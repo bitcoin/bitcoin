@@ -520,7 +520,7 @@ UniValue certnew(const JSONRPCRequest& request) {
 
 	// check for alias existence in DB
 	CAliasIndex theAlias;
-
+	ToLowerCase(vchAlias);
 	if (!GetAlias(vchAlias, theAlias))
 		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 3500 - " + _("failed to read alias from alias DB"));
 
@@ -693,6 +693,7 @@ UniValue certtransfer(const JSONRPCRequest& request) {
 
 	// check for alias existence in DB
 	CAliasIndex toAlias;
+	ToLowerCase(vchAlias);
 	if (!GetAlias(vchAlias, toAlias))
 		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 3503 - " + _("Failed to read transfer alias from DB"));
 
@@ -853,7 +854,6 @@ void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const
 
 	CCert dbCert;
 	GetCert(cert.vchCert, dbCert);
-	
 
 	entry.push_back(Pair("txtype", opName));
 	entry.push_back(Pair("_id", stringFromVch(cert.vchCert)));
@@ -870,27 +870,30 @@ void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const
 	if(cert.nAccessFlags != dbCert.nAccessFlags)
 		entry.push_back(Pair("access_flags", cert.nAccessFlags));
 }
+
 bool CCertDB::ScanCerts(const int count, const int from, const UniValue& oOptions, UniValue& oRes) {
 	string strTxid = "";
 	vector<unsigned char> vchCert, vchAlias;
 	int nStartBlock = 0;
 	if (!oOptions.isNull()) {
-		const UniValue &optionsObj = find_value(oOptions, "options").get_obj();
-		const UniValue &txid = find_value(optionsObj, "txid");
+		const UniValue &txid = find_value(oOptions, "txid");
 		if (txid.isStr()) {
 			strTxid = txid.get_str();
 		}
-		const UniValue &certObj = find_value(optionsObj, "cert");
-		if (certObj.isStr())
+		const UniValue &certObj = find_value(oOptions, "cert");
+		if (certObj.isStr()) {
 			vchCert = vchFromValue(certObj);
+		}
 
-		const UniValue &aliasObj = find_value(optionsObj, "alias");
-		if (aliasObj.isStr())
+		const UniValue &aliasObj = find_value(oOptions, "alias");
+		if (aliasObj.isStr()) {
 			vchAlias = vchFromValue(aliasObj);
+		}
 
-		const UniValue &startblock = find_value(optionsObj, "startblock");
-		if (startblock.isNum())
+		const UniValue &startblock = find_value(oOptions, "startblock");
+		if (startblock.isNum()) {
 			nStartBlock = startblock.get_int();
+		}
 	}
 
 	LOCK(cs_cert);
@@ -930,8 +933,10 @@ bool CCertDB::ScanCerts(const int count, const int from, const UniValue& oOption
 					pcursor->Next();
 					continue;
 				}
-				index++;
-				if (from > 0 && index <= from) {
+				index += 1;
+				if (index <= from)
+				{
+					pcursor->Next();
 					continue;
 				}
 				oRes.push_back(oCert);
@@ -946,38 +951,51 @@ bool CCertDB::ScanCerts(const int count, const int from, const UniValue& oOption
 	}
 	return true;
 }
-UniValue scancerts(const JSONRPCRequest& request) {
+
+UniValue listcerts(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
 	if (request.fHelp || 3 < params.size())
-		throw runtime_error("scancerts [count] [from] [options]\n"
+		throw runtime_error("listcerts [count] [from] [{options}]\n"
 			"scan through all certificates.\n"
-			"[count]          (numeric, optional, default=10) The number of results to return.\n"
+			"[count]          (numeric, optional, unbounded=0, default=10) The number of results to return, 0 to return all.\n"
 			"[from]           (numeric, optional, default=0) The number of results to skip.\n"
-			"[options]        (array, optional) A json object with options to filter results\n"
+			"[options]        (object, optional) A json object with options to filter results\n"
 			"    {\n"
 			"      \"txid\":txid				(string) Transaction ID to filter results for\n"
-			"	   \"cert\":guid				(string) Certificate GUID to filter.\n"
-			"      \"alias\":alias				(string) Alias name to filter.\n"
-			"      \"startblock\":block number   (number) Earliest block to filter from. Block number is the block at which the transaction would have confirmed.\n"
+			"	     \"cert\":guid				(string) Certificate GUID to filter.\n"
+			"      \"alias\":alias			(string) Owner alias name to filter.\n"
+			"      \"startblock\":block	(number) Earliest block to filter from. Block number is the block at which the transaction would have confirmed.\n"
 			"    }\n"
-			+ HelpExampleCli("scancerts", "0 10")
-			+ HelpExampleCli("scancerts", "10 10 {\"options\":{\"txid\":\"1c7f966dab21119bac53213a2bc7532bff1fa844c124fd750a7d0b1332440bd1\",\"cert\":\"32bff1fa844c124\",\"alias\":\"''\",\"startblock\":0}}")
+			+ HelpExampleCli("listcerts", "0")
+			+ HelpExampleCli("listcerts", "10 0")
+			+ HelpExampleCli("listcerts", "0 0 '{\"alias\":\"cert-owner-alias\",\"startblock\":0}'")
+			+ HelpExampleCli("listcerts", "0 0 '{\"cert\":\"32bff1fa844c124\"}'")
+			+ HelpExampleCli("listcerts", "0 0 '{\"txid\":\"1c7f966dab21119bac53213a2bc7532bff1fa844c124fd750a7d0b1332440bd1\"}'")
 		);
 	UniValue options;
 	int count = 10;
 	int from = 0;
-	if (params.size() > 0)
+	if (params.size() > 0) {
 		count = params[0].get_int();
-	if (params.size() > 1)
+		if (count == 0) {
+			count = INT_MAX;
+		} else
+		if (count < 0) {
+			throw runtime_error("SYSCOIN_CERT_RPC_ERROR: ERRCODE: 3508 - " + _("'count' must be 0 or greater"));
+		}
+	}
+	if (params.size() > 1) {
 		from = params[1].get_int();
-	if (params.size() > 2)
+		if (from < 0) {
+			throw runtime_error("SYSCOIN_CERT_RPC_ERROR: ERRCODE: 3508 - " + _("'from' must be 0 or greater"));
+		}
+	}
+	if (params.size() > 2) {
 		options = params[2];
+	}
 
 	UniValue oRes(UniValue::VARR);
 	if (!pcertdb->ScanCerts(count, from, options, oRes))
 		throw runtime_error("SYSCOIN_CERT_RPC_ERROR: ERRCODE: 3508 - " + _("Scan failed"));
 	return oRes;
 }
-
-
-
