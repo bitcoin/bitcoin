@@ -434,7 +434,6 @@ class WalletParticlTest(ParticlTestFramework):
 
 
         # Test manageaddressbook
-
         try:
             ro = nodes[0].manageaddressbook('edit', 'piNdRiuL2BqUA8hh2A6AtEbBkKqKxK13LT', 'lblEdited')
             assert(False), 'Edited non existing address.'
@@ -517,7 +516,6 @@ class WalletParticlTest(ParticlTestFramework):
         ro = nodes[0].manageaddressbook('info', sTestAddress)
 
 
-
         ro = nodes[1].walletlock()
         time.sleep(1)
         ro = nodes[1].getwalletinfo()
@@ -532,8 +530,6 @@ class WalletParticlTest(ParticlTestFramework):
         assert(ro['encryptionstatus'] == 'Locked')
 
         ro = nodes[1].walletpassphrase('changedPass', 2)
-
-
 
 
         nodes[0].walletpassphrase('qwerty123', 3000)
@@ -629,6 +625,10 @@ class WalletParticlTest(ParticlTestFramework):
         unspentCheck = nodes[2].listunspent()
         assert(len(unspentCheck) == len(unspent))
 
+        # Test bumpfee
+        txnid = nodes[1].sendtoaddress(address1, 0.01, "", "", False, "", True)
+        ro = nodes[1].bumpfee(txnid)
+        assert(len(ro['errors']) == 0)
 
 if __name__ == '__main__':
     WalletParticlTest().main()

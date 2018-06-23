@@ -462,6 +462,8 @@ public:
     CAmount GetDebit(const CTransaction& tx, const isminefilter& filter) const override;
     CAmount GetDebit(CHDWalletDB *pwdb, const CTransactionRecord &rtx, const isminefilter& filter) const;
 
+    /** Returns whether all of the inputs match the filter */
+    bool IsAllFromMe(const CTransaction& tx, const isminefilter& filter) const override;
 
     CAmount GetCredit(const CTxOutBase *txout, const isminefilter &filter) const override;
     CAmount GetCredit(const CTransaction &tx, const isminefilter &filter) const override;
@@ -638,6 +640,9 @@ public:
 
     bool DummySignInput(CTxIn &tx_in, const CTxOut &txout) const override;
 
+    bool DummySignInput(CTxIn &tx_in, const CTxOutBaseRef &txout) const;
+    bool DummySignTx(CMutableTransaction &txNew, const std::vector<CTxOutBaseRef> &txouts) const;
+
     int LoadStealthAddresses();
     bool IndexStealthKey(CHDWalletDB *pwdb, uint160 &hash, const CStealthAddressIndexed &sxi, uint32_t &id);
     bool GetStealthKeyIndex(const CStealthAddressIndexed &sxi, uint32_t &id);
@@ -799,9 +804,17 @@ bool CheckOutputValue(const CTempRecipient &r, const CTxOutBase *txbout, CAmount
 void SetCTOutVData(std::vector<uint8_t> &vData, CPubKey &pkEphem, uint32_t nStealthPrefix);
 int CreateOutput(OUTPUT_PTR<CTxOutBase> &txbout, CTempRecipient &r, std::string &sError);
 
+// Calculate the size of the transaction assuming all signatures are max size
+// Use DummySignatureCreator, which inserts 72 byte signatures everywhere.
+// NOTE: this requires that all inputs must be in mapWallet (eg the tx should
+// be IsAllFromMe).
+int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CHDWallet *wallet);
+int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CHDWallet *wallet, const std::vector<CTxOutBaseRef>& txouts);
+
 bool IsParticlWallet(const CKeyStore *win);
 CHDWallet *GetParticlWallet(CKeyStore *win);
 const CHDWallet *GetParticlWallet(const CKeyStore *win);
+
 
 #endif // PARTICL_WALLET_HDWALLET_H
 

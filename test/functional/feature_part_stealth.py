@@ -217,6 +217,5 @@ class StealthTest(ParticlTestFramework):
         assert(replay['ephemeral_pubkey'] == ro['ephemeral_pubkey'])
 
 
-
 if __name__ == '__main__':
     StealthTest().main()

@@ -2041,6 +2041,47 @@ CAmount CHDWallet::GetDebit(CHDWalletDB *pwdb, const CTransactionRecord &rtx, co
     return nDebit;
 };
 
+bool CHDWallet::IsAllFromMe(const CTransaction& tx, const isminefilter& filter) const
+{
+    LOCK(cs_wallet);
+
+    for (const CTxIn& txin : tx.vin)
+    {
+        auto mi = mapWallet.find(txin.prevout.hash);
+        if (mi != mapWallet.end())
+        {
+            const CWalletTx& prev = (*mi).second;
+
+            if (txin.prevout.n >= prev.tx->GetNumVOuts())
+                return false; // invalid input!
+
+            if (!(IsMine(prev.tx->vpout[txin.prevout.n].get()) & filter))
+                return false;
+            continue;
+        };
+
+        auto mri = mapRecords.find(txin.prevout.hash);
+        if (mri != mapRecords.end())
+        {
+            const COutputRecord *oR = mri->second.GetOutput(txin.prevout.n);
+            if (!oR)
+                return false;
+            if ((filter & ISMINE_SPENDABLE)
+                && (oR->nFlags & ORF_OWNED))
+            {
+                continue;
+            };
+            /* TODO
+            if ((filter & ISMINE_WATCH_ONLY)
+                && (oR->nFlags & ORF_WATCH_ONLY))
+                return oR->nValue;
+            */
+        };
+        return false; // any unknown inputs can't be from us
+    };
+    return true;
+};
+
 CAmount CHDWallet::GetCredit(const CTxOutBase *txout, const isminefilter &filter) const
 {
     CAmount nValue = 0;
@@ -3627,7 +3668,7 @@ int CHDWallet::AddStandardInputs(CWalletTx &wtx, CTransactionRecord &rtx,
             // to avoid conflicting with other possible uses of nSequence,
             // and in the spirit of "smallest possible change from prior
             // behavior."
-            const uint32_t nSequence = coinControl->m_signal_bip125_rbf ? MAX_BIP125_RBF_SEQUENCE : (CTxIn::SEQUENCE_FINAL - 1);
+            const uint32_t nSequence = coinControl->m_signal_bip125_rbf.get_value_or(m_signal_rbf) ? MAX_BIP125_RBF_SEQUENCE : (CTxIn::SEQUENCE_FINAL - 1);
             for (const auto& coin : setCoins)
                 txNew.vin.push_back(CTxIn(coin.outpoint,CScript(),
                                           nSequence));
@@ -8423,6 +8464,39 @@ bool CHDWallet::DummySignInput(CTxIn &tx_in, const CTxOut &txout) const
     return true;
 }
 
+bool CHDWallet::DummySignInput(CTxIn &tx_in, const CTxOutBaseRef &txout) const
+{
+    // Fill in dummy signatures for fee calculation.
+    if (!txout->GetPScriptPubKey())
+        return error("%s: Bad output type\n", __func__);
+    const CScript &scriptPubKey = *txout->GetPScriptPubKey();
+    SignatureData sigdata;
+
+    if (!ProduceSignature(*this, DUMMY_SIGNATURE_CREATOR_PARTICL, scriptPubKey, sigdata))
+    {
+        return false;
+    } else {
+        UpdateInput(tx_in, sigdata);
+    }
+    return true;
+}
+
+bool CHDWallet::DummySignTx(CMutableTransaction &txNew, const std::vector<CTxOutBaseRef> &txouts) const
+{
+    // Fill in dummy signatures for fee calculation.
+    int nIn = 0;
+    for (const auto& txout : txouts)
+    {
+        if (!DummySignInput(txNew.vin[nIn], txout)) {
+            return false;
+        }
+
+        nIn++;
+    }
+    return true;
+};
+
+
 int CHDWallet::LoadStealthAddresses()
 {
     LogPrint(BCLog::HDWALLET, "%s\n", __func__);
@@ -12245,6 +12319,55 @@ int LoopExtAccountsInDB(CHDWallet *pwallet, bool fInactive, LoopExtKeyCallback &
 
     return 0;
 };
+
+int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CHDWallet *wallet)
+{
+    std::vector<CTxOutBaseRef> txouts;
+
+    // Look up the inputs.  We should have already checked that this transaction
+    // IsAllFromMe(ISMINE_SPENDABLE), so every input should already be in our
+    // wallet, with a valid index into the vout array, and the ability to sign.
+    for (auto& input : tx.vin) {
+        const auto mi = wallet->mapWallet.find(input.prevout.hash);
+        if (mi != wallet->mapWallet.end()) {
+            assert(input.prevout.n < mi->second.tx->GetNumVOuts());
+            txouts.emplace_back(mi->second.tx->vpout[input.prevout.n]);
+            continue;
+        }
+        const auto mri = wallet->mapRecords.find(input.prevout.hash);
+        if (mri != wallet->mapRecords.end()) {
+            const COutputRecord *oR = mri->second.GetOutput(input.prevout.n);
+            if (oR && (oR->nFlags & ORF_OWNED))
+            {
+                if (oR->nType != OUTPUT_STANDARD)
+                {
+                    LogPrintf("ERROR: %s non standard output - TODO.\n", __func__);
+                    return -1;
+                };
+                txouts.emplace_back(MAKE_OUTPUT<CTxOutStandard>(oR->nValue, oR->scriptPubKey));
+                continue;
+            };
+        }
+
+        return -1;
+    }
+
+    return CalculateMaximumSignedTxSize(tx, wallet, txouts);
+}
+
+// txouts needs to be in the order of tx.vin
+int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CHDWallet *wallet, const std::vector<CTxOutBaseRef>& txouts)
+{
+    CMutableTransaction txNew(tx);
+
+    if (!wallet->DummySignTx(txNew, txouts)) {
+        // This should never happen, because IsAllFromMe(ISMINE_SPENDABLE)
+        // implies that we can sign for every input.
+        return -1;
+    }
+
+    return GetVirtualTransactionSize(txNew);
+}
 
 bool IsParticlWallet(const CKeyStore *win)
 {

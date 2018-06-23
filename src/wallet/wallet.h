@@ -1125,7 +1125,7 @@ public:
     virtual bool IsFromMe(const CTransaction& tx) const;
     virtual CAmount GetDebit(const CTransaction& tx, const isminefilter& filter) const;
     /** Returns whether all of the inputs match the filter */
-    bool IsAllFromMe(const CTransaction& tx, const isminefilter& filter) const;
+    virtual bool IsAllFromMe(const CTransaction& tx, const isminefilter& filter) const;
     virtual CAmount GetCredit(const CTransaction& tx, const isminefilter& filter) const;
     CAmount GetChange(const CTransaction& tx) const;
     void ChainStateFlushed(const CBlockLocator& loc) override;

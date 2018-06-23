@@ -318,7 +318,7 @@ void SendCoinsDialog::on_sendButton_clicked()
 
     QString sCoinControl;
     sCoinControl += " {";
-    sCoinControl += "\"replaceable\":" + QString::fromUtf8((ctrl.m_signal_bip125_rbf ? "true" : "false"));
+    sCoinControl += "\"replaceable\":" + QString::fromUtf8((ui->optInRBF->isChecked() ? "true" : "false"));
 
     if (ctrl.m_feerate)
     {
@@ -353,7 +353,6 @@ void SendCoinsDialog::on_sendButton_clicked()
         sCoinControl += "]";
     };
     sCoinControl += "} ";
-
 
     UniValue rv;
     QString sGetFeeCommand = sCommand + " true" + sCoinControl;
