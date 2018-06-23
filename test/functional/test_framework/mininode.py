@@ -77,6 +77,12 @@ class P2PConnection(asyncore.dispatcher):
 
         super().__init__(map=mininode_socket_map)
 
+        self._conn_open = False
+
+    @property
+    def is_connected(self):
+        return self._conn_open
+
     def peer_connect(self, dstaddr, dstport, net="regtest"):
         self.dstaddr = dstaddr
         self.dstport = dstport
@@ -84,7 +90,7 @@ class P2PConnection(asyncore.dispatcher):
         self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         self.sendbuf = b""
         self.recvbuf = b""
-        self.state = "connecting"
+        self._asyncore_pre_connection = True
         self.network = net
         self.disconnect = False
 
@@ -97,22 +103,23 @@ class P2PConnection(asyncore.dispatcher):
 
     def peer_disconnect(self):
         # Connection could have already been closed by other end.
-        if self.state == "connected":
-            self.disconnect_node()
+        if self.is_connected:
+            self.disconnect = True  # Signal asyncore to disconnect
 
     # Connection and disconnection methods
 
     def handle_connect(self):
         """asyncore callback when a connection is opened."""
-        if self.state != "connected":
+        if not self.is_connected:
             logger.debug("Connected & Listening: %s:%d" % (self.dstaddr, self.dstport))
-            self.state = "connected"
+            self._conn_open = True
+            self._asyncore_pre_connection = False
             self.on_open()
 
     def handle_close(self):
         """asyncore callback when a connection is closed."""
         logger.debug("Closing connection to: %s:%d" % (self.dstaddr, self.dstport))
-        self.state = "closed"
+        self._conn_open = False
         self.recvbuf = b""
         self.sendbuf = b""
         try:
@@ -120,13 +127,6 @@ class P2PConnection(asyncore.dispatcher):
         except:
             pass
         self.on_close()
-
-    def disconnect_node(self):
-        """Disconnect the p2p connection.
-
-        Called by the test logic thread. Causes the p2p connection
-        to be disconnected on the next iteration of the asyncore loop."""
-        self.disconnect = True
 
     # Socket read methods
 
@@ -182,9 +182,8 @@ class P2PConnection(asyncore.dispatcher):
     def writable(self):
         """asyncore method to determine whether the handle_write() callback should be called on the next loop."""
         with mininode_lock:
-            pre_connection = self.state == "connecting"
             length = len(self.sendbuf)
-        return (length > 0 or pre_connection)
+        return length > 0 or self._asyncore_pre_connection
 
     def handle_write(self):
         """asyncore callback when data should be written to the socket."""
@@ -192,7 +191,7 @@ class P2PConnection(asyncore.dispatcher):
             # asyncore does not expose socket connection, only the first read/write
             # event, thus we must check connection manually here to know when we
             # actually connect
-            if self.state == "connecting":
+            if self._asyncore_pre_connection:
                 self.handle_connect()
             if not self.writable():
                 return
@@ -204,14 +203,29 @@ class P2PConnection(asyncore.dispatcher):
                 return
             self.sendbuf = self.sendbuf[sent:]
 
-    def send_message(self, message, pushbuf=False):
+    def send_message(self, message):
         """Send a P2P message over the socket.
 
         This method takes a P2P payload, builds the P2P header and adds
         the message to the send buffer to be sent over the socket."""
-        if self.state != "connected" and not pushbuf:
-            raise IOError('Not connected, no pushbuf')
+        if not self.is_connected:
+            raise IOError('Not connected')
         self._log_message("send", message)
+        tmsg = self._build_message(message)
+        with mininode_lock:
+            if len(self.sendbuf) == 0:
+                try:
+                    sent = self.send(tmsg)
+                    self.sendbuf = tmsg[sent:]
+                except BlockingIOError:
+                    self.sendbuf = tmsg
+            else:
+                self.sendbuf += tmsg
+
+    # Class utility methods
+
+    def _build_message(self, message):
+        """Build a serialized P2P message"""
         command = message.command
         data = message.serialize()
         tmsg = MAGIC_BYTES[self.network]
@@ -222,17 +236,7 @@ class P2PConnection(asyncore.dispatcher):
         h = sha256(th)
         tmsg += h[:4]
         tmsg += data
-        with mininode_lock:
-            if (len(self.sendbuf) == 0 and not pushbuf):
-                try:
-                    sent = self.send(tmsg)
-                    self.sendbuf = tmsg[sent:]
-                except BlockingIOError:
-                    self.sendbuf = tmsg
-            else:
-                self.sendbuf += tmsg
-
-    # Class utility methods
+        return tmsg
 
     def _log_message(self, direction, msg):
         """Logs a message being sent or received over the connection."""
@@ -280,7 +284,7 @@ class P2PInterface(P2PConnection):
             vt.addrTo.port = self.dstport
             vt.addrFrom.ip = "0.0.0.0"
             vt.addrFrom.port = 0
-            self.send_message(vt, True)
+            self.sendbuf = self._build_message(vt)  # Will be sent right after handle_connect
 
     # Message receiving methods
 
@@ -348,7 +352,7 @@ class P2PInterface(P2PConnection):
     # Connection helper methods
 
     def wait_for_disconnect(self, timeout=60):
-        test_function = lambda: self.state != "connected"
+        test_function = lambda: not self.is_connected
         wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
     # Message receiving helper methods

@@ -47,9 +47,9 @@ class TimeoutsTest(BitcoinTestFramework):
 
         sleep(1)
 
-        assert no_verack_node.connected
-        assert no_version_node.connected
-        assert no_send_node.connected
+        assert no_verack_node.is_connected
+        assert no_version_node.is_connected
+        assert no_send_node.is_connected
 
         no_verack_node.send_message(msg_ping())
         no_version_node.send_message(msg_ping())
@@ -58,18 +58,18 @@ class TimeoutsTest(BitcoinTestFramework):
 
         assert "version" in no_verack_node.last_message
 
-        assert no_verack_node.connected
-        assert no_version_node.connected
-        assert no_send_node.connected
+        assert no_verack_node.is_connected
+        assert no_version_node.is_connected
+        assert no_send_node.is_connected
 
         no_verack_node.send_message(msg_ping())
         no_version_node.send_message(msg_ping())
 
         sleep(31)
 
-        assert not no_verack_node.connected
-        assert not no_version_node.connected
-        assert not no_send_node.connected
+        assert not no_verack_node.is_connected
+        assert not no_version_node.is_connected
+        assert not no_send_node.is_connected
 
 if __name__ == '__main__':
     TimeoutsTest().main()
