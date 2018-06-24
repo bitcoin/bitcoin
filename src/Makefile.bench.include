@@ -15,6 +15,7 @@ bench_bench_bitcoin_SOURCES = \
   bench/bench_bitcoin.cpp \
   bench/bench.cpp \
   bench/bench.h \
+  bench/block_assemble.cpp \
   bench/checkblock.cpp \
   bench/checkqueue.cpp \
   bench/examples.cpp \
