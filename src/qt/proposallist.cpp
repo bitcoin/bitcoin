@@ -124,8 +124,8 @@ ProposalList::ProposalList(interfaces::Node& node, const PlatformStyle *platform
     hlayout->addSpacing(width);
     hlayout->setTableColumnsToTrack(view->horizontalHeader());
 
-    connect(view->horizontalHeader(), SIGNAL(sectionResized(int,int,int)), SLOT(invalidateAlignedLayout()));
-    connect(view->horizontalScrollBar(), SIGNAL(valueChanged(int)), SLOT(invalidateAlignedLayout()));
+    // connect(view->horizontalHeader(), &QHeaderView::sectionResized, &ProposalList::invalidateAlignedLayout);
+    // connect(view->horizontalScrollBar(), &QAbstractSlider::valueChanged, &ProposalList::invalidateAlignedLayout);
 
     view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     view->setTabKeyNavigation(false);
@@ -168,28 +168,28 @@ ProposalList::ProposalList(interfaces::Node& node, const PlatformStyle *platform
     contextMenu->addSeparator();
     contextMenu->addAction(openUrlAction);
 
-    connect(voteYesButton, SIGNAL(clicked()), this, SLOT(voteYes()));
-    connect(voteAbstainButton, SIGNAL(clicked()), this, SLOT(voteAbstain()));
-    connect(voteNoButton, SIGNAL(clicked()), this, SLOT(voteNo()));
+    connect(voteYesButton, &QPushButton::clicked, this, &ProposalList::voteYes);
+    connect(voteAbstainButton, &QPushButton::clicked, this, &ProposalList::voteAbstain);
+    connect(voteNoButton, &QPushButton::clicked, this, &ProposalList::voteNo);
 
-    connect(proposalWidget, SIGNAL(textChanged(QString)), this, SLOT(changedProposal(QString)));
-    connect(startDateWidget, SIGNAL(activated(int)), this, SLOT(chooseStartDate(int)));
-    connect(endDateWidget, SIGNAL(activated(int)), this, SLOT(chooseEndDate(int)));
-    connect(yesVotesWidget, SIGNAL(textChanged(QString)), this, SLOT(changedYesVotes(QString)));
-    connect(noVotesWidget, SIGNAL(textChanged(QString)), this, SLOT(changedNoVotes(QString)));
-    connect(absoluteYesVotesWidget, SIGNAL(textChanged(QString)), this, SLOT(changedAbsoluteYesVotes(QString)));
-    connect(yesVotesWidget, SIGNAL(textChanged(QString)), this, SLOT(changedYesVotes(QString)));
-    connect(amountWidget, SIGNAL(textChanged(QString)), this, SLOT(changedAmount(QString)));
-    connect(percentageWidget, SIGNAL(textChanged(QString)), this, SLOT(changedPercentage(QString)));
+    connect(proposalWidget, &QLineEdit::textChanged, this, &ProposalList::changedProposal);
+    connect(startDateWidget, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &ProposalList::chooseStartDate);
+    connect(endDateWidget, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &ProposalList::chooseEndDate);
+    connect(yesVotesWidget, &QLineEdit::textChanged, this, &ProposalList::changedYesVotes);
+    connect(noVotesWidget, &QLineEdit::textChanged, this, &ProposalList::changedNoVotes);
+    connect(absoluteYesVotesWidget, &QLineEdit::textChanged, this, &ProposalList::changedAbsoluteYesVotes);
+    connect(yesVotesWidget, &QLineEdit::textChanged, this, &ProposalList::changedYesVotes);
+    connect(amountWidget, &QLineEdit::textChanged, this, &ProposalList::changedAmount);
+    connect(percentageWidget, &QLineEdit::textChanged, this, &ProposalList::changedPercentage);
 
-    connect(view, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(openProposalUrl()));
-    connect(view, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
+    connect(view, &QTableView::doubleClicked, this, &ProposalList::openProposalUrl);
+    connect(view, &QTableView::customContextMenuRequested, this, &ProposalList::contextualMenu);
 
-    connect(voteYesAction, SIGNAL(triggered()), this, SLOT(voteYes()));
-    connect(voteNoAction, SIGNAL(triggered()), this, SLOT(voteNo()));
-    connect(voteAbstainAction, SIGNAL(triggered()), this, SLOT(voteAbstain()));
+    connect(voteYesAction, &QAction::triggered, this, &ProposalList::voteYes);
+    connect(voteNoAction, &QAction::triggered, this, &ProposalList::voteNo);
+    connect(voteAbstainAction, &QAction::triggered, this, &ProposalList::voteAbstain);
 
-    connect(openUrlAction, SIGNAL(triggered()), this, SLOT(openProposalUrl()));
+    connect(openUrlAction, &QAction::triggered, this, &ProposalList::openProposalUrl);
 
     proposalProxyModel = new ProposalFilterProxy(this);
     proposalProxyModel->setSourceModel(proposalTableModel);
@@ -226,7 +226,7 @@ ProposalList::ProposalList(interfaces::Node& node, const PlatformStyle *platform
     nLastUpdate = GetTime();
 
     timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(refreshProposals()));
+    connect(timer, &QTimer::timeout, this, &ProposalList::refreshProposals);
     timer->start(1000);
 
     setLayout(vlayout);
@@ -236,13 +236,12 @@ void ProposalList::invalidateAlignedLayout() {
     hlayout->invalidate();
 }
 
-void ProposalList::refreshProposals(bool force) {
+void ProposalList::refreshProposals() {
     int64_t secondsRemaining = nLastUpdate - GetTime() + PROPOSALLIST_UPDATE_SECONDS;
 
     QString secOrMinutes = (secondsRemaining / 60 > 1) ? tr("minute(s)") : tr("second(s)");
     secondsLabel->setText(tr("List will be updated in %1 %2").arg((secondsRemaining > 60) ? QString::number(secondsRemaining / 60) : QString::number(secondsRemaining), secOrMinutes));
 
-    if(secondsRemaining > 0 && !force) return;
     nLastUpdate = GetTime();
 
     proposalTableModel->refreshProposals();
@@ -503,7 +502,7 @@ void ProposalList::vote_click_handler(const std::string voteString)
     QMessageBox::information(this, tr("Voting"),
         tr("You voted %1 %2 time(s) successfully and failed %3 time(s) on %4").arg(QString::fromStdString(voteString), QString::number(nSuccessful), QString::number(nFailed), proposalName));
 
-    refreshProposals(true);
+    refreshProposals();
 }
 
 void ProposalList::openProposalUrl()
@@ -540,7 +539,7 @@ QWidget *ProposalList::createStartDateRangeWidget()
 
     startDateRangeWidget->setVisible(false);
 
-    connect(proposalStartDate, SIGNAL(dateChanged(QDate)), this, SLOT(startDateRangeChanged()));
+    connect(proposalStartDate, &QDateTimeEdit::dateChanged, this, &ProposalList::startDateRangeChanged);
 
     return startDateRangeWidget;
 }
@@ -569,7 +568,7 @@ QWidget *ProposalList::createEndDateRangeWidget()
 
     endDateRangeWidget->setVisible(false);
 
-    connect(proposalEndDate, SIGNAL(dateChanged(QDate)), this, SLOT(endDateRangeChanged()));
+    connect(proposalEndDate, &QDateTimeEdit::dateChanged, this, &ProposalList::endDateRangeChanged);
 
     return endDateRangeWidget;
 }

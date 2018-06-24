@@ -34,10 +34,10 @@ QRGeneralImageWidget::QRGeneralImageWidget(QWidget *parent):
 {
     contextMenu = new QMenu(this);
     QAction *saveImageAction = new QAction(tr("&Save Image..."), this);
-    connect(saveImageAction, SIGNAL(triggered()), this, SLOT(saveImage()));
+    connect(saveImageAction, &QAction::triggered, this, &QRGeneralImageWidget::saveImage);
     contextMenu->addAction(saveImageAction);
     QAction *copyImageAction = new QAction(tr("&Copy Image"), this);
-    connect(copyImageAction, SIGNAL(triggered()), this, SLOT(copyImage()));
+    connect(copyImageAction, &QAction::triggered, this, &QRGeneralImageWidget::copyImage);
     contextMenu->addAction(copyImageAction);
 }
 
@@ -101,7 +101,7 @@ QRDialog::QRDialog(QWidget *parent) :
     ui->lblQRCode->setVisible(false);
 #endif
 
-    connect(ui->button_saveImage, SIGNAL(clicked()), ui->lblQRCode, SLOT(saveImage()));
+    connect(ui->button_saveImage, &QPushButton::clicked, ui->lblQRCode, &QRGeneralImageWidget::saveImage);
 }
 
 QRDialog::~QRDialog()
@@ -109,12 +109,12 @@ QRDialog::~QRDialog()
     delete ui;
 }
 
-void QRDialog::setModel(OptionsModel *model)
+void QRDialog::setModel(OptionsModel *_model)
 {
-    this->model = model;
+    this->model = _model;
 
-    if (model)
-        connect(model, SIGNAL(displayUnitChanged(int)), this, SLOT(update()));
+    if (_model)
+        connect(_model, &OptionsModel::displayUnitChanged, this, &QRDialog::update);
 
     // update the display unit if necessary
     update();

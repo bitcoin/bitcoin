@@ -118,7 +118,7 @@ Q_SIGNALS:
     void doubleClicked(const QModelIndex&);
 
 public Q_SLOTS:
-    void refreshProposals(bool force = false);
+    void refreshProposals();
     void changedProposal(const QString &proposal);
     void chooseStartDate(int idx);
     void chooseEndDate(int idx);

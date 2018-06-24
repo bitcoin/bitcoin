@@ -189,31 +189,32 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     mapperThirdPartyTxUrls = new QSignalMapper(this);
 
     // Connect actions
-    connect(mapperThirdPartyTxUrls, SIGNAL(mapped(QString)), this, SLOT(openThirdPartyTxUrl(QString)));
+    connect(mapperThirdPartyTxUrls, static_cast<void (QSignalMapper::*)(const QString&)>(&QSignalMapper::mapped), this, &TransactionView::openThirdPartyTxUrl);
 
-    connect(dateWidget, SIGNAL(activated(int)), this, SLOT(chooseDate(int)));
-    connect(typeWidget, SIGNAL(activated(int)), this, SLOT(chooseType(int)));
-    connect(watchOnlyWidget, SIGNAL(activated(int)), this, SLOT(chooseWatchonly(int)));
-    connect(amountWidget, SIGNAL(textChanged(QString)), amount_typing_delay, SLOT(start()));
-    connect(amount_typing_delay, SIGNAL(timeout()), this, SLOT(changedAmount()));
-    connect(search_widget, SIGNAL(textChanged(QString)), prefix_typing_delay, SLOT(start()));
-    connect(prefix_typing_delay, SIGNAL(timeout()), this, SLOT(changedSearch()));
+    connect(dateWidget, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &TransactionView::chooseDate);
+    connect(typeWidget, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &TransactionView::chooseType);
+    connect(watchOnlyWidget, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &TransactionView::chooseWatchonly);
+    connect(amountWidget, &QLineEdit::textChanged, amount_typing_delay, static_cast<void (QTimer::*)()>(&QTimer::start));
+    connect(amount_typing_delay, &QTimer::timeout, this, &TransactionView::changedAmount);
+    connect(search_widget, &QLineEdit::textChanged, prefix_typing_delay, static_cast<void (QTimer::*)()>(&QTimer::start));
+    connect(prefix_typing_delay, &QTimer::timeout, this, &TransactionView::changedSearch);
 
-    connect(view, SIGNAL(doubleClicked(QModelIndex)), this, SIGNAL(doubleClicked(QModelIndex)));
-    connect(view, SIGNAL(clicked(QModelIndex)), this, SLOT(computeSum()));
-    connect(view, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
+    connect(view, &QTableView::doubleClicked, this, &TransactionView::doubleClicked);
+    connect(view, &QTableView::clicked, this, &TransactionView::computeSum);
+    connect(view, &QTableView::customContextMenuRequested, this, &TransactionView::contextualMenu);
 
-    connect(bumpFeeAction, SIGNAL(triggered()), this, SLOT(bumpFee()));
-    connect(abandonAction, SIGNAL(triggered()), this, SLOT(abandonTx()));
-    connect(copyAddressAction, SIGNAL(triggered()), this, SLOT(copyAddress()));
-    connect(copyLabelAction, SIGNAL(triggered()), this, SLOT(copyLabel()));
-    connect(copyAmountAction, SIGNAL(triggered()), this, SLOT(copyAmount()));
-    connect(copyTxIDAction, SIGNAL(triggered()), this, SLOT(copyTxID()));
-    connect(copyTxHexAction, SIGNAL(triggered()), this, SLOT(copyTxHex()));
-    connect(copyTxPlainText, SIGNAL(triggered()), this, SLOT(copyTxPlainText()));
-    connect(editLabelAction, SIGNAL(triggered()), this, SLOT(editLabel()));
-    connect(showDetailsAction, SIGNAL(triggered()), this, SLOT(showDetails()));
-
+    connect(bumpFeeAction, &QAction::triggered, this, &TransactionView::bumpFee);
+    connect(abandonAction, &QAction::triggered, this, &TransactionView::abandonTx);
+    connect(copyAddressAction, &QAction::triggered, this, &TransactionView::copyAddress);
+    connect(copyLabelAction, &QAction::triggered, this, &TransactionView::copyLabel);
+    connect(copyAmountAction, &QAction::triggered, this, &TransactionView::copyAmount);
+    connect(copyTxIDAction, &QAction::triggered, this, &TransactionView::copyTxID);
+    connect(copyTxHexAction, &QAction::triggered, this, &TransactionView::copyTxHex);
+    connect(copyTxPlainText, &QAction::triggered, this, &TransactionView::copyTxPlainText);
+    connect(editLabelAction, &QAction::triggered, this, &TransactionView::editLabel);
+    connect(showDetailsAction, &QAction::triggered, this, &TransactionView::showDetails);
+    // Double-clicking on a transaction on the transaction history page shows details
+    connect(this, &TransactionView::doubleClicked, this, &TransactionView::showDetails);
     // Highlight transaction after fee bump
     connect(this, &TransactionView::bumpedFee, [this](const uint256& txid) {
       focusTransaction(txid);
@@ -250,7 +251,7 @@ void TransactionView::setModel(WalletModel *_model)
         transactionView->setColumnWidth(TransactionTableModel::Amount, AMOUNT_MINIMUM_COLUMN_WIDTH);
 
         // Note: it's a good idea to connect this signal AFTER the model is set
-        connect(transactionView->selectionModel(), SIGNAL(selectionChanged(QItemSelection, QItemSelection)), this, SLOT(computeSum()));
+        connect(transactionView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &TransactionView::computeSum);
 
         columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(transactionView, AMOUNT_MINIMUM_COLUMN_WIDTH, MINIMUM_COLUMN_WIDTH, this);
 
@@ -267,7 +268,7 @@ void TransactionView::setModel(WalletModel *_model)
                     if (i == 0)
                         contextMenu->addSeparator();
                     contextMenu->addAction(thirdPartyTxUrlAction);
-                    connect(thirdPartyTxUrlAction, SIGNAL(triggered()), mapperThirdPartyTxUrls, SLOT(map()));
+                    connect(thirdPartyTxUrlAction, &QAction::triggered, mapperThirdPartyTxUrls, static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
                     mapperThirdPartyTxUrls->setMapping(thirdPartyTxUrlAction, listUrls[i].trimmed());
                 }
             }
@@ -277,8 +278,8 @@ void TransactionView::setModel(WalletModel *_model)
         updateWatchOnlyColumn(_model->wallet().haveWatchOnly());
 
         // Watch-only signal
-        connect(_model, SIGNAL(notifyWatchonlyChanged(bool)), this, SLOT(updateWatchOnlyColumn(bool)));
-        
+        connect(_model, &WalletModel::notifyWatchonlyChanged, this, &TransactionView::updateWatchOnlyColumn);
+
         // Update transaction list with persisted settings
         chooseType(settings.value("transactionType").toInt());
         chooseDate(settings.value("transactionDate").toInt());
@@ -630,8 +631,8 @@ QWidget *TransactionView::createDateRangeWidget()
     dateRangeWidget->setVisible(false);
 
     // Notify on change
-    connect(dateFrom, SIGNAL(dateChanged(QDate)), this, SLOT(dateRangeChanged()));
-    connect(dateTo, SIGNAL(dateChanged(QDate)), this, SLOT(dateRangeChanged()));
+    connect(dateFrom, &QDateTimeEdit::dateChanged, this, &TransactionView::dateRangeChanged);
+    connect(dateTo, &QDateTimeEdit::dateChanged, this, &TransactionView::dateRangeChanged);
 
     return dateRangeWidget;
 }

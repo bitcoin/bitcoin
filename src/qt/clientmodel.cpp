@@ -46,11 +46,11 @@ ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QO
     peerTableModel = new PeerTableModel(m_node, this);
     banTableModel = new BanTableModel(m_node, this);
     pollTimer = new QTimer(this);
-    connect(pollTimer, SIGNAL(timeout()), this, SLOT(updateTimer()));
+    connect(pollTimer, &QTimer::timeout, this, &ClientModel::updateTimer);
     pollTimer->start(MODEL_UPDATE_DELAY);
 
     pollMnTimer = new QTimer(this);
-    connect(pollMnTimer, SIGNAL(timeout()), this, SLOT(updateMnTimer()));
+    connect(pollMnTimer, &QTimer::timeout, this, &ClientModel::updateMnTimer);
     // no need to update as frequent as data for balances/txes/blocks
     pollMnTimer->start(MODEL_UPDATE_DELAY * 4);
 

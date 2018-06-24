@@ -52,7 +52,7 @@ public:
     explicit QRDialog(QWidget *parent = 0);
     ~QRDialog();
 
-    void setModel(OptionsModel *model);
+    void setModel(OptionsModel *_model);
     void setInfo(QString strWindowtitle, QString strQRCode, QString strTextInfo, QString strQRCodeTitle);
 
 private Q_SLOTS:

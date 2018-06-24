@@ -47,7 +47,7 @@ ProposalTableModel::ProposalTableModel(interfaces::Node& node, const PlatformSty
     
     networkManager = new QNetworkAccessManager(this);
 
-    connect(networkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(onResult(QNetworkReply*)));
+    connect(networkManager, &QNetworkAccessManager::finished, this, &ProposalTableModel::onResult);
 
     refreshProposals();
 }
