@@ -241,6 +241,7 @@ See detailed [change log](https://github.com/dashpay/dash/compare/v0.12.2.3...da
 - [`2c04504f1`](https://github.com/dashpay/dash/commit/2c04504f1) Refactor IS votes processing (#1951)
 
 ### PrivateSend:
+- [`0d5426343`](https://github.com/dashpay/dash/commit/0d5426343) Fix an edge case in PrepareDenominate (#2138)
 - [`8e129877a`](https://github.com/dashpay/dash/commit/8e129877a) Partially revert 1922 (#2108)
 - [`fcac40ab4`](https://github.com/dashpay/dash/commit/fcac40ab4) RPC: fix wallet lock check in `privatesend start` (#2102)
 - [`dbbedc031`](https://github.com/dashpay/dash/commit/dbbedc031) Fix JoinExistingQueue bug (#2100)
@@ -336,6 +337,7 @@ See detailed [change log](https://github.com/dashpay/dash/compare/v0.12.2.3...da
 - [`e30009c31`](https://github.com/dashpay/dash/commit/e30009c31) Fix qt and fontconfig depends #1884
 
 ### Docs:
+- [`d46dc0f56`](https://github.com/dashpay/dash/commit/d46dc0f56) Update release notes (#2135)
 - [`d076ad4ce`](https://github.com/dashpay/dash/commit/d076ad4ce) Update release notes and staging tree in README (#2116)
 - [`ca2eae6e6`](https://github.com/dashpay/dash/commit/ca2eae6e6) 12.3 release notes draft (#2045)
 - [`faeb4480a`](https://github.com/dashpay/dash/commit/faeb4480a) Update manpages with ./contrib/devtools/gen-manpages.sh (#2088)
@@ -348,6 +350,8 @@ See detailed [change log](https://github.com/dashpay/dash/compare/v0.12.2.3...da
 - [`3dc62106b`](https://github.com/dashpay/dash/commit/3dc62106b) [Docs] Doxygen config update (#1796)
 
 ### Other fixes and improvements:
+- [`9af9d57b4`](https://github.com/dashpay/dash/commit/9af9d57b4) Release 0.12.3 (#2145)
+- [`8e6364694`](https://github.com/dashpay/dash/commit/8e6364694) Bump SERIALIZATION_VERSION_STRINGs (#2136)
 - [`641070521`](https://github.com/dashpay/dash/commit/641070521) Fix 2 small issues in sporks module (#2133)
 - [`97b9b4fed`](https://github.com/dashpay/dash/commit/97b9b4fed) Bump nMinimumChainWork, defaultAssumeValid and checkpoints (#2130)
 - [`1c9917e22`](https://github.com/dashpay/dash/commit/1c9917e22) Fix CVE-2018-12356 by hardening the regex (#2126)
@@ -439,6 +443,7 @@ Thanks to everyone who directly contributed to this release:
 - Codarren Velvindron
 - crowning-
 - gladcow
+- InhumanPerfection
 - Kamil Woźniak
 - Nathan Marley
 - Oleg Girko
