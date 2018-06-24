@@ -8,7 +8,6 @@
 #include <hash.h>
 #include <tinyformat.h>
 #include <utilstrencodings.h>
-#include <streams.h>
 
 std::string COutPoint::ToString() const
 {
@@ -95,6 +94,16 @@ std::string CTxOutBase::ToString() const
             CTxOutData *dout = (CTxOutData*)this;
             return strprintf("CTxOutData(data=%s)", HexStr(dout->vData).substr(0, 30));
             }
+        case OUTPUT_CT:
+            {
+            CTxOutCT *cto = (CTxOutCT*)this;
+            return strprintf("CTxOutCT(data=%s, scriptPubKey=%s)", HexStr(cto->vData).substr(0, 30), HexStr(cto->scriptPubKey).substr(0, 30));
+            }
+        case OUTPUT_RINGCT:
+            {
+            CTxOutRingCT *rcto = (CTxOutRingCT*)this;
+            return strprintf("CTxOutRingCT(data=%s, pk=%s)", HexStr(rcto->vData).substr(0, 30), HexStr(rcto->pk).substr(0, 30));
+            }
         default:
             break;
     };
@@ -115,15 +124,25 @@ std::vector<CTxOutBaseRef> DeepCopy(const std::vector<CTxOutBaseRef> &from)
     {
         switch (from[i]->GetType())
         {
-            case OUTPUT_STANDARD:   vpout[i] = MAKE_OUTPUT<CTxOutStandard>();   break;
-            case OUTPUT_CT:         vpout[i] = MAKE_OUTPUT<CTxOutCT>();         break;
-            case OUTPUT_RINGCT:     vpout[i] = MAKE_OUTPUT<CTxOutRingCT>();     break;
-            case OUTPUT_DATA:       vpout[i] = MAKE_OUTPUT<CTxOutData>();       break;
-            default:                                                            break;
+            case OUTPUT_STANDARD:
+                vpout[i] = MAKE_OUTPUT<CTxOutStandard>();
+                *((CTxOutStandard*)vpout[i].get()) = *((CTxOutStandard*)from[i].get());
+                break;
+            case OUTPUT_CT:
+                vpout[i] = MAKE_OUTPUT<CTxOutCT>();
+                *((CTxOutCT*)vpout[i].get()) = *((CTxOutCT*)from[i].get());
+                break;
+            case OUTPUT_RINGCT:
+                vpout[i] = MAKE_OUTPUT<CTxOutRingCT>();
+                *((CTxOutRingCT*)vpout[i].get()) = *((CTxOutRingCT*)from[i].get());
+                break;
+            case OUTPUT_DATA:
+                vpout[i] = MAKE_OUTPUT<CTxOutData>();
+                *((CTxOutData*)vpout[i].get()) = *((CTxOutData*)from[i].get());
+                break;
+            default:
+                break;
         };
-        CDataStream s(SER_NETWORK, PROTOCOL_VERSION);
-        s << *from[i];
-        s >> *vpout[i];
     };
 
     return vpout;
