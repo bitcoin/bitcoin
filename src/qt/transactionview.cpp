@@ -22,13 +22,13 @@
 #include <QComboBox>
 #include <QDateTimeEdit>
 #include <QDesktopServices>
-#include <QDoubleValidator>
 #include <QHBoxLayout>
 #include <QHeaderView>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMenu>
 #include <QPoint>
+#include <QRegExpValidator>
 #include <QScrollBar>
 #include <QSignalMapper>
 #include <QTableView>
@@ -100,7 +100,24 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
 #endif
     hlayout->addWidget(search_widget);
 
-    amountWidget = new QLineEdit(this);
+    class MinAmountWidget : public QLineEdit {
+    public:
+        MinAmountWidget(QWidget* parent) : QLineEdit(parent) {}
+    protected:
+        bool event(QEvent* event)
+        {
+            if (event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease) {
+                QKeyEvent* key_event = static_cast<QKeyEvent*>(event);
+                if (key_event->key() == Qt::Key_Comma) {
+                    // Translate a comma into a period
+                    QKeyEvent period_key_event(event->type(), Qt::Key_Period, key_event->modifiers(), ".", key_event->isAutoRepeat(), key_event->count());
+                    return QLineEdit::event(&period_key_event);
+                }
+            }
+            return QLineEdit::event(event);
+        }
+    };
+    amountWidget = new MinAmountWidget(this);
 #if QT_VERSION >= 0x040700
     amountWidget->setPlaceholderText(tr("Min amount"));
 #endif
@@ -109,7 +126,8 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     } else {
         amountWidget->setFixedWidth(100);
     }
-    amountWidget->setValidator(new QDoubleValidator(0, 1e20, 8, this));
+    // Match max 20 digits ignoring whitespaces, optional period followed by max 8 digits
+    amountWidget->setValidator(new QRegExpValidator(QRegExp("(\\s*[0-9]\\s*){1,20}([.][0-9]{1,8})?|[.][0-9]{1,8}"), this));
     hlayout->addWidget(amountWidget);
 
     // Delay before filtering transactions in ms
