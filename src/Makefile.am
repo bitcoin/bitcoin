@@ -235,6 +235,7 @@ libbitcoin_server_a_SOURCES = \
   rpc/net.cpp \
   rpc/rawtransaction.cpp \
   rpc/server.cpp \
+  rpc/util.cpp \
   script/sigcache.cpp \
   timedata.cpp \
   torcontrol.cpp \
@@ -392,7 +393,6 @@ libbitcoin_util_a_SOURCES = \
   logging.cpp \
   random.cpp \
   rpc/protocol.cpp \
-  rpc/util.cpp \
   support/cleanse.cpp \
   sync.cpp \
   threadinterrupt.cpp \
