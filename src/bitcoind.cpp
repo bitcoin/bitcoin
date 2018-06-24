@@ -42,10 +42,7 @@
 
 static void WaitForShutdown()
 {
-    while (!ShutdownRequested())
-    {
-        MilliSleep(200);
-    }
+    BlockUntilShutdownRequested();
     Interrupt();
 }
 

@@ -23,6 +23,8 @@ class thread_group;
 
 void StartShutdown();
 bool ShutdownRequested();
+/* Block until shutdown requested - this can only be called from one thread. */
+void BlockUntilShutdownRequested();
 /** Interrupt threads */
 void Interrupt();
 void Shutdown();

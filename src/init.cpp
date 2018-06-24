@@ -140,14 +140,59 @@ static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
 //
 
 std::atomic<bool> fRequestShutdown(false);
+#ifdef WIN32
+CSemaphore shutdown_barrier(0);
+#else
+// On POSIX systems use a pipe to be notified of shutdown - this is the only method
+// that is safe with signal handling.
+int g_shutdown_pipe[2] = {-1,-1};
+#endif
 
 void StartShutdown()
 {
+    if (fRequestShutdown) // Avoid writing to pipe multiple times for multiple signals
+        return;
     fRequestShutdown = true;
+#ifdef WIN32
+    shutdown_barrier.post();
+#else
+    static const char ch = 0;
+    (void)write(g_shutdown_pipe[1], &ch, 1);
+#endif
 }
+
 bool ShutdownRequested()
 {
     return fRequestShutdown;
+}
+
+void BlockUntilShutdownRequested()
+{
+#ifdef WIN32
+    shutdown_barrier.wait();
+#else
+    char ch;
+    (void)read(g_shutdown_pipe[0], &ch, 1);
+#endif
+}
+
+bool StartShutdownNotification()
+{
+#ifdef WIN32
+    // Nothing to do, shutdown_barrier is pre-initialized
+    return true;
+#else
+    return pipe(g_shutdown_pipe) == 0;
+#endif
+}
+
+void StopShutdownNotification()
+{
+#ifndef WIN32
+    close(g_shutdown_pipe[0]);
+    close(g_shutdown_pipe[1]);
+    g_shutdown_pipe[0] = g_shutdown_pipe[1] = -1;
+#endif
 }
 
 /**
@@ -299,6 +344,7 @@ void Shutdown()
     g_wallet_init_interface.Close();
     globalVerifyHandle.reset();
     ECC_Stop();
+    StopShutdownNotification();
     LogPrintf("%s: done\n", __func__);
 }
 
@@ -310,7 +356,7 @@ void Shutdown()
 #ifndef WIN32
 static void HandleSIGTERM(int)
 {
-    fRequestShutdown = true;
+    StartShutdown();
 }
 
 static void HandleSIGHUP(int)
@@ -320,7 +366,7 @@ static void HandleSIGHUP(int)
 #else
 static BOOL WINAPI consoleCtrlHandler(DWORD dwCtrlType)
 {
-    fRequestShutdown = true;
+    StartShutdown();
     Sleep(INFINITE);
     return true;
 }
@@ -1242,6 +1288,9 @@ bool AppInitMain()
 #ifndef WIN32
     CreatePidFile(GetPidFile(), getpid());
 #endif
+    if (!StartShutdownNotification()) {
+        return InitError("Unable to create shutdown notification.");
+    }
     if (g_logger->m_print_to_file) {
         if (gArgs.GetBoolArg("-shrinkdebugfile", g_logger->DefaultShrinkDebugFile())) {
             // Do this first since it both loads a bunch of debug.log into memory,
