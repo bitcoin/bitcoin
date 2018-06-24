@@ -154,6 +154,12 @@ class WalletTest(BitcoinTestFramework):
             raw_tx = self.nodes[0].createrawtransaction(inputs, outputs)
             txns_to_send.append(self.nodes[0].signrawtransactionwithwallet(raw_tx))
 
+        # Verify that an unspent output can be locked
+        output_0 = {"txid": node0utxos[0]["txid"], "vout": node0utxos[0]["vout"]}
+        assert_equal(self.nodes[0].listlockunspent(), [])
+        assert(self.nodes[0].lockunspent(False, [output_0]))
+        assert_equal(self.nodes[0].listlockunspent(), [output_0])
+
         # Have node 1 (miner) send the transactions
         self.nodes[1].sendrawtransaction(txns_to_send[0]["hex"], True)
         self.nodes[1].sendrawtransaction(txns_to_send[1]["hex"], True)
@@ -166,8 +172,12 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(self.nodes[2].getbalance(), 94)
 
         # Verify that a spent output cannot be locked anymore
-        spent_0 = {"txid": node0utxos[0]["txid"], "vout": node0utxos[0]["vout"]}
-        assert_raises_rpc_error(-8, "Invalid parameter, expected unspent output", self.nodes[0].lockunspent, False, [spent_0])
+        assert_raises_rpc_error(-8, "Invalid parameter, expected unspent output", self.nodes[0].lockunspent, False, [output_0])
+
+        # Verify that a spent output can be unlocked
+        assert_equal(self.nodes[0].listlockunspent(), [output_0])
+        assert(self.nodes[0].lockunspent(True, [output_0]))
+        assert_equal(self.nodes[0].listlockunspent(), [])
 
         # Send 10 BTC normal
         address = self.nodes[0].getnewaddress("test")
