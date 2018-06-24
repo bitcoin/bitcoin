@@ -49,6 +49,7 @@ QT_END_NAMESPACE
 
 namespace GUIUtil {
 class ClickableLabel;
+class ClickableProgressBar;
 }
 
 /**
@@ -101,9 +102,9 @@ private:
     QLabel* labelWalletHDStatusIcon = nullptr;
     GUIUtil::ClickableLabel* labelProxyIcon = nullptr;
     GUIUtil::ClickableLabel* connectionsControl = nullptr;
-    QLabel* labelBlocksIcon = nullptr;
+    GUIUtil::ClickableLabel* labelBlocksIcon = nullptr;
     QLabel* progressBarLabel = nullptr;
-    QProgressBar* progressBar = nullptr;
+    GUIUtil::ClickableProgressBar* progressBar = nullptr;
     QProgressDialog* progressDialog = nullptr;
 
     QMenuBar* appMenuBar = nullptr;
@@ -227,7 +228,7 @@ private:
     /** Set the proxy-enabled icon as shown in the UI. */
     void updateProxyIcon();
 
-private Q_SLOTS:
+public Q_SLOTS:
 #ifdef ENABLE_WALLET
     /** Switch to overview (home) page */
     void gotoOverviewPage();
@@ -262,7 +263,8 @@ private Q_SLOTS:
 #endif
 
     /** Show window if hidden, unminimize when minimized, rise when obscured or show if hidden and fToggleHidden is true */
-    void showNormalIfMinimized(bool fToggleHidden = false);
+    void showNormalIfMinimized() { showNormalIfMinimized(false); }
+    void showNormalIfMinimized(bool fToggleHidden);
     /** Simply calls showNormalIfMinimized(true) for use in SLOT() macro */
     void toggleHidden();
 
