@@ -49,6 +49,7 @@
 #include <QDoubleValidator>
 #include <QFileDialog>
 #include <QFont>
+#include <QFontDatabase>
 #include <QLineEdit>
 #include <QSettings>
 #include <QTextDocument> // for Qt::mightBeRichText
@@ -56,10 +57,6 @@
 #include <QUrlQuery>
 #include <QMouseEvent>
 
-
-#if QT_VERSION >= 0x50200
-#include <QFontDatabase>
-#endif
 
 static fs::detail::utf8_codecvt_facet utf8;
 
@@ -87,7 +84,7 @@ QString dateTimeStr(qint64 nTime)
 
 QFont fixedPitchFont()
 {
-#if QT_VERSION >= 0x50200
+#if QT_VERSION >= 0x050200
     return QFontDatabase::systemFont(QFontDatabase::FixedFont);
 #else
     QFont font("Monospace");
