@@ -11,6 +11,7 @@
 #include <crypto/sha256.h>
 #include <miner.h>
 #include <policy/policy.h>
+#include <pow.h>
 #include <scheduler.h>
 #include <script/standard.h>
 #include <txdb.h>
