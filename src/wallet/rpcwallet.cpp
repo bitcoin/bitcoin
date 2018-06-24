@@ -1387,9 +1387,7 @@ public:
     bool operator()(const CScriptID &scriptID) {
         CScript subscript;
         if (pwallet && pwallet->GetCScript(scriptID, subscript)) {
-            int witnessversion;
-            std::vector<unsigned char> witprog;
-            if (subscript.IsWitnessProgram(witnessversion, witprog)) {
+            if (subscript.IsWitnessProgram()) {
                 ExtractDestination(subscript, result);
                 already_witness = true;
                 return true;
