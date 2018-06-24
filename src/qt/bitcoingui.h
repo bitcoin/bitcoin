@@ -76,7 +76,7 @@ public:
     bool removeWallet(WalletModel* walletModel);
     void removeAllWallets();
 #endif // ENABLE_WALLET
-    bool enableWallet;
+    bool enableWallet = false;
 
 protected:
     void changeEvent(QEvent *e);
@@ -90,68 +90,68 @@ private:
     interfaces::Node& m_node;
     std::unique_ptr<interfaces::Handler> m_handler_message_box;
     std::unique_ptr<interfaces::Handler> m_handler_question;
-    ClientModel *clientModel;
-    WalletFrame *walletFrame;
+    ClientModel* clientModel = nullptr;
+    WalletFrame* walletFrame = nullptr;
 
-    UnitDisplayStatusBarControl *unitDisplayControl;
-    QLabel *labelWalletEncryptionIcon;
-    QLabel *labelWalletHDStatusIcon;
-    QLabel *labelProxyIcon;
-    QLabel *connectionsControl;
-    QLabel *labelBlocksIcon;
-    QLabel *progressBarLabel;
-    QProgressBar *progressBar;
-    QProgressDialog *progressDialog;
+    UnitDisplayStatusBarControl* unitDisplayControl = nullptr;
+    QLabel* labelWalletEncryptionIcon = nullptr;
+    QLabel* labelWalletHDStatusIcon = nullptr;
+    QLabel* labelProxyIcon = nullptr;
+    QLabel* connectionsControl = nullptr;
+    QLabel* labelBlocksIcon = nullptr;
+    QLabel* progressBarLabel = nullptr;
+    QProgressBar* progressBar = nullptr;
+    QProgressDialog* progressDialog = nullptr;
 
-    QMenuBar *appMenuBar;
-    QToolBar *appToolBar;
-    QAction *overviewAction;
-    QAction *historyAction;
-    QAction *masternodeAction;
-    QAction *quitAction;
-    QAction *sendCoinsAction;
-    QAction *sendCoinsMenuAction;
-    QAction *usedSendingAddressesAction;
-    QAction *usedReceivingAddressesAction;
-    QAction *signMessageAction;
-    QAction *verifyMessageAction;
-    QAction *aboutAction;
-    QAction *receiveCoinsAction;
-    QAction *receiveCoinsMenuAction;
-    QAction *optionsAction;
-    QAction *toggleHideAction;
-    QAction *encryptWalletAction;
-    QAction *backupWalletAction;
-    QAction *changePassphraseAction;
-    QAction *aboutQtAction;
-    QAction *openInfoAction;
-    QAction *openRPCConsoleAction;
-    QAction *openGraphAction;
-    QAction *openPeersAction;
-    QAction *openConfEditorAction;
-    QAction *openMNConfEditorAction;
-    QAction *showBackupsAction;
-    QAction *openAction;
-    QAction *showHelpMessageAction;
-    QAction *showPrivateSendHelpAction;
-    QAction *proposalAction;
-    QAction *m_wallet_selector_label_action = nullptr;
-    QAction *m_wallet_selector_action = nullptr;
+    QMenuBar* appMenuBar = nullptr;
+    QToolBar* appToolBar = nullptr;
+    QAction* overviewAction = nullptr;
+    QAction* historyAction = nullptr;
+    QAction *masternodeAction = nullptr;
+    QAction* quitAction = nullptr;
+    QAction* sendCoinsAction = nullptr;
+    QAction* sendCoinsMenuAction = nullptr;
+    QAction* usedSendingAddressesAction = nullptr;
+    QAction* usedReceivingAddressesAction = nullptr;
+    QAction* signMessageAction = nullptr;
+    QAction* verifyMessageAction = nullptr;
+    QAction* aboutAction = nullptr;
+    QAction* receiveCoinsAction = nullptr;
+    QAction* receiveCoinsMenuAction = nullptr;
+    QAction* optionsAction = nullptr;
+    QAction* toggleHideAction = nullptr;
+    QAction* encryptWalletAction = nullptr;
+    QAction* backupWalletAction = nullptr;
+    QAction* changePassphraseAction = nullptr;
+    QAction* aboutQtAction = nullptr;
+    QAction *openInfoAction = nullptr;
+    QAction* openRPCConsoleAction = nullptr;
+    QAction *openGraphAction = nullptr;
+    QAction *openPeersAction = nullptr;
+    QAction *openConfEditorAction = nullptr;
+    QAction *openMNConfEditorAction = nullptr;
+    QAction *showBackupsAction = nullptr;
+    QAction *openAction = nullptr;
+    QAction *showHelpMessageAction = nullptr;
+    QAction *showPrivateSendHelpAction = nullptr;
+    QAction *proposalAction = nullptr;
+    QAction* m_wallet_selector_label_action = nullptr;
+    QAction* m_wallet_selector_action = nullptr;
 
     QLabel *m_wallet_selector_label = nullptr;
-    QComboBox *m_wallet_selector;
+    QComboBox* m_wallet_selector = nullptr;
 
-    QSystemTrayIcon *trayIcon;
-    QMenu *trayIconMenu;
-    QMenu *dockIconMenu;
-    Notificator *notificator;
-    RPCConsole *rpcConsole;
-    HelpMessageDialog *helpMessageDialog;
-    ModalOverlay *modalOverlay;
+    QSystemTrayIcon* trayIcon = nullptr;
+    QMenu* trayIconMenu = nullptr;
+    QMenu *dockIconMenu = nullptr;
+    Notificator* notificator = nullptr;
+    RPCConsole* rpcConsole = nullptr;
+    HelpMessageDialog* helpMessageDialog = nullptr;
+    ModalOverlay* modalOverlay = nullptr;
 
     /** Keep track of previous number of blocks, to detect progress */
-    int prevBlocks;
-    int spinnerFrame;
+    int prevBlocks = 0;
+    int spinnerFrame = 0;
 
     const PlatformStyle *platformStyle;
 
