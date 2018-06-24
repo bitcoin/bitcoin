@@ -200,7 +200,7 @@ bool WalletInit::Verify() const
     // Keep track of each wallet absolute path to detect duplicates.
     std::set<fs::path> wallet_paths;
 
-    for (const auto wallet_file : wallet_files) {
+    for (const auto& wallet_file : wallet_files) {
         fs::path wallet_path = fs::absolute(wallet_file, GetWalletDir());
 
         if (!wallet_paths.insert(wallet_path).second) {
