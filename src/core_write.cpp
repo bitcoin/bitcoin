@@ -70,6 +70,23 @@ const std::map<unsigned char, std::string> mapSigHashTypes = {
     {static_cast<unsigned char>(SIGHASH_SINGLE|SIGHASH_ANYONECANPAY), std::string("SINGLE|ANYONECANPAY")},
 };
 
+std::string SighashToStr(unsigned char sighash_type)
+{
+    const auto& it = mapSigHashTypes.find(sighash_type);
+    if (it == mapSigHashTypes.end()) return "";
+    return it->second;
+}
+
+std::vector<uint8_t> Uint32ToUint8VectorLE(uint32_t in)
+{
+    std::vector<uint8_t> bytes;
+    bytes.push_back(in);
+    bytes.push_back(in >> 8);
+    bytes.push_back(in >> 16);
+    bytes.push_back(in >> 24);
+    return bytes;
+}
+
 /**
  * Create the assembly string representation of a CScript object.
  * @param[in] script    CScript object to convert into the asm string representation.

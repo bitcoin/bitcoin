@@ -91,6 +91,15 @@ public:
                ((uint64_t)ptr[7]) << 56;
     }
 
+    uint32_t GetUint32LE(int pos) const
+    {
+        const uint8_t* ptr = data + pos * 4;
+        return ((uint32_t)ptr[0]) | \
+               ((uint32_t)ptr[1]) << 8 | \
+               ((uint32_t)ptr[2]) << 16 | \
+               ((uint32_t)ptr[3]) << 24;
+    }
+
     template<typename Stream>
     void Serialize(Stream& s) const
     {
