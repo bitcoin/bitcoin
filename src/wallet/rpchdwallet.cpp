@@ -6398,12 +6398,18 @@ static UniValue buildscript(const JSONRPCRequest &request)
         throw std::runtime_error(
             "buildscript json\n"
             "\nArguments:\n"
-            "{recipe: , ...}\n"
-            "\nRecipes:\n"
-            "{\"recipe\":\"ifcoinstake\", \"addrstake\":\"addrA\", \"addrspend\":\"addrB\"}"
-            "{\"recipe\":\"abslocktime\", \"time\":timestamp, \"addr\":\"addr\"}"
-            "{\"recipe\":\"rellocktime\", \"time\":timestamp, \"addr\":\"addr\"}"
-            );
+            "1. Recipe (json, required)\n"
+            " {\"recipe\":\"ifcoinstake\", \"addrstake\":\"addrA\", \"addrspend\":\"addrB\"}\n"
+            " {\"recipe\":\"abslocktime\", \"time\":timestamp, \"addr\":\"addr\"}\n"
+            " {\"recipe\":\"rellocktime\", \"time\":timestamp, \"addr\":\"addr\"}\n"
+            "\nResult\n"
+            " {\n"
+            "   \"hex\" : n,        (string) Script as hex\n"
+            "   \"asm\" : n,        (string) Script as asm\n"
+            " }\n"
+            "\nExamples:\n"
+            + HelpExampleCli("buildscript", "\"{\\\"recipe\\\":\\\"ifcoinstake\\\", \\\"addrstake\\\":\\\"addrA\\\", \\\"addrspend\\\":\\\"addrB\\\"}\"")
+            + HelpExampleRpc("buildscript", "\"{\\\"recipe\\\":\\\"ifcoinstake\\\", \\\"addrstake\\\":\\\"addrA\\\", \\\"addrspend\\\":\\\"addrB\\\"}\""));
 
     if (!request.params[0].isObject())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Input must be a json object.");
