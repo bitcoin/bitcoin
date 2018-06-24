@@ -29,6 +29,16 @@ namespace sha256d64_avx2
 void Transform_8way(unsigned char* out, const unsigned char* in);
 }
 
+namespace sha256d64_shani
+{
+void Transform_2way(unsigned char* out, const unsigned char* in);
+}
+
+namespace sha256_shani
+{
+void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks);
+}
+
 // Internal implementation code.
 namespace
 {
@@ -448,6 +458,7 @@ void TransformD64Wrapper(unsigned char* out, const unsigned char* in)
 
 TransformType Transform = sha256::Transform;
 TransformD64Type TransformD64 = sha256::TransformD64;
+TransformD64Type TransformD64_2way = nullptr;
 TransformD64Type TransformD64_4way = nullptr;
 TransformD64Type TransformD64_8way = nullptr;
 
@@ -512,6 +523,13 @@ bool SelfTest() {
     TransformD64(out, data + 1);
     if (!std::equal(out, out + 32, result_d64)) return false;
 
+    // Test TransformD64_2way, if available.
+    if (TransformD64_2way) {
+        unsigned char out[64];
+        TransformD64_2way(out, data + 1);
+        if (!std::equal(out, out + 64, result_d64)) return false;
+    }
+
     // Test TransformD64_4way, if available.
     if (TransformD64_4way) {
         unsigned char out[128];
@@ -556,6 +574,7 @@ std::string SHA256AutoDetect()
     bool have_xsave = false;
     bool have_avx = false;
     bool have_avx2 = false;
+    bool have_shani = false;
     bool enabled_avx = false;
 
     (void)AVXEnabled;
@@ -563,6 +582,7 @@ std::string SHA256AutoDetect()
     (void)have_avx;
     (void)have_xsave;
     (void)have_avx2;
+    (void)have_shani;
     (void)enabled_avx;
 
     uint32_t eax, ebx, ecx, edx;
@@ -576,7 +596,19 @@ std::string SHA256AutoDetect()
     if (have_sse4) {
         cpuid(7, 0, eax, ebx, ecx, edx);
         have_avx2 = (ebx >> 5) & 1;
+        have_shani = (ebx >> 29) & 1;
     }
+
+#if defined(ENABLE_SHANI) && !defined(BUILD_BITCOIN_INTERNAL)
+    if (have_shani) {
+        Transform = sha256_shani::Transform;
+        TransformD64 = TransformD64Wrapper<sha256_shani::Transform>;
+        TransformD64_2way = sha256d64_shani::Transform_2way;
+        ret = "shani(1way,2way)";
+        have_sse4 = false; // Disable SSE4/AVX2;
+        have_avx2 = false;
+    }
+#endif
 
     if (have_sse4) {
 #if defined(__x86_64__) || defined(__amd64__)
@@ -675,6 +707,14 @@ void SHA256D64(unsigned char* out, const unsigned char* in, size_t blocks)
             out += 128;
             in += 256;
             blocks -= 4;
+        }
+    }
+    if (TransformD64_2way) {
+        while (blocks >= 2) {
+            TransformD64_2way(out, in);
+            out += 64;
+            in += 128;
+            blocks -= 2;
         }
     }
     while (blocks) {
