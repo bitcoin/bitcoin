@@ -93,9 +93,6 @@ endif
 # bitcoin core #
 BITCOIN_CORE_H = \
   addrdb.h \
-  addressindex.h \
-  spentindex.h \
-  timestampindex.h \
   rctindex.h \
   addrman.h \
   base58.h \
@@ -234,7 +231,10 @@ BITCOIN_CORE_H = \
   zmq/zmqnotificationinterface.h \
   zmq/zmqpublishnotifier.h \
   usbdevice/usbdevice.h \
-  usbdevice/rpcusbdevice.h
+  usbdevice/rpcusbdevice.h \
+  insight/addressindex.h \
+  insight/spentindex.h \
+  insight/timestampindex.h
 
 
 obj/build.h: FORCE
@@ -249,7 +249,6 @@ libparticl_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libparticl_server_a_SOURCES = \
   addrman.cpp \
   addrdb.cpp \
-  addressindex.cpp \
   bloom.cpp \
   blockencodings.cpp \
   chain.cpp \
@@ -292,6 +291,7 @@ libparticl_server_a_SOURCES = \
   validation.cpp \
   validationinterface.cpp \
   versionbits.cpp \
+  insight/addressindex.cpp \
   $(BITCOIN_CORE_H)
 
 if ENABLE_ZMQ

@@ -15,7 +15,7 @@
 #include <util.h>
 #include <utilmoneystr.h>
 #include <utilstrencodings.h>
-#include <spentindex.h>
+#include <insight/spentindex.h>
 #include <blind.h>
 
 //extern bool GetSpentIndex(CSpentIndexKey &key, CSpentIndexValue &value);

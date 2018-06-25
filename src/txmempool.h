@@ -14,8 +14,8 @@
 #include <string>
 
 
-#include <addressindex.h>
-#include <spentindex.h>
+#include <insight/addressindex.h>
+#include <insight/spentindex.h>
 #include <amount.h>
 #include <coins.h>
 #include <indirectmap.h>

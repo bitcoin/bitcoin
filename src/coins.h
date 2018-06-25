@@ -14,8 +14,8 @@
 #include <serialize.h>
 #include <uint256.h>
 
-#include <addressindex.h>
-#include <spentindex.h>
+#include <insight/addressindex.h>
+#include <insight/spentindex.h>
 #include <rctindex.h>
 
 #include <assert.h>

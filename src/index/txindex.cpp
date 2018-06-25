@@ -255,6 +255,14 @@ bool TxIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
     return m_db->WriteTxs(vPos);
 }
 
+bool TxIndex::EraseBlock(const CBlock& block)
+{
+    for (const auto& tx : block.vtx) {
+
+    }
+    return true;
+}
+
 BaseIndex::DB& TxIndex::GetDB() const { return *m_db; }
 
 bool TxIndex::FindTx(const uint256& tx_hash, uint256& block_hash, CTransactionRef& tx) const

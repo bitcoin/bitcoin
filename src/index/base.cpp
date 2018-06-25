@@ -187,6 +187,18 @@ void BaseIndex::BlockConnected(const std::shared_ptr<const CBlock>& block, const
     }
 }
 
+void BaseIndex::BlockDisconnected(const std::shared_ptr<const CBlock> &pblock)
+{
+    if (!m_synced) {
+        return;
+    }
+    if (!EraseBlock(*pblock)) {
+        FatalError("%s: Failed to erase block %s from index database",
+                   __func__, pblock->GetHash().ToString());
+        return;
+    }
+}
+
 void BaseIndex::ChainStateFlushed(const CBlockLocator& locator)
 {
     if (!m_synced) {

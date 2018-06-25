@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_ADDRESSINDEX_H
-#define BITCOIN_ADDRESSINDEX_H
+#ifndef BITCOIN_INSIGHT_ADDRESSINDEX_H
+#define BITCOIN_INSIGHT_ADDRESSINDEX_H
 
 #include <uint256.h>
 #include <amount.h>
@@ -305,4 +305,4 @@ bool ExtractIndexInfo(const CScript *pScript, int &scriptType, std::vector<uint8
 bool ExtractIndexInfo(const CTxOutBase *out, int &scriptType, std::vector<uint8_t> &hashBytes, CAmount &nValue, const CScript *&pScript);
 
 
-#endif // BITCOIN_ADDRESSINDEX_H
+#endif // BITCOIN_INSIGHT_ADDRESSINDEX_H

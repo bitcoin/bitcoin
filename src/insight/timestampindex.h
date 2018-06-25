@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_TIMESTAMPINDEX_H
-#define BITCOIN_TIMESTAMPINDEX_H
+#ifndef BITCOIN_INSIGHT_TIMESTAMPINDEX_H
+#define BITCOIN_INSIGHT_TIMESTAMPINDEX_H
 
 #include <uint256.h>
 
@@ -128,4 +128,4 @@ struct CTimestampBlockIndexValue {
     }
 };
 
-#endif // BITCOIN_TIMESTAMPINDEX_H
+#endif // BITCOIN_INSIGHT_TIMESTAMPINDEX_H

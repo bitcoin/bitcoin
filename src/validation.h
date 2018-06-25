@@ -18,9 +18,9 @@
 #include <script/script_error.h>
 #include <sync.h>
 #include <versionbits.h>
-#include <spentindex.h>
-#include <addressindex.h>
-#include <timestampindex.h>
+#include <insight/spentindex.h>
+#include <insight/addressindex.h>
+#include <insight/timestampindex.h>
 
 #include <algorithm>
 #include <exception>

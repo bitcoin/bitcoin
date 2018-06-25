@@ -29,6 +29,7 @@ protected:
     bool Init() override;
 
     bool WriteBlock(const CBlock& block, const CBlockIndex* pindex) override;
+    bool EraseBlock(const CBlock& block) override;
 
     BaseIndex::DB& GetDB() const override;
 

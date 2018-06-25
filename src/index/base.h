@@ -61,6 +61,8 @@ protected:
     void BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex,
                         const std::vector<CTransactionRef>& txn_conflicted) override;
 
+    void BlockDisconnected(const std::shared_ptr<const CBlock> &pblock) override;
+
     void ChainStateFlushed(const CBlockLocator& locator) override;
 
     /// Initialize internal state from the database and block index.
@@ -68,6 +70,9 @@ protected:
 
     /// Write update index entries for a newly connected block.
     virtual bool WriteBlock(const CBlock& block, const CBlockIndex* pindex) { return true; }
+
+    /// Undo update index entries for a newly connected block.
+    virtual bool EraseBlock(const CBlock& block) { return true; }
 
     virtual DB& GetDB() const = 0;
 
