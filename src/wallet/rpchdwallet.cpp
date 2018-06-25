@@ -1573,7 +1573,8 @@ static UniValue extkeyimportinternal(const JSONRPCRequest &request, bool fGenesi
         std::vector<uint8_t> vSeed, vEntropy;
 
         // First check the mnemonic is valid
-        if (0 != MnemonicDecode(-1, sMnemonic, vEntropy, sError))
+        int nLanguage = -1;
+        if (0 != MnemonicDecode(nLanguage, sMnemonic, vEntropy, sError))
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("MnemonicDecode failed: %s", sError.c_str()));
 
         if (0 != MnemonicToSeed(sMnemonic, sPassphrase, vSeed))

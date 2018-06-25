@@ -191,7 +191,8 @@ UniValue mnemonic(const JSONRPCRequest &request)
         std::vector<uint8_t> vSeed;
 
         // Decode to determine validity of mnemonic
-        if (0 != MnemonicDecode(-1, sMnemonic, vEntropy, sError))
+        int nLanguage = -1;
+        if (0 != MnemonicDecode(nLanguage, sMnemonic, vEntropy, sError))
             throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("MnemonicDecode failed %s.", sError.c_str()).c_str());
 
         if (0 != MnemonicToSeed(sMnemonic, sPassword, vSeed))
@@ -221,6 +222,8 @@ UniValue mnemonic(const JSONRPCRequest &request)
             eKey58.SetKey(ekMaster, CChainParams::EXT_SECRET_KEY);
             result.pushKV("master", eKey58.ToString());
         };
+
+        result.pushKV("language", MnemonicGetLanguage(nLanguage));
 
         if (sMnemonic.size() > 0)
             memory_cleanse(&sMnemonic[0], sMnemonic.size());

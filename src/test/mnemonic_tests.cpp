@@ -39,13 +39,14 @@ BOOST_AUTO_TEST_CASE(mnemonic_test_fails)
 {
     // Fail tests
 
+    int nLanguage = -1;
     std::string sError;
     std::vector<uint8_t> vEntropy;
     std::string sWords = "legals winner thank year wave sausage worth useful legal winner thank yellow";
-    BOOST_CHECK_MESSAGE(3 == MnemonicDecode(-1, sWords, vEntropy, sError), "MnemonicDecode: " << sError);
+    BOOST_CHECK_MESSAGE(3 == MnemonicDecode(nLanguage, sWords, vEntropy, sError), "MnemonicDecode: " << sError);
 
     sWords = "winner legal thank year wave sausage worth useful legal winner thank yellow";
-    BOOST_CHECK_MESSAGE(5 == MnemonicDecode(-1, sWords, vEntropy, sError), "MnemonicDecode: " << sError);
+    BOOST_CHECK_MESSAGE(5 == MnemonicDecode(nLanguage, sWords, vEntropy, sError), "MnemonicDecode: " << sError);
 }
 
 BOOST_AUTO_TEST_CASE(mnemonic_addchecksum)
@@ -102,7 +103,8 @@ void runTests(int nLanguage, UniValue &tests)
 
         BOOST_CHECK(sWords == sWordsTest);
 
-        BOOST_CHECK_MESSAGE(0 == MnemonicDecode(-1, sWords, vEntropyTest, sError), "MnemonicDecode: " << sError);
+        int nLanguage = -1;
+        BOOST_CHECK_MESSAGE(0 == MnemonicDecode(nLanguage, sWords, vEntropyTest, sError), "MnemonicDecode: " << sError);
         BOOST_CHECK(vEntropy == vEntropyTest);
 
         std::vector<uint8_t> vSeed = ParseHex(sSeed);
