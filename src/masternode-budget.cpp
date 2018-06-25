@@ -1614,11 +1614,11 @@ BudgetDraft::BudgetDraft()
 }
 
 BudgetDraft::BudgetDraft(int nBlockStart, const std::vector<CTxBudgetPayment>& vecBudgetPayments, uint256 nFeeTXHash)
-    : m_autoChecked(false)
+    : fValid(true)
+    , m_autoChecked(false)
     , m_payments(vecBudgetPayments)
     , m_blockStart(nBlockStart)
     , m_feeTransactionHash(nFeeTXHash)
-    , fValid(true)
 {
     boost::sort(this->m_payments, ComparePayments);
 }
