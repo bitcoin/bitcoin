@@ -338,11 +338,9 @@ libparticl_wallet_a_SOURCES = \
   wallet/hdwallet.cpp \
   wallet/hdwalletdb.cpp \
   wallet/rpchdwallet.cpp \
-  pos/miner.cpp \
   blind.cpp \
   key/stealth.cpp \
   pos/miner.cpp \
-  pos/kernel.cpp \
   policy/rbf.cpp \
   wallet/walletutil.cpp \
   wallet/coinselection.cpp \
