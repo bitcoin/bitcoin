@@ -93,8 +93,9 @@ Value mnbudget(const Array& params, bool fHelp)
 
         if (pindexPrev)
         {
-            const int nextBlock = GetNextSuperblock(pindexPrev->nHeight);
-            if (nBlockStart >= nextBlock - GetVotingThreshold())
+            const int64_t submissionBlock = pindexPrev->nHeight + BUDGET_FEE_CONFIRMATIONS + 1;
+            const int64_t nextBlock = GetNextSuperblock(pindexPrev->nHeight);
+            if (submissionBlock >= nextBlock - GetVotingThreshold())
                 return "Sorry, your proposal can not be added as we're too close to the proposal payment. Please submit your proposal for the next proposal payment.";
         }
 
