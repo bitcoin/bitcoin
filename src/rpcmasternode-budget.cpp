@@ -48,8 +48,7 @@ Value mnbudget(const Array& params, bool fHelp)
         CBlockIndex* pindexPrev = chainActive.Tip();
         if(!pindexPrev) return "unknown";
 
-        int nNext = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
-        return nNext;
+        return GetNextSuperblock(pindexPrev->nHeight);
     }
 
     if(strCommand == "prepare")
@@ -80,8 +79,8 @@ Value mnbudget(const Array& params, bool fHelp)
 
         int nBlockStart = params[4].get_int();
         if(nBlockStart % GetBudgetPaymentCycleBlocks() != 0){
-            int nNext = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
-            return strprintf("Invalid block start - must be a budget cycle block. Next valid block: %d", nNext);
+            const int nextBlock = GetNextSuperblock(pindexPrev->nHeight);;
+            return strprintf("Invalid block start - must be a budget cycle block. Next valid block: %d", nextBlock);
         }
 
         int nBlockEnd = nBlockStart + GetBudgetPaymentCycleBlocks() * nPaymentCount;
@@ -91,6 +90,13 @@ Value mnbudget(const Array& params, bool fHelp)
 
         if(nBlockEnd < pindexPrev->nHeight)
             return "Invalid ending block, starting block + (payment_cycle*payments) must be more than current height.";
+
+        if (pindexPrev)
+        {
+            const int nextBlock = GetNextSuperblock(pindexPrev->nHeight);
+            if (nBlockStart >= nextBlock - GetVotingThreshold())
+                return "Sorry, your proposal can not be added as we're too close to the proposal payment. Please submit your proposal for the next proposal payment.";
+        }
 
         CBitcoinAddress address(params[5].get_str());
         if (!address.IsValid())
@@ -153,8 +159,8 @@ Value mnbudget(const Array& params, bool fHelp)
 
         int nBlockStart = params[4].get_int();
         if(nBlockStart % GetBudgetPaymentCycleBlocks() != 0){
-            int nNext = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
-            return strprintf("Invalid block start - must be a budget cycle block. Next valid block: %d", nNext);
+            const int nextBlock = GetNextSuperblock(pindexPrev->nHeight);
+            return strprintf("Invalid block start - must be a budget cycle block. Next valid block: %d", nextBlock);
         }
 
         int nBlockEnd = nBlockStart + (GetBudgetPaymentCycleBlocks()*nPaymentCount);
@@ -186,10 +192,6 @@ Value mnbudget(const Array& params, bool fHelp)
         if(!masternodeSync.IsBlockchainSynced()){
             return "Must wait for client to sync with masternode network. Try again in a minute or so.";            
         }
-
-        // if(!budgetProposalBroadcast.IsValid(strError)){
-        //     return "Proposal is not valid - " + budgetProposalBroadcast.GetHash().ToString() + " - " + strError;
-        // }
 
         budget.mapSeenMasternodeBudgetProposals.insert(make_pair(budgetProposalBroadcast.GetHash(), budgetProposalBroadcast));
         budgetProposalBroadcast.Relay();
