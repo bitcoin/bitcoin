@@ -196,6 +196,7 @@ class RavenTestFramework():
 
     def setup_network(self):
         """Override this method to customize test network topology"""
+        self.log.info("Running setup_network")
         self.setup_nodes()
 
         # Connect the nodes as a "chain".  This allows us
@@ -207,6 +208,7 @@ class RavenTestFramework():
 
     def setup_nodes(self):
         """Override this method to customize test node setup"""
+        self.log.info("Running setup_nodes")
         extra_args = None
         if hasattr(self, "extra_args"):
             extra_args = self.extra_args

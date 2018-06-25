@@ -49,9 +49,12 @@ struct CAssetOutputEntry;
 class CAssets {
 public:
     std::map<std::string, std::set<COutPoint> > mapMyUnspentAssets; // Asset Name -> COutPoint
+
+
     std::map<std::string, std::set<std::string> > mapAssetsAddresses; // Asset Name -> set <Addresses>
     std::map<std::pair<std::string, std::string>, CAmount> mapAssetsAddressAmount; // pair < Asset Name , Address > -> Quantity of tokens in the address
 
+    // Dirty, Gets wiped once flushed to database
     std::map<std::string, CNewAsset> mapReissuedAssetData; // Asset Name -> New Asset Data
 
     CAssets(const CAssets& assets) {
@@ -273,6 +276,7 @@ public :
         setChangeOwnedOutPoints.clear();
 
         mapReissuedAssetData.clear();
+        mapAssetsAddressAmount.clear();
 
         // Copy sets of possibilymine
         setPossiblyMineAdd.clear();
@@ -330,4 +334,7 @@ void UpdatePossibleAssets();
 bool GetAssetFromCoin(const Coin& coin, std::string& strName, CAmount& nAmount);
 
 void GetAssetData(const CScript& script, CAssetOutputEntry& data);
+
+bool GetBestAssetAddressAmount(CAssetsCache& cache, const std::string& assetName, const std::string& address);
+
 #endif //RAVENCOIN_ASSET_PROTOCOL_H
