@@ -74,6 +74,7 @@ BITCOIN_TESTS =\
   test/transaction_tests.cpp \
   test/univalue_tests.cpp \
   test/util_tests.cpp \
+  test/score_tests.cpp \
   test/db_tests.cpp
 
 if ENABLE_WALLET
