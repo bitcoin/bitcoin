@@ -546,7 +546,6 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
                         throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, the format must follow { \"transfer\": {\"asset_name\": amount, ...} }"));
 
                     UniValue asset_quantity;
-                    int idx = 0;
                     for (auto asset_name : keys) {
                         asset_quantity = find_value(transferData, asset_name);
 
@@ -568,10 +567,8 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
                         transfer.ConstructTransaction(scriptPubKey);
 
                         // Push into vouts
-                        CTxOut out(idx, scriptPubKey);
+                        CTxOut out(0, scriptPubKey);
                         rawTx.vout.push_back(out);
-
-                        idx++;
                     }
                 }
                 else {

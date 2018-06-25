@@ -22,4 +22,10 @@
 "[{\"txid\":\"de5dfcf2e4372e341adb8cca743517f766dc421f75e052e66f1235a3636a1f91\",\"vout\":0}]" "{\"mssiSaYW18h3vj8LpqdNjjNjYsAPvg7sWB\": 500, \"n31k7MYxWTevfdioKC2gNTJTPQkmmtkUYe\": 749.988, \"muX3sYGaRuDi59TQwyMus6r5d4Fxoafc2a\": {\"issue\": {\"name_length\": 3, \"asset_name\": \"RAVEN\", \"asset_quantity\": 20, \"units\": 1, \"reissuable\": 0, \"has_ipfs\": 1, \"ipfs_hash\" : \"43f81c6f2c0593bde5a85e09ae662816eca80797\"}}}"
 
 
+
+
+transfer example
+"[{\"txid\":\"59420e8a36b2c4258a936f9a7b0f1259c927f021bcf035deb264829216368e1c\",\"vout\":0}, {\"txid\":\"01c7b733ec8ebe3a653ee0485830ec40d2b203ec232e540cfcf45ac4abedb569\",\"vout\":3}]" "{\"n2NKWBsA2wFqK7yBuazviueHGT7GXu7KtS\": 4999.988, \"mwfL6voyJhhPngjQG2HvaL9Kero4jwmxeZ\": {\"transfer\": {\"JEREMY\": 98}}, \"n182d3SGGdspDjBPipgwuL7Fafr52GnCcR\": {\"transfer\": {\"JEREMY\": 1}}}"
+
+
 "[{\"txid\":\"5c6dc6c2942d01d0b181a69616284514085b01d200be94865b19ec1bdd59dcac\",\"vout\":1}]" "{\"n3C2qrCma88RRQ39fQPumLBaFSuwUePcVc\":98999.998}"

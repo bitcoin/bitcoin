@@ -409,7 +409,23 @@ static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignature
             result.witness.push_back(valtype(pubKey2.begin(), pubKey2.end()));
             return result;
         }
-    default:
+    case TX_TRANSFER_ASSET:
+        // Signatures are bigger than placeholders or empty scripts:
+        if (sigs1.script.empty() || sigs1.script[0].empty())
+            return sigs2;
+        return sigs1;
+    case TX_NEW_ASSET:
+        // Signatures are bigger than placeholders or empty scripts:
+        if (sigs1.script.empty() || sigs1.script[0].empty())
+            return sigs2;
+        return sigs1;
+    case TX_REISSUE_ASSET:
+        // Signatures are bigger than placeholders or empty scripts:
+        if (sigs1.script.empty() || sigs1.script[0].empty())
+            return sigs2;
+        return sigs1;
+
+        default:
         return Stacks();
     }
 }
