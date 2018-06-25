@@ -668,6 +668,15 @@ bool CSystemnodeBroadcast::Create(std::string strService, std::string strKeySyst
         return false;
     }
 
+    int age = GetInputAge(txin);
+    if (age < SYSTEMNODE_MIN_CONFIRMATIONS)
+    {
+        strErrorMessage = strprintf("Input must have at least %d confirmations. Now it has %d",
+                                     SYSTEMNODE_MIN_CONFIRMATIONS, age);
+        LogPrintf("CSystemnodeBroadcast::Create -- %s\n", strErrorMessage);
+        return false;
+    }
+
     CService service = CService(strService);
     if(Params().NetworkID() == CBaseChainParams::MAIN) {
         if(service.GetPort() != 9340) {

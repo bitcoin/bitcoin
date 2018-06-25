@@ -621,6 +621,21 @@ void MasternodeList::VoteMany(std::string strCommand)
     uint256 hash;
     hash.SetHex(strHash);
 
+    const int blockStart = ui->tableWidgetVoting->item(r, 3)->text().toInt();
+    const int blockEnd = ui->tableWidgetVoting->item(r, 4)->text().toInt();
+    if (!budget.CanSubmitVotes(blockStart, blockEnd))
+    {
+        QMessageBox::critical(
+            this,
+            tr("Voting Details"),
+            tr(
+                "Sorry, your vote has not been added to the proposal. "
+                "The proposal voting is currently disabled as we're too close to the proposal payment."
+            )
+        );
+        return;
+    }
+
     int success = 0;
     int failed = 0;
     std::string statusObj;
@@ -673,6 +688,7 @@ void MasternodeList::VoteMany(std::string strCommand)
 
     QMessageBox msg;
     msg.setText(QString::fromStdString(returnObj));
+    msg.setWindowTitle(tr("Voting Details"));
     msg.exec();
     updateVoteList(true);
 }

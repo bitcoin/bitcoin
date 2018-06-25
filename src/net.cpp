@@ -467,6 +467,11 @@ void CNode::CloseSocketDisconnect()
         vRecvMsg.clear();
 }
 
+void CNode::PushTxLockedList()
+{
+    PushMessage("txllist");
+}
+
 void CNode::PushVersion()
 {
     int nBestHeight = g_signals.GetHeight().get_value_or(0);
@@ -2069,7 +2074,10 @@ CNode::CNode(SOCKET hSocketIn, CAddress addrIn, std::string addrNameIn, bool fIn
 
     // Be shy and don't send version until we hear
     if (hSocket != INVALID_SOCKET && !fInbound)
+    {
         PushVersion();
+        PushTxLockedList();
+    }
 
     GetNodeSignals().InitializeNode(GetId(), this);
 }
