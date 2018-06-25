@@ -4083,13 +4083,13 @@ bool static AlreadyHave(const CInv& inv)
         }
         return false;
     case MSG_BUDGET_FINALIZED_VOTE:
-        if(budget.mapSeenFinalizedBudgetVotes.count(inv.hash)) {
+        if(budget.mapSeenBudgetDraftVotes.count(inv.hash)) {
             masternodeSync.AddedBudgetItem(inv.hash);
             return true;
         }
         return false;
     case MSG_BUDGET_FINALIZED:
-        if(budget.mapSeenFinalizedBudgets.count(inv.hash)) {
+        if(budget.mapSeenBudgetDrafts.count(inv.hash)) {
             masternodeSync.AddedBudgetItem(inv.hash);
             return true;
         }
@@ -4287,20 +4287,20 @@ void static ProcessGetData(CNode* pfrom)
                 }
 
                 if (!pushed && inv.type == MSG_BUDGET_FINALIZED_VOTE) {
-                    if(budget.mapSeenFinalizedBudgetVotes.count(inv.hash)){
+                    if(budget.mapSeenBudgetDraftVotes.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << budget.mapSeenFinalizedBudgetVotes[inv.hash];
+                        ss << budget.mapSeenBudgetDraftVotes[inv.hash];
                         pfrom->PushMessage("fbvote", ss);
                         pushed = true;
                     }
                 }
 
                 if (!pushed && inv.type == MSG_BUDGET_FINALIZED) {
-                    if(budget.mapSeenFinalizedBudgets.count(inv.hash)){
+                    if(budget.mapSeenBudgetDrafts.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << budget.mapSeenFinalizedBudgets[inv.hash];
+                        ss << budget.mapSeenBudgetDrafts[inv.hash];
                         pfrom->PushMessage("fbs", ss);
                         pushed = true;
                     }

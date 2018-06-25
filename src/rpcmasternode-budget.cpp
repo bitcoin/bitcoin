@@ -616,7 +616,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
             }
 
 
-            CFinalizedBudgetVote vote(pmn->vin, hash);
+            BudgetDraftVote vote(pmn->vin, hash);
             if(!vote.Sign(keyMasternode, pubKeyMasternode)){
                 failed++;
                 statusObj.push_back(Pair("result", "failed"));
@@ -626,8 +626,8 @@ Value mnfinalbudget(const Array& params, bool fHelp)
             }
 
             std::string strError = "";
-            if(budget.UpdateFinalizedBudget(vote, NULL, strError)){
-                budget.mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+            if(budget.UpdateBudgetDraft(vote, NULL, strError)){
+                budget.mapSeenBudgetDraftVotes.insert(make_pair(vote.GetHash(), vote));
                 vote.Relay();
                 success++;
                 statusObj.push_back(Pair("result", "success"));
@@ -670,14 +670,14 @@ Value mnfinalbudget(const Array& params, bool fHelp)
             return "Failure to find masternode in list : " + activeMasternode.vin.ToString();
         }
 
-        CFinalizedBudgetVote vote(activeMasternode.vin, hash);
+        BudgetDraftVote vote(activeMasternode.vin, hash);
         if(!vote.Sign(keyMasternode, pubKeyMasternode)){
             return "Failure to sign.";
         }
 
         std::string strError = "";
-        if(budget.UpdateFinalizedBudget(vote, NULL, strError)){
-            budget.mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+        if(budget.UpdateBudgetDraft(vote, NULL, strError)){
+            budget.mapSeenBudgetDraftVotes.insert(make_pair(vote.GetHash(), vote));
             vote.Relay();
             return "success";
         } else {
@@ -690,23 +690,24 @@ Value mnfinalbudget(const Array& params, bool fHelp)
     {
         Object resultObj;
 
-        std::vector<CFinalizedBudget*> winningFbs = budget.GetFinalizedBudgets();
-        BOOST_FOREACH(CFinalizedBudget* finalizedBudget, winningFbs)
+        std::vector<BudgetDraft*> drafts = budget.GetBudgetDrafts();
+        BOOST_FOREACH(BudgetDraft* budgetDraft, drafts)
         {
             Object bObj;
-            bObj.push_back(Pair("FeeTX",  finalizedBudget->GetFeeTxHash().ToString()));
-            bObj.push_back(Pair("Hash",  finalizedBudget->GetHash().ToString()));
-            bObj.push_back(Pair("BlockStart",  (int64_t)finalizedBudget->GetBlockStart()));
-            bObj.push_back(Pair("BlockEnd",    (int64_t)finalizedBudget->GetBlockStart())); // Budgets are paid in a single block !
-            bObj.push_back(Pair("Proposals",  finalizedBudget->GetProposals()));
-            bObj.push_back(Pair("VoteCount",  (int64_t)finalizedBudget->GetVoteCount()));
-            bObj.push_back(Pair("Status",  finalizedBudget->GetStatus()));
-
+            bObj.push_back(Pair("IsSubmittedManually",  budgetDraft->IsSubmittedManually()));
+            bObj.push_back(Pair("Hash",  budgetDraft->GetHash().ToString()));
+            bObj.push_back(Pair("BlockStart",  (int64_t)budgetDraft->GetBlockStart()));
+            bObj.push_back(Pair("BlockEnd",    (int64_t)budgetDraft->GetBlockStart())); // Budgets are paid in a single block !
+            bObj.push_back(Pair("Proposals",  budgetDraft->GetProposals()));
+            bObj.push_back(Pair("VoteCount",  (int64_t)budgetDraft->GetVoteCount()));
+            bObj.push_back(Pair("Status",  budgetDraft->GetStatus()));
             std::string strError = "";
-            bObj.push_back(Pair("IsValid",  finalizedBudget->IsValid(strError)));
+            bObj.push_back(Pair("IsValid",  budgetDraft->IsValid(strError)));
             bObj.push_back(Pair("IsValidReason",  strError.c_str()));
+            if (budgetDraft->IsSubmittedManually())
+                bObj.push_back(Pair("FeeTX",  budgetDraft->GetFeeTxHash().ToString()));
 
-            resultObj.push_back(Pair(finalizedBudget->GetName(), bObj));
+            resultObj.push_back(Pair(budgetDraft->GetHash().ToString(), bObj));
         }
 
         return resultObj;
@@ -723,17 +724,29 @@ Value mnfinalbudget(const Array& params, bool fHelp)
 
         Object obj;
 
-        CFinalizedBudget* pfinalBudget = budget.FindFinalizedBudget(hash);
+        BudgetDraft* pbudgetDraft = budget.FindBudgetDraft(hash);
 
-        if(pfinalBudget == NULL) return "Unknown budget hash";
+        if(pbudgetDraft == NULL) return "Unknown budget hash";
 
-        const std::map<uint256, CFinalizedBudgetVote>& fbVotes = pfinalBudget->GetVotes();
-        for (std::map<uint256, CFinalizedBudgetVote>::const_iterator i = fbVotes.begin(); i != fbVotes.end(); ++i)
+        const std::map<uint256, BudgetDraftVote>& fbVotes = pbudgetDraft->GetVotes();
+        for (std::map<uint256, BudgetDraftVote>::const_iterator i = fbVotes.begin(); i != fbVotes.end(); ++i)
         {
             Object bObj;
             bObj.push_back(Pair("nHash", i->first.ToString().c_str()));
             bObj.push_back(Pair("nTime", static_cast<int64_t>(i->second.nTime)));
             bObj.push_back(Pair("fValid", i->second.fValid));
+
+            obj.push_back(Pair(i->second.vin.prevout.ToStringShort(), bObj));
+        }
+
+        const std::map<uint256, BudgetDraftVote>& oldVotes = pbudgetDraft->GetObsoleteVotes();
+        for (std::map<uint256, BudgetDraftVote>::const_iterator i = oldVotes.begin(); i != oldVotes.end(); ++i)
+        {
+            Object bObj;
+            bObj.push_back(Pair("nHash", i->first.ToString().c_str()));
+            bObj.push_back(Pair("nTime", static_cast<int64_t>(i->second.nTime)));
+            bObj.push_back(Pair("fValid", i->second.fValid));
+            bObj.push_back(Pair("obsolete", true));
 
             obj.push_back(Pair(i->second.vin.prevout.ToStringShort(), bObj));
         }
