@@ -1067,7 +1067,7 @@ namespace
         std::vector<CBlockIndex> blocks;
         std::string error;
 
-        const CBaseChainParams::Network prevParams = Params().NetworkID();
+        const CBaseChainParams::Network prevParams;
 
         TestnetBudgetManagerVotingFixture()
             : nextSbStart(10000)
@@ -1076,6 +1076,7 @@ namespace
             , mn(CreateMasternode(CTxIn(COutPoint(ArithToUint256(1), 1 * COIN))))
             , hashes(static_cast<size_t>(blockHeight))
             , blocks(static_cast<size_t>(blockHeight))
+            , prevParams(Params().NetworkID())
         {
             SelectParams(CBaseChainParams::TESTNET);
             for (size_t i = 0; i < blocks.size(); ++i)

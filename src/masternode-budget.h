@@ -351,8 +351,8 @@ public:
     }
 
 private:
-    std::vector<CTxBudgetPayment> m_payments;
     int m_blockStart;
+    std::vector<CTxBudgetPayment> m_payments;
     uint256 m_feeTransactionHash;
     std::vector<unsigned char> m_signature;
     CTxIn m_masternodeSubmittedId;
