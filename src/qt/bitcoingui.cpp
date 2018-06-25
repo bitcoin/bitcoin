@@ -516,7 +516,7 @@ bool BitcoinGUI::addWallet(WalletModel *walletModel)
     if(!walletFrame)
         return false;
     const QString name = walletModel->getWalletName();
-    QString display_name = name.isEmpty() ? "["+tr("default wallet")+"]" : name;
+    const QString display_name = walletModel->getDisplayName();
     setWalletActionsEnabled(true);
     m_wallet_selector->addItem(display_name, name);
     if (m_wallet_selector->count() == 2) {
