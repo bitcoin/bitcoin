@@ -654,6 +654,7 @@ public:
     bool IsOwnerAsset() const;
     bool IsReissueAsset() const;
     bool IsTransferAsset() const;
+    bool IsAsset() const;
     /** RVN END */
 
     /** Called by IsStandardTx and P2SH/BIP62 VerifyScript (which makes it consensus-critical). */

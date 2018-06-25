@@ -5,6 +5,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <assets/assets.h>
+#include <wallet/wallet.h>
+#include <base58.h>
 #include "script.h"
 
 #include "tinyformat.h"
@@ -214,6 +216,7 @@ bool CScript::IsPayToScriptHash() const
             (*this)[22] == OP_EQUAL);
 }
 
+/** RVN START */
 bool CScript::IsNewAsset() const
 {
     // Extra-fast test for new-asset CScripts:
@@ -257,6 +260,11 @@ bool CScript::IsTransferAsset() const
             (*this)[29] == RVN_N &&
             (*this)[30] == RVN_T);
 }
+
+bool CScript::IsAsset() const {
+    return IsTransferAsset() || IsReissueAsset() || IsOwnerAsset() || IsNewAsset();
+}
+/** RVN END */
 
 bool CScript::IsPayToWitnessScriptHash() const
 {

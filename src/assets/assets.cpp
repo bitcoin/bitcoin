@@ -1630,6 +1630,50 @@ bool GetAssetFromCoin(const Coin& coin, std::string& strName, CAmount& nAmount)
     return false;
 }
 
+void GetAssetData(const CScript& script, CAssetOutputEntry& data)
+{
+    // Placeholder strings that will get set if you successfully get the transfer or asset from the script
+    std::string address = "";
+    std::string assetName = "";
+
+    // Get the New Asset or Transfer Asset from the scriptPubKey
+    if (script.IsNewAsset()) {
+        CNewAsset asset;
+        if (AssetFromScript(script, asset, address)) {
+            assetName = asset.strName;
+            data.type = ASSET_NEW_STRING;
+            data.amount = asset.nAmount;
+            data.destination = DecodeDestination(address);
+            data.assetName = asset.strName;
+        }
+    } else if (script.IsTransferAsset()) {
+        CAssetTransfer transfer;
+        if (TransferAssetFromScript(script, transfer, address)) {
+            assetName = transfer.strName;
+            data.type = ASSET_TRANSFER_STRING;
+            data.amount = transfer.nAmount;
+            data.destination = DecodeDestination(address);
+            data.assetName = transfer.strName;
+        }
+    } else if (script.IsOwnerAsset()) {
+        if (OwnerAssetFromScript(script, assetName, address)) {
+            data.type = ASSET_NEW_STRING;
+            data.amount = OWNER_ASSET_AMOUNT;
+            data.destination = DecodeDestination(address);
+            data.assetName = assetName;
+        }
+    } else if (script.IsReissueAsset()) {
+        CReissueAsset reissue;
+        if (ReissueAssetFromScript(script, reissue, address)) {
+            assetName = reissue.strName;
+            data.type = ASSET_REISSUE_STRING;
+            data.amount = reissue.nAmount;
+            data.destination = DecodeDestination(address);
+            data.assetName = reissue.strName;
+        }
+    }
+}
+
 bool CheckAssetOwner(const std::string& assetName)
 {
     if (passets->mapMyUnspentAssets.count(assetName + OWNER)) {

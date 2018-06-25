@@ -1497,7 +1497,15 @@ int CWalletTx::GetRequestCount() const
 }
 
 void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
-                           std::list<COutputEntry>& listSent, CAmount& nFee, std::string& strSentAccount, const isminefilter& filter) const
+                           std::list<COutputEntry>& listSent, CAmount& nFee, std::string& strSentAccount, const isminefilter& filter) const {
+
+    std::list<CAssetOutputEntry> assetsReceived;
+    std::list<CAssetOutputEntry> assetsSent;
+    GetAmounts(listReceived, listSent, nFee, strSentAccount, filter, assetsReceived, assetsSent);
+}
+
+void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
+                           std::list<COutputEntry>& listSent, CAmount& nFee, std::string& strSentAccount, const isminefilter& filter, std::list<CAssetOutputEntry>& assetsReceived, std::list<CAssetOutputEntry>& assetsSent) const
 {
     nFee = 0;
     listReceived.clear();
@@ -1540,15 +1548,33 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
             address = CNoDestination();
         }
 
-        COutputEntry output = {address, txout.nValue, (int)i};
+        if (!txout.scriptPubKey.IsAsset()) {
+            COutputEntry output = {address, txout.nValue, (int) i};
 
-        // If we are debited by the transaction, add the output as a "sent" entry
-        if (nDebit > 0)
-            listSent.push_back(output);
+            // If we are debited by the transaction, add the output as a "sent" entry
+            if (nDebit > 0)
+                listSent.push_back(output);
 
-        // If we are receiving the output, add it as a "received" entry
-        if (fIsMine & filter)
-            listReceived.push_back(output);
+            // If we are receiving the output, add it as a "received" entry
+            if (fIsMine & filter)
+                listReceived.push_back(output);
+        }
+
+        /** RVN START */
+        if (txout.scriptPubKey.IsAsset()) {
+            CAssetOutputEntry assetoutput;
+            assetoutput.vout = i;
+            GetAssetData(txout.scriptPubKey, assetoutput);
+
+            // The only asset type we send is transfer_asset. We need to skip all other types for the sent category
+            if (nDebit > 0 && assetoutput.type == ASSET_TRANSFER_STRING)
+                assetsSent.emplace_back(assetoutput);
+
+            if (fIsMine & filter)
+                assetsReceived.emplace_back(assetoutput);
+
+        }
+        /** RVN END */
     }
 
 }

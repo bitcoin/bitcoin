@@ -31,11 +31,17 @@
 #define MAX_ASSET_LENGTH 31
 #define OWNER_ASSET_AMOUNT 1 * COIN
 
+#define ASSET_TRANSFER_STRING "transfer_asset"
+#define ASSET_NEW_STRING "new_asset"
+#define ASSET_REISSUE_STRING "reissue_asset"
+
+
 class CScript;
 class CDataStream;
 class CTransaction;
 class CTxOut;
 class Coin;
+struct CAssetOutputEntry;
 
 // 50000 * 82 Bytes == 4.1 Mb
 #define MAX_CACHE_ASSETS_SIZE 50000
@@ -327,5 +333,8 @@ void UpdatePossibleAssets();
 
 bool GetAssetFromCoin(const Coin& coin, std::string& strName, CAmount& nAmount);
 
+void GetAssetData(const CScript& script, CAssetOutputEntry& data);
+
 bool GetBestAssetAddressAmount(CAssetsCache& cache, const std::string& assetName, const std::string& address);
+
 #endif //RAVENCOIN_ASSET_PROTOCOL_H
