@@ -700,7 +700,7 @@ void RPCConsole::addWallet(WalletModel * const walletModel)
 {
     const QString name = walletModel->getWalletName();
     // use name for text and internal data object (to allow to move to a wallet id later)
-    QString display_name = name.isEmpty() ? "["+tr("default wallet")+"]" : name;
+    const QString display_name = walletModel->getDisplayName();
     ui->WalletSelector->addItem(display_name, name);
     if (ui->WalletSelector->count() == 2 && !isVisible()) {
         // First wallet added, set to default so long as the window isn't presently visible (and potentially in use)
