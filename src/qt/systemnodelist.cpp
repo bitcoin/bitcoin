@@ -73,9 +73,6 @@ SystemnodeList::SystemnodeList(QWidget *parent) :
 
     updateNodeList();
 
-    //CBlockIndex* pindexPrev = chainActive.Tip();
-    //int nNext = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
-    //ui->superblockLabel->setText(QString::number(nNext));
     sendDialog = new SendCollateralDialog(SendCollateralDialog::SYSTEMNODE, this);
 }
 

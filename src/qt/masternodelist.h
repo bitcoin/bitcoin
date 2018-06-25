@@ -50,6 +50,7 @@ public Q_SLOTS:
     void updateMyNodeList(bool reset = false);
     void updateNodeList();
     void updateVoteList(bool reset = false);
+    void updateNextSuperblock();
     SendCollateralDialog* getSendCollateralDialog()
     {
         return sendDialog;
