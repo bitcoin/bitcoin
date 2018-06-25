@@ -15,8 +15,7 @@ bench_bench_particl_SOURCES = \
   bench/bench_bitcoin.cpp \
   bench/bench.cpp \
   bench/bench.h \
-  bench/blind.cpp \
-  bench/mlsag.cpp \
+  bench/block_assemble.cpp \
   bench/checkblock.cpp \
   bench/checkqueue.cpp \
   bench/examples.cpp \
@@ -28,7 +27,9 @@ bench_bench_particl_SOURCES = \
   bench/verify_script.cpp \
   bench/base58.cpp \
   bench/lockedpool.cpp \
-  bench/prevector.cpp
+  bench/prevector.cpp \
+  bench/blind.cpp \
+  bench/mlsag.cpp
 
 nodist_bench_bench_particl_SOURCES = $(GENERATED_BENCH_FILES)
 

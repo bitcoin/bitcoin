@@ -1,6 +1,6 @@
 This directory contains the BitcoinQT graphical user interface (GUI). It uses the cross-platform framework [Qt](https://www1.qt.io/developers/).
 
-The current precise version for Qt 5 is specified in [qt.mk](/depends/packages/qt.mk). Qt 4 is also supported (see [#8263](https://github.com/bitcoin/bitcoin/issues/8263)).
+The current precise version for Qt 5 is specified in [qt.mk](/depends/packages/qt.mk).
 
 ## Compile and run
 
@@ -16,7 +16,7 @@ To run:
 
 ### forms
 
-Contains [Designer UI](http://doc.qt.io/qt-5.9/designer-using-a-ui-file.html) files. They are created with [Qt Creator](#using-qt-creator-as-ide), but can be edited using any text editor.
+Contains [Designer UI](https://doc.qt.io/qt-5.9/designer-using-a-ui-file.html) files. They are created with [Qt Creator](#using-qt-creator-as-ide), but can be edited using any text editor.
 
 ### locale
 
@@ -36,7 +36,7 @@ Represents the main window of the Bitcoin UI.
 
 ### \*model.(h/cpp)
 
-The model. When it has a corresponding controller, it generally inherits from  [QAbstractTableModel](http://doc.qt.io/qt-5/qabstracttablemodel.html). Models that are used by controllers as helpers inherit from other Qt classes like [QValidator](http://doc.qt.io/qt-5/qvalidator.html).
+The model. When it has a corresponding controller, it generally inherits from  [QAbstractTableModel](https://doc.qt.io/qt-5/qabstracttablemodel.html). Models that are used by controllers as helpers inherit from other Qt classes like [QValidator](https://doc.qt.io/qt-5/qvalidator.html).
 
 ClientModel is used by the main application `bitcoingui` and several models like `peertablemodel`.
 
@@ -46,7 +46,7 @@ A controller. `:NAMEpage.cpp` generally includes `:NAMEmodel.h` and `forms/:NAME
 
 ### \*dialog.(h/cpp)
 
-Various dialogs, e.g. to open a URL. Inherit from [QDialog](http://doc.qt.io/qt-4.8/qdialog.html).
+Various dialogs, e.g. to open a URL. Inherit from [QDialog](https://doc.qt.io/qt-5/qdialog.html).
 
 ### paymentserver.(h/cpp)
 

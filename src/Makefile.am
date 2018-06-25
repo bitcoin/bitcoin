@@ -282,6 +282,7 @@ libparticl_server_a_SOURCES = \
   rpc/server.cpp \
   rpc/client.cpp \
   rpc/rpcutil.cpp \
+  rpc/util.cpp \
   script/sigcache.cpp \
   timedata.cpp \
   torcontrol.cpp \
@@ -474,7 +475,6 @@ libparticl_util_a_SOURCES = \
   logging.cpp \
   random.cpp \
   rpc/protocol.cpp \
-  rpc/util.cpp \
   support/cleanse.cpp \
   sync.cpp \
   threadinterrupt.cpp \
