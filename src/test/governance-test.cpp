@@ -1542,3 +1542,24 @@ BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
     }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(TestGetNextSuperblock)
+
+    BOOST_AUTO_TEST_CASE(InBetween)
+    {
+        const int current = 100500;
+        const int expected = 129600;
+
+        BOOST_REQUIRE_EQUAL(expected, GetNextSuperblock(current));
+    }
+
+    BOOST_AUTO_TEST_CASE(EqualToSuperblock)
+    {
+        const int current = 129600;
+        const int expected = 172800;
+
+        BOOST_REQUIRE_EQUAL(expected, GetNextSuperblock(current));
+    }
+
+BOOST_AUTO_TEST_SUITE_END()
+
