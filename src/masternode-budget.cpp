@@ -206,11 +206,11 @@ void CBudgetManager::SubmitBudgetDraft()
         nCurrentHeight = chainActive.Height();
     }
 
-    int nBlockStart = nCurrentHeight - nCurrentHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
-    if(nSubmittedHeight >= nBlockStart)
+    const int blockStart = GetNextSuperblock(nCurrentHeight);
+    if(nSubmittedHeight >= blockStart)
         return;
 
-    if(nBlockStart - nCurrentHeight > BlocksBeforeSuperblockToSubmitBudgetDraft())
+    if(blockStart - nCurrentHeight > BlocksBeforeSuperblockToSubmitBudgetDraft())
         return; // allow submitting final budget only when 2 days left before payments
 
     std::vector<CBudgetProposal*> vBudgetProposals = budget.GetBudget();
@@ -243,7 +243,7 @@ void CBudgetManager::SubmitBudgetDraft()
                 return;
             }
 
-            BudgetDraftBroadcast budgetDraftBroadcast(nBlockStart, vecTxBudgetPayments, activeMasternode.vin, key2);
+            BudgetDraftBroadcast budgetDraftBroadcast(blockStart, vecTxBudgetPayments, activeMasternode.vin, key2);
 
             if(mapSeenBudgetDrafts.count(budgetDraftBroadcast.GetHash())) {
                 LogPrintf("CBudgetManager::SubmitBudgetDraft - Budget already exists - %s\n", budgetDraftBroadcast.GetHash().ToString());
@@ -266,7 +266,7 @@ void CBudgetManager::SubmitBudgetDraft()
     }
     else
     {
-        BudgetDraftBroadcast tempBudget(nBlockStart, vecTxBudgetPayments, uint256());
+        BudgetDraftBroadcast tempBudget(blockStart, vecTxBudgetPayments, uint256());
         if(mapSeenBudgetDrafts.count(tempBudget.GetHash())) {
             LogPrintf("CBudgetManager::SubmitBudgetDraft - Budget already exists - %s\n", tempBudget.GetHash().ToString());
             nSubmittedHeight = nCurrentHeight;
@@ -324,7 +324,7 @@ void CBudgetManager::SubmitBudgetDraft()
         }
 
         //create the proposal incase we're the first to make it
-        BudgetDraftBroadcast budgetDraftBroadcast(nBlockStart, vecTxBudgetPayments, txidCollateral);
+        BudgetDraftBroadcast budgetDraftBroadcast(blockStart, vecTxBudgetPayments, txidCollateral);
 
         std::string strError = "";
         if(!budgetDraftBroadcast.IsValid(strError)){
@@ -600,9 +600,9 @@ std::vector<CBudgetProposal*> CBudgetManager::GetBudget()
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(pindexPrev == NULL) return vBudgetProposalsRet;
 
-    int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
-    int nBlockEnd  =  nBlockStart + GetBudgetPaymentCycleBlocks() - 1;
-    CAmount nTotalBudget = GetTotalBudget(nBlockStart);
+    const int blockStart = GetNextSuperblock(pindexPrev->nHeight);
+    const int blockEnd  =  blockStart + GetBudgetPaymentCycleBlocks() - 1;
+    CAmount totalBudget = GetTotalBudget(blockStart);
 
 
     std::vector<std::pair<CBudgetProposal*, int> >::iterator it2 = vBudgetPorposalsSort.begin();
@@ -611,12 +611,12 @@ std::vector<CBudgetProposal*> CBudgetManager::GetBudget()
         CBudgetProposal* pbudgetProposal = (*it2).first;
 
         //prop start/end should be inside this period
-        if(pbudgetProposal->fValid && pbudgetProposal->nBlockStart <= nBlockStart &&
-                pbudgetProposal->nBlockEnd >= nBlockEnd &&
+        if(pbudgetProposal->fValid && pbudgetProposal->nBlockStart <= blockStart &&
+                pbudgetProposal->nBlockEnd >= blockEnd &&
                 pbudgetProposal->GetYeas() - pbudgetProposal->GetNays() > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/10 && 
                 pbudgetProposal->IsEstablished())
         {
-            if(pbudgetProposal->GetAmount() + nBudgetAllocated <= nTotalBudget) {
+            if(pbudgetProposal->GetAmount() + nBudgetAllocated <= totalBudget) {
                 pbudgetProposal->SetAllotted(pbudgetProposal->GetAmount());
                 nBudgetAllocated += pbudgetProposal->GetAmount();
                 vBudgetProposalsRet.push_back(pbudgetProposal);
