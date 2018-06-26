@@ -29,3 +29,10 @@ transfer example
 
 
 "[{\"txid\":\"5c6dc6c2942d01d0b181a69616284514085b01d200be94865b19ec1bdd59dcac\",\"vout\":1}]" "{\"n3C2qrCma88RRQ39fQPumLBaFSuwUePcVc\":98999.998}"
+
+
+reissue example
+"[{\"txid\":\"3f3c22a0544369698d3428ba11a29bbbfe8508938f9a0974b0eff086be24a02e\",\"vout\":0}, {\"txid\":\"f0028b85cc2ca694d2fd0f96c65b4312fb67cc32e056069da3462bf6d32400fc\",\"vout\":2}]" "{\"n2NKWBsA2wFqK7yBuazviueHGT7GXu7KtS\": 4899.988, \"n1ReissueAssetXXXXXXXXXXXXXXWG9NLd\": 100.00, \"mwfL6voyJhhPngjQG2HvaL9Kero4jwmxeZ\": {\"reissue\": {\"asset_name\": \"TEST\", \"asset_quantity\": 25, \"reissuable\": 1, \"ipfs_hash\" : \"43f81c6f2c0593bde5a85e09ae662816eca80797\"}}}"
+
+"[{\"txid\":\"3f3c22a0544369698d3428ba11a29bbbfe8508938f9a0974b0eff086be24a02e\",\"vout\":0}, {\"txid\":\"f0028b85cc2ca694d2fd0f96c65b4312fb67cc32e056069da3462bf6d32400fc\",\"vout\":2}]" "{\"n2NKWBsA2wFqK7yBuazviueHGT7GXu7KtS\": 4899.988, \"n1ReissueAssetXXXXXXXXXXXXXXWG9NLd\": 100.00, \"mwfL6voyJhhPngjQG2HvaL9Kero4jwmxeZ\": {\"reissue\": {\"asset_name\": \"TEST\", \"asset_quantity\": 25, \"reissuable\": 5}}}"
+
