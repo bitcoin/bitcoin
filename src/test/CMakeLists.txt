@@ -42,6 +42,7 @@ add_executable(crown_test
   wallet_tests.cpp 
   rpc_wallet_tests.cpp
   governance-test.cpp
+  db_tests.cpp
 )
 
 target_compile_definitions(crown_test PRIVATE "BOOST_TEST_DYN_LINK=1")
