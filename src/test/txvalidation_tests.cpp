@@ -30,7 +30,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_reject_coinbase, TestChain100Setup)
     coinbaseTx.vout[0].nValue = 1 * CENT;
     coinbaseTx.vout[0].scriptPubKey = scriptPubKey;
 
-    assert(CTransaction(coinbaseTx).IsCoinBase());
+    BOOST_CHECK(CTransaction(coinbaseTx).IsCoinBase());
 
     CValidationState state;
 
