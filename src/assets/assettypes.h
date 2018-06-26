@@ -120,7 +120,7 @@ public:
     {
         nAmount = 0;
         strName = "";
-        nReissuable = true;
+        nReissuable = 1;
         strIPFSHash = "";
     }
 
