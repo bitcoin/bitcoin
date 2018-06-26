@@ -174,7 +174,7 @@ unsigned int CScript::GetSigOpCount(bool fAccurate) const
 
 unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
 {
-    if (!IsPayToScriptHashAny())
+    if (!IsPayToScriptHashAny(false)) // Assume cs spending path
         return GetSigOpCount(true);
 
     // This is a pay-to-script-hash scriptPubKey;
@@ -206,6 +206,13 @@ bool CScript::IsPayToPublicKeyHash() const
         (*this)[23] == OP_EQUALVERIFY &&
         (*this)[24] == OP_CHECKSIG);
 }
+
+bool CScript::IsPayToScriptHashAny(bool fIsTxCoinstake) const
+{
+    if (!fIsTxCoinstake && (IsPayToScriptHash256_CS() || IsPayToScriptHash_CS()))
+        return true;
+    return IsPayToScriptHash() || IsPayToScriptHash256() || IsPayToTimeLockedScriptHash();
+};
 
 bool CScript::IsPayToScriptHash() const
 {

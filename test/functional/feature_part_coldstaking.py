@@ -90,7 +90,6 @@ class ColdStakingTest(ParticlTestFramework):
             assert('is spendable from this wallet' in e.error['message'])
 
 
-
         txid1 = nodes[0].sendtoaddress(addr2_1, 100)
 
         tx = nodes[0].getrawtransaction(txid1, True)
@@ -110,7 +109,6 @@ class ColdStakingTest(ParticlTestFramework):
 
         ro = nodes[0].deriverangekeys(0, 0, coldstakingaddr)
         assert(ro[0] == keyhash_to_p2pkh_part(hex_str_to_bytes(hashCoinstake)))
-
 
 
         ro = nodes[0].extkey('list', 'true')

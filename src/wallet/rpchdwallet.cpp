@@ -5302,7 +5302,7 @@ static UniValue createsignaturewithwallet(const JSONRPCRequest &request)
         if (txin.prevout == out)
         {
             MutableTransactionSignatureCreator creator(&mtx, i, vchAmount, nHashType);
-            CScript &scriptSig = scriptPubKey.IsPayToScriptHashAny() ? scriptRedeem : scriptPubKey;
+            CScript &scriptSig = scriptPubKey.IsPayToScriptHashAny(mtx.IsCoinStake()) ? scriptRedeem : scriptPubKey;
 
             if (!creator.CreateSig(*pwallet, vchSig, idSign, scriptSig, SigVersion::BASE))
                 throw JSONRPCError(RPC_MISC_ERROR, "CreateSig failed.");
@@ -5441,7 +5441,7 @@ static UniValue createsignaturewithkey(const JSONRPCRequest &request)
         if (txin.prevout == out)
         {
             MutableTransactionSignatureCreator creator(&mtx, i, vchAmount, nHashType);
-            CScript &scriptSig = scriptPubKey.IsPayToScriptHashAny() ? scriptRedeem : scriptPubKey;
+            CScript &scriptSig = scriptPubKey.IsPayToScriptHashAny(mtx.IsCoinStake()) ? scriptRedeem : scriptPubKey;
 
             if (!creator.CreateSig(keystore, vchSig, idSign, scriptSig, SigVersion::BASE))
                 throw JSONRPCError(RPC_MISC_ERROR, "CreateSig failed.");

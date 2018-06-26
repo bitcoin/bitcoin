@@ -1564,7 +1564,10 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
         }
     }
 
-    bool fIsP2SH = checker.IsParticlVersion() ? scriptPubKey.IsPayToScriptHashAny() : scriptPubKey.IsPayToScriptHash();
+    bool fIsP2SH = checker.IsParticlVersion() ? scriptPubKey.IsPayToScriptHashAny(checker.IsCoinStake()) : scriptPubKey.IsPayToScriptHash();
+    if (fIsP2SH && flags & SCRIPT_VERIFY_NO_CSP2SH)
+        fIsP2SH = scriptPubKey.IsPayToScriptHashAny(true); // will match only plain p2sh scripts
+
     // Additional validation for spend-to-script-hash transactions:
     if ((flags & SCRIPT_VERIFY_P2SH)
         && fIsP2SH)

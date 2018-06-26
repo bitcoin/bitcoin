@@ -416,7 +416,7 @@ static UniValue devicesignrawtransaction(const JSONRPCRequest &request)
 
             // if redeemScript given and not using the local wallet (private keys
             // given), add redeemScript to the tempKeystore so it can be signed:
-            if (fGivenKeys && (scriptPubKey.IsPayToScriptHashAny())) {
+            if (fGivenKeys && (scriptPubKey.IsPayToScriptHashAny(mtx.IsCoinStake()))) {
                 RPCTypeCheckObj(prevOut,
                     {
                         {"txid", UniValueType(UniValue::VSTR)},

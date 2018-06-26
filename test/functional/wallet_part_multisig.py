@@ -7,6 +7,7 @@ from test_framework.test_particl import ParticlTestFramework
 from test_framework.test_particl import isclose
 from test_framework.util import *
 
+
 class MultiSigTest(ParticlTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
@@ -52,7 +53,6 @@ class MultiSigTest(ParticlTestFramework):
         addrs.append(ro)
         ro = nodes[1].getaddressinfo(ro)
         pubkeys.append(ro['pubkey'])
-
 
 
         mn2 = nodes[2].mnemonic("new", "", "french")
@@ -188,9 +188,6 @@ class MultiSigTest(ParticlTestFramework):
         ro = nodes[0].getblock(block2_hash)
         assert(txnid_spendMultisig2 in ro['tx'])
 
-
-
-
         ro = nodes[0].getaddressinfo(msAddr)
         scriptPubKey = ro['scriptPubKey']
         redeemScript = ro['hex']
@@ -249,6 +246,69 @@ class MultiSigTest(ParticlTestFramework):
         block3_hash = nodes[0].getblockhash(3)
         ro = nodes[0].getblock(block3_hash)
         assert(txnid_spendMultisig3 in ro['tx'])
+
+
+        # Coldstake script
+
+        stakeAddr = nodes[0].getnewaddress()
+        addrTo = nodes[0].getnewaddress()
+
+        opts = {"recipe":"ifcoinstake","addrstake":stakeAddr,"addrspend":msAddr}
+        ro = nodes[0].buildscript(opts)
+        scriptTo = ro['hex']
+
+        outputs = [{ 'address':'script', 'amount':1, 'script':scriptTo }]
+        txFundId = nodes[0].sendtypeto('part', 'part', outputs)
+        hexfund = nodes[0].gettransaction(txFundId)['hex']
+        ro = nodes[0].decoderawtransaction(hexfund)
+        for vout in ro['vout']:
+            if not isclose(vout['value'], 1.0):
+                continue
+            fundoutn = vout['n']
+            fundscriptpubkey = vout['scriptPubKey']['hex']
+            assert('OP_ISCOINSTAKE' in vout['scriptPubKey']['asm'])
+        assert(fundoutn >= 0), "fund output not found"
+
+        ro = nodes[0].getaddressinfo(msAddr)
+        assert(ro['isscript'] == True)
+        scriptPubKey = ro['scriptPubKey']
+        redeemScript = ro['hex']
+
+        inputs = [{
+            "txid":txFundId,
+            "vout":fundoutn,
+            "scriptPubKey":fundscriptpubkey,
+            "redeemScript":redeemScript,
+            "amount":1.0,
+            }]
+
+        outputs = {addrTo:0.99}
+        hexRaw = nodes[0].createrawtransaction(inputs, outputs)
+
+        sig0 = nodes[0].createsignaturewithwallet(hexRaw, inputs[0], addrs[0])
+        sig1 = nodes[0].createsignaturewithwallet(hexRaw, inputs[0], addrs[1])
+
+        witnessStack = [
+            "",
+            sig0,
+            sig1,
+            redeemScript,
+        ]
+        hexRawSigned = nodes[0].tx([hexRaw,'witness=0:'+ ':'.join(witnessStack)])
+
+        ro = nodes[0].verifyrawtransaction(hexRawSigned)
+        assert(ro['complete'] == True)
+
+        ro = nodes[0].signrawtransactionwithwallet(hexRaw)
+        assert(ro['complete'] == True)
+        assert(ro['hex'] == hexRawSigned)
+
+        txid = nodes[0].sendrawtransaction(hexRawSigned)
+
+        self.stakeBlocks(1)
+        block4_hash = nodes[0].getblockhash(4)
+        ro = nodes[0].getblock(block4_hash)
+        assert(txid in ro['tx'])
 
 
 if __name__ == '__main__':

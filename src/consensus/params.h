@@ -62,7 +62,11 @@ struct Params {
     /** Time at which OP_ISCOINSTAKE becomes active */
     int64_t OpIsCoinstakeTime;
     bool fAllowOpIsCoinstakeWithP2PKH;
+    /** Block height at which csp2sh becomes active */
+    int csp2shHeight;
+    /** Time at which Paid SMSG becomes active */
     int64_t nPaidSmsgTime;
+
 
     /**
      * Minimum blocks including miner confirmation of the total of 2016 blocks in a retargeting period,

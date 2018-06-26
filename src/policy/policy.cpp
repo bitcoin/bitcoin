@@ -343,7 +343,7 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         // get the scriptPubKey corresponding to this input:
         prevScript = prev.scriptPubKey;
 
-        if (prevScript.IsPayToScriptHashAny()) {
+        if (prevScript.IsPayToScriptHashAny(tx.IsCoinStake())) {
             std::vector <std::vector<unsigned char> > stack;
 
             // If the scriptPubKey is P2SH, we try to extract the redeemScript casually by converting the scriptSig
