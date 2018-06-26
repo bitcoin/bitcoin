@@ -1025,6 +1025,14 @@ UniValue sendfrom(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
+    if (!IsDeprecatedRPCEnabled("accounts")) {
+        if (request.fHelp) {
+            throw std::runtime_error("sendfrom (Deprecated, will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts)");
+        }
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "sendfrom is deprecated and will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts.");
+    }
+
+
     if (request.fHelp || request.params.size() < 3 || request.params.size() > 7)
         throw std::runtime_error(
             "sendfrom \"fromaccount\" \"toaddress\" amount ( minconf addlocked \"comment\" \"comment_to\" )\n"
@@ -1273,9 +1281,11 @@ UniValue sendmany(const JSONRPCRequest& request)
     EnsureWalletIsUnlocked(pwallet);
 
     // Check funds
-    CAmount nBalance = pwallet->GetLegacyBalance(ISMINE_SPENDABLE, nMinDepth, &strAccount, fAddLocked);
-    if (totalAmount > nBalance)
+    if (IsDeprecatedRPCEnabled("accounts") && totalAmount > pwallet->GetLegacyBalance(ISMINE_SPENDABLE, nMinDepth, &strAccount, fAddLocked)) {
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
+    } else if (!IsDeprecatedRPCEnabled("accounts") && totalAmount > pwallet->GetLegacyBalance(ISMINE_SPENDABLE, nMinDepth, nullptr, fAddLocked)) {
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Wallet has insufficient funds");
+    }
 
     // Send
     CReserveKey keyChange(pwallet);
@@ -4121,7 +4131,6 @@ static const CRPCCommand commands[] =
     { "wallet",             "listwallets",              &listwallets,              {} },
     { "wallet",             "loadwallet",               &loadwallet,               {"filename"} },
     { "wallet",             "lockunspent",                      &lockunspent,                   {"unlock","transactions"} },
-    { "wallet",             "sendfrom",                         &sendfrom,                      {"fromaccount","toaddress","amount","minconf","addlocked","comment","comment_to"} },
     { "wallet",             "sendmany",                         &sendmany,                      {"fromaccount|dummy","amounts","minconf","addlocked","comment","subtractfeefrom","use_is","use_ps","conf_target","estimate_mode"} },
     { "wallet",             "sendtoaddress",                    &sendtoaddress,                 {"address","amount","comment","comment_to","subtractfeefromamount","use_is","use_ps","conf_target","estimate_mode"} },
     { "wallet",             "settxfee",                         &settxfee,                      {"amount"} },
@@ -4143,6 +4152,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "listaccounts",                     &listaccounts,                  {"minconf","addlocked","include_watchonly"} },
     { "wallet",             "listreceivedbyaccount",            &listreceivedbylabel,           {"minconf","addlocked","include_empty","include_watchonly"} },
     { "wallet",             "setaccount",                       &setlabel,                      {"address","account"} },
+    { "wallet",             "sendfrom",                         &sendfrom,                      {"fromaccount","toaddress","amount","minconf","addlocked","comment","comment_to"} },
     { "wallet",             "move",                             &movecmd,                       {"fromaccount","toaccount","amount","minconf","comment"} },
 
     /** Label functions (to replace non-balance account functions) */
