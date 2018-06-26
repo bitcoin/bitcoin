@@ -11,7 +11,6 @@
 #include <script/standard.h>
 #include <uint256.h>
 
-
 typedef std::vector<unsigned char> valtype;
 
 MutableTransactionSignatureCreator::MutableTransactionSignatureCreator(const CMutableTransaction* txToIn, unsigned int nInIn, const std::vector<uint8_t>& amountIn, int nHashTypeIn) : txTo(txToIn), nIn(nInIn), nHashType(nHashTypeIn), amount(amountIn), checker(txTo, nIn, amountIn) {}
@@ -474,8 +473,16 @@ SignatureData CombineSignatures(const CScript& scriptPubKey, const BaseSignature
 {
     txnouttype txType;
     std::vector<std::vector<unsigned char> > vSolutions;
+    if (HasIsCoinstakeOp(scriptPubKey))
+    {
+        CScript script;
+        if (checker.IsCoinStake())
+            GetCoinstakeScriptPath(scriptPubKey, script);
+        else
+            GetNonCoinstakeScriptPath(scriptPubKey, script);
+        Solver(script, txType, vSolutions);
+    } else
     Solver(scriptPubKey, txType, vSolutions);
-
     return CombineSignatures(scriptPubKey, checker, txType, vSolutions, Stacks(scriptSig1), Stacks(scriptSig2), SigVersion::BASE).Output();
 }
 

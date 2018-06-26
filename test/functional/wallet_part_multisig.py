@@ -55,9 +55,7 @@ class MultiSigTest(ParticlTestFramework):
         pubkeys.append(ro['pubkey'])
 
 
-        mn2 = nodes[2].mnemonic("new", "", "french")
-
-        ro = nodes[2].extkeyimportmaster(mn2['mnemonic'])
+        ro = nodes[2].extkeyimportmaster(nodes[2].mnemonic('new', '', 'french')['mnemonic'])
 
         ro = nodes[2].getnewaddress()
         addrs.append(ro)
