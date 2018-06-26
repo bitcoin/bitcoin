@@ -192,6 +192,10 @@
         <translation>Portemonnee versleuteld</translation>
     </message>
     <message>
+        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your coins from being stolen by malware infecting your computer.</source>
+        <translation>%1 zal nu afsluiten om het versleutelingsproces te voltooien. Onthoud dat het versleutelen van uw portemonnee u niet volledig kan beschermen: Malware kan uw computer infecteren en uw chaincoins stelen.</translation>
+    </message>
+    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>BELANGRIJK: Elke eerder gemaakte backup van uw portemonneebestand dient u te vervangen door het nieuw gegenereerde, versleutelde portemonneebestand. Om veiligheidsredenen zullen eerdere backups van het niet-versleutelde portemonneebestand onbruikbaar worden zodra u uw nieuwe, versleutelde, portemonnee begint te gebruiken.</translation>
     </message>
@@ -2026,6 +2030,12 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Ontvangen</translation>
     </message>
 </context>
+<context>
+    <name>ProposalList</name>
+    </context>
+<context>
+    <name>ProposalTableModel</name>
+    </context>
 <context>
     <name>QObject</name>
     <message>

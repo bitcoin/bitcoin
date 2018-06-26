@@ -185,6 +185,10 @@ Questi sono i tuoi indirizzi Chaincoin per ricevere pagamenti. Si consiglia di u
         <translation>Cifrare veramente il portafoglio?</translation>
     </message>
     <message>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR CHC&lt;/b&gt;!</source>
+        <translation>Attenzione: se si cripta il portafoglio e si perde la passphrase, SI PERDONO TUTTI I CHC!</translation>
+    </message>
+    <message>
         <source>Wallet encrypted</source>
         <translation>Portafoglio cifrato</translation>
     </message>
@@ -283,6 +287,14 @@ Questi sono i tuoi indirizzi Chaincoin per ricevere pagamenti. Si consiglia di u
         <translation>Sfoglia masternodes</translation>
     </message>
     <message>
+        <source>&amp;Proposals</source>
+        <translation>&amp;Proposta</translation>
+    </message>
+    <message>
+        <source>Browse proposals</source>
+        <translation>Scegli proposte</translation>
+    </message>
+    <message>
         <source>E&amp;xit</source>
         <translation>&amp;Esci</translation>
     </message>
@@ -349,6 +361,10 @@ Questi sono i tuoi indirizzi Chaincoin per ricevere pagamenti. Si consiglia di u
     <message>
         <source>Show network monitor</source>
         <translation>Visualizza monitor rete</translation>
+    </message>
+    <message>
+        <source>&amp;Peers list</source>
+        <translation>&amp;Peers list</translation>
     </message>
     <message>
         <source>Show peers info</source>
@@ -435,6 +451,10 @@ Questi sono i tuoi indirizzi Chaincoin per ricevere pagamenti. Si consiglia di u
         <translation>&amp;Ricevi</translation>
     </message>
     <message>
+        <source>&amp;About Chaincoin Core</source>
+        <translation>&amp;Informazioni su Chaincoin Core</translation>
+    </message>
+    <message>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Mostra / Nascondi</translation>
     </message>
@@ -509,6 +529,10 @@ Questi sono i tuoi indirizzi Chaincoin per ricevere pagamenti. Si consiglia di u
     <message>
         <source>Open a chaincoin: URI or payment request</source>
         <translation>Apri una chaincoin: URI o richiesta di pagamento</translation>
+    </message>
+    <message>
+        <source>Show the Chaincoin Core help message to get a list with possible Chaincoin Core command-line options</source>
+        <translation>Mostra il messaggio di aiuto Chaincoin Core per ottenere un elenco con le possibili opzioni della riga di comando Chaincoin Core</translation>
     </message>
     <message>
         <source>&amp;PrivateSend information</source>
@@ -605,6 +629,11 @@ Questi sono i tuoi indirizzi Chaincoin per ricevere pagamenti. Si consiglia di u
         <translation>Il portamonete è &lt;b&gt;cifrato&lt;/b&gt; ed attualmente &lt;b&gt;sbloccato&lt;/b&gt;</translation>
     </message>
     <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt; for mixing only</source>
+        <translation>
+Wallet crittografato e attualmente sbloccato per la solamente per il mixing</translation>
+    </message>
+    <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Il portamonete è &lt;b&gt;cifrato&lt;/b&gt; ed attualmente &lt;b&gt;bloccato&lt;/b&gt;</translation>
     </message>
@@ -657,6 +686,10 @@ Questi sono i tuoi indirizzi Chaincoin per ricevere pagamenti. Si consiglia di u
     <message>
         <source>(un)select all</source>
         <translation>(de)seleziona tutto</translation>
+    </message>
+    <message>
+        <source>toggle lock state</source>
+        <translation>Attiva/Disattiva stato blocco</translation>
     </message>
     <message>
         <source>Tree mode</source>
@@ -749,6 +782,10 @@ Questi sono i tuoi indirizzi Chaincoin per ricevere pagamenti. Si consiglia di u
     <message>
         <source>Please switch to "List mode" to use this function.</source>
         <translation>Passare alla "Modalità elenco" per utilizzare questa funzione.</translation>
+    </message>
+    <message>
+        <source>Non-anonymized input selected. &lt;b&gt;PrivateSend will be disabled.&lt;/b&gt;&lt;br&gt;&lt;br&gt;If you still want to use PrivateSend, please deselect all non-nonymized inputs first and then check PrivateSend checkbox again.</source>
+        <translation>Ingresso non anonimo selezionato. PrivateSend sarà disabilitato.Se vuoi ancora utilizzare PrivateSend, deseleziona prima tutti gli input non-anonimi e poi controlla nuovamente la casella di controllo PrivateSend.</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
@@ -943,6 +980,10 @@ Questi sono i tuoi indirizzi Chaincoin per ricevere pagamenti. Si consiglia di u
         <translation>(%1-bit)</translation>
     </message>
     <message>
+        <source>About Chaincoin Core</source>
+        <translation>Informazioni Chaincoin Core</translation>
+    </message>
+    <message>
         <source>Command-line options</source>
         <translation>Opzioni della riga di comando</translation>
     </message>
@@ -1053,6 +1094,10 @@ Questi sono i tuoi indirizzi Chaincoin per ricevere pagamenti. Si consiglia di u
         <translation>I miei Masternode</translation>
     </message>
     <message>
+        <source>Alias</source>
+        <translation>Alias</translation>
+    </message>
+    <message>
         <source>Address</source>
         <translation>Indirizzo</translation>
     </message>
@@ -1077,8 +1122,16 @@ Questi sono i tuoi indirizzi Chaincoin per ricevere pagamenti. Si consiglia di u
         <translation>Beneficiario</translation>
     </message>
     <message>
+        <source>S&amp;tart alias</source>
+        <translation>S&amp;tart alias</translation>
+    </message>
+    <message>
         <source>Start &amp;all</source>
         <translation>Avvia &amp;tutto</translation>
+    </message>
+    <message>
+        <source>Start &amp;MISSING</source>
+        <translation>Start &amp;MISSING</translation>
     </message>
     <message>
         <source>&amp;Update status</source>
@@ -1117,6 +1170,10 @@ Questi sono i tuoi indirizzi Chaincoin per ricevere pagamenti. Si consiglia di u
         <translation>Conteggio Nodi:</translation>
     </message>
     <message>
+        <source>Start alias</source>
+        <translation>Start alias</translation>
+    </message>
+    <message>
         <source>Confirm masternode start</source>
         <translation>Conferma avvio masternode</translation>
     </message>
@@ -1143,6 +1200,10 @@ Questi sono i tuoi indirizzi Chaincoin per ricevere pagamenti. Si consiglia di u
     <message>
         <source>Confirm missing masternodes start</source>
         <translation>Inizia la conferma dei masternode mancanti</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to start MISSING masternodes?</source>
+        <translation>Sei sicuro di voler iniziare a perdere masternodes?</translation>
     </message>
     <message>
         <source>Additional information for Masternode </source>
@@ -1187,6 +1248,10 @@ Questi sono i tuoi indirizzi Chaincoin per ricevere pagamenti. Si consiglia di u
         <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the Chaincoin network, as detailed below.</source>
         <translation>
 Le transazioni recenti potrebbero non essere ancora visibili e pertanto il saldo del tuo portafoglio potrebbe non essere corretto. Queste informazioni saranno corrette una volta che il portafoglio avrà ultimato la sincronizzazione con la rete Chaincoin, come descritto di seguito.</translation>
+    </message>
+    <message>
+        <source>Attempting to spend Chaincoin that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <translation>Il tentativo di spendere Chaincoin che sono interessati da transazioni non ancora visualizzate non verrà accettato dalla rete.</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -1275,6 +1340,10 @@ Le transazioni recenti potrebbero non essere ancora visibili e pertanto il saldo
         <translation>Numero di thread di &amp;verifica degli script </translation>
     </message>
     <message>
+        <source>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</source>
+        <translation>Mostra scheda aggiuntiva elenca tutti i tuoi masternodes nella prima Sub-tab e tutti masternodes sulla rete nella seconda seconda Tab.</translation>
+    </message>
+    <message>
         <source>Show Masternodes Tab</source>
         <translation>Visualizza Tab Masternodes</translation>
     </message>
@@ -1303,6 +1372,18 @@ Assicurati di avere sempre un backup (automatico) del portafogli recente in un l
     <message>
         <source>Enable PrivateSend &amp;multi-session</source>
         <translation>Abilita PrivateSend &amp;sessione-multipla</translation>
+    </message>
+    <message>
+        <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
+        <translation>Se si disattiva la spesa di modifiche non confermate, la modifica da una transazione non può essere utilizzata finché tale transazione non avrà almeno una conferma. Ciò influisce anche sulla modalità di calcolo del saldo.</translation>
+    </message>
+    <message>
+        <source>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
+        <translation>Questa impostazione determina la quantità di transazioni anonime per ogni masternode. Più alto sarà il livello di privacy e più alta sarà la commissione.</translation>
+    </message>
+    <message>
+        <source>PrivateSend rounds to use</source>
+        <translation>PrivateSend rounds da utilizzare</translation>
     </message>
     <message>
         <source>This amount acts as a threshold to turn off PrivateSend once it's reached.</source>
@@ -1629,6 +1710,10 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation>Saldo PrivateSend:</translation>
     </message>
     <message>
+        <source>Amount and Rounds:</source>
+        <translation>Quantità e Rounds:</translation>
+    </message>
+    <message>
         <source>0 CHC / 0 Rounds</source>
         <translation>0 CHC / 0 Rounds</translation>
     </message>
@@ -1745,6 +1830,14 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation>PrivateSend</translation>
     </message>
     <message>
+        <source>WARNING! Something went wrong on automatic backup</source>
+        <translation>ATTENZIONE! Qualcosa è andato storto sul backup automatico</translation>
+    </message>
+    <message>
+        <source>ERROR! Failed to create automatic backup</source>
+        <translation>ERRORE! Impossibile creare il backup automatico</translation>
+    </message>
+    <message>
         <source>Mixing is disabled, please close your wallet and fix the issue!</source>
         <translation>Il missaggio è disabilitato, si prega di chiudere il portafoglio e risolvere il problema!</translation>
     </message>
@@ -1777,7 +1870,11 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <source>If you don't want to see internal PrivateSend fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
         <translation>Se non vuoi vedere le commissioni / transazioni interne di PrivateSend seleziona "Più comune" come Tipo nella scheda "Transazioni".</translation>
     </message>
-    </context>
+    <message>
+        <source>Wallet is locked and user declined to unlock. Disabling PrivateSend.</source>
+        <translation>Wallet bloccato e l'utente ha rifiutato di sbloccare. Disabilitazione di PrivateSend.</translation>
+    </message>
+</context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -1795,6 +1892,14 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     <message>
         <source>Invalid payment address %1</source>
         <translation>Indirizzo di pagamento non valido %1</translation>
+    </message>
+    <message>
+        <source>Cannot start chaincoin: click-to-pay handler</source>
+        <translation>Impossibile avviare chaincoin: gestore click-to-pay</translation>
+    </message>
+    <message>
+        <source>URI cannot be parsed! This can be caused by an invalid Chaincoin address or malformed URI parameters.</source>
+        <translation>L'URI non può essere analizzato! Ciò può essere causato da un indirizzo Chaincoin non valido o da parametri URI errati.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1886,6 +1991,196 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     <message>
         <source>Received</source>
         <translation>Ricevuto</translation>
+    </message>
+</context>
+<context>
+    <name>ProposalList</name>
+    <message>
+        <source>Enter proposal name</source>
+        <translation>Inserisci il nome proposto</translation>
+    </message>
+    <message>
+        <source>Min amount</source>
+        <translation>Quantità min</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Tutto</translation>
+    </message>
+    <message>
+        <source>Today</source>
+        <translation>Oggi</translation>
+    </message>
+    <message>
+        <source>This week</source>
+        <translation>Questa settimana</translation>
+    </message>
+    <message>
+        <source>This month</source>
+        <translation>Questo mese</translation>
+    </message>
+    <message>
+        <source>Last month</source>
+        <translation>Ultimo mese</translation>
+    </message>
+    <message>
+        <source>This year</source>
+        <translation>Questo anno</translation>
+    </message>
+    <message>
+        <source>Range...</source>
+        <translation>Intervallo...</translation>
+    </message>
+    <message>
+        <source>Min yes votes</source>
+        <translation>Min Voti si</translation>
+    </message>
+    <message>
+        <source>Min no votes</source>
+        <translation>Min voti no</translation>
+    </message>
+    <message>
+        <source>Min percentage</source>
+        <translation>Percentuale Min</translation>
+    </message>
+    <message>
+        <source>Vote Yes</source>
+        <translation>Voto Si</translation>
+    </message>
+    <message>
+        <source>Yote Yes on the selected proposal</source>
+        <translation>Vota Sì sulla proposta selezionata</translation>
+    </message>
+    <message>
+        <source>Vote Abstain</source>
+        <translation>Voto Astenersi</translation>
+    </message>
+    <message>
+        <source>Yote Abstain on the selected proposal</source>
+        <translation>Vota astenuto sulla proposta selezionata</translation>
+    </message>
+    <message>
+        <source>Vote No</source>
+        <translation>Voto No</translation>
+    </message>
+    <message>
+        <source>Yote No on the selected proposal</source>
+        <translation>Vota No sulla proposta selezionata</translation>
+    </message>
+    <message>
+        <source>Vote yes</source>
+        <translation>Voto Si</translation>
+    </message>
+    <message>
+        <source>Vote abstain</source>
+        <translation>Voto astenersi</translation>
+    </message>
+    <message>
+        <source>Vote no</source>
+        <translation>Voto no</translation>
+    </message>
+    <message>
+        <source>Visit proposal website</source>
+        <translation>Visita proposta sito web</translation>
+    </message>
+    <message>
+        <source>Visit statistics website</source>
+        <translation>Visita statistiche sito web</translation>
+    </message>
+    <message>
+        <source>minute(s)</source>
+        <translation>minuto(i)</translation>
+    </message>
+    <message>
+        <source>second(s)</source>
+        <translation>secondo(i)</translation>
+    </message>
+    <message>
+        <source>List will be updated in 0 second(s)</source>
+        <translation>L'elenco verrà aggiornato in 0 secondi</translation>
+    </message>
+    <message>
+        <source>Confirm vote</source>
+        <translation>Conferma voto</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to vote &lt;strong&gt;%1&lt;/strong&gt; on the proposal &lt;strong&gt;%2&lt;/strong&gt;?</source>
+        <translation>Sei sicuro di vole votare %1 per la proposta %2?</translation>
+    </message>
+    <message>
+        <source>Voting</source>
+        <translation>Votazione in corso</translation>
+    </message>
+    <message>
+        <source>Start Date:</source>
+        <translation>Data inizio:</translation>
+    </message>
+    <message>
+        <source>End Date:</source>
+        <translation>Data Fine:</translation>
+    </message>
+</context>
+<context>
+    <name>ProposalTableModel</name>
+    <message>
+        <source>Proposal</source>
+        <translation>Proposta</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>Quantità</translation>
+    </message>
+    <message>
+        <source>Start Date</source>
+        <translation>Data Inizio</translation>
+    </message>
+    <message>
+        <source>End Date</source>
+        <translation>Data Fine</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Si</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>No</translation>
+    </message>
+    <message>
+        <source>Percentage</source>
+        <translation>Percentuale</translation>
+    </message>
+    <message>
+        <source>Proposal Name</source>
+        <translation>Nome proposto</translation>
+    </message>
+    <message>
+        <source>Date and time that the proposal starts.</source>
+        <translation>Data e ora inizio della proposta.</translation>
+    </message>
+    <message>
+        <source>Date and time that the proposal ends.</source>
+        <translation>Data e ora fine proposta</translation>
+    </message>
+    <message>
+        <source>Obtained yes votes.</source>
+        <translation>Voti Si ottenuti</translation>
+    </message>
+    <message>
+        <source>Obtained no votes.</source>
+        <translation>Voti No ottenuti</translation>
+    </message>
+    <message>
+        <source>Obtained absolute yes votes.</source>
+        <translation>Voti si assoluti ottenuti</translation>
+    </message>
+    <message>
+        <source>Proposed amount.</source>
+        <translation>Quantità proposta.</translation>
+    </message>
+    <message>
+        <source>Current vote percentage.</source>
+        <translation>Attuale percentuale di voto.</translation>
     </message>
 </context>
 <context>
@@ -2120,6 +2415,10 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     <message>
         <source>Memory usage</source>
         <translation>Utilizzo memoria</translation>
+    </message>
+    <message>
+        <source>Open the Chaincoin Core debug log file from the current data directory. This can take a few seconds for large log files.</source>
+        <translation>Aprire il file di log di debug di Chaincoin Core dalla directory dei dati corrente. Questo può richiedere alcuni secondi per i file di registro di grandi dimensioni.</translation>
     </message>
     <message>
         <source>Number of Masternodes</source>
@@ -2401,6 +2700,10 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation>Genera un indirizzo Bech32</translation>
     </message>
     <message>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Chaincoin network.</source>
+        <translation>Un messaggio facoltativo da allegare alla richiesta di pagamento, che verrà visualizzata all'apertura della richiesta. Nota: il messaggio non verrà inviato con il pagamento tramite la rete Chaincoin.</translation>
+    </message>
+    <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>Mostra la richiesta selezionata (produce lo stesso effetto di un doppio click su una voce)</translation>
     </message>
@@ -2630,8 +2933,24 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation>Con Replace-By-Fee (BIP-125) si puo' aumentare la commissione sulla transazione dopo averla inviata. Senza questa, una commissione piu' alta e' consigliabile per compensare l'aumento del rischio dovuto al ritardo della transazione.</translation>
     </message>
     <message>
+        <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until your have validated the complete chain.</source>
+        <translation>L'utilizzo del fallbackfee può comportare l'invio di una transazione che richiederà diverse ore o giorni (o mai) per confermare. Prendi in considerazione la possibilità di scegliere la tariffa manualmente o attendi fino a quando non avrai convalidato la catena completa.</translation>
+    </message>
+    <message>
+        <source>If the custom fee is set to 1000 chuffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 chuffs in fee,&lt;br /&gt;while "at least" pays 1000 chuffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>Se la tariffa personalizzata è impostata su 1000 cheats e la transazione è di soli 250 byte, quindi "per kilobyte" paga solo 250 chuff in conto, mentre "almeno" paga 1000 chuff. Per le transazioni più grandi di un kilobyte pagate entrambi per kilobyte.</translation>
+    </message>
+    <message>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for chaincoin transactions than the network can process.</source>
+        <translation>Pagare solo la commissione minima va bene finché c'è meno volume di transazioni rispetto allo spazio nei blocchi ma sappi che questo può finire in una transazione che non verrà mai confermata fino a quando non ci sarà più richiesta di transazioni chaincoin</translation>
+    </message>
+    <message>
         <source>&amp;Recommended:</source>
         <translation>&amp;Raccomandato</translation>
+    </message>
+    <message>
+        <source>&amp;Custom:</source>
+        <translation>&amp;Custom:</translation>
     </message>
     <message>
         <source>Confirmation time:</source>
@@ -2640,6 +2959,10 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     <message>
         <source>Clear &amp;All</source>
         <translation>Cancella &amp;tutto</translation>
+    </message>
+    <message>
+        <source>PrivateSend</source>
+        <translation>PrivateSend</translation>
     </message>
     <message>
         <source>Balance:</source>
@@ -2692,6 +3015,10 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     <message>
         <source>anonymous funds</source>
         <translation>fondi anonimi</translation>
+    </message>
+    <message>
+        <source>any available funds (not anonymous)</source>
+        <translation>tutti i fondi disponibili (non anonimo)</translation>
     </message>
     <message>
         <source>%1 to %2</source>
@@ -2833,6 +3160,10 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation>Rimuovi questa voce</translation>
     </message>
     <message>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Chaincoin than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <translation>La commissione verrà detratta dall'importo inviato. Il destinatario riceverà un importo inferiore di Chaincoin di quello inserito nel campo dell'importo. Se sono selezionati più destinatari, la commissione viene divisa in parti uguali.</translation>
+    </message>
+    <message>
         <source>S&amp;ubtract fee from amount</source>
         <translation>S&amp;ottrae la commissione dall'importo</translation>
     </message>
@@ -2843,6 +3174,10 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     <message>
         <source>Message:</source>
         <translation>Messaggio:</translation>
+    </message>
+    <message>
+        <source>A message that was attached to the chaincoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Chaincoin network.</source>
+        <translation>Un messaggio che è stato allegato al chaincoin: URI che verrà memorizzato con la transazione come riferimento. Nota: questo messaggio non verrà inviato tramite la rete Chaincoin.</translation>
     </message>
     <message>
         <source>This is an unauthenticated payment request.</source>
@@ -2896,6 +3231,14 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     <message>
         <source>&amp;Sign Message</source>
         <translation>&amp;Firma Messaggio</translation>
+    </message>
+    <message>
+        <source>You can sign messages/agreements with your addresses to prove you can receive Chaincoin sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <translation>È possibile firmare messaggi / accordi con i propri indirizzi per dimostrare che è possibile ricevere Chaincoin inviati a loro. Fai attenzione a non firmare nulla di vago o casuale, in quanto gli attacchi di phishing potrebbero cercare di ingannarti a firmare la tua identità. Firma solo le dichiarazioni completamente dettagliate che accetti.</translation>
+    </message>
+    <message>
+        <source>The Chaincoin address to sign the message with</source>
+        <translation>L'indirizzo Chaincoin con cui firmare il messaggio</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -3309,6 +3652,22 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation>Ottenuto dal mining</translation>
     </message>
     <message>
+        <source>PrivateSend Denominate</source>
+        <translation>L'indirizzo Chaincoin con cui firmare il messaggio</translation>
+    </message>
+    <message>
+        <source>PrivateSend Collateral Payment</source>
+        <translation>PrivateSend Collateral Payment</translation>
+    </message>
+    <message>
+        <source>PrivateSend Make Collateral Inputs</source>
+        <translation>PrivateSend crea input collaterali</translation>
+    </message>
+    <message>
+        <source>PrivateSend Create Denominations</source>
+        <translation>PrivateSend Create Denominations</translation>
+    </message>
+    <message>
         <source>PrivateSend</source>
         <translation>PrivateSend</translation>
     </message>
@@ -3394,6 +3753,23 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     <message>
         <source>PrivateSend</source>
         <translation>PrivateSend</translation>
+    </message>
+    <message>
+        <source>PrivateSend Make Collateral Inputs</source>
+        <translation>PrivateSend crea input collaterali
+</translation>
+    </message>
+    <message>
+        <source>PrivateSend Create Denominations</source>
+        <translation>PrivateSend Crea denominazioni</translation>
+    </message>
+    <message>
+        <source>PrivateSend Denominate</source>
+        <translation>PrivateSend Denominato</translation>
+    </message>
+    <message>
+        <source>PrivateSend Collateral Payment</source>
+        <translation>PrivateSend pagamento collaterale</translation>
     </message>
     <message>
         <source>To yourself</source>
@@ -3619,6 +3995,18 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation>Nulla</translation>
     </message>
     <message>
+        <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
+        <translation>(1 = mantieni i metadati tx, ad es. Il proprietario dell'account e le informazioni sulla richiesta di pagamento, 2 = elimina i metadati tx)</translation>
+    </message>
+    <message>
+        <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation>-maxtxfee è impostato molto alto! Tariffe che potrebbero essere pagate su una singola transazione.</translation>
+    </message>
+    <message>
+        <source>Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info)</source>
+        <translation>Aggiungi un nodo a cui connettersi e prova a mantenere aperta la connessione (consulta la guida del comando RPC `addnode` per maggiori informazioni)</translation>
+    </message>
+    <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
         <translation>Impossibile fornire connessioni specifiche e avere addrman connessioni in uscita allo stesso tempo.</translation>
     </message>
@@ -3679,8 +4067,56 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation>Copyright (C) %i-%i</translation>
     </message>
     <message>
+        <source>Corrupted block database detected</source>
+        <translation>Rilevato blocco corrotto nel database</translation>
+    </message>
+    <message>
+        <source>Could not parse masternode.conf</source>
+        <translation>Impossibile analizzare masternode.conf</translation>
+    </message>
+    <message>
+        <source>Debugging/Testing options:</source>
+        <translation>Opzioni Debugging/Testing:</translation>
+    </message>
+    <message>
+        <source>Do not load the wallet and disable wallet RPC calls</source>
+        <translation>Non caricare il wallet e disabilitare le chiamate RPC wallet</translation>
+    </message>
+    <message>
+        <source>Do you want to rebuild the block database now?</source>
+        <translation>Vuoi ricostruire il database dei blocchi ora?</translation>
+    </message>
+    <message>
         <source>Done loading</source>
         <translation>Caricamento effettuato</translation>
+    </message>
+    <message>
+        <source>ERROR! Failed to create automatic backup</source>
+        <translation>ERRORE! Impossibile creare il backup automatico</translation>
+    </message>
+    <message>
+        <source>Enable publish hash block in &lt;address&gt;</source>
+        <translation>Abilitare la pubbliazione hash nel blocco &lt;address&gt;</translation>
+    </message>
+    <message>
+        <source>Enable publish hash transaction in &lt;address&gt;</source>
+        <translation>Abilitare la pubblicazione degli hash nella transazione &lt;address&gt;</translation>
+    </message>
+    <message>
+        <source>Enable publish raw block in &lt;address&gt;</source>
+        <translation>Abilita il blocco raw di pubblicazione in &lt;address&gt;</translation>
+    </message>
+    <message>
+        <source>Enable publish raw transaction in &lt;address&gt;</source>
+        <translation>Abilita raw transazione pubblica  &lt;address&gt;</translation>
+    </message>
+    <message>
+        <source>Entries are full.</source>
+        <translation>Le voci sono complete.</translation>
+    </message>
+    <message>
+        <source>Entry exceeds maximum size.</source>
+        <translation>La voce supera la dimensione massima.</translation>
     </message>
     <message>
         <source>Error loading %s</source>
@@ -3827,8 +4263,28 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation>Attenzione</translation>
     </message>
     <message>
+        <source>Your entries added successfully.</source>
+        <translation>Voci aggiunte correttamente.</translation>
+    </message>
+    <message>
+        <source>Your transaction was accepted into the pool!</source>
+        <translation>La transazione è stata accettata nella pool!</translation>
+    </message>
+    <message>
+        <source>Zapping all transactions from wallet...</source>
+        <translation>Zapping di tutte le transazioni da portafoglio...</translation>
+    </message>
+    <message>
+        <source>ZeroMQ notification options:</source>
+        <translation>Opzioni di notifica ZeroMQ:</translation>
+    </message>
+    <message>
         <source>no mixing available.</source>
         <translation>mixing non disponibile.</translation>
     </message>
-    </context>
+    <message>
+        <source>see debug.log for details.</source>
+        <translation>vedere debug.log per i dettagli.</translation>
+    </message>
+</context>
 </TS>

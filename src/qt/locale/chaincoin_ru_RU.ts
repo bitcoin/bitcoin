@@ -593,6 +593,12 @@
     </message>
 </context>
 <context>
+    <name>ProposalList</name>
+    </context>
+<context>
+    <name>ProposalTableModel</name>
+    </context>
+<context>
     <name>QObject</name>
     <message>
         <source>%1 and %2</source>

@@ -11,7 +11,7 @@
     </message>
     <message>
         <source>&amp;New</source>
-        <translation>Novo</translation>
+        <translation>&amp;Novo</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -31,7 +31,7 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Eksportuj podatke iz izabrane kartice u fajl</translation>
+        <translation>Eksportujte podatke iz izabrane kartice u fajl</translation>
     </message>
     <message>
         <source>&amp;Export</source>
@@ -39,7 +39,7 @@
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;Izbriši</translation>
+        <translation>Iz&amp;briši</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -50,6 +50,10 @@
         <translation>Izbirajte adresu za primanje</translation>
     </message>
     <message>
+        <source>C&amp;hoose</source>
+        <translation>I&amp;zaberite</translation>
+    </message>
+    <message>
         <source>Sending addresses</source>
         <translation>Adresa za slanje</translation>
     </message>
@@ -57,34 +61,194 @@
         <source>Receiving addresses</source>
         <translation>Adresa za primanje</translation>
     </message>
-    </context>
+    <message>
+        <source>These are your Chaincoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Ovo su vaše Chaincoin adrese za slanje uplata. Proverite uvek iznos i adresu na koju šaljete pre slanja novčića.</translation>
+    </message>
+    <message>
+        <source>These are your Chaincoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>Ovo su vaše Chaincoin adrese za primanje uplata. Preporučuje se da koristite novu adresu za svaku transakciju.</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Kopirajte Adresu</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation>Kopirajte &amp;Etiketu</translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation>Iz&amp;menite</translation>
+    </message>
+    <message>
+        <source>Export Address List</source>
+        <translation>Izvezi Listu Adresa</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Datoteka sa podacima odvojenim zarezom (*.csv)</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Izvoz Neuspešan</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation>Dogodila se greška prilikom snimanja liste adresa u %1. Molimo pokušajte kasnije.</translation>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>Etiketa</translation>
+    </message>
     <message>
         <source>Address</source>
         <translation>Adresa</translation>
     </message>
-    </context>
+    <message>
+        <source>(no label)</source>
+        <translation>(bez etikete)</translation>
+    </message>
+</context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
+        <source>Passphrase Dialog</source>
+        <translation>Maska za unos Lozinke za šifrovanje</translation>
+    </message>
+    <message>
         <source>Enter passphrase</source>
-        <translation>Унесите лозинку</translation>
+        <translation>Unesite lozinku za šifrovanje</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>Нова лозинка</translation>
+        <translation>Nova lozinka za šifrovanje</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>Поновите нову лозинку</translation>
+        <translation>Ponovite novu lozinku za enkripciju</translation>
     </message>
-    </context>
+    <message>
+        <source>Show password</source>
+        <translation>Prikazati lozinku</translation>
+    </message>
+    <message>
+        <source>Serves to disable the trivial sendmoney when OS account compromised. Provides no real security.</source>
+        <translation>Služi da onemogući trivijalno slanje novca kada je nalog OS kompromitovan. Pruža prividnu sigurnost.</translation>
+    </message>
+    <message>
+        <source>Only for mixing via PrivateSend</source>
+        <translation>Samo za miksovanje preko PrivatnogSlanja</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Unesite novu lozinku za šifrovanje novčanik. &lt;br/&gt;Molimo vas koristite lozinku za šifrovanje od &lt;b&gt;deset ili više slučajnih karaktera&lt;/b&gt;, ili &lt;b&gt; osam ili više reči &lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <source>Encrypt wallet</source>
+        <translation>Enkriptujete novčanik</translation>
+    </message>
+    <message>
+        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
+        <translation>Ova operacija traži lozinku za enkripciju za otključavanje novčanika.</translation>
+    </message>
+    <message>
+        <source>Unlock wallet</source>
+        <translation>Otključajte novčanik.</translation>
+    </message>
+    <message>
+        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
+        <translation>Ova operacija zahteva lozinku za šifrovanje za dešifrovanje novčanika.</translation>
+    </message>
+    <message>
+        <source>Decrypt wallet</source>
+        <translation>Dešifrujte novčanik</translation>
+    </message>
+    <message>
+        <source>Change passphrase</source>
+        <translation>Promenite lozinku za šifrovanje</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>Unesite staru i novu lozinku za šifrovanje novčanika.</translation>
+    </message>
+    <message>
+        <source>Confirm wallet encryption</source>
+        <translation>Potvrdite šifrovanje novčanika.</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to encrypt your wallet?</source>
+        <translation>Da li ste sigurni da želite da šifrujete novčanik?</translation>
+    </message>
+    <message>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR CHC&lt;/b&gt;!</source>
+        <translation>Upozorenje: Ako enkriptujete vaš novčanik i izgubite lozinku za šifrovanje, &lt;b&gt;IZGUBIĆETE NEPOVRATNO SVU KOLIČINU CHC&lt;/b&gt;!</translation>
+    </message>
+    <message>
+        <source>Wallet encrypted</source>
+        <translation>Novčanik je šifrovan</translation>
+    </message>
+    <message>
+        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your coins from being stolen by malware infecting your computer.</source>
+        <translation>%1 će se zatvoriti sada kako bi se dovršila enkripcija. Upamptite da enkripcija vašeg novčanika ne može potpuno zaštititi novčiće od krađe ako je vaš računar zaražen zlonamernim programima.</translation>
+    </message>
+    <message>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
+        <translation>VAŽNO: Sve prethodne rezervne kopije vašeg novčanika neophodno je da budu zamenjene novije generisanom, šifrovanom datotekom novčanika. Iz bezbednosnih razloga, prethodne rezervne kopije ne šifrovanog novčanika postaju neupotrebljive nakon šifrovanja novčanika.</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed</source>
+        <translation>Šifrovanje novčanika nije uspela</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
+        <translation>Šufrovanje novčanika nije uspela zbog interne greške. Novčanik nije šifrovan.</translation>
+    </message>
+    <message>
+        <source>The supplied passphrases do not match.</source>
+        <translation>Uneta lozinka za šifrovanje se ne poklapa.</translation>
+    </message>
+    <message>
+        <source>Wallet unlock failed</source>
+        <translation>Otključavanje novčanika nije uspelo</translation>
+    </message>
+    <message>
+        <source>The passphrase entered for the wallet decryption was incorrect.</source>
+        <translation>Lozinka uneta za dešifrovanje novčanika je netačna.</translation>
+    </message>
+    <message>
+        <source>Wallet decryption failed</source>
+        <translation>Dešifrovanje novčanika nije uspelo</translation>
+    </message>
+    <message>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation>Lozinka za šifrovanje novčanika je uspešno promenjena.</translation>
+    </message>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>Upozorenje: Ukljčena su velika slova na tastaturi!</translation>
+    </message>
+</context>
 <context>
     <name>BanTableModel</name>
-    </context>
+    <message>
+        <source>IP/Netmask</source>
+        <translation>IP/Netmaska</translation>
+    </message>
+    <message>
+        <source>Banned Until</source>
+        <translation>Zabranjen Do</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
+    <message>
+        <source>Sign &amp;message...</source>
+        <translation>Potpišite &amp;poruku...</translation>
+    </message>
     <message>
         <source>Synchronizing with network...</source>
         <translation>Синхронизација са мрежом у току...</translation>
@@ -94,16 +258,36 @@
         <translation>&amp;Општи преглед</translation>
     </message>
     <message>
+        <source>Node</source>
+        <translation>Čvorište</translation>
+    </message>
+    <message>
         <source>Show general overview of wallet</source>
         <translation>Погледајте општи преглед новчаника</translation>
     </message>
     <message>
+        <source>Send coins to a Chaincoin address</source>
+        <translation>Pošaljite novčiće na Chaincoin adresu</translation>
+    </message>
+    <message>
+        <source>Request payments (generates QR codes and chaincoin: URIs)</source>
+        <translation>Zahtevajte plaćanje (generiše se QR kod i chaincoin: URis)</translation>
+    </message>
+    <message>
         <source>&amp;Transactions</source>
-        <translation>&amp;Трансакције</translation>
+        <translation>&amp;Transkacije</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
-        <translation>Претражите историјат трансакција</translation>
+        <translation>Pretražite istoriju transakcija</translation>
+    </message>
+    <message>
+        <source>&amp;Masternodes</source>
+        <translation>&amp;Glavni čvorovi</translation>
+    </message>
+    <message>
+        <source>Browse masternodes</source>
+        <translation>Pregledajte glavne švorove</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
@@ -111,7 +295,11 @@
     </message>
     <message>
         <source>Quit application</source>
-        <translation>Напустите програм</translation>
+        <translation>Napustite program</translation>
+    </message>
+    <message>
+        <source>Show information about %1</source>
+        <translation>Prikađite informaciju o %1</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
@@ -119,23 +307,43 @@
     </message>
     <message>
         <source>Show information about Qt</source>
-        <translation>Прегледајте информације о Qt-у</translation>
+        <translation>Pregledajte informacije o Qt-у</translation>
     </message>
     <message>
         <source>&amp;Options...</source>
-        <translation>П&amp;оставке...</translation>
+        <translation>&amp;Pоdešavanja...</translation>
+    </message>
+    <message>
+        <source>Modify configuration options for %1</source>
+        <translation>Izmenite podešavanja konfiguracije za %1</translation>
     </message>
     <message>
         <source>&amp;Encrypt Wallet...</source>
-        <translation>&amp;Шифровање новчаника...</translation>
+        <translation>&amp;Šifrovanje novčanika...</translation>
     </message>
     <message>
         <source>&amp;Backup Wallet...</source>
-        <translation>&amp;Backup новчаника</translation>
+        <translation>&amp;Rezervna kopija novčanika</translation>
     </message>
     <message>
         <source>&amp;Change Passphrase...</source>
-        <translation>Промени &amp;лозинку...</translation>
+        <translation>Promenite &amp;lozinku za šifrovanje...</translation>
+    </message>
+    <message>
+        <source>Sign messages with your Chaincoin addresses to prove you own them</source>
+        <translation>Potpišite poruku sa Chaincoin adresa da bi ste dolazali da su u vašem posedu</translation>
+    </message>
+    <message>
+        <source>&amp;Information</source>
+        <translation>&amp;Informacija</translation>
+    </message>
+    <message>
+        <source>Show diagnostic information</source>
+        <translation>Pokaži diagnostičke informacije</translation>
+    </message>
+    <message>
+        <source>&amp;Debug console</source>
+        <translation>Kono&amp;la za otklanjanje gršaka</translation>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
@@ -303,6 +511,12 @@
     </context>
 <context>
     <name>PeerTableModel</name>
+    </context>
+<context>
+    <name>ProposalList</name>
+    </context>
+<context>
+    <name>ProposalTableModel</name>
     </context>
 <context>
     <name>QObject</name>

@@ -1252,6 +1252,12 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
 </context>
 <context>
+    <name>ProposalList</name>
+    </context>
+<context>
+    <name>ProposalTableModel</name>
+    </context>
+<context>
     <name>QObject</name>
     <message>
         <source>Amount</source>

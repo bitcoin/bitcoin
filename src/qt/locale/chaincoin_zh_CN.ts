@@ -62,6 +62,14 @@
         <translation>收款地址</translation>
     </message>
     <message>
+        <source>These are your Chaincoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>这些是你要付款过去的链币地址。在付钱之前，务必要检查金额和收款地址是否正确。</translation>
+    </message>
+    <message>
+        <source>These are your Chaincoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>这些是你用来收款的链币地址。建议在每次交易时，都使用一个新的收款地址。</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation>复制地址</translation>
     </message>
@@ -124,6 +132,18 @@
         <translation>重复新密码</translation>
     </message>
     <message>
+        <source>Show password</source>
+        <translation>显示密码</translation>
+    </message>
+    <message>
+        <source>Serves to disable the trivial sendmoney when OS account compromised. Provides no real security.</source>
+        <translation>当操作系统帐户受到威胁时，用来禁用微不足道的sendmoney功能。 不提供真正的安全。</translation>
+    </message>
+    <message>
+        <source>Only for mixing via PrivateSend</source>
+        <translation>只用于私人混合</translation>
+    </message>
+    <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
         <translation>输入钱包的新密码。&lt;br/&gt;密码请用&lt;b&gt;10 个以上的随机字符&lt;/b&gt;，或是&lt;b&gt;8 个以上的字词&lt;/b&gt;。</translation>
     </message>
@@ -164,8 +184,16 @@
         <translation>你确定要把钱包加密吗？</translation>
     </message>
     <message>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR CHC&lt;/b&gt;!</source>
+        <translation>警告: 如果把钱包加密后又忘记密码，你就会从此&lt;b&gt;失去其中所有的链币了&lt;/b&gt;！</translation>
+    </message>
+    <message>
         <source>Wallet encrypted</source>
         <translation>钱包已加密</translation>
+    </message>
+    <message>
+        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your coins from being stolen by malware infecting your computer.</source>
+        <translation>%1 现在要关闭，以完成加密过程。请注意，加密钱包不能完全防止入侵你的电脑的恶意程序偷取钱币。</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -238,12 +266,36 @@
         <translation>显示钱包概况</translation>
     </message>
     <message>
+        <source>Send coins to a Chaincoin address</source>
+        <translation>向一个链币地址发送链币</translation>
+    </message>
+    <message>
+        <source>Request payments (generates QR codes and chaincoin: URIs)</source>
+        <translation>请求支付 (生成二维码和链币: URI)</translation>
+    </message>
+    <message>
         <source>&amp;Transactions</source>
         <translation>交易记录(&amp;T)</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
         <translation>查看交易历史</translation>
+    </message>
+    <message>
+        <source>&amp;Masternodes</source>
+        <translation>&amp;主节点</translation>
+    </message>
+    <message>
+        <source>Browse masternodes</source>
+        <translation>浏览主节点</translation>
+    </message>
+    <message>
+        <source>&amp;Proposals</source>
+        <translation>&amp;提案</translation>
+    </message>
+    <message>
+        <source>Browse proposals</source>
+        <translation>浏览提案</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
@@ -284,6 +336,66 @@
     <message>
         <source>&amp;Change Passphrase...</source>
         <translation>更改密码(&amp;C)...</translation>
+    </message>
+    <message>
+        <source>Sign messages with your Chaincoin addresses to prove you own them</source>
+        <translation>用链币地址关联的私钥为消息签名，以证明您拥有这个链币地址</translation>
+    </message>
+    <message>
+        <source>Verify messages to ensure they were signed with specified Chaincoin addresses</source>
+        <translation>验证邮件以确保它们使用指定的链币地址进行签名</translation>
+    </message>
+    <message>
+        <source>&amp;Information</source>
+        <translation>&amp;信息</translation>
+    </message>
+    <message>
+        <source>Show diagnostic information</source>
+        <translation>显示诊断信息</translation>
+    </message>
+    <message>
+        <source>&amp;Debug console</source>
+        <translation>调试控制台(&amp;D)</translation>
+    </message>
+    <message>
+        <source>&amp;Network Monitor</source>
+        <translation>网络监控(&amp;N)</translation>
+    </message>
+    <message>
+        <source>Show network monitor</source>
+        <translation>显示网络监控</translation>
+    </message>
+    <message>
+        <source>&amp;Peers list</source>
+        <translation>&amp;同伴名单</translation>
+    </message>
+    <message>
+        <source>Show peers info</source>
+        <translation>显示同行信息</translation>
+    </message>
+    <message>
+        <source>Open Wallet &amp;Configuration File</source>
+        <translation>打开钱包&amp;配置文件</translation>
+    </message>
+    <message>
+        <source>Open configuration file</source>
+        <translation>打开配置文件</translation>
+    </message>
+    <message>
+        <source>Open &amp;Masternode Configuration File</source>
+        <translation>打开&amp;主链点配置文件</translation>
+    </message>
+    <message>
+        <source>Open Masternode configuration file</source>
+        <translation>打开主链点配置文件</translation>
+    </message>
+    <message>
+        <source>Show Automatic &amp;Backups</source>
+        <translation>显示自动&amp;备份</translation>
+    </message>
+    <message>
+        <source>Show automatically created wallet backups</source>
+        <translation>显示自动创建的钱包备份</translation>
     </message>
     <message>
         <source>&amp;Sending addresses...</source>
@@ -342,6 +454,10 @@
         <translation>接收(&amp;R)</translation>
     </message>
     <message>
+        <source>&amp;About Chaincoin Core</source>
+        <translation>＆关于链币核心</translation>
+    </message>
+    <message>
         <source>&amp;Show / Hide</source>
         <translation>显示 / 隐藏(&amp;S)</translation>
     </message>
@@ -389,6 +505,10 @@
         <source>Processing blocks on disk...</source>
         <translation>正在处理数据块...</translation>
     </message>
+    <message numerus="yes">
+        <source>Processed %n block(s) of transaction history.</source>
+        <translation><numerusform>处理了％n块的交易记录。</numerusform></translation>
+    </message>
     <message>
         <source>%1 behind</source>
         <translation>落后 %1 </translation>
@@ -404,6 +524,30 @@
     <message>
         <source>Error</source>
         <translation>错误</translation>
+    </message>
+    <message>
+        <source>Open $URI...</source>
+        <translation>打开 $URI...</translation>
+    </message>
+    <message>
+        <source>Open a chaincoin: URI or payment request</source>
+        <translation>打开一个链币: URI 或支付请求</translation>
+    </message>
+    <message>
+        <source>Show the Chaincoin Core help message to get a list with possible Chaincoin Core command-line options</source>
+        <translation>显示链币核心帮助信息来得到链币核心的命令行选项列表</translation>
+    </message>
+    <message>
+        <source>&amp;PrivateSend information</source>
+        <translation>＆保密发送信息</translation>
+    </message>
+    <message>
+        <source>Show the PrivateSend basic information</source>
+        <translation>显示保密发送的基本信息</translation>
+    </message>
+    <message>
+        <source>&amp;Tools</source>
+        <translation>&amp;工具</translation>
     </message>
     <message>
         <source>Warning</source>
@@ -422,12 +566,24 @@
         <translation>%1 客戶</translation>
     </message>
     <message>
+        <source>The configuration file could not be opened.</source>
+        <translation>配置文件无法打开。</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n active connection(s) to Chaincoin network</source>
+        <translation><numerusform>％n活动连接在链币网上</numerusform></translation>
+    </message>
+    <message>
         <source>Connecting to peers...</source>
         <translation>正在连接到节点……</translation>
     </message>
     <message>
         <source>Catching up...</source>
         <translation>更新中...</translation>
+    </message>
+    <message>
+        <source>Chaincoin Core</source>
+        <translation>Chaincoin Core</translation>
     </message>
     <message>
         <source>Date: %1
@@ -480,13 +636,25 @@
         <translation>钱包已被&lt;b&gt;加密&lt;/b&gt;，当前为&lt;b&gt;解锁&lt;/b&gt;状态</translation>
     </message>
     <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt; for mixing only</source>
+        <translation>钱包已被&lt;b&gt;加密&lt;/b&gt;，当前为&lt;b&gt;解锁&lt;/b&gt;仅用于混合</translation>
+    </message>
+    <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>钱包已被&lt;b&gt;加密&lt;/b&gt;，当前为&lt;b&gt;锁定&lt;/b&gt;状态</translation>
     </message>
-    </context>
+    <message>
+        <source>A fatal error occurred. Chaincoin can no longer continue safely and will quit.</source>
+        <translation>发生致命错误。 链币不能再安全继续并且会退出。</translation>
+    </message>
+</context>
 <context>
     <name>ClientModel</name>
-    </context>
+    <message>
+        <source>Total: %1 (PS compatible: %2 / Enabled: %3)</source>
+        <translation>总数: %1 (PS 兼容: %2 / 启用: %3)</translation>
+    </message>
+</context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -526,12 +694,20 @@
         <translation>(不)全选</translation>
     </message>
     <message>
+        <source>toggle lock state</source>
+        <translation>切换锁定状态</translation>
+    </message>
+    <message>
         <source>Tree mode</source>
         <translation>树状模式</translation>
     </message>
     <message>
         <source>List mode</source>
         <translation>列表模式</translation>
+    </message>
+    <message>
+        <source>(1 locked)</source>
+        <translation>(1 锁定)</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -544,6 +720,10 @@
     <message>
         <source>Received with address</source>
         <translation>按地址收款</translation>
+    </message>
+    <message>
+        <source>PS Rounds</source>
+        <translation>PS 回合</translation>
     </message>
     <message>
         <source>Date</source>
@@ -606,6 +786,14 @@
         <translation>复制找零金额</translation>
     </message>
     <message>
+        <source>Please switch to "List mode" to use this function.</source>
+        <translation>请换到“列表模式”以使用此功能。</translation>
+    </message>
+    <message>
+        <source>Non-anonymized input selected. &lt;b&gt;PrivateSend will be disabled.&lt;/b&gt;&lt;br&gt;&lt;br&gt;If you still want to use PrivateSend, please deselect all non-nonymized inputs first and then check PrivateSend checkbox again.</source>
+        <translation>选定非匿名的输入。&lt;b&gt;PrivateSend会被关掉，&lt;/b&gt;&lt;br&gt;&lt;br&gt;如果你仍然还想使用PrivateSend， 请先取消选择所有非匿名输入, 然后再次选中PrivateSend复选框</translation>
+    </message>
+    <message>
         <source>(%1 locked)</source>
         <translation>(锁定 %1 枚)</translation>
     </message>
@@ -636,7 +824,71 @@
 </context>
 <context>
     <name>DarksendConfig</name>
-    </context>
+    <message>
+        <source>Configure PrivateSend</source>
+        <translation>配置PrivateSend</translation>
+    </message>
+    <message>
+        <source>Basic Privacy</source>
+        <translation>基本隐私</translation>
+    </message>
+    <message>
+        <source>High Privacy</source>
+        <translation>高级隐私</translation>
+    </message>
+    <message>
+        <source>Maximum Privacy</source>
+        <translation>最高隐私</translation>
+    </message>
+    <message>
+        <source>Please select a privacy level.</source>
+        <translation>请选择隐私程度。</translation>
+    </message>
+    <message>
+        <source>Use 2 separate masternodes to mix funds up to 1000 CHC</source>
+        <translation>用2个独立的主链点来混合资金高达1000 链币</translation>
+    </message>
+    <message>
+        <source>Use 8 separate masternodes to mix funds up to 1000 CHC</source>
+        <translation>用8个独立的主链点来混合资金高达1000 链币</translation>
+    </message>
+    <message>
+        <source>Use 16 separate masternodes</source>
+        <translation>用16个独立的主链点</translation>
+    </message>
+    <message>
+        <source>This option is the quickest and will cost about ~0.025 CHC to anonymize 1000 CHC</source>
+        <translation>这个选项是最快的，并且会花费大约~0.025 链币来·匿名化1000链币</translation>
+    </message>
+    <message>
+        <source>This option is moderately fast and will cost about 0.05 CHC to anonymize 1000 CHC</source>
+        <translation>这个选项速度中等，并且会花费大约~0.05 链币来·匿名化1000链币</translation>
+    </message>
+    <message>
+        <source>This is the slowest and most secure option. Using maximum anonymity will cost</source>
+        <translation>这是最慢和最安全的选择。使用最高匿名化将会花费用</translation>
+    </message>
+    <message>
+        <source>0.1 CHC per 1000 CHC you anonymize.</source>
+        <translation>0.1 链币每 1000 链币你匿名化</translation>
+    </message>
+    <message>
+        <source>PrivateSend Configuration</source>
+        <translation>PrivateSend 配置</translation>
+    </message>
+    <message>
+        <source>PrivateSend was successfully set to basic (%1 and 2 rounds). You can change this at any time by opening Chaincoin's configuration screen.</source>
+        <translation>PrivateSend已成功设置为基本（%1和2轮）。您可以随时打开链币配置屏幕来改变这一点。</translation>
+    </message>
+    <message>
+        <source>PrivateSend was successfully set to high (%1 and 8 rounds). You can change this at any time by opening Chaincoin's configuration screen.</source>
+        <translation>PrivateSend已成功设置为基本（%1和8轮）。你可以随时打开链币配置屏幕来改变这一点。</translation>
+    </message>
+    <message>
+        <source>PrivateSend was successfully set to maximum (%1 and 16 rounds). You can change this at any time by opening Chaincoin's configuration screen.</source>
+        <translation>PrivateSend已成功设置为基本（%1和16轮）. 你可以随时打开链币配置屏幕来改变这一点.</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -674,6 +926,10 @@
     <message>
         <source>Edit sending address</source>
         <translation>编辑付款地址</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is not a valid Chaincoin address.</source>
+        <translation>输入的地址"%1"不是有效的链币地址</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book.</source>
@@ -718,8 +974,16 @@
         <translation>版本</translation>
     </message>
     <message>
+        <source>Chaincoin Core</source>
+        <translation>链币核心</translation>
+    </message>
+    <message>
         <source>(%1-bit)</source>
         <translation>(%1 位)</translation>
+    </message>
+    <message>
+        <source>About Chaincoin Core</source>
+        <translation>关于链币核心</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -761,7 +1025,15 @@
         <source>Reset all settings changed in the GUI</source>
         <translation>重置图形界面所有的变更设置</translation>
     </message>
-    </context>
+    <message>
+        <source>PrivateSend information</source>
+        <translation>PrivateSend 信息</translation>
+    </message>
+    <message>
+        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Chaincoin in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times..&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.01 CHC, 0.1 CHC, 1 CHC and 10 CHC -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be anonymized. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more info see &lt;a href="https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend"&gt;https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend&lt;/a&gt;         </source>
+        <translation>&lt;h3&gt;PrivateSend基本&lt;/h3&gt;PrivateSend 模糊你的资金来源，为你提供真正的财务隐私。你钱包里的所有链币都是由不同的“投入”组成的，你可以把它看作是独立, 分别的硬币。&lt;br&gt;PrivateSend使用新的处理过程将你的输入与其他两个人的输入混合在一起，而不会让你的硬币离开您的钱包。你始终保持对你的钱的控制。&lt;hr&gt;&lt;b&gt;PrivateSend的过程将像这样工作：&lt;/b&gt;&lt;ol type="1"&gt;&lt;li&gt;PrivateSend首先将您的交易投入分解为标准面值。这些面值是0.01 链币，0.1 链币，1 链币和 10 链币 - 有点像你每天使用的纸币。&lt;/li&gt;&lt;li&gt;你的钱包然后将所有请求发送到网络上特殊配置的软件节点，称为“主节点”。这些“主节点”会被通知你有兴趣混合一定的面额。没有任何可识别的信息会被发送到主节点，所以他们永远不知道你是谁。&lt;/li&gt;&lt;li&gt;当另外两个人发出类似的信息时，表示他们希望混合相同的面额，混合会开始。主节点将会混合输入并指示所有三个用户的钱包现在把换后的输入回付给自己。你的钱包会直接向其自己支付这个面额, 但是以不同的地址（称为更改地址)。&lt;/li&gt;&lt;li&gt;为了充分掩盖您的资金，你的钱包必须在每个面额下多次重复此过程。每当这个过程完成时，它就被称为“一轮”。每一轮PrivateSend都会让别人更难以确定你的资金来源。&lt;/li&gt;&lt;li&gt;这种混合过程在后台进行，无需任何干预。当你想进行交易时，你的资金已经会被匿名化了。不需要额外的等待。&lt;/li&gt;&lt;/ol&gt;&lt;hr&gt;&lt;b&gt;重要：&lt;/b&gt;您的钱包只包含1000个“更改地址”。每次发生混和时，最多9个地址会被使用。这意味着这1000个地址会持续大约100个混和事件。当900个使用时， 你的钱包必须创建更多地址。但是，只有在启用了自动备份的情况下才能执行此操作。&lt;br&gt;因此，禁用备份的用户也将禁用PrivateSend。&lt;hr&gt;更多信息请参阅&lt;a href="https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend"&gt;https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend&lt;/a&gt;</translation>
+    </message>
+</context>
 <context>
     <name>Intro</name>
     <message>
@@ -793,6 +1065,10 @@
         <translation>使用自定义的数据目录：</translation>
     </message>
     <message>
+        <source>Chaincoin</source>
+        <translation>链币</translation>
+    </message>
+    <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
         <translation>错误：无法创建 指定的数据目录 "%1" </translation>
     </message>
@@ -800,15 +1076,187 @@
         <source>Error</source>
         <translation>错误</translation>
     </message>
-    </context>
+    <message numerus="yes">
+        <source>%n GB of free space available</source>
+        <translation><numerusform>％n GB的可用空间</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation><numerusform>（需要％n GB）</numerusform></translation>
+    </message>
+</context>
 <context>
     <name>MasternodeList</name>
-    </context>
+    <message>
+        <source>Form</source>
+        <translation>表格</translation>
+    </message>
+    <message>
+        <source>My Masternodes</source>
+        <translation>我的主节点</translation>
+    </message>
+    <message>
+        <source>Note: Status of your masternodes in local wallet can potentially be slightly incorrect.&lt;br /&gt;Always wait for wallet to sync additional data and then double check from another node&lt;br /&gt;if your masternode should be running but you still do not see "ENABLED" in "Status" field.</source>
+        <translation>注意：本地钱包的主节点状态可能会稍微不正确。</translation>
+    </message>
+    <message>
+        <source>Alias</source>
+        <translation>别名</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>地址</translation>
+    </message>
+    <message>
+        <source>Protocol</source>
+        <translation>协议</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>状态</translation>
+    </message>
+    <message>
+        <source>Active</source>
+        <translation>活性</translation>
+    </message>
+    <message>
+        <source>Last Seen</source>
+        <translation>最近看到</translation>
+    </message>
+    <message>
+        <source>Payee</source>
+        <translation>收款人</translation>
+    </message>
+    <message>
+        <source>S&amp;tart alias</source>
+        <translation>&amp;开始别名</translation>
+    </message>
+    <message>
+        <source>Start &amp;all</source>
+        <translation>开始&amp;全都</translation>
+    </message>
+    <message>
+        <source>Start &amp;MISSING</source>
+        <translation>开始不见的</translation>
+    </message>
+    <message>
+        <source>&amp;Update status</source>
+        <translation>&amp;更新状态</translation>
+    </message>
+    <message>
+        <source>Show additional Masternode information</source>
+        <translation>显示额外的主节点信息</translation>
+    </message>
+    <message>
+        <source>Show Details</source>
+        <translation>显示详细信息</translation>
+    </message>
+    <message>
+        <source>Status will be updated automatically in (sec):</source>
+        <translation>状态将在（秒）内自动更新：</translation>
+    </message>
+    <message>
+        <source>0</source>
+        <translation>0</translation>
+    </message>
+    <message>
+        <source>All Masternodes</source>
+        <translation>全部主节点</translation>
+    </message>
+    <message>
+        <source>Filter List:</source>
+        <translation>过滤列表：</translation>
+    </message>
+    <message>
+        <source>Filter masternode list</source>
+        <translation>过滤主节点表</translation>
+    </message>
+    <message>
+        <source>Node Count:</source>
+        <translation>节点数量：</translation>
+    </message>
+    <message>
+        <source>Start alias</source>
+        <translation>开始别名</translation>
+    </message>
+    <message>
+        <source>Confirm masternode start</source>
+        <translation>确认主节点开始</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to start masternode %1?</source>
+        <translation>你确定要开始主节点%1？</translation>
+    </message>
+    <message>
+        <source>Confirm all masternodes start</source>
+        <translation>确认全部主节点启动</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to start ALL masternodes?</source>
+        <translation>你确定要开始“全部”主节点吗？</translation>
+    </message>
+    <message>
+        <source>Command is not available right now</source>
+        <translation>命令现在不可用</translation>
+    </message>
+    <message>
+        <source>You can't use this command until masternode list is synced</source>
+        <translation>在未完成同步主节点列表之前，你不能使用此命令</translation>
+    </message>
+    <message>
+        <source>Confirm missing masternodes start</source>
+        <translation>确认不见的主节点开始</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to start MISSING masternodes?</source>
+        <translation>你确定要启动‘不见’的主节点吗？</translation>
+    </message>
+    <message>
+        <source>Additional information for Masternode </source>
+        <translation>有关主节点的更多信息</translation>
+    </message>
+    <message>
+        <source>Masternode Private Key</source>
+        <translation>主节点私钥</translation>
+    </message>
+    <message>
+        <source>Private Key</source>
+        <translation>私钥</translation>
+    </message>
+    <message>
+        <source>Collateral</source>
+        <translation>抵押</translation>
+    </message>
+    <message>
+        <source>IP</source>
+        <translation>IP地址</translation>
+    </message>
+    <message>
+        <source>Version</source>
+        <translation>版本</translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation>未知</translation>
+    </message>
+    <message>
+        <source>Sentinel</source>
+        <translation>哨器</translation>
+    </message>
+</context>
 <context>
     <name>ModalOverlay</name>
     <message>
         <source>Form</source>
         <translation>表单</translation>
+    </message>
+    <message>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the Chaincoin network, as detailed below.</source>
+        <translation>最近的交易可能还看不见，因此你的钱包的余额可能不正确。一旦你的钱包完成了与链币网络的同步，这些信息就会正确无误，详情如下。</translation>
+    </message>
+    <message>
+        <source>Attempting to spend Chaincoin that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <translation>当试花 ‘尚未显示的交易’ 的链币将不会被网络接受。</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -825,6 +1273,10 @@
     <message>
         <source>Progress</source>
         <translation>进度</translation>
+    </message>
+    <message>
+        <source>~</source>
+        <translation>~</translation>
     </message>
     <message>
         <source>Progress increase per hour</source>
@@ -893,12 +1345,88 @@
         <translation>脚本验证线程数(&amp;V)</translation>
     </message>
     <message>
+        <source>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</source>
+        <translation>选项卡其中， 在第一个子选项卡中显示了所有你的主节点&lt;br/&gt;以及第二个子选项卡是中网络上的所有主节点。</translation>
+    </message>
+    <message>
+        <source>Show Masternodes Tab</source>
+        <translation>显示主节点选项卡</translation>
+    </message>
+    <message>
+        <source>Show additional information and buttons for PrivateSend on overview screen.</source>
+        <translation>在总览屏幕上显示PrivateSend的附加信息和按钮。</translation>
+    </message>
+    <message>
+        <source>Enable advanced PrivateSend interface</source>
+        <translation>启用先进的PrivateSend界面</translation>
+    </message>
+    <message>
+        <source>Show warning dialog when PrivateSend detects that wallet has very low number of keys left.</source>
+        <translation>当PrivateSend检测到钱包的密钥数量非常少时显示警告对话框。</translation>
+    </message>
+    <message>
+        <source>Warn if PrivateSend is running out of keys</source>
+        <translation>如果PrivateSend的密钥要用完时，则发出警告</translation>
+    </message>
+    <message>
+        <source>Whether to use experimental PrivateSend mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</source>
+        <translation>是否使用实验性PrivateSend模式当每个区块都有多个次混合回合。&lt;br/&gt;注意：您必须小心使用此功能。&lt;br/&gt;确保你总是有最近的钱包（自动）备份在一个安全的地方。</translation>
+    </message>
+    <message>
+        <source>Enable PrivateSend &amp;multi-session</source>
+        <translation>启用私密发送和多会合</translation>
+    </message>
+    <message>
+        <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
+        <translation>如果你禁用未经确认的补钱， 从交易留下来的补钱&lt;br/&gt;直到该交易至少有一次确认才能使用。&lt;br/&gt;这也会影响你的余额计算方式。</translation>
+    </message>
+    <message>
+        <source>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
+        <translation>此设置确定多少不同的主节点那个输入将会通过匿名处理&lt;br/&gt;更多的匿名化使得隐私程度更高，但费用也更高。</translation>
+    </message>
+    <message>
+        <source>PrivateSend rounds to use</source>
+        <translation>PrivateSend轮次使用</translation>
+    </message>
+    <message>
+        <source>This amount acts as a threshold to turn off PrivateSend once it's reached.</source>
+        <translation>一旦达到，此金额充当一个门槛关闭私人发送。</translation>
+    </message>
+    <message>
+        <source>Amount of Chaincoin to keep anonymized</source>
+        <translation>链币数量要保持匿名</translation>
+    </message>
+    <message>
+        <source>Automatically open the Chaincoin Core client port on the router. This only works when your router  UPnP and it is enabled.</source>
+        <translation>自动打开路由器上的链币中心客户端端口。</translation>
+    </message>
+    <message>
+        <source>Connect to the Chaincoin network through a SOCKS5 proxy.</source>
+        <translation>通过SOCKS5代理连接到链币网络。</translation>
+    </message>
+    <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
         <translation>代理的 IP 地址 (例如 IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
         <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
         <translation>显示默认的SOCKS5代理是否被用于在该类型的网络下连接同伴</translation>
+    </message>
+    <message>
+        <source>Connect to the Chaincoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>通过Tor隐藏服务的单独SOCKS5代理连接到链币网络。</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
+        <translation>使用单独的SOCKS＆5代理通过Tor隐藏服务来访问对等点：</translation>
+    </message>
+    <message>
+        <source>Hide the icon from the system tray.</source>
+        <translation>从系统托盘中隐藏图标。</translation>
+    </message>
+    <message>
+        <source>&amp;Hide tray icon</source>
+        <translation>&amp;隐藏托盘图标</translation>
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
@@ -929,6 +1457,14 @@
         <translation>网络(&amp;N)</translation>
     </message>
     <message>
+        <source>Automatically start Chaincoin Core after logging in to the system.</source>
+        <translation>登录到系统后自动启动链币核心</translation>
+    </message>
+    <message>
+        <source>&amp;Start Chaincoin Core on system login</source>
+        <translation>&amp;在系统登录时启动链币核心</translation>
+    </message>
+    <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
         <translation>(0 = 自动, &lt;0 = 保持指定数量的CPU核心空闲)</translation>
     </message>
@@ -951,6 +1487,14 @@
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>使用 &amp;UPnP 映射端口</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside.</source>
+        <translation>接受来自外部的连接。</translation>
+    </message>
+    <message>
+        <source>Allow incomin&amp;g connections</source>
+        <translation>允许传入连接</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1019,6 +1563,23 @@
     <message>
         <source>Whether to show coin control features or not.</source>
         <translation>是否需要交易源地址控制功能。</translation>
+    </message>
+    <message>
+        <source>The user interface language can be set here. This setting will take effect after restarting Chaincoin Core.</source>
+        <translation>用户界面语言可以在这里设置。 设置将在重新启动链币核心后生效</translation>
+    </message>
+    <message>
+        <source>Language missing or translation incomplete? Help contributing translations here:
+https://www.transifex.com/projects/p/chaincoin/</source>
+        <translation>语言不全或翻译不完整？这里帮助提供翻译: https://www.transifex.com/projects/p/chaincoin/</translation>
+    </message>
+    <message>
+        <source>User Interface Theme:</source>
+        <translation>用户界面主题：</translation>
+    </message>
+    <message>
+        <source>Decimal digits</source>
+        <translation>小数点</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -1128,6 +1689,50 @@
         <translation>可使用：</translation>
     </message>
     <message>
+        <source>Completion:</source>
+        <translation>完成:</translation>
+    </message>
+    <message>
+        <source>PrivateSend Balance:</source>
+        <translation>匿名发送余额:</translation>
+    </message>
+    <message>
+        <source>Amount and Rounds:</source>
+        <translation>数量和回合:</translation>
+    </message>
+    <message>
+        <source>n/a</source>
+        <translation>n/a</translation>
+    </message>
+    <message>
+        <source>(Last Message)</source>
+        <translation>(最后消息)</translation>
+    </message>
+    <message>
+        <source>Start/Stop Mixing</source>
+        <translation>开始/停止 混合</translation>
+    </message>
+    <message>
+        <source>Try to manually submit a PrivateSend request.</source>
+        <translation>尝试手动提交匿名发送请求.</translation>
+    </message>
+    <message>
+        <source>Try Mix</source>
+        <translation>尝试混合</translation>
+    </message>
+    <message>
+        <source>Reset</source>
+        <translation>重启</translation>
+    </message>
+    <message>
+        <source>Information about PrivateSend and Mixing</source>
+        <translation>匿名发送和混合信息</translation>
+    </message>
+    <message>
+        <source>Info</source>
+        <translation>信息</translation>
+    </message>
+    <message>
         <source>Recent transactions</source>
         <translation>最近交易记录</translation>
     </message>
@@ -1142,6 +1747,22 @@
     <message>
         <source>Current total balance in watch-only addresses</source>
         <translation>观察地址(watch-only address)中的当前总余额 </translation>
+    </message>
+    <message>
+        <source>out of sync</source>
+        <translation>失去同步</translation>
+    </message>
+    <message>
+        <source>Automatic backups are disabled, no mixing available!</source>
+        <translation>自动备份被禁用,混合不可用!</translation>
+    </message>
+    <message>
+        <source>Start Mixing</source>
+        <translation>开始混合</translation>
+    </message>
+    <message>
+        <source>Stop Mixing</source>
+        <translation>停止混合</translation>
     </message>
     </context>
 <context>
@@ -1250,6 +1871,116 @@
         <translation>收到</translation>
     </message>
 </context>
+<context>
+    <name>ProposalList</name>
+    <message>
+        <source>Range...</source>
+        <translation>指定范围...</translation>
+    </message>
+    <message>
+        <source>Min yes votes</source>
+        <translation>最少赞同票</translation>
+    </message>
+    <message>
+        <source>Min no votes</source>
+        <translation>最少否决票</translation>
+    </message>
+    <message>
+        <source>Min percentage</source>
+        <translation>最少百分比</translation>
+    </message>
+    <message>
+        <source>Vote Yes</source>
+        <translation>投赞同票</translation>
+    </message>
+    <message>
+        <source>Yote Yes on the selected proposal</source>
+        <translation>在选中的提案上投赞同票</translation>
+    </message>
+    <message>
+        <source>Vote Abstain</source>
+        <translation>投弃权票</translation>
+    </message>
+    <message>
+        <source>Yote Abstain on the selected proposal</source>
+        <translation>在选中的提案上投弃权票</translation>
+    </message>
+    <message>
+        <source>Vote No</source>
+        <translation>投否决票</translation>
+    </message>
+    <message>
+        <source>Yote No on the selected proposal</source>
+        <translation>在选中的提案上投否决票</translation>
+    </message>
+    <message>
+        <source>Vote yes</source>
+        <translation>投赞同票</translation>
+    </message>
+    <message>
+        <source>Vote abstain</source>
+        <translation>投弃权票</translation>
+    </message>
+    <message>
+        <source>Vote no</source>
+        <translation>投否决票</translation>
+    </message>
+    <message>
+        <source>Confirm vote</source>
+        <translation>确认投票</translation>
+    </message>
+    <message>
+        <source>Voting</source>
+        <translation>投票</translation>
+    </message>
+    <message>
+        <source>Start Date:</source>
+        <translation>开始日期:</translation>
+    </message>
+    <message>
+        <source>End Date:</source>
+        <translation>结束日期:</translation>
+    </message>
+</context>
+<context>
+    <name>ProposalTableModel</name>
+    <message>
+        <source>Proposal</source>
+        <translation>提案</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>数量</translation>
+    </message>
+    <message>
+        <source>Start Date</source>
+        <translation>开始日期</translation>
+    </message>
+    <message>
+        <source>End Date</source>
+        <translation>结束日期</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>是</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>否</translation>
+    </message>
+    <message>
+        <source>Abs. Yes</source>
+        <translation>Abs. Yes</translation>
+    </message>
+    <message>
+        <source>Percentage</source>
+        <translation>百分比</translation>
+    </message>
+    <message>
+        <source>Proposal Name</source>
+        <translation>提案名字</translation>
+    </message>
+    </context>
 <context>
     <name>QObject</name>
     <message>
@@ -2752,5 +3483,261 @@
 </context>
 <context>
     <name>chaincoin-core</name>
-    </context>
+    <message>
+        <source>Line: %d</source>
+        <translation>行: %d</translation>
+    </message>
+    <message>
+        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
+        <translation>使用 &lt;port&gt;端口监听 JSON-RPC 连接 (默认: %u ; testnet: %u) </translation>
+    </message>
+    <message>
+        <source>Listen for connections on &lt;port&gt; (default: %u or testnet: %u)</source>
+        <translation>使用端口 &lt;port&gt; 监听连接 (默认: %u ; testnet: %u) </translation>
+    </message>
+    <message>
+        <source>Loading P2P addresses...</source>
+        <translation>正在加载P2P地址...</translation>
+    </message>
+    <message>
+        <source>Loading banlist...</source>
+        <translation>正在加载黑名单...</translation>
+    </message>
+    <message>
+        <source>Loading block index...</source>
+        <translation>正在加载区块索引...</translation>
+    </message>
+    <message>
+        <source>Loading governance cache...</source>
+        <translation>正在加载管理缓存…</translation>
+    </message>
+    <message>
+        <source>Loading masternode cache...</source>
+        <translation>正在加载主节点缓存…</translation>
+    </message>
+    <message>
+        <source>Loading masternode payment cache...</source>
+        <translation>正在加载主节点支付缓存…</translation>
+    </message>
+    <message>
+        <source>Loading wallet...</source>
+        <translation>正在加载钱包...</translation>
+    </message>
+    <message>
+        <source>Masternode options:</source>
+        <translation>主节点选项:</translation>
+    </message>
+    <message>
+        <source>Not enough file descriptors available.</source>
+        <translation>没有足够的文件描述符可用。</translation>
+    </message>
+    <message>
+        <source>Not enough funds to anonymize.</source>
+        <translation>没有足够的匿名资金.</translation>
+    </message>
+    <message>
+        <source>Not in the Masternode list.</source>
+        <translation>不在主节点列表中.</translation>
+    </message>
+    <message>
+        <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
+        <translation>只连接 &lt;net&gt;网络中的节点 (ipv4, ipv6 或 onion) </translation>
+    </message>
+    <message>
+        <source>Options:</source>
+        <translation>选项:</translation>
+    </message>
+    <message>
+        <source>Password for JSON-RPC connections</source>
+        <translation>JSON-RPC 连接密码</translation>
+    </message>
+    <message>
+        <source>Port: %d</source>
+        <translation>端口: %d</translation>
+    </message>
+    <message>
+        <source>Prepend debug output with timestamp (default: %u)</source>
+        <translation>输出调试信息时，前面加上时间戳 (默认: %u)</translation>
+    </message>
+    <message>
+        <source>Print this help message and exit</source>
+        <translation>打印出这段帮助信息并退出</translation>
+    </message>
+    <message>
+        <source>Print version and exit</source>
+        <translation>打印版本信息并退出</translation>
+    </message>
+    <message>
+        <source>PrivateSend is idle.</source>
+        <translation>匿名发送空闲.</translation>
+    </message>
+    <message>
+        <source>PrivateSend options:</source>
+        <translation>匿名发送选项:</translation>
+    </message>
+    <message>
+        <source>PrivateSend request complete:</source>
+        <translation>匿名发送请求完成:</translation>
+    </message>
+    <message>
+        <source>PrivateSend request incomplete:</source>
+        <translation>匿名发送请求未完成:</translation>
+    </message>
+    <message>
+        <source>Prune cannot be configured with a negative value.</source>
+        <translation>修剪不能配置一个负数。</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -txindex.</source>
+        <translation>修剪模式与 -txindex 不兼容。</translation>
+    </message>
+    <message>
+        <source>Pruning blockstore...</source>
+        <translation>正在修剪区块存储...</translation>
+    </message>
+    <message>
+        <source>RPC server options:</source>
+        <translation>RPC 服务器选项：</translation>
+    </message>
+    <message>
+        <source>Relay non-P2SH multisig (default: %u)</source>
+        <translation>是否转发 非P2SH格式的多签名交易 (默认: %u) </translation>
+    </message>
+    <message>
+        <source>Replaying blocks...</source>
+        <translation>重放区块…</translation>
+    </message>
+    <message>
+        <source>Rescan the block chain for missing wallet transactions on startup</source>
+        <translation>重新扫描区块链以查找遗漏的钱包交易</translation>
+    </message>
+    <message>
+        <source>Rescanning...</source>
+        <translation>正在重新扫描...</translation>
+    </message>
+    <message>
+        <source>Session not complete!</source>
+        <translation>会话未完成!</translation>
+    </message>
+    <message>
+        <source>Session timed out.</source>
+        <translation>会话超时</translation>
+    </message>
+    <message>
+        <source>Set key pool size to &lt;n&gt; (default: %u)</source>
+        <translation>设置私钥池大小为 &lt;n&gt; (默认：%u) </translation>
+    </message>
+    <message>
+        <source>Set maximum BIP141 block weight (default: %d)</source>
+        <translation>设置BIP141最大区块权重 (默认: %d)</translation>
+    </message>
+    <message>
+        <source>Set the masternode private key</source>
+        <translation>设置主节点私钥</translation>
+    </message>
+    <message>
+        <source>Set the number of threads to service RPC calls (default: %d)</source>
+        <translation>设置RPC服务线程数 (默认: %d) </translation>
+    </message>
+    <message>
+        <source>Show all debugging options (usage: --help -help-debug)</source>
+        <translation>显示所有调试选项 (用法:  --help -help-debug)</translation>
+    </message>
+    <message>
+        <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
+        <translation>客户端启动时压缩debug.log文件(缺省：no-debug模式时为1)</translation>
+    </message>
+    <message>
+        <source>Synchroning blockchain...</source>
+        <translation>同步区块链...</translation>
+    </message>
+    <message>
+        <source>Synchronization failed</source>
+        <translation>同步失败</translation>
+    </message>
+    <message>
+        <source>Synchronization finished</source>
+        <translation>同步完成</translation>
+    </message>
+    <message>
+        <source>Synchronization pending...</source>
+        <translation>等待同步...</translation>
+    </message>
+    <message>
+        <source>Tor control port password (default: empty)</source>
+        <translation>Tor 控制端口密码 (默认值: 空白)</translation>
+    </message>
+    <message>
+        <source>Tor control port to use if onion listening enabled (default: %s)</source>
+        <translation>开启监听 onion 连接时的 Tor 控制端口号 (默认值: %s)</translation>
+    </message>
+    <message>
+        <source>Transaction amount too small</source>
+        <translation>交易金额太小</translation>
+    </message>
+    <message>
+        <source>Transaction amounts must be positive</source>
+        <translation>交易金额必须为正数</translation>
+    </message>
+    <message>
+        <source>Transaction created successfully.</source>
+        <translation>交易创建成功</translation>
+    </message>
+    <message>
+        <source>Transaction fee and change calculation failed</source>
+        <translation>交易费更改计算失败</translation>
+    </message>
+    <message>
+        <source>Transaction fees are too high.</source>
+        <translation>交易费用太高</translation>
+    </message>
+    <message>
+        <source>Transaction has too long of a mempool chain</source>
+        <translation>交易对内存池链太长</translation>
+    </message>
+    <message>
+        <source>Transaction must have at least one recipient</source>
+        <translation>交易必须包含至少一个接收人</translation>
+    </message>
+    <message>
+        <source>Transaction not valid.</source>
+        <translation>交易无效.</translation>
+    </message>
+    <message>
+        <source>Transaction too large for fee policy</source>
+        <translation>对于当前费用策略交易太大</translation>
+    </message>
+    <message>
+        <source>Transaction too large</source>
+        <translation>交易太大</translation>
+    </message>
+    <message>
+        <source>Trying to connect...</source>
+        <translation>尝试连接…</translation>
+    </message>
+    <message>
+        <source>Wallet is locked.</source>
+        <translation>钱包以锁定.</translation>
+    </message>
+    <message>
+        <source>Wallet needed to be rewritten: restart %s to complete</source>
+        <translation>钱包需要重写：重新启动%s完成</translation>
+    </message>
+    <message>
+        <source>Wallet options:</source>
+        <translation>钱包选项:</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation>警告</translation>
+    </message>
+    <message>
+        <source>Will retry...</source>
+        <translation>将重试…</translation>
+    </message>
+    <message>
+        <source>see debug.log for details.</source>
+        <translation>查看debug.log取更多信息.</translation>
+    </message>
+</context>
 </TS>

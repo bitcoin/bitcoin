@@ -314,17 +314,17 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+378"/>
+        <location filename="../bitcoingui.cpp" line="+387"/>
         <source>Sign &amp;message...</source>
         <translation>Sign &amp;message...</translation>
     </message>
     <message>
-        <location line="+552"/>
+        <location line="+563"/>
         <source>Synchronizing with network...</source>
         <translation>Synchronizing with network...</translation>
     </message>
     <message>
-        <location line="-642"/>
+        <location line="-660"/>
         <source>&amp;Overview</source>
         <translation>&amp;Overview</translation>
     </message>
@@ -370,6 +370,16 @@
     </message>
     <message>
         <location line="+25"/>
+        <source>&amp;Proposals</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Browse proposals</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>E&amp;xit</source>
         <translation>E&amp;xit</translation>
     </message>
@@ -504,7 +514,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+470"/>
+        <location line="+481"/>
         <source>Click to disable network activity.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -529,7 +539,7 @@
         <translation>Reindexing blocks on disk...</translation>
     </message>
     <message>
-        <location line="-566"/>
+        <location line="-577"/>
         <source>Backup wallet to another location</source>
         <translation>Backup wallet to another location</translation>
     </message>
@@ -549,7 +559,7 @@
         <translation>&amp;Verify message...</translation>
     </message>
     <message>
-        <location line="-239"/>
+        <location line="-246"/>
         <source>Wallet</source>
         <translation>Wallet</translation>
     </message>
@@ -564,7 +574,7 @@
         <translation>&amp;Receive</translation>
     </message>
     <message>
-        <location line="+51"/>
+        <location line="+58"/>
         <source>&amp;About Chaincoin Core</source>
         <translation type="unfinished"></translation>
     </message>
@@ -584,7 +594,7 @@
         <translation>Encrypt the private keys that belong to your wallet</translation>
     </message>
     <message>
-        <location line="+100"/>
+        <location line="+103"/>
         <source>&amp;File</source>
         <translation>&amp;File</translation>
     </message>
@@ -604,7 +614,7 @@
         <translation>Tabs toolbar</translation>
     </message>
     <message>
-        <location line="-117"/>
+        <location line="-120"/>
         <source>Show the list of used sending addresses and labels</source>
         <translation type="unfinished"></translation>
     </message>
@@ -619,7 +629,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+524"/>
+        <location line="+535"/>
         <source>Indexing blocks on disk...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -652,14 +662,14 @@
         <translation>Transactions after this will not yet be visible.</translation>
     </message>
     <message>
-        <location line="-234"/>
+        <location line="-240"/>
         <location line="+8"/>
-        <location line="+308"/>
+        <location line="+314"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>
     <message>
-        <location line="-681"/>
+        <location line="-692"/>
         <source>Open $URI...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -684,12 +694,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+81"/>
+        <location line="+84"/>
         <source>&amp;Tools</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+594"/>
+        <location line="+602"/>
         <source>Warning</source>
         <translation>Warning</translation>
     </message>
@@ -704,7 +714,7 @@
         <translation>Up to date</translation>
     </message>
     <message>
-        <location line="-383"/>
+        <location line="-389"/>
         <source>%1 client</source>
         <translation type="unfinished"></translation>
     </message>
@@ -715,7 +725,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location line="+94"/>
+        <location line="+100"/>
         <source>%n active connection(s) to Chaincoin network</source>
         <translation type="unfinished">
             <numerusform></numerusform>
@@ -2613,6 +2623,269 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     <message>
         <location line="+0"/>
         <source>Received</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ProposalList</name>
+    <message>
+        <location filename="../proposallist.cpp" line="+56"/>
+        <source>Enter proposal name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Min amount</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location line="+11"/>
+        <source>All</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-10"/>
+        <location line="+11"/>
+        <source>Today</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-10"/>
+        <location line="+11"/>
+        <source>This week</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-10"/>
+        <location line="+11"/>
+        <source>This month</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-10"/>
+        <location line="+11"/>
+        <source>Last month</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-10"/>
+        <location line="+11"/>
+        <source>This year</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-10"/>
+        <location line="+11"/>
+        <source>Range...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Min yes votes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Min no votes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Min abs. yes votes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Min percentage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Vote Yes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Yote Yes on the selected proposal</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Vote Abstain</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Yote Abstain on the selected proposal</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Vote No</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Yote No on the selected proposal</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Vote yes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Vote abstain</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Vote no</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Visit proposal website</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Visit statistics website</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+80"/>
+        <source>minute(s)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>second(s)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>List will be updated in %1 %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>List will be updated in 0 second(s)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+187"/>
+        <source>Confirm vote</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Are you sure you want to vote &lt;strong&gt;%1&lt;/strong&gt; on the proposal &lt;strong&gt;%2&lt;/strong&gt;?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+65"/>
+        <source>Voting</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>You voted %1 %2 time(s) successfully and failed %3 time(s) on %4</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>Start Date:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>End Date:</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ProposalTableModel</name>
+    <message>
+        <location filename="../proposaltablemodel.cpp" line="+45"/>
+        <source>Proposal</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Amount</source>
+        <translation type="unfinished">Amount</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Start Date</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>End Date</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Yes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>No</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Abs. Yes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Percentage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+171"/>
+        <source>Proposal Name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Date and time that the proposal starts.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Date and time that the proposal ends.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Obtained yes votes.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Obtained no votes.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Obtained absolute yes votes.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Proposed amount.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Current vote percentage.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -4950,7 +5223,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+231"/>
+        <location line="+239"/>
         <source>Backup Wallet</source>
         <translation type="unfinished"></translation>
     </message>

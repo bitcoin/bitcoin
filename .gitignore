@@ -1109,3 +1109,7 @@ Chaincoin.includes
 *.user
 *.orig
 chaincoin.icns
+src/qt/moc_columnalignedlayout.cpp
+src/qt/moc_proposalfilterproxy.cpp
+src/qt/moc_proposallist.cpp
+src/qt/moc_proposaltablemodel.cpp

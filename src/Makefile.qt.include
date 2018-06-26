@@ -3,22 +3,120 @@ EXTRA_LIBRARIES += qt/libbitcoinqt.a
 
 # chaincoin qt core #
 QT_TS = \
+  qt/locale/chaincoin_af.ts \
+  qt/locale/chaincoin_af_ZA.ts \
+  qt/locale/chaincoin_am.ts \
+  qt/locale/chaincoin_ar.ts \
+  qt/locale/chaincoin_be_BY.ts \
   qt/locale/chaincoin_bg.ts \
+  qt/locale/chaincoin_bg_BG.ts \
+  qt/locale/chaincoin_bn.ts \
+  qt/locale/chaincoin_ca.ts \
+  qt/locale/chaincoin_ca@valencia.ts \
+  qt/locale/chaincoin_ca_ES.ts \
+  qt/locale/chaincoin_cs.ts \
+  qt/locale/chaincoin_cs_CZ.ts \
+  qt/locale/chaincoin_cy.ts \
+  qt/locale/chaincoin_da.ts \
   qt/locale/chaincoin_de.ts \
+  qt/locale/chaincoin_de_AT.ts \
+  qt/locale/chaincoin_de_DE.ts \
+  qt/locale/chaincoin_el.ts \
+  qt/locale/chaincoin_el_GR.ts \
   qt/locale/chaincoin_en.ts \
+  qt/locale/chaincoin_en_GB.ts \
+  qt/locale/chaincoin_eo.ts \
   qt/locale/chaincoin_es.ts \
+  qt/locale/chaincoin_es_419.ts \
+  qt/locale/chaincoin_es_AR.ts \
+  qt/locale/chaincoin_es_CL.ts \
+  qt/locale/chaincoin_es_CO.ts \
+  qt/locale/chaincoin_es_DO.ts \
+  qt/locale/chaincoin_es_ES.ts \
+  qt/locale/chaincoin_es_MX.ts \
+  qt/locale/chaincoin_es_UY.ts \
+  qt/locale/chaincoin_es_VE.ts \
+  qt/locale/chaincoin_et.ts \
+  qt/locale/chaincoin_et_EE.ts \
+  qt/locale/chaincoin_eu_ES.ts \
+  qt/locale/chaincoin_fa.ts \
+  qt/locale/chaincoin_fa_IR.ts \
   qt/locale/chaincoin_fi.ts \
   qt/locale/chaincoin_fr.ts \
+  qt/locale/chaincoin_fr_CA.ts \
+  qt/locale/chaincoin_fr_FR.ts \
+  qt/locale/chaincoin_gl.ts \
+  qt/locale/chaincoin_he.ts \
+  qt/locale/chaincoin_he_IL.ts \
+  qt/locale/chaincoin_hi_IN.ts \
+  qt/locale/chaincoin_hr.ts \
+  qt/locale/chaincoin_hu.ts \
+  qt/locale/chaincoin_hu_HU.ts \
+  qt/locale/chaincoin_id.ts \
+  qt/locale/chaincoin_id_ID.ts \
+  qt/locale/chaincoin_is.ts \
   qt/locale/chaincoin_it.ts \
+  qt/locale/chaincoin_it_IT.ts \
   qt/locale/chaincoin_ja.ts \
+  qt/locale/chaincoin_ja_JP.ts \
+  qt/locale/chaincoin_ka.ts \
+  qt/locale/chaincoin_kk_KZ.ts \
+  qt/locale/chaincoin_km_KH.ts \
+  qt/locale/chaincoin_ko.ts \
+  qt/locale/chaincoin_ko_KR.ts \
+  qt/locale/chaincoin_ku_IQ.ts \
+  qt/locale/chaincoin_ky.ts \
+  qt/locale/chaincoin_la.ts \
+  qt/locale/chaincoin_lt.ts \
+  qt/locale/chaincoin_lv_LV.ts \
+  qt/locale/chaincoin_mk_MK.ts \
+  qt/locale/chaincoin_ml.ts \
+  qt/locale/chaincoin_mn.ts \
+  qt/locale/chaincoin_mr_IN.ts \
+  qt/locale/chaincoin_ms.ts \
+  qt/locale/chaincoin_ms_MY.ts \
+  qt/locale/chaincoin_my.ts \
+  qt/locale/chaincoin_nb.ts \
+  qt/locale/chaincoin_nb_NO.ts \
+  qt/locale/chaincoin_ne.ts \
+  qt/locale/chaincoin_nl.ts \
+  qt/locale/chaincoin_nl_NL.ts \
+  qt/locale/chaincoin_pam.ts \
   qt/locale/chaincoin_pl.ts \
+  qt/locale/chaincoin_pl_PL.ts \
   qt/locale/chaincoin_pt.ts \
+  qt/locale/chaincoin_pt_BR.ts \
+  qt/locale/chaincoin_pt_MZ.ts \
+  qt/locale/chaincoin_pt_PT.ts \
+  qt/locale/chaincoin_ro.ts \
+  qt/locale/chaincoin_ro_RO.ts \
   qt/locale/chaincoin_ru.ts \
+  qt/locale/chaincoin_ru_RU.ts \
+  qt/locale/chaincoin_si.ts \
   qt/locale/chaincoin_sk.ts \
+  qt/locale/chaincoin_sl_SI.ts \
+  qt/locale/chaincoin_sn.ts \
+  qt/locale/chaincoin_sq.ts \
+  qt/locale/chaincoin_sr.ts \
+  qt/locale/chaincoin_sr@latin.ts \
   qt/locale/chaincoin_sv.ts \
+  qt/locale/chaincoin_ta.ts \
+  qt/locale/chaincoin_ta_IN.ts \
+  qt/locale/chaincoin_te.ts \
+  qt/locale/chaincoin_th.ts \
+  qt/locale/chaincoin_th_TH.ts \
+  qt/locale/chaincoin_tr.ts \
+  qt/locale/chaincoin_tr_TR.ts \
+  qt/locale/chaincoin_uk.ts \
+  qt/locale/chaincoin_ur_PK.ts \
+  qt/locale/chaincoin_uz@Cyrl.ts \
   qt/locale/chaincoin_vi.ts \
+  qt/locale/chaincoin_vi_VN.ts \
+  qt/locale/chaincoin_zh-Hans.ts \
+  qt/locale/chaincoin_zh.ts \
   qt/locale/chaincoin_zh_CN.ts \
-  qt/locale/chaincoin_zh_TW.ts
+  qt/locale/chaincoin_zh_HK.ts \
+  qt/locale/chaincoin_zh_TW.ts 
 
 QT_FORMS_UI = \
   qt/forms/addressbookpage.ui \

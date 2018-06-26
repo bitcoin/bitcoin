@@ -238,6 +238,10 @@
         <translation>تاریخچه تراکنش را باز کن</translation>
     </message>
     <message>
+        <source>&amp;Masternodes</source>
+        <translation>مسترنود</translation>
+    </message>
+    <message>
         <source>E&amp;xit</source>
         <translation>خروج</translation>
     </message>
@@ -557,6 +561,14 @@
     </context>
 <context>
     <name>MasternodeList</name>
+    <message>
+        <source>My Masternodes</source>
+        <translation>مسترنودهای من</translation>
+    </message>
+    <message>
+        <source>All Masternodes</source>
+        <translation>همه مسترنودها</translation>
+    </message>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -665,6 +677,12 @@
     <name>PeerTableModel</name>
     </context>
 <context>
+    <name>ProposalList</name>
+    </context>
+<context>
+    <name>ProposalTableModel</name>
+    </context>
+<context>
     <name>QObject</name>
     <message>
         <source>Amount</source>
@@ -708,6 +726,10 @@
     <message>
         <source>Current number of blocks</source>
         <translation>تعداد زنجیره های حاضر</translation>
+    </message>
+    <message>
+        <source>Number of Masternodes</source>
+        <translation>تعداد مسترنودها</translation>
     </message>
     </context>
 <context>
@@ -1030,5 +1052,29 @@
     </context>
 <context>
     <name>chaincoin-core</name>
+    <message>
+        <source>Masternode:</source>
+        <translation>مسترنود:</translation>
+    </message>
+    <message>
+        <source>No Masternodes detected.</source>
+        <translation>مسترنودی پیدا نشود۔</translation>
+    </message>
+    <message>
+        <source>Not in the Masternode list.</source>
+        <translation>در لیست مسترنودها نیست۔</translation>
+    </message>
+    <message>
+        <source>Synchronizing masternode payments...</source>
+        <translation>همگام سازی پرداخت های مسترنودی۔۔۔</translation>
+    </message>
+    <message>
+        <source>Synchronizing masternodes...</source>
+        <translation>هماهنگ سازی مسترنودها۔۔۔</translation>
+    </message>
+    <message>
+        <source>This is not a Masternode.</source>
+        <translation>این مسترنود نیست۔</translation>
+    </message>
     </context>
 </TS>
