@@ -429,3 +429,19 @@ bool IsSolvable(const SigningProvider& provider, const CScript& script)
     }
     return false;
 }
+
+
+bool PartiallySignedTransaction::IsNull() const
+{
+    return !tx && inputs.empty() && outputs.empty() && unknown.empty();
+}
+
+bool PSBTInput::IsNull() const
+{
+    return !non_witness_utxo && witness_utxo.IsNull() && partial_sigs.empty() && unknown.empty() && hd_keypaths.empty() && redeem_script.empty() && witness_script.empty();
+}
+
+bool PSBTOutput::IsNull() const
+{
+    return redeem_script.empty() && witness_script.empty() && hd_keypaths.empty() && unknown.empty();
+}
