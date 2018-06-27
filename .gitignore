@@ -1113,3 +1113,6 @@ src/qt/moc_columnalignedlayout.cpp
 src/qt/moc_proposalfilterproxy.cpp
 src/qt/moc_proposallist.cpp
 src/qt/moc_proposaltablemodel.cpp
+*.pyc
+*.log
+*.trs
