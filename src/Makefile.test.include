@@ -77,7 +77,7 @@ BITCOIN_TESTS =\
   test/streams_tests.cpp \
   test/test_chaincoin.cpp \
   test/test_chaincoin.h \
-  test/test_bitcoin_main.cpp \
+  test/test_chaincoin_main.cpp \
   test/timedata_tests.cpp \
   test/torcontrol_tests.cpp \
   test/transaction_tests.cpp \
@@ -115,7 +115,7 @@ endif
 #
 
 # test_chaincoin_fuzzy binary #
-test_test_chaincoin_fuzzy_SOURCES = test/test_bitcoin_fuzzy.cpp
+test_test_chaincoin_fuzzy_SOURCES = test/test_chaincoin_fuzzy.cpp
 test_test_chaincoin_fuzzy_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_test_chaincoin_fuzzy_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_test_chaincoin_fuzzy_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
@@ -140,16 +140,16 @@ CLEAN_BITCOIN_TEST = test/*.gcda test/*.gcno $(GENERATED_TEST_FILES)
 
 CLEANFILES += $(CLEAN_BITCOIN_TEST)
 
-bitcoin_test: $(TEST_BINARY)
+chaincoin_test: $(TEST_BINARY)
 
-bitcoin_test_check: $(TEST_BINARY) FORCE
+chaincoin_test_check: $(TEST_BINARY) FORCE
 	$(MAKE) check-TESTS TESTS=$^
 
-bitcoin_test_clean : FORCE
+chaincoin_test_clean : FORCE
 	rm -f $(CLEAN_BITCOIN_TEST) $(test_test_chaincoin_OBJECTS) $(TEST_BINARY)
 
 check-local:
-	@echo "Running test/util/bitcoin-util-test.py..."
+	@echo "Running test/util/chaincoin-util-test.py..."
 	$(PYTHON) $(top_builddir)/test/util/bitcoin-util-test.py
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
 if EMBEDDED_UNIVALUE
