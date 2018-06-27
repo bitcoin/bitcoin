@@ -28,6 +28,7 @@
 #include <uint256.h>
 #include <utilstrencodings.h>
 #include <blind.h>
+#include <insight/insight.h>
 
 #ifdef ENABLE_WALLET
 #include <wallet/rpcwallet.h>

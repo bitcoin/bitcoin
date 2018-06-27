@@ -14,6 +14,7 @@
 #include <ui_interface.h>
 #include <init.h>
 #include <validation.h>
+#include <insight/insight.h>
 
 #include <stdint.h>
 

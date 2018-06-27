@@ -28,6 +28,8 @@
 #include <warnings.h>
 #include <key_io.h>
 
+#include <insight/insight.h>
+
 #include <stdint.h>
 
 #include <univalue.h>

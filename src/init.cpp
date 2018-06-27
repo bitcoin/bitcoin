@@ -46,6 +46,7 @@
 #include <validationinterface.h>
 #include <smsg/smessage.h>
 #include <smsg/rpcsmessage.h>
+#include <insight/rpc.h>
 #include <pos/miner.h>
 #ifdef ENABLE_WALLET
 #include <wallet/hdwallet.h>
@@ -75,6 +76,8 @@
 #if ENABLE_ZMQ
 #include <zmq/zmqnotificationinterface.h>
 #endif
+
+#include <insight/insight.h>
 
 bool fFeeEstimatesInitialized = false;
 static const bool DEFAULT_PROXYRANDOMIZE = true;
@@ -1463,6 +1466,7 @@ bool AppInitMain()
      */
     RegisterAllCoreRPCCommands(tableRPC);
     RegisterSmsgRPCCommands(tableRPC);
+    RegisterInsightRPCCommands(tableRPC);
 #ifdef ENABLE_WALLET
     RegisterHDWalletRPCCommands(tableRPC);
 #endif
@@ -1863,6 +1867,10 @@ bool AppInitMain()
 
     if (gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
         g_txindex = MakeUnique<TxIndex>(nTxIndexCache, false, fReindex);
+
+        if (gArgs.GetBoolArg("-csindex", DEFAULT_CSINDEX)) {
+            g_txindex->m_coldStakeIndex = true; // TODO: warn if disabled/enabled
+        }
         g_txindex->Start();
     }
 

@@ -35,6 +35,9 @@ protected:
 
     const char* GetName() const override { return "txindex"; }
 
+
+    bool IndexCSOutputs(const CBlock& block, const CBlockIndex* pindex);
+
 public:
     /// Constructs the index, which becomes available to be queried.
     explicit TxIndex(size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
@@ -50,6 +53,8 @@ public:
     /// @return  true if transaction is found, false otherwise
     bool FindTx(const uint256& tx_hash, uint256& block_hash, CTransactionRef& tx) const;
     bool FindTx(const uint256& tx_hash, CBlockHeader& header, CTransactionRef& tx) const;
+
+    bool m_coldStakeIndex = false;
 };
 
 /// The global transaction index, used in GetTransaction. May be null.

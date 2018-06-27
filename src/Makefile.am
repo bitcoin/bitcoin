@@ -234,7 +234,9 @@ BITCOIN_CORE_H = \
   usbdevice/rpcusbdevice.h \
   insight/addressindex.h \
   insight/spentindex.h \
-  insight/timestampindex.h
+  insight/timestampindex.h \
+  insight/insight.h \
+  insight/rpc.h
 
 
 obj/build.h: FORCE
@@ -291,7 +293,8 @@ libparticl_server_a_SOURCES = \
   validation.cpp \
   validationinterface.cpp \
   versionbits.cpp \
-  insight/addressindex.cpp \
+  insight/insight.cpp \
+  insight/rpc.cpp \
   $(BITCOIN_CORE_H)
 
 if ENABLE_ZMQ

@@ -299,10 +299,4 @@ struct CMempoolAddressDeltaKeyCompare
     }
 };
 
-class CTxOutBase;
-
-bool ExtractIndexInfo(const CScript *pScript, int &scriptType, std::vector<uint8_t> &hashBytes);
-bool ExtractIndexInfo(const CTxOutBase *out, int &scriptType, std::vector<uint8_t> &hashBytes, CAmount &nValue, const CScript *&pScript);
-
-
 #endif // BITCOIN_INSIGHT_ADDRESSINDEX_H

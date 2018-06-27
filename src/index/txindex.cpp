@@ -245,6 +245,8 @@ bool TxIndex::Init()
 
 bool TxIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
 {
+    if (m_coldStakeIndex)
+        IndexCSOutputs(block, pindex);
     CDiskTxPos pos(pindex->GetBlockPos(), GetSizeOfCompactSize(block.vtx.size()));
     std::vector<std::pair<uint256, CDiskTxPos>> vPos;
     vPos.reserve(block.vtx.size());
@@ -256,6 +258,16 @@ bool TxIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
 }
 
 bool TxIndex::EraseBlock(const CBlock& block)
+{
+    if (!m_coldStakeIndex)
+        return true;
+    for (const auto& tx : block.vtx) {
+
+    }
+    return true;
+}
+
+bool TxIndex::IndexCSOutputs(const CBlock& block, const CBlockIndex* pindex)
 {
     for (const auto& tx : block.vtx) {
 

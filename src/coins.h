@@ -14,14 +14,13 @@
 #include <serialize.h>
 #include <uint256.h>
 
-#include <insight/addressindex.h>
-#include <insight/spentindex.h>
-#include <rctindex.h>
-
 #include <assert.h>
 #include <stdint.h>
 
 #include <unordered_map>
+#include <insight/addressindex.h>
+#include <insight/spentindex.h>
+#include <rctindex.h>
 
 extern bool fParticlMode;
 

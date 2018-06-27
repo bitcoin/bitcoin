@@ -335,7 +335,7 @@ static void MutateTxAddWitness(CMutableTransaction& tx, const std::string& strIn
                 std::string strErr = "Expecting hex input '" + vStrInputParts[i] + "'";
                 throw std::runtime_error(strErr.c_str());
             }
-           vScript = ParseHex(vStrInputParts[i]);
+            vScript = ParseHex(vStrInputParts[i]);
         }
         txin.scriptWitness.stack.push_back(vScript);
     }

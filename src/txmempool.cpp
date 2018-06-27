@@ -17,6 +17,7 @@
 #include <util.h>
 #include <utilmoneystr.h>
 #include <utiltime.h>
+#include <insight/insight.h>
 
 #include <anon.h>
 

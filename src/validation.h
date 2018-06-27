@@ -18,9 +18,6 @@
 #include <script/script_error.h>
 #include <sync.h>
 #include <versionbits.h>
-#include <insight/spentindex.h>
-#include <insight/addressindex.h>
-#include <insight/timestampindex.h>
 
 #include <algorithm>
 #include <exception>
@@ -135,6 +132,7 @@ static const bool DEFAULT_PERMIT_BAREMULTISIG = true;
 static const bool DEFAULT_CHECKPOINTS_ENABLED = true;
 static const bool DEFAULT_TXINDEX_ = true; // required for staking
 #define DEFAULT_TXINDEX (gArgs.GetBoolArg("-legacymode", false) ? false : DEFAULT_TXINDEX_)
+static const bool DEFAULT_CSINDEX = false;
 static const bool DEFAULT_ADDRESSINDEX = false;
 static const bool DEFAULT_TIMESTAMPINDEX = false;
 static const bool DEFAULT_SPENTINDEX = false;
@@ -492,17 +490,6 @@ public:
 
     ScriptError GetScriptError() const { return error; }
 };
-
-
-/** Functions for insight block explorer */
-bool GetTimestampIndex(const unsigned int &high, const unsigned int &low, const bool fActiveOnly, std::vector<std::pair<uint256, unsigned int> > &hashes);
-bool GetSpentIndex(CSpentIndexKey &key, CSpentIndexValue &value);
-bool HashOnchainActive(const uint256 &hash);
-bool GetAddressIndex(uint256 addressHash, int type,
-                     std::vector<std::pair<CAddressIndexKey, CAmount> > &addressIndex,
-                     int start = 0, int end = 0);
-bool GetAddressUnspent(uint256 addressHash, int type,
-                       std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > &unspentOutputs);
 
 /** Initializes the script-execution cache */
 void InitScriptExecutionCache();
