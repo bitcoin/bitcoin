@@ -44,7 +44,7 @@ def fetch_all_translations():
         print('Error while fetching translations', file=sys.stderr)
         sys.exit(1)
 
-def find_format_specifiers(s):
+def find_format_specifiers(s, errors):
     '''Find all format specifiers in a string.'''
     pos = 0
     specifiers = []
@@ -54,10 +54,11 @@ def find_format_specifiers(s):
             break
         try:
             specifiers.append(s[percent+1])
-        except:
-            print('Failed to get specifier')
-        specifiers.append(s[percent+1])
-        pos = percent+2
+            pos = percent+2
+        except IndexError:
+            errors.append("Failed to parse specifier: %s'" % (sanitize_string(s)))
+            # just jump over and move on
+            pos = percent+1
     return specifiers
 
 def split_format_specifiers(specifiers):
@@ -86,12 +87,12 @@ def sanitize_string(s):
     return s.replace('\n',' ')
 
 def check_format_specifiers(source, translation, errors, numerus):
-    source_f = split_format_specifiers(find_format_specifiers(source))
+    source_f = split_format_specifiers(find_format_specifiers(source, errors))
     # assert that no source messages contain both Qt and strprintf format specifiers
     # if this fails, go change the source as this is hacky and confusing!
     assert(not(source_f[0] and source_f[1]))
     try:
-        translation_f = split_format_specifiers(find_format_specifiers(translation))
+        translation_f = split_format_specifiers(find_format_specifiers(translation, errors))
     except IndexError:
         errors.append("Parse error in translation for '%s': '%s'" % (sanitize_string(source), sanitize_string(translation)))
         return False
