@@ -2186,7 +2186,7 @@ CAmount CWallet::GetImmatureBalance() const
     return nTotal;
 }
 
-CAmount CWallet::GetWatchOnlyBalance() const
+CAmount CWallet::GetWatchOnlyBalance(int min_depth, int max_depth) const
 {
     CAmount nTotal = 0;
     {
@@ -2194,8 +2194,13 @@ CAmount CWallet::GetWatchOnlyBalance() const
         for (const auto& entry : mapWallet)
         {
             const CWalletTx* pcoin = &entry.second;
-            if (pcoin->IsTrusted())
+            int depth = pcoin->GetDepthInMainChain();
+            if ( (min_depth == 0 && !pcoin->IsTrusted() && depth == 0 && pcoin->InMempool()) /* either 0 conf... */
+                ||
+                 (pcoin->IsTrusted() && (min_depth == 1 || depth >= min_depth) && (max_depth < 0 || depth <= max_depth)) /*... or within depth limits (if set) */
+               ) {
                 nTotal += pcoin->GetAvailableWatchOnlyCredit();
+            }
         }
     }
 
@@ -2204,17 +2209,7 @@ CAmount CWallet::GetWatchOnlyBalance() const
 
 CAmount CWallet::GetUnconfirmedWatchOnlyBalance() const
 {
-    CAmount nTotal = 0;
-    {
-        LOCK2(cs_main, cs_wallet);
-        for (const auto& entry : mapWallet)
-        {
-            const CWalletTx* pcoin = &entry.second;
-            if (!pcoin->IsTrusted() && pcoin->GetDepthInMainChain() == 0 && pcoin->InMempool())
-                nTotal += pcoin->GetAvailableWatchOnlyCredit();
-        }
-    }
-    return nTotal;
+    return GetWatchOnlyBalance(0, 0);
 }
 
 CAmount CWallet::GetImmatureWatchOnlyBalance() const
