@@ -1027,7 +1027,11 @@ Wallet crittografato e attualmente sbloccato per la solamente per il mixing</tra
         <source>PrivateSend information</source>
         <translation>Informzione PrivateSend</translation>
     </message>
-    </context>
+    <message>
+        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Chaincoin in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times..&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.01 CHC, 0.1 CHC, 1 CHC and 10 CHC -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be anonymized. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more info see &lt;a href="https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend"&gt;https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend&lt;/a&gt;         </source>
+        <translation>&lt;h3&gt;PrivateSend Basi&lt;/h3&gt; PrivateSend ti dà la vera privacy finanziaria oscurando le origini dei vostri fondi. Tutti i CHC sono nel vostro portafoglio con differenti "inputs " come monete separate e discrete.&lt;br&gt; PrivateSend utilizza un processo innovativo per mescolare i vostri ingressi con gli ingressi di altre due persone, senza spostare le monete dal vostro portafolgio. Mantiene il controllo dei vostri soldi in ogni momento..&lt;hr&gt; &lt;b&gt;Il processo PrivateSend funziona così:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend inizia rompendo gli input della transazione verso il basso in denominazioni standard. Queste denominazioni sono 0,01 CHC, 0,1 CHC, 1 CHC e 10 CHC--come i soldi di carta che usi ogni giorno.&lt;/li&gt; &lt;li&gt;Il portafogli invia quindi le richieste ai nodi software appositamente configurati sulla rete, chiamati "masternodes. " questi masternodes sono informati del vostro interesse a mescolare una certa denominazione. Nessuna informazione identificabile viene inviata al masternodes, in modo che non si sa mai "chi " sei.&lt;/li&gt; &lt;li&gt;Quando altre due persone inviano messaggi simili, indicando che desiderano mescolare la stessa denominazione, inizia una sessione di mixaggio. Il masternode mescola gli ingressi e istruisce tutti e tre gli utenti ' portafogli da pagare con l'ora trasformata in ingresso verso se stessi. Il tuo portafoglio paga tale denominazione direttamente a se stesso, ma in un indirizzo diverso (chiamato indirizzo di modifica).&lt;/li&gt; &lt;li&gt;Al fine di oscurare completamente i vostri fondi, il portafoglio deve ripetere questo processo un certo numero di volte con ogni denominazione. Ogni volta che il processo è completato, viene chiamato un "round. " ogni turno di PrivateSend rende esponenzialmente più difficile determinare dove i fondi di origine.&lt;/li&gt; &lt;li&gt;Questo processo di miscelazione avviene in background senza alcun intervento da parte vostra. Quando si desidera effettuare una transazione, i fondi saranno già anonimi. Nessun'attesa supplementare è richiesta.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANTE:&lt;/b&gt; Il tuo portafogli contiene solo 1000 di questi "indirizzi da cambiare. " ogni volta che si verifica un evento di missaggio, fino a 9 dei tuoi indirizzi vengono utilizzati. Ciò significa che questi 1000 indirizzi durano per circa 100 eventi di mixaggio. Quando 900 di loro sono utilizzati, il portafoglio deve creare più indirizzi. Si può solo fare questo, tuttavia, se si dispone di backup automatici abilitati.&lt;br&gt; Di conseguenza, gli utenti che hanno disattivato i backup avranno anche PrivateSend disabilitato. Per maggiori informazioni vedere &lt;a href="https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend"&gt;https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend&lt;/a&gt;         </translation>
+    </message>
+</context>
 <context>
     <name>Intro</name>
     <message>
@@ -1718,6 +1722,10 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation>0 CHC / 0 Rounds</translation>
     </message>
     <message>
+        <source>Submitted Denom:</source>
+        <translation>Denom presentato:</translation>
+    </message>
+    <message>
         <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
         <translation>Le denominazioni che hai inviato al Masternode. Per mixare, gli altri utenti devono presentare gli stessi tagli.</translation>
     </message>
@@ -1796,6 +1804,10 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     <message>
         <source>Found enough compatible inputs to anonymize %1</source>
         <translation>Trovato abbastanza input compatibili da rendere anonimo %1</translation>
+    </message>
+    <message>
+        <source>Not enough compatible inputs to anonymize &lt;span style='color:red;'&gt;%1&lt;/span&gt;,&lt;br&gt;will anonymize &lt;span style='color:red;'&gt;%2&lt;/span&gt; instead</source>
+        <translation>Non ci sono abbastanza entrate compatibili per poter anonimizzare&lt;span style='color:red;'&gt;%1&lt;/span&gt;,&lt;br&gt;will anonymize &lt;span style='color:red;'&gt;%2&lt;/span&gt; instead</translation>
     </message>
     <message>
         <source>Overall progress</source>
@@ -4045,6 +4057,42 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     <message>
         <source>Equivalent bytes per sigop in transactions for relay and mining (default: %u)</source>
         <translation>Byte equivalenti per sigop nelle transazioni per relay e mining (default: %u)</translation>
+    </message>
+    <message>
+        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
+        <translation>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</translation>
+    </message>
+    <message>
+        <source>PrivateSend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.</source>
+        <translation>PrivateSend usa gli importi esatti denominati per trasmettere i fondi monetari, potreste semplicemente avere bisogno di di anonimizzare alcune più monete.</translation>
+    </message>
+    <message>
+        <source>Starting in lite mode, all Chaincoin-specific functionality is disabled.</source>
+        <translation>A partire dalla modalità Lite, tutte le funzionalità specifiche di Chaincoin sono disabilitate.</translation>
+    </message>
+    <message>
+        <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
+        <translation>Il database di blocco contiene un blocco che sembra provenire dal futuro. Questo può essere dovuto alla data e l'ora del computer impostato in modo errato. Ricostruire solo il database di blocco se si è certi che la data e l'ora del computer siano corrette</translation>
+    </message>
+    <message>
+        <source>The transaction amount is too small to send after the fee has been deducted</source>
+        <translation>L'importo della transazione è troppo piccolo per l'invio dopo che la tassa è stata dedotta</translation>
+    </message>
+    <message>
+        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
+        <translation>Si tratta di un pre-release test build-uso a proprio rischio-non utilizzare per le applicazioni minerarie o di mercato.</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
+        <translation>Questa è la tassa di transazione che si può scartare se il cambiamento è più piccolo del rimanente a questo livello</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you may pay when fee estimates are not available.</source>
+        <translation>Questa è la tassa di transazione che si può pagare quando le stime della tassa non sono disponibili.</translation>
+    </message>
+    <message>
+        <source>Unable to locate enough PrivateSend denominated funds for this transaction.</source>
+        <translation>Impossibile individuare abbastanza fondi denominati PrivateSend per questa transazione.</translation>
     </message>
     <message>
         <source>(default: %s)</source>

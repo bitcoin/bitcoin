@@ -3918,5 +3918,45 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>-maxtxfee מוגדר גבוה מאוד! תשלום גדול זה יכול להיות משולם על עסקה אחת.</translation>
     </message>
+    <message>
+        <source>A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)</source>
+        <translation>שיעור עמלה (ב -%s/kB) שישמש בהערכת העמלות כשאר יש נתונים לא מספיקים (ברירת המחדל:%s)</translation>
+    </message>
+    <message>
+        <source>Accept relayed transactions received from whitelisted peers even when not relaying transactions (default: %d)</source>
+        <translation>קבל עסקאות שהועברו מתקבלות מעמיתים ברשימת ההיתרים גם כאשר לא מבצעים עסקאות (ברירת המחדל:%d)</translation>
+    </message>
+    <message>
+        <source>Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info)</source>
+        <translation>הוספת צומת כדי להתחבר ולנסות לשמור את החיבור פתוח (ראה את הפקודה 'Addnode `RPC לקבלת מידע נוסף)</translation>
+    </message>
+    <message>
+        <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
+        <translation>אפשר חיבורי JSON-RPC מהמקור שצוין. תקף עבור &lt;ip&gt; הוא כתובת IP יחידה (למשל, 1.2.3.4), רשת / מסכת רשת (למשל 1.2.3.4/255.255.255.0) או רשת / CIDR (למשל 1.2.3.4/24). ניתן לציין אפשרות זו מספר פעמים</translation>
+    </message>
+    <message>
+        <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
+        <translation>נקשר לכתובת הנתונה ותמיד מקשיב לה. השתמש ב- [host]:port notation for IPv6Pv6</translation>
+    </message>
+    <message>
+        <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
+        <translation>נקשר לכתובת הנתונה ולרשימת ההיתרים המחוברים אליה. השתמש ב- [host]: port port עבור IPv6</translation>
+    </message>
+    <message>
+        <source>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</source>
+        <translation>הקש על הכתובת הנתונה כדי להאזין לחיבורי JSON-RPC. השתמש ב- [host]:port notation for IPv6. אפשרות זו ניתן להגדיר מספר פעמים (ברירת המחדל: לאגד את כל ממשקים)</translation>
+    </message>
+    <message>
+        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
+        <translation>לא ניתן להשיג נעילה בספריית הנתונים %s. %s כנראה כבר פועל.</translation>
+    </message>
+    <message>
+        <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
+        <translation>לא ניתן לספק חיבורים ספציפיים</translation>
+    </message>
+    <message>
+        <source>Connect only to the specified node(s); -connect=0 disables automatic connections (the rules for this peer are the same as for -addnode)</source>
+        <translation>התחבר רק לנקודות שצוינו. -connect=0 משבית את החיבורים האוטומטיים (הכללים עבור עמיתים זהים זהים ל - adnode)</translation>
+    </message>
     </context>
 </TS>

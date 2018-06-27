@@ -1,0 +1,188 @@
+<TS language="ak" version="2.1">
+<context>
+    <name>AddressBookPage</name>
+    <message>
+        <source>Right-click to edit address or label</source>
+        <translation>mia nimfa na sesa addrɛss anaa s3 ne din</translation>
+    </message>
+    <message>
+        <source>Create a new address</source>
+        <translation>yɛ addrɛss foforɔ</translation>
+    </message>
+    <message>
+        <source>&amp;New</source>
+        <translation>foforɔ</translation>
+    </message>
+    <message>
+        <source>Copy the currently selected address to the system clipboard</source>
+        <translation>yɛ addrɛss a esi so no ne sɛso na sɔ mu</translation>
+    </message>
+    <message>
+        <source>&amp;Copy</source>
+        <translation>yɛ no sɛso</translation>
+    </message>
+    <message>
+        <source>C&amp;lose</source>
+        <translation>to mu</translation>
+    </message>
+    <message>
+        <source>Delete the currently selected address from the list</source>
+        <translation>yi addrɛss a esi so no firi mu</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>fa deɛ ɛwɔ so no kɔ</translation>
+    </message>
+    <message>
+        <source>&amp;Export</source>
+        <translation>fa kɔ</translation>
+    </message>
+    <message>
+        <source>&amp;Delete</source>
+        <translation>yi firi mu</translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation>sesa</translation>
+    </message>
+    </context>
+<context>
+    <name>AddressTableModel</name>
+    </context>
+<context>
+    <name>AskPassphraseDialog</name>
+    </context>
+<context>
+    <name>BanTableModel</name>
+    <message>
+        <source>IP/Netmask</source>
+        <translation>IP/Netmask</translation>
+    </message>
+    </context>
+<context>
+    <name>BitcoinGUI</name>
+    </context>
+<context>
+    <name>ClientModel</name>
+    </context>
+<context>
+    <name>CoinControlDialog</name>
+    </context>
+<context>
+    <name>DarksendConfig</name>
+    </context>
+<context>
+    <name>EditAddressDialog</name>
+    </context>
+<context>
+    <name>FreespaceChecker</name>
+    </context>
+<context>
+    <name>HelpMessageDialog</name>
+    </context>
+<context>
+    <name>Intro</name>
+    </context>
+<context>
+    <name>MasternodeList</name>
+    </context>
+<context>
+    <name>ModalOverlay</name>
+    </context>
+<context>
+    <name>OpenURIDialog</name>
+    </context>
+<context>
+    <name>OptionsDialog</name>
+    </context>
+<context>
+    <name>OverviewPage</name>
+    </context>
+<context>
+    <name>PaymentServer</name>
+    </context>
+<context>
+    <name>PeerTableModel</name>
+    </context>
+<context>
+    <name>ProposalList</name>
+    </context>
+<context>
+    <name>ProposalTableModel</name>
+    </context>
+<context>
+    <name>QObject</name>
+    </context>
+<context>
+    <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRDialog</name>
+    </context>
+<context>
+    <name>QRGeneralImageWidget</name>
+    </context>
+<context>
+    <name>QRImageWidget</name>
+    </context>
+<context>
+    <name>RPCConsole</name>
+    </context>
+<context>
+    <name>ReceiveCoinsDialog</name>
+    </context>
+<context>
+    <name>ReceiveRequestDialog</name>
+    </context>
+<context>
+    <name>RecentRequestsTableModel</name>
+    </context>
+<context>
+    <name>SendCoinsDialog</name>
+    </context>
+<context>
+    <name>SendCoinsEntry</name>
+    </context>
+<context>
+    <name>SendConfirmationDialog</name>
+    </context>
+<context>
+    <name>ShutdownWindow</name>
+    </context>
+<context>
+    <name>SignVerifyMessageDialog</name>
+    </context>
+<context>
+    <name>SplashScreen</name>
+    </context>
+<context>
+    <name>TrafficGraphWidget</name>
+    </context>
+<context>
+    <name>TransactionDesc</name>
+    </context>
+<context>
+    <name>TransactionDescDialog</name>
+    </context>
+<context>
+    <name>TransactionTableModel</name>
+    </context>
+<context>
+    <name>TransactionView</name>
+    </context>
+<context>
+    <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletFrame</name>
+    </context>
+<context>
+    <name>WalletModel</name>
+    </context>
+<context>
+    <name>WalletView</name>
+    </context>
+<context>
+    <name>chaincoin-core</name>
+    </context>
+</TS>

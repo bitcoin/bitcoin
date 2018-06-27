@@ -1582,6 +1582,14 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation>小数点</translation>
     </message>
     <message>
+        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items.&lt;br/&gt;%s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation>第三方URL（例如，块浏览器）作为上下文菜单项出现在“事务”选项卡中&lt;br/&gt;%s在URL中被替换为交易哈希。多个网址由垂直条分隔|。</translation>
+    </message>
+    <message>
+        <source>&amp;Third party transaction URLs</source>
+        <translation>＆第三方交易网址</translation>
+    </message>
+    <message>
         <source>&amp;OK</source>
         <translation>确定(&amp;O)</translation>
     </message>
@@ -1673,6 +1681,10 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation>余额</translation>
     </message>
     <message>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Chaincoin network after a connection is established, but this process has not completed yet.</source>
+        <translation>显示的信息可能已过时。连接建立后，你的钱包会自动与链币网络同步，但此过程尚未完成。</translation>
+    </message>
+    <message>
         <source>Total:</source>
         <translation>总额：</translation>
     </message>
@@ -1689,6 +1701,14 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation>可使用：</translation>
     </message>
     <message>
+        <source>Status:</source>
+        <translation>状态：</translation>
+    </message>
+    <message>
+        <source>Enabled/Disabled</source>
+        <translation>启用/禁用</translation>
+    </message>
+    <message>
         <source>Completion:</source>
         <translation>完成:</translation>
     </message>
@@ -1699,6 +1719,18 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     <message>
         <source>Amount and Rounds:</source>
         <translation>数量和回合:</translation>
+    </message>
+    <message>
+        <source>0 CHC / 0 Rounds</source>
+        <translation>0链币 / 0回合</translation>
+    </message>
+    <message>
+        <source>Submitted Denom:</source>
+        <translation>提交面值：</translation>
+    </message>
+    <message>
+        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <translation>你提交给主节点的计价。&lt;br&gt;为了混合，其他用户必须提交完全相同的计价。</translation>
     </message>
     <message>
         <source>n/a</source>
@@ -1719,6 +1751,10 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     <message>
         <source>Try Mix</source>
         <translation>尝试混合</translation>
+    </message>
+    <message>
+        <source>Reset the current status of PrivateSend (can interrupt PrivateSend if it's in the process of Mixing, which can cost you money!)</source>
+        <translation>重置匿名发送的当前状态（如果它正在混合过程中会中断匿名发送，这会花费你的钱！）</translation>
     </message>
     <message>
         <source>Reset</source>
@@ -1764,7 +1800,105 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <source>Stop Mixing</source>
         <translation>停止混合</translation>
     </message>
-    </context>
+    <message>
+        <source>No inputs detected</source>
+        <translation>没有输入</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n Rounds</source>
+        <translation><numerusform>%n 回合</numerusform></translation>
+    </message>
+    <message>
+        <source>Not enough compatible inputs to anonymize &lt;span style='color:red;'&gt;%1&lt;/span&gt;,&lt;br&gt;will anonymize &lt;span style='color:red;'&gt;%2&lt;/span&gt; instead</source>
+        <translation>没有足够的兼容输入来匿名化&lt;span style='color:red;'&gt;%1&lt;/span&gt;，&lt;br&gt;会匿名化&lt;span style='color:red;'&gt;%2&lt;/span&gt;反而</translation>
+    </message>
+    <message>
+        <source>Overall progress</source>
+        <translation>总体进程</translation>
+    </message>
+    <message>
+        <source>Denominated</source>
+        <translation>计价</translation>
+    </message>
+    <message>
+        <source>Mixed</source>
+        <translation>混合过</translation>
+    </message>
+    <message>
+        <source>Anonymized</source>
+        <translation>匿名化过</translation>
+    </message>
+    <message numerus="yes">
+        <source>Denominated inputs have %5 of %n rounds on average</source>
+        <translation><numerusform>计价投入平均有%5 的 ％n轮</numerusform></translation>
+    </message>
+    <message>
+        <source>Disabled</source>
+        <translation>残</translation>
+    </message>
+    <message>
+        <source>Very low number of keys left since last automatic backup!</source>
+        <translation>自上次自动备份以来，密钥数量非常少！</translation>
+    </message>
+    <message>
+        <source>We are about to create a new automatic backup for you, however &lt;span style='color:red;'&gt; you should always make sure you have backups saved in some safe place&lt;/span&gt;!</source>
+        <translation>我们即将为您创建一个新的自动备份，但是&lt;span style='color:red;'&gt;您应该始终确定将备份保存在一些安全的地方&lt;/span&gt;!</translation>
+    </message>
+    <message>
+        <source>Note: You turn this message off in options.</source>
+        <translation>注意：您可以在选项中关闭此消息。</translation>
+    </message>
+    <message>
+        <source>PrivateSend</source>
+        <translation>匿名发送</translation>
+    </message>
+    <message>
+        <source>WARNING! Something went wrong on automatic backup</source>
+        <translation>警告！ 自动备份出错</translation>
+    </message>
+    <message>
+        <source>ERROR! Failed to create automatic backup</source>
+        <translation>错误！ 无法创建自动备份</translation>
+    </message>
+    <message>
+        <source>Mixing is disabled, please close your wallet and fix the issue!</source>
+        <translation>混合已禁用，请关闭您的钱包并解决问题！</translation>
+    </message>
+    <message>
+        <source>Enabled</source>
+        <translation>启用</translation>
+    </message>
+    <message>
+        <source>see debug.log for details.</source>
+        <translation>有关详细信息，请参阅debug.log。</translation>
+    </message>
+    <message>
+        <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
+        <translation>警告！ 无法补充密钥池，请解锁您的钱包。</translation>
+    </message>
+    <message>
+        <source>Last PrivateSend message:
+</source>
+        <translation>最后的匿名发送消息：
+</translation>
+    </message>
+    <message>
+        <source>N/A</source>
+        <translation>无法使用</translation>
+    </message>
+    <message>
+        <source>PrivateSend was successfully reset.</source>
+        <translation>匿名发送已成功重置</translation>
+    </message>
+    <message>
+        <source>If you don't want to see internal PrivateSend fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
+        <translation>如果您不想查看内部匿名发送费用/交易，请在“交易”标签中选择“最常见”作为类型。</translation>
+    </message>
+    <message>
+        <source>Wallet is locked and user declined to unlock. Disabling PrivateSend.</source>
+        <translation>电子钱包已锁定，用户拒绝解锁。 禁用匿名发送。</translation>
+    </message>
+</context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -1782,6 +1916,14 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     <message>
         <source>Invalid payment address %1</source>
         <translation>无效的付款地址 %1</translation>
+    </message>
+    <message>
+        <source>Cannot start chaincoin: click-to-pay handler</source>
+        <translation>无法启动链币：点击付款处理程序</translation>
+    </message>
+    <message>
+        <source>URI cannot be parsed! This can be caused by an invalid Chaincoin address or malformed URI parameters.</source>
+        <translation>网址无法解析！ 这可能是由无效的链币地址或格式错误的网址参数引起的。</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1802,6 +1944,10 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     <message>
         <source>Payment request expired.</source>
         <translation>付款请求已过期。</translation>
+    </message>
+    <message>
+        <source>Payment request is not initialized.</source>
+        <translation>付款申请未初始化。</translation>
     </message>
     <message>
         <source>Unverified payment requests to custom payment scripts are unsupported.</source>
@@ -1874,6 +2020,38 @@ https://www.transifex.com/projects/p/chaincoin/</source>
 <context>
     <name>ProposalList</name>
     <message>
+        <source>Enter proposal name</source>
+        <translation>输入提案名称</translation>
+    </message>
+    <message>
+        <source>Min amount</source>
+        <translation>最小的金额</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>全都</translation>
+    </message>
+    <message>
+        <source>Today</source>
+        <translation>今天</translation>
+    </message>
+    <message>
+        <source>This week</source>
+        <translation>本星期</translation>
+    </message>
+    <message>
+        <source>This month</source>
+        <translation>这个月</translation>
+    </message>
+    <message>
+        <source>Last month</source>
+        <translation>上个月</translation>
+    </message>
+    <message>
+        <source>This year</source>
+        <translation>今年</translation>
+    </message>
+    <message>
         <source>Range...</source>
         <translation>指定范围...</translation>
     </message>
@@ -1884,6 +2062,10 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     <message>
         <source>Min no votes</source>
         <translation>最少否决票</translation>
+    </message>
+    <message>
+        <source>Min abs. yes votes</source>
+        <translation>最小绝对是票</translation>
     </message>
     <message>
         <source>Min percentage</source>
@@ -1924,6 +2106,22 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     <message>
         <source>Vote no</source>
         <translation>投否决票</translation>
+    </message>
+    <message>
+        <source>Visit proposal website</source>
+        <translation>访问提案网站</translation>
+    </message>
+    <message>
+        <source>Visit statistics website</source>
+        <translation>访问统计网站</translation>
+    </message>
+    <message>
+        <source>minute(s)</source>
+        <translation>分钟</translation>
+    </message>
+    <message>
+        <source>second(s)</source>
+        <translation>秒</translation>
     </message>
     <message>
         <source>Confirm vote</source>
