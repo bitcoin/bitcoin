@@ -2846,6 +2846,8 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                             return false;
                         }
                     }
+                } else {
+                    bnb_used = false;
                 }
 
                 const CAmount nChange = nValueIn - nValueToSelect;
