@@ -66,11 +66,13 @@ typedef std::pair<CPubKey, std::vector<unsigned char>> SigPair;
 // in order to construct final scriptSigs and scriptWitnesses.
 struct SignatureData {
     bool complete = false; ///< Stores whether the scriptSig and scriptWitness are complete
+    bool witness = false; ///< Stores whether the input this SigData corresponds to is a witness input
     CScript scriptSig; ///< The scriptSig of an input. Contains complete signatures or the traditional partial signatures format
     CScript redeem_script; ///< The redeemScript (if any) for the input
     CScript witness_script; ///< The witnessScript (if any) for the input. witnessScripts are used in P2WSH outputs.
     CScriptWitness scriptWitness; ///< The scriptWitness of an input. Contains complete signatures or the traditional partial signatures format. scriptWitness is part of a transaction input per BIP 144.
     std::map<CKeyID, SigPair> signatures; ///< BIP 174 style partial signatures for the input. May contain all signatures necessary for producing a final scriptSig or scriptWitness.
+    std::map<CKeyID, CPubKey> misc_pubkeys;
 
     SignatureData() {}
     explicit SignatureData(const CScript& script) : scriptSig(script) {}
