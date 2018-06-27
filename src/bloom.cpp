@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 The Bitcoin Core developers
+// Copyright (c) 2012-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,6 +13,7 @@
 
 #include <math.h>
 #include <stdlib.h>
+
 
 #define LN2SQUARED 0.4804530139182014246671025263266649717305529515945455
 #define LN2 0.6931471805599453094172321214581765680755001343602552
@@ -30,7 +31,7 @@ CBloomFilter::CBloomFilter(const unsigned int nElements, const double nFPRate, c
      * See https://en.wikipedia.org/wiki/Bloom_filter for an explanation of these formulas
      */
     isFull(false),
-    isEmpty(false),
+    isEmpty(true),
     nHashFuncs(std::min((unsigned int)(vData.size() * 8 / nElements * LN2), MAX_HASH_FUNCS)),
     nTweak(nTweakIn),
     nFlags(nFlagsIn)
@@ -276,8 +277,8 @@ void CRollingBloomFilter::insert(const std::vector<unsigned char>& vKey)
 
 void CRollingBloomFilter::insert(const uint256& hash)
 {
-    std::vector<unsigned char> data(hash.begin(), hash.end());
-    insert(data);
+    std::vector<unsigned char> vData(hash.begin(), hash.end());
+    insert(vData);
 }
 
 bool CRollingBloomFilter::contains(const std::vector<unsigned char>& vKey) const
@@ -296,8 +297,8 @@ bool CRollingBloomFilter::contains(const std::vector<unsigned char>& vKey) const
 
 bool CRollingBloomFilter::contains(const uint256& hash) const
 {
-    std::vector<unsigned char> data(hash.begin(), hash.end());
-    return contains(data);
+    std::vector<unsigned char> vData(hash.begin(), hash.end());
+    return contains(vData);
 }
 
 void CRollingBloomFilter::reset()
