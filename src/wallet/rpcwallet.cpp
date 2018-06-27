@@ -3972,6 +3972,8 @@ UniValue rescanblockchain(const JSONRPCRequest& request)
     else {
         throw JSONRPCError(RPC_MISC_ERROR, "Rescan failed. Potentially corrupted data files.");
     }
+    assert(stopBlock);
+
     UniValue response(UniValue::VOBJ);
     response.pushKV("start_height", pindexStart->nHeight);
     response.pushKV("stop_height", stopBlock->nHeight);
