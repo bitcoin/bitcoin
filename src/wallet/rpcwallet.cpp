@@ -905,12 +905,11 @@ static UniValue getbalance(const JSONRPCRequest& request)
     int nMinDepth = 1;
     if (!minconf.isNull())
         nMinDepth = minconf.get_int();
-    isminefilter filter = ISMINE_SPENDABLE;
-    if(!include_watchonly.isNull())
-        if(include_watchonly.get_bool())
-            filter = filter | ISMINE_WATCH_ONLY;
-
     if (IsDeprecatedRPCEnabled("accounts")) {
+        isminefilter filter = ISMINE_SPENDABLE;
+        if(!include_watchonly.isNull())
+            if(include_watchonly.get_bool())
+                filter = filter | ISMINE_WATCH_ONLY;
         const UniValue& account_value = request.params[0];
 
         if (!account_value.isNull()) {
@@ -921,8 +920,8 @@ static UniValue getbalance(const JSONRPCRequest& request)
         return ValueFromAmount(pwallet->GetLegacyBalance(filter, nMinDepth, account));
     }
 
-    if (!minconf.isNull() || !include_watchonly.isNull() || account) {
-        return ValueFromAmount(pwallet->GetLegacyBalance(filter, nMinDepth, account));
+    if (!minconf.isNull() || !include_watchonly.isNull()) {
+        return ValueFromAmount(pwallet->GetWatchOnlyBalance(nMinDepth));
     }
     else {
         return ValueFromAmount(pwallet->GetBalance());
