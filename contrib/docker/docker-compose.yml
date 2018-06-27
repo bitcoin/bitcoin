@@ -1,0 +1,18 @@
+version: '3.6'
+services:
+  node:
+    build: ../../.
+    ports:
+      - "8333"
+      - "18333"
+      - "8332"
+      - "18332"
+    volumes:
+      - /home/bitcoin
+      - ./bitcoin.conf:/bitcoin.conf
+    command: >
+      bitcoind
+        -printtoconsole
+        -rpcuser=${BITCOIN_RPC_USER:-username}
+        -rpcpassword=${BITCOIN_RPC_PASSWORD:-password}
+        -testnet
