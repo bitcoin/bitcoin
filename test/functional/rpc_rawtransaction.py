@@ -426,5 +426,24 @@ class RawTransactionsTest(BitcoinTestFramework):
         decrawtx = self.nodes[0].decoderawtransaction(rawtx)
         assert_equal(decrawtx['version'], 0x7fffffff)
 
+        self.log.info('sendrawtransaction with maxfeerate')
+
+        txId = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 1.0)
+        rawTx = self.nodes[0].getrawtransaction(txId, True)
+        vout = next(o for o in rawTx['vout'] if o['value'] == Decimal('1.00000000'))
+
+        self.sync_all()
+        inputs = [{ "txid" : txId, "vout" : vout['n'] }]
+        outputs = { self.nodes[0].getnewaddress() : Decimal("0.99999000") } # 1000 sat fee
+        rawTx = self.nodes[2].createrawtransaction(inputs, outputs)
+        rawTxSigned = self.nodes[2].signrawtransactionwithwallet(rawTx)
+        assert_equal(rawTxSigned['complete'], True)
+        # 1000 sat fee, ~200 b transaction, fee rate should land around 5 sat/b = 0.00005000 BTC/kB
+        # Thus, below call should fail
+        assert_raises_rpc_error(-26, "absurdly-high-fee", self.nodes[2].sendrawtransaction, rawTxSigned['hex'], 0.00001000)
+        # And below call should succeed
+        self.nodes[2].sendrawtransaction(hexstring=rawTxSigned['hex'], maxfeerate=0.00007000)
+
+
 if __name__ == '__main__':
     RawTransactionsTest().main()
