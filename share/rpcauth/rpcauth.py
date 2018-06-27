@@ -29,6 +29,6 @@ password = base64.urlsafe_b64encode(os.urandom(32)).decode("utf-8")
 m = hmac.new(bytearray(salt, 'utf-8'), bytearray(password, 'utf-8'), "SHA256")
 result = m.hexdigest()
 
-print("String to be appended to bitcoin.conf:")
+print("String to be appended to chaincoin.conf:")
 print("rpcauth="+username+":"+salt+"$"+result)
 print("Your password:\n"+password)
