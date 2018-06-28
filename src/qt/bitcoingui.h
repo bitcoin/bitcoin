@@ -32,6 +32,7 @@ class WalletModel;
 class HelpMessageDialog;
 class ModalOverlay;
 class MasternodeList;
+class ProposalList;
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -121,6 +122,7 @@ private:
     QAction *openAction;
     QAction *showHelpMessageAction;
     QAction *showPrivateSendHelpAction;
+    QAction *proposalAction;
 
     QSystemTrayIcon *trayIcon;
     QMenu *trayIconMenu;
@@ -214,6 +216,8 @@ private Q_SLOTS:
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
+    /** Switch to proposal page */
+    void gotoProposalPage();
 
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");

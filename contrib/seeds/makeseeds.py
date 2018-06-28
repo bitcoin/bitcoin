@@ -6,6 +6,11 @@
 # Generate seeds.txt from Pieter's DNS seeder
 #
 
+import re
+import sys
+import dns.resolver
+import collections
+
 NSEEDS=512
 
 MAX_SEEDS_PER_ASN=2
@@ -15,11 +20,6 @@ MIN_BLOCKS = 337600
 # These are hosts that have been observed to be behaving strangely (e.g.
 # aggressively connecting to every node).
 SUSPICIOUS_HOSTS = {}
-
-import re
-import sys
-import dns.resolver
-import collections
 
 PATTERN_IPV4 = re.compile(r"^((\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})):(\d+)$")
 PATTERN_IPV6 = re.compile(r"^\[([0-9a-z:]+)\]:(\d+)$")

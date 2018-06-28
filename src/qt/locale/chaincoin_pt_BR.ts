@@ -192,6 +192,10 @@
         <translation>Carteira criptografada</translation>
     </message>
     <message>
+        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your coins from being stolen by malware infecting your computer.</source>
+        <translation>%1 será fechado para finalizar o processo de criptografia. Lembre-se que criptografar sua carteira não protege totalmente seus chaincoins de serem roubados por malwares que infectem seu computador.</translation>
+    </message>
+    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>IMPORTANTE: Qualquer backup prévio que você tenha feito da sua carteira deve ser substituído pelo novo, e encriptado, arquivo gerado. Por razões de segurança, qualquer backup do arquivo não criptografado se tornará inútil assim que você começar a usar uma nova carteira criptografada.</translation>
     </message>
@@ -2035,6 +2039,12 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation>Recebido</translation>
     </message>
 </context>
+<context>
+    <name>ProposalList</name>
+    </context>
+<context>
+    <name>ProposalTableModel</name>
+    </context>
 <context>
     <name>QObject</name>
     <message>

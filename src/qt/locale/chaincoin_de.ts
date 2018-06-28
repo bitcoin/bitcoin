@@ -192,6 +192,10 @@
         <translation>Brieftasche verschlüsselt</translation>
     </message>
     <message>
+        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your coins from being stolen by malware infecting your computer.</source>
+        <translation>%1 wird jetzt beendet, um den Verschlüsselungsprozess abzuschließen. Bitte beachten Sie, dass die Brieftaschen-Verschlüsselung nicht vollständig vor Diebstahl Ihrer Coins durch Schadprogramme schützt, die Ihren Computer befällt.</translation>
+    </message>
+    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>WICHTIG: Alle vorherigen Brieftaschen-Sicherungen sollten durch die neu erzeugte, verschlüsselte Brieftasche ersetzt werden. Aus Sicherheitsgründen werden vorherige Sicherungen der unverschlüsselten Brieftasche nutzlos, sobald Sie die neue, verschlüsselte Brieftasche verwenden.</translation>
     </message>
@@ -284,6 +288,14 @@
     <message>
         <source>Browse masternodes</source>
         <translation>Masternodes durchsuchen</translation>
+    </message>
+    <message>
+        <source>&amp;Proposals</source>
+        <translation>&amp;Proposals</translation>
+    </message>
+    <message>
+        <source>Browse proposals</source>
+        <translation>Durchsuche Proposals</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
@@ -1225,7 +1237,7 @@
     </message>
     <message>
         <source>Collateral</source>
-        <translation>Pfand</translation>
+        <translation>Sicherheitszahlung</translation>
     </message>
     <message>
         <source>IP</source>
@@ -1823,7 +1835,7 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </message>
     <message>
         <source>Denominated</source>
-        <translation>Bezeichnet</translation>
+        <translation>Gestückelt</translation>
     </message>
     <message>
         <source>Mixed</source>
@@ -1835,7 +1847,7 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </message>
     <message numerus="yes">
         <source>Denominated inputs have %5 of %n rounds on average</source>
-        <translation><numerusform>Bezeichnete Inputs haben durchschnittlich %5 von %n Runden</numerusform><numerusform>Bezeichnete Inputs haben durchschnittlich %5 von %n Runden</numerusform></translation>
+        <translation><numerusform>Bezeichnete Inputs haben durchschnittlich %5 von %n Runden</numerusform><numerusform>Gestückelte Inputs haben durchschnittlich %5 von %n Runden</numerusform></translation>
     </message>
     <message>
         <source>keys left: %1</source>
@@ -1907,7 +1919,11 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <source>PrivateSend requires at least %1 to use.</source>
         <translation>PrivateSend benötigt mindestens %1 zur Benutzung.</translation>
     </message>
-    </context>
+    <message>
+        <source>Wallet is locked and user declined to unlock. Disabling PrivateSend.</source>
+        <translation>Wallet ist gesperrt und der Benutzer hat das entsperren abgelehnt. Deaktiviere PrivateSend.</translation>
+    </message>
+</context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -2027,6 +2043,212 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </message>
 </context>
 <context>
+    <name>ProposalList</name>
+    <message>
+        <source>Enter proposal name</source>
+        <translation>Gebe Proposal-Namen ein</translation>
+    </message>
+    <message>
+        <source>Min amount</source>
+        <translation>Mindestbetrag</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Alle</translation>
+    </message>
+    <message>
+        <source>Today</source>
+        <translation>Heute</translation>
+    </message>
+    <message>
+        <source>This week</source>
+        <translation>Diese Woche</translation>
+    </message>
+    <message>
+        <source>This month</source>
+        <translation>Diesen Monat</translation>
+    </message>
+    <message>
+        <source>Last month</source>
+        <translation>Letzten Monat</translation>
+    </message>
+    <message>
+        <source>This year</source>
+        <translation>Dieses Jahr</translation>
+    </message>
+    <message>
+        <source>Range...</source>
+        <translation>Zeitraum...</translation>
+    </message>
+    <message>
+        <source>Min yes votes</source>
+        <translation>Mindest ja-Votes</translation>
+    </message>
+    <message>
+        <source>Min no votes</source>
+        <translation>Mindest nein-Votes</translation>
+    </message>
+    <message>
+        <source>Min abs. yes votes</source>
+        <translation>Mindest enthaltene Ja-Votes</translation>
+    </message>
+    <message>
+        <source>Min percentage</source>
+        <translation>Mindestprozentzahl</translation>
+    </message>
+    <message>
+        <source>Vote Yes</source>
+        <translation>Ja Voten</translation>
+    </message>
+    <message>
+        <source>Yote Yes on the selected proposal</source>
+        <translation>Vote Ja bei ausgewähltem Proposal</translation>
+    </message>
+    <message>
+        <source>Vote Abstain</source>
+        <translation>Enthalten Voten</translation>
+    </message>
+    <message>
+        <source>Yote Abstain on the selected proposal</source>
+        <translation>Enthalten voten bei ausgewähltem Proposal</translation>
+    </message>
+    <message>
+        <source>Vote No</source>
+        <translation>Vote Nein</translation>
+    </message>
+    <message>
+        <source>Yote No on the selected proposal</source>
+        <translation>Vote Nein bei ausgewähltem Proposal</translation>
+    </message>
+    <message>
+        <source>Vote yes</source>
+        <translation>Ja Voten</translation>
+    </message>
+    <message>
+        <source>Vote abstain</source>
+        <translation>Enthalten Voten</translation>
+    </message>
+    <message>
+        <source>Vote no</source>
+        <translation>Vote Nein</translation>
+    </message>
+    <message>
+        <source>Visit proposal website</source>
+        <translation>Besuche Proposal Webseite</translation>
+    </message>
+    <message>
+        <source>Visit statistics website</source>
+        <translation>Besuche Statistik Webseite</translation>
+    </message>
+    <message>
+        <source>minute(s)</source>
+        <translation>Minute(n)</translation>
+    </message>
+    <message>
+        <source>second(s)</source>
+        <translation>Sekunde(n)</translation>
+    </message>
+    <message>
+        <source>List will be updated in %1 %2</source>
+        <translation>Liste wird in %1 %2 upgedated</translation>
+    </message>
+    <message>
+        <source>List will be updated in 0 second(s)</source>
+        <translation>Liste wird in 0 Sekunde(n) upgedatet</translation>
+    </message>
+    <message>
+        <source>Confirm vote</source>
+        <translation>Bestätige Vote</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to vote &lt;strong&gt;%1&lt;/strong&gt; on the proposal &lt;strong&gt;%2&lt;/strong&gt;?</source>
+        <translation>Bist du sicher das du &lt;strong&gt;%1&lt;/strong&gt;, bei dem Proposal &lt;strong&gt;%2&lt;/strong&gt;voten willst ?</translation>
+    </message>
+    <message>
+        <source>Voting</source>
+        <translation>Voting</translation>
+    </message>
+    <message>
+        <source>You voted %1 %2 time(s) successfully and failed %3 time(s) on %4</source>
+        <translation>Du hast %1 %2 Mal(e) erfolgreich gevotet und es scheiterte %3 Mal(e) bei %4</translation>
+    </message>
+    <message>
+        <source>Start Date:</source>
+        <translation>Startdatum:</translation>
+    </message>
+    <message>
+        <source>End Date:</source>
+        <translation>Enddatum:</translation>
+    </message>
+</context>
+<context>
+    <name>ProposalTableModel</name>
+    <message>
+        <source>Proposal</source>
+        <translation>Proposal</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>Betrag</translation>
+    </message>
+    <message>
+        <source>Start Date</source>
+        <translation>Startdatum</translation>
+    </message>
+    <message>
+        <source>End Date</source>
+        <translation>Enddatum</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Ja</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>Nein</translation>
+    </message>
+    <message>
+        <source>Abs. Yes</source>
+        <translation>Ja Enthaltungen</translation>
+    </message>
+    <message>
+        <source>Percentage</source>
+        <translation>Prozentual</translation>
+    </message>
+    <message>
+        <source>Proposal Name</source>
+        <translation>Proposal Name</translation>
+    </message>
+    <message>
+        <source>Date and time that the proposal starts.</source>
+        <translation>Datum und Zeit an dem der Proposal startet.</translation>
+    </message>
+    <message>
+        <source>Date and time that the proposal ends.</source>
+        <translation>Datum und Zeit an dem der Proposal endet.</translation>
+    </message>
+    <message>
+        <source>Obtained yes votes.</source>
+        <translation>Erhaltende Ja Votes.</translation>
+    </message>
+    <message>
+        <source>Obtained no votes.</source>
+        <translation>Erhaltene Nein Votes.</translation>
+    </message>
+    <message>
+        <source>Obtained absolute yes votes.</source>
+        <translation>Erhaltende absolute Ja Votes.</translation>
+    </message>
+    <message>
+        <source>Proposed amount.</source>
+        <translation>Vorgeschlagene Betrag. </translation>
+    </message>
+    <message>
+        <source>Current vote percentage.</source>
+        <translation>Momentane Vote Prozentzahl. </translation>
+    </message>
+</context>
+<context>
     <name>QObject</name>
     <message>
         <source>Amount</source>
@@ -2131,9 +2353,21 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <source>Error: %1</source>
         <translation>Fehler: %1</translation>
     </message>
-    </context>
+    <message>
+        <source>Error reading masternode configuration file: %1</source>
+        <translation>Fehler beim lesen der Masternode Konfigurationsdatei: %1</translation>
+    </message>
+</context>
 <context>
     <name>QRDialog</name>
+    <message>
+        <source>QR-Code Title</source>
+        <translation>QR-Code Titel</translation>
+    </message>
+    <message>
+        <source>QR Code</source>
+        <translation>QR-Code</translation>
+    </message>
     <message>
         <source>&amp;Save Image...</source>
         <translation>Sichere Datei...</translation>
@@ -2246,6 +2480,10 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     <message>
         <source>Memory usage</source>
         <translation>Speichernutzung</translation>
+    </message>
+    <message>
+        <source>Open the Chaincoin Core debug log file from the current data directory. This can take a few seconds for large log files.</source>
+        <translation>Öffnet die Chaincoin Core Debugprotokolldatei aus dem aktuellen Datenverzeichnis. Dies kann bei großen Protokolldateien einige Sekunden dauern.</translation>
     </message>
     <message>
         <source>Number of Masternodes</source>
@@ -2527,6 +2765,10 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Erzeuge Bech32-Adresse</translation>
     </message>
     <message>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Chaincoin network.</source>
+        <translation>Eine optionale Nachricht, die an die Zahlungsanforderung angehängt wird. Sie wird angezeigt, wenn die Anforderung geöffnet wird. Hinweis: Diese Nachricht wird nicht mit der Zahlung über das Chaincoin-Netzwerk gesendet.</translation>
+    </message>
+    <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>Ausgewählte Zahlungsanforderungen anzeigen (entspricht einem Doppelklick auf einen Eintrag)</translation>
     </message>
@@ -2756,12 +2998,36 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Mit Replace-By-Fee (BIP-125) kann die Transaktionsgebühr nach dem Senden erhöht werden. Ohne dies wird eine höhere Gebühr empfohlen, um das Risiko einer hohen Transaktionszeit zu reduzieren.</translation>
     </message>
     <message>
+        <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until your have validated the complete chain.</source>
+        <translation>Bei Benutzung der Fallbackfee kann es dazu kommen, dass es bei einer Transaktion mehrere Stunden oder Tage dauern kann, um bestätigt zu werden (oder niemals bestätigt wird). Erwägen Sie, Ihre Gebühr manuell zu wählen oder zu warten, bis Sie die komplette Kette validiert haben.</translation>
+    </message>
+    <message>
+        <source>If the custom fee is set to 1000 chuffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 chuffs in fee,&lt;br /&gt;while "at least" pays 1000 chuffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>Wenn die benutzerdefinierte Gebühr 1000 chuffs beträgt und die Transaktion nur 250 Byte groß ist, wird bei Auswahl von "pro Kilobyte" eine Gebühr in Höhe von 250 chuffs, bei Auswahl von "Mindestbetrag" eine Gebühr in Höhe von 1000 chuffs bezahlt. Bei Transaktionen die Größer als ein Kilobyte sind, werden bei beiden Optionen die Gebühren pro Kilobyte bezahlt.</translation>
+    </message>
+    <message>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for chaincoin transactions than the network can process.</source>
+        <translation>Nur die minimale Gebühr zu bezahlen ist so lange in Ordnung, wie weniger Transaktionsvolumen als Platz in den Blöcken vorhanden ist.&lt;br /&gt;Aber Vorsicht, diese Option kann dazu führen, dass Transaktionen nicht bestätigt werden, wenn mehr Bedarf an Chaincoin-Transaktionen besteht als das Netzwerk verarbeiten kann.</translation>
+    </message>
+    <message>
+        <source>&amp;Recommended:</source>
+        <translation>&amp;Empfehlungen:</translation>
+    </message>
+    <message>
+        <source>&amp;Custom:</source>
+        <translation>&amp;Benutzerdefiniert:</translation>
+    </message>
+    <message>
         <source>Confirmation time:</source>
         <translation>Bestätigungszeit:</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
         <translation>&amp;Zurücksetzen</translation>
+    </message>
+    <message>
+        <source>PrivateSend</source>
+        <translation>PrivateSend</translation>
     </message>
     <message>
         <source>Balance:</source>
@@ -2806,6 +3072,22 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     <message>
         <source>%1 (%2 blocks)</source>
         <translation>%1 (%2 Blöcke)</translation>
+    </message>
+    <message>
+        <source>using</source>
+        <translation>benutzen</translation>
+    </message>
+    <message>
+        <source>anonymous funds</source>
+        <translation>anonyme Gelder</translation>
+    </message>
+    <message>
+        <source>(privatesend requires this amount to be rounded up to the nearest %1).</source>
+        <translation>(PrivateSend benötigt den Betrag auf den nächsten %1 gerundet).</translation>
+    </message>
+    <message>
+        <source>any available funds (not anonymous)</source>
+        <translation>alle benötigten Gelder (nicht anonym) </translation>
     </message>
     <message>
         <source>%1 to %2</source>
@@ -2884,6 +3166,10 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation><numerusform>Voraussichtlicher Beginn der Bestätigung innerhalb von %n Block</numerusform><numerusform>Voraussichtlicher Beginn der Bestätigung innerhalb von %n Blöcken.</numerusform></translation>
     </message>
     <message>
+        <source>Warning: Invalid Chaincoin address</source>
+        <translation>Warnung: Ungültige Chaincoin Adresse</translation>
+    </message>
+    <message>
         <source>Warning: Unknown change address</source>
         <translation>Warnung: Unbekannte Wechselgeld-Adresse</translation>
     </message>
@@ -2909,6 +3195,10 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     <message>
         <source>Pay &amp;To:</source>
         <translation>E&amp;mpfänger:</translation>
+    </message>
+    <message>
+        <source>The Chaincoin address to send the payment to</source>
+        <translation>Die Chaincoin Adresse um die Zahlung zu senden</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
@@ -2939,6 +3229,10 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Diesen Eintrag entfernen</translation>
     </message>
     <message>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Chaincoin than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <translation>Die Gebühr wird vom zu überweisenden Betrag abgezogen. Der Empfänger wird also weniger Chaincoin erhalten, als Sie im Betrags-Feld eingegeben haben. Falls mehrere Empfänger ausgewählt wurden, wird die Gebühr gleichmäßig verteilt.</translation>
+    </message>
+    <message>
         <source>S&amp;ubtract fee from amount</source>
         <translation>Gebühr vom Betrag ab&amp;ziehen</translation>
     </message>
@@ -2949,6 +3243,10 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     <message>
         <source>Message:</source>
         <translation>Nachricht:</translation>
+    </message>
+    <message>
+        <source>A message that was attached to the chaincoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Chaincoin network.</source>
+        <translation>Eine an die "chaincoin:"-URI angefügte Nachricht, die zusammen mit der Transaktion gespeichert wird. Hinweis: Diese Nachricht wird nicht über das Chaincoin-Netzwerk gesendet.</translation>
     </message>
     <message>
         <source>This is an unauthenticated payment request.</source>
@@ -3004,6 +3302,14 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Nachricht &amp;signieren</translation>
     </message>
     <message>
+        <source>You can sign messages/agreements with your addresses to prove you can receive Chaincoin sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <translation>Sie können Nachrichten/Vereinbarungen mit Hilfe Ihrer Adressen signieren, um zu beweisen, dass Sie Chaincoins empfangen können, die an diese Adressen überwiesen werden. Seien Sie vorsichtig und signieren Sie nichts Vages oder Willkürliches, um Ihre Indentität vor Phishingangriffen zu schützen. Signieren Sie nur vollständig-detaillierte Aussagen, mit denen Sie auch einverstanden sind.</translation>
+    </message>
+    <message>
+        <source>The Chaincoin address to sign the message with</source>
+        <translation>Die Chaincoin Adresse mit der die Nachricht signiert wird</translation>
+    </message>
+    <message>
         <source>Choose previously used address</source>
         <translation>Bereits verwendete Adresse auswählen</translation>
     </message>
@@ -3030,6 +3336,18 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     <message>
         <source>Copy the current signature to the system clipboard</source>
         <translation>Aktuelle Signatur in die Zwischenablage kopieren</translation>
+    </message>
+    <message>
+        <source>Sign the message to prove you own this Chaincoin address</source>
+        <translation>Die Nachricht signieren, um den Besitz dieser Chaincoin-Adresse zu beweisen</translation>
+    </message>
+    <message>
+        <source>The Chaincoin address the message was signed with</source>
+        <translation>Die Chaincoin-Adresse mit der die Nachricht signiert wurde</translation>
+    </message>
+    <message>
+        <source>Verify the message to ensure it was signed with the specified Chaincoin address</source>
+        <translation>Die Nachricht verifizieren, um sicherzustellen, dass diese mit der angegebenen Chaincoin-Adresse signiert wurde</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -3117,6 +3435,10 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     <message>
         <source>[testnet]</source>
         <translation>[Testnetz]</translation>
+    </message>
+    <message>
+        <source>Version %1</source>
+        <translation>Version %1</translation>
     </message>
     <message>
         <source>The Bitcoin Core developers</source>
@@ -3403,6 +3725,26 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Erarbeitet</translation>
     </message>
     <message>
+        <source>PrivateSend Denominate</source>
+        <translation>PrivateSend Stückeln</translation>
+    </message>
+    <message>
+        <source>PrivateSend Collateral Payment</source>
+        <translation>PrivateSend Sicherheits-Zahlung</translation>
+    </message>
+    <message>
+        <source>PrivateSend Make Collateral Inputs</source>
+        <translation>PrivateSend Sicherheits-Eingänge machen</translation>
+    </message>
+    <message>
+        <source>PrivateSend Create Denominations</source>
+        <translation>PrivateSend Erstelle Stückelungen</translation>
+    </message>
+    <message>
+        <source>PrivateSend</source>
+        <translation>PrivateSend</translation>
+    </message>
+    <message>
         <source>watch-only</source>
         <translation>beobachtet</translation>
     </message>
@@ -3480,6 +3822,26 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     <message>
         <source>Sent to</source>
         <translation>Überwiesen an</translation>
+    </message>
+    <message>
+        <source>PrivateSend</source>
+        <translation>PrivateSend</translation>
+    </message>
+    <message>
+        <source>PrivateSend Make Collateral Inputs</source>
+        <translation>PrivateSend Sicherheits-Eingänge machen</translation>
+    </message>
+    <message>
+        <source>PrivateSend Create Denominations</source>
+        <translation>PrivateSend Erstelle Stückelungen</translation>
+    </message>
+    <message>
+        <source>PrivateSend Denominate</source>
+        <translation>PrivateSend Stückeln</translation>
+    </message>
+    <message>
+        <source>PrivateSend Collateral Payment</source>
+        <translation>PrivateSend Sicherheits-Zahlung</translation>
     </message>
     <message>
         <source>To yourself</source>
@@ -3701,8 +4063,260 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
 <context>
     <name>chaincoin-core</name>
     <message>
+        <source>None</source>
+        <translation>Keine</translation>
+    </message>
+    <message>
+        <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
+        <translation>(1 = TX-Metadaten wie z.B. Accountbesitzer und Zahlungsanforderungsinformationen behalten, 2 = TX-Metadaten verwerfen)</translation>
+    </message>
+    <message>
+        <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation>-maxtxfee ist auf einen sehr hohen Wert festgelegt! Gebühren dieser Höhe könnten für eine einzelne Transaktion bezahlt werden.</translation>
+    </message>
+    <message>
+        <source>A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)</source>
+        <translation>Eine Transaktionsgebühr (in %s/kB) wird genutzt, wenn für die Gebührenschützung zu wenig Daten vorliegen (Standardwert: %s)</translation>
+    </message>
+    <message>
+        <source>Accept relayed transactions received from whitelisted peers even when not relaying transactions (default: %d)</source>
+        <translation>Immer übermittelte Transaktionen von freigegebenen Peers akzeptieren, auch wenn keine Transaktionen übermittelt werden (Standard: %d)</translation>
+    </message>
+    <message>
+        <source>Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info)</source>
+        <translation>Mit dem angegebenen Knoten verbinden und versuchen die Verbindung aufrecht zu erhalten (Siehe die "addnode" RPC Kommando Hilfe für mehr Information)</translation>
+    </message>
+    <message>
+        <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
+        <translation>JSON-RPC-Verbindungen von der angegeben Quelle erlauben. Gültig für &lt;ip&gt; ist eine einzelne IP-Adresse (z.B. 1.2.3.4), ein Netzwerk bzw. eine Netzmaske (z.B. 1.2.3.4/255.255.255.0), oder die CIDR-Notation (z.B. 1.2.3.4/24). Kann mehrmals angegeben werden.</translation>
+    </message>
+    <message>
+        <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
+        <translation>An die angegebene Adresse binden und immer abhören. Für IPv6 "[Host]:Port"-Notation verwenden</translation>
+    </message>
+    <message>
+        <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
+        <translation>An die angegebene Adresse binden und Gegenstellen, die sich dorthin verbinden, immer zulassen. Für IPv6 "[Host]:Port"-Notation verwenden</translation>
+    </message>
+    <message>
+        <source>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</source>
+        <translation>An die angegebene Adresse binden und auf JSON-RPC-Verbindungen abhören. Benutzen Sie die [host]:port Annotation für IPv6. Diese Option kann mehrmals angegeben werden. (Standard: Verbindet mit allen Schnittstellen)</translation>
+    </message>
+    <message>
+        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
+        <translation>Datenverzeichnis %s kann nicht gesperrt werden. Evtl. wurde %s bereits gestartet.</translation>
+    </message>
+    <message>
+        <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
+        <translation>Kann keine Verbindungen herstellen und addrman gleichzeitig ausgehende Verbindungen suchen lassen.</translation>
+    </message>
+    <message>
+        <source>Connect only to the specified node(s); -connect=0 disables automatic connections (the rules for this peer are the same as for -addnode)</source>
+        <translation>Stellt lediglich die Verbindungen zum/zu den spezifischen Knoten her; -connect=0 deaktiviert die automatische Verbindungsherstellung (Die Regel für diesen Knoten ist die selbe wie für -addnode)</translation>
+    </message>
+    <message>
+        <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
+        <translation>Neue Dateien mit Standard-Systemrechten erzeugen, anstatt mit umask 077 (nur mit deaktivierter Walletfunktion nutzbar)</translation>
+    </message>
+    <message>
+        <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
+        <translation>Alle Wallet-Transaktionen löschen und nur diese Teilbereiche der Blockkette durch -rescan beim Starten wiederherstellen</translation>
+    </message>
+    <message>
+        <source>Disable all Chaincoin specific functionality (Masternodes, PrivateSend, Governance) (0-1, default: %u)</source>
+        <translation>Deaktiviert alle Chaincoin spezifischen Funktionen (Masternodes, PrivateSend, Governance) (0-1, Standard: %u)</translation>
+    </message>
+    <message>
+        <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
+        <translation>Eigene IP-Adressen ermitteln (Standard: 1, wenn abgehört wird und nicht -externalip oder -proxy)</translation>
+    </message>
+    <message>
+        <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
+        <translation>Veröffentlicht unter der MIT-Softwarelizenz, siehe beiligende Datei KOPIERE oder &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
+    </message>
+    <message>
+        <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
+        <translation>Die Transaktion nicht länger im Speicherpool behalten als &lt;n&gt; Stunden (Standard: %u)</translation>
+    </message>
+    <message>
+        <source>Enable multiple PrivateSend mixing sessions per block, experimental (0-1, default: %u)</source>
+        <translation>Aktiviere mehrere PrivateSend mix-Runden pro Block, experimentell (0-1 Standard: %u)</translation>
+    </message>
+    <message>
+        <source>Enable use of automated PrivateSend for funds stored in this wallet (0-1, default: %u)</source>
+        <translation>Aktiviere die automatische Benutzung von PrivateSend für Gelder die in der Wallet aufbewahrt werden (0-1, Standard: %u)</translation>
+    </message>
+    <message>
+        <source>Equivalent bytes per sigop in transactions for relay and mining (default: %u)</source>
+        <translation>Maximale Datengröße in "Data Carrier"-Transaktionen die weitergeleitet und erarbeitet werden (Standard: %u)</translation>
+    </message>
+    <message>
+        <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
+        <translation>Fehler beim Herunterladen von %s: Sie können keine hierarchisch deterministische Schlüsselgeneration (HD) auf eine bereits existierende nicht-HD Brieftasche (Wallet) aktivieren.</translation>
+    </message>
+    <message>
+        <source>Error loading wallet %s. -wallet parameter must only specify a filename (not a path).</source>
+        <translation>Fehler beim Laden der Brieftasche %s. Der Parameter -wallet darf nur ein Dateiname sein (kein Dateipfad).</translation>
+    </message>
+    <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
         <translation>Fehler beim lesen von %s! Alle Schlüssel korrekt gelesen, aber die Transaktionsdaten oder die Adressbucheinträge fehlen vielleicht oder sind inkorrekt.</translation>
+    </message>
+    <message>
+        <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
+        <translation>Fehler: Abhören nach eingehenden Verbindungen fehlgeschlagen (listen meldete Fehler %s)</translation>
+    </message>
+    <message>
+        <source>Exclude debugging information for a category. Can be used in conjunction with -debug=1 to output debug logs for all categories except one or more specified categories.</source>
+        <translation>Debugging-Informationen für eine Kategorie ausschließen. Kann in Verbindung mit -debug = 1 verwendet werden, um Debug-Logs für alle Kategorien auszugeben, mit Ausnahme einer oder mehrerer spezifizierter Kategorien.</translation>
+    </message>
+    <message>
+        <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
+        <translation>Befehl ausführen wenn ein relevanter Alarm empfangen wird oder wir einen wirklich langen Fork entdecken (%s im Befehl wird durch die Nachricht ersetzt)</translation>
+    </message>
+    <message>
+        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
+        <translation>Befehl ausführen wenn sich eine Wallet-Transaktion verändert (%s im Befehl wird durch die Transaktions-ID ersetzt)</translation>
+    </message>
+    <message>
+        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
+        <translation>Befehl ausführen wenn der beste Block wechselt (%s im Befehl wird durch den Hash des Blocks ersetzt)</translation>
+    </message>
+    <message>
+        <source>Extra transactions to keep in memory for compact block reconstructions (default: %u)</source>
+        <translation>Zusätzliche Transaktionen für kompakten Block-Nachbau im Speicher vorhalten (default: %u)</translation>
+    </message>
+    <message>
+        <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
+        <translation>Konnte kein Backup erstellen, Datei existiert bereits! Dies kann passieren wenn du die Wallet in weniger als 60 Sekunden neu gestartet hast. Du kannst fortfahren wenn du damit einverstanden bist.</translation>
+    </message>
+    <message>
+        <source>Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)</source>
+        <translation>Niedrigere Gebühren (in %s/Kb) als diese werden bei der Transaktionserstellung als gebührenfrei angesehen (Standard: %s)</translation>
+    </message>
+    <message>
+        <source>Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)</source>
+        <translation>Niedrigere Gebühren (in %s/Kb) als diese werden bei der Transaktionserstellung als gebührenfrei angesehen (Standard: %s)</translation>
+    </message>
+    <message>
+        <source>Force relay of transactions from whitelisted peers even if they violate local relay policy (default: %d)</source>
+        <translation>Leite Transaktionen von Peers auf der Positivliste auf jeden Fall weiter, auch wenn sie die lokale Weiterleitungsregeln verletzen (Standardeinstellung: %d)</translation>
+    </message>
+    <message>
+        <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
+        <translation>Nicht bestätigte gestückelte Outputs gefunden, warte zum fortfahren bis sie bestätigt wurden.</translation>
+    </message>
+    <message>
+        <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
+        <translation>Legt fest, wie gründlich die Blockverifikation von -checkblocks ist (0-4, Standard: %u)</translation>
+    </message>
+    <message>
+        <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
+        <translation>Wenn &lt;category&gt; nicht angegeben wird oder &lt;category&gt;=1, jegliche Debugginginformationen ausgeben.</translation>
+    </message>
+    <message>
+        <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
+        <translation>Wenn -paytxfee nicht festgelegt wurde Gebühren einschließen, so dass mit der Bestätigung von Transaktionen im Schnitt innerhalb von n Blöcken begonnen wird (Standard: %u)</translation>
+    </message>
+    <message>
+        <source>If this block is in the chain assume that it and its ancestors are valid and potentially skip their script verification (0 to verify all, default: %s, testnet: %s)</source>
+        <translation>Sofern dieser Block Bestandteil der Blockchain ist, nehme an, dass er und seine Vorgänger gültig sind und überspringe ggf. dessen Skriptverifikation (0 um alle zu verifizieren, default: %s, testnet: %s)</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
+        <translation>Ungültiger Betrag für -maxtxfee=&lt;amount&gt;: '%s' (muss mindestens die minimale Weiterleitungsgebühr in Höhe von %s sein, um zu verhindern dass Transaktionen nicht bearbeitet werden)</translation>
+    </message>
+    <message>
+        <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
+        <translation>Einen vollständigen Transaktionsindex führen, der vom RPC-Befehl "getrawtransaction" genutzt wird (Standard: %u)</translation>
+    </message>
+    <message>
+        <source>Maximum allowed median peer time offset adjustment. Local perspective of time may be influenced by peers forward or backward by this amount. (default: %u seconds)</source>
+        <translation>Maximal zulässige mediane Peer-Zeit-Offset-Einstellung. Lokale Perspektive der Zeit kann von Peers vorwärts oder rückwärts um diesen Betrag beeinflusst werden. (Voreinstellung: %u Sekunden)</translation>
+    </message>
+    <message>
+        <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
+        <translation>Maximale Datengröße in "Data Carrier"-Transaktionen die weitergeleitet und erarbeitet werden (Standard: %u)</translation>
+    </message>
+    <message>
+        <source>Maximum total fees (in %s) to use in a single wallet transaction or raw transaction; setting this too low may abort large transactions (default: %s)</source>
+        <translation>Maximale Gesamtgebühr (in %s) in einer Börsentransaktion; wird dies zu niedrig gesetzten können große Transaktionen abgebrochen werden (Standard: %s)</translation>
+    </message>
+    <message>
+        <source>Number of seconds to keep misbehaving peers from reconnecting (default: %u)</source>
+        <translation>Anzahl Sekunden, während denen sich nicht konform verhaltenden Gegenstellen die Wiederverbindung verweigert wird (Standard: %u)</translation>
+    </message>
+    <message>
+        <source>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</source>
+        <translation>Debugginginformationen ausgeben (Standard: %u, &lt;category&gt; anzugeben ist optional)</translation>
+    </message>
+    <message>
+        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
+        <translation>Bitte korrigieren Sie die Datums- und Uhrzeiteinstellungen Ihres Computers, da %s ansonsten nicht ordnungsgemäß funktionieren wird.</translation>
+    </message>
+    <message>
+        <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
+        <translation>Wenn sie %s nützlich finden, sind Helfer sehr gern gesehen. Besuchen Sie %s um mehr über das Softwareprojekt zu erfahren.</translation>
+    </message>
+    <message>
+        <source>PrivateSend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.</source>
+        <translation>PrivateSend benutzt exakt gestückelte Beträge um Gelder zu senden, vielleicht musst du einfach paar mehr Coins anonymisieren.</translation>
+    </message>
+    <message>
+        <source>Provide liquidity to PrivateSend by infrequently mixing coins on a continual basis (0-100, default: %u, 1=very frequent, high fees, 100=very infrequent, low fees)</source>
+        <translation>Gewährt Liquidität für PrivateSend indem unregelmäßig Coins auf häufiger Basis gemixt werden (0-100, Standard: %u, 1=sehr häufig hohe Gebühren, 100=sehr unregelmäßig wenig Gebühren)</translation>
+    </message>
+    <message>
+        <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
+        <translation>Kürzungsmodus wurde kleiner als das Minimum in Höhe von %d MiB konfiguriert. Bitte verwenden Sie einen größeren Wert.</translation>
+    </message>
+    <message>
+        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
+        <translation>Prune (Kürzung): Die letzte Syncronisation der Wallet liegt vor gekürzten (gelöschten) Blöcken. Es ist ein -reindex (download der gesamten Blockkette) notwendig.</translation>
+    </message>
+    <message>
+        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect used)</source>
+        <translation>Adressen von Gegenstellen via DNS-Namensauflösung finden, falls zu wenige Adressen verfügbar sind (Standard: 1, außer bei -connect)</translation>
+    </message>
+    <message>
+        <source>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</source>
+        <translation>Zufällige Anmeldedaten für jede Proxyverbindung verwenden. Dies aktiviert Tor-Datenflussisolation (Standard: %u)</translation>
+    </message>
+    <message>
+        <source>Reduce storage requirements by pruning (deleting) old blocks. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, &gt;%u = target size in MiB to use for block files)</source>
+        <translation>Speicherplatzanforderung durch Kürzen (Pruning) alter Blöcke reduzieren. Dieser Modus ist nicht mit -txindex und -resacan kompatibel. Warnung: Das Rücksetzen dieser Einstellung erfordert das erneute Herunterladen der gesamten Blockchain. (Standard: 0 = deaktiviert das Pruning, 1 = erlaubt manuelles Pruning via RPC, &gt;%u = Zielgröße in MiB zur Benutzung für die Blockdateien)</translation>
+    </message>
+    <message>
+        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
+        <translation>Rescans sind im pruned mode nicht möglich. Ein -reindex ist notwendig, welcher die gesmate Blockkette erneut herunterlädt.</translation>
+    </message>
+    <message>
+        <source>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</source>
+        <translation>Niedrigste Gebühr (in %s/kB) für Transaktionen einstellen, die bei der Blockerzeugung berücksichtigt werden sollen. (default: %s)</translation>
+    </message>
+    <message>
+        <source>Set maximum BIP141 block weight to this * 4. Deprecated, use blockmaxweight</source>
+        <translation>Setzen von maximalem BIP141 Blockgewicht von * 4. ist veraltet, benutze blockmaxweight</translation>
+    </message>
+    <message>
+        <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
+        <translation>Maximale Anzahl an Skript-Verifizierungs-Threads festlegen (%u bis %d, 0 = automatisch, &lt;0 = so viele Kerne frei lassen, Standard: %d)</translation>
+    </message>
+    <message>
+        <source>Sets the serialization of raw transaction or block hex returned in non-verbose mode, non-segwit(0) or segwit(1) (default: %d)</source>
+        <translation>Setzt die Serialisierung von Rohtransaktionen oder Block Hex-Daten auf non-verbose mode, nicht-Segwit(0) oder Segwit(1) (default: %d)</translation>
+    </message>
+    <message>
+        <source>Specify directory to hold wallets (default: &lt;datadir&gt;/wallets if it exists, otherwise &lt;datadir&gt;)</source>
+        <translation>Spezifiziere das Verzeichnis für das Wallet (Standard:&lt;datadir&gt;/wallets wenn es vorhanden ist, sonst &lt;datadir&gt;)</translation>
+    </message>
+    <message>
+        <source>Specify location of debug log file: this can be an absolute path or a path relative to the data directory (default: %s)</source>
+        <translation>Verzeichniss für das Debug Logfile: Es kann sich um einen absoluten oder relativen Pfad zum Datenverzeichniss handeln (Standard: %s)</translation>
+    </message>
+    <message>
+        <source>Starting in lite mode, all Chaincoin-specific functionality is disabled.</source>
+        <translation>Starte im lite-Modus, alle Chaincoin-spezifischen Funktionen sind deaktiviert.</translation>
     </message>
     <message>
         <source>Support filtering of blocks and transaction with bloom filters (default: %u)</source>
@@ -3741,8 +4355,20 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Versucht ausgehenden Datenverkehr unter dem gegebenen Wert zu halten (in MiB pro 24h), 0 = kein Limit (default: %d)</translation>
     </message>
     <message>
+        <source>Unable to locate enough PrivateSend denominated funds for this transaction.</source>
+        <translation>Nicht in der Lage genügend gestückelte PrivateSend Gelder für diese Transaktion zu finden.</translation>
+    </message>
+    <message>
+        <source>Unable to locate enough PrivateSend non-denominated funds for this transaction that are not equal 1000 CHC.</source>
+        <translation>Nicht in der Lage genügend nicht-gestückelte PrivateSend Gelder für diese Transaktion zu finden, die nicht gleich 1000 CHC sind.</translation>
+    </message>
+    <message>
         <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
         <translation>Fehler beim verarbeiten von Blöcken. Sie müssen die Datenbank mit Hilfe des Arguments '-reindex-chainstate' neuladen. </translation>
+    </message>
+    <message>
+        <source>Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain</source>
+        <translation>Sie müssen die Datenbank mit Hilfe von -reindex neu aufbauen, um zum ungekürzten Modus zurückzukehren. Dies erfordert, dass die gesamte Blockkette erneut heruntergeladen wird.</translation>
     </message>
     <message>
         <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
@@ -3751,6 +4377,10 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     <message>
         <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
         <translation>Das Argument -whitelistalwaysrelay wird nicht unterstützt und deswegen ignoriert. Benutze -whitelistrelay und/oder -whitelistforcerelay.</translation>
+    </message>
+    <message>
+        <source>Use N separate masternodes for each denominated input to mix funds (2-16, default: %u)</source>
+        <translation>Benutze N separate Masternodes für jeden gestückelten Input um Gelder zu mixen (2-16 Standard: %u)</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
@@ -3777,6 +4407,14 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Das Wallet erzeugt keine Transaktionen, die das Mempool Chain Limit überschreiten (Standardeinstellung: %u)</translation>
     </message>
     <message>
+        <source>Warning: At least %d of %d masternodes are running on a newer software version. Please check latest releases, you might need to update too.</source>
+        <translation>Warnung: Mindestens %d von %d Masternodes laufen auf einer neueren Software Version. Bitte checke die letzten Releases, du musst vielleicht demnächst auch updaten. </translation>
+    </message>
+    <message>
+        <source>Warning: Every masternode (out of %d known ones) is running on a newer software version. Please check latest releases, it's very likely that you missed a major/critical update.</source>
+        <translation>Warnung: Keder Masternode ( von %d bekannten) laufen auf einer neueren Software Version. Bitte checke die letzten Releases, es ist sehr wahrscheinlich das du ein wichtiges/kritisches Update verpasst hast. </translation>
+    </message>
+    <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
         <translation>Warnung: Das Netzwerk scheint nicht vollständig übereinzustimmen! Einige Miner scheinen Probleme zu haben.</translation>
     </message>
@@ -3785,8 +4423,20 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Warnung: Unbekannte Blockversion wird durch Mining erzeugt! Es ist möglich, dass unbekannte Regeln in Kraft sind.</translation>
     </message>
     <message>
+        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
+        <translation>Warnung: Wallet Datei korrupt, Daten geborgen! Original %s gespeichert als %s in %s; wenn dein Kontostand oder Transaktionen inkorrekt sind, solltest du von einem Backup wiederherstellen.</translation>
+    </message>
+    <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Warnung: Wir scheinen nicht vollständig mit unseren Gegenstellen übereinzustimmen! Sie oder die anderen Knoten müssen unter Umständen Ihre Client-Software aktualisieren.</translation>
+    </message>
+    <message>
+        <source>What type of addresses to use ("legacy", "p2sh-segwit", or "bech32", default: "%s")</source>
+        <translation>Welcher Adressen-Typ genutzt wird ("legacy", "p2sh-segwit", oder "bech32", Standard: "%s")</translation>
+    </message>
+    <message>
+        <source>What type of change to use ("legacy", "p2sh-segwit", or "bech32"). Default is same as -addresstype, except when -addresstype=p2sh-segwit a native segwit output is used when sending to a native segwit address)</source>
+        <translation>Welcher Wechselgeld-Typ genutzt wird ("legacy", "p2sh-segwit", oder "bech32"). Standard ist der gleiche -addresstype, außer wenn -addresstype=p2sh-segwit ein nativer segwit Output wird benutzt wenn an eine native segwit Adresse gesendet wird)</translation>
     </message>
     <message>
         <source>Whether to save the mempool on shutdown and load on restart (default: %u)</source>
@@ -3809,6 +4459,10 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Sie müssen die Datenbank mit Hilfe von -reindex neu aufbauen, um zum ungekürzten Modus zurückzukehren. Dies erfordert, dass die gesamte Blockkette erneut heruntergeladen wird.</translation>
     </message>
     <message>
+        <source>masternodeaddr option is deprecated. Please use masternode.conf to manage your remote masternodes.</source>
+        <translation>masternodeaddr Option ist veraltet. Benutze bitte masternode.conf um deine remote Masternodes zu Verwalten.</translation>
+    </message>
+    <message>
         <source>%d of last 100 blocks have unexpected version</source>
         <translation>%d der letzten 100 Blöcke haben eine unerwartete Version</translation>
     </message>
@@ -3821,12 +4475,20 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>%s wurde sehr hoch eingestellt!</translation>
     </message>
     <message>
+        <source>(%d could be used only on mainnet)</source>
+        <translation>(%d konnte nur für mainnet verwendet werden)</translation>
+    </message>
+    <message>
         <source>(default: %s)</source>
         <translation>(Standard: %s)</translation>
     </message>
     <message>
         <source>(default: %u)</source>
         <translation>(Standard: %u)</translation>
+    </message>
+    <message>
+        <source>(must be %d for mainnet)</source>
+        <translation>(muss %d für mainnet sein)</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -3851,6 +4513,10 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     <message>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Erlaube DNS-Abfragen für -addnode, -seednode und -connect</translation>
+    </message>
+    <message>
+        <source>Already have that input.</source>
+        <translation>Habe schon den Input.</translation>
     </message>
     <message>
         <source>Always query for peer addresses via DNS lookup (default: %u)</source>
@@ -3885,6 +4551,10 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Mixen nicht möglich während der Synchronisation der Wallet</translation>
     </message>
     <message>
+        <source>Can't mix: no compatible inputs found!</source>
+        <translation>Konnte nicht mixen: Keine kompatiblen Inputs gefunden!</translation>
+    </message>
+    <message>
         <source>Cannot downgrade wallet</source>
         <translation>Wallet kann nicht auf eine ältere Version herabgestuft werden</translation>
     </message>
@@ -3899,6 +4569,10 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     <message>
         <source>Change index out of range</source>
         <translation>Position des Wechselgeldindex außerhalb des gültigen Bereichs</translation>
+    </message>
+    <message>
+        <source>Collateral not valid.</source>
+        <translation>Sicherheitszahlung nicht gültig.</translation>
     </message>
     <message>
         <source>Connect through SOCKS5 proxy</source>
@@ -3917,8 +4591,16 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Verbindungsoptionen:</translation>
     </message>
     <message>
+        <source>Copyright (C) %i-%i</source>
+        <translation>Copyright (C) %i-%i</translation>
+    </message>
+    <message>
         <source>Corrupted block database detected</source>
         <translation>Beschädigte Blockdatenbank erkannt</translation>
+    </message>
+    <message>
+        <source>Could not parse masternode.conf</source>
+        <translation>Konnte masternode.conf nicht parsen</translation>
     </message>
     <message>
         <source>Debugging/Testing options:</source>
@@ -3955,6 +4637,18 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     <message>
         <source>Enable publish raw transaction in &lt;address&gt;</source>
         <translation>Aktiviere das Veröffentlichen der Roh-Transaktion in &lt;address&gt;</translation>
+    </message>
+    <message>
+        <source>Enable the client to act as a masternode (0-1, default: %u)</source>
+        <translation>Aktivieren den Client als Masternode zu fungieren (0-1, Standard: %u)</translation>
+    </message>
+    <message>
+        <source>Enable transaction replacement in the memory pool (default: %u)</source>
+        <translation>Maximal &lt;n&gt; nicht-verbindbare Transaktionen im Speicher halten (Standard: %u)</translation>
+    </message>
+    <message>
+        <source>Entries are full.</source>
+        <translation>Einträge sind voll.</translation>
     </message>
     <message>
         <source>Entry exceeds maximum size.</source>
@@ -4041,16 +4735,52 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Backup konnte nicht gelöscht werden, Fehler: %s</translation>
     </message>
     <message>
+        <source>Failed to find mixing queue to join</source>
+        <translation>Es schlug fehl eine Warteschlange zum mixen zu finden</translation>
+    </message>
+    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Fehler, es konnte kein Port abgehört werden. Wenn dies so gewünscht wird -listen=0 verwenden.</translation>
+    </message>
+    <message>
+        <source>Failed to load fulfilled requests cache from</source>
+        <translation>Fehler beim Laden des Caches für erfüllte Anfragen von</translation>
+    </message>
+    <message>
+        <source>Failed to load governance cache from</source>
+        <translation>Fehler beim Laden des Governance Caches von</translation>
+    </message>
+    <message>
+        <source>Failed to load masternode cache from</source>
+        <translation>Fehler beim Laden des Masternode Caches von</translation>
+    </message>
+    <message>
+        <source>Failed to load masternode payments cache from</source>
+        <translation>Fehler beim Laden des Masternode-Zahlungs Caches von</translation>
+    </message>
+    <message>
+        <source>Failed to parse host:port string</source>
+        <translation>Fehler beim parsen von host:port string</translation>
     </message>
     <message>
         <source>Failed to rescan the wallet during initialization</source>
         <translation>Durchsuchen des Wallets während der Initialisation fehlgeschlagen. </translation>
     </message>
     <message>
+        <source>Failed to start a new mixing queue</source>
+        <translation>Fehler beim Starten von einer neuen mix-Warteschlange</translation>
+    </message>
+    <message>
         <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
         <translation>Gebühr (in %s/kB), die von Ihnen gesendeten Transaktionen hinzugefügt wird (Standard: %s)</translation>
+    </message>
+    <message>
+        <source>Found enough users, signing ( waiting %s )</source>
+        <translation>Habe genug Benutzer gefunden, signiere ( warten %s )</translation>
+    </message>
+    <message>
+        <source>Found enough users, signing ...</source>
+        <translation>Genug Benutzer gefunden, signiere ...</translation>
     </message>
     <message>
         <source>How many blocks to check at startup (default: %u, 0 = all)</source>
@@ -4085,6 +4815,18 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Hinweis</translation>
     </message>
     <message>
+        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
+        <translation>Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im OpenSSL-Toolkit %s entwickelt wird, von Eric Young geschriebene kryptographische Software und von Thomas Bernard geschriebene UPnP-Software.</translation>
+    </message>
+    <message>
+        <source>Initialization sanity check failed. %s is shutting down.</source>
+        <translation>Initialisierungsplausibilitätsprüfung fehlgeschlagen. %s wird beendet.</translation>
+    </message>
+    <message>
+        <source>Input is not valid.</source>
+        <translation>Input ungültig.</translation>
+    </message>
+    <message>
         <source>Insufficient funds.</source>
         <translation>Unzureichender Kontostand</translation>
     </message>
@@ -4113,12 +4855,28 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Ungültiger Betrag für -paytxfee=&lt;amount&gt;: '%s' (muss mindestens %s sein)</translation>
     </message>
     <message>
+        <source>Invalid input count.</source>
+        <translation>Ungültige Input Anzahl. </translation>
+    </message>
+    <message>
         <source>Invalid masternodeprivkey. Please see documenation.</source>
         <translation>Ungültiger Masternodeprivatekey. Wenn sie Hilfe benötigen schauen sie in die Dokumentation</translation>
     </message>
     <message>
         <source>Invalid netmask specified in -whitelist: '%s'</source>
         <translation>Ungültige Netzmaske angegeben in -whitelist: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid port detected in masternode.conf</source>
+        <translation>Ungültiger Port in masternode.conf gefunden</translation>
+    </message>
+    <message>
+        <source>Invalid script detected.</source>
+        <translation>Ungültiger Skript gefunden.</translation>
+    </message>
+    <message>
+        <source>Keep N CHC anonymized (default: %u)</source>
+        <translation>Behalte N CHC anonymisiert (Standard: %u)</translation>
     </message>
     <message>
         <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
@@ -4131,6 +4889,18 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     <message>
         <source>Keypool ran out, please call keypoolrefill first</source>
         <translation>Der Keypool ist erschöpft. Bitte rufen Sie zunächst keypoolrefill auf.</translation>
+    </message>
+    <message>
+        <source>Last PrivateSend was too recent.</source>
+        <translation>Letzter PrivateSend liegt zu kurze Zeit zurück.</translation>
+    </message>
+    <message>
+        <source>Last successful PrivateSend action was too recent.</source>
+        <translation>Letzte erfolgreiche PrivateSend Aktion liegt zu kurze Zeit zurück.</translation>
+    </message>
+    <message>
+        <source>Line: %d</source>
+        <translation>Zeile: %d</translation>
     </message>
     <message>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
@@ -4153,8 +4923,36 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Lade Blockindex...</translation>
     </message>
     <message>
+        <source>Loading fulfilled requests cache...</source>
+        <translation>Lade Cache für erfüllte Anfragen...</translation>
+    </message>
+    <message>
+        <source>Loading governance cache...</source>
+        <translation>Lade Governance Cache... </translation>
+    </message>
+    <message>
+        <source>Loading masternode cache...</source>
+        <translation>Lade Masternode Cache...</translation>
+    </message>
+    <message>
+        <source>Loading masternode payment cache...</source>
+        <translation>Lade Masternode-Zahlungs Cache</translation>
+    </message>
+    <message>
         <source>Loading wallet...</source>
         <translation>Lade Wallet...</translation>
+    </message>
+    <message>
+        <source>Location of the auth cookie (default: data dir)</source>
+        <translation>Dateiort für das Auth-Cookie (Standard: Datenverzeichnis)</translation>
+    </message>
+    <message>
+        <source>Lock is already in place.</source>
+        <translation>Sperre ist bereits vorhanden.</translation>
+    </message>
+    <message>
+        <source>Lock masternodes from masternode configuration file (default: %u)</source>
+        <translation>Sperre Masternodes von der Masternode Konfigurationsdatei (Standard: %u)</translation>
     </message>
     <message>
         <source>Maintain at most &lt;n&gt; connections to peers (default: %u)</source>
@@ -4165,6 +4963,26 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Die Wallet soll Transaktionen übertragen/broadcasten</translation>
     </message>
     <message>
+        <source>Masternode cache is empty, skipping payments and governance cache...</source>
+        <translation>Masternode Cache ist leer, überspringe Zahlungs- und Governance Cache</translation>
+    </message>
+    <message>
+        <source>Masternode options:</source>
+        <translation>Masternode Optionen:</translation>
+    </message>
+    <message>
+        <source>Masternode queue is full.</source>
+        <translation>Masternode Warteschlange ist voll.</translation>
+    </message>
+    <message>
+        <source>Masternode:</source>
+        <translation>Masternode:</translation>
+    </message>
+    <message>
+        <source>Masternodes are not supported in lite mode.</source>
+        <translation>Masternode sind im lite-Mode nicht unterstützt.</translation>
+    </message>
+    <message>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
         <translation>Maximale Größe des Empfangspuffers pro Verbindung, &lt;n&gt; * 1000 Byte (Standard: %u)</translation>
     </message>
@@ -4173,8 +4991,52 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Maximale Größe des Sendepuffers pro Verbindung, &lt;n&gt; * 1000 Byte (Standard: %u)</translation>
     </message>
     <message>
+        <source>Missing input transaction information.</source>
+        <translation>Fehlende Input-Transaktionsinformationen.</translation>
+    </message>
+    <message>
+        <source>Mixing in progress...</source>
+        <translation>Mixen im Gange...</translation>
+    </message>
+    <message>
+        <source>Need to specify a port with -whitebind: '%s'</source>
+        <translation>Angabe eines Ports benötigt für -whitebind: '%s'</translation>
+    </message>
+    <message>
+        <source>No Masternodes detected.</source>
+        <translation>Keine Masternodes entdeckt.</translation>
+    </message>
+    <message>
+        <source>No compatible Masternode found.</source>
+        <translation>Keine kompatiblen Masternodes gefunden. </translation>
+    </message>
+    <message>
+        <source>No errors detected.</source>
+        <translation>Keine Fehler gefunden.</translation>
+    </message>
+    <message>
+        <source>No matching denominations found for mixing.</source>
+        <translation>Keine passenden Stückelungen zum mixen gefunden.</translation>
+    </message>
+    <message>
+        <source>Node relay options:</source>
+        <translation>Knoten-Weiterleitungsoptionen:</translation>
+    </message>
+    <message>
+        <source>Non-standard public key detected.</source>
+        <translation>Nicht standardmäßiger öffentlicher Schlüssel erkannt.</translation>
+    </message>
+    <message>
+        <source>Not compatible with existing transactions.</source>
+        <translation>Nicht kompatibel mit bestehenden Transaktionen.</translation>
+    </message>
+    <message>
         <source>Not enough file descriptors available.</source>
         <translation>Nicht genügend Datei-Deskriptoren verfügbar.</translation>
+    </message>
+    <message>
+        <source>Not enough funds to anonymize.</source>
+        <translation>Nicht genug Gelder zum anonymisieren.</translation>
     </message>
     <message>
         <source>Not in the Masternode list.</source>
@@ -4191,6 +5053,10 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     <message>
         <source>Password for JSON-RPC connections</source>
         <translation>Passwort für JSON-RPC-Verbindungen</translation>
+    </message>
+    <message>
+        <source>Port: %d</source>
+        <translation>Port: %d</translation>
     </message>
     <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
@@ -4373,6 +5239,18 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Netzwerk-Threads werden gestartet...</translation>
     </message>
     <message>
+        <source>Submitted following entries to masternode: %u / %d</source>
+        <translation>Folgende Einträge zu Masternode eingereicht: %u / %d</translation>
+    </message>
+    <message>
+        <source>Submitted to masternode, waiting for more entries ( %u / %d ) %s</source>
+        <translation>Übergeben an Masternode, warten auf weitere Einträge ( %u / %d ) %s</translation>
+    </message>
+    <message>
+        <source>Submitted to masternode, waiting in queue %s</source>
+        <translation>Übergeben an Masternode, warte in Schlange %s </translation>
+    </message>
+    <message>
         <source>Synchroning blockchain...</source>
         <translation>Synchronisiere Blockchain...</translation>
     </message>
@@ -4433,6 +5311,10 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Schwellenwert, um Verbindungen zu sich nicht konform verhaltenden Gegenstellen zu beenden (Standard: %u)</translation>
     </message>
     <message>
+        <source>Too many %f denominations, removing.</source>
+        <translation>Zu viele %f Stückelungen, entferne.</translation>
+    </message>
+    <message>
         <source>Tor control port password (default: empty)</source>
         <translation>TOR Kontrollport Passwort (Standard: leer)</translation>
     </message>
@@ -4489,6 +5371,10 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Kann auf diesem Computer nicht an %s binden (bind meldete Fehler %s)</translation>
     </message>
     <message>
+        <source>Unable to bind to %s on this computer. %s is probably already running.</source>
+        <translation>Kann auf diesem Computer nicht an %s binden. Evtl. wurde %s bereits gestartet.</translation>
+    </message>
+    <message>
         <source>Unable to generate initial keys</source>
         <translation>Anfänglicher Schlüssel kann nicht generiert werden.</translation>
     </message>
@@ -4497,8 +5383,24 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Kann HTTP Server nicht starten. Siehe debug log für Details.</translation>
     </message>
     <message>
+        <source>Unknown address type '%s'</source>
+        <translation>Unbekannter Adress-Typ '%s'</translation>
+    </message>
+    <message>
+        <source>Unknown change type '%s'</source>
+        <translation>Unbekannter Wechselgeld-Typ '%s'</translation>
+    </message>
+    <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
         <translation>Unbekannter Netztyp in -onlynet angegeben: '%s'</translation>
+    </message>
+    <message>
+        <source>Unknown response.</source>
+        <translation>Unbekannte Antwort.</translation>
+    </message>
+    <message>
+        <source>Unknown state: id = %u</source>
+        <translation>Unbekannter Zustand: id = %u</translation>
     </message>
     <message>
         <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
@@ -4513,8 +5415,16 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Nicht unterstütztes Argument -tor gefunden, bitte -onion verwenden.</translation>
     </message>
     <message>
+        <source>Unsupported logging category %s=%s.</source>
+        <translation>Nicht unterstützte logging Kategorie %s=%s.</translation>
+    </message>
+    <message>
         <source>Upgrade wallet to latest format on startup</source>
         <translation>Wallet beim Starten auf das neueste Format aktualisieren</translation>
+    </message>
+    <message>
+        <source>Upgrading UTXO database</source>
+        <translation>Aktualisierung der UTXO Datenbank</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
@@ -4541,8 +5451,16 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Verifiziere Wallet(s)...</translation>
     </message>
     <message>
+        <source>Very low number of keys left: %d</source>
+        <translation>Sehr geringe Anzahl verbleibender Schlüssel: %d</translation>
+    </message>
+    <message>
         <source>Wallet %s resides outside wallet directory %s</source>
         <translation>Brieftasche %s liegt außerhalb des Datenverzechnisses %s</translation>
+    </message>
+    <message>
+        <source>Wallet debugging/testing options:</source>
+        <translation>Wallet Debugging-/Testoptionen:</translation>
     </message>
     <message>
         <source>Wallet is locked.</source>
@@ -4573,8 +5491,20 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Legt fest ob nur Blöcke Modus aktiv sein soll (Standard: %u)</translation>
     </message>
     <message>
+        <source>Will retry...</source>
+        <translation>Versuche erneut...</translation>
+    </message>
+    <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>Sie müssen die Datenbank mit Hilfe von -reindex neu aufbauen, um -txindex zu ändern</translation>
+    </message>
+    <message>
+        <source>Your entries added successfully.</source>
+        <translation>Deine Einträge wurden erfolgreich hinzugefügt.</translation>
+    </message>
+    <message>
+        <source>Your transaction was accepted into the pool!</source>
+        <translation>Deine Transaktion wurde in den Pool aufgenommen!</translation>
     </message>
     <message>
         <source>Zapping all transactions from wallet...</source>
@@ -4583,6 +5513,10 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     <message>
         <source>ZeroMQ notification options:</source>
         <translation>ZeroMQ-Benachrichtigungsoptionen:</translation>
+    </message>
+    <message>
+        <source>no mixing available.</source>
+        <translation>kein mixen verfügbar,</translation>
     </message>
     <message>
         <source>see debug.log for details.</source>

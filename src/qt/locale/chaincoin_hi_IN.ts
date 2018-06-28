@@ -278,6 +278,12 @@
     <name>PeerTableModel</name>
     </context>
 <context>
+    <name>ProposalList</name>
+    </context>
+<context>
+    <name>ProposalTableModel</name>
+    </context>
+<context>
     <name>QObject</name>
     <message>
         <source>Amount</source>
