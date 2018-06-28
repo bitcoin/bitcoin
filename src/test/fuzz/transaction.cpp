@@ -97,7 +97,8 @@ FUZZ_TARGET_INIT(transaction, initialize_transaction)
 
     CCoinsView coins_view;
     const CCoinsViewCache coins_view_cache(&coins_view);
-    (void)AreInputsStandard(tx, coins_view_cache);
+    std::string debug;
+    (void)AreInputsStandard(tx, coins_view_cache, reason, debug);
     (void)IsWitnessStandard(tx, coins_view_cache);
 
     UniValue u(UniValue::VOBJ);
