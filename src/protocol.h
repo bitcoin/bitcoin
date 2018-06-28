@@ -333,25 +333,6 @@ public:
 
     void Init();
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
-        if (ser_action.ForRead())
-            Init();
-        int nVersion = s.GetVersion();
-        if (s.GetType() & SER_DISK)
-            READWRITE(nVersion);
-        if ((s.GetType() & SER_DISK) ||
-            (nVersion >= CADDR_TIME_VERSION && !(s.GetType() & SER_GETHASH)))
-            READWRITE(nTime);
-        uint64_t nServicesInt = nServices;
-        READWRITE(nServicesInt);
-        nServices = static_cast<ServiceFlags>(nServicesInt);
-        READWRITEAS(CService, *this);
-    }
-
     // TODO: make private (improves encapsulation)
 public:
     ServiceFlags nServices;
