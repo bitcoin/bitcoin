@@ -90,8 +90,10 @@ uint256 CPartialMerkleTree::TraverseAndExtract(int height, unsigned int pos, uns
             return uint256();
         }
         const uint256 &hash = vHash[nHashUsed++];
-        if (height==0 && fParentOfMatch) // in case of height 0, we have a matched txid
+        if (height==0 && fParentOfMatch) { // in case of height 0, we have a matched txid
             vMatch.push_back(hash);
+            vnIndex.push_back(pos);
+        }
         return hash;
     } else {
         // otherwise, descend into the subtrees to extract matched txids and hashes
