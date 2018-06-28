@@ -52,10 +52,10 @@ bool IsBlockValueValid(const CBlock& block, int nBlockHeight, const CAmount &blo
 
     LogPrint("gobject", "block.vtx[0]->GetValueOut() %lld <= nSuperblockMaxValue %lld\n", block.vtx[0]->GetValueOut(), nSuperblockMaxValue);
 
-    if(!masternodeSync.IsSynced()) {
+    if(!masternodeSync.IsSynced() || fLiteMode) {
         // not enough data but at least it must NOT exceed superblock max value
         if(CSuperblock::IsValidBlockHeight(nBlockHeight)) {
-            if(fDebug) LogPrintf("IsBlockPayeeValid -- WARNING: Client not synced, checking superblock max bounds only\n");
+            if(fDebug) LogPrintf("IsBlockPayeeValid -- WARNING: Not enough data, checking superblock max bounds only\n");
             if(!isSuperblockMaxValueMet) {
                 strErrorRet = strprintf("coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded superblock max value",
                                         nBlockHeight, block.vtx[0]->GetValueOut(), nSuperblockMaxValue);
@@ -122,9 +122,9 @@ bool IsBlockValueValid(const CBlock& block, int nBlockHeight, const CAmount &blo
 
 bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight,  const CAmount &blockReward, const CAmount &fee, CAmount& nTotalRewardWithMasternodes)
 {
-    if(!masternodeSync.IsSynced()) {
+    if(!masternodeSync.IsSynced() || fLiteMode) {
         //there is no budget data to use to check anything, let's just accept the longest chain
-        if(fDebug) LogPrintf("IsBlockPayeeValid -- WARNING: Client not synced, skipping block payee checks\n");
+		if (fDebug) LogPrintf("IsBlockPayeeValid -- WARNING: Not enough data, skipping block payee checks\n");
 		nTotalRewardWithMasternodes = txNew.GetValueOut();
         return true;
     }
