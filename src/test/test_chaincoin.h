@@ -116,6 +116,6 @@ struct TestMemPoolEntryHelper
     TestMemPoolEntryHelper &SigOpsCost(unsigned int _sigopsCost) { sigOpCost = _sigopsCost; return *this; }
 };
 
-CBlock getBlock13b8a();
+CBlock getBlock9tx();
 
 #endif
