@@ -34,31 +34,25 @@ static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<CO
 static void CoinSelection(benchmark::State& state)
 {
     const CWallet wallet("dummy", WalletDatabase::CreateDummy());
-    std::vector<COutput> vCoins;
     LOCK(wallet.cs_wallet);
 
-    while (state.KeepRunning()) {
-        // Add coins.
-        for (int i = 0; i < 1000; i++)
-            addCoin(1000 * COIN, wallet, vCoins);
-        addCoin(3 * COIN, wallet, vCoins);
+    // Add coins.
+    std::vector<COutput> vCoins;
+    for (int i = 0; i < 1000; ++i) {
+        addCoin(1000 * COIN, wallet, vCoins);
+    }
+    addCoin(3 * COIN, wallet, vCoins);
 
+    const CoinEligibilityFilter filter_standard(1, 6, 0);
+    const CoinSelectionParams coin_selection_params(true, 34, 148, CFeeRate(0), 0);
+    while (state.KeepRunning()) {
         std::set<CInputCoin> setCoinsRet;
         CAmount nValueRet;
         bool bnb_used;
-        CoinEligibilityFilter filter_standard(1, 6, 0);
-        CoinSelectionParams coin_selection_params(false, 34, 148, CFeeRate(0), 0);
-        bool success = wallet.SelectCoinsMinConf(1003 * COIN, filter_standard, vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used)
-                       || wallet.SelectCoinsMinConf(1003 * COIN, filter_standard, vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used);
+        bool success = wallet.SelectCoinsMinConf(1003 * COIN, filter_standard, vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used);
         assert(success);
         assert(nValueRet == 1003 * COIN);
         assert(setCoinsRet.size() == 2);
-
-        // Empty wallet.
-        for (COutput& output : vCoins) {
-            delete output.tx;
-        }
-        vCoins.clear();
     }
 }
 
