@@ -119,7 +119,7 @@ class WalletTest(BitcoinTestFramework):
         self.nodes[1].lockunspent(False, [unspent_0])
         tx = self.nodes[1].createrawtransaction([unspent_0], { self.nodes[1].getnewaddress() : 1 })
         tx = self.nodes[1].fundrawtransaction(tx)['hex']
-        tx = self.nodes[1].signrawtransactionwithwallet(tx)["hex"]
+        tx = self.nodes[1].signrawtransaction(tx)["hex"]
         self.nodes[1].sendrawtransaction(tx)
         assert_equal(len(self.nodes[1].listlockunspent()), 0)
 
