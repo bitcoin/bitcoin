@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(generate_assetallocationpruning)
 	string guid = AssetNew("node1", "bcf", "jagprunealias2", "pubdata", "8", "false", "10000", "-1", "0.05");
 	AssetSend("node1", guid, "\"[{\\\"aliasto\\\":\\\"jagprunealias2\\\",\\\"amount\\\":1}]\"", "assetallocationsend");
 	AssetAllocationTransfer(false, "node1", guid, "jagprunealias2", "\"[{\\\"aliasto\\\":\\\"jagprunealias2node2\\\",\\\"amount\\\":0.11}]\"", "allocationsendmemo");
-	AssetClaimInterest("node1", guid, "jagprunealias2node2");
+	
 	// we can find it as normal first
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "assetinfo " + guid + " false"));
 	// make sure our alias doesn't expire
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(generate_assetallocationpruning)
 	AssetUpdate("node1", guid1);
 	AssetSend("node1", guid1, "\"[{\\\"aliasto\\\":\\\"jagprunealias2\\\",\\\"amount\\\":1}]\"", "assetallocationsend");
 	AssetAllocationTransfer(false, "node1", guid1, "jagprunealias2", "\"[{\\\"aliasto\\\":\\\"jagprunealias2node2\\\",\\\"amount\\\":0.11}]\"", "allocationsendmemo");
-	AssetClaimInterest("node1", guid1, "jagprunealias2node2");
+	AssetClaimInterest("node2", guid1, "jagprunealias2node2");
 	// you can search it still on node1/node2
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid1 + " false"));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetinfo " + guid1 + " false"));
