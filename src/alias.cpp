@@ -1606,7 +1606,7 @@ UniValue aliasnew(const JSONRPCRequest& request) {
 						"<aliasname> alias name.\n"
 						"<public value> alias public profile data, 256 characters max.\n"
 						"<accept_transfers_flags> 0 for none, 1 for accepting certificate transfers, 2 for accepting asset transfers and 3 for all. Default is 3.\n"	
-						"<expire_timestamp> Epoch time when to expire alias. It is exponentially more expensive per year, calculation is FEERATE*(2.88^years). FEERATE is the dynamic satoshi per byte fee set in the rate peg alias used for this alias. Defaults to 1 hour.\n"	
+						"<expire_timestamp> Epoch time when to expire alias. It is exponentially more expensive per year, calculation is FEERATE*(2.88^years). FEERATE is the dynamic based on the size of the transaction and what the minimum fee rate is currently which depends on how congested the network is. Defaults to 1 hour.\n"	
 						"<address> Address for this alias.\n"		
 						"<encryption_privatekey> Encrypted private key used for encryption/decryption of private data related to this alias. Should be encrypted to publickey.\n"
 						"<encryption_publickey> Public key used for encryption/decryption of private data related to this alias.\n"						
@@ -1809,6 +1809,151 @@ UniValue aliasnew(const JSONRPCRequest& request) {
 	res.push_back(EncodeHexTx(tx));
 	return res;
 }
+UniValue aliasnewestimatedfee(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+	if (request.fHelp || 8 != params.size())
+		throw runtime_error(
+			"aliasnewestimatedfee [aliasname] [public value] [accept_transfers_flags=3] [expire_timestamp] [address] [encryption_privatekey] [encryption_publickey] [witness]\n"
+			"Estimate the fee for a new alias.\n"
+			"<aliasname> alias name.\n"
+			"<public value> alias public profile data, 256 characters max.\n"
+			"<accept_transfers_flags> 0 for none, 1 for accepting certificate transfers, 2 for accepting asset transfers and 3 for all. Default is 3.\n"
+			"<expire_timestamp> Epoch time when to expire alias. It is exponentially more expensive per year, calculation is FEERATE*(2.88^years). FEERATE is the dynamic based on the size of the transaction and what the minimum fee rate is currently which depends on how congested the network is. Defaults to 1 hour.\n"
+			"<address> Address for this alias.\n"
+			"<encryption_privatekey> Encrypted private key used for encryption/decryption of private data related to this alias. Should be encrypted to publickey.\n"
+			"<encryption_publickey> Public key used for encryption/decryption of private data related to this alias.\n"
+			"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
+			+ HelpRequiringPassphrase());
+	vector<unsigned char> vchAlias = vchFromString(params[0].get_str());
+	ToLowerCase(vchAlias);
+	string strName = stringFromVch(vchAlias);
+	/*Above pattern makes sure domain name matches the following criteria :
+
+	The domain name should be a-z | 0-9 and hyphen(-)
+	The domain name should between 3 and 63 characters long
+	Last Tld can be 2 to a maximum of 6 characters
+	The domain name should not start or end with hyphen (-) (e.g. -syscoin.org or syscoin-.org)
+	The domain name can be a subdomain (e.g. sys.blogspot.com)*/
+	using namespace boost::xpressive;
+	using namespace boost::algorithm;
+	to_lower(strName);
+	smatch nameparts;
+	sregex domainwithtldregex = sregex::compile("^((?!-)[a-z0-9-]{3,64}(?<!-)\\.)+[a-z]{2,6}$");
+	sregex domainwithouttldregex = sregex::compile("^((?!-)[a-z0-9-]{3,64}(?<!-))");
+
+	if (find_first(strName, "."))
+	{
+		if (!regex_search(strName, nameparts, domainwithtldregex) || string(nameparts[0]) != strName)
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5503 - " + _("Invalid Syscoin Identity. Must follow the domain name spec of 3 to 64 characters with no preceding or trailing dashes and a TLD of 2 to 6 characters"));
+	}
+	else
+	{
+		if (!regex_search(strName, nameparts, domainwithouttldregex) || string(nameparts[0]) != strName)
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5504 - " + _("Invalid Syscoin Identity. Must follow the domain name spec of 3 to 64 characters with no preceding or trailing dashes"));
+	}
+
+
+
+	vchAlias = vchFromString(strName);
+
+	vector<unsigned char> vchPublicValue;
+	string strPublicValue = "";
+	strPublicValue = params[1].get_str();
+	vchPublicValue = vchFromString(strPublicValue);
+
+	unsigned char nAcceptTransferFlags = 3;
+	nAcceptTransferFlags = params[2].get_int();
+	uint64_t nTime = 0;
+	nTime = params[3].get_int64();
+	// sanity check set to 1 hr
+	if (nTime < chainActive.Tip()->GetMedianTimePast() + 3600)
+		nTime = chainActive.Tip()->GetMedianTimePast() + 3600;
+
+	string strAddress = "";
+	strAddress = params[4].get_str();
+
+	string strEncryptionPrivateKey = "";
+	strEncryptionPrivateKey = params[5].get_str();
+	string strEncryptionPublicKey = "";
+	strEncryptionPublicKey = params[6].get_str();
+	vector<unsigned char> vchWitness;
+	vchWitness = vchFromValue(params[7]);
+	CMutableTransaction tx;
+	tx.nVersion = SYSCOIN_TX_VERSION;
+	tx.vin.clear();
+	tx.vout.clear();
+	CAliasIndex oldAlias;
+	if (GetAlias(vchAlias, oldAlias))
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5506 - " + _("This alias already exists"));
+
+
+	const vector<unsigned char> &vchRandAlias = vchFromString(GenerateSyscoinGuid());
+
+	// build alias
+	CAliasIndex newAlias, newAlias1;
+	newAlias.vchGUID = vchRandAlias;
+	newAlias.vchAlias = vchAlias;
+	if (!strEncryptionPublicKey.empty())
+		newAlias.vchEncryptionPublicKey = ParseHex(strEncryptionPublicKey);
+	if (!strEncryptionPrivateKey.empty())
+		newAlias.vchEncryptionPrivateKey = ParseHex(strEncryptionPrivateKey);
+	newAlias.vchPublicValue = vchPublicValue;
+	newAlias.nExpireTime = nTime;
+	newAlias.nAcceptTransferFlags = nAcceptTransferFlags;
+
+
+	vector<unsigned char> data;
+	vector<unsigned char> vchHashAlias, vchHashAlias1;
+	uint256 hash;
+	bool bActivation = false;
+	newAlias1 = newAlias;
+
+
+	// ensure that the stored alias registration and the creation of alias from parameters matches hash, if not then the params must have changed so re-register
+	newAlias1.Serialize(data);
+	hash = Hash(data.begin(), data.end());
+	vchHashAlias1 = vchFromValue(hash.GetHex());
+
+	CScript scriptPubKey, scriptPubKey1;
+	
+	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchAlias << newAlias1.vchGUID << vchHashAlias1 << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
+	scriptPubKey1<< CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchHashAlias1 << OP_2DROP << OP_DROP;
+	// setup dummy destination for fee calculation purposes
+	CSyscoinAddress newAddress = CSyscoinAddress("1QFqqMUD55ZV3PJEJZtaKCsQmjLT6JkjvJ");
+	scriptPubKey += GetScriptForDestination(newAddress.Get());
+	scriptPubKey1 += GetScriptForDestination(newAddress.Get());
+
+	vector<CRecipient> vecSend;
+	CRecipient recipient, recipient1;
+	CreateAliasRecipient(scriptPubKey, recipient);
+	CreateAliasRecipient(scriptPubKey1, recipient1);
+
+	CScript scriptData;
+
+	scriptData << OP_RETURN << data;
+	CRecipient fee;
+	CreateFeeRecipient(scriptData, data, fee);
+	// calculate a fee if renewal is larger than default.. based on how many years you extend for it will be exponentially more expensive
+	uint64_t nTimeExpiry = nTime - chainActive.Tip()->GetMedianTimePast();
+	if (nTimeExpiry < 3600)
+		nTimeExpiry = 3600;
+	float fYears = nTimeExpiry / ONE_YEAR_IN_SECONDS;
+	if (fYears < 1)
+		fYears = 1;
+	fee.nAmount = GetDataFee(scriptData) * powf(2.88, fYears);
+	vecSend.push_back(recipient1);
+	for (unsigned int i = 0; i<MAX_ALIAS_UPDATES_PER_BLOCK; i++)
+	{
+		vecSend.push_back(recipient);
+	}
+	for (auto& recp : vecSend) {
+		tx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
+	}
+	CTransaction txIn_t(tx);
+	UniValue res(UniValue::VARR);
+	res.push_back(ValueFromAmount(txIn_t.GetValueOut()));
+	return res;
+}
 UniValue aliasupdate(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
 	if (request.fHelp || 8 != params.size())
@@ -1819,7 +1964,7 @@ UniValue aliasupdate(const JSONRPCRequest& request) {
 						"<public_value> alias public profile data, 256 characters max.\n"			
 						"<address> Address of alias.\n"		
 						"<accept_transfers_flags> 0 for none, 1 for accepting certificate transfers, 2 for accepting asset transfers and 3 for all. Default is 3.\n"
-						"<expire_timestamp> Epoch time when to expire alias. It is exponentially more expensive per year, calculation is 2.88^years. FEERATE is the dynamic satoshi per byte fee set in the rate peg alias used for this alias. Defaults to 1 hour. Set to 0 if not changing expiration.\n"		
+						"<expire_timestamp> Epoch time when to expire alias. It is exponentially more expensive per year, calculation is FEERATE*(2.88^years). FEERATE is the dynamic based on the size of the transaction and what the minimum fee rate is currently which depends on how congested the network is. Set to 0 if not changing expiration, if non-empty a fee will be applied for changing the expiry time.\n"		
 						"<encryption_privatekey> Encrypted private key used for encryption/decryption of private data related to this alias. If transferring, the key should be encrypted to alias_pubkey.\n"
 						"<encryption_publickey> Public key used for encryption/decryption of private data related to this alias. Useful if you are changing pub/priv keypair for encryption on this alias.\n"						
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
@@ -1829,8 +1974,6 @@ UniValue aliasupdate(const JSONRPCRequest& request) {
 	string strPublicValue = "";
 	strPublicValue = params[1].get_str();
 	
-	CWalletTx wtx;
-	CAliasIndex updateAlias;
 	string strAddress = "";
 	strAddress = params[2].get_str();
 	
@@ -1908,6 +2051,117 @@ UniValue aliasupdate(const JSONRPCRequest& request) {
 	vecSend.push_back(recipient);
 	
 	return syscointxfund_helper(vchAlias, vchWitness, recipient, vecSend);
+}
+UniValue aliasupdateestimatedfee(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+	if (request.fHelp || 8 != params.size())
+		throw runtime_error(
+			"aliasupdateestimatedfee [aliasname] [public value] [address] [accept_transfers_flags=3] [expire_timestamp] [encryption_privatekey] [encryption_publickey] [witness]\n"
+			"Estimate the fee for an update and possibly transfer action on an alias.\n"
+			"<aliasname> alias name.\n"
+			"<public_value> alias public profile data, 256 characters max.\n"
+			"<address> Address of alias.\n"
+			"<accept_transfers_flags> 0 for none, 1 for accepting certificate transfers, 2 for accepting asset transfers and 3 for all. Default is 3.\n"
+			"<expire_timestamp> Epoch time when to expire alias. It is exponentially more expensive per year, calculation is FEERATE*(2.88^years). FEERATE is the dynamic based on the size of the transaction and what the minimum fee rate is currently which depends on how congested the network is. Set to 0 if not changing expiration, if non-empty a fee will be applied for changing the expiry time.\n"
+			"<encryption_privatekey> Encrypted private key used for encryption/decryption of private data related to this alias. If transferring, the key should be encrypted to alias_pubkey.\n"
+			"<encryption_publickey> Public key used for encryption/decryption of private data related to this alias. Useful if you are changing pub/priv keypair for encryption on this alias.\n"
+			"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
+			+ HelpRequiringPassphrase());
+	vector<unsigned char> vchAlias = vchFromString(params[0].get_str());
+	string strPrivateValue = "";
+	string strPublicValue = "";
+	strPublicValue = params[1].get_str();
+
+	string strAddress = "";
+	strAddress = params[2].get_str();
+
+	unsigned char nAcceptTransferFlags = params[3].get_int();
+
+	uint64_t nTime = chainActive.Tip()->GetMedianTimePast() + ONE_YEAR_IN_SECONDS;
+	nTime = params[4].get_int64();
+
+	string strEncryptionPrivateKey = "";
+	strEncryptionPrivateKey = params[5].get_str();
+
+	string strEncryptionPublicKey = "";
+	strEncryptionPublicKey = params[6].get_str();
+
+	vector<unsigned char> vchWitness;
+	vchWitness = vchFromValue(params[7]);
+
+
+	CAliasIndex theAlias;
+	ToLowerCase(vchAlias);
+	if (!GetAlias(vchAlias, theAlias))
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5511 - " + _("Could not find an alias with this name"));
+
+
+	CAliasIndex copyAlias = theAlias;
+	theAlias.ClearAlias();
+	if (strPublicValue != stringFromVch(copyAlias.vchPublicValue))
+		theAlias.vchPublicValue = vchFromString(strPublicValue);
+	if (strEncryptionPrivateKey != HexStr(copyAlias.vchEncryptionPrivateKey))
+		theAlias.vchEncryptionPrivateKey = ParseHex(strEncryptionPrivateKey);
+	if (strEncryptionPublicKey != HexStr(copyAlias.vchEncryptionPublicKey))
+		theAlias.vchEncryptionPublicKey = ParseHex(strEncryptionPublicKey);
+
+	if (strAddress != EncodeBase58(copyAlias.vchAddress))
+		DecodeBase58(strAddress, theAlias.vchAddress);
+	theAlias.nExpireTime = nTime;
+	theAlias.nAccessFlags = copyAlias.nAccessFlags;
+	theAlias.nAcceptTransferFlags = nAcceptTransferFlags;
+
+	CSyscoinAddress newAddress;
+	CScript scriptPubKeyOrig;
+	if (theAlias.vchAddress.empty())
+		GetAddress(copyAlias, &newAddress, scriptPubKeyOrig);
+	else
+		GetAddress(theAlias, &newAddress, scriptPubKeyOrig);
+
+	vector<unsigned char> data;
+	theAlias.Serialize(data);
+	uint256 hash = Hash(data.begin(), data.end());
+	vector<unsigned char> vchHashAlias = vchFromValue(hash.GetHex());
+
+	CScript scriptPubKey;
+	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << copyAlias.vchAlias << copyAlias.vchGUID << vchHashAlias << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
+	scriptPubKey += scriptPubKeyOrig;
+
+	vector<CRecipient> vecSend;
+	CRecipient recipient;
+	CreateAliasRecipient(scriptPubKey, recipient);
+	CScript scriptData;
+	scriptData << OP_RETURN << data;
+	CRecipient fee;
+	CreateFeeRecipient(scriptData, data, fee);
+	if (nTime > 0) {
+		// calculate a fee if renewal is larger than default.. based on how many years you extend for it will be exponentially more expensive
+		uint64_t nTimeExpiry = nTime - chainActive.Tip()->GetMedianTimePast();
+		if (nTimeExpiry < 3600)
+			nTimeExpiry = 3600;
+		float fYears = nTimeExpiry / ONE_YEAR_IN_SECONDS;
+		if (fYears < 1)
+			fYears = 1;
+		fee.nAmount = GetDataFee(scriptData) * powf(2.88, fYears);
+	}
+
+	vecSend.push_back(fee);
+	vecSend.push_back(recipient);
+
+	string hexstring = syscointxfund_helper(vchAlias, vchWitness, recipient, vecSend);
+	CMutableTransaction tx;
+	DecodeHexTx(tx, hexstring);
+	CTransaction rawTx(tx);
+	CAmount estimatedFee = 0;
+	// find the fee amount based on the total output value (don't account for the last output which is change)
+	if (rawTx.vout.size() > 0) {
+		for (int i = 0; i < rawTx.vout.size() - 1; i++) {
+			estimatedFee += rawTx.vout[i].nValue;
+		}
+	}
+	UniValue res(UniValue::VARR);
+	res.push_back(ValueFromAmount(estimatedFee));
+	return res;
 }
 UniValue syscoindecoderawtransaction(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
