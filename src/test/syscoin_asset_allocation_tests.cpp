@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(generate_assetallocationpruning)
 	// makes sure services expire in 100 blocks instead of 1 year of blocks for testing purposes
 	printf("Running generate_assetallocationpruning...\n");
 	AliasNew("node1", "jagprunealias2", "changeddata1");
-	MilliSleep(2000);
+	MilliSleep(5000);
 	AliasNew("node2", "jagprunealias2node2", "data");
 	// stop node2 create a service,  mine some blocks to expire the service, when we restart the node the service data won't be synced with node2
 	StopNode("node2");
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(generate_assetallocationpruning)
 	// ensure you can still update before expiry
 	AssetUpdate("node1", guid1);
 	AssetSend("node1", guid, "\"[{\\\"aliasto\\\":\\\"jagprunealias2\\\",\\\"amount\\\":1}]\"", "assetallocationsend");
-	AssetAllocationTransfer(false, "node1", guid, "jagprunealias2", "\"[{\\\"aliasto\\\":\\\"jagprunealias2node2\\\",\\\"amount\\\":0.11}]\"", "allocationsendmemo");
+	AssetAllocationTransfer(false, "node1", guid1, "jagprunealias2", "\"[{\\\"aliasto\\\":\\\"jagprunealias2node2\\\",\\\"amount\\\":0.11}]\"", "allocationsendmemo");
 	// you can search it still on node1/node2
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid1 + " false"));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetinfo " + guid1 + " false"));
