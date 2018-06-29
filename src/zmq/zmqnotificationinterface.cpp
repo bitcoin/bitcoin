@@ -180,3 +180,5 @@ void CZMQNotificationInterface::BlockDisconnected(const std::shared_ptr<const CB
         TransactionAddedToMempool(ptx);
     }
 }
+
+CZMQNotificationInterface* g_zmq_notification_interface = nullptr;
