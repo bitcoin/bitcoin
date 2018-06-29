@@ -1482,7 +1482,7 @@ bool CAssetAllocationDB::CleanupDatabase(int &servicesCleaned)
 		boost::this_thread::interruption_point();
 		try {
 			if (pcursor->GetKey(keyTuple) && keyTuple.first == "assetallocationi") {
-				if (!GetAssetAllocation(keyTuple.second, asset) || chainActive.Tip()->GetMedianTimePast() >= GetAssetAllocationExpiration(assetallocation))
+				if (!GetAssetAllocation(keyTuple.second, assetallocation) || chainActive.Tip()->GetMedianTimePast() >= GetAssetAllocationExpiration(assetallocation))
 				{
 					servicesCleaned++;
 					EraseAssetAllocation(keyTuple.second, true);
