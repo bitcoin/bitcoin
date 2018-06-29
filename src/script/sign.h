@@ -634,6 +634,9 @@ bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreato
 bool SignSignature(const SigningProvider &provider, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, const CAmount& amount, int nHashType);
 bool SignSignature(const SigningProvider &provider, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType);
 
+/** Signs a PSBTInput */
+bool SignPSBTInput(const SigningProvider& provider, const CMutableTransaction& tx, PSBTInput& input, SignatureData& sigdata, int index, int sighash = 1);
+
 /** Extract signature data from a transaction input, and insert it. */
 SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nIn, const CTxOut& txout);
 void UpdateInput(CTxIn& input, const SignatureData& data);
