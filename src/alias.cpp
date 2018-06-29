@@ -2148,9 +2148,9 @@ UniValue aliasupdateestimatedfee(const JSONRPCRequest& request) {
 	vecSend.push_back(fee);
 	vecSend.push_back(recipient);
 
-	string hexstring = syscointxfund_helper(vchAlias, vchWitness, recipient, vecSend);
+	const UniValue &txHexArray = syscointxfund_helper(vchAlias, vchWitness, recipient, vecSend);
 	CMutableTransaction tx;
-	DecodeHexTx(tx, hexstring);
+	DecodeHexTx(tx, txHexArray[0].get_str());
 	CTransaction rawTx(tx);
 	CAmount estimatedFee = 0;
 	// find the fee amount based on the total output value (don't account for the last output which is change)
