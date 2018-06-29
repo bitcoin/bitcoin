@@ -891,8 +891,10 @@ int GetInputHeight(const CTxIn& vin)
 int GetInputAge(const CTxIn& vin)
 {
     int height = GetInputHeight(vin);
-    if (height < 0)
+
+    if (height < 0 || height == MEMPOOL_HEIGHT)
         return 0;
+
     return (chainActive.Tip()->nHeight + 1) - height;
 }
 
