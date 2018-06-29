@@ -1250,14 +1250,16 @@ bool CPrivateSendClient::MakeCollateralAmounts(const CompactTallyItem& tallyItem
     for (const auto& outpoint : tallyItem.vecOutPoints)
         coinControl.Select(outpoint);
 
-    bool fSuccess = pwallet->CreateTransaction(vecSend, wtx, reservekeyChange,
+    CTransactionRef tx;
+    tx = MakeTransactionRef(std::move(*wtx.tx));
+    bool fSuccess = pwallet->CreateTransaction(vecSend, tx, reservekeyChange,
             nFeeRet, nChangePosRet, strFail, coinControl, true, ONLY_NONDENOMINATED);
     if(!fSuccess) {
         LogPrintf("CPrivateSendClient::MakeCollateralAmounts -- ONLY_NONDENOMINATED: %s\n", strFail);
         // If we failed then most likely there are not enough funds on this address.
         if(fTryDenominated) {
             // Try to also use denominated coins (we can't mix denominated without collaterals anyway).
-            if(!pwallet->CreateTransaction(vecSend, wtx, reservekeyChange,
+            if(!pwallet->CreateTransaction(vecSend, tx, reservekeyChange,
                                 nFeeRet, nChangePosRet, strFail, coinControl, true, ALL_COINS)) {
                 LogPrintf("CPrivateSendClient::MakeCollateralAmounts -- ALL_COINS Error: %s\n", strFail);
                 reservekeyCollateral.ReturnKey();
@@ -1276,7 +1278,7 @@ bool CPrivateSendClient::MakeCollateralAmounts(const CompactTallyItem& tallyItem
 
     // use the same nCachedLastSuccessBlock as for DS mixing to prevent race
     CValidationState state;
-    if(!pwallet->CommitTransaction(wtx, reservekeyChange, connman, state)) {
+    if(!pwallet->CommitTransaction(MakeTransactionRef(std::move(*wtx.tx)), std::move(wtx.mapValue), {} /* orderForm */, std::move(wtx.strFromAccount), reservekeyChange, connman, state)) {
         LogPrintf("CPrivateSendClient::MakeCollateralAmounts -- CommitTransaction failed! Reason given: %s\n", state.GetRejectReason());
         return false;
     }
@@ -1394,8 +1396,8 @@ bool CPrivateSendClient::CreateDenominated(const CompactTallyItem& tallyItem, bo
     std::string strFail = "";
     // make our change address
     CReserveKey reservekeyChange(pwallet);
-
-    bool fSuccess = pwallet->CreateTransaction(vecSend, wtx, reservekeyChange,
+    CTransactionRef tx = MakeTransactionRef(std::move(*wtx.tx));
+    bool fSuccess = pwallet->CreateTransaction(vecSend, tx, reservekeyChange,
             nFeeRet, nChangePosRet, strFail, coinControl, true, ONLY_NONDENOMINATED);
     if(!fSuccess) {
         LogPrintf("CPrivateSendClient::CreateDenominated -- Error: %s\n", strFail);
@@ -1406,7 +1408,7 @@ bool CPrivateSendClient::CreateDenominated(const CompactTallyItem& tallyItem, bo
     keyHolderStorageDenom.KeepAll();
 
     CValidationState state;
-    if(!pwallet->CommitTransaction(wtx, reservekeyChange, connman, state)) {
+    if(!pwallet->CommitTransaction(tx, std::move(wtx.mapValue), {} /* orderForm */, std::move(wtx.strFromAccount), reservekeyChange, connman, state)) {
         LogPrintf("CPrivateSendClient::CreateDenominated -- CommitTransaction failed! Reason given: %s\n", state.GetRejectReason());
         return false;
     }
