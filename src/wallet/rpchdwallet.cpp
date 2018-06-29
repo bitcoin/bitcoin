@@ -6894,7 +6894,7 @@ static UniValue fundrawtransactionfrom(const JSONRPCRequest& request)
             + HelpExampleCli("signrawtransactionwithwallet", "\"fundedtransactionhex\"") +
             "\nSend the transaction\n"
             + HelpExampleCli("sendrawtransaction", "\"signedtransactionhex\"")
-            );
+        );
 
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VSTR, UniValue::VOBJ, UniValue::VOBJ, UniValue::VOBJ}, true);
 

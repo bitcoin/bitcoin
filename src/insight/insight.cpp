@@ -16,41 +16,36 @@ bool ExtractIndexInfo(const CScript *pScript, int &scriptType, std::vector<uint8
 {
     CScript tmpScript;
     if (HasIsCoinstakeOp(*pScript)
-        && GetNonCoinstakeScriptPath(*pScript, tmpScript))
+        && GetNonCoinstakeScriptPath(*pScript, tmpScript)) {
         return ExtractIndexInfo(&tmpScript, scriptType, hashBytes);
+    }
 
     scriptType = ADDR_INDT_UNKNOWN;
-    if (pScript->IsPayToPublicKeyHash())
-    {
+    if (pScript->IsPayToPublicKeyHash()) {
         hashBytes.assign(pScript->begin()+3, pScript->begin()+23);
         scriptType = ADDR_INDT_PUBKEY_ADDRESS;
     } else
-    if (pScript->IsPayToScriptHash())
-    {
+    if (pScript->IsPayToScriptHash()) {
         hashBytes.assign(pScript->begin()+2, pScript->begin()+22);
         scriptType = ADDR_INDT_SCRIPT_ADDRESS;
     } else
-    if (pScript->IsPayToPublicKeyHash256())
-    {
+    if (pScript->IsPayToPublicKeyHash256()) {
         hashBytes.assign(pScript->begin()+3, pScript->begin()+35);
         scriptType = ADDR_INDT_PUBKEY_ADDRESS_256;
     } else
-    if (pScript->IsPayToScriptHash256())
-    {
+    if (pScript->IsPayToScriptHash256()) {
         hashBytes.assign(pScript->begin()+2, pScript->begin()+34);
         scriptType = ADDR_INDT_SCRIPT_ADDRESS_256;
-    };
+    }
 
     return true;
 };
 
 bool ExtractIndexInfo(const CTxOutBase *out, int &scriptType, std::vector<uint8_t> &hashBytes, CAmount &nValue, const CScript *&pScript)
 {
-    if (!(pScript = out->GetPScriptPubKey()))
-    {
-        LogPrintf("ERROR: %s - expected script pointer.\n", __func__);
-        return false;
-    };
+    if (!(pScript = out->GetPScriptPubKey())) {
+        return error("%s: Expected script pointer.", __func__);
+    }
 
     nValue = out->IsType(OUTPUT_STANDARD) ? out->GetValue() : 0;
 
@@ -61,25 +56,30 @@ bool ExtractIndexInfo(const CTxOutBase *out, int &scriptType, std::vector<uint8_
 
 bool GetTimestampIndex(const unsigned int &high, const unsigned int &low, const bool fActiveOnly, std::vector<std::pair<uint256, unsigned int> > &hashes)
 {
-    if (!fTimestampIndex)
+    if (!fTimestampIndex) {
         return error("Timestamp index not enabled");
+    }
 
-    if (!pblocktree->ReadTimestampIndex(high, low, fActiveOnly, hashes))
+    if (!pblocktree->ReadTimestampIndex(high, low, fActiveOnly, hashes)) {
         return error("Unable to get hashes for timestamps");
+    }
 
     return true;
 };
 
 bool GetSpentIndex(CSpentIndexKey &key, CSpentIndexValue &value)
 {
-    if (!fSpentIndex)
+    if (!fSpentIndex) {
         return false;
+    }
 
-    if (mempool.getSpentIndex(key, value))
+    if (mempool.getSpentIndex(key, value)) {
         return true;
+    }
 
-    if (!pblocktree->ReadSpentIndex(key, value))
+    if (!pblocktree->ReadSpentIndex(key, value)) {
         return false;
+    }
 
     return true;
 };
@@ -98,11 +98,13 @@ bool HashOnchainActive(const uint256 &hash)
 bool GetAddressIndex(uint256 addressHash, int type,
                      std::vector<std::pair<CAddressIndexKey, CAmount> > &addressIndex, int start, int end)
 {
-    if (!fAddressIndex)
-        return error("address index not enabled");
+    if (!fAddressIndex) {
+        return error("Address index not enabled");
+    }
 
-    if (!pblocktree->ReadAddressIndex(addressHash, type, addressIndex, start, end))
-        return error("unable to get txids for address");
+    if (!pblocktree->ReadAddressIndex(addressHash, type, addressIndex, start, end)) {
+        return error("Unable to get txids for address");
+    }
 
     return true;
 };
@@ -110,11 +112,13 @@ bool GetAddressIndex(uint256 addressHash, int type,
 bool GetAddressUnspent(uint256 addressHash, int type,
                        std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > &unspentOutputs)
 {
-    if (!fAddressIndex)
-        return error("address index not enabled");
+    if (!fAddressIndex) {
+        return error("Address index not enabled");
+    }
 
-    if (!pblocktree->ReadAddressUnspentIndex(addressHash, type, unspentOutputs))
-        return error("unable to get txids for address");
+    if (!pblocktree->ReadAddressUnspentIndex(addressHash, type, unspentOutputs)) {
+        return error("Unable to get txids for address");
+    }
 
     return true;
 };

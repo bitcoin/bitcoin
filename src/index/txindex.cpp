@@ -8,11 +8,19 @@
 #include <util.h>
 #include <validation.h>
 
+#include <insight/csindex.h>
+#include <script/script.h>
+#include <script/interpreter.h>
+#include <script/ismine.h>
+
 #include <boost/thread.hpp>
 
 constexpr char DB_BEST_BLOCK = 'B';
 constexpr char DB_TXINDEX = 't';
 constexpr char DB_TXINDEX_BLOCK = 'T';
+
+//constexpr char DB_TXINDEX_CSOUTPUT = 'O';
+//constexpr char DB_TXINDEX_CSLINK = 'L';
 
 std::unique_ptr<TxIndex> g_txindex;
 
@@ -245,8 +253,9 @@ bool TxIndex::Init()
 
 bool TxIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
 {
-    if (m_coldStakeIndex)
+    if (m_cs_index) {
         IndexCSOutputs(block, pindex);
+    }
     CDiskTxPos pos(pindex->GetBlockPos(), GetSizeOfCompactSize(block.vtx.size()));
     std::vector<std::pair<uint256, CDiskTxPos>> vPos;
     vPos.reserve(block.vtx.size());
@@ -259,19 +268,150 @@ bool TxIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
 
 bool TxIndex::EraseBlock(const CBlock& block)
 {
-    if (!m_coldStakeIndex)
+    if (!m_cs_index) {
         return true;
-    for (const auto& tx : block.vtx) {
-
     }
+
+    std::set<COutPoint> erasedCSOuts;
+    CDBBatch batch(*m_db);
+    for (const auto& tx : block.vtx) {
+        int n = -1;
+        for (const auto &o : tx->vpout) {
+            n++;
+            if (!o->IsType(OUTPUT_STANDARD)) {
+                continue;
+            }
+            const CScript *ps = o->GetPScriptPubKey();
+            if (!ps->StartsWithICS()) {
+                continue;
+            }
+
+            ColdStakeIndexOutputKey ok(tx->GetHash(), n);
+            batch.Erase(ok);
+            erasedCSOuts.insert(COutPoint(ok.m_txnid, ok.m_n));
+        }
+        for (const auto &in : tx->vin) {
+            ColdStakeIndexOutputKey ok(in.prevout.hash, in.prevout.n);
+            ColdStakeIndexOutputValue ov;
+
+            if (erasedCSOuts.count(in.prevout)) {
+                continue;
+            }
+            if (m_db->Read(ok, ov)) {
+                ov.m_spend_height = -1;
+                ov.m_spend_txid.SetNull();
+                batch.Write(std::make_pair(DB_TXINDEX_CSOUTPUT, ok), ov);
+            }
+        }
+    }
+
+    if (!m_db->WriteBatch(batch)) {
+        return error("%s: WriteBatch failed.", __func__);
+    }
+
     return true;
 }
 
 bool TxIndex::IndexCSOutputs(const CBlock& block, const CBlockIndex* pindex)
 {
+    CDBBatch batch(*m_db);
+    std::map<ColdStakeIndexOutputKey, ColdStakeIndexOutputValue> newCSOuts;
+    std::map<ColdStakeIndexLinkKey, std::vector<ColdStakeIndexOutputKey> > newCSLinks;
     for (const auto& tx : block.vtx) {
+        int n = -1;
+        for (const auto &o : tx->vpout) {
+            n++;
+            if (!o->IsType(OUTPUT_STANDARD)) {
+                continue;
+            }
+            const CScript *ps = o->GetPScriptPubKey();
+            if (!ps->StartsWithICS()) {
+                continue;
+            }
 
+            CScript scriptStake, scriptSpend;
+            if (!SplitConditionalCoinstakeScript(*ps, scriptStake, scriptSpend)) {
+                continue;
+            }
+
+            std::vector<valtype> vSolutions;
+
+            ColdStakeIndexOutputKey ok;
+            ColdStakeIndexOutputValue ov;
+            ColdStakeIndexLinkKey lk;
+            lk.m_height = pindex->nHeight;
+
+            if (!Solver(scriptStake, lk.m_stake_type, vSolutions)) {
+                LogPrint(BCLog::COINDB, "%s: Failed to parse scriptStake.\n", __func__);
+                continue;
+            }
+
+            if (lk.m_stake_type == TX_PUBKEYHASH) {
+                memcpy(lk.m_stake_id.begin(), vSolutions[0].data(), 20);
+            } else
+            if (lk.m_stake_type == TX_PUBKEYHASH256) {
+                lk.m_stake_id = CKeyID256(uint256(vSolutions[0]));
+            } else {
+                LogPrint(BCLog::COINDB, "%s: Ignoring unexpected stakescript type=%d.\n", __func__, lk.m_stake_type);
+                continue;
+            };
+
+            if (!Solver(scriptSpend, lk.m_spend_type, vSolutions)) {
+                LogPrint(BCLog::COINDB, "%s: Failed to parse spendscript.\n", __func__);
+                continue;
+            }
+
+            if (lk.m_spend_type == TX_PUBKEYHASH || lk.m_spend_type == TX_SCRIPTHASH)
+            {
+                memcpy(lk.m_spend_id.begin(), vSolutions[0].data(), 20);
+            } else
+            if (lk.m_spend_type == TX_PUBKEYHASH256 || lk.m_spend_type == TX_SCRIPTHASH256) {
+                lk.m_spend_id = CKeyID256(uint256(vSolutions[0]));
+            } else {
+                LogPrint(BCLog::COINDB, "%s: Ignoring unexpected spendscript type=%d.\n", __func__, lk.m_spend_type);
+                continue;
+            }
+
+            ok.m_txnid = tx->GetHash();
+            ok.m_n = n;
+            ov.m_value = o->GetValue();
+
+            newCSOuts[ok] = ov;
+
+            newCSLinks[lk].push_back(ok);
+        }
+
+        for (const auto &in : tx->vin) {
+            if (in.IsAnonInput()) {
+                continue;
+            }
+            ColdStakeIndexOutputKey ok(in.prevout.hash, in.prevout.n);
+            ColdStakeIndexOutputValue ov;
+
+            auto it = newCSOuts.find(ok);
+            if (it != newCSOuts.end()) {
+                it->second.m_spend_height = pindex->nHeight;
+                it->second.m_spend_txid = tx->GetHash();
+            } else
+            if (m_db->Read(std::make_pair(DB_TXINDEX_CSOUTPUT, ok), ov)) {
+                ov.m_spend_height = pindex->nHeight;
+                ov.m_spend_txid = tx->GetHash();
+                batch.Write(std::make_pair(DB_TXINDEX_CSOUTPUT, ok), ov);
+            }
+        }
+    };
+
+    for (const auto &it : newCSOuts) {
+        batch.Write(std::make_pair(DB_TXINDEX_CSOUTPUT, it.first), it.second);
     }
+    for (const auto &it : newCSLinks) {
+        batch.Write(std::make_pair(DB_TXINDEX_CSLINK, it.first), it.second);
+    }
+
+    if (!m_db->WriteBatch(batch)) {
+        return error("%s: WriteBatch failed.", __func__);
+    }
+
     return true;
 }
 

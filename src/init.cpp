@@ -519,6 +519,7 @@ void SetupServerArgs()
     gArgs.AddArg("-addressindex", strprintf("Maintain a full address index, used to query for the balance, txids and unspent outputs for addresses (default: %u)", DEFAULT_ADDRESSINDEX), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-timestampindex", strprintf("Maintain a timestamp index for block hashes, used to query blocks hashes by a range of timestamps (default: %u)", DEFAULT_TIMESTAMPINDEX), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-spentindex", strprintf("Maintain a full spent index, used to query the spending txid and input index for an outpoint (default: %u)", DEFAULT_SPENTINDEX), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-csindex", strprintf("Maintain an index of outputs by coldstaking address (default: %u)", DEFAULT_CSINDEX), false, OptionsCategory::OPTIONS);
 
     gArgs.AddArg("-dbmaxopenfiles", strprintf("Maximum number of open files parameter passed to level-db (default: %u)", DEFAULT_DB_MAX_OPEN_FILES), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-dbcompression", strprintf("Database compression parameter passed to level-db (default: %s)", DEFAULT_DB_COMPRESSION ? "true" : "false"), false, OptionsCategory::OPTIONS);
@@ -1869,7 +1870,7 @@ bool AppInitMain()
         g_txindex = MakeUnique<TxIndex>(nTxIndexCache, false, fReindex);
 
         if (gArgs.GetBoolArg("-csindex", DEFAULT_CSINDEX)) {
-            g_txindex->m_coldStakeIndex = true; // TODO: warn if disabled/enabled
+            g_txindex->m_cs_index = true; // TODO: warn if disabled/enabled
         }
         g_txindex->Start();
     }

@@ -31,7 +31,7 @@ protected:
     bool WriteBlock(const CBlock& block, const CBlockIndex* pindex) override;
     bool EraseBlock(const CBlock& block) override;
 
-    BaseIndex::DB& GetDB() const override;
+    //BaseIndex::DB& GetDB() const override;
 
     const char* GetName() const override { return "txindex"; }
 
@@ -39,6 +39,8 @@ protected:
     bool IndexCSOutputs(const CBlock& block, const CBlockIndex* pindex);
 
 public:
+    BaseIndex::DB& GetDB() const override;
+
     /// Constructs the index, which becomes available to be queried.
     explicit TxIndex(size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
 
@@ -54,7 +56,8 @@ public:
     bool FindTx(const uint256& tx_hash, uint256& block_hash, CTransactionRef& tx) const;
     bool FindTx(const uint256& tx_hash, CBlockHeader& header, CTransactionRef& tx) const;
 
-    bool m_coldStakeIndex = false;
+    bool m_cs_index = false;
+    std::set<std::vector<uint8_t> > m_cs_index_whitelist;
 };
 
 /// The global transaction index, used in GetTransaction. May be null.

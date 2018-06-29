@@ -362,10 +362,7 @@ bool CHDWallet::ProcessStakingSettings(std::string &sError)
 
 bool CHDWallet::IsHDEnabled() const
 {
-    ExtKeyAccountMap::const_iterator mi = mapExtAccounts.find(idDefaultAccount);
-    if (mi != mapExtAccounts.end())
-        return true;
-    return false;
+    return mapExtAccounts.find(idDefaultAccount) != mapExtAccounts.end();
 }
 
 static void AppendKey(CHDWallet *pw, CKey &key, uint32_t nChild, UniValue &derivedKeys)
@@ -659,9 +656,6 @@ bool CHDWallet::LoadAddressBook(CHDWalletDB *pwdb)
 
     CDataStream ssKey(SER_DISK, CLIENT_VERSION);
     CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-
-    CBitcoinAddress addr;
-    CKeyID idAccount;
 
     std::string sPrefix = "abe";
     std::string strType;
@@ -1160,11 +1154,7 @@ bool CHDWallet::GetExtKey(const CKeyID &keyID, CStoredExtKey &extKeyOut) const
 
 bool CHDWallet::HaveTransaction(const uint256 &txhash) const
 {
-    if (mapWallet.count(txhash))
-        return true;
-    if (mapRecords.count(txhash))
-        return true;
-    return false;
+    return mapWallet.count(txhash) || mapRecords.count(txhash);
 };
 
 int CHDWallet::GetKey(const CKeyID &address, CKey &keyOut, CExtKeyAccount *&pa, CEKAKey &ak, CKeyID &idStealth) const
@@ -1756,8 +1746,10 @@ std::set< std::set<CTxDestination> > CHDWallet::GetAddressGroupings()
 
 isminetype CHDWallet::IsMine(const CTxIn& txin) const
 {
-    if (txin.IsAnonInput())
+    if (txin.IsAnonInput()) {
         return ISMINE_NO;
+    }
+
     LOCK(cs_wallet);
     MapWallet_t::const_iterator mi = mapWallet.find(txin.prevout.hash);
     if (mi != mapWallet.end())
@@ -1790,7 +1782,7 @@ isminetype CHDWallet::IsMine(const CTxIn& txin) const
 isminetype CHDWallet::IsMine(const CScript &scriptPubKey, CKeyID &keyID,
     const CEKAKey *&pak, const CEKASCKey *&pasc, CExtKeyAccount *&pa, bool &isInvalid, SigVersion sigversion) const
 {
-    if (HasIsCoinstakeOp(scriptPubKey))
+    if (scriptPubKey.StartsWithICS())
     {
         CScript scriptA, scriptB;
         if (!SplitConditionalCoinstakeScript(scriptPubKey, scriptA, scriptB))
@@ -8215,14 +8207,11 @@ bool CHDWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& 
     };
 
     // Add new txins (keeping original txin scriptSig/order)
-    for (const auto &txin : tx_new->vin)
-    {
-        if (!coinControl.IsSelected(txin.prevout))
-        {
+    for (const auto &txin : tx_new->vin) {
+        if (!coinControl.IsSelected(txin.prevout)) {
             tx.vin.push_back(txin);
 
-            if (lockUnspents)
-            {
+            if (lockUnspents) {
               LOCK2(cs_main, cs_wallet);
               LockCoin(txin.prevout);
             }

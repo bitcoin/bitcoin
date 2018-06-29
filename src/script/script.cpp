@@ -344,7 +344,11 @@ bool CScript::IsPayToScriptHash_CS() const
         && (*this)[51] == OP_ENDIF;
 };
 
-
+bool CScript::StartsWithICS() const
+{
+    return this->size() > 0
+        && (*this)[0] == OP_ISCOINSTAKE;
+};
 
 
 bool CScript::IsPushOnly(const_iterator pc) const

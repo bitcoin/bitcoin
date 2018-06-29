@@ -150,6 +150,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getaddressdeltas", 0, "addresses"},
     { "getaddressutxos", 0, "addresses"},
     { "getaddressmempool", 0, "addresses"},
+    { "listcoldstakeunspent", 1, "height"},
     { "bumpfee", 1, "options" },
 
 
