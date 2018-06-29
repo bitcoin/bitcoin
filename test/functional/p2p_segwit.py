@@ -1964,17 +1964,14 @@ class SegWitTest(BitcoinTestFramework):
 
         self.utxo.pop(0)
 
-
     def run_test(self):
-        # Setup the p2p connections and start up the network thread.
+        # Setup the p2p connections
         # self.test_node sets NODE_WITNESS|NODE_NETWORK
         self.test_node = self.nodes[0].add_p2p_connection(TestP2PConn(), services=NODE_NETWORK|NODE_WITNESS)
         # self.old_node sets only NODE_NETWORK
         self.old_node = self.nodes[0].add_p2p_connection(TestP2PConn(), services=NODE_NETWORK)
         # self.std_node is for testing node1 (fRequireStandard=true)
         self.std_node = self.nodes[1].add_p2p_connection(TestP2PConn(), services=NODE_NETWORK|NODE_WITNESS)
-
-        network_thread_start()
 
         # Keep a place to store utxo's that can be used in later tests
         self.utxo = []
