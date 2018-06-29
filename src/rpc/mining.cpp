@@ -592,7 +592,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
 
         entry.push_back(Pair("data", EncodeHexTx(tx)));
         entry.push_back(Pair("txid", txHash.GetHex()));
-        entry.push_back(Pair("hash", txHash.GetHex()));
+        entry.push_back(Pair("hash", tx.GetWitnessHash().GetHex()));
 
         UniValue deps(UniValue::VARR);
         for (const CTxIn &in : tx.vin)
