@@ -29,6 +29,7 @@ from .messages import (
     ser_string,
 )
 from .test_node import TestNode
+from .mininode import NetworkThread
 from .util import (
     PortSeed,
     MAX_NODES,
@@ -104,6 +105,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.chain = 'regtest'
         self.setup_clean_chain = False
         self.nodes = []
+        self.network_thread = None
         self.mocktime = 0
         self.supports_cli = False
         self.bind_to_localhost_only = True
@@ -177,6 +179,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             self.options.tmpdir = tempfile.mkdtemp(prefix="test")
         self._start_logging()
 
+        self.log.debug('Setting up network thread')
+        self.network_thread = NetworkThread()
+        self.network_thread.start()
+
         success = TestStatus.FAILED
 
         try:
@@ -204,6 +210,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             print("Testcase failed. Attaching python debugger. Enter ? for help")
             pdb.set_trace()
 
+        self.log.debug('Closing down network thread')
+        self.network_thread.close()
         if not self.options.noshutdown:
             self.log.info("Stopping nodes")
             try:

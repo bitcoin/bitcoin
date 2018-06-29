@@ -15,7 +15,7 @@ Generate 427 more blocks.
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-from test_framework.mininode import CTransaction, network_thread_start
+from test_framework.messages import CTransaction
 from test_framework.blocktools import create_coinbase, create_block
 from test_framework.script import CScript
 from io import BytesIO
@@ -45,7 +45,6 @@ class NULLDUMMYTest(BitcoinTestFramework):
         self.address = self.nodes[0].getnewaddress()
         self.ms_address = self.nodes[0].addmultisigaddress(1,[self.address])['address']
 
-        network_thread_start()
         self.coinbase_blocks = self.nodes[0].generate(2) # Block 2
         coinbase_txid = []
         for i in self.coinbase_blocks:

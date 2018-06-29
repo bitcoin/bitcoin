@@ -96,8 +96,6 @@ class P2PLeakTest(BitcoinTestFramework):
         no_version_idlenode = self.nodes[0].add_p2p_connection(CNodeNoVersionIdle(), send_version=False)
         no_verack_idlenode = self.nodes[0].add_p2p_connection(CNodeNoVerackIdle())
 
-        network_thread_start()
-
         wait_until(lambda: no_version_bannode.ever_connected, timeout=10, lock=mininode_lock)
         wait_until(lambda: no_version_idlenode.ever_connected, timeout=10, lock=mininode_lock)
         wait_until(lambda: no_verack_idlenode.version_received, timeout=10, lock=mininode_lock)
@@ -120,6 +118,7 @@ class P2PLeakTest(BitcoinTestFramework):
         assert(no_version_bannode.unexpected_msg == False)
         assert(no_version_idlenode.unexpected_msg == False)
         assert(no_verack_idlenode.unexpected_msg == False)
+
 
 if __name__ == '__main__':
     P2PLeakTest().main()

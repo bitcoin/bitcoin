@@ -41,7 +41,6 @@ from test_framework.messages import (
 )
 from test_framework.mininode import (
     P2PInterface,
-    network_thread_start,
 )
 
 
@@ -266,7 +265,6 @@ class BlockchainTest(BitcoinTestFramework):
 
         # Start a P2P connection since we'll need to create some blocks.
         node.add_p2p_connection(P2PInterface())
-        network_thread_start()
         node.p2p.wait_for_verack()
 
         current_height = node.getblock(node.getbestblockhash())['height']

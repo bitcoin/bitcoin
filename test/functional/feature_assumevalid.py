@@ -33,16 +33,16 @@ import time
 
 from test_framework.blocktools import (create_block, create_coinbase)
 from test_framework.key import CECKey
-from test_framework.mininode import (CBlockHeader,
-                                     COutPoint,
-                                     CTransaction,
-                                     CTxIn,
-                                     CTxOut,
-                                     network_thread_join,
-                                     network_thread_start,
-                                     P2PInterface,
-                                     msg_block,
-                                     msg_headers)
+from test_framework.messages import (
+    CBlockHeader,
+    COutPoint,
+    CTransaction,
+    CTxIn,
+    CTxOut,
+    msg_block,
+    msg_headers
+)
+from test_framework.mininode import P2PInterface
 from test_framework.script import (CScript, OP_TRUE)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (assert_equal, set_node_times)
@@ -99,8 +99,6 @@ class AssumeValidTest(BitcoinTestFramework):
 
         # Connect to node0
         p2p0 = self.nodes[0].add_p2p_connection(BaseNode())
-
-        network_thread_start()
         self.nodes[0].p2p.wait_for_verack()
 
         # Build the blockchain
@@ -161,9 +159,7 @@ class AssumeValidTest(BitcoinTestFramework):
             self.block_time += 1
             height += 1
 
-        # We're adding new connections so terminate the network thread
         self.nodes[0].disconnect_p2ps()
-        network_thread_join()
 
         # Start node1 and node2 with assumevalid so they accept a block with a bad signature.
         self.start_node(1, extra_args=self.extra_args + ["-assumevalid=" + hex(block102.sha256)])
@@ -172,8 +168,6 @@ class AssumeValidTest(BitcoinTestFramework):
         p2p0 = self.nodes[0].add_p2p_connection(BaseNode())
         p2p1 = self.nodes[1].add_p2p_connection(BaseNode())
         p2p2 = self.nodes[2].add_p2p_connection(BaseNode())
-
-        network_thread_start()
 
         p2p0.wait_for_verack()
         p2p1.wait_for_verack()
