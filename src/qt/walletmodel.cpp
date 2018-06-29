@@ -354,7 +354,17 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
         CTransactionRef& newTx = transaction.getTransaction();
         CReserveKey *keyChange = transaction.getPossibleKeyChange();
         CValidationState state;
-        if (!wallet->CommitTransaction(newTx, {} /* mapValue */, std::move(vOrderForm), {} /* fromAccount */, *keyChange, g_connman.get(), state))
+        bool fPrivateSend;
+        for (const SendCoinsRecipient &rcp : transaction.getRecipients())
+        {
+            if (rcp.inputType == ONLY_DENOMINATED)
+            {
+                fPrivateSend = true;
+                continue;
+            }
+        }
+
+        if (!wallet->CommitTransaction(newTx, {} /* mapValue */, std::move(vOrderForm), {} /* fromAccount */, *keyChange, g_connman.get(), state, fPrivateSend))
             return SendCoinsReturn(TransactionCommitFailed, QString::fromStdString(state.GetRejectReason()));
 
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);

@@ -3781,8 +3781,6 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                     //over pay for denominated transactions
                     if (nCoinType == ONLY_DENOMINATED) {
                         nFeeRet += nChange;
-                        // was used for tracking, to be removed
-                        //wtxNew.mapValue["DS"] = "1";
                         // recheck skipped denominations during next mixing
                         privateSendClient.ClearSkippedDenominations();
                     } else {
@@ -3994,7 +3992,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
 /**
  * Call after CreateTransaction unless you want to abort
  */
-bool CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm, std::string fromAccount, CReserveKey& reservekey, CConnman* connman, CValidationState& state)
+bool CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm, std::string fromAccount, CReserveKey& reservekey, CConnman* connman, CValidationState& state, bool fPrivateSend)
 {
     {
         LOCK2(cs_main, cs_wallet);
@@ -4005,6 +4003,8 @@ bool CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
         wtxNew.strFromAccount = std::move(fromAccount);
         wtxNew.fTimeReceivedIsTxTime = true;
         wtxNew.fFromMe = true;
+        if (fPrivateSend)
+            wtxNew.mapValue["DS"] = "1";
 
         LogPrintf("CommitTransaction:\n%s", wtxNew.tx->ToString());
         {
