@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(generate_assetallocationpruning)
 	AliasNew("node2", "jagprunealias2node2", "data");
 	// stop node2 create a service,  mine some blocks to expire the service, when we restart the node the service data won't be synced with node2
 	StopNode("node2");
-	string guid = AssetNew("node1", "bcf", "jagprunealias2", "pubdata");
+	string guid = AssetNew("node1", "bcf", "jagprunealias2", "pubdata", "8", "false", "10000", "-1", "0.05");
 	AssetSend("node1", guid, "\"[{\\\"aliasto\\\":\\\"jagprunealias2\\\",\\\"amount\\\":1}]\"", "assetallocationsend");
 	AssetAllocationTransfer(false, "node1", guid, "jagprunealias2", "\"[{\\\"aliasto\\\":\\\"jagprunealias2node2\\\",\\\"amount\\\":0.11}]\"", "allocationsendmemo");
 	// we can find it as normal first
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(generate_assetallocationpruning)
 	// create a new service
 	AliasNew("node1", "jagprunealias2", "temp");
 	AliasNew("node2", "jagprunealias2node2", "temp");
-	string guid1 = AssetNew("node1", "bcf", "jagprunealias2", "pubdata");
+	string guid1 = AssetNew("node1", "bcf", "jagprunealias2", "pubdata", "8", "false", "10000", "-1", "0.05");
 	// ensure you can still update before expiry
 	AssetUpdate("node1", guid1);
 	AssetSend("node1", guid1, "\"[{\\\"aliasto\\\":\\\"jagprunealias2\\\",\\\"amount\\\":1}]\"", "assetallocationsend");
@@ -194,6 +194,7 @@ BOOST_AUTO_TEST_CASE(generate_assetallocationpruning)
 	GenerateBlocks(5, "node1");
 	ExpireAlias("jagprunealias2node2");
 	// now it should be expired
+	BOOST_CHECK_THROW(r = CallRPC("node2", "assetallocationcollectinterest " + guid1 + " jagprunealias2node2 ''"), runtime_error);
 	BOOST_CHECK_THROW(CallRPC("node1", "assetupdate " + guid1 + " jagprunealias2 assets 0 0 ''"), runtime_error);
 	BOOST_CHECK_THROW(CallRPC("node2", "assetallocationcollectinterest " + guid1 + " jagprunealias2node2 ''"), runtime_error);
 	GenerateBlocks(5, "node1");
