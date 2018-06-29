@@ -1091,6 +1091,14 @@ bool BuildAssetAllocationJson(CAssetAllocation& assetallocation, const CAsset& a
     oAssetAllocation.push_back(Pair("txid", assetallocation.txHash.GetHex()));
     oAssetAllocation.push_back(Pair("height", (int)assetallocation.nHeight));
 	oAssetAllocation.push_back(Pair("alias", stringFromVch(assetallocation.vchAlias)));
+	bool expired = false;
+	int64_t expired_time = GetAssetAllocationExpiration(assetallocation);
+	if (expired_time <= chainActive.Tip()->GetMedianTimePast())
+	{
+		expired = true;
+	}
+	oAssetAllocation.push_back(Pair("expires_on", expired_time));
+	oAssetAllocation.push_back(Pair("expired", expired));
 	oAssetAllocation.push_back(Pair("balance", ValueFromAssetAmount(assetallocation.nBalance, asset.nPrecision, asset.bUseInputRanges)));
 	oAssetAllocation.push_back(Pair("interest_claim_height", (int)assetallocation.nLastInterestClaimHeight));
 	oAssetAllocation.push_back(Pair("memo", stringFromVch(assetallocation.vchMemo)));
@@ -1454,4 +1462,38 @@ UniValue listassetallocations(const JSONRPCRequest& request) {
 	if (!passetallocationdb->ScanAssetAllocations(count, from, options, oRes))
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("Scan failed"));
 	return oRes;
+}
+uint64_t GetAssetAllocationExpiration(const CAssetAllocation& assetallocation) {
+	// dont prune by default, set nHeight to future time
+	uint64_t nTime = chainActive.Tip()->GetMedianTimePast() + 1;
+	CAliasUnprunable aliasUnprunable;
+	// if service alias exists in unprunable db (this should always exist for any alias that ever existed) then get the last expire height set for this alias and check against it for pruning
+	if (paliasdb && paliasdb->ReadAliasUnprunable(assetallocation.vchAlias, aliasUnprunable) && !aliasUnprunable.IsNull())
+		nTime = aliasUnprunable.nExpireTime;
+	return nTime;
+}
+bool CAssetAllocationDB::CleanupDatabase(int &servicesCleaned)
+{
+	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
+	pcursor->SeekToFirst();
+	CAssetAllocation assetallocation;
+	pair<string, CAssetAllocationTuple > keyTuple;
+	while (pcursor->Valid()) {
+		boost::this_thread::interruption_point();
+		try {
+			if (pcursor->GetKey(keyTuple) && keyTuple.first == "assetallocationi") {
+				if (!GetAssetAllocation(keyTuple.second, asset) || chainActive.Tip()->GetMedianTimePast() >= GetAssetAllocationExpiration(assetallocation))
+				{
+					servicesCleaned++;
+					EraseAssetAllocation(keyTuple.second, true);
+				}
+
+			}
+			pcursor->Next();
+		}
+		catch (std::exception &e) {
+			return error("%s() : deserialize error", __PRETTY_FUNCTION__);
+		}
+	}
+	return true;
 }

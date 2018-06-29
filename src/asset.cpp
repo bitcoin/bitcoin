@@ -1086,7 +1086,15 @@ bool BuildAssetJson(const CAsset& asset, const bool bGetInputs, UniValue& oAsset
 			nTime = pindex->GetMedianTimePast();
 		}
 	}
+	bool expired = false;
 	oAsset.push_back(Pair("time", nTime));
+	int64_t expired_time = GetAssetExpiration(asset);
+	if (expired_time <= chainActive.Tip()->GetMedianTimePast())
+	{
+		expired = true;
+	}
+	oAsset.push_back(Pair("expires_on", expired_time));
+	oAsset.push_back(Pair("expired", expired));
 	oAsset.push_back(Pair("publicvalue", stringFromVch(asset.vchPubData)));
 	oAsset.push_back(Pair("category", stringFromVch(asset.sCategory)));
 	oAsset.push_back(Pair("alias", stringFromVch(asset.vchAlias)));
@@ -1390,4 +1398,38 @@ UniValue listassets(const JSONRPCRequest& request) {
 	if (!passetdb->ScanAssets(count, from, options, oRes))
 		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Scan failed"));
 	return oRes;
+}
+uint64_t GetAssetExpiration(const CAsset& asset) {
+	// dont prune by default, set nHeight to future time
+	uint64_t nTime = chainActive.Tip()->GetMedianTimePast() + 1;
+	CAliasUnprunable aliasUnprunable;
+	// if service alias exists in unprunable db (this should always exist for any alias that ever existed) then get the last expire height set for this alias and check against it for pruning
+	if (paliasdb && paliasdb->ReadAliasUnprunable(asset.vchAlias, aliasUnprunable) && !aliasUnprunable.IsNull())
+		nTime = aliasUnprunable.nExpireTime;
+	return nTime;
+}
+bool CAssetDB::CleanupDatabase(int &servicesCleaned)
+{
+	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
+	pcursor->SeekToFirst();
+	CAsset asset;
+	pair<string, vector<unsigned char> > keyTuple;
+	while (pcursor->Valid()) {
+		boost::this_thread::interruption_point();
+		try {
+			if (pcursor->GetKey(keyTuple) && keyTuple.first == "asseti") {
+				if (!GetAsset(keyTuple.second, asset) || chainActive.Tip()->GetMedianTimePast() >= GetAssetExpiration(asset))
+				{
+					servicesCleaned++;
+					EraseAsset(keyTuple.second, true);
+				}
+
+			}
+			pcursor->Next();
+		}
+		catch (std::exception &e) {
+			return error("%s() : deserialize error", __PRETTY_FUNCTION__);
+		}
+	}
+	return true;
 }
