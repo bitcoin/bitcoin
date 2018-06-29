@@ -62,6 +62,7 @@
 
 #if ENABLE_ZMQ
 #include <zmq/zmqnotificationinterface.h>
+#include <zmq/zmqrpc.h>
 #endif
 
 bool fFeeEstimatesInitialized = false;
@@ -1287,6 +1288,9 @@ bool AppInitMain()
      */
     RegisterAllCoreRPCCommands(tableRPC);
     g_wallet_init_interface.RegisterRPC(tableRPC);
+#if ENABLE_ZMQ
+    RegisterZMQRPCCommands(tableRPC);
+#endif
 
     /* Start the RPC server already.  It will be started in "warmup" mode
      * and not really process calls already (but it will signify connections
