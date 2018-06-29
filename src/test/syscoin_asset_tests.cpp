@@ -1080,7 +1080,7 @@ BOOST_AUTO_TEST_CASE(generate_assettransfer)
 	// retransfer asset
 	AssetTransfer("node2", "node3", guid1, "jagasset3");
 }
-BOOST_AUTO_TEST_CASE(generate_certpruning)
+BOOST_AUTO_TEST_CASE(generate_assetpruning)
 {
 	UniValue r;
 	// makes sure services expire in 100 blocks instead of 1 year of blocks for testing purposes
