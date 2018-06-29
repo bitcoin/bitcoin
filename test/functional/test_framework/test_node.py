@@ -293,7 +293,7 @@ class TestNode():
         if 'dstaddr' not in kwargs:
             kwargs['dstaddr'] = '127.0.0.1'
 
-        p2p_conn.peer_connect(*args, **kwargs)
+        p2p_conn.peer_connect(*args, **kwargs)()
         self.p2ps.append(p2p_conn)
 
         return p2p_conn
@@ -369,10 +369,10 @@ class TestNodeCLI():
     def batch(self, requests):
         results = []
         for request in requests:
-           try:
-               results.append(dict(result=request()))
-           except JSONRPCException as e:
-               results.append(dict(error=e))
+            try:
+                results.append(dict(result=request()))
+            except JSONRPCException as e:
+                results.append(dict(error=e))
         return results
 
     def send_cli(self, command=None, *args, **kwargs):

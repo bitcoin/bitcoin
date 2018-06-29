@@ -47,9 +47,8 @@ class FeeFilterTest(BitcoinTestFramework):
         node1.generate(1)
         sync_blocks(self.nodes)
 
-        # Setup the p2p connections and start up the network thread.
+        # Setup the p2p connections
         self.nodes[0].add_p2p_connection(TestP2PConn())
-        network_thread_start()
         self.nodes[0].p2p.wait_for_verack()
 
         # Test that invs are received for all txs at feerate of 20 sat/byte
