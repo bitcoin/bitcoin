@@ -218,3 +218,5 @@ void CZMQNotificationInterface::NotifyGovernanceObject(const CGovernanceObject &
         }
     }
 }
+
+CZMQNotificationInterface* g_zmq_notification_interface = nullptr;

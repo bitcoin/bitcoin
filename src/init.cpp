@@ -126,10 +126,6 @@ static DummyWallet g_dummy_wallet;
 WalletInterface* const g_wallet_interface = &g_dummy_wallet;
 #endif
 
-#if ENABLE_ZMQ
-static CZMQNotificationInterface* pzmqNotificationInterface = nullptr;
-#endif
-
 static ModuleInterface* pModuleNotificationInterface = nullptr;
 
 #ifdef WIN32
@@ -309,10 +305,10 @@ void Shutdown()
     g_wallet_init_interface.Stop();
 
 #if ENABLE_ZMQ
-    if (pzmqNotificationInterface) {
-        UnregisterValidationInterface(pzmqNotificationInterface);
-        delete pzmqNotificationInterface;
-        pzmqNotificationInterface = nullptr;
+    if (g_zmq_notification_interface) {
+        UnregisterValidationInterface(g_zmq_notification_interface);
+        delete g_zmq_notification_interface;
+        g_zmq_notification_interface = nullptr;
     }
 #endif
 
@@ -1465,10 +1461,10 @@ bool AppInitMain()
     }
 
 #if ENABLE_ZMQ
-    pzmqNotificationInterface = CZMQNotificationInterface::Create();
+    g_zmq_notification_interface = CZMQNotificationInterface::Create();
 
-    if (pzmqNotificationInterface) {
-        RegisterValidationInterface(pzmqNotificationInterface);
+    if (g_zmq_notification_interface) {
+        RegisterValidationInterface(g_zmq_notification_interface);
     }
 #endif
 
