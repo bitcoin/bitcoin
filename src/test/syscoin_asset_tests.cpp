@@ -1080,9 +1080,8 @@ BOOST_AUTO_TEST_CASE(generate_assettransfer)
 	// retransfer asset
 	AssetTransfer("node2", "node3", guid1, "jagasset3");
 }
-BOOST_AUTO_TEST_CASE(generate_assetpruning)
+BOOST_AUTO_TEST_CASE(generate_certpruning)
 {
-	// asset's should not expire or be pruned
 	UniValue r;
 	// makes sure services expire in 100 blocks instead of 1 year of blocks for testing purposes
 	printf("Running generate_assetpruning...\n");
@@ -1091,36 +1090,59 @@ BOOST_AUTO_TEST_CASE(generate_assetpruning)
 	StopNode("node2");
 	string guid = AssetNew("node1", "bcf", "jagprunealias1", "pubdata");
 	// we can find it as normal first
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasinfo jagprunealias1"));
-	// make sure our offer alias doesn't expire
-	AssetUpdate("node1", guid);
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "assetinfo " + guid + " false"));
+	// make sure our alias doesn't expire
+	string hex_str = AliasUpdate("node1", "jagprunealias1");
+	BOOST_CHECK(hex_str.empty());
 	GenerateBlocks(5, "node1");
 	ExpireAlias("jagprunealias1");
 	StartNode("node2");
 	GenerateBlocks(5, "node2");
 
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasinfo jagprunealias1"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid + " false"));
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
 
-	// shouldn't be pruned
-	BOOST_CHECK_NO_THROW(CallRPC("node2", "assetinfo " + guid + " false"));
+	// should be pruned
+	BOOST_CHECK_THROW(CallRPC("node2", "assetinfo " + guid + " false"), runtime_error);
 
 	// stop node3
 	StopNode("node3");
-	
-	AliasNew("node1", "jagprunealias1", "changeddata1");
-	AssetUpdate("node1", guid);
+	// should fail: already expired alias
+	BOOST_CHECK_THROW(CallRPC("node1", "assetupdate " + guid + " jagprunealias1 assets 0 0 ''"), runtime_error);
+	GenerateBlocks(5, "node1");
 
 	// stop and start node1
 	StopNode("node1");
 	StartNode("node1");
 	GenerateBlocks(5, "node1");
 
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "assetinfo " + guid + " false"));
+	BOOST_CHECK_THROW(CallRPC("node1", "assetinfo " + guid + " false"), runtime_error);
 
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasinfo jagprunealias1"));
-
-	// try to create asset with same name
-	AssetNew("node1", "bcf", "jagprunealias1", "pubdata");
+	// create a new service
+	AliasNew("node1", "jagprunealias1", "temp");
+	string guid1 = AssetNew("node1", "bcf", "jagprunealias1", "pubdata");
+	// ensure you can still update before expiry
+	AssetUpdate("node1", guid1);
+	// you can search it still on node1/node2
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid1 + " false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetinfo " + guid1 + " false"));
+	// make sure our alias doesn't expire
+	hex_str = AliasUpdate("node1", "jagprunealias1");
+	BOOST_CHECK(hex_str.empty());
+	GenerateBlocks(5, "node1");
+	ExpireAlias("jagprunealias1");
+	// now it should be expired
+	BOOST_CHECK_THROW(CallRPC("node1", "assetupdate " + guid1 + " jagprunealias1 assets 0 0 ''"), runtime_error);
+	GenerateBlocks(5, "node1");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid1 + " false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetinfo " + guid1 + " false"));
+	// and it should say its expired
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetinfo " + guid1 + " false"));
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
+	GenerateBlocks(5, "node1");
 	StartNode("node3");
+	GenerateBlocks(5, "node3");
+	// node3 shouldn't find the service at all (meaning node3 doesn't sync the data)
+	BOOST_CHECK_THROW(CallRPC("node3", "assetinfo " + guid1 + " false"), runtime_error);
 }
 BOOST_AUTO_TEST_SUITE_END ()

@@ -1212,17 +1212,14 @@ bool BuildOfferJson(const COffer& theOffer, UniValue& oOffer)
 
 	bool expired = false;
 
-	int64_t expired_time;
-	expired = 0;
 
-	expired_time = 0;
 	vector<unsigned char> vchCert;
 	if(!theOffer.vchCert.empty())
 		vchCert = theOffer.vchCert;
 	oOffer.push_back(Pair("_id", stringFromVch(theOffer.vchOffer)));
 	oOffer.push_back(Pair("cert", stringFromVch(vchCert)));
 	oOffer.push_back(Pair("txid", theOffer.txHash.GetHex()));
-	expired_time =  GetOfferExpiration(theOffer);
+	int64_t expired_time =  GetOfferExpiration(theOffer);
     if(expired_time <= chainActive.Tip()->GetMedianTimePast())
 	{
 		expired = true;
