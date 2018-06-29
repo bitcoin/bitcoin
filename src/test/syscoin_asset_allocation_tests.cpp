@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(generate_assetallocationpruning)
 	string guid1 = AssetNew("node1", "bcf", "jagprunealias2", "pubdata");
 	// ensure you can still update before expiry
 	AssetUpdate("node1", guid1);
-	AssetSend("node1", guid, "\"[{\\\"aliasto\\\":\\\"jagprunealias2\\\",\\\"amount\\\":1}]\"", "assetallocationsend");
+	AssetSend("node1", guid1, "\"[{\\\"aliasto\\\":\\\"jagprunealias2\\\",\\\"amount\\\":1}]\"", "assetallocationsend");
 	AssetAllocationTransfer(false, "node1", guid1, "jagprunealias2", "\"[{\\\"aliasto\\\":\\\"jagprunealias2node2\\\",\\\"amount\\\":0.11}]\"", "allocationsendmemo");
 	// you can search it still on node1/node2
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid1 + " false"));
@@ -195,11 +195,10 @@ BOOST_AUTO_TEST_CASE(generate_assetallocationpruning)
 	ExpireAlias("jagprunealias2node2");
 	// now it should be expired
 	BOOST_CHECK_THROW(CallRPC("node1", "assetupdate " + guid1 + " jagprunealias2 assets 0 0 ''"), runtime_error);
-	BOOST_CHECK_THROW(CallRPC("node2", "assetallocationcollectinterest " + guid + " jagprunealias2node2 ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "assetallocationcollectinterest " + guid1 + " jagprunealias2node2 ''"), runtime_error);
 	GenerateBlocks(5, "node1");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid1 + " false"));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid1 + " jagprunealias2node2 false"));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetinfo " + guid1 + " false"));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetallocationinfo " + guid1 + " jagprunealias2node2 false"));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
 	// and it should say its expired
