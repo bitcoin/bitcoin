@@ -21,7 +21,6 @@ class P2PMempoolTests(BitcoinTestFramework):
     def run_test(self):
         # Add a p2p connection
         self.nodes[0].add_p2p_connection(P2PInterface())
-        network_thread_start()
         self.nodes[0].p2p.wait_for_verack()
 
         #request mempool
