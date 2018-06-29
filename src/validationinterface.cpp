@@ -139,6 +139,10 @@ void CMainSignals::MempoolEntryRemoved(CTransactionRef ptx, MemPoolRemovalReason
 }
 
 void CMainSignals::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {
+    // Dependencies exist that require UpdatedBlockTip events to be delivered in the order in which
+    // the chain actually updates. One way to ensure this is for the caller to invoke this signal
+    // in the same critical section where the chain is updated
+
     m_internals->m_schedulerClient.AddToProcessQueue([pindexNew, pindexFork, fInitialDownload, this] {
         m_internals->UpdatedBlockTip(pindexNew, pindexFork, fInitialDownload);
     });
