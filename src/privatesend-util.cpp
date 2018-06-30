@@ -27,31 +27,45 @@ CScript CKeyHolder::GetScriptForDestination() const
 
 CScript CKeyHolderStorage::AddKey(CWallet* pwallet)
 {
+    auto keyHolder = std::unique_ptr<CKeyHolder>(new CKeyHolder(pwallet));
+    auto script = keyHolder->GetScriptForDestination();
+
     LOCK(cs_storage);
-    storage.emplace_back(std::unique_ptr<CKeyHolder>(new CKeyHolder(pwallet)));
+    storage.emplace_back(std::move(keyHolder));
     LogPrintf("CKeyHolderStorage::%s -- storage size %lld\n", __func__, storage.size());
-    return storage.back()->GetScriptForDestination();
+    return script;
 }
 
-void CKeyHolderStorage::KeepAll(){
-    LOCK(cs_storage);
-    if (storage.size() > 0) {
-        for (auto &key : storage) {
+void CKeyHolderStorage::KeepAll()
+{
+    std::vector<std::unique_ptr<CKeyHolder>> tmp;
+    {
+        // don't hold cs_storage while calling KeepKey(), which might lock cs_wallet
+        LOCK(cs_storage);
+        std::swap(storage, tmp);
+    }
+
+    if (tmp.size() > 0) {
+        for (auto &key : tmp) {
             key->KeepKey();
         }
-        LogPrintf("CKeyHolderStorage::%s -- %lld keys kept\n", __func__, storage.size());
-        storage.clear();
+        LogPrintf("CKeyHolderStorage::%s -- %lld keys kept\n", __func__, tmp.size());
     }
 }
 
 void CKeyHolderStorage::ReturnAll()
 {
-    LOCK(cs_storage);
-    if (storage.size() > 0) {
-        for (auto &key : storage) {
+    std::vector<std::unique_ptr<CKeyHolder>> tmp;
+    {
+        // don't hold cs_storage while calling ReturnKey(), which might lock cs_wallet
+        LOCK(cs_storage);
+        std::swap(storage, tmp);
+    }
+
+    if (tmp.size() > 0) {
+        for (auto &key : tmp) {
             key->ReturnKey();
         }
-        LogPrintf("CKeyHolderStorage::%s -- %lld keys returned\n", __func__, storage.size());
-        storage.clear();
+        LogPrintf("CKeyHolderStorage::%s -- %lld keys returned\n", __func__, tmp.size());
     }
 }

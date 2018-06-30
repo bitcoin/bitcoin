@@ -8,6 +8,7 @@
         <file alias="fr">locale/dash_fr.qm</file>
         <file alias="it">locale/dash_it.qm</file>
         <file alias="ja">locale/dash_ja.qm</file>
+        <file alias="nl">locale/dash_nl.qm</file>
         <file alias="pl">locale/dash_pl.qm</file>
         <file alias="pt">locale/dash_pt.qm</file>
         <file alias="ru">locale/dash_ru.qm</file>

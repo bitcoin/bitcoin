@@ -81,6 +81,7 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *)
     if(fMax <= 0.0f) return;
 
     QColor axisCol(Qt::gray);
+    QColor axisCol2;
     int h = height() - YMARGIN * 2;
     painter.setPen(axisCol);
     painter.drawLine(XMARGIN, YMARGIN + h, width() - XMARGIN, YMARGIN + h);
@@ -88,25 +89,24 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *)
     // decide what order of magnitude we are
     int base = floor(log10(fMax));
     float val = pow(10.0f, base);
+    float val2;
 
     const QString units     = tr("KB/s");
     const float yMarginText = 2.0;
     
     // draw lines
     painter.setPen(axisCol);
-    painter.drawText(XMARGIN, YMARGIN + h - h * val / fMax-yMarginText, QString("%1 %2").arg(val).arg(units));
     for(float y = val; y < fMax; y += val) {
         int yy = YMARGIN + h - h * y / fMax;
         painter.drawLine(XMARGIN, yy, width() - XMARGIN, yy);
     }
     // if we drew 3 or fewer lines, break them up at the next lower order of magnitude
     if(fMax / val <= 3.0f) {
-        axisCol = axisCol.darker();
-        val = pow(10.0f, base - 1);
-        painter.setPen(axisCol);
-        painter.drawText(XMARGIN, YMARGIN + h - h * val / fMax-yMarginText, QString("%1 %2").arg(val).arg(units));
+        axisCol2 = axisCol.darker();
+        val2 = pow(10.0f, base - 1);
+        painter.setPen(axisCol2);
         int count = 1;
-        for(float y = val; y < fMax; y += val, count++) {
+        for(float y = val2; y < fMax; y += val2, count++) {
             // don't overwrite lines drawn above
             if(count % 10 == 0)
                 continue;
@@ -129,6 +129,20 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *)
         painter.fillPath(pOut, QColor(255, 0, 0, 128));
         painter.setPen(Qt::red);
         painter.drawPath(pOut);
+    }
+
+    // draw text on top of everything else
+    QRect textRect = painter.boundingRect(QRect(XMARGIN, YMARGIN + h - (h * val / fMax) - yMarginText, 0, 0), Qt::AlignLeft, QString("%1 %2").arg(val).arg(units));
+    textRect.translate(0, -textRect.height());
+    painter.fillRect(textRect, Qt::black);
+    painter.setPen(axisCol);
+    painter.drawText(textRect, Qt::AlignLeft, QString("%1 %2").arg(val).arg(units));
+    if(fMax / val <= 3.0f) {
+        QRect textRect2 = painter.boundingRect(QRect(XMARGIN, YMARGIN + h - (h * val2 / fMax) - yMarginText, 0, 0), Qt::AlignLeft, QString("%1 %2").arg(val2).arg(units));
+        textRect2.translate(0, -textRect2.height());
+        painter.fillRect(textRect2, Qt::black);
+        painter.setPen(axisCol2);
+        painter.drawText(textRect2, Qt::AlignLeft, QString("%1 %2").arg(val2).arg(units));
     }
 }
 

@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(limitedmap_test)
     // make sure that the size is updated
     BOOST_CHECK(map.size() == 1);
 
-    // make sure that the new items is in the map
+    // make sure that the new item is in the map
     BOOST_CHECK(map.count(-1) == 1);
 
     // insert 10 new items
@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(limitedmap_test)
         // make sure the item is present
         BOOST_CHECK(map.count(i) == 1);
 
-        // use the iterator to check for the expected key adn value
+        // use the iterator to check for the expected key and value
         BOOST_CHECK(it->first == i);
         BOOST_CHECK(it->second == i + 1);
         

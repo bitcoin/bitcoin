@@ -5,14 +5,16 @@
 
 #include "random.h"
 
+#include "crypto/sha512.h"
 #include "support/cleanse.h"
 #ifdef WIN32
 #include "compat.h" // for Windows API
+#include <wincrypt.h>
 #endif
-#include "serialize.h"        // for begin_ptr(vec)
 #include "util.h"             // for LogPrint()
 #include "utilstrencodings.h" // for GetTime()
 
+#include <stdlib.h>
 #include <limits>
 
 #ifndef WIN32
@@ -21,6 +23,12 @@
 
 #include <openssl/err.h>
 #include <openssl/rand.h>
+
+static void RandFailure()
+{
+    LogPrintf("Failed to read randomness, aborting\n");
+    abort();
+}
 
 static inline int64_t GetPerformanceCounter()
 {
@@ -43,7 +51,7 @@ void RandAddSeed()
     memory_cleanse((void*)&nCounter, sizeof(nCounter));
 }
 
-void RandAddSeedPerfmon()
+static void RandAddSeedPerfmon()
 {
     RandAddSeed();
 
@@ -63,15 +71,15 @@ void RandAddSeedPerfmon()
     const size_t nMaxSize = 10000000; // Bail out at more than 10MB of performance data
     while (true) {
         nSize = vData.size();
-        ret = RegQueryValueExA(HKEY_PERFORMANCE_DATA, "Global", NULL, NULL, begin_ptr(vData), &nSize);
+        ret = RegQueryValueExA(HKEY_PERFORMANCE_DATA, "Global", NULL, NULL, vData.data(), &nSize);
         if (ret != ERROR_MORE_DATA || vData.size() >= nMaxSize)
             break;
         vData.resize(std::max((vData.size() * 3) / 2, nMaxSize)); // Grow size of buffer exponentially
     }
     RegCloseKey(HKEY_PERFORMANCE_DATA);
     if (ret == ERROR_SUCCESS) {
-        RAND_add(begin_ptr(vData), nSize, nSize / 100.0);
-        memory_cleanse(begin_ptr(vData), nSize);
+        RAND_add(vData.data(), nSize, nSize / 100.0);
+        memory_cleanse(vData.data(), nSize);
         LogPrint("rand", "%s: %lu bytes\n", __func__, nSize);
     } else {
         static bool warned = false; // Warn only once
@@ -83,12 +91,63 @@ void RandAddSeedPerfmon()
 #endif
 }
 
+/** Get 32 bytes of system entropy. */
+static void GetOSRand(unsigned char *ent32)
+{
+#ifdef WIN32
+    HCRYPTPROV hProvider;
+    int ret = CryptAcquireContextW(&hProvider, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
+    if (!ret) {
+        RandFailure();
+    }
+    ret = CryptGenRandom(hProvider, 32, ent32);
+    if (!ret) {
+        RandFailure();
+    }
+    CryptReleaseContext(hProvider, 0);
+#else
+    int f = open("/dev/urandom", O_RDONLY);
+    if (f == -1) {
+        RandFailure();
+    }
+    int have = 0;
+    do {
+        ssize_t n = read(f, ent32 + have, 32 - have);
+        if (n <= 0 || n + have > 32) {
+            RandFailure();
+        }
+        have += n;
+    } while (have < 32);
+    close(f);
+#endif
+}
+
 void GetRandBytes(unsigned char* buf, int num)
 {
     if (RAND_bytes(buf, num) != 1) {
-        LogPrintf("%s: OpenSSL RAND_bytes() failed with error: %s\n", __func__, ERR_error_string(ERR_get_error(), NULL));
-        assert(false);
+        RandFailure();
     }
+}
+
+void GetStrongRandBytes(unsigned char* out, int num)
+{
+    assert(num <= 32);
+    CSHA512 hasher;
+    unsigned char buf[64];
+
+    // First source: OpenSSL's RNG
+    RandAddSeedPerfmon();
+    GetRandBytes(buf, 32);
+    hasher.Write(buf, 32);
+
+    // Second source: OS RNG
+    GetOSRand(buf);
+    hasher.Write(buf, 32);
+
+    // Produce output
+    hasher.Finalize(buf);
+    memcpy(out, buf, num);
+    memory_cleanse(buf, 64);
 }
 
 uint64_t GetRand(uint64_t nMax)
@@ -118,40 +177,20 @@ uint256 GetRandHash()
     return hash;
 }
 
-uint32_t insecure_rand_Rz = 11;
-uint32_t insecure_rand_Rw = 11;
-void seed_insecure_rand(bool fDeterministic)
+FastRandomContext::FastRandomContext(bool fDeterministic)
 {
     // The seed values have some unlikely fixed points which we avoid.
     if (fDeterministic) {
-        insecure_rand_Rz = insecure_rand_Rw = 11;
+        Rz = Rw = 11;
     } else {
         uint32_t tmp;
         do {
             GetRandBytes((unsigned char*)&tmp, 4);
         } while (tmp == 0 || tmp == 0x9068ffffU);
-        insecure_rand_Rz = tmp;
+        Rz = tmp;
         do {
             GetRandBytes((unsigned char*)&tmp, 4);
         } while (tmp == 0 || tmp == 0x464fffffU);
-        insecure_rand_Rw = tmp;
+        Rw = tmp;
     }
-}
-
-InsecureRand::InsecureRand(bool _fDeterministic)
-    : nRz(11),
-      nRw(11),
-      fDeterministic(_fDeterministic)
-{
-    // The seed values have some unlikely fixed points which we avoid.
-    if(fDeterministic) return;
-    uint32_t nTmp;
-    do {
-        GetRandBytes((unsigned char*)&nTmp, 4);
-    } while (nTmp == 0 || nTmp == 0x9068ffffU);
-    nRz = nTmp;
-    do {
-        GetRandBytes((unsigned char*)&nTmp, 4);
-    } while (nTmp == 0 || nTmp == 0x464fffffU);
-    nRw = nTmp;
 }

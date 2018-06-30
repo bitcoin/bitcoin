@@ -37,7 +37,7 @@ SecureString CMnemonic::Generate(int strength)
         return SecureString();
     }
     SecureVector data(32);
-    GetRandBytes(&data[0], 32);
+    GetStrongRandBytes(&data[0], 32);
     SecureString mnemonic = FromData(data, strength / 8);
     return mnemonic;
 }

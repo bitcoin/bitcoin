@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 # linearize-data.py: Construct a linear, no-fork version of the chain.
 #
@@ -8,24 +8,28 @@
 #
 
 from __future__ import print_function, division
-import json
 import struct
 import re
 import os
 import os.path
-import base64
-import httplib
 import sys
 import hashlib
 import dash_hash
 import datetime
 import time
 from collections import namedtuple
+from binascii import hexlify, unhexlify
 
 settings = {}
 
+##### Switch endian-ness #####
+def hex_switchEndian(s):
+	""" Switches the endianness of a hex string (in pairs of hex chars) """
+	pairList = [s[i:i+2].encode() for i in range(0, len(s), 2)]
+	return b''.join(pairList[::-1]).decode()
+
 def uint32(x):
-	return x & 0xffffffffL
+	return x & 0xffffffff
 
 def bytereverse(x):
 	return uint32(( ((x) << 24) | (((x) << 8) & 0x00ff0000) |
@@ -36,14 +40,14 @@ def bufreverse(in_buf):
 	for i in range(0, len(in_buf), 4):
 		word = struct.unpack('@I', in_buf[i:i+4])[0]
 		out_words.append(struct.pack('@I', bytereverse(word)))
-	return ''.join(out_words)
+	return b''.join(out_words)
 
 def wordreverse(in_buf):
 	out_words = []
 	for i in range(0, len(in_buf), 4):
 		out_words.append(in_buf[i:i+4])
 	out_words.reverse()
-	return ''.join(out_words)
+	return b''.join(out_words)
 
 def calc_hdr_hash(blk_hdr):
 	#hash1 = hashlib.sha256()
@@ -62,7 +66,7 @@ def calc_hash_str(blk_hdr):
 	hash = calc_hdr_hash(blk_hdr)
 	hash = bufreverse(hash)
 	hash = wordreverse(hash)
-	hash_str = hash.encode('hex')
+	hash_str = hexlify(hash).decode('utf-8')
 	return hash_str
 
 def get_blk_dt(blk_hdr):
@@ -72,17 +76,21 @@ def get_blk_dt(blk_hdr):
 	dt_ym = datetime.datetime(dt.year, dt.month, 1)
 	return (dt_ym, nTime)
 
+# When getting the list of block hashes, undo any byte reversals.
 def get_block_hashes(settings):
 	blkindex = []
 	f = open(settings['hashlist'], "r")
 	for line in f:
 		line = line.rstrip()
+		if settings['rev_hash_bytes'] == 'true':
+			line = hex_switchEndian(line)
 		blkindex.append(line)
 
 	print("Read " + str(len(blkindex)) + " hashes")
 
 	return blkindex
 
+# The block map shouldn't give or receive byte-reversed hashes.
 def mkblockmap(blkindex):
 	blkmap = {}
 	for height,hash in enumerate(blkindex):
@@ -129,7 +137,7 @@ class BlockDataCopier:
 		if not self.fileOutput and ((self.outsz + blockSizeOnDisk) > self.maxOutSz):
 			self.outF.close()
 			if self.setFileTime:
-				os.utime(outFname, (int(time.time()), highTS))
+				os.utime(self.outFname, (int(time.time()), self.highTS))
 			self.outF = None
 			self.outFname = None
 			self.outFn = self.outFn + 1
@@ -137,12 +145,12 @@ class BlockDataCopier:
 
 		(blkDate, blkTS) = get_blk_dt(blk_hdr)
 		if self.timestampSplit and (blkDate > self.lastDate):
-			print("New month " + blkDate.strftime("%Y-%m") + " @ " + hash_str)
-			lastDate = blkDate
-			if outF:
-				outF.close()
-				if setFileTime:
-					os.utime(outFname, (int(time.time()), highTS))
+			print("New month " + blkDate.strftime("%Y-%m") + " @ " + self.hash_str)
+			self.lastDate = blkDate
+			if self.outF:
+				self.outF.close()
+				if self.setFileTime:
+					os.utime(self.outFname, (int(time.time()), self.highTS))
 				self.outF = None
 				self.outFname = None
 				self.outFn = self.outFn + 1
@@ -150,11 +158,11 @@ class BlockDataCopier:
 
 		if not self.outF:
 			if self.fileOutput:
-				outFname = self.settings['output_file']
+				self.outFname = self.settings['output_file']
 			else:
-				outFname = os.path.join(self.settings['output'], "blk%05d.dat" % self.outFn)
-			print("Output file " + outFname)
-			self.outF = open(outFname, "wb")
+				self.outFname = os.path.join(self.settings['output'], "blk%05d.dat" % self.outFn)
+			print("Output file " + self.outFname)
+			self.outF = open(self.outFname, "wb")
 
 		self.outF.write(inhdr)
 		self.outF.write(blk_hdr)
@@ -210,7 +218,7 @@ class BlockDataCopier:
 
 			inMagic = inhdr[:4]
 			if (inMagic != self.settings['netmagic']):
-				print("Invalid magic: " + inMagic.encode('hex'))
+				print("Invalid magic: " + hexlify(inMagic).decode('utf-8'))
 				return
 			inLenLE = inhdr[4:]
 			su = struct.unpack("<I", inLenLE)
@@ -218,13 +226,16 @@ class BlockDataCopier:
 			blk_hdr = self.inF.read(80)
 			inExtent = BlockExtent(self.inFn, self.inF.tell(), inhdr, blk_hdr, inLen)
 
-			hash_str = calc_hash_str(blk_hdr)
-			if not hash_str in blkmap:
-				print("Skipping unknown block " + hash_str)
+			self.hash_str = calc_hash_str(blk_hdr)
+			if not self.hash_str in blkmap:
+				# Because blocks can be written to files out-of-order as of 0.10, the script
+				# may encounter blocks it doesn't know about. Treat as debug output.
+				if settings['debug_output'] == 'true':
+					print("Skipping unknown block " + self.hash_str)
 				self.inF.seek(inLen, os.SEEK_CUR)
 				continue
 
-			blkHeight = self.blkmap[hash_str]
+			blkHeight = self.blkmap[self.hash_str]
 			self.blkCountIn += 1
 
 			if self.blkCountOut == blkHeight:
@@ -268,10 +279,16 @@ if __name__ == '__main__':
 		settings[m.group(1)] = m.group(2)
 	f.close()
 
+	# Force hash byte format setting to be lowercase to make comparisons easier.
+	# Also place upfront in case any settings need to know about it.
+	if 'rev_hash_bytes' not in settings:
+		settings['rev_hash_bytes'] = 'false'
+	settings['rev_hash_bytes'] = settings['rev_hash_bytes'].lower()
+
 	if 'netmagic' not in settings:
-		settings['netmagic'] = 'cee2caff'
+		settings['netmagic'] = 'bf0c6bbd'
 	if 'genesis' not in settings:
-		settings['genesis'] = '00000bafbc94add76cb75e2ec92894837288a481e5c005f6563d91623bf8bc2c'
+		settings['genesis'] = '00000ffd590b1485b3caadc19b22e6379c733355108f107a430458cdf3407ab6'
 	if 'input' not in settings:
 		settings['input'] = 'input'
 	if 'hashlist' not in settings:
@@ -281,15 +298,18 @@ if __name__ == '__main__':
 	if 'split_timestamp' not in settings:
 		settings['split_timestamp'] = 0
 	if 'max_out_sz' not in settings:
-		settings['max_out_sz'] = 1000L * 1000 * 1000
+		settings['max_out_sz'] = 1000 * 1000 * 1000
 	if 'out_of_order_cache_sz' not in settings:
 		settings['out_of_order_cache_sz'] = 100 * 1000 * 1000
+	if 'debug_output' not in settings:
+		settings['debug_output'] = 'false'
 
-	settings['max_out_sz'] = long(settings['max_out_sz'])
+	settings['max_out_sz'] = int(settings['max_out_sz'])
 	settings['split_timestamp'] = int(settings['split_timestamp'])
 	settings['file_timestamp'] = int(settings['file_timestamp'])
-	settings['netmagic'] = settings['netmagic'].decode('hex')
+	settings['netmagic'] = unhexlify(settings['netmagic'].encode('utf-8'))
 	settings['out_of_order_cache_sz'] = int(settings['out_of_order_cache_sz'])
+	settings['debug_output'] = settings['debug_output'].lower()
 
 	if 'output_file' not in settings and 'output' not in settings:
 		print("Missing output file / directory")
@@ -298,8 +318,8 @@ if __name__ == '__main__':
 	blkindex = get_block_hashes(settings)
 	blkmap = mkblockmap(blkindex)
 
+	# Block hash map won't be byte-reversed. Neither should the genesis hash.
 	if not settings['genesis'] in blkmap:
 		print("Genesis block not found in hashlist")
 	else:
 		BlockDataCopier(settings, blkindex, blkmap).run()
-

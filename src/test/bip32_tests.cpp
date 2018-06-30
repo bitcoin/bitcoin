@@ -120,11 +120,11 @@ void RunTest(const TestVector &test) {
 
         CDataStream ssPub(SER_DISK, CLIENT_VERSION);
         ssPub << pubkeyNew;
-        BOOST_CHECK(ssPub.size() == 74+1);
+        BOOST_CHECK(ssPub.size() == 75);
 
         CDataStream ssPriv(SER_DISK, CLIENT_VERSION);
         ssPriv << keyNew;
-        BOOST_CHECK(ssPriv.size() == 74+1);
+        BOOST_CHECK(ssPriv.size() == 75);
 
         CExtPubKey pubCheck;
         CExtKey privCheck;

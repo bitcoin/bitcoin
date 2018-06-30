@@ -21,10 +21,10 @@
 //
 // When startup is finished and the main window is
 // shown, a signal is sent to slot uiReady(), which
-// emits a receivedURL() signal for any payment
+// emits a receivedURI() signal for any payment
 // requests that happened during startup.
 //
-// After startup, receivedURL() happens as usual.
+// After startup, receivedURI() happens as usual.
 //
 // This class has one more feature: a static
 // method that finds URIs passed in the command line
@@ -53,7 +53,7 @@ class QUrl;
 QT_END_NAMESPACE
 
 // BIP70 max payment request size in bytes (DoS protection)
-extern const qint64 BIP70_MAX_PAYMENTREQUEST_SIZE;
+static const qint64 BIP70_MAX_PAYMENTREQUEST_SIZE = 50000;
 
 class PaymentServer : public QObject
 {

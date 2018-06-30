@@ -411,7 +411,7 @@
                  </property>
                 </widget>
                </item>
-             </layout>
+              </layout>
              </item>
              <item>
               <layout class="QFormLayout" name="formLayoutCoinControl4">
@@ -588,7 +588,7 @@
         <x>0</x>
         <y>0</y>
         <width>830</width>
-        <height>69</height>
+        <height>104</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,1">
@@ -760,9 +760,31 @@
            </layout>
           </item>
           <item>
+           <widget class="QLabel" name="fallbackFeeWarningLabel">
+            <property name="toolTip">
+             <string>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until your have validated the complete chain.</string>
+            </property>
+            <property name="font">
+            <font>
+                <weight>75</weight>
+                <bold>true</bold>
+            </font>
+            </property>
+            <property name="text">
+             <string>Warning: Fee estimation is currently not possible.</string>
+            </property>
+            <property name="wordWrap">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
            <spacer name="horizontalSpacer_4">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::MinimumExpanding</enum>
             </property>
             <property name="sizeHint" stdset="0">
              <size>
@@ -1031,7 +1053,7 @@
                    <item>
                     <widget class="QLabel" name="labelSmartFee3">
                      <property name="text">
-                      <string>Confirmation time:</string>
+                      <string>Confirmation time target:</string>
                      </property>
                      <property name="margin">
                       <number>2</number>
@@ -1064,7 +1086,7 @@
                       <number>0</number>
                      </property>
                      <property name="maximum">
-                      <number>24</number>
+                      <number>23</number>
                      </property>
                      <property name="pageStep">
                       <number>1</number>
@@ -1092,6 +1114,26 @@
                       <widget class="QLabel" name="labelSmartFeeNormal">
                        <property name="text">
                         <string>normal</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer_7">
+                       <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item>
+                      <widget class="QLabel" name="confirmationTargetLabel">
+                       <property name="text">
+                        <string notr="true">(count)</string>
                        </property>
                       </widget>
                      </item>
@@ -1137,59 +1179,6 @@
               </layout>
              </item>
             </layout>
-           </item>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayoutFee5" stretch="0,0,0">
-             <property name="spacing">
-              <number>8</number>
-             </property>
-             <property name="bottomMargin">
-              <number>4</number>
-             </property>
-             <item>
-              <widget class="QCheckBox" name="checkBoxFreeTx">
-               <property name="text">
-                <string>Send as zero-fee transaction if possible</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="labelFreeTx">
-               <property name="text">
-                <string>(confirmation may take longer)</string>
-               </property>
-               <property name="margin">
-                <number>5</number>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <spacer name="horizontalSpacerFee5">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>1</width>
-                 <height>1</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <spacer name="verticalSpacerFee2">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>1</width>
-               <height>1</height>
-              </size>
-             </property>
-            </spacer>
            </item>
           </layout>
          </widget>

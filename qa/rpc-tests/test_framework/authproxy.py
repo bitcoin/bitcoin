@@ -1,6 +1,6 @@
 
 """
-  Copyright 2011 Jeff Garzik
+  Copyright (c) 2011 Jeff Garzik
 
   AuthServiceProxy has the following improvements over python-jsonrpc's
   ServiceProxy class:
@@ -42,6 +42,7 @@ import base64
 import decimal
 import json
 import logging
+import socket
 try:
     import urllib.parse as urlparse
 except ImportError:
@@ -55,7 +56,11 @@ log = logging.getLogger("BitcoinRPC")
 
 class JSONRPCException(Exception):
     def __init__(self, rpc_error):
-        Exception.__init__(self)
+        try:
+            errmsg = '%(message)s (%(code)i)' % rpc_error
+        except (KeyError, TypeError):
+            errmsg = ''
+        Exception.__init__(self, errmsg)
         self.error = rpc_error
 
 
@@ -126,15 +131,23 @@ class AuthServiceProxy(object):
                 return self._get_response()
             else:
                 raise
+        except (BrokenPipeError,ConnectionResetError):
+            # Python 3.5+ raises BrokenPipeError instead of BadStatusLine when the connection was reset
+            # ConnectionResetError happens on FreeBSD with Python 3.4
+            self.__conn.close()
+            self.__conn.request(method, path, postdata, headers)
+            return self._get_response()
 
-    def __call__(self, *args):
+    def __call__(self, *args, **argsn):
         AuthServiceProxy.__id_count += 1
 
         log.debug("-%s-> %s %s"%(AuthServiceProxy.__id_count, self._service_name,
                                  json.dumps(args, default=EncodeDecimal, ensure_ascii=self.ensure_ascii)))
+        if args and argsn:
+            raise ValueError('Cannot handle both named and positional arguments')
         postdata = json.dumps({'version': '1.1',
                                'method': self._service_name,
-                               'params': args,
+                               'params': args or argsn,
                                'id': AuthServiceProxy.__id_count}, default=EncodeDecimal, ensure_ascii=self.ensure_ascii)
         response = self._request('POST', self.__url.path, postdata.encode('utf-8'))
         if response['error'] is not None:
@@ -151,7 +164,15 @@ class AuthServiceProxy(object):
         return self._request('POST', self.__url.path, postdata.encode('utf-8'))
 
     def _get_response(self):
-        http_response = self.__conn.getresponse()
+        try:
+            http_response = self.__conn.getresponse()
+        except socket.timeout as e:
+            raise JSONRPCException({
+                'code': -344,
+                'message': '%r RPC took longer than %f seconds. Consider '
+                           'using larger timeout for calls that take '
+                           'longer to return.' % (self._service_name,
+                                                  self.__conn.timeout)})
         if http_response is None:
             raise JSONRPCException({
                 'code': -342, 'message': 'missing HTTP response from server'})

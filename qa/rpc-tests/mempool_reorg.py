@@ -1,5 +1,5 @@
-#!/usr/bin/env python2
-# Copyright (c) 2014-2015 The Bitcoin Core developers
+#!/usr/bin/env python3
+# Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,6 +13,10 @@ from test_framework.util import *
 
 # Create one-input, one-output, no-fee transaction:
 class MempoolCoinbaseTest(BitcoinTestFramework):
+    def __init__(self):
+        super().__init__()
+        self.num_nodes = 2
+        self.setup_clean_chain = False
 
     alert_filename = None  # Set by setup_network
 
@@ -44,14 +48,14 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         # and make sure the mempool code behaves correctly.
         b = [ self.nodes[0].getblockhash(n) for n in range(101, 105) ]
         coinbase_txids = [ self.nodes[0].getblock(h)['tx'][0] for h in b ]
-        spend_101_raw = create_tx(self.nodes[0], coinbase_txids[1], node1_address, 500)
-        spend_102_raw = create_tx(self.nodes[0], coinbase_txids[2], node0_address, 500)
-        spend_103_raw = create_tx(self.nodes[0], coinbase_txids[3], node0_address, 500)
+        spend_101_raw = create_tx(self.nodes[0], coinbase_txids[1], node1_address, 499.9)
+        spend_102_raw = create_tx(self.nodes[0], coinbase_txids[2], node0_address, 499.9)
+        spend_103_raw = create_tx(self.nodes[0], coinbase_txids[3], node0_address, 499.9)
 
         # Create a block-height-locked transaction which will be invalid after reorg
-        timelock_tx = self.nodes[0].createrawtransaction([{"txid": coinbase_txids[0], "vout": 0}], {node0_address: 500})
+        timelock_tx = self.nodes[0].createrawtransaction([{"txid": coinbase_txids[0], "vout": 0}], {node0_address: 499.9})
         # Set the time lock
-        timelock_tx = timelock_tx.replace("ffffffff", "11111111", 1)
+        timelock_tx = timelock_tx.replace("ffffffff", "11111191", 1)
         timelock_tx = timelock_tx[:-8] + hex(self.nodes[0].getblockcount() + 2)[2:] + "000000"
         timelock_tx = self.nodes[0].signrawtransaction(timelock_tx)["hex"]
         assert_raises(JSONRPCException, self.nodes[0].sendrawtransaction, timelock_tx)
@@ -63,8 +67,8 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         assert_raises(JSONRPCException, self.nodes[0].sendrawtransaction, timelock_tx)
 
         # Create 102_1 and 103_1:
-        spend_102_1_raw = create_tx(self.nodes[0], spend_102_id, node1_address, 500)
-        spend_103_1_raw = create_tx(self.nodes[0], spend_103_id, node1_address, 500)
+        spend_102_1_raw = create_tx(self.nodes[0], spend_102_id, node1_address, 499.8)
+        spend_103_1_raw = create_tx(self.nodes[0], spend_103_id, node1_address, 499.8)
 
         # Broadcast and mine 103_1:
         spend_103_1_id = self.nodes[0].sendrawtransaction(spend_103_1_raw)

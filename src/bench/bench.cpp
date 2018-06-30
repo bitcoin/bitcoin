@@ -3,13 +3,16 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "bench.h"
+#include "perf.h"
 
 #include <iostream>
+#include <iomanip>
 #include <sys/time.h>
 
-using namespace benchmark;
-
-std::map<std::string, BenchFunction> BenchRunner::benchmarks;
+benchmark::BenchRunner::BenchmarkMap &benchmark::BenchRunner::benchmarks() {
+    static std::map<std::string, benchmark::BenchFunction> benchmarks_map;
+    return benchmarks_map;
+}
 
 static double gettimedouble(void) {
     struct timeval tv;
@@ -17,45 +20,72 @@ static double gettimedouble(void) {
     return tv.tv_usec * 0.000001 + tv.tv_sec;
 }
 
-BenchRunner::BenchRunner(std::string name, BenchFunction func)
+benchmark::BenchRunner::BenchRunner(std::string name, benchmark::BenchFunction func)
 {
-    benchmarks.insert(std::make_pair(name, func));
+    benchmarks().insert(std::make_pair(name, func));
 }
 
 void
-BenchRunner::RunAll(double elapsedTimeForOne)
+benchmark::BenchRunner::RunAll(double elapsedTimeForOne)
 {
-    std::cout << "Benchmark" << "," << "count" << "," << "min" << "," << "max" << "," << "average" << "\n";
+    perf_init();
+    std::cout << "#Benchmark" << "," << "count" << "," << "min" << "," << "max" << "," << "average" << ","
+              << "min_cycles" << "," << "max_cycles" << "," << "average_cycles" << "\n";
 
-    for (std::map<std::string,BenchFunction>::iterator it = benchmarks.begin();
-         it != benchmarks.end(); ++it) {
-
-        State state(it->first, elapsedTimeForOne);
-        BenchFunction& func = it->second;
-        func(state);
+    for (const auto &p: benchmarks()) {
+        State state(p.first, elapsedTimeForOne);
+        p.second(state);
     }
+    perf_fini();
 }
 
-bool State::KeepRunning()
+bool benchmark::State::KeepRunning()
 {
+    if (count & countMask) {
+      ++count;
+      return true;
+    }
     double now;
+    uint64_t nowCycles;
     if (count == 0) {
-        beginTime = now = gettimedouble();
+        lastTime = beginTime = now = gettimedouble();
+        lastCycles = beginCycles = nowCycles = perf_cpucycles();
     }
     else {
-        // timeCheckCount is used to avoid calling gettime most of the time,
-        // so benchmarks that run very quickly get consistent results.
-        if ((count+1)%timeCheckCount != 0) {
-            ++count;
-            return true; // keep going
-        }
         now = gettimedouble();
-        double elapsedOne = (now - lastTime)/timeCheckCount;
+        double elapsed = now - lastTime;
+        double elapsedOne = elapsed * countMaskInv;
         if (elapsedOne < minTime) minTime = elapsedOne;
         if (elapsedOne > maxTime) maxTime = elapsedOne;
-        if (elapsedOne*timeCheckCount < maxElapsed/16) timeCheckCount *= 2;
+
+        // We only use relative values, so don't have to handle 64-bit wrap-around specially
+        nowCycles = perf_cpucycles();
+        uint64_t elapsedOneCycles = (nowCycles - lastCycles) * countMaskInv;
+        if (elapsedOneCycles < minCycles) minCycles = elapsedOneCycles;
+        if (elapsedOneCycles > maxCycles) maxCycles = elapsedOneCycles;
+
+        if (elapsed*128 < maxElapsed) {
+          // If the execution was much too fast (1/128th of maxElapsed), increase the count mask by 8x and restart timing.
+          // The restart avoids including the overhead of this code in the measurement.
+          countMask = ((countMask<<3)|7) & ((1LL<<60)-1);
+          countMaskInv = 1./(countMask+1);
+          count = 0;
+          minTime = std::numeric_limits<double>::max();
+          maxTime = std::numeric_limits<double>::min();
+          minCycles = std::numeric_limits<uint64_t>::max();
+          maxCycles = std::numeric_limits<uint64_t>::min();
+          return true;
+        }
+        if (elapsed*16 < maxElapsed) {
+          uint64_t newCountMask = ((countMask<<1)|1) & ((1LL<<60)-1);
+          if ((count & newCountMask)==0) {
+              countMask = newCountMask;
+              countMaskInv = 1./(countMask+1);
+          }
+        }
     }
     lastTime = now;
+    lastCycles = nowCycles;
     ++count;
 
     if (now - beginTime < maxElapsed) return true; // Keep going
@@ -64,7 +94,9 @@ bool State::KeepRunning()
 
     // Output results
     double average = (now-beginTime)/count;
-    std::cout << name << "," << count << "," << minTime << "," << maxTime << "," << average << "\n";
+    int64_t averageCycles = (nowCycles-beginCycles)/count;
+    std::cout << std::fixed << std::setprecision(15) << name << "," << count << "," << minTime << "," << maxTime << "," << average << ","
+              << minCycles << "," << maxCycles << "," << averageCycles << "\n";
 
     return false;
 }

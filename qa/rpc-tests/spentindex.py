@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # Copyright (c) 2014-2015 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -7,7 +7,6 @@
 # Test addressindex generation and fetching
 #
 
-import time
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from test_framework.script import *
@@ -16,9 +15,10 @@ import binascii
 
 class SpentIndexTest(BitcoinTestFramework):
 
-    def setup_chain(self):
-        print("Initializing test directory "+self.options.tmpdir)
-        initialize_chain_clean(self.options.tmpdir, 4)
+    def __init__(self):
+        super().__init__()
+        self.setup_clean_chain = True
+        self.num_nodes = 4
 
     def setup_network(self):
         self.nodes = []
@@ -36,7 +36,7 @@ class SpentIndexTest(BitcoinTestFramework):
         self.sync_all()
 
     def run_test(self):
-        print "Mining blocks..."
+        print("Mining blocks...")
         self.nodes[0].generate(105)
         self.sync_all()
 
@@ -44,25 +44,25 @@ class SpentIndexTest(BitcoinTestFramework):
         assert_equal(chain_height, 105)
 
         # Check that
-        print "Testing spent index..."
+        print("Testing spent index...")
 
         privkey = "cU4zhap7nPJAWeMFu4j6jLrfPmqakDAzy8zn8Fhb3oEevdm4e5Lc"
         address = "yeMpGzMj3rhtnz48XsfpB8itPHhHtgxLc3"
-        addressHash = "C5E4FB9171C22409809A3E8047A29C83886E325D".decode("hex")
+        addressHash = binascii.unhexlify("C5E4FB9171C22409809A3E8047A29C83886E325D")
         scriptPubKey = CScript([OP_DUP, OP_HASH160, addressHash, OP_EQUALVERIFY, OP_CHECKSIG])
         unspent = self.nodes[0].listunspent()
         tx = CTransaction()
-        amount = unspent[0]["amount"] * 100000000
+        amount = int(unspent[0]["amount"] * COIN)
         tx.vin = [CTxIn(COutPoint(int(unspent[0]["txid"], 16), unspent[0]["vout"]))]
         tx.vout = [CTxOut(amount, scriptPubKey)]
         tx.rehash()
 
         signed_tx = self.nodes[0].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
-        txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], True)
+        txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], True, False, True)
         self.nodes[0].generate(1)
         self.sync_all()
 
-        print "Testing getspentinfo method..."
+        print("Testing getspentinfo method...")
 
         # Check that the spentinfo works standalone
         info = self.nodes[1].getspentinfo({"txid": unspent[0]["txid"], "index": unspent[0]["vout"]})
@@ -70,7 +70,7 @@ class SpentIndexTest(BitcoinTestFramework):
         assert_equal(info["index"], 0)
         assert_equal(info["height"], 106)
 
-        print "Testing getrawtransaction method..."
+        print("Testing getrawtransaction method...")
 
         # Check that verbose raw transaction includes spent info
         txVerbose = self.nodes[3].getrawtransaction(unspent[0]["txid"], 1)
@@ -86,15 +86,15 @@ class SpentIndexTest(BitcoinTestFramework):
         # Check that verbose raw transaction includes address values and input values
         privkey2 = "cU4zhap7nPJAWeMFu4j6jLrfPmqakDAzy8zn8Fhb3oEevdm4e5Lc"
         address2 = "yeMpGzMj3rhtnz48XsfpB8itPHhHtgxLc3"
-        addressHash2 = "C5E4FB9171C22409809A3E8047A29C83886E325D".decode("hex")
+        addressHash2 = binascii.unhexlify("C5E4FB9171C22409809A3E8047A29C83886E325D")
         scriptPubKey2 = CScript([OP_DUP, OP_HASH160, addressHash2, OP_EQUALVERIFY, OP_CHECKSIG])
         tx2 = CTransaction()
         tx2.vin = [CTxIn(COutPoint(int(txid, 16), 0))]
-        tx2.vout = [CTxOut(amount, scriptPubKey2)]
-        tx.rehash()
+        tx2.vout = [CTxOut(amount - int(COIN / 10), scriptPubKey2)]
+        tx2.rehash()
         self.nodes[0].importprivkey(privkey)
         signed_tx2 = self.nodes[0].signrawtransaction(binascii.hexlify(tx2.serialize()).decode("utf-8"))
-        txid2 = self.nodes[0].sendrawtransaction(signed_tx2["hex"], True)
+        txid2 = self.nodes[0].sendrawtransaction(signed_tx2["hex"], True, False, True)
 
         # Check the mempool index
         self.sync_all()
@@ -112,7 +112,7 @@ class SpentIndexTest(BitcoinTestFramework):
         assert_equal(txVerbose4["vin"][0]["value"], Decimal(unspent[0]["amount"]))
         assert_equal(txVerbose4["vin"][0]["valueSat"], amount)
 
-        print "Passed\n"
+        print("Passed\n")
 
 
 if __name__ == '__main__':

@@ -1,16 +1,19 @@
-#!/usr/bin/env python2
-# Copyright (c) 2014-2015 The Bitcoin Core developers
+#!/usr/bin/env python3
+# Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 # Exercise the wallet keypool, and interaction with wallet encryption/locking
 
-# Add python-bitcoinrpc to module search path:
-
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
 class KeyPoolTest(BitcoinTestFramework):
+
+    def __init__(self):
+        super().__init__()
+        self.setup_clean_chain = True
+        self.num_nodes = 1
 
     def run_test(self):
         nodes = self.nodes
@@ -64,10 +67,6 @@ class KeyPoolTest(BitcoinTestFramework):
             raise AssertionError('Keypool should be exhausted after three addesses')
         except JSONRPCException as e:
             assert(e.error['code']==-12)
-
-    def setup_chain(self):
-        print("Initializing test directory "+self.options.tmpdir)
-        initialize_chain_clean(self.options.tmpdir, 1)
 
     def setup_network(self):
         self.nodes = start_nodes(1, self.options.tmpdir, [['-usehd=0']])

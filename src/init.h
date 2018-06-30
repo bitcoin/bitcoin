@@ -16,9 +16,8 @@ namespace boost
 class thread_group;
 } // namespace boost
 
-extern CWallet* pwalletMain;
-
 void StartShutdown();
+void StartRestart();
 bool ShutdownRequested();
 /** Interrupt threads */
 void Interrupt(boost::thread_group& threadGroup);
@@ -27,7 +26,30 @@ void Shutdown();
 void InitLogging();
 //!Parameter interaction: change current parameters depending on various rules
 void InitParameterInteraction();
-bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler);
+
+/** Initialize bitcoin core: Basic context setup.
+ *  @note This can be done before daemonization.
+ *  @pre Parameters should be parsed and config file should be read.
+ */
+bool AppInitBasicSetup();
+/**
+ * Initialization: parameter interaction.
+ * @note This can be done before daemonization.
+ * @pre Parameters should be parsed and config file should be read, AppInitBasicSetup should have been called.
+ */
+bool AppInitParameterInteraction();
+/**
+ * Initialization sanity checks: ecc init, sanity checks, dir lock.
+ * @note This can be done before daemonization.
+ * @pre Parameters should be parsed and config file should be read, AppInitParameterInteraction should have been called.
+ */
+bool AppInitSanityChecks();
+/**
+ * Bitcoin core main initialization.
+ * @note This should only be done after daemonization.
+ * @pre Parameters should be parsed and config file should be read, AppInitSanityChecks should have been called.
+ */
+bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler);
 void PrepareShutdown();
 
 /** The help message mode determines what help message to show */

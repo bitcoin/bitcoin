@@ -36,6 +36,7 @@ public:
 
     void setClientModel(ClientModel *clientModel);
     void setWalletModel(WalletModel *walletModel);
+    void ShowQRCode(std::string strAlias);
     void StartAlias(std::string strAlias);
     void StartAll(std::string strCommand = "start-all");
 
@@ -50,6 +51,7 @@ public Q_SLOTS:
     void updateNodeList();
 
 Q_SIGNALS:
+    void doubleClicked(const QModelIndex&);
 
 private:
     QTimer *timer;
@@ -68,6 +70,7 @@ private:
 private Q_SLOTS:
     void showContextMenu(const QPoint &);
     void on_filterLineEdit_textChanged(const QString &strFilterIn);
+    void on_QRButton_clicked();
     void on_startButton_clicked();
     void on_startAllButton_clicked();
     void on_startMissingButton_clicked();

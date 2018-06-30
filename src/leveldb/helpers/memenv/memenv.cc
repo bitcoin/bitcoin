@@ -277,6 +277,19 @@ class InMemoryEnv : public EnvWrapper {
     return Status::OK();
   }
 
+  virtual Status NewAppendableFile(const std::string& fname,
+                                   WritableFile** result) {
+    MutexLock lock(&mutex_);
+    FileState** sptr = &file_map_[fname];
+    FileState* file = *sptr;
+    if (file == NULL) {
+      file = new FileState();
+      file->Ref();
+    }
+    *result = new WritableFileImpl(file);
+    return Status::OK();
+  }
+
   virtual bool FileExists(const std::string& fname) {
     MutexLock lock(&mutex_);
     return file_map_.find(fname) != file_map_.end();

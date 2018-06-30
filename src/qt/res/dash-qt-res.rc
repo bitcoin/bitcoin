@@ -1,4 +1,5 @@
 IDI_ICON1 ICON DISCARDABLE "icons/bitcoin.ico"
+IDI_ICON2 ICON DISCARDABLE "icons/bitcoin_testnet.ico"
 
 #include <windows.h>             // needed for VERSIONINFO
 #include "../../clientversion.h" // holds the needed client version information
@@ -19,13 +20,13 @@ BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
             VALUE "CompanyName",        "Dash"
-            VALUE "FileDescription",    "Dash Core (GUI node for Dash)"
+            VALUE "FileDescription",    PACKAGE_NAME " (GUI node for Dash)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
             VALUE "InternalName",       "dash-qt"
             VALUE "LegalCopyright",     COPYRIGHT_STR
             VALUE "LegalTrademarks1",   "Distributed under the MIT software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
             VALUE "OriginalFilename",   "dash-qt.exe"
-            VALUE "ProductName",        "Dash Core"
+            VALUE "ProductName",        PACKAGE_NAME
             VALUE "ProductVersion",     VER_PRODUCTVERSION_STR
         END
     END

@@ -1,5 +1,5 @@
-#!/usr/bin/env python2
-# Copyright (c) 2014-2015 The Bitcoin Core developers
+#!/usr/bin/env python3
+# Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,7 +13,6 @@ from decimal import Decimal
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.authproxy import JSONRPCException
 from test_framework.util import (
-    initialize_chain,
     assert_equal,
     assert_raises,
     assert_is_hex_string,
@@ -32,12 +31,13 @@ class BlockchainTest(BitcoinTestFramework):
 
     """
 
-    def setup_chain(self):
-        print("Initializing test directory " + self.options.tmpdir)
-        initialize_chain(self.options.tmpdir)
+    def __init__(self):
+        super().__init__()
+        self.setup_clean_chain = False
+        self.num_nodes = 1
 
     def setup_network(self, split=False):
-        self.nodes = start_nodes(1, self.options.tmpdir)
+        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir)
         self.is_network_split = False
         self.sync_all()
 
@@ -50,15 +50,15 @@ class BlockchainTest(BitcoinTestFramework):
         node = self.nodes[0]
         res = node.gettxoutsetinfo()
 
-        assert_equal(res[u'total_amount'], Decimal('98214.28571450'))
-        assert_equal(res[u'transactions'], 200)
-        assert_equal(res[u'height'], 200)
-        assert_equal(res[u'txouts'], 200)
+        assert_equal(res['total_amount'], Decimal('98214.28571450'))
+        assert_equal(res['transactions'], 200)
+        assert_equal(res['height'], 200)
+        assert_equal(res['txouts'], 200)
         size = res['disk_size']
         assert size > 6400
         assert size < 64000
-        assert_equal(len(res[u'bestblock']), 64)
-        assert_equal(len(res[u'hash_serialized_2']), 64)
+        assert_equal(len(res['bestblock']), 64)
+        assert_equal(len(res['hash_serialized_2']), 64)
 
         print("Test that gettxoutsetinfo() works for blockchain with just the genesis block")
         b1hash = node.getblockhash(1)
@@ -106,6 +106,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert isinstance(header['mediantime'], int)
         assert isinstance(header['nonce'], int)
         assert isinstance(header['version'], int)
+        assert isinstance(int(header['versionHex'], 16), int)
         assert isinstance(header['difficulty'], Decimal)
 
 if __name__ == '__main__':

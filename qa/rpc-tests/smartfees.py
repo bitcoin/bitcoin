@@ -1,5 +1,5 @@
-#!/usr/bin/env python2
-# Copyright (c) 2014-2015 The Bitcoin Core developers
+#!/usr/bin/env python3
+# Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -167,6 +167,11 @@ def check_estimates(node, fees_seen, max_invalid, print_estimates = True):
 
 class EstimateFeeTest(BitcoinTestFramework):
 
+    def __init__(self):
+        super().__init__()
+        self.num_nodes = 3
+        self.setup_clean_chain = False
+
     def setup_network(self):
         '''
         We'll setup the network to have 3 nodes that all mine with different parameters.
@@ -176,7 +181,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.nodes = []
         # Use node0 to mine blocks for input splitting
         self.nodes.append(start_node(0, self.options.tmpdir, ["-maxorphantx=1000",
-                                                              "-relaypriority=0", "-whitelist=127.0.0.1"]))
+                                                              "-whitelist=127.0.0.1"]))
 
         print("This test is time consuming, please be patient")
         print("Splitting inputs to small size so we can generate low priority tx's")
@@ -214,12 +219,12 @@ class EstimateFeeTest(BitcoinTestFramework):
         # (17k is room enough for 110 or so transactions)
         self.nodes.append(start_node(1, self.options.tmpdir,
                                      ["-blockprioritysize=1500", "-blockmaxsize=17000",
-                                      "-maxorphantx=1000", "-relaypriority=0", "-debug=estimatefee"]))
+                                      "-maxorphantx=1000", "-debug=estimatefee"]))
         connect_nodes(self.nodes[1], 0)
 
         # Node2 is a stingy miner, that
         # produces too small blocks (room for only 55 or so transactions)
-        node2args = ["-blockprioritysize=0", "-blockmaxsize=8000", "-maxorphantx=1000", "-relaypriority=0"]
+        node2args = ["-blockprioritysize=0", "-blockmaxsize=8000", "-maxorphantx=1000"]
 
         self.nodes.append(start_node(2, self.options.tmpdir, node2args))
         connect_nodes(self.nodes[0], 2)
@@ -242,9 +247,9 @@ class EstimateFeeTest(BitcoinTestFramework):
                                                       self.memutxo, Decimal("0.005"), min_fee, min_fee)
                 tx_kbytes = (len(txhex) // 2) / 1000.0
                 self.fees_per_kb.append(float(fee)/tx_kbytes)
-            sync_mempools(self.nodes[0:3],.1)
+            sync_mempools(self.nodes[0:3], wait=.1)
             mined = mining_node.getblock(mining_node.generate(1)[0],True)["tx"]
-            sync_blocks(self.nodes[0:3],.1)
+            sync_blocks(self.nodes[0:3], wait=.1)
             # update which txouts are confirmed
             newmem = []
             for utx in self.memutxo:
@@ -260,7 +265,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.confutxo = self.txouts # Start with the set of confirmed txouts after splitting
         print("Will output estimates for 1/2/3/6/15/25 blocks")
 
-        for i in xrange(2):
+        for i in range(2):
             print("Creating transactions and mining them with a block size that can't keep up")
             # Create transactions and mine 10 small blocks with node 2, but create txs faster than we can mine
             self.transact_and_mine(10, self.nodes[2])
@@ -276,7 +281,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         while len(self.nodes[1].getrawmempool()) > 0:
             self.nodes[1].generate(1)
 
-        sync_blocks(self.nodes[0:3],.1)
+        sync_blocks(self.nodes[0:3], wait=.1)
         print("Final estimates after emptying mempools")
         check_estimates(self.nodes[1], self.fees_per_kb, 2)
 
