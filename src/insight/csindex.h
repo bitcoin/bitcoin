@@ -9,6 +9,12 @@
 
 constexpr char DB_TXINDEX_CSOUTPUT = 'O';
 constexpr char DB_TXINDEX_CSLINK = 'L';
+constexpr char DB_TXINDEX_CSBESTBLOCK = 'C';
+
+enum CSIndexFlags
+{
+    CSI_FROM_STAKE              = (1 << 0),
+};
 
 class ColdStakeIndexOutputKey
 {
@@ -39,19 +45,19 @@ public:
 class ColdStakeIndexOutputValue
 {
 public:
-    CAmount m_value;
+    CAmount m_value = 0;
+    uint8_t m_flags = 0; // Mark outputs resulting from coldstaking
     int m_spend_height = -1;
     uint256 m_spend_txid;
-    uint8_t m_spend_type; // mark spends that were from coldstaking
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(m_value);
+        READWRITE(m_flags);
         READWRITE(m_spend_height);
         READWRITE(m_spend_txid);
-        READWRITE(m_spend_type);
     }
 };
 

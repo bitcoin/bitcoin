@@ -23,6 +23,7 @@ SOURCES = [
     "src/rpc/mnemonic.cpp",
     "src/smsg/rpcsmessage.cpp",
     "src/usbdevice/rpcusbdevice.cpp",
+    "src/insight/rpc.cpp",
 ]
 
 # Source file (relative to root) containing conversion mapping

@@ -12,6 +12,7 @@
 #include <script/script.h>
 #include <script/interpreter.h>
 #include <script/ismine.h>
+#include <key_io.h>
 
 #include <boost/thread.hpp>
 
@@ -248,7 +249,28 @@ bool TxIndex::Init()
         return false;
     }
 
-    return BaseIndex::Init();
+    if (!BaseIndex::Init()) {
+        return false;
+    }
+
+    // Set m_best_block_index to the last cs_indexed block if lower
+    if (m_cs_index) {
+        CBlockLocator locator;
+        if (!GetDB().Read(DB_TXINDEX_CSBESTBLOCK, locator)) {
+            locator.SetNull();
+        }
+        CBlockIndex *best_cs_block_index = FindForkInGlobalIndex(chainActive, locator);
+
+        if (best_cs_block_index != chainActive.Tip()) {
+            m_synced = false;
+            if (m_best_block_index.load()->nHeight > best_cs_block_index->nHeight) {
+                LogPrintf("Setting txindex best block back to %d to sync csindex.\n", best_cs_block_index->nHeight);
+                m_best_block_index = best_cs_block_index;
+            }
+        }
+    }
+
+    return true;
 }
 
 bool TxIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
@@ -346,6 +368,11 @@ bool TxIndex::IndexCSOutputs(const CBlock& block, const CBlockIndex* pindex)
                 continue;
             }
 
+            if (m_cs_index_whitelist.size() > 0
+                && !m_cs_index_whitelist.count(vSolutions[0])) {
+                continue;
+            }
+
             if (lk.m_stake_type == TX_PUBKEYHASH) {
                 memcpy(lk.m_stake_id.begin(), vSolutions[0].data(), 20);
             } else
@@ -376,8 +403,11 @@ bool TxIndex::IndexCSOutputs(const CBlock& block, const CBlockIndex* pindex)
             ok.m_n = n;
             ov.m_value = o->GetValue();
 
-            newCSOuts[ok] = ov;
+            if (tx->IsCoinStake()) {
+                ov.m_flags |= CSI_FROM_STAKE;
+            }
 
+            newCSOuts[ok] = ov;
             newCSLinks[lk].push_back(ok);
         }
 
@@ -399,7 +429,7 @@ bool TxIndex::IndexCSOutputs(const CBlock& block, const CBlockIndex* pindex)
                 batch.Write(std::make_pair(DB_TXINDEX_CSOUTPUT, ok), ov);
             }
         }
-    };
+    }
 
     for (const auto &it : newCSOuts) {
         batch.Write(std::make_pair(DB_TXINDEX_CSOUTPUT, it.first), it.second);
@@ -407,6 +437,8 @@ bool TxIndex::IndexCSOutputs(const CBlock& block, const CBlockIndex* pindex)
     for (const auto &it : newCSLinks) {
         batch.Write(std::make_pair(DB_TXINDEX_CSLINK, it.first), it.second);
     }
+
+    batch.Write(DB_TXINDEX_CSBESTBLOCK, chainActive.GetLocator(pindex));
 
     if (!m_db->WriteBatch(batch)) {
         return error("%s: WriteBatch failed.", __func__);
@@ -469,4 +501,29 @@ bool TxIndex::FindTx(const uint256& tx_hash, CBlockHeader& header, CTransactionR
         return error("%s: txid mismatch", __func__);
     }
     return true;
+}
+
+bool TxIndex::AppendCSAddress(std::string addr)
+{
+    CTxDestination dest = DecodeDestination(addr);
+
+    if (dest.type() == typeid(CKeyID)) {
+        CKeyID id = boost::get<CKeyID>(dest);
+        valtype vSolution;
+        vSolution.resize(20);
+        memcpy(vSolution.data(), id.begin(), 20);
+        m_cs_index_whitelist.insert(vSolution);
+        return true;
+    }
+
+    if (dest.type() == typeid(CKeyID256)) {
+        CKeyID256 id256 = boost::get<CKeyID256>(dest);
+        valtype vSolution;
+        vSolution.resize(32);
+        memcpy(vSolution.data(), id256.begin(), 32);
+        m_cs_index_whitelist.insert(vSolution);
+        return true;
+    }
+
+    return error("%s: Failed to parse address %s.", __func__, addr);
 }

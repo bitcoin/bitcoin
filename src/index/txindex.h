@@ -56,6 +56,8 @@ public:
     bool FindTx(const uint256& tx_hash, uint256& block_hash, CTransactionRef& tx) const;
     bool FindTx(const uint256& tx_hash, CBlockHeader& header, CTransactionRef& tx) const;
 
+    bool AppendCSAddress(std::string addr);
+
     bool m_cs_index = false;
     std::set<std::vector<uint8_t> > m_cs_index_whitelist;
 };

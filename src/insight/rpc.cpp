@@ -566,12 +566,18 @@ UniValue getspentinfo(const JSONRPCRequest& request)
 
 UniValue listcoldstakeunspent(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw std::runtime_error(
-            "getcoldstakeunspents \"stakeaddress\" (height)\n"
+            "getcoldstakeunspents \"stakeaddress\" (height, options)\n"
             "\nReturns the unspent outputs of \"stakeaddress\" at height.\n"
             "\nArguments:\n"
-
+            "1. \"stakeaddress\"        (string, required) The stakeaddress to filter outputs by.\n"
+            "2. height                (string, optional) The block height to return outputs for.\n"
+            "3. options               (object, optional)\n"
+            "   {\n"
+            "     \"mature_only\"         (boolean, optional, default false) Return only outputs stakeable at height.\n"\
+            "     \"all_staked\"          (boolean, optional, default false) Ignore maturity check for outputs of coinstake transactions.\n"
+            "   }\n"
             "\nResult:\n"
 
             "\nExamples:\n"
@@ -608,18 +614,32 @@ UniValue listcoldstakeunspent(const JSONRPCRequest& request)
 
     int height = !request.params[1].isNull() ? request.params[1].get_int() : chainActive.Tip()->nHeight;
 
+    bool mature_only = false;
+    bool all_staked = false;
+    if (request.params[2].isObject()) {
+        const UniValue &options = request.params[2];
+        RPCTypeCheck(options, {UniValue::VBOOL, UniValue::VBOOL}, true);
+        if (options["mature_only"].isBool()) {
+            mature_only = options["mature_only"].get_bool();
+        }
+        if (options["all_staked"].isBool()) {
+            all_staked = options["all_staked"].get_bool();
+        }
+    }
+
     UniValue rv(UniValue::VARR);
 
     std::unique_ptr<CDBIterator> it(db.NewIterator());
     it->Seek(std::make_pair(DB_TXINDEX_CSLINK, seek_key));
 
+    int min_kernel_depth = Params().GetStakeMinConfirmations();
     std::pair<char, ColdStakeIndexLinkKey> key;
     while (it->Valid() && it->GetKey(key)) {
         ColdStakeIndexLinkKey &lk = key.second;
 
         if (key.first != DB_TXINDEX_CSLINK
-            || lk.m_stake_id != lk.m_stake_id
-            || lk.m_height > height)
+            || lk.m_stake_id != seek_key.m_stake_id
+            || (int)lk.m_height > height)
             break;
 
         std::vector <ColdStakeIndexOutputKey> oks;
@@ -630,11 +650,20 @@ UniValue listcoldstakeunspent(const JSONRPCRequest& request)
             for (const auto &ok : oks) {
                 if (db.Read(std::make_pair(DB_TXINDEX_CSOUTPUT, ok), ov)
                     && (ov.m_spend_height == -1 || ov.m_spend_height > height)) {
+
+                    if (mature_only
+                        && (!all_staked || !(ov.m_flags & CSI_FROM_STAKE))) {
+                        int depth = height - lk.m_height;
+                        int depth_required = std::min(min_kernel_depth-1, (int)(height / 2));
+                        if (depth < depth_required) {
+                            it->Next();
+                            continue;
+                        }
+                    }
+
                     UniValue output(UniValue::VOBJ);
                     output.pushKV("height", (int)lk.m_height);
-                    //output.pushKV("txid", ok.m_txnid.ToString());
                     output.pushKV("value", ov.m_value);
-                    output.pushKV("m_spend_type", lk.m_spend_type);
 
                     switch (lk.m_spend_type) {
                         case TX_PUBKEYHASH: {
@@ -686,7 +715,7 @@ static const CRPCCommand commands[] =
     /* Blockchain */
     { "blockchain",         "getspentinfo",           &getspentinfo,           {"inputs"} },
 
-    { "csindex",            "listcoldstakeunspent",   &listcoldstakeunspent,   {"stakeaddress","height"} },
+    { "csindex",            "listcoldstakeunspent",   &listcoldstakeunspent,   {"stakeaddress","height","options"} },
 
 };
 

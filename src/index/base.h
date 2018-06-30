@@ -35,7 +35,7 @@ protected:
         bool WriteBestBlock(const CBlockLocator& locator);
     };
 
-private:
+//private:
     /// Whether the index is in sync with the main chain. The flag is flipped
     /// from false to true once, after which point this starts processing
     /// ValidationInterface notifications to stay in sync.

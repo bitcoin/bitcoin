@@ -11647,11 +11647,9 @@ uint64_t CHDWallet::GetStakeWeight() const
     uint64_t nWeight = 0;
 
     LOCK2(cs_main, cs_wallet);
-    for (auto pcoin : setCoins)
-    {
-        //if (pcoin.first->GetDepthInMainChain() >= nStakeMinConfirmations)
+    for (auto pcoin : setCoins) {
         nWeight += pcoin.first->tx->vpout[pcoin.second]->GetValue();
-    };
+    }
 
     return nWeight;
 };
