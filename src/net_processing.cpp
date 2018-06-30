@@ -1218,7 +1218,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
 
                 if (!push && inv.type == MSG_GOVERNANCE_OBJECT) {
                     LogPrint("net", "ProcessGetData -- MSG_GOVERNANCE_OBJECT: inv = %s\n", inv.ToString());
-                    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                    CDataStream ss(SER_NETWORK, pfrom->GetSendVersion());
                     bool topush = false;
                     {
                         if(governance.HaveObjectForHash(inv.hash)) {
@@ -1236,7 +1236,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                 }
 
                 if (!push && inv.type == MSG_GOVERNANCE_OBJECT_VOTE) {
-                    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                    CDataStream ss(SER_NETWORK, pfrom->GetSendVersion());
                     bool topush = false;
                     {
                         if(governance.HaveVoteForHash(inv.hash)) {
