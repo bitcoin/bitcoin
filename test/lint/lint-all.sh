@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Copyright (c) 2017 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
@@ -6,6 +6,10 @@
 #
 # This script runs all contrib/devtools/lint-*.sh files, and fails if any exit
 # with a non-zero status code.
+
+# This script is intentionally locale dependent by not setting "export LC_ALL=C"
+# in order to allow for the executed lint scripts to opt in or opt out of locale
+# dependence themselves.
 
 set -u
 

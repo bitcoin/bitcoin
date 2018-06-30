@@ -118,7 +118,7 @@ WalletTxOut MakeWalletTxOut(CWallet& wallet, const CWalletTx& wtx, int n, int de
 class WalletImpl : public Wallet
 {
 public:
-    WalletImpl(CWallet& wallet) : m_wallet(wallet) {}
+    WalletImpl(const std::shared_ptr<CWallet>& wallet) : m_shared_wallet(wallet), m_wallet(*wallet.get()) {}
 
     bool encryptWallet(const SecureString& wallet_passphrase) override
     {
@@ -429,6 +429,10 @@ public:
     bool hdEnabled() override { return m_wallet.IsHDEnabled(); }
     OutputType getDefaultAddressType() override { return m_wallet.m_default_address_type; }
     OutputType getDefaultChangeType() override { return m_wallet.m_default_change_type; }
+    std::unique_ptr<Handler> handleUnload(UnloadFn fn) override
+    {
+        return MakeHandler(m_wallet.NotifyUnload.connect(fn));
+    }
     std::unique_ptr<Handler> handleShowProgress(ShowProgressFn fn) override
     {
         return MakeHandler(m_wallet.ShowProgress.connect(fn));
@@ -453,11 +457,12 @@ public:
         return MakeHandler(m_wallet.NotifyWatchonlyChanged.connect(fn));
     }
 
+    std::shared_ptr<CWallet> m_shared_wallet;
     CWallet& m_wallet;
 };
 
 } // namespace
 
-std::unique_ptr<Wallet> MakeWallet(CWallet& wallet) { return MakeUnique<WalletImpl>(wallet); }
+std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet) { return MakeUnique<WalletImpl>(wallet); }
 
 } // namespace interfaces

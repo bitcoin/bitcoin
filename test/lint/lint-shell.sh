@@ -1,10 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Copyright (c) 2018 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
 # Check for shellcheck warnings in shell scripts.
+
+# This script is intentionally locale dependent by not setting "export LC_ALL=C"
+# to allow running certain versions of shellcheck that core dump when LC_ALL=C
+# is set.
 
 # Disabled warnings:
 # SC2001: See if you can use ${variable//search/replace} instead.

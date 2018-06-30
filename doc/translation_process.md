@@ -46,9 +46,7 @@ Visit the [Transifex Signup](https://www.transifex.com/signup/) page to create a
 You can find the Bitcoin translation project at [https://www.transifex.com/projects/p/bitcoin/](https://www.transifex.com/projects/p/bitcoin/).
 
 ### Installing the Transifex client command-line tool
-The client it used to fetch updated translations. If you are having problems, or need more details, see [http://docs.transifex.com/developer/client/setup](http://docs.transifex.com/developer/client/setup)
-
-**For Linux and Mac**
+The client is used to fetch updated translations. If you are having problems, or need more details, see [https://docs.transifex.com/client/installing-the-client](https://docs.transifex.com/client/installing-the-client)
 
 `pip install transifex-client`
 
@@ -63,10 +61,6 @@ password = PASSWORD
 token =
 username = USERNAME
 ```
-
-**For Windows**
-
-Please see [http://docs.transifex.com/developer/client/setup#windows](http://docs.transifex.com/developer/client/setup#windows) for details on installation.
 
 The Transifex Bitcoin project config file is included as part of the repo. It can be found at `.tx/config`, however you shouldn’t need change anything.
 

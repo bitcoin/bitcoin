@@ -37,24 +37,17 @@ public:
 };
 
 /** A signature creator for transactions. */
-class TransactionSignatureCreator : public BaseSignatureCreator {
-    const CTransaction* txTo;
+class MutableTransactionSignatureCreator : public BaseSignatureCreator {
+    const CMutableTransaction* txTo;
     unsigned int nIn;
     int nHashType;
     CAmount amount;
-    const TransactionSignatureChecker checker;
+    const MutableTransactionSignatureChecker checker;
 
 public:
-    TransactionSignatureCreator(const CTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int nHashTypeIn=SIGHASH_ALL);
+    MutableTransactionSignatureCreator(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int nHashTypeIn = SIGHASH_ALL);
     const BaseSignatureChecker& Checker() const override { return checker; }
     bool CreateSig(const SigningProvider& provider, std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const override;
-};
-
-class MutableTransactionSignatureCreator : public TransactionSignatureCreator {
-    CTransaction tx;
-
-public:
-    MutableTransactionSignatureCreator(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int nHashTypeIn) : TransactionSignatureCreator(&tx, nInIn, amountIn, nHashTypeIn), tx(*txToIn) {}
 };
 
 /** A signature creator that just produces 72-byte empty signatures. */
@@ -80,7 +73,6 @@ SignatureData CombineSignatures(const CScript& scriptPubKey, const BaseSignature
 
 /** Extract signature data from a transaction, and insert it. */
 SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nIn);
-void UpdateTransaction(CMutableTransaction& tx, unsigned int nIn, const SignatureData& data);
 void UpdateInput(CTxIn& input, const SignatureData& data);
 
 /* Check whether we know how to sign for an output like this, assuming we

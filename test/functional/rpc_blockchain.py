@@ -41,7 +41,6 @@ from test_framework.messages import (
 )
 from test_framework.mininode import (
     P2PInterface,
-    network_thread_start,
 )
 
 
@@ -217,6 +216,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(header['confirmations'], 1)
         assert_equal(header['previousblockhash'], secondbesthash)
         assert_is_hex_string(header['chainwork'])
+        assert_equal(header['nTx'], 1)
         assert_is_hash_string(header['hash'])
         assert_is_hash_string(header['previousblockhash'])
         assert_is_hash_string(header['merkleroot'])
@@ -261,7 +261,6 @@ class BlockchainTest(BitcoinTestFramework):
 
         # Start a P2P connection since we'll need to create some blocks.
         node.add_p2p_connection(P2PInterface())
-        network_thread_start()
         node.p2p.wait_for_verack()
 
         current_height = node.getblock(node.getbestblockhash())['height']

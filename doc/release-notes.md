@@ -56,6 +56,11 @@ frequently tested on them.
 Notable changes
 ===============
 
+GUI changes
+-----------
+
+- Block storage can be limited under Preferences, in the Main tab. Undoing this setting requires downloading the full blockchain again. This mode is incompatible with -txindex and -rescan.
+
 RPC changes
 ------------
 

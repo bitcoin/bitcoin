@@ -129,6 +129,15 @@ class WalletTest(BitcoinTestFramework):
                                 self.nodes[2].lockunspent, False,
                                 [{"txid": unspent_0["txid"], "vout": 999}])
 
+        # An output should be unlocked when spent
+        unspent_0 = self.nodes[1].listunspent()[0]
+        self.nodes[1].lockunspent(False, [unspent_0])
+        tx = self.nodes[1].createrawtransaction([unspent_0], { self.nodes[1].getnewaddress() : 1 })
+        tx = self.nodes[1].fundrawtransaction(tx)['hex']
+        tx = self.nodes[1].signrawtransactionwithwallet(tx)["hex"]
+        self.nodes[1].sendrawtransaction(tx)
+        assert_equal(len(self.nodes[1].listlockunspent()), 0)
+
         # Have node1 generate 100 blocks (so node0 can recover the fee)
         self.nodes[1].generate(100)
         self.sync_all([self.nodes[0:3]])
@@ -230,8 +239,8 @@ class WalletTest(BitcoinTestFramework):
         # 2. hex-changed one output to 0.0
         # 3. sign and send
         # 4. check if recipient (node0) can list the zero value tx
-        usp = self.nodes[1].listunspent()
-        inputs = [{"txid": usp[0]['txid'], "vout": usp[0]['vout']}]
+        usp = self.nodes[1].listunspent(query_options={'minimumAmount': '49.998'})[0]
+        inputs = [{"txid": usp['txid'], "vout": usp['vout']}]
         outputs = {self.nodes[1].getnewaddress(): 49.998, self.nodes[0].getnewaddress(): 11.11}
 
         raw_tx = self.nodes[1].createrawtransaction(inputs, outputs).replace("c0833842", "00000000")  # replace 11.11 with 0.0 (int32)

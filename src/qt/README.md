@@ -1,10 +1,10 @@
 This directory contains the BitcoinQT graphical user interface (GUI). It uses the cross-platform framework [Qt](https://www1.qt.io/developers/).
 
-The current precise version for Qt 5 is specified in [qt.mk](/depends/packages/qt.mk). Qt 4 is also supported (see [#8263](https://github.com/bitcoin/bitcoin/issues/8263)).
+The current precise version for Qt 5 is specified in [qt.mk](/depends/packages/qt.mk).
 
 ## Compile and run
 
-See build instructions ([OSX](/doc/build-osx.md), [Windows](/doc/build-windows.md), [Unix](/doc/build-unix.md), etc).
+See build instructions ([macOS](/doc/build-osx.md), [Windows](/doc/build-windows.md), [Unix](/doc/build-unix.md), etc).
 
 To run:
 
@@ -16,7 +16,7 @@ To run:
 
 ### forms
 
-Contains [Designer UI](http://doc.qt.io/qt-5.9/designer-using-a-ui-file.html) files. They are created with [Qt Creator](#using-qt-creator-as-ide), but can be edited using any text editor.
+Contains [Designer UI](https://doc.qt.io/qt-5.9/designer-using-a-ui-file.html) files. They are created with [Qt Creator](#using-qt-creator-as-ide), but can be edited using any text editor.
 
 ### locale
 
@@ -36,7 +36,7 @@ Represents the main window of the Bitcoin UI.
 
 ### \*model.(h/cpp)
 
-The model. When it has a corresponding controller, it generally inherits from  [QAbstractTableModel](http://doc.qt.io/qt-5/qabstracttablemodel.html). Models that are used by controllers as helpers inherit from other Qt classes like [QValidator](http://doc.qt.io/qt-5/qvalidator.html).
+The model. When it has a corresponding controller, it generally inherits from  [QAbstractTableModel](https://doc.qt.io/qt-5/qabstracttablemodel.html). Models that are used by controllers as helpers inherit from other Qt classes like [QValidator](https://doc.qt.io/qt-5/qvalidator.html).
 
 ClientModel is used by the main application `bitcoingui` and several models like `peertablemodel`.
 
@@ -46,7 +46,7 @@ A controller. `:NAMEpage.cpp` generally includes `:NAMEmodel.h` and `forms/:NAME
 
 ### \*dialog.(h/cpp)
 
-Various dialogs, e.g. to open a URL. Inherit from [QDialog](http://doc.qt.io/qt-4.8/qdialog.html).
+Various dialogs, e.g. to open a URL. Inherit from [QDialog](https://doc.qt.io/qt-5/qdialog.html).
 
 ### paymentserver.(h/cpp)
 
@@ -65,7 +65,7 @@ Represents the view to a single wallet.
 * `guiconstants.h`: UI colors, app name, etc
 * `guiutil.h`: several helper functions
 * `macdockiconhandler.(h/cpp)`
-* `macdockiconhandler.(h/cpp)`: display notifications in OSX
+* `macdockiconhandler.(h/cpp)`: display notifications in macOS
 
 ## Contribute
 
@@ -81,9 +81,9 @@ the UI layout.
 Download and install the community edition of [Qt Creator](https://www.qt.io/download/).
 Uncheck everything except Qt Creator during the installation process.
 
-Instructions for OSX:
+Instructions for macOS:
 
-1. Make sure you installed everything through Homebrew mentioned in the [OSX build instructions](/doc/build-osx.md)
+1. Make sure you installed everything through Homebrew mentioned in the [macOS build instructions](/doc/build-osx.md)
 2. Use `./configure` with the `--enable-debug` flag
 3. In Qt Creator do "New Project" -> Import Project -> Import Existing Project
 4. Enter "bitcoin-qt" as project name, enter src/qt as location
