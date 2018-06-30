@@ -62,7 +62,6 @@ libconftest.dylib*
 *.o
 *.o-*
 *.patch
-.dash
 *.a
 *.pb.cc
 *.pb.h
@@ -108,13 +107,8 @@ coverage_percent.txt
 linux-coverage-build
 linux-build
 win32-build
-qa/pull-tester/run-bitcoind-for-test.sh
 qa/pull-tester/tests_config.py
-qa/pull-tester/cache/*
-qa/pull-tester/test.*/*
-qa/tmp
-cache/
-share/BitcoindComparisonTool.jar
+qa/cache/*
 
 !src/leveldb*/Makefile
 
@@ -124,6 +118,7 @@ share/BitcoindComparisonTool.jar
 /doc/doxygen/
 
 libdashconsensus.pc
+contrib/devtools/split-debug.sh
 src/qt/dash-qt.bash
 qa/pull-tester/tests-config.sh
 
@@ -132,3 +127,9 @@ dash-cli
 dashd
 dash-qt
 make
+
+/docker/bin
+
+# CLion
+.idea
+cmake-build-debug

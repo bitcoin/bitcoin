@@ -40,6 +40,8 @@ TEST(MemEnvTest, Basics) {
 
   // Create a file.
   ASSERT_OK(env_->NewWritableFile("/dir/f", &writable_file));
+  ASSERT_OK(env_->GetFileSize("/dir/f", &file_size));
+  ASSERT_EQ(0, file_size);
   delete writable_file;
 
   // Check that the file exists.
@@ -55,9 +57,16 @@ TEST(MemEnvTest, Basics) {
   ASSERT_OK(writable_file->Append("abc"));
   delete writable_file;
 
-  // Check for expected size.
+  // Check that append works.
+  ASSERT_OK(env_->NewAppendableFile("/dir/f", &writable_file));
   ASSERT_OK(env_->GetFileSize("/dir/f", &file_size));
   ASSERT_EQ(3, file_size);
+  ASSERT_OK(writable_file->Append("hello"));
+  delete writable_file;
+
+  // Check for expected size.
+  ASSERT_OK(env_->GetFileSize("/dir/f", &file_size));
+  ASSERT_EQ(8, file_size);
 
   // Check that renaming works.
   ASSERT_TRUE(!env_->RenameFile("/dir/non_existent", "/dir/g").ok());
@@ -65,7 +74,7 @@ TEST(MemEnvTest, Basics) {
   ASSERT_TRUE(!env_->FileExists("/dir/f"));
   ASSERT_TRUE(env_->FileExists("/dir/g"));
   ASSERT_OK(env_->GetFileSize("/dir/g", &file_size));
-  ASSERT_EQ(3, file_size);
+  ASSERT_EQ(8, file_size);
 
   // Check that opening non-existent file fails.
   SequentialFile* seq_file;

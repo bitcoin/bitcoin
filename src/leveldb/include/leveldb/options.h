@@ -128,6 +128,12 @@ struct Options {
   // efficiently detect that and will switch to uncompressed mode.
   CompressionType compression;
 
+  // EXPERIMENTAL: If true, append to existing MANIFEST and log files
+  // when a database is opened.  This can significantly speed up open.
+  //
+  // Default: currently false, but may become true later.
+  bool reuse_logs;
+
   // If non-NULL, use the specified filter policy to reduce disk reads.
   // Many applications will benefit from passing the result of
   // NewBloomFilterPolicy() here.

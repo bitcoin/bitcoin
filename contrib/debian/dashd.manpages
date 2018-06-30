@@ -1,3 +1,2 @@
-debian/manpages/dashd.1
-debian/manpages/dash.conf.5
-debian/manpages/dash-cli.1
+doc/man/dashd.1
+doc/man/dash-cli.1

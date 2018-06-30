@@ -1,3 +1,6 @@
+# Copyright (c) 2012 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
 Bitcoin base58 encoding and decoding.
 
@@ -81,7 +84,6 @@ def b58decode_chk(v):
     result = b58decode(v)
     if result is None:
         return None
-    h3 = checksum(result[:-4])
     if result[-4:] == checksum(result[:-4]):
         return result[:-4]
     else:

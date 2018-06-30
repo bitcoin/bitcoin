@@ -1,5 +1,5 @@
-#!/usr/bin/env python2
-# Copyright (c) 2014-2015 The Bitcoin Core developers
+#!/usr/bin/env python3
+# Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,16 +10,15 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
-try:
-    import http.client as httplib
-except ImportError:
-    import httplib
-try:
-    import urllib.parse as urlparse
-except ImportError:
-    import urlparse
+import urllib.parse
 
 class NodeHandlingTest (BitcoinTestFramework):
+
+    def __init__(self):
+        super().__init__()
+        self.num_nodes = 4
+        self.setup_clean_chain = False
+
     def run_test(self):
         ###########################
         # setban/listbanned tests #
@@ -55,7 +54,8 @@ class NodeHandlingTest (BitcoinTestFramework):
         self.nodes[2].setban("2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/19", "add", 1000) #ban for 1000 seconds
         listBeforeShutdown = self.nodes[2].listbanned()
         assert_equal("192.168.0.1/32", listBeforeShutdown[2]['address']) #must be here
-        time.sleep(2) #make 100% sure we expired 192.168.0.1 node time
+        set_mocktime(get_mocktime() + 2) #make 100% sure we expired 192.168.0.1 node time
+        set_node_times(self.nodes, get_mocktime()) #make 100% sure we expired 192.168.0.1 node time
 
         #stop node
         stop_node(self.nodes[2], 2)
@@ -69,7 +69,7 @@ class NodeHandlingTest (BitcoinTestFramework):
         ###########################
         # RPC disconnectnode test #
         ###########################
-        url = urlparse.urlparse(self.nodes[1].url)
+        url = urllib.parse.urlparse(self.nodes[1].url)
         self.nodes[0].disconnectnode(url.hostname+":"+str(p2p_port(1)))
         time.sleep(2) #disconnecting a node needs a little bit of time
         for node in self.nodes[0].getpeerinfo():

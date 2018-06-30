@@ -10,6 +10,10 @@ The implementation is dependent on the following:
  - OpenSSL for base64 encoding. regular util.h libraries were not used for base64 encoding/decoding since they do not use secure allocation.
  - JSON Spirit for reading / writing RPC communications
 
+### A note about security
+
+Every connection to KeePassHTTP server is done via plain HTTP and even though protocol uses some internal encryption it should not be considered to be a highly secure one. This protocol has certain flaw which allow an attacker to decrypt your passwords when they manage to intercept communication between a KeePassHTTP server over a network connection (see [here](https://github.com/pfn/keepasshttp/issues/258) and [here](https://github.com/keepassxreboot/keepassxc/issues/147)). Dash Core therefore strictly limits communication between itself and KeePassHttp to your local computer. As long as your computer is not compromised, your wallet passphrase is as safe as if you would enter it directly.
+
 ### What's new
 
 The following new options are available for dashd and dash-qt:
@@ -51,4 +55,4 @@ At this point, the association is made. The next action depends on your particul
 
 At this point, the passphrase is stored in KeePassHttp. When Unlocking the wallet, one can use _keepass_ as the passphrase to trigger retrieval of the password. This works from the RPC commands as well as the GUI.
 
-Extended guide with screenshots is also available: https://dashtalk.org/threads/keepass-integration.3620/
+Extended guide with screenshots is also available: https://www.dash.org/forum/threads/keepass-integration.3620/

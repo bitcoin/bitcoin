@@ -42,15 +42,13 @@ static void MicroSleep(uint64_t n)
 
 BOOST_AUTO_TEST_CASE(manythreads)
 {
-    seed_insecure_rand(false);
-
     // Stress test: hundreds of microsecond-scheduled tasks,
     // serviced by 10 threads.
     //
     // So... ten shared counters, which if all the tasks execute
     // properly will sum to the number of tasks done.
-    // Each task adds or subtracts from one of the counters a
-    // random amount, and then schedules another task 0-1000
+    // Each task adds or subtracts a random amount from one of the
+    // counters, and then schedules another task 0-1000
     // microseconds in the future to subtract or add from
     // the counter -random_amount+1, so in the end the shared
     // counters should sum to the number of initial tasks performed.
@@ -58,7 +56,7 @@ BOOST_AUTO_TEST_CASE(manythreads)
 
     boost::mutex counterMutex[10];
     int counter[10] = { 0 };
-    boost::random::mt19937 rng(insecure_rand());
+    boost::random::mt19937 rng(42);
     boost::random::uniform_int_distribution<> zeroToNine(0, 9);
     boost::random::uniform_int_distribution<> randomMsec(-11, 1000);
     boost::random::uniform_int_distribution<> randomDelta(-1000, 1000);

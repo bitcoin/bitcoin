@@ -1,5 +1,5 @@
-#!/usr/bin/env python2
-# Copyright (c) 2014-2015 The Bitcoin Core developers
+#!/usr/bin/env python3
+# Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -22,6 +22,10 @@ SEQUENCE_LOCKTIME_MASK = 0x0000ffff
 NOT_FINAL_ERROR = "64: non-BIP68-final"
 
 class BIP68Test(BitcoinTestFramework):
+    def __init__(self):
+        super().__init__()
+        self.num_nodes = 2
+        self.setup_clean_chain = False
 
     def setup_network(self):
         self.nodes = []
@@ -35,28 +39,28 @@ class BIP68Test(BitcoinTestFramework):
         # Generate some coins
         self.nodes[0].generate(110)
 
-        print "Running test disable flag"
+        print("Running test disable flag")
         self.test_disable_flag()
 
-        print "Running test sequence-lock-confirmed-inputs"
+        print("Running test sequence-lock-confirmed-inputs")
         self.test_sequence_lock_confirmed_inputs()
 
-        print "Running test sequence-lock-unconfirmed-inputs"
+        print("Running test sequence-lock-unconfirmed-inputs")
         self.test_sequence_lock_unconfirmed_inputs()
 
-        print "Running test BIP68 not consensus before versionbits activation"
+        print("Running test BIP68 not consensus before versionbits activation")
         self.test_bip68_not_consensus()
 
-        print "Verifying nVersion=2 transactions aren't standard"
+        print("Verifying nVersion=2 transactions aren't standard")
         self.test_version2_relay(before_activation=True)
 
-        print "Activating BIP68 (and 112/113)"
+        print("Activating BIP68 (and 112/113)")
         self.activateCSV()
 
-        print "Verifying nVersion=2 transactions are now standard"
+        print("Verifying nVersion=2 transactions are now standard")
         self.test_version2_relay(before_activation=False)
 
-        print "Passed\n"
+        print("Passed\n")
 
     # Test that BIP68 is not in effect if tx version is 1, or if
     # the first sequence bit is set.
@@ -125,7 +129,7 @@ class BIP68Test(BitcoinTestFramework):
             random.shuffle(addresses)
             num_outputs = random.randint(1, max_outputs)
             outputs = {}
-            for i in xrange(num_outputs):
+            for i in range(num_outputs):
                 outputs[addresses[i]] = random.randint(1, 20)*0.01
             self.nodes[0].sendmany("", outputs)
             self.nodes[0].generate(1)
@@ -137,7 +141,7 @@ class BIP68Test(BitcoinTestFramework):
         # some of those inputs to be sequence locked (and randomly choose
         # between height/time locking). Small random chance of making the locks
         # all pass.
-        for i in xrange(400):
+        for i in range(400):
             # Randomly choose up to 10 inputs
             num_inputs = random.randint(1, 10)
             random.shuffle(utxos)
@@ -151,7 +155,7 @@ class BIP68Test(BitcoinTestFramework):
             tx = CTransaction()
             tx.nVersion = 2
             value = 0
-            for j in xrange(num_inputs):
+            for j in range(num_inputs):
                 sequence_value = 0xfffffffe # this disables sequence locks
 
                 # 50% chance we enable sequence locks
@@ -258,8 +262,8 @@ class BIP68Test(BitcoinTestFramework):
         # Now mine some blocks, but make sure tx2 doesn't get mined.
         # Use prioritisetransaction to lower the effective feerate to 0
         self.nodes[0].prioritisetransaction(tx2.hash, -1e15, int(-self.relayfee*COIN))
-        cur_time = int(time.time())
-        for i in xrange(10):
+        cur_time = get_mocktime()
+        for i in range(10):
             self.nodes[0].setmocktime(cur_time + 600)
             self.nodes[0].generate(1)
             cur_time += 600
@@ -324,7 +328,7 @@ class BIP68Test(BitcoinTestFramework):
         # tx3 to be removed.
         tip = int(self.nodes[0].getblockhash(self.nodes[0].getblockcount()-1), 16)
         height = self.nodes[0].getblockcount()
-        for i in xrange(2):
+        for i in range(2):
             block = create_block(tip, create_coinbase(height), cur_time)
             block.nVersion = 3
             block.rehash()
@@ -339,7 +343,7 @@ class BIP68Test(BitcoinTestFramework):
         assert(tx2.hash in mempool)
 
         # Reset the chain and get rid of the mocktimed-blocks
-        self.nodes[0].setmocktime(0)
+        self.nodes[0].setmocktime(get_mocktime())
         self.nodes[0].invalidateblock(self.nodes[0].getblockhash(cur_height+1))
         self.nodes[0].generate(10)
 
@@ -385,7 +389,7 @@ class BIP68Test(BitcoinTestFramework):
 
         # make a block that violates bip68; ensure that the tip updates
         tip = int(self.nodes[0].getbestblockhash(), 16)
-        block = create_block(tip, create_coinbase(self.nodes[0].getblockcount()+1))
+        block = create_block(tip, create_coinbase(self.nodes[0].getblockcount()+1), get_mocktime() + 600)
         block.nVersion = 3
         block.vtx.extend([tx1, tx2, tx3])
         block.hashMerkleRoot = block.calc_merkle_root()

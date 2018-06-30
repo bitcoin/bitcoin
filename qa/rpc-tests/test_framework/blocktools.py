@@ -1,8 +1,8 @@
+#!/usr/bin/env python3
 # blocktools.py - utilities for manipulating blocks and transactions
-#
-# Distributed under the MIT/X11 software license, see the accompanying
+# Copyright (c) 2015-2016 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#
 
 from .mininode import *
 from .script import CScript, OP_TRUE, OP_CHECKSIG
@@ -56,12 +56,27 @@ def create_coinbase(height, pubkey = None):
     coinbase.calc_sha256()
     return coinbase
 
-# Create a transaction with an anyone-can-spend output, that spends the
-# nth output of prevtx.
-def create_transaction(prevtx, n, sig, value):
+# Create a transaction.
+# If the scriptPubKey is not specified, make it anyone-can-spend.
+def create_transaction(prevtx, n, sig, value, scriptPubKey=CScript()):
     tx = CTransaction()
     assert(n < len(prevtx.vout))
     tx.vin.append(CTxIn(COutPoint(prevtx.sha256, n), sig, 0xffffffff))
-    tx.vout.append(CTxOut(value, b""))
+    tx.vout.append(CTxOut(value, scriptPubKey))
     tx.calc_sha256()
     return tx
+
+def get_legacy_sigopcount_block(block, fAccurate=True):
+    count = 0
+    for tx in block.vtx:
+        count += get_legacy_sigopcount_tx(tx, fAccurate)
+    return count
+
+def get_legacy_sigopcount_tx(tx, fAccurate=True):
+    count = 0
+    for i in tx.vout:
+        count += i.scriptPubKey.GetSigOpCount(fAccurate)
+    for j in tx.vin:
+        # scriptSig might be of type bytes, so convert to CScript for the moment
+        count += CScript(j.scriptSig).GetSigOpCount(fAccurate)
+    return count

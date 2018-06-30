@@ -1,3 +1,8 @@
+# Copyright (c) 2013-2016 The Bitcoin Core developers
+# Copyright (c) 2014-2018 The Dash Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 TESTS += test/test_dash
 bin_PROGRAMS += test/test_dash
 TEST_SRCDIR = test
@@ -8,16 +13,42 @@ EXTRA_DIST += \
 	test/bctest.py \
 	test/bitcoin-util-test.py \
 	test/data/bitcoin-util-test.json \
-	test/data/blanktx.hex \
+	test/data/blanktxv1.hex \
+	test/data/blanktxv1.json \
+	test/data/blanktxv2.hex \
+	test/data/blanktxv2.json \
 	test/data/tt-delin1-out.hex \
+	test/data/tt-delin1-out.json \
 	test/data/tt-delout1-out.hex \
+	test/data/tt-delout1-out.json \
 	test/data/tt-locktime317000-out.hex \
+	test/data/tt-locktime317000-out.json \
 	test/data/tx394b54bb.hex \
 	test/data/txcreate1.hex \
+	test/data/txcreate1.json \
 	test/data/txcreate2.hex \
+	test/data/txcreate2.json \
 	test/data/txcreatedata1.hex \
+	test/data/txcreatedata1.json \
 	test/data/txcreatedata2.hex \
-	test/data/txcreatesign.hex
+	test/data/txcreatedata2.json \
+	test/data/txcreatedata_seq0.hex \
+	test/data/txcreatedata_seq0.json \
+	test/data/txcreatedata_seq1.hex \
+	test/data/txcreatedata_seq1.json \
+	test/data/txcreatemultisig1.hex \
+	test/data/txcreatemultisig1.json \
+	test/data/txcreatemultisig2.hex \
+	test/data/txcreatemultisig2.json \
+	test/data/txcreateoutpubkey1.hex \
+	test/data/txcreateoutpubkey1.json \
+	test/data/txcreatescript1.hex \
+	test/data/txcreatescript1.json \
+	test/data/txcreatescript2.hex \
+	test/data/txcreatescript2.json \
+	test/data/txcreatesignv1.hex \
+	test/data/txcreatesignv1.json \
+	test/data/txcreatesignv2.hex
 
 JSON_TEST_FILES = \
   test/data/script_tests.json \
@@ -25,6 +56,8 @@ JSON_TEST_FILES = \
   test/data/base58_encode_decode.json \
   test/data/base58_keys_invalid.json \
   test/data/bip39_vectors.json \
+  test/data/proposals_valid.json \
+  test/data/proposals_invalid.json \
   test/data/tx_invalid.json \
   test/data/tx_valid.json \
   test/data/sighash.json
@@ -38,20 +71,23 @@ BITCOIN_TESTS =\
   test/scriptnum10.h \
   test/addrman_tests.cpp \
   test/alert_tests.cpp \
+  test/amount_tests.cpp \
   test/allocator_tests.cpp \
   test/base32_tests.cpp \
   test/base58_tests.cpp \
   test/base64_tests.cpp \
   test/bip32_tests.cpp \
   test/bip39_tests.cpp \
+  test/blockencodings_tests.cpp \
   test/bloom_tests.cpp \
   test/bswap_tests.cpp \
+  test/checkqueue_tests.cpp \
   test/cachemap_tests.cpp \
   test/cachemultimap_tests.cpp \
-  test/checkblock_tests.cpp \
   test/coins_tests.cpp \
   test/compress_tests.cpp \
   test/crypto_tests.cpp \
+  test/cuckoocache_tests.cpp \
   test/DoS_tests.cpp \
   test/getarg_tests.cpp \
   test/governance_validators_tests.cpp \
@@ -70,12 +106,14 @@ BITCOIN_TESTS =\
   test/policyestimator_tests.cpp \
   test/pow_tests.cpp \
   test/prevector_tests.cpp \
+  test/raii_event_tests.cpp \
   test/ratecheck_tests.cpp \
   test/reverselock_tests.cpp \
   test/rpc_tests.cpp \
   test/sanity_tests.cpp \
   test/scheduler_tests.cpp \
   test/script_P2SH_tests.cpp \
+  test/script_P2PK_tests.cpp \
   test/script_P2PKH_tests.cpp \
   test/script_tests.cpp \
   test/scriptnum_tests.cpp \
@@ -84,8 +122,12 @@ BITCOIN_TESTS =\
   test/sigopcount_tests.cpp \
   test/skiplist_tests.cpp \
   test/streams_tests.cpp \
+  test/subsidy_tests.cpp \
   test/test_dash.cpp \
   test/test_dash.h \
+  test/test_random.h \
+  test/testutil.cpp \
+  test/testutil.h \
   test/timedata_tests.cpp \
   test/transaction_tests.cpp \
   test/txvalidationcache_tests.cpp \
@@ -96,21 +138,23 @@ BITCOIN_TESTS =\
 
 if ENABLE_WALLET
 BITCOIN_TESTS += \
-  test/accounting_tests.cpp \
+  wallet/test/wallet_test_fixture.cpp \
+  wallet/test/wallet_test_fixture.h \
+  wallet/test/accounting_tests.cpp \
   wallet/test/wallet_tests.cpp \
-  test/rpc_wallet_tests.cpp
+  wallet/test/crypto_tests.cpp
 endif
 
 test_test_dash_SOURCES = $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
 test_test_dash_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -I$(builddir)/test/ $(TESTDEFS) $(EVENT_CFLAGS)
-test_test_dash_LDADD = $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) \
-  $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1)
+test_test_dash_LDADD = $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CONSENSUS) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) \
+  $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1) $(EVENT_LIBS)
 test_test_dash_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 if ENABLE_WALLET
 test_test_dash_LDADD += $(LIBBITCOIN_WALLET)
 endif
 
-test_test_dash_LDADD += $(LIBBITCOIN_CONSENSUS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
+test_test_dash_LDADD += $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
 test_test_dash_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) -static
 
 if ENABLE_ZMQ
@@ -125,6 +169,9 @@ CLEAN_BITCOIN_TEST = test/*.gcda test/*.gcno $(GENERATED_TEST_FILES)
 
 CLEANFILES += $(CLEAN_BITCOIN_TEST)
 
+# This file is problematic for out-of-tree builds if it exists.
+DISTCLEANFILES += test/buildenv.pyc
+
 dash_test: $(TEST_BINARY)
 
 dash_test_check: $(TEST_BINARY) FORCE
@@ -135,24 +182,28 @@ dash_test_clean : FORCE
 
 check-local:
 	@echo "Running test/bitcoin-util-test.py..."
-	$(AM_V_at)srcdir=$(srcdir) PYTHONPATH=$(builddir)/test $(srcdir)/test/bitcoin-util-test.py
+	$(AM_V_at)srcdir=$(srcdir) PYTHONPATH=$(builddir)/test $(PYTHON) $(srcdir)/test/bitcoin-util-test.py
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
 if EMBEDDED_UNIVALUE
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C univalue check
 endif
 
-%.json.h: %.json
+test/data/%.json.h: test/data/%.json
 	@$(MKDIR_P) $(@D)
-	@echo "namespace json_tests{" > $@
-	@echo "static unsigned const char $(*F)[] = {" >> $@
-	@$(HEXDUMP) -v -e '8/1 "0x%02x, "' -e '"\n"' $< | $(SED) -e 's/0x  ,//g' >> $@
-	@echo "};};" >> $@
+	@{ \
+	 echo "namespace json_tests{" && \
+	 echo "static unsigned const char $(*F)[] = {" && \
+	 $(HEXDUMP) -v -e '8/1 "0x%02x, "' -e '"\n"' $< | $(SED) -e 's/0x  ,//g' && \
+	 echo "};};"; \
+	} > "$@.new" && mv -f "$@.new" "$@"
 	@echo "Generated $@"
 
-%.raw.h: %.raw
+test/data/%.raw.h: test/data/%.raw
 	@$(MKDIR_P) $(@D)
-	@echo "namespace alert_tests{" > $@
-	@echo "static unsigned const char $(*F)[] = {" >> $@
-	@$(HEXDUMP) -v -e '8/1 "0x%02x, "' -e '"\n"' $< | $(SED) -e 's/0x  ,//g' >> $@
-	@echo "};};" >> $@
+	@{ \
+	 echo "namespace raw_tests{" && \
+	 echo "static unsigned const char $(*F)[] = {" && \
+	 $(HEXDUMP) -v -e '8/1 "0x%02x, "' -e '"\n"' $< | $(SED) -e 's/0x  ,//g' && \
+	 echo "};};"; \
+	} > "$@.new" && mv -f "$@.new" "$@"
 	@echo "Generated $@"

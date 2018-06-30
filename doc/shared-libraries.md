@@ -11,7 +11,7 @@ The interface is defined in the C header `dashconsensus.h` located in  `src/scri
 
 #### Version
 
-`dashconsensus_version` returns an `unsigned int` with the the API version *(currently at an experimental `0`)*.
+`dashconsensus_version` returns an `unsigned int` with the API version *(currently at an experimental `0`)*.
 
 #### Script Validation
 
@@ -30,6 +30,9 @@ The interface is defined in the C header `dashconsensus.h` located in  `src/scri
 - `dashconsensus_SCRIPT_FLAGS_VERIFY_NONE`
 - `dashconsensus_SCRIPT_FLAGS_VERIFY_P2SH` - Evaluate P2SH ([BIP16](https://github.com/bitcoin/bips/blob/master/bip-0016.mediawiki)) subscripts
 - `dashconsensus_SCRIPT_FLAGS_VERIFY_DERSIG` - Enforce strict DER ([BIP66](https://github.com/bitcoin/bips/blob/master/bip-0066.mediawiki)) compliance
+- `dashconsensus_SCRIPT_FLAGS_VERIFY_NULLDUMMY` - Enforce NULLDUMMY ([BIP147](https://github.com/bitcoin/bips/blob/master/bip-0147.mediawiki))
+- `dashconsensus_SCRIPT_FLAGS_VERIFY_CHECKLOCKTIMEVERIFY` - Enable CHECKLOCKTIMEVERIFY ([BIP65](https://github.com/bitcoin/bips/blob/master/bip-0065.mediawiki))
+- `dashconsensus_SCRIPT_FLAGS_VERIFY_CHECKSEQUENCEVERIFY` - Enable CHECKSEQUENCEVERIFY ([BIP112](https://github.com/bitcoin/bips/blob/master/bip-0112.mediawiki))
 
 ##### Errors
 - `dashconsensus_ERR_OK` - No errors with input parameters *(see the return value of `dashconsensus_verify_script` for the verification status)*

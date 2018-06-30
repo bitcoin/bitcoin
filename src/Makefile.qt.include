@@ -1,5 +1,10 @@
+# Copyright (c) 2013-2016 The Bitcoin Core developers
+# Copyright (c) 2014-2018 The Dash Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 bin_PROGRAMS += qt/dash-qt
-EXTRA_LIBRARIES += qt/libbitcoinqt.a
+EXTRA_LIBRARIES += qt/libdashqt.a
 
 # dash qt core #
 QT_TS = \
@@ -11,8 +16,10 @@ QT_TS = \
   qt/locale/dash_fr.ts \
   qt/locale/dash_it.ts \
   qt/locale/dash_ja.ts \
+  qt/locale/dash_nl.ts \
   qt/locale/dash_pl.ts \
   qt/locale/dash_pt.ts \
+  qt/locale/dash_pt_BR.ts \
   qt/locale/dash_ru.ts \
   qt/locale/dash_sk.ts \
   qt/locale/dash_sv.ts \
@@ -30,6 +37,7 @@ QT_FORMS_UI = \
   qt/forms/intro.ui \
   qt/forms/modaloverlay.ui \
   qt/forms/masternodelist.ui \
+  qt/forms/qrdialog.ui \
   qt/forms/openuridialog.ui \
   qt/forms/optionsdialog.ui \
   qt/forms/overviewpage.ui \
@@ -69,6 +77,7 @@ QT_MOC_CPP = \
   qt/moc_overviewpage.cpp \
   qt/moc_peertablemodel.cpp \
   qt/moc_paymentserver.cpp \
+  qt/moc_qrdialog.cpp \
   qt/moc_qvalidatedlineedit.cpp \
   qt/moc_qvaluecombobox.cpp \
   qt/moc_receivecoinsdialog.cpp \
@@ -142,6 +151,7 @@ BITCOIN_QT_H = \
   qt/paymentserver.h \
   qt/peertablemodel.h \
   qt/platformstyle.h \
+  qt/qrdialog.h \
   qt/qvalidatedlineedit.h \
   qt/qvaluecombobox.h \
   qt/receivecoinsdialog.h \
@@ -169,6 +179,7 @@ BITCOIN_QT_H = \
 
 RES_ICONS = \
   qt/res/icons/bitcoin.ico \
+  qt/res/icons/bitcoin_testnet.ico \
   qt/res/icons/bitcoin.png \
   qt/res/icons/chevron.png \
   qt/res/icons/warning.png \
@@ -214,6 +225,7 @@ RES_ICONS = \
   qt/res/icons/drkblue/synced.png \
   qt/res/icons/drkblue/transaction0.png \
   qt/res/icons/drkblue/transaction2.png \
+  qt/res/icons/drkblue/transaction_abandoned.png \
   qt/res/icons/drkblue/transaction_conflicted.png \
   qt/res/icons/drkblue/tx_inout.png \
   qt/res/icons/drkblue/tx_input.png \
@@ -224,7 +236,6 @@ RES_ICONS = \
   qt/res/icons/drkblue/verify.png \
   qt/res/icons/drkblue/fontbigger.png \
   qt/res/icons/drkblue/fontsmaller.png \
-  qt/res/icons/drkblue/transaction_abandoned.png \
   qt/res/icons/drkblue/network_disabled.png \
   qt/res/icons/crownium/add.png \
   qt/res/icons/crownium/address-book.png \
@@ -268,6 +279,7 @@ RES_ICONS = \
   qt/res/icons/crownium/synced.png \
   qt/res/icons/crownium/transaction0.png \
   qt/res/icons/crownium/transaction2.png \
+  qt/res/icons/crownium/transaction_abandoned.png \
   qt/res/icons/crownium/transaction_conflicted.png \
   qt/res/icons/crownium/tx_inout.png \
   qt/res/icons/crownium/tx_input.png \
@@ -278,7 +290,6 @@ RES_ICONS = \
   qt/res/icons/crownium/verify.png \
   qt/res/icons/crownium/fontbigger.png \
   qt/res/icons/crownium/fontsmaller.png \
-  qt/res/icons/crownium/transaction_abandoned.png \
   qt/res/icons/crownium/network_disabled.png \
   qt/res/icons/light/add.png \
   qt/res/icons/light/address-book.png \
@@ -334,6 +345,60 @@ RES_ICONS = \
   qt/res/icons/light/fontsmaller.png \
   qt/res/icons/light/transaction_abandoned.png \
   qt/res/icons/light/network_disabled.png \
+  qt/res/icons/light-retro/add.png \
+  qt/res/icons/light-retro/address-book.png \
+  qt/res/icons/light-retro/browse.png \
+  qt/res/icons/light-retro/clock1.png \
+  qt/res/icons/light-retro/clock2.png \
+  qt/res/icons/light-retro/clock3.png \
+  qt/res/icons/light-retro/clock4.png \
+  qt/res/icons/light-retro/clock5.png \
+  qt/res/icons/light-retro/configure.png \
+  qt/res/icons/light-retro/connect0_16.png \
+  qt/res/icons/light-retro/connect1_16.png \
+  qt/res/icons/light-retro/connect2_16.png \
+  qt/res/icons/light-retro/connect3_16.png \
+  qt/res/icons/light-retro/connect4_16.png \
+  qt/res/icons/light-retro/debugwindow.png \
+  qt/res/icons/light-retro/drkblue_editpaste.png \
+  qt/res/icons/light-retro/drkblue_address-book.png \
+  qt/res/icons/light-retro/drkblue_editcopy.png \
+  qt/res/icons/light-retro/drkblue_remove.png \
+  qt/res/icons/light-retro/edit.png \
+  qt/res/icons/light-retro/editcopy.png \
+  qt/res/icons/light-retro/editpaste.png \
+  qt/res/icons/light-retro/export.png \
+  qt/res/icons/light-retro/eye.png \
+  qt/res/icons/light-retro/eye_minus.png \
+  qt/res/icons/light-retro/eye_plus.png \
+  qt/res/icons/light-retro/filesave.png \
+  qt/res/icons/light-retro/hd_disabled.png \
+  qt/res/icons/light-retro/hd_enabled.png \
+  qt/res/icons/light-retro/history.png \
+  qt/res/icons/light-retro/key.png \
+  qt/res/icons/light-retro/lock_closed.png \
+  qt/res/icons/light-retro/lock_open.png \
+  qt/res/icons/light-retro/masternodes.png \
+  qt/res/icons/light-retro/overview.png \
+  qt/res/icons/light-retro/quit.png \
+  qt/res/icons/light-retro/receive.png \
+  qt/res/icons/light-retro/remove.png \
+  qt/res/icons/light-retro/send.png \
+  qt/res/icons/light-retro/synced.png \
+  qt/res/icons/light-retro/transaction0.png \
+  qt/res/icons/light-retro/transaction2.png \
+  qt/res/icons/light-retro/transaction_conflicted.png \
+  qt/res/icons/light-retro/tx_inout.png \
+  qt/res/icons/light-retro/tx_input.png \
+  qt/res/icons/light-retro/tx_output.png \
+  qt/res/icons/light-retro/tx_mined.png \
+  qt/res/icons/light-retro/about.png \
+  qt/res/icons/light-retro/about_qt.png \
+  qt/res/icons/light-retro/verify.png \
+  qt/res/icons/light-retro/fontbigger.png \
+  qt/res/icons/light-retro/fontsmaller.png \
+  qt/res/icons/light-retro/transaction_abandoned.png \
+  qt/res/icons/light-retro/network_disabled.png \
   qt/res/icons/trad/add.png \
   qt/res/icons/trad/address-book.png \
   qt/res/icons/trad/browse.png \
@@ -376,6 +441,7 @@ RES_ICONS = \
   qt/res/icons/trad/synced.png \
   qt/res/icons/trad/transaction0.png \
   qt/res/icons/trad/transaction2.png \
+  qt/res/icons/trad/transaction_abandoned.png \
   qt/res/icons/trad/transaction_conflicted.png \
   qt/res/icons/trad/tx_inout.png \
   qt/res/icons/trad/tx_input.png \
@@ -386,10 +452,9 @@ RES_ICONS = \
   qt/res/icons/trad/verify.png \
   qt/res/icons/trad/fontbigger.png \
   qt/res/icons/trad/fontsmaller.png \
-  qt/res/icons/trad/transaction_abandoned.png \
   qt/res/icons/trad/network_disabled.png
 
-BITCOIN_QT_CPP = \
+BITCOIN_QT_BASE_CPP = \
   qt/bantablemodel.cpp \
   qt/bitcoinaddressvalidator.cpp \
   qt/bitcoinamountfield.cpp \
@@ -414,12 +479,9 @@ BITCOIN_QT_CPP = \
   qt/trafficgraphwidget.cpp \
   qt/utilitydialog.cpp
 
-if TARGET_WINDOWS
-BITCOIN_QT_CPP += qt/winshutdownmonitor.cpp
-endif
+BITCOIN_QT_WINDOWS_CPP = qt/winshutdownmonitor.cpp
 
-if ENABLE_WALLET
-BITCOIN_QT_CPP += \
+BITCOIN_QT_WALLET_CPP = \
   qt/addressbookpage.cpp \
   qt/addresstablemodel.cpp \
   qt/askpassphrasedialog.cpp \
@@ -432,6 +494,7 @@ BITCOIN_QT_CPP += \
   qt/overviewpage.cpp \
   qt/paymentrequestplus.cpp \
   qt/paymentserver.cpp \
+  qt/qrdialog.cpp \
   qt/receivecoinsdialog.cpp \
   qt/receiverequestdialog.cpp \
   qt/recentrequeststablemodel.cpp \
@@ -448,6 +511,13 @@ BITCOIN_QT_CPP += \
   qt/walletmodel.cpp \
   qt/walletmodeltransaction.cpp \
   qt/walletview.cpp
+
+BITCOIN_QT_CPP = $(BITCOIN_QT_BASE_CPP)
+if TARGET_WINDOWS
+BITCOIN_QT_CPP += $(BITCOIN_QT_WINDOWS_CPP)
+endif
+if ENABLE_WALLET
+BITCOIN_QT_CPP += $(BITCOIN_QT_WALLET_CPP)
 endif
 
 RES_IMAGES = \
@@ -490,6 +560,19 @@ RES_IMAGES = \
   qt/res/images/light/drkblue_rightArrow_small.png \
   qt/res/images/light/drkblue_qtreeview_selected.png \
   qt/res/images/light/drkblue_walletFrame_bg.png \
+  qt/res/images/light-retro/about.png \
+  qt/res/images/light-retro/splash.png \
+  qt/res/images/light-retro/splash_testnet.png \
+  qt/res/images/light-retro/dash_logo_horizontal.png \
+  qt/res/images/light-retro/unchecked.png \
+  qt/res/images/light-retro/checked.png \
+  qt/res/images/light-retro/drkblue_downArrow.png \
+  qt/res/images/light-retro/drkblue_downArrow_small.png \
+  qt/res/images/light-retro/drkblue_upArrow_small.png \
+  qt/res/images/light-retro/drkblue_leftArrow_small.png \
+  qt/res/images/light-retro/drkblue_rightArrow_small.png \
+  qt/res/images/light-retro/drkblue_qtreeview_selected.png \
+  qt/res/images/light-retro/drkblue_walletFrame_bg.png \
   qt/res/images/trad/about.png \
   qt/res/images/trad/splash.png \
   qt/res/images/trad/splash_testnet.png \
@@ -507,23 +590,25 @@ RES_CSS = \
   qt/res/css/crownium.css \
   qt/res/css/light.css \
   qt/res/css/light-hires.css \
+  qt/res/css/light-retro.css \
+  qt/res/css/light-hires-retro.css \
   qt/res/css/trad.css
 
-RES_MOVIES = $(wildcard qt/res/movies/spinner-*.png)
+RES_MOVIES = $(wildcard $(srcdir)/qt/res/movies/spinner-*.png)
 
 BITCOIN_RC = qt/res/dash-qt-res.rc
 
 BITCOIN_QT_INCLUDES = -I$(builddir)/qt -I$(srcdir)/qt -I$(srcdir)/qt/forms \
   -I$(builddir)/qt/forms -DQT_NO_KEYWORDS
 
-qt_libbitcoinqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) \
+qt_libdashqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) \
   $(QT_INCLUDES) $(QT_DBUS_INCLUDES) $(PROTOBUF_CFLAGS) $(QR_CFLAGS)
-qt_libbitcoinqt_a_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
+qt_libdashqt_a_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
 
-qt_libbitcoinqt_a_SOURCES = $(BITCOIN_QT_CPP) $(BITCOIN_QT_H) $(QT_FORMS_UI) \
+qt_libdashqt_a_SOURCES = $(BITCOIN_QT_CPP) $(BITCOIN_QT_H) $(QT_FORMS_UI) \
   $(QT_QRC) $(QT_QRC_LOCALE) $(QT_TS) $(PROTOBUF_PROTO) $(RES_ICONS) $(RES_IMAGES) $(RES_CSS) $(RES_MOVIES)
 
-nodist_qt_libbitcoinqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) \
+nodist_qt_libdashqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) \
   $(PROTOBUF_H) $(QT_QRC_CPP) $(QT_QRC_LOCALE_CPP)
 
 # forms/foo.h -> forms/ui_foo.h
@@ -532,7 +617,7 @@ QT_FORMS_H=$(join $(dir $(QT_FORMS_UI)),$(addprefix ui_, $(notdir $(QT_FORMS_UI:
 # Most files will depend on the forms and moc files as includes. Generate them
 # before anything else.
 $(QT_MOC): $(QT_FORMS_H)
-$(qt_libbitcoinqt_a_OBJECTS) $(qt_dash_qt_OBJECTS) : | $(QT_MOC)
+$(qt_libdashqt_a_OBJECTS) $(qt_dash_qt_OBJECTS) : | $(QT_MOC)
 
 #Generating these with a half-written protobuf header leads to wacky results.
 #This makes sure it's done.
@@ -551,14 +636,14 @@ endif
 if TARGET_WINDOWS
   qt_dash_qt_SOURCES += $(BITCOIN_RC)
 endif
-qt_dash_qt_LDADD = qt/libbitcoinqt.a $(LIBBITCOIN_SERVER)
+qt_dash_qt_LDADD = qt/libdashqt.a $(LIBBITCOIN_SERVER)
 if ENABLE_WALLET
 qt_dash_qt_LDADD += $(LIBBITCOIN_WALLET)
 endif
 if ENABLE_ZMQ
 qt_dash_qt_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
 endif
-qt_dash_qt_LDADD += $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) \
+qt_dash_qt_LDADD += $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CONSENSUS) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) \
   $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(LIBSECP256K1) \
   $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
 qt_dash_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
@@ -569,31 +654,32 @@ QT_QM=$(QT_TS:.ts=.qm)
 
 SECONDARY: $(QT_QM)
 
-qt/dashstrings.cpp: $(libbitcoin_server_a_SOURCES) $(libbitcoin_wallet_a_SOURCES) $(libbitcoin_common_a_SOURCES) $(libbitcoin_zmq_a_SOURCES) $(libbitcoin_consensus_a_SOURCES) $(libbitcoin_util_a_SOURCES)
+$(srcdir)/qt/dashstrings.cpp: $(libdash_server_a_SOURCES) $(libdash_wallet_a_SOURCES) $(libdash_common_a_SOURCES) $(libdash_zmq_a_SOURCES) $(libdash_consensus_a_SOURCES) $(libdash_util_a_SOURCES)
 	@test -n $(XGETTEXT) || echo "xgettext is required for updating translations"
-	$(AM_V_GEN) cd $(srcdir); XGETTEXT=$(XGETTEXT) ../share/qt/extract_strings_qt.py $^
+	$(AM_V_GEN) cd $(srcdir); XGETTEXT=$(XGETTEXT) PACKAGE_NAME="$(PACKAGE_NAME)" COPYRIGHT_HOLDERS="$(COPYRIGHT_HOLDERS)" COPYRIGHT_HOLDERS_SUBSTITUTION="$(COPYRIGHT_HOLDERS_SUBSTITUTION)" $(PYTHON) ../share/qt/extract_strings_qt.py $^
 
-translate: qt/dashstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(BITCOIN_QT_CPP) qt/dash.cpp $(BITCOIN_QT_H) $(BITCOIN_MM)
+translate: $(srcdir)/qt/dashstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(BITCOIN_QT_BASE_CPP) qt/dash.cpp $(BITCOIN_QT_WINDOWS_CPP) $(BITCOIN_QT_WALLET_CPP) $(BITCOIN_QT_H) $(BITCOIN_MM)
 	@test -n $(LUPDATE) || echo "lupdate is required for updating translations"
-	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(LUPDATE) $^ -locations relative -no-obsolete -ts qt/locale/dash_en.ts
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(LUPDATE) $^ -locations relative -no-obsolete -ts $(srcdir)/qt/locale/dash_en.ts
 
 $(QT_QRC_LOCALE_CPP): $(QT_QRC_LOCALE) $(QT_QM)
 	@test -f $(RCC)
-	@test -f $(@D)/$(<F) || cp -f $< $(@D)
-	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) $(RCCFLAGS) -name dash_locale $(@D)/$(<F) | \
+	@cp -f $< $(@D)/temp_$(<F)
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) $(RCCFLAGS) -name dash_locale $(@D)/temp_$(<F) | \
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
+	@rm $(@D)/temp_$(<F)
 
 $(QT_QRC_CPP): $(QT_QRC) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_CSS) $(RES_MOVIES) $(PROTOBUF_H)
 	@test -f $(RCC)
 	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) $(RCCFLAGS) -name dash $< | \
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
 
-CLEAN_QT = $(nodist_qt_libbitcoinqt_a_SOURCES) $(QT_QM) $(QT_FORMS_H) qt/*.gcda qt/*.gcno
+CLEAN_QT = $(nodist_qt_libdashqt_a_SOURCES) $(QT_QM) $(QT_FORMS_H) qt/*.gcda qt/*.gcno
 
 CLEANFILES += $(CLEAN_QT)
 
 dash_qt_clean: FORCE
-	rm -f $(CLEAN_QT) $(qt_libbitcoinqt_a_OBJECTS) $(qt_dash_qt_OBJECTS) qt/dash-qt$(EXEEXT) $(LIBBITCOINQT)
+	rm -f $(CLEAN_QT) $(qt_libdashqt_a_OBJECTS) $(qt_dash_qt_OBJECTS) qt/dash-qt$(EXEEXT) $(LIBBITCOINQT)
 
 dash_qt : qt/dash-qt$(EXEEXT)
 

@@ -1,5 +1,5 @@
-#!/usr/bin/env python2
-# Copyright (c) 2014-2015 The Bitcoin Core developers
+#!/usr/bin/env python3
+# Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -68,10 +68,15 @@ def make_utxo(node, amount, confirmed=True, scriptPubKey=CScript([1])):
 
 class ReplaceByFeeTest(BitcoinTestFramework):
 
+    def __init__(self):
+        super().__init__()
+        self.num_nodes = 1
+        self.setup_clean_chain = False
+
     def setup_network(self):
         self.nodes = []
         self.nodes.append(start_node(0, self.options.tmpdir, ["-maxorphantx=1000", "-debug",
-                                                              "-relaypriority=0", "-whitelist=127.0.0.1",
+                                                              "-whitelist=127.0.0.1",
                                                               "-limitancestorcount=50",
                                                               "-limitancestorsize=101",
                                                               "-limitdescendantcount=200",
@@ -82,34 +87,34 @@ class ReplaceByFeeTest(BitcoinTestFramework):
     def run_test(self):
         make_utxo(self.nodes[0], 1*COIN)
 
-        print "Running test simple doublespend..."
+        print("Running test simple doublespend...")
         self.test_simple_doublespend()
 
-        print "Running test doublespend chain..."
+        print("Running test doublespend chain...")
         self.test_doublespend_chain()
 
-        print "Running test doublespend tree..."
+        print("Running test doublespend tree...")
         self.test_doublespend_tree()
 
-        print "Running test replacement feeperkb..."
+        print("Running test replacement feeperkb...")
         self.test_replacement_feeperkb()
 
-        print "Running test spends of conflicting outputs..."
+        print("Running test spends of conflicting outputs...")
         self.test_spends_of_conflicting_outputs()
 
-        print "Running test new unconfirmed inputs..."
+        print("Running test new unconfirmed inputs...")
         self.test_new_unconfirmed_inputs()
 
-        print "Running test too many replacements..."
+        print("Running test too many replacements...")
         self.test_too_many_replacements()
 
-        print "Running test opt-in..."
+        print("Running test opt-in...")
         self.test_opt_in()
 
-        print "Running test prioritised transactions..."
+        print("Running test prioritised transactions...")
         self.test_prioritised_transactions()
 
-        print "Passed\n"
+        print("Passed\n")
 
     def test_simple_doublespend(self):
         """Simple doublespend"""
@@ -388,7 +393,6 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         utxo = make_utxo(self.nodes[0], initial_nValue)
         fee = int(0.0001*COIN)
         split_value = int((initial_nValue-fee)/(MAX_REPLACEMENT_LIMIT+1))
-        actual_fee = initial_nValue - split_value*(MAX_REPLACEMENT_LIMIT+1)
 
         outputs = []
         for i in range(MAX_REPLACEMENT_LIMIT+1):
@@ -459,7 +463,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         except JSONRPCException as exp:
             assert_equal(exp.error['code'], -26)
         else:
-            print tx1b_txid
+            print(tx1b_txid)
             assert(False)
 
         tx1_outpoint = make_utxo(self.nodes[0], int(1.1*COIN))

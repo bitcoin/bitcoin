@@ -1,3 +1,7 @@
+// Copyright (c) 2015 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #include "merkle.h"
 #include "hash.h"
 #include "utilstrencodings.h"
@@ -156,7 +160,7 @@ uint256 BlockMerkleRoot(const CBlock& block, bool* mutated)
     std::vector<uint256> leaves;
     leaves.resize(block.vtx.size());
     for (size_t s = 0; s < block.vtx.size(); s++) {
-        leaves[s] = block.vtx[s].GetHash();
+        leaves[s] = block.vtx[s]->GetHash();
     }
     return ComputeMerkleRoot(leaves, mutated);
 }
@@ -166,7 +170,7 @@ std::vector<uint256> BlockMerkleBranch(const CBlock& block, uint32_t position)
     std::vector<uint256> leaves;
     leaves.resize(block.vtx.size());
     for (size_t s = 0; s < block.vtx.size(); s++) {
-        leaves[s] = block.vtx[s].GetHash();
+        leaves[s] = block.vtx[s]->GetHash();
     }
     return ComputeMerkleBranch(leaves, position);
 }
