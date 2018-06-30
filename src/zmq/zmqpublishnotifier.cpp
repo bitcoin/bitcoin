@@ -75,9 +75,13 @@ bool CZMQAbstractPublishNotifier::Initialize(void *pcontext)
             zmqError("Failed to create socket");
             return false;
         }
-        
-        int HWMlimit = 0;
-        zmq_setsockopt(psocket, ZMQ_SNDHWM, &HWMlimit, sizeof(HWMlimit));
+
+        int hwm = gArgs.GetArg("-zmqhwm", 10000);
+        zmq_setsockopt(psocket, ZMQ_SNDHWM, &hwm, sizeof(hwm));
+        int sndhwm;
+        size_t sndhwm_size = sizeof(sndhwm);
+        zmq_getsockopt (psocket, ZMQ_SNDHWM, &sndhwm, &sndhwm_size);
+        LogPrintf("ZMQ SNDHWM: %d\n", sndhwm);
 
         int rc = zmq_bind(psocket, address.c_str());
         if (rc!=0)
