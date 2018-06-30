@@ -1,5 +1,5 @@
-Dash Core version 0.12.3
-========================
+Dash Core version 0.12.3.1
+==========================
 
 Release is now available from:
 
@@ -148,7 +148,7 @@ Command-line options
 --------------------
 
 New cmd-line options:
-- introduced in Dash Core 0.12.3: `allowprivatenet`, `bip9params`, `sporkaddr`, `devnet`;
+- introduced in Dash Core 0.12.3.1: `allowprivatenet`, `bip9params`, `sporkaddr`, `devnet`;
 - backported from Bitcoin Core 0.13/0.14: `blockreconstructionextratxn`, `maxtimeadjustment`, `maxtipage`,
 `incrementalrelayfee`, `dustrelayfee`, `blockmintxfee`.
 
@@ -205,10 +205,10 @@ The alert system was also kept in place for now. We are going to continue backpo
 A lot of refactoring, code cleanups and other small fixes were done in this release again. We are going to continue making code more reliable and easier to review in future releases as well.
 
 
-0.12.3 Change log
-=================
+0.12.3.1 Change log
+===================
 
-See detailed [change log](https://github.com/dashpay/dash/compare/v0.12.2.3...dashpay:v0.12.3) below.
+See detailed [change log](https://github.com/dashpay/dash/compare/v0.12.2.3...dashpay:v0.12.3.1) below.
 
 ### Governance:
 - [`6c79c348e`](https://github.com/dashpay/dash/commit/6c79c348e) Drop "MAY, 2018" clause for proposal validation on mainnet (#2101)
@@ -339,6 +339,7 @@ See detailed [change log](https://github.com/dashpay/dash/compare/v0.12.2.3...da
 - [`e30009c31`](https://github.com/dashpay/dash/commit/e30009c31) Fix qt and fontconfig depends #1884
 
 ### Docs:
+- [`a80ef0423`](https://github.com/dashpay/dash/commit/a80ef0423) Update release notes (#2155)
 - [`5e1149a65`](https://github.com/dashpay/dash/commit/5e1149a65) Update release notes (#2142)
 - [`d46dc0f56`](https://github.com/dashpay/dash/commit/d46dc0f56) Update release notes (#2135)
 - [`d076ad4ce`](https://github.com/dashpay/dash/commit/d076ad4ce) Update release notes and staging tree in README (#2116)
