@@ -33,7 +33,6 @@ buffering or reassembly.
 
 ## Prerequisites
 
-
 The ZeroMQ feature in Chaincoin Core requires the ZeroMQ API >= 4.0.0
 [libzmq](https://github.com/zeromq/libzmq/releases).
 For version information, see [dependencies.md](dependencies.md).
