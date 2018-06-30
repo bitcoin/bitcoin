@@ -262,6 +262,7 @@ See detailed [change log](https://github.com/dashpay/dash/compare/v0.12.2.3...da
 - [`1d620d1f9`](https://github.com/dashpay/dash/commit/1d620d1f9) Fix calls to AcceptToMemoryPool in PS submodules (#1823)
 
 ### Network:
+- [`fda74b4a8`](https://github.com/dashpay/dash/commit/fda74b4a8) Use correct protocol when serializing messages in reply to `getdata` (#2157)
 - [`6bf389afb`](https://github.com/dashpay/dash/commit/6bf389afb) Don't drop mnb-s for outdated MNs (#2131)
 - [`c60079b59`](https://github.com/dashpay/dash/commit/c60079b59) ThreadOpenMasternodeConnections should process only one mn at a time (#2080)
 - [`a648d6eff`](https://github.com/dashpay/dash/commit/a648d6eff) Drop delayed headers logic and fix duplicate initial headers sync by handling block inv correctly (#2032)
@@ -329,6 +330,7 @@ See detailed [change log](https://github.com/dashpay/dash/compare/v0.12.2.3...da
 - [`1cffb8a7e`](https://github.com/dashpay/dash/commit/1cffb8a7e) Include p2pk into addressindex (#1839)
 
 ### GUI:
+- [`7ab5b4a28`](https://github.com/dashpay/dash/commit/7ab5b4a28) Update/optimize images (#2147)
 - [`82805a6c6`](https://github.com/dashpay/dash/commit/82805a6c6) swap out old logo for T&C logo in Qt GUI (#2081)
 - [`e9f63073d`](https://github.com/dashpay/dash/commit/e9f63073d) Warn when more than 50% of masternodes are using newer version (#1963)
 - [`653600352`](https://github.com/dashpay/dash/commit/653600352) Draw text on top of everything else in TrafficGraphWidget (#1944)
@@ -337,6 +339,7 @@ See detailed [change log](https://github.com/dashpay/dash/compare/v0.12.2.3...da
 - [`e30009c31`](https://github.com/dashpay/dash/commit/e30009c31) Fix qt and fontconfig depends #1884
 
 ### Docs:
+- [`5e1149a65`](https://github.com/dashpay/dash/commit/5e1149a65) Update release notes (#2142)
 - [`d46dc0f56`](https://github.com/dashpay/dash/commit/d46dc0f56) Update release notes (#2135)
 - [`d076ad4ce`](https://github.com/dashpay/dash/commit/d076ad4ce) Update release notes and staging tree in README (#2116)
 - [`ca2eae6e6`](https://github.com/dashpay/dash/commit/ca2eae6e6) 12.3 release notes draft (#2045)
@@ -350,6 +353,8 @@ See detailed [change log](https://github.com/dashpay/dash/compare/v0.12.2.3...da
 - [`3dc62106b`](https://github.com/dashpay/dash/commit/3dc62106b) [Docs] Doxygen config update (#1796)
 
 ### Other fixes and improvements:
+- [`4dbde218b`](https://github.com/dashpay/dash/commit/4dbde218b) Fix p2pkh tests asserts (#2153)
+- [`26c891f67`](https://github.com/dashpay/dash/commit/26c891f67) Fix block value/payee validation in lite mode (#2148)
 - [`9af9d57b4`](https://github.com/dashpay/dash/commit/9af9d57b4) Release 0.12.3 (#2145)
 - [`8e6364694`](https://github.com/dashpay/dash/commit/8e6364694) Bump SERIALIZATION_VERSION_STRINGs (#2136)
 - [`641070521`](https://github.com/dashpay/dash/commit/641070521) Fix 2 small issues in sporks module (#2133)
