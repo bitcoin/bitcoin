@@ -7,8 +7,8 @@
 
 #include <crypto/sha512.h>
 
+#include <cstddef> // size_t
 #include <stdint.h>
-#include <stdlib.h>
 
 /** A hasher class for HMAC-SHA-512. */
 class CHMAC_SHA512
