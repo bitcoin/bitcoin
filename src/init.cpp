@@ -1235,6 +1235,145 @@ bool AppInitLockDataDirectory()
     return true;
 }
 
+static bool AppInitLoadBlockIndex(const CChainParams& chainparams, int64_t nCoinDBCache, int64_t nBlockTreeDBCache, bool fReindexChainState, bool& fReset, std::string& strLoadError)
+{
+    const int64_t load_block_index_start_time = GetTimeMillis();
+    bool is_coinsview_empty;
+    try {
+        LOCK(cs_main);
+        UnloadBlockIndex();
+        pcoinsTip.reset();
+        pcoinsdbview.reset();
+        pcoinscatcher.reset();
+        // new CBlockTreeDB tries to delete the existing file, which
+        // fails if it's still open from the previous loop. Close it first:
+        pblocktree.reset();
+        pblocktree.reset(new CBlockTreeDB(nBlockTreeDBCache, false, fReset));
+
+        if (fReset) {
+            pblocktree->WriteReindexing(true);
+            //If we're reindexing in prune mode, wipe away unusable block files and all undo data files
+            if (fPruneMode)
+                CleanupBlockRevFiles();
+        }
+
+        if (ShutdownRequested()) return false;
+
+        // LoadBlockIndex will load fHavePruned if we've ever removed a
+        // block file from disk.
+        // Note that it also sets fReindex based on the disk flag!
+        // From here on out fReindex and fReset mean something different!
+        if (!LoadBlockIndex(chainparams)) {
+            strLoadError = _("Error loading block database");
+            return false;
+        }
+
+        // If the loaded chain has a wrong genesis, bail out immediately
+        // (we're likely using a testnet datadir, or the other way around).
+        if (!mapBlockIndex.empty() && !LookupBlockIndex(chainparams.GetConsensus().hashGenesisBlock)) {
+            fReset = true; // don't retry
+            strLoadError = _("Incorrect or no genesis block found. Wrong datadir for network?");
+            return false;
+        }
+
+        // Check for changed -prune state.  What we are concerned about is a user who has pruned blocks
+        // in the past, but is now trying to run unpruned.
+        if (fHavePruned && !fPruneMode) {
+            strLoadError = _("You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain");
+            return false;
+        }
+
+        // At this point blocktree args are consistent with what's on disk.
+        // If we're not mid-reindex (based on disk + args), add a genesis block on disk
+        // (otherwise we use the one already on disk).
+        // This is called again in ThreadImport after the reindex completes.
+        if (!fReindex && !LoadGenesisBlock(chainparams)) {
+            strLoadError = _("Error initializing block database");
+            return false;
+        }
+
+        // At this point we're either in reindex or we've loaded a useful
+        // block tree into mapBlockIndex!
+
+        pcoinsdbview.reset(new CCoinsViewDB(nCoinDBCache, false, fReset || fReindexChainState));
+        pcoinscatcher.reset(new CCoinsViewErrorCatcher(pcoinsdbview.get()));
+
+        // If necessary, upgrade from older database format.
+        // This is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
+        if (!pcoinsdbview->Upgrade()) {
+            strLoadError = _("Error upgrading chainstate database");
+            return false;
+        }
+
+        // ReplayBlocks is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
+        if (!ReplayBlocks(chainparams, pcoinsdbview.get())) {
+            strLoadError = _("Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.");
+            return false;
+        }
+
+        // The on-disk coinsdb is now in a good state, create the cache
+        pcoinsTip.reset(new CCoinsViewCache(pcoinscatcher.get()));
+
+        is_coinsview_empty = fReset || fReindexChainState || pcoinsTip->GetBestBlock().IsNull();
+        if (!is_coinsview_empty) {
+            // LoadChainTip sets ::ChainActive() based on pcoinsTip's best block
+            if (!LoadChainTip(chainparams)) {
+                strLoadError = _("Error initializing block database");
+                return false;
+            }
+            assert(::ChainActive().Tip() != nullptr);
+        }
+    } catch (const std::exception& e) {
+        LogPrintf("%s\n", e.what());
+        strLoadError = _("Error opening block database");
+        return false;
+    }
+
+    if (!fReset) {
+        // Note that RewindBlockIndex MUST run even if we're about to -reindex-chainstate.
+        // It both disconnects blocks based on ::ChainActive(), and drops block data in
+        // mapBlockIndex based on lack of available witness data.
+        uiInterface.InitMessage(_("Rewinding blocks..."));
+        if (!RewindBlockIndex(chainparams)) {
+            strLoadError = _("Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain");
+            return false;
+        }
+    }
+
+    try {
+        LOCK(cs_main);
+        if (!is_coinsview_empty) {
+            uiInterface.InitMessage(_("Verifying blocks..."));
+            if (fHavePruned && gArgs.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS) > MIN_BLOCKS_TO_KEEP) {
+                LogPrintf("Prune: pruned datadir may not have more than %d blocks; only checking available blocks\n",
+                    MIN_BLOCKS_TO_KEEP);
+            }
+
+            CBlockIndex* tip = ::ChainActive().Tip();
+            RPCNotifyBlockChange(true, tip);
+            if (tip && tip->nTime > GetAdjustedTime() + 2 * 60 * 60) {
+                strLoadError = _("The block database contains a block which appears to be from the future. "
+                        "This may be due to your computer's date and time being set incorrectly. "
+                        "Only rebuild the block database if you are sure that your computer's date and time are correct");
+                return false;
+            }
+
+            if (!CVerifyDB().VerifyDB(chainparams, pcoinsdbview.get(), gArgs.GetArg("-checklevel", DEFAULT_CHECKLEVEL),
+                          gArgs.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS))) {
+                strLoadError = _("Corrupted block database detected");
+                return false;
+            }
+        }
+    } catch (const std::exception& e) {
+        LogPrintf("%s\n", e.what());
+        strLoadError = _("Error opening block database");
+        return false;
+    }
+
+    LogPrintf(" block index %15dms\n", GetTimeMillis() - load_block_index_start_time);
+    return true;
+}
+
 bool AppInitMain(InitInterfaces& interfaces)
 {
     const CChainParams& chainparams = Params();
@@ -1494,142 +1633,7 @@ bool AppInitMain(InitInterfaces& interfaces)
 
         uiInterface.InitMessage(_("Loading block index..."));
 
-        do {
-            const int64_t load_block_index_start_time = GetTimeMillis();
-            bool is_coinsview_empty;
-            try {
-                LOCK(cs_main);
-                UnloadBlockIndex();
-                pcoinsTip.reset();
-                pcoinsdbview.reset();
-                pcoinscatcher.reset();
-                // new CBlockTreeDB tries to delete the existing file, which
-                // fails if it's still open from the previous loop. Close it first:
-                pblocktree.reset();
-                pblocktree.reset(new CBlockTreeDB(nBlockTreeDBCache, false, fReset));
-
-                if (fReset) {
-                    pblocktree->WriteReindexing(true);
-                    //If we're reindexing in prune mode, wipe away unusable block files and all undo data files
-                    if (fPruneMode)
-                        CleanupBlockRevFiles();
-                }
-
-                if (ShutdownRequested()) break;
-
-                // LoadBlockIndex will load fHavePruned if we've ever removed a
-                // block file from disk.
-                // Note that it also sets fReindex based on the disk flag!
-                // From here on out fReindex and fReset mean something different!
-                if (!LoadBlockIndex(chainparams)) {
-                    strLoadError = _("Error loading block database");
-                    break;
-                }
-
-                // If the loaded chain has a wrong genesis, bail out immediately
-                // (we're likely using a testnet datadir, or the other way around).
-                if (!mapBlockIndex.empty() && !LookupBlockIndex(chainparams.GetConsensus().hashGenesisBlock)) {
-                    return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
-                }
-
-                // Check for changed -prune state.  What we are concerned about is a user who has pruned blocks
-                // in the past, but is now trying to run unpruned.
-                if (fHavePruned && !fPruneMode) {
-                    strLoadError = _("You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain");
-                    break;
-                }
-
-                // At this point blocktree args are consistent with what's on disk.
-                // If we're not mid-reindex (based on disk + args), add a genesis block on disk
-                // (otherwise we use the one already on disk).
-                // This is called again in ThreadImport after the reindex completes.
-                if (!fReindex && !LoadGenesisBlock(chainparams)) {
-                    strLoadError = _("Error initializing block database");
-                    break;
-                }
-
-                // At this point we're either in reindex or we've loaded a useful
-                // block tree into mapBlockIndex!
-
-                pcoinsdbview.reset(new CCoinsViewDB(nCoinDBCache, false, fReset || fReindexChainState));
-                pcoinscatcher.reset(new CCoinsViewErrorCatcher(pcoinsdbview.get()));
-
-                // If necessary, upgrade from older database format.
-                // This is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
-                if (!pcoinsdbview->Upgrade()) {
-                    strLoadError = _("Error upgrading chainstate database");
-                    break;
-                }
-
-                // ReplayBlocks is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
-                if (!ReplayBlocks(chainparams, pcoinsdbview.get())) {
-                    strLoadError = _("Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.");
-                    break;
-                }
-
-                // The on-disk coinsdb is now in a good state, create the cache
-                pcoinsTip.reset(new CCoinsViewCache(pcoinscatcher.get()));
-
-                is_coinsview_empty = fReset || fReindexChainState || pcoinsTip->GetBestBlock().IsNull();
-                if (!is_coinsview_empty) {
-                    // LoadChainTip sets ::ChainActive() based on pcoinsTip's best block
-                    if (!LoadChainTip(chainparams)) {
-                        strLoadError = _("Error initializing block database");
-                        break;
-                    }
-                    assert(::ChainActive().Tip() != nullptr);
-                }
-            } catch (const std::exception& e) {
-                LogPrintf("%s\n", e.what());
-                strLoadError = _("Error opening block database");
-                break;
-            }
-
-            if (!fReset) {
-                // Note that RewindBlockIndex MUST run even if we're about to -reindex-chainstate.
-                // It both disconnects blocks based on ::ChainActive(), and drops block data in
-                // mapBlockIndex based on lack of available witness data.
-                uiInterface.InitMessage(_("Rewinding blocks..."));
-                if (!RewindBlockIndex(chainparams)) {
-                    strLoadError = _("Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain");
-                    break;
-                }
-            }
-
-            try {
-                LOCK(cs_main);
-                if (!is_coinsview_empty) {
-                    uiInterface.InitMessage(_("Verifying blocks..."));
-                    if (fHavePruned && gArgs.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS) > MIN_BLOCKS_TO_KEEP) {
-                        LogPrintf("Prune: pruned datadir may not have more than %d blocks; only checking available blocks\n",
-                            MIN_BLOCKS_TO_KEEP);
-                    }
-
-                    CBlockIndex* tip = ::ChainActive().Tip();
-                    RPCNotifyBlockChange(true, tip);
-                    if (tip && tip->nTime > GetAdjustedTime() + 2 * 60 * 60) {
-                        strLoadError = _("The block database contains a block which appears to be from the future. "
-                                "This may be due to your computer's date and time being set incorrectly. "
-                                "Only rebuild the block database if you are sure that your computer's date and time are correct");
-                        break;
-                    }
-
-                    if (!CVerifyDB().VerifyDB(chainparams, pcoinsdbview.get(), gArgs.GetArg("-checklevel", DEFAULT_CHECKLEVEL),
-                                  gArgs.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS))) {
-                        strLoadError = _("Corrupted block database detected");
-                        break;
-                    }
-                }
-            } catch (const std::exception& e) {
-                LogPrintf("%s\n", e.what());
-                strLoadError = _("Error opening block database");
-                break;
-            }
-
-            fLoaded = true;
-            LogPrintf(" block index %15dms\n", GetTimeMillis() - load_block_index_start_time);
-        } while(false);
-
+        fLoaded = AppInitLoadBlockIndex(chainparams, nCoinDBCache, nBlockTreeDBCache, fReindexChainState, fReset, strLoadError);
         if (!fLoaded && !ShutdownRequested()) {
             // first suggest a reindex
             if (!fReset) {
