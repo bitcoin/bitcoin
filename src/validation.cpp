@@ -3177,8 +3177,17 @@ static int GetWitnessCommitmentIndex(const CBlock& block)
 {
     int commitpos = -1;
     if (!block.vtx.empty()) {
-        for (size_t o = 0; o < block.vtx[0]->vout.size(); o++) {
-            if (block.vtx[0]->vout[o].scriptPubKey.size() >= 38 && block.vtx[0]->vout[o].scriptPubKey[0] == OP_RETURN && block.vtx[0]->vout[o].scriptPubKey[1] == 0x24 && block.vtx[0]->vout[o].scriptPubKey[2] == 0xaa && block.vtx[0]->vout[o].scriptPubKey[3] == 0x21 && block.vtx[0]->vout[o].scriptPubKey[4] == 0xa9 && block.vtx[0]->vout[o].scriptPubKey[5] == 0xed) {
+        const CTransactionRef& tx = block.vtx[0];
+        // Note there can be multiple outputs matching the pattern; the last one counts
+        for (size_t o = 0; o < tx->vout.size(); o++) {
+            const CScript& scriptPubKey = tx->vout[o].scriptPubKey;
+            if (scriptPubKey.size() >= 38 &&
+                scriptPubKey[0] == OP_RETURN &&
+                scriptPubKey[1] == 0x24 &&
+                scriptPubKey[2] == 0xaa &&
+                scriptPubKey[3] == 0x21 &&
+                scriptPubKey[4] == 0xa9 &&
+                scriptPubKey[5] == 0xed) {
                 commitpos = o;
             }
         }
