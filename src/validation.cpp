@@ -1080,8 +1080,10 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus:
         return error("%s: Deserialize or I/O error - %s at %s", __func__, e.what(), pos.ToString());
     }
 
+    bool isFork = block.nTime >= 1527625482;
+
     // Check the header
-    if (!CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
+    if (!CheckProofOfWork(block.GetHash(), block.nBits, isFork, consensusParams))
         return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
 
     return true;
@@ -2066,6 +2068,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         vPos.push_back(std::make_pair(tx.GetHash(), pos));
         pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
     }
+    
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
     LogPrint(BCLog::BENCH, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime3 - nTime2), 0.001 * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime3 - nTime2) / (nInputs-1), nTimeConnect * 0.000001);
 
@@ -2082,12 +2085,9 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
     // Check premine tx-out at hardfork height
     const auto& coinbaseVouts = block.vtx[0]->vout;
-    if (isPremineBlock && chainparams.GetConsensus().premineAddress != "")
+    if (isPremineBlock)
     {
-        const auto it = std::find(
-            coinbaseVouts.cbegin(), coinbaseVouts.cend(),
-            CTxOut(premineValue, GetScriptForDestination(CBitcoinAddress(chainparams.GetConsensus().premineAddress).Get())));
-        if (it == coinbaseVouts.cend())
+        if (coinbaseVouts[0].nValue < premineValue)
         {
             return state.DoS(100, error("ConnectBlock(): coinbase has no premine (actual=%d vs premine=%d)", block.vtx[0]-> GetValueOut(), premineValue), REJECT_INVALID, "bad-cb-no-premine");
         }
@@ -3099,8 +3099,10 @@ static bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, 
 
 static bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true)
 {
+    bool isFork = block.nTime >= 1527625482;
+
     // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
+    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, isFork, consensusParams))
         return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
 
     return true;

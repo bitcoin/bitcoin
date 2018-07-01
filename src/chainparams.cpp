@@ -12,6 +12,8 @@
 #include <utilstrencodings.h>
 #include <assert.h>
 #include <chainparamsseeds.h>
+#include <script/standard.h>
+#include <pubkey.h>
 
 static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
@@ -79,7 +81,6 @@ public:
         consensus.BIP65Height = 388381; // 000000000000000004c2b624ed5d7756c508d90fd0da2c7c679febfa6c4735f0
         consensus.BIP66Height = 363725; // 00000000000000000379eaa19dce8c9b722d46ae6a57c2f1a988119488b50931
         consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.powLimitPremine = uint256S("0007ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.powLimitStart = uint256S("0000000fffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nWarmUpWindow = 4096;
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
@@ -110,8 +111,8 @@ public:
         consensus.defaultAssumeValid = uint256S("0x0000000000000000005214481d2d96f898e3d5416e43359c145944a909d242e0"); //506067
 
         consensus.hardforkHeight = 525001;
-        consensus.premineAddress = "Mf8RVs3b4MM2s4pY9W5pyqTgbNPTVE8qT6";
         consensus.premineValue = 1050000 * COIN * COIN_RATIO; // 5%
+        consensus.premineAddress = "BfrckfYi7xaSGmMec4T2keu6xczQSx7rxo";
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -127,7 +128,7 @@ public:
         pchMessageStart[1] = 0xb2;
         pchMessageStart[2] = 0xbe;
         pchMessageStart[3] = 0xd8;
-
+        
         nDefaultPort = 6403;
         nPruneAfterHeight = 100000;
 
@@ -139,8 +140,8 @@ public:
         // Note that of those with the service bits flag, most only support a subset of possible options
         // vSeeds.emplace_back("", true);
         
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,51);
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,43);
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,26);
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,51);
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,128);
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4};
@@ -204,7 +205,6 @@ public:
         consensus.BIP65Height = 581885; // 00000000007f6655f22f98e72ed80d8b06dc761d5da09df0fa1dc4be4f861eb6
         consensus.BIP66Height = 330776; // 000000002104c8c45e99a8853285a3b592602a3ccde2b832481da85e9e4ba182
         consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.powLimitPremine = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.powLimitStart = uint256S("0000000fffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nWarmUpWindow = 1024;
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
@@ -236,8 +236,8 @@ public:
         consensus.defaultAssumeValid = uint256S("0x0000000002e9e7b00e1f6dc5123a04aad68dd0f0968d8c7aa45f6640795c37b1"); //1135275
 
         consensus.hardforkHeight = 1200000;
-        consensus.premineAddress = "mh7CayYx3J8ofEU5zSZPqJJV65d8ijkJpm";
         consensus.premineValue = 2000000 * COIN * COIN_RATIO;
+        consensus.premineAddress = "BfrckfYi7xaSGmMec4T2keu6xczQSx7rxo";
 
         pchBitcoinMessageStart[0] = 0x0b;
         pchBitcoinMessageStart[1] = 0x11;
@@ -304,7 +304,6 @@ public:
         consensus.BIP65Height = 1351; // BIP65 activated on regtest (Used in rpc activation tests)
         consensus.BIP66Height = 1251; // BIP66 activated on regtest (Used in rpc activation tests)
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.powLimitPremine = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.powLimitStart = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nWarmUpWindow = 1024;
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
@@ -331,8 +330,8 @@ public:
         consensus.defaultAssumeValid = uint256S("0x00");
 
         consensus.hardforkHeight = 1000;
-        consensus.premineAddress = "";
         consensus.premineValue = 2000000 * COIN * COIN_RATIO;
+        consensus.premineAddress = "BfrckfYi7xaSGmMec4T2keu6xczQSx7rxo";
 
         pchBitcoinMessageStart[0] = 0xfa;
         pchBitcoinMessageStart[1] = 0xbf;

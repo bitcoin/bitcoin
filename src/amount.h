@@ -29,3 +29,4 @@ static const CAmount MAX_MONEY = 21000000 * COIN * COIN_RATIO;
 inline bool MoneyRange(const CAmount& nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 
 #endif //  BITCOIN_AMOUNT_H
+

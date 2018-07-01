@@ -104,19 +104,10 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
     const auto isHardfork = nHeight >= params.hardforkHeight;
 
-    // Premine block
-    if (isHardfork)
+    // Pow limit start for warm-up period
+    if (isHardfork && nHeight < params.hardforkHeight + params.nWarmUpWindow)
     {
-        if (nHeight == params.hardforkHeight)
-        {
-            return UintToArith256(params.powLimitPremine).GetCompact();
-        }
-
-        // Pow limit start for warm-up period.
-        if (nHeight < params.hardforkHeight + params.nWarmUpWindow)
-        {
-            return UintToArith256(params.powLimitStart).GetCompact();
-        }
+        return UintToArith256(params.powLimitStart).GetCompact();
     }
 
     if (params.fPowNoRetargeting) return pindexLast->nBits;
@@ -178,7 +169,7 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
     return bnNew.GetCompact();
 }
 
-bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params& params)
+bool CheckProofOfWork(uint256 hash, unsigned int nBits, bool ifForked, const Consensus::Params& params)
 {
     bool fNegative;
     bool fOverflow;
@@ -187,7 +178,7 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
     bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
 
     // Check range
-    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(params.powLimit)) {
+    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(ifForked ? params.powLimitStart : params.powLimit)) {
         return false;
     }
 
