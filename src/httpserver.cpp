@@ -13,9 +13,9 @@
 #include <sync.h>
 #include <ui_interface.h>
 
+#include <cstdlib> // free, size_t
 #include <memory>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include <sys/types.h>

@@ -15,6 +15,7 @@
 #include <version.h>
 
 #include <atomic>
+#include <cstdlib> // free
 #include <map>
 #include <memory>
 #include <string>

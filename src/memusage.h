@@ -7,8 +7,7 @@
 
 #include <indirectmap.h>
 
-#include <stdlib.h>
-
+#include <cstddef> // size_t
 #include <map>
 #include <memory>
 #include <set>

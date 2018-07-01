@@ -64,6 +64,8 @@
 #include <zmq/zmqnotificationinterface.h>
 #endif
 
+#include <cstdlib> // abort, atoi, size_t
+
 bool fFeeEstimatesInitialized = false;
 static const bool DEFAULT_PROXYRANDOMIZE = true;
 static const bool DEFAULT_REST_ENABLE = false;

@@ -11,6 +11,7 @@
 #include <utilmoneystr.h>
 #include <test/test_bitcoin.h>
 
+#include <cstdlib> // exit, EXIT_SUCCESS
 #include <stdint.h>
 #include <vector>
 #ifndef WIN32
@@ -1090,7 +1091,7 @@ static void TestOtherProcess(fs::path dirname, std::string lockname, int fd)
             break;
         case ExitCommand:
             close(fd);
-            exit(0);
+            exit(EXIT_SUCCESS);
         default:
             assert(0);
         }

@@ -11,6 +11,8 @@
 #include <QImage>
 #include <QPalette>
 
+#include <cstdlib> // abs
+
 static const struct {
     const char *platformId;
     /** Show images on push buttons */

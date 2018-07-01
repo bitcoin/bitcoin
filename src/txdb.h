@@ -11,6 +11,7 @@
 #include <chain.h>
 #include <primitives/block.h>
 
+#include <cstddef> // size_t
 #include <map>
 #include <memory>
 #include <string>

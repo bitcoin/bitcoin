@@ -5,8 +5,8 @@
 #ifndef BITCOIN_CRYPTO_CHACHA20_H
 #define BITCOIN_CRYPTO_CHACHA20_H
 
+#include <cstddef> // size_t
 #include <stdint.h>
-#include <stdlib.h>
 
 /** A PRNG class for ChaCha20. */
 class ChaCha20

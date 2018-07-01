@@ -37,6 +37,7 @@
 
 #include <walletinitinterface.h>
 
+#include <cstdlib> // EXIT_FAILURE, EXIT_SUCCESS, exit
 #include <memory>
 #include <stdint.h>
 

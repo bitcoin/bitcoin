@@ -14,6 +14,7 @@
 #include <ui_interface.h>
 #include <init.h>
 
+#include <cstdlib> // _Exit, EXIT_SUCCESS
 #include <stdint.h>
 
 #include <boost/thread.hpp>
@@ -125,7 +126,7 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
                 static FastRandomContext rng;
                 if (rng.randrange(crash_simulate) == 0) {
                     LogPrintf("Simulating a crash. Goodbye.\n");
-                    _Exit(0);
+                    _Exit(EXIT_SUCCESS);
                 }
             }
         }

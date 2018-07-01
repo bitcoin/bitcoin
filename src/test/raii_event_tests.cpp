@@ -8,7 +8,7 @@
 // It would probably be ideal to define dummy test(s) that report skipped, but boost::test doesn't seem to make that practical (at least not in versions available with common distros)
 
 #include <map>
-#include <stdlib.h>
+#include <cstdlib> // malloc, free, size_t
 
 #include <support/events.h>
 

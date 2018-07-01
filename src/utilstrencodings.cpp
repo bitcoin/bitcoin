@@ -7,7 +7,7 @@
 
 #include <tinyformat.h>
 
-#include <cstdlib>
+#include <cstdlib> // strto*, atoi, size_t
 #include <cstring>
 #include <errno.h>
 #include <limits>

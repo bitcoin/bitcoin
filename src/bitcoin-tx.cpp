@@ -22,6 +22,7 @@
 #include <utilmoneystr.h>
 #include <utilstrencodings.h>
 
+#include <cstdlib> // EXIT_FAILURE, EXIT_SUCCESS, atoi
 #include <memory>
 #include <stdio.h>
 

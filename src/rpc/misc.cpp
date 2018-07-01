@@ -26,6 +26,7 @@
 #endif
 #include <warnings.h>
 
+#include <cstdlib> // free, size_t
 #include <stdint.h>
 #ifdef HAVE_MALLOC_INFO
 #include <malloc.h>
