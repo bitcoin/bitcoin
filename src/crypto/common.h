@@ -9,8 +9,8 @@
 #include <config/bitcoin-config.h>
 #endif
 
+#include <cstring> // memcpy
 #include <stdint.h>
-#include <string.h>
 
 #include <compat/endian.h>
 

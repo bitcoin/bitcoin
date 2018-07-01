@@ -14,6 +14,7 @@
 #include <utilstrencodings.h>
 
 #include <atomic>
+#include <cstring> // memset
 
 #ifndef WIN32
 #include <fcntl.h>

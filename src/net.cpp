@@ -25,6 +25,7 @@
 #else
 #include <fcntl.h>
 #endif
+#include <cstring> // memcpy, strcmp
 
 #ifdef USE_UPNP
 #include <miniupnpc/miniupnpc.h>

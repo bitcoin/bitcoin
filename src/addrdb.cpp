@@ -14,6 +14,8 @@
 #include <tinyformat.h>
 #include <util.h>
 
+#include <cstring> // memcmp
+
 namespace {
 
 template <typename Stream, typename Data>

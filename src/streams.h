@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <assert.h>
+#include <cstring> // memcpy
 #include <ios>
 #include <limits>
 #include <map>
@@ -18,7 +19,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string>
-#include <string.h>
 #include <utility>
 #include <vector>
 

@@ -10,6 +10,7 @@
 #include <script/standard.h>
 #include <util.h>
 
+#include <cstring> // memcpy
 #include <string>
 #include <vector>
 

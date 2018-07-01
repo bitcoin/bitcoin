@@ -12,6 +12,8 @@
 #include <script/script.h>
 #include <uint256.h>
 
+#include <cstring> // memcmp, size_t
+
 typedef std::vector<unsigned char> valtype;
 
 namespace {

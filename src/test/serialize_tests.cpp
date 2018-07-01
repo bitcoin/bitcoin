@@ -7,6 +7,7 @@
 #include <hash.h>
 #include <test/test_bitcoin.h>
 
+#include <cstring> // memcpy, strcmp
 #include <stdint.h>
 
 #include <boost/test/unit_test.hpp>

@@ -30,6 +30,7 @@
 #include <utilmoneystr.h>
 #include <utilstrencodings.h>
 
+#include <cstring> // memcmp, strstr
 #include <memory>
 
 #if defined(NDEBUG)

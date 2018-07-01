@@ -6,7 +6,7 @@
 
 #include <crypto/common.h>
 
-#include <string.h>
+#include <cstring> // memset
 
 // Internal implementation code.
 namespace

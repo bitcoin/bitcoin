@@ -9,6 +9,8 @@
 #include <pubkey.h>
 #include <script/standard.h>
 
+#include <cstring> // memcpy
+
 /*
  * These check for scripts for which a special case with a shorter encoding is defined.
  * They are implemented separately from the CScript test, as these test for exact byte

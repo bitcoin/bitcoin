@@ -6,7 +6,7 @@
 #include <config/bitcoin-config.h>
 #endif
 
-#include <cstddef>
+#include <cstring> // memmove, memcpy, size_t
 
 #if defined(HAVE_SYS_SELECT_H)
 #include <sys/select.h>

@@ -6,9 +6,9 @@
 #define BITCOIN_PREVECTOR_H
 
 #include <assert.h>
+#include <cstring> // memcpy, memset, memmove
 #include <stdlib.h>
 #include <stdint.h>
-#include <string.h>
 
 #include <cstddef>
 #include <iterator>

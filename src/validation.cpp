@@ -41,6 +41,7 @@
 #include <validationinterface.h>
 #include <warnings.h>
 
+#include <cstring> // memcmp, memcpy
 #include <future>
 #include <sstream>
 

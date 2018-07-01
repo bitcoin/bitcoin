@@ -8,6 +8,8 @@
 #include <secp256k1.h>
 #include <secp256k1_recovery.h>
 
+#include <cstring> // memcpy, memset
+
 namespace
 {
 /* Global secp256k1_context object used for verification. */

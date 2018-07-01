@@ -7,7 +7,7 @@
 #define BITCOIN_UINT256_H
 
 #include <assert.h>
-#include <cstring>
+#include <cstring> // memcpy, memset, memcmp
 #include <stdexcept>
 #include <stdint.h>
 #include <string>

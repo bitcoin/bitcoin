@@ -5,7 +5,7 @@
 
 #include <support/cleanse.h>
 
-#include <cstring>
+#include <cstring> // memset
 
 #if defined(_MSC_VER)
 #include <Windows.h> // For SecureZeroMemory.

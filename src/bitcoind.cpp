@@ -22,6 +22,7 @@
 
 #include <boost/thread.hpp>
 
+#include <cstring> // strerror
 #include <stdio.h>
 
 /* Introduction text for doxygen: */

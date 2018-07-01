@@ -6,7 +6,7 @@
 #include <config/bitcoin-config.h>
 #endif
 
-#include <cstring>
+#include <cstring> // memchr
 
 #if HAVE_DECL_STRNLEN == 0
 size_t strnlen( const char *start, size_t max_len)

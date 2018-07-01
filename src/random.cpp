@@ -14,6 +14,7 @@
 #include <logging.h>  // for LogPrint()
 #include <utiltime.h> // for GetTime()
 
+#include <cstring> // memcpy, memset
 #include <stdlib.h>
 #include <chrono>
 #include <thread>
