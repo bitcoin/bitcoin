@@ -13,8 +13,8 @@
 #include <boost/variant/static_visitor.hpp>
 
 #include <assert.h>
-#include <string.h>
 #include <algorithm>
+#include <cstddef> // size_t
 
 namespace
 {

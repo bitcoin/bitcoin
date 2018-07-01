@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <assert.h>
+#include <cstddef> // size_t
 #include <ios>
 #include <limits>
 #include <map>
@@ -17,7 +18,6 @@
 #include <set>
 #include <stdint.h>
 #include <string>
-#include <string.h>
 #include <utility>
 #include <vector>
 
