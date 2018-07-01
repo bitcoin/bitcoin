@@ -6,6 +6,7 @@
 
 #include <net.h>
 
+#include <cstdlib> // exit, EXIT_SUCCESS, EXIT_FAILURE
 #include <memory>
 
 #include <boost/test/unit_test.hpp>

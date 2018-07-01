@@ -13,7 +13,7 @@
 #include <vector>
 #include <deque>
 #include <set>
-#include <stdlib.h>
+#include <cstdlib> // free, atoi, strtol, size_t
 
 #include <boost/bind.hpp>
 #include <boost/signals2/signal.hpp>

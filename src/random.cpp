@@ -14,7 +14,7 @@
 #include <logging.h>  // for LogPrint()
 #include <utiltime.h> // for GetTime()
 
-#include <stdlib.h>
+#include <cstdlib> // abort, size_t
 #include <chrono>
 #include <thread>
 

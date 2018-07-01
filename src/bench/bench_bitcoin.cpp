@@ -11,6 +11,7 @@
 #include <utilstrencodings.h>
 #include <validation.h>
 
+#include <cstdlib> // EXIT_FAILURE, EXIT_SUCCESS
 #include <memory>
 
 static const int64_t DEFAULT_BENCH_EVALUATIONS = 5;

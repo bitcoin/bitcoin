@@ -77,6 +77,8 @@
 #include <openssl/crypto.h>
 #include <openssl/rand.h>
 #include <openssl/conf.h>
+
+#include <cstdlib> // atoi, getenv, system, size_t
 #include <thread>
 
 // Application startup time (used for uptime calculation)

@@ -20,6 +20,8 @@
 #include <script/standard.h>
 #include <util.h>
 
+#include <cstdlib> // getenv
+
 #ifdef WIN32
 #ifdef _WIN32_WINNT
 #undef _WIN32_WINNT

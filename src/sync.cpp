@@ -9,6 +9,7 @@
 
 #include <stdio.h>
 
+#include <cstdlib> // abort
 #include <map>
 #include <memory>
 #include <set>

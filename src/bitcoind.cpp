@@ -22,6 +22,7 @@
 
 #include <boost/thread.hpp>
 
+#include <cstdlib> // EXIT_FAILURE, EXIT_SUCCESS
 #include <stdio.h>
 
 /* Introduction text for doxygen: */
