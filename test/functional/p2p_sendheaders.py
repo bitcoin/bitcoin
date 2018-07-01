@@ -301,6 +301,7 @@ class SendHeadersTest(BitcoinTestFramework):
                 test_node.clear_block_announcements()  # since we requested headers...
             elif i == 2:
                 # this time announce own block via headers
+                inv_node.clear_block_announcements()
                 height = self.nodes[0].getblockcount()
                 last_time = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['time']
                 block_time = last_time + 1
@@ -310,6 +311,7 @@ class SendHeadersTest(BitcoinTestFramework):
                 test_node.wait_for_getdata([new_block.sha256])
                 test_node.send_message(msg_block(new_block))
                 test_node.sync_with_ping()  # make sure this block is processed
+                wait_until(lambda: inv_node.block_announced, timeout=60, lock=mininode_lock)
                 inv_node.clear_block_announcements()
                 test_node.clear_block_announcements()
 
