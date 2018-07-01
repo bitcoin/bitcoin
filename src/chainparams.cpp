@@ -78,8 +78,8 @@ public:
         consensus.BIP16Height = 0;
         consensus.BIP34Height = 0;
         consensus.BIP34Hash = uint256S("6d2d7d525900712451b9697d0b5b2304ebae6efb349540da445bf575c0159969");
-        consensus.BIP65Height = 379155; // Dobbscoin: X-Day 2018
-        consensus.BIP66Height = 379155; // No more 0.10 mining, all 0.16, aiming for Maximum Sloth Networking Support
+        consensus.BIP65Height = 525000; // Dobbscoin: X-Day 2018
+        consensus.BIP66Height = 525000; // No more 0.10 mining, all 0.16, aiming for Maximum Sloth Networking Support
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 10 * 60;
