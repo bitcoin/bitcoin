@@ -309,7 +309,7 @@ bool TxIndex::EraseBlock(const CBlock& block)
             }
 
             ColdStakeIndexOutputKey ok(tx->GetHash(), n);
-            batch.Erase(ok);
+            batch.Erase(std::make_pair(DB_TXINDEX_CSOUTPUT, ok));
             erasedCSOuts.insert(COutPoint(ok.m_txnid, ok.m_n));
         }
         for (const auto &in : tx->vin) {
@@ -319,7 +319,7 @@ bool TxIndex::EraseBlock(const CBlock& block)
             if (erasedCSOuts.count(in.prevout)) {
                 continue;
             }
-            if (m_db->Read(ok, ov)) {
+            if (m_db->Read(std::make_pair(DB_TXINDEX_CSOUTPUT, ok), ov)) {
                 ov.m_spend_height = -1;
                 ov.m_spend_txid.SetNull();
                 batch.Write(std::make_pair(DB_TXINDEX_CSOUTPUT, ok), ov);

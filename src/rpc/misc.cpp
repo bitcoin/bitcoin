@@ -274,9 +274,9 @@ static UniValue setmocktime(const JSONRPCRequest& request)
     // ensure all call sites of GetTime() are accessing this safely.
     LOCK(cs_main);
 
-    bool isOffset = request.params.size() > 1 ? GetBool(request.params[0]) : false;
+    bool isOffset = request.params.size() > 1 ? GetBool(request.params[1]) : false;
 
-    RPCTypeCheck(request.params, {UniValue::VNUM});
+    RPCTypeCheck(request.params, {UniValue::VNUM, UniValue::VBOOL}, true);
 
     if (isOffset)
         SetMockTimeOffset(request.params[0].get_int64());

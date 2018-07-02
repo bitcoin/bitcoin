@@ -203,6 +203,7 @@ INSIGHT_SCRIPTS = [
     'feature_ins_timestampindex.py',
     'feature_ins_spentindex.py',
     'feature_ins_txindex.py',
+    'feature_ins_csindex.py',
 ]
 
 # Place EXTENDED_SCRIPTS first since it has the 3 longest running tests

@@ -115,7 +115,6 @@ class WalletParticlTest(ParticlTestFramework):
         assert(fFound)
 
 
-
         ro = nodes[0].extkey('deriveAccount', '2nd account')
         assert(ro['result'] == 'Success.')
         assert(account0_id != ro['account'])
@@ -167,8 +166,7 @@ class WalletParticlTest(ParticlTestFramework):
         except JSONRPCException as e:
             assert('Wallet locked' in e.error['message'])
 
-        ro = nodes[0].walletpassphrase('qwerty123', 300)
-
+        nodes[0].walletpassphrase('qwerty123', 300)
         ro = nodes[0].extkey('list')
         assert(len(ro) == 3) # 1 loose key (master) + 2 accounts
 

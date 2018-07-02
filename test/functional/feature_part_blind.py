@@ -61,8 +61,7 @@ class BlindTest(ParticlTestFramework):
 
         self.stakeBlocks(2)
 
-        mnemonic2 = nodes[2].mnemonic('new')
-        ro = nodes[2].extkeyimportmaster(mnemonic2['master'])
+        nodes[2].extkeyimportmaster(nodes[2].mnemonic('new')['master'])
         sxAddrTo2_1 = nodes[2].getnewstealthaddress('lblsx21')
 
         txnHash3 = nodes[1].sendblindtoblind(sxAddrTo2_1, 0.2, '', '', False, 'node1 -> node2 b->b')

@@ -14,6 +14,7 @@
 #include <txdb.h>
 #include <util.h>
 #include <validation.h>
+#include <validationinterface.h>
 #include <chainparams.h>
 
 
@@ -343,7 +344,8 @@ bool RewindToCheckpoint(int nCheckPointHeight, int &nBlocks, std::string &sError
 
         nBlocks++;
 
-        CBlock block;
+        std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
+        CBlock& block = *pblock;
         if (!ReadBlockFromDisk(block, pindex, chainparams.GetConsensus()))
             return errorN(false, sError, __func__, "ReadBlockFromDisk failed.");
         if (DISCONNECT_OK != DisconnectBlock(block, pindex, view))
@@ -356,6 +358,7 @@ bool RewindToCheckpoint(int nCheckPointHeight, int &nBlocks, std::string &sError
 
         chainActive.SetTip(pindex->pprev);
         UpdateTip(pindex->pprev, chainparams);
+        GetMainSignals().BlockDisconnected(pblock);
     };
     nLastRCTOutput = chainActive.Tip()->nAnonOutputs;
 

@@ -9,8 +9,7 @@
 
 from test_framework.test_particl import ParticlTestFramework
 from test_framework.util import *
-from test_framework.script import *
-from test_framework.mininode import *
+
 
 class AddressIndexTest(ParticlTestFramework):
     def set_test_params(self):
