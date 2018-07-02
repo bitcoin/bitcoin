@@ -2088,7 +2088,7 @@ void CConnman::ThreadMessageHandler()
             // Send messages
             {
                 LOCK(pnode->cs_sendProcessing);
-                m_msgproc->SendMessages(pnode, flagInterruptMsgProc);
+                m_msgproc->SendMessages(pnode);
             }
 
             if (flagInterruptMsgProc)
