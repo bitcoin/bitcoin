@@ -495,7 +495,7 @@ void OverviewPage::privateSendStatus()
                                 tr("We are about to create a new automatic backup for you, however "
                                    "<span style='color:red;'> you should always make sure you have backups "
                                    "saved in some safe place</span>!") + "<br><br>" +
-                                tr("Note: You turn this message off in options.");
+                                tr("Note: You can turn this message off in options.");
             ui->labelPrivateSendEnabled->setToolTip(strWarn);
             LogPrintf("OverviewPage::privateSendStatus -- Very low number of keys left since last automatic backup, warning user and trying to create new backup...\n");
             QMessageBox::warning(this, tr("PrivateSend"), strWarn, QMessageBox::Ok, QMessageBox::Ok);
