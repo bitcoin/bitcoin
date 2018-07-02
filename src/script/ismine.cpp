@@ -12,6 +12,7 @@
 #include "script/script.h"
 #include "script/standard.h"
 #include "script/sign.h"
+#include "validation.h"
 
 
 typedef std::vector<unsigned char> valtype;
@@ -144,6 +145,8 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
         }
             /** RVN START */
         case TX_NEW_ASSET: {
+            if (!AreAssetsDeployed())
+                return ISMINE_NO;
             keyID = CKeyID(uint160(vSolutions[0]));
             if (sigversion != SIGVERSION_BASE) {
                 CPubKey pubkey;
@@ -159,6 +162,8 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
         }
 
         case TX_TRANSFER_ASSET: {
+            if (!AreAssetsDeployed())
+                return ISMINE_NO;
             keyID = CKeyID(uint160(vSolutions[0]));
             if (sigversion != SIGVERSION_BASE) {
                 CPubKey pubkey;
@@ -173,6 +178,8 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
         }
 
         case TX_REISSUE_ASSET: {
+            if (!AreAssetsDeployed())
+                return ISMINE_NO;
             keyID = CKeyID(uint160(vSolutions[0]));
             if (sigversion != SIGVERSION_BASE) {
                 CPubKey pubkey;

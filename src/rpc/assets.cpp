@@ -38,6 +38,9 @@
 
 UniValue UnitValueFromAmount(const CAmount& amount, const std::string asset_name)
 {
+    if (!AreAssetsDeployed())
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND, std::string("Assets is not active"));
+
     if (!passets)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Asset cache isn't available.");
 
@@ -55,6 +58,9 @@ UniValue UnitValueFromAmount(const CAmount& amount, const std::string asset_name
 
 UniValue issue(const JSONRPCRequest& request)
 {
+    if (!AreAssetsDeployed())
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND, std::string("Assets is not active"));
+
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
@@ -199,7 +205,10 @@ UniValue issue(const JSONRPCRequest& request)
 
 UniValue listassetbalancesbyaddress(const JSONRPCRequest &request)
 {
-    if (request.fHelp || request.params.size() != 1)
+    if (!AreAssetsDeployed())
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND, std::string("Assets is not active"));
+
+    if (request.fHelp || request.params.size() < 1)
         throw std::runtime_error(
             "listassetbalancesbyaddress \"address\"\n"
             "\nReturns a list of all asset balances for an address.\n"
@@ -240,6 +249,9 @@ UniValue listassetbalancesbyaddress(const JSONRPCRequest &request)
 
 UniValue getassetdata(const JSONRPCRequest& request)
 {
+    if (!AreAssetsDeployed())
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND, std::string("Assets is not active"));
+
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
                 "getassetdata \"asset_name\"\n"
@@ -300,12 +312,15 @@ void safe_advance(Iter& curr, const Iter& end, Incr n)
 
 UniValue listmyassets(const JSONRPCRequest &request)
 {
+    if (!AreAssetsDeployed())
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND, std::string("Assets is not active"));
+
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() > 4)
+    if (request.fHelp || request.params.size() > 0)
         throw std::runtime_error(
                 "listmyassets \"( asset )\" ( verbose ) ( count ) ( start )\n"
                 "\nReturns a list of all asset that are owned by this wallet\n"
@@ -474,6 +489,9 @@ UniValue listmyassets(const JSONRPCRequest &request)
 
 UniValue listaddressesbyasset(const JSONRPCRequest &request)
 {
+    if (!AreAssetsDeployed())
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND, std::string("Assets is not active"));
+
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
                 "listaddressesbyasset \"asset_name\"\n"
@@ -518,6 +536,9 @@ UniValue listaddressesbyasset(const JSONRPCRequest &request)
 
 UniValue transfer(const JSONRPCRequest& request)
 {
+    if (!AreAssetsDeployed())
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND, std::string("Assets is not active"));
+
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
@@ -622,6 +643,9 @@ UniValue transfer(const JSONRPCRequest& request)
 
 UniValue reissue(const JSONRPCRequest& request)
 {
+    if (!AreAssetsDeployed())
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND, std::string("Assets is not active"));
+
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
@@ -767,7 +791,11 @@ UniValue reissue(const JSONRPCRequest& request)
     return result;
 }
 
-UniValue listassets(const JSONRPCRequest& request) {
+UniValue listassets(const JSONRPCRequest& request)
+{
+    if (!AreAssetsDeployed())
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND, std::string("Assets is not active"));
+
     if (request.fHelp || request.params.size() > 4)
         throw std::runtime_error(
                 "listassets \"( asset )\" ( verbose ) ( count ) ( start )\n"

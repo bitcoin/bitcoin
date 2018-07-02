@@ -499,4 +499,8 @@ bool DumpMempool();
 /** Load the mempool from disk. */
 bool LoadMempool();
 
+/** RVN START */
+bool AreAssetsDeployed();
+/** RVN END */
+
 #endif // RAVEN_VALIDATION_H

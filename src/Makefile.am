@@ -78,6 +78,9 @@ endif
 RAVEN_CORE_H = \
   addrdb.h \
   addrman.h \
+  assets/assets.h \
+  assets/assetdb.h \
+  assets/assettypes.h \
   base58.h \
   bech32.h \
   bloom.h \
@@ -192,6 +195,7 @@ libraven_server_a_SOURCES = \
   blockencodings.cpp \
   chain.cpp \
   checkpoints.cpp \
+  consensus/consensus.cpp \
   consensus/tx_verify.cpp \
   httprpc.cpp \
   httpserver.cpp \
@@ -203,10 +207,7 @@ libraven_server_a_SOURCES = \
   net_processing.cpp \
   noui.cpp \
   assets/assets.cpp \
-  assets/assets.h \
   assets/assetdb.cpp \
-  assets/assetdb.h \
-  assets/assettypes.h \
   policy/fees.cpp \
   policy/policy.cpp \
   policy/rbf.cpp \

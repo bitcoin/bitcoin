@@ -6,6 +6,7 @@
 
 #include <base58.h>
 #include <assets/assets.h>
+#include <validation.h>
 #include "script/standard.h"
 
 #include "pubkey.h"

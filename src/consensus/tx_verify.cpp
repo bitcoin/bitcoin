@@ -170,7 +170,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, CAssetsCa
     if (tx.vout.empty())
         return state.DoS(10, false, REJECT_INVALID, "bad-txns-vout-empty");
     // Size limits (this doesn't take the witness into account, as that hasn't been checked for malleability)
-    if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * WITNESS_SCALE_FACTOR > MAX_BLOCK_WEIGHT)
+    if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * WITNESS_SCALE_FACTOR > GetMaxBlockWeight())
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-oversize");
 
     // Check for negative or overflow output values
@@ -186,33 +186,38 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, CAssetsCa
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-txouttotal-toolarge");
 
         /** RVN START */
+        if (!AreAssetsDeployed() && txout.scriptPubKey.IsAsset())
+            return state.DoS(100, false, REJECT_INVALID, "bad-txns-is-asset-and-asset-not-active");
+
         // Check for transfers that don't meet the assets units only if the assetCache is not null
-        if (assetCache) {
-            // Get the transfer transaction data from the scriptPubKey
-            if (txout.scriptPubKey.IsTransferAsset()) {
-                CAssetTransfer transfer;
-                std::string address;
-                if (!TransferAssetFromScript(txout.scriptPubKey, transfer, address))
-                    return state.DoS(100, false, REJECT_INVALID, "bad-tsnx-transfer-asset-bad-deserialize");
+        if (AreAssetsDeployed()) {
+            if (assetCache) {
+                // Get the transfer transaction data from the scriptPubKey
+                if (txout.scriptPubKey.IsTransferAsset()) {
+                    CAssetTransfer transfer;
+                    std::string address;
+                    if (!TransferAssetFromScript(txout.scriptPubKey, transfer, address))
+                        return state.DoS(100, false, REJECT_INVALID, "bad-tsnx-transfer-asset-bad-deserialize");
 
-                // If we aren't reindexing
-                if (!fReindex) {
-                    // If the transfer is an ownership asset. Check to make sure that it is OWNER_ASSET_AMOUNT
-                    if (IsAssetNameAnOwner(transfer.strName)) {
-                        if (transfer.nAmount != OWNER_ASSET_AMOUNT)
-                            return state.DoS(100, false, REJECT_INVALID, "bad-txns-transfer-owner-amount-wasn't-1");
-                    } else {
-                        // For all other types of assets, make sure they are sending the right type of units
-                        CNewAsset asset;
-                        if (!assetCache->GetAssetIfExists(transfer.strName, asset))
-                            return state.DoS(100, false, REJECT_INVALID, "bad-txns-transfer-asset-not-exist");
+                    // If we aren't reindexing
+                    if (!fReindex) {
+                        // If the transfer is an ownership asset. Check to make sure that it is OWNER_ASSET_AMOUNT
+                        if (IsAssetNameAnOwner(transfer.strName)) {
+                            if (transfer.nAmount != OWNER_ASSET_AMOUNT)
+                                return state.DoS(100, false, REJECT_INVALID, "bad-txns-transfer-owner-amount-wasn't-1");
+                        } else {
+                            // For all other types of assets, make sure they are sending the right type of units
+                            CNewAsset asset;
+                            if (!assetCache->GetAssetIfExists(transfer.strName, asset))
+                                return state.DoS(100, false, REJECT_INVALID, "bad-txns-transfer-asset-not-exist");
 
-                        if (asset.strName != transfer.strName)
-                            return state.DoS(100, false, REJECT_INVALID, "bad-txns-asset-database-corrupted");
+                            if (asset.strName != transfer.strName)
+                                return state.DoS(100, false, REJECT_INVALID, "bad-txns-asset-database-corrupted");
 
-                        if (transfer.nAmount % int64_t(pow(10, (MAX_UNIT - asset.units))) != 0)
-                            return state.DoS(100, false, REJECT_INVALID,
-                                             "bad-txns-transfer-asset-amount-not-match-units");
+                            if (transfer.nAmount % int64_t(pow(10, (MAX_UNIT - asset.units))) != 0)
+                                return state.DoS(100, false, REJECT_INVALID,
+                                                 "bad-txns-transfer-asset-amount-not-match-units");
+                        }
                     }
                 }
             }
@@ -243,46 +248,48 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, CAssetsCa
     }
 
     /** RVN START */
-    if (assetCache) {
-        // Get the new asset from the transaction
-        if (tx.IsNewAsset()) {
-            CNewAsset asset;
-            std::string strAddress;
-            if (!AssetFromTransaction(tx, asset, strAddress))
-                return state.DoS(100, false, REJECT_INVALID, "bad-txns-issue-asset");
+    if (AreAssetsDeployed()) {
+        if (assetCache) {
+            // Get the new asset from the transaction
+            if (tx.IsNewAsset()) {
+                CNewAsset asset;
+                std::string strAddress;
+                if (!AssetFromTransaction(tx, asset, strAddress))
+                    return state.DoS(100, false, REJECT_INVALID, "bad-txns-issue-asset");
 
-            // Validate the new assets information
-            std::string strError = "";
-            if (!IsNewOwnerTxValid(tx, asset.strName, strAddress, strError))
-                return state.DoS(100, false, REJECT_INVALID, strError);
+                // Validate the new assets information
+                std::string strError = "";
+                if (!IsNewOwnerTxValid(tx, asset.strName, strAddress, strError))
+                    return state.DoS(100, false, REJECT_INVALID, strError);
 
-            if (!asset.IsValid(strError, *assetCache, fMemPoolCheck, fCheckDuplicateInputs))
-                return state.DoS(100, false, REJECT_INVALID, "bad-txns-" + strError);
+                if (!asset.IsValid(strError, *assetCache, fMemPoolCheck, fCheckDuplicateInputs))
+                    return state.DoS(100, false, REJECT_INVALID, "bad-txns-" + strError);
 
-        } else if (tx.IsReissueAsset()) {
-            CReissueAsset reissue;
-            std::string strAddress;
-            if (!ReissueAssetFromTransaction(tx, reissue, strAddress))
-                return state.DoS(100, false, REJECT_INVALID, "bad-txns-reissue-asset");
+            } else if (tx.IsReissueAsset()) {
+                CReissueAsset reissue;
+                std::string strAddress;
+                if (!ReissueAssetFromTransaction(tx, reissue, strAddress))
+                    return state.DoS(100, false, REJECT_INVALID, "bad-txns-reissue-asset");
 
-            bool foundOwnerAsset = false;
-            for (auto out : tx.vout) {
-                CAssetTransfer transfer;
-                std::string transferAddress;
-                if (TransferAssetFromScript(out.scriptPubKey, transfer, transferAddress)) {
-                    if (reissue.strName + OWNER == transfer.strName) {
-                        foundOwnerAsset = true;
-                        break;
+                bool foundOwnerAsset = false;
+                for (auto out : tx.vout) {
+                    CAssetTransfer transfer;
+                    std::string transferAddress;
+                    if (TransferAssetFromScript(out.scriptPubKey, transfer, transferAddress)) {
+                        if (reissue.strName + OWNER == transfer.strName) {
+                            foundOwnerAsset = true;
+                            break;
+                        }
                     }
                 }
+
+                if (!foundOwnerAsset)
+                    return state.DoS(100, false, REJECT_INVALID, "bad-txns-reissue-asset-bad-owner-asset");
+
+                std::string strError = "";
+                if (!reissue.IsValid(strError, *assetCache))
+                    return state.DoS(100, false, REJECT_INVALID, "bad-txns-" + strError);
             }
-
-            if (!foundOwnerAsset)
-                return state.DoS(100, false, REJECT_INVALID, "bad-txns-reissue-asset-bad-owner-asset");
-
-            std::string strError = "";
-            if (!reissue.IsValid(strError, *assetCache))
-                return state.DoS(100, false, REJECT_INVALID, "bad-txns-" + strError);
         }
     }
     /** RVN END */

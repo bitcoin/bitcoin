@@ -608,14 +608,16 @@ void CTxMemPool::clear()
     _clear();
 }
 
-static void CheckInputsAndUpdateCoins(const CTransaction& tx, CCoinsViewCache& mempoolDuplicate, const int64_t spendheight)
-{
+static void CheckInputsAndUpdateCoins(const CTransaction& tx, CCoinsViewCache& mempoolDuplicate, const int64_t spendheight) {
     CValidationState state;
     CAmount txfee = 0;
     bool fCheckResult = tx.IsCoinBase() || Consensus::CheckTxInputs(tx, state, mempoolDuplicate, spendheight, txfee);
     /** RVN START */
-    bool fCheckAssets = Consensus::CheckTxAssets(tx, state, mempoolDuplicate);
-    assert(fCheckResult && fCheckAssets);
+    if (AreAssetsDeployed()) {
+        bool fCheckAssets = Consensus::CheckTxAssets(tx, state, mempoolDuplicate);
+        assert(fCheckResult && fCheckAssets);
+    } else
+        assert(fCheckResult);
     /** RVN END */
     UpdateCoins(tx, mempoolDuplicate, 1000000);
 }

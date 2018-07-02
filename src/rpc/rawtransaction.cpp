@@ -777,6 +777,9 @@ UniValue decodescript(const JSONRPCRequest& request)
 
     /** RVN START */
     if (type.isStr() && type.get_str() == ASSET_TRANSFER_STRING) {
+        if (!AreAssetsDeployed())
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Assets are not active");
+
         CAssetTransfer transfer;
         std::string address;
 
@@ -787,6 +790,9 @@ UniValue decodescript(const JSONRPCRequest& request)
         r.push_back(Pair("amount", ValueFromAmount(transfer.nAmount)));
 
     } else if (type.isStr() && type.get_str() == ASSET_REISSUE_STRING) {
+        if (!AreAssetsDeployed())
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Assets are not active");
+
         CReissueAsset reissue;
         std::string address;
 
@@ -803,6 +809,9 @@ UniValue decodescript(const JSONRPCRequest& request)
             r.push_back(Pair("new_ipfs_hash", reissue.strIPFSHash));
 
     } else if (type.isStr() && type.get_str() == ASSET_NEW_STRING) {
+        if (!AreAssetsDeployed())
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Assets are not active");
+
         CNewAsset asset;
         std::string address;
 

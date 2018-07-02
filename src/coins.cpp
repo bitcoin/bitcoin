@@ -98,65 +98,70 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool 
     const uint256& txid = tx.GetHash();
 
     /** RVN START */
-    if (assetsCache) {
-        if (tx.IsNewAsset()) {
-            CNewAsset asset;
-            std::string strAddress;
-            AssetFromTransaction(tx, asset, strAddress);
+    if (AreAssetsDeployed()) {
+        if (assetsCache) {
+            if (tx.IsNewAsset()) {
+                CNewAsset asset;
+                std::string strAddress;
+                AssetFromTransaction(tx, asset, strAddress);
 
-            std::string ownerName;
-            std::string ownerAddress;
-            OwnerFromTransaction(tx, ownerName, ownerAddress);
+                std::string ownerName;
+                std::string ownerAddress;
+                OwnerFromTransaction(tx, ownerName, ownerAddress);
 
-            // Add the new asset to cache
-            if (!assetsCache->AddNewAsset(asset, strAddress))
-                error("%s : Failed at adding a new asset to our cache. asset: %s", __func__,
-                      asset.strName);
+                // Add the new asset to cache
+                if (!assetsCache->AddNewAsset(asset, strAddress))
+                    error("%s : Failed at adding a new asset to our cache. asset: %s", __func__,
+                          asset.strName);
 
-            // Add the owner asset to cache
-            if (!assetsCache->AddOwnerAsset(ownerName, ownerAddress))
-                error("%s : Failed at adding a new asset to our cache. asset: %s", __func__,
-                      asset.strName);
+                // Add the owner asset to cache
+                if (!assetsCache->AddOwnerAsset(ownerName, ownerAddress))
+                    error("%s : Failed at adding a new asset to our cache. asset: %s", __func__,
+                          asset.strName);
 
-            int assetIndex = tx.vout.size() - 1;
-            int ownerIndex = assetIndex - 1;
+                int assetIndex = tx.vout.size() - 1;
+                int ownerIndex = assetIndex - 1;
 
-            CAssetCachePossibleMine possibleMineOwner(ownerName, COutPoint(tx.GetHash(), ownerIndex), tx.vout[ownerIndex]);
-            if (!assetsCache->AddPossibleOutPoint(possibleMineOwner))
-                error("%s: Failed to add the owner asset I own to my Unspent Asset Cache. Asset Name : %s",
-                      __func__, ownerName);
+                CAssetCachePossibleMine possibleMineOwner(ownerName, COutPoint(tx.GetHash(), ownerIndex),
+                                                          tx.vout[ownerIndex]);
+                if (!assetsCache->AddPossibleOutPoint(possibleMineOwner))
+                    error("%s: Failed to add the owner asset I own to my Unspent Asset Cache. Asset Name : %s",
+                          __func__, ownerName);
 
-            CAssetCachePossibleMine possibleMine(asset.strName, COutPoint(tx.GetHash(), assetIndex), tx.vout[assetIndex]);
-            if (!assetsCache->AddPossibleOutPoint(possibleMine))
-                error("%s: Failed to add an asset I own to my Unspent Asset Cache. Asset Name : %s",
-                      __func__, asset.strName);
-        } else if (tx.IsReissueAsset()) {
-            CReissueAsset reissue;
-            std::string strAddress;
-            ReissueAssetFromTransaction(tx, reissue, strAddress);
+                CAssetCachePossibleMine possibleMine(asset.strName, COutPoint(tx.GetHash(), assetIndex),
+                                                     tx.vout[assetIndex]);
+                if (!assetsCache->AddPossibleOutPoint(possibleMine))
+                    error("%s: Failed to add an asset I own to my Unspent Asset Cache. Asset Name : %s",
+                          __func__, asset.strName);
+            } else if (tx.IsReissueAsset()) {
+                CReissueAsset reissue;
+                std::string strAddress;
+                ReissueAssetFromTransaction(tx, reissue, strAddress);
 
-            // Get the asset before we change it
-            CNewAsset asset;
-            if(!assetsCache->GetAssetIfExists(reissue.strName, asset))
-                error("%s: Failed to get the original asset that is getting reissued. Asset Name : %s",
-                      __func__, reissue.strName);
+                // Get the asset before we change it
+                CNewAsset asset;
+                if (!assetsCache->GetAssetIfExists(reissue.strName, asset))
+                    error("%s: Failed to get the original asset that is getting reissued. Asset Name : %s",
+                          __func__, reissue.strName);
 
-            int reissueIndex = tx.vout.size() - 1;
+                int reissueIndex = tx.vout.size() - 1;
 
-            if (!assetsCache->AddReissueAsset(reissue, strAddress, COutPoint(txid, reissueIndex)))
-                error("%s: Failed to reissue an asset. Asset Name : %s", __func__, reissue.strName);
+                if (!assetsCache->AddReissueAsset(reissue, strAddress, COutPoint(txid, reissueIndex)))
+                    error("%s: Failed to reissue an asset. Asset Name : %s", __func__, reissue.strName);
 
-            // Set the old IPFSHash for the blockundo
-            if (reissue.strIPFSHash != "") {
-                auto pair = std::make_pair(reissue.strName, asset.strIPFSHash);
-                undoIPFSHash->first = reissue.strName; // Asset Name
-                undoIPFSHash->second = asset.strIPFSHash; // Old Assets IPFSHash
+                // Set the old IPFSHash for the blockundo
+                if (reissue.strIPFSHash != "") {
+                    auto pair = std::make_pair(reissue.strName, asset.strIPFSHash);
+                    undoIPFSHash->first = reissue.strName; // Asset Name
+                    undoIPFSHash->second = asset.strIPFSHash; // Old Assets IPFSHash
+                }
+
+                CAssetCachePossibleMine possibleMine(reissue.strName, COutPoint(tx.GetHash(), reissueIndex),
+                                                     tx.vout[reissueIndex]);
+                if (!assetsCache->AddPossibleOutPoint(possibleMine))
+                    error("%s: Failed to add an reissued asset I own to my Unspent Asset Cache. Asset Name : %s",
+                          __func__, reissue.strName);
             }
-
-            CAssetCachePossibleMine possibleMine(reissue.strName, COutPoint(tx.GetHash(), reissueIndex), tx.vout[reissueIndex]);
-            if (!assetsCache->AddPossibleOutPoint(possibleMine))
-                error("%s: Failed to add an reissued asset I own to my Unspent Asset Cache. Asset Name : %s",
-                      __func__, reissue.strName);
         }
     }
     /** RVN END */
@@ -168,18 +173,20 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool 
         cache.AddCoin(COutPoint(txid, i), Coin(tx.vout[i], nHeight, fCoinbase), overwrite);
 
         /** RVN START */
-        if (assetsCache) {
-            if (tx.vout[i].scriptPubKey.IsTransferAsset() && !tx.vout[i].scriptPubKey.IsUnspendable()) {
-                CAssetTransfer assetTransfer;
-                std::string address;
-                if (!TransferAssetFromScript(tx.vout[i].scriptPubKey, assetTransfer, address))
-                    LogPrintf(
-                            "%s : ERROR - Received a coin that was a Transfer Asset but failed to get the transfer object from the scriptPubKey. CTxOut: %s\n",
-                            __func__, tx.vout[i].ToString());
+        if (AreAssetsDeployed()) {
+            if (assetsCache) {
+                if (tx.vout[i].scriptPubKey.IsTransferAsset() && !tx.vout[i].scriptPubKey.IsUnspendable()) {
+                    CAssetTransfer assetTransfer;
+                    std::string address;
+                    if (!TransferAssetFromScript(tx.vout[i].scriptPubKey, assetTransfer, address))
+                        LogPrintf(
+                                "%s : ERROR - Received a coin that was a Transfer Asset but failed to get the transfer object from the scriptPubKey. CTxOut: %s\n",
+                                __func__, tx.vout[i].ToString());
 
-                if (!assetsCache->AddTransferAsset(assetTransfer, address, COutPoint(txid, i), tx.vout[i]))
-                    LogPrintf("%s : ERROR - Failed to add transfer asset CTxOut: %s\n", __func__,
-                              tx.vout[i].ToString());
+                    if (!assetsCache->AddTransferAsset(assetTransfer, address, COutPoint(txid, i), tx.vout[i]))
+                        LogPrintf("%s : ERROR - Failed to add transfer asset CTxOut: %s\n", __func__,
+                                  tx.vout[i].ToString());
+                }
             }
         }
         /** RVN END */
@@ -207,9 +214,11 @@ bool CCoinsViewCache::SpendCoin(const COutPoint &outpoint, Coin* moveout, CAsset
     }
 
     /** RVN START */
-    if (assetsCache) {
-        if (!assetsCache->TrySpendCoin(outpoint, tempCoin.out))
-            return error("%s : Failed to try and spend the asset. COutPoint : %s", __func__, outpoint.ToString());
+    if (AreAssetsDeployed()) {
+        if (assetsCache) {
+            if (!assetsCache->TrySpendCoin(outpoint, tempCoin.out))
+                return error("%s : Failed to try and spend the asset. COutPoint : %s", __func__, outpoint.ToString());
+        }
     }
     /** RVN END */
 
@@ -348,12 +357,12 @@ bool CCoinsViewCache::HaveInputs(const CTransaction& tx) const
 }
 
 static const size_t MIN_TRANSACTION_OUTPUT_WEIGHT = WITNESS_SCALE_FACTOR * ::GetSerializeSize(CTxOut(), SER_NETWORK, PROTOCOL_VERSION);
-static const size_t MAX_OUTPUTS_PER_BLOCK = MAX_BLOCK_WEIGHT / MIN_TRANSACTION_OUTPUT_WEIGHT;
+//static const size_t MAX_OUTPUTS_PER_BLOCK = MAX_BLOCK_WEIGHT / MIN_TRANSACTION_OUTPUT_WEIGHT;
 
 const Coin& AccessByTxid(const CCoinsViewCache& view, const uint256& txid)
 {
     COutPoint iter(txid, 0);
-    while (iter.n < MAX_OUTPUTS_PER_BLOCK) {
+    while (iter.n < GetMaxBlockWeight() / MIN_TRANSACTION_OUTPUT_WEIGHT) {
         const Coin& alternate = view.AccessCoin(iter);
         if (!alternate.IsSpent()) return alternate;
         ++iter.n;

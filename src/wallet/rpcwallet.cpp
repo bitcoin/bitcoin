@@ -1603,37 +1603,36 @@ void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const std::s
     }
 
     /** RVN START */
-    if (listAssetsReceived.size() > 0 && wtx.GetDepthInMainChain() >= nMinDepth)
-    {
-        for (const CAssetOutputEntry& data : listAssetsReceived) {
-            UniValue entry(UniValue::VOBJ);
+    if (AreAssetsDeployed()) {
+        if (listAssetsReceived.size() > 0 && wtx.GetDepthInMainChain() >= nMinDepth) {
+            for (const CAssetOutputEntry &data : listAssetsReceived) {
+                UniValue entry(UniValue::VOBJ);
 
-            entry.push_back(Pair("asset_type", data.type));
-            entry.push_back(Pair("asset_name", data.assetName));
-            entry.push_back(Pair("amount", ValueFromAmount(data.amount)));
-            entry.push_back(Pair("destination", EncodeDestination(data.destination)));
-            entry.push_back(Pair("vout", data.vout));
-            entry.push_back(Pair("category", "receive"));
-            retAssets.push_back(entry);
+                entry.push_back(Pair("asset_type", data.type));
+                entry.push_back(Pair("asset_name", data.assetName));
+                entry.push_back(Pair("amount", ValueFromAmount(data.amount)));
+                entry.push_back(Pair("destination", EncodeDestination(data.destination)));
+                entry.push_back(Pair("vout", data.vout));
+                entry.push_back(Pair("category", "receive"));
+                retAssets.push_back(entry);
+            }
         }
-    }
 
+        if ((!listAssetsSent.empty() || nFee != 0) && (fAllAccounts || strAccount == strSentAccount)) {
+            for (const CAssetOutputEntry &data : listAssetsSent) {
+                UniValue entry(UniValue::VOBJ);
 
-    if ((!listAssetsSent.empty() || nFee != 0) && (fAllAccounts || strAccount == strSentAccount))
-    {
-        for (const CAssetOutputEntry& data : listAssetsSent) {
-            UniValue entry(UniValue::VOBJ);
-
-            entry.push_back(Pair("asset_type", data.type));
-            entry.push_back(Pair("asset_name", data.assetName));
-            entry.push_back(Pair("amount", ValueFromAmount(data.amount)));
-            entry.push_back(Pair("destination", EncodeDestination(data.destination)));
-            entry.push_back(Pair("vout", data.vout));
-            entry.push_back(Pair("category", "send"));
-            retAssets.push_back(entry);
+                entry.push_back(Pair("asset_type", data.type));
+                entry.push_back(Pair("asset_name", data.assetName));
+                entry.push_back(Pair("amount", ValueFromAmount(data.amount)));
+                entry.push_back(Pair("destination", EncodeDestination(data.destination)));
+                entry.push_back(Pair("vout", data.vout));
+                entry.push_back(Pair("category", "send"));
+                retAssets.push_back(entry);
+            }
         }
-    }
 
+    }
     /** RVN END */
 }
 
