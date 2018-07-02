@@ -47,17 +47,13 @@ BOOST_FIXTURE_TEST_SUITE(rpc_tests, TestingSetup)
 BOOST_AUTO_TEST_CASE(rpc_assets_getaddressbalances)
 {
     // missing required params
-    BOOST_CHECK_THROW(CallRPC("getaddressbalances"), std::runtime_error);
+    BOOST_CHECK_THROW(CallRPC("listassetbalancesbyaddress"), std::runtime_error);
 
     // valid params
-    BOOST_CHECK_NO_THROW(CallRPC(std::string("getaddressbalances ")+ok_address));
-    BOOST_CHECK_NO_THROW(CallRPC(std::string("getaddressbalances ")+ok_address+" 1"));
+    BOOST_CHECK_NO_THROW(CallRPC(std::string("listassetbalancesbyaddress ")+ok_address));
 
     // invalid address
-    BOOST_CHECK_THROW(CallRPC(std::string("getaddressbalances ")+bad_address), std::runtime_error);
-
-    // invalid minconf
-    BOOST_CHECK_THROW(CallRPC(std::string("getaddressbalances ")+ok_address+" NaN"), std::runtime_error);
+    BOOST_CHECK_THROW(CallRPC(std::string("listassetbalancesbyaddress ")+bad_address), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(rpc_rawparams)

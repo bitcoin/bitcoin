@@ -27,6 +27,7 @@
 
 #define OWNER "!"
 #define OWNER_LENGTH 1
+#define OWNER_UNITS 0
 #define MIN_ASSET_LENGTH 3
 #define MAX_ASSET_LENGTH 31
 #define OWNER_ASSET_AMOUNT 1 * COIN
@@ -337,4 +338,9 @@ void GetAssetData(const CScript& script, CAssetOutputEntry& data);
 
 bool GetBestAssetAddressAmount(CAssetsCache& cache, const std::string& assetName, const std::string& address);
 
+bool GetMyOwnedAssets(CAssetsCache& cache, std::vector<std::string>& assets);
+bool GetMyOwnedAssets(CAssetsCache& cache, const std::string prefix, std::vector<std::string>& assetNames);
+bool GetMyAssetBalance(CAssetsCache& cache, const std::string& assetName, CAmount& balance);
+bool GetMyAssetBalances(CAssetsCache& cache, const std::vector<std::string>& assetNames, std::map<std::string, CAmount>& balances);
+bool GetMyAssetBalances(CAssetsCache& cache, std::map<std::string, CAmount>& balances);
 #endif //RAVENCOIN_ASSET_PROTOCOL_H

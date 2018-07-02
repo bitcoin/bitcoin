@@ -6,6 +6,7 @@
 //#include <base58.h>
 #include <assets/assets.h>
 #include <assets/assetdb.h>
+#include <map>
 #include <tinyformat.h>
 //#include <rpc/server.h>
 //#include <script/standard.h>
@@ -35,6 +36,22 @@
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h"
 
+UniValue UnitValueFromAmount(const CAmount& amount, const std::string asset_name)
+{
+    if (!passets)
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Asset cache isn't available.");
+
+    uint8_t units = OWNER_UNITS;
+    if (!IsAssetNameAnOwner(asset_name)) {
+        CNewAsset assetData;
+        if (!passets->GetAssetIfExists(asset_name, assetData))
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't load asset from cache: " + asset_name);
+
+        units = assetData.units;
+    }
+
+    return ValueFromAmount(amount, units);
+}
 
 UniValue issue(const JSONRPCRequest& request)
 {
@@ -43,19 +60,19 @@ UniValue issue(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 3 || request.params.size() > 7)
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 7)
         throw std::runtime_error(
-            "issue \"asset-name\" qty \"address\" ( units ) ( reissuable ) ( has_ipfs ) \"( ipfs_hash )\"\n"
+            "issue \"asset_name\" qty \"( to_address )\" ( units ) ( reissuable ) ( has_ipfs ) \"( ipfs_hash )\"\n"
             "\nIssue an asset with unique name.\n"
-            "Unit as 1 for whole units, or 0.00000001 for satoshi-like units.\n"
+            "Unit as the number of decimals precision for the asset (0 for whole units (\"1\"), 8 for max precision (\"1.00000000\")\n"
             "Qty should be whole number.\n"
             "Reissuable is true/false for whether additional units can be issued by the original issuer.\n"
 
             "\nArguments:\n"
             "1. \"asset_name\"            (string, required) a unique name\n"
             "2. \"qty\"                   (integer, required) the number of units to be issued\n"
-            "3. \"to_address\"            (string), required), address asset will be sent to, if it is empty, address will be generated for you\n"
-            "4. \"units\"                 (integer, optional, default=0, min=0, max=8), the number of decimals precision for the asset (0 for whole units (\"1\"), 8 for max precision (\"1.00000000\")\n"
+            "3. \"to_address\"            (string), optional, default=\"\"), address asset will be sent to, if it is empty, address will be generated for you\n"
+            "4. \"units\"                 (integer, optional, default=8, min=0, max=8), the number of decimals precision for the asset (0 for whole units (\"1\"), 8 for max precision (\"1.00000000\")\n"
             "5. \"reissuable\"            (boolean, optional, default=false), whether future reissuance is allowed\n"
             "6. \"has_ipfs\"              (boolean, optional, default=false), whether ifps hash is going to be added to the asset\n"
             "7. \"ipfs_hash\"             (string, optional but required if has_ipfs = 1), an ipfs hash\n"
@@ -64,9 +81,10 @@ UniValue issue(const JSONRPCRequest& request)
             "\"txid\"                     (string) The transaction id\n"
 
             "\nExamples:\n"
+            + HelpExampleCli("issue", "\"myassetname\" 1000")
             + HelpExampleCli("issue", "\"myassetname\" 1000 \"myaddress\"")
-            + HelpExampleCli("issue", "\"myassetname\" 1000 \"myaddress\" \"0.0001\"")
-            + HelpExampleCli("issue", "\"myassetname\" 1000 \"myaddress\" \"0.01\" true")
+            + HelpExampleCli("issue", "\"myassetname\" 1000 \"myaddress\" 4")
+            + HelpExampleCli("issue", "\"myassetname\" 1000 \"myaddress\" 2 true")
         );
 
 
@@ -79,7 +97,9 @@ UniValue issue(const JSONRPCRequest& request)
 
     CAmount nAmount = AmountFromValue(request.params[1]);
 
-    std::string address = request.params[2].get_str();
+    std::string address = "";
+    if (request.params.size() > 2)
+        address = request.params[2].get_str();
 
     if (address != "") {
         CTxDestination destination = DecodeDestination(address);
@@ -106,7 +126,7 @@ UniValue issue(const JSONRPCRequest& request)
         address = EncodeDestination(keyID);
     }
 
-    int units = 1;
+    int units = 8;
     if (request.params.size() > 3)
         units = request.params[3].get_int();
     bool reissuable = false;
@@ -177,16 +197,15 @@ UniValue issue(const JSONRPCRequest& request)
     return result;
 }
 
-UniValue getaddressbalances(const JSONRPCRequest& request)
+UniValue listassetbalancesbyaddress(const JSONRPCRequest &request)
 {
-    if (request.fHelp || request.params.size() < 1)
+    if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-            "getaddressbalances \"address\" ( minconf )\n"
-            "\nReturns a list of all the asset balances for address in this node's wallet, with at least minconf confirmations.\n"
+            "listassetbalancesbyaddress \"address\"\n"
+            "\nReturns a list of all asset balances for an address.\n"
 
             "\nArguments:\n"
             "1. \"address\"               (string, required) a raven address\n"
-            "2. \"minconf\"               (integer, optional, default=1) the minimum required confirmations\n"
 
             "\nResult:\n"
             "{\n"
@@ -195,25 +214,13 @@ UniValue getaddressbalances(const JSONRPCRequest& request)
             "}\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("getaddressbalances", "\"myaddress\"")
-            + HelpExampleCli("getaddressbalances", "\"myaddress\" 5")
+            + HelpExampleCli("listassetbalancesbyaddress", "\"myaddress\"")
         );
 
     std::string address = request.params[0].get_str();
     CTxDestination destination = DecodeDestination(address);
     if (!IsValidDestination(destination)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raven address: ") + address);
-    }
-
-    int minconf = 1;
-    if (!request.params[1].isNull()) {
-        if (request.params[1].get_int() != 1) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("TODO: implement miniconf != 1"));
-        }
-        minconf = request.params[1].get_int();
-        if (minconf < 1) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid minconf: ") + std::to_string(minconf));
-        }
     }
 
     LOCK(cs_main);
@@ -224,7 +231,7 @@ UniValue getaddressbalances(const JSONRPCRequest& request)
 
     for (auto it : passets->mapAssetsAddressAmount) {
         if (address.compare(it.first.second) == 0) {
-            result.push_back(Pair(it.first.first, it.second));
+            result.push_back(Pair(it.first.first, UnitValueFromAmount(it.second, it.first.first)));
         }
     }
 
@@ -235,22 +242,21 @@ UniValue getassetdata(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-                "getassetdata asset_name\n"
+                "getassetdata \"asset_name\"\n"
                 "\nReturns assets metadata if that asset exists\n"
 
                 "\nArguments:\n"
                 "1. \"asset_name\"               (string, required) the name of the asset\n"
 
                 "\nResult:\n"
-                "[ "
-                "{ name: (string)\n"
-                "  amount: (number)\n"
-                "  units: (number)\n"
-                "  reissuable: (number)\n"
-                "  has_ipfs: (number)\n"
-                "  ipfs_hash: (hash)}\n, only if has_ipfs = 1"
-                "{...}, {...}\n"
-                "]\n"
+                "{\n"
+                "  name: (string),\n"
+                "  amount: (number),\n"
+                "  units: (number),\n"
+                "  reissuable: (number),\n"
+                "  has_ipfs: (number),\n"
+                "  ipfs_hash: (hash) (only if has_ipfs = 1)\n"
+                "}\n"
 
                 "\nExamples:\n"
                 + HelpExampleCli("getallassets", "\"assetname\"")
@@ -260,23 +266,20 @@ UniValue getassetdata(const JSONRPCRequest& request)
     std::string asset_name = request.params[0].get_str();
 
     LOCK(cs_main);
-    UniValue result (UniValue::VARR);
+    UniValue result (UniValue::VOBJ);
 
     if (passets) {
         CNewAsset asset;
         if (!passets->GetAssetIfExists(asset_name, asset))
             return NullUniValue;
 
-        UniValue value(UniValue::VOBJ);
-        value.push_back(Pair("name", asset.strName));
-        value.push_back(Pair("amount", asset.nAmount));
-        value.push_back(Pair("units", asset.units));
-        value.push_back(Pair("reissuable", asset.nReissuable));
-        value.push_back(Pair("has_ipfs", asset.nHasIPFS));
+        result.push_back(Pair("name", asset.strName));
+        result.push_back(Pair("amount", UnitValueFromAmount(asset.nAmount, asset.strName)));
+        result.push_back(Pair("units", asset.units));
+        result.push_back(Pair("reissuable", asset.nReissuable));
+        result.push_back(Pair("has_ipfs", asset.nHasIPFS));
         if (asset.nHasIPFS)
-            value.push_back(Pair("ipfs_hash", asset.strIPFSHash));
-
-        result.push_back(value);
+            result.push_back(Pair("ipfs_hash", asset.strIPFSHash));
 
         return result;
     }
@@ -284,72 +287,205 @@ UniValue getassetdata(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
-UniValue getmyassets(const JSONRPCRequest& request)
+template <class Iter, class Incr>
+void safe_advance(Iter& curr, const Iter& end, Incr n)
 {
-    if (request.fHelp || request.params.size() > 0)
+    size_t remaining(std::distance(curr, end));
+    if (remaining < n)
+    {
+        n = remaining;
+    }
+    std::advance(curr, n);
+};
+
+UniValue listmyassets(const JSONRPCRequest &request)
+{
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() > 4)
         throw std::runtime_error(
-                "getmyassets\n"
+                "listmyassets \"( asset )\" ( verbose ) ( count ) ( start )\n"
                 "\nReturns a list of all asset that are owned by this wallet\n"
 
-                "\nResult:\n"
-                "[ "
-                "  {\n"
-                "    (asset_name):\n"
-                "    [\n"
-                "      {\n"
-                "        \"txid\": txid,\n"
-                "        \"index\": index\n"
-                "      }\n"
-                "      {...}, {...}\n"
-                "    ]\n"
-                "  }\n"
-                "  {...}, {...}\n"
-                "]\n"
+                "\nArguments:\n"
+                "1. \"asset\"                    (string, optional, default=\"*\") filters results -- must be an asset name or a partial asset name followed by '*' ('*' matches all trailing characters)\n"
+                "2. \"verbose\"                  (boolean, optional, default=false) when false results only contain balances -- when true results include outpoints\n"
+                "3. \"count\"                    (integer, optional, default=ALL) truncates results to include only the first _count_ assets found\n"
+                "4. \"start\"                    (integer, optional, default=0) results skip over the first _start_ assets found (if negative it skips back from the end)\n"
+
+                "\nResult (verbose=false):\n"
+                "{\n"
+                "  (asset_name): balance,\n"
+                "  ...\n"
+                "}\n"
+
+                "\nResult (verbose=true):\n"
+                "{\n"
+                "  (asset_name):\n"
+                "    {\n"
+                "      \"balance\": balance,\n"
+                "      \"outpoints\":\n"
+                "        [\n"
+                "          {\n"
+                "            \"txid\": txid,\n"
+                "            \"index\": index,\n"
+                "            \"amount\": amount\n"
+                "          }\n"
+                "          {...}, {...}\n"
+                "        ]\n"
+                "    }\n"
+                "}\n"
+                "{...}, {...}\n"
 
                 "\nExamples:\n"
-                + HelpExampleRpc("getmyassets", "")
-                + HelpExampleCli("getmyassets", "")
+                + HelpExampleRpc("listmyassets", "")
+                + HelpExampleCli("listmyassets", "asset")
+                + HelpExampleCli("listmyassets", "\"asset*\" true 10 20")
         );
 
+    ObserveSafeMode();
+    LOCK2(cs_main, pwallet->cs_wallet);
 
-    LOCK(cs_main);
-    UniValue result (UniValue::VARR);
-    if (passets) {
-        UniValue assets(UniValue::VOBJ);
-        for (auto it : passets->mapMyUnspentAssets) {
-            UniValue outs(UniValue::VARR);
-            for (auto out : it.second) {
+    if (!passets)
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Asset cache unavailable.");
+
+    std::string filter = "*";
+    if (request.params.size() > 0)
+        filter = request.params[0].get_str();
+
+    if (filter == "")
+        filter = "*";
+
+    bool verbose = false;
+    if (request.params.size() > 1)
+        verbose = request.params[1].get_bool();
+
+    size_t count = INT_MAX;
+    if (request.params.size() > 2) {
+        if (request.params[2].get_int() < 1)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "count must be greater than 1.");
+        count = request.params[2].get_int();
+    }
+
+    long start = 0;
+    if (request.params.size() > 3) {
+        start = request.params[3].get_int();
+    }
+
+    // retrieve balances
+    std::map<std::string, CAmount> balances;
+    if (filter == "*") {
+        if (!GetMyAssetBalances(*passets, balances))
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't get asset balances.");
+    }
+    else if (filter.back() == '*') {
+        std::vector<std::string> assetNames;
+        filter.pop_back();
+        if (!GetMyOwnedAssets(*passets, filter, assetNames))
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't get owned assets.");
+        if (!GetMyAssetBalances(*passets, assetNames, balances))
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't get asset balances.");
+    }
+    else {
+        if (!IsAssetNameValid(filter))
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid asset name.");
+        CAmount balance;
+        if (!GetMyAssetBalance(*passets, filter, balance))
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't get asset balances.");
+        balances[filter] = balance;
+    }
+
+    // pagination setup
+    auto bal = balances.begin();
+    if (start >= 0)
+        safe_advance(bal, balances.end(), (size_t)start);
+    else
+        safe_advance(bal, balances.end(), balances.size() + start);
+    auto end = bal;
+    safe_advance(end, balances.end(), count);
+
+    // generate output
+    UniValue result(UniValue::VOBJ);
+    if (verbose) {
+        for (; bal != end && bal != balances.end(); bal++) {
+            UniValue asset(UniValue::VOBJ);
+            asset.push_back(Pair("balance", UnitValueFromAmount(bal->second, bal->first)));
+
+            UniValue outpoints(UniValue::VARR);
+            for (auto const& out : passets->mapMyUnspentAssets[bal->first]) {
                 UniValue tempOut(UniValue::VOBJ);
                 tempOut.push_back(Pair("txid", out.hash.GetHex()));
                 tempOut.push_back(Pair("index", std::to_string(out.n)));
-                outs.push_back(tempOut);
-            }
-            assets.push_back(Pair(it.first, outs));
-            outs.clear();
-        }
-        result.push_back(assets);
-    }
 
+                //
+                // get amount for this outpoint
+                CAmount txAmount = 0;
+                auto it = pwallet->mapWallet.find(out.hash);
+                if (it == pwallet->mapWallet.end()) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
+                }
+                const CWalletTx& wtx = it->second;
+                CTxOut txOut = wtx.tx->vout[out.n];
+                std::string strAddress;
+                if (CheckIssueDataTx(txOut)) {
+                    CNewAsset asset;
+                    if (!AssetFromScript(txOut.scriptPubKey, asset, strAddress))
+                        throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't get asset from script.");
+                    txAmount = asset.nAmount;
+                }
+                else if (CheckReissueDataTx(txOut)) {
+                    CReissueAsset asset;
+                    if (!ReissueAssetFromScript(txOut.scriptPubKey, asset, strAddress))
+                        throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't get asset from script.");
+                    txAmount = asset.nAmount;
+                }
+                else if (CheckTransferOwnerTx(txOut)) {
+                    CAssetTransfer asset;
+                    if (!TransferAssetFromScript(txOut.scriptPubKey, asset, strAddress))
+                        throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't get asset from script.");
+                    txAmount = asset.nAmount;
+                }
+                else if (CheckOwnerDataTx(txOut)) {
+                    std::string assetName;
+                    if (!OwnerAssetFromScript(txOut.scriptPubKey, assetName, strAddress))
+                        throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't get asset from script.");
+                    txAmount = OWNER_ASSET_AMOUNT;
+                }
+                tempOut.push_back(Pair("amount", UnitValueFromAmount(txAmount, bal->first)));
+                //
+                //
+
+                outpoints.push_back(tempOut);
+            }
+            asset.push_back(Pair("outpoints", outpoints));
+            result.push_back(Pair(bal->first, asset));
+        }
+    }
+    else {
+        for (; bal != end && bal != balances.end(); bal++) {
+            result.push_back(Pair(bal->first, UnitValueFromAmount(bal->second, bal->first)));
+        }
+    }
     return result;
 }
 
-// TODO: Used to test database, remove before release(?)
-UniValue getassetaddresses(const JSONRPCRequest& request)
+UniValue listaddressesbyasset(const JSONRPCRequest &request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-                "getassetaddresses asset_name\n"
-                "\nReturns a list of all address that own the given asset"
+                "listaddressesbyasset \"asset_name\"\n"
+                "\nReturns a list of all address that own the given asset (with balances)"
 
                 "\nArguments:\n"
                 "1. \"asset_name\"               (string, required) name of asset\n"
 
                 "\nResult:\n"
                 "[ "
-                "address,\n"
-                "address,\n"
-                "address,\n"
-                "...\n"
+                "  (address): balance,\n"
+                "  ...\n"
                 "]\n"
 
                 "\nExamples:\n"
@@ -374,7 +510,7 @@ UniValue getassetaddresses(const JSONRPCRequest& request)
         auto pair = std::make_pair(asset_name, it);
 
         if (GetBestAssetAddressAmount(*passets, asset_name, it))
-            addresses.push_back(Pair(it, ValueFromAmount(passets->mapAssetsAddressAmount.at(pair))));
+            addresses.push_back(Pair(it, UnitValueFromAmount(passets->mapAssetsAddressAmount.at(pair), asset_name)));
     }
 
     return addresses;
@@ -389,13 +525,13 @@ UniValue transfer(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() != 3)
         throw std::runtime_error(
-                "transfer asset_name address amount\n"
+                "transfer \"asset_name\" qty \"to_address\"\n"
                 "\nTransfers a quantity of an owned asset to a given address"
 
                 "\nArguments:\n"
                 "1. \"asset_name\"               (string, required) name of asset\n"
-                "2. \"address\"                  (string, required) address to send the asset to\n"
-                "3. \"amount\"                   (number, required) number of assets you want to send to the address\n"
+                "3. \"qty\"                      (number, required) number of assets you want to send to the address\n"
+                "2. \"to_address\"               (string, required) address to send the asset to\n"
 
                 "\nResult:\n"
                 "txid"
@@ -404,8 +540,8 @@ UniValue transfer(const JSONRPCRequest& request)
                 "]\n"
 
                 "\nExamples:\n"
-                + HelpExampleCli("transfer", "\"asset_name\" \"address\" \"20\"")
-                + HelpExampleCli("transfer", "\"asset_name\" \"address\" \"20\"")
+                + HelpExampleCli("transfer", "\"asset_name\" 20 \"address\"")
+                + HelpExampleCli("transfer", "\"asset_name\" 20 \"address\"")
         );
 
     ObserveSafeMode();
@@ -415,9 +551,9 @@ UniValue transfer(const JSONRPCRequest& request)
 
     std::string asset_name = request.params[0].get_str();
 
-    std::string address = request.params[1].get_str();
+    CAmount nAmount = AmountFromValue(request.params[1]);
 
-    CAmount nAmount = AmountFromValue(request.params[2]);
+    std::string address = request.params[2].get_str();
 
     if (!IsValidDestinationString(address))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raven address: ") + address);
@@ -493,24 +629,24 @@ UniValue reissue(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() > 5 || request.params.size() < 3)
         throw std::runtime_error(
-                "reissue \"asset_name\" \"address\" amount reissuable \"new_ipfs\" \n"
+                "reissue \"asset_name\" qty \"to_address\" reissuable \"new_ipfs\" \n"
                 "\nReissues a quantity of an asset to an owned address if you own the Owner Token"
                 "\nCan change the reissuable flag during reissuance"
                 "\nCan change the ipfs hash during reissuance"
 
                 "\nArguments:\n"
                 "1. \"asset_name\"               (string, required) name of asset that is being reissued\n"
-                "2. \"address\"                  (string, required) address to send the asset to\n"
-                "3. \"amount\"                   (number, required) number of assets to reissue\n"
+                "2. \"qty\"                      (number, required) number of assets to reissue\n"
+                "3. \"to_address\"               (string, required) address to send the asset to\n"
                 "4. \"reissuable\"               (boolean, optional, default=true), whether future reissuance is allowed\n"
-                "5. \"new_ifps\"                  (string, optional, default=\"\"), whether to update the current ipfshash\n"
+                "5. \"new_ifps\"                 (string, optional, default=\"\"), whether to update the current ipfshash\n"
 
                 "\nResult:\n"
                 "\"txid\"                     (string) The transaction id\n"
 
                 "\nExamples:\n"
-                + HelpExampleCli("reissue", "\"asset_name\" \"address\" \"20\"")
-                + HelpExampleCli("reissue", "\"asset_name\" \"address\" \"20\" \"true\" \"JUSTGA63B1T1MNF54OX776PCK8TSXM1JLFDOQ9KF\"")
+                + HelpExampleCli("reissue", "\"asset_name\" 20 \"address\"")
+                + HelpExampleCli("reissue", "\"asset_name\" 20 \"address\" \"true\" \"JUSTGA63B1T1MNF54OX776PCK8TSXM1JLFDOQ9KF\"")
         );
 
     ObserveSafeMode();
@@ -521,8 +657,8 @@ UniValue reissue(const JSONRPCRequest& request)
 
     // Get that paramaters
     std::string asset_name = request.params[0].get_str();
-    std::string address = request.params[1].get_str();
-    CAmount nAmount = AmountFromValue(request.params[2]);
+    CAmount nAmount = AmountFromValue(request.params[1]);
+    std::string address = request.params[2].get_str();
 
     bool reissuable = true;
     if (request.params.size() > 3) {
@@ -631,17 +767,111 @@ UniValue reissue(const JSONRPCRequest& request)
     return result;
 }
 
+UniValue listassets(const JSONRPCRequest& request) {
+    if (request.fHelp || request.params.size() > 4)
+        throw std::runtime_error(
+                "listassets \"( asset )\" ( verbose ) ( count ) ( start )\n"
+                "\nReturns a list of all asset that are owned by this wallet\n"
+                "\nThis could be a slow/expensive operation as it reads from the database\n"
+                "\nAssets come back in timestamp order (oldest to newest)\n"
+
+                "\nArguments:\n"
+                "1. \"asset\"                    (string, optional, default=\"*\") filters results -- must be an asset name or a partial asset name followed by '*' ('*' matches all trailing characters)\n"
+                "2. \"verbose\"                  (boolean, optional, default=false) when false result is just a list of asset names -- when true results are asset name mapped to metadata\n"
+                "3. \"count\"                    (integer, optional, default=ALL) truncates results to include only the first _count_ assets found\n"
+                "4. \"start\"                    (integer, optional, default=0) results skip over the first _start_ assets found (if negative it skips back from the end)\n"
+
+                "\nResult (verbose=false):\n"
+                "[\n"
+                "  asset_name,\n"
+                "  ...\n"
+                "]\n"
+
+                "\nResult (verbose=true):\n"
+                "{\n"
+                "  (asset_name):\n"
+                "    {\n"
+                "      amount: (number),\n"
+                "      units: (number),\n"
+                "      reissuable: (number),\n"
+                "      has_ipfs: (number),\n"
+                "      ipfs_hash: (hash) (only if has_ipfs = 1)\n"
+                "    },\n"
+                "  {...}, {...}\n"
+                "}\n"
+
+                "\nExamples:\n"
+                + HelpExampleRpc("listassets", "")
+                + HelpExampleCli("listassets", "asset")
+                + HelpExampleCli("listassets", "\"asset*\" true 10 20")
+        );
+
+    ObserveSafeMode();
+    LOCK(cs_main);
+
+    if (!passetsdb)
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "asset db unavailable.");
+
+    std::string filter = "*";
+    if (request.params.size() > 0)
+        filter = request.params[0].get_str();
+
+    if (filter == "")
+        filter = "*";
+
+    bool verbose = false;
+    if (request.params.size() > 1)
+        verbose = request.params[1].get_bool();
+
+    size_t count = INT_MAX;
+    if (request.params.size() > 2) {
+        if (request.params[2].get_int() < 1)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "count must be greater than 1.");
+        count = request.params[2].get_int();
+    }
+
+    long start = 0;
+    if (request.params.size() > 3) {
+        start = request.params[3].get_int();
+    }
+
+    std::vector<CNewAsset> assets;
+    if (!passetsdb->AssetDir(assets, filter, count, start))
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "couldn't retrieve asset directory.");
+
+    UniValue result;
+    result = verbose ? UniValue(UniValue::VOBJ) : UniValue(UniValue::VARR);
+
+    for (auto asset : assets) {
+        if (verbose) {
+            UniValue detail(UniValue::VOBJ);
+            detail.push_back(Pair("name", asset.strName));
+            detail.push_back(Pair("amount", UnitValueFromAmount(asset.nAmount, asset.strName)));
+            detail.push_back(Pair("units", asset.units));
+            detail.push_back(Pair("reissuable", asset.nReissuable));
+            detail.push_back(Pair("has_ipfs", asset.nHasIPFS));
+            if (asset.nHasIPFS)
+                detail.push_back(Pair("ipfs_hash", asset.strIPFSHash));
+            result.push_back(Pair(asset.strName, detail));
+        } else {
+            result.push_back(asset.strName);
+        }
+    }
+
+    return result;
+}
 
 static const CRPCCommand commands[] =
-{ //  category    name                      actor (function)         argNames
-  //  ----------- ------------------------  -----------------------  ----------
-    { "assets",   "issue",                  &issue,                  {"asset_name","qty","to_address","units","reissuable","has_ipfs","ipfs_hash"} },
-    { "assets",   "getaddressbalances",     &getaddressbalances,     {"address", "minconf"} },
-    { "assets",   "getassetdata",           &getassetdata,           {"asset_name"}},
-    { "assets",   "getmyassets",            &getmyassets,            {}},
-    { "assets",   "getassetaddresses",      &getassetaddresses,      {"asset_name"}},
-    { "assets",   "transfer",               &transfer,               {"asset_name", "address", "amount"}},
-    { "assets",   "reissue",                &reissue,                {"asset_name", "address", "amount", "reissuable", "new_ipfs"}}
+{ //  category    name                          actor (function)             argNames
+  //  ----------- ------------------------      -----------------------      ----------
+    { "assets",   "issue",                      &issue,                      {"asset_name","qty","to_address","units","reissuable","has_ipfs","ipfs_hash"} },
+    { "assets",   "listassetbalancesbyaddress", &listassetbalancesbyaddress, {"address"} },
+    { "assets",   "getassetdata",               &getassetdata,               {"asset_name"}},
+    { "assets",   "listmyassets",               &listmyassets,               {"asset", "verbose", "count", "start"}},
+    { "assets",   "listaddressesbyasset",       &listaddressesbyasset,       {"asset_name"}},
+    { "assets",   "transfer",                   &transfer,                   {"asset_name", "qty", "to_address"}},
+    { "assets",   "reissue",                    &reissue,                    {"asset_name", "qty", "to_address", "reissuable", "new_ipfs"}},
+    { "assets",   "listassets",                 &listassets,                 {"asset", "verbose", "count", "start"}}
 };
 
 void RegisterAssetRPCCommands(CRPCTable &t)

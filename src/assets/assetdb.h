@@ -43,7 +43,8 @@ public:
     // Helper functions
     bool EraseMyOutPoints(const std::string& assetName);
     bool LoadAssets();
-
+    bool AssetDir(std::vector<CNewAsset>& assets, const std::string filter, const size_t count, const long start);
+    bool AssetDir(std::vector<CNewAsset>& assets);
 };
 
 

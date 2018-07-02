@@ -159,7 +159,7 @@ bool CNewAsset::IsValid(std::string& strError, CAssetsCache& assetCache, bool fC
     }
 
     if (!IsAssetNameValid(std::string(strName)))
-        strError = "Invalid parameter: asset_name must only consist of valid characters and have a size between 3 and 31 characters. See help for more details.";
+        strError = "Invalid parameter: asset_name must only consist of valid characters and have a size between 3 and 30 characters. See help for more details.";
 
     if (nAmount <= 0)
         strError  = "Invalid parameter: asset amount can't be equal to or less than zero.";
@@ -486,7 +486,7 @@ bool CAssetTransfer::IsValid(std::string& strError) const
     strError = "";
 
     if (!IsAssetNameValid(std::string(strName)))
-        strError = "Invalid parameter: asset_name must only consist of valid characters and have a size between 3 and 31 characters. See help for more details.";
+        strError = "Invalid parameter: asset_name must only consist of valid characters and have a size between 3 and 30 characters. See help for more details.";
 
     if (nAmount <= 0)
         strError  = "Invalid parameter: asset amount can't be equal to or less than zero.";
@@ -1723,3 +1723,64 @@ bool GetBestAssetAddressAmount(CAssetsCache& cache, const std::string& assetName
     return false;
 }
 
+//! sets _assetNames_ to the set of names of owned assets
+bool GetMyOwnedAssets(CAssetsCache& cache, std::vector<std::string>& assetNames) {
+    for (auto const& entry : cache.mapMyUnspentAssets) {
+        assetNames.push_back(entry.first);
+    }
+
+    return true;
+}
+
+//! sets _assetNames_ to the set of names of owned assets that start with _prefix_
+bool GetMyOwnedAssets(CAssetsCache& cache, const std::string prefix, std::vector<std::string>& assetNames) {
+    for (auto const& entry : cache.mapMyUnspentAssets)
+        if (entry.first.find(prefix) == 0)
+            assetNames.push_back(entry.first);
+
+    return true;
+}
+
+//! sets _balance_ to the total quantity of _assetName_ owned across all addresses
+bool GetMyAssetBalance(CAssetsCache& cache, const std::string& assetName, CAmount& balance) {
+    balance = 0;
+    for (auto const& address : cache.mapAssetsAddresses[assetName]) {
+        if (vpwallets.size() == 0)
+            return false;
+
+        if (IsMine(*vpwallets[0], DecodeDestination(address), SIGVERSION_BASE) & ISMINE_ALL) {
+            if (!GetBestAssetAddressAmount(cache, assetName, address))
+                return false;
+
+            auto amt = cache.mapAssetsAddressAmount[make_pair(assetName, address)];
+            balance += amt;
+        }
+    }
+
+    return true;
+}
+
+//! sets _balances_ with the total quantity of each asset in _assetNames_
+bool GetMyAssetBalances(CAssetsCache& cache, const std::vector<std::string>& assetNames, std::map<std::string, CAmount>& balances) {
+    for (auto const& assetName : assetNames) {
+        CAmount balance;
+        if (!GetMyAssetBalance(cache, assetName, balance))
+            return false;
+
+        balances[assetName] = balance;
+    }
+
+    return true;
+}
+
+//! sets _balances_ with the total quantity of each owned asset
+bool GetMyAssetBalances(CAssetsCache& cache, std::map<std::string, CAmount>& balances) {
+    std::vector<std::string> assetNames;
+    if (!GetMyOwnedAssets(cache, assetNames))
+        return false;
+
+    if (!GetMyAssetBalances(cache, assetNames, balances))
+        return false;
+
+    return true;
+}
