@@ -517,13 +517,13 @@ BOOST_AUTO_TEST_CASE(generate_asset_maxsenders)
 	UniValue r;
 	printf("Running generate_asset_maxsenders...\n");
 	AliasNew("node1", "fundingmaxsender", "data");
-	string assetguid = AssetNew("node1", "max", "jagmaxsender", "");
+	string guid = AssetNew("node1", "max", "jagmaxsender", "", "8", "false", "10");
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress fundingtps 200000"), runtime_error);
 	GenerateBlocks(5, "node1");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo fundingtps"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo fundingmaxsender"));
 	string strAddress = find_value(r.get_obj(), "address").get_str();
 	// create 250 aliases
-	printf("creating sender 250 aliases/asset...\n");
+	printf("creating sender 250 aliases...\n");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockchaininfo"));
 	int64_t mediantime = find_value(r.get_obj(), "mediantime").get_int64();
 	mediantime += ONE_YEAR_IN_SECONDS;
@@ -533,7 +533,10 @@ BOOST_AUTO_TEST_CASE(generate_asset_maxsenders)
 		string aliasname = "jagmaxsenders" + boost::lexical_cast<string>(i);
 		senderstring += "{\\\"aliasto\\\":\\\"";
 		senderstring += aliasname;
-		senderstring += "\\\",\\\"amount\\\":0.001}";
+		if(i==0)
+			senderstring += "\\\",\\\"amount\\\":5.0}";
+		else
+			senderstring += "\\\",\\\"amount\\\":0.001}";
 		if (i < 249)
 			senderstring += ",";
 		// registration	
@@ -556,6 +559,17 @@ BOOST_AUTO_TEST_CASE(generate_asset_maxsenders)
 	senderstring += "]\"";
 	printf("done now trying to send asset...\n");
 	AssetSend("node1", guid, senderstring, "memomaxsend");
+	// test asset allocation transfers aswell
+	senderstring = "";
+	for (int i = 0; i < 250; i++) {
+		string aliasname = "jagmaxsenders" + boost::lexical_cast<string>(i);
+		senderstring += "{\\\"aliasto\\\":\\\"";
+		senderstring += aliasname;
+		senderstring += "\\\",\\\"amount\\\":0.001}";
+		if (i < 249)
+			senderstring += ",";
+	}
+	AssetAllocationTransfer(false, "node1", guid, "jagmaxsenders0", senderstring, "memomaxsend allocation");
 
 }
 BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_checktotalsupply)
