@@ -801,10 +801,14 @@ void CBudgetManager::NewBlock()
         std::string strError = "";
         int nConf = 0;
         int64_t nTime = 0;
-        if(!IsBudgetCollateralValid(it5->GetFeeTxHash(), it5->GetHash(), strError, nTime, nConf)){
+        if(it5->IsSubmittedManually() && !IsBudgetCollateralValid(it5->GetFeeTxHash(), it5->GetHash(), strError, nTime, nConf)){
             ++it5;
             continue;
         }
+
+        const CMasternode* producer = mnodeman.Find(it5->MasternodeSubmittedId());
+        if (producer == NULL)
+            continue;
 
         if(!it5->IsValid(strError)) {
             LogPrintf("fbs (immature) - invalid finalized budget - %s\n", strError);
@@ -929,7 +933,14 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, const std::string& strCommand,
         BudgetDraftBroadcast budgetDraftBroadcast;
         vRecv >> budgetDraftBroadcast;
 
-        if(mapSeenBudgetDrafts.count(budgetDraftBroadcast.GetHash())){
+        std::map<uint256, BudgetDraftBroadcast>::const_iterator found = mapSeenBudgetDrafts.find(budgetDraftBroadcast.GetHash());
+        if(found != mapSeenBudgetDrafts.end())
+        {
+            // If someone submitted a valid budget automatically and another one submitted the same budget manually -
+            // relay both no matter what order they got in
+            if (found->second.IsSubmittedManually() != budgetDraftBroadcast.IsSubmittedManually())
+                budgetDraftBroadcast.Relay();
+
             masternodeSync.AddedBudgetItem(budgetDraftBroadcast.GetHash());
             return;
         }
@@ -944,8 +955,6 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, const std::string& strCommand,
             return;
         }
 
-        mapSeenBudgetDrafts.insert(make_pair(budgetDraftBroadcast.GetHash(), budgetDraftBroadcast));
-
         if (!budgetDraftBroadcast.IsSubmittedManually())
         {
             const CMasternode* producer = mnodeman.Find(budgetDraftBroadcast.MasternodeSubmittedId());
@@ -953,6 +962,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, const std::string& strCommand,
             {
                 LogPrintf("fbs - unknown masternode - vin: %s\n", budgetDraftBroadcast.MasternodeSubmittedId().ToString());
                 mnodeman.AskForMN(pfrom, budgetDraftBroadcast.MasternodeSubmittedId());
+                vecImmatureBudgetDrafts.push_back(budgetDraftBroadcast);
                 return;
             }
 
@@ -961,6 +971,8 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, const std::string& strCommand,
                 Misbehaving(pfrom->GetId(), 50);
             }
         }
+
+        mapSeenBudgetDrafts.insert(make_pair(budgetDraftBroadcast.GetHash(), budgetDraftBroadcast));
 
         if(!budgetDraftBroadcast.IsValid(strError)) {
             LogPrintf("fbs - invalid finalized budget - %s\n", strError);
