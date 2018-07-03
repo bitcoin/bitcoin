@@ -517,7 +517,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_maxsenders)
 	UniValue r;
 	printf("Running generate_asset_maxsenders...\n");
 	AliasNew("node1", "fundingmaxsender", "data");
-	string guid = AssetNew("node1", "max", "fundingmaxsender", "", "8", "false", "10");
+	string guid = AssetNew("node1", "max", "fundingmaxsender", "data", "8", "false", "10");
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress fundingmaxsender 200000"), runtime_error);
 	GenerateBlocks(5, "node1");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo fundingmaxsender"));
