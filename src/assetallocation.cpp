@@ -416,16 +416,13 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, int op, const vector<vec
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2039 - " + _("Failed to write to asset DB");
 				return error(errorMessage.c_str());
 			}
+			if (!bSanityCheck && strResponseEnglish != "") {
+				paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, assetAllocationTuple.ToString());
+			}
 		}
 		if(bSanityCheck)
 			theAssetAllocation = dbAssetAllocation;
-		else {
-			if (fJustCheck) {
-				if (strResponseEnglish != "") {
-					paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, assetAllocationTuple.ToString());
-				}
-			}
-		}
+
 	}
 	else if (op == OP_ASSET_ALLOCATION_SEND)
 	{
