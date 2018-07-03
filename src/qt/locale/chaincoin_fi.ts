@@ -1689,10 +1689,6 @@
         <translation>&amp;Vastaanota maksu</translation>
     </message>
     <message>
-        <source>Generate Bech32 address</source>
-        <translation>Luo Bech32-osoite</translation>
-    </message>
-    <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>Näytä valittu pyyntö (sama toiminta kuin alkion tuplaklikkaus)</translation>
     </message>

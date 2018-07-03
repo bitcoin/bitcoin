@@ -2527,14 +2527,6 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>&amp;Request payment</translation>
     </message>
     <message>
-        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
-        <translation>Địa chỉ Bech32 (BIP-173) rẻ hơn để chi tiêu và cung cấp sự bảo vệ tốt hơn chống lại lỗi chính tả. Khi bỏ chọn một địa chỉ SegWit P2SH được bao bọc sẽ được tạo, tương thích với các ví cũ hơn.</translation>
-    </message>
-    <message>
-        <source>Generate Bech32 address</source>
-        <translation>Tạo địa chỉ Bech32</translation>
-    </message>
-    <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>Hiển thị request đã chọn (does the same as double clicking an entry)</translation>
     </message>
@@ -4051,10 +4043,6 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     <message>
         <source>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</source>
         <translation>Đặt mức phí thấp nhất (trong %s/kB) cho các giao dịch được bao gồm trong việc tạo khối. (mặc định: %s)</translation>
-    </message>
-    <message>
-        <source>Set maximum BIP141 block weight to this * 4. Deprecated, use blockmaxweight</source>
-        <translation>Đặt trọng số khối BIP141 tối đa cho điều này * 4. Không được chấp nhận, sử dụng blockmaxweight</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>

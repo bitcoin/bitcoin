@@ -2001,24 +2001,12 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation>הצבע כן</translation>
     </message>
     <message>
-        <source>Yote Yes on the selected proposal</source>
-        <translation>הצבע כן על ההצעה הנבמחר</translation>
-    </message>
-    <message>
         <source>Vote Abstain</source>
         <translation>הצבע בעד</translation>
     </message>
     <message>
-        <source>Yote Abstain on the selected proposal</source>
-        <translation>ציין את ההצעה על ההצעה שנבחרה</translation>
-    </message>
-    <message>
         <source>Vote No</source>
         <translation>הצבע לא</translation>
-    </message>
-    <message>
-        <source>Yote No on the selected proposal</source>
-        <translation>הצבע לא על ההצעה שנבחרה</translation>
     </message>
     <message>
         <source>Vote yes</source>
@@ -2631,14 +2619,6 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     <message>
         <source>&amp;Request payment</source>
         <translation>&amp;בקש תשלום</translation>
-    </message>
-    <message>
-        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
-        <translation>כתובות Bech32 (BIP-173) זולות יותר יכולות ולהציע הגנה טובה יותר מפני שגיאות הקלדה. כאשר לא מסומנת, תופיע כתובת P2SH עטופה ב - SegWit, שתתאים לארנקים ישנים יותר.</translation>
-    </message>
-    <message>
-        <source>Generate Bech32 address</source>
-        <translation>צור כתובת Bech32</translation>
     </message>
     <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Chaincoin network.</source>
@@ -3956,7 +3936,79 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <source>Connect only to the specified node(s); -connect=0 disables automatic connections (the rules for this peer are the same as for -addnode)</source>
-        <translation>התחבר רק לנקודות שצוינו. -connect=0 משבית את החיבורים האוטומטיים (הכללים עבור עמיתים זהים זהים ל - adnode)</translation>
+        <translation>התחבר רק לצמת(ים)שצוינו. -connect=0 משבית את החיבורים האוטומטיים (הכללים עבור עמיתים זהים זהים ל - adnode)</translation>
+    </message>
+    <message>
+        <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
+        <translation>צירת קבצים חדשים עם הרשאות ברירת המחדל של המערכת, במקום umask 077 (יעיל רק שפונקציונליות הארנק מושבתת)</translation>
+    </message>
+    <message>
+        <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
+        <translation>מחק את כל עסקאות הארנק ושחזר רק את החלקים של ה blockchain דרך - סריקה עם ההפעלה</translation>
+    </message>
+    <message>
+        <source>Disable all Chaincoin specific functionality (Masternodes, PrivateSend, Governance) (0-1, default: %u)</source>
+        <translation>השבת את כל הפונקציונליות הספציפית של Chaincoin  ו  (Masternodes, PrivateSend, Governance) ו (0-1, default: %u)</translation>
+    </message>
+    <message>
+        <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
+        <translation>גלה כתובות IP שלך (ברירת מחדל: 1 בעת האזנה וללא externalip או proxy)</translation>
+    </message>
+    <message>
+        <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
+        <translation>מופץ תחת רישיון התוכנה MIT, ראה את הקובץ המצורף COPYING או &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
+    </message>
+    <message>
+        <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
+        <translation>אל תשמור עסקאות ב- mempool יותר מ &lt;n&gt; שעות (ברירת מחדל:%u)</translation>
+    </message>
+    <message>
+        <source>Enable multiple PrivateSend mixing sessions per block, experimental (0-1, default: %u)</source>
+        <translation>אפשר מספר ערבובים של PrivateSend לכל בלוק, ניסיוני (0-1, ברירת מחדל:%u)</translation>
+    </message>
+    <message>
+        <source>Enable use of automated PrivateSend for funds stored in this wallet (0-1, default: %u)</source>
+        <translation>אפשר שימוש ב- PrivateSend אוטומטי עבור כספים המאוחסנים בארנק זה (0-1, ברירת המחדל:%u)</translation>
+    </message>
+    <message>
+        <source>Equivalent bytes per sigop in transactions for relay and mining (default: %u)</source>
+        <translation>שווה ערך בתים לכל sigop בעסקאות ממסר וכרייה (ברירת המחדל:%u)</translation>
+    </message>
+    <message>
+        <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
+        <translation>שגיאה בטעינת%s: לא ניתן להפעיל HD בארנק שכבר קיים בו non-HD</translation>
+    </message>
+    <message>
+        <source>Error loading wallet %s. -wallet parameter must only specify a filename (not a path).</source>
+        <translation>שגיאה בטעינת ארנק%s. פרמטר הארנק חייב לציין רק שם קובץ (לא נתיב).</translation>
+    </message>
+    <message>
+        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
+        <translation>שגיאה בקריאת%s! כל המפתחות נקראו נכון, אך נתוני העסקה או רשומות פנקס הכתובות עשויים להיות חסרים או שגויים.</translation>
+    </message>
+    <message>
+        <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
+        <translation>שגיאה: האזנה עבור חיבורים נכנסים נכשלה (האזנה החזירה שגיאה %s)</translation>
+    </message>
+    <message>
+        <source>Exclude debugging information for a category. Can be used in conjunction with -debug=1 to output debug logs for all categories except one or more specified categories.</source>
+        <translation>אל תכלול מידע באגים עבור קטגוריה. ניתן להשתמש בשילוב עם -debug = 1 כדי לייצא לוג עבור כל הקטגוריות למעט אחד או יותר קטגוריות שצוינו.</translation>
+    </message>
+    <message>
+        <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
+        <translation>בצע פקודה כאשר מתקבלת התראה רלוונטית או שאנו רואים פיצול ארוך באמת (%s ב cmd מוחלף על ידי הודעה)</translation>
+    </message>
+    <message>
+        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
+        <translation>ביצוע פקודה כאשר הבלוק הטוב ביותר משתנה (%s ב cmd מוחלף על ידי hush)</translation>
+    </message>
+    <message>
+        <source>Extra transactions to keep in memory for compact block reconstructions (default: %u)</source>
+        <translation>עסקאות נוספות לשמור בזיכרון עבור שחזורים בלוק קומפקטי (ברירת המחדל:%u)</translation>
+    </message>
+    <message>
+        <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
+        <translation>יצירת גיבוי נכשל, הקובץ כבר קיים! זה יכול לקרות אם אתה מפעיל מחדש את הארנק בתוך פחות מ 60 שניות. אתה יכול להמשיך אם אתה בסדר עם זה.</translation>
     </message>
     </context>
 </TS>

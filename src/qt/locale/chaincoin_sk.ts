@@ -1762,14 +1762,6 @@
         <translation>&amp;Vyžiadať platbu</translation>
     </message>
     <message>
-        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
-        <translation>Je lacnejšie míňať z Bech32 adries (BIP-173), ktoré tiež ponúkajú lepšiu ochranu voči preklepom. Ak túto možnosť nevyberiete, bude vytvorená adresa typu P2SH so SegWit, kompatibilná so staršími peňaženkami.</translation>
-    </message>
-    <message>
-        <source>Generate Bech32 address</source>
-        <translation>Generovať adresu Bech32</translation>
-    </message>
-    <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>Zobraz zvolenú požiadavku (urobí to isté ako dvoj-klik na záznam)</translation>
     </message>

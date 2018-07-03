@@ -1761,14 +1761,6 @@
         <translation>&amp;Demander un paiement</translation>
     </message>
     <message>
-        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
-        <translation>Il est moins coûteux de dépenser à partir d’adresses Bech32 (BIP-173). Elles offrent aussi une meilleure protection contre les fautes de frappe. Si cette option n’est pas cochée, une adresse SegWit enveloppée dans un P2SH sera créée, compatible avec les anciens porte-monnaie.</translation>
-    </message>
-    <message>
-        <source>Generate Bech32 address</source>
-        <translation>Générer une adresse Bech32</translation>
-    </message>
-    <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>Afficher la demande choisie (comme double-cliquer sur une entrée)</translation>
     </message>
