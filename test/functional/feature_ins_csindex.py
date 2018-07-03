@@ -85,13 +85,13 @@ class TxIndexTest(ParticlTestFramework):
         assert(len(ro) == 3)
 
         ro = nodes[2].rewindchain()
-        assert(ro["to_height"] == 3)
+        assert(ro['to_height'] == 3)
         ro = nodes[2].getblockchaininfo()
-        assert(ro["blocks"] == 3)
+        assert(ro['blocks'] == 3)
 
         ro = nodes[2].listcoldstakeunspent(addrStake, 4)
-        assert(ro[0]["height"] == 2)
-        assert(ro[1]["height"] == 2)
+        assert(ro[0]['height'] == 2)
+        assert(ro[1]['height'] == 2)
         assert(len(ro) == 2)
 
         ro = nodes[1].listcoldstakeunspent(addrStake)
@@ -101,6 +101,11 @@ class TxIndexTest(ParticlTestFramework):
 
         ro = nodes[1].listcoldstakeunspent(addrStake)
         assert(len(ro) == 3)
+
+        ro = nodes[1].getblockreward(2)
+        assert(ro['stakereward'] < ro['blockreward'])
+
+
 
 
 if __name__ == '__main__':

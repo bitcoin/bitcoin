@@ -12,6 +12,7 @@
 #include <validation.h>
 #include <txmempool.h>
 #include <key_io.h>
+#include <core_io.h>
 
 #include <univalue.h>
 
@@ -568,18 +569,24 @@ UniValue listcoldstakeunspent(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw std::runtime_error(
-            "getcoldstakeunspents \"stakeaddress\" (height, options)\n"
+            "listcoldstakeunspent \"stakeaddress\" (height, options)\n"
             "\nReturns the unspent outputs of \"stakeaddress\" at height.\n"
             "\nArguments:\n"
             "1. \"stakeaddress\"        (string, required) The stakeaddress to filter outputs by.\n"
-            "2. height                (string, optional) The block height to return outputs for.\n"
+            "2. height                (numeric, optional) The block height to return outputs for.\n"
             "3. options               (object, optional)\n"
             "   {\n"
             "     \"mature_only\"         (boolean, optional, default false) Return only outputs stakeable at height.\n"\
             "     \"all_staked\"          (boolean, optional, default false) Ignore maturity check for outputs of coinstake transactions.\n"
             "   }\n"
             "\nResult:\n"
-
+            "[\n"
+            " {\n"
+            "  \"height\" : n,           (numeric) The height the output was staked into the chain.\n"
+            "  \"value\" : n,            (numeric) The value of the output.\n"
+            "  \"addrspend\" : \"addr\",   (string) The spending address of the output\n"
+            " } ...\n"
+            "]\n"
             "\nExamples:\n"
             + HelpExampleCli("listcoldstakeunspent", "\"Pb7FLL3DyaAVP2eGfRiEkj4U8ZJ3RHLY9g\" 1000")
             + HelpExampleRpc("listcoldstakeunspent", "\"Pb7FLL3DyaAVP2eGfRiEkj4U8ZJ3RHLY9g\", 1000")
@@ -702,6 +709,103 @@ UniValue listcoldstakeunspent(const JSONRPCRequest& request)
     return rv;
 }
 
+UniValue getblockreward(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1)
+        throw std::runtime_error(
+            "getblockreward height\n"
+            "\nReturns the blockreward for block at height.\n"
+            "\nArguments:\n"
+            "1. height                (numeric, required) The height index.\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"blockhash\" : \"id\",     (id) The hash of the block.\n"
+            "  \"stakereward\" : n,      (numeric) The stake reward portion, newly minted coin.\n"
+            "  \"blockreward\" : n,      (numeric) The block reward, value paid to staker, including fees.\n"
+            "  \"foundationreward\" : n, (numeric) The accumulated foundation reward payout, if any.\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getblockreward", "1000")
+            + HelpExampleRpc("getblockreward", "1000")
+        );
+
+    RPCTypeCheck(request.params, {UniValue::VNUM});
+
+    if (!g_txindex) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Requires -txindex enabled");
+    }
+
+    int nHeight = request.params[0].get_int();
+    if (nHeight < 0 || nHeight > chainActive.Height()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
+    }
+
+    LOCK(cs_main);
+
+    CBlockIndex *pblockindex = chainActive[nHeight];
+
+    CAmount stake_reward = 0;
+    if (pblockindex->pprev) {
+        stake_reward = Params().GetProofOfStakeReward(pblockindex->pprev, 0);
+    }
+
+    CBlock block;
+    if (!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus())) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Block not found on disk");
+    }
+
+    const DevFundSettings *devfundconf = Params().GetDevFundSettings(pblockindex->GetBlockTime());
+    CScript devFundScriptPubKey;
+    if (devfundconf) {
+        CTxDestination dest = DecodeDestination(devfundconf->sDevFundAddresses);
+        devFundScriptPubKey = GetScriptForDestination(dest);
+    }
+
+    const auto &tx = block.vtx[0];
+
+    CAmount value_out = 0, value_in = 0, value_foundation = 0;
+    for (const auto &txout : tx->vpout) {
+        if (!txout->IsStandardOutput()) {
+            continue;
+        }
+
+        if (devfundconf && *txout->GetPScriptPubKey() == devFundScriptPubKey) {
+            value_foundation += txout->GetValue();
+            continue;
+        }
+
+        value_out += txout->GetValue();
+    }
+
+    for (const auto& txin : tx->vin) {
+        if (txin.IsAnonInput()) {
+            continue;
+        }
+
+        CBlockIndex *blockindex = nullptr;
+        CTransactionRef tx_prev;
+        uint256 hashBlock;
+        if (!GetTransaction(txin.prevout.hash, tx_prev, Params().GetConsensus(), hashBlock, true, blockindex)) {
+            throw JSONRPCError(RPC_MISC_ERROR, "Transaction not found on disk");
+        }
+        if (txin.prevout.n > tx_prev->GetNumVOuts()) {
+            throw JSONRPCError(RPC_MISC_ERROR, "prevout not found on disk");
+        }
+        value_in += tx_prev->vpout[txin.prevout.n]->GetValue();
+    }
+
+    CAmount block_reward = value_out - value_in;
+
+    UniValue rv(UniValue::VOBJ);
+    rv.pushKV("blockhash", pblockindex->GetBlockHash().ToString());
+    rv.pushKV("stakereward", ValueFromAmount(stake_reward));
+    rv.pushKV("blockreward", ValueFromAmount(block_reward));
+    if (value_foundation > 0)
+        rv.pushKV("foundationreward", ValueFromAmount(value_foundation));
+
+    return rv;
+}
+
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
@@ -716,6 +820,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         "getspentinfo",           &getspentinfo,           {"inputs"} },
 
     { "csindex",            "listcoldstakeunspent",   &listcoldstakeunspent,   {"stakeaddress","height","options"} },
+    { "blockchain",         "getblockreward",         &getblockreward,         {"height"} },
 
 };
 

@@ -2151,6 +2151,11 @@ static UniValue getblockstats(const JSONRPCRequest& request)
                 tx_total_out += out.nValue;
                 utxo_size_inc += GetSerializeSize(out, SER_NETWORK, PROTOCOL_VERSION) + PER_UTXO_OVERHEAD;
             }
+            for (const auto& out : tx->vpout) {
+                if (out->IsStandardOutput())
+                    tx_total_out += out->GetValue();
+                utxo_size_inc += GetSerializeSize(*out, SER_NETWORK, PROTOCOL_VERSION) + PER_UTXO_OVERHEAD + 1;
+            }
         }
 
         if (tx->IsCoinBase()) {
@@ -2197,13 +2202,29 @@ static UniValue getblockstats(const JSONRPCRequest& request)
                     throw JSONRPCError(RPC_INTERNAL_ERROR, std::string("Unexpected internal error (tx index seems corrupt)"));
                 }
 
+                if (tx->IsParticlVersion()) {
+                    const auto& prevoutput = tx_in->vpout[in.prevout.n];
+
+                    if (prevoutput->IsStandardOutput())
+                        tx_total_in += prevoutput->GetValue();
+                    utxo_size_inc -= GetSerializeSize(*prevoutput, SER_NETWORK, PROTOCOL_VERSION) + PER_UTXO_OVERHEAD;
+                } else
+                {
                 CTxOut prevoutput = tx_in->vout[in.prevout.n];
 
                 tx_total_in += prevoutput.nValue;
                 utxo_size_inc -= GetSerializeSize(prevoutput, SER_NETWORK, PROTOCOL_VERSION) + PER_UTXO_OVERHEAD;
+                }
             }
 
-            CAmount txfee = tx_total_in - tx_total_out;
+            CAmount txfee;
+            if (tx->IsCoinStake()) {
+                 txfee = 0;
+            } else
+            if (!tx->GetCTFee(txfee)) {
+                txfee = tx_total_in - tx_total_out;
+            }
+
             assert(MoneyRange(txfee));
             if (do_medianfee) {
                 fee_array.push_back(txfee);

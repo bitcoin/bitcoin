@@ -204,7 +204,7 @@ CAmount CTransaction::GetPlainValueOut(size_t &nStandard, size_t &nCT, size_t &n
     // accumulators not cleared here intentionally
     CAmount nValueOut = 0;
 
-    for (auto &txout : vpout)
+    for (const auto &txout : vpout)
     {
         if (txout->IsType(OUTPUT_CT))
         {
@@ -220,7 +220,7 @@ CAmount CTransaction::GetPlainValueOut(size_t &nStandard, size_t &nCT, size_t &n
 
         nStandard++;
         CAmount nValue = txout->GetValue();
-        nValueOut += txout->GetValue();
+        nValueOut += nValue;
         if (!MoneyRange(nValue) || !MoneyRange(nValueOut))
             throw std::runtime_error(std::string(__func__) + ": value out of range");
     };
