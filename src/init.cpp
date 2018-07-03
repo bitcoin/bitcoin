@@ -611,7 +611,7 @@ bool LoadData()
     }
 
     uiInterface.InitMessage(_("Loading budget cache..."));
-    if (!Load(budget, "budget.dat", "MasternodeBudget"))
+    if (!Load(budget, "budget-v2.dat", "MasternodeBudget"))
     {
         return InitError(_("Failed to load systemnode cache from") + "\n" + (pathDB / strDBName).string());
     }
@@ -638,7 +638,7 @@ bool LoadData()
 void DumpData()
 {
     Dump(mnodeman, "mncache.dat", "MasternodeCache");
-    Dump(budget, "budget.dat", "MasternodeBudget");
+    Dump(budget, "budget-v2.dat", "MasternodeBudget");
     Dump(masternodePayments, "mnpayments.dat", "MasternodePayments");
     Dump(snodeman, "sncache.dat", "SystemnodeCache");
     Dump(systemnodePayments, "snpayments.dat", "SystemnodePayments");
