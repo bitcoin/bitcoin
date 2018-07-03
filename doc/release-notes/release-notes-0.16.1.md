@@ -107,10 +107,10 @@ weights.
 
 ### Miscellaneous
 - #12518 `a17fecf` Bump leveldb subtree (MarcoFalke)
+- #13004 `6a3b0d3` Print to console by default when not run with -daemon (practicalswift)
 - #12442 `f3b8d85` devtools: Exclude patches from lint-whitespace (MarcoFalke)
 - #12988 `acdf433` Hold cs_main while calling UpdatedBlockTip() signal (skeees)
 - #12985 `0684cf9` Windows: Avoid launching as admin when NSIS installer ends. (JeremyRand)
-- #13004 `6a3b0d3` Print to console by default when not run with -daemon (practicalswift)
 
 ### Documentation
 - #12637 `60086dd` backport: #12556 fix version typo in getpeerinfo RPC call help (fanquake)
