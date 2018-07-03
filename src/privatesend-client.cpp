@@ -1223,7 +1223,8 @@ bool CPrivateSendClient::MakeCollateralAmounts(const CompactTallyItem& tallyItem
     if(!fTryDenominated && tallyItem.vecOutPoints.size() == 1 && CPrivateSend::IsDenominatedAmount(tallyItem.nAmount))
         return false;
 
-    CWalletTx wtx;
+    CTransactionRef tx;
+    CWalletTx wtx(pwallet, tx);
     CAmount nFeeRet = 0;
     int nChangePosRet = -1;
     std::string strFail = "";
@@ -1250,8 +1251,6 @@ bool CPrivateSendClient::MakeCollateralAmounts(const CompactTallyItem& tallyItem
     for (const auto& outpoint : tallyItem.vecOutPoints)
         coinControl.Select(outpoint);
 
-    CTransactionRef tx;
-    tx = MakeTransactionRef(std::move(*wtx.tx));
     bool fSuccess = pwallet->CreateTransaction(vecSend, tx, reservekeyChange,
             nFeeRet, nChangePosRet, strFail, coinControl, true, ONLY_NONDENOMINATED);
     if(!fSuccess) {
@@ -1390,13 +1389,13 @@ bool CPrivateSendClient::CreateDenominated(const CompactTallyItem& tallyItem, bo
     for (const auto& outpoint : tallyItem.vecOutPoints)
         coinControl.Select(outpoint);
 
-    CWalletTx wtx;
+    CTransactionRef tx;
+    CWalletTx wtx(pwallet, tx);
     CAmount nFeeRet = 0;
     int nChangePosRet = -1;
     std::string strFail = "";
     // make our change address
     CReserveKey reservekeyChange(pwallet);
-    CTransactionRef tx = MakeTransactionRef(std::move(*wtx.tx));
     bool fSuccess = pwallet->CreateTransaction(vecSend, tx, reservekeyChange,
             nFeeRet, nChangePosRet, strFail, coinControl, true, ONLY_NONDENOMINATED);
     if(!fSuccess) {
