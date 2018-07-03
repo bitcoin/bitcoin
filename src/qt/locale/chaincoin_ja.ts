@@ -2101,24 +2101,12 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>賛成に投票</translation>
     </message>
     <message>
-        <source>Yote Yes on the selected proposal</source>
-        <translation>選択した議案に賛成投票</translation>
-    </message>
-    <message>
         <source>Vote Abstain</source>
         <translation>棄権に投票</translation>
     </message>
     <message>
-        <source>Yote Abstain on the selected proposal</source>
-        <translation>選択した議案に棄権票</translation>
-    </message>
-    <message>
         <source>Vote No</source>
         <translation>反対に投票</translation>
-    </message>
-    <message>
-        <source>Yote No on the selected proposal</source>
-        <translation>選択した議案に反対投票</translation>
     </message>
     <message>
         <source>Vote yes</source>
@@ -2755,14 +2743,6 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     <message>
         <source>&amp;Request payment</source>
         <translation>支払をリクエストする (&amp;R)</translation>
-    </message>
-    <message>
-        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
-        <translation>Bech32形式(BIP-173を参照)のアドレスを利用するとアドレスからの出金時に安い手数料で済み、また誤入力の可能性を減らすことができます。チェックを外すと、古いウォレットと互換性を保つことができるP2SH形式のセグウィットアドレスが作られます。</translation>
-    </message>
-    <message>
-        <source>Generate Bech32 address</source>
-        <translation>Bech32形式のアドレスを生成</translation>
     </message>
     <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Chaincoin network.</source>
@@ -4289,10 +4269,6 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     <message>
         <source>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</source>
         <translation>ブロック生成時に取り込まれるトランザクションの最低手数料率 (%s/kB 単位)。(デフォルト: %s)</translation>
-    </message>
-    <message>
-        <source>Set maximum BIP141 block weight to this * 4. Deprecated, use blockmaxweight</source>
-        <translation>BIP141:SegWitの最大ブロックサイズはこれを4倍したものとします。注意: 非推奨です。代わりにblockmaxweightを使用してください。</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>

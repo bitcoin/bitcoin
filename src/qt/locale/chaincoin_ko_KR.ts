@@ -1761,14 +1761,6 @@
         <translation>지불 요청(&amp;R)</translation>
     </message>
     <message>
-        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
-        <translation>Bech32 주소 (BIP-173)는 더 적은 수수료와 오입금으로부터 방지해 줍니다. Bech32가 비활성화 되어있으면 P2SH 기반의 세그윗 주소가 대신 생성됩니다.</translation>
-    </message>
-    <message>
-        <source>Generate Bech32 address</source>
-        <translation>Bech32 주소 생성</translation>
-    </message>
-    <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>선택된 요청을 표시하기 (더블 클릭으로 항목을 표시할 수 있습니다)</translation>
     </message>

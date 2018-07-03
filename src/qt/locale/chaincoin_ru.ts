@@ -1757,14 +1757,6 @@
         <translation>&amp;Запросить платёж</translation>
     </message>
     <message>
-        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
-        <translation>Bech32 адреса (BIP-173) дешевле в коммисиях и предлагают лучшую защиту от опечаток. Когда пункт P2SH не отмечен, будет создан связанный SegWit адрес, совместимый со старыми кошельками.</translation>
-    </message>
-    <message>
-        <source>Generate Bech32 address</source>
-        <translation>Создать Bech32 адрес</translation>
-    </message>
-    <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>Показать выбранный запрос (то же самое, что и двойной клик по записи)</translation>
     </message>

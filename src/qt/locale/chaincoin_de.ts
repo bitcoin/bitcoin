@@ -1264,7 +1264,7 @@
     </message>
     <message>
         <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the Chaincoin network, as detailed below.</source>
-        <translation>Neueste Transaktionen werden eventuell noch nicht angezeigt, daher könnte Ihr Kontostand veraltet sein. Er wird korrigiert, sobald Ihr Wallet die Synchronisation mit dem Chaincoin-Netzwerk erfolgreich abgeschlossen hat. Details dazu finden sich weiter unten.</translation>
+        <translation>Neueste Transaktionen werden eventuell noch nicht angezeigt, daher könnte Ihr Kontostand veraltet sein. Er wird korrigiert, sobald Ihre Wallet die Synchronisation mit dem Chaincoin-Netzwerk erfolgreich abgeschlossen hat. Details dazu finden sich weiter unten.</translation>
     </message>
     <message>
         <source>Attempting to spend Chaincoin that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
@@ -2082,15 +2082,15 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </message>
     <message>
         <source>Min yes votes</source>
-        <translation>Mindest ja-Votes</translation>
+        <translation>Mindest "Ja" Stimmen</translation>
     </message>
     <message>
         <source>Min no votes</source>
-        <translation>Mindest nein-Votes</translation>
+        <translation>Mindest "Nein" Stimmen</translation>
     </message>
     <message>
         <source>Min abs. yes votes</source>
-        <translation>Mindest enthaltene Ja-Votes</translation>
+        <translation>Mindest enthaltene "Ja" Stimmen</translation>
     </message>
     <message>
         <source>Min percentage</source>
@@ -2098,39 +2098,39 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </message>
     <message>
         <source>Vote Yes</source>
-        <translation>Ja Voten</translation>
-    </message>
-    <message>
-        <source>Yote Yes on the selected proposal</source>
-        <translation>Vote Ja bei ausgewähltem Proposal</translation>
+        <translation>Stimme "Ja"</translation>
     </message>
     <message>
         <source>Vote Abstain</source>
-        <translation>Enthalten Voten</translation>
-    </message>
-    <message>
-        <source>Yote Abstain on the selected proposal</source>
-        <translation>Enthalten voten bei ausgewähltem Proposal</translation>
+        <translation>Enthalten der Stimme</translation>
     </message>
     <message>
         <source>Vote No</source>
-        <translation>Vote Nein</translation>
+        <translation>Stimme "Nein"</translation>
     </message>
     <message>
-        <source>Yote No on the selected proposal</source>
-        <translation>Vote Nein bei ausgewähltem Proposal</translation>
+        <source>Vote Yes on the selected proposal</source>
+        <translation>Stimme "Ja" bei ausgewähltem Proposal</translation>
+    </message>
+    <message>
+        <source>Vote Abstain on the selected proposal</source>
+        <translation>Enthalten der Stimme bei ausgewähltem Proposal</translation>
+    </message>
+    <message>
+        <source>Vote No on the selected proposal</source>
+        <translation>Stimme "Nein" bei ausgewähltem Proposal</translation>
     </message>
     <message>
         <source>Vote yes</source>
-        <translation>Ja Voten</translation>
+        <translation>Stimme "Ja"</translation>
     </message>
     <message>
         <source>Vote abstain</source>
-        <translation>Enthalten Voten</translation>
+        <translation>Enthalten der Stimme</translation>
     </message>
     <message>
         <source>Vote no</source>
-        <translation>Vote Nein</translation>
+        <translation>Stimme "Nein"</translation>
     </message>
     <message>
         <source>Visit proposal website</source>
@@ -2158,11 +2158,11 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </message>
     <message>
         <source>Confirm vote</source>
-        <translation>Bestätige Vote</translation>
+        <translation>Bestätige Stimme</translation>
     </message>
     <message>
         <source>Are you sure you want to vote &lt;strong&gt;%1&lt;/strong&gt; on the proposal &lt;strong&gt;%2&lt;/strong&gt;?</source>
-        <translation>Bist du sicher das du &lt;strong&gt;%1&lt;/strong&gt;, bei dem Proposal &lt;strong&gt;%2&lt;/strong&gt;voten willst ?</translation>
+        <translation>Bist du sicher das du &lt;strong&gt;%1&lt;/strong&gt;, bei dem Proposal &lt;strong&gt;%2&lt;/strong&gt;stimmen willst ?</translation>
     </message>
     <message>
         <source>Voting</source>
@@ -2170,7 +2170,7 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </message>
     <message>
         <source>You voted %1 %2 time(s) successfully and failed %3 time(s) on %4</source>
-        <translation>Du hast %1 %2 Mal(e) erfolgreich gevotet und es scheiterte %3 Mal(e) bei %4</translation>
+        <translation>Du hast %1 %2 mal erfolgreich abgestimmt und es scheiterte %3 mal bei %4</translation>
     </message>
     <message>
         <source>Start Date:</source>
@@ -2229,15 +2229,15 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </message>
     <message>
         <source>Obtained yes votes.</source>
-        <translation>Erhaltende Ja Votes.</translation>
+        <translation>Erhaltende "Ja" Stimmen.</translation>
     </message>
     <message>
         <source>Obtained no votes.</source>
-        <translation>Erhaltene Nein Votes.</translation>
+        <translation>Erhaltene "Nein" Stimmen.</translation>
     </message>
     <message>
         <source>Obtained absolute yes votes.</source>
-        <translation>Erhaltende absolute Ja Votes.</translation>
+        <translation>Erhaltende absolute "Ja" Stimmen.</translation>
     </message>
     <message>
         <source>Proposed amount.</source>
@@ -2245,7 +2245,7 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </message>
     <message>
         <source>Current vote percentage.</source>
-        <translation>Momentane Vote Prozentzahl. </translation>
+        <translation>Derzeitige Teilnahme (in Prozent). </translation>
     </message>
 </context>
 <context>
@@ -2749,20 +2749,20 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Zurücksetzen</translation>
     </message>
     <message>
+        <source>Native segwit addresses (aka Bech32 or BIP-173) reduce your transaction fees later on and offer better protection against typos, but old wallets don't support them. When unchecked, an address compatible with older wallets will be created instead.</source>
+        <translation>Bech32-Adressen (BIP-173) sind günstiger zum Senden und besser geschützt gegen Tippfehler. Wenn nicht gewählt, wird eine P2SH-verpackte SegWit-Adresse generiert, kompatibel mit älteren Wallets.</translation>
+    </message>
+    <message>
+        <source>Generate native segwit (Bech32) address</source>
+        <translation>Erzeuge Segwit (Bech32) Adresse</translation>
+    </message>
+    <message>
         <source>Requested payments history</source>
         <translation>Verlauf der angeforderten Zahlungen</translation>
     </message>
     <message>
         <source>&amp;Request payment</source>
         <translation>&amp;Zahlung anfordern</translation>
-    </message>
-    <message>
-        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
-        <translation>Bech32-Adressen (BIP-173) sind günstiger zum Senden, und besser geschützt gegen Tippfehler. Wenn nicht gewählt, wird eine P2SH-verpackte SegWit-Adresse generiert, kompatibel mit älteren Wallets.</translation>
-    </message>
-    <message>
-        <source>Generate Bech32 address</source>
-        <translation>Erzeuge Bech32-Adresse</translation>
     </message>
     <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Chaincoin network.</source>
@@ -4293,10 +4293,6 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     <message>
         <source>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</source>
         <translation>Niedrigste Gebühr (in %s/kB) für Transaktionen einstellen, die bei der Blockerzeugung berücksichtigt werden sollen. (default: %s)</translation>
-    </message>
-    <message>
-        <source>Set maximum BIP141 block weight to this * 4. Deprecated, use blockmaxweight</source>
-        <translation>Setzen von maximalem BIP141 Blockgewicht von * 4. ist veraltet, benutze blockmaxweight</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
