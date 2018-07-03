@@ -910,4 +910,28 @@ QString formatPingTime(double dPingTime)
     return dPingTime == 0 ? QObject::tr("N/A") : QString(QObject::tr("%1 ms")).arg(QString::number((int)(dPingTime * 1000), 10));
 }
 
+/**
+ * Class constructor.
+ * @param[int64_t] numValue   The Number to convert to a QString for display
+ */
+QTableWidgetNumberItem::QTableWidgetNumberItem(const int64_t numValue) : QTableWidgetItem(), value(numValue)
+{
+    this->setText(QString::number(numValue));
+}
+
+/**
+ * Comparator overload to ensure that the QStrings internally set as numbers are compared as numbers and not strings.
+ * @param[QTableWidgetItem] item      Right hand side of the less than operator
+ */
+bool QTableWidgetNumberItem::operator<(QTableWidgetItem const& item) const
+{
+    QTableWidgetNumberItem const* rhs = dynamic_cast<QTableWidgetNumberItem const*>(&item);
+
+    if (!rhs) {
+        return QTableWidgetItem::operator<(item);
+    }
+
+    return value < rhs->value;
+}
+
 } // namespace GUIUtil
