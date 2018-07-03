@@ -1,4 +1,4 @@
-Protocol Documentation - 0.12.1
+Protocol Documentation - 0.16.1
 =====================================
 
 This document describes the protocol extensions for all additional functionality build into the Chaincoin protocol. This doesn't include any of the Bitcoin protocol, which has been left intact in the Chaincoin project. For more information about the core protocol, please see https://en.bitcoin.it/w/index.php?title#Protocol_documentation&action#edit
@@ -292,15 +292,6 @@ Get Masternode list or specific entry
 | Field Size | Field Name | Data type | Description |
 | ---------- | ----------- | --------- | -------- |
 | 41 | vin | [CTxIn](#ctxin) | The unspent output which is holding 1000 CHC
-
-### SYNCSTATUSCOUNT - "ssc"
-
-Sync Status Count
-
-| Field Size | Field Name | Data type | Description |
-| ---------- | ----------- | --------- | -------- |
-| 4 | nItemID | int | Masternode Sync Item ID
-| 4 | nCount | int | Masternode Sync Count
 
 #### Defined Sync Item IDs (per src/masternode-sync.h)
 
