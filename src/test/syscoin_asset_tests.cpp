@@ -512,6 +512,52 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest)
 	balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 824875837095);
 }
+BOOST_AUTO_TEST_CASE(generate_asset_maxsenders)
+{
+	UniValue r;
+	printf("Running generate_asset_maxsenders...\n");
+	AliasNew("node1", "fundingmaxsender", "data");
+	string assetguid = AssetNew("node1", "max", "jagmaxsender", "");
+	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress fundingtps 200000"), runtime_error);
+	GenerateBlocks(5, "node1");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo fundingtps"));
+	string strAddress = find_value(r.get_obj(), "address").get_str();
+	// create 250 aliases
+	printf("creating sender 250 aliases/asset...\n");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockchaininfo"));
+	int64_t mediantime = find_value(r.get_obj(), "mediantime").get_int64();
+	mediantime += ONE_YEAR_IN_SECONDS;
+	string mediantimestr = boost::lexical_cast<string>(mediantime);
+	string senderstring = "\"[";
+	for (int i = 0; i < 250; i++) {
+		string aliasname = "jagmaxsenders" + boost::lexical_cast<string>(i);
+		senderstring += "{\\\"aliasto\\\":\\\"";
+		senderstring += aliasname;
+		senderstring += "\\\",\\\"amount\\\":0.001}";
+		if (i < 249)
+			senderstring += ",";
+		// registration	
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew " + aliasname + " '' 3 " + mediantimestr + " '' '' '' ''"));
+		UniValue varray = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscointxfund " + varray[0].get_str() + " " + "\"{\\\"addresses\\\":[\\\"" + strAddress + "\\\"]}\""));
+		varray = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray[0].get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "generate 1"));
+		// activation	
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasnew " + aliasname + " '' 3 " + mediantimestr + " '' '' '' ''"));
+		UniValue varray1 = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscointxfund " + varray1[0].get_str() + " " + "\"{\\\"addresses\\\":[\\\"" + strAddress + "\\\"]}\""));
+		varray1 = r.get_array();
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + varray1[0].get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + find_value(r.get_obj(), "hex").get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "generate 1"));
+	}
+	senderstring += "]\"";
+	printf("done now trying to send asset...\n");
+	AssetSend("node1", guid, senderstring, "memomaxsend");
+
+}
 BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_checktotalsupply)
 {
 	UniValue r;
