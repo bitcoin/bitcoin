@@ -39,6 +39,19 @@ enum class IsMineSigVersion
     WITNESS_V0 = 2  //! P2WSH witness script execution
 };
 
+/**
+ * This is an internal representation of isminetype + invalidity.
+ * Its order is significant, as we return the max of all explored
+ * possibilities.
+ */
+enum class IsMineResult
+{
+    NO = 0,          //! Not ours
+    WATCH_ONLY = 1,  //! Included in watch-only balance
+    SPENDABLE = 2,   //! Included in all balances
+    INVALID = 3,     //! Not spendable by anyone (uncompressed pubkey in segwit, P2SH inside P2SH or witness, witness inside witness)
+};
+
 bool PermitsUncompressed(IsMineSigVersion sigversion)
 {
     return sigversion == IsMineSigVersion::TOP || sigversion == IsMineSigVersion::P2SH;
@@ -100,6 +113,11 @@ isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, b
         break;
     case TX_WITNESS_V0_KEYHASH:
     {
+        if (sigversion == IsMineSigVersion::WITNESS_V0) {
+            // P2WPKH inside P2WSH is invalid.
+            isInvalid = true;
+            return ISMINE_NO;
+        }
         if (sigversion == IsMineSigVersion::TOP && !keystore.HaveCScript(CScriptID(CScript() << OP_0 << vSolutions[0]))) {
             // We do not support bare witness outputs unless the P2SH version of it would be
             // acceptable as well. This protects against matching before segwit activates.
@@ -137,6 +155,11 @@ isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, b
     case TX_TIMELOCKED_SCRIPTHASH:
     case TX_SCRIPTHASH256:
     {
+        if (sigversion != IsMineSigVersion::TOP) {
+            // P2SH inside P2WSH or P2SH is invalid.
+            isInvalid = true;
+            return ISMINE_NO;
+        }
         CScriptID scriptID;
         if (vSolutions[0].size() == 20)
             scriptID = CScriptID(uint160(vSolutions[0]));
@@ -155,6 +178,11 @@ isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, b
     }
     case TX_WITNESS_V0_SCRIPTHASH:
     {
+        if (sigversion == IsMineSigVersion::WITNESS_V0) {
+            // P2WSH inside P2WSH is invalid.
+            isInvalid = true;
+            return ISMINE_NO;
+        }
         if (sigversion == IsMineSigVersion::TOP && !keystore.HaveCScript(CScriptID(CScript() << OP_0 << vSolutions[0]))) {
             break;
         }
@@ -208,13 +236,15 @@ isminetype IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey, b
 
 isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, bool& isInvalid)
 {
-    return IsMineInner(keystore, scriptPubKey, isInvalid, IsMineSigVersion::TOP);
+    isminetype rv = IsMineInner(keystore, scriptPubKey, isInvalid, IsMineSigVersion::TOP);
+    return isInvalid ? ISMINE_NO : rv;
 }
 
 isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey)
 {
     bool isInvalid = false;
-    return IsMine(keystore, scriptPubKey, isInvalid);
+    isminetype rv = IsMineInner(keystore, scriptPubKey, isInvalid, IsMineSigVersion::TOP);
+    return isInvalid ? ISMINE_NO : rv;
 }
 
 isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest)

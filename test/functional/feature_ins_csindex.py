@@ -106,7 +106,5 @@ class TxIndexTest(ParticlTestFramework):
         assert(ro['stakereward'] < ro['blockreward'])
 
 
-
-
 if __name__ == '__main__':
     TxIndexTest().main()

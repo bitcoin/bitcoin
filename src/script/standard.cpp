@@ -5,12 +5,14 @@
 
 #include <script/standard.h>
 
-#include <key/extkey.h>
-#include <key/stealth.h>
+#include <crypto/sha256.h>
 #include <pubkey.h>
 #include <script/script.h>
 #include <util.h>
 #include <utilstrencodings.h>
+
+#include <key/extkey.h>
+#include <key/stealth.h>
 
 
 typedef std::vector<unsigned char> valtype;
@@ -31,6 +33,11 @@ bool CScriptID256::Set(const CScript& in)
     *this = HashSha256(in.begin(), in.end());
     return true;
 };
+
+WitnessV0ScriptHash::WitnessV0ScriptHash(const CScript& in)
+{
+    CSHA256().Write(in.data(), in.size()).Finalize(begin());
+}
 
 const char* GetTxnOutputType(txnouttype t)
 {
@@ -502,9 +509,7 @@ CScript GetScriptForWitness(const CScript& redeemscript)
             return GetScriptForDestination(WitnessV0KeyHash(vSolutions[0]));
         }
     }
-    uint256 hash;
-    CSHA256().Write(&redeemscript[0], redeemscript.size()).Finalize(hash.begin());
-    return GetScriptForDestination(WitnessV0ScriptHash(hash));
+    return GetScriptForDestination(WitnessV0ScriptHash(redeemscript));
 }
 
 bool IsValidDestination(const CTxDestination& dest) {

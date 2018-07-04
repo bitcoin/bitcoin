@@ -7,8 +7,6 @@
 #include <clientversion.h>
 #include <core_io.h>
 #include <crypto/ripemd160.h>
-#include <init.h>
-#include <txmempool.h>
 #include <key_io.h>
 #include <validation.h>
 #include <httpserver.h>
@@ -27,6 +25,8 @@
 #include <wallet/walletdb.h>
 #endif
 #include <warnings.h>
+
+#include <txmempool.h>
 
 #include <rpc/rpcutil.h>
 #include <rpc/client.h>
@@ -91,7 +91,7 @@ static UniValue validateaddress(const JSONRPCRequest& request)
             ret.pushKV("address", currentAddress);
 
             CScript scriptPubKey = GetScriptForDestination(dest);
-            ret.pushKV("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end()));;
+            ret.pushKV("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end()));
 
             UniValue detail = DescribeAddress(dest);
             ret.pushKVs(detail);
