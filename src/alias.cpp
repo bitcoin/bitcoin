@@ -271,7 +271,7 @@ bool CheckAliasInputs(const CCoinsViewCache &inputs, const CTransaction &tx, int
 		{
 			continue;
 		}
-		if (!IsAliasOp(op)) {
+		if (!IsAliasOp(pop)) {
 			aliasUpdate = false;
 		}
 	}
