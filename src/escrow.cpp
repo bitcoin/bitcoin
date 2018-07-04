@@ -167,11 +167,7 @@ bool CEscrow::UnserializeFromData(const vector<unsigned char> &vchData, const ve
     try {
         CDataStream dsEscrow(vchData, SER_NETWORK, PROTOCOL_VERSION);
         dsEscrow >> *this;
-
-		vector<unsigned char> vchEscrowData;
-		Serialize(vchEscrowData);
-		const uint256 &calculatedHash = Hash(vchEscrowData.begin(), vchEscrowData.end());
-		const vector<unsigned char> &vchRandEscrow = vchFromValue(calculatedHash.GetHex());
+		const vector<unsigned char> &vchRandEscrow = vchFromString(Hash(vchData.begin(), vchData.end()).GetHex());
 		if(vchRandEscrow != vchHash)
 		{
 			SetNull();

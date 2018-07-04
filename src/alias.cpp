@@ -725,11 +725,7 @@ bool CAliasIndex::UnserializeFromData(const vector<unsigned char> &vchData, cons
     try {
         CDataStream dsAlias(vchData, SER_NETWORK, PROTOCOL_VERSION);
         dsAlias >> *this;
-
-		vector<unsigned char> vchAliasData;
-		Serialize(vchAliasData);
-		const uint256 &calculatedHash = Hash(vchAliasData.begin(), vchAliasData.end());
-		const vector<unsigned char> &vchRandAlias = vchFromValue(calculatedHash.GetHex());
+		const vector<unsigned char> &vchRandAlias = vchFromString(Hash(vchData.begin(), vchData.end()).GetHex());
 		if(vchRandAlias != vchHash)
 		{
 			SetNull();
