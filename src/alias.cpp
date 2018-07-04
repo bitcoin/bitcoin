@@ -237,7 +237,16 @@ bool IsSyscoinDataOutput(const CTxOut& out) {
    return false;
 }
 
-
+bool FindAliasScriptOp(const CScript& script, int& op) {
+	CScript::const_iterator pc = scriptIn.begin();
+	opcodetype opcode;
+	if (!script.GetOp(pc, opcode))
+		return false;
+	if (opcode < OP_1 || opcode > OP_16)
+		return false;
+	op = CScript::DecodeOP_N(opcode);
+	return op == OP_SYSCOIN_ALIAS || op == OP_SYSCOIN_ASSET || op == OP_SYSCOIN_ASSET_ALLOCATION || op == OP_SYSCOIN_CERT || op == OP_SYSCOIN_ESCROW || op == OP_SYSCOIN_OFFER;
+}
 bool CheckAliasInputs(const CCoinsViewCache &inputs, const CTransaction &tx, int op, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool bSanityCheck) {
 	if (!paliasdb)
 		return false;
@@ -265,13 +274,10 @@ bool CheckAliasInputs(const CCoinsViewCache &inputs, const CTransaction &tx, int
 	bool aliasUpdate = true;
 	// check to see if there is more than just an alias script output for this tx, if so its not an alias update
 	for (unsigned int i = 0; i < tx.vout.size(); i++) {
-		vector<vector<unsigned char> > vvch;
 		int pop;
-		if (!DecodeAliasScript(tx.vout[i].scriptPubKey, pop, vvch))
-		{
+		if (!FindAliasScriptOp(tx.vout[i].scriptPubKey, pop))
 			continue;
-		}
-		if (!IsAliasOp(pop)) {
+		if (pop != OP_SYSCOIN_ALIAS) {
 			aliasUpdate = false;
 		}
 	}
@@ -1029,7 +1035,6 @@ bool FindAliasInTx(const CCoinsViewCache &inputs, const CTransaction& tx, vector
 	}
 	return false;
 }
-
 bool DecodeAliasScript(const CScript& script, int& op,
 		vector<vector<unsigned char> > &vvch, CScript::const_iterator& pc) {
 	opcodetype opcode;
