@@ -237,7 +237,7 @@ bool IsSyscoinDataOutput(const CTxOut& out) {
    return false;
 }
 
-bool FindAliasScriptOp(const CScript& script, int& op) {
+bool FindSyscoinScriptOp(const CScript& script, int& op) {
 	CScript::const_iterator pc = script.begin();
 	opcodetype opcode;
 	if (!script.GetOp(pc, opcode))
@@ -271,23 +271,21 @@ bool CheckAliasInputs(const CCoinsViewCache &inputs, const CTransaction &tx, int
 	vector<unsigned char> vchAlias;
 	vector<unsigned char> vchHash;
 	int nDataOut;
-	bool aliasUpdate = true;
+	bool aliasData = true;
 	// check to see if there is more than just an alias script output for this tx, if so its not an alias update
 	for (unsigned int i = 0; i < tx.vout.size(); i++) {
 		int pop;
-		if (!FindAliasScriptOp(tx.vout[i].scriptPubKey, pop))
+		if (!FindSyscoinScriptOp(tx.vout[i].scriptPubKey, pop))
 			continue;
 		if (pop != OP_SYSCOIN_ALIAS) {
-			aliasUpdate = false;
+			aliasData = false;
 		}
 	}
-	// if it is an alias update get data and unserialize the alias from data output
-	if (aliasUpdate) {
+	// if it has alias data, get it and unserialize the alias from data output
+	if (aliasData) {
 		bool bData = GetSyscoinData(tx, vchData, vchHash, nDataOut);
-		if (bData && !theAlias.UnserializeFromData(vchData, vchHash))
-		{
-			theAlias.SetNull();
-		}
+		if (bData)
+			theAlias.UnserializeFromData(vchData, vchHash);
 	}
 	if(fJustCheck)
 	{
