@@ -50,11 +50,7 @@ bool CAssetAllocation::UnserializeFromData(const vector<unsigned char> &vchData,
     try {
         CDataStream dsAsset(vchData, SER_NETWORK, PROTOCOL_VERSION);
         dsAsset >> *this;
-
-		vector<unsigned char> vchAssetData;
-		Serialize(vchAssetData);
-		const uint256 &calculatedHash = Hash(vchAssetData.begin(), vchAssetData.end());
-		const vector<unsigned char> &vchRandAsset = vchFromValue(calculatedHash.GetHex());
+		const vector<unsigned char> &vchRandAsset = vchFromString(Hash(dsAsset.begin(), dsAsset.end()).GetHex());
 		if(vchRandAsset != vchHash)
 		{
 			SetNull();
@@ -832,7 +828,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
 	theAssetAllocation.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
 
-	vector<unsigned char> vchHashAsset = vchFromValue(hash.GetHex());
+	vector<unsigned char> vchHashAsset = vchFromString(hash.GetHex());
 	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ASSET_ALLOCATION) << CScript::EncodeOP_N(OP_ASSET_ALLOCATION_SEND) << vchHashAsset << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyFromOrig;
 	// send the asset pay txn
@@ -900,7 +896,7 @@ UniValue assetallocationcollectinterest(const JSONRPCRequest& request) {
 	theAssetAllocation.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
 
-	vector<unsigned char> vchHashAsset = vchFromValue(hash.GetHex());
+	vector<unsigned char> vchHashAsset = vchFromString(hash.GetHex());
 	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ASSET_ALLOCATION) << CScript::EncodeOP_N(OP_ASSET_COLLECT_INTEREST) << vchHashAsset << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyFromOrig;
 	// send the asset pay txn
