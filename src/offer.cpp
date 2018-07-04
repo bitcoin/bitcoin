@@ -148,14 +148,13 @@ string offerFromOp(int op) {
 }
 bool COffer::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
     try {
-		CDataStream dsOffer(vchData, SER_NETWORK, PROTOCOL_VERSION);
-		dsOffer >> *this;
-		const vector<unsigned char> &vchRandOffer = vchFromString(Hash(dsOffer.begin(), dsOffer.end()).GetHex());
+		const vector<unsigned char> &vchRandOffer = vchFromString(Hash(vchData.begin(), vchData.end()).GetHex());
 		if(vchRandOffer != vchHash)
 		{
-			SetNull();
 			return false;
 		}
+		CDataStream dsOffer(vchData, SER_NETWORK, PROTOCOL_VERSION);
+		dsOffer >> *this;
     } catch (std::exception &e) {
 		SetNull();
         return false;
