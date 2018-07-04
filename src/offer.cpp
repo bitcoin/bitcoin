@@ -151,7 +151,6 @@ bool COffer::UnserializeFromData(const vector<unsigned char> &vchData, const vec
 		const vector<unsigned char> &vchRandOffer = vchFromString(Hash(vchData.begin(), vchData.end()).GetHex());
 		if(vchRandOffer != vchHash)
 		{
-			SetNull();
 			return false;
 		}
 		CDataStream dsOffer(vchData, SER_NETWORK, PROTOCOL_VERSION);

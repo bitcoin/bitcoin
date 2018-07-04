@@ -453,7 +453,7 @@ bool CheckAliasInputs(const CCoinsViewCache &inputs, const CTransaction &tx, int
 	}
 	else {
 		// whitelist alias updates don't update expiry date
-		if (!vchData.empty() && theAlias.offerWhitelist.entries.empty() && theAlias.nExpireTime > 0)
+		if (!theAlias.IsNull() && theAlias.offerWhitelist.entries.empty() && theAlias.nExpireTime > 0)
 		{
 			CAmount fee = GetDataFee(tx.vout[nDataOut].scriptPubKey);
 			float fYears;
