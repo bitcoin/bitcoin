@@ -262,10 +262,26 @@ bool CheckAliasInputs(const CCoinsViewCache &inputs, const CTransaction &tx, int
 	vector<unsigned char> vchAlias;
 	vector<unsigned char> vchHash;
 	int nDataOut;
-	bool bData = GetSyscoinData(tx, vchData, vchHash, nDataOut);
-	if(bData && !theAlias.UnserializeFromData(vchData, vchHash))
-	{
-		theAlias.SetNull();
+	bool aliasUpdate = true;
+	// check to see if there is more than just an alias script output for this tx, if so its not an alias update
+	for (unsigned int i = 0; i < tx.vout.size(); i++) {
+		vector<vector<unsigned char> > vvch;
+		int pop;
+		if (!DecodeAliasScript(tx.vout[i].scriptPubKey, pop, vvch))
+		{
+			continue;
+		}
+		if (!IsAliasOp(op)) {
+			aliasUpdate = false;
+		}
+	}
+	// if it is an alias update get data and unserialize the alias from data output
+	if (aliasUpdate) {
+		bool bData = GetSyscoinData(tx, vchData, vchHash, nDataOut);
+		if (bData && !theAlias.UnserializeFromData(vchData, vchHash))
+		{
+			theAlias.SetNull();
+		}
 	}
 	if(fJustCheck)
 	{
