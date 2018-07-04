@@ -53,7 +53,6 @@ bool CAssetAllocation::UnserializeFromData(const vector<unsigned char> &vchData,
 		const vector<unsigned char> &vchRandAsset = vchFromString(Hash(vchData.begin(), vchData.end()).GetHex());
 		if(vchRandAsset != vchHash)
 		{
-			SetNull();
 			return false;
 		}
 
