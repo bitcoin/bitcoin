@@ -723,13 +723,14 @@ void GetAddress(const CAliasIndex& alias, CSyscoinAddress* address,CScript& scri
 }
 bool CAliasIndex::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
     try {
-		const vector<unsigned char> &vchRandAlias = vchFromString(Hash(vchData.begin(), vchData.end()).GetHex());
-		if(vchRandAlias != vchHash)
-		{
-			return false;
-		}
 		CDataStream dsAlias(vchData, SER_NETWORK, PROTOCOL_VERSION);
 		dsAlias >> *this;
+		const vector<unsigned char> &vchRandAlias = vchFromString(Hash(dsAlias.begin(), dsAlias.end()).GetHex());
+		if(vchRandAlias != vchHash)
+		{
+			SetNull();
+			return false;
+		}
     } catch (std::exception &e) {
 		SetNull();
         return false;

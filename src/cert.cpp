@@ -56,14 +56,14 @@ string certFromOp(int op) {
 }
 bool CCert::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
     try {
-		const vector<unsigned char> &vchRandCert = vchFromString(Hash(vchData.begin(), vchData.end()).GetHex());
+		CDataStream dsCert(vchData, SER_NETWORK, PROTOCOL_VERSION);
+		dsCert >> *this;
+		const vector<unsigned char> &vchRandCert = vchFromString(Hash(dsCert.begin(), dsCert.end()).GetHex());
 		if(vchRandCert != vchHash)
 		{
 			SetNull();
 			return false;
 		}
-		CDataStream dsCert(vchData, SER_NETWORK, PROTOCOL_VERSION);
-		dsCert >> *this;
     } catch (std::exception &e) {
 		SetNull();
         return false;

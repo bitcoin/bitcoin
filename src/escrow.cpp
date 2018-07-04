@@ -165,13 +165,14 @@ string escrowFromOp(int op) {
 }
 bool CEscrow::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
     try {
-		const vector<unsigned char> &vchRandEscrow = vchFromString(Hash(vchData.begin(), vchData.end()).GetHex());
-		if(vchRandEscrow != vchHash)
-		{
-			return false;
-		}
 		CDataStream dsEscrow(vchData, SER_NETWORK, PROTOCOL_VERSION);
 		dsEscrow >> *this;
+		const vector<unsigned char> &vchRandEscrow = vchFromString(Hash(dsEscrow.begin(), dsEscrow.end()).GetHex());
+		if(vchRandEscrow != vchHash)
+		{
+			SetNull();
+			return false;
+		}
     } catch (std::exception &e) {
 		SetNull();
         return false;
