@@ -238,7 +238,7 @@ bool IsSyscoinDataOutput(const CTxOut& out) {
 }
 
 bool FindAliasScriptOp(const CScript& script, int& op) {
-	CScript::const_iterator pc = scriptIn.begin();
+	CScript::const_iterator pc = script.begin();
 	opcodetype opcode;
 	if (!script.GetOp(pc, opcode))
 		return false;
