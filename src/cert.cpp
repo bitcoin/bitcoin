@@ -545,7 +545,7 @@ UniValue certnew(const JSONRPCRequest& request) {
 	newCert.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
  	
-    vector<unsigned char> vchHashCert = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashCert = vchFromString(hash.GetHex());
 
     scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_CERT) << CScript::EncodeOP_N(OP_CERT_ACTIVATE) << vchHashCert << OP_2DROP << OP_DROP;
     scriptPubKey += scriptPubKeyOrig;
@@ -638,7 +638,7 @@ UniValue certupdate(const JSONRPCRequest& request) {
 	theCert.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
  	
-    vector<unsigned char> vchHashCert = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashCert = vchFromString(hash.GetHex());
     scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_CERT) << CScript::EncodeOP_N(OP_CERT_UPDATE) << vchHashCert << OP_2DROP << OP_DROP;
     scriptPubKey += scriptPubKeyOrig;
 
@@ -737,7 +737,7 @@ UniValue certtransfer(const JSONRPCRequest& request) {
 	theCert.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
  	
-    vector<unsigned char> vchHashCert = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashCert = vchFromString(hash.GetHex());
     scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_CERT) << CScript::EncodeOP_N(OP_CERT_TRANSFER) << vchHashCert << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
     // send the cert pay txn
