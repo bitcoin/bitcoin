@@ -1091,7 +1091,7 @@ void CreateFeeRecipient(CScript& scriptPubKey, const vector<unsigned char>& data
 	CAmount nFee = 0;
 	// add hash to data output (must match hash in inputs check with the tx scriptpubkey hash)
     uint256 hash = Hash(data.begin(), data.end());
-    vector<unsigned char> vchHashRand = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashRand = vchFromString(hash.GetHex());
 	scriptPubKey << vchHashRand;
 	CRecipient recp = {scriptPubKey, 0, false};
 	recipient = recp;
@@ -1709,7 +1709,7 @@ UniValue aliasnew(const JSONRPCRequest& request) {
 	{
 		data = mapAliasRegistrationData[vchAlias];
 		hash = Hash(data.begin(), data.end());
-		vchHashAlias = vchFromValue(hash.GetHex());
+		vchHashAlias = vchFromString(hash.GetHex());
 		if (!newAlias.UnserializeFromData(data, vchHashAlias))
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("Cannot unserialize alias registration transaction"));
 		if (strAddress.empty())
@@ -1722,7 +1722,7 @@ UniValue aliasnew(const JSONRPCRequest& request) {
 	// ensure that the stored alias registration and the creation of alias from parameters matches hash, if not then the params must have changed so re-register
 	newAlias1.Serialize(data);
 	hash = Hash(data.begin(), data.end());
-	vchHashAlias1 = vchFromValue(hash.GetHex());
+	vchHashAlias1 = vchFromString(hash.GetHex());
 	// vchHashAlias might be empty anyway if this is an initial registration or if they need to re-register as per the comments above
 	if (vchHashAlias1 == vchHashAlias)
 		bActivation = true;
@@ -1907,7 +1907,7 @@ UniValue aliasnewestimatedfee(const JSONRPCRequest& request) {
 	// ensure that the stored alias registration and the creation of alias from parameters matches hash, if not then the params must have changed so re-register
 	newAlias1.Serialize(data);
 	hash = Hash(data.begin(), data.end());
-	vchHashAlias1 = vchFromValue(hash.GetHex());
+	vchHashAlias1 = vchFromString(hash.GetHex());
 
 	CScript scriptPubKey, scriptPubKey1;
 	
@@ -2018,7 +2018,7 @@ UniValue aliasupdate(const JSONRPCRequest& request) {
 	vector<unsigned char> data;
 	theAlias.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
-    vector<unsigned char> vchHashAlias = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashAlias = vchFromString(hash.GetHex());
 
 	CScript scriptPubKey;
 	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << copyAlias.vchAlias << copyAlias.vchGUID << vchHashAlias << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
@@ -2116,7 +2116,7 @@ UniValue aliasupdateestimatedfee(const JSONRPCRequest& request) {
 	vector<unsigned char> data;
 	theAlias.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
-	vector<unsigned char> vchHashAlias = vchFromValue(hash.GetHex());
+	vector<unsigned char> vchHashAlias = vchFromString(hash.GetHex());
 
 	CScript scriptPubKey;
 	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << copyAlias.vchAlias << copyAlias.vchGUID << vchHashAlias << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
@@ -2754,7 +2754,7 @@ UniValue aliasupdatewhitelist(const JSONRPCRequest& request) {
 	vector<unsigned char> data;
 	theAlias.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
-	vector<unsigned char> vchHashAlias = vchFromValue(hash.GetHex());
+	vector<unsigned char> vchHashAlias = vchFromString(hash.GetHex());
 
 	CScript scriptPubKey;
 	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << copyAlias.vchAlias << copyAlias.vchGUID << vchHashAlias << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
@@ -2806,7 +2806,7 @@ UniValue aliasclearwhitelist(const JSONRPCRequest& request) {
 	vector<unsigned char> data;
 	theAlias.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
-	vector<unsigned char> vchHashAlias = vchFromValue(hash.GetHex());
+	vector<unsigned char> vchHashAlias = vchFromString(hash.GetHex());
 
 	CScript scriptPubKey;
 	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << copyAlias.vchAlias << copyAlias.vchGUID << vchHashAlias << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;

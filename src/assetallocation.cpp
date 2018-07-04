@@ -828,7 +828,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
 	theAssetAllocation.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
 
-	vector<unsigned char> vchHashAsset = vchFromValue(hash.GetHex());
+	vector<unsigned char> vchHashAsset = vchFromString(hash.GetHex());
 	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ASSET_ALLOCATION) << CScript::EncodeOP_N(OP_ASSET_ALLOCATION_SEND) << vchHashAsset << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyFromOrig;
 	// send the asset pay txn
@@ -896,7 +896,7 @@ UniValue assetallocationcollectinterest(const JSONRPCRequest& request) {
 	theAssetAllocation.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
 
-	vector<unsigned char> vchHashAsset = vchFromValue(hash.GetHex());
+	vector<unsigned char> vchHashAsset = vchFromString(hash.GetHex());
 	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ASSET_ALLOCATION) << CScript::EncodeOP_N(OP_ASSET_COLLECT_INTEREST) << vchHashAsset << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyFromOrig;
 	// send the asset pay txn

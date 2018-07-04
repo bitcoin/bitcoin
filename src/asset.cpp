@@ -718,7 +718,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
 	newAsset.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
  	
-    vector<unsigned char> vchHashAsset = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashAsset = vchFromString(hash.GetHex());
 
     scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ASSET) << CScript::EncodeOP_N(OP_ASSET_ACTIVATE) << vchHashAsset << OP_2DROP << OP_DROP;
     scriptPubKey += scriptPubKeyOrig;
@@ -812,7 +812,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
 	theAsset.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
  	
-    vector<unsigned char> vchHashAsset = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashAsset = vchFromString(hash.GetHex());
     scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ASSET) << CScript::EncodeOP_N(OP_ASSET_UPDATE) << vchHashAsset << OP_2DROP << OP_DROP;
     scriptPubKey += scriptPubKeyOrig;
 
@@ -888,7 +888,7 @@ UniValue assettransfer(const JSONRPCRequest& request) {
 	theAsset.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
  	
-    vector<unsigned char> vchHashAsset = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashAsset = vchFromString(hash.GetHex());
     scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ASSET) << CScript::EncodeOP_N(OP_ASSET_TRANSFER) << vchHashAsset << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
     // send the asset pay txn
@@ -1024,7 +1024,7 @@ UniValue assetsend(const JSONRPCRequest& request) {
 	theAssetAllocation.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
 
-	vector<unsigned char> vchHashAsset = vchFromValue(hash.GetHex());
+	vector<unsigned char> vchHashAsset = vchFromString(hash.GetHex());
 	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ASSET) << CScript::EncodeOP_N(OP_ASSET_SEND) << vchHashAsset << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyFromOrig;
 	// send the asset pay txn
