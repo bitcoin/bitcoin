@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2017 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -35,6 +35,7 @@
 #include <script/standard.h>
 #include <script/sigcache.h>
 #include <scheduler.h>
+#include <shutdown.h>
 #include <timedata.h>
 #include <txdb.h>
 #include <txmempool.h>
@@ -126,7 +127,7 @@ static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
 // created by AppInit() or the Qt main() function.
 //
 // A clean exit happens when StartShutdown() or the SIGTERM
-// signal handler sets fRequestShutdown, which makes main thread's
+// signal handler sets ShutdownRequested(), which makes main thread's
 // WaitForShutdown() interrupts the thread group.
 // And then, WaitForShutdown() makes all other on-going threads
 // in the thread group join the main thread.
@@ -135,20 +136,9 @@ static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
 // threads have exited.
 //
 // Shutdown for Qt is very similar, only it uses a QTimer to detect
-// fRequestShutdown getting set, and then does the normal Qt
+// ShutdownRequested() getting set, and then does the normal Qt
 // shutdown thing.
 //
-
-std::atomic<bool> fRequestShutdown(false);
-
-void StartShutdown()
-{
-    fRequestShutdown = true;
-}
-bool ShutdownRequested()
-{
-    return fRequestShutdown;
-}
 
 /**
  * This is a minimally invasive approach to shutdown on LevelDB read errors from the
@@ -310,7 +300,7 @@ void Shutdown()
 #ifndef WIN32
 static void HandleSIGTERM(int)
 {
-    fRequestShutdown = true;
+    StartShutdown();
 }
 
 static void HandleSIGHUP(int)
@@ -320,7 +310,7 @@ static void HandleSIGHUP(int)
 #else
 static BOOL WINAPI consoleCtrlHandler(DWORD dwCtrlType)
 {
-    fRequestShutdown = true;
+    StartShutdown();
     Sleep(INFINITE);
     return true;
 }
@@ -713,7 +703,7 @@ static void ThreadImport(std::vector<fs::path> vImportFiles)
     if (gArgs.GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
         LoadMempool();
     }
-    g_is_mempool_loaded = !fRequestShutdown;
+    g_is_mempool_loaded = !ShutdownRequested();
 }
 
 /** Sanity checks
@@ -1450,7 +1440,7 @@ bool AppInitMain()
     LogPrintf("* Using %.1fMiB for in-memory UTXO set (plus up to %.1fMiB of unused mempool space)\n", nCoinCacheUsage * (1.0 / 1024 / 1024), nMempoolSizeMax * (1.0 / 1024 / 1024));
 
     bool fLoaded = false;
-    while (!fLoaded && !fRequestShutdown) {
+    while (!fLoaded && !ShutdownRequested()) {
         bool fReset = fReindex;
         std::string strLoadError;
 
@@ -1477,7 +1467,7 @@ bool AppInitMain()
                         CleanupBlockRevFiles();
                 }
 
-                if (fRequestShutdown) break;
+                if (ShutdownRequested()) break;
 
                 // LoadBlockIndex will load fHavePruned if we've ever removed a
                 // block file from disk.
@@ -1584,7 +1574,7 @@ bool AppInitMain()
             fLoaded = true;
         } while(false);
 
-        if (!fLoaded && !fRequestShutdown) {
+        if (!fLoaded && !ShutdownRequested()) {
             // first suggest a reindex
             if (!fReset) {
                 bool fRet = uiInterface.ThreadSafeQuestion(
@@ -1593,7 +1583,7 @@ bool AppInitMain()
                     "", CClientUIInterface::MSG_ERROR | CClientUIInterface::BTN_ABORT);
                 if (fRet) {
                     fReindex = true;
-                    fRequestShutdown = false;
+                    AbortShutdown();
                 } else {
                     LogPrintf("Aborted block database rebuild. Exiting.\n");
                     return false;
@@ -1607,8 +1597,7 @@ bool AppInitMain()
     // As LoadBlockIndex can take several minutes, it's possible the user
     // requested to kill the GUI during the last operation. If so, exit.
     // As the program has not fully started yet, Shutdown() is possibly overkill.
-    if (fRequestShutdown)
-    {
+    if (ShutdownRequested()) {
         LogPrintf("Shutdown requested. Exiting.\n");
         return false;
     }
