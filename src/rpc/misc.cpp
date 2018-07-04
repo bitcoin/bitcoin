@@ -349,9 +349,8 @@ UniValue validateaddress(const JSONRPCRequest& request)
     if (isValid)
     {
 		CTxDestination dest = address.Get();
-		CSyscoinAddress saddr;
-		saddr.Set(dest, CChainParams::ADDRESS_SYS);
-		ret.push_back(Pair("address", saddr.ToString()));
+		address = CSyscoinAddress(address.ToString());
+		ret.push_back(Pair("address", address.ToString()));
 
 		CSyscoinAddress zaddr;
 		zaddr.Set(dest, CChainParams::ADDRESS_ZEC);
@@ -360,6 +359,10 @@ UniValue validateaddress(const JSONRPCRequest& request)
 		CSyscoinAddress btcaddr;
 		btcaddr.Set(dest, CChainParams::ADDRESS_BTC);
 		ret.push_back(Pair("btcaddress", btcaddr.ToString()));
+
+		CSyscoinAddress saddr;
+		saddr.Set(dest, CChainParams::ADDRESS_SYS);
+		ret.push_back(Pair("saddress", saddr.ToString()));
 
 		// SYSCOIN alias from address
 		string strAlias;
