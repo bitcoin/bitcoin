@@ -148,13 +148,9 @@ string offerFromOp(int op) {
 }
 bool COffer::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
     try {
-        CDataStream dsOffer(vchData, SER_NETWORK, PROTOCOL_VERSION);
-        dsOffer >> *this;
-
-		vector<unsigned char> vchOfferData;
-		Serialize(vchOfferData);
-		const uint256 &calculatedHash = Hash(vchOfferData.begin(), vchOfferData.end());
-		const vector<unsigned char> &vchRandOffer = vchFromValue(calculatedHash.GetHex());
+		CDataStream dsOffer(vchData, SER_NETWORK, PROTOCOL_VERSION);
+		dsOffer >> *this;
+		const vector<unsigned char> &vchRandOffer = vchFromString(Hash(dsOffer.begin(), dsOffer.end()).GetHex());
 		if(vchRandOffer != vchHash)
 		{
 			SetNull();
@@ -846,7 +842,7 @@ UniValue offernew(const JSONRPCRequest& request) {
 	newOffer.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
 
-    vector<unsigned char> vchHashOffer = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashOffer = vchFromString(hash.GetHex());
 	CSyscoinAddress aliasAddress;
 	GetAddress(alias, &aliasAddress, scriptPubKeyOrig);
 	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_OFFER) << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchHashOffer << OP_2DROP << OP_DROP;
@@ -934,7 +930,7 @@ UniValue offerlink(const JSONRPCRequest& request) {
 	newOffer.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
 
-    vector<unsigned char> vchHashOffer = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashOffer = vchFromString(hash.GetHex());
 	CSyscoinAddress aliasAddress;
 	GetAddress(alias, &aliasAddress, scriptPubKeyOrig);
 	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_OFFER) << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchHashOffer << OP_2DROP << OP_DROP;
@@ -1134,7 +1130,7 @@ UniValue offerupdate(const JSONRPCRequest& request) {
 	theOffer.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
 
-    vector<unsigned char> vchHashOffer = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashOffer = vchFromString(hash.GetHex());
 	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_OFFER) << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchHashOffer << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 

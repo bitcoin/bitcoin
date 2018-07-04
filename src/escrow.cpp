@@ -165,13 +165,9 @@ string escrowFromOp(int op) {
 }
 bool CEscrow::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
     try {
-        CDataStream dsEscrow(vchData, SER_NETWORK, PROTOCOL_VERSION);
-        dsEscrow >> *this;
-
-		vector<unsigned char> vchEscrowData;
-		Serialize(vchEscrowData);
-		const uint256 &calculatedHash = Hash(vchEscrowData.begin(), vchEscrowData.end());
-		const vector<unsigned char> &vchRandEscrow = vchFromValue(calculatedHash.GetHex());
+		CDataStream dsEscrow(vchData, SER_NETWORK, PROTOCOL_VERSION);
+		dsEscrow >> *this;
+		const vector<unsigned char> &vchRandEscrow = vchFromString(Hash(dsEscrow.begin(), dsEscrow.end()).GetHex());
 		if(vchRandEscrow != vchHash)
 		{
 			SetNull();
@@ -1064,7 +1060,7 @@ UniValue escrowbid(const JSONRPCRequest& request) {
 	theEscrow.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
 
-	vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
+	vector<unsigned char> vchHashEscrow = vchFromString(hash.GetHex());
 
 	CScript scriptPubKeyOrigBuyer;
 	scriptPubKeyOrigBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_BID) << vchHashEscrow << OP_2DROP << OP_DROP;
@@ -1135,7 +1131,7 @@ UniValue escrowaddshipping(const JSONRPCRequest& request) {
 	theEscrow.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
 
-	vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
+	vector<unsigned char> vchHashEscrow = vchFromString(hash.GetHex());
 
 	CScript scriptPubKeyOrigBuyer;
 	scriptPubKeyOrigBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_ADD_SHIPPING) << vchHashEscrow << OP_2DROP << OP_DROP;
@@ -1401,7 +1397,7 @@ UniValue escrownew(const JSONRPCRequest& request) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4517 - " + _("Cannot include deposit when using Buy It Now"));
 	}
 
-    vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashEscrow = vchFromString(hash.GetHex());
 	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_ACTIVATE) << vchHashEscrow << OP_2DROP << OP_DROP;
 	scriptPubKeyBuyer += scriptPubKeyAliasOrig;
 
@@ -1479,7 +1475,7 @@ UniValue escrowacknowledge(const JSONRPCRequest& request) {
 	escrow.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
 
-	vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
+	vector<unsigned char> vchHashEscrow = vchFromString(hash.GetHex());
 
 	CScript scriptPubKeyOrigBuyer;
 
@@ -1738,7 +1734,7 @@ UniValue escrowrelease(const JSONRPCRequest& request) {
 	escrow.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
 
-    vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashEscrow = vchFromString(hash.GetHex());
 
     CScript scriptPubKeyOrigSeller;
 
@@ -1814,7 +1810,7 @@ UniValue escrowcompleterelease(const JSONRPCRequest& request) {
 	escrow.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
 
-    vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashEscrow = vchFromString(hash.GetHex());
     scriptPubKeyBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_RELEASE_COMPLETE) << vchHashEscrow << OP_2DROP << OP_DROP;
     scriptPubKeyBuyer += sellerScript;
 	vector<CRecipient> vecSend;
@@ -1926,7 +1922,7 @@ UniValue escrowrefund(const JSONRPCRequest& request) {
 	escrow.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
 
-	vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
+	vector<unsigned char> vchHashEscrow = vchFromString(hash.GetHex());
 
 	CScript scriptPubKeyOrigSeller;
 
@@ -2005,7 +2001,7 @@ UniValue escrowcompleterefund(const JSONRPCRequest& request) {
 	escrow.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
 
-	vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
+	vector<unsigned char> vchHashEscrow = vchFromString(hash.GetHex());
 	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_REFUND_COMPLETE) << vchHashEscrow << OP_2DROP << OP_DROP;
 	scriptPubKeyBuyer += buyerScript;
 	vector<CRecipient> vecSend;
@@ -2173,7 +2169,7 @@ UniValue escrowfeedback(const JSONRPCRequest& request) {
 	escrow.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
 
-    vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashEscrow = vchFromString(hash.GetHex());
 	CScript scriptPubKeyBuyer, scriptPubKeySeller,scriptPubKeyArbiter;
 	vector<CRecipient> vecSend;
 	CRecipient recipientBuyer, recipientSeller, recipientArbiter;
