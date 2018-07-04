@@ -51,11 +51,7 @@ bool CAsset::UnserializeFromData(const vector<unsigned char> &vchData, const vec
     try {
         CDataStream dsAsset(vchData, SER_NETWORK, PROTOCOL_VERSION);
         dsAsset >> *this;
-
-		vector<unsigned char> vchAssetData;
-		Serialize(vchAssetData);
-		const uint256 &calculatedHash = Hash(vchAssetData.begin(), vchAssetData.end());
-		const vector<unsigned char> &vchRandAsset = vchFromValue(calculatedHash.GetHex());
+		const vector<unsigned char> &vchRandAsset = vchFromString(Hash(vchData.begin(), vchData.end()).GetHex());
 		if(vchRandAsset != vchHash)
 		{
 			SetNull();

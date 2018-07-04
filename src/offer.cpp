@@ -150,11 +150,7 @@ bool COffer::UnserializeFromData(const vector<unsigned char> &vchData, const vec
     try {
         CDataStream dsOffer(vchData, SER_NETWORK, PROTOCOL_VERSION);
         dsOffer >> *this;
-
-		vector<unsigned char> vchOfferData;
-		Serialize(vchOfferData);
-		const uint256 &calculatedHash = Hash(vchOfferData.begin(), vchOfferData.end());
-		const vector<unsigned char> &vchRandOffer = vchFromValue(calculatedHash.GetHex());
+		const vector<unsigned char> &vchRandOffer = vchFromString(Hash(vchData.begin(), vchData.end()).GetHex());
 		if(vchRandOffer != vchHash)
 		{
 			SetNull();
