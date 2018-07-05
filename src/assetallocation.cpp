@@ -50,9 +50,12 @@ bool CAssetAllocation::UnserializeFromData(const vector<unsigned char> &vchData,
     try {
         CDataStream dsAsset(vchData, SER_NETWORK, PROTOCOL_VERSION);
         dsAsset >> *this;
-		const vector<unsigned char> &vchRandAsset = vchFromString(Hash(vchData.begin(), vchData.end()).GetHex());
-		if(vchRandAsset != vchHash)
-		{
+		vector<unsigned char> vchSerializedData;
+		Serialize(vchSerializedData);
+		const uint256 &calculatedHash = Hash(vchSerializedData.begin(), vchSerializedData.end());
+		const vector<unsigned char> &vchRand = vchFromValue(calculatedHash.GetHex());
+		if (vchRand != vchHash) {
+			SetNull();
 			return false;
 		}
 

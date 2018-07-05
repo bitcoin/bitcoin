@@ -49,13 +49,16 @@ string assetFromOp(int op) {
 }
 bool CAsset::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
     try {
-		const vector<unsigned char> &vchRandAsset = vchFromString(Hash(vchData.begin(), vchData.end()).GetHex());
-		if(vchRandAsset != vchHash)
-		{
-			return false;
-		}
 		CDataStream dsAsset(vchData, SER_NETWORK, PROTOCOL_VERSION);
 		dsAsset >> *this;
+		vector<unsigned char> vchSerializedData;
+		Serialize(vchSerializedData);
+		const uint256 &calculatedHash = Hash(vchSerializedData.begin(), vchSerializedData.end());
+		const vector<unsigned char> &vchRand = vchFromValue(calculatedHash.GetHex());
+		if (vchRand != vchHash) {
+			SetNull();
+			return false;
+		}
     } catch (std::exception &e) {
 		SetNull();
         return false;
