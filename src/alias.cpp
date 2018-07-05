@@ -59,6 +59,16 @@ uint64_t GetAliasExpiration(const CAliasIndex& alias) {
 		nTime = aliasUnprunable.nExpireTime;
 	return nTime;
 }
+bool FindSyscoinScriptOp(const CScript& script, int& op) {
+	CScript::const_iterator pc = script.begin();
+	opcodetype opcode;
+	if (!script.GetOp(pc, opcode))
+		return false;
+	if (opcode < OP_1 || opcode > OP_16)
+		return false;
+	op = CScript::DecodeOP_N(opcode);
+	return op == OP_SYSCOIN_ALIAS || op == OP_SYSCOIN_ASSET || op == OP_SYSCOIN_ASSET_ALLOCATION || op == OP_SYSCOIN_CERT || op == OP_SYSCOIN_ESCROW || op == OP_SYSCOIN_OFFER;
+}
 bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 {
 	vector<unsigned char> vchData;
@@ -240,16 +250,6 @@ bool IsSyscoinDataOutput(const CTxOut& out) {
    return false;
 }
 
-bool FindSyscoinScriptOp(const CScript& script, int& op) {
-	CScript::const_iterator pc = script.begin();
-	opcodetype opcode;
-	if (!script.GetOp(pc, opcode))
-		return false;
-	if (opcode < OP_1 || opcode > OP_16)
-		return false;
-	op = CScript::DecodeOP_N(opcode);
-	return op == OP_SYSCOIN_ALIAS || op == OP_SYSCOIN_ASSET || op == OP_SYSCOIN_ASSET_ALLOCATION || op == OP_SYSCOIN_CERT || op == OP_SYSCOIN_ESCROW || op == OP_SYSCOIN_OFFER;
-}
 bool CheckAliasInputs(const CCoinsViewCache &inputs, const CTransaction &tx, int op, const vector<vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, string &errorMessage, bool bSanityCheck) {
 	if (!paliasdb)
 		return false;
