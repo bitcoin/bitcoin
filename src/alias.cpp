@@ -1690,7 +1690,7 @@ UniValue aliasnew(const JSONRPCRequest& request) {
 	tx.vout.clear();
 	CAliasIndex oldAlias;
 	if (GetAlias(vchAlias, oldAlias))
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5506 - " + _("This alias already exists"));
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5505 - " + _("This alias already exists"));
 
 
 	const vector<unsigned char> &vchRandAlias = vchFromString(GenerateSyscoinGuid());
@@ -1717,7 +1717,7 @@ UniValue aliasnew(const JSONRPCRequest& request) {
 		CSyscoinAddress addressAlias(pubKey.GetID());
 		strAddress = addressAlias.ToString();
 		if (pwalletMain && !pwalletMain->AddKeyPubKey(privKey, pubKey))
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5507 - " + _("Error adding key to wallet"));
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5506 - " + _("Error adding key to wallet"));
 	}
 	CScript scriptPubKeyOrig;
 	DecodeBase58(strAddress, newAlias.vchAddress);
@@ -1733,7 +1733,7 @@ UniValue aliasnew(const JSONRPCRequest& request) {
 		hash = Hash(data.begin(), data.end());
 		vchHashAlias = vchFromString(hash.GetHex());
 		if (!newAlias.UnserializeFromData(data, vchHashAlias))
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5508 - " + _("Cannot unserialize alias registration transaction"));
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5507 - " + _("Cannot unserialize alias registration transaction"));
 		if (strAddress.empty())
 			newAlias1.vchAddress = newAlias.vchAddress;
 
