@@ -24,7 +24,7 @@ void GenerateSpendableCoins();
 void GenerateMainNetBlocks(int nBlocks, const string& node);
 string CallExternal(string &cmd);
 void SetSysMocktime(const int64_t& expiryTime);
-void SleepFor(const int& seconds, bool actualSleep=false, string &node="''");
+void SleepFor(const int& seconds, bool actualSleep=false, const string &node="''");
 void ExpireAlias(const string& alias);
 void CheckRangeSubtract(const string& originalRanges, const string& subtractRanges, const string& expectedOutputRanges);
 void CheckRangeMerge(const string& originalRanges, const string& newRanges, const string& expectedOutputRanges);
