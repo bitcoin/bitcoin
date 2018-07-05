@@ -480,9 +480,11 @@ void SetSysMocktime(const int64_t& expiryTime, const string& node) {
 		{
 			CallRPC("node1", "getinfo");
 			BOOST_CHECK_NO_THROW(CallRPC("node1", cmd, true, false));
-			GenerateBlocks(5, "node1");
-			GenerateBlocks(5, "node1");
-			GenerateBlocks(5, "node1");
+			if (node == "''") {
+				GenerateBlocks(5, "node1");
+				GenerateBlocks(5, "node1");
+				GenerateBlocks(5, "node1");
+			}
 			UniValue r;
 			BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockchaininfo"));
 			BOOST_CHECK(expiryTime <= find_value(r.get_obj(), "mediantime").get_int64());
@@ -496,9 +498,11 @@ void SetSysMocktime(const int64_t& expiryTime, const string& node) {
 		{
 			CallRPC("node2", "getinfo");
 			BOOST_CHECK_NO_THROW(CallRPC("node2", cmd, true, false));
-			GenerateBlocks(5, "node2");
-			GenerateBlocks(5, "node2");
-			GenerateBlocks(5, "node2");
+			if (node == "''") {
+				GenerateBlocks(5, "node2");
+				GenerateBlocks(5, "node2");
+				GenerateBlocks(5, "node2");
+			}
 			UniValue r;
 			BOOST_CHECK_NO_THROW(r = CallRPC("node2", "getblockchaininfo"));
 			BOOST_CHECK(expiryTime <= find_value(r.get_obj(), "mediantime").get_int64());
@@ -513,9 +517,11 @@ void SetSysMocktime(const int64_t& expiryTime, const string& node) {
 		{
 			CallRPC("node3", "getinfo");
 			BOOST_CHECK_NO_THROW(CallRPC("node3", cmd, true, false));
-			GenerateBlocks(5, "node3");
-			GenerateBlocks(5, "node3");
-			GenerateBlocks(5, "node3");
+			if (node == "''") {
+				GenerateBlocks(5, "node3");
+				GenerateBlocks(5, "node3");
+				GenerateBlocks(5, "node3");
+			}
 			UniValue r;
 			BOOST_CHECK_NO_THROW(r = CallRPC("node3", "getblockchaininfo"));
 			BOOST_CHECK(expiryTime <= find_value(r.get_obj(), "mediantime").get_int64());
