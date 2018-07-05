@@ -432,7 +432,7 @@ void GenerateSpendableCoins() {
 void SleepFor(const int& milliseconds, bool actualSleep) {
 	if (actualSleep)
 		MilliSleep(milliseconds);
-	int seconds = milliseconds / 1000;
+	float seconds = milliseconds / 1000;
 	BOOST_CHECK(seconds > 0);
 	UniValue r;
 	try
