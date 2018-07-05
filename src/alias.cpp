@@ -73,12 +73,9 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 {
 	vector<unsigned char> vchData;
 	vector<unsigned char> vchHash;
-	int op;
 	if(!GetSyscoinData(scriptPubKey, vchData, vchHash))
 		return false;
 	if(!chainActive.Tip())
-		return false;
-	if (!FindSyscoinScriptOp(scriptPubKey, op))
 		return false;
 	CAliasIndex alias;
 	COffer offer;
