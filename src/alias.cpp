@@ -63,9 +63,12 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 {
 	vector<unsigned char> vchData;
 	vector<unsigned char> vchHash;
+	int op;
 	if(!GetSyscoinData(scriptPubKey, vchData, vchHash))
 		return false;
 	if(!chainActive.Tip())
+		return false;
+	if (!FindSyscoinScriptOp(scriptPubKey, op))
 		return false;
 	CAliasIndex alias;
 	COffer offer;
@@ -743,13 +746,16 @@ void GetAddress(const CAliasIndex& alias, CSyscoinAddress* address,CScript& scri
 }
 bool CAliasIndex::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
     try {
-		const vector<unsigned char> &vchRandAlias = vchFromString(Hash(vchData.begin(), vchData.end()).GetHex());
-		if(vchRandAlias != vchHash)
-		{
-			return false;
-		}
 		CDataStream dsAlias(vchData, SER_NETWORK, PROTOCOL_VERSION);
 		dsAlias >> *this;
+		vector<unsigned char> vchSerializedData;
+		Serialize(vchSerializedData);
+		const uint256 &calculatedHash = Hash(vchSerializedData.begin(), vchSerializedData.end());
+		const vector<unsigned char> &vchRand = vchFromValue(calculatedHash.GetHex());
+		if (vchRand != vchHash) {
+			SetNull();
+			return false;
+		}
     } catch (std::exception &e) {
 		SetNull();
         return false;
