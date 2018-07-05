@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_send)
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MINOR_CONFLICT_OK);
 
 	// wait for 1 second as required by unit test
-	MilliSleep(1000);
+	SleepFor(1000);
 
 	// second send
 	string txid2 = AssetAllocationTransfer(true, "node1", guid, "jagassetallocationsend1", "\"[{\\\"aliasto\\\":\\\"jagassetallocationsend2\\\",\\\"amount\\\":0.13}]\"", "allocationsendmemo");
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_send)
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MINOR_CONFLICT_OK);
 
 	// wait for 1.5 second to clear minor warning status
-	MilliSleep(1500);
+	SleepFor(1500);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + guid + " jagassetallocationsend1 " + txid0));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
 
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(generate_assetallocationpruning)
 	// makes sure services expire in 100 blocks instead of 1 year of blocks for testing purposes
 	printf("Running generate_assetallocationpruning...\n");
 	AliasNew("node1", "jagprunealias2", "changeddata1");
-	MilliSleep(5000);
+	SleepFor(5000);
 	AliasNew("node2", "jagprunealias2node2", "data");
 	// stop node2 create a service,  mine some blocks to expire the service, when we restart the node the service data won't be synced with node2
 	StopNode("node2");
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(generate_assetallocationpruning)
 	ExpireAlias("jagprunealias2");
 	StartNode("node2");
 	GenerateBlocks(5, "node2");
-
+	GenerateBlocks(5, "node1");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid + " false"));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
 
@@ -160,6 +160,7 @@ BOOST_AUTO_TEST_CASE(generate_assetallocationpruning)
 
 	// expire asset allocation alias and now asset allocation is also expired
 	ExpireAlias("jagprunealias2node2");
+	GenerateBlocks(5, "node1");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagprunealias2node2 false"));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
 
