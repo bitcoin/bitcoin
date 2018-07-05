@@ -429,7 +429,9 @@ void GenerateSpendableCoins() {
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress " + newaddress + " 100000"), runtime_error);
 	GenerateBlocks(10, "node1");
 }
-void SleepFor(const int& milliseconds) {
+void SleepFor(const int& milliseconds, bool actualSleep) {
+	if (actualSleep)
+		MilliSleep(milliseconds);
 	int seconds = milliseconds / 1000;
 	BOOST_CHECK(seconds > 0);
 	UniValue r;
