@@ -431,7 +431,7 @@ void GenerateSpendableCoins() {
 }
 void SleepFor(const int& seconds) {
 	BOOST_CHECK(seconds > 0);
-
+	UniValue r;
 	try
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockchaininfo"));
