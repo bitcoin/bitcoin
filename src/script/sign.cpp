@@ -56,6 +56,24 @@ static bool SignN(const SigningProvider& provider, const std::vector<valtype>& m
     return nSigned==nRequired;
 }
 
+static bool SignLargeN(const SigningProvider& provider, const std::vector<valtype>& multisigdata, const BaseSignatureCreator& creator, const CScript& scriptCode, std::vector<valtype>& ret, SigVersion sigversion)
+{
+    int nSigned = 0;
+    int nRequired = multisigdata.back()[0];
+    for (unsigned int i = 1; i < multisigdata.size()-1; i++)
+    {
+        const valtype& pubkey = multisigdata[i];
+        CKeyID keyID = CPubKey(pubkey).GetID();
+        if (Sign1(provider, keyID, creator, scriptCode, ret, sigversion)) {
+            ++nSigned;
+        } else {
+            ret.push_back(valtype());
+        }
+    }
+    std::reverse(std::begin(ret), std::end(ret));
+    return nSigned==nRequired;
+}
+
 /**
  * Sign scriptPubKey using signature made with creator.
  * Signatures are returned in scriptSigRet (or returns false if scriptPubKey can't be signed),
@@ -104,6 +122,9 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
     case TX_MULTISIG:
         ret.push_back(valtype()); // workaround CHECKMULTISIG bug
         return (SignN(provider, vSolutions, creator, scriptPubKey, ret, sigversion));
+
+    case TX_LARGE_MULTISIG:
+        return SignLargeN(provider, vSolutions, creator, scriptPubKey, ret, sigversion);
 
     case TX_WITNESS_V0_KEYHASH:
         ret.push_back(vSolutions[0]);
@@ -276,6 +297,64 @@ static std::vector<valtype> CombineMultisig(const CScript& scriptPubKey, const B
     return result;
 }
 
+static std::vector<valtype> CombineLargeMultisig(const CScript& scriptPubKey, const BaseSignatureChecker& checker,
+                               const std::vector<valtype>& vSolutions,
+                               const std::vector<valtype>& sigs1, const std::vector<valtype>& sigs2, SigVersion sigversion)
+{
+    // Combine all the signatures we've got:
+    std::set<valtype> allsigs;
+    for (const valtype& v : sigs1)
+    {
+        if (!v.empty())
+            allsigs.insert(v);
+    }
+    for (const valtype& v : sigs2)
+    {
+        if (!v.empty())
+            allsigs.insert(v);
+    }
+
+    // Build a map of pubkey -> signature by matching sigs to pubkeys:
+    assert(vSolutions.size() > 1);
+    unsigned int nSigsRequired = vSolutions.back()[0];
+    unsigned int nPubKeys = vSolutions.size()-2;
+    std::map<valtype, valtype> sigs;
+    for (const valtype& sig : allsigs)
+    {
+        for (unsigned int i = 0; i < nPubKeys; i++)
+        {
+            const valtype& pubkey = vSolutions[i];
+            if (sigs.count(pubkey))
+                continue; // Already got a sig for this pubkey
+
+            if (checker.CheckSig(sig, pubkey, scriptPubKey, sigversion))
+            {
+                sigs[pubkey] = sig;
+                break;
+            }
+        }
+    }
+    // Now build a merged CScript:
+    unsigned int nSigsHave = 0;
+    std::vector<valtype> result; result.push_back(valtype()); // pop-one-too-many workaround
+    for (unsigned int i = 0; i < nPubKeys && nSigsHave < nSigsRequired; i++)
+    {
+        if (sigs.count(vSolutions[i]) && nSigsHave < nSigsRequired)
+        {
+            result.push_back(sigs[vSolutions[i]]);
+            ++nSigsHave;
+        } else {
+            result.push_back(valtype());
+        }
+    }
+
+    // Sigs are in "reverse" order compared to OP_CHECKMULTISIG(VERIFY)
+    std::reverse(std::begin(result), std::end(result));
+
+    return result;
+}
+
+
 namespace
 {
 struct Stacks
@@ -344,6 +423,8 @@ static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignature
         }
     case TX_MULTISIG:
         return Stacks(CombineMultisig(scriptPubKey, checker, vSolutions, sigs1.script, sigs2.script, sigversion));
+    case TX_LARGE_MULTISIG:
+        return Stacks(CombineLargeMultisig(scriptPubKey, checker, vSolutions, sigs1.script, sigs2.script, sigversion));
     case TX_WITNESS_V0_SCRIPTHASH:
         if (sigs1.witness.empty() || sigs1.witness.back().empty())
             return sigs2;
