@@ -368,7 +368,7 @@ BOOST_AUTO_TEST_CASE (generate_alias_offerexpiry_resync)
 	// change offer to an older alias, expire the alias and ensure that on resync the offer seems to be expired still
 	AliasNew("node1", "aliasold", "changeddata1");
 	printf("Sleeping 5 seconds between the creation of the two aliases for this test...\n");
-	MilliSleep(5000);
+	SleepFor(5000);
 	GenerateBlocks(5, "node1");
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
@@ -792,7 +792,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpiredbuyback)
 	AliasNew("node1", "aliasexpirebuyback", "somedata2");
 	// run the test with node3 offline to test pruning with renewing alias
 	StopNode("node3");
-	MilliSleep(500);
+	SleepFor(500);
 	AliasNew("node1", "aliasexpirebuyback1", "somedata1");
 	GenerateBlocks(5, "node1");
 	ExpireAlias("aliasexpirebuyback1");
@@ -1001,11 +1001,11 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	string aliasexpirenode2address = AliasNew("node2", "aliasexpirednode2", "somedata");
 	string offerguid = OfferNew("node1", "aliasexpire0", "category", "title", "100", "1.00", "description", "USD");
 	string certguid = CertNew("node1", "aliasexpire", "certtitle", "pubdata");
-	MilliSleep(2500);
+	SleepFor(2500);
 	AliasNew("node3", "aliasexpire3", "somedata");
 	StopNode("node3");
 	printf("Sleeping 5 seconds between the creation of aliases for this test...\n");
-	MilliSleep(5000);	
+	SleepFor(5000);
 	GenerateBlocks(5, "node1");
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
