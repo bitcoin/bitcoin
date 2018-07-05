@@ -50,15 +50,6 @@ void InstantSend::ProcessMessage(CNode* pfrom, const std::string& strCommand, CD
             return;
         }
 
-        BOOST_FOREACH(const CTxOut o, tx.vout){
-            // IX supports normal scripts and unspendable scripts (used in DS collateral and Budget collateral).
-            // TODO: Look into other script types that are normal and can be included
-            if(!o.scriptPubKey.IsNormalPaymentScript() && !o.scriptPubKey.IsUnspendable()){
-                IXLogPrintf("ProcessMessageInstantX::ix - Invalid Script %s\n", tx.ToString().c_str());
-                return;
-            }
-        }
-
         int nBlockHeight = CreateNewLock(tx);
 
         bool fMissingInputs = false;
