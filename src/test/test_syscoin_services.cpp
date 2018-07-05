@@ -429,41 +429,47 @@ void GenerateSpendableCoins() {
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress " + newaddress + " 100000"), runtime_error);
 	GenerateBlocks(10, "node1");
 }
-void SleepFor(const int& milliseconds, bool actualSleep) {
+void SleepFor(const int& milliseconds, bool actualSleep, string &node) {
 	if (actualSleep)
 		MilliSleep(milliseconds);
 	int seconds = milliseconds / 1000;
 	BOOST_CHECK(seconds > 0);
 	UniValue r;
-	try
-	{
-		r = CallRPC("node1", "getblockchaininfo");
-		int64_t currentTime = find_value(r.get_obj(), "mediantime").get_int64();
-		currentTime += seconds;
-		SetSysMocktime(currentTime);
+	if (node == "node1" || node.empty()) {
+		try
+		{
+			r = CallRPC("node1", "getblockchaininfo");
+			int64_t currentTime = find_value(r.get_obj(), "mediantime").get_int64();
+			currentTime += seconds;
+			SetSysMocktime(currentTime);
+		}
+		catch (const runtime_error &e)
+		{
+		}
 	}
-	catch (const runtime_error &e)
-	{
+	else if (node == "node2" || node.empty()) {
+		try
+		{
+			r = CallRPC("node2", "getblockchaininfo");
+			int64_t currentTime = find_value(r.get_obj(), "mediantime").get_int64();
+			currentTime += seconds;
+			SetSysMocktime(currentTime);
+		}
+		catch (const runtime_error &e)
+		{
+		}
 	}
-	try
-	{
-		r = CallRPC("node2", "getblockchaininfo");
-		int64_t currentTime = find_value(r.get_obj(), "mediantime").get_int64();
-		currentTime += seconds;
-		SetSysMocktime(currentTime);
-	}
-	catch (const runtime_error &e)
-	{
-	}
-	try
-	{
-		r = CallRPC("node3", "getblockchaininfo");
-		int64_t currentTime = find_value(r.get_obj(), "mediantime").get_int64();
-		currentTime += seconds;
-		SetSysMocktime(currentTime);
-	}
-	catch (const runtime_error &e)
-	{
+	else if (node == "node3" || node.empty()) {
+		try
+		{
+			r = CallRPC("node3", "getblockchaininfo");
+			int64_t currentTime = find_value(r.get_obj(), "mediantime").get_int64();
+			currentTime += seconds;
+			SetSysMocktime(currentTime);
+		}
+		catch (const runtime_error &e)
+		{
+		}
 	}
 }
 void SetSysMocktime(const int64_t& expiryTime) {
