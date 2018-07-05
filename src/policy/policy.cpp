@@ -88,7 +88,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
     // computing signature hashes is O(ninputs*txsize). Limiting transactions
     // to MAX_STANDARD_TX_WEIGHT mitigates CPU exhaustion attacks.
     unsigned int sz = GetTransactionWeight(tx);
-    if (sz >= MAX_STANDARD_TX_WEIGHT) {
+    if (sz > MAX_STANDARD_TX_WEIGHT) {
         reason = "tx-size";
         return false;
     }
