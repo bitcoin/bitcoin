@@ -437,7 +437,7 @@ void SleepFor(const int& milliseconds, bool actualSleep) {
 	UniValue r;
 	try
 	{
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockchaininfo"));
+		r = CallRPC("node1", "getblockchaininfo");
 		int64_t currentTime = find_value(r.get_obj(), "mediantime").get_int64();
 		currentTime += seconds;
 		SetSysMocktime(currentTime);
@@ -447,7 +447,7 @@ void SleepFor(const int& milliseconds, bool actualSleep) {
 	}
 	try
 	{
-		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "getblockchaininfo"));
+		r = CallRPC("node2", "getblockchaininfo");
 		int64_t currentTime = find_value(r.get_obj(), "mediantime").get_int64();
 		currentTime += seconds;
 		SetSysMocktime(currentTime);
@@ -457,7 +457,7 @@ void SleepFor(const int& milliseconds, bool actualSleep) {
 	}
 	try
 	{
-		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "getblockchaininfo"));
+		r = CallRPC("node3", "getblockchaininfo");
 		int64_t currentTime = find_value(r.get_obj(), "mediantime").get_int64();
 		currentTime += seconds;
 		SetSysMocktime(currentTime);

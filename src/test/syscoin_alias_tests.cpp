@@ -368,11 +368,7 @@ BOOST_AUTO_TEST_CASE (generate_alias_offerexpiry_resync)
 	// change offer to an older alias, expire the alias and ensure that on resync the offer seems to be expired still
 	AliasNew("node1", "aliasold", "changeddata1");
 	printf("Sleeping 5 seconds between the creation of the two aliases for this test...\n");
-	SleepFor(5000);
-	GenerateBlocks(5, "node1");
-	GenerateBlocks(5, "node2");
-	GenerateBlocks(5, "node3");
-	GenerateBlocks(50);
+	SleepFor(10000);
 	AliasNew("node1", "aliasnew", "changeddata1");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo aliasold"));
 	int64_t aliasoldexpiry = find_value(r.get_obj(), "expires_on").get_int64();	
