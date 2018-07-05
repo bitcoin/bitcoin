@@ -493,33 +493,30 @@ static UniValue devicesignrawtransaction(const JSONRPCRequest &request)
             TxInErrorToJSON(txin, vErrors, "Input not found or already spent");
             continue;
         }
-        if (coin.nType != OUTPUT_STANDARD && coin.nType != OUTPUT_CT)
-        {
+        if (coin.nType != OUTPUT_STANDARD && coin.nType != OUTPUT_CT) {
             pDevice->Close();
             throw JSONRPCError(RPC_MISC_ERROR, strprintf("Bad input type: %d", coin.nType));
-        };
+        }
 
         std::vector<uint8_t> vchAmount(8);
-        SignatureData sigdata;
         CScript prevPubKey = coin.out.scriptPubKey;
         CAmount amount = coin.out.nValue;
         memcpy(vchAmount.data(), &amount, 8);
+        SignatureData sigdata = DataFromTransaction(mtx, i, vchAmount, prevPubKey);
 
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
-        if (!fHashSingle || (i < mtx.GetNumVOuts()))
-        {
+        if (!fHashSingle || (i < mtx.GetNumVOuts())) {
             pDevice->sError.clear();
             ProduceSignature(keystore, DeviceSignatureCreator(pDevice, &mtx, i, vchAmount, nHashType), prevPubKey, sigdata);
 
-            if (!pDevice->sError.empty())
-            {
+            if (!pDevice->sError.empty()) {
                 UniValue entry(UniValue::VOBJ);
                 entry.push_back(Pair("error", pDevice->sError));
                 vErrors.push_back(entry);
-            };
-        };
+            }
+        }
 
-        sigdata = CombineSignatures(prevPubKey, TransactionSignatureChecker(&txConst, i, vchAmount), sigdata, DataFromTransaction(mtx, i));
+        //sigdata = CombineSignatures(prevPubKey, TransactionSignatureChecker(&txConst, i, vchAmount), sigdata, DataFromTransaction(mtx, i));
         UpdateInput(txin, sigdata);
 
         ScriptError serror = SCRIPT_ERR_OK;

@@ -1724,13 +1724,13 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
                 const CScript &scriptPubKey = *txout->GetPScriptPubKey();
                 ExtractDestination(scriptPubKey, address);
 
-                if (HasIsCoinstakeOp(scriptPubKey))
-                {
+                if (HasIsCoinstakeOp(scriptPubKey)) {
                     CScript scriptOut;
-                    if (GetCoinstakeScriptPath(scriptPubKey, scriptOut))
+                    if (GetCoinstakeScriptPath(scriptPubKey, scriptOut)){
                         ExtractDestination(scriptOut, addressStake);
-                };
-            };
+                    }
+                }
+            }
             nCredit += txout->GetValue();
 
             if (fForFilterTx)
@@ -1785,12 +1785,12 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
                 address = CNoDestination();
             };
 
-            if (HasIsCoinstakeOp(scriptPubKey))
-            {
+            if (HasIsCoinstakeOp(scriptPubKey)) {
                 CScript scriptOut;
-                if (GetCoinstakeScriptPath(scriptPubKey, scriptOut))
+                if (GetCoinstakeScriptPath(scriptPubKey, scriptOut)) {
                     ExtractDestination(scriptOut, addressStake);
-            };
+                }
+            }
 
             COutputEntry output = {address, txout->GetValue(), (int)i, fIsMine, addressStake};
 

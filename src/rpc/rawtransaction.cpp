@@ -900,17 +900,17 @@ static UniValue combinerawtransaction(const JSONRPCRequest& request)
         }
         const CScript& prevPubKey = coin.out.scriptPubKey;
         const CAmount& amount = coin.out.nValue;
-
         SignatureData sigdata;
+        std::vector<uint8_t> vchAmount(8);
+        memcpy(&vchAmount[0], &amount, 8);
 
         // ... and merge in other signatures:
         for (const CMutableTransaction& txv : txVariants) {
             if (txv.vin.size() > i) {
-                std::vector<uint8_t> vchAmount(8);
-                memcpy(&vchAmount[0], &amount, 8);
-                sigdata = CombineSignatures(prevPubKey, TransactionSignatureChecker(&txConst, i, vchAmount), sigdata, DataFromTransaction(txv, i));
+                sigdata.MergeSignatureData(DataFromTransaction(txv, i, vchAmount, prevPubKey));
             }
         }
+        ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(&mergedTx, i, vchAmount, 1), prevPubKey, sigdata);
 
         UpdateInput(txin, sigdata);
     }
@@ -1041,7 +1041,6 @@ UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival
             continue;
         }
 
-        SignatureData sigdata;
         CScript prevPubKey = coin.out.scriptPubKey;
 
         std::vector<uint8_t> vchAmount;
@@ -1059,11 +1058,11 @@ UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival
             throw JSONRPCError(RPC_MISC_ERROR, strprintf("Bad input type: %d", coin.nType));
         };
 
+        SignatureData sigdata = DataFromTransaction(mtx, i, vchAmount, prevPubKey);
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
         if (!fHashSingle || (i < mtx.GetNumVOuts())) {
             ProduceSignature(*keystore, MutableTransactionSignatureCreator(&mtx, i, vchAmount, nHashType), prevPubKey, sigdata);
         }
-        sigdata = CombineSignatures(prevPubKey, TransactionSignatureChecker(&txConst, i, vchAmount), sigdata, DataFromTransaction(mtx, i));
         UpdateInput(txin, sigdata);
 
         ScriptError serror = SCRIPT_ERR_OK;

@@ -1,0 +1,6 @@
+bitcoin-tx.cpp 138
+rpc/rawtransaction.cpp 404
+script/sign.h 417
+script/sign.cpp 420
+test/script_tests.cpp 579
+test/transaction_tests.cpp 580

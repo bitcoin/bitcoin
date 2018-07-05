@@ -1847,3 +1847,11 @@ bool SplitConditionalCoinstakeScript(const CScript &scriptIn, CScript &scriptOut
 
     return false;
 };
+
+bool GetColdStakeScriptPath(bool for_coinstake, const CScript &script_in, CScript &script_out)
+{
+    if (for_coinstake) {
+        return GetCoinstakeScriptPath(script_in, script_out);
+    }
+    return GetNonCoinstakeScriptPath(script_in, script_out);
+}

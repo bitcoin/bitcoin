@@ -4204,15 +4204,14 @@ static UniValue listunspent(const JSONRPCRequest& request)
             }
         }
 
-        if (HasIsCoinstakeOp(*scriptPubKey))
-        {
+        if (HasIsCoinstakeOp(*scriptPubKey)) {
             CScript scriptStake;
-            if (GetCoinstakeScriptPath(*scriptPubKey, scriptStake))
-            {
-                if (ExtractDestination(scriptStake, address))
+            if (GetCoinstakeScriptPath(*scriptPubKey, scriptStake)) {
+                if (ExtractDestination(scriptStake, address)) {
                     entry.push_back(Pair("coldstaking_address", CBitcoinAddress(address).ToString()));
-            };
-        };
+                }
+            }
+        }
 
         entry.pushKV("scriptPubKey", HexStr(scriptPubKey->begin(), scriptPubKey->end()));
 

@@ -163,18 +163,17 @@ void ScriptPubKeyToUniv(const CScript& scriptPubKey,
     }
     out.pushKV("addresses", a);
 
-    if (HasIsCoinstakeOp(scriptPubKey))
-    {
+    if (HasIsCoinstakeOp(scriptPubKey)) {
         CScript scriptCS;
-        if (GetCoinstakeScriptPath(scriptPubKey, scriptCS))
-        if (ExtractDestinations(scriptCS, type, addresses, nRequired)) {
+        if (GetCoinstakeScriptPath(scriptPubKey, scriptCS)
+            && ExtractDestinations(scriptCS, type, addresses, nRequired)) {
             UniValue a(UniValue::VARR);
             for (const CTxDestination& addr : addresses) {
                 a.push_back(EncodeDestination(addr));
-            };
+            }
             out.pushKV("stakeaddresses", a);
-        };
-    };
+        }
+    }
 }
 
 void AddRangeproof(const std::vector<uint8_t> &vRangeproof, UniValue &entry)

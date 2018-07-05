@@ -506,6 +506,17 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction) {
     threadGroup.join_all();
 }
 
+SignatureData CombineSignatures(const CMutableTransaction& input1, const CMutableTransaction& input2, const CTransactionRef tx)
+{
+    SignatureData sigdata;
+    sigdata = DataFromTransaction(input1, 0, tx->vout[0]);
+    sigdata.MergeSignatureData(DataFromTransaction(input2, 0, tx->vout[0]));
+    std::vector<uint8_t> vamount(8);
+    memcpy(vamount.data(), &tx->vout[0].nValue, 8);
+    ProduceSignature(DUMMY_SIGNING_PROVIDER, MutableTransactionSignatureCreator(&input1, 0, vamount), tx->vout[0].scriptPubKey, sigdata);
+    return sigdata;
+}
+
 BOOST_AUTO_TEST_CASE(test_witness)
 {
     std::vector<uint8_t> vchAmount(8);
@@ -643,8 +654,7 @@ BOOST_AUTO_TEST_CASE(test_witness)
     CreateCreditAndSpend(keystore2, scriptMulti, output2, input2, false);
     CheckWithFlag(output2, input2, 0, false);
     BOOST_CHECK(*output1 == *output2);
-    memcpy(vchAmount.data(), &output1->vout[0].nValue, 8);
-    UpdateInput(input1.vin[0], CombineSignatures(output1->vout[0].scriptPubKey, MutableTransactionSignatureChecker(&input1, 0, vchAmount), DataFromTransaction(input1, 0), DataFromTransaction(input2, 0)));
+    UpdateInput(input1.vin[0], CombineSignatures(input1, input2, output1));
     CheckWithFlag(output1, input1, STANDARD_SCRIPT_VERIFY_FLAGS, true);
 
     // P2SH 2-of-2 multisig
@@ -655,8 +665,7 @@ BOOST_AUTO_TEST_CASE(test_witness)
     CheckWithFlag(output2, input2, 0, true);
     CheckWithFlag(output2, input2, SCRIPT_VERIFY_P2SH, false);
     BOOST_CHECK(*output1 == *output2);
-    memcpy(vchAmount.data(), &output1->vout[0].nValue, 8);
-    UpdateInput(input1.vin[0], CombineSignatures(output1->vout[0].scriptPubKey, MutableTransactionSignatureChecker(&input1, 0, vchAmount), DataFromTransaction(input1, 0), DataFromTransaction(input2, 0)));
+    UpdateInput(input1.vin[0], CombineSignatures(input1, input2, output1));
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_P2SH, true);
     CheckWithFlag(output1, input1, STANDARD_SCRIPT_VERIFY_FLAGS, true);
 
@@ -668,8 +677,7 @@ BOOST_AUTO_TEST_CASE(test_witness)
     CheckWithFlag(output2, input2, 0, true);
     CheckWithFlag(output2, input2, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, false);
     BOOST_CHECK(*output1 == *output2);
-    memcpy(vchAmount.data(), &output1->vout[0].nValue, 8);
-    UpdateInput(input1.vin[0], CombineSignatures(output1->vout[0].scriptPubKey, MutableTransactionSignatureChecker(&input1, 0, vchAmount), DataFromTransaction(input1, 0), DataFromTransaction(input2, 0)));
+    UpdateInput(input1.vin[0], CombineSignatures(input1, input2, output1));
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, true);
     CheckWithFlag(output1, input1, STANDARD_SCRIPT_VERIFY_FLAGS, true);
 
@@ -681,9 +689,7 @@ BOOST_AUTO_TEST_CASE(test_witness)
     CheckWithFlag(output2, input2, SCRIPT_VERIFY_P2SH, true);
     CheckWithFlag(output2, input2, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, false);
     BOOST_CHECK(*output1 == *output2);
-
-    memcpy(vchAmount.data(), &output1->vout[0].nValue, 8);
-    UpdateInput(input1.vin[0], CombineSignatures(output1->vout[0].scriptPubKey, MutableTransactionSignatureChecker(&input1, 0, vchAmount), DataFromTransaction(input1, 0), DataFromTransaction(input2, 0)));
+    UpdateInput(input1.vin[0], CombineSignatures(input1, input2, output1));
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, true);
     CheckWithFlag(output1, input1, STANDARD_SCRIPT_VERIFY_FLAGS, true);
 }
