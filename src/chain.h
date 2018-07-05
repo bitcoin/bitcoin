@@ -14,13 +14,9 @@
 
 #include <vector>
 
-
 enum eBlockFlags
 {
     BLOCK_PROOF_OF_STAKE            = (1 << 0), // is proof-of-stake block
-    BLOCK_STAKE_ENTROPY             = (1 << 1), // entropy bit for stake modifier
-    BLOCK_STAKE_MODIFIER            = (1 << 2), // regenerated stake modifier
-
     BLOCK_FAILED_DUPLICATE_STAKE    = (1 << 3),
 };
 
@@ -340,11 +336,6 @@ public:
         return GetBlockTime();
     }
 
-    bool IsProofOfWork() const
-    {
-        return !(nFlags & BLOCK_PROOF_OF_STAKE);
-    }
-
     bool IsProofOfStake() const
     {
         return (nFlags & BLOCK_PROOF_OF_STAKE);
@@ -353,19 +344,6 @@ public:
     void SetProofOfStake()
     {
         nFlags |= BLOCK_PROOF_OF_STAKE;
-    }
-
-    unsigned int GetStakeEntropyBit() const
-    {
-        return ((nFlags & BLOCK_STAKE_ENTROPY) >> 1);
-    }
-
-    bool SetStakeEntropyBit(unsigned int nEntropyBit)
-    {
-        if (nEntropyBit > 1)
-            return false;
-        nFlags |= (nEntropyBit? BLOCK_STAKE_ENTROPY : 0);
-        return true;
     }
 
     static constexpr int nMedianTimeSpan = 11;
