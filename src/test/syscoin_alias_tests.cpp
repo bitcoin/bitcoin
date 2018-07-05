@@ -379,7 +379,7 @@ BOOST_AUTO_TEST_CASE (generate_alias_offerexpiry_resync)
 	BOOST_CHECK(aliasoldexpiry > mediantime);
 	BOOST_CHECK(aliasoldexpiry < aliasnewexpiry);
 	// move node3 ahead before shutting down so anything created while it was offline is essentially expired when it is turned back on
-	SleepFor(10000, false, "node3");
+	SleepFor(4000*1000, false, "node3");
 	StopNode("node3");
 	GenerateBlocks(5, "node2");
 
