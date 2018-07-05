@@ -435,7 +435,7 @@ void SleepFor(const int& milliseconds, bool actualSleep, string &node) {
 	int seconds = milliseconds / 1000;
 	BOOST_CHECK(seconds > 0);
 	UniValue r;
-	if (node == "node1" || node.empty()) {
+	if (node == "node1" || node == "''") {
 		try
 		{
 			r = CallRPC("node1", "getblockchaininfo");
@@ -447,7 +447,7 @@ void SleepFor(const int& milliseconds, bool actualSleep, string &node) {
 		{
 		}
 	}
-	else if (node == "node2" || node.empty()) {
+	else if (node == "node2" || node == "''") {
 		try
 		{
 			r = CallRPC("node2", "getblockchaininfo");
@@ -459,7 +459,7 @@ void SleepFor(const int& milliseconds, bool actualSleep, string &node) {
 		{
 		}
 	}
-	else if (node == "node3" || node.empty()) {
+	else if (node == "node3" || node == "''") {
 		try
 		{
 			r = CallRPC("node3", "getblockchaininfo");
