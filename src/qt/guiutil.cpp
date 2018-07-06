@@ -914,7 +914,7 @@ QString formatPingTime(double dPingTime)
  * Class constructor.
  * @param[int64_t] numValue   The Number to convert to a QString for display
  */
-QTableWidgetNumberItem::QTableWidgetNumberItem(const int64_t numValue) : QTableWidgetItem(), value(numValue)
+QTableWidgetNumberItem::QTableWidgetNumberItem(const int64_t numValue) : QTableWidgetItem(), m_value(numValue)
 {
     this->setText(QString::number(numValue));
 }
@@ -931,7 +931,7 @@ bool QTableWidgetNumberItem::operator<(QTableWidgetItem const& item) const
         return QTableWidgetItem::operator<(item);
     }
 
-    return value < rhs->value;
+    return m_value < rhs->m_value;
 }
 
 } // namespace GUIUtil
