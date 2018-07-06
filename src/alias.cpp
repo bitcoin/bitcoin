@@ -1106,7 +1106,7 @@ void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient)
 	recipient = recp;
 	CTxOut txout(recipient.nAmount, scriptPubKey);
 	size_t nSize = GetSerializeSize(txout, SER_DISK, 0) + 148u;
-	recipient.nAmount = 3 * minRelayTxFee.GetFee(nSize);
+	recipient.nAmount = 6 * minRelayTxFee.GetFee(nSize);
 }
 void CreateFeeRecipient(CScript& scriptPubKey, const vector<unsigned char>& data, CRecipient& recipient)
 {
@@ -1126,7 +1126,7 @@ CAmount GetDataFee(const CScript& scriptPubKey, bool bRequired)
     size_t nSize = GetSerializeSize(txout, SER_DISK,0)+148u;
 	// required is for consensus, minimumfee is for what the current fee should be according to current network state to get confirmed and relayed
 	if (!bRequired)
-		nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
+		nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool)*2;
 	else
 		nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool, 0);
 	recp.nAmount = nFee;
@@ -1356,8 +1356,8 @@ UniValue syscointxfund_helper(const vector<unsigned char> &vchAlias, const vecto
 	return syscointxfund(request);
 }
 CAmount GetFee(const size_t nBytes, const bool fUseInstantSend = false) {
-
-	CAmount nFee = CWallet::GetMinimumFee(nBytes, nTxConfirmTarget, mempool);
+	// we multiply by 2 so there is little chance that nodes wont think they are dust
+	CAmount nFee = CWallet::GetMinimumFee(nBytes*2, nTxConfirmTarget, mempool);
 	if (fUseInstantSend) {
 		CAmount nMinFee = CTxLockRequest::MIN_FEE;
 		nFee = std::max(nFee, nMinFee);
