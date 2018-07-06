@@ -831,6 +831,8 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
 	uint256 hash = Hash(data.begin(), data.end());
 
 	vector<unsigned char> vchHashAsset = vchFromString(hash.GetHex());
+	if (!theAssetAllocation.UnserializeFromData(data, vchHashAsset))
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1504 - " + _("Could not unserialize asset allocation data"));
 	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ASSET_ALLOCATION) << CScript::EncodeOP_N(OP_ASSET_ALLOCATION_SEND) << vchHashAsset << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyFromOrig;
 	// send the asset pay txn
