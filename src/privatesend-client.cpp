@@ -876,18 +876,9 @@ bool CPrivateSendClient::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, CCon
         std::vector<CTxDSIn> vecTxDSInTmp;
         std::vector<COutput> vCoinsTmp;
 
-        CAmount nMinAmount = vecStandardDenoms[vecBits.front()];
-        CAmount nMaxAmount = nBalanceNeedsAnonymized;
-        // nInputCount is not covered by legacy signature, require SPORK_6_NEW_SIGS to activate to use new algo
-        // (to make sure nInputCount wasn't modified by some intermediary node)
-        bool fNewAlgo = sporkManager.IsSporkActive(SPORK_6_NEW_SIGS);
-
-        if (fNewAlgo && dsq.nInputCount != 0) {
-            nMinAmount = nMaxAmount = dsq.nInputCount * vecStandardDenoms[vecBits.front()];
-        }
-        // Try to match their denominations if possible, select exact number of denominations
-        if(!pwalletMain->SelectCoinsByDenominations(dsq.nDenom, nMinAmount, nMaxAmount, vecTxDSInTmp, vCoinsTmp, nValueInTmp, 0, nPrivateSendRounds)) {
-            LogPrintf("CPrivateSendClient::JoinExistingQueue -- Couldn't match %d denominations %d %d (%s)\n", dsq.nInputCount, vecBits.front(), dsq.nDenom, CPrivateSend::GetDenominationsToString(dsq.nDenom));
+        // Try to match their denominations if possible, select at least 1 denominations
+        if(!pwalletMain->SelectCoinsByDenominations(dsq.nDenom, vecStandardDenoms[vecBits.front()], nBalanceNeedsAnonymized, vecTxDSInTmp, vCoinsTmp, nValueInTmp, 0, nPrivateSendRounds)) {
+            LogPrintf("CPrivateSendClient::JoinExistingQueue -- Couldn't match denominations %d %d (%s)\n", vecBits.front(), dsq.nDenom, CPrivateSend::GetDenominationsToString(dsq.nDenom));
             continue;
         }
 
