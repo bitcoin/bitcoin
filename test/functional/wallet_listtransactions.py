@@ -6,7 +6,7 @@
 from decimal import Decimal
 from io import BytesIO
 
-from test_framework.mininode import CTransaction, COIN
+from test_framework.messages import COIN, CTransaction
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_array_result,

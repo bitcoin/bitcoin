@@ -4,9 +4,10 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test decoding scripts via decodescript RPC command."""
 
+from test_framework.messages import CTransaction, sha256
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
-from test_framework.mininode import *
+from test_framework.util import assert_equal, bytes_to_hex_str, hex_str_to_bytes
+
 from io import BytesIO
 
 class DecodeScriptTest(BitcoinTestFramework):
