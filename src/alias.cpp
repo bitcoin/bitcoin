@@ -1124,7 +1124,7 @@ CAmount GetDataFee(const CScript& scriptPubKey)
 	CRecipient recp = {scriptPubKey, 0, false};
 	CTxOut txout(0, scriptPubKey);
     size_t nSize = GetSerializeSize(txout, SER_DISK,0)+148u;
-	nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
+	nFee = CWallet::GetRequiredFee(nSize);
 	recp.nAmount = nFee;
 	return recp.nAmount;
 }
