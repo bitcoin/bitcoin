@@ -279,8 +279,6 @@ bool CSporkMessage::CheckSignature(const CKeyID& pubKeyId) const
             LogPrintf("CSporkMessage::CheckSignature -- VerifyHash() failed, error: %s\n", strError);
             return false;
         }
-<<<<<<< HEAD
-=======
     } else {
         std::string strMessage = boost::lexical_cast<std::string>(nSporkID) + boost::lexical_cast<std::string>(nValue) + boost::lexical_cast<std::string>(nTimeSigned);
 
@@ -294,7 +292,6 @@ bool CSporkMessage::CheckSignature(const CKeyID& pubKeyId) const
                 return false;
             }
         }
->>>>>>> 6410705... Fix 2 small issues in sporks module (#2133)
     }
 
     return true;
