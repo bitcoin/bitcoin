@@ -569,6 +569,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_maxsenders)
 		if (i < 249)
 			senderstring += ",";
 	}
+	senderstring += "]\"";
 	AssetAllocationTransfer(false, "node1", guid, "jagmaxsenders0", senderstring, "memomaxsend allocation");
 
 }
