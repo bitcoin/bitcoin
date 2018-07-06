@@ -561,7 +561,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_maxsenders)
 	AssetSend("node1", guid, senderstring, "memomaxsend");
 	// test asset allocation transfers aswell
 	senderstring = "\"[";
-	for (int i = 0; i < 250; i++) {
+	for (int i = 1; i < 250; i++) {
 		string aliasname = "jagmaxsenders" + boost::lexical_cast<string>(i);
 		senderstring += "{\\\"aliasto\\\":\\\"";
 		senderstring += aliasname;
