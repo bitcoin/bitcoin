@@ -109,28 +109,6 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 			return true;
 		}
 	}
-	else if (asset.UnserializeFromData(vchData, vchHash))
-	{
-		if (!passetdb || !passetdb->ReadAsset(asset.vchAsset, asset))
-		{
-			// setting to the tip means we don't prune this data, we keep it
-			nTime = chainActive.Tip()->GetMedianTimePast() + 1;
-			return true;
-		}
-		nTime = GetAssetExpiration(asset);
-		return true;
-	}
-	else if (assetallocation.UnserializeFromData(vchData, vchHash))
-	{
-		if (!passetallocationdb || !passetallocationdb->ReadAssetAllocation(CAssetAllocationTuple(assetallocation.vchAsset, assetallocation.vchAlias), assetallocation))
-		{
-			// setting to the tip means we don't prune this data, we keep it
-			nTime = chainActive.Tip()->GetMedianTimePast() + 1;
-			return true;
-		}
-		nTime = GetAssetAllocationExpiration(assetallocation);
-		return true;
-	}
 	else if(offer.UnserializeFromData(vchData, vchHash))
 	{
 		if (!pofferdb || !pofferdb->ReadOffer(offer.vchOffer, offer))
@@ -902,10 +880,6 @@ void CleanupSyscoinServiceDatabases(int &numServicesCleaned)
 		pcertdb->CleanupDatabase(numServicesCleaned);
 	if (paliasdb != NULL) 
 		paliasdb->CleanupDatabase(numServicesCleaned);
-	if (passetdb != NULL)
-		passetdb->CleanupDatabase(numServicesCleaned);
-	if (passetallocationdb != NULL)
-		passetallocationdb->CleanupDatabase(numServicesCleaned);
 	FlushSyscoinDBs();
 }
 bool GetAlias(const vector<unsigned char> &vchAlias,
