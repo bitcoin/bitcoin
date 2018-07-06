@@ -251,17 +251,10 @@ struct Stacks
     std::vector<valtype> script;
     std::vector<valtype> witness;
 
-    Stacks() {}
-    explicit Stacks(const std::vector<valtype>& scriptSigStack_) : script(scriptSigStack_), witness() {}
+    Stacks() = delete;
+    Stacks(const Stacks&) = delete;
     explicit Stacks(const SignatureData& data) : witness(data.scriptWitness.stack) {
         EvalScript(script, data.scriptSig, SCRIPT_VERIFY_STRICTENC, BaseSignatureChecker(), SigVersion::BASE);
-    }
-
-    SignatureData Output() const {
-        SignatureData result;
-        result.scriptSig = PushAll(script);
-        result.scriptWitness.stack = witness;
-        return result;
     }
 };
 }
