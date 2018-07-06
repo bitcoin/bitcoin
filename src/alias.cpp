@@ -475,7 +475,7 @@ bool CheckAliasInputs(const CCoinsViewCache &inputs, const CTransaction &tx, int
 		// whitelist alias updates don't update expiry date
 		if (!theAlias.IsNull() && theAlias.offerWhitelist.entries.empty() && theAlias.nExpireTime > 0)
 		{
-			CAmount fee = GetDataFee(tx.vout[nDataOut].scriptPubKey);
+			CAmount fee = GetDataFee(tx.vout[nDataOut].scriptPubKey, true);
 			float fYears;
 			//  get expire time and figure out if alias payload pays enough fees for expiry
 			int nHeightTmp = nHeight;
@@ -1118,13 +1118,17 @@ void CreateFeeRecipient(CScript& scriptPubKey, const vector<unsigned char>& data
 	CRecipient recp = {scriptPubKey, 0, false};
 	recipient = recp;
 }
-CAmount GetDataFee(const CScript& scriptPubKey)
+CAmount GetDataFee(const CScript& scriptPubKey, bool bRequired)
 {
 	CAmount nFee = 0;
 	CRecipient recp = {scriptPubKey, 0, false};
 	CTxOut txout(0, scriptPubKey);
     size_t nSize = GetSerializeSize(txout, SER_DISK,0)+148u;
-	nFee = CWallet::GetRequiredFee(nSize);
+	// required is for consensus, minimumfee is for what the current fee should be according to current network state to get confirmed and relayed
+	if(!bRequired)
+		nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
+	else
+		nFee = CWallet::GetRequiredFee(nSize);
 	recp.nAmount = nFee;
 	return recp.nAmount;
 }
