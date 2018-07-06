@@ -1026,8 +1026,10 @@ UniValue assetsend(const JSONRPCRequest& request) {
 	vector<unsigned char> data;
 	theAssetAllocation.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
-
 	vector<unsigned char> vchHashAsset = vchFromString(hash.GetHex());
+	if(!theAssetAllocation.UnserializeFromData(data, vchHashAsset))
+		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2510 - " + _("Could not unserialize asset allocation data"));
+
 	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ASSET) << CScript::EncodeOP_N(OP_ASSET_SEND) << vchHashAsset << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyFromOrig;
 	// send the asset pay txn
