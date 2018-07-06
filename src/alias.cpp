@@ -1125,10 +1125,10 @@ CAmount GetDataFee(const CScript& scriptPubKey, bool bRequired)
 	CTxOut txout(0, scriptPubKey);
     size_t nSize = GetSerializeSize(txout, SER_DISK,0)+148u;
 	// required is for consensus, minimumfee is for what the current fee should be according to current network state to get confirmed and relayed
-	if(!bRequired)
+	if (!bRequired)
 		nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool);
 	else
-		nFee = CWallet::GetRequiredFee(nSize);
+		nFee = CWallet::GetMinimumFee(nSize, nTxConfirmTarget, mempool, 0);
 	recp.nAmount = nFee;
 	return recp.nAmount;
 }
