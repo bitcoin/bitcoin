@@ -1014,7 +1014,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	const string &escrowguid = EscrowNewBuyItNow("node2", "node1", "aliasexpirednode2", offerguid, "1", "aliasexpire3");
 	string aliasexpire2node2address = AliasNew("node2", "aliasexpire2node2", "pubdata");
 	string certgoodguid = CertNew("node1", "aliasexpire2", "certtitle", "pubdata");
-	ExpireAlias("aliasexpirednode2");
+	ExpireAlias("aliasexpire3");
 	GenerateBlocks(5, "node2");
 	
 	AliasNew("node1", "aliasexpire", "pubdata");
