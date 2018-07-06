@@ -570,7 +570,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_maxsenders)
 			senderstring += ",";
 	}
 	senderstring += "]\"";
-	AssetAllocationTransfer(false, "node1", guid, "jagmaxsenders0", senderstring, "memomaxsend allocation");
+	AssetAllocationTransfer(false, "node1", guid, "jagmaxsenders0", senderstring, "memomaxsendallocation");
 
 }
 BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_checktotalsupply)
