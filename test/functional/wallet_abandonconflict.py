@@ -10,9 +10,10 @@
  which are not included in a block and are not currently in the mempool. It has
  no effect on transactions which are already abandoned.
 """
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from decimal import Decimal
 
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import assert_equal, assert_raises_rpc_error, connect_nodes, disconnect_nodes, sync_blocks, sync_mempools
 
 class AbandonConflictTest(BitcoinTestFramework):
     def set_test_params(self):
