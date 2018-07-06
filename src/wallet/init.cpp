@@ -135,7 +135,9 @@ bool WalletInit::ParameterInteraction() const
 
     if (gArgs.GetBoolArg("-sysperms", false))
         return InitError("-sysperms is not allowed in combination with enabled wallet functionality");
-    if (gArgs.GetArg("-prune", 0) && gArgs.GetBoolArg("-rescan", false))
+
+    // Because pruning can be implictly enabled, this check is repeated once fHavePruned is known.
+    if (gArgs.IsArgSet("-prune") && gArgs.GetArg("-prune", 0) && gArgs.GetBoolArg("-rescan", false))
         return InitError(_("Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again."));
 
     if (::minRelayTxFee.GetFeePerK() > HIGH_TX_FEE_PER_KB)

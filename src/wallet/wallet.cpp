@@ -4297,8 +4297,8 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(const std::string& name, 
         //We can't rescan beyond non-pruned blocks, stop and throw an error
         //this might happen if a user uses an old wallet within a pruned node
         // or if he ran -disablewallet for a longer time, then decided to re-enable
-        if (fPruneMode)
-        {
+        assert(fPruneMode != PruneMode::UNKNOWN);
+        if (fPruneMode == PruneMode::ENABLED) {
             CBlockIndex *block = chainActive.Tip();
             while (block && block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA) && block->pprev->nTx > 0 && pindexRescan != block)
                 block = block->pprev;

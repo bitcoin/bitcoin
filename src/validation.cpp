@@ -225,7 +225,7 @@ int nScriptCheckThreads = 0;
 std::atomic_bool fImporting(false);
 std::atomic_bool fReindex(false);
 bool fHavePruned = false;
-bool fPruneMode = false;
+PruneMode fPruneMode = PruneMode::UNKNOWN;
 bool fIsBareMultisigStd = DEFAULT_PERMIT_BAREMULTISIG;
 bool fRequireStandard = true;
 bool fCheckBlockIndex = false;
@@ -2125,7 +2125,8 @@ bool static FlushStateToDisk(const CChainParams& chainparams, CValidationState &
         bool fFlushForPrune = false;
         bool fDoFullFlush = false;
         LOCK(cs_LastBlockFile);
-        if (fPruneMode && (fCheckForPruning || nManualPruneHeight > 0) && !fReindex) {
+        assert(fPruneMode != PruneMode::UNKNOWN);
+        if (fPruneMode == PruneMode::ENABLED && (fCheckForPruning || nManualPruneHeight > 0) && !fReindex) {
             if (nManualPruneHeight > 0) {
                 FindFilesToPruneManual(setFilesToPrune, nManualPruneHeight);
             } else {
@@ -3037,8 +3038,10 @@ static bool FindBlockPos(CDiskBlockPos &pos, unsigned int nAddSize, unsigned int
         unsigned int nOldChunks = (pos.nPos + BLOCKFILE_CHUNK_SIZE - 1) / BLOCKFILE_CHUNK_SIZE;
         unsigned int nNewChunks = (vinfoBlockFile[nFile].nSize + BLOCKFILE_CHUNK_SIZE - 1) / BLOCKFILE_CHUNK_SIZE;
         if (nNewChunks > nOldChunks) {
-            if (fPruneMode)
+            assert(fPruneMode != PruneMode::UNKNOWN);
+            if (fPruneMode == PruneMode::ENABLED) {
                 fCheckForPruning = true;
+            }
             if (CheckDiskSpace(nNewChunks * BLOCKFILE_CHUNK_SIZE - pos.nPos, true)) {
                 FILE *file = OpenBlockFile(pos);
                 if (file) {
@@ -3070,8 +3073,10 @@ static bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, 
     unsigned int nOldChunks = (pos.nPos + UNDOFILE_CHUNK_SIZE - 1) / UNDOFILE_CHUNK_SIZE;
     unsigned int nNewChunks = (nNewSize + UNDOFILE_CHUNK_SIZE - 1) / UNDOFILE_CHUNK_SIZE;
     if (nNewChunks > nOldChunks) {
-        if (fPruneMode)
+        assert(fPruneMode != PruneMode::UNKNOWN);
+        if (fPruneMode == PruneMode::ENABLED) {
             fCheckForPruning = true;
+        }
         if (CheckDiskSpace(nNewChunks * UNDOFILE_CHUNK_SIZE - pos.nPos, true)) {
             FILE *file = OpenUndoFile(pos);
             if (file) {
@@ -3665,7 +3670,8 @@ void UnlinkPrunedFiles(const std::set<int>& setFilesToPrune)
 /* Calculate the block/rev files to delete based on height specified by user with RPC command pruneblockchain */
 static void FindFilesToPruneManual(std::set<int>& setFilesToPrune, int nManualPruneHeight)
 {
-    assert(fPruneMode && nManualPruneHeight > 0);
+    assert(fPruneMode != PruneMode::UNKNOWN);
+    assert(fPruneMode == PruneMode::ENABLED && nManualPruneHeight > 0);
 
     LOCK2(cs_main, cs_LastBlockFile);
     if (chainActive.Tip() == nullptr)
@@ -4001,7 +4007,8 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
         uiInterface.ShowProgress(_("Verifying blocks..."), percentageDone, false);
         if (pindex->nHeight <= chainActive.Height()-nCheckDepth)
             break;
-        if (fPruneMode && !(pindex->nStatus & BLOCK_HAVE_DATA)) {
+        assert(fPruneMode != PruneMode::UNKNOWN);
+        if (fPruneMode == PruneMode::ENABLED && !(pindex->nStatus & BLOCK_HAVE_DATA)) {
             // If pruning, only go back as far as we have data.
             LogPrintf("VerifyDB(): block verification stopping at height %d (pruning, no data)\n", pindex->nHeight);
             break;
@@ -4177,7 +4184,8 @@ bool CChainState::RewindBlockIndex(const CChainParams& params)
     CValidationState state;
     CBlockIndex* pindex = chainActive.Tip();
     while (chainActive.Height() >= nHeight) {
-        if (fPruneMode && !(chainActive.Tip()->nStatus & BLOCK_HAVE_DATA)) {
+        assert(fPruneMode != PruneMode::UNKNOWN);
+        if (fPruneMode == PruneMode::ENABLED && !(chainActive.Tip()->nStatus & BLOCK_HAVE_DATA)) {
             // If pruning, don't try rewinding past the HAVE_DATA point;
             // since older blocks can't be served anyway, there's
             // no need to walk further, and trying to DisconnectTip()

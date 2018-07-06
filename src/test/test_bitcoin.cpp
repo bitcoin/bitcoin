@@ -76,6 +76,9 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         fs::create_directories(pathTemp);
         gArgs.ForceSetArg("-datadir", pathTemp.string());
 
+        // All tests currently assume an unpruned node:
+        fPruneMode = PruneMode::DISABLED;
+
         // We have to run a scheduler thread to prevent ActivateBestChain
         // from blocking due to queue overrun.
         threadGroup.create_thread(boost::bind(&CScheduler::serviceQueue, &scheduler));

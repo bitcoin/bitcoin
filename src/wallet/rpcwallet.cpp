@@ -3949,7 +3949,8 @@ UniValue rescanblockchain(const JSONRPCRequest& request)
     }
 
     // We can't rescan beyond non-pruned blocks, stop and throw an error
-    if (fPruneMode) {
+    assert(fPruneMode != PruneMode::UNKNOWN);
+    if (fPruneMode == PruneMode::ENABLED) {
         LOCK(cs_main);
         CBlockIndex *block = pindexStop ? pindexStop : pChainTip;
         while (block && block->nHeight >= pindexStart->nHeight) {

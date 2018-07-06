@@ -385,7 +385,7 @@ void SetupServerArgs()
 #endif
     gArgs.AddArg("-prune=<n>", strprintf("Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex and -rescan. "
             "Warning: Reverting this setting requires re-downloading the entire blockchain. "
-            "(default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, >%u = automatically prune block files to stay under the specified target size in MiB)", MIN_DISK_SPACE_FOR_BLOCK_FILES / 1024 / 1024), false, OptionsCategory::OPTIONS);
+            "(0 = disable pruning blocks, 1 = allow manual pruning via RPC, >%u = automatically prune block files to stay under the specified target size in MiB, default: 0, or 1 if there are pruned blocks)", MIN_DISK_SPACE_FOR_BLOCK_FILES / 1024 / 1024), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-reindex", "Rebuild chain state and block index from the blk*.dat files on disk", false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-reindex-chainstate", "Rebuild chain state from the currently indexed blocks", false, OptionsCategory::OPTIONS);
 #ifndef WIN32
@@ -933,8 +933,9 @@ bool AppInitParameterInteraction()
         return InitError(strprintf(_("Specified blocks directory \"%s\" does not exist.\n"), gArgs.GetArg("-blocksdir", "").c_str()));
     }
 
-    // if using block pruning, then disallow txindex
-    if (gArgs.GetArg("-prune", 0)) {
+    // If using block pruning, then disallow txindex. Because pruning can be
+    // implictly enabled, this check is repeated once fHavePruned is known.
+    if (gArgs.IsArgSet("-prune") && gArgs.GetArg("-prune", 0)) {
         if (gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX))
             return InitError(_("Prune mode is incompatible with -txindex."));
     }
@@ -1060,16 +1061,18 @@ bool AppInitParameterInteraction()
         return InitError(_("Prune cannot be configured with a negative value."));
     }
     nPruneTarget = (uint64_t) nPruneArg * 1024 * 1024;
-    if (nPruneArg == 1) {  // manual pruning: -prune=1
+    if (gArgs.IsArgSet("-prune") && nPruneArg == 0) { // pruning explicitly disabled
+        fPruneMode = PruneMode::DISABLED;
+    } else if (nPruneArg == 1) {  // manual pruning: -prune=1
         LogPrintf("Block pruning enabled.  Use RPC call pruneblockchain(height) to manually prune block and undo files.\n");
         nPruneTarget = std::numeric_limits<uint64_t>::max();
-        fPruneMode = true;
+        fPruneMode = PruneMode::ENABLED;
     } else if (nPruneTarget) {
         if (nPruneTarget < MIN_DISK_SPACE_FOR_BLOCK_FILES) {
             return InitError(strprintf(_("Prune configured below the minimum of %d MiB.  Please use a higher number."), MIN_DISK_SPACE_FOR_BLOCK_FILES / 1024 / 1024));
         }
         LogPrintf("Prune configured to target %uMiB on disk for block and undo files.\n", nPruneTarget / 1024 / 1024);
-        fPruneMode = true;
+        fPruneMode = PruneMode::ENABLED;
     }
 
     nConnectTimeout = gArgs.GetArg("-timeout", DEFAULT_CONNECT_TIMEOUT);
@@ -1460,9 +1463,12 @@ bool AppInitMain()
 
                 if (fReset) {
                     pblocktree->WriteReindexing(true);
-                    //If we're reindexing in prune mode, wipe away unusable block files and all undo data files
-                    if (fPruneMode)
-                        CleanupBlockRevFiles();
+                    // If we're reindexing in prune mode, wipe away unusable block files and all undo data files
+                    // This is skipped if there are pruned blocks but prune= is currently not set.
+                    assert(fPruneMode != PruneMode::UNKNOWN || !gArgs.IsArgSet("-prune"));
+                    if ((fPruneMode != PruneMode::UNKNOWN && gArgs.GetArg("-prune", 0)) || fPruneMode == PruneMode::ENABLED) {
+                      CleanupBlockRevFiles();
+                    }
                 }
 
                 if (ShutdownRequested()) break;
@@ -1476,6 +1482,24 @@ bool AppInitMain()
                     break;
                 }
 
+                // If prune= is not set but blocks have previously been pruned,
+                // behave as if prune=1, otherwise behave as if prune=0.
+                if (fPruneMode == PruneMode::UNKNOWN && !gArgs.IsArgSet("-prune")) {
+                    if (fHavePruned) {
+                        fPruneMode = PruneMode::ENABLED;
+                        // Repeat check from AppInitParameterInteraction:
+                        if (gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
+                            return InitError(_("Prune mode is incompatible with -txindex."));
+                        }
+                        // Repeat check from WalletInit::AppInitParameterInteraction:
+                        if (gArgs.GetBoolArg("-rescan", false)) {
+                            return InitError(_("Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again."));
+                        }
+                    } else {
+                        fPruneMode = PruneMode::DISABLED;
+                    }
+                }
+
                 // If the loaded chain has a wrong genesis, bail out immediately
                 // (we're likely using a testnet datadir, or the other way around).
                 if (!mapBlockIndex.empty() && !LookupBlockIndex(chainparams.GetConsensus().hashGenesisBlock)) {
@@ -1484,7 +1508,8 @@ bool AppInitMain()
 
                 // Check for changed -prune state.  What we are concerned about is a user who has pruned blocks
                 // in the past, but is now trying to run unpruned.
-                if (fHavePruned && !fPruneMode) {
+                assert(fPruneMode != PruneMode::UNKNOWN);
+                if (fHavePruned && fPruneMode == PruneMode::DISABLED) {
                     strLoadError = _("You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain");
                     break;
                 }
@@ -1621,7 +1646,8 @@ bool AppInitMain()
 
     // if pruning, unset the service bit and perform the initial blockstore prune
     // after any wallet rescanning has taken place.
-    if (fPruneMode) {
+    assert(fPruneMode != PruneMode::UNKNOWN);
+    if (fPruneMode == PruneMode::ENABLED) {
         LogPrintf("Unsetting NODE_NETWORK on prune mode\n");
         nLocalServices = ServiceFlags(nLocalServices & ~NODE_NETWORK);
         if (!fReindex) {

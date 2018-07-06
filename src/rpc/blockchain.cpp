@@ -918,8 +918,10 @@ static UniValue pruneblockchain(const JSONRPCRequest& request)
             + HelpExampleCli("pruneblockchain", "1000")
             + HelpExampleRpc("pruneblockchain", "1000"));
 
-    if (!fPruneMode)
+    assert(fPruneMode != PruneMode::UNKNOWN);
+    if (fPruneMode == PruneMode::DISABLED) {
         throw JSONRPCError(RPC_MISC_ERROR, "Cannot prune blocks because node is not in prune mode.");
+    }
 
     LOCK(cs_main);
 
@@ -1240,8 +1242,9 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
     obj.pushKV("initialblockdownload",  IsInitialBlockDownload());
     obj.pushKV("chainwork",             chainActive.Tip()->nChainWork.GetHex());
     obj.pushKV("size_on_disk",          CalculateCurrentUsage());
-    obj.pushKV("pruned",                fPruneMode);
-    if (fPruneMode) {
+    assert(fPruneMode != PruneMode::UNKNOWN);
+    obj.pushKV("pruned",                fPruneMode == PruneMode::ENABLED);
+    if (fPruneMode == PruneMode::ENABLED) {
         CBlockIndex* block = chainActive.Tip();
         assert(block);
         while (block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA)) {
@@ -1250,6 +1253,7 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
 
         obj.pushKV("pruneheight",        block->nHeight);
 
+        assert(fPruneMode != PruneMode::UNKNOWN);
         // if 0, execution bypasses the whole if block.
         bool automatic_pruning = (gArgs.GetArg("-prune", 0) != 1);
         obj.pushKV("automatic_pruning",  automatic_pruning);
