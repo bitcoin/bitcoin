@@ -108,6 +108,9 @@ qrc_*.cpp
 .DS_Store
 build
 
+# Previous releases
+releases
+
 #lcov
 *.gcno
 *.gcda
