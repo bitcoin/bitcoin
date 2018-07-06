@@ -310,7 +310,7 @@ void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient);
 void CreateAliasRecipient(const CScript& scriptPubKey, CRecipient& recipient);
 void CreateFeeRecipient(CScript& scriptPubKey, const std::vector<unsigned char>& data, CRecipient& recipient);
 void CreateAliasRecipient(const CScript& scriptPubKey, CRecipient& recipient);
-CAmount GetDataFee(const CScript& scriptPubKey);
+CAmount GetDataFee(const CScript& scriptPubKey, bool bRequired=false);
 bool IsAliasOp(int op);
 bool GetAlias(const std::vector<unsigned char> &vchAlias, CAliasIndex& alias);
 bool CheckParam(const UniValue& params, const unsigned int index);
