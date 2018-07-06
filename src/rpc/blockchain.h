@@ -10,7 +10,7 @@ class CBlockIndex;
 class UniValue;
 
 /**
- * Get the difficulty of the net wrt to the given block index, or the chain tip if
+ * Get the difficulty of the net wrt the given block index, or the chain tip if
  * not provided.
  *
  * @return A floating point number that is a multiple of the main net minimum
