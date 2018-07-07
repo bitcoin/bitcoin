@@ -81,6 +81,9 @@ endif
 # raven core #
 RAVEN_CORE_H = \
   addrdb.h \
+  addressindex.h \
+  spentindex.h \
+  timestampindex.h \
   addrman.h \
   assets/assets.h \
   assets/assetdb.h \
