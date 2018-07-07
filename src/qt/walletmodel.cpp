@@ -66,18 +66,17 @@ void WalletModel::updateStatus()
 
 void WalletModel::pollBalanceChanged()
 {
-    // Try to get balances and return early if locks can't be acquired. This
-    // avoids the GUI from getting stuck on periodical polls if the core is
-    // holding the locks for a longer time - for example, during a wallet
-    // rescan.
-    interfaces::WalletBalances new_balances;
-    int numBlocks = -1;
-    if (!m_wallet->tryGetBalances(new_balances, numBlocks)) {
-        return;
-    }
+    if (fForceCheckBalanceChanged || m_node.getNumBlocks() != cachedNumBlocks) {
+        // Try to get balances and return early if locks can't be acquired. This
+        // avoids the GUI from getting stuck on periodical polls if the core is
+        // holding the locks for a longer time - for example, during a wallet
+        // rescan.
+        interfaces::WalletBalances new_balances;
+        int numBlocks = -1;
+        if (!m_wallet->tryGetBalances(new_balances, numBlocks)) {
+            return;
+        }
 
-    if(fForceCheckBalanceChanged || m_node.getNumBlocks() != cachedNumBlocks)
-    {
         fForceCheckBalanceChanged = false;
 
         // Balance and number of transactions might have changed
