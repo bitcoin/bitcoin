@@ -103,8 +103,25 @@ unsigned int static DarkGravityWave(const CBlockIndex* pindexLast, const CBlockH
         // Special difficulty rule for testnet/devnet:
         // If the new block's timestamp is more than 2* 2.5 minutes
         // then allow mining of a min-difficulty block.
-        if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nPowTargetSpacing*2)
-            return bnPowLimit.GetCompact();
+
+        // start using smoother adjustment on testnet when total work hits
+        // 000000000000000000000000000000000000000000000000003ff00000000000
+        if (pindexLast->nChainWork >= UintToArith256(uint256S("0x000000000000000000000000000000000000000000000000003ff00000000000"))
+            // and immediately on devnet
+            || !params.hashDevnetGenesisBlock.IsNull()) {
+            if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nPowTargetSpacing*4) {
+                arith_uint256 bnNew = arith_uint256().SetCompact(pindexLast->nBits) * 10;
+                if (bnNew > bnPowLimit) {
+                    bnNew = bnPowLimit;
+                }
+                return bnNew.GetCompact();
+            }
+        } else {
+            // old stuff
+            if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nPowTargetSpacing*2) {
+                return bnPowLimit.GetCompact();
+            }
+        }
     }
 
     const CBlockIndex *pindex = pindexLast;
