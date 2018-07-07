@@ -68,7 +68,7 @@ QValidator::State RavenAddressEntryValidator::validate(QString &input, int &pos)
         if (((ch >= '0' && ch<='9') ||
             (ch >= 'a' && ch<='z') ||
             (ch >= 'A' && ch<='Z')) &&
-            ch != 'I' && ch != 'O') // Characters invalid in both Base58 and Bech32
+            ch != 'l' && ch != 'I' && ch != '0' && ch != 'O')
         {
             // Alphanumeric and not a 'forbidden' character
         }
