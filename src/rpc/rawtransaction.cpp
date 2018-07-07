@@ -37,8 +37,7 @@
 #include <univalue.h>
 #include <tinyformat.h>
 
-
-void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
+void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry, bool expanded = false)
 {
     // Call into TxToUniv() in raven-common to decode the transaction hex.
     //
@@ -47,18 +46,67 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
     // data into the returned UniValue.
     TxToUniv(tx, uint256(), entry, true, RPCSerializationFlags());
 
+    if (expanded) {
+        uint256 txid = tx.GetHash();
+        if (!(tx.IsCoinBase())) {
+            const UniValue& oldVin = entry["vin"];
+            UniValue newVin(UniValue::VARR);
+            for (unsigned int i = 0; i < tx.vin.size(); i++) {
+                const CTxIn& txin = tx.vin[i];
+                UniValue in = oldVin[i];
+
+                // Add address and value info if spentindex enabled
+                CSpentIndexValue spentInfo;
+                CSpentIndexKey spentKey(txin.prevout.hash, txin.prevout.n);
+                if (GetSpentIndex(spentKey, spentInfo)) {
+                    in.pushKV("value", ValueFromAmount(spentInfo.satoshis));
+                    in.pushKV("valueSat", spentInfo.satoshis);
+                    if (spentInfo.addressType == 1) {
+                        in.pushKV("address", CRavenAddress(CKeyID(spentInfo.addressHash)).ToString());
+                    } else if (spentInfo.addressType == 2) {
+                        in.pushKV("address", CRavenAddress(CScriptID(spentInfo.addressHash)).ToString());
+                    }
+                }
+                newVin.push_back(in);
+            }
+            entry.pushKV("vin", newVin);
+        }
+
+        const UniValue& oldVout = entry["vout"];
+        UniValue newVout(UniValue::VARR);
+        for (unsigned int i = 0; i < tx.vout.size(); i++) {
+            const CTxOut& txout = tx.vout[i];
+            UniValue out = oldVout[i];
+
+            // Add spent information if spentindex is enabled
+            CSpentIndexValue spentInfo;
+            CSpentIndexKey spentKey(txid, i);
+            if (GetSpentIndex(spentKey, spentInfo)) {
+                out.pushKV("spentTxId", spentInfo.txid.GetHex());
+                out.pushKV("spentIndex", (int)spentInfo.inputIndex);
+                out.pushKV("spentHeight", spentInfo.blockHeight);
+            }
+
+            out.pushKV("valueSat", txout.nValue);
+            newVout.push_back(out);
+        }
+        entry.pushKV("vout", newVout);
+    }
+
     if (!hashBlock.IsNull()) {
-        entry.push_back(Pair("blockhash", hashBlock.GetHex()));
+        entry.pushKV("blockhash", hashBlock.GetHex());
         BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
         if (mi != mapBlockIndex.end() && (*mi).second) {
             CBlockIndex* pindex = (*mi).second;
             if (chainActive.Contains(pindex)) {
-                entry.push_back(Pair("confirmations", 1 + chainActive.Height() - pindex->nHeight));
-                entry.push_back(Pair("time", pindex->GetBlockTime()));
-                entry.push_back(Pair("blocktime", pindex->GetBlockTime()));
+                entry.pushKV("height", pindex->nHeight);
+                entry.pushKV("confirmations", 1 + chainActive.Height() - pindex->nHeight);
+                entry.pushKV("time", pindex->GetBlockTime());
+                entry.pushKV("blocktime", pindex->GetBlockTime());
+            } else {
+                entry.pushKV("height", -1);
+                entry.pushKV("confirmations", 0);
             }
-            else
-                entry.push_back(Pair("confirmations", 0));
         }
     }
 }
@@ -158,6 +206,7 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
     }
 
     CTransactionRef tx;
+
     uint256 hashBlock;
     if (!GetTransaction(hash, tx, Params().GetConsensus(), hashBlock, true))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string(fTxIndex ? "No such mempool or blockchain transaction"
@@ -168,7 +217,8 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
         return EncodeHexTx(*tx, RPCSerializationFlags());
 
     UniValue result(UniValue::VOBJ);
-    TxToJSON(*tx, hashBlock, result);
+    TxToJSON(*tx, hashBlock, result, true);
+
     return result;
 }
 
