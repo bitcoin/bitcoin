@@ -65,9 +65,14 @@ double CAddrInfo::GetChance(int64_t nNow) const
     return fChance;
 }
 
-CAddrInfo* CAddrMan::Find(const CNetAddr& addr, int* pnId)
+CAddrInfo* CAddrMan::Find(const CService& addr, int* pnId)
 {
-    std::map<CNetAddr, int>::iterator it = mapAddr.find(addr);
+    CService addr2 = addr;
+    if (!discriminatePorts) {
+        addr2.SetPort(0);
+    }
+
+    std::map<CService, int>::iterator it = mapAddr.find(addr2);
     if (it == mapAddr.end())
         return NULL;
     if (pnId)
@@ -80,9 +85,14 @@ CAddrInfo* CAddrMan::Find(const CNetAddr& addr, int* pnId)
 
 CAddrInfo* CAddrMan::Create(const CAddress& addr, const CNetAddr& addrSource, int* pnId)
 {
+    CService addr2 = addr;
+    if (!discriminatePorts) {
+        addr2.SetPort(0);
+    }
+
     int nId = nIdCount++;
     mapInfo[nId] = CAddrInfo(addr, addrSource);
-    mapAddr[addr] = nId;
+    mapAddr[addr2] = nId;
     mapInfo[nId].nRandomPos = vRandom.size();
     vRandom.push_back(nId);
     if (pnId)
@@ -117,9 +127,14 @@ void CAddrMan::Delete(int nId)
     assert(!info.fInTried);
     assert(info.nRefCount == 0);
 
+    CService addr = info;
+    if (!discriminatePorts) {
+        addr.SetPort(0);
+    }
+
     SwapRandom(info.nRandomPos, vRandom.size() - 1);
     vRandom.pop_back();
-    mapAddr.erase(info);
+    mapAddr.erase(addr);
     mapInfo.erase(nId);
     nNew--;
 }

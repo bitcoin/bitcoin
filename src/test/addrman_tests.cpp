@@ -33,7 +33,7 @@ public:
         return (unsigned int)(state % nMax);
     }
 
-    CAddrInfo* Find(const CNetAddr& addr, int* pnId = NULL)
+    CAddrInfo* Find(const CService& addr, int* pnId = NULL)
     {
         return CAddrMan::Find(addr, pnId);
     }
