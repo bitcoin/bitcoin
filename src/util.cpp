@@ -1053,7 +1053,7 @@ void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length) {
     SetFilePointerEx(hFile, nFileSize, 0, FILE_BEGIN);
     SetEndOfFile(hFile);
 #elif defined(MAC_OSX)
-    // OSX specific version
+    // macOS specific version
     fstore_t fst;
     fst.fst_flags = F_ALLOCATECONTIG;
     fst.fst_posmode = F_PEOFPOSMODE;
