@@ -999,6 +999,8 @@ public:
     bool AccountMove(std::string strFrom, std::string strTo, CAmount nAmount, std::string strComment = "") EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool GetLabelDestination(CTxDestination &dest, const std::string& label, bool bForceNew = false);
 
+    //! For ParticlWallet, clear cached balances from wallet called at new block and adding new transaction
+    virtual void ClearCachedBalances() {};
     void MarkDirty();
     bool AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose=true);
     virtual bool LoadToWallet(const CWalletTx& wtxIn);

@@ -2076,33 +2076,23 @@ bool CHDWallet::IsAllFromMe(const CTransaction& tx, const isminefilter& filter) 
 
 CAmount CHDWallet::GetCredit(const CTxOutBase *txout, const isminefilter &filter) const
 {
-    CAmount nValue = 0;
-    switch (txout->nVersion)
-    {
-        case OUTPUT_STANDARD:
-            nValue = ((CTxOutStandard*)txout)->nValue;
-            break;
-        case OUTPUT_CT:
-        case OUTPUT_RINGCT:
-        default:
-            return 0;
-    };
-
-    if (!MoneyRange(nValue))
+    if (!txout->IsStandardOutput())
+        return 0;
+    CAmount value = txout->GetValue();
+    if (!MoneyRange(value))
         throw std::runtime_error(std::string(__func__) + ": value out of range");
-    return ((IsMine(txout) & filter) ? nValue : 0);
+    return ((IsMine(txout) & filter) ? value : 0);
 }
 
 CAmount CHDWallet::GetCredit(const CTransaction &tx, const isminefilter &filter) const
 {
     CAmount nCredit = 0;
 
-    for (const auto &txout : tx.vpout)
-    {
+    for (const auto &txout : tx.vpout) {
         nCredit += GetCredit(txout.get(), filter);
         if (!MoneyRange(nCredit))
             throw std::runtime_error(std::string(__func__) + ": value out of range");
-    };
+    }
     return nCredit;
 };
 
@@ -2303,41 +2293,56 @@ CAmount CHDWallet::GetBalance() const
     return nBalance;
 };
 
-CAmount CHDWallet::GetStakeableBalance() const
+CAmount CHDWallet::GetSpendableBalance() const
 {
+    // Returns a value to be compared against reservebalance, includes stakeable watch-only balance.
+    if (m_have_spendable_balance_cached)
+        return m_spendable_balance_cached;
+
     CAmount nBalance = 0;
 
     LOCK2(cs_main, cs_wallet);
 
-    for (const auto &ri : mapRecords)
-    {
+    for (const auto &ri : mapRecords) {
         const auto &txhash = ri.first;
         const auto &rtx = ri.second;
-        if (!IsTrusted(txhash, rtx.blockHash, rtx.nIndex))
+        if (!IsTrusted(txhash, rtx.blockHash, rtx.nIndex)) {
             continue;
+        }
 
-        for (const auto &r : rtx.vout)
-        {
+        for (const auto &r : rtx.vout) {
             if (r.nType == OUTPUT_STANDARD
                 && (r.nFlags & ORF_OWNED || r.nFlags & ORF_STAKEONLY)
                 && !IsSpent(txhash, r.n))
                 nBalance += r.nValue;
-        };
+        }
 
-        if (!MoneyRange(nBalance))
+        if (!MoneyRange(nBalance)) {
             throw std::runtime_error(std::string(__func__) + ": value out of range");
-    };
+        }
+    }
 
-    for (MapWallet_t::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
-    {
-        const CWalletTx* pcoin = &(*it).second;
-        if (!pcoin->IsTrusted())
+    for (const auto &walletEntry : mapWallet) {
+        const auto &wtx = walletEntry.second;
+        if (!wtx.IsTrusted()) {
             continue;
-        nBalance += pcoin->GetAvailableCredit();
-        nBalance += pcoin->GetAvailableWatchOnlyCredit();  // TODO: split stakeable and non-stakeable watch type
-    };
+        }
+        nBalance += wtx.GetAvailableCredit();
+        if (wtx.GetAvailableWatchOnlyCredit() > 0) {
+            for (unsigned int i = 0; i < wtx.tx->GetNumVOuts(); i++) {
+                if (!IsSpent(wtx.GetHash(), i)) {
+                    nBalance += GetCredit(wtx.tx->vpout[i].get(), ISMINE_WATCH_COLDSTAKE);
+                    if (!MoneyRange(nBalance))
+                        throw std::runtime_error(std::string(__func__) + ": value out of range");
+                }
+            }
+        }
+    }
 
-    return nBalance;
+    m_spendable_balance_cached = nBalance;
+    m_have_spendable_balance_cached = true;
+
+    return m_spendable_balance_cached;
 };
 
 CAmount CHDWallet::GetUnconfirmedBalance() const
@@ -5356,6 +5361,13 @@ int CHDWallet::AddAnonInputs(CWalletTx &wtx, CTransactionRecord &rtx,
 
     return 0;
 };
+
+void CHDWallet::ClearCachedBalances()
+{
+    // Clear cache when a new txn is added to the wallet or a block is added or removed from the chain.
+    m_have_spendable_balance_cached = false;
+    return;
+}
 
 bool CHDWallet::LoadToWallet(const CWalletTx& wtxIn)
 {
@@ -10152,6 +10164,7 @@ bool CHDWallet::AddToRecord(CTransactionRecord &rtxIn, const CTransaction &tx,
 
     std::string sName = GetName();
     GetMainSignals().TransactionAddedToWallet(sName, MakeTransactionRef(tx));
+    ClearCachedBalances();
 
     return true;
 };
@@ -11621,8 +11634,7 @@ bool CHDWallet::SetReserveBalance(CAmount nNewReserveBalance)
 uint64_t CHDWallet::GetStakeWeight() const
 {
     // Choose coins to use
-    int64_t nBalance = GetStakeableBalance();
-
+    int64_t nBalance = GetSpendableBalance();
     if (nBalance <= nReserveBalance)
         return 0;
 
@@ -11658,7 +11670,7 @@ void CHDWallet::AvailableCoinsForStaking(std::vector<COutput> &vCoins, int64_t n
 {
     vCoins.clear();
 
-    deepestTxnDepth = 0;
+    m_greatest_txn_depth = 0;
 
     {
         LOCK2(cs_main, cs_wallet);
@@ -11673,8 +11685,8 @@ void CHDWallet::AvailableCoinsForStaking(std::vector<COutput> &vCoins, int64_t n
 
             int nDepth = pcoin->GetDepthInMainChainCached();
 
-            if (nDepth > deepestTxnDepth)
-                deepestTxnDepth = nDepth;
+            if (nDepth > m_greatest_txn_depth)
+                m_greatest_txn_depth = nDepth;
 
             if (nDepth < nRequiredDepth)
                 continue;
@@ -11718,8 +11730,8 @@ void CHDWallet::AvailableCoinsForStaking(std::vector<COutput> &vCoins, int64_t n
             const CTransactionRecord &rtx = it->second;
 
             int nDepth = GetDepthInMainChain(rtx.blockHash, rtx.nIndex);
-            if (nDepth > deepestTxnDepth)
-                deepestTxnDepth = nDepth;
+            if (nDepth > m_greatest_txn_depth)
+                m_greatest_txn_depth = nDepth;
 
             if (nDepth < nRequiredDepth)
                 continue;
@@ -11814,7 +11826,7 @@ bool CHDWallet::CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHei
     arith_uint256 bnTargetPerCoinDay;
     bnTargetPerCoinDay.SetCompact(nBits);
 
-    CAmount nBalance = GetStakeableBalance();
+    CAmount nBalance = GetSpendableBalance();
     if (nBalance <= nReserveBalance)
         return false;
 

@@ -358,27 +358,12 @@ public:
 class CHDWallet : public CWallet
 {
 public:
-
-    // Create wallet with passed-in database handle
-    CHDWallet(std::string name, std::unique_ptr<WalletDatabase> dbw_in) : CWallet(name, std::move(dbw_in))
-    {
-        SetHDWalletNull();
-    }
-
-    void SetHDWalletNull()
-    {
-        nReserveBalance = 0;
-
-        pEKMaster = nullptr;
-
-        nRCTOutSelectionGroup1 = 2400;
-        nRCTOutSelectionGroup2 = 24000;
-    };
+    CHDWallet(std::string name, std::unique_ptr<WalletDatabase> dbw_in) : CWallet(name, std::move(dbw_in)) {};
 
     ~CHDWallet()
     {
         Finalise();
-    };
+    }
 
     int Finalise();
     int FreeExtKeyMaps();
@@ -406,7 +391,6 @@ public:
     bool EncryptWallet(const SecureString &strWalletPassphrase) override;
     bool Lock() override;
     bool Unlock(const SecureString &strWalletPassphrase) override;
-
 
 
     isminetype HaveAddress(const CTxDestination &dest);
@@ -478,7 +462,7 @@ public:
     bool IsTrusted(const uint256 &hash, const uint256 &blockhash, int nIndex = 0) const;
 
     CAmount GetBalance() const override;
-    CAmount GetStakeableBalance() const;        // Includes watch_only
+    CAmount GetSpendableBalance() const;        // Includes watch_only_cs balance
     CAmount GetUnconfirmedBalance() const override;
     CAmount GetBlindBalance();
     CAmount GetAnonBalance();
@@ -533,7 +517,7 @@ public:
         std::vector<CTempRecipient> &vecSend, bool sign, size_t nRingSize, size_t nInputsPerSig, CAmount &nFeeRet, const CCoinControl *coinControl, std::string &sError);
 
 
-
+    void ClearCachedBalances() override;
     bool LoadToWallet(const CWalletTx& wtxIn) override;
     bool LoadToWallet(const uint256 &hash, const CTransactionRecord &rtx);
 
@@ -738,9 +722,13 @@ public:
 
     int64_t nLastCoinStakeSearchTime = 0;
     uint32_t nStealth, nFoundStealth; // for reporting, zero before use
-    int64_t nReserveBalance;
+    int64_t nReserveBalance = 0;
     size_t nStakeThread = 9999999; // unset
-    mutable int deepestTxnDepth = 0; // for stake mining
+
+    mutable int m_greatest_txn_depth = 0; // depth of most deep txn
+    //mutable int m_least_txn_depth = 0; // depth of least deep txn
+    mutable bool m_have_spendable_balance_cached = false;
+    mutable CAmount m_spendable_balance_cached = 0;
 
     enum eStakingState {
         NOT_STAKING = 0,
@@ -754,7 +742,7 @@ public:
 
     std::set<CStealthAddress> stealthAddresses;
 
-    CStoredExtKey *pEKMaster;
+    CStoredExtKey *pEKMaster = nullptr;
     CKeyID idDefaultAccount;
     ExtKeyAccountMap mapExtAccounts;
     ExtKeyMap mapExtKeys;
@@ -779,8 +767,8 @@ public:
 
     bool fUnlockForStakingOnly = false; // Use coldstaking instead
 
-    int64_t nRCTOutSelectionGroup1;
-    int64_t nRCTOutSelectionGroup2;
+    int64_t nRCTOutSelectionGroup1 = 2400;
+    int64_t nRCTOutSelectionGroup2 = 24000;
 
 private:
     void ParseAddressForMetaData(const CTxDestination &addr, COutputRecord &rec);

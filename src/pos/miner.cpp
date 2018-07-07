@@ -382,7 +382,7 @@ void ThreadStakeMiner(size_t nThreadID, std::vector<std::shared_ptr<CWallet>> &v
                 continue;
             };
 
-            if (pwallet->GetStakeableBalance() <= pwallet->nReserveBalance)
+            if (pwallet->GetSpendableBalance() <= pwallet->nReserveBalance)
             {
                 pwallet->nIsStaking = CHDWallet::NOT_STAKING_BALANCE;
                 nWaitFor = std::min(nWaitFor, (size_t)60000);
@@ -426,10 +426,10 @@ void ThreadStakeMiner(size_t nThreadID, std::vector<std::shared_ptr<CWallet>> &v
             } else
             {
                 int nRequiredDepth = std::min((int)(Params().GetStakeMinConfirmations()-1), (int)(nBestHeight / 2));
-                if (pwallet->deepestTxnDepth < nRequiredDepth-4)
+                if (pwallet->m_greatest_txn_depth < nRequiredDepth-4)
                 {
                     pwallet->nIsStaking = CHDWallet::NOT_STAKING_DEPTH;
-                    size_t nSleep = (nRequiredDepth - pwallet->deepestTxnDepth) / 4;
+                    size_t nSleep = (nRequiredDepth - pwallet->m_greatest_txn_depth) / 4;
                     nWaitFor = std::min(nWaitFor, (size_t)(nSleep * 1000));
                     pwallet->nLastCoinStakeSearchTime = nSearchTime + nSleep;
                     LogPrint(BCLog::POS, "%s: Wallet %d, no outputs with required depth, sleeping for %ds.\n", __func__, i, nSleep);
