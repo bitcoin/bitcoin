@@ -345,16 +345,24 @@ public:
         }
         return result;
     }
-    bool tryGetBalances(WalletBalances& balances, int& num_blocks) override
+    bool tryGetBalances(WalletBalances& balances, bool skip_height_check, int cached_blocks, int& num_blocks) override
     {
         TRY_LOCK(cs_main, locked_chain);
-        if (!locked_chain) return false;
+        if (!locked_chain) {
+            return false;
+        }
+
+        num_blocks = ::chainActive.Height();
+        if (!skip_height_check && num_blocks == cached_blocks) {
+            return false;
+        }
+
         TRY_LOCK(m_wallet.cs_wallet, locked_wallet);
         if (!locked_wallet) {
             return false;
         }
         balances = getBalances();
-        num_blocks = ::chainActive.Height();
+
         return true;
     }
     CAmount getBalance() override { return m_wallet.GetBalance(); }

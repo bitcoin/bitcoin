@@ -192,8 +192,8 @@ public:
     //! Get balances.
     virtual WalletBalances getBalances() = 0;
 
-    //! Get balances if possible without blocking.
-    virtual bool tryGetBalances(WalletBalances& balances, int& num_blocks) = 0;
+    //! Get balances if cached_blocks != num_blocks and if possible without blocking.
+    virtual bool tryGetBalances(WalletBalances& balances, bool skip_height_check, int cached_blocks, int& num_blocks) = 0;
 
     //! Get balance.
     virtual CAmount getBalance() = 0;
