@@ -2,7 +2,7 @@
 # Attempt to guess a canonical system name.
 #   Copyright 1992-2018 Free Software Foundation, Inc.
 
-timestamp='2018-01-26'
+timestamp='2018-07-06'
 
 # This file is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -101,12 +101,12 @@ trap "exitcode=\$?; (rm -f \$tmpfiles 2>/dev/null; rmdir \$tmp 2>/dev/null) && e
 trap "rm -f \$tmpfiles 2>/dev/null; rmdir \$tmp 2>/dev/null; exit 1" 1 2 13 15 ;
 : ${TMPDIR=/tmp} ;
  { tmp=`(umask 077 && mktemp -d "$TMPDIR/cgXXXXXX") 2>/dev/null` && test -n "$tmp" && test -d "$tmp" ; } ||
- { test -n "$RANDOM" && tmp=$TMPDIR/cg$$-$RANDOM && (umask 077 && mkdir $tmp) ; } ||
- { tmp=$TMPDIR/cg-$$ && (umask 077 && mkdir $tmp) && echo "Warning: creating insecure temp directory" >&2 ; } ||
+ { test -n "$RANDOM" && tmp=$TMPDIR/cg$$-$RANDOM && (umask 077 && mkdir $tmp 2>/dev/null) ; } ||
+ { tmp=$TMPDIR/cg-$$ && (umask 077 && mkdir $tmp 2>/dev/null) && echo "Warning: creating insecure temp directory" >&2 ; } ||
  { echo "$me: cannot create a temporary directory in $TMPDIR" >&2 ; exit 1 ; } ;
 dummy=$tmp/dummy ;
 tmpfiles="$dummy.c $dummy.o $dummy.rel $dummy" ;
-case $CC_FOR_BUILD,$HOST_CC,$CC in
+case ${CC_FOR_BUILD-},${HOST_CC-},${CC-} in
  ,,)    echo "int x;" > "$dummy.c" ;
 	for c in cc gcc c89 c99 ; do
 	  if ($c -c -o "$dummy.o" "$dummy.c") >/dev/null 2>&1 ; then
@@ -237,7 +237,7 @@ case "$UNAME_MACHINE:$UNAME_SYSTEM:$UNAME_RELEASE:$UNAME_VERSION" in
 	# Since CPU_TYPE-MANUFACTURER-KERNEL-OPERATING_SYSTEM:
 	# contains redundant information, the shorter form:
 	# CPU_TYPE-MANUFACTURER-OPERATING_SYSTEM is used.
-	echo "$machine-${os}${release}${abi}"
+	echo "$machine-${os}${release}${abi-}"
 	exit ;;
     *:Bitrig:*:*)
 	UNAME_MACHINE_ARCH=`arch | sed 's/Bitrig.//'`
@@ -894,8 +894,8 @@ EOF
 	# other systems with GNU libc and userland
 	echo "$UNAME_MACHINE-unknown-`echo "$UNAME_SYSTEM" | sed 's,^[^/]*/,,' | tr "[:upper:]" "[:lower:]"``echo "$UNAME_RELEASE"|sed -e 's/[-(].*//'`-$LIBC"
 	exit ;;
-    i*86:Minix:*:*)
-	echo "$UNAME_MACHINE"-pc-minix
+    *:Minix:*:*)
+	echo "$UNAME_MACHINE"-unknown-minix
 	exit ;;
     aarch64:Linux:*:*)
 	echo "$UNAME_MACHINE"-unknown-linux-"$LIBC"
@@ -1469,7 +1469,7 @@ EOF
 exit 1
 
 # Local variables:
-# eval: (add-hook 'write-file-functions 'time-stamp)
+# eval: (add-hook 'before-save-hook 'time-stamp)
 # time-stamp-start: "timestamp='"
 # time-stamp-format: "%:y-%02m-%02d"
 # time-stamp-end: "'"
