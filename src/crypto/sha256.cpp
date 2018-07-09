@@ -29,6 +29,15 @@ namespace sha256d64_avx2
 void Transform_8way(unsigned char* out, const unsigned char* in);
 }
 
+#if defined(__linux__) && defined(ENABLE_POWER8)
+#include <sys/auxv.h>
+namespace sha256_power8
+{
+void Transform_4way(unsigned char* out, const unsigned char* in);
+}
+#endif
+
+
 // Internal implementation code.
 namespace
 {
@@ -581,6 +590,12 @@ std::string SHA256AutoDetect()
 #else
         ret = "sse4";
 #endif
+    }
+#elif (defined(__linux__)) && defined(ENABLE_POWER8)
+    if (getauxval(AT_HWCAP2) & 0x02000000) {
+        TransformD64_4way = sha256_power8::Transform_4way;
+        assert(SelfTest(Transform));
+        return "power8(4way),C(1way)";
     }
 #endif
 
