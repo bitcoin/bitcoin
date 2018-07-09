@@ -1301,7 +1301,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 							strprintf("%s: %s", __func__, e.what()));
 					MilliSleep(1);
 				}
-			} while(!addedToPool)
+			} while (!addedToPool);
 		}
 	}
 
