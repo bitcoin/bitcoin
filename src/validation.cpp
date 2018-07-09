@@ -1285,9 +1285,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 				}
 			});
 			bool addedToPool = false;
-			bool addedToPoolFailed = false;
 			int numTries = 100;
-			std::string failReason = "";
 			do {
 				try {
 					threadpool.post(t);
@@ -1297,19 +1295,13 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 				catch (const std::runtime_error& e) {
 					addedToPool = false;
 					numTries--;
-					if (numTries <= 0) {
-						addedToPoolFailed = true;
-						addedToPool = false;
-						failReason = std::string(e.what());
-						break;
-					}
+					if(numTries <= 0)
+						return state.DoS(0, false,
+							REJECT_INVALID, "threadpool-full", false,
+							strprintf("AcceptToMemoryPoolWorker: %s", e.what()));
 					MilliSleep(1);
 				}
 			} while (!addedToPool);
-			if(addedToPoolFailed)
-				return state.DoS(0, false,
-					REJECT_INVALID, "threadpool-full", false,
-					strprintf("AcceptToMemoryPoolWorker: %s", failReason));
 		}
 	}
 
