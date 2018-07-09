@@ -568,16 +568,16 @@ void MasternodeList::updateVoteList(bool reset)
             urlItem->setOpenExternalLinks(true);
             urlItem->setStyleSheet("background-color: transparent;");
             QTableWidgetItem *hashItem = new QTableWidgetItem(QString::fromStdString(pbudgetProposal->GetHash().ToString()));
-            QTableWidgetItem *blockStartItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetBlockStart()));
-            QTableWidgetItem *blockEndItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetBlockEnd()));
-            QTableWidgetItem *paymentsItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetTotalPaymentCount()));
-            QTableWidgetItem *remainingPaymentsItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetRemainingPaymentCount()));
-            QTableWidgetItem *yesVotesItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetYeas()));
-            QTableWidgetItem *noVotesItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetNays()));
-            QTableWidgetItem *abstainVotesItem = new QTableWidgetItem(QString::number((int64_t)pbudgetProposal->GetAbstains()));
+            GUIUtil::QTableWidgetNumberItem *blockStartItem = new GUIUtil::QTableWidgetNumberItem((int64_t)pbudgetProposal->GetBlockStart());
+            GUIUtil::QTableWidgetNumberItem *blockEndItem = new GUIUtil::QTableWidgetNumberItem((int64_t)pbudgetProposal->GetBlockEnd());
+            GUIUtil::QTableWidgetNumberItem *paymentsItem = new GUIUtil::QTableWidgetNumberItem((int64_t)pbudgetProposal->GetTotalPaymentCount());
+            GUIUtil::QTableWidgetNumberItem *remainingPaymentsItem = new GUIUtil::QTableWidgetNumberItem((int64_t)pbudgetProposal->GetRemainingPaymentCount());
+            GUIUtil::QTableWidgetNumberItem *yesVotesItem = new GUIUtil::QTableWidgetNumberItem((int64_t)pbudgetProposal->GetYeas());
+            GUIUtil::QTableWidgetNumberItem *noVotesItem = new GUIUtil::QTableWidgetNumberItem((int64_t)pbudgetProposal->GetNays());
+            GUIUtil::QTableWidgetNumberItem *abstainVotesItem = new GUIUtil::QTableWidgetNumberItem((int64_t)pbudgetProposal->GetAbstains());
             QTableWidgetItem *AddressItem = new QTableWidgetItem(QString::fromStdString(address2.ToString()));
-            QTableWidgetItem *totalPaymentItem = new QTableWidgetItem(QString::number((pbudgetProposal->GetAmount()*pbudgetProposal->GetTotalPaymentCount())/100000000 ));
-            QTableWidgetItem *monthlyPaymentItem = new QTableWidgetItem(QString::number(pbudgetProposal->GetAmount()/100000000));
+            GUIUtil::QTableWidgetNumberItem *totalPaymentItem = new GUIUtil::QTableWidgetNumberItem((pbudgetProposal->GetAmount()*pbudgetProposal->GetTotalPaymentCount())/100000000);
+            GUIUtil::QTableWidgetNumberItem *monthlyPaymentItem = new GUIUtil::QTableWidgetNumberItem(pbudgetProposal->GetAmount()/100000000);
 
             ui->tableWidgetVoting->insertRow(0);
             ui->tableWidgetVoting->setItem(0, 0, nameItem);
