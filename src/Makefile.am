@@ -69,8 +69,12 @@ if BUILD_RAVEND
   bin_PROGRAMS += ravend
 endif
 
-if BUILD_RAVEN_UTILS
-  bin_PROGRAMS += raven-cli raven-tx
+if BUILD_RAVEN_CLI
+  bin_PROGRAMS += raven-cli
+endif
+
+if BUILD_RAVEN_TX
+  bin_PROGRAMS += raven-tx
 endif
 
 .PHONY: FORCE check-symbols check-security

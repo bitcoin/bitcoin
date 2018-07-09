@@ -26,6 +26,18 @@ make install # optional
 
 This will build raven-qt as well if the dependencies are met.
 
+On most Linux distros the "fPIC" flag needs to be set.  If this flag is not specified it is possible that the build will fail with an error similar to:
+```bash
+relocation R_X86_64_32 against `.rodata' can not be used when making a shared object; recompile with -fPIC
+```
+ 
+To resolve or avoid the following build error specify the following configure parameters, make clean, and then build:
+```bash
+./configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX CXXFLAGS="-fPIC" CPPFLAGS="-fPIC"
+make clean
+make
+```
+
 Dependencies
 ---------------------
 

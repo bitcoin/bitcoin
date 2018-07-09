@@ -289,11 +289,17 @@ CXXFLAGS="$TEMP_CXXFLAGS"
 
 CPPFLAGS="$CPPFLAGS -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS"
 
-AC_ARG_WITH([utils],
-  [AS_HELP_STRING([--with-utils],
-  [build raven-cli raven-tx (default=yes)])],
-  [build_raven_utils=$withval],
-  [build_raven_utils=yes])
+AC_ARG_WITH([cli],
+  [AS_HELP_STRING([--with-cli],
+  [build raven-cli (default=yes)])],
+  [build_raven_cli=$withval],
+  [build_raven_cli=yes])
+
+AC_ARG_WITH([tx],
+  [AS_HELP_STRING([--with-tx],
+  [build raven-tx (default=no)])],
+  [build_raven_tx=$withval],
+  [build_raven_tx=no])
 
 AC_ARG_WITH([libs],
   [AS_HELP_STRING([--with-libs],
@@ -724,7 +730,7 @@ RAVEN_QT_INIT
 dnl sets $raven_enable_qt, $raven_enable_qt_test, $raven_enable_qt_dbus
 RAVEN_QT_CONFIGURE([$use_pkgconfig], [qt5])
 
-if test x$build_raven_utils$build_ravend$raven_enable_qt$use_tests$use_bench = xnonononono; then
+if test x$build_raven_cli$build_raven_tx$build_ravend$raven_enable_qt$use_tests$use_bench = xnononononono; then
     use_boost=no
 else
     use_boost=yes
@@ -910,7 +916,7 @@ if test x$use_pkgconfig = xyes; then
       if test x$use_qr != xno; then
         RAVEN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
       fi
-      if test x$build_raven_utils$build_ravend$raven_enable_qt$use_tests != xnononono; then
+      if test x$build_raven_cli$build_raven_tx$build_ravend$raven_enable_qt$use_tests != xnonononono; then
         PKG_CHECK_MODULES([EVENT], [libevent],, [AC_MSG_ERROR(libevent not found.)])
         if test x$TARGET_OS != xwindows; then
           PKG_CHECK_MODULES([EVENT_PTHREADS], [libevent_pthreads],, [AC_MSG_ERROR(libevent_pthreads not found.)])
@@ -935,7 +941,7 @@ else
   AC_CHECK_HEADER([openssl/ssl.h],, AC_MSG_ERROR(libssl headers missing),)
   AC_CHECK_LIB([ssl],         [main],SSL_LIBS=-lssl, AC_MSG_ERROR(libssl missing))
 
-  if test x$build_raven_utils$build_ravend$raven_enable_qt$use_tests != xnononono; then
+  if test x$build_raven_cli$build_raven_tx$build_ravend$raven_enable_qt$use_tests != xnonononono; then
     AC_CHECK_HEADER([event2/event.h],, AC_MSG_ERROR(libevent headers missing),)
     AC_CHECK_LIB([event],[main],EVENT_LIBS=-levent,AC_MSG_ERROR(libevent missing))
     if test x$TARGET_OS != xwindows; then
@@ -984,7 +990,7 @@ dnl univalue check
 
 need_bundled_univalue=yes
 
-if test x$build_raven_utils$build_ravend$raven_enable_qt$use_tests$use_bench = xnonononono; then
+if test x$build_raven_cli$build_raven_tx$build_ravend$raven_enable_qt$use_tests$use_bench = xnonononono; then
   need_bundled_univalue=no
 else
 
@@ -1034,9 +1040,13 @@ AC_MSG_CHECKING([whether to build ravend])
 AM_CONDITIONAL([BUILD_RAVEND], [test x$build_ravend = xyes])
 AC_MSG_RESULT($build_ravend)
 
-AC_MSG_CHECKING([whether to build utils (raven-cli raven-tx)])
-AM_CONDITIONAL([BUILD_RAVEN_UTILS], [test x$build_raven_utils = xyes])
-AC_MSG_RESULT($build_raven_utils)
+AC_MSG_CHECKING([whether to build raven-cli])
+AM_CONDITIONAL([BUILD_RAVEN_CLI], [test x$build_raven_cli = xyes])
+AC_MSG_RESULT($build_raven_cli)
+
+AC_MSG_CHECKING([whether to build raven-tx])
+AM_CONDITIONAL([BUILD_RAVEN_TX], [test x$build_raven_tx = xyes])
+AC_MSG_RESULT($build_raven_tx)
 
 AC_MSG_CHECKING([whether to build libraries])
 AM_CONDITIONAL([BUILD_RAVEN_LIBS], [test x$build_raven_libs = xyes])
@@ -1162,8 +1172,8 @@ else
   AC_MSG_RESULT([no])
 fi
 
-if test x$build_raven_utils$build_raven_libs$build_ravend$raven_enable_qt$use_bench$use_tests = xnononononono; then
-  AC_MSG_ERROR([No targets! Please specify at least one of: --with-utils --with-libs --with-daemon --with-gui --enable-bench or --enable-tests])
+if test x$build_raven_cli$build_raven_tx$build_raven_libs$build_ravend$raven_enable_qt$use_bench$use_tests = xnonononononono; then
+  AC_MSG_ERROR([No targets! Please specify at least one of: --with-cli --with-tx --with-libs --with-daemon --with-gui --enable-bench or --enable-tests])
 fi
 
 AM_CONDITIONAL([TARGET_DARWIN], [test x$TARGET_OS = xdarwin])
@@ -1288,28 +1298,30 @@ esac
 
 echo 
 echo "Options used to compile and link:"
-echo "  with wallet   = $enable_wallet"
-echo "  with gui / qt = $raven_enable_qt"
+echo "  build raven-cli = $build_raven_cli"
+echo "  build raven-tx  = $build_raven_tx"
+echo "  with wallet     = $enable_wallet"
+echo "  with gui / qt   = $raven_enable_qt"
 if test x$raven_enable_qt != xno; then
-    echo "    qt version  = $raven_qt_got_major_vers"
-    echo "    with qr     = $use_qr"
+    echo "    qt version    = $raven_qt_got_major_vers"
+    echo "    with qr       = $use_qr"
 fi
-echo "  with zmq      = $use_zmq"
-echo "  with test     = $use_tests"
-echo "  with bench    = $use_bench"
-echo "  with upnp     = $use_upnp"
-echo "  use asm       = $use_asm"
-echo "  debug enabled = $enable_debug"
-echo "  werror        = $enable_werror"
-echo 
-echo "  target os     = $TARGET_OS"
-echo "  build os      = $BUILD_OS"
+echo "  with zmq        = $use_zmq"
+echo "  with test       = $use_tests"
+echo "  with bench      = $use_bench"
+echo "  with upnp       = $use_upnp"
+echo "  use asm         = $use_asm"
+echo "  debug enabled   = $enable_debug"
+echo "  werror          = $enable_werror"
 echo
-echo "  CC            = $CC"
-echo "  CFLAGS        = $CFLAGS"
-echo "  CPPFLAGS      = $CPPFLAGS"
-echo "  CXX           = $CXX"
-echo "  CXXFLAGS      = $CXXFLAGS"
-echo "  LDFLAGS       = $LDFLAGS"
-echo "  ARFLAGS       = $ARFLAGS"
+echo "  target os       = $TARGET_OS"
+echo "  build os        = $BUILD_OS"
+echo
+echo "  CC              = $CC"
+echo "  CFLAGS          = $CFLAGS"
+echo "  CPPFLAGS        = $CPPFLAGS"
+echo "  CXX             = $CXX"
+echo "  CXXFLAGS        = $CXXFLAGS"
+echo "  LDFLAGS         = $LDFLAGS"
+echo "  ARFLAGS         = $ARFLAGS"
 echo 
