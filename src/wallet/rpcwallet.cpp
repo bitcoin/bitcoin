@@ -13,7 +13,7 @@
 #include <validation.h>
 #include <key_io.h>
 #include <net.h>
-#include <netbase.h>
+#include <outputtype.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <policy/policy.h>

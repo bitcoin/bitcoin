@@ -154,8 +154,9 @@ BITCOIN_CORE_H = \
   netfulfilledman.h \
   netmessagemaker.h \
   noui.h \
-  policy/fees.h \
+  outputtype.h \
   policy/feerate.h \
+  policy/fees.h \
   policy/policy.h \
   policy/rbf.h \
   pow.h \
@@ -307,6 +308,7 @@ libbitcoin_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_wallet_a_SOURCES = \
   interfaces/wallet.cpp \
+  outputtype.cpp \
   wallet/crypter.cpp \
   wallet/db.cpp \
   wallet/feebumper.cpp \
