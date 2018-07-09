@@ -137,6 +137,7 @@ test_test_bitcoin_fuzzy_LDADD = \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBBITCOIN_CRYPTO_SSE41) \
   $(LIBBITCOIN_CRYPTO_AVX2) \
+  $(LIBBITCOIN_CRYPTO_SHANI) \
   $(LIBSECP256K1)
 
 test_test_bitcoin_fuzzy_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
