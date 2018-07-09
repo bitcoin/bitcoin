@@ -1181,12 +1181,6 @@ public:
      */
     void LearnAllRelatedScripts(const CPubKey& key);
 
-    /**
-     * Get a destination of the requested type (if possible) to the specified script.
-     * This function will automatically add the necessary scripts to the wallet.
-     */
-    CTxDestination AddAndGetDestinationForScript(const CScript& script, OutputType);
-
     /** Whether a given output is spendable by this wallet */
     bool OutputEligibleForSpending(const COutput& output, const CoinEligibilityFilter& eligibility_filter) const;
 };

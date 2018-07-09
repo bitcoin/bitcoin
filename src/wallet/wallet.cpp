@@ -4470,26 +4470,3 @@ void CWallet::LearnAllRelatedScripts(const CPubKey& key)
     LearnRelatedScripts(key, OutputType::P2SH_SEGWIT);
 }
 
-CTxDestination CWallet::AddAndGetDestinationForScript(const CScript& script, OutputType type)
-{
-    // Note that scripts over 520 bytes are not yet supported.
-    switch (type) {
-    case OutputType::LEGACY:
-        return CScriptID(script);
-    case OutputType::P2SH_SEGWIT:
-    case OutputType::BECH32: {
-        CTxDestination witdest = WitnessV0ScriptHash(script);
-        CScript witprog = GetScriptForDestination(witdest);
-        // Check if the resulting program is solvable (i.e. doesn't use an uncompressed key)
-        if (!IsSolvable(*this, witprog)) return CScriptID(script);
-        // Add the redeemscript, so that P2WSH and P2SH-P2WSH outputs are recognized as ours.
-        AddCScript(witprog);
-        if (type == OutputType::BECH32) {
-            return witdest;
-        } else {
-            return CScriptID(witprog);
-        }
-    }
-    default: assert(false);
-    }
-}
