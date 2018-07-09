@@ -168,6 +168,12 @@ namespace {
 
     /** Dirty block file entries. */
     set<int> setDirtyFileInfo;
+
+    /** Map which holds received headers auxpow **/
+    std::map<uint256, CAuxPow> mapAuxPow;
+
+    /** Indicator to start/stop headers sync **/
+    bool headerSyncStopped = false;
 } // anon namespace
 
 //////////////////////////////////////////////////////////////////////////////
@@ -4938,12 +4944,20 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         if (pindexLast)
             UpdateBlockAvailability(pfrom->GetId(), pindexLast->GetBlockHash());
 
-        if (nCount == MAX_HEADERS_RESULTS && pindexLast && hasNewHeaders) {
-            // Headers message had its maximum size; the peer may have more headers.
-            // TODO: optimize: if pindexLast is an ancestor of chainActive.Tip or pindexBestHeader, continue
-            // from there instead.
-            LogPrint("net", "more getheaders (%d) to end to peer=%d (startheight:%d)\n", pindexLast->nHeight, pfrom->id, pfrom->nStartingHeight);
-            pfrom->PushMessage("getheaders", chainActive.GetLocator(pindexLast), uint256());
+        // Don't let headers sync to go further more than 50.000 blocks
+        if (pindexBestHeader->nHeight - chainActive.Tip()->nHeight < 50000)
+        {
+            if (nCount == MAX_HEADERS_RESULTS && pindexLast && hasNewHeaders) {
+                // Headers message had its maximum size; the peer may have more headers.
+                // TODO: optimize: if pindexLast is an ancestor of chainActive.Tip or pindexBestHeader, continue
+                // from there instead.
+                LogPrint("net", "more getheaders (%d) to end to peer=%d (startheight:%d)\n", pindexLast->nHeight, pfrom->id, pfrom->nStartingHeight);
+                pfrom->PushMessage("getheaders", chainActive.GetLocator(pindexLast), uint256());
+            }
+        }
+        else
+        {
+            headerSyncStopped = true;
         }
 
         CheckBlockIndex();
@@ -4953,6 +4967,18 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     {
         CBlock block;
         vRecv >> block;
+
+        if (block.nVersion.IsAuxpow())
+        {
+            std::map<uint256, CAuxPow>::iterator auxIt = mapAuxPow.find(block.GetHash());
+            if (auxIt != mapAuxPow.end())
+            {
+                *(block.auxpow) = auxIt->second;
+                mapAuxPow.erase(block.GetHash());
+            } else {
+                pfrom->PushMessage("getheaders", NULL, block.GetHash());
+            }
+        }
 
         CInv inv(MSG_BLOCK, block.GetHash());
         LogPrint("net", "received block %s peer=%d\n", inv.hash.ToString(), pfrom->id);
@@ -5451,6 +5477,13 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                 LogPrint("net", "initial getheaders (%d) to peer=%d (startheight:%d)\n", pindexStart->nHeight, pto->id, pto->nStartingHeight);
                 pto->PushMessage("getheaders", chainActive.GetLocator(pindexStart), uint256());
             }
+        }
+
+        // Restart headers sync if synced blocks coint is almost equal to headers
+        if (headerSyncStopped && (pindexBestHeader->nHeight - chainActive.Tip()->nHeight < 5000))
+        {
+            headerSyncStopped = false;
+            pto->PushMessage("getheaders", chainActive.GetLocator(pindexBestHeader), uint256());
         }
 
         // Resend wallet transactions that haven't gotten in a block yet
