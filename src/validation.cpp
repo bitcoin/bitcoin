@@ -1287,7 +1287,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 			bool addedToPool = false;
 			bool addedToPoolFailed = false;
 			int numTries = 100;
-			string failReason = "";
+			std::string failReason = "";
 			do {
 				try {
 					threadpool.post(t);
