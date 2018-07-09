@@ -1298,7 +1298,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 					if(numTries <= 0)
 						return state.DoS(0, false,
 							REJECT_INVALID, "threadpool-full", false,
-							strprintf("%s: %s", __func__, e.what()));
+							strprintf("AcceptToMemoryPoolWorker: %s", std::string(e.what())));
 					MilliSleep(1);
 				}
 			} while (!addedToPool);
