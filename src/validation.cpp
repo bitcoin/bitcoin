@@ -1289,19 +1289,19 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 			do {
 				try {
 					threadpool.post(t);
-					addedToPool = true;
+					break;
 				}
 				// work queue exceeded
 				catch (const std::runtime_error& e) {
-					addedToPool = false;
 					numTries--;
 					if(numTries <= 0)
 						return state.DoS(0, false,
 							REJECT_INVALID, "threadpool-full", false,
 							strprintf("AcceptToMemoryPoolWorker: %s", e.what()));
 					MilliSleep(1);
+					continue;
 				}
-			} while (!addedToPool);
+			} while (1);
 		}
 	}
 
