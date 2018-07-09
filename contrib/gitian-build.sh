@@ -43,9 +43,9 @@ Options:
 -u|--url	Specify the URL of the repository. Default is https://github.com/bitcoin/bitcoin
 -v|--verify 	Verify the Gitian build
 -b|--build	Do a Gitian build
--s|--sign	Make signed binaries for Windows and Mac OSX
+-s|--sign	Make signed binaries for Windows and macOS
 -B|--buildsign	Build both signed and unsigned binaries
--o|--os		Specify which Operating Systems the build is for. Default is lwx. l for linux, w for windows, x for osx
+-o|--os		Specify which Operating Systems the build is for. Default is lwx. l for Linux, w for Windows, x for macOS
 -j		Number of processes to use. Default 2
 -m		Memory to allocate in MiB. Default 2000
 --kvm           Use KVM instead of LXC
@@ -107,7 +107,7 @@ while :; do
 		fi
 		shift
 	    else
-		echo 'Error: "--os" requires an argument containing an l (for linux), w (for windows), or x (for Mac OSX)'
+		echo 'Error: "--os" requires an argument containing an l (for Linux), w (for Windows), or x (for macOS)'
 		exit 1
 	    fi
 	    ;;
@@ -185,7 +185,7 @@ fi
 # Check for OSX SDK
 if [[ ! -e "gitian-builder/inputs/MacOSX10.11.sdk.tar.gz" && $osx == true ]]
 then
-    echo "Cannot build for OSX, SDK does not exist. Will build for other OSes"
+    echo "Cannot build for macOS, SDK does not exist. Will build for other OSes"
     osx=false
 fi
 
@@ -292,7 +292,7 @@ then
 	if [[ $osx = true ]]
 	then
 	    echo ""
-	    echo "Compiling ${VERSION} Mac OSX"
+	    echo "Compiling ${VERSION} macOS"
 	    echo ""
 	    ./bin/gbuild -j ${proc} -m ${mem} --commit bitcoin=${COMMIT} --url bitcoin=${url} ../bitcoin/contrib/gitian-descriptors/gitian-osx.yml
 	    ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-osx.yml
@@ -332,7 +332,7 @@ then
 	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-win-unsigned ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
 	# Mac OSX	
 	echo ""
-	echo "Verifying v${VERSION} Mac OSX"
+	echo "Verifying v${VERSION} macOS"
 	echo ""	
 	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-unsigned ../bitcoin/contrib/gitian-descriptors/gitian-osx.yml
 	# Signed Windows
@@ -340,9 +340,9 @@ then
 	echo "Verifying v${VERSION} Signed Windows"
 	echo ""
 	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-signed ../bitcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
-	# Signed Mac OSX
+	# Signed macOS
 	echo ""
-	echo "Verifying v${VERSION} Signed Mac OSX"
+	echo "Verifying v${VERSION} Signed macOS"
 	echo ""
 	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-signed ../bitcoin/contrib/gitian-descriptors/gitian-osx-signer.yml	
 	popd
@@ -364,11 +364,11 @@ then
 	    mv build/out/bitcoin-*win64-setup.exe ../bitcoin-binaries/${VERSION}
 	    mv build/out/bitcoin-*win32-setup.exe ../bitcoin-binaries/${VERSION}
 	fi
-	# Sign Mac OSX
+	# Sign macOS
 	if [[ $osx = true ]]
 	then
 	    echo ""
-	    echo "Signing ${VERSION} Mac OSX"
+	    echo "Signing ${VERSION} macOS"
 	    echo ""
 	    ./bin/gbuild -i --commit signature=${COMMIT} ../bitcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
 	    ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-osx-signed --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-osx-signer.yml

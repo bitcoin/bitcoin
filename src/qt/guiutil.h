@@ -234,7 +234,7 @@ namespace GUIUtil
     };
 
 #if defined(Q_OS_MAC)
-    // workaround for Qt OSX Bug:
+    // workaround for Qt macOS Bug:
     // https://bugreports.qt-project.org/browse/QTBUG-15631
     // QProgressBar uses around 10% CPU even when app is in background
     class ProgressBar : public ClickableProgressBar
