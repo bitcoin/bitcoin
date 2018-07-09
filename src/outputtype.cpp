@@ -73,4 +73,29 @@ std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key)
     }
 }
 
+CTxDestination AddAndGetDestinationForScript(CKeyStore& keystore, const CScript& script, OutputType type)
+{
+    // Add script to keystore
+    keystore.AddCScript(script);
+    // Note that scripts over 520 bytes are not yet supported.
+    switch (type) {
+    case OutputType::LEGACY:
+        return CScriptID(script);
+    case OutputType::P2SH_SEGWIT:
+    case OutputType::BECH32: {
+        CTxDestination witdest = WitnessV0ScriptHash(script);
+        CScript witprog = GetScriptForDestination(witdest);
+        // Check if the resulting program is solvable (i.e. doesn't use an uncompressed key)
+        if (!IsSolvable(keystore, witprog)) return CScriptID(script);
+        // Add the redeemscript, so that P2WSH and P2SH-P2WSH outputs are recognized as ours.
+        keystore.AddCScript(witprog);
+        if (type == OutputType::BECH32) {
+            return witdest;
+        } else {
+            return CScriptID(witprog);
+        }
+    }
+    default: assert(false);
+    }
+}
 
