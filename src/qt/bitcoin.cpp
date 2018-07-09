@@ -36,6 +36,7 @@
 #include <wallet/wallet.h>
 #endif
 
+#include <memory>
 #include <stdint.h>
 
 #include <boost/thread.hpp>
