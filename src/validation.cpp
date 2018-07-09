@@ -1284,7 +1284,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 					scriptExecutionCache.insert(hashCacheEntry);
 				}
 			});
-			bool addedToPool = false;
 			int numTries = 100;
 			do {
 				try {
