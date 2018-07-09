@@ -120,6 +120,26 @@ BOOST_AUTO_TEST_CASE(get_next_work)
     CBlockHeader blockHeader;
     blockHeader.nTime = 1408732505; // Block #123457
     BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, params), 0x1b1441de); // Block #123457 has 0x1b1441de
+
+    // test special rules for slow blocks on devnet/testnet
+    SoftSetBoolArg("-devnet", true);
+    SelectParams(CBaseChainParams::DEVNET);
+    const Consensus::Params& paramsdev = Params().GetConsensus();
+
+    // make sure normal rules apply
+    blockHeader.nTime = 1408732505; // Block #123457
+    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, paramsdev), 0x1b1441de); // Block #123457 has 0x1b1441de
+
+    // 10x higher target
+    blockHeader.nTime = 1408733090; // Block #123457 (10m+1sec)
+    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, paramsdev), 0x1c00c8f8); // Block #123457 has 0x1c00c8f8
+    blockHeader.nTime = 1408733689; // Block #123457 (20m)
+    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, paramsdev), 0x1c00c8f8); // Block #123457 has 0x1c00c8f8
+    // lowest diff possible
+    blockHeader.nTime = 1408739690; // Block #123457 (2h+1sec)
+    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, paramsdev), 0x207fffff); // Block #123457 has 0x207fffff
+    blockHeader.nTime = 1408743289; // Block #123457 (3h)
+    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, paramsdev), 0x207fffff); // Block #123457 has 0x207fffff
 }
 
 /* Test the constraint on the upper bound for next work */
