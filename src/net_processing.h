@@ -22,7 +22,7 @@ private:
     CConnman* const connman;
 
 public:
-    explicit PeerLogicValidation(CConnman* connman, CScheduler &scheduler);
+    explicit PeerLogicValidation(CConnman* connman, CScheduler &scheduler, bool enable_bip61);
 
     /**
      * Overridden from CValidationInterface.
@@ -65,6 +65,9 @@ public:
 
 private:
     int64_t m_stale_tip_check_time; //! Next time to check for stale tip
+
+    /** Enable BIP61 (sending reject messages) */
+    const bool m_enable_bip61;
 };
 
 struct CNodeStateStats {
