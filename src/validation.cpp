@@ -1284,7 +1284,24 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 					scriptExecutionCache.insert(hashCacheEntry);
 				}
 			});
-			threadpool.post(t);
+			bool addedToPool = false;
+			int numTries = 100;
+			do {
+				try {
+					threadpool.post(t);
+					addedToPool = true;
+				}
+				// work queue exceeded
+				catch (const std::runtime_error& e) {
+					addedToPool = false;
+					numTries--;
+					if(numTries <= 0)
+						return state.DoS(0, false,
+							REJECT_INVALID, "threadpool-full", false,
+							strprintf("%s: %s", __func__, e.what());
+					MilliSleep(1);
+				}
+			} while(!addedToPool))
 		}
 	}
 
