@@ -42,7 +42,9 @@
 #include <QComboBox>
 #include <QDateTime>
 #include <QDesktopWidget>
+#include <QDir>
 #include <QDragEnterEvent>
+#include <QFileDialog>
 #include <QListWidget>
 #include <QMenuBar>
 #include <QMessageBox>
@@ -330,6 +332,15 @@ void BitcoinGUI::createActions()
     openAction = new QAction(platformStyle->TextColorIcon(":/icons/open"), tr("Open &URI..."), this);
     openAction->setStatusTip(tr("Open a bitcoin: URI or payment request"));
 
+    m_new_wallet_action = new QAction(platformStyle->TextColorIcon(":/icons/open"), tr("New &Wallet..."), this);
+    m_new_wallet_action->setStatusTip(tr("Create a wallet"));
+
+    m_open_wallet_action = new QAction(platformStyle->TextColorIcon(":/icons/open"), tr("Open &Wallet..."), this);
+    m_open_wallet_action->setStatusTip(tr("Open a wallet"));
+
+    m_close_wallet_action = new QAction(platformStyle->TextColorIcon(":/icons/open"), tr("Close Wallet..."), this);
+    m_close_wallet_action->setStatusTip(tr("Close wallet..."));
+
     showHelpMessageAction = new QAction(platformStyle->TextColorIcon(":/icons/info"), tr("&Command-line options"), this);
     showHelpMessageAction->setMenuRole(QAction::NoRole);
     showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible Bitcoin command-line options").arg(tr(PACKAGE_NAME)));
@@ -355,6 +366,9 @@ void BitcoinGUI::createActions()
         connect(usedSendingAddressesAction, &QAction::triggered, walletFrame, &WalletFrame::usedSendingAddresses);
         connect(usedReceivingAddressesAction, &QAction::triggered, walletFrame, &WalletFrame::usedReceivingAddresses);
         connect(openAction, &QAction::triggered, this, &BitcoinGUI::openClicked);
+        connect(m_new_wallet_action, &QAction::triggered, this, &BitcoinGUI::newWallet);
+        connect(m_open_wallet_action, &QAction::triggered, this, &BitcoinGUI::openWallet);
+        connect(m_close_wallet_action, &QAction::triggered, this, &BitcoinGUI::closeWallet);
     }
 #endif // ENABLE_WALLET
 
@@ -376,6 +390,9 @@ void BitcoinGUI::createMenuBar()
     QMenu *file = appMenuBar->addMenu(tr("&File"));
     if(walletFrame)
     {
+        file->addAction(m_new_wallet_action);
+        file->addAction(m_open_wallet_action);
+        file->addAction(m_close_wallet_action);
         file->addAction(openAction);
         file->addAction(backupWalletAction);
         file->addAction(signMessageAction);
@@ -524,7 +541,12 @@ bool BitcoinGUI::addWallet(WalletModel *walletModel)
         m_wallet_selector_action->setVisible(true);
     }
     rpcConsole->addWallet(walletModel);
-    return walletFrame->addWallet(walletModel);
+    bool res = walletFrame->addWallet(walletModel);
+    if (res) {
+        m_wallet_selector->setCurrentIndex(m_wallet_selector->count() - 1);
+        setCurrentWalletBySelectorIndex(m_wallet_selector->count() - 1);
+    }
+    return res;
 }
 
 bool BitcoinGUI::removeWallet(WalletModel* walletModel)
@@ -567,6 +589,7 @@ void BitcoinGUI::removeAllWallets()
 
 void BitcoinGUI::setWalletActionsEnabled(bool enabled)
 {
+    m_close_wallet_action->setEnabled(enabled);
     overviewAction->setEnabled(enabled);
     sendCoinsAction->setEnabled(enabled);
     sendCoinsMenuAction->setEnabled(enabled);
@@ -686,6 +709,54 @@ void BitcoinGUI::openClicked()
     {
         Q_EMIT receivedURI(dlg.getURI());
     }
+}
+
+void BitcoinGUI::newWallet()
+{
+    QString file_name = QFileDialog::getSaveFileName(this, tr("New Wallet"));
+    if (file_name.isEmpty()) return;
+
+    std::string error, warning;
+    if (!m_node.createWallet(QDir::toNativeSeparators(file_name).toStdString(), error, warning)) {
+        QMessageBox::information(this, tr("New Wallet"), QString::fromStdString(error));
+        return;
+    }
+    if (!warning.empty()) {
+        QMessageBox::information(this, tr("New Wallet"), QString::fromStdString(warning));
+    }
+}
+
+void BitcoinGUI::openWallet()
+{
+    QString file_name = QFileDialog::getExistingDirectory(this, tr("Open Wallet"), QString(), QFileDialog::DontResolveSymlinks);
+    if (file_name.isEmpty()) return;
+
+    std::string error, warning;
+    if (!m_node.loadWallet(QDir::toNativeSeparators(file_name).toStdString(), error, warning)) {
+        QMessageBox::information(this, tr("Open Wallet"), QString::fromStdString(error));
+        return;
+    }
+    if (!warning.empty()) {
+        QMessageBox::information(this, tr("Open Wallet"), QString::fromStdString(warning));
+    }
+}
+
+void BitcoinGUI::closeWallet()
+{
+    if (!walletFrame) return;
+
+    WalletView * const wallet_view = walletFrame->currentWalletView();
+    if (!wallet_view) return;
+
+    WalletModel * const wallet_model = wallet_view->getWalletModel();
+    QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Close wallet"),
+             tr("Are you sure you wish to close wallet %1?").arg(wallet_model->getDisplayName()),
+             QMessageBox::Yes|QMessageBox::Cancel,
+             QMessageBox::Cancel);
+
+    if (retval != QMessageBox::Yes) return;
+
+    wallet_model->requestUnload();
 }
 
 void BitcoinGUI::gotoOverviewPage()
