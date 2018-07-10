@@ -1103,18 +1103,40 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
-    // After hardfork block intervals will be changed from 10 to 1 minute
-    int intervalRatio = nHeight >= consensusParams.hardforkHeight ? 10 : 1;
+    const CAmount initSubsidy = 50 * COIN * COIN_RATIO;
 
-    int halvings = nHeight / (consensusParams.nSubsidyHalvingInterval * intervalRatio);
-    // Force block reward to zero when right shift is undefined.
-    if (halvings >= 64)
+    // Old subsidy
+    if (nHeight < consensusParams.hardforkHeight)
+    {
+        const int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
+        // Force block reward to zero when right shift is undefined.
+        if (halvings >= 64) {
+            return 0;
+        }
+
+        CAmount nSubsidy = initSubsidy;
+
+        // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
+        nSubsidy >>= halvings;
+        return nSubsidy; 
+    }
+
+    // New subsidy
+    const int halvingRatio = (consensusParams.nSubsidyHalvingInterval * 10) / consensusParams.nSubsidyHalvingInterval;
+    const CAmount initSubsidyMBC = initSubsidy >> (consensusParams.hardforkHeight / consensusParams.nSubsidyHalvingInterval);
+    const int lastSubsidyHeightBTC = (consensusParams.hardforkHeight / consensusParams.nSubsidyHalvingInterval) * consensusParams.nSubsidyHalvingInterval;
+    const int remainSubsidyHeightBTC = consensusParams.nSubsidyHalvingInterval - (consensusParams.hardforkHeight - lastSubsidyHeightBTC);
+    const int newSubsidyHeightMBC = consensusParams.hardforkHeight + remainSubsidyHeightBTC * halvingRatio;
+    if (nHeight < newSubsidyHeightMBC) {
+        const CAmount nSubsidy = initSubsidyMBC / halvingRatio;
+        return nSubsidy;
+    }
+
+    const int halvings = (nHeight - newSubsidyHeightMBC) / (consensusParams.nSubsidyHalvingInterval * 10) + 1;
+    if (halvings >= 20) {
         return 0;
-
-    // MicroBitcoin reward formula: (Reward amount * 10,000) / intervalRatio
-    CAmount nSubsidy = (50 * COIN * COIN_RATIO) / intervalRatio;
-    // Subsidy is cut in half every (210,000 * intervalRatio) blocks which will occur approximately every 4 years.
-    nSubsidy >>= halvings;
+    }
+    const CAmount nSubsidy = (initSubsidyMBC >> halvings) / halvingRatio;
     return nSubsidy;
 }
 
