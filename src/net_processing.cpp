@@ -43,7 +43,7 @@
 #include "privatesend-server.h"
 
 #include <boost/thread.hpp>
-#include "assetallocation.h"
+
 #if defined(NDEBUG)
 # error "Syscoin Core cannot be compiled without assertions."
 #endif
@@ -2149,10 +2149,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             AddToCompactExtraTransactions(removedTx);
 
         int nDoS = 0;
-		// SYSCOIN give it ZDAG_MINIMUM_LATENCY_SECONDS seconds since last sig verification failure in Multithreaded mode before actually banning peer to give time for entire network to sync up on state
-		// this ensures that when switching from multithreaded to singlethreaded it won't start banning right away it will wait. It also assumes that ZDAG_MINIMUM_LATENCY_SECONDS < 60 as 60 seconds is the default time to wait
-		// until switching back to multithreaded mode
-        if (state.IsInvalid(nDoS) && ((GetTime() - nLastMultithreadMempoolFailure) > ZDAG_MINIMUM_LATENCY_SECONDS))
+        if (state.IsInvalid(nDoS))
         {
             LogPrint("mempoolrej", "%s from peer=%d was not accepted: %s\n", tx.GetHash().ToString(),
                 pfrom->id,

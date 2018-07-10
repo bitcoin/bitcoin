@@ -1202,7 +1202,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 			CCheckQueueControl<CScriptCheck> control(&scriptcheckqueue);
 			control.Add(vChecks);
 			if (!control.Wait())
-				return state.DoS(100, false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed-mt"));
+				return false;
 			if (!CheckSyscoinInputs(tx, state, view, true, chainActive.Height(), CBlock())) {
 				return false;
 			}
