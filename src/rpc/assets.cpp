@@ -320,7 +320,7 @@ UniValue listmyassets(const JSONRPCRequest &request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() > 0)
+    if (request.fHelp || request.params.size() > 4)
         throw std::runtime_error(
                 "listmyassets \"( asset )\" ( verbose ) ( count ) ( start )\n"
                 "\nReturns a list of all asset that are owned by this wallet\n"

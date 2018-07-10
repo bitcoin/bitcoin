@@ -22,10 +22,10 @@ class AssetTest(RavenTestFramework):
 
         n0, n1, n2 = self.nodes[0], self.nodes[1], self.nodes[2]
 
-        self.log.info("Generating RVN for node[0]...")
+        self.log.info("Generating RVN for node[0] and activating assets...")
         n0.generate(1)
         self.sync_all()
-        n2.generate(100)
+        n2.generate(431)
         self.sync_all()
         assert_equal(n0.getbalance(), 5000)
 
