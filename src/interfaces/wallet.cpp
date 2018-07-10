@@ -428,6 +428,20 @@ public:
     bool IsWalletFlagSet(uint64_t flag) override { return m_wallet.IsWalletFlagSet(flag); }
     OutputType getDefaultAddressType() override { return m_wallet.m_default_address_type; }
     OutputType getDefaultChangeType() override { return m_wallet.m_default_change_type; }
+    void unload() override
+    {
+        RemoveWallet(m_shared_wallet);
+        UnregisterValidationInterface(&m_wallet);
+
+        // The wallet can be in use so it's not possible to explicitly unload here.
+        // Just notify the unload intent so that all shared pointers are released.
+        // The wallet will be destroyed once the last shared pointer is released.
+        m_wallet.NotifyUnload();
+    }
+    std::unique_ptr<Handler> handleLoad(LoadFn fn) override
+    {
+        return MakeHandler(m_wallet.NotifyLoad.connect(fn));
+    }
     std::unique_ptr<Handler> handleUnload(UnloadFn fn) override
     {
         return MakeHandler(m_wallet.NotifyUnload.connect(fn));

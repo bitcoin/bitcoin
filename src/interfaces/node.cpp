@@ -226,6 +226,22 @@ class NodeImpl : public Node
         }
         return wallets;
     }
+    bool createWallet(const std::string& wallet_file, std::string& error, std::string& warning) override
+    {
+#ifdef ENABLE_WALLET
+        return CreateWallet(wallet_file, 0, error, warning) != nullptr;
+#else
+        throw std::logic_error("Node::createWallet() called in non-wallet build.");
+#endif
+    }
+    bool loadWallet(const std::string& wallet_file, std::string& error, std::string& warning) override
+    {
+#ifdef ENABLE_WALLET
+        return LoadWallet(wallet_file, error, warning) != nullptr;
+#else
+        throw std::logic_error("Node::loadWallet() called in non-wallet build.");
+#endif
+    }
     std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) override
     {
         return MakeHandler(::uiInterface.InitMessage_connect(fn));

@@ -176,6 +176,12 @@ public:
     //! Return interfaces for accessing wallets (if any).
     virtual std::vector<std::unique_ptr<Wallet>> getWallets() = 0;
 
+    //! Attempts to create a wallet from file or directory.
+    virtual bool createWallet(const std::string& wallet_file, std::string& error, std::string& warning) = 0;
+
+    //! Attempts to load a wallet from file or directory.
+    virtual bool loadWallet(const std::string& wallet_file, std::string& error, std::string& warning) = 0;
+
     //! Register handler for init messages.
     using InitMessageFn = std::function<void(const std::string& message)>;
     virtual std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) = 0;

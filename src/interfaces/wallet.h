@@ -245,6 +245,13 @@ public:
     // Get default change type.
     virtual OutputType getDefaultChangeType() = 0;
 
+    // Request wallet unload.
+    virtual void unload() = 0;
+
+    //! Register handler for load message.
+    using LoadFn = std::function<void()>;
+    virtual std::unique_ptr<Handler> handleLoad(LoadFn fn) = 0;
+
     //! Register handler for unload message.
     using UnloadFn = std::function<void()>;
     virtual std::unique_ptr<Handler> handleUnload(UnloadFn fn) = 0;
