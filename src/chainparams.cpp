@@ -124,10 +124,10 @@ public:
         pchBitcoinMessageStart[2] = 0xb4;
         pchBitcoinMessageStart[3] = 0xd9;
         
-        pchMessageStart[0] = 0xf4;
-        pchMessageStart[1] = 0xb2;
-        pchMessageStart[2] = 0xbe;
-        pchMessageStart[3] = 0xd8;
+        pchMessageStart[0] = 0x4d;
+        pchMessageStart[1] = 0x42;
+        pchMessageStart[2] = 0x43;
+        pchMessageStart[3] = 0x76;
         
         nDefaultPort = 6403;
         nPruneAfterHeight = 100000;
@@ -200,13 +200,13 @@ public:
     CTestNetParams() {
         strNetworkID = "test";
         consensus.nSubsidyHalvingInterval = 210000;
-        consensus.BIP34Height = 21111;
+        consensus.BIP34Height = -1;
         consensus.BIP34Hash = uint256S("0x0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8");
-        consensus.BIP65Height = 581885; // 00000000007f6655f22f98e72ed80d8b06dc761d5da09df0fa1dc4be4f861eb6
-        consensus.BIP66Height = 330776; // 000000002104c8c45e99a8853285a3b592602a3ccde2b832481da85e9e4ba182
-        consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.powLimitStart = uint256S("0000000fffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.nWarmUpWindow = 1024;
+        consensus.BIP65Height = -1; // 00000000007f6655f22f98e72ed80d8b06dc761d5da09df0fa1dc4be4f861eb6
+        consensus.BIP66Height = -1; // 000000002104c8c45e99a8853285a3b592602a3ccde2b832481da85e9e4ba182
+        consensus.powLimit = uint256S("000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.powLimitStart = uint256S("000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.nWarmUpWindow = 32768;
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 1 * 60;
         consensus.nBtcPowTargetSpacing = 10 * 60;
@@ -235,21 +235,21 @@ public:
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x0000000002e9e7b00e1f6dc5123a04aad68dd0f0968d8c7aa45f6640795c37b1"); //1135275
 
-        consensus.hardforkHeight = 1200000;
+        consensus.hardforkHeight = 2;
         consensus.premineValue = 2000000 * COIN * COIN_RATIO;
-        consensus.premineAddress = "BfrckfYi7xaSGmMec4T2keu6xczQSx7rxo";
+        consensus.premineAddress = "Vpr6jmjNxoQoMpQv35a8U9jnfqSXnKdacP";
 
-        pchBitcoinMessageStart[0] = 0x0b;
-        pchBitcoinMessageStart[1] = 0x11;
-        pchBitcoinMessageStart[2] = 0x09;
-        pchBitcoinMessageStart[3] = 0x07;
+        pchBitcoinMessageStart[0] = 0x0a;
+        pchBitcoinMessageStart[1] = 0x10;
+        pchBitcoinMessageStart[2] = 0x08;
+        pchBitcoinMessageStart[3] = 0x06;
 
-        pchMessageStart[0] = 0xf3;
-        pchMessageStart[1] = 0xb1;
-        pchMessageStart[2] = 0xb4;
-        pchMessageStart[3] = 0xd7;
+        pchMessageStart[0] = 0xf2;
+        pchMessageStart[1] = 0xb0;
+        pchMessageStart[2] = 0xb3;
+        pchMessageStart[3] = 0xd6;
 
-        nDefaultPort = 18333;
+        nDefaultPort = 18433;
         nPruneAfterHeight = 1000;
 
         genesis = CreateGenesisBlock(1296688602, 414098458, 0x1d00ffff, 1, 50 * COIN * COIN_RATIO);
@@ -262,8 +262,8 @@ public:
         // nodes with support for servicebits filtering should be at the top
         // vSeeds.emplace_back("", true);
 
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,71);
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,73);
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,239);
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
@@ -277,7 +277,7 @@ public:
 
         checkpointData = {
             {
-                {546, uint256S("000000002a936ca763904c3c35fce2f3556c559c0214345d31b1bcebf76acb70")},
+                
             }
         };
 

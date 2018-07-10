@@ -1103,13 +1103,17 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
-    int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
+    // After hardfork block intervals will be changed from 10 to 1 minute
+    int intervalRatio = nHeight >= consensusParams.hardforkHeight ? 10 : 1;
+
+    int halvings = nHeight / (consensusParams.nSubsidyHalvingInterval * intervalRatio);
     // Force block reward to zero when right shift is undefined.
     if (halvings >= 64)
         return 0;
 
-    CAmount nSubsidy = 50 * COIN * COIN_RATIO;
-    // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
+    // MicroBitcoin reward formula: (Reward amount * 10,000) / intervalRatio
+    CAmount nSubsidy = (50 * COIN * COIN_RATIO) / intervalRatio;
+    // Subsidy is cut in half every (210,000 * intervalRatio) blocks which will occur approximately every 4 years.
     nSubsidy >>= halvings;
     return nSubsidy;
 }
