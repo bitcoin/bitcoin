@@ -8,6 +8,7 @@
 
 #include "amount.h"
 
+#include <QSortFilterProxyModel>
 #include <QWidget>
 #include <memory>
 
@@ -59,6 +60,7 @@ private:
 
     TxViewDelegate *txdelegate;
     std::unique_ptr<TransactionFilterProxy> filter;
+    std::unique_ptr<QSortFilterProxyModel> assetFilter;
 
 private Q_SLOTS:
     void updateDisplayUnit();

@@ -100,6 +100,8 @@ transactionrecord.cpp
 transactionrecord.h
 transactiontablemodel.cpp
 transactiontablemodel.h
+assettablemodel.cpp
+assettablemodel.h
 transactionview.cpp
 transactionview.h
 utilitydialog.cpp
