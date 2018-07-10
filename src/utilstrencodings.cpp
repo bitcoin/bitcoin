@@ -8,7 +8,7 @@
 #include <tinyformat.h>
 
 #include <cstdlib>
-#include <cstring>
+#include <cstring> // strlen
 #include <errno.h>
 #include <limits>
 

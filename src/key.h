@@ -12,6 +12,7 @@
 #include <support/allocators/secure.h>
 #include <uint256.h>
 
+#include <cstring> // memset, memcpy, memcmp
 #include <stdexcept>
 #include <vector>
 

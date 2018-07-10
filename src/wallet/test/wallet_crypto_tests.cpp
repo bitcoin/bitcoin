@@ -6,6 +6,7 @@
 #include <utilstrencodings.h>
 #include <wallet/crypter.h>
 
+#include <cstring> // memcmp
 #include <vector>
 
 #include <boost/test/unit_test.hpp>

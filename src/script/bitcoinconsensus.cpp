@@ -10,6 +10,8 @@
 #include <script/interpreter.h>
 #include <version.h>
 
+#include <cstring> // memcpy, size_t
+
 namespace {
 
 /** A class that deserializes a single CTransaction one time. */

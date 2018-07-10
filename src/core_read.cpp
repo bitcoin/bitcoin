@@ -19,6 +19,8 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/split.hpp>
 
+#include <cstring> // strcmp
+
 CScript ParseScript(const std::string& s)
 {
     CScript result;

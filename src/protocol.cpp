@@ -12,6 +12,8 @@
 # include <arpa/inet.h>
 #endif
 
+#include <cstring> // memcpy, memset, strncmp, memcmp
+
 static std::atomic<bool> g_initial_block_download_completed(false);
 
 namespace NetMsgType {

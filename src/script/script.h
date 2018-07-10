@@ -12,10 +12,10 @@
 
 #include <assert.h>
 #include <climits>
+#include <cstddef> // size_t
 #include <limits>
 #include <stdexcept>
 #include <stdint.h>
-#include <string.h>
 #include <string>
 #include <vector>
 

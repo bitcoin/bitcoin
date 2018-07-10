@@ -11,6 +11,7 @@
 #include <utilstrencodings.h>
 #include <wallet/walletutil.h>
 
+#include <cstring> // memcmp, strchr, strncmp, strlen
 #include <stdint.h>
 
 #ifndef WIN32

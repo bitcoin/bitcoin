@@ -21,6 +21,7 @@
 #include <pubkey.h>
 #include <blockencodings.h>
 
+#include <cstring> // memcpy
 #include <stdint.h>
 #include <unistd.h>
 

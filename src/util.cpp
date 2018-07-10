@@ -10,6 +10,7 @@
 #include <serialize.h>
 #include <utilstrencodings.h>
 
+#include <cstring> // strlen, strerror
 #include <stdarg.h>
 
 #if (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))

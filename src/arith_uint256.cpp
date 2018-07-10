@@ -10,7 +10,6 @@
 #include <crypto/common.h>
 
 #include <stdio.h>
-#include <string.h>
 
 template <unsigned int BITS>
 base_uint<BITS>::base_uint(const std::string& str)

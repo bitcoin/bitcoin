@@ -8,8 +8,8 @@
 #include <array>
 #include <algorithm>
 #include <atomic>
-#include <cstring>
 #include <cmath>
+#include <cstddef> // size_t
 #include <memory>
 #include <vector>
 
