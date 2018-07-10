@@ -2502,7 +2502,6 @@ static UniValue loadwallet(const JSONRPCRequest& request)
             + HelpExampleRpc("loadwallet", "\"test.dat\"")
         );
     std::string wallet_file = request.params[0].get_str();
-    std::string error;
 
     fs::path wallet_path = fs::absolute(wallet_file, GetWalletDir());
     if (fs::symlink_status(wallet_path).type() == fs::file_not_found) {
@@ -2515,18 +2514,11 @@ static UniValue loadwallet(const JSONRPCRequest& request)
         }
     }
 
-    std::string warning;
-    if (!CWallet::Verify(wallet_file, false, error, warning)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Wallet file verification failed: " + error);
-    }
-
-    std::shared_ptr<CWallet> const wallet = CWallet::CreateWalletFromFile(wallet_file, fs::absolute(wallet_file, GetWalletDir()));
+    std::string error, warning;
+    std::shared_ptr<CWallet> const wallet = LoadWallet(wallet_file, error, warning);
     if (!wallet) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Wallet loading failed.");
+        throw JSONRPCError(RPC_WALLET_ERROR, error);
     }
-    AddWallet(wallet);
-
-    wallet->postInitProcess();
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("name", wallet->GetName());
@@ -2563,23 +2555,10 @@ static UniValue createwallet(const JSONRPCRequest& request)
         disable_privatekeys = request.params[1].get_bool();
     }
 
-    fs::path wallet_path = fs::absolute(wallet_name, GetWalletDir());
-    if (fs::symlink_status(wallet_path).type() != fs::file_not_found) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Wallet " + wallet_name + " already exists.");
-    }
-
-    // Wallet::Verify will check if we're trying to create a wallet with a duplication name.
-    if (!CWallet::Verify(wallet_name, false, error, warning)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Wallet file verification failed: " + error);
-    }
-
-    std::shared_ptr<CWallet> const wallet = CWallet::CreateWalletFromFile(wallet_name, fs::absolute(wallet_name, GetWalletDir()), (disable_privatekeys ? (uint64_t)WALLET_FLAG_DISABLE_PRIVATE_KEYS : 0));
+    std::shared_ptr<CWallet> const wallet = CreateWallet(wallet_name, (disable_privatekeys ? (uint64_t)WALLET_FLAG_DISABLE_PRIVATE_KEYS : 0), error, warning);
     if (!wallet) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Wallet creation failed.");
+        throw JSONRPCError(RPC_WALLET_ERROR, error);
     }
-    AddWallet(wallet);
-
-    wallet->postInitProcess();
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("name", wallet->GetName());

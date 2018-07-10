@@ -81,6 +81,74 @@ std::shared_ptr<CWallet> GetWallet(const std::string& name)
     return nullptr;
 }
 
+static void GetWalletNameAndPath(const std::string& wallet_file, std::string& wallet_name, fs::path& wallet_path) {
+    wallet_path = fs::absolute(wallet_file, GetWalletDir());
+    fs::path name;
+    fs::path parent = wallet_path;
+    while (!parent.empty()) {
+        if (parent == GetWalletDir()) {
+            break;
+        }
+        name = parent.filename() / name;
+        parent = parent.parent_path();
+    }
+    wallet_name = name.string();
+}
+
+std::shared_ptr<CWallet> CreateWallet(const std::string& wallet_file, uint64_t wallet_creation_flags, std::string& error, std::string& warning)
+{
+    fs::path wallet_path;
+    std::string wallet_name;
+    GetWalletNameAndPath(wallet_file, wallet_name, wallet_path);
+
+    if (fs::symlink_status(wallet_path).type() != fs::file_not_found) {
+        error = "Wallet " + wallet_name + " already exists.";
+        return nullptr;
+    }
+
+    // Wallet::Verify will check if we're trying to create a wallet with a duplication name.
+    if (!CWallet::Verify(wallet_file, false, error, warning)) {
+        error = "Wallet file verification failed: " + error;
+        return nullptr;
+    }
+
+    std::shared_ptr<CWallet> const wallet = CWallet::CreateWalletFromFile(wallet_name, wallet_path, wallet_creation_flags);
+    if (!wallet) {
+        error = "Wallet creation failed.";
+        return nullptr;
+    }
+
+    AddWallet(wallet);
+
+    wallet->postInitProcess();
+    return wallet;
+}
+
+std::shared_ptr<CWallet> LoadWallet(const std::string& wallet_file, std::string& error, std::string& warning)
+{
+    LOCK(cs_wallets);
+
+    fs::path wallet_path;
+    std::string wallet_name;
+    GetWalletNameAndPath(wallet_file, wallet_name, wallet_path);
+
+    if (!CWallet::Verify(wallet_file, false, error, warning)) {
+        error = "Wallet file verification failed: " + error;
+        return nullptr;
+    }
+
+    std::shared_ptr<CWallet> wallet = CWallet::CreateWalletFromFile(wallet_name, wallet_path);
+    if (!wallet) {
+        error = "Wallet creation failed.";
+        return nullptr;
+    }
+
+    AddWallet(wallet);
+    wallet->postInitProcess();
+
+    return wallet;
+}
+
 // Custom deleter for shared_ptr<CWallet>.
 static void ReleaseWallet(CWallet* wallet)
 {
@@ -4183,6 +4251,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(const std::string& name, 
     }
 
     uiInterface.LoadWallet(walletInstance);
+    walletInstance->NotifyLoad();
 
     // Register with the validation interface. It's ok to do this after rescan since we're still holding cs_main.
     RegisterValidationInterface(walletInstance.get());

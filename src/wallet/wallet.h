@@ -39,6 +39,10 @@ bool HasWallets();
 std::vector<std::shared_ptr<CWallet>> GetWallets();
 std::shared_ptr<CWallet> GetWallet(const std::string& name);
 
+std::shared_ptr<CWallet> CreateWallet(const std::string& wallet_file, uint64_t wallet_creation_flags, std::string& error, std::string& warning);
+std::shared_ptr<CWallet> LoadWallet(const std::string& wallet_file, std::string& error, std::string& warning);
+
+
 //! Default for -keypool
 static const unsigned int DEFAULT_KEYPOOL_SIZE = 1000;
 //! -paytxfee default
@@ -1007,6 +1011,9 @@ public:
 
     //! Flush wallet (bitdb flush)
     void Flush(bool shutdown=false);
+
+    /** Wallet has loaded */
+    boost::signals2::signal<void ()> NotifyLoad;
 
     /** Wallet is about to be unloaded */
     boost::signals2::signal<void ()> NotifyUnload;
