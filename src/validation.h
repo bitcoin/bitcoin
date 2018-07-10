@@ -184,7 +184,8 @@ extern bool fAlerts;
 /** If the tip is older than this (in seconds), the node is considered to be in initial block download. */
 extern int64_t nMaxTipAge;
 extern bool fEnableReplacement;
-
+// SYSCOIN
+extern int64_t nLastMultithreadMempoolFailure;
 extern bool fLargeWorkForkFound;
 extern bool fLargeWorkInvalidChainFound;
 
