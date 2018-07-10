@@ -36,11 +36,13 @@
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h"
 
+std::string AssetActivationWarning()
+{
+    return AreAssetsDeployed() ? "" : "\nTHIS COMMAND IS NOT YET ACTIVE!\nhttps://github.com/RavenProject/rips/blob/master/rip-0002.mediawiki\n";
+}
+
 UniValue UnitValueFromAmount(const CAmount& amount, const std::string asset_name)
 {
-    if (!AreAssetsDeployed())
-        throw JSONRPCError(RPC_METHOD_NOT_FOUND, std::string("Assets is not active"));
-
     if (!passets)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Asset cache isn't available.");
 
@@ -58,17 +60,10 @@ UniValue UnitValueFromAmount(const CAmount& amount, const std::string asset_name
 
 UniValue issue(const JSONRPCRequest& request)
 {
-    if (!AreAssetsDeployed())
-        throw JSONRPCError(RPC_METHOD_NOT_FOUND, std::string("Assets is not active"));
-
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
-        return NullUniValue;
-    }
-
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 7)
+    if (request.fHelp || !AreAssetsDeployed() || request.params.size() < 2 || request.params.size() > 7)
         throw std::runtime_error(
             "issue \"asset_name\" qty \"( to_address )\" ( units ) ( reissuable ) ( has_ipfs ) \"( ipfs_hash )\"\n"
+            + AssetActivationWarning() +
             "\nIssue an asset with unique name.\n"
             "Unit as the number of decimals precision for the asset (0 for whole units (\"1\"), 8 for max precision (\"1.00000000\")\n"
             "Qty should be whole number.\n"
@@ -93,6 +88,10 @@ UniValue issue(const JSONRPCRequest& request)
             + HelpExampleCli("issue", "\"myassetname\" 1000 \"myaddress\" 2 true")
         );
 
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
 
     ObserveSafeMode();
     LOCK2(cs_main, pwallet->cs_wallet);
@@ -205,12 +204,10 @@ UniValue issue(const JSONRPCRequest& request)
 
 UniValue listassetbalancesbyaddress(const JSONRPCRequest &request)
 {
-    if (!AreAssetsDeployed())
-        throw JSONRPCError(RPC_METHOD_NOT_FOUND, std::string("Assets is not active"));
-
-    if (request.fHelp || request.params.size() < 1)
+    if (request.fHelp || !AreAssetsDeployed() || request.params.size() < 1)
         throw std::runtime_error(
             "listassetbalancesbyaddress \"address\"\n"
+            + AssetActivationWarning() +
             "\nReturns a list of all asset balances for an address.\n"
 
             "\nArguments:\n"
@@ -249,12 +246,10 @@ UniValue listassetbalancesbyaddress(const JSONRPCRequest &request)
 
 UniValue getassetdata(const JSONRPCRequest& request)
 {
-    if (!AreAssetsDeployed())
-        throw JSONRPCError(RPC_METHOD_NOT_FOUND, std::string("Assets is not active"));
-
-    if (request.fHelp || request.params.size() != 1)
+    if (request.fHelp || !AreAssetsDeployed() || request.params.size() != 1)
         throw std::runtime_error(
                 "getassetdata \"asset_name\"\n"
+                + AssetActivationWarning() +
                 "\nReturns assets metadata if that asset exists\n"
 
                 "\nArguments:\n"
@@ -312,17 +307,10 @@ void safe_advance(Iter& curr, const Iter& end, Incr n)
 
 UniValue listmyassets(const JSONRPCRequest &request)
 {
-    if (!AreAssetsDeployed())
-        throw JSONRPCError(RPC_METHOD_NOT_FOUND, std::string("Assets is not active"));
-
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
-        return NullUniValue;
-    }
-
-    if (request.fHelp || request.params.size() > 0)
+    if (request.fHelp || !AreAssetsDeployed() || request.params.size() > 4)
         throw std::runtime_error(
                 "listmyassets \"( asset )\" ( verbose ) ( count ) ( start )\n"
+                + AssetActivationWarning() +
                 "\nReturns a list of all asset that are owned by this wallet\n"
 
                 "\nArguments:\n"
@@ -360,6 +348,11 @@ UniValue listmyassets(const JSONRPCRequest &request)
                 + HelpExampleCli("listmyassets", "asset")
                 + HelpExampleCli("listmyassets", "\"asset*\" true 10 20")
         );
+
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
 
     ObserveSafeMode();
     LOCK2(cs_main, pwallet->cs_wallet);
@@ -489,12 +482,10 @@ UniValue listmyassets(const JSONRPCRequest &request)
 
 UniValue listaddressesbyasset(const JSONRPCRequest &request)
 {
-    if (!AreAssetsDeployed())
-        throw JSONRPCError(RPC_METHOD_NOT_FOUND, std::string("Assets is not active"));
-
-    if (request.fHelp || request.params.size() != 1)
+    if (request.fHelp || !AreAssetsDeployed() || request.params.size() != 1)
         throw std::runtime_error(
                 "listaddressesbyasset \"asset_name\"\n"
+                + AssetActivationWarning() +
                 "\nReturns a list of all address that own the given asset (with balances)"
 
                 "\nArguments:\n"
@@ -536,17 +527,10 @@ UniValue listaddressesbyasset(const JSONRPCRequest &request)
 
 UniValue transfer(const JSONRPCRequest& request)
 {
-    if (!AreAssetsDeployed())
-        throw JSONRPCError(RPC_METHOD_NOT_FOUND, std::string("Assets is not active"));
-
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
-        return NullUniValue;
-    }
-
-    if (request.fHelp || request.params.size() != 3)
+    if (request.fHelp || !AreAssetsDeployed() || request.params.size() != 3)
         throw std::runtime_error(
                 "transfer \"asset_name\" qty \"to_address\"\n"
+                + AssetActivationWarning() +
                 "\nTransfers a quantity of an owned asset to a given address"
 
                 "\nArguments:\n"
@@ -564,6 +548,11 @@ UniValue transfer(const JSONRPCRequest& request)
                 + HelpExampleCli("transfer", "\"asset_name\" 20 \"address\"")
                 + HelpExampleCli("transfer", "\"asset_name\" 20 \"address\"")
         );
+
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
 
     ObserveSafeMode();
     LOCK2(cs_main, pwallet->cs_wallet);
@@ -643,17 +632,10 @@ UniValue transfer(const JSONRPCRequest& request)
 
 UniValue reissue(const JSONRPCRequest& request)
 {
-    if (!AreAssetsDeployed())
-        throw JSONRPCError(RPC_METHOD_NOT_FOUND, std::string("Assets is not active"));
-
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
-        return NullUniValue;
-    }
-
-    if (request.fHelp || request.params.size() > 5 || request.params.size() < 3)
+    if (request.fHelp || !AreAssetsDeployed() || request.params.size() > 5 || request.params.size() < 3)
         throw std::runtime_error(
                 "reissue \"asset_name\" qty \"to_address\" reissuable \"new_ipfs\" \n"
+                + AssetActivationWarning() +
                 "\nReissues a quantity of an asset to an owned address if you own the Owner Token"
                 "\nCan change the reissuable flag during reissuance"
                 "\nCan change the ipfs hash during reissuance"
@@ -672,6 +654,11 @@ UniValue reissue(const JSONRPCRequest& request)
                 + HelpExampleCli("reissue", "\"asset_name\" 20 \"address\"")
                 + HelpExampleCli("reissue", "\"asset_name\" 20 \"address\" \"true\" \"JUSTGA63B1T1MNF54OX776PCK8TSXM1JLFDOQ9KF\"")
         );
+
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
 
     ObserveSafeMode();
     LOCK2(cs_main, pwallet->cs_wallet);
@@ -793,12 +780,10 @@ UniValue reissue(const JSONRPCRequest& request)
 
 UniValue listassets(const JSONRPCRequest& request)
 {
-    if (!AreAssetsDeployed())
-        throw JSONRPCError(RPC_METHOD_NOT_FOUND, std::string("Assets is not active"));
-
-    if (request.fHelp || request.params.size() > 4)
+    if (request.fHelp || !AreAssetsDeployed() || request.params.size() > 4)
         throw std::runtime_error(
                 "listassets \"( asset )\" ( verbose ) ( count ) ( start )\n"
+                + AssetActivationWarning() +
                 "\nReturns a list of all asset that are owned by this wallet\n"
                 "\nThis could be a slow/expensive operation as it reads from the database\n"
                 "\nAssets come back in timestamp order (oldest to newest)\n"
