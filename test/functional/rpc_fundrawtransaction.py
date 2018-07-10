@@ -81,6 +81,9 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.nodes[0].generate(1)
         self.sync_all()
 
+        # Test required parameters
+        assert_raises_rpc_error(-22, "TX decode failed", self.nodes[0].fundrawtransaction, 'foo')
+
         ###############
         # simple test #
         ###############

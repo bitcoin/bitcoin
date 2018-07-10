@@ -13,6 +13,7 @@ BOOST_FIXTURE_TEST_SUITE(amount_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(MoneyRangeTest)
 {
     BOOST_CHECK_EQUAL(MoneyRange(CAmount(-1)), false);
+    BOOST_CHECK_EQUAL(MoneyRange(INVALID_MONEY), false);
     BOOST_CHECK_EQUAL(MoneyRange(MAX_MONEY + CAmount(1)), false);
     BOOST_CHECK_EQUAL(MoneyRange(CAmount(1)), true);
 }
