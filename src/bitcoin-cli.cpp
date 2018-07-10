@@ -121,12 +121,12 @@ static int AppInitRPC(int argc, char* argv[])
         }
         return EXIT_SUCCESS;
     }
-    if (!fs::is_directory(GetDataDir(false))) {
-        fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
-        return EXIT_FAILURE;
-    }
     if (!gArgs.ReadConfigFiles(error, true)) {
         fprintf(stderr, "Error reading configuration file: %s\n", error.c_str());
+        return EXIT_FAILURE;
+    }
+    if (!fs::is_directory(GetDataDir(false))) {
+        fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
         return EXIT_FAILURE;
     }
     // Check for -testnet or -regtest parameter (BaseParams() calls are only valid after this clause)

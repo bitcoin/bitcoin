@@ -91,13 +91,13 @@ static bool AppInit(int argc, char* argv[])
 
     try
     {
+        if (!gArgs.ReadConfigFiles(error)) {
+            fprintf(stderr, "Error reading configuration file: %s\n", error.c_str());
+            return false;
+        }
         if (!fs::is_directory(GetDataDir(false, false)))
         {
             fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
-            return false;
-        }
-        if (!gArgs.ReadConfigFiles(error)) {
-            fprintf(stderr, "Error reading configuration file: %s\n", error.c_str());
             return false;
         }
         // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
