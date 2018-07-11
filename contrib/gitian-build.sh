@@ -251,6 +251,36 @@ git fetch
 git checkout ${COMMIT}
 popd
 
+build() {
+    #
+    # Usage: build RELEASE DESCRIPTOR
+    #   e.g. build linux gitian-linux.yml
+    #
+    release="$1"
+    baserelease="${release/-*/}"
+    descriptor="../bitcoin/contrib/gitian-descriptors/$2"
+
+    echo ""
+    echo "Compiling ${VERSION} ${release}"
+    echo ""
+
+    # Different gbuild flags if we're codesigning
+    if [[ "${release}" == *-signed ]]
+    then
+        ./bin/gbuild -i --commit "signature=${COMMIT}" "${descriptor}"
+    else
+        ./bin/gbuild -j "${proc}" -m "${mem}" --commit "bitcoin=${COMMIT}" --url "bitcoin=${url}" "${descriptor}"
+        mv build/out/src/bitcoin-*.tar.gz "../bitcoin-binaries/${VERSION}"
+    fi
+
+    # Move outputs to inputs if they will be codesigned
+    [[ "${release}" == *-unsigned ]] && mv build/out/bitcoin-*-"${release}".tar.gz inputs/bitcoin-"${release}".tar.gz
+
+    mv build/out/bitcoin*-"${baserelease}"*.tar.gz "../bitcoin-binaries/${VERSION}"
+
+    ./bin/gsign -p "$signProg" --signer "$SIGNER" --release "${VERSION}-${release}" --destination ../gitian.sigs/ "${descriptor}"
+}
+
 # Build
 if [[ $build = true ]]
 then
@@ -267,38 +297,16 @@ then
 	wget -N -P inputs $osslTarUrl
 	make -C ../bitcoin/depends download SOURCES_PATH=`pwd`/cache/common
 
-	# Linux
-	if [[ $linux = true ]]
-	then
-            echo ""
-	    echo "Compiling ${VERSION} Linux"
-	    echo ""
-	    ./bin/gbuild -j ${proc} -m ${mem} --commit bitcoin=${COMMIT} --url bitcoin=${url} ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
-	    ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-linux --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
-	    mv build/out/bitcoin-*.tar.gz build/out/src/bitcoin-*.tar.gz ../bitcoin-binaries/${VERSION}
-	fi
-	# Windows
-	if [[ $windows = true ]]
-	then
-	    echo ""
-	    echo "Compiling ${VERSION} Windows"
-	    echo ""
-	    ./bin/gbuild -j ${proc} -m ${mem} --commit bitcoin=${COMMIT} --url bitcoin=${url} ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
-	    ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-win-unsigned --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
-	    mv build/out/bitcoin-*-win-unsigned.tar.gz inputs/bitcoin-win-unsigned.tar.gz
-	    mv build/out/bitcoin-*.zip build/out/bitcoin-*.exe ../bitcoin-binaries/${VERSION}
-	fi
-	# Mac OSX
-	if [[ $osx = true ]]
-	then
-	    echo ""
-	    echo "Compiling ${VERSION} Mac OSX"
-	    echo ""
-	    ./bin/gbuild -j ${proc} -m ${mem} --commit bitcoin=${COMMIT} --url bitcoin=${url} ../bitcoin/contrib/gitian-descriptors/gitian-osx.yml
-	    ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-osx.yml
-	    mv build/out/bitcoin-*-osx-unsigned.tar.gz inputs/bitcoin-osx-unsigned.tar.gz
-	    mv build/out/bitcoin-*.tar.gz build/out/bitcoin-*.dmg ../bitcoin-binaries/${VERSION}
-	fi
+  for i in "${linux}:linux" \
+           "${windows}:win-unsigned" \
+           "${osx}:osx-unsigned"
+  do
+    willdo="${i/:*/}"
+    release="${i/*:/}"
+    descriptor="gitian-${release/-*/}.yml"
+
+    [[ "${willdo}" = true ]] && build "${release}" "${descriptor}"
+  done
 	popd
 
         if [[ $commitFiles = true ]]
@@ -319,32 +327,20 @@ fi
 # Verify the build
 if [[ $verify = true ]]
 then
-	# Linux
 	pushd ./gitian-builder
-	echo ""
-	echo "Verifying v${VERSION} Linux"
-	echo ""
-	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-linux ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
-	# Windows
-	echo ""
-	echo "Verifying v${VERSION} Windows"
-	echo ""
-	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-win-unsigned ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
-	# Mac OSX	
-	echo ""
-	echo "Verifying v${VERSION} Mac OSX"
-	echo ""	
-	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-unsigned ../bitcoin/contrib/gitian-descriptors/gitian-osx.yml
-	# Signed Windows
-	echo ""
-	echo "Verifying v${VERSION} Signed Windows"
-	echo ""
-	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-signed ../bitcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
-	# Signed Mac OSX
-	echo ""
-	echo "Verifying v${VERSION} Signed Mac OSX"
-	echo ""
-	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-signed ../bitcoin/contrib/gitian-descriptors/gitian-osx-signer.yml	
+  for i in "linux:gitian-linux.yml" \
+           "win-unsigned:gitian-win.yml" \
+           "osx-unsigned:gitian-osx.yml" \
+           "win-signed:gitian-win-signer.yml" \
+           "osx-signed:gitian-osx-signer.yml"
+  do
+    release="${i/:*/}"
+    descriptor="${i/*:/}"
+	  echo ""
+	  echo "Verifying v${VERSION} ${release}"
+	  echo ""
+	  ./bin/gverify -v -d ../gitian.sigs/ -r "${VERSION}-${release}" "../bitcoin/contrib/gitian-descriptors/${descriptor}"
+  done
 	popd
 fi
 
@@ -353,27 +349,15 @@ if [[ $sign = true ]]
 then
 	
         pushd ./gitian-builder
-	# Sign Windows
-	if [[ $windows = true ]]
-	then
-	    echo ""
-	    echo "Signing ${VERSION} Windows"
-	    echo ""
-	    ./bin/gbuild -i --commit signature=${COMMIT} ../bitcoin/contrib/gitian-descriptors/gitian-win-signer.yml
-	    ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-win-signed --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-win-signer.yml
-	    mv build/out/bitcoin-*win64-setup.exe ../bitcoin-binaries/${VERSION}
-	    mv build/out/bitcoin-*win32-setup.exe ../bitcoin-binaries/${VERSION}
-	fi
-	# Sign Mac OSX
-	if [[ $osx = true ]]
-	then
-	    echo ""
-	    echo "Signing ${VERSION} Mac OSX"
-	    echo ""
-	    ./bin/gbuild -i --commit signature=${COMMIT} ../bitcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
-	    ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-osx-signed --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
-	    mv build/out/bitcoin-osx-signed.dmg ../bitcoin-binaries/${VERSION}/bitcoin-${VERSION}-osx.dmg
-	fi
+  for i in "${windows}:win-signed" \
+           "${osx}:osx-signed"
+  do
+      willdo="${i/:*/}"
+      release="${i/*:/}"
+      descriptor="gitian-${release/signed/signer}.yml"
+
+      [[ "${willdo}" = true ]] && build "${release}" "${descriptor}"
+  done
 	popd
 
         if [[ $commitFiles = true ]]
