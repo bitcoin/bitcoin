@@ -1601,7 +1601,7 @@ UniValue aliasnew(const JSONRPCRequest& request) {
 						"<aliasname> alias name.\n"
 						"<public value> alias public profile data, 256 characters max.\n"
 						"<accept_transfers_flags> 0 for none, 1 for accepting certificate transfers, 2 for accepting asset transfers and 3 for all. Default is 3.\n"	
-						"<expire_timestamp> Epoch time when to expire alias. It is exponentially more expensive per year, calculation is FEERATE*(2.88^years). FEERATE is the dynamic based on the size of the transaction and what the minimum fee rate is currently which depends on how congested the network is. Defaults to 1 hour.\n"	
+						"<expire_timestamp> Unix epoch time in second for when to expire the alias. It is exponentially more expensive per year, calculation is FEERATE*(2.88^years). FEERATE is the dynamic based on the size of the transaction and what the minimum fee rate is currently which depends on how congested the network is. Defaults to 1 hour.\n"	
 						"<address> Address for this alias.\n"		
 						"<encryption_privatekey> Encrypted private key used for encryption/decryption of private data related to this alias. Should be encrypted to publickey.\n"
 						"<encryption_publickey> Public key used for encryption/decryption of private data related to this alias.\n"						
