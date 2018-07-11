@@ -29,7 +29,7 @@ signProg="gpg --detach-sign"
 commitFiles=true
 
 # Help Message
-read -d '' usage <<- EOF
+read -rd '' usage <<- EOF
 Usage: $scriptName [-c|u|v|b|s|B|o|h|j|m|] signer version
 
 Run this script from the directory containing the bitcoin, gitian-builder, gitian.sigs, and bitcoin-detached-sigs.
@@ -60,99 +60,99 @@ while :; do
     case $1 in
         # Verify
         -v|--verify)
-	    verify=true
+            verify=true
             ;;
         # Build
         -b|--build)
-	    build=true
+            build=true
             ;;
         # Sign binaries
         -s|--sign)
-	    sign=true
+            sign=true
             ;;
         # Build then Sign
         -B|--buildsign)
-	    sign=true
-	    build=true
+            sign=true
+            build=true
             ;;
         # PGP Signer
         -S|--signer)
-	    if [ -n "$2" ]
-	    then
-		SIGNER="$2"
-		shift
-	    else
-		echo 'Error: "--signer" requires a non-empty argument.'
-		exit 1
-	    fi
-           ;;
+            if [ -n "$2" ]
+            then
+                SIGNER="$2"
+                shift
+            else
+                echo 'Error: "--signer" requires a non-empty argument.'
+                exit 1
+            fi
+            ;;
         # Operating Systems
         -o|--os)
-	    if [ -n "$2" ]
-	    then
-		linux=false
-		windows=false
-		osx=false
-		if [[ "$2" = *"l"* ]]
-		then
-		    linux=true
-		fi
-		if [[ "$2" = *"w"* ]]
-		then
-		    windows=true
-		fi
-		if [[ "$2" = *"x"* ]]
-		then
-		    osx=true
-		fi
-		shift
-	    else
-		echo 'Error: "--os" requires an argument containing an l (for linux), w (for windows), or x (for Mac OSX)'
-		exit 1
-	    fi
-	    ;;
-	# Help message
-	-h|--help)
-	    echo "$usage"
-	    exit 0
-	    ;;
-	# Commit or branch
-	-c|--commit)
-	    commit=true
-	    ;;
-	# Number of Processes
-	-j)
-	    if [ -n "$2" ]
-	    then
-		proc=$2
-		shift
-	    else
-		echo 'Error: "-j" requires an argument'
-		exit 1
-	    fi
-	    ;;
-	# Memory to allocate
-	-m)
-	    if [ -n "$2" ]
-	    then
-		mem=$2
-		shift
-	    else
-		echo 'Error: "-m" requires an argument'
-		exit 1
-	    fi
-	    ;;
-	# URL
-	-u)
-	    if [ -n "$2" ]
-	    then
-		url=$2
-		shift
-	    else
-		echo 'Error: "-u" requires an argument'
-		exit 1
-	    fi
-	    ;;
+            if [ -n "$2" ]
+            then
+                linux=false
+                windows=false
+                osx=false
+                if [[ "$2" = *"l"* ]]
+                then
+                    linux=true
+                fi
+                if [[ "$2" = *"w"* ]]
+                then
+                    windows=true
+                fi
+                if [[ "$2" = *"x"* ]]
+                then
+                    osx=true
+                fi
+                shift
+            else
+                echo 'Error: "--os" requires an argument containing an l (for linux), w (for windows), or x (for Mac OSX)'
+                exit 1
+            fi
+            ;;
+        # Help message
+        -h|--help)
+            echo "$usage"
+            exit 0
+            ;;
+        # Commit or branch
+        -c|--commit)
+            commit=true
+            ;;
+        # Number of Processes
+        -j)
+            if [ -n "$2" ]
+            then
+                proc=$2
+                shift
+            else
+                echo 'Error: "-j" requires an argument'
+                exit 1
+            fi
+            ;;
+        # Memory to allocate
+        -m)
+            if [ -n "$2" ]
+            then
+                mem=$2
+                shift
+            else
+                echo 'Error: "-m" requires an argument'
+                exit 1
+            fi
+            ;;
+        # URL
+        -u)
+            if [ -n "$2" ]
+            then
+                url=$2
+                shift
+            else
+                echo 'Error: "-u" requires an argument'
+                exit 1
+            fi
+            ;;
         # kvm
         --kvm)
             lxc=false
@@ -170,17 +170,14 @@ while :; do
         --setup)
             setup=true
             ;;
-	*)               # Default case: If no more options then break out of the loop.
-             break
+        *)               # Default case: If no more options then break out of the loop.
+            break
     esac
     shift
 done
 
 # Set up LXC
-if [[ $lxc = true ]]
-then
-    export USE_LXC=1
-fi
+[[ $lxc = true ]] && export USE_LXC=1
 
 # Check for OSX SDK
 if [[ ! -e "gitian-builder/inputs/MacOSX10.11.sdk.tar.gz" && $osx == true ]]
@@ -221,11 +218,8 @@ then
 fi
 
 # Add a "v" if no -c
-if [[ $commit = false ]]
-then
-	COMMIT="v${VERSION}"
-fi
-echo ${COMMIT}
+[[ $commit = false ]] && COMMIT="v${VERSION}"
+echo "${COMMIT}"
 
 # Setup build environment
 if [[ $setup = true ]]
@@ -248,144 +242,128 @@ fi
 # Set up build
 pushd ./bitcoin
 git fetch
-git checkout ${COMMIT}
+git checkout "${COMMIT}"
 popd
+
+build() {
+    #
+    # Usage: build RELEASE DESCRIPTOR
+    #   e.g. build linux gitian-linux.yml
+    #
+    release="$1"
+    baserelease="${release/-*/}"
+    descriptor="../bitcoin/contrib/gitian-descriptors/$2"
+
+    echo ""
+    echo "Compiling ${VERSION} ${release}"
+    echo ""
+
+    # Different gbuild flags if we're codesigning
+    if [[ "${release}" == *-signed ]]
+    then
+        ./bin/gbuild -i --commit "signature=${COMMIT}" "${descriptor}"
+    else
+        ./bin/gbuild -j "${proc}" -m "${mem}" --commit "bitcoin=${COMMIT}" --url "bitcoin=${url}" "${descriptor}"
+        mv build/out/src/bitcoin-*.tar.gz "../bitcoin-binaries/${VERSION}"
+    fi
+
+    # Move outputs to inputs if they will be codesigned
+    [[ "${release}" == *-unsigned ]] && mv build/out/bitcoin-*-"${release}".tar.gz inputs/bitcoin-"${release}".tar.gz
+
+    mv build/out/bitcoin*-"${baserelease}"*.tar.gz "../bitcoin-binaries/${VERSION}"
+
+    ./bin/gsign -p "$signProg" --signer "$SIGNER" --release "${VERSION}-${release}" --destination ../gitian.sigs/ "${descriptor}"
+}
 
 # Build
 if [[ $build = true ]]
 then
-	# Make output folder
-	mkdir -p ./bitcoin-binaries/${VERSION}
-	
-	# Build Dependencies
-	echo ""
-	echo "Building Dependencies"
-	echo ""
-	pushd ./gitian-builder	
-	mkdir -p inputs
-	wget -N -P inputs $osslPatchUrl
-	wget -N -P inputs $osslTarUrl
-	make -C ../bitcoin/depends download SOURCES_PATH=`pwd`/cache/common
+    # Make output folder
+    mkdir -p "./bitcoin-binaries/${VERSION}"
 
-	# Linux
-	if [[ $linux = true ]]
-	then
-            echo ""
-	    echo "Compiling ${VERSION} Linux"
-	    echo ""
-	    ./bin/gbuild -j ${proc} -m ${mem} --commit bitcoin=${COMMIT} --url bitcoin=${url} ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
-	    ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-linux --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
-	    mv build/out/bitcoin-*.tar.gz build/out/src/bitcoin-*.tar.gz ../bitcoin-binaries/${VERSION}
-	fi
-	# Windows
-	if [[ $windows = true ]]
-	then
-	    echo ""
-	    echo "Compiling ${VERSION} Windows"
-	    echo ""
-	    ./bin/gbuild -j ${proc} -m ${mem} --commit bitcoin=${COMMIT} --url bitcoin=${url} ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
-	    ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-win-unsigned --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
-	    mv build/out/bitcoin-*-win-unsigned.tar.gz inputs/bitcoin-win-unsigned.tar.gz
-	    mv build/out/bitcoin-*.zip build/out/bitcoin-*.exe ../bitcoin-binaries/${VERSION}
-	fi
-	# Mac OSX
-	if [[ $osx = true ]]
-	then
-	    echo ""
-	    echo "Compiling ${VERSION} Mac OSX"
-	    echo ""
-	    ./bin/gbuild -j ${proc} -m ${mem} --commit bitcoin=${COMMIT} --url bitcoin=${url} ../bitcoin/contrib/gitian-descriptors/gitian-osx.yml
-	    ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-osx.yml
-	    mv build/out/bitcoin-*-osx-unsigned.tar.gz inputs/bitcoin-osx-unsigned.tar.gz
-	    mv build/out/bitcoin-*.tar.gz build/out/bitcoin-*.dmg ../bitcoin-binaries/${VERSION}
-	fi
-	popd
+    # Build Dependencies
+    echo ""
+    echo "Building Dependencies"
+    echo ""
 
-        if [[ $commitFiles = true ]]
-        then
-	    # Commit to gitian.sigs repo
-            echo ""
-            echo "Committing ${VERSION} Unsigned Sigs"
-            echo ""
-            pushd gitian.sigs
-            git add ${VERSION}-linux/"${SIGNER}"
-            git add ${VERSION}-win-unsigned/"${SIGNER}"
-            git add ${VERSION}-osx-unsigned/"${SIGNER}"
-            git commit -a -m "Add ${VERSION} unsigned sigs for ${SIGNER}"
-            popd
-        fi
+    pushd ./gitian-builder
+    mkdir -p inputs
+    wget -N -P inputs $osslPatchUrl
+    wget -N -P inputs $osslTarUrl
+    make -C ../bitcoin/depends download SOURCES_PATH="$(pwd)/cache/common"
+
+    for i in "${linux}:linux" \
+             "${windows}:win-unsigned" \
+             "${osx}:osx-unsigned"
+    do
+        willdo="${i/:*/}"
+        release="${i/*:/}"
+        descriptor="gitian-${release/-*/}.yml"
+
+        [[ "${willdo}" = true ]] && build "${release}" "${descriptor}"
+    done
+    popd
+
+    if [[ $commitFiles = true ]]
+    then
+        # Commit to gitian.sigs repo
+        echo ""
+        echo "Committing ${VERSION} Unsigned Sigs"
+        echo ""
+        pushd gitian.sigs
+        git add "${VERSION}-linux/${SIGNER}"
+        git add "${VERSION}-win-unsigned/${SIGNER}"
+        git add "${VERSION}-osx-unsigned/${SIGNER}"
+        git commit -a -m "Add ${VERSION} unsigned sigs for ${SIGNER}"
+        popd
+    fi
 fi
 
 # Verify the build
 if [[ $verify = true ]]
 then
-	# Linux
-	pushd ./gitian-builder
-	echo ""
-	echo "Verifying v${VERSION} Linux"
-	echo ""
-	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-linux ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
-	# Windows
-	echo ""
-	echo "Verifying v${VERSION} Windows"
-	echo ""
-	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-win-unsigned ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
-	# Mac OSX	
-	echo ""
-	echo "Verifying v${VERSION} Mac OSX"
-	echo ""	
-	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-unsigned ../bitcoin/contrib/gitian-descriptors/gitian-osx.yml
-	# Signed Windows
-	echo ""
-	echo "Verifying v${VERSION} Signed Windows"
-	echo ""
-	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-signed ../bitcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
-	# Signed Mac OSX
-	echo ""
-	echo "Verifying v${VERSION} Signed Mac OSX"
-	echo ""
-	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-signed ../bitcoin/contrib/gitian-descriptors/gitian-osx-signer.yml	
-	popd
+    pushd ./gitian-builder
+    for i in "linux:gitian-linux.yml" \
+             "win-unsigned:gitian-win.yml" \
+             "osx-unsigned:gitian-osx.yml" \
+             "win-signed:gitian-win-signer.yml" \
+             "osx-signed:gitian-osx-signer.yml"
+    do
+        release="${i/:*/}"
+        descriptor="${i/*:/}"
+        echo ""
+        echo "Verifying v${VERSION} ${release}"
+        echo ""
+        ./bin/gverify -v -d ../gitian.sigs/ -r "${VERSION}-${release}" "../bitcoin/contrib/gitian-descriptors/${descriptor}"
+    done
+    popd
 fi
 
 # Sign binaries
 if [[ $sign = true ]]
 then
-	
-        pushd ./gitian-builder
-	# Sign Windows
-	if [[ $windows = true ]]
-	then
-	    echo ""
-	    echo "Signing ${VERSION} Windows"
-	    echo ""
-	    ./bin/gbuild -i --commit signature=${COMMIT} ../bitcoin/contrib/gitian-descriptors/gitian-win-signer.yml
-	    ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-win-signed --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-win-signer.yml
-	    mv build/out/bitcoin-*win64-setup.exe ../bitcoin-binaries/${VERSION}
-	    mv build/out/bitcoin-*win32-setup.exe ../bitcoin-binaries/${VERSION}
-	fi
-	# Sign Mac OSX
-	if [[ $osx = true ]]
-	then
-	    echo ""
-	    echo "Signing ${VERSION} Mac OSX"
-	    echo ""
-	    ./bin/gbuild -i --commit signature=${COMMIT} ../bitcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
-	    ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-osx-signed --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
-	    mv build/out/bitcoin-osx-signed.dmg ../bitcoin-binaries/${VERSION}/bitcoin-${VERSION}-osx.dmg
-	fi
-	popd
+    pushd ./gitian-builder
+    for i in "${windows}:win-signed" \
+             "${osx}:osx-signed"
+    do
+        willdo="${i/:*/}"
+        release="${i/*:/}"
+        descriptor="gitian-${release/signed/signer}.yml"
 
-        if [[ $commitFiles = true ]]
-        then
-            # Commit Sigs
-            pushd gitian.sigs
-            echo ""
-            echo "Committing ${VERSION} Signed Sigs"
-            echo ""
-            git add ${VERSION}-win-signed/"${SIGNER}"
-            git add ${VERSION}-osx-signed/"${SIGNER}"
-            git commit -a -m "Add ${VERSION} signed binary sigs for ${SIGNER}"
-            popd
-        fi
+        [[ "${willdo}" = true ]] && build "${release}" "${descriptor}"
+    done
+    popd
+
+    if [[ $commitFiles = true ]]
+    then
+        # Commit Sigs
+        pushd gitian.sigs
+        echo ""
+        echo "Committing ${VERSION} Signed Sigs"
+        echo ""
+        git add "${VERSION}-win-signed/${SIGNER}"
+        git add "${VERSION}-osx-signed/${SIGNER}"
+        git commit -a -m "Add ${VERSION} signed binary sigs for ${SIGNER}"
+        popd
+    fi
 fi
