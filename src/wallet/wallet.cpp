@@ -2114,6 +2114,39 @@ void CWallet::ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman
  * @{
  */
 
+void CWallet::GetBalances(CAmount& balance, CAmount& unconfirmed_balance, CAmount& immature_balance, bool& have_watch_only, CAmount& watch_only_balance, CAmount& unconfirmed_watch_only_balance, CAmount& immature_watch_only_balance) const
+{
+    LOCK2(cs_main, cs_wallet);
+
+    balance = 0;
+    unconfirmed_balance = 0;
+    immature_balance = 0;
+    have_watch_only = HaveWatchOnly();
+    watch_only_balance = 0;
+    unconfirmed_watch_only_balance = 0;
+    immature_watch_only_balance = 0;
+
+    for (const auto& entry : mapWallet) {
+        const CWalletTx* pcoin = &entry.second;
+        if (pcoin->IsTrusted()) {
+            balance += pcoin->GetAvailableCredit();
+            if (have_watch_only) {
+                watch_only_balance += pcoin->GetAvailableWatchOnlyCredit();
+            }
+        } else {
+            if (pcoin->GetDepthInMainChain() == 0 && pcoin->InMempool()) {
+                unconfirmed_balance += pcoin->GetAvailableCredit();
+                if (have_watch_only) {
+                    unconfirmed_watch_only_balance += pcoin->GetAvailableWatchOnlyCredit();
+                }
+            }
+        }
+        immature_balance += pcoin->GetImmatureCredit();
+        if (have_watch_only) {
+            immature_watch_only_balance += pcoin->GetImmatureWatchOnlyCredit();
+        }
+    }
+}
 
 CAmount CWallet::GetBalance() const
 {

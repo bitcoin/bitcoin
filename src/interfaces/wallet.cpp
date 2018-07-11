@@ -333,15 +333,14 @@ public:
     WalletBalances getBalances() override
     {
         WalletBalances result;
-        result.balance = m_wallet.GetBalance();
-        result.unconfirmed_balance = m_wallet.GetUnconfirmedBalance();
-        result.immature_balance = m_wallet.GetImmatureBalance();
-        result.have_watch_only = m_wallet.HaveWatchOnly();
-        if (result.have_watch_only) {
-            result.watch_only_balance = m_wallet.GetWatchOnlyBalance();
-            result.unconfirmed_watch_only_balance = m_wallet.GetUnconfirmedWatchOnlyBalance();
-            result.immature_watch_only_balance = m_wallet.GetImmatureWatchOnlyBalance();
-        }
+        m_wallet.GetBalances(
+          result.balance,
+          result.unconfirmed_balance,
+          result.immature_balance,
+          result.have_watch_only,
+          result.watch_only_balance,
+          result.unconfirmed_watch_only_balance,
+          result.immature_watch_only_balance);
         return result;
     }
     bool tryGetBalances(WalletBalances& balances, int& num_blocks) override

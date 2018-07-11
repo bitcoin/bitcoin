@@ -942,6 +942,7 @@ public:
     void ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman) override;
     // ResendWalletTransactionsBefore may only be called if fBroadcastTransactions!
     std::vector<uint256> ResendWalletTransactionsBefore(int64_t nTime, CConnman* connman);
+    void GetBalances(CAmount& balance, CAmount& unconfirmed_balance, CAmount& immature_balance, bool& have_watch_only, CAmount& watch_only_balance, CAmount& unconfirmed_watch_only_balance, CAmount& immature_watch_only_balance) const;
     CAmount GetBalance() const;
     CAmount GetUnconfirmedBalance() const;
     CAmount GetImmatureBalance() const;
