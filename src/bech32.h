@@ -19,7 +19,11 @@
 namespace bech32
 {
 
-/** Encode a Bech32 string. Returns the empty string in case of failure. */
+/**
+ * Encode a Bech32 string.
+ * @return a Bech32 string representing the inputs
+ * @throws std::length_error if the result would exceed the allowed length of 90 chars
+ */
 std::string Encode(const std::string& hrp, const std::vector<uint8_t>& values);
 
 /** Decode a Bech32 string. Returns (hrp, data). Empty hrp means failure. */
