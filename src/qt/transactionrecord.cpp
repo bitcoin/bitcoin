@@ -195,10 +195,6 @@ void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, int 
             if (wtx.is_in_main_chain)
             {
                 status.matures_in = wtx.blocks_to_maturity;
-
-                // Check if the block was requested by anyone
-                if (adjustedTime - wtx.time_received > 2 * 60 && wtx.request_count == 0)
-                    status.status = TransactionStatus::MaturesWarning;
             }
             else
             {
@@ -215,10 +211,6 @@ void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, int 
         if (status.depth < 0)
         {
             status.status = TransactionStatus::Conflicted;
-        }
-        else if (adjustedTime - wtx.time_received > 2 * 60 && wtx.request_count == 0)
-        {
-            status.status = TransactionStatus::Offline;
         }
         else if (status.depth == 0)
         {

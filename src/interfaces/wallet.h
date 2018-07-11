@@ -346,7 +346,6 @@ struct WalletTxStatus
     int block_height;
     int blocks_to_maturity;
     int depth_in_main_chain;
-    int request_count;
     unsigned int time_received;
     uint32_t lock_time;
     bool is_final;
