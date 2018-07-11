@@ -46,6 +46,7 @@ from test_framework.script import (
     CScript,
     CScriptNum,
     CScriptOp,
+    MAX_SCRIPT_ELEMENT_SIZE,
     OP_0,
     OP_1,
     OP_16,
@@ -1136,8 +1137,6 @@ class SegWitTest(BitcoinTestFramework):
     @subtest
     def test_max_witness_push_length(self):
         """Test that witness stack can only allow up to 520 byte pushes."""
-
-        MAX_SCRIPT_ELEMENT_SIZE = 520
 
         block = self.build_next_block()
 
