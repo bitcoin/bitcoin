@@ -26,6 +26,7 @@ bench_bench_bitcoin_SOURCES = \
   bench/mempool_eviction.cpp \
   bench/verify_script.cpp \
   bench/base58.cpp \
+  bench/bech32.cpp \
   bench/lockedpool.cpp \
   bench/prevector.cpp
 
