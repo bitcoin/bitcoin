@@ -2445,11 +2445,11 @@ UniValue aliasinfo(const JSONRPCRequest& request) {
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
 	ToLowerCase(vchAlias);
 	CAliasIndex txPos;
-	if (!paliasdb || !paliasdb->ReadAlias(vchAlias, txPos))
+	if (!paliasdb)
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5517 - " + _("Failed to read from alias DB"));
 
 	UniValue oName(UniValue::VOBJ);
-	if(!BuildAliasJson(txPos, oName))
+	if(!paliasdb->ReadAlias(vchAlias, txPos) || !BuildAliasJson(txPos, oName))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5518 - " + _("Could not find this alias"));
 		
 	return oName;
