@@ -60,99 +60,99 @@ while :; do
     case $1 in
         # Verify
         -v|--verify)
-	    verify=true
+            verify=true
             ;;
         # Build
         -b|--build)
-	    build=true
+            build=true
             ;;
         # Sign binaries
         -s|--sign)
-	    sign=true
+            sign=true
             ;;
         # Build then Sign
         -B|--buildsign)
-	    sign=true
-	    build=true
+            sign=true
+            build=true
             ;;
         # PGP Signer
         -S|--signer)
-	    if [ -n "$2" ]
-	    then
-		SIGNER="$2"
-		shift
-	    else
-		echo 'Error: "--signer" requires a non-empty argument.'
-		exit 1
-	    fi
-           ;;
+            if [ -n "$2" ]
+            then
+                SIGNER="$2"
+                shift
+            else
+                echo 'Error: "--signer" requires a non-empty argument.'
+                exit 1
+            fi
+            ;;
         # Operating Systems
         -o|--os)
-	    if [ -n "$2" ]
-	    then
-		linux=false
-		windows=false
-		osx=false
-		if [[ "$2" = *"l"* ]]
-		then
-		    linux=true
-		fi
-		if [[ "$2" = *"w"* ]]
-		then
-		    windows=true
-		fi
-		if [[ "$2" = *"x"* ]]
-		then
-		    osx=true
-		fi
-		shift
-	    else
-		echo 'Error: "--os" requires an argument containing an l (for linux), w (for windows), or x (for Mac OSX)'
-		exit 1
-	    fi
-	    ;;
-	# Help message
-	-h|--help)
-	    echo "$usage"
-	    exit 0
-	    ;;
-	# Commit or branch
-	-c|--commit)
-	    commit=true
-	    ;;
-	# Number of Processes
-	-j)
-	    if [ -n "$2" ]
-	    then
-		proc=$2
-		shift
-	    else
-		echo 'Error: "-j" requires an argument'
-		exit 1
-	    fi
-	    ;;
-	# Memory to allocate
-	-m)
-	    if [ -n "$2" ]
-	    then
-		mem=$2
-		shift
-	    else
-		echo 'Error: "-m" requires an argument'
-		exit 1
-	    fi
-	    ;;
-	# URL
-	-u)
-	    if [ -n "$2" ]
-	    then
-		url=$2
-		shift
-	    else
-		echo 'Error: "-u" requires an argument'
-		exit 1
-	    fi
-	    ;;
+            if [ -n "$2" ]
+            then
+                linux=false
+                windows=false
+                osx=false
+                if [[ "$2" = *"l"* ]]
+                then
+                    linux=true
+                fi
+                if [[ "$2" = *"w"* ]]
+                then
+                    windows=true
+                fi
+                if [[ "$2" = *"x"* ]]
+                then
+                    osx=true
+                fi
+                shift
+            else
+                echo 'Error: "--os" requires an argument containing an l (for linux), w (for windows), or x (for Mac OSX)'
+                exit 1
+            fi
+            ;;
+        # Help message
+        -h|--help)
+            echo "$usage"
+            exit 0
+            ;;
+        # Commit or branch
+        -c|--commit)
+            commit=true
+            ;;
+        # Number of Processes
+        -j)
+            if [ -n "$2" ]
+            then
+                proc=$2
+                shift
+            else
+                echo 'Error: "-j" requires an argument'
+                exit 1
+            fi
+            ;;
+        # Memory to allocate
+        -m)
+            if [ -n "$2" ]
+            then
+                mem=$2
+                shift
+            else
+                echo 'Error: "-m" requires an argument'
+                exit 1
+            fi
+            ;;
+        # URL
+        -u)
+            if [ -n "$2" ]
+            then
+                url=$2
+                shift
+            else
+                echo 'Error: "-u" requires an argument'
+                exit 1
+            fi
+            ;;
         # kvm
         --kvm)
             lxc=false
@@ -170,8 +170,8 @@ while :; do
         --setup)
             setup=true
             ;;
-	*)               # Default case: If no more options then break out of the loop.
-             break
+        *)               # Default case: If no more options then break out of the loop.
+            break
     esac
     shift
 done
@@ -223,7 +223,7 @@ fi
 # Add a "v" if no -c
 if [[ $commit = false ]]
 then
-	COMMIT="v${VERSION}"
+    COMMIT="v${VERSION}"
 fi
 echo ${COMMIT}
 
@@ -284,92 +284,92 @@ build() {
 # Build
 if [[ $build = true ]]
 then
-	# Make output folder
-	mkdir -p ./bitcoin-binaries/${VERSION}
-	
-	# Build Dependencies
-	echo ""
-	echo "Building Dependencies"
-	echo ""
-	pushd ./gitian-builder	
-	mkdir -p inputs
-	wget -N -P inputs $osslPatchUrl
-	wget -N -P inputs $osslTarUrl
-	make -C ../bitcoin/depends download SOURCES_PATH=`pwd`/cache/common
+    # Make output folder
+    mkdir -p ./bitcoin-binaries/${VERSION}
 
-  for i in "${linux}:linux" \
-           "${windows}:win-unsigned" \
-           "${osx}:osx-unsigned"
-  do
-    willdo="${i/:*/}"
-    release="${i/*:/}"
-    descriptor="gitian-${release/-*/}.yml"
+    # Build Dependencies
+    echo ""
+    echo "Building Dependencies"
+    echo ""
 
-    [[ "${willdo}" = true ]] && build "${release}" "${descriptor}"
-  done
-	popd
+    pushd ./gitian-builder
+    mkdir -p inputs
+    wget -N -P inputs $osslPatchUrl
+    wget -N -P inputs $osslTarUrl
+    make -C ../bitcoin/depends download SOURCES_PATH=`pwd`/cache/common
 
-        if [[ $commitFiles = true ]]
-        then
-	    # Commit to gitian.sigs repo
-            echo ""
-            echo "Committing ${VERSION} Unsigned Sigs"
-            echo ""
-            pushd gitian.sigs
-            git add ${VERSION}-linux/"${SIGNER}"
-            git add ${VERSION}-win-unsigned/"${SIGNER}"
-            git add ${VERSION}-osx-unsigned/"${SIGNER}"
-            git commit -a -m "Add ${VERSION} unsigned sigs for ${SIGNER}"
-            popd
-        fi
+    for i in "${linux}:linux" \
+             "${windows}:win-unsigned" \
+             "${osx}:osx-unsigned"
+    do
+        willdo="${i/:*/}"
+        release="${i/*:/}"
+        descriptor="gitian-${release/-*/}.yml"
+
+        [[ "${willdo}" = true ]] && build "${release}" "${descriptor}"
+    done
+    popd
+
+    if [[ $commitFiles = true ]]
+    then
+        # Commit to gitian.sigs repo
+        echo ""
+        echo "Committing ${VERSION} Unsigned Sigs"
+        echo ""
+        pushd gitian.sigs
+        git add ${VERSION}-linux/"${SIGNER}"
+        git add ${VERSION}-win-unsigned/"${SIGNER}"
+        git add ${VERSION}-osx-unsigned/"${SIGNER}"
+        git commit -a -m "Add ${VERSION} unsigned sigs for ${SIGNER}"
+        popd
+    fi
 fi
 
 # Verify the build
 if [[ $verify = true ]]
 then
-	pushd ./gitian-builder
-  for i in "linux:gitian-linux.yml" \
-           "win-unsigned:gitian-win.yml" \
-           "osx-unsigned:gitian-osx.yml" \
-           "win-signed:gitian-win-signer.yml" \
-           "osx-signed:gitian-osx-signer.yml"
-  do
-    release="${i/:*/}"
-    descriptor="${i/*:/}"
-	  echo ""
-	  echo "Verifying v${VERSION} ${release}"
-	  echo ""
-	  ./bin/gverify -v -d ../gitian.sigs/ -r "${VERSION}-${release}" "../bitcoin/contrib/gitian-descriptors/${descriptor}"
-  done
-	popd
+    pushd ./gitian-builder
+    for i in "linux:gitian-linux.yml" \
+             "win-unsigned:gitian-win.yml" \
+             "osx-unsigned:gitian-osx.yml" \
+             "win-signed:gitian-win-signer.yml" \
+             "osx-signed:gitian-osx-signer.yml"
+    do
+        release="${i/:*/}"
+        descriptor="${i/*:/}"
+        echo ""
+        echo "Verifying v${VERSION} ${release}"
+        echo ""
+        ./bin/gverify -v -d ../gitian.sigs/ -r "${VERSION}-${release}" "../bitcoin/contrib/gitian-descriptors/${descriptor}"
+    done
+    popd
 fi
 
 # Sign binaries
 if [[ $sign = true ]]
 then
-	
-        pushd ./gitian-builder
-  for i in "${windows}:win-signed" \
-           "${osx}:osx-signed"
-  do
-      willdo="${i/:*/}"
-      release="${i/*:/}"
-      descriptor="gitian-${release/signed/signer}.yml"
+    pushd ./gitian-builder
+    for i in "${windows}:win-signed" \
+             "${osx}:osx-signed"
+    do
+        willdo="${i/:*/}"
+        release="${i/*:/}"
+        descriptor="gitian-${release/signed/signer}.yml"
 
-      [[ "${willdo}" = true ]] && build "${release}" "${descriptor}"
-  done
-	popd
+        [[ "${willdo}" = true ]] && build "${release}" "${descriptor}"
+    done
+    popd
 
-        if [[ $commitFiles = true ]]
-        then
-            # Commit Sigs
-            pushd gitian.sigs
-            echo ""
-            echo "Committing ${VERSION} Signed Sigs"
-            echo ""
-            git add ${VERSION}-win-signed/"${SIGNER}"
-            git add ${VERSION}-osx-signed/"${SIGNER}"
-            git commit -a -m "Add ${VERSION} signed binary sigs for ${SIGNER}"
-            popd
-        fi
+    if [[ $commitFiles = true ]]
+    then
+        # Commit Sigs
+        pushd gitian.sigs
+        echo ""
+        echo "Committing ${VERSION} Signed Sigs"
+        echo ""
+        git add ${VERSION}-win-signed/"${SIGNER}"
+        git add ${VERSION}-osx-signed/"${SIGNER}"
+        git commit -a -m "Add ${VERSION} signed binary sigs for ${SIGNER}"
+        popd
+    fi
 fi
