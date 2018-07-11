@@ -121,7 +121,7 @@ class CCryptoKeyStore : public CBasicKeyStore
 private:
     CHDChain cryptedHDChain;
 
-    CKeyingMaterial vMasterKey;
+    CKeyingMaterial vMasterKey GUARDED_BY(cs_KeyStore);
 
     //! if fUseCrypto is true, mapKeys must be empty
     //! if fUseCrypto is false, vMasterKey must be empty
@@ -145,7 +145,7 @@ protected:
     bool SetCryptedHDChain(const CHDChain& chain);
 
     bool Unlock(const CKeyingMaterial& vMasterKeyIn, bool fForMixingOnly = false);
-    CryptedKeyMap mapCryptedKeys;
+    CryptedKeyMap mapCryptedKeys GUARDED_BY(cs_KeyStore);
 
 public:
     CCryptoKeyStore() : fUseCrypto(false), fDecryptionThoroughlyChecked(false), fOnlyMixingAllowed(false)
