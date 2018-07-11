@@ -15,7 +15,7 @@
 #include <byteswap.h>
 #endif
 
-#if defined(__APPLE__)
+#if defined(MAC_OSX)
 
 #if !defined(bswap_16)
 
@@ -61,6 +61,6 @@ inline uint64_t bswap_64(uint64_t x)
 }
 #endif // HAVE_DECL_BSWAP64 == 0
 
-#endif // defined(__APPLE__)
+#endif // defined(MAC_OSX)
 
 #endif // BITCOIN_COMPAT_BYTESWAP_H
