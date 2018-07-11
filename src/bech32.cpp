@@ -4,6 +4,9 @@
 
 #include <bech32.h>
 
+#include <cstring>
+#include <stdexcept>
+
 namespace
 {
 
@@ -146,13 +149,20 @@ namespace bech32
 /** Encode a Bech32 string. */
 std::string Encode(const std::string& hrp, const data& values) {
     data checksum = CreateChecksum(hrp, values);
-    data combined = Cat(values, checksum);
-    std::string ret = hrp + '1';
-    ret.reserve(ret.size() + combined.size());
-    for (auto c : combined) {
-        ret += CHARSET[c];
+    if (hrp.size() + 1 + values.size() + checksum.size() > 90) {
+        throw std::length_error("Combined bech32 size would be greater than allowed by bip-173");
     }
-    return ret;
+    char ret[91];
+    memcpy(ret, hrp.data(), hrp.size());
+    char* curr = ret + hrp.size();
+    *curr = '1';
+    for (auto c : values) {
+        *(++curr) = CHARSET[c];
+    }
+    for (auto c : checksum) {
+        *(++curr) = CHARSET[c];
+    }
+    return std::string(ret, ++curr);
 }
 
 /** Decode a Bech32 string. */
