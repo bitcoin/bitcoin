@@ -32,6 +32,7 @@ bench_bench_dash_SOURCES = \
   bench/mempool_eviction.cpp \
   bench/util_time.cpp \
   bench/base58.cpp \
+  bench/bech32.cpp \
   bench/lockedpool.cpp \
   bench/poly1305.cpp \
   bench/prevector.cpp \
