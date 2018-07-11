@@ -49,10 +49,10 @@ class CBasicKeyStore : public CKeyStore
 protected:
     mutable CCriticalSection cs_KeyStore;
 
-    KeyMap mapKeys;
-    WatchKeyMap mapWatchKeys;
-    ScriptMap mapScripts;
-    WatchOnlySet setWatchOnly;
+    KeyMap mapKeys GUARDED_BY(cs_KeyStore);
+    WatchKeyMap mapWatchKeys GUARDED_BY(cs_KeyStore);
+    ScriptMap mapScripts GUARDED_BY(cs_KeyStore);
+    WatchOnlySet setWatchOnly GUARDED_BY(cs_KeyStore);
 
     void ImplicitlyLearnRelatedKeyScripts(const CPubKey& pubkey) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
 
