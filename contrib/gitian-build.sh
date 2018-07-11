@@ -29,7 +29,7 @@ signProg="gpg --detach-sign"
 commitFiles=true
 
 # Help Message
-read -d '' usage <<- EOF
+read -rd '' usage <<- EOF
 Usage: $scriptName [-c|u|v|b|s|B|o|h|j|m|] signer version
 
 Run this script from the directory containing the bitcoin, gitian-builder, gitian.sigs, and bitcoin-detached-sigs.
@@ -177,10 +177,7 @@ while :; do
 done
 
 # Set up LXC
-if [[ $lxc = true ]]
-then
-    export USE_LXC=1
-fi
+[[ $lxc = true ]] && export USE_LXC=1
 
 # Check for OSX SDK
 if [[ ! -e "gitian-builder/inputs/MacOSX10.11.sdk.tar.gz" && $osx == true ]]
@@ -221,11 +218,8 @@ then
 fi
 
 # Add a "v" if no -c
-if [[ $commit = false ]]
-then
-    COMMIT="v${VERSION}"
-fi
-echo ${COMMIT}
+[[ $commit = false ]] && COMMIT="v${VERSION}"
+echo "${COMMIT}"
 
 # Setup build environment
 if [[ $setup = true ]]
@@ -248,7 +242,7 @@ fi
 # Set up build
 pushd ./bitcoin
 git fetch
-git checkout ${COMMIT}
+git checkout "${COMMIT}"
 popd
 
 build() {
@@ -285,7 +279,7 @@ build() {
 if [[ $build = true ]]
 then
     # Make output folder
-    mkdir -p ./bitcoin-binaries/${VERSION}
+    mkdir -p "./bitcoin-binaries/${VERSION}"
 
     # Build Dependencies
     echo ""
@@ -296,7 +290,7 @@ then
     mkdir -p inputs
     wget -N -P inputs $osslPatchUrl
     wget -N -P inputs $osslTarUrl
-    make -C ../bitcoin/depends download SOURCES_PATH=`pwd`/cache/common
+    make -C ../bitcoin/depends download SOURCES_PATH="$(pwd)/cache/common"
 
     for i in "${linux}:linux" \
              "${windows}:win-unsigned" \
@@ -317,9 +311,9 @@ then
         echo "Committing ${VERSION} Unsigned Sigs"
         echo ""
         pushd gitian.sigs
-        git add ${VERSION}-linux/"${SIGNER}"
-        git add ${VERSION}-win-unsigned/"${SIGNER}"
-        git add ${VERSION}-osx-unsigned/"${SIGNER}"
+        git add "${VERSION}-linux/${SIGNER}"
+        git add "${VERSION}-win-unsigned/${SIGNER}"
+        git add "${VERSION}-osx-unsigned/${SIGNER}"
         git commit -a -m "Add ${VERSION} unsigned sigs for ${SIGNER}"
         popd
     fi
@@ -367,8 +361,8 @@ then
         echo ""
         echo "Committing ${VERSION} Signed Sigs"
         echo ""
-        git add ${VERSION}-win-signed/"${SIGNER}"
-        git add ${VERSION}-osx-signed/"${SIGNER}"
+        git add "${VERSION}-win-signed/${SIGNER}"
+        git add "${VERSION}-osx-signed/${SIGNER}"
         git commit -a -m "Add ${VERSION} signed binary sigs for ${SIGNER}"
         popd
     fi
