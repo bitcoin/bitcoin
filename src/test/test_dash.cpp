@@ -53,42 +53,50 @@ extern bool fPrintToConsole;
 extern void noui_connect();
 
 BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
+    : m_path_root(fs::temp_directory_path() / "test_bitcoin" / strprintf("%lu_%i", (unsigned long)GetTime(), (int)(InsecureRandRange(1 << 30))))
 {
-        SHA256AutoDetect();
-        RandomInit();
-        ECC_Start();
-        BLSInit();
-        SetupEnvironment();
-        SetupNetworking();
-        InitSignatureCache();
-        InitScriptExecutionCache();
-        CPrivateSend::InitStandardDenominations();
-        fPrintToDebugLog = false; // don't want to write to debug.log file
-        fCheckBlockIndex = true;
-        SelectParams(chainName);
-        evoDb.reset(new CEvoDB(1 << 20, true, true));
-        deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
-        noui_connect();
+    SHA256AutoDetect();
+    RandomInit();
+    ECC_Start();
+    BLSInit();
+    SetupEnvironment();
+    SetupNetworking();
+    InitSignatureCache();
+    InitScriptExecutionCache();
+    CPrivateSend::InitStandardDenominations();
+    fPrintToDebugLog = false; // don't want to write to debug.log file
+    fCheckBlockIndex = true;
+    SelectParams(chainName);
+    evoDb.reset(new CEvoDB(1 << 20, true, true));
+    deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
+    noui_connect();
 }
 
 BasicTestingSetup::~BasicTestingSetup()
 {
-        deterministicMNManager.reset();
-        evoDb.reset();
+    deterministicMNManager.reset();
+    evoDb.reset();
 
-        ECC_Stop();
+    fs::remove_all(m_path_root);
+    ECC_Stop();
+}
+
+fs::path BasicTestingSetup::SetDataDir(const std::string& name)
+{
+    fs::path ret = m_path_root / name;
+    fs::create_directories(ret);
+    gArgs.ForceSetArg("-datadir", ret.string());
+    return ret;
 }
 
 TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(chainName)
 {
+    SetDataDir("tempdir");
     const CChainParams& chainparams = Params();
         // Ideally we'd move all the RPC tests to the functional testing framework
         // instead of unit tests, but for now we need these here.
         RegisterAllCoreRPCCommands(tableRPC);
         ClearDatadirCache();
-        pathTemp = fs::temp_directory_path() / strprintf("test_dash_%lu_%i", (unsigned long)GetTime(), (int)(InsecureRandRange(100000)));
-        fs::create_directories(pathTemp);
-        gArgs.ForceSetArg("-datadir", pathTemp.string());
 
         // We have to run a scheduler thread to prevent ActivateBestChain
         // from blocking due to queue overrun.
@@ -131,7 +139,6 @@ TestingSetup::~TestingSetup()
         llmq::DestroyLLMQSystem();
         pcoinsdbview.reset();
         pblocktree.reset();
-        fs::remove_all(pathTemp);
 }
 
 TestChainSetup::TestChainSetup(int blockCount) : TestingSetup(CBaseChainParams::REGTEST)
