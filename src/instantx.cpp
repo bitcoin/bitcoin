@@ -1134,10 +1134,7 @@ bool CTxLockVote::IsFailed() const
 
 bool COutPointLock::AddVote(const CTxLockVote& vote)
 {
-    if(mapMasternodeVotes.count(vote.GetMasternodeOutpoint()))
-        return false;
-    mapMasternodeVotes.insert(std::make_pair(vote.GetMasternodeOutpoint(), vote));
-    return true;
+    return mapMasternodeVotes.emplace(vote.GetMasternodeOutpoint(), vote).second;
 }
 
 std::vector<CTxLockVote> COutPointLock::GetVotes() const
