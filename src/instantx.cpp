@@ -37,6 +37,7 @@ int nInstantSendDepth = DEFAULT_INSTANTSEND_DEPTH;
 int nCompleteTXLocks;
 
 CInstantSend instantsend;
+const std::string CInstantSend::SERIALIZATION_VERSION_STRING = "CInstantSend-Version-1";
 
 // Transaction Locks
 //
@@ -787,6 +788,21 @@ bool CInstantSend::IsInstantSendReadyToLock(const uint256& txHash)
     return it != mapTxLockCandidates.end() && it->second.IsAllOutPointsReady();
 }
 
+void CInstantSend::Clear()
+{
+    LOCK(cs_instantsend);
+
+    mapLockRequestAccepted.clear();
+    mapLockRequestRejected.clear();
+    mapTxLockVotes.clear();
+    mapTxLockVotesOrphan.clear();
+    mapTxLockCandidates.clear();
+    mapVotedOutpoints.clear();
+    mapLockedOutpoints.clear();
+    mapMasternodeOrphanVotes.clear();
+    nCachedBlockHeight = 0;
+}
+
 bool CInstantSend::IsLockedInstantSendTransaction(const uint256& txHash)
 {
     if(!fEnableInstantSend || GetfLargeWorkForkFound() || GetfLargeWorkInvalidChainFound() ||
@@ -909,7 +925,7 @@ void CInstantSend::SyncTransaction(const CTransaction& tx, const CBlockIndex *pi
     }
 }
 
-std::string CInstantSend::ToString()
+std::string CInstantSend::ToString() const
 {
     LOCK(cs_instantsend);
     return strprintf("Lock Candidates: %llu, Votes %llu", mapTxLockCandidates.size(), mapTxLockVotes.size());
