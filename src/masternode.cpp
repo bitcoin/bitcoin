@@ -326,7 +326,7 @@ void CMasternode::UpdateLastPaid(const CBlockIndex *pindex, int nMaxBlocksToScan
 			const CAmount & nMasternodePayment = GetBlockSubsidy(BlockReading->nHeight, chainparams.GetConsensus(), nTotal, false, true, payee.nStartHeight);
 
             for (const auto& txout : block.vtx[0]->vout)
-                if(mnpayee == txout.scriptPubKey && nMasternodePayment == txout.nValue) {
+                if(mnpayee == txout.scriptPubKey && nMasternodePayment <= txout.nValue) {
                     nBlockLastPaid = BlockReading->nHeight;
                     nTimeLastPaid = BlockReading->nTime;
                     LogPrint("mnpayments", "CMasternode::UpdateLastPaidBlock -- searching for block with payment to %s -- found new %d\n", outpoint.ToStringShort(), nBlockLastPaid);
