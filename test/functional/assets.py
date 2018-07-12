@@ -31,7 +31,7 @@ class AssetTest(RavenTestFramework):
 
         self.log.info("Calling issue()...")
         address0 = n0.getnewaddress()
-        ipfs_hash = "uPMS6aXCbZKpEjPHPUZN2NjB3YrhJTHsV4X3vb2t"
+        ipfs_hash = "QmacSRmrkVmvJfbCpmU6pK72furJ8E8fbKHindrLxmYMQo"
         n0.issue(asset_name="MY_ASSET", qty=1000, to_address=address0, \
                  units=4, reissuable=True, has_ipfs=True, ipfs_hash=ipfs_hash)
 
