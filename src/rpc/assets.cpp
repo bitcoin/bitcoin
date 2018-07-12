@@ -146,7 +146,7 @@ UniValue issue(const JSONRPCRequest& request)
     if (request.params.size() > 6 && has_ipfs)
         ipfs_hash = request.params[6].get_str();
 
-    CNewAsset asset(asset_name, nAmount, units, reissuable ? 1 : 0, has_ipfs ? 1 : 0, ipfs_hash);
+    CNewAsset asset(asset_name, nAmount, units, reissuable ? 1 : 0, has_ipfs ? 1 : 0, DecodeIPFS(ipfs_hash));
 
     // Validate the assets data
     std::string strError;
@@ -286,7 +286,7 @@ UniValue getassetdata(const JSONRPCRequest& request)
         result.push_back(Pair("reissuable", asset.nReissuable));
         result.push_back(Pair("has_ipfs", asset.nHasIPFS));
         if (asset.nHasIPFS)
-            result.push_back(Pair("ipfs_hash", asset.strIPFSHash));
+            result.push_back(Pair("ipfs_hash", EncodeIPFS(asset.strIPFSHash)));
 
         return result;
     }
@@ -679,6 +679,8 @@ UniValue reissue(const JSONRPCRequest& request)
     std::string newipfs = "";
     if (request.params.size() > 4) {
         newipfs = request.params[4].get_str();
+        if (newipfs.length() != 46)
+            throw JSONRPCError(RPC_INVALID_PARAMS, std::string("Invalid IPFS hash (must be 46 characters"));
     }
 
     // Check that validitity of the address
@@ -699,7 +701,7 @@ UniValue reissue(const JSONRPCRequest& request)
     if (!passetsCache)
         throw JSONRPCError(RPC_DATABASE_ERROR, std::string("passetsCache isn't initialized"));
 
-    CReissueAsset reissueAsset(asset_name, nAmount, reissuable, newipfs);
+    CReissueAsset reissueAsset(asset_name, nAmount, reissuable, DecodeIPFS(newipfs));
 
     std::string strError;
     if (!reissueAsset.IsValid(strError, *passets))
@@ -864,7 +866,7 @@ UniValue listassets(const JSONRPCRequest& request)
             detail.push_back(Pair("reissuable", asset.nReissuable));
             detail.push_back(Pair("has_ipfs", asset.nHasIPFS));
             if (asset.nHasIPFS)
-                detail.push_back(Pair("ipfs_hash", asset.strIPFSHash));
+                detail.push_back(Pair("ipfs_hash", EncodeIPFS(asset.strIPFSHash)));
             result.push_back(Pair(asset.strName, detail));
         } else {
             result.push_back(asset.strName);

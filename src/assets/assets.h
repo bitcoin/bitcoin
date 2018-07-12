@@ -343,4 +343,7 @@ bool GetMyOwnedAssets(CAssetsCache& cache, const std::string prefix, std::vector
 bool GetMyAssetBalance(CAssetsCache& cache, const std::string& assetName, CAmount& balance);
 bool GetMyAssetBalances(CAssetsCache& cache, const std::vector<std::string>& assetNames, std::map<std::string, CAmount>& balances);
 bool GetMyAssetBalances(CAssetsCache& cache, std::map<std::string, CAmount>& balances);
+
+std::string DecodeIPFS(std::string encoded);
+std::string EncodeIPFS(std::string decoded);
 #endif //RAVENCOIN_ASSET_PROTOCOL_H

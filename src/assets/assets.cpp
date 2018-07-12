@@ -173,8 +173,8 @@ bool CNewAsset::IsValid(std::string& strError, CAssetsCache& assetCache, bool fC
     if (nHasIPFS != 0 && nHasIPFS != 1)
         strError  = "Invalid parameter: has_ipfs must be 0 or 1.";
 
-    if (nHasIPFS && strIPFSHash.size() != 46)
-        strError  = "Invalid parameter: ipfs_hash must be 46 bytes (currently " + std::to_string(strIPFSHash.size()) + ").";
+    if (nHasIPFS && strIPFSHash.size() != 34)
+        strError  = "Invalid parameter: ipfs_hash must be 34 bytes.";
 
     return strError == "";
 }
@@ -546,8 +546,8 @@ bool CReissueAsset::IsValid(std::string &strError, CAssetsCache& assetCache) con
         return false;
     }
 
-    if (strIPFSHash != "" && strIPFSHash.size() != 46) {
-        strError = "Unable to reissue asset: new ipfs_hash must be 46 bytes.";
+    if (strIPFSHash != "" && strIPFSHash.size() != 34) {
+        strError = "Unable to reissue asset: new ipfs_hash must be 34 bytes.";
         return false;
     }
 
@@ -1784,3 +1784,20 @@ bool GetMyAssetBalances(CAssetsCache& cache, std::map<std::string, CAmount>& bal
 
     return true;
 }
+
+// 46 char base58 --> 34 char KAW compatible
+std::string DecodeIPFS(std::string encoded)
+{
+    std::vector<unsigned char> b;
+    DecodeBase58(encoded, b);
+    return std::string(b.begin(), b.end());
+};
+
+// 34 char KAW compatible --> 46 char base58
+std::string EncodeIPFS(std::string decoded){
+    std::vector<char> charData(decoded.begin(), decoded.end());
+    std::vector<unsigned char> unsignedCharData;
+    for (char c : charData)
+        unsignedCharData.push_back(static_cast<unsigned char>(c));
+    return EncodeBase58(unsignedCharData);
+};
