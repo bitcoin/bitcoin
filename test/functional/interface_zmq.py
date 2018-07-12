@@ -3,10 +3,10 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the ZMQ notification interface."""
-import configparser
 import struct
 
-from test_framework.test_framework import BitcoinTestFramework, SkipTest
+from test_framework.test_framework import (
+    BitcoinTestFramework, skip_if_no_bitcoind_zmq, skip_if_no_py3_zmq)
 from test_framework.mininode import CTransaction
 from test_framework.util import (assert_equal,
                                  bytes_to_hex_str,
@@ -38,18 +38,9 @@ class ZMQTest (BitcoinTestFramework):
         self.num_nodes = 2
 
     def setup_nodes(self):
-        # Try to import python3-zmq. Skip this test if the import fails.
-        try:
-            import zmq
-        except ImportError:
-            raise SkipTest("python3-zmq module not available.")
-
-        # Check that bitcoin has been built with ZMQ enabled.
-        config = configparser.ConfigParser()
-        config.read_file(open(self.options.configfile))
-
-        if not config["components"].getboolean("ENABLE_ZMQ"):
-            raise SkipTest("bitcoind has not been built with zmq enabled.")
+        skip_if_no_py3_zmq()
+        skip_if_no_bitcoind_zmq(self)
+        import zmq
 
         # Initialize ZMQ context and socket.
         # All messages are received in the same socket which means
