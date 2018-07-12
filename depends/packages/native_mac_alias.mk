@@ -12,10 +12,10 @@ define $(package)_preprocess_cmds
 endef
 
 define $(package)_build_cmds
-    python setup.py build
+    python3 setup.py build
 endef
 
 define $(package)_stage_cmds
     mkdir -p $($(package)_install_libdir) && \
-    python setup.py install --root=$($(package)_staging_dir) --prefix=$(build_prefix) --install-lib=$($(package)_install_libdir)
+    python3 setup.py install --root=$($(package)_staging_dir) --prefix=$(build_prefix) --install-lib=$($(package)_install_libdir)
 endef

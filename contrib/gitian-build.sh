@@ -28,6 +28,9 @@ scriptName=$(basename -- "$0")
 signProg="gpg --detach-sign"
 commitFiles=true
 
+SDK_URL=${SDK_URL:-https://bitcoincore.org/depends-sources/sdks}
+OSX_SDK=${OSX_SDK:-10.11}
+
 # Help Message
 read -d '' usage <<- EOF
 Usage: $scriptName [-c|u|v|b|s|B|o|h|j|m|] signer version
@@ -316,6 +319,13 @@ then
 	    echo ""
 	    echo "Compiling ${VERSION} Mac OSX"
 	    echo ""
+
+	    if [ -n "$OSX_SDK" ]; then
+	        if [ ! -f inputs/MacOSX${OSX_SDK}.sdk.tar.gz ]; then
+	            curl --location --fail $SDK_URL/MacOSX${OSX_SDK}.sdk.tar.gz -o inputs/MacOSX${OSX_SDK}.sdk.tar.gz
+	        fi
+	    fi
+
 	    ./bin/gbuild -j ${proc} -m ${mem} --commit dash=${COMMIT} --url dash=${url} ../dash/contrib/gitian-descriptors/gitian-osx.yml
 	    ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../dash/contrib/gitian-descriptors/gitian-osx.yml
 	    mv build/out/dashcore-*-osx-unsigned.tar.gz inputs/dashcore-osx-unsigned.tar.gz
