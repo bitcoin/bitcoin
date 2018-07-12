@@ -160,8 +160,6 @@ void CMasternodeMan::Check()
 	// SYSCOIN remove csmain lock
     LOCK(cs);
 
-    LogPrint("masternode", "CMasternodeMan::Check -- nLastSentinelPingTime=%d, IsSentinelPingActive()=%d\n", nLastSentinelPingTime, IsSentinelPingActive());
-
     for (auto& mnpair : mapMasternodes) {
         // NOTE: internally it checks only every MASTERNODE_CHECK_SECONDS seconds
         // since the last time, so expect some MNs to skip this
@@ -791,7 +789,6 @@ void CMasternodeMan::ProcessPendingMnbRequests(CConnman& connman)
             ++itPendingMNB;
         }
     }
-    LogPrint("masternode", "%s -- mapPendingMNB size: %d\n", __func__, mapPendingMNB.size());
 }
 
 void CMasternodeMan::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
@@ -1157,7 +1154,6 @@ void CMasternodeMan::ProcessPendingMnvRequests(CConnman& connman)
             ++itPendingMNV;
         }
     }
-    LogPrint("masternode", "%s -- mapPendingMNV size: %d\n", __func__, mapPendingMNV.size());
 }
 
 void CMasternodeMan::SendVerifyReply(CNode* pnode, CMasternodeVerification& mnv, CConnman& connman)
