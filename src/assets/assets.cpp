@@ -173,8 +173,8 @@ bool CNewAsset::IsValid(std::string& strError, CAssetsCache& assetCache, bool fC
     if (nHasIPFS != 0 && nHasIPFS != 1)
         strError  = "Invalid parameter: has_ipfs must be 0 or 1.";
 
-    if (nHasIPFS && strIPFSHash.size() != 40)
-        strError  = "Invalid parameter: ipfs_hash must be 40 bytes (currently " + std::to_string(strIPFSHash.size()) + ").";
+    if (nHasIPFS && strIPFSHash.size() != 46)
+        strError  = "Invalid parameter: ipfs_hash must be 46 bytes (currently " + std::to_string(strIPFSHash.size()) + ").";
 
     return strError == "";
 }
@@ -546,8 +546,8 @@ bool CReissueAsset::IsValid(std::string &strError, CAssetsCache& assetCache) con
         return false;
     }
 
-    if (strIPFSHash != "" && strIPFSHash.size() != 40) {
-        strError = "Unable to reissue asset: new ipfs_hash must be 40 bytes.";
+    if (strIPFSHash != "" && strIPFSHash.size() != 46) {
+        strError = "Unable to reissue asset: new ipfs_hash must be 46 bytes.";
         return false;
     }
 

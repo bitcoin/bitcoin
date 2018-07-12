@@ -31,7 +31,7 @@ BOOST_FIXTURE_TEST_SUITE(asset_reissue_tests, BasicTestingSetup)
     BOOST_CHECK_MESSAGE(cache.AddNewAsset(asset1, Params().GlobalBurnAddress()), "Failed to add new asset");
 
     // Create a reissuance of the asset
-    CReissueAsset reissue1("RVNASSET", CAmount(1), 1, "MOMPMIGHS4LLKDUDI0FWW2HCBROC73EHVAWTMGEL");
+    CReissueAsset reissue1("RVNASSET", CAmount(1), 1, "QmacSRmrkVmvJfbCpmU6pK72furJ8E8fbKHindrLxmYMQo");
     COutPoint out(uint256S("BF50CB9A63BE0019171456252989A459A7D0A5F494735278290079D22AB704A4"), 1);
 
     // Add an reissuance of the asset to the cache
@@ -51,7 +51,7 @@ BOOST_FIXTURE_TEST_SUITE(asset_reissue_tests, BasicTestingSetup)
     BOOST_CHECK_MESSAGE(asset2.nAmount == CAmount(101), "Asset2: Amount isn't 101");
     BOOST_CHECK_MESSAGE(asset2.strName == "RVNASSET", "Asset2: Asset name is wrong");
     BOOST_CHECK_MESSAGE(asset2.units == 8, "Asset2: Units is wrong");
-    BOOST_CHECK_MESSAGE(asset2.strIPFSHash == "MOMPMIGHS4LLKDUDI0FWW2HCBROC73EHVAWTMGEL", "Asset2: IPFS hash is wrong");
+    BOOST_CHECK_MESSAGE(asset2.strIPFSHash == "QmacSRmrkVmvJfbCpmU6pK72furJ8E8fbKHindrLxmYMQo", "Asset2: IPFS hash is wrong");
 
     // Remove the reissue from the cache
     std::vector<std::pair<std::string, std::string> > undoBlockIPFS;
@@ -88,13 +88,13 @@ BOOST_FIXTURE_TEST_SUITE(asset_reissue_tests, BasicTestingSetup)
         BOOST_CHECK_MESSAGE(cache.AddNewAsset(asset1, Params().GlobalBurnAddress()), "Failed to add new asset");
 
         // Create a reissuance of the asset that is valid
-        CReissueAsset reissue1("RVNASSET", CAmount(1), 1, "MOMPMIGHS4LLKDUDI0FWW2HCBROC73EHVAWTMGEL");
+        CReissueAsset reissue1("RVNASSET", CAmount(1), 1, "QmacSRmrkVmvJfbCpmU6pK72furJ8E8fbKHindrLxmYMQo");
 
         std::string error;
         BOOST_CHECK_MESSAGE(reissue1.IsValid(error, cache), "Reissue should of been valid");
 
         // Create a reissuance of the asset that is not valid
-        CReissueAsset reissue2("NOTEXIST", CAmount(1), 1, "MOMPMIGHS4LLKDUDI0FWW2HCBROC73EHVAWTMGEL");
+        CReissueAsset reissue2("NOTEXIST", CAmount(1), 1, "QmacSRmrkVmvJfbCpmU6pK72furJ8E8fbKHindrLxmYMQo");
 
         BOOST_CHECK_MESSAGE(!reissue2.IsValid(error, cache), "Reissue shouldn't of been valid");
 
