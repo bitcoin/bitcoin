@@ -19,7 +19,6 @@
 #include "walletmodel.h"
 
 #include "instantx.h"
-#include "darksendconfig.h"
 #include "masternode-sync.h"
 #include "privatesend-client.h"
 
@@ -646,15 +645,6 @@ void OverviewPage::togglePrivateSend(){
         privateSendClient.UnlockCoins();
     } else {
         ui->togglePrivateSend->setText(tr("Stop Mixing"));
-
-        /* show darksend configuration if client has defaults set */
-
-        if(privateSendClient.nPrivateSendAmount == 0){
-            DarksendConfig dlg(this);
-            dlg.setModel(walletModel);
-            dlg.exec();
-        }
-
     }
 }
 
