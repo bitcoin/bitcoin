@@ -54,3 +54,10 @@ tests each pull and when master is tested using jenkins.
 
 ### [Verify SF Binaries](/contrib/verifysfbinaries) ###
 This script attempts to download and verify the signature file SHA256SUMS.asc from SourceForge.
+
+Command Line Tools
+---------------------
+
+### [Bash Completion](/contrib/bash-completion.md) ###
+Bash completion scripts for `syscoind` and `syscoin-cli`.
+
