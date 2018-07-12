@@ -757,3 +757,8 @@ bool WalletModel::getDefaultWalletRbf() const
 {
     return fWalletRbf;
 }
+
+CWallet* WalletModel::getWallet() const
+{
+    return wallet;
+}

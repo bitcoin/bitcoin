@@ -113,6 +113,10 @@ private:
     QAction *openAction;
     QAction *showHelpMessageAction;
 
+    /** RVN START */
+    QAction *assetAction;
+    /** RVN END */
+
     QSystemTrayIcon *trayIcon;
     QMenu *trayIconMenu;
     Notificator *notificator;
@@ -208,6 +212,12 @@ private Q_SLOTS:
 
     /** Show open dialog */
     void openClicked();
+
+    /** RVN START */
+    /** Switch to assets page */
+    void gotoAssetsPage();
+    /** RVN END */
+
 #endif // ENABLE_WALLET
     /** Show configuration dialog */
     void optionsClicked();

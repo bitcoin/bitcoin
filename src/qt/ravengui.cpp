@@ -122,7 +122,8 @@ RavenGUI::RavenGUI(const PlatformStyle *_platformStyle, const NetworkStyle *netw
     modalOverlay(0),
     prevBlocks(0),
     spinnerFrame(0),
-    platformStyle(_platformStyle)
+    platformStyle(_platformStyle),
+    assetAction(0)
 {
     QSettings settings;
     if (!restoreGeometry(settings.value("MainWindowGeometry").toByteArray())) {
@@ -318,6 +319,15 @@ void RavenGUI::createActions()
     historyAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_4));
     tabGroup->addAction(historyAction);
 
+    /** RVN START */
+    assetAction = new QAction(platformStyle->SingleColorIcon(":/icons/open"), tr("&Assets"), this);
+    assetAction->setStatusTip(tr("Show asset information"));
+    assetAction->setToolTip(assetAction->statusTip());
+    assetAction->setCheckable(true);
+    assetAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
+    tabGroup->addAction(assetAction);
+    /** RVN END */
+
 #ifdef ENABLE_WALLET
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
     // can be triggered from the tray menu, and need to show the GUI to be useful.
@@ -333,6 +343,8 @@ void RavenGUI::createActions()
     connect(receiveCoinsMenuAction, SIGNAL(triggered()), this, SLOT(gotoReceiveCoinsPage()));
     connect(historyAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(historyAction, SIGNAL(triggered()), this, SLOT(gotoHistoryPage()));
+    connect(assetAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(assetAction, SIGNAL(triggered()), this, SLOT(gotoAssetsPage()));
 #endif // ENABLE_WALLET
 
     quitAction = new QAction(platformStyle->TextColorIcon(":/icons/quit"), tr("E&xit"), this);
@@ -467,6 +479,10 @@ void RavenGUI::createToolBars()
         toolbar->addAction(sendCoinsAction);
         toolbar->addAction(receiveCoinsAction);
         toolbar->addAction(historyAction);
+
+        /** RVN START */
+        toolbar->addAction(assetAction);
+        /** RVN END */
         overviewAction->setChecked(true);
     }
 }
@@ -574,6 +590,10 @@ void RavenGUI::setWalletActionsEnabled(bool enabled)
     usedSendingAddressesAction->setEnabled(enabled);
     usedReceivingAddressesAction->setEnabled(enabled);
     openAction->setEnabled(enabled);
+
+    /** RVN START */
+    assetAction->setEnabled(enabled);
+    /** RVN END */
 }
 
 void RavenGUI::createTrayIcon(const NetworkStyle *networkStyle)
@@ -717,6 +737,14 @@ void RavenGUI::gotoVerifyMessageTab(QString addr)
 {
     if (walletFrame) walletFrame->gotoVerifyMessageTab(addr);
 }
+
+/** RVN START */
+void RavenGUI::gotoAssetsPage()
+{
+    assetAction->setChecked(true);
+    if (walletFrame) walletFrame->gotoAssetsPage();
+};
+/** RVN END */
 #endif // ENABLE_WALLET
 
 void RavenGUI::updateNetworkState()

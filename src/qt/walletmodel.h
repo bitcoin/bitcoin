@@ -219,6 +219,8 @@ public:
 
     bool getDefaultWalletRbf() const;
 
+    CWallet* getWallet() const;
+
 private:
     CWallet *wallet;
     bool fHaveWatchOnly;

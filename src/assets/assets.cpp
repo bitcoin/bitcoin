@@ -18,9 +18,14 @@
 #include <wallet/wallet.h>
 #include <boost/algorithm/string.hpp>
 #include <consensus/validation.h>
+#include <rpc/protocol.h>
+#include <net.h>
 #include "assets.h"
 #include "assetdb.h"
 #include "assettypes.h"
+#include "protocol.h"
+#include "wallet/coincontrol.h"
+#include "utilmoneystr.h"
 
 // excluding owner tag ('!')
 static const auto MAX_NAME_LENGTH = 30;
@@ -92,7 +97,6 @@ bool IsNameValidBeforeTag(const std::string& name)
 
 bool IsAssetNameValid(const std::string& name)
 {
-
     if (std::regex_match(name, UNIQUE_INDICATOR))
     {
         if (name.size() > MAX_NAME_LENGTH) return false;
@@ -131,7 +135,7 @@ bool CNewAsset::IsNull() const
     return strName == "";
 }
 
-bool CNewAsset::IsValid(std::string& strError, CAssetsCache& assetCache, bool fCheckMempool, bool fCheckDuplicateInputs)
+bool CNewAsset::IsValid(std::string& strError, CAssetsCache& assetCache, bool fCheckMempool, bool fCheckDuplicateInputs) const
 {
     strError = "";
 
@@ -1216,7 +1220,7 @@ bool CAssetsCache::Flush(bool fSoftCopy, bool fFlushDB)
 
             for (auto newReissue : setNewReissueToAdd) {
                 auto reissue_name = newReissue.reissue.strName;
-
+                auto pair = make_pair(reissue_name, newReissue.address);
                 if (mapReissuedAssetData.count(reissue_name)) {
                     if(!passetsdb->WriteAssetData(mapReissuedAssetData.at(reissue_name))) {
                         dirty = true;
@@ -1228,6 +1232,18 @@ bool CAssetsCache::Flush(bool fSoftCopy, bool fFlushDB)
                     }
 
                     passetsCache->Erase(reissue_name);
+
+                    if (mapAssetsAddressAmount.count(pair)) {
+                        if (!passetsdb->WriteAssetAddressQuantity(pair.first, pair.second,
+                                                                  mapAssetsAddressAmount[pair])) {
+                            dirty = true;
+                            message = "_Failed Writing reissue asset quantity to the address quantity database";
+                        }
+
+                        if (dirty) {
+                            return error("%s, %s", __func__, message);
+                        }
+                    }
                 }
             }
 
@@ -1683,6 +1699,13 @@ bool CheckAssetOwner(const std::string& assetName)
     return false;
 }
 
+void GetAllOwnedAssets(std::vector<std::string>& names)
+{
+    for (auto owned : passets->mapMyUnspentAssets)
+        if (IsAssetNameAnOwner(owned.first))
+            names.emplace_back(owned.first);
+}
+
 CAmount GetIssueAssetBurnAmount()
 {
     return Params().IssueAssetBurnAmount();
@@ -1782,5 +1805,193 @@ bool GetMyAssetBalances(CAssetsCache& cache, std::map<std::string, CAmount>& bal
     if (!GetMyAssetBalances(cache, assetNames, balances))
         return false;
 
+    return true;
+}
+
+bool CreateAssetTransaction(CWallet* pwallet, const CNewAsset& asset, const std::string& address, std::pair<int, std::string>& error, std::string& txid)
+{
+    // Validate the assets data
+    std::string strError;
+    if (!asset.IsValid(strError, *passets)) {
+        error = std::make_pair(RPC_INVALID_PARAMETER, strError);
+        return false;
+    }
+
+    CAmount curBalance = pwallet->GetBalance();
+
+    // Get the current burn amount for issuing an asset
+    CAmount burnAmount = GetIssueAssetBurnAmount();
+
+    // Check to make sure the wallet has the RVN required by the burnAmount
+    if (curBalance < burnAmount) {
+        error = std::make_pair(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
+        return false;
+    }
+
+    if (pwallet->GetBroadcastTransactions() && !g_connman) {
+        error = std::make_pair(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+        return false;
+    }
+
+    // Get the script for the burn address
+    CScript scriptPubKey = GetScriptForDestination(DecodeDestination(Params().IssueAssetBurnAddress()));
+
+    CMutableTransaction mutTx;
+
+    CWalletTx wtxNew;
+    CCoinControl coin_control;
+
+    LOCK2(cs_main, pwallet->cs_wallet);
+
+    // Create and send the transaction
+    CReserveKey reservekey(pwallet);
+    CAmount nFeeRequired;
+    std::string strTxError;
+    std::vector<CRecipient> vecSend;
+    int nChangePosRet = -1;
+    bool fSubtractFeeFromAmount = false;
+    CRecipient recipient = {scriptPubKey, burnAmount, fSubtractFeeFromAmount};
+    vecSend.push_back(recipient);
+    if (!pwallet->CreateTransactionWithAsset(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strTxError, coin_control, asset, DecodeDestination(address))) {
+        if (!fSubtractFeeFromAmount && burnAmount + nFeeRequired > curBalance)
+            strTxError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
+        error = std::make_pair(RPC_WALLET_ERROR, strTxError);
+        return false;
+    }
+
+    CValidationState state;
+    if (!pwallet->CommitTransaction(wtxNew, reservekey, g_connman.get(), state)) {
+        strTxError = strprintf("Error: The transaction was rejected! Reason given: %s", state.GetRejectReason());
+        error = std::make_pair(RPC_WALLET_ERROR, strTxError);
+        return false;
+    }
+
+    txid = wtxNew.GetHash().GetHex();
+    return true;
+}
+
+bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& reissueAsset, const std::string& address, std::pair<int, std::string>& error, std::string& txid)
+{
+    std::string asset_name = reissueAsset.strName;
+
+    // Check that validitity of the address
+    if (!IsValidDestinationString(address)) {
+        error = std::make_pair(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raven address: ") + address);
+        return false;
+    }
+
+    // Check the assets name
+    if (!IsAssetNameValid(asset_name)) {
+        error = std::make_pair(RPC_INVALID_PARAMS, std::string("Invalid asset name: ") + asset_name);
+        return false;
+    }
+
+    if (IsAssetNameAnOwner(asset_name)) {
+        error = std::make_pair(RPC_INVALID_PARAMS, std::string("Owner Assets are not able to be reissued"));
+        return false;
+    }
+
+    // passets and passetsCache need to be initialized
+    if (!passets) {
+        error = std::make_pair(RPC_DATABASE_ERROR, std::string("passets isn't initialized"));
+        return false;
+    }
+
+    if (!passetsCache) {
+        error = std::make_pair(RPC_DATABASE_ERROR,
+                               std::string("passetsCache isn't initialized"));
+        return false;
+    }
+
+    std::string strError;
+    if (!reissueAsset.IsValid(strError, *passets)) {
+        error = std::make_pair(RPC_VERIFY_ERROR,
+                               std::string("Failed to create reissue asset object. Error: ") + strError);
+        return false;
+    }
+
+
+    // Check to make sure this wallet is the owner of the asset
+    if(!CheckAssetOwner(asset_name)) {
+        error = std::make_pair(RPC_INVALID_PARAMS,
+                               std::string("This wallet is not the owner of the asset: ") + asset_name);
+        return false;
+    }
+
+    // Get the outpoint that belongs to the Owner Asset
+    std::set<COutPoint> myAssetOutPoints;
+    if (!passets->GetAssetsOutPoints(asset_name + OWNER, myAssetOutPoints)) {
+        error = std::make_pair(RPC_INVALID_PARAMS, std::string("This wallet can't find the owner token information for: ") + asset_name);
+        return false;
+    }
+
+    // Check to make sure we have the right amount of outpoints
+    if (myAssetOutPoints.size() == 0) {
+        error = std::make_pair(RPC_INVALID_PARAMS, std::string("This wallet doesn't own any assets with the name: ") + asset_name + OWNER);
+        return false;
+    }
+
+    if (myAssetOutPoints.size() != 1) {
+        error = std::make_pair(RPC_INVALID_PARAMS, "Found multiple Owner Assets. Database is out of sync. You might have to run the wallet with -reindex");
+        return false;
+    }
+
+    // Check the wallet balance
+    CAmount curBalance = pwallet->GetBalance();
+
+    // Get the current burn amount for issuing an asset
+    CAmount burnAmount = GetReissueAssetBurnAmount();
+
+    // Check to make sure the wallet has the RVN required by the burnAmount
+    if (curBalance < burnAmount) {
+        error = std::make_pair(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
+        return false;
+    }
+
+    if (pwallet->GetBroadcastTransactions() && !g_connman) {
+        error = std::make_pair(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+        return false;
+    }
+
+    // Get the script for the destination address for the assets
+    CScript scriptTransferOwnerAsset = GetScriptForDestination(DecodeDestination(address));
+
+    CAssetTransfer assetTransfer(asset_name + OWNER, OWNER_ASSET_AMOUNT);
+    assetTransfer.ConstructTransaction(scriptTransferOwnerAsset);
+
+    // Get the script for the burn address
+    CScript scriptPubKeyBurn = GetScriptForDestination(DecodeDestination(Params().ReissueAssetBurnAddress()));
+
+    CMutableTransaction mutTx;
+
+    CWalletTx wtxNew;
+    CCoinControl coin_control;
+
+    // Create and send the transaction
+    CReserveKey reservekey(pwallet);
+    CAmount nFeeRequired;
+    std::string strTxError;
+    std::vector<CRecipient> vecSend;
+    int nChangePosRet = -1;
+    bool fSubtractFeeFromAmount = false;
+    CRecipient recipient = {scriptPubKeyBurn, burnAmount, fSubtractFeeFromAmount};
+    CRecipient recipient2 = {scriptTransferOwnerAsset, 0, fSubtractFeeFromAmount};
+    vecSend.push_back(recipient);
+    vecSend.push_back(recipient2);
+    if (!pwallet->CreateTransactionWithReissueAsset(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strTxError, coin_control, reissueAsset, DecodeDestination(address), myAssetOutPoints)) {
+        if (!fSubtractFeeFromAmount && burnAmount + nFeeRequired > curBalance)
+            strTxError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
+        error = std::make_pair(RPC_WALLET_ERROR, strTxError);
+        return false;
+    }
+
+    CValidationState state;
+    if (!pwallet->CommitTransaction(wtxNew, reservekey, g_connman.get(), state)) {
+        strTxError = strprintf("Error: The transaction was rejected! Reason given: %s", state.GetRejectReason());
+        error = std::make_pair(RPC_WALLET_ERROR, strTxError);
+        return false;
+    }
+
+    txid = wtxNew.GetHash().GetHex();
     return true;
 }
