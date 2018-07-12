@@ -20,8 +20,6 @@
 #include <util.h>
 #include <utilmoneystr.h>
 
-#include <boost/lexical_cast.hpp>
-
 bool CDarkSendEntry::AddScriptSig(const CTxIn& txin)
 {
     for (auto& txdsin : vecTxDSIn) {

@@ -12,8 +12,6 @@
 #include <netfulfilledman.h>
 #include <util.h>
 
-#include <boost/lexical_cast.hpp>
-
 /** Object for who's going to get paid on which blocks */
 CMasternodePayments mnpayments;
 

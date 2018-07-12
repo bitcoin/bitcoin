@@ -1782,10 +1782,10 @@ bool AppInitMain()
             LOCK(pwallet->cs_wallet);
             LogPrintf("Locking Masternodes:\n");
             uint256 mnTxHash;
-            int outputIndex;
-            for (CMasternodeConfig::CMasternodeEntry mne : masternodeConfig.getEntries()) {
+            uint32_t outputIndex;
+            for (const auto& mne : masternodeConfig.getEntries()) {
                 mnTxHash.SetHex(mne.getTxHash());
-                outputIndex = boost::lexical_cast<unsigned int>(mne.getOutputIndex());
+                outputIndex = (uint32_t)atoi(mne.getOutputIndex());
                 COutPoint outpoint = COutPoint(mnTxHash, outputIndex);
                 // don't lock non-spendable outpoint (i.e. it's already spent or it's not from this wallet at all)
                 if(pwallet->IsMine(CTxIn(outpoint)) != ISMINE_SPENDABLE) {
