@@ -28,7 +28,7 @@ private:
 
     static const int LAST_PAID_SCAN_BLOCKS;
 
-    static const int MIN_POSE_PROTO_VERSION     = 70221;
+    static const int MIN_POSE_PROTO_VERSION     = 70222;
     static const int MAX_POSE_CONNECTIONS       = 10;
     static const int MAX_POSE_RANK              = 10;
     static const int MAX_POSE_BLOCKS            = 10;
