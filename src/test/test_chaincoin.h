@@ -45,6 +45,11 @@ struct BasicTestingSetup {
 
     explicit BasicTestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~BasicTestingSetup();
+
+    fs::path SetDataDir(const std::string& name);
+
+private:
+    const fs::path m_path_root;
 };
 
 /** Testing setup that configures a complete environment.
@@ -59,7 +64,6 @@ struct CConnmanTest {
 
 class PeerLogicValidation;
 struct TestingSetup: public BasicTestingSetup {
-    fs::path pathTemp;
     boost::thread_group threadGroup;
     CConnman* connman;
     CScheduler scheduler;
