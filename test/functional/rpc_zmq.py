@@ -4,8 +4,10 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test for the ZMQ RPC methods."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BitcoinTestFramework, SkipTest
 from test_framework.util import assert_equal
+
+import configparser
 
 
 class RPCZMQTest(BitcoinTestFramework):
@@ -17,6 +19,12 @@ class RPCZMQTest(BitcoinTestFramework):
         self.setup_clean_chain = True
 
     def run_test(self):
+        # Check that bitcoin has been built with ZMQ enabled.
+        config = configparser.ConfigParser()
+        config.read_file(open(self.options.configfile))
+        if not config["components"].getboolean("ENABLE_ZMQ"):
+            raise SkipTest("bitcoind has not been built with zmq enabled.")
+
         self._test_getzmqnotifications()
 
     def _test_getzmqnotifications(self):
