@@ -248,8 +248,9 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 bool AcceptableInputs(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
                         bool* pfMissingInputs, bool fRejectInsaneFee=false, bool isDSTX=false);
 
-int GetInputAge(CTxIn& vin);
-int GetInputAgeIX(uint256 nTXHash, CTxIn& vin);
+int GetInputHeight(const CTxIn& vin);
+int GetInputAge(const CTxIn& vin);
+int GetInputAgeIX(uint256 nTXHash, const CTxIn& vin);
 int GetIXConfirmations(uint256 nTXHash);
 
 struct CNodeStateStats {

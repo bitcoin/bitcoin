@@ -56,7 +56,7 @@ public:
     std::string GetStatus();
 
     /// Enable cold wallet mode (run a Systemnode with no funds)
-    bool EnableHotColdSystemNode(CTxIn& vin, CService& addr);
+    bool EnableHotColdSystemNode(const CTxIn& vin, const CService& addr);
 };
 
 #endif

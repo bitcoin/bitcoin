@@ -30,31 +30,6 @@ bool SNIsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight);
 std::string SNGetRequiredPaymentsString(int nBlockHeight);
 
 
-void DumpSystemnodePayments();
-
-/** Save Systemnode Payment Data (snpayments.dat)
- */
-class CSystemnodePaymentDB
-{
-private:
-    boost::filesystem::path pathDB;
-    std::string strMagicMessage;
-public:
-    enum ReadResult {
-        Ok,
-        FileError,
-        HashReadError,
-        IncorrectHash,
-        IncorrectMagicMessage,
-        IncorrectMagicNumber,
-        IncorrectFormat
-    };
-
-    CSystemnodePaymentDB();
-    bool Write(const CSystemnodePayments &objToSave);
-    ReadResult Read(CSystemnodePayments& objToLoad, bool fDryRun = false);
-};
-
 class CSystemnodePayee
 {
 public:
@@ -241,7 +216,7 @@ public:
     int GetMinSystemnodePaymentsProto() const;
     void ProcessMessageSystemnodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
     void Sync(CNode* node, int nCountNeeded);
-    void CleanPaymentList();
+    void CheckAndRemove();
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
     bool GetBlockPayee(int nBlockHeight, CScript& payee);
     bool IsScheduled(CSystemnode& sn, int nNotBlockHeight);

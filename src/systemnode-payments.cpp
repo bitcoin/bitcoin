@@ -22,138 +22,6 @@ CCriticalSection cs_vecSNPayments;
 CCriticalSection cs_mapSystemnodeBlocks;
 CCriticalSection cs_mapSystemnodePayeeVotes;
 
-//
-// CSystemnodePaymentDB
-//
-
-CSystemnodePaymentDB::CSystemnodePaymentDB()
-{
-    pathDB = GetDataDir() / "snpayments.dat";
-    strMagicMessage = "SystemnodePayments";
-}
-
-bool CSystemnodePaymentDB::Write(const CSystemnodePayments& objToSave)
-{
-    int64_t nStart = GetTimeMillis();
-
-    // serialize, checksum data up to that point, then append checksum
-    CDataStream ssObj(SER_DISK, CLIENT_VERSION);
-    ssObj << strMagicMessage; // systemnode cache file specific magic message
-    ssObj << FLATDATA(Params().MessageStart()); // network specific magic number
-    ssObj << objToSave;
-    uint256 hash = Hash(ssObj.begin(), ssObj.end());
-    ssObj << hash;
-
-    // open output file, and associate with CAutoFile
-    FILE *file = fopen(pathDB.string().c_str(), "wb");
-    CAutoFile fileout(file, SER_DISK, CLIENT_VERSION);
-    if (fileout.IsNull())
-        return error("%s : Failed to open file %s", __func__, pathDB.string());
-
-    // Write and commit header, data
-    try {
-        fileout << ssObj;
-    }
-    catch (std::exception &e) {
-        return error("%s : Serialize or I/O error - %s", __func__, e.what());
-    }
-    fileout.fclose();
-
-    LogPrintf("Written info to snpayments.dat  %dms\n", GetTimeMillis() - nStart);
-
-    return true;
-}
-
-CSystemnodePaymentDB::ReadResult CSystemnodePaymentDB::Read(CSystemnodePayments& objToLoad, bool fDryRun)
-{
-
-    int64_t nStart = GetTimeMillis();
-    // open input file, and associate with CAutoFile
-    FILE *file = fopen(pathDB.string().c_str(), "rb");
-    CAutoFile filein(file, SER_DISK, CLIENT_VERSION);
-    if (filein.IsNull())
-    {
-        error("%s : Failed to open file %s", __func__, pathDB.string());
-        return FileError;
-    }
-
-    // use file size to size memory buffer
-    int fileSize = boost::filesystem::file_size(pathDB);
-    int dataSize = fileSize - sizeof(uint256);
-    // Don't try to resize to a negative number if file is small
-    if (dataSize < 0)
-        dataSize = 0;
-    vector<unsigned char> vchData;
-    vchData.resize(dataSize);
-    uint256 hashIn;
-
-    // read data and checksum from file
-    try {
-        filein.read((char *)&vchData[0], dataSize);
-        filein >> hashIn;
-    }
-    catch (std::exception &e) {
-        error("%s : Deserialize or I/O error - %s", __func__, e.what());
-        return HashReadError;
-    }
-    filein.fclose();
-
-    CDataStream ssObj(vchData, SER_DISK, CLIENT_VERSION);
-
-    // verify stored checksum matches input data
-    uint256 hashTmp = Hash(ssObj.begin(), ssObj.end());
-    if (hashIn != hashTmp)
-    {
-        error("%s : Checksum mismatch, data corrupted", __func__);
-        return IncorrectHash;
-    }
-
-
-    unsigned char pchMsgTmp[4];
-    std::string strMagicMessageTmp;
-    try {
-        // de-serialize file header (systemnode cache file specific magic message) and ..
-        ssObj >> strMagicMessageTmp;
-
-        // ... verify the message matches predefined one
-        if (strMagicMessage != strMagicMessageTmp)
-        {
-            error("%s : Invalid systemnode payement cache magic message", __func__);
-            return IncorrectMagicMessage;
-        }
-
-
-        // de-serialize file header (network specific magic number) and ..
-        ssObj >> FLATDATA(pchMsgTmp);
-
-        // ... verify the network matches ours
-        if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp)))
-        {
-            error("%s : Invalid network magic number", __func__);
-            return IncorrectMagicNumber;
-        }
-
-        // de-serialize data into CSystemnodePayments object
-        ssObj >> objToLoad;
-    }
-    catch (std::exception &e) {
-        objToLoad.Clear();
-        error("%s : Deserialize or I/O error - %s", __func__, e.what());
-        return IncorrectFormat;
-    }
-
-    LogPrintf("Loaded info from snpayments.dat  %dms\n", GetTimeMillis() - nStart);
-    LogPrintf("  %s\n", objToLoad.ToString());
-    if(!fDryRun) {
-        LogPrintf("Systemnode payments manager - cleaning....\n");
-        objToLoad.CleanPaymentList();
-        LogPrintf("Systemnode payments manager - result:\n");
-        LogPrintf("  %s\n", objToLoad.ToString());
-    }
-
-    return Ok;
-}
-
 bool SNIsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight)
 {
     if(!systemnodeSync.IsSynced()) { //there is no budget data to use to check anything -- find the longest chain
@@ -204,35 +72,6 @@ bool CSystemnodePayments::IsTransactionValid(const CTransaction& txNew, int nBlo
     }
 
     return true;
-}
-
-void DumpSystemnodePayments()
-{
-    int64_t nStart = GetTimeMillis();
-
-    CSystemnodePaymentDB paymentdb;
-    CSystemnodePayments tempPayments;
-
-    LogPrintf("Verifying snpayments.dat format...\n");
-    CSystemnodePaymentDB::ReadResult readResult = paymentdb.Read(tempPayments, true);
-    // there was an error and it was not an error on file opening => do not proceed
-    if (readResult == CSystemnodePaymentDB::FileError)
-        LogPrintf("Missing budgets file - snpayments.dat, will try to recreate\n");
-    else if (readResult != CSystemnodePaymentDB::Ok)
-    {
-        LogPrintf("Error reading snpayments.dat: ");
-        if(readResult == CSystemnodePaymentDB::IncorrectFormat)
-            LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
-        else
-        {
-            LogPrintf("file format is unknown or invalid, please fix it manually\n");
-            return;
-        }
-    }
-    LogPrintf("Writting info to snpayments.dat...\n");
-    paymentdb.Write(systemnodePayments);
-
-    LogPrintf("Budget dump finished  %dms\n", GetTimeMillis() - nStart);
 }
 
 int CSystemnodePayments::GetMinSystemnodePaymentsProto() const
@@ -491,7 +330,7 @@ bool CSystemnodePayments::GetBlockPayee(int nBlockHeight, CScript& payee)
     return false;
 }
 
-void CSystemnodePayments::CleanPaymentList()
+void CSystemnodePayments::CheckAndRemove()
 {
     LOCK2(cs_mapSystemnodePayeeVotes, cs_mapSystemnodeBlocks);
 

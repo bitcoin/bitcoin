@@ -42,137 +42,6 @@ struct CompareScoreSN
     }
 };
 
-//
-// CSystemnodeDB
-//
-
-CSystemnodeDB::CSystemnodeDB()
-{
-    pathSN = GetDataDir() / "sncache.dat";
-    strMagicMessage = "SystemnodeCache";
-}
-
-bool CSystemnodeDB::Write(const CSystemnodeMan& snodemanToSave)
-{
-    int64_t nStart = GetTimeMillis();
-
-    // serialize, checksum data up to that point, then append checksum
-    CDataStream ssSystemnodes(SER_DISK, CLIENT_VERSION);
-    ssSystemnodes << strMagicMessage; // systemnode cache file specific magic message
-    ssSystemnodes << FLATDATA(Params().MessageStart()); // network specific magic number
-    ssSystemnodes << snodemanToSave;
-    uint256 hash = Hash(ssSystemnodes.begin(), ssSystemnodes.end());
-    ssSystemnodes << hash;
-
-    // open output file, and associate with CAutoFile
-    FILE *file = fopen(pathSN.string().c_str(), "wb");
-    CAutoFile fileout(file, SER_DISK, CLIENT_VERSION);
-    if (fileout.IsNull())
-        return error("%s : Failed to open file %s", __func__, pathSN.string());
-
-    // Write and commit header, data
-    try {
-        fileout << ssSystemnodes;
-    }
-    catch (std::exception &e) {
-        return error("%s : Serialize or I/O error - %s", __func__, e.what());
-    }
-//    FileCommit(fileout);
-    fileout.fclose();
-
-    LogPrintf("Written info to sncache.dat  %dms\n", GetTimeMillis() - nStart);
-    LogPrintf("  %s\n", snodemanToSave.ToString());
-
-    return true;
-}
-
-CSystemnodeDB::ReadResult CSystemnodeDB::Read(CSystemnodeMan& snodemanToLoad, bool fDryRun)
-{
-    int64_t nStart = GetTimeMillis();
-    // open input file, and associate with CAutoFile
-    FILE *file = fopen(pathSN.string().c_str(), "rb");
-    CAutoFile filein(file, SER_DISK, CLIENT_VERSION);
-    if (filein.IsNull())
-    {
-        error("%s : Failed to open file %s", __func__, pathSN.string());
-        return FileError;
-    }
-
-    // use file size to size memory buffer
-    int fileSize = boost::filesystem::file_size(pathSN);
-    int dataSize = fileSize - sizeof(uint256);
-    // Don't try to resize to a negative number if file is small
-    if (dataSize < 0)
-        dataSize = 0;
-    vector<unsigned char> vchData;
-    vchData.resize(dataSize);
-    uint256 hashIn;
-
-    // read data and checksum from file
-    try {
-        filein.read((char *)&vchData[0], dataSize);
-        filein >> hashIn;
-    }
-    catch (std::exception &e) {
-        error("%s : Deserialize or I/O error - %s", __func__, e.what());
-        return HashReadError;
-    }
-    filein.fclose();
-
-    CDataStream ssSystemnodes(vchData, SER_DISK, CLIENT_VERSION);
-
-    // verify stored checksum matches input data
-    uint256 hashTmp = Hash(ssSystemnodes.begin(), ssSystemnodes.end());
-    if (hashIn != hashTmp)
-    {
-        error("%s : Checksum mismatch, data corrupted", __func__);
-        return IncorrectHash;
-    }
-
-    unsigned char pchMsgTmp[4];
-    std::string strMagicMessageTmp;
-    try {
-        // de-serialize file header (systemnode cache file specific magic message) and ..
-
-        ssSystemnodes >> strMagicMessageTmp;
-
-        // ... verify the message matches predefined one
-        if (strMagicMessage != strMagicMessageTmp)
-        {
-            error("%s : Invalid systemnode cache magic message", __func__);
-            return IncorrectMagicMessage;
-        }
-
-        // de-serialize file header (network specific magic number) and ..
-        ssSystemnodes >> FLATDATA(pchMsgTmp);
-
-        // ... verify the network matches ours
-        if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp)))
-        {
-            error("%s : Invalid network magic number", __func__);
-            return IncorrectMagicNumber;
-        }
-        // de-serialize data into CSystemnodeMan object
-        ssSystemnodes >> snodemanToLoad;
-    }
-    catch (std::exception &e) {
-        snodemanToLoad.Clear();
-        error("%s : Deserialize or I/O error - %s", __func__, e.what());
-        return IncorrectFormat;
-    }
-
-    LogPrintf("Loaded info from sncache.dat  %dms\n", GetTimeMillis() - nStart);
-    LogPrintf("  %s\n", snodemanToLoad.ToString());
-    if(!fDryRun) {
-        LogPrintf("Systemnode manager - cleaning....\n");
-        snodemanToLoad.CheckAndRemove(true);
-        LogPrintf("Systemnode manager - result:\n");
-        LogPrintf("  %s\n", snodemanToLoad.ToString());
-    }
-
-    return Ok;
-}
-
 std::vector<pair<int, CSystemnode> > CSystemnodeMan::GetSystemnodeRanks(int64_t nBlockHeight, int minProtocol)
 {
     std::vector<pair<int64_t, CSystemnode> > vecSystemnodeScores;
@@ -192,8 +61,7 @@ std::vector<pair<int, CSystemnode> > CSystemnodeMan::GetSystemnodeRanks(int64_t 
             continue;
         }
 
-        uint256 n = mn.CalculateScore(1, nBlockHeight);
-        int64_t n2 = UintToArith256(n).GetCompact(false);
+        int64_t n2 = mn.CalculateScore(nBlockHeight).GetCompact(false);
 
         vecSystemnodeScores.push_back(make_pair(n2, mn));
     }
@@ -483,7 +351,7 @@ CSystemnode* CSystemnodeMan::GetNextSystemnodeInQueueForPayment(int nBlockHeight
         CSystemnode* pmn = Find(s.second);
         if(!pmn) break;
 
-        arith_uint256 n = UintToArith256(pmn->CalculateScore(1, nBlockHeight-100));
+        arith_uint256 n = pmn->CalculateScore(nBlockHeight-100);
         if(n > nHigh){
             nHigh = n;
             pBestSystemnode = pmn;
@@ -492,35 +360,6 @@ CSystemnode* CSystemnodeMan::GetNextSystemnodeInQueueForPayment(int nBlockHeight
         if(nCountTenth >= nTenthNetwork) break;
     }
     return pBestSystemnode;
-}
-
-void DumpSystemnodes()
-{
-    int64_t nStart = GetTimeMillis();
-
-    CSystemnodeDB sndb;
-    CSystemnodeMan tempMnodeman;
-
-    LogPrintf("Verifying sncache.dat format...\n");
-    CSystemnodeDB::ReadResult readResult = sndb.Read(tempMnodeman, true);
-    // there was an error and it was not an error on file opening => do not proceed
-    if (readResult == CSystemnodeDB::FileError)
-        LogPrintf("Missing throne cache file - sncache.dat, will try to recreate\n");
-    else if (readResult != CSystemnodeDB::Ok)
-    {
-        LogPrintf("Error reading sncache.dat: ");
-        if(readResult == CSystemnodeDB::IncorrectFormat)
-            LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
-        else
-        {
-            LogPrintf("file format is unknown or invalid, please fix it manually\n");
-            return;
-        }
-    }
-    LogPrintf("Writting info to sncache.dat...\n");
-    sndb.Write(snodeman);
-
-    LogPrintf("Systemnode dump finished  %dms\n", GetTimeMillis() - nStart);
 }
 
 bool CSystemnodeMan::Add(CSystemnode &sn)
@@ -652,8 +491,7 @@ CSystemnode* CSystemnodeMan::GetCurrentSystemNode(int mod, int64_t nBlockHeight,
         if(mn.protocolVersion < minProtocol || !mn.IsEnabled()) continue;
 
         // calculate the score for each Systemnode
-        uint256 n = mn.CalculateScore(mod, nBlockHeight);
-        int64_t n2 = UintToArith256(n).GetCompact(false);
+        int64_t n2 = mn.CalculateScore(nBlockHeight).GetCompact(false);
 
         // determine the winner
         if(n2 > score){
@@ -680,8 +518,7 @@ int CSystemnodeMan::GetSystemnodeRank(const CTxIn& vin, int64_t nBlockHeight, in
             sn.Check();
             if(!sn.IsEnabled()) continue;
         }
-        uint256 n = sn.CalculateScore(1, nBlockHeight);
-        int64_t n2 = UintToArith256(n).GetCompact(false);
+        int64_t n2 = sn.CalculateScore(nBlockHeight).GetCompact(false);
 
         vecSystemnodeScores.push_back(make_pair(n2, sn.vin));
     }

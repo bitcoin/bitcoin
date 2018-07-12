@@ -212,7 +212,7 @@ bool CActiveSystemnode::SendSystemnodePing(std::string& errorMessage) {
 }
 
 // when starting a Systemnode, this can enable to run as a hot wallet with no funds
-bool CActiveSystemnode::EnableHotColdSystemNode(CTxIn& newVin, CService& newService)
+bool CActiveSystemnode::EnableHotColdSystemNode(const CTxIn& newVin, const CService& newService)
 {
     if(!fSystemNode) return false;
 

@@ -44,24 +44,26 @@ public:
     std::vector<unsigned char> vchSig;
 
     CSystemnodePing();
-    CSystemnodePing(CTxIn& newVin);
+    CSystemnodePing(const CTxIn& newVin);
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    {
         READWRITE(vin);
         READWRITE(blockHash);
         READWRITE(sigTime);
         READWRITE(vchSig);
     }
 
-    bool CheckAndUpdate(int& nDos, bool fRequireEnabled = true, bool fCheckSigTimeOnly = false);
-    bool Sign(CKey& keySystemnode, CPubKey& pubKeySystemnode);
-    bool VerifySignature(CPubKey& pubKeySystemnode, int &nDos);
-    void Relay();
+    bool CheckAndUpdate(int& nDos, bool fRequireEnabled = true, bool fCheckSigTimeOnly = false) const;
+    bool Sign(const CKey& keySystemnode, const CPubKey& pubKeySystemnode);
+    bool VerifySignature(const CPubKey& pubKeySystemnode, int &nDos) const;
+    void Relay() const;
 
-    uint256 GetHash(){
+    uint256 GetHash() const
+    {
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         ss << vin;
         ss << sigTime;
@@ -108,7 +110,8 @@ private:
     mutable CCriticalSection cs;
     int64_t lastTimeChecked;
 public:
-    enum state {
+    enum state
+    {
         SYSTEMNODE_ENABLED = 1,
         SYSTEMNODE_EXPIRED = 2,
         SYSTEMNODE_VIN_SPENT = 3,
@@ -166,12 +169,13 @@ public:
         return !(a.vin == b.vin);
     }
 
-    uint256 CalculateScore(int mod=1, int64_t nBlockHeight=0);
+    arith_uint256 CalculateScore(int64_t nBlockHeight=0) const;
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    {
             LOCK(cs);
 
             READWRITE(vin);
@@ -186,15 +190,14 @@ public:
             READWRITE(unitTest);
     }
 
-    int64_t SecondsSincePayment();
-
-    bool UpdateFromNewBroadcast(CSystemnodeBroadcast& snb);
+    int64_t SecondsSincePayment() const;
+    bool UpdateFromNewBroadcast(const CSystemnodeBroadcast& snb);
     void Check(bool forceCheck = false);
-    bool IsBroadcastedWithin(int seconds)
+    bool IsBroadcastedWithin(int seconds) const
     {
         return (GetAdjustedTime() - sigTime) < seconds;
     }
-    bool IsEnabled()
+    bool IsEnabled() const
     {
         return activeState == SYSTEMNODE_ENABLED;
     }
@@ -210,7 +213,7 @@ public:
 
         return cacheInputAge+(chainActive.Tip()->nHeight-cacheInputAgeBlock);
     }
-    bool IsPingedWithin(int seconds, int64_t now = -1)
+    bool IsPingedWithin(int seconds, int64_t now = -1) const
     {
         now == -1 ? now = GetAdjustedTime() : now;
 
@@ -218,7 +221,8 @@ public:
                 ? false
                 : now - lastPing.sigTime < seconds;
     }
-    std::string Status() {
+    std::string Status() const
+    {
         std::string strStatus = "ACTIVE";
 
         if(activeState == CSystemnode::SYSTEMNODE_ENABLED) strStatus   = "ENABLED";
@@ -229,7 +233,7 @@ public:
 
         return strStatus;
     }
-    int64_t GetLastPaid();
+    int64_t GetLastPaid() const;
 };
 
 //
@@ -247,16 +251,17 @@ public:
     static bool Create(CTxIn txin, CService service, CKey keyCollateral, CPubKey pubKeyCollateral, CKey keySystemnodeNew, CPubKey pubKeySystemnodeNew, std::string &strErrorMessage, CSystemnodeBroadcast &snb);
     static bool Create(std::string strService, std::string strKey, std::string strTxHash, std::string strOutputIndex, std::string& strErrorMessage, CSystemnodeBroadcast &snb, bool fOffline = false);
 
-    bool CheckAndUpdate(int& nDoS);
-    bool CheckInputsAndAdd(int& nDos);
-    bool Sign(CKey& keyCollateralAddress);
-    bool VerifySignature();
-    void Relay();
+    bool CheckAndUpdate(int& nDoS) const;
+    bool CheckInputsAndAdd(int& nDos) const;
+    bool Sign(const CKey& keyCollateralAddress);
+    bool VerifySignature() const;
+    void Relay() const;
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    {
         READWRITE(vin);
         READWRITE(addr);
         READWRITE(pubkey);
@@ -267,7 +272,8 @@ public:
         READWRITE(lastPing);
     }
 
-    uint256 GetHash(){
+    uint256 GetHash() const
+    {
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         ss << sigTime;
         ss << pubkey;

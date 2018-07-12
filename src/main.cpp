@@ -869,7 +869,7 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& in
     return nSigOps;
 }
 
-int GetInputAge(CTxIn& vin)
+int GetInputHeight(const CTxIn& vin)
 {
     CCoinsView viewDummy;
     CCoinsViewCache view(&viewDummy);
@@ -880,26 +880,31 @@ int GetInputAge(CTxIn& vin)
 
         const CCoins* coins = view.AccessCoins(vin.prevout.hash);
 
-        if (coins){
-            if(coins->nHeight < 0) return 0;
-            return (chainActive.Tip()->nHeight+1) - coins->nHeight;
+        if (coins) {
+            return coins->nHeight;
         }
         else
             return -1;
     }
 }
 
-int GetInputAgeIX(uint256 nTXHash, CTxIn& vin)
+int GetInputAge(const CTxIn& vin)
+{
+    int height = GetInputHeight(vin);
+
+    if (height < 0 || height == MEMPOOL_HEIGHT)
+        return 0;
+
+    return (chainActive.Tip()->nHeight + 1) - height;
+}
+
+int GetInputAgeIX(uint256 nTXHash, const CTxIn& vin)
 {    
-    int sigs = 0;
     int nResult = GetInputAge(vin);
     if(nResult < 0) nResult = 0;
 
     if (nResult < 6){
-        std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(nTXHash);
-        if (i != mapTxLocks.end()){
-            sigs = (*i).second.CountSignatures();
-        }
+        int sigs = GetInstantSend().GetSignaturesCount(nTXHash);
         if(sigs >= INSTANTX_SIGNATURES_REQUIRED){
             return nInstantXDepth+nResult;
         }
@@ -910,12 +915,8 @@ int GetInputAgeIX(uint256 nTXHash, CTxIn& vin)
 
 int GetIXConfirmations(uint256 nTXHash)
 {    
-    int sigs = 0;
+    int sigs = GetInstantSend().GetSignaturesCount(nTXHash);
 
-    std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(nTXHash);
-    if (i != mapTxLocks.end()){
-        sigs = (*i).second.CountSignatures();
-    }
     if(sigs >= INSTANTX_SIGNATURES_REQUIRED){
         return nInstantXDepth;
     }
@@ -1040,13 +1041,13 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
     // ----------- instantX transaction scanning -----------
 
-    BOOST_FOREACH(const CTxIn& in, tx.vin){
-        if(mapLockedInputs.count(in.prevout)){
-            if(mapLockedInputs[in.prevout] != tx.GetHash()){
-                return state.DoS(0,
-                                 error("AcceptToMemoryPool : conflicts with existing transaction lock: %s", reason),
-                                 REJECT_INVALID, "tx-lock-conflict");
-            }
+    BOOST_FOREACH(const CTxIn& in, tx.vin)
+    {
+        boost::optional<uint256> txHash = GetInstantSend().GetLockedTx(in.prevout);
+        if (txHash && txHash.get() != tx.GetHash())
+        {
+            return state.DoS(0, error("AcceptToMemoryPool : conflicts with existing transaction lock: %s", reason),
+                             REJECT_INVALID, "tx-lock-conflict");
         }
     }
 
@@ -1232,13 +1233,13 @@ bool AcceptableInputs(CTxMemPool& pool, CValidationState &state, const CTransact
 
     // ----------- instantX transaction scanning -----------
 
-    BOOST_FOREACH(const CTxIn& in, tx.vin){
-        if(mapLockedInputs.count(in.prevout)){
-            if(mapLockedInputs[in.prevout] != tx.GetHash()){
-                return state.DoS(0,
-                                 error("AcceptableInputs : conflicts with existing transaction lock: %s", reason),
-                                 REJECT_INVALID, "tx-lock-conflict");
-            }
+    BOOST_FOREACH(const CTxIn& in, tx.vin)
+    {
+        boost::optional<uint256> txHash = GetInstantSend().GetLockedTx(in.prevout);
+        if (txHash && txHash.get() != tx.GetHash())
+        {
+            return state.DoS(0, error("AcceptableInputs : conflicts with existing transaction lock: %s", reason),
+                             REJECT_INVALID, "tx-lock-conflict");
         }
     }
 
@@ -2244,7 +2245,7 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode) {
     // The cache is large and we're within 10% and 100 MiB of the limit, but we have time now (not in the middle of a block processing).
     bool fCacheLarge = mode == FLUSH_STATE_PERIODIC && cacheSize > std::max((9 * nTotalSpace) / 10, nTotalSpace - 100 * 1024 * 1024);
     // The cache is over the limit, we have to write now.
-    bool fCacheCritical = mode == FLUSH_STATE_IF_NEEDED && cacheSize > nCoinCacheUsage;
+    bool fCacheCritical = mode == FLUSH_STATE_IF_NEEDED && static_cast<size_t>(cacheSize) > nCoinCacheUsage;
     // It's been a while since we wrote the block index to disk. Do this frequently, so we don't need to redownload after a crash.
     bool fPeriodicWrite = mode == FLUSH_STATE_PERIODIC && nNow > nLastWrite + (int64_t)DATABASE_WRITE_INTERVAL * 1000000;
     // It's been very long since we flushed the cache. Do this infrequently, to optimize cache usage.
@@ -3026,14 +3027,16 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         BOOST_FOREACH(const CTransaction& tx, block.vtx){
             if (!tx.IsCoinBase()){
                 //only reject blocks when it's based on complete consensus
-                BOOST_FOREACH(const CTxIn& in, tx.vin){
-                    if(mapLockedInputs.count(in.prevout)){
-                        if(mapLockedInputs[in.prevout] != tx.GetHash()){
-                            mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
-                            LogPrintf("CheckBlock() : found conflicting transaction with transaction lock %s %s\n", mapLockedInputs[in.prevout].ToString(), tx.GetHash().ToString());
-                            return state.DoS(0, error("CheckBlock() : found conflicting transaction with transaction lock"),
-                                             REJECT_INVALID, "conflicting-tx-ix");
-                        }
+                BOOST_FOREACH(const CTxIn& in, tx.vin)
+                {
+                    boost::optional<uint256> txHash = GetInstantSend().GetLockedTx(in.prevout);
+                    if (txHash && txHash.get() != tx.GetHash())
+                    {
+                        mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
+                        LogPrintf("CheckBlock() : found conflicting transaction with transaction lock %s %s\n",
+                                  txHash.get().ToString(), tx.GetHash().ToString());
+                        return state.DoS(0, error("CheckBlock() : found conflicting transaction with transaction lock"),
+                                         REJECT_INVALID, "conflicting-tx-ix");
                     }
                 }
             }
@@ -4058,10 +4061,9 @@ bool static AlreadyHave(const CInv& inv)
     case MSG_BLOCK:
         return mapBlockIndex.count(inv.hash);
     case MSG_TXLOCK_REQUEST:
-        return mapTxLockReq.count(inv.hash) ||
-               mapTxLockReqRejected.count(inv.hash);
+        return GetInstantSend().TxLockRequested(inv.hash);
     case MSG_TXLOCK_VOTE:
-        return mapTxLockVote.count(inv.hash);
+        return GetInstantSend().AlreadyHave(inv.hash);
     case MSG_SPORK:
         return mapSporks.count(inv.hash);
     case MSG_MASTERNODE_WINNER:
@@ -4083,13 +4085,13 @@ bool static AlreadyHave(const CInv& inv)
         }
         return false;
     case MSG_BUDGET_FINALIZED_VOTE:
-        if(budget.mapSeenFinalizedBudgetVotes.count(inv.hash)) {
+        if(budget.mapSeenBudgetDraftVotes.count(inv.hash)) {
             masternodeSync.AddedBudgetItem(inv.hash);
             return true;
         }
         return false;
     case MSG_BUDGET_FINALIZED:
-        if(budget.mapSeenFinalizedBudgets.count(inv.hash)) {
+        if(budget.mapSeenBudgetDrafts.count(inv.hash)) {
             masternodeSync.AddedBudgetItem(inv.hash);
             return true;
         }
@@ -4227,19 +4229,23 @@ void static ProcessGetData(CNode* pfrom)
                     }
                 }
                 if (!pushed && inv.type == MSG_TXLOCK_VOTE) {
-                    if(mapTxLockVote.count(inv.hash)){
+                    boost::optional<CConsensusVote> vote = GetInstantSend().GetLockVote(inv.hash);
+                    if (vote)
+                    {
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << mapTxLockVote[inv.hash];
+                        ss << vote.get();
                         pfrom->PushMessage("txlvote", ss);
                         pushed = true;
                     }
                 }
                 if (!pushed && inv.type == MSG_TXLOCK_REQUEST) {
-                    if(mapTxLockReq.count(inv.hash)){
+                    boost::optional<CTransaction> lockedTx = GetInstantSend().GetLockReq(inv.hash);
+                    if (lockedTx)
+                    {
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << mapTxLockReq[inv.hash];
+                        ss << lockedTx.get();
                         pfrom->PushMessage("ix", ss);
                         pushed = true;
                     }
@@ -4283,20 +4289,20 @@ void static ProcessGetData(CNode* pfrom)
                 }
 
                 if (!pushed && inv.type == MSG_BUDGET_FINALIZED_VOTE) {
-                    if(budget.mapSeenFinalizedBudgetVotes.count(inv.hash)){
+                    if(budget.mapSeenBudgetDraftVotes.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << budget.mapSeenFinalizedBudgetVotes[inv.hash];
+                        ss << budget.mapSeenBudgetDraftVotes[inv.hash];
                         pfrom->PushMessage("fbvote", ss);
                         pushed = true;
                     }
                 }
 
                 if (!pushed && inv.type == MSG_BUDGET_FINALIZED) {
-                    if(budget.mapSeenFinalizedBudgets.count(inv.hash)){
+                    if(budget.mapSeenBudgetDrafts.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << budget.mapSeenFinalizedBudgets[inv.hash];
+                        ss << budget.mapSeenBudgetDrafts[inv.hash];
                         pfrom->PushMessage("fbs", ss);
                         pushed = true;
                     }
@@ -4769,7 +4775,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         bool ignoreFees = false;
         CTxIn vin;
         vector<unsigned char> vchSig;
-        int64_t sigTime;
 
         vRecv >> tx;
 
@@ -5197,7 +5202,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         budget.ProcessMessage(pfrom, strCommand, vRecv);
         masternodePayments.ProcessMessageMasternodePayments(pfrom, strCommand, vRecv);
         systemnodePayments.ProcessMessageSystemnodePayments(pfrom, strCommand, vRecv);
-        ProcessMessageInstantX(pfrom, strCommand, vRecv);
+        GetInstantSend().ProcessMessage(pfrom, strCommand, vRecv);
         ProcessSpork(pfrom, strCommand, vRecv);
         masternodeSync.ProcessMessage(pfrom, strCommand, vRecv);
         systemnodeSync.ProcessMessage(pfrom, strCommand, vRecv);

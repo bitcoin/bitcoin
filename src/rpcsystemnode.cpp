@@ -373,7 +373,7 @@ Value systemnode(const Array& params, bool fHelp)
             arith_uint256  nHigh = 0;
             CSystemnode *pBestSystemnode = NULL;
             BOOST_FOREACH(CSystemnode& mn, vSystemnodes) {
-                arith_uint256  n = UintToArith256(mn.CalculateScore(1, nHeight-100));
+                arith_uint256  n = mn.CalculateScore(nHeight - 100);
                 if(n > nHigh){
                     nHigh = n;
                     pBestSystemnode = &mn;

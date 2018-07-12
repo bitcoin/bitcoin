@@ -142,7 +142,8 @@ void CActiveMasternode::ManageStatus()
     }
 }
 
-std::string CActiveMasternode::GetStatus() {
+std::string CActiveMasternode::GetStatus() const
+{
     switch (status) {
     case ACTIVE_MASTERNODE_INITIAL: return "Node just started, not yet activated";
     case ACTIVE_MASTERNODE_SYNC_IN_PROCESS: return "Sync in progress. Must wait until sync is complete to start Masternode";
@@ -210,7 +211,7 @@ bool CActiveMasternode::SendMasternodePing(std::string& errorMessage) {
 }
 
 // when starting a Masternode, this can enable to run as a hot wallet with no funds
-bool CActiveMasternode::EnableHotColdMasterNode(CTxIn& newVin, CService& newService)
+bool CActiveMasternode::EnableHotColdMasterNode(const CTxIn& newVin, const CService& newService)
 {
     if(!fMasterNode) return false;
 

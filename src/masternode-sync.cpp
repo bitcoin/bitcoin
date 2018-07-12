@@ -110,7 +110,7 @@ void CMasternodeSync::AddedMasternodeWinner(uint256 hash)
 void CMasternodeSync::AddedBudgetItem(uint256 hash)
 {
     if(budget.mapSeenMasternodeBudgetProposals.count(hash) || budget.mapSeenMasternodeBudgetVotes.count(hash) ||
-            budget.mapSeenFinalizedBudgets.count(hash) || budget.mapSeenFinalizedBudgetVotes.count(hash)) {
+            budget.mapSeenBudgetDrafts.count(hash) || budget.mapSeenBudgetDraftVotes.count(hash)) {
         if(mapSeenSyncBudget[hash] < MASTERNODE_SYNC_THRESHOLD) {
             lastBudgetItem = GetTime();
             mapSeenSyncBudget[hash]++;

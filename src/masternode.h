@@ -31,7 +31,6 @@ extern map<int64_t, uint256> mapCacheBlockHashes;
 
 bool GetBlockHash(uint256& hash, int nBlockHeight);
 
-
 //
 // The Masternode Ping Class : Contains a different serialize method for sending pings from masternodes throughout the network
 //
@@ -47,24 +46,26 @@ public:
     //removed stop
 
     CMasternodePing();
-    CMasternodePing(CTxIn& newVin);
+    CMasternodePing(const CTxIn& newVin);
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    {
         READWRITE(vin);
         READWRITE(blockHash);
         READWRITE(sigTime);
         READWRITE(vchSig);
     }
 
-    bool CheckAndUpdate(int& nDos, bool fRequireEnabled = true, bool fCheckSigTimeOnly = false);
-    bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
-    bool VerifySignature(CPubKey& pubKeyMasternode, int &nDos);
-    void Relay();
+    bool CheckAndUpdate(int& nDos, bool fRequireEnabled = true, bool fCheckSigTimeOnly = false) const;
+    bool Sign(const CKey& keyMasternode, const CPubKey& pubKeyMasternode);
+    bool VerifySignature(const CPubKey& pubKeyMasternode, int &nDos) const;
+    void Relay() const;
 
-    uint256 GetHash(){
+    uint256 GetHash() const
+    {
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         ss << vin;
         ss << sigTime;
@@ -97,9 +98,7 @@ public:
     {
         return !(a == b);
     }
-
 };
-
 
 //
 // The Masternode Class. It contains the input of the 10000 CRW, signature to prove
@@ -112,7 +111,8 @@ private:
     mutable CCriticalSection cs;
     int64_t lastTimeChecked;
 public:
-    enum state {
+    enum state
+    {
         MASTERNODE_ENABLED = 1,
         MASTERNODE_EXPIRED = 2,
         MASTERNODE_VIN_SPENT = 3,
@@ -181,12 +181,13 @@ public:
         return !(a.vin == b.vin);
     }
 
-    uint256 CalculateScore(int mod=1, int64_t nBlockHeight=0);
+    arith_uint256 CalculateScore(int64_t nBlockHeight=0) const;
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    {
             LOCK(cs);
 
             READWRITE(vin);
@@ -207,25 +208,16 @@ public:
             READWRITE(nLastScanningErrorBlockHeight);
     }
 
-    int64_t SecondsSincePayment();
-
-    bool UpdateFromNewBroadcast(CMasternodeBroadcast& mnb);
-
-    inline uint64_t SliceHash(uint256& hash, int slice)
-    {
-        uint64_t n = 0;
-        memcpy(&n, &hash+slice*64, 64);
-        return n;
-    }
-
+    int64_t SecondsSincePayment() const;
+    bool UpdateFromNewBroadcast(const CMasternodeBroadcast& mnb);
     void Check(bool forceCheck = false);
 
-    bool IsBroadcastedWithin(int seconds)
+    bool IsBroadcastedWithin(int seconds) const
     {
         return (GetAdjustedTime() - sigTime) < seconds;
     }
 
-    bool IsPingedWithin(int seconds, int64_t now = -1)
+    bool IsPingedWithin(int seconds, int64_t now = -1) const
     {
         now == -1 ? now = GetAdjustedTime() : now;
 
@@ -245,7 +237,7 @@ public:
         return activeState == MASTERNODE_ENABLED;
     }
 
-    bool IsValidNetAddr();
+    bool IsValidNetAddr() const;
 
     int GetMasternodeInputAge()
     {
@@ -259,7 +251,8 @@ public:
         return cacheInputAge+(chainActive.Tip()->nHeight-cacheInputAgeBlock);
     }
 
-    std::string Status() {
+    std::string Status() const
+    {
         std::string strStatus = "ACTIVE";
 
         if(activeState == CMasternode::MASTERNODE_ENABLED) strStatus   = "ENABLED";
@@ -271,10 +264,8 @@ public:
         return strStatus;
     }
 
-    int64_t GetLastPaid();
-
+    int64_t GetLastPaid() const;
 };
-
 
 //
 // The Masternode Broadcast Class : Contains a different serialize method for sending masternodes through the network
@@ -292,16 +283,17 @@ public:
     static bool Create(std::string strService, std::string strKey, std::string strTxHash, std::string strOutputIndex, std::string& strErrorMessage, CMasternodeBroadcast &mnb, bool fOffline = false);
 
 
-    bool CheckAndUpdate(int& nDoS);
-    bool CheckInputsAndAdd(int& nDos);
-    bool Sign(CKey& keyCollateralAddress);
-    bool VerifySignature();
-    void Relay();
+    bool CheckAndUpdate(int& nDoS) const;
+    bool CheckInputsAndAdd(int& nDos) const;
+    bool Sign(const CKey& keyCollateralAddress);
+    bool VerifySignature() const;
+    void Relay() const;
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    {
         READWRITE(vin);
         READWRITE(addr);
         READWRITE(pubkey);
@@ -313,13 +305,13 @@ public:
         READWRITE(nLastDsq);
     }
 
-    uint256 GetHash(){
+    uint256 GetHash() const
+    {
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         ss << sigTime;
         ss << pubkey;
         return ss.GetHash();
     }
-
 };
 
 #endif
