@@ -70,9 +70,17 @@ class AbandonConflictTest(BitcoinTestFramework):
         signed2 = self.nodes[0].signrawtransactionwithwallet(self.nodes[0].createrawtransaction(inputs, outputs))
         txABC2 = self.nodes[0].sendrawtransaction(signed2["hex"])
 
+        # Create a child tx spending ABC2
+        signed3_change = Decimal("24.999")
+        inputs = [ {"txid":txABC2, "vout":0} ]
+        outputs = { self.nodes[0].getnewaddress(): signed3_change }
+        signed3 = self.nodes[0].signrawtransactionwithwallet(self.nodes[0].createrawtransaction(inputs, outputs))
+        # note tx is never directly referenced, only abandoned as a child of the above
+        self.nodes[0].sendrawtransaction(signed3["hex"])
+
         # In mempool txs from self should increase balance from change
         newbalance = self.nodes[0].getbalance()
-        assert_equal(newbalance, balance - Decimal("30") + Decimal("24.9996"))
+        assert_equal(newbalance, balance - Decimal("30") + signed3_change)
         balance = newbalance
 
         # Restart the node with a higher min relay fee so the parent tx is no longer in mempool
@@ -87,7 +95,7 @@ class AbandonConflictTest(BitcoinTestFramework):
         # Not in mempool txs from self should only reduce balance
         # inputs are still spent, but change not received
         newbalance = self.nodes[0].getbalance()
-        assert_equal(newbalance, balance - Decimal("24.9996"))
+        assert_equal(newbalance, balance - signed3_change)
         # Unconfirmed received funds that are not in mempool, also shouldn't show
         # up in unconfirmed balance
         unconfbalance = self.nodes[0].getunconfirmedbalance() + self.nodes[0].getbalance()
