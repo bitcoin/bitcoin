@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/validation.h>
+#include <validationinterface.h>
 #include <governance.h>
 #include <governance-object.h>
 #include <governance-validators.h>
@@ -263,7 +264,8 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
             }
             return;
         }
-
+        // SEND NOTIFICATION TO SCRIPT/ZMQ
+        GetMainSignals().NotifyGovernanceVote(vote);
     }
 }
 
@@ -359,6 +361,10 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
 
     CGovernanceException exception;
     CheckOrphanVotes(govobj, exception, connman);
+
+    // SEND NOTIFICATION TO SCRIPT/ZMQ
+    GetMainSignals().NotifyGovernanceObject(govobj);
+
 
     DBG( std::cout << "CGovernanceManager::AddGovernanceObject END" << std::endl; );
 }
