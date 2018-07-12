@@ -13,9 +13,13 @@ static std::multimap<std::string, CZMQAbstractPublishNotifier*> mapPublishNotifi
 static const char *MSG_HASHBLOCK  = "hashblock";
 static const char *MSG_HASHTX     = "hashtx";
 static const char *MSG_HASHTXLOCK = "hashtxlock";
+static const char *MSG_HASHGVOTE  = "hashgovernancevote";
+static const char *MSG_HASHGOBJ   = "hashgovernanceobject";
 static const char *MSG_RAWBLOCK   = "rawblock";
 static const char *MSG_RAWTX      = "rawtx";
 static const char *MSG_RAWTXLOCK  = "rawtxlock";
+static const char *MSG_RAWGVOTE   = "rawgovernancevote";
+static const char *MSG_RAWGOBJ    = "rawgovernanceobject";
 
 // Internal function to send multipart message
 static int zmq_send_multipart(void *sock, const void* data, size_t size, ...)
@@ -173,6 +177,26 @@ bool CZMQPublishHashTransactionLockNotifier::NotifyTransactionLock(const CTransa
     return SendMessage(MSG_HASHTXLOCK, data, 32);
 }
 
+bool CZMQPublishHashGovernanceVoteNotifier::NotifyGovernanceVote(const CGovernanceVote &vote)
+{
+    uint256 hash = vote.GetHash();
+    LogPrint("zmq", "zmq: Publish hashgovernancevote %s\n", hash.GetHex());
+    char data[32];
+    for (unsigned int i = 0; i < 32; i++)
+        data[31 - i] = hash.begin()[i];
+    return SendMessage(MSG_HASHGVOTE, data, 32);
+}
+
+bool CZMQPublishHashGovernanceObjectNotifier::NotifyGovernanceObject(const CGovernanceObject &object)
+{
+    uint256 hash = object.GetHash();
+    LogPrint("zmq", "zmq: Publish hashgovernanceobject %s\n", hash.GetHex());
+    char data[32];
+    for (unsigned int i = 0; i < 32; i++)
+        data[31 - i] = hash.begin()[i];
+    return SendMessage(MSG_HASHGOBJ, data, 32);
+}
+
 bool CZMQPublishRawBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
 {
     LogPrint("zmq", "zmq: Publish rawblock %s\n", pindex->GetBlockHash().GetHex());
@@ -210,4 +234,22 @@ bool CZMQPublishRawTransactionLockNotifier::NotifyTransactionLock(const CTransac
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << transaction;
     return SendMessage(MSG_RAWTXLOCK, &(*ss.begin()), ss.size());
+}
+
+bool CZMQPublishRawGovernanceVoteNotifier::NotifyGovernanceVote(const CGovernanceVote &vote)
+{
+    uint256 nHash = vote.GetHash();
+    LogPrint("gobject", "gobject: Publish rawgovernanceobject: hash = %s, vote = %d\n", nHash.ToString(), vote.ToString());
+    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+    ss << vote;
+    return SendMessage(MSG_RAWGVOTE, &(*ss.begin()), ss.size());
+}
+
+bool CZMQPublishRawGovernanceObjectNotifier::NotifyGovernanceObject(const CGovernanceObject &govobj)
+{
+    uint256 nHash = govobj.GetHash();
+    LogPrint("gobject", "gobject: Publish rawgovernanceobject: hash = %s, type = %d\n", nHash.ToString(), govobj.GetObjectType());
+    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+    ss << govobj;
+    return SendMessage(MSG_RAWGOBJ, &(*ss.begin()), ss.size());
 }

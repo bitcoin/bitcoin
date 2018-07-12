@@ -26,6 +26,8 @@ void RegisterValidationInterface(CValidationInterface* pwalletIn) {
     g_signals.ScriptForMining.connect(boost::bind(&CValidationInterface::GetScriptForMining, pwalletIn, _1));
     g_signals.BlockFound.connect(boost::bind(&CValidationInterface::ResetRequestCount, pwalletIn, _1));
     g_signals.NewPoWValidBlock.connect(boost::bind(&CValidationInterface::NewPoWValidBlock, pwalletIn, _1, _2));
+    g_signals.NotifyGovernanceObject.connect(boost::bind(&CValidationInterface::NotifyGovernanceObject, pwalletIn, _1));
+    g_signals.NotifyGovernanceVote.connect(boost::bind(&CValidationInterface::NotifyGovernanceVote, pwalletIn, _1));
 }
 
 void UnregisterValidationInterface(CValidationInterface* pwalletIn) {
@@ -42,6 +44,8 @@ void UnregisterValidationInterface(CValidationInterface* pwalletIn) {
     g_signals.NewPoWValidBlock.disconnect(boost::bind(&CValidationInterface::NewPoWValidBlock, pwalletIn, _1, _2));
     g_signals.NotifyHeaderTip.disconnect(boost::bind(&CValidationInterface::NotifyHeaderTip, pwalletIn, _1, _2));
     g_signals.AcceptedBlockHeader.disconnect(boost::bind(&CValidationInterface::AcceptedBlockHeader, pwalletIn, _1));
+    g_signals.NotifyGovernanceObject.disconnect(boost::bind(&CValidationInterface::NotifyGovernanceObject, pwalletIn, _1));
+    g_signals.NotifyGovernanceVote.disconnect(boost::bind(&CValidationInterface::NotifyGovernanceVote, pwalletIn, _1));
 }
 
 void UnregisterAllValidationInterfaces() {
@@ -58,4 +62,6 @@ void UnregisterAllValidationInterfaces() {
     g_signals.NewPoWValidBlock.disconnect_all_slots();
     g_signals.NotifyHeaderTip.disconnect_all_slots();
     g_signals.AcceptedBlockHeader.disconnect_all_slots();
+    g_signals.NotifyGovernanceObject.disconnect_all_slots();
+    g_signals.NotifyGovernanceVote.disconnect_all_slots();
 }

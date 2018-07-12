@@ -62,6 +62,10 @@ Currently, the following notifications are supported:
     -zmqpubrawblock=address
     -zmqpubrawtx=address
     -zmqpubrawtxlock=address
+    -zmqpubhashgovernancevote=address
+    -zmqpubhashgovernanceobject=address
+    -zmqpubrawgovernancevote=address
+    -zmqpubhashgovernanceobject=address
 
 The socket type is PUB and the address must be a valid ZeroMQ socket
 address. The same address can be used in more than one notification.

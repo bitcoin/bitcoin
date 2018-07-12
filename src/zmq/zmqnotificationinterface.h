@@ -27,6 +27,9 @@ protected:
     void SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex, int posInBlock) override;
     void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override;
     void NotifyTransactionLock(const CTransaction &tx) override;
+    void NotifyGovernanceVote(const CGovernanceVote& vote) override;
+    void NotifyGovernanceObject(const CGovernanceObject& object) override;
+
 
 private:
     CZMQNotificationInterface();
