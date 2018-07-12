@@ -116,6 +116,7 @@ testScripts = [
     'fundrawtransaction.py',
     'fundrawtransaction-hd.py',
     # vv Tests less than 2m vv
+    'p2p-instantsend.py',
     'wallet.py',
     'wallet-accounts.py',
     'wallet-dump.py',

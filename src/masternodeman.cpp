@@ -968,7 +968,9 @@ void CMasternodeMan::SyncAll(CNode* pnode, CConnman& connman)
     LOCK(cs);
 
     for (const auto& mnpair : mapMasternodes) {
-        if (mnpair.second.addr.IsRFC1918() || mnpair.second.addr.IsLocal()) continue; // do not send local network masternode
+        if (Params().RequireRoutableExternalIP() &&
+            (mnpair.second.addr.IsRFC1918() || mnpair.second.addr.IsLocal()))
+            continue; // do not send local network masternode
         // NOTE: send masternode regardless of its current state, the other node will need it to verify old votes.
         LogPrint("masternode", "CMasternodeMan::%s -- Sending Masternode entry: masternode=%s  addr=%s\n", __func__, mnpair.first.ToStringShort(), mnpair.second.addr.ToString());
         PushDsegInvs(pnode, mnpair.second);
