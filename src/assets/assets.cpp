@@ -48,7 +48,10 @@ bool IsRootNameValid(const std::string& name)
     return std::regex_match(name, ROOT_NAME_CHARACTERS)
         && !std::regex_match(name, DOUBLE_PUNCTUATION)
         && !std::regex_match(name, LEADING_PUNCTUATION)
-        && !std::regex_match(name, TRAILING_PUNCTUATION);
+        && !std::regex_match(name, TRAILING_PUNCTUATION)
+        && !std::regex_match(name, "^RVN$")
+        && !std::regex_match(name, "^RAVEN$")
+        && !std::regex_match(name, "^RAVENCOIN$");
 }
 
 bool IsSubNameValid(const std::string& name)
