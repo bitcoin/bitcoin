@@ -3723,6 +3723,12 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 }
                 unsigned int nBytes = ::GetSerializeSize(txNew, SER_NETWORK, PROTOCOL_VERSION);
 
+                if (nBytes > MAX_STANDARD_TX_SIZE) {
+                    // Do not create oversized transactions (bad-txns-oversize).
+                    strFailReason = _("Transaction too large");
+                    return false;
+                }
+
                 CTransaction txNewConst(txNew);
                 dPriority = txNewConst.ComputePriority(dPriority, nBytes);
 

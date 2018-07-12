@@ -78,6 +78,7 @@ bool CCert::UnserializeFromTx(const CTransaction &tx) {
 	int nOut;
 	if(!GetSyscoinData(tx, vchData, vchHash, nOut))
 	{
+		SetNull();
 		return false;
 	}
 	if(!UnserializeFromData(vchData, vchHash))

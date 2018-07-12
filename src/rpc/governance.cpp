@@ -426,9 +426,6 @@ UniValue gobject(const JSONRPCRequest& request)
         int nSuccessful = 0;
         int nFailed = 0;
 
-        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
-        mnEntries = masternodeConfig.getEntries();
-
         UniValue resultsObj(UniValue::VOBJ);
 
         for (const auto& mne : masternodeConfig.getEntries()) {
@@ -537,9 +534,6 @@ UniValue gobject(const JSONRPCRequest& request)
 
         int nSuccessful = 0;
         int nFailed = 0;
-
-        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
-        mnEntries = masternodeConfig.getEntries();
 
         UniValue resultsObj(UniValue::VOBJ);
 
