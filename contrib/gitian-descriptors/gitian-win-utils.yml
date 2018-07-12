@@ -55,10 +55,10 @@ script: |
 
   dzip() {
     export LC_ALL=C
-    
+
     ZIPFILE=${1:?}
     shift
-    
+
     if [ -n "$REFERENCE_DATETIME" ]; then
       find "$@" -exec touch --date="$REFERENCE_DATETIME" -- {} +
     fi
@@ -79,7 +79,7 @@ script: |
       exit 1
     fi
   done
-  
+
   get Zlib-1.2.7-win32-x86.zip http://nsis.sourceforge.net/mediawiki/images/c/ca/Zlib-1.2.7-win32-x86.zip
   unzip -d Zlib-1.2.7 Zlib-1.2.7-win32-x86.zip
 
