@@ -15,6 +15,7 @@
 #include "util.h"
 
 #include <univalue.h>
+#include <string>
 
 CGovernanceObject::CGovernanceObject():
     cs(),
@@ -225,8 +226,8 @@ std::string CGovernanceObject::GetSignatureMessage() const
 {
     LOCK(cs);
     std::string strMessage = nHashParent.ToString() + "|" +
-        boost::lexical_cast<std::string>(nRevision) + "|" +
-        boost::lexical_cast<std::string>(nTime) + "|" +
+        std::to_string(nRevision) + "|" +
+        std::to_string(nTime) + "|" +
         GetDataAsHexString() + "|" +
         masternodeOutpoint.ToStringShort() + "|" +
         nCollateralHash.ToString();

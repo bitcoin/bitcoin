@@ -14,7 +14,7 @@
 #include "spork.h"
 #include "util.h"
 
-#include <boost/lexical_cast.hpp>
+#include <string>
 
 /** Object for who's going to get paid on which blocks */
 CMasternodePayments mnpayments;
@@ -455,7 +455,7 @@ bool CMasternodePaymentVote::Sign()
         }
     } else {
         std::string strMessage = masternodeOutpoint.ToStringShort() +
-                    boost::lexical_cast<std::string>(nBlockHeight) +
+                    std::to_string(nBlockHeight) +
                     ScriptToAsmStr(payee);
 
         if(!CMessageSigner::SignMessage(strMessage, vchSig, activeMasternode.keyMasternode)) {
@@ -905,7 +905,7 @@ bool CMasternodePaymentVote::CheckSignature(const CPubKey& pubKeyMasternode, int
         if (!CHashSigner::VerifyHash(hash, pubKeyMasternode, vchSig, strError)) {
             // could be a signature in old format
             std::string strMessage = masternodeOutpoint.ToStringShort() +
-                        boost::lexical_cast<std::string>(nBlockHeight) +
+                        std::to_string(nBlockHeight) +
                         ScriptToAsmStr(payee);
             if(!CMessageSigner::VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {
                 // nope, not in old format either
@@ -921,7 +921,7 @@ bool CMasternodePaymentVote::CheckSignature(const CPubKey& pubKeyMasternode, int
         }
     } else {
         std::string strMessage = masternodeOutpoint.ToStringShort() +
-                    boost::lexical_cast<std::string>(nBlockHeight) +
+                    std::to_string(nBlockHeight) +
                     ScriptToAsmStr(payee);
 
         if (!CMessageSigner::VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {
