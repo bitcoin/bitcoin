@@ -34,8 +34,8 @@ extern CMasternodePayments mnpayments;
 
 /// TODO: all 4 functions do not belong here really, they should be refactored/moved somewhere (main.cpp ?)
 bool IsBlockValueValid(const CBlock& block, int nBlockHeight,  const CAmount &blockReward, const CAmount &nFee, std::string& strErrorRet);
-bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, const CAmount &blockReward, CAmount& nTotalRewardWithMasternodes);
-void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount &blockReward, CTxOut& txoutMasternodeRet, std::vector<CTxOut>& voutSuperblockRet);
+bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, const CAmount &blockReward, const CAmount& fees, CAmount& nTotalRewardWithMasternodes);
+void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount &blockReward, CAmount& fees, CTxOut& txoutMasternodeRet, std::vector<CTxOut>& voutSuperblockRet);
 std::string GetRequiredPaymentsString(int nBlockHeight);
 
 class CMasternodePayee
@@ -104,7 +104,7 @@ public:
 	bool GetBestPayee(CScript& payeeRet, int &nStartHeightBlock) const;
     bool HasPayeeWithVotes(const CScript& payeeIn, int nVotesReq, CMasternodePayee& payee) const;
 
-    bool IsTransactionValid(const CTransaction& txNew, const int64_t &nHeight, CAmount& nTotalRewardWithMasternodes) const;
+    bool IsTransactionValid(const CTransaction& txNew, const int64_t &nHeight, const CAmount& fee, CAmount& nTotalRewardWithMasternodes) const;
 
     std::string GetRequiredPaymentsString() const;
 };
@@ -211,7 +211,7 @@ public:
 
     bool GetBlockPayee(int nBlockHeight, CScript& payeeRet) const;
 	bool GetBlockPayee(int nBlockHeight, CScript& payee, int &nStartHeightBlock) const;
-    bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight, CAmount& nTotalRewardWithMasternodes) const;
+    bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight, const CAmount& fee, CAmount& nTotalRewardWithMasternodes) const;
     bool IsScheduled(const masternode_info_t& mnInfo, int nNotBlockHeight) const;
 
     bool UpdateLastVote(const CMasternodePaymentVote& vote);
@@ -219,7 +219,7 @@ public:
     int GetMinMasternodePaymentsProto() const;
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
     std::string GetRequiredPaymentsString(int nBlockHeight) const;
-    void FillBlockPayee(CMutableTransaction& txNew, int nBlockHeight, CAmount &blockReward, CTxOut& txoutMasternodeRet) const;
+    void FillBlockPayee(CMutableTransaction& txNew, int nBlockHeight, CAmount &blockReward, CAmount &fees,  CTxOut& txoutMasternodeRet) const;
     std::string ToString() const;
 
     int GetBlockCount() const { return mapMasternodeBlocks.size(); }
