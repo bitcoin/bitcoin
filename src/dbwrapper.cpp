@@ -6,13 +6,33 @@
 
 #include <memory>
 #include <random.h>
+#include <node/ui_interface.h>
+#include <util/translation.h>
 
+#include <leveldb/c.h>
 #include <leveldb/cache.h>
+#include <leveldb/db.h>
 #include <leveldb/env.h>
 #include <leveldb/filter_policy.h>
 #include <memenv.h>
 #include <stdint.h>
 #include <algorithm>
+
+bool dbwrapper_SanityCheck()
+{
+    unsigned long header_version = (leveldb::kMajorVersion << 16) | leveldb::kMinorVersion;
+    unsigned long library_version = (leveldb_major_version() << 16) | leveldb_minor_version();
+
+    if (header_version != library_version) {
+        InitError(Untranslated(strprintf("Compiled with LevelDB %d.%d, but linked with LevelDB %d.%d (incompatible).",
+            leveldb::kMajorVersion, leveldb::kMinorVersion,
+            leveldb_major_version(), leveldb_minor_version()
+        )));
+        return false;
+    }
+
+    return true;
+}
 
 class CBitcoinLevelDBLogger : public leveldb::Logger {
 public:
