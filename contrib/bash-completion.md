@@ -17,11 +17,11 @@ brew install bash-completion
 
 BASHRC=$(cat <<EOF
 if [ -f $(brew --prefix)/etc/bash_completion ]; then
-. $(brew --prefix)/etc/bash_completion
+  . $(brew --prefix)/etc/bash_completion
 fi
-source ~/syscoin/contrib/_osx.bash-completion
-source ~/syscoin/contrib/syscoind.bash-completion
-source ~/syscoin/contrib/syscoin-cli.bash-completion
+. ~/syscoin/contrib/_osx.bash-completion
+. ~/syscoin/contrib/syscoind.bash-completion
+. ~/syscoin/contrib/syscoin-cli.bash-completion
 EOF
 )
 
