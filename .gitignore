@@ -132,3 +132,4 @@ syscoin-cli
 syscoind
 syscoin-qt
 make
+contrib/devtools/split-debug.sh
