@@ -15,7 +15,6 @@ The example assumes Syscoin was compiled in `~/syscoin` and the scripts will be 
 ```
 brew install bash-completion
 
-# syscoind.service config
 BASHRC=$(cat <<EOF
 if [ -f $(brew --prefix)/etc/bash_completion ]; then
 . $(brew --prefix)/etc/bash_completion
@@ -26,7 +25,7 @@ source ~/syscoin/contrib/syscoin-cli.bash-completion
 EOF
 )
 
-grep -q "/etc/bash_completion" || echo "$BASHRC" >> ~/.bashrc
+grep -q "/etc/bash_completion" ~/.bashrc || echo "$BASHRC" >> ~/.bashrc
 . ~/.bashrc
 
 ```
