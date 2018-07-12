@@ -20,6 +20,8 @@
 #include <string>
 #include <vector>
 
+bool dbwrapper_SanityCheck();
+
 static const size_t DBWRAPPER_PREALLOC_KEY_SIZE = 64;
 static const size_t DBWRAPPER_PREALLOC_VALUE_SIZE = 1024;
 
