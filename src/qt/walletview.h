@@ -20,6 +20,7 @@ class SendCoinsRecipient;
 class TransactionView;
 class WalletModel;
 class AddressBookPage;
+class AssetsDialog;
 
 QT_BEGIN_NAMESPACE
 class QModelIndex;
@@ -71,6 +72,11 @@ private:
     QProgressDialog *progressDialog;
     const PlatformStyle *platformStyle;
 
+
+    /** RVN START */
+    AssetsDialog *assetsPage;
+    /** RVN END */
+
 public Q_SLOTS:
     /** Switch to overview (home) page */
     void gotoOverviewPage();
@@ -113,6 +119,12 @@ public Q_SLOTS:
 
     /** User has requested more information about the out of sync state */
     void requestedSyncWarningInfo();
+
+
+    /** RVN START */
+    /** Switch to assets page */
+    void gotoAssetsPage();
+    /** RVN END */
 
 Q_SIGNALS:
     /** Signal that we want to show the main window */

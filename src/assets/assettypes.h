@@ -45,7 +45,7 @@ public:
 
     bool IsNull() const;
 
-    bool IsValid(std::string& strError, CAssetsCache& assetCache, bool fCheckMempool = false, bool fCheckDuplicateInputs = true);
+    bool IsValid(std::string& strError, CAssetsCache& assetCache, bool fCheckMempool = false, bool fCheckDuplicateInputs = true) const;
 
     std::string ToString();
 

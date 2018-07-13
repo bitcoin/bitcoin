@@ -148,57 +148,14 @@ UniValue issue(const JSONRPCRequest& request)
 
     CNewAsset asset(asset_name, nAmount, units, reissuable ? 1 : 0, has_ipfs ? 1 : 0, ipfs_hash);
 
-    // Validate the assets data
-    std::string strError;
-    if (!asset.IsValid(strError, *passets)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strError);
-    }
-
-    CAmount curBalance = pwallet->GetBalance();
-
-    // Get the current burn amount for issuing an asset
-    CAmount burnAmount = GetIssueAssetBurnAmount();
-
-    // Check to make sure the wallet has the RVN required by the burnAmount
-    if (curBalance < burnAmount) {
-        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
-    }
-
-    if (pwallet->GetBroadcastTransactions() && !g_connman) {
-        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
-    }
-
-    // Get the script for the burn address
-    CScript scriptPubKey = GetScriptForDestination(DecodeDestination(Params().IssueAssetBurnAddress()));
-
-    CMutableTransaction mutTx;
-
-    CWalletTx wtxNew;
-    CCoinControl coin_control;
-
-    // Create and send the transaction
-    CReserveKey reservekey(pwallet);
-    CAmount nFeeRequired;
-    std::string strTxError;
-    std::vector<CRecipient> vecSend;
-    int nChangePosRet = -1;
-    bool fSubtractFeeFromAmount = false;
-    CRecipient recipient = {scriptPubKey, burnAmount, fSubtractFeeFromAmount};
-    vecSend.push_back(recipient);
-    if (!pwallet->CreateTransactionWithAsset(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strTxError, coin_control, asset, DecodeDestination(address))) {
-        if (!fSubtractFeeFromAmount && burnAmount + nFeeRequired > curBalance)
-            strTxError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
-        throw JSONRPCError(RPC_WALLET_ERROR, strTxError);
-    }
-
-    CValidationState state;
-    if (!pwallet->CommitTransaction(wtxNew, reservekey, g_connman.get(), state)) {
-        strTxError = strprintf("Error: The transaction was rejected! Reason given: %s", state.GetRejectReason());
-        throw JSONRPCError(RPC_WALLET_ERROR, strTxError);
-    }
+    // Create the transaction and broadcast it
+    std::pair<int, std::string> error;
+    std::string txid;
+    if (!CreateAssetTransaction(pwallet, asset, address, error, txid))
+        throw JSONRPCError(error.first, error.second);
 
     UniValue result(UniValue::VARR);
-    result.push_back(wtxNew.GetHash().GetHex());
+    result.push_back(txid);
     return result;
 }
 
@@ -681,100 +638,14 @@ UniValue reissue(const JSONRPCRequest& request)
         newipfs = request.params[4].get_str();
     }
 
-    // Check that validitity of the address
-    if (!IsValidDestinationString(address))
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raven address: ") + address);
-
-    // Check the assets name
-    if (!IsAssetNameValid(asset_name))
-        throw JSONRPCError(RPC_INVALID_PARAMS, std::string("Invalid asset name: ") + asset_name);
-
-    if (IsAssetNameAnOwner(asset_name))
-        throw JSONRPCError(RPC_INVALID_PARAMS, std::string("Owner Assets are not able to be reissued"));
-
-    // passets and passetsCache need to be initialized
-    if (!passets)
-        throw JSONRPCError(RPC_DATABASE_ERROR, std::string("passets isn't initialized"));
-
-    if (!passetsCache)
-        throw JSONRPCError(RPC_DATABASE_ERROR, std::string("passetsCache isn't initialized"));
-
+    std::string txid;
+    std::pair<int, std::string> error;
     CReissueAsset reissueAsset(asset_name, nAmount, reissuable, newipfs);
-
-    std::string strError;
-    if (!reissueAsset.IsValid(strError, *passets))
-        throw JSONRPCError(RPC_VERIFY_ERROR, std::string("Failed to create reissue asset object. Error: ") + strError);
-
-    // Check to make sure this wallet is the owner of the asset
-    if(!CheckAssetOwner(asset_name))
-        throw JSONRPCError(RPC_INVALID_PARAMS, std::string("This wallet is not the owner of the asset: ") + asset_name);
-
-    // Get the outpoint that belongs to the Owner Asset
-    std::set<COutPoint> myAssetOutPoints;
-    if (!passets->GetAssetsOutPoints(asset_name + OWNER, myAssetOutPoints))
-        throw JSONRPCError(RPC_INVALID_PARAMS, std::string("This wallet can't find the owner token information for: ") + asset_name);
-
-    // Check to make sure we have the right amount of outpoints
-    if (myAssetOutPoints.size() == 0)
-        throw JSONRPCError(RPC_INVALID_PARAMS, std::string("This wallet doesn't own any assets with the name: ") + asset_name + OWNER);
-
-    if (myAssetOutPoints.size() != 1)
-        throw JSONRPCError(RPC_INVALID_PARAMS, std::string("Found multiple Owner Assets. Database is out of sync. You might have to run the wallet with -reindex"));
-
-    // Check the wallet balance
-    CAmount curBalance = pwallet->GetBalance();
-
-    // Get the current burn amount for issuing an asset
-    CAmount burnAmount = GetReissueAssetBurnAmount();
-
-    // Check to make sure the wallet has the RVN required by the burnAmount
-    if (curBalance < burnAmount) {
-        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
-    }
-
-    if (pwallet->GetBroadcastTransactions() && !g_connman) {
-        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
-    }
-
-    // Get the script for the destination address for the assets
-    CScript scriptTransferOwnerAsset = GetScriptForDestination(DecodeDestination(address));
-
-    CAssetTransfer assetTransfer(asset_name + OWNER, OWNER_ASSET_AMOUNT);
-    assetTransfer.ConstructTransaction(scriptTransferOwnerAsset);
-
-    // Get the script for the burn address
-    CScript scriptPubKeyBurn = GetScriptForDestination(DecodeDestination(Params().ReissueAssetBurnAddress()));
-
-    CMutableTransaction mutTx;
-
-    CWalletTx wtxNew;
-    CCoinControl coin_control;
-
-    // Create and send the transaction
-    CReserveKey reservekey(pwallet);
-    CAmount nFeeRequired;
-    std::string strTxError;
-    std::vector<CRecipient> vecSend;
-    int nChangePosRet = -1;
-    bool fSubtractFeeFromAmount = false;
-    CRecipient recipient = {scriptPubKeyBurn, burnAmount, fSubtractFeeFromAmount};
-    CRecipient recipient2 = {scriptTransferOwnerAsset, 0, fSubtractFeeFromAmount};
-    vecSend.push_back(recipient);
-    vecSend.push_back(recipient2);
-    if (!pwallet->CreateTransactionWithReissueAsset(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strTxError, coin_control, reissueAsset, DecodeDestination(address), myAssetOutPoints)) {
-        if (!fSubtractFeeFromAmount && burnAmount + nFeeRequired > curBalance)
-            strTxError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
-        throw JSONRPCError(RPC_WALLET_ERROR, strTxError);
-    }
-
-    CValidationState state;
-    if (!pwallet->CommitTransaction(wtxNew, reservekey, g_connman.get(), state)) {
-        strTxError = strprintf("Error: The transaction was rejected! Reason given: %s", state.GetRejectReason());
-        throw JSONRPCError(RPC_WALLET_ERROR, strTxError);
-    }
+    if (!CreateReissueAssetTransaction(pwallet, reissueAsset, address, error, txid))
+        throw JSONRPCError(error.first, error.second);
 
     UniValue result(UniValue::VARR);
-    result.push_back(wtxNew.GetHash().GetHex());
+    result.push_back(txid);
     return result;
 }
 
