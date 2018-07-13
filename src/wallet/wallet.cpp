@@ -2016,7 +2016,7 @@ bool CWalletTx::InMempool() const
     return fInMempool;
 }
 
-bool CWalletTx::IsTrusted() const
+bool CWalletTx::IsTrusted(bool trust_unavailable) const
 {
     // Quick answer in most cases
     if (!CheckFinalTx(*tx))
@@ -2029,8 +2029,9 @@ bool CWalletTx::IsTrusted() const
     if (!pwallet->m_spend_zero_conf_change || !IsFromMe(ISMINE_ALL)) // using wtx's cached debit
         return false;
 
-    // Don't trust unconfirmed transactions from us unless they are in the mempool.
-    if (!InMempool())
+    // Don't consider unconfirmed transactions from us as trusted unless we want to
+    // trust unavailable UTXOs, or they are in the mempool
+    if (!trust_unavailable && !InMempool())
         return false;
 
     // Trusted if all inputs are from us and are in the mempool:
@@ -2115,7 +2116,7 @@ void CWallet::ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman
  */
 
 
-CAmount CWallet::GetBalance() const
+CAmount CWallet::GetBalance(bool include_unavailable) const
 {
     CAmount nTotal = 0;
     {
@@ -2123,7 +2124,7 @@ CAmount CWallet::GetBalance() const
         for (const auto& entry : mapWallet)
         {
             const CWalletTx* pcoin = &entry.second;
-            if (pcoin->IsTrusted())
+            if (pcoin->IsTrusted(include_unavailable))
                 nTotal += pcoin->GetAvailableCredit();
         }
     }
@@ -2131,7 +2132,7 @@ CAmount CWallet::GetBalance() const
     return nTotal;
 }
 
-CAmount CWallet::GetUnconfirmedBalance() const
+CAmount CWallet::GetUnconfirmedBalance(bool include_unavailable) const
 {
     CAmount nTotal = 0;
     {
@@ -2139,7 +2140,7 @@ CAmount CWallet::GetUnconfirmedBalance() const
         for (const auto& entry : mapWallet)
         {
             const CWalletTx* pcoin = &entry.second;
-            if (!pcoin->IsTrusted() && pcoin->GetDepthInMainChain() == 0 && pcoin->InMempool())
+            if (!pcoin->IsTrusted() && pcoin->GetDepthInMainChain() == 0 && (include_unavailable || pcoin->InMempool()))
                 nTotal += pcoin->GetAvailableCredit();
         }
     }

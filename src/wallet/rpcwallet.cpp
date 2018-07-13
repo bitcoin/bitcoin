@@ -852,41 +852,63 @@ static UniValue getbalance(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || (request.params.size() > 3 && IsDeprecatedRPCEnabled("accounts")) || (request.params.size() != 0 && !IsDeprecatedRPCEnabled("accounts")))
-        throw std::runtime_error(
-            "getbalance ( \"account\" minconf include_watchonly )\n"
-            "\nIf account is not specified, returns the server's total available balance.\n"
-            "The available balance is what the wallet considers currently spendable, and is\n"
-            "thus affected by options which limit spendability such as -spendzeroconfchange.\n"
-            "If account is specified (DEPRECATED), returns the balance in the account.\n"
-            "Note that the account \"\" is not the same as leaving the parameter out.\n"
-            "The server total may be different to the balance in the default \"\" account.\n"
-            "\nArguments:\n"
-            "1. \"account\"         (string, optional) DEPRECATED. This argument will be removed in V0.18. \n"
-            "                     To use this deprecated argument, start bitcoind with -deprecatedrpc=accounts. The account string may be given as a\n"
-            "                     specific account name to find the balance associated with wallet keys in\n"
-            "                     a named account, or as the empty string (\"\") to find the balance\n"
-            "                     associated with wallet keys not in any named account, or as \"*\" to find\n"
-            "                     the balance associated with all wallet keys regardless of account.\n"
-            "                     When this option is specified, it calculates the balance in a different\n"
-            "                     way than when it is not specified, and which can count spends twice when\n"
-            "                     there are conflicting pending transactions (such as those created by\n"
-            "                     the bumpfee command), temporarily resulting in low or even negative\n"
-            "                     balances. In general, account balance calculation is not considered\n"
-            "                     reliable and has resulted in confusing outcomes, so it is recommended to\n"
-            "                     avoid passing this argument.\n"
-            "2. minconf           (numeric, optional, default=1) DEPRECATED. Only valid when an account is specified. This argument will be removed in V0.18. To use this deprecated argument, start bitcoind with -deprecatedrpc=accounts. Only include transactions confirmed at least this many times.\n"
-            "3. include_watchonly (bool, optional, default=false) DEPRECATED. Only valid when an account is specified. This argument will be removed in V0.18. To use this deprecated argument, start bitcoind with -deprecatedrpc=accounts. Also include balance in watch-only addresses (see 'importaddress')\n"
-            "\nResult:\n"
-            "amount              (numeric) The total amount in " + CURRENCY_UNIT + " received for this account.\n"
-            "\nExamples:\n"
-            "\nThe total amount in the wallet with 1 or more confirmations\n"
-            + HelpExampleCli("getbalance", "") +
-            "\nThe total amount in the wallet at least 6 blocks confirmed\n"
-            + HelpExampleCli("getbalance", "\"*\" 6") +
-            "\nAs a json rpc call\n"
-            + HelpExampleRpc("getbalance", "\"*\", 6")
-        );
+    if (request.fHelp || (request.params.size() > 3 && IsDeprecatedRPCEnabled("accounts")) || (request.params.size() > 1 && !IsDeprecatedRPCEnabled("accounts"))) {
+        if (IsDeprecatedRPCEnabled("accounts")) {
+            throw std::runtime_error(
+                "getbalance ( \"account\" minconf include_watchonly )\n"
+                "\nIf account is not specified, returns the server's total available balance.\n"
+                "The available balance is what the wallet considers currently spendable, and is\n"
+                "thus affected by options which limit spendability such as -spendzeroconfchange.\n"
+                "If account is specified (DEPRECATED), returns the balance in the account.\n"
+                "Note that the account \"\" is not the same as leaving the parameter out.\n"
+                "The server total may be different to the balance in the default \"\" account.\n"
+                "\nArguments:\n"
+                "1. \"account\"         (string, optional) DEPRECATED. This argument will be removed in V0.18. \n"
+                "                     To use this deprecated argument, start bitcoind with -deprecatedrpc=accounts. The account string may be given as a\n"
+                "                     specific account name to find the balance associated with wallet keys in\n"
+                "                     a named account, or as the empty string (\"\") to find the balance\n"
+                "                     associated with wallet keys not in any named account, or as \"*\" to find\n"
+                "                     the balance associated with all wallet keys regardless of account.\n"
+                "                     When this option is specified, it calculates the balance in a different\n"
+                "                     way than when it is not specified, and which can count spends twice when\n"
+                "                     there are conflicting pending transactions (such as those created by\n"
+                "                     the bumpfee command), temporarily resulting in low or even negative\n"
+                "                     balances. In general, account balance calculation is not considered\n"
+                "                     reliable and has resulted in confusing outcomes, so it is recommended to\n"
+                "                     avoid passing this argument.\n"
+                "2. minconf           (numeric, optional, default=1) DEPRECATED. Only valid when an account is specified. This argument will be removed in V0.18. To use this deprecated argument, start bitcoind with -deprecatedrpc=accounts. Only include transactions confirmed at least this many times.\n"
+                "3. include_watchonly (bool, optional, default=false) DEPRECATED. Only valid when an account is specified. This argument will be removed in V0.18. To use this deprecated argument, start bitcoind with -deprecatedrpc=accounts. Also include balance in watch-only addresses (see 'importaddress')\n"
+                "\nResult:\n"
+                "amount              (numeric) The total amount in " + CURRENCY_UNIT + " received for this account.\n"
+                "\nExamples:\n"
+                "\nThe total amount in the wallet with 1 or more confirmations\n"
+                + HelpExampleCli("getbalance", "") +
+                "\nThe total amount in the wallet at least 6 blocks confirmed\n"
+                + HelpExampleCli("getbalance", "\"*\" 6") +
+                "\nAs a json rpc call\n"
+                + HelpExampleRpc("getbalance", "\"*\", 6")
+            );
+        } else {
+            throw std::runtime_error(
+                "getbalance ( include_unavailable )\n"
+                "\nReturns the wallet's total available balance.\n"
+                "The available balance is what the wallet considers currently spendable, and is\n"
+                "thus affected by options which limit spendability such as -spendzeroconfchange.\n"
+                "\nArguments:\n"
+                "1. include_unavailable (bool, optional, default=false) Also include balance for UTXOs which are currently not (but possibly in the future)\n"
+                "                                                       spendable.\n"
+                "\nResult:\n"
+                "amount              (numeric) The total amount in " + CURRENCY_UNIT + " received.\n"
+                "\nExamples:\n"
+                "\nThe total amount in the wallet\n"
+                + HelpExampleCli("getbalance", "") +
+                "\nThe total amount in the wallet, including currently unspendable UTXO:s\n"
+                + HelpExampleCli("getbalance", "true") +
+                "\nAs a json rpc call\n"
+                + HelpExampleRpc("getbalance", "true")
+            );
+        }
+    }
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -925,7 +947,16 @@ static UniValue getbalance(const JSONRPCRequest& request)
         return ValueFromAmount(pwallet->GetLegacyBalance(filter, nMinDepth, account));
     }
 
-    return ValueFromAmount(pwallet->GetBalance());
+    // params[0] is not converted from JSON until account stuff is removed, so we need to manually convert it here
+    // TODO: add param[0] to clients.cpp for getbalance and switch to get_bool() here, once account stuff is removed
+    if (!request.params[0].isNull() && request.params[0].get_str() != "true" && request.params[0].get_str() != "false") {
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+            "include_unavailable may only be true or false");
+    }
+
+    const bool include_unavailable = !request.params[0].isNull() && request.params[0].get_str() == "true";
+
+    return ValueFromAmount(pwallet->GetBalance(include_unavailable));
 }
 
 static UniValue getunconfirmedbalance(const JSONRPCRequest &request)
@@ -937,10 +968,16 @@ static UniValue getunconfirmedbalance(const JSONRPCRequest &request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() > 0)
+    if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
-                "getunconfirmedbalance\n"
-                "Returns the server's total unconfirmed balance\n");
+                "getunconfirmedbalance ( include_unavailable )\n"
+                "\nReturns the server's total unconfirmed balance.\n"
+                "\nArguments:\n"
+                "1. include_unavailable (bool, optional, default=false) Also include balance for UTXOs which are\n"
+                "                                                       currently not (but possibly in the future)\n"
+                "                                                       spendable."
+                "\nResult:\n"
+                "amount                 (numeric)                       The total balance in " + CURRENCY_UNIT + ".\n");
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -948,7 +985,8 @@ static UniValue getunconfirmedbalance(const JSONRPCRequest &request)
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    return ValueFromAmount(pwallet->GetUnconfirmedBalance());
+    bool include_unavailable = !request.params[0].isNull() && request.params[0].get_bool();
+    return ValueFromAmount(pwallet->GetUnconfirmedBalance(include_unavailable));
 }
 
 
@@ -4407,7 +4445,7 @@ extern UniValue rescanblockchain(const JSONRPCRequest& request);
 
 static const CRPCCommand commands[] =
 { //  category              name                                actor (function)                argNames
-    //  --------------------- ------------------------          -----------------------         ----------
+  //  --------------------- ------------------------            -----------------------         ----------
     { "rawtransactions",    "fundrawtransaction",               &fundrawtransaction,            {"hexstring","options","iswitness"} },
     { "hidden",             "resendwallettransactions",         &resendwallettransactions,      {} },
     { "wallet",             "abandontransaction",               &abandontransaction,            {"txid"} },
@@ -4421,12 +4459,12 @@ static const CRPCCommand commands[] =
     { "wallet",             "dumpwallet",                       &dumpwallet,                    {"filename"} },
     { "wallet",             "encryptwallet",                    &encryptwallet,                 {"passphrase"} },
     { "wallet",             "getaddressinfo",                   &getaddressinfo,                {"address"} },
-    { "wallet",             "getbalance",                       &getbalance,                    {"account","minconf","include_watchonly"} },
+    { "wallet",             "getbalance",                       &getbalance,                    {"account|include_unavailable","minconf","include_watchonly"} },
     { "wallet",             "getnewaddress",                    &getnewaddress,                 {"label|account","address_type"} },
     { "wallet",             "getrawchangeaddress",              &getrawchangeaddress,           {"address_type"} },
     { "wallet",             "getreceivedbyaddress",             &getreceivedbyaddress,          {"address","minconf"} },
     { "wallet",             "gettransaction",                   &gettransaction,                {"txid","include_watchonly"} },
-    { "wallet",             "getunconfirmedbalance",            &getunconfirmedbalance,         {} },
+    { "wallet",             "getunconfirmedbalance",            &getunconfirmedbalance,         {"include_unavailable"} },
     { "wallet",             "getwalletinfo",                    &getwalletinfo,                 {} },
     { "wallet",             "importmulti",                      &importmulti,                   {"requests","options"} },
     { "wallet",             "importprivkey",                    &importprivkey,                 {"privkey","label","rescan"} },

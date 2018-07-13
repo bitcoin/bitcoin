@@ -439,6 +439,10 @@ class WalletTest(BitcoinTestFramework):
         extra_txid = self.nodes[0].sendtoaddress(sending_addr, Decimal('0.0001'))
         assert(extra_txid not in self.nodes[0].getrawmempool())
         assert(extra_txid in [tx["txid"] for tx in self.nodes[0].listtransactions()])
+        # The change output for extra_txid should be in the balance if we include unspendable
+        assert(self.nodes[0].getbalance() < self.nodes[0].getbalance(include_unavailable="true"))
+        # This should be reflected in getunconfirmedbalance as well
+        assert(self.nodes[0].getunconfirmedbalance() < self.nodes[0].getunconfirmedbalance(include_unavailable=True))
         self.nodes[0].abandontransaction(extra_txid)
         total_txs = len(self.nodes[0].listtransactions("*", 99999))
 
