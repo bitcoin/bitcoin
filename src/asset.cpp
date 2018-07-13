@@ -365,6 +365,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 	}
 	if (!fJustCheck) {
 		const string &user1 = stringFromVch(vvchAddress);
+		DecodeBase58(user1, vvchAddress);
 		string user2 = "";
 		string user3 = "";
 		if (op == OP_ASSET_TRANSFER) {
@@ -385,7 +386,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 
 		if (op == OP_ASSET_UPDATE || op == OP_ASSET_TRANSFER || op == OP_ASSET_SEND)
 		{
-			if (EncodeBase58(dbAsset.vchAddress) != vvchAddress)
+			if (EncodeBase58(dbAsset.vchAddress) != user1)
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Cannot edit this asset. Asset owner must sign off on this change");
 				return true;
@@ -488,15 +489,16 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 						receiverAllocation.nHeight = nHeight;
 						receiverAllocation.vchMemo = theAssetAllocation.vchMemo;
 						receiverAllocation.nBalance += amountTuple.second;
+						const string& receiverAddress = EncodeBase58(receiverAllocation.vchAddress);
 						// adjust sender balance
 						theAsset.nBalance -= amountTuple.second;
-						if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, dbAsset.nBalance - nTotal, amountTuple.second, dbAsset, INT64_MAX, vvchAddress, receiverAllocation.vchAddress, fJustCheck))
+						if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, dbAsset.nBalance - nTotal, amountTuple.second, dbAsset, INT64_MAX, user1, receiverAddress, fJustCheck))
 						{
 							errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2034 - " + _("Failed to write to asset allocation DB");
 							continue;
 						}
 						if (strResponseEnglish != "") {
-							paliasdb->WriteAliasIndexTxHistory(user1, EncodeBase58(receiverAllocation.vchAddress), user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString());
+							paliasdb->WriteAliasIndexTxHistory(user1, receiverAddress, user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString());
 						}
 					}
 				}
@@ -555,20 +557,20 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 						receiverAllocation.listAllocationInputs = outputMerge;
 						receiverAllocation.nBalance += rangeTotals[i];
 
-
+						const string& receiverAddress = EncodeBase58(receiverAllocation.vchAddress);
 						// figure out senders subtracted ranges and balance
 						vector<CRange> outputSubtract;
 						subtractRanges(dbAsset.listAllocationInputs, input.second, outputSubtract);
 						theAsset.listAllocationInputs = outputSubtract;
 						theAsset.nBalance -= rangeTotals[i];
-						if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, dbAsset.nBalance - nTotal, rangeTotals[i], dbAsset, INT64_MAX, vvchAddress, receiverAllocation.vchAddress, fJustCheck))
+						if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, dbAsset.nBalance - nTotal, rangeTotals[i], dbAsset, INT64_MAX, user1, receiverAddress, fJustCheck))
 						{
 							errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2039 - " + _("Failed to write to asset allocation DB");
 							return error(errorMessage.c_str());
 						}
 
 						if (strResponseEnglish != "") {
-							paliasdb->WriteAliasIndexTxHistory(user1, EncodeBase58(receiverAllocation.vchAddress), user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString());
+							paliasdb->WriteAliasIndexTxHistory(user1, receiverAddress, user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString());
 						}
 					}
 				}
