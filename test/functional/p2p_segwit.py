@@ -41,6 +41,7 @@ from test_framework.messages import (
 from test_framework.mininode import (
     P2PInterface,
     mininode_lock,
+    wait_until,
 )
 from test_framework.script import (
     CScript,
@@ -221,7 +222,7 @@ class SegWitTest(BitcoinTestFramework):
         block.solve()
 
     def run_test(self):
-        # Setup the p2p connections and start up the network thread.
+        # Setup the p2p connections
         # self.test_node sets NODE_WITNESS|NODE_NETWORK
         self.test_node = self.nodes[0].add_p2p_connection(TestP2PConn(), services=NODE_NETWORK | NODE_WITNESS)
         # self.old_node sets only NODE_NETWORK
@@ -351,10 +352,7 @@ class SegWitTest(BitcoinTestFramework):
         # Sending witness data before activation is not allowed (anti-spam
         # rule).
         test_witness_block(self.nodes[0].rpc, self.test_node, block, accepted=False)
-        # TODO: fix synchronization so we can test reject reason
-        # Right now, bitcoind delays sending reject messages for blocks
-        # until the future, making synchronization here difficult.
-        # assert_equal(self.test_node.last_message["reject"].reason, "unexpected-witness")
+        wait_until(lambda: 'reject' in self.test_node.last_message and self.test_node.last_message["reject"].reason ==  b"unexpected-witness")
 
         # But it should not be permanently marked bad...
         # Resend without witness information.
@@ -605,9 +603,6 @@ class SegWitTest(BitcoinTestFramework):
     @subtest
     def advance_to_segwit_lockin(self):
         """Mine enough blocks to lock in segwit, but don't activate."""
-        # TODO: we could verify that lockin only happens at the right threshold of
-        # signalling blocks, rather than just at the right period boundary.
-
         height = self.nodes[0].getblockcount()
         # Advance to end of period, and verify lock-in happens at the end
         self.nodes[0].generate(VB_PERIOD - 1)
@@ -741,9 +736,6 @@ class SegWitTest(BitcoinTestFramework):
     @subtest
     def advance_to_segwit_active(self):
         """Mine enough blocks to activate segwit."""
-        # TODO: we could verify that activation only happens at the right threshold
-        # of signalling blocks, rather than just at the right period boundary.
-
         height = self.nodes[0].getblockcount()
         self.nodes[0].generate(VB_PERIOD - (height % VB_PERIOD) - 2)
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'locked_in')
@@ -1402,30 +1394,28 @@ class SegWitTest(BitcoinTestFramework):
         Future segwit version transactions are non-standard, but valid in blocks.
         Can run this before and after segwit activation."""
 
-        num_tests = 17  # will test OP_0, OP1, ..., OP_16
-        if (len(self.utxo) < num_tests):
+        NUM_SEGWIT_VERSIONS = 17  # will test OP_0, OP1, ..., OP_16
+        if len(self.utxo) < NUM_SEGWIT_VERSIONS:
             tx = CTransaction()
             tx.vin.append(CTxIn(COutPoint(self.utxo[0].sha256, self.utxo[0].n), b""))
-            split_value = (self.utxo[0].nValue - 4000) // num_tests
-            for i in range(num_tests):
+            split_value = (self.utxo[0].nValue - 4000) // NUM_SEGWIT_VERSIONS
+            for i in range(NUM_SEGWIT_VERSIONS):
                 tx.vout.append(CTxOut(split_value, CScript([OP_TRUE])))
             tx.rehash()
             block = self.build_next_block()
             self.update_witness_block_with_transactions(block, [tx])
             test_witness_block(self.nodes[0].rpc, self.test_node, block, accepted=True)
             self.utxo.pop(0)
-            for i in range(num_tests):
+            for i in range(NUM_SEGWIT_VERSIONS):
                 self.utxo.append(UTXO(tx.sha256, i, split_value))
 
         sync_blocks(self.nodes)
         temp_utxo = []
         tx = CTransaction()
-        count = 0
         witness_program = CScript([OP_TRUE])
         witness_hash = sha256(witness_program)
         assert_equal(len(self.nodes[1].getrawmempool()), 0)
         for version in list(range(OP_1, OP_16 + 1)) + [OP_0]:
-            count += 1
             # First try to spend to a future version segwit script_pubkey.
             script_pubkey = CScript([CScriptOp(version), witness_hash])
             tx.vin = [CTxIn(COutPoint(self.utxo[0].sha256, self.utxo[0].n), b"")]
@@ -1680,19 +1670,19 @@ class SegWitTest(BitcoinTestFramework):
         # Test combinations of signature hashes.
         # Split the utxo into a lot of outputs.
         # Randomly choose up to 10 to spend, sign with different hashtypes, and
-        # output to a random number of outputs.  Repeat num_tests times.
+        # output to a random number of outputs.  Repeat NUM_SIGHASH_TESTS times.
         # Ensure that we've tested a situation where we use SIGHASH_SINGLE with
         # an input index > number of outputs.
-        num_tests = 500
+        NUM_SIGHASH_TESTS = 500
         temp_utxos = []
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(prev_utxo.sha256, prev_utxo.n), b""))
-        split_value = prev_utxo.nValue // num_tests
-        for i in range(num_tests):
+        split_value = prev_utxo.nValue // NUM_SIGHASH_TESTS
+        for i in range(NUM_SIGHASH_TESTS):
             tx.vout.append(CTxOut(split_value, script_pubkey))
         tx.wit.vtxinwit.append(CTxInWitness())
         sign_p2pk_witness_input(witness_program, tx, 0, SIGHASH_ALL, prev_utxo.nValue, key)
-        for i in range(num_tests):
+        for i in range(NUM_SIGHASH_TESTS):
             temp_utxos.append(UTXO(tx.sha256, i, split_value))
 
         block = self.build_next_block()
@@ -1701,7 +1691,7 @@ class SegWitTest(BitcoinTestFramework):
 
         block = self.build_next_block()
         used_sighash_single_out_of_bounds = False
-        for i in range(num_tests):
+        for i in range(NUM_SIGHASH_TESTS):
             # Ping regularly to keep the connection alive
             if (not i % 100):
                 self.test_node.sync_with_ping()
