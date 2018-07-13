@@ -62,8 +62,6 @@ static const bool DEFAULT_WALLET_RBF = false;
 static const bool DEFAULT_WALLETBROADCAST = true;
 static const bool DEFAULT_DISABLE_WALLET = false;
 
-static const int64_t TIMESTAMP_MIN = 0;
-
 class CBlockIndex;
 class CCoinControl;
 class COutput;
