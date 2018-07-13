@@ -239,8 +239,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 		}
 			
 	}
-	
-	CAliasIndex alias;
+
 	string retError = "";
 	if(fJustCheck)
 	{
@@ -498,7 +497,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 							continue;
 						}
 						if (strResponseEnglish != "") {
-							paliasdb->WriteAliasIndexTxHistory(user1, receiverAddress, user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString());
+							paliasdb->WriteAliasIndexTxHistory(user1, receiverAddress, user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString(receiverAddress));
 						}
 					}
 				}
@@ -570,7 +569,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 						}
 
 						if (strResponseEnglish != "") {
-							paliasdb->WriteAliasIndexTxHistory(user1, receiverAddress, user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString());
+							paliasdb->WriteAliasIndexTxHistory(user1, receiverAddress, user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString(receiverAddress));
 						}
 					}
 				}
@@ -836,7 +835,7 @@ UniValue assettransfer(const JSONRPCRequest& request) {
  if (request.fHelp || params.size() != 3)
         throw runtime_error(
 			"assettransfer [asset] [address] [witness]\n"
-						"Transfer a asset allocation you own to another alias.\n"
+						"Transfer a asset allocation you own to another address.\n"
 						"<asset> Asset guid.\n"
 						"<address> Address to transfer to.\n"
 						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
@@ -898,14 +897,14 @@ UniValue assetsend(const JSONRPCRequest& request) {
 	if (request.fHelp || params.size() != 4)
 		throw runtime_error(
 			"assetsend [asset] ( [{\"address\":\"aliasname\",\"amount\":amount},...] or [{\"address\":\"aliasname\",\"ranges\":[{\"start\":index,\"end\":index},...]},...] ) [memo] [witness]\n"
-			"Send an asset you own to another alias/address as an asset allocation. Maximimum recipients is 250.\n"
+			"Send an asset you own to another address/address as an asset allocation. Maximimum recipients is 250.\n"
 			"<asset> Asset guid.\n"
 			"<address> Address to transfer to.\n"
 			"<amount> Quantity of asset to send.\n"
 			"<ranges> Ranges of inputs to send in integers specified in the start and end fields.\n"
 			"<memo> Message to include in this asset allocation transfer.\n"
 			"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
-			"The third parameter can be either an array of alias and amounts if sending amount pairs or an array of alias and array of start/end pairs of indexes for input ranges.\n"
+			"The third parameter can be either an array of address and amounts if sending amount pairs or an array of address and array of start/end pairs of indexes for input ranges.\n"
 			+ HelpRequiringPassphrase());
 
 	// gather & validate inputs
@@ -984,7 +983,7 @@ UniValue assetsend(const JSONRPCRequest& request) {
 
 	CAssetAllocationTuple assetAllocationTuple(vchAsset, theAsset.vchAddress);
 	if (!fUnitTest) {
-		// check to see if a transaction for this asset/alias tuple has arrived before minimum latency period
+		// check to see if a transaction for this asset/address tuple has arrived before minimum latency period
 		ArrivalTimesMap arrivalTimes;
 		passetallocationdb->ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
 		const int64_t & nNow = duration_cast<seconds>(system_clock::now().time_since_epoch()).count();
@@ -1327,14 +1326,14 @@ UniValue listassets(const JSONRPCRequest& request) {
 			"[options]        (object, optional) A json object with options to filter results\n"
 			"    {\n"
 			"      \"txid\":txid					(string) Transaction ID to filter results for\n"
-			"	     \"asset\":guid					(string) Asset GUID to filter.\n"
+			"	   \"asset\":guid					(string) Asset GUID to filter.\n"
 			"      \"address\":address				(string) Owner address to filter.\n"
-			"      \"startblock\":block 	(number) Earliest block to filter from. Block number is the block at which the transaction would have confirmed.\n"
+			"      \"startblock\":block 			(number) Earliest block to filter from. Block number is the block at which the transaction would have confirmed.\n"
 			"    }\n"
 			+ HelpExampleCli("listassets", "0")
 			+ HelpExampleCli("listassets", "10 10")
-			+ HelpExampleCli("listassets", "0 0 '{\"alias\":\"owner-alias\"}'")
-			+ HelpExampleCli("listassets", "0 0 '{\"asset\":\"32bff1fa844c124\",\"alias\":\"owner-alias\",\"startblock\":0}'")
+			+ HelpExampleCli("listassets", "0 0 '{\"address\":\"SfaT8dGhk1zaQkk8bujMfgWw3szxReej4S\"}'")
+			+ HelpExampleCli("listassets", "0 0 '{\"asset\":\"32bff1fa844c124\",\"address\":\"SfaT8dGhk1zaQkk8bujMfgWw3szxReej4S\",\"startblock\":0}'")
 		);
 	UniValue options;
 	int count = 10;

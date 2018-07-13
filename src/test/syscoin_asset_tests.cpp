@@ -358,7 +358,7 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "generate 1"));
 		string guid = arr[1].get_str();
 		
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetsend " + guid + " " + aliasname + " " + "\"[{\\\"aliasto\\\":\\\"" + aliasname + "\\\",\\\"amount\\\":1}]\" '' ''"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetsend " + guid + " " + aliasname + " " + "\"[{\\\"address\\\":\\\"" + aliasname + "\\\",\\\"amount\\\":1}]\" '' ''"));
 		arr = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
 		hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -402,7 +402,7 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 	count = 0;
 	for (auto& assetTuple : assetMap) {
 		count++;
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsend " + assetTuple.first + " " + assetAliasMap[assetTuple.first] + " " + "\"[{\\\"aliasto\\\":\\\"" + assetTuple.second + "\\\",\\\"amount\\\":1}]\" '' ''"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsend " + assetTuple.first + " " + assetAliasMap[assetTuple.first] + " " + "\"[{\\\"address\\\":\\\"" + assetTuple.second + "\\\",\\\"amount\\\":1}]\" '' ''"));
 		UniValue arr = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
 		string hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -499,7 +499,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest)
 	// setup asset with 5% interest hourly (unit test mode calculates interest hourly not annually)
 	string guid = AssetNew("node1", "cad", "jagassetcollection", "data", "8", "false", "10000", "-1", "0.05");
 
-	AssetSend("node1", guid, "\"[{\\\"aliasto\\\":\\\"jagassetcollectionreceiver\\\",\\\"amount\\\":5000}]\"", "memoassetinterest");
+	AssetSend("node1", guid, "\"[{\\\"address\\\":\\\"jagassetcollectionreceiver\\\",\\\"amount\\\":5000}]\"", "memoassetinterest");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectionreceiver false"));
 	UniValue balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 5000 * COIN);
@@ -531,7 +531,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_maxsenders)
 	string senderstring = "\"[";
 	for (int i = 0; i < 250; i++) {
 		string aliasname = "jagmaxsenders" + boost::lexical_cast<string>(i);
-		senderstring += "{\\\"aliasto\\\":\\\"";
+		senderstring += "{\\\"address\\\":\\\"";
 		senderstring += aliasname;
 		if(i==0)
 			senderstring += "\\\",\\\"amount\\\":5.0}";
@@ -563,7 +563,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_maxsenders)
 	senderstring = "\"[";
 	for (int i = 1; i < 250; i++) {
 		string aliasname = "jagmaxsenders" + boost::lexical_cast<string>(i);
-		senderstring += "{\\\"aliasto\\\":\\\"";
+		senderstring += "{\\\"address\\\":\\\"";
 		senderstring += aliasname;
 		senderstring += "\\\",\\\"amount\\\":0.001}";
 		if (i < 249)

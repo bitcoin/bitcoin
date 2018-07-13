@@ -67,7 +67,7 @@ public:
 		vchAsset.clear();
 		vchAddress.clear();
 	}
-	std::string ToString() const;
+	std::string ToString(const std::string &strAddress) const;
 	inline bool IsNull() {
 		return (vchAsset.empty() && vchAddress.empty());
 	}
@@ -117,7 +117,14 @@ public:
 		SetNull();
 		UnserializeFromTx(tx);
 	}
+	inline void ClearAssetAllocation()
+	{
+		vchMemo.clear();
+		listAllocationInputs.clear();
+		listSendingAllocationInputs.clear();
+		listSendingAllocationAmounts.clear();
 
+	}
 	ADD_SERIALIZE_METHODS;
 	template <typename Stream, typename Operation>
 	inline void SerializationOp(Stream& s, Operation ser_action) {
