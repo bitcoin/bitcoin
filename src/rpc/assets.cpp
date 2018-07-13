@@ -159,7 +159,7 @@ UniValue issue(const JSONRPCRequest& request)
     return result;
 }
 
-UniValue listassetbalancesbyaddress(const JSONRPCRequest &request)
+UniValue listassetbalancesbyaddress(const JSONRPCRequest& request)
 {
     if (request.fHelp || !AreAssetsDeployed() || request.params.size() < 1)
         throw std::runtime_error(
@@ -591,7 +591,7 @@ UniValue reissue(const JSONRPCRequest& request)
 {
     if (request.fHelp || !AreAssetsDeployed() || request.params.size() > 5 || request.params.size() < 3)
         throw std::runtime_error(
-                "reissue \"asset_name\" qty \"to_address\" reissuable \"new_ipfs\" \n"
+                "reissue \"asset_name\" qty \"to_address\" ( reissuable ) \"( new_ipfs )\" \n"
                 + AssetActivationWarning() +
                 "\nReissues a quantity of an asset to an owned address if you own the Owner Token"
                 "\nCan change the reissuable flag during reissuance"
