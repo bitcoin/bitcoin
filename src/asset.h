@@ -44,7 +44,7 @@ class CAsset {
 public:
 	std::vector<unsigned char> vchAsset;
 	std::vector<unsigned char> vchSymbol;
-	std::vector<unsigned char> vchAlias;
+	std::vector<unsigned char> vchAddress;
 	// if allocations are tracked by individual inputs
 	std::vector<CRange> listAllocationInputs;
     uint256 txHash;
@@ -70,7 +70,7 @@ public:
 		vchPubData.clear();
 		sCategory.clear();
 		listAllocationInputs.clear();
-		vchAlias.clear();
+		vchAddress.clear();
 		vchSymbol.clear();
 
 	}
@@ -83,7 +83,7 @@ public:
 		READWRITE(vchAsset);
 		READWRITE(vchSymbol);
 		READWRITE(sCategory);
-		READWRITE(vchAlias);
+		READWRITE(vchAddress);
 		READWRITE(listAllocationInputs);
 		READWRITE(nBalance);
 		READWRITE(nTotalSupply);
@@ -103,7 +103,7 @@ public:
 		vchPubData = b.vchPubData;
 		txHash = b.txHash;
         nHeight = b.nHeight;
-		vchAlias = b.vchAlias;
+		vchAddress = b.vchAddress;
 		vchAsset = b.vchAsset;
 		sCategory = b.sCategory;
 		listAllocationInputs = b.listAllocationInputs;
@@ -121,7 +121,7 @@ public:
     inline friend bool operator!=(const CAsset &a, const CAsset &b) {
         return !(a == b);
     }
-	inline void SetNull() { vchSymbol.clear(); nPrecision = 8; bCanAdjustInterestRate = false; fInterestRate = 0;  bUseInputRanges = false; nMaxSupply = 0; nTotalSupply = 0; nBalance = 0; listAllocationInputs.clear(); sCategory.clear(); vchAsset.clear(); nHeight = 0; txHash.SetNull(); vchAlias.clear(); vchPubData.clear(); }
+	inline void SetNull() { vchSymbol.clear(); nPrecision = 8; bCanAdjustInterestRate = false; fInterestRate = 0;  bUseInputRanges = false; nMaxSupply = 0; nTotalSupply = 0; nBalance = 0; listAllocationInputs.clear(); sCategory.clear(); vchAsset.clear(); nHeight = 0; txHash.SetNull(); vchAddress.clear(); vchPubData.clear(); }
     inline bool IsNull() const { return (vchAsset.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);

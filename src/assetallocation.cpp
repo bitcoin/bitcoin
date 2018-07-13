@@ -86,16 +86,16 @@ void CAssetAllocation::Serialize( vector<unsigned char> &vchData) {
 	vchData = vector<unsigned char>(dsAsset.begin(), dsAsset.end());
 
 }
-void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& assetallocation, const CAsset& asset, const CAmount& nSenderBalance, const CAmount& nAmount, const std::vector<unsigned char>& vchSender, const std::vector<unsigned char>& vchReceiver) {
+void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& assetallocation, const CAsset& asset, const CAmount& nSenderBalance, const CAmount& nAmount, const std::string& strSender, const std::string& strReceiver) {
 	if (IsArgSet("-zmqpubassetallocation") || fAssetAllocationIndex) {
 		UniValue oName(UniValue::VOBJ);
 		bool isMine = true;
-		if (BuildAssetAllocationIndexerJson(assetallocation, asset, nSenderBalance, nAmount, vchSender, vchReceiver, isMine, oName)) {
+		if (BuildAssetAllocationIndexerJson(assetallocation, asset, nSenderBalance, nAmount, strSender, strReceiver, isMine, oName)) {
 			const string& strObj = oName.write();
 			GetMainSignals().NotifySyscoinUpdate(strObj.c_str(), "assetallocation");
 			if (isMine && fAssetAllocationIndex) {
 				int nHeight = assetallocation.nHeight;
-				const string& strKey = assetallocation.txHash.GetHex()+"-"+stringFromVch(asset.vchAsset)+"-"+stringFromVch(vchSender)+"-"+ stringFromVch(vchReceiver);
+				const string& strKey = assetallocation.txHash.GetHex()+"-"+stringFromVch(asset.vchAsset)+"-"+ strSender +"-"+ strReceiver;
 				{
 					LOCK2(mempool.cs, cs_assetallocationindex);
 					// we want to the height from mempool if it exists or use the one stored in assetallocation
@@ -1113,7 +1113,7 @@ bool BuildAssetAllocationJson(CAssetAllocation& assetallocation, const CAsset& a
 	oAssetAllocation.push_back(Pair("accumulated_interest", ValueFromAssetAmount(GetAssetAllocationInterest(assetallocation, chainActive.Tip()->nHeight, errorMessage), asset.nPrecision, asset.bUseInputRanges)));
 	return true;
 }
-bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, const CAsset& asset, const CAmount& nSenderBalance, const CAmount& nAmount, const vector<unsigned char>& vchSender, const vector<unsigned char>& vchReceiver, bool &isMine, UniValue& oAssetAllocation)
+bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, const CAsset& asset, const CAmount& nSenderBalance, const CAmount& nAmount, const string& strSender, const string& strReceiver, bool &isMine, UniValue& oAssetAllocation)
 {
 	CAmount nAmountDisplay = nAmount;
 	int64_t nTime = 0;
@@ -1132,44 +1132,33 @@ bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, co
 	oAssetAllocation.push_back(Pair("symbol", stringFromVch(asset.vchSymbol)));
 	oAssetAllocation.push_back(Pair("interest_rate", asset.fInterestRate));
 	oAssetAllocation.push_back(Pair("height", (int)assetallocation.nHeight));
-	oAssetAllocation.push_back(Pair("sender", stringFromVch(vchSender)));
+	oAssetAllocation.push_back(Pair("sender", strSender));
 	oAssetAllocation.push_back(Pair("sender_balance", ValueFromAssetAmount(nSenderBalance, asset.nPrecision, asset.bUseInputRanges)));
-	oAssetAllocation.push_back(Pair("receiver", stringFromVch(vchReceiver)));
+	oAssetAllocation.push_back(Pair("receiver", strReceiver));
 	oAssetAllocation.push_back(Pair("receiver_balance", ValueFromAssetAmount(assetallocation.nBalance, asset.nPrecision, asset.bUseInputRanges)));
 	oAssetAllocation.push_back(Pair("memo", stringFromVch(assetallocation.vchMemo)));
 	oAssetAllocation.push_back(Pair("confirmed", bConfirmed));
 	if (fAssetAllocationIndex) {
 		string strCat = "";
 		isMine = true;
-		CAliasIndex fromAlias;
-		if (!GetAlias(vchSender, fromAlias))
-		{
-			isMine = false;
-		}
-		CAliasIndex toAlias;
-		if (!GetAlias(vchReceiver, toAlias))
-		{
-			isMine = false;
-		}
-		if (isMine)
-		{
-			const CSyscoinAddress fromAddress(EncodeBase58(fromAlias.vchAddress));
+		
+		const CSyscoinAddress fromAddress(strSender);
 
-			isminefilter filter = ISMINE_SPENDABLE;
-			isminefilter mine = IsMine(*pwalletMain, fromAddress.Get());
-			if ((mine & filter)) {
-				strCat = "send";
-				nAmountDisplay *= -1;
-			}
-			else {
-				const CSyscoinAddress toAddress(EncodeBase58(toAlias.vchAddress));
-				mine = IsMine(*pwalletMain, toAddress.Get());
-				if ((mine & filter))
-					strCat = "receive";
-				else
-					isMine = false;
-			}
+		isminefilter filter = ISMINE_SPENDABLE;
+		isminefilter mine = IsMine(*pwalletMain, fromAddress.Get());
+		if ((mine & filter)) {
+			strCat = "send";
+			nAmountDisplay *= -1;
 		}
+		else {
+			const CSyscoinAddress toAddress(strReceiver);
+			mine = IsMine(*pwalletMain, toAddress.Get());
+			if ((mine & filter))
+				strCat = "receive";
+			else
+				isMine = false;
+		}
+		
 		oAssetAllocation.push_back(Pair("category", strCat));
 	}
 	oAssetAllocation.push_back(Pair("amount", ValueFromAssetAmount(nAmountDisplay, asset.nPrecision, asset.bUseInputRanges)));
