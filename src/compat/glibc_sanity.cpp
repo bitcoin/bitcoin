@@ -9,6 +9,7 @@
 #include <cstddef>
 
 #if defined(HAVE_SYS_SELECT_H)
+#include <cstring>
 #include <sys/select.h>
 #endif
 
