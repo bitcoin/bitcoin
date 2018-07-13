@@ -33,7 +33,7 @@ static const auto MAX_NAME_LENGTH = 30;
 // min lengths are expressed by quantifiers
 static const std::regex ROOT_NAME_CHARACTERS("^[A-Z0-9._]{3,}$");
 static const std::regex SUB_NAME_CHARACTERS("^[A-Z0-9._]+$");
-static const std::regex UNIQUE_TAG_CHARACTERS("^[A-Za-z0-9@$%&*()[\\]{}<>\\-_.;?\\\\:]+$");
+static const std::regex UNIQUE_TAG_CHARACTERS("^[-A-Za-z0-9@$%&*()[\\]{}<>_.;?\\\\:]+$");
 static const std::regex CHANNEL_TAG_CHARACTERS("^[A-Z0-9._]+$");
 
 static const std::regex DOUBLE_PUNCTUATION("^.*[._]{2,}.*$");
