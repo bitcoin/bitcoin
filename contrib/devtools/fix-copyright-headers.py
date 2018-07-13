@@ -9,7 +9,7 @@ For example:
 
 it will change it to
 
-// Copyright (c) 2009-2015 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 '''
 import os
 import time
