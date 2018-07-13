@@ -3728,7 +3728,12 @@ static void FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPruneAfte
     uint64_t nBytesToPrune;
     int count=0;
 
-    if (nCurrentUsage + nBuffer >= nPruneTarget) {
+    // On a prune event, the chainstate DB is flushed.
+    // To avoid excessive prune events negating the benefit of high dbcache
+    // values, we should not prune too rapidly.
+    // Here we use dbcache as an arbitrary high water mark.
+    uint64_t nPruneHWM = nPruneTarget + nCoinCacheUsage;
+    if (nCurrentUsage + nBuffer >= nPruneHWM) {
         for (int fileNumber = 0; fileNumber < nLastBlockFile; fileNumber++) {
             nBytesToPrune = vinfoBlockFile[fileNumber].nSize + vinfoBlockFile[fileNumber].nUndoSize;
 
@@ -3750,8 +3755,9 @@ static void FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPruneAfte
         }
     }
 
-    LogPrint(BCLog::PRUNE, "Prune: target=%dMiB actual=%dMiB diff=%dMiB max_prune_height=%d removed %d blk/rev pairs\n",
-           nPruneTarget/1024/1024, nCurrentUsage/1024/1024,
+    LogPrint(BCLog::PRUNE, "Prune: target=%dMiB hwm=%dMiB actual=%dMiB diff=%dMiB max_prune_height=%d removed %d blk/rev pairs\n",
+           nPruneTarget/1024/1024, nPruneHWM/1024/1024,
+           nCurrentUsage/1024/1024,
            ((int64_t)nPruneTarget - (int64_t)nCurrentUsage)/1024/1024,
            nLastBlockWeCanPrune, count);
 }
