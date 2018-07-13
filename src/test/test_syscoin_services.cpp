@@ -1249,7 +1249,7 @@ void AssetClaimInterest(const string& node, const string& name, const string& al
 	GenerateBlocks(1);
 	
 }
-string AssetAllocationTransfer(const bool usezdag, const string& node, const string& name, const string& fromalias, const string& inputs, const string& memo, const string& witness) {
+string AssetAllocationTransfer(const bool usezdag, const string& node, const string& name, const string& fromaddress, const string& inputs, const string& memo, const string& witness) {
 	
 	UniValue r;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + name + " false"));
@@ -1272,7 +1272,12 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 
 
 		UniValue receiverObj = receiver.get_obj();
-		vector<unsigned char> vchAliasTo = vchFromValue(find_value(receiverObj, "aliasto"));
+		vector<unsigned char> vchAddressTo = vchFromValue(find_value(receiverObj, "address"));
+		CSyscoinAddress addressTo(stringFromVch(vchAddressTo));
+		if (!addressTo.IsValid())
+			throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1502 - " + _("Invalid recipient address"));
+
+		DecodeBase58(stringFromVch(vchAddressTo), vchAddressTo);
 
 		UniValue inputRangeObj = find_value(receiverObj, "ranges");
 		UniValue amountObj = find_value(receiverObj, "amount");
@@ -1291,13 +1296,13 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 			const unsigned int rangeTotal = validateRangesAndGetCount(vectorOfRanges);
 			BOOST_CHECK(rangeTotal > 0);
 			inputamount += rangeTotal;
-			theAssetAllocation.listSendingAllocationInputs.push_back(make_pair(vchAliasTo, vectorOfRanges));
+			theAssetAllocation.listSendingAllocationInputs.push_back(make_pair(vchAddressTo, vectorOfRanges));
 		}
 		else if (amountObj.isNum()) {
 			const CAmount &amount = AssetAmountFromValue(amountObj, nprecision, binputranges);
 			inputamount += amount;
 			BOOST_CHECK(amount > 0);
-			theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(vchAliasTo, amount));
+			theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(vchAddressTo, amount));
 		}
 
 
@@ -1306,12 +1311,12 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationinfo " + name + " " + fromalias + " false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationinfo " + name + " " + fromaddress + " false"));
 	UniValue balance = find_value(r.get_obj(), "balance");
 	CAmount newfromamount = AssetAmountFromValue(balance, nprecision, binputranges) - inputamount;
 
-	// "assetallocationsend [asset] [aliasfrom] ( [{\"alias\":\"aliasname\",\"amount\":amount},...] or [{\"alias\":\"aliasname\",\"ranges\":[{\"start\":index,\"end\":index},...]},...] ) [memo] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationsend " + name + " " + fromalias + " " + inputs + " " + memo + " " + witness));
+	// "assetallocationsend [asset] [aliasfrom] ( [{\"address\":\"address\",\"amount\":amount},...] or [{\"address\":\"address\",\"ranges\":[{\"start\":index,\"end\":index},...]},...] ) [memo] [witness]\n"
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationsend " + name + " " + fromaddress + " " + inputs + " " + memo + " " + witness));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -1359,8 +1364,13 @@ string AssetSend(const string& node, const string& name, const string& inputs, c
 			
 
 		UniValue receiverObj = receiver.get_obj();
-		vector<unsigned char> vchAliasTo = vchFromValue(find_value(receiverObj, "aliasto"));
-		
+		vector<unsigned char> vchAddressTo = vchFromValue(find_value(receiverObj, "address"));
+		CSyscoinAddress addressTo(stringFromVch(vchAddressTo));
+		if (!addressTo.IsValid())
+			throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1502 - " + _("Invalid recipient address"));
+
+		DecodeBase58(stringFromVch(vchAddressTo), vchAddressTo);
+
 		UniValue inputRangeObj = find_value(receiverObj, "ranges");
 		UniValue amountObj = find_value(receiverObj, "amount");
 		if (inputRangeObj.isArray()) {
@@ -1378,13 +1388,13 @@ string AssetSend(const string& node, const string& name, const string& inputs, c
 			const unsigned int rangeTotal = validateRangesAndGetCount(vectorOfRanges);
 			BOOST_CHECK(rangeTotal > 0);
 			inputamount += rangeTotal;
-			theAssetAllocation.listSendingAllocationInputs.push_back(make_pair(vchAliasTo, vectorOfRanges));
+			theAssetAllocation.listSendingAllocationInputs.push_back(make_pair(vchAddressTo, vectorOfRanges));
 		}
 		else if (amountObj.isNum()) {
 			const CAmount &amount = AssetAmountFromValue(amountObj, nprecision, binputranges);
 			inputamount += amount;
 			BOOST_CHECK(amount > 0);
-			theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(vchAliasTo, amount));
+			theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(vchAddressTo, amount));
 		}
 		
 
@@ -1397,7 +1407,7 @@ string AssetSend(const string& node, const string& name, const string& inputs, c
 	UniValue balance = find_value(r.get_obj(), "balance");
 	CAmount newfromamount = AssetAmountFromValue(balance, nprecision, binputranges) - inputamount;
 
-	// "assetsend [asset] ( [{\"alias\":\"aliasname\",\"amount\":amount},...] or [{\"alias\":\"aliasname\",\"ranges\":[{\"start\":index,\"end\":index},...]},...] ) [memo] [witness]\n"
+	// "assetsend [asset] ( [{\"address\":\"address\",\"amount\":amount},...] or [{\"address\":\"address\",\"ranges\":[{\"start\":index,\"end\":index},...]},...] ) [memo] [witness]\n"
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetsend " + name + " " + inputs + " " + memo + " " + witness));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));

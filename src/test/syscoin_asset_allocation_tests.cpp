@@ -30,12 +30,12 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_send)
 	AliasNew("node2", "jagassetallocationsend2", "data");
 	string guid = AssetNew("node1", "usd", "jagassetallocationsend1", "data", "8", "false", "1", "-1");
 
-	AssetSend("node1", guid, "\"[{\\\"aliasto\\\":\\\"jagassetallocationsend1\\\",\\\"amount\\\":1}]\"", "assetallocationsend");
+	AssetSend("node1", guid, "\"[{\\\"address\\\":\\\"jagassetallocationsend1\\\",\\\"amount\\\":1}]\"", "assetallocationsend");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetallocationsend1 false"));
 	UniValue balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 1 * COIN);
 
-	string txid0 = AssetAllocationTransfer(false, "node1", guid, "jagassetallocationsend1", "\"[{\\\"aliasto\\\":\\\"jagassetallocationsend2\\\",\\\"amount\\\":0.11}]\"", "allocationsendmemo");
+	string txid0 = AssetAllocationTransfer(false, "node1", guid, "jagassetallocationsend1", "\"[{\\\"address\\\":\\\"jagassetallocationsend2\\\",\\\"amount\\\":0.11}]\"", "allocationsendmemo");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetallocationsend2 false"));
 	balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false),0.11 * COIN);
@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_send)
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
 
 	// send using zdag
-	string txid1 = AssetAllocationTransfer(true, "node1", guid, "jagassetallocationsend1", "\"[{\\\"aliasto\\\":\\\"jagassetallocationsend2\\\",\\\"amount\\\":0.12}]\"", "allocationsendmemo");
+	string txid1 = AssetAllocationTransfer(true, "node1", guid, "jagassetallocationsend1", "\"[{\\\"address\\\":\\\"jagassetallocationsend2\\\",\\\"amount\\\":0.12}]\"", "allocationsendmemo");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetallocationsend2 false"));
 	balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 0.23 * COIN);
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_send)
 	// wait for 1 second as required by unit test
 	MilliSleep(1000);
 	// second send
-	string txid2 = AssetAllocationTransfer(true, "node1", guid, "jagassetallocationsend1", "\"[{\\\"aliasto\\\":\\\"jagassetallocationsend2\\\",\\\"amount\\\":0.13}]\"", "allocationsendmemo");
+	string txid2 = AssetAllocationTransfer(true, "node1", guid, "jagassetallocationsend1", "\"[{\\\"address\\\":\\\"jagassetallocationsend2\\\",\\\"amount\\\":0.13}]\"", "allocationsendmemo");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetallocationsend2 false"));
 	balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 0.36 * COIN);
