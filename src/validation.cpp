@@ -1290,7 +1290,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 				if (numTries <= 0)
 					return state.DoS(0, false,
 						REJECT_INVALID, "threadpool-full", false,
-						strprintf("AcceptToMemoryPoolWorker: %s", e.what()));
+						"AcceptToMemoryPoolWorker: Thread pool queue size exceeded");
 				MilliSleep(1);
 			}		
 		}
