@@ -42,6 +42,7 @@ class CDataStream;
 class CTransaction;
 class CTxOut;
 class Coin;
+class CWallet;
 struct CAssetOutputEntry;
 
 // 50000 * 82 Bytes == 4.1 Mb
@@ -329,6 +330,7 @@ bool IsScriptTransferAsset(const CScript& scriptPubKey);
 bool IsNewOwnerTxValid(const CTransaction& tx, const std::string& assetName, const std::string& address, std::string& errorMsg);
 
 bool CheckAssetOwner(const std::string& assetName);
+void GetAllOwnedAssets(std::vector<std::string>& names);
 
 void UpdatePossibleAssets();
 
@@ -346,4 +348,7 @@ bool GetMyAssetBalances(CAssetsCache& cache, std::map<std::string, CAmount>& bal
 
 std::string DecodeIPFS(std::string encoded);
 std::string EncodeIPFS(std::string decoded);
+
+bool CreateAssetTransaction(CWallet* pwallet, const CNewAsset& asset, const std::string& address, std::pair<int, std::string>& error, std::string& txid);
+bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& asset, const std::string& address, std::pair<int, std::string>& error, std::string& txid);
 #endif //RAVENCOIN_ASSET_PROTOCOL_H

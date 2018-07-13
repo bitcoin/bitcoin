@@ -197,14 +197,14 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, CAssetsCa
                     CAssetTransfer transfer;
                     std::string address;
                     if (!TransferAssetFromScript(txout.scriptPubKey, transfer, address))
-                        return state.DoS(100, false, REJECT_INVALID, "bad-tsnx-transfer-asset-bad-deserialize");
+                        return state.DoS(100, false, REJECT_INVALID, "bad-txns-transfer-asset-bad-deserialize");
 
                     // If we aren't reindexing
                     if (!fReindex) {
                         // If the transfer is an ownership asset. Check to make sure that it is OWNER_ASSET_AMOUNT
                         if (IsAssetNameAnOwner(transfer.strName)) {
                             if (transfer.nAmount != OWNER_ASSET_AMOUNT)
-                                return state.DoS(100, false, REJECT_INVALID, "bad-txns-transfer-owner-amount-wasn't-1");
+                                return state.DoS(100, false, REJECT_INVALID, "bad-txns-transfer-owner-amount-was-not-1");
                         } else {
                             // For all other types of assets, make sure they are sending the right type of units
                             CNewAsset asset;
@@ -334,7 +334,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
     // Tally transaction fees
     const CAmount txfee_aux = nValueIn - value_out;
     if (!MoneyRange(txfee_aux)) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-outofrange");
+        return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-out-of-range");
     }
 
     txfee = txfee_aux;
@@ -346,7 +346,7 @@ bool Consensus::CheckTxAssets(const CTransaction& tx, CValidationState& state, c
 {
     // are the actual inputs available?
     if (!inputs.HaveInputs(tx)) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-missingorspent", false,
+        return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-missing-or-spent", false,
                          strprintf("%s: inputs missing/spent", __func__));
     }
 
@@ -393,11 +393,11 @@ bool Consensus::CheckTxAssets(const CTransaction& tx, CValidationState& state, c
 
     // Check the input values and the output values
     if (totalOutputs.size() != totalInputs.size())
-        return state.DoS(100, false, REJECT_INVALID, "bad-tx-asset-inputs-size-doesn't-match-outputs-size");
+        return state.DoS(100, false, REJECT_INVALID, "bad-tx-asset-inputs-size-does-not-match-outputs-size");
 
     for (const auto& outValue : totalOutputs) {
         if (!totalInputs.count(outValue.first))
-            return state.DoS(100, false, REJECT_INVALID, "bad-tx-asset-inputs-doesn't-have-asset-that-is-in-outputs");
+            return state.DoS(100, false, REJECT_INVALID, "bad-tx-asset-inputs-does-not-have-asset-that-is-in-outputs");
 
         if (totalInputs.at(outValue.first) != outValue.second)
             return state.DoS(100, false, REJECT_INVALID, "bad-tx-asset-inputs-amount-mismatch-with-outputs-amount");

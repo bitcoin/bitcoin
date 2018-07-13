@@ -516,14 +516,21 @@ void static RavenMiner(const CChainParams& chainparams)
     unsigned int nExtraNonce = 0;
 
 
-    CWallet *  pWallet = GetFirstWallet();
+    CWallet * pWallet = NULL;
+
+    #ifdef ENABLE_WALLET
+        pWallet = GetFirstWallet();
+    #endif
 
     if (!EnsureWalletIsAvailable(pWallet, false)) {
         LogPrintf("RavenMiner -- Wallet not available\n");
     }
 
     if (pWallet == NULL)
+    {
         LogPrintf("pWallet is NULL\n");
+        return;
+    }
 
 
     std::shared_ptr<CReserveScript> coinbaseScript;

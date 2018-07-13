@@ -19,6 +19,7 @@
 #include "transactiontablemodel.h"
 #include "transactionview.h"
 #include "walletmodel.h"
+#include "assetsdialog.h"
 
 #include "ui_interface.h"
 
@@ -57,6 +58,8 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     receiveCoinsPage = new ReceiveCoinsDialog(platformStyle);
     sendCoinsPage = new SendCoinsDialog(platformStyle);
 
+    assetsPage = new AssetsDialog(platformStyle);
+
     usedSendingAddressesPage = new AddressBookPage(platformStyle, AddressBookPage::ForEditing, AddressBookPage::SendingTab, this);
     usedReceivingAddressesPage = new AddressBookPage(platformStyle, AddressBookPage::ForEditing, AddressBookPage::ReceivingTab, this);
 
@@ -64,6 +67,10 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     addWidget(transactionsPage);
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
+
+    /** RVN START */
+    addWidget(assetsPage);
+    /** RVN END */
 
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
     connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), transactionView, SLOT(focusTransaction(QModelIndex)));
@@ -79,6 +86,10 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     connect(sendCoinsPage, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
     // Pass through messages from transactionView
     connect(transactionView, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
+
+    /** RVN START */
+    connect(assetsPage, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
+    /** RNV END */
 }
 
 WalletView::~WalletView()
@@ -125,6 +136,9 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
     sendCoinsPage->setModel(_walletModel);
     usedReceivingAddressesPage->setModel(_walletModel ? _walletModel->getAddressTableModel() : nullptr);
     usedSendingAddressesPage->setModel(_walletModel ? _walletModel->getAddressTableModel() : nullptr);
+
+    /** RVN START */
+    assetsPage->setModel(_walletModel);
 
     if (_walletModel)
     {
@@ -329,3 +343,10 @@ void WalletView::requestedSyncWarningInfo()
 {
     Q_EMIT outOfSyncWarningClicked();
 }
+
+/** RVN START */
+void WalletView::gotoAssetsPage()
+{
+    setCurrentWidget(assetsPage);
+}
+/** RVN END */
