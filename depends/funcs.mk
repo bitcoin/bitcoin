@@ -64,6 +64,7 @@ $(1)_cached:=$(BASE_CACHE)/$(host)/$(1)/$(1)-$($(1)_version)-$($(1)_build_id).ta
 $(1)_all_sources=$($(1)_file_name) $($(1)_extra_sources)
 
 #stamps
+$(1)_introduced=$$($(1)_extract_dir)/.introduced
 $(1)_fetched=$(SOURCES_PATH)/download-stamps/.stamp_fetched-$(1)-$($(1)_file_name).hash
 $(1)_extracted=$$($(1)_extract_dir)/.stamp_extracted
 $(1)_preprocessed=$$($(1)_extract_dir)/.stamp_preprocessed
@@ -157,48 +158,60 @@ $(1)_autoconf += LDFLAGS="$$($(1)_ldflags)"
 endif
 endef
 
+shortdate="+%H:%M:%S"
+
 define int_add_cmds
-$($(1)_fetched):
-	$(AT)mkdir -p $$(@D) $(SOURCES_PATH)
+$($(1)_introduced):
+	@echo "============================================================"
+	@echo "   Package : $(1)"
+	@echo "   Date    : `date`"
+	@echo "============================================================"
+	$(AT)mkdir -p $$(@D)
+	$(AT)touch $$@
+$($(1)_fetched): | $($(1)_introduced)
+	$(AT)mkdir -p $$(@D) $(SOURCES_PATH) $($(1)_download_dir)
 	$(AT)rm -f $$@
 	$(AT)touch $$@
-	$(AT)cd $$(@D); $(call $(1)_fetch_cmds,$(1))
+	$(AT)cd $$(@D); ( echo -n -e ""; $(call $(1)_fetch_cmds,$(1)) ) > $($(1)_download_dir)/.fetch_output 2>&1 || ( cat $($(1)_download_dir)/.fetch_output && false )
 	$(AT)cd $($(1)_source_dir); $(foreach source,$($(1)_all_sources),$(build_SHA256SUM) $(source) >> $$(@);)
 	$(AT)touch $$@
-$($(1)_extracted): | $($(1)_fetched)
-	$(AT)echo Extracting $(1)...
-	$(AT)mkdir -p $$(@D)
-	$(AT)cd $$(@D); $(call $(1)_extract_cmds,$(1))
+$($(1)_extracted): | $($(1)_introduced) $($(1)_fetched)
+	$(AT)echo `date $(shortdate)`: Extracting $(1)...
+	$(AT)mkdir -p $$(@D) $($(1)_download_dir)
+	$(AT)cd $$(@D); ( echo -n -e ""; $(call $(1)_extract_cmds,$(1)) ) > $($(1)_download_dir)/.extract_output 2>&1 || ( cat $($(1)_download_dir)/.extract_output && false )
 	$(AT)touch $$@
-$($(1)_preprocessed): | $($(1)_dependencies) $($(1)_extracted)
-	$(AT)echo Preprocessing $(1)...
+$($(1)_preprocessed): | $($(1)_introduced) $($(1)_dependencies) $($(1)_extracted)
+	$(AT)echo `date $(shortdate)`: Preprocessing $(1)...
 	$(AT)mkdir -p $$(@D) $($(1)_patch_dir)
 	$(AT)$(foreach patch,$($(1)_patches),cd $(PATCHES_PATH)/$(1); cp $(patch) $($(1)_patch_dir) ;)
-	$(AT)cd $$(@D); $(call $(1)_preprocess_cmds, $(1))
+	$(AT)cd $$(@D); ( echo -n -e ""; $(call $(1)_preprocess_cmds, $(1)) ) > $($(1)_patch_dir)/.preproc_output 2>&1 || ( cat $($(1)_patch_dir)/.preproc_output && false )
 	$(AT)touch $$@
-$($(1)_configured): | $($(1)_preprocessed)
-	$(AT)echo Configuring $(1)...
+$($(1)_configured): | $($(1)_introduced) $($(1)_preprocessed)
+	$(AT)echo `date $(shortdate)`: Configuring $(1)...
 	$(AT)rm -rf $(host_prefix); mkdir -p $(host_prefix)/lib; cd $(host_prefix); $(foreach package,$($(1)_all_dependencies), tar xf $($(package)_cached); )
-	$(AT)mkdir -p $$(@D)
-	$(AT)+cd $$(@D); $($(1)_config_env) $(call $(1)_config_cmds, $(1))
+	$(AT)mkdir -p $$(@D) $($(1)_source_dir)
+	$(AT)+cd $$(@D); ( echo -n -e ""; $($(1)_config_env) $(call $(1)_config_cmds, $(1)) ) > $($(1)_source_dir)/.config_output 2>&1 || ( cat $($(1)_source_dir)/.config_output && false )
 	$(AT)touch $$@
 $($(1)_built): | $($(1)_configured)
-	$(AT)echo Building $(1)...
-	$(AT)mkdir -p $$(@D)
-	$(AT)+cd $$(@D); $($(1)_build_env) $(call $(1)_build_cmds, $(1))
+	$(AT)echo `date $(shortdate)`: Building $(1)...
+	$(AT)rm -f .built-$(1)
+	$(AT)( sleep 540; if [ ! -e ".built-$(1)" ]; then echo `date $(shortdate)`: ...; sleep 540; if [ ! -e ".built-$(1)" ]; then echo `date $(shortdate)`: ...; fi; fi ) &
+	$(AT)mkdir -p $$(@D) $($(1)_source_dir)
+	$(AT)+cd $$(@D); ( echo -n -e ""; $($(1)_build_env) $(call $(1)_build_cmds, $(1)) ) > $($(1)_source_dir)/.build_output 2>&1 || ( cat $($(1)_source_dir)/.build_output && false )
+	$(AT)touch .built-$(1)
 	$(AT)touch $$@
 $($(1)_staged): | $($(1)_built)
-	$(AT)echo Staging $(1)...
+	$(AT)echo `date $(shortdate)`: Staging $(1)...
 	$(AT)mkdir -p $($(1)_staging_dir)/$(host_prefix)
-	$(AT)cd $($(1)_build_dir); $($(1)_stage_env) $(call $(1)_stage_cmds, $(1))
+	$(AT)cd $($(1)_build_dir); ( echo -n -e ""; $($(1)_stage_env) $(call $(1)_stage_cmds, $(1)) ) > $($(1)_staging_dir)/.stage_output 2>&1 || ( cat $($(1)_staging_dir)/.stage_output && false )
 	$(AT)rm -rf $($(1)_extract_dir)
 	$(AT)touch $$@
 $($(1)_postprocessed): | $($(1)_staged)
-	$(AT)echo Postprocessing $(1)...
-	$(AT)cd $($(1)_staging_prefix_dir); $(call $(1)_postprocess_cmds)
+	$(AT)echo `date $(shortdate)`: Postprocessing $(1)...
+	$(AT)cd $($(1)_staging_prefix_dir); ( echo -n -e ""; $(call $(1)_postprocess_cmds) ) > $($(1)_staging_prefix_dir)/.postproc_output 2>&1 || ( cat $($(1)_staging_prefix_dir)/.postproc_output && false )
 	$(AT)touch $$@
 $($(1)_cached): | $($(1)_dependencies) $($(1)_postprocessed)
-	$(AT)echo Caching $(1)...
+	$(AT)echo `date $(shortdate)`: Caching $(1)...
 	$(AT)cd $$($(1)_staging_dir)/$(host_prefix); find . | sort | tar --no-recursion -czf $$($(1)_staging_dir)/$$(@F) -T -
 	$(AT)mkdir -p $$(@D)
 	$(AT)rm -rf $$(@D) && mkdir -p $$(@D)
@@ -209,7 +222,7 @@ $($(1)_cached_checksum): $($(1)_cached)
 
 .PHONY: $(1)
 $(1): | $($(1)_cached_checksum)
-.SECONDARY: $($(1)_cached) $($(1)_postprocessed) $($(1)_staged) $($(1)_built) $($(1)_configured) $($(1)_preprocessed) $($(1)_extracted) $($(1)_fetched)
+.SECONDARY: $($(1)_cached) $($(1)_postprocessed) $($(1)_staged) $($(1)_built) $($(1)_configured) $($(1)_preprocessed) $($(1)_extracted) $($(1)_fetched) $($(1)_introduced)
 
 endef
 
