@@ -123,7 +123,7 @@ void CreateAssetDialog::CheckFormState()
     if (!IsAssetNameValid(ui->nameText->text().toStdString()))
         return;
 
-    if (ui->ipfsBox->isChecked() && ui->ipfsText->text().size() != 40)
+    if (ui->ipfsBox->isChecked() && ui->ipfsText->text().size() != 46)
         return;
 
     enableCreateButton();
@@ -232,11 +232,11 @@ void CreateAssetDialog::onCreateAssetClicked()
     bool reissuable = ui->reissuableBox->isChecked();
     bool hasIPFS = ui->ipfsBox->isChecked();
 
-    QString ipfs = "";
+    std::string ipfsDecoded = "";
     if (hasIPFS)
-        ipfs = ui->ipfsText->text();
+        ipfsDecoded = DecodeIPFS(ui->ipfsText->text().toStdString());
 
-    CNewAsset asset(name.toStdString(), quantity, units, reissuable ? 1 : 0, hasIPFS ? 1 : 0, ipfs.toStdString());
+    CNewAsset asset(name.toStdString(), quantity, units, reissuable ? 1 : 0, hasIPFS ? 1 : 0, ipfsDecoded);
 
     // Create the transaction and broadcast it
     std::pair<int, std::string> error;

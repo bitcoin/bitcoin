@@ -806,7 +806,7 @@ UniValue decodescript(const JSONRPCRequest& request)
         r.push_back(Pair("reissuable", reissuable));
 
         if (reissue.strIPFSHash != "")
-            r.push_back(Pair("new_ipfs_hash", reissue.strIPFSHash));
+            r.push_back(Pair("new_ipfs_hash", EncodeIPFS(reissue.strIPFSHash)));
 
     } else if (type.isStr() && type.get_str() == ASSET_NEW_STRING) {
         if (!AreAssetsDeployed())
@@ -829,7 +829,7 @@ UniValue decodescript(const JSONRPCRequest& request)
         r.push_back(Pair("hasIPFS", hasIPFS));
 
         if (hasIPFS)
-            r.push_back(Pair("ipfs_hash", asset.strIPFSHash));
+            r.push_back(Pair("ipfs_hash", EncodeIPFS(asset.strIPFSHash)));
     }
     /** RVN END */
 
