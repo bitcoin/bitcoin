@@ -67,7 +67,7 @@
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Това са Вашите Биткойн адреси,благодарение на които ще получавате плащания.Препоръчително е да използвате нови адреси за получаване на всяка транзакция.</translation>
+        <translation>Това са Вашите МикроБиткойн адреси,благодарение на които ще получавате плащания.Препоръчително е да използвате нови адреси за получаване на всяка транзакция.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -169,7 +169,7 @@
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>ВНИМАНИЕ: Ако шифрирате вашият портфейл и изгубите паролата си, &lt;b&gt;ЩЕ ИЗГУБИТЕ ВСИЧКИТЕ СИ БИТКОИНИ&lt;/b&gt;!</translation>
+        <translation>ВНИМАНИЕ: Ако шифрирате вашият портфейл и изгубите паролата си, &lt;b&gt;ЩЕ ИЗГУБИТЕ ВСИЧКИТЕ СИ МикроБиткоИНИ&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -331,7 +331,7 @@
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
-        <translation>Изпращане към Биткоин адрес</translation>
+        <translation>Изпращане към МикроБиткоин адрес</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -355,7 +355,7 @@
     </message>
     <message>
         <source>Bitcoin</source>
-        <translation>Биткоин</translation>
+        <translation>МикроБиткоин</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -383,11 +383,11 @@
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Пишете съобщения със своя Биткойн адрес за да докажете,че е ваш.</translation>
+        <translation>Пишете съобщения със своя МикроБиткойн адрес за да докажете,че е ваш.</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Потвърждаване на съобщения  за да се знае,че са написани с дадените Биткойн адреси.</translation>
+        <translation>Потвърждаване на съобщения  за да се знае,че са написани с дадените МикроБиткойн адреси.</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -407,7 +407,7 @@
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Изискване на плащания(генерира QR кодове и биткойн: URIs)</translation>
+        <translation>Изискване на плащания(генерира QR кодове и МикроБиткойн: URIs)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -419,7 +419,7 @@
     </message>
     <message>
         <source>Open a bitcoin: URI or payment request</source>
-        <translation>Отворете биткойн: URI  или заявка за плащане</translation>
+        <translation>Отворете МикроБиткойн: URI  или заявка за плащане</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -463,7 +463,7 @@
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation>Покажи %1 помощно съобщение за да получиш лист с възможни Биткойн команди</translation>
+        <translation>Покажи %1 помощно съобщение за да получиш лист с възможни МикроБиткойн команди</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -707,7 +707,7 @@
     </message>
     <message>
         <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation>"%1" не е валиден Биткоин адрес.</translation>
+        <translation>"%1" не е валиден МикроБиткоин адрес.</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book.</source>
@@ -937,7 +937,7 @@
     </message>
     <message>
         <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation>Свързване с Биткойн мрежата чрез SOCKS5  прокси.</translation>
+        <translation>Свързване с МикроБиткойн мрежата чрез SOCKS5  прокси.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1032,7 +1032,7 @@
     </message>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Текущата информация на екрана може да не е актуална. Вашият портфейл ще се синхронизира автоматично с мрежата на Биткоин, щом поне една връзката с нея се установи; този процес все още не е приключил.</translation>
+        <translation>Текущата информация на екрана може да не е актуална. Вашият портфейл ще се синхронизира автоматично с мрежата на МикроБиткоин, щом поне една връзката с нея се установи; този процес все още не е приключил.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -1087,7 +1087,7 @@
     </message>
     <message>
         <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation>Биткойн не можe да се стартира: click-to-pay handler</translation>
+        <translation>МикроБиткойн не можe да се стартира: click-to-pay handler</translation>
     </message>
     <message>
         <source>URI handling</source>
@@ -1161,7 +1161,7 @@
     </message>
     <message>
         <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation>Въведете Биткойн адрес (например: %1)</translation>
+        <translation>Въведете МикроБиткойн адрес (например: %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1714,7 +1714,7 @@
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
-        <translation>Внимание: Невалиден Биткойн адрес</translation>
+        <translation>Внимание: Невалиден МикроБиткойн адрес</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -1850,7 +1850,7 @@
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation>Проверете съобщение, за да сте сигурни че е подписано с определен Биткоин адрес</translation>
+        <translation>Проверете съобщение, за да сте сигурни че е подписано с определен МикроБиткоин адрес</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -2371,7 +2371,7 @@
     </message>
     <message>
         <source>Bitcoin Core</source>
-        <translation>Биткойн ядро</translation>
+        <translation>МикроБиткойн ядро</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>

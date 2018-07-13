@@ -63,11 +63,11 @@
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Тези са вашите Биткойн адреси за изпращане на монети. Винаги проверявайте количеството и получаващия адрес преди изпращане. </translation>
+        <translation>Тези са вашите МикроБиткойн адреси за изпращане на монети. Винаги проверявайте количеството и получаващия адрес преди изпращане. </translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Това са вашите Биткойн адреси за получаване на монети. Препоръчително е да ползвате нов адрес на всяка транзакция.</translation>
+        <translation>Това са вашите МикроБиткойн адреси за получаване на монети. Препоръчително е да ползвате нов адрес на всяка транзакция.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -421,7 +421,7 @@
     <name>bitcoin-core</name>
     <message>
         <source>Bitcoin Core</source>
-        <translation>Биткойн ядро</translation>
+        <translation>МикроБиткойн ядро</translation>
     </message>
     </context>
 </TS>
