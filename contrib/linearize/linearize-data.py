@@ -3,6 +3,7 @@
 # linearize-data.py: Construct a linear, no-fork version of the chain.
 #
 # Copyright (c) 2013-2014 The Bitcoin Core developers
+# Copyright (c) 2014-2018 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -302,4 +303,3 @@ if __name__ == '__main__':
 		print("Genesis block not found in hashlist")
 	else:
 		BlockDataCopier(settings, blkindex, blkmap).run()
-

@@ -1,4 +1,5 @@
-dnl Copyright (c) 2013-2016 The Syscoin Core developers
+dnl Copyright (c) 2013-2016 The Bitcoin Core developers
+dnl Copyright (c) 2014-2017 The Syscoin Core developers
 dnl Distributed under the MIT software license, see the accompanying
 dnl file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -536,4 +537,3 @@ AC_DEFUN([_SYSCOIN_QT_FIND_LIBS_WITHOUT_PKGCONFIG],[
   CXXFLAGS="$TEMP_CXXFLAGS"
   LIBS="$TEMP_LIBS"
 ])
-
