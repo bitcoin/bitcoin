@@ -48,15 +48,15 @@ static const std::regex UNIQUE_INDICATOR("^[^#]+#[^#]+$");
 static const std::regex CHANNEL_INDICATOR("^[^~]+~[^~]+$");
 static const std::regex OWNER_INDICATOR("^[^!]+!$");
 
+static const std::regex RAVEN_NAMES("^RVN$|^RAVEN$|^RAVENCOIN$|^RAVEN.COIN$|^RAVEN_COIN$");
+
 bool IsRootNameValid(const std::string& name)
 {
     return std::regex_match(name, ROOT_NAME_CHARACTERS)
         && !std::regex_match(name, DOUBLE_PUNCTUATION)
         && !std::regex_match(name, LEADING_PUNCTUATION)
         && !std::regex_match(name, TRAILING_PUNCTUATION)
-        && !std::regex_match(name, "^RVN$")
-        && !std::regex_match(name, "^RAVEN$")
-        && !std::regex_match(name, "^RAVENCOIN$");
+        && !std::regex_match(name, RAVEN_NAMES);
 }
 
 bool IsSubNameValid(const std::string& name)
