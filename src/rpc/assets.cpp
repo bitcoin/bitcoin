@@ -60,9 +60,9 @@ UniValue UnitValueFromAmount(const CAmount& amount, const std::string asset_name
 
 UniValue issue(const JSONRPCRequest& request)
 {
-    if (request.fHelp || !AreAssetsDeployed() || request.params.size() < 2 || request.params.size() > 7)
+    if (request.fHelp || !AreAssetsDeployed() || request.params.size() < 2 || request.params.size() > 8)
         throw std::runtime_error(
-            "issue \"asset_name\" qty \"( to_address )\" ( units ) ( reissuable ) ( has_ipfs ) \"( ipfs_hash )\"\n"
+            "issue \"asset_name\" qty \"( to_address )\" \"( change_address )\" ( units ) ( reissuable ) ( has_ipfs ) \"( ipfs_hash )\"\n"
             + AssetActivationWarning() +
             "\nIssue an asset with unique name.\n"
             "Unit as the number of decimals precision for the asset (0 for whole units (\"1\"), 8 for max precision (\"1.00000000\")\n"
@@ -73,10 +73,11 @@ UniValue issue(const JSONRPCRequest& request)
             "1. \"asset_name\"            (string, required) a unique name\n"
             "2. \"qty\"                   (integer, required) the number of units to be issued\n"
             "3. \"to_address\"            (string), optional, default=\"\"), address asset will be sent to, if it is empty, address will be generated for you\n"
-            "4. \"units\"                 (integer, optional, default=8, min=0, max=8), the number of decimals precision for the asset (0 for whole units (\"1\"), 8 for max precision (\"1.00000000\")\n"
-            "5. \"reissuable\"            (boolean, optional, default=false), whether future reissuance is allowed\n"
-            "6. \"has_ipfs\"              (boolean, optional, default=false), whether ifps hash is going to be added to the asset\n"
-            "7. \"ipfs_hash\"             (string, optional but required if has_ipfs = 1), an ipfs hash\n"
+            "4. \"change_address\"        (string), optional, default=\"\"), address the the rvn change will be sent to, if it is empty, change address will be generated for you\n"
+            "5. \"units\"                 (integer, optional, default=8, min=0, max=8), the number of decimals precision for the asset (0 for whole units (\"1\"), 8 for max precision (\"1.00000000\")\n"
+            "6. \"reissuable\"            (boolean, optional, default=false), whether future reissuance is allowed\n"
+            "7. \"has_ipfs\"              (boolean, optional, default=false), whether ifps hash is going to be added to the asset\n"
+            "8. \"ipfs_hash\"             (string, optional but required if has_ipfs = 1), an ipfs hash\n"
 
             "\nResult:\n"
             "\"txid\"                     (string) The transaction id\n"
@@ -84,8 +85,8 @@ UniValue issue(const JSONRPCRequest& request)
             "\nExamples:\n"
             + HelpExampleCli("issue", "\"myassetname\" 1000")
             + HelpExampleCli("issue", "\"myassetname\" 1000 \"myaddress\"")
-            + HelpExampleCli("issue", "\"myassetname\" 1000 \"myaddress\" 4")
-            + HelpExampleCli("issue", "\"myassetname\" 1000 \"myaddress\" 2 true")
+            + HelpExampleCli("issue", "\"myassetname\" 1000 \"myaddress\" \"changeaddress\" 4")
+            + HelpExampleCli("issue", "\"myassetname\" 1000 \"myaddress\" \"changeaddress\" 2 true")
         );
 
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -106,7 +107,7 @@ UniValue issue(const JSONRPCRequest& request)
     if (request.params.size() > 2)
         address = request.params[2].get_str();
 
-    if (address != "") {
+    if (!address.empty()) {
         CTxDestination destination = DecodeDestination(address);
         if (!IsValidDestination(destination)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raven address: ") + address);
@@ -131,27 +132,38 @@ UniValue issue(const JSONRPCRequest& request)
         address = EncodeDestination(keyID);
     }
 
-    int units = 8;
+    std::string changeAddress = "";
     if (request.params.size() > 3)
-        units = request.params[3].get_int();
-    bool reissuable = false;
+        changeAddress = request.params[3].get_str();
+    if (!changeAddress.empty()) {
+        CTxDestination destination = DecodeDestination(changeAddress);
+        if (!IsValidDestination(destination)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
+                               std::string("Invalid Change Address: Invalid Raven address: ") + changeAddress);
+        }
+    }
+
+    int units = 8;
     if (request.params.size() > 4)
-        reissuable = request.params[4].get_bool();
+        units = request.params[4].get_int();
+    bool reissuable = false;
+    if (request.params.size() > 5)
+        reissuable = request.params[5].get_bool();
 
     bool has_ipfs = false;
-    if (request.params.size() > 5)
-        has_ipfs = request.params[5].get_bool();
+    if (request.params.size() > 6)
+        has_ipfs = request.params[6].get_bool();
 
     std::string ipfs_hash = "";
-    if (request.params.size() > 6 && has_ipfs)
-        ipfs_hash = request.params[6].get_str();
+    if (request.params.size() > 7 && has_ipfs)
+        ipfs_hash = request.params[7].get_str();
 
     CNewAsset asset(asset_name, nAmount, units, reissuable ? 1 : 0, has_ipfs ? 1 : 0, ipfs_hash);
 
     // Create the transaction and broadcast it
     std::pair<int, std::string> error;
     std::string txid;
-    if (!CreateAssetTransaction(pwallet, asset, address, error, txid))
+    if (!CreateAssetTransaction(pwallet, asset, address, error, txid, changeAddress))
         throw JSONRPCError(error.first, error.second);
 
     UniValue result(UniValue::VARR);
@@ -748,7 +760,7 @@ UniValue listassets(const JSONRPCRequest& request)
 static const CRPCCommand commands[] =
 { //  category    name                          actor (function)             argNames
   //  ----------- ------------------------      -----------------------      ----------
-    { "assets",   "issue",                      &issue,                      {"asset_name","qty","to_address","units","reissuable","has_ipfs","ipfs_hash"} },
+    { "assets",   "issue",                      &issue,                      {"asset_name","qty","to_address","change_address:","units","reissuable","has_ipfs","ipfs_hash"} },
     { "assets",   "listassetbalancesbyaddress", &listassetbalancesbyaddress, {"address"} },
     { "assets",   "getassetdata",               &getassetdata,               {"asset_name"}},
     { "assets",   "listmyassets",               &listmyassets,               {"asset", "verbose", "count", "start"}},
