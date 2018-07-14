@@ -38,6 +38,14 @@ static void SetupBenchArgs()
     gArgs.AddArg("-help", "", false, OptionsCategory::HIDDEN);
 }
 
+static fs::path SetDataDir()
+{
+    fs::path ret = fs::temp_directory_path() / "bench_bitcoin" / fs::unique_path();
+    fs::create_directories(ret);
+    gArgs.ForceSetArg("-datadir", ret.string());
+    return ret;
+}
+
 int main(int argc, char** argv)
 {
     SetupBenchArgs();
@@ -52,6 +60,9 @@ int main(int argc, char** argv)
 
         return EXIT_SUCCESS;
     }
+
+    // Set the datadir after parsing the bench options
+    const fs::path bench_datadir{SetDataDir()};
 
     SHA256AutoDetect();
     RandomInit();
@@ -79,6 +90,8 @@ int main(int argc, char** argv)
     }
 
     benchmark::BenchRunner::RunAll(*printer, evaluations, scaling_factor, regex_filter, is_list_only);
+
+    fs::remove_all(bench_datadir);
 
     ECC_Stop();
 
