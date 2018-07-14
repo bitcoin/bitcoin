@@ -59,7 +59,7 @@ class HTTPBasicsTest(BitcoinTestFramework):
         #Old authpair
         authpair = url.username + ':' + url.password
 
-        #New authpair generated via share/rpcuser tool
+        #New authpair generated via share/rpcauth tool
         password = "cA773lm788buwYe4g4WT+05pKyNruVKjQ25x3n0DQcM="
 
         #Second authpair with different username
