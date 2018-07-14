@@ -697,7 +697,6 @@ void BerkeleyEnvironment::Flush(bool fShutdown)
                 if (!fMockDb) {
                     fs::remove_all(fs::path(strPath) / "database");
                 }
-                g_dbenvs.erase(strPath);
             }
         }
     }
@@ -796,6 +795,10 @@ void BerkeleyDatabase::Flush(bool shutdown)
 {
     if (!IsDummy()) {
         env->Flush(shutdown);
-        if (shutdown) env = nullptr;
+        if (shutdown) {
+            LOCK(cs_db);
+            g_dbenvs.erase(env->Directory().string());
+            env = nullptr;
+        }
     }
 }
