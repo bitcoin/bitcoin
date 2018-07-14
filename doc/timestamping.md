@@ -1,7 +1,7 @@
-Timestamping with Crowncoin
+Timestamping with Crown
 ===========================
 
-Crowncoin allows to store arbitrary 32-byte hashes into the blockchain,
+Crown Platform allows to store arbitrary 32-byte hashes into the blockchain,
 so that existence of the hashed data at a certain point in time can be proven.
 This is done in two (or three, depending on the point of view) steps:
 
@@ -21,9 +21,9 @@ blockchain in the next step.
 2) Timestamp the hash:
 ----------------------
 
-Given your hash, you can use Crowncoin's 'timestamp' RPC command to store
+Given your hash, you can use Crown's 'timestamp' RPC command to store
 it into the blockchain in a special transaction.  This costs the usual
-transaction fee required for the Crowncoin network, but has no extra cost.
+transaction fee required for the Crown network, but has no extra cost.
 
 Open the RPC console via "Help -> Debug window -> Console".  If your wallet
 is encrypted, you have to unlock it first:
@@ -42,8 +42,8 @@ hex string.  For instance:
 The resulting hex string is the transaction ID of the timestamping tx.  Your
 data is now sent to the network, and will be recorded permanently in the
 blockchain as soon as that transaction is confirmed.  As soon as the next
-Crowncoin block is merge-mined with a valid Crowncoin block, there will even
-be a "hash link" between your data and the Crowncoin blockchain.  See also [1].
+Crown block is merge-mined with a valid Crown block, there will even
+be a "hash link" between your data and the Crown blockchain.  See also [1].
 
   [1] https://www.domob.eu/blog/2015/0225-NameStamp.php
 
@@ -63,7 +63,7 @@ For this, you can query for the timestamping transaction ID:
 
 As you can see, the hash is contained literally in the transaction (last line)
 and thus is also part of the blockchain.  Note that you may need to run your
-Crowncoin client with the '-txindex' option to look up by txid, or you may
+Crown client with the '-txindex' option to look up by txid, or you may
 need to query the transaction via the block containing it or an online
 service.  In any case, your hash data is permanently recorded in the
 blockchain and such a query can be used to prove this fact to the world.
