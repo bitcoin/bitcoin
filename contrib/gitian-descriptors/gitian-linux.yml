@@ -8,15 +8,19 @@ architectures:
 packages:
 - "curl"
 - "g++-aarch64-linux-gnu"
-- "g++-7-aarch64-linux-gnu"
-- "gcc-7-aarch64-linux-gnu"
+- "g++-8-aarch64-linux-gnu"
+- "gcc-8-aarch64-linux-gnu"
 - "binutils-aarch64-linux-gnu"
 - "g++-arm-linux-gnueabihf"
-- "g++-7-arm-linux-gnueabihf"
-- "gcc-7-arm-linux-gnueabihf"
+- "g++-8-arm-linux-gnueabihf"
+- "gcc-8-arm-linux-gnueabihf"
 - "binutils-arm-linux-gnueabihf"
-- "g++-7-multilib"
-- "gcc-7-multilib"
+- "g++-riscv64-linux-gnu"
+- "g++-8-riscv64-linux-gnu"
+- "gcc-8-riscv64-linux-gnu"
+- "binutils-riscv64-linux-gnu"
+- "g++-8-multilib"
+- "gcc-8-multilib"
 - "binutils-gold"
 - "git"
 - "pkg-config"
@@ -34,9 +38,9 @@ files: []
 script: |
 
   WRAP_DIR=$HOME/wrapped
-  HOSTS="i686-pc-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu"
+  HOSTS="i686-pc-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu riscv64-linux-gnu"
   CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
-  FAKETIME_HOST_PROGS=""
+  FAKETIME_HOST_PROGS="gcc g++"
   FAKETIME_PROGS="date ar ranlib nm"
   HOST_CFLAGS="-O2 -g"
   HOST_CXXFLAGS="-O2 -g"
@@ -69,12 +73,15 @@ script: |
   function create_per-host_faketime_wrappers {
   for i in $HOSTS; do
     for prog in ${FAKETIME_HOST_PROGS}; do
-        echo '#!/usr/bin/env bash' > ${WRAP_DIR}/${i}-${prog}
-        echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
-        echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
-        echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
-        echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
-        chmod +x ${WRAP_DIR}/${i}-${prog}
+        if which ${i}-${prog}-8
+        then
+            echo '#!/usr/bin/env bash' > ${WRAP_DIR}/${i}-${prog}
+            echo "REAL=\`which -a ${i}-${prog}-8 | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
+            echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
+            echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
+            echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
+            chmod +x ${WRAP_DIR}/${i}-${prog}
+        fi
     done
   done
   }
@@ -100,7 +107,7 @@ script: |
   rm -f ${WRAP_DIR}/${prog}
   cat << EOF > ${WRAP_DIR}/${prog}
   #!/usr/bin/env bash
-  REAL="`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1`"
+  REAL="`which -a ${prog}-8 | grep -v ${WRAP_DIR}/${prog} | head -1`"
   for var in "\$@"
   do
     if [ "\$var" = "-m32" ]; then
@@ -174,6 +181,7 @@ script: |
     case $i in
        aarch64-*) : ;;
        arm-*) : ;;
+       riscv64-*) : ;;
        *) make ${MAKEOPTS} -C src check-symbols ;;
     esac
 
