@@ -1215,19 +1215,6 @@ bool CWallet::LoadToWallet(const CWalletTx& wtxIn)
     return true;
 }
 
-/**
- * Add a transaction to the wallet, or update it.  pIndex and posInBlock should
- * be set when the transaction was known to be included in a block.  When
- * pIndex == nullptr, then wallet state is not updated in AddToWallet, but
- * notifications happen and cached balances are marked dirty.
- *
- * If fUpdate is true, existing transactions will be updated.
- * TODO: One exception to this is that the abandoned state is cleared under the
- * assumption that any further notification of a transaction that was considered
- * abandoned is an indication that it is not safe to be considered abandoned.
- * Abandoned state should probably be more carefully tracked via different
- * posInBlock signals or by checking mempool presence when necessary.
- */
 bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const CBlockIndex* pIndex, int posInBlock, bool fUpdate)
 {
     const CTransaction& tx = *ptx;
@@ -1305,6 +1292,16 @@ bool CWallet::TransactionCanBeAbandoned(const uint256& hashTx) const
     return wtx && !wtx->isAbandoned() && wtx->GetDepthInMainChain() == 0 && !wtx->InMempool();
 }
 
+void CWallet::MarkInputsDirty(const CTransactionRef& tx)
+{
+    for (const CTxIn& txin : tx->vin) {
+        auto it = mapWallet.find(txin.prevout.hash);
+        if (it != mapWallet.end()) {
+            it->second.MarkDirty();
+        }
+    }
+}
+
 bool CWallet::AbandonTransaction(const uint256& hashTx)
 {
     LOCK2(cs_main, cs_wallet);
@@ -1353,13 +1350,7 @@ bool CWallet::AbandonTransaction(const uint256& hashTx)
             }
             // If a transaction changes 'conflicted' state, that changes the balance
             // available of the outputs it spends. So force those to be recomputed
-            for (const CTxIn& txin : wtx.tx->vin)
-            {
-                auto it = mapWallet.find(txin.prevout.hash);
-                if (it != mapWallet.end()) {
-                    it->second.MarkDirty();
-                }
-            }
+            MarkInputsDirty(wtx.tx);
         }
     }
 
@@ -1418,12 +1409,7 @@ void CWallet::MarkConflicted(const uint256& hashBlock, const uint256& hashTx)
             }
             // If a transaction changes 'conflicted' state, that changes the balance
             // available of the outputs it spends. So force those to be recomputed
-            for (const CTxIn& txin : wtx.tx->vin) {
-                auto it = mapWallet.find(txin.prevout.hash);
-                if (it != mapWallet.end()) {
-                    it->second.MarkDirty();
-                }
-            }
+            MarkInputsDirty(wtx.tx);
         }
     }
 
@@ -1432,20 +1418,13 @@ void CWallet::MarkConflicted(const uint256& hashBlock, const uint256& hashTx)
 }
 
 void CWallet::SyncTransaction(const CTransactionRef& ptx, const CBlockIndex *pindex, int posInBlock, bool update_tx) {
-    const CTransaction& tx = *ptx;
-
     if (!AddToWalletIfInvolvingMe(ptx, pindex, posInBlock, update_tx))
         return; // Not one of ours
 
     // If a transaction changes 'conflicted' state, that changes the balance
     // available of the outputs it spends. So force those to be
     // recomputed, also:
-    for (const CTxIn& txin : tx.vin) {
-        auto it = mapWallet.find(txin.prevout.hash);
-        if (it != mapWallet.end()) {
-            it->second.MarkDirty();
-        }
-    }
+    MarkInputsDirty(ptx);
 
     fAnonymizableTallyCached = false;
     fAnonymizableTallyCachedNonDenom = false;
