@@ -146,4 +146,40 @@ BOOST_AUTO_TEST_CASE(key_test1)
     BOOST_CHECK(detsigc == ParseHex("1f208fda5eac92f7d291e891e9a3e0a2f1a89c7a49517960dd76da30fc7da896a45e2f81a84f829bca72f76c293457643cef1ab08196f0156cbae19312a1fec9b4"));
 }
 
+BOOST_AUTO_TEST_CASE(key_signature_tests)
+{
+    // When entropy is specified, we should see at least one high R signature within 20 signatures
+    CKey key = DecodeSecret(strSecret1);
+    std::string msg = "A message to be signed";
+    uint256 msg_hash = Hash(msg.begin(), msg.end());
+    std::vector<unsigned char> sig;
+    bool found = false;
+
+    for (int i = 1; i <=20; ++i) {
+        sig.clear();
+        key.Sign(msg_hash, sig, false, i);
+        found = sig[3] == 0x21 && sig[4] == 0x00;
+        if (found) {
+            break;
+        }
+    }
+    BOOST_CHECK(found);
+
+    // When entropy is not specified, we should always see low R signatures that are less than 70 bytes in 256 tries
+    // We should see at least one signature that is less than 70 bytes.
+    found = true;
+    bool found_small = false;
+    for (int i = 0; i < 256; ++i) {
+        sig.clear();
+        std::string msg = "A message to be signed" + std::to_string(i);
+        msg_hash = Hash(msg.begin(), msg.end());
+        key.Sign(msg_hash, sig);
+        found = sig[3] == 0x20;
+        BOOST_CHECK(sig.size() <= 70);
+        found_small |= sig.size() < 70;
+    }
+    BOOST_CHECK(found);
+    BOOST_CHECK(found_small);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
