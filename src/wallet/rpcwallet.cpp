@@ -868,8 +868,9 @@ UniValue getbalance(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || (request.params.size() > 4 && IsDeprecatedRPCEnabled("accounts")) || (request.params.size() != 0 && !IsDeprecatedRPCEnabled("accounts")))
+    if (request.fHelp || (request.params.size() > 4))
         throw std::runtime_error(
+           (IsDeprecatedRPCEnabled("accounts") ? std::string(
             "getbalance ( \"account\" minconf addlocked include_watchonly )\n"
             "\nIf account is not specified, returns the server's total available balance.\n"
             "The available balance is what the wallet considers currently spendable, and is\n"
@@ -881,9 +882,18 @@ UniValue getbalance(const JSONRPCRequest& request)
             "1. \"account\"        (string, optional) DEPRECATED. This argument will be removed in V0.18. \n"
             "                     To use this deprecated argument, start dashd with -deprecatedrpc=accounts.\n"
             "                     The selected account, or \"*\" for entire wallet. It may be the default account using \"\".\n"
-            "2. minconf          (numeric, optional, default=1) DEPRECATED. Only valid when an account is specified. This argument will be removed in V0.18. To use this deprecated argument, start dashd with -deprecatedrpc=accounts. Only include transactions confirmed at least this many times.\n"
-            "3. addlocked      (bool, optional, default=false) Whether to include the value of transactions locked via InstantSend in the wallet's balance.\n"
-            "4. include_watchonly (bool, optional, default=false) DEPRECATED. Only valid when an account is specified. This argument will be removed in V0.18. To use this deprecated argument, start dashd with -deprecatedrpc=accounts. Also include balance in watch-only addresses (see 'importaddress')\n"
+            "2. minconf           (numeric, optional) Only include transactions confirmed at least this many times.\n"
+            "                     The default is 1 if an account is provided or 0 if no account is provided\n")
+            : std::string(
+            "getbalance ( \"(dummy)\" minconf addlocked include_watchonly )\n"
+            "\nReturns the total available balance.\n"
+            "The available balance is what the wallet considers currently spendable, and is\n"
+            "thus affected by options which limit spendability such as -spendzeroconfchange.\n"
+            "\nArguments:\n"
+            "1. (dummy)           (string, optional) Remains for backward compatibility. Must be excluded or set to \"*\".\n"
+            "2. minconf           (numeric, optional, default=0) Only include transactions confirmed at least this many times.\n")) +
+            "3. addlocked         (bool, optional, default=false) Whether to include the value of transactions locked via InstantSend in the wallet's balance.\n"
+            "4. include_watchonly (bool, optional, default=false) Also include balance in watch-only addresses (see 'importaddress')\n"
             "\nResult:\n"
             "amount              (numeric) The total amount in " + CURRENCY_UNIT + " received for this account.\n"
             "\nExamples:\n"
@@ -901,42 +911,41 @@ UniValue getbalance(const JSONRPCRequest& request)
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    if (IsDeprecatedRPCEnabled("accounts")) {
-        const UniValue& account_value = request.params[0];
-        const UniValue& minconf = request.params[1];
-        const UniValue& addlocked = request.params[2];
-        const UniValue& include_watchonly = request.params[3];
+    const UniValue& account_value = request.params[0];
 
-        if (account_value.isNull()) {
-            if (!minconf.isNull()) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER,
-                    "getbalance minconf option is only currently supported if an account is specified");
-            }
-            if (!include_watchonly.isNull()) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER,
-                    "getbalance include_watchonly option is only currently supported if an account is specified");
-            }
-            return ValueFromAmount(pwallet->GetBalance());
-        }
+    int min_depth = 0;
+    if (IsDeprecatedRPCEnabled("accounts") && !account_value.isNull()) {
+        // Default min_depth to 1 when an account is provided.
+        min_depth = 1;
+    }
+    if (!request.params[1].isNull()) {
+        min_depth = request.params[1].get_int();
+    }
+
+    const UniValue& addlocked = request.params[2];
+    bool fAddLocked = false;
+    if (!addlocked.isNull()) {
+        fAddLocked = addlocked.get_bool();
+    }
+
+    isminefilter filter = ISMINE_SPENDABLE;
+    if (!request.params[3].isNull() && request.params[3].get_bool()) {
+        filter = filter | ISMINE_WATCH_ONLY;
+    }
+
+    if (!account_value.isNull()) {
 
         const std::string& account_param = account_value.get_str();
         const std::string* account = account_param != "*" ? &account_param : nullptr;
 
-        int nMinDepth = 1;
-        if (!minconf.isNull())
-            nMinDepth = minconf.get_int();
-        bool fAddLocked = false;
-        if (!addlocked.isNull())
-            fAddLocked = addlocked.get_bool();
-        isminefilter filter = ISMINE_SPENDABLE;
-        if(!include_watchonly.isNull())
-            if(include_watchonly.get_bool())
-                filter = filter | ISMINE_WATCH_ONLY;
-
-        return ValueFromAmount(pwallet->GetLegacyBalance(filter, nMinDepth, account, fAddLocked));
+        if (!IsDeprecatedRPCEnabled("accounts") && account_param != "*") {
+            throw JSONRPCError(RPC_METHOD_DEPRECATED, "dummy first argument must be excluded or set to \"*\".");
+        } else if (IsDeprecatedRPCEnabled("accounts")) {
+            return ValueFromAmount(pwallet->GetLegacyBalance(filter, min_depth, account, fAddLocked));
+        }
     }
 
-    return ValueFromAmount(pwallet->GetBalance());
+    return ValueFromAmount(pwallet->GetBalance(filter, min_depth));
 }
 
 UniValue getunconfirmedbalance(const JSONRPCRequest &request)
@@ -4107,7 +4116,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "dumpwallet",                       &dumpwallet,                    {"filename"} },
     { "wallet",             "encryptwallet",                    &encryptwallet,                 {"passphrase"} },
     { "wallet",             "getaddressinfo",                   &getaddressinfo,                {"address"} },
-    { "wallet",             "getbalance",                       &getbalance,                    {"account","minconf","addlocked","include_watchonly"} },
+    { "wallet",             "getbalance",                       &getbalance,                    {"account|dummy","minconf","addlocked","include_watchonly"} },
     { "wallet",             "getnewaddress",                    &getnewaddress,                 {"label|account"} },
     { "wallet",             "getrawchangeaddress",              &getrawchangeaddress,           {} },
     { "wallet",             "getreceivedbyaddress",             &getreceivedbyaddress,          {"address","minconf","addlocked"} },
