@@ -189,7 +189,20 @@ CPubKey CKey::GetPubKey() const {
     return result;
 }
 
-bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, uint32_t test_case) const {
+// Check that the sig has a low R value and will be less than 71 bytes
+bool SigHasLowR(const secp256k1_ecdsa_signature* sig)
+{
+    unsigned char compact_sig[64];
+    secp256k1_ecdsa_signature_serialize_compact(secp256k1_context_sign, compact_sig, sig);
+
+    // In DER serialization, all values are interpreted as big-endian, signed integers. The highest bit in the integer indicates
+    // its signed-ness; 0 is positive, 1 is negative. When the value is interpreted as a negative integer, it must be converted
+    // to a positive value by prepending a 0x00 byte so that the highest bit is 0. We can avoid this prepending by ensuring that
+    // our highest bit is always 0, and thus we must check that the first byte is less than 0x80.
+    return compact_sig[0] < 0x80;
+}
+
+bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, bool grind, uint32_t test_case) const {
     if (!fValid)
         return false;
     vchSig.resize(CPubKey::SIGNATURE_SIZE);
@@ -197,7 +210,14 @@ bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, uint32_
     unsigned char extra_entropy[32] = {0};
     WriteLE32(extra_entropy, test_case);
     secp256k1_ecdsa_signature sig;
-    int ret = secp256k1_ecdsa_sign(secp256k1_context_sign, &sig, hash.begin(), begin(), secp256k1_nonce_function_rfc6979, test_case ? extra_entropy : nullptr);
+    uint32_t counter = 0;
+    int ret = secp256k1_ecdsa_sign(secp256k1_context_sign, &sig, hash.begin(), begin(), secp256k1_nonce_function_rfc6979, (!grind && test_case) ? extra_entropy : nullptr);
+
+    // Grind for low R
+    while (ret && !SigHasLowR(&sig) && grind) {
+        WriteLE32(extra_entropy, ++counter);
+        ret = secp256k1_ecdsa_sign(secp256k1_context_sign, &sig, hash.begin(), begin(), secp256k1_nonce_function_rfc6979, extra_entropy);
+    }
     assert(ret);
     secp256k1_ecdsa_signature_serialize_der(secp256k1_context_sign, vchSig.data(), &nSigLen, &sig);
     vchSig.resize(nSigLen);
