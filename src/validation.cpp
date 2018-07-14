@@ -2709,6 +2709,12 @@ bool CChainState::ActivateBestChain(CValidationState &state, const CChainParams&
             CBlockIndex* starting_tip = chainActive.Tip();
             bool blocks_connected = false;
             do {
+                if (nStopAtHeight != DEFAULT_STOPATHEIGHT
+                        && chainActive.Tip()
+                        && chainActive.Tip()->nHeight >= nStopAtHeight) {
+                    break;
+                }
+
                 // We absolutely may not unlock cs_main until we've made forward progress
                 // (with the exception of shutdown due to hardware issues, low disk space, etc).
                 ConnectTrace connectTrace(mempool); // Destructed before cs_main is unlocked
@@ -2765,6 +2771,7 @@ bool CChainState::ActivateBestChain(CValidationState &state, const CChainParams&
         if (ShutdownRequested())
             break;
     } while (pindexNewTip != pindexMostWork);
+
     CheckBlockIndex(chainparams.GetConsensus());
 
     // Write changes periodically to disk, after relay.
