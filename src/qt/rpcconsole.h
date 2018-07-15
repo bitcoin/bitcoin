@@ -133,6 +133,7 @@ public Q_SLOTS:
 Q_SIGNALS:
     // For RPC command executor
     void cmdRequest(const QString &command, const WalletModel* wallet_model);
+    void executorThreadFinished();
 
 private:
     void startExecutor();

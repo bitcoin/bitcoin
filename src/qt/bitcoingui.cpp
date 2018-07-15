@@ -548,9 +548,9 @@ void BitcoinGUI::createToolBars()
 
 void BitcoinGUI::setClientModel(ClientModel *_clientModel)
 {
-    this->clientModel = _clientModel;
     if(_clientModel)
     {
+        this->clientModel = _clientModel;
         // Create system tray menu (or setup the dock menu) that late to prevent users from calling actions,
         // while the client has not yet fully loaded
         createTrayIconMenu();
@@ -601,15 +601,24 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel)
             trayIconMenu->clear();
         }
         // Propagate cleared model to child objects
+        connect(rpcConsole, &RPCConsole::executorThreadFinished, this, &BitcoinGUI::clearChildModels);
         rpcConsole->setClientModel(nullptr);
-#ifdef ENABLE_WALLET
-        if (walletFrame)
-        {
-            walletFrame->setClientModel(nullptr);
-        }
-#endif // ENABLE_WALLET
-        unitDisplayControl->setOptionsModel(nullptr);
+        // Allow GUI to remain responsive when there's a long running rpc call.
+        qApp->exec();
     }
+}
+
+void BitcoinGUI::clearChildModels()
+{
+    this->clientModel = nullptr;
+#ifdef ENABLE_WALLET
+    if (walletFrame)
+    {
+        walletFrame->setClientModel(nullptr);
+    }
+#endif // ENABLE_WALLET
+    unitDisplayControl->setOptionsModel(nullptr);
+    qApp->quit();
 }
 
 #ifdef ENABLE_WALLET
@@ -1115,7 +1124,7 @@ void BitcoinGUI::closeEvent(QCloseEvent *event)
         {
             // close rpcConsole in case it was open to make some space for the shutdown window
             rpcConsole->close();
-
+            closeEventRegistered = true;
             QApplication::quit();
         }
         else
@@ -1311,7 +1320,9 @@ void BitcoinGUI::detectShutdown()
     {
         if(rpcConsole)
             rpcConsole->hide();
-        qApp->quit();
+        if(!closeEventRegistered) {
+            qApp->quit();
+        }
     }
 }
 

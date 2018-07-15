@@ -686,8 +686,8 @@ void RPCConsole::setClientModel(ClientModel *model)
     }
     if (!model) {
         // Client model is being set to 0, this means shutdown() is about to be called.
+        connect(&thread, &QThread::finished, this, &RPCConsole::executorThreadFinished);
         thread.quit();
-        thread.wait();
     }
 }
 

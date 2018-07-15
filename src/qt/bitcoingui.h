@@ -161,6 +161,7 @@ private:
     RPCConsole* rpcConsole = nullptr;
     HelpMessageDialog* helpMessageDialog = nullptr;
     ModalOverlay* modalOverlay = nullptr;
+    bool closeEventRegistered = false;
 
 #ifdef Q_OS_MAC
     CAppNapInhibitor* m_app_nap_inhibitor = nullptr;
@@ -220,6 +221,7 @@ public Q_SLOTS:
        @param[in] ret       pointer to a bool that will be modified to whether Ok was clicked (modal only)
     */
     void message(const QString &title, const QString &message, unsigned int style, bool *ret = nullptr);
+    void clearChildModels();
 
 #ifdef ENABLE_WALLET
     void setCurrentWallet(WalletModel* wallet_model);
