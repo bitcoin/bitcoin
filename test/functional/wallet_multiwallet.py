@@ -30,6 +30,11 @@ class MultiWalletTest(BitcoinTestFramework):
         wallet_dir = lambda *p: data_dir('wallets', *p)
         wallet = lambda name: node.get_wallet_rpc(name)
 
+        def wallet_file(name):
+            if os.path.isdir(wallet_dir(name)):
+                return wallet_dir(name, "wallet.dat")
+            return wallet_dir(name)
+
         # check wallet.dat is created
         self.stop_nodes()
         assert_equal(os.path.isfile(wallet_dir('wallet.dat')), True)
@@ -42,6 +47,12 @@ class MultiWalletTest(BitcoinTestFramework):
         # rename wallet.dat to make sure plain wallet file paths (as opposed to
         # directory paths) can be loaded
         os.rename(wallet_dir("wallet.dat"), wallet_dir("w8"))
+
+        # create another dummy wallet for use in testing backups later
+        self.start_node(0, [])
+        self.stop_nodes()
+        empty_wallet = os.path.join(self.options.tmpdir, 'empty.dat')
+        os.rename(wallet_dir("wallet.dat"), empty_wallet)
 
         # restart node with a mix of wallet names:
         #   w1, w2, w3 - to verify new wallets created when non-existing paths specified
@@ -59,10 +70,7 @@ class MultiWalletTest(BitcoinTestFramework):
         # check that all requested wallets were created
         self.stop_node(0)
         for wallet_name in wallet_names:
-            if os.path.isdir(wallet_dir(wallet_name)):
-                assert_equal(os.path.isfile(wallet_dir(wallet_name, "wallet.dat")), True)
-            else:
-                assert_equal(os.path.isfile(wallet_dir(wallet_name)), True)
+            assert_equal(os.path.isfile(wallet_file(wallet_name)), True)
 
         # should not initialize if wallet path can't be created
         exp_stderr = "boost::filesystem::create_directory: (The system cannot find the path specified|Not a directory):"
@@ -264,6 +272,26 @@ class MultiWalletTest(BitcoinTestFramework):
         self.nodes[0].loadwallet('w1')
         assert_equal(self.nodes[0].listwallets(), ['w1'])
         assert_equal(w1.getwalletinfo()['walletname'], 'w1')
+
+        # Test backing up and restoring wallets
+        self.log.info("Test wallet backup")
+        self.restart_node(0, ['-nowallet'])
+        for wallet_name in wallet_names:
+            self.nodes[0].loadwallet(wallet_name)
+        for wallet_name in wallet_names:
+            rpc = self.nodes[0].get_wallet_rpc(wallet_name)
+            addr = rpc.getnewaddress()
+            backup = os.path.join(self.options.tmpdir, 'backup.dat')
+            rpc.backupwallet(backup)
+            self.nodes[0].unloadwallet(wallet_name)
+            shutil.copyfile(empty_wallet, wallet_file(wallet_name))
+            self.nodes[0].loadwallet(wallet_name)
+            assert_equal(rpc.getaddressinfo(addr)['ismine'], False)
+            self.nodes[0].unloadwallet(wallet_name)
+            shutil.copyfile(backup, wallet_file(wallet_name))
+            self.nodes[0].loadwallet(wallet_name)
+            assert_equal(rpc.getaddressinfo(addr)['ismine'], True)
+
 
 if __name__ == '__main__':
     MultiWalletTest().main()
