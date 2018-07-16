@@ -625,7 +625,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_checktotalsupply)
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8, false), 100 * COIN);
 	CAmount supplyRemaining = 100 * COIN - (nBalance1 + nBalance2);
 	// mint up to the max supply
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetupdate " + guid + " jagassetupdate assets " + ValueFromAssetAmount(supplyRemaining, 8, false).write() + " 0.1 ''"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetupdate " + guid + " pub assets " + ValueFromAssetAmount(supplyRemaining, 8, false).write() + " 0.1 ''"));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -810,7 +810,7 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_precision)
 		string maxstr = ValueFromAssetAmount(negonesupply, i, false).get_str();
 		AssetUpdate("node1", guid, "pub12", maxstr);
 		// can't go above max balance (10^18) / (10^i) for i decimal places
-		BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate " + guid + " " + aliasName + " assets 1 0 ''"), runtime_error);
+		BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate " + guid + " pub assets 1 0 ''"), runtime_error);
 		// can't create asset with more than max+1 balance or max+1 supply
 		string maxstrplusone = ValueFromAssetAmount(negonesupply + (precisionCoin * 2), i, false).get_str();
 		maxstr = ValueFromAssetAmount(negonesupply + precisionCoin, i, false).get_str();
@@ -841,7 +841,7 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_precision)
 	string maxstr = ValueFromAssetAmount(negonesupply, i, true).get_str();
 	AssetUpdate("node1", guid1, "pub12", maxstr);
 	// can't go above max balance (10^18) / (10^i) for i decimal places
-	BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate " + guid1 + " " + aliasName + " assets 1 0 ''"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate " + guid1 + " pub assets 1 0 ''"), runtime_error);
 	// can't create asset with more than max+1 balance or max+1 supply
 	string maxstrplusone = ValueFromAssetAmount(negonesupply + (precisionCoin * 2), i, true).get_str();
 	maxstr = ValueFromAssetAmount(negonesupply + precisionCoin, i, true).get_str();
