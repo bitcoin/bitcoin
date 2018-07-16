@@ -358,7 +358,7 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "generate 1"));
 		string guid = arr[1].get_str();
 		
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetsend " + guid + " " + aliasname + " " + "\"[{\\\"address\\\":\\\"" + aliasname + "\\\",\\\"amount\\\":1}]\" '' ''"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetsend " + guid + " " + aliasname + " " + "\"[{\\\"ownerto\\\":\\\"" + aliasname + "\\\",\\\"amount\\\":1}]\" '' ''"));
 		arr = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
 		hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -402,7 +402,7 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 	count = 0;
 	for (auto& assetTuple : assetMap) {
 		count++;
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsend " + assetTuple.first + " " + assetAliasMap[assetTuple.first] + " " + "\"[{\\\"address\\\":\\\"" + assetTuple.second + "\\\",\\\"amount\\\":1}]\" '' ''"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsend " + assetTuple.first + " " + assetAliasMap[assetTuple.first] + " " + "\"[{\\\"ownerto\\\":\\\"" + assetTuple.second + "\\\",\\\"amount\\\":1}]\" '' ''"));
 		UniValue arr = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
 		string hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -499,7 +499,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest)
 	// setup asset with 5% interest hourly (unit test mode calculates interest hourly not annually)
 	string guid = AssetNew("node1", "cad", "jagassetcollection", "data", "8", "false", "10000", "-1", "0.05");
 
-	AssetSend("node1", guid, "\"[{\\\"address\\\":\\\"jagassetcollectionreceiver\\\",\\\"amount\\\":5000}]\"", "memoassetinterest");
+	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"jagassetcollectionreceiver\\\",\\\"amount\\\":5000}]\"", "memoassetinterest");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectionreceiver false"));
 	UniValue balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 5000 * COIN);
@@ -531,7 +531,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_maxsenders)
 	string senderstring = "\"[";
 	for (int i = 0; i < 250; i++) {
 		string aliasname = "jagmaxsenders" + boost::lexical_cast<string>(i);
-		senderstring += "{\\\"address\\\":\\\"";
+		senderstring += "{\\\"ownerto\\\":\\\"";
 		senderstring += aliasname;
 		if(i==0)
 			senderstring += "\\\",\\\"amount\\\":5.0}";
@@ -563,7 +563,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_maxsenders)
 	senderstring = "\"[";
 	for (int i = 1; i < 250; i++) {
 		string aliasname = "jagmaxsenders" + boost::lexical_cast<string>(i);
-		senderstring += "{\\\"address\\\":\\\"";
+		senderstring += "{\\\"ownerto\\\":\\\"";
 		senderstring += aliasname;
 		senderstring += "\\\",\\\"amount\\\":0.001}";
 		if (i < 249)
@@ -583,7 +583,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_checktotalsupply)
 	AliasNew("node1", "jagassetcollectioncheckreceiver1", "data");
 	// setup asset with 5% interest hourly (unit test mode calculates interest hourly not annually)
 	string guid = AssetNew("node1", "cad", "jagassetcollectioncheck", "data", "8", "false", "50", "100", "0.1");
-	AssetSend("node1", guid, "\"[{\\\"aliasto\\\":\\\"jagassetcollectioncheckreceiver\\\",\\\"amount\\\":20},{\\\"aliasto\\\":\\\"jagassetcollectioncheckreceiver1\\\",\\\"amount\\\":30}]\"", "memoassetinterest");
+	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"jagassetcollectioncheckreceiver\\\",\\\"amount\\\":20},{\\\"ownerto\\\":\\\"jagassetcollectioncheckreceiver1\\\",\\\"amount\\\":30}]\"", "memoassetinterest");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectioncheckreceiver false"));
 	UniValue balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 20 * COIN);
@@ -650,7 +650,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_average_balance)
 	AliasNew("node1", "jagassetcollectionrcveravg", "data");
 	// setup asset with 5% interest hourly (unit test mode calculates interest hourly not annually)
 	string guid = AssetNew("node1", "token", "jagassetcollectionavg", "data", "8", "false", "10000", "-1", "0.05");
-	AssetSend("node1", guid, "\"[{\\\"aliasto\\\":\\\"jagassetcollectionrcveravg\\\",\\\"amount\\\":1000}]\"", "memoassetinterest");
+	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"jagassetcollectionrcveravg\\\",\\\"amount\\\":1000}]\"", "memoassetinterest");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectionrcveravg false"));
 	UniValue balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 1000 * COIN);
@@ -659,7 +659,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_average_balance)
 	GenerateBlocks((60 * 3) - 1);
 
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), claimheight);
-	AssetSend("node1", guid, "\"[{\\\"aliasto\\\":\\\"jagassetcollectionrcveravg\\\",\\\"amount\\\":3000}]\"", "memoassetinterest");
+	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"jagassetcollectionrcveravg\\\",\\\"amount\\\":3000}]\"", "memoassetinterest");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectionrcveravg false"));
 	balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 4000 * COIN);
@@ -668,7 +668,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_average_balance)
 	GenerateBlocks((60 * 2) - 1);
 
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), claimheight);
-	AssetSend("node1", guid, "\"[{\\\"aliasto\\\":\\\"jagassetcollectionrcveravg\\\",\\\"amount\\\":1000}]\"", "memoassetinterest");
+	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"jagassetcollectionrcveravg\\\",\\\"amount\\\":1000}]\"", "memoassetinterest");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectionrcveravg false"));
 	balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 5000 * COIN);
@@ -694,7 +694,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_update_with_average_balance
 	AliasNew("node1", "jagassetcollectionrcveravgu", "data");
 	// setup asset with 5% interest hourly (unit test mode calculates interest hourly not annually), can adjust the rate
 	string guid = AssetNew("node1", "mytoken", "jagassetcollectionavgu", "data", "8", "false", "10000", "-1", "0.05", "true");
-	AssetSend("node1", guid, "\"[{\\\"aliasto\\\":\\\"jagassetcollectionrcveravgu\\\",\\\"amount\\\":1000}]\"", "memoassetinterest");
+	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"jagassetcollectionrcveravgu\\\",\\\"amount\\\":1000}]\"", "memoassetinterest");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectionrcveravgu false"));
 	UniValue balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 1000 * COIN);
@@ -704,7 +704,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_update_with_average_balance
 	// update interest rate to 10%
 	AssetUpdate("node1", guid, "pub", "''", "0.1");
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), claimheight);
-	AssetSend("node1", guid, "\"[{\\\"aliasto\\\":\\\"jagassetcollectionrcveravgu\\\",\\\"amount\\\":3000}]\"", "memoassetinterest");
+	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"jagassetcollectionrcveravgu\\\",\\\"amount\\\":3000}]\"", "memoassetinterest");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectionrcveravgu false"));
 	balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 4000 * COIN);
@@ -715,7 +715,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_update_with_average_balance
 	// interest rate to back to 5%
 	AssetUpdate("node1", guid, "pub", "''", "0.05");
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), claimheight);
-	AssetSend("node1", guid, "\"[{\\\"aliasto\\\":\\\"jagassetcollectionrcveravgu\\\",\\\"amount\\\":1000}]\"", "memoassetinterest");
+	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"jagassetcollectionrcveravgu\\\",\\\"amount\\\":1000}]\"", "memoassetinterest");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectionrcveravgu false"));
 	balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 5000 * COIN);
@@ -744,7 +744,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_every_block)
 	AliasNew("node1", "jagassetcollectionreceiver1", "data");
 	// setup asset with 10% interest hourly (unit test mode calculates interest hourly not annually)
 	string guid = AssetNew("node1", "a", "jagassetcollection1", "data", "8", "false", "10000", "-1", "0.05");
-	AssetSend("node1", guid, "\"[{\\\"aliasto\\\":\\\"jagassetcollectionreceiver1\\\",\\\"amount\\\":5000}]\"", "memoassetinterest1");
+	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"jagassetcollectionreceiver1\\\",\\\"amount\\\":5000}]\"", "memoassetinterest1");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectionreceiver1 false"));
 	UniValue balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 5000 * COIN);
@@ -858,8 +858,8 @@ BOOST_AUTO_TEST_CASE(generate_assetsend)
 	AliasNew("node1", "jagassetsend", "data");
 	AliasNew("node2", "jagassetsend1", "data");
 	string guid = AssetNew("node1", "elf", "jagassetsend", "data", "8", "false", "10", "20");
-	// [{\"aliasto\":\"aliasname\",\"amount\":amount},...]
-	AssetSend("node1", guid, "\"[{\\\"aliasto\\\":\\\"jagassetsend1\\\",\\\"amount\\\":7}]\"", "memoassetsend");
+	// [{\"ownerto\":\"aliasname\",\"amount\":amount},...]
+	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"jagassetsend1\\\",\\\"amount\\\":7}]\"", "memoassetsend");
 	// ensure amounts are correct
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid + " true"));
 	UniValue balance = find_value(r.get_obj(), "balance");
@@ -922,9 +922,9 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges)
 	// if use input ranges update supply and ensure adds to end of allocation, ensure balance gets updated properly
 	string guid = AssetNew("node1", "msft", "jagassetsendranges", "data", "8", "true", "10", "20");
 	// send range 1-2, 4-6, 8-9 and then add 1 balance and expect it to add to 10, add 9 more and expect it to add to 11, try to add one more and won't let you due to max 20 supply
-	// [{\"aliasto\":\"aliasname\",\"ranges\":[{\"start\":index,\"end\":index},...]},...]
+	// [{\"ownerto\":\"aliasname\",\"ranges\":[{\"start\":index,\"end\":index},...]},...]
 	// break ranges into 0, 3, 7
-	AssetSend("node1", guid, "\"[{\\\"aliasto\\\":\\\"jagassetsendranges1\\\",\\\"ranges\\\":[{\\\"start\\\":1,\\\"end\\\":2},{\\\"start\\\":4,\\\"end\\\":6},{\\\"start\\\":8,\\\"end\\\":9}]}]\"", "memoassetsendranges");
+	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"jagassetsendranges1\\\",\\\"ranges\\\":[{\\\"start\\\":1,\\\"end\\\":2},{\\\"start\\\":4,\\\"end\\\":6},{\\\"start\\\":8,\\\"end\\\":9}]}]\"", "memoassetsendranges");
 	// ensure receiver get's it
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetsendranges1 true"));
 	UniValue inputs = find_value(r.get_obj(), "inputs");
@@ -1020,7 +1020,7 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 	AliasNew("node2", "jagassetsendrangese", "data");
 	// if use input ranges update supply and ensure adds to end of allocation, ensure balance gets updated properly
 	string guid = AssetNew("node1", "asset", "jagassetsendrangesowner", "asset", "8", "true", "1000", "1000000");
-	AssetSend("node1", guid, "\"[{\\\"aliasto\\\":\\\"jagassetsendrangesownerallocation\\\",\\\"ranges\\\":[{\\\"start\\\":0,\\\"end\\\":999}]}]\"", "memo1");
+	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"jagassetsendrangesownerallocation\\\",\\\"ranges\\\":[{\\\"start\\\":0,\\\"end\\\":999}]}]\"", "memo1");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid + " true"));
 	UniValue inputs = find_value(r.get_obj(), "inputs");
 	BOOST_CHECK(inputs.isArray());
@@ -1028,7 +1028,7 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 	BOOST_CHECK_EQUAL(inputsArray.size(), 0);
 
 
-	AssetAllocationTransfer(true, "node1", guid, "jagassetsendrangesownerallocation", "\"[{\\\"aliasto\\\":\\\"jagassetsendrangesa\\\",\\\"ranges\\\":[{\\\"start\\\":0,\\\"end\\\":199}]},{\\\"aliasto\\\":\\\"jagassetsendrangesb\\\",\\\"ranges\\\":[{\\\"start\\\":200,\\\"end\\\":399}]},{\\\"aliasto\\\":\\\"jagassetsendrangesc\\\",\\\"ranges\\\":[{\\\"start\\\":400,\\\"end\\\":599}]},{\\\"aliasto\\\":\\\"jagassetsendrangesd\\\",\\\"ranges\\\":[{\\\"start\\\":600,\\\"end\\\":799}]},{\\\"aliasto\\\":\\\"jagassetsendrangese\\\",\\\"ranges\\\":[{\\\"start\\\":800,\\\"end\\\":999}]}]\"", "memo");
+	AssetAllocationTransfer(true, "node1", guid, "jagassetsendrangesownerallocation", "\"[{\\\"ownerto\\\":\\\"jagassetsendrangesa\\\",\\\"ranges\\\":[{\\\"start\\\":0,\\\"end\\\":199}]},{\\\"ownerto\\\":\\\"jagassetsendrangesb\\\",\\\"ranges\\\":[{\\\"start\\\":200,\\\"end\\\":399}]},{\\\"ownerto\\\":\\\"jagassetsendrangesc\\\",\\\"ranges\\\":[{\\\"start\\\":400,\\\"end\\\":599}]},{\\\"ownerto\\\":\\\"jagassetsendrangesd\\\",\\\"ranges\\\":[{\\\"start\\\":600,\\\"end\\\":799}]},{\\\"ownerto\\\":\\\"jagassetsendrangese\\\",\\\"ranges\\\":[{\\\"start\\\":800,\\\"end\\\":999}]}]\"", "memo");
 	// ensure receiver get's it
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetsendrangesa true"));
 	inputs = find_value(r.get_obj(), "inputs");
