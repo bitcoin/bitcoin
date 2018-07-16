@@ -806,13 +806,11 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                 // be increased is also an easy-to-reason about way to prevent
                 // DoS attacks via replacements.
                 //
-                // The mining code doesn't (currently) take children into
-                // account (CPFP) so we only consider the feerates of
-                // transactions being directly replaced, not their indirect
-                // descendants. While that does mean high feerate children are
-                // ignored when deciding whether or not to replace, we do
-                // require the replacement to pay more overall fees too,
-                // mitigating most cases.
+                // We only consider the feerates of transactions being directly
+                // replaced, not their indirect descendants. While that does
+                // mean high feerate children are ignored when deciding whether
+                // or not to replace, we do require the replacement to pay more
+                // overall fees too, mitigating most cases.
                 CFeeRate oldFeeRate(mi->GetModifiedFee(), mi->GetTxSize());
                 if (newFeeRate <= oldFeeRate)
                 {
