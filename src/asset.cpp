@@ -787,9 +787,9 @@ UniValue assetupdate(const JSONRPCRequest& request) {
 	strPubData = params[1].get_str();
 	strCategory = params[2].get_str();
 	
-	float fInterestRate = params[3].get_real();
+	float fInterestRate = params[4].get_real();
 	vector<unsigned char> vchWitness;
-	vchWitness = vchFromValue(params[4]);
+	vchWitness = vchFromValue(params[5]);
 
     CScript scriptPubKeyFromOrig;
 	CAsset theAsset;
