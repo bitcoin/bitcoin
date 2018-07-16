@@ -1044,7 +1044,7 @@ UniValue assetsend(const JSONRPCRequest& request) {
 			UniValue inputRanges = inputRangeObj.get_array();
 			vector<CRange> vectorOfRanges;
 			for (unsigned int rangeIndex = 0; rangeIndex < inputRanges.size(); rangeIndex++) {
-				const UniValue& inputRangeObj = inputRangpes[rangeIndex];
+				const UniValue& inputRangeObj = inputRanges[rangeIndex];
 				if (!inputRangeObj.isObject())
 					throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"start'\",\"end\"}");
 				UniValue startRangeObj = find_value(inputRangeObj, "start");
@@ -1103,7 +1103,7 @@ UniValue assetsend(const JSONRPCRequest& request) {
 	vecSend.push_back(recipient);
 
 	CRecipient aliasRecipient;
-	if (!trAddressFrom.empty()) {
+	if (!strAddressFrom.empty()) {
 		CScript scriptPubKeyAlias;
 		scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << fromAlias.vchAlias << fromAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += scriptPubKeyFromOrig;
