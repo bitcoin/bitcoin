@@ -389,8 +389,8 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 				return true;
 			}
 		}
-		else if (stringFromVch(user1) != vchAlias) {
-			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1016 - " + _("Cannot send this asset. Asset allocation owner must sign off on this change");
+		else if (user1 != stringFromVch(vchAlias)) {
+			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1016 - " + _("Cannot send create or update this asset. Asset allocation owner must sign off on this change");
 			return true;
 		}
 		if (op == OP_ASSET_UPDATE) {
@@ -479,7 +479,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 						// don't need to check for existance of allocation because it may not exist, may be creating it here for the first time for receiver
 						GetAssetAllocation(receiverAllocationTuple, receiverAllocation);
 						if (receiverAllocation.IsNull()) {
-							receiverAllocation.vchAddress = receiverAllocationTuple.vchAddress;
+							receiverAllocation.vchAliasOrAddress = receiverAllocationTuple.vchAliasOrAddress;
 							receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
 							receiverAllocation.nLastInterestClaimHeight = nHeight;
 						}
@@ -493,7 +493,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 						receiverAllocation.nHeight = nHeight;
 						receiverAllocation.vchMemo = theAssetAllocation.vchMemo;
 						receiverAllocation.nBalance += amountTuple.second;
-						const string& receiverAddress = EncodeBase58(receiverAllocation.vchAddress);
+						const string& receiverAddress = stringFromVch(receiverAllocation.vchAliasOrAddress);
 						// adjust sender balance
 						theAsset.nBalance -= amountTuple.second;
 						if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, dbAsset.nBalance - nTotal, amountTuple.second, dbAsset, INT64_MAX, user1, receiverAddress, fJustCheck))
