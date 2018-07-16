@@ -1190,27 +1190,21 @@ bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, co
 	oAssetAllocation.push_back(Pair("confirmed", bConfirmed));
 	if (fAssetAllocationIndex) {
 		string strCat = "";
-		if (!strAddress.empty())
-			fromAddressStr = strSender; 
-			ToAddressStr = strReceiver;
-		}
-		else {
-			CAliasIndex fromAlias;
-			if(GetAlias(vchSender, fromAlias))
-				fromAddressStr = EncodeBase58(fromAlias.vchAddress);
-			CAliasIndex toAlias;
-			if(GetAlias(vchReceiver, toAlias))
-				toAddressStr = EncodeBase58(toAlias.vchAddress);
-		}
-		if (!fromAddressStr.empty() || !toAddressStr.empty()) {
+		CAliasIndex fromAlias;
+		if (GetAlias(vchFromString(strSender), fromAlias))
+			strSender = EncodeBase58(fromAlias.vchAddress);
+		CAliasIndex toAlias;
+		if (GetAlias(vchFromString(strReceiver), toAlias))
+			strReceiver = EncodeBase58(toAlias.vchAddress);
+		if (!strSender.empty() || !strReceiver.empty()) {
 			isminefilter filter = ISMINE_SPENDABLE;
-			isminefilter mine = IsMine(*pwalletMain, CSyscoinAddress(fromAddressStr).Get());
+			isminefilter mine = IsMine(*pwalletMain, CSyscoinAddress(strSender).Get());
 			if ((mine & filter)) {
 				strCat = "send";
 				nAmountDisplay *= -1;
 			}
 			else if(!toAddressStr.empty()){
-				mine = IsMine(*pwalletMain, CSyscoinAddress(toAddressStr).Get());
+				mine = IsMine(*pwalletMain, CSyscoinAddress(strReceiver).Get());
 				if ((mine & filter))
 					strCat = "receive";
 			}
