@@ -245,6 +245,8 @@ public:
      */
     void NotifyMasternodeUpdates(CConnman& connman);
 	unsigned int GetStartHeight(const masternode_info_t& mnInfo);
+
+    void DoMaintenance(CConnman &connman);
 };
 
 #endif

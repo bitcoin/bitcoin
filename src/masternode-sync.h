@@ -78,6 +78,8 @@ public:
     void AcceptedBlockHeader(const CBlockIndex *pindexNew);
     void NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload, CConnman& connman);
     void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload, CConnman& connman);
+
+    void DoMaintenance(CConnman &connman) { ProcessTick(connman); }
 };
 
 #endif

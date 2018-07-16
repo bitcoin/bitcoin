@@ -860,29 +860,14 @@ void CPrivateSendServer::SetState(PoolState nStateNew)
     nState = nStateNew;
 }
 
-//TODO: Rename/move to core
-void ThreadCheckPrivateSendServer(CConnman& connman)
+void CPrivateSendServer::DoMaintenance(CConnman& connman)
 {
     if(fLiteMode) return; // disable all Syscoin specific functionality
     if(!fMasternodeMode) return; // only run on masternodes
 
-    static bool fOneThread;
-    if(fOneThread) return;
-    fOneThread = true;
+    if(!masternodeSync.IsBlockchainSynced() || ShutdownRequested())
+        return;
 
-    // Make this thread recognisable as the PrivateSend thread
-    RenameThread("syscoin-ps-server");
-
-    unsigned int nTick = 0;
-
-    while (true)
-    {
-        MilliSleep(1000);
-
-        if(masternodeSync.IsBlockchainSynced() && !ShutdownRequested()) {
-            nTick++;
-            privateSendServer.CheckTimeout(connman);
-            privateSendServer.CheckForCompleteQueue(connman);
-        }
-    }
+    privateSendServer.CheckTimeout(connman);
+    privateSendServer.CheckForCompleteQueue(connman);
 }

@@ -1417,34 +1417,22 @@ void CPrivateSendClient::UpdatedBlockTip(const CBlockIndex *pindex)
 
 }
 
-//TODO: Rename/move to core
-void ThreadCheckPrivateSendClient(CConnman& connman)
+void CPrivateSendClient::DoMaintenance(CConnman& connman)
 {
     if(fLiteMode) return; // disable all Syscoin specific functionality
     if(fMasternodeMode) return; // no client-side mixing on masternodes
 
-    static bool fOneThread;
-    if(fOneThread) return;
-    fOneThread = true;
+    if(!masternodeSync.IsBlockchainSynced() || ShutdownRequested())
+        return;
 
-    // Make this thread recognisable as the PrivateSend thread
-    RenameThread("syscoin-ps-client");
+    static unsigned int nTick = 0;
+    static unsigned int nDoAutoNextRun = nTick + PRIVATESEND_AUTO_TIMEOUT_MIN;
 
-    unsigned int nTick = 0;
-    unsigned int nDoAutoNextRun = nTick + PRIVATESEND_AUTO_TIMEOUT_MIN;
-
-    while (true)
-    {
-        MilliSleep(1000);
-
-        if(masternodeSync.IsBlockchainSynced() && !ShutdownRequested()) {
-            nTick++;
-            privateSendClient.CheckTimeout();
-            privateSendClient.ProcessPendingDsaRequest(connman);
-            if(nDoAutoNextRun == nTick) {
-                privateSendClient.DoAutomaticDenominating(connman);
-                nDoAutoNextRun = nTick + PRIVATESEND_AUTO_TIMEOUT_MIN + GetRandInt(PRIVATESEND_AUTO_TIMEOUT_MAX - PRIVATESEND_AUTO_TIMEOUT_MIN);
-            }
-        }
+    nTick++;
+    privateSendClient.CheckTimeout();
+    privateSendClient.ProcessPendingDsaRequest(connman);
+    if(nDoAutoNextRun == nTick) {
+        privateSendClient.DoAutomaticDenominating(connman);
+        nDoAutoNextRun = nTick + PRIVATESEND_AUTO_TIMEOUT_MIN + GetRandInt(PRIVATESEND_AUTO_TIMEOUT_MAX - PRIVATESEND_AUTO_TIMEOUT_MIN);
     }
 }
