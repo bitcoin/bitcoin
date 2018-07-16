@@ -7,6 +7,7 @@
 #include "addrman.h"
 #include "alert.h"
 #include "clientversion.h"
+#include "init.h"
 #include "governance.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
@@ -1701,4 +1702,31 @@ unsigned int CMasternodeMan::GetStartHeight(const masternode_info_t& mnInfo) {
 	if (nHeight > 0)
 		return nHeight;
 	return 0;
+
+void CMasternodeMan::DoMaintenance(CConnman& connman)
+{
+    if(fLiteMode) return; // disable all Syscoin specific functionality
+
+    if(!masternodeSync.IsBlockchainSynced() || ShutdownRequested())
+        return;
+
+    static unsigned int nTick = 0;
+
+    nTick++;
+
+    // make sure to check all masternodes first
+    mnodeman.Check();
+
+    mnodeman.ProcessPendingMnbRequests(connman);
+    mnodeman.ProcessPendingMnvRequests(connman);
+
+    if(nTick % 60 == 0) {
+        mnodeman.ProcessMasternodeConnections(connman);
+        mnodeman.CheckAndRemove(connman);
+        mnodeman.WarnMasternodeDaemonUpdates();
+    }
+
+    if(fMasternodeMode && (nTick % (60 * 5) == 0)) {
+        mnodeman.DoFullVerificationStep(connman);
+    }
 }

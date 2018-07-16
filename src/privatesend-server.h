@@ -74,8 +74,8 @@ public:
 
     void CheckTimeout(CConnman& connman);
     void CheckForCompleteQueue(CConnman& connman);
-};
 
-void ThreadCheckPrivateSendServer(CConnman& connman);
+    void DoMaintenance(CConnman& connman);
+};
 
 #endif

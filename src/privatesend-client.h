@@ -191,8 +191,8 @@ public:
     void CheckTimeout();
 
     void UpdatedBlockTip(const CBlockIndex *pindex);
-};
 
-void ThreadCheckPrivateSendClient(CConnman& connman);
+    void DoMaintenance(CConnman& connman);
+};
 
 #endif
