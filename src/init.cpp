@@ -434,6 +434,8 @@ void SetupServerArgs()
     gArgs.AddArg("-whitelist=<IP address or network>", "Whitelist peers connecting from the given IP address (e.g. 1.2.3.4) or CIDR notated network (e.g. 1.2.3.0/24). Can be specified multiple times."
         " Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway", false, OptionsCategory::CONNECTION);
 
+    // DummyWalletInit::AddWalletOptions() is called if wallet is not compiled.
+    // If this behavior is changed, "disablewallet" should be added to hidden options.
     g_wallet_init_interface.AddWalletOptions();
 
 #if ENABLE_ZMQ
