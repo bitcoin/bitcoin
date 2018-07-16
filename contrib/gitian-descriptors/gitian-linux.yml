@@ -27,6 +27,7 @@ packages:
 - "bsdmainutils"
 - "ca-certificates"
 - "python"
+- "python3"
 remotes:
 - "url": "https://github.com/dashpay/dash.git"
   "dir": "dash"
