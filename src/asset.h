@@ -18,7 +18,7 @@ class CCoinsViewCache;
 class CBlock;
 class CAliasIndex;
 
-bool CheckAssetInputs(const CTransaction &tx, int op, const std::vector<std::vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAddress, bool fJustCheck, int nHeight, sorted_vector<CAssetAllocationTuple> &revertedAssetAllocations, std::string &errorMessage, bool bSanityCheck=false);
+bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int op, const std::vector<std::vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vchAlias, bool fJustCheck, int nHeight, sorted_vector<CAssetAllocationTuple> &revertedAssetAllocations, std::string &errorMessage, bool bSanityCheck=false);
 bool DecodeAssetTx(const CTransaction& tx, int& op, std::vector<std::vector<unsigned char> >& vvch);
 bool DecodeAndParseAssetTx(const CTransaction& tx, int& op, std::vector<std::vector<unsigned char> >& vvch, char& type);
 bool DecodeAssetScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
@@ -44,7 +44,7 @@ class CAsset {
 public:
 	std::vector<unsigned char> vchAsset;
 	std::vector<unsigned char> vchSymbol;
-	std::vector<unsigned char> vchAddress;
+	std::vector<unsigned char> vchAliasOrAddress;
 	// if allocations are tracked by individual inputs
 	std::vector<CRange> listAllocationInputs;
     uint256 txHash;
@@ -70,7 +70,7 @@ public:
 		vchPubData.clear();
 		sCategory.clear();
 		listAllocationInputs.clear();
-		vchAddress.clear();
+		vchAliasOrAddress.clear();
 		vchSymbol.clear();
 
 	}
@@ -83,7 +83,7 @@ public:
 		READWRITE(vchAsset);
 		READWRITE(vchSymbol);
 		READWRITE(sCategory);
-		READWRITE(vchAddress);
+		READWRITE(vchAliasOrAddress);
 		READWRITE(listAllocationInputs);
 		READWRITE(nBalance);
 		READWRITE(nTotalSupply);
@@ -103,7 +103,7 @@ public:
 		vchPubData = b.vchPubData;
 		txHash = b.txHash;
         nHeight = b.nHeight;
-		vchAddress = b.vchAddress;
+		vchAliasOrAddress = b.vchAliasOrAddress;
 		vchAsset = b.vchAsset;
 		sCategory = b.sCategory;
 		listAllocationInputs = b.listAllocationInputs;
@@ -121,7 +121,7 @@ public:
     inline friend bool operator!=(const CAsset &a, const CAsset &b) {
         return !(a == b);
     }
-	inline void SetNull() { vchSymbol.clear(); nPrecision = 8; bCanAdjustInterestRate = false; fInterestRate = 0;  bUseInputRanges = false; nMaxSupply = 0; nTotalSupply = 0; nBalance = 0; listAllocationInputs.clear(); sCategory.clear(); vchAsset.clear(); nHeight = 0; txHash.SetNull(); vchAddress.clear(); vchPubData.clear(); }
+	inline void SetNull() { vchSymbol.clear(); nPrecision = 8; bCanAdjustInterestRate = false; fInterestRate = 0;  bUseInputRanges = false; nMaxSupply = 0; nTotalSupply = 0; nBalance = 0; listAllocationInputs.clear(); sCategory.clear(); vchAsset.clear(); nHeight = 0; txHash.SetNull(); vchAliasOrAddress.clear(); vchPubData.clear(); }
     inline bool IsNull() const { return (vchAsset.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
