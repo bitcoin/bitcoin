@@ -1010,6 +1010,23 @@ bool FindAliasInTx(const CCoinsViewCache &inputs, const CTransaction& tx, vector
 	}
 	return false;
 }
+bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, const string& ownerAddressToMatch) {
+	int op;
+	CTxDestination dest;
+	for (unsigned int i = 0; i < tx.vin.size(); i++) {
+		const Coin& prevCoins = inputs.AccessCoin(tx.vin[i].prevout);
+		if (prevCoins.IsSpent()) {
+			continue;
+		}
+		if (!ExtractDestination(prevCoins.out.scriptPubKey, dest))
+			continue;
+		CSyscoinAddress address(dest);
+		if (address.ToString() == ownerAddressToMatch) {
+			return true;
+		}
+	}
+	return false;
+}
 bool DecodeAliasScript(const CScript& script, int& op,
 		vector<vector<unsigned char> > &vvch, CScript::const_iterator& pc) {
 	opcodetype opcode;
