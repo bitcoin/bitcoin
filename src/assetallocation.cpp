@@ -961,7 +961,7 @@ UniValue assetallocationcollectinterest(const JSONRPCRequest& request) {
 		CScript scriptPubKeyAlias;
 		scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << fromAlias.vchAlias << fromAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += scriptPubKeyFromOrig;
-		CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);yea 
+		CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 	}
 	
 	CScript scriptData;
