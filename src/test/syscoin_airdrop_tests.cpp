@@ -63,8 +63,8 @@ void GenerateAirDrop(const std::vector<PaymentAmount> &paymentAmounts, const CAm
 
 		if(sendManyString != "") 
 			sendManyString += ",";
-		//"\"[{\\\"address\\\":\\\"jagassetallocationsend2\\\",\\\"amount\\\":0.1}]\""
-		sendManyString += "\"[{\\\"address\\\":\\\"" + paymentAmounts[i].alias + "\\\",\\\"amount\\\":" + ValueFromAmount(nAmountToAirDrop).write();
+		//"\"[{\\\"aliasto\\\":\\\"jagassetallocationsend2\\\",\\\"amount\\\":0.1}]\""
+		sendManyString += "\"[{\\\"aliasto\\\":\\\"" + paymentAmounts[i].alias + "\\\",\\\"amount\\\":" + ValueFromAmount(nAmountToAirDrop).write();
 		nTotalSent += paymentAmounts[i].amount;
 		totalTx++;
 		if(i != 0 && (i%numberOfTxPerBlock) == 0)
