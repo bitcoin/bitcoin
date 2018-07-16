@@ -754,6 +754,7 @@ int LoadMostRelevantInMemoryState()
             return -1;
         }
         curTip = curTip->pprev;
+        spBlockIndex = curTip;
         if (curTip != NULL) {
             _my_sps->setWatermark(curTip->GetBlockHash());
         }
