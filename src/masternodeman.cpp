@@ -6,6 +6,7 @@
 #include "addrman.h"
 #include "alert.h"
 #include "clientversion.h"
+#include "init.h"
 #include "governance.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
@@ -1756,4 +1757,32 @@ void CMasternodeMan::NotifyMasternodeUpdates(CConnman& connman)
     LOCK(cs);
     fMasternodesAdded = false;
     fMasternodesRemoved = false;
+}
+
+void CMasternodeMan::DoMaintenance(CConnman& connman)
+{
+    if(fLiteMode) return; // disable all Dash specific functionality
+
+    if(!masternodeSync.IsBlockchainSynced() || ShutdownRequested())
+        return;
+
+    static unsigned int nTick = 0;
+
+    nTick++;
+
+    // make sure to check all masternodes first
+    mnodeman.Check();
+
+    mnodeman.ProcessPendingMnbRequests(connman);
+    mnodeman.ProcessPendingMnvRequests(connman);
+
+    if(nTick % 60 == 0) {
+        mnodeman.ProcessMasternodeConnections(connman);
+        mnodeman.CheckAndRemove(connman);
+        mnodeman.WarnMasternodeDaemonUpdates();
+    }
+
+    if(fMasternodeMode && (nTick % (60 * 5) == 0)) {
+        mnodeman.DoFullVerificationStep(connman);
+    }
 }

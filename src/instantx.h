@@ -159,6 +159,8 @@ public:
     void SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex, int posInBlock);
 
     std::string ToString() const;
+
+    void DoMaintenance() { CheckAndRemove(); }
 };
 
 /**

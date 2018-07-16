@@ -232,6 +232,8 @@ public:
     int GetStorageLimit() const;
 
     void UpdatedBlockTip(const CBlockIndex *pindex, CConnman& connman);
+
+    void DoMaintenance() { CheckAndRemove(); }
 };
 
 #endif
