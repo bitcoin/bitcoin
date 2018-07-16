@@ -182,7 +182,7 @@ public:
 	CAssetAllocationDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetallocations", nCacheSize, fMemory, fWipe, false, true) {}
 
     bool WriteAssetAllocation(const CAssetAllocation& assetallocation, const CAmount& nSenderBalance, const CAmount& nAmount, const CAsset& asset, const int64_t& arrivalTime, const std::string& strSender, const std::string& strReceiver, const bool& fJustCheck) {
-		const CAssetAllocationTuple allocationTuple(assetallocation.vchAsset, assetallocation.vchAlias);
+		const CAssetAllocationTuple allocationTuple(assetallocation.vchAsset, assetallocation.vchAliasOrAddress);
 		bool writeState = false;
 		{
 			LOCK(cs_assetallocation);
