@@ -247,6 +247,9 @@ int64_t SelectCoins(const std::string& fromAddress, CCoinControl& coinControl, i
             if (pwalletMain->IsSpent(txid, n)) {
                 continue;
             }
+            if (pwalletMain->IsLockedCoin(txid, n)) {
+                continue;
+            }
             if (txOut.nValue < GetEconomicThreshold(txOut)) {
                 if (msc_debug_tokens)
                     PrintToLog("%s: output value below economic threshold: %s:%d, value: %d\n",
@@ -270,6 +273,70 @@ int64_t SelectCoins(const std::string& fromAddress, CCoinControl& coinControl, i
         }
 
         if (nMax <= nTotal) break;
+    }
+#endif
+
+    return nTotal;
+}
+
+/**
+ * Selects all spendable outputs to create a transaction.
+ */
+int64_t SelectAllCoins(const std::string& fromAddress, CCoinControl& coinControl)
+{
+    // total output funds collected
+    int64_t nTotal = 0;
+
+#ifdef ENABLE_WALLET
+    if (NULL == pwalletMain) {
+        return 0;
+    }
+
+    int nHeight = GetHeight();
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    // iterate over the wallet
+    for (std::map<uint256, CWalletTx>::const_iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it) {
+        const uint256& txid = it->first;
+        const CWalletTx& wtx = it->second;
+
+        if (!wtx.IsTrusted()) {
+            continue;
+        }
+        if (!wtx.GetAvailableCredit()) {
+            continue;
+        }
+
+        for (unsigned int n = 0; n < wtx.vout.size(); n++) {
+            const CTxOut& txOut = wtx.vout[n];
+
+            CTxDestination dest;
+            if (!CheckInput(txOut, nHeight, dest)) {
+                continue;
+            }
+            if (!IsMine(*pwalletMain, dest)) {
+                continue;
+            }
+            if (pwalletMain->IsSpent(txid, n)) {
+                continue;
+            }
+            if (pwalletMain->IsLockedCoin(txid, n)) {
+                continue;
+            }
+
+            std::string sAddress = CBitcoinAddress(dest).ToString();
+            if (msc_debug_tokens) {
+                PrintToLog("%s: sender: %s, outpoint: %s:%d, value: %d\n", __func__, sAddress, txid.GetHex(), n, txOut.nValue);
+            }
+
+            // only use funds from the sender's address
+            if (fromAddress == sAddress) {
+                COutPoint outpoint(txid, n);
+                coinControl.Select(outpoint);
+
+                nTotal += txOut.nValue;
+            }
+        }
     }
 #endif
 
