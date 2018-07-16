@@ -1138,14 +1138,6 @@ bool BuildAssetAllocationJson(CAssetAllocation& assetallocation, const CAsset& a
     oAssetAllocation.push_back(Pair("txid", assetallocation.txHash.GetHex()));
     oAssetAllocation.push_back(Pair("height", (int)assetallocation.nHeight));
 	oAssetAllocation.push_back(Pair("owner", stringFromVch(assetallocation.vchAliasOrAddress)));
-	bool expired = false;
-	int64_t expired_time = GetAssetAllocationExpiration(assetallocation);
-	if (expired_time <= chainActive.Tip()->GetMedianTimePast())
-	{
-		expired = true;
-	}
-	oAssetAllocation.push_back(Pair("expires_on", expired_time));
-	oAssetAllocation.push_back(Pair("expired", expired));
 	oAssetAllocation.push_back(Pair("balance", ValueFromAssetAmount(assetallocation.nBalance, asset.nPrecision, asset.bUseInputRanges)));
 	oAssetAllocation.push_back(Pair("interest_claim_height", (int)assetallocation.nLastInterestClaimHeight));
 	oAssetAllocation.push_back(Pair("memo", stringFromVch(assetallocation.vchMemo)));
