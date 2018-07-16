@@ -435,18 +435,16 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot find sender asset allocation.");
 			return true;
 		}
-		if (dbAssetAllocation.vchAliasOrAddress != theAssetAllocation.vchAliasOrAddress) {
-			if (vchAlias.empty()) {
-				if (!FindAssetOwnerInTx(inputs, tx, user1))
-				{
-					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot send this asset. Asset allocation owner must sign off on this change");
-					return true;
-				}
-			}
-			else {
-				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1016 - " + _("Cannot send this asset. Asset allocation owner must sign off on this change");
+		if (vchAlias.empty()) {
+			if (!FindAssetOwnerInTx(inputs, tx, user1))
+			{
+				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot send this asset. Asset allocation owner must sign off on this change");
 				return true;
 			}
+		}
+		else if (dbAssetAllocation.vchAliasOrAddress != theAssetAllocation.vchAliasOrAddress) {
+			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1016 - " + _("Cannot send this asset. Asset allocation owner must sign off on this change");
+			return true;
 		}
 		if (!bSanityCheck) {
 			bRevert = !fJustCheck;
@@ -1361,11 +1359,6 @@ bool CAssetAllocationDB::ScanAssetAllocations(const int count, const int from, c
 			vchAliasOrAddress = vchFromValue(receiverAddress);
 		}
 
-		const UniValue &addressObj = find_value(oOptions, "owner");
-		if (addressObj.isStr()) {
-			vchAliasOrAddress = vchFromValue(addressObj);
-		}
-
 		const UniValue &startblock = find_value(oOptions, "startblock");
 		if (startblock.isNum()) {
 			nStartBlock = startblock.get_int();
@@ -1482,7 +1475,6 @@ UniValue listassetallocations(const JSONRPCRequest& request) {
 			"    {\n"
 			"      \"txid\":txid					(string) Transaction ID to filter.\n"
 			"	   \"asset\":guid					(string) Asset GUID to filter.\n"
-			"      \"sender_alias\":string			(string) Sender alias to filter.\n"
 			"      \"receiver_alias\":string		(string) Receiver alias to filter.\n"
 			"      \"receiver_address\":string		(string) Receiver address to filter.\n"
 			"      \"startblock\":block				(number) Earliest block to filter from. Block number is the block at which the transaction would have confirmed.\n"

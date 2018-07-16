@@ -454,6 +454,11 @@ bool CheckCertInputs(const CTransaction &tx, int op, const vector<vector<unsigne
 	}
 	else
 	{
+		if (theCert.vchAlias != vvchAlias)
+		{
+			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 3015 - " + _("Cannot create this certificate. Certificate owner must sign off on this change.");
+			return true;
+		}
 		if (fJustCheck && GetCert(theCert.vchCert, theCert))
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 3022 - " + _("Certificate already exists");
