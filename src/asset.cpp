@@ -749,7 +749,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
 	vecSend.push_back(recipient);
 
 	CRecipient aliasRecipient;
-	if (!strAddressFrom.empty()) {
+	if (strAddressFrom.empty()) {
 		CScript scriptPubKeyAlias;
 		scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << fromAlias.vchAlias << fromAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += scriptPubKeyFromOrig;
@@ -858,7 +858,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
 	vecSend.push_back(recipient);
 
 	CRecipient aliasRecipient;
-	if (!strAddressFrom.empty()) {
+	if (strAddressFrom.empty()) {
 		CScript scriptPubKeyAlias;
 		scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << fromAlias.vchAlias << fromAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += scriptPubKeyFromOrig;
@@ -954,7 +954,7 @@ UniValue assettransfer(const JSONRPCRequest& request) {
 	vecSend.push_back(recipient);
 
 	CRecipient aliasRecipient;
-	if (!strAddressFrom.empty()) {
+	if (strAddressFrom.empty()) {
 		CScript scriptPubKeyAlias;
 		scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << fromAlias.vchAlias << fromAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += scriptPubKeyFromOrig;
@@ -1103,7 +1103,7 @@ UniValue assetsend(const JSONRPCRequest& request) {
 	vecSend.push_back(recipient);
 
 	CRecipient aliasRecipient;
-	if (!strAddressFrom.empty()) {
+	if (strAddressFrom.empty()) {
 		CScript scriptPubKeyAlias;
 		scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << fromAlias.vchAlias << fromAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += scriptPubKeyFromOrig;
