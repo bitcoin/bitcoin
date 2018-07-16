@@ -719,7 +719,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 					if (DecodeAssetAllocationTx(tx, op, vvchArgs))
 					{
 						errorMessage.clear();
-						good = CheckAssetAllocationInputs(tx, inputs, op, vvchArgs, fJustCheck, nHeight, revertedAssetAllocations, errorMessage);
+						good = CheckAssetAllocationInputs(tx, inputs, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedAssetAllocations, errorMessage);
 						if (fDebug && !errorMessage.empty())
 							LogPrintf("%s\n", errorMessage.c_str());
 
@@ -754,7 +754,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 					else if (DecodeAssetTx(tx, op, vvchArgs))
 					{
 						errorMessage.clear();
-						good = CheckAssetInputs(tx, inputs, op, vvchArgs, fJustCheck, nHeight, revertedAssetAllocations, errorMessage);
+						good = CheckAssetInputs(tx, inputs, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedAssetAllocations, errorMessage);
 						if (fDebug && !errorMessage.empty())
 							LogPrintf("%s\n", errorMessage.c_str());
 					}
