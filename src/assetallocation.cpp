@@ -760,7 +760,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
 	if (!valueTo.isArray())
 		throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Array of receivers not found");
 	string strAddressFrom;
-	const string& strAliasOrAddress = stringFromVch(vchAliasOrAddressFrom);
+	string strAliasOrAddress = stringFromVch(vchAliasOrAddressFrom);
 	const CSyscoinAddress addressFrom(strAliasOrAddress);
 	if (addressFrom.IsValid()) {
 		strAddressFrom = strAliasOrAddress;
@@ -892,7 +892,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
 	vecSend.push_back(fee);
 
 
-	return syscointxfund_helper(stringFromVch(vchAliasOrAddressFrom), vchWitness, aliasRecipient, vecSend);
+	return syscointxfund_helper(vchAliasOrAddressFrom, vchWitness, aliasRecipient, vecSend);
 }
 UniValue assetallocationcollectinterest(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
@@ -912,7 +912,7 @@ UniValue assetallocationcollectinterest(const JSONRPCRequest& request) {
 	vchWitness = vchFromValue(params[2]);
 	
 	string strAddressFrom;
-	const string& strAliasOrAddress = stringFromVch(vchAliasOrAddressFrom);
+	string& strAliasOrAddress = stringFromVch(vchAliasOrAddressFrom);
 	const CSyscoinAddress address(strAliasOrAddress);
 	if (address.IsValid()) {
 		strAddressFrom = strAliasOrAddress;
@@ -970,7 +970,7 @@ UniValue assetallocationcollectinterest(const JSONRPCRequest& request) {
 	vecSend.push_back(fee);
 
 
-	return syscointxfund_helper(strAliasOrAddress, vchWitness, aliasRecipient, vecSend);
+	return syscointxfund_helper(vchAliasOrAddressFrom, vchWitness, aliasRecipient, vecSend);
 }
 
 UniValue assetallocationinfo(const JSONRPCRequest& request) {

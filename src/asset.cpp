@@ -689,7 +689,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
 	vchWitness = vchFromValue(params[10]);
 
 	string strAddressFrom;
-	const string& strAliasOrAddress = stringFromVch(vchAliasOrAddress);
+	string strAliasOrAddress = stringFromVch(vchAliasOrAddress);
 	const CSyscoinAddress address(strAliasOrAddress);
 	if (address.IsValid()) {
 		strAddressFrom = strAliasOrAddress;
@@ -762,7 +762,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
 
-	UniValue res = syscointxfund_helper(strAliasOrAddress, vchWitness, aliasRecipient, vecSend);
+	UniValue res = syscointxfund_helper(vchAliasOrAddress, vchWitness, aliasRecipient, vecSend);
 	res.push_back(stringFromVch(newAsset.vchAsset));
 	return res;
 }
@@ -872,7 +872,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
 	vecSend.push_back(fee);
 	
 	
-	return syscointxfund_helper(strAliasOrAddress, vchWitness, aliasRecipient, vecSend);
+	return syscointxfund_helper(theAsset.vchAliasOrAddress, vchWitness, aliasRecipient, vecSend);
 }
 
 UniValue assettransfer(const JSONRPCRequest& request) {
@@ -967,7 +967,7 @@ UniValue assettransfer(const JSONRPCRequest& request) {
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
 	
-	return syscointxfund_helper(strAliasOrAddress, vchWitness, aliasRecipient, vecSend);
+	return syscointxfund_helper(theAsset.vchAliasOrAddress, vchWitness, aliasRecipient, vecSend);
 }
 UniValue assetsend(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
@@ -1025,7 +1025,6 @@ UniValue assetsend(const JSONRPCRequest& request) {
 
 
 	UniValue receivers = valueTo.get_array();
-	CAliasIndex toAlias;
 	for (unsigned int idx = 0; idx < receivers.size(); idx++) {
 		const UniValue& receiver = receivers[idx];
 		if (!receiver.isObject())
@@ -1118,7 +1117,7 @@ UniValue assetsend(const JSONRPCRequest& request) {
 	vecSend.push_back(fee);
 
 
-	return syscointxfund_helper(strAliasOrAddress, vchWitness, aliasRecipient, vecSend);
+	return syscointxfund_helper(theAsset.vchAliasOrAddress, vchWitness, aliasRecipient, vecSend);
 }
 
 UniValue assetinfo(const JSONRPCRequest& request) {
