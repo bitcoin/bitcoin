@@ -542,7 +542,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 				}
 
 				if (!bSanityCheck) {
-					if (!GetAssetAllocation(receiverAllocationTuple)) {
+					CAssetAllocation receiverAllocation;
+					if (!GetAssetAllocation(receiverAllocationTuple, receiverAllocation)) {
 						receiverAllocation.SetNull();
 						receiverAllocation.vchAliasOrAddress = receiverAllocationTuple.vchAliasOrAddress;
 						receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
@@ -630,7 +631,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1028 - " + _("Cannot send an asset allocation to yourself");
 					return true;
 				}
-				const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, inputTuple.first);
+				const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, input.first);
 				if (fJustCheck) {
 					if (bAddAllReceiversToConflictList || bBalanceOverrun) {
 						assetAllocationConflicts.insert(receiverAllocationTuple);
@@ -804,7 +805,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
 			UniValue inputRanges = inputRangeObj.get_array();
 			vector<CRange> vectorOfRanges;
 			for (unsigned int rangeIndex = 0; rangeIndex < inputRanges.size(); rangeIndex++) {
-				const UniValue& inputRangeObj = inputRangpes[rangeIndex];
+				const UniValue& inputRangeObj = inputRanges[rangeIndex];
 				if(!inputRangeObj.isObject())
 					throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"start'\",\"end\"}");
 				UniValue startRangeObj = find_value(inputRangeObj, "start");
@@ -912,7 +913,7 @@ UniValue assetallocationcollectinterest(const JSONRPCRequest& request) {
 	vchWitness = vchFromValue(params[2]);
 	
 	string strAddressFrom;
-	string& strAliasOrAddress = stringFromVch(vchAliasOrAddressFrom);
+	string strAliasOrAddress = stringFromVch(vchAliasOrAddressFrom);
 	const CSyscoinAddress address(strAliasOrAddress);
 	if (address.IsValid()) {
 		strAddressFrom = strAliasOrAddress;
@@ -1190,21 +1191,23 @@ bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, co
 	oAssetAllocation.push_back(Pair("confirmed", bConfirmed));
 	if (fAssetAllocationIndex) {
 		string strCat = "";
+		string strSenderTmp = strSender;
+		string strReceiverTmp = strReceiver;
 		CAliasIndex fromAlias;
-		if (GetAlias(vchFromString(strSender), fromAlias))
-			strSender = EncodeBase58(fromAlias.vchAddress);
+		if (GetAlias(vchFromString(strSenderTmp), fromAlias))
+			strSenderTmp = EncodeBase58(fromAlias.vchAddress);
 		CAliasIndex toAlias;
-		if (GetAlias(vchFromString(strReceiver), toAlias))
-			strReceiver = EncodeBase58(toAlias.vchAddress);
-		if (!strSender.empty() || !strReceiver.empty()) {
+		if (GetAlias(vchFromString(strReceiverTmp), toAlias))
+			strReceiverTmp = EncodeBase58(toAlias.vchAddress);
+		if (!strSenderTmp.empty() || !strReceiverTmp.empty()) {
 			isminefilter filter = ISMINE_SPENDABLE;
-			isminefilter mine = IsMine(*pwalletMain, CSyscoinAddress(strSender).Get());
+			isminefilter mine = IsMine(*pwalletMain, CSyscoinAddress(strSenderTmp).Get());
 			if ((mine & filter)) {
 				strCat = "send";
 				nAmountDisplay *= -1;
 			}
-			else if(!toAddressStr.empty()){
-				mine = IsMine(*pwalletMain, CSyscoinAddress(strReceiver).Get());
+			else if(!strReceiverTmp.empty()){
+				mine = IsMine(*pwalletMain, CSyscoinAddress(strReceiverTmp).Get());
 				if ((mine & filter))
 					strCat = "receive";
 			}
@@ -1227,7 +1230,7 @@ void AssetAllocationTxToJSON(const int op, const std::vector<unsigned char> &vch
 	entry.push_back(Pair("txtype", opName));
 	entry.push_back(Pair("_id", CAssetAllocationTuple(assetallocation.vchAsset, assetallocation.vchAliasOrAddress).ToString()));
 	entry.push_back(Pair("asset", stringFromVch(assetallocation.vchAsset)));
-	entry.push_back(Pair("owner", stringFromVch(assetallocation.vchAliasOrAddress));
+	entry.push_back(Pair("owner", stringFromVch(assetallocation.vchAliasOrAddress)));
 	entry.push_back(Pair("memo", stringFromVch(assetallocation.vchMemo)));
 	UniValue oAssetAllocationReceiversArray(UniValue::VARR);
 	if (!assetallocation.listSendingAllocationAmounts.empty()) {
