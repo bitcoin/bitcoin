@@ -246,6 +246,7 @@ public:
      */
     void NotifyMasternodeUpdates(CConnman* connman);
 
+    void DoMaintenance(CConnman& connman);
 };
 
 #endif
