@@ -157,7 +157,7 @@ Commit your signature to gitian.sigs:
     git add ${VERSION}-linux/"${SIGNER}"
     git add ${VERSION}-win-unsigned/"${SIGNER}"
     git add ${VERSION}-osx-unsigned/"${SIGNER}"
-    git commit -a
+    git commit -m "Add ${VERSION} unsigned sigs for ${SIGNER}"
     git push  # Assuming you can push to the gitian.sigs tree
     popd
 
