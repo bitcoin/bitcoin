@@ -1209,6 +1209,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 		}
 		else
 		{
+			LOCK(scriptCheckMapCS);
 			scriptCheckMap[hash] = vChecks;
 		}
 		// Remove conflicting transactions from the mempool
