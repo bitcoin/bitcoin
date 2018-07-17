@@ -610,7 +610,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 		nHeight = chainActive.Height()+1;
 	std::string errorMessage;
 	bool good = true;
-
+	const std::vector<unsigned char> &emptyVch = vchFromString("");
 	if (block.vtx.empty() && tx.nVersion == SYSCOIN_TX_VERSION) {
 		{
 			bool foundAliasInput = true;
@@ -634,7 +634,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 				if (DecodeAssetAllocationTx(tx, op, vvchArgs))
 				{
 					errorMessage.clear();
-					good = CheckAssetAllocationInputs(tx, inputs, op, vvchArgs, foundAliasInput? vvchAliasArgs[0]: vchFromString(""), fJustCheck, nHeight, revertedAssetAllocations, errorMessage, bSanity);
+					good = CheckAssetAllocationInputs(tx, inputs, op, vvchArgs, foundAliasInput? vvchAliasArgs[0]: emptyVch, fJustCheck, nHeight, revertedAssetAllocations, errorMessage, bSanity);
 				}
 				else if (DecodeOfferTx(tx, op, vvchArgs))
 				{
@@ -660,7 +660,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 				else if (DecodeAssetTx(tx, op, vvchArgs))
 				{
 					errorMessage.clear();
-					good = CheckAssetInputs(tx, inputs, op, vvchArgs, foundAliasInput ? vvchAliasArgs[0] : vchFromString(""), fJustCheck, nHeight, revertedAssetAllocations, errorMessage, bSanity);
+					good = CheckAssetInputs(tx, inputs, op, vvchArgs, foundAliasInput ? vvchAliasArgs[0] : emptyVch, fJustCheck, nHeight, revertedAssetAllocations, errorMessage, bSanity);
 				}
 			}
 			else
@@ -711,12 +711,12 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 				if (fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 
-				if (!vvchAliasArgs.empty() && good)
+				if (good)
 				{
 					if (DecodeAssetAllocationTx(tx, op, vvchArgs))
 					{
 						errorMessage.clear();
-						good = CheckAssetAllocationInputs(tx, inputs, op, vvchArgs, foundAliasInput ? vvchAliasArgs[0] : vchFromString(""), fJustCheck, nHeight, revertedAssetAllocations, errorMessage);
+						good = CheckAssetAllocationInputs(tx, inputs, op, vvchArgs, foundAliasInput ? vvchAliasArgs[0] : emptyVch, fJustCheck, nHeight, revertedAssetAllocations, errorMessage);
 						if (fDebug && !errorMessage.empty())
 							LogPrintf("%s\n", errorMessage.c_str());
 
@@ -751,7 +751,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 					else if (DecodeAssetTx(tx, op, vvchArgs))
 					{
 						errorMessage.clear();
-						good = CheckAssetInputs(tx, inputs, op, vvchArgs, foundAliasInput ? vvchAliasArgs[0] : vchFromString(""), fJustCheck, nHeight, revertedAssetAllocations, errorMessage);
+						good = CheckAssetInputs(tx, inputs, op, vvchArgs, foundAliasInput ? vvchAliasArgs[0] : emptyVch, fJustCheck, nHeight, revertedAssetAllocations, errorMessage);
 						if (fDebug && !errorMessage.empty())
 							LogPrintf("%s\n", errorMessage.c_str());
 					}
