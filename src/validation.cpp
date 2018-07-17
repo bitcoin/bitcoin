@@ -1318,6 +1318,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 					return state.DoS(0, false,
 						REJECT_INVALID, "threadpool-full", false,
 						"AcceptToMemoryPoolWorker: thread pool queue is full");
+				LogPrintf("AcceptToMemoryPoolWorker: thread pool queue is full");
 				MilliSleep(1);
 			}
 		}
