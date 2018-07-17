@@ -487,6 +487,23 @@ BOOST_AUTO_TEST_CASE(generate_bad_assetmaxsupply)
 	// balance > max supply
 	BOOST_CHECK_THROW(CallRPC("node1", "assetnew abc jagassetmaxsupply " + gooddata + " assets 3 false 2000 1000 0 false ''"), runtime_error);
 }
+BOOST_AUTO_TEST_CASE(generate_bad_assetmaxsupply_address)
+{
+	GenerateBlocks(5);
+	printf("Running generate_bad_assetmaxsupply_address...\n");
+	GenerateBlocks(5);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getnewaddress", false, false));
+	string newaddress = r.get_str();
+	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
+	// 256 bytes long
+	string gooddata = "SfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfdd";
+	// 0 max supply bad
+	BOOST_CHECK_THROW(CallRPC("node1", "assetnew abc " + newaddress + " " + gooddata + " assets 8 false 1 0 0 false ''"), runtime_error);
+	// 1 max supply good
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew abc " + newaddress + " " + gooddata + " assets 8 false 1 1 0 false ''"));
+	// balance > max supply
+	BOOST_CHECK_THROW(CallRPC("node1", "assetnew abc " + newaddress + " " + gooddata + " assets 3 false 2000 1000 0 false ''"), runtime_error);
+}
 BOOST_AUTO_TEST_CASE(generate_assetuppercase)
 {
 	GenerateBlocks(5);
@@ -494,6 +511,25 @@ BOOST_AUTO_TEST_CASE(generate_assetuppercase)
 	UniValue r;
 	AliasNew("node1", "jagassetuppercase", "data");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetnew upper jagassetuppercase data assets 8 false 1 1 0 false ''"));
+	UniValue arr = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
+	string hex_str = find_value(r.get_obj(), "hex").get_str();
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + hex_str));
+
+	GenerateBlocks(5);
+	// assetinfo is case incensitive
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + arr[1].get_str() + " false"));
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "symbol").get_str(), "UPPER");
+}
+BOOST_AUTO_TEST_CASE(generate_assetuppercase_address)
+{
+	GenerateBlocks(5);
+	printf("Running generate_assetuppercase_address...\n");
+	UniValue r;
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getnewaddress", false, false));
+	string newaddress = r.get_str();
+	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetnew upper " + newaddress + " data assets 8 false 1 1 0 false ''"));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -524,6 +560,33 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest)
 	// calc interest expect 5000 (1 + 0.05 / 60) ^ (60(10)) = ~8248
 	AssetClaimInterest("node1", guid, "jagassetcollectionreceiver");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectionreceiver false"));
+	balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 824875837095);
+}
+BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_address)
+{
+	UniValue r;
+	printf("Running generate_asset_collect_interest_address...\n");
+	GenerateBlocks(5);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getnewaddress", false, false));
+	string newaddress = r.get_str();
+	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getnewaddress", false, false));
+	string newaddress2 = r.get_str();
+	newaddress2.erase(std::remove(newaddress2.begin(), newaddress2.end(), '\n'), newaddress2.end());
+	// setup asset with 5% interest hourly (unit test mode calculates interest hourly not annually)
+	string guid = AssetNew("node1", "cad", newaddress, "data", "8", "false", "10000", "-1", "0.05");
+
+	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"" + newaddress2 + "\\\",\\\"amount\\\":5000}]\"", "memoassetinterest");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress2 + " false"));
+	UniValue balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 5000 * COIN);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), find_value(r.get_obj(), "height").get_int());
+	// 10 hours later
+	GenerateBlocks(60 * 10);
+	// calc interest expect 5000 (1 + 0.05 / 60) ^ (60(10)) = ~8248
+	AssetClaimInterest("node1", guid, newaddress2);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress2 + " false"));
 	balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 824875837095);
 }
