@@ -75,7 +75,7 @@
  * Global state
  */
 
-CCriticalSection cs_main;
+CCriticalSection cs_main, scriptCheckMapCS, scriptExecutionCacheCS;
 
 BlockMap mapBlockIndex;
 CChain chainActive;
