@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Bitcoin Core developers
 // Copyright (c) 2014-2019 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -21,12 +21,12 @@
 #include <sync.h>
 #include <tinyformat.h>
 #include <utiltime.h>
+#include <utilmemory.h>
 #include <amount.h>
 
 #include <atomic>
 #include <exception>
 #include <map>
-#include <memory>
 #include <set>
 #include <stdint.h>
 #include <string>
@@ -344,12 +344,5 @@ std::string IntVersionToString(uint32_t nVersion);
  */
 std::string SafeIntVersionToString(uint32_t nVersion);
 
-
-//! Substitute for C++14 std::make_unique.
-template <typename T, typename... Args>
-std::unique_ptr<T> MakeUnique(Args&&... args)
-{
-    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
-}
 
 #endif // BITCOIN_UTIL_H
