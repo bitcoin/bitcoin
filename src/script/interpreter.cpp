@@ -316,8 +316,12 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                 return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
 
             // Note how OP_RESERVED does not count towards the opcode limit.
-            if (opcode > OP_16 && ++nOpCount > MAX_OPS_PER_SCRIPT)
-                return set_error(serror, SCRIPT_ERR_OP_COUNT);
+            if (opcode > OP_16) {
+                ++nOpCount;
+                if (nOpCount > MAX_OPS_PER_SCRIPT) {
+                    return set_error(serror, SCRIPT_ERR_OP_COUNT);
+                }
+            }
 
             if (opcode == OP_CAT ||
                 opcode == OP_SUBSTR ||
