@@ -502,7 +502,6 @@ BOOST_AUTO_TEST_CASE(generate_bad_assetmaxsupply_address)
 }
 BOOST_AUTO_TEST_CASE(generate_assetuppercase)
 {
-	UniValue r;
 	GenerateBlocks(5);
 	printf("Running generate_assetuppercase...\n");
 	UniValue r;
@@ -520,6 +519,7 @@ BOOST_AUTO_TEST_CASE(generate_assetuppercase)
 }
 BOOST_AUTO_TEST_CASE(generate_assetuppercase_address)
 {
+	UniValue r;
 	GenerateBlocks(5);
 	printf("Running generate_assetuppercase_address...\n");
 	string newaddress = GetNewFundedAddress("node1");
