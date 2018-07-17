@@ -385,7 +385,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 		if (vchAlias.empty()) {
 			if (!FindAssetOwnerInTx(inputs, tx, user1))
 			{
-				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot send edit asset. Asset owner must sign off on this change");
+				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot send create or update this asset. Asset allocation owner must sign off on this change");
 				return true;
 			}
 		}

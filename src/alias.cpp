@@ -1020,8 +1020,7 @@ bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, c
 		}
 		if (!ExtractDestination(prevCoins.out.scriptPubKey, dest))
 			continue;
-		CSyscoinAddress address(dest);
-		if (address.ToString() == ownerAddressToMatch) {
+		if (CSyscoinAddress(dest).ToString() == ownerAddressToMatch) {
 			return true;
 		}
 	}
