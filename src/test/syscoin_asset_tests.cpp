@@ -502,6 +502,7 @@ BOOST_AUTO_TEST_CASE(generate_bad_assetmaxsupply_address)
 }
 BOOST_AUTO_TEST_CASE(generate_assetuppercase)
 {
+	UniValue r;
 	GenerateBlocks(5);
 	printf("Running generate_assetuppercase...\n");
 	UniValue r;
