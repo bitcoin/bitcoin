@@ -7,7 +7,7 @@ import sys
 
 def setup():
     global args, workdir
-    programs = ['ruby', 'git', 'apt-cacher-ng']
+    programs = ['ruby', 'git', 'apt-cacher-ng', 'make', 'wget']
     if args.kvm:
         programs += ['python-vm-builder', 'qemu-kvm', 'qemu-utils']
     elif args.docker:
@@ -21,6 +21,8 @@ def setup():
         subprocess.check_call(['git', 'clone', 'https://github.com/bitcoin-core/bitcoin-detached-sigs.git'])
     if not os.path.isdir('gitian-builder'):
         subprocess.check_call(['git', 'clone', 'https://github.com/devrandom/gitian-builder.git'])
+    if not os.path.isdir('bitcoin'):
+        subprocess.check_call(['git', 'clone', 'https://github.com/bitcoin/bitcoin.git'])
     os.chdir('gitian-builder')
     make_image_prog = ['bin/make-base-vm', '--suite', 'bionic', '--arch', 'amd64']
     if args.docker:
@@ -70,7 +72,7 @@ def build():
         subprocess.check_call(['git', 'add', args.version+'-linux/'+args.signer])
         subprocess.check_call(['git', 'add', args.version+'-win-unsigned/'+args.signer])
         subprocess.check_call(['git', 'add', args.version+'-osx-unsigned/'+args.signer])
-        subprocess.check_call(['git', 'commit', '-a', '-m', 'Add '+args.version+' unsigned sigs for '+args.signer])
+        subprocess.check_call(['git', 'commit', '-m', 'Add '+args.version+' unsigned sigs for '+args.signer])
         os.chdir(workdir)
 
 def sign():
