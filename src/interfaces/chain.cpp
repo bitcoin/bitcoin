@@ -9,6 +9,7 @@
 #include <interfaces/handler.h>
 #include <interfaces/wallet.h>
 #include <net.h>
+#include <node/coin.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
@@ -287,6 +288,7 @@ public:
         }
         return true;
     }
+    void findCoins(std::map<COutPoint, Coin>& coins) override { return FindCoins(coins); }
     double guessVerificationProgress(const uint256& block_hash) override
     {
         LOCK(cs_main);
