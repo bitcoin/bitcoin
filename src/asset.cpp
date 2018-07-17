@@ -1034,7 +1034,7 @@ UniValue assetsend(const JSONRPCRequest& request) {
 		UniValue toObj = find_value(receiverObj, "ownerto");
 		vector<unsigned char> vchAliasOrAddressTo;
 		vchAliasOrAddressTo = vchFromValue(toObj);
-		if (!CSyscoinAddress(stringFromVch(vchAliasOrAddressTo).IsValid())) {
+		if (!CSyscoinAddress(stringFromVch(vchAliasOrAddressTo)).IsValid()) {
 			ToLowerCase(vchAliasOrAddressTo);
 			if (!GetAlias(vchAliasOrAddressTo, toAlias))
 				throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("Failed to read recipient alias from DB"));

@@ -1165,7 +1165,6 @@ void AssetUpdate(const string& node, const string& name, const string& pubdata, 
 	string newsupply = supply == "''" ? "0" : supply;
 	string newinterest = interest == "''" ? oldinterest : interest;
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + oldalias));
 	// "assetupdate [asset] [public] [category=assets] [supply] [interest_rate] [witness]\n"
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetupdate " + name + " " + newpubdata + " assets " + newsupply + " " + newinterest + " " + witness));
 	// increase supply to new amount if we passed in a supply value
