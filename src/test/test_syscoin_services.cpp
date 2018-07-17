@@ -1064,7 +1064,6 @@ string AssetNew(const string& node, const string& name, const string& alias, con
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
 	UniValue r;
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + alias));
 	
 	// "assetnew [name] [alias] [public] [category=assets] [precision=8] [use_inputranges] [supply] [max_supply] [interest_rate] [can_adjust_interest_rate] [witness]\n"
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetnew " + name + " " + alias + " " + pubdata + " " + " assets " + " " + precision + " " + useinputranges + " " + supply + " " + maxsupply + " " + interestrate + " " + canadjustinterest + " " + witness));
