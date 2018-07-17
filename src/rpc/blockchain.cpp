@@ -20,6 +20,7 @@
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <rpc/server.h>
+#include <script/descriptor.h>
 #include <streams.h>
 #include <sync.h>
 #include <txdb.h>
@@ -1984,67 +1985,36 @@ public:
     }
 };
 
-static const char *g_default_scantxoutset_script_types[] = { "P2PKH", "P2SH_P2WPKH", "P2WPKH" };
-
-enum class OutputScriptType {
-    UNKNOWN,
-    P2PK,
-    P2PKH,
-    P2SH_P2WPKH,
-    P2WPKH
-};
-
-static inline OutputScriptType GetOutputScriptTypeFromString(const std::string& outputtype)
-{
-    if (outputtype == "P2PK") return OutputScriptType::P2PK;
-    else if (outputtype == "P2PKH") return OutputScriptType::P2PKH;
-    else if (outputtype == "P2SH_P2WPKH") return OutputScriptType::P2SH_P2WPKH;
-    else if (outputtype == "P2WPKH") return OutputScriptType::P2WPKH;
-    else return OutputScriptType::UNKNOWN;
-}
-
-CTxDestination GetDestinationForKey(const CPubKey& key, OutputScriptType type)
-{
-    switch (type) {
-    case OutputScriptType::P2PKH: return key.GetID();
-    case OutputScriptType::P2SH_P2WPKH:
-    case OutputScriptType::P2WPKH: {
-        if (!key.IsCompressed()) return key.GetID();
-        CTxDestination witdest = WitnessV0KeyHash(key.GetID());
-        if (type == OutputScriptType::P2SH_P2WPKH) {
-            CScript witprog = GetScriptForDestination(witdest);
-            return CScriptID(witprog);
-        } else {
-            return witdest;
-        }
-    }
-    default: assert(false);
-    }
-}
-
 UniValue scantxoutset(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
             "scantxoutset <action> ( <scanobjects> )\n"
-            "\nScans the unspent transaction output set for possible entries that matches common scripts of given public keys.\n"
-            "Using addresses as scanobjects will _not_ detect unspent P2PK txouts\n"
+            "\nScans the unspent transaction output set for entries that match certain output descriptors.\n"
+            "Examples of output descriptors are:\n"
+            "    addr(<address>)                      Outputs whose scriptPubKey corresponds to the specified address (does not include P2PK)\n"
+            "    raw(<hex script>)                    Outputs whose scriptPubKey equals the specified hex scripts\n"
+            "    combo(<pubkey>)                      P2PK, P2PKH, P2WPKH, and P2SH-P2WPKH outputs for the given pubkey\n"
+            "    pkh(<pubkey>)                        P2PKH outputs for the given pubkey\n"
+            "    sh(multi(<n>,<pubkey>,<pubkey>,...)) P2SH-multisig outputs for the given threshold and pubkeys\n"
+            "\nIn the above, <pubkey> either refers to a fixed public key in hexadecimal notation, or to an xpub/xprv optionally followed by one\n"
+            "or more path elements separated by \"/\", and optionally ending in \"/*\" or \"/*'\" to specify all unhardened or hardened child keys.\n"
+            "In the latter case, a range needs to be specified by below if different from 1000.\n"
+            "For more information on output descriptors, see the documentation at TODO\n"
             "\nArguments:\n"
             "1. \"action\"                       (string, required) The action to execute\n"
             "                                      \"start\" for starting a scan\n"
             "                                      \"abort\" for aborting the current scan (returns true when abort was successful)\n"
             "                                      \"status\" for progress report (in %) of the current scan\n"
-            "2. \"scanobjects\"                  (array, optional) Array of scan objects (only one object type per scan object allowed)\n"
-            "      [\n"
-            "        { \"address\" : \"<address>\" },       (string, optional) Bitcoin address\n"
-            "        { \"script\"  : \"<scriptPubKey>\" },  (string, optional) HEX encoded script (scriptPubKey)\n"
-            "        { \"pubkey\"  :                      (object, optional) Public key\n"
-            "          {\n"
-            "            \"pubkey\" : \"<pubkey\">,         (string, required) HEX encoded public key\n"
-            "            \"script_types\" : [ ... ],      (array, optional) Array of script-types to derive from the pubkey (possible values: \"P2PK\", \"P2PKH\", \"P2SH-P2WPKH\", \"P2WPKH\")\n"
-            "          }\n"
+            "2. \"scanobjects\"                  (array, required) Array of scan objects\n"
+            "    [                             Every scan object is either a string descriptor or an object:\n"
+            "        \"descriptor\",             (string, optional) An output descriptor\n"
+            "        {                         (object, optional) An object with output descriptor and metadata\n"
+            "          \"desc\": \"descriptor\",   (string, required) An output descriptor\n"
+            "          \"range\": n,             (numeric, optional) Up to what child index HD chains should be explored (default: 1000)\n"
             "        },\n"
-            "      ]\n"
+            "        ...\n"
+            "    ]\n"
             "\nResult:\n"
             "{\n"
             "  \"unspents\": [\n"
@@ -2090,79 +2060,35 @@ UniValue scantxoutset(const JSONRPCRequest& request)
 
         // loop through the scan objects
         for (const UniValue& scanobject : request.params[1].get_array().getValues()) {
-            if (!scanobject.isObject()) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid scan object");
+            std::string desc_str;
+            int range = 1000;
+            if (scanobject.isStr()) {
+                desc_str = scanobject.get_str();
+            } else if (scanobject.isObject()) {
+                UniValue desc_uni = find_value(scanobject, "desc");
+                if (desc_uni.isNull()) throw JSONRPCError(RPC_INVALID_PARAMETER, "Descriptor needs to be provided in scan object");
+                desc_str = desc_uni.get_str();
+                UniValue range_uni = find_value(scanobject, "range");
+                if (!range_uni.isNull()) {
+                    range = range_uni.get_int();
+                    if (range < 0 || range > 1000000) throw JSONRPCError(RPC_INVALID_PARAMETER, "range out of range");
+                }
+            } else {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Scan object needs to be either a string or an object");
             }
-            UniValue address_uni = find_value(scanobject, "address");
-            UniValue pubkey_uni  = find_value(scanobject, "pubkey");
-            UniValue script_uni  = find_value(scanobject, "script");
 
-            // make sure only one object type is present
-            if (1 != !address_uni.isNull() + !pubkey_uni.isNull() + !script_uni.isNull()) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Only one object type is allowed per scan object");
-            } else if (!address_uni.isNull() && !address_uni.isStr()) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Scanobject \"address\" must contain a single string as value");
-            } else if (!pubkey_uni.isNull() && !pubkey_uni.isObject()) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Scanobject \"pubkey\" must contain an object as value");
-            } else if (!script_uni.isNull() && !script_uni.isStr()) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Scanobject \"script\" must contain a single string as value");
-            } else if (address_uni.isStr()) {
-                // type: address
-                // decode destination and derive the scriptPubKey
-                // add the script to the scan containers
-                CTxDestination dest = DecodeDestination(address_uni.get_str());
-                if (!IsValidDestination(dest)) {
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+            FlatSigningProvider provider;
+            auto desc = Parse(desc_str, provider);
+            if (!desc) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid descriptor '%s'", desc_str));
+            }
+            if (!desc->IsRange()) range = 0;
+            for (int i = 0; i <= range; ++i) {
+                std::vector<CScript> scripts;
+                if (!desc->Expand(i, provider, scripts, provider)) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Cannot derive script without private keys: '%s'", desc_str));
                 }
-                CScript script = GetScriptForDestination(dest);
-                assert(!script.empty());
-                needles.insert(script);
-            } else if (pubkey_uni.isObject()) {
-                // type: pubkey
-                // derive script(s) according to the script_type parameter
-                UniValue script_types_uni = find_value(pubkey_uni, "script_types");
-                UniValue pubkeydata_uni = find_value(pubkey_uni, "pubkey");
-
-                // check the script types and use the default if not provided
-                if (!script_types_uni.isNull() && !script_types_uni.isArray()) {
-                    throw JSONRPCError(RPC_INVALID_PARAMETER, "script_types must be an array");
-                } else if (script_types_uni.isNull()) {
-                    // use the default script types
-                    script_types_uni = UniValue(UniValue::VARR);
-                    for (const char *t : g_default_scantxoutset_script_types) {
-                        script_types_uni.push_back(t);
-                    }
-                }
-
-                // check the acctual pubkey
-                if (!pubkeydata_uni.isStr() || !IsHex(pubkeydata_uni.get_str())) {
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Public key must be hex encoded");
-                }
-                CPubKey pubkey(ParseHexV(pubkeydata_uni, "pubkey"));
-                if (!pubkey.IsFullyValid()) {
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid public key");
-                }
-
-                // loop through the script types and derive the script
-                for (const UniValue& script_type_uni : script_types_uni.get_array().getValues()) {
-                    OutputScriptType script_type = GetOutputScriptTypeFromString(script_type_uni.get_str());
-                    if (script_type == OutputScriptType::UNKNOWN) throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid script type");
-                    CScript script;
-                    if (script_type == OutputScriptType::P2PK) {
-                        // support legacy P2PK scripts
-                        script << ToByteVector(pubkey) << OP_CHECKSIG;
-                    } else {
-                        script = GetScriptForDestination(GetDestinationForKey(pubkey, script_type));
-                    }
-                    assert(!script.empty());
-                    needles.insert(script);
-                }
-            } else if (script_uni.isStr()) {
-                // type: script
-                // check and add the script to the scan containers (needles array)
-                CScript script(ParseHexV(script_uni, "script"));
-                // TODO: check script: max length, has OP, is unspenable etc.
-                needles.insert(script);
+                needles.insert(scripts.begin(), scripts.end());
             }
         }
 
