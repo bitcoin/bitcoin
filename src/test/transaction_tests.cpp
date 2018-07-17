@@ -547,7 +547,6 @@ BOOST_AUTO_TEST_CASE(test_witness)
 
     CTransactionRef output1, output2;
     CMutableTransaction input1, input2;
-    SignatureData sigdata;
 
     // Normal pay-to-compressed-pubkey.
     CreateCreditAndSpend(keystore, scriptPubkey1, output1, input1);
