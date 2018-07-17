@@ -457,6 +457,21 @@ BOOST_AUTO_TEST_CASE(generate_big_assetname)
 	// its 3 chars now so its ok
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew abc jagassetnamebig " + gooddata + " assets 8 false 1 1 0 false ''"));
 }
+BOOST_AUTO_TEST_CASE(generate_big_assetname_address)
+{
+	GenerateBlocks(5);
+	printf("Running generate_big_assetname_address...\n");
+	GenerateBlocks(5);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getnewaddress", false, false));
+	string newaddress = r.get_str();
+	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
+	// 256 bytes long
+	string gooddata = "SfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfdd";
+	// cannot create this asset because its more than 8 chars
+	BOOST_CHECK_THROW(CallRPC("node1", "assetnew 123456789 " + newaddress + " " + gooddata + " assets 8 false 1 1 0 false ''"), runtime_error);
+	// its 3 chars now so its ok
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew abc " + newaddress + " " + gooddata + " assets 8 false 1 1 0 false ''"));
+}
 BOOST_AUTO_TEST_CASE(generate_bad_assetmaxsupply)
 {
 	GenerateBlocks(5);
