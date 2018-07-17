@@ -324,8 +324,6 @@ CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys)
 
 CScript GetScriptForWitness(const CScript& redeemscript)
 {
-    CScript ret;
-
     txnouttype typ;
     std::vector<std::vector<unsigned char> > vSolutions;
     if (Solver(redeemscript, typ, vSolutions)) {
