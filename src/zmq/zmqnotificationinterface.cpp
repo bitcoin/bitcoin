@@ -45,13 +45,13 @@ CZMQNotificationInterface* CZMQNotificationInterface::Create()
         std::string arg("-zmq" + entry.first);
         if (gArgs.IsArgSet(arg))
         {
-            CZMQNotifierFactory factory = entry.second;
-            std::string address = gArgs.GetArg(arg, "");
-            CZMQAbstractNotifier *notifier = factory();
+            const auto& factory = entry.second;
+            const std::string address = gArgs.GetArg(arg, "");
+            std::unique_ptr<CZMQAbstractNotifier> notifier = factory();
             notifier->SetType(entry.first);
             notifier->SetAddress(address);
             notifier->SetOutboundMessageHighWaterMark(static_cast<int>(gArgs.GetArg(arg + "hwm", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM)));
-            notifiers.emplace_back(notifier);
+            notifiers.push_back(std::move(notifier));
         }
     }
 

@@ -7,10 +7,14 @@
 
 #include <zmq/zmqconfig.h>
 
+#include <util/memory.h>
+
+#include <memory>
+
 class CBlockIndex;
 class CZMQAbstractNotifier;
 
-typedef CZMQAbstractNotifier* (*CZMQNotifierFactory)();
+using CZMQNotifierFactory = std::unique_ptr<CZMQAbstractNotifier> (*)();
 
 class CZMQAbstractNotifier
 {
@@ -21,9 +25,9 @@ public:
     virtual ~CZMQAbstractNotifier();
 
     template <typename T>
-    static CZMQAbstractNotifier* Create()
+    static std::unique_ptr<CZMQAbstractNotifier> Create()
     {
-        return new T();
+        return MakeUnique<T>();
     }
 
     std::string GetType() const { return type; }
