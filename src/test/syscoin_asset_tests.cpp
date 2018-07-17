@@ -462,6 +462,7 @@ BOOST_AUTO_TEST_CASE(generate_big_assetname_address)
 	GenerateBlocks(5);
 	printf("Running generate_big_assetname_address...\n");
 	GenerateBlocks(5);
+	UniValue r;
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getnewaddress", false, false));
 	string newaddress = r.get_str();
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
@@ -492,6 +493,7 @@ BOOST_AUTO_TEST_CASE(generate_bad_assetmaxsupply_address)
 	GenerateBlocks(5);
 	printf("Running generate_bad_assetmaxsupply_address...\n");
 	GenerateBlocks(5);
+	UniValue r;
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getnewaddress", false, false));
 	string newaddress = r.get_str();
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
