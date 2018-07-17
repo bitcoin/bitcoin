@@ -115,7 +115,7 @@ bool SelectCoinsBnB(std::vector<CInputCoin>& utxo_pool, const CAmount& target_va
             while (!curr_selection.empty() && !curr_selection.back()) {
                 curr_selection.pop_back();
                 curr_available_value += utxo_pool.at(curr_selection.size()).effective_value;
-            };
+            }
 
             if (curr_selection.empty()) { // We have walked back to the first utxo and no branch is untraversed. All solutions searched
                 break;
