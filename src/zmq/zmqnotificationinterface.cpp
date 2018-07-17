@@ -4,14 +4,12 @@
 
 #include <zmq/zmqnotificationinterface.h>
 #include <zmq/zmqpublishnotifier.h>
+#include <zmq/zmqutil.h>
+
+#include <zmq.h>
 
 #include <validation.h>
 #include <util/system.h>
-
-void zmqError(const char *str)
-{
-    LogPrint(BCLog::ZMQ, "zmq: Error: %s, errno=%s\n", str, zmq_strerror(errno));
-}
 
 CZMQNotificationInterface::CZMQNotificationInterface() : pcontext(nullptr)
 {

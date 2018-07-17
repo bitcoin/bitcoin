@@ -4,6 +4,8 @@
 
 #include <zmq/zmqabstractnotifier.h>
 
+#include <cassert>
+
 const int CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM;
 
 CZMQAbstractNotifier::~CZMQAbstractNotifier()
