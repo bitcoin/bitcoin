@@ -102,8 +102,9 @@ and, if not disabled, configured using the `-torcontrol` and `-torpassword` sett
 To show verbose debugging information, pass `-debug=tor`.
 
 Connecting to Tor's control socket API requires one of two authentication methods to be 
-configured. For cookie authentication the user running bitcoind must have write access 
-to the `CookieAuthFile` specified in Tor configuration. In some cases this is 
+configured. It also requires the control socket to be enabled, eg. put `ControlPort 9051`
+in torrc config file. For cookie authentication the user running bitcoind must have write 
+access to the `CookieAuthFile` specified in Tor configuration. In some cases this is 
 preconfigured and the creation of a hidden service is automatic. If permission problems 
 are seen with `-debug=tor` they can be resolved by adding both the user running tor and 
 the user running bitcoind to the same group and setting permissions appropriately. On 
