@@ -29,8 +29,15 @@ void InitBLSTests();
 void CleanupBLSTests();
 void CleanupBLSDkgTests();
 
-int
-main(int argc, char** argv)
+static fs::path SetDataDir()
+{
+    fs::path ret = fs::temp_directory_path() / "bench_bitcoin" / fs::unique_path();
+    fs::create_directories(ret);
+    gArgs.ForceSetArg("-datadir", ret.string());
+    return ret;
+}
+
+int main(int argc, char** argv)
 {
     gArgs.ParseParameters(argc, argv);
 
@@ -48,6 +55,9 @@ main(int argc, char** argv)
 
         return 0;
     }
+
+    // Set the datadir after parsing the bench options
+    const fs::path bench_datadir{SetDataDir()};
 
     SHA256AutoDetect();
 
@@ -81,6 +91,8 @@ main(int argc, char** argv)
     }
 
     benchmark::BenchRunner::RunAll(*printer, evaluations, scaling_factor, regex_filter, is_list_only);
+
+    fs::remove_all(bench_datadir);
 
     // need to be called before global destructors kick in (PoolAllocator is needed due to many BLSSecretKeys)
     CleanupBLSDkgTests();
