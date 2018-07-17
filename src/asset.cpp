@@ -1034,9 +1034,11 @@ UniValue assetsend(const JSONRPCRequest& request) {
 		UniValue toObj = find_value(receiverObj, "ownerto");
 		vector<unsigned char> vchAliasOrAddressTo;
 		vchAliasOrAddressTo = vchFromValue(toObj);
-		ToLowerCase(vchAliasOrAddressTo);
-		if (!GetAlias(vchAliasOrAddressTo, toAlias))
-			throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("Failed to read recipient alias from DB"));
+		if (!CSyscoinAddress(stringFromVch(vchAliasOrAddressTo).IsValid())) {
+			ToLowerCase(vchAliasOrAddressTo);
+			if (!GetAlias(vchAliasOrAddressTo, toAlias))
+				throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("Failed to read recipient alias from DB"));
+		}
 
 		UniValue inputRangeObj = find_value(receiverObj, "ranges");
 		UniValue amountObj = find_value(receiverObj, "amount");
