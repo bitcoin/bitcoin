@@ -1944,6 +1944,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 			if (cacheFullScriptStore && !pvChecks) {
 				// We executed all of the provided scripts, and were told to
 				// cache the result. Do so now.
+				LOCK(scriptExecutionCacheCS);
 				scriptExecutionCache.insert(hashCacheEntry);
 			}
         }
