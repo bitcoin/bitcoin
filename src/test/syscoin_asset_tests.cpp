@@ -555,10 +555,10 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_address)
 	printf("Running generate_asset_collect_interest_address...\n");
 	GenerateBlocks(5);
 	string newaddress = GetNewFundedAddress("node1");
+	string newaddress2 = GetNewFundedAddress("node1");
 	// setup asset with 5% interest hourly (unit test mode calculates interest hourly not annually)
 	string guid = AssetNew("node1", "cad", newaddress, "data", "8", "false", "10000", "-1", "0.05");
-
-	string newaddress2 = GetNewFundedAddress("node1");
+	
 	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"" + newaddress2 + "\\\",\\\"amount\\\":5000}]\"", "memoassetinterest");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress2 + " false"));
 	UniValue balance = find_value(r.get_obj(), "balance");

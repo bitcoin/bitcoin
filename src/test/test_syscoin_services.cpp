@@ -434,7 +434,15 @@ string GetNewFundedAddress(const string &node) {
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getnewaddress", false, false));
 	string newaddress = r.get_str();
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
-	BOOST_CHECK_THROW(CallRPC(node, "sendtoaddress " + newaddress + " 10"), runtime_error);
+	string sendnode = "";
+	if (node == "node1")
+		sendnode = "node2";
+	else if (node == "node2")
+		sendnode = "node1";
+	else if (node == "node3")
+		sendnode = "node1";
+	BOOST_CHECK_THROW(CallRPC(sendnode, "sendtoaddress " + newaddress + " 10"), runtime_error);
+	GenerateBlocks(10, sendnode);
 	GenerateBlocks(10, node);
 	return newaddress;
 }
