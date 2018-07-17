@@ -436,13 +436,13 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 			return true;
 		}
 		if (vchAlias.empty()) {
-			if (!FindAssetOwnerInTx(inputs, tx, user1))
+			if (dbAssetAllocation.vchAliasOrAddress != theAssetAllocation.vchAliasOrAddress || !FindAssetOwnerInTx(inputs, tx, user1))
 			{
 				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot send this asset. Asset allocation owner must sign off on this change");
 				return true;
 			}
 		}
-		else if (dbAssetAllocation.vchAliasOrAddress != theAssetAllocation.vchAliasOrAddress) {
+		else if (dbAssetAllocation.vchAliasOrAddress != theAssetAllocation.vchAliasOrAddress || theAssetAllocation.vchAliasOrAddress != vchAlias) {
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1016 - " + _("Cannot send this asset. Asset allocation owner must sign off on this change");
 			return true;
 		}
