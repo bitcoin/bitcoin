@@ -1,3 +1,0 @@
-#!/bin/bash
-
-docker ps -a  | tail -n +1 | egrep ' (peercoin|peercoinnet)/' | awk '{print $1}' | xargs docker rm -f

@@ -96,6 +96,7 @@ Options SanitizeOptions(const std::string& dbname,
   result.filter_policy = (src.filter_policy != NULL) ? ipolicy : NULL;
   ClipToRange(&result.max_open_files,    64 + kNumNonTableCacheFiles, 50000);
   ClipToRange(&result.write_buffer_size, 64<<10,                      1<<30);
+  ClipToRange(&result.max_file_size,     1<<20,                       1<<30);
   ClipToRange(&result.block_size,        1<<10,                       4<<20);
   if (result.info_log == NULL) {
     // Open a log file in the same directory as the db
@@ -125,7 +126,7 @@ DBImpl::DBImpl(const Options& raw_options, const std::string& dbname)
       db_lock_(NULL),
       shutting_down_(NULL),
       bg_cv_(&mutex_),
-      mem_(new MemTable(internal_comparator_)),
+      mem_(NULL),
       imm_(NULL),
       logfile_(NULL),
       logfile_number_(0),
@@ -133,9 +134,7 @@ DBImpl::DBImpl(const Options& raw_options, const std::string& dbname)
       seed_(0),
       tmp_batch_(new WriteBatch),
       bg_compaction_scheduled_(false),
-      manual_compaction_(NULL),
-      consecutive_compaction_errors_(0) {
-  mem_->Ref();
+      manual_compaction_(NULL) {
   has_imm_.Release_Store(NULL);
 
   // Reserve ten files or so for other uses and give the rest to TableCache.
@@ -217,6 +216,12 @@ void DBImpl::MaybeIgnoreError(Status* s) const {
 }
 
 void DBImpl::DeleteObsoleteFiles() {
+  if (!bg_error_.ok()) {
+    // After a background error, we don't know whether a new version may
+    // or may not have been committed, so we cannot safely garbage collect.
+    return;
+  }
+
   // Make a set of all of the live files
   std::set<uint64_t> live = pending_outputs_;
   versions_->AddLiveFiles(&live);
@@ -266,7 +271,7 @@ void DBImpl::DeleteObsoleteFiles() {
   }
 }
 
-Status DBImpl::Recover(VersionEdit* edit) {
+Status DBImpl::Recover(VersionEdit* edit, bool *save_manifest) {
   mutex_.AssertHeld();
 
   // Ignore error from CreateDir since the creation of the DB is
@@ -296,66 +301,69 @@ Status DBImpl::Recover(VersionEdit* edit) {
     }
   }
 
-  s = versions_->Recover();
-  if (s.ok()) {
-    SequenceNumber max_sequence(0);
+  s = versions_->Recover(save_manifest);
+  if (!s.ok()) {
+    return s;
+  }
+  SequenceNumber max_sequence(0);
 
-    // Recover from all newer log files than the ones named in the
-    // descriptor (new log files may have been added by the previous
-    // incarnation without registering them in the descriptor).
-    //
-    // Note that PrevLogNumber() is no longer used, but we pay
-    // attention to it in case we are recovering a database
-    // produced by an older version of leveldb.
-    const uint64_t min_log = versions_->LogNumber();
-    const uint64_t prev_log = versions_->PrevLogNumber();
-    std::vector<std::string> filenames;
-    s = env_->GetChildren(dbname_, &filenames);
+  // Recover from all newer log files than the ones named in the
+  // descriptor (new log files may have been added by the previous
+  // incarnation without registering them in the descriptor).
+  //
+  // Note that PrevLogNumber() is no longer used, but we pay
+  // attention to it in case we are recovering a database
+  // produced by an older version of leveldb.
+  const uint64_t min_log = versions_->LogNumber();
+  const uint64_t prev_log = versions_->PrevLogNumber();
+  std::vector<std::string> filenames;
+  s = env_->GetChildren(dbname_, &filenames);
+  if (!s.ok()) {
+    return s;
+  }
+  std::set<uint64_t> expected;
+  versions_->AddLiveFiles(&expected);
+  uint64_t number;
+  FileType type;
+  std::vector<uint64_t> logs;
+  for (size_t i = 0; i < filenames.size(); i++) {
+    if (ParseFileName(filenames[i], &number, &type)) {
+      expected.erase(number);
+      if (type == kLogFile && ((number >= min_log) || (number == prev_log)))
+        logs.push_back(number);
+    }
+  }
+  if (!expected.empty()) {
+    char buf[50];
+    snprintf(buf, sizeof(buf), "%d missing files; e.g.",
+             static_cast<int>(expected.size()));
+    return Status::Corruption(buf, TableFileName(dbname_, *(expected.begin())));
+  }
+
+  // Recover in the order in which the logs were generated
+  std::sort(logs.begin(), logs.end());
+  for (size_t i = 0; i < logs.size(); i++) {
+    s = RecoverLogFile(logs[i], (i == logs.size() - 1), save_manifest, edit,
+                       &max_sequence);
     if (!s.ok()) {
       return s;
     }
-    std::set<uint64_t> expected;
-    versions_->AddLiveFiles(&expected);
-    uint64_t number;
-    FileType type;
-    std::vector<uint64_t> logs;
-    for (size_t i = 0; i < filenames.size(); i++) {
-      if (ParseFileName(filenames[i], &number, &type)) {
-        expected.erase(number);
-        if (type == kLogFile && ((number >= min_log) || (number == prev_log)))
-          logs.push_back(number);
-      }
-    }
-    if (!expected.empty()) {
-      char buf[50];
-      snprintf(buf, sizeof(buf), "%d missing files; e.g.",
-               static_cast<int>(expected.size()));
-      return Status::Corruption(buf, TableFileName(dbname_, *(expected.begin())));
-    }
 
-    // Recover in the order in which the logs were generated
-    std::sort(logs.begin(), logs.end());
-    for (size_t i = 0; i < logs.size(); i++) {
-      s = RecoverLogFile(logs[i], edit, &max_sequence);
-
-      // The previous incarnation may not have written any MANIFEST
-      // records after allocating this log number.  So we manually
-      // update the file number allocation counter in VersionSet.
-      versions_->MarkFileNumberUsed(logs[i]);
-    }
-
-    if (s.ok()) {
-      if (versions_->LastSequence() < max_sequence) {
-        versions_->SetLastSequence(max_sequence);
-      }
-    }
+    // The previous incarnation may not have written any MANIFEST
+    // records after allocating this log number.  So we manually
+    // update the file number allocation counter in VersionSet.
+    versions_->MarkFileNumberUsed(logs[i]);
   }
 
-  return s;
+  if (versions_->LastSequence() < max_sequence) {
+    versions_->SetLastSequence(max_sequence);
+  }
+
+  return Status::OK();
 }
 
-Status DBImpl::RecoverLogFile(uint64_t log_number,
-                              VersionEdit* edit,
+Status DBImpl::RecoverLogFile(uint64_t log_number, bool last_log,
+                              bool* save_manifest, VersionEdit* edit,
                               SequenceNumber* max_sequence) {
   struct LogReporter : public log::Reader::Reporter {
     Env* env;
@@ -387,7 +395,7 @@ Status DBImpl::RecoverLogFile(uint64_t log_number,
   reporter.info_log = options_.info_log;
   reporter.fname = fname.c_str();
   reporter.status = (options_.paranoid_checks ? &status : NULL);
-  // We intentially make log::Reader do checksumming even if
+  // We intentionally make log::Reader do checksumming even if
   // paranoid_checks==false so that corruptions cause entire commits
   // to be skipped instead of propagating bad information (like overly
   // large sequence numbers).
@@ -400,12 +408,13 @@ Status DBImpl::RecoverLogFile(uint64_t log_number,
   std::string scratch;
   Slice record;
   WriteBatch batch;
+  int compactions = 0;
   MemTable* mem = NULL;
   while (reader.ReadRecord(&record, &scratch) &&
          status.ok()) {
     if (record.size() < 12) {
       reporter.Corruption(
-          record.size(), Status::Corruption("log record too small"));
+          record.size(), Status::Corruption("log record too small", fname));
       continue;
     }
     WriteBatchInternal::SetContents(&batch, record);
@@ -427,25 +436,52 @@ Status DBImpl::RecoverLogFile(uint64_t log_number,
     }
 
     if (mem->ApproximateMemoryUsage() > options_.write_buffer_size) {
+      compactions++;
+      *save_manifest = true;
       status = WriteLevel0Table(mem, edit, NULL);
+      mem->Unref();
+      mem = NULL;
       if (!status.ok()) {
         // Reflect errors immediately so that conditions like full
         // file-systems cause the DB::Open() to fail.
         break;
       }
-      mem->Unref();
-      mem = NULL;
     }
   }
 
-  if (status.ok() && mem != NULL) {
-    status = WriteLevel0Table(mem, edit, NULL);
-    // Reflect errors immediately so that conditions like full
-    // file-systems cause the DB::Open() to fail.
+  delete file;
+
+  // See if we should keep reusing the last log file.
+  if (status.ok() && options_.reuse_logs && last_log && compactions == 0) {
+    assert(logfile_ == NULL);
+    assert(log_ == NULL);
+    assert(mem_ == NULL);
+    uint64_t lfile_size;
+    if (env_->GetFileSize(fname, &lfile_size).ok() &&
+        env_->NewAppendableFile(fname, &logfile_).ok()) {
+      Log(options_.info_log, "Reusing old log %s \n", fname.c_str());
+      log_ = new log::Writer(logfile_, lfile_size);
+      logfile_number_ = log_number;
+      if (mem != NULL) {
+        mem_ = mem;
+        mem = NULL;
+      } else {
+        // mem can be NULL if lognum exists but was empty.
+        mem_ = new MemTable(internal_comparator_);
+        mem_->Ref();
+      }
+    }
   }
 
-  if (mem != NULL) mem->Unref();
-  delete file;
+  if (mem != NULL) {
+    // mem did not get reused; compact it.
+    if (status.ok()) {
+      *save_manifest = true;
+      status = WriteLevel0Table(mem, edit, NULL);
+    }
+    mem->Unref();
+  }
+
   return status;
 }
 
@@ -495,7 +531,7 @@ Status DBImpl::WriteLevel0Table(MemTable* mem, VersionEdit* edit,
   return s;
 }
 
-Status DBImpl::CompactMemTable() {
+void DBImpl::CompactMemTable() {
   mutex_.AssertHeld();
   assert(imm_ != NULL);
 
@@ -523,9 +559,9 @@ Status DBImpl::CompactMemTable() {
     imm_ = NULL;
     has_imm_.Release_Store(NULL);
     DeleteObsoleteFiles();
+  } else {
+    RecordBackgroundError(s);
   }
-
-  return s;
 }
 
 void DBImpl::CompactRange(const Slice* begin, const Slice* end) {
@@ -568,15 +604,17 @@ void DBImpl::TEST_CompactRange(int level, const Slice* begin,const Slice* end) {
   }
 
   MutexLock l(&mutex_);
-  while (!manual.done) {
-    while (manual_compaction_ != NULL) {
+  while (!manual.done && !shutting_down_.Acquire_Load() && bg_error_.ok()) {
+    if (manual_compaction_ == NULL) {  // Idle
+      manual_compaction_ = &manual;
+      MaybeScheduleCompaction();
+    } else {  // Running either my compaction or another compaction.
       bg_cv_.Wait();
     }
-    manual_compaction_ = &manual;
-    MaybeScheduleCompaction();
-    while (manual_compaction_ == &manual) {
-      bg_cv_.Wait();
-    }
+  }
+  if (manual_compaction_ == &manual) {
+    // Cancel my manual compaction since we aborted early for some reason.
+    manual_compaction_ = NULL;
   }
 }
 
@@ -596,12 +634,22 @@ Status DBImpl::TEST_CompactMemTable() {
   return s;
 }
 
+void DBImpl::RecordBackgroundError(const Status& s) {
+  mutex_.AssertHeld();
+  if (bg_error_.ok()) {
+    bg_error_ = s;
+    bg_cv_.SignalAll();
+  }
+}
+
 void DBImpl::MaybeScheduleCompaction() {
   mutex_.AssertHeld();
   if (bg_compaction_scheduled_) {
     // Already scheduled
   } else if (shutting_down_.Acquire_Load()) {
     // DB is being deleted; no more background compactions
+  } else if (!bg_error_.ok()) {
+    // Already got an error; no more changes
   } else if (imm_ == NULL &&
              manual_compaction_ == NULL &&
              !versions_->NeedsCompaction()) {
@@ -619,30 +667,12 @@ void DBImpl::BGWork(void* db) {
 void DBImpl::BackgroundCall() {
   MutexLock l(&mutex_);
   assert(bg_compaction_scheduled_);
-  if (!shutting_down_.Acquire_Load()) {
-    Status s = BackgroundCompaction();
-    if (s.ok()) {
-      // Success
-      consecutive_compaction_errors_ = 0;
-    } else if (shutting_down_.Acquire_Load()) {
-      // Error most likely due to shutdown; do not wait
-    } else {
-      // Wait a little bit before retrying background compaction in
-      // case this is an environmental problem and we do not want to
-      // chew up resources for failed compactions for the duration of
-      // the problem.
-      bg_cv_.SignalAll();  // In case a waiter can proceed despite the error
-      Log(options_.info_log, "Waiting after background compaction error: %s",
-          s.ToString().c_str());
-      mutex_.Unlock();
-      ++consecutive_compaction_errors_;
-      int seconds_to_sleep = 1;
-      for (int i = 0; i < 3 && i < consecutive_compaction_errors_ - 1; ++i) {
-        seconds_to_sleep *= 2;
-      }
-      env_->SleepForMicroseconds(seconds_to_sleep * 1000000);
-      mutex_.Lock();
-    }
+  if (shutting_down_.Acquire_Load()) {
+    // No more background work when shutting down.
+  } else if (!bg_error_.ok()) {
+    // No more background work after a background error.
+  } else {
+    BackgroundCompaction();
   }
 
   bg_compaction_scheduled_ = false;
@@ -653,11 +683,12 @@ void DBImpl::BackgroundCall() {
   bg_cv_.SignalAll();
 }
 
-Status DBImpl::BackgroundCompaction() {
+void DBImpl::BackgroundCompaction() {
   mutex_.AssertHeld();
 
   if (imm_ != NULL) {
-    return CompactMemTable();
+    CompactMemTable();
+    return;
   }
 
   Compaction* c;
@@ -691,6 +722,9 @@ Status DBImpl::BackgroundCompaction() {
     c->edit()->AddFile(c->level() + 1, f->number, f->file_size,
                        f->smallest, f->largest);
     status = versions_->LogAndApply(c->edit(), &mutex_);
+    if (!status.ok()) {
+      RecordBackgroundError(status);
+    }
     VersionSet::LevelSummaryStorage tmp;
     Log(options_.info_log, "Moved #%lld to level-%d %lld bytes %s: %s\n",
         static_cast<unsigned long long>(f->number),
@@ -701,6 +735,9 @@ Status DBImpl::BackgroundCompaction() {
   } else {
     CompactionState* compact = new CompactionState(c);
     status = DoCompactionWork(compact);
+    if (!status.ok()) {
+      RecordBackgroundError(status);
+    }
     CleanupCompaction(compact);
     c->ReleaseInputs();
     DeleteObsoleteFiles();
@@ -714,9 +751,6 @@ Status DBImpl::BackgroundCompaction() {
   } else {
     Log(options_.info_log,
         "Compaction error: %s", status.ToString().c_str());
-    if (options_.paranoid_checks && bg_error_.ok()) {
-      bg_error_ = status;
-    }
   }
 
   if (is_manual) {
@@ -732,7 +766,6 @@ Status DBImpl::BackgroundCompaction() {
     }
     manual_compaction_ = NULL;
   }
-  return status;
 }
 
 void DBImpl::CleanupCompaction(CompactionState* compact) {
@@ -819,8 +852,9 @@ Status DBImpl::FinishCompactionOutputFile(CompactionState* compact,
     delete iter;
     if (s.ok()) {
       Log(options_.info_log,
-          "Generated table #%llu: %lld keys, %lld bytes",
+          "Generated table #%llu@%d: %lld keys, %lld bytes",
           (unsigned long long) output_number,
+          compact->compaction->level(),
           (unsigned long long) current_entries,
           (unsigned long long) current_bytes);
     }
@@ -1001,6 +1035,9 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
 
   if (status.ok()) {
     status = InstallCompactionResults(compact);
+  }
+  if (!status.ok()) {
+    RecordBackgroundError(status);
   }
   VersionSet::LevelSummaryStorage tmp;
   Log(options_.info_log,
@@ -1185,13 +1222,23 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* my_batch) {
     {
       mutex_.Unlock();
       status = log_->AddRecord(WriteBatchInternal::Contents(updates));
+      bool sync_error = false;
       if (status.ok() && options.sync) {
         status = logfile_->Sync();
+        if (!status.ok()) {
+          sync_error = true;
+        }
       }
       if (status.ok()) {
         status = WriteBatchInternal::InsertInto(updates, mem_);
       }
       mutex_.Lock();
+      if (sync_error) {
+        // The state of the log file is indeterminate: the log record we
+        // just added may or may not show up when the DB is re-opened.
+        // So we force the DB into a mode where all future writes fail.
+        RecordBackgroundError(status);
+      }
     }
     if (updates == tmp_batch_) tmp_batch_->Clear();
 
@@ -1252,7 +1299,7 @@ WriteBatch* DBImpl::BuildBatchGroup(Writer** last_writer) {
         break;
       }
 
-      // Append to *reuslt
+      // Append to *result
       if (result == first->batch) {
         // Switch to temporary batch instead of disturbing caller's batch
         result = tmp_batch_;
@@ -1380,6 +1427,19 @@ bool DBImpl::GetProperty(const Slice& property, std::string* value) {
   } else if (in == "sstables") {
     *value = versions_->current()->DebugString();
     return true;
+  } else if (in == "approximate-memory-usage") {
+    size_t total_usage = options_.block_cache->TotalCharge();
+    if (mem_) {
+      total_usage += mem_->ApproximateMemoryUsage();
+    }
+    if (imm_) {
+      total_usage += imm_->ApproximateMemoryUsage();
+    }
+    char buf[50];
+    snprintf(buf, sizeof(buf), "%llu",
+             static_cast<unsigned long long>(total_usage));
+    value->append(buf);
+    return true;
   }
 
   return false;
@@ -1434,8 +1494,11 @@ Status DB::Open(const Options& options, const std::string& dbname,
   DBImpl* impl = new DBImpl(options, dbname);
   impl->mutex_.Lock();
   VersionEdit edit;
-  Status s = impl->Recover(&edit); // Handles create_if_missing, error_if_exists
-  if (s.ok()) {
+  // Recover handles create_if_missing, error_if_exists
+  bool save_manifest = false;
+  Status s = impl->Recover(&edit, &save_manifest);
+  if (s.ok() && impl->mem_ == NULL) {
+    // Create new log and a corresponding memtable.
     uint64_t new_log_number = impl->versions_->NewFileNumber();
     WritableFile* lfile;
     s = options.env->NewWritableFile(LogFileName(dbname, new_log_number),
@@ -1445,15 +1508,22 @@ Status DB::Open(const Options& options, const std::string& dbname,
       impl->logfile_ = lfile;
       impl->logfile_number_ = new_log_number;
       impl->log_ = new log::Writer(lfile);
-      s = impl->versions_->LogAndApply(&edit, &impl->mutex_);
+      impl->mem_ = new MemTable(impl->internal_comparator_);
+      impl->mem_->Ref();
     }
-    if (s.ok()) {
-      impl->DeleteObsoleteFiles();
-      impl->MaybeScheduleCompaction();
-    }
+  }
+  if (s.ok() && save_manifest) {
+    edit.SetPrevLogNumber(0);  // No older logs needed after recovery.
+    edit.SetLogNumber(impl->logfile_number_);
+    s = impl->versions_->LogAndApply(&edit, &impl->mutex_);
+  }
+  if (s.ok()) {
+    impl->DeleteObsoleteFiles();
+    impl->MaybeScheduleCompaction();
   }
   impl->mutex_.Unlock();
   if (s.ok()) {
+    assert(impl->mem_ != NULL);
     *dbptr = impl;
   } else {
     delete impl;

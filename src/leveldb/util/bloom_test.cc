@@ -46,7 +46,8 @@ class BloomTest {
       key_slices.push_back(Slice(keys_[i]));
     }
     filter_.clear();
-    policy_->CreateFilter(&key_slices[0], key_slices.size(), &filter_);
+    policy_->CreateFilter(&key_slices[0], static_cast<int>(key_slices.size()),
+                          &filter_);
     keys_.clear();
     if (kVerbose >= 2) DumpFilter();
   }
@@ -126,7 +127,8 @@ TEST(BloomTest, VaryingLengths) {
     }
     Build();
 
-    ASSERT_LE(FilterSize(), (length * 10 / 8) + 40) << length;
+    ASSERT_LE(FilterSize(), static_cast<size_t>((length * 10 / 8) + 40))
+        << length;
 
     // All added keys must match
     for (int i = 0; i < length; i++) {

@@ -76,6 +76,7 @@ AC_DEFUN([AX_BOOST_UNIT_TEST_FRAMEWORK],
 
             if test "x$ax_boost_user_unit_test_framework_lib" = "x"; then
 			saved_ldflags="${LDFLAGS}"
+                ax_lib=
                 for monitor_library in `ls $BOOSTLIBDIR/libboost_unit_test_framework*.so* $BOOSTLIBDIR/libboost_unit_test_framework*.dylib* $BOOSTLIBDIR/libboost_unit_test_framework*.a* 2>/dev/null` ; do
                     if test -r $monitor_library ; then
                        libextension=`echo $monitor_library | sed 's,.*/,,' | sed -e 's;^lib\(boost_unit_test_framework.*\)\.so.*$;\1;' -e 's;^lib\(boost_unit_test_framework.*\)\.dylib.*$;\1;' -e 's;^lib\(boost_unit_test_framework.*\)\.a.*$;\1;'`
@@ -124,7 +125,7 @@ AC_DEFUN([AX_BOOST_UNIT_TEST_FRAMEWORK],
                done
             fi
             if test "x$ax_lib" = "x"; then
-                AC_MSG_ERROR(Could not find a version of the library!)
+                AC_MSG_ERROR(Could not find a version of the boost_unit_test_framework library!)
             fi
 			if test "x$link_unit_test_framework" != "xyes"; then
 				AC_MSG_ERROR(Could not link against $ax_lib !)

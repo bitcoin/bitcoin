@@ -1,9 +1,0 @@
-Building Peercoin
-
-See doc/readme-qt.rst for instructions on building Peercoin-Qt,
-the intended-for-end-users, nice-graphical-interface, reference
-implementation of Peercoin.
-
-See doc/build-*.txt for instructions on building peercoind,
-the intended-for-services, no-graphical-interface, reference
-implementation of Peercoin.

@@ -1,8 +1,11 @@
-#include "transactionfilterproxy.h"
+// Copyright (c) 2011-2017 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "transactiontablemodel.h"
+#include <qt/transactionfilterproxy.h>
 
-#include <QDateTime>
+#include <qt/transactiontablemodel.h>
+#include <qt/transactionrecord.h>
 
 #include <cstdlib>
 
@@ -15,10 +18,12 @@ TransactionFilterProxy::TransactionFilterProxy(QObject *parent) :
     QSortFilterProxyModel(parent),
     dateFrom(MIN_DATE),
     dateTo(MAX_DATE),
-    addrPrefix(),
+    m_search_string(),
     typeFilter(ALL_TYPES),
+    watchOnlyFilter(WatchOnlyFilter_All),
     minAmount(0),
-    limitRows(-1)
+    limitRows(-1),
+    showInactive(true)
 {
 }
 
@@ -28,16 +33,28 @@ bool TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &
 
     int type = index.data(TransactionTableModel::TypeRole).toInt();
     QDateTime datetime = index.data(TransactionTableModel::DateRole).toDateTime();
+    bool involvesWatchAddress = index.data(TransactionTableModel::WatchonlyRole).toBool();
     QString address = index.data(TransactionTableModel::AddressRole).toString();
     QString label = index.data(TransactionTableModel::LabelRole).toString();
+    QString txid = index.data(TransactionTableModel::TxIDRole).toString();
     qint64 amount = llabs(index.data(TransactionTableModel::AmountRole).toLongLong());
+    int status = index.data(TransactionTableModel::StatusRole).toInt();
 
+    if(!showInactive && status == TransactionStatus::Conflicted)
+        return false;
     if(!(TYPE(type) & typeFilter))
+        return false;
+    if (involvesWatchAddress && watchOnlyFilter == WatchOnlyFilter_No)
+        return false;
+    if (!involvesWatchAddress && watchOnlyFilter == WatchOnlyFilter_Yes)
         return false;
     if(datetime < dateFrom || datetime > dateTo)
         return false;
-    if (!address.contains(addrPrefix, Qt::CaseInsensitive) && !label.contains(addrPrefix, Qt::CaseInsensitive))
+    if (!address.contains(m_search_string, Qt::CaseInsensitive) &&
+        !  label.contains(m_search_string, Qt::CaseInsensitive) &&
+        !   txid.contains(m_search_string, Qt::CaseInsensitive)) {
         return false;
+    }
     if(amount < minAmount)
         return false;
 
@@ -51,9 +68,10 @@ void TransactionFilterProxy::setDateRange(const QDateTime &from, const QDateTime
     invalidateFilter();
 }
 
-void TransactionFilterProxy::setAddressPrefix(const QString &addrPrefix)
+void TransactionFilterProxy::setSearchString(const QString &search_string)
 {
-    this->addrPrefix = addrPrefix;
+    if (m_search_string == search_string) return;
+    m_search_string = search_string;
     invalidateFilter();
 }
 
@@ -63,15 +81,27 @@ void TransactionFilterProxy::setTypeFilter(quint32 modes)
     invalidateFilter();
 }
 
-void TransactionFilterProxy::setMinAmount(qint64 minimum)
+void TransactionFilterProxy::setMinAmount(const CAmount& minimum)
 {
     this->minAmount = minimum;
+    invalidateFilter();
+}
+
+void TransactionFilterProxy::setWatchOnlyFilter(WatchOnlyFilter filter)
+{
+    this->watchOnlyFilter = filter;
     invalidateFilter();
 }
 
 void TransactionFilterProxy::setLimit(int limit)
 {
     this->limitRows = limit;
+}
+
+void TransactionFilterProxy::setShowInactive(bool _showInactive)
+{
+    this->showInactive = _showInactive;
+    invalidateFilter();
 }
 
 int TransactionFilterProxy::rowCount(const QModelIndex &parent) const

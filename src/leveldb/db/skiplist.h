@@ -1,7 +1,10 @@
 // Copyright (c) 2011 The LevelDB Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
-//
+
+#ifndef STORAGE_LEVELDB_DB_SKIPLIST_H_
+#define STORAGE_LEVELDB_DB_SKIPLIST_H_
+
 // Thread safety
 // -------------
 //
@@ -377,3 +380,5 @@ bool SkipList<Key,Comparator>::Contains(const Key& key) const {
 }
 
 }  // namespace leveldb
+
+#endif  // STORAGE_LEVELDB_DB_SKIPLIST_H_

@@ -12,10 +12,11 @@ bin
 src/*.exe
 src/*/*.exe
 src/peercoin
-src/peercoin-cli
 src/peercoind
-src/test_peercoin
+src/peercoin-cli
+src/peercoin-tx
 src/test/test_peercoin
+src/test/test_peercoin_fuzzy
 src/qt/test/test_peercoin-qt
 
 # autoreconf
@@ -39,35 +40,37 @@ config.log
 config.status
 configure
 libtool
-src/bitcoin-config.h
-src/bitcoin-config.h.in
-src/stamp-h1
+src/config/bitcoin-config.h
+src/config/bitcoin-config.h.in
+src/config/stamp-h1
 share/setup.nsi
 share/qt/Info.plist
 
-src/leveldb/.deps/
+src/univalue/gen
 
-src/test/.deps
-src/test/.dirstamp
-
-src/qt/.deps/
-src/qt/.dirstamp
 src/qt/*.moc
 src/qt/moc_*.cpp
 src/qt/forms/ui_*.h
 
-src/qt/test/.deps/
-src/qt/test/.dirstamp
 src/qt/test/moc*.cpp
-src/qt/res/.deps/
-src/qt/res/.dirstamp
 
+src/qt/bitcoin-qt.config
+src/qt/bitcoin-qt.creator
+src/qt/bitcoin-qt.creator.user
+src/qt/bitcoin-qt.files
+src/qt/bitcoin-qt.includes
+
+.deps
+.dirstamp
+.libs
 .*.swp
 *.*~*
 *.bak
 *.rej
 *.orig
+*.pyc
 *.o
+*.o-*
 *.patch
 .ppcoin
 .peercoin
@@ -79,6 +82,13 @@ src/qt/res/.dirstamp
 *.trs
 *.dmg
 
+*.json.h
+*.raw.h
+
+#libtool object files
+*.lo
+*.la
+
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
@@ -86,8 +96,7 @@ ppcoin-qt
 peercoin-qt
 PPCoin-Qt.app
 Peercoin-Qt.app
-.qmake.stash
-peercoin-qt_plugin_import.cpp
+background.tiff*
 
 # Unit-tests
 Makefile.test
@@ -97,19 +106,13 @@ peercoin-qt_test
 # Resources cpp
 qrc_*.cpp
 
-# Qt creator
-*.pro.user
-
 # Mac specific
 .DS_Store
 build
 
-# mingw / Windows
-release/
-*.Debug
-*.Release
 #lcov
 *.gcno
+*.gcda
 /*.info
 test_bitcoin.coverage/
 total.coverage/
@@ -119,14 +122,12 @@ coverage_percent.txt
 linux-coverage-build
 linux-build
 win32-build
-qa/pull-tester/run-bitcoind-for-test.sh
-qa/pull-tester/build-tests.sh
+test/config.ini
+test/cache/*
 
-!src/leveldb-*/Makefile
-peercoin-qt
+!src/leveldb*/Makefile
 
-#db4/
-db4/
+/doc/doxygen/
 
-#ignore in top level directory only
-/debian
+libbitcoinconsensus.pc
+contrib/devtools/split-debug.sh
