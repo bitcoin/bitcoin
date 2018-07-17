@@ -222,6 +222,11 @@ bool CMPTransaction::interpret_SimpleSend()
     SwapByteOrder64(nValue);
     nNewValue = nValue;
 
+    // Special case: if can't find the receiver -- assume send to self!
+    if (receiver.empty()) {
+        receiver = sender;
+    }
+
     if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
         PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
@@ -267,6 +272,11 @@ bool CMPTransaction::interpret_SendAll()
     memcpy(&ecosystem, &pkt[4], 1);
 
     property = ecosystem; // provide a hint for the UI, TODO: better handling!
+
+    // Special case: if can't find the receiver -- assume send to self!
+    if (receiver.empty()) {
+        receiver = sender;
+    }
 
     if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t       ecosystem: %d\n", (int)ecosystem);
@@ -610,6 +620,11 @@ bool CMPTransaction::interpret_GrantTokens()
     memcpy(&nValue, &pkt[8], 8);
     SwapByteOrder64(nValue);
     nNewValue = nValue;
+
+    // Special case: if can't find the receiver -- assume grant to self!
+    if (receiver.empty()) {
+        receiver = sender;
+    }
 
     if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
@@ -1048,11 +1063,6 @@ int CMPTransaction::logicMath_SimpleSend()
 
     // ------------------------------------------
 
-    // Special case: if can't find the receiver -- assume send to self!
-    if (receiver.empty()) {
-        receiver = sender;
-    }
-
     // Move the tokens
     assert(update_tally_map(sender, property, -nValue, BALANCE));
     assert(update_tally_map(receiver, property, nValue, BALANCE));
@@ -1204,11 +1214,6 @@ int CMPTransaction::logicMath_SendAll()
     }
 
     // ------------------------------------------
-
-    // Special case: if can't find the receiver -- assume send to self!
-    if (receiver.empty()) {
-        receiver = sender;
-    }
 
     CMPTally* ptally = getTally(sender);
     if (ptally == NULL) {
@@ -1948,11 +1953,6 @@ int CMPTransaction::logicMath_GrantTokens()
 
     // Persist the number of granted tokens
     assert(_my_sps->updateSP(property, sp));
-
-    // Special case: if can't find the receiver -- assume grant to self!
-    if (receiver.empty()) {
-        receiver = sender;
-    }
 
     // Move the tokens
     assert(update_tally_map(receiver, property, nValue, BALANCE));
