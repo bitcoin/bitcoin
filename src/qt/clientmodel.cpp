@@ -29,8 +29,6 @@
 #include <QDebug>
 #include <QTimer>
 
-class CBlockIndex;
-
 static int64_t nLastHeaderTipUpdateNotification = 0;
 static int64_t nLastBlockTipUpdateNotification = 0;
 
