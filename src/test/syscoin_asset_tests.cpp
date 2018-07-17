@@ -506,15 +506,11 @@ BOOST_AUTO_TEST_CASE(generate_assetuppercase)
 	printf("Running generate_assetuppercase...\n");
 	UniValue r;
 	AliasNew("node1", "jagassetuppercase", "data");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetnew upper jagassetuppercase data assets 8 false 1 1 0 false ''"));
-	UniValue arr = r.get_array();
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
-	string hex_str = find_value(r.get_obj(), "hex").get_str();
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + hex_str));
+	string guid = AssetNew("node1", "upper", "jagassetuppercase", "data", "8", "false", "1", "1", "0");
 
 	GenerateBlocks(5);
 	// assetinfo is case incensitive
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + arr[1].get_str() + " false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid + " false"));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "symbol").get_str(), "UPPER");
 }
 BOOST_AUTO_TEST_CASE(generate_assetuppercase_address)
@@ -523,15 +519,11 @@ BOOST_AUTO_TEST_CASE(generate_assetuppercase_address)
 	GenerateBlocks(5);
 	printf("Running generate_assetuppercase_address...\n");
 	string newaddress = GetNewFundedAddress("node1");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetnew upper " + newaddress + " data assets 8 false 1 1 0 false ''"));
-	UniValue arr = r.get_array();
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
-	string hex_str = find_value(r.get_obj(), "hex").get_str();
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + hex_str));
+	string guid = AssetNew("node1", "upper", newaddress, "data", "8", "false", "1", "1", "0");
 
 	GenerateBlocks(5);
 	// assetinfo is case incensitive
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + arr[1].get_str() + " false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid + " false"));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "symbol").get_str(), "UPPER");
 }
 BOOST_AUTO_TEST_CASE(generate_asset_collect_interest)
