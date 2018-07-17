@@ -36,13 +36,11 @@ class ScantxoutsetTest(BitcoinTestFramework):
 
         self.restart_node(0, ['-nowallet'])
         self.log.info("Test if we have found the non HD unspent outputs.")
-        assert_equal(self.nodes[0].scantxoutset("start", [ {"pubkey": {"pubkey": pubk1}}, {"pubkey": {"pubkey": pubk2}}, {"pubkey": {"pubkey": pubk3}}])['total_amount'], 6)
-        assert_equal(self.nodes[0].scantxoutset("start", [ {"address": addr_P2SH_SEGWIT}, {"address": addr_LEGACY}, {"address": addr_BECH32}])['total_amount'], 6)
-        assert_equal(self.nodes[0].scantxoutset("start", [ {"address": addr_P2SH_SEGWIT}, {"address": addr_LEGACY}, {"pubkey": {"pubkey": pubk3}} ])['total_amount'], 6)
+        assert_equal(self.nodes[0].scantxoutset("start", [ "combo(" + pubk1 + ")", "combo(" + pubk2 + ")", "combo(" + pubk3 + ")"])['total_amount'], 6)
+        assert_equal(self.nodes[0].scantxoutset("start", [ "addr(" + addr_P2SH_SEGWIT + ")", "addr(" + addr_LEGACY + ")", "addr(" + addr_BECH32 + ")"])['total_amount'], 6)
+        assert_equal(self.nodes[0].scantxoutset("start", [ "addr(" + addr_P2SH_SEGWIT + ")", "addr(" + addr_LEGACY + ")", "combo(" + pubk3 + ")"])['total_amount'], 6)
 
         self.log.info("Test invalid parameters.")
-        assert_raises_rpc_error(-8, 'Scanobject "pubkey" must contain an object as value', self.nodes[0].scantxoutset, "start", [ {"pubkey": pubk1}]) #missing pubkey object
-        assert_raises_rpc_error(-8, 'Scanobject "address" must contain a single string as value', self.nodes[0].scantxoutset, "start", [ {"address": {"address": addr_P2SH_SEGWIT}}]) #invalid object for address object
 
 if __name__ == '__main__':
     ScantxoutsetTest().main()
