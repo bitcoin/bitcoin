@@ -157,10 +157,6 @@ Create new tokens with fixed supply.
 | `url`               | string  | required | an URL for further information about the new tokens (can be `""`)                            |
 | `data`              | string  | required | a description for the new tokens (can be `""`)                                               |
 | `amount`            | string  | required | the number of tokens to create                                                               |
-| `tokensperunit`     | string  | required | the amount of tokens granted per unit invested in the crowdsale                              |
-| `deadline`          | number  | required | the deadline of the crowdsale as Unix timestamp                                              |
-| `earlybonus`        | number  | required | an early bird bonus for participants in percent per week                                     |
-| `issuerpercentage`  | number  | required | a percentage of tokens that will be granted to the issuer                                    |
 
 **Result:**
 ```js
