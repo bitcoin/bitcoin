@@ -569,6 +569,11 @@ public:
     int Priority() const;
 
     std::string ToString() const;
+
+    inline CInputCoin GetInputCoin() const
+    {
+        return CInputCoin(tx->tx, i, nInputBytes);
+    }
 };
 
 
