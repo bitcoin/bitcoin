@@ -27,7 +27,6 @@ static void Bech32Encode(benchmark::State& state)
 static void Bech32Decode(benchmark::State& state)
 {
     std::string addr = "bc1qkallence7tjawwvy0dwt4twc62qjgaw8f4vlhyd006d99f09";
-    std::vector<unsigned char> vch;
     while (state.KeepRunning()) {
         bech32::Decode(addr);
     }
