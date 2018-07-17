@@ -462,10 +462,7 @@ BOOST_AUTO_TEST_CASE(generate_big_assetname_address)
 	GenerateBlocks(5);
 	printf("Running generate_big_assetname_address...\n");
 	GenerateBlocks(5);
-	UniValue r;
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getnewaddress", false, false));
-	string newaddress = r.get_str();
-	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
+	string newaddress = GetNewFundedAddress("node1");
 	// 256 bytes long
 	string gooddata = "SfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfdd";
 	// cannot create this asset because its more than 8 chars
@@ -493,10 +490,7 @@ BOOST_AUTO_TEST_CASE(generate_bad_assetmaxsupply_address)
 	GenerateBlocks(5);
 	printf("Running generate_bad_assetmaxsupply_address...\n");
 	GenerateBlocks(5);
-	UniValue r;
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getnewaddress", false, false));
-	string newaddress = r.get_str();
-	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
+	string newaddress = GetNewFundedAddress("node1");
 	// 256 bytes long
 	string gooddata = "SfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfdd";
 	// 0 max supply bad
@@ -527,10 +521,7 @@ BOOST_AUTO_TEST_CASE(generate_assetuppercase_address)
 {
 	GenerateBlocks(5);
 	printf("Running generate_assetuppercase_address...\n");
-	UniValue r;
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getnewaddress", false, false));
-	string newaddress = r.get_str();
-	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
+	string newaddress = GetNewFundedAddress("node1");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetnew upper " + newaddress + " data assets 8 false 1 1 0 false ''"));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
@@ -570,12 +561,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_address)
 	UniValue r;
 	printf("Running generate_asset_collect_interest_address...\n");
 	GenerateBlocks(5);
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getnewaddress", false, false));
-	string newaddress = r.get_str();
-	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getnewaddress", false, false));
-	string newaddress2 = r.get_str();
-	newaddress2.erase(std::remove(newaddress2.begin(), newaddress2.end(), '\n'), newaddress2.end());
+	string newaddress = GetNewFundedAddress("node1");
+	string newaddress2 = GetNewFundedAddress("node1");
 	// setup asset with 5% interest hourly (unit test mode calculates interest hourly not annually)
 	string guid = AssetNew("node1", "cad", newaddress, "data", "8", "false", "10000", "-1", "0.05");
 

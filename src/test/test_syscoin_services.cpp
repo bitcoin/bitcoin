@@ -429,6 +429,14 @@ void GenerateSpendableCoins() {
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress " + newaddress + " 100000"), runtime_error);
 	GenerateBlocks(10, "node1");
 }
+string GetNewFundedAddress(const string &node) {
+	UniValue r;
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getnewaddress", false, false));
+	string newaddress = r.get_str();
+	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
+	BOOST_CHECK_THROW(CallRPC(node, "sendtoaddress " + newaddress + " 10"), runtime_error);
+	GenerateBlocks(10, node);
+}
 void SleepFor(const int& milliseconds, bool actualSleep) {
 	if (actualSleep)
 		MilliSleep(milliseconds);
