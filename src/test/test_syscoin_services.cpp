@@ -436,6 +436,7 @@ string GetNewFundedAddress(const string &node) {
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
 	BOOST_CHECK_THROW(CallRPC(node, "sendtoaddress " + newaddress + " 10"), runtime_error);
 	GenerateBlocks(10, node);
+	return newaddress;
 }
 void SleepFor(const int& milliseconds, bool actualSleep) {
 	if (actualSleep)
