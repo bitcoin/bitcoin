@@ -13,7 +13,9 @@ Use `brew` to install `bash-completion` then update `~/.bashrc` to include the c
 The example assumes Syscoin was compiled in `~/syscoin` and the scripts will be availabe in `~/syscoin/contrib`, however they can be moved to a different location.
 
 ```
-brew install bash-completion
+brew install bash bash-completion
+sudo bash -c 'echo /usr/local/bin/bash >> /etc/shells'
+chsh -s /usr/local/bin/bash
 
 BASHRC=$(cat <<EOF
 if [ -f $(brew --prefix)/etc/bash_completion ]; then

@@ -1,4 +1,5 @@
 // Copyright (c) 2010-2011 Dmitry Vyukov. All rights reserved.
+// Copyright (c) 2014-2018 The Syscoin Core developers
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided
