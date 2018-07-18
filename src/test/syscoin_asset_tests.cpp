@@ -303,7 +303,7 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid1 + " false"));
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid1);
 	BOOST_CHECK(find_value(r.get_obj(), "symbol").get_str() == "USD");
-}
+}/*
 BOOST_AUTO_TEST_CASE(generate_asset_throughput)
  {
 	UniValue r;
@@ -390,7 +390,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	}
 	totalTime /= tpsresponse.size();
 	printf("totalTime %.2f, num responses %d\n", totalTime, tpsresponse.size());
-}
+}*/
 BOOST_AUTO_TEST_CASE(generate_big_assetname)
 {
 	GenerateBlocks(5);
@@ -1764,12 +1764,13 @@ BOOST_AUTO_TEST_CASE(generate_assetpruning_address)
 	UniValue r;
 	// makes sure services expire in 100 blocks instead of 1 year of blocks for testing purposes
 	printf("Running generate_assetpruning_address...\n");
-	AliasNew("node1", "jagprunealias1", "changeddata1");
 	string newaddress = GetNewFundedAddress("node1");
+	AliasNew("node1", "jagprunealias1", "changeddata1");
 	// stop node2 create a service,  mine some blocks to expire the service, when we restart the node the service data won't be synced with node2
 	StopNode("node2");
 	string guid = AssetNew("node1", "bcf", newaddress, "pubdata");
-	
+	// we can find it as normal first
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasinfo jagprunealias1"));
 	// make sure our offer alias doesn't expire
 	AssetUpdate("node1", guid);
 	GenerateBlocks(5, "node1");
