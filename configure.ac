@@ -1429,14 +1429,23 @@ unset PKG_CONFIG_LIBDIR
 PKG_CONFIG_LIBDIR="$PKGCONFIG_LIBDIR_TEMP"
 
 if test x$need_bundled_univalue = xyes; then
-  AC_CONFIG_SUBDIRS([src/univalue])
+  dnl CXX might've been modified above to force a c++ std version, one that may
+  dnl not match the version that univalue would use. Pass ours down, overriding
+  dnl any manually set value, since this one can only be an improvement.
+  dnl ac_cv_prog_CXX is used rather than CXX to avoid breaking the config cache.
+  AX_SUBDIRS_CONFIGURE([src/univalue],[],[],[[ac_cv_prog_CXX=${CXX}]])
 fi
 
-ac_configure_args="${ac_configure_args} --disable-shared --with-pic --with-bignum=no --enable-module-recovery --disable-jni"
-AC_CONFIG_SUBDIRS([src/secp256k1])
+AX_SUBDIRS_CONFIGURE([src/secp256k1],[[--disable-shared],[--with-pic],[--with-bignum=no],[--enable-module-recovery],[--disable-jni]])
+
+dnl autoreconf has special handling for AC_CONFIGURE_SUBDIRS in order to run autoconf in subdirs.
+dnl When using AX_SUBDIRS_CONFIGURE instead though, autoreconf's scan does not find the subdirs, so
+dnl add a quick hack here that will turn up during parsing but not execution.
+if false; then
+  AC_CONFIG_SUBDIRS([src/univalue src/secp256k1])
+fi
 
 AC_OUTPUT
-
 dnl Taken from https://wiki.debian.org/RpathIssue
 case $host in
    *-*-linux-gnu)
