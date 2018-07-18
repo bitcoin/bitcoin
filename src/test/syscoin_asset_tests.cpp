@@ -346,7 +346,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	GenerateBlocks(10);
 	printf("Creating assetsend transactions...\n");
 	vector<string> assetSendTxVec;
-	count = 0;
+	int count = 0;
 	for (auto& assetTuple : assetMap) {
 		count++;
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsend " + assetTuple.first + " " + assetAddressMap[assetTuple.first] + " " + "\"[{\\\"ownerto\\\":\\\"" + assetTuple.second + "\\\",\\\"amount\\\":1}]\" '' ''"));
@@ -361,7 +361,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	}
 	printf("Sending assetsend transactions to network...\n");
 	map<string, int64_t> sendTimes;
-	int count = 0;
+	count = 0;
 	for (auto& hex_str : assetSendTxVec) {
 		count++;
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + hex_str));
