@@ -1252,7 +1252,6 @@ bool CAssetsCache::Flush(bool fSoftCopy, bool fFlushDB)
 
             for (auto undoReissue : setNewReissueToRemove) {
                 auto reissue_name = undoReissue.reissue.strName;
-
                 if (mapReissuedAssetData.count(reissue_name)) {
                     if(!passetsdb->WriteAssetData(mapReissuedAssetData.at(reissue_name))) {
                         dirty = true;
@@ -1281,7 +1280,6 @@ bool CAssetsCache::Flush(bool fSoftCopy, bool fFlushDB)
                     passetsCache->Erase(reissue_name);
                 }
             }
-
 
             // Undo the asset spends by updating there balance in the database
             for (auto undoSpend : vUndoAssetAmount) {
@@ -1704,9 +1702,11 @@ bool CheckAssetOwner(const std::string& assetName)
 
 void GetAllOwnedAssets(std::vector<std::string>& names)
 {
-    for (auto owned : passets->mapMyUnspentAssets)
-        if (IsAssetNameAnOwner(owned.first))
+    for (auto owned : passets->mapMyUnspentAssets) {
+        if (IsAssetNameAnOwner(owned.first)) {
             names.emplace_back(owned.first);
+        }
+    }
 }
 
 CAmount GetIssueAssetBurnAmount()
