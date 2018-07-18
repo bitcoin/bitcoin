@@ -1111,7 +1111,7 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_precision_address)
 	string istr = boost::lexical_cast<string>(4);
 	int i = 0;
 	string assetName = "usd" + istr;
-	string addressName = "GetNewFundedAddress("node1");
+	string addressName = GetNewFundedAddress("node1");
 	
 	// test max supply
 	string guid1 = AssetNew("node1", assetName, addressName, "data", istr, "true", "1", "-1");
@@ -1764,7 +1764,7 @@ BOOST_AUTO_TEST_CASE(generate_assetpruning_address)
 	// makes sure services expire in 100 blocks instead of 1 year of blocks for testing purposes
 	printf("Running generate_assetpruning_address...\n");
 	AliasNew("node1", "jagprunealias1", "changeddata1");
-	string newaddres = GetNewFundedAddress("node1");
+	string newaddress = GetNewFundedAddress("node1");
 	// stop node2 create a service,  mine some blocks to expire the service, when we restart the node the service data won't be synced with node2
 	StopNode("node2");
 	string guid = AssetNew("node1", "bcf", newaddress, "pubdata");
