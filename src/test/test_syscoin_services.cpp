@@ -1227,8 +1227,6 @@ void AssetTransfer(const string& node, const string &tonode, const string& name,
 	string oldalias = find_value(r.get_obj(), "owner").get_str();
 	string oldsymbol = find_value(r.get_obj(), "symbol").get_str();
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasinfo " + toalias));
-
 
 	// "assettransfer [asset] [alias] [witness]\n"
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assettransfer " + name + " " + toalias + " " + witness));
