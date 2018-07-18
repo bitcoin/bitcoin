@@ -352,6 +352,11 @@ void ReissueAssetDialog::onReissueAssetClicked()
     bool reissuable = ui->reissuableBox->isChecked();
     bool hasIPFS = ui->ipfsBox->isChecked();
 
+    QString changeAddress = "";
+    if (ui->changeAddressBox->isChecked())
+        changeAddress = ui->changeAddressText->text();
+
+
     QString ipfs = "";
     if (hasIPFS)
         ipfs = ui->ipfsText->text();
@@ -361,7 +366,7 @@ void ReissueAssetDialog::onReissueAssetClicked()
     // Create the transaction and broadcast it
     std::pair<int, std::string> error;
     std::string txid;
-    if (!CreateReissueAssetTransaction(model->getWallet(), reissueAsset, address.toStdString(), error, txid))
+    if (!CreateReissueAssetTransaction(model->getWallet(), reissueAsset, address.toStdString(), changeAddress.toStdString(), error, txid))
         showMessage("Invalid: " + QString::fromStdString(error.second));
     else {
         QMessageBox msgBox;

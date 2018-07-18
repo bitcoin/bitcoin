@@ -1887,14 +1887,42 @@ bool CreateAssetTransaction(CWallet* pwallet, const CNewAsset& asset, const std:
     return true;
 }
 
-bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& reissueAsset, const std::string& address, std::pair<int, std::string>& error, std::string& txid)
+bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& reissueAsset, const std::string& address, const std::string& changeAddress, std::pair<int, std::string>& error, std::string& txid)
 {
     std::string asset_name = reissueAsset.strName;
+    std::string change_address = changeAddress;
 
     // Check that validitity of the address
     if (!IsValidDestinationString(address)) {
         error = std::make_pair(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raven address: ") + address);
         return false;
+    }
+
+    if (!change_address.empty()) {
+        CTxDestination destination = DecodeDestination(change_address);
+        if (!IsValidDestination(destination)) {
+            error = std::make_pair(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raven address: ") + change_address);
+            return false;
+        }
+    } else {
+        // Create a new address
+        std::string strAccount;
+
+        if (!pwallet->IsLocked()) {
+            pwallet->TopUpKeyPool();
+        }
+
+        // Generate a new key that is added to wallet
+        CPubKey newKey;
+        if (!pwallet->GetKeyFromPool(newKey)) {
+            error = std::make_pair(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+            return false;
+        }
+        CKeyID keyID = newKey.GetID();
+
+        pwallet->SetAddressBook(keyID, strAccount, "receive");
+
+        change_address = EncodeDestination(keyID);
     }
 
     // Check the assets name
@@ -1971,7 +1999,7 @@ bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& reissu
     }
 
     // Get the script for the destination address for the assets
-    CScript scriptTransferOwnerAsset = GetScriptForDestination(DecodeDestination(address));
+    CScript scriptTransferOwnerAsset = GetScriptForDestination(DecodeDestination(change_address));
 
     CAssetTransfer assetTransfer(asset_name + OWNER, OWNER_ASSET_AMOUNT);
     assetTransfer.ConstructTransaction(scriptTransferOwnerAsset);
@@ -1983,6 +2011,7 @@ bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& reissu
 
     CWalletTx wtxNew;
     CCoinControl coin_control;
+    coin_control.destChange = DecodeDestination(change_address);
 
     // Create and send the transaction
     CReserveKey reservekey(pwallet);

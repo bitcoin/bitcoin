@@ -601,9 +601,9 @@ UniValue transfer(const JSONRPCRequest& request)
 
 UniValue reissue(const JSONRPCRequest& request)
 {
-    if (request.fHelp || !AreAssetsDeployed() || request.params.size() > 5 || request.params.size() < 3)
+    if (request.fHelp || !AreAssetsDeployed() || request.params.size() > 6 || request.params.size() < 3)
         throw std::runtime_error(
-                "reissue \"asset_name\" qty \"to_address\" ( reissuable ) \"( new_ipfs )\" \n"
+                "reissue \"asset_name\" qty \"to_address\" \"change_address\" ( reissuable ) \"( new_ipfs )\" \n"
                 + AssetActivationWarning() +
                 "\nReissues a quantity of an asset to an owned address if you own the Owner Token"
                 "\nCan change the reissuable flag during reissuance"
@@ -613,15 +613,16 @@ UniValue reissue(const JSONRPCRequest& request)
                 "1. \"asset_name\"               (string, required) name of asset that is being reissued\n"
                 "2. \"qty\"                      (number, required) number of assets to reissue\n"
                 "3. \"to_address\"               (string, required) address to send the asset to\n"
-                "4. \"reissuable\"               (boolean, optional, default=true), whether future reissuance is allowed\n"
-                "5. \"new_ifps\"                 (string, optional, default=\"\"), whether to update the current ipfshash\n"
+                "4. \"change_address\"           (string, optional) address that the change of the transaction will be sent to\n"
+                "5. \"reissuable\"               (boolean, optional, default=true), whether future reissuance is allowed\n"
+                "6. \"new_ifps\"                 (string, optional, default=\"\"), whether to update the current ipfshash\n"
 
                 "\nResult:\n"
                 "\"txid\"                     (string) The transaction id\n"
 
                 "\nExamples:\n"
                 + HelpExampleCli("reissue", "\"asset_name\" 20 \"address\"")
-                + HelpExampleCli("reissue", "\"asset_name\" 20 \"address\" \"true\" \"JUSTGA63B1T1MNF54OX776PCK8TSXM1JLFDOQ9KF\"")
+                + HelpExampleCli("reissue", "\"asset_name\" 20 \"address\" \"change_address\" \"true\" \"JUSTGA63B1T1MNF54OX776PCK8TSXM1JLFDOQ9KF\"")
         );
 
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -640,20 +641,24 @@ UniValue reissue(const JSONRPCRequest& request)
     CAmount nAmount = AmountFromValue(request.params[1]);
     std::string address = request.params[2].get_str();
 
+    std::string changeAddress =  "";
+    if (request.params.size() > 3)
+        changeAddress = request.params[3].get_str();
+
     bool reissuable = true;
-    if (request.params.size() > 3) {
-        reissuable = request.params[3].get_bool();
+    if (request.params.size() > 4) {
+        reissuable = request.params[4].get_bool();
     }
 
     std::string newipfs = "";
-    if (request.params.size() > 4) {
-        newipfs = request.params[4].get_str();
+    if (request.params.size() > 5) {
+        newipfs = request.params[5].get_str();
     }
 
     std::string txid;
     std::pair<int, std::string> error;
     CReissueAsset reissueAsset(asset_name, nAmount, reissuable, newipfs);
-    if (!CreateReissueAssetTransaction(pwallet, reissueAsset, address, error, txid))
+    if (!CreateReissueAssetTransaction(pwallet, reissueAsset, address, changeAddress, error, txid))
         throw JSONRPCError(error.first, error.second);
 
     UniValue result(UniValue::VARR);
@@ -766,7 +771,7 @@ static const CRPCCommand commands[] =
     { "assets",   "listmyassets",               &listmyassets,               {"asset", "verbose", "count", "start"}},
     { "assets",   "listaddressesbyasset",       &listaddressesbyasset,       {"asset_name"}},
     { "assets",   "transfer",                   &transfer,                   {"asset_name", "qty", "to_address"}},
-    { "assets",   "reissue",                    &reissue,                    {"asset_name", "qty", "to_address", "reissuable", "new_ipfs"}},
+    { "assets",   "reissue",                    &reissue,                    {"asset_name", "qty", "to_address", "change_address", "reissuable", "new_ipfs"}},
     { "assets",   "listassets",                 &listassets,                 {"asset", "verbose", "count", "start"}}
 };
 
