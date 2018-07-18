@@ -53,10 +53,10 @@ bool IsBlockValueValid(const CBlock& block, int nBlockHeight, const CAmount &blo
 
     LogPrint("gobject", "block.vtx[0]->GetValueOut() %lld <= nSuperblockMaxValue %lld\n", block.vtx[0]->GetValueOut(), nSuperblockMaxValue);
 
-    if(!masternodeSync.IsSynced()) {
+    if(!masternodeSync.IsSynced() || fLiteMode) {
         // not enough data but at least it must NOT exceed superblock max value
         if(CSuperblock::IsValidBlockHeight(nBlockHeight)) {
-            if(fDebug) LogPrintf("IsBlockPayeeValid -- WARNING: Client not synced, checking superblock max bounds only\n");
+            if(fDebug) LogPrintf("IsBlockPayeeValid -- WARNING: Not enough data, checking superblock max bounds only\n");
             if(!isSuperblockMaxValueMet) {
                 strErrorRet = strprintf("coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded superblock max value",
                                         nBlockHeight, block.vtx[0]->GetValueOut(), nSuperblockMaxValue);
@@ -123,9 +123,9 @@ bool IsBlockValueValid(const CBlock& block, int nBlockHeight, const CAmount &blo
 
 bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight,  const CAmount &blockReward, const CAmount &fee, CAmount& nTotalRewardWithMasternodes)
 {
-    if(!masternodeSync.IsSynced()) {
+    if(!masternodeSync.IsSynced() || fLiteMode) {
         //there is no budget data to use to check anything, let's just accept the longest chain
-        if(fDebug) LogPrintf("IsBlockPayeeValid -- WARNING: Client not synced, skipping block payee checks\n");
+		if (fDebug) LogPrintf("IsBlockPayeeValid -- WARNING: Not enough data, skipping block payee checks\n");
 		nTotalRewardWithMasternodes = txNew.GetValueOut();
         return true;
     }
@@ -985,12 +985,11 @@ void CMasternodePayments::RequestLowDataPaymentBlocks(CNode* pnode, CConnman& co
         pindex = pindex->pprev;
     }
 
-    auto it = mapMasternodeBlocks.begin();
-
-    while(it != mapMasternodeBlocks.end()) {
+    for (auto& mnBlockPayees : mapMasternodeBlocks) {
+        int nBlockHeight = mnBlockPayees.first;
         int nTotalVotes = 0;
         bool fFound = false;
-        for (const auto& payee : it->second.vecPayees) {
+        for (const auto& payee : mnBlockPayees.second.vecPayees) {
             if(payee.GetVoteCount() >= MNPAYMENTS_SIGNATURES_REQUIRED) {
                 fFound = true;
                 break;
@@ -1001,24 +1000,23 @@ void CMasternodePayments::RequestLowDataPaymentBlocks(CNode* pnode, CConnman& co
         // or no clear winner was found but there are at least avg number of votes
         if(fFound || nTotalVotes >= (MNPAYMENTS_SIGNATURES_TOTAL + MNPAYMENTS_SIGNATURES_REQUIRED)/2) {
             // so just move to the next block
-            ++it;
             continue;
         }
         // DEBUG
         DBG (
             // Let's see why this failed
-            for (const auto& payee : it->second.vecPayees) {
+            for (const auto& payee : mnBlockPayees.second.vecPayees) {
                 CTxDestination address1;
                 ExtractDestination(payee.GetPayee(), address1);
                 CSyscoinAddress address2(address1);
                 printf("payee %s votes %d\n", address2.ToString().c_str(), payee.GetVoteCount());
             }
-            printf("block %d votes total %d\n", it->first, nTotalVotes);
+            printf("block %d votes total %d\n", nBlockHeight, nTotalVotes);
         )
         // END DEBUG
         // Low data block found, let's try to sync it
         uint256 hash;
-        if(GetBlockHash(hash, it->first)) {
+        if(GetBlockHash(hash, nBlockHeight)) {
             vToFetch.push_back(CInv(MSG_MASTERNODE_PAYMENT_BLOCK, hash));
         }
         // We should not violate GETDATA rules
@@ -1028,7 +1026,6 @@ void CMasternodePayments::RequestLowDataPaymentBlocks(CNode* pnode, CConnman& co
             // Start filling new batch
             vToFetch.clear();
         }
-        ++it;
     }
     // Ask for the rest of it
     if(!vToFetch.empty()) {
