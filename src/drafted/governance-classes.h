@@ -1,5 +1,5 @@
-// Copyright (c) 2014-2017 The Syscoin Core developers
-// Copyright (c) 2015-2017 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2017-2018 The Syscoin Core developers
 
 /*
  * FIELDS AND CLASSIFICATION
