@@ -1757,6 +1757,8 @@ BOOST_AUTO_TEST_CASE(generate_assetpruning)
 	// try to create asset with same name
 	AssetNew("node1", "bcf", "jagprunealias1", "pubdata");
 	StartNode("node3");
+	ExpireAlias("jagprunealias1");
+	GenerateBlocks(5, "node1");
 }
 BOOST_AUTO_TEST_CASE(generate_assetpruning_address)
 {
