@@ -312,22 +312,9 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	GenerateBlocks(5, "node3");
 	map<string, string> assetMap;
 	map<string, string> assetAddressMap;
-	AliasNew("node1", "fundingtps", "data");
-	AliasNew("node3", "fundingtps3", "data");
-	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress fundingtps 200000"), runtime_error);
-	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress fundingtps3 200000"), runtime_error);
-	GenerateBlocks(5, "node1");
-	GenerateBlocks(5, "node3");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo fundingtps"));
-	string strAddress = find_value(r.get_obj(), "address").get_str();
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo fundingtps3"));
-	string strAddress3 = find_value(r.get_obj(), "address").get_str();
-	// create 1000 aliases and assets for each asset	
+
+	// create 1000 addresses and assets for each asset	
 	printf("creating sender 1000 address/asset...\n");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockchaininfo"));
-	int64_t mediantime = find_value(r.get_obj(), "mediantime").get_int64();
-	mediantime += ONE_YEAR_IN_SECONDS;
-	string mediantimestr = boost::lexical_cast<string>(mediantime);
 	for (int i = 0; i < 1000; i++) {
 		string address1 = GetNewFundedAddress("node1");
 		string address2 = GetNewFundedAddress("node1");
@@ -357,7 +344,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	}
 
 	GenerateBlocks(10);
-	printf("Creating assetsend transactions to node3 alias...\n");
+	printf("Creating assetsend transactions...\n");
 	vector<string> assetSendTxVec;
 	count = 0;
 	for (auto& assetTuple : assetMap) {
