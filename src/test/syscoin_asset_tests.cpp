@@ -361,7 +361,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	}
 	printf("Sending assetsend transactions to network...\n");
 	map<string, int64_t> sendTimes;
-	count = 0;
+	int count = 0;
 	for (auto& hex_str : assetSendTxVec) {
 		count++;
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + hex_str));
