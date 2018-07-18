@@ -127,7 +127,15 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_send_address)
 	printf("Running generate_asset_allocation_send_address...\n");
 	GenerateBlocks(5);
 	string newaddress1 = GetNewFundedAddress("node1");
+	BOOST_CHECK_THROW(CallRPC("node2", "sendtoaddress " + newaddress1 + " 10"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "sendtoaddress " + newaddress1 + " 10"), runtime_error);
+	GenerateBlocks(5);
+	GenerateBlocks(5, "node2");
 	string newaddress2 = GetNewFundedAddress("node1");
+	BOOST_CHECK_THROW(CallRPC("node2", "sendtoaddress " + newaddress2 + " 10"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "sendtoaddress " + newaddress2 + " 10"), runtime_error);
+	GenerateBlocks(5);
+	GenerateBlocks(5, "node2");
 	string guid = AssetNew("node1", "usd", newaddress1, "data", "8", "false", "1", "-1");
 
 	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"" + newaddress1 + "\\\",\\\"amount\\\":1}]\"", "assetallocationsend");
