@@ -116,6 +116,27 @@
     </layout>
    </item>
    <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_5">
+     <item>
+      <widget class="QCheckBox" name="changeAddressBox">
+       <property name="toolTip">
+        <string>If this is activated, but the change address is empty, change will be sent to a newly generated address.</string>
+       </property>
+       <property name="text">
+        <string>Custom change address</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="changeAddressText">
+       <property name="placeholderText">
+        <string>The RVN address that all change will be sent to (asset change and rvn). Leave blank to create a new address.</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout_4">
      <item>
       <widget class="QCheckBox" name="reissuableBox">
@@ -148,6 +169,13 @@
       </spacer>
      </item>
     </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="reissueWarningLabel">
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_7">
