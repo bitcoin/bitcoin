@@ -21,6 +21,7 @@ For example a file changed in 2015 (with 2015 being the current year):
 would be changed to:
 
 ```// Copyright (c) 2009-2015 The Syscoin Core developers```
+```// Copyright (c) 2014-2018 The Syscoin Core developers
 
 git-subtree-check.sh
 ====================
