@@ -75,7 +75,7 @@
  * Global state
  */
 
-CCriticalSection cs_main;
+CCriticalSection cs_main, scriptCheckMapCS, scriptExecutionCacheCS;
 
 BlockMap mapBlockIndex;
 CChain chainActive;
@@ -1209,6 +1209,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 		}
 		else
 		{
+			LOCK(scriptCheckMapCS);
 			scriptCheckMap[hash] = vChecks;
 		}
 		// Remove conflicting transactions from the mempool
@@ -1256,35 +1257,70 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 			std::packaged_task<void()> t([&pool, ptx, hash, coins_to_uncache, hashCacheEntry]() {
 				CValidationState vstate;
 				const CTransaction& txIn = *ptx;
+				bool checkFailed = false;
 				CCoinsViewCache vView(pcoinsTip);
-				std::vector<CScriptCheck> &vCheckRef = scriptCheckMap[hash];
-				for (auto& check : vCheckRef) {
-					if (!check())
-					{
-						LOCK2(cs_main, mempool.cs);
-						LogPrint("mempool", "%s: %s\n", "CheckInputs Error", hash.ToString());
-						BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
-							pcoinsTip->Uncache(hashTx);
-						pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
-						pool.ClearPrioritisation(hash);
-						// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
-						CValidationState stateDummy;
-						FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
-						nLastMultithreadMempoolFailure = GetTime();
-						scriptCheckMap.erase(hash);
-						return;
+				{
+					LOCK(scriptCheckMapCS);
+					std::vector<CScriptCheck> &vCheckRef = scriptCheckMap[hash];
+					for (auto& check : vCheckRef) {
+						if (!check())
+						{
+							checkFailed = true;
+							break;
+						}
 					}
 				}
-				// we don't actually care if this doesn't pass, it will just be a NO-OP and fee's used for someone who tries to create invalid syscoin tx's, 
-				// the checkblock validation of syscoin tx's does the same thing anyway and syscointxfund ensures for normal users that bad tx's simply will be errored out before allowing to add to mempool
-				CheckSyscoinInputs(txIn, vstate, vView, true, chainActive.Height(), CBlock());
+				if (checkFailed) {
+					LOCK2(cs_main, mempool.cs);
+					LogPrint("mempool", "%s: %s\n", "CheckInputs Error", hash.ToString());
+					BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
+						pcoinsTip->Uncache(hashTx);
+					pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
+					pool.ClearPrioritisation(hash);
+					// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
+					CValidationState stateDummy;
+					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
+					nLastMultithreadMempoolFailure = GetTime();
+					{
+						LOCK(scriptCheckMapCS);
+						scriptCheckMap.erase(hash);
+					}
+					return;
+				}
+				if (!CheckSyscoinInputs(txIn, vstate, vView, true, chainActive.Height(), CBlock()))
 				{
-					LOCK(cs_main);
+					LOCK2(cs_main, mempool.cs);
+					LogPrint("mempool", "%s: %s\n", "CheckSyscoinInputs Error", hash.ToString());
+					BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
+						pcoinsTip->Uncache(hashTx);
+					pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
+					pool.ClearPrioritisation(hash);
+					// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
+					CValidationState stateDummy;
+					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
+					nLastMultithreadMempoolFailure = GetTime();
+					{
+						LOCK(scriptCheckMapCS);
+						scriptCheckMap.erase(hash);
+					}
+					return;
+				}
+				{
+					LOCK2(scriptCheckMapCS, scriptExecutionCacheCS);
 					scriptCheckMap.erase(hash);
 					scriptExecutionCache.insert(hashCacheEntry);
 				}
 			});
-			threadpool.post(t);
+			int numTries = 100;
+			while (!threadpool.tryPost(t)) {
+				numTries--;
+				if (numTries <= 0)
+					return state.DoS(0, false,
+						REJECT_INVALID, "threadpool-full", false,
+						"AcceptToMemoryPoolWorker: thread pool queue is full");
+				LogPrintf("AcceptToMemoryPoolWorker: thread pool queue is full");
+				MilliSleep(1);
+			}
 		}
 	}
 
@@ -1909,6 +1945,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 			if (cacheFullScriptStore && !pvChecks) {
 				// We executed all of the provided scripts, and were told to
 				// cache the result. Do so now.
+				LOCK(scriptExecutionCacheCS);
 				scriptExecutionCache.insert(hashCacheEntry);
 			}
         }
