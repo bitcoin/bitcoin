@@ -33,6 +33,8 @@ CreateAssetDialog::CreateAssetDialog(const PlatformStyle *_platformStyle, QWidge
     connect(ui->closeButton, SIGNAL(clicked()), this, SLOT(onCloseClicked()));
     connect(ui->createAssetButton, SIGNAL(clicked()), this, SLOT(onCreateAssetClicked()));
     connect(ui->unitBox, SIGNAL(valueChanged(int)), this, SLOT(onUnitChanged(int)));
+    connect(ui->rvnChangeBox, SIGNAL(clicked()), this, SLOT(onCustomAddressClicked()));
+    connect(ui->changeAddressText, SIGNAL(textChanged(QString)), this, SLOT(onChangeAddressChanged(QString)));
 
     // Setup the default values
     setUpValues();
@@ -51,6 +53,9 @@ void CreateAssetDialog::setUpValues()
     ui->ipfsText->hide();
     ui->ipfsHashLabel->hide();
     ui->ipfsLine->hide();
+    ui->changeAddressText->hide();
+    ui->changeAddressLabel->hide();
+    ui->changeAddressLine->hide();
     ui->availabilityButton->setDisabled(true);
     hideMessage();
     CheckFormState();
@@ -80,7 +85,6 @@ void CreateAssetDialog::showMessage(QString string)
     ui->messageLabel->setText(string);
     ui->messageLabel->show();
     ui->availabilityButton->setDisabled(true);
-    CheckFormState();
 }
 
 void CreateAssetDialog::showValidMessage(QString string)
@@ -89,7 +93,6 @@ void CreateAssetDialog::showValidMessage(QString string)
     ui->messageLabel->setText(string);
     ui->messageLabel->show();
     ui->availabilityButton->setDisabled(true);
-    CheckFormState();
 }
 
 void CreateAssetDialog::hideMessage()
@@ -98,6 +101,9 @@ void CreateAssetDialog::hideMessage()
     ui->addressText->setStyleSheet("");
     if (ui->ipfsBox->isChecked())
         ui->ipfsText->setStyleSheet("");
+
+    if (ui->rvnChangeBox->isChecked())
+        ui->changeAddressText->setStyleSheet("");
     ui->messageLabel->hide();
 }
 
@@ -108,24 +114,39 @@ void CreateAssetDialog::disableCreateButton()
 
 void CreateAssetDialog::enableCreateButton()
 {
-    ui->createAssetButton->setDisabled(false);
+    if (checkedAvailablity)
+        ui->createAssetButton->setDisabled(false);
 }
 
 void CreateAssetDialog::CheckFormState()
 {
     disableCreateButton(); // Disable the button by default
+    hideMessage();
 
     const CTxDestination dest = DecodeDestination(ui->addressText->text().toStdString());
 
-    if (!(IsValidDestination(dest) || ui->addressText->text().isEmpty()) && IsAssetNameValid(ui->nameText->text().toStdString()))
+    if (!(IsValidDestination(dest) || ui->addressText->text().isEmpty()) && IsAssetNameValid(ui->nameText->text().toStdString())) {
+        ui->addressText->setStyleSheet("border: 1px solid red");
+        showMessage("Warning: Invalid Raven address");
         return;
+    }
 
     if (!IsAssetNameValid(ui->nameText->text().toStdString()))
         return;
 
-    if (ui->ipfsBox->isChecked() && ui->ipfsText->text().size() != 40)
+    if(ui->rvnChangeBox->isChecked() && !IsValidDestinationString(ui->changeAddressText->text().toStdString())) {
+        ui->changeAddressText->setStyleSheet("border: 1px solid red");
+        showMessage(tr("If Custom Change Address is selected, a valid address must be given"));
         return;
+    }
 
+    if (ui->ipfsBox->isChecked() && ui->ipfsText->text().size() != 46) {
+        ui->ipfsText->setStyleSheet("border: 1px solid red");
+        showMessage("If JSON Meta Data is selected, a valid IPFS hash must be given");
+        return;
+    }
+
+    showValidMessage("Valid Asset");
     enableCreateButton();
 }
 
@@ -145,13 +166,19 @@ void CreateAssetDialog::checkAvailabilityClicked()
         if (passets->GetAssetIfExists(name.toStdString(), asset)) {
             ui->nameText->setStyleSheet("border: 1px solid red");
             showMessage("Invalid: Asset name already in use");
+            disableCreateButton();
+            return;
         } else {
             ui->nameText->setStyleSheet("border: 1px solid green");
-            showValidMessage("Name is available");
         }
     } else {
         showMessage("Error: Asset Database not in sync");
+        disableCreateButton();
+        return;
     }
+
+    checkedAvailablity = true;
+    CheckFormState();
 }
 
 void CreateAssetDialog::onNameChanged(QString name)
@@ -169,47 +196,24 @@ void CreateAssetDialog::onNameChanged(QString name)
 
     if (!IsAssetNameValid(name.toStdString())) {
         ui->nameText->setStyleSheet("border: 1px solid red");
-        showMessage("Invalid: Allowed characters include: A-Z 0-9 . _");
+        showMessage("Invalid: Max Size 30 Characters. Allowed characters include: A-Z 0-9 . _");
     } else {
         hideMessage();
         ui->availabilityButton->setDisabled(false);
     }
+
+    checkedAvailablity = false;
+    disableCreateButton();
 }
 
 void CreateAssetDialog::onAddressNameChanged(QString address)
 {
-    const CTxDestination dest = DecodeDestination(address.toStdString());
-
-    if (address.isEmpty()) // Nothing entered
-    {
-        hideMessage();
-        CheckFormState();
-    }
-    else if (!IsValidDestination(dest)) // Invalid address
-    {
-        ui->addressText->setStyleSheet("border: 1px solid red");
-        showMessage("Warning: Invalid Raven address");
-    }
-    else // Valid address
-    {
-        hideMessage();
-        CheckFormState();
-    }
+    CheckFormState();
 }
 
 void CreateAssetDialog::onIPFSHashChanged(QString hash)
 {
-    if (hash.size() == 0) {
-        hideMessage();
-        CheckFormState();
-    }
-    else if (hash.size() != 46) {
-        ui->ipfsText->setStyleSheet("border: 1px solid red");
-        showMessage("IPFS hash must be the correct length");
-    } else {
-        hideMessage();
-        CheckFormState();
-    }
+    CheckFormState();
 }
 
 void CreateAssetDialog::onCloseClicked()
@@ -241,7 +245,8 @@ void CreateAssetDialog::onCreateAssetClicked()
     // Create the transaction and broadcast it
     std::pair<int, std::string> error;
     std::string txid;
-    if (!CreateAssetTransaction(model->getWallet(), asset, address.toStdString(), error, txid))
+    std::string changeAddress = ui->changeAddressText->text().toStdString();
+    if (!CreateAssetTransaction(model->getWallet(), asset, address.toStdString(), error, txid, changeAddress))
         showMessage("Invalid: " + QString::fromStdString(error.second));
     else {
         QMessageBox msgBox;
@@ -264,10 +269,6 @@ void CreateAssetDialog::onCreateAssetClicked()
         if (msgBox.clickedButton() == okayButton) {
             close();
         }
-
-
-
-
     }
 }
 
@@ -285,4 +286,26 @@ void CreateAssetDialog::onUnitChanged(int value)
     }
 
     ui->unitExampleLabel->setText(text);
+}
+
+void CreateAssetDialog::onCustomAddressClicked()
+{
+    if (ui->rvnChangeBox->isChecked()) {
+        ui->changeAddressLabel->show();
+        ui->changeAddressText->show();
+        ui->changeAddressLine->show();
+    } else {
+        ui->changeAddressLabel->hide();
+        ui->changeAddressText->hide();
+        ui->changeAddressLine->hide();
+        ui->changeAddressText->clear();
+        hideMessage();
+    }
+
+    CheckFormState();
+}
+
+void CreateAssetDialog::onChangeAddressChanged(QString changeAddress)
+{
+    CheckFormState();
 }

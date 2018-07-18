@@ -1811,12 +1811,21 @@ bool GetMyAssetBalances(CAssetsCache& cache, std::map<std::string, CAmount>& bal
     return true;
 }
 
-bool CreateAssetTransaction(CWallet* pwallet, const CNewAsset& asset, const std::string& address, std::pair<int, std::string>& error, std::string& txid)
+bool CreateAssetTransaction(CWallet* pwallet, const CNewAsset& asset, const std::string& address, std::pair<int, std::string>& error, std::string& txid, std::string& rvnChangeAddress)
 {
     // Validate the assets data
     std::string strError;
     if (!asset.IsValid(strError, *passets)) {
         error = std::make_pair(RPC_INVALID_PARAMETER, strError);
+        return false;
+    }
+
+    bool haveChangeAddress = false;
+    if (rvnChangeAddress != "")
+        haveChangeAddress = true;
+
+    if (haveChangeAddress && !IsValidDestinationString(rvnChangeAddress)) {
+        error = std::make_pair(RPC_INVALID_ADDRESS_OR_KEY, "Change Address isn't a valid RVN address");
         return false;
     }
 
@@ -1843,6 +1852,11 @@ bool CreateAssetTransaction(CWallet* pwallet, const CNewAsset& asset, const std:
 
     CWalletTx wtxNew;
     CCoinControl coin_control;
+
+    if (haveChangeAddress) {
+        auto rvnChangeDest = DecodeDestination(rvnChangeAddress);
+        coin_control.destChange = rvnChangeDest;
+    }
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
