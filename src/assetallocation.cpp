@@ -950,6 +950,7 @@ UniValue assetallocationinfo(const JSONRPCRequest& request) {
     return oAssetAllocation;
 }
 int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& assetAllocationTupleSender, const uint256& lookForTxHash) {
+	LOCK2(cs_main, mempool.cs);
 	CAssetAllocation dbLastAssetAllocation, dbAssetAllocation;
 	ArrivalTimesMap arrivalTimes;
 	// get last POW asset allocation balance to ensure we use POW balance to check for potential conflicts in mempool (real-time balances).
@@ -1020,10 +1021,6 @@ int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& a
 				if (senderBalance < 0) {
 					return ZDAG_MINOR_CONFLICT_OK;
 				}
-				// even if the sender may be flagged, the order of events suggests that this receiver should get his money confirmed upon pow because real-time balance is sufficient for this receiver
-				else if (txHash == lookForTxHash) {
-					return ZDAG_STATUS_OK;
-				}
 			}
 		}
 		else if (!assetallocation.listSendingAllocationInputs.empty()) {
@@ -1037,11 +1034,11 @@ int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& a
 				if (senderBalance < 0) {
 					return ZDAG_MINOR_CONFLICT_OK;
 				}
-				// even if the sender may be flagged, the order of events suggests that this receiver should get his money confirmed upon pow because real-time balance is sufficient for this receiver
-				else if (txHash == lookForTxHash) {
-					return ZDAG_STATUS_OK;
-				}
 			}
+		}
+		// even if the sender may be flagged, the order of events suggests that this receiver should get his money confirmed upon pow because real-time balance is sufficient for this receiver
+		if (txHash == lookForTxHash) {
+			return ZDAG_STATUS_OK;
 		}
 	}
 	// ensure that prev state balance -+ realtime balances == the current realtime balance
