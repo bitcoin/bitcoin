@@ -1310,7 +1310,8 @@ bool CPrivateSendClient::CreateDenominated(const CompactTallyItem& tallyItem, bo
     do {
         std::vector<CAmount> vecStandardDenoms = CPrivateSend::GetStandardDenominations();
 
-        BOOST_REVERSE_FOREACH(CAmount nDenomValue, vecStandardDenoms) {
+        for (auto it = vecStandardDenoms.rbegin(); it != vecStandardDenoms.rend(); ++it) {
+            CAmount nDenomValue = *it;
 
             if(fSkip) {
                 // Note: denoms are skipped if there are already DENOMS_COUNT_MAX of them

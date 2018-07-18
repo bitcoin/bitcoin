@@ -659,7 +659,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4040 - " + _("Linked offer auction requires a witness signature for each bid but none provided");
 						return true;
 					}
-				}
+				}	
 				theEscrow.fBidPerUnit = serializedEscrow.fBidPerUnit;
 				theEscrow.nAmountOrBidPerUnit = serializedEscrow.nAmountOrBidPerUnit;
 				theEscrow.txHash = tx.GetHash();
@@ -908,6 +908,11 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 		}
 		else
 		{
+			if (vvchAliasArgs[0] != theEscrow.vchBuyerAlias)
+			{
+				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4064 - " + _("Only buyer can initiate an escrow");
+				return true;
+			}
 			COffer myLinkOffer;
 			if (fJustCheck && GetEscrow(serializedEscrow.vchEscrow, theEscrow))
 			{

@@ -596,6 +596,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, const vector<vector<unsign
 	}
 	else if(op == OP_OFFER_ACTIVATE)
 	{
+		if (theOffer.vchAlias != vvchAlias)
+		{
+			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot create this offer. Offer owner must sign off on this change.");
+			return true;
+		}
 		COfferLinkWhitelistEntry entry;
 		if (GetOffer(theOffer.vchOffer, theOffer))
 		{

@@ -21,6 +21,8 @@ static const char* pszBase58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnop
 
 bool DecodeBase58(const char* psz, std::vector<unsigned char>& vch)
 {
+	// SYSCOIN
+	vch.clear();
     // Skip leading spaces.
     while (*psz && isspace(*psz))
         psz++;

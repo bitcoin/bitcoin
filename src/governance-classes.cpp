@@ -240,16 +240,12 @@ std::vector<CSuperblock_sptr> CGovernanceTriggerManager::GetActiveTriggers()
     DBG( std::cout << "GetActiveTriggers: mapTrigger.size() = " << mapTrigger.size() << std::endl; );
 
     // LOOK AT THESE OBJECTS AND COMPILE A VALID LIST OF TRIGGERS
-    trigger_m_it it = mapTrigger.begin();
-    while(it != mapTrigger.end()) {
-
-        CGovernanceObject* pObj = governance.FindGovernanceObject((*it).first);
-
+    for (const auto& pair : mapTrigger) {
+        CGovernanceObject* pObj = governance.FindGovernanceObject(pair.first);
         if(pObj) {
             DBG( std::cout << "GetActiveTriggers: pObj->GetDataAsPlainString() = " << pObj->GetDataAsPlainString() << std::endl; );
-            vecResults.push_back(it->second);
+            vecResults.push_back(pair.second);
         }
-        ++it;
     }
 
     DBG( std::cout << "GetActiveTriggers: vecResults.size() = " << vecResults.size() << std::endl; );

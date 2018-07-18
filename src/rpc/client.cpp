@@ -242,7 +242,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
 	{ "assetnew", 9, "can_adjust_interest_rate" },
 	{ "assetupdate", 4, "interest_rate" },
 	{ "assetinfo", 1, "getinputs" },
-	{ "assetsend", 2, "inputs" },
+	{ "assetsend", 1, "inputs" },
 	{ "listassets", 0, "count" },
 	{ "listassets", 1, "from" },
 	{ "listassets", 2, "options" }
