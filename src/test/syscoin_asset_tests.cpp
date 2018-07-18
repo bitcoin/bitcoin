@@ -1690,11 +1690,12 @@ BOOST_AUTO_TEST_CASE(generate_assettransfer)
 BOOST_AUTO_TEST_CASE(generate_assettransfer_address)
 {
 	printf("Running generate_assettransfer_address...\n");
+	GenerateBlocks(5, "node1");
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
 	string newaddres1 = GetNewFundedAddress("node1");
-	string newaddres2 = GetNewFundedAddress("node1");
-	string newaddres3 = GetNewFundedAddress("node1");
+	string newaddres2 = GetNewFundedAddress("node2");
+	string newaddres3 = GetNewFundedAddress("node3");
 
 	string guid1 = AssetNew("node1", "dow", newaddres1, "pubdata");
 	string guid2 = AssetNew("node1", "cat", newaddres1, "pubdata");
