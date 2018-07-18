@@ -349,7 +349,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	int count = 0;
 	for (auto& assetTuple : assetMap) {
 		count++;
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsend " + assetTuple.first + " " + assetAddressMap[assetTuple.first] + " " + "\"[{\\\"ownerto\\\":\\\"" + assetTuple.second + "\\\",\\\"amount\\\":1}]\" '' ''"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsend " + assetTuple.first + " " + assetTuple.second+ " " + "\"[{\\\"ownerto\\\":\\\"" + assetAddressMap[assetTuple.first] + "\\\",\\\"amount\\\":1}]\" '' ''"));
 		UniValue arr = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
 		string hex_str = find_value(r.get_obj(), "hex").get_str();
