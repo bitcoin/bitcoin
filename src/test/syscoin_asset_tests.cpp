@@ -648,6 +648,74 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_checktotalsupply)
 	// totalsupply cannot go > maxsupply
 	BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate " + guid + " jagassetupdate assets 0.001 0.1 ''"), runtime_error);
 }
+BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_checktotalsupply_address)
+{
+	UniValue r;
+	printf("Running generate_asset_collect_interest_checktotalsupply_address...\n");
+	GenerateBlocks(5);
+	string newaddress = GetNewFundedAddress("node1");
+	string newaddress1 = GetNewFundedAddress("node1");
+	string newaddress2 = GetNewFundedAddress("node1");
+	// setup asset with 5% interest hourly (unit test mode calculates interest hourly not annually)
+	string guid = AssetNew("node1", "cad", newaddress, "data", "8", "false", "50", "100", "0.1");
+	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"" + newaddress1 + "\\\",\\\"amount\\\":20},{\\\"ownerto\\\":\\\"" + newaddress2 + "\\\",\\\"amount\\\":30}]\"", "memoassetinterest");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress1 + " false"));
+	UniValue balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 20 * COIN);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), find_value(r.get_obj(), "height").get_int());
+
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress2 + " false"));
+	balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 30 * COIN);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), find_value(r.get_obj(), "height").get_int());
+
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid + " false"));
+	UniValue totalsupply = find_value(r.get_obj(), "total_supply");
+	UniValue maxsupply = find_value(r.get_obj(), "max_supply");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8, false), 50 * COIN);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8, false), 100 * COIN);
+
+	// 1 hour later
+	GenerateBlocks(60);
+	// calc interest expect 20 (1 + 0.1 / 60) ^ (60(1)) = ~22.13 and 30 (1 + 0.1 / 60) ^ (60(1)) = ~33.26
+	AssetClaimInterest("node1", guid, newaddress1);
+	AssetClaimInterest("node1", guid, newaddress2);
+	// ensure total supply and individual supplies are correct after interest claims
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress1 + " false"));
+	balance = find_value(r.get_obj(), "balance");
+	CAmount nBalance1 = AssetAmountFromValue(balance, 8, false);
+	BOOST_CHECK_EQUAL(nBalance1, 2213841452);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), find_value(r.get_obj(), "height").get_int());
+
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress2 + " false"));
+	balance = find_value(r.get_obj(), "balance");
+	CAmount nBalance2 = AssetAmountFromValue(balance, 8, false);
+	BOOST_CHECK_EQUAL(nBalance2, 3326296782);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), find_value(r.get_obj(), "height").get_int());
+
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid + " false"));
+	totalsupply = find_value(r.get_obj(), "total_supply");
+	maxsupply = find_value(r.get_obj(), "max_supply");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8, false), (nBalance1 + nBalance2));
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8, false), 100 * COIN);
+	CAmount supplyRemaining = 100 * COIN - (nBalance1 + nBalance2);
+	// mint up to the max supply
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetupdate " + guid + " pub assets " + ValueFromAssetAmount(supplyRemaining, 8, false).write() + " 0.1 ''"));
+	UniValue arr = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
+	string hex_str = find_value(r.get_obj(), "hex").get_str();
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + hex_str));
+	GenerateBlocks(5);
+
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid + " false"));
+	totalsupply = find_value(r.get_obj(), "total_supply");
+	maxsupply = find_value(r.get_obj(), "max_supply");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8, false), 100 * COIN);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8, false), 100 * COIN);
+
+	// totalsupply cannot go > maxsupply
+	BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate " + guid + " jagassetupdate assets 0.001 0.1 ''"), runtime_error);
+}
 BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_average_balance)
 {
 	UniValue r;
@@ -689,6 +757,50 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_average_balance)
 	//  ((2666.67*pow((1 + (0.05 / 60)), (60*6)))) - 2666.67 = 932.5 interest (total 5932.5 balance after interest)
 	AssetClaimInterest("node1", guid, "jagassetcollectionrcveravg");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectionrcveravg false"));
+	balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 593250716124);
+}
+BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_average_balance_address)
+{
+	UniValue r;
+	printf("Running generate_asset_collect_interest_average_balance_address...\n");
+	GenerateBlocks(5);
+	string newaddress = GetNewFundedAddress("node1");
+	string newaddress1 = GetNewFundedAddress("node1");
+	// setup asset with 5% interest hourly (unit test mode calculates interest hourly not annually)
+	string guid = AssetNew("node1", "token", newaddress  "data", "8", "false", "10000", "-1", "0.05");
+	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"" + newaddress1 + "\\\",\\\"amount\\\":1000}]\"", "memoassetinterest");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress1 + " false"));
+	UniValue balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 1000 * COIN);
+	int claimheight = find_value(r.get_obj(), "height").get_int();
+	// 3 hours later send 1k more
+	GenerateBlocks((60 * 3) - 1);
+
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), claimheight);
+	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"" + newaddress1 + "\\\",\\\"amount\\\":3000}]\"", "memoassetinterest");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress1 + " false"));
+	balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 4000 * COIN);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), claimheight);
+	// 2 hours later send 3k more
+	GenerateBlocks((60 * 2) - 1);
+
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), claimheight);
+	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"" + newaddress1 + "\\\",\\\"amount\\\":1000}]\"", "memoassetinterest");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress1 + " false"));
+	balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 5000 * COIN);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), claimheight);
+
+	// 1 hour later send 1k more
+	GenerateBlocks((60 * 1) - 1);
+
+	// total interest (1000*180 + 4000*120 + 5000*60) / 360 = 2666.67 - average balance over 6hrs, calculate interest on that balance and apply it to 5k
+	// formula is  ((averagebalance*pow((1 + ((double)asset.fInterestRate / 60)), (60*6)))) - averagebalance;
+	//  ((2666.67*pow((1 + (0.05 / 60)), (60*6)))) - 2666.67 = 932.5 interest (total 5932.5 balance after interest)
+	AssetClaimInterest("node1", guid, newaddress1);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress1 + " false"));
 	balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 593250716124);
 }
@@ -742,6 +854,56 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_update_with_average_balance
 	balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 631064931803);
 }
+BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_update_with_average_balance_address)
+{
+	UniValue r;
+	printf("Running generate_asset_collect_interest_update_with_average_balance_address...\n");
+	GenerateBlocks(5);
+	string newaddress = GetNewFundedAddress("node1");
+	string newaddress1 = GetNewFundedAddress("node1");
+	// setup asset with 5% interest hourly (unit test mode calculates interest hourly not annually), can adjust the rate
+	string guid = AssetNew("node1", "mytoken", newaddress, "data", "8", "false", "10000", "-1", "0.05", "true");
+	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"" + newaddress1 + "\\\",\\\"amount\\\":1000}]\"", "memoassetinterest");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress1 + " false"));
+	UniValue balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 1000 * COIN);
+	int claimheight = find_value(r.get_obj(), "height").get_int();
+	// 3 hours later send 1k more
+	GenerateBlocks((60 * 3) - 11);
+	// update interest rate to 10%
+	AssetUpdate("node1", guid, "pub", "''", "0.1");
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), claimheight);
+	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"" + newaddress1 + "\\\",\\\"amount\\\":3000}]\"", "memoassetinterest");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress1 + " false"));
+	balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 4000 * COIN);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), claimheight);
+	// 2 hours later send 3k more
+	GenerateBlocks((60 * 2) - 11);
+
+	// interest rate to back to 5%
+	AssetUpdate("node1", guid, "pub", "''", "0.05");
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), claimheight);
+	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"" + newaddress1 + "\\\",\\\"amount\\\":1000}]\"", "memoassetinterest");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress1 + " false"));
+	balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 5000 * COIN);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), claimheight);
+
+	// 1 hour later send 1k more
+	GenerateBlocks((60 * 1) - 11);
+
+	// at the end set rate to 50% but this shouldn't affect the result since we set this rate recently
+	AssetUpdate("node1", guid, "pub", "''", "0.5");
+	// total interest (1000*180 + 4000*120 + 5000*60) / 360 = 2666.67 - average balance over 6hrs, calculate interest on that balance and apply it to 5k
+	// total interest rate (0.05*180 + 0.1*120 + 0.05*60) / 360 = 0.0667% - average interest over 6hrs
+	// formula is  ((averagebalance*pow((1 + ((double)asset.fInterestRate / 60)), (60*6)))) - averagebalance;
+	//  ((2666.67*pow((1 + (0.0667 / 60)), (60*6)))) - 2666.67 = 1310.65 interest (total about 6310.65 balance after interest)
+	AssetClaimInterest("node1", guid, newaddress1);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress1 + " false"));
+	balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 631064931803);
+}
 BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_every_block)
 {
 	UniValue r;
@@ -764,6 +926,32 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_every_block)
 		printf("Claiming interest %d of out %d...\n", i, 60 * 10);
 	}
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectionreceiver1 false"));
+	balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 824875837081);
+
+}
+BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_every_block_address)
+{
+	UniValue r;
+	printf("Running generate_asset_collect_interest_every_block_address...\n");
+	GenerateBlocks(5);
+	string newaddress = GetNewFundedAddress("node1");
+	string newaddress1 = GetNewFundedAddress("node1");
+	// setup asset with 10% interest hourly (unit test mode calculates interest hourly not annually)
+	string guid = AssetNew("node1", "a", newaddress, "data", "8", "false", "10000", "-1", "0.05");
+	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"" + newaddress1 + "\\\",\\\"amount\\\":5000}]\"", "memoassetinterest1");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress1 + " false"));
+	UniValue balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 5000 * COIN);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), find_value(r.get_obj(), "height").get_int());
+	// 10 hours later
+	// calc interest expect 5000 (1 + 0.05 / 60) ^ (60(10)) = ~8248
+	for (int i = 0; i <= 60 * 10; i += 25) {
+		AssetClaimInterest("node1", guid, newaddress1);
+		GenerateBlocks(24);
+		printf("Claiming interest %d of out %d...\n", i, 60 * 10);
+	}
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress1 + " false"));
 	balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 824875837081);
 
@@ -886,6 +1074,65 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_precision)
 	BOOST_CHECK_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + aliasName + " pub assets " + istr + " true 1 " + maxstrplusone + " 0 false ''"), runtime_error);
 
 }
+BOOST_AUTO_TEST_CASE(generate_assetupdate_precision_address)
+{
+	printf("Running generate_assetupdate_precision_address...\n");
+	UniValue r;
+	for (int i = 0; i <= 8; i++) {
+		string istr = boost::lexical_cast<string>(i);
+		string assetName = "asset" + istr;
+		string addressName = GetNewFundedAddress("node1");
+		// test max supply for every possible precision
+		string guid = AssetNew("node1", assetName, addressName, "data", istr, "false", "1", "-1");
+		UniValue negonevalue(UniValue::VSTR);
+		negonevalue.setStr("-1");
+		CAmount precisionCoin = powf(10, i);
+		// get max value - 1 (1 is already the supply, and this value is cumulative)
+		CAmount negonesupply = AssetAmountFromValue(negonevalue, i, false) - precisionCoin;
+		string maxstr = ValueFromAssetAmount(negonesupply, i, false).get_str();
+		AssetUpdate("node1", guid, "pub12", maxstr);
+		// can't go above max balance (10^18) / (10^i) for i decimal places
+		BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate " + guid + " pub assets 1 0 ''"), runtime_error);
+		// can't create asset with more than max+1 balance or max+1 supply
+		string maxstrplusone = ValueFromAssetAmount(negonesupply + (precisionCoin * 2), i, false).get_str();
+		maxstr = ValueFromAssetAmount(negonesupply + precisionCoin, i, false).get_str();
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + addressName + " pub assets " + istr + " false " + maxstr + " -1 0 false ''"));
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + addressName + " pub assets " + istr + " false 1 " + maxstr + " 0 false ''"));
+		BOOST_CHECK_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + addressName + " pub assets " + istr + " false " + maxstrplusone + " -1 0 false ''"), runtime_error);
+		BOOST_CHECK_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + addressName + " pub assets " + istr + " false 1 " + maxstrplusone + " 0 false ''"), runtime_error);
+	}
+	string newaddress = GetNewFundedAddress("node1");
+	// invalid precisions
+	BOOST_CHECK_THROW(CallRPC("node1", "assetnew high " + newaddress + " pub assets 9 false 1 2 0 false ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "assetnew low " + newaddress + " pub assets -1 false 1 2 0 false ''"), runtime_error);
+
+	// try an input range asset for 10m max with precision 0
+	// for fun try to use precision 4 for input range it should default to 0
+	string istr = boost::lexical_cast<string>(4);
+	int i = 0;
+	string assetName = "usd" + istr;
+	string addressName = "GetNewFundedAddress("node1");
+	
+	// test max supply
+	string guid1 = AssetNew("node1", assetName, addressName, "data", istr, "true", "1", "-1");
+	UniValue negonevalue(UniValue::VSTR);
+	negonevalue.setStr("-1");
+	CAmount precisionCoin = powf(10, i);
+	// get max value - 1 (1 is already the supply, and this value is cumulative)
+	CAmount negonesupply = AssetAmountFromValue(negonevalue, i, true) - precisionCoin;
+	string maxstr = ValueFromAssetAmount(negonesupply, i, true).get_str();
+	AssetUpdate("node1", guid1, "pub12", maxstr);
+	// can't go above max balance (10^18) / (10^i) for i decimal places
+	BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate " + guid1 + " pub assets 1 0 ''"), runtime_error);
+	// can't create asset with more than max+1 balance or max+1 supply
+	string maxstrplusone = ValueFromAssetAmount(negonesupply + (precisionCoin * 2), i, true).get_str();
+	maxstr = ValueFromAssetAmount(negonesupply + precisionCoin, i, true).get_str();
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + addressName + " pub assets " + istr + " true " + maxstr + " -1 0 false ''"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + addressName + " pub assets " + istr + " true 1 " + maxstr + " 0 false ''"));
+	BOOST_CHECK_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + addressName + " pub assets " + istr + " true " + maxstrplusone + " -1 0 false ''"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "assetnew  " + assetName + "2 " + addressName + " pub assets " + istr + " true 1 " + maxstrplusone + " 0 false ''"), runtime_error);
+
+}
 BOOST_AUTO_TEST_CASE(generate_assetsend)
 {
 	UniValue r;
@@ -947,6 +1194,68 @@ BOOST_AUTO_TEST_CASE(generate_assetsend)
 	BOOST_CHECK(inputsArray.size() == 0);
 	// can't go over 20 supply
 	BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate " + guid + " jagassetsend assets 1 0 ''"), runtime_error);
+}
+BOOST_AUTO_TEST_CASE(generate_assetsend_address)
+{
+	UniValue r;
+	printf("Running generate_assetsend_address...\n");
+	string newaddress = GetNewFundedAddress("node1");
+	string newaddress1 = GetNewFundedAddress("node1");
+	string guid = AssetNew("node1", "elf", newaddress, "data", "8", "false", "10", "20");
+	// [{\"ownerto\":\"aliasname\",\"amount\":amount},...]
+	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"" + newaddress1 + "\\\",\\\"amount\\\":7}]\"", "memoassetsend");
+	// ensure amounts are correct
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid + " true"));
+	UniValue balance = find_value(r.get_obj(), "balance");
+	UniValue totalsupply = find_value(r.get_obj(), "total_supply");
+	UniValue maxsupply = find_value(r.get_obj(), "max_supply");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 3 * COIN);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8, false), 10 * COIN);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8, false), 20 * COIN);
+	UniValue inputs = find_value(r.get_obj(), "inputs");
+	BOOST_CHECK(inputs.isArray());
+	UniValue inputsArray = inputs.get_array();
+	BOOST_CHECK(inputsArray.size() == 0);
+	// ensure receiver get's it
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress1 + " true"));
+	inputs = find_value(r.get_obj(), "inputs");
+	BOOST_CHECK(inputs.isArray());
+	inputsArray = inputs.get_array();
+	BOOST_CHECK(inputsArray.size() == 0);
+	balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 7 * COIN);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "memo").get_str(), "memoassetsend");
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), find_value(r.get_obj(), "height").get_int());
+
+	// add balances
+	AssetUpdate("node1", guid, "pub12", "1");
+	// check balance is added to end
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid + " true"));
+	balance = find_value(r.get_obj(), "balance");
+	totalsupply = find_value(r.get_obj(), "total_supply");
+	maxsupply = find_value(r.get_obj(), "max_supply");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 4 * COIN);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8, false), 11 * COIN);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8, false), 20 * COIN);
+	inputs = find_value(r.get_obj(), "inputs");
+	BOOST_CHECK(inputs.isArray());
+	inputsArray = inputs.get_array();
+	BOOST_CHECK(inputsArray.size() == 0);
+	AssetUpdate("node1", guid, "pub12", "9");
+	// check balance is added to end
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid + " true"));
+	balance = find_value(r.get_obj(), "balance");
+	totalsupply = find_value(r.get_obj(), "total_supply");
+	maxsupply = find_value(r.get_obj(), "max_supply");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 13 * COIN);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8, false), 20 * COIN);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8, false), 20 * COIN);
+	inputs = find_value(r.get_obj(), "inputs");
+	BOOST_CHECK(inputs.isArray());
+	inputsArray = inputs.get_array();
+	BOOST_CHECK(inputsArray.size() == 0);
+	// can't go over 20 supply
+	BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate " + guid + " " + newaddress + " assets 1 0 ''"), runtime_error);
 }
 BOOST_AUTO_TEST_CASE(generate_assetsend_ranges)
 {
@@ -1040,6 +1349,99 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges)
 	BOOST_CHECK_EQUAL(find_value(inputsArray[3].get_obj(), "end").get_int(), 19);
 	// can't go over 20 supply
 	BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate " + guid + " jagassetsendranges assets 1 0 ''"), runtime_error);
+}
+BOOST_AUTO_TEST_CASE(generate_assetsend_ranges_address)
+{
+	UniValue r;
+	printf("Running generate_assetsend_ranges_address...\n");
+	string newaddress = GetNewFundedAddress("node1");
+	string newaddress1 = GetNewFundedAddress("node1");
+	// if use input ranges update supply and ensure adds to end of allocation, ensure balance gets updated properly
+	string guid = AssetNew("node1", "msft", newaddress, "data", "8", "true", "10", "20");
+	// send range 1-2, 4-6, 8-9 and then add 1 balance and expect it to add to 10, add 9 more and expect it to add to 11, try to add one more and won't let you due to max 20 supply
+	// [{\"ownerto\":\"aliasname\",\"ranges\":[{\"start\":index,\"end\":index},...]},...]
+	// break ranges into 0, 3, 7
+	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"" + newaddress1 + "\\\",\\\"ranges\\\":[{\\\"start\\\":1,\\\"end\\\":2},{\\\"start\\\":4,\\\"end\\\":6},{\\\"start\\\":8,\\\"end\\\":9}]}]\"", "memoassetsendranges");
+	// ensure receiver get's it
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress1 + " true"));
+	UniValue inputs = find_value(r.get_obj(), "inputs");
+	BOOST_CHECK(inputs.isArray());
+	UniValue inputsArray = inputs.get_array();
+	BOOST_CHECK_EQUAL(inputsArray.size(), 3);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "start").get_int(), 1);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "end").get_int(), 2);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[1].get_obj(), "start").get_int(), 4);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[1].get_obj(), "end").get_int(), 6);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[2].get_obj(), "start").get_int(), 8);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[2].get_obj(), "end").get_int(), 9);
+	UniValue balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 7);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "memo").get_str(), "memoassetsendranges");
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "interest_claim_height").get_int(), find_value(r.get_obj(), "height").get_int());
+
+	// ensure ranges are correct
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid + " true"));
+	balance = find_value(r.get_obj(), "balance");
+	UniValue totalsupply = find_value(r.get_obj(), "total_supply");
+	UniValue maxsupply = find_value(r.get_obj(), "max_supply");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 3);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8, true), 10);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8, true), 20);
+	inputs = find_value(r.get_obj(), "inputs");
+	BOOST_CHECK(inputs.isArray());
+	inputsArray = inputs.get_array();
+	BOOST_CHECK_EQUAL(inputsArray.size(), 3);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "start").get_int(), 0);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "end").get_int(), 0);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[1].get_obj(), "start").get_int(), 3);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[1].get_obj(), "end").get_int(), 3);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[2].get_obj(), "start").get_int(), 7);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[2].get_obj(), "end").get_int(), 7);
+	// add balances, expect to add to range 10 because total supply is 10 (0-9 range)
+	AssetUpdate("node1", guid, "pub12", "1");
+	// check balance is added to end
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid + " true"));
+	balance = find_value(r.get_obj(), "balance");
+	totalsupply = find_value(r.get_obj(), "total_supply");
+	maxsupply = find_value(r.get_obj(), "max_supply");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 4);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8, true), 11);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8, true), 20);
+	inputs = find_value(r.get_obj(), "inputs");
+	BOOST_CHECK(inputs.isArray());
+	inputsArray = inputs.get_array();
+	BOOST_CHECK_EQUAL(inputsArray.size(), 4);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "start").get_int(), 0);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "end").get_int(), 0);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[1].get_obj(), "start").get_int(), 3);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[1].get_obj(), "end").get_int(), 3);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[2].get_obj(), "start").get_int(), 7);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[2].get_obj(), "end").get_int(), 7);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[3].get_obj(), "start").get_int(), 10);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[3].get_obj(), "end").get_int(), 10);
+	AssetUpdate("node1", guid, "pub12", "9");
+	// check balance is added to end, last range expected 10-19
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid + " true"));
+	balance = find_value(r.get_obj(), "balance");
+	totalsupply = find_value(r.get_obj(), "total_supply");
+	maxsupply = find_value(r.get_obj(), "max_supply");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 13);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8, true), 20);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8, true), 20);
+	inputs = find_value(r.get_obj(), "inputs");
+	BOOST_CHECK(inputs.isArray());
+	inputsArray = inputs.get_array();
+	BOOST_CHECK_EQUAL(inputsArray.size(), 4);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "start").get_int(), 0);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "end").get_int(), 0);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[1].get_obj(), "start").get_int(), 3);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[1].get_obj(), "end").get_int(), 3);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[2].get_obj(), "start").get_int(), 7);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[2].get_obj(), "end").get_int(), 7);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[3].get_obj(), "start").get_int(), 10);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[3].get_obj(), "end").get_int(), 19);
+	// can't go over 20 supply
+	BOOST_CHECK_THROW(r = CallRPC("node1", "assetupdate " + guid + " " + newaddress + " assets 1 0 ''"), runtime_error);
 }
 BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 {
@@ -1149,6 +1551,115 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2)
 	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "end").get_int(), 1999);
 
 }
+BOOST_AUTO_TEST_CASE(generate_assetsend_ranges2_address)
+{
+	// create an asset, assetsend the initial allocation to myself, assetallocationsend the entire allocation to 5 other aliases, 5 other aliases send all those allocations back to me, then mint 1000 new tokens
+	UniValue r;
+	printf("Running generate_assetsend_ranges2_address...\n");
+	string newaddressowner = GetNewFundedAddress("node1");
+	string newaddressownerallocation = GetNewFundedAddress("node1");
+	string newaddressrangesa = GetNewFundedAddress("node1");
+	string newaddressrangesb = GetNewFundedAddress("node1");
+	string newaddressrangesc = GetNewFundedAddress("node1");
+	string newaddressrangesd = GetNewFundedAddress("node1");
+	string newaddressrangese = GetNewFundedAddress("node1");
+	
+	// if use input ranges update supply and ensure adds to end of allocation, ensure balance gets updated properly
+	string guid = AssetNew("node1", "asset", newaddressowner, "asset", "8", "true", "1000", "1000000");
+	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"" + newaddressownerallocation + "\\\",\\\"ranges\\\":[{\\\"start\\\":0,\\\"end\\\":999}]}]\"", "memo1");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid + " true"));
+	UniValue inputs = find_value(r.get_obj(), "inputs");
+	BOOST_CHECK(inputs.isArray());
+	UniValue inputsArray = inputs.get_array();
+	BOOST_CHECK_EQUAL(inputsArray.size(), 0);
+
+
+	AssetAllocationTransfer(true, "node1", guid, "" + newaddressownerallocation + "", "\"[{\\\"ownerto\\\":\\\"" + newaddressrangesa + "\\\",\\\"ranges\\\":[{\\\"start\\\":0,\\\"end\\\":199}]},{\\\"ownerto\\\":\\\"" + newaddressrangesb + "\\\",\\\"ranges\\\":[{\\\"start\\\":200,\\\"end\\\":399}]},{\\\"ownerto\\\":\\\"" + newaddressrangesc + "\\\",\\\"ranges\\\":[{\\\"start\\\":400,\\\"end\\\":599}]},{\\\"ownerto\\\":\\\"" + newaddressrangesd + "\\\",\\\"ranges\\\":[{\\\"start\\\":600,\\\"end\\\":799}]},{\\\"ownerto\\\":\\\"" + newaddressrangese + "\\\",\\\"ranges\\\":[{\\\"start\\\":800,\\\"end\\\":999}]}]\"", "memo");
+	// ensure receiver get's it
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddressrangesa + " true"));
+	inputs = find_value(r.get_obj(), "inputs");
+	BOOST_CHECK(inputs.isArray());
+	inputsArray = inputs.get_array();
+	BOOST_CHECK_EQUAL(inputsArray.size(), 1);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "start").get_int(), 0);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "end").get_int(), 199);
+	UniValue balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 200);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "memo").get_str(), "memo");
+
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddressrangesa + " true"));
+	inputs = find_value(r.get_obj(), "inputs");
+	BOOST_CHECK(inputs.isArray());
+	inputsArray = inputs.get_array();
+	BOOST_CHECK_EQUAL(inputsArray.size(), 1);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "start").get_int(), 0);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "end").get_int(), 199);
+	balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 200);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "memo").get_str(), "memo");
+
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddressrangesb + " true"));
+	inputs = find_value(r.get_obj(), "inputs");
+	BOOST_CHECK(inputs.isArray());
+	inputsArray = inputs.get_array();
+	BOOST_CHECK_EQUAL(inputsArray.size(), 1);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "start").get_int(), 200);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "end").get_int(), 399);
+	balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 200);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "memo").get_str(), "memo");
+
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddressrangesc + " true"));
+	inputs = find_value(r.get_obj(), "inputs");
+	BOOST_CHECK(inputs.isArray());
+	inputsArray = inputs.get_array();
+	BOOST_CHECK_EQUAL(inputsArray.size(), 1);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "start").get_int(), 400);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "end").get_int(), 599);
+	balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 200);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "memo").get_str(), "memo");
+
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddressrangesd + " true"));
+	inputs = find_value(r.get_obj(), "inputs");
+	BOOST_CHECK(inputs.isArray());
+	inputsArray = inputs.get_array();
+	BOOST_CHECK_EQUAL(inputsArray.size(), 1);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "start").get_int(), 600);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "end").get_int(), 799);
+	balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 200);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "memo").get_str(), "memo");
+
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddressrangese + " true"));
+	inputs = find_value(r.get_obj(), "inputs");
+	BOOST_CHECK(inputs.isArray());
+	inputsArray = inputs.get_array();
+	BOOST_CHECK_EQUAL(inputsArray.size(), 1);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "start").get_int(), 800);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "end").get_int(), 999);
+	balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 200);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "memo").get_str(), "memo");
+
+
+	AssetUpdate("node1", guid, "ASSET", "1000");
+	// check balance is added to end
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid + " true"));
+	balance = find_value(r.get_obj(), "balance");
+	UniValue totalsupply = find_value(r.get_obj(), "total_supply");
+	UniValue maxsupply = find_value(r.get_obj(), "max_supply");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, true), 1000);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8, true), 2000);
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8, true), 1000000);
+	inputs = find_value(r.get_obj(), "inputs");
+	BOOST_CHECK(inputs.isArray());
+	inputsArray = inputs.get_array();
+	BOOST_CHECK_EQUAL(inputsArray.size(), 1);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "start").get_int(), 1000);
+	BOOST_CHECK_EQUAL(find_value(inputsArray[0].get_obj(), "end").get_int(), 1999);
+
+}
 BOOST_AUTO_TEST_CASE(generate_assettransfer)
 {
 	printf("Running generate_assettransfer...\n");
@@ -1176,6 +1687,33 @@ BOOST_AUTO_TEST_CASE(generate_assettransfer)
 	// retransfer asset
 	AssetTransfer("node2", "node3", guid1, "jagasset3");
 }
+BOOST_AUTO_TEST_CASE(generate_assettransfer_address)
+{
+	printf("Running generate_assettransfer_address...\n");
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
+	string newaddres1 = GetNewFundedAddress("node1");
+	string newaddres2 = GetNewFundedAddress("node1");
+	string newaddres3 = GetNewFundedAddress("node1");
+
+	string guid1 = AssetNew("node1", "dow", newaddres1, "pubdata");
+	string guid2 = AssetNew("node1", "cat", newaddres1, "pubdata");
+	AssetUpdate("node1", guid1, "pub3");
+	UniValue r;
+	AssetTransfer("node1", "node2", guid1, newaddres2);
+	AssetTransfer("node1", "node3", guid2, newaddres3);
+
+	// xfer an asset that isn't yours
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assettransfer " + guid1 + " " + newaddres2 + " ''"));
+	UniValue arr = r.get_array();
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
+	BOOST_CHECK(!find_value(r.get_obj(), "complete").get_bool());
+	// update xferred asset
+	AssetUpdate("node2", guid1, "public");
+
+	// retransfer asset
+	AssetTransfer("node2", "node3", guid1, newaddres3);
+}
 BOOST_AUTO_TEST_CASE(generate_assetpruning)
 {
 	// asset's should not expire or be pruned
@@ -1188,6 +1726,49 @@ BOOST_AUTO_TEST_CASE(generate_assetpruning)
 	string guid = AssetNew("node1", "bcf", "jagprunealias1", "pubdata");
 	// we can find it as normal first
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasinfo jagprunealias1"));
+	// make sure our offer alias doesn't expire
+	AssetUpdate("node1", guid);
+	GenerateBlocks(5, "node1");
+	ExpireAlias("jagprunealias1");
+	StartNode("node2");
+	GenerateBlocks(5, "node2");
+
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasinfo jagprunealias1"));
+
+	// shouldn't be pruned
+	BOOST_CHECK_NO_THROW(CallRPC("node2", "assetinfo " + guid + " false"));
+
+	// stop node3
+	StopNode("node3");
+
+	AliasNew("node1", "jagprunealias1", "changeddata1");
+	AssetUpdate("node1", guid);
+
+	// stop and start node1
+	StopNode("node1");
+	StartNode("node1");
+	GenerateBlocks(5, "node1");
+
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "assetinfo " + guid + " false"));
+
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasinfo jagprunealias1"));
+
+	// try to create asset with same name
+	AssetNew("node1", "bcf", "jagprunealias1", "pubdata");
+	StartNode("node3");
+}
+BOOST_AUTO_TEST_CASE(generate_assetpruning_address)
+{
+	// asset's should not expire or be pruned
+	UniValue r;
+	// makes sure services expire in 100 blocks instead of 1 year of blocks for testing purposes
+	printf("Running generate_assetpruning_address...\n");
+	AliasNew("node1", "jagprunealias1", "changeddata1");
+	string newaddres = GetNewFundedAddress("node1");
+	// stop node2 create a service,  mine some blocks to expire the service, when we restart the node the service data won't be synced with node2
+	StopNode("node2");
+	string guid = AssetNew("node1", "bcf", newaddress, "pubdata");
+	
 	// make sure our offer alias doesn't expire
 	AssetUpdate("node1", guid);
 	GenerateBlocks(5, "node1");
