@@ -119,6 +119,27 @@ At this stage one should expect comments and review from other contributors. You
 can add more commits to your pull request by committing them locally and pushing
 to your fork until you have satisfied all feedback.
 
+
+Scripted Diffs
+--------------
+
+For mechanical, search-and-replace changes, make a "scripted diff". Scripted diffs embed a shell script in the commit message, which exactly reproduces the changes contained in the commit. For search-and-replace operations across many files, the script is a more-compact representation of the changes. This is easier to audit for correctness than examining all the changes.
+
+To create a scripted diff, prefix your commit title with the text `scripted-diff: `. In the commit message body, start the script section with the line `-BEGIN VERIFY SCRIPT-` and close the script section with the line `-END VERIFY SCRIPT-`.
+
+Use `git grep --files-with-matches $QUERY` to restrict your scripted changes to files in version control.
+
+Example:
+
+    scripted-diff: Replace OLD with NEW
+
+    -BEGIN VERIFY SCRIPT-
+    git grep --files-with-matches OLD src/*.cpp | xargs sed --in-place --regexp-extended 's/OLD/NEW/g'
+    -END VERIFY SCRIPT-
+
+NOTE: the version of `sed` pre-installed on macOS does not cleanly support in-place editing. Install `GNU sed` for that.
+
+
 Squashing Commits
 ---------------------------
 If your pull request is accepted for merging, you may be asked by a maintainer
