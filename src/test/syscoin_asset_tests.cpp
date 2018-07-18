@@ -768,7 +768,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_average_balance_address)
 	string newaddress = GetNewFundedAddress("node1");
 	string newaddress1 = GetNewFundedAddress("node1");
 	// setup asset with 5% interest hourly (unit test mode calculates interest hourly not annually)
-	string guid = AssetNew("node1", "token", newaddress  "data", "8", "false", "10000", "-1", "0.05");
+	string guid = AssetNew("node1", "token", newaddress , "data", "8", "false", "10000", "-1", "0.05");
 	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"" + newaddress1 + "\\\",\\\"amount\\\":1000}]\"", "memoassetinterest");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress1 + " false"));
 	UniValue balance = find_value(r.get_obj(), "balance");
