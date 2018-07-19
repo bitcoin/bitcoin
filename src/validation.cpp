@@ -2705,6 +2705,12 @@ bool CChainState::ActivateBestChain(CValidationState &state, const CChainParams&
         {
             LOCK(cs_main);
             CBlockIndex* starting_tip = chainActive.Tip();
+
+            if (nStopAtHeight && starting_tip && starting_tip->nHeight >= nStopAtHeight && ShutdownRequested()) {
+                // ignore future blocks when nStopAtHeight has been reached
+                break;
+            }
+
             bool blocks_connected = false;
             do {
                 // We absolutely may not unlock cs_main until we've made forward progress
@@ -2754,7 +2760,10 @@ bool CChainState::ActivateBestChain(CValidationState &state, const CChainParams&
         }
         // When we reach this point, we switched to a new tip (stored in pindexNewTip).
 
-        if (nStopAtHeight && pindexNewTip && pindexNewTip->nHeight >= nStopAtHeight) StartShutdown();
+        if (nStopAtHeight && pindexNewTip && pindexNewTip->nHeight >= nStopAtHeight) {
+            LogPrintf("-stopatheight target (%d) reached, shutting down\n", nStopAtHeight);
+            StartShutdown();
+        }
 
         // We check shutdown only after giving ActivateBestChainStep a chance to run once so that we
         // never shutdown before connecting the genesis block during LoadChainTip(). Previously this
