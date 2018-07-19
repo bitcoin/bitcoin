@@ -764,7 +764,7 @@ const fs::path &GetBlocksDir(bool fNetSpecific)
     return path;
 }
 
-const fs::path &GetDataDir(bool fNetSpecific)
+const fs::path &GetDataDir(bool fNetSpecific, bool fCreateDataDir)
 {
 
     LOCK(csPathCached);
@@ -788,6 +788,9 @@ const fs::path &GetDataDir(bool fNetSpecific)
     if (fNetSpecific)
         path /= BaseParams().DataDir();
 
+    if (!fCreateDataDir)
+        return path;
+
     if (fs::create_directories(path)) {
         // This is the first run, create wallets subdirectory too
         fs::create_directories(path / "wallets");
@@ -806,9 +809,9 @@ void ClearDatadirCache()
     g_blocks_path_cache_net_specific = fs::path();
 }
 
-fs::path GetConfigFile(const std::string& confPath)
+fs::path GetConfigFile(const std::string& confPath, bool fCreateDataDir)
 {
-    return AbsPathForConfigVal(fs::path(confPath), false);
+    return AbsPathForConfigVal(fs::path(confPath), false, fCreateDataDir);
 }
 
 bool ArgsManager::ReadConfigStream(std::istream& stream, std::string& error, bool ignore_invalid_keys)
@@ -846,7 +849,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
     }
 
     const std::string confPath = GetArg("-conf", BITCOIN_CONF_FILENAME);
-    fs::ifstream stream(GetConfigFile(confPath));
+    fs::ifstream stream(GetConfigFile(confPath, false));
 
     // ok to not have a config file
     if (stream.good()) {
@@ -874,7 +877,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
             }
 
             for (const std::string& to_include : includeconf) {
-                fs::ifstream include_config(GetConfigFile(to_include));
+                fs::ifstream include_config(GetConfigFile(to_include, false));
                 if (include_config.good()) {
                     if (!ReadConfigStream(include_config, error, ignore_invalid_keys)) {
                         return false;
@@ -1188,9 +1191,9 @@ int64_t GetStartupTime()
     return nStartupTime;
 }
 
-fs::path AbsPathForConfigVal(const fs::path& path, bool net_specific)
+fs::path AbsPathForConfigVal(const fs::path& path, bool net_specific, bool fCreateDataDir)
 {
-    return fs::absolute(path, GetDataDir(net_specific));
+    return fs::absolute(path, GetDataDir(net_specific, fCreateDataDir));
 }
 
 int ScheduleBatchPriority(void)

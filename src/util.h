@@ -87,9 +87,9 @@ void ReleaseDirectoryLocks();
 bool TryCreateDirectories(const fs::path& p);
 fs::path GetDefaultDataDir();
 const fs::path &GetBlocksDir(bool fNetSpecific = true);
-const fs::path &GetDataDir(bool fNetSpecific = true);
+const fs::path &GetDataDir(bool fNetSpecific = true, bool fCreateDataDir = true);
 void ClearDatadirCache();
-fs::path GetConfigFile(const std::string& confPath);
+fs::path GetConfigFile(const std::string& confPath, bool fCreateDataDir = true);
 #ifndef WIN32
 fs::path GetPidFile();
 void CreatePidFile(const fs::path &path, pid_t pid);
@@ -107,7 +107,7 @@ void runCommand(const std::string& strCommand);
  * @param net_specific Forwarded to GetDataDir().
  * @return The normalized path.
  */
-fs::path AbsPathForConfigVal(const fs::path& path, bool net_specific = true);
+fs::path AbsPathForConfigVal(const fs::path& path, bool net_specific = true, bool fCreateDatadir = true);
 
 inline bool IsSwitchChar(char c)
 {
