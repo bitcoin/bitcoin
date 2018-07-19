@@ -66,8 +66,38 @@ struct CoinEligibilityFilter
     CoinEligibilityFilter(int conf_mine, int conf_theirs, uint64_t max_ancestors, uint64_t max_descendants) : conf_mine(conf_mine), conf_theirs(conf_theirs), max_ancestors(max_ancestors), max_descendants(max_descendants) {}
 };
 
+struct OutputGroup
+{
+    std::vector<CInputCoin> m_outputs;
+    bool m_from_me{true};
+    CAmount m_value{0};
+    int m_depth{999};
+    size_t m_ancestors{0};
+    size_t m_descendants{0};
+    CAmount effective_value{0};
+    CAmount fee{0};
+    CAmount long_term_fee{0};
+
+    OutputGroup() {}
+    OutputGroup(std::vector<CInputCoin>&& outputs, bool from_me, CAmount value, int depth, size_t ancestors, size_t descendants)
+    : m_outputs(std::move(outputs))
+    , m_from_me(from_me)
+    , m_value(value)
+    , m_depth(depth)
+    , m_ancestors(ancestors)
+    , m_descendants(descendants)
+    {}
+    OutputGroup(const CInputCoin& output, int depth, bool from_me, size_t ancestors, size_t descendants) : OutputGroup() {
+        Insert(output, depth, from_me, ancestors, descendants);
+    }
+    void Insert(const CInputCoin& output, int depth, bool from_me, size_t ancestors, size_t descendants);
+    std::vector<CInputCoin>::iterator Discard(const CInputCoin& output);
+    bool EligibleForSpending(const CoinEligibilityFilter& eligibility_filter) const;
+};
+
 bool SelectCoinsBnB(std::vector<CInputCoin>& utxo_pool, const CAmount& target_value, const CAmount& cost_of_change, std::set<CInputCoin>& out_set, CAmount& value_ret, CAmount not_input_fees);
 
 // Original coin selection algorithm as a fallback
 bool KnapsackSolver(const CAmount& nTargetValue, std::vector<CInputCoin>& vCoins, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet);
+
 #endif // BITCOIN_WALLET_COINSELECTION_H
