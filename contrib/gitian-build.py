@@ -11,7 +11,14 @@ def setup():
     if args.kvm:
         programs += ['python-vm-builder', 'qemu-kvm', 'qemu-utils']
     elif args.docker:
-        programs += ['docker.io']
+        dockers = ['docker.io', 'docker-ce']
+        for i in dockers:
+            return_code = subprocess.call(['sudo', 'apt-get', 'install', '-qq', i])
+            if return_code == 0:
+                break
+        if return_code != 0:
+            print('Cannot find any way to install docker', file=sys.stderr)
+            exit(1)
     else:
         programs += ['lxc', 'debootstrap']
     subprocess.check_call(['sudo', 'apt-get', 'install', '-qq'] + programs)
@@ -31,6 +38,10 @@ def setup():
         make_image_prog += ['--lxc']
     subprocess.check_call(make_image_prog)
     os.chdir(workdir)
+    if args.is_bionic and not args.kvm and not args.docker:
+        subprocess.check_call(['sudo', 'sed', '-i', 's/lxcbr0/br0/', '/etc/default/lxc-net'])
+        print('Reboot is required')
+        exit(0)
 
 def build():
     global args, workdir
@@ -147,6 +158,8 @@ def main():
     args.windows = 'w' in args.os
     args.macos = 'm' in args.os
 
+    args.is_bionic = b'bionic' in subprocess.check_output(['lsb_release', '-cs'])
+
     if args.buildsign:
         args.build=True
         args.sign=True
@@ -161,6 +174,10 @@ def main():
         os.environ['USE_DOCKER'] = '1'
     elif not args.kvm:
         os.environ['USE_LXC'] = '1'
+        if not 'GITIAN_HOST_IP' in os.environ.keys():
+            os.environ['GITIAN_HOST_IP'] = '10.0.3.1'
+        if not 'LXC_GUEST_IP' in os.environ.keys():
+            os.environ['LXC_GUEST_IP'] = '10.0.3.5'
 
     # Disable for MacOS if no SDK found
     if args.macos and not os.path.isfile('gitian-builder/inputs/MacOSX10.11.sdk.tar.gz'):
