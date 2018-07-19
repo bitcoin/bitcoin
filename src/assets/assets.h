@@ -331,6 +331,7 @@ bool IsNewOwnerTxValid(const CTransaction& tx, const std::string& assetName, con
 
 bool CheckAssetOwner(const std::string& assetName);
 void GetAllOwnedAssets(std::vector<std::string>& names);
+void GetAllMyAssets(std::vector<std::string>& names);
 
 void UpdatePossibleAssets();
 

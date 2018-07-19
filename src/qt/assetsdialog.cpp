@@ -14,7 +14,7 @@
 #include "guiutil.h"
 #include "optionsmodel.h"
 #include "platformstyle.h"
-#include "sendcoinsentry.h"
+#include "sendassetsentry.h"
 #include "walletmodel.h"
 
 #include "base58.h"
@@ -154,7 +154,7 @@ void AssetsDialog::setModel(WalletModel *_model)
     {
         for(int i = 0; i < ui->entries->count(); ++i)
         {
-            SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
+            SendAssetsEntry *entry = qobject_cast<SendAssetsEntry*>(ui->entries->itemAt(i)->widget());
             if(entry)
             {
                 entry->setModel(_model);
@@ -170,7 +170,11 @@ void AssetsDialog::setModel(WalletModel *_model)
         // Coin Control
         connect(_model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(coinControlUpdateLabels()));
         connect(_model->getOptionsModel(), SIGNAL(coinControlFeaturesChanged(bool)), this, SLOT(coinControlFeatureChanged(bool)));
-        ui->frameCoinControl->setVisible(_model->getOptionsModel()->getCoinControlFeatures());
+
+
+        ui->frameCoinControl->setVisible(false);
+        //TODO Turn on the coin control features for assets
+//        ui->frameCoinControl->setVisible(_model->getOptionsModel()->getCoinControlFeatures());
         coinControlUpdateLabels();
 
         // fee section
@@ -233,7 +237,7 @@ void AssetsDialog::on_sendButton_clicked()
 
     for(int i = 0; i < ui->entries->count(); ++i)
     {
-        SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
+        SendAssetsEntry *entry = qobject_cast<SendAssetsEntry*>(ui->entries->itemAt(i)->widget());
         if(entry)
         {
             if(entry->validate())
@@ -405,12 +409,22 @@ void AssetsDialog::accept()
     clear();
 }
 
-SendCoinsEntry *AssetsDialog::addEntry()
+SendAssetsEntry *AssetsDialog::addEntry()
 {
-    SendCoinsEntry *entry = new SendCoinsEntry(platformStyle, this);
+    LOCK(cs_main);
+    std::vector<std::string> assets;
+    GetAllMyAssets(assets);
+
+    QStringList list;
+    for (auto name : assets) {
+        if (!IsAssetNameAnOwner(name))
+            list << QString::fromStdString(name);
+    }
+
+    SendAssetsEntry *entry = new SendAssetsEntry(platformStyle, list, this);
     entry->setModel(model);
     ui->entries->addWidget(entry);
-    connect(entry, SIGNAL(removeEntry(SendCoinsEntry*)), this, SLOT(removeEntry(SendCoinsEntry*)));
+    connect(entry, SIGNAL(removeEntry(SendAssetsEntry*)), this, SLOT(removeEntry(SendAssetsEntry*)));
     connect(entry, SIGNAL(payAmountChanged()), this, SLOT(coinControlUpdateLabels()));
     connect(entry, SIGNAL(subtractFeeFromAmountChanged()), this, SLOT(coinControlUpdateLabels()));
 
@@ -433,7 +447,7 @@ void AssetsDialog::updateTabsAndLabels()
     coinControlUpdateLabels();
 }
 
-void AssetsDialog::removeEntry(SendCoinsEntry* entry)
+void AssetsDialog::removeEntry(SendAssetsEntry* entry)
 {
     entry->hide();
 
@@ -450,7 +464,7 @@ QWidget *AssetsDialog::setupTabChain(QWidget *prev)
 {
     for(int i = 0; i < ui->entries->count(); ++i)
     {
-        SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
+        SendAssetsEntry *entry = qobject_cast<SendAssetsEntry*>(ui->entries->itemAt(i)->widget());
         if(entry)
         {
             prev = entry->setupTabChain(prev);
@@ -464,11 +478,11 @@ QWidget *AssetsDialog::setupTabChain(QWidget *prev)
 
 void AssetsDialog::setAddress(const QString &address)
 {
-    SendCoinsEntry *entry = 0;
+    SendAssetsEntry *entry = 0;
     // Replace the first entry if it is still unused
     if(ui->entries->count() == 1)
     {
-        SendCoinsEntry *first = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(0)->widget());
+        SendAssetsEntry *first = qobject_cast<SendAssetsEntry*>(ui->entries->itemAt(0)->widget());
         if(first->isClear())
         {
             entry = first;
@@ -487,11 +501,11 @@ void AssetsDialog::pasteEntry(const SendCoinsRecipient &rv)
     if(!fNewRecipientAllowed)
         return;
 
-    SendCoinsEntry *entry = 0;
+    SendAssetsEntry *entry = 0;
     // Replace the first entry if it is still unused
     if(ui->entries->count() == 1)
     {
-        SendCoinsEntry *first = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(0)->widget());
+        SendAssetsEntry *first = qobject_cast<SendAssetsEntry*>(ui->entries->itemAt(0)->widget());
         if(first->isClear())
         {
             entry = first;
@@ -835,7 +849,7 @@ void AssetsDialog::coinControlUpdateLabels()
 
     for(int i = 0; i < ui->entries->count(); ++i)
     {
-        SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
+        SendAssetsEntry *entry = qobject_cast<SendAssetsEntry*>(ui->entries->itemAt(i)->widget());
         if(entry && !entry->isHidden())
         {
             SendCoinsRecipient rcp = entry->getValue();

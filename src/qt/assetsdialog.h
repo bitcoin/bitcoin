@@ -15,7 +15,7 @@
 
 class ClientModel;
 class PlatformStyle;
-class SendCoinsEntry;
+class SendAssetsEntry;
 class SendCoinsRecipient;
 
 namespace Ui {
@@ -50,7 +50,7 @@ public Q_SLOTS:
     void clear();
     void reject();
     void accept();
-    SendCoinsEntry *addEntry();
+    SendAssetsEntry *addEntry();
     void updateTabsAndLabels();
     void setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
                     const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
@@ -76,7 +76,7 @@ private Q_SLOTS:
     void on_sendButton_clicked();
     void on_buttonChooseFee_clicked();
     void on_buttonMinimizeFee_clicked();
-    void removeEntry(SendCoinsEntry* entry);
+    void removeEntry(SendAssetsEntry* entry);
     void updateDisplayUnit();
     void coinControlFeatureChanged(bool);
     void coinControlButtonClicked();

@@ -1709,6 +1709,13 @@ void GetAllOwnedAssets(std::vector<std::string>& names)
     }
 }
 
+void GetAllMyAssets(std::vector<std::string>& names)
+{
+    for (auto owned : passets->mapMyUnspentAssets) {
+        names.emplace_back(owned.first);
+    }
+}
+
 CAmount GetIssueAssetBurnAmount()
 {
     return Params().IssueAssetBurnAmount();
