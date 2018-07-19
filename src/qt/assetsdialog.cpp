@@ -36,7 +36,7 @@
 #include <QTimer>
 
 static const std::array<int, 9> confTargets = { {2, 4, 6, 12, 24, 48, 144, 504, 1008} };
-int getConfTargetForIndex(int index) {
+int getConfTargetForIndexAssets(int index) {
     if (index+1 > static_cast<int>(confTargets.size())) {
         return confTargets.back();
     }
@@ -45,7 +45,7 @@ int getConfTargetForIndex(int index) {
     }
     return confTargets[index];
 }
-int getIndexForConfTarget(int target) {
+int getIndexForConfTargetAssets(int target) {
     for (unsigned int i = 0; i < confTargets.size(); i++) {
         if (confTargets[i] >= target) {
             return i;
@@ -205,9 +205,9 @@ void AssetsDialog::setModel(WalletModel *_model)
             settings.remove("nSmartFeeSliderPosition");
         }
         if (settings.value("nConfTarget").toInt() == 0)
-            ui->confTargetSelector->setCurrentIndex(getIndexForConfTarget(model->getDefaultConfirmTarget()));
+            ui->confTargetSelector->setCurrentIndex(getIndexForConfTargetAssets(model->getDefaultConfirmTarget()));
         else
-            ui->confTargetSelector->setCurrentIndex(getIndexForConfTarget(settings.value("nConfTarget").toInt()));
+            ui->confTargetSelector->setCurrentIndex(getIndexForConfTargetAssets(settings.value("nConfTarget").toInt()));
     }
 }
 
@@ -216,7 +216,7 @@ AssetsDialog::~AssetsDialog()
     QSettings settings;
     settings.setValue("fFeeSectionMinimized", fFeeMinimized);
     settings.setValue("nFeeRadio", ui->groupFee->checkedId());
-    settings.setValue("nConfTarget", getConfTargetForIndex(ui->confTargetSelector->currentIndex()));
+    settings.setValue("nConfTarget", getConfTargetForIndexAssets(ui->confTargetSelector->currentIndex()));
     settings.setValue("nTransactionFee", (qint64)ui->customFee->value());
     settings.setValue("fPayOnlyMinFee", ui->checkBoxMinimumFee->isChecked());
 
@@ -655,7 +655,7 @@ void AssetsDialog::updateCoinControlState(CCoinControl& ctrl)
     }
     // Avoid using global defaults when sending money from the GUI
     // Either custom fee will be used or if not selected, the confirmation target from dropdown box
-    ctrl.m_confirm_target = getConfTargetForIndex(ui->confTargetSelector->currentIndex());
+    ctrl.m_confirm_target = getConfTargetForIndexAssets(ui->confTargetSelector->currentIndex());
     ctrl.signalRbf = ui->optInRBF->isChecked();
 }
 
@@ -860,48 +860,6 @@ void AssetsDialog::coinControlUpdateLabels()
         ui->labelCoinControlAutomaticallySelected->show();
         ui->widgetCoinControl->hide();
         ui->labelCoinControlInsuffFunds->hide();
-    }
-}
-
-SendConfirmationDialog::SendConfirmationDialog(const QString &title, const QString &text, int _secDelay,
-                                               QWidget *parent) :
-        QMessageBox(QMessageBox::Question, title, text, QMessageBox::Yes | QMessageBox::Cancel, parent), secDelay(_secDelay)
-{
-    setDefaultButton(QMessageBox::Cancel);
-    yesButton = button(QMessageBox::Yes);
-    updateYesButton();
-    connect(&countDownTimer, SIGNAL(timeout()), this, SLOT(countDown()));
-}
-
-int SendConfirmationDialog::exec()
-{
-    updateYesButton();
-    countDownTimer.start(1000);
-    return QMessageBox::exec();
-}
-
-void SendConfirmationDialog::countDown()
-{
-    secDelay--;
-    updateYesButton();
-
-    if(secDelay <= 0)
-    {
-        countDownTimer.stop();
-    }
-}
-
-void SendConfirmationDialog::updateYesButton()
-{
-    if(secDelay > 0)
-    {
-        yesButton->setEnabled(false);
-        yesButton->setText(tr("Yes") + " (" + QString::number(secDelay) + ")");
-    }
-    else
-    {
-        yesButton->setEnabled(true);
-        yesButton->setText(tr("Yes"));
     }
 }
 

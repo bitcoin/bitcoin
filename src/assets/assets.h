@@ -349,6 +349,6 @@ bool GetMyAssetBalances(CAssetsCache& cache, std::map<std::string, CAmount>& bal
 std::string DecodeIPFS(std::string encoded);
 std::string EncodeIPFS(std::string decoded);
 
-bool CreateAssetTransaction(CWallet* pwallet, const CNewAsset& asset, const std::string& address, std::pair<int, std::string>& error, std::string& txid);
+bool CreateAssetTransaction(CWallet* pwallet, const CNewAsset& asset, const std::string& address, std::pair<int, std::string>& error, std::string& txid, std::string& rvnChangeAddress);
 bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& asset, const std::string& address, std::pair<int, std::string>& error, std::string& txid);
 #endif //RAVENCOIN_ASSET_PROTOCOL_H

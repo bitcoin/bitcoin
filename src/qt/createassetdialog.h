@@ -33,6 +33,8 @@ private:
     WalletModel *model;
     const PlatformStyle *platformStyle;
 
+    bool checkedAvailablity = false;
+
 
     void toggleIPFSText();
     void setUpValues();
@@ -52,6 +54,8 @@ private Q_SLOTS:
     void onCloseClicked();
     void onCreateAssetClicked();
     void onUnitChanged(int value);
+    void onCustomAddressClicked();
+    void onChangeAddressChanged(QString changeAddress);
 };
 
 #endif // RAVEN_QT_CREATEASSETDIALOG_H

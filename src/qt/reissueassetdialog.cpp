@@ -36,6 +36,9 @@ ReissueAssetDialog::ReissueAssetDialog(const PlatformStyle *_platformStyle, QWid
     connect(ui->ipfsText, SIGNAL(textChanged(QString)), this, SLOT(onIPFSHashChanged(QString)));
     connect(ui->addressText, SIGNAL(textChanged(QString)), this, SLOT(onAddressNameChanged(QString)));
     connect(ui->reissueAssetButton, SIGNAL(clicked()), this, SLOT(onReissueAssetClicked()));
+    connect(ui->changeAddressBox, SIGNAL(clicked()), this, SLOT(onChangeAddressChanged()));
+    connect(ui->changeAddressText, SIGNAL(textChanged(QString)), this, SLOT(onChangeAddressTextChanged(QString)));
+    connect(ui->reissuableBox, SIGNAL(clicked()), this, SLOT(onReissueBoxChanged()));
     this->asset = new CNewAsset();
     asset->SetNull();
     // Setup the default values
@@ -56,6 +59,8 @@ void ReissueAssetDialog::setUpValues()
     ui->ipfsHashLabel->hide();
     hideMessage();
 
+    ui->changeAddressText->hide();
+
     ui->currentDataLabel->setText("<h3><b><u>Current Asset Data</u></b></h3>");
     ui->reissueAssetDataLabel->setText("<h3><b><u>New Updated Changes</u></b></h3>");
 
@@ -65,16 +70,28 @@ void ReissueAssetDialog::setUpValues()
 
     ui->comboBox->addItem("Select an asset");
 
-    for (auto item : assets)
-        ui->comboBox->addItem(QString::fromStdString(item).split("!").first());
+    // Load the assets that are reissuable
+    for (auto item : assets) {
+        std::string name = QString::fromStdString(item).split("!").first().toStdString();
+        CNewAsset asset;
+        if (passets->GetAssetIfExists(name, asset)) {
+            if (asset.nReissuable)
+                ui->comboBox->addItem(QString::fromStdString(asset.strName));
+        }
+    }
 
+    // Hide the current asset data
     ui->currentAssetData->viewport()->setAutoFillBackground(false);
     ui->currentAssetData->setFrameStyle(QFrame::NoFrame);
     ui->currentAssetData->hide();
 
+    // Hide the updated asset data
     ui->updatedAssetData->viewport()->setAutoFillBackground(false);
     ui->updatedAssetData->setFrameStyle(QFrame::NoFrame);
     ui->updatedAssetData->hide();
+
+    // Hide the reissue Warning Label
+    ui->reissueWarningLabel->hide();
 
     disableAll();
 }
@@ -139,11 +156,25 @@ void ReissueAssetDialog::CheckFormState()
         return;
     }
 
+    // Check the destination address
     const CTxDestination dest = DecodeDestination(ui->addressText->text().toStdString());
+    if (!ui->addressText->text().isEmpty()) {
+        if (!IsValidDestination(dest)) {
+            showMessage("Invalid Raven Destination Address");
+            return;
+        }
+    }
 
-    if (!(IsValidDestination(dest) || ui->addressText->text().isEmpty())) {
-        showMessage("Invalid Raven Address");
-        return;
+    // Check the change address
+    if (ui->changeAddressBox->isChecked())
+    {
+        if (!ui->changeAddressText->text().isEmpty()) {
+            const CTxDestination changeDest = DecodeDestination(ui->changeAddressText->text().toStdString());
+            if (!IsValidDestination(changeDest)) {
+                showMessage("Invalid Raven Change Address");
+                return;
+            }
+        }
     }
 
     if (ui->ipfsBox->isChecked() && ui->ipfsText->text().size() != 46) {
@@ -161,6 +192,7 @@ void ReissueAssetDialog::disableAll()
     ui->reissuableBox->setDisabled(true);
     ui->ipfsBox->setDisabled(true);
     ui->reissueAssetButton->setDisabled(true);
+    ui->changeAddressBox->setDisabled(true);
 
     asset->SetNull();
 }
@@ -171,6 +203,7 @@ void ReissueAssetDialog::enableDataEntry()
     ui->addressText->setDisabled(false);
     ui->reissuableBox->setDisabled(false);
     ui->ipfsBox->setDisabled(false);
+    ui->changeAddressBox->setDisabled(false);
 }
 
 void ReissueAssetDialog::buildUpdatedData()
@@ -289,17 +322,18 @@ void ReissueAssetDialog::onAddressNameChanged(QString address)
     if (address.isEmpty()) // Nothing entered
     {
         hideMessage();
+        ui->addressText->setStyleSheet("");
         CheckFormState();
     }
     else if (!IsValidDestination(dest)) // Invalid address
     {
         ui->addressText->setStyleSheet("border: 1px solid red");
-        showMessage("Warning: Invalid Raven address");
         CheckFormState();
     }
     else // Valid address
     {
         hideMessage();
+        ui->addressText->setStyleSheet("");
         CheckFormState();
     }
 }
@@ -351,4 +385,49 @@ void ReissueAssetDialog::onReissueAssetClicked()
             close();
         }
     }
+}
+
+void ReissueAssetDialog::onChangeAddressChanged()
+{
+    if (ui->changeAddressBox->isChecked()) {
+        ui->changeAddressText->show();
+    } else {
+        ui->changeAddressText->hide();
+    }
+}
+
+void ReissueAssetDialog::onChangeAddressTextChanged(QString address)
+{
+    const CTxDestination dest = DecodeDestination(address.toStdString());
+
+    if (address.isEmpty()) // Nothing entered
+    {
+        hideMessage();
+        ui->changeAddressText->setStyleSheet("");
+        CheckFormState();
+    }
+    else if (!IsValidDestination(dest)) // Invalid address
+    {
+        ui->changeAddressText->setStyleSheet("border: 1px solid red");
+        CheckFormState();
+    }
+    else // Valid address
+    {
+        hideMessage();
+        ui->changeAddressText->setStyleSheet("");
+        CheckFormState();
+    }
+}
+
+void ReissueAssetDialog::onReissueBoxChanged()
+{
+    if (!ui->reissuableBox->isChecked()) {
+        ui->reissueWarningLabel->setText("Warning: Once this asset is reissued with the reissuable flag set to false. It won't be able to be reissued in the future");
+        ui->reissueWarningLabel->setStyleSheet("color: red");
+        ui->reissueWarningLabel->show();
+    } else {
+        ui->reissueWarningLabel->hide();
+    }
+
+    buildUpdatedData();
 }

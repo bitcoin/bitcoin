@@ -56,6 +56,9 @@ private Q_SLOTS:
     void onIPFSHashChanged(QString hash);
     void onAddressNameChanged(QString address);
     void onReissueAssetClicked();
+    void onChangeAddressChanged();
+    void onChangeAddressTextChanged(QString address);
+    void onReissueBoxChanged();
 };
 
 #endif // RAVEN_QT_REISSUEASSETDIALOG_H

@@ -285,10 +285,6 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, CAssetsCa
 
                 if (!foundOwnerAsset)
                     return state.DoS(100, false, REJECT_INVALID, "bad-txns-reissue-asset-bad-owner-asset");
-
-                std::string strError = "";
-                if (!reissue.IsValid(strError, *assetCache))
-                    return state.DoS(100, false, REJECT_INVALID, "bad-txns-" + strError);
             }
         }
     }

@@ -131,6 +131,48 @@
     </widget>
    </item>
    <item>
+    <widget class="QCheckBox" name="rvnChangeBox">
+     <property name="toolTip">
+      <string>Add a custom change address from the rvn spent to create this asset</string>
+     </property>
+     <property name="text">
+      <string>Custom Change Address</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="Line" name="line_7">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_9">
+     <item>
+      <widget class="QLabel" name="changeAddressLabel">
+       <property name="text">
+        <string>Change Address:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="changeAddressText">
+       <property name="placeholderText">
+        <string>The RVN address where the RVN change from this transaction will be sent</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="Line" name="changeAddressLine">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout_4">
      <item>
       <widget class="QLabel" name="unitsLabel">
