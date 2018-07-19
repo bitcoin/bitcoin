@@ -8,6 +8,10 @@ define $(package)_set_vars
 $(package)_config_opts=--without-fop --without-xmlto --without-xsltproc --disable-specs
 endef
 
+define $(package)_preprocess_cmds
+  cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub .
+endef
+
 define $(package)_config_cmds
   $($(package)_autoconf)
 endef

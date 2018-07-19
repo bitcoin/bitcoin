@@ -10,6 +10,10 @@ $(package)_config_opts += --disable-gprof --disable-gcov --disable-mudflap
 $(package)_config_opts_linux=--with-pic
 endef
 
+define $(package)_preprocess_cmds
+  cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub use
+endef
+
 define $(package)_config_cmds
   $($(package)_autoconf)
 endef
