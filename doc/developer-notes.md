@@ -5,8 +5,10 @@ Developer Notes
 **Table of Contents**
 
 - [Developer Notes](#developer-notes)
-    - [Coding Style](#coding-style)
+    - [Coding Style (General)](#coding-style-general)
+    - [Coding Style (C++)](#coding-style-c)
     - [Doxygen comments](#doxygen-comments)
+    - [Coding Style (Python)](#coding-style-python)
     - [Development tips and tricks](#development-tips-and-tricks)
         - [Compiling for debugging](#compiling-for-debugging)
         - [Compiling for gprof profiling](#compiling-for-gprof-profiling)
@@ -35,8 +37,8 @@ Developer Notes
 
 <!-- markdown-toc end -->
 
-Coding Style
----------------
+Coding Style (General)
+----------------------
 
 Various coding styles have been used during the history of the codebase,
 and the result is not very consistent. However, we're now trying to converge to
@@ -45,6 +47,9 @@ style over attempting to mimic the surrounding style, except for move-only
 commits.
 
 Do not submit patches solely to modify the style of existing code.
+
+Coding Style (C++)
+------------------
 
 - **Indentation and whitespace rules** as specified in
 [src/.clang-format](/src/.clang-format). You can use the provided
@@ -173,6 +178,11 @@ A full list of comment syntaxes picked up by doxygen can be found at http://www.
 but if possible use one of the above styles.
 
 Documentation can be generated with `make docs` and cleaned up with `make clean-docs`.
+
+Coding Style (Python)
+---------------------
+
+Refer to [/test/functional/README.md#style-guidelines](/test/functional/README.md#style-guidelines).
 
 Development tips and tricks
 ---------------------------
