@@ -622,7 +622,7 @@ UniValue reissue(const JSONRPCRequest& request)
 
                 "\nExamples:\n"
                 + HelpExampleCli("reissue", "\"asset_name\" 20 \"address\"")
-                + HelpExampleCli("reissue", "\"asset_name\" 20 \"address\" \"change_address\" \"true\" \"JUSTGA63B1T1MNF54OX776PCK8TSXM1JLFDOQ9KF\"")
+                + HelpExampleCli("reissue", "\"asset_name\" 20 \"address\" \"change_address\" \"true\" \"Qmd286K6pohQcTKYqnS1YhWrCiS4gz7Xi34sdwMe9USZ7u\"")
         );
 
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
