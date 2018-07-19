@@ -778,10 +778,6 @@ const fs::path &GetDataDir(bool fNetSpecific, bool fCreateDataDir)
 
     if (gArgs.IsArgSet("-datadir")) {
         path = fs::system_complete(gArgs.GetArg("-datadir", ""));
-        if (!fs::is_directory(path)) {
-            path = "";
-            return path;
-        }
     } else {
         path = GetDefaultDataDir();
     }
