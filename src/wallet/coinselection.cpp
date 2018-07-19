@@ -298,3 +298,40 @@ bool KnapsackSolver(const CAmount& nTargetValue, std::vector<CInputCoin>& vCoins
 
     return true;
 }
+
+/******************************************************************************
+
+ OutputGroup
+
+ ******************************************************************************/
+
+void OutputGroup::Insert(const CInputCoin& output, int depth, bool from_me, size_t ancestors, size_t descendants) {
+    m_outputs.push_back(output);
+    m_from_me &= from_me;
+    m_value += output.effective_value;
+    m_depth = std::min(m_depth, depth);
+    // m_ancestors is currently the max ancestor count for all coins in the group; however, this is
+    // not ideal, as a wallet will consider e.g. thirty 2-ancestor coins as having two ancestors,
+    // when in reality it has 60 ancestors.
+    m_ancestors = std::max(m_ancestors, ancestors);
+    // m_descendants is the count as seen from the top ancestor, not the descendants as seen from the
+    // coin itself; thus, this value is accurate
+    m_descendants = std::max(m_descendants, descendants);
+    effective_value = m_value;
+}
+
+std::vector<CInputCoin>::iterator OutputGroup::Discard(const CInputCoin& output) {
+    auto it = m_outputs.begin();
+    while (it != m_outputs.end() && it->outpoint != output.outpoint) ++it;
+    if (it == m_outputs.end()) return it;
+    m_value -= output.effective_value;
+    effective_value -= output.effective_value;
+    return m_outputs.erase(it);
+}
+
+bool OutputGroup::EligibleForSpending(const CoinEligibilityFilter& eligibility_filter) const
+{
+    return m_depth >= (m_from_me ? eligibility_filter.conf_mine : eligibility_filter.conf_theirs)
+        && m_ancestors <= eligibility_filter.max_ancestors
+        && m_descendants <= eligibility_filter.max_descendants;
+}

@@ -4438,3 +4438,29 @@ void CWallet::LearnAllRelatedScripts(const CPubKey& key)
     LearnRelatedScripts(key, OutputType::P2SH_SEGWIT);
 }
 
+std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outputs, bool single_coin) const {
+    std::vector<OutputGroup> groups;
+    std::map<CTxDestination, OutputGroup> gmap;
+    CTxDestination dst;
+    for (const auto& output : outputs) {
+        if (output.fSpendable) {
+            CInputCoin input_coin = output.GetInputCoin();
+
+            size_t ancestors, descendants;
+            mempool.GetTransactionAncestry(output.tx->GetHash(), ancestors, descendants);
+            if (!single_coin && ExtractDestination(output.tx->tx->vout[output.i].scriptPubKey, dst)) {
+                if (gmap.count(dst) == 10) {
+                    groups.push_back(gmap[dst]);
+                    gmap.erase(dst);
+                }
+                gmap[dst].Insert(input_coin, output.nDepth, output.tx->IsFromMe(ISMINE_ALL), ancestors, descendants);
+            } else {
+                groups.emplace_back(input_coin, output.nDepth, output.tx->IsFromMe(ISMINE_ALL), ancestors, descendants);
+            }
+        }
+    }
+    if (!single_coin) {
+        for (const auto& it : gmap) groups.push_back(it.second);
+    }
+    return groups;
+}
