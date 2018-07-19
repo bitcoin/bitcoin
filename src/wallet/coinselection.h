@@ -47,6 +47,17 @@ public:
     }
 };
 
+struct CoinEligibilityFilter
+{
+    const int conf_mine;
+    const int conf_theirs;
+    const uint64_t max_ancestors;
+    const uint64_t max_descendants;
+
+    CoinEligibilityFilter(int conf_mine, int conf_theirs, uint64_t max_ancestors) : conf_mine(conf_mine), conf_theirs(conf_theirs), max_ancestors(max_ancestors), max_descendants(max_ancestors) {}
+    CoinEligibilityFilter(int conf_mine, int conf_theirs, uint64_t max_ancestors, uint64_t max_descendants) : conf_mine(conf_mine), conf_theirs(conf_theirs), max_ancestors(max_ancestors), max_descendants(max_descendants) {}
+};
+
 bool SelectCoinsBnB(std::vector<CInputCoin>& utxo_pool, const CAmount& target_value, const CAmount& cost_of_change, std::set<CInputCoin>& out_set, CAmount& value_ret, CAmount not_input_fees);
 
 // Original coin selection algorithm as a fallback
