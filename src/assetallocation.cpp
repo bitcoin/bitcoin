@@ -513,7 +513,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 			const CAmount &nBalanceAfterSend = dbAssetAllocation.nBalance - nTotal;
 			if (nBalanceAfterSend < 0) {
 				bBalanceOverrun = true;
-				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1021 - " + _("Sender balance is insufficient");
+				if(bSanityCheck)
+					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1021 - " + _("Sender balance is insufficient");
 				if (fJustCheck && !bSanityCheck) {
 					// add conflicting sender
 					assetAllocationConflicts.insert(assetAllocationTuple);
@@ -532,16 +533,14 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1022 - " + _("Cannot send an asset allocation to yourself");
 					return true;
 				}
-				const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, amountTuple.first);
-
-				if (fJustCheck) {
-					if (bAddAllReceiversToConflictList || bBalanceOverrun) {
-						assetAllocationConflicts.insert(receiverAllocationTuple);
-					}
-
-				}
-
 				if (!bSanityCheck) {
+					const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, amountTuple.first);
+					if (fJustCheck) {
+						if (bAddAllReceiversToConflictList || bBalanceOverrun) {
+							assetAllocationConflicts.insert(receiverAllocationTuple);
+						}
+
+					}
 					CAssetAllocation receiverAllocation;
 					if (!GetAssetAllocation(receiverAllocationTuple, receiverAllocation)) {
 						receiverAllocation.SetNull();
@@ -563,7 +562,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 						receiverAllocation.vchMemo = theAssetAllocation.vchMemo;
 						receiverAllocation.nBalance += amountTuple.second;
 						theAssetAllocation.nBalance -= amountTuple.second;
-                       
+
 					}
 					const string& receiverAddress = stringFromVch(receiverAllocation.vchAliasOrAddress);
 					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, nBalanceAfterSend, amountTuple.second, dbAsset, INT64_MAX, user1, receiverAddress, fJustCheck))
@@ -611,7 +610,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 			const CAmount &nBalanceAfterSend = dbAssetAllocation.nBalance - nTotal;
 			if (nBalanceAfterSend < 0) {
 				bBalanceOverrun = true;
-				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1027 - " + _("Sender balance is insufficient");
+				if(bSanityCheck)
+					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1027 - " + _("Sender balance is insufficient");
 				if (fJustCheck && !bSanityCheck) {
 					// add conflicting sender
 					assetAllocationConflicts.insert(assetAllocationTuple);
@@ -631,20 +631,21 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1028 - " + _("Cannot send an asset allocation to yourself");
 					return true;
 				}
-				const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, input.first);
-				if (fJustCheck) {
-					if (bAddAllReceiversToConflictList || bBalanceOverrun) {
-						assetAllocationConflicts.insert(receiverAllocationTuple);
+				if (!bSanityCheck) {
+					const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, input.first);
+					if (fJustCheck) {
+						if (bAddAllReceiversToConflictList || bBalanceOverrun) {
+							assetAllocationConflicts.insert(receiverAllocationTuple);
+						}
+
+					}
+					// ensure entire allocation range being subtracted exists on sender (full inclusion check)
+					if (!doesRangeContain(dbAssetAllocation.listAllocationInputs, input.second))
+					{
+						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1029 - " + _("Input not found");
+						return true;
 					}
 
-				}
-				// ensure entire allocation range being subtracted exists on sender (full inclusion check)
-				if (!doesRangeContain(dbAssetAllocation.listAllocationInputs, input.second))
-				{
-					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1029 - " + _("Input not found");
-					return true;
-				}
-				if (!bSanityCheck) {
 					if (!GetAssetAllocation(receiverAllocationTuple, receiverAllocation)) {
 						receiverAllocation.SetNull();
 						receiverAllocation.vchAliasOrAddress = receiverAllocationTuple.vchAliasOrAddress;
