@@ -388,8 +388,7 @@ class TestNodeCLI():
 
     def send_cli(self, command=None, *args, **kwargs):
         """Run dash-cli command. Deserializes returned string as python object."""
-
-        pos_args = [str(arg) for arg in args]
+        pos_args = [str(arg).lower() if type(arg) is bool else str(arg) for arg in args]
         named_args = [str(key) + "=" + str(value) for (key, value) in kwargs.items()]
         assert not (pos_args and named_args), "Cannot use positional arguments and named arguments in the same dash-cli call"
         p_args = [self.binary, "-datadir=" + self.datadir] + self.options

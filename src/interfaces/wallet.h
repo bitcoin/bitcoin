@@ -262,6 +262,9 @@ public:
     // Return whether HD enabled.
     virtual bool hdEnabled() = 0;
 
+    // check if a certain wallet flag is set.
+    virtual bool IsWalletFlagSet(uint64_t flag) = 0;
+
     virtual CoinJoin::Client& coinJoin() = 0;
 
     //! Register handler for unload message.

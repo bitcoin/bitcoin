@@ -506,6 +506,7 @@ public:
     }
     unsigned int getConfirmTarget() override { return m_wallet.m_confirm_target; }
     bool hdEnabled() override { return m_wallet.IsHDEnabled(); }
+    bool IsWalletFlagSet(uint64_t flag) override { return m_wallet.IsWalletFlagSet(flag); }
     CoinJoin::Client& coinJoin() override { return m_coinjoin; }
     std::unique_ptr<Handler> handleUnload(UnloadFn fn) override
     {

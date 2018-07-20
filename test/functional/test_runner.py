@@ -115,6 +115,8 @@ BASE_SCRIPTS = [
     'mempool_reorg.py',
     'mempool_persist.py',
     'wallet_multiwallet.py',
+    'wallet_disableprivatekeys.py',
+    'wallet_disableprivatekeys.py --usecli',
     'interface_http.py',
     'rpc_users.py',
     'feature_proxy.py',
