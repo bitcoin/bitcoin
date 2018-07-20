@@ -42,11 +42,23 @@ BOOST_FIXTURE_TEST_SUITE(asset_tests, BasicTestingSetup)
         BOOST_CHECK(!IsAssetNameValid("A._BC"));
         BOOST_CHECK(!IsAssetNameValid("AB_.C"));
 
+        //- Versions of RAVENCOIN NOT allowed
         BOOST_CHECK(!IsAssetNameValid("RVN"));
         BOOST_CHECK(!IsAssetNameValid("RAVEN"));
         BOOST_CHECK(!IsAssetNameValid("RAVENCOIN"));
-        BOOST_CHECK(!IsAssetNameValid("RAVEN.COIN"));
-        BOOST_CHECK(!IsAssetNameValid("RAVEN_COIN"));
+        BOOST_CHECK(!IsAssetNameValid("RAVENC0IN"));
+        BOOST_CHECK(!IsAssetNameValid("RAVENCO1N"));
+        BOOST_CHECK(!IsAssetNameValid("RAVENC01N"));
+
+        //- Versions of RAVENCOIN ALLOWED
+        BOOST_CHECK(IsAssetNameValid("RAVEN.COIN"));
+        BOOST_CHECK(IsAssetNameValid("RAVEN_COIN"));
+        BOOST_CHECK(IsAssetNameValid("RVNSPYDER"));
+        BOOST_CHECK(IsAssetNameValid("SPYDERRVN"));
+        BOOST_CHECK(IsAssetNameValid("RAVENSPYDER"));
+        BOOST_CHECK(IsAssetNameValid("SPYDERAVEN"));
+        BOOST_CHECK(IsAssetNameValid("BLACK_RAVENS"));
+        BOOST_CHECK(IsAssetNameValid("SERVNOT"));
 
         // subs
         BOOST_CHECK(IsAssetNameValid("ABC/A"));

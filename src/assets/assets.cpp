@@ -48,7 +48,7 @@ static const std::regex UNIQUE_INDICATOR("^[^#]+#[^#]+$");
 static const std::regex CHANNEL_INDICATOR("^[^~]+~[^~]+$");
 static const std::regex OWNER_INDICATOR("^[^!]+!$");
 
-static const std::regex RAVEN_NAMES("^RVN$|^RAVEN$|^RAVENCOIN$|^RAVEN.COIN$|^RAVEN_COIN$");
+static const std::regex RAVEN_NAMES("^RVN|^RAVEN|^RAVENCOIN|^RAVENC0IN|^RAVENCO1N|^RAVENC01N");
 
 bool IsRootNameValid(const std::string& name)
 {
