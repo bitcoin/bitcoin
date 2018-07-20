@@ -81,6 +81,7 @@ after_script:
 jobs:
   include:
     - stage: lint
+      env:
       sudo: false
       cache: false
       addons:
