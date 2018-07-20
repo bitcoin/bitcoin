@@ -534,68 +534,83 @@ UniValue transfer(const JSONRPCRequest& request)
 
     std::string address = request.params[2].get_str();
 
-    if (!IsValidDestinationString(address))
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raven address: ") + address);
+    std::pair<int, std::string> error;
+    std::vector< std::pair<CAssetTransfer, std::string> >vTransfers;
 
-    if (!passets)
-        throw JSONRPCError(RPC_DATABASE_ERROR, std::string("passets isn't initialized"));
-
-    std::set<COutPoint> myAssetOutPoints;
-    if (!passets->GetAssetsOutPoints(asset_name, myAssetOutPoints))
-        throw JSONRPCError(RPC_INVALID_PARAMS, std::string("This wallet doesn't own any assets with the name: ") + asset_name);
-
-    if (myAssetOutPoints.size() == 0)
-        throw JSONRPCError(RPC_INVALID_PARAMS, std::string("This wallet doesn't own any assets with the name: ") + asset_name);
-
-    // If it is an ownership transfer, make a quick check to make sure the amount is 1
-    if (IsAssetNameAnOwner(asset_name))
-        if (nAmount != COIN * 1)
-            throw JSONRPCError(RPC_INVALID_PARAMS, std::string("When transfer an 'Ownership Asset' the amount must always be 1. Please try again with the amount of 1"));
-
-    CAmount curBalance = pwallet->GetBalance();
-
-    if (curBalance == 0)
-        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, std::string("This wallet doesn't contain any RVN, transfering an asset requires a network fee"));
-
-    if (pwallet->GetBroadcastTransactions() && !g_connman) {
-        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
-    }
-
-    // Get the script for the burn address
-    CScript scriptPubKey = GetScriptForDestination(DecodeDestination(address));
-
-    // Update the scriptPubKey with the transfer asset information
-    CAssetTransfer assetTransfer(asset_name, nAmount);
-    assetTransfer.ConstructTransaction(scriptPubKey);
-
-    CMutableTransaction mutTx;
-
-    CWalletTx wtxNew;
-    CCoinControl coin_control;
-
-    // Create and send the transaction
+    vTransfers.emplace_back(std::make_pair(CAssetTransfer(asset_name, nAmount), address));
     CReserveKey reservekey(pwallet);
-    CAmount nFeeRequired;
-    std::string strTxError;
-    std::vector<CRecipient> vecSend;
-    int nChangePosRet = -1;
-    bool fSubtractFeeFromAmount = false;
-    CRecipient recipient = {scriptPubKey, 0, fSubtractFeeFromAmount};
-    vecSend.push_back(recipient);
-    if (!pwallet->CreateTransactionWithTransferAsset(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strTxError, coin_control, myAssetOutPoints)) {
-        if (!fSubtractFeeFromAmount && nFeeRequired > curBalance)
-            strTxError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
-        throw JSONRPCError(RPC_WALLET_ERROR, strTxError);
-    }
+    CWalletTx transaction;
+    CAmount nRequiredFee;
 
-    CValidationState state;
-    if (!pwallet->CommitTransaction(wtxNew, reservekey, g_connman.get(), state)) {
-        strTxError = strprintf("Error: The transaction was rejected! Reason given: %s", state.GetRejectReason());
-        throw JSONRPCError(RPC_WALLET_ERROR, strTxError);
-    }
+    if (!CreateTransferAssetTransaction(pwallet, vTransfers, "", error, transaction, reservekey, nRequiredFee))
+        throw JSONRPCError(error.first, error.second);
+
+    std::string txid;
+    if (!SendAssetTransferTransaction(pwallet, transaction, reservekey, error, txid))
+        throw JSONRPCError(error.first, error.second);
+
+//    if (!IsValidDestinationString(address))
+//        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raven address: ") + address);
+//
+//    if (!passets)
+//        throw JSONRPCError(RPC_DATABASE_ERROR, std::string("passets isn't initialized"));
+//
+//    std::set<COutPoint> myAssetOutPoints;
+//    if (!passets->GetAssetsOutPoints(asset_name, myAssetOutPoints))
+//        throw JSONRPCError(RPC_INVALID_PARAMS, std::string("This wallet doesn't own any assets with the name: ") + asset_name);
+//
+//    if (myAssetOutPoints.size() == 0)
+//        throw JSONRPCError(RPC_INVALID_PARAMS, std::string("This wallet doesn't own any assets with the name: ") + asset_name);
+//
+//    // If it is an ownership transfer, make a quick check to make sure the amount is 1
+//    if (IsAssetNameAnOwner(asset_name))
+//        if (nAmount != COIN * 1)
+//            throw JSONRPCError(RPC_INVALID_PARAMS, std::string("When transfer an 'Ownership Asset' the amount must always be 1. Please try again with the amount of 1"));
+//
+//    CAmount curBalance = pwallet->GetBalance();
+//
+//    if (curBalance == 0)
+//        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, std::string("This wallet doesn't contain any RVN, transfering an asset requires a network fee"));
+//
+//    if (pwallet->GetBroadcastTransactions() && !g_connman) {
+//        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+//    }
+//
+//    // Get the script for the burn address
+//    CScript scriptPubKey = GetScriptForDestination(DecodeDestination(address));
+//
+//    // Update the scriptPubKey with the transfer asset information
+//    CAssetTransfer assetTransfer(asset_name, nAmount);
+//    assetTransfer.ConstructTransaction(scriptPubKey);
+//
+//    CMutableTransaction mutTx;
+//
+//    CWalletTx wtxNew;
+//    CCoinControl coin_control;
+//
+//    // Create and send the transaction
+//    CReserveKey reservekey(pwallet);
+//    CAmount nFeeRequired;
+//    std::string strTxError;
+//    std::vector<CRecipient> vecSend;
+//    int nChangePosRet = -1;
+//    bool fSubtractFeeFromAmount = false;
+//    CRecipient recipient = {scriptPubKey, 0, fSubtractFeeFromAmount};
+//    vecSend.push_back(recipient);
+//    if (!pwallet->CreateTransactionWithTransferAsset(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strTxError, coin_control, myAssetOutPoints)) {
+//        if (!fSubtractFeeFromAmount && nFeeRequired > curBalance)
+//            strTxError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
+//        throw JSONRPCError(RPC_WALLET_ERROR, strTxError);
+//    }
+//
+//    CValidationState state;
+//    if (!pwallet->CommitTransaction(wtxNew, reservekey, g_connman.get(), state)) {
+//        strTxError = strprintf("Error: The transaction was rejected! Reason given: %s", state.GetRejectReason());
+//        throw JSONRPCError(RPC_WALLET_ERROR, strTxError);
+//    }
 
     UniValue result(UniValue::VARR);
-    result.push_back(wtxNew.GetHash().GetHex());
+    result.push_back(txid);
     return result;
 }
 

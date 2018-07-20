@@ -43,8 +43,8 @@ public:
     QWidget *setupTabChain(QWidget *prev);
 
     void setAddress(const QString &address);
-    void pasteEntry(const SendCoinsRecipient &rv);
-    bool handlePaymentRequest(const SendCoinsRecipient &recipient);
+    void pasteEntry(const SendAssetsRecipient &rv);
+    bool handlePaymentRequest(const SendAssetsRecipient &recipient);
 
 public Q_SLOTS:
     void clear();

@@ -34,6 +34,8 @@
 #include <QSettings>
 #include <QTextDocument>
 #include <QTimer>
+#include <policy/policy.h>
+#include <core_io.h>
 
 static const std::array<int, 9> confTargets = { {2, 4, 6, 12, 24, 48, 144, 504, 1008} };
 int getConfTargetForIndexAssets(int index) {
@@ -232,7 +234,7 @@ void AssetsDialog::on_sendButton_clicked()
     if(!model || !model->getOptionsModel())
         return;
 
-    QList<SendCoinsRecipient> recipients;
+    QList<SendAssetsRecipient> recipients;
     bool valid = true;
 
     for(int i = 0; i < ui->entries->count(); ++i)
@@ -265,36 +267,30 @@ void AssetsDialog::on_sendButton_clicked()
         return;
     }
 
-    // prepare transaction for getting txFee earlier
-    WalletModelTransaction currentTransaction(recipients);
-    WalletModel::SendCoinsReturn prepareStatus;
+    std::vector< std::pair<CAssetTransfer, std::string> >vTransfers;
 
-    // Always use a CCoinControl instance, use the CoinControlDialog instance if CoinControl has been enabled
-    CCoinControl ctrl;
-    if (model->getOptionsModel()->getCoinControlFeatures())
-        ctrl = *CoinControlDialog::coinControl;
+    for (auto recipient : recipients) {
+        vTransfers.emplace_back(std::make_pair(CAssetTransfer(recipient.assetName.toStdString(), recipient.amount), recipient.address.toStdString()));
+    }
 
-    updateCoinControlState(ctrl);
+    CWalletTx tx;
+    CReserveKey reservekey(model->getWallet());
+    std::pair<int, std::string> error;
+    CAmount nFeeRequired;
 
-    prepareStatus = model->prepareTransaction(currentTransaction, ctrl);
-
-    // process prepareStatus and on error generate message shown to user
-    processSendCoinsReturn(prepareStatus,
-                           RavenUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), currentTransaction.getTransactionFee()));
-
-    if(prepareStatus.status != WalletModel::OK) {
-        fNewRecipientAllowed = true;
+    if (!CreateTransferAssetTransaction(model->getWallet(), vTransfers, "", error, tx, reservekey, nFeeRequired)) {
+        QMessageBox msgBox;
+        msgBox.setText(QString::fromStdString(error.second));
+        msgBox.exec();
         return;
     }
 
-    CAmount txFee = currentTransaction.getTransactionFee();
-
-    // Format confirmation message
+        // Format confirmation message
     QStringList formatted;
-    for (const SendCoinsRecipient &rcp : currentTransaction.getRecipients())
+    for (SendAssetsRecipient &rcp : recipients)
     {
         // generate bold amount string
-        QString amount = "<b>" + RavenUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
+        QString amount = "<b>" + QString::fromStdString(StringFromAmount(rcp.amount, 8)) + " " + rcp.assetName;
         amount.append("</b>");
         // generate monospace address string
         QString address = "<span style='font-family: monospace;'>" + rcp.address;
@@ -329,31 +325,17 @@ void AssetsDialog::on_sendButton_clicked()
     QString questionString = tr("Are you sure you want to send?");
     questionString.append("<br /><br />%1");
 
-    if(txFee > 0)
+    if(nFeeRequired > 0)
     {
         // append fee string if a fee is required
         questionString.append("<hr /><span style='color:#aa0000;'>");
-        questionString.append(RavenUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), txFee));
+        questionString.append(RavenUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), nFeeRequired));
         questionString.append("</span> ");
         questionString.append(tr("added as transaction fee"));
 
         // append transaction size
-        questionString.append(" (" + QString::number((double)currentTransaction.getTransactionSize() / 1000) + " kB)");
+        questionString.append(" (" + QString::number((double)GetVirtualTransactionSize(tx) / 1000) + " kB)");
     }
-
-    // add total amount in all subdivision units
-    questionString.append("<hr />");
-    CAmount totalAmount = currentTransaction.getTotalTransactionAmount() + txFee;
-    QStringList alternativeUnits;
-    for (RavenUnits::Unit u : RavenUnits::availableUnits())
-    {
-        if(u != model->getOptionsModel()->getDisplayUnit())
-            alternativeUnits.append(RavenUnits::formatHtmlWithUnit(u, totalAmount));
-    }
-    questionString.append(tr("Total Amount %1")
-                                  .arg(RavenUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), totalAmount)));
-    questionString.append(QString("<span style='font-size:10pt;font-weight:normal;'><br />(=%2)</span>")
-                                  .arg(alternativeUnits.join(" " + tr("or") + "<br />")));
 
     if (ui->optInRBF->isChecked())
     {
@@ -362,7 +344,7 @@ void AssetsDialog::on_sendButton_clicked()
         questionString.append("</span>");
     }
 
-    SendConfirmationDialog confirmationDialog(tr("Confirm send coins"),
+    SendConfirmationDialog confirmationDialog(tr("Confirm send assets"),
                                               questionString.arg(formatted.join("<br />")), SEND_CONFIRM_DELAY, this);
     confirmationDialog.exec();
     QMessageBox::StandardButton retval = (QMessageBox::StandardButton)confirmationDialog.result();
@@ -374,7 +356,7 @@ void AssetsDialog::on_sendButton_clicked()
     }
 
     // now send the prepared transaction
-    WalletModel::SendCoinsReturn sendStatus = model->sendCoins(currentTransaction);
+    WalletModel::SendCoinsReturn sendStatus = model->sendAssets(tx, recipients, reservekey);
     // process sendStatus and on error generate message shown to user
     processSendCoinsReturn(sendStatus);
 
@@ -385,6 +367,144 @@ void AssetsDialog::on_sendButton_clicked()
         coinControlUpdateLabels();
     }
     fNewRecipientAllowed = true;
+
+
+
+    std::string txid;
+    if (!SendAssetTransferTransaction(model->getWallet(), tx, reservekey, error, txid)) {
+        QMessageBox msgBox;
+        msgBox.setText(QString::fromStdString(error.second));
+        msgBox.exec();
+        return;
+    } else {
+        QMessageBox msgBox;
+        msgBox.setText("Transaction sent to network");
+        msgBox.setInformativeText("Transaction Hash: " + QString::fromStdString(txid));
+        msgBox.exec();
+        accept();
+    }
+    fNewRecipientAllowed = true;
+
+//    // prepare transaction for getting txFee earlier
+//    WalletModelTransaction currentTransaction(recipients);
+//    WalletModel::SendCoinsReturn prepareStatus;
+//
+//    // Always use a CCoinControl instance, use the CoinControlDialog instance if CoinControl has been enabled
+//    CCoinControl ctrl;
+//    if (model->getOptionsModel()->getCoinControlFeatures())
+//        ctrl = *CoinControlDialog::coinControl;
+//
+//    updateCoinControlState(ctrl);
+//
+//    prepareStatus = model->prepareTransaction(currentTransaction, ctrl);
+//
+//    // process prepareStatus and on error generate message shown to user
+//    processSendCoinsReturn(prepareStatus,
+//                           RavenUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), currentTransaction.getTransactionFee()));
+//
+//    if(prepareStatus.status != WalletModel::OK) {
+//        fNewRecipientAllowed = true;
+//        return;
+//    }
+//
+//    CAmount txFee = currentTransaction.getTransactionFee();
+//
+//    // Format confirmation message
+//    QStringList formatted;
+//    for (const SendCoinsRecipient &rcp : currentTransaction.getRecipients())
+//    {
+//        // generate bold amount string
+//        QString amount = "<b>" + RavenUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
+//        amount.append("</b>");
+//        // generate monospace address string
+//        QString address = "<span style='font-family: monospace;'>" + rcp.address;
+//        address.append("</span>");
+//
+//        QString recipientElement;
+//
+//        if (!rcp.paymentRequest.IsInitialized()) // normal payment
+//        {
+//            if(rcp.label.length() > 0) // label with address
+//            {
+//                recipientElement = tr("%1 to %2").arg(amount, GUIUtil::HtmlEscape(rcp.label));
+//                recipientElement.append(QString(" (%1)").arg(address));
+//            }
+//            else // just address
+//            {
+//                recipientElement = tr("%1 to %2").arg(amount, address);
+//            }
+//        }
+//        else if(!rcp.authenticatedMerchant.isEmpty()) // authenticated payment request
+//        {
+//            recipientElement = tr("%1 to %2").arg(amount, GUIUtil::HtmlEscape(rcp.authenticatedMerchant));
+//        }
+//        else // unauthenticated payment request
+//        {
+//            recipientElement = tr("%1 to %2").arg(amount, address);
+//        }
+//
+//        formatted.append(recipientElement);
+//    }
+//
+//    QString questionString = tr("Are you sure you want to send?");
+//    questionString.append("<br /><br />%1");
+//
+//    if(txFee > 0)
+//    {
+//        // append fee string if a fee is required
+//        questionString.append("<hr /><span style='color:#aa0000;'>");
+//        questionString.append(RavenUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), txFee));
+//        questionString.append("</span> ");
+//        questionString.append(tr("added as transaction fee"));
+//
+//        // append transaction size
+//        questionString.append(" (" + QString::number((double)currentTransaction.getTransactionSize() / 1000) + " kB)");
+//    }
+//
+//    // add total amount in all subdivision units
+//    questionString.append("<hr />");
+//    CAmount totalAmount = currentTransaction.getTotalTransactionAmount() + txFee;
+//    QStringList alternativeUnits;
+//    for (RavenUnits::Unit u : RavenUnits::availableUnits())
+//    {
+//        if(u != model->getOptionsModel()->getDisplayUnit())
+//            alternativeUnits.append(RavenUnits::formatHtmlWithUnit(u, totalAmount));
+//    }
+//    questionString.append(tr("Total Amount %1")
+//                                  .arg(RavenUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), totalAmount)));
+//    questionString.append(QString("<span style='font-size:10pt;font-weight:normal;'><br />(=%2)</span>")
+//                                  .arg(alternativeUnits.join(" " + tr("or") + "<br />")));
+//
+//    if (ui->optInRBF->isChecked())
+//    {
+//        questionString.append("<hr /><span>");
+//        questionString.append(tr("This transaction signals replaceability (optin-RBF)."));
+//        questionString.append("</span>");
+//    }
+//
+//    SendConfirmationDialog confirmationDialog(tr("Confirm send coins"),
+//                                              questionString.arg(formatted.join("<br />")), SEND_CONFIRM_DELAY, this);
+//    confirmationDialog.exec();
+//    QMessageBox::StandardButton retval = (QMessageBox::StandardButton)confirmationDialog.result();
+//
+//    if(retval != QMessageBox::Yes)
+//    {
+//        fNewRecipientAllowed = true;
+//        return;
+//    }
+//
+//    // now send the prepared transaction
+//    WalletModel::SendCoinsReturn sendStatus = model->sendCoins(currentTransaction);
+//    // process sendStatus and on error generate message shown to user
+//    processSendCoinsReturn(sendStatus);
+//
+//    if (sendStatus.status == WalletModel::OK)
+//    {
+//        accept();
+//        CoinControlDialog::coinControl->UnSelectAll();
+//        coinControlUpdateLabels();
+//    }
+//    fNewRecipientAllowed = true;
 }
 
 void AssetsDialog::clear()
@@ -496,7 +616,7 @@ void AssetsDialog::setAddress(const QString &address)
     entry->setAddress(address);
 }
 
-void AssetsDialog::pasteEntry(const SendCoinsRecipient &rv)
+void AssetsDialog::pasteEntry(const SendAssetsRecipient &rv)
 {
     if(!fNewRecipientAllowed)
         return;
@@ -520,7 +640,7 @@ void AssetsDialog::pasteEntry(const SendCoinsRecipient &rv)
     updateTabsAndLabels();
 }
 
-bool AssetsDialog::handlePaymentRequest(const SendCoinsRecipient &rv)
+bool AssetsDialog::handlePaymentRequest(const SendAssetsRecipient &rv)
 {
     // Just paste the entry, all pre-checks
     // are done in paymentserver.cpp.
@@ -852,10 +972,10 @@ void AssetsDialog::coinControlUpdateLabels()
         SendAssetsEntry *entry = qobject_cast<SendAssetsEntry*>(ui->entries->itemAt(i)->widget());
         if(entry && !entry->isHidden())
         {
-            SendCoinsRecipient rcp = entry->getValue();
+            SendAssetsRecipient rcp = entry->getValue();
             CoinControlDialog::payAmounts.append(rcp.amount);
-            if (rcp.fSubtractFeeFromAmount)
-                CoinControlDialog::fSubtractFeeFromAmount = true;
+//            if (rcp.fSubtractFeeFromAmount)
+//                CoinControlDialog::fSubtractFeeFromAmount = true;
         }
     }
 

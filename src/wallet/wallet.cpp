@@ -2719,9 +2719,6 @@ bool CWallet::SelectAssets(const std::map<std::string, std::vector<COutput> >& m
             mapValueRet.insert(std::make_pair(asset.first, 0));
 
         for (auto out : asset.second) {
-            if (out.nDepth < 10)
-                continue;
-
             if (!out.fSpendable)
                 continue;
 
@@ -2757,7 +2754,7 @@ bool CWallet::SelectAssets(const std::map<std::string, std::vector<COutput> >& m
         }
 
         if (mapValueRet.at(asset.first) < mapAssetTargetValue.at(asset.first)) {
-            return error("%s : Tried to transfer an asset but this wallet didn't have enough (Assets must 10 confirmations before you are able to send them), Asset Name: %s, Transfer Amount: %d, Wallet Total: %d", __func__, asset.first, mapValueRet.at(asset.first), mapAssetTargetValue.at(asset.first));
+            return error("%s : Tried to transfer an asset but this wallet didn't have enough, Asset Name: %s, Transfer Amount: %d, Wallet Total: %d", __func__, asset.first, mapValueRet.at(asset.first), mapAssetTargetValue.at(asset.first));
         }
     }
 

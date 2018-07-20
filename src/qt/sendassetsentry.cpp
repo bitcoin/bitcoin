@@ -156,18 +156,18 @@ bool SendAssetsEntry::validate()
     return retval;
 }
 
-SendCoinsRecipient SendAssetsEntry::getValue()
+SendAssetsRecipient SendAssetsEntry::getValue()
 {
     // Payment request
     if (recipient.paymentRequest.IsInitialized())
         return recipient;
 
     // Normal payment
+    recipient.assetName = ui->assetSelectionBox->currentText();
     recipient.address = ui->payTo->text();
     recipient.label = ui->addAsLabel->text();
-    recipient.amount = ui->payAmount->value();
+    recipient.amount = ui->payAmount->value() * COIN;
     recipient.message = ui->messageTextLabel->text();
-    recipient.fSubtractFeeFromAmount = false;
 
     return recipient;
 }
@@ -183,7 +183,7 @@ QWidget *SendAssetsEntry::setupTabChain(QWidget *prev)
     return ui->deleteButton;
 }
 
-void SendAssetsEntry::setValue(const SendCoinsRecipient &value)
+void SendAssetsEntry::setValue(const SendAssetsRecipient &value)
 {
     recipient = value;
 
