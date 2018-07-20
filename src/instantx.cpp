@@ -1121,7 +1121,11 @@ bool CTxLockVote::Sign()
 void CTxLockVote::Relay(CConnman& connman) const
 {
     CInv inv(MSG_TXLOCK_VOTE, GetHash());
-    connman.RelayInv(inv);
+    CTxLockRequest request;
+    if(instantsend.GetTxLockRequest(txHash, request))
+        connman.RelayInvFiltered(inv, *request.tx);
+    else
+        connman.RelayInv(inv);
 }
 
 bool CTxLockVote::IsExpired(int nHeight) const
