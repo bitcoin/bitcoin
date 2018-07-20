@@ -50,10 +50,6 @@ static bool GetCScript(const SigningProvider& provider, const SignatureData& sig
 
 static bool GetPubKey(const SigningProvider& provider, SignatureData& sigdata, const CKeyID& address, CPubKey& pubkey)
 {
-    if (provider.GetPubKey(address, pubkey)) {
-        sigdata.misc_pubkeys.emplace(pubkey.GetID(), pubkey);
-        return true;
-    }
     // Look for pubkey in all partial sigs
     const auto it = sigdata.signatures.find(address);
     if (it != sigdata.signatures.end()) {
@@ -63,7 +59,15 @@ static bool GetPubKey(const SigningProvider& provider, SignatureData& sigdata, c
     // Look for pubkey in pubkey list
     const auto& pk_it = sigdata.misc_pubkeys.find(address);
     if (pk_it != sigdata.misc_pubkeys.end()) {
-        pubkey = pk_it->second;
+        pubkey = pk_it->second.first;
+        return true;
+    }
+    // Query the underlying provider
+    if (provider.GetPubKey(address, pubkey)) {
+        KeyOriginInfo info;
+        if (provider.GetKeyOrigin(address, info)) {
+            sigdata.misc_pubkeys.emplace(address, std::make_pair(pubkey, std::move(info)));
+        }
         return true;
     }
     return false;
@@ -543,7 +547,7 @@ void PSBTInput::FillSignatureData(SignatureData& sigdata) const
         sigdata.witness_script = witness_script;
     }
     for (const auto& key_pair : hd_keypaths) {
-        sigdata.misc_pubkeys.emplace(key_pair.first.GetID(), key_pair.first);
+        sigdata.misc_pubkeys.emplace(key_pair.first.GetID(), key_pair);
     }
 }
 
@@ -570,6 +574,9 @@ void PSBTInput::FromSignatureData(const SignatureData& sigdata)
     }
     if (witness_script.empty() && !sigdata.witness_script.empty()) {
         witness_script = sigdata.witness_script;
+    }
+    for (const auto& entry : sigdata.misc_pubkeys) {
+        hd_keypaths.emplace(entry.second);
     }
 }
 
@@ -612,7 +619,7 @@ void PSBTOutput::FillSignatureData(SignatureData& sigdata) const
         sigdata.witness_script = witness_script;
     }
     for (const auto& key_pair : hd_keypaths) {
-        sigdata.misc_pubkeys.emplace(key_pair.first.GetID(), key_pair.first);
+        sigdata.misc_pubkeys.emplace(key_pair.first.GetID(), key_pair);
     }
 }
 
@@ -623,6 +630,9 @@ void PSBTOutput::FromSignatureData(const SignatureData& sigdata)
     }
     if (witness_script.empty() && !sigdata.witness_script.empty()) {
         witness_script = sigdata.witness_script;
+    }
+    for (const auto& entry : sigdata.misc_pubkeys) {
+        hd_keypaths.emplace(entry.second);
     }
 }
 

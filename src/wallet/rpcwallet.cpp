@@ -4462,7 +4462,7 @@ bool FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& psbtx, const C
         }
 
         SignatureData sigdata;
-        complete &= SignPSBTInput(HidingSigningProvider(pwallet, !sign, false), *psbtx.tx, input, sigdata, i, sighash_type);
+        complete &= SignPSBTInput(HidingSigningProvider(pwallet, !sign, !bip32derivs), *psbtx.tx, input, sigdata, i, sighash_type);
 
         if (it != pwallet->mapWallet.end()) {
             // Drop the unnecessary UTXO if we added both from the wallet.
@@ -4470,13 +4470,6 @@ bool FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& psbtx, const C
                 input.non_witness_utxo = nullptr;
             } else {
                 input.witness_utxo.SetNull();
-            }
-        }
-
-        // Get public key paths
-        if (bip32derivs) {
-            for (const auto& pubkey_it : sigdata.misc_pubkeys) {
-                AddKeypathToMap(pwallet, pubkey_it.first, input.hd_keypaths);
             }
         }
     }
@@ -4496,15 +4489,8 @@ bool FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& psbtx, const C
         psbt_out.FillSignatureData(sigdata);
 
         MutableTransactionSignatureCreator creator(psbtx.tx.get_ptr(), 0, out.nValue, 1);
-        ProduceSignature(*pwallet, creator, out.scriptPubKey, sigdata);
+        ProduceSignature(HidingSigningProvider(pwallet, true, !bip32derivs), creator, out.scriptPubKey, sigdata);
         psbt_out.FromSignatureData(sigdata);
-
-        // Get public key paths
-        if (bip32derivs) {
-            for (const auto& pubkey_it : sigdata.misc_pubkeys) {
-                AddKeypathToMap(pwallet, pubkey_it.first, psbt_out.hd_keypaths);
-            }
-        }
     }
     return complete;
 }
