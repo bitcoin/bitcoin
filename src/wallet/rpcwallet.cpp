@@ -4464,7 +4464,7 @@ bool ParseHDKeypath(std::string keypath_str, std::vector<uint32_t>& keypath)
     return true;
 }
 
-void AddKeypathToMap(const CWallet* pwallet, const CKeyID& keyID, std::map<CPubKey, std::vector<uint32_t>>& hd_keypaths)
+void AddKeypathToMap(const CWallet* pwallet, const CKeyID& keyID, std::map<CPubKey, KeyOriginInfo>& hd_keypaths)
 {
     CPubKey vchPubKey;
     if (!pwallet->GetPubKey(keyID, vchPubKey)) {
@@ -4475,9 +4475,9 @@ void AddKeypathToMap(const CWallet* pwallet, const CKeyID& keyID, std::map<CPubK
     if (it != pwallet->mapKeyMetadata.end()) {
         meta = it->second;
     }
-    std::vector<uint32_t> keypath;
+    KeyOriginInfo info;
     if (!meta.hdKeypath.empty()) {
-        if (!ParseHDKeypath(meta.hdKeypath, keypath)) {
+        if (!ParseHDKeypath(meta.hdKeypath, info.path)) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Internal keypath is broken");
         }
         // Get the proper master key id
@@ -4485,12 +4485,13 @@ void AddKeypathToMap(const CWallet* pwallet, const CKeyID& keyID, std::map<CPubK
         pwallet->GetKey(meta.hd_seed_id, key);
         CExtKey masterKey;
         masterKey.SetSeed(key.begin(), key.size());
-        // Add to map
-        keypath.insert(keypath.begin(), ReadLE32(masterKey.key.GetPubKey().GetID().begin()));
+        // Compute identifier
+        CKeyID masterid = masterKey.key.GetPubKey().GetID();
+        std::copy(masterid.begin(), masterid.begin() + 4, info.fingerprint);
     } else { // Single pubkeys get the master fingerprint of themselves
-        keypath.insert(keypath.begin(), ReadLE32(vchPubKey.GetID().begin()));
+        std::copy(keyID.begin(), keyID.begin() + 4, info.fingerprint);
     }
-    hd_keypaths.emplace(vchPubKey, keypath);
+    hd_keypaths.emplace(vchPubKey, std::move(info));
 }
 
 bool FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& psbtx, const CTransaction* txConst, int sighash_type, bool sign, bool bip32derivs)
