@@ -1,6 +1,6 @@
 #pragma once
 
-#include <thread_pool/mpmc_bounded_queue.hpp>
+#include "mpmc_bounded_queue.hpp"
 
 #include <atomic>
 #include <limits>
