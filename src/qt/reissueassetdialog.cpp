@@ -177,7 +177,7 @@ void ReissueAssetDialog::CheckFormState()
         }
     }
 
-    if (ui->ipfsBox->isChecked() && ui->ipfsText->text().size() != 40) {
+    if (ui->ipfsBox->isChecked() && ui->ipfsText->text().size() != 46) {
         showMessage("Invalid IPFS Hash");
         return;
     }
@@ -223,7 +223,7 @@ void ReissueAssetDialog::buildUpdatedData()
     data += QString("Quantity: %1\n").arg(QString::fromStdString(ss.str()));
     data += QString("Reissuable: %1\n").arg(reissuable);
     if (asset->nHasIPFS && !ui->ipfsBox->isChecked())
-        data += QString("IPFS Hash: %1\n").arg(QString::fromStdString(asset->strIPFSHash));
+        data += QString("IPFS Hash: %1\n").arg(QString::fromStdString(EncodeIPFS(asset->strIPFSHash)));
     else if (ui->ipfsBox->isChecked()) {
         data += QString("IPFS Hash: %1\n").arg(ui->ipfsText->text());
     }
@@ -270,7 +270,7 @@ void ReissueAssetDialog::onAssetSelected(int index)
         QString data = QString("Name: %1\n").arg(QString::fromStdString(asset->strName));
         data += QString("Quantity: %1\n").arg(QString::fromStdString(ss.str()));
         if (asset->nHasIPFS)
-            data += QString("IPFS Hash: %1\n").arg(QString::fromStdString(asset->strIPFSHash));
+            data += QString("IPFS Hash: %1\n").arg(QString::fromStdString(EncodeIPFS(asset->strIPFSHash)));
 
         // Show the display text to the user
         ui->currentAssetData->setText(data);
@@ -357,11 +357,12 @@ void ReissueAssetDialog::onReissueAssetClicked()
         changeAddress = ui->changeAddressText->text();
 
 
-    QString ipfs = "";
-    if (hasIPFS)
-        ipfs = ui->ipfsText->text();
 
-    CReissueAsset reissueAsset(name.toStdString(), quantity, reissuable ? 1 : 0, ipfs.toStdString());
+    std::string ipfsDecoded = "";
+    if (hasIPFS)
+        ipfsDecoded = DecodeIPFS(ui->ipfsText->text().toStdString());
+
+    CReissueAsset reissueAsset(name.toStdString(), quantity, reissuable ? 1 : 0, ipfsDecoded);
 
     // Create the transaction and broadcast it
     std::pair<int, std::string> error;

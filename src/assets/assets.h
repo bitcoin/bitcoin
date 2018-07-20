@@ -349,6 +349,9 @@ bool GetMyAssetBalance(CAssetsCache& cache, const std::string& assetName, CAmoun
 bool GetMyAssetBalances(CAssetsCache& cache, const std::vector<std::string>& assetNames, std::map<std::string, CAmount>& balances);
 bool GetMyAssetBalances(CAssetsCache& cache, std::map<std::string, CAmount>& balances);
 
+std::string DecodeIPFS(std::string encoded);
+std::string EncodeIPFS(std::string decoded);
+
 bool CreateAssetTransaction(CWallet* pwallet, const CNewAsset& asset, const std::string& address, std::pair<int, std::string>& error, std::string& txid, std::string& rvnChangeAddress);
 bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& asset, const std::string& address, const std::string& changeAddress, std::pair<int, std::string>& error, std::string& txid);
 bool CreateTransferAssetTransaction(CWallet* pwallet, const std::vector< std::pair<CAssetTransfer, std::string> >vTransfers, const std::string& changeAddress, std::pair<int, std::string>& error, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRequired);

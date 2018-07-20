@@ -158,7 +158,7 @@ UniValue issue(const JSONRPCRequest& request)
     if (request.params.size() > 7 && has_ipfs)
         ipfs_hash = request.params[7].get_str();
 
-    CNewAsset asset(asset_name, nAmount, units, reissuable ? 1 : 0, has_ipfs ? 1 : 0, ipfs_hash);
+    CNewAsset asset(asset_name, nAmount, units, reissuable ? 1 : 0, has_ipfs ? 1 : 0, DecodeIPFS(ipfs_hash));
 
     // Create the transaction and broadcast it
     std::pair<int, std::string> error;
@@ -255,7 +255,7 @@ UniValue getassetdata(const JSONRPCRequest& request)
         result.push_back(Pair("reissuable", asset.nReissuable));
         result.push_back(Pair("has_ipfs", asset.nHasIPFS));
         if (asset.nHasIPFS)
-            result.push_back(Pair("ipfs_hash", asset.strIPFSHash));
+            result.push_back(Pair("ipfs_hash", EncodeIPFS(asset.strIPFSHash)));
 
         return result;
     }
@@ -668,11 +668,13 @@ UniValue reissue(const JSONRPCRequest& request)
     std::string newipfs = "";
     if (request.params.size() > 5) {
         newipfs = request.params[5].get_str();
+        if (newipfs.length() != 46)
+            throw JSONRPCError(RPC_INVALID_PARAMS, std::string("Invalid IPFS hash (must be 46 characters"));
     }
 
     std::string txid;
     std::pair<int, std::string> error;
-    CReissueAsset reissueAsset(asset_name, nAmount, reissuable, newipfs);
+    CReissueAsset reissueAsset(asset_name, nAmount, reissuable, DecodeIPFS(newipfs));
     if (!CreateReissueAssetTransaction(pwallet, reissueAsset, address, changeAddress, error, txid))
         throw JSONRPCError(error.first, error.second);
 
@@ -767,7 +769,7 @@ UniValue listassets(const JSONRPCRequest& request)
             detail.push_back(Pair("reissuable", asset.nReissuable));
             detail.push_back(Pair("has_ipfs", asset.nHasIPFS));
             if (asset.nHasIPFS)
-                detail.push_back(Pair("ipfs_hash", asset.strIPFSHash));
+                detail.push_back(Pair("ipfs_hash", EncodeIPFS(asset.strIPFSHash)));
             result.push_back(Pair(asset.strName, detail));
         } else {
             result.push_back(asset.strName);
