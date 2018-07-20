@@ -3964,11 +3964,7 @@ bool FillPSCT(const CWallet* pwallet, PartiallySignedTransaction& psctx, const C
         }
 
         SignatureData sigdata;
-        if (sign) {
-            complete &= SignPSCTInput(*pwallet, *psctx.tx, input, sigdata, i, sighash_type);
-        } else {
-            complete &= SignPSCTInput(PublicOnlySigningProvider(pwallet), *psctx.tx, input, sigdata, i, sighash_type);
-        }
+        complete &= SignPSCTInput(HidingSigningProvider(pwallet, !sign, false), *psctx.tx, input, sigdata, i, sighash_type);
 
         if (it != pwallet->mapWallet.end()) {
             // Drop the unnecessary UTXO if we added both from the wallet.
