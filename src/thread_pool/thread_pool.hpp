@@ -192,7 +192,7 @@ inline bool GenericThreadPool<Task, Queue>::tryPostImpl(Handler&& handler, size_
     // is fully utilized (num active workers = argmin(num tasks, num total workers)).
     // If there aren't busy waiters, let's see if we have any idling threads. 
     // These incur higher overhead to wake up than the busy waiters.
-    if (m_state->numBusyWaiters().load(std::memory_order_relaxed) == 0)
+    if (m_state->numBusyWaiters().load(std::memory_order_acquire) == 0)
     {
         auto result = m_state->idleWorkers().tryEmptyAny();
         if (result.first)
@@ -223,7 +223,7 @@ inline bool GenericThreadPool<Task, Queue>::tryPostImpl(Handler&& handler, size_
             // thread's functionality. This code experimentally lowers task response time under
             // low thread pool utilization without incurring significant performance penalties at
             // high thread pool utilization.
-            if (m_state->numBusyWaiters().load(std::memory_order_relaxed) == 0)
+            if (m_state->numBusyWaiters().load(std::memory_order_acquire) == 0)
             {
                 auto result = m_state->idleWorkers().tryEmptyAny();
                 if (result.first)
