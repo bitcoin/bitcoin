@@ -1,7 +1,7 @@
 #pragma once
 
-#include <slotted_bag.hpp>
-#include <thread_pool_options.hpp>
+#include "slotted_bag.hpp"
+#include "thread_pool_options.hpp"
 
 #include <atomic>
 #include <memory>
