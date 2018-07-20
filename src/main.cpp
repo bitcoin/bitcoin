@@ -3583,6 +3583,9 @@ bool static LoadBlockIndexDB()
         return true;
     chainActive.SetTip(it->second);
 
+    // This function calls after relaunch so download headers again
+    pindexBestHeader = chainActive.Tip();
+
     PruneBlockIndexCandidates();
 
     LogPrintf("LoadBlockIndexDB(): hashBestChain=%s height=%d date=%s progress=%f\n",
@@ -4174,7 +4177,12 @@ void static ProcessGetData(CNode* pfrom)
                     if (!ReadBlockFromDisk(block, (*mi).second))
                         assert(!"cannot load block from disk");
                     if (inv.type == MSG_BLOCK)
+                    {
+                        // Don't send auxpow information with block
+                        block.auxpow.reset();
+                        block.readWriteAuxPow = false;
                         pfrom->PushMessage("block", block);
+                    }
                     else // MSG_FILTERED_BLOCK)
                     {
                         LOCK(pfrom->cs_filter);
@@ -4938,6 +4946,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                     std::string strError = "invalid header received " + header.GetHash().ToString();
                     return error(strError.c_str());
                 }
+            } else {
+                // If block header is accepted successfully keep auxpow to use for blocks
+                mapAuxPow.insert(std::pair<uint256, CAuxPow>(header.GetHash(), *(header.auxpow)));
             }
         }
 
@@ -4966,34 +4977,41 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     else if (strCommand == "block" && !fImporting && !fReindex) // Ignore blocks received while importing
     {
         CBlock block;
+        // Auxpow should be received with headers so no need to get it with blocks
+        block.readWriteAuxPow = false;
         vRecv >> block;
 
+        bool processBlock = true;
         if (block.nVersion.IsAuxpow())
         {
             std::map<uint256, CAuxPow>::iterator auxIt = mapAuxPow.find(block.GetHash());
             if (auxIt != mapAuxPow.end())
             {
-                *(block.auxpow) = auxIt->second;
+                block.auxpow.reset(new CAuxPow(auxIt->second));
                 mapAuxPow.erase(block.GetHash());
             } else {
-                pfrom->PushMessage("getheaders", NULL, block.GetHash());
+                LogPrintf("Couldn't find auxpow for block: %s, at height: %d\n", block.GetHash().ToString(), chainActive.Tip()->nHeight);
+                processBlock = false;
             }
         }
 
-        CInv inv(MSG_BLOCK, block.GetHash());
-        LogPrint("net", "received block %s peer=%d\n", inv.hash.ToString(), pfrom->id);
+        if (processBlock)
+        {
+            CInv inv(MSG_BLOCK, block.GetHash());
+            LogPrint("net", "received block %s peer=%d\n", inv.hash.ToString(), pfrom->id);
 
-        pfrom->AddInventoryKnown(inv);
+            pfrom->AddInventoryKnown(inv);
 
-        CValidationState state;
-        ProcessNewBlock(state, pfrom, &block);
-        int nDoS;
-        if (state.IsInvalid(nDoS)) {
-            pfrom->PushMessage("reject", strCommand, state.GetRejectCode(),
-                               state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), inv.hash);
-            if (nDoS > 0) {
-                TRY_LOCK(cs_main, lockMain);
-                if(lockMain) Misbehaving(pfrom->GetId(), nDoS);
+            CValidationState state;
+            ProcessNewBlock(state, pfrom, &block);
+            int nDoS;
+            if (state.IsInvalid(nDoS)) {
+                pfrom->PushMessage("reject", strCommand, state.GetRejectCode(),
+                                   state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), inv.hash);
+                if (nDoS > 0) {
+                    TRY_LOCK(cs_main, lockMain);
+                    if(lockMain) Misbehaving(pfrom->GetId(), nDoS);
+                }
             }
         }
 
@@ -5475,6 +5493,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                 nSyncStarted++;
                 CBlockIndex *pindexStart = pindexBestHeader->pprev ? pindexBestHeader->pprev : pindexBestHeader;
                 LogPrint("net", "initial getheaders (%d) to peer=%d (startheight:%d)\n", pindexStart->nHeight, pto->id, pto->nStartingHeight);
+
                 pto->PushMessage("getheaders", chainActive.GetLocator(pindexStart), uint256());
             }
         }

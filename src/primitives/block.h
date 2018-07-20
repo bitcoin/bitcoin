@@ -30,6 +30,7 @@ public:
 
     // auxpow (if this is a merge-minded block)
     boost::shared_ptr<CAuxPow> auxpow;
+    bool readWriteAuxPow;
 
     CBlockHeader()
     {
@@ -44,10 +45,13 @@ public:
         nVersion = this->nVersion.GetBaseVersion();
         if (this->nVersion.IsAuxpow())
         {
-            if (ser_action.ForRead())
-                auxpow.reset (new CAuxPow());
-            assert(auxpow);
-            READWRITE(*auxpow);
+            if (readWriteAuxPow)
+            {
+                if (ser_action.ForRead())
+                    auxpow.reset (new CAuxPow());
+                assert(auxpow);
+                READWRITE(*auxpow);
+            }
         } else if (ser_action.ForRead())
             auxpow.reset();
     }
@@ -61,6 +65,7 @@ public:
         nTime = 0;
         nBits = 0;
         nNonce = 0;
+        readWriteAuxPow = true;
     }
 
     bool IsNull() const
