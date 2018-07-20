@@ -187,15 +187,15 @@ template <typename U>
 inline bool MPMCBoundedQueue<T>::push(U&& data)
 {
     Cell* cell;
-    size_t pos = m_enqueue_pos.load(std::memory_order_acquire);
+    size_t pos = m_enqueue_pos.load(std::memory_order_relaxed);
     for(;;)
     {
         cell = &m_buffer[pos & m_buffer_mask];
-        size_t seq = cell->sequence.load(std::memory_order_acquire);
+        size_t seq = cell->sequence.load(std::memory_order_relaxed);
         intptr_t dif = (intptr_t)seq - (intptr_t)pos;
         if(dif == 0)
         {
-            if(m_enqueue_pos.compare_exchange_weak(pos, pos + 1, std::memory_order_acq_rel))
+            if(m_enqueue_pos.compare_exchange_weak(pos, pos + 1, std::memory_order_relaxed))
                 break;
         }
         else if(dif < 0)
@@ -204,13 +204,13 @@ inline bool MPMCBoundedQueue<T>::push(U&& data)
         }
         else
         {
-            pos = m_enqueue_pos.load(std::memory_order_acquire);
+            pos = m_enqueue_pos.load(std::memory_order_relaxed);
         }
     }
 
     cell->data = std::forward<U>(data);
 
-    cell->sequence.store(pos + 1, std::memory_order_release);
+    cell->sequence.store(pos + 1, std::memory_order_relaxed);
 
     return true;
 }
