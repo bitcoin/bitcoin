@@ -171,7 +171,7 @@ bool CPubKey::Verify(const uint256 &hash, const std::vector<unsigned char>& vchS
         return false;
     secp256k1_pubkey pubkey;
     secp256k1_ecdsa_signature sig;
-    if (!secp256k1_ec_pubkey_parse(secp256k1_context_verify, &pubkey, &(*this)[0], size())) {
+    if (!secp256k1_ec_pubkey_parse(secp256k1_context_verify, &pubkey, vch, size())) {
         return false;
     }
     if (!ecdsa_signature_parse_der_lax(secp256k1_context_verify, &sig, vchSig.data(), vchSig.size())) {
@@ -207,14 +207,14 @@ bool CPubKey::IsFullyValid() const {
     if (!IsValid())
         return false;
     secp256k1_pubkey pubkey;
-    return secp256k1_ec_pubkey_parse(secp256k1_context_verify, &pubkey, &(*this)[0], size());
+    return secp256k1_ec_pubkey_parse(secp256k1_context_verify, &pubkey, vch, size());
 }
 
 bool CPubKey::Decompress() {
     if (!IsValid())
         return false;
     secp256k1_pubkey pubkey;
-    if (!secp256k1_ec_pubkey_parse(secp256k1_context_verify, &pubkey, &(*this)[0], size())) {
+    if (!secp256k1_ec_pubkey_parse(secp256k1_context_verify, &pubkey, vch, size())) {
         return false;
     }
     unsigned char pub[PUBLIC_KEY_SIZE];
@@ -232,7 +232,7 @@ bool CPubKey::Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChi
     BIP32Hash(cc, nChild, *begin(), begin()+1, out);
     memcpy(ccChild.begin(), out+32, 32);
     secp256k1_pubkey pubkey;
-    if (!secp256k1_ec_pubkey_parse(secp256k1_context_verify, &pubkey, &(*this)[0], size())) {
+    if (!secp256k1_ec_pubkey_parse(secp256k1_context_verify, &pubkey, vch, size())) {
         return false;
     }
     if (!secp256k1_ec_pubkey_tweak_add(secp256k1_context_verify, &pubkey, out)) {
