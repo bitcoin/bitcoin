@@ -219,11 +219,11 @@ template <typename T>
 inline bool MPMCBoundedQueue<T>::pop(T& data)
 {
     Cell* cell;
-    size_t pos = m_dequeue_pos.load(std::memory_order_acquire);
+    size_t pos = m_dequeue_pos.load(std::memory_order_relaxed);
     for(;;)
     {
         cell = &m_buffer[pos & m_buffer_mask];
-        size_t seq = cell->sequence.load(std::memory_order_acquire);
+        size_t seq = cell->sequence.load(std::memory_order_relaxed);
         intptr_t dif = (intptr_t)seq - (intptr_t)(pos + 1);
         if(dif == 0)
         {
@@ -236,7 +236,7 @@ inline bool MPMCBoundedQueue<T>::pop(T& data)
         }
         else
         {
-            pos = m_dequeue_pos.load(std::memory_order_acquire);
+            pos = m_dequeue_pos.load(std::memory_order_relaxed);
         }
     }
 
