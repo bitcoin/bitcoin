@@ -100,6 +100,16 @@ constexpr OutputType DEFAULT_ADDRESS_TYPE{OutputType::P2SH_SEGWIT};
 //! Default for -changetype
 constexpr OutputType DEFAULT_CHANGE_TYPE{OutputType::CHANGE_AUTO};
 
+enum WalletFlags : uint64_t {
+    // wallet flags in the upper section (> 1 << 31) will lead to not opening the wallet if flag is unknown
+    // unkown wallet flags in the lower section <= (1 << 31) will be tolerated
+
+    // will enforce the rule that the wallet can't contain any private keys (only watch-only/pubkeys)
+    WALLET_FLAG_DISABLE_PRIVATE_KEYS = (1ULL << 32),
+};
+
+static constexpr uint64_t g_known_wallet_flags = WALLET_FLAG_DISABLE_PRIVATE_KEYS;
+
 /** A key pool entry */
 class CKeyPool
 {
@@ -726,6 +736,7 @@ private:
     std::set<int64_t> set_pre_split_keypool;
     int64_t m_max_keypool_index = 0;
     std::map<CKeyID, int64_t> m_pool_key_to_index;
+    std::atomic<uint64_t> m_wallet_flags{0};
 
     int64_t nTimeFirstKey = 0;
 
@@ -1132,7 +1143,7 @@ public:
     static bool Verify(std::string wallet_file, bool salvage_wallet, std::string& error_string, std::string& warning_string);
 
     /* Initializes the wallet, returns a new CWallet instance or a null pointer in case of an error */
-    static std::shared_ptr<CWallet> CreateWalletFromFile(const std::string& name, const fs::path& path);
+    static std::shared_ptr<CWallet> CreateWalletFromFile(const std::string& name, const fs::path& path, uint64_t wallet_creation_flags = 0);
 
     /**
      * Wallet post-init setup
@@ -1185,6 +1196,16 @@ public:
 
     /** Whether a given output is spendable by this wallet */
     bool OutputEligibleForSpending(const COutput& output, const CoinEligibilityFilter& eligibility_filter) const;
+
+    /** set a single wallet flag */
+    void SetWalletFlag(uint64_t flags);
+
+    /** check if a certain wallet flag is set */
+    bool IsWalletFlagSet(uint64_t flag);
+
+    /** overwrite all flags by the given uint64_t
+       returns false if unknown, non-tolerable flags are present */
+    bool SetWalletFlags(uint64_t overwriteFlags, bool memOnly);
 };
 
 /** A key allocated from the key pool. */

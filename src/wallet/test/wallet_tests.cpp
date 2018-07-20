@@ -365,4 +365,13 @@ BOOST_FIXTURE_TEST_CASE(ListCoins, ListCoinsTestingSetup)
     BOOST_CHECK_EQUAL(list.begin()->second.size(), 2U);
 }
 
+BOOST_FIXTURE_TEST_CASE(wallet_disableprivkeys, TestChain100Setup)
+{
+    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>("dummy", WalletDatabase::CreateDummy());
+    wallet->SetWalletFlag(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
+    BOOST_CHECK(!wallet->TopUpKeyPool(1000));
+    CPubKey pubkey;
+    BOOST_CHECK(!wallet->GetKeyFromPool(pubkey, false));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
