@@ -640,18 +640,25 @@ void PSBTOutput::Merge(const PSBTOutput& output)
     if (witness_script.empty() && !output.witness_script.empty()) witness_script = output.witness_script;
 }
 
-bool PublicOnlySigningProvider::GetCScript(const CScriptID &scriptid, CScript& script) const
+bool HidingSigningProvider::GetCScript(const CScriptID& scriptid, CScript& script) const
 {
     return m_provider->GetCScript(scriptid, script);
 }
 
-bool PublicOnlySigningProvider::GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const
+bool HidingSigningProvider::GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const
 {
     return m_provider->GetPubKey(keyid, pubkey);
 }
 
-bool PublicOnlySigningProvider::GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const
+bool HidingSigningProvider::GetKey(const CKeyID& keyid, CKey& key) const
 {
+    if (m_hide_secret) return false;
+    return m_provider->GetKey(keyid, key);
+}
+
+bool HidingSigningProvider::GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const
+{
+    if (m_hide_origin) return false;
     return m_provider->GetKeyOrigin(keyid, info);
 }
 
