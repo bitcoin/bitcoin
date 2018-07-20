@@ -173,18 +173,7 @@ script: |
     CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS} CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}" LDFLAGS="${HOST_LDFLAGS}"
     make ${MAKEOPTS}
     make ${MAKEOPTS} -C src check-security
-
-    #TODO: This is a quick hack that disables symbol checking for arm.
-    #      Instead, we should investigate why these are popping up.
-    #      For aarch64, we'll need to bump up the min GLIBC version, as the abi
-    #      support wasn't introduced until 2.17.
-    case $i in
-       aarch64-*) : ;;
-       arm-*) : ;;
-       riscv64-*) : ;;
-       *) make ${MAKEOPTS} -C src check-symbols ;;
-    esac
-
+    make ${MAKEOPTS} -C src check-symbols
     make install DESTDIR=${INSTALLPATH}
     cd installed
     find . -name "lib*.la" -delete
