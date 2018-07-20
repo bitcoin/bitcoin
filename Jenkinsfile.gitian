@@ -12,7 +12,6 @@ def proc = 4
 def mem = 2000
 
 def repositoryUrl = "https://github.com/dashpay/dash.git"
-def commit = "develop"
 
 def tasks = [:]
 for(int i = 0; i < targets.size(); i++) {
@@ -25,6 +24,7 @@ for(int i = 0; i < targets.size(); i++) {
       def pwd = sh(returnStdout: true, script: 'pwd').trim()
       def dockerGid = sh(returnStdout: true, script: "stat -c '%g' /var/run/docker.sock").trim()
       def BRANCH_NAME = sh(returnStdout: true, script: 'echo $BRANCH_NAME').trim()
+      def commit = BRANCH_NAME
       def hasCache = false
 
       def gitianDescriptor

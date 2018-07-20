@@ -51,18 +51,37 @@ script: |
   mkdir -p ${WRAP_DIR}
   if test -n "$GBUILD_CACHE_ENABLED"; then
     export SOURCES_PATH=${GBUILD_COMMON_CACHE}
-    export BASE_CACHE=${GBUILD_PACKAGE_CACHE}
+    export BASE_CACHE=${GBUILD_PACKAGE_CACHE}/depends
     mkdir -p ${BASE_CACHE} ${SOURCES_PATH}
+
+    # Setup ccache to use correct cache directories and fix the compiler check of ccache
+    CONFIGFLAGS="${CONFIGFLAGS} --enable-ccache"
+    export CCACHE_DIR=${GBUILD_PACKAGE_CACHE}/ccache
+    # As we later wrap the gcc binaries, this is fast
+    export CCACHE_COMPILERCHECK="content"
+    if [ -f ${GBUILD_PACKAGE_CACHE}/ccache.tar.gz ]; then
+      pushd ${GBUILD_PACKAGE_CACHE}
+      tar xzf ccache.tar.gz
+      rm ccache.tar.gz
+      popd
+    fi
+  else
+    CONFIGFLAGS="${CONFIGFLAGS} --disable-ccache"
   fi
+
+  # We include the GCC version in all wrappers so that ccache can detect compiler upgrades when hashing the wrappers
+  GCCVERSION=`gcc --version | head -1`
 
   function create_global_faketime_wrappers {
   for prog in ${FAKETIME_PROGS}; do
     echo '#!/bin/bash' > ${WRAP_DIR}/${prog}
+    echo "# GCCVERSION=${GCCVERSION}" >> ${WRAP_DIR}/${prog}
     echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> ${WRAP_DIR}/${prog}
     echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${prog}
     echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${prog}
     echo "\$REAL \$@" >> $WRAP_DIR/${prog}
     chmod +x ${WRAP_DIR}/${prog}
+    touch -d "${REFERENCE_DATETIME}" ${WRAP_DIR}/${prog}
   done
   }
 
@@ -70,11 +89,13 @@ script: |
   for i in $HOSTS; do
     for prog in ${FAKETIME_HOST_PROGS}; do
         echo '#!/bin/bash' > ${WRAP_DIR}/${i}-${prog}
+        echo "# GCCVERSION=${GCCVERSION}" >> ${WRAP_DIR}/${i}-${prog}
         echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
         echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
         echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
         echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
         chmod +x ${WRAP_DIR}/${i}-${prog}
+        touch -d "${REFERENCE_DATETIME}" ${WRAP_DIR}/${i}-${prog}
     done
   done
   }
@@ -100,6 +121,7 @@ script: |
   rm -f ${WRAP_DIR}/${prog}
   cat << EOF > ${WRAP_DIR}/${prog}
   #!/bin/bash
+  # GCCVERSION=${GCCVERSION}
   REAL="`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1`"
   for var in "\$@"
   do
@@ -112,6 +134,7 @@ script: |
   \$REAL \$@
   EOF
   chmod +x ${WRAP_DIR}/${prog}
+  touch -d "${REFERENCE_DATETIME}" ${WRAP_DIR}/${prog}
   done
 
   cd dash
@@ -155,7 +178,7 @@ script: |
     mkdir -p ${INSTALLPATH}
     tar --strip-components=1 -xf ../$SOURCEDIST
 
-    CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS} CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}" LDFLAGS="${HOST_LDFLAGS}"
+    CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS} CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}" LDFLAGS="${HOST_LDFLAGS}"
     make ${MAKEOPTS}
     make ${MAKEOPTS} -C src check-security
 
@@ -183,3 +206,11 @@ script: |
   done
   mkdir -p $OUTDIR/src
   mv $SOURCEDIST $OUTDIR/src
+
+  # Compress ccache (otherwise the assert file will get too huge)
+  if [ "$CCACHE_DIR" != "" ]; then
+    pushd ${GBUILD_PACKAGE_CACHE}
+    tar czf ccache.tar.gz ccache
+    rm -rf ccache
+    popd
+  fi

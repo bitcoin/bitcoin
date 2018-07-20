@@ -49,8 +49,20 @@ script: |
   mkdir -p ${WRAP_DIR}
   if test -n "$GBUILD_CACHE_ENABLED"; then
     export SOURCES_PATH=${GBUILD_COMMON_CACHE}
-    export BASE_CACHE=${GBUILD_PACKAGE_CACHE}
+    export BASE_CACHE=${GBUILD_PACKAGE_CACHE}/depends
     mkdir -p ${BASE_CACHE} ${SOURCES_PATH}
+
+    # Setup ccache to use correct cache directories
+    CONFIGFLAGS="${CONFIGFLAGS} --enable-ccache"
+    export CCACHE_DIR=${GBUILD_PACKAGE_CACHE}/ccache
+    if [ -f ${GBUILD_PACKAGE_CACHE}/ccache.tar.gz ]; then
+      pushd ${GBUILD_PACKAGE_CACHE}
+      tar xzf ccache.tar.gz
+      rm ccache.tar.gz
+      popd
+    fi
+  else
+    CONFIGFLAGS="${CONFIGFLAGS} --disable-ccache"
   fi
 
   export ZERO_AR_DATE=1
@@ -63,6 +75,7 @@ script: |
     echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${prog}
     echo "\$REAL \$@" >> $WRAP_DIR/${prog}
     chmod +x ${WRAP_DIR}/${prog}
+    touch -d "${REFERENCE_DATETIME}" ${WRAP_DIR}/${prog}
   done
   }
 
@@ -75,6 +88,7 @@ script: |
         echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
         echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
         chmod +x ${WRAP_DIR}/${i}-${prog}
+        touch -d "${REFERENCE_DATETIME}" ${WRAP_DIR}/${i}-${prog}
     done
   done
   }
@@ -126,7 +140,7 @@ script: |
     mkdir -p ${INSTALLPATH}
     tar --strip-components=1 -xf ../$SOURCEDIST
 
-    CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS}
+    CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS}
     make ${MAKEOPTS}
     make install-strip DESTDIR=${INSTALLPATH}
 
@@ -158,3 +172,11 @@ script: |
   mkdir -p $OUTDIR/src
   mv $SOURCEDIST $OUTDIR/src
   mv ${OUTDIR}/${DISTNAME}-x86_64-*.tar.gz ${OUTDIR}/${DISTNAME}-osx64.tar.gz
+
+  # Compress ccache (otherwise the assert file will get too huge)
+  if [ "$CCACHE_DIR" != "" ]; then
+    pushd ${GBUILD_PACKAGE_CACHE}
+    tar czf ccache.tar.gz ccache
+    rm -rf ccache
+    popd
+  fi
