@@ -86,7 +86,7 @@ SYSCOIN_CORE_H = \
   escrow.h \
   feedback.h \
   auxpow.h \
-  thread_pool.hpp \
+  thread_pool/thread_pool.hpp \
   thread_pool/thread_pool/fixed_function.hpp \
   thread_pool/thread_pool/mpmc_bounded_queue.hpp \
   thread_pool/thread_pool/thread_pool.hpp \
