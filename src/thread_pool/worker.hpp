@@ -1,8 +1,8 @@
 #pragma once
 
-#include <thread_pool/slotted_bag.hpp>
-#include <thread_pool/thread_pool_options.hpp>
-#include <thread_pool/thread_pool_state.hpp>
+#include <slotted_bag.hpp>
+#include <thread_pool_options.hpp>
+#include <thread_pool_state.hpp>
 
 #include <atomic>
 #include <thread>

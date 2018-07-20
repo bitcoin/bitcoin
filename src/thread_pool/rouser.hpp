@@ -1,9 +1,9 @@
 #pragma once
 
-#include <thread_pool/slotted_bag.hpp>
-#include <thread_pool/thread_pool_options.hpp>
-#include <thread_pool/thread_pool_state.hpp>
-#include <thread_pool/worker.hpp>
+#include <slotted_bag.hpp>
+#include <thread_pool_options.hpp>
+#include <thread_pool_state.hpp>
+#include <worker.hpp>
 
 #include <atomic>
 #include <thread>
