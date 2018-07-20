@@ -208,7 +208,7 @@ template <typename Task, template<typename> class Queue>
 inline void Worker<Task, Queue>::stop()
 {
     auto expectedState = State::Running;
-    if (m_state.compare_exchange_strong(expectedState, State::Stopped, std::memory_order_relaxed))
+    if (m_state.compare_exchange_strong(expectedState, State::Stopped, std::memory_order_acq_rel))
     {
         wake();
         m_thread.join();
@@ -221,7 +221,7 @@ template <typename Task, template<typename> class Queue>
 inline void Worker<Task, Queue>::start(const size_t id, std::shared_ptr<ThreadPoolState<Task, Queue>> state)
 {
     auto expectedState = State::Initialized;
-    if (!m_state.compare_exchange_strong(expectedState, State::Running, std::memory_order_relaxed))
+    if (!m_state.compare_exchange_strong(expectedState, State::Running, std::memory_order_acq_rel))
         throw std::runtime_error("Cannot start Worker: it has previously been started or stopped.");
 
     m_thread = std::thread(&Worker<Task, Queue>::threadFunc, this, id, state);
@@ -301,7 +301,7 @@ void Worker<Task, Queue>::handleTask(Task& task)
 template <typename Task, template <typename> class Queue>
 bool Worker<Task, Queue>::tryGetTask(Task& task, WorkerVector& workers)
 {
-    if (m_state.load(std::memory_order_relaxed) != State::Running)
+    if (m_state.load(std::memory_order_acquire) != State::Running)
         throw WorkerStoppedException();
 
     // Prioritize local queue, then try stealing from sibling workers.
@@ -331,7 +331,7 @@ inline void Worker<Task, Queue>::threadFunc(const size_t id, std::shared_ptr<Thr
             // We were unable to obtain a task. 
             // We now transition into the busy wait state.
             task_found = false;
-            state->numBusyWaiters().fetch_add(1, std::memory_order_relaxed);
+            state->numBusyWaiters().fetch_add(1, std::memory_order_acq_rel);
 
             for (auto i = 0u; i < m_busy_wait_options.numIterations() && !task_found; i++)
             {
@@ -342,7 +342,7 @@ inline void Worker<Task, Queue>::threadFunc(const size_t id, std::shared_ptr<Thr
             // If we found a task during our busy wait sequence, we abort it and transition back into the active loop.
             if (task_found)
             {
-                state->numBusyWaiters().fetch_sub(1, std::memory_order_relaxed);
+                state->numBusyWaiters().fetch_sub(1, std::memory_order_acq_rel);
                 handleTask(handler); // Handle the task body only once we decrement the busy waiting loop.
                 continue;
             }
@@ -360,7 +360,7 @@ inline void Worker<Task, Queue>::threadFunc(const size_t id, std::shared_ptr<Thr
 
             // We need to transition out of the busy wait state after we have submitted ourselves to the idle 
             // worker queue in order to avoid a race.
-            state->numBusyWaiters().fetch_sub(1, std::memory_order_relaxed);
+            state->numBusyWaiters().fetch_sub(1, std::memory_order_acq_rel);
 
             // While we were adding this worker to the idle worker bag, a job may have been posted into this 
             // worker's queue. We need to check for work again before initiating the deep sleep sequence, otherwise

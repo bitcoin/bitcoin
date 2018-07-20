@@ -111,7 +111,7 @@ template <typename Task, template<typename> class Queue>
 inline void Rouser::start(std::shared_ptr<ThreadPoolState<Task, Queue>> state)
 {
     auto expectedState = State::Initialized;
-    if (!m_state.compare_exchange_strong(expectedState, State::Running, std::memory_order_relaxed))
+    if (!m_state.compare_exchange_strong(expectedState, State::Running, std::memory_order_acq_rel))
         throw std::runtime_error("Cannot start Rouser: it has previously been started or stopped.");
 
     m_thread = std::thread(&Rouser::threadFunc<Task, Queue>, this, state);
@@ -120,7 +120,7 @@ inline void Rouser::start(std::shared_ptr<ThreadPoolState<Task, Queue>> state)
 inline void Rouser::stop()
 {
     auto expectedState = State::Running;
-    if (m_state.compare_exchange_strong(expectedState, State::Stopped, std::memory_order_relaxed))
+    if (m_state.compare_exchange_strong(expectedState, State::Stopped, std::memory_order_acq_rel))
         m_thread.join();
     else if (expectedState == State::Initialized)
         throw std::runtime_error("Cannot stop Rouser: stop may only be calld after the Rouser has been started.");
@@ -129,10 +129,10 @@ inline void Rouser::stop()
 template <typename Task, template<typename> class Queue>
 inline void Rouser::threadFunc(std::shared_ptr<ThreadPoolState<Task, Queue>> shared_state)
 {
-    while (m_state.load(std::memory_order_relaxed) == State::Running)
+    while (m_state.load(std::memory_order_acquire) == State::Running)
     {
         // Try to wake up a thread if there are no current busy waiters.
-        if (shared_state->numBusyWaiters().load(std::memory_order_relaxed) == 0)
+        if (shared_state->numBusyWaiters().load(std::memory_order_acquire) == 0)
         {
             auto result = shared_state->idleWorkers().tryEmptyAny();
             if (result.first)
