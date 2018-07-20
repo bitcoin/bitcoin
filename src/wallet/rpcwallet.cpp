@@ -4429,26 +4429,9 @@ void AddKeypathToMap(const CWallet* pwallet, const CKeyID& keyID, std::map<CPubK
     if (!pwallet->GetPubKey(keyID, vchPubKey)) {
         return;
     }
-    CKeyMetadata meta;
-    auto it = pwallet->mapKeyMetadata.find(keyID);
-    if (it != pwallet->mapKeyMetadata.end()) {
-        meta = it->second;
-    }
     KeyOriginInfo info;
-    if (!meta.hdKeypath.empty()) {
-        if (!ParseHDKeypath(meta.hdKeypath, info.path)) {
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "Internal keypath is broken");
-        }
-        // Get the proper master key id
-        CKey key;
-        pwallet->GetKey(meta.hd_seed_id, key);
-        CExtKey masterKey;
-        masterKey.SetSeed(key.begin(), key.size());
-        // Compute identifier
-        CKeyID masterid = masterKey.key.GetPubKey().GetID();
-        std::copy(masterid.begin(), masterid.begin() + 4, info.fingerprint);
-    } else { // Single pubkeys get the master fingerprint of themselves
-        std::copy(keyID.begin(), keyID.begin() + 4, info.fingerprint);
+    if (!pwallet->GetKeyOrigin(keyID, info)) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Internal keypath is broken");
     }
     hd_keypaths.emplace(vchPubKey, std::move(info));
 }

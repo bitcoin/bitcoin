@@ -4466,3 +4466,29 @@ std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outpu
     }
     return groups;
 }
+
+bool CWallet::GetKeyOrigin(const CKeyID& keyID, KeyOriginInfo& info) const
+{
+    CKeyMetadata meta;
+    {
+        LOCK(cs_wallet);
+        auto it = mapKeyMetadata.find(keyID);
+        if (it != mapKeyMetadata.end()) {
+            meta = it->second;
+        }
+    }
+    if (!meta.hdKeypath.empty()) {
+        if (!ParseHDKeypath(meta.hdKeypath, info.path)) return false;
+        // Get the proper master key id
+        CKey key;
+        GetKey(meta.hd_seed_id, key);
+        CExtKey masterKey;
+        masterKey.SetSeed(key.begin(), key.size());
+        // Compute identifier
+        CKeyID masterid = masterKey.key.GetPubKey().GetID();
+        std::copy(masterid.begin(), masterid.begin() + 4, info.fingerprint);
+    } else { // Single pubkeys get the master fingerprint of themselves
+        std::copy(keyID.begin(), keyID.begin() + 4, info.fingerprint);
+    }
+    return true;
+}
