@@ -208,7 +208,7 @@ template <typename Task, template<typename> class Queue>
 inline void Worker<Task, Queue>::stop()
 {
     auto expectedState = State::Running;
-    if (m_state.compare_exchange_strong(expectedState, State::Stopped, std::memory_order_relaxed))
+    if (m_state.compare_exchange_strong(expectedState, State::Stopped, std::memory_order_acquire))
     {
         wake();
         m_thread.join();
@@ -221,7 +221,7 @@ template <typename Task, template<typename> class Queue>
 inline void Worker<Task, Queue>::start(const size_t id, std::shared_ptr<ThreadPoolState<Task, Queue>> state)
 {
     auto expectedState = State::Initialized;
-    if (!m_state.compare_exchange_strong(expectedState, State::Running, std::memory_order_relaxed))
+    if (!m_state.compare_exchange_strong(expectedState, State::Running, std::memory_order_acquire))
         throw std::runtime_error("Cannot start Worker: it has previously been started or stopped.");
 
     m_thread = std::thread(&Worker<Task, Queue>::threadFunc, this, id, state);
