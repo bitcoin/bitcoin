@@ -1662,12 +1662,12 @@ UniValue finalizepsbt(const JSONRPCRequest& request)
             mtx.vin[i].scriptWitness = psbtx.inputs[i].final_script_witness;
         }
         ssTx << mtx;
-        result.push_back(Pair("hex", HexStr(ssTx)));
+        result.pushKV("hex", HexStr(ssTx));
     } else {
         ssTx << psbtx;
-        result.push_back(Pair("psbt", EncodeBase64(ssTx.str())));
+        result.pushKV("psbt", EncodeBase64(ssTx.str()));
     }
-    result.push_back(Pair("complete", complete));
+    result.pushKV("complete", complete);
 
     return result;
 }
