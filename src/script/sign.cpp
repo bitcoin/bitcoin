@@ -645,9 +645,14 @@ bool PublicOnlySigningProvider::GetCScript(const CScriptID &scriptid, CScript& s
     return m_provider->GetCScript(scriptid, script);
 }
 
-bool PublicOnlySigningProvider::GetPubKey(const CKeyID &address, CPubKey& pubkey) const
+bool PublicOnlySigningProvider::GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const
 {
-    return m_provider->GetPubKey(address, pubkey);
+    return m_provider->GetPubKey(keyid, pubkey);
+}
+
+bool PublicOnlySigningProvider::GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const
+{
+    return m_provider->GetKeyOrigin(keyid, info);
 }
 
 bool FlatSigningProvider::GetCScript(const CScriptID& scriptid, CScript& script) const { return LookupHelper(scripts, scriptid, script); }
