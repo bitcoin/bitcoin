@@ -43,6 +43,8 @@ class CTransaction;
 class CTxOut;
 class Coin;
 class CWallet;
+class CReserveKey;
+class CWalletTx;
 struct CAssetOutputEntry;
 
 // 50000 * 82 Bytes == 4.1 Mb
@@ -331,6 +333,7 @@ bool IsNewOwnerTxValid(const CTransaction& tx, const std::string& assetName, con
 
 bool CheckAssetOwner(const std::string& assetName);
 void GetAllOwnedAssets(std::vector<std::string>& names);
+void GetAllMyAssets(std::vector<std::string>& names);
 
 void UpdatePossibleAssets();
 
@@ -350,5 +353,7 @@ std::string DecodeIPFS(std::string encoded);
 std::string EncodeIPFS(std::string decoded);
 
 bool CreateAssetTransaction(CWallet* pwallet, const CNewAsset& asset, const std::string& address, std::pair<int, std::string>& error, std::string& txid, std::string& rvnChangeAddress);
-bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& asset, const std::string& address, std::pair<int, std::string>& error, std::string& txid);
+bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& asset, const std::string& address, const std::string& changeAddress, std::pair<int, std::string>& error, std::string& txid);
+bool CreateTransferAssetTransaction(CWallet* pwallet, const std::vector< std::pair<CAssetTransfer, std::string> >vTransfers, const std::string& changeAddress, std::pair<int, std::string>& error, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRequired);
+bool SendAssetTransferTransaction(CWallet* pwallet, CWalletTx& transaction, CReserveKey& reserveKey, std::pair<int, std::string>& error, std::string& txid);
 #endif //RAVENCOIN_ASSET_PROTOCOL_H

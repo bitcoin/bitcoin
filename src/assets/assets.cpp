@@ -1709,6 +1709,13 @@ void GetAllOwnedAssets(std::vector<std::string>& names)
     }
 }
 
+void GetAllMyAssets(std::vector<std::string>& names)
+{
+    for (auto owned : passets->mapMyUnspentAssets) {
+        names.emplace_back(owned.first);
+    }
+}
+
 CAmount GetIssueAssetBurnAmount()
 {
     return Params().IssueAssetBurnAmount();
@@ -1904,14 +1911,42 @@ bool CreateAssetTransaction(CWallet* pwallet, const CNewAsset& asset, const std:
     return true;
 }
 
-bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& reissueAsset, const std::string& address, std::pair<int, std::string>& error, std::string& txid)
+bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& reissueAsset, const std::string& address, const std::string& changeAddress, std::pair<int, std::string>& error, std::string& txid)
 {
     std::string asset_name = reissueAsset.strName;
+    std::string change_address = changeAddress;
 
     // Check that validitity of the address
     if (!IsValidDestinationString(address)) {
         error = std::make_pair(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raven address: ") + address);
         return false;
+    }
+
+    if (!change_address.empty()) {
+        CTxDestination destination = DecodeDestination(change_address);
+        if (!IsValidDestination(destination)) {
+            error = std::make_pair(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raven address: ") + change_address);
+            return false;
+        }
+    } else {
+        // Create a new address
+        std::string strAccount;
+
+        if (!pwallet->IsLocked()) {
+            pwallet->TopUpKeyPool();
+        }
+
+        // Generate a new key that is added to wallet
+        CPubKey newKey;
+        if (!pwallet->GetKeyFromPool(newKey)) {
+            error = std::make_pair(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+            return false;
+        }
+        CKeyID keyID = newKey.GetID();
+
+        pwallet->SetAddressBook(keyID, strAccount, "receive");
+
+        change_address = EncodeDestination(keyID);
     }
 
     // Check the assets name
@@ -1988,7 +2023,7 @@ bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& reissu
     }
 
     // Get the script for the destination address for the assets
-    CScript scriptTransferOwnerAsset = GetScriptForDestination(DecodeDestination(address));
+    CScript scriptTransferOwnerAsset = GetScriptForDestination(DecodeDestination(change_address));
 
     CAssetTransfer assetTransfer(asset_name + OWNER, OWNER_ASSET_AMOUNT);
     assetTransfer.ConstructTransaction(scriptTransferOwnerAsset);
@@ -1996,10 +2031,9 @@ bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& reissu
     // Get the script for the burn address
     CScript scriptPubKeyBurn = GetScriptForDestination(DecodeDestination(Params().ReissueAssetBurnAddress()));
 
-    CMutableTransaction mutTx;
-
     CWalletTx wtxNew;
     CCoinControl coin_control;
+    coin_control.destChange = DecodeDestination(change_address);
 
     // Create and send the transaction
     CReserveKey reservekey(pwallet);
@@ -2027,5 +2061,101 @@ bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& reissu
     }
 
     txid = wtxNew.GetHash().GetHex();
+    return true;
+}
+
+bool CreateTransferAssetTransaction(CWallet* pwallet, const std::vector< std::pair<CAssetTransfer, std::string> >vTransfers, const std::string& changeAddress, std::pair<int, std::string>& error, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRequired)
+{
+    // Initialize Values for transaction
+    std::string strTxError;
+    std::vector<CRecipient> vecSend;
+    int nChangePosRet = -1;
+    bool fSubtractFeeFromAmount = false;
+
+    // Check for a balance before processing transfers
+    CAmount curBalance = pwallet->GetBalance();
+    if (curBalance == 0) {
+        error = std::make_pair(RPC_WALLET_INSUFFICIENT_FUNDS, std::string("This wallet doesn't contain any RVN, transfering an asset requires a network fee"));
+        return false;
+    }
+
+    // Check for peers and connections
+    if (pwallet->GetBroadcastTransactions() && !g_connman) {
+        error = std::make_pair(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+        return false;
+    }
+
+    std::set<COutPoint> myAssetOutPoints;
+    // Loop through all transfers and create scriptpubkeys for them
+    for (auto transfer : vTransfers) {
+        std::string address = transfer.second;
+        std::string asset_name = transfer.first.strName;
+        CAmount nAmount = transfer.first.nAmount;
+
+        if (!IsValidDestinationString(address)) {
+            error = std::make_pair(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raven address: ") + address);
+            return false;
+        }
+
+        if (!passets) {
+            error = std::make_pair(RPC_DATABASE_ERROR, std::string("passets isn't initialized"));
+            return false;
+        }
+
+        std::set<COutPoint> myTempAssetOutPoints;
+        if (!passets->GetAssetsOutPoints(asset_name, myTempAssetOutPoints)) {
+            error = std::make_pair(RPC_INVALID_PARAMS, std::string("This wallet doesn't own any assets with the name: ") + asset_name);
+            return false;
+        }
+
+        if (myTempAssetOutPoints.size() == 0) {
+            error = std::make_pair(RPC_INVALID_PARAMS, std::string("This wallet doesn't own any assets with the name: ") + asset_name);
+            return false;
+        }
+
+        // Put the outpoints into our master set
+        myAssetOutPoints.insert(myTempAssetOutPoints.begin(), myTempAssetOutPoints.end());
+
+        // If it is an ownership transfer, make a quick check to make sure the amount is 1
+        if (IsAssetNameAnOwner(asset_name))
+            if (nAmount != COIN * 1) {
+                error = std::make_pair(RPC_INVALID_PARAMS, std::string(
+                        "When transfer an 'Ownership Asset' the amount must always be 1. Please try again with the amount of 1"));
+                return false;
+            }
+
+        // Get the script for the burn address
+        CScript scriptPubKey = GetScriptForDestination(DecodeDestination(address));
+
+        // Update the scriptPubKey with the transfer asset information
+        CAssetTransfer assetTransfer(asset_name, nAmount);
+        assetTransfer.ConstructTransaction(scriptPubKey);
+
+        CRecipient recipient = {scriptPubKey, 0, fSubtractFeeFromAmount};
+        vecSend.push_back(recipient);
+    }
+
+    CCoinControl coin_control;
+
+    // Create and send the transaction
+    if (!pwallet->CreateTransactionWithTransferAsset(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strTxError, coin_control, myAssetOutPoints)) {
+        if (!fSubtractFeeFromAmount && nFeeRequired > curBalance) {
+            error = std::make_pair(RPC_WALLET_ERROR, strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired)));
+            return false;
+        }
+        error = std::make_pair(RPC_TRANSACTION_ERROR, strTxError);
+        return false;
+    }
+    return true;
+}
+
+bool SendAssetTransferTransaction(CWallet* pwallet, CWalletTx& transaction, CReserveKey& reserveKey, std::pair<int, std::string>& error, std::string& txid)
+{
+    CValidationState state;
+    if (!pwallet->CommitTransaction(transaction, reserveKey, g_connman.get(), state)) {
+        error = std::make_pair(RPC_WALLET_ERROR, strprintf("Error: The transaction was rejected! Reason given: %s", state.GetRejectReason()));
+        return false;
+    }
+    txid = transaction.GetHash().GetHex();
     return true;
 }

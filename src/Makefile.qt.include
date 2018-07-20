@@ -115,7 +115,8 @@ QT_FORMS_UI = \
   qt/forms/transactiondescdialog.ui \
   qt/forms/assetsdialog.ui \
   qt/forms/createassetdialog.ui \
-  qt/forms/reissueassetdialog.ui
+  qt/forms/reissueassetdialog.ui \
+  qt/forms/sendassetsentry.ui
 
 QT_MOC_CPP = \
   qt/moc_addressbookpage.cpp \
@@ -167,7 +168,8 @@ QT_MOC_CPP = \
   qt/moc_walletview.cpp \
   qt/moc_assetsdialog.cpp \
   qt/moc_createassetdialog.cpp \
-  qt/moc_reissueassetdialog.cpp
+  qt/moc_reissueassetdialog.cpp \
+  qt/moc_sendassetsentry.cpp
 
 RAVEN_MM = \
   qt/macdockiconhandler.mm \
@@ -231,6 +233,7 @@ RAVEN_QT_H = \
   qt/recentrequeststablemodel.h \
   qt/reissueassetdialog.h \
   qt/rpcconsole.h \
+  qt/sendassetsentry.h \
   qt/sendcoinsdialog.h \
   qt/sendcoinsentry.h \
   qt/signverifymessagedialog.h \
@@ -350,6 +353,7 @@ RAVEN_QT_WALLET_CPP = \
   qt/receiverequestdialog.cpp \
   qt/recentrequeststablemodel.cpp \
   qt/reissueassetdialog.cpp \
+  qt/sendassetsentry.cpp \
   qt/sendcoinsdialog.cpp \
   qt/sendcoinsentry.cpp \
   qt/signverifymessagedialog.cpp \
