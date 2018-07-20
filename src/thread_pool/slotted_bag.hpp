@@ -154,7 +154,7 @@ inline bool SlottedBag<Queue>::empty(size_t id)
 {
     // This consumer action is solely responsible for an indiscriminant QueuedValid -> QueuedInvalid state transition.
     auto state = Slot::State::QueuedValid;
-    return m_slots[id].state.compare_exchange_strong(state, Slot::State::QueuedInvalid, std::memory_order_acq_rel);
+    return m_slots[id].state.compare_exchange_strong(state, Slot::State::QueuedInvalid, std::memory_order_relaxed);
 }
 
 template <template<typename> class Queue>
@@ -167,7 +167,7 @@ inline std::pair<bool, size_t> SlottedBag<Queue>::tryEmptyAny()
         // (i.e. they are solely responsible for the transition back into the NotQueued state) by virtue of the
         // MPMCBoundedQueue's atomicity semantics.
         // In other words, only one consumer can hold a popped slot before it its state is set to NotQueued.
-        switch (slot->state.exchange(Slot::State::NotQueued, std::memory_order_acq_rel))
+        switch (slot->state.exchange(Slot::State::NotQueued, std::memory_order_relaxed))
         {
         case Slot::State::NotQueued:
             throw std::logic_error("State machine logic violation.");
