@@ -98,6 +98,8 @@ BASE_SCRIPTS = [
     'mempool_persist.py',
     'wallet_multiwallet.py',
     'wallet_multiwallet.py --usecli',
+    'wallet_disableprivatekeys.py',
+    'wallet_disableprivatekeys.py --usecli',
     'interface_http.py',
     'rpc_psbt.py',
     'rpc_users.py',
