@@ -3905,17 +3905,7 @@ bool FillPSCT(const CWallet* pwallet, PartiallySignedTransaction& psctx, const C
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Specified Sighash and sighash in PSCT do not match.");
         }
 
-        SignatureData sigdata;
-        complete &= SignPSCTInput(HidingSigningProvider(pwallet, !sign, !bip32derivs), *psctx.tx, input, sigdata, i, sighash_type);
-
-        if (it != pwallet->mapWallet.end()) {
-            // Drop the unnecessary UTXO if we added both from the wallet.
-            if (sigdata.witness) {
-                input.non_witness_utxo = nullptr;
-            } else {
-                input.witness_utxo.SetNull();
-            }
-        }
+        complete &= SignPSCTInput(HidingSigningProvider(pwallet, !sign, !bip32derivs), *psctx.tx, input, i, sighash_type);
     }
 
     // Fill in the bip32 keypaths and redeemscripts for the outputs so that hardware wallets can identify change
@@ -4186,7 +4176,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "walletlock",                       &walletlock,                    {} },
     { "wallet",             "walletpassphrase",                 &walletpassphrase,              {"passphrase","timeout"} },
     { "wallet",             "walletpassphrasechange",           &walletpassphrasechange,        {"oldpassphrase","newpassphrase"} },
-    { "wallet",             "walletprocesspsct",                &walletprocesspsct,             {"psbt","sign","sighashtype","bip32derivs"} },
+    { "wallet",             "walletprocesspsct",                &walletprocesspsct,             {"psct","sign","sighashtype","bip32derivs"} },
 };
 
 void RegisterWalletRPCCommands(CRPCTable &t)

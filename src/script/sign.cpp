@@ -236,7 +236,7 @@ bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreato
     return sigdata.complete;
 }
 
-bool SignPSCTInput(const SigningProvider& provider, const CMutableTransaction& tx, PSCTInput& input, SignatureData& sigdata, int index, int sighash)
+bool SignPSCTInput(const SigningProvider& provider, const CMutableTransaction& tx, PSCTInput& input, int index, int sighash)
 {
     // if this input has a final scriptsig or scriptwitness, don't do anything with it
     if (!input.final_script_sig.empty() || !input.final_script_witness.IsNull()) {
@@ -244,6 +244,7 @@ bool SignPSCTInput(const SigningProvider& provider, const CMutableTransaction& t
     }
 
     // Fill SignatureData with input info
+    SignatureData sigdata;
     input.FillSignatureData(sigdata);
 
     // Get UTXO
@@ -275,6 +276,16 @@ bool SignPSCTInput(const SigningProvider& provider, const CMutableTransaction& t
     // Verify that a witness signature was produced in case one was required.
     if (require_witness_sig && !sigdata.witness) return false;
     input.FromSignatureData(sigdata);
+
+    // If both UTXO types are present, drop the unnecessary one.
+    if (input.non_witness_utxo && !input.witness_utxo.IsNull()) {
+        if (sigdata.witness) {
+            input.non_witness_utxo = nullptr;
+        } else {
+            input.witness_utxo.SetNull();
+        }
+    }
+
     return sig_complete;
 }
 

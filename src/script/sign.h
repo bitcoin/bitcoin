@@ -704,7 +704,7 @@ bool SignSignature(const SigningProvider &provider, const CScript& fromPubKey, C
 bool SignSignature(const SigningProvider &provider, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType);
 
 /** Signs a PSCTInput, verifying that all provided data matches what is being signed. */
-bool SignPSCTInput(const SigningProvider& provider, const CMutableTransaction& tx, PSCTInput& input, SignatureData& sigdata, int index, int sighash = 1);
+bool SignPSCTInput(const SigningProvider& provider, const CMutableTransaction& tx, PSCTInput& input, int index, int sighash = SIGHASH_ALL);
 
 /** Extract signature data from a transaction input, and insert it. */
 SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nIn, const CTxOut& txout);
