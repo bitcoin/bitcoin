@@ -74,7 +74,6 @@
 #include <malloc.h>
 #endif
 
-#include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/interprocess/sync/file_lock.hpp>
@@ -1060,20 +1059,27 @@ uint32_t StringVersionToInt(const std::string& strVersion)
     return nVersion;
 }
 
+/** Private helper function that concatenates version. */
+static void AppendVersion(std::string& res, const std::string& next)
+{
+    if (!res.empty()) res += ", ";
+    res += next;
+}
+
 std::string IntVersionToString(uint32_t nVersion)
 {
     if((nVersion >> 24) > 0) // MSB is always 0
         throw std::bad_cast();
     if(nVersion == 0)
         throw std::bad_cast();
-    std::array<std::string, 3> tokens;
+    std::string version;
     for(unsigned idx = 0; idx < 3; idx++)
     {
         unsigned shift = (2 - idx) * 8;
         uint32_t byteValue = (nVersion >> shift) & 0xff;
-        tokens[idx] = boost::lexical_cast<std::string>(byteValue);
+        AppendVersion(version, boost::lexical_cast<std::string>(byteValue));
     }
-    return boost::join(tokens, ".");
+    return version;
 }
 
 std::string SafeIntVersionToString(uint32_t nVersion)
