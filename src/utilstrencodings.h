@@ -62,6 +62,16 @@ int64_t atoi64(const std::string& str);
 int atoi(const std::string& str);
 
 /**
+ * Tests if the given character is a decimal digit.
+ * @param[in] c     character to test
+ * @return          true if the argument is a decimal digit; otherwise false.
+ */
+constexpr bool IsDigit(char c)
+{
+    return c >= '0' && c <= '9';
+}
+
+/**
  * Convert string to signed 32-bit integer with strict parse error feedback.
  * @returns true if the entire string could be parsed as valid integer,
  *   false if not the entire string could be parsed or when overflow or underflow occurred.
