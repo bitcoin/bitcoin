@@ -1345,6 +1345,10 @@ bool AcceptToMemoryPoolWithTime(CTxMemPool& pool, CValidationState &state, const
                         bool* pfMissingInputs, int64_t nAcceptTime, std::list<CTransactionRef>* plTxnReplaced,
                         bool fOverrideMempoolLimit, const CAmount nAbsurdFee, bool fDryRun, bool bMultiThreaded)
 {
+	// SYSCOIN if 2 or less threads available then goto single threaded mode
+	if (nScriptCheckThreads <= 2) {
+		bMultiThreaded = false;
+	}
 	// SYSCOIN if its been less 60 seconds since the last MT mempool verification failure then fallback to single threaded
 	if (GetTime() - nLastMultithreadMempoolFailure < 60) {
 		LogPrint("mempool", "%s\n", "AcceptToMemoryPoolWithTime: switching to single thread verification...");
