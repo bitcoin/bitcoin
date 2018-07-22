@@ -1109,7 +1109,6 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
     while (!waitingOnDependants.empty()) {
         const CTxMemPoolEntry* entry = waitingOnDependants.front();
         waitingOnDependants.pop_front();
-        CValidationState state;
         if (!mempoolDuplicate.HaveInputs(entry->GetTx())) {
             waitingOnDependants.push_back(entry);
             stepsSinceLastRemove++;
