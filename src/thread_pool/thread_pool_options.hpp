@@ -267,7 +267,7 @@ inline std::chrono::microseconds const& ThreadPoolOptions::rousePeriod() const
 
 inline size_t ThreadPoolOptions::defaultThreadCount()
 {
-    static const size_t instance = std::max<size_t>(1u, std::thread::hardware_concurrency()-1);
+    static const size_t instance = std::max<size_t>(2u, std::thread::hardware_concurrency()-1);
     return instance;
 }
 
