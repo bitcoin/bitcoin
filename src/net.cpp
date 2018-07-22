@@ -1241,6 +1241,17 @@ void CConnman::DisconnectNodes()
 {
     {
         LOCK(cs_vNodes);
+
+        if (!fNetworkActive) {
+            // Disconnect any connected nodes
+            for (CNode* pnode : vNodes) {
+                if (!pnode->fDisconnect) {
+                    LogPrint(BCLog::NET, "Network not active, dropping peer=%d\n", pnode->GetId());
+                    pnode->fDisconnect = true;
+                }
+            }
+        }
+
         // Disconnect unused nodes
         for (auto it = vNodes.begin(); it != vNodes.end(); )
         {
@@ -2591,14 +2602,6 @@ void CConnman::SetNetworkActive(bool active)
     }
 
     fNetworkActive = active;
-
-    if (!fNetworkActive) {
-        LOCK(cs_vNodes);
-        // Close sockets to all nodes
-        for (CNode* pnode : vNodes) {
-            pnode->CloseSocketDisconnect();
-        }
-    }
 
     uiInterface.NotifyNetworkActiveChanged(fNetworkActive);
 }
