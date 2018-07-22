@@ -72,7 +72,23 @@ public:
     }
 };
 
-static void SetMaxOpenFiles(leveldb::Options *options) {
+// Mmap is only used on 64-bit Unix systems.
+constexpr bool LevelDBUsesMmap() {
+#ifdef WIN32
+    return false;
+#else
+    return sizeof(void*) >= 8;
+#endif
+}
+
+// Systems with mmap do not use the block cache.
+constexpr bool LevelDBUsesBlockCache()
+{
+    return !LevelDBUsesMmap();
+}
+
+static void SetMaxOpenFiles(leveldb::Options *options)
+{
     // On most platforms the default setting of max_open_files (which is 1000)
     // is optimal. On Windows using a large file count is OK because the handles
     // do not interfere with select() loops. On 64-bit Unix hosts this value is
@@ -100,8 +116,20 @@ static void SetMaxOpenFiles(leveldb::Options *options) {
 static leveldb::Options GetOptions(size_t nCacheSize)
 {
     leveldb::Options options;
-    options.block_cache = leveldb::NewLRUCache(nCacheSize / 2);
-    options.write_buffer_size = nCacheSize / 4; // up to two write buffers may be held in memory simultaneously
+
+    // Only give LevelDB memory for the block cache if it will actually use it;
+    // on systems mmap this space is not used by LevelDB (as it's already in the
+    // page cache), so don't bother in that case.
+    //
+    // Up to two write buffers may be held in memory simultaneously, so set
+    // write_buffer_size for the worst case.
+    if (LevelDBUsesBlockCache()) {
+        options.write_buffer_size = nCacheSize / 4;
+        options.block_cache = leveldb::NewLRUCache(nCacheSize / 2);
+    } else {
+        options.write_buffer_size = nCacheSize / 2;
+    }
+
     options.filter_policy = leveldb::NewBloomFilterPolicy(10);
     options.compression = leveldb::kNoCompression;
     options.info_log = new CBitcoinLevelDBLogger();
