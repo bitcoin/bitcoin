@@ -1327,10 +1327,16 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 			int numTries = 100;
 			while (!threadpool.tryPost(t)) {
 				numTries--;
-				if (numTries <= 0)
+				if (numTries <= 0) {
+					{
+						LOCK2(scriptCheckMapCS, scriptExecutionCacheCS);
+						scriptCheckMap.erase(hash);
+						scriptExecutionCache.insert(hashCacheEntry);
+					}
 					return state.DoS(0, false,
 						REJECT_INVALID, "threadpool-full", false,
 						"AcceptToMemoryPoolWorker: thread pool queue is full");
+				}
 				MilliSleep(1);
 			}
 		}
@@ -1345,10 +1351,6 @@ bool AcceptToMemoryPoolWithTime(CTxMemPool& pool, CValidationState &state, const
                         bool* pfMissingInputs, int64_t nAcceptTime, std::list<CTransactionRef>* plTxnReplaced,
                         bool fOverrideMempoolLimit, const CAmount nAbsurdFee, bool fDryRun, bool bMultiThreaded)
 {
-	// SYSCOIN if 2 or less threads available then goto single threaded mode
-	if (nScriptCheckThreads <= 2) {
-		bMultiThreaded = false;
-	}
 	// SYSCOIN if its been less 60 seconds since the last MT mempool verification failure then fallback to single threaded
 	if (GetTime() - nLastMultithreadMempoolFailure < 60) {
 		LogPrint("mempool", "%s\n", "AcceptToMemoryPoolWithTime: switching to single thread verification...");
