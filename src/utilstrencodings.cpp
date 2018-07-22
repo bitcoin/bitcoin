@@ -473,7 +473,7 @@ bool ParseFixedPoint(const std::string &val, int decimals, int64_t *amount_out)
             /* pass single 0 */
             ++ptr;
         } else if (val[ptr] >= '1' && val[ptr] <= '9') {
-            while (ptr < end && val[ptr] >= '0' && val[ptr] <= '9') {
+            while (ptr < end && IsDigit(val[ptr])) {
                 if (!ProcessMantissaDigit(val[ptr], mantissa, mantissa_tzeros))
                     return false; /* overflow */
                 ++ptr;
@@ -483,9 +483,9 @@ bool ParseFixedPoint(const std::string &val, int decimals, int64_t *amount_out)
     if (ptr < end && val[ptr] == '.')
     {
         ++ptr;
-        if (ptr < end && val[ptr] >= '0' && val[ptr] <= '9')
+        if (ptr < end && IsDigit(val[ptr]))
         {
-            while (ptr < end && val[ptr] >= '0' && val[ptr] <= '9') {
+            while (ptr < end && IsDigit(val[ptr])) {
                 if (!ProcessMantissaDigit(val[ptr], mantissa, mantissa_tzeros))
                     return false; /* overflow */
                 ++ptr;
@@ -502,8 +502,8 @@ bool ParseFixedPoint(const std::string &val, int decimals, int64_t *amount_out)
             exponent_sign = true;
             ++ptr;
         }
-        if (ptr < end && val[ptr] >= '0' && val[ptr] <= '9') {
-            while (ptr < end && val[ptr] >= '0' && val[ptr] <= '9') {
+        if (ptr < end && IsDigit(val[ptr])) {
+            while (ptr < end && IsDigit(val[ptr])) {
                 if (exponent > (UPPER_BOUND / 10LL))
                     return false; /* overflow */
                 exponent = exponent * 10 + val[ptr] - '0';
