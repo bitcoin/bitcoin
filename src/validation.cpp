@@ -1313,8 +1313,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
 					nLastMultithreadMempoolFailure = GetTime();
 					{
-						LOCK(scriptCheckMapCS);
+						LOCK2(scriptCheckMapCS, scriptExecutionCacheCS);
 						scriptCheckMap.erase(hash);
+						scriptExecutionCache.insert(hashCacheEntry);
 					}
 					return;
 				}
@@ -1329,9 +1330,8 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 				numTries--;
 				if (numTries <= 0) {
 					{
-						LOCK2(scriptCheckMapCS, scriptExecutionCacheCS);
+						LOCK2(scriptCheckMapCS);
 						scriptCheckMap.erase(hash);
-						scriptExecutionCache.insert(hashCacheEntry);
 					}
 					return state.DoS(0, false,
 						REJECT_INVALID, "threadpool-full", false,
