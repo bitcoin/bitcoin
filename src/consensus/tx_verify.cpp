@@ -276,7 +276,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, CAssetsCa
                     CAssetTransfer transfer;
                     std::string transferAddress;
                     if (TransferAssetFromScript(out.scriptPubKey, transfer, transferAddress)) {
-                        if (reissue.strName + OWNER == transfer.strName) {
+                        if (reissue.strName + OWNER_TAG == transfer.strName) {
                             foundOwnerAsset = true;
                             break;
                         }

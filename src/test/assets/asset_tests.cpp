@@ -20,96 +20,103 @@ BOOST_FIXTURE_TEST_SUITE(asset_tests, BasicTestingSetup)
     }
 
     BOOST_AUTO_TEST_CASE(name_validation_tests) {
+        AssetType type;
+    
         // regular
-        BOOST_CHECK(IsAssetNameValid("MIN"));
-        BOOST_CHECK(IsAssetNameValid("MAX_ASSET_IS_30_CHARACTERS_LNG"));
-        BOOST_CHECK(!IsAssetNameValid("MAX_ASSET_IS_31_CHARACTERS_LONG"));
-        BOOST_CHECK(IsAssetNameValid("A_BCDEFGHIJKLMNOPQRSTUVWXY.Z"));
-        BOOST_CHECK(IsAssetNameValid("0_12345678.9"));
+        BOOST_CHECK(IsAssetNameValid("MIN", type));
+        BOOST_CHECK(type == AssetType::ROOT);
+        BOOST_CHECK(IsAssetNameValid("MAX_ASSET_IS_30_CHARACTERS_LNG", type));
+        BOOST_CHECK(!IsAssetNameValid("MAX_ASSET_IS_31_CHARACTERS_LONG", type));
+        BOOST_CHECK(type == AssetType::INVALID);
+        BOOST_CHECK(IsAssetNameValid("A_BCDEFGHIJKLMNOPQRSTUVWXY.Z", type));
+        BOOST_CHECK(IsAssetNameValid("0_12345678.9", type));
 
-        BOOST_CHECK(!IsAssetNameValid("NO"));
-        BOOST_CHECK(!IsAssetNameValid("nolower"));
-        BOOST_CHECK(!IsAssetNameValid("NO SPACE"));
-        BOOST_CHECK(!IsAssetNameValid("(#&$(&*^%$))"));
+        BOOST_CHECK(!IsAssetNameValid("NO", type));
+        BOOST_CHECK(!IsAssetNameValid("nolower", type));
+        BOOST_CHECK(!IsAssetNameValid("NO SPACE", type));
+        BOOST_CHECK(!IsAssetNameValid("(#&$(&*^%$))", type));
 
-        BOOST_CHECK(!IsAssetNameValid("_ABC"));
-        BOOST_CHECK(!IsAssetNameValid("_ABC"));
-        BOOST_CHECK(!IsAssetNameValid("ABC_"));
-        BOOST_CHECK(!IsAssetNameValid(".ABC"));
-        BOOST_CHECK(!IsAssetNameValid("ABC."));
-        BOOST_CHECK(!IsAssetNameValid("AB..C"));
-        BOOST_CHECK(!IsAssetNameValid("A__BC"));
-        BOOST_CHECK(!IsAssetNameValid("A._BC"));
-        BOOST_CHECK(!IsAssetNameValid("AB_.C"));
+        BOOST_CHECK(!IsAssetNameValid("_ABC", type));
+        BOOST_CHECK(!IsAssetNameValid("_ABC", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC_", type));
+        BOOST_CHECK(!IsAssetNameValid(".ABC", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC.", type));
+        BOOST_CHECK(!IsAssetNameValid("AB..C", type));
+        BOOST_CHECK(!IsAssetNameValid("A__BC", type));
+        BOOST_CHECK(!IsAssetNameValid("A._BC", type));
+        BOOST_CHECK(!IsAssetNameValid("AB_.C", type));
 
         //- Versions of RAVENCOIN NOT allowed
-        BOOST_CHECK(!IsAssetNameValid("RVN"));
-        BOOST_CHECK(!IsAssetNameValid("RAVEN"));
-        BOOST_CHECK(!IsAssetNameValid("RAVENCOIN"));
-        BOOST_CHECK(!IsAssetNameValid("RAVENC0IN"));
-        BOOST_CHECK(!IsAssetNameValid("RAVENCO1N"));
-        BOOST_CHECK(!IsAssetNameValid("RAVENC01N"));
+        BOOST_CHECK(!IsAssetNameValid("RVN", type));
+        BOOST_CHECK(!IsAssetNameValid("RAVEN", type));
+        BOOST_CHECK(!IsAssetNameValid("RAVENCOIN", type));
+        BOOST_CHECK(!IsAssetNameValid("RAVENC0IN", type));
+        BOOST_CHECK(!IsAssetNameValid("RAVENCO1N", type));
+        BOOST_CHECK(!IsAssetNameValid("RAVENC01N", type));
 
         //- Versions of RAVENCOIN ALLOWED
-        BOOST_CHECK(IsAssetNameValid("RAVEN.COIN"));
-        BOOST_CHECK(IsAssetNameValid("RAVEN_COIN"));
-        BOOST_CHECK(IsAssetNameValid("RVNSPYDER"));
-        BOOST_CHECK(IsAssetNameValid("SPYDERRVN"));
-        BOOST_CHECK(IsAssetNameValid("RAVENSPYDER"));
-        BOOST_CHECK(IsAssetNameValid("SPYDERAVEN"));
-        BOOST_CHECK(IsAssetNameValid("BLACK_RAVENS"));
-        BOOST_CHECK(IsAssetNameValid("SERVNOT"));
+        BOOST_CHECK(IsAssetNameValid("RAVEN.COIN", type));
+        BOOST_CHECK(IsAssetNameValid("RAVEN_COIN", type));
+        BOOST_CHECK(IsAssetNameValid("RVNSPYDER", type));
+        BOOST_CHECK(IsAssetNameValid("SPYDERRVN", type));
+        BOOST_CHECK(IsAssetNameValid("RAVENSPYDER", type));
+        BOOST_CHECK(IsAssetNameValid("SPYDERAVEN", type));
+        BOOST_CHECK(IsAssetNameValid("BLACK_RAVENS", type));
+        BOOST_CHECK(IsAssetNameValid("SERVNOT", type));
 
         // subs
-        BOOST_CHECK(IsAssetNameValid("ABC/A"));
-        BOOST_CHECK(IsAssetNameValid("ABC/A/1"));
-        BOOST_CHECK(IsAssetNameValid("ABC/A_1/1.A"));
-        BOOST_CHECK(IsAssetNameValid("ABC/AB/XYZ/STILL/MAX/30/123456"));
+        BOOST_CHECK(IsAssetNameValid("ABC/A", type));
+        BOOST_CHECK(type == AssetType::SUB);
+        BOOST_CHECK(IsAssetNameValid("ABC/A/1", type));
+        BOOST_CHECK(IsAssetNameValid("ABC/A_1/1.A", type));
+        BOOST_CHECK(IsAssetNameValid("ABC/AB/XYZ/STILL/MAX/30/123456", type));
 
-        BOOST_CHECK(!IsAssetNameValid("ABC//MIN_1"));
-        BOOST_CHECK(!IsAssetNameValid("ABC/"));
-        BOOST_CHECK(!IsAssetNameValid("ABC/NOTRAIL/"));
-        BOOST_CHECK(!IsAssetNameValid("ABC/_X"));
-        BOOST_CHECK(!IsAssetNameValid("ABC/X_"));
-        BOOST_CHECK(!IsAssetNameValid("ABC/.X"));
-        BOOST_CHECK(!IsAssetNameValid("ABC/X."));
-        BOOST_CHECK(!IsAssetNameValid("ABC/X__X"));
-        BOOST_CHECK(!IsAssetNameValid("ABC/X..X"));
-        BOOST_CHECK(!IsAssetNameValid("ABC/X_.X"));
-        BOOST_CHECK(!IsAssetNameValid("ABC/X._X"));
-        BOOST_CHECK(!IsAssetNameValid("ABC/nolower"));
-        BOOST_CHECK(!IsAssetNameValid("ABC/NO SPACE"));
-        BOOST_CHECK(!IsAssetNameValid("ABC/(*#^&$%)"));
-        BOOST_CHECK(!IsAssetNameValid("ABC/AB/XYZ/STILL/MAX/30/OVERALL/1234"));
+        BOOST_CHECK(!IsAssetNameValid("ABC//MIN_1", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC/", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC/NOTRAIL/", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC/_X", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC/X_", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC/.X", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC/X.", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC/X__X", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC/X..X", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC/X_.X", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC/X._X", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC/nolower", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC/NO SPACE", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC/(*#^&$%)", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC/AB/XYZ/STILL/MAX/30/OVERALL/1234", type));
 
         // unique
-        BOOST_CHECK(IsAssetNameValid("ABC#AZaz09"));
-        BOOST_CHECK(IsAssetNameValid("ABC#@$%&*()[]{}<>-_.;?\\:"));
-        BOOST_CHECK(!IsAssetNameValid("ABC#no!bangs"));
-        BOOST_CHECK(IsAssetNameValid("ABC/THING#_STILL_30_MAX------_"));
+        BOOST_CHECK(IsAssetNameValid("ABC#AZaz09", type));
+        BOOST_CHECK(type == AssetType::UNIQUE);
+        BOOST_CHECK(IsAssetNameValid("ABC#@$%&*()[]{}<>-_.;?\\:", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC#no!bangs", type));
+        BOOST_CHECK(IsAssetNameValid("ABC/THING#_STILL_30_MAX------_", type));
 
-        BOOST_CHECK(!IsAssetNameValid("MIN#"));
-        BOOST_CHECK(!IsAssetNameValid("ABC#NO#HASH"));
-        BOOST_CHECK(!IsAssetNameValid("ABC#NO SPACE"));
-        BOOST_CHECK(!IsAssetNameValid("ABC#RESERVED/"));
-        BOOST_CHECK(!IsAssetNameValid("ABC#RESERVED~"));
-        BOOST_CHECK(!IsAssetNameValid("ABC#RESERVED^"));
+        BOOST_CHECK(!IsAssetNameValid("MIN#", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC#NO#HASH", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC#NO SPACE", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC#RESERVED/", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC#RESERVED~", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC#RESERVED^", type));
 
         // channel
-        BOOST_CHECK(IsAssetNameValid("ABC~1"));
-        BOOST_CHECK(IsAssetNameValid("ABC~STILL_MAX_OF_30.CHARS_1234"));
+        BOOST_CHECK(IsAssetNameValid("ABC~1", type));
+        BOOST_CHECK(type == AssetType::CHANNEL);
+        BOOST_CHECK(IsAssetNameValid("ABC~STILL_MAX_OF_30.CHARS_1234", type));
 
-        BOOST_CHECK(!IsAssetNameValid("MIN~"));
-        BOOST_CHECK(!IsAssetNameValid("ABC~NO~TILDE"));
-        BOOST_CHECK(!IsAssetNameValid("ABC~_ANN"));
-        BOOST_CHECK(!IsAssetNameValid("ABC~ANN_"));
-        BOOST_CHECK(!IsAssetNameValid("ABC~.ANN"));
-        BOOST_CHECK(!IsAssetNameValid("ABC~ANN."));
-        BOOST_CHECK(!IsAssetNameValid("ABC~X__X"));
-        BOOST_CHECK(!IsAssetNameValid("ABC~X._X"));
-        BOOST_CHECK(!IsAssetNameValid("ABC~X_.X"));
-        BOOST_CHECK(!IsAssetNameValid("ABC~X..X"));
-        BOOST_CHECK(!IsAssetNameValid("ABC~nolower"));
+        BOOST_CHECK(!IsAssetNameValid("MIN~", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC~NO~TILDE", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC~_ANN", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC~ANN_", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC~.ANN", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC~ANN.", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC~X__X", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC~X._X", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC~X_.X", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC~X..X", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC~nolower", type));
 
         // owner
         BOOST_CHECK(IsAssetNameAnOwner("ABC!"));
@@ -119,7 +126,8 @@ BOOST_FIXTURE_TEST_SUITE(asset_tests, BasicTestingSetup)
         BOOST_CHECK(!IsAssetNameAnOwner("MAX_ASSET_IS_31_CHARACTERS_LONG!"));
         BOOST_CHECK(IsAssetNameAnOwner("ABC/A!"));
         BOOST_CHECK(IsAssetNameAnOwner("ABC/A/1!"));
-        BOOST_CHECK(IsAssetNameValid("ABC#AZaz09"));
+        BOOST_CHECK(IsAssetNameValid("ABC!", type));
+        BOOST_CHECK(type == AssetType::OWNER);
 
 
     }

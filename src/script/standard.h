@@ -68,7 +68,8 @@ enum txnouttype
     /** RVN START */
     TX_NEW_ASSET,
     TX_REISSUE_ASSET,
-    TX_TRANSFER_ASSET
+    TX_TRANSFER_ASSET,
+    TX_RESERVED_ASSET
     /** RVN END */
 };
 

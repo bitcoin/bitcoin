@@ -272,8 +272,17 @@ bool CScript::IsTransferAsset() const
             (*this)[30] == RVN_T);
 }
 
+bool CScript::IsReservedAsset() const
+{
+    return (this->size() > 30 &&
+            (*this)[25] == OP_RVN_ASSET &&
+            (*this)[27] == RVN_R &&
+            (*this)[28] == RVN_V &&
+            (*this)[29] == RVN_N);
+}
+
 bool CScript::IsAsset() const {
-    return IsTransferAsset() || IsReissueAsset() || IsOwnerAsset() || IsNewAsset();
+    return IsTransferAsset() || IsReissueAsset() || IsOwnerAsset() || IsNewAsset() || IsReservedAsset();
 }
 /** RVN END */
 

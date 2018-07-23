@@ -38,6 +38,7 @@ const char* GetTxnOutputType(txnouttype t)
     case TX_NEW_ASSET: return ASSET_NEW_STRING;
     case TX_TRANSFER_ASSET: return ASSET_TRANSFER_STRING;
     case TX_REISSUE_ASSET: return ASSET_REISSUE_STRING;
+    case TX_RESERVED_ASSET: return ASSET_RESERVED_STRING;
     /** RVN END */
     }
     return nullptr;
@@ -94,6 +95,13 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
 
     if (scriptPubKey.IsReissueAsset()) {
         typeRet = TX_REISSUE_ASSET;
+        std::vector<unsigned char> hashBytes(scriptPubKey.begin()+3, scriptPubKey.begin()+23);
+        vSolutionsRet.push_back(hashBytes);
+        return true;
+    }
+
+    if (scriptPubKey.IsReservedAsset()) {
+        typeRet = TX_RESERVED_ASSET;
         std::vector<unsigned char> hashBytes(scriptPubKey.begin()+3, scriptPubKey.begin()+23);
         vSolutionsRet.push_back(hashBytes);
         return true;

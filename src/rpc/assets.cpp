@@ -725,7 +725,7 @@ UniValue listassets(const JSONRPCRequest& request)
 static const CRPCCommand commands[] =
 { //  category    name                          actor (function)             argNames
   //  ----------- ------------------------      -----------------------      ----------
-    { "assets",   "issue",                      &issue,                      {"asset_name","qty","to_address","change_address:","units","reissuable","has_ipfs","ipfs_hash"} },
+    { "assets",   "issue",                      &issue,                      {"asset_name","qty","to_address","change_address","units","reissuable","has_ipfs","ipfs_hash"} },
     { "assets",   "listassetbalancesbyaddress", &listassetbalancesbyaddress, {"address"} },
     { "assets",   "getassetdata",               &getassetdata,               {"asset_name"}},
     { "assets",   "listmyassets",               &listmyassets,               {"asset", "verbose", "count", "start"}},

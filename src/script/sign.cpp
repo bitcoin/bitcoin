@@ -79,6 +79,7 @@ static bool SignStep(const BaseSignatureCreator& creator, const CScript& scriptP
     switch (whichTypeRet)
     {
     case TX_NONSTANDARD:
+    case TX_RESERVED_ASSET:
     case TX_NULL_DATA:
         return false;
     /** RVN START */

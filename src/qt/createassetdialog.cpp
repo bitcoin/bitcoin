@@ -125,13 +125,15 @@ void CreateAssetDialog::CheckFormState()
 
     const CTxDestination dest = DecodeDestination(ui->addressText->text().toStdString());
 
-    if (!(IsValidDestination(dest) || ui->addressText->text().isEmpty()) && IsAssetNameValid(ui->nameText->text().toStdString())) {
+    AssetType assetType;
+    bool assetNameValid = IsAssetNameValid(ui->nameText->text().toStdString(), assetType) && assetType == AssetType::ROOT;
+    if (!(IsValidDestination(dest) || ui->addressText->text().isEmpty()) && assetNameValid) {
         ui->addressText->setStyleSheet("border: 1px solid red");
         showMessage("Warning: Invalid Raven address");
         return;
     }
 
-    if (!IsAssetNameValid(ui->nameText->text().toStdString()))
+    if (!assetNameValid)
         return;
 
     if(ui->rvnChangeBox->isChecked() && !IsValidDestinationString(ui->changeAddressText->text().toStdString())) {
@@ -194,7 +196,8 @@ void CreateAssetDialog::onNameChanged(QString name)
         return;
     }
 
-    if (!IsAssetNameValid(name.toStdString())) {
+    AssetType assetType;
+    if (!IsAssetNameValid(name.toStdString(), assetType) || assetType != AssetType::ROOT) {
         ui->nameText->setStyleSheet("border: 1px solid red");
         showMessage("Invalid: Max Size 30 Characters. Allowed characters include: A-Z 0-9 . _");
     } else {

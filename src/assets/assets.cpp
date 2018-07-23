@@ -98,34 +98,61 @@ bool IsNameValidBeforeTag(const std::string& name)
     return true;
 }
 
-bool IsAssetNameValid(const std::string& name)
+bool IsAssetNameASubasset(const std::string& name)
 {
+    std::vector<std::string> parts;
+    boost::split(parts, name, boost::is_any_of(SUB_NAME_DELIMITER));
+
+    if (!IsRootNameValid(parts.front())) return false;
+
+    return parts.size() > 1;
+}
+
+bool IsAssetNameValid(const std::string& name, AssetType& assetType)
+{
+    assetType = INVALID;
     if (std::regex_match(name, UNIQUE_INDICATOR))
     {
         if (name.size() > MAX_NAME_LENGTH) return false;
         std::vector<std::string> parts;
         boost::split(parts, name, boost::is_any_of(UNIQUE_TAG_DELIMITER));
-        return IsNameValidBeforeTag(parts.front())
-            && IsUniqueTagValid(parts.back());
+        bool valid = IsNameValidBeforeTag(parts.front()) && IsUniqueTagValid(parts.back());
+        if (!valid) return false;
+        assetType = AssetType::UNIQUE;
+        return true;
     }
     else if (std::regex_match(name, CHANNEL_INDICATOR))
     {
         if (name.size() > MAX_NAME_LENGTH) return false;
         std::vector<std::string> parts;
         boost::split(parts, name, boost::is_any_of(CHANNEL_TAG_DELIMITER));
-        return IsNameValidBeforeTag(parts.front())
-            && IsChannelTagValid(parts.back());
+        bool valid = IsNameValidBeforeTag(parts.front()) && IsChannelTagValid(parts.back());
+        if (!valid) return false;
+        assetType = AssetType::CHANNEL;
+        return true;
     }
     else if (std::regex_match(name, OWNER_INDICATOR))
     {
         if (name.size() > MAX_NAME_LENGTH + 1) return false;
-        return IsNameValidBeforeTag(name.substr(0, name.size() - 1));
+        bool valid = IsNameValidBeforeTag(name.substr(0, name.size() - 1));
+        if (!valid) return false;
+        assetType = AssetType::OWNER;
+        return true;
     }
     else
     {
         if (name.size() > MAX_NAME_LENGTH) return false;
-        return IsNameValidBeforeTag(name);
+        bool valid = IsNameValidBeforeTag(name);
+        if (!valid) return false;
+        assetType = IsAssetNameASubasset(name) ? AssetType::SUB : AssetType::ROOT;
+        return true;
     }
+}
+
+bool IsAssetNameValid(const std::string& name)
+{
+    AssetType _assetType;
+    return IsAssetNameValid(name, _assetType);
 }
 
 bool IsAssetNameAnOwner(const std::string& name)
@@ -257,7 +284,7 @@ void CNewAsset::ConstructTransaction(CScript& script) const
 void CNewAsset::ConstructOwnerTransaction(CScript& script) const
 {
     CDataStream ssOwner(SER_NETWORK, PROTOCOL_VERSION);
-    ssOwner << std::string(this->strName + OWNER);
+    ssOwner << std::string(this->strName + OWNER_TAG);
 
     std::vector<unsigned char> vchMessage;
     vchMessage.push_back(RVN_R); // r
@@ -315,7 +342,7 @@ bool IsNewOwnerTxValid(const CTransaction& tx, const std::string& assetName, con
         return false;
     }
 
-    if (ownerName != std::string(assetName + OWNER)) {
+    if (ownerName != std::string(assetName + OWNER_TAG)) {
         errorMsg = "bad-txns-owner-name-mismatch";
         return false;
     }
@@ -1693,7 +1720,7 @@ void GetAssetData(const CScript& script, CAssetOutputEntry& data)
 
 bool CheckAssetOwner(const std::string& assetName)
 {
-    if (passets->mapMyUnspentAssets.count(assetName + OWNER)) {
+    if (passets->mapMyUnspentAssets.count(assetName + OWNER_TAG)) {
         return true;
     }
 
@@ -1989,14 +2016,14 @@ bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& reissu
 
     // Get the outpoint that belongs to the Owner Asset
     std::set<COutPoint> myAssetOutPoints;
-    if (!passets->GetAssetsOutPoints(asset_name + OWNER, myAssetOutPoints)) {
+    if (!passets->GetAssetsOutPoints(asset_name + OWNER_TAG, myAssetOutPoints)) {
         error = std::make_pair(RPC_INVALID_PARAMS, std::string("This wallet can't find the owner token information for: ") + asset_name);
         return false;
     }
 
     // Check to make sure we have the right amount of outpoints
     if (myAssetOutPoints.size() == 0) {
-        error = std::make_pair(RPC_INVALID_PARAMS, std::string("This wallet doesn't own any assets with the name: ") + asset_name + OWNER);
+        error = std::make_pair(RPC_INVALID_PARAMS, std::string("This wallet doesn't own any assets with the name: ") + asset_name + OWNER_TAG);
         return false;
     }
 
@@ -2025,7 +2052,7 @@ bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& reissu
     // Get the script for the destination address for the assets
     CScript scriptTransferOwnerAsset = GetScriptForDestination(DecodeDestination(change_address));
 
-    CAssetTransfer assetTransfer(asset_name + OWNER, OWNER_ASSET_AMOUNT);
+    CAssetTransfer assetTransfer(asset_name + OWNER_TAG, OWNER_ASSET_AMOUNT);
     assetTransfer.ConstructTransaction(scriptTransferOwnerAsset);
 
     // Get the script for the burn address
