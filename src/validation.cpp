@@ -1302,7 +1302,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 			{
 				pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
 				pool.ClearPrioritisation(hash);
-				return state;
+				return false;
 
 			}
 			sysTimeAccum += GetTimeMicros() - sysTimeStart;
