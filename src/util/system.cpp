@@ -1265,3 +1265,21 @@ std::pair<int, char**> WinCmdLineArgs::get()
 }
 #endif
 } // namespace util
+
+bool CopyDirectory(const fs::path& dest, const fs::path& source, const std::string& logprefix)
+{
+    if (fs::exists(source) && fs::is_directory(source)) {
+        if (!fs::is_directory(dest) && !fs::create_directory(dest)) {
+            return false;
+        }
+        LogPrintf("%s", logprefix); /* Continued */
+        for (fs::directory_iterator file(source); file != fs::directory_iterator(); ++file) {
+            fs::path current(file->path());
+            if (fs::is_directory(current)) continue;
+            fs::copy_file(current, dest / current.filename());
+            LogPrintf("."); /* Continued */
+        }
+        LogPrintf("\n");
+    }
+    return true;
+}

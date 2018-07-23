@@ -387,4 +387,13 @@ private:
 
 } // namespace util
 
+/**
+ * Copy all the files in the given directory to the destination path, log-printing
+ * "." for each file, and a "\n" after the copy operation completes, prefixed by
+ * logprefix (skipped if the source does not exist).
+ * Returns false if the destination path is not a directory and cannot be created.
+ * Note that true is returned, even if the source does not exist/is not a directory.
+ */
+bool CopyDirectory(const fs::path& dest, const fs::path& source, const std::string& logprefix);
+
 #endif // BITCOIN_UTIL_SYSTEM_H
