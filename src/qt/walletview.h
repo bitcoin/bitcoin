@@ -139,6 +139,8 @@ Q_SIGNALS:
     void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label, const QString& assetName);
     /** Notify that the out of sync warning icon has been pressed */
     void outOfSyncWarningClicked();
+    /** Show the assets GUI */
+    void checkAssets();
 };
 
 #endif // RAVEN_QT_WALLETVIEW_H
