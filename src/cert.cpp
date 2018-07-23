@@ -21,9 +21,7 @@
 #include <boost/thread.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/range/adaptor/reversed.hpp>
-#include <chrono>
 
-using namespace std::chrono;
 using namespace std;
 
 bool IsCertOp(int op) {
@@ -477,7 +475,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, const vector<vector<unsigne
 	if (!bSanityCheck) {
 		int64_t ms = INT64_MAX;
 		if (fJustCheck) {
-			ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+			ms = GetTimeMillis();
 		}
 		if (!pcertdb->WriteCert(theCert, op, ms, fJustCheck))
 		{

@@ -27,9 +27,7 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/range/adaptor/reversed.hpp>
-#include <chrono>
 
-using namespace std::chrono;
 using namespace std;
 
 bool IsOfferOp(int op) {
@@ -684,7 +682,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, const vector<vector<unsign
 	if (!bSanityCheck) {
 		int64_t ms = INT64_MAX;
 		if (fJustCheck) {
-			ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+			ms = GetTimeMillis();
 		}
 		if (!pofferdb->WriteOffer(theOffer, op, ms, fJustCheck))
 		{
