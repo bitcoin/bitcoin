@@ -294,6 +294,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
         bool fJustCheck, int nHeight, sorted_vector<CAssetAllocationTuple> &revertedAssetAllocations, string &errorMessage, bool bSanityCheck) {
 	if (!paliasdb || !passetallocationdb)
 		return false;
+	int64_t nStartTime = GetTimeMillis();
+	int64_t nInterimTime = nStartTime;
 	if (tx.IsCoinBase() && !fJustCheck && !bSanityCheck)
 	{
 		LogPrintf("*Trying to add assetallocation in coinbase transaction, skipping...");
@@ -328,7 +330,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 			return true;
 		}		
 	}
-
+	printf("time1 %lld totaltime %lld\n", GetTimeMillis() - nInterimTime, GetTimeMillis() - nStartTime);
 	string retError = "";
 	if(fJustCheck)
 	{
@@ -383,6 +385,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 	bool bRevert = false;
 	bool bBalanceOverrun = false;
 	bool bAddAllReceiversToConflictList = false;
+	printf("time2 %lld totaltime %lld\n", GetTimeMillis() - nInterimTime, GetTimeMillis() - nStartTime);
 	if (op == OP_ASSET_COLLECT_INTEREST)
 	{
 		if (!GetAssetAllocation(assetAllocationTuple, dbAssetAllocation))
@@ -400,6 +403,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1012 - " + _("Cannot collect interest on this asset, no interest rate has been defined");
 			return true;
 		}
+		printf("time3 %lld totaltime %lld\n", GetTimeMillis() - nInterimTime, GetTimeMillis() - nStartTime);
 		theAssetAllocation = dbAssetAllocation;
 		// only apply interest on PoW
 		if (!fJustCheck) {
@@ -454,6 +458,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 				}
 			}
 		}
+		printf("time4 %lld totaltime %lld\n", GetTimeMillis() - nInterimTime, GetTimeMillis() - nStartTime);
 		if (bRevert && !GetAssetAllocation(assetAllocationTuple, dbAssetAllocation))
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot find sender asset allocation.");
@@ -508,6 +513,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 					return true;
 				}
 			}
+			printf("time5 %lld totaltime %lld\n", GetTimeMillis() - nInterimTime, GetTimeMillis() - nStartTime);
 			const CAmount &nBalanceAfterSend = dbAssetAllocation.nBalance - nTotal;
 			if (nBalanceAfterSend < 0) {
 				bBalanceOverrun = true;
@@ -546,6 +552,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 						receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
 						receiverAllocation.nLastInterestClaimHeight = nHeight;
 					}
+					printf("time6 %lld totaltime %lld\n", GetTimeMillis() - nInterimTime, GetTimeMillis() - nStartTime);
 					if (!bBalanceOverrun) {
 						receiverAllocation.txHash = tx.GetHash();
 						if (dbAsset.fInterestRate > 0) {
@@ -562,18 +569,20 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 						theAssetAllocation.nBalance -= amountTuple.second;
 
 					}
+					printf("time7 %lld totaltime %lld\n", GetTimeMillis() - nInterimTime, GetTimeMillis() - nStartTime);
 					const string& receiverAddress = stringFromVch(receiverAllocation.vchAliasOrAddress);
 					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, nBalanceAfterSend, amountTuple.second, dbAsset, INT64_MAX, user1, receiverAddress, fJustCheck))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1023 - " + _("Failed to write to asset allocation DB");
 						return error(errorMessage.c_str());
 					}
-
+					printf("time8 %lld totaltime %lld\n", GetTimeMillis() - nInterimTime, GetTimeMillis() - nStartTime);
 					if (fJustCheck) {
 						if (strResponseEnglish != "") {
 							paliasdb->WriteAliasIndexTxHistory(user1, receiverAddress, user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString());
 						}
 					}
+					printf("time9 %lld totaltime %lld\n", GetTimeMillis() - nInterimTime, GetTimeMillis() - nStartTime);
 				}
 			}
 		}
@@ -694,19 +703,20 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 			theAssetAllocation.nHeight = nHeight;
 			theAssetAllocation.txHash = tx.GetHash();
 		}
-
+		printf("time11 %lld totaltime %lld\n", GetTimeMillis() - nInterimTime, GetTimeMillis() - nStartTime);
 		int64_t ms = INT64_MAX;
 		if (fJustCheck) {
 			ms = GetTimeMillis();
 			if(fUnitTest)
 				vecTPSTestReceivedTimes.emplace_back(theAssetAllocation.txHash, ms);
 		}
-
+		printf("time12 %lld totaltime %lld\n", GetTimeMillis() - nInterimTime, GetTimeMillis() - nStartTime);
 		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, 0, 0, dbAsset, ms, "", "", fJustCheck))
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1031 - " + _("Failed to write to asset allocation DB");
 			return error(errorMessage.c_str());
 		}
+		printf("time13 %lld totaltime %lld\n", GetTimeMillis() - nInterimTime, GetTimeMillis() - nStartTime);
 		// debug
 		if (fDebug)
 			LogPrintf("CONNECTED ASSET ALLOCATION: op=%s assetallocation=%s hash=%s height=%d fJustCheck=%d at time %lld\n",
@@ -717,6 +727,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 				fJustCheck ? 1 : 0, (long long)ms);
 
 	}
+	printf("time14 %lld totaltime %lld\n", GetTimeMillis() - nInterimTime, GetTimeMillis() - nStartTime);
     return true;
 }
 UniValue tpstestinfo(const JSONRPCRequest& request) {
