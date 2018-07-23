@@ -704,17 +704,19 @@ fs::path GetDefaultDataDir()
 #endif
 }
 
-static fs::path g_blocks_path_cache_net_specific;
-static fs::path pathCached;
-static fs::path pathCachedNetSpecific;
-static CCriticalSection csPathCached;
+static fs::path g_blocks_path_cached_net_specific;
+static fs::path g_master_blocks_path_cached;
+static fs::path g_path_cached;
+static fs::path g_path_cached_net_specific;
+static fs::path g_master_path_cached;
+static fs::path g_master_path_cached_net_specific;
+static CCriticalSection g_path_cache_lock;
 
 const fs::path &GetBlocksDir()
 {
+    LOCK(g_path_cache_lock);
 
-    LOCK(csPathCached);
-
-    fs::path &path = g_blocks_path_cache_net_specific;
+    fs::path& path = g_blocks_path_cached_net_specific;
 
     // This can be called during exceptions by LogPrintf(), so we cache the
     // value so we don't have to do memory allocations after that.
@@ -739,10 +741,9 @@ const fs::path &GetBlocksDir()
 
 const fs::path &GetDataDir(bool fNetSpecific)
 {
+    LOCK(g_path_cache_lock);
 
-    LOCK(csPathCached);
-
-    fs::path &path = fNetSpecific ? pathCachedNetSpecific : pathCached;
+    fs::path& path = fNetSpecific ? g_path_cached_net_specific : g_path_cached;
 
     // This can be called during exceptions by LogPrintf(), so we cache the
     // value so we don't have to do memory allocations after that.
@@ -769,13 +770,56 @@ const fs::path &GetDataDir(bool fNetSpecific)
     return path;
 }
 
+const fs::path& GetMasterBlocksDir()
+{
+    LOCK(g_path_cache_lock);
+
+    fs::path& path = g_master_blocks_path_cached;
+
+    // This can be called during exceptions by LogPrintf(), so we cache the
+    // value so we don't have to do memory allocations after that.
+    if (!path.empty()) return path;
+
+    if (!gArgs.IsArgSet("-masterdatadir")) {
+        path = GetBlocksDir();
+        return path;
+    }
+
+    path = GetMasterDataDir(false) / "blocks";
+    return path;
+}
+
+const fs::path& GetMasterDataDir(bool net_specific)
+{
+    LOCK(g_path_cache_lock);
+
+    fs::path& path = net_specific ? g_master_path_cached_net_specific : g_master_path_cached;
+
+    // This can be called during exceptions by LogPrintf(), so we cache the
+    // value so we don't have to do memory allocations after that.
+    if (!path.empty()) return path;
+
+    if (!gArgs.IsArgSet("-masterdatadir")) return path;
+    path = fs::system_complete(gArgs.GetArg("-masterdatadir", ""));
+    if (!fs::is_directory(path)) {
+        path = "";
+        return path;
+    }
+    if (net_specific) path /= BaseParams().DataDir();
+
+    return path;
+}
+
 void ClearDatadirCache()
 {
-    LOCK(csPathCached);
+    LOCK(g_path_cache_lock);
 
-    pathCached = fs::path();
-    pathCachedNetSpecific = fs::path();
-    g_blocks_path_cache_net_specific = fs::path();
+    g_path_cached = fs::path();
+    g_path_cached_net_specific = fs::path();
+    g_master_path_cached = fs::path();
+    g_master_path_cached_net_specific = fs::path();
+    g_blocks_path_cached_net_specific = fs::path();
+    g_master_blocks_path_cached = fs::path();
 }
 
 fs::path GetConfigFile(const std::string& confPath)

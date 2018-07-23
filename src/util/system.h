@@ -83,6 +83,8 @@ fs::path GetDefaultDataDir();
 // The blocks directory is always net specific.
 const fs::path &GetBlocksDir();
 const fs::path &GetDataDir(bool fNetSpecific = true);
+const fs::path& GetMasterBlocksDir();
+const fs::path& GetMasterDataDir(bool net_specific = true);
 void ClearDatadirCache();
 fs::path GetConfigFile(const std::string& confPath);
 #ifdef WIN32
