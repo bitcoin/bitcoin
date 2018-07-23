@@ -271,9 +271,15 @@ public:
     std::vector<AddedNodeInfo> GetAddedNodeInfo();
 
     size_t GetNodeCount(NumConnections num);
+    // Gets a vector of NodeStats objects
     void GetNodeStats(std::vector<CNodeStats>& vstats);
+    // Gets a single NodeStats object by NodeID
+    bool GetNodeStats(NodeId, CNodeStats& stats);
     bool DisconnectNode(const std::string& node);
     bool DisconnectNode(NodeId id);
+
+    bool SetWhitelisted(NodeId id, bool fWhitelisted);
+    bool SetManualConnection(NodeId id, bool manual);
 
     ServiceFlags GetLocalServices() const;
 
@@ -351,6 +357,8 @@ private:
     void DeleteNode(CNode* pnode);
 
     NodeId GetNewNodeId();
+
+    CNode* GetNodeByID(NodeId id);
 
     size_t SocketSendData(CNode *pnode) const;
     //!check is the banlist has unwritten changes
