@@ -1262,10 +1262,12 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 		{
 			static int counter = 0;
 			static int64_t scriptTimeAccum = 0;
+			static int64_t sysTimeAccum = 0;
 			counter++;
 			std::packaged_task<void()> t([&pool, ptx, hash, coins_to_uncache, hashCacheEntry, vChecks]() {
 				int64_t scriptTimeStart = GetTimeMicros();
 				CValidationState vstate;
+				CCoinsViewCache vView(pcoinsTip);
 				const CTransaction& txIn = *ptx;
 				for (auto &check : vChecks) {
 					if (!check())
@@ -1283,8 +1285,25 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 						return;
 					}
 				}
+				scriptTimeAccum += GetTimeMicros() - scriptTimeStart;
+				int64_t sysTimeStart = GetTimeMicros();
+				if (!CheckSyscoinInputs(txIn, vstate, vView, true, chainActive.Height(), CBlock()))
+				{
+					LOCK2(cs_main, mempool.cs);
+					LogPrint("mempool", "%s: %s\n", "CheckSyscoinInputs Error", hash.ToString());
+					BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
+						pcoinsTip->Uncache(hashTx);
+					pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
+					pool.ClearPrioritisation(hash);
+					// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
+					CValidationState stateDummy;
+					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
+					nLastMultithreadMempoolFailure = GetTime();
+				}
+				sysTimeAccum += GetTimeMicros() - sysTimeStart;
 				scriptExecutionCache.insert(hashCacheEntry);
-				scriptTimeAccum +=  GetTimeMicros() - scriptTimeStart;
+				if ((counter % 100) == 0)
+					printf("scriptTimeAccum %lld ms vs sysTimeAccum %lld ms\n", scriptTimeAccum, sysTimeAccum);
 			});
 			int numTries = 100;
 			while (!threadpool.tryPost(t)) {
@@ -1296,18 +1315,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 				}
 				MilliSleep(1);
 			}
-			static int64_t sysTimeAccum = 0;
-			int64_t sysTimeStart = GetTimeMicros();
-			if (!CheckSyscoinInputs(tx, state, view, true, chainActive.Height(), CBlock()))
-			{
-				pool.removeRecursive(tx, MemPoolRemovalReason::UNKNOWN);
-				pool.ClearPrioritisation(hash);
-				return false;
-
-			}
-			sysTimeAccum += GetTimeMicros() - sysTimeStart;
-			if ((counter % 100) == 0)
-				printf("scriptTimeAccum %f ms vs sysTimeStart %f ms\n", (scriptTimeAccum/counter)/1000, (sysTimeAccum/counter)/1000);
+	
 		}
 	}
 
