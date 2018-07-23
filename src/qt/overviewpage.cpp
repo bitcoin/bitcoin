@@ -19,6 +19,7 @@
 
 #include <QAbstractItemDelegate>
 #include <QPainter>
+#include <validation.h>
 
 #define DECORATION_SIZE 54
 #define NUM_ITEMS 5
@@ -109,6 +110,7 @@ public:
 
 };
 #include "overviewpage.moc"
+#include "ravengui.h"
 
 OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) :
     QWidget(parent),
@@ -145,6 +147,9 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
     connect(ui->labelWalletStatus, SIGNAL(clicked()), this, SLOT(handleOutOfSyncWarningClicks()));
     connect(ui->labelAssetStatus, SIGNAL(clicked()), this, SLOT(handleOutOfSyncWarningClicks()));
     connect(ui->labelTransactionsStatus, SIGNAL(clicked()), this, SLOT(handleOutOfSyncWarningClicks()));
+
+    // Trigger the call to show the assets table if assets are active
+    showAssets();
 }
 
 void OverviewPage::handleTransactionClicked(const QModelIndex &index)
@@ -238,7 +243,6 @@ void OverviewPage::setWalletModel(WalletModel *model)
         assetFilter->setSourceModel(model->getAssetTableModel());
         ui->listAssets->setModel(assetFilter.get());
 
-
         // Keep up to date with wallet
         setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance(),
                    model->getWatchBalance(), model->getWatchUnconfirmedBalance(), model->getWatchImmatureBalance());
@@ -280,5 +284,21 @@ void OverviewPage::showOutOfSyncWarning(bool fShow)
 {
     ui->labelWalletStatus->setVisible(fShow);
     ui->labelTransactionsStatus->setVisible(fShow);
-    ui->labelAssetStatus->setVisible(fShow);
+    if (AreAssetsDeployed()) {
+        ui->labelAssetStatus->setVisible(fShow);
+    }
+}
+
+void OverviewPage::showAssets()
+{
+    if (AreAssetsDeployed()) {
+        ui->listAssets->show();
+        ui->assetBalanceLabel->show();
+        ui->labelAssetStatus->show();
+        return;
+    }
+
+    ui->assetBalanceLabel->hide();
+    ui->labelAssetStatus->hide();
+    ui->listAssets->hide();
 }

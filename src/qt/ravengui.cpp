@@ -63,6 +63,9 @@
 #include <QUrl>
 #else
 #include <QUrlQuery>
+#include <validation.h>
+#include <tinyformat.h>
+
 #endif
 
 const std::string RavenGUI::DEFAULT_UIPLATFORM =
@@ -592,7 +595,7 @@ void RavenGUI::setWalletActionsEnabled(bool enabled)
     openAction->setEnabled(enabled);
 
     /** RVN START */
-    assetAction->setEnabled(enabled);
+    assetAction->setEnabled(false);
     /** RVN END */
 }
 
@@ -1027,6 +1030,16 @@ void RavenGUI::incomingTransaction(const QString& date, int unit, const CAmount&
         msg += tr("Address: %1\n").arg(address);
     message((amount)<0 ? tr("Sent transaction") : tr("Incoming transaction"),
              msg, CClientUIInterface::MSG_INFORMATION);
+}
+
+void RavenGUI::checkAssets()
+{
+    // Check that status of RIP2 and activate the assets icon if it is active
+    if(AreAssetsDeployed())
+        assetAction->setDisabled(false);
+    else
+        assetAction->setDisabled(true);
+
 }
 #endif // ENABLE_WALLET
 

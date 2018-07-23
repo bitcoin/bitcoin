@@ -30,6 +30,7 @@
 #include <QProgressDialog>
 #include <QPushButton>
 #include <QVBoxLayout>
+#include <validation.h>
 
 WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     QStackedWidget(parent),
@@ -114,6 +115,8 @@ void WalletView::setRavenGUI(RavenGUI *gui)
 
         // Connect HD enabled state signal 
         connect(this, SIGNAL(hdEnabledStatusChanged(int)), gui, SLOT(setHDStatus(int)));
+
+        connect(this, SIGNAL(checkAssets()), gui, SLOT(checkAssets()));
     }
 }
 
@@ -182,11 +185,16 @@ void WalletView::processNewTransaction(const QModelIndex& parent, int start, int
     QString label = ttm->data(index, TransactionTableModel::LabelRole).toString();
 
     Q_EMIT incomingTransaction(date, walletModel->getOptionsModel()->getDisplayUnit(), amount, type, address, label);
+
+    /** Everytime we get an new transaction. We should check to see if assets are enabled or not */
+    overviewPage->showAssets();
+    Q_EMIT checkAssets();
 }
 
 void WalletView::gotoOverviewPage()
 {
     setCurrentWidget(overviewPage);
+    Q_EMIT checkAssets();
 }
 
 void WalletView::gotoHistoryPage()

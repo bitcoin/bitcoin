@@ -422,9 +422,9 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_5">
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_5">
+           <layout class="QHBoxLayout" name="assetBalanceHorizontalLayout">
             <item>
-             <widget class="QLabel" name="label_6">
+             <widget class="QLabel" name="assetBalanceLabel">
               <property name="font">
                <font>
                 <weight>75</weight>
@@ -520,6 +520,19 @@
              <bool>false</bool>
             </attribute>
            </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
         </widget>
