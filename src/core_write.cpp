@@ -17,7 +17,7 @@
 #include "utilmoneystr.h"
 #include "utilstrencodings.h"
 
-UniValue ValueFromAmount(const CAmount& amount, const int8_t units)
+std::string ValueFromAmountString(const CAmount& amount, const int8_t units)
 {
     bool sign = amount < 0;
     int64_t n_abs = (sign ? -amount : amount);
@@ -25,13 +25,16 @@ UniValue ValueFromAmount(const CAmount& amount, const int8_t units)
     int64_t remainder = n_abs % COIN;
 
     if (units == 0 && remainder == 0) {
-        return UniValue(UniValue::VNUM,
-                        strprintf("%s%d", sign ? "-" : "", quotient));
+        return strprintf("%s%d", sign ? "-" : "", quotient);
     }
     else {
-        return UniValue(UniValue::VNUM,
-                        strprintf("%s%d.%0" + std::to_string(units) + "d", sign ? "-" : "", quotient, remainder));
+        return strprintf("%s%d.%0" + std::to_string(units) + "d", sign ? "-" : "", quotient, remainder);
     }
+}
+
+UniValue ValueFromAmount(const CAmount& amount, const int8_t units)
+{
+    return UniValue(UniValue::VNUM, ValueFromAmountString(amount, units));
 }
 
 UniValue ValueFromAmount(const CAmount& amount)

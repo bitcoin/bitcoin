@@ -5,6 +5,7 @@
 
 #include "transactionrecord.h"
 
+#include "assets/assets.h"
 #include "base58.h"
 #include "consensus/consensus.h"
 #include "validation.h"
@@ -22,6 +23,7 @@ bool TransactionRecord::showTransaction(const CWalletTx &wtx)
     // we may want to use this in the future for things like RBF.
     return true;
 }
+
 
 /*
  * Decompose CWallet transaction to model transaction records.
@@ -158,6 +160,101 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             parts.last().involvesWatchAddress = involvesWatchAddress;
         }
     }
+
+
+    /** RVN START */
+    if (AreAssetsDeployed()) {
+        CAmount nFee;
+        std::string strSentAccount;
+        std::list<COutputEntry> listReceived;
+        std::list<COutputEntry> listSent;
+
+        std::list<CAssetOutputEntry> listAssetsReceived;
+        std::list<CAssetOutputEntry> listAssetsSent;
+
+        wtx.GetAmounts(listReceived, listSent, nFee, strSentAccount, ISMINE_ALL, listAssetsReceived, listAssetsSent);
+
+        if (listAssetsReceived.size() > 0)
+        {
+            for (const CAssetOutputEntry &data : listAssetsReceived)
+            {
+                TransactionRecord sub(hash, nTime);
+                sub.idx = data.vout;
+
+                const CTxOut& txout = wtx.tx->vout[sub.idx];
+                isminetype mine = wallet->IsMine(txout);
+
+                sub.address = EncodeDestination(data.destination);
+                sub.assetName = data.assetName;
+                sub.credit = data.amount;
+                sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
+
+                if (data.type == ASSET_NEW_STRING)
+                    sub.type = TransactionRecord::Issue;
+                else if (data.type == ASSET_REISSUE_STRING)
+                    sub.type = TransactionRecord::Reissue;
+                else if (data.type == ASSET_TRANSFER_STRING)
+                    sub.type = TransactionRecord::TransferFrom;
+                else
+                    sub.type = TransactionRecord::Other;
+
+                if (IsAssetNameAnOwner(sub.assetName))
+                    sub.units = OWNER_UNITS;
+                else if (CheckIssueDataTx(wtx.tx->vout[sub.idx]))
+                {
+                    CNewAsset asset;
+                    std::string strAddress;
+                    if (AssetFromTransaction(wtx, asset, strAddress))
+                        sub.units = asset.units;
+                }
+                else
+                {
+                    CNewAsset asset;
+                    if (passets->GetAssetIfExists(sub.assetName, asset))
+                        sub.units = asset.units;
+                }
+
+                parts.append(sub);
+            }
+        }
+
+        if (listAssetsSent.size() > 0)
+        {
+            for (const CAssetOutputEntry &data : listAssetsSent)
+            {
+                TransactionRecord sub(hash, nTime);
+                sub.idx = data.vout;
+                sub.address = EncodeDestination(data.destination);
+                sub.assetName = data.assetName;
+                sub.credit = -data.amount;
+                sub.involvesWatchAddress = false;
+
+                if (data.type == ASSET_TRANSFER_STRING)
+                    sub.type = TransactionRecord::TransferTo;
+                else
+                    sub.type = TransactionRecord::Other;
+
+                if (IsAssetNameAnOwner(sub.assetName))
+                    sub.units = OWNER_UNITS;
+                else if (CheckIssueDataTx(wtx.tx->vout[sub.idx]))
+                {
+                    CNewAsset asset;
+                    std::string strAddress;
+                    if (AssetFromTransaction(wtx, asset, strAddress))
+                        sub.units = asset.units;
+                }
+                else
+                {
+                    CNewAsset asset;
+                    if (passets->GetAssetIfExists(sub.assetName, asset))
+                        sub.units = asset.units;
+                }
+
+                parts.append(sub);
+            }
+        }
+    }
+    /** RVN END */
 
     return parts;
 }

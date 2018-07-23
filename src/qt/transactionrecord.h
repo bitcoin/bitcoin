@@ -80,20 +80,24 @@ public:
         SendToOther,
         RecvWithAddress,
         RecvFromOther,
-        SendToSelf
+        SendToSelf,
+        Issue,
+        Reissue,
+        TransferTo,
+        TransferFrom
     };
 
     /** Number of confirmation recommended for accepting a transaction */
     static const int RecommendedNumConfirmations = 6;
 
     TransactionRecord():
-            hash(), time(0), type(Other), address(""), debit(0), credit(0), idx(0)
+            hash(), time(0), type(Other), address(""), debit(0), credit(0), assetName("RVN"), units(8), idx(0)
     {
     }
 
     TransactionRecord(uint256 _hash, qint64 _time):
             hash(_hash), time(_time), type(Other), address(""), debit(0),
-            credit(0), idx(0)
+            credit(0), assetName("RVN"), units(8), idx(0)
     {
     }
 
@@ -101,7 +105,7 @@ public:
                 Type _type, const std::string &_address,
                 const CAmount& _debit, const CAmount& _credit):
             hash(_hash), time(_time), type(_type), address(_address), debit(_debit), credit(_credit),
-            idx(0)
+            assetName("RVN"), units(8), idx(0)
     {
     }
 
@@ -118,6 +122,8 @@ public:
     std::string address;
     CAmount debit;
     CAmount credit;
+    std::string assetName;
+    uint8_t units;
     /**@}*/
 
     /** Subtransaction index, for sort key */

@@ -86,12 +86,15 @@ public:
             foreground = option.palette.color(QPalette::Text);
         }
         painter->setPen(foreground);
-        QString amountText = RavenUnits::formatWithUnit(unit, amount, true, RavenUnits::separatorAlways);
+        QString amountText = index.data(TransactionTableModel::FormattedAmountRole).toString();
         if(!confirmed)
         {
             amountText = QString("[") + amountText + QString("]");
         }
-        painter->drawText(amountRect, Qt::AlignRight|Qt::AlignVCenter, amountText);
+        painter->drawText(addressRect, Qt::AlignRight|Qt::AlignVCenter, amountText);
+
+        QString assetName = index.data(TransactionTableModel::AssetNameRole).toString();
+        painter->drawText(amountRect, Qt::AlignRight|Qt::AlignVCenter, assetName);
 
         painter->setPen(option.palette.color(QPalette::Text));
         painter->drawText(amountRect, Qt::AlignLeft|Qt::AlignVCenter, GUIUtil::dateTimeStr(date));
