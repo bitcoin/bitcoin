@@ -116,26 +116,24 @@ static constexpr uint8_t PSBT_OUT_BIP32_DERIVATION = 0x02;
 // as a 0 length key which indicates that this is the separator. The separator has no value.
 static constexpr uint8_t PSBT_SEPARATOR = 0x00;
 
-// Takes a stream and multiple arguments and serializes them into a vector and then into the stream
+// Takes a stream and multiple arguments and serializes them as if first serialized into a vector and then into the stream
 // The resulting output into the stream has the total serialized length of all of the objects followed by all objects concatenated with each other.
 template<typename Stream, typename... X>
 void SerializeToVector(Stream& s, const X&... args)
 {
-    std::vector<unsigned char> ret;
-    CVectorWriter ss(SER_NETWORK, PROTOCOL_VERSION, ret, 0);
-    SerializeMany(ss, args...);
-    s << ret;
+    WriteCompactSize(s, GetSerializeSizeMany(s, args...));
+    SerializeMany(s, args...);
 }
 
 // Takes a stream and multiple arguments and unserializes them first as a vector then each object individually in the order provided in the arguments
 template<typename Stream, typename... X>
 void UnserializeFromVector(Stream& s, X&... args)
 {
-    std::vector<unsigned char> data;
-    s >> data;
-    CDataStream ss(data, SER_NETWORK, PROTOCOL_VERSION);
-    UnserializeMany(ss, args...);
-    if (!ss.eof()) {
+    size_t expected_size = ReadCompactSize(s);
+    size_t remaining_before = s.size();
+    UnserializeMany(s, args...);
+    size_t remaining_after = s.size();
+    if (remaining_after + expected_size != remaining_before) {
         throw std::ios_base::failure("Size of value was not the stated size");
     }
 }

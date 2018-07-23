@@ -991,4 +991,12 @@ size_t GetSerializeSize(const S& s, const T& t)
     return (CSizeComputer(s.GetType(), s.GetVersion()) << t).size();
 }
 
+template <typename S, typename... T>
+size_t GetSerializeSizeMany(const S& s, const T&... t)
+{
+    CSizeComputer sc(s.GetType(), s.GetVersion());
+    SerializeMany(sc, t...);
+    return sc.size();
+}
+
 #endif // BITCOIN_SERIALIZE_H
