@@ -1300,7 +1300,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 			int64_t sysTimeStart = GetTimeMicros();
 			if (!CheckSyscoinInputs(tx, state, view, true, chainActive.Height(), CBlock()))
 			{
-				pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
+				pool.removeRecursive(tx, MemPoolRemovalReason::UNKNOWN);
 				pool.ClearPrioritisation(hash);
 				return false;
 
