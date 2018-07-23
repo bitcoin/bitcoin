@@ -15,7 +15,7 @@ out collectively by the network. Bitcoin Core is the name of open source
 software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
-the Bitcoin Core software, see https://bitcoin.org/en/download, or read the
+the Bitcoin Core software, see https://bitcoincore.org/en/download/, or read the
 [original whitepaper](https://bitcoincore.org/bitcoin.pdf).
 
 License
