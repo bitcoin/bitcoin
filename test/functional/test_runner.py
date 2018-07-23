@@ -199,6 +199,7 @@ EXTENDED_SCRIPTS = [
     # Longest test should go first, to favor running tests in parallel
     'feature_pruning.py',
     'feature_dbcrash.py',
+    'feature_masterdatadir.py',
 ]
 
 # Place EXTENDED_SCRIPTS first since it has the 3 longest running tests
