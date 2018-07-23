@@ -76,7 +76,7 @@
  * Global state
  */
 
-CCriticalSection cs_main, scriptCheckMapCS, scriptExecutionCacheCS;
+CCriticalSection cs_main, scriptExecutionCacheCS;
 BlockMap mapBlockIndex;
 CChain chainActive;
 CBlockIndex *pindexBestHeader = NULL;
@@ -792,7 +792,6 @@ static bool IsCurrentForFeeEstimation()
     return true;
 }
 static CCheckQueue<CScriptCheck> scriptcheckqueue(128);
-static std::map<uint256, std::vector<CScriptCheck> > scriptCheckMap;
 static CuckooCache::cache<uint256, SignatureCacheHasher> scriptExecutionCache;
 static uint256 scriptExecutionCacheNonce(GetRandHash());
 
@@ -1220,11 +1219,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 				return false;
 			}
 		}
-		else
-		{
-			LOCK(scriptCheckMapCS);
-			scriptCheckMap[hash] = vChecks;
-		}
 		// Remove conflicting transactions from the mempool
 		BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
 		{
@@ -1267,22 +1261,20 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 		if (bMultiThreaded)
 		{
 
-			std::packaged_task<void()> t([&pool, ptx, hash, coins_to_uncache, hashCacheEntry]() {
+			std::packaged_task<void()> t([&pool, ptx, hash, coins_to_uncache, hashCacheEntry, vChecks]() {
 				CValidationState vstate;
 				const CTransaction& txIn = *ptx;
 				bool checkFailed = false;
 				CCoinsViewCache vView(pcoinsTip);
-				{
-					LOCK(scriptCheckMapCS);
-					std::vector<CScriptCheck> &vCheckRef = scriptCheckMap[hash];
-					for (auto& check : vCheckRef) {
-						if (!check())
-						{
-							checkFailed = true;
-							break;
-						}
+				
+				for (auto& check : vChecks) {
+					if (!check())
+					{
+						checkFailed = true;
+						break;
 					}
 				}
+				
 				if (checkFailed) {
 					LOCK2(cs_main, mempool.cs);
 					LogPrint("mempool", "%s: %s\n", "CheckInputs Error", hash.ToString());
@@ -1294,10 +1286,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 					CValidationState stateDummy;
 					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
 					nLastMultithreadMempoolFailure = GetTime();
-					{
-						LOCK(scriptCheckMapCS);
-						scriptCheckMap.erase(hash);
-					}
 					return;
 				}
 				if(!CheckSyscoinInputs(txIn, vstate, vView, true, chainActive.Height(), CBlock()))
@@ -1313,15 +1301,13 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
 					nLastMultithreadMempoolFailure = GetTime();
 					{
-						LOCK2(scriptCheckMapCS, scriptExecutionCacheCS);
-						scriptCheckMap.erase(hash);
+						LOCK(scriptExecutionCacheCS);
 						scriptExecutionCache.insert(hashCacheEntry);
 					}
 					return;
 				}
 				{
-					LOCK2(scriptCheckMapCS, scriptExecutionCacheCS);
-					scriptCheckMap.erase(hash);
+					LOCK(scriptExecutionCacheCS);
 					scriptExecutionCache.insert(hashCacheEntry);
 				}
 			});
@@ -1329,10 +1315,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 			while (!threadpool.tryPost(t)) {
 				numTries--;
 				if (numTries <= 0) {
-					{
-						LOCK2(scriptCheckMapCS);
-						scriptCheckMap.erase(hash);
-					}
 					return state.DoS(0, false,
 						REJECT_INVALID, "threadpool-full", false,
 						"AcceptToMemoryPoolWorker: thread pool queue is full");
