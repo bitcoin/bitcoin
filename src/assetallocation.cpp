@@ -99,7 +99,7 @@ void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& asset
 				int nHeight = assetallocation.nHeight;
 				const string& strKey = assetallocation.txHash.GetHex()+"-"+stringFromVch(asset.vchAsset)+"-"+stringFromVch(vchSender)+"-"+ stringFromVch(vchReceiver);
 				{
-					LOCK2(mempool.cs, cs_assetallocationindex);
+					LOCK(mempool.cs);
 					// we want to the height from mempool if it exists or use the one stored in assetallocation
 					CTxMemPool::txiter it = mempool.mapTx.find(assetallocation.txHash);
 					if (it != mempool.mapTx.end())
@@ -1242,7 +1242,6 @@ bool CAssetAllocationTransactionsDB::ScanAssetAllocationIndex(const int count, c
 			nStartBlock = startblock.get_int();
 		}
 	}
-	LOCK(cs_assetallocationindex);
 	int index = 0;
 	UniValue assetValue;
 	vector<string> contents;
@@ -1305,7 +1304,6 @@ bool CAssetAllocationDB::ScanAssetAllocations(const int count, const int from, c
 		}
 	}
 
-	LOCK(cs_assetallocation);
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
 	CAssetAllocation txPos;
