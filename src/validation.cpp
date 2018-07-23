@@ -76,7 +76,7 @@
  * Global state
  */
 
-CCriticalSection cs_main, scriptExecutionCacheCS;
+CCriticalSection cs_main;
 BlockMap mapBlockIndex;
 CChain chainActive;
 CBlockIndex *pindexBestHeader = NULL;
@@ -1260,12 +1260,13 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 		}
 		if (bMultiThreaded)
 		{
-
+			static int counter = 0;
+			static int64_t scriptTimeAccum = 0;
+			counter++;
 			std::packaged_task<void()> t([&pool, ptx, hash, coins_to_uncache, hashCacheEntry, vChecks]() {
+				int64_t scriptTimeStart = GetTimeMicros();
 				CValidationState vstate;
 				const CTransaction& txIn = *ptx;
-				CCoinsViewCache vView(pcoinsTip);
-				
 				for (auto &check : vChecks) {
 					if (!check())
 					{
@@ -1282,28 +1283,8 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 						return;
 					}
 				}
-				if(!CheckSyscoinInputs(txIn, vstate, vView, true, chainActive.Height(), CBlock()))
-				{
-					LOCK2(cs_main, mempool.cs);
-					LogPrint("mempool", "%s: %s\n", "CheckSyscoinInputs Error", hash.ToString());
-					BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
-						pcoinsTip->Uncache(hashTx);
-					pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
-					pool.ClearPrioritisation(hash);
-					// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
-					CValidationState stateDummy;
-					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
-					nLastMultithreadMempoolFailure = GetTime();
-					{
-						LOCK(scriptExecutionCacheCS);
-						scriptExecutionCache.insert(hashCacheEntry);
-					}
-					return;
-				}
-				{
-					LOCK(scriptExecutionCacheCS);
-					scriptExecutionCache.insert(hashCacheEntry);
-				}
+				scriptExecutionCache.insert(hashCacheEntry);
+				scriptTimeAccum +=  GetTimeMicros() - scriptTimeStart;
 			});
 			int numTries = 100;
 			while (!threadpool.tryPost(t)) {
@@ -1315,6 +1296,18 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 				}
 				MilliSleep(1);
 			}
+			static int64_t sysTimeAccum = 0;
+			int64_t sysTimeStart = GetTimeMicros();
+			if (!CheckSyscoinInputs(tx, state, view, true, chainActive.Height(), CBlock()))
+			{
+				pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
+				pool.ClearPrioritisation(hash);
+				return state;
+
+			}
+			sysTimeAccum += GetTimeMicros() - sysTimeStart;
+			if ((counter % 100) == 0)
+				printf("scriptTimeAccum %lld vs sysTimeStart %lld\n", scriptTimeAccum, sysTimeStart);
 		}
 	}
 
@@ -1939,7 +1932,6 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 			if (cacheFullScriptStore && !pvChecks) {
 				// We executed all of the provided scripts, and were told to
 				// cache the result. Do so now.
-				LOCK(scriptExecutionCacheCS);
 				scriptExecutionCache.insert(hashCacheEntry);
 			}
         }
