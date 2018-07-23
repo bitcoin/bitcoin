@@ -65,7 +65,6 @@ enum txnouttype
     TX_NULL_DATA, //!< unspendable OP_RETURN script that carries data
     TX_WITNESS_V0_SCRIPTHASH,
     TX_WITNESS_V0_KEYHASH,
-    TX_WITNESS_UNKNOWN, //!< Only for Witness versions not already defined above
     /** RVN START */
     TX_NEW_ASSET,
     TX_REISSUE_ASSET,
@@ -79,42 +78,14 @@ public:
     friend bool operator<(const CNoDestination &a, const CNoDestination &b) { return true; }
 };
 
-struct WitnessV0ScriptHash : public uint256 {};
-struct WitnessV0KeyHash : public uint160 {};
-
-//! CTxDestination subtype to encode any future Witness version
-struct WitnessUnknown
-{
-    unsigned int version;
-    unsigned int length;
-    unsigned char program[40];
-
-    friend bool operator==(const WitnessUnknown& w1, const WitnessUnknown& w2) {
-        if (w1.version != w2.version) return false;
-        if (w1.length != w2.length) return false;
-        return std::equal(w1.program, w1.program + w1.length, w2.program);
-    }
-
-    friend bool operator<(const WitnessUnknown& w1, const WitnessUnknown& w2) {
-        if (w1.version < w2.version) return true;
-        if (w1.version > w2.version) return false;
-        if (w1.length < w2.length) return true;
-        if (w1.length > w2.length) return false;
-        return std::lexicographical_compare(w1.program, w1.program + w1.length, w2.program, w2.program + w2.length);
-    }
-};
-
 /**
  * A txout script template with a specific destination. It is either:
  *  * CNoDestination: no destination set
- *  * CKeyID: TX_PUBKEYHASH destination (P2PKH)
- *  * CScriptID: TX_SCRIPTHASH destination (P2SH)
- *  * WitnessV0ScriptHash: TX_WITNESS_V0_SCRIPTHASH destination (P2WSH)
- *  * WitnessV0KeyHash: TX_WITNESS_V0_KEYHASH destination (P2WPKH)
- *  * WitnessUnknown: TX_WITNESS_UNKNOWN destination (P2W???)
- *  A CTxDestination is the internal data type encoded in a raven address
+ *  * CKeyID: TX_PUBKEYHASH destination
+ *  * CScriptID: TX_SCRIPTHASH destination
+ *  A CTxDestination is the internal data type encoded in a ravencoin address
  */
-typedef boost::variant<CNoDestination, CKeyID, CScriptID, WitnessV0ScriptHash, WitnessV0KeyHash, WitnessUnknown> CTxDestination;
+typedef boost::variant<CNoDestination, CKeyID, CScriptID> CTxDestination;
 
 /** Check whether a CTxDestination is a CNoDestination. */
 bool IsValidDestination(const CTxDestination& dest);
@@ -139,7 +110,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
  * Parse a standard scriptPubKey for the destination address. Assigns result to
  * the addressRet parameter and returns true if successful. For multisig
  * scripts, instead use ExtractDestinations. Currently only works for P2PK,
- * P2PKH, P2SH, P2WPKH, and P2WSH scripts.
+ * P2PKH, and P2SH scripts.
  */
 bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet);
 

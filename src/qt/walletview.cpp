@@ -20,6 +20,7 @@
 #include "transactionview.h"
 #include "walletmodel.h"
 #include "assetsdialog.h"
+#include <validation.h>
 
 #include "ui_interface.h"
 
@@ -30,7 +31,7 @@
 #include <QProgressDialog>
 #include <QPushButton>
 #include <QVBoxLayout>
-#include <validation.h>
+
 
 WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     QStackedWidget(parent),
@@ -111,11 +112,12 @@ void WalletView::setRavenGUI(RavenGUI *gui)
         connect(this, SIGNAL(encryptionStatusChanged(int)), gui, SLOT(setEncryptionStatus(int)));
 
         // Pass through transaction notifications
-        connect(this, SIGNAL(incomingTransaction(QString,int,CAmount,QString,QString,QString)), gui, SLOT(incomingTransaction(QString,int,CAmount,QString,QString,QString)));
+        connect(this, SIGNAL(incomingTransaction(QString,int,CAmount,QString,QString,QString,QString)), gui, SLOT(incomingTransaction(QString,int,CAmount,QString,QString,QString,QString)));
 
         // Connect HD enabled state signal 
         connect(this, SIGNAL(hdEnabledStatusChanged(int)), gui, SLOT(setHDStatus(int)));
 
+        // Pass through checkAssets calls to the GUI
         connect(this, SIGNAL(checkAssets()), gui, SLOT(checkAssets()));
     }
 }
@@ -183,8 +185,9 @@ void WalletView::processNewTransaction(const QModelIndex& parent, int start, int
     QModelIndex index = ttm->index(start, 0, parent);
     QString address = ttm->data(index, TransactionTableModel::AddressRole).toString();
     QString label = ttm->data(index, TransactionTableModel::LabelRole).toString();
+    QString assetName = ttm->data(index, TransactionTableModel::AssetNameRole).toString();
 
-    Q_EMIT incomingTransaction(date, walletModel->getOptionsModel()->getDisplayUnit(), amount, type, address, label);
+    Q_EMIT incomingTransaction(date, walletModel->getOptionsModel()->getDisplayUnit(), amount, type, address, label, assetName);
 
     /** Everytime we get an new transaction. We should check to see if assets are enabled or not */
     overviewPage->showAssets();

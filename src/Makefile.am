@@ -81,12 +81,14 @@ endif
 # raven core #
 RAVEN_CORE_H = \
   addrdb.h \
+  addressindex.h \
+  spentindex.h \
+  timestampindex.h \
   addrman.h \
   assets/assets.h \
   assets/assetdb.h \
   assets/assettypes.h \
   base58.h \
-  bech32.h \
   bloom.h \
   blockencodings.h \
   chain.h \
@@ -366,7 +368,6 @@ libraven_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(RAVEN_INCLUDES)
 libraven_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libraven_common_a_SOURCES = \
   base58.cpp \
-  bech32.cpp \
   chainparams.cpp \
   coins.cpp \
   compressor.cpp \

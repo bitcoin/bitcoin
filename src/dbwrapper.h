@@ -219,7 +219,7 @@ public:
      * @param[in] obfuscate   If true, store data obfuscated via simple XOR. If false, XOR
      *                        with a zero'd byte array.
      */
-    CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory = false, bool fWipe = false, bool obfuscate = false);
+    CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory = false, bool fWipe = false, bool obfuscate = false, size_t maxFileSize = 2 << 20);
     ~CDBWrapper();
 
     template <typename K, typename V>

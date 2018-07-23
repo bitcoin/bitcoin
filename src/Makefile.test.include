@@ -37,7 +37,6 @@ RAVEN_TESTS =\
   test/base32_tests.cpp \
   test/base58_tests.cpp \
   test/base64_tests.cpp \
-  test/bech32_tests.cpp \
   test/bip32_tests.cpp \
   test/blockencodings_tests.cpp \
   test/bloom_tests.cpp \
@@ -72,6 +71,8 @@ RAVEN_TESTS =\
   test/sanity_tests.cpp \
   test/scheduler_tests.cpp \
   test/script_P2SH_tests.cpp \
+  test/script_P2PK_tests.cpp \
+  test/script_P2PKH_tests.cpp \
   test/script_tests.cpp \
   test/script_standard_tests.cpp \
   test/scriptnum_tests.cpp \
