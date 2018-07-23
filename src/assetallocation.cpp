@@ -24,9 +24,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/algorithm/string.hpp>
-#include <chrono>
 
-using namespace std::chrono;
 using namespace std;
 vector<pair<uint256, int64_t> > vecTPSTestReceivedTimes;
 AssetAllocationIndexItemMap AssetAllocationIndex;
@@ -699,7 +697,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 
 		int64_t ms = INT64_MAX;
 		if (fJustCheck) {
-			ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+			ms = GetTimeMillis();
 			if(fUnitTest)
 				vecTPSTestReceivedTimes.emplace_back(theAssetAllocation.txHash, ms);
 		}
@@ -850,7 +848,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
 	// check to see if a transaction for this asset/address tuple has arrived before minimum latency period
 	ArrivalTimesMap arrivalTimes;
 	passetallocationdb->ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
-	const int64_t & nNow = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+	const int64_t & nNow = GetTimeMillis();
         
 	for (auto& arrivalTime : arrivalTimes) {
 		int minLatency = ZDAG_MINIMUM_LATENCY_SECONDS*1000;
@@ -1038,7 +1036,7 @@ int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& a
 	// go through arrival times and check that balances don't overrun the POW balance
 	CAmount nRealtimeBalanceRequired = 0;
 	pair<uint256, int64_t> lastArrivalTime;
-	lastArrivalTime.second = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+	lastArrivalTime.second = GetTimeMillis();
 	map<vector<unsigned char>, CAmount> mapBalances;
 	// init sender balance, track balances by address
 	// this is important because asset allocations can be sent/received within blocks and will overrun balances prematurely if not tracked properly, for example pow balance 3, sender sends 3, gets 2 sends 2 (total send 3+2=5 > balance of 3 from last stored state, this is a valid scenario and shouldn't be flagged)
