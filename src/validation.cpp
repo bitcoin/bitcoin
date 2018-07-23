@@ -1307,7 +1307,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 			}
 			sysTimeAccum += GetTimeMicros() - sysTimeStart;
 			if ((counter % 100) == 0)
-				printf("scriptTimeAccum %lld vs sysTimeStart %lld\n", scriptTimeAccum, sysTimeStart);
+				printf("scriptTimeAccum %f ms vs sysTimeStart %f ms\n", (scriptTimeAccum/counter)/1000, (sysTimeStart/counter)/1000);
 		}
 	}
 
