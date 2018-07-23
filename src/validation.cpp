@@ -1266,7 +1266,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 				const CTransaction& txIn = *ptx;
 				CCoinsViewCache vView(pcoinsTip);
 				
-				for (auto check : vChecks) {
+				for (auto &check : vChecks) {
 					if (!check())
 					{
 						LOCK2(cs_main, mempool.cs);
@@ -1807,9 +1807,9 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight)
     UpdateCoins(tx, inputs, txundo, nHeight);
 }
 
-bool CScriptCheck::operator()() {
+bool CScriptCheck::operator()() const {
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
-    if (!VerifyScript(scriptSig, scriptPubKey, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, cacheStore), &error)) {
+    if (!VerifyScript(scriptSig, scriptPubKey, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, cacheStore))) {
         return false;
     }
     return true;
