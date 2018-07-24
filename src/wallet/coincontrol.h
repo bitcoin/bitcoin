@@ -32,6 +32,8 @@ public:
     boost::optional<unsigned int> m_confirm_target;
     //! Override the wallet's m_signal_rbf if set
     boost::optional<bool> m_signal_bip125_rbf;
+    //! Avoid partial use of funds sent to a given address
+    bool m_avoid_partial_spends;
     //! Fee estimation mode to control arguments to estimateSmartFee
     FeeEstimateMode m_fee_mode;
 
@@ -40,19 +42,7 @@ public:
         SetNull();
     }
 
-    void SetNull()
-    {
-        destChange = CNoDestination();
-        m_change_type.reset();
-        fAllowOtherInputs = false;
-        fAllowWatchOnly = false;
-        setSelected.clear();
-        m_feerate.reset();
-        fOverrideFeeRate = false;
-        m_confirm_target.reset();
-        m_signal_bip125_rbf.reset();
-        m_fee_mode = FeeEstimateMode::UNSET;
-    }
+    void SetNull();
 
     bool HasSelected() const
     {
