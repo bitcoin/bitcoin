@@ -45,6 +45,8 @@ public:
     boost::optional<CFeeRate> m_discard_feerate;
     //! Override the default confirmation target if set
     boost::optional<unsigned int> m_confirm_target;
+    //! Avoid partial use of funds sent to a given address
+    bool m_avoid_partial_spends;
     //! Fee estimation mode to control arguments to estimateSmartFee
     FeeEstimateMode m_fee_mode;
     //! Controls which types of coins are allowed to be used (default: ALL_COINS)
@@ -55,22 +57,7 @@ public:
         SetNull();
     }
 
-    void SetNull(bool fResetCoinType = true)
-    {
-        destChange = CNoDestination();
-        fAllowOtherInputs = false;
-        fRequireAllInputs = true;
-        fAllowWatchOnly = false;
-        setSelected.clear();
-        m_feerate.reset();
-        m_discard_feerate.reset();
-        fOverrideFeeRate = false;
-        m_confirm_target.reset();
-        m_fee_mode = FeeEstimateMode::UNSET;
-        if (fResetCoinType) {
-            nCoinType = CoinType::ALL_COINS;
-        }
-    }
+    void SetNull(bool fResetCoinType = true);
 
     bool HasSelected() const
     {

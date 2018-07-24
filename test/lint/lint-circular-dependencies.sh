@@ -29,6 +29,7 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "validation -> validationinterface -> validation"
     "wallet/fees -> wallet/wallet -> wallet/fees"
     "wallet/wallet -> wallet/walletdb -> wallet/wallet"
+    "wallet/coincontrol -> wallet/wallet -> wallet/coincontrol"
     "policy/fees -> policy/policy -> validation -> policy/fees"
     "qt/addressbookpage -> qt/bitcoingui -> qt/walletview -> qt/addressbookpage"
     "txmempool -> validation -> validationinterface -> txmempool"

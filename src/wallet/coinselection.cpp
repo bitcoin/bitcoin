@@ -6,11 +6,14 @@
 #include <util.h>
 #include <utilmoneystr.h>
 
+#include <llmq/quorums_instantsend.h>
 #include <coinjoin/coinjoin.h>
+
+#include <boost/optional.hpp>
 
 // Descending order comparator
 struct {
-    bool operator()(const CInputCoin& a, const CInputCoin& b) const
+    bool operator()(const OutputGroup& a, const OutputGroup& b) const
     {
         return a.effective_value > b.effective_value;
     }
@@ -61,7 +64,7 @@ struct {
 
 static const size_t TOTAL_TRIES = 100000;
 
-bool SelectCoinsBnB(std::vector<CInputCoin>& utxo_pool, const CAmount& target_value, const CAmount& cost_of_change, std::set<CInputCoin>& out_set, CAmount& value_ret, CAmount not_input_fees)
+bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& target_value, const CAmount& cost_of_change, std::set<CInputCoin>& out_set, CAmount& value_ret, CAmount not_input_fees)
 {
     out_set.clear();
     CAmount curr_value = 0;
@@ -72,7 +75,7 @@ bool SelectCoinsBnB(std::vector<CInputCoin>& utxo_pool, const CAmount& target_va
 
     // Calculate curr_available_value
     CAmount curr_available_value = 0;
-    for (const CInputCoin& utxo : utxo_pool) {
+    for (const OutputGroup& utxo : utxo_pool) {
         // Assert that this utxo is not negative. It should never be negative, effective value calculation should have removed it
         assert(utxo.effective_value > 0);
         curr_available_value += utxo.effective_value;
@@ -125,11 +128,11 @@ bool SelectCoinsBnB(std::vector<CInputCoin>& utxo_pool, const CAmount& target_va
 
             // Output was included on previous iterations, try excluding now.
             curr_selection.back() = false;
-            CInputCoin& utxo = utxo_pool.at(curr_selection.size() - 1);
+            OutputGroup& utxo = utxo_pool.at(curr_selection.size() - 1);
             curr_value -= utxo.effective_value;
             curr_waste -= utxo.fee - utxo.long_term_fee;
         } else { // Moving forwards, continuing down this branch
-            CInputCoin& utxo = utxo_pool.at(curr_selection.size());
+            OutputGroup& utxo = utxo_pool.at(curr_selection.size());
 
             // Remove this utxo from the curr_available_value utxo amount
             curr_available_value -= utxo.effective_value;
@@ -158,20 +161,20 @@ bool SelectCoinsBnB(std::vector<CInputCoin>& utxo_pool, const CAmount& target_va
     value_ret = 0;
     for (size_t i = 0; i < best_selection.size(); ++i) {
         if (best_selection.at(i)) {
-            out_set.insert(utxo_pool.at(i));
-            value_ret += utxo_pool.at(i).txout.nValue;
+            util::insert(out_set, utxo_pool.at(i).m_outputs);
+            value_ret += utxo_pool.at(i).m_value;
         }
     }
 
     return true;
 }
 
-static void ApproximateBestSubset(const std::vector<CInputCoin>& vValue, const CAmount& nTotalLower, const CAmount& nTargetValue,
+static void ApproximateBestSubset(const std::vector<OutputGroup>& groups, const CAmount& nTotalLower, const CAmount& nTargetValue,
                                   std::vector<char>& vfBest, CAmount& nBest, int iterations = 1000)
 {
     std::vector<char> vfIncluded;
 
-    vfBest.assign(vValue.size(), true);
+    vfBest.assign(groups.size(), true);
     nBest = nTotalLower;
     int nBestInputCount = 0;
 
@@ -179,13 +182,13 @@ static void ApproximateBestSubset(const std::vector<CInputCoin>& vValue, const C
 
     for (int nRep = 0; nRep < iterations && nBest != nTargetValue; nRep++)
     {
-        vfIncluded.assign(vValue.size(), false);
+        vfIncluded.assign(groups.size(), false);
         CAmount nTotal = 0;
         int nTotalInputCount = 0;
         bool fReachedTarget = false;
         for (int nPass = 0; nPass < 2 && !fReachedTarget; nPass++)
         {
-            for (unsigned int i = 0; i < vValue.size(); i++)
+            for (unsigned int i = 0; i < groups.size(); i++)
             {
                 //The solver here uses a randomized algorithm,
                 //the randomness serves no real security purpose but is just
@@ -195,7 +198,7 @@ static void ApproximateBestSubset(const std::vector<CInputCoin>& vValue, const C
                 //the selection random.
                 if (nPass == 0 ? insecure_rand.randbool() : !vfIncluded[i])
                 {
-                    nTotal += vValue[i].txout.nValue;
+                    nTotal += groups[i].m_value;
                     ++nTotalInputCount;
                     vfIncluded[i] = true;
                     if (nTotal >= nTargetValue)
@@ -207,7 +210,7 @@ static void ApproximateBestSubset(const std::vector<CInputCoin>& vValue, const C
                             nBestInputCount = nTotalInputCount;
                             vfBest = vfIncluded;
                         }
-                        nTotal -= vValue[i].txout.nValue;
+                        nTotal -= groups[i].m_value;
                         --nTotalInputCount;
                         vfIncluded[i] = false;
                     }
@@ -217,58 +220,46 @@ static void ApproximateBestSubset(const std::vector<CInputCoin>& vValue, const C
     }
 }
 
-int CInputCoin::Priority() const
-{
-    for (const auto& d : CCoinJoin::GetStandardDenominations()) {
-        // large denoms have lower value
-        if (txout.nValue == d) return (float)COIN / d * 10000;
-    }
-    if (txout.nValue < 1 * COIN) return 20000;
-
-    //nondenom return largest first
-    return -1 * (txout.nValue / COIN);
-}
-
 struct CompareByPriority
 {
-    bool operator()(const CInputCoin& coin1,
-                    const CInputCoin& coin2) const
+    bool operator()(const OutputGroup& group1,
+                    const OutputGroup& group2) const
     {
-        return coin1.Priority() > coin2.Priority();
+        return CCoinJoin::CalculateAmountPriority(group1.m_value) > CCoinJoin::CalculateAmountPriority(group2.m_value);
     }
 };
 
 // move denoms down
-bool less_then_denom (const CInputCoin& coin1, const CInputCoin& coin2)
+bool less_then_denom (const OutputGroup& group1, const OutputGroup& group2)
 {
     bool found1 = false;
     bool found2 = false;
     for (const auto& d : CCoinJoin::GetStandardDenominations()) // loop through predefined denoms
     {
-        if(coin1.txout.nValue == d) found1 = true;
-        if(coin2.txout.nValue == d) found2 = true;
+        if(group1.m_value == d) found1 = true;
+        if(group2.m_value == d) found2 = true;
     }
     return (!found1 && found2);
 }
 
-bool KnapsackSolver(const CAmount& nTargetValue, std::vector<CInputCoin>& vCoins, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, bool fFulyMixedOnly, CAmount maxTxFee)
+bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& groups, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, bool fFulyMixedOnly, CAmount maxTxFee)
 {
     setCoinsRet.clear();
     nValueRet = 0;
 
     // List of values less than target
-    boost::optional<CInputCoin> coinLowestLarger;
-    std::vector<CInputCoin> vValue;
+    boost::optional<OutputGroup> lowest_larger;
+    std::vector<OutputGroup> applicable_groups;
     CAmount nTotalLower = 0;
 
-    Shuffle(vCoins.begin(), vCoins.end(), FastRandomContext());
+    Shuffle(groups.begin(), groups.end(), FastRandomContext());
 
     int tryDenomStart = 0;
     CAmount nMinChange = MIN_CHANGE;
 
     if (fFulyMixedOnly) {
         // larger denoms first
-        std::sort(vCoins.rbegin(), vCoins.rend(), CompareByPriority());
+        std::sort(groups.rbegin(), groups.rend(), CompareByPriority());
         // we actually want denoms only, so let's skip "non-denom only" step
         tryDenomStart = 1;
         // no change is allowed
@@ -276,50 +267,40 @@ bool KnapsackSolver(const CAmount& nTargetValue, std::vector<CInputCoin>& vCoins
     } else {
         // move denoms down on the list
         // try not to use denominated coins when not needed, save denoms for coinjoin
-        std::sort(vCoins.begin(), vCoins.end(), less_then_denom);
+        std::sort(groups.begin(), groups.end(), less_then_denom);
     }
 
     // try to find nondenom first to prevent unneeded spending of mixed coins
-    for (unsigned int tryDenom = tryDenomStart; tryDenom < 2; tryDenom++)
-    {
+    for (unsigned int tryDenom = tryDenomStart; tryDenom < 2; tryDenom++) {
         LogPrint(BCLog::SELECTCOINS, "tryDenom: %d\n", tryDenom);
-        vValue.clear();
+        applicable_groups.clear();
         nTotalLower = 0;
-        for (const CInputCoin &coin : vCoins)
-        {
-            if (tryDenom == 0 && CCoinJoin::IsDenominatedAmount(coin.txout.nValue)) continue; // we don't want denom values on first run
-
-            if (coin.txout.nValue == nTargetValue)
-            {
-                setCoinsRet.insert(coin);
-                nValueRet += coin.txout.nValue;
+        for (const OutputGroup& group : groups) {
+            if (tryDenom == 0 && CCoinJoin::IsDenominatedAmount(group.m_value)) {
+                continue; // we don't want denom values on first run
+            }
+            if (group.m_value == nTargetValue) {
+                util::insert(setCoinsRet, group.m_outputs);
+                nValueRet += group.m_value;
                 return true;
-            }
-            else if (coin.txout.nValue < nTargetValue + nMinChange)
-            {
-                vValue.push_back(coin);
-                nTotalLower += coin.txout.nValue;
-            }
-            else if (!coinLowestLarger || coin.txout.nValue < coinLowestLarger->txout.nValue)
-            {
-                coinLowestLarger = coin;
+            } else if (group.m_value < nTargetValue + nMinChange) {
+                applicable_groups.push_back(group);
+                nTotalLower += group.m_value;
+            } else if (!lowest_larger || group.m_value < lowest_larger->m_value) {
+                lowest_larger = group;
             }
         }
 
-        if (nTotalLower == nTargetValue)
-        {
-            for (const auto& input : vValue)
-            {
-                setCoinsRet.insert(input);
-                nValueRet += input.txout.nValue;
+        if (nTotalLower == nTargetValue) {
+            for (const auto& group : applicable_groups) {
+                util::insert(setCoinsRet, group.m_outputs);
+                nValueRet += group.m_value;
             }
             return true;
         }
 
-        if (nTotalLower < nTargetValue)
-        {
-            if (!coinLowestLarger) // there is no input larger than nTargetValue
-            {
+        if (nTotalLower < nTargetValue) {
+            if (!lowest_larger) { // there is no input larger than nTargetValue
                 if (tryDenom == 0)
                     // we didn't look at denom yet, let's do it
                     continue;
@@ -327,8 +308,8 @@ bool KnapsackSolver(const CAmount& nTargetValue, std::vector<CInputCoin>& vCoins
                     // we looked at everything possible and didn't find anything, no luck
                     return false;
             }
-            setCoinsRet.insert(coinLowestLarger.get());
-            nValueRet += coinLowestLarger->txout.nValue;
+            util::insert(setCoinsRet, lowest_larger->m_outputs);
+            nValueRet += lowest_larger->m_value;
             // There is no change in PS, so we know the fee beforehand,
             // can see if we exceeded the max fee and thus fail quickly.
             return fFulyMixedOnly ? (nValueRet - nTargetValue <= maxTxFee) : true;
@@ -339,31 +320,28 @@ bool KnapsackSolver(const CAmount& nTargetValue, std::vector<CInputCoin>& vCoins
     }
 
     // Solve subset sum by stochastic approximation
-    std::sort(vValue.begin(), vValue.end(), descending);
+    std::sort(applicable_groups.begin(), applicable_groups.end(), descending);
     std::vector<char> vfBest;
     CAmount nBest;
 
-    ApproximateBestSubset(vValue, nTotalLower, nTargetValue, vfBest, nBest);
-    if (nBest != nTargetValue && nMinChange != 0 && nTotalLower >= nTargetValue + nMinChange)
-        ApproximateBestSubset(vValue, nTotalLower, nTargetValue + nMinChange, vfBest, nBest);
+    ApproximateBestSubset(applicable_groups, nTotalLower, nTargetValue, vfBest, nBest);
+    if (nBest != nTargetValue && nMinChange != 0 && nTotalLower >= nTargetValue + nMinChange) {
+        ApproximateBestSubset(applicable_groups, nTotalLower, nTargetValue + nMinChange, vfBest, nBest);
+    }
 
     // If we have a bigger coin and (either the stochastic approximation didn't find a good solution,
     //                                   or the next bigger coin is closer), return the bigger coin
-    if (coinLowestLarger &&
-        ((nBest != nTargetValue && nBest < nTargetValue + nMinChange) || coinLowestLarger->txout.nValue <= nBest))
-    {
-        setCoinsRet.insert(coinLowestLarger.get());
-        nValueRet += coinLowestLarger->txout.nValue;
-    }
-    else {
+    if (lowest_larger &&
+        ((nBest != nTargetValue && nBest < nTargetValue + nMinChange) || lowest_larger->m_value <= nBest)) {
+        util::insert(setCoinsRet, lowest_larger->m_outputs);
+        nValueRet += lowest_larger->m_value;
+    } else {
         std::string s = "CWallet::SelectCoinsMinConf best subset: ";
-        for (unsigned int i = 0; i < vValue.size(); i++)
-        {
-            if (vfBest[i])
-            {
-                setCoinsRet.insert(vValue[i]);
-                nValueRet += vValue[i].txout.nValue;
-                s += FormatMoney(vValue[i].txout.nValue) + " ";
+        for (unsigned int i = 0; i < applicable_groups.size(); i++) {
+            if (vfBest[i]) {
+                util::insert(setCoinsRet, applicable_groups[i].m_outputs);
+                nValueRet += applicable_groups[i].m_value;
+                s += FormatMoney(applicable_groups[i].m_value) + " ";
             }
         }
         LogPrint(BCLog::SELECTCOINS, "%s - total %s\n", s, FormatMoney(nBest));
@@ -372,4 +350,50 @@ bool KnapsackSolver(const CAmount& nTargetValue, std::vector<CInputCoin>& vCoins
     // There is no change in PS, so we know the fee beforehand,
     // can see if we exceeded the max fee and thus fail quickly.
     return fFulyMixedOnly ? (nValueRet - nTargetValue <= maxTxFee) : true;
+}
+
+/******************************************************************************
+
+ OutputGroup
+
+ ******************************************************************************/
+
+void OutputGroup::Insert(const CInputCoin& output, int depth, bool from_me, size_t ancestors, size_t descendants) {
+    m_outputs.push_back(output);
+    m_from_me &= from_me;
+    m_value += output.effective_value;
+    m_depth = std::min(m_depth, depth);
+    // m_ancestors is currently the max ancestor count for all coins in the group; however, this is
+    // not ideal, as a wallet will consider e.g. thirty 2-ancestor coins as having two ancestors,
+    // when in reality it has 60 ancestors.
+    m_ancestors = std::max(m_ancestors, ancestors);
+    // m_descendants is the count as seen from the top ancestor, not the descendants as seen from the
+    // coin itself; thus, this value is accurate
+    m_descendants = std::max(m_descendants, descendants);
+    effective_value = m_value;
+}
+
+std::vector<CInputCoin>::iterator OutputGroup::Discard(const CInputCoin& output) {
+    auto it = m_outputs.begin();
+    while (it != m_outputs.end() && it->outpoint != output.outpoint) ++it;
+    if (it == m_outputs.end()) return it;
+    m_value -= output.effective_value;
+    effective_value -= output.effective_value;
+    return m_outputs.erase(it);
+}
+
+bool OutputGroup::IsLockedByInstantSend() const
+{
+    for (const auto& output : m_outputs) {
+        if (!llmq::quorumInstantSendManager->IsLocked(output.outpoint.hash))
+            return false;
+    }
+    return true;
+}
+
+bool OutputGroup::EligibleForSpending(const CoinEligibilityFilter& eligibility_filter) const
+{
+    return (m_depth >= (m_from_me ? eligibility_filter.conf_mine : eligibility_filter.conf_theirs) || IsLockedByInstantSend())
+        && m_ancestors <= eligibility_filter.max_ancestors
+        && m_descendants <= eligibility_filter.max_descendants;
 }
