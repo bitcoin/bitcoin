@@ -612,6 +612,8 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 	std::string errorMessage;
 	bool good = true;
 	const std::vector<unsigned char> &emptyVch = vchFromString("");
+	int64_t sysTimeStart = GetTimeMicros();
+	int64_t sysTimeNow = GetTimeMicros();
 	if (block.vtx.empty() && tx.nVersion == SYSCOIN_TX_VERSION) {
 		{
 			bool foundAliasInput = true;
@@ -624,9 +626,11 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 				op = OP_ALIAS_UPDATE;
 
 			}
+			printf("checksysin1 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
 			errorMessage.clear();
 			if(foundAliasInput)
 				good = CheckAliasInputs(inputs, tx, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bSanity);
+			printf("checksysin2 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
 			if (!errorMessage.empty())
 				return state.DoS(100, false, REJECT_INVALID, errorMessage);
 	
@@ -634,8 +638,10 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 			{
 				if (DecodeAssetAllocationTx(tx, op, vvchArgs))
 				{
+					printf("checksysin3 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
 					errorMessage.clear();
 					good = CheckAssetAllocationInputs(tx, inputs, op, vvchArgs, foundAliasInput? vvchAliasArgs[0]: emptyVch, fJustCheck, nHeight, revertedAssetAllocations, errorMessage, bSanity);
+					printf("checksysin4 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
 				}
 				else if (DecodeOfferTx(tx, op, vvchArgs))
 				{
@@ -669,6 +675,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 
 			if (!good || !errorMessage.empty())
 				return state.DoS(100, false, REJECT_INVALID, errorMessage);
+			printf("checksysin5 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
 		}
 	}
 	else if (!block.vtx.empty()) {
@@ -768,7 +775,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 			return state.DoS(0, false, REJECT_INVALID, "Failed to flush syscoin databases");
 	}
 
-
+	printf("checksysin6 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
 	return true;
 }
 /** Convert CValidationState to a human-readable message for logging */
@@ -1260,12 +1267,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 		}
 		if (bMultiThreaded)
 		{
-			static int counter = 0;
-			static int64_t scriptTimeAccum = 0;
-			static int64_t sysTimeAccum = 0;
-			counter++;
 			std::packaged_task<void()> t([&pool, ptx, hash, coins_to_uncache, hashCacheEntry, vChecks]() {
-				int64_t scriptTimeStart = GetTimeMicros();
 				CValidationState vstate;
 				CCoinsViewCache vView(pcoinsTip);
 				const CTransaction& txIn = *ptx;
@@ -1285,8 +1287,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 						return;
 					}
 				}
-				scriptTimeAccum = GetTimeMicros() - scriptTimeStart;
-				int64_t sysTimeStart = GetTimeMicros();
 				if (!CheckSyscoinInputs(txIn, vstate, vView, true, chainActive.Height(), CBlock()))
 				{
 					LOCK2(cs_main, mempool.cs);
@@ -1300,9 +1300,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
 					nLastMultithreadMempoolFailure = GetTime();
 				}
-				sysTimeAccum = GetTimeMicros() - sysTimeStart;
-				scriptExecutionCache.insert(hashCacheEntry);
-				printf("scriptTimeAccum %lld ms vs sysTimeAccum %lld ms\n", scriptTimeAccum, sysTimeAccum);			
+				scriptExecutionCache.insert(hashCacheEntry);		
 			});
 			int numTries = 100;
 			while (!threadpool.tryPost(t)) {
