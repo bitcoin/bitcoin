@@ -24,9 +24,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/algorithm/string.hpp>
-#include <chrono>
 
-using namespace std::chrono;
 using namespace std;
 vector<pair<uint256, int64_t> > vecTPSTestReceivedTimes;
 AssetAllocationIndexItemMap AssetAllocationIndex;
@@ -97,7 +95,7 @@ void CAssetAllocationDB::WriteAssetAllocationIndex(const CAssetAllocation& asset
 				int nHeight = assetallocation.nHeight;
 				const string& strKey = assetallocation.txHash.GetHex()+"-"+stringFromVch(asset.vchAsset)+"-"+ strSender +"-"+ strReceiver;
 				{
-					LOCK2(mempool.cs, cs_assetallocationindex);
+					LOCK(mempool.cs);
 					// we want to the height from mempool if it exists or use the one stored in assetallocation
 					CTxMemPool::txiter it = mempool.mapTx.find(assetallocation.txHash);
 					if (it != mempool.mapTx.end())
@@ -176,7 +174,7 @@ bool DecodeAssetAllocationScript(const CScript& script, int& op,
 		}
 		if (!(opcode >= 0 && opcode <= OP_PUSHDATA4))
 			return false;
-		vvch.push_back(vch);
+		vvch.emplace_back(vch);
 	}
 
 	// move the pc to after any DROP or NOP
@@ -330,7 +328,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 			return true;
 		}		
 	}
-
 	string retError = "";
 	if(fJustCheck)
 	{
@@ -570,7 +567,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1023 - " + _("Failed to write to asset allocation DB");
 						return error(errorMessage.c_str());
 					}
-
 					if (fJustCheck) {
 						if (strResponseEnglish != "") {
 							paliasdb->WriteAliasIndexTxHistory(user1, receiverAddress, user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString());
@@ -604,7 +600,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 					return true;
 				}
 				const CAmount rangeTotalAmount = rangeTotal;
-				rangeTotals.push_back(rangeTotalAmount);
+				rangeTotals.emplace_back(rangeTotalAmount);
 				nTotal += rangeTotalAmount;
 			}
 			const CAmount &nBalanceAfterSend = dbAssetAllocation.nBalance - nTotal;
@@ -696,14 +692,12 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 			theAssetAllocation.nHeight = nHeight;
 			theAssetAllocation.txHash = tx.GetHash();
 		}
-
 		int64_t ms = INT64_MAX;
 		if (fJustCheck) {
-			ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+			ms = GetTimeMillis();
 			if(fUnitTest)
 				vecTPSTestReceivedTimes.emplace_back(theAssetAllocation.txHash, ms);
 		}
-
 		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, 0, 0, dbAsset, ms, "", "", fJustCheck))
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1031 - " + _("Failed to write to asset allocation DB");
@@ -850,7 +844,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
 	// check to see if a transaction for this asset/address tuple has arrived before minimum latency period
 	ArrivalTimesMap arrivalTimes;
 	passetallocationdb->ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
-	const int64_t & nNow = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+	const int64_t & nNow = GetTimeMillis();
         
 	for (auto& arrivalTime : arrivalTimes) {
 		int minLatency = ZDAG_MINIMUM_LATENCY_SECONDS*1000;
@@ -1038,7 +1032,7 @@ int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& a
 	// go through arrival times and check that balances don't overrun the POW balance
 	CAmount nRealtimeBalanceRequired = 0;
 	pair<uint256, int64_t> lastArrivalTime;
-	lastArrivalTime.second = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+	lastArrivalTime.second = GetTimeMillis();
 	map<vector<unsigned char>, CAmount> mapBalances;
 	// init sender balance, track balances by address
 	// this is important because asset allocations can be sent/received within blocks and will overrun balances prematurely if not tracked properly, for example pow balance 3, sender sends 3, gets 2 sends 2 (total send 3+2=5 > balance of 3 from last stored state, this is a valid scenario and shouldn't be flagged)
@@ -1292,7 +1286,6 @@ bool CAssetAllocationTransactionsDB::ScanAssetAllocationIndex(const int count, c
 			nStartBlock = startblock.get_int();
 		}
 	}
-	LOCK(cs_assetallocationindex);
 	int index = 0;
 	UniValue assetValue;
 	vector<string> contents;
@@ -1354,7 +1347,6 @@ bool CAssetAllocationDB::ScanAssetAllocations(const int count, const int from, c
 		}
 	}
 
-	LOCK(cs_assetallocation);
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
 	CAssetAllocation txPos;

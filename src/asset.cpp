@@ -170,7 +170,7 @@ bool DecodeAssetScript(const CScript& script, int& op,
 		}
 		if (!(opcode >= 0 && opcode <= OP_PUSHDATA4))
 			return false;
-		vvch.push_back(vch);
+		vvch.emplace_back(vch);
 	}
 
 	// move the pc to after any DROP or NOP
@@ -536,7 +536,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 						return true;
 					}
 					const CAmount rangeTotalAmount = rangeTotal;
-					rangeTotals.push_back(rangeTotalAmount);
+					rangeTotals.emplace_back(rangeTotalAmount);
 					nTotal += rangeTotalAmount;
 				}
 				if (theAsset.nBalance < nTotal) {
@@ -1100,7 +1100,7 @@ UniValue assetsend(const JSONRPCRequest& request) {
 		// check to see if a transaction for this asset/address tuple has arrived before minimum latency period
 		ArrivalTimesMap arrivalTimes;
 		passetallocationdb->ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
-		const int64_t & nNow = duration_cast<seconds>(system_clock::now().time_since_epoch()).count();
+		const int64_t & nNow = GetTimeMillis();
 		for (auto& arrivalTime : arrivalTimes) {
 			// if this tx arrived within the minimum latency period flag it as potentially conflicting
 			if ((nNow - (arrivalTime.second / 1000)) < ZDAG_MINIMUM_LATENCY_SECONDS) {
@@ -1378,7 +1378,6 @@ bool CAssetDB::ScanAssets(const int count, const int from, const UniValue& oOpti
 			nStartBlock = startblock.get_int();
 		}
 	}
-	LOCK(cs_asset);
 
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
