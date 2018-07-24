@@ -182,8 +182,8 @@ public:
 //! the maximum number of tried addr collisions to store
 #define ADDRMAN_SET_TRIED_COLLISION_SIZE 10
 
-/** 
- * Stochastical (IP) address manager 
+/**
+ * Stochastical (IP) address manager
  */
 class CAddrMan
 {
