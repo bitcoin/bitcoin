@@ -356,7 +356,7 @@ CAddrInfo CAddrMan::Select_(bool newOnly)
 
     // Use a 50% chance for choosing between tried and new table entries.
     if (!newOnly &&
-       (nTried > 0 && (nNew == 0 || RandomInt(2) == 0))) { 
+       (nTried > 0 && (nNew == 0 || RandomInt(2) == 0))) {
         // use a tried node
         double fChanceFactor = 1.0;
         while (1) {

@@ -148,7 +148,7 @@ bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)
         const CTxOut& txout = tx.vout[i];
         // Match if the filter contains any arbitrary script data element in any scriptPubKey in tx
         // If this matches, also add the specific output that was matched.
-        // This means clients don't have to update the filter themselves when a new relevant tx 
+        // This means clients don't have to update the filter themselves when a new relevant tx
         // is discovered in order to find spending transactions, which avoids round-tripping and race conditions.
         CScript::const_iterator pc = txout.scriptPubKey.begin();
         std::vector<unsigned char> data;
