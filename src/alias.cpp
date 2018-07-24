@@ -1049,7 +1049,7 @@ bool DecodeAliasScript(const CScript& script, int& op,
 		}
 		if (!(opcode >= 0 && opcode <= OP_PUSHDATA4))
 			return false;
-		vvch.push_back(vch);
+		vvch.emplace_back(vch);
 	}
 
 	// move the pc to after any DROP or NOP

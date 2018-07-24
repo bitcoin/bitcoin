@@ -191,7 +191,7 @@ public:
 				if (arrivalTime < INT64_MAX) {
 					ArrivalTimesMap arrivalTimes;
 					ReadISArrivalTimes(allocationTuple, arrivalTimes);
-					arrivalTimes[assetallocation.txHash] = arrivalTime;
+					arrivalTimes.emplace(arrivalTime);
 					writeState = writeState && Write(make_pair(std::string("assetallocationa"), allocationTuple), arrivalTimes);
 				}
 			}
