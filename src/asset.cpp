@@ -170,7 +170,7 @@ bool DecodeAssetScript(const CScript& script, int& op,
 		}
 		if (!(opcode >= 0 && opcode <= OP_PUSHDATA4))
 			return false;
-		vvch.push_back(vch);
+		vvch.emplace_back(vch);
 	}
 
 	// move the pc to after any DROP or NOP
@@ -536,7 +536,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 						return true;
 					}
 					const CAmount rangeTotalAmount = rangeTotal;
-					rangeTotals.push_back(rangeTotalAmount);
+					rangeTotals.emplace_back(rangeTotalAmount);
 					nTotal += rangeTotalAmount;
 				}
 				if (theAsset.nBalance < nTotal) {
