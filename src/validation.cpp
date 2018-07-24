@@ -612,9 +612,6 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 	std::string errorMessage;
 	bool good = true;
 	const std::vector<unsigned char> &emptyVch = vchFromString("");
-	int64_t sysTimeStart = GetTimeMicros();
-	int64_t sysTimeNow = GetTimeMicros();
-	int64_t now;
 	if (block.vtx.empty() && tx.nVersion == SYSCOIN_TX_VERSION) {
 		bool foundAliasInput = true;
 		if (!DecodeAliasTx(tx, op, vvchAliasArgs))
@@ -626,17 +623,9 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 			op = OP_ALIAS_UPDATE;
 
 		}
-		now = GetTimeMicros();
-		if (!bSanity)
-			printf("checksysin1 difference %lld total %lld\n", now - sysTimeNow, now - sysTimeStart);
-		sysTimeNow = GetTimeMicros();
 		errorMessage.clear();
 		if (foundAliasInput)
 			good = CheckAliasInputs(inputs, tx, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bSanity);
-		now = GetTimeMicros();
-		if (!bSanity)
-			printf("checksysin2 difference %lld total %lld\n", now - sysTimeNow, now - sysTimeStart);
-		sysTimeNow = GetTimeMicros();
 		if (!errorMessage.empty())
 			return state.DoS(100, false, REJECT_INVALID, errorMessage);
 
@@ -644,16 +633,8 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 		{
 			if (DecodeAssetAllocationTx(tx, op, vvchArgs))
 			{
-				now = GetTimeMicros();
-				if (!bSanity)
-					printf("checksysin3 difference %lld total %lld\n", now - sysTimeNow, now - sysTimeStart);
-				sysTimeNow = GetTimeMicros();
 				errorMessage.clear();
 				good = CheckAssetAllocationInputs(tx, inputs, op, vvchArgs, foundAliasInput ? vvchAliasArgs[0] : emptyVch, fJustCheck, nHeight, revertedAssetAllocations, errorMessage, bSanity);
-				now = GetTimeMicros();
-				if (!bSanity)
-					printf("checksysin4 difference %lld total %lld\n", now - sysTimeNow, now - sysTimeStart);
-				sysTimeNow = GetTimeMicros();
 			}
 			else if (DecodeOfferTx(tx, op, vvchArgs))
 			{
@@ -687,9 +668,6 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 
 		if (!good || !errorMessage.empty())
 			return state.DoS(100, false, REJECT_INVALID, errorMessage);
-		now = GetTimeMicros();
-		if (!bSanity)
-			printf("checksysin5 difference %lld total %lld\n", now - sysTimeNow, now - sysTimeStart);
 		return true;
 	}
 	else if (!block.vtx.empty()) {
