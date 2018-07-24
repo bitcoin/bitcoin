@@ -614,6 +614,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 	const std::vector<unsigned char> &emptyVch = vchFromString("");
 	int64_t sysTimeStart = GetTimeMicros();
 	int64_t sysTimeNow = GetTimeMicros();
+	int64_t now;
 	if (block.vtx.empty() && tx.nVersion == SYSCOIN_TX_VERSION) {
 		bool foundAliasInput = true;
 		if (!DecodeAliasTx(tx, op, vvchAliasArgs))
@@ -625,7 +626,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 			op = OP_ALIAS_UPDATE;
 
 		}
-		int64_t now = GetTimeMicros();
+		now = GetTimeMicros();
 		if (!bSanity)
 			printf("checksysin1 difference %lld total %lld\n", now - sysTimeNow, now - sysTimeStart);
 		sysTimeNow = GetTimeMicros();
@@ -2936,7 +2937,7 @@ bool static DisconnectTip(CValidationState& state, const CChainParams& chainpara
         bool flushed = view.Flush();
         assert(flushed);
     }
-    LogPrint("bench", "- Disconnect block: %.2fms\n", (now nStart) * 0.001);
+    LogPrint("bench", "- Disconnect block: %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
     // Write the chain state to disk, if necessary.
     if (!FlushStateToDisk(state, FLUSH_STATE_IF_NEEDED))
         return false;
