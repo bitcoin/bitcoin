@@ -615,78 +615,76 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 	int64_t sysTimeStart = GetTimeMicros();
 	int64_t sysTimeNow = GetTimeMicros();
 	if (block.vtx.empty() && tx.nVersion == SYSCOIN_TX_VERSION) {
+		bool foundAliasInput = true;
+		if (!DecodeAliasTx(tx, op, vvchAliasArgs))
 		{
-			bool foundAliasInput = true;
-			if (!DecodeAliasTx(tx, op, vvchAliasArgs))
-			{
-				if (!FindAliasInTx(inputs, tx, vvchAliasArgs)) {
-					foundAliasInput = false;
-				}
-				// it is assumed if no alias output is found, then it is for another service so this would be an alias update
-				op = OP_ALIAS_UPDATE;
-
+			if (!FindAliasInTx(inputs, tx, vvchAliasArgs)) {
+				foundAliasInput = false;
 			}
-			if(!bSanity)
-			printf("checksysin1 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
-			sysTimeNow = GetTimeMicros();
-			errorMessage.clear();
-			if(foundAliasInput)
-				good = CheckAliasInputs(inputs, tx, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bSanity);
-			if(!bSanity)
-			printf("checksysin2 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
-			sysTimeNow = GetTimeMicros();
-			if (!errorMessage.empty())
-				return state.DoS(100, false, REJECT_INVALID, errorMessage);
-	
-			if (good)
-			{
-				if (DecodeAssetAllocationTx(tx, op, vvchArgs))
-				{
-					if(!bSanity)
-					printf("checksysin3 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
-					sysTimeNow = GetTimeMicros();
-					errorMessage.clear();
-					good = CheckAssetAllocationInputs(tx, inputs, op, vvchArgs, foundAliasInput? vvchAliasArgs[0]: emptyVch, fJustCheck, nHeight, revertedAssetAllocations, errorMessage, bSanity);
-					if(!bSanity)
-					printf("checksysin4 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
-					sysTimeNow = GetTimeMicros();
-				}
-				else if (DecodeOfferTx(tx, op, vvchArgs))
-				{
-					if(!foundAliasInput)
-						return state.DoS(100, false, REJECT_INVALID, "no-alias-input-found-mempool");
-					errorMessage.clear();
-					good = CheckOfferInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedOffers, errorMessage, bSanity);
-				}
-				else if (DecodeCertTx(tx, op, vvchArgs))
-				{
-					if (!foundAliasInput)
-						return state.DoS(100, false, REJECT_INVALID, "no-alias-input-found-mempool");
-					errorMessage.clear();
-					good = CheckCertInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedCerts, errorMessage, bSanity);
-				}
-				else if (DecodeEscrowTx(tx, op, vvchArgs))
-				{
-					if (!foundAliasInput)
-						return state.DoS(100, false, REJECT_INVALID, "no-alias-input-found-mempool");
-					errorMessage.clear();
-					good = CheckEscrowInputs(tx, op, vvchArgs, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bSanity);
-				}
-				else if (DecodeAssetTx(tx, op, vvchArgs))
-				{
-					errorMessage.clear();
-					good = CheckAssetInputs(tx, inputs, op, vvchArgs, foundAliasInput ? vvchAliasArgs[0] : emptyVch, fJustCheck, nHeight, revertedAssetAllocations, errorMessage, bSanity);
-				}
-			}
-			else
-				return state.DoS(100, false, REJECT_INVALID, "syscoin-inputs-error");
+			// it is assumed if no alias output is found, then it is for another service so this would be an alias update
+			op = OP_ALIAS_UPDATE;
 
-			if (!good || !errorMessage.empty())
-				return state.DoS(100, false, REJECT_INVALID, errorMessage);
-			if(!bSanity)
-			printf("checksysin5 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
-			sysTimeNow = GetTimeMicros();
 		}
+		if (!bSanity)
+			printf("checksysin1 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
+		sysTimeNow = GetTimeMicros();
+		errorMessage.clear();
+		if (foundAliasInput)
+			good = CheckAliasInputs(inputs, tx, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bSanity);
+		if (!bSanity)
+			printf("checksysin2 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
+		sysTimeNow = GetTimeMicros();
+		if (!errorMessage.empty())
+			return state.DoS(100, false, REJECT_INVALID, errorMessage);
+
+		if (good)
+		{
+			if (DecodeAssetAllocationTx(tx, op, vvchArgs))
+			{
+				if (!bSanity)
+					printf("checksysin3 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
+				sysTimeNow = GetTimeMicros();
+				errorMessage.clear();
+				good = CheckAssetAllocationInputs(tx, inputs, op, vvchArgs, foundAliasInput ? vvchAliasArgs[0] : emptyVch, fJustCheck, nHeight, revertedAssetAllocations, errorMessage, bSanity);
+				if (!bSanity)
+					printf("checksysin4 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
+				sysTimeNow = GetTimeMicros();
+			}
+			else if (DecodeOfferTx(tx, op, vvchArgs))
+			{
+				if (!foundAliasInput)
+					return state.DoS(100, false, REJECT_INVALID, "no-alias-input-found-mempool");
+				errorMessage.clear();
+				good = CheckOfferInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedOffers, errorMessage, bSanity);
+			}
+			else if (DecodeCertTx(tx, op, vvchArgs))
+			{
+				if (!foundAliasInput)
+					return state.DoS(100, false, REJECT_INVALID, "no-alias-input-found-mempool");
+				errorMessage.clear();
+				good = CheckCertInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedCerts, errorMessage, bSanity);
+			}
+			else if (DecodeEscrowTx(tx, op, vvchArgs))
+			{
+				if (!foundAliasInput)
+					return state.DoS(100, false, REJECT_INVALID, "no-alias-input-found-mempool");
+				errorMessage.clear();
+				good = CheckEscrowInputs(tx, op, vvchArgs, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bSanity);
+			}
+			else if (DecodeAssetTx(tx, op, vvchArgs))
+			{
+				errorMessage.clear();
+				good = CheckAssetInputs(tx, inputs, op, vvchArgs, foundAliasInput ? vvchAliasArgs[0] : emptyVch, fJustCheck, nHeight, revertedAssetAllocations, errorMessage, bSanity);
+			}
+		}
+		else
+			return state.DoS(100, false, REJECT_INVALID, "syscoin-inputs-error");
+
+		if (!good || !errorMessage.empty())
+			return state.DoS(100, false, REJECT_INVALID, errorMessage);
+		if (!bSanity)
+			printf("checksysin5 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
+		return true;
 	}
 	else if (!block.vtx.empty()) {
 		CBlock sortedBlock;
@@ -784,8 +782,6 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 		if ((nFlushIndexBlocks % 200) == 0 && !FlushSyscoinDBs())
 			return state.DoS(0, false, REJECT_INVALID, "Failed to flush syscoin databases");
 	}
-	if(!bSanity)
-	printf("checksysin6 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
 	return true;
 }
 /** Convert CValidationState to a human-readable message for logging */
