@@ -1285,7 +1285,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 						return;
 					}
 				}
-				scriptTimeAccum += GetTimeMicros() - scriptTimeStart;
+				scriptTimeAccum = GetTimeMicros() - scriptTimeStart;
 				int64_t sysTimeStart = GetTimeMicros();
 				if (!CheckSyscoinInputs(txIn, vstate, vView, true, chainActive.Height(), CBlock()))
 				{
@@ -1300,10 +1300,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
 					nLastMultithreadMempoolFailure = GetTime();
 				}
-				sysTimeAccum += GetTimeMicros() - sysTimeStart;
+				sysTimeAccum = GetTimeMicros() - sysTimeStart;
 				scriptExecutionCache.insert(hashCacheEntry);
-			if ((counter % 100) == 0)
-				printf("scriptTimeAccum %lld ms vs sysTimeAccum %lld ms\n", scriptTimeAccum, sysTimeAccum);				
+				printf("scriptTimeAccum %lld ms vs sysTimeAccum %lld ms\n", scriptTimeAccum, sysTimeAccum);			
 			});
 			int numTries = 100;
 			while (!threadpool.tryPost(t)) {
