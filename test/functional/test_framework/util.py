@@ -26,6 +26,10 @@ logger = logging.getLogger("TestFramework.utils")
 # Assert functions
 ##################
 
+def assert_contains_pair(key, val, dict):
+    if not (key in dict and val == dict[key]):
+        raise AssertionError("k/v pair (%s,%s) not in dict" % (key, val))
+
 def assert_fee_amount(fee, tx_size, fee_per_kB):
     """Assert the fee was in range"""
     target_fee = tx_size * fee_per_kB / 1000

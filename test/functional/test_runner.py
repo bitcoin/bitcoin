@@ -131,6 +131,7 @@ BASE_SCRIPTS= [
     # 'p2p-fingerprint.py', TODO fix mininode rehash methods to use X16R
     'uacomment.py',
     'assets.py',
+    'listmyassets.py',
 ]
 
 EXTENDED_SCRIPTS = [

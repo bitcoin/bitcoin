@@ -1827,7 +1827,9 @@ bool GetMyAssetBalances(CAssetsCache& cache, const std::vector<std::string>& ass
         if (!GetMyAssetBalance(cache, assetName, balance))
             return false;
 
-        balances[assetName] = balance;
+        // don't include zero balances
+        if (balance > 0)
+            balances[assetName] = balance;
     }
 
     return true;
