@@ -37,6 +37,7 @@ public:
     explicit TransactionView(const PlatformStyle *platformStyle, QWidget *parent = 0);
 
     void setModel(WalletModel *model);
+    void showAssets();
 
     // Date ranges for filter
     enum DateEnum
@@ -71,6 +72,8 @@ private:
     QLineEdit *addressWidget;
     QLineEdit *amountWidget;
     QLineEdit *assetNameWidget;
+
+    bool showingAssets;
 
     QMenu *contextMenu;
     QSignalMapper *mapperThirdPartyTxUrls;

@@ -191,6 +191,7 @@ void WalletView::processNewTransaction(const QModelIndex& parent, int start, int
 
     /** Everytime we get an new transaction. We should check to see if assets are enabled or not */
     overviewPage->showAssets();
+    transactionView->showAssets();
     Q_EMIT checkAssets();
 }
 
