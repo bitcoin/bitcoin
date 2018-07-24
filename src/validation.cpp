@@ -625,14 +625,16 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 			op = OP_ALIAS_UPDATE;
 
 		}
+		int64_t now = GetTimeMicros();
 		if (!bSanity)
-			printf("checksysin1 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
+			printf("checksysin1 difference %lld total %lld\n", now - sysTimeNow, now - sysTimeStart);
 		sysTimeNow = GetTimeMicros();
 		errorMessage.clear();
 		if (foundAliasInput)
 			good = CheckAliasInputs(inputs, tx, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bSanity);
+		int64_t now = GetTimeMicros();
 		if (!bSanity)
-			printf("checksysin2 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
+			printf("checksysin2 difference %lld total %lld\n", now - sysTimeNow, now - sysTimeStart);
 		sysTimeNow = GetTimeMicros();
 		if (!errorMessage.empty())
 			return state.DoS(100, false, REJECT_INVALID, errorMessage);
@@ -641,13 +643,15 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 		{
 			if (DecodeAssetAllocationTx(tx, op, vvchArgs))
 			{
+				int64_t now = GetTimeMicros();
 				if (!bSanity)
-					printf("checksysin3 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
+					printf("checksysin3 difference %lld total %lld\n", now - sysTimeNow, now - sysTimeStart);
 				sysTimeNow = GetTimeMicros();
 				errorMessage.clear();
 				good = CheckAssetAllocationInputs(tx, inputs, op, vvchArgs, foundAliasInput ? vvchAliasArgs[0] : emptyVch, fJustCheck, nHeight, revertedAssetAllocations, errorMessage, bSanity);
+				int64_t now = GetTimeMicros();
 				if (!bSanity)
-					printf("checksysin4 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
+					printf("checksysin4 difference %lld total %lld\n", now - sysTimeNow, now - sysTimeStart);
 				sysTimeNow = GetTimeMicros();
 			}
 			else if (DecodeOfferTx(tx, op, vvchArgs))
@@ -682,8 +686,9 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 
 		if (!good || !errorMessage.empty())
 			return state.DoS(100, false, REJECT_INVALID, errorMessage);
+		int64_t now = GetTimeMicros();
 		if (!bSanity)
-			printf("checksysin5 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
+			printf("checksysin5 difference %lld total %lld\n", now - sysTimeNow, now - sysTimeStart);
 		return true;
 	}
 	else if (!block.vtx.empty()) {
@@ -2931,7 +2936,7 @@ bool static DisconnectTip(CValidationState& state, const CChainParams& chainpara
         bool flushed = view.Flush();
         assert(flushed);
     }
-    LogPrint("bench", "- Disconnect block: %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
+    LogPrint("bench", "- Disconnect block: %.2fms\n", (now nStart) * 0.001);
     // Write the chain state to disk, if necessary.
     if (!FlushStateToDisk(state, FLUSH_STATE_IF_NEEDED))
         return false;
