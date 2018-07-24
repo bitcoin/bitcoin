@@ -626,11 +626,13 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 				op = OP_ALIAS_UPDATE;
 
 			}
+			if(!bSanity)
 			printf("checksysin1 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
 			sysTimeNow = GetTimeMicros();
 			errorMessage.clear();
 			if(foundAliasInput)
 				good = CheckAliasInputs(inputs, tx, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bSanity);
+			if(!bSanity)
 			printf("checksysin2 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
 			sysTimeNow = GetTimeMicros();
 			if (!errorMessage.empty())
@@ -640,10 +642,12 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 			{
 				if (DecodeAssetAllocationTx(tx, op, vvchArgs))
 				{
+					if(!bSanity)
 					printf("checksysin3 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
 					sysTimeNow = GetTimeMicros();
 					errorMessage.clear();
 					good = CheckAssetAllocationInputs(tx, inputs, op, vvchArgs, foundAliasInput? vvchAliasArgs[0]: emptyVch, fJustCheck, nHeight, revertedAssetAllocations, errorMessage, bSanity);
+					if(!bSanity)
 					printf("checksysin4 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
 					sysTimeNow = GetTimeMicros();
 				}
@@ -679,6 +683,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 
 			if (!good || !errorMessage.empty())
 				return state.DoS(100, false, REJECT_INVALID, errorMessage);
+			if(!bSanity)
 			printf("checksysin5 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
 			sysTimeNow = GetTimeMicros();
 		}
@@ -779,7 +784,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 		if ((nFlushIndexBlocks % 200) == 0 && !FlushSyscoinDBs())
 			return state.DoS(0, false, REJECT_INVALID, "Failed to flush syscoin databases");
 	}
-
+	if(!bSanity)
 	printf("checksysin6 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
 	return true;
 }
