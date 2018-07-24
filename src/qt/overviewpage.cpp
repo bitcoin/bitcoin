@@ -20,6 +20,7 @@
 #include <QAbstractItemDelegate>
 #include <QPainter>
 #include <validation.h>
+#include <utiltime.h>
 
 #define DECORATION_SIZE 54
 #define NUM_ITEMS 5
@@ -298,10 +299,131 @@ void OverviewPage::showAssets()
         ui->listAssets->show();
         ui->assetBalanceLabel->show();
         ui->labelAssetStatus->show();
+    } else {
+        ui->assetBalanceLabel->hide();
+        ui->labelAssetStatus->hide();
+        ui->listAssets->hide();
+    }
+
+    displayAssetInfo();
+}
+
+void OverviewPage::displayAssetInfo()
+{
+    ui->assetInfoTitleLabel->setText("<b>" + tr("Asset Activation Status") + "</b>");
+    ui->assetInfoPercentageLabel->setText(tr("Current Percentage") + ":");
+    ui->assetInfoStatusLabel->setText(tr("Status") + ":");
+    ui->assetInfoBlockLabel->setText(tr("Target Percentage") + ":");
+    ui->assetInfoPossibleLabel->setText(tr("Possible") + ":");
+    ui->assetInfoBlocksLeftLabel->setText(tr("Voting Block Cycle") + ":");
+
+    const ThresholdState thresholdState = VersionBitsTipState(Params().GetConsensus(),
+                                                              Consensus::DeploymentPos::DEPLOYMENT_ASSETS);
+    auto startTime = Params().GetConsensus().vDeployments[Consensus::DeploymentPos::DEPLOYMENT_ASSETS].nStartTime * 1000;
+    auto currentTime = GetTimeMillis();
+    auto date = GUIUtil::dateTimeStr(startTime / 1000);
+
+    QString status;
+    switch (thresholdState) {
+        case THRESHOLD_DEFINED:
+            if (currentTime < startTime)
+                status = tr("Waiting until ") + date;
+            else
+                status = tr("Waiting");
+            break;
+        case THRESHOLD_STARTED:
+            status = tr("Voting Started");
+            break;
+        case THRESHOLD_LOCKED_IN:
+            status = tr("Locked in - Not Active");
+            break;
+        case THRESHOLD_ACTIVE:
+            status = tr("Active");
+            break;
+        case THRESHOLD_FAILED:
+            status = tr("Failed");
+            break;
+    }
+
+    if (thresholdState == THRESHOLD_ACTIVE) {
+        hideAssetInfo();
         return;
     }
 
-    ui->assetBalanceLabel->hide();
-    ui->labelAssetStatus->hide();
-    ui->listAssets->hide();
+    ui->assetInfoStatusValue->setText(status);
+
+    // Get the current height of the chain
+    auto currentheight = chainActive.Height();
+
+    auto heightLockedIn = VersionBitsTipStateSinceHeight(Params().GetConsensus(),
+                                                         Consensus::DeploymentPos::DEPLOYMENT_ASSETS);
+    auto cycleWidth = Params().GetConsensus().nMinerConfirmationWindow;
+    auto difference = currentheight - heightLockedIn + 1;
+    QString currentCount;
+    currentCount.sprintf("%d/%d blocks", difference, cycleWidth);
+
+    if (thresholdState == THRESHOLD_STARTED) {
+        BIP9Stats statsStruct = VersionBitsTipStatistics(Params().GetConsensus(),
+                                                         Consensus::DeploymentPos::DEPLOYMENT_ASSETS);
+
+        double targetDouble = double(statsStruct.threshold) / double(statsStruct.period);
+        QString targetPercentage;
+        targetPercentage.sprintf("%0.2f%%", targetDouble * 100);
+        ui->assetInfoBlockValue->setText(targetPercentage);
+
+        double currentDouble = double(statsStruct.count) / double(statsStruct.period);
+        QString currentPercentage;
+        currentPercentage.sprintf("%0.2f%%", currentDouble * 100);
+        ui->assetInfoPercentageValue->setText(currentPercentage);
+
+        QString possible = statsStruct.possible ? tr("true") : tr("false");
+        ui->assetInfoPossibleValue->setText(possible);
+
+        ui->assetInfoBlocksLeftValue->setText(currentCount);
+
+        ui->assetInfoPercentageValue->show();
+        ui->assetInfoBlockValue->show();
+        ui->assetInfoPercentageLabel->show();
+        ui->assetInfoBlockLabel->show();
+        ui->assetInfoPossibleLabel->show();
+        ui->assetInfoPossibleValue->show();
+        ui->assetInfoBlocksLeftLabel->show();
+        ui->assetInfoBlocksLeftValue->show();
+    } else if (thresholdState == THRESHOLD_LOCKED_IN) {
+
+        ui->assetInfoBlockLabel->setText(tr("Active in") + ":");
+        ui->assetInfoBlockValue->setText(currentCount);
+
+        ui->assetInfoPercentageValue->hide();
+        ui->assetInfoPercentageLabel->hide();
+        ui->assetInfoPossibleLabel->hide();
+        ui->assetInfoPossibleValue->hide();
+        ui->assetInfoBlocksLeftLabel->hide();
+        ui->assetInfoBlocksLeftValue->hide();
+    } else {
+        ui->assetInfoPercentageValue->hide();
+        ui->assetInfoBlockValue->hide();
+        ui->assetInfoPercentageLabel->hide();
+        ui->assetInfoBlockLabel->hide();
+        ui->assetInfoPossibleLabel->hide();
+        ui->assetInfoPossibleValue->hide();
+        ui->assetInfoBlocksLeftLabel->hide();
+        ui->assetInfoBlocksLeftValue->hide();
+    }
+}
+
+void OverviewPage::hideAssetInfo()
+{
+    ui->assetInfoPercentageValue->hide();
+    ui->assetInfoBlockValue->hide();
+    ui->assetInfoStatusValue->hide();
+    ui->assetInfoPossibleValue->hide();
+    ui->assetInfoBlocksLeftValue->hide();
+
+    ui->assetInfoTitleLabel->hide();
+    ui->assetInfoBlockLabel->hide();
+    ui->assetInfoStatusLabel->hide();
+    ui->assetInfoPercentageLabel->hide();
+    ui->assetInfoPossibleLabel->hide();
+    ui->assetInfoBlocksLeftLabel->hide();
 }
