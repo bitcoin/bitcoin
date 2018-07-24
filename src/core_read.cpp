@@ -105,7 +105,7 @@ static bool CheckTxScriptsSanity(const CMutableTransaction& tx)
             return false;
         }
     }
-    
+
     return true;
 }
 
@@ -140,7 +140,7 @@ bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no
             // Fall through.
         }
     }
-    
+
     return false;
 }
 

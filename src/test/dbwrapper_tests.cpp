@@ -20,9 +20,9 @@ static bool is_null_key(const std::vector<unsigned char>& key) {
 
     return isnull;
 }
- 
+
 BOOST_FIXTURE_TEST_SUITE(dbwrapper_tests, BasicTestingSetup)
-                       
+
 BOOST_AUTO_TEST_CASE(dbwrapper)
 {
     // Perform tests both obfuscated and non-obfuscated.
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(existing_data_no_obfuscate)
     // Now, set up another wrapper that wants to obfuscate the same directory
     CDBWrapper odbw(ph, (1 << 10), false, false, true);
 
-    // Check that the key/val we wrote with unobfuscated wrapper exists and 
+    // Check that the key/val we wrote with unobfuscated wrapper exists and
     // is readable.
     uint256 res2;
     BOOST_CHECK(odbw.Read(key, res2));
@@ -153,13 +153,13 @@ BOOST_AUTO_TEST_CASE(existing_data_no_obfuscate)
 
     uint256 in2 = InsecureRand256();
     uint256 res3;
- 
+
     // Check that we can write successfully
     BOOST_CHECK(odbw.Write(key, in2));
     BOOST_CHECK(odbw.Read(key, res3));
     BOOST_CHECK_EQUAL(res3.ToString(), in2.ToString());
 }
-                        
+
 // Ensure that we start obfuscating during a reindex.
 BOOST_AUTO_TEST_CASE(existing_data_reindex)
 {
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(existing_data_reindex)
 
     uint256 in2 = InsecureRand256();
     uint256 res3;
- 
+
     // Check that we can write successfully
     BOOST_CHECK(odbw.Write(key, in2));
     BOOST_CHECK(odbw.Read(key, res3));
