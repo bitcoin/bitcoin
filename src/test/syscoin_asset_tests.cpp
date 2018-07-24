@@ -374,7 +374,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	printf("Gathering results...\n");
 	float totalTime = 0;
 	// wait 10 seconds	
-	SleepFor(10000);
+	MilliSleep(10000);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "tpstestinfo"));
 	UniValue tpsresponse = r.get_array();
 	for (int i = 0; i < tpsresponse.size(); i++) {
