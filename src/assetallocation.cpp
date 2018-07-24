@@ -294,8 +294,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
         bool fJustCheck, int nHeight, sorted_vector<CAssetAllocationTuple> &revertedAssetAllocations, string &errorMessage, bool bSanityCheck) {
 	if (!paliasdb || !passetallocationdb)
 		return false;
-	int64_t nStartTime = GetTimeMillis();
-	int64_t nInterimTime = nStartTime;
 	if (tx.IsCoinBase() && !fJustCheck && !bSanityCheck)
 	{
 		LogPrintf("*Trying to add assetallocation in coinbase transaction, skipping...");
@@ -330,9 +328,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 			return true;
 		}		
 	}
-	if (!bSanityCheck && GetTimeMillis() - nInterimTime > 5)
-	printf("time1 %lld totaltime %lld\n", GetTimeMillis() - nInterimTime, GetTimeMillis() - nStartTime);
-	nInterimTime = GetTimeMillis();
 	string retError = "";
 	if(fJustCheck)
 	{
@@ -387,9 +382,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 	bool bRevert = false;
 	bool bBalanceOverrun = false;
 	bool bAddAllReceiversToConflictList = false;
-	if (!bSanityCheck && GetTimeMillis() - nInterimTime > 5)
-	printf("time2 %lld totaltime %lld\n", GetTimeMillis() - nInterimTime, GetTimeMillis() - nStartTime);
-	nInterimTime = GetTimeMillis();
 	if (op == OP_ASSET_COLLECT_INTEREST)
 	{
 		if (!GetAssetAllocation(assetAllocationTuple, dbAssetAllocation))
@@ -407,9 +399,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1012 - " + _("Cannot collect interest on this asset, no interest rate has been defined");
 			return true;
 		}
-		if(!bSanityCheck && GetTimeMillis() - nInterimTime > 5)
-			printf("time3 %lld totaltime %lld\n", GetTimeMillis() - nInterimTime, GetTimeMillis() - nStartTime);
-		nInterimTime = GetTimeMillis();
 		theAssetAllocation = dbAssetAllocation;
 		// only apply interest on PoW
 		if (!fJustCheck) {
@@ -464,9 +453,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 				}
 			}
 		}
-		if (!bSanityCheck && GetTimeMillis() - nInterimTime > 5)
-		printf("time4 %lld totaltime %lld bRevert %d\n", GetTimeMillis() - nInterimTime, GetTimeMillis() - nStartTime, bRevert? 1: 0);
-		nInterimTime = GetTimeMillis();
 		if (bRevert && !GetAssetAllocation(assetAllocationTuple, dbAssetAllocation))
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot find sender asset allocation.");
@@ -521,9 +507,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 					return true;
 				}
 			}
-			if (!bSanityCheck && GetTimeMillis() - nInterimTime > 5)
-			printf("time5 %lld totaltime %lld\n", GetTimeMillis() - nInterimTime, GetTimeMillis() - nStartTime);
-			nInterimTime = GetTimeMillis();
 			const CAmount &nBalanceAfterSend = dbAssetAllocation.nBalance - nTotal;
 			if (nBalanceAfterSend < 0) {
 				bBalanceOverrun = true;
@@ -562,9 +545,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 						receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
 						receiverAllocation.nLastInterestClaimHeight = nHeight;
 					}
-					if (!bSanityCheck && GetTimeMillis() - nInterimTime > 5)
-					printf("time6 %lld totaltime %lld\n", GetTimeMillis() - nInterimTime, GetTimeMillis() - nStartTime);
-					nInterimTime = GetTimeMillis();
 					if (!bBalanceOverrun) {
 						receiverAllocation.txHash = tx.GetHash();
 						if (dbAsset.fInterestRate > 0) {
@@ -581,26 +561,17 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 						theAssetAllocation.nBalance -= amountTuple.second;
 
 					}
-					if (!bSanityCheck && GetTimeMillis() - nInterimTime > 5)
-					printf("time7 %lld totaltime %lld\n", GetTimeMillis() - nInterimTime, GetTimeMillis() - nStartTime);
-					nInterimTime = GetTimeMillis();
 					const string& receiverAddress = stringFromVch(receiverAllocation.vchAliasOrAddress);
 					if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, nBalanceAfterSend, amountTuple.second, dbAsset, INT64_MAX, user1, receiverAddress, fJustCheck))
 					{
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1023 - " + _("Failed to write to asset allocation DB");
 						return error(errorMessage.c_str());
 					}
-					if (!bSanityCheck && GetTimeMillis() - nInterimTime > 5)
-					printf("time8 %lld totaltime %lld\n", GetTimeMillis() - nInterimTime, GetTimeMillis() - nStartTime);
-					nInterimTime = GetTimeMillis();
 					if (fJustCheck) {
 						if (strResponseEnglish != "") {
 							paliasdb->WriteAliasIndexTxHistory(user1, receiverAddress, user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString());
 						}
 					}
-					if (!bSanityCheck && GetTimeMillis() - nInterimTime > 5)
-					printf("time9 %lld totaltime %lld\n", GetTimeMillis() - nInterimTime, GetTimeMillis() - nStartTime);
-					nInterimTime = GetTimeMillis();
 				}
 			}
 		}
@@ -720,25 +691,18 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 		if (!bBalanceOverrun) {
 			theAssetAllocation.nHeight = nHeight;
 			theAssetAllocation.txHash = tx.GetHash();
-		}if (!bSanityCheck && GetTimeMillis() - nInterimTime > 5)
-		printf("time11 %lld totaltime %lld\n", GetTimeMillis() - nInterimTime, GetTimeMillis() - nStartTime);
-		nInterimTime = GetTimeMillis();
+		}
 		int64_t ms = INT64_MAX;
 		if (fJustCheck) {
 			ms = GetTimeMillis();
 			if(fUnitTest)
 				vecTPSTestReceivedTimes.emplace_back(theAssetAllocation.txHash, ms);
-		}if (!bSanityCheck && GetTimeMillis() - nInterimTime > 5)
-		printf("time12 %lld totaltime %lld\n", GetTimeMillis() - nInterimTime, GetTimeMillis() - nStartTime);
-		nInterimTime = GetTimeMillis();
+		}
 		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, 0, 0, dbAsset, ms, "", "", fJustCheck))
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1031 - " + _("Failed to write to asset allocation DB");
 			return error(errorMessage.c_str());
 		}
-		if (!bSanityCheck && GetTimeMillis() - nInterimTime > 5)
-		printf("time13 %lld totaltime %lld\n", GetTimeMillis() - nInterimTime, GetTimeMillis() - nStartTime);
-		nInterimTime = GetTimeMillis();
 		// debug
 		if (fDebug)
 			LogPrintf("CONNECTED ASSET ALLOCATION: op=%s assetallocation=%s hash=%s height=%d fJustCheck=%d at time %lld\n",
@@ -749,8 +713,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 				fJustCheck ? 1 : 0, (long long)ms);
 
 	}
-	if (!bSanityCheck && GetTimeMillis() - nInterimTime > 5)
-	printf("time14 %lld totaltime %lld\n", GetTimeMillis() - nInterimTime, GetTimeMillis() - nStartTime);
     return true;
 }
 UniValue tpstestinfo(const JSONRPCRequest& request) {
