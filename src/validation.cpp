@@ -627,10 +627,12 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 
 			}
 			printf("checksysin1 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
+			sysTimeNow = GetTimeMicros();
 			errorMessage.clear();
 			if(foundAliasInput)
 				good = CheckAliasInputs(inputs, tx, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bSanity);
 			printf("checksysin2 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
+			sysTimeNow = GetTimeMicros();
 			if (!errorMessage.empty())
 				return state.DoS(100, false, REJECT_INVALID, errorMessage);
 	
@@ -639,9 +641,11 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 				if (DecodeAssetAllocationTx(tx, op, vvchArgs))
 				{
 					printf("checksysin3 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
+					sysTimeNow = GetTimeMicros();
 					errorMessage.clear();
 					good = CheckAssetAllocationInputs(tx, inputs, op, vvchArgs, foundAliasInput? vvchAliasArgs[0]: emptyVch, fJustCheck, nHeight, revertedAssetAllocations, errorMessage, bSanity);
 					printf("checksysin4 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
+					sysTimeNow = GetTimeMicros();
 				}
 				else if (DecodeOfferTx(tx, op, vvchArgs))
 				{
@@ -676,6 +680,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 			if (!good || !errorMessage.empty())
 				return state.DoS(100, false, REJECT_INVALID, errorMessage);
 			printf("checksysin5 difference %lld total %lld\n", GetTimeMicros() - sysTimeNow, GetTimeMicros() - sysTimeStart);
+			sysTimeNow = GetTimeMicros();
 		}
 	}
 	else if (!block.vtx.empty()) {
