@@ -27,9 +27,7 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/range/adaptor/reversed.hpp>
-#include <chrono>
 
-using namespace std::chrono;
 using namespace std;
 
 bool IsOfferOp(int op) {
@@ -277,7 +275,7 @@ bool DecodeOfferScript(const CScript& script, int& op,
 		}
 		if (!(opcode >= 0 && opcode <= OP_PUSHDATA4))
 			return false;
-		vvch.push_back(vch);
+		vvch.emplace_back(vch);
 	}
 
 	// move the pc to after any DROP or NOP
@@ -684,7 +682,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, const vector<vector<unsign
 	if (!bSanityCheck) {
 		int64_t ms = INT64_MAX;
 		if (fJustCheck) {
-			ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+			ms = GetTimeMillis();
 		}
 		if (!pofferdb->WriteOffer(theOffer, op, ms, fJustCheck))
 		{
@@ -1036,7 +1034,7 @@ UniValue offerupdate(const JSONRPCRequest& request) {
 	if (!fUnitTest) {
 		ArrivalTimesMap arrivalTimes;
 		pofferdb->ReadISArrivalTimes(vchOffer, arrivalTimes);
-		const int64_t & nNow = duration_cast<seconds>(system_clock::now().time_since_epoch()).count();
+		const int64_t & nNow = GetTimeMillis();
 		for (auto& arrivalTime : arrivalTimes) {
 			// if this tx arrived within the minimum latency period flag it as potentially conflicting
 			if ((nNow - (arrivalTime.second / 1000)) < ZDAG_MINIMUM_LATENCY_SECONDS) {
@@ -1483,7 +1481,6 @@ bool COfferDB::ScanOffers(const int count, const int from, const UniValue& oOpti
 			nStartBlock = startblock.get_int();
 	}
 
-	LOCK(cs_offer);
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
 	COffer txPos;

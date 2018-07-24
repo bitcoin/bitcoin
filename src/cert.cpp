@@ -21,9 +21,7 @@
 #include <boost/thread.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/range/adaptor/reversed.hpp>
-#include <chrono>
 
-using namespace std::chrono;
 using namespace std;
 
 bool IsCertOp(int op) {
@@ -219,7 +217,7 @@ bool DecodeCertScript(const CScript& script, int& op,
 		}
 		if (!(opcode >= 0 && opcode <= OP_PUSHDATA4))
 			return false;
-		vvch.push_back(vch);
+		vvch.emplace_back(vch);
 	}
 
 	// move the pc to after any DROP or NOP
@@ -477,7 +475,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, const vector<vector<unsigne
 	if (!bSanityCheck) {
 		int64_t ms = INT64_MAX;
 		if (fJustCheck) {
-			ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+			ms = GetTimeMillis();
 		}
 		if (!pcertdb->WriteCert(theCert, op, ms, fJustCheck))
 		{
@@ -613,7 +611,7 @@ UniValue certupdate(const JSONRPCRequest& request) {
 	if (!fUnitTest) {
 		ArrivalTimesMap arrivalTimes;
 		pcertdb->ReadISArrivalTimes(vchCert, arrivalTimes);
-		const int64_t & nNow = duration_cast<seconds>(system_clock::now().time_since_epoch()).count();
+		const int64_t & nNow = GetTimeMillis();
 		for (auto& arrivalTime : arrivalTimes) {
 			// if this tx arrived within the minimum latency period flag it as potentially conflicting
 			if ((nNow - (arrivalTime.second / 1000)) < ZDAG_MINIMUM_LATENCY_SECONDS) {
@@ -710,7 +708,7 @@ UniValue certtransfer(const JSONRPCRequest& request) {
 	if (!fUnitTest) {
 		ArrivalTimesMap arrivalTimes;
 		pcertdb->ReadISArrivalTimes(vchCert, arrivalTimes);
-		const int64_t & nNow = duration_cast<seconds>(system_clock::now().time_since_epoch()).count();
+		const int64_t & nNow = GetTimeMillis();
 		for (auto& arrivalTime : arrivalTimes) {
 			// if this tx arrived within the minimum latency period flag it as potentially conflicting
 			if ((nNow - (arrivalTime.second / 1000)) < ZDAG_MINIMUM_LATENCY_SECONDS) {
@@ -897,7 +895,6 @@ bool CCertDB::ScanCerts(const int count, const int from, const UniValue& oOption
 		}
 	}
 
-	LOCK(cs_cert);
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
 	CCert txPos;

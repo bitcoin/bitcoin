@@ -320,7 +320,7 @@ bool DecodeEscrowScript(const CScript& script, int& op,
 		}
 		if (!(opcode >= 0 && opcode <= OP_PUSHDATA4))
 			return false;
-		vvch.push_back(vch);
+		vvch.emplace_back(vch);
 	}
 
 	// move the pc to after any DROP or NOP
@@ -2428,7 +2428,6 @@ bool CEscrowDB::ScanEscrows(const int count, const int from, const UniValue& oOp
 		}
 	}
 
-	LOCK(cs_escrow);
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
 	CEscrow txPos;
