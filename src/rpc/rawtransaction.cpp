@@ -863,23 +863,33 @@ UniValue decodescript(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Assets are not active");
 
         CNewAsset asset;
+        std::string ownerAsset;
         std::string address;
 
-        if(!AssetFromScript(script, asset, address))
+        if(AssetFromScript(script, asset, address)) {
+            r.push_back(Pair("asset_name", asset.strName));
+            r.push_back(Pair("amount", ValueFromAmount(asset.nAmount)));
+            r.push_back(Pair("units", asset.units));
+
+            bool reissuable = asset.nReissuable ? true : false;
+            r.push_back(Pair("reissuable", reissuable));
+
+            bool hasIPFS = asset.nHasIPFS ? true : false;
+            r.push_back(Pair("hasIPFS", hasIPFS));
+
+            if (hasIPFS)
+                r.push_back(Pair("ipfs_hash", EncodeIPFS(asset.strIPFSHash)));
+        }
+        else if (OwnerAssetFromScript(script, ownerAsset, address))
+        {
+            r.push_back(Pair("asset_name", ownerAsset));
+            r.push_back(Pair("amount", ValueFromAmount(OWNER_ASSET_AMOUNT)));
+            r.push_back(Pair("units", OWNER_UNITS));
+        }
+        else
+        {
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Failed to deserialize the new asset script");
-
-        r.push_back(Pair("asset_name", asset.strName));
-        r.push_back(Pair("amount", ValueFromAmount(asset.nAmount)));
-        r.push_back(Pair("units", asset.units));
-
-        bool reissuable = asset.nReissuable ? true : false;
-        r.push_back(Pair("reissuable", reissuable));
-
-        bool hasIPFS = asset.nHasIPFS ? true : false;
-        r.push_back(Pair("hasIPFS", hasIPFS));
-
-        if (hasIPFS)
-            r.push_back(Pair("ipfs_hash", EncodeIPFS(asset.strIPFSHash)));
+        }
     } else {
 
     }
