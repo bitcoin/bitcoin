@@ -356,6 +356,12 @@ Delete all wallet transactions and only recover those parts of the
 blockchain through \fB\-rescan\fR on startup (1 = keep tx meta data e.g.
 account owner and payment request information, 2 = drop tx meta
 data)
+.HP
+\fB\-avoidreuse\fR
+.IP
+Mark addresses which have been used to fund transactions in the past,
+and avoid reusing these in future funding, except when explicitly
+requested (default: 0)
 .PP
 ZeroMQ notification options:
 .HP

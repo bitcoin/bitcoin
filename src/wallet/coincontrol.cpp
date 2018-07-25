@@ -13,6 +13,7 @@ void CCoinControl::SetNull()
     fAllowOtherInputs = false;
     fAllowWatchOnly = false;
     m_avoid_partial_spends = gArgs.GetBoolArg("-avoidpartialspends", DEFAULT_AVOIDPARTIALSPENDS);
+    m_allow_dirty_addresses = false;
     setSelected.clear();
     m_feerate.reset();
     fOverrideFeeRate = false;
