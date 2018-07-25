@@ -65,6 +65,31 @@ class ImportMultiTest (BitcoinTestFramework):
         assert_equal(result[0]['error']['code'], -5)
         assert_equal(result[0]['error']['message'], 'Invalid address')
 
+        self.log.info("Should not import an invalid privkey")
+        result = self.nodes[1].importmulti([{
+            "privkey": "not valid privkey",
+            "timestamp": "now",
+        }])
+        assert_equal(result[0]['success'], False)
+        assert_equal(result[0]['error']['code'], -5)
+        assert_equal(result[0]['error']['message'], 'Invalid private key encoding')
+
+        self.log.info("Should not import given both a scriptPubKey and a privkey")
+        address = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
+        privkey = self.nodes[0].dumpprivkey(address['address'])
+        result = self.nodes[1].importmulti([{
+            "scriptPubKey": address['scriptPubKey'],
+            "privkey": privkey,
+            "timestamp": "now",
+        }])
+        assert_equal(result[0]['success'], False)
+        assert_equal(result[0]['error']['code'], -8)
+        assert_equal(result[0]['error']['message'], 'Must provide either a privkey or a scriptPubKey')
+        address_assert = self.nodes[1].getaddressinfo(address['address'])
+        assert_equal(address_assert['iswatchonly'], False)
+        assert_equal(address_assert['ismine'], False)
+        assert_equal('timestamp' in address_assert, False)
+
         # ScriptPubKey + internal
         self.log.info("Should import a scriptPubKey with internal flag")
         address = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
@@ -218,6 +243,46 @@ class ImportMultiTest (BitcoinTestFramework):
         assert_equal(result[0]['success'], False)
         assert_equal(result[0]['error']['code'], -8)
         assert_equal(result[0]['error']['message'], 'Internal must be set for hex scriptPubKey')
+        address_assert = self.nodes[1].getaddressinfo(address['address'])
+        assert_equal(address_assert['iswatchonly'], False)
+        assert_equal(address_assert['ismine'], False)
+        assert_equal('timestamp' in address_assert, False)
+
+        # Explicit private key + !watchonly
+        self.log.info("Should import an explicit private key")
+        address = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
+        privkey = self.nodes[0].dumpprivkey(address['address'])
+        result = self.nodes[1].importmulti([{
+            "privkey": privkey,
+            "timestamp": "now"
+        }])
+        assert_equal(result[0]['success'], True)
+        address_assert = self.nodes[1].getaddressinfo(address['address'])
+        assert_equal(address_assert['iswatchonly'], False)
+        assert_equal(address_assert['ismine'], True)
+        assert_equal(address_assert['timestamp'], timestamp)
+
+        self.log.info("Should not import a private key if it is already imported")
+        result = self.nodes[1].importmulti([{
+            "privkey": privkey,
+            "timestamp": "now"
+        }])
+        assert_equal(result[0]['success'], False)
+        assert_equal(result[0]['error']['code'], -4)
+        assert_equal(result[0]['error']['message'], 'The wallet already contains the given private key')
+
+        # Explicit private key + watchonly
+        self.log.info("Should not import a private key with watchonly")
+        address = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
+        privkey = self.nodes[0].dumpprivkey(address['address'])
+        result = self.nodes[1].importmulti([{
+            "privkey": privkey,
+            "timestamp": "now",
+            "watchonly": True
+        }])
+        assert_equal(result[0]['success'], False)
+        assert_equal(result[0]['error']['code'], -8)
+        assert_equal(result[0]['error']['message'], 'Privkeys cannot be imported watch-only')
         address_assert = self.nodes[1].getaddressinfo(address['address'])
         assert_equal(address_assert['iswatchonly'], False)
         assert_equal(address_assert['ismine'], False)

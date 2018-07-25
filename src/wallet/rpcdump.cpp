@@ -86,6 +86,39 @@ static bool GetWalletAddressesForKey(CWallet * const pwallet, const CKeyID &keyi
     return fLabelFound;
 }
 
+static bool ImportPrivateKey(CWallet * const pwallet, const UniValue& privkey, const std::string& label = "", const int64_t timestamp = 1)
+{
+    CKey key = DecodeSecret(privkey.get_str());
+    if (!key.IsValid()) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
+    }
+
+    CPubKey pubkey = key.GetPubKey();
+    assert(key.VerifyPubKey(pubkey));
+    CKeyID address = pubkey.GetID();
+    pwallet->MarkDirty();
+    // We don't know which corresponding address will be used; label them all
+    for (const auto& dest : GetAllDestinationsForKey(pubkey)) {
+        pwallet->SetAddressBook(dest, label, "receive");
+    }
+
+    // Don't throw error in case a key is already there
+    if (pwallet->HaveKey(address)) {
+        return false;
+    }
+
+    LOCK(pwallet->cs_wallet);
+    // whenever a key is imported, we need to scan the whole chain
+    pwallet->UpdateTimeFirstKey(timestamp);
+    pwallet->mapKeyMetadata[address].nCreateTime = timestamp;
+
+    if (!pwallet->AddKeyPubKey(key, pubkey)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
+    }
+    pwallet->LearnAllRelatedScripts(pubkey);
+
+    return true;
+}
 
 UniValue importprivkey(const JSONRPCRequest& request)
 {
@@ -127,7 +160,6 @@ UniValue importprivkey(const JSONRPCRequest& request)
 
         EnsureWalletIsUnlocked(pwallet);
 
-        std::string strSecret = request.params[0].get_str();
         std::string strLabel = "";
         if (!request.params[1].isNull())
             strLabel = request.params[1].get_str();
@@ -143,32 +175,10 @@ UniValue importprivkey(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
         }
 
-        CKey key = DecodeSecret(strSecret);
-        if (!key.IsValid()) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
-
-        CPubKey pubkey = key.GetPubKey();
-        assert(key.VerifyPubKey(pubkey));
-        CKeyID vchAddress = pubkey.GetID();
-        {
-            pwallet->MarkDirty();
-            // We don't know which corresponding address will be used; label them all
-            for (const auto& dest : GetAllDestinationsForKey(pubkey)) {
-                pwallet->SetAddressBook(dest, strLabel, "receive");
-            }
-
-            // Don't throw error in case a key is already there
-            if (pwallet->HaveKey(vchAddress)) {
-                return NullUniValue;
-            }
-
-            // whenever a key is imported, we need to scan the whole chain
-            pwallet->UpdateTimeFirstKey(1);
-            pwallet->mapKeyMetadata[vchAddress].nCreateTime = 1;
-
-            if (!pwallet->AddKeyPubKey(key, pubkey)) {
-                throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
-            }
-            pwallet->LearnAllRelatedScripts(pubkey);
+        // If the import failed (due to key already known) we silently exit
+        // without rescanning
+        if (!ImportPrivateKey(pwallet, request.params[0], strLabel)) {
+            return NullUniValue;
         }
     }
     if (fRescan) {
@@ -825,12 +835,12 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
     try {
         bool success = false;
 
-        // Required fields.
+        // Required fields (optional if privkey field provided).
         const UniValue& scriptPubKey = data["scriptPubKey"];
 
-        // Should have script or JSON with "address".
-        if (!(scriptPubKey.getType() == UniValue::VOBJ && scriptPubKey.exists("address")) && !(scriptPubKey.getType() == UniValue::VSTR)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid scriptPubKey");
+        // Should have script or JSON with "address", if privkey is null.
+        if (!data.exists("privkey") && !(scriptPubKey.getType() == UniValue::VOBJ && scriptPubKey.exists("address")) && !(scriptPubKey.getType() == UniValue::VSTR)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid scriptPubKey/privkey");
         }
 
         // Optional fields.
@@ -840,6 +850,20 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
         const bool internal = data.exists("internal") ? data["internal"].get_bool() : false;
         const bool watchOnly = data.exists("watchonly") ? data["watchonly"].get_bool() : false;
         const std::string& label = data.exists("label") && !internal ? data["label"].get_str() : "";
+
+        if (data.exists("privkey")) {
+            const UniValue& privkey = data["privkey"];
+            if (data.exists("scriptPubKey"))           throw JSONRPCError(RPC_INVALID_PARAMETER, "Must provide either a privkey or a scriptPubKey");
+            if (strRedeemScript != "")                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Redeem script not supported for privkey import");
+            if (pubKeys.size() > 0 || keys.size() > 0) throw JSONRPCError(RPC_INVALID_PARAMETER, "Keys/pubkeys not supported for privkey import");
+            if (watchOnly)                             throw JSONRPCError(RPC_INVALID_PARAMETER, "Privkeys cannot be imported watch-only");
+            if (!ImportPrivateKey(pwallet, privkey, label, timestamp)) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "The wallet already contains the given private key");
+            }
+            UniValue result = UniValue(UniValue::VOBJ);
+            result.pushKV("success", UniValue(true));
+            return result;
+        }
 
         bool isScript = scriptPubKey.getType() == UniValue::VSTR;
         bool isP2SH = strRedeemScript.length() > 0;
@@ -1151,6 +1175,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
             "1. requests     (array, required) Data to be imported\n"
             "  [     (array of json objects)\n"
             "    {\n"
+            "      \"privkey\": \"<privkey>\",                               (string) A WIF private key, instead of scriptPubKey below\n"
             "      \"scriptPubKey\": \"<script>\" | { \"address\":\"<address>\" }, (string / json, required) Type of scriptPubKey (string for script, json for address)\n"
             "      \"timestamp\": timestamp | \"now\"                        , (integer / string, required) Creation time of the key in seconds since epoch (Jan 1 1970 GMT),\n"
             "                                                              or the string \"now\" to substitute the current synced blockchain time. The timestamp of the oldest\n"
@@ -1161,15 +1186,15 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
             "      \"redeemscript\": \"<script>\"                            , (string, optional) Allowed only if the scriptPubKey is a P2SH address or a P2SH scriptPubKey\n"
             "      \"pubkeys\": [\"<pubKey>\", ... ]                         , (array, optional) Array of strings giving pubkeys that must occur in the output or redeemscript\n"
             "      \"keys\": [\"<key>\", ... ]                               , (array, optional) Array of strings giving private keys whose corresponding public keys must occur in the output or redeemscript\n"
-            "      \"internal\": <true>                                    , (boolean, optional, default: false) Stating whether matching outputs should be treated as not incoming payments\n"
-            "      \"watchonly\": <true>                                   , (boolean, optional, default: false) Stating whether matching outputs should be considered watched even when they're not spendable, only allowed if keys are empty\n"
-            "      \"label\": <label>                                      , (string, optional, default: '') Label to assign to the address (aka account name, for now), only allowed with internal=false\n"
+            "      \"internal\": <true>                                    , (boolean, optional, default=false) Stating whether matching outputs should be treated as not incoming payments\n"
+            "      \"watchonly\": <true>                                   , (boolean, optional, default=false) Stating whether matching outputs should be considered watched even when they're not spendable, only allowed if keys are empty\n"
+            "      \"label\": <label>                                      , (string, optional, default='') Label to assign to the address (aka account name, for now), only allowed with internal=false\n"
             "    }\n"
             "  ,...\n"
             "  ]\n"
             "2. options                 (json, optional)\n"
             "  {\n"
-            "     \"rescan\": <false>,         (boolean, optional, default: true) Stating if should rescan the blockchain after all imports\n"
+            "     \"rescan\": <bool>,          (boolean, optional, default=true) Whether a rescan of the blockchain after all imports should be executed\n"
             "  }\n"
             "\nNote: This call can take minutes to complete if rescan is true, during that time, other rpc calls\n"
             "may report that the imported keys, addresses or scripts exists but related transactions are still missing.\n"
@@ -1265,7 +1290,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
                 if (scannedTime <= GetImportTimestamp(request, now) || results.at(i).exists("error")) {
                     response.push_back(results.at(i));
                 } else {
-                    UniValue result = UniValue(UniValue::VOBJ);
+                    UniValue result(UniValue::VOBJ);
                     result.pushKV("success", UniValue(false));
                     result.pushKV(
                         "error",
