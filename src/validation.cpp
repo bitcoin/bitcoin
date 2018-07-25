@@ -1287,6 +1287,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 			while (!threadpool.tryPost(t)) {
 				numTries--;
 				if (numTries <= 0) {
+					LogPrint("mempool", "threadpool-full\n");
 					return state.DoS(0, false,
 						REJECT_INVALID, "threadpool-full", false,
 						"AcceptToMemoryPoolWorker: thread pool queue is full");
