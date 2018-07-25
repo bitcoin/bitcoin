@@ -304,7 +304,7 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid1);
 	BOOST_CHECK(find_value(r.get_obj(), "symbol").get_str() == "USD");
 }
-/*BOOST_AUTO_TEST_CASE(generate_asset_throughput)
+BOOST_AUTO_TEST_CASE(generate_asset_throughput)
  {
 	UniValue r;
 	printf("Running generate_asset_throughput...\n");
@@ -443,7 +443,7 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 	}
 	totalTime /= tpsresponse.size();
 	printf("totalTime %.2f, num responses %d\n", totalTime, tpsresponse.size());
-}*/
+}
 BOOST_AUTO_TEST_CASE(generate_big_assetname)
 {
 	GenerateBlocks(5);
