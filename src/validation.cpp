@@ -75,7 +75,7 @@
  * Global state
  */
 
-CCriticalSection cs_main, scriptCheckMapCS, scriptExecutionCacheCS;
+CCriticalSection cs_main;
 
 BlockMap mapBlockIndex;
 CChain chainActive;
@@ -1207,11 +1207,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 				return false;
 			}
 		}
-		else
-		{
-			LOCK(scriptCheckMapCS);
-			scriptCheckMap[hash] = vChecks;
-		}
 		// Remove conflicting transactions from the mempool
 		BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
 		{
@@ -1253,39 +1248,25 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 		}
 		if (bMultiThreaded)
 		{
-
-			std::packaged_task<void()> t([&pool, ptx, hash, coins_to_uncache, hashCacheEntry]() {
+			std::packaged_task<void()> t([&pool, ptx, hash, coins_to_uncache, hashCacheEntry, vChecks]() {
 				CValidationState vstate;
-				const CTransaction& txIn = *ptx;
-				bool checkFailed = false;
 				CCoinsViewCache vView(pcoinsTip);
-				{
-					LOCK(scriptCheckMapCS);
-					std::vector<CScriptCheck> &vCheckRef = scriptCheckMap[hash];
-					for (auto& check : vCheckRef) {
-						if (!check())
-						{
-							checkFailed = true;
-							break;
-						}
-					}
-				}
-				if (checkFailed) {
-					LOCK2(cs_main, mempool.cs);
-					LogPrint("mempool", "%s: %s\n", "CheckInputs Error", hash.ToString());
-					BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
-						pcoinsTip->Uncache(hashTx);
-					pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
-					pool.ClearPrioritisation(hash);
-					// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
-					CValidationState stateDummy;
-					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
-					nLastMultithreadMempoolFailure = GetTime();
+				const CTransaction& txIn = *ptx;
+				for (auto &check : vChecks) {
+					if (!check())
 					{
-						LOCK(scriptCheckMapCS);
-						scriptCheckMap.erase(hash);
+						LOCK2(cs_main, mempool.cs);
+						LogPrint("mempool", "%s: %s\n", "CheckInputs Error", hash.ToString());
+						BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
+							pcoinsTip->Uncache(hashTx);
+						pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
+						pool.ClearPrioritisation(hash);
+						// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
+						CValidationState stateDummy;
+						FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
+						nLastMultithreadMempoolFailure = GetTime();
+						return;
 					}
-					return;
 				}
 				if (!CheckSyscoinInputs(txIn, vstate, vView, true, chainActive.Height(), CBlock()))
 				{
@@ -1299,34 +1280,26 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 					CValidationState stateDummy;
 					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
 					nLastMultithreadMempoolFailure = GetTime();
-					{
-						LOCK(scriptCheckMapCS);
-						scriptCheckMap.erase(hash);
-					}
-					return;
 				}
-				{
-					LOCK2(scriptCheckMapCS, scriptExecutionCacheCS);
-					scriptCheckMap.erase(hash);
-					scriptExecutionCache.insert(hashCacheEntry);
-				}
+				scriptExecutionCache.insert(hashCacheEntry);
 			});
 			int numTries = 100;
 			while (!threadpool.tryPost(t)) {
 				numTries--;
-				if (numTries <= 0)
+				if (numTries <= 0) {
 					return state.DoS(0, false,
 						REJECT_INVALID, "threadpool-full", false,
 						"AcceptToMemoryPoolWorker: thread pool queue is full");
-				LogPrintf("AcceptToMemoryPoolWorker: thread pool queue is full");
+				}
 				MilliSleep(1);
 			}
+
 		}
 	}
 
 	GetMainSignals().SyncTransaction(tx, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
-	
-    return true;
+
+	return true;
 }
 
 bool AcceptToMemoryPoolWithTime(CTxMemPool& pool, CValidationState &state, const CTransactionRef &tx, bool fLimitFree,
@@ -1813,7 +1786,7 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight)
     UpdateCoins(tx, inputs, txundo, nHeight);
 }
 
-bool CScriptCheck::operator()() {
+bool CScriptCheck::operator()() const {
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
     if (!VerifyScript(scriptSig, scriptPubKey, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, cacheStore), &error)) {
         return false;
