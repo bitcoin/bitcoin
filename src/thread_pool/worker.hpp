@@ -294,6 +294,8 @@ void Worker<Task, Queue>::handleTask(Task& task)
     }
     catch (...)
     {
+		LogPrint("mempool", "%s\n", "Unknown Worker task Error!!!");
+		printf("Unknown Worker task Error!!\n");
         // Suppress all exceptions.
     }
 }
@@ -389,9 +391,11 @@ inline void Worker<Task, Queue>::threadFunc(const size_t id, std::shared_ptr<Thr
             }
         }
     }
-    catch (WorkerStoppedException)
+    catch (WorkerStoppedException &e)
     {
         // Allow thread function to complete.
+		LogPrint("mempool", "%s: %s\n", "Worker Error", e.what());	
+		printf("worker error %s\n", e.what())
     }
 }
 
