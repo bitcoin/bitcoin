@@ -394,8 +394,8 @@ inline void Worker<Task, Queue>::threadFunc(const size_t id, std::shared_ptr<Thr
     catch (WorkerStoppedException &e)
     {
         // Allow thread function to complete.
-		LogPrint("mempool", "%s: %s\n", "Worker Error", e.what().what().c_str());	
-		printf("worker error %s\n", e.what().what().c_str());
+		LogPrint("mempool", "%s: %s\n", "Worker Error", e.what());	
+		printf("worker error %s\n", e.what());
     }
 }
 
