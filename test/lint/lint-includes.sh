@@ -58,7 +58,6 @@ EXPECTED_BOOST_INCLUDES=(
     boost/filesystem/detail/utf8_codecvt_facet.hpp
     boost/filesystem/fstream.hpp
     boost/function.hpp
-    boost/interprocess/sync/file_lock.hpp
     boost/lexical_cast.hpp
     boost/lockfree/queue.hpp
     boost/multi_index/hashed_index.hpp
