@@ -5,7 +5,7 @@ Additional fields may be added, but will be ignored by Ravencoin.
 ```
 {
 
-   "contract_url": "[https://yoursite.com/more-info-about-the-coin.pdf](https://yoursite.com/more-info-about-the-coin.pdf)",
+   "contract_url": "https://yoursite.com/more-info-about-the-coin.pdf",
 
    "contract_hash": "<SHA256 hash in hex of contract_url contents>",
 
@@ -29,11 +29,11 @@ Additional fields may be added, but will be ignored by Ravencoin.
 
    "icon": "<base64 encoded png image at 32x32>",
 
-   "image_url": "[https://yoursite.com/coin-image.jpg](https://yoursite.com/coin-image.jpg)",
+   "image_url": "https://yoursite.com/coin-image.jpg",
 
    "contact_name": "Joe Schmoe",
 
-   "contact_email": "[joe_schmoe@gmail.com](mailto:joe_schmoe@gmail.com)",
+   "contact_email": "joe_schmoe@gmail.com",
 
    "contact_address": "Lemonade HQ|1234 Nowhere Street|Billings, MT  83982",
 
@@ -41,7 +41,9 @@ Additional fields may be added, but will be ignored by Ravencoin.
 
    "forsale": true,
 
-   "forsale_price": "5000 RVN"
+   "forsale_price": "5000 RVN",
+   
+   "restricted": "rule144"
 
 }
 ```
@@ -86,3 +88,4 @@ All fields are optional. Clients, explorers, and wallets are not obligated to di
 
 **forsale_price** - To give buyers an idea of the cost to own and admin the asset token.   Price followed by a space, followed by the currency.  Examples: "10000 RVN" or "0.3 BTC" or "50000 USD"  This might be parsed by token broker websites.
 
+**restricted** - Designate the token as being restricted.  One example is "rule144" which means sale may be restricted because of the type of token and the exemption used for issuance.  Other restrictions types can be used here as a signal to explorers, exchanges, or token brokers.  No enforcement of restrictions is built into the Ravencoin protocol. 
