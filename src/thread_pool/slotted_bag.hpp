@@ -154,7 +154,7 @@ inline bool SlottedBag<Queue>::empty(size_t id)
 {
     // This consumer action is solely responsible for an indiscriminant QueuedValid -> QueuedInvalid state transition.
     auto state = Slot::State::QueuedValid;
-    return m_slots[id].state.compare_exchange_strong(state, Slot::State::QueuedInvalid, std::memory_order_acq_rel);
+    return m_slots[id].state.compare_exchange_strong(state, Slot::State::QueuedInvalid, std::memory_order_acq_rel, std::memory_order_relaxed);
 }
 
 template <template<typename> class Queue>
