@@ -1043,10 +1043,15 @@ void RavenGUI::incomingTransaction(const QString& date, int unit, const CAmount&
 void RavenGUI::checkAssets()
 {
     // Check that status of RIP2 and activate the assets icon if it is active
-    if(AreAssetsDeployed())
+    if(AreAssetsDeployed()) {
         assetAction->setDisabled(false);
-    else
+        assetAction->setToolTip(tr("Show asset information"));
+        }
+    else {
         assetAction->setDisabled(true);
+        assetAction->setToolTip(tr("Assets not yet active"));
+
+        }
 
 }
 #endif // ENABLE_WALLET
