@@ -395,7 +395,7 @@ inline void Worker<Task, Queue>::threadFunc(const size_t id, std::shared_ptr<Thr
     {
         // Allow thread function to complete.
 		LogPrint("mempool", "%s: %s\n", "Worker Error", e.what());	
-		printf("worker error %s\n", e.what())
+		printf("worker error %s\n", e.what());
     }
 }
 
