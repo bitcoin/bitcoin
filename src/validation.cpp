@@ -1248,7 +1248,13 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 		}
 		if (bMultiThreaded)
 		{
+			static int64_t accumscript = 0;
+			static int64_t counter = 0;
+			static int64_t accumsys = 0;
+			counter++;
 			std::packaged_task<void()> t([&pool, ptx, hash, coins_to_uncache, hashCacheEntry, vChecks]() {
+				
+				int64_t currentscript = GetTimeMicros();
 				CValidationState vstate;
 				CCoinsViewCache vView(pcoinsTip);
 				const CTransaction& txIn = *ptx;
@@ -1268,6 +1274,11 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 						return;
 					}
 				}
+				int64_t now = GetTimeMicros();
+				accumscript += now - currentscript;
+				if(counter%100 == 0)
+				printf("accumscript %lld current elapsed %lld\n", accumscript, now - currentscript);
+				int64_t currentsys = GetTimeMicros();
 				if (!CheckSyscoinInputs(txIn, vstate, vView, true, chainActive.Height(), CBlock()))
 				{
 					LOCK2(cs_main, mempool.cs);
@@ -1281,6 +1292,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
 					nLastMultithreadMempoolFailure = GetTime();
 				}
+				now = GetTimeMicros();
+				accumsys += now - currentsys;
+				if (counter % 100 == 0)
+				printf("accumsys %lld current elapsed %lld\n", accumsys, now - currentsys);
 				scriptExecutionCache.insert(hashCacheEntry);
 			});
 			int numTries = 100;
