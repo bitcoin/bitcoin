@@ -807,6 +807,13 @@ void RavenGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVerif
         else
             modalOverlay->tipUpdate(count, blockDate, nVerificationProgress);
     }
+
+#ifdef ENABLE_WALLET
+    if(walletFrame)
+        {
+            walletFrame->displayAssetInfo();
+        }
+#endif // ENABLE_WALLET
     if (!clientModel)
         return;
 

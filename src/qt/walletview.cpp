@@ -361,4 +361,9 @@ void WalletView::gotoAssetsPage()
 {
     setCurrentWidget(assetsPage);
 }
+
+void WalletView::displayAssetInfo()
+{
+    overviewPage->displayAssetInfo();
+}
 /** RVN END */
