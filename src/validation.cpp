@@ -1602,6 +1602,12 @@ static DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* 
         return DISCONNECT_FAILED;
     }
 
+    std::vector<std::pair<std::string, std::string> > vIPFSHashes;
+    if (!passetsdb->ReadBlockUndoAssetData(block.GetHash(), vIPFSHashes)) {
+        error("DisconnectBlock(): block asset undo data inconsistent");
+        return DISCONNECT_FAILED;
+    }
+
     std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
     std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
     std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
@@ -1714,7 +1720,7 @@ static DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* 
                     if (assetsCache->ContainsAsset(reissue.strName)) {
                         if (!assetsCache->RemoveReissueAsset(reissue, strAddress,
                                                              COutPoint(tx.GetHash(), tx.vout.size() - 1),
-                                                             blockUndo.vIPFSHashes)) {
+                                                             vIPFSHashes)) {
                             error("%s : Failed to Undo Reissue Asset. Asset Name : %s", __func__, reissue.strName);
                             return DISCONNECT_FAILED;
                         }
@@ -2052,6 +2058,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     LogPrint(BCLog::BENCH, "    - Fork checks: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime2 - nTime1), nTimeForks * MICRO, nTimeForks * MILLI / nBlocksTotal);
 
     CBlockUndo blockundo;
+    std::vector<std::pair<std::string, std::string> > vUndoIPFSHashes;
 
     CCheckQueueControl<CScriptCheck> control(fScriptChecks && nScriptCheckThreads ? &scriptcheckqueue : nullptr);
 
@@ -2061,9 +2068,8 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     int64_t nSigOpsCost = 0;
     CDiskTxPos pos(pindex->GetBlockPos(), GetSizeOfCompactSize(block.vtx.size()));
     std::vector<std::pair<uint256, CDiskTxPos> > vPos;
-    vPos.reserve(block.vtx.size() * 2);
+    vPos.reserve(block.vtx.size());
     blockundo.vtxundo.reserve(block.vtx.size() - 1);
-    blockundo.vIPFSHashes.reserve(block.vtx.size() - 1);
     std::vector<PrecomputedTransactionData> txdata;
     txdata.reserve(block.vtx.size()); // Required so that pointers to individual PrecomputedTransactionData don't get invalidated
 
@@ -2256,7 +2262,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
         /** RVN START */
         if (!undoIPFSHash->first.empty()) {
-            blockundo.vIPFSHashes.emplace_back(*undoIPFSHash);
+            vUndoIPFSHashes.emplace_back(*undoIPFSHash);
         }
         /** RVN END */
 
@@ -2294,6 +2300,11 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
             // update nUndoPos in block index
             pindex->nUndoPos = _pos.nPos;
             pindex->nStatus |= BLOCK_HAVE_UNDO;
+        }
+
+        if (vUndoIPFSHashes.size()) {
+            if (!passetsdb->WriteBlockUndoAssetData(block.GetHash(), vUndoIPFSHashes))
+                return AbortNode(state, "Failed to write asset undo data");
         }
 
         pindex->RaiseValidity(BLOCK_VALID_SCRIPTS);
