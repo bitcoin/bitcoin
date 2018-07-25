@@ -365,5 +365,6 @@ void WalletView::gotoAssetsPage()
 void WalletView::displayAssetInfo()
 {
     overviewPage->displayAssetInfo();
+    Q_EMIT checkAssets();
 }
 /** RVN END */
