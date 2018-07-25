@@ -138,12 +138,40 @@ public:
 }
 instance_of_cinit;
 
+#ifdef WIN32
+WinFileLock::WinFileLock(const fs::path& file)
+{
+    hLockFile = CreateFileW(file.wstring().c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+}
+
+WinFileLock::~WinFileLock()
+{
+    if (hLockFile != INVALID_HANDLE_VALUE) {
+        UnlockFile(hLockFile, 0, 0, 0, 0);
+        CloseHandle(hLockFile);
+    }
+}
+
+WinFileLock::try_lock()
+{
+    if (hLockFile == INVALID_HANDLE_VALUE) {
+        return false;
+    }
+    _OVERLAPPED overlapped = {0};
+    return LockFileEx(hLockFile, LOCKFILE_EXCLUSIVE_LOCK | LOCKFILE_FAIL_IMMEDIATELY, 0, 0, 0, &overlapped);
+}
+#endif
+
 /** A map that contains all the currently held directory locks. After
  * successful locking, these will be held here until the global destructor
  * cleans them up and thus automatically unlocks them, or ReleaseDirectoryLocks
  * is called.
  */
+#ifndef WIN32
 static std::map<std::string, std::unique_ptr<boost::interprocess::file_lock>> dir_locks;
+#else
+static std::map<std::string, std::unique_ptr<WinFileLock>> dir_locks;
+#endif
 /** Mutex to protect dir_locks. */
 static std::mutex cs_dir_locks;
 
@@ -160,9 +188,12 @@ bool LockDirectory(const fs::path& directory, const std::string lockfile_name, b
     // Create empty lock file if it doesn't exist.
     FILE* file = fsbridge::fopen(pathLockFile, "a");
     if (file) fclose(file);
-
     try {
+#ifndef WIN32
         auto lock = MakeUnique<boost::interprocess::file_lock>(pathLockFile.string().c_str());
+#else
+        auto lock = MakeUnique<WinFileLock>(pathLockFile);
+#endif
         if (!lock->try_lock()) {
             return false;
         }

@@ -144,6 +144,17 @@ enum class OptionsCategory {
     HIDDEN // Always the last option to avoid printing these in the help
 };
 
+#ifdef WIN32
+class WinFileLock {
+public:
+    WinFileLock(const fs::path& file);
+    ~WinFileLock();
+    try_lock();
+private:
+    HANDLE hLockFile;
+};
+#endif
+
 class ArgsManager
 {
 protected:

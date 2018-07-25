@@ -1225,4 +1225,18 @@ BOOST_AUTO_TEST_CASE(test_DirIsWritable)
     fs::remove(tmpdirname);
 }
 
+#ifdef WIN32
+BOOST_AUTO_TEST_CASE(test_WinFileLock)
+{
+    fs::path filename = SetDataDir("test_WinFileLock");
+    filename = filename / ".testlock";
+
+    WinFileLock lock1(filename);
+    BOOST_CHECK(lock1.try_lock());
+
+    WinFileLock lock2(filename);
+    BOOST_CHECK(!lock2.try_lock());
+}
+#endif
+
 BOOST_AUTO_TEST_SUITE_END()
