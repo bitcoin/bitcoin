@@ -47,6 +47,17 @@
 
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
 
+static inline bool GetAvoidReuseFlag(CWallet * const pwallet, const UniValue& param) {
+    bool can_avoid_reuse = pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE);
+    bool avoid_reuse = param.isNull() ? can_avoid_reuse : param.get_bool();
+
+    if (avoid_reuse && !can_avoid_reuse) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "wallet does not have the \"avoid reuse\" feature enabled");
+    }
+
+    return avoid_reuse;
+}
+
 bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string& wallet_name)
 {
     if (request.URI.substr(0, WALLET_ENDPOINT_BASE.size()) == WALLET_ENDPOINT_BASE) {
