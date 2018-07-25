@@ -208,7 +208,7 @@ template <typename Task, template<typename> class Queue>
 inline void Worker<Task, Queue>::stop()
 {
     auto expectedState = State::Running;
-    if (m_state.compare_exchange_strong(expectedState, State::Stopped, std::memory_order_acq_rel, std::smemory_order_relaxed))
+    if (m_state.compare_exchange_strong(expectedState, State::Stopped, std::memory_order_acq_rel, std::memory_order_relaxed))
     {
         wake();
         m_thread.join();
