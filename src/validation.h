@@ -465,7 +465,7 @@ public:
         scriptPubKey(scriptPubKeyIn),
         ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), cacheStore(cacheIn), error(SCRIPT_ERR_UNKNOWN_ERROR) { }
 
-    bool operator()();
+    bool operator()() const;
 
     void swap(CScriptCheck &check) {
         scriptPubKey.swap(check.scriptPubKey);
