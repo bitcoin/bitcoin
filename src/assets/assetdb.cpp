@@ -13,6 +13,7 @@
 static const char ASSET_FLAG = 'A';
 static const char ASSET_ADDRESS_QUANTITY_FLAG = 'B';
 static const char MY_ASSET_FLAG = 'M';
+static const char BLOCK_ASSET_UNDO_DATA = 'U';
 
 CAssetsDB::CAssetsDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assets", nCacheSize, fMemory, fWipe) {
 }
@@ -66,6 +67,22 @@ bool CAssetsDB::EraseMyOutPoints(const std::string& assetName)
     if (!EraseMyAssetData(assetName))
         return error("%s : Failed to erase my asset outpoints from database.", __func__);
 
+    return true;
+}
+
+bool CAssetsDB::WriteBlockUndoAssetData(const uint256& blockhash, const std::vector<std::pair<std::string, std::string> >& vIPFSHashes)
+{
+    return Write(std::make_pair(BLOCK_ASSET_UNDO_DATA, blockhash), vIPFSHashes);
+}
+
+bool CAssetsDB::ReadBlockUndoAssetData(const uint256 &blockhash,
+                                       std::vector<std::pair<std::string, std::string> > &vIPFSHashes) {
+
+    // If it exists, return the read value.
+    if (Exists(std::make_pair(BLOCK_ASSET_UNDO_DATA, blockhash)))
+        return Read(std::make_pair(BLOCK_ASSET_UNDO_DATA, blockhash), vIPFSHashes);
+
+    // If it doesn't exist, we just return true because we don't want to fail just because it didn't exist in the db
     return true;
 }
 

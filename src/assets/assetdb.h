@@ -29,11 +29,13 @@ public:
     bool WriteAssetData(const CNewAsset& asset);
     bool WriteMyAssetsData(const std::string &strName, const std::set<COutPoint>& setOuts);
     bool WriteAssetAddressQuantity(const std::string& assetName, const std::string& address, const CAmount& quantity);
+    bool WriteBlockUndoAssetData(const uint256& blockhash, const std::vector<std::pair<std::string, std::string> >& vIPFSHashes);
 
     // Read from database functions
     bool ReadAssetData(const std::string& strName, CNewAsset& asset);
     bool ReadMyAssetsData(const std::string &strName, std::set<COutPoint>& setOuts);
     bool ReadAssetAddressQuantity(const std::string& assetName, const std::string& address, CAmount& quantity);
+    bool ReadBlockUndoAssetData(const uint256& blockhash, std::vector<std::pair<std::string, std::string> >& vIPFSHashes);
 
     // Erase from database functions
     bool EraseAssetData(const std::string& assetName);
