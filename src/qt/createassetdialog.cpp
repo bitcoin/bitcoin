@@ -84,7 +84,6 @@ void CreateAssetDialog::showMessage(QString string)
     ui->messageLabel->setStyleSheet("color: red");
     ui->messageLabel->setText(string);
     ui->messageLabel->show();
-    ui->availabilityButton->setDisabled(true);
 }
 
 void CreateAssetDialog::showValidMessage(QString string)
@@ -92,7 +91,6 @@ void CreateAssetDialog::showValidMessage(QString string)
     ui->messageLabel->setStyleSheet("color: green");
     ui->messageLabel->setText(string);
     ui->messageLabel->show();
-    ui->availabilityButton->setDisabled(true);
 }
 
 void CreateAssetDialog::hideMessage()
@@ -148,8 +146,14 @@ void CreateAssetDialog::CheckFormState()
         return;
     }
 
-    showValidMessage("Valid Asset");
-    enableCreateButton();
+    if (checkedAvailablity) {
+        showValidMessage("Valid Asset");
+        enableCreateButton();
+        ui->availabilityButton->setDisabled(true);
+    } else {
+        disableCreateButton();
+        ui->availabilityButton->setDisabled(false);
+    }
 }
 
 /** SLOTS */
@@ -169,17 +173,19 @@ void CreateAssetDialog::checkAvailabilityClicked()
             ui->nameText->setStyleSheet("border: 1px solid red");
             showMessage("Invalid: Asset name already in use");
             disableCreateButton();
+            checkedAvailablity = false;
             return;
         } else {
+            checkedAvailablity = true;
             ui->nameText->setStyleSheet("border: 1px solid green");
         }
     } else {
+        checkedAvailablity = false;
         showMessage("Error: Asset Database not in sync");
         disableCreateButton();
         return;
     }
 
-    checkedAvailablity = true;
     CheckFormState();
 }
 
