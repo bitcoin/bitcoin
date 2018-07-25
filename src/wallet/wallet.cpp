@@ -2732,6 +2732,9 @@ bool CWallet::SelectAssets(const std::map<std::string, std::vector<COutput> >& m
             }
 
             setCoinsRet.insert(CInputCoin(out.tx, out.i));
+
+            if (mapValueRet.at(asset.first) >= mapAssetTargetValue.at(asset.first))
+                break;
         }
 
         if (mapValueRet.at(asset.first) < mapAssetTargetValue.at(asset.first)) {

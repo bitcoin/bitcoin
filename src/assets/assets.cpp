@@ -386,7 +386,7 @@ bool TransferAssetFromScript(const CScript& scriptPubKey, CAssetTransfer& assetT
     return true;
 }
 
-bool AssetFromScript(const CScript& scriptPubKey, CNewAsset& assetTransfer, std::string& strAddress)
+bool AssetFromScript(const CScript& scriptPubKey, CNewAsset& assetNew, std::string& strAddress)
 {
     if (!IsScriptNewAsset(scriptPubKey))
         return false;
@@ -396,12 +396,12 @@ bool AssetFromScript(const CScript& scriptPubKey, CNewAsset& assetTransfer, std:
 
     strAddress = EncodeDestination(destination);
 
-    std::vector<unsigned char> vchTransferAsset;
-    vchTransferAsset.insert(vchTransferAsset.end(), scriptPubKey.begin() + 31, scriptPubKey.end());
-    CDataStream ssAsset(vchTransferAsset, SER_NETWORK, PROTOCOL_VERSION);
+    std::vector<unsigned char> vchNewAsset;
+    vchNewAsset.insert(vchNewAsset.end(), scriptPubKey.begin() + 31, scriptPubKey.end());
+    CDataStream ssAsset(vchNewAsset, SER_NETWORK, PROTOCOL_VERSION);
 
     try {
-        ssAsset >> assetTransfer;
+        ssAsset >> assetNew;
     } catch(std::exception& e) {
         std::cout << "Failed to get the asset from the stream: " << e.what() << std::endl;
         return false;
@@ -782,10 +782,13 @@ bool CAssetsCache::UndoAssetCoin(const Coin& coin, const COutPoint& out)
     // Get the asset tx from the script
     if (IsScriptNewAsset(coin.out.scriptPubKey)) {
         CNewAsset asset;
-        if (!AssetFromScript(coin.out.scriptPubKey, asset, strAddress))
-            return error("%s : Failed to get asset from script while trying to undo asset spend. OutPoint : %s", __func__,
+        if (!AssetFromScript(coin.out.scriptPubKey, asset, strAddress)) {
+            return error("%s : Failed to get asset from script while trying to undo asset spend. OutPoint : %s",
+                         __func__,
                          out.ToString());
+        }
         assetName = asset.strName;
+
         nAmount = asset.nAmount;
     } else if (IsScriptTransferAsset(coin.out.scriptPubKey)) {
         CAssetTransfer transfer;
@@ -801,6 +804,12 @@ bool CAssetsCache::UndoAssetCoin(const Coin& coin, const COutPoint& out)
             return error("%s : Failed to get owner asset from script while trying to undo asset spend. OutPoint : %s", __func__, out.ToString());
         assetName = ownerName;
         nAmount = OWNER_ASSET_AMOUNT;
+    } else if (IsScriptReissueAsset(coin.out.scriptPubKey)) {
+        CReissueAsset reissue;
+        if (!ReissueAssetFromScript(coin.out.scriptPubKey, reissue, strAddress))
+            return error("%s : Failed to get reissue asset from script while trying to undo asset spend. OutPoint : %s", __func__, out.ToString());
+        assetName = reissue.strName;
+        nAmount = reissue.nAmount;
     }
 
     if (assetName == "" || strAddress == "" || nAmount == 0)
