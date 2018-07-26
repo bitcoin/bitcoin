@@ -2545,14 +2545,6 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>&amp;Betalingsverzoek</translation>
     </message>
     <message>
-        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
-        <translation>Bech32 adressen (BIP-173) zijn goedkoper om van te betalen en bieden betere bescherming tegen typefouten. Indien niet aangevinkt zal een P2SH omgeven SegWit adres aangemaakt worden, compatibel met oudere wallets.</translation>
-    </message>
-    <message>
-        <source>Generate Bech32 address</source>
-        <translation>Genereer Bech32-adres</translation>
-    </message>
-    <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Chaincoin network.</source>
         <translation>Een optioneel bericht om aan het betalingsverzoek te koppelen, dat wordt weergegeven wanneer het verzoek wordt geopend. Opmerking: het bericht zal niet worden verzonden met de betaling via het Chaincoin netwerk.</translation>
     </message>
@@ -4082,10 +4074,6 @@ bekijk het bijkomende document COPYING of &lt;http://www.opensource.org/licenses
     <message>
         <source>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</source>
         <translation>Zet transactiekosten op het laagste niveau (in %s/kB) voor transacties die in zitten bij gemaakte blokken (standaard %s)</translation>
-    </message>
-    <message>
-        <source>Set maximum BIP141 block weight to this * 4. Deprecated, use blockmaxweight</source>
-        <translation>Zet het BIP141 maximum gewicht van een block op dit * 4. Verouderd, gebruik blockmaxweight</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>

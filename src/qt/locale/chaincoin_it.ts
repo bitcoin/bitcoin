@@ -1826,6 +1826,10 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation>Anonimato</translation>
     </message>
     <message>
+        <source>keys left: %1</source>
+        <translation>chiavi sinistra: %1</translation>
+    </message>
+    <message>
         <source>Disabled</source>
         <translation>Disabilitato</translation>
     </message>
@@ -2060,24 +2064,12 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation>Voto Si</translation>
     </message>
     <message>
-        <source>Yote Yes on the selected proposal</source>
-        <translation>Vota Sì sulla proposta selezionata</translation>
-    </message>
-    <message>
         <source>Vote Abstain</source>
         <translation>Voto Astenersi</translation>
     </message>
     <message>
-        <source>Yote Abstain on the selected proposal</source>
-        <translation>Vota astenuto sulla proposta selezionata</translation>
-    </message>
-    <message>
         <source>Vote No</source>
         <translation>Voto No</translation>
-    </message>
-    <message>
-        <source>Yote No on the selected proposal</source>
-        <translation>Vota No sulla proposta selezionata</translation>
     </message>
     <message>
         <source>Vote yes</source>
@@ -2702,14 +2694,6 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     <message>
         <source>&amp;Request payment</source>
         <translation>&amp;Richiedi pagamento</translation>
-    </message>
-    <message>
-        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
-        <translation>Indirizzi Bech32 (BIP-173) sono piu' economici per spendere e offrono maggior protezione contro errori di battitura. Quando non selezionati, un indirizzo di tipo P2SH wrapped SegWit sara' creato, compatibile con i portafogli precedenti. </translation>
-    </message>
-    <message>
-        <source>Generate Bech32 address</source>
-        <translation>Genera un indirizzo Bech32</translation>
     </message>
     <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Chaincoin network.</source>
@@ -4019,6 +4003,10 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation>Aggiungi un nodo a cui connettersi e prova a mantenere aperta la connessione (consulta la guida del comando RPC `addnode` per maggiori informazioni)</translation>
     </message>
     <message>
+        <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
+        <translation>Bind verso l'indirizzo sempre in ascolto. Usa [host]:port per ip v6</translation>
+    </message>
+    <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
         <translation>Impossibile fornire connessioni specifiche e avere addrman connessioni in uscita allo stesso tempo.</translation>
     </message>
@@ -4059,12 +4047,40 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation>Byte equivalenti per sigop nelle transazioni per relay e mining (default: %u)</translation>
     </message>
     <message>
+        <source>Exclude debugging information for a category. Can be used in conjunction with -debug=1 to output debug logs for all categories except one or more specified categories.</source>
+        <translation>Escludere le informazioni di debug per una categoria. Può essere utilizzato in combinazione con-debug = 1 per l'output dei log di debug per tutte le categorie eccetto una o più categorie specificate.</translation>
+    </message>
+    <message>
+        <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
+        <translation>Impossibile creare il backup, il file esiste già! Questo potrebbe succedere se è stato riavviato il portafoglio in meno di 60 secondi. È possibile continuare se si sta bene con questo.</translation>
+    </message>
+    <message>
+        <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
+        <translation>Trovato denominazioni in uscita non confermate, in attesa finché non confermano di continuare.</translation>
+    </message>
+    <message>
+        <source>Number of seconds to keep misbehaving peers from reconnecting (default: %u)</source>
+        <translation>Number of seconds to keep misbehaving peers from reconnecting (default: %u)</translation>
+    </message>
+    <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
         <translation>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</translation>
     </message>
     <message>
         <source>PrivateSend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.</source>
         <translation>PrivateSend usa gli importi esatti denominati per trasmettere i fondi monetari, potreste semplicemente avere bisogno di di anonimizzare alcune più monete.</translation>
+    </message>
+    <message>
+        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect used)</source>
+        <translation>Query per gli indirizzi peer tramite ricerca DNS, se basso su indirizzi (default: 1 a meno che-Connect usato)</translation>
+    </message>
+    <message>
+        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
+        <translation>Le ripetizioni non sono possibili in modalità tagliata. Sarà necessario utilizzare-REINDEX che scaricherà l'intero blockchain di nuovo.</translation>
+    </message>
+    <message>
+        <source>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</source>
+        <translation>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</translation>
     </message>
     <message>
         <source>Starting in lite mode, all Chaincoin-specific functionality is disabled.</source>
@@ -4093,6 +4109,26 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     <message>
         <source>Unable to locate enough PrivateSend denominated funds for this transaction.</source>
         <translation>Impossibile individuare abbastanza fondi denominati PrivateSend per questa transazione.</translation>
+    </message>
+    <message>
+        <source>Unable to locate enough PrivateSend non-denominated funds for this transaction that are not equal 1000 CHC.</source>
+        <translation>Unable to locate enough PrivateSend non-denominated funds for this transaction that are not equal 1000 CHC.</translation>
+    </message>
+    <message>
+        <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
+        <translation>Impossibile riprodurre i blocchi. Sarà necessario ricostruire il database utilizzando-REINDEX-chainstate.</translation>
+    </message>
+    <message>
+        <source>Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain</source>
+        <translation>Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
+        <translation>Trovato argomento -socks non supportato. Non è possibile impostare la versione SOCKS, solamente SOCKS5 proxy è supportato.</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
+        <translation>Argomento non supportato-whitelistalwaysrelay ignorato, utilizzare-whitelistrelay e/o-whitelistforcerelay.</translation>
     </message>
     <message>
         <source>(default: %s)</source>

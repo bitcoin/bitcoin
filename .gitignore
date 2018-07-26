@@ -66,3 +66,6 @@ src/test/test_chaincoin
 src/test/test_chaincoin_fuzzy
 
 test/config.ini
+background.tiff
+background.tiff.png
+background.tiff@2x.png

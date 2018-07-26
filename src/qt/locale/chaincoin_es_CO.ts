@@ -1552,14 +1552,6 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>Solicitar pago</translation>
     </message>
     <message>
-        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
-        <translation>Las direcciones Bech32 (BIP-173) son más baratas para gastar y ofrecen una mejor protección contra los errores tipográficos. Cuando no se selecciona, se creará una dirección SegWit envuelta en P2SH, compatible con monederos más antiguos.</translation>
-    </message>
-    <message>
-        <source>Generate Bech32 address</source>
-        <translation>Generar dirección Bech32</translation>
-    </message>
-    <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>Mostrar la solicitud seleccionada (hace lo mismo que hacer doble clic en una entrada)</translation>
     </message>

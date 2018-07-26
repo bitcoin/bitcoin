@@ -1753,10 +1753,6 @@
         <translation>Ödeme &amp;talep et</translation>
     </message>
     <message>
-        <source>Generate Bech32 address</source>
-        <translation>Bech32 adresi oluştur</translation>
-    </message>
-    <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>Seçilen talebi göster (bir unsura çift tıklamakla aynı anlama gelir)</translation>
     </message>

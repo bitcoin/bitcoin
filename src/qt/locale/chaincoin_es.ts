@@ -2097,24 +2097,12 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Vota Si</translation>
     </message>
     <message>
-        <source>Yote Yes on the selected proposal</source>
-        <translation>Vota Si en propuestas especiales</translation>
-    </message>
-    <message>
         <source>Vote Abstain</source>
         <translation>Vota Abstenerse</translation>
     </message>
     <message>
-        <source>Yote Abstain on the selected proposal</source>
-        <translation>Vota Abstenerse en propuestas especiales</translation>
-    </message>
-    <message>
         <source>Vote No</source>
         <translation>Vota No</translation>
-    </message>
-    <message>
-        <source>Yote No on the selected proposal</source>
-        <translation>Vota No en propuestas especiales</translation>
     </message>
     <message>
         <source>Vote yes</source>
@@ -2751,14 +2739,6 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     <message>
         <source>&amp;Request payment</source>
         <translation>&amp;Solicitar pago</translation>
-    </message>
-    <message>
-        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
-        <translation>Las direcciones Bech32 (BIP-173) son mas baratas al gastar y ofrecen mejor proteción contra errores de tipeo. Cuando no se marque una dirección SegWit envuelta en P2SH será creada, compatible con monederos antiguos. </translation>
-    </message>
-    <message>
-        <source>Generate Bech32 address</source>
-        <translation>Generar dirección Bech32</translation>
     </message>
     <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Chaincoin network.</source>
@@ -4289,11 +4269,6 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     <message>
         <source>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</source>
         <translation>Establecer la tasa más baja (en %s/kB) por transacciones para incluirse en la creación de bloque. (predeterminado: %s)</translation>
-    </message>
-    <message>
-        <source>Set maximum BIP141 block weight to this * 4. Deprecated, use blockmaxweight</source>
-        <translation>Configurar máximo peso de bloque BIP141 a este * 4.
-Descontinuado, use blockmaxweight</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>

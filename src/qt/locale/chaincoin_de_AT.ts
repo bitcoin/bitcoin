@@ -23,7 +23,7 @@
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation>&amp;Zua</translation>
+        <translation>&amp;Schließen</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -39,7 +39,7 @@
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;Tua weg</translation>
+        <translation>&amp;Löschen</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -157,7 +157,7 @@
     </message>
     <message>
         <source>Unlock wallet</source>
-        <translation>Aufsperren</translation>
+        <translation>Wallet entsperren</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
@@ -229,7 +229,7 @@
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation>Wahrscheinlich leuchtet CAPS LOCK</translation>
+        <translation>Warnung: Die Feststelltaste ist aktiviert!</translation>
     </message>
 </context>
 <context>
@@ -288,6 +288,14 @@
     <message>
         <source>Browse masternodes</source>
         <translation>Masternodes durchsuchen</translation>
+    </message>
+    <message>
+        <source>&amp;Proposals</source>
+        <translation>&amp;Proposals</translation>
+    </message>
+    <message>
+        <source>Browse proposals</source>
+        <translation>Durchsuche Proposals</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
@@ -503,7 +511,7 @@
     </message>
     <message>
         <source>%1 behind</source>
-        <translation>%1 hintn noch</translation>
+        <translation>%1 im Rückstand</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
@@ -515,7 +523,7 @@
     </message>
     <message>
         <source>Error</source>
-        <translation>Scheisse</translation>
+        <translation>Fehler</translation>
     </message>
     <message>
         <source>Open $URI...</source>
@@ -567,7 +575,7 @@
     </message>
     <message>
         <source>Connecting to peers...</source>
-        <translation>Schau ma...</translation>
+        <translation>Verbinde mit Netzwerk...</translation>
     </message>
     <message>
         <source>Catching up...</source>
@@ -1229,7 +1237,7 @@
     </message>
     <message>
         <source>Collateral</source>
-        <translation>Collateral</translation>
+        <translation>Sicherheitszahlung</translation>
     </message>
     <message>
         <source>IP</source>
@@ -1256,7 +1264,7 @@
     </message>
     <message>
         <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the Chaincoin network, as detailed below.</source>
-        <translation>Neueste Transaktionen werden eventuell noch nicht angezeigt, daher könnte Ihr Kontostand veraltet sein. Er wird korrigiert, sobald Ihr Wallet die Synchronisation mit dem Chaincoin-Netzwerk erfolgreich abgeschlossen hat. Details dazu finden sich weiter unten.</translation>
+        <translation>Neueste Transaktionen werden eventuell noch nicht angezeigt, daher könnte Ihr Kontostand veraltet sein. Er wird korrigiert, sobald Ihre Wallet die Synchronisation mit dem Chaincoin-Netzwerk erfolgreich abgeschlossen hat. Details dazu finden sich weiter unten.</translation>
     </message>
     <message>
         <source>Attempting to spend Chaincoin that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
@@ -2036,10 +2044,210 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
 </context>
 <context>
     <name>ProposalList</name>
-    </context>
+    <message>
+        <source>Enter proposal name</source>
+        <translation>Gebe Proposal-Namen ein</translation>
+    </message>
+    <message>
+        <source>Min amount</source>
+        <translation>Mindestbetrag</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Alle</translation>
+    </message>
+    <message>
+        <source>Today</source>
+        <translation>Heute</translation>
+    </message>
+    <message>
+        <source>This week</source>
+        <translation>Diese Woche</translation>
+    </message>
+    <message>
+        <source>This month</source>
+        <translation>Diesen Monat</translation>
+    </message>
+    <message>
+        <source>Last month</source>
+        <translation>Letzten Monat</translation>
+    </message>
+    <message>
+        <source>This year</source>
+        <translation>Dieses Jahr</translation>
+    </message>
+    <message>
+        <source>Range...</source>
+        <translation>Zeitraum...</translation>
+    </message>
+    <message>
+        <source>Min yes votes</source>
+        <translation>Mindestens "Jo" Soga</translation>
+    </message>
+    <message>
+        <source>Min no votes</source>
+        <translation>Mindestens "Na" Soga</translation>
+    </message>
+    <message>
+        <source>Min abs. yes votes</source>
+        <translation>Mindest enthaltene "Ja" Stimmen</translation>
+    </message>
+    <message>
+        <source>Min percentage</source>
+        <translation>Mindestprozentzahl</translation>
+    </message>
+    <message>
+        <source>Vote Yes</source>
+        <translation>Sog ma "Jo eh"</translation>
+    </message>
+    <message>
+        <source>Vote Abstain</source>
+        <translation>Sog ma nix</translation>
+    </message>
+    <message>
+        <source>Vote No</source>
+        <translation>Sog ma "na"</translation>
+    </message>
+    <message>
+        <source>Vote Yes on the selected proposal</source>
+        <translation>Sog ma "Jo eh" zu dem Schas</translation>
+    </message>
+    <message>
+        <source>Vote Abstain on the selected proposal</source>
+        <translation>Sog ma nix zu dem Schas</translation>
+    </message>
+    <message>
+        <source>Vote No on the selected proposal</source>
+        <translation>Sog ma "Na" zu dem Schas</translation>
+    </message>
+    <message>
+        <source>Vote yes</source>
+        <translation>Sog ma "Jo eh"</translation>
+    </message>
+    <message>
+        <source>Vote abstain</source>
+        <translation>Sog ma nix</translation>
+    </message>
+    <message>
+        <source>Vote no</source>
+        <translation>Sog ma "Na"</translation>
+    </message>
+    <message>
+        <source>Visit proposal website</source>
+        <translation>Besuche Proposal Webseite</translation>
+    </message>
+    <message>
+        <source>Visit statistics website</source>
+        <translation>Besuche Statistik Webseite</translation>
+    </message>
+    <message>
+        <source>minute(s)</source>
+        <translation>Minute(n)</translation>
+    </message>
+    <message>
+        <source>second(s)</source>
+        <translation>Sekunde(n)</translation>
+    </message>
+    <message>
+        <source>List will be updated in %1 %2</source>
+        <translation>Liste wird in %1 %2 upgedated</translation>
+    </message>
+    <message>
+        <source>List will be updated in 0 second(s)</source>
+        <translation>Liste wird in 0 Sekunde(n) upgedatet</translation>
+    </message>
+    <message>
+        <source>Confirm vote</source>
+        <translation>Jo siha eh</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to vote &lt;strong&gt;%1&lt;/strong&gt; on the proposal &lt;strong&gt;%2&lt;/strong&gt;?</source>
+        <translation>Manst echt &lt;strong&gt;%1&lt;/strong&gt;, bei dem Proposal &lt;strong&gt;%2&lt;/strong&gt;stimmen willst ?</translation>
+    </message>
+    <message>
+        <source>Voting</source>
+        <translation>Voting</translation>
+    </message>
+    <message>
+        <source>You voted %1 %2 time(s) successfully and failed %3 time(s) on %4</source>
+        <translation>Des hot %1 %2 mol funktioniert und daneben gongan %3 mal bei %4</translation>
+    </message>
+    <message>
+        <source>Start Date:</source>
+        <translation>Startdatum:</translation>
+    </message>
+    <message>
+        <source>End Date:</source>
+        <translation>Enddatum:</translation>
+    </message>
+</context>
 <context>
     <name>ProposalTableModel</name>
-    </context>
+    <message>
+        <source>Proposal</source>
+        <translation>Proposal</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>Betrag</translation>
+    </message>
+    <message>
+        <source>Start Date</source>
+        <translation>Startdatum</translation>
+    </message>
+    <message>
+        <source>End Date</source>
+        <translation>Enddatum</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Ja</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>Nein</translation>
+    </message>
+    <message>
+        <source>Abs. Yes</source>
+        <translation>Ja Enthaltungen</translation>
+    </message>
+    <message>
+        <source>Percentage</source>
+        <translation>Prozentual</translation>
+    </message>
+    <message>
+        <source>Proposal Name</source>
+        <translation>Proposal Name</translation>
+    </message>
+    <message>
+        <source>Date and time that the proposal starts.</source>
+        <translation>Datum und Zeit an dem der Proposal startet.</translation>
+    </message>
+    <message>
+        <source>Date and time that the proposal ends.</source>
+        <translation>Datum und Zeit an dem der Proposal endet.</translation>
+    </message>
+    <message>
+        <source>Obtained yes votes.</source>
+        <translation>Erhaltende "Ja" Stimmen.</translation>
+    </message>
+    <message>
+        <source>Obtained no votes.</source>
+        <translation>Erhaltene "Nein" Stimmen.</translation>
+    </message>
+    <message>
+        <source>Obtained absolute yes votes.</source>
+        <translation>Erhaltende absolute "Ja" Stimmen.</translation>
+    </message>
+    <message>
+        <source>Proposed amount.</source>
+        <translation>Vorgeschlagene Betrag. </translation>
+    </message>
+    <message>
+        <source>Current vote percentage.</source>
+        <translation>Derzeitige Teilnahme (in Prozent). </translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
     <message>
@@ -2541,20 +2749,20 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Zurücksetzen</translation>
     </message>
     <message>
+        <source>Native segwit addresses (aka Bech32 or BIP-173) reduce your transaction fees later on and offer better protection against typos, but old wallets don't support them. When unchecked, an address compatible with older wallets will be created instead.</source>
+        <translation>Bech32-Adressen (BIP-173) sind günstiger zum Senden und besser geschützt gegen Tippfehler. Wenn nicht gewählt, wird eine P2SH-verpackte SegWit-Adresse generiert, kompatibel mit älteren Wallets.</translation>
+    </message>
+    <message>
+        <source>Generate native segwit (Bech32) address</source>
+        <translation>Erzeuge Segwit (Bech32) Adresse</translation>
+    </message>
+    <message>
         <source>Requested payments history</source>
         <translation>Verlauf der angeforderten Zahlungen</translation>
     </message>
     <message>
         <source>&amp;Request payment</source>
         <translation>&amp;Zahlung anfordern</translation>
-    </message>
-    <message>
-        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
-        <translation>Bech32-Adressen (BIP-173) sind günstiger zum Senden, und besser geschützt gegen Tippfehler. Wenn nicht gewählt, wird eine P2SH-verpackte SegWit-Adresse generiert, kompatibel mit älteren Wallets.</translation>
-    </message>
-    <message>
-        <source>Generate Bech32 address</source>
-        <translation>Erzeuge Bech32-Adresse</translation>
     </message>
     <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Chaincoin network.</source>
@@ -3522,11 +3730,11 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </message>
     <message>
         <source>PrivateSend Collateral Payment</source>
-        <translation>PrivateSend Collateral Zahlung</translation>
+        <translation>PrivateSend Sicherheits-Zahlung</translation>
     </message>
     <message>
         <source>PrivateSend Make Collateral Inputs</source>
-        <translation>PrivateSend Mache Collateral Inputs</translation>
+        <translation>PrivateSend Sicherheits-Eingänge machen</translation>
     </message>
     <message>
         <source>PrivateSend Create Denominations</source>
@@ -3621,7 +3829,7 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </message>
     <message>
         <source>PrivateSend Make Collateral Inputs</source>
-        <translation>PrivateSend Mache Collateral Inputs</translation>
+        <translation>PrivateSend Sicherheits-Eingänge machen</translation>
     </message>
     <message>
         <source>PrivateSend Create Denominations</source>
@@ -3633,7 +3841,7 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </message>
     <message>
         <source>PrivateSend Collateral Payment</source>
-        <translation>PrivateSend Collateral Zahlung</translation>
+        <translation>PrivateSend Sicherheits-Zahlung</translation>
     </message>
     <message>
         <source>To yourself</source>
@@ -4087,10 +4295,6 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
         <translation>Niedrigste Gebühr (in %s/kB) für Transaktionen einstellen, die bei der Blockerzeugung berücksichtigt werden sollen. (default: %s)</translation>
     </message>
     <message>
-        <source>Set maximum BIP141 block weight to this * 4. Deprecated, use blockmaxweight</source>
-        <translation>Setzen von maximalem BIP141 Blockgewicht von * 4. ist veraltet, benutze blockmaxweight</translation>
-    </message>
-    <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
         <translation>Maximale Anzahl an Skript-Verifizierungs-Threads festlegen (%u bis %d, 0 = automatisch, &lt;0 = so viele Kerne frei lassen, Standard: %d)</translation>
     </message>
@@ -4364,7 +4568,7 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </message>
     <message>
         <source>Collateral not valid.</source>
-        <translation>Collateral ungültig.</translation>
+        <translation>Sicherheitszahlung nicht gültig.</translation>
     </message>
     <message>
         <source>Connect through SOCKS5 proxy</source>
@@ -5188,11 +5392,11 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </message>
     <message>
         <source>Unknown response.</source>
-        <translation>Was sogta?</translation>
+        <translation>Unbekannte Antwort.</translation>
     </message>
     <message>
         <source>Unknown state: id = %u</source>
-        <translation>Kenn mi nix aus: id = %u</translation>
+        <translation>Unbekannter Zustand: id = %u</translation>
     </message>
     <message>
         <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
@@ -5284,7 +5488,7 @@ https://www.transifex.com/projects/p/chaincoin/</translation>
     </message>
     <message>
         <source>Will retry...</source>
-        <translation>Probier ma...</translation>
+        <translation>Versuche erneut...</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>

@@ -1757,14 +1757,6 @@
         <translation>&amp;Cerere plată</translation>
     </message>
     <message>
-        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
-        <translation>Adresele de tip Bech32 (BIP-173) sunt mai ieftin de folosit si ofera o protectie mai buna impotriva greselilor de tastare. Daca nu este bifat se creaza o adresa SegWit impachetata in P2SH, compatibila cu portofelele mai vechi.</translation>
-    </message>
-    <message>
-        <source>Generate Bech32 address</source>
-        <translation>Genereaza adresa Bech32</translation>
-    </message>
-    <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>Arată cererea selectată (acelaşi lucru ca şi dublu-clic pe o înregistrare)</translation>
     </message>

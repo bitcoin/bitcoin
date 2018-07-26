@@ -2554,14 +2554,6 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation>&amp;Requisitar Pagamento</translation>
     </message>
     <message>
-        <source>Bech32 addresses (BIP-173) are cheaper to spend from and offer better protection against typos. When unchecked a P2SH wrapped SegWit address will be created, compatible with older wallets.</source>
-        <translation>Os endereços Bech32 (BIP-173) são mais baratos de gastar e oferecem uma proteção melhor contra erros de digitação. Quando desmarcado, será criado um endereço SegWit envolvido em P2SH, compatível com carteiras antigas.</translation>
-    </message>
-    <message>
-        <source>Generate Bech32 address</source>
-        <translation>Gerar endereço Bech32</translation>
-    </message>
-    <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Chaincoin network.</source>
         <translation>Uma mensagem opcional que será anexada na cobrança e será mostrada quando ela for aberta. Nota: A mensagem não será enviada com o pagamento pela rede Chaincoin.</translation>
     </message>
@@ -4090,10 +4082,6 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     <message>
         <source>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</source>
         <translation>Taxa (em %s/KiB) a ser adicionada às transações que você mandar (padrão: %s)</translation>
-    </message>
-    <message>
-        <source>Set maximum BIP141 block weight to this * 4. Deprecated, use blockmaxweight</source>
-        <translation>Define o tamanho máximo BIP141 do bloco *4. Depreciado, use blockmaxweight</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
