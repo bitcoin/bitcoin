@@ -98,6 +98,7 @@ private Q_SLOTS:
     /** RVN START */
     void createAssetButtonClicked();
     void ressieAssetButtonClicked();
+    void refreshButtonClicked();
     /** RVN END */
 
     Q_SIGNALS:

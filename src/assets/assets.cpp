@@ -1873,7 +1873,7 @@ std::string EncodeIPFS(std::string decoded){
     return EncodeBase58(unsignedCharData);
 };
 
-bool CreateAssetTransaction(CWallet* pwallet, const CNewAsset& asset, const std::string& address, std::pair<int, std::string>& error, std::string& txid, std::string& rvnChangeAddress)
+bool CreateAssetTransaction(CWallet* pwallet, const CNewAsset& asset, const std::string& address, std::pair<int, std::string>& error, std::string& rvnChangeAddress, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRequired)
 {
     // Validate the assets data
     std::string strError;
@@ -1910,9 +1910,6 @@ bool CreateAssetTransaction(CWallet* pwallet, const CNewAsset& asset, const std:
     // Get the script for the burn address
     CScript scriptPubKey = GetScriptForDestination(DecodeDestination(Params().IssueAssetBurnAddress()));
 
-    CMutableTransaction mutTx;
-
-    CWalletTx wtxNew;
     CCoinControl coin_control;
 
     if (haveChangeAddress) {
@@ -1923,8 +1920,6 @@ bool CreateAssetTransaction(CWallet* pwallet, const CNewAsset& asset, const std:
     LOCK2(cs_main, pwallet->cs_wallet);
 
     // Create and send the transaction
-    CReserveKey reservekey(pwallet);
-    CAmount nFeeRequired;
     std::string strTxError;
     std::vector<CRecipient> vecSend;
     int nChangePosRet = -1;
@@ -1937,19 +1932,10 @@ bool CreateAssetTransaction(CWallet* pwallet, const CNewAsset& asset, const std:
         error = std::make_pair(RPC_WALLET_ERROR, strTxError);
         return false;
     }
-
-    CValidationState state;
-    if (!pwallet->CommitTransaction(wtxNew, reservekey, g_connman.get(), state)) {
-        strTxError = strprintf("Error: The transaction was rejected! Reason given: %s", state.GetRejectReason());
-        error = std::make_pair(RPC_WALLET_ERROR, strTxError);
-        return false;
-    }
-
-    txid = wtxNew.GetHash().GetHex();
     return true;
 }
 
-bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& reissueAsset, const std::string& address, const std::string& changeAddress, std::pair<int, std::string>& error, std::string& txid)
+bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& reissueAsset, const std::string& address, const std::string& changeAddress, std::pair<int, std::string>& error, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRequired)
 {
     std::string asset_name = reissueAsset.strName;
     std::string change_address = changeAddress;
@@ -2069,13 +2055,10 @@ bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& reissu
     // Get the script for the burn address
     CScript scriptPubKeyBurn = GetScriptForDestination(DecodeDestination(Params().ReissueAssetBurnAddress()));
 
-    CWalletTx wtxNew;
     CCoinControl coin_control;
     coin_control.destChange = DecodeDestination(change_address);
 
     // Create and send the transaction
-    CReserveKey reservekey(pwallet);
-    CAmount nFeeRequired;
     std::string strTxError;
     std::vector<CRecipient> vecSend;
     int nChangePosRet = -1;
@@ -2090,15 +2073,6 @@ bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& reissu
         error = std::make_pair(RPC_WALLET_ERROR, strTxError);
         return false;
     }
-
-    CValidationState state;
-    if (!pwallet->CommitTransaction(wtxNew, reservekey, g_connman.get(), state)) {
-        strTxError = strprintf("Error: The transaction was rejected! Reason given: %s", state.GetRejectReason());
-        error = std::make_pair(RPC_WALLET_ERROR, strTxError);
-        return false;
-    }
-
-    txid = wtxNew.GetHash().GetHex();
     return true;
 }
 
@@ -2187,7 +2161,7 @@ bool CreateTransferAssetTransaction(CWallet* pwallet, const std::vector< std::pa
     return true;
 }
 
-bool SendAssetTransferTransaction(CWallet* pwallet, CWalletTx& transaction, CReserveKey& reserveKey, std::pair<int, std::string>& error, std::string& txid)
+bool SendAssetTransaction(CWallet* pwallet, CWalletTx& transaction, CReserveKey& reserveKey, std::pair<int, std::string>& error, std::string& txid)
 {
     CValidationState state;
     if (!pwallet->CommitTransaction(transaction, reserveKey, g_connman.get(), state)) {

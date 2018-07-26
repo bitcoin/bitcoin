@@ -387,7 +387,7 @@ WalletModel::SendCoinsReturn WalletModel::sendAssets(CWalletTx& tx, QList<SendAs
 
         std::pair<int, std::string> error;
         std::string txid;
-        if (!SendAssetTransferTransaction(this->wallet, tx, reservekey, error, txid))
+        if (!SendAssetTransaction(this->wallet, tx, reservekey, error, txid))
             return SendCoinsReturn(TransactionCommitFailed, QString::fromStdString(error.second));
 
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);

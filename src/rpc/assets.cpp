@@ -160,10 +160,18 @@ UniValue issue(const JSONRPCRequest& request)
 
     CNewAsset asset(asset_name, nAmount, units, reissuable ? 1 : 0, has_ipfs ? 1 : 0, DecodeIPFS(ipfs_hash));
 
-    // Create the transaction and broadcast it
+    CReserveKey reservekey(pwallet);
+    CWalletTx transaction;
+    CAmount nRequiredFee;
     std::pair<int, std::string> error;
+
+    // Create the Transaction
+    if (!CreateAssetTransaction(pwallet, asset, address, error, changeAddress, transaction, reservekey, nRequiredFee))
+        throw JSONRPCError(error.first, error.second);
+
+    // Send the Transaction to the network
     std::string txid;
-    if (!CreateAssetTransaction(pwallet, asset, address, error, txid, changeAddress))
+    if (!SendAssetTransaction(pwallet, transaction, reservekey, error, txid))
         throw JSONRPCError(error.first, error.second);
 
     UniValue result(UniValue::VARR);
@@ -548,7 +556,7 @@ UniValue transfer(const JSONRPCRequest& request)
 
     // Send the Transaction to the network
     std::string txid;
-    if (!SendAssetTransferTransaction(pwallet, transaction, reservekey, error, txid))
+    if (!SendAssetTransaction(pwallet, transaction, reservekey, error, txid))
         throw JSONRPCError(error.first, error.second);
 
     // Display the transaction id
@@ -615,10 +623,20 @@ UniValue reissue(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_PARAMS, std::string("Invalid IPFS hash (must be 46 characters"));
     }
 
-    std::string txid;
-    std::pair<int, std::string> error;
     CReissueAsset reissueAsset(asset_name, nAmount, reissuable, DecodeIPFS(newipfs));
-    if (!CreateReissueAssetTransaction(pwallet, reissueAsset, address, changeAddress, error, txid))
+
+    std::pair<int, std::string> error;
+    CReserveKey reservekey(pwallet);
+    CWalletTx transaction;
+    CAmount nRequiredFee;
+
+    // Create the Transaction
+    if (!CreateReissueAssetTransaction(pwallet, reissueAsset, address, changeAddress, error, transaction, reservekey, nRequiredFee))
+        throw JSONRPCError(error.first, error.second);
+
+    // Send the Transaction to the network
+    std::string txid;
+    if (!SendAssetTransaction(pwallet, transaction, reservekey, error, txid))
         throw JSONRPCError(error.first, error.second);
 
     UniValue result(UniValue::VARR);

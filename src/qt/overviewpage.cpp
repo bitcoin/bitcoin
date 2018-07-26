@@ -314,7 +314,7 @@ void OverviewPage::displayAssetInfo()
     ui->assetInfoPercentageLabel->setText(tr("Current Percentage") + ":");
     ui->assetInfoStatusLabel->setText(tr("Status") + ":");
     ui->assetInfoBlockLabel->setText(tr("Target Percentage") + ":");
-    ui->assetInfoPossibleLabel->setText(tr("Possible") + ":");
+    ui->assetInfoPossibleLabel->setText(tr("Could Vote Pass") + ":");
     ui->assetInfoBlocksLeftLabel->setText(tr("Voting Block Cycle") + ":");
 
     const ThresholdState thresholdState = VersionBitsTipState(Params().GetConsensus(),
@@ -358,7 +358,7 @@ void OverviewPage::displayAssetInfo()
     auto heightLockedIn = VersionBitsTipStateSinceHeight(Params().GetConsensus(),
                                                          Consensus::DeploymentPos::DEPLOYMENT_ASSETS);
     auto cycleWidth = Params().GetConsensus().nMinerConfirmationWindow;
-    auto difference = currentheight - heightLockedIn + 1;
+    auto difference = (currentheight - heightLockedIn + 1) % cycleWidth;
     QString currentCount;
     currentCount.sprintf("%d/%d blocks", difference, cycleWidth);
 
@@ -376,7 +376,7 @@ void OverviewPage::displayAssetInfo()
         currentPercentage.sprintf("%0.2f%%", currentDouble * 100);
         ui->assetInfoPercentageValue->setText(currentPercentage);
 
-        QString possible = statsStruct.possible ? tr("true") : tr("false");
+        QString possible = statsStruct.possible ? tr("yes") : tr("no");
         ui->assetInfoPossibleValue->setText(possible);
 
         ui->assetInfoBlocksLeftValue->setText(currentCount);

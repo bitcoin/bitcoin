@@ -8,6 +8,9 @@
 #include "platformstyle.h"
 #include "walletmodel.h"
 #include "addresstablemodel.h"
+#include "sendcoinsdialog.h"
+#include "ravenunits.h"
+#include "optionsmodel.h"
 
 #include <QModelIndex>
 #include <QDebug>
@@ -16,6 +19,9 @@
 #include <script/standard.h>
 #include <base58.h>
 #include <QClipboard>
+#include <wallet/wallet.h>
+#include <core_io.h>
+#include <policy/policy.h>
 
 CreateAssetDialog::CreateAssetDialog(const PlatformStyle *_platformStyle, QWidget *parent, WalletModel* model) :
         QDialog(parent),
@@ -251,13 +257,88 @@ void CreateAssetDialog::onCreateAssetClicked()
 
     CNewAsset asset(name.toStdString(), quantity, units, reissuable ? 1 : 0, hasIPFS ? 1 : 0, ipfsDecoded);
 
-    // Create the transaction and broadcast it
+    CWalletTx tx;
+    CReserveKey reservekey(model->getWallet());
     std::pair<int, std::string> error;
-    std::string txid;
+    CAmount nFeeRequired;
     std::string changeAddress = ui->changeAddressText->text().toStdString();
-    if (!CreateAssetTransaction(model->getWallet(), asset, address.toStdString(), error, txid, changeAddress))
+
+    // Create the transaction
+    if (!CreateAssetTransaction(model->getWallet(), asset, address.toStdString(), error, changeAddress, tx, reservekey, nFeeRequired)) {
         showMessage("Invalid: " + QString::fromStdString(error.second));
-    else {
+        return;
+    }
+
+    // Format confirmation message
+    QStringList formatted;
+
+    // generate bold amount string
+    QString amount = "<b>" + QString::fromStdString(StringFromAmount(GetIssueAssetBurnAmount(), 8)) + " RVN";
+    amount.append("</b>");
+    // generate monospace address string
+    QString addressburn = "<span style='font-family: monospace;'>" + QString::fromStdString(Params().IssueAssetBurnAddress());
+    addressburn.append("</span>");
+
+    QString recipientElement1;
+    recipientElement1 = tr("%1 to %2").arg(amount, addressburn);
+    formatted.append(recipientElement1);
+
+    // generate the bold asset amount
+    QString assetAmount = "<b>" + QString::fromStdString(StringFromAmount(asset.nAmount, asset.units)) + " " + QString::fromStdString(asset.strName);
+    assetAmount.append("</b>");
+
+    // generate the monospace address string
+    QString assetAddress = "<span style='font-family: monospace;'>" + address;
+    assetAddress.append("</span>");
+
+    QString recipientElement2;
+    recipientElement2 = tr("%1 to %2").arg(assetAmount, assetAddress);
+    formatted.append(recipientElement2);
+
+    QString questionString = tr("Are you sure you want to send?");
+    questionString.append("<br /><br />%1");
+
+    if(nFeeRequired > 0)
+    {
+        // append fee string if a fee is required
+        questionString.append("<hr /><span style='color:#aa0000;'>");
+        questionString.append(RavenUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), nFeeRequired));
+        questionString.append("</span> ");
+        questionString.append(tr("added as transaction fee"));
+
+        // append transaction size
+        questionString.append(" (" + QString::number((double)GetVirtualTransactionSize(tx) / 1000) + " kB)");
+    }
+
+    // add total amount in all subdivision units
+    questionString.append("<hr />");
+    CAmount totalAmount = GetIssueAssetBurnAmount() + nFeeRequired;
+    QStringList alternativeUnits;
+    for (RavenUnits::Unit u : RavenUnits::availableUnits())
+    {
+        if(u != model->getOptionsModel()->getDisplayUnit())
+            alternativeUnits.append(RavenUnits::formatHtmlWithUnit(u, totalAmount));
+    }
+    questionString.append(tr("Total Amount %1")
+                                  .arg(RavenUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), totalAmount)));
+    questionString.append(QString("<span style='font-size:10pt;font-weight:normal;'><br />(=%2)</span>")
+                                  .arg(alternativeUnits.join(" " + tr("or") + "<br />")));
+
+    SendConfirmationDialog confirmationDialog(tr("Confirm send assets"),
+                                              questionString.arg(formatted.join("<br />")), SEND_CONFIRM_DELAY, this);
+    confirmationDialog.exec();
+    QMessageBox::StandardButton retval = (QMessageBox::StandardButton)confirmationDialog.result();
+
+    if(retval != QMessageBox::Yes)
+    {
+        return;
+    }
+
+    // Create the transaction and broadcast it
+    std::string txid;
+    if (!SendAssetTransaction(model->getWallet(), tx, reservekey, error, txid)) {
+        showMessage("Invalid: " + QString::fromStdString(error.second));
+    } else {
         QMessageBox msgBox;
         QPushButton *copyButton = msgBox.addButton(tr("Copy"), QMessageBox::ActionRole);
         copyButton->disconnect();
@@ -271,7 +352,7 @@ void CreateAssetDialog::onCreateAssetClicked()
         });
 
         QPushButton *okayButton = msgBox.addButton(QMessageBox::Ok);
-        msgBox.setText(tr("Created the asset transaction with the transaction id:"));
+        msgBox.setText(tr("Asset transaction sent to network:"));
         msgBox.setInformativeText(QString::fromStdString(txid));
         msgBox.exec();
 
