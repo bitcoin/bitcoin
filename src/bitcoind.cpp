@@ -54,7 +54,11 @@ static void WaitForShutdown()
 //
 // Start
 //
+#ifndef WIN32
 static bool AppInit(int argc, char* argv[])
+#else
+static bool AppInit(int argc, wchar_t* argv[])
+#endif
 {
     bool fRet = false;
 
@@ -183,7 +187,11 @@ static bool AppInit(int argc, char* argv[])
     return fRet;
 }
 
+#ifndef WIN32
 int main(int argc, char* argv[])
+#else
+int wmain(int argc, wchar_t* argv[])
+#endif
 {
     SetupEnvironment();
 

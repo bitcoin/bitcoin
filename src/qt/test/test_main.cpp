@@ -41,7 +41,11 @@ Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
 extern void noui_connect();
 
 // This is all you need to run all the tests
+#ifndef WIN32
 int main(int argc, char *argv[])
+#else
+int wmain(int argc, wchar_t* argv[])
+#endif
 {
     SetupEnvironment();
     SetupNetworking();
@@ -50,7 +54,7 @@ int main(int argc, char *argv[])
     ClearDatadirCache();
     fs::path pathTemp = fs::temp_directory_path() / strprintf("test_bitcoin-qt_%lu_%i", (unsigned long)GetTime(), (int)GetRand(100000));
     fs::create_directories(pathTemp);
-    gArgs.ForceSetArg("-datadir", pathTemp.string());
+    gArgs.ForceSetArg("-datadir", pathTemp.u8string());
 
     bool fInvalid = false;
 
@@ -65,7 +69,11 @@ int main(int argc, char *argv[])
 
     // Don't remove this, it's needed to access
     // QApplication:: and QCoreApplication:: in the tests
+#ifndef WIN32
     QApplication app(argc, argv);
+#else
+    QApplication app(__argc, __argv);
+#endif
     app.setApplicationName("Bitcoin-Qt-test");
 
     SSL_library_init();

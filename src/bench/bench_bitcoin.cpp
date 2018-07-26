@@ -46,7 +46,11 @@ static fs::path SetDataDir()
     return ret;
 }
 
+#ifndef WIN32
 int main(int argc, char** argv)
+#else
+int wmain(int argc, wchar_t** argv)
+#endif
 {
     SetupBenchArgs();
     std::string error;

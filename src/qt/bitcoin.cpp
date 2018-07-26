@@ -32,6 +32,7 @@
 #include <ui_interface.h>
 #include <uint256.h>
 #include <util.h>
+#include <utilstrencodings.h>
 #include <warnings.h>
 
 #include <walletinitinterface.h>
@@ -51,6 +52,10 @@
 #include <QTimer>
 #include <QTranslator>
 #include <QSslConfiguration>
+
+#ifdef WIN32
+#include <shellapi.h>
+#endif
 
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
@@ -553,7 +558,11 @@ static void SetupUIArgs()
 }
 
 #ifndef BITCOIN_QT_TEST
+#ifndef WIN32
 int main(int argc, char *argv[])
+#else
+int wmain(int argc, wchar_t* argv[])
+#endif
 {
     SetupEnvironment();
 
@@ -565,7 +574,11 @@ int main(int argc, char *argv[])
     Q_INIT_RESOURCE(bitcoin);
     Q_INIT_RESOURCE(bitcoin_locale);
 
+#ifndef WIN32
     BitcoinApplication app(*node, argc, argv);
+#else
+    BitcoinApplication app(*node, __argc, __argv);
+#endif
 #if QT_VERSION > 0x050100
     // Generate high-dpi pixmaps
     QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);

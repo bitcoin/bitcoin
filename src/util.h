@@ -50,6 +50,11 @@ extern CTranslationInterface translationInterface;
 extern const char * const BITCOIN_CONF_FILENAME;
 extern const char * const BITCOIN_PID_FILENAME;
 
+extern fs::detail::utf8_codecvt_facet g_utf8;
+
+#define u8string() string(g_utf8)
+#define u8path(str) path(str, g_utf8)
+
 /**
  * Translation function: Call Translate signal on UI interface, which returns a boost::optional result.
  * If no translation slot is registered, nothing is returned, and simply return the input.
@@ -109,14 +114,17 @@ void runCommand(const std::string& strCommand);
  */
 fs::path AbsPathForConfigVal(const fs::path& path, bool net_specific = true);
 
+#ifndef WIN32
 inline bool IsSwitchChar(char c)
 {
-#ifdef WIN32
-    return c == '-' || c == '/';
-#else
     return c == '-';
-#endif
 }
+#else
+inline bool IsSwitchChar(wchar_t c)
+{
+    return c == L'-' || c == L'/';
+}
+#endif
 
 enum class OptionsCategory {
     OPTIONS,
@@ -167,7 +175,11 @@ public:
      */
     void SelectConfigNetwork(const std::string& network);
 
+#ifndef WIN32
     bool ParseParameters(int argc, const char* const argv[], std::string& error);
+#else
+    bool ParseParameters(int argc, const wchar_t* const argv[], std::string& error);
+#endif
     bool ReadConfigFiles(std::string& error, bool ignore_invalid_keys = false);
 
     /**

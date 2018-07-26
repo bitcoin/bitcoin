@@ -234,7 +234,7 @@ void Shutdown()
         if (!est_fileout.IsNull())
             ::feeEstimator.Write(est_fileout);
         else
-            LogPrintf("%s: Failed to write fee estimates to %s\n", __func__, est_path.string());
+            LogPrintf("%s: Failed to write fee estimates to %s\n", __func__, est_path.u8string());
         fFeeEstimatesInitialized = false;
     }
 
@@ -604,12 +604,12 @@ static void CleanupBlockRevFiles()
     fs::path blocksdir = GetBlocksDir();
     for (fs::directory_iterator it(blocksdir); it != fs::directory_iterator(); it++) {
         if (fs::is_regular_file(*it) &&
-            it->path().filename().string().length() == 12 &&
-            it->path().filename().string().substr(8,4) == ".dat")
+            it->path().filename().u8string().length() == 12 &&
+            it->path().filename().u8string().substr(8,4) == ".dat")
         {
-            if (it->path().filename().string().substr(0,3) == "blk")
-                mapBlockFiles[it->path().filename().string().substr(3,5)] = it->path();
-            else if (it->path().filename().string().substr(0,3) == "rev")
+            if (it->path().filename().u8string().substr(0,3) == "blk")
+                mapBlockFiles[it->path().filename().u8string().substr(3,5)] = it->path();
+            else if (it->path().filename().u8string().substr(0,3) == "rev")
                 remove(it->path());
         }
     }
@@ -668,7 +668,7 @@ static void ThreadImport(std::vector<fs::path> vImportFiles)
             LoadExternalBlockFile(chainparams, file);
             RenameOver(pathBootstrap, pathBootstrapOld);
         } else {
-            LogPrintf("Warning: Could not open bootstrap file %s\n", pathBootstrap.string());
+            LogPrintf("Warning: Could not open bootstrap file %s\n", pathBootstrap.u8string());
         }
     }
 
@@ -676,10 +676,10 @@ static void ThreadImport(std::vector<fs::path> vImportFiles)
     for (const fs::path& path : vImportFiles) {
         FILE *file = fsbridge::fopen(path, "rb");
         if (file) {
-            LogPrintf("Importing blocks file %s...\n", path.string());
+            LogPrintf("Importing blocks file %s...\n", path.u8string());
             LoadExternalBlockFile(chainparams, file);
         } else {
-            LogPrintf("Warning: Could not open blocks file %s\n", path.string());
+            LogPrintf("Warning: Could not open blocks file %s\n", path.u8string());
         }
     }
 
@@ -825,7 +825,7 @@ static std::string ResolveErrMsg(const char * const optname, const std::string& 
 void InitLogging()
 {
     g_logger->m_print_to_file = !gArgs.IsArgNegated("-debuglogfile");
-    g_logger->m_file_path = AbsPathForConfigVal(gArgs.GetArg("-debuglogfile", DEFAULT_DEBUGLOGFILE));
+    g_logger->m_file_path = AbsPathForConfigVal(fs::u8path(gArgs.GetArg("-debuglogfile", DEFAULT_DEBUGLOGFILE)));
 
     // Add newlines to the logfile to distinguish this execution from the last
     // one; called before console logging is set up, so this is only sent to
@@ -1180,10 +1180,10 @@ static bool LockDataDirectory(bool probeOnly)
     // Make sure only a single Bitcoin process is using the data directory.
     fs::path datadir = GetDataDir();
     if (!DirIsWritable(datadir)) {
-        return InitError(strprintf(_("Cannot write to data directory '%s'; check permissions."), datadir.string()));
+        return InitError(strprintf(_("Cannot write to data directory '%s'; check permissions."), datadir.u8string()));
     }
     if (!LockDirectory(datadir, ".lock", probeOnly)) {
-        return InitError(strprintf(_("Cannot obtain a lock on data directory %s. %s is probably already running."), datadir.string(), _(PACKAGE_NAME)));
+        return InitError(strprintf(_("Cannot obtain a lock on data directory %s. %s is probably already running."), datadir.u8string(), _(PACKAGE_NAME)));
     }
     return true;
 }
@@ -1236,24 +1236,24 @@ bool AppInitMain()
         }
         if (!g_logger->OpenDebugLog()) {
             return InitError(strprintf("Could not open debug log file %s",
-                                       g_logger->m_file_path.string()));
+                                       g_logger->m_file_path.u8string()));
         }
     }
 
     if (!g_logger->m_log_timestamps)
         LogPrintf("Startup time: %s\n", FormatISO8601DateTime(GetTime()));
-    LogPrintf("Default data directory %s\n", GetDefaultDataDir().string());
-    LogPrintf("Using data directory %s\n", GetDataDir().string());
-    LogPrintf("Using config file %s\n", GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME)).string());
+    LogPrintf("Default data directory %s\n", GetDefaultDataDir().u8string());
+    LogPrintf("Using data directory %s\n", GetDataDir().u8string());
+    LogPrintf("Using config file %s\n", GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME)).u8string());
     LogPrintf("Using at most %i automatic connections (%i file descriptors available)\n", nMaxConnections, nFD);
 
     // Warn about relative -datadir path.
-    if (gArgs.IsArgSet("-datadir") && !fs::path(gArgs.GetArg("-datadir", "")).is_absolute()) {
+    if (gArgs.IsArgSet("-datadir") && !fs::u8path(gArgs.GetArg("-datadir", "")).is_absolute()) {
         LogPrintf("Warning: relative datadir option '%s' specified, which will be interpreted relative to the " /* Continued */
                   "current working directory '%s'. This is fragile, because if bitcoin is started in the future "
                   "from a different location, it will be unable to locate the current data files. There could "
                   "also be data loss if bitcoin is started while in a temporary directory.\n",
-            gArgs.GetArg("-datadir", ""), fs::current_path().string());
+            gArgs.GetArg("-datadir", ""), fs::current_path().u8string());
     }
 
     InitSignatureCache();
@@ -1655,7 +1655,7 @@ bool AppInitMain()
 
     std::vector<fs::path> vImportFiles;
     for (const std::string& strFile : gArgs.GetArgs("-loadblock")) {
-        vImportFiles.push_back(strFile);
+        vImportFiles.push_back(fs::u8path(strFile));
     }
 
     threadGroup.create_thread(boost::bind(&ThreadImport, vImportFiles));

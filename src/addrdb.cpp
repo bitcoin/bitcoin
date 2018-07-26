@@ -45,12 +45,12 @@ bool SerializeFileDB(const std::string& prefix, const fs::path& path, const Data
     FILE *file = fsbridge::fopen(pathTmp, "wb");
     CAutoFile fileout(file, SER_DISK, CLIENT_VERSION);
     if (fileout.IsNull())
-        return error("%s: Failed to open file %s", __func__, pathTmp.string());
+        return error("%s: Failed to open file %s", __func__, pathTmp.u8string());
 
     // Serialize
     if (!SerializeDB(fileout, data)) return false;
     if (!FileCommit(fileout.Get()))
-        return error("%s: Failed to flush file %s", __func__, pathTmp.string());
+        return error("%s: Failed to flush file %s", __func__, pathTmp.u8string());
     fileout.fclose();
 
     // replace existing file, if any, with new file
@@ -98,7 +98,7 @@ bool DeserializeFileDB(const fs::path& path, Data& data)
     FILE *file = fsbridge::fopen(path, "rb");
     CAutoFile filein(file, SER_DISK, CLIENT_VERSION);
     if (filein.IsNull())
-        return error("%s: Failed to open file %s", __func__, path.string());
+        return error("%s: Failed to open file %s", __func__, path.u8string());
 
     return DeserializeDB(filein, data);
 }
