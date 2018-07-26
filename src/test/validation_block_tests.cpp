@@ -23,7 +23,7 @@ BOOST_FIXTURE_TEST_SUITE(validation_block_tests, RegtestingSetup)
 struct TestSubscriber : public CValidationInterface {
     uint256 m_expected_tip;
 
-    TestSubscriber(uint256 tip) : m_expected_tip(tip) {}
+    explicit TestSubscriber(uint256 tip) : m_expected_tip(tip) {}
 
     void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload) override
     {
