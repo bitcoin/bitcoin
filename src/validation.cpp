@@ -63,7 +63,7 @@
 #include "graph.h"
 #include "base58.h"
 #include "rpc/server.h"
-#include "thread_pool/thread_pool.hpp"
+#include "thread_pool/thread_pool.h"
 #include <future>
 #include <functional>
 #include "cuckoocache.h"
@@ -86,7 +86,7 @@ int nScriptCheckThreads = 0;
 // SYSCOIN
 int64_t nLastMultithreadMempoolFailure = 0;
 bool fLoaded = false;
-tp::ThreadPool threadpool;
+async::threadpool tp;
 std::atomic_bool fImporting(false);
 bool fReindex = false;
 bool fTxIndex = true;
@@ -1286,17 +1286,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 				scriptExecutionCache.insert(hashCacheEntry);
 				LogPrint("thread", "Finished thread for signature checks for hash %s, elapsed %lld microseconds\n", hash.ToString(), GetTimeMicros() - time);
 			});
-			int numTries = 100;
-			while (!threadpool.tryPost(t)) {
-				numTries--;
-				if (numTries <= 0) {
-					LogPrint("mempool", "threadpool-full\n");
-					return state.DoS(0, false,
-						REJECT_INVALID, "threadpool-full", false,
-						"AcceptToMemoryPoolWorker: thread pool queue is full");
-				}
-				MilliSleep(1);
-			}
+			threadpool.post(t);
 
 		}
 	}
