@@ -62,7 +62,7 @@ All fields are optional. Clients, explorers, and wallets are not obligated to di
 
 **symbol** - The symbol.  If included, it should match the issued symbol.
 
-**name** - The name given to the symbol.  Example: name: "Bitcoin Cash"  Symbol: "BCH"
+**name** - The name given to the symbol.  Example: name: "Bitcoin"  Symbol: "BTC"
 
 **description** - The description of what the symbol represents.
 
