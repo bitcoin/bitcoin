@@ -557,4 +557,12 @@ std::string WideToUtf8(const std::wstring& wide_string)
     assert(size == utf8_string.size());
     return utf8_string;
 }
+std::wstring Utf8ToWide(const std::string& utf8_string)
+{
+    size_t size = MultiByteToWideChar(CP_UTF8, 0, &*utf8_string.begin(), utf8_string.size(), nullptr, 0);
+    std::wstring wide_string(size, 0);
+    size = MultiByteToWideChar(CP_UTF8, 0, &*utf8_string.begin(), utf8_string.size(), &*wide_string.begin(), wide_string.size());
+    assert(size == wide_string.size());
+    return wide_string;
+}
 #endif

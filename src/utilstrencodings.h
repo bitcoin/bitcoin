@@ -185,6 +185,7 @@ bool ConvertBits(const O& outfn, I it, I end) {
 
 #ifdef WIN32
 std::string WideToUtf8(const std::wstring& wide_string);
+std::wstring Utf8ToWide(const std::string& utf8_string);
 #endif
 
 #endif // BITCOIN_UTILSTRENCODINGS_H
