@@ -386,6 +386,21 @@ class CScriptWitness():
             return False
         return True
 
+class CScriptTransfer():
+    def __init__(self):
+        self.name = None
+        self.amount = 0
+
+    def deserialize(self, f):
+        self.name = deser_string(f)
+        self.amount = struct.unpack("<q", f.read(8))[0]
+
+    def serialize(self):
+        r = b""
+        r += ser_string(self.name)
+        r += struct.pack("<q", self.amount)
+        return r
+
 
 class CTxInWitness():
     def __init__(self):

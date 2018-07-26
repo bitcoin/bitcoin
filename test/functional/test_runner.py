@@ -132,6 +132,7 @@ BASE_SCRIPTS= [
     'uacomment.py',
     'assets.py',
     'listmyassets.py',
+    'rawassettransactions.py',
 ]
 
 EXTENDED_SCRIPTS = [
