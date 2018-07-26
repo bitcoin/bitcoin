@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <wallet/coinselection.h>
+#include <privatesend.h>
 #include <util.h>
 #include <utilmoneystr.h>
 
@@ -210,17 +211,14 @@ static void ApproximateBestSubset(const std::vector<CInputCoin>& vValue, const C
     }
 }
 
-bool less_then_denom (const COutput& out1, const COutput& out2)
+bool less_then_denom(const CInputCoin& pcoin1, const CInputCoin& pcoin2)
 {
-    const CWalletTx *pcoin1 = out1.tx;
-    const CWalletTx *pcoin2 = out2.tx;
-
     bool found1 = false;
     bool found2 = false;
     for (const auto& d : CPrivateSend::GetStandardDenominations()) // loop through predefined denoms
     {
-        if(pcoin1->tx->vout[out1.i].nValue == d) found1 = true;
-        if(pcoin2->tx->vout[out2.i].nValue == d) found2 = true;
+        if(pcoin1.txout.nValue == d) found1 = true;
+        if(pcoin2.txout.nValue == d) found2 = true;
     }
     return (!found1 && found2);
 }
