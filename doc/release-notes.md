@@ -391,7 +391,7 @@ mobile software allowing you to vote with your masternode a bit easier (this sof
 Removal of SPORKs
 ---------------------------------
 
-Chaincoin 0.9 was controlled by a central entity holding private keys to control the entire network. This has been concluded unwanted b the community and there for has been removed. All forks are depending on block validation from now on.
+Chaincoin 0.9 was controlled by a central entity holding private keys to control the entire network. This has been concluded unwanted by the community and there for has been removed. All forks are depending on block validation from now on.
 
 Removal of InstantSend
 ---------------------------------
