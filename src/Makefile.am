@@ -86,14 +86,11 @@ SYSCOIN_CORE_H = \
   escrow.h \
   feedback.h \
   auxpow.h \
-  thread_pool/thread_pool.hpp \
-  thread_pool/fixed_function.hpp \
+  thread_pool/utility.h \
+  thread_pool/thread_pool.h \
   thread_pool/mpmc_bounded_queue.hpp \
-  thread_pool/thread_pool_state.hpp \
-  thread_pool/thread_pool_options.hpp \
-  thread_pool/worker.hpp \
-  thread_pool/slotted_bag.hpp \
-  thread_pool/rouser.hpp \
+  thread_pool/queue.h \
+  thread_pool/bounded_queue.hpp \
   addrdb.h \
   activemasternode.h \
   addressindex.h \
