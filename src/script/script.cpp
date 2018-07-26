@@ -4,9 +4,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <assets/assets.h>
-#include <wallet/wallet.h>
-#include <base58.h>
+#include "assets/assets.h"
 #include "script.h"
 
 #include "tinyformat.h"
