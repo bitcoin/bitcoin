@@ -92,7 +92,7 @@ public:
         consensus.BIP16Height = 1;
         consensus.BIP34Height = 1;
         consensus.BIP34Hash = uint256S("0x00000012f1c40ff12a9e6b0e9076fe4fa7ad27012e256a5ad7bcb80dc02c0409"); // PM-Tech: ChainCoin
-        consensus.BIP65Height = 1800000;
+        consensus.BIP65Height = 1551170;
         consensus.BIP66Height = 1000000;
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
         consensus.nPowTargetTimespan = 90; // PM-Tech: ChainCoin re-target at every block
