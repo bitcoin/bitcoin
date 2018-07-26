@@ -189,6 +189,10 @@ static const uint64_t nMinDiskSpace = 52428800;
 extern bool fHavePruned;
 /** True if we're running in -prune mode. */
 extern bool fPruneMode;
+/** True if we have a master datadir from which we derive out own datadir. */
+extern bool g_has_master_datadir;
+/** Set to the block file index of the last block file that is shared with the master. */
+extern int g_master_endblock;
 /** Number of MiB of block files that we're trying to stay below. */
 extern uint64_t nPruneTarget;
 /** Block files containing a block-height within MIN_BLOCKS_TO_KEEP of chainActive.Tip() will not be pruned. */

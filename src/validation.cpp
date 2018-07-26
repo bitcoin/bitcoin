@@ -233,6 +233,8 @@ std::atomic_bool fImporting(false);
 std::atomic_bool fReindex(false);
 bool fHavePruned = false;
 bool fPruneMode = false;
+bool g_has_master_datadir = false;
+int g_master_endblock = -1;
 bool fIsBareMultisigStd = DEFAULT_PERMIT_BAREMULTISIG;
 bool fRequireStandard = true;
 bool fCheckBlockIndex = false;
