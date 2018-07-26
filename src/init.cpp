@@ -1278,6 +1278,58 @@ bool AppInitMain(InitInterfaces& interfaces)
             gArgs.GetArg("-datadir", ""), fs::current_path().string());
     }
 
+    if (g_has_master_datadir) {
+        // LevelDB does not support readonly access, so we need to copy the entire
+        // chainstate and blocks/index dirs over to the new location, if not found already
+        fs::path path = GetDataDir() / "chainstate";
+        if (!fs::exists(path)) {
+            std::unique_ptr<fsbridge::FileLock> master_lock;
+            if (!ObtainDirectoryLock(GetMasterDataDir(), ".lock", master_lock)) {
+                return InitError(strprintf(_("Cannot obtain a lock on master data directory %s. The master must not be running during the initial slave startup. Shut it down, start the slave again, and then start the master back up once the slave has finished copying the chainstate and block index."), GetMasterDataDir().string()));
+            }
+            fs::path mpath = GetMasterDataDir() / "chainstate";
+            if (!CopyDirectory(path, mpath, "Copying chainstate from master. This will take some time, and requires roughly 4 GB of disk space ")) {
+                return InitError(strprintf("Failed to create directory %s",
+                                           path.string()));
+            }
+            path = GetBlocksDir() / "index";
+            mpath = GetMasterBlocksDir() / "index";
+            if (!CopyDirectory(path, mpath, "Copying block index from master ")) {
+                return InitError(strprintf("Failed to create directory %s",
+                                           path.string()));
+            }
+            // Find last and next to last block files, mark next to last as final, and
+            // copy the last over to the slave
+            int last = g_master_endblock = 0;
+            for (fs::directory_iterator file(GetMasterBlocksDir()); file != fs::directory_iterator(); ++file) {
+                std::string s = file->path().filename().string();
+                // if s is not 'blk?????.dat' we skip
+                if (s.length() != 12 || s.substr(0, 3) != "blk" || s.substr(8) != ".dat") continue;
+                last = std::max<uint64_t>(last, std::stoull(s.substr(3, 5)));
+            }
+            if (last) {
+                g_master_endblock = last - 1;
+                std::string suffix = strprintf("%05llu.dat", last);
+                fs::copy_file(GetMasterBlocksDir() / ("blk" + suffix), GetBlocksDir() / ("blk" + suffix));
+                fs::copy_file(GetMasterBlocksDir() / ("rev" + suffix), GetBlocksDir() / ("rev" + suffix));
+            }
+            path = GetDataDir() / "master.dat";
+            FILE* fp = fsbridge::fopen(path, "wb");
+            if (1 != fwrite(&g_master_endblock, sizeof(g_master_endblock), 1, fp)) {
+                return InitError(strprintf("Failed to write master.dat file %s", path.string()));
+            }
+            fclose(fp);
+        } else {
+            path = GetDataDir() / "master.dat";
+            FILE* fp = fsbridge::fopen(path, "rb");
+            if (1 != fread(&g_master_endblock, sizeof(g_master_endblock), 1, fp)) {
+                return InitError(strprintf("Failed to read master.dat file %s", path.string()));
+            }
+            fclose(fp);
+        }
+        LogPrintf("Master end block file = %llu\n", g_master_endblock);
+    }
+
     InitSignatureCache();
     InitScriptExecutionCache();
 
