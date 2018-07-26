@@ -10,14 +10,15 @@
 #include <chainparams.h>
 #include <clientversion.h>
 #include <compat.h>
+#include <conf_file.h>
 #include <fs.h>
-#include <rpc/server.h>
+#include <httprpc.h>
+#include <httpserver.h>
 #include <init.h>
 #include <noui.h>
+#include <rpc/server.h>
 #include <shutdown.h>
 #include <util.h>
-#include <httpserver.h>
-#include <httprpc.h>
 #include <utilstrencodings.h>
 #include <walletinitinterface.h>
 
@@ -96,6 +97,20 @@ static bool AppInit(int argc, char* argv[])
             fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
             return false;
         }
+
+        // Create bitcoin.conf template in datadir if -conf flag is not set and there is no existing bitcoin.conf file in the datadir
+        if (!gArgs.IsArgSet("-conf") && !fs::exists(GetConfigFile(BITCOIN_CONF_FILENAME))) {
+            try {
+                // write default bitcoin.conf template
+                std::ofstream conf_file(GetConfigFile(BITCOIN_CONF_FILENAME).string().c_str());
+                conf_file << DEFAULT_BITCOIN_CONF_TEXT;
+
+                // fail gracefully
+            } catch (std::ofstream::failure& writeErr) {
+                LogPrintf("Failed to write bitcoin.conf file template to %s\n", GetConfigFile(BITCOIN_CONF_FILENAME).string());
+            }
+        }
+
         if (!gArgs.ReadConfigFiles(error)) {
             fprintf(stderr, "Error reading configuration file: %s\n", error.c_str());
             return false;
