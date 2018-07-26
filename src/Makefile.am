@@ -87,8 +87,7 @@ SYSCOIN_CORE_H = \
   feedback.h \
   auxpow.h \
   thread_pool/utility.h \
-  thread_pool/thread_pool.h \
-  thread_pool/mpmc_bounded_queue.hpp \
+  thread_pool/threadpool.h \
   thread_pool/queue.h \
   thread_pool/bounded_queue.hpp \
   addrdb.h \
