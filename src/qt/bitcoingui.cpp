@@ -1159,7 +1159,7 @@ void BitcoinGUI::detectShutdown()
     {
         if(rpcConsole)
             rpcConsole->hide();
-        qApp->quit();
+        QApplication::quit();
     }
 }
 
