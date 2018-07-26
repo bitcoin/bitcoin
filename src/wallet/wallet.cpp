@@ -3564,9 +3564,10 @@ bool CWallet::ConvertList(std::vector<CTxIn> vecTxIn, std::vector<CAmount>& vecA
 
     for (const auto& txin : vecTxIn) {
         if (mapWallet.count(txin.prevout.hash)) {
-            CWalletTx& wtx = mapWallet[txin.prevout.hash];
-            if(txin.prevout.n < wtx.tx->vout.size()){
-                vecAmounts.push_back(wtx.tx->vout[txin.prevout.n].nValue);
+            auto it = mapWallet.find(txin.prevout.hash);
+            if(txin.prevout.n < it->second.tx->vout.size()){
+
+                vecAmounts.push_back(it->second.tx->vout[txin.prevout.n].nValue);
             }
         } else {
             LogPrintf("CWallet::ConvertList -- Couldn't find transaction\n");
