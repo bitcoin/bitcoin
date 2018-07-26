@@ -398,13 +398,12 @@ UniValue masternode(const JSONRPCRequest& request)
             std::string strStatus = fFound ? mn.GetStatus() : "MISSING";
 
             UniValue mnObj(UniValue::VOBJ);
-            mnObj.pushKV("alias", mne.getAlias());
             mnObj.pushKV("address", mne.getIp());
             mnObj.pushKV("privateKey", mne.getPrivKey());
             mnObj.pushKV("txHash", mne.getTxHash());
             mnObj.pushKV("outputIndex", mne.getOutputIndex());
             mnObj.pushKV("status", strStatus);
-            resultObj.pushKV("masternode", mnObj);
+            resultObj.pushKV(mne.getAlias(), mnObj);
         }
 
         return resultObj;
