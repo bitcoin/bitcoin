@@ -63,7 +63,7 @@
 #include "graph.h"
 #include "base58.h"
 #include "rpc/server.h"
-#include "thread_pool/thread_pool.h"
+#include "thread_pool/threadpool.h"
 #include <future>
 #include <functional>
 #include "cuckoocache.h"
