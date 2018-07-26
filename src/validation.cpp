@@ -3783,6 +3783,40 @@ static FILE* OpenDiskFile(const CDiskBlockPos &pos, const char *prefix, bool fRe
     fs::path path = GetBlockPosFilename(pos, prefix);
     fs::create_directories(path.parent_path());
     FILE* file = fsbridge::fopen(path, fReadOnly ? "rb": "rb+");
+    if (!file && g_has_master_datadir && pos.nFile <= g_master_endblock) {
+        // fall back to master source file; we copy it if !fReadOnly, otherwise
+        // we just open it as is (presuming it exists)
+        fs::path mpath = GetBlockPosFilename(pos, prefix, true);
+        FILE* mfile = fsbridge::fopen(mpath, "rb");
+        if (mfile) {
+            if (fReadOnly) {
+                // good as is
+                return mfile;
+            }
+            // need writing; copy to own datadir
+            file = fsbridge::fopen(path, "wb+");
+            uint8_t buffer[16384];
+            while (!feof(mfile)) {
+                size_t r = fread(buffer, 1, 16384, mfile);
+                if (r) {
+                    if (r != fwrite(buffer, 1, r, file)) {
+                        fclose(mfile);
+                        fclose(file);
+                        LogPrintf("Unable to copy %s to %s\n", mpath.string(), path.string());
+                        // Half-copied files are bad so let's delete it
+                        if (0 != remove(path.string().c_str())) {
+                            LogPrintf("In addition, I was unable to delete the (incomplete) %s\n", path.string());
+                        }
+                        return nullptr;
+                    }
+                }
+            }
+            fclose(mfile);
+            fseek(file, 0, SEEK_SET);
+            return file;
+        }
+        // no master file available
+    }
     if (!file && !fReadOnly)
         file = fsbridge::fopen(path, "wb+");
     if (!file) {
@@ -3808,9 +3842,10 @@ static FILE* OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly) {
     return OpenDiskFile(pos, "rev", fReadOnly);
 }
 
-fs::path GetBlockPosFilename(const CDiskBlockPos &pos, const char *prefix)
+fs::path GetBlockPosFilename(const CDiskBlockPos &pos, const char *prefix, bool readonly)
 {
-    return GetBlocksDir() / strprintf("%s%05u.dat", prefix, pos.nFile);
+    const auto& dir = (readonly && g_has_master_datadir && pos.nFile <= g_master_endblock ? GetMasterBlocksDir() : GetBlocksDir());
+    return dir / strprintf("%s%05u.dat", prefix, pos.nFile);
 }
 
 CBlockIndex * CChainState::InsertBlockIndex(const uint256& hash)
