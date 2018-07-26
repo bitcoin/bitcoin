@@ -136,6 +136,10 @@ AssetsDialog::AssetsDialog(const PlatformStyle *_platformStyle, QWidget *parent)
     /** RVN START */
     connect(ui->createAssetButton, SIGNAL(clicked()), this, SLOT(createAssetButtonClicked()));
     connect(ui->reissueAssetButton, SIGNAL(clicked()), this, SLOT(ressieAssetButtonClicked()));
+    connect(ui->refreshButton, SIGNAL(clicked()), this, SLOT(refreshButtonClicked()));
+    ui->refreshButton->setIcon(platformStyle->SingleColorIcon(":/icons/refresh"));
+    ui->refreshButton->setToolTip(tr("Refresh the page to display newly received assets"));
+    ui->optInRBF->hide();
     /** RVN END */
 }
 
@@ -285,7 +289,7 @@ void AssetsDialog::on_sendButton_clicked()
         return;
     }
 
-        // Format confirmation message
+    // Format confirmation message
     QStringList formatted;
     for (SendAssetsRecipient &rcp : recipients)
     {
@@ -371,7 +375,7 @@ void AssetsDialog::on_sendButton_clicked()
 
 
     std::string txid;
-    if (!SendAssetTransferTransaction(model->getWallet(), tx, reservekey, error, txid)) {
+    if (!SendAssetTransaction(model->getWallet(), tx, reservekey, error, txid)) {
         QMessageBox msgBox;
         msgBox.setText(QString::fromStdString(error.second));
         msgBox.exec();
@@ -1022,5 +1026,19 @@ void AssetsDialog::ressieAssetButtonClicked()
 
     ReissueAssetDialog dlg(platformStyle, 0, model);
     dlg.exec();
+}
+
+void AssetsDialog::refreshButtonClicked()
+{
+    for(int i = 0; i < ui->entries->count(); ++i)
+    {
+        SendAssetsEntry *entry = qobject_cast<SendAssetsEntry*>(ui->entries->itemAt(i)->widget());
+        if(entry)
+        {
+            removeEntry(entry);
+        }
+    }
+
+    addEntry();
 }
 /** RVN END */
