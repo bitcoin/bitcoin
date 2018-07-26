@@ -385,6 +385,7 @@ void SetupServerArgs()
     gArgs.AddArg("-feefilter", strprintf("Tell other nodes to filter invs to us by our mempool min fee (default: %u)", DEFAULT_FEEFILTER), true, OptionsCategory::OPTIONS);
     gArgs.AddArg("-includeconf=<file>", "Specify additional configuration file, relative to the -datadir path (only useable from configuration file, not command line)", false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-loadblock=<file>", "Imports blocks from external blk000??.dat file on startup", false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-masterdatadir=<dir>", "Specify a master data directory, from which the datadir is derived, reusing block files where possible", false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-maxmempool=<n>", strprintf("Keep the transaction memory pool below <n> megabytes (default: %u)", DEFAULT_MAX_MEMPOOL_SIZE), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-maxorphantx=<n>", strprintf("Keep at most <n> unconnectable transactions in memory (default: %u)", DEFAULT_MAX_ORPHAN_TRANSACTIONS), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-mempoolexpiry=<n>", strprintf("Do not keep transactions in the mempool longer than <n> hours (default: %u)", DEFAULT_MEMPOOL_EXPIRY), false, OptionsCategory::OPTIONS);
@@ -1246,10 +1247,13 @@ bool AppInitMain(InitInterfaces& interfaces)
         }
     }
 
+    g_has_master_datadir = gArgs.IsArgSet("-masterdatadir");
+
     if (!LogInstance().m_log_timestamps)
         LogPrintf("Startup time: %s\n", FormatISO8601DateTime(GetTime()));
     LogPrintf("Default data directory %s\n", GetDefaultDataDir().string());
     LogPrintf("Using data directory %s\n", GetDataDir().string());
+    if (g_has_master_datadir) LogPrintf("Using master data directory %s\n", GetMasterDataDir().string());
 
     // Only log conf file usage message if conf file actually exists.
     fs::path config_file_path = GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME));
