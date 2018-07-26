@@ -10,6 +10,8 @@
 #include "assets.h"
 #include "validation.h"
 
+#include <boost/thread.hpp>
+
 static const char ASSET_FLAG = 'A';
 static const char ASSET_ADDRESS_QUANTITY_FLAG = 'B';
 static const char MY_ASSET_FLAG = 'M';
