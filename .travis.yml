@@ -15,6 +15,7 @@ env:
   global:
     - MAKEJOBS=-j3
     - RUN_TESTS=false
+    - DOCKER_NAME_TAG=ubuntu:18.04
     - BOOST_TEST_RANDOM=1$TRAVIS_BUILD_ID
     - CCACHE_SIZE=100M
     - CCACHE_TEMPDIR=/tmp/.ccache-temp
@@ -45,9 +46,10 @@ env:
 before_install:
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
 install:
+    - travis_retry docker pull $DOCKER_NAME_TAG
     - env | grep -E '^(CCACHE_|WINEDEBUG|BOOST_TEST_RANDOM|CONFIG_SHELL)' | tee /tmp/env
     - if [[ $HOST = *-mingw32 ]]; then DOCKER_ADMIN="--cap-add SYS_ADMIN"; fi
-    - DOCKER_ID=$(docker run $DOCKER_ADMIN -idt --mount type=bind,src=$TRAVIS_BUILD_DIR,dst=$TRAVIS_BUILD_DIR --mount type=bind,src=$CCACHE_DIR,dst=$CCACHE_DIR -w $TRAVIS_BUILD_DIR --env-file /tmp/env ubuntu:18.04)
+    - DOCKER_ID=$(docker run $DOCKER_ADMIN -idt --mount type=bind,src=$TRAVIS_BUILD_DIR,dst=$TRAVIS_BUILD_DIR --mount type=bind,src=$CCACHE_DIR,dst=$CCACHE_DIR -w $TRAVIS_BUILD_DIR --env-file /tmp/env $DOCKER_NAME_TAG)
     - DOCKER_EXEC () { docker exec $DOCKER_ID bash -c "cd $PWD && $*"; }
     - if [ -n "$DPKG_ADD_ARCH" ]; then DOCKER_EXEC dpkg --add-architecture "$DPKG_ADD_ARCH" ; fi
     - travis_retry DOCKER_EXEC apt-get update
