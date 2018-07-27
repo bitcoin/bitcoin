@@ -55,7 +55,6 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_lock)
 	int vout = 0;
 	CAmount nAmount = 0;
 	for (unsigned int i = 0; i<voutArray.size(); i++) {
-		nAmount = AmountFromValue(find_value(voutArray[i].get_obj(), "value"));
 		UniValue scriptObj = find_value(voutArray[i].get_obj(), "scriptPubKey").get_obj();
 		UniValue addressesArray = find_value(scriptObj, "addresses");
 		for (unsigned int j = 0; j<addressesArray.size(); j++) {
@@ -66,7 +65,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_lock)
 		}
 	}
 	// for fees;
-	nAmount -= 10000;
+	nAmount -= 2000000;
+	BOOST_CHECK(nAmount > 0);
 	string strAmount = ValueFromAmount(nAmount).write();
 	string voutstr = itostr(vout);
 	// lock outpoint so other txs can't spend through wallet auto-selection 
@@ -93,7 +93,9 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_lock)
 
     string hex_str = find_value(r.get_obj(), "hex").get_str();
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "testmempoolaccept \"[\\\"" + hex_str + "\\\"]\""));
-    BOOST_CHECK(find_value(r.get_array()[0].get_obj(), "allowed").get_bool());
+    
+
+	BOOST_CHECK(find_value(r.get_array()[0].get_obj(), "allowed").get_bool());
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hex_str, true, false));
     string res = r.get_str();
     res.erase(std::remove(res.begin(), res.end(), '\n'), res.end());
