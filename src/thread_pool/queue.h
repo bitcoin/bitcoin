@@ -28,7 +28,7 @@ public:
   static bool is_lock_free_v() {
     return std::atomic<uint64_t>{}.is_lock_free();
   }
-  static constexpr size_t cacheline_size = TRAITS::CachelineSize;
+  static const size_t cacheline_size = TRAITS::CachelineSize;
   static constexpr uint64_t BaseMask = getBitmask<uint64_t>(TRAITS::Basebits);
   static constexpr uint64_t L1Mask = getBitmask<uint64_t>(TRAITS::L1bits)
                                      << TRAITS::Basebits;
