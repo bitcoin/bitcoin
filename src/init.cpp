@@ -1410,7 +1410,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
             threadGroup.create_thread(&ThreadScriptCheck);
     }
 	if (!tp) {
-		tp = new async::threadpool();
+		tp = new async::threadpool;
 		LogPrint("threadpool", "THREADPOOL::Created threadpool, size: %d, idlesize: %d\n", tp->size(), tp->idlesize());
 	}
     if (!sporkManager.SetSporkAddress(GetArg("-sporkaddr", Params().SporkAddress())))
