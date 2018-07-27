@@ -28,13 +28,28 @@ constexpr int HARDENED = 2; // Derivation needs access to private keys
 constexpr int UNSOLVABLE = 4; // This descriptor is not expected to be solvable
 constexpr int SIGNABLE = 8; // We can sign with this descriptor (this is not true when actual BIP32 derivation is used, as that's not integrated in our signing code)
 
+std::string MaybeUseHInsteadOfApostrophy(std::string ret)
+{
+    if (InsecureRandBool()) {
+        while (true) {
+            auto it = ret.find("'");
+            if (it != std::string::npos) {
+                ret[it] = 'h';
+            } else {
+                break;
+            }
+        }
+    }
+    return ret;
+}
+
 void Check(const std::string& prv, const std::string& pub, int flags, const std::vector<std::vector<std::string>>& scripts)
 {
     FlatSigningProvider keys_priv, keys_pub;
 
     // Check that parsing succeeds.
-    auto parse_priv = Parse(prv, keys_priv);
-    auto parse_pub = Parse(pub, keys_pub);
+    auto parse_priv = Parse(MaybeUseHInsteadOfApostrophy(prv), keys_priv);
+    auto parse_pub = Parse(MaybeUseHInsteadOfApostrophy(pub), keys_pub);
     BOOST_CHECK(parse_priv);
     BOOST_CHECK(parse_pub);
 
