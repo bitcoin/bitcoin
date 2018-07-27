@@ -632,7 +632,7 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
                         throw JSONRPCError(RPC_INVALID_PARAMETER, strError);
 
 
-                    // Create the scripts for the change of the ownership toekn
+                    // Create the scripts for the change of the ownership token
                     CScript scriptTransferOwnerAsset = GetScriptForDestination(destination);
                     CAssetTransfer assetTransfer(asset_name.get_str() + OWNER_TAG, OWNER_ASSET_AMOUNT);
                     assetTransfer.ConstructTransaction(scriptTransferOwnerAsset);

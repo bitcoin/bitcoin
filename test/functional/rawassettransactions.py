@@ -47,18 +47,21 @@ class RawAssetTransactionsTest(RavenTestFramework):
         assert_is_hash_string(tx_issue_hash)
         self.log.info("issue tx: " + tx_issue_hash)
 
-        self.nodes[0].generate(10)
+        self.nodes[0].generate(1)
         self.sync_all()
-        assert_equal(1000, self.nodes[0].listmyassets()['TEST_ASSET'])
+        assert_equal(1000, self.nodes[0].listmyassets('TEST_ASSET')['TEST_ASSET'])
+        assert_equal(1, self.nodes[0].listmyassets('TEST_ASSET!')['TEST_ASSET!'])
 
         ########################################
         # reissue
         unspent = self.nodes[0].listunspent()[0]
         unspent_asset_owner = self.nodes[0].listmyassets('TEST_ASSET!', True)['TEST_ASSET!']['outpoints'][0]
+
         inputs = [
             {k: unspent[k] for k in ['txid', 'vout']},
             {k: unspent_asset_owner[k] for k in ['txid', 'vout']},
         ]
+
         outputs = {
             'n1ReissueAssetXXXXXXXXXXXXXXWG9NLd': 100,
             change_address: float(unspent['amount']) - 100.0001,
@@ -69,19 +72,22 @@ class RawAssetTransactionsTest(RavenTestFramework):
                 }
             }
         }
+
         tx_reissue = self.nodes[0].createrawtransaction(inputs, outputs)
         tx_reissue_signed = self.nodes[0].signrawtransaction(tx_reissue)
         tx_reissue_hash = self.nodes[0].sendrawtransaction(tx_reissue_signed['hex'])
         assert_is_hash_string(tx_reissue_hash)
         self.log.info("reissue tx: " + tx_reissue_hash)
 
-        self.nodes[0].generate(10)
+        self.nodes[0].generate(1)
         self.sync_all()
-        assert_equal(2000, self.nodes[0].listmyassets()['TEST_ASSET'])
+        assert_equal(2000, self.nodes[0].listmyassets('TEST_ASSET')['TEST_ASSET'])
+        assert_equal(1, self.nodes[0].listmyassets('TEST_ASSET!')['TEST_ASSET!'])
 
+        self.sync_all()
         # ########################################
         # # transfer
-        to_address = self.nodes[1].getnewaddress()
+        remote_to_address = self.nodes[1].getnewaddress()
         change_asset_address = self.nodes[0].getnewaddress()
         unspent = self.nodes[0].listunspent()[0]
         unspent_asset = self.nodes[0].listmyassets('TEST_ASSET', True)['TEST_ASSET']['outpoints'][0]
@@ -91,12 +97,12 @@ class RawAssetTransactionsTest(RavenTestFramework):
         ]
         outputs = {
             change_address: float(unspent['amount']) - 0.0001,
-            to_address: {
+            remote_to_address: {
                 'transfer': {
                     'TEST_ASSET': 400
                 }
             },
-            change_asset_address: {
+            to_address: {
                 'transfer': {
                     'TEST_ASSET': float(unspent_asset['amount']) - 400
                 }
@@ -147,10 +153,11 @@ class RawAssetTransactionsTest(RavenTestFramework):
         assert_is_hash_string(tx_transfer_hash)
         self.log.info("transfer tx: " + tx_transfer_hash)
 
-        self.nodes[0].generate(10)
+        self.nodes[0].generate(1)
         self.sync_all()
-        assert_equal(1600, self.nodes[0].listmyassets()['TEST_ASSET'])
-        assert_equal(400, self.nodes[1].listmyassets()['TEST_ASSET'])
+        assert_equal(1600, self.nodes[0].listmyassets('TEST_ASSET')['TEST_ASSET'])
+        assert_equal(1, self.nodes[0].listmyassets('TEST_ASSET!')['TEST_ASSET!'])
+        assert_equal(400, self.nodes[1].listmyassets('TEST_ASSET')['TEST_ASSET'])
 
 
     def run_test(self):
