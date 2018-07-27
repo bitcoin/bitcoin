@@ -626,17 +626,18 @@ public:
      */
     void UpdateTransactionsFromBlock(const std::vector<uint256>& vHashesToUpdate) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
 
-    /** Try to calculate all in-mempool ancestors of entry.
+    /** Try to calculate all in-mempool ancestors of the passed iterator.
      *  (these are all calculated including the tx itself)
      *  limitAncestorCount = max number of ancestors
      *  limitAncestorSize = max size of ancestors
      *  limitDescendantCount = max number of descendants any ancestor can have
      *  limitDescendantSize = max size of descendants any ancestor can have
      *  errString = populated with error reason if any limits are hit
-     *  fSearchForParents = whether to search a tx's vin for in-mempool parents, or
-     *    look up parents from mapLinks. Must be true for entries not in the mempool
+     *  search_parents_for_entry = Use this entry's tx's vin to search for in-mempool parents.
+     *    Only needed when there is no mapTx iterator to this entry, which could be
+     *    used to look up parents from mapLinks.
      */
-    bool CalculateMemPoolAncestors(const CTxMemPoolEntry& entry, setEntries& setAncestors, uint64_t limitAncestorCount, uint64_t limitAncestorSize, uint64_t limitDescendantCount, uint64_t limitDescendantSize, std::string& errString, bool fSearchForParents = true) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    bool CalculateMemPoolAncestors(txiter it, setEntries& setAncestors, uint64_t limitAncestorCount, uint64_t limitAncestorSize, uint64_t limitDescendantCount, uint64_t limitDescendantSize, std::string& errString, const CTxMemPoolEntry* search_parents_for_entry = nullptr) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Populate setDescendants with all in-mempool descendants of hash.
      *  Assumes that setDescendants includes all in-mempool descendants of anything

@@ -310,8 +310,8 @@ public:
         auto limit_descendant_size = gArgs.GetArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT) * 1000;
         std::string unused_error_string;
         LOCK(::mempool.cs);
-        return ::mempool.CalculateMemPoolAncestors(entry, ancestors, limit_ancestor_count, limit_ancestor_size,
-            limit_descendant_count, limit_descendant_size, unused_error_string);
+        return ::mempool.CalculateMemPoolAncestors(CTxMemPool::txiter{}, ancestors, limit_ancestor_count, limit_ancestor_size,
+            limit_descendant_count, limit_descendant_size, unused_error_string, /* search_parents_for_entry */ &entry);
     }
     CFeeRate estimateSmartFee(int num_blocks, bool conservative, FeeCalculation* calc) override
     {

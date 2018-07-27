@@ -566,7 +566,7 @@ static UniValue getmempoolancestors(const JSONRPCRequest& request)
     CTxMemPool::setEntries setAncestors;
     uint64_t noLimit = std::numeric_limits<uint64_t>::max();
     std::string dummy;
-    mempool.CalculateMemPoolAncestors(*it, setAncestors, noLimit, noLimit, noLimit, noLimit, dummy, false);
+    mempool.CalculateMemPoolAncestors(it, setAncestors, noLimit, noLimit, noLimit, noLimit, dummy);
 
     if (!fVerbose) {
         UniValue o(UniValue::VARR);

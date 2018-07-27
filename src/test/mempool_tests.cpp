@@ -193,9 +193,10 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     tx7.vout[1].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
     tx7.vout[1].nValue = 1 * COIN;
 
+    const CTxMemPoolEntry& search_parents_for_entry_1 = entry.Fee(2000000LL).FromTx(tx7);
     CTxMemPool::setEntries setAncestorsCalculated;
     std::string dummy;
-    BOOST_CHECK_EQUAL(pool.CalculateMemPoolAncestors(entry.Fee(2000000LL).FromTx(tx7), setAncestorsCalculated, 100, 1000000, 1000, 1000000, dummy), true);
+    BOOST_CHECK_EQUAL(pool.CalculateMemPoolAncestors(CTxMemPool::txiter{}, setAncestorsCalculated, 100, 1000000, 1000, 1000000, dummy, &search_parents_for_entry_1), true);
     BOOST_CHECK(setAncestorsCalculated == setAncestors);
 
     pool.addUnchecked(entry.FromTx(tx7), setAncestors);
@@ -252,8 +253,9 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     tx10.vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
     tx10.vout[0].nValue = 10 * COIN;
 
+    const CTxMemPoolEntry& search_parents_for_entry_2 = entry.Fee(200000LL).Time(4).FromTx(tx10);
     setAncestorsCalculated.clear();
-    BOOST_CHECK_EQUAL(pool.CalculateMemPoolAncestors(entry.Fee(200000LL).Time(4).FromTx(tx10), setAncestorsCalculated, 100, 1000000, 1000, 1000000, dummy), true);
+    BOOST_CHECK_EQUAL(pool.CalculateMemPoolAncestors(CTxMemPool::txiter{}, setAncestorsCalculated, 100, 1000000, 1000, 1000000, dummy, &search_parents_for_entry_2), true);
     BOOST_CHECK(setAncestorsCalculated == setAncestors);
 
     pool.addUnchecked(entry.FromTx(tx10), setAncestors);

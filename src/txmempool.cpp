@@ -145,12 +145,13 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256> &vHashes
     }
 }
 
-bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, setEntries &setAncestors, uint64_t limitAncestorCount, uint64_t limitAncestorSize, uint64_t limitDescendantCount, uint64_t limitDescendantSize, std::string &errString, bool fSearchForParents /* = true */) const
+bool CTxMemPool::CalculateMemPoolAncestors(txiter it, setEntries& setAncestors, uint64_t limitAncestorCount, uint64_t limitAncestorSize, uint64_t limitDescendantCount, uint64_t limitDescendantSize, std::string& errString, const CTxMemPoolEntry* search_parents_for_entry) const
 {
     setEntries parentHashes;
+    const CTxMemPoolEntry& entry = search_parents_for_entry ? *search_parents_for_entry : *it;
     const CTransaction &tx = entry.GetTx();
 
-    if (fSearchForParents) {
+    if (search_parents_for_entry) {
         // Get parents of this transaction that are in the mempool
         // GetMemPoolParents() is only valid for entries in the mempool, so we
         // iterate mapTx to find parents.
@@ -165,9 +166,8 @@ bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, setEntr
             }
         }
     } else {
-        // If we're not searching for parents, we require this to be an
-        // entry in the mempool already.
-        txiter it = mapTx.iterator_to(entry);
+        // If we're not searching for parents, we were provided with an iterator
+        // to an entry that is already in the mempool.
         parentHashes = GetMemPoolParents(it);
     }
 
@@ -270,7 +270,6 @@ void CTxMemPool::UpdateForRemoveFromMempool(const setEntries &entriesToRemove, b
     }
     for (txiter removeIt : entriesToRemove) {
         setEntries setAncestors;
-        const CTxMemPoolEntry &entry = *removeIt;
         std::string dummy;
         // Since this is a tx that is already in the mempool, we can call CMPA
         // with fSearchForParents = false.  If the mempool is in a consistent
@@ -289,7 +288,7 @@ void CTxMemPool::UpdateForRemoveFromMempool(const setEntries &entriesToRemove, b
         // differ from the set of mempool parents we'd calculate by searching,
         // and it's important that we use the mapLinks[] notion of ancestor
         // transactions as the set of things to update for removal.
-        CalculateMemPoolAncestors(entry, setAncestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, dummy, false);
+        CalculateMemPoolAncestors(removeIt, setAncestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, dummy);
         // Note that UpdateAncestorsOf severs the child links that point to
         // removeIt in the entries for the parents of removeIt.
         UpdateAncestorsOf(false, removeIt, setAncestors);
@@ -650,7 +649,7 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
         setEntries setAncestors;
         uint64_t nNoLimit = std::numeric_limits<uint64_t>::max();
         std::string dummy;
-        CalculateMemPoolAncestors(*it, setAncestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, dummy);
+        CalculateMemPoolAncestors(txiter{}, setAncestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, dummy, /* search_parents_for_entry */ &*it);
         uint64_t nCountCheck = setAncestors.size() + 1;
         uint64_t nSizeCheck = it->GetTxSize();
         CAmount nFeesCheck = it->GetModifiedFee();
@@ -821,7 +820,7 @@ void CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeD
             setEntries setAncestors;
             uint64_t nNoLimit = std::numeric_limits<uint64_t>::max();
             std::string dummy;
-            CalculateMemPoolAncestors(*it, setAncestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, dummy, false);
+            CalculateMemPoolAncestors(it, setAncestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, dummy);
             for (txiter ancestorIt : setAncestors) {
                 mapTx.modify(ancestorIt, update_descendant_state(0, nFeeDelta, 0));
             }
@@ -938,7 +937,7 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, bool validFeeEstimat
     setEntries setAncestors;
     uint64_t nNoLimit = std::numeric_limits<uint64_t>::max();
     std::string dummy;
-    CalculateMemPoolAncestors(entry, setAncestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, dummy);
+    CalculateMemPoolAncestors(txiter{}, setAncestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, dummy, /* search_parents_for_entry */ &entry);
     return addUnchecked(entry, setAncestors, validFeeEstimate);
 }
 
