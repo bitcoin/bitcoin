@@ -436,7 +436,7 @@ bool ParseKeyPath(const std::vector<Span<const char>>& split, KeyPath& out)
     for (size_t i = 1; i < split.size(); ++i) {
         Span<const char> elem = split[i];
         bool hardened = false;
-        if (elem.size() > 0 && elem[elem.size() - 1] == '\'') {
+        if (elem.size() > 0 && (elem[elem.size() - 1] == '\'' || elem[elem.size() - 1] == 'h')) {
             elem = elem.first(elem.size() - 1);
             hardened = true;
         }
@@ -472,7 +472,7 @@ std::unique_ptr<PubkeyProvider> ParsePubkey(const Span<const char>& sp, bool per
     if (split.back() == MakeSpan("*").first(1)) {
         split.pop_back();
         type = DeriveType::UNHARDENED;
-    } else if (split.back() == MakeSpan("*'").first(2)) {
+    } else if (split.back() == MakeSpan("*'").first(2) || split.back() == MakeSpan("*h").first(2)) {
         split.pop_back();
         type = DeriveType::HARDENED;
     }
