@@ -76,6 +76,7 @@
 #include "escrow.h"
 #include "asset.h"
 #include "assetallocation.h"
+#include "thread_pool/threadpool.h"
 #ifndef WIN32
 #include <signal.h>
 #endif
