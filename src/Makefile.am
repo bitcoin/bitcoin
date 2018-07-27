@@ -89,7 +89,7 @@ SYSCOIN_CORE_H = \
   thread_pool/utility.h \
   thread_pool/threadpool.h \
   thread_pool/queue.h \
-  thread_pool/bounded_queue.hpp \
+  thread_pool/bounded_queue.h \
   addrdb.h \
   activemasternode.h \
   addressindex.h \
