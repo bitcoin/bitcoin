@@ -20,7 +20,7 @@ struct traits // 3-level (L3, L2, L1) depth of nested group design, total
   static constexpr uint64_t L1bits = 12;
   static constexpr uint64_t Basebits = 8;
   static constexpr bool NOEXCEPT_CHECK = false; // exception handling flag
-  static constexpr size_t CachelineSize = 64;
+  static constexpr int CachelineSize = 64;
 };
 
 template <typename T, typename TRAITS = traits> class queue final {
@@ -28,7 +28,7 @@ public:
   static bool is_lock_free_v() {
     return std::atomic<uint64_t>{}.is_lock_free();
   }
-  static constexpr size_t cacheline_size = TRAITS::CachelineSize;
+  static constexpr int cacheline_size = TRAITS::CachelineSize;
   static constexpr uint64_t BaseMask = getBitmask<uint64_t>(TRAITS::Basebits);
   static constexpr uint64_t L1Mask = getBitmask<uint64_t>(TRAITS::L1bits)
                                      << TRAITS::Basebits;
