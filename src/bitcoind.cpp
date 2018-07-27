@@ -11,13 +11,13 @@
 #include <clientversion.h>
 #include <compat.h>
 #include <fs.h>
-#include <httprpc.h>
-#include <httpserver.h>
+#include <rpc/server.h>
 #include <init.h>
 #include <noui.h>
-#include <rpc/server.h>
 #include <shutdown.h>
 #include <util.h>
+#include <httpserver.h>
+#include <httprpc.h>
 #include <utilstrencodings.h>
 #include <walletinitinterface.h>
 
@@ -96,7 +96,6 @@ static bool AppInit(int argc, char* argv[])
             fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
             return false;
         }
-
         if (!gArgs.ReadConfigFiles(error)) {
             fprintf(stderr, "Error reading configuration file: %s\n", error.c_str());
             return false;
