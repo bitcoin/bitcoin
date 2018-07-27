@@ -20,8 +20,6 @@
 #include "versionbits.h"
 #include "spentindex.h"
 
-#include "thread_pool/threadpool.h"
-
 #include <algorithm>
 #include <exception>
 #include <map>
