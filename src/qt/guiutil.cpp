@@ -423,10 +423,10 @@ bool openRavenConf()
 
     /* Create the file */
     boost::filesystem::ofstream configFile(pathConfig, std::ios_base::app);
-
+    
     if (!configFile.good())
         return false;
-
+    
     configFile.close();
     
     /* Open raven.conf with the associated application */
@@ -1001,7 +1001,7 @@ void ClickableLabel::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_EMIT clicked(event->pos());
 }
-
+    
 void ClickableProgressBar::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_EMIT clicked(event->pos());
