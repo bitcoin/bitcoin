@@ -1445,22 +1445,34 @@ void CPrivateSendClient::UpdatedBlockTip(const CBlockIndex *pindex)
 
 }
 
-void CPrivateSendClient::DoMaintenance(CConnman& connman)
+//TODO: Rename/move to core
+void ThreadCheckPrivateSendClient(CConnman& connman)
 {
     if(fLiteMode) return; // disable all Chaincoin specific functionality
     if(fMasternodeMode) return; // no client-side mixing on masternodes
 
-    if(!masternodeSync.IsBlockchainSynced() || ShutdownRequested())
-        return;
+    static bool fOneThread;
+    if(fOneThread) return;
+    fOneThread = true;
 
-    static unsigned int nTick = 0;
-    static unsigned int nDoAutoNextRun = nTick + PRIVATESEND_AUTO_TIMEOUT_MIN;
+    // Make this thread recognisable as the PrivateSend thread
+    RenameThread("chaincoin-ps-client");
 
-    nTick++;
-    privateSendClient.CheckTimeout();
-    privateSendClient.ProcessPendingDsaRequest(&connman);
-    if(nDoAutoNextRun == nTick) {
-        privateSendClient.DoAutomaticDenominating(&connman);
-        nDoAutoNextRun = nTick + PRIVATESEND_AUTO_TIMEOUT_MIN + GetRandInt(PRIVATESEND_AUTO_TIMEOUT_MAX - PRIVATESEND_AUTO_TIMEOUT_MIN);
+    unsigned int nTick = 0;
+    unsigned int nDoAutoNextRun = nTick + PRIVATESEND_AUTO_TIMEOUT_MIN;
+
+    while (true)
+    {
+        MilliSleep(1000);
+
+        if(masternodeSync.IsBlockchainSynced() && !ShutdownRequested()) {
+            nTick++;
+            privateSendClient.CheckTimeout();
+            privateSendClient.ProcessPendingDsaRequest(&connman);
+            if(nDoAutoNextRun == nTick) {
+                privateSendClient.DoAutomaticDenominating(&connman);
+                nDoAutoNextRun = nTick + PRIVATESEND_AUTO_TIMEOUT_MIN + GetRandInt(PRIVATESEND_AUTO_TIMEOUT_MAX - PRIVATESEND_AUTO_TIMEOUT_MIN);
+            }
+        }
     }
 }

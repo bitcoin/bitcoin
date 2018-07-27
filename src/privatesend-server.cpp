@@ -899,14 +899,29 @@ void CPrivateSendServer::SetState(PoolState nStateNew)
     nState = nStateNew;
 }
 
-void CPrivateSendServer::DoMaintenance(CConnman& connman)
+//TODO: Rename/move to core
+void ThreadCheckPrivateSendServer(CConnman& connman)
 {
     if(fLiteMode) return; // disable all Chaincoin specific functionality
     if(!fMasternodeMode) return; // only run on masternodes
 
-    if(!masternodeSync.IsBlockchainSynced() || ShutdownRequested())
-        return;
+    static bool fOneThread;
+    if(fOneThread) return;
+    fOneThread = true;
 
-    privateSendServer.CheckTimeout(&connman);
-    privateSendServer.CheckForCompleteQueue(&connman);
+    // Make this thread recognisable as the PrivateSend thread
+    RenameThread("chaincoin-ps-server");
+
+    unsigned int nTick = 0;
+
+    while (true)
+    {
+        MilliSleep(1000);
+
+        if(masternodeSync.IsBlockchainSynced() && !ShutdownRequested()) {
+            nTick++;
+            privateSendServer.CheckTimeout(&connman);
+            privateSendServer.CheckForCompleteQueue(&connman);
+        }
+    }
 }
