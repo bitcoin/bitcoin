@@ -67,8 +67,6 @@
 #include <future>
 #include <functional>
 #include "cuckoocache.h"
-// SYSCOIN
-using namespace async;
 #if defined(NDEBUG)
 # error "Syscoin Core cannot be compiled without assertions."
 #endif
@@ -88,7 +86,7 @@ int nScriptCheckThreads = 0;
 // SYSCOIN
 int64_t nLastMultithreadMempoolFailure = 0;
 bool fLoaded = false;
-threadpool *tp = NULL;
+async::threadpool *tp = NULL;
 std::atomic_bool fImporting(false);
 bool fReindex = false;
 bool fTxIndex = true;
