@@ -71,7 +71,7 @@
 
 #if defined(OS_ANDROID) && __ANDROID_API__ < 9
 // fdatasync() was only introduced in API level 9 on Android. Use fsync()
-// when targetting older platforms.
+// when targeting older platforms.
 #define fdatasync fsync
 #endif
 

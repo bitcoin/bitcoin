@@ -102,7 +102,7 @@ constexpr OutputType DEFAULT_CHANGE_TYPE{OutputType::CHANGE_AUTO};
 
 enum WalletFlags : uint64_t {
     // wallet flags in the upper section (> 1 << 31) will lead to not opening the wallet if flag is unknown
-    // unkown wallet flags in the lower section <= (1 << 31) will be tolerated
+    // unknown wallet flags in the lower section <= (1 << 31) will be tolerated
 
     // will enforce the rule that the wallet can't contain any private keys (only watch-only/pubkeys)
     WALLET_FLAG_DISABLE_PRIVATE_KEYS = (1ULL << 32),
