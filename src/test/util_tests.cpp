@@ -602,6 +602,10 @@ BOOST_AUTO_TEST_CASE(test_ParseFixedPoint)
     BOOST_CHECK(!ParseFixedPoint("1.1e", 8, &amount));
     BOOST_CHECK(!ParseFixedPoint("1.1e-", 8, &amount));
     BOOST_CHECK(!ParseFixedPoint("1.", 8, &amount));
+
+    BOOST_CHECK(ParseFixedPoint("21000000000", 8, &amount));
+    BOOST_CHECK(ParseFixedPoint("42000000000", 8, &amount));
+    BOOST_CHECK(!ParseFixedPoint("42000000001", 8, &amount));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
