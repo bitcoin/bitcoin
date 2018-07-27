@@ -405,6 +405,4 @@ public:
     static void TransactionAddedToMempool(const CTransactionRef& tx);
 };
 
-void ThreadCheckPrivateSend(CConnman& connman);
-
 #endif

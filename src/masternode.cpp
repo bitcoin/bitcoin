@@ -20,7 +20,7 @@
 #include <wallet/wallet.h>
 #endif // ENABLE_WALLET
 
-#include <boost/lexical_cast.hpp>
+#include <string>
 
 
 CMasternode::CMasternode() :
@@ -732,7 +732,7 @@ bool CMasternodePing::CheckSignature(const CPubKey& pubKeyMasternode, int &nDos)
 
     if (!CHashSigner::VerifyHash(hash, pubKeyMasternode, vchSig, strError)) {
         std::string strMessage = CTxIn(masternodeOutpoint).ToString() + blockHash.ToString() +
-                    boost::lexical_cast<std::string>(sigTime);
+                    std::to_string(sigTime);
 
         if (!CMessageSigner::VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {
             LogPrintf("CMasternodePing::CheckSignature -- Got bad Masternode ping signature, masternode=%s, error: %s\n", masternodeOutpoint.ToStringShort(), strError);

@@ -4,6 +4,7 @@
 
 #include <activemasternode.h>
 #include <addrman.h>
+#include <init.h>
 #include <governance.h>
 #include <masternode-payments.h>
 #include <masternode-sync.h>
@@ -774,14 +775,11 @@ void CMasternodeMan::ProcessPendingMnbRequests(CConnman* connman)
         bool fDone = connman->ForNode(itPendingMNB->first, [&](CNode* pnode) {
             // compile request vector
             std::vector<CInv> vToFetch;
-            std::set<uint256>& setHashes = itPendingMNB->second.second;
-            std::set<uint256>::iterator it = setHashes.begin();
-            while(it != setHashes.end()) {
-                if(*it != uint256()) {
-                    vToFetch.push_back(CInv(MSG_MASTERNODE_ANNOUNCE, *it));
-                    LogPrint(BCLog::MNODE, "-- asking for mnb %s from addr=%s\n", it->ToString(), pnode->addr.ToString());
+            for (auto& nHash : itPendingMNB->second.second) {
+                if(nHash != uint256()) {
+                    vToFetch.push_back(CInv(MSG_MASTERNODE_ANNOUNCE, nHash));
+                    LogPrint(BCLog::MNODE, "-- asking for mnb %s from addr=%s\n", nHash.ToString(), pnode->addr.ToString());
                 }
-                ++it;
             }
 
             // ask for data
@@ -1009,20 +1007,18 @@ void CMasternodeMan::DoFullVerificationStep(CConnman* connman)
     int nRanksTotal = (int)vecMasternodeRanks.size();
 
     // send verify requests only if we are in top MAX_POSE_RANK
-    rank_pair_vec_t::iterator it = vecMasternodeRanks.begin();
-    while(it != vecMasternodeRanks.end()) {
-        if(it->first > MAX_POSE_RANK) {
+    for (auto& rankPair : vecMasternodeRanks) {
+        if(rankPair.first > MAX_POSE_RANK) {
             LogPrint(BCLog::MNODE, "CMasternodeMan::DoFullVerificationStep -- Must be in top %d to send verify request\n",
                         (int)MAX_POSE_RANK);
             return;
         }
-        if(it->second.outpoint == activeMasternode.outpoint) {
-            nMyRank = it->first;
+        if(rankPair.second.outpoint == activeMasternode.outpoint) {
+            nMyRank = rankPair.first;
             LogPrint(BCLog::MNODE, "CMasternodeMan::DoFullVerificationStep -- Found self at rank %d/%d, verifying up to %d masternodes\n",
                         nMyRank, nRanksTotal, (int)MAX_POSE_CONNECTIONS);
             break;
         }
-        ++it;
     }
 
     // edge case: list is too short and this masternode is not enabled
@@ -1040,7 +1036,7 @@ void CMasternodeMan::DoFullVerificationStep(CConnman* connman)
 
     std::sort(vSortedByAddr.begin(), vSortedByAddr.end(), CompareByAddr());
 
-    it = vecMasternodeRanks.begin() + nOffset;
+    auto it = vecMasternodeRanks.begin() + nOffset;
     while(it != vecMasternodeRanks.end()) {
         if(it->second.IsPoSeVerified() || it->second.IsPoSeBanned()) {
             LogPrint(BCLog::MNODE, "CMasternodeMan::DoFullVerificationStep -- Already %s%s%s masternode %s address %s, skipping...\n",
@@ -1734,4 +1730,32 @@ void CMasternodeMan::NotifyMasternodeUpdates(CConnman* connman)
     LOCK(cs);
     fMasternodesAdded = false;
     fMasternodesRemoved = false;
+}
+
+void CMasternodeMan::DoMaintenance(CConnman& connman)
+{
+    if(fLiteMode) return; // disable all Dash specific functionality
+
+    if(!masternodeSync.IsBlockchainSynced() || ShutdownRequested())
+        return;
+
+    static unsigned int nTick = 0;
+
+    nTick++;
+
+    // make sure to check all masternodes first
+    mnodeman.Check();
+
+    mnodeman.ProcessPendingMnbRequests(&connman);
+    mnodeman.ProcessPendingMnvRequests(&connman);
+
+    if(nTick % 60 == 0) {
+        mnodeman.ProcessMasternodeConnections(&connman);
+        mnodeman.CheckAndRemove(&connman);
+        mnodeman.WarnMasternodeDaemonUpdates();
+    }
+
+    if(fMasternodeMode && (nTick % (60 * 5) == 0)) {
+        mnodeman.DoFullVerificationStep(&connman);
+    }
 }

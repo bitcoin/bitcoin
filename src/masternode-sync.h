@@ -77,6 +77,8 @@ public:
 //    void BlockChecked(const CBlock& block);
 //    void NewPoWValidBlock(const CBlockIndex *pindex);
     void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload, CConnman* connman);
+
+    void DoMaintenance(CConnman& connman) { ProcessTick(&connman); }
 };
 
 #endif

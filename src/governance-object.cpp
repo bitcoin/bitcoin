@@ -14,6 +14,7 @@
 #include <util.h>
 
 #include <univalue.h>
+#include <string>
 
 CGovernanceObject::CGovernanceObject():
     cs(),
@@ -224,8 +225,8 @@ std::string CGovernanceObject::GetSignatureMessage() const
 {
     LOCK(cs);
     std::string strMessage = nHashParent.ToString() + "|" +
-        boost::lexical_cast<std::string>(nRevision) + "|" +
-        boost::lexical_cast<std::string>(nTime) + "|" +
+        std::to_string(nRevision) + "|" +
+        std::to_string(nTime) + "|" +
         GetDataAsHexString() + "|" +
         masternodeOutpoint.ToStringShort() + "|" +
         nCollateralHash.ToString();
@@ -702,30 +703,6 @@ void CGovernanceObject::UpdateSentinelVariables()
     if(GetAbsoluteYesCount(VOTE_SIGNAL_ENDORSED) >= nAbsVoteReq) fCachedEndorsed = true;
 
     if(GetAbsoluteNoCount(VOTE_SIGNAL_VALID) >= nAbsVoteReq) fCachedValid = false;
-}
-
-void CGovernanceObject::swap(CGovernanceObject& first, CGovernanceObject& second) // nothrow
-{
-    // enable ADL (not necessary in our case, but good practice)
-    using std::swap;
-
-    // by swapping the members of two classes,
-    // the two classes are effectively swapped
-    swap(first.nHashParent, second.nHashParent);
-    swap(first.nRevision, second.nRevision);
-    swap(first.nTime, second.nTime);
-    swap(first.nDeletionTime, second.nDeletionTime);
-    swap(first.nCollateralHash, second.nCollateralHash);
-    swap(first.vchData, second.vchData);
-    swap(first.nObjectType, second.nObjectType);
-
-    // swap all cached valid flags
-    swap(first.fCachedFunding, second.fCachedFunding);
-    swap(first.fCachedValid, second.fCachedValid);
-    swap(first.fCachedDelete, second.fCachedDelete);
-    swap(first.fCachedEndorsed, second.fCachedEndorsed);
-    swap(first.fDirtyCache, second.fDirtyCache);
-    swap(first.fExpired, second.fExpired);
 }
 
 void CGovernanceObject::CheckOrphanVotes(CConnman* connman)

@@ -12,8 +12,6 @@
 #include <netfulfilledman.h>
 #include <util.h>
 
-#include <boost/lexical_cast.hpp>
-
 /** Object for who's going to get paid on which blocks */
 CMasternodePayments mnpayments;
 
@@ -903,12 +901,11 @@ void CMasternodePayments::RequestLowDataPaymentBlocks(CNode* pnode, CConnman* co
         pindex = pindex->pprev;
     }
 
-    auto it = mapMasternodeBlocks.begin();
-
-    while(it != mapMasternodeBlocks.end()) {
+    for (auto& mnBlockPayees : mapMasternodeBlocks) {
+        int nBlockHeight = mnBlockPayees.first;
         int nTotalVotes = 0;
         bool fFound = false;
-        for (const auto& payee : it->second.vecPayees) {
+        for (const auto& payee : mnBlockPayees.second.vecPayees) {
             if(payee.GetVoteCount() >= MNPAYMENTS_SIGNATURES_REQUIRED) {
                 fFound = true;
                 break;
@@ -919,25 +916,23 @@ void CMasternodePayments::RequestLowDataPaymentBlocks(CNode* pnode, CConnman* co
         // or no clear winner was found but there are at least avg number of votes
         if(fFound || nTotalVotes >= (MNPAYMENTS_SIGNATURES_TOTAL + MNPAYMENTS_SIGNATURES_REQUIRED)/2) {
             // so just move to the next block
-            ++it;
             continue;
         }
         // DEBUG
         DBG (
             // Let's see why this failed
-            for (const auto& payee : it->second.vecPayees) {
-                CTxDestination address1;
-                ExtractDestination(payee.GetPayee(), address1);
-                CBitcoinAddress address2(address1);
-                printf("payee %s votes %d\n", address2.ToString().c_str(), payee.GetVoteCount());
+            for (const auto& payee : mnBlockPayees.second.vecPayees) {
+                CTxDestination address;
+                ExtractDestination(payee.GetPayee(), address);
+                printf("payee %s votes %d\n", EncodeDestination(address), payee.GetVoteCount());
             }
-            printf("block %d votes total %d\n", it->first, nTotalVotes);
+            printf("block %d votes total %d\n", nBlockHeight, nTotalVotes);
         )
         // END DEBUG
         // Low data block found, let's try to sync it
-                uint256 hash;
-                if(mnodeman.HasBlockHash(hash, it->first)) {
-                    vToFetch.push_back(CInv(MSG_MASTERNODE_PAYMENT_BLOCK, hash));
+        uint256 hash;
+        if(mnodeman.HasBlockHash(hash, nBlockHeight)) {
+            vToFetch.push_back(CInv(MSG_MASTERNODE_PAYMENT_BLOCK, hash));
         }
         // We should not violate GETDATA rules
         if(vToFetch.size() == MAX_INV_SZ) {
@@ -946,7 +941,6 @@ void CMasternodePayments::RequestLowDataPaymentBlocks(CNode* pnode, CConnman* co
             // Start filling new batch
             vToFetch.clear();
         }
-        ++it;
     }
     // Ask for the rest of it
     if(!vToFetch.empty()) {

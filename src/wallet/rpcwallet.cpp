@@ -3095,10 +3095,10 @@ UniValue listunspent(const JSONRPCRequest& request)
         entry.pushKV("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end()));
         entry.pushKV("amount", ValueFromAmount(out.tx->tx->vout[out.i].nValue));
         entry.pushKV("confirmations", out.nDepth);
-        entry.pushKV("ps_rounds", pwallet->GetOutpointPrivateSendRounds(COutPoint(out.tx->GetHash(), out.i)));
         entry.pushKV("spendable", out.fSpendable);
         entry.pushKV("solvable", out.fSolvable);
         entry.pushKV("safe", out.fSafe);
+        entry.pushKV("ps_rounds", pwallet->GetCappedOutpointPrivateSendRounds(COutPoint(out.tx->GetHash(), out.i)));
         results.push_back(entry);
     }
 

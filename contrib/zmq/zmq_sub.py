@@ -46,6 +46,8 @@ class ZMQHandler():
         self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "hashtx")
         self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "rawblock")
         self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "rawtx")
+        self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "rawgovernancevote")
+        self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "rawgovernanceobject")
         self.zmqSubSocket.connect("tcp://127.0.0.1:%i" % port)
 
     async def handle(self) :
@@ -68,7 +70,19 @@ class ZMQHandler():
         elif topic == b"rawtx":
             print('- RAW TX ('+sequence+') -')
             print(binascii.hexlify(body))
-        # schedule ourselves to receive the next message
+        elif topic == "hashgovernancevote":
+            print('- HASH GOVERNANCE VOTE ('+sequence+') -')
+            print(binascii.hexlify(body))
+        elif topic == "hashgovernanceobject":
+            print('- HASH GOVERNANCE OBJECT ('+sequence+') -')
+            print(binascii.hexlify(body))
+        elif topic == "rawgovernancevote":
+            print('- RAW GOVERNANCE VOTE ('+sequence+') -')
+            print(binascii.hexlify(body))
+        elif topic == "rawgovernanceobject":
+            print('- RAW GOVERNANCE OBJECT ('+sequence+') -')
+            print(binascii.hexlify(body))
+       # schedule ourselves to receive the next message
         asyncio.ensure_future(self.handle())
 
     def start(self):
