@@ -130,13 +130,13 @@ CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bo
     } else {
         if (fWipe) {
             LogPrintf("Wiping LevelDB in %s\n", path.u8string());
-            leveldb::Status result = leveldb::DestroyDB(path.string(), options);
+            leveldb::Status result = leveldb::DestroyDB(path.u8string(), options);
             dbwrapper_private::HandleError(result);
         }
         TryCreateDirectories(path);
         LogPrintf("Opening LevelDB in %s\n", path.u8string());
     }
-    leveldb::Status status = leveldb::DB::Open(options, path.string(), &pdb);
+    leveldb::Status status = leveldb::DB::Open(options, path.u8string(), &pdb);
     dbwrapper_private::HandleError(status);
     LogPrintf("Opened LevelDB successfully\n");
 
