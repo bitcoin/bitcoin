@@ -96,7 +96,7 @@ Options when installing required Boost library files:
 1. On Ubuntu 14.04+ and Debian 7+ you can install individual boost development packages:
 
 ```shell
-sudo apt-get install -y libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-program-options-dev libboost-test-dev libboost-thread-dev libboost-graph-dev
+sudo apt-get install -y libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-program-options-dev libboost-test-dev libboost-thread-dev libboost-graph-dev libboost-regex-dev
 ```
 
 2. Alternatively you can install all boost development packages with:
