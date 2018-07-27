@@ -301,12 +301,11 @@ bool CRPCTable::appendCommand(const std::string& name, const CRPCCommand* pcmd)
     return true;
 }
 
-bool StartRPC()
+void StartRPC()
 {
     LogPrint(BCLog::RPC, "Starting RPC\n");
     fRPCRunning = true;
     g_rpcSignals.Started();
-    return true;
 }
 
 void InterruptRPC()
