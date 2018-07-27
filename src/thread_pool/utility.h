@@ -74,6 +74,7 @@ inline std::string getErrorMsg(std::string const &message, char const *file,
 
 #define ERROR_MSG(...) getErrorMsg(__VA_ARGS__, __FILE__, __func__, __LINE__)
 
+/*
 #ifdef _WIN32
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -119,3 +120,4 @@ static size_t cache_line_size() {
 #else
 #error unsupported platform
 #endif
+*/
