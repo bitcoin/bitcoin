@@ -26,7 +26,7 @@ private:
                 "T must be nothrow destructible");
 
 public:
-  static constexpr size_t cacheline_size = TRAITS::CachelineSize;
+  static const size_t cacheline_size = TRAITS::CachelineSize;
   using seq_t = typename TRAITS::sequence_type;
   explicit bounded_queue(size_t size)
       : fastmodulo((size > 0 && ((size & (size - 1)) == 0))),
