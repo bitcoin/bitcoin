@@ -242,6 +242,8 @@ Threads
 
 - ThreadRPCServer : Remote procedure call handler, listens on port 8332 for connections and services them.
 
+- ChaincoinMiner : Generates chaincoins (if wallet is enabled).
+
 - Shutdown : Does an orderly shutdown of everything.
 
 Ignoring IDE/editor files

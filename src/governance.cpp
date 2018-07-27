@@ -575,7 +575,7 @@ struct sortProposalsByVotes {
     }
 };
 
-void CGovernanceManager::DoMaintenance(CConnman& connman)
+void CGovernanceManager::DoMaintenance(CConnman* connman)
 {
     if(fLiteMode || !masternodeSync.IsSynced()) return;
 
@@ -583,7 +583,7 @@ void CGovernanceManager::DoMaintenance(CConnman& connman)
 
     CleanOrphanObjects();
 
-    RequestOrphanObjects(&connman);
+    RequestOrphanObjects(connman);
 
     // CHECK AND REMOVE - REPROCESS GOVERNANCE OBJECTS
 
