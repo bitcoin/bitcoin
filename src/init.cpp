@@ -76,7 +76,7 @@
 #include "escrow.h"
 #include "asset.h"
 #include "assetallocation.h"
-#include "thread_pool/threadpool.h"
+#include "thread_pool/thread_pool.hpp"
 #ifndef WIN32
 #include <signal.h>
 #endif
@@ -102,7 +102,6 @@ static const bool DEFAULT_PROXYRANDOMIZE = true;
 static const bool DEFAULT_REST_ENABLE = false;
 static const bool DEFAULT_DISABLE_SAFEMODE = false;
 static const bool DEFAULT_STOPAFTERBLOCKIMPORT = false;
-
 
 std::unique_ptr<CConnman> g_connman;
 std::unique_ptr<PeerLogicValidation> peerLogic;
@@ -325,9 +324,9 @@ void PrepareShutdown()
         delete pblocktree;
         pblocktree = NULL;
     }
-	if (tp)
-		delete tp;
-	tp = NULL;
+	if (threadpool)
+		delete threadpool;
+	threadpool = NULL;
 	    LogPrint("threadpool", "THREADPOOL::Destroyed threadpool\n");
 #ifdef ENABLE_WALLET
     if (pwalletMain)
@@ -1409,9 +1408,9 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         for (int i=0; i<nScriptCheckThreads-1; i++)
             threadGroup.create_thread(&ThreadScriptCheck);
     }
-	if (!tp) {
-		tp = new async::threadpool;
-		LogPrint("threadpool", "THREADPOOL::Created threadpool, size: %d, idlesize: %d\n", tp->size(), tp->idlesize());
+	if (!threadpool) {
+		threadpool = new tp::ThreadPool;
+		LogPrint("threadpool", "THREADPOOL::Created threadpool\n");
 	}
     if (!sporkManager.SetSporkAddress(GetArg("-sporkaddr", Params().SporkAddress())))
         return InitError(_("Invalid spork address specified with -sporkaddr"));

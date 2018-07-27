@@ -63,7 +63,7 @@
 #include "graph.h"
 #include "base58.h"
 #include "rpc/server.h"
-#include "thread_pool/threadpool.h"
+#include "thread_pool/thread_pool.hpp"
 #include <future>
 #include <functional>
 #include "cuckoocache.h"
@@ -86,7 +86,7 @@ int nScriptCheckThreads = 0;
 // SYSCOIN
 int64_t nLastMultithreadMempoolFailure = 0;
 bool fLoaded = false;
-async::threadpool *tp = NULL;
+tp::ThreadPool *threadpool = NULL;
 std::atomic_bool fImporting(false);
 bool fReindex = false;
 bool fTxIndex = true;
@@ -1246,11 +1246,12 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 			if (!pool.exists(hash))
 				return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
 		}
-		if (bMultiThreaded && tp != NULL)
+		if (bMultiThreaded && threadpool != NULL)
 		{
-			tp->post([&pool, ptx, hash, coins_to_uncache, hashCacheEntry, vChecks]() {
+			// define a task for the worker to process
+			std::packaged_task<void()> task([&pool, ptx, hash, coins_to_uncache, hashCacheEntry, vChecks]() {
 				const int64_t &time = GetTimeMicros();
-				LogPrint("threadpool", "THREADPOOL::Entering thread for signature checks for hash %s, size: %d, idlesize: %d\n", hash.ToString(), tp->size(), tp->idlesize());
+				LogPrint("threadpool", "THREADPOOL::Entering thread for signature checks for hash %s\n", hash.ToString());
 				CValidationState vstate;
 				CCoinsViewCache vView(pcoinsTip);
 				const CTransaction& txIn = *ptx;
@@ -1284,10 +1285,25 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 					nLastMultithreadMempoolFailure = GetTime();
 				}
 				scriptExecutionCache.insert(hashCacheEntry);
-				LogPrint("threadpool", "THREADPOOL::Finished thread for signature checks for hash %s, elapsed %lld microseconds, size: %d, idlesize: %d\n", hash.ToString(), GetTimeMicros() - time, tp->size(), tp->idlesize());
+				LogPrint("threadpool", "THREADPOOL::Finished thread for signature checks for hash %s, elapsed %lld microseconds\n", hash.ToString(), GetTimeMicros() - time);
 			});
-			LogPrint("threadpool", "THREADPOOL::Added worker for signature checks for hash %s, size: %d, idlesize: %d\n", hash.ToString(), tp->size(), tp->idlesize());
 
+			bool isThreadPosted = false;
+			for (int numTries = 50; numTries >= 0; numTries--){
+				isThreadPosted = threadpool->tryPost(task);
+				if (isThreadPosted) {
+					LogPrint("threadpool", "THREADPOOL::Added worker for signature checks for hash %s\n", hash.ToString());
+					break;
+				} else {
+					LogPrintf("THREADPOOL::AcceptToMemoryPoolWorker: thread pool queue is full\n");
+					MilliSleep(10);
+				}
+			}
+			if (!isThreadPosted) {
+				return state.DoS(0, false,
+					REJECT_INVALID, "threadpool-full", false,
+					"AcceptToMemoryPoolWorker: thread pool queue is full");
+			}
 		}
 	}
 
@@ -2616,7 +2632,10 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 	const CAmount &blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), nTotalRewardWithMasternodes);
 
 	if (!IsBlockPayeeValid(*block.vtx[0], pindex->nHeight, blockReward, nTotalRewardWithMasternodes)) {
-		mapRejectedBlocks.insert(std::make_pair(block.GetHash(), GetTime()));
+		{
+			LOCK(cs_main);
+			mapRejectedBlocks.insert(std::make_pair(block.GetHash(), GetTime()));
+		}
 		return state.DoS(0, error("ConnectBlock(SYS): couldn't find masternode or superblock payments"),
 			REJECT_INVALID, "bad-cb-payee");
 	}
