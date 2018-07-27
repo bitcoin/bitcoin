@@ -33,14 +33,6 @@ env:
     - PYTHON_DEBUG=1
     - WINEDEBUG=fixme-all
 
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - gcc-4.9
-      - g++-4.9
-      
   matrix:
 # ARM
     - HOST=arm-linux-gnueabihf PPA="ppa:bitcoin/bitcoin" PACKAGES="g++-arm-linux-gnueabihf" DEP_OPTS="NO_QT=1" CHECK_DOC=1 GOAL="install" SYSCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
@@ -58,7 +50,6 @@ addons:
     - HOST=x86_64-apple-darwin11 PPA="ppa:bitcoin/bitcoin" PACKAGES="cmake imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools python-dev" SYSCOIN_CONFIG="--enable-gui --enable-reduce-exports" OSX_SDK=10.11 GOAL="deploy"
 
 before_install:
-    - if [ "$CXX" = "g++" ]; then export CXX="g++-4.9" CC="gcc-4.9"; fi
     - travis_retry sudo apt-get install python-dev
     - travis_retry sudo add-apt-repository ppa:ubuntu-wine/ppa -y
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
