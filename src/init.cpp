@@ -325,6 +325,9 @@ void PrepareShutdown()
         delete pblocktree;
         pblocktree = NULL;
     }
+	if (tp)
+		delete tp;
+	tp = NULL;
 #ifdef ENABLE_WALLET
     if (pwalletMain)
         pwalletMain->Flush(true);
@@ -1405,7 +1408,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         for (int i=0; i<nScriptCheckThreads-1; i++)
             threadGroup.create_thread(&ThreadScriptCheck);
     }
-
+	if (!tp)
+		tp = new async::threadpool();
     if (!sporkManager.SetSporkAddress(GetArg("-sporkaddr", Params().SporkAddress())))
         return InitError(_("Invalid spork address specified with -sporkaddr"));
 
