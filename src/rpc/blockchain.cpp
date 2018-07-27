@@ -1990,6 +1990,7 @@ UniValue scantxoutset(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
             "scantxoutset <action> ( <scanobjects> )\n"
+            "\nEXPERIMENTAL warning: this call may be removed or changed in future releases.\n"
             "\nScans the unspent transaction output set for entries that match certain output descriptors.\n"
             "Examples of output descriptors are:\n"
             "    addr(<address>)                      Outputs whose scriptPubKey corresponds to the specified address (does not include P2PK)\n"
