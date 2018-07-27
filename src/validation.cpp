@@ -86,7 +86,7 @@ int nScriptCheckThreads = 0;
 // SYSCOIN
 int64_t nLastMultithreadMempoolFailure = 0;
 bool fLoaded = false;
-async::threadpool tp;
+async::threadpool *tp = NULL;
 std::atomic_bool fImporting(false);
 bool fReindex = false;
 bool fTxIndex = true;
@@ -1246,7 +1246,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 			if (!pool.exists(hash))
 				return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
 		}
-		if (bMultiThreaded)
+		if (bMultiThreaded && tp != NULL)
 		{
 			std::packaged_task<void()> t([&pool, ptx, hash, coins_to_uncache, hashCacheEntry, vChecks]() {
 				const int64_t &time = GetTimeMicros();
@@ -1286,7 +1286,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 				scriptExecutionCache.insert(hashCacheEntry);
 				LogPrint("thread", "Finished thread for signature checks for hash %s, elapsed %lld microseconds\n", hash.ToString(), GetTimeMicros() - time);
 			});
-			threadpool.post(t);
+			tp->post(t);
 
 		}
 	}
