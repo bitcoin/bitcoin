@@ -6,6 +6,7 @@
 #include <util.h>
 
 #include <chainparamsbase.h>
+#include <conf_file.h>
 #include <random.h>
 #include <serialize.h>
 #include <utilstrencodings.h>
@@ -788,11 +789,21 @@ const fs::path &GetDataDir(bool fNetSpecific)
         path /= BaseParams().DataDir();
 
     if (fs::create_directories(path)) {
-        // This is the first run, create wallets subdirectory too
-        fs::create_directories(path / "wallets");
+        // This is the first run, setup datadir
+        SetupDatadir(path);
     }
 
     return path;
+}
+
+void SetupDatadir(fs::path path)
+{
+    // create "wallets" subdirectory
+    fs::create_directories(path / "wallets");
+
+    // write default bitcoin.conf template to datadir
+    std::ofstream conf_file((path / BITCOIN_CONF_FILENAME).string().c_str());
+    conf_file << DEFAULT_BITCOIN_CONF_TEXT << std::endl;
 }
 
 void ClearDatadirCache()
