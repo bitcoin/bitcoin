@@ -139,3 +139,4 @@ void CMainSignals::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared
 void CMainSignals::BlockFound(const uint256 &hash) {
     m_internals->BlockFound(hash);
 }
+

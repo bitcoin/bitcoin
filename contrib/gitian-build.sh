@@ -256,7 +256,7 @@ if [[ $build = true ]]
 then
 	# Make output folder
 	mkdir -p ./raven-binaries/${VERSION}
-
+	
 	# Build Dependencies
 	echo ""
 	echo "Building Dependencies"
@@ -330,10 +330,10 @@ then
 	echo "Verifying v${VERSION} Windows"
 	echo ""
 	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-win-unsigned ../raven/contrib/gitian-descriptors/gitian-win.yml
-	# Mac OSX
+	# Mac OSX	
 	echo ""
 	echo "Verifying v${VERSION} Mac OSX"
-	echo ""
+	echo ""	
 	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-unsigned ../raven/contrib/gitian-descriptors/gitian-osx.yml
 	# Signed Windows
 	echo ""
@@ -344,7 +344,7 @@ then
 	echo ""
 	echo "Verifying v${VERSION} Signed Mac OSX"
 	echo ""
-	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-signed ../raven/contrib/gitian-descriptors/gitian-osx-signer.yml
+	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-signed ../raven/contrib/gitian-descriptors/gitian-osx-signer.yml	
 	popd
 fi
 

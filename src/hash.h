@@ -384,7 +384,7 @@ inline uint256 HashX16R(const T1 pbegin, const T1 pend, const uint256 PrevBlockH
 
     uint512 hash[16];
 
-    for (int i=0;i<16;i++)
+    for (int i=0;i<16;i++) 
     {
         const void *toHash;
         int lenToHash;
