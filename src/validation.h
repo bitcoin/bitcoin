@@ -44,7 +44,10 @@ class CScriptCheck;
 class CTxMemPool;
 class CValidationInterface;
 class CValidationState;
-class threadpool;
+namespace async
+{
+	class threadpool;
+};
 struct ChainTxData;
 
 struct LockPoints;
@@ -551,7 +554,7 @@ extern CCoinsViewCache *pcoinsTip;
 /** Global variable that points to the active block tree (protected by cs_main) */
 extern CBlockTreeDB *pblocktree;
 
-extern threadpool* tp;
+extern async::threadpool* tp;
 /**
  * Return the spend height, which is one more than the inputs.GetBestBlock().
  * While checking, GetBestBlock() refers to the parent block. (protected by cs_main)
