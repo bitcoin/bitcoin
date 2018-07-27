@@ -222,8 +222,13 @@ void Shutdown()
     peerLogic.reset();
     g_connman.reset();
 
-    // STORE DATA CACHES INTO SERIALIZED DAT FILES
     if (!fLiteMode) {
+#ifdef ENABLE_WALLET
+        // Stop PrivateSend, release keys
+        privateSendClient.fEnablePrivateSend = false;
+        privateSendClient.ResetPool();
+#endif
+        // STORE DATA CACHES INTO SERIALIZED DAT FILES
         CFlatDB<CMasternodeMan> flatdb1("mncache.dat", "magicMasternodeCache");
         flatdb1.Dump(mnodeman);
         CFlatDB<CMasternodePayments> flatdb2("mnpayments.dat", "magicMasternodePaymentsCache");
