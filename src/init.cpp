@@ -95,8 +95,6 @@
 #if ENABLE_ZMQ
 #include "zmq/zmqnotificationinterface.h"
 #endif
-// SYSCOIN
-using namespace async;
 extern void ThreadSendAlert(CConnman& connman);
 
 bool fFeeEstimatesInitialized = false;
@@ -1411,7 +1409,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
             threadGroup.create_thread(&ThreadScriptCheck);
     }
 	if (!tp)
-		tp = new threadpool();
+		tp = new async::threadpool();
     if (!sporkManager.SetSporkAddress(GetArg("-sporkaddr", Params().SporkAddress())))
         return InitError(_("Invalid spork address specified with -sporkaddr"));
 
