@@ -1685,7 +1685,7 @@ static DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* 
                     CNewAsset asset;
                     std::string strAddress;
                     if (!AssetFromTransaction(tx, asset, strAddress)) {
-                        error("%s : Failed to get asset from transaction. TXID : ", __func__, tx.GetHash().GetHex());
+                        error("%s : Failed to get asset from transaction. TXID : %s", __func__, tx.GetHash().GetHex());
                         return DISCONNECT_FAILED;
                     }
                     if (assetsCache->ContainsAsset(asset)) {
@@ -1699,12 +1699,12 @@ static DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* 
                     std::string ownerName;
                     std::string ownerAddress;
                     if (!OwnerFromTransaction(tx, ownerName, ownerAddress)) {
-                        error("%s : Failed to get owner from transaction. TXID : ", __func__, tx.GetHash().GetHex());
+                        error("%s : Failed to get owner from transaction. TXID : %s", __func__, tx.GetHash().GetHex());
                         return DISCONNECT_FAILED;
                     }
 
                     if (!assetsCache->RemoveOwnerAsset(ownerName, ownerAddress)) {
-                        error("%s : Failed to Remove Owner from transaction. TXID : ", __func__, tx.GetHash().GetHex());
+                        error("%s : Failed to Remove Owner from transaction. TXID : %s", __func__, tx.GetHash().GetHex());
                         return DISCONNECT_FAILED;
                     }
                 } else if (tx.IsReissueAsset()) {
@@ -1712,7 +1712,7 @@ static DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* 
                     std::string strAddress;
 
                     if (!ReissueAssetFromTransaction(tx, reissue, strAddress)) {
-                        error("%s : Failed to get reissue asset from transaction. TXID : ", __func__,
+                        error("%s : Failed to get reissue asset from transaction. TXID : %s", __func__,
                               tx.GetHash().GetHex());
                         return DISCONNECT_FAILED;
                     }
@@ -1731,7 +1731,7 @@ static DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* 
                     CAssetTransfer transfer;
                     std::string strAddress;
                     if (!TransferAssetFromScript(tx.vout[index].scriptPubKey, transfer, strAddress)) {
-                        error("%s : Failed to get transfer asset from transaction. CTxOut : ", __func__,
+                        error("%s : Failed to get transfer asset from transaction. CTxOut : %s", __func__,
                               tx.vout[index].ToString());
                         return DISCONNECT_FAILED;
                     }

@@ -364,7 +364,7 @@ UniValue listmyassets(const JSONRPCRequest &request)
     std::map<std::string, CAmount> balances;
     if (filter == "*") {
         if (!GetMyAssetBalances(*passets, balances))
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't get asset balances.");
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't get asset balances. For all assets");
     }
     else if (filter.back() == '*') {
         std::vector<std::string> assetNames;
@@ -378,8 +378,9 @@ UniValue listmyassets(const JSONRPCRequest &request)
         if (!IsAssetNameValid(filter))
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid asset name.");
         CAmount balance;
-        if (!GetMyAssetBalance(*passets, filter, balance))
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't get asset balances.");
+        if (!GetMyAssetBalance(*passets, filter, balance)) {
+            throw JSONRPCError(RPC_INTERNAL_ERROR, std::string("Couldn't get asset balances. For asset : ") + filter);
+        }
         balances[filter] = balance;
     }
 

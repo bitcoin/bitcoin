@@ -51,6 +51,7 @@
 #include "wallet/init.h"
 #endif
 #include "warnings.h"
+#include "tinyformat.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <memory>
@@ -1454,10 +1455,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                     strLoadError = _("Failed to load Assets Database");
                     break;
                 }
-                std::cout << std::endl << "Loaded Assets without error" << std::endl << "Cache of assets size: "
-                          << passetsCache->Size() << std::endl << "number of assets I have: "
-                          << passets->mapMyUnspentAssets.size() << std::endl;
 
+                LogPrintf("Loaded Assets from database without error\nCache of assets size: %d\nNumber of assets I have: %d\n", passetsCache->Size(), passets->mapMyUnspentAssets.size());
 
                 if (fReset) {
                     pblocktree->WriteReindexing(true);

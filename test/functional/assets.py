@@ -61,8 +61,8 @@ class AssetTest(RavenTestFramework):
         assert_is_hash_string(myassets["MY_ASSET"]["outpoints"][0]["txid"])
         assert_equal(myassets["MY_ASSET"]["outpoints"][0]["txid"], \
                      myassets["MY_ASSET!"]["outpoints"][0]["txid"])
-        assert(int(myassets["MY_ASSET"]["outpoints"][0]["index"]) >= 0)
-        assert(int(myassets["MY_ASSET!"]["outpoints"][0]["index"]) >= 0)
+        assert(int(myassets["MY_ASSET"]["outpoints"][0]["vout"]) >= 0)
+        assert(int(myassets["MY_ASSET!"]["outpoints"][0]["vout"]) >= 0)
         assert_equal(myassets["MY_ASSET"]["outpoints"][0]["amount"], 1000)
         assert_equal(myassets["MY_ASSET!"]["outpoints"][0]["amount"], 1)
 
@@ -87,7 +87,7 @@ class AssetTest(RavenTestFramework):
         assert_equal(myassets["MY_ASSET"]["balance"], 200)
         assert_equal(len(myassets["MY_ASSET"]["outpoints"]), 1)
         assert_is_hash_string(myassets["MY_ASSET"]["outpoints"][0]["txid"])
-        assert(int(myassets["MY_ASSET"]["outpoints"][0]["index"]) >= 0)
+        assert(int(myassets["MY_ASSET"]["outpoints"][0]["vout"]) >= 0)
         assert_equal(n0.listmyassets(asset="MY_ASSET")["MY_ASSET"], 800)
 
         self.log.info("Checking listassetbalancesbyaddress()...")

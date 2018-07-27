@@ -243,11 +243,13 @@ struct CAssetCacheSpendAsset
 {
     std::string assetName;
     std::string address;
+    CAmount nAmount;
 
-    CAssetCacheSpendAsset(const std::string& assetName, const std::string& address)
+    CAssetCacheSpendAsset(const std::string& assetName, const std::string& address, const CAmount& nAmount)
     {
         this->assetName = assetName;
         this->address = address;
+        this->nAmount = nAmount;
     }
 };
 
