@@ -87,10 +87,14 @@ public:
         consensus.vDeployments[d].nTimeout = nTimeout;
     }
 };
-static CRegTestParams regTestParams;
+CRegTestParams* g_regTestParams;
 
 
 void UpdateRegtestBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)
 {
     static_cast<CRegTestParams&>(Params(NETWORK_REGTEST)).UpdateBIP9Parameters(d, nStartTime, nTimeout);
+}
+
+void Init3() {
+    g_regTestParams = new CRegTestParams();
 }
