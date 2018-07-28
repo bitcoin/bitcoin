@@ -275,7 +275,7 @@ bool DecodeOfferScript(const CScript& script, int& op,
 		}
 		if (!(opcode >= 0 && opcode <= OP_PUSHDATA4))
 			return false;
-		vvch.emplace_back(vector<unsigned char>(vch.cbegin(), vch.cend()));
+		vvch.emplace_back(std::move(vch));
 	}
 
 	// move the pc to after any DROP or NOP
