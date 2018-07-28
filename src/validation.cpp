@@ -1317,7 +1317,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 				LogPrint("threadpool", "THREADPOOL::Finished task for signature check for hash %s, execution time %lld microseconds\n", hash.ToString(), thisExecutionMicros);
 				// log all the time for unit tests, when debug=threadpool, or every 100th transaction
 				std::string message = "THREADPOOL::Stats after signature check for hash %s, total executions: %d, concurrent executions: %d, max concurrent executions: %d, average execution time: %lld microseconds, min execution time: %lld microseconds, max execution time: %lld microseconds\n";
-				if (fUnitTest || totalExecutionCount % 100 == 0) {
+				if (totalExecutionCount % 100 == 0) {
 					LogPrintf(message, hash.ToString(), totalExecutionCount, concurrentExecutionCount, maxConcurrentExecutionCount, totalExecutionMicros / totalExecutionCount, minExecutionMicros, maxExecutionMicros);
 				} else {
 					LogPrint("threadpool", message, hash.ToString(), totalExecutionCount, concurrentExecutionCount, maxConcurrentExecutionCount, totalExecutionMicros / totalExecutionCount, minExecutionMicros, maxExecutionMicros);
