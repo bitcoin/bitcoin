@@ -484,6 +484,24 @@ QString TransactionTableModel::formatTxAmount(const TransactionRecord *wtx, bool
     return QString(str);
 }
 
+QIcon IconWithShiftedColor(const QString& filename, bool shift)
+{
+    if (!shift)
+        return QIcon(filename);
+
+    QImage img(filename);
+    img = img.convertToFormat(QImage::Format_ARGB32);
+    for (int x = img.width(); x--; )
+    {
+        for (int y = img.height(); y--; )
+        {
+            const QRgb rgb = img.pixel(x, y);
+            img.setPixel(x, y, qRgba(qRed(rgb), qGreen(rgb), qBlue(rgb)+128, qAlpha(rgb)));
+        }
+    }
+    return QIcon(QPixmap::fromImage(img));
+}
+
 QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx) const
 {
     QString theme = GUIUtil::getThemeName();
@@ -495,17 +513,19 @@ QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx)
     case TransactionStatus::Offline:
         return COLOR_TX_STATUS_OFFLINE;
     case TransactionStatus::Unconfirmed:
+        // TODO: use special icon for InstantSend 0-conf
         return QIcon(":/icons/" + theme + "/transaction_0");
     case TransactionStatus::Abandoned:
         return QIcon(":/icons/" + theme + "/transaction_abandoned");
     case TransactionStatus::Confirming:
         switch(wtx->status.depth)
         {
-        case 1: return QIcon(":/icons/" + theme + "/transaction_1");
-        case 2: return QIcon(":/icons/" + theme + "/transaction_2");
-        case 3: return QIcon(":/icons/" + theme + "/transaction_3");
-        case 4: return QIcon(":/icons/" + theme + "/transaction_4");
-        default: return QIcon(":/icons/" + theme + "/transaction_5");
+        // TODO: use special icons for InstantSend instead of color shifting
+        case 1: return IconWithShiftedColor(":/icons/" + theme + "/transaction_1", wtx->status.lockedByInstantSend);
+        case 2: return IconWithShiftedColor(":/icons/" + theme + "/transaction_2", wtx->status.lockedByInstantSend);
+        case 3: return IconWithShiftedColor(":/icons/" + theme + "/transaction_3", wtx->status.lockedByInstantSend);
+        case 4: return IconWithShiftedColor(":/icons/" + theme + "/transaction_4", wtx->status.lockedByInstantSend);
+        default: return IconWithShiftedColor(":/icons/" + theme + "/transaction_5", wtx->status.lockedByInstantSend);
         };
     case TransactionStatus::Confirmed:
         return QIcon(":/icons/" + theme + "/transaction_confirmed");
@@ -607,6 +627,10 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         if(rec->status.status == TransactionStatus::Abandoned)
         {
             return COLOR_TX_STATUS_DANGER;
+        }
+        if(rec->status.lockedByInstantSend)
+        {
+            return COLOR_TX_STATUS_LOCKED;
         }
         // Non-confirmed (but not immature) as transactions are grey
         if(!rec->status.countsForBalance && rec->status.status != TransactionStatus::Immature)
