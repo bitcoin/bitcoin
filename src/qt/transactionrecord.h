@@ -43,6 +43,8 @@ public:
 
     /// Transaction counts towards available balance
     bool countsForBalance;
+    /// Transaction was locked via InstantSend
+    bool lockedByInstantSend;
     /// Sorting key based on status
     std::string sortKey;
 

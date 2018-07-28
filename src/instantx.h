@@ -27,10 +27,6 @@ extern CInstantSend instantsend;
     (1000/2900.0)**5 = 0.004875397277841433
 */
 
-static const int MIN_INSTANTSEND_DEPTH              = 0;
-static const int MAX_INSTANTSEND_DEPTH              = 60;
-static const int DEFAULT_INSTANTSEND_DEPTH          = 5;
-
 static const int MIN_INSTANTSEND_PROTO_VERSION      = MIN_PEER_PROTO_VERSION;
 
 // For how long we are going to accept votes/locks
@@ -139,8 +135,6 @@ public:
     bool IsLockedInstantSendTransaction(const uint256& txHash);
     // get the actual number of accepted lock signatures
     int GetTransactionLockSignatures(const uint256& txHash);
-    // get instantsend confirmations (only)
-    int GetConfirmations(const uint256 &nTXHash);
 
     // remove expired entries from maps
     void CheckAndRemove();

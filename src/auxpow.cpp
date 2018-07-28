@@ -44,7 +44,7 @@ void CMerkleTx::InitMerkleBranch(const CBlock& block, int posInBlock)
 	vMerkleBranch = BlockMerkleBranch(block, nIndex);
 }
 
-int CMerkleTx::GetDepthInMainChain(const CBlockIndex* &pindexRet, bool enableIX) const
+int CMerkleTx::GetDepthInMainChain(const CBlockIndex* &pindexRet) const
 {
 	int nResult;
 
@@ -71,10 +71,12 @@ int CMerkleTx::GetDepthInMainChain(const CBlockIndex* &pindexRet, bool enableIX)
 		}
 	}
 
-	if (enableIX && nResult < 6 && instantsend.IsLockedInstantSendTransaction(GetHash()))
-		return nInstantSendDepth + nResult;
-
 	return nResult;
+}
+
+bool CMerkleTx::IsLockedByInstantSend() const
+{
+	return instantsend.IsLockedInstantSendTransaction(GetHash());
 }
 
 int CMerkleTx::GetBlocksToMaturity() const
