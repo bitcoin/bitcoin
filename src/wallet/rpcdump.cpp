@@ -773,7 +773,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     file << "\n";
 
     UniValue obj(UniValue::VOBJ);
-    obj.push_back(Pair("dashcoreversion", CLIENT_BUILD));
+    obj.push_back(Pair("syscoincoreversion", CLIENT_BUILD));
     obj.push_back(Pair("lastblockheight", chainActive.Height()));
     obj.push_back(Pair("lastblockhash", chainActive.Tip()->GetBlockHash().ToString()));
     obj.push_back(Pair("lastblocktime", EncodeDumpTime(chainActive.Tip()->GetBlockTime())));
