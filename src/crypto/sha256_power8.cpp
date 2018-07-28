@@ -19,6 +19,12 @@
 
 #include <altivec.h>
 
+#if defined(__clang__)
+#pragma clang attribute push(__attribute__((__target__("power8-vector"))), apply_to = function)
+#elif defined(__GNUC__)
+#pragma GCC target ("power8-vector")
+#endif
+
 namespace sha256_power8
 {
 
@@ -399,3 +405,7 @@ void Transform_4way(unsigned char* out, const unsigned char* in)
     vec_vsx_st(w4567_3, 1 *16 + 96, out);
 }
 }
+
+#if defined(__clang__)
+#pragma clang attribute pop
+#endif
