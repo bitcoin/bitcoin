@@ -174,7 +174,7 @@ bool DecodeAssetAllocationScript(const CScript& script, int& op,
 		}
 		if (!(opcode >= 0 && opcode <= OP_PUSHDATA4))
 			return false;
-		vvch.emplace_back(vector<unsigned char>(vch.cbegin(), vch.cend()));
+		vvch.emplace_back(std::move(vch));
 	}
 
 	// move the pc to after any DROP or NOP
@@ -600,8 +600,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 					return true;
 				}
 				const CAmount rangeTotalAmount = rangeTotal;
-				rangeTotals.emplace_back(rangeTotalAmount);
-				nTotal += rangeTotalAmount;
+				rangeTotals.emplace_back(std::move(rangeTotalAmount));
+				nTotal += rangeTotals.back();
 			}
 			const CAmount &nBalanceAfterSend = dbAssetAllocation.nBalance - nTotal;
 			if (nBalanceAfterSend < 0) {

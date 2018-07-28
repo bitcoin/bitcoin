@@ -170,7 +170,7 @@ bool DecodeAssetScript(const CScript& script, int& op,
 		}
 		if (!(opcode >= 0 && opcode <= OP_PUSHDATA4))
 			return false;
-		vvch.emplace_back(vector<unsigned char>(vch.cbegin(), vch.cend()));
+		vvch.emplace_back(std::move(vch));
 	}
 
 	// move the pc to after any DROP or NOP
@@ -536,8 +536,8 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 						return true;
 					}
 					const CAmount rangeTotalAmount = rangeTotal;
-					rangeTotals.emplace_back(rangeTotalAmount);
-					nTotal += rangeTotalAmount;
+					rangeTotals.emplace_back(atd::move(rangeTotalAmount));
+					nTotal += rangeTotals.back();
 				}
 				if (theAsset.nBalance < nTotal) {
 					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2037 - " + _("Sender balance is insufficient");
