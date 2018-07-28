@@ -1248,6 +1248,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 		}
 		if (bMultiThreaded && threadpool != NULL)
 		{
+			// track worker thread metrics
 			static int totalExecutions = 0;
 			static int concurrentExecutions = 0;
 			static int64_t totalExecution = 0;
@@ -1257,13 +1258,16 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 			concurrentExecutions += concurrentCount;
 			concurrentCount++;
 			totalExecutions++;
+
 			// define a task for the worker to process
 			std::packaged_task<void()> task([&pool, ptx, hash, coins_to_uncache, hashCacheEntry, vChecks]() {
+				LogPrint("threadpool", "THREADPOOL::Starting task for signature check for hash %s\n", hash.ToString());
 				const int64_t &time = GetTimeMicros();
 				CValidationState vstate;
 				CCoinsViewCache vView(pcoinsTip);
 				const CTransaction& txIn = *ptx;
-				for (auto &check : vChecks) {
+				for (auto &check : vChecks)
+				{
 					if (!check())
 					{
 						LOCK2(cs_main, mempool.cs);
@@ -1276,6 +1280,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 						CValidationState stateDummy;
 						FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
 						nLastMultithreadMempoolFailure = GetTime();
+						LogPrint("threadpool", "THREADPOOL::Exiting task for signature check for hash %s with CheckInputs Error, execution time %lld microseconds\n", hash.ToString(), GetTimeMicros()-time);
 						return;
 					}
 				}
@@ -1300,24 +1305,38 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 					maxExecution = thisExecution;
 				totalExecution += thisExecution;
 				concurrentCount--;
+				LogPrint("threadpool", "THREADPOOL::Finished task for signature check for hash %s, execution time %lld microseconds\n", hash.ToString(), thisExecution);
+				
+				if (fDebug || fUnitTest)
+				{
+					// log all the time for unit tests, when debug=threadpool, or every 100th transaction
+					std::string message = "THREADPOOL::Stats after signature check for hash %s, total executions: %d, concurrent executions: %d, average execution time: %lld microseconds, min execution time: %lld microseconds, max execution time: %lld microseconds\n";
+					if (totalExecutions % 100 == 0) {
+						LogPrintf(message, hash.ToString(), totalExecutions, concurrentExecutions, totalExecution / totalExecutions, minExecution, maxExecution);
+					} else {
+						LogPrint("threadpool", message, hash.ToString(), totalExecutions, concurrentExecutions, totalExecution / totalExecutions, minExecution, maxExecution);
+					}
+
+				}
 			});
 
+			// retry if the threadpool queue is full and return error if we can't post
 			bool isThreadPosted = false;
-			for (int numTries = 50; numTries >= 0; numTries--){
+			for (int numTries = 1; numTries <= 50; numTries++)
+			{
+				// send task to threadpool pointer from init.cpp
 				isThreadPosted = threadpool->tryPost(task);
-				if (isThreadPosted) {
-					if (!fDebug || (fDebug && (totalExecutions % 100) == 0))
-						LogPrint("threadpool", "THREADPOOL::Added worker for signature checks for hash %s, total executions: %d, concurrent executions: %d, average execution time: %lld microseconds, min execution time: %lld microseconds, max execution time: %lld microseconds\n", hash.ToString(), totalExecutions, concurrentExecutions, totalExecution / totalExecutions, minExecution, maxExecution);
+				if (isThreadPosted)
+				{
+					LogPrint("threadpool", "THREADPOOL::Added worker for signature checks for hash %s in %d tries\n", hash.ToString(), numTries);
 					break;
-				} else {
-					LogPrintf("THREADPOOL::AcceptToMemoryPoolWorker: thread pool queue is full\n");
-					MilliSleep(10);
 				}
+				LogPrintf("THREADPOOL::AcceptToMemoryPoolWorker: thread pool queue is full\n");
+				MilliSleep(10);
 			}
-			if (!isThreadPosted) {
-				return state.DoS(0, false,
-					REJECT_INVALID, "threadpool-full", false,
-					"AcceptToMemoryPoolWorker: thread pool queue is full");
+			if (!isThreadPosted)
+			{
+				return state.DoS(0, false, REJECT_INVALID, "threadpool-full", false, "AcceptToMemoryPoolWorker: thread pool queue is full");
 			}
 		}
 	}
