@@ -45,6 +45,12 @@ std::ostream& operator<<(std::ostream& os, const uint256& num)
     return os;
 }
 
+std::ostream& operator<<(std::ostream& os, const Chain chain)
+{
+    os << GetChainName(chain);
+    return os;
+}
+
 BasicTestingSetup::BasicTestingSetup(const Chain chain)
     : m_path_root(fs::temp_directory_path() / "test_bitcoin" / strprintf("%lu_%i", (unsigned long)GetTime(), (int)(InsecureRandRange(1 << 30))))
 {

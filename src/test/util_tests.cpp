@@ -541,7 +541,7 @@ BOOST_AUTO_TEST_CASE(util_GetArg)
     BOOST_CHECK_EQUAL(testArgs.GetArg("pritest4", "default"), "b");
 }
 
-BOOST_AUTO_TEST_CASE(util_GetChainName)
+BOOST_AUTO_TEST_CASE(util_GetChain)
 {
     TestArgsManager test_args;
     const char* avail_args[] = {"-testnet", "-regtest"};
@@ -558,39 +558,39 @@ BOOST_AUTO_TEST_CASE(util_GetChainName)
     std::string error;
 
     test_args.ParseParameters(0, (char**)argv_testnet, error);
-    BOOST_CHECK_EQUAL(test_args.GetChainName(), "main");
+    BOOST_CHECK_EQUAL(test_args.GetChain(), Chain::MAIN);
 
     test_args.ParseParameters(2, (char**)argv_testnet, error);
-    BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
+    BOOST_CHECK_EQUAL(test_args.GetChain(), Chain::TESTNET);
 
     test_args.ParseParameters(2, (char**)argv_regtest, error);
-    BOOST_CHECK_EQUAL(test_args.GetChainName(), "regtest");
+    BOOST_CHECK_EQUAL(test_args.GetChain(), Chain::REGTEST);
 
     test_args.ParseParameters(3, (char**)argv_test_no_reg, error);
-    BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
+    BOOST_CHECK_EQUAL(test_args.GetChain(), Chain::TESTNET);
 
     test_args.ParseParameters(3, (char**)argv_both, error);
-    BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
+    BOOST_CHECK_THROW(test_args.GetChain(), std::runtime_error);
 
     test_args.ParseParameters(0, (char**)argv_testnet, error);
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
+    BOOST_CHECK_EQUAL(test_args.GetChain(), Chain::TESTNET);
 
     test_args.ParseParameters(2, (char**)argv_testnet, error);
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
+    BOOST_CHECK_EQUAL(test_args.GetChain(), Chain::TESTNET);
 
     test_args.ParseParameters(2, (char**)argv_regtest, error);
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
+    BOOST_CHECK_THROW(test_args.GetChain(), std::runtime_error);
 
     test_args.ParseParameters(3, (char**)argv_test_no_reg, error);
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
+    BOOST_CHECK_EQUAL(test_args.GetChain(), Chain::TESTNET);
 
     test_args.ParseParameters(3, (char**)argv_both, error);
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
+    BOOST_CHECK_THROW(test_args.GetChain(), std::runtime_error);
 
     // check setting the network to test (and thus making
     // [test] regtest=1 potentially relevant) doesn't break things
@@ -598,23 +598,23 @@ BOOST_AUTO_TEST_CASE(util_GetChainName)
 
     test_args.ParseParameters(0, (char**)argv_testnet, error);
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
+    BOOST_CHECK_EQUAL(test_args.GetChain(), Chain::TESTNET);
 
     test_args.ParseParameters(2, (char**)argv_testnet, error);
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
+    BOOST_CHECK_EQUAL(test_args.GetChain(), Chain::TESTNET);
 
     test_args.ParseParameters(2, (char**)argv_regtest, error);
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
+    BOOST_CHECK_THROW(test_args.GetChain(), std::runtime_error);
 
     test_args.ParseParameters(2, (char**)argv_test_no_reg, error);
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
+    BOOST_CHECK_EQUAL(test_args.GetChain(), Chain::TESTNET);
 
     test_args.ParseParameters(3, (char**)argv_both, error);
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
+    BOOST_CHECK_THROW(test_args.GetChain(), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(util_FormatMoney)

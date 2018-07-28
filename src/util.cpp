@@ -403,7 +403,7 @@ void ArgsManager::WarnForSectionOnlyArgs()
         if (!found_result.first) continue;
 
         // otherwise, issue a warning
-        const std::string& networkName = ::GetChainName(m_network);
+        const std::string& networkName = GetChainName(m_network);
         LogPrintf("Warning: Config setting for %s only applied on %s network when in [%s] section.\n", arg, networkName, networkName);
     }
 }
@@ -896,7 +896,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
         // if there is an -includeconf in the override args, but it is empty, that means the user
         // passed '-noincludeconf' on the command line, in which case we should not include anything
         if (m_override_args.count("-includeconf") == 0) {
-            std::string chain_id = GetChainName();
+            std::string chain_id = GetChainName(GetChain());
             std::vector<std::string> includeconf(GetArgs("-includeconf"));
             {
                 // We haven't set m_network yet (that happens in SelectParams()), so manually check
@@ -931,7 +931,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
             {
                 std::vector<std::string> includeconf_net(GetArgs(std::string("-") + chain_id + ".includeconf"));
                 includeconf.insert(includeconf.end(), includeconf_net.begin(), includeconf_net.end());
-                std::string chain_id_final = GetChainName();
+                std::string chain_id_final = GetChainName(GetChain());
                 if (chain_id_final != chain_id) {
                     // Also warn about recursive includeconf for the chain that was specified in one of the includeconfs
                     includeconf_net = GetArgs(std::string("-") + chain_id_final + ".includeconf");
@@ -965,11 +965,6 @@ Chain ArgsManager::GetChain() const
     if (fTestNet)
         return Chain::TESTNET;
     return Chain::MAIN;
-}
-
-std::string ArgsManager::GetChainName() const
-{
-    return ::GetChainName(GetChain());
 }
 
 void SetupChainArgs(ArgsManager& args)

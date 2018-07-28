@@ -124,7 +124,8 @@ struct TestMemPoolEntryHelper
 
 CBlock getBlock13b8a();
 
-// define an implicit conversion here so that uint256 may be used directly in BOOST_CHECK_*
+// define implicit conversions here so that types may be used directly in BOOST_CHECK_*
 std::ostream& operator<<(std::ostream& os, const uint256& num);
+std::ostream& operator<<(std::ostream& os, const Chain chain);
 
 #endif

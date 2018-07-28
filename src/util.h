@@ -261,7 +261,6 @@ public:
      * Looks for -regtest, -testnet and returns the appropriate BIP70 chain name.
      * @return Chain::MAIN by default; raises runtime error if an invalid combination is given.
      */
-    std::string GetChainName() const;
     Chain GetChain() const;
 
     /**
@@ -293,7 +292,7 @@ public:
 extern ArgsManager gArgs;
 
 /**
- * Set the chain name arguments for ArgsManager::GetChainName
+ * Set the chain name arguments for ArgsManager::GetChain
  */
 void SetupChainArgs(ArgsManager& args);
 
