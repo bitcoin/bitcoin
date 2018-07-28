@@ -13,6 +13,12 @@
 
 #include <attributes.h>
 
+#if defined(__clang__)
+#pragma clang attribute push(__attribute__((__target__("sse4,sse4.1,sha"))), apply_to = function)
+#elif defined(__GNUC__)
+#pragma GCC target ("sse4,sse4.1,sha")
+#endif
+
 namespace {
 
 alignas(__m128i) const uint8_t MASK[16] = {0x03, 0x02, 0x01, 0x00, 0x07, 0x06, 0x05, 0x04, 0x0b, 0x0a, 0x09, 0x08, 0x0f, 0x0e, 0x0d, 0x0c};
@@ -354,5 +360,9 @@ void Transform_2way(unsigned char* out, const unsigned char* in)
 }
 
 }
+
+#if defined(__clang__)
+#pragma clang attribute pop
+#endif
 
 #endif
