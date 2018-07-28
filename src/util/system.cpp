@@ -629,6 +629,14 @@ std::string ArgsManager::GetHelpMessage() const
     return usage;
 }
 
+void SetupChainParamsBaseOptions()
+{
+    gArgs.AddArg("-regtest", "Enter regression test mode, which uses a special chain in which blocks can be solved instantly. "
+                                   "This is intended for regression testing tools and app development.", true, OptionsCategory::CHAINPARAMS);
+    gArgs.AddArg("-testnet", "Use the test chain", false, OptionsCategory::CHAINPARAMS);
+    gArgs.AddArg("-vbparams=deployment:start:end", "Use given start/end times for specified version bits deployment (regtest-only)", true, OptionsCategory::CHAINPARAMS);
+}
+
 bool HelpRequested(const ArgsManager& args)
 {
     return args.IsArgSet("-?") || args.IsArgSet("-h") || args.IsArgSet("-help") || args.IsArgSet("-help-debug");

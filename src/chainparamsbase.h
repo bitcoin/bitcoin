@@ -40,11 +40,6 @@ private:
 std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain);
 
 /**
- *Set the arguments for chainparams
- */
-void SetupChainParamsBaseOptions();
-
-/**
  * Return the currently selected parameters. This won't change after app
  * startup, except for unit tests.
  */
