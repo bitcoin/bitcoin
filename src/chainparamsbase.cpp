@@ -7,10 +7,6 @@
 
 #include <tinyformat.h>
 
-const std::string CBaseChainParams::MAIN = "main";
-const std::string CBaseChainParams::TESTNET = "test";
-const std::string CBaseChainParams::REGTEST = "regtest";
-
 std::string GetChainName(const Chain chain)
 {
     switch (chain) {

@@ -7,26 +7,13 @@
 
 #include <string>
 
-/**
- * CBaseChainParams defines the base parameters (shared between bitcoin-cli and bitcoind)
- * of a given instance of the Bitcoin system.
- */
-class CBaseChainParams
-{
-public:
-    /** BIP70 chain name strings (main, test or regtest) */
-    static const std::string MAIN;
-    static const std::string TESTNET;
-    static const std::string REGTEST;
-};
-
 enum class Chain {
     MAIN,
     TESTNET,
     REGTEST
 };
 
-/** @return the name for the chain */
+/** @return the BIP70 name for the chain (main, test or regtest) */
 std::string GetChainName(const Chain chain);
 
 /** @return the data dir for the chain */
