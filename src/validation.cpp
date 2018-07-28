@@ -1656,12 +1656,12 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, C
 		nSubsidy *= 0.75;
 		if (nHeight > 0 && nStartHeight > 0) {
 			unsigned int nDifferenceInBlocks = 0;
-			if (nStartHeight < nHeight)
-				nDifferenceInBlocks = (nHeight - nStartHeight);
+			if (nHeight > (int)nStartHeight)
+				nDifferenceInBlocks = (nHeight - (int)nStartHeight);
 			// the first three intervals should discount rewards to incentivize bonding over longer terms (we add 3% premium every interval)
 			double fSubsidyAdjustmentPercentage = 0;
 			for (int i = 1; i <= consensusParams.nTotalSeniorityIntervals; i++) {
-				const int &nTotalSeniorityBlocks = i*consensusParams.nSeniorityInterval;
+				const unsigned int &nTotalSeniorityBlocks = i*consensusParams.nSeniorityInterval;
 				if (nDifferenceInBlocks <= nTotalSeniorityBlocks)
 					break;
 				fSubsidyAdjustmentPercentage += 0.03;
@@ -2787,9 +2787,9 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode, int n
     if (nLastSetChain == 0) {
         nLastSetChain = nNow;
     }
-    int64_t nMempoolSizeMax = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
-    int64_t cacheSize = pcoinsTip->DynamicMemoryUsage() * DB_PEAK_USAGE_FACTOR;
-    int64_t nTotalSpace = nCoinCacheUsage + std::max<int64_t>(nMempoolSizeMax - nMempoolUsage, 0);
+    size_t nMempoolSizeMax = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
+    size_t cacheSize = pcoinsTip->DynamicMemoryUsage() * DB_PEAK_USAGE_FACTOR;
+    size_t nTotalSpace = nCoinCacheUsage + std::max<int64_t>(nMempoolSizeMax - nMempoolUsage, 0);
     // The cache is large and we're within 10% and 10 MiB of the limit, but we have time now (not in the middle of a block processing).
     bool fCacheLarge = mode == FLUSH_STATE_PERIODIC && cacheSize > std::max((9 * nTotalSpace) / 10, nTotalSpace - MAX_BLOCK_COINSDB_USAGE * 1024 * 1024);
     // The cache is over the limit, we have to write now.
