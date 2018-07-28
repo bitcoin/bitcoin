@@ -536,7 +536,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 						return true;
 					}
 					const CAmount rangeTotalAmount = rangeTotal;
-					rangeTotals.emplace_back(atd::move(rangeTotalAmount));
+					rangeTotals.emplace_back(std::move(rangeTotalAmount));
 					nTotal += rangeTotals.back();
 				}
 				if (theAsset.nBalance < nTotal) {
