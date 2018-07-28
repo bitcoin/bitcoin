@@ -5,9 +5,7 @@
 #ifndef BITCOIN_CHAINPARAMSBASE_H
 #define BITCOIN_CHAINPARAMSBASE_H
 
-#include <memory>
 #include <string>
-#include <vector>
 
 /**
  * CBaseChainParams defines the base parameters (shared between bitcoin-cli and bitcoind)
@@ -20,24 +18,7 @@ public:
     static const std::string MAIN;
     static const std::string TESTNET;
     static const std::string REGTEST;
-
-    const std::string& DataDir() const { return strDataDir; }
-    int RPCPort() const { return nRPCPort; }
-
-    CBaseChainParams() = delete;
-    CBaseChainParams(const std::string& data_dir, int rpc_port) : nRPCPort(rpc_port), strDataDir(data_dir) {}
-
-private:
-    int nRPCPort;
-    std::string strDataDir;
 };
-
-/**
- * Creates and returns a std::unique_ptr<CBaseChainParams> of the chosen chain.
- * @returns a CBaseChainParams* of the chosen chain.
- * @throws a std::runtime_error if the chain is not supported.
- */
-std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain);
 
 /**
  *Set the arguments for chainparams

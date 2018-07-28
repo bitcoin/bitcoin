@@ -7,9 +7,6 @@
 
 #include <tinyformat.h>
 #include <util.h>
-#include <utilmemory.h>
-
-#include <assert.h>
 
 const std::string CBaseChainParams::MAIN = "main";
 const std::string CBaseChainParams::TESTNET = "test";
@@ -46,16 +43,4 @@ int GetRPCPort(const std::string& chain)
     } else {
         throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
     }
-}
-
-std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain)
-{
-    if (chain == CBaseChainParams::MAIN)
-        return MakeUnique<CBaseChainParams>("", 8332);
-    else if (chain == CBaseChainParams::TESTNET)
-        return MakeUnique<CBaseChainParams>("testnet3", 18332);
-    else if (chain == CBaseChainParams::REGTEST)
-        return MakeUnique<CBaseChainParams>("regtest", 18443);
-    else
-        throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }
