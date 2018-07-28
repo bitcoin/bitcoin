@@ -701,11 +701,20 @@ bool CPrivateSendClient::DoAutomaticDenominating(CConnman& connman, bool fDryRun
 {
     if(fMasternodeMode) return false; // no client-side mixing on masternodes
     if(!fEnablePrivateSend) return false;
-    if(!pwalletMain || pwalletMain->IsLocked(true)) return false;
     if(nState != POOL_STATE_IDLE) return false;
 
     if(!masternodeSync.IsMasternodeListSynced()) {
         strAutoDenomResult = _("Can't mix while sync in progress.");
+        return false;
+    }
+
+    if (!pwalletMain) {
+        strAutoDenomResult = _("Wallet is not initialized");
+        return false;
+    }
+
+    if(!fDryRun && pwalletMain->IsLocked(true)) {
+        strAutoDenomResult = _("Wallet is locked.");
         return false;
     }
 
@@ -720,11 +729,6 @@ bool CPrivateSendClient::DoAutomaticDenominating(CConnman& connman, bool fDryRun
     TRY_LOCK(cs_darksend, lockDS);
     if(!lockDS) {
         strAutoDenomResult = _("Lock is already in place.");
-        return false;
-    }
-
-    if(!fDryRun && pwalletMain->IsLocked(true)) {
-        strAutoDenomResult = _("Wallet is locked.");
         return false;
     }
 
