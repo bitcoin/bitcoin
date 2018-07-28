@@ -101,7 +101,7 @@ void StartNode(const string &dataDir, bool regTest, const string& extraArgs)
     boost::filesystem::path fpath = boost::filesystem::system_complete("../syscoind");
 	string nodePath = fpath.string() + string(" -unittest -assetallocationindex -datadir=") + dataDir;
 	if(regTest)
-		nodePath += string(" -regtest -addressindex");
+		nodePath += string(" -regtest -debug=threadpool -addressindex");
 	if(!extraArgs.empty())
 		nodePath += string(" ") + extraArgs;
 
