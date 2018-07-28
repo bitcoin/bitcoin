@@ -290,6 +290,11 @@ public:
 extern ArgsManager gArgs;
 
 /**
+ * Set the chain name arguments for ArgsManager::GetChainName
+ */
+void SetupChainParamsBaseOptions();
+
+/**
  * @return true if help has been requested via a command-line arg
  */
 bool HelpRequested(const ArgsManager& args);

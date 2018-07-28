@@ -20,11 +20,6 @@ public:
     static const std::string REGTEST;
 };
 
-/**
- *Set the arguments for chainparams
- */
-void SetupChainParamsBaseOptions();
-
 /** @return the data dir for the named chain */
 std::string GetDataDir(const std::string& chain);
 
