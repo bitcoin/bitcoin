@@ -1249,22 +1249,23 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 		if (bMultiThreaded && threadpool != NULL)
 		{
 			// track worker thread metrics
-			static int totalExecutions = 0;
-			static int concurrentExecutions = 0;
-			static int64_t totalExecution = 0;
-			static int64_t minExecution = 1000000000;
-			static int64_t maxExecution = 0;
-			static int concurrentCount = 0;
-			concurrentExecutions += concurrentCount;
-			concurrentCount++;
-			totalExecutions++;
+			static int totalExecutionCount = 0;
+			static int concurrentExecutionCount = 0;
+			static int maxConcurrentExecutionCount = 0;
+			static int64_t totalExecutionMicros = 0;
+			static int64_t minExecutionMicros = 1000000000;
+			static int64_t maxExecutionMicros = 0;
 
 			// define a task for the worker to process
 			std::packaged_task<void()> task([&pool, ptx, hash, coins_to_uncache, hashCacheEntry, vChecks]() {
 				LogPrint("threadpool", "THREADPOOL::Starting task for signature check for hash %s\n", hash.ToString());
+				// metrics
 				const int64_t &time = GetTimeMicros();
-				CValidationState vstate;
-				CCoinsViewCache vView(pcoinsTip);
+				totalExecutionCount += 1;
+				concurrentExecutionCount += 1;
+
+				CValidationState validationState;
+				CCoinsViewCache coinsViewCache(pcoinsTip);
 				const CTransaction& txIn = *ptx;
 				for (auto &check : vChecks)
 				{
@@ -1284,7 +1285,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 						return;
 					}
 				}
-				if (!CheckSyscoinInputs(txIn, vstate, vView, true, chainActive.Height(), CBlock()))
+				if (!CheckSyscoinInputs(txIn, validationState, coinsViewCache, true, chainActive.Height(), CBlock()))
 				{
 					LOCK2(cs_main, mempool.cs);
 					LogPrint("mempool", "%s: %s\n", "CheckSyscoinInputs Error", hash.ToString());
@@ -1298,26 +1299,32 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 					nLastMultithreadMempoolFailure = GetTime();
 				}
 				scriptExecutionCache.insert(hashCacheEntry);
-				const int64_t &thisExecution = GetTimeMicros() - time;
-				if (thisExecution < minExecution)
-					minExecution = thisExecution;
-				if (thisExecution > maxExecution)
-					maxExecution = thisExecution;
-				totalExecution += thisExecution;
-				concurrentCount--;
-				LogPrint("threadpool", "THREADPOOL::Finished task for signature check for hash %s, execution time %lld microseconds\n", hash.ToString(), thisExecution);
-				
-				if (fDebug || fUnitTest)
-				{
-					// log all the time for unit tests, when debug=threadpool, or every 100th transaction
-					std::string message = "THREADPOOL::Stats after signature check for hash %s, total executions: %d, concurrent executions: %d, average execution time: %lld microseconds, min execution time: %lld microseconds, max execution time: %lld microseconds\n";
-					if (totalExecutions % 100 == 0) {
-						LogPrintf(message, hash.ToString(), totalExecutions, concurrentExecutions, totalExecution / totalExecutions, minExecution, maxExecution);
-					} else {
-						LogPrint("threadpool", message, hash.ToString(), totalExecutions, concurrentExecutions, totalExecution / totalExecutions, minExecution, maxExecution);
-					}
 
+				// metrics
+				const int64_t &thisExecutionMicros = GetTimeMicros() - time;
+				if (thisExecutionMicros < minExecutionMicros) {
+					minExecutionMicros = thisExecutionMicros;
 				}
+				if (thisExecutionMicros > maxExecutionMicros) {
+					maxExecutionMicros = thisExecutionMicros;
+				}
+				totalExecutionMicros += thisExecutionMicros;
+				if (concurrentExecutionCount > maxConcurrentExecutionCount) {
+					maxConcurrentExecutionCount = concurrentExecutionCount;
+				}
+
+				// logging
+				LogPrint("threadpool", "THREADPOOL::Finished task for signature check for hash %s, execution time %lld microseconds\n", hash.ToString(), thisExecutionMicros);
+				// log all the time for unit tests, when debug=threadpool, or every 100th transaction
+				std::string message = "THREADPOOL::Stats after signature check for hash %s, total executions: %d, concurrent executions: %d, max concurrent executions: %d, average execution time: %lld microseconds, min execution time: %lld microseconds, max execution time: %lld microseconds\n";
+				if (fUnitTest || totalExecutionCount % 100 == 0) {
+					LogPrintf(message, hash.ToString(), totalExecutionCount, concurrentExecutionCount, maxConcurrentExecutionCount, totalExecutionMicros / totalExecutionCount, minExecutionMicros, maxExecutionMicros);
+				} else {
+					LogPrint("threadpool", message, hash.ToString(), totalExecutionCount, concurrentExecutionCount, maxConcurrentExecutionCount, totalExecutionMicros / totalExecutionCount, minExecutionMicros, maxExecutionMicros);
+				}
+
+				// indicate that this thread is done
+				concurrentExecutionCount -= 1;
 			});
 
 			// retry if the threadpool queue is full and return error if we can't post
@@ -1328,7 +1335,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 				isThreadPosted = threadpool->tryPost(task);
 				if (isThreadPosted)
 				{
-					LogPrint("threadpool", "THREADPOOL::Added worker for signature checks for hash %s in %d tries\n", hash.ToString(), numTries);
+					LogPrint("threadpool", "THREADPOOL::Added worker for signature check for hash %s in %d tries\n", hash.ToString(), numTries);
 					break;
 				}
 				LogPrintf("THREADPOOL::AcceptToMemoryPoolWorker: thread pool queue is full\n");
