@@ -1248,10 +1248,18 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 		}
 		if (bMultiThreaded && threadpool != NULL)
 		{
+			static int totalExecutions = 0;
+			static int concurrentExecutions = 0;
+			static int64_t totalExecution = 0;
+			static int64_t minExecution = 1000000000;
+			static int64_t maxExecution = 0;
+			static int concurrentCount = 0;
+			concurrentExecutions += concurrentCount;
+			concurrentCount++;
+			totalExecutions++;
 			// define a task for the worker to process
 			std::packaged_task<void()> task([&pool, ptx, hash, coins_to_uncache, hashCacheEntry, vChecks]() {
 				const int64_t &time = GetTimeMicros();
-				LogPrint("threadpool", "THREADPOOL::Entering thread for signature checks for hash %s\n", hash.ToString());
 				CValidationState vstate;
 				CCoinsViewCache vView(pcoinsTip);
 				const CTransaction& txIn = *ptx;
@@ -1285,14 +1293,21 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 					nLastMultithreadMempoolFailure = GetTime();
 				}
 				scriptExecutionCache.insert(hashCacheEntry);
-				LogPrint("threadpool", "THREADPOOL::Finished thread for signature checks for hash %s, elapsed %lld microseconds\n", hash.ToString(), GetTimeMicros() - time);
+				const int64_t &thisExecution = GetTimeMicros() - time;
+				if (thisExecution < minExecution)
+					minExecution = thisExecution;
+				if (thisExecution > maxExecution)
+					maxExecution = thisExecution;
+				totalExecution += thisExecution;
+				concurrentCount--;
 			});
 
 			bool isThreadPosted = false;
 			for (int numTries = 50; numTries >= 0; numTries--){
 				isThreadPosted = threadpool->tryPost(task);
 				if (isThreadPosted) {
-					LogPrint("threadpool", "THREADPOOL::Added worker for signature checks for hash %s\n", hash.ToString());
+					if (!fDebug || (fDebug && (totalExecutions % 100) == 0))
+						LogPrint("threadpool", "THREADPOOL::Added worker for signature checks for hash %s, size: %d, idlesize: %d, total executions: %d, concurrent executions: %d, average execution time: %lld microseconds, min execution time: %lld microseconds, max execution time: %lld microseconds\n", hash.ToString(), tp->size(), tp->idlesize(), totalExecutions, concurrentExecutions, totalExecution / totalExecutions, minExecution, maxExecution);
 					break;
 				} else {
 					LogPrintf("THREADPOOL::AcceptToMemoryPoolWorker: thread pool queue is full\n");
