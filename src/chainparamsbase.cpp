@@ -6,18 +6,10 @@
 #include <chainparamsbase.h>
 
 #include <tinyformat.h>
-#include <util.h>
 
 const std::string CBaseChainParams::MAIN = "main";
 const std::string CBaseChainParams::TESTNET = "test";
 const std::string CBaseChainParams::REGTEST = "regtest";
-
-void SetupChainParamsBaseOptions()
-{
-    gArgs.AddArg("-regtest", "Enter regression test mode, which uses a special chain in which blocks can be solved instantly. "
-                                   "This is intended for regression testing tools and app development.", true, OptionsCategory::CHAINPARAMS);
-    gArgs.AddArg("-testnet", "Use the test chain", false, OptionsCategory::CHAINPARAMS);
-}
 
 std::string GetDataDir(const std::string& chain)
 {
