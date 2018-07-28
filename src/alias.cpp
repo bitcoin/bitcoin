@@ -629,7 +629,7 @@ bool CheckAliasInputs(const CCoinsViewCache &inputs, const CTransaction &tx, int
 		if (!theAliasNull)
 		{
 			if (!bSanityCheck) {
-				if (strResponseEnglish != "") {
+				if (!strResponseEnglish.empty()) {
 					paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, strName);
 				}
 			}

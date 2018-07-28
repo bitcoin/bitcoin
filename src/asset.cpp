@@ -513,7 +513,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 							errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2034 - " + _("Failed to write to asset allocation DB");
 							continue;
 						}
-						if (strResponseEnglish != "") {
+						if (!strResponseEnglish.empty()) {
 							paliasdb->WriteAliasIndexTxHistory(user1, receiverAddress, user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString());
 						}
 					}
@@ -529,7 +529,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 				vector<CAmount> rangeTotals;
 				for (auto& inputTuple : theAssetAllocation.listSendingAllocationInputs) {
 					const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, inputTuple.first);
-					const unsigned int rangeTotal = validateRangesAndGetCount(inputTuple.second);
+					const unsigned int &rangeTotal = validateRangesAndGetCount(inputTuple.second);
 					if (rangeTotal == 0)
 					{
 						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2036 - " + _("Invalid input range");
@@ -585,7 +585,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 							return error(errorMessage.c_str());
 						}
 
-						if (strResponseEnglish != "") {
+						if (!strResponseEnglish.empty()) {
 							paliasdb->WriteAliasIndexTxHistory(user1, receiverAddress, user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString());
 						}
 					}
@@ -648,7 +648,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 				theAsset.nPrecision = 0;
 		}
 		if (!bSanityCheck  && op != OP_ASSET_SEND) {
-			if (strResponseEnglish != "") {
+			if (!strResponseEnglish.empty()) {
 				paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theAsset.vchAsset));
 			}
 		}
