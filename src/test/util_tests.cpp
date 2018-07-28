@@ -438,7 +438,7 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     BOOST_CHECK(!test_args.IsArgNegated("-zzz"));
 
     // Test sections work
-    test_args.SelectConfigNetwork("sec1");
+    test_args.SelectConfigNetwork(Chain::TESTNET);
 
     // same as original
     BOOST_CHECK(test_args.GetArg("-a", "xxx") == ""
@@ -459,7 +459,7 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     const auto& sec1_ccc_res = test_args.GetArgs("-ccc");
     BOOST_CHECK_EQUAL_COLLECTIONS(sec1_ccc_res.begin(), sec1_ccc_res.end(), sec1_ccc_expected.begin(), sec1_ccc_expected.end());
 
-    test_args.SelectConfigNetwork("sec2");
+    test_args.SelectConfigNetwork(Chain::REGTEST);
 
     // same as original
     BOOST_CHECK(test_args.GetArg("-a", "xxx") == ""
@@ -485,18 +485,18 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     test_args.SetNetworkOnlyArg("-ccc");
     test_args.SetNetworkOnlyArg("-h");
 
-    test_args.SelectConfigNetwork(CBaseChainParams::MAIN);
+    test_args.SelectConfigNetwork(Chain::MAIN);
     BOOST_CHECK(test_args.GetArg("-d", "xxx") == "e");
     BOOST_CHECK(test_args.GetArgs("-ccc").size() == 2);
     BOOST_CHECK(test_args.GetArg("-h", "xxx") == "0");
 
-    test_args.SelectConfigNetwork("sec1");
+    test_args.SelectConfigNetwork(Chain::TESTNET);
     BOOST_CHECK(test_args.GetArg("-d", "xxx") == "eee");
     BOOST_CHECK(test_args.GetArgs("-d").size() == 1);
     BOOST_CHECK(test_args.GetArgs("-ccc").size() == 2);
     BOOST_CHECK(test_args.GetArg("-h", "xxx") == "1");
 
-    test_args.SelectConfigNetwork("sec2");
+    test_args.SelectConfigNetwork(Chain::REGTEST);
     BOOST_CHECK(test_args.GetArg("-d", "xxx") == "xxx");
     BOOST_CHECK(test_args.GetArgs("-d").size() == 0);
     BOOST_CHECK(test_args.GetArgs("-ccc").size() == 1);
@@ -594,7 +594,7 @@ BOOST_AUTO_TEST_CASE(util_GetChainName)
 
     // check setting the network to test (and thus making
     // [test] regtest=1 potentially relevant) doesn't break things
-    test_args.SelectConfigNetwork("test");
+    test_args.SelectConfigNetwork(Chain::TESTNET);
 
     test_args.ParseParameters(0, (char**)argv_testnet, error);
     test_args.ReadConfigString(testnetconf);

@@ -10,14 +10,29 @@
 #include <script/script.h>
 #include <utilstrencodings.h>
 #include <test/test_bitcoin.h>
+#include <tinyformat.h>
 
 #include <boost/test/unit_test.hpp>
 
 #include <univalue.h>
+#include <stdexcept>
 
 extern UniValue read_json(const std::string& jsondata);
 
 BOOST_FIXTURE_TEST_SUITE(key_io_tests, BasicTestingSetup)
+
+static Chain ToChain(const std::string& chainName)
+{
+    if (chainName == "main") {
+        return Chain::MAIN;
+    } else if (chainName == "test") {
+        return Chain::TESTNET;
+    } else if (chainName == "regtest") {
+        return Chain::REGTEST;
+    } else {
+        throw std::invalid_argument(strprintf("Unexpected chainName: %s", chainName));
+    }
+}
 
 // Goal: check that parsed keys match test payload
 BOOST_AUTO_TEST_CASE(key_io_valid_parse)
@@ -25,7 +40,7 @@ BOOST_AUTO_TEST_CASE(key_io_valid_parse)
     UniValue tests = read_json(std::string(json_tests::key_io_valid, json_tests::key_io_valid + sizeof(json_tests::key_io_valid)));
     CKey privkey;
     CTxDestination destination;
-    SelectParams(CBaseChainParams::MAIN);
+    SelectParams(Chain::MAIN);
 
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
         UniValue test = tests[idx];
@@ -38,7 +53,7 @@ BOOST_AUTO_TEST_CASE(key_io_valid_parse)
         std::vector<unsigned char> exp_payload = ParseHex(test[1].get_str());
         const UniValue &metadata = test[2].get_obj();
         bool isPrivkey = find_value(metadata, "isPrivkey").get_bool();
-        SelectParams(find_value(metadata, "chain").get_str());
+        SelectParams(ToChain(find_value(metadata, "chain").get_str()));
         bool try_case_flip = find_value(metadata, "tryCaseFlip").isNull() ? false : find_value(metadata, "tryCaseFlip").get_bool();
         if (isPrivkey) {
             bool isCompressed = find_value(metadata, "isCompressed").get_bool();
@@ -97,7 +112,7 @@ BOOST_AUTO_TEST_CASE(key_io_valid_gen)
         std::vector<unsigned char> exp_payload = ParseHex(test[1].get_str());
         const UniValue &metadata = test[2].get_obj();
         bool isPrivkey = find_value(metadata, "isPrivkey").get_bool();
-        SelectParams(find_value(metadata, "chain").get_str());
+        SelectParams(ToChain(find_value(metadata, "chain").get_str()));
         if (isPrivkey) {
             bool isCompressed = find_value(metadata, "isCompressed").get_bool();
             CKey key;
@@ -114,7 +129,7 @@ BOOST_AUTO_TEST_CASE(key_io_valid_gen)
         }
     }
 
-    SelectParams(CBaseChainParams::MAIN);
+    SelectParams(Chain::MAIN);
 }
 
 
@@ -136,7 +151,7 @@ BOOST_AUTO_TEST_CASE(key_io_invalid)
         std::string exp_base58string = test[0].get_str();
 
         // must be invalid as public and as private key
-        for (auto chain : { CBaseChainParams::MAIN, CBaseChainParams::TESTNET, CBaseChainParams::REGTEST }) {
+        for (Chain chain : { Chain::MAIN, Chain::TESTNET, Chain::REGTEST }) {
             SelectParams(chain);
             destination = DecodeDestination(exp_base58string);
             BOOST_CHECK_MESSAGE(!IsValidDestination(destination), "IsValid pubkey in mainnet:" + strTest);

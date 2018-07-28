@@ -14,6 +14,7 @@
 #include <config/bitcoin-config.h>
 #endif
 
+#include <chainparamsbase.h>
 #include <compat.h>
 #include <fs.h>
 #include <logging.h>
@@ -153,7 +154,8 @@ protected:
     mutable CCriticalSection cs_args;
     std::map<std::string, std::vector<std::string>> m_override_args;
     std::map<std::string, std::vector<std::string>> m_config_args;
-    std::string m_network;
+    Chain m_network;
+    bool m_network_set;
     std::set<std::string> m_network_only_args;
     std::map<OptionsCategory, std::map<std::string, Arg>> m_available_args;
 
@@ -165,10 +167,10 @@ public:
     /**
      * Select the network in use
      */
-    void SelectConfigNetwork(const std::string& network);
+    void SelectConfigNetwork(const Chain network);
 
     /** @return the network in use */
-    const std::string& ConfigNetwork() const;
+    Chain ConfigNetwork() const;
 
     bool ParseParameters(int argc, const char* const argv[], std::string& error);
     bool ReadConfigFiles(std::string& error, bool ignore_invalid_keys = false);
@@ -260,6 +262,7 @@ public:
      * @return CBaseChainParams::MAIN by default; raises runtime error if an invalid combination is given.
      */
     std::string GetChainName() const;
+    Chain GetChain() const;
 
     /**
      * Add argument

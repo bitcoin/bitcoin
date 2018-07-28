@@ -11,28 +11,32 @@ const std::string CBaseChainParams::MAIN = "main";
 const std::string CBaseChainParams::TESTNET = "test";
 const std::string CBaseChainParams::REGTEST = "regtest";
 
-std::string GetDataDir(const std::string& chain)
+std::string GetChainName(const Chain chain)
 {
-    if (chain == CBaseChainParams::MAIN) {
-        return "";
-    } else if (chain == CBaseChainParams::TESTNET) {
-        return "testnet3";
-    } else if (chain == CBaseChainParams::REGTEST) {
-        return "regtest";
-    } else {
-        throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
+    switch (chain) {
+    case Chain::MAIN:    return "main";
+    case Chain::TESTNET: return "test";
+    case Chain::REGTEST: return "regtest";
+    default: throw std::runtime_error(strprintf("%s: Unknown chain %d.", __func__, static_cast<int>(chain)));
     }
 }
 
-int GetRPCPort(const std::string& chain)
+std::string GetDataDir(const Chain chain)
 {
-    if (chain == CBaseChainParams::MAIN) {
-        return 8332;
-    } else if (chain == CBaseChainParams::TESTNET) {
-        return 18332;
-    } else if (chain == CBaseChainParams::REGTEST) {
-        return 18443;
-    } else {
-        throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
+    switch (chain) {
+    case Chain::MAIN:    return "";
+    case Chain::TESTNET: return "testnet3";
+    case Chain::REGTEST: return "regtest";
+    default: throw std::runtime_error(strprintf("%s: Unknown chain %d.", __func__, static_cast<int>(chain)));
+    }
+}
+
+int GetRPCPort(const Chain chain)
+{
+    switch (chain) {
+    case Chain::MAIN:    return 8332;
+    case Chain::TESTNET: return 18332;
+    case Chain::REGTEST: return 18443;
+    default: throw std::runtime_error(strprintf("%s: Unknown chain %d.", __func__, static_cast<int>(chain)));
     }
 }

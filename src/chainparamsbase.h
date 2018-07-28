@@ -20,10 +20,19 @@ public:
     static const std::string REGTEST;
 };
 
-/** @return the data dir for the named chain */
-std::string GetDataDir(const std::string& chain);
+enum class Chain {
+    MAIN,
+    TESTNET,
+    REGTEST
+};
 
-/** @return the rpc port for the named chain */
-int GetRPCPort(const std::string& chain);
+/** @return the name for the chain */
+std::string GetChainName(const Chain chain);
+
+/** @return the data dir for the chain */
+std::string GetDataDir(const Chain chain);
+
+/** @return the rpc port for the chain */
+int GetRPCPort(const Chain chain);
 
 #endif // BITCOIN_CHAINPARAMSBASE_H

@@ -5,7 +5,6 @@
 
 #include <util.h>
 
-#include <chainparamsbase.h>
 #include <random.h>
 #include <serialize.h>
 #include <utilstrencodings.h>
@@ -32,6 +31,7 @@
 #include <algorithm>
 #include <fcntl.h>
 #include <sched.h>
+#include <stdexcept>
 #include <sys/resource.h>
 #include <sys/stat.h>
 
@@ -226,14 +226,14 @@ public:
      *  See also comments around ArgsManager::ArgsManager() below. */
     static inline bool UseDefaultSection(const ArgsManager& am, const std::string& arg)
     {
-        return (am.m_network == CBaseChainParams::MAIN || am.m_network_only_args.count(arg) == 0);
+        return (am.m_network == Chain::MAIN || am.m_network_only_args.count(arg) == 0);
     }
 
     /** Convert regular argument into the network-specific setting */
     static inline std::string NetworkArg(const ArgsManager& am, const std::string& arg)
     {
         assert(arg.length() > 1 && arg[0] == '-');
-        return "-" + am.m_network + "." + arg.substr(1);
+        return "-" + GetChainName(am.m_network) + "." + arg.substr(1);
     }
 
     /** Find arguments in a map and add them to a vector */
@@ -283,7 +283,7 @@ public:
         // But in contrast we return the first argument seen in a config file,
         // so "foo=bar \n foo=baz" in the config file gives
         // GetArg(am,"foo")={true,"bar"}
-        if (!am.m_network.empty()) {
+        if (am.m_network_set) {
             found_result = GetArgHelper(am.m_config_args, NetworkArg(am, arg));
             if (found_result.first) {
                 return found_result;
@@ -363,6 +363,7 @@ static bool InterpretNegatedOption(std::string& key, std::string& val)
 }
 
 ArgsManager::ArgsManager() :
+    m_network_set(false),
     /* These options would cause cross-contamination if values for
      * mainnet were used while running on regtest/testnet (or vice-versa).
      * Setting them as section_only_args ensures that sharing a config file
@@ -381,10 +382,10 @@ ArgsManager::ArgsManager() :
 void ArgsManager::WarnForSectionOnlyArgs()
 {
     // if there's no section selected, don't worry
-    if (m_network.empty()) return;
+    if (!m_network_set) return;
 
     // if it's okay to use the default section for this network, don't worry
-    if (m_network == CBaseChainParams::MAIN) return;
+    if (m_network == Chain::MAIN) return;
 
     for (const auto& arg : m_network_only_args) {
         std::pair<bool, std::string> found_result;
@@ -402,17 +403,22 @@ void ArgsManager::WarnForSectionOnlyArgs()
         if (!found_result.first) continue;
 
         // otherwise, issue a warning
-        LogPrintf("Warning: Config setting for %s only applied on %s network when in [%s] section.\n", arg, m_network, m_network);
+        const std::string& networkName = ::GetChainName(m_network);
+        LogPrintf("Warning: Config setting for %s only applied on %s network when in [%s] section.\n", arg, networkName, networkName);
     }
 }
 
-void ArgsManager::SelectConfigNetwork(const std::string& network)
+void ArgsManager::SelectConfigNetwork(const Chain network)
 {
     m_network = network;
+    m_network_set = true;
 }
 
-const std::string& ArgsManager::ConfigNetwork() const
+Chain ArgsManager::ConfigNetwork() const
 {
+    if (!m_network_set) {
+        throw std::runtime_error("ConfigNetwork queried before selection");
+    }
     return m_network;
 }
 
@@ -495,7 +501,7 @@ std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg) const
     LOCK(cs_args);
 
     ArgsManagerHelper::AddArgs(result, m_override_args, strArg);
-    if (!m_network.empty()) {
+    if (m_network_set) {
         ArgsManagerHelper::AddArgs(result, m_config_args, ArgsManagerHelper::NetworkArg(*this, strArg));
     }
 
@@ -519,7 +525,7 @@ bool ArgsManager::IsArgNegated(const std::string& strArg) const
     const auto& ov = m_override_args.find(strArg);
     if (ov != m_override_args.end()) return ov->second.empty();
 
-    if (!m_network.empty()) {
+    if (m_network_set) {
         const auto& cfs = m_config_args.find(ArgsManagerHelper::NetworkArg(*this, strArg));
         if (cfs != m_config_args.end()) return cfs->second.empty();
     }
@@ -947,7 +953,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
     return true;
 }
 
-std::string ArgsManager::GetChainName() const
+Chain ArgsManager::GetChain() const
 {
     bool fRegTest = ArgsManagerHelper::GetNetBoolArg(*this, "-regtest");
     bool fTestNet = ArgsManagerHelper::GetNetBoolArg(*this, "-testnet");
@@ -955,10 +961,15 @@ std::string ArgsManager::GetChainName() const
     if (fTestNet && fRegTest)
         throw std::runtime_error("Invalid combination of -regtest and -testnet.");
     if (fRegTest)
-        return CBaseChainParams::REGTEST;
+        return Chain::REGTEST;
     if (fTestNet)
-        return CBaseChainParams::TESTNET;
-    return CBaseChainParams::MAIN;
+        return Chain::TESTNET;
+    return Chain::MAIN;
+}
+
+std::string ArgsManager::GetChainName() const
+{
+    return ::GetChainName(GetChain());
 }
 
 void SetupChainArgs(ArgsManager& args)

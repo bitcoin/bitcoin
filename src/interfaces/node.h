@@ -5,10 +5,11 @@
 #ifndef BITCOIN_INTERFACES_NODE_H
 #define BITCOIN_INTERFACES_NODE_H
 
-#include <addrdb.h>     // For banmap_t
-#include <amount.h>     // For CAmount
-#include <net.h>        // For CConnman::NumConnections
-#include <netaddress.h> // For Network
+#include <addrdb.h>          // For banmap_t
+#include <amount.h>          // For CAmount
+#include <chainparamsbase.h> // For Chain
+#include <net.h>             // For CConnman::NumConnections
+#include <netaddress.h>      // For Network
 
 #include <functional>
 #include <memory>
@@ -50,7 +51,7 @@ public:
     virtual bool readConfigFiles(std::string& error) = 0;
 
     //! Choose network parameters.
-    virtual void selectParams(const std::string& network) = 0;
+    virtual void selectParams(const Chain network) = 0;
 
     //! Get network name.
     virtual std::string getNetwork() = 0;

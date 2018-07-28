@@ -362,18 +362,17 @@ const CChainParams &Params() {
     return *globalChainParams;
 }
 
-std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain)
+std::unique_ptr<CChainParams> CreateChainParams(const Chain chain)
 {
-    if (chain == CBaseChainParams::MAIN)
-        return std::unique_ptr<CChainParams>(new CMainParams());
-    else if (chain == CBaseChainParams::TESTNET)
-        return std::unique_ptr<CChainParams>(new CTestNetParams());
-    else if (chain == CBaseChainParams::REGTEST)
-        return std::unique_ptr<CChainParams>(new CRegTestParams());
-    throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
+    switch (chain) {
+    case Chain::MAIN:    return std::unique_ptr<CChainParams>(new CMainParams());
+    case Chain::TESTNET: return std::unique_ptr<CChainParams>(new CTestNetParams());
+    case Chain::REGTEST: return std::unique_ptr<CChainParams>(new CRegTestParams());
+    default: throw std::runtime_error(strprintf("%s: Unknown chain %d.", __func__, static_cast<int>(chain)));
+    }
 }
 
-void SelectParams(const std::string& network)
+void SelectParams(const Chain network)
 {
     gArgs.SelectConfigNetwork(network);
     globalChainParams = CreateChainParams(network);
