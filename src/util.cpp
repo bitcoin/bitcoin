@@ -411,6 +411,11 @@ void ArgsManager::SelectConfigNetwork(const std::string& network)
     m_network = network;
 }
 
+const std::string& ArgsManager::ConfigNetwork() const
+{
+    return m_network;
+}
+
 bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::string& error)
 {
     LOCK(cs_args);
@@ -756,7 +761,7 @@ const fs::path &GetBlocksDir(bool fNetSpecific)
         path = GetDataDir(false);
     }
     if (fNetSpecific)
-        path /= BaseParams().DataDir();
+        path /= ::GetDataDir(gArgs.ConfigNetwork());
 
     path /= "blocks";
     fs::create_directories(path);
@@ -785,7 +790,7 @@ const fs::path &GetDataDir(bool fNetSpecific)
         path = GetDefaultDataDir();
     }
     if (fNetSpecific)
-        path /= BaseParams().DataDir();
+        path /= ::GetDataDir(gArgs.ConfigNetwork());
 
     if (fs::create_directories(path)) {
         // This is the first run, create wallets subdirectory too

@@ -44,13 +44,10 @@ std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain
  */
 void SetupChainParamsBaseOptions();
 
-/**
- * Return the currently selected parameters. This won't change after app
- * startup, except for unit tests.
- */
-const CBaseChainParams& BaseParams();
+/** @return the data dir for the named chain */
+std::string GetDataDir(const std::string& chain);
 
-/** Sets the params returned by Params() to those for the given network. */
-void SelectBaseParams(const std::string& chain);
+/** @return the rpc port for the named chain */
+int GetRPCPort(const std::string& chain);
 
 #endif // BITCOIN_CHAINPARAMSBASE_H

@@ -130,9 +130,9 @@ static int AppInitRPC(int argc, char* argv[])
         fprintf(stderr, "Error reading configuration file: %s\n", error.c_str());
         return EXIT_FAILURE;
     }
-    // Check for -testnet or -regtest parameter (BaseParams() calls are only valid after this clause)
+    // Check for -testnet or -regtest parameter (gArgs.ConfigNetwork() calls are only valid after this clause)
     try {
-        SelectBaseParams(gArgs.GetChainName());
+        gArgs.SelectConfigNetwork(gArgs.GetChainName());
     } catch (const std::exception& e) {
         fprintf(stderr, "Error: %s\n", e.what());
         return EXIT_FAILURE;
@@ -311,7 +311,7 @@ static UniValue CallRPC(BaseRequestHandler *rh, const std::string& strMethod, co
     //     1. -rpcport
     //     2. port in -rpcconnect (ie following : in ipv4 or ]: in ipv6)
     //     3. default port for chain
-    int port = BaseParams().RPCPort();
+    int port = GetRPCPort(gArgs.ConfigNetwork());
     SplitHostPort(gArgs.GetArg("-rpcconnect", DEFAULT_RPCCONNECT), port, host);
     port = gArgs.GetArg("-rpcport", port);
 
