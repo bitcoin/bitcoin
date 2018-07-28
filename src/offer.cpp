@@ -672,7 +672,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, const vector<vector<unsign
 		}
 	}
 	if(!bSanityCheck) {
-		if (strResponseEnglish != "") {
+		if (!strResponseEnglish.empty()) {
 			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theOffer.vchOffer));
 		}
 	}

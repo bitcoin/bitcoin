@@ -413,7 +413,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1014 - " + _("Failed to write to asset DB");
 				return error(errorMessage.c_str());
 			}
-			if (!bSanityCheck && strResponseEnglish != "") {
+			if (!bSanityCheck && !strResponseEnglish.empty()) {
 				paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, assetAllocationTuple.ToString());
 			}
 		}
@@ -568,7 +568,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 						return error(errorMessage.c_str());
 					}
 					if (fJustCheck) {
-						if (strResponseEnglish != "") {
+						if (!strResponseEnglish.empty()) {
 							paliasdb->WriteAliasIndexTxHistory(user1, receiverAddress, user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString());
 						}
 					}
@@ -593,7 +593,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 						return error(errorMessage.c_str());
 					}
 				}
-				const unsigned int rangeTotal = validateRangesAndGetCount(inputTuple.second);
+				const unsigned int &rangeTotal = validateRangesAndGetCount(inputTuple.second);
 				if(rangeTotal == 0)
 				{
 					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1026 - " + _("Invalid input ranges");
@@ -675,7 +675,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 					}
 
 					if (fJustCheck) {
-						if (strResponseEnglish != "") {
+						if (!strResponseEnglish.empty()) {
 							paliasdb->WriteAliasIndexTxHistory(user1, receiverAddress, user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString());
 						}
 					}
@@ -1071,7 +1071,7 @@ int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& a
 		}
 		else if (!assetallocation.listSendingAllocationInputs.empty()) {
 			for (auto& inputTuple : assetallocation.listSendingAllocationInputs) {
-				const unsigned int rangeCount = validateRangesAndGetCount(inputTuple.second);
+				const unsigned int &rangeCount = validateRangesAndGetCount(inputTuple.second);
 				if (rangeCount == 0)
 					continue;
 				senderBalance -= rangeCount;

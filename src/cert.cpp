@@ -464,7 +464,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, const vector<vector<unsigne
 		}
 	}
 	if(!bSanityCheck) {
-		if (strResponseEnglish != "") {
+		if (!strResponseEnglish.empty()) {
 			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theCert.vchCert));
 		}
 	}

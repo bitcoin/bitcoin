@@ -996,7 +996,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 		}
 
 		if (!bSanityCheck) {
-			if (strResponseEnglish != "") {
+			if (!strResponseEnglish.empty()) {
 				user1 = stringFromVch(theEscrow.vchBuyerAlias);
 				user2 = stringFromVch(theEscrow.vchSellerAlias);
 				user3 = stringFromVch(theEscrow.vchArbiterAlias);
