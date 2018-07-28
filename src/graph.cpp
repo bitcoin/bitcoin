@@ -65,10 +65,10 @@ bool OrderBasedOnArrivalTime(std::vector<CTransactionRef>& blockVtx) {
 			}
 		}
 		// add normal tx's to orderedvtx, 
-		orderedVtx.emplace_back(txRef);
+		orderedVtx.emplace_back(std::move(txRef));
 	}
 	for (auto& orderedIndex : orderedIndexes) {
-		orderedVtx.emplace_back(blockVtx[orderedIndex.second]);
+		orderedVtx.emplace_back(std::move(blockVtx[orderedIndex.second]));
 	}
 	if (blockVtx.size() != orderedVtx.size())
 	{
@@ -169,7 +169,7 @@ bool DAGTopologicalSort(std::vector<CTransactionRef>& blockVtx, const std::vecto
 		return false;
 	}
 	// add coinbase
-	newVtx.emplace_back(blockVtx[0]);
+	newVtx.emplace_back(std::move(blockVtx[0]));
 
 	// add sys tx's to newVtx in reverse sorted order
 	reverse(c.begin(), c.end());
@@ -183,7 +183,7 @@ bool DAGTopologicalSort(std::vector<CTransactionRef>& blockVtx, const std::vecto
 		for (auto& nIndex : vecTx) {
 			if (nIndex >= blockVtx.size())
 				continue;
-			newVtx.emplace_back(blockVtx[nIndex]);
+			newVtx.emplace_back(std::move(blockVtx[nIndex]));
 		}
 	}
 
@@ -191,7 +191,7 @@ bool DAGTopologicalSort(std::vector<CTransactionRef>& blockVtx, const std::vecto
 	for (auto& nIndex : conflictedIndexes) {
 		if (nIndex >= blockVtx.size())
 			continue;
-		newVtx.emplace_back(blockVtx[nIndex]);
+		newVtx.emplace_back(std::move(blockVtx[nIndex]));
 	}
 	
 	// add non-sys and other sys tx's to end of newVtx
@@ -202,7 +202,7 @@ bool DAGTopologicalSort(std::vector<CTransactionRef>& blockVtx, const std::vecto
 		const CTransaction& tx = *txRef;
 		if (!DecodeAssetAllocationTx(tx, op, vvchArgs))
 		{
-			newVtx.emplace_back(txRef);
+			newVtx.emplace_back(std::move(txRef));
 		}
 	}
 	if (blockVtx.size() != newVtx.size())
