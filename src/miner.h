@@ -30,6 +30,8 @@ struct CBlockTemplate
     CBlock block;
     std::vector<CAmount> vTxFees;
     std::vector<int64_t> vTxSigOps;
+    CTxOut txoutMasternode; // masternode payment
+    std::vector<CTxOut> voutSuperblock; // superblock payment
 };
 
 // Container for tracking updates to ancestor feerate as we include (parent)
