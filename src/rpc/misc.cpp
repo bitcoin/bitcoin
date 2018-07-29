@@ -264,7 +264,7 @@ UniValue createmultisig(const JSONRPCRequest& request)
             "It returns a json object with the address and redeemScript.\n"
             "DEPRECATION WARNING: Using addresses with createmultisig is deprecated. Clients must\n"
             "transition to using addmultisigaddress to create multisig addresses with addresses known\n"
-            "to the wallet before upgrading to v0.17. To use the deprecated functionality, start bitcoind with -deprecatedrpc=createmultisig\n"
+            "to the wallet before upgrading to v0.17. To use the deprecated functionality, start xpchaind with -deprecatedrpc=createmultisig\n"
             "\nArguments:\n"
             "1. nrequired                    (numeric, required) The number of required signatures out of the n keys or addresses.\n"
             "2. \"keys\"                       (string, required) A json array of hex-encoded public keys\n"
@@ -305,7 +305,7 @@ UniValue createmultisig(const JSONRPCRequest& request)
 #endif
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid public key: %s\nNote that from v0.16, createmultisig no longer accepts addresses."
             " Clients must transition to using addmultisigaddress to create multisig addresses with addresses known to the wallet before upgrading to v0.17."
-            " To use the deprecated functionality, start bitcoind with -deprecatedrpc=createmultisig", keys[i].get_str()));
+            " To use the deprecated functionality, start xpchaind with -deprecatedrpc=createmultisig", keys[i].get_str()));
         }
     }
 

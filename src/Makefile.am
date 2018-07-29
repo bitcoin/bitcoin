@@ -378,7 +378,7 @@ nodist_libbitcoin_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
 # xpchaind binary #
-xpchaind_SOURCES = bitcoind.cpp
+xpchaind_SOURCES = xpchaind.cpp
 xpchaind_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 xpchaind_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 xpchaind_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
