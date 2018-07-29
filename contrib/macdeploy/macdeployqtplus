@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-from __future__ import division, print_function, unicode_literals
+#!/usr/bin/env python3
 #
 # Copyright (C) 2011  Patrick "p2k" Schneider <me@p2k-network.org>
 #
@@ -87,8 +86,6 @@ class FrameworkInfo(object):
     
     @classmethod
     def fromOtoolLibraryLine(cls, line):
-        print("DEBUG FOR OTOOL DEPLOY: " + line)
-
         # Note: line must be trimmed
         if line == "":
             return None
@@ -118,8 +115,6 @@ class FrameworkInfo(object):
             info.binaryPath = path
             info.version = "-"
             
-            print("DEBUG FOR DYLIB DEPLOY: " + path)
-
             info.installName = path
             info.deployedInstallName = "@executable_path/../Frameworks/" + info.binaryName
             info.sourceFilePath = path
@@ -204,10 +199,10 @@ class DeploymentInfo(object):
         return False
 
 def getFrameworks(binaryPath, verbose):
-    if verbose >= 2:
+    if verbose >= 3:
         print("Inspecting with otool: " + binaryPath)
     otoolbin=os.getenv("OTOOL", "otool")
-    otool = subprocess.Popen([otoolbin, "-L", binaryPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    otool = subprocess.Popen([otoolbin, "-L", binaryPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     o_stdout, o_stderr = otool.communicate()
     if otool.returncode != 0:
         if verbose >= 1:
@@ -215,10 +210,7 @@ def getFrameworks(binaryPath, verbose):
             sys.stderr.flush()
             raise RuntimeError("otool failed with return code %d" % otool.returncode)
 
-    print("OUT: " + o_stdout.decode())
-
-    otoolLines = o_stdout.decode().split("\n")
-    otoolLines.append(" /usr/local/opt/boost/lib/libboost_system-mt.dylib (compatibility version 0.0.0, current version 0.0.0)")
+    otoolLines = o_stdout.split("\n")
     otoolLines.pop(0) # First line is the inspected binary
     if ".framework" in binaryPath or binaryPath.endswith(".dylib"):
         otoolLines.pop(0) # Frameworks and dylibs list themselves as a dependency.
@@ -228,7 +220,7 @@ def getFrameworks(binaryPath, verbose):
         line = line.replace("@loader_path", os.path.dirname(binaryPath))
         info = FrameworkInfo.fromOtoolLibraryLine(line.strip())
         if info is not None:
-            if verbose >= 2:
+            if verbose >= 3:
                 print("Found framework:")
                 print(info)
             libraries.append(info)
@@ -492,7 +484,7 @@ to the codesign tool.
 E.g. CODESIGNARGS='--sign "Developer ID Application: ..." --keychain /encrypted/foo.keychain'""")
 
 ap.add_argument("app_bundle", nargs=1, metavar="app-bundle", help="application bundle to be deployed")
-ap.add_argument("-verbose", type=int, nargs=1, default=[3], metavar="<0-3>", help="0 = no output, 1 = error/warning (default), 2 = normal, 3 = debug")
+ap.add_argument("-verbose", type=int, nargs=1, default=[1], metavar="<0-3>", help="0 = no output, 1 = error/warning (default), 2 = normal, 3 = debug")
 ap.add_argument("-no-plugins", dest="plugins", action="store_false", default=True, help="skip plugin deployment")
 ap.add_argument("-no-strip", dest="strip", action="store_false", default=True, help="don't run 'strip' on the binaries")
 ap.add_argument("-sign", dest="sign", action="store_true", default=False, help="sign .app bundle with codesign tool")
@@ -721,22 +713,6 @@ elif config.sign:
 
 if config.dmg is not None:
 
-    #Patch in check_output for Python 2.6
-    if "check_output" not in dir( subprocess ):
-        def f(*popenargs, **kwargs):
-            if 'stdout' in kwargs:
-                raise ValueError('stdout argument not allowed, it will be overridden.')
-            process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
-            output, unused_err = process.communicate()
-            retcode = process.poll()
-            if retcode:
-                cmd = kwargs.get("args")
-                if cmd is None:
-                    cmd = popenargs[0]
-                raise CalledProcessError(retcode, cmd)
-            return output
-        subprocess.check_output = f
-
     def runHDIUtil(verb, image_basename, **kwargs):
         hdiutil_args = ["hdiutil", verb, image_basename + ".dmg"]
         if "capture_stdout" in kwargs:
@@ -754,7 +730,7 @@ if config.dmg is not None:
             if not value is True:
                 hdiutil_args.append(str(value))
         
-        return run(hdiutil_args)
+        return run(hdiutil_args, universal_newlines=True)
     
     if verbose >= 2:
         if fancy is None:
@@ -796,7 +772,7 @@ if config.dmg is not None:
         except subprocess.CalledProcessError as e:
             sys.exit(e.returncode)
         
-        m = re.search("/Volumes/(.+$)", output.decode())
+        m = re.search("/Volumes/(.+$)", output)
         disk_root = m.group(0)
         disk_name = m.group(1)
         
