@@ -2723,17 +2723,17 @@ void static UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams) {
                 }
             }
         }
-        // Check the version of the last 100 blocks to see if we need to upgrade:
-        for (int i = 0; i < 100 && pindex != NULL; i++)
+        // Check the version of the last 400 blocks to see if we need to upgrade:
+        for (int i = 0; i < 400 && pindex != NULL; i++)
         {
             int32_t nExpectedVersion = ComputeBlockVersion(pindex->pprev, chainParams.GetConsensus());
             if (pindex->nVersion > VERSIONBITS_LAST_OLD_BLOCK_VERSION && (pindex->nVersion & ~nExpectedVersion) != 0)
                 ++nUpgraded;
             pindex = pindex->pprev;
         }
-        if (nUpgraded > 20)
+        if (nUpgraded > 300)
             warningMessages.push_back(strprintf("%d of last 100 blocks have unexpected version", nUpgraded));
-        if (nUpgraded > 100/2)
+        if (nUpgraded > 200)
         {
             // strMiscWarning is read by GetWarnings(), called by Qt and the JSON-RPC code to warn the user:
             strMiscWarning = _("Warning: Unknown block versions being mined! It's possible unknown rules are in effect");
