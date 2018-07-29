@@ -316,7 +316,7 @@ crypto_libraven_crypto_a_SOURCES = \
   crypto/sph_simd.h \
   crypto/sph_skein.h \
   crypto/sph_hamsi.h \
-  crypto/sph_fugue. h \
+  crypto/sph_fugue.h \
   crypto/sph_shabal.h \
   crypto/sph_whirlpool.h \
   crypto/sph_sha2.h \
