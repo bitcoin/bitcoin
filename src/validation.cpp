@@ -1251,8 +1251,16 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 			// track worker thread metrics
 			static int totalWorkerCount = 0;
 			static int totalExecutionCount = 0;
+
+			static int totalCheckCount = 0;
+			static int totalCheckMicros = 0;
+
+			static int totalSyscoinCheckCount = 0;
+			static int totalSyscoinCheckMicros = 0;
+
 			static int concurrentExecutionCount = 0;
 			static int maxConcurrentExecutionCount = 0;
+
 			static int64_t totalExecutionMicros = 0;
 			static int64_t minExecutionMicros = 1000000000;
 			static int64_t maxExecutionMicros = 0;
@@ -1262,6 +1270,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 				LogPrint("threadpool", "THREADPOOL::%s:Signature check started\n", hash.ToString());
 				// metrics
 				const int64_t &time = GetTimeMicros();
+				int thisCheckCount = 0;
+				int thisSyscoinCheckCount = 0;
+				int thisCheckMicros = 0;
+				int thisSyscoinCheckMicros = 0;
 				totalExecutionCount += 1;
 				concurrentExecutionCount += 1;
 
@@ -1269,8 +1281,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 				CCoinsViewCache coinsViewCache(pcoinsTip);
 				const CTransaction& txIn = *ptx;
 				bool isCheckPassing = true;  // optimistic in case vChecks is empty
+				const int64_t &checkTime = GetTimeMicros();
 				for (auto &check : vChecks)
 				{
+					thisCheckCount += 1;
 					isCheckPassing = check();
 					if (!isCheckPassing)
 					{
@@ -1287,8 +1301,13 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 						break;
 					}
 				}
+				// how long did we run check()'s
+				thisCheckMicros = GetTimeMicros() - checkTime;
+
 				if (isCheckPassing)
 				{
+					const int64_t &syscoinCheckTime = GetTimeMicros();
+					thisSyscoinCheckCount += 1;
 					if (!CheckSyscoinInputs(txIn, validationState, coinsViewCache, true, chainActive.Height(), CBlock()))
 					{
 						LOCK2(cs_main, mempool.cs);
@@ -1303,6 +1322,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 						nLastMultithreadMempoolFailure = GetTime();
 					}
 					scriptExecutionCache.insert(hashCacheEntry);
+
+					// how long did we run CheckSyscoinInputs()'s
+					thisSyscoinCheckMicros = GetTimeMicros() - syscoinCheckTime;
 				}
 
 				// metrics
@@ -1313,22 +1335,39 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 				if (thisExecutionMicros > maxExecutionMicros) {
 					maxExecutionMicros = thisExecutionMicros;
 				}
-				totalExecutionMicros += thisExecutionMicros;
 				if (concurrentExecutionCount > maxConcurrentExecutionCount) {
 					maxConcurrentExecutionCount = concurrentExecutionCount;
 				}
+				totalCheckCount += thisCheckCount;
+				totalCheckMicros += thisCheckMicros;
+				totalSyscoinCheckCount += thisSyscoinCheckCount;
+				totalSyscoinCheckMicros += thisSyscoinCheckMicros;
+
+				totalExecutionMicros += thisExecutionMicros;
+
+				int thisAvgCheckMicros = thisCheckMicros / thisCheckCount;
 
 				// logging
-				LogPrint("threadpool", "THREADPOOL::%s:Signature check finished - execution time %lld microseconds\n", hash.ToString(), thisExecutionMicros);
+				LogPrint("threadpool", 
+					"THREADPOOL::%s:Signature check finished - execution time %lld microseconds, check(%d): total %lld, avg %lld microseconds, syscoin(%d): %lld microseconds, \n", 
+					hash.ToString(), thisExecutionMicros, thisCheckCount, thisCheckMicros, thisAvgCheckMicros, thisSyscoinCheckCount, thisSyscoinCheckMicros);
+
+				int avgCheckMicros = totalCheckMicros / totalCheckCount;
+				int avgSyscoinCheckMicros = totalSyscoinCheckMicros / totalSyscoinCheckCount;
+				int avgExecutionMicros = totalExecutionMicros / totalExecutionCount;
+
 				// every 100th transaction or when debug=threadpool
-				std::string messageCounts = "THREADPOOL::%s:Signature check executions - concurrent: %d, max concurrent: %d, total: %d\n";
-				std::string messageMicros = "THREADPOOL::%s:Signature check microseconds - avg: %lld, min: %lld, max: %lld, total: %lld\n";
+				std::string messageCounts = "THREADPOOL::%s:Signature check executions - concurrent: %d, max concurrent: %d, total calls: %d\n";
+				std::string messageInternals = "THREADPOOL::%s:Signature check internals - check(%d): total %lld, avg %lld microseconds, syscoin(%d): total %lld, avg %lld microseconds\n";
+				std::string messageMicros = "THREADPOOL::%s:Signature check timing - avg: %lld, min: %lld, max: %lld, total: %lld microseconds\n";
 				if (totalExecutionCount % 100 == 0) {
 					LogPrintf(messageCounts, hash.ToString(), concurrentExecutionCount, maxConcurrentExecutionCount, totalExecutionCount);
-					LogPrintf(messageMicros, hash.ToString(), totalExecutionMicros / totalExecutionCount, minExecutionMicros, maxExecutionMicros, totalExecutionMicros);
+					LogPrintf(messageInternals, hash.ToString(), totalCheckCount, totalCheckMicros, avgCheckMicros, totalSyscoinCheckCount, totalSyscoinCheckMicros, avgSyscoinCheckMicros);
+					LogPrintf(messageMicros, hash.ToString(), avgExecutionMicros, minExecutionMicros, maxExecutionMicros, totalExecutionMicros);
 				} else {
 					LogPrint("threadpool", messageCounts, hash.ToString(), concurrentExecutionCount, maxConcurrentExecutionCount, totalExecutionCount);
-					LogPrint("threadpool", messageMicros, hash.ToString(), totalExecutionMicros / totalExecutionCount, minExecutionMicros, maxExecutionMicros, totalExecutionMicros);
+					LogPrint("threadpool", messageInternals, hash.ToString(), totalCheckCount, totalCheckMicros, avgCheckMicros, totalSyscoinCheckCount, totalSyscoinCheckMicros, avgSyscoinCheckMicros);
+					LogPrint("threadpool", messageMicros, hash.ToString(), avgExecutionMicros, minExecutionMicros, maxExecutionMicros, totalExecutionMicros);
 				}
 
 				// indicate that this thread is done
