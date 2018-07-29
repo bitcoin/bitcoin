@@ -1249,6 +1249,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 		if (bMultiThreaded && threadpool != NULL)
 		{
 			// track worker thread metrics
+			static int totalWorkerCount = 0;
 			static int totalExecutionCount = 0;
 			static int concurrentExecutionCount = 0;
 			static int maxConcurrentExecutionCount = 0;
@@ -1258,7 +1259,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 
 			// define a task for the worker to process
 			std::packaged_task<void()> task([&pool, ptx, hash, coins_to_uncache, hashCacheEntry, vChecks]() {
-				LogPrint("threadpool", "THREADPOOL::Starting task for signature check for hash %s\n", hash.ToString());
+				LogPrint("threadpool", "THREADPOOL::%s:Signature check started\n", hash.ToString());
 				// metrics
 				const int64_t &time = GetTimeMicros();
 				totalExecutionCount += 1;
@@ -1281,7 +1282,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 						CValidationState stateDummy;
 						FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
 						nLastMultithreadMempoolFailure = GetTime();
-						LogPrint("threadpool", "THREADPOOL::Exiting task for signature check for hash %s with CheckInputs Error, execution time %lld microseconds\n", hash.ToString(), GetTimeMicros()-time);
+						LogPrint("threadpool", "THREADPOOL::%s:Signature check exiting with CheckInputs Error, execution time %lld microseconds\n", hash.ToString(), GetTimeMicros()-time);
 						return;
 					}
 				}
@@ -1314,13 +1315,16 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 				}
 
 				// logging
-				LogPrint("threadpool", "THREADPOOL::Finished task for signature check for hash %s, execution time %lld microseconds\n", hash.ToString(), thisExecutionMicros);
-				// log all the time for unit tests, when debug=threadpool, or every 100th transaction
-				std::string message = "THREADPOOL::Metrics after signature check for hash %s, total executions: %d, concurrent executions: %d, max concurrent executions: %d, average execution time: %lld microseconds, min execution time: %lld microseconds, max execution time: %lld microseconds\n";
+				LogPrint("threadpool", "THREADPOOL::%s:Signature check finished - execution time %lld microseconds\n", hash.ToString(), thisExecutionMicros);
+				// every 100th transaction or when debug=threadpool
+				std::string messageCounts = "THREADPOOL::%s:Signature check executions - concurrent: %d, max concurrent: %d, total: %d\n";
+				std::string messageMicros = "THREADPOOL::%s:Signature check microseconds - avg: %lld, min: %lld, max: %lld, total: %lld\n";
 				if (totalExecutionCount % 100 == 0) {
-					LogPrintf(message, hash.ToString(), totalExecutionCount, concurrentExecutionCount, maxConcurrentExecutionCount, totalExecutionMicros / totalExecutionCount, minExecutionMicros, maxExecutionMicros);
+					LogPrintf(messageCounts, hash.ToString(), concurrentExecutionCount, maxConcurrentExecutionCount, totalExecutionCount);
+					LogPrintf(messageMicros, hash.ToString(), totalExecutionMicros / totalExecutionCount, minExecutionMicros, maxExecutionMicros, totalExecutionMicros);
 				} else {
-					LogPrint("threadpool", message, hash.ToString(), totalExecutionCount, concurrentExecutionCount, maxConcurrentExecutionCount, totalExecutionMicros / totalExecutionCount, minExecutionMicros, maxExecutionMicros);
+					LogPrint("threadpool", messageCounts, hash.ToString(), concurrentExecutionCount, maxConcurrentExecutionCount, totalExecutionCount);
+					LogPrint("threadpool", messageMicros, hash.ToString(), totalExecutionMicros / totalExecutionCount, minExecutionMicros, maxExecutionMicros, totalExecutionMicros);
 				}
 
 				// indicate that this thread is done
@@ -1335,7 +1339,8 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 				isThreadPosted = threadpool->tryPost(task);
 				if (isThreadPosted)
 				{
-					LogPrint("threadpool", "THREADPOOL::Added worker for signature check for hash %s in %d tries\n", hash.ToString(), numTries);
+					totalWorkerCount += 1;
+					LogPrint("threadpool", "THREADPOOL::%s:Signature check task #%d added in %d tries\n", hash.ToString(), totalWorkerCount, numTries);
 					break;
 				}
 				LogPrintf("THREADPOOL::AcceptToMemoryPoolWorker: thread pool queue is full\n");
