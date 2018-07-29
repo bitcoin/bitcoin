@@ -17,9 +17,10 @@ BOOST_FIXTURE_TEST_SUITE(script_standard_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(script_standard_Solver_success)
 {
-    CKey keys[3];
-    CPubKey pubkeys[3];
-    for (int i = 0; i < 3; i++) {
+    const static unsigned int NUM_KEYS = MAX_PUBKEYS_PER_MULTISIG + 1;
+    CKey keys[NUM_KEYS];
+    CPubKey pubkeys[NUM_KEYS];
+    for (unsigned int i = 0; i < NUM_KEYS; i++) {
         keys[i].MakeNewKey(true);
         pubkeys[i] = keys[i].GetPubKey();
     }
@@ -81,6 +82,48 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_success)
     BOOST_CHECK(solutions[2] == ToByteVector(pubkeys[1]));
     BOOST_CHECK(solutions[3] == ToByteVector(pubkeys[2]));
     BOOST_CHECK(solutions[4] == std::vector<unsigned char>({3}));
+
+    // 17-of-20 TX_MULTISIG, with 1-byte varint pushes for each number
+    s.clear();
+    s << CScriptNum(17);
+    for (unsigned int i = 0; i < MAX_PUBKEYS_PER_MULTISIG; i++) {
+        s << ToByteVector(pubkeys[i]);
+    }
+    s << CScriptNum(MAX_PUBKEYS_PER_MULTISIG) << OP_CHECKMULTISIG;
+
+    BOOST_CHECK(Solver(s, whichType, solutions));
+    BOOST_CHECK_EQUAL(whichType, TX_MULTISIG);
+    BOOST_CHECK_EQUAL(solutions.size(), 22);
+    BOOST_CHECK(solutions[0] == std::vector<unsigned char>({17}));
+    for (unsigned int i = 1; i < MAX_PUBKEYS_PER_MULTISIG-1; i++) {
+         BOOST_CHECK(solutions[i] == ToByteVector(pubkeys[i-1]));
+    }
+    BOOST_CHECK(solutions[21] == std::vector<unsigned char>({20}));
+
+    // 16-of-20 TX_MULTISIG, with non-minimal encoding of the first number
+    // which should fail
+    s.clear();
+    s << CScriptNum(16);
+    for (unsigned int i = 0; i < MAX_PUBKEYS_PER_MULTISIG; i++) {
+        s << ToByteVector(pubkeys[i]);
+    }
+    s << CScriptNum(MAX_PUBKEYS_PER_MULTISIG) << OP_CHECKMULTISIG;
+
+    BOOST_CHECK(!Solver(s, whichType, solutions));
+    BOOST_CHECK_EQUAL(whichType, TX_NONSTANDARD);
+    BOOST_CHECK_EQUAL(solutions.size(), 0);
+
+    // 17-of-21 TX_MULTISIG which should fail
+    s.clear();
+    s << CScriptNum(17);
+    for (unsigned int i = 0; i < NUM_KEYS; i++) {
+        s << ToByteVector(pubkeys[i]);
+    }
+    s << CScriptNum(NUM_KEYS) << OP_CHECKMULTISIG;
+
+    BOOST_CHECK(!Solver(s, whichType, solutions));
+    BOOST_CHECK_EQUAL(whichType, TX_NONSTANDARD);
+    BOOST_CHECK_EQUAL(solutions.size(), 0);
 
     // TX_NULL_DATA
     s.clear();

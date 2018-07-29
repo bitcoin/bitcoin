@@ -63,10 +63,18 @@ static bool MatchPayToPubkeyHash(const CScript& script, valtype& pubkeyhash)
     return false;
 }
 
-/** Test for "small positive integer" script opcodes - OP_1 through OP_16. */
-static constexpr bool IsSmallInteger(opcodetype opcode)
+/** Test for "small positive integer" script opcodes - OP_1 through OP_16, or a single byte push for 17 to 20. */
+static bool IsSmallInteger(const opcodetype& opcode, const valtype& data, unsigned int& value)
 {
-    return opcode >= OP_1 && opcode <= OP_16;
+    if (opcode >= OP_1 && opcode <= OP_16) {
+        value = CScript::DecodeOP_N(opcode);
+        return true;
+    }
+    if (opcode == 1 && data[0] >= 17 && data[0] <= MAX_PUBKEYS_PER_MULTISIG) {
+        value = data[0];
+        return true;
+    }
+    return false;
 }
 
 static bool MatchMultisig(const CScript& script, unsigned int& required, std::vector<valtype>& pubkeys)
@@ -76,13 +84,12 @@ static bool MatchMultisig(const CScript& script, unsigned int& required, std::ve
     CScript::const_iterator it = script.begin();
     if (script.size() < 1 || script.back() != OP_CHECKMULTISIG) return false;
 
-    if (!script.GetOp(it, opcode, data) || !IsSmallInteger(opcode)) return false;
-    required = CScript::DecodeOP_N(opcode);
+    if (!script.GetOp(it, opcode, data) || !IsSmallInteger(opcode, data, required)) return false;
     while (script.GetOp(it, opcode, data) && CPubKey::ValidSize(data)) {
         pubkeys.emplace_back(std::move(data));
     }
-    if (!IsSmallInteger(opcode)) return false;
-    unsigned int keys = CScript::DecodeOP_N(opcode);
+    unsigned int keys;
+    if (!IsSmallInteger(opcode, data, keys)) return false;
     if (pubkeys.size() != keys || keys < required) return false;
     return (it + 1 == script.end());
 }
@@ -151,9 +158,9 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
     std::vector<std::vector<unsigned char>> keys;
     if (MatchMultisig(scriptPubKey, required, keys)) {
         typeRet = TX_MULTISIG;
-        vSolutionsRet.push_back({static_cast<unsigned char>(required)}); // safe as required is in range 1..16
+        vSolutionsRet.push_back({static_cast<unsigned char>(required)}); // safe as required is in range 1..20
         vSolutionsRet.insert(vSolutionsRet.end(), keys.begin(), keys.end());
-        vSolutionsRet.push_back({static_cast<unsigned char>(keys.size())}); // safe as size is in range 1..16
+        vSolutionsRet.push_back({static_cast<unsigned char>(keys.size())}); // safe as size is in range 1..20
         return true;
     }
 
