@@ -170,6 +170,12 @@ AC_ARG_ENABLE([lcov],
   [use_lcov=$enableval],
   [use_lcov=no])
 
+AC_ARG_ENABLE([pinentry],
+  [AS_HELP_STRING([--disable-pinentry],
+  [disable bitcoin-wallet-unlock pinentry wrapper (enabled by default)])],
+  [enable_pinentry=$enableval],
+  [enable_pinentry=yes])
+
 AC_ARG_ENABLE([lcov-branch-coverage],
   [AS_HELP_STRING([--enable-lcov-branch-coverage],
   [enable lcov testing branch coverage (default is no)])],
@@ -1314,6 +1320,8 @@ if test x$use_reduce_exports = xyes; then
 else
   AC_MSG_RESULT([no])
 fi
+
+AM_CONDITIONAL([ENABLE_PINENTRY], [test x$enable_pinentry = xyes && test x$TARGET_OS != xwindows])
 
 if test x$build_bitcoin_utils$build_bitcoin_libs$build_bitcoind$bitcoin_enable_qt$use_bench$use_tests = xnononononono; then
   AC_MSG_ERROR([No targets! Please specify at least one of: --with-utils --with-libs --with-daemon --with-gui --enable-bench or --enable-tests])

@@ -85,6 +85,9 @@ endif
 
 if BUILD_BITCOIN_UTILS
   bin_PROGRAMS += bitcoin-cli bitcoin-tx
+if ENABLE_PINENTRY
+  bin_PROGRAMS += bitcoin-wallet-unlock
+endif
 endif
 
 .PHONY: FORCE check-symbols check-security
@@ -499,6 +502,15 @@ bitcoin_tx_LDADD = \
   $(LIBSECP256K1)
 
 bitcoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+#
+
+# bitcoin-wallet-unlock binary #
+if ENABLE_PINENTRY
+bitcoin_wallet_unlock_SOURCES = bitcoin-wallet-unlock.cpp
+bitcoin_wallet_unlock_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+bitcoin_wallet_unlock_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+bitcoin_wallet_unlock_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+endif
 #
 
 # bitcoinconsensus library #
