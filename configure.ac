@@ -1247,6 +1247,7 @@ AC_CONFIG_FILES([doc/Doxyfile])
 AC_CONFIG_LINKS([contrib/filter-lcov.py:contrib/filter-lcov.py])
 AC_CONFIG_LINKS([test/functional/test_runner.py:test/functional/test_runner.py])
 AC_CONFIG_LINKS([test/util/raven-util-test.py:test/util/raven-util-test.py])
+AC_CONFIG_LINKS([src/crypto/md_helper.c:src/crypto/md_helper.c])
 
 dnl boost's m4 checks do something really nasty: they export these vars. As a
 dnl result, they leak into secp256k1's configure and crazy things happen.
