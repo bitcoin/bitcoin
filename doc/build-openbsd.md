@@ -1,6 +1,6 @@
 OpenBSD build guide
 ======================
-(updated for OpenBSD 5.7)
+(updated for OpenBSD 5.9)
 
 This guide describes how to build bitcoind and command-line utilities on OpenBSD.
 
@@ -15,11 +15,10 @@ Run the following as root to install the base dependencies for building:
 pkg_add gmake libtool libevent
 pkg_add autoconf # (select highest version, e.g. 2.69)
 pkg_add automake # (select highest version, e.g. 1.15)
-pkg_add python # (select version 2.7.x, not 3.x)
-ln -sf /usr/local/bin/python2.7 /usr/local/bin/python2
+pkg_add python # (select highest version, e.g. 3.5)
 ```
 
-The default C++ compiler that comes with OpenBSD 5.7 is g++ 4.2. This version is old (from 2007), and is not able to compile the current version of Bitcoin Core. It is possible to patch it up to compile, but with the planned transition to C++11 this is a losing battle. So here we will be installing a newer compiler.
+The default C++ compiler that comes with OpenBSD 5.9 is g++ 4.2. This version is old (from 2007), and is not able to compile the current version of Bitcoin Core, primarily as it has no C++11 support, but even before there were issues. So here we will be installing a newer compiler.
 
 GCC
 -------
@@ -27,7 +26,7 @@ GCC
 You can install a newer version of gcc with:
 
 ```bash
-pkg_add g++ # (select newest 4.x version, e.g. 4.9.2)
+pkg_add g++ # (select newest 4.x version, e.g. 4.9.3)
 ```
 
 This compiler will not overwrite the system compiler, it will be installed as `egcc` and `eg++` in `/usr/local/bin`.
@@ -49,18 +48,15 @@ BOOST_PREFIX="${BITCOIN_ROOT}/boost"
 mkdir -p $BOOST_PREFIX
 
 # Fetch the source and verify that it is not tampered with
-wget http://heanet.dl.sourceforge.net/project/boost/boost/1.59.0/boost_1_59_0.tar.bz2
-echo '727a932322d94287b62abb1bd2d41723eec4356a7728909e38adb65ca25241ca  boost_1_59_0.tar.bz2' | sha256 -c
-# MUST output: (SHA256) boost_1_59_0.tar.bz2: OK
-tar -xjf boost_1_59_0.tar.bz2
+curl -o boost_1_61_0.tar.bz2 http://heanet.dl.sourceforge.net/project/boost/boost/1.61.0/boost_1_61_0.tar.bz2
+echo 'a547bd06c2fd9a71ba1d169d9cf0339da7ebf4753849a8f7d6fdb8feee99b640  boost_1_61_0.tar.bz2' | sha256 -c
+# MUST output: (SHA256) boost_1_61_0.tar.bz2: OK
+tar -xjf boost_1_61_0.tar.bz2
 
-# Boost 1.59 needs two small patches for OpenBSD
-cd boost_1_59_0
+# Boost 1.61 needs one small patch for OpenBSD
+cd boost_1_61_0
 # Also here: https://gist.githubusercontent.com/laanwj/bf359281dc319b8ff2e1/raw/92250de8404b97bb99d72ab898f4a8cb35ae1ea3/patch-boost_test_impl_execution_monitor_ipp.patch
 patch -p0 < /usr/ports/devel/boost/patches/patch-boost_test_impl_execution_monitor_ipp
-# https://github.com/boostorg/filesystem/commit/90517e459681790a091566dce27ca3acabf9a70c
-sed 's/__OPEN_BSD__/__OpenBSD__/g' < libs/filesystem/src/path.cpp > libs/filesystem/src/path.cpp.tmp
-mv libs/filesystem/src/path.cpp.tmp libs/filesystem/src/path.cpp
 
 # Build w/ minimum configuration necessary for bitcoin
 echo 'using gcc : : eg++ : <cxxflags>"-fvisibility=hidden -fPIC" <linkflags>"" <archiver>"ar" <striper>"strip"  <ranlib>"ranlib" <rc>"" : ;' > user-config.jam
@@ -84,7 +80,7 @@ BDB_PREFIX="${BITCOIN_ROOT}/db4"
 mkdir -p $BDB_PREFIX
 
 # Fetch the source and verify that it is not tampered with
-wget 'http://download.oracle.com/berkeley-db/db-4.8.30.NC.tar.gz'
+curl -o db-4.8.30.NC.tar.gz 'http://download.oracle.com/berkeley-db/db-4.8.30.NC.tar.gz'
 echo '12edc0df75bf9abd7f82f821795bcee50f42cb2e5f76a6a281b85732798364ef  db-4.8.30.NC.tar.gz' | sha256 -c
 # MUST output: (SHA256) db-4.8.30.NC.tar.gz: OK
 tar -xzf db-4.8.30.NC.tar.gz
@@ -93,8 +89,24 @@ tar -xzf db-4.8.30.NC.tar.gz
 cd db-4.8.30.NC/build_unix/
 #  Note: Do a static build so that it can be embedded into the executable, instead of having to find a .so at runtime
 ../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX CC=egcc CXX=eg++ CPP=ecpp
-make install
+make install # do NOT use -jX, this is broken
 ```
+
+### Resource limits
+
+The standard ulimit restrictions in OpenBSD are very strict:
+
+    data(kbytes)         1572864
+
+This is, unfortunately, no longer enough to compile some `.cpp` files in the project,
+at least with gcc 4.9.3 (see issue https://github.com/bitcoin/bitcoin/issues/6658).
+If your user is in the `staff` group the limit can be raised with:
+
+    ulimit -d 3000000
+
+The change will only affect the current shell and processes spawned by it. To
+make the change system-wide, change `datasize-cur` and `datasize-max` in
+`/etc/login.conf`, and reboot.
 
 ### Building Bitcoin Core
 
@@ -123,7 +135,7 @@ To configure without wallet:
 
 Build and run the tests:
 ```bash
-gmake
+gmake # can use -jX here for parallelism
 gmake check
 ```
 

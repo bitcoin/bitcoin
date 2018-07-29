@@ -461,6 +461,40 @@ bool ParseInt64(const std::string& str, int64_t *out)
         n <= std::numeric_limits<int64_t>::max();
 }
 
+bool ParseUInt32(const std::string& str, uint32_t *out)
+{
+    if (!ParsePrechecks(str))
+        return false;
+    if (str.size() >= 1 && str[0] == '-') // Reject negative values, unfortunately strtoul accepts these by default if they fit in the range
+        return false;
+    char *endp = NULL;
+    errno = 0; // strtoul will not set errno if valid
+    unsigned long int n = strtoul(str.c_str(), &endp, 10);
+    if(out) *out = (uint32_t)n;
+    // Note that strtoul returns a *unsigned long int*, so even if it doesn't report a over/underflow
+    // we still have to check that the returned value is within the range of an *uint32_t*. On 64-bit
+    // platforms the size of these types may be different.
+    return endp && *endp == 0 && !errno &&
+        n <= std::numeric_limits<uint32_t>::max();
+}
+
+bool ParseUInt64(const std::string& str, uint64_t *out)
+{
+    if (!ParsePrechecks(str))
+        return false;
+    if (str.size() >= 1 && str[0] == '-') // Reject negative values, unfortunately strtoull accepts these by default if they fit in the range
+        return false;
+    char *endp = NULL;
+    errno = 0; // strtoull will not set errno if valid
+    unsigned long long int n = strtoull(str.c_str(), &endp, 10);
+    if(out) *out = (uint64_t)n;
+    // Note that strtoull returns a *unsigned long long int*, so even if it doesn't report a over/underflow
+    // we still have to check that the returned value is within the range of an *uint64_t*.
+    return endp && *endp == 0 && !errno &&
+        n <= std::numeric_limits<uint64_t>::max();
+}
+
+
 bool ParseDouble(const std::string& str, double *out)
 {
     if (!ParsePrechecks(str))
@@ -478,34 +512,40 @@ bool ParseDouble(const std::string& str, double *out)
 std::string FormatParagraph(const std::string& in, size_t width, size_t indent)
 {
     std::stringstream out;
-    size_t col = 0;
     size_t ptr = 0;
-    while(ptr < in.size())
+    size_t indented = 0;
+    while (ptr < in.size())
     {
-        // Find beginning of next word
-        ptr = in.find_first_not_of(' ', ptr);
-        if (ptr == std::string::npos)
-            break;
-        // Find end of next word
-        size_t endword = in.find_first_of(' ', ptr);
-        if (endword == std::string::npos)
-            endword = in.size();
-        // Add newline and indentation if this wraps over the allowed width
-        if (col > 0)
-        {
-            if ((col + endword - ptr) > width)
-            {
-                out << '\n';
-                for(size_t i=0; i<indent; ++i)
-                    out << ' ';
-                col = 0;
-            } else
-                out << ' ';
+        size_t lineend = in.find_first_of('\n', ptr);
+        if (lineend == std::string::npos) {
+            lineend = in.size();
         }
-        // Append word
-        out << in.substr(ptr, endword - ptr);
-        col += endword - ptr + 1;
-        ptr = endword;
+        const size_t linelen = lineend - ptr;
+        const size_t rem_width = width - indented;
+        if (linelen <= rem_width) {
+            out << in.substr(ptr, linelen + 1);
+            ptr = lineend + 1;
+            indented = 0;
+        } else {
+            size_t finalspace = in.find_last_of(" \n", ptr + rem_width);
+            if (finalspace == std::string::npos || finalspace < ptr) {
+                // No place to break; just include the entire word and move on
+                finalspace = in.find_first_of("\n ", ptr);
+                if (finalspace == std::string::npos) {
+                    // End of the string, just add it and break
+                    out << in.substr(ptr);
+                    break;
+                }
+            }
+            out << in.substr(ptr, finalspace - ptr) << "\n";
+            if (in[finalspace] == '\n') {
+                indented = 0;
+            } else if (indent) {
+                out << std::string(indent, ' ');
+                indented = indent;
+            }
+            ptr = finalspace + 1;
+        }
     }
     return out.str();
 }

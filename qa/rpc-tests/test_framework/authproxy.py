@@ -42,6 +42,7 @@ import base64
 import decimal
 import json
 import logging
+import socket
 try:
     import urllib.parse as urlparse
 except ImportError:
@@ -61,15 +62,17 @@ class JSONRPCException(Exception):
 
 def EncodeDecimal(o):
     if isinstance(o, decimal.Decimal):
-        return round(o, 8)
+        return str(o)
     raise TypeError(repr(o) + " is not JSON serializable")
 
 class AuthServiceProxy(object):
     __id_count = 0
 
-    def __init__(self, service_url, service_name=None, timeout=HTTP_TIMEOUT, connection=None):
+    # ensure_ascii: escape unicode as \uXXXX, passed to json.dumps
+    def __init__(self, service_url, service_name=None, timeout=HTTP_TIMEOUT, connection=None, ensure_ascii=True):
         self.__service_url = service_url
         self._service_name = service_name
+        self.ensure_ascii = ensure_ascii # can be toggled on the fly by tests
         self.__url = urlparse.urlparse(service_url)
         if self.__url.port is None:
             port = 80
@@ -92,11 +95,10 @@ class AuthServiceProxy(object):
             self.__conn = connection
         elif self.__url.scheme == 'https':
             self.__conn = httplib.HTTPSConnection(self.__url.hostname, port,
-                                                  None, None, False,
-                                                  timeout)
+                                                  timeout=timeout)
         else:
             self.__conn = httplib.HTTPConnection(self.__url.hostname, port,
-                                                 False, timeout)
+                                                 timeout=timeout)
 
     def __getattr__(self, name):
         if name.startswith('__') and name.endswith('__'):
@@ -125,17 +127,23 @@ class AuthServiceProxy(object):
                 return self._get_response()
             else:
                 raise
+        except (BrokenPipeError,ConnectionResetError):
+            # Python 3.5+ raises BrokenPipeError instead of BadStatusLine when the connection was reset
+            # ConnectionResetError happens on FreeBSD with Python 3.4
+            self.__conn.close()
+            self.__conn.request(method, path, postdata, headers)
+            return self._get_response()
 
     def __call__(self, *args):
         AuthServiceProxy.__id_count += 1
 
         log.debug("-%s-> %s %s"%(AuthServiceProxy.__id_count, self._service_name,
-                                 json.dumps(args, default=EncodeDecimal)))
+                                 json.dumps(args, default=EncodeDecimal, ensure_ascii=self.ensure_ascii)))
         postdata = json.dumps({'version': '1.1',
                                'method': self._service_name,
                                'params': args,
-                               'id': AuthServiceProxy.__id_count}, default=EncodeDecimal)
-        response = self._request('POST', self.__url.path, postdata)
+                               'id': AuthServiceProxy.__id_count}, default=EncodeDecimal, ensure_ascii=self.ensure_ascii)
+        response = self._request('POST', self.__url.path, postdata.encode('utf-8'))
         if response['error'] is not None:
             raise JSONRPCException(response['error'])
         elif 'result' not in response:
@@ -145,20 +153,33 @@ class AuthServiceProxy(object):
             return response['result']
 
     def _batch(self, rpc_call_list):
-        postdata = json.dumps(list(rpc_call_list), default=EncodeDecimal)
+        postdata = json.dumps(list(rpc_call_list), default=EncodeDecimal, ensure_ascii=self.ensure_ascii)
         log.debug("--> "+postdata)
-        return self._request('POST', self.__url.path, postdata)
+        return self._request('POST', self.__url.path, postdata.encode('utf-8'))
 
     def _get_response(self):
-        http_response = self.__conn.getresponse()
+        try:
+            http_response = self.__conn.getresponse()
+        except socket.timeout as e:
+            raise JSONRPCException({
+                'code': -344,
+                'message': '%r RPC took longer than %f seconds. Consider '
+                           'using larger timeout for calls that take '
+                           'longer to return.' % (self._service_name,
+                                                  self.__conn.timeout)})
         if http_response is None:
             raise JSONRPCException({
                 'code': -342, 'message': 'missing HTTP response from server'})
 
+        content_type = http_response.getheader('Content-Type')
+        if content_type != 'application/json':
+            raise JSONRPCException({
+                'code': -342, 'message': 'non-JSON HTTP response with \'%i %s\' from server' % (http_response.status, http_response.reason)})
+
         responsedata = http_response.read().decode('utf8')
         response = json.loads(responsedata, parse_float=decimal.Decimal)
         if "error" in response and response["error"] is None:
-            log.debug("<-%s- %s"%(response["id"], json.dumps(response["result"], default=EncodeDecimal)))
+            log.debug("<-%s- %s"%(response["id"], json.dumps(response["result"], default=EncodeDecimal, ensure_ascii=self.ensure_ascii)))
         else:
             log.debug("<-- "+responsedata)
         return response

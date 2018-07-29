@@ -10,6 +10,7 @@
 #include <QDialog>
 #include <QImage>
 #include <QLabel>
+#include <QPainter>
 
 class OptionsModel;
 

@@ -26,10 +26,6 @@
         <translation>&amp;Tanca</translation>
     </message>
     <message>
-        <source>&amp;Copy Address</source>
-        <translation>&amp;Copia l'adreça</translation>
-    </message>
-    <message>
         <source>Delete the currently selected address from the list</source>
         <translation>Elimina l'adreça sel·leccionada actualment de la llista</translation>
     </message>
@@ -47,23 +43,23 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>Trieu una adreça on voleu enviar monedes</translation>
+        <translation>Trieu l'adreça on enviar les monedes</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>Trieu l'adreça on voleu rebre monedes</translation>
+        <translation>Trieu l'adreça on rebre les monedes</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation>T&amp;ria</translation>
+        <translation>&amp;Tria</translation>
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation>S'estan enviant les adreces</translation>
+        <translation>Adreces d'enviament</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation>S'estan rebent les adreces</translation>
+        <translation>Adreces de recepció</translation>
     </message>
     <message>
         <source>These are your Zetacoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
@@ -74,8 +70,12 @@
         <translation>Aquestes són les vostres adreces Zetacoin per rebre pagaments. Es recomana utilitzar una adreça nova de recepció per a cada transacció.</translation>
     </message>
     <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Copia l'adreça</translation>
+    </message>
+    <message>
         <source>Copy &amp;Label</source>
-        <translation>Copia l'&amp;etiqueta</translation>
+        <translation>Copia l'eti&amp;queta</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
@@ -87,7 +87,7 @@
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>Fitxer de separació amb comes (*.csv)</translation>
+        <translation>Fitxer separat per comes (*.csv)</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -132,6 +132,10 @@
         <translation>Repetiu la nova contrasenya</translation>
     </message>
     <message>
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Introduïu la contrasenya nova al moneder.&lt;br/&gt;Utilitzeu una contrasenya de &lt;b&gt;deu o més caràcters aleatoris&lt;/b&gt;, o &lt;b&gt;vuit o més paraules&lt;/b&gt;.</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation>Encripta el moneder</translation>
     </message>
@@ -156,6 +160,10 @@
         <translation>Canvia la contrasenya</translation>
     </message>
     <message>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>Introduïu la contrasenya antiga i la contrasenya nova al moneder.</translation>
+    </message>
+    <message>
         <source>Confirm wallet encryption</source>
         <translation>Confirma l'encriptació del moneder</translation>
     </message>
@@ -168,28 +176,16 @@
         <translation>Esteu segur que voleu encriptar el vostre moneder?</translation>
     </message>
     <message>
-        <source>Zetacoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your zetacoins from being stolen by malware infecting your computer.</source>
-        <translation>Ara es tancarà el Zetacoin Core per finalitzar el procés d'encriptació. Tingueu present que encriptar el vostre moneder no garanteix que les vostres zetacoins no puguin ser robades per programari maliciós que infecti l'ordinador.</translation>
-    </message>
-    <message>
-        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>IMPORTANT: Tota copia de seguretat que hàgiu realitzat hauria de ser reemplaçada pel, recentment generat, fitxer encriptat del moneder.</translation>
-    </message>
-    <message>
-        <source>Warning: The Caps Lock key is on!</source>
-        <translation>Avís: Les lletres majúscules estan activades!</translation>
-    </message>
-    <message>
         <source>Wallet encrypted</source>
         <translation>Moneder encriptat</translation>
     </message>
     <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Introduïu la contrasenya nova al moneder.&lt;br/&gt;Utilitzeu una contrasenya de &lt;b&gt;deu o més caràcters aleatoris&lt;/b&gt;, o &lt;b&gt;vuit o més paraules&lt;/b&gt;.</translation>
+        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your zetacoins from being stolen by malware infecting your computer.</source>
+        <translation>Ara es tancarà el %1 per finalitzar el procés d'encriptació. Recordeu que encriptar el vostre moneder no garanteix que les vostres zetacoins no puguin ser robades per programari maliciós que infecti l'ordinador.</translation>
     </message>
     <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Introduïu la contrasenya antiga i la contrasenya nova al moneder.</translation>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
+        <translation>IMPORTANT: Tota copia de seguretat que hàgiu realitzat hauria de ser reemplaçada pel, recentment generat, fitxer encriptat del moneder. Per motius de seguretat, les còpies de seguretat anteriors del fitxer de moneder no encriptat esdevindran inusables tan aviat com començar a utilitzar el nou moneder encriptat.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -201,7 +197,7 @@
     </message>
     <message>
         <source>The supplied passphrases do not match.</source>
-        <translation>La contrasenya introduïda no coincideix.</translation>
+        <translation>Les contrasenyes introduïdes no coincideixen.</translation>
     </message>
     <message>
         <source>Wallet unlock failed</source>
@@ -218,6 +214,10 @@
     <message>
         <source>Wallet passphrase was successfully changed.</source>
         <translation>La contrasenya del moneder ha estat modificada correctament.</translation>
+    </message>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>Avís: Les lletres majúscules estan activades!</translation>
     </message>
 </context>
 <context>
@@ -270,6 +270,14 @@
         <translation>Surt de l'aplicació</translation>
     </message>
     <message>
+        <source>&amp;About %1</source>
+        <translation>Qu&amp;ant al %1</translation>
+    </message>
+    <message>
+        <source>Show information about %1</source>
+        <translation>Mosta informació sobre el %1</translation>
+    </message>
+    <message>
         <source>About &amp;Qt</source>
         <translation>Quant a &amp;Qt</translation>
     </message>
@@ -280,6 +288,10 @@
     <message>
         <source>&amp;Options...</source>
         <translation>&amp;Opcions...</translation>
+    </message>
+    <message>
+        <source>Modify configuration options for %1</source>
+        <translation>Modifica les opcions de configuració de %1</translation>
     </message>
     <message>
         <source>&amp;Encrypt Wallet...</source>
@@ -299,19 +311,11 @@
     </message>
     <message>
         <source>&amp;Receiving addresses...</source>
-        <translation>Adreces de &amp;recepció</translation>
+        <translation>Adreces de &amp;recepció...</translation>
     </message>
     <message>
         <source>Open &amp;URI...</source>
         <translation>Obre un &amp;URI...</translation>
-    </message>
-    <message>
-        <source>Zetacoin Core client</source>
-        <translation>Client del Zetacoin Core</translation>
-    </message>
-    <message>
-        <source>Importing blocks from disk...</source>
-        <translation>S'estan important els blocs del disc...</translation>
     </message>
     <message>
         <source>Reindexing blocks on disk...</source>
@@ -358,10 +362,6 @@
         <translation>&amp;Rep</translation>
     </message>
     <message>
-        <source>Show information about Zetacoin Core</source>
-        <translation>Mostra informació del Zetacoin Core</translation>
-    </message>
-    <message>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Mostra / Amaga</translation>
     </message>
@@ -398,20 +398,8 @@
         <translation>Barra d'eines de les pestanyes</translation>
     </message>
     <message>
-        <source>Zetacoin Core</source>
-        <translation>Nucli de Zetacoin</translation>
-    </message>
-    <message>
         <source>Request payments (generates QR codes and zetacoin: URIs)</source>
         <translation>Sol·licita pagaments (genera codis QR i zetacoin: URI)</translation>
-    </message>
-    <message>
-        <source>&amp;About Zetacoin Core</source>
-        <translation>&amp;Quant al Zetacoin Core</translation>
-    </message>
-    <message>
-        <source>Modify configuration options for Zetacoin Core</source>
-        <translation>Modifica les opcions de configuració del Zetacoin Core</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -429,13 +417,17 @@
         <source>&amp;Command-line options</source>
         <translation>Opcions de la &amp;línia d'ordres</translation>
     </message>
-    <message>
-        <source>Show the Zetacoin Core help message to get a list with possible Zetacoin command-line options</source>
-        <translation>Mostra el missatge d'ajuda del Zetacoin Core per obtenir una llista amb les possibles opcions de línia d'ordres de Zetacoin</translation>
-    </message>
     <message numerus="yes">
         <source>%n active connection(s) to Zetacoin network</source>
         <translation><numerusform>%n connexió activa a la xarxa Zetacoin</numerusform><numerusform>%n connexions actives a la xarxa Zetacoin</numerusform></translation>
+    </message>
+    <message>
+        <source>Indexing blocks on disk...</source>
+        <translation>S'estan indexant els blocs al disc...</translation>
+    </message>
+    <message>
+        <source>Processing blocks on disk...</source>
+        <translation>S'estan processant els blocs al disc...</translation>
     </message>
     <message>
         <source>No block source available...</source>
@@ -494,6 +486,14 @@
         <translation>Al dia</translation>
     </message>
     <message>
+        <source>Show the %1 help message to get a list with possible Zetacoin command-line options</source>
+        <translation>Mostra el missatge d'ajuda del %1 per obtenir una llista amb les possibles opcions de línia d'ordres de Zetacoin</translation>
+    </message>
+    <message>
+        <source>%1 client</source>
+        <translation>Client de %1</translation>
+    </message>
+    <message>
         <source>Catching up...</source>
         <translation>S'està posant al dia ...</translation>
     </message>
@@ -542,13 +542,6 @@
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>El moneder està &lt;b&gt;encriptat&lt;/b&gt; i actualment &lt;b&gt;bloquejat&lt;/b&gt;</translation>
-    </message>
-</context>
-<context>
-    <name>ClientModel</name>
-    <message>
-        <source>Network Alert</source>
-        <translation>Alerta de xarxa</translation>
     </message>
 </context>
 <context>
@@ -631,11 +624,11 @@
     </message>
     <message>
         <source>Copy address</source>
-        <translation>Copiar adreça </translation>
+        <translation>Copia l'adreça</translation>
     </message>
     <message>
         <source>Copy label</source>
-        <translation>Copiar etiqueta</translation>
+        <translation>Copia l'etiqueta</translation>
     </message>
     <message>
         <source>Copy amount</source>
@@ -643,15 +636,7 @@
     </message>
     <message>
         <source>Copy transaction ID</source>
-        <translation>Copiar ID de transacció</translation>
-    </message>
-    <message>
-        <source>Lock unspent</source>
-        <translation>Bloqueja sense gastar</translation>
-    </message>
-    <message>
-        <source>Unlock unspent</source>
-        <translation>Desbloqueja sense gastar</translation>
+        <translation>Copia l'ID de transacció</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -683,15 +668,15 @@
     </message>
     <message>
         <source>highest</source>
-        <translation>El més alt</translation>
+        <translation>el més alt</translation>
     </message>
     <message>
         <source>higher</source>
-        <translation>Més alt</translation>
+        <translation>més alt</translation>
     </message>
     <message>
         <source>high</source>
-        <translation>Alt</translation>
+        <translation>alt</translation>
     </message>
     <message>
         <source>medium-high</source>
@@ -726,22 +711,6 @@
         <translation>cap</translation>
     </message>
     <message>
-        <source>This label turns red if the transaction size is greater than 1000 bytes.</source>
-        <translation>Aquesta etiqueta es torna en vermell si la transacció és superior a 1000 bytes.</translation>
-    </message>
-    <message>
-        <source>This label turns red if the priority is smaller than "medium".</source>
-        <translation>Aquesta etiqueta es torna en vermell si la propietat és inferior que la «mitjana».</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than %1.</source>
-        <translation>Aquesta etiqueta es torna vermella si el destinatari rep un import inferior de %1.</translation>
-    </message>
-    <message>
-        <source>Can vary +/- %1 satoshi(s) per input.</source>
-        <translation>Pot variar +/- %1 satoshi(s) per entrada.</translation>
-    </message>
-    <message>
         <source>yes</source>
         <translation>sí</translation>
     </message>
@@ -750,8 +719,12 @@
         <translation>no</translation>
     </message>
     <message>
+        <source>This label turns red if the transaction size is greater than 1000 bytes.</source>
+        <translation>Aquesta etiqueta es torna en vermell si la transacció és superior a 1000 bytes.</translation>
+    </message>
+    <message>
         <source>This means a fee of at least %1 per kB is required.</source>
-        <translation>Això comporta una comissió d'almenys %1 per kB.</translation>
+        <translation>Això comporta que cal una comissió d'almenys %1 per kB.</translation>
     </message>
     <message>
         <source>Can vary +/- 1 byte per input.</source>
@@ -760,6 +733,18 @@
     <message>
         <source>Transactions with higher priority are more likely to get included into a block.</source>
         <translation>Les transaccions amb una major prioritat són més propenses a ser incloses en un bloc.</translation>
+    </message>
+    <message>
+        <source>This label turns red if the priority is smaller than "medium".</source>
+        <translation>Aquesta etiqueta es torna en vermell si la propietat és inferior que la «mitjana».</translation>
+    </message>
+    <message>
+        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
+        <translation>Aquesta etiqueta es torna vermella si cap recipient rep un import inferior al llindar de polsim actual.</translation>
+    </message>
+    <message>
+        <source>Can vary +/- %1 satoshi(s) per input.</source>
+        <translation>Pot variar en +/- %1 satoshi(s) per entrada.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -798,7 +783,7 @@
     </message>
     <message>
         <source>New receiving address</source>
-        <translation>Nova adreça de recepció.</translation>
+        <translation>Nova adreça de recepció</translation>
     </message>
     <message>
         <source>New sending address</source>
@@ -806,19 +791,19 @@
     </message>
     <message>
         <source>Edit receiving address</source>
-        <translation>Edita les adreces de recepció</translation>
+        <translation>Edita l'adreça de recepció</translation>
     </message>
     <message>
         <source>Edit sending address</source>
-        <translation>Edita les adreces d'enviament</translation>
-    </message>
-    <message>
-        <source>The entered address "%1" is already in the address book.</source>
-        <translation>L'adreça introduïda «%1» ja és present a la llibreta d'adreces.</translation>
+        <translation>Edita l'adreça d'enviament</translation>
     </message>
     <message>
         <source>The entered address "%1" is not a valid Zetacoin address.</source>
         <translation>L'adreça introduïda «%1» no és una adreça de Zetacoin vàlida.</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book.</source>
+        <translation>L'adreça introduïda «%1» ja és present a la llibreta d'adreces.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -826,7 +811,7 @@
     </message>
     <message>
         <source>New key generation failed.</source>
-        <translation>Ha fallat la generació d'una nova clau.</translation>
+        <translation>Ha fallat la generació d'una clau nova.</translation>
     </message>
 </context>
 <context>
@@ -855,10 +840,6 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Zetacoin Core</source>
-        <translation>Nucli de Zetacoin</translation>
-    </message>
-    <message>
         <source>version</source>
         <translation>versió</translation>
     </message>
@@ -867,8 +848,8 @@
         <translation>(%1-bit)</translation>
     </message>
     <message>
-        <source>About Zetacoin Core</source>
-        <translation>Quant al Zetacoin Core</translation>
+        <source>About %1</source>
+        <translation>Quant al %1</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -907,7 +888,7 @@
         <translation>Mostra la pantalla de benvinguda a l'inici (per defecte: %u)</translation>
     </message>
     <message>
-        <source>Reset all settings changes made over the GUI</source>
+        <source>Reset all settings changed in the GUI</source>
         <translation>Reinicialitza tots els canvis de configuració fets des de la interfície gràfica</translation>
     </message>
 </context>
@@ -915,19 +896,19 @@
     <name>Intro</name>
     <message>
         <source>Welcome</source>
-        <translation>Us donem la benviguda</translation>
+        <translation>Us donem la benvinguda</translation>
     </message>
     <message>
-        <source>Welcome to Zetacoin Core.</source>
-        <translation>Us donem la benvinguda al Zetacoin Core.</translation>
+        <source>Welcome to %1.</source>
+        <translation>Us donem la benvinguda a %1.</translation>
     </message>
     <message>
-        <source>As this is the first time the program is launched, you can choose where Zetacoin Core will store its data.</source>
-        <translation>Atès que és la primera vegada que executeu el programa, podeu triar on emmagatzemarà el Zetacoin Core les dades.</translation>
+        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
+        <translation>Com és la primera vegada que s'executa el programa, podeu triar on %1 emmagatzemarà les dades.</translation>
     </message>
     <message>
-        <source>Zetacoin Core will download and store a copy of the Zetacoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>El Zetacoin Core descarregarà i emmagatzemarà una còpia de la cadena de blocs de Zetacoin. Com a mínim s'emmagatzemaran %1 GB de dades en aquest directori, que seguiran creixent gradualment. També s'hi emmagatzemarà el moneder.</translation>
+        <source>%1 will download and store a copy of the Zetacoin block chain. At least %2GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <translation>%1 baixarà i emmagatzemarà una còpia de la cadena de blocs de Zetacoin. Com a mínim %2GB de dades s'emmagatzemaran en aquest directori, i augmentarà al llarg del temps. El moneder també s'emmagatzemarà en aquest directori.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -936,10 +917,6 @@
     <message>
         <source>Use a custom data directory:</source>
         <translation>Utilitza un directori de dades personalitzat:</translation>
-    </message>
-    <message>
-        <source>Zetacoin Core</source>
-        <translation>Nucli de Zetacoin</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -978,7 +955,7 @@
     </message>
     <message>
         <source>Select payment request file to open</source>
-        <translation>Selecciona el fitxer de sol·licitud de pagament per obrir</translation>
+        <translation>Seleccioneu el fitxer de sol·licitud de pagament per obrir</translation>
     </message>
 </context>
 <context>
@@ -990,6 +967,14 @@
     <message>
         <source>&amp;Main</source>
         <translation>&amp;Principal</translation>
+    </message>
+    <message>
+        <source>Automatically start %1 after logging in to the system.</source>
+        <translation>Inicieu %1 automàticament després d'entrar en el sistema.</translation>
+    </message>
+    <message>
+        <source>&amp;Start %1 on system login</source>
+        <translation>&amp;Inicia %1 en l'entrada al sistema</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
@@ -1020,10 +1005,6 @@
         <translation>Minimitza en comptes de sortir de l'aplicació quan la finestra es tanca. Quan s'habilita aquesta opció l'aplicació es tancara només quan se selecciona Surt del menú. </translation>
     </message>
     <message>
-        <source>The user interface language can be set here. This setting will take effect after restarting Zetacoin Core.</source>
-        <translation>La interfície d'usuari pot definir-se des d'aquí. El paràmetre tindrà efecte després de reiniciar el Zetacoin Core.</translation>
-    </message>
-    <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>URL de terceres parts (p. ex. explorador de blocs) que apareix en la pestanya de transaccions com elements del menú contextual. %s en l'URL es reemplaçat pel resum de la transacció. Diferents URL estan separades per una barra vertical |.</translation>
     </message>
@@ -1046,14 +1027,6 @@
     <message>
         <source>&amp;Network</source>
         <translation>&amp;Xarxa</translation>
-    </message>
-    <message>
-        <source>Automatically start Zetacoin Core after logging in to the system.</source>
-        <translation>Inicia el Zetacoin Core automàticament després d'iniciar una sessió en el sistema.</translation>
-    </message>
-    <message>
-        <source>&amp;Start Zetacoin Core on system login</source>
-        <translation>&amp;Inicia el Zetacoin Core en inciar el sistema</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1116,12 +1089,36 @@
         <translation>Mostra si el proxy SOCKS5 per defecte proporcionat s'utilitza per arribar als iguals mitjançant aquest tipus de xarxa.</translation>
     </message>
     <message>
+        <source>IPv4</source>
+        <translation>IPv4</translation>
+    </message>
+    <message>
+        <source>IPv6</source>
+        <translation>IPv6</translation>
+    </message>
+    <message>
+        <source>Tor</source>
+        <translation>Tor</translation>
+    </message>
+    <message>
+        <source>Connect to the Zetacoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>Conectar a la red de Zetacoin a través de un proxy SOCKS5 per als serveis ocults de Tor</translation>
+    </message>
+    <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
         <translation>Utilitza un proxy SOCKS4 apart per a arribar als iguals a través de serveis ocults de Tor:</translation>
     </message>
     <message>
         <source>&amp;Window</source>
         <translation>&amp;Finestra</translation>
+    </message>
+    <message>
+        <source>&amp;Hide the icon from the system tray.</source>
+        <translation>Ama&amp;ga la icona de la safata del sistema.</translation>
+    </message>
+    <message>
+        <source>Hide tray icon</source>
+        <translation>Amaga la icona de la safata</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
@@ -1142,6 +1139,10 @@
     <message>
         <source>User Interface &amp;language:</source>
         <translation>&amp;Llengua de la interfície d'usuari:</translation>
+    </message>
+    <message>
+        <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
+        <translation>Aquí es pot definir la llengua de la interfície d'usuari. Aquest paràmetre tindrà efecte en reiniciar el %1.</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -1270,92 +1271,24 @@
 <context>
     <name>PaymentServer</name>
     <message>
+        <source>Payment request error</source>
+        <translation>Error de la sol·licitud de pagament</translation>
+    </message>
+    <message>
+        <source>Cannot start zetacoin: click-to-pay handler</source>
+        <translation>No es pot iniciar zetacoin: controlador click-to-pay</translation>
+    </message>
+    <message>
         <source>URI handling</source>
         <translation>Gestió d'URI</translation>
     </message>
     <message>
-        <source>Invalid payment address %1</source>
-        <translation>Adreça de pagament no vàlida %1</translation>
-    </message>
-    <message>
-        <source>Payment request rejected</source>
-        <translation>La sol·licitud de pagament s'ha rebutjat</translation>
-    </message>
-    <message>
-        <source>Payment request network doesn't match client network.</source>
-        <translation>La xarxa de la sol·licitud de pagament no coincideix amb la xarxa del client.</translation>
-    </message>
-    <message>
-        <source>Payment request is not initialized.</source>
-        <translation>La sol·licitud de pagament no està inicialitzada.</translation>
-    </message>
-    <message>
-        <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>L'import de pagament sol·licitat %1 és massa petit (es considera polsim).</translation>
-    </message>
-    <message>
-        <source>Payment request error</source>
-        <translation>Error en la sol·licitud de pagament</translation>
-    </message>
-    <message>
-        <source>Cannot start zetacoin: click-to-pay handler</source>
-        <translation>No es pot iniciar zetacoin: gestor clica-per-pagar</translation>
-    </message>
-    <message>
-        <source>Payment request fetch URL is invalid: %1</source>
-        <translation>L'URL de recuperació de la sol·licitud de pagament no és vàlida: %1</translation>
-    </message>
-    <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Zetacoin address or malformed URI parameters.</source>
-        <translation>L'URI no pot ser analitzat! Això pot ser a causa d'una adreça de Zetacoin no vàlida o per paràmetres URI amb mal format.</translation>
-    </message>
-    <message>
-        <source>Payment request file handling</source>
-        <translation>Gestió de fitxers de les sol·licituds de pagament</translation>
-    </message>
-    <message>
-        <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
-        <translation>No es pot llegir el fitxer de la sol·licitud de pagament. Això pot ser causat per un fitxer de sol·licitud de pagament no vàlid.</translation>
-    </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation>La sol·licitud de pagament ha vençut.</translation>
-    </message>
-    <message>
-        <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation>No s'accepten sol·licituds de pagament no verificades a scripts de pagament personalitzats.</translation>
-    </message>
-    <message>
-        <source>Invalid payment request.</source>
-        <translation>Sol·licitud de pagament no vàlida.</translation>
-    </message>
-    <message>
-        <source>Refund from %1</source>
-        <translation>Reemborsament de %1</translation>
-    </message>
-    <message>
-        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
-        <translation>La sol·licitud de pagament %1 és massa gran (%2 bytes, permès %3 bytes).</translation>
-    </message>
-    <message>
-        <source>Error communicating with %1: %2</source>
-        <translation>Error en comunicar amb %1: %2</translation>
-    </message>
-    <message>
-        <source>Payment request cannot be parsed!</source>
-        <translation>No es pot analitzar la sol·licitud de pagament!</translation>
-    </message>
-    <message>
-        <source>Bad response from server %1</source>
-        <translation>Mala resposta del servidor %1</translation>
+        <source>Network request error</source>
+        <translation>Error en la sol·licitud de xarxa</translation>
     </message>
     <message>
         <source>Payment acknowledged</source>
         <translation>Pagament reconegut</translation>
-    </message>
-    <message>
-        <source>Network request error</source>
-        <translation>Error en la sol·licitud de xarxa</translation>
     </message>
 </context>
 <context>
@@ -1434,10 +1367,6 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Client name</source>
-        <translation>Nom del client</translation>
-    </message>
-    <message>
         <source>N/A</source>
         <translation>N/A</translation>
     </message>
@@ -1458,12 +1387,12 @@
         <translation>General</translation>
     </message>
     <message>
-        <source>Using OpenSSL version</source>
-        <translation>Utilitzant OpenSSL versió</translation>
-    </message>
-    <message>
         <source>Using BerkeleyDB version</source>
         <translation>Utilitzant BerkeleyDB versió</translation>
+    </message>
+    <message>
+        <source>Datadir</source>
+        <translation>Datadir</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -1490,8 +1419,16 @@
         <translation>Nombre de blocs actuals</translation>
     </message>
     <message>
-        <source>Open the Zetacoin Core debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Obre el fitxer de registre de depuració del Zetacoin Core del directori de dades actual. Pot portar uns quants segons per a fitxers de registre grans.</translation>
+        <source>Memory Pool</source>
+        <translation>Reserva de memòria</translation>
+    </message>
+    <message>
+        <source>Current number of transactions</source>
+        <translation>Nombre actual de transaccions</translation>
+    </message>
+    <message>
+        <source>Memory usage</source>
+        <translation>Us de memoria</translation>
     </message>
     <message>
         <source>Received</source>
@@ -1610,10 +1547,6 @@
         <translation>Fora:</translation>
     </message>
     <message>
-        <source>Build date</source>
-        <translation>Data de compilació</translation>
-    </message>
-    <message>
         <source>Debug log file</source>
         <translation>Fitxer de registre de depuració</translation>
     </message>
@@ -1648,10 +1581,6 @@
     <message>
         <source>&amp;Unban Node</source>
         <translation>&amp;Desbandeja el node</translation>
-    </message>
-    <message>
-        <source>Welcome to the Zetacoin Core RPC console.</source>
-        <translation>Us donem la benviguda a la consola RPC del Zetacoin Core.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1785,10 +1714,6 @@
         <translation>Copia l'etiqueta</translation>
     </message>
     <message>
-        <source>Copy message</source>
-        <translation>Copia el missatge</translation>
-    </message>
-    <message>
         <source>Copy amount</source>
         <translation>Copia l'import</translation>
     </message>
@@ -1839,15 +1764,7 @@
         <source>Message</source>
         <translation>Missatge</translation>
     </message>
-    <message>
-        <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>URI resultant massa llarga, intenta reduir el text per a la etiqueta / missatge</translation>
-    </message>
-    <message>
-        <source>Error encoding URI into QR Code.</source>
-        <translation>Error en codificar l'URI en un codi QR.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
@@ -1863,10 +1780,6 @@
         <translation>Missatge</translation>
     </message>
     <message>
-        <source>Amount</source>
-        <translation>Import</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(sense etiqueta)</translation>
     </message>
@@ -1875,8 +1788,12 @@
         <translation>(sense missatge)</translation>
     </message>
     <message>
-        <source>(no amount)</source>
-        <translation>(sense import)</translation>
+        <source>(no amount requested)</source>
+        <translation>(no s'ha sol·licitat import)</translation>
+    </message>
+    <message>
+        <source>Requested</source>
+        <translation>Sol·licitat</translation>
     </message>
 </context>
 <context>
@@ -1998,14 +1915,6 @@
         <translation>ràpid</translation>
     </message>
     <message>
-        <source>Send as zero-fee transaction if possible</source>
-        <translation>Envia com a transacció de comissió zero si és possible</translation>
-    </message>
-    <message>
-        <source>(confirmation may take longer)</source>
-        <translation>(la confirmació pot trigar més temps)</translation>
-    </message>
-    <message>
         <source>Send to multiple recipients at once</source>
         <translation>Envia a múltiples destinataris al mateix temps</translation>
     </message>
@@ -2038,14 +1947,6 @@
         <translation>E&amp;nvia</translation>
     </message>
     <message>
-        <source>Confirm send coins</source>
-        <translation>Confirma l'enviament de monedes</translation>
-    </message>
-    <message>
-        <source>%1 to %2</source>
-        <translation>%1 a %2</translation>
-    </message>
-    <message>
         <source>Copy quantity</source>
         <translation>Copia la quantitat</translation>
     </message>
@@ -2070,6 +1971,10 @@
         <translation>Copia la prioritat</translation>
     </message>
     <message>
+        <source>Copy dust</source>
+        <translation>Copia el polsim</translation>
+    </message>
+    <message>
         <source>Copy change</source>
         <translation>Copia el canvi</translation>
     </message>
@@ -2082,6 +1987,14 @@
         <translation>o</translation>
     </message>
     <message>
+        <source>Confirm send coins</source>
+        <translation>Confirma l'enviament de monedes</translation>
+    </message>
+    <message>
+        <source>The recipient address is not valid. Please recheck.</source>
+        <translation>L'adreça del destinatari no és vàlida. Torneu-la a comprovar.</translation>
+    </message>
+    <message>
         <source>The amount to pay must be larger than 0.</source>
         <translation>L'import a pagar ha de ser major que 0.</translation>
     </message>
@@ -2091,63 +2004,19 @@
     </message>
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation>El total excedeix el teu balanç quan s'afegeix la comissió a la transacció %1.</translation>
-    </message>
-    <message>
-        <source>Transaction creation failed!</source>
-        <translation>Ha fallat la creació de la transacció!</translation>
-    </message>
-    <message>
-        <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>S'ha rebutjat la transacció! Això pot passar si alguna de les monedes del vostre moneder ja s'han gastat; per exemple, si heu fet servir una còpia de seguretat del fitxer wallet.dat i s'haguessin gastat monedes de la còpia però sense marcar-les-hi com a gastades.</translation>
-    </message>
-    <message>
-        <source>A fee higher than %1 is considered an absurdly high fee.</source>
-        <translation>Una comissió superior a %1 es considera una comissió absurdament alta.</translation>
-    </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation>La sol·licitud de pagament ha vençut.</translation>
-    </message>
-    <message>
-        <source>Pay only the required fee of %1</source>
-        <translation>Paga només la comissió necessària de %1</translation>
-    </message>
-    <message numerus="yes">
-        <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation><numerusform>Estimat per començar la confirmació en %n bloc.</numerusform><numerusform>Estimat per començar la confirmació en %n blocs.</numerusform></translation>
-    </message>
-    <message>
-        <source>The recipient address is not valid. Please recheck.</source>
-        <translation>L'adreça de destinatari no és vàlida. Torneu-la a comprovar.</translation>
+        <translation>El total excedeix el vostre balanç quan s'afegeix la comissió a la transacció %1.</translation>
     </message>
     <message>
         <source>Duplicate address found: addresses should only be used once each.</source>
-        <translation>S'ha trobat una adreça duplicada: cal utilitzar les adreces només un cop cada vegada.</translation>
+        <translation>S'ha trobat una adreça duplicada: les adreces només s'haurien d'utilitzar una vegada cada una.</translation>
     </message>
     <message>
-        <source>Warning: Invalid Zetacoin address</source>
-        <translation>Avís: adreça Zetacoin no vàlida</translation>
+        <source>Transaction creation failed!</source>
+        <translation>La creació de la transacció ha fallat!</translation>
     </message>
     <message>
         <source>(no label)</source>
         <translation>(sense etiqueta)</translation>
-    </message>
-    <message>
-        <source>Warning: Unknown change address</source>
-        <translation>Avís: adreça de canvi desconeguda</translation>
-    </message>
-    <message>
-        <source>Copy dust</source>
-        <translation>Copia el polsim</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to send?</source>
-        <translation>Esteu segur que ho voleu enviar?</translation>
-    </message>
-    <message>
-        <source>added as transaction fee</source>
-        <translation>S'ha afegit una taxa de transacció</translation>
     </message>
 </context>
 <context>
@@ -2159,10 +2028,6 @@
     <message>
         <source>Pay &amp;To:</source>
         <translation>Paga &amp;a:</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>Introduïu una etiqueta per a aquesta adreça per afegir-la a la llibreta d'adreces</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
@@ -2232,13 +2097,12 @@
         <source>Memo:</source>
         <translation>Memo:</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>SendConfirmationDialog</name>
+    </context>
 <context>
     <name>ShutdownWindow</name>
-    <message>
-        <source>Zetacoin Core is shutting down...</source>
-        <translation>S'està aturant el Zetacoin Core...</translation>
-    </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
         <translation>No apagueu l'ordinador fins que no desaparegui aquesta finestra.</translation>
@@ -2330,69 +2194,9 @@
         <source>Reset all verify message fields</source>
         <translation>Neteja tots els camps de verificació de missatge</translation>
     </message>
-    <message>
-        <source>Click "Sign Message" to generate signature</source>
-        <translation>Feu clic a «Signa el missatge» per a generar una signatura</translation>
-    </message>
-    <message>
-        <source>The entered address is invalid.</source>
-        <translation>L'adreça introduïda no és vàlida.</translation>
-    </message>
-    <message>
-        <source>Please check the address and try again.</source>
-        <translation>Comproveu l'adreça i torneu-ho a provar.</translation>
-    </message>
-    <message>
-        <source>The entered address does not refer to a key.</source>
-        <translation>L'adreça introduïda no referencia a cap clau.</translation>
-    </message>
-    <message>
-        <source>Wallet unlock was cancelled.</source>
-        <translation>El desbloqueig del moneder ha estat cancelat.</translation>
-    </message>
-    <message>
-        <source>Private key for the entered address is not available.</source>
-        <translation>La clau privada per a la adreça introduïda no està disponible.</translation>
-    </message>
-    <message>
-        <source>Message signing failed.</source>
-        <translation>La signatura del missatge ha fallat.</translation>
-    </message>
-    <message>
-        <source>Message signed.</source>
-        <translation>Missatge signat.</translation>
-    </message>
-    <message>
-        <source>The signature could not be decoded.</source>
-        <translation>La signatura no s'ha pogut descodificar.</translation>
-    </message>
-    <message>
-        <source>Please check the signature and try again.</source>
-        <translation>Comproveu la signatura i torneu-ho a provar.</translation>
-    </message>
-    <message>
-        <source>The signature did not match the message digest.</source>
-        <translation>La signatura no coincideix amb el resum del missatge.</translation>
-    </message>
-    <message>
-        <source>Message verification failed.</source>
-        <translation>Ha fallat la verificació del missatge.</translation>
-    </message>
-    <message>
-        <source>Message verified.</source>
-        <translation>Missatge verificat.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>SplashScreen</name>
-    <message>
-        <source>Zetacoin Core</source>
-        <translation>Zetacoin Core</translation>
-    </message>
-    <message>
-        <source>The Zetacoin Core developers</source>
-        <translation>Els desenvolupadors del Zetacoin Core</translation>
-    </message>
     <message>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
@@ -2408,32 +2212,8 @@
 <context>
     <name>TransactionDesc</name>
     <message>
-        <source>Open until %1</source>
-        <translation>Obert fins %1</translation>
-    </message>
-    <message>
-        <source>conflicted</source>
-        <translation>en conflicte</translation>
-    </message>
-    <message>
-        <source>%1/offline</source>
-        <translation>%1/fora de línia</translation>
-    </message>
-    <message>
-        <source>%1/unconfirmed</source>
-        <translation>%1/sense confirmar</translation>
-    </message>
-    <message>
-        <source>%1 confirmations</source>
-        <translation>%1 confirmacions</translation>
-    </message>
-    <message>
         <source>Status</source>
         <translation>Estat</translation>
-    </message>
-    <message numerus="yes">
-        <source>, broadcast through %n node(s)</source>
-        <translation><numerusform>, difusió a través de %n node</numerusform><numerusform>, difusió a través de %n nodes</numerusform></translation>
     </message>
     <message>
         <source>Date</source>
@@ -2445,11 +2225,15 @@
     </message>
     <message>
         <source>Generated</source>
-        <translation>Generat</translation>
+        <translation>Generada</translation>
     </message>
     <message>
         <source>From</source>
-        <translation>Des de</translation>
+        <translation>De</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>desconegut</translation>
     </message>
     <message>
         <source>To</source>
@@ -2457,27 +2241,7 @@
     </message>
     <message>
         <source>own address</source>
-        <translation>Adreça pròpia</translation>
-    </message>
-    <message>
-        <source>watch-only</source>
-        <translation>només lectura</translation>
-    </message>
-    <message>
-        <source>label</source>
-        <translation>etiqueta</translation>
-    </message>
-    <message>
-        <source>Credit</source>
-        <translation>Crèdit</translation>
-    </message>
-    <message numerus="yes">
-        <source>matures in %n more block(s)</source>
-        <translation><numerusform>disponible en %n bloc més</numerusform><numerusform>disponibles en %n blocs més</numerusform></translation>
-    </message>
-    <message>
-        <source>not accepted</source>
-        <translation>no acceptat</translation>
+        <translation>adreça pròpia</translation>
     </message>
     <message>
         <source>Debit</source>
@@ -2505,68 +2269,24 @@
     </message>
     <message>
         <source>Comment</source>
-        <translation>Comentar</translation>
+        <translation>Comentari</translation>
     </message>
     <message>
         <source>Transaction ID</source>
-        <translation>ID de transacció</translation>
-    </message>
-    <message>
-        <source>Merchant</source>
-        <translation>Mercader</translation>
-    </message>
-    <message>
-        <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Les monedes generades han de madurar %1 blocs abans de poder ser gastades. Quan genereu aquest bloc, es farà saber a la xarxa per tal d'afegir-lo a la cadena de blocs. Si no pot fer-se lloc a la cadena, el seu estat canviarà a «no acceptat» i no es podrà gastar. Això pot passar ocasionalment si un altre node genera un bloc en un marge de segons respecte al vostre.</translation>
-    </message>
-    <message>
-        <source>Debug information</source>
-        <translation>Informació de depuració</translation>
-    </message>
-    <message>
-        <source>Transaction</source>
-        <translation>Transacció</translation>
-    </message>
-    <message>
-        <source>Inputs</source>
-        <translation>Entrades</translation>
+        <translation>ID de la transacció</translation>
     </message>
     <message>
         <source>Amount</source>
         <translation>Import</translation>
     </message>
-    <message>
-        <source>true</source>
-        <translation>cert</translation>
-    </message>
-    <message>
-        <source>false</source>
-        <translation>fals</translation>
-    </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>, encara no ha estat emès correctement</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation><numerusform>Obre per %n bloc més</numerusform><numerusform>Obre per %n blocs més</numerusform></translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>desconegut</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>TransactionDescDialog</name>
-    <message>
-        <source>Transaction details</source>
-        <translation>Detall de la transacció</translation>
-    </message>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Aquest panell mostra una descripció detallada de la transacció</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TransactionTableModel</name>
     <message>
@@ -2578,60 +2298,32 @@
         <translation>Tipus</translation>
     </message>
     <message>
-        <source>Immature (%1 confirmations, will be available after %2)</source>
-        <translation>Immadur (%1 confirmacions, serà disponible després de %2)</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation><numerusform>Obre per %n bloc més</numerusform><numerusform>Obre per %n blocs més</numerusform></translation>
-    </message>
-    <message>
-        <source>Open until %1</source>
-        <translation>Obert fins %1</translation>
-    </message>
-    <message>
-        <source>Confirmed (%1 confirmations)</source>
-        <translation>Confirmat (%1 confirmacions)</translation>
-    </message>
-    <message>
-        <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>Aquest bloc no ha estat rebut per cap altre node i probablement no serà acceptat!</translation>
-    </message>
-    <message>
-        <source>Generated but not accepted</source>
-        <translation>Generat però no acceptat</translation>
+        <source>Label</source>
+        <translation>Etiqueta</translation>
     </message>
     <message>
         <source>Offline</source>
         <translation>Fora de línia</translation>
     </message>
     <message>
-        <source>Label</source>
-        <translation>Etiqueta</translation>
-    </message>
-    <message>
         <source>Unconfirmed</source>
         <translation>Sense confirmar</translation>
     </message>
     <message>
-        <source>Confirming (%1 of %2 recommended confirmations)</source>
-        <translation>Confirmant (%1 de %2 confirmacions recomanades)</translation>
-    </message>
-    <message>
-        <source>Conflicted</source>
-        <translation>En conflicte</translation>
+        <source>Abandoned</source>
+        <translation>Abandonada</translation>
     </message>
     <message>
         <source>Received with</source>
-        <translation>Rebut amb</translation>
+        <translation>Rebuda amb</translation>
     </message>
     <message>
         <source>Received from</source>
-        <translation>Rebut de</translation>
+        <translation>Rebuda de</translation>
     </message>
     <message>
         <source>Sent to</source>
-        <translation>Enviat a</translation>
+        <translation>Enviada a</translation>
     </message>
     <message>
         <source>Payment to yourself</source>
@@ -2639,98 +2331,26 @@
     </message>
     <message>
         <source>Mined</source>
-        <translation>Minat</translation>
+        <translation>Minada</translation>
     </message>
     <message>
-        <source>watch-only</source>
-        <translation>només lectura</translation>
+        <source>(no label)</source>
+        <translation>(sense etiqueta)</translation>
     </message>
-    <message>
-        <source>(n/a)</source>
-        <translation>(n/a)</translation>
-    </message>
-    <message>
-        <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation>Estat de la transacció. Desplaceu-vos sobre aquest camp per mostrar el nombre de confirmacions.</translation>
-    </message>
-    <message>
-        <source>Date and time that the transaction was received.</source>
-        <translation>Data i hora en que la transacció va ser rebuda.</translation>
-    </message>
-    <message>
-        <source>Type of transaction.</source>
-        <translation>Tipus de transacció.</translation>
-    </message>
-    <message>
-        <source>Whether or not a watch-only address is involved in this transaction.</source>
-        <translation>Si està implicada o no una adreça només de lectura en la transacció.</translation>
-    </message>
-    <message>
-        <source>User-defined intent/purpose of the transaction.</source>
-        <translation>Intenció/propòsit de la transacció definida per l'usuari.</translation>
-    </message>
-    <message>
-        <source>Amount removed from or added to balance.</source>
-        <translation>Import extret o afegit del balanç.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>TransactionView</name>
     <message>
-        <source>All</source>
-        <translation>Tot</translation>
-    </message>
-    <message>
-        <source>Today</source>
-        <translation>Avui</translation>
-    </message>
-    <message>
-        <source>This week</source>
-        <translation>Aquesta setmana</translation>
-    </message>
-    <message>
-        <source>This month</source>
-        <translation>Aquest mes</translation>
-    </message>
-    <message>
-        <source>Last month</source>
-        <translation>El mes passat</translation>
-    </message>
-    <message>
-        <source>This year</source>
-        <translation>Enguany</translation>
-    </message>
-    <message>
-        <source>Range...</source>
-        <translation>Rang...</translation>
-    </message>
-    <message>
         <source>Received with</source>
-        <translation>Rebut amb</translation>
+        <translation>Rebuda amb</translation>
     </message>
     <message>
         <source>Sent to</source>
-        <translation>Enviat a</translation>
-    </message>
-    <message>
-        <source>To yourself</source>
-        <translation>A un mateix</translation>
+        <translation>Enviada a</translation>
     </message>
     <message>
         <source>Mined</source>
-        <translation>Minat</translation>
-    </message>
-    <message>
-        <source>Other</source>
-        <translation>Altres</translation>
-    </message>
-    <message>
-        <source>Enter address or label to search</source>
-        <translation>Introduïu una adreça o una etiqueta per cercar</translation>
-    </message>
-    <message>
-        <source>Min amount</source>
-        <translation>Import mínim</translation>
+        <translation>Minada</translation>
     </message>
     <message>
         <source>Copy address</source>
@@ -2738,7 +2358,7 @@
     </message>
     <message>
         <source>Copy label</source>
-        <translation>Copiar etiqueta</translation>
+        <translation>Copia l'etiqueta</translation>
     </message>
     <message>
         <source>Copy amount</source>
@@ -2746,47 +2366,11 @@
     </message>
     <message>
         <source>Copy transaction ID</source>
-        <translation>Copiar ID de transacció</translation>
-    </message>
-    <message>
-        <source>Edit label</source>
-        <translation>Editar etiqueta</translation>
-    </message>
-    <message>
-        <source>Show transaction details</source>
-        <translation>Mostra detalls de la transacció</translation>
-    </message>
-    <message>
-        <source>Export Transaction History</source>
-        <translation>Exporta l'historial de transacció</translation>
-    </message>
-    <message>
-        <source>Watch-only</source>
-        <translation>Només de lectura</translation>
-    </message>
-    <message>
-        <source>Exporting Failed</source>
-        <translation>L'exportació ha fallat</translation>
-    </message>
-    <message>
-        <source>There was an error trying to save the transaction history to %1.</source>
-        <translation>S'ha produït un error en provar de desar l'historial de transacció a %1.</translation>
-    </message>
-    <message>
-        <source>Exporting Successful</source>
-        <translation>Exportació amb èxit</translation>
-    </message>
-    <message>
-        <source>The transaction history was successfully saved to %1.</source>
-        <translation>L'historial de transaccions s'ha desat correctament a %1.</translation>
+        <translation>Copia l'ID de transacció</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Fitxer separat per comes (*.csv)</translation>
-    </message>
-    <message>
-        <source>Confirmed</source>
-        <translation>Confirmat</translation>
     </message>
     <message>
         <source>Date</source>
@@ -2805,18 +2389,10 @@
         <translation>Adreça</translation>
     </message>
     <message>
-        <source>ID</source>
-        <translation>ID</translation>
+        <source>Exporting Failed</source>
+        <translation>L'exportació ha fallat</translation>
     </message>
-    <message>
-        <source>Range:</source>
-        <translation>Rang:</translation>
-    </message>
-    <message>
-        <source>to</source>
-        <translation>a</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
     <message>
@@ -2826,53 +2402,13 @@
 </context>
 <context>
     <name>WalletFrame</name>
-    <message>
-        <source>No wallet has been loaded.</source>
-        <translation>No s'ha carregat cap moneder.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>WalletModel</name>
-    <message>
-        <source>Send Coins</source>
-        <translation>Envia monedes</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
-    <message>
-        <source>&amp;Export</source>
-        <translation>&amp;Exporta</translation>
-    </message>
-    <message>
-        <source>Export the data in the current tab to a file</source>
-        <translation>Exporta les dades de la pestanya actual a un fitxer</translation>
-    </message>
-    <message>
-        <source>Backup Wallet</source>
-        <translation>Còpia de seguretat del moneder</translation>
-    </message>
-    <message>
-        <source>Wallet Data (*.dat)</source>
-        <translation>Dades del moneder (*.dat)</translation>
-    </message>
-    <message>
-        <source>Backup Failed</source>
-        <translation>Ha fallat la còpia de seguretat</translation>
-    </message>
-    <message>
-        <source>There was an error trying to save the wallet data to %1.</source>
-        <translation>S'ha produït un error en provar de desar les dades del moneder a %1.</translation>
-    </message>
-    <message>
-        <source>The wallet data was successfully saved to %1.</source>
-        <translation>S'han desat les dades del moneder correctament a %1.</translation>
-    </message>
-    <message>
-        <source>Backup Successful</source>
-        <translation>La còpia de seguretat s'ha realitzat correctament</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>bitcoin-core</name>
     <message>
@@ -2896,20 +2432,56 @@
         <translation>Accepta la línia d'ordres i ordres JSON-RPC </translation>
     </message>
     <message>
-        <source>Maximum total fees (in %s) to use in a single wallet transaction; setting this too low may abort large transactions (default: %s)</source>
-        <translation>Comissions totals màximes (en %s) per utilitzar en una única transacció de moneder; definir-ne una massa baixa pot interrompre les transaccions més grans (per defecte: %s)</translation>
+        <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
+        <translation>Si no es proporciona &lt;category&gt; o si &lt;category&gt; = 1, treu a la sortida tota la informació de depuració.</translation>
+    </message>
+    <message>
+        <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
+        <translation>Poda configurada per sota el mínim de %d MiB. Utilitzeu un nombre superior.</translation>
+    </message>
+    <message>
+        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
+        <translation>Poda: la darrera sincronització del moneder va més enllà de les dades podades. Cal que activeu -reindex (baixeu tota la cadena de blocs de nou en cas de node podat)</translation>
+    </message>
+    <message>
+        <source>Reduce storage requirements by pruning (deleting) old blocks. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, &gt;%u = target size in MiB to use for block files)</source>
+        <translation>Reduïu els requisits d'emmagatzematge podant (suprimint) els blocs antics. Aquest mode és incompatible amb -txindex i -rescan. Avís: la reversió d'aquest paràmetre implica haver de tornar a baixar la cadena de blocs sencera. (per defecte: 0 = inhabilita la poda de blocs, &gt;%u = mida objectiu en MiB per utilitzar en els fitxers de blocs)</translation>
+    </message>
+    <message>
+        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
+        <translation>Els rescanejos no són possible en el mode de poda. Caldrà que utilitzeu -reindex, que tornarà a baixar la cadena de blocs sencera.</translation>
+    </message>
+    <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>Error: s'ha produït un error intern fatal. Vegeu debug.log per a més detalls</translation>
     </message>
     <message>
         <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
         <translation>Comissió (en %s/kB) per afegir a les transaccions que envieu (per defecte: %s)</translation>
     </message>
     <message>
+        <source>Pruning blockstore...</source>
+        <translation>S'està podant la cadena de blocs...</translation>
+    </message>
+    <message>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Executa en segon pla com a programa dimoni i accepta ordres</translation>
     </message>
     <message>
+        <source>Unable to start HTTP server. See debug log for details.</source>
+        <translation>No s'ha pogut iniciar el servidor HTTP. Vegeu debug.log per a més detalls.</translation>
+    </message>
+    <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Accepta connexions de fora (per defecte: 1 si no -proxy o -connect)</translation>
+    </message>
+    <message>
+        <source>Zetacoin Core</source>
+        <translation>Zetacoin Core</translation>
+    </message>
+    <message>
+        <source>-fallbackfee is set very high! This is the transaction fee you may pay when fee estimates are not available.</source>
+        <translation>-fallbackfee és molt elevat. Aquesta és la comissió de transacció que podeu pagar quan les estimacions de comissions no estan disponibles.</translation>
     </message>
     <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
@@ -2936,28 +2508,12 @@
         <translation>Aquesta és una versió de pre-llançament - utilitza-la sota la teva responsabilitat - No usar per a minería o aplicacions de compra-venda</translation>
     </message>
     <message>
-        <source>Unable to bind to %s on this computer. Zetacoin Core is probably already running.</source>
-        <translation>No es pot enllaçar %s a aquest ordinador. El Zetacoin Core probablement ja estigui executant-s'hi.</translation>
-    </message>
-    <message>
-        <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
-        <translation>AVÍS: s'ha generat un nombre anòmalament alt de blocs, %d blocs rebuts en les darreres %d hores (se n'esperaven %d)</translation>
-    </message>
-    <message>
-        <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
-        <translation>AVÍS: comproveu la vostra connexió a la xarxa, %d blocs rebuts en les darreres %d hores (se n'esperaven %d)</translation>
-    </message>
-    <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
         <translation>Avís: la xarxa no sembla que hi estigui plenament d'acord. Alguns miners sembla que estan experimentant problemes.</translation>
     </message>
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Avís: sembla que no estem plenament d'acord amb els nostres iguals! Podria caler que actualitzar l'aplicació, o potser que ho facin altres nodes.</translation>
-    </message>
-    <message>
-        <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Avís: el fitxer wallet.dat és corrupte, dades rescatades! L'arxiu wallet.dat original ha estat desat com wallet.{estampa_temporal}.bak al directori %s; si el teu balanç o transaccions son incorrectes hauries de restaurar-lo de un backup.</translation>
     </message>
     <message>
         <source>Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.</source>
@@ -3080,14 +2636,6 @@
         <translation>Opcions de moneder:</translation>
     </message>
     <message>
-        <source>Warning: This version is obsolete; upgrade required!</source>
-        <translation>Avís: aquesta versió és obsoleta; cal actualitzar-la!</translation>
-    </message>
-    <message>
-        <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation>Cal que reconstruïu la base de dades fent servir -reindex per canviar -txindex</translation>
-    </message>
-    <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation>Permet les connexions JSON-RPC d'una font específica. Vàlid per a &lt;ip&gt; són una IP individual (p. ex., 1.2.3.4), una xarxa / màscara de xarxa (p. ex., 1.2.3.4/255.255.255.0) o una xarxa/CIDR (p. ex., 1.2.3.4/24). Es pot especificar aquesta opció moltes vegades</translation>
     </message>
@@ -3098,10 +2646,6 @@
     <message>
         <source>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</source>
         <translation>Vincula a l'adreça donada per a escoltar les connexions JSON-RPC. Feu servir la notació [host]:port per a IPv6. Aquesta opció pot ser especificada moltes vegades (per defecte: vincula a totes les interfícies)</translation>
-    </message>
-    <message>
-        <source>Cannot obtain a lock on data directory %s. Zetacoin Core is probably already running.</source>
-        <translation>No es pot obtenir un bloqueig del directori de dades %s. El Zetacoin Core probablement ja s'estigui executant.</translation>
     </message>
     <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
@@ -3144,10 +2688,6 @@
         <translation>Defineix la mida màxima de transaccions d'alta prioritat / baixa comissió en bytes (per defecte: %d)</translation>
     </message>
     <message>
-        <source>Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)</source>
-        <translation>Defineix el nombre de fils per a la generació de moneda si està habilitat (-1 = tots els nuclis, per defecte: %d)</translation>
-    </message>
-    <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
         <translation>L'import de la transacció és massa petit per enviar-la després que se'n dedueixi la comissió</translation>
     </message>
@@ -3172,24 +2712,8 @@
         <translation>Accepta sol·licituds REST públiques (per defecte: %u)</translation>
     </message>
     <message>
-        <source>Activating best chain...</source>
-        <translation>S'està activant la millor cadena...</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -whitebind address: '%s'</source>
-        <translation>No es pot resoldre l'adreça -whitebind: «%s»</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Connecta a través del proxy SOCKS5</translation>
-    </message>
-    <message>
-        <source>Copyright (C) 2009-%i The Zetacoin Core Developers</source>
-        <translation>Copyright (C) 2009-%i Els desenvolupadors del Zetacoin Core</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat: Wallet requires newer version of Zetacoin Core</source>
-        <translation>Error en carregar wallet.dat: el moneder requereix una versió més nova del Zetacoin core</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
@@ -3198,22 +2722,6 @@
     <message>
         <source>Information</source>
         <translation>&amp;Informació</translation>
-    </message>
-    <message>
-        <source>Initialization sanity check failed. Zetacoin Core is shutting down.</source>
-        <translation>Ha fallat la inicialització de la comprovació de validesa. El Zetacoin Core s'està aturant.</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Import no vàlid per a -maxtxfee=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Import no vàlid per a -minrelaytxfee=&lt;amount&gt;: «%s»</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Import no vàlid per a -mintxfee=&lt;amount&gt;: «%s»</translation>
     </message>
     <message>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
@@ -3238,14 +2746,6 @@
     <message>
         <source>RPC server options:</source>
         <translation>Opcions del servidor RPC:</translation>
-    </message>
-    <message>
-        <source>Rebuild block chain index from current blk000??.dat files on startup</source>
-        <translation>Reconstrueix l'índex de la cadena de blocs dels fitxers blk000??.dat actuals a l'inici.</translation>
-    </message>
-    <message>
-        <source>Receive and display P2P network alerts (default: %u)</source>
-        <translation>Rep i mostra avisos de la xarxa P2P (per defecte: %u)</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
@@ -3300,20 +2800,12 @@
         <translation>Nom d'usuari per a connexions JSON-RPC</translation>
     </message>
     <message>
-        <source>Wallet needed to be rewritten: restart Zetacoin Core to complete</source>
-        <translation>Cal reescriure el moneder: reiniceu el Zetacoin Core per completar-ho.</translation>
-    </message>
-    <message>
         <source>Warning</source>
         <translation>Avís</translation>
     </message>
     <message>
         <source>Zapping all transactions from wallet...</source>
         <translation>Se suprimeixen totes les transaccions del moneder...</translation>
-    </message>
-    <message>
-        <source>wallet.dat corrupt, salvage failed</source>
-        <translation>El fitxer wallet.data és corrupte. El rescat de les dades ha fallat</translation>
     </message>
     <message>
         <source>Password for JSON-RPC connections</source>
@@ -3324,20 +2816,12 @@
         <translation>Executa l'ordre quan el millor bloc canviï (%s en cmd es reemplaça per un resum de bloc)</translation>
     </message>
     <message>
-        <source>This help message</source>
-        <translation>Aquest misatge d'ajuda</translation>
-    </message>
-    <message>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Permet consultes DNS per a -addnode, -seednode i -connect</translation>
     </message>
     <message>
         <source>Loading addresses...</source>
         <translation>S'estan carregant les adreces...</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation>Error en carregar wallet.dat: Moneder corrupte</translation>
     </message>
     <message>
         <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
@@ -3370,14 +2854,6 @@
     <message>
         <source>Always query for peer addresses via DNS lookup (default: %u)</source>
         <translation>Demana sempre les adreces dels iguals a través de consultes DNS (per defecte: %u)</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat</source>
-        <translation>Error en carregar wallet.dat</translation>
-    </message>
-    <message>
-        <source>Generate coins (default: %u)</source>
-        <translation>Genera monedes (per defecte: %u)</translation>
     </message>
     <message>
         <source>How many blocks to check at startup (default: %u, 0 = all)</source>
@@ -3432,10 +2908,6 @@
         <translation>Defineix la mida clau disponible a &lt;n&gt; (per defecte: %u)</translation>
     </message>
     <message>
-        <source>Set minimum block size in bytes (default: %u)</source>
-        <translation>Defineix la mida de bloc mínima en bytes (per defecte: %u)</translation>
-    </message>
-    <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>
         <translation>Defineix el nombre de fils a crides de servei RPC (per defecte: %d)</translation>
     </message>
@@ -3462,18 +2934,6 @@
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
         <translation>Xarxa desconeguda especificada a -onlynet: '%s'</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -bind address: '%s'</source>
-        <translation>No es pot resoldre l'adreça -bind: '%s'</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -externalip address: '%s'</source>
-        <translation>No es pot resoldre l'adreça -externalip: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Import no vàlid per a -paytxfee=&lt;amount&gt;: «%s»</translation>
     </message>
     <message>
         <source>Insufficient funds</source>

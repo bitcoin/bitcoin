@@ -3,6 +3,7 @@ $(package)_version=1_59_0
 $(package)_download_path=http://sourceforge.net/projects/boost/files/boost/1.59.0
 $(package)_file_name=$(package)_$($(package)_version).tar.bz2
 $(package)_sha256_hash=727a932322d94287b62abb1bd2d41723eec4356a7728909e38adb65ca25241ca
+$(package)_patches=fix-win-wake-from-sleep.patch
 
 define $(package)_set_vars
 $(package)_config_opts_release=variant=release
@@ -20,11 +21,12 @@ $(package)_archiver_$(host_os)=$($(package)_ar)
 $(package)_toolset_darwin=darwin
 $(package)_archiver_darwin=$($(package)_libtool)
 $(package)_config_libraries=chrono,filesystem,program_options,system,thread,test
-$(package)_cxxflags=-fvisibility=hidden
+$(package)_cxxflags=-std=c++11 -fvisibility=hidden
 $(package)_cxxflags_linux=-fPIC
 endef
 
 define $(package)_preprocess_cmds
+  patch -p1 < $($(package)_patch_dir)/fix-win-wake-from-sleep.patch && \
   echo "using $(boost_toolset_$(host_os)) : : $($(package)_cxx) : <cxxflags>\"$($(package)_cxxflags) $($(package)_cppflags)\" <linkflags>\"$($(package)_ldflags)\" <archiver>\"$(boost_archiver_$(host_os))\" <striper>\"$(host_STRIP)\"  <ranlib>\"$(host_RANLIB)\" <rc>\"$(host_WINDRES)\" : ;" > user-config.jam
 endef
 

@@ -1,8 +1,7 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # Copyright (c) 2015 The Bitcoin Core developers
-# Distributed under the MIT/X11 software license, see the accompanying
+# Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#
 
 from test_framework.test_framework import ComparisonTestFramework
 from test_framework.util import *
@@ -10,8 +9,7 @@ from test_framework.mininode import ToHex, CTransaction, NetworkThread
 from test_framework.blocktools import create_coinbase, create_block
 from test_framework.comptool import TestInstance, TestManager
 from test_framework.script import *
-from binascii import unhexlify
-import cStringIO
+from io import BytesIO
 import time
 
 '''
@@ -64,13 +62,13 @@ seq_random_low_bit = 1<<18
 # b31,b25,b22,b18 represent the 31st, 25th, 22nd and 18th bits respectively in the nSequence field
 # relative_locktimes[b31][b25][b22][b18] is a base_relative_locktime with the indicated bits set if their indices are 1
 relative_locktimes = []
-for b31 in xrange(2):
+for b31 in range(2):
     b25times = []
-    for b25 in xrange(2):
+    for b25 in range(2):
         b22times = []
-        for b22 in xrange(2):
+        for b22 in range(2):
             b18times = []
-            for b18 in xrange(2):
+            for b18 in range(2):
                 rlt = base_relative_locktime
                 if (b31):
                     rlt = rlt | seq_disable_flag
@@ -87,20 +85,21 @@ for b31 in xrange(2):
 
 def all_rlt_txs(txarray):
     txs = []
-    for b31 in xrange(2):
-        for b25 in xrange(2):
-            for b22 in xrange(2):
-                for b18 in xrange(2):
+    for b31 in range(2):
+        for b25 in range(2):
+            for b22 in range(2):
+                for b18 in range(2):
                     txs.append(txarray[b31][b25][b22][b18])
     return txs
 
 class BIP68_112_113Test(ComparisonTestFramework):
     def __init__(self):
+        super().__init__()
         self.num_nodes = 1
 
     def setup_network(self):
         # Must set the blockversion for this test
-        self.nodes = start_nodes(1, self.options.tmpdir,
+        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir,
                                  extra_args=[['-debug', '-whitelist=127.0.0.1', '-blockversion=4']],
                                  binary=[self.options.testbinary])
 
@@ -119,7 +118,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
         outputs = { to_address : amount }
         rawtx = node.createrawtransaction(inputs, outputs)
         tx = CTransaction()
-        f = cStringIO.StringIO(unhexlify(rawtx))
+        f = BytesIO(hex_str_to_bytes(rawtx))
         tx.deserialize(f)
         return tx
 
@@ -127,12 +126,12 @@ class BIP68_112_113Test(ComparisonTestFramework):
         rawtx = ToHex(unsignedtx)
         signresult = node.signrawtransaction(rawtx)
         tx = CTransaction()
-        f = cStringIO.StringIO(unhexlify(signresult['hex']))
+        f = BytesIO(hex_str_to_bytes(signresult['hex']))
         tx.deserialize(f)
         return tx
 
     def generate_blocks(self, number, version, test_blocks = []):
-        for i in xrange(number):
+        for i in range(number):
             block = self.create_test_block([], version)
             test_blocks.append([block, True])
             self.last_block_time += 600
@@ -153,13 +152,13 @@ class BIP68_112_113Test(ComparisonTestFramework):
         txs = []
         assert(len(bip68inputs) >= 16)
         i = 0
-        for b31 in xrange(2):
+        for b31 in range(2):
             b25txs = []
-            for b25 in xrange(2):
+            for b25 in range(2):
                 b22txs = []
-                for b22 in xrange(2):
+                for b22 in range(2):
                     b18txs = []
-                    for b18 in xrange(2):
+                    for b18 in range(2):
                         tx =  self.create_transaction(self.nodes[0], bip68inputs[i], self.nodeaddress, Decimal("49.98"))
                         i += 1
                         tx.nVersion = txversion
@@ -174,20 +173,20 @@ class BIP68_112_113Test(ComparisonTestFramework):
         tx = self.create_transaction(self.nodes[0], input, self.nodeaddress, Decimal("49.98"))
         tx.nVersion = txversion
         signtx = self.sign_transaction(self.nodes[0], tx)
-        signtx.vin[0].scriptSig = CScript([-1, OP_NOP3, OP_DROP] + list(CScript(signtx.vin[0].scriptSig)))
+        signtx.vin[0].scriptSig = CScript([-1, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(signtx.vin[0].scriptSig)))
         return signtx
 
     def create_bip112txs(self, bip112inputs, varyOP_CSV, txversion, locktime_delta = 0):
         txs = []
         assert(len(bip112inputs) >= 16)
         i = 0
-        for b31 in xrange(2):
+        for b31 in range(2):
             b25txs = []
-            for b25 in xrange(2):
+            for b25 in range(2):
                 b22txs = []
-                for b22 in xrange(2):
+                for b22 in range(2):
                     b18txs = []
-                    for b18 in xrange(2):
+                    for b18 in range(2):
                         tx =  self.create_transaction(self.nodes[0], bip112inputs[i], self.nodeaddress, Decimal("49.98"))
                         i += 1
                         if (varyOP_CSV): # if varying OP_CSV, nSequence is fixed
@@ -197,9 +196,9 @@ class BIP68_112_113Test(ComparisonTestFramework):
                         tx.nVersion = txversion
                         signtx = self.sign_transaction(self.nodes[0], tx)
                         if (varyOP_CSV):
-                            signtx.vin[0].scriptSig = CScript([relative_locktimes[b31][b25][b22][b18], OP_NOP3, OP_DROP] + list(CScript(signtx.vin[0].scriptSig)))
+                            signtx.vin[0].scriptSig = CScript([relative_locktimes[b31][b25][b22][b18], OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(signtx.vin[0].scriptSig)))
                         else:
-                            signtx.vin[0].scriptSig = CScript([base_relative_locktime, OP_NOP3, OP_DROP] + list(CScript(signtx.vin[0].scriptSig)))
+                            signtx.vin[0].scriptSig = CScript([base_relative_locktime, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(signtx.vin[0].scriptSig)))
                         b18txs.append(signtx)
                     b22txs.append(b18txs)
                 b25txs.append(b22txs)
@@ -213,7 +212,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
         self.nodes[0].setmocktime(0) # set time back to present so yielded blocks aren't in the future as we advance last_block_time
         self.tipheight = 82 # height of the next block to build
         self.last_block_time = long_past_time
-        self.tip = int ("0x" + self.nodes[0].getbestblockhash() + "L", 0)
+        self.tip = int("0x" + self.nodes[0].getbestblockhash(), 0)
         self.nodeaddress = self.nodes[0].getnewaddress()
 
         assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'defined')
@@ -251,20 +250,20 @@ class BIP68_112_113Test(ComparisonTestFramework):
         # Note we reuse inputs for v1 and v2 txs so must test these separately
         # 16 normal inputs
         bip68inputs = []
-        for i in xrange(16):
+        for i in range(16):
             bip68inputs.append(self.send_generic_input_tx(self.nodes[0], self.coinbase_blocks))
         # 2 sets of 16 inputs with 10 OP_CSV OP_DROP (actually will be prepended to spending scriptSig)
         bip112basicinputs = []
-        for j in xrange(2):
+        for j in range(2):
             inputs = []
-            for i in xrange(16):
+            for i in range(16):
                 inputs.append(self.send_generic_input_tx(self.nodes[0], self.coinbase_blocks))
             bip112basicinputs.append(inputs)
         # 2 sets of 16 varied inputs with (relative_lock_time) OP_CSV OP_DROP (actually will be prepended to spending scriptSig)
         bip112diverseinputs = []
-        for j in xrange(2):
+        for j in range(2):
             inputs = []
-            for i in xrange(16):
+            for i in range(16):
                 inputs.append(self.send_generic_input_tx(self.nodes[0], self.coinbase_blocks))
             bip112diverseinputs.append(inputs)
         # 1 special input with -1 OP_CSV OP_DROP (actually will be prepended to spending scriptSig)
@@ -275,7 +274,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
         self.nodes[0].setmocktime(self.last_block_time + 600)
         inputblockhash = self.nodes[0].generate(1)[0] # 1 block generated for inputs to be in chain at height 572
         self.nodes[0].setmocktime(0)
-        self.tip = int("0x" + inputblockhash + "L", 0)
+        self.tip = int("0x" + inputblockhash, 0)
         self.tipheight += 1
         self.last_block_time += 600
         assert_equal(len(self.nodes[0].getblock(inputblockhash,True)["tx"]), 82+1)
@@ -399,22 +398,22 @@ class BIP68_112_113Test(ComparisonTestFramework):
         ### Version 2 txs ###
         bip68success_txs = []
         # All txs with SEQUENCE_LOCKTIME_DISABLE_FLAG set pass
-        for b25 in xrange(2):
-            for b22 in xrange(2):
-                for b18 in xrange(2):
+        for b25 in range(2):
+            for b22 in range(2):
+                for b18 in range(2):
                     bip68success_txs.append(bip68txs_v2[1][b25][b22][b18])
         yield TestInstance([[self.create_test_block(bip68success_txs), True]]) # 15
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
         # All txs without flag fail as we are at delta height = 8 < 10 and delta time = 8 * 600 < 10 * 512
         bip68timetxs = []
-        for b25 in xrange(2):
-            for b18 in xrange(2):
+        for b25 in range(2):
+            for b18 in range(2):
                 bip68timetxs.append(bip68txs_v2[0][b25][1][b18])
         for tx in bip68timetxs:
             yield TestInstance([[self.create_test_block([tx]), False]]) # 16 - 19
         bip68heighttxs = []
-        for b25 in xrange(2):
-            for b18 in xrange(2):
+        for b25 in range(2):
+            for b18 in range(2):
                 bip68heighttxs.append(bip68txs_v2[0][b25][0][b18])
         for tx in bip68heighttxs:
             yield TestInstance([[self.create_test_block([tx]), False]]) # 20 - 23
@@ -446,9 +445,9 @@ class BIP68_112_113Test(ComparisonTestFramework):
         yield TestInstance([[self.create_test_block([bip112tx_special_v1]), False]]) #32
         # If SEQUENCE_LOCKTIME_DISABLE_FLAG is set in argument to OP_CSV, version 1 txs should still pass
         success_txs = []
-        for b25 in xrange(2):
-            for b22 in xrange(2):
-                for b18 in xrange(2):
+        for b25 in range(2):
+            for b22 in range(2):
+                for b18 in range(2):
                     success_txs.append(bip112txs_vary_OP_CSV_v1[1][b25][b22][b18])
                     success_txs.append(bip112txs_vary_OP_CSV_9_v1[1][b25][b22][b18])
         yield TestInstance([[self.create_test_block(success_txs), True]]) # 33
@@ -458,9 +457,9 @@ class BIP68_112_113Test(ComparisonTestFramework):
         fail_txs = []
         fail_txs.extend(all_rlt_txs(bip112txs_vary_nSequence_v1))
         fail_txs.extend(all_rlt_txs(bip112txs_vary_nSequence_9_v1))
-        for b25 in xrange(2):
-            for b22 in xrange(2):
-                for b18 in xrange(2):
+        for b25 in range(2):
+            for b22 in range(2):
+                for b18 in range(2):
                     fail_txs.append(bip112txs_vary_OP_CSV_v1[0][b25][b22][b18])
                     fail_txs.append(bip112txs_vary_OP_CSV_9_v1[0][b25][b22][b18])
 
@@ -473,9 +472,9 @@ class BIP68_112_113Test(ComparisonTestFramework):
 
         # If SEQUENCE_LOCKTIME_DISABLE_FLAG is set in argument to OP_CSV, version 2 txs should pass (all sequence locks are met)
         success_txs = []
-        for b25 in xrange(2):
-            for b22 in xrange(2):
-                for b18 in xrange(2):
+        for b25 in range(2):
+            for b22 in range(2):
+                for b18 in range(2):
                     success_txs.append(bip112txs_vary_OP_CSV_v2[1][b25][b22][b18]) # 8/16 of vary_OP_CSV
                     success_txs.append(bip112txs_vary_OP_CSV_9_v2[1][b25][b22][b18]) # 8/16 of vary_OP_CSV_9
 
@@ -486,9 +485,9 @@ class BIP68_112_113Test(ComparisonTestFramework):
         # All txs with nSequence 9 should fail either due to earlier mismatch or failing the CSV check
         fail_txs = []
         fail_txs.extend(all_rlt_txs(bip112txs_vary_nSequence_9_v2)) # 16/16 of vary_nSequence_9
-        for b25 in xrange(2):
-            for b22 in xrange(2):
-                for b18 in xrange(2):
+        for b25 in range(2):
+            for b22 in range(2):
+                for b18 in range(2):
                     fail_txs.append(bip112txs_vary_OP_CSV_9_v2[0][b25][b22][b18]) # 16/16 of vary_OP_CSV_9
 
         for tx in fail_txs:
@@ -496,17 +495,17 @@ class BIP68_112_113Test(ComparisonTestFramework):
 
         # If SEQUENCE_LOCKTIME_DISABLE_FLAG is set in nSequence, tx should fail
         fail_txs = []
-        for b25 in xrange(2):
-            for b22 in xrange(2):
-                for b18 in xrange(2):
+        for b25 in range(2):
+            for b22 in range(2):
+                for b18 in range(2):
                     fail_txs.append(bip112txs_vary_nSequence_v2[1][b25][b22][b18]) # 8/16 of vary_nSequence
         for tx in fail_txs:
             yield TestInstance([[self.create_test_block([tx]), False]]) # 108-115
 
         # If sequencelock types mismatch, tx should fail
         fail_txs = []
-        for b25 in xrange(2):
-            for b18 in xrange(2):
+        for b25 in range(2):
+            for b18 in range(2):
                 fail_txs.append(bip112txs_vary_nSequence_v2[0][b25][1][b18]) # 12/16 of vary_nSequence
                 fail_txs.append(bip112txs_vary_OP_CSV_v2[0][b25][1][b18]) # 12/16 of vary_OP_CSV
         for tx in fail_txs:
@@ -514,8 +513,8 @@ class BIP68_112_113Test(ComparisonTestFramework):
 
         # Remaining txs should pass, just test masking works properly
         success_txs = []
-        for b25 in xrange(2):
-            for b18 in xrange(2):
+        for b25 in range(2):
+            for b18 in range(2):
                 success_txs.append(bip112txs_vary_nSequence_v2[0][b25][0][b18]) # 16/16 of vary_nSequence
                 success_txs.append(bip112txs_vary_OP_CSV_v2[0][b25][0][b18]) # 16/16 of vary_OP_CSV
         yield TestInstance([[self.create_test_block(success_txs), True]]) # 124
@@ -523,8 +522,8 @@ class BIP68_112_113Test(ComparisonTestFramework):
 
         # Additional test, of checking that comparison of two time types works properly
         time_txs = []
-        for b25 in xrange(2):
-            for b18 in xrange(2):
+        for b25 in range(2):
+            for b18 in range(2):
                 tx = bip112txs_vary_OP_CSV_v2[0][b25][1][b18]
                 tx.vin[0].nSequence = base_relative_locktime | seq_type_flag
                 signtx = self.sign_transaction(self.nodes[0], tx)

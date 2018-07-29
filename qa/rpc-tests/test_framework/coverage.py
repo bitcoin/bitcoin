@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+# Copyright (c) 2015-2016 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 """
 This module contains utilities for doing coverage analysis on the RPC
 interface.
@@ -45,7 +50,7 @@ class AuthServiceProxyWrapper(object):
         rpc_method = self.auth_service_proxy_instance._service_name
 
         if self.coverage_logfile:
-            with open(self.coverage_logfile, 'a+') as f:
+            with open(self.coverage_logfile, 'a+', encoding='utf8') as f:
                 f.write("%s\n" % rpc_method)
 
         return return_val
@@ -95,7 +100,7 @@ def write_all_rpc_commands(dirname, node):
         if line and not line.startswith('='):
             commands.add("%s\n" % line.split()[0])
 
-    with open(filename, 'w') as f:
+    with open(filename, 'w', encoding='utf8') as f:
         f.writelines(list(commands))
 
     return True

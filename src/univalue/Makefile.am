@@ -3,7 +3,7 @@ ACLOCAL_AMFLAGS = -I build-aux/m4
 .INTERMEDIATE: $(GENBIN)
 
 include_HEADERS = include/univalue.h
-noinst_HEADERS = lib/univalue_escapes.h
+noinst_HEADERS = lib/univalue_escapes.h lib/univalue_utffilter.h
 
 lib_LTLIBRARIES = libunivalue.la
 
@@ -73,6 +73,10 @@ TEST_FILES = \
 	$(TEST_DATA_DIR)/fail35.json \
 	$(TEST_DATA_DIR)/fail36.json \
 	$(TEST_DATA_DIR)/fail37.json \
+	$(TEST_DATA_DIR)/fail38.json \
+	$(TEST_DATA_DIR)/fail39.json \
+	$(TEST_DATA_DIR)/fail40.json \
+	$(TEST_DATA_DIR)/fail41.json \
 	$(TEST_DATA_DIR)/fail3.json \
 	$(TEST_DATA_DIR)/fail4.json \
 	$(TEST_DATA_DIR)/fail5.json \
@@ -83,6 +87,7 @@ TEST_FILES = \
 	$(TEST_DATA_DIR)/pass1.json \
 	$(TEST_DATA_DIR)/pass2.json \
 	$(TEST_DATA_DIR)/pass3.json \
-	$(TEST_DATA_DIR)/round1.json
+	$(TEST_DATA_DIR)/round1.json \
+	$(TEST_DATA_DIR)/round2.json
 
 EXTRA_DIST=$(TEST_FILES) $(GEN_SRCS)

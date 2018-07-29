@@ -6,6 +6,7 @@
 #include <vector>
 #include <stdio.h>
 #include "univalue.h"
+#include "univalue_utffilter.h"
 
 using namespace std;
 
@@ -174,41 +175,31 @@ enum jtokentype getJsonToken(string& tokenVal, unsigned int& consumed,
         raw++;                                // skip "
 
         string valStr;
+        JSONUTF8StringFilter writer(valStr);
 
         while (*raw) {
-            if (*raw < 0x20)
+            if ((unsigned char)*raw < 0x20)
                 return JTOK_ERR;
 
             else if (*raw == '\\') {
                 raw++;                        // skip backslash
 
                 switch (*raw) {
-                case '"':  valStr += "\""; break;
-                case '\\': valStr += "\\"; break;
-                case '/':  valStr += "/"; break;
-                case 'b':  valStr += "\b"; break;
-                case 'f':  valStr += "\f"; break;
-                case 'n':  valStr += "\n"; break;
-                case 'r':  valStr += "\r"; break;
-                case 't':  valStr += "\t"; break;
+                case '"':  writer.push_back('\"'); break;
+                case '\\': writer.push_back('\\'); break;
+                case '/':  writer.push_back('/'); break;
+                case 'b':  writer.push_back('\b'); break;
+                case 'f':  writer.push_back('\f'); break;
+                case 'n':  writer.push_back('\n'); break;
+                case 'r':  writer.push_back('\r'); break;
+                case 't':  writer.push_back('\t'); break;
 
                 case 'u': {
                     unsigned int codepoint;
                     if (hatoui(raw + 1, raw + 1 + 4, codepoint) !=
                                raw + 1 + 4)
                         return JTOK_ERR;
-
-                    if (codepoint <= 0x7f)
-                        valStr.push_back((char)codepoint);
-                    else if (codepoint <= 0x7FF) {
-                        valStr.push_back((char)(0xC0 | (codepoint >> 6)));
-                        valStr.push_back((char)(0x80 | (codepoint & 0x3F)));
-                    } else if (codepoint <= 0xFFFF) {
-                        valStr.push_back((char)(0xE0 | (codepoint >> 12)));
-                        valStr.push_back((char)(0x80 | ((codepoint >> 6) & 0x3F)));
-                        valStr.push_back((char)(0x80 | (codepoint & 0x3F)));
-                    }
-
+                    writer.push_back_u(codepoint);
                     raw += 4;
                     break;
                     }
@@ -226,11 +217,13 @@ enum jtokentype getJsonToken(string& tokenVal, unsigned int& consumed,
             }
 
             else {
-                valStr += *raw;
+                writer.push_back(*raw);
                 raw++;
             }
         }
 
+        if (!writer.finalize())
+            return JTOK_ERR;
         tokenVal = valStr;
         consumed = (raw - rawStart);
         return JTOK_STRING;

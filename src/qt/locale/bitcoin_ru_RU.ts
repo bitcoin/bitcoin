@@ -2,6 +2,10 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Right-click to edit address or label</source>
+        <translation>Кликните правой кнопкой мыши для редоктирования адреса или ярлыка</translation>
+    </message>
+    <message>
         <source>Create a new address</source>
         <translation>Создать новый адрес</translation>
     </message>
@@ -11,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Скопировать выделенный адрес в буфер</translation>
+        <translation>Copy the currently selected address to the system clipboardый адрес в буфер</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -19,11 +23,7 @@
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation>Закрыть</translation>
-    </message>
-    <message>
-        <source>&amp;Copy Address</source>
-        <translation>Копировать адрес</translation>
+        <translation>&amp;Закрыть</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -41,16 +41,16 @@
         <source>&amp;Delete</source>
         <translation>Удалить</translation>
     </message>
-    <message>
-        <source>C&amp;hoose</source>
-        <translation>Выбрать</translation>
-    </message>
     </context>
 <context>
     <name>AddressTableModel</name>
     </context>
 <context>
     <name>AskPassphraseDialog</name>
+    <message>
+        <source>Repeat new passphrase</source>
+        <translation>Повторите новый пароль</translation>
+    </message>
     </context>
 <context>
     <name>BanTableModel</name>
@@ -58,12 +58,8 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <source>Zetacoin Core</source>
+        <source>Zetacoin</source>
         <translation>Zetacoin Core</translation>
-    </message>
-    <message>
-        <source>&amp;About Zetacoin Core</source>
-        <translation>О Zetacoin Core</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -83,9 +79,6 @@
     </message>
     </context>
 <context>
-    <name>ClientModel</name>
-    </context>
-<context>
     <name>CoinControlDialog</name>
     <message>
         <source>Date</source>
@@ -98,18 +91,6 @@
     <message>
         <source>Confirmed</source>
         <translation>Подтвержденные</translation>
-    </message>
-    <message>
-        <source>Copy address</source>
-        <translation>Копировать адрес</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation>Да</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation>Нет</translation>
     </message>
     </context>
 <context>
@@ -125,16 +106,8 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Zetacoin Core</source>
-        <translation>Zetacoin Core</translation>
-    </message>
-    <message>
         <source>version</source>
         <translation>версия</translation>
-    </message>
-    <message>
-        <source>About Zetacoin Core</source>
-        <translation>О Zetacoin Core</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -147,10 +120,6 @@
     </context>
 <context>
     <name>Intro</name>
-    <message>
-        <source>Zetacoin Core</source>
-        <translation>Zetacoin Core</translation>
-    </message>
     <message>
         <source>Error</source>
         <translation>Ошибка</translation>
@@ -200,16 +169,15 @@
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
-    <message>
-        <source>Date</source>
-        <translation>Дата</translation>
-    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
     </context>
 <context>
     <name>SendCoinsEntry</name>
+    </context>
+<context>
+    <name>SendConfirmationDialog</name>
     </context>
 <context>
     <name>ShutdownWindow</name>
@@ -219,45 +187,21 @@
     </context>
 <context>
     <name>SplashScreen</name>
-    <message>
-        <source>Zetacoin Core</source>
-        <translation>Zetacoin Core</translation>
-    </message>
     </context>
 <context>
     <name>TrafficGraphWidget</name>
     </context>
 <context>
     <name>TransactionDesc</name>
-    <message>
-        <source>Date</source>
-        <translation>Дата</translation>
-    </message>
     </context>
 <context>
     <name>TransactionDescDialog</name>
     </context>
 <context>
     <name>TransactionTableModel</name>
-    <message>
-        <source>Date</source>
-        <translation>Дата</translation>
-    </message>
     </context>
 <context>
     <name>TransactionView</name>
-    <message>
-        <source>Copy address</source>
-        <translation>Копировать адрес</translation>
-    </message>
-    <message>
-        <source>Confirmed</source>
-        <translation>Подтвержденные</translation>
-    </message>
-    <message>
-        <source>Date</source>
-        <translation>Дата</translation>
-    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
@@ -270,17 +214,17 @@
     </context>
 <context>
     <name>WalletView</name>
-    <message>
-        <source>&amp;Export</source>
-        <translation>Экспорт</translation>
-    </message>
-    <message>
-        <source>Export the data in the current tab to a file</source>
-        <translation>Экспортировать данные текущей вкладки в файл</translation>
-    </message>
     </context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>Zetacoin Core</source>
+        <translation>Zetacoin Core</translation>
+    </message>
+    <message>
+        <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
+        <translation>bitcoin-core</translation>
+    </message>
     <message>
         <source>Information</source>
         <translation>Информация</translation>
@@ -288,6 +232,10 @@
     <message>
         <source>Warning</source>
         <translation>Предупреждение</translation>
+    </message>
+    <message>
+        <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
+        <translation>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</translation>
     </message>
     <message>
         <source>Error</source>

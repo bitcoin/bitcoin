@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(merkle_test)
             int duplicate2 = mutate >= 2 ? 1 << ctz(ntx1) : 0; // Likewise for the second mutation.
             if (duplicate2 >= ntx1) break;
             int ntx2 = ntx1 + duplicate2;
-            int duplicate3 = mutate >= 3 ? 1 << ctz(ntx2) : 0; // And for the the third mutation.
+            int duplicate3 = mutate >= 3 ? 1 << ctz(ntx2) : 0; // And for the third mutation.
             if (duplicate3 >= ntx2) break;
             int ntx3 = ntx2 + duplicate3;
             // Build a block with ntx different transactions.
