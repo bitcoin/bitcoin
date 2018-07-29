@@ -1268,9 +1268,11 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 				CValidationState validationState;
 				CCoinsViewCache coinsViewCache(pcoinsTip);
 				const CTransaction& txIn = *ptx;
+				bool isCheckPassing = true;  // optimistic in case vChecks is empty
 				for (auto &check : vChecks)
 				{
-					if (!check())
+					isCheckPassing = check();
+					if (!isCheckPassing)
 					{
 						LOCK2(cs_main, mempool.cs);
 						LogPrint("mempool", "%s: %s\n", "CheckInputs Error", hash.ToString());
@@ -1282,24 +1284,26 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 						CValidationState stateDummy;
 						FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
 						nLastMultithreadMempoolFailure = GetTime();
-						LogPrint("threadpool", "THREADPOOL::%s:Signature check exiting with CheckInputs Error, execution time %lld microseconds\n", hash.ToString(), GetTimeMicros()-time);
-						return;
+						break;
 					}
 				}
-				if (!CheckSyscoinInputs(txIn, validationState, coinsViewCache, true, chainActive.Height(), CBlock()))
+				if (isCheckPassing)
 				{
-					LOCK2(cs_main, mempool.cs);
-					LogPrint("mempool", "%s: %s\n", "CheckSyscoinInputs Error", hash.ToString());
-					BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
-						pcoinsTip->Uncache(hashTx);
-					pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
-					pool.ClearPrioritisation(hash);
-					// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
-					CValidationState stateDummy;
-					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
-					nLastMultithreadMempoolFailure = GetTime();
+					if (!CheckSyscoinInputs(txIn, validationState, coinsViewCache, true, chainActive.Height(), CBlock()))
+					{
+						LOCK2(cs_main, mempool.cs);
+						LogPrint("mempool", "%s: %s\n", "CheckSyscoinInputs Error", hash.ToString());
+						BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
+							pcoinsTip->Uncache(hashTx);
+						pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
+						pool.ClearPrioritisation(hash);
+						// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
+						CValidationState stateDummy;
+						FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
+						nLastMultithreadMempoolFailure = GetTime();
+					}
+					scriptExecutionCache.insert(hashCacheEntry);
 				}
-				scriptExecutionCache.insert(hashCacheEntry);
 
 				// metrics
 				const int64_t &thisExecutionMicros = GetTimeMicros() - time;
