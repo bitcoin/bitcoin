@@ -17,13 +17,13 @@ BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
             VALUE "CompanyName",        "Bitcoin"
-            VALUE "FileDescription",    "bitcoin-tx (CLI Bitcoin transaction editor utility)"
+            VALUE "FileDescription",    "xpchain-tx (CLI Bitcoin transaction editor utility)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
-            VALUE "InternalName",       "bitcoin-tx"
+            VALUE "InternalName",       "xpchain-tx"
             VALUE "LegalCopyright",     COPYRIGHT_STR
             VALUE "LegalTrademarks1",   "Distributed under the MIT software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
-            VALUE "OriginalFilename",   "bitcoin-tx.exe"
-            VALUE "ProductName",        "bitcoin-tx"
+            VALUE "OriginalFilename",   "xpchain-tx.exe"
+            VALUE "ProductName",        "xpchain-tx"
             VALUE "ProductVersion",     VER_PRODUCTVERSION_STR
         END
     END
