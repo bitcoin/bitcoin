@@ -42,7 +42,7 @@ Notificator::Notificator(const QString &_programName, QSystemTrayIcon *_trayIcon
     ,interface(0)
 #endif
 {
-    if(_trayIcon && _trayIcon->supportsMessages())
+    if(_trayIcon && QSystemTrayIcon::supportsMessages())
     {
         mode = QSystemTray;
     }

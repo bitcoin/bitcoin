@@ -720,9 +720,9 @@ int main(int argc, char *argv[])
 #if defined(Q_OS_WIN)
             WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("%1 didn't yet exit safely...").arg(QObject::tr(PACKAGE_NAME)), (HWND)app.getMainWinId());
 #endif
-            app.exec();
+            QApplication::exec();
             app.requestShutdown();
-            app.exec();
+            QApplication::exec();
             rv = app.getReturnValue();
         } else {
             // A dialog with detailed error will have been shown by InitError()
