@@ -14,6 +14,10 @@
 #error Client version information missing: version is not defined by bitcoin-config.h or in any other way
 #endif
 
+#if !defined(PEERCOIN_VERSION_MAJOR) || !defined(PEERCOIN_VERSION_MINOR) || !defined(PEERCOIN_VERSION_REVISION) || !defined(PEERCOIN_VERSION_BUILD)
+#error Client version information missing: version is not defined by bitcoin-config.h or in any other way
+#endif
+
 /**
  * Converts the parameter X to a string after macro replacement on X has been performed.
  * Don't merge these into one macro!
@@ -46,7 +50,7 @@ static const int PEERCOIN_VERSION =
                            1000000 * PEERCOIN_VERSION_MAJOR
                          +   10000 * PEERCOIN_VERSION_MINOR
                          +     100 * PEERCOIN_VERSION_REVISION
-                         +       1 * CLIENT_VERSION_BUILD;
+                         +       1 * PEERCOIN_VERSION_BUILD;
 
 extern const std::string CLIENT_NAME;
 extern const std::string CLIENT_BUILD;

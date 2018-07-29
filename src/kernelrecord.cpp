@@ -24,10 +24,10 @@ bool KernelRecord::showTransaction(const CWalletTx &wtx)
 vector<KernelRecord> KernelRecord::decomposeOutput(const CWallet *wallet, const CWalletTx &wtx)
 {
     vector<KernelRecord> parts;
-    int64 nTime = wtx.GetTxTime();
+    int64_t nTime = wtx.GetTxTime();
     uint256 hash = wtx.GetHash();
     std::map<std::string, std::string> mapValue = wtx.mapValue;
-    int nDayWeight = (min((GetAdjustedTime() - nTime), (int64)STAKE_MAX_AGE) - nStakeMinAge) / 86400;
+    int nDayWeight = (min((GetAdjustedTime() - nTime), (int64_t)STAKE_MAX_AGE) - nStakeMinAge) / 86400;
 
     if (showTransaction(wtx))
     {
@@ -38,7 +38,7 @@ vector<KernelRecord> KernelRecord::decomposeOutput(const CWallet *wallet, const 
                 CTxDestination address;
                 std::string addrStr;
 
-                uint64 coinAge = max(txOut.nValue * nDayWeight / COIN, (int64)0);
+                uint64 coinAge = max(txOut.nValue * nDayWeight / COIN, (int64_t)0);
 
                 if (ExtractDestination(txOut.scriptPubKey, address))
                 {
@@ -64,7 +64,7 @@ std::string KernelRecord::getTxID()
     return hash.ToString() + strprintf("-%03d", idx);
 }
 
-int64 KernelRecord::getAge() const
+int64_t KernelRecord::getAge() const
 {
     return (GetAdjustedTime() - nTime) / 86400;
 }
@@ -73,8 +73,8 @@ double KernelRecord::getProbToMintStake(double difficulty, int timeOffset) const
 {
     double maxTarget = pow(static_cast<double>(2), 224);
     double target = maxTarget / difficulty;
-    int dayWeight = (min((GetAdjustedTime() - nTime) + timeOffset, (int64)STAKE_MAX_AGE) - nStakeMinAge) / 86400;
-    uint64 coinAge = max(nValue * dayWeight / COIN, (int64)0);
+    int dayWeight = (min((GetAdjustedTime() - nTime) + timeOffset, (int64_t)STAKE_MAX_AGE) - nStakeMinAge) / 86400;
+    uint64 coinAge = max(nValue * dayWeight / COIN, (int64_t)0);
     return target * coinAge / pow(static_cast<double>(2), 256);
 }
 

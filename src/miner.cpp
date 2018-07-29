@@ -26,9 +26,14 @@
 #include <utilmoneystr.h>
 #include <validationinterface.h>
 
+#include <wallet/wallet.h>
+#include <warnings.h>
+
 #include <algorithm>
 #include <queue>
 #include <utility>
+
+#include <boost/thread.hpp>
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -45,10 +50,10 @@ uint64_t nLastBlockTx = 0;
 uint64_t nLastBlockWeight = 0;
 int64_t nLastCoinStakeSearchInterval = 0;
 
-int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
+int64_t UpdateTime(CBlockHeader* pblock)
 {
     int64_t nOldTime = pblock->nTime;
-    int64_t nNewTime = std::max(GetBlockTime(), GetAdjustedTime());
+    int64_t nNewTime = std::max(pblock->GetBlockTime(), GetAdjustedTime());
 
     if (nOldTime < nNewTime)
         pblock->nTime = nNewTime;
@@ -130,7 +135,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     assert(pindexPrev != nullptr);
     nHeight = pindexPrev->nHeight + 1;
 
-    // ppcoin: if coinstake available add coinstake tx
+    // peercoin: if coinstake available add coinstake tx
     static int64_t nLastCoinStakeSearchTime = GetAdjustedTime();  // only initialized at startup
 
     if (pwallet)  // attemp to find a coinstake
@@ -141,7 +146,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         int64_t nSearchTime = txCoinStake.nTime; // search to current time
         if (nSearchTime > nLastCoinStakeSearchTime)
         {
-            if (pwallet->CreateCoinStake(*pwallet, pblock->nBits, nSearchTime-nLastCoinStakeSearchTime, txCoinStake, fV7Enabled))
+            if (pwallet->CreateCoinStake(*pwallet, pblock->nBits, nSearchTime-nLastCoinStakeSearchTime, txCoinStake))
             {
                 if (txCoinStake.nTime >= std::max(pindexPrev->GetMedianTimePast()+1, pindexPrev->GetBlockTime() - MAX_FUTURE_BLOCK_TIME))
                 {   // make sure coinstake would meet timestamp protocol
@@ -164,7 +169,10 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     LOCK(mempool.cs);
 
     pblock->nVersion = ComputeBlockVersion(pindexPrev, chainparams.GetConsensus());
-    pblock->SetBlockVersion(GetArg("-blockversion", CBlockHeader::CURRENT_VERSION));
+    // -regtest only: allow overriding block.nVersion with
+    // -blockversion=N to test forking scenarios
+    if (chainparams.MineBlocksOnDemand())
+        pblock->nVersion = gArgs.GetArg("-blockversion", pblock->nVersion);
 
     pblock->nTime = GetAdjustedTime();
     const int64_t nMedianTimePast = pindexPrev->GetMedianTimePast();
@@ -205,7 +213,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     pblock->nTime          = std::max(pindexPrev->GetMedianTimePast()+1, pblock->GetMaxTransactionTime());
     pblock->nTime          = std::max(pblock->GetBlockTime(), pindexPrev->GetBlockTime() - MAX_FUTURE_BLOCK_TIME);
     if (pblock->IsProofOfWork())
-        UpdateTime(pblock, chainparams.GetConsensus(), pindexPrev);
+        UpdateTime(pblock);
     pblock->nNonce         = 0;
     pblocktemplate->vTxSigOpsCost[0] = WITNESS_SCALE_FACTOR * GetLegacySigOpCount(*pblock->vtx[0]);
 
@@ -257,11 +265,6 @@ bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& packa
 
         // peercoin: timestamp limit
         if (it->GetTx().nTime > GetAdjustedTime() || (pblock->IsProofOfStake() && it->GetTx().nTime > pblock->vtx[1]->nTime))
-            return false;
-
-        // peercoin: simplify transaction fee - allow free = false
-        int64 nMinFee = tx.GetMinFee(nBlockSize, false, GMF_BLOCK);
-        if (nTxFees < nMinFee)
             return false;
     }
     return true;
@@ -511,8 +514,9 @@ static bool ProcessBlockFound(const CBlock* pblock, const CChainParams& chainpar
             return error("PeercoinMiner: generated block is stale");
     }
 
+    //ppc - check if this is still needed
     // Inform about the new block
-    GetMainSignals().BlockFound(pblock->GetHash());
+    //GetMainSignals().BlockFound(pblock->GetHash());
 
     // Process this block the same as if we had received it from another node
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
@@ -529,22 +533,22 @@ void PoSMiner(CWallet *pwallet)
 
     unsigned int nExtraNonce = 0;
 
-    boost::shared_ptr<CReserveScript> coinbaseScript;
-    GetMainSignals().ScriptForMining(coinbaseScript);
+    std::shared_ptr<CReserveScript> coinbaseScript;
+    pwallet->GetScriptForMining(coinbaseScript);
 
     // Compute timeout for pos as sqrt(numUTXO)
     unsigned int pos_timio;
     {
         std::vector<COutput> vCoins;
         pwallet->AvailableCoins(vCoins, false);
-        pos_timio = GetArg("-staketimio", 500) + 30 * sqrt(vCoins.size());
+        pos_timio = gArgs.GetArg("-staketimio", 500) + 30 * sqrt(vCoins.size());
         LogPrintf("Set proof-of-stake timeout: %ums for %u UTXOs\n", pos_timio, vCoins.size());
     }
 
     std::string strMintMessage = _("Info: Minting suspended due to locked wallet.");
     std::string strMintDisabledMessage = _("Info: Minting disabled by 'nominting' option.");
     std::string strMintBlockMessage = _("Info: Minting suspended due to block creation failure.");
-    if (GetBoolArg("-nominting"))
+    if (gArgs.GetBoolArg("-nominting", false))
     {
         strMintWarning = strMintDisabledMessage;
         return;
@@ -591,7 +595,7 @@ void PoSMiner(CWallet *pwallet)
             CBlock *pblock = &pblocktemplate->block;
             IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
 
-            // ppcoin: if proof-of-stake block found then process block
+            // peercoin: if proof-of-stake block found then process block
             if (pblock->IsProofOfStake())
             {
                 if (!SignBlock(*pblock, *pwallet))
@@ -622,7 +626,7 @@ void PoSMiner(CWallet *pwallet)
     }
 }
 
-// ppcoin: stake minter thread
+// peercoin: stake minter thread
 void static ThreadStakeMinter(void* parg)
 {
     LogPrintf("ThreadStakeMinter started\n");
@@ -639,9 +643,10 @@ void static ThreadStakeMinter(void* parg)
     LogPrintf("ThreadStakeMinter exiting\n");
 }
 
-// ppcoin: stake minter
-void MintStake(boost::thread_group& threadGroup, CWallet* pwallet)
+// peercoin: stake minter
+void MintStake(boost::thread_group& threadGroup)
 {
-    // ppcoin: mint proof-of-stake blocks in the background
-    threadGroup.create_thread(boost::bind(&ThreadStakeMinter, pwallet));
+    // peercoin: mint proof-of-stake blocks in the background
+    if (!vpwallets.empty())
+        threadGroup.create_thread(boost::bind(&ThreadStakeMinter, vpwallets[0]));
 }

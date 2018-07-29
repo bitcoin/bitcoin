@@ -87,11 +87,11 @@ public:
         nHeight = code >> 1;
         fCoinBase = code & 1;
         ::Unserialize(s, REF(CTxOutCompressor(out)));
-        // ppcoin flags
+        // peercoin flags
         unsigned int nFlag = 0;
         ::Unserialize(s, VARINT(nFlag));
         fCoinStake = nFlag & 1;
-        // ppcoin transaction timestamp
+        // peercoin transaction timestamp
         ::Unserialize(s, VARINT(nTime));
     }
 

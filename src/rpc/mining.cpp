@@ -26,6 +26,8 @@
 #include <validationinterface.h>
 #include <warnings.h>
 
+#include <wallet/wallet.h>
+
 #include <memory>
 #include <stdint.h>
 
@@ -53,9 +55,10 @@ UniValue GetNetworkHashPS(int lookup, int height) {
     if (pb == nullptr || !pb->nHeight)
         return 0;
 
+    //ppc - redo this to fit peercoin
     // If lookup is -1, then use blocks since last difficulty change.
-    if (lookup <= 0)
-        lookup = pb->nHeight % Params().GetConsensus().DifficultyAdjustmentInterval() + 1;
+//    if (lookup <= 0)
+//        lookup = pb->nHeight % Params().GetConsensus().DifficultyAdjustmentInterval() + 1;
 
     // If lookup is larger than chain, then set it to chain length.
     if (lookup > pb->nHeight)
@@ -104,29 +107,29 @@ UniValue getnetworkhashps(const JSONRPCRequest& request)
 }
 
 // peercoin: get network Gh/s estimate
-Value getnetworkghps(const Array& params, bool fHelp)
+UniValue getnetworkghps(const JSONRPCRequest& request)
 {
-    if (fHelp || params.size() != 0)
-        throw runtime_error(
+    if (request.fHelp || request.params.size() != 0)
+        throw std::runtime_error(
             "getnetworkghps\n"
             "Returns a recent Ghash/second network mining estimate.");
 
-    int64 nTargetSpacingWorkMin = 30;
-    int64 nTargetSpacingWork = nTargetSpacingWorkMin;
-    int64 nInterval = 72;
-    CBlockIndex* pindex = pindexGenesisBlock;
-    CBlockIndex* pindexPrevWork = pindexGenesisBlock;
+    int64_t nTargetSpacingWorkMin = 30;
+    int64_t nTargetSpacingWork = nTargetSpacingWorkMin;
+    int64_t nInterval = 72;
+    CBlockIndex* pindex = chainActive.Genesis();
+    CBlockIndex* pindexPrevWork = chainActive.Genesis();
     while (pindex)
     {
         // Exponential moving average of recent proof-of-work block spacing
         if (pindex->IsProofOfWork())
         {
-            int64 nActualSpacingWork = pindex->GetBlockTime() - pindexPrevWork->GetBlockTime();
+            int64_t nActualSpacingWork = pindex->GetBlockTime() - pindexPrevWork->GetBlockTime();
             nTargetSpacingWork = ((nInterval - 1) * nTargetSpacingWork + nActualSpacingWork + nActualSpacingWork) / (nInterval + 1);
-            nTargetSpacingWork = max(nTargetSpacingWork, nTargetSpacingWorkMin);
+            nTargetSpacingWork = std::max(nTargetSpacingWork, nTargetSpacingWorkMin);
             pindexPrevWork = pindex;
         }
-        pindex = pindex->pnext;
+        pindex = chainActive.Next(pindex);
     }
     double dNetworkGhps = GetDifficulty() * 4.294967296 / nTargetSpacingWork;
     return dNetworkGhps;
@@ -246,7 +249,7 @@ UniValue getmininginfo(const JSONRPCRequest& request)
     obj.push_back(Pair("currentblocktx",   (uint64_t)nLastBlockTx));
     obj.push_back(Pair("difficulty",       (double)GetDifficulty()));
     obj.push_back(Pair("networkhashps",    getnetworkhashps(request)));
-    obj.push_back(Pair("networkghps",      getnetworkghps(params, false)));
+    obj.push_back(Pair("networkghps",      getnetworkghps(request)));
     obj.push_back(Pair("pooledtx",         (uint64_t)mempool.size()));
     obj.push_back(Pair("chain",            Params().NetworkIDString()));
     if (IsDeprecatedRPCEnabled("getmininginfo")) {
@@ -564,7 +567,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     const Consensus::Params& consensusParams = Params().GetConsensus();
 
     // Update nTime
-    UpdateTime(pblock, consensusParams, pindexPrev);
+    UpdateTime(pblock);
     pblock->nNonce = 0;
 
     // NOTE: If at some point we support pre-segwit miners post-segwit-activation, this needs to take segwit support into consideration
@@ -782,7 +785,7 @@ UniValue submitblock(const JSONRPCRequest& request)
         throw JSONRPCError(-100, "Block failed CheckBlock() function.");
 
     // peercoin: sign block
-    if (!SignBlock(block, *pwalletMain))
+    if (vpwallets.empty() || !SignBlock(block, *vpwallets[0]))
         throw JSONRPCError(-100, "Unable to sign block, wallet locked?");
 
     {

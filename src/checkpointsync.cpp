@@ -68,13 +68,13 @@ using namespace json_spirit;
 using namespace std;
 
 
-// ppcoin: sync-checkpoint master key
+// peercoin: sync-checkpoint master key
 const std::string CSyncCheckpoint::strMainPubKey = "04c0c707c28533fd5c9f79d2d3a2d80dff259ad8f915241cd14608fb9bc07c74830efe8438f2b272a866b4af5e0c2cc2a9909972aefbd976937e39f46bb38c277c";
 const std::string CSyncCheckpoint::strTestPubKey = "0400c195be8d5194007b3f02249f785a51505776bd8f43cc6d49206163e08a63ad9009c814966921c361b14949c51e281edc9347e7ce0e8c57019df1313a6cac7b";
 std::string CSyncCheckpoint::strMasterPrivKey = "";
 
 
-// ppcoin: synchronized checkpoint (centrally broadcasted)
+// peercoin: synchronized checkpoint (centrally broadcasted)
 uint256 hashSyncCheckpoint = 0;
 uint256 hashPendingCheckpoint = 0;
 CSyncCheckpoint checkpointMessage;
@@ -83,7 +83,7 @@ uint256 hashInvalidCheckpoint = 0;
 CCriticalSection cs_hashSyncCheckpoint;
 std::string strCheckpointWarning;
 
-// ppcoin: get last synchronized checkpoint
+// peercoin: get last synchronized checkpoint
 CBlockIndex* GetLastSyncCheckpoint()
 {
     LOCK(cs_hashSyncCheckpoint);
@@ -94,7 +94,7 @@ CBlockIndex* GetLastSyncCheckpoint()
     return NULL;
 }
 
-// ppcoin: only descendant of current sync-checkpoint is allowed
+// peercoin: only descendant of current sync-checkpoint is allowed
 bool ValidateSyncCheckpoint(uint256 hashCheckpoint)
 {
     if (!mapBlockIndex.count(hashSyncCheckpoint))
@@ -252,7 +252,7 @@ bool WantedByPendingSyncCheckpoint(uint256 hashBlock)
     return false;
 }
 
-// ppcoin: reset synchronized checkpoint to last hardened checkpoint
+// peercoin: reset synchronized checkpoint to last hardened checkpoint
 bool ResetSyncCheckpoint()
 {
     LOCK(cs_hashSyncCheckpoint);
@@ -386,7 +386,7 @@ bool IsSyncCheckpointTooOld(unsigned int nSeconds)
     return (pindexSync->GetBlockTime() + nSeconds < GetAdjustedTime());
 }
 
-// ppcoin: find block wanted by given orphan block
+// peercoin: find block wanted by given orphan block
 uint256 WantedByOrphan(const CBlock* pblockOrphan)
 {
     // Work back to the first block in the orphan chain
@@ -395,7 +395,7 @@ uint256 WantedByOrphan(const CBlock* pblockOrphan)
     return pblockOrphan->hashPrevBlock;
 }
 
-// ppcoin: verify signature of sync-checkpoint message
+// peercoin: verify signature of sync-checkpoint message
 bool CSyncCheckpoint::CheckSignature()
 {
     CKey key;
@@ -411,7 +411,7 @@ bool CSyncCheckpoint::CheckSignature()
     return true;
 }
 
-// ppcoin: process synchronized checkpoint
+// peercoin: process synchronized checkpoint
 bool CSyncCheckpoint::ProcessSyncCheckpoint(CNode* pfrom)
 {
     if (!CheckSignature())
@@ -430,7 +430,7 @@ bool CSyncCheckpoint::ProcessSyncCheckpoint(CNode* pfrom)
             pfrom->PushGetBlocks(pindexBest, hashCheckpoint);
             // ask directly as well in case rejected earlier by duplicate
             // proof-of-stake because getblocks may not get it this time
-            pfrom->AskFor(CInv(MSG_BLOCK, mapOrphanBlocks.count(hashCheckpoint)? WantedByOrphan(mapOrphanBlocks[hashCheckpoint]) : hashCheckpoint));
+            //pfrom->AskFor(CInv(MSG_BLOCK, mapOrphanBlocks.count(hashCheckpoint)? WantedByOrphan(mapOrphanBlocks[hashCheckpoint]) : hashCheckpoint));
         }
         return false;
     }
@@ -458,79 +458,3 @@ bool CSyncCheckpoint::ProcessSyncCheckpoint(CNode* pfrom)
     printf("ProcessSyncCheckpoint: sync-checkpoint at %s\n", hashCheckpoint.ToString().c_str());
     return true;
 }
-
-
-// RPC commands related to sync checkpoints
-// get information of sync-checkpoint (first introduced in ppcoin)
-Value getcheckpoint(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() != 0)
-        throw runtime_error(
-            "getcheckpoint\n"
-            "Show info of synchronized checkpoint.\n");
-
-    Object result;
-    CBlockIndex* pindexCheckpoint;
-
-    result.push_back(Pair("synccheckpoint", hashSyncCheckpoint.ToString().c_str()));
-    if (mapBlockIndex.count(hashSyncCheckpoint))
-    {
-        pindexCheckpoint = mapBlockIndex[hashSyncCheckpoint];
-        result.push_back(Pair("height", pindexCheckpoint->nHeight));
-        result.push_back(Pair("timestamp", (boost::int64_t) pindexCheckpoint->GetBlockTime()));
-    }
-    result.push_back(Pair("subscribemode", IsSyncCheckpointEnforced()? "enforce" : "advisory"));
-    if (mapArgs.count("-checkpointkey"))
-        result.push_back(Pair("checkpointmaster", true));
-
-    return result;
-}
-
-Value sendcheckpoint(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() != 1)
-        throw runtime_error(
-            "sendcheckpoint <blockhash>\n"
-            "Send a synchronized checkpoint.\n");
-
-    if (!mapArgs.count("-checkpointkey") || CSyncCheckpoint::strMasterPrivKey.empty())
-        throw runtime_error("Not a checkpointmaster node, first set checkpointkey in configuration and restart client. ");
-
-    std::string strHash = params[0].get_str();
-    uint256 hash(strHash);
-
-    if (!SendSyncCheckpoint(hash))
-        throw runtime_error("Failed to send checkpoint, check log. ");
-
-    Object result;
-    CBlockIndex* pindexCheckpoint;
-
-    result.push_back(Pair("synccheckpoint", hashSyncCheckpoint.ToString().c_str()));
-    if (mapBlockIndex.count(hashSyncCheckpoint))
-    {
-        pindexCheckpoint = mapBlockIndex[hashSyncCheckpoint];
-        result.push_back(Pair("height", pindexCheckpoint->nHeight));
-        result.push_back(Pair("timestamp", (boost::int64_t) pindexCheckpoint->GetBlockTime()));
-    }
-    result.push_back(Pair("subscribemode", IsSyncCheckpointEnforced()? "enforce" : "advisory"));
-    if (mapArgs.count("-checkpointkey"))
-        result.push_back(Pair("checkpointmaster", true));
-
-    return result;
-}
-
-Value enforcecheckpoint(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() != 1)
-        throw runtime_error(
-            "enforcecheckpoint <enforce>\n"
-            "<enforce> is true or false to enable or disable enforcement of broadcasted checkpoints by developer.");
-
-    bool fEnforceCheckpoint = params[0].get_bool();
-    if (mapArgs.count("-checkpointkey") && !fEnforceCheckpoint)
-        throw runtime_error(
-            "checkpoint master node must enforce synchronized checkpoints.");
-    SetCheckpointEnforce(fEnforceCheckpoint);
-    return Value::null;
-}
-

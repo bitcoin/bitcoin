@@ -173,11 +173,11 @@ bool WalletParameterInteraction()
                                        gArgs.GetArg("-maxtxfee", ""), ::minRelayTxFee.ToString()));
         }
     }
-    if (IsArgSet("-reservebalance"))
+    if (gArgs.IsArgSet("-reservebalance"))
     {
         CAmount nReserveBalance = 0;
-        if (!ParseMoney(GetArg("-reservebalance", ""), nReserveBalance))
-            return InitError(strprintf(_("Invalid amount for -reservebalance=<amount>: '%s'"), GetArg("-reservebalance", "")));
+        if (!ParseMoney(gArgs.GetArg("-reservebalance", ""), nReserveBalance))
+            return InitError(strprintf(_("Invalid amount for -reservebalance=<amount>: '%s'"), gArgs.GetArg("-reservebalance", "")));
     }
     nTxConfirmTarget = gArgs.GetArg("-txconfirmtarget", DEFAULT_TX_CONFIRM_TARGET);
     bSpendZeroConfChange = gArgs.GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE);

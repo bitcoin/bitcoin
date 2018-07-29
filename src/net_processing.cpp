@@ -30,8 +30,10 @@
 #include <utilmoneystr.h>
 #include <utilstrencodings.h>
 
+#include <checkpointsync.h>
+
 #if defined(NDEBUG)
-# error "Bitcoin cannot be compiled without assertions."
+# error "Peercoin cannot be compiled without assertions."
 #endif
 
 std::atomic<int64_t> nTimeBestReceived(0); // Used only to inform the wallet of when we last received a block
@@ -440,13 +442,13 @@ bool TipMayBeStale(const Consensus::Params &consensusParams)
     if (g_last_tip_update == 0) {
         g_last_tip_update = GetTime();
     }
-    return g_last_tip_update < GetTime() - consensusParams.nTargetSpacing * 3 && mapBlocksInFlight.empty();
+    return g_last_tip_update < GetTime() - consensusParams.nPowTargetSpacing * 3 && mapBlocksInFlight.empty();
 }
 
 // Requires cs_main
 bool CanDirectFetch(const Consensus::Params &consensusParams)
 {
-    return chainActive.Tip()->GetBlockTime() > GetAdjustedTime() - consensusParams.nTargetSpacing * 20;
+    return chainActive.Tip()->GetBlockTime() > GetAdjustedTime() - consensusParams.nPowTargetSpacing * 20;
 }
 
 // Requires cs_main
@@ -2867,7 +2869,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
          CSyncCheckpoint checkpoint;
          vRecv >> checkpoint;
 
-         if (checkpoint.ProcessSyncCheckpoint())
+         if (checkpoint.ProcessSyncCheckpoint(pfrom))
              if (g_connman)
                  g_connman->ForEachNode([&checkpoint](CNode* pnode) {
                      checkpoint.RelayTo(pnode);

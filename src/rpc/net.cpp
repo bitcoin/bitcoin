@@ -23,6 +23,8 @@
 
 #include <univalue.h>
 
+#include <checkpointsync.h>
+
 UniValue getconnectioncount(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
@@ -628,64 +630,141 @@ UniValue setnetworkactive(const JSONRPCRequest& request)
 // There is a known deadlock situation with ThreadMessageHandler
 // ThreadMessageHandler: holds cs_vSend and acquiring cs_main in SendMessages()
 // ThreadRPCServer: holds cs_main and acquiring cs_vSend in alert.RelayTo()/PushMessage()/BeginMessage()
-Value sendalert(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() < 6)
-        throw runtime_error(
-            "sendalert <message> <privatekey> <minver> <maxver> <priority> <id> [cancelupto]\n"
-            "<message> is the alert text message\n"
-            "<privatekey> is hex string of alert master private key\n"
-            "<minver> is the minimum applicable internal client version\n"
-            "<maxver> is the maximum applicable internal client version\n"
-            "<priority> is integer priority number\n"
-            "<id> is the alert id\n"
-            "[cancelupto] cancels all alert id's up to this number\n"
-            "Returns true or false.");
+//UniValue sendalert(const JSONRPCRequest& request)
+//{
+//    if (request.fHelp || request.params.size() < 6)
+//        throw std::runtime_error(
+//            "sendalert <message> <privatekey> <minver> <maxver> <priority> <id> [cancelupto]\n"
+//            "<message> is the alert text message\n"
+//            "<privatekey> is hex string of alert master private key\n"
+//            "<minver> is the minimum applicable internal client version\n"
+//            "<maxver> is the maximum applicable internal client version\n"
+//            "<priority> is integer priority number\n"
+//            "<id> is the alert id\n"
+//            "[cancelupto] cancels all alert id's up to this number\n"
+//            "Returns true or false.");
 
-    CAlert alert;
-    CKey key;
+//    CAlert alert;
+//    CKey key;
 
-    alert.strStatusBar = params[0].get_str();
-    alert.nMinVer = params[2].get_int();
-    alert.nMaxVer = params[3].get_int();
-    alert.nPriority = params[4].get_int();
-    alert.nID = params[5].get_int();
-    if (params.size() > 6)
-        alert.nCancel = params[6].get_int();
-    alert.nVersion = PROTOCOL_VERSION;
-    alert.nRelayUntil = GetAdjustedTime() + 365*24*60*60;
-    alert.nExpiration = GetAdjustedTime() + 365*24*60*60;
+//    alert.strStatusBar = params[0].get_str();
+//    alert.nMinVer = params[2].get_int();
+//    alert.nMaxVer = params[3].get_int();
+//    alert.nPriority = params[4].get_int();
+//    alert.nID = params[5].get_int();
+//    if (params.size() > 6)
+//        alert.nCancel = params[6].get_int();
+//    alert.nVersion = PROTOCOL_VERSION;
+//    alert.nRelayUntil = GetAdjustedTime() + 365*24*60*60;
+//    alert.nExpiration = GetAdjustedTime() + 365*24*60*60;
 
-    CDataStream sMsg(SER_NETWORK, PROTOCOL_VERSION);
-    sMsg << (CUnsignedAlert)alert;
-    alert.vchMsg = vector<unsigned char>(sMsg.begin(), sMsg.end());
+//    CDataStream sMsg(SER_NETWORK, PROTOCOL_VERSION);
+//    sMsg << (CUnsignedAlert)alert;
+//    alert.vchMsg = vector<unsigned char>(sMsg.begin(), sMsg.end());
     
-    vector<unsigned char> vchPrivKey = ParseHex(params[1].get_str());
-    key.SetPrivKey(CPrivKey(vchPrivKey.begin(), vchPrivKey.end())); // if key is not correct openssl may crash
-    if (!key.Sign(Hash(alert.vchMsg.begin(), alert.vchMsg.end()), alert.vchSig))
-        throw runtime_error(
-            "Unable to sign alert, check private key?\n");  
-    if(!alert.ProcessAlert()) 
-        throw runtime_error(
-            "Failed to process alert.\n");
-    // Relay alert
-    {
-        LOCK(cs_vNodes);
-        BOOST_FOREACH(CNode* pnode, vNodes)
-            alert.RelayTo(pnode);
-    }
+//    vector<unsigned char> vchPrivKey = ParseHex(params[1].get_str());
+//    key.SetPrivKey(CPrivKey(vchPrivKey.begin(), vchPrivKey.end())); // if key is not correct openssl may crash
+//    if (!key.Sign(Hash(alert.vchMsg.begin(), alert.vchMsg.end()), alert.vchSig))
+//        throw runtime_error(
+//            "Unable to sign alert, check private key?\n");
+//    if(!alert.ProcessAlert())
+//        throw runtime_error(
+//            "Failed to process alert.\n");
+//    // Relay alert
+//    {
+//        LOCK(cs_vNodes);
+//        BOOST_FOREACH(CNode* pnode, vNodes)
+//            alert.RelayTo(pnode);
+//    }
 
-    Object result;
-    result.push_back(Pair("strStatusBar", alert.strStatusBar));
-    result.push_back(Pair("nVersion", alert.nVersion));
-    result.push_back(Pair("nMinVer", alert.nMinVer));
-    result.push_back(Pair("nMaxVer", alert.nMaxVer));
-    result.push_back(Pair("nPriority", alert.nPriority));
-    result.push_back(Pair("nID", alert.nID));
-    if (alert.nCancel > 0)
-        result.push_back(Pair("nCancel", alert.nCancel));
+//    Object result;
+//    result.push_back(Pair("strStatusBar", alert.strStatusBar));
+//    result.push_back(Pair("nVersion", alert.nVersion));
+//    result.push_back(Pair("nMinVer", alert.nMinVer));
+//    result.push_back(Pair("nMaxVer", alert.nMaxVer));
+//    result.push_back(Pair("nPriority", alert.nPriority));
+//    result.push_back(Pair("nID", alert.nID));
+//    if (alert.nCancel > 0)
+//        result.push_back(Pair("nCancel", alert.nCancel));
+//    return result;
+//}
+
+// RPC commands related to sync checkpoints
+// get information of sync-checkpoint (first introduced in ppcoin)
+UniValue getcheckpoint(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 0)
+        throw std::runtime_error(
+            "getcheckpoint\n"
+            "Show info of synchronized checkpoint.\n");
+
+    UniValue result(UniValue::VOBJ);
+    CBlockIndex* pindexCheckpoint;
+
+    result.push_back(Pair("synccheckpoint", hashSyncCheckpoint.ToString()));
+    if (mapBlockIndex.count(hashSyncCheckpoint))
+    {
+        pindexCheckpoint = mapBlockIndex[hashSyncCheckpoint];
+        result.push_back(Pair("height", pindexCheckpoint->nHeight));
+        result.push_back(Pair("timestamp", (boost::int64_t) pindexCheckpoint->GetBlockTime()));
+    }
+    result.push_back(Pair("subscribemode", IsSyncCheckpointEnforced()? "enforce" : "advisory"));
+    if (gArgs.IsArgSet("-checkpointkey"))
+        result.push_back(Pair("checkpointmaster", true));
+
     return result;
 }
+
+UniValue sendcheckpoint(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1)
+        throw std::runtime_error(
+            "sendcheckpoint <blockhash>\n"
+            "Send a synchronized checkpoint.\n");
+
+    if (!gArgs.IsArgSet("-checkpointkey") || CSyncCheckpoint::strMasterPrivKey.empty())
+        throw std::runtime_error("Not a checkpointmaster node, first set checkpointkey in configuration and restart client. ");
+
+    std::string strHash = request.params[0].get_str();
+    uint256 hash(uint256S(strHash));
+
+    if (!SendSyncCheckpoint(hash))
+        throw std::runtime_error("Failed to send checkpoint, check log. ");
+
+    UniValue result(UniValue::VOBJ);
+    CBlockIndex* pindexCheckpoint;
+
+    result.push_back(Pair("synccheckpoint", hashSyncCheckpoint.ToString().c_str()));
+    if (mapBlockIndex.count(hashSyncCheckpoint))
+    {
+        pindexCheckpoint = mapBlockIndex[hashSyncCheckpoint];
+        result.push_back(Pair("height", pindexCheckpoint->nHeight));
+        result.push_back(Pair("timestamp", (boost::int64_t) pindexCheckpoint->GetBlockTime()));
+    }
+    result.push_back(Pair("subscribemode", IsSyncCheckpointEnforced()? "enforce" : "advisory"));
+    if (gArgs.IsArgSet("-checkpointkey"))
+        result.push_back(Pair("checkpointmaster", true));
+
+    return result;
+}
+
+UniValue enforcecheckpoint(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1)
+        throw std::runtime_error(
+            "enforcecheckpoint <enforce>\n"
+            "<enforce> is true or false to enable or disable enforcement of broadcasted checkpoints by developer.");
+
+    bool fEnforceCheckpoint = request.params[0].get_bool();
+    if (gArgs.IsArgSet("-checkpointkey") && !fEnforceCheckpoint)
+        throw std::runtime_error(
+            "checkpoint master node must enforce synchronized checkpoints.");
+    SetCheckpointEnforce(fEnforceCheckpoint);
+    return NullUniValue;
+}
+
+
+
 
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
@@ -707,7 +786,7 @@ static const CRPCCommand commands[] =
     { "network",            "getcheckpoint",          &getcheckpoint,          {} },
     { "network",            "sendcheckpoint",         &sendcheckpoint,         {} },
     { "network",            "enforcecheckpoint",      &enforcecheckpoint,      {} },
-    { "network",            "sendalert",              &sendalert,              {} },
+//    { "network",            "sendalert",              &sendalert,              {} },
 };
 
 void RegisterNetRPCCommands(CRPCTable &t)

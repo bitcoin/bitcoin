@@ -9,6 +9,9 @@
 #include <script/interpreter.h>
 #include <consensus/validation.h>
 
+#include <kernel.h>
+#include <validation.h>   // GetCoinAge()
+
 // TODO remove the following dependencies
 #include <chain.h>
 #include <coins.h>
@@ -163,9 +166,6 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
         return state.DoS(10, false, REJECT_INVALID, "bad-txns-vin-empty");
     if (tx.vout.empty())
         return state.DoS(10, false, REJECT_INVALID, "bad-txns-vout-empty");
-    // Time (prevent mempool memory exhaustion attack)
-    if (nTime > GetAdjustedTime() + MAX_FUTURE_BLOCK_TIME)
-        return state.DoS(10, error("CTransaction::CheckTransaction() : timestamp is too far into the future"));
     // Size limits (this doesn't take the witness into account, as that hasn't been checked for malleability)
     if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * WITNESS_SCALE_FACTOR > MAX_BLOCK_WEIGHT)
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-oversize");
@@ -179,8 +179,8 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
         // peercoin: enforce minimum output amount
         // v0.5 protocol: zero amount allowed
         if ((!txout.IsEmpty()) && txout.nValue < MIN_TXOUT_AMOUNT &&
-            !(IsProtocolV05(nTime) && (txout.nValue == 0)))
-            return state.DoS(100, error("CTransaction::CheckTransaction() : txout.nValue below minimum"));
+            !(IsProtocolV05(tx.nTime) && (txout.nValue == 0)))
+            return state.DoS(100, false, REJECT_INVALID, "txout.nValue below minimum");
         if (txout.nValue < 0)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-negative");
         if (txout.nValue > MAX_MONEY)
@@ -215,7 +215,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
     return true;
 }
 
-bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee)
+bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee, const Consensus::Params& params)
 {
     // are the actual inputs available?
     if (!inputs.HaveInputs(tx)) {
@@ -230,14 +230,14 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
         assert(!coin.IsSpent());
 
         // If prev is coinbase, check that it's matured
-        if ((coin.IsCoinBase() || coin.IsCoinStake()) && nSpendHeight - coin.nHeight < Params().GetConsensus().nCoinbaseMaturity) {
+        if ((coin.IsCoinBase() || coin.IsCoinStake()) && nSpendHeight - coin.nHeight < params.nCoinbaseMaturity) {
             return state.Invalid(false,
                 REJECT_INVALID, "bad-txns-premature-spend-of-coinbase/coinstake",
                 strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
         }
 
         // peercoin: check transaction timestamp
-        if (coins->nTime > tx.nTime)
+        if (coin.nTime > tx.nTime)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-spent-too-early", false, strprintf("%s : transaction timestamp earlier than input transaction", __func__));
 
         // Check for negative or overflow input values
@@ -253,7 +253,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
         CAmount nLimit = 0;
         uint64_t nCoinAge;
         if (!GetCoinAge(tx, inputs, nCoinAge))
-            return error("CheckTxInputs() : %s unable to get coin age for coinstake", tx.GetHash().ToString());
+            return state.DoS(100, false, REJECT_INVALID, "unable to get coin age for coinstake");
         nLimit = GetProofOfStakeReward(nCoinAge);
         CAmount nStakeReward = tx.GetValueOut() - nValueIn;
         if (nStakeReward > nLimit - tx.GetMinFee() + MIN_TX_FEE)

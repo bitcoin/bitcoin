@@ -35,6 +35,10 @@
 
 #include <univalue.h>
 
+#include <kernelrecord.h>
+#include <miner.h>
+#include <boost/lexical_cast.hpp>
+
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
 
 CWallet *GetWalletForJSONRPCRequest(const JSONRPCRequest& request)
@@ -1624,7 +1628,7 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
     }
 }
 
-static void PushCoinStakeCategory(Object & entry, const CWalletTx &wtx)
+static void PushCoinStakeCategory(UniValue & entry, const CWalletTx &wtx)
 {
     if (wtx.GetDepthInMainChain() < 1)
         entry.push_back(Pair("category", "stake-orphan"));
@@ -2408,7 +2412,7 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
     pwallet->nRelockTime = GetTime() + nSleepTime;
     RPCRunLater(strprintf("lockwallet(%s)", pwallet->GetName()), boost::bind(LockWallet, pwallet), nSleepTime);
 
-    // ppcoin: if user OS account compromised prevent trivial sendmoney commands
+    // peercoin: if user OS account compromised prevent trivial sendmoney commands
     if (request.params.size() > 2)
         fWalletUnlockMintOnly = request.params[2].get_bool();
     else
@@ -2760,7 +2764,7 @@ UniValue settxfee(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 1 || AmountFromValue(params[0]) < MIN_TX_FEE)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 1 || AmountFromValue(request.params[0]) < MIN_TX_FEE)
         throw std::runtime_error(
             "settxfee amount\n"
             "\nSet the transaction fee per kB. Overwrites the paytxfee parameter.\n"
@@ -2778,9 +2782,9 @@ UniValue settxfee(const JSONRPCRequest& request)
 
     // Amount
     CAmount nAmount = AmountFromValue(request.params[0]);
+    nAmount = (nAmount / CENT) * CENT;
 
     payTxFee = CFeeRate(nAmount, 1000);
-    payTxFee = (payTxFee / CENT) * CENT;  // round to cent
     return true;
 }
 
@@ -3560,48 +3564,50 @@ UniValue rescanblockchain(const JSONRPCRequest& request)
     return response;
 }
 
-Value listminting(const Array& params, bool fHelp)
+UniValue listminting(const JSONRPCRequest& request)
 {
-    if(fHelp || params.size() > 2)
-        throw runtime_error(
+    if(request.fHelp || request.params.size() > 2)
+        throw std::runtime_error(
                 "listminting [count=-1] [from=0]\n"
                 "Return all mintable outputs and provide details for each of them.");
 
-    int64 count = -1;
-    if(params.size() > 0)
-        count = params[0].get_int();
+    int64_t count = -1;
+    if(request.params.size() > 0)
+        count = request.params[0].get_int();
 
-    int64 from = 0;
-    if(params.size() > 1)
-        from = params[1].get_int();
+    int64_t from = 0;
+    if(request.params.size() > 1)
+        from = request.params[1].get_int();
 
-    Array ret;
+    UniValue ret(UniValue::VARR);
 
-    const CBlockIndex *p = GetLastBlockIndex(pindexBest, true);
+    const CBlockIndex *p = GetLastBlockIndex(chainActive.Tip(), true);
     double difficulty = p->GetBlockDifficulty();
+    int64_t nStakeMinAge = Params().GetConsensus().nStakeMinAge;
 
-    for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+    if (!vpwallets.empty())
+    for (std::map<uint256, CWalletTx>::iterator it = vpwallets[0]->mapWallet.begin(); it != vpwallets[0]->mapWallet.end(); ++it)
     {
 
-        std::vector<KernelRecord> txList = KernelRecord::decomposeOutput(pwalletMain, it->second);
-        int minAge = nStakeMinAge / 60 / 60 / 24;
-        BOOST_FOREACH(KernelRecord& kr, txList) {
+        std::vector<KernelRecord> txList = KernelRecord::decomposeOutput(vpwallets[0], it->second);
+        int64_t minAge = nStakeMinAge / 60 / 60 / 24;
+        for (auto& kr : txList) {
             if(!kr.spent) {
 
                 if(count > 0 && ret.size() >= count) {
                     break;
                 }
 
-                string strTime = boost::lexical_cast<std::string>(kr.nTime);
-                string strAmount = boost::lexical_cast<std::string>(kr.nValue);
-                string strAge = boost::lexical_cast<std::string>(kr.getAge());
-                string strCoinAge = boost::lexical_cast<std::string>(kr.coinAge);
+                std::string strTime = boost::lexical_cast<std::string>(kr.nTime);
+                std::string strAmount = boost::lexical_cast<std::string>(kr.nValue);
+                std::string strAge = boost::lexical_cast<std::string>(kr.getAge());
+                std::string strCoinAge = boost::lexical_cast<std::string>(kr.coinAge);
 
-                Array params;
+                UniValue params(UniValue::VARR);
                 params.push_back(kr.address);
-                string account = AccountFromValue(getaccount(params, false));
+                std::string account = AccountFromValue(getaccount(request));
 
-                string status = "immature";
+                std::string status = "immature";
                 int searchInterval = 0;
                 int attemps = 0;
                 if(kr.getAge() >=  minAge)
@@ -3611,7 +3617,7 @@ Value listminting(const Array& params, bool fHelp)
                     attemps = GetAdjustedTime() - kr.nTime - nStakeMinAge;
                 }
 
-                Object obj;
+                UniValue obj(UniValue::VOBJ);
                 obj.push_back(Pair("account",                   account));
                 obj.push_back(Pair("address",                   kr.address));
                 obj.push_back(Pair("input-txid",                kr.hash.ToString()));
@@ -3636,17 +3642,17 @@ Value listminting(const Array& params, bool fHelp)
 }
 
 // peercoin: make a public-private key pair
-Value makekeypair(const Array& params, bool fHelp)
+UniValue makekeypair(const JSONRPCRequest& request)
 {
-    if (fHelp || params.size() > 1)
-        throw runtime_error(
+    if (request.fHelp || request.params.size() > 1)
+        throw std::runtime_error(
             "makekeypair [prefix]\n"
             "Make a public/private key pair.\n"
             "[prefix] is optional preferred prefix for the public key.\n");
 
-    string strPrefix = "";
-    if (params.size() > 0)
-        strPrefix = params[0].get_str();
+    std::string strPrefix = "";
+    if (request.params.size() > 0)
+        strPrefix = request.params[0].get_str();
 
     CKey key;
     int nCount = 0;
@@ -3654,89 +3660,92 @@ Value makekeypair(const Array& params, bool fHelp)
     {
         key.MakeNewKey(false);
         nCount++;
-    } while (nCount < 10000 && strPrefix != HexStr(key.GetPubKey().Raw()).substr(0, strPrefix.size()));
+    } while (nCount < 10000 && strPrefix != HexStr(key.GetPubKey()).substr(0, strPrefix.size()));
 
-    if (strPrefix != HexStr(key.GetPubKey().Raw()).substr(0, strPrefix.size()))
-        return Value::null;
+    if (strPrefix != HexStr(key.GetPubKey()).substr(0, strPrefix.size()))
+        return NullUniValue;
 
-    Object result;
-    result.push_back(Pair("PublicKey", HexStr(key.GetPubKey().Raw())));
-    bool fCompressed;
-    CSecret vchSecret = key.GetSecret(fCompressed);
-    result.push_back(Pair("PrivateKey", CBitcoinSecret(vchSecret, fCompressed).ToString()));
     CPrivKey vchPrivKey = key.GetPrivKey();
-    result.push_back(Pair("PrivateKeyHex", HexStr<CPrivKey::iterator>(vchPrivKey.begin(), vchPrivKey.end())));
+    UniValue result(UniValue::VOBJ);
+    result.push_back(Pair("PrivateKey", HexStr<CPrivKey::iterator>(vchPrivKey.begin(), vchPrivKey.end())));
+    result.push_back(Pair("PublicKey", HexStr(key.GetPubKey())));
     return result;
 }
 
 // peercoin: display key pair from hex private key
-Value showkeypair(const Array& params, bool fHelp)
+UniValue showkeypair(const JSONRPCRequest& request)
 {
-    if (fHelp || params.size() != 1)
-        throw runtime_error(
+    if (request.fHelp || request.params.size() != 1)
+        throw std::runtime_error(
             "showkeypair <hexprivkey>\n"
             "Display a public/private key pair with given hex private key.\n"
             "<hexprivkey> is the private key in hex form.\n");
 
-    string strPrivKey = params[0].get_str();
+    std::string strPrivKey = request.params[0].get_str();
 
-    std::vector<unsigned char> vchPrivKey = ParseHex(strPrivKey);
-    CKey key;
-    key.SetPrivKey(CPrivKey(vchPrivKey.begin(), vchPrivKey.end())); // if key is not correct openssl may crash
+    CBitcoinSecret vchSecret;
+    bool fGood = vchSecret.SetString(strPrivKey);
+
+    if (!fGood) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
+
+    CKey key = vchSecret.GetKey();
+    if (!key.IsValid()) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Private key outside allowed range");
+
+    CPubKey pubkey = key.GetPubKey();
+    assert(key.VerifyPubKey(pubkey));
 
     // Test signing some message
-    string strMsg = "Test sign by showkeypair";
+    std::string strMsg = "Test sign by showkeypair";
     std::vector<unsigned char> vchMsg(strMsg.begin(), strMsg.end());
     std::vector<unsigned char> vchSig;
     if (!key.Sign(Hash(vchMsg.begin(), vchMsg.end()), vchSig))
-        throw runtime_error(
+        throw std::runtime_error(
             "Failed to sign using the key, bad key?\n");
 
-    Object result;
-    result.push_back(Pair("PublicKey", HexStr(key.GetPubKey().Raw())));
-    bool fCompressed;
-    CSecret vchSecret = key.GetSecret(fCompressed);
-    result.push_back(Pair("PrivateKey", CBitcoinSecret(vchSecret, fCompressed).ToString()));
+    UniValue result(UniValue::VOBJ);
+    result.push_back(Pair("PublicKey", HexStr(key.GetPubKey())));
+    CPrivKey vchPrivKey = key.GetPrivKey();
+    result.push_back(Pair("PrivateKey", HexStr<CPrivKey::iterator>(vchPrivKey.begin(), vchPrivKey.end())));
     result.push_back(Pair("PrivateKeyHex", strPrivKey));
     return result;
 }
 
 // peercoin: reserve balance from being staked for network protection
-Value reservebalance(const Array& params, bool fHelp)
+UniValue reservebalance(const JSONRPCRequest& request)
 {
-    if (fHelp || params.size() > 2)
-        throw runtime_error(
+    if (request.fHelp || request.params.size() > 2)
+        throw std::runtime_error(
             "reservebalance [<reserve> [amount]]\n"
             "<reserve> is true or false to turn balance reserve on or off.\n"
             "<amount> is a real and rounded to cent.\n"
             "Set reserve amount not participating in network protection.\n"
             "If no parameters provided current setting is printed.\n");
 
-    if (params.size() > 0)
+    if (request.params.size() > 0)
     {
-        bool fReserve = params[0].get_bool();
+        bool fReserve = request.params[0].get_bool();
         if (fReserve)
         {
-            if (params.size() == 1)
-                throw runtime_error("must provide amount to reserve balance.\n");
-            int64 nAmount = AmountFromValue(params[1]);
+            if (request.params.size() == 1)
+                throw std::runtime_error("must provide amount to reserve balance.\n");
+            int64_t nAmount = AmountFromValue(request.params[1]);
             nAmount = (nAmount / CENT) * CENT;  // round to cent
             if (nAmount < 0)
-                throw runtime_error("amount cannot be negative.\n");
-            mapArgs["-reservebalance"] = FormatMoney(nAmount).c_str();
+                throw std::runtime_error("amount cannot be negative.\n");
+            gArgs.ForceSetArg("-reservebalance", FormatMoney(nAmount));
         }
         else
         {
-            if (params.size() > 1)
-                throw runtime_error("cannot specify amount to turn off reserve.\n");
-            mapArgs["-reservebalance"] = "0";
+            if (request.params.size() > 1)
+                throw std::runtime_error("cannot specify amount to turn off reserve.\n");
+            gArgs.ForceSetArg("-reservebalance", "0");
         }
     }
 
-    Object result;
-    int64 nReserveBalance = 0;
-    if (mapArgs.count("-reservebalance") && !ParseMoney(mapArgs["-reservebalance"], nReserveBalance))
-        throw runtime_error("invalid reserve balance amount\n");
+    UniValue result(UniValue::VOBJ);
+    CAmount nReserveBalance = 0;
+    if (gArgs.IsArgSet("-reservebalance") && !ParseMoney(gArgs.GetArg("-reservebalance", ""), nReserveBalance))
+        throw std::runtime_error("invalid reserve balance amount\n");
     result.push_back(Pair("reserve", (nReserveBalance > 0)));
     result.push_back(Pair("amount", ValueFromAmount(nReserveBalance)));
     return result;

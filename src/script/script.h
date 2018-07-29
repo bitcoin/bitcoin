@@ -209,7 +209,7 @@ class CScriptNum
  * The semantics are subtle, though: operands must be in the range [-2^31 +1...2^31 -1],
  * but results may overflow (and are valid as long as they are not used in a subsequent
  * numeric operation). CScriptNum enforces those semantics by storing results as
- * an int64 and allowing out-of-range values to be returned as a vector of bytes but
+ * an int64_t and allowing out-of-range values to be returned as a vector of bytes but
  * throwing an exception if arithmetic is done or the result is interpreted as an integer.
  */
 public:

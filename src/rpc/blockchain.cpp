@@ -31,6 +31,8 @@
 
 #include <univalue.h>
 
+#include <miner.h>
+
 #include <boost/thread/thread.hpp> // boost::thread::interrupt
 
 #include <mutex>
@@ -58,7 +60,7 @@ double GetDifficulty(const CChain& chain, const CBlockIndex* blockindex)
         if (chain.Tip() == nullptr)
             return 1.0;
         else
-            blockindex = GetLastBlockIndex(pindexBest, false);
+            blockindex = GetLastBlockIndex(chain.Tip(), false);
     }
 
     return blockindex->GetBlockDifficulty();
@@ -132,25 +134,22 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
     result.push_back(Pair("flags", strprintf("%s%s", blockindex->IsProofOfStake()? "proof-of-stake" : "proof-of-work", blockindex->GeneratedStakeModifier()? " stake-modifier": "")));
     result.push_back(Pair("proofhash", blockindex->IsProofOfStake()? blockindex->hashProofOfStake.GetHex() : blockindex->GetBlockHash().GetHex()));
     result.push_back(Pair("entropybit", (int)blockindex->GetStakeEntropyBit()));
-    result.push_back(Pair("modifier", strprintf("%016" PRI64x, blockindex->nStakeModifier)));
+    result.push_back(Pair("modifier", strprintf("%016llx", blockindex->nStakeModifier)));
     result.push_back(Pair("modifierchecksum", strprintf("%08x", blockindex->nStakeModifierChecksum)));
 
-    Array txinfo;
-    BOOST_FOREACH (const CTransaction& tx, block.vtx)
+    UniValue txs(UniValue::VARR);
+    for (const auto& tx : block.vtx)
     {
-        if (txDetails)
+        if(txDetails)
         {
-            txinfo.push_back(tx.ToStringShort());
-            txinfo.push_back(DateTimeStrFormat(tx.nTime));
-            BOOST_FOREACH(const CTxIn& txin, tx.vin)
-                txinfo.push_back(txin.ToStringShort());
-            BOOST_FOREACH(const CTxOut& txout, tx.vout)
-                txinfo.push_back(txout.ToStringShort());
+            UniValue objTx(UniValue::VOBJ);
+            TxToJSON(*tx, uint256(), objTx);
+            txs.push_back(objTx);
         }
         else
-            txinfo.push_back(tx.GetHash().GetHex());
+            txs.push_back(tx->GetHash().GetHex());
     }
-    result.push_back(Pair("tx", txinfo));
+    result.push_back(Pair("tx", txs));
 
     return result;
 }

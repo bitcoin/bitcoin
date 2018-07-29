@@ -432,7 +432,7 @@ QString MintingTableModel::formatTxCoinDay(const KernelRecord *wtx) const
 
 QString MintingTableModel::formatTxAge(const KernelRecord *wtx) const
 {
-    int64 nAge = wtx->getAge();
+    int64_t nAge = wtx->getAge();
     return QString::number(nAge);
 }
 

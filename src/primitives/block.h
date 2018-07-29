@@ -10,15 +10,6 @@
 #include <serialize.h>
 #include <uint256.h>
 
-// peercoin: proof-of-stake related block index fields
-unsigned int nFlags;  // peercoin: block index flags
-enum
-{
-    BLOCK_PROOF_OF_STAKE = (1 << 0), // is proof-of-stake block
-    BLOCK_STAKE_ENTROPY  = (1 << 1), // entropy bit for stake modifier
-    BLOCK_STAKE_MODIFIER = (1 << 2), // regenerated stake modifier
-};
-
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work
  * requirements.  When they solve the proof-of-work, they broadcast the block
@@ -75,8 +66,6 @@ public:
     {
         return (int64_t)nTime;
     }
-
-    unsigned int GetStakeEntropyBit() const; // peercoin: entropy bit for stake modifier if chosen by modifier
 };
 
 
@@ -135,7 +124,7 @@ public:
     // peercoin: two types of block: proof-of-work or proof-of-stake
     bool IsProofOfStake() const
     {
-        return (vtx.size() > 1 && vtx[1].IsCoinStake());
+        return (vtx.size() > 1 && vtx[1]->IsCoinStake());
     }
 
     bool IsProofOfWork() const
@@ -145,17 +134,19 @@ public:
 
     std::pair<COutPoint, unsigned int> GetProofOfStake() const
     {
-        return IsProofOfStake()? std::make_pair(vtx[1].vin[0].prevout, vtx[1].nTime) : std::make_pair(COutPoint(), (unsigned int)0);
+        return IsProofOfStake() ? std::make_pair(vtx[1]->vin[0].prevout, vtx[1]->nTime) : std::make_pair(COutPoint(), (unsigned int)0);
     }
 
     // peercoin: get max transaction timestamp
-    int64 GetMaxTransactionTime() const
+    int64_t GetMaxTransactionTime() const
     {
-        int64 maxTransactionTime = 0;
-        BOOST_FOREACH(const CTransaction& tx, vtx)
-            maxTransactionTime = std::max(maxTransactionTime, (int64)tx.nTime);
+        int64_t maxTransactionTime = 0;
+        for (const auto& tx : vtx)
+            maxTransactionTime = std::max(maxTransactionTime, (int64_t)tx->nTime);
         return maxTransactionTime;
     }
+
+    unsigned int GetStakeEntropyBit() const; // peercoin: entropy bit for stake modifier if chosen by modifier
 
     std::string ToString() const;
 };

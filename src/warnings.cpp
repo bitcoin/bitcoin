@@ -8,6 +8,8 @@
 #include <util.h>
 #include <warnings.h>
 
+#include <checkpointsync.h>
+
 CCriticalSection cs_warnings;
 std::string strMiscWarning;
 std::string strMintWarning;
@@ -82,7 +84,7 @@ std::string GetWarnings(const std::string& strFor)
         strGUI += (strGUI.empty() ? "" : uiAlertSeperator) + _("Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.");
     }
     // peercoin: detect invalid checkpoint
-    if (hashInvalidCheckpoint != 0)
+    if (hashInvalidCheckpoint != uint256())
         strStatusBar = strRPC = strGUI = "WARNING: Inconsistent checkpoint found! Stop enforcing checkpoints and notify developers to resolve the issue.";
 
     if (strFor == "gui")

@@ -2863,20 +2863,3 @@ uint64_t CConnman::CalculateKeyedNetGroup(const CAddress& ad) const
 
     return GetDeterministicRandomizer(RANDOMIZER_ID_NETGROUP).Write(vchNetGroup.data(), vchNetGroup.size()).Finalize();
 }
-
-void RelayBlock(const CBlock& block, const uint256& hash)
-{
-    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-    ss.reserve(10000);
-    ss << block;
-    RelayBlock(block, hash, ss);
-}
-
-void RelayBlock(const CBlock& tx, const uint256& hash, const CDataStream& ss)
-{
-    CInv inv(MSG_BLOCK, hash);
-    AddRelay(inv, ss);
-    LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes)
-        pnode->PushInventory(inv);
-}

@@ -50,9 +50,9 @@ CTxIn MultisigInputEntry::getInput()
     return input;
 }
 
-int64 MultisigInputEntry::getAmount()
+int64_t MultisigInputEntry::getAmount()
 {
-    int64 amount = 0;
+    int64_t amount = 0;
     int nOutput = ui->transactionOutput->currentIndex();
     CTransaction tx;
     uint256 blockHash = 0;
@@ -121,7 +121,7 @@ void MultisigInputEntry::on_transactionId_textChanged(const QString &transaction
         QString idStr;
         idStr.setNum(i);
         const CTxOut& txOut = tx.vout[i];
-        int64 amount = txOut.nValue;
+        int64_t amount = txOut.nValue;
         QString amountStr;
         amountStr.sprintf("%.6f", (double) amount / COIN);
         CScript script = txOut.scriptPubKey;

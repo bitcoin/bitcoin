@@ -5,6 +5,7 @@
 #define  PPCOIN_CHECKPOINTSYNC_H
 
 #include "net.h"
+#include "netmessagemaker.h"
 #include "util.h"
 
 #define CHECKPOINT_MAX_SPAN (60 * 60 * 4) // max 4 hours before latest block
@@ -44,17 +45,18 @@ public:
     int nVersion;
     uint256 hashCheckpoint;      // checkpoint block
 
-    IMPLEMENT_SERIALIZE
-    (
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(this->nVersion);
-        nVersion = this->nVersion;
         READWRITE(hashCheckpoint);
-    )
+    }
 
     void SetNull()
     {
         nVersion = 1;
-        hashCheckpoint = 0;
+        hashCheckpoint = uint256();
     }
 
     std::string ToString() const
@@ -89,11 +91,13 @@ public:
         SetNull();
     }
 
-    IMPLEMENT_SERIALIZE
-    (
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(vchMsg);
         READWRITE(vchSig);
-    )
+    }
 
     void SetNull()
     {
@@ -104,7 +108,7 @@ public:
 
     bool IsNull() const
     {
-        return (hashCheckpoint == 0);
+        return (hashCheckpoint == uint256());
     }
 
     uint256 GetHash() const
@@ -115,10 +119,10 @@ public:
     bool RelayTo(CNode* pnode) const
     {
         // returns true if wasn't already sent
-        if (pnode->hashCheckpointKnown != hashCheckpoint)
+        if (g_connman && pnode->hashCheckpointKnown != hashCheckpoint)
         {
             pnode->hashCheckpointKnown = hashCheckpoint;
-            pnode->PushMessage("checkpoint", *this);
+            g_connman->PushMessage(pnode, CNetMsgMaker(pnode->GetSendVersion()).Make("checkpoint", *this));
             return true;
         }
         return false;

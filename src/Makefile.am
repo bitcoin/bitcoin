@@ -78,6 +78,7 @@ BITCOIN_CORE_H = \
   addrdb.h \
   addrman.h \
   base58.h \
+  bignum.h \
   bech32.h \
   bloom.h \
   blockencodings.h \
@@ -450,7 +451,7 @@ peercoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 # peercoinconsensus library #
 if BUILD_BITCOIN_LIBS
 include_HEADERS = script/bitcoinconsensus.h
-libbitcoinconsensus_la_SOURCES = $(crypto_libbitcoin_crypto_a_SOURCES) $(libbitcoin_consensus_a_SOURCES)
+libpeercoinconsensus_la_SOURCES = $(crypto_libbitcoin_crypto_a_SOURCES) $(libbitcoin_consensus_a_SOURCES)
 
 if GLIBC_BACK_COMPAT
   libpeercoinconsensus_la_SOURCES += compat/glibc_compat.cpp

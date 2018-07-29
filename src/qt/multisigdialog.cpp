@@ -270,7 +270,7 @@ void MultisigDialog::on_createTransactionButton_clicked()
                 CBitcoinAddress address(recipient.address.toStdString());
                 CScript scriptPubKey;
                 scriptPubKey.SetDestination(address.Get());
-                int64 amount = recipient.amount;
+                int64_t amount = recipient.amount;
                 CTxOut output(amount, scriptPubKey);
                 transaction.vout.push_back(output);
             }
@@ -350,12 +350,12 @@ void MultisigDialog::on_transaction_textChanged()
     updateRemoveEnabled();
 
     // Check the fee
-    int64 transactionSize = ui->transaction->text().size() / 2;
+    int64_t transactionSize = ui->transaction->text().size() / 2;
     if(transactionSize == 0)
         return;
     transactionSize += ui->inputs->count() * 73; // Future ECDSA signatures in DER format
-    int64 fee = (int64 ) (ui->fee->text().toDouble() * COIN);
-    int64 minFee = MIN_TX_FEE * (1 + (int64) transactionSize / 1000);
+    int64_t fee = (int64_t ) (ui->fee->text().toDouble() * COIN);
+    int64_t minFee = MIN_TX_FEE * (1 + (int64_t) transactionSize / 1000);
     if(fee < minFee)
     {
         ui->fee->setStyleSheet("color:red;");
@@ -487,13 +487,13 @@ void MultisigDialog::on_copySignedTransactionButton_clicked()
 
 void MultisigDialog::on_sendTransactionButton_clicked()
 {
-    int64 transactionSize = ui->signedTransaction->text().size() / 2;
+    int64_t transactionSize = ui->signedTransaction->text().size() / 2;
     if(transactionSize == 0)
         return;
 
     // Check the fee
-    int64 fee = (int64 ) (ui->fee->text().toDouble() * COIN);
-    int64 minFee = MIN_TX_FEE * (1 + (int64) transactionSize / 1000);
+    int64_t fee = (int64_t ) (ui->fee->text().toDouble() * COIN);
+    int64_t minFee = MIN_TX_FEE * (1 + (int64_t) transactionSize / 1000);
     if(fee < minFee)
     {
         QMessageBox::StandardButton ret = QMessageBox::question(this, tr("Confirm sending transaction"), tr("The fee of the transaction (%1 PPC) is smaller than the expected fee (%2 PPC). Do you want to send the transaction anyway?").arg((double) fee / COIN).arg((double) minFee / COIN), QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
@@ -592,7 +592,7 @@ void MultisigDialog::removeEntry(SendCoinsEntry *entry)
 void MultisigDialog::updateAmounts()
 {
     // Update inputs amount
-    int64 inputsAmount = 0;
+    int64_t inputsAmount = 0;
     for(int i = 0; i < ui->inputs->count(); i++)
     {
         MultisigInputEntry *entry = qobject_cast<MultisigInputEntry *>(ui->inputs->itemAt(i)->widget());
@@ -604,7 +604,7 @@ void MultisigDialog::updateAmounts()
     ui->inputsAmount->setText(inputsAmountStr);
 
     // Update outputs amount
-    int64 outputsAmount = 0;
+    int64_t outputsAmount = 0;
     for(int i = 0; i < ui->outputs->count(); i++)
     {
         SendCoinsEntry *entry = qobject_cast<SendCoinsEntry *>(ui->outputs->itemAt(i)->widget());
@@ -616,7 +616,7 @@ void MultisigDialog::updateAmounts()
     ui->outputsAmount->setText(outputsAmountStr);
 
     // Update fee amount
-    int64 fee = inputsAmount - outputsAmount;
+    int64_t fee = inputsAmount - outputsAmount;
     QString feeStr;
     feeStr.sprintf("%.6f", (double) fee / COIN);
     ui->fee->setText(feeStr);

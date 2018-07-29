@@ -12,6 +12,8 @@
 #include <tinyformat.h>
 #include <uint256.h>
 
+#include <utilmoneystr.h>
+
 #include <vector>
 
 /**
@@ -221,10 +223,18 @@ public:
 
 // peercoin
     // peercoin: money supply related block index fields
-    int64 nMint;
-    int64 nMoneySupply;
+    int64_t nMint;
+    int64_t nMoneySupply;
 
-    uint64 nStakeModifier; // hash modifier for proof-of-stake
+    // peercoin: proof-of-stake related block index fields
+    unsigned int nFlags;  // peercoin: block index flags
+    enum
+    {
+        BLOCK_PROOF_OF_STAKE = (1 << 0), // is proof-of-stake block
+        BLOCK_STAKE_ENTROPY  = (1 << 1), // entropy bit for stake modifier
+        BLOCK_STAKE_MODIFIER = (1 << 2), // regenerated stake modifier
+    };
+    uint64_t nStakeModifier; // hash modifier for proof-of-stake
     unsigned int nStakeModifierChecksum; // checksum of index; in-memeory only
     COutPoint prevoutStake;
     unsigned int nStakeTime;
@@ -263,7 +273,7 @@ public:
         return (nFlags & BLOCK_STAKE_MODIFIER);
     }
 
-    void SetStakeModifier(uint64 nModifier, bool fGeneratedStakeModifier)
+    void SetStakeModifier(uint64_t nModifier, bool fGeneratedStakeModifier)
     {
         nStakeModifier = nModifier;
         if (fGeneratedStakeModifier)
@@ -319,17 +329,18 @@ public:
         nBits          = block.nBits;
         nNonce         = block.nNonce;
 
-        if (block.IsProofOfStake())
-        {
-            SetProofOfStake();
-            prevoutStake = block.vtx[1].vin[0].prevout;
-            nStakeTime = block.vtx[1].nTime;
-        }
-        else
-        {
-            prevoutStake.SetNull();
-            nStakeTime = 0;
-        }
+        //ppc - check if we need to have prevoutStake and nStakeTime information when using this initialization
+//        if (block.IsProofOfStake())
+//        {
+//            SetProofOfStake();
+//            prevoutStake = block.vtx[1].vin[0].prevout;
+//            nStakeTime = block.vtx[1].nTime;
+//        }
+//        else
+//        {
+//            prevoutStake.SetNull();
+//            nStakeTime = 0;
+//        }
     }
 
     CDiskBlockPos GetBlockPos() const {
@@ -376,6 +387,32 @@ public:
     int64_t GetBlockTimeMax() const
     {
         return (int64_t)nTimeMax;
+    }
+
+    /**
+     * Duplicate from bitcoinrpc that originaly define this method.
+     * May require some cleanup since this method should be available both for rpc
+     * and qt clients.
+     */
+    double GetBlockDifficulty() const
+    {
+        int nShift = (nBits >> 24) & 0xff;
+
+        double dDiff =
+            (double)0x0000ffff / (double)(nBits & 0x00ffffff);
+
+        while (nShift < 29)
+        {
+            dDiff *= 256.0;
+            nShift++;
+        }
+        while (nShift > 29)
+        {
+            dDiff /= 256.0;
+            nShift--;
+        }
+
+        return dDiff;
     }
 
     static constexpr int nMedianTimeSpan = 11;

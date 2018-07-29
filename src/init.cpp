@@ -47,6 +47,9 @@
 #include <wallet/init.h>
 #endif
 #include <warnings.h>
+
+#include <checkpointsync.h>
+
 #include <stdint.h>
 #include <stdio.h>
 #include <memory>
@@ -364,7 +367,7 @@ std::string HelpMessage(HelpMessageMode mode)
 #ifndef WIN32
     strUsage += HelpMessageOpt("-pid=<file>", strprintf(_("Specify pid file (default: %s)"), BITCOIN_PID_FILENAME));
 #endif
-// ppc - disabled until correctly implemented
+//ppc - disabled until correctly implemented
 //    strUsage += HelpMessageOpt("-prune=<n>", strprintf(_("Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex and -rescan. "
 //            "Warning: Reverting this setting requires re-downloading the entire blockchain. "
 //            "(default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, >%u = automatically prune block files to stay under the specified target size in MiB)"), MIN_DISK_SPACE_FOR_BLOCK_FILES / 1024 / 1024));
@@ -1072,13 +1075,6 @@ bool AppInitParameterInteraction()
         return InitError(strprintf("acceptnonstdtxn is not currently supported for %s chain", chainparams.NetworkIDString()));
     nBytesPerSigOp = gArgs.GetArg("-bytespersigop", nBytesPerSigOp);
 
-    if (IsArgSet("-checkpointkey")) // peercoin: checkpoint master priv key
-    {
-        if (!CheckpointsSync::SetCheckpointPrivKey(GetArg("-checkpointkey", "")))
-            return InitError(_("Unable to sign checkpoint, wrong checkpointkey?\n"));
-        else LogPrintf("Setting checkpoint private key is successful\n");
-    }
-
 #ifdef ENABLE_WALLET
     if (!WalletParameterInteraction())
         return false;
@@ -1167,6 +1163,13 @@ bool AppInitSanityChecks()
     RandomInit();
     ECC_Start();
     globalVerifyHandle.reset(new ECCVerifyHandle());
+
+    // peercoin: moved here because ECC need to be initialized to execute this
+    if (gArgs.IsArgSet("-checkpointkey")) // peercoin: checkpoint master priv key
+    {
+        if (!SetCheckpointPrivKey(gArgs.GetArg("-checkpointkey", "")))
+            return InitError(_("Unable to sign checkpoint, wrong checkpointkey?"));
+    }
 
     // Sanity check
     if (!InitSanityCheck())
@@ -1469,8 +1472,8 @@ bool AppInitMain()
                 }
 
                 // peercoin: initialize synchronized checkpoint
-                if (!fReindex && !CheckpointsSync::WriteSyncCheckpoint(block.GetHash()))
-                    return error("failed to init sync checkpoint");
+                if (!fReindex && !WriteSyncCheckpoint(chainparams.GenesisBlock().GetHash()))
+                    return error("LoadBlockIndex() : failed to init sync checkpoint");
 
                 // peercoin: if checkpoint master key changed must reset sync-checkpoint
                 if (!CheckCheckpointPubKey())
@@ -1744,8 +1747,8 @@ bool AppInitMain()
 
 #ifdef ENABLE_WALLET
     StartWallets(scheduler);
-    if (GetBoolArg("-stakegen", true))
-        MintStake(threadGroup, pwalletMain);
+    if (gArgs.GetBoolArg("-stakegen", true))
+        MintStake(threadGroup);
 #endif
 
     return true;
