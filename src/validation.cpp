@@ -602,10 +602,8 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
     std::set<uint256> setConflicts;
     for (const CTxIn &txin : tx.vin)
     {
-        auto itConflicting = pool.mapNextTx.find(txin.prevout);
-        if (itConflicting != pool.mapNextTx.end())
-        {
-            const CTransaction *ptxConflicting = itConflicting->second;
+        const CTransaction* ptxConflicting = pool.GetConflictTx(txin.prevout);
+        if (ptxConflicting) {
             if (!setConflicts.count(ptxConflicting->GetHash()))
             {
                 // Allow opt-out of transaction replacement by setting
@@ -786,16 +784,8 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             CFeeRate newFeeRate(nModifiedFees, nSize);
             std::set<uint256> setConflictsParents;
             const int maxDescendantsToVisit = 100;
-            CTxMemPool::setEntries setIterConflicting;
-            for (const uint256 &hashConflicting : setConflicts)
-            {
-                CTxMemPool::txiter mi = pool.mapTx.find(hashConflicting);
-                if (mi == pool.mapTx.end())
-                    continue;
-
-                // Save these to avoid repeated lookups
-                setIterConflicting.insert(mi);
-
+            const CTxMemPool::setEntries setIterConflicting = pool.GetIterSet(setConflicts);
+            for (const auto& mi : setIterConflicting) {
                 // Don't allow the replacement to reduce the feerate of the
                 // mempool.
                 //
@@ -861,11 +851,12 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                     // Rather than check the UTXO set - potentially expensive -
                     // it's cheaper to just check if the new input refers to a
                     // tx that's in the mempool.
-                    if (pool.mapTx.find(tx.vin[j].prevout.hash) != pool.mapTx.end())
+                    if (pool.exists(tx.vin[j].prevout.hash)) {
                         return state.DoS(0, false,
                                          REJECT_NONSTANDARD, "replacement-adds-unconfirmed", false,
                                          strprintf("replacement %s adds unconfirmed input, idx %d",
                                                   hash.ToString(), j));
+                    }
                 }
             }
 
