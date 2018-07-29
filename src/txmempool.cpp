@@ -156,9 +156,9 @@ bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, setEntr
         // GetMemPoolParents() is only valid for entries in the mempool, so we
         // iterate mapTx to find parents.
         for (unsigned int i = 0; i < tx.vin.size(); i++) {
-            txiter piter = mapTx.find(tx.vin[i].prevout.hash);
-            if (piter != mapTx.end()) {
-                parentHashes.insert(piter);
+            boost::optional<txiter> piter = GetIter(tx.vin[i].prevout.hash);
+            if (piter) {
+                parentHashes.insert(*piter);
                 if (parentHashes.size() + 1 > limitAncestorCount) {
                     errString = strprintf("too many unconfirmed parents [limit: %u]", limitAncestorCount);
                     return false;
@@ -364,12 +364,10 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
     // Update transaction for any feeDelta created by PrioritiseTransaction
     // TODO: refactor so that the fee delta is calculated before inserting
     // into mapTx.
-    std::map<uint256, CAmount>::const_iterator pos = mapDeltas.find(entry.GetTx().GetHash());
-    if (pos != mapDeltas.end()) {
-        const CAmount &delta = pos->second;
-        if (delta) {
+    CAmount delta{0};
+    ApplyDelta(entry.GetTx().GetHash(), delta);
+    if (delta) {
             mapTx.modify(newit, update_fee_delta(delta));
-        }
     }
 
     // Update cachedInnerUsage to include contained transaction's usage.
@@ -391,11 +389,8 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
     // to clean up the mess we're leaving here.
 
     // Update ancestors with information about this tx
-    for (const uint256 &phash : setParentTransactions) {
-        txiter pit = mapTx.find(phash);
-        if (pit != mapTx.end()) {
+    for (const auto& pit : GetIterSet(setParentTransactions)) {
             UpdateParent(newit, pit, true);
-        }
     }
     UpdateAncestorsOf(true, newit, setAncestors);
     UpdateEntryForAncestors(newit, setAncestors);
@@ -862,6 +857,29 @@ void CTxMemPool::ClearPrioritisation(const uint256 hash)
 {
     LOCK(cs);
     mapDeltas.erase(hash);
+}
+
+const CTransaction* CTxMemPool::GetConflictTx(const COutPoint& prevout) const
+{
+    const auto it = mapNextTx.find(prevout);
+    return it == mapNextTx.end() ? nullptr : it->second;
+}
+
+boost::optional<CTxMemPool::txiter> CTxMemPool::GetIter(const uint256& txid) const
+{
+    auto it = mapTx.find(txid);
+    if (it != mapTx.end()) return it;
+    return boost::optional<txiter>{};
+}
+
+CTxMemPool::setEntries CTxMemPool::GetIterSet(const std::set<uint256>& hashes) const
+{
+    CTxMemPool::setEntries ret;
+    for (const auto& h : hashes) {
+        const auto mi = GetIter(h);
+        if (mi) ret.insert(*mi);
+    }
+    return ret;
 }
 
 bool CTxMemPool::HasNoInputsOf(const CTransaction &tx) const
