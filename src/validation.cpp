@@ -1257,11 +1257,17 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 		}
 		if (bMultiThreaded)
 		{
-			std::packaged_task<void()> t([&pool, ptx, hash, coins_to_uncache, hashCacheEntry, vChecks]() {
-				CValidationState vstate;
-				CCoinsViewCache vView(pcoinsTip);
-				const CTransaction& txIn = *ptx;
-				for (auto &check : vChecks) {
+			bool bSysVersion = tx.nVersion == SYSCOIN_TX_VERSION;
+			bool bCheckSyscoinInputs = false;
+			for (auto &check : vChecks) {
+				if (bSysVersion && !bCheckSyscoinInputs)
+				{
+					bCheckSyscoinInputs = true;
+				}
+				std::packaged_task<void()> t([&pool, ptx, hash, coins_to_uncache, hashCacheEntry, check, bCheckSyscoinInputs]() {
+					CValidationState vstate;
+					CCoinsViewCache vView(pcoinsTip);
+					const CTransaction& txIn = *ptx;
 					if (!check())
 					{
 						LOCK2(cs_main, mempool.cs);
@@ -1276,31 +1282,31 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 						nLastMultithreadMempoolFailure = GetTime();
 						return;
 					}
+					if (bCheckSyscoinInputs && !CheckSyscoinInputs(txIn, vstate, vView, true, chainActive.Height(), CBlock()))
+					{
+						LOCK2(cs_main, mempool.cs);
+						LogPrint("mempool", "%s: %s\n", "CheckSyscoinInputs Error", hash.ToString());
+						BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
+							pcoinsTip->Uncache(hashTx);
+						pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
+						pool.ClearPrioritisation(hash);
+						// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
+						CValidationState stateDummy;
+						FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
+						nLastMultithreadMempoolFailure = GetTime();
+					}
+					scriptExecutionCache.insert(hashCacheEntry);
+				});
+				int numTries = 100;
+				while (!threadpool.tryPost(t)) {
+					numTries--;
+					if (numTries <= 0) {
+						return state.DoS(0, false,
+							REJECT_INVALID, "threadpool-full", false,
+							"AcceptToMemoryPoolWorker: thread pool queue is full");
+					}
+					MilliSleep(1);
 				}
-				if (!CheckSyscoinInputs(txIn, vstate, vView, true, chainActive.Height(), CBlock()))
-				{
-					LOCK2(cs_main, mempool.cs);
-					LogPrint("mempool", "%s: %s\n", "CheckSyscoinInputs Error", hash.ToString());
-					BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
-						pcoinsTip->Uncache(hashTx);
-					pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
-					pool.ClearPrioritisation(hash);
-					// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
-					CValidationState stateDummy;
-					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
-					nLastMultithreadMempoolFailure = GetTime();
-				}
-				scriptExecutionCache.insert(hashCacheEntry);		
-			});
-			int numTries = 100;
-			while (!threadpool.tryPost(t)) {
-				numTries--;
-				if (numTries <= 0) {
-					return state.DoS(0, false,
-						REJECT_INVALID, "threadpool-full", false,
-						"AcceptToMemoryPoolWorker: thread pool queue is full");
-				}
-				MilliSleep(1);
 			}
 	
 		}
