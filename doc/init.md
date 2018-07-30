@@ -44,7 +44,7 @@ This allows for running bitcoind without having to do any manual configuration.
 relative to the data directory. `wallet` *only* supports relative paths.
 
 For an example configuration file that describes the configuration settings,
-see `contrib/debian/examples/bitcoin.conf`.
+see `share/examples/bitcoin.conf`.
 
 Paths
 ---------------------------------
