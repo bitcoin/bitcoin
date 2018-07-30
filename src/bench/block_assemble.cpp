@@ -97,10 +97,14 @@ static void AssembleBlock(benchmark::Bench& bench)
         if (NUM_BLOCKS - b >= COINBASE_MATURITY)
             txs.at(b) = MakeTransactionRef(tx);
     }
-    for (const auto& txr : txs) {
-        CValidationState state;
-        bool ret{::AcceptToMemoryPool(::mempool, state, txr, nullptr /* pfMissingInputs */, false /* bypass_limits */, /* nAbsurdFee */ 0)};
-        assert(ret);
+    {
+        LOCK(::cs_main); // Required for ::AcceptToMemoryPool.
+
+        for (const auto& txr : txs) {
+            CValidationState state;
+            bool ret{::AcceptToMemoryPool(::mempool, state, txr, nullptr /* pfMissingInputs */, false /* bypass_limits */, /* nAbsurdFee */ 0)};
+            assert(ret);
+        }
     }
 
     bench.minEpochIterations(700).run([&] {
