@@ -1283,7 +1283,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 				int thisSyscoinCheckCount = 0;
 				int thisCheckMicros = 0;
 				int thisSyscoinCheckMicros = 0;
-				totalExecutionCount += 1;
 				concurrentExecutionCount += 1;
 
 				CValidationState validationState;
@@ -1359,7 +1358,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 				concurrentExecutionCount -= 1;
 			});
 
-
+			totalExecutionCount ++;
 			// every 100th transaction or when not in unit test mode
 			if (totalCheckCount > 0 && totalSyscoinCheckCount > 0 && totalExecutionCount > 0 && (!fUnitTest || (fUnitTest && totalExecutionCount % 100 == 0))) {
 				int avgCheckMicros = totalCheckMicros / totalCheckCount;

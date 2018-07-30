@@ -1055,6 +1055,8 @@ UniValue assetsend(const JSONRPCRequest& request) {
 
 		UniValue receiverObj = receiver.get_obj();
 		UniValue toObj = find_value(receiverObj, "ownerto");
+		if(!toObj.isNull())
+			toObj = find_value(receiverObj, "aliasto");
 		vector<unsigned char> vchAliasOrAddressTo;
 		vchAliasOrAddressTo = vchFromValue(toObj);
 		if (!CSyscoinAddress(stringFromVch(vchAliasOrAddressTo)).IsValid()) {
