@@ -168,7 +168,7 @@ Q_SIGNALS:
 
 private:
     /// Pass fatal exception message to UI thread
-    void handleRunawayException(const std::exception *e);
+    [[noreturn]] void handleRunawayException(const std::exception *e);
 
     interfaces::Node& m_node;
 };
@@ -212,7 +212,7 @@ public Q_SLOTS:
     void initializeResult(bool success);
     void shutdownResult();
     /// Handle runaway exceptions. Shows a message box with the problem and quits the program.
-    void handleRunawayException(const QString &message);
+    [[noreturn]] void handleRunawayException(const QString &message);
     void addWallet(WalletModel* walletModel);
     void removeWallet();
 
@@ -248,7 +248,7 @@ BitcoinCore::BitcoinCore(interfaces::Node& node) :
 {
 }
 
-void BitcoinCore::handleRunawayException(const std::exception *e)
+[[noreturn]] void BitcoinCore::handleRunawayException(const std::exception *e)
 {
     PrintExceptionContinue(e, "Runaway exception");
     Q_EMIT runawayException(QString::fromStdString(m_node.getWarnings("gui")));
@@ -524,7 +524,7 @@ void BitcoinApplication::shutdownResult()
     quit(); // Exit second main loop invocation after shutdown finished
 }
 
-void BitcoinApplication::handleRunawayException(const QString &message)
+[[noreturn]] void BitcoinApplication::handleRunawayException(const QString &message)
 {
     QMessageBox::critical(0, "Runaway exception", BitcoinGUI::tr("A fatal error occurred. Bitcoin can no longer continue safely and will quit.") + QString("\n\n") + message);
     ::exit(EXIT_FAILURE);
