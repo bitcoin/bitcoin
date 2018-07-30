@@ -128,7 +128,7 @@ sudo apt-get install -y libminiupnpc-dev
 ##### ZMQ dependencies / Optional:
 
 ```shell
-sudo apt-get install -y libzmq-dev
+sudo apt-get install -y libzmq3-dev
 ```
 
 #### Dependencies for the GUI
