@@ -3156,7 +3156,7 @@ void PeerLogicValidation::EvictExtraOutboundPeers(int64_t time_in_seconds)
 
         LOCK(cs_main);
 
-        connman->ForEachNode([&](CNode* pnode) {
+        connman->ForEachNode([&worst_peer, &oldest_block_announcement](CNode* pnode) {
             AssertLockHeld(cs_main);
 
             // Ignore non-outbound peers, or nodes marked for disconnect already
@@ -3171,7 +3171,7 @@ void PeerLogicValidation::EvictExtraOutboundPeers(int64_t time_in_seconds)
             }
         });
         if (worst_peer != -1) {
-            bool disconnected = connman->ForNode(worst_peer, [&](CNode *pnode) {
+            bool disconnected = connman->ForNode(worst_peer, [&time_in_seconds, &oldest_block_announcement](CNode *pnode) {
                 AssertLockHeld(cs_main);
 
                 // Only disconnect a peer that has been connected to us for

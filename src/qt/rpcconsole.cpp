@@ -174,7 +174,7 @@ bool RPCConsole::RPCParseCommandLine(interfaces::Node* node, std::string &strRes
     size_t filter_begin_pos = 0, chpos;
     std::vector<std::pair<size_t, size_t>> filter_ranges;
 
-    auto add_to_current_stack = [&](const std::string& strArg) {
+    auto add_to_current_stack = [&stack, &nDepthInsideSensitive, &filter_begin_pos, &chpos](const std::string& strArg) {
         if (stack.back().empty() && (!nDepthInsideSensitive) && historyFilter.contains(QString::fromStdString(strArg), Qt::CaseInsensitive)) {
             nDepthInsideSensitive = 1;
             filter_begin_pos = chpos;
@@ -186,7 +186,7 @@ bool RPCConsole::RPCParseCommandLine(interfaces::Node* node, std::string &strRes
         stack.back().push_back(strArg);
     };
 
-    auto close_out_params = [&]() {
+    auto close_out_params = [&nDepthInsideSensitive, &filter_begin_pos, &filter_ranges, &chpos, &stack]() {
         if (nDepthInsideSensitive) {
             if (!--nDepthInsideSensitive) {
                 assert(filter_begin_pos);
