@@ -266,7 +266,7 @@ int64_t getMPbalance(const std::string& address, uint32_t propertyId, TallyType 
     }
     if (ttype == ACCEPT_RESERVE && propertyId > OMNI_PROPERTY_TMSC) {
         // ACCEPT_RESERVE is always empty, except for MSC and TMSC
-        return 0; 
+        return 0;
     }
 
     LOCK(cs_tally);
@@ -470,7 +470,7 @@ bool mastercore::update_tally_map(const std::string& who, uint32_t propertyId, i
         PrintToLog("%s(%s, %u=0x%X, %+d, ttype=%d) ERROR: invalid tally type\n", __func__, who, propertyId, propertyId, amount, ttype);
         return false;
     }
-    
+
     bool bRet = false;
     int64_t before = 0;
     int64_t after = 0;
@@ -844,7 +844,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
     int64_t inAll = 0;
 
     { // needed to ensure the cache isn't cleared in the meantime when doing parallel queries
-    LOCK(cs_tx_cache);
+    LOCK2(cs_main, cs_tx_cache); // cs_main should be locked first to avoid deadlocks with cs_tx_cache at FillTxInputCache(...)->GetTransaction(...)->LOCK(cs_main)
 
     // Add previous transaction inputs to the cache
     if (!FillTxInputCache(wtx)) {
