@@ -7,7 +7,7 @@ import copy
 import struct
 import time
 
-from test_framework.blocktools import create_block, create_coinbase, create_transaction, get_legacy_sigopcount_block
+from test_framework.blocktools import create_block, create_coinbase, create_tx_with_script, get_legacy_sigopcount_block
 from test_framework.key import CECKey
 from test_framework.messages import (
     CBlock,
@@ -1217,7 +1217,7 @@ class FullBlockTest(BitcoinTestFramework):
 
     # this is a little handier to use than the version in blocktools.py
     def create_tx(self, spend_tx, n, value, script=CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE])):
-        return create_transaction(spend_tx, n, b"", value, script)
+        return create_tx_with_script(spend_tx, n, b"", value, script)
 
     # sign a transaction, using the key we know about
     # this signs input 0 in tx, which is assumed to be spending output n in spend_tx
@@ -1253,7 +1253,7 @@ class FullBlockTest(BitcoinTestFramework):
             coinbase.vout[0].nValue += spend.tx.vout[spend.n].nValue - 1  # all but one satoshi to fees
             coinbase.rehash()
             block = create_block(base_block_hash, coinbase, block_time)
-            tx = create_transaction(spend.tx, spend.n, b"", 1, script)  # spend 1 satoshi
+            tx = create_tx_with_script(spend.tx, spend.n, b"", 1, script)  # spend 1 satoshi
             self.sign_tx(tx, spend.tx, spend.n)
             self.add_transactions_to_block(block, [tx])
             block.hashMerkleRoot = block.calc_merkle_root()
