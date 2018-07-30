@@ -1276,7 +1276,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 
 			// define a task for the worker to process
 			std::packaged_task<void()> task([&pool, ptx, hash, coins_to_uncache, hashCacheEntry, vChecks]() {
-				LogPrint("threadpool", "THREADPOOL::%s:Signature check started\n", hash.ToString());
 				// metrics
 				const int64_t &time = GetTimeMicros();
 				int thisCheckCount = 0;
