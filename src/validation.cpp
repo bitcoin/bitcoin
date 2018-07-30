@@ -47,6 +47,7 @@
 
 #include <atomic>
 #include <sstream>
+#include <string>
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/join.hpp>
@@ -1080,7 +1081,8 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus:
         return error("%s: Deserialize or I/O error - %s at %s", __func__, e.what(), pos.ToString());
     }
 
-    bool isFork = block.nTime >= 1527625482;
+    // bool isFork = block.nTime >= 1527625482;
+    bool isFork = block.nTime > consensusParams.hardforkTimestamp;
 
     // Check the header
     if (!CheckProofOfWork(block.GetHash(), block.nBits, isFork, consensusParams))
@@ -3125,7 +3127,8 @@ static bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, 
 
 static bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true)
 {
-    bool isFork = block.nTime >= 1527625482;
+    // bool isFork = block.nTime >= 1527625482;
+    bool isFork = block.nTime > consensusParams.hardforkTimestamp;
 
     // Check proof of work matches claimed amount
     if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, isFork, consensusParams))
@@ -3150,6 +3153,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     if (fCheckMerkleRoot) {
         bool mutated;
         uint256 hashMerkleRoot2 = BlockMerkleRoot(block, &mutated);
+
         if (block.hashMerkleRoot != hashMerkleRoot2)
             return state.DoS(100, false, REJECT_INVALID, "bad-txnmrklroot", true, "hashMerkleRoot mismatch");
 

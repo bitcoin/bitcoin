@@ -181,7 +181,7 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, bool ifForked, const Con
     if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(ifForked ? params.powLimitStart : params.powLimit)) {
         return false;
     }
-
+    
     // Check proof of work matches claimed amount
     if (UintToArith256(hash) > bnTarget) {
         return false;

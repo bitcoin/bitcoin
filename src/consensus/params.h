@@ -71,6 +71,7 @@ struct Params {
     uint256 defaultAssumeValid;
 
     int hardforkHeight;
+    int64_t hardforkTimestamp;
     std::string premineAddress;
     CAmount premineValue;
 };

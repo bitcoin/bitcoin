@@ -11,15 +11,18 @@
 #include "utilstrencodings.h"
 #include "crypto/common.h"
 #include "versionbits.h"
+#include "consensus/params.h"
+#include "chainparams.h"
 
 /*
  * All magic is happening here :D
  */
-uint256 CBlockHeader::GetHash() const
+uint256 CBlockHeader::GetHash(const Consensus::Params& consensusParams) const
 {
-    if (IsMicroBitcoin())
+    // if (IsMicroBitcoin())
+    if (nTime > consensusParams.hardforkTimestamp)
     {
-        XCoin::CGroestlHashWriter ss(SER_GETHASH, PROTOCOL_VERSION); //GRS
+        XCoin::CGroestlHashWriter ss(SER_GETHASH, PROTOCOL_VERSION); // GRS
         ss << *this;
         return ss.GetHash();
     } else {
@@ -27,9 +30,15 @@ uint256 CBlockHeader::GetHash() const
     }
 }
 
+uint256 CBlockHeader::GetHash() const
+{
+    const Consensus::Params& consensusParams = Params().GetConsensus();
+    return GetHash(consensusParams);
+}
+
 bool CBlockHeader::IsMicroBitcoin() const
 {
-    return nTime > 1527625482; // 525000
+    return nTime > Params().GetConsensus().hardforkTimestamp;
 }
 
 std::string CBlock::ToString() const

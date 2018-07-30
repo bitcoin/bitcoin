@@ -59,6 +59,7 @@ public:
     };
 
     const Consensus::Params& GetConsensus() const { return consensus; }
+    bool IsMBC(int nTime) const { return nTime > consensus.hardforkTimestamp; }
     const CMessageHeader::MessageStartChars& MessageStart() const { return pchMessageStart; }
     const CMessageHeader::MessageStartChars& BitcoinMessageStart() const { return pchBitcoinMessageStart; }
     int GetDefaultPort() const { return nDefaultPort; }
