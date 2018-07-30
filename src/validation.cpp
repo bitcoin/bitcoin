@@ -1262,8 +1262,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 			bool bAlreadyCheckedSyscoinInputs = false;
 			int op;
 			std::vector<std::vector<unsigned char> > vvchArgs;
-			for (int i = 0; i < vChecks.size();i++) {
-				const CScriptCheck& check = vChecks[i];
+			for (auto &check : vChecks) {
 				if (bSysVersion && !bAlreadyCheckedSyscoinInputs && DecodeAssetAllocationTx(tx, op, vvchArgs))
 				{
 					if (op == OP_ASSET_ALLOCATION_SEND) {
@@ -1280,13 +1279,11 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 				}
 				else
 					bCheckSyscoinInputs = false;
-				bool bLastCheck = i == vChecks.size()-1;
-				std::packaged_task<void()> t([&pool, ptx, hash, coins_to_uncache, check, bCheckSyscoinInputs, bLastCheck, hashCacheEntry]() {
+
+				std::packaged_task<void()> t([&pool, ptx, hash, coins_to_uncache, hashCacheEntry, check, bCheckSyscoinInputs]() {
 					CValidationState vstate;
 					CCoinsViewCache vView(pcoinsTip);
 					const CTransaction& txIn = *ptx;
-					if (GetTime() - nLastMultithreadMempoolFailure < 60)
-						return;
 					if (!check())
 					{
 						LOCK2(cs_main, mempool.cs);
@@ -1301,28 +1298,20 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 						nLastMultithreadMempoolFailure = GetTime();
 						return;
 					}
-					if (bCheckSyscoinInputs)
+					if (bCheckSyscoinInputs && !CheckSyscoinInputs(txIn, vstate, vView, true, chainActive.Height(), CBlock()))
 					{
-						if (GetTime() - nLastMultithreadMempoolFailure < 60)
-							return;
-						if (!CheckSyscoinInputs(txIn, vstate, vView, true, chainActive.Height(), CBlock()))
-						{
-							LOCK2(cs_main, mempool.cs);
-							LogPrint("mempool", "%s: %s\n", "CheckSyscoinInputs Error", hash.ToString());
-							BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
-								pcoinsTip->Uncache(hashTx);
-							pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
-							pool.ClearPrioritisation(hash);
-							// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
-							CValidationState stateDummy;
-							FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
-							nLastMultithreadMempoolFailure = GetTime();
-							scriptExecutionCache.remove(hashCacheEntry);
-							return;
-						}
+						LOCK2(cs_main, mempool.cs);
+						LogPrint("mempool", "%s: %s\n", "CheckSyscoinInputs Error", hash.ToString());
+						BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
+							pcoinsTip->Uncache(hashTx);
+						pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
+						pool.ClearPrioritisation(hash);
+						// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
+						CValidationState stateDummy;
+						FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
+						nLastMultithreadMempoolFailure = GetTime();
 					}
-					if(bLastCheck)
-						scriptExecutionCache.insert(hashCacheEntry);
+					scriptExecutionCache.insert(hashCacheEntry);
 				});
 				int numTries = 100;
 				while (!threadpool.tryPost(t)) {
@@ -1334,7 +1323,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 					}
 					MilliSleep(1);
 				}
-				
 			}
 	
 		}
