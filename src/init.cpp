@@ -77,6 +77,7 @@
 #include "escrow.h"
 #include "asset.h"
 #include "assetallocation.h"
+#include "thread_pool/thread_pool.hpp"
 #ifndef WIN32
 #include <signal.h>
 #endif
@@ -95,7 +96,6 @@
 #if ENABLE_ZMQ
 #include "zmq/zmqnotificationinterface.h"
 #endif
-
 extern void ThreadSendAlert(CConnman& connman);
 
 bool fFeeEstimatesInitialized = false;
@@ -103,7 +103,6 @@ static const bool DEFAULT_PROXYRANDOMIZE = true;
 static const bool DEFAULT_REST_ENABLE = false;
 static const bool DEFAULT_DISABLE_SAFEMODE = false;
 static const bool DEFAULT_STOPAFTERBLOCKIMPORT = false;
-
 
 std::unique_ptr<CConnman> g_connman;
 std::unique_ptr<PeerLogicValidation> peerLogic;
@@ -331,6 +330,10 @@ void PrepareShutdown()
         delete pblocktree;
         pblocktree = NULL;
     }
+	if (threadpool)
+		delete threadpool;
+	threadpool = NULL;
+	    LogPrint("threadpool", "THREADPOOL::Destroyed threadpool\n");
 #ifdef ENABLE_WALLET
     if (pwalletMain)
         pwalletMain->Flush(true);
@@ -1411,7 +1414,10 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         for (int i=0; i<nScriptCheckThreads-1; i++)
             threadGroup.create_thread(&ThreadScriptCheck);
     }
-
+	if (!threadpool) {
+		threadpool = new tp::ThreadPool;
+		LogPrint("threadpool", "THREADPOOL::Created threadpool\n");
+	}
     if (!sporkManager.SetSporkAddress(GetArg("-sporkaddr", Params().SporkAddress())))
         return InitError(_("Invalid spork address specified with -sporkaddr"));
 
@@ -1437,7 +1443,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
             return InitError(_("Unable to start HTTP server. See debug log for details."));
     }
 
-    int64_t nStart;
+    int64_t nStart = 0;
 
     // ********************************************************* Step 5: Backup wallet and verify wallet database integrity
 #ifdef ENABLE_WALLET

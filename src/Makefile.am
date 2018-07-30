@@ -86,7 +86,6 @@ SYSCOIN_CORE_H = \
   escrow.h \
   feedback.h \
   auxpow.h \
-  thread_pool/thread_pool.hpp \
   thread_pool/fixed_function.hpp \
   thread_pool/mpmc_bounded_queue.hpp \
   thread_pool/thread_pool_state.hpp \
@@ -211,7 +210,7 @@ SYSCOIN_CORE_H = \
   wallet/walletdb.h \
   warnings.h \
   zmq/zmqabstractnotifier.h \
-  zmq/zmqconfig.h\
+  zmq/zmqconfig.h \
   zmq/zmqnotificationinterface.h \
   zmq/zmqpublishnotifier.h
 

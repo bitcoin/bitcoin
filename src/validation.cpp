@@ -86,7 +86,7 @@ int nScriptCheckThreads = 0;
 // SYSCOIN
 int64_t nLastMultithreadMempoolFailure = 0;
 bool fLoaded = false;
-tp::ThreadPool threadpool;
+tp::ThreadPool *threadpool = NULL;
 std::atomic_bool fImporting(false);
 bool fReindex = false;
 bool fTxIndex = true;
@@ -1255,14 +1255,47 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 			if (!pool.exists(hash))
 				return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
 		}
-		if (bMultiThreaded)
+		if (bMultiThreaded && threadpool != NULL)
 		{
-			std::packaged_task<void()> t([&pool, ptx, hash, coins_to_uncache, hashCacheEntry, vChecks]() {
-				CValidationState vstate;
-				CCoinsViewCache vView(pcoinsTip);
+			// track worker thread metrics
+			static int totalWorkerCount = 0;
+			static int totalExecutionCount = 0;
+
+			static int totalCheckCount = 0;
+			static int totalCheckMicros = 0;
+
+			static int totalSyscoinCheckCount = 0;
+			static int totalSyscoinCheckMicros = 0;
+
+			static int concurrentExecutionCount = 0;
+			static int maxConcurrentExecutionCount = 0;
+
+			static int64_t totalExecutionMicros = 0;
+			static int64_t minExecutionMicros = 1000000000;
+			static int64_t maxExecutionMicros = 0;
+
+			// define a task for the worker to process
+			std::packaged_task<void()> task([&pool, ptx, hash, coins_to_uncache, hashCacheEntry, vChecks]() {
+				LogPrint("threadpool", "THREADPOOL::%s:Signature check started\n", hash.ToString());
+				// metrics
+				const int64_t &time = GetTimeMicros();
+				int thisCheckCount = 0;
+				int thisSyscoinCheckCount = 0;
+				int thisCheckMicros = 0;
+				int thisSyscoinCheckMicros = 0;
+				totalExecutionCount += 1;
+				concurrentExecutionCount += 1;
+
+				CValidationState validationState;
+				CCoinsViewCache coinsViewCache(pcoinsTip);
 				const CTransaction& txIn = *ptx;
-				for (auto &check : vChecks) {
-					if (!check())
+				bool isCheckPassing = true;  // optimistic in case vChecks is empty
+				const int64_t &checkTime = GetTimeMicros();
+				for (auto &check : vChecks)
+				{
+					thisCheckCount += 1;
+					isCheckPassing = check();
+					if (!isCheckPassing)
 					{
 						LOCK2(cs_main, mempool.cs);
 						LogPrint("mempool", "%s: %s\n", "CheckInputs Error", hash.ToString());
@@ -1274,41 +1307,107 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 						CValidationState stateDummy;
 						FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
 						nLastMultithreadMempoolFailure = GetTime();
-						return;
+						break;
 					}
 				}
-				if (!CheckSyscoinInputs(txIn, vstate, vView, true, chainActive.Height(), CBlock()))
+				// how long did we run check()'s
+				thisCheckMicros = GetTimeMicros() - checkTime;
+
+				if (isCheckPassing)
 				{
-					LOCK2(cs_main, mempool.cs);
-					LogPrint("mempool", "%s: %s\n", "CheckSyscoinInputs Error", hash.ToString());
-					BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
-						pcoinsTip->Uncache(hashTx);
-					pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
-					pool.ClearPrioritisation(hash);
-					// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
-					CValidationState stateDummy;
-					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
-					nLastMultithreadMempoolFailure = GetTime();
+					const int64_t &syscoinCheckTime = GetTimeMicros();
+					thisSyscoinCheckCount += 1;
+					if (!CheckSyscoinInputs(txIn, validationState, coinsViewCache, true, chainActive.Height(), CBlock()))
+					{
+						LOCK2(cs_main, mempool.cs);
+						LogPrint("mempool", "%s: %s\n", "CheckSyscoinInputs Error", hash.ToString());
+						BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
+							pcoinsTip->Uncache(hashTx);
+						pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
+						pool.ClearPrioritisation(hash);
+						// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
+						CValidationState stateDummy;
+						FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
+						nLastMultithreadMempoolFailure = GetTime();
+					}
+					scriptExecutionCache.insert(hashCacheEntry);
+
+					// how long did we run CheckSyscoinInputs()'s
+					thisSyscoinCheckMicros = GetTimeMicros() - syscoinCheckTime;
 				}
-				scriptExecutionCache.insert(hashCacheEntry);		
+
+				// metrics
+				const int64_t &thisExecutionMicros = GetTimeMicros() - time;
+				if (thisExecutionMicros < minExecutionMicros) {
+					minExecutionMicros = thisExecutionMicros;
+				}
+				if (thisExecutionMicros > maxExecutionMicros) {
+					maxExecutionMicros = thisExecutionMicros;
+				}
+				if (concurrentExecutionCount > maxConcurrentExecutionCount) {
+					maxConcurrentExecutionCount = concurrentExecutionCount;
+				}
+				totalCheckCount += thisCheckCount;
+				totalCheckMicros += thisCheckMicros;
+				totalSyscoinCheckCount += thisSyscoinCheckCount;
+				totalSyscoinCheckMicros += thisSyscoinCheckMicros;
+
+				totalExecutionMicros += thisExecutionMicros;
+
+				int thisAvgCheckMicros = thisCheckMicros / thisCheckCount;
+
+				// logging
+				LogPrint("threadpool", 
+					"THREADPOOL::%s:Signature check finished - execution time %lld microseconds, check(%d): total %lld, avg %lld microseconds, syscoin(%d): %lld microseconds, \n", 
+					hash.ToString(), thisExecutionMicros, thisCheckCount, thisCheckMicros, thisAvgCheckMicros, thisSyscoinCheckCount, thisSyscoinCheckMicros);
+
+				int avgCheckMicros = totalCheckMicros / totalCheckCount;
+				int avgSyscoinCheckMicros = totalSyscoinCheckMicros / totalSyscoinCheckCount;
+				int avgExecutionMicros = totalExecutionMicros / totalExecutionCount;
+
+				// every 100th transaction or when debug=threadpool
+				std::string messageCounts = "THREADPOOL::%s:Signature check executions - concurrent: %d, max concurrent: %d, total calls: %d\n";
+				std::string messageInternals = "THREADPOOL::%s:Signature check internals - check(%d): total %lld, avg %lld microseconds, syscoin(%d): total %lld, avg %lld microseconds\n";
+				std::string messageMicros = "THREADPOOL::%s:Signature check timing - avg: %lld, min: %lld, max: %lld, total: %lld microseconds\n";
+				if (totalExecutionCount % 100 == 0) {
+					LogPrintf(messageCounts, hash.ToString(), concurrentExecutionCount, maxConcurrentExecutionCount, totalExecutionCount);
+					LogPrintf(messageInternals, hash.ToString(), totalCheckCount, totalCheckMicros, avgCheckMicros, totalSyscoinCheckCount, totalSyscoinCheckMicros, avgSyscoinCheckMicros);
+					LogPrintf(messageMicros, hash.ToString(), avgExecutionMicros, minExecutionMicros, maxExecutionMicros, totalExecutionMicros);
+				} else {
+					LogPrint("threadpool", messageCounts, hash.ToString(), concurrentExecutionCount, maxConcurrentExecutionCount, totalExecutionCount);
+					LogPrint("threadpool", messageInternals, hash.ToString(), totalCheckCount, totalCheckMicros, avgCheckMicros, totalSyscoinCheckCount, totalSyscoinCheckMicros, avgSyscoinCheckMicros);
+					LogPrint("threadpool", messageMicros, hash.ToString(), avgExecutionMicros, minExecutionMicros, maxExecutionMicros, totalExecutionMicros);
+				}
+
+				// indicate that this thread is done
+				concurrentExecutionCount -= 1;
 			});
-			int numTries = 100;
-			while (!threadpool.tryPost(t)) {
-				numTries--;
-				if (numTries <= 0) {
-					return state.DoS(0, false,
-						REJECT_INVALID, "threadpool-full", false,
-						"AcceptToMemoryPoolWorker: thread pool queue is full");
+
+			// retry if the threadpool queue is full and return error if we can't post
+			bool isThreadPosted = false;
+			for (int numTries = 1; numTries <= 50; numTries++)
+			{
+				// send task to threadpool pointer from init.cpp
+				isThreadPosted = threadpool->tryPost(task);
+				if (isThreadPosted)
+				{
+					totalWorkerCount += 1;
+					LogPrint("threadpool", "THREADPOOL::%s:Signature check task #%d added in %d tries\n", hash.ToString(), totalWorkerCount, numTries);
+					break;
 				}
-				MilliSleep(1);
+				LogPrintf("THREADPOOL::AcceptToMemoryPoolWorker: thread pool queue is full\n");
+				MilliSleep(10);
 			}
-	
+			if (!isThreadPosted)
+			{
+				return state.DoS(0, false, REJECT_INVALID, "threadpool-full", false, "AcceptToMemoryPoolWorker: thread pool queue is full");
+			}
 		}
 	}
 
 	GetMainSignals().SyncTransaction(tx, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
-	
-    return true;
+
+	return true;
 }
 
 bool AcceptToMemoryPoolWithTime(CTxMemPool& pool, CValidationState &state, const CTransactionRef &tx, bool fLimitFree,
@@ -1621,12 +1720,12 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, C
 		nSubsidy *= 0.75;
 		if (nHeight > 0 && nStartHeight > 0) {
 			unsigned int nDifferenceInBlocks = 0;
-			if (nStartHeight < nHeight)
-				nDifferenceInBlocks = (nHeight - nStartHeight);
+			if (nHeight > (int)nStartHeight)
+				nDifferenceInBlocks = (nHeight - (int)nStartHeight);
 			// the first three intervals should discount rewards to incentivize bonding over longer terms (we add 3% premium every interval)
 			double fSubsidyAdjustmentPercentage = 0;
 			for (int i = 1; i <= consensusParams.nTotalSeniorityIntervals; i++) {
-				const int &nTotalSeniorityBlocks = i*consensusParams.nSeniorityInterval;
+				const unsigned int &nTotalSeniorityBlocks = i*consensusParams.nSeniorityInterval;
 				if (nDifferenceInBlocks <= nTotalSeniorityBlocks)
 					break;
 				fSubsidyAdjustmentPercentage += 0.03;
@@ -2630,8 +2729,11 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 	CAmount nTotalRewardWithMasternodes;
 	const CAmount &blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), nTotalRewardWithMasternodes);
 
-	if (!IsBlockPayeeValid(*block.vtx[0], pindex->nHeight, blockReward, nFees, nTotalRewardWithMasternodes)) {
-		mapRejectedBlocks.insert(std::make_pair(block.GetHash(), GetTime()));
+	if (!IsBlockPayeeValid(*block.vtx[0], pindex->nHeight, blockReward, nTotalRewardWithMasternodes)) {
+		{
+			LOCK(cs_main);
+			mapRejectedBlocks.insert(std::make_pair(block.GetHash(), GetTime()));
+		}
 		return state.DoS(0, error("ConnectBlock(SYS): couldn't find masternode or superblock payments"),
 			REJECT_INVALID, "bad-cb-payee");
 	}
@@ -2749,9 +2851,9 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode, int n
     if (nLastSetChain == 0) {
         nLastSetChain = nNow;
     }
-    int64_t nMempoolSizeMax = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
-    int64_t cacheSize = pcoinsTip->DynamicMemoryUsage() * DB_PEAK_USAGE_FACTOR;
-    int64_t nTotalSpace = nCoinCacheUsage + std::max<int64_t>(nMempoolSizeMax - nMempoolUsage, 0);
+    size_t nMempoolSizeMax = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
+    size_t cacheSize = pcoinsTip->DynamicMemoryUsage() * DB_PEAK_USAGE_FACTOR;
+    size_t nTotalSpace = nCoinCacheUsage + std::max<int64_t>(nMempoolSizeMax - nMempoolUsage, 0);
     // The cache is large and we're within 10% and 10 MiB of the limit, but we have time now (not in the middle of a block processing).
     bool fCacheLarge = mode == FLUSH_STATE_PERIODIC && cacheSize > std::max((9 * nTotalSpace) / 10, nTotalSpace - MAX_BLOCK_COINSDB_USAGE * 1024 * 1024);
     // The cache is over the limit, we have to write now.

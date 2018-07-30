@@ -115,8 +115,8 @@ class CMasternodePaymentVote
 {
 public:
     COutPoint masternodeOutpoint;
-	int nStartHeight;
     int nBlockHeight;
+    int nStartHeight;
     CScript payee;
     std::vector<unsigned char> vchSig;
 
