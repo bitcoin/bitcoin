@@ -61,6 +61,7 @@ struct Params {
     uint256 nSuperblockStartHash;
     int nSuperblockCycle; // in blocks
     int nGovernanceMinQuorum; // Min absolute vote count to trigger an action
+	int nShareFeeBlock; // when to start enforcing 50/50 sharing of tx fees with masternodes
     int nGovernanceFilterElements;
     int nMasternodeMinimumConfirmations;
     /** Block height and hash at which BIP34 becomes active */
