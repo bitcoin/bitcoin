@@ -1259,10 +1259,23 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 		{
 			bool bSysVersion = tx.nVersion == SYSCOIN_TX_VERSION;
 			bool bCheckSyscoinInputs = false;
+			bool bAlreadyCheckedSyscoinInputs = false;
+			int op;
+			std::vector<std::vector<unsigned char> > vvchArgs;
 			for (auto &check : vChecks) {
-				if (bSysVersion && !bCheckSyscoinInputs)
+				if (bSysVersion && !bAlreadyCheckedSyscoinInputs && DecodeAssetAllocationTx(tx, op, vvchArgs))
 				{
-					bCheckSyscoinInputs = true;
+					if (op == OP_ASSET_ALLOCATION_SEND) {
+						CAssetAllocation allocation(tx);
+						CTxDestination dest;
+						if (!ExtractDestination(check.scriptPubKey, dest))
+							continue;
+						if (CSyscoinAddress(dest).ToString() == stringFromVch(allocation.vchAliasOrAddress)) {
+							bAlreadyCheckedSyscoinInputs = true;
+							bCheckSyscoinInputs = true;
+							break;
+						}
+					}
 				}
 				std::packaged_task<void()> t([&pool, ptx, hash, coins_to_uncache, hashCacheEntry, check, bCheckSyscoinInputs]() {
 					CValidationState vstate;
