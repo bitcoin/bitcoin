@@ -1289,7 +1289,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 						return;
 					if (!check())
 					{
-						nLastMultithreadMempoolFailure = GetTime();
 						LOCK2(cs_main, mempool.cs);
 						LogPrint("mempool", "%s: %s\n", "CheckInputs Error", hash.ToString());
 						BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
@@ -1299,7 +1298,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 						// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
 						CValidationState stateDummy;
 						FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
-						
+						nLastMultithreadMempoolFailure = GetTime();
 						return;
 					}
 					if (bCheckSyscoinInputs)
@@ -1308,7 +1307,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 							return;
 						if (!CheckSyscoinInputs(txIn, vstate, vView, true, chainActive.Height(), CBlock()))
 						{
-							nLastMultithreadMempoolFailure = GetTime();
 							LOCK2(cs_main, mempool.cs);
 							LogPrint("mempool", "%s: %s\n", "CheckSyscoinInputs Error", hash.ToString());
 							BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
@@ -1318,6 +1316,8 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 							// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
 							CValidationState stateDummy;
 							FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
+							nLastMultithreadMempoolFailure = GetTime();
+							scriptExecutionCache.remove(hashCacheEntry);
 							return;
 						}
 					}
