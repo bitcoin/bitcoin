@@ -10,7 +10,7 @@
 #include <vector>
 
 /**
- * CBaseChainParams defines the base parameters (shared between bitcoin-cli and xpchaind)
+ * CBaseChainParams defines the base parameters (shared between xpchain-cli and xpchaind)
  * of a given instance of the Bitcoin system.
  */
 class CBaseChainParams

@@ -617,7 +617,7 @@ UniValue echo(const JSONRPCRequest& request)
             "echo|echojson \"message\" ...\n"
             "\nSimply echo back the input arguments. This command is for testing.\n"
             "\nThe difference between echo and echojson is that echojson has argument conversion enabled in the client-side table in"
-            "bitcoin-cli and the GUI. There is no server-side difference."
+            "xpchain-cli and the GUI. There is no server-side difference."
         );
 
     return request.params;
@@ -631,7 +631,7 @@ static UniValue getinfo_deprecated(const JSONRPCRequest& request)
         "- getblockchaininfo: blocks, difficulty, chain\n"
         "- getnetworkinfo: version, protocolversion, timeoffset, connections, proxy, relayfee, warnings\n"
         "- getwalletinfo: balance, keypoololdest, keypoolsize, paytxfee, unlocked_until, walletversion\n"
-        "\nbitcoin-cli has the option -getinfo to collect and format these in the old format."
+        "\nxpchain-cli has the option -getinfo to collect and format these in the old format."
     );
 }
 

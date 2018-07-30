@@ -404,13 +404,13 @@ xpchaind_LDADD = \
 xpchaind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
 
 # xpchain-cli binary #
-xpchain_cli_SOURCES = bitcoin-cli.cpp
+xpchain_cli_SOURCES = xpchain-cli.cpp
 xpchain_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
 xpchain_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 xpchain_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-xpchain_cli_SOURCES += bitcoin-cli-res.rc
+xpchain_cli_SOURCES += xpchain-cli-res.rc
 endif
 
 xpchain_cli_LDADD = \
