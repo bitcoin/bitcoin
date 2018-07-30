@@ -117,7 +117,7 @@ void FreespaceChecker::check()
 Intro::Intro(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::Intro),
-    thread(0),
+    thread(nullptr),
     signalled(false)
 {
     ui->setupUi(this);
