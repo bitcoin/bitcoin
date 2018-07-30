@@ -99,6 +99,7 @@ private Q_SLOTS:
     void createAssetButtonClicked();
     void ressieAssetButtonClicked();
     void refreshButtonClicked();
+    void mineButtonClicked();
     /** RVN END */
 
     Q_SIGNALS:

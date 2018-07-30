@@ -37,6 +37,32 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="mineButton">
+       <property name="text">
+        <string>Mine Block</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="mineBlocksCount">
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <number>1000</number>
+       </property>
+       <property name="singleStep">
+        <number>10</number>
+       </property>
+       <property name="value">
+        <number>1</number>
+       </property>
+       <property name="displayIntegerBase">
+        <number>10</number>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="horizontalSpacer_3">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -635,7 +661,7 @@
         <x>0</x>
         <y>0</y>
         <width>1044</width>
-        <height>278</height>
+        <height>274</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,1">

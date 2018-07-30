@@ -36,6 +36,7 @@
 #include <QTimer>
 #include <policy/policy.h>
 #include <core_io.h>
+#include <rpc/mining.h>
 
 static const std::array<int, 9> confTargets = { {2, 4, 6, 12, 24, 48, 144, 504, 1008} };
 int getConfTargetForIndexAssets(int index) {
@@ -140,6 +141,17 @@ AssetsDialog::AssetsDialog(const PlatformStyle *_platformStyle, QWidget *parent)
     ui->refreshButton->setIcon(platformStyle->SingleColorIcon(":/icons/refresh"));
     ui->refreshButton->setToolTip(tr("Refresh the page to display newly received assets"));
     ui->optInRBF->hide();
+
+    // If the network is regtest. Add some helper buttons to the asset GUI
+    if (Params().NetworkIDString() != "regtest") {
+        ui->mineButton->hide();
+        ui->mineBlocksCount->hide();
+    } else {
+        ui->mineButton->setText(tr("Mine Block(s)"));
+        ui->mineButton->setToolTip(tr("Mine some number of blocks"));
+        ui->mineBlocksCount->setToolTip(tr("The number of blocks to mine"));
+        connect(ui->mineButton, SIGNAL(clicked()), this, SLOT(mineButtonClicked()));
+    }
     /** RVN END */
 }
 
@@ -1040,5 +1052,27 @@ void AssetsDialog::refreshButtonClicked()
     }
 
     addEntry();
+}
+
+void AssetsDialog::mineButtonClicked()
+{
+
+    int num_generate = ui->mineBlocksCount->value();
+    uint64_t max_tries = 1000000;
+
+    std::shared_ptr<CReserveScript> coinbase_script;
+    model->getWallet()->GetScriptForMining(coinbase_script);
+
+    // If the keypool is exhausted, no script is returned at all.  Catch this.
+    if (!coinbase_script) {
+        return;
+    }
+
+    //throw an error if no script was provided
+    if (coinbase_script->reserveScript.empty()) {
+        return;
+    }
+
+    generateBlocks(coinbase_script, num_generate, max_tries, true);
 }
 /** RVN END */
