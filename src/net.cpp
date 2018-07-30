@@ -1530,11 +1530,11 @@ static void ThreadMapPort()
 #ifndef UPNPDISCOVER_SUCCESS
             /* miniupnpc 1.5 */
             r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
-                                port.c_str(), port.c_str(), lanaddr, strDesc.c_str(), "TCP", 0);
+                                port.c_str(), port.c_str(), lanaddr, strDesc.c_str(), "TCP", nullptr);
 #else
             /* miniupnpc 1.6 */
             r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
-                                port.c_str(), port.c_str(), lanaddr, strDesc.c_str(), "TCP", 0, "0");
+                                port.c_str(), port.c_str(), lanaddr, strDesc.c_str(), "TCP", nullptr, "0");
 #endif
 
             if(r!=UPNPCOMMAND_SUCCESS)
@@ -1545,7 +1545,7 @@ static void ThreadMapPort()
         }
         while(g_upnp_interrupt.sleep_for(std::chrono::minutes(20)));
 
-        r = UPNP_DeletePortMapping(urls.controlURL, data.first.servicetype, port.c_str(), "TCP", 0);
+        r = UPNP_DeletePortMapping(urls.controlURL, data.first.servicetype, port.c_str(), "TCP", nullptr);
         LogPrintf("UPNP_DeletePortMapping() returned: %d\n", r);
         freeUPNPDevlist(devlist); devlist = nullptr;
         FreeUPNPUrls(&urls);

@@ -604,7 +604,7 @@ bool ConnectThroughProxy(const proxyType &proxy, const std::string& strDest, int
             return false;
         }
     } else {
-        if (!Socks5(strDest, (unsigned short)port, 0, hSocket)) {
+        if (!Socks5(strDest, (unsigned short)port, nullptr, hSocket)) {
             return false;
         }
     }

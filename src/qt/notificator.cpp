@@ -39,7 +39,7 @@ Notificator::Notificator(const QString &_programName, QSystemTrayIcon *_trayIcon
     mode(None),
     trayIcon(_trayIcon)
 #ifdef USE_DBUS
-    ,interface(0)
+    ,interface(nullptr)
 #endif
 {
     if(_trayIcon && _trayIcon->supportsMessages())

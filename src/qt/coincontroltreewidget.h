@@ -13,7 +13,7 @@ class CoinControlTreeWidget : public QTreeWidget
     Q_OBJECT
 
 public:
-    explicit CoinControlTreeWidget(QWidget *parent = 0);
+    explicit CoinControlTreeWidget(QWidget *parent = nullptr);
 
 protected:
     virtual void keyPressEvent(QKeyEvent *event);

@@ -452,7 +452,7 @@ private:
 
 TorController::TorController(struct event_base* _base, const std::string& _target):
     base(_base),
-    target(_target), conn(base), reconnect(true), reconnect_ev(0),
+    target(_target), conn(base), reconnect(true), reconnect_ev(nullptr),
     reconnect_timeout(RECONNECT_TIMEOUT_START)
 {
     reconnect_ev = event_new(base, -1, 0, reconnect_cb, this);

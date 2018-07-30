@@ -113,8 +113,8 @@ public:
 OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::OverviewPage),
-    clientModel(0),
-    walletModel(0),
+    clientModel(nullptr),
+    walletModel(nullptr),
     txdelegate(new TxViewDelegate(platformStyle, this))
 {
     ui->setupUi(this);
