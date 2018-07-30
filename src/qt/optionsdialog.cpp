@@ -29,8 +29,8 @@
 OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     QDialog(parent),
     ui(new Ui::OptionsDialog),
-    model(0),
-    mapper(0)
+    model(nullptr),
+    mapper(nullptr)
 {
     ui->setupUi(this);
 

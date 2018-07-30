@@ -30,7 +30,7 @@ public:
         EditSendingAddress
     };
 
-    explicit EditAddressDialog(Mode mode, QWidget *parent = 0);
+    explicit EditAddressDialog(Mode mode, QWidget *parent = nullptr);
     ~EditAddressDialog();
 
     void setModel(AddressTableModel *model);

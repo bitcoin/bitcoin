@@ -194,10 +194,10 @@ bool PaymentServer::ipcSendCommandLine()
 PaymentServer::PaymentServer(QObject* parent, bool startLocalServer) :
     QObject(parent),
     saveURIs(true),
-    uriServer(0),
-    optionsModel(0)
+    uriServer(nullptr),
+    optionsModel(nullptr)
 #ifdef ENABLE_BIP70
-    ,netManager(0)
+    ,netManager(nullptr)
 #endif
 {
 #ifdef ENABLE_BIP70

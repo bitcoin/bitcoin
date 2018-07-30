@@ -59,7 +59,7 @@ protected:
 AddressBookPage::AddressBookPage(const PlatformStyle *platformStyle, Mode _mode, Tabs _tab, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::AddressBookPage),
-    model(0),
+    model(nullptr),
     mode(_mode),
     tab(_tab)
 {

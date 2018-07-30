@@ -60,7 +60,7 @@ public:
         }
     }
 
-    CAmount value(bool *valid_out=0) const
+    CAmount value(bool *valid_out=nullptr) const
     {
         return parse(text(), valid_out);
     }
@@ -159,7 +159,7 @@ private:
      * return validity.
      * @note Must return 0 if !valid.
      */
-    CAmount parse(const QString &text, bool *valid_out=0) const
+    CAmount parse(const QString &text, bool *valid_out=nullptr) const
     {
         CAmount val = 0;
         bool valid = BitcoinUnits::parse(currentUnit, text, &val);
