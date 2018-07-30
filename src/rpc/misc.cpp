@@ -9,22 +9,21 @@
 #include <clientversion.h>
 #include <core_io.h>
 #include <crypto/ripemd160.h>
-#include <httpserver.h>
 #include <init.h>
+#include <validation.h>
+#include <httpserver.h>
 #include <net.h>
 #include <netbase.h>
 #include <rpc/blockchain.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <timedata.h>
-#include <txmempool.h>
 #include <util.h>
 #include <utilstrencodings.h>
-#include <validation.h>
 #ifdef ENABLE_WALLET
+#include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
-#include <wallet/rpcwallet.h>
 #endif
 #include <warnings.h>
 
