@@ -1,4 +1,4 @@
-// Copyright (c) 2016 The Syscoin Core developers
+// Copyright (c) 2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -21,7 +21,7 @@ struct PaymentAmount
 void SendSnapShotPayment(const std::string &strSend, const std::string &asset, const std::string &alias, const std::string &memo)
 {
 	currentTx++;
-	std::string strSendMany = "assetsend " + asset + " " + alias + " " + strSend + "}]\" " + memo + " ''";
+	std::string strSendMany = "assetsend " + asset + " " + strSend + "}]\" " + memo + " ''";
 	UniValue r;
 	BOOST_CHECK_THROW(r = CallRPC("mainnet1", strSendMany, false), runtime_error);
 }

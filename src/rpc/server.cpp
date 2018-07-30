@@ -1,6 +1,7 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Syscoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -273,9 +274,11 @@ static const CRPCCommand vRPCCommands[] =
   //  --------------------- ------------------------  -----------------------  ------ ----------
   // SYSCOIN rpc functions
 	{ "wallet", "aliasnew",          &aliasnew,          false ,  {}},
+	{ "wallet", "aliasnewestimatedfee",          &aliasnewestimatedfee,          false ,{} },
 	{ "wallet", "syscointxfund",          &syscointxfund,          false ,  {}},
 	
 	{ "wallet", "aliasupdate",       &aliasupdate,       false ,  {}},
+	{ "wallet", "aliasupdateestimatedfee",       &aliasupdateestimatedfee,       false ,{} },
 	{ "wallet", "aliasinfo",         &aliasinfo,         false ,  {}},
 	{ "wallet", "aliasbalance",      &aliasbalance,         false ,  {}},
 	{ "wallet", "aliasbalancemulti",      &aliasbalancemulti,         false ,{} },

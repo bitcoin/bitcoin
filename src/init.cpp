@@ -1,6 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Syscoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -256,6 +257,11 @@ void PrepareShutdown()
         flatdb3.Dump(governance);
         CFlatDB<CNetFulfilledRequestManager> flatdb4("netfulfilled.dat", "magicFulfilledCache");
         flatdb4.Dump(netfulfilledman);
+        if(fEnableInstantSend)
+        {
+            CFlatDB<CInstantSend> flatdb5("instantsend.dat", "magicInstantSendCache");
+            flatdb5.Dump(instantsend);
+        }
     }
 
     UnregisterNodeSignals(GetNodeSignals());
@@ -1999,6 +2005,16 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         CFlatDB<CNetFulfilledRequestManager> flatdb4(strDBName, "magicFulfilledCache");
         if(!flatdb4.Load(netfulfilledman)) {
             return InitError(_("Failed to load fulfilled requests cache from") + "\n" + (pathDB / strDBName).string());
+        }
+
+        if(fEnableInstantSend)
+        {
+            strDBName = "instantsend.dat";
+            uiInterface.InitMessage(_("Loading InstantSend data cache..."));
+            CFlatDB<CInstantSend> flatdb5(strDBName, "magicInstantSendCache");
+            if(!flatdb5.Load(instantsend)) {
+                return InitError(_("Failed to load InstantSend data cache from") + "\n" + (pathDB / strDBName).string());
+            }
         }
     }
 

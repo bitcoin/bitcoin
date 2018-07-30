@@ -1,4 +1,4 @@
-# Copyright (c) 2013-2016 The Syscoin Core developers
+# Copyright (c) 2013-2016 The Bitcoin Core developers
 # Copyright (c) 2014-2018 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -88,9 +88,11 @@ SYSCOIN_CORE_H = \
   auxpow.h \
   thread_pool/fixed_function.hpp \
   thread_pool/mpmc_bounded_queue.hpp \
-  thread_pool/thread_pool.hpp \
+  thread_pool/thread_pool_state.hpp \
   thread_pool/thread_pool_options.hpp \
   thread_pool/worker.hpp \
+  thread_pool/slotted_bag.hpp \
+  thread_pool/rouser.hpp \
   addrdb.h \
   activemasternode.h \
   addressindex.h \

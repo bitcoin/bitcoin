@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2017 The Syscoin Core developers
+// Copyright (c) 2015-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -165,15 +165,13 @@ string escrowFromOp(int op) {
 }
 bool CEscrow::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
     try {
-        CDataStream dsEscrow(vchData, SER_NETWORK, PROTOCOL_VERSION);
-        dsEscrow >> *this;
-
-		vector<unsigned char> vchEscrowData;
-		Serialize(vchEscrowData);
-		const uint256 &calculatedHash = Hash(vchEscrowData.begin(), vchEscrowData.end());
-		const vector<unsigned char> &vchRandEscrow = vchFromValue(calculatedHash.GetHex());
-		if(vchRandEscrow != vchHash)
-		{
+		CDataStream dsEscrow(vchData, SER_NETWORK, PROTOCOL_VERSION);
+		dsEscrow >> *this;
+		vector<unsigned char> vchSerializedData;
+		Serialize(vchSerializedData);
+		const uint256 &calculatedHash = Hash(vchSerializedData.begin(), vchSerializedData.end());
+		const vector<unsigned char> &vchRand = vchFromValue(calculatedHash.GetHex());
+		if (vchRand != vchHash) {
 			SetNull();
 			return false;
 		}
@@ -322,7 +320,7 @@ bool DecodeEscrowScript(const CScript& script, int& op,
 		}
 		if (!(opcode >= 0 && opcode <= OP_PUSHDATA4))
 			return false;
-		vvch.push_back(vch);
+		vvch.emplace_back(std::move(vch));
 	}
 
 	// move the pc to after any DROP or NOP
@@ -661,7 +659,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4040 - " + _("Linked offer auction requires a witness signature for each bid but none provided");
 						return true;
 					}
-				}
+				}	
 				theEscrow.fBidPerUnit = serializedEscrow.fBidPerUnit;
 				theEscrow.nAmountOrBidPerUnit = serializedEscrow.nAmountOrBidPerUnit;
 				theEscrow.txHash = tx.GetHash();
@@ -910,6 +908,11 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 		}
 		else
 		{
+			if (vvchAliasArgs[0] != theEscrow.vchBuyerAlias)
+			{
+				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4064 - " + _("Only buyer can initiate an escrow");
+				return true;
+			}
 			COffer myLinkOffer;
 			if (fJustCheck && GetEscrow(serializedEscrow.vchEscrow, theEscrow))
 			{
@@ -993,7 +996,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 		}
 
 		if (!bSanityCheck) {
-			if (strResponseEnglish != "") {
+			if (!strResponseEnglish.empty()) {
 				user1 = stringFromVch(theEscrow.vchBuyerAlias);
 				user2 = stringFromVch(theEscrow.vchSellerAlias);
 				user3 = stringFromVch(theEscrow.vchArbiterAlias);
@@ -1064,7 +1067,7 @@ UniValue escrowbid(const JSONRPCRequest& request) {
 	theEscrow.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
 
-	vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
+	vector<unsigned char> vchHashEscrow = vchFromString(hash.GetHex());
 
 	CScript scriptPubKeyOrigBuyer;
 	scriptPubKeyOrigBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_BID) << vchHashEscrow << OP_2DROP << OP_DROP;
@@ -1135,7 +1138,7 @@ UniValue escrowaddshipping(const JSONRPCRequest& request) {
 	theEscrow.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
 
-	vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
+	vector<unsigned char> vchHashEscrow = vchFromString(hash.GetHex());
 
 	CScript scriptPubKeyOrigBuyer;
 	scriptPubKeyOrigBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_ADD_SHIPPING) << vchHashEscrow << OP_2DROP << OP_DROP;
@@ -1401,7 +1404,7 @@ UniValue escrownew(const JSONRPCRequest& request) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4517 - " + _("Cannot include deposit when using Buy It Now"));
 	}
 
-    vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashEscrow = vchFromString(hash.GetHex());
 	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_ACTIVATE) << vchHashEscrow << OP_2DROP << OP_DROP;
 	scriptPubKeyBuyer += scriptPubKeyAliasOrig;
 
@@ -1479,7 +1482,7 @@ UniValue escrowacknowledge(const JSONRPCRequest& request) {
 	escrow.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
 
-	vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
+	vector<unsigned char> vchHashEscrow = vchFromString(hash.GetHex());
 
 	CScript scriptPubKeyOrigBuyer;
 
@@ -1738,7 +1741,7 @@ UniValue escrowrelease(const JSONRPCRequest& request) {
 	escrow.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
 
-    vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashEscrow = vchFromString(hash.GetHex());
 
     CScript scriptPubKeyOrigSeller;
 
@@ -1814,7 +1817,7 @@ UniValue escrowcompleterelease(const JSONRPCRequest& request) {
 	escrow.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
 
-    vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashEscrow = vchFromString(hash.GetHex());
     scriptPubKeyBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_RELEASE_COMPLETE) << vchHashEscrow << OP_2DROP << OP_DROP;
     scriptPubKeyBuyer += sellerScript;
 	vector<CRecipient> vecSend;
@@ -1926,7 +1929,7 @@ UniValue escrowrefund(const JSONRPCRequest& request) {
 	escrow.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
 
-	vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
+	vector<unsigned char> vchHashEscrow = vchFromString(hash.GetHex());
 
 	CScript scriptPubKeyOrigSeller;
 
@@ -2005,7 +2008,7 @@ UniValue escrowcompleterefund(const JSONRPCRequest& request) {
 	escrow.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
 
-	vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
+	vector<unsigned char> vchHashEscrow = vchFromString(hash.GetHex());
 	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_REFUND_COMPLETE) << vchHashEscrow << OP_2DROP << OP_DROP;
 	scriptPubKeyBuyer += buyerScript;
 	vector<CRecipient> vecSend;
@@ -2173,7 +2176,7 @@ UniValue escrowfeedback(const JSONRPCRequest& request) {
 	escrow.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
 
-    vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashEscrow = vchFromString(hash.GetHex());
 	CScript scriptPubKeyBuyer, scriptPubKeySeller,scriptPubKeyArbiter;
 	vector<CRecipient> vecSend;
 	CRecipient recipientBuyer, recipientSeller, recipientArbiter;

@@ -10,7 +10,6 @@ using namespace std;
 typedef typename std::vector<int> container;
 bool OrderBasedOnArrivalTime(std::vector<CTransactionRef>& blockVtx) {
 	std::vector<vector<unsigned char> > vvchArgs;
-	std::vector<vector<unsigned char> > vvchAliasArgs;
 	std::vector<CTransactionRef> orderedVtx;
 	int op;
 	AssertLockHeld(cs_main);
@@ -26,12 +25,9 @@ bool OrderBasedOnArrivalTime(std::vector<CTransactionRef>& blockVtx) {
 		{
 			if (DecodeAssetAllocationTx(tx, op, vvchArgs))
 			{
-				if (!FindAliasInTx(view, tx, vvchAliasArgs)) {
-					continue;
-				}
 				ArrivalTimesMap arrivalTimes;
 				CAssetAllocation assetallocation(tx);
-				CAssetAllocationTuple assetAllocationTuple(assetallocation.vchAsset, vvchAliasArgs[0]);
+				CAssetAllocationTuple assetAllocationTuple(assetallocation.vchAsset, assetallocation.vchAliasOrAddress);
 				passetallocationdb->ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
 				ArrivalTimesMap::iterator it = arrivalTimes.find(tx.GetHash());
 				if (it != arrivalTimes.end())
@@ -85,7 +81,6 @@ bool OrderBasedOnArrivalTime(std::vector<CTransactionRef>& blockVtx) {
 bool CreateGraphFromVTX(const std::vector<CTransactionRef>& blockVtx, Graph &graph, std::vector<vertex_descriptor> &vertices, IndexMap &mapTxIndex) {
 	AliasMap mapAliasIndex;
 	std::vector<vector<unsigned char> > vvchArgs;
-	std::vector<vector<unsigned char> > vvchAliasArgs;
 	int op;
 	AssertLockHeld(cs_main);
 	CCoinsViewCache view(pcoinsTip);
@@ -97,20 +92,16 @@ bool CreateGraphFromVTX(const std::vector<CTransactionRef>& blockVtx, Graph &gra
 		if (tx.nVersion == SYSCOIN_TX_VERSION)
 		{
 			if (DecodeAssetAllocationTx(tx, op, vvchArgs))
-			{
-				
-				if (!FindAliasInTx(view, tx, vvchAliasArgs)) {
-					continue;
-				}
-				
-				const string& sender = stringFromVch(vvchAliasArgs[0]);
+			{	
+				CAssetAllocation allocation(tx);
+				const string& sender = stringFromVch(allocation.vchAliasOrAddress);
 				AliasMap::const_iterator it = mapAliasIndex.find(sender);
 				if (it == mapAliasIndex.end()) {
 					vertices.push_back(add_vertex(graph));
 					mapAliasIndex[sender] = vertices.size() - 1;
 				}
 				mapTxIndex[mapAliasIndex[sender]].push_back(n);
-				CAssetAllocation allocation(tx);
+				
 				if (!allocation.listSendingAllocationAmounts.empty()) {
 					for (auto& allocationInstance : allocation.listSendingAllocationAmounts) {
 						const string& receiver = stringFromVch(allocationInstance.first);

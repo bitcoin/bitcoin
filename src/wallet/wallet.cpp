@@ -1,6 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Syscoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -3722,6 +3723,12 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                     nIn++;
                 }
                 unsigned int nBytes = ::GetSerializeSize(txNew, SER_NETWORK, PROTOCOL_VERSION);
+
+                if (nBytes > MAX_STANDARD_TX_SIZE) {
+                    // Do not create oversized transactions (bad-txns-oversize).
+                    strFailReason = _("Transaction too large");
+                    return false;
+                }
 
                 CTransaction txNewConst(txNew);
                 dPriority = txNewConst.ComputePriority(dPriority, nBytes);

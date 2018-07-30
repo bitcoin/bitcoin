@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2017 The Syscoin Core developers
+// Copyright (c) 2015-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -27,9 +27,7 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/range/adaptor/reversed.hpp>
-#include <chrono>
 
-using namespace std::chrono;
 using namespace std;
 
 bool IsOfferOp(int op) {
@@ -148,15 +146,13 @@ string offerFromOp(int op) {
 }
 bool COffer::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
     try {
-        CDataStream dsOffer(vchData, SER_NETWORK, PROTOCOL_VERSION);
-        dsOffer >> *this;
-
-		vector<unsigned char> vchOfferData;
-		Serialize(vchOfferData);
-		const uint256 &calculatedHash = Hash(vchOfferData.begin(), vchOfferData.end());
-		const vector<unsigned char> &vchRandOffer = vchFromValue(calculatedHash.GetHex());
-		if(vchRandOffer != vchHash)
-		{
+		CDataStream dsOffer(vchData, SER_NETWORK, PROTOCOL_VERSION);
+		dsOffer >> *this;
+		vector<unsigned char> vchSerializedData;
+		Serialize(vchSerializedData);
+		const uint256 &calculatedHash = Hash(vchSerializedData.begin(), vchSerializedData.end());
+		const vector<unsigned char> &vchRand = vchFromValue(calculatedHash.GetHex());
+		if (vchRand != vchHash) {
 			SetNull();
 			return false;
 		}
@@ -279,7 +275,7 @@ bool DecodeOfferScript(const CScript& script, int& op,
 		}
 		if (!(opcode >= 0 && opcode <= OP_PUSHDATA4))
 			return false;
-		vvch.push_back(vch);
+		vvch.emplace_back(std::move(vch));
 	}
 
 	// move the pc to after any DROP or NOP
@@ -598,6 +594,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, const vector<vector<unsign
 	}
 	else if(op == OP_OFFER_ACTIVATE)
 	{
+		if (theOffer.vchAlias != vvchAlias)
+		{
+			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot create this offer. Offer owner must sign off on this change.");
+			return true;
+		}
 		COfferLinkWhitelistEntry entry;
 		if (GetOffer(theOffer.vchOffer, theOffer))
 		{
@@ -671,7 +672,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, const vector<vector<unsign
 		}
 	}
 	if(!bSanityCheck) {
-		if (strResponseEnglish != "") {
+		if (!strResponseEnglish.empty()) {
 			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theOffer.vchOffer));
 		}
 	}
@@ -681,7 +682,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, const vector<vector<unsign
 	if (!bSanityCheck) {
 		int64_t ms = INT64_MAX;
 		if (fJustCheck) {
-			ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+			ms = GetTimeMillis();
 		}
 		if (!pofferdb->WriteOffer(theOffer, op, ms, fJustCheck))
 		{
@@ -846,7 +847,7 @@ UniValue offernew(const JSONRPCRequest& request) {
 	newOffer.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
 
-    vector<unsigned char> vchHashOffer = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashOffer = vchFromString(hash.GetHex());
 	CSyscoinAddress aliasAddress;
 	GetAddress(alias, &aliasAddress, scriptPubKeyOrig);
 	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_OFFER) << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchHashOffer << OP_2DROP << OP_DROP;
@@ -934,7 +935,7 @@ UniValue offerlink(const JSONRPCRequest& request) {
 	newOffer.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
 
-    vector<unsigned char> vchHashOffer = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashOffer = vchFromString(hash.GetHex());
 	CSyscoinAddress aliasAddress;
 	GetAddress(alias, &aliasAddress, scriptPubKeyOrig);
 	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_OFFER) << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchHashOffer << OP_2DROP << OP_DROP;
@@ -1033,7 +1034,7 @@ UniValue offerupdate(const JSONRPCRequest& request) {
 	if (!fUnitTest) {
 		ArrivalTimesMap arrivalTimes;
 		pofferdb->ReadISArrivalTimes(vchOffer, arrivalTimes);
-		const int64_t & nNow = duration_cast<seconds>(system_clock::now().time_since_epoch()).count();
+		const int64_t & nNow = GetTimeMillis();
 		for (auto& arrivalTime : arrivalTimes) {
 			// if this tx arrived within the minimum latency period flag it as potentially conflicting
 			if ((nNow - (arrivalTime.second / 1000)) < ZDAG_MINIMUM_LATENCY_SECONDS) {
@@ -1134,7 +1135,7 @@ UniValue offerupdate(const JSONRPCRequest& request) {
 	theOffer.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
 
-    vector<unsigned char> vchHashOffer = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashOffer = vchFromString(hash.GetHex());
 	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_OFFER) << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchHashOffer << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 
@@ -1212,17 +1213,14 @@ bool BuildOfferJson(const COffer& theOffer, UniValue& oOffer)
 
 	bool expired = false;
 
-	int64_t expired_time;
-	expired = 0;
 
-	expired_time = 0;
 	vector<unsigned char> vchCert;
 	if(!theOffer.vchCert.empty())
 		vchCert = theOffer.vchCert;
 	oOffer.push_back(Pair("_id", stringFromVch(theOffer.vchOffer)));
 	oOffer.push_back(Pair("cert", stringFromVch(vchCert)));
 	oOffer.push_back(Pair("txid", theOffer.txHash.GetHex()));
-	expired_time =  GetOfferExpiration(theOffer);
+	int64_t expired_time =  GetOfferExpiration(theOffer);
     if(expired_time <= chainActive.Tip()->GetMedianTimePast())
 	{
 		expired = true;
