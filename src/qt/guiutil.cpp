@@ -419,7 +419,7 @@ void openDebugLogfile()
 
 bool openConfigfile()
 {
-    fs::path pathConfig = GetConfigFile(CHAINCOIN_CONF_FILENAME);
+    fs::path pathConfig = GetConfigFile(gArgs.GetArg("-conf", CHAINCOIN_CONF_FILENAME));
 
     /* Create the file */
     fs::ofstream configFile(pathConfig, std::ios_base::app);
@@ -435,7 +435,7 @@ bool openConfigfile()
 
 bool openMNConfigfile()
 {
-    fs::path pathMNConfig = GetMasternodeConfigFile(MASTERNODE_CONF_FILENAME);
+    fs::path pathMNConfig = GetMasternodeConfigFile(gArgs.GetArg("-mnconf", MASTERNODE_CONF_FILENAME));
 
     /* Create the file */
     fs::ofstream configMNFile(pathMNConfig, std::ios_base::app);
