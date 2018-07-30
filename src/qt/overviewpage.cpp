@@ -1,4 +1,5 @@
-// Copyright (c) 2011-2015 The Syscoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
 // Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -300,6 +301,12 @@ void OverviewPage::setWalletModel(WalletModel *model)
         connect(ui->privateSendReset, SIGNAL(clicked()), this, SLOT(privateSendReset()));
         connect(ui->privateSendInfo, SIGNAL(clicked()), this, SLOT(privateSendInfo()));
         connect(ui->togglePrivateSend, SIGNAL(clicked()), this, SLOT(togglePrivateSend()));
+
+        // privatesend buttons will not react to spacebar must be clicked on
+        ui->privateSendAuto->setFocusPolicy(Qt::NoFocus);
+        ui->privateSendReset->setFocusPolicy(Qt::NoFocus);
+        ui->privateSendInfo->setFocusPolicy(Qt::NoFocus);
+        ui->togglePrivateSend->setFocusPolicy(Qt::NoFocus);
     }
 }
 

@@ -1,4 +1,5 @@
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2017-2018 The Syscoin Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -686,11 +687,8 @@ void CGovernanceObject::UpdateSentinelVariables()
 
     // CALCULATE THE MINUMUM VOTE COUNT REQUIRED FOR FULL SIGNAL
 
-    // todo - 12.1 - should be set to `10` after governance vote compression is implemented
     int nAbsVoteReq = std::max(Params().GetConsensus().nGovernanceMinQuorum, nMnCount / 10);
     int nAbsDeleteReq = std::max(Params().GetConsensus().nGovernanceMinQuorum, (2 * nMnCount) / 3);
-    // todo - 12.1 - Temporarily set to 1 for testing - reverted
-    //nAbsVoteReq = 1;
 
     // SET SENTINEL FLAGS TO FALSE
 

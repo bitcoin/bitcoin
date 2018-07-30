@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2017 The Syscoin Core developers
+// Copyright (c) 2015-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -302,7 +302,7 @@ void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient);
 void CreateAliasRecipient(const CScript& scriptPubKey, CRecipient& recipient);
 void CreateFeeRecipient(CScript& scriptPubKey, const std::vector<unsigned char>& data, CRecipient& recipient);
 void CreateAliasRecipient(const CScript& scriptPubKey, CRecipient& recipient);
-CAmount GetDataFee(const CScript& scriptPubKey);
+CAmount GetDataFee(const CScript& scriptPubKey, bool bRequired=false);
 bool IsAliasOp(int op);
 bool GetAlias(const std::vector<unsigned char> &vchAlias, CAliasIndex& alias);
 bool CheckParam(const UniValue& params, const unsigned int index);
@@ -341,4 +341,5 @@ bool IsOutpointMature(const COutPoint& outpoint, bool fUseInstantSend = false);
 UniValue syscointxfund_helper(const std::vector<unsigned char> &vchAlias, const std::vector<unsigned char> &vchWitness, const CRecipient &aliasRecipient, std::vector<CRecipient> &vecSend);
 bool FlushSyscoinDBs();
 void ToLowerCase(std::vector<unsigned char>& vchValue);
+bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, const std::string& ownerAddressToMatch);
 #endif // ALIAS_H

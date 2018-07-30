@@ -1,5 +1,6 @@
-// Copyright (c) 2009-2015 The Syscoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -705,26 +706,23 @@ UniValue dumphdinfo(const JSONRPCRequest& request)
 
     EnsureWalletIsUnlocked();
 
-    // add the base58check encoded extended master if the wallet uses HD
     CHDChain hdChainCurrent;
-    if (pwalletMain->GetHDChain(hdChainCurrent))
-    {
-        if (!pwalletMain->GetDecryptedHDChain(hdChainCurrent))
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "Cannot decrypt HD seed");
+    if (!pwalletMain->GetHDChain(hdChainCurrent))
+        throw JSONRPCError(RPC_WALLET_ERROR, "This wallet is not a HD wallet.");
 
-        SecureString ssMnemonic;
-        SecureString ssMnemonicPassphrase;
-        hdChainCurrent.GetMnemonic(ssMnemonic, ssMnemonicPassphrase);
+    if (!pwalletMain->GetDecryptedHDChain(hdChainCurrent))
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Cannot decrypt HD seed");
 
-        UniValue obj(UniValue::VOBJ);
-        obj.push_back(Pair("hdseed", HexStr(hdChainCurrent.GetSeed())));
-        obj.push_back(Pair("mnemonic", ssMnemonic.c_str()));
-        obj.push_back(Pair("mnemonicpassphrase", ssMnemonicPassphrase.c_str()));
+    SecureString ssMnemonic;
+    SecureString ssMnemonicPassphrase;
+    hdChainCurrent.GetMnemonic(ssMnemonic, ssMnemonicPassphrase);
 
-        return obj;
-    }
+    UniValue obj(UniValue::VOBJ);
+    obj.push_back(Pair("hdseed", HexStr(hdChainCurrent.GetSeed())));
+    obj.push_back(Pair("mnemonic", ssMnemonic.c_str()));
+    obj.push_back(Pair("mnemonicpassphrase", ssMnemonicPassphrase.c_str()));
 
-    return NullUniValue;
+    return obj;
 }
 
 UniValue dumpwallet(const JSONRPCRequest& request)
