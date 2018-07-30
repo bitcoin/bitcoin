@@ -22,7 +22,7 @@ AskPassphraseDialog::AskPassphraseDialog(Mode _mode, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::AskPassphraseDialog),
     mode(_mode),
-    model(0),
+    model(nullptr),
     fCapsLock(false)
 {
     ui->setupUi(this);

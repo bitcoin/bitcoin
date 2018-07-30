@@ -21,7 +21,7 @@
 SendCoinsEntry::SendCoinsEntry(const PlatformStyle *_platformStyle, QWidget *parent) :
     QStackedWidget(parent),
     ui(new Ui::SendCoinsEntry),
-    model(0),
+    model(nullptr),
     platformStyle(_platformStyle)
 {
     ui->setupUi(this);
