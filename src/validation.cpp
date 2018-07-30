@@ -1358,12 +1358,13 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 				// indicate that this thread is done
 				concurrentExecutionCount -= 1;
 			});
-			int avgCheckMicros = totalCheckMicros / totalCheckCount;
-			int avgSyscoinCheckMicros = totalSyscoinCheckMicros / totalSyscoinCheckCount;
-			int avgExecutionMicros = totalExecutionMicros / totalExecutionCount;
+
 
 			// every 100th transaction or when not in unit test mode
-			if (!fUnitTest || (fUnitTest && totalExecutionCount % 100 == 0)) {
+			if (totalCheckCount > 0 && totalSyscoinCheckCount > 0 && totalExecutionCount > 0 && (!fUnitTest || (fUnitTest && totalExecutionCount % 100 == 0))) {
+				int avgCheckMicros = totalCheckMicros / totalCheckCount;
+				int avgSyscoinCheckMicros = totalSyscoinCheckMicros / totalSyscoinCheckCount;
+				int avgExecutionMicros = totalExecutionMicros / totalExecutionCount;
 				const std::string &messageCounts = "THREADPOOL::%s:Signature check executions - concurrent: %d, max concurrent: %d, total calls: %d\n";
 				const std::string &messageInternals = "THREADPOOL::%s:Signature check internals - check(%d): total %lld, avg %lld microseconds, syscoin(%d): total %lld, avg %lld microseconds\n";
 				const std::string &messageMicros = "THREADPOOL::%s:Signature check timing - avg: %lld, min: %lld, max: %lld, total: %lld microseconds\n";
