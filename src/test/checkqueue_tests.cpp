@@ -390,14 +390,13 @@ BOOST_AUTO_TEST_CASE(test_CheckQueueControl_Locks)
         std::atomic<int> nThreads {0};
         std::atomic<int> fails {0};
         for (size_t i = 0; i < 3; ++i) {
-            tg.create_thread(
-                    [&]{
+            tg.create_thread([&queue, &nThreads, &fails] {
                     CCheckQueueControl<FakeCheck> control(queue.get());
                     // While sleeping, no other thread should execute to this point
                     auto observed = ++nThreads;
                     MilliSleep(10);
                     fails += observed  != nThreads;
-                    });
+            });
         }
         tg.join_all();
         BOOST_REQUIRE_EQUAL(fails, 0);
@@ -412,7 +411,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueueControl_Locks)
         bool done_ack{false};
         {
             std::unique_lock<std::mutex> l(m);
-            tg.create_thread([&]{
+            tg.create_thread([&queue, &m, &has_lock, &cv, &has_tried, &done, &done_ack] {
                     CCheckQueueControl<FakeCheck> control(queue.get());
                     std::unique_lock<std::mutex> ll(m);
                     has_lock = true;

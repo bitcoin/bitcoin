@@ -232,7 +232,7 @@ static void test_cache_erase_parallel(size_t megabytes)
     for (uint32_t x = 0; x < 3; ++x)
         /** Each thread is emplaced with x copy-by-value
         */
-        threads.emplace_back([&, x] {
+        threads.emplace_back([&hashes, &mtx, &n_insert, x, &set] {
             boost::shared_lock<boost::shared_mutex> l(mtx);
             size_t ntodo = (n_insert/4)/3;
             size_t start = ntodo*x;
