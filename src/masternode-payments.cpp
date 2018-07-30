@@ -251,13 +251,18 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int nBlockH
     }
 
 	// miner takes 25% of the reward and half fees
-	txNew.vout[0].nValue = (blockReward*0.25) + nHalfFee;
+	txNew.vout[0].nValue = (blockReward*0.25);
+	if (nHeight >= chainparams.GetConsensus().nShareFeeBlock)
+		txNew.vout[0].nValue += nHalfFee;
 	// masternode takes 75% of reward, add/remove some reward depending on seniority and half fees.
 	CAmount nTotalReward;
 	blockReward = GetBlockSubsidy(nBlockHeight, Params().GetConsensus(), nTotalReward, false, true, nStartHeightBlock);
 
     // ... and masternode
-    txoutMasternodeRet = CTxOut(blockReward + nHalfFee, payee);
+    txoutMasternodeRet = CTxOut(blockReward, payee);
+	if (nHeight >= chainparams.GetConsensus().nShareFeeBlock)
+		txoutMasternodeRet.nValue += nHalfFee;
+
     txNew.vout.push_back(txoutMasternodeRet);
 
     CTxDestination address1;
@@ -581,9 +586,11 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew, const
 	for (const auto& payee : vecPayees) {
 		const CScript& payeeScript = payee.GetPayee();
 		nMasternodePayment = GetBlockSubsidy(nHeight, chainparams.GetConsensus(), nTotalRewardWithMasternodes, false, true, payee.nStartHeight);
+		if (nHeight >= chainparams.GetConsensus().nShareFeeBlock)
+			nMasternodePayment += nHalfFee;
 		bool bFoundPayment = false;
 		BOOST_FOREACH(CTxOut txout, txNew.vout) {
-			if (payeeScript == txout.scriptPubKey && (nMasternodePayment+nHalfFee) == txout.nValue) {
+			if (payeeScript == txout.scriptPubKey && nMasternodePayment == txout.nValue) {
 				LogPrint("mnpayments", "CMasternodeBlockPayees::IsTransactionValid -- Found required payment\n");
 				bFoundPayment = true;
 			}
@@ -609,7 +616,9 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew, const
 
 	// if not enough sigs approve longest chain
 	if (nMaxSignatures < MNPAYMENTS_SIGNATURES_REQUIRED) {
-		nTotalRewardWithMasternodes = txNew.GetValueOut() - fee;
+		nTotalRewardWithMasternodes = txNew.GetValueOut();
+		if (nHeight >= chainparams.GetConsensus().nShareFeeBlock)
+			nTotalRewardWithMasternodes  -= fee;
 		return true;
 	}
     LogPrintf("CMasternodeBlockPayees::IsTransactionValid -- ERROR: Missing required payment, possible payees: '%s', amount: %f SYS\n", strPayeesPossible, (float)nMasternodePayment/COIN);
