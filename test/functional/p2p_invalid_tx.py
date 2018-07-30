@@ -5,7 +5,7 @@
 """Test node responses to invalid transactions.
 
 In this test we connect to one node over p2p, and test tx requests."""
-from test_framework.blocktools import create_block, create_coinbase, create_transaction
+from test_framework.blocktools import create_block, create_coinbase, create_tx_with_script
 from test_framework.messages import (
     COIN,
     COutPoint,
@@ -68,7 +68,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         # Transaction will be rejected with code 16 (REJECT_INVALID)
         # and we get disconnected immediately
         self.log.info('Test a transaction that is rejected')
-        tx1 = create_transaction(block1.vtx[0], 0, b'\x64' * 35, 50 * COIN - 12000)
+        tx1 = create_tx_with_script(block1.vtx[0], 0, script_sig=b'\x64' * 35, amount=50 * COIN - 12000)
         node.p2p.send_txs_and_test([tx1], node, success=False, expect_disconnect=True)
 
         # Make two p2p connections to provide the node with orphans
