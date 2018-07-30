@@ -21,6 +21,8 @@
 #include "versionbits.h"
 #include "spentindex.h"
 
+#include "thread_pool/thread_pool.hpp"
+
 #include <algorithm>
 #include <exception>
 #include <map>
@@ -34,7 +36,6 @@
 
 #include <boost/unordered_map.hpp>
 #include <boost/filesystem/path.hpp>
-
 class CBlockIndex;
 class CBlockTreeDB;
 class CBloomFilter;
@@ -552,6 +553,7 @@ extern CCoinsViewCache *pcoinsTip;
 /** Global variable that points to the active block tree (protected by cs_main) */
 extern CBlockTreeDB *pblocktree;
 
+extern tp::ThreadPool* threadpool;
 /**
  * Return the spend height, which is one more than the inputs.GetBestBlock().
  * While checking, GetBestBlock() refers to the parent block. (protected by cs_main)
