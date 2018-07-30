@@ -871,10 +871,10 @@ static UniValue getbalance(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || (request.params.size() > 3 ))
+    if (request.fHelp || request.params.size() > 4)
         throw std::runtime_error(
            (IsDeprecatedRPCEnabled("accounts") ? std::string(
-            "getbalance ( \"account\" minconf include_watchonly )\n"
+            "getbalance ( \"account\" minconf include_watchonly dest_filter )\n"
             "\nIf account is not specified, returns the server's total available balance.\n"
             "The available balance is what the wallet considers currently spendable, and is\n"
             "thus affected by options which limit spendability such as -spendzeroconfchange.\n"
@@ -906,6 +906,10 @@ static UniValue getbalance(const JSONRPCRequest& request)
             "1. (dummy)           (string, optional) Remains for backward compatibility. Must be excluded or set to \"*\".\n"
             "2. minconf           (numeric, optional, default=0) Only include transactions confirmed at least this many times.\n")) +
             "3. include_watchonly (bool, optional, default=false) Also include balance in watch-only addresses (see 'importaddress')\n"
+            "4. dest_filter       (string, optional) Destination filter (only applicable if -avoidreuse is enabled), one of 'mixed', 'clean', or 'dirty'\n"
+            "                     'mixed' will show balance for both clean and dirty outputs (default if -avoidreuse=false)\n"
+            "                     'clean' will show balance for clean outputs only (default if -avoidreuse=true)\n"
+            "                     'dirty' will show balance for dirty outputs only\n"
             "\nResult:\n"
             "amount              (numeric) The total amount in " + CURRENCY_UNIT + " received for this account.\n"
             "\nExamples:\n"
@@ -939,6 +943,8 @@ static UniValue getbalance(const JSONRPCRequest& request)
         filter = filter | ISMINE_WATCH_ONLY;
     }
 
+    DestinationFilter dest_filter = DestinationFilterFromValue(request.params[3]);
+
     if (!account_value.isNull()) {
 
         const std::string& account_param = account_value.get_str();
@@ -951,7 +957,7 @@ static UniValue getbalance(const JSONRPCRequest& request)
         }
     }
 
-    return ValueFromAmount(pwallet->GetBalance(filter, min_depth));
+    return ValueFromAmount(pwallet->GetBalance(filter, min_depth, dest_filter));
 }
 
 static UniValue getunconfirmedbalance(const JSONRPCRequest &request)
@@ -4791,7 +4797,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "dumpwallet",                       &dumpwallet,                    {"filename"} },
     { "wallet",             "encryptwallet",                    &encryptwallet,                 {"passphrase"} },
     { "wallet",             "getaddressinfo",                   &getaddressinfo,                {"address"} },
-    { "wallet",             "getbalance",                       &getbalance,                    {"account|dummy","minconf","include_watchonly"} },
+    { "wallet",             "getbalance",                       &getbalance,                    {"account|dummy","minconf","include_watchonly","dest_filter"} },
     { "wallet",             "getnewaddress",                    &getnewaddress,                 {"label|account","address_type"} },
     { "wallet",             "getrawchangeaddress",              &getrawchangeaddress,           {"address_type"} },
     { "wallet",             "getreceivedbyaddress",             &getreceivedbyaddress,          {"address","minconf"} },
