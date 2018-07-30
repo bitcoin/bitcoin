@@ -1277,9 +1277,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 						}
 					}
 				}
-				else
-					bCheckSyscoinInputs = false;
-
 				std::packaged_task<void()> t([&pool, ptx, hash, coins_to_uncache, hashCacheEntry, check, bCheckSyscoinInputs]() {
 					CValidationState vstate;
 					CCoinsViewCache vView(pcoinsTip);
