@@ -40,6 +40,16 @@
 
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
 
+inline DestinationFilter DestinationFilterFromValue(const UniValue& value)
+{
+    DestinationFilter dest_filter;
+    if (value.isNull()) return DeriveDestinationFilter();
+    if (!ParseDestinationFilter(value.get_str(), dest_filter)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "dest_filter must be one of 'mixed', 'clean', or 'dirty'");
+    }
+    return dest_filter;
+}
+
 bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string& wallet_name)
 {
     if (request.URI.substr(0, WALLET_ENDPOINT_BASE.size()) == WALLET_ENDPOINT_BASE) {
@@ -464,7 +474,7 @@ static UniValue getaddressesbyaccount(const JSONRPCRequest& request)
 
 static CTransactionRef SendMoney(CWallet * const pwallet, const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, const CCoinControl& coin_control, mapValue_t mapValue, std::string fromAccount)
 {
-    CAmount curBalance = pwallet->GetBalance();
+    CAmount curBalance = pwallet->GetBalance(ISMINE_SPENDABLE, 0, coin_control.m_dest_filter);
 
     // Check amount
     if (nValue <= 0)

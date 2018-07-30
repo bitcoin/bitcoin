@@ -922,6 +922,35 @@ bool CWallet::MarkReplaced(const uint256& originalHash, const uint256& newHash)
     return success;
 }
 
+void CWallet::SetDirtyState(const uint256& hash, unsigned int n, bool dirty)
+{
+    const CWalletTx* srctx = GetWalletTx(hash);
+    if (!srctx) return;
+
+    CTxDestination dst;
+    if (ExtractDestination(srctx->tx->vout[n].scriptPubKey, dst)) {
+        if (::IsMine(*this, dst)) {
+            if (dirty && !GetDestData(dst, "dirty", nullptr)) {
+                AddDestData(dst, "dirty", "p"); // p for "present", opposite of absent (null)
+            } else if (!dirty && GetDestData(dst, "dirty", nullptr)) {
+                EraseDestData(dst, "dirty");
+            }
+        }
+    }
+}
+
+bool CWallet::IsDirty(const uint256& hash, unsigned int n) const
+{
+    const CWalletTx* srctx = GetWalletTx(hash);
+    if (srctx) {
+        CTxDestination dst;
+        if (ExtractDestination(srctx->tx->vout[n].scriptPubKey, dst)) {
+            return ::IsMine(*this, dst) && GetDestData(dst, "dirty", nullptr);
+        }
+    }
+    return false;
+}
+
 bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
 {
     LOCK(cs_wallet);
@@ -929,6 +958,14 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
     WalletBatch batch(*database, "r+", fFlushOnClose);
 
     uint256 hash = wtxIn.GetHash();
+
+    if (gArgs.GetBoolArg("-avoidreuse", DEFAULT_AVOIDREUSE)) {
+        // Mark used destinations as dirty
+        for (const CTxIn& txin : wtxIn.tx->vin) {
+            const COutPoint& op = txin.prevout;
+            SetDirtyState(op.hash, op.n, true);
+        }
+    }
 
     // Inserts only if not already there, returns tx inserted or tx found
     std::pair<std::map<uint256, CWalletTx>::iterator, bool> ret = mapWallet.insert(std::make_pair(hash, wtxIn));
@@ -1938,7 +1975,7 @@ CAmount CWalletTx::GetImmatureCredit(bool fUseCache) const
     return 0;
 }
 
-CAmount CWalletTx::GetAvailableCredit(bool fUseCache, const isminefilter& filter) const
+CAmount CWalletTx::GetAvailableCredit(bool fUseCache, const isminefilter& filter, DestinationFilter dest_filter) const
 {
     if (pwallet == nullptr)
         return 0;
@@ -1949,14 +1986,8 @@ CAmount CWalletTx::GetAvailableCredit(bool fUseCache, const isminefilter& filter
 
     CAmount* cache = nullptr;
     bool* cache_used = nullptr;
-
-    if (filter == ISMINE_SPENDABLE) {
-        cache = &nAvailableCreditCached;
-        cache_used = &fAvailableCreditCached;
-    } else if (filter == ISMINE_WATCH_ONLY) {
-        cache = &nAvailableWatchCreditCached;
-        cache_used = &fAvailableWatchCreditCached;
-    }
+    if      (filter == ISMINE_SPENDABLE)  available_credit.Select(dest_filter, &cache_used, &cache);
+    else if (filter == ISMINE_WATCH_ONLY) available_watch_credit.Select(dest_filter, &cache_used, &cache);
 
     if (fUseCache && cache_used && *cache_used) {
         return *cache;
@@ -1966,7 +1997,7 @@ CAmount CWalletTx::GetAvailableCredit(bool fUseCache, const isminefilter& filter
     uint256 hashTx = GetHash();
     for (unsigned int i = 0; i < tx->vout.size(); i++)
     {
-        if (!pwallet->IsSpent(hashTx, i))
+        if (!pwallet->IsSpent(hashTx, i) && DestinationFilterApplies(dest_filter, pwallet->IsDirty(hashTx, i)))
         {
             const CTxOut &txout = tx->vout[i];
             nCredit += pwallet->GetCredit(txout, filter);
@@ -2110,7 +2141,7 @@ void CWallet::ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman
  */
 
 
-CAmount CWallet::GetBalance(const isminefilter& filter, const int min_depth) const
+CAmount CWallet::GetBalance(const isminefilter& filter, const int min_depth, DestinationFilter dest_filter) const
 {
     CAmount nTotal = 0;
     {
@@ -2119,7 +2150,7 @@ CAmount CWallet::GetBalance(const isminefilter& filter, const int min_depth) con
         {
             const CWalletTx* pcoin = &entry.second;
             if (pcoin->IsTrusted() && pcoin->GetDepthInMainChain() >= min_depth) {
-                nTotal += pcoin->GetAvailableCredit(true, filter);
+                nTotal += pcoin->GetAvailableCredit(true, filter, dest_filter);
             }
         }
     }
@@ -2250,6 +2281,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
 
     vCoins.clear();
     CAmount nTotal = 0;
+    DestinationFilter dest_filter = DeriveDestinationFilter(coinControl);
 
     for (const auto& entry : mapWallet)
     {
@@ -2327,6 +2359,10 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
             isminetype mine = IsMine(pcoin->tx->vout[i]);
 
             if (mine == ISMINE_NO) {
+                continue;
+            }
+
+            if (!DestinationFilterApplies(dest_filter, IsDirty(wtxid, i))) {
                 continue;
             }
 
