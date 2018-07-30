@@ -8,6 +8,10 @@ if ENABLE_QT
   dist_man1_MANS+=raven-qt.1
 endif
 
-if BUILD_RAVEN_UTILS
-  dist_man1_MANS+=raven-cli.1 raven-tx.1
+if BUILD_RAVEN_CLI
+  dist_man1_MANS+=raven-cli.1
+endif
+
+if BUILD_RAVEN_TX
+  dist_man1_MANS+=raven-tx.1
 endif

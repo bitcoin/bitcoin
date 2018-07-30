@@ -8,6 +8,7 @@
 
 #include "amount.h"
 
+#include <QSortFilterProxyModel>
 #include <QWidget>
 #include <memory>
 
@@ -37,6 +38,9 @@ public:
     void setClientModel(ClientModel *clientModel);
     void setWalletModel(WalletModel *walletModel);
     void showOutOfSyncWarning(bool fShow);
+    void showAssets();
+    void displayAssetInfo();
+    void hideAssetInfo();
 
 public Q_SLOTS:
     void setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
@@ -59,6 +63,7 @@ private:
 
     TxViewDelegate *txdelegate;
     std::unique_ptr<TransactionFilterProxy> filter;
+    std::unique_ptr<QSortFilterProxyModel> assetFilter;
 
 private Q_SLOTS:
     void updateDisplayUnit();

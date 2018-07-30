@@ -3,12 +3,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <assets/assets.h>
+#include <script/standard.h>
+#include <util.h>
+#include <validation.h>
 #include "tx_verify.h"
 
 #include "consensus.h"
 #include "primitives/transaction.h"
 #include "script/interpreter.h"
 #include "validation.h"
+#include <cmath>
 
 // TODO remove the following dependencies
 #include "chain.h"
@@ -157,7 +162,7 @@ int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& i
     return nSigOps;
 }
 
-bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fCheckDuplicateInputs)
+bool CheckTransaction(const CTransaction& tx, CValidationState &state, CAssetsCache* assetCache, bool fCheckDuplicateInputs, bool fMemPoolCheck)
 {
     // Basic checks that don't depend on any context
     if (tx.vin.empty())
@@ -165,7 +170,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
     if (tx.vout.empty())
         return state.DoS(10, false, REJECT_INVALID, "bad-txns-vout-empty");
     // Size limits (this doesn't take the witness into account, as that hasn't been checked for malleability)
-    if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * WITNESS_SCALE_FACTOR > MAX_BLOCK_WEIGHT)
+    if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * WITNESS_SCALE_FACTOR > GetMaxBlockWeight())
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-oversize");
 
     // Check for negative or overflow output values
@@ -179,6 +184,45 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
         nValueOut += txout.nValue;
         if (!MoneyRange(nValueOut))
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-txouttotal-toolarge");
+
+        /** RVN START */
+        if (!AreAssetsDeployed() && txout.scriptPubKey.IsAsset() && !fReindex)
+            return state.DoS(100, false, REJECT_INVALID, "bad-txns-is-asset-and-asset-not-active");
+
+        // Check for transfers that don't meet the assets units only if the assetCache is not null
+        if (AreAssetsDeployed()) {
+            if (assetCache) {
+                // Get the transfer transaction data from the scriptPubKey
+                if (txout.scriptPubKey.IsTransferAsset()) {
+                    CAssetTransfer transfer;
+                    std::string address;
+                    if (!TransferAssetFromScript(txout.scriptPubKey, transfer, address))
+                        return state.DoS(100, false, REJECT_INVALID, "bad-txns-transfer-asset-bad-deserialize");
+
+                    // If we aren't reindexing
+                    if (!fReindex) {
+                        // If the transfer is an ownership asset. Check to make sure that it is OWNER_ASSET_AMOUNT
+                        if (IsAssetNameAnOwner(transfer.strName)) {
+                            if (transfer.nAmount != OWNER_ASSET_AMOUNT)
+                                return state.DoS(100, false, REJECT_INVALID, "bad-txns-transfer-owner-amount-was-not-1");
+                        } else {
+                            // For all other types of assets, make sure they are sending the right type of units
+                            CNewAsset asset;
+                            if (!assetCache->GetAssetIfExists(transfer.strName, asset))
+                                return state.DoS(100, false, REJECT_INVALID, "bad-txns-transfer-asset-not-exist");
+
+                            if (asset.strName != transfer.strName)
+                                return state.DoS(100, false, REJECT_INVALID, "bad-txns-asset-database-corrupted");
+
+                            if (transfer.nAmount % int64_t(pow(10, (MAX_UNIT - asset.units))) != 0)
+                                return state.DoS(100, false, REJECT_INVALID,
+                                                 "bad-txns-transfer-asset-amount-not-match-units");
+                        }
+                    }
+                }
+            }
+        }
+        /** RVN END */
     }
 
     // Check for duplicate inputs - note that this check is slow so we skip it in CheckBlock
@@ -202,6 +246,49 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
             if (txin.prevout.IsNull())
                 return state.DoS(10, false, REJECT_INVALID, "bad-txns-prevout-null");
     }
+
+    /** RVN START */
+    if (AreAssetsDeployed()) {
+        if (assetCache) {
+            // Get the new asset from the transaction
+            if (tx.IsNewAsset()) {
+                CNewAsset asset;
+                std::string strAddress;
+                if (!AssetFromTransaction(tx, asset, strAddress))
+                    return state.DoS(100, false, REJECT_INVALID, "bad-txns-issue-asset");
+
+                // Validate the new assets information
+                std::string strError = "";
+                if (!IsNewOwnerTxValid(tx, asset.strName, strAddress, strError))
+                    return state.DoS(100, false, REJECT_INVALID, strError);
+
+                if (!asset.IsValid(strError, *assetCache, fMemPoolCheck, fCheckDuplicateInputs))
+                    return state.DoS(100, false, REJECT_INVALID, "bad-txns-" + strError);
+
+            } else if (tx.IsReissueAsset()) {
+                CReissueAsset reissue;
+                std::string strAddress;
+                if (!ReissueAssetFromTransaction(tx, reissue, strAddress))
+                    return state.DoS(100, false, REJECT_INVALID, "bad-txns-reissue-asset");
+
+                bool foundOwnerAsset = false;
+                for (auto out : tx.vout) {
+                    CAssetTransfer transfer;
+                    std::string transferAddress;
+                    if (TransferAssetFromScript(out.scriptPubKey, transfer, transferAddress)) {
+                        if (reissue.strName + OWNER_TAG == transfer.strName) {
+                            foundOwnerAsset = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!foundOwnerAsset)
+                    return state.DoS(100, false, REJECT_INVALID, "bad-txns-reissue-asset-bad-owner-asset");
+            }
+        }
+    }
+    /** RVN END */
 
     return true;
 }
@@ -243,9 +330,74 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
     // Tally transaction fees
     const CAmount txfee_aux = nValueIn - value_out;
     if (!MoneyRange(txfee_aux)) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-outofrange");
+        return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-out-of-range");
     }
 
     txfee = txfee_aux;
+    return true;
+}
+
+//! Check to make sure that the inputs and outputs CAmount match exactly.
+bool Consensus::CheckTxAssets(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs)
+{
+    // are the actual inputs available?
+    if (!inputs.HaveInputs(tx)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-missing-or-spent", false,
+                         strprintf("%s: inputs missing/spent", __func__));
+    }
+
+    // Create map that stores the amount of an asset transaction input. Used to verify no assets are burned
+    std::map<std::string, CAmount> totalInputs;
+
+    for (unsigned int i = 0; i < tx.vin.size(); ++i) {
+        const COutPoint &prevout = tx.vin[i].prevout;
+        const Coin& coin = inputs.AccessCoin(prevout);
+        assert(!coin.IsSpent());
+
+        if (coin.IsAsset()) {
+            std::string strName;
+            CAmount nAmount;
+
+            if (!GetAssetFromCoin(coin, strName, nAmount))
+                return state.DoS(100, false, REJECT_INVALID, "bad-txns-failed-to-get-asset-from-script");
+
+            // Add to the total value of assets in the inputs
+            if (totalInputs.count(strName))
+                totalInputs.at(strName) += nAmount;
+            else
+                totalInputs.insert(make_pair(strName, nAmount));
+        }
+    }
+
+    // Create map that stores the amount of an asset transaction output. Used to verify no assets are burned
+    std::map<std::string, CAmount> totalOutputs;
+
+    for (const auto& txout : tx.vout) {
+        if (txout.scriptPubKey.IsTransferAsset()) {
+            CAssetTransfer transfer;
+            std::string address;
+            if (!TransferAssetFromScript(txout.scriptPubKey, transfer, address))
+                return state.DoS(100, false, REJECT_INVALID, "bad-tx-asset-transfer-bad-deserialize");
+
+            // Add to the total value of assets in the outputs
+            if (totalOutputs.count(transfer.strName))
+                totalOutputs.at(transfer.strName) += transfer.nAmount;
+            else
+                totalOutputs.insert(make_pair(transfer.strName, transfer.nAmount));
+        }
+    }
+
+    // Check the input values and the output values
+    if (totalOutputs.size() != totalInputs.size())
+        return state.DoS(100, false, REJECT_INVALID, "bad-tx-asset-inputs-size-does-not-match-outputs-size");
+
+    for (const auto& outValue : totalOutputs) {
+        if (!totalInputs.count(outValue.first))
+            return state.DoS(100, false, REJECT_INVALID, "bad-tx-asset-inputs-does-not-have-asset-that-is-in-outputs");
+
+        if (totalInputs.at(outValue.first) != outValue.second)
+            return state.DoS(100, false, REJECT_INVALID, "bad-tx-asset-inputs-amount-mismatch-with-outputs-amount");
+    }
+
     return true;
 }

@@ -27,6 +27,8 @@
 #include <memory> // for unique_ptr
 #include <unordered_map>
 
+#include "assets/assets.h"
+
 static bool fRPCRunning = false;
 static bool fRPCInWarmup = true;
 static std::string rpcWarmupStatus("RPC server started");

@@ -121,12 +121,12 @@ class ProxyTest(RavenTestFramework):
 
         if test_onion:
             # Test: outgoing onion connection through node
-            node.addnode("ravenostk4e4re.onion:8767", "onetry")
+            node.addnode("bitcoinostk4e4re.onion:8333", "onetry")
             cmd = proxies[2].queue.get()
             assert(isinstance(cmd, Socks5Command))
             assert_equal(cmd.atyp, AddressType.DOMAINNAME)
-            assert_equal(cmd.addr, b"ravenostk4e4re.onion")
-            assert_equal(cmd.port, 8767)
+            assert_equal(cmd.addr, b"bitcoinostk4e4re.onion")
+            assert_equal(cmd.port, 8333)
             if not auth:
                 assert_equal(cmd.username, None)
                 assert_equal(cmd.password, None)
@@ -147,6 +147,7 @@ class ProxyTest(RavenTestFramework):
         return rv
 
     def run_test(self):
+
         # basic -proxy
         self.node_test(self.nodes[0], [self.serv1, self.serv1, self.serv1, self.serv1], False)
 

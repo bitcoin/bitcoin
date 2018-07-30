@@ -6,6 +6,7 @@
 TESTS += test/test_raven
 bin_PROGRAMS += test/test_raven
 noinst_PROGRAMS += test/test_raven_fuzzy
+noinst_PROGRAMS += test/test_raven_hash
 TEST_SRCDIR = test
 TEST_BINARY=test/test_raven$(EXEEXT)
 
@@ -24,6 +25,10 @@ GENERATED_TEST_FILES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.r
 
 # test_raven binary #
 RAVEN_TESTS =\
+  test/assets/asset_tests.cpp \
+  test/assets/asset_tx_tests.cpp \
+  test/assets/cache_tests.cpp \
+  test/assets/asset_reissue_tests.cpp \
   test/arith_uint256_tests.cpp \
   test/scriptnum10.h \
   test/addrman_tests.cpp \
@@ -32,7 +37,6 @@ RAVEN_TESTS =\
   test/base32_tests.cpp \
   test/base58_tests.cpp \
   test/base64_tests.cpp \
-  test/bech32_tests.cpp \
   test/bip32_tests.cpp \
   test/blockencodings_tests.cpp \
   test/bloom_tests.cpp \
@@ -67,6 +71,8 @@ RAVEN_TESTS =\
   test/sanity_tests.cpp \
   test/scheduler_tests.cpp \
   test/script_P2SH_tests.cpp \
+  test/script_P2PK_tests.cpp \
+  test/script_P2PKH_tests.cpp \
   test/script_tests.cpp \
   test/script_standard_tests.cpp \
   test/scriptnum_tests.cpp \
@@ -130,6 +136,22 @@ test_test_raven_fuzzy_LDADD = \
   $(LIBSECP256K1)
 
 test_test_raven_fuzzy_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+#
+
+# test_raven_hash binary #
+test_test_raven_hash_SOURCES = test/test_raven_hash.cpp
+test_test_raven_hash_CPPFLAGS = $(AM_CPPFLAGS) $(RAVEN_INCLUDES)
+test_test_raven_hash_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_test_raven_hash_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_AP_LDFLAGS)
+
+test_test_raven_hash_LDADD = \
+  $(LIBUNIVALUE) \
+  $(LIBRAVEN_COMMON) \
+  $(LIBRAVEN_UTIL) \
+  $(LIBRAVEN_CONSENSUS) \
+  $(LIBRAVEN_CRYPTO)
+
+test_test_raven_hash_LDADD += $(CRYPTO_LIBS)
 #
 
 nodist_test_test_raven_SOURCES = $(GENERATED_TEST_FILES)

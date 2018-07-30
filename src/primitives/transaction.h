@@ -324,6 +324,11 @@ public:
     // GetValueIn() is a method on CCoinsViewCache, because
     // inputs must be known to compute value in.
 
+    /** RVN START */
+    bool IsNewAsset() const;
+    bool IsReissueAsset() const;
+    /** RVN END */
+
     /**
      * Get the total transaction size in bytes, including witness data.
      * "Total Size" defined in BIP141 and BIP144.

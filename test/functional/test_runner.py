@@ -96,6 +96,10 @@ BASE_SCRIPTS= [
     'multi_rpc.py',
     'proxy_test.py',
     'signrawtransactions.py',
+    'addressindex.py',
+    'timestampindex.py',
+    'spentindex.py',
+    'txindex.py',
     'disconnect_ban.py',
     'decodescript.py',
     'blockchain.py',
@@ -107,14 +111,14 @@ BASE_SCRIPTS= [
     'prioritise_transaction.py',
     # 'invalidblockrequest.py', TODO fix mininode rehash methods to use X16R
     # 'invalidtxrequest.py', TODO fix mininode rehash methods to use X16R
-    # 'p2p-versionbits-warning.py', TODO fix mininode rehash methods to use X16R
+    'p2p-versionbits-warning.py',
     'preciousblock.py',
     'importprunedfunds.py',
     'signmessages.py',
     # 'nulldummy.py',  TODO fix mininode rehash methods to use X16R
     'import-rescan.py',
     # 'mining.py', TODO fix mininode rehash methods to use X16R
-    # 'bumpfee.py', TODO fix mininode rehash methods to use X16R
+    'bumpfee.py',
     'rpcnamedargs.py',
     'listsinceblock.py',
     'p2p-leaktests.py',
@@ -126,6 +130,9 @@ BASE_SCRIPTS= [
     'minchainwork.py',
     # 'p2p-fingerprint.py', TODO fix mininode rehash methods to use X16R
     'uacomment.py',
+    'assets.py',
+    'listmyassets.py',
+    'rawassettransactions.py',
 ]
 
 EXTENDED_SCRIPTS = [
@@ -135,9 +142,9 @@ EXTENDED_SCRIPTS = [
     # vv Tests less than 20m vv
     'smartfees.py',
     # vv Tests less than 5m vv
-    # 'maxuploadtarget.py', TODO fix mininode rehash methods to use X16R
+    'maxuploadtarget.py',
     'mempool_packages.py',
-    #'dbcrash.py',
+    'dbcrash.py',
     # vv Tests less than 2m vv
     'bip68-sequence.py',
     'getblocktemplate_longpoll.py',
@@ -148,12 +155,12 @@ EXTENDED_SCRIPTS = [
     'rpcbind_test.py',
     # vv Tests less than 30s vv
     'assumevalid.py',
-    #'example_test.py', TODO fix mininode rehash methods to use X16R
+    #'example_test.py',
     'txn_doublespend.py',
     'txn_clone.py --mineblock',
     'notifications.py',
     'invalidateblock.py',
-    #'p2p-acceptblock.py',  TODO fix mininode rehash methods to use X16R
+    #'p2p-acceptblock.py',
     'replace-by-fee.py',
 ]
 
@@ -304,7 +311,18 @@ def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_cove
 
     if len(test_list) > 1 and jobs > 1:
         # Populate cache
-        subprocess.check_output([tests_dir + 'create_cache.py'] + flags + ["--tmpdir=%s/cache" % tmpdir])
+        try:
+            subprocess.check_output([tests_dir + 'create_cache.py'] + flags + ["--tmpdir=%s/cache" % tmpdir])
+        except subprocess.CalledProcessError as e:
+            print("\n----<test_runner>----\n")
+            print("Error in create_cache.py:\n")
+            for line in e.output.decode().split('\n'):
+                print(line)
+            print('\n')
+            print(e.returncode)
+            print('\n')
+            print("\n----</test_runner>---\n")
+            raise
 
     #Run Tests
     job_queue = TestHandler(jobs, tests_dir, tmpdir, test_list, flags)

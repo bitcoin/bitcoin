@@ -10,7 +10,7 @@ SUBDIRS += doc/man
 endif
 .PHONY: deploy FORCE
 
-GZIP_ENV="-9n"
+override GZIP_ENV = "-9n"
 export PYTHONPATH
 
 if BUILD_RAVEN_LIBS

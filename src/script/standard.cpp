@@ -4,13 +4,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <base58.h>
+#include <assets/assets.h>
+#include <validation.h>
 #include "script/standard.h"
 
 #include "pubkey.h"
 #include "script/script.h"
 #include "util.h"
 #include "utilstrencodings.h"
-
 
 typedef std::vector<unsigned char> valtype;
 
@@ -31,7 +33,13 @@ const char* GetTxnOutputType(txnouttype t)
     case TX_NULL_DATA: return "nulldata";
     case TX_WITNESS_V0_KEYHASH: return "witness_v0_keyhash";
     case TX_WITNESS_V0_SCRIPTHASH: return "witness_v0_scripthash";
-    case TX_WITNESS_UNKNOWN: return "witness_unknown";
+
+    /** RVN START */
+    case TX_NEW_ASSET: return ASSET_NEW_STRING;
+    case TX_TRANSFER_ASSET: return ASSET_TRANSFER_STRING;
+    case TX_REISSUE_ASSET: return ASSET_REISSUE_STRING;
+    case TX_RESERVED_ASSET: return ASSET_RESERVED_STRING;
+    /** RVN END */
     }
     return nullptr;
 }
@@ -63,6 +71,42 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
         vSolutionsRet.push_back(hashBytes);
         return true;
     }
+    /** RVN START */
+    if (scriptPubKey.IsNewAsset()) {
+        typeRet = TX_NEW_ASSET;
+        std::vector<unsigned char> hashBytes(scriptPubKey.begin()+3, scriptPubKey.begin()+23);
+        vSolutionsRet.push_back(hashBytes);
+        return true;
+    }
+
+    if (scriptPubKey.IsTransferAsset()) {
+        typeRet = TX_TRANSFER_ASSET;
+        std::vector<unsigned char> hashBytes(scriptPubKey.begin()+3, scriptPubKey.begin()+23);
+        vSolutionsRet.push_back(hashBytes);
+        return true;
+    }
+
+    if (scriptPubKey.IsOwnerAsset()) {
+        typeRet = TX_NEW_ASSET;
+        std::vector<unsigned char> hashBytes(scriptPubKey.begin()+3, scriptPubKey.begin()+23);
+        vSolutionsRet.push_back(hashBytes);
+        return true;
+    }
+
+    if (scriptPubKey.IsReissueAsset()) {
+        typeRet = TX_REISSUE_ASSET;
+        std::vector<unsigned char> hashBytes(scriptPubKey.begin()+3, scriptPubKey.begin()+23);
+        vSolutionsRet.push_back(hashBytes);
+        return true;
+    }
+
+    if (scriptPubKey.IsReservedAsset()) {
+        typeRet = TX_RESERVED_ASSET;
+        std::vector<unsigned char> hashBytes(scriptPubKey.begin()+3, scriptPubKey.begin()+23);
+        vSolutionsRet.push_back(hashBytes);
+        return true;
+    }
+    /** RVN END */
 
     int witnessversion;
     std::vector<unsigned char> witnessprogram;
@@ -75,12 +119,6 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
         if (witnessversion == 0 && witnessprogram.size() == 32) {
             typeRet = TX_WITNESS_V0_SCRIPTHASH;
             vSolutionsRet.push_back(witnessprogram);
-            return true;
-        }
-        if (witnessversion != 0) {
-            typeRet = TX_WITNESS_UNKNOWN;
-            vSolutionsRet.push_back(std::vector<unsigned char>{(unsigned char)witnessversion});
-            vSolutionsRet.push_back(std::move(witnessprogram));
             return true;
         }
         return false;
@@ -206,24 +244,12 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
     {
         addressRet = CScriptID(uint160(vSolutions[0]));
         return true;
-    } else if (whichType == TX_WITNESS_V0_KEYHASH) {
-        WitnessV0KeyHash hash;
-        std::copy(vSolutions[0].begin(), vSolutions[0].end(), hash.begin());
-        addressRet = hash;
-        return true;
-    } else if (whichType == TX_WITNESS_V0_SCRIPTHASH) {
-        WitnessV0ScriptHash hash;
-        std::copy(vSolutions[0].begin(), vSolutions[0].end(), hash.begin());
-        addressRet = hash;
-        return true;
-    } else if (whichType == TX_WITNESS_UNKNOWN) {
-        WitnessUnknown unk;
-        unk.version = vSolutions[0][0];
-        std::copy(vSolutions[1].begin(), vSolutions[1].end(), unk.program);
-        unk.length = vSolutions[1].size();
-        addressRet = unk;
+    /** RVN START */
+    } else if (whichType == TX_NEW_ASSET || whichType == TX_REISSUE_ASSET || whichType == TX_TRANSFER_ASSET) {
+        addressRet = CKeyID(uint160(vSolutions[0]));
         return true;
     }
+     /** RVN END */
     // Multisig txns have more than one address...
     return false;
 }
@@ -291,27 +317,6 @@ public:
     bool operator()(const CScriptID &scriptID) const {
         script->clear();
         *script << OP_HASH160 << ToByteVector(scriptID) << OP_EQUAL;
-        return true;
-    }
-
-    bool operator()(const WitnessV0KeyHash& id) const
-    {
-        script->clear();
-        *script << OP_0 << ToByteVector(id);
-        return true;
-    }
-
-    bool operator()(const WitnessV0ScriptHash& id) const
-    {
-        script->clear();
-        *script << OP_0 << ToByteVector(id);
-        return true;
-    }
-
-    bool operator()(const WitnessUnknown& id) const
-    {
-        script->clear();
-        *script << CScript::EncodeOP_N(id.version) << std::vector<unsigned char>(id.program, id.program + id.length);
         return true;
     }
 };

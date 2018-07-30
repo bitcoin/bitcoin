@@ -74,7 +74,6 @@ BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
 
         CBlockHeaderAndShortTxIDs shortIDs2;
         stream >> shortIDs2;
-
         PartiallyDownloadedBlock partialBlock(&pool);
         BOOST_CHECK(partialBlock.InitData(shortIDs2, extra_txn) == READ_STATUS_OK);
         BOOST_CHECK( partialBlock.IsTxAvailable(0));
@@ -86,14 +85,12 @@ BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
         size_t poolSize = pool.size();
         pool.removeRecursive(*block.vtx[2]);
         BOOST_CHECK_EQUAL(pool.size(), poolSize - 1);
-
         CBlock block2;
         {
             PartiallyDownloadedBlock tmp = partialBlock;
             BOOST_CHECK(partialBlock.FillBlock(block2, {}) == READ_STATUS_INVALID); // No transactions
             partialBlock = tmp;
         }
-
         // Wrong transaction
         {
             PartiallyDownloadedBlock tmp = partialBlock;
@@ -102,7 +99,6 @@ BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
         }
         bool mutated;
         BOOST_CHECK(block.hashMerkleRoot != BlockMerkleRoot(block2, &mutated));
-
         CBlock block3;
         BOOST_CHECK(partialBlock.FillBlock(block3, {block.vtx[1]}) == READ_STATUS_OK);
         BOOST_CHECK_EQUAL(block.GetHash().ToString(), block3.GetHash().ToString());

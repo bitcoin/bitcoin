@@ -1,6 +1,0 @@
-usr/local/bin/raven-qt usr/bin
-share/pixmaps/raven32.xpm usr/share/pixmaps
-share/pixmaps/raven16.xpm usr/share/pixmaps
-share/pixmaps/raven128.png usr/share/pixmaps
-debian/raven-qt.desktop usr/share/applications
-debian/raven-qt.protocol usr/share/kde4/services/

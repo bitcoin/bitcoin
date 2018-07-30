@@ -28,7 +28,10 @@ uint256 ParseHashStr(const std::string&, const std::string& strName);
 std::vector<unsigned char> ParseHexUV(const UniValue& v, const std::string& strName);
 
 // core_write.cpp
+std::string ValueFromAmountString(const CAmount& amount, const int8_t units);
+UniValue ValueFromAmount(const CAmount& amount, const int8_t units);
 UniValue ValueFromAmount(const CAmount& amount);
+std::string StringFromAmount(const CAmount& amount, const int8_t units);
 std::string FormatScript(const CScript& script);
 std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags = 0);
 void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex);

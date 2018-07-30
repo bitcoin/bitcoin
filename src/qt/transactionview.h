@@ -37,6 +37,7 @@ public:
     explicit TransactionView(const PlatformStyle *platformStyle, QWidget *parent = 0);
 
     void setModel(WalletModel *model);
+    void showAssets();
 
     // Date ranges for filter
     enum DateEnum
@@ -55,6 +56,7 @@ public:
         WATCHONLY_COLUMN_WIDTH = 23,
         DATE_COLUMN_WIDTH = 120,
         TYPE_COLUMN_WIDTH = 113,
+        ASSET_NAME_MINIMUM_COLUMN_WIDTH = 200,
         AMOUNT_MINIMUM_COLUMN_WIDTH = 120,
         MINIMUM_COLUMN_WIDTH = 23
     };
@@ -69,6 +71,9 @@ private:
     QComboBox *watchOnlyWidget;
     QLineEdit *addressWidget;
     QLineEdit *amountWidget;
+    QLineEdit *assetNameWidget;
+
+    bool showingAssets;
 
     QMenu *contextMenu;
     QSignalMapper *mapperThirdPartyTxUrls;
@@ -94,6 +99,7 @@ private Q_SLOTS:
     void copyAddress();
     void editLabel();
     void copyLabel();
+    void copyAssetName();
     void copyAmount();
     void copyTxID();
     void copyTxHex();
@@ -114,6 +120,7 @@ public Q_SLOTS:
     void chooseType(int idx);
     void chooseWatchonly(int idx);
     void changedAmount();
+    void changedAssetName();
     void changedPrefix();
     void exportClicked();
     void focusTransaction(const QModelIndex&);

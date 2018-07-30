@@ -14,6 +14,7 @@ import logging
 import os
 import random
 import re
+import subprocess
 from subprocess import CalledProcessError
 import time
 
@@ -24,6 +25,10 @@ logger = logging.getLogger("TestFramework.utils")
 
 # Assert functions
 ##################
+
+def assert_contains_pair(key, val, dict):
+    if not (key in dict and val == dict[key]):
+        raise AssertionError("k/v pair (%s,%s) not in dict" % (key, val))
 
 def assert_fee_amount(fee, tx_size, fee_per_kB):
     """Assert the fee was in range"""
@@ -191,6 +196,12 @@ def hash256(byte_str):
     sha256d = hashlib.sha256()
     sha256d.update(sha256.digest())
     return sha256d.digest()[::-1]
+
+x16r_hash_cmd = os.path.dirname(os.path.realpath(__file__)) + "/../../../src/test/test_raven_hash"
+def hash_block(hex_str):
+    cmd = [x16r_hash_cmd, hex_str]
+    hash = subprocess.run(cmd, stdout=subprocess.PIPE, check=True).stdout.decode('ascii')
+    return hash
 
 def hex_str_to_bytes(hex_str):
     return unhexlify(hex_str.encode('ascii'))

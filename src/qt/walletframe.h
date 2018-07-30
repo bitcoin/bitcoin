@@ -46,6 +46,8 @@ public:
 
     void showOutOfSyncWarning(bool fShow);
 
+    void displayAssetInfo();
+
 Q_SIGNALS:
     /** Notify that the user has requested more information about the out-of-sync warning */
     void requestedSyncWarningInfo();
@@ -92,6 +94,12 @@ public Q_SLOTS:
     void usedReceivingAddresses();
     /** Pass on signal over requested out-of-sync-warning information */
     void outOfSyncWarningClicked();
+
+    /** RVN START */
+
+    /** Switch to assets page */
+    void gotoAssetsPage();
+    /** RVN END */
 };
 
 #endif // RAVEN_QT_WALLETFRAME_H

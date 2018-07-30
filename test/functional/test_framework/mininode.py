@@ -28,9 +28,11 @@ import copy
 import hashlib
 from io import BytesIO
 import logging
+import os
 import random
 import socket
 import struct
+import subprocess
 import sys
 import time
 from threading import RLock, Thread
@@ -46,7 +48,7 @@ MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version 
 MAX_INV_SZ = 50000
 MAX_BLOCK_BASE_SIZE = 1000000
 
-COIN = 100000000 # 1 btc in satoshis
+COIN = 100000000 # 1 rvn in corbies
 
 NODE_NETWORK = (1 << 0)
 # NODE_GETUTXO = (1 << 1)
@@ -79,6 +81,12 @@ def ripemd160(s):
 
 def hash256(s):
     return sha256(sha256(s))
+
+x16r_hash_cmd = os.path.dirname(os.path.realpath(__file__)) + "/../../../src/test/test_raven_hash"
+def hash_x16r(s):
+    cmd = [x16r_hash_cmd, s]
+    hash = subprocess.run(cmd, stdout=subprocess.PIPE, check=True).stdout.decode('ascii')
+    return hash
 
 def ser_compact_size(l):
     r = b""
@@ -378,6 +386,21 @@ class CScriptWitness():
             return False
         return True
 
+class CScriptTransfer():
+    def __init__(self):
+        self.name = None
+        self.amount = 0
+
+    def deserialize(self, f):
+        self.name = deser_string(f)
+        self.amount = struct.unpack("<q", f.read(8))[0]
+
+    def serialize(self):
+        r = b""
+        r += ser_string(self.name)
+        r += struct.pack("<q", self.amount)
+        return r
+
 
 class CTxInWitness():
     def __init__(self):
@@ -572,6 +595,7 @@ class CBlockHeader():
         r += struct.pack("<I", self.nNonce)
         return r
 
+    # TODO: rename calc_sha256 and self.sha256 to calc_x16r and self.x16r for clarity
     def calc_sha256(self):
         if self.sha256 is None:
             r = b""
@@ -581,8 +605,8 @@ class CBlockHeader():
             r += struct.pack("<I", self.nTime)
             r += struct.pack("<I", self.nBits)
             r += struct.pack("<I", self.nNonce)
-            self.sha256 = uint256_from_str(hash256(r))
-            self.hash = encode(hash256(r)[::-1], 'hex_codec').decode('ascii')
+            self.hash = hash_x16r(encode(r, 'hex_codec').decode('ascii'))
+            self.sha256 = int(self.hash, 16)
 
     def rehash(self):
         self.sha256 = None

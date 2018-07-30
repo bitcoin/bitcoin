@@ -14,10 +14,13 @@
 #include "platformstyle.h"
 #include "transactionfilterproxy.h"
 #include "transactiontablemodel.h"
+#include "assettablemodel.h"
 #include "walletmodel.h"
 
 #include <QAbstractItemDelegate>
 #include <QPainter>
+#include <validation.h>
+#include <utiltime.h>
 
 #define DECORATION_SIZE 54
 #define NUM_ITEMS 5
@@ -85,12 +88,15 @@ public:
             foreground = option.palette.color(QPalette::Text);
         }
         painter->setPen(foreground);
-        QString amountText = RavenUnits::formatWithUnit(unit, amount, true, RavenUnits::separatorAlways);
+        QString amountText = index.data(TransactionTableModel::FormattedAmountRole).toString();
         if(!confirmed)
         {
             amountText = QString("[") + amountText + QString("]");
         }
-        painter->drawText(amountRect, Qt::AlignRight|Qt::AlignVCenter, amountText);
+        painter->drawText(addressRect, Qt::AlignRight|Qt::AlignVCenter, amountText);
+
+        QString assetName = index.data(TransactionTableModel::AssetNameRole).toString();
+        painter->drawText(amountRect, Qt::AlignRight|Qt::AlignVCenter, assetName);
 
         painter->setPen(option.palette.color(QPalette::Text));
         painter->drawText(amountRect, Qt::AlignLeft|Qt::AlignVCenter, GUIUtil::dateTimeStr(date));
@@ -108,6 +114,7 @@ public:
 
 };
 #include "overviewpage.moc"
+#include "ravengui.h"
 
 OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) :
     QWidget(parent),
@@ -129,6 +136,7 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
     icon.addPixmap(icon.pixmap(QSize(64,64), QIcon::Normal), QIcon::Disabled); // also set the disabled icon because we are using a disabled QPushButton to work around missing HiDPI support of QLabel (https://bugreports.qt.io/browse/QTBUG-42503)
     ui->labelTransactionsStatus->setIcon(icon);
     ui->labelWalletStatus->setIcon(icon);
+    ui->labelAssetStatus->setIcon(icon);
 
     // Recent transactions
     ui->listTransactions->setItemDelegate(txdelegate);
@@ -141,7 +149,11 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
     // start with displaying the "out of sync" warnings
     showOutOfSyncWarning(true);
     connect(ui->labelWalletStatus, SIGNAL(clicked()), this, SLOT(handleOutOfSyncWarningClicks()));
+    connect(ui->labelAssetStatus, SIGNAL(clicked()), this, SLOT(handleOutOfSyncWarningClicks()));
     connect(ui->labelTransactionsStatus, SIGNAL(clicked()), this, SLOT(handleOutOfSyncWarningClicks()));
+
+    // Trigger the call to show the assets table if assets are active
+    showAssets();
 }
 
 void OverviewPage::handleTransactionClicked(const QModelIndex &index)
@@ -231,6 +243,10 @@ void OverviewPage::setWalletModel(WalletModel *model)
         ui->listTransactions->setModel(filter.get());
         ui->listTransactions->setModelColumn(TransactionTableModel::ToAddress);
 
+        assetFilter.reset(new QSortFilterProxyModel());
+        assetFilter->setSourceModel(model->getAssetTableModel());
+        ui->listAssets->setModel(assetFilter.get());
+
         // Keep up to date with wallet
         setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance(),
                    model->getWatchBalance(), model->getWatchUnconfirmedBalance(), model->getWatchImmatureBalance());
@@ -244,6 +260,7 @@ void OverviewPage::setWalletModel(WalletModel *model)
 
     // update the display unit, to not use the default ("RVN")
     updateDisplayUnit();
+    ui->listAssets->resizeColumnsToContents();
 }
 
 void OverviewPage::updateDisplayUnit()
@@ -271,4 +288,142 @@ void OverviewPage::showOutOfSyncWarning(bool fShow)
 {
     ui->labelWalletStatus->setVisible(fShow);
     ui->labelTransactionsStatus->setVisible(fShow);
+    if (AreAssetsDeployed()) {
+        ui->labelAssetStatus->setVisible(fShow);
+    }
+}
+
+void OverviewPage::showAssets()
+{
+    if (AreAssetsDeployed()) {
+        ui->listAssets->show();
+        ui->assetBalanceLabel->show();
+        ui->labelAssetStatus->show();
+    } else {
+        ui->assetBalanceLabel->hide();
+        ui->labelAssetStatus->hide();
+        ui->listAssets->hide();
+    }
+
+    displayAssetInfo();
+}
+
+void OverviewPage::displayAssetInfo()
+{
+    ui->assetInfoTitleLabel->setText("<b>" + tr("Asset Activation Status") + "</b>");
+    ui->assetInfoPercentageLabel->setText(tr("Current Percentage") + ":");
+    ui->assetInfoStatusLabel->setText(tr("Status") + ":");
+    ui->assetInfoBlockLabel->setText(tr("Target Percentage") + ":");
+    ui->assetInfoPossibleLabel->setText(tr("Could Vote Pass") + ":");
+    ui->assetInfoBlocksLeftLabel->setText(tr("Voting Block Cycle") + ":");
+
+    const ThresholdState thresholdState = VersionBitsTipState(Params().GetConsensus(),
+                                                              Consensus::DeploymentPos::DEPLOYMENT_ASSETS);
+    auto startTime = Params().GetConsensus().vDeployments[Consensus::DeploymentPos::DEPLOYMENT_ASSETS].nStartTime * 1000;
+    auto currentTime = GetTimeMillis();
+    auto date = GUIUtil::dateTimeStr(startTime / 1000);
+
+    QString status;
+    switch (thresholdState) {
+        case THRESHOLD_DEFINED:
+            if (currentTime < startTime)
+                status = tr("Waiting until ") + date;
+            else
+                status = tr("Waiting");
+            break;
+        case THRESHOLD_STARTED:
+            status = tr("Voting Started");
+            break;
+        case THRESHOLD_LOCKED_IN:
+            status = tr("Locked in - Not Active");
+            break;
+        case THRESHOLD_ACTIVE:
+            status = tr("Active");
+            break;
+        case THRESHOLD_FAILED:
+            status = tr("Failed");
+            break;
+    }
+
+    if (thresholdState == THRESHOLD_ACTIVE) {
+        hideAssetInfo();
+        return;
+    }
+
+    ui->assetInfoStatusValue->setText(status);
+
+    // Get the current height of the chain
+    auto currentheight = chainActive.Height();
+
+    auto heightLockedIn = VersionBitsTipStateSinceHeight(Params().GetConsensus(),
+                                                         Consensus::DeploymentPos::DEPLOYMENT_ASSETS);
+    auto cycleWidth = Params().GetConsensus().nMinerConfirmationWindow;
+    auto difference = (currentheight - heightLockedIn + 1) % cycleWidth;
+    QString currentCount;
+    currentCount.sprintf("%d/%d blocks", difference, cycleWidth);
+
+    if (thresholdState == THRESHOLD_STARTED) {
+        BIP9Stats statsStruct = VersionBitsTipStatistics(Params().GetConsensus(),
+                                                         Consensus::DeploymentPos::DEPLOYMENT_ASSETS);
+
+        double targetDouble = double(statsStruct.threshold) / double(statsStruct.period);
+        QString targetPercentage;
+        targetPercentage.sprintf("%0.2f%%", targetDouble * 100);
+        ui->assetInfoBlockValue->setText(targetPercentage);
+
+        double currentDouble = double(statsStruct.count) / double(statsStruct.period);
+        QString currentPercentage;
+        currentPercentage.sprintf("%0.2f%%", currentDouble * 100);
+        ui->assetInfoPercentageValue->setText(currentPercentage);
+
+        QString possible = statsStruct.possible ? tr("yes") : tr("no");
+        ui->assetInfoPossibleValue->setText(possible);
+
+        ui->assetInfoBlocksLeftValue->setText(currentCount);
+
+        ui->assetInfoPercentageValue->show();
+        ui->assetInfoBlockValue->show();
+        ui->assetInfoPercentageLabel->show();
+        ui->assetInfoBlockLabel->show();
+        ui->assetInfoPossibleLabel->show();
+        ui->assetInfoPossibleValue->show();
+        ui->assetInfoBlocksLeftLabel->show();
+        ui->assetInfoBlocksLeftValue->show();
+    } else if (thresholdState == THRESHOLD_LOCKED_IN) {
+
+        ui->assetInfoBlockLabel->setText(tr("Active in") + ":");
+        ui->assetInfoBlockValue->setText(currentCount);
+
+        ui->assetInfoPercentageValue->hide();
+        ui->assetInfoPercentageLabel->hide();
+        ui->assetInfoPossibleLabel->hide();
+        ui->assetInfoPossibleValue->hide();
+        ui->assetInfoBlocksLeftLabel->hide();
+        ui->assetInfoBlocksLeftValue->hide();
+    } else {
+        ui->assetInfoPercentageValue->hide();
+        ui->assetInfoBlockValue->hide();
+        ui->assetInfoPercentageLabel->hide();
+        ui->assetInfoBlockLabel->hide();
+        ui->assetInfoPossibleLabel->hide();
+        ui->assetInfoPossibleValue->hide();
+        ui->assetInfoBlocksLeftLabel->hide();
+        ui->assetInfoBlocksLeftValue->hide();
+    }
+}
+
+void OverviewPage::hideAssetInfo()
+{
+    ui->assetInfoPercentageValue->hide();
+    ui->assetInfoBlockValue->hide();
+    ui->assetInfoStatusValue->hide();
+    ui->assetInfoPossibleValue->hide();
+    ui->assetInfoBlocksLeftValue->hide();
+
+    ui->assetInfoTitleLabel->hide();
+    ui->assetInfoBlockLabel->hide();
+    ui->assetInfoStatusLabel->hide();
+    ui->assetInfoPercentageLabel->hide();
+    ui->assetInfoPossibleLabel->hide();
+    ui->assetInfoBlocksLeftLabel->hide();
 }

@@ -1,0 +1,57 @@
+# bash programmable completion for ravend(1) and raven-qt(1)
+# Copyright (c) 2012-2016 The Bitcoin Core developers
+# Copyright (c) 2017 The Raven Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+_ravend() {
+    local cur prev words=() cword
+    local ravend
+
+    # save and use original argument to invoke ravend for -help
+    # it might not be in $PATH
+    ravend="$1"
+
+    COMPREPLY=()
+    _get_comp_words_by_ref -n = cur prev words cword
+
+    case "$cur" in
+        -conf=*|-pid=*|-loadblock=*|-rootcertificates=*|-rpccookiefile=*|-wallet=*)
+            cur="${cur#*=}"
+            _filedir
+            return 0
+            ;;
+        -datadir=*)
+            cur="${cur#*=}"
+            _filedir -d
+            return 0
+            ;;
+        -*=*)	# prevent nonsense completions
+            return 0
+            ;;
+        *)
+
+            # only parse -help if sensible
+            if [[ -z "$cur" || "$cur" =~ ^- ]]; then
+                local helpopts
+                helpopts=$($ravend -help 2>&1 | awk '$1 ~ /^-/ { sub(/=.*/, "="); print $1 }' )
+                COMPREPLY=( $( compgen -W "$helpopts" -- "$cur" ) )
+            fi
+
+            # Prevent space if an argument is desired
+            if [[ $COMPREPLY == *= ]]; then
+                compopt -o nospace
+            fi
+            return 0
+            ;;
+    esac
+} &&
+complete -F _ravend ravend raven-qt
+
+# Local variables:
+# mode: shell-script
+# sh-basic-offset: 4
+# sh-indent-comment: t
+# indent-tabs-mode: nil
+# End:
+# ex: ts=4 sw=4 et filetype=sh

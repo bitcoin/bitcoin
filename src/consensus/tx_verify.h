@@ -15,11 +15,12 @@ class CBlockIndex;
 class CCoinsViewCache;
 class CTransaction;
 class CValidationState;
+class CAssetsCache;
 
 /** Transaction validation functions */
 
 /** Context-independent validity checks */
-bool CheckTransaction(const CTransaction& tx, CValidationState& state, bool fCheckDuplicateInputs=true);
+bool CheckTransaction(const CTransaction& tx, CValidationState& state, CAssetsCache* assetCache = nullptr, bool fCheckDuplicateInputs=true, bool fMemPoolCheck=false);
 
 namespace Consensus {
 /**
@@ -29,6 +30,10 @@ namespace Consensus {
  * Preconditions: tx.IsCoinBase() is false.
  */
 bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee);
+
+/** RVN START */
+bool CheckTxAssets(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs);
+/** RVN END */
 } // namespace Consensus
 
 /** Auxiliary functions for transaction validation (ideally should not be exposed) */

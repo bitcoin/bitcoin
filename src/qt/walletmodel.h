@@ -21,6 +21,7 @@ class OptionsModel;
 class PlatformStyle;
 class RecentRequestsTableModel;
 class TransactionTableModel;
+class AssetTableModel;
 class WalletModelTransaction;
 
 class CCoinControl;
@@ -29,6 +30,8 @@ class COutPoint;
 class COutput;
 class CPubKey;
 class CWallet;
+class CWalletTx;
+class CReserveKey;
 class uint256;
 
 QT_BEGIN_NAMESPACE
@@ -95,6 +98,69 @@ public:
     }
 };
 
+class SendAssetsRecipient
+{
+public:
+    explicit SendAssetsRecipient() : amount(0), nVersion(SendCoinsRecipient::CURRENT_VERSION) { }
+    explicit SendAssetsRecipient(const QString& assetName, const QString &addr, const QString &_label, const CAmount& _amount, const QString &_message):
+            assetName(assetName), address(addr), label(_label), amount(_amount), message(_message), nVersion(SendAssetsRecipient::CURRENT_VERSION) {}
+
+    // If from an unauthenticated payment request, this is used for storing
+    // the addresses, e.g. address-A<br />address-B<br />address-C.
+    // Info: As we don't need to process addresses in here when using
+    // payment requests, we can abuse it for displaying an address list.
+    // Todo: This is a hack, should be replaced with a cleaner solution!
+
+    QString assetName;
+    QString address;
+    QString label;
+    CAmount amount;
+    // If from a payment request, this is used for storing the memo
+    QString message;
+
+    // If from a payment request, paymentRequest.IsInitialized() will be true
+    PaymentRequestPlus paymentRequest;
+    // Empty if no authentication or invalid signature/cert/etc.
+    QString authenticatedMerchant;
+
+    static const int CURRENT_VERSION = 1;
+    int nVersion;
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        std::string sAddress = address.toStdString();
+        std::string sLabel = label.toStdString();
+        std::string sMessage = message.toStdString();
+        std::string sPaymentRequest;
+        std::string sAssetName = assetName.toStdString();
+        if (!ser_action.ForRead() && paymentRequest.IsInitialized())
+            paymentRequest.SerializeToString(&sPaymentRequest);
+        std::string sAuthenticatedMerchant = authenticatedMerchant.toStdString();
+
+        READWRITE(this->nVersion);
+        READWRITE(sAssetName);
+        READWRITE(sAddress);
+        READWRITE(sLabel);
+        READWRITE(amount);
+        READWRITE(sMessage);
+        READWRITE(sPaymentRequest);
+        READWRITE(sAuthenticatedMerchant);
+
+        if (ser_action.ForRead())
+        {
+            assetName = QString::fromStdString(sAssetName);
+            address = QString::fromStdString(sAddress);
+            label = QString::fromStdString(sLabel);
+            message = QString::fromStdString(sMessage);
+            if (!sPaymentRequest.empty())
+                paymentRequest.parse(QByteArray::fromRawData(sPaymentRequest.data(), sPaymentRequest.size()));
+            authenticatedMerchant = QString::fromStdString(sAuthenticatedMerchant);
+        }
+    }
+};
+
 /** Interface to Raven wallet from Qt view code. */
 class WalletModel : public QObject
 {
@@ -128,6 +194,7 @@ public:
     OptionsModel *getOptionsModel();
     AddressTableModel *getAddressTableModel();
     TransactionTableModel *getTransactionTableModel();
+    AssetTableModel *getAssetTableModel();
     RecentRequestsTableModel *getRecentRequestsTableModel();
 
     CAmount getBalance(const CCoinControl *coinControl = nullptr) const;
@@ -159,6 +226,8 @@ public:
 
     // Send coins to a list of recipients
     SendCoinsReturn sendCoins(WalletModelTransaction &transaction);
+
+    SendCoinsReturn sendAssets(CWalletTx& tx, QList<SendAssetsRecipient>& recipients, CReserveKey& reservekey);
 
     // Wallet encryption
     bool setWalletEncrypted(bool encrypted, const SecureString &passphrase);
@@ -219,6 +288,8 @@ public:
 
     bool getDefaultWalletRbf() const;
 
+    CWallet* getWallet() const;
+
 private:
     CWallet *wallet;
     bool fHaveWatchOnly;
@@ -230,6 +301,7 @@ private:
 
     AddressTableModel *addressTableModel;
     TransactionTableModel *transactionTableModel;
+    AssetTableModel *assetTableModel;
     RecentRequestsTableModel *recentRequestsTableModel;
 
     // Cache some values to be able to detect changes
@@ -266,6 +338,9 @@ Q_SIGNALS:
 
     // Coins sent: from wallet, to recipient, in (serialized) transaction:
     void coinsSent(CWallet* wallet, SendCoinsRecipient recipient, QByteArray transaction);
+
+    // Asset sent: from wallet, to recupient, in (serialized) transaction:
+    void assetsSent(CWallet* wallet, SendAssetsRecipient recipient, QByteArray transaction);
 
     // Show progress dialog e.g. for rescan
     void showProgress(const QString &title, int nProgress);

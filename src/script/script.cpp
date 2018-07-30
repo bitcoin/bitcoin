@@ -4,6 +4,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "assets/assets.h"
 #include "script.h"
 
 #include "tinyformat.h"
@@ -140,6 +141,10 @@ const char* GetOpName(opcodetype opcode)
     case OP_NOP9                   : return "OP_NOP9";
     case OP_NOP10                  : return "OP_NOP10";
 
+    /** RVN START */
+    case OP_RVN_ASSET              : return "OP_RVN_ASSET";
+    /** RVN END */
+
     case OP_INVALIDOPCODE          : return "OP_INVALIDOPCODE";
 
     // Note:
@@ -200,6 +205,17 @@ unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
     return subscript.GetSigOpCount(true);
 }
 
+bool CScript::IsPayToPublicKeyHash() const
+{
+    // Extra-fast test for pay-to-pubkey-hash CScripts:
+    return (this->size() == 25 &&
+	    (*this)[0] == OP_DUP &&
+	    (*this)[1] == OP_HASH160 &&
+	    (*this)[2] == 0x14 &&
+	    (*this)[23] == OP_EQUALVERIFY &&
+	    (*this)[24] == OP_CHECKSIG);
+}
+
 bool CScript::IsPayToScriptHash() const
 {
     // Extra-fast test for pay-to-script-hash CScripts:
@@ -208,6 +224,65 @@ bool CScript::IsPayToScriptHash() const
             (*this)[1] == 0x14 &&
             (*this)[22] == OP_EQUAL);
 }
+
+/** RVN START */
+bool CScript::IsNewAsset() const
+{
+    // Extra-fast test for new-asset CScripts:
+    return (this->size() > 39 &&
+            (*this)[25] == OP_RVN_ASSET &&
+            (*this)[27] == RVN_R &&
+            (*this)[28] == RVN_V &&
+            (*this)[29] == RVN_N &&
+            (*this)[30] == RVN_Q);
+}
+
+bool CScript::IsOwnerAsset() const
+{
+    // Extra-fast test for new-asset CScripts:
+    return (this->size() > 30 &&
+            (*this)[25] == OP_RVN_ASSET &&
+            (*this)[27] == RVN_R &&
+            (*this)[28] == RVN_V &&
+            (*this)[29] == RVN_N &&
+            (*this)[30] == RVN_O);
+}
+
+bool CScript::IsReissueAsset() const
+{
+    // Extra-fast test for new-asset CScripts:
+    return (this->size() > 30 &&
+            (*this)[25] == OP_RVN_ASSET &&
+            (*this)[27] == RVN_R &&
+            (*this)[28] == RVN_V &&
+            (*this)[29] == RVN_N &&
+            (*this)[30] == RVN_R);
+}
+
+bool CScript::IsTransferAsset() const
+{
+    // Extra-fast test for new-asset CScripts:
+    return (this->size() > 30 &&
+            (*this)[25] == OP_RVN_ASSET &&
+            (*this)[27] == RVN_R &&
+            (*this)[28] == RVN_V &&
+            (*this)[29] == RVN_N &&
+            (*this)[30] == RVN_T);
+}
+
+bool CScript::IsReservedAsset() const
+{
+    return (this->size() > 30 &&
+            (*this)[25] == OP_RVN_ASSET &&
+            (*this)[27] == RVN_R &&
+            (*this)[28] == RVN_V &&
+            (*this)[29] == RVN_N);
+}
+
+bool CScript::IsAsset() const {
+    return IsTransferAsset() || IsReissueAsset() || IsOwnerAsset() || IsNewAsset() || IsReservedAsset();
+}
+/** RVN END */
 
 bool CScript::IsPayToWitnessScriptHash() const
 {
@@ -231,6 +306,21 @@ bool CScript::IsWitnessProgram(int& version, std::vector<unsigned char>& program
         version = DecodeOP_N((opcodetype)(*this)[0]);
         program = std::vector<unsigned char>(this->begin() + 2, this->end());
         return true;
+    }
+    return false;
+}
+bool CScript::IsPayToPublicKey() const
+{
+    // Test for pay-to-pubkey CScript with both
+    // compressed or uncompressed pubkey
+    if (this->size() == 35) {
+        return ((*this)[1] == 0x02 || (*this)[1] == 0x03) &&
+                (*this)[34] == OP_CHECKSIG;
+    }
+    if (this->size() == 67) {
+        return (*this)[1] == 0x04 &&
+                (*this)[66] == OP_CHECKSIG;
+
     }
     return false;
 }

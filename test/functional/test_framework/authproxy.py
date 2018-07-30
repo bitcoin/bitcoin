@@ -135,6 +135,10 @@ class AuthServiceProxy():
         postdata = json.dumps(self.get_request(*args, **argsn), default=EncodeDecimal, ensure_ascii=self.ensure_ascii)
         response = self._request('POST', self.__url.path, postdata.encode('utf-8'))
         if response['error'] is not None:
+            log.debug("----<authproxy>----")
+            log.debug("Call failed.  postdata:")
+            log.debug(postdata)
+            log.debug("----</authproxy>---")
             raise JSONRPCException(response['error'])
         elif 'result' not in response:
             raise JSONRPCException({
