@@ -53,6 +53,21 @@ public:
     }
 };
 
+enum DestinationFilter
+{
+    DestinationMixed     = 0,
+    DestinationOnlyClean = 1,
+    DestinationOnlyDirty = 2,
+};
+
+bool ParseDestinationFilter(const std::string& str, DestinationFilter& dest_filter);
+const std::string& FormatDestinationFilter(DestinationFilter dest_filter);
+inline bool DestinationFilterApplies(DestinationFilter dest_filter, bool is_dirty) {
+    return
+        (dest_filter == DestinationFilter::DestinationMixed) ||
+        ((dest_filter == DestinationOnlyDirty) == is_dirty);
+}
+
 struct CoinEligibilityFilter
 {
     const int conf_mine;

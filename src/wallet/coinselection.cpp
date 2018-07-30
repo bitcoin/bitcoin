@@ -324,3 +324,26 @@ bool OutputGroup::EligibleForSpending(const CoinEligibilityFilter& eligibility_f
         && m_ancestors <= eligibility_filter.max_ancestors
         && m_descendants <= eligibility_filter.max_descendants;
 }
+
+static const std::string DESTINATION_FILTER_STRING_MIXED = "mixed";
+static const std::string DESTINATION_FILTER_STRING_CLEAN = "clean";
+static const std::string DESTINATION_FILTER_STRING_DIRTY = "dirty";
+
+bool ParseDestinationFilter(const std::string& type, DestinationFilter& dest_filter)
+{
+    if      (type == DESTINATION_FILTER_STRING_MIXED) dest_filter = DestinationFilter::DestinationMixed;
+    else if (type == DESTINATION_FILTER_STRING_CLEAN) dest_filter = DestinationFilter::DestinationOnlyClean;
+    else if (type == DESTINATION_FILTER_STRING_DIRTY) dest_filter = DestinationFilter::DestinationOnlyDirty;
+    else return false;
+    return true;
+}
+
+const std::string& FormatDestinationFilter(DestinationFilter type)
+{
+    switch (type) {
+    case DestinationFilter::DestinationMixed:     return DESTINATION_FILTER_STRING_MIXED;
+    case DestinationFilter::DestinationOnlyClean: return DESTINATION_FILTER_STRING_CLEAN;
+    case DestinationFilter::DestinationOnlyDirty: return DESTINATION_FILTER_STRING_DIRTY;
+    default: assert(false);
+    }
+}
