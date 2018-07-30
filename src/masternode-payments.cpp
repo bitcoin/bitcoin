@@ -252,7 +252,7 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int nBlockH
 
 	// miner takes 25% of the reward and half fees
 	txNew.vout[0].nValue = (blockReward*0.25);
-	if (nHeight >= Params().GetConsensus().nShareFeeBlock)
+	if (nBlockHeight >= Params().GetConsensus().nShareFeeBlock)
 		txNew.vout[0].nValue += nHalfFee;
 	// masternode takes 75% of reward, add/remove some reward depending on seniority and half fees.
 	CAmount nTotalReward;
@@ -260,7 +260,7 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int nBlockH
 
     // ... and masternode
     txoutMasternodeRet = CTxOut(blockReward, payee);
-	if (nHeight >= Params().GetConsensus().nShareFeeBlock)
+	if (nBlockHeight >= Params().GetConsensus().nShareFeeBlock)
 		txoutMasternodeRet.nValue += nHalfFee;
 
     txNew.vout.push_back(txoutMasternodeRet);
