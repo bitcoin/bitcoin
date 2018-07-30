@@ -453,7 +453,7 @@ bool CheckSequenceLocks(const CTransaction &tx, int flags, LockPoints* lp = NULL
 class CScriptCheck
 {
 private:
- 
+    CScript scriptPubKey;
     const CTransaction *ptxTo;
     unsigned int nIn;
     unsigned int nFlags;
@@ -461,7 +461,6 @@ private:
     ScriptError error;
 
 public:
-	CScript scriptPubKey;
     CScriptCheck(): ptxTo(0), nIn(0), nFlags(0), cacheStore(false), error(SCRIPT_ERR_UNKNOWN_ERROR) {}
     CScriptCheck(const CScript& scriptPubKeyIn, const CAmount amountIn, const CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, bool cacheIn) :
         scriptPubKey(scriptPubKeyIn),
