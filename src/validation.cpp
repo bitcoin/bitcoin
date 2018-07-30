@@ -2719,7 +2719,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 	CAmount nTotalRewardWithMasternodes;
 	const CAmount &blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), nTotalRewardWithMasternodes);
 
-	if (!IsBlockPayeeValid(*block.vtx[0], pindex->nHeight, blockReward, nTotalRewardWithMasternodes)) {
+	if (!IsBlockPayeeValid(*block.vtx[0], pindex->nHeight, blockReward, nFees, nTotalRewardWithMasternodes)) {
 		{
 			LOCK(cs_main);
 			mapRejectedBlocks.insert(std::make_pair(block.GetHash(), GetTime()));
