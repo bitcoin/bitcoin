@@ -34,6 +34,8 @@ public:
     boost::optional<bool> m_signal_bip125_rbf;
     //! Avoid partial use of funds sent to a given address
     bool m_avoid_partial_spends;
+    //! Destination filter (allow all, or allow only clean, or allow only dirty outputs)
+    DestinationFilter m_dest_filter;
     //! Fee estimation mode to control arguments to estimateSmartFee
     FeeEstimateMode m_fee_mode;
 

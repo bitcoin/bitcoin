@@ -4454,3 +4454,11 @@ std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outpu
     }
     return groups;
 }
+
+DestinationFilter DeriveDestinationFilter(const CCoinControl* potential_coin_control)
+{
+    if (potential_coin_control) return potential_coin_control->m_dest_filter;
+    return gArgs.GetBoolArg("-avoidreuse", DEFAULT_AVOIDREUSE)
+            ? DestinationFilter::DestinationOnlyClean
+            : DestinationFilter::DestinationMixed;
+}

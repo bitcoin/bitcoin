@@ -78,6 +78,8 @@ class CWalletTx;
 struct FeeCalculation;
 enum class FeeEstimateMode;
 
+DestinationFilter DeriveDestinationFilter(const CCoinControl* potential_coin_control=nullptr);
+
 /** (client) version numbers for particular wallet features */
 enum WalletFeature
 {
