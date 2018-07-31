@@ -46,7 +46,7 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
 
         LogPrint(BCLog::PRIVSEND, "DSACCEPT -- nDenom %d (%s)  txCollateral %s", dsa.nDenom, CPrivateSend::GetDenominationsToString(dsa.nDenom), dsa.txCollateral.GetHash().ToString());
 
-        if(dsa.nInputCount < 0 || dsa.nInputCount > PRIVATESEND_ENTRY_MAX_SIZE) return;
+        if(dsa.nInputCount < 0 || dsa.nInputCount > (int)PRIVATESEND_ENTRY_MAX_SIZE) return;
 
         masternode_info_t mnInfo;
         if(!mnodeman.GetMasternodeInfo(activeMasternode.outpoint, mnInfo)) {
@@ -101,7 +101,7 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
         LogPrint(BCLog::PRIVSEND, "DSQUEUE -- %s new\n", dsq.ToString());
 
         if(dsq.IsExpired()) return;
-        if(dsq.nInputCount < 0 || dsq.nInputCount > PRIVATESEND_ENTRY_MAX_SIZE) return;
+        if(dsq.nInputCount < 0 || dsq.nInputCount > (int)PRIVATESEND_ENTRY_MAX_SIZE) return;
 
         masternode_info_t mnInfo;
         if(!mnodeman.GetMasternodeInfo(dsq.masternodeOutpoint, mnInfo)) return;
@@ -169,13 +169,13 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
             return;
         }
 
-        if(nSessionInputCount != 0 && entry.vecTxDSIn.size() != nSessionInputCount) {
+        if(nSessionInputCount != 0 && (int)entry.vecTxDSIn.size() != nSessionInputCount) {
             LogPrintf("DSVIN -- ERROR: incorrect number of inputs! %d/%d\n", entry.vecTxDSIn.size(), nSessionInputCount);
             PushStatus(pfrom, STATUS_REJECTED, ERR_INVALID_INPUT_COUNT, connman);
             return;
         }
 
-        if(nSessionInputCount != 0 && entry.vecTxOut.size() != nSessionInputCount) {
+        if(nSessionInputCount != 0 && (int)entry.vecTxOut.size() != nSessionInputCount) {
             LogPrintf("DSVIN -- ERROR: incorrect number of outputs! %d/%d\n", entry.vecTxOut.size(), nSessionInputCount);
             PushStatus(pfrom, STATUS_REJECTED, ERR_INVALID_INPUT_COUNT, connman);
             return;
@@ -713,7 +713,7 @@ bool CPrivateSendServer::IsAcceptableDSA(const CDarksendAccept& dsa, PoolMessage
         return false;
     }
 
-    if(dsa.nInputCount < 0 || dsa.nInputCount > PRIVATESEND_ENTRY_MAX_SIZE) {
+    if(dsa.nInputCount < 0 || dsa.nInputCount > (int)PRIVATESEND_ENTRY_MAX_SIZE) {
         LogPrint(BCLog::PRIVSEND, "CPrivateSendServer::%s -- requested count is not valid!\n", __func__);
         nMessageIDRet = ERR_INVALID_INPUT_COUNT;
         return false;
