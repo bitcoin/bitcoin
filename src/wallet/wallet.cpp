@@ -2858,21 +2858,21 @@ const CTxOut& CWallet::FindNonChangeParentOutput(const CTransaction& tx, int out
     return ptx->vout[n];
 }
 
-bool CWallet::OutputEligibleForSpending(const COutput& output, const CoinEligibilityFilter& eligibilty_filter) const
+bool CWallet::OutputEligibleForSpending(const COutput& output, const CoinEligibilityFilter& eligibility_filter) const
 {
     if (!output.fSpendable)
         return false;
 
-    if (output.nDepth < (output.tx->IsFromMe(ISMINE_ALL) ? eligibilty_filter.conf_mine : eligibilty_filter.conf_theirs))
+    if (output.nDepth < (output.tx->IsFromMe(ISMINE_ALL) ? eligibility_filter.conf_mine : eligibility_filter.conf_theirs))
         return false;
 
-    if (!mempool.TransactionWithinChainLimit(output.tx->GetHash(), eligibilty_filter.max_ancestors))
+    if (!mempool.TransactionWithinChainLimit(output.tx->GetHash(), eligibility_filter.max_ancestors))
         return false;
 
     return true;
 }
 
-bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibilityFilter& eligibilty_filter, std::vector<COutput> vCoins,
+bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, std::vector<COutput> vCoins,
                                  std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CoinSelectionParams& coin_selection_params, bool& bnb_used) const
 {
     setCoinsRet.clear();
@@ -2900,7 +2900,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
                 if (tryDenom == 0 && CPrivateSend::IsDenominatedAmount(output.tx->tx->vout[output.i].nValue))
                     continue; // we don't want denom values on first run
 
-                if (!OutputEligibleForSpending(output, eligibilty_filter))
+                if (!OutputEligibleForSpending(output, eligibility_filter))
                     continue;
 
                 CInputCoin coin(output.tx->tx, output.i);
@@ -2928,7 +2928,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
                 if (tryDenom == 0 && CPrivateSend::IsDenominatedAmount(output.tx->tx->vout[output.i].nValue))
                     continue; // we don't want denom values on first run
 
-                if (!OutputEligibleForSpending(output, eligibilty_filter))
+                if (!OutputEligibleForSpending(output, eligibility_filter))
                     continue;
 
                 CInputCoin coin = CInputCoin(output.tx->tx, output.i);
