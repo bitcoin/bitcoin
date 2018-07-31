@@ -253,7 +253,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
 
         auto& newTx = transaction.getWtx();
         std::string rejectReason;
-        if (!newTx->commit({} /* mapValue */, std::move(vOrderForm), {} /* fromAccount */, rejectReason))
+        if (!newTx->commit({} /* mapValue */, std::move(vOrderForm), rejectReason))
             return SendCoinsReturn(TransactionCommitFailed, QString::fromStdString(rejectReason));
 
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
