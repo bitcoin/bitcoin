@@ -99,7 +99,7 @@ def split_inputs(from_node, txins, txouts, initial_split=False):
     txouts.append({"txid": txid, "vout": 0, "amount": half_change})
     txouts.append({"txid": txid, "vout": 1, "amount": rem_change})
 
-def check_estimates(node, fees_seen, max_invalid):
+def check_estimates(node, fees_seen):
     """Call estimatesmartfee and verify that the estimates meet certain invariants."""
 
     delta = 1.0e-6  # account for rounding error
@@ -219,13 +219,13 @@ class EstimateFeeTest(BitcoinTestFramework):
             self.log.info("Creating transactions and mining them with a block size that can't keep up")
             # Create transactions and mine 10 small blocks with node 2, but create txs faster than we can mine
             self.transact_and_mine(10, self.nodes[2])
-            check_estimates(self.nodes[1], self.fees_per_kb, 14)
+            check_estimates(self.nodes[1], self.fees_per_kb)
 
             self.log.info("Creating transactions and mining them at a block size that is just big enough")
             # Generate transactions while mining 10 more blocks, this time with node1
             # which mines blocks with capacity just above the rate that transactions are being created
             self.transact_and_mine(10, self.nodes[1])
-            check_estimates(self.nodes[1], self.fees_per_kb, 2)
+            check_estimates(self.nodes[1], self.fees_per_kb)
 
         # Finish by mining a normal-sized block:
         while len(self.nodes[1].getrawmempool()) > 0:
@@ -233,7 +233,7 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         sync_blocks(self.nodes[0:3], wait=.1)
         self.log.info("Final estimates after emptying mempools")
-        check_estimates(self.nodes[1], self.fees_per_kb, 2)
+        check_estimates(self.nodes[1], self.fees_per_kb)
 
 if __name__ == '__main__':
     EstimateFeeTest().main()
