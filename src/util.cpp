@@ -864,7 +864,7 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, std::string& error, boo
                 error = strprintf("Invalid configuration value %s", option.first.c_str());
                 return false;
             } else {
-                LogPrintf("Ignoring unknown configuration value %s\n", option.first);
+                fprintf(stderr, "Ignoring unknown configuration value %s\n", option.first.c_str());
             }
         }
     }
