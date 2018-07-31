@@ -1351,9 +1351,6 @@ bool AppInitMain()
 
     // ********************************************************* Step 5: initialize AutoBackup and verify wallet database integrity
 #ifdef ENABLE_WALLET
-    if (!InitAutoBackupWallet())
-        return false;
-
     if (!VerifyWallets())
         return false;
 
