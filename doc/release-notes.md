@@ -458,10 +458,6 @@ Instant send is a functionality ported from DASH distributing a copy of desired 
 - #13246 `6de7543` Bump to Ubuntu Bionic 18.04 in build-windows.md (ken2812221)
 - #12556 `e730b82` Fix version typo in getpeerinfo RPC call help (tamasblummer)
 
-### Logging
-
-- The log timestamp format is now ISO 8601 (e.g. "2018-02-28T12:34:56Z").
-
 RPC changes
 ------------
 
@@ -511,6 +507,18 @@ Low-level RPC changes
   with any `-wallet=<path>` options, there is no change in behavior, and the
   name of any wallet is just its `<path>` string.
 
+### Logging
+
+- The log timestamp format is now ISO 8601 (e.g. "2018-02-28T12:34:56Z").
+
+Miner block size removed
+
+The `-blockmaxsize` option for miners to limit their blocks' sizes was
+deprecated in V0.15.1, and has now been removed. Miners should use the
+`-blockmaxweight` option if they want to limit the weight of their blocks'
+weights.
+
+>>>>>>> 4757c04cb... [config] Remove blockmaxsize option
 Credits
 =======
 
