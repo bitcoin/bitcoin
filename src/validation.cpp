@@ -573,7 +573,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
     // Don't relay version 3 transactions until CSV is active, and we can be
     // sure that such transactions will be mined (unless we're on
     // -testnet/-regtest).
-    if (fRequireStandard && tx.nVersion >= 3 && VersionBitsTipState(chainparams.GetConsensus(), Consensus::DEPLOYMENT_CSV) != THRESHOLD_ACTIVE) {
+    if (fRequireStandard && tx.nVersion >= 3 && VersionBitsTipState(chainparams.GetConsensus(), Consensus::DEPLOYMENT_CSV) != ThresholdState::ACTIVE) {
         return state.DoS(0, false, REJECT_NONSTANDARD, "premature-version3-tx");
     }
 
@@ -1763,7 +1763,7 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
     for (int i = 0; i < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; i++) {
         ThresholdState state = VersionBitsState(pindexPrev, params, static_cast<Consensus::DeploymentPos>(i), versionbitscache);
         const struct VBDeploymentInfo& vbinfo = VersionBitsDeploymentInfo[static_cast<Consensus::DeploymentPos>(i)];
-        if (vbinfo.check_mn_protocol && state == THRESHOLD_STARTED && !fAssumeMasternodeIsUpgraded) {
+        if (vbinfo.check_mn_protocol && state == ThresholdState::STARTED && !fAssumeMasternodeIsUpgraded) {
             CScript payee;
             masternode_info_t mnInfo;
             if (!mnpayments.GetBlockPayee(pindexPrev->nHeight + 1, payee)) {
