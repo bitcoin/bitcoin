@@ -1316,6 +1316,8 @@ bool CAssetAllocationTransactionsDB::ScanAssetAllocationIndex(const int count, c
 			if (index >= count + from)
 				break;
 		}
+		if (index >= count + from)
+			break;
 	}
 	return true;
 }
