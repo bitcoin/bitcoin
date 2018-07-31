@@ -241,7 +241,7 @@ uint256 CGovernanceObject::GetHash() const
 
     // CREATE HASH OF ALL IMPORTANT PIECES OF DATA
 
-    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+    CHashWriter ss(SER_GETHASH, MIN_PEER_PROTO_VERSION);
     ss << nHashParent;
     ss << nRevision;
     ss << nTime;

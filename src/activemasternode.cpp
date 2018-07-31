@@ -209,7 +209,7 @@ void CActiveMasternode::ManageStateRemote()
     mnodeman.CheckMasternode(pubKeyMasternode, true);
     masternode_info_t infoMn;
     if(mnodeman.GetMasternodeInfo(pubKeyMasternode, infoMn)) {
-        if(infoMn.nProtocolVersion != PROTOCOL_VERSION) {
+        if(infoMn.nProtocolVersion != MIN_PEER_PROTO_VERSION) {
             nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
             strNotCapableReason = "Invalid protocol version";
             LogPrintf("CActiveMasternode::ManageStateRemote -- %s: %s\n", GetStateString(), strNotCapableReason);

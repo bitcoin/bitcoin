@@ -23,7 +23,7 @@
 
 
 CMasternode::CMasternode() :
-    masternode_info_t{ MASTERNODE_ENABLED, PROTOCOL_VERSION, GetAdjustedTime()},
+    masternode_info_t{ MASTERNODE_ENABLED, MIN_PEER_PROTO_VERSION, GetAdjustedTime()},
     fAllowMixingTx(true)
 {}
 
@@ -76,13 +76,13 @@ bool CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb, CConnman& co
     // if it matches our Masternode privkey...
     if(fMasternodeMode && pubKeyMasternode == activeMasternode.pubKeyMasternode) {
         nPoSeBanScore = -MASTERNODE_POSE_BAN_MAX_SCORE;
-        if(nProtocolVersion == PROTOCOL_VERSION) {
-            // ... and PROTOCOL_VERSION, then we've been remotely activated ...
+        if(nProtocolVersion == MIN_PEER_PROTO_VERSION) {
+            // ... and MIN_PEER_PROTO_VERSION, then we've been remotely activated ...
             activeMasternode.ManageState(connman);
         } else {
             // ... otherwise we need to reactivate our node, do not add it to the list and do not relay
             // but also do not ban the node we get this message from
-            LogPrintf("CMasternode::UpdateFromNewBroadcast -- wrong PROTOCOL_VERSION, re-activate your MN: message nProtocolVersion=%d  PROTOCOL_VERSION=%d\n", nProtocolVersion, PROTOCOL_VERSION);
+            LogPrintf("CMasternode::UpdateFromNewBroadcast -- wrong MIN_PEER_PROTO_VERSION, re-activate your MN: message nProtocolVersion=%d  MIN_PEER_PROTO_VERSION=%d\n", nProtocolVersion, MIN_PEER_PROTO_VERSION);
             return false;
         }
     }
@@ -97,7 +97,7 @@ bool CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb, CConnman& co
 arith_uint256 CMasternode::CalculateScore(const uint256& blockHash) const
 {
     // Deterministically calculate a "score" for a Masternode based on any given (block)hash
-    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+    CHashWriter ss(SER_GETHASH, MIN_PEER_PROTO_VERSION);
     ss << outpoint << nCollateralMinConfBlockHash << blockHash;
     return UintToArith256(ss.GetHash());
 }
@@ -178,7 +178,7 @@ void CMasternode::Check(bool fForce)
                    // masternode doesn't meet payment protocol requirements ...
     bool fRequireUpdate = nProtocolVersion < mnpayments.GetMinMasternodePaymentsProto() ||
                    // or it's our own node and we just updated it to the new protocol but we are still waiting for activation ...
-                   (fOurMasternode && nProtocolVersion < PROTOCOL_VERSION);
+                   (fOurMasternode && nProtocolVersion < MIN_PEER_PROTO_VERSION);
 
     if(fRequireUpdate) {
         nActiveState = MASTERNODE_UPDATE_REQUIRED;
@@ -420,7 +420,7 @@ bool CMasternodeBroadcast::Create(const COutPoint& outpoint, const CService& ser
     if (!mnp.Sign(keyMasternodeNew, pubKeyMasternodeNew))
         return Log(strprintf("Failed to sign ping, masternode=%s", outpoint.ToStringShort()));
 
-    mnbRet = CMasternodeBroadcast(service, outpoint, pubKeyCollateralAddressNew, pubKeyMasternodeNew, PROTOCOL_VERSION);
+    mnbRet = CMasternodeBroadcast(service, outpoint, pubKeyCollateralAddressNew, pubKeyMasternodeNew, MIN_PEER_PROTO_VERSION);
 
     if (!mnbRet.IsValidNetAddr())
         return Log(strprintf("Invalid IP address, masternode=%s", outpoint.ToStringShort()));
@@ -612,7 +612,7 @@ uint256 CMasternodeBroadcast::GetHash() const
 {
     // Note: doesn't match serialization
 
-    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+    CHashWriter ss(SER_GETHASH, MIN_PEER_PROTO_VERSION);
     ss << outpoint;
     ss << pubKeyCollateralAddress;
     ss << sigTime;
