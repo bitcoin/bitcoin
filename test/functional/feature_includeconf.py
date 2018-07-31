@@ -55,9 +55,11 @@ class IncludeConfTest(BitcoinTestFramework):
         self.stop_node(0, expected_stderr="warning: -includeconf cannot be used from included files; ignoring -includeconf=relative2.conf")
 
         self.log.info("-includeconf cannot contain invalid arg")
-        with open(os.path.join(self.options.tmpdir, "node0", "relative.conf"), "w", encoding="utf8") as f:
-            f.write("foo=bar\n")
-        self.nodes[0].assert_start_raises_init_error(expected_msg="Error reading configuration file: Invalid configuration value foo")
+
+        # Commented out as long as we ignore invalid arguments in configuration files
+        #with open(os.path.join(self.options.tmpdir, "node0", "relative.conf"), "w", encoding="utf8") as f:
+        #    f.write("foo=bar\n")
+        #self.nodes[0].assert_start_raises_init_error(expected_msg="Error reading configuration file: Invalid configuration value foo")
 
         self.log.info("-includeconf cannot be invalid path")
         os.remove(os.path.join(self.options.tmpdir, "node0", "relative.conf"))

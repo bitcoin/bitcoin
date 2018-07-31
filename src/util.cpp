@@ -859,9 +859,13 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, std::string& error, boo
         }
 
         // Check that the arg is known
-        if (!IsArgKnown(strKey) && !ignore_invalid_keys) {
-            error = strprintf("Invalid configuration value %s", option.first.c_str());
-            return false;
+        if (!IsArgKnown(strKey)) {
+            if (!ignore_invalid_keys) {
+                error = strprintf("Invalid configuration value %s", option.first.c_str());
+                return false;
+            } else {
+                LogPrintf("Ignoring unknown configuration value %s\n", option.first);
+            }
         }
     }
     return true;
