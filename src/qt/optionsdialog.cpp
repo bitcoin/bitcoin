@@ -61,9 +61,15 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     ui->proxyPortTor->setEnabled(false);
     ui->proxyPortTor->setValidator(new QIntValidator(1, 65535, this));
 
-    connect(ui->connectSocks, &QPushButton::toggled, ui->proxyIp, &QWidget::setEnabled);
-    connect(ui->connectSocks, &QPushButton::toggled, ui->proxyPort, &QWidget::setEnabled);
-    connect(ui->connectSocks, &QPushButton::toggled, this, &OptionsDialog::updateProxyValidationState);
+    // Disable and don't connect proxy checkbox interaction if proxy= is set by
+    // a param, to make it clear that removing the param / config is prerequisite to disabling.
+    if (!gArgs.GetArg("-proxy", "").empty()) {
+        ui->connectSocks->setEnabled(false);
+    } else {
+        connect(ui->connectSocks, &QPushButton::toggled, ui->proxyIp, &QWidget::setEnabled);
+        connect(ui->connectSocks, &QPushButton::toggled, ui->proxyPort, &QWidget::setEnabled);
+        connect(ui->connectSocks, &QPushButton::toggled, this, &OptionsDialog::updateProxyValidationState);
+    }
 
     connect(ui->connectSocksTor, &QPushButton::toggled, ui->proxyIpTor, &QWidget::setEnabled);
     connect(ui->connectSocksTor, &QPushButton::toggled, ui->proxyPortTor, &QWidget::setEnabled);
