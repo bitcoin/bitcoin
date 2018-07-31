@@ -41,7 +41,7 @@ def cltv_validate(node, tx, height):
     tx.nLockTime = height
 
     # Need to re-sign, since nSequence and nLockTime changed
-    signed_result = node.signrawtransaction(ToHex(tx))
+    signed_result = node.signrawtransactionwithwallet(ToHex(tx))
     new_tx = CTransaction()
     new_tx.deserialize(BytesIO(hex_str_to_bytes(signed_result['hex'])))
 
@@ -54,7 +54,7 @@ def create_transaction(node, coinbase, to_address, amount):
     inputs = [{ "txid" : from_txid, "vout" : 0}]
     outputs = { to_address : amount }
     rawtx = node.createrawtransaction(inputs, outputs)
-    signresult = node.signrawtransaction(rawtx)
+    signresult = node.signrawtransactionwithwallet(rawtx)
     tx = CTransaction()
     tx.deserialize(BytesIO(hex_str_to_bytes(signresult['hex'])))
     return tx

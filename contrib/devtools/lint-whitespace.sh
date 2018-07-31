@@ -7,12 +7,26 @@
 # Check for new lines in diff that introduce trailing whitespace.
 
 # We can't run this check unless we know the commit range for the PR.
+
+while getopts "?" opt; do
+  case $opt in
+    ?)
+      echo "Usage: .lint-whitespace.sh [N]"
+      echo "       TRAVIS_COMMIT_RANGE='<commit range>' .lint-whitespace.sh"
+      echo "       .lint-whitespace.sh -?"
+      echo "Checks unstaged changes, the previous N commits, or a commit range."
+      echo "TRAVIS_COMMIT_RANGE='47ba2c3...ee50c9e' .lint-whitespace.sh"
+      exit 0
+    ;;
+  esac
+done
+
 if [ -z "${TRAVIS_COMMIT_RANGE}" ]; then
-  echo "Cannot run lint-whitespace.sh without commit range. To run locally, use:"
-  echo "TRAVIS_COMMIT_RANGE='<commit range>' .lint-whitespace.sh"
-  echo "For example:"
-  echo "TRAVIS_COMMIT_RANGE='47ba2c3...ee50c9e' .lint-whitespace.sh"
-  exit 1
+  if [ "$1" ]; then
+    TRAVIS_COMMIT_RANGE="HEAD~$1...HEAD"
+  else
+    TRAVIS_COMMIT_RANGE="HEAD"
+  fi
 fi
 
 showdiff() {
@@ -64,7 +78,7 @@ if showdiff | grep -E -q '^\+.*\s+$'; then
 fi
 
 # Check if tab characters were found in the diff.
-if showcodediff | grep -P -q '^\+.*\t'; then
+if showcodediff | perl -nle '$MATCH++ if m{^\+.*\t}; END{exit 1 unless $MATCH>0}' > /dev/null; then
   echo "This diff appears to have added new lines with tab characters instead of spaces."
   echo "The following changes were suspected:"
   FILENAME=""
@@ -91,7 +105,7 @@ if showcodediff | grep -P -q '^\+.*\t'; then
       fi
       echo "$line"
     fi
-  done < <(showcodediff | grep -P '^(diff --git |@@|\+.*\t)')
+  done < <(showcodediff | perl -nle 'print if m{^(diff --git |@@|\+.*\t)}')
   RET=1
 fi
 

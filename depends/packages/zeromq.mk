@@ -1,9 +1,9 @@
 package=zeromq
-$(package)_version=4.2.2
+$(package)_version=4.2.3
 $(package)_download_path=https://github.com/zeromq/libzmq/releases/download/v$($(package)_version)/
 $(package)_file_name=$(package)-$($(package)_version).tar.gz
-$(package)_sha256_hash=5b23f4ca9ef545d5bd3af55d305765e3ee06b986263b31967435d285a3e6df6b
-$(package)_patches=0001-fix-build-with-older-mingw64.patch
+$(package)_sha256_hash=8f1e2b2aade4dbfde98d82366d61baef2f62e812530160d2e6d0a5bb24e40bc0
+$(package)_patches=0001-fix-build-with-older-mingw64.patch 0002-disable-pthread_set_name_np.patch
 
 define $(package)_set_vars
   $(package)_config_opts=--without-docs --disable-shared --without-libsodium --disable-curve --disable-curve-keygen --disable-perf
@@ -13,7 +13,7 @@ endef
 
 define $(package)_preprocess_cmds
    patch -p1 < $($(package)_patch_dir)/0001-fix-build-with-older-mingw64.patch && \
-  ./autogen.sh
+   patch -p1 < $($(package)_patch_dir)/0002-disable-pthread_set_name_np.patch
 endef
 
 define $(package)_config_cmds

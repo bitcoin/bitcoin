@@ -9,6 +9,7 @@
 #include <test/data/base58_keys_valid.json.h>
 
 #include <key.h>
+#include <key_io.h>
 #include <script/script.h>
 #include <test/test_chaincoin.h>
 #include <uint256.h>
@@ -77,7 +78,7 @@ BOOST_AUTO_TEST_CASE(base58_DecodeBase58)
 BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
 {
     UniValue tests = read_json(std::string(json_tests::base58_keys_valid, json_tests::base58_keys_valid + sizeof(json_tests::base58_keys_valid)));
-    CBitcoinSecret secret;
+    CKey privkey;
     CTxDestination destination;
     SelectParams(CBaseChainParams::MAIN);
 
@@ -97,9 +98,8 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
         if (isPrivkey) {
             bool isCompressed = find_value(metadata, "isCompressed").get_bool();
             // Must be valid private key
-            BOOST_CHECK_MESSAGE(secret.SetString(exp_base58string), "!SetString:"+ strTest);
-            BOOST_CHECK_MESSAGE(secret.IsValid(), "!IsValid:" + strTest);
-            CKey privkey = secret.GetKey();
+            privkey = DecodeSecret(exp_base58string);
+            BOOST_CHECK_MESSAGE(privkey.IsValid(), "!IsValid:" + strTest);
             BOOST_CHECK_MESSAGE(privkey.IsCompressed() == isCompressed, "compressed mismatch:" + strTest);
             BOOST_CHECK_MESSAGE(privkey.size() == exp_payload.size() && std::equal(privkey.begin(), privkey.end(), exp_payload.begin()), "key mismatch:" + strTest);
 
@@ -129,8 +129,8 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
             }
 
             // Public key must be invalid private key
-            secret.SetString(exp_base58string);
-            BOOST_CHECK_MESSAGE(!secret.IsValid(), "IsValid pubkey as privkey:" + strTest);
+            privkey = DecodeSecret(exp_base58string);
+            BOOST_CHECK_MESSAGE(!privkey.IsValid(), "IsValid pubkey as privkey:" + strTest);
         }
     }
 }
@@ -158,9 +158,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
             CKey key;
             key.Set(exp_payload.begin(), exp_payload.end(), isCompressed);
             assert(key.IsValid());
-            CBitcoinSecret secret;
-            secret.SetKey(key);
-            BOOST_CHECK_MESSAGE(secret.ToString() == exp_base58string, "result mismatch: " + strTest);
+            BOOST_CHECK_MESSAGE(EncodeSecret(key) == exp_base58string, "result mismatch: " + strTest);
         } else {
             CTxDestination dest;
             CScript exp_script(exp_payload.begin(), exp_payload.end());
@@ -179,7 +177,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
 BOOST_AUTO_TEST_CASE(base58_keys_invalid)
 {
     UniValue tests = read_json(std::string(json_tests::base58_keys_invalid, json_tests::base58_keys_invalid + sizeof(json_tests::base58_keys_invalid))); // Negative testcases
-    CBitcoinSecret secret;
+    CKey privkey;
     CTxDestination destination;
 
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
@@ -197,8 +195,8 @@ BOOST_AUTO_TEST_CASE(base58_keys_invalid)
             SelectParams(chain);
             destination = DecodeDestination(exp_base58string);
             BOOST_CHECK_MESSAGE(!IsValidDestination(destination), "IsValid pubkey in mainnet:" + strTest);
-            secret.SetString(exp_base58string);
-            BOOST_CHECK_MESSAGE(!secret.IsValid(), "IsValid privkey in mainnet:" + strTest);
+            privkey = DecodeSecret(exp_base58string);
+            BOOST_CHECK_MESSAGE(!privkey.IsValid(), "IsValid privkey in mainnet:" + strTest);
         }
     }
 }

@@ -6,12 +6,13 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <amount.h>
-#include <base58.h>
 #include <chain.h>
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <httpserver.h>
 #include <keepass.h>
+#include <validation.h>
+#include <key_io.h>
 #include <net.h>
 #include <netbase.h>
 #include <policy/feerate.h>
@@ -19,6 +20,7 @@
 #include <policy/policy.h>
 #include <policy/rbf.h>
 #include <rpc/mining.h>
+#include <rpc/rawtransaction.h>
 #include <rpc/safemode.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
@@ -29,6 +31,7 @@
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/feebumper.h>
+#include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
@@ -1032,15 +1035,14 @@ UniValue sendmany(const JSONRPCRequest& request)
             "\nSend multiple times. Amounts are double-precision floating point numbers."
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
-            "1. \"fromaccount\"           (string, required) DEPRECATED. The account to send the funds from. Should be \"\" for the default account\n"
-            "2. \"amounts\"               (string, required) A json object with addresses and amounts\n"
+            "1. \"amounts\"               (string, required) A json object with addresses and amounts\n"
             "    {\n"
             "      \"address\":amount     (numeric or string) The chaincoin address is the key, the numeric amount (can be string) in " + CURRENCY_UNIT + " is the value\n"
             "      ,...\n"
             "    }\n"
-            "3. minconf                 (numeric, optional, default=1) Only use the balance confirmed at least this many times.\n"
-            "4. \"comment\"               (string, optional) A comment\n"
-            "5. subtractfeefrom         (string, optional) A json array with addresses.\n"
+            "2. minconf                 (numeric, optional, default=1) Only use the balance confirmed at least this many times.\n"
+            "3. \"comment\"               (string, optional) A comment\n"
+            "4. subtractfeefrom         (string, optional) A json array with addresses.\n"
             "                           The fee will be equally deducted from the amount of each selected address.\n"
             "                           Those recipients will receive less chaincoins than you enter in their corresponding amount field.\n"
             "                           If no addresses are specified here, the sender pays the fee.\n"
@@ -1048,10 +1050,10 @@ UniValue sendmany(const JSONRPCRequest& request)
             "      \"address\"            (string) Subtract fee from this address\n"
             "      ,...\n"
             "    ]\n"
-            "6. replaceable            (boolean, optional) Allow this transaction to be replaced by a transaction with higher fees via BIP 125\n"
-            "7. conf_target            (numeric, optional) Confirmation target (in blocks)\n"
-            "8. \"estimate_mode\"      (string, optional, default=UNSET) The fee estimate mode, must be one of:\n"
-            "9.\"use_ps\"                (bool, optional) Use anonymized funds only (default: false)\n"
+            "5. replaceable            (boolean, optional) Allow this transaction to be replaced by a transaction with higher fees via BIP 125\n"
+            "6. conf_target            (numeric, optional) Confirmation target (in blocks)\n"
+            "7. \"estimate_mode\"      (string, optional, default=UNSET) The fee estimate mode, must be one of:\n"
+            "8.\"use_ps\"                (bool, optional) Use anonymized funds only (default: false)\n"
             "       \"UNSET\"\n"
             "       \"ECONOMICAL\"\n"
             "       \"CONSERVATIVE\"\n"
@@ -1201,10 +1203,6 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
             "  \"address\":\"multisigaddress\",    (string) The value of the new multisig address.\n"
             "  \"redeemScript\":\"script\"         (string) The string value of the hex-encoded redemption script.\n"
             "}\n"
-            "\nResult (DEPRECATED. To see this result in v0.16 instead, please start bitcoind with -deprecatedrpc=addmultisigaddress).\n"
-            "        clients should transition to the new output api before upgrading to v0.17.\n"
-            "\"address\"                         (string) A bitcoin address associated with the keys.\n"
-
             "\nExamples:\n"
             "\nAdd a multisig address from 2 addresses\n"
             + HelpExampleCli("addmultisigaddress", "2 \"[\\\"Ct4qk9uKvQYAonVGSZNXqxeDmtjaEWgfrs\\\",\\\"CoSoWQkpgLpppPoyyzbUFh1fq2RBvW6UK1\\\"]\"") +
@@ -1246,11 +1244,6 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
     pwallet->AddCScript(inner);
     CTxDestination dest = pwallet->AddAndGetDestinationForScript(inner, output_type);
     pwallet->SetAddressBook(dest, strAccount, "send");
-
-    // Return old style interface
-    if (IsDeprecatedRPCEnabled("addmultisigaddress")) {
-        return EncodeDestination(dest);
-    }
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("address", EncodeDestination(dest));
@@ -1419,6 +1412,16 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
         if(params[2].get_bool())
             filter = filter | ISMINE_WATCH_ONLY;
 
+    bool has_filtered_address = false;
+    CTxDestination filtered_address = CNoDestination();
+    if (!fByAccounts && params.size() > 3) {
+        if (!IsValidDestinationString(params[3].get_str())) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "address_filter parameter was invalid");
+        }
+        filtered_address = DecodeDestination(params[3].get_str());
+        has_filtered_address = true;
+    }
+
     // Tally
     std::map<CTxDestination, tallyitem> mapTally;
     for (const std::pair<uint256, CWalletTx>& pairWtx : pwallet->mapWallet) {
@@ -1437,6 +1440,10 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
             if (!ExtractDestination(txout.scriptPubKey, address))
                 continue;
 
+            if (has_filtered_address && !(filtered_address == address)) {
+                continue;
+            }
+
             isminefilter mine = IsMine(*pwallet, address);
             if(!(mine & filter))
                 continue;
@@ -1453,10 +1460,24 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
     // Reply
     UniValue ret(UniValue::VARR);
     std::map<std::string, tallyitem> mapAccountTally;
-    for (const std::pair<CTxDestination, CAddressBookData>& item : pwallet->mapAddressBook) {
-        const CTxDestination& dest = item.first;
-        const std::string& strAccount = item.second.name;
-        std::map<CTxDestination, tallyitem>::iterator it = mapTally.find(dest);
+
+    // Create mapAddressBook iterator
+    // If we aren't filtering, go from begin() to end()
+    auto start = pwallet->mapAddressBook.begin();
+    auto end = pwallet->mapAddressBook.end();
+    // If we are filtering, find() the applicable entry
+    if (has_filtered_address) {
+        start = pwallet->mapAddressBook.find(filtered_address);
+        if (start != end) {
+            end = std::next(start);
+        }
+    }
+
+    for (auto item_it = start; item_it != end; ++item_it)
+    {
+        const CTxDestination& address = item_it->first;
+        const std::string& strAccount = item_it->second.name;
+        auto it = mapTally.find(address);
         if (it == mapTally.end() && !fIncludeEmpty)
             continue;
 
@@ -1482,7 +1503,7 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
             UniValue obj(UniValue::VOBJ);
             if(fIsWatchonly)
                 obj.pushKV("involvesWatchonly", true);
-            obj.pushKV("address",       EncodeDestination(dest));
+            obj.pushKV("address",       EncodeDestination(address));
             obj.pushKV("account",       strAccount);
             obj.pushKV("amount",        ValueFromAmount(nAmount));
             obj.pushKV("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf));
@@ -1527,15 +1548,15 @@ UniValue listreceivedbyaddress(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() > 3)
+    if (request.fHelp || request.params.size() > 4)
         throw std::runtime_error(
-            "listreceivedbyaddress ( minconf include_empty include_watchonly)\n"
+            "listreceivedbyaddress ( minconf include_empty include_watchonly address_filter )\n"
             "\nList balances by receiving address.\n"
             "\nArguments:\n"
             "1. minconf          (numeric, optional, default=1) The minimum number of confirmations before payments are included.\n"
             "2. include_empty     (bool, optional, default=false) Whether to include addresses that haven't received any payments.\n"
-            "3. include_watchonly (bool, optional, default=false) Whether to include watchonly addresses (see 'importaddress').\n"
-
+            "3. include_watchonly (bool, optional, default=false) Whether to include watch-only addresses (see 'importaddress').\n"
+            "4. address_filter    (string, optional) If present, only return information on this address.\n"
             "\nResult:\n"
             "[\n"
             "  {\n"
@@ -1551,7 +1572,9 @@ UniValue listreceivedbyaddress(const JSONRPCRequest& request)
 
             "\nExamples:\n"
             + HelpExampleCli("listreceivedbyaddress", "")
-            + HelpExampleCli("listreceivedbyaddress", "6 false true")
+            + HelpExampleCli("listreceivedbyaddress", "6 true")
+            + HelpExampleRpc("listreceivedbyaddress", "6, true, true")
+            + HelpExampleRpc("listreceivedbyaddress", "6, true, true, \"CM72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\"")
         );
 
     ObserveSafeMode();
@@ -1797,8 +1820,6 @@ UniValue listtransactions(const JSONRPCRequest& request)
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    LOCK2(cs_main, pwallet->cs_wallet);
-
     std::string strAccount = "*";
     if (!request.params[0].isNull())
         strAccount = request.params[0].get_str();
@@ -1820,20 +1841,25 @@ UniValue listtransactions(const JSONRPCRequest& request)
 
     UniValue ret(UniValue::VARR);
 
-    const CWallet::TxItems & txOrdered = pwallet->wtxOrdered;
-
-    // iterate backwards until we have nCount items to return:
-    for (CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
     {
-        CWalletTx *const pwtx = (*it).second.first;
-        if (pwtx != nullptr)
-            ListTransactions(pwallet, *pwtx, strAccount, 0, true, ret, filter);
-        CAccountingEntry *const pacentry = (*it).second.second;
-        if (pacentry != nullptr)
-            AcentryToJSON(*pacentry, strAccount, ret);
+        LOCK2(cs_main, pwallet->cs_wallet);
 
-        if ((int)ret.size() >= (nCount+nFrom)) break;
+        const CWallet::TxItems & txOrdered = pwallet->wtxOrdered;
+
+        // iterate backwards until we have nCount items to return:
+        for (CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
+        {
+            CWalletTx *const pwtx = (*it).second.first;
+            if (pwtx != nullptr)
+                ListTransactions(pwallet, *pwtx, strAccount, 0, true, ret, filter);
+            CAccountingEntry *const pacentry = (*it).second.second;
+            if (pacentry != nullptr)
+                AcentryToJSON(*pacentry, strAccount, ret);
+
+            if ((int)ret.size() >= (nCount+nFrom)) break;
+        }
     }
+
     // ret is newest to oldest
 
     if (nFrom > (int)ret.size())
@@ -1869,7 +1895,7 @@ UniValue listaccounts(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() > 2)
         throw std::runtime_error(
-            "listaccounts ( minconf addlockconf include_watchonly)\n"
+            "listaccounts ( minconf include_watchonly)\n"
             "\nDEPRECATED. Returns Object that has account names as keys, account balances as values.\n"
             "\nArguments:\n"
             "1. minconf           (numeric, optional, default=1) Only include transactions with at least this many confirmations\n"
@@ -3198,7 +3224,6 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
                 {"changePosition", UniValueType(UniValue::VNUM)},
                 {"includeWatching", UniValueType(UniValue::VBOOL)},
                 {"lockUnspents", UniValueType(UniValue::VBOOL)},
-                {"reserveChangeKey", UniValueType(UniValue::VBOOL)}, // DEPRECATED (and ignored), should be removed in 0.16 or so.
                 {"feeRate", UniValueType()}, // will be checked below
                 {"subtractFeeFromOutputs", UniValueType(UniValue::VARR)},
                 {"replaceable", UniValueType(UniValue::VBOOL)},
@@ -3295,6 +3320,75 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
     return result;
 }
 
+UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
+{
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
+        throw std::runtime_error(
+            "signrawtransactionwithwallet \"hexstring\" ( [{\"txid\":\"id\",\"vout\":n,\"scriptPubKey\":\"hex\",\"redeemScript\":\"hex\"},...] sighashtype )\n"
+            "\nSign inputs for raw transaction (serialized, hex-encoded).\n"
+            "The second optional argument (may be null) is an array of previous transaction outputs that\n"
+            "this transaction depends on but may not yet be in the block chain.\n"
+            + HelpRequiringPassphrase(pwallet) + "\n"
+
+            "\nArguments:\n"
+            "1. \"hexstring\"                      (string, required) The transaction hex string\n"
+            "2. \"prevtxs\"                        (string, optional) An json array of previous dependent transaction outputs\n"
+            "     [                              (json array of json objects, or 'null' if none provided)\n"
+            "       {\n"
+            "         \"txid\":\"id\",               (string, required) The transaction id\n"
+            "         \"vout\":n,                  (numeric, required) The output number\n"
+            "         \"scriptPubKey\": \"hex\",     (string, required) script key\n"
+            "         \"redeemScript\": \"hex\",     (string, required for P2SH or P2WSH) redeem script\n"
+            "         \"amount\": value            (numeric, required) The amount spent\n"
+            "       }\n"
+            "       ,...\n"
+            "    ]\n"
+            "3. \"sighashtype\"                    (string, optional, default=ALL) The signature hash type. Must be one of\n"
+            "       \"ALL\"\n"
+            "       \"NONE\"\n"
+            "       \"SINGLE\"\n"
+            "       \"ALL|ANYONECANPAY\"\n"
+            "       \"NONE|ANYONECANPAY\"\n"
+            "       \"SINGLE|ANYONECANPAY\"\n"
+
+            "\nResult:\n"
+            "{\n"
+            "  \"hex\" : \"value\",                  (string) The hex-encoded raw transaction with signature(s)\n"
+            "  \"complete\" : true|false,          (boolean) If the transaction has a complete set of signatures\n"
+            "  \"errors\" : [                      (json array of objects) Script verification errors (if there are any)\n"
+            "    {\n"
+            "      \"txid\" : \"hash\",              (string) The hash of the referenced, previous transaction\n"
+            "      \"vout\" : n,                   (numeric) The index of the output to spent and used as input\n"
+            "      \"scriptSig\" : \"hex\",          (string) The hex-encoded signature script\n"
+            "      \"sequence\" : n,               (numeric) Script sequence number\n"
+            "      \"error\" : \"text\"              (string) Verification or signing error related to the input\n"
+            "    }\n"
+            "    ,...\n"
+            "  ]\n"
+            "}\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("signrawtransactionwithwallet", "\"myhex\"")
+            + HelpExampleRpc("signrawtransactionwithwallet", "\"myhex\"")
+        );
+
+    RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VARR, UniValue::VSTR}, true);
+
+    CMutableTransaction mtx;
+    if (!DecodeHexTx(mtx, request.params[0].get_str(), true)) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+    }
+
+    // Sign the transaction
+    LOCK2(cs_main, pwallet->cs_wallet);
+    return SignTransaction(mtx, request.params[1], pwallet, false, request.params[2]);
+}
+
 UniValue bumpfee(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -3311,8 +3405,8 @@ UniValue bumpfee(const JSONRPCRequest& request)
             "If the change output is not big enough to cover the increased fee, the command will currently fail\n"
             "instead of adding new inputs to compensate. (A future implementation could improve this.)\n"
             "The command will fail if the wallet or mempool contains a transaction that spends one of T's outputs.\n"
-            "By default, the new fee will be calculated automatically using estimatefee.\n"
-            "The user can specify a confirmation target for estimatefee.\n"
+            "By default, the new fee will be calculated automatically using estimatesmartfee.\n"
+            "The user can specify a confirmation target for estimatesmartfee.\n"
             "Alternatively, the user can specify totalFee, or use RPC settxfee to set a higher fee rate.\n"
             "At a minimum, the new fee rate must be high enough to pay an additional new relay fee (incrementalfee\n"
             "returned by getnetworkinfo) to enter the node's mempool.\n"
@@ -3574,6 +3668,209 @@ UniValue rescanblockchain(const JSONRPCRequest& request)
     return response;
 }
 
+class DescribeWalletAddressVisitor : public boost::static_visitor<UniValue>
+{
+public:
+    CWallet * const pwallet;
+
+    void ProcessSubScript(const CScript& subscript, UniValue& obj, bool include_addresses = false) const
+    {
+        // Always present: script type and redeemscript
+        txnouttype which_type;
+        std::vector<std::vector<unsigned char>> solutions_data;
+        Solver(subscript, which_type, solutions_data);
+        obj.pushKV("script", GetTxnOutputType(which_type));
+        obj.pushKV("hex", HexStr(subscript.begin(), subscript.end()));
+
+        CTxDestination embedded;
+        UniValue a(UniValue::VARR);
+        if (ExtractDestination(subscript, embedded)) {
+            // Only when the script corresponds to an address.
+            UniValue subobj(UniValue::VOBJ);
+            UniValue detail = DescribeAddress(embedded);
+            subobj.pushKVs(detail);
+            UniValue wallet_detail = boost::apply_visitor(*this, embedded);
+            subobj.pushKVs(wallet_detail);
+            subobj.pushKV("address", EncodeDestination(embedded));
+            subobj.pushKV("scriptPubKey", HexStr(subscript.begin(), subscript.end()));
+            // Always report the pubkey at the top level, so that `getnewaddress()['pubkey']` always works.
+            if (subobj.exists("pubkey")) obj.pushKV("pubkey", subobj["pubkey"]);
+            obj.pushKV("embedded", std::move(subobj));
+            if (include_addresses) a.push_back(EncodeDestination(embedded));
+        } else if (which_type == TX_MULTISIG) {
+            // Also report some information on multisig scripts (which do not have a corresponding address).
+            // TODO: abstract out the common functionality between this logic and ExtractDestinations.
+            obj.pushKV("sigsrequired", solutions_data[0][0]);
+            UniValue pubkeys(UniValue::VARR);
+            for (size_t i = 1; i < solutions_data.size() - 1; ++i) {
+                CPubKey key(solutions_data[i].begin(), solutions_data[i].end());
+                if (include_addresses) a.push_back(EncodeDestination(key.GetID()));
+                pubkeys.push_back(HexStr(key.begin(), key.end()));
+            }
+            obj.pushKV("pubkeys", std::move(pubkeys));
+        }
+
+        // The "addresses" field is confusing because it refers to public keys using their P2PKH address.
+        // For that reason, only add the 'addresses' field when needed for backward compatibility. New applications
+        // can use the 'embedded'->'address' field for P2SH or P2WSH wrapped addresses, and 'pubkeys' for
+        // inspecting multisig participants.
+        if (include_addresses) obj.pushKV("addresses", std::move(a));
+    }
+
+    explicit DescribeWalletAddressVisitor(CWallet* _pwallet) : pwallet(_pwallet) {}
+
+    UniValue operator()(const CNoDestination& dest) const { return UniValue(UniValue::VOBJ); }
+
+    UniValue operator()(const CKeyID& keyID) const
+    {
+        UniValue obj(UniValue::VOBJ);
+        CPubKey vchPubKey;
+        if (pwallet && pwallet->GetPubKey(keyID, vchPubKey)) {
+            obj.pushKV("pubkey", HexStr(vchPubKey));
+            obj.pushKV("iscompressed", vchPubKey.IsCompressed());
+        }
+        return obj;
+    }
+
+    UniValue operator()(const CScriptID& scriptID) const
+    {
+        UniValue obj(UniValue::VOBJ);
+        CScript subscript;
+        if (pwallet && pwallet->GetCScript(scriptID, subscript)) {
+            ProcessSubScript(subscript, obj, IsDeprecatedRPCEnabled("validateaddress"));
+        }
+        return obj;
+    }
+
+    UniValue operator()(const WitnessV0KeyHash& id) const
+    {
+        UniValue obj(UniValue::VOBJ);
+        CPubKey pubkey;
+        if (pwallet && pwallet->GetPubKey(CKeyID(id), pubkey)) {
+            obj.pushKV("pubkey", HexStr(pubkey));
+        }
+        return obj;
+    }
+
+    UniValue operator()(const WitnessV0ScriptHash& id) const
+    {
+        UniValue obj(UniValue::VOBJ);
+        CScript subscript;
+        CRIPEMD160 hasher;
+        uint160 hash;
+        hasher.Write(id.begin(), 32).Finalize(hash.begin());
+        if (pwallet && pwallet->GetCScript(CScriptID(hash), subscript)) {
+            ProcessSubScript(subscript, obj);
+        }
+        return obj;
+    }
+
+    UniValue operator()(const WitnessUnknown& id) const { return UniValue(UniValue::VOBJ); }
+};
+
+UniValue DescribeWalletAddress(CWallet* pwallet, const CTxDestination& dest)
+{
+    UniValue ret(UniValue::VOBJ);
+    UniValue detail = DescribeAddress(dest);
+    ret.pushKVs(detail);
+    ret.pushKVs(boost::apply_visitor(DescribeWalletAddressVisitor(pwallet), dest));
+    return ret;
+}
+
+UniValue getaddressinfo(const JSONRPCRequest& request)
+{
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() != 1) {
+        throw std::runtime_error(
+            "getaddressinfo \"address\"\n"
+            "\nReturn information about the given bitcoin address. Some information requires the address\n"
+            "to be in the wallet.\n"
+            "\nArguments:\n"
+            "1. \"address\"                    (string, required) The bitcoin address to get the information of.\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"address\" : \"address\",        (string) The bitcoin address validated\n"
+            "  \"scriptPubKey\" : \"hex\",       (string) The hex encoded scriptPubKey generated by the address\n"
+            "  \"ismine\" : true|false,        (boolean) If the address is yours or not\n"
+            "  \"iswatchonly\" : true|false,   (boolean) If the address is watchonly\n"
+            "  \"isscript\" : true|false,      (boolean) If the key is a script\n"
+            "  \"iswitness\" : true|false,     (boolean) If the address is a witness address\n"
+            "  \"witness_version\" : version   (numeric, optional) The version number of the witness program\n"
+            "  \"witness_program\" : \"hex\"     (string, optional) The hex value of the witness program\n"
+            "  \"script\" : \"type\"             (string, optional) The output script type. Only if \"isscript\" is true and the redeemscript is known. Possible types: nonstandard, pubkey, pubkeyhash, scripthash, multisig, nulldata, witness_v0_keyhash, witness_v0_scripthash, witness_unknown\n"
+            "  \"hex\" : \"hex\",                (string, optional) The redeemscript for the p2sh address\n"
+            "  \"pubkeys\"                     (string, optional) Array of pubkeys associated with the known redeemscript (only if \"script\" is \"multisig\")\n"
+            "    [\n"
+            "      \"pubkey\"\n"
+            "      ,...\n"
+            "    ]\n"
+            "  \"sigsrequired\" : xxxxx        (numeric, optional) Number of signatures required to spend multisig output (only if \"script\" is \"multisig\")\n"
+            "  \"pubkey\" : \"publickeyhex\",    (string, optional) The hex value of the raw public key, for single-key addresses (possibly embedded in P2SH or P2WSH)\n"
+            "  \"embedded\" : {...},           (object, optional) Information about the address embedded in P2SH or P2WSH, if relevant and known. It includes all getaddressinfo output fields for the embedded address, excluding metadata (\"timestamp\", \"hdkeypath\", \"hdmasterkeyid\") and relation to the wallet (\"ismine\", \"iswatchonly\", \"account\").\n"
+            "  \"iscompressed\" : true|false,  (boolean) If the address is compressed\n"
+            "  \"account\" : \"account\"         (string) The account associated with the address, \"\" is the default account\n"
+            "  \"timestamp\" : timestamp,      (number, optional) The creation time of the key if available in seconds since epoch (Jan 1 1970 GMT)\n"
+            "  \"hdkeypath\" : \"keypath\"       (string, optional) The HD keypath if the key is HD and available\n"
+            "  \"hdmasterkeyid\" : \"<hash160>\" (string, optional) The Hash160 of the HD master pubkey\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getaddressinfo", "\"1PSSGeFHDnKNxiEyFrD1wcEaHr9hrQDDWc\"")
+            + HelpExampleRpc("getaddressinfo", "\"1PSSGeFHDnKNxiEyFrD1wcEaHr9hrQDDWc\"")
+        );
+    }
+
+    LOCK(pwallet->cs_wallet);
+
+    UniValue ret(UniValue::VOBJ);
+    CTxDestination dest = DecodeDestination(request.params[0].get_str());
+
+    // Make sure the destination is valid
+    if (!IsValidDestination(dest)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+    }
+
+    std::string currentAddress = EncodeDestination(dest);
+    ret.pushKV("address", currentAddress);
+
+    CScript scriptPubKey = GetScriptForDestination(dest);
+    ret.pushKV("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end()));
+
+    isminetype mine = IsMine(*pwallet, dest);
+    ret.pushKV("ismine", bool(mine & ISMINE_SPENDABLE));
+    ret.pushKV("iswatchonly", bool(mine & ISMINE_WATCH_ONLY));
+    UniValue detail = DescribeWalletAddress(pwallet, dest);
+    ret.pushKVs(detail);
+    if (pwallet->mapAddressBook.count(dest)) {
+        ret.pushKV("account", pwallet->mapAddressBook[dest].name);
+    }
+    const CKeyMetadata* meta = nullptr;
+    CKeyID key_id = GetKeyForDestination(*pwallet, dest);
+    if (!key_id.IsNull()) {
+        auto it = pwallet->mapKeyMetadata.find(key_id);
+        if (it != pwallet->mapKeyMetadata.end()) {
+            meta = &it->second;
+        }
+    }
+    if (!meta) {
+        auto it = pwallet->m_script_metadata.find(CScriptID(scriptPubKey));
+        if (it != pwallet->m_script_metadata.end()) {
+            meta = &it->second;
+        }
+    }
+    if (meta) {
+        ret.pushKV("timestamp", meta->nCreateTime);
+        if (!meta->hdKeypath.empty()) {
+            ret.pushKV("hdkeypath", meta->hdKeypath);
+            ret.pushKV("hdmasterkeyid", meta->hdMasterKeyID.GetHex());
+        }
+    }
+    return ret;
+}
+
 extern UniValue abortrescan(const JSONRPCRequest& request); // in rpcdump.cpp
 extern UniValue dumpprivkey(const JSONRPCRequest& request); // in rpcdump.cpp
 extern UniValue importprivkey(const JSONRPCRequest& request);
@@ -3587,61 +3884,63 @@ extern UniValue importmulti(const JSONRPCRequest& request);
 extern UniValue rescanblockchain(const JSONRPCRequest& request);
 
 static const CRPCCommand commands[] =
-{ //  category              name                        actor (function)           argNames
-    //  --------------------- ------------------------    -----------------------  ----------
-    { "rawtransactions",    "fundrawtransaction",       &fundrawtransaction,       {"hexstring","options","iswitness"} },
-    { "hidden",             "resendwallettransactions", &resendwallettransactions, {} },
-    { "wallet",             "abandontransaction",       &abandontransaction,       {"txid"} },
-    { "wallet",             "abortrescan",              &abortrescan,              {} },
-    { "wallet",             "addmultisigaddress",       &addmultisigaddress,       {"nrequired","keys","account","address_type"} },
-    { "hidden",             "addwitnessaddress",        &addwitnessaddress,        {"address","p2sh"} },
-    { "wallet",             "backupwallet",             &backupwallet,             {"destination"} },
-    { "wallet",             "bumpfee",                  &bumpfee,                  {"txid", "options"} },
-    { "wallet",             "dumpprivkey",              &dumpprivkey,              {"address"}  },
-    { "wallet",             "dumpwallet",               &dumpwallet,               {"filename"} },
-    { "wallet",             "encryptwallet",            &encryptwallet,            {"passphrase"} },
-    { "wallet",             "getaccountaddress",        &getaccountaddress,        {"account"} },
-    { "wallet",             "getaccount",               &getaccount,               {"address"} },
-    { "wallet",             "getaddressesbyaccount",    &getaddressesbyaccount,    {"account"} },
-    { "wallet",             "getbalance",               &getbalance,               {"account","minconf","include_watchonly"} },
-    { "wallet",             "getnewaddress",            &getnewaddress,            {"account","address_type"} },
-    { "wallet",             "getrawchangeaddress",      &getrawchangeaddress,      {"address_type"} },
-    { "wallet",             "getreceivedbyaccount",     &getreceivedbyaccount,     {"account","minconf"} },
-    { "wallet",             "getreceivedbyaddress",     &getreceivedbyaddress,     {"address","minconf"} },
-    { "wallet",             "gettransaction",           &gettransaction,           {"txid","include_watchonly"} },
-    { "wallet",             "getunconfirmedbalance",    &getunconfirmedbalance,    {} },
-    { "wallet",             "getwalletinfo",            &getwalletinfo,            {} },
-    { "wallet",             "importmulti",              &importmulti,              {"requests","options"} },
-    { "wallet",             "importprivkey",            &importprivkey,            {"privkey","label","rescan"} },
-    { "wallet",             "importwallet",             &importwallet,             {"filename"} },
-    { "wallet",             "importaddress",            &importaddress,            {"address","label","rescan","p2sh"} },
-    { "wallet",             "importprunedfunds",        &importprunedfunds,        {"rawtransaction","txoutproof"} },
-    { "wallet",             "importpubkey",             &importpubkey,             {"pubkey","label","rescan"} },
-    { "wallet",             "keypoolrefill",            &keypoolrefill,            {"newsize"} },
-    { "wallet",             "listaccounts",             &listaccounts,             {"minconf","include_watchonly"} },
-    { "wallet",             "listaddressgroupings",     &listaddressgroupings,     {} },
-    { "wallet",             "listlockunspent",          &listlockunspent,          {} },
-    { "wallet",             "listreceivedbyaccount",    &listreceivedbyaccount,    {"minconf","include_empty","include_watchonly"} },
-    { "wallet",             "listreceivedbyaddress",    &listreceivedbyaddress,    {"minconf","include_empty","include_watchonly"} },
-    { "wallet",             "listsinceblock",           &listsinceblock,           {"blockhash","target_confirmations","include_watchonly","include_removed"} },
-    { "wallet",             "listtransactions",         &listtransactions,         {"account","count","skip","include_watchonly"} },
-    { "wallet",             "listunspent",              &listunspent,              {"minconf","maxconf","addresses","include_unsafe","query_options"} },
-    { "wallet",             "listwallets",              &listwallets,              {} },
-    { "wallet",             "lockunspent",              &lockunspent,              {"unlock","transactions"} },
-    { "wallet",             "move",                     &movecmd,                  {"fromaccount","toaccount","amount","minconf","comment"} },
-    { "wallet",             "sendfrom",                 &sendfrom,                 {"fromaccount","toaddress","amount","minconf","comment","comment_to"} },
-    { "wallet",             "sendmany",                 &sendmany,                 {"fromaccount","amounts","minconf","comment","subtractfeefrom","replaceable","conf_target","estimate_mode"} },
-    { "wallet",             "sendtoaddress",            &sendtoaddress,            {"address","amount","comment","comment_to","subtractfeefromamount","replaceable","conf_target","estimate_mode"} },
-    { "wallet",             "setaccount",               &setaccount,               {"address","account"} },
-    { "wallet",             "settxfee",                 &settxfee,                 {"amount"} },
-    { "wallet",             "signmessage",              &signmessage,              {"address","message"} },
-    { "wallet",             "walletlock",               &walletlock,               {} },
-    { "wallet",             "walletpassphrasechange",   &walletpassphrasechange,   {"oldpassphrase","newpassphrase"} },
-    { "wallet",             "walletpassphrase",         &walletpassphrase,         {"passphrase","timeout"} },
-    { "wallet",             "removeprunedfunds",        &removeprunedfunds,        {"txid"} },
-    { "wallet",             "rescanblockchain",         &rescanblockchain,         {"start_height", "stop_height"} },
+{ //  category              name                                actor (function)                argNames
+    //  --------------------- ------------------------          -----------------------         ----------
+    { "rawtransactions",    "fundrawtransaction",               &fundrawtransaction,            {"hexstring","options","iswitness"} },
+    { "hidden",             "resendwallettransactions",         &resendwallettransactions,      {} },
+    { "wallet",             "abandontransaction",               &abandontransaction,            {"txid"} },
+    { "wallet",             "abortrescan",                      &abortrescan,                   {} },
+    { "wallet",             "addmultisigaddress",               &addmultisigaddress,            {"nrequired","keys","account","address_type"} },
+    { "hidden",             "addwitnessaddress",                &addwitnessaddress,             {"address","p2sh"} },
+    { "wallet",             "backupwallet",                     &backupwallet,                  {"destination"} },
+    { "wallet",             "bumpfee",                          &bumpfee,                       {"txid", "options"} },
+    { "wallet",             "dumpprivkey",                      &dumpprivkey,                   {"address"}  },
+    { "wallet",             "dumpwallet",                       &dumpwallet,                    {"filename"} },
+    { "wallet",             "encryptwallet",                    &encryptwallet,                 {"passphrase"} },
+    { "wallet",             "getaccountaddress",                &getaccountaddress,             {"account"} },
+    { "wallet",             "getaccount",                       &getaccount,                    {"address"} },
+    { "wallet",             "getaddressesbyaccount",            &getaddressesbyaccount,         {"account"} },
+    { "wallet",             "getaddressinfo",                   &getaddressinfo,                {"address"} },
+    { "wallet",             "getbalance",                       &getbalance,                    {"account","minconf","include_watchonly"} },
+    { "wallet",             "getnewaddress",                    &getnewaddress,                 {"account","address_type"} },
+    { "wallet",             "getrawchangeaddress",              &getrawchangeaddress,           {"address_type"} },
+    { "wallet",             "getreceivedbyaccount",             &getreceivedbyaccount,          {"account","minconf"} },
+    { "wallet",             "getreceivedbyaddress",             &getreceivedbyaddress,          {"address","minconf"} },
+    { "wallet",             "gettransaction",                   &gettransaction,                {"txid","include_watchonly"} },
+    { "wallet",             "getunconfirmedbalance",            &getunconfirmedbalance,         {} },
+    { "wallet",             "getwalletinfo",                    &getwalletinfo,                 {} },
+    { "wallet",             "importmulti",                      &importmulti,                   {"requests","options"} },
+    { "wallet",             "importprivkey",                    &importprivkey,                 {"privkey","label","rescan"} },
+    { "wallet",             "importwallet",                     &importwallet,                  {"filename"} },
+    { "wallet",             "importaddress",                    &importaddress,                 {"address","label","rescan","p2sh"} },
+    { "wallet",             "importprunedfunds",                &importprunedfunds,             {"rawtransaction","txoutproof"} },
+    { "wallet",             "importpubkey",                     &importpubkey,                  {"pubkey","label","rescan"} },
+    { "wallet",             "keypoolrefill",                    &keypoolrefill,                 {"newsize"} },
+    { "wallet",             "listaccounts",                     &listaccounts,                  {"minconf","include_watchonly"} },
+    { "wallet",             "listaddressgroupings",             &listaddressgroupings,          {} },
+    { "wallet",             "listlockunspent",                  &listlockunspent,               {} },
+    { "wallet",             "listreceivedbyaccount",            &listreceivedbyaccount,         {"minconf","include_empty","include_watchonly"} },
+    { "wallet",             "listreceivedbyaddress",            &listreceivedbyaddress,         {"minconf","include_empty","include_watchonly","address_filter"} },
+    { "wallet",             "listsinceblock",                   &listsinceblock,                {"blockhash","target_confirmations","include_watchonly","include_removed"} },
+    { "wallet",             "listtransactions",                 &listtransactions,              {"account","count","skip","include_watchonly"} },
+    { "wallet",             "listunspent",                      &listunspent,                   {"minconf","maxconf","addresses","include_unsafe","query_options"} },
+    { "wallet",             "listwallets",                      &listwallets,                   {} },
+    { "wallet",             "lockunspent",                      &lockunspent,                   {"unlock","transactions"} },
+    { "wallet",             "move",                             &movecmd,                       {"fromaccount","toaccount","amount","minconf","comment"} },
+    { "wallet",             "sendfrom",                         &sendfrom,                      {"fromaccount","toaddress","amount","minconf","comment","comment_to"} },
+    { "wallet",             "sendmany",                         &sendmany,                      {"fromaccount","amounts","minconf","comment","subtractfeefrom","replaceable","conf_target","estimate_mode"} },
+    { "wallet",             "sendtoaddress",                    &sendtoaddress,                 {"address","amount","comment","comment_to","subtractfeefromamount","replaceable","conf_target","estimate_mode"} },
+    { "wallet",             "setaccount",                       &setaccount,                    {"address","account"} },
+    { "wallet",             "settxfee",                         &settxfee,                      {"amount"} },
+    { "wallet",             "signmessage",                      &signmessage,                   {"address","message"} },
+    { "wallet",             "signrawtransactionwithwallet",     &signrawtransactionwithwallet,  {"hexstring","prevtxs","sighashtype"} },
+    { "wallet",             "walletlock",                       &walletlock,                    {} },
+    { "wallet",             "walletpassphrasechange",           &walletpassphrasechange,        {"oldpassphrase","newpassphrase"} },
+    { "wallet",             "walletpassphrase",                 &walletpassphrase,              {"passphrase","timeout"} },
+    { "wallet",             "removeprunedfunds",                &removeprunedfunds,             {"txid"} },
+    { "wallet",             "rescanblockchain",                 &rescanblockchain,              {"start_height", "stop_height"} },
 
-    { "generating",         "generate",                 &generate,                 {"nblocks","maxtries"} },
+    { "generating",         "generate",                         &generate,                      {"nblocks","maxtries"} },
 };
 
 void RegisterWalletRPCCommands(CRPCTable &t)

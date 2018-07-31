@@ -93,8 +93,8 @@ class AddressTypeTest(BitcoinTestFramework):
 
     def test_address(self, node, address, multisig, typ):
         """Run sanity checks on an address."""
-        info = self.nodes[node].validateaddress(address)
-        assert(info['isvalid'])
+        info = self.nodes[node].getaddressinfo(address)
+        assert(self.nodes[node].validateaddress(address)['isvalid'])
         if not multisig and typ == 'legacy':
             # P2PKH
             assert(not info['isscript'])

@@ -183,6 +183,7 @@ void SetServiceFlagsIBDCache(bool state) {
     g_initial_block_download_completed = state;
 }
 
+
 CAddress::CAddress() : CService()
 {
     Init();

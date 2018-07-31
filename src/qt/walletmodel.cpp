@@ -15,8 +15,8 @@
 #include <qt/sendcoinsdialog.h>
 #include <qt/transactiontablemodel.h>
 
-#include <base58.h>
 #include <chain.h>
+#include <key_io.h>
 #include <keystore.h>
 #include <validation.h>
 #include <net.h> // for g_connman
@@ -43,13 +43,8 @@ WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *_wallet, O
     QObject(parent), wallet(_wallet), optionsModel(_optionsModel), addressTableModel(0),
     transactionTableModel(0),
     recentRequestsTableModel(0),
-    cachedBalance(0),
-    cachedUnconfirmedBalance(0),
-    cachedImmatureBalance(0),
-    cachedAnonymizedBalance(0),
-    cachedWatchOnlyBalance(0),
-    cachedWatchUnconfBalance(0),
-    cachedWatchImmatureBalance(0),
+    cachedBalance(0), cachedUnconfirmedBalance(0), cachedImmatureBalance(0), cachedAnonymizedBalance(0),
+    cachedWatchOnlyBalance{0}, cachedWatchUnconfBalance{0}, cachedWatchImmatureBalance{0},
     cachedEncryptionStatus(Unencrypted),
     cachedNumBlocks(0),
     cachedPrivateSendRounds(0)
@@ -750,7 +745,7 @@ bool WalletModel::bumpFee(uint256 hash)
     questionString.append("</td></tr></table>");
     SendConfirmationDialog confirmationDialog(tr("Confirm fee bump"), questionString);
     confirmationDialog.exec();
-    QMessageBox::StandardButton retval = (QMessageBox::StandardButton)confirmationDialog.result();
+    QMessageBox::StandardButton retval = static_cast<QMessageBox::StandardButton>(confirmationDialog.result());
 
     // cancel sign&broadcast if users doesn't want to bump the fee
     if (retval != QMessageBox::Yes) {

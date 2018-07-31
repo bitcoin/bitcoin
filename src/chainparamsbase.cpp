@@ -17,50 +17,12 @@ const std::string CBaseChainParams::REGTEST = "regtest";
 void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp)
 {
     strUsage += HelpMessageGroup(_("Chain selection options:"));
-    strUsage += HelpMessageOpt("-testnet", _("Use the test chain"));
     if (debugHelp) {
         strUsage += HelpMessageOpt("-regtest", "Enter regression test mode, which uses a special chain in which blocks can be solved instantly. "
                                    "This is intended for regression testing tools and app development.");
     }
+    strUsage += HelpMessageOpt("-testnet", _("Use the test chain"));
 }
-
-/**
- * Main network
- */
-class CBaseMainParams : public CBaseChainParams
-{
-public:
-    CBaseMainParams()
-    {
-        nRPCPort = 11995;
-    }
-};
-
-/**
- * Testnet (v3)
- */
-class CBaseTestNetParams : public CBaseChainParams
-{
-public:
-    CBaseTestNetParams()
-    {
-        nRPCPort = 21995;
-        strDataDir = "testnet4";
-    }
-};
-
-/*
- * Regression test
- */
-class CBaseRegTestParams : public CBaseChainParams
-{
-public:
-    CBaseRegTestParams()
-    {
-        nRPCPort = 18443;
-        strDataDir = "regtest";
-    }
-};
 
 static std::unique_ptr<CBaseChainParams> globalChainBaseParams;
 
@@ -73,11 +35,11 @@ const CBaseChainParams& BaseParams()
 std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain)
 {
     if (chain == CBaseChainParams::MAIN)
-        return std::unique_ptr<CBaseChainParams>(new CBaseMainParams());
+        return MakeUnique<CBaseChainParams>("", 11995);
     else if (chain == CBaseChainParams::TESTNET)
-        return std::unique_ptr<CBaseChainParams>(new CBaseTestNetParams());
+        return MakeUnique<CBaseChainParams>("testnet3", 21995);
     else if (chain == CBaseChainParams::REGTEST)
-        return std::unique_ptr<CBaseChainParams>(new CBaseRegTestParams());
+        return MakeUnique<CBaseChainParams>("regtest", 18443);
     else
         throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }

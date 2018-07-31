@@ -16,7 +16,8 @@
 #include <qt/platformstyle.h>
 #include <qt/sendcoinsentry.h>
 
-#include <base58.h>
+#include <chainparams.h>
+#include <key_io.h>
 #include <wallet/coincontrol.h>
 #include <validation.h> // mempool and minRelayTxFee
 #include <ui_interface.h>
@@ -399,7 +400,7 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients, QString strFee,
     SendConfirmationDialog confirmationDialog(tr("Confirm send coins"),
         questionString.arg(formatted.join("<br />")), SEND_CONFIRM_DELAY, this);
     confirmationDialog.exec();
-    QMessageBox::StandardButton retval = (QMessageBox::StandardButton)confirmationDialog.result();
+    QMessageBox::StandardButton retval = static_cast<QMessageBox::StandardButton>(confirmationDialog.result());
 
     if(retval != QMessageBox::Yes)
     {
@@ -417,12 +418,19 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients, QString strFee,
         accept();
         CoinControlDialog::coinControl()->UnSelectAll();
         coinControlUpdateLabels();
+        Q_EMIT coinsSent(currentTransaction.getTransaction()->GetHash());
     }
     fNewRecipientAllowed = true;
 }
 
 void SendCoinsDialog::clear()
 {
+    // Clear coin control settings
+    CoinControlDialog::coinControl()->UnSelectAll();
+    ui->checkBoxCoinControlChange->setChecked(false);
+    ui->lineEditCoinControlChange->clear();
+    coinControlUpdateLabels();
+
     // Remove entries until only one left
     while(ui->entries->count())
     {

@@ -67,6 +67,8 @@ public:
     bool AllowMultiplePorts() const { return fAllowMultiplePorts; }
     /** Return the BIP70 network string (main, test or regtest) */
     std::string NetworkIDString() const { return strNetworkID; }
+    /** Return true if the fallback fee is by default enabled for this network */
+    bool IsFallbackFeeEnabled() const { return m_fallback_fee_enabled; }
     /** Return the list of hostnames to look up for DNS seeds */
     const std::vector<std::string>& DNSSeeds() const { return vSeeds; }
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
@@ -98,6 +100,7 @@ protected:
     ChainTxData chainTxData;
     int nPoolMaxTransactions;
     int nFulfilledRequestExpireTime;
+    bool m_fallback_fee_enabled;
 };
 
 /**

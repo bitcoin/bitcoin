@@ -132,6 +132,8 @@ Not OK (used plenty in the current source, but not picked up):
 A full list of comment syntaxes picked up by doxygen can be found at http://www.stack.nl/~dimitri/doxygen/manual/docblocks.html,
 but if possible use one of the above styles.
 
+Documentation can be generated with `make docs` and cleaned up with `make clean-docs`.
+
 Development tips and tricks
 ---------------------------
 
@@ -139,6 +141,10 @@ Development tips and tricks
 
 Run configure with the --enable-debug option, then make. Or run configure with
 CXXFLAGS="-g -ggdb -O0" or whatever debug flags you need.
+
+**compiling for gprof profiling**
+
+Run configure with the --enable-gprof option, then make.
 
 **debug.log**
 
@@ -237,8 +243,6 @@ Threads
 - ThreadMessageHandler : Higher-level message handling (sending and receiving).
 
 - DumpAddresses : Dumps IP addresses of nodes to peers.dat.
-
-- ThreadFlushWalletDB : Close the wallet.dat file if it hasn't been used in 500ms.
 
 - ThreadRPCServer : Remote procedure call handler, listens on port 8332 for connections and services them.
 
@@ -378,6 +382,18 @@ C++ data structures
   - *Rationale*: Easier to understand what is happening, thus easier to spot mistakes, even for those
   that are not language lawyers
 
+- Initialize all non-static class members where they are defined
+
+  - *Rationale*: Initializing the members in the declaration makes it easy to spot uninitialized ones,
+  and avoids accidentally reading uninitialized memory
+
+```cpp
+class A
+{
+    uint32_t m_count{0};
+}
+```
+
 Strings and formatting
 ------------------------
 
@@ -413,11 +429,11 @@ member name:
 ```c++
 class AddressBookPage
 {
-    Mode mode;
+    Mode m_mode;
 }
 
 AddressBookPage::AddressBookPage(Mode _mode) :
-      mode(_mode)
+      m_mode(_mode)
 ...
 ```
 
@@ -604,7 +620,7 @@ To create a scripted-diff:
 
 The scripted-diff is verified by the tool `contrib/devtools/commit-script-check.sh`
 
-Commit `bb81e173` is an example of a scripted-diff.
+Commit [`bb81e173`](https://github.com/bitcoin/bitcoin/commit/bb81e173) is an example of a scripted-diff.
 
 RPC interface guidelines
 --------------------------

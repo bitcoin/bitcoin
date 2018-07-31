@@ -7,7 +7,6 @@
 
 #include <wallet/wallet.h>
 
-#include <base58.h>
 #include <checkpoints.h>
 #include <chain.h>
 #include <wallet/coincontrol.h>
@@ -17,6 +16,7 @@
 #include <fs.h>
 #include <wallet/init.h>
 #include <key.h>
+#include <key_io.h>
 #include <keystore.h>
 #include <net.h>
 #include <policy/fees.h>
@@ -41,7 +41,6 @@
 #include <future>
 
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/thread.hpp>
 
 std::vector<CWalletRef> vpwallets;
 /** Transaction fee set by the user */
@@ -51,8 +50,8 @@ bool bSpendZeroConfChange = DEFAULT_SPEND_ZEROCONF_CHANGE;
 bool fWalletRbf = DEFAULT_WALLET_RBF;
 OutputType g_address_type = OUTPUT_TYPE_NONE;
 OutputType g_change_type = OUTPUT_TYPE_NONE;
+bool g_wallet_allow_fallback_fee = true; //<! will be defined via chainparams
 
-const char * DEFAULT_WALLET_DAT = "wallet.dat";
 const uint32_t BIP32_HARDENED_KEY_LIMIT = 0x80000000;
 
 /** 
@@ -1056,7 +1055,8 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
     if (!strCmd.empty())
     {
         boost::replace_all(strCmd, "%s", wtxIn.GetHash().GetHex());
-        boost::thread t(runCommand, strCmd); // thread runs free
+        std::thread t(runCommand, strCmd);
+        t.detach(); // thread runs free
     }
 
     fAnonymizableTallyCached = false;
@@ -1936,20 +1936,15 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, CBlock
             dProgressStart = GuessVerificationProgress(chainParams.TxData(), pindex);
             dProgressTip = GuessVerificationProgress(chainParams.TxData(), tip);
         }
+        double gvp = dProgressStart;
         while (pindex && !fAbortRescan)
         {
             if (pindex->nHeight % 100 == 0 && dProgressTip - dProgressStart > 0.0) {
-                double gvp = 0;
-                {
-                    LOCK(cs_main);
-                    gvp = GuessVerificationProgress(chainParams.TxData(), pindex);
-                }
                 ShowProgress(_("Rescanning..."), std::max(1, std::min(99, (int)((gvp - dProgressStart) / (dProgressTip - dProgressStart) * 100))));
             }
             if (GetTime() >= nNow + 60) {
                 nNow = GetTime();
-                LOCK(cs_main);
-                LogPrintf("Still rescanning. At block %d. Progress=%f\n", pindex->nHeight, GuessVerificationProgress(chainParams.TxData(), pindex));
+                LogPrintf("Still rescanning. At block %d. Progress=%f\n", pindex->nHeight, gvp);
             }
 
             CBlock block;
@@ -1973,6 +1968,7 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, CBlock
             {
                 LOCK(cs_main);
                 pindex = chainActive.Next(pindex);
+                gvp = GuessVerificationProgress(chainParams.TxData(), pindex);
                 if (tip != chainActive.Tip()) {
                     tip = chainActive.Tip();
                     // in case the tip has changed, update progress max
@@ -1981,7 +1977,7 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, CBlock
             }
         }
         if (pindex && fAbortRescan) {
-            LogPrintf("Rescan aborted at block %d. Progress=%f\n", pindex->nHeight, GuessVerificationProgress(chainParams.TxData(), pindex));
+            LogPrintf("Rescan aborted at block %d. Progress=%f\n", pindex->nHeight, gvp);
         }
         ShowProgress(_("Rescanning..."), 100); // hide progress dialog in GUI
     }
@@ -2676,11 +2672,12 @@ CAmount CWallet::GetAvailableBalance(const CCoinControl* coinControl) const
 
 void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const CCoinControl *coinControl, AvailableCoinsType nCoinType, const CAmount &nMinimumAmount, const CAmount &nMaximumAmount, const CAmount &nMinimumSumAmount, const uint64_t nMaximumCount, const int nMinDepth, const int nMaxDepth) const
 {
+    AssertLockHeld(cs_main);
+    AssertLockHeld(cs_wallet);
+
     vCoins.clear();
 
     {
-        LOCK2(cs_main, cs_wallet);
-
         CAmount nTotal = 0;
 
         for (const auto& entry : mapWallet)
@@ -2813,11 +2810,11 @@ std::map<CTxDestination, std::vector<COutput>> CWallet::ListCoins() const
     // avoid adding some extra complexity to the Qt code.
 
     std::map<CTxDestination, std::vector<COutput>> result;
-
     std::vector<COutput> availableCoins;
-    AvailableCoins(availableCoins);
 
     LOCK2(cs_main, cs_wallet);
+    AvailableCoins(availableCoins);
+
     for (auto& coin : availableCoins) {
         CTxDestination address;
         if (coin.fSpendable &&
@@ -3812,6 +3809,11 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                 }
 
                 nFeeNeeded = GetMinimumFee(nBytes, coin_control, ::mempool, ::feeEstimator, &feeCalc);
+                if (feeCalc.reason == FeeReason::FALLBACK && !g_wallet_allow_fallback_fee) {
+                    // eventually allow a fallback fee
+                    strFailReason = _("Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.");
+                    return false;
+                }
 
                 // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
                 // because we must be at the maximum allowed fee.
@@ -4011,7 +4013,7 @@ bool CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
         {
             // Broadcast
             if (!wtx.AcceptToMemoryPool(maxTxFee, state)) {
-                LogPrintf("CommitTransaction(): Transaction cannot be broadcast immediately, %s\n", state.GetRejectReason());
+                LogPrintf("CommitTransaction(): Transaction cannot be broadcast immediately, %s\n", FormatStateMessage(state));
                 // TODO: if we expect the failure to be long term or permanent, instead delete wtx from the wallet and return failure.
             } else {
                 wtx.RelayWalletTransaction(connman);
@@ -4844,16 +4846,17 @@ std::vector<std::string> CWallet::GetDestValues(const std::string& prefix) const
     return values;
 }
 
-CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
+CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& path)
 {
+    const std::string& walletFile = name;
+
     // needed to restore wallet transaction meta data after -zapwallettxes
     std::vector<CWalletTx> vWtx;
 
     if (gArgs.GetBoolArg("-zapwallettxes", false)) {
         uiInterface.InitMessage(_("Zapping all transactions from wallet..."));
 
-        std::unique_ptr<CWalletDBWrapper> dbw(new CWalletDBWrapper(&bitdb, walletFile));
-        std::unique_ptr<CWallet> tempWallet = MakeUnique<CWallet>(std::move(dbw));
+        std::unique_ptr<CWallet> tempWallet = MakeUnique<CWallet>(name, CWalletDBWrapper::Create(path));
         DBErrors nZapWalletRet = tempWallet->ZapWalletTx(vWtx);
         if (nZapWalletRet != DB_LOAD_OK) {
             InitError(strprintf(_("Error loading %s: Wallet corrupted"), walletFile));
@@ -4865,8 +4868,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
 
     int64_t nStart = GetTimeMillis();
     bool fFirstRun = true;
-    std::unique_ptr<CWalletDBWrapper> dbw(new CWalletDBWrapper(&bitdb, walletFile));
-    CWallet *walletInstance = new CWallet(std::move(dbw));
+    CWallet *walletInstance = new CWallet(name, CWalletDBWrapper::Create(path));
     DBErrors nLoadWalletRet = walletInstance->LoadWallet(fFirstRun);
     if (nLoadWalletRet != DB_LOAD_OK)
     {
@@ -5231,11 +5233,6 @@ int CMerkleTx::GetBlocksToMaturity() const
 
 bool CWalletTx::AcceptToMemoryPool(const CAmount& nAbsurdFee, CValidationState& state)
 {
-    // Quick check to avoid re-setting fInMempool to false
-    if (mempool.exists(tx->GetHash())) {
-        return false;
-    }
-
     // We must set fInMempool here - while it will be re-set to true by the
     // entered-mempool callback, if we did not there would be a race where a
     // user could call sendmoney in a loop and hit spurious out of funds errors
@@ -5243,7 +5240,7 @@ bool CWalletTx::AcceptToMemoryPool(const CAmount& nAbsurdFee, CValidationState& 
     // unavailable as we're not yet aware its in mempool.
     bool ret = ::AcceptToMemoryPool(mempool, state, tx, nullptr /* pfMissingInputs */,
                                 nullptr /* plTxnReplaced */, false /* bypass_limits */, nAbsurdFee);
-    fInMempool = ret;
+    fInMempool |= ret;
     return ret;
 }
 

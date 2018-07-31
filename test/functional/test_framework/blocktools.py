@@ -149,7 +149,7 @@ def create_witness_tx(node, use_p2wsh, utxo, pubkey, encode_p2sh, amount):
     else:
         addr = key_to_p2sh_p2wpkh(pubkey) if encode_p2sh else key_to_p2wpkh(pubkey)
     if not encode_p2sh:
-        assert_equal(node.validateaddress(addr)['scriptPubKey'], witness_script(use_p2wsh, pubkey))
+        assert_equal(node.getaddressinfo(addr)['scriptPubKey'], witness_script(use_p2wsh, pubkey))
     return node.createrawtransaction([utxo], {addr: amount})
 
 # Create a transaction spending a given utxo to a segwit output corresponding
@@ -160,7 +160,7 @@ def create_witness_tx(node, use_p2wsh, utxo, pubkey, encode_p2sh, amount):
 def send_to_witness(use_p2wsh, node, utxo, pubkey, encode_p2sh, amount, sign=True, insert_redeem_script=""):
     tx_to_witness = create_witness_tx(node, use_p2wsh, utxo, pubkey, encode_p2sh, amount)
     if (sign):
-        signed = node.signrawtransaction(tx_to_witness)
+        signed = node.signrawtransactionwithwallet(tx_to_witness)
         assert("errors" not in signed or len(["errors"]) == 0)
         return node.sendrawtransaction(signed["hex"])
     else:

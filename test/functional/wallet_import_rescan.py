@@ -125,7 +125,7 @@ class ImportRescanTest(BitcoinTestFramework):
             if import_node.prune:
                 extra_args[i] += ["-prune=1"]
 
-        self.add_nodes(self.num_nodes, extra_args)
+        self.add_nodes(self.num_nodes, extra_args=extra_args)
         self.start_nodes()
         for i in range(1, self.num_nodes):
             connect_nodes(self.nodes[i], 0)
@@ -135,7 +135,7 @@ class ImportRescanTest(BitcoinTestFramework):
         # each possible type of wallet import RPC.
         for i, variant in enumerate(IMPORT_VARIANTS):
             variant.label = "label {} {}".format(i, variant)
-            variant.address = self.nodes[1].validateaddress(self.nodes[1].getnewaddress(variant.label))
+            variant.address = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress(variant.label))
             variant.key = self.nodes[1].dumpprivkey(variant.address["address"])
             variant.initial_amount = 10 - (i + 1) / 4.0
             variant.initial_txid = self.nodes[0].sendtoaddress(variant.address["address"], variant.initial_amount)

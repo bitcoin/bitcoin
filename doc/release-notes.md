@@ -37,7 +37,7 @@ Compatibility
 ==============
 
 Chaincoin Core is extensively tested on multiple operating systems using
-the Linux kernel, macOS 10.8+, and Windows Vista and later. Windows XP is not supported.
+the Linux kernel, macOS 10.11+, and Windows 7 and newer (Windows XP is not supported).
 
 Chaincoin Core should also work on most other Unix-like systems but is not
 frequently tested on them.
@@ -461,6 +461,44 @@ Instant send is a functionality ported from DASH distributing a copy of desired 
 ### Logging
 
 - The log timestamp format is now ISO 8601 (e.g. "2018-02-28T12:34:56Z").
+
+RPC changes
+------------
+
+### Low-level changes
+
+- The `createrawtransaction` RPC will now accept an array or dictionary (kept for compatibility) for the `outputs` parameter. This means the order of transaction outputs can be specified by the client.
+- The `fundrawtransaction` RPC will reject the previously deprecated `reserveChangeKey` option.
+
+External wallet files
+---------------------
+
+The `-wallet=<path>` option now accepts full paths instead of requiring wallets
+to be located in the -walletdir directory.
+
+Newly created wallet format
+---------------------------
+
+If `-wallet=<path>` is specified with a path that does not exist, it will now
+create a wallet directory at the specified location (containing a wallet.dat
+data file, a db.log file, and database/log.?????????? files) instead of just
+creating a data file at the path and storing log files in the parent
+directory. This should make backing up wallets more straightforward than
+before because the specified wallet path can just be directly archived without
+having to look in the parent directory for transaction log files.
+
+For backwards compatibility, wallet paths that are names of existing data files
+in the `-walletdir` directory will continue to be accepted and interpreted the
+same as before.
+
+Low-level RPC changes
+---------------------
+
+- When bitcoin is not started with any `-wallet=<path>` options, the name of
+  the default wallet returned by `getwalletinfo` and `listwallets` RPCs is
+  now the empty string `""` instead of `"wallet.dat"`. If bitcoin is started
+  with any `-wallet=<path>` options, there is no change in behavior, and the
+  name of any wallet is just its `<path>` string.
 
 Credits
 =======

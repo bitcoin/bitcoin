@@ -2,9 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <base58.h>
+#include <key_io.h>
 #include <keystore.h>
-#include <pubkey.h>
 #include <rpc/protocol.h>
 #include <rpc/util.h>
 #include <tinyformat.h>
@@ -65,4 +64,65 @@ CScript CreateMultisigRedeemscript(const int required, const std::vector<CPubKey
     }
 
     return result;
+}
+
+class DescribeAddressVisitor : public boost::static_visitor<UniValue>
+{
+public:
+    explicit DescribeAddressVisitor() {}
+
+    UniValue operator()(const CNoDestination& dest) const
+    {
+        return UniValue(UniValue::VOBJ);
+    }
+
+    UniValue operator()(const CKeyID& keyID) const
+    {
+        UniValue obj(UniValue::VOBJ);
+        obj.pushKV("isscript", false);
+        obj.pushKV("iswitness", false);
+        return obj;
+    }
+
+    UniValue operator()(const CScriptID& scriptID) const
+    {
+        UniValue obj(UniValue::VOBJ);
+        obj.pushKV("isscript", true);
+        obj.pushKV("iswitness", false);
+        return obj;
+    }
+
+    UniValue operator()(const WitnessV0KeyHash& id) const
+    {
+        UniValue obj(UniValue::VOBJ);
+        obj.pushKV("isscript", false);
+        obj.pushKV("iswitness", true);
+        obj.pushKV("witness_version", 0);
+        obj.pushKV("witness_program", HexStr(id.begin(), id.end()));
+        return obj;
+    }
+
+    UniValue operator()(const WitnessV0ScriptHash& id) const
+    {
+        UniValue obj(UniValue::VOBJ);
+        obj.pushKV("isscript", true);
+        obj.pushKV("iswitness", true);
+        obj.pushKV("witness_version", 0);
+        obj.pushKV("witness_program", HexStr(id.begin(), id.end()));
+        return obj;
+    }
+
+    UniValue operator()(const WitnessUnknown& id) const
+    {
+        UniValue obj(UniValue::VOBJ);
+        obj.pushKV("iswitness", true);
+        obj.pushKV("witness_version", (int)id.version);
+        obj.pushKV("witness_program", HexStr(id.program, id.program + id.length));
+        return obj;
+    }
+};
+
+UniValue DescribeAddress(const CTxDestination& dest)
+{
+    return boost::apply_visitor(DescribeAddressVisitor(), dest);
 }

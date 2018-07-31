@@ -54,7 +54,7 @@ void CPrivateSendClient::ProcessMessage(CNode* pfrom, const std::string& strComm
         LogPrint(BCLog::PRIVSEND, "DSQUEUE -- %s new\n", dsq.ToString());
 
         if(dsq.IsExpired()) return;
-        if(dsq.nInputCount < 0 || dsq.nInputCount > PRIVATESEND_ENTRY_MAX_SIZE) return;
+        if(dsq.nInputCount < 0 || dsq.nInputCount > (int)PRIVATESEND_ENTRY_MAX_SIZE) return;
 
         masternode_info_t infoMn;
         if(!mnodeman.GetMasternodeInfo(dsq.masternodeOutpoint, infoMn)) return;
@@ -1169,7 +1169,7 @@ bool CPrivateSendClient::PrepareDenominate(int nMinRounds, int nMaxRounds, std::
         }
     }
 
-    if (CPrivateSend::GetDenominations(vecTxOutRet) != nSessionDenom || (nSessionInputCount != 0 && vecTxOutRet.size() != nSessionInputCount)) {
+    if (CPrivateSend::GetDenominations(vecTxOutRet) != nSessionDenom || (nSessionInputCount != 0 && (int)vecTxOutRet.size() != nSessionInputCount)) {
         {
             // unlock used coins on failure
             LOCK(pwallet->cs_wallet);
