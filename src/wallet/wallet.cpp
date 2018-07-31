@@ -3064,26 +3064,6 @@ bool CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
     return true;
 }
 
-bool CWallet::AddAccountingEntry(const CAccountingEntry& acentry)
-{
-    WalletBatch batch(*database);
-
-    return AddAccountingEntry(acentry, &batch);
-}
-
-bool CWallet::AddAccountingEntry(const CAccountingEntry& acentry, WalletBatch *batch)
-{
-    if (!batch->WriteAccountingEntry(++nAccountingEntryNumber, acentry)) {
-        return false;
-    }
-
-    laccentries.push_back(acentry);
-    CAccountingEntry & entry = laccentries.back();
-    wtxOrdered.insert(std::make_pair(entry.nOrderPos, TxPair(nullptr, &entry)));
-
-    return true;
-}
-
 DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
 {
     LOCK2(cs_main, cs_wallet);
