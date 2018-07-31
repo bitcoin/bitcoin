@@ -802,7 +802,9 @@ void SetupDatadir(fs::path path)
     fs::create_directories(path / "wallets");
 
     // write default bitcoin.conf template to datadir
-    std::ofstream conf_file((path / BITCOIN_CONF_FILENAME).string().c_str());
+    std::string conf_filename(BITCOIN_CONF_FILENAME);
+    std::string example_conf_filename = conf_filename + ".example";
+    std::ofstream conf_file((path / example_conf_filename).string().c_str());
     conf_file << DEFAULT_BITCOIN_CONF_TEXT << std::endl;
 }
 
