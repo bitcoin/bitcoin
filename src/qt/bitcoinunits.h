@@ -57,7 +57,7 @@ public:
     enum Unit
     {
         MBC,
-        uMBC
+        mMBC
     };
 
     enum SeparatorStyle
