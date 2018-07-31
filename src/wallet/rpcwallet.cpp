@@ -118,9 +118,9 @@ void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
     if (confirms <= 0) {
         LOCK(mempool.cs);
         RBFTransactionState rbfState = IsRBFOptIn(*wtx.tx, mempool);
-        if (rbfState == RBF_TRANSACTIONSTATE_UNKNOWN)
+        if (rbfState == RBFTransactionState::UNKNOWN)
             rbfStatus = "unknown";
-        else if (rbfState == RBF_TRANSACTIONSTATE_REPLACEABLE_BIP125)
+        else if (rbfState == RBFTransactionState::REPLACEABLE_BIP125)
             rbfStatus = "yes";
     }
     entry.pushKV("bip125-replaceable", rbfStatus);

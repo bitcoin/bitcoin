@@ -127,10 +127,10 @@ struct PrecomputedTransactionData
     explicit PrecomputedTransactionData(const CTransaction& tx);
 };
 
-enum SigVersion
+enum class SigVersion
 {
-    SIGVERSION_BASE = 0,
-    SIGVERSION_WITNESS_V0 = 1,
+    BASE = 0,
+    WITNESS_V0 = 1,
 };
 
 uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType, const CAmount& amount, SigVersion sigversion, const PrecomputedTransactionData* cache = nullptr);
