@@ -1380,11 +1380,10 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
 static void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, int nMinDepth, bool fLong, UniValue& ret, const isminefilter& filter) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     CAmount nFee;
-    std::string dummy_account;
     std::list<COutputEntry> listReceived;
     std::list<COutputEntry> listSent;
 
-    wtx.GetAmounts(listReceived, listSent, nFee, dummy_account, filter);
+    wtx.GetAmounts(listReceived, listSent, nFee, filter);
 
     bool involvesWatchonly = wtx.IsFromMe(ISMINE_WATCH_ONLY);
 
