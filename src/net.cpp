@@ -1798,7 +1798,6 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         CAddress addrConnect;
 
         // Only connect out to one peer per network group (/16 for IPv4).
-        // Do this here so we don't have to critsect vNodes inside mapAddresses critsect.
         int nOutbound = 0;
         std::set<std::vector<unsigned char> > setConnected;
         {
