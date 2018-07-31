@@ -152,10 +152,10 @@ arith_uint256 CMasternode::CalculateScore(int64_t nBlockHeight) const
     if(chainActive.Tip() == NULL)
         return arith_uint256();
 
-    assert(chainActive.Height() >= GetInputHeight(vin) + MASTERNODE_MIN_CONFIRMATIONS);
-
     // Find the block hash where tx got MASTERNODE_MIN_CONFIRMATIONS
     CBlockIndex *pblockIndex = chainActive[GetInputHeight(vin) + MASTERNODE_MIN_CONFIRMATIONS - 1];
+    if (!pblockIndex)
+        return arith_uint256();
     uint256 collateralMinConfBlockHash = pblockIndex->GetBlockHash();
 
     uint256 hash = uint256();
