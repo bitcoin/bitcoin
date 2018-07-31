@@ -47,10 +47,10 @@ std::string HelpMessageCli()
     strUsage += HelpMessageOpt("-rpcport=<port>", strprintf(_("Connect to JSON-RPC on <port> (default: %u or testnet: %u)"), defaultBaseParams->RPCPort(), testnetBaseParams->RPCPort()));
     strUsage += HelpMessageOpt("-rpcuser=<user>", _("Username for JSON-RPC connections"));
     strUsage += HelpMessageOpt("-rpcwait", _("Wait for RPC server to start"));
-    strUsage += HelpMessageOpt("-rpcwallet=<walletname>", _("Send RPC for non-default wallet on RPC server (needs to exactly match corresponding -wallet option passed to bitcoind)"));
+    strUsage += HelpMessageOpt("-rpcwallet=<walletname>", _("Send RPC for non-default wallet on RPC server (needs to exactly match corresponding -wallet option passed to chaincoind)"));
     strUsage += HelpMessageOpt("-stdin", _("Read extra arguments from standard input, one per line until EOF/Ctrl-D (recommended for sensitive information such as passphrases).  When combined with -stdinrpcpass, the first line from standard input is used for the RPC password."));
     strUsage += HelpMessageOpt("-stdinrpcpass", strprintf(_("Read RPC password from standard input as a single line.  When combined with -stdin, the first line from standard input is used for the RPC password.")));
-    strUsage += HelpMessageOpt("-usewallet=<walletname>", _("Send RPC for non-default wallet on RPC server (argument is wallet filename in bitcoind directory, required if bitcoind/-Qt runs with multiple wallets)"));
+    strUsage += HelpMessageOpt("-usewallet=<walletname>", _("Send RPC for non-default wallet on RPC server (argument is wallet filename in chaincoind directory, required if chaincoind/-Qt runs with multiple wallets)"));
 
     return strUsage;
 }
@@ -89,7 +89,7 @@ static int AppInitRPC(int argc, char* argv[])
         if (!gArgs.IsArgSet("-version")) {
             strUsage += "\n" + _("Usage:") + "\n" +
                   "  chaincoin-cli [options] <command> [params]  " + _("Send command to Chaincoin Core") + "\n" +
-                  "  bitcoin-cli [options] -named <command> [name=value] ... " + strprintf(_("Send command to %s (with named arguments)"), _(PACKAGE_NAME)) + "\n" +
+                  "  chaincoin-cli [options] -named <command> [name=value] ... " + strprintf(_("Send command to %s (with named arguments)"), _(PACKAGE_NAME)) + "\n" +
                   "  chaincoin-cli [options] help                " + _("List commands") + "\n" +
                   "  chaincoin-cli [options] help <command>      " + _("Get help for a command") + "\n";
 
@@ -315,13 +315,11 @@ static UniValue CallRPC(BaseRequestHandler *rh, const std::string& strMethod, co
 
     // Get credentials
     std::string strRPCUserColonPass;
+    bool failedToGetAuthCookie = false;
     if (gArgs.GetArg("-rpcpassword", "") == "") {
         // Try fall back to cookie-based authentication if no password is provided
         if (!GetAuthCookie(&strRPCUserColonPass)) {
-            throw std::runtime_error(strprintf(
-                _("Could not locate RPC credentials. No authentication cookie could be found, and no rpcpassword is set in the configuration file (%s)"),
-                    GetConfigFile(gArgs.GetArg("-conf", CHAINCOIN_CONF_FILENAME)).string().c_str()));
-
+            failedToGetAuthCookie = true;
         }
     } else {
         strRPCUserColonPass = gArgs.GetArg("-rpcuser", "") + ":" + gArgs.GetArg("-rpcpassword", "");
@@ -360,11 +358,21 @@ static UniValue CallRPC(BaseRequestHandler *rh, const std::string& strMethod, co
 
     event_base_dispatch(base.get());
 
-    if (response.status == 0)
-        throw CConnectionFailed(strprintf("couldn't connect to server\n(make sure server is running and you are connecting to the correct RPC port: %d %s)", response.error, http_errorstring(response.error)));
-    else if (response.status == HTTP_UNAUTHORIZED)
-        throw std::runtime_error("incorrect rpcuser or rpcpassword (authorization failed)");
-    else if (response.status >= 400 && response.status != HTTP_BAD_REQUEST && response.status != HTTP_NOT_FOUND && response.status != HTTP_INTERNAL_SERVER_ERROR)
+    if (response.status == 0) {
+        std::string responseErrorMessage;
+        if (response.error != -1) {
+            responseErrorMessage = strprintf(" (error code %d - \"%s\")", response.error, http_errorstring(response.error));
+        }
+        throw CConnectionFailed(strprintf("Could not connect to the server %s:%d%s\n\nMake sure the chaincoind server is running and that you are connecting to the correct RPC port.", host, port, responseErrorMessage));
+    } else if (response.status == HTTP_UNAUTHORIZED) {
+        if (failedToGetAuthCookie) {
+            throw std::runtime_error(strprintf(
+                _("Could not locate RPC credentials. No authentication cookie could be found, and RPC password is not set.  See -rpcpassword and -stdinrpcpass.  Configuration file: (%s)"),
+                GetConfigFile(gArgs.GetArg("-conf", CHAINCOIN_CONF_FILENAME)).string().c_str()));
+        } else {
+            throw std::runtime_error("Authorization failed: Incorrect rpcuser or rpcpassword");
+        }
+    } else if (response.status >= 400 && response.status != HTTP_BAD_REQUEST && response.status != HTTP_NOT_FOUND && response.status != HTTP_INTERNAL_SERVER_ERROR)
         throw std::runtime_error(strprintf("server returned HTTP error %d", response.status));
     else if (response.body.empty())
         throw std::runtime_error("no response from server");
@@ -446,7 +454,7 @@ int CommandLineRPC(int argc, char *argv[])
                             strPrint += "error message:\n"+errMsg.get_str();
 
                         if (errCode.isNum() && errCode.get_int() == RPC_WALLET_NOT_SPECIFIED) {
-                            strPrint += "\nTry adding \"-rpcwallet=<filename>\" option to bitcoin-cli command line.";
+                            strPrint += "\nTry adding \"-rpcwallet=<filename>\" option to chaincoin-cli command line.";
                         }
                     }
                 } else {
