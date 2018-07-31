@@ -1702,7 +1702,7 @@ unsigned int CMasternodeMan::GetStartHeight(const masternode_info_t& mnInfo) {
 	if (nHeight > 0)
 		return nHeight;
 	return 0;
-
+}
 void CMasternodeMan::DoMaintenance(CConnman& connman)
 {
     if(fLiteMode) return; // disable all Syscoin specific functionality
