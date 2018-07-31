@@ -511,7 +511,7 @@ void OverviewPage::privateSendStatus()
 
         std::string strBackupWarning;
         std::string strBackupError;
-        if(!AutoBackupWallet(pwallet, "", strBackupWarning, strBackupError)) {
+        if(!AutoBackupWallet(pwallet, nullptr, strBackupWarning, strBackupError)) {
             if (!strBackupWarning.empty()) {
                 // It's still more or less safe to continue but warn user anyway
                 LogPrintf("OverviewPage::privateSendStatus -- WARNING! Something went wrong on automatic backup: %s\n", strBackupWarning);

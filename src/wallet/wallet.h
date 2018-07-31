@@ -1373,5 +1373,5 @@ public:
 // be IsAllFromMe).
 int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet);
 int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, const std::vector<CTxOut>& txouts);
-bool AutoBackupWallet (CWallet* wallet, std::string strWalletFile, std::string& strBackupWarning, std::string& strBackupError);
+bool AutoBackupWallet (CWallet* wallet, std::string walletFile, std::string& strBackupWarning, std::string& strBackupError);
 #endif // BITCOIN_WALLET_WALLET_H

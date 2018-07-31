@@ -205,29 +205,6 @@ void RegisterWalletRPC(CRPCTable &t)
     RegisterWalletRPCCommands(t);
 }
 
-bool InitAutoBackupWallet()
-{
-    if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET))
-        return true;
-
-    std::string strWarning;
-    std::string strError;
-
-    nWalletBackups = gArgs.GetArg("-createwalletbackups", 10);
-    nWalletBackups = std::max(0, std::min(10, nWalletBackups));
-
-    std::string strWalletFile = gArgs.GetArg("-wallet", DEFAULT_WALLET_DAT);
-
-    if(!AutoBackupWallet(nullptr, strWalletFile, strWarning, strError)) {
-        if (!strWarning.empty())
-            InitWarning(strWarning);
-        if (!strError.empty())
-            return InitError(strError);
-    }
-
-    return true;
-}
-
 bool VerifyWallets()
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
@@ -247,7 +224,7 @@ bool VerifyWallets()
 
     LogPrintf("Using wallet directory %s\n", GetWalletDir().string());
 
-    uiInterface.InitMessage(_("Verifying wallet(s)..."));
+    uiInterface.InitMessage(_("Verifying and backing up wallet(s)..."));
 
     // Keep track of each wallet absolute path to detect duplicates.
     std::set<fs::path> wallet_paths;
@@ -297,6 +274,13 @@ bool VerifyWallets()
         if (!dbV) {
             InitError(strError);
             return false;
+        }
+
+        if(!AutoBackupWallet(nullptr, walletFile, strWarning, strError)) {
+            if (!strWarning.empty())
+                InitWarning(strWarning);
+            if (!strError.empty())
+                return InitError(strError);
         }
     }
 
