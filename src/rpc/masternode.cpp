@@ -250,7 +250,7 @@ UniValue masternode(const JSONRPCRequest& request)
 
         obj.push_back(Pair("height",        nHeight));
         obj.push_back(Pair("IP:port",       mnInfo.addr.ToString()));
-        obj.push_back(Pair("protocol",      mnInfo.nProtocolVersion));
+        obj.push_back(Pair("min_protocol",      mnInfo.nProtocolVersion));
         obj.push_back(Pair("outpoint",      mnInfo.outpoint.ToStringShort()));
         obj.push_back(Pair("payee",         CSyscoinAddress(mnInfo.pubKeyCollateralAddress.GetID()).ToString()));
         obj.push_back(Pair("lastseen",      mnInfo.nTimeLastPing));
@@ -517,7 +517,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
                 "  lastseen       - Print timestamp of when a masternode was last seen on the network\n"
                 "  payee          - Print Syscoin address associated with a masternode (can be additionally filtered,\n"
                 "                   partial match)\n"
-                "  protocol       - Print protocol of a masternode (can be additionally filtered, exact match)\n"
+                "  protocol       - Print minimum protocol of a masternode (can be additionally filtered, exact match)\n"
                 "  pubkey         - Print the masternode (not collateral) public key\n"
                 "  rank           - Print rank of a masternode based on current block\n"
                 "  sentinel       - Print sentinel version of a masternode (can be additionally filtered, exact match)\n"
@@ -618,6 +618,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
                 objMN.push_back(Pair("payee", CSyscoinAddress(mn.pubKeyCollateralAddress.GetID()).ToString()));
                 objMN.push_back(Pair("status", mn.GetStatus()));
                 objMN.push_back(Pair("protocol", mn.nProtocolVersion));
+				objMN.push_back(Pair("daemonprotocol", PROTOCOL_VERSION));
                 objMN.push_back(Pair("daemonversion", mn.lastPing.GetDaemonString()));
                 objMN.push_back(Pair("sentinelversion", mn.lastPing.GetSentinelString()));
                 objMN.push_back(Pair("sentinelstate", (mn.lastPing.fSentinelIsCurrent ? "current" : "expired")));
