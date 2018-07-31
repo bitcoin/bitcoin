@@ -543,7 +543,10 @@ its upstream repository.
 Current subtrees include:
 
 - src/leveldb
-  - Upstream at https://github.com/google/leveldb ; Maintained by Google, but open important PRs to Core to avoid delay
+  - Upstream at https://github.com/google/leveldb ; Maintained by Google, but
+    open important PRs to Core to avoid delay.
+  - **Note**: Follow the instructions in [Upgrading LevelDB](#upgrading-leveldb) when
+    merging upstream changes to the leveldb subtree.
 
 - src/libsecp256k1
   - Upstream at https://github.com/bitcoin-core/secp256k1/ ; actively maintaned by Core contributors.
@@ -554,6 +557,52 @@ Current subtrees include:
 - src/univalue
   - Upstream at https://github.com/jgarzik/univalue ; report important PRs to Core to avoid delay.
 
+Upgrading LevelDB
+---------------------
+
+Extra care must be taken when upgrading LevelDB. This section explains issues
+you must be aware of.
+
+### File Descriptor Counts
+
+In most configurations we use the default LevelDB value for `max_open_files`,
+which is 1000 at the time of this writing. If LevelDB actually uses this many
+file descriptors it will cause problems with Bitcoin's `select()` loop, because
+it may cause new sockets to be created where the fd value is >= 1024. For this
+reason, on 64-bit Unix systems we rely on an internal LevelDB optimization that
+uses `mmap()` + `close()` to open table files without actually retaining
+references to the table file descriptors. If you are upgrading LevelDB, you must
+sanity check the changes to make sure that this assumption remains valid.
+
+In addition to reviewing the upstream changes in `env_posix.cc`, you can use `lsof` to
+check this. For example, on Linux this command will show open `.ldb` file counts:
+
+```bash
+$ lsof -p $(pidof bitcoind) |\
+    awk 'BEGIN { fd=0; mem=0; } /ldb$/ { if ($4 == "mem") mem++; else fd++ } END { printf "mem = %s, fd = %s\n", mem, fd}'
+mem = 119, fd = 0
+```
+
+The `mem` value shows how many files are mmap'ed, and the `fd` value shows you
+many file descriptors these files are using. You should check that `fd` is a
+small number (usually 0 on 64-bit hosts).
+
+See the notes in the `SetMaxOpenFiles()` function in `dbwrapper.cc` for more
+details.
+
+### Consensus Compatibility
+
+It is possible for LevelDB changes to inadvertently change consensus
+compatibility between nodes. This happened in Bitcoin 0.8 (when LevelDB was
+first introduced). When upgrading LevelDB you should review the upstream changes
+to check for issues affecting consensus compatibility.
+
+For example, if LevelDB had a bug that accidentally prevented a key from being
+returned in an edge case, and that bug was fixed upstream, the bug "fix" would
+be an incompatible consensus change. In this situation the correct behavior
+would be to revert the upstream fix before applying the updates to Bitcoin's
+copy of LevelDB. In general you should be wary of any upstream changes affecting
+what data is returned from LevelDB queries.
 
 Git and GitHub tips
 ---------------------
