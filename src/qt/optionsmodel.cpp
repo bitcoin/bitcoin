@@ -130,15 +130,25 @@ void OptionsModel::Init(bool resetSettings)
     if (!m_node.softSetBoolArg("-listen", settings.value("fListen").toBool()))
         addOverriddenOption("-listen");
 
-    if (!settings.contains("fUseProxy"))
-        settings.setValue("fUseProxy", false);
-    if (!settings.contains("addrProxy"))
-        settings.setValue("addrProxy", GetDefaultProxyAddress());
+    if (!settings.contains("addrProxy")) {
+        QString addrProxy = QString::fromStdString(gArgs.GetArg("-proxy", ""));
+        if (!addrProxy.isEmpty()) {
+            // If a proxy is configured, enable it in the UI:
+            if (!settings.contains("fUseProxy")) {
+                settings.setValue("fUseProxy", true);
+            }
+        } else {
+            addrProxy = GetDefaultProxyAddress();
+        }
+        settings.setValue("addrProxy", addrProxy);
+    }
     // Only try to set -proxy, if user has enabled fUseProxy
     if (settings.value("fUseProxy").toBool() && !m_node.softSetArg("-proxy", settings.value("addrProxy").toString().toStdString()))
         addOverriddenOption("-proxy");
     else if(!settings.value("fUseProxy").toBool() && !gArgs.GetArg("-proxy", "").empty())
         addOverriddenOption("-proxy");
+    if (!settings.contains("fUseProxy"))
+        settings.setValue("fUseProxy", false);
 
     if (!settings.contains("fUseSeparateProxyTor"))
         settings.setValue("fUseSeparateProxyTor", false);
