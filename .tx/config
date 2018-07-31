@@ -1,10 +1,9 @@
 [main]
 host = https://www.transifex.com
 
-[chaincoin.qt-translation-016x]
+[chaincoin.qt-translation-017x]
 file_filter = src/qt/locale/chaincoin_<lang>.ts
 minimum_perc = 0
 source_file = src/qt/locale/chaincoin_en.ts
 source_lang = en
 type = QT
-
