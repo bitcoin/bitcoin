@@ -1563,10 +1563,8 @@ UniValue listtransactions(const JSONRPCRequest& request)
         // iterate backwards until we have nCount items to return:
         for (CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
         {
-            CWalletTx *const pwtx = (*it).second.first;
-            if (pwtx != nullptr) {
-                ListTransactions(pwallet, *pwtx, 0, true, ret, filter);
-            }
+            CWalletTx *const pwtx = (*it).second;
+            ListTransactions(pwallet, *pwtx, 0, true, ret, filter);
             if ((int)ret.size() >= (nCount+nFrom)) break;
         }
     }
