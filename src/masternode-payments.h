@@ -25,7 +25,7 @@ static const int MNPAYMENTS_SIGNATURES_TOTAL            = 10;
 // V1 - Last protocol version before update
 // V2 - Newest protocol version
 static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1 = 70206;
-static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_2 = PROTOCOL_VERSION;
+static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_2 = MIN_PEER_PROTO_VERSION;
 
 extern CCriticalSection cs_vecPayees;
 extern CCriticalSection cs_mapMasternodeBlocks;

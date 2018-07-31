@@ -273,9 +273,7 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int nBlockH
 }
 
 int CMasternodePayments::GetMinMasternodePaymentsProto() const {
-    return sporkManager.IsSporkActive(SPORK_10_MASTERNODE_PAY_UPDATED_NODES)
-            ? MIN_MASTERNODE_PAYMENT_PROTO_VERSION_2
-            : MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1;
+	return MIN_MASTERNODE_PAYMENT_PROTO_VERSION_2;
 }
 
 void CMasternodePayments::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
@@ -399,7 +397,7 @@ uint256 CMasternodePaymentVote::GetHash() const
 {
     // Note: doesn't match serialization
 
-    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+    CHashWriter ss(SER_GETHASH, MIN_PEER_PROTO_VERSION);
     ss << *(CScriptBase*)(&payee);
     ss << nBlockHeight;
 	ss << nStartHeight;

@@ -136,7 +136,7 @@ void CGovernanceVote::UpdateHash() const
 {
     // Note: doesn't match serialization
 
-    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+    CHashWriter ss(SER_GETHASH, MIN_PEER_PROTO_VERSION);
     ss << masternodeOutpoint;
     ss << nParentHash;
     ss << nVoteSignal;

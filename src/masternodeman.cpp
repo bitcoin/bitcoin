@@ -1508,15 +1508,15 @@ bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CNode* pfrom, CMasternodeBr
         // if it matches our Masternode privkey...
         if(fMasternodeMode && mnb.pubKeyMasternode == activeMasternode.pubKeyMasternode) {
             mnb.nPoSeBanScore = -MASTERNODE_POSE_BAN_MAX_SCORE;
-            if(mnb.nProtocolVersion == PROTOCOL_VERSION) {
-                // ... and PROTOCOL_VERSION, then we've been remotely activated ...
+            if(mnb.nProtocolVersion == MIN_PEER_PROTO_VERSION) {
+                // ... and MIN_PEER_PROTO_VERSION, then we've been remotely activated ...
                 LogPrintf("CMasternodeMan::CheckMnbAndUpdateMasternodeList -- Got NEW Masternode entry: masternode=%s  sigTime=%lld  addr=%s\n",
                             mnb.outpoint.ToStringShort(), mnb.sigTime, mnb.addr.ToString());
                 activeMasternode.ManageState(connman);
             } else {
                 // ... otherwise we need to reactivate our node, do not add it to the list and do not relay
                 // but also do not ban the node we get this message from
-                LogPrintf("CMasternodeMan::CheckMnbAndUpdateMasternodeList -- wrong PROTOCOL_VERSION, re-activate your MN: message nProtocolVersion=%d  PROTOCOL_VERSION=%d\n", mnb.nProtocolVersion, PROTOCOL_VERSION);
+                LogPrintf("CMasternodeMan::CheckMnbAndUpdateMasternodeList -- wrong MIN_PEER_PROTO_VERSION, re-activate your MN: message nProtocolVersion=%d  MIN_PEER_PROTO_VERSION=%d\n", mnb.nProtocolVersion, MIN_PEER_PROTO_VERSION);
                 return false;
             }
         }

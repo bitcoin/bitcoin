@@ -148,7 +148,7 @@ public:
     }
 
     uint256 GetHash(){
-        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+        CHashWriter ss(SER_GETHASH, MIN_PEER_PROTO_VERSION);
         ss << strName;
         ss << strURL;
         ss << nTime;
