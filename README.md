@@ -50,7 +50,7 @@ submit new unit tests for old code. Unit tests can be compiled and run
 
 There are also [regression and integration tests](/qa) of the RPC interface, written
 in Python, that are run automatically on the build server.
-These tests can be run with: `qa/pull-tester/rpc-tests.py`
+These tests can be run (if the [test dependencies](/qa) are installed) with: `qa/pull-tester/rpc-tests.py`
 
 ### Manual Quality Assurance (QA) Testing
 

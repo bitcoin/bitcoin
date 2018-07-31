@@ -2,6 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#if defined(HAVE_CONFIG_H)
+#include "config/bitcoin-config.h"
+#endif
+
 #include "bitcoingui.h"
 
 #include "bitcoinunits.h"
@@ -115,7 +119,7 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *platformStyle, const NetworkStyle *n
 {
     GUIUtil::restoreWindowGeometry("nWindow", QSize(850, 550), this);
 
-    QString windowTitle = tr("Zetacoin Core") + " - ";
+    QString windowTitle = tr(PACKAGE_NAME) + " - ";
 #ifdef ENABLE_WALLET
     /* if compiled with wallet support, -disablewallet can still disable the wallet */
     enableWallet = !GetBoolArg("-disablewallet", false);
@@ -313,15 +317,17 @@ void BitcoinGUI::createActions()
     quitAction->setStatusTip(tr("Quit application"));
     quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
     quitAction->setMenuRole(QAction::QuitRole);
-    aboutAction = new QAction(platformStyle->TextColorIcon(":/icons/about"), tr("&About Zetacoin Core"), this);
-    aboutAction->setStatusTip(tr("Show information about Zetacoin Core"));
+    aboutAction = new QAction(platformStyle->TextColorIcon(":/icons/about"), tr("&About %1").arg(tr(PACKAGE_NAME)), this);
+    aboutAction->setStatusTip(tr("Show information about %1").arg(tr(PACKAGE_NAME)));
     aboutAction->setMenuRole(QAction::AboutRole);
+    aboutAction->setEnabled(false);
     aboutQtAction = new QAction(platformStyle->TextColorIcon(":/icons/about_qt"), tr("About &Qt"), this);
     aboutQtAction->setStatusTip(tr("Show information about Qt"));
     aboutQtAction->setMenuRole(QAction::AboutQtRole);
     optionsAction = new QAction(platformStyle->TextColorIcon(":/icons/options"), tr("&Options..."), this);
-    optionsAction->setStatusTip(tr("Modify configuration options for Zetacoin Core"));
+    optionsAction->setStatusTip(tr("Modify configuration options for %1").arg(tr(PACKAGE_NAME)));
     optionsAction->setMenuRole(QAction::PreferencesRole);
+    optionsAction->setEnabled(false);
     toggleHideAction = new QAction(platformStyle->TextColorIcon(":/icons/about"), tr("&Show / Hide"), this);
     toggleHideAction->setStatusTip(tr("Show or hide the main Window"));
 
@@ -339,6 +345,8 @@ void BitcoinGUI::createActions()
 
     openRPCConsoleAction = new QAction(platformStyle->TextColorIcon(":/icons/debugwindow"), tr("&Debug window"), this);
     openRPCConsoleAction->setStatusTip(tr("Open debugging and diagnostic console"));
+    // initially disable the debug window menu item
+    openRPCConsoleAction->setEnabled(false);
 
     usedSendingAddressesAction = new QAction(platformStyle->TextColorIcon(":/icons/address-book"), tr("&Sending addresses..."), this);
     usedSendingAddressesAction->setStatusTip(tr("Show the list of used sending addresses and labels"));
@@ -350,7 +358,7 @@ void BitcoinGUI::createActions()
 
     showHelpMessageAction = new QAction(platformStyle->TextColorIcon(":/icons/info"), tr("&Command-line options"), this);
     showHelpMessageAction->setMenuRole(QAction::NoRole);
-    showHelpMessageAction->setStatusTip(tr("Show the Zetacoin Core help message to get a list with possible Zetacoin command-line options"));
+    showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible Bitcoin command-line options").arg(tr(PACKAGE_NAME)));
 
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));
@@ -453,8 +461,8 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
         setNumConnections(clientModel->getNumConnections());
         connect(clientModel, SIGNAL(numConnectionsChanged(int)), this, SLOT(setNumConnections(int)));
 
-        setNumBlocks(clientModel->getNumBlocks(), clientModel->getLastBlockDate(), clientModel->getVerificationProgress(NULL));
-        connect(clientModel, SIGNAL(numBlocksChanged(int,QDateTime,double)), this, SLOT(setNumBlocks(int,QDateTime,double)));
+        setNumBlocks(clientModel->getNumBlocks(), clientModel->getLastBlockDate(), clientModel->getVerificationProgress(NULL), false);
+        connect(clientModel, SIGNAL(numBlocksChanged(int,QDateTime,double,bool)), this, SLOT(setNumBlocks(int,QDateTime,double,bool)));
 
         // Receive and report messages from client model
         connect(clientModel, SIGNAL(message(QString,QString,unsigned int)), this, SLOT(message(QString,QString,unsigned int)));
@@ -470,6 +478,16 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
         }
 #endif // ENABLE_WALLET
         unitDisplayControl->setOptionsModel(clientModel->getOptionsModel());
+        
+        OptionsModel* optionsModel = clientModel->getOptionsModel();
+        if(optionsModel)
+        {
+            // be aware of the tray icon disable state change reported by the OptionsModel object.
+            connect(optionsModel,SIGNAL(hideTrayIconChanged(bool)),this,SLOT(setTrayIconVisible(bool)));
+        
+            // initialize the disable state of the tray icon with the current value in the model.
+            setTrayIconVisible(optionsModel->getHideTrayIcon());
+        }
     } else {
         // Disable possibility to show main window via action
         toggleHideAction->setEnabled(false);
@@ -478,6 +496,12 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
             // Disable context menu on tray icon
             trayIconMenu->clear();
         }
+        // Propagate cleared model to child objects
+        rpcConsole->setClientModel(nullptr);
+#ifdef ENABLE_WALLET
+        walletFrame->setClientModel(nullptr);
+#endif // ENABLE_WALLET
+        unitDisplayControl->setOptionsModel(nullptr);
     }
 }
 
@@ -528,10 +552,10 @@ void BitcoinGUI::createTrayIcon(const NetworkStyle *networkStyle)
 {
 #ifndef Q_OS_MAC
     trayIcon = new QSystemTrayIcon(this);
-    QString toolTip = tr("Zetacoin Core client") + " " + networkStyle->getTitleAddText();
+    QString toolTip = tr("%1 client").arg(tr(PACKAGE_NAME)) + " " + networkStyle->getTitleAddText();
     trayIcon->setToolTip(toolTip);
     trayIcon->setIcon(networkStyle->getTrayAndWindowIcon());
-    trayIcon->show();
+    trayIcon->hide();
 #endif
 
     notificator = new Notificator(QApplication::applicationName(), trayIcon, this);
@@ -682,7 +706,7 @@ void BitcoinGUI::setNumConnections(int count)
     labelConnectionsIcon->setToolTip(tr("%n active connection(s) to Zetacoin network", "", count));
 }
 
-void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress)
+void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, bool header)
 {
     if(!clientModel)
         return;
@@ -694,15 +718,25 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
     enum BlockSource blockSource = clientModel->getBlockSource();
     switch (blockSource) {
         case BLOCK_SOURCE_NETWORK:
+            if (header) {
+                return;
+            }
             progressBarLabel->setText(tr("Synchronizing with network..."));
             break;
         case BLOCK_SOURCE_DISK:
-            progressBarLabel->setText(tr("Importing blocks from disk..."));
+            if (header) {
+                progressBarLabel->setText(tr("Indexing blocks on disk..."));
+            } else {
+                progressBarLabel->setText(tr("Processing blocks on disk..."));
+            }
             break;
         case BLOCK_SOURCE_REINDEX:
             progressBarLabel->setText(tr("Reindexing blocks on disk..."));
             break;
         case BLOCK_SOURCE_NONE:
+            if (header) {
+                return;
+            }
             // Case: not Importing, not Reindexing and no network connection
             progressBarLabel->setText(tr("No block source available..."));
             break;
@@ -874,17 +908,30 @@ void BitcoinGUI::closeEvent(QCloseEvent *event)
 #ifndef Q_OS_MAC // Ignored on Mac
     if(clientModel && clientModel->getOptionsModel())
     {
-        if(!clientModel->getOptionsModel()->getMinimizeToTray() &&
-           !clientModel->getOptionsModel()->getMinimizeOnClose())
+        if(!clientModel->getOptionsModel()->getMinimizeOnClose())
         {
             // close rpcConsole in case it was open to make some space for the shutdown window
             rpcConsole->close();
 
             QApplication::quit();
         }
+        else
+        {
+            QMainWindow::showMinimized();
+            event->ignore();
+        }
     }
-#endif
+#else
     QMainWindow::closeEvent(event);
+#endif
+}
+
+void BitcoinGUI::showEvent(QShowEvent *event)
+{
+    // enable the debug window when the main window shows up
+    openRPCConsoleAction->setEnabled(true);
+    aboutAction->setEnabled(true);
+    optionsAction->setEnabled(true);
 }
 
 #ifdef ENABLE_WALLET
@@ -1040,6 +1087,14 @@ void BitcoinGUI::showProgress(const QString &title, int nProgress)
         progressDialog->setValue(nProgress);
 }
 
+void BitcoinGUI::setTrayIconVisible(bool fHideTrayIcon)
+{
+    if (trayIcon)
+    {
+        trayIcon->setVisible(!fHideTrayIcon);
+    }
+}
+
 static bool ThreadSafeMessageBox(BitcoinGUI *gui, const std::string& message, const std::string& caption, unsigned int style)
 {
     bool modal = (style & CClientUIInterface::MODAL);
@@ -1061,12 +1116,14 @@ void BitcoinGUI::subscribeToCoreSignals()
 {
     // Connect signals to client
     uiInterface.ThreadSafeMessageBox.connect(boost::bind(ThreadSafeMessageBox, this, _1, _2, _3));
+    uiInterface.ThreadSafeQuestion.connect(boost::bind(ThreadSafeMessageBox, this, _1, _3, _4));
 }
 
 void BitcoinGUI::unsubscribeFromCoreSignals()
 {
     // Disconnect signals from client
     uiInterface.ThreadSafeMessageBox.disconnect(boost::bind(ThreadSafeMessageBox, this, _1, _2, _3));
+    uiInterface.ThreadSafeQuestion.disconnect(boost::bind(ThreadSafeMessageBox, this, _1, _3, _4));
 }
 
 UnitDisplayStatusBarControl::UnitDisplayStatusBarControl(const PlatformStyle *platformStyle) :
@@ -1096,7 +1153,7 @@ void UnitDisplayStatusBarControl::mousePressEvent(QMouseEvent *event)
 /** Creates context menu, its actions, and wires up all the relevant signals for mouse events. */
 void UnitDisplayStatusBarControl::createContextMenu()
 {
-    menu = new QMenu();
+    menu = new QMenu(this);
     Q_FOREACH(BitcoinUnits::Unit u, BitcoinUnits::availableUnits())
     {
         QAction *menuAction = new QAction(QString(BitcoinUnits::name(u)), this);

@@ -1,146 +1,66 @@
-Bitcoin Core version 0.12.1 is now available from:
+Bitcoin Core version 0.13.2 is now available from:
 
-  <https://bitcoin.org/bin/bitcoin-core-0.12.1/>
+  <https://bitcoin.org/bin/bitcoin-core-0.13.2/>
 
-This is a new minor version release, including the BIP9, BIP68 and BIP112
-softfork, various bugfixes and updated translations.
+This is a new minor version release, including various bugfixes and
+performance improvements, as well as updated translations.
 
 Please report bugs using the issue tracker at github:
 
   <https://github.com/bitcoin/bitcoin/issues>
 
-Upgrading and downgrading
-=========================
+To receive security and update notifications, please subscribe to:
 
-How to Upgrade
---------------
+  <https://bitcoincore.org/en/list/announcements/join/>
 
-If you are running an older version, shut it down. Wait until it has completely
-shut down (which might take a few minutes for older versions), then run the
-installer (on Windows) or just copy over /Applications/Bitcoin-Qt (on Mac) or
-bitcoind/bitcoin-qt (on Linux).
+Compatibility
+==============
 
-Downgrade warning
------------------
+Microsoft ended support for Windows XP on [April 8th, 2014](https://www.microsoft.com/en-us/WindowsForBusiness/end-of-xp-support),
+an OS initially released in 2001. This means that not even critical security
+updates will be released anymore. Without security updates, using a bitcoin
+wallet on a XP machine is irresponsible at least.
 
-### Downgrade to a version < 0.12.0
+In addition to that, with 0.12.x there have been varied reports of Bitcoin Core
+randomly crashing on Windows XP. It is [not clear](https://github.com/bitcoin/bitcoin/issues/7681#issuecomment-217439891)
+what the source of these crashes is, but it is likely that upstream
+libraries such as Qt are no longer being tested on XP.
 
-Because release 0.12.0 and later will obfuscate the chainstate on every
-fresh sync or reindex, the chainstate is not backwards-compatible with
-pre-0.12 versions of Bitcoin Core or other software.
+We do not have time nor resources to provide support for an OS that is
+end-of-life. From 0.13.0 on, Windows XP is no longer supported. Users are
+suggested to upgrade to a newer version of Windows, or install an alternative OS
+that is supported.
 
-If you want to downgrade after you have done a reindex with 0.12.0 or later,
-you will need to reindex when you first start Bitcoin Core version 0.11 or
-earlier.
+No attempt is made to prevent installing or running the software on Windows XP,
+you can still do so at your own risk, but do not expect it to work: do not
+report issues about Windows XP to the issue tracker.
+
+From 0.13.1 onwards OS X 10.7 is no longer supported. 0.13.0 was intended to work on 10.7+, 
+but severe issues with the libc++ version on 10.7.x keep it from running reliably. 
+0.13.1 now requires 10.8+, and will communicate that to 10.7 users, rather than crashing unexpectedly.
 
 Notable changes
 ===============
 
-First version bits BIP9 softfork deployment
--------------------------------------------
+Change to wallet handling of mempool rejection
+-----------------------------------------------
 
-This release includes a soft fork deployment to enforce [BIP68][],
-[BIP112][] and [BIP113][] using the [BIP9][] deployment mechanism.
+When a newly created transaction failed to enter the mempool due to
+the limits on chains of unconfirmed transactions the sending RPC
+calls would return an error.  The transaction would still be queued
+in the wallet and, once some of the parent transactions were
+confirmed, broadcast after the software was restarted.
 
-The deployment sets the block version number to 0x20000001 between
-midnight 1st May 2016 and midnight 1st May 2017 to signal readiness for 
-deployment. The version number consists of 0x20000000 to indicate version
-bits together with setting bit 0 to indicate support for this combined
-deployment, shown as "csv" in the `getblockchaininfo` RPC call.
+This behavior has been changed to return success and to reattempt
+mempool insertion at the same time transaction rebroadcast is
+attempted, avoiding a need for a restart.
 
-For more information about the soft forking change, please see
-<https://github.com/bitcoin/bitcoin/pull/7648>
+Transactions in the wallet which cannot be accepted into the mempool
+can be abandoned with the previously existing abandontransaction RPC
+(or in the GUI via a context menu on the transaction).
 
-This specific backport pull-request can be viewed at
-<https://github.com/bitcoin/bitcoin/pull/7543>
 
-[BIP9]: https://github.com/bitcoin/bips/blob/master/bip-0009.mediawiki
-[BIP68]: https://github.com/bitcoin/bips/blob/master/bip-0068.mediawiki
-[BIP112]: https://github.com/bitcoin/bips/blob/master/bip-0112.mediawiki
-[BIP113]: https://github.com/bitcoin/bips/blob/master/bip-0113.mediawiki
-
-BIP68 soft fork to enforce sequence locks for relative locktime
----------------------------------------------------------------
-
-[BIP68][] introduces relative lock-time consensus-enforced semantics of
-the sequence number field to enable a signed transaction input to remain
-invalid for a defined period of time after confirmation of its corresponding
-outpoint.
-
-For more information about the implementation, see
-<https://github.com/bitcoin/bitcoin/pull/7184>
-
-BIP112 soft fork to enforce OP_CHECKSEQUENCEVERIFY
---------------------------------------------------
-
-[BIP112][] redefines the existing OP_NOP3 as OP_CHECKSEQUENCEVERIFY (CSV)
-for a new opcode in the Bitcoin scripting system that in combination with
-[BIP68][] allows execution pathways of a script to be restricted based
-on the age of the output being spent.
-
-For more information about the implementation, see
-<https://github.com/bitcoin/bitcoin/pull/7524>
-
-BIP113 locktime enforcement soft fork
--------------------------------------
-
-Bitcoin Core 0.11.2 previously introduced mempool-only locktime
-enforcement using GetMedianTimePast(). This release seeks to
-consensus enforce the rule.
-
-Bitcoin transactions currently may specify a locktime indicating when
-they may be added to a valid block.  Current consensus rules require
-that blocks have a block header time greater than the locktime specified
-in any transaction in that block.
-
-Miners get to choose what time they use for their header time, with the
-consensus rule being that no node will accept a block whose time is more
-than two hours in the future.  This creates a incentive for miners to
-set their header times to future values in order to include locktimed
-transactions which weren't supposed to be included for up to two more
-hours.
-
-The consensus rules also specify that valid blocks may have a header
-time greater than that of the median of the 11 previous blocks.  This
-GetMedianTimePast() time has a key feature we generally associate with
-time: it can't go backwards.
-
-[BIP113][] specifies a soft fork enforced in this release that
-weakens this perverse incentive for individual miners to use a future
-time by requiring that valid blocks have a computed GetMedianTimePast()
-greater than the locktime specified in any transaction in that block.
-
-Mempool inclusion rules currently require transactions to be valid for
-immediate inclusion in a block in order to be accepted into the mempool.
-This release begins applying the BIP113 rule to received transactions,
-so transaction whose time is greater than the GetMedianTimePast() will
-no longer be accepted into the mempool.
-
-**Implication for miners:** you will begin rejecting transactions that
-would not be valid under BIP113, which will prevent you from producing
-invalid blocks when BIP113 is enforced on the network. Any
-transactions which are valid under the current rules but not yet valid
-under the BIP113 rules will either be mined by other miners or delayed
-until they are valid under BIP113. Note, however, that time-based
-locktime transactions are more or less unseen on the network currently.
-
-**Implication for users:** GetMedianTimePast() always trails behind the
-current time, so a transaction locktime set to the present time will be
-rejected by nodes running this release until the median time moves
-forward. To compensate, subtract one hour (3,600 seconds) from your
-locktimes to allow those transactions to be included in mempools at
-approximately the expected time.
-
-For more information about the implementation, see
-<https://github.com/bitcoin/bitcoin/pull/6566>
-
-Miscellaneous
--------------
-
-The p2p alert system is off by default. To turn on, use `-alert` with
-startup configuration.
-
-0.12.1 Change log
+0.13.2 Change log
 =================
 
 Detailed release notes follow. This overview includes changes that affect
@@ -148,51 +68,111 @@ behavior, not code moves, refactors and string updates. For convenience in locat
 the code changes and accompanying discussion, both the pull request and
 git merge commit are mentioned.
 
+### Consensus
+- #9293 `e591c10` [0.13 Backport #9053] IBD using chainwork instead of height and not using header timestamp (gmaxwell)
+- #9053 `5b93eee` IBD using chainwork instead of height and not using header timestamps (gmaxwell)
+
 ### RPC and other APIs
-- #7739 `7ffc2bd` Add abandoned status to listtransactions (jonasschnelli)
+- #8845 `1d048b9` Don't return the address of a P2SH of a P2SH (jnewbery)
+- #9041 `87fbced` keypoololdest denote Unix epoch, not GMT (s-matthew-english)
+- #9122 `f82c81b` fix getnettotals RPC description about timemillis (visvirial)
+- #9042 `5bcb05d` [rpc] ParseHash: Fail when length is not 64 (MarcoFalke)
+- #9194 `f26dab7` Add option to return non-segwit serialization via rpc (instagibbs)
+- #9347 `b711390` [0.13.2] wallet/rpc backports (MarcoFalke)
+- #9292 `c365556` Complain when unknown rpcserialversion is specified (sipa)
+- #9322 `49a612f` [qa] Don't set unknown rpcserialversion (MarcoFalke)
 
 ### Block and transaction handling
-- #7543 `834aaef` Backport BIP9, BIP68 and BIP112 with softfork (btcdrak)
+- #8357 `ce0d817` [mempool] Fix relaypriority calculation error (maiiz)
+- #9267 `0a4aa87` [0.13 backport #9239] Disable fee estimates for a confirm target of 1 block (morcos)
+- #9196 `0c09d9f` Send tip change notification from invalidateblock (ryanofsky)
 
 ### P2P protocol and network code
-- #7804 `90f1d24` Track block download times per individual block (sipa)
-- #7832 `4c3a00d` Reduce block timeout to 10 minutes (laanwj)
-
-### Validation
-- #7821 `4226aac` init: allow shutdown during 'Activating best chain...' (laanwj)
-- #7835 `46898e7` Version 2 transactions remain non-standard until CSV activates (sdaftuar)
+- #8995 `9ef3875` Add missing cs_main lock to ::GETBLOCKTXN processing (TheBlueMatt)
+- #9234 `94531b5` torcontrol: Explicitly request RSA1024 private key (laanwj)
+- #8637 `2cad5db` Compact Block Tweaks (rebase of #8235) (sipa)
+- #9058 `286e548` Fixes for p2p-compactblocks.py test timeouts on travis (#8842) (ryanofsky)
+- #8865 `4c71fc4` Decouple peer-processing-logic from block-connection-logic (TheBlueMatt)
+- #9117 `6fe3981` net: don't send feefilter messages before the version handshake is complete (theuni)
+- #9188 `ca1fd75` Make orphan parent fetching ask for witnesses (gmaxwell)
+- #9052 `3a3bcbf` Use RelevantServices instead of node_network in AttemptToEvict (gmaxwell)
+- #9048 `9460771` [0.13 backport #9026] Fix handling of invalid compact blocks (sdaftuar)
+- #9357 `03b6f62` [0.13 backport #9352] Attempt reconstruction from all compact block announcements (sdaftuar)
+- #9189 `b96a8f7` Always add default_witness_commitment with GBT client support (sipa)
+- #9253 `28d0f22` Fix calculation of number of bound sockets to use (TheBlueMatt)
+- #9199 `da5a16b` Always drop the least preferred HB peer when adding a new one (gmaxwell)
 
 ### Build system
-- #7487 `00d57b4` Workaround Travis-side CI issues (luke-jr)
-- #7606 `a10da9a` No need to set -L and --location for curl (MarcoFalke)
-- #7614 `ca8f160` Add curl to packages (now needed for depends) (luke-jr)
-- #7776 `a784675` Remove unnecessary executables from gitian release (laanwj)
+- #9169 `d1b4da9` build: fix qt5.7 build under macOS (theuni)
+- #9326 `a0f7ece` Update for OpenSSL 1.1 API (gmaxwell)
+- #9224 `396c405` Prevent FD_SETSIZE error building on OpenBSD (ivdsangen)
+
+### GUI
+- #8972 `6f86b53` Make warnings label selectable (jonasschnelli) (MarcoFalke)
+- #9185 `6d70a73` Fix coincontrol sort issue (jonasschnelli)
+- #9094 `5f3a12c` Use correct conversion function for boost::path datadir (laanwj)
+- #8908 `4a974b2` Update bitcoin-qt.desktop (s-matthew-english)
+- #9190 `dc46b10` Plug many memory leaks (laanwj)
 
 ### Wallet
-- #7715 `19866c1` Fix calculation of balances and available coins. (morcos)
+- #9290 `35174a0` Make RelayWalletTransaction attempt to AcceptToMemoryPool (gmaxwell)
+- #9295 `43bcfca` Bugfix: Fundrawtransaction: don't terminate when keypool is empty (jonasschnelli)
+- #9302 `f5d606e` Return txid even if ATMP fails for new transaction (sipa)
+- #9262 `fe39f26` Prefer coins that have fewer ancestors, sanity check txn before ATMP (instagibbs)
+
+### Tests and QA
+- #9159 `eca9b46` Wait for specific block announcement in p2p-compactblocks (ryanofsky)
+- #9186 `dccdc3a` Fix use-after-free in scheduler tests (laanwj)
+- #9168 `3107280` Add assert_raises_message to check specific error message (mrbandrews)
+- #9191 `29435db` 0.13.2 Backports (MarcoFalke)
+- #9077 `1d4c884` Increase wallet-dump RPC timeout (ryanofsky)
+- #9098 `ecd7db5` Handle zombies and cluttered tmpdirs (MarcoFalke)
+- #8927 `387ec9d` Add script tests for FindAndDelete in pre-segwit and segwit scripts (jl2012)
+- #9200 `eebc699` bench: Fix subtle counting issue when rescaling iteration count (laanwj)
 
 ### Miscellaneous
-- #7617 `f04f4fd` Fix markdown syntax and line terminate LogPrint (MarcoFalke)
-- #7747 `4d035bc` added depends cross compile info (accraze)
-- #7741 `a0cea89` Mark p2p alert system as deprecated (btcdrak)
-- #7780 `c5f94f6` Disable bad-chain alert (btcdrak)
+- #8838 `094848b` Calculate size and weight of block correctly in CreateNewBlock() (jnewbery)
+- #8920 `40169dc` Set minimum required Boost to 1.47.0 (fanquake)
+- #9251 `a710a43` Improvement of documentation of command line parameter 'whitelist' (wodry)
+- #8932 `106da69` Allow bitcoin-tx to create v2 transactions (btcdrak)
+- #8929 `12428b4` add software-properties-common (sigwo)
+- #9120 `08d1c90` bug: Missed one "return false" in recent refactoring in #9067 (UdjinM6)
+- #9067 `f85ee01` Fix exit codes (UdjinM6)
+- #9340 `fb987b3` [0.13] Update secp256k1 subtree (MarcoFalke)
+- #9229 `b172377` Remove calls to getaddrinfo_a (TheBlueMatt)
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
-- accraze
 - Alex Morcos
 - BtcDrak
+- Cory Fields
+- fanquake
+- Gregory Maxwell
+- Gregory Sanders
+- instagibbs
+- Ivo van der Sangen
+- jnewbery
+- Johnson Lau
 - Jonas Schnelli
 - Luke Dashjr
+- maiiz
 - MarcoFalke
-- Mark Friedenbach
-- NicolasDorier
+- Masahiko Hyuga
+- Matt Corallo
+- matthias
+- mrbandrews
+- Pavel Janík
 - Pieter Wuille
+- randy-waterhouse
+- Russell Yanofsky
+- S. Matthew English
+- Steven
 - Suhas Daftuar
+- UdjinM6
 - Wladimir J. van der Laan
+- wodry
 
 As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
-

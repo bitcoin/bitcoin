@@ -23,9 +23,6 @@
     </message>
     </context>
 <context>
-    <name>ClientModel</name>
-    </context>
-<context>
     <name>CoinControlDialog</name>
     <message>
         <source>Date</source>
@@ -80,10 +77,6 @@
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
-    <message>
-        <source>Date</source>
-        <translation>日期</translation>
-    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -95,21 +88,12 @@
         <source>Choose...</source>
         <translation>选择...</translation>
     </message>
-    <message>
-        <source>Pay only the required fee of %1</source>
-        <translation>仅支付全额的%1</translation>
-    </message>
-    <message>
-        <source>The recipient address is not valid. Please recheck.</source>
-        <translation>收款人地址无效，请再次确认。</translation>
-    </message>
-    <message>
-        <source>Warning: Invalid Zetacoin address</source>
-        <translation>警告：比特币地址无效</translation>
-    </message>
     </context>
 <context>
     <name>SendCoinsEntry</name>
+    </context>
+<context>
+    <name>SendConfirmationDialog</name>
     </context>
 <context>
     <name>ShutdownWindow</name>
@@ -125,27 +109,15 @@
     </context>
 <context>
     <name>TransactionDesc</name>
-    <message>
-        <source>Date</source>
-        <translation>日期</translation>
-    </message>
     </context>
 <context>
     <name>TransactionDescDialog</name>
     </context>
 <context>
     <name>TransactionTableModel</name>
-    <message>
-        <source>Date</source>
-        <translation>日期</translation>
-    </message>
     </context>
 <context>
     <name>TransactionView</name>
-    <message>
-        <source>Date</source>
-        <translation>日期</translation>
-    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
@@ -178,24 +150,8 @@
         <translation>警告</translation>
     </message>
     <message>
-        <source>wallet.dat corrupt, salvage failed</source>
-        <translation>wallet.dat文件受损，修复失败</translation>
-    </message>
-    <message>
-        <source>This help message</source>
-        <translation>此条帮助信息</translation>
-    </message>
-    <message>
         <source>Loading addresses...</source>
         <translation>正在载入地址...</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation>wallet.dat文件加载错误：钱包受损</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat</source>
-        <translation>wallet.dat文件加载错误</translation>
     </message>
     <message>
         <source>Insufficient funds</source>

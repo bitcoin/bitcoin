@@ -1,7 +1,7 @@
 # Copyright 2014 BitPay, Inc.
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
+from __future__ import division,print_function,unicode_literals
 import subprocess
 import os
 import json
@@ -24,6 +24,9 @@ def bctest(testDir, testObj, exeext):
 	if "output_cmp" in testObj:
 		outputFn = testObj['output_cmp']
 		outputData = open(testDir + "/" + outputFn).read()
+		if not outputData:
+			print("Output data missing for " + outputFn)
+			sys.exit(1)
 	proc = subprocess.Popen(execrun, stdin=stdinCfg, stdout=subprocess.PIPE, stderr=subprocess.PIPE,universal_newlines=True)
 	try:
 		outs = proc.communicate(input=inputData)

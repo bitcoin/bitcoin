@@ -1,4 +1,4 @@
-<TS language="fr_CA" version="2.0">
+<TS language="fr_CA" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -13,30 +13,10 @@
         <source>&amp;Delete</source>
         <translation>&amp;Supprimer</translation>
     </message>
-    <message>
-        <source>Sending addresses</source>
-        <translation>envoyer adresse de reception </translation>
-    </message>
-    <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>Fichier séparé par une virgule (*.csv)</translation>
-    </message>
     </context>
 <context>
     <name>AddressTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation>Record</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Addresse</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(pas de record)</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -51,22 +31,6 @@
         <source>Repeat new passphrase</source>
         <translation>Répéter Mot de Passe</translation>
     </message>
-    <message>
-        <source>Encrypt wallet</source>
-        <translation>Encrypter Porte-Feuille</translation>
-    </message>
-    <message>
-        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Cette opération nécessite le mot de passe de votre porte-feuille pour débarrer le porte-feuille.</translation>
-    </message>
-    <message>
-        <source>Unlock wallet</source>
-        <translation>Débarrer Porte-Feuille</translation>
-    </message>
-    <message>
-        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Cette opération nécessite le mot de passe de votre porte-feuille pour le décrypter.</translation>
-    </message>
     </context>
 <context>
     <name>BanTableModel</name>
@@ -75,21 +39,10 @@
     <name>BitcoinGUI</name>
     </context>
 <context>
-    <name>ClientModel</name>
-    </context>
-<context>
     <name>CoinControlDialog</name>
     <message>
         <source>(un)select all</source>
         <translation>Toute sélectionner </translation>
-    </message>
-    <message>
-        <source>Copy address</source>
-        <translation>copier l'adresse </translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(pas de record)</translation>
     </message>
     </context>
 <context>
@@ -145,35 +98,18 @@
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
-    <message>
-        <source>Address</source>
-        <translation>Addresse</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Record</translation>
-    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation>Record</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(pas de record)</translation>
-    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
-    <message>
-        <source>(no label)</source>
-        <translation>(pas de record)</translation>
-    </message>
     </context>
 <context>
     <name>SendCoinsEntry</name>
+    </context>
+<context>
+    <name>SendConfirmationDialog</name>
     </context>
 <context>
     <name>ShutdownWindow</name>
@@ -195,29 +131,9 @@
     </context>
 <context>
     <name>TransactionTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation>Record</translation>
-    </message>
     </context>
 <context>
     <name>TransactionView</name>
-    <message>
-        <source>Copy address</source>
-        <translation>copier l'adresse </translation>
-    </message>
-    <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>Fichier séparé par une virgule (*.csv)</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Record</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Addresse</translation>
-    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>

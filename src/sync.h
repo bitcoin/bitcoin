@@ -71,29 +71,38 @@ public:
     }
 };
 
-/**
- * Wrapped boost mutex: supports recursive locking, but no waiting
- * TODO: We should move away from using the recursive lock by default.
- */
-typedef AnnotatedMixin<boost::recursive_mutex> CCriticalSection;
-
-/** Wrapped boost mutex: supports waiting but not recursive locking */
-typedef AnnotatedMixin<boost::mutex> CWaitableCriticalSection;
-
-/** Just a typedef for boost::condition_variable, can be wrapped later if desired */
-typedef boost::condition_variable CConditionVariable;
-
 #ifdef DEBUG_LOCKORDER
 void EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry = false);
 void LeaveCritical();
 std::string LocksHeld();
 void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs);
+void DeleteLock(void* cs);
 #else
 void static inline EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry = false) {}
 void static inline LeaveCritical() {}
 void static inline AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs) {}
+void static inline DeleteLock(void* cs) {}
 #endif
 #define AssertLockHeld(cs) AssertLockHeldInternal(#cs, __FILE__, __LINE__, &cs)
+
+/**
+ * Wrapped boost mutex: supports recursive locking, but no waiting
+ * TODO: We should move away from using the recursive lock by default.
+ */
+class CCriticalSection : public AnnotatedMixin<boost::recursive_mutex>
+{
+public:
+    ~CCriticalSection() {
+        DeleteLock((void*)this);
+    }
+};
+
+typedef CCriticalSection CDynamicCriticalSection;
+/** Wrapped boost mutex: supports waiting but not recursive locking */
+typedef AnnotatedMixin<boost::mutex> CWaitableCriticalSection;
+
+/** Just a typedef for boost::condition_variable, can be wrapped later if desired */
+typedef boost::condition_variable CConditionVariable;
 
 #ifdef DEBUG_LOCKCONTENTION
 void PrintLockContention(const char* pszName, const char* pszFile, int nLine);

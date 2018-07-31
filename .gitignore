@@ -114,3 +114,4 @@ share/BitcoindComparisonTool.jar
 /doc/doxygen/
 
 libbitcoinconsensus.pc
+contrib/devtools/split-debug.sh
