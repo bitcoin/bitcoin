@@ -735,7 +735,7 @@ DBErrors CWallet::ReorderTransactions()
     // Old wallets didn't have any defined order for transactions
     // Probably a bad idea to change the output of this
 
-    // First: get all CWalletTx and CAccountingEntry into a sorted-by-time multimap.
+    // First: get all CWalletTx into a sorted-by-time multimap.
     typedef std::pair<CWalletTx*, CAccountingEntry*> TxPair;
     typedef std::multimap<int64_t, TxPair > TxItems;
     TxItems txByTime;
@@ -744,12 +744,6 @@ DBErrors CWallet::ReorderTransactions()
     {
         CWalletTx* wtx = &entry.second;
         txByTime.insert(std::make_pair(wtx->nTimeReceived, TxPair(wtx, nullptr)));
-    }
-    std::list<CAccountingEntry> acentries;
-    batch.ListAccountCreditDebit("", acentries);
-    for (CAccountingEntry& entry : acentries)
-    {
-        txByTime.insert(std::make_pair(entry.nTime, TxPair(nullptr, &entry)));
     }
 
     nOrderPosNext = 0;
@@ -770,9 +764,6 @@ DBErrors CWallet::ReorderTransactions()
                 if (!batch.WriteTx(*pwtx))
                     return DBErrors::LOAD_FAIL;
             }
-            else
-                if (!batch.WriteAccountingEntry(pacentry->nEntryNo, *pacentry))
-                    return DBErrors::LOAD_FAIL;
         }
         else
         {
@@ -794,9 +785,6 @@ DBErrors CWallet::ReorderTransactions()
                 if (!batch.WriteTx(*pwtx))
                     return DBErrors::LOAD_FAIL;
             }
-            else
-                if (!batch.WriteAccountingEntry(pacentry->nEntryNo, *pacentry))
-                    return DBErrors::LOAD_FAIL;
         }
     }
     batch.WriteOrderPosNext(nOrderPosNext);
