@@ -17,15 +17,11 @@
 /** A virtual base class for key stores */
 class CKeyStore
 {
-protected:
-    mutable CCriticalSection cs_KeyStore;
-
 public:
     virtual ~CKeyStore() {}
 
     //! Add a key to the store.
     virtual bool AddKeyPubKey(const CKey &key, const CPubKey &pubkey) =0;
-    virtual bool AddKey(const CKey &key);
 
     //! Check whether a key corresponding to a given address is present in the store.
     virtual bool HaveKey(const CKeyID &address) const =0;
@@ -55,6 +51,8 @@ typedef std::set<CScript> WatchOnlySet;
 class CBasicKeyStore : public CKeyStore
 {
 protected:
+    mutable CCriticalSection cs_KeyStore;
+
     KeyMap mapKeys;
     WatchKeyMap mapWatchKeys;
     ScriptMap mapScripts;
@@ -64,6 +62,7 @@ protected:
 
 public:
     bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey) override;
+    bool AddKey(const CKey &key) { return AddKeyPubKey(key, key.GetPubKey()); }
     bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const override;
     bool HaveKey(const CKeyID &address) const override;
     std::set<CKeyID> GetKeys() const override;
