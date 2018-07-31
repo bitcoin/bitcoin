@@ -357,8 +357,10 @@ target_link_libraries(crown_wallet
   PUBLIC crown_common
   PUBLIC crown_server
   PUBLIC BDB::bdb
-  PRIVATE OpenSSL::Crypto
-  PUBLIC curl)
+  PUBLIC OpenSSL::Crypto
+  PUBLIC OpenSSL::SSL
+  PUBLIC CURL::libcurl
+  )
 
 
 add_executable(crownd
@@ -385,7 +387,6 @@ target_link_libraries(crownd
   OpenSSL::Crypto
   OpenSSL::SSL
   BDB::bdb
-  curl
 )
 
 add_executable(crown-cli

@@ -210,4 +210,6 @@ target_link_libraries(crown_qt
   Qt5::Widgets
   protobuf::libprotobuf
   protobuf::libprotobuf-lite
+  OpenSSL::Crypto
+  OpenSSL::SSL
   )
