@@ -491,7 +491,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket)
     //  this test could be a security issue.
     BOOST_CHECK(info1.GetNewBucket(nKey1) != info1.GetNewBucket(nKey2));
 
-    // Test: Ports should not effect bucket placement in the addr
+    // Test: Ports should not affect bucket placement in the addr
     CAddrInfo info2 = CAddrInfo(addr2, source1);
     BOOST_CHECK(info1.GetKey() != info2.GetKey());
     BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1), info2.GetNewBucket(nKey1));

@@ -62,7 +62,7 @@ class TestNode():
         if extra_conf != None:
             append_config(dirname, i, extra_conf)
         # Most callers will just need to add extra args to the standard list below.
-        # For those callers that need more flexibity, they can just set the args property directly.
+        # For those callers that need more flexibility, they can just set the args property directly.
         # Note that common args are set in the config file (see initialize_datadir)
         self.extra_args = extra_args
         self.args = [self.binary, "-datadir=" + self.datadir, "-logtimemicros", "-debug", "-debugexclude=libevent", "-debugexclude=leveldb", "-mocktime=" + str(mocktime), "-uacomment=testnode%d" % i]

@@ -111,7 +111,7 @@ class AbandonConflictTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
         assert_equal(self.nodes[0].getbalance(), balance)
 
-        # But if its received again then it is unabandoned
+        # But if it is received again then it is unabandoned
         # And since now in mempool, the change is available
         # But its child tx remains abandoned
         self.nodes[0].sendrawtransaction(signed["hex"])
@@ -119,7 +119,7 @@ class AbandonConflictTest(BitcoinTestFramework):
         assert_equal(newbalance, balance - Decimal("20") + Decimal("14.99998"))
         balance = newbalance
 
-        # Send child tx again so its unabandoned
+        # Send child tx again so it is unabandoned
         self.nodes[0].sendrawtransaction(signed2["hex"])
         newbalance = self.nodes[0].getbalance()
         assert_equal(newbalance, balance - Decimal("10") - Decimal("14.99998") + Decimal("24.9996"))

@@ -15,7 +15,7 @@
  *
  *  Contains the prevout's CTxOut being spent, and its metadata as well
  *  (coinbase or not, height). The serialization contains a dummy value of
- *  zero. This is be compatible with older versions which expect to see
+ *  zero. This is compatible with older versions which expect to see
  *  the transaction version there.
  */
 class TxInUndoSerializer
