@@ -285,24 +285,6 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
 
             pwallet->LoadToWallet(wtx);
         }
-        else if (strType == "acentry")
-        {
-            std::string strAccount;
-            ssKey >> strAccount;
-            uint64_t nNumber;
-            ssKey >> nNumber;
-            if (nNumber > pwallet->nAccountingEntryNumber) {
-                pwallet->nAccountingEntryNumber = nNumber;
-            }
-
-            if (!wss.fAnyUnordered)
-            {
-                CAccountingEntry acentry;
-                ssValue >> acentry;
-                if (acentry.nOrderPos == -1)
-                    wss.fAnyUnordered = true;
-            }
-        }
         else if (strType == "watchs")
         {
             wss.nWatchKeys++;
@@ -493,7 +475,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 return false;
             }
         } else if (strType != "bestblock" && strType != "bestblock_nomerkle" &&
-                strType != "minversion") {
+                strType != "minversion" && strType != "acentry") {
             wss.m_unknown_records++;
         }
     } catch (...)
@@ -607,12 +589,6 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 
     if (wss.fAnyUnordered)
         result = pwallet->ReorderTransactions();
-
-    pwallet->laccentries.clear();
-    ListAccountCreditDebit("*", pwallet->laccentries);
-    for (CAccountingEntry& entry : pwallet->laccentries) {
-        pwallet->wtxOrdered.insert(make_pair(entry.nOrderPos, CWallet::TxPair(nullptr, &entry)));
-    }
 
     return result;
 }
