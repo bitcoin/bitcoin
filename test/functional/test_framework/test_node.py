@@ -182,11 +182,14 @@ class TestNode():
     def wait_until_stopped(self, timeout=BITCOIND_PROC_WAIT_TIMEOUT):
         wait_until(self.is_node_stopped, timeout=timeout)
 
-    def assert_start_raises_init_error(self, extra_args=None, expected_msg=None, *args, **kwargs):
+    def assert_start_raises_init_error(self, extra_args=None, expected_msg=None, partial_match=False, *args, **kwargs):
         """Attempt to start the node and expect it to raise an error.
 
+        extra_args: extra arguments to pass through to bitcoind
+        expected_msg: regex that stderr should match when bitcoind fails
+
         Will throw if bitcoind starts without an error.
-        Will throw if an expected_msg is provided and it does not appear in bitcoind's stdout."""
+        Will throw if an expected_msg is provided and it does not match bitcoind's stdout."""
         with tempfile.SpooledTemporaryFile(max_size=2**16) as log_stderr:
             try:
                 self.start(extra_args, stderr=log_stderr, *args, **kwargs)
@@ -197,11 +200,16 @@ class TestNode():
                 assert 'bitcoind exited' in str(e)  # node must have shutdown
                 self.running = False
                 self.process = None
+                # Check stderr for expected message
                 if expected_msg is not None:
                     log_stderr.seek(0)
-                    stderr = log_stderr.read().decode('utf-8')
-                    if expected_msg not in stderr:
-                        raise AssertionError("Expected error \"" + expected_msg + "\" not found in:\n" + stderr)
+                    stderr = log_stderr.read().decode('utf-8').strip()
+                    if partial_match:
+                        if re.search(expected_msg, stderr, flags=re.MULTILINE) is None:
+                            raise AssertionError('Expected message "{}" does not partially match stderr:\n"{}"'.format(expected_msg, stderr))
+                    else:
+                        if re.fullmatch(expected_msg, stderr) is None:
+                            raise AssertionError('Expected message "{}" does not fully match stderr:\n"{}"'.format(expected_msg, stderr))
             else:
                 if expected_msg is None:
                     assert_msg = "bitcoind should have exited with an error"
