@@ -110,7 +110,7 @@ UniValue getnewaddress(const UniValue& params, bool fHelp)
     if (fHelp || params.size() > 1)
         throw runtime_error(
             "getnewaddress ( \"account\" )\n"
-            "\nReturns a new Bitcoin address for receiving payments.\n"
+            "\nReturns a new Zetacoin address for receiving payments.\n"
             "If 'account' is specified (DEPRECATED), it is added to the address book \n"
             "so payments received with the address will be credited to 'account'.\n"
             "\nArguments:\n"
@@ -162,7 +162,7 @@ UniValue getaccountaddress(const UniValue& params, bool fHelp)
     if (fHelp || params.size() != 1)
         throw runtime_error(
             "getaccountaddress \"account\"\n"
-            "\nDEPRECATED. Returns the current Bitcoin address for receiving payments to this account.\n"
+            "\nDEPRECATED. Returns the current Zetacoin address for receiving payments to this account.\n"
             "\nArguments:\n"
             "1. \"account\"       (string, required) The account name for the address. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created and a new address created  if there is no account by the given name.\n"
             "\nResult:\n"
@@ -194,7 +194,7 @@ UniValue getrawchangeaddress(const UniValue& params, bool fHelp)
     if (fHelp || params.size() > 1)
         throw runtime_error(
             "getrawchangeaddress\n"
-            "\nReturns a new Bitcoin address, for receiving change.\n"
+            "\nReturns a new Zetacoin address, for receiving change.\n"
             "This is for use with raw transactions, NOT normal use.\n"
             "\nResult:\n"
             "\"address\"    (string) The address\n"
@@ -242,7 +242,7 @@ UniValue setaccount(const UniValue& params, bool fHelp)
 
     CBitcoinAddress address(params[0].get_str());
     if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Zetacoin address");
 
     string strAccount;
     if (params.size() > 1)
@@ -289,7 +289,7 @@ UniValue getaccount(const UniValue& params, bool fHelp)
 
     CBitcoinAddress address(params[0].get_str());
     if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Zetacoin address");
 
     string strAccount;
     map<CTxDestination, CAddressBookData>::iterator mi = pwalletMain->mapAddressBook.find(address.Get());
@@ -386,7 +386,7 @@ UniValue sendtoaddress(const UniValue& params, bool fHelp)
             "                             to which you're sending the transaction. This is not part of the \n"
             "                             transaction, just kept in your wallet.\n"
             "5. subtractfeefromamount  (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
-            "                             The recipient will receive less bitcoins than you enter in the amount field.\n"
+            "                             The recipient will receive less Zetacoins than you enter in the amount field.\n"
             "\nResult:\n"
             "\"transactionid\"  (string) The transaction id.\n"
             "\nExamples:\n"
@@ -400,7 +400,7 @@ UniValue sendtoaddress(const UniValue& params, bool fHelp)
 
     CBitcoinAddress address(params[0].get_str());
     if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Zetacoin address");
 
     // Amount
     CAmount nAmount = AmountFromValue(params[1]);
@@ -562,7 +562,7 @@ UniValue getreceivedbyaddress(const UniValue& params, bool fHelp)
     // Bitcoin address
     CBitcoinAddress address = CBitcoinAddress(params[0].get_str());
     if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Zetacoin address");
     CScript scriptPubKey = GetScriptForDestination(address.Get());
     if (!IsMine(*pwalletMain, scriptPubKey))
         return ValueFromAmount(0);
@@ -821,7 +821,7 @@ UniValue sendfrom(const UniValue& params, bool fHelp)
     string strAccount = AccountFromValue(params[0]);
     CBitcoinAddress address(params[1].get_str());
     if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Zetacoin address");
     CAmount nAmount = AmountFromValue(params[2]);
     if (nAmount <= 0)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
@@ -870,7 +870,7 @@ UniValue sendmany(const UniValue& params, bool fHelp)
             "4. \"comment\"             (string, optional) A comment\n"
             "5. subtractfeefromamount   (string, optional) A json array with addresses.\n"
             "                           The fee will be equally deducted from the amount of each selected address.\n"
-            "                           Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
+            "                           Those recipients will receive less Zetacoins than you enter in their corresponding amount field.\n"
             "                           If no addresses are specified here, the sender pays the fee.\n"
             "    [\n"
             "      \"address\"            (string) Subtract fee from this address\n"
@@ -916,7 +916,7 @@ UniValue sendmany(const UniValue& params, bool fHelp)
     {
         CBitcoinAddress address(name_);
         if (!address.IsValid())
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Bitcoin address: ")+name_);
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Zetacoin address: ")+name_);
 
         if (setAddress.count(address))
             throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+name_);
@@ -972,7 +972,7 @@ UniValue addmultisigaddress(const UniValue& params, bool fHelp)
     {
         string msg = "addmultisigaddress nrequired [\"key\",...] ( \"account\" )\n"
             "\nAdd a nrequired-to-sign multisignature address to the wallet.\n"
-            "Each key is a Bitcoin address or hex-encoded public key.\n"
+            "Each key is a Zetacoin address or hex-encoded public key.\n"
             "If 'account' is specified (DEPRECATED), assign address to that account.\n"
 
             "\nArguments:\n"
@@ -1086,7 +1086,7 @@ UniValue addwitnessaddress(const UniValue& params, bool fHelp)
 
     CBitcoinAddress address(params[0].get_str());
     if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Zetacoin address");
 
     Witnessifier w;
     CTxDestination dest = address.Get();
@@ -1900,7 +1900,7 @@ UniValue walletpassphrase(const UniValue& params, bool fHelp)
         throw runtime_error(
             "walletpassphrase \"passphrase\" timeout\n"
             "\nStores the wallet decryption key in memory for 'timeout' seconds.\n"
-            "This is needed prior to performing transactions related to private keys such as sending bitcoins\n"
+            "This is needed prior to performing transactions related to private keys such as sending Zetacoins\n"
             "\nArguments:\n"
             "1. \"passphrase\"     (string, required) The wallet passphrase\n"
             "2. timeout            (numeric, required) The time to keep the decryption key in seconds.\n"
@@ -2055,7 +2055,7 @@ UniValue encryptwallet(const UniValue& params, bool fHelp)
             "\nExamples:\n"
             "\nEncrypt you wallet\n"
             + HelpExampleCli("encryptwallet", "\"my pass phrase\"") +
-            "\nNow set the passphrase to use the wallet, such as for signing or sending bitcoin\n"
+            "\nNow set the passphrase to use the wallet, such as for signing or sending Zetacoin\n"
             + HelpExampleCli("walletpassphrase", "\"my pass phrase\"") +
             "\nNow we can so something like sign\n"
             + HelpExampleCli("signmessage", "\"zetacoinaddress\" \"test message\"") +
@@ -2090,7 +2090,7 @@ UniValue encryptwallet(const UniValue& params, bool fHelp)
     // slack space in .dat files; that is bad if the old data is
     // unencrypted private keys. So:
     StartShutdown();
-    return "wallet encrypted; Bitcoin server stopping, restart to run with encrypted wallet. The keypool has been flushed and a new HD seed was generated (if you are using HD). You need to make a new backup.";
+    return "wallet encrypted; Zetacoin server stopping, restart to run with encrypted wallet. The keypool has been flushed and a new HD seed was generated (if you are using HD). You need to make a new backup.";
 }
 
 UniValue lockunspent(const UniValue& params, bool fHelp)
@@ -2104,7 +2104,7 @@ UniValue lockunspent(const UniValue& params, bool fHelp)
             "\nUpdates list of temporarily unspendable outputs.\n"
             "Temporarily lock (unlock=false) or unlock (unlock=true) specified transaction outputs.\n"
             "If no transaction outputs are specified when unlocking then all current locked transaction outputs are unlocked.\n"
-            "A locked transaction output will not be chosen by automatic coin selection, when spending bitcoins.\n"
+            "A locked transaction output will not be chosen by automatic coin selection, when spending Zetacoins.\n"
             "Locks are stored in memory only. Nodes start with zero locked outputs, and the locked output list\n"
             "is always cleared (by virtue of process exit) when a node stops or fails.\n"
             "Also see the listunspent call\n"
@@ -2388,7 +2388,7 @@ UniValue listunspent(const UniValue& params, bool fHelp)
             const UniValue& input = inputs[idx];
             CBitcoinAddress address(input.get_str());
             if (!address.IsValid())
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Bitcoin address: ")+input.get_str());
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Zetacoin address: ")+input.get_str());
             if (setAddress.count(address))
                 throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+input.get_str());
            setAddress.insert(address);
@@ -2461,7 +2461,7 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
                             "1. \"hexstring\"           (string, required) The hex string of the raw transaction\n"
                             "2. options               (object, optional)\n"
                             "   {\n"
-                            "     \"changeAddress\"     (string, optional, default pool address) The bitcoin address to receive the change\n"
+                            "     \"changeAddress\"     (string, optional, default pool address) The Zetacoin address to receive the change\n"
                             "     \"changePosition\"    (numeric, optional, default random) The index of the change output\n"
                             "     \"includeWatching\"   (boolean, optional, default false) Also select inputs which are watch only\n"
                             "     \"lockUnspents\"      (boolean, optional, default false) Lock selected unspent outputs\n"
@@ -2519,7 +2519,7 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
             CBitcoinAddress address(options["changeAddress"].get_str());
 
             if (!address.IsValid())
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "changeAddress must be a valid bitcoin address");
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "changeAddress must be a valid Zetacoin address");
 
             changeAddress = address.Get();
         }
