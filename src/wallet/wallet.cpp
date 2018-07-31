@@ -32,9 +32,9 @@
 #include <util.h>
 #include <utilmoneystr.h>
 #include <wallet/fees.h>
+#include <wallet/keepass.h>
 
 #include <governance.h>
-#include <keepass.h>
 #include <privatesend-client.h>
 
 #include <assert.h>

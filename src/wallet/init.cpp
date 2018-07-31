@@ -10,6 +10,7 @@
 #include <util.h>
 #include <utilmoneystr.h>
 #include <validation.h>
+#include <wallet/keepass.h>
 #include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
@@ -180,6 +181,10 @@ bool WalletInit::ParameterInteraction()
     nTxConfirmTarget = gArgs.GetArg("-txconfirmtarget", DEFAULT_TX_CONFIRM_TARGET);
     bSpendZeroConfChange = gArgs.GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE);
     fWalletRbf = gArgs.GetBoolArg("-walletrbf", DEFAULT_WALLET_RBF);
+
+    if (gArgs.IsArgSet("-keepass")) {
+        keePassInt.init(); // Initialize KeePass Integration
+    }
 
     return true;
 }

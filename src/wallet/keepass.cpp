@@ -2,7 +2,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <keepass.h>
+#include <wallet/keepass.h>
 
 #include <wallet/crypter.h>
 #include <clientversion.h>
