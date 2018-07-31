@@ -67,7 +67,7 @@ BASE_SCRIPTS= [
     'feature_segwit.py',
     # vv Tests less than 2m vv
     'wallet_basic.py',
-    'wallet_accounts.py',
+    'wallet_labels.py',
     'p2p_segwit.py',
     'wallet_dump.py',
     'rpc_listtransactions.py',

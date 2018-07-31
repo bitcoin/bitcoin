@@ -78,7 +78,7 @@ class Variant(collections.namedtuple("Variant", "call data rescan prune")):
 
         if txid is not None:
             tx, = [tx for tx in txs if tx["txid"] == txid]
-            assert_equal(tx["account"], self.label)
+            assert_equal(tx["label"], self.label)
             assert_equal(tx["address"], self.address["address"])
             assert_equal(tx["amount"], amount)
             assert_equal(tx["category"], "receive")
