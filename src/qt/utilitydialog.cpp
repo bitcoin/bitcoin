@@ -148,8 +148,7 @@ void HelpMessageDialog::on_okButton_accepted()
 
 
 /** "Shutdown" window */
-ShutdownWindow::ShutdownWindow(QWidget *parent, Qt::WindowFlags f):
-    QWidget(parent, f)
+ShutdownWindow::ShutdownWindow()
 {
     QVBoxLayout *layout = new QVBoxLayout();
     layout->addWidget(new QLabel(
