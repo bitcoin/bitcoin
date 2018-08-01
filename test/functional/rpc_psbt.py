@@ -5,8 +5,9 @@
 """Test the Partially Signed Transaction RPCs.
 """
 
+from decimal import Decimal
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, find_output, disconnect_nodes, connect_nodes_bi, sync_blocks
+from test_framework.util import assert_equal, assert_raises_rpc_error, connect_nodes_bi, disconnect_nodes, find_output, sync_blocks
 
 import json
 import os
@@ -339,6 +340,29 @@ class PSBTTest(BitcoinTestFramework):
         joined_decoded = self.nodes[0].decodepsbt(joined)
         assert len(joined_decoded['inputs']) == 4 and len(joined_decoded['outputs']) == 2 and "final_scriptwitness" not in joined_decoded['inputs'][3] and "final_scriptSig" not in joined_decoded['inputs'][3]
 
+        # Newly created PSBT needs UTXOs and updating
+        addr = self.nodes[1].getnewaddress("", "p2sh-segwit")
+        txid = self.nodes[0].sendtoaddress(addr, 7)
+        addrinfo = self.nodes[1].getaddressinfo(addr)
+        self.nodes[0].generate(6)
+        self.sync_all()
+        vout = find_output(self.nodes[0], txid, 7)
+        psbt = self.nodes[1].createpsbt([{"txid":txid, "vout":vout}], {self.nodes[0].getnewaddress("", "p2sh-segwit"):Decimal('6.999')})
+        analyzed = self.nodes[0].analyzepsbt(psbt)
+        assert not analyzed['inputs'][0]['has_utxo'] and not analyzed['inputs'][0]['is_final'] and analyzed['inputs'][0]['next'] == 'updater' and analyzed['next'] == 'updater'
+
+        # After update with wallet, only needs signing
+        updated = self.nodes[1].walletprocesspsbt(psbt, False, 'ALL', True)['psbt']
+        analyzed = self.nodes[0].analyzepsbt(updated)
+        assert analyzed['inputs'][0]['has_utxo'] and not analyzed['inputs'][0]['is_final'] and analyzed['inputs'][0]['next'] == 'signer' and analyzed['next'] == 'signer' and analyzed['inputs'][0]['missing']['signatures'][0] == addrinfo['embedded']['witness_program']
+
+        # Check fee and size things
+        assert analyzed['fee'] == Decimal('0.001') and analyzed['estimated_vsize'] == 134 and analyzed['estimated_feerate'] == '0.00746268 BTC/kB'
+
+        # After signing and finalizing, needs extracting
+        signed = self.nodes[1].walletprocesspsbt(updated)['psbt']
+        analyzed = self.nodes[0].analyzepsbt(signed)
+        assert analyzed['inputs'][0]['has_utxo'] and analyzed['inputs'][0]['is_final'] and analyzed['next'] == 'extractor'
 
 if __name__ == '__main__':
     PSBTTest().main()
