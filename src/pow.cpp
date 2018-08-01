@@ -94,7 +94,7 @@ unsigned int static DarkGravityWave(const CBlockIndex* pindexLast, const CBlockH
 
     if (params.fPowAllowMinDifficultyBlocks)
     {
-        // If the new block's timestamp is more than 2* 2.5 minutes
+        // If the new block's timestamp is more than 2* 1 minutes
         // then allow mining of a min-difficulty block.
         if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nPowTargetSpacing*2)
             return bnPowLimit.GetCompact();
@@ -154,7 +154,7 @@ unsigned int GetNextWorkRequiredBTC(const CBlockIndex* pindexLast, const CBlockH
         if (params.fPowAllowMinDifficultyBlocks)
         {
             // Special difficulty rule for testnet:
-            // If the new block's timestamp is more than 2* 2.5 minutes
+            // If the new block's timestamp is more than 2* 1 minutes
             // then allow mining of a min-difficulty block.
             if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nPowTargetSpacing*2)
                 return nProofOfWorkLimit;
