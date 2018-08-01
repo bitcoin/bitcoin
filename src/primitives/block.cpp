@@ -6,9 +6,10 @@
 #include <primitives/block.h>
 
 #include <hash.h>
-#include <tinyformat.h>
-#include <utilstrencodings.h>
+#include <utilstrprintf.h>
 #include <crypto/common.h>
+
+#include <sstream>
 
 uint256 CBlockHeader::GetHash() const
 {

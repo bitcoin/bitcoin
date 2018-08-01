@@ -8,12 +8,12 @@
 #endif
 
 #include <utiltime.h>
+#include <utilstrprintf.h>
 
 #include <atomic>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread.hpp>
 #include <ctime>
-#include <tinyformat.h>
 
 static std::atomic<int64_t> nMockTime(0); //!< For unit testing
 

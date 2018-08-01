@@ -7,7 +7,7 @@
 #define BITCOIN_LOGGING_H
 
 #include <fs.h>
-#include <tinyformat.h>
+#include <utilstrprintf.h>
 
 #include <atomic>
 #include <cstdint>

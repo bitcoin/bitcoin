@@ -6,8 +6,8 @@
 #include <keystore.h>
 #include <rpc/protocol.h>
 #include <rpc/util.h>
-#include <tinyformat.h>
 #include <utilstrencodings.h>
+#include <utilstrprintf.h>
 
 // Converts a hex string to a public key if possible
 CPubKey HexToPubKey(const std::string& hex_in)

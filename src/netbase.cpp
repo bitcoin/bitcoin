@@ -9,9 +9,9 @@
 #include <sync.h>
 #include <uint256.h>
 #include <random.h>
-#include <tinyformat.h>
 #include <util.h>
 #include <utilstrencodings.h>
+#include <utilstrprintf.h>
 
 #include <atomic>
 
