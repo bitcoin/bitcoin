@@ -339,10 +339,15 @@ private:
 
     uint64_t CalculateKeyedNetGroup(const CAddress& ad) const;
 
-    CNode* FindNode(const CNetAddr& ip);
-    CNode* FindNode(const CSubNet& subNet);
-    CNode* FindNode(const std::string& addrName);
-    CNode* FindNode(const CService& addr);
+    CNode* FindNode(const CNetAddr& ip) EXCLUSIVE_LOCKS_REQUIRED(cs_vNodes);
+    CNode* FindNode(const CSubNet& subNet) EXCLUSIVE_LOCKS_REQUIRED(cs_vNodes);
+    CNode* FindNode(const std::string& addrName) EXCLUSIVE_LOCKS_REQUIRED(cs_vNodes);
+    CNode* FindNode(const CService& addr) EXCLUSIVE_LOCKS_REQUIRED(cs_vNodes);
+
+    bool NodeExists(const CNetAddr& ip) LOCKS_EXCLUDED(cs_vNodes);
+    bool NodeExists(const CSubNet& subNet) LOCKS_EXCLUDED(cs_vNodes);
+    bool NodeExists(const std::string& addrName) LOCKS_EXCLUDED(cs_vNodes);
+    bool NodeExists(const CService& addr) LOCKS_EXCLUDED(cs_vNodes);
 
     bool AttemptToEvictConnection();
     CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure, bool manual_connection);
