@@ -394,6 +394,14 @@ struct PartiallySignedTransaction
     PartiallySignedTransaction() {}
     PartiallySignedTransaction(const PartiallySignedTransaction& psbt_in) : tx(psbt_in.tx), inputs(psbt_in.inputs), outputs(psbt_in.outputs), unknown(psbt_in.unknown) {}
     explicit PartiallySignedTransaction(const CMutableTransaction& tx);
+    /**
+     * Finds the UTXO for a given input index
+     *
+     * @param[out] utxo The UTXO of the input if found
+     * @param[in] input_index Index of the input to retrieve the UTXO of
+     * @return Whether the UTXO for the specified input was found
+     */
+    bool GetInputUTXO(CTxOut& utxo, int input_index) const;
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {
