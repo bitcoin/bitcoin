@@ -11,8 +11,8 @@
 #include <hash.h>
 #include <random.h>
 #include <streams.h>
-#include <tinyformat.h>
 #include <util.h>
+#include <utilstrprintf.h>
 
 namespace {
 

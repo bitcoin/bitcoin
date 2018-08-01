@@ -31,7 +31,7 @@ EXCLUDE = [
     'src/qt/bitcoinstrings.cpp',
     'src/chainparamsseeds.h',
     # other external copyrights:
-    'src/tinyformat.h',
+    'src/tinyformat/tinyformat.h',
     'src/leveldb/util/env_win.cc',
     'src/crypto/ctaes/bench.c',
     'test/functional/test_framework/bignum.py',

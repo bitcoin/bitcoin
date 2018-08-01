@@ -30,7 +30,6 @@
 #include <script/standard.h>
 #include <shutdown.h>
 #include <timedata.h>
-#include <tinyformat.h>
 #include <txdb.h>
 #include <txmempool.h>
 #include <ui_interface.h>
@@ -38,6 +37,7 @@
 #include <util.h>
 #include <utilmoneystr.h>
 #include <utilstrencodings.h>
+#include <utilstrprintf.h>
 #include <validationinterface.h>
 #include <warnings.h>
 

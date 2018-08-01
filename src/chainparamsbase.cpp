@@ -5,9 +5,9 @@
 
 #include <chainparamsbase.h>
 
-#include <tinyformat.h>
 #include <util.h>
 #include <utilmemory.h>
+#include <utilstrprintf.h>
 
 #include <assert.h>
 

@@ -5,9 +5,9 @@
 #include <chainparams.h>
 #include <index/base.h>
 #include <shutdown.h>
-#include <tinyformat.h>
 #include <ui_interface.h>
 #include <util.h>
+#include <utilstrprintf.h>
 #include <validation.h>
 #include <warnings.h>
 

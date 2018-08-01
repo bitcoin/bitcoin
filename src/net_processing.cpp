@@ -22,12 +22,12 @@
 #include <random.h>
 #include <reverse_iterator.h>
 #include <scheduler.h>
-#include <tinyformat.h>
 #include <txmempool.h>
 #include <ui_interface.h>
 #include <util.h>
 #include <utilmoneystr.h>
 #include <utilstrencodings.h>
+#include <utilstrprintf.h>
 
 #include <memory>
 

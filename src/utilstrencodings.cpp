@@ -5,7 +5,7 @@
 
 #include <utilstrencodings.h>
 
-#include <tinyformat.h>
+#include <utilstrprintf.h>
 
 #include <cstdlib>
 #include <cstring>
