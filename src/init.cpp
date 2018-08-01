@@ -1887,6 +1887,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     // ********************************************************* Step 11a: setup PrivateSend
     fMasternodeMode = GetBoolArg("-masternode", false);
 	fUnitTest = GetBoolArg("-unittest", false);
+	fLogThreadpool = LogAcceptCategory("threadpool");
 	fAssetAllocationIndex = GetBoolArg("-assetallocationindex", false);
     // TODO: masternode should have no wallet
 
