@@ -77,6 +77,18 @@ const char * const BITCOIN_CONF_FILENAME = "bitcoin.conf";
 
 ArgsManager gArgs;
 
+bool ObtainDirectoryLock(const fs::path& directory, const std::string lockfile_name, std::unique_ptr<fsbridge::FileLock>& lock)
+{
+    fs::path pathLockFile = directory / lockfile_name;
+
+    // Create empty lock file if it doesn't exist.
+    FILE* file = fsbridge::fopen(pathLockFile, "a");
+    if (file) fclose(file);
+
+    lock = MakeUnique<fsbridge::FileLock>(pathLockFile);
+    return lock->TryLock();
+}
+
 /** A map that contains all the currently held directory locks. After
  * successful locking, these will be held here until the global destructor
  * cleans them up and thus automatically unlocks them, or ReleaseDirectoryLocks
@@ -96,17 +108,16 @@ bool LockDirectory(const fs::path& directory, const std::string lockfile_name, b
         return true;
     }
 
-    // Create empty lock file if it doesn't exist.
-    FILE* file = fsbridge::fopen(pathLockFile, "a");
-    if (file) fclose(file);
-    auto lock = MakeUnique<fsbridge::FileLock>(pathLockFile);
-    if (!lock->TryLock()) {
+    std::unique_ptr<fsbridge::FileLock> lock;
+    if (!ObtainDirectoryLock(directory, lockfile_name, lock)) {
         return error("Error while attempting to lock directory %s: %s", directory.string(), lock->GetReason());
     }
+
     if (!probe_only) {
         // Lock successful and we're not just probing, put it into the map
         dir_locks.emplace(pathLockFile.string(), std::move(lock));
     }
+
     return true;
 }
 
