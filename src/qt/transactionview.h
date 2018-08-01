@@ -113,6 +113,8 @@ Q_SIGNALS:
     /** Send computed sum back to wallet-view */
     void trxAmount(QString amount);
 
+    void bumpedFee(const uint256& txid);
+
 public Q_SLOTS:
     void chooseDate(int idx);
     void chooseType(int idx);
