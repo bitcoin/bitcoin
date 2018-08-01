@@ -5,6 +5,7 @@
 #include <sync.h>
 
 #include <logging.h>
+#include <tinyformat.h>
 #include <utilstrencodings.h>
 
 #include <stdio.h>
@@ -47,7 +48,7 @@ struct CLockLocation {
 
     std::string ToString() const
     {
-        return mutexName + "  " + sourceFile + ":" + itostr(sourceLine) + (fTry ? " (TRY)" : "");
+        return strprintf("%s %s: %d%s", mutexName, sourceFile, sourceLine, (fTry ? " (TRY)" : ""));
     }
 
 private:
