@@ -1721,13 +1721,13 @@ void CMasternodeMan::DoMaintenance(CConnman& connman)
     mnodeman.ProcessPendingMnbRequests(connman);
     mnodeman.ProcessPendingMnvRequests(connman);
 
-    if(nTick % 60 == 0) {
+    if(nTick % 10 == 0) {
         mnodeman.ProcessMasternodeConnections(connman);
         mnodeman.CheckAndRemove(connman);
         mnodeman.WarnMasternodeDaemonUpdates();
     }
 
-    if(fMasternodeMode && (nTick % (60 * 5) == 0)) {
+    if(fMasternodeMode && (nTick % 50 == 0)) {
         mnodeman.DoFullVerificationStep(connman);
     }
 }
