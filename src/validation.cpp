@@ -86,6 +86,7 @@ int nScriptCheckThreads = 0;
 // SYSCOIN
 int64_t nLastMultithreadMempoolFailure = 0;
 bool fLoaded = false;
+bool fLogThreadpool = false;
 tp::ThreadPool *threadpool = NULL;
 std::atomic_bool fImporting(false);
 bool fReindex = false;
@@ -1277,21 +1278,25 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 			// define a task for the worker to process
 			std::packaged_task<void()> task([&pool, ptx, hash, coins_to_uncache, hashCacheEntry, vChecks]() {
 				// metrics
-				const int64_t &time = GetTimeMicros();
+				const int64_t time;
+				if (fLogThreadpool) {
+					time = GetTimeMicros();
+					concurrentExecutionCount += 1;
+				}
 				int thisCheckCount = 0;
 				int thisSyscoinCheckCount = 0;
 				int thisCheckMicros = 0;
 				int thisSyscoinCheckMicros = 0;
-				concurrentExecutionCount += 1;
+				
 
 				CValidationState validationState;
 				CCoinsViewCache coinsViewCache(pcoinsTip);
 				const CTransaction& txIn = *ptx;
 				bool isCheckPassing = true;  // optimistic in case vChecks is empty
-				const int64_t &checkTime = GetTimeMicros();
 				for (auto &check : vChecks)
 				{
-					thisCheckCount += 1;
+					if (fLogThreadpool) 
+						thisCheckCount += 1;
 					isCheckPassing = check();
 					if (!isCheckPassing)
 					{
@@ -1308,13 +1313,18 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 						break;
 					}
 				}
-				// how long did we run check()'s
-				thisCheckMicros = GetTimeMicros() - checkTime;
+				if (fLogThreadpool) {
+					// how long did we run check()'s
+					thisCheckMicros = GetTimeMicros() - time;
+				}
 
 				if (isCheckPassing)
 				{
-					const int64_t &syscoinCheckTime = GetTimeMicros();
-					thisSyscoinCheckCount += 1;
+					const int64_t syscoinCheckTime;
+					if (fLogThreadpool) {
+						syscoinCheckTime = GetTimeMicros();
+						thisSyscoinCheckCount += 1;
+					}
 					if (!CheckSyscoinInputs(txIn, validationState, coinsViewCache, true, chainActive.Height(), CBlock()))
 					{
 						nLastMultithreadMempoolFailure = GetTime();
@@ -1329,37 +1339,39 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 						FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
 					}
 					scriptExecutionCache.insert(hashCacheEntry);
-
-					// how long did we run CheckSyscoinInputs()'s
-					thisSyscoinCheckMicros = GetTimeMicros() - syscoinCheckTime;
+					if (fLogThreadpool) {
+						// how long did we run CheckSyscoinInputs()'s
+						thisSyscoinCheckMicros = GetTimeMicros() - syscoinCheckTime;
+					}
 				}
+				if (fLogThreadpool) {
+					// metrics
+					const int64_t &thisExecutionMicros = GetTimeMicros() - time;
+					if (thisExecutionMicros < minExecutionMicros) {
+						minExecutionMicros = thisExecutionMicros;
+					}
+					if (thisExecutionMicros > maxExecutionMicros) {
+						maxExecutionMicros = thisExecutionMicros;
+					}
+					if (concurrentExecutionCount > maxConcurrentExecutionCount) {
+						maxConcurrentExecutionCount = concurrentExecutionCount;
+					}
+					totalCheckCount += thisCheckCount;
+					totalCheckMicros += thisCheckMicros;
+					totalSyscoinCheckCount += thisSyscoinCheckCount;
+					totalSyscoinCheckMicros += thisSyscoinCheckMicros;
 
-				// metrics
-				const int64_t &thisExecutionMicros = GetTimeMicros() - time;
-				if (thisExecutionMicros < minExecutionMicros) {
-					minExecutionMicros = thisExecutionMicros;
+					totalExecutionMicros += thisExecutionMicros;
+
+
+					// indicate that this thread is done
+					concurrentExecutionCount -= 1;
 				}
-				if (thisExecutionMicros > maxExecutionMicros) {
-					maxExecutionMicros = thisExecutionMicros;
-				}
-				if (concurrentExecutionCount > maxConcurrentExecutionCount) {
-					maxConcurrentExecutionCount = concurrentExecutionCount;
-				}
-				totalCheckCount += thisCheckCount;
-				totalCheckMicros += thisCheckMicros;
-				totalSyscoinCheckCount += thisSyscoinCheckCount;
-				totalSyscoinCheckMicros += thisSyscoinCheckMicros;
-
-				totalExecutionMicros += thisExecutionMicros;
-
-
-				// indicate that this thread is done
-				concurrentExecutionCount -= 1;
 			});
-
-			totalExecutionCount ++;
+			if(fLogThreadpool)
+				totalExecutionCount ++;
 			// every 100th transaction or when not in unit test mode
-			if (totalCheckCount > 0 && totalSyscoinCheckCount > 0 && totalExecutionCount > 0 && (!fUnitTest || (fUnitTest && totalExecutionCount % 100 == 0))) {
+			if (fLogThreadpool && totalCheckCount > 0 && totalSyscoinCheckCount > 0 && totalExecutionCount > 0 && (!fUnitTest || (fUnitTest && totalExecutionCount % 100 == 0))) {
 				int avgCheckMicros = totalCheckMicros / totalCheckCount;
 				int avgSyscoinCheckMicros = totalSyscoinCheckMicros / totalSyscoinCheckCount;
 				int avgExecutionMicros = totalExecutionMicros / totalExecutionCount;
