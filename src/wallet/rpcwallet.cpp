@@ -40,6 +40,16 @@
 
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
 
+inline DestinationFilter DestinationFilterFromValue(const UniValue& value)
+{
+    DestinationFilter dest_filter;
+    if (value.isNull()) return DeriveDestinationFilter();
+    if (!ParseDestinationFilter(value.get_str(), dest_filter)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "dest_filter must be one of 'mixed', 'clean', or 'dirty'");
+    }
+    return dest_filter;
+}
+
 bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string& wallet_name)
 {
     if (request.URI.substr(0, WALLET_ENDPOINT_BASE.size()) == WALLET_ENDPOINT_BASE) {
@@ -464,7 +474,7 @@ static UniValue getaddressesbyaccount(const JSONRPCRequest& request)
 
 static CTransactionRef SendMoney(CWallet * const pwallet, const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, const CCoinControl& coin_control, mapValue_t mapValue, std::string fromAccount)
 {
-    CAmount curBalance = pwallet->GetBalance();
+    CAmount curBalance = pwallet->GetBalance(ISMINE_SPENDABLE, 0, coin_control.m_dest_filter);
 
     // Check amount
     if (nValue <= 0)
@@ -511,9 +521,9 @@ static UniValue sendtoaddress(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 8)
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 9)
         throw std::runtime_error(
-            "sendtoaddress \"address\" amount ( \"comment\" \"comment_to\" subtractfeefromamount replaceable conf_target \"estimate_mode\")\n"
+            "sendtoaddress \"address\" amount ( \"comment\" \"comment_to\" subtractfeefromamount replaceable conf_target \"estimate_mode\" dest_filter )\n"
             "\nSend an amount to a given address.\n"
             + HelpRequiringPassphrase(pwallet) +
             "\nArguments:\n"
@@ -532,12 +542,17 @@ static UniValue sendtoaddress(const JSONRPCRequest& request)
             "       \"UNSET\"\n"
             "       \"ECONOMICAL\"\n"
             "       \"CONSERVATIVE\"\n"
+            "9. dest_filter              (string, optional) Destination filter (only applicable if -avoidreuse is enabled), one of 'mixed', 'clean', or 'dirty'\n"
+            "                            'mixed' will include both clean and dirty outputs (default if -avoidreuse=false)\n"
+            "                            'clean' will include clean outputs only (default if -avoidreuse=true)\n"
+            "                            'dirty' will include dirty outputs only\n"
             "\nResult:\n"
             "\"txid\"                  (string) The transaction id.\n"
             "\nExamples:\n"
             + HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1")
             + HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1 \"donation\" \"seans outpost\"")
             + HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1 \"\" \"\" true")
+            + HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1 \"\" \"\" false true 0 UNSET dirty")
             + HelpExampleRpc("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.1, \"donation\", \"seans outpost\"")
         );
 
@@ -584,6 +599,7 @@ static UniValue sendtoaddress(const JSONRPCRequest& request)
         }
     }
 
+    if (!request.params[8].isNull()) coin_control.m_dest_filter = DestinationFilterFromValue(request.params[8]);
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -861,10 +877,10 @@ static UniValue getbalance(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || (request.params.size() > 3 ))
+    if (request.fHelp || request.params.size() > 4)
         throw std::runtime_error(
            (IsDeprecatedRPCEnabled("accounts") ? std::string(
-            "getbalance ( \"account\" minconf include_watchonly )\n"
+            "getbalance ( \"account\" minconf include_watchonly dest_filter )\n"
             "\nIf account is not specified, returns the server's total available balance.\n"
             "The available balance is what the wallet considers currently spendable, and is\n"
             "thus affected by options which limit spendability such as -spendzeroconfchange.\n"
@@ -896,6 +912,10 @@ static UniValue getbalance(const JSONRPCRequest& request)
             "1. (dummy)           (string, optional) Remains for backward compatibility. Must be excluded or set to \"*\".\n"
             "2. minconf           (numeric, optional, default=0) Only include transactions confirmed at least this many times.\n")) +
             "3. include_watchonly (bool, optional, default=false) Also include balance in watch-only addresses (see 'importaddress')\n"
+            "4. dest_filter       (string, optional) Destination filter (only applicable if -avoidreuse is enabled), one of 'mixed', 'clean', or 'dirty'\n"
+            "                     'mixed' will show balance for both clean and dirty outputs (default if -avoidreuse=false)\n"
+            "                     'clean' will show balance for clean outputs only (default if -avoidreuse=true)\n"
+            "                     'dirty' will show balance for dirty outputs only\n"
             "\nResult:\n"
             "amount              (numeric) The total amount in " + CURRENCY_UNIT + " received for this account.\n"
             "\nExamples:\n"
@@ -929,6 +949,8 @@ static UniValue getbalance(const JSONRPCRequest& request)
         filter = filter | ISMINE_WATCH_ONLY;
     }
 
+    DestinationFilter dest_filter = DestinationFilterFromValue(request.params[3]);
+
     if (!account_value.isNull()) {
 
         const std::string& account_param = account_value.get_str();
@@ -941,7 +963,7 @@ static UniValue getbalance(const JSONRPCRequest& request)
         }
     }
 
-    return ValueFromAmount(pwallet->GetBalance(filter, min_depth));
+    return ValueFromAmount(pwallet->GetBalance(filter, min_depth, dest_filter));
 }
 
 static UniValue getunconfirmedbalance(const JSONRPCRequest &request)
@@ -4781,7 +4803,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "dumpwallet",                       &dumpwallet,                    {"filename"} },
     { "wallet",             "encryptwallet",                    &encryptwallet,                 {"passphrase"} },
     { "wallet",             "getaddressinfo",                   &getaddressinfo,                {"address"} },
-    { "wallet",             "getbalance",                       &getbalance,                    {"account|dummy","minconf","include_watchonly"} },
+    { "wallet",             "getbalance",                       &getbalance,                    {"account|dummy","minconf","include_watchonly","dest_filter"} },
     { "wallet",             "getnewaddress",                    &getnewaddress,                 {"label|account","address_type"} },
     { "wallet",             "getrawchangeaddress",              &getrawchangeaddress,           {"address_type"} },
     { "wallet",             "getreceivedbyaddress",             &getreceivedbyaddress,          {"address","minconf"} },
@@ -4805,7 +4827,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "loadwallet",                       &loadwallet,                    {"filename"} },
     { "wallet",             "lockunspent",                      &lockunspent,                   {"unlock","transactions"} },
     { "wallet",             "sendmany",                         &sendmany,                      {"fromaccount|dummy","amounts","minconf","comment","subtractfeefrom","replaceable","conf_target","estimate_mode"} },
-    { "wallet",             "sendtoaddress",                    &sendtoaddress,                 {"address","amount","comment","comment_to","subtractfeefromamount","replaceable","conf_target","estimate_mode"} },
+    { "wallet",             "sendtoaddress",                    &sendtoaddress,                 {"address","amount","comment","comment_to","subtractfeefromamount","replaceable","conf_target","estimate_mode","dest_filter"} },
     { "wallet",             "settxfee",                         &settxfee,                      {"amount"} },
     { "wallet",             "signmessage",                      &signmessage,                   {"address","message"} },
     { "wallet",             "signrawtransactionwithwallet",     &signrawtransactionwithwallet,  {"hexstring","prevtxs","sighashtype"} },

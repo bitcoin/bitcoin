@@ -13,6 +13,7 @@ void CCoinControl::SetNull()
     fAllowOtherInputs = false;
     fAllowWatchOnly = false;
     m_avoid_partial_spends = gArgs.GetBoolArg("-avoidpartialspends", DEFAULT_AVOIDPARTIALSPENDS);
+    m_dest_filter = DeriveDestinationFilter();
     setSelected.clear();
     m_feerate.reset();
     fOverrideFeeRate = false;
@@ -20,4 +21,3 @@ void CCoinControl::SetNull()
     m_signal_bip125_rbf.reset();
     m_fee_mode = FeeEstimateMode::UNSET;
 }
-

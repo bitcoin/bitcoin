@@ -64,6 +64,9 @@ static const bool DEFAULT_WALLET_RBF = false;
 static const bool DEFAULT_WALLETBROADCAST = true;
 static const bool DEFAULT_DISABLE_WALLET = false;
 
+//! if set, addresses will be marked dirty once spent from, and will be excluded from future coin selects
+static const bool DEFAULT_AVOIDREUSE = false;
+
 class CBlockIndex;
 class CCoinControl;
 class COutput;
@@ -74,6 +77,8 @@ class CBlockPolicyEstimator;
 class CWalletTx;
 struct FeeCalculation;
 enum class FeeEstimateMode;
+
+DestinationFilter DeriveDestinationFilter(const CCoinControl* potential_coin_control=nullptr);
 
 /** (client) version numbers for particular wallet features */
 enum WalletFeature
@@ -279,6 +284,25 @@ public:
 int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* pwallet);
 
 /**
+ * A cached balance entry, for the three cases
+ * (1) mixed clean and dirty outputs,
+ * (2) clean outputs only,
+ * (3) dirty outputs only.
+ */
+struct CachedBalance {
+    bool valid[3]; ///< whether the cached value is applicable
+    CAmount value[3];
+    CachedBalance() : valid{false, false, false} {}
+    inline void Select(DestinationFilter dest_filter, bool** valid_ptr, CAmount** value_ptr) const {
+        *valid_ptr = const_cast<bool*>(&valid[dest_filter]);
+        *value_ptr = const_cast<CAmount*>(&value[dest_filter]);
+    }
+    inline void Reset() {
+        memset(valid, 0, sizeof(valid));
+    }
+};
+
+/**
  * A transaction with a bunch of additional info that only the owner cares about.
  * It includes any unrecorded transactions needed to link it back to the block chain.
  */
@@ -341,21 +365,19 @@ public:
     mutable bool fDebitCached;
     mutable bool fCreditCached;
     mutable bool fImmatureCreditCached;
-    mutable bool fAvailableCreditCached;
+    CachedBalance available_credit;
+    CachedBalance available_watch_credit;
     mutable bool fWatchDebitCached;
     mutable bool fWatchCreditCached;
     mutable bool fImmatureWatchCreditCached;
-    mutable bool fAvailableWatchCreditCached;
     mutable bool fChangeCached;
     mutable bool fInMempool;
     mutable CAmount nDebitCached;
     mutable CAmount nCreditCached;
     mutable CAmount nImmatureCreditCached;
-    mutable CAmount nAvailableCreditCached;
     mutable CAmount nWatchDebitCached;
     mutable CAmount nWatchCreditCached;
     mutable CAmount nImmatureWatchCreditCached;
-    mutable CAmount nAvailableWatchCreditCached;
     mutable CAmount nChangeCached;
 
     CWalletTx(const CWallet* pwalletIn, CTransactionRef arg) : CMerkleTx(std::move(arg))
@@ -376,23 +398,21 @@ public:
         fDebitCached = false;
         fCreditCached = false;
         fImmatureCreditCached = false;
-        fAvailableCreditCached = false;
         fWatchDebitCached = false;
         fWatchCreditCached = false;
         fImmatureWatchCreditCached = false;
-        fAvailableWatchCreditCached = false;
         fChangeCached = false;
         fInMempool = false;
         nDebitCached = 0;
         nCreditCached = 0;
         nImmatureCreditCached = 0;
-        nAvailableCreditCached = 0;
         nWatchDebitCached = 0;
         nWatchCreditCached = 0;
-        nAvailableWatchCreditCached = 0;
         nImmatureWatchCreditCached = 0;
         nChangeCached = 0;
         nOrderPos = -1;
+        available_credit.Reset();
+        available_watch_credit.Reset();
     }
 
     template<typename Stream>
@@ -436,14 +456,14 @@ public:
     void MarkDirty()
     {
         fCreditCached = false;
-        fAvailableCreditCached = false;
         fImmatureCreditCached = false;
         fWatchDebitCached = false;
         fWatchCreditCached = false;
-        fAvailableWatchCreditCached = false;
         fImmatureWatchCreditCached = false;
         fDebitCached = false;
         fChangeCached = false;
+        available_credit.Reset();
+        available_watch_credit.Reset();
     }
 
     void BindWallet(CWallet *pwalletIn)
@@ -456,7 +476,7 @@ public:
     CAmount GetDebit(const isminefilter& filter) const;
     CAmount GetCredit(const isminefilter& filter) const;
     CAmount GetImmatureCredit(bool fUseCache=true) const;
-    CAmount GetAvailableCredit(bool fUseCache=true, const isminefilter& filter=ISMINE_SPENDABLE) const;
+    CAmount GetAvailableCredit(bool fUseCache=true, const isminefilter& filter=ISMINE_SPENDABLE, DestinationFilter dest_filter=DeriveDestinationFilter()) const;
     CAmount GetImmatureWatchOnlyCredit(const bool fUseCache=true) const;
     CAmount GetChange() const;
 
@@ -859,6 +879,9 @@ public:
         std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CoinSelectionParams& coin_selection_params, bool& bnb_used) const;
 
     bool IsSpent(const uint256& hash, unsigned int n) const;
+    bool IsDirty(const uint256& hash, unsigned int n) const;
+    void SetDirtyState(const uint256& hash, unsigned int n, bool dirty);
+
     std::vector<OutputGroup> GroupOutputs(const std::vector<COutput>& outputs, bool single_coin) const;
 
     bool IsLockedCoin(uint256 hash, unsigned int n) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
@@ -947,7 +970,7 @@ public:
     void ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman) override;
     // ResendWalletTransactionsBefore may only be called if fBroadcastTransactions!
     std::vector<uint256> ResendWalletTransactionsBefore(int64_t nTime, CConnman* connman);
-    CAmount GetBalance(const isminefilter& filter=ISMINE_SPENDABLE, const int min_depth=0) const;
+    CAmount GetBalance(const isminefilter& filter=ISMINE_SPENDABLE, const int min_depth=0, DestinationFilter dest_filter=DeriveDestinationFilter()) const;
     CAmount GetUnconfirmedBalance() const;
     CAmount GetImmatureBalance() const;
     CAmount GetUnconfirmedWatchOnlyBalance() const;
