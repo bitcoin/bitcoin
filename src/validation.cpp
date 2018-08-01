@@ -1278,7 +1278,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 			// define a task for the worker to process
 			std::packaged_task<void()> task([&pool, ptx, hash, coins_to_uncache, hashCacheEntry, vChecks]() {
 				// metrics
-				const int64_t time;
+				int64_t &time;
 				if (fLogThreadpool) {
 					time = GetTimeMicros();
 					concurrentExecutionCount += 1;
@@ -1320,7 +1320,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 
 				if (isCheckPassing)
 				{
-					const int64_t syscoinCheckTime;
+					int64_t &syscoinCheckTime;
 					if (fLogThreadpool) {
 						syscoinCheckTime = GetTimeMicros();
 						thisSyscoinCheckCount += 1;
