@@ -191,13 +191,12 @@ void PSBTOutput::Merge(const PSBTOutput& output)
     if (redeem_script.empty() && !output.redeem_script.empty()) redeem_script = output.redeem_script;
     if (witness_script.empty() && !output.witness_script.empty()) witness_script = output.witness_script;
 }
-
 bool PSBTInputSigned(PSBTInput& input)
 {
     return !input.final_script_sig.empty() || !input.final_script_witness.IsNull();
 }
 
-bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, int sighash)
+bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, int sighash, SignatureData* out_sigdata, bool use_dummy)
 {
     PSBTInput& input = psbt.inputs.at(index);
     const CMutableTransaction& tx = *psbt.tx;
@@ -237,9 +236,14 @@ bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& 
         return false;
     }
 
-    MutableTransactionSignatureCreator creator(&tx, index, utxo.nValue, sighash);
     sigdata.witness = false;
-    bool sig_complete = ProduceSignature(provider, creator, utxo.scriptPubKey, sigdata);
+    bool sig_complete;
+    if (use_dummy) {
+        sig_complete = ProduceSignature(provider, DUMMY_SIGNATURE_CREATOR, utxo.scriptPubKey, sigdata);
+    } else {
+        MutableTransactionSignatureCreator creator(&tx, index, utxo.nValue, sighash);
+        sig_complete = ProduceSignature(provider, creator, utxo.scriptPubKey, sigdata);
+    }
     // Verify that a witness signature was produced in case one was required.
     if (require_witness_sig && !sigdata.witness) return false;
     input.FromSignatureData(sigdata);
@@ -248,6 +252,14 @@ bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& 
     if (sigdata.witness) {
         input.witness_utxo = utxo;
         input.non_witness_utxo = nullptr;
+    }
+
+    // Fill in the missing info
+    if (out_sigdata) {
+        out_sigdata->missing_pubkeys = sigdata.missing_pubkeys;
+        out_sigdata->missing_sigs = sigdata.missing_sigs;
+        out_sigdata->missing_redeem_script = sigdata.missing_redeem_script;
+        out_sigdata->missing_witness_script = sigdata.missing_witness_script;
     }
 
     return sig_complete;
