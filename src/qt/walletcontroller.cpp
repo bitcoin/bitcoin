@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <qt/askpassphrasedialog.h>
+#include <qt/clientmodel.h>
 #include <qt/createwalletdialog.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
@@ -24,12 +25,13 @@
 #include <QTimer>
 #include <QWindow>
 
-WalletController::WalletController(interfaces::Node& node, OptionsModel* options_model, QObject* parent)
+WalletController::WalletController(ClientModel& client_model, QObject* parent)
     : QObject(parent)
     , m_activity_thread(new QThread(this))
     , m_activity_worker(new QObject)
-    , m_node(node)
-    , m_options_model(options_model)
+    , m_client_model(client_model)
+    , m_node(client_model.node())
+    , m_options_model(client_model.getOptionsModel())
 {
     m_handler_load_wallet = m_node.walletClient().handleLoadWallet([this](std::unique_ptr<interfaces::Wallet> wallet) {
         getOrCreateWallet(std::move(wallet));
@@ -103,7 +105,7 @@ WalletModel* WalletController::getOrCreateWallet(std::unique_ptr<interfaces::Wal
     }
 
     // Instantiate model and register it.
-    WalletModel* wallet_model = new WalletModel(std::move(wallet), m_node, m_options_model, nullptr);
+    WalletModel* wallet_model = new WalletModel(std::move(wallet), m_client_model, nullptr);
     // Handler callback runs in a different thread so fix wallet model thread affinity.
     wallet_model->moveToThread(thread());
     wallet_model->setParent(this);
