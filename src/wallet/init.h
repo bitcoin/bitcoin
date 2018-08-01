@@ -33,7 +33,7 @@ public:
     bool Open() override;
 
     //! Complete startup of wallets.
-    void Start(CScheduler& scheduler) override;
+    void Start(CScheduler& scheduler, CConnman* connman) override;
 
     //! Flush all wallets in preparation for shutdown.
     void Flush() override;

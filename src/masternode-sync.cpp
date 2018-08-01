@@ -382,35 +382,19 @@ void CMasternodeSync::SendGovernanceSyncRequest(CNode* pnode, CConnman* connman)
     }
 }
 
-/* not needed as we are either in IBD or otherwise covered by UpdatedBlockTip
-void CMasternodeSync::BlockChecked(const CBlock& block)
-{
-    LogPrint(BCLog::MNODESYNC, "CMasternodeSync::BlockChecked -- block hash: %s\n", block.GetHash().ToString());
 
-    if (!IsBlockchainSynced()) {
-        // Postpone timeout each time new block header arrives while we are still syncing blockchain
-        BumpAssetLastTime("CMasternodeSync::BlockChecked");
-    }
-}
-
-void CMasternodeSync::NewPoWValidBlock(const CBlockIndex *pindex)
+void CMasternodeSync::NewPoWValidBlock(const CBlockIndex *pindex, bool fInitialDownload, CConnman* connman)
 {
     LogPrint(BCLog::MNODESYNC, "CMasternodeSync::NewPoWValidBlock -- pindex->nHeight: %d\n", pindex->nHeight);
 
-    if (IsFailed() || IsSynced() || !pindexBestHeader)
-        return;
-
     if (!IsBlockchainSynced()) {
-        // Postpone timeout each time new block arrives while we are still syncing blockchain
-        BumpAssetLastTime("CMasternodeSync::NewPoWValidBlock");
+        // Postpone timeout each time new block header arrives while we are still syncing blockchain
+        BumpAssetLastTime("CMasternodeSync::AcceptedBlockHeader");
     }
 }
-*/
 
 void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload, CConnman* connman)
 {
-    LogPrint(BCLog::MNODESYNC, "CMasternodeSync::UpdatedBlockTip -- pindexNew->nHeight: %d fInitialDownload=%d\n", pindexNew->nHeight, fInitialDownload);
-
     if (IsFailed() || IsSynced() || !pindexBestHeader)
         return;
 

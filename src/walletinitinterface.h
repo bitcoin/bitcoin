@@ -7,6 +7,7 @@
 
 #include <string>
 
+class CConnman;
 class CScheduler;
 class CRPCTable;
 
@@ -23,7 +24,7 @@ public:
     /** Open wallets*/
     virtual bool Open() = 0;
     /** Start wallets*/
-    virtual void Start(CScheduler& scheduler) = 0;
+    virtual void Start(CScheduler& scheduler, CConnman* connman) = 0;
     /** Flush Wallets*/
     virtual void Flush() = 0;
     /** Stop Wallets*/
@@ -42,7 +43,7 @@ public:
     void RegisterRPC(CRPCTable &) override {}
     bool Verify() override {return true;}
     bool Open() override {return true;}
-    void Start(CScheduler& scheduler) override {}
+    void Start(CScheduler& scheduler, CConnman* connman) override {}
     void Flush() override {}
     void Stop() override {}
     void Close() override {}

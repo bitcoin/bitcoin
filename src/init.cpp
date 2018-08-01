@@ -23,6 +23,7 @@
 #include <httprpc.h>
 #include <key.h>
 #include <miner.h>
+#include <module-interface.h>
 #include <net.h>
 #include <netbase.h>
 #include <net_processing.h>
@@ -50,7 +51,7 @@
 
 
 #include <activemasternode.h>
-#include <dsnotificationinterface.h>
+#include <module-interface.h>
 #include <flat-database.h>
 #include <governance.h>
 #include <masternode-payments.h>
@@ -59,7 +60,6 @@
 #include <masternodeconfig.h>
 #include <messagesigner.h>
 #include <netfulfilledman.h>
-#include <privatesend-client.h>
 #include <privatesend-server.h>
 
 #include <stdint.h>
@@ -90,6 +90,7 @@ static const bool DEFAULT_STOPAFTERBLOCKIMPORT = false;
 std::unique_ptr<CConnman> g_connman;
 std::unique_ptr<PeerLogicValidation> peerLogic;
 std::unique_ptr<WalletInitInterface> g_wallet_init_interface;
+std::unique_ptr<ModuleInterface> g_module_interface;
 
 #if ENABLE_ZMQ
 static CZMQNotificationInterface* pzmqNotificationInterface = nullptr;
@@ -218,11 +219,6 @@ void Shutdown()
     g_connman.reset();
 
     if (!fLiteMode) {
-#ifdef ENABLE_WALLET
-        // Stop PrivateSend, release keys
-        privateSendClient.fEnablePrivateSend = false;
-        privateSendClient.ResetPool();
-#endif
         // STORE DATA CACHES INTO SERIALIZED DAT FILES
         CFlatDB<CMasternodeMan> flatdb1("mncache.dat", "magicMasternodeCache");
         flatdb1.Dump(mnodeman);
@@ -519,13 +515,6 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-mnconf=<file>", strprintf(_("Specify masternode configuration file (default: %s)"), "masternode.conf"));
     strUsage += HelpMessageOpt("-mnconflock=<n>", strprintf(_("Lock masternodes from masternode configuration file (default: %u)"), 1));
     strUsage += HelpMessageOpt("-masternodeprivkey=<n>", _("Set the masternode private key"));
-
-    strUsage += HelpMessageGroup(_("PrivateSend options:"));
-    strUsage += HelpMessageOpt("-enableprivatesend=<n>", strprintf(_("Enable use of automated PrivateSend for funds stored in this wallet (0-1, default: %u)"), 0));
-    strUsage += HelpMessageOpt("-privatesendmultisession=<n>", strprintf(_("Enable multiple PrivateSend mixing sessions per block, experimental (0-1, default: %u)"), DEFAULT_PRIVATESEND_MULTISESSION));
-    strUsage += HelpMessageOpt("-privatesendrounds=<n>", strprintf(_("Use N separate masternodes for each denominated input to mix funds (2-16, default: %u)"), DEFAULT_PRIVATESEND_ROUNDS));
-    strUsage += HelpMessageOpt("-privatesendamount=<n>", strprintf(_("Keep N CHC anonymized (default: %u)"), DEFAULT_PRIVATESEND_AMOUNT));
-    strUsage += HelpMessageOpt("-liquidityprovider=<n>", strprintf(_("Provide liquidity to PrivateSend by infrequently mixing coins on a continual basis (0-100, default: %u, 1=very frequent, high fees, 100=very infrequent, low fees)"), DEFAULT_PRIVATESEND_LIQUIDITY));
 
     strUsage += HelpMessageGroup(_("Node relay options:"));
     if (showDebug) {
@@ -858,18 +847,6 @@ void InitParameterInteraction()
         if (gArgs.SoftSetBoolArg("-whitelistrelay", true))
             LogPrintf("%s: parameter interaction: -whitelistforcerelay=1 -> setting -whitelistrelay=1\n", __func__);
     }
-
-#ifdef ENABLE_WALLET
-    int nLiqProvTmp = gArgs.GetArg("-liquidityprovider", DEFAULT_PRIVATESEND_LIQUIDITY);
-    if (nLiqProvTmp > 0) {
-        gArgs.ForceSetArg("-enableprivatesend", "1");
-        LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -enableprivatesend=1\n", __func__, nLiqProvTmp);
-        gArgs.ForceSetArg("-privatesendrounds", itostr(std::numeric_limits<int>::max()));
-        LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -privatesendrounds=%d\n", __func__, nLiqProvTmp, itostr(std::numeric_limits<int>::max()));
-        gArgs.ForceSetArg("-privatesendamount", itostr(MAX_PRIVATESEND_AMOUNT));
-        LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -privatesendamount=%d\n", __func__, nLiqProvTmp, MAX_PRIVATESEND_AMOUNT);
-    }
-#endif // ENABLE_WALLET
 }
 
 static std::string ResolveErrMsg(const char * const optname, const std::string& strBind)
@@ -1300,7 +1277,7 @@ bool AppInitMain()
     // Warn about relative -datadir path.
     if (gArgs.IsArgSet("-datadir") && !fs::path(gArgs.GetArg("-datadir", "")).is_absolute()) {
         LogPrintf("Warning: relative datadir option '%s' specified, which will be interpreted relative to the "
-                  "current working directory '%s'. This is fragile, because if bitcoin is started in the future "
+                  "current working directory '%s'. This is fragile, because if chaincoin is started in the future "
                   "from a different location, it will be unable to locate the current data files. There could "
                   "also be data loss if bitcoin is started while in a temporary directory.\n",
             gArgs.GetArg("-datadir", ""), fs::current_path().string());
@@ -1668,6 +1645,7 @@ bool AppInitMain()
     fFeeEstimatesInitialized = true;
 
     // ********************************************************* Step 8: load wallet
+
     if (!g_wallet_init_interface->Open()) return false;
 
     // ********************************************************* Step 9: data directory maintenance
@@ -1764,47 +1742,7 @@ bool AppInitMain()
         }
     }
 
-#ifdef ENABLE_WALLET
     LogPrintf("Using masternode config file %s\n", GetMasternodeConfigFile(gArgs.GetArg("-mnconf", MASTERNODE_CONF_FILENAME)).string());
-
-    for (CWalletRef pwallet : vpwallets) {
-        if(gArgs.GetBoolArg("-mnconflock", true) && pwallet && (masternodeConfig.getCount() > 0)) {
-            LOCK(pwallet->cs_wallet);
-            LogPrintf("Locking Masternodes:\n");
-            uint256 mnTxHash;
-            uint32_t outputIndex;
-            for (const auto& mne : masternodeConfig.getEntries()) {
-                mnTxHash.SetHex(mne.getTxHash());
-                outputIndex = (uint32_t)atoi(mne.getOutputIndex());
-                COutPoint outpoint = COutPoint(mnTxHash, outputIndex);
-                // don't lock non-spendable outpoint (i.e. it's already spent or it's not from this wallet at all)
-                if(pwallet->IsMine(CTxIn(outpoint)) != ISMINE_SPENDABLE) {
-                    LogPrintf("  %s %s - IS NOT SPENDABLE, was not locked\n", mne.getTxHash(), mne.getOutputIndex());
-                    continue;
-                }
-                pwallet->LockCoin(outpoint);
-                LogPrintf("  %s %s - locked successfully\n", mne.getTxHash(), mne.getOutputIndex());
-            }
-        }
-    }
-
-    privateSendClient.nLiquidityProvider = std::min(std::max((int)gArgs.GetArg("-liquidityprovider", DEFAULT_PRIVATESEND_LIQUIDITY), MIN_PRIVATESEND_LIQUIDITY), MAX_PRIVATESEND_LIQUIDITY);
-    int nMaxRounds = MAX_PRIVATESEND_ROUNDS;
-    if(privateSendClient.nLiquidityProvider) {
-        // special case for liquidity providers only, normal clients should use default value
-        privateSendClient.SetMinBlocksToWait(privateSendClient.nLiquidityProvider);
-        nMaxRounds = std::numeric_limits<int>::max();
-    }
-
-    privateSendClient.fEnablePrivateSend = gArgs.GetBoolArg("-enableprivatesend", false);
-    privateSendClient.fPrivateSendMultiSession = gArgs.GetBoolArg("-privatesendmultisession", DEFAULT_PRIVATESEND_MULTISESSION);
-    privateSendClient.nPrivateSendRounds = std::min(std::max((int)gArgs.GetArg("-privatesendrounds", DEFAULT_PRIVATESEND_ROUNDS), MIN_PRIVATESEND_ROUNDS), nMaxRounds);
-    privateSendClient.nPrivateSendAmount = std::min(std::max((int)gArgs.GetArg("-privatesendamount", DEFAULT_PRIVATESEND_AMOUNT), MIN_PRIVATESEND_AMOUNT), MAX_PRIVATESEND_AMOUNT);
-
-    LogPrintf("PrivateSend liquidityprovider: %d\n", privateSendClient.nLiquidityProvider);
-    LogPrintf("PrivateSend rounds: %d\n", privateSendClient.nPrivateSendRounds);
-    LogPrintf("PrivateSend amount: %d\n", privateSendClient.nPrivateSendAmount);
-#endif // ENABLE_WALLET
 
     LogPrintf("fLiteMode %d\n", fLiteMode);
 
@@ -1865,8 +1803,6 @@ bool AppInitMain()
     threadGroup.create_thread(boost::bind(&ThreadCheckPrivateSend, boost::ref(*g_connman)));
     if (fMasternodeMode)
         threadGroup.create_thread(boost::bind(&ThreadCheckPrivateSendServer, boost::ref(*g_connman)));
-    else
-        threadGroup.create_thread(boost::bind(&ThreadCheckPrivateSendClient, boost::ref(*g_connman)));
 
     if (ShutdownRequested()) {
         return false;
@@ -1955,7 +1891,7 @@ bool AppInitMain()
     SetRPCWarmupFinished();
     uiInterface.InitMessage(_("Done loading"));
 
-    g_wallet_init_interface->Start(scheduler);
+    g_wallet_init_interface->Start(scheduler, &connman);
 
     return true;
 }

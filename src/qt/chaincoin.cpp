@@ -15,6 +15,7 @@
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 #include <qt/intro.h>
+#include <module-interface.h>
 #include <qt/networkstyle.h>
 #include <qt/optionsmodel.h>
 #include <qt/platformstyle.h>
@@ -38,6 +39,7 @@
 #ifdef ENABLE_WALLET
 #include <wallet/init.h>
 #include <wallet/wallet.h>
+#include <wallet/walletinterface.h>
 #endif
 #include <walletinitinterface.h>
 
@@ -692,8 +694,10 @@ int main(int argc, char *argv[])
 
     // Hook up the wallet init interface
     g_wallet_init_interface.reset(new WalletInit);
+    g_module_interface.reset(new WalletInterface);
 #else
     g_wallet_init_interface.reset(new DummyWalletInit);
+    g_module_interface.reset(new DummyModuleInterface);
 #endif
 
     /// 9. Main GUI initialization

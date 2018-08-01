@@ -17,7 +17,7 @@
 #include <netbase.h>
 #include <txdb.h> // for -dbcache defaults
 
-#include <privatesend-client.h>
+#include <wallet/privatesend-client.h>
 
 #include <QDataWidgetMapper>
 #include <QDir>

@@ -14,11 +14,9 @@
 #include <masternode-sync.h>
 #include <masternodeman.h>
 #include <messagesigner.h>
+#include <module-interface.h>
 #include <script/standard.h>
 #include <util.h>
-#ifdef ENABLE_WALLET
-#include <wallet/wallet.h>
-#endif // ENABLE_WALLET
 
 #include <string>
 
@@ -355,7 +353,6 @@ void CMasternode::UpdateLastPaid(const CBlockIndex *pindex, int nMaxBlocksToScan
     // LogPrint(BCLog::MNODEPAY, "CMasternode::UpdateLastPaidBlock -- searching for block with payment to %s -- keeping old %d\n", outpoint.ToStringShort(), nBlockLastPaid);
 }
 
-#ifdef ENABLE_WALLET
 bool CMasternodeBroadcast::Create(const std::string& strService, const std::string& strKeyMasternode, const std::string& strTxHash, const std::string& strOutputIndex, std::string& strErrorRet, CMasternodeBroadcast &mnbRet, bool fOffline)
 {
     COutPoint outpoint;
@@ -380,12 +377,7 @@ bool CMasternodeBroadcast::Create(const std::string& strService, const std::stri
     if (!CMessageSigner::GetKeysFromSecret(strKeyMasternode, keyMasternodeNew, pubKeyMasternodeNew))
         return Log(strprintf("Invalid masternode key %s", strKeyMasternode));
 
-    bool foundmnout = false;
-    for (CWalletRef pwallet : vpwallets) {
-        if (pwallet->GetMasternodeOutpointAndKeys(outpoint, destNew, pubKeyCollateralAddressNew, keyCollateralAddressNew, strTxHash, strOutputIndex))
-            foundmnout = true;
-    }
-    if (!foundmnout)
+    if (!g_module_interface->CheckWalletCollateral(outpoint, destNew, pubKeyCollateralAddressNew, keyCollateralAddressNew, strTxHash, strOutputIndex))
         return Log(strprintf("Could not allocate outpoint %s:%s for masternode %s", strTxHash, strOutputIndex, strService));
 
     CService service;
@@ -433,7 +425,6 @@ bool CMasternodeBroadcast::Create(const COutPoint& outpoint, const CService& ser
 
     return true;
 }
-#endif // ENABLE_WALLET
 
 bool CMasternodeBroadcast::SimpleCheck(int& nDos)
 {

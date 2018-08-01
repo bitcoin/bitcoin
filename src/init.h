@@ -15,6 +15,9 @@ class CWallet;
 class WalletInitInterface;
 extern std::unique_ptr<WalletInitInterface> g_wallet_init_interface;
 
+class ModuleInterface;
+extern std::unique_ptr<ModuleInterface> g_module_interface;
+
 namespace boost
 {
 class thread_group;

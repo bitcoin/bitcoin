@@ -4,17 +4,18 @@
 
 #include <activemasternode.h>
 #include <addrman.h>
+#include <clientversion.h>
 #include <governance.h>
+#include <init.h>
 #include <masternode-payments.h>
 #include <masternode-sync.h>
 #include <masternodeman.h>
 #include <messagesigner.h>
+#include <module-interface.h>
 #include <netfulfilledman.h>
 #include <netmessagemaker.h>
-#ifdef ENABLE_WALLET
-#include <privatesend-client.h>
-#endif // ENABLE_WALLET
 #include <script/standard.h>
+#include <ui_interface.h>
 #include <util.h>
 #include <warnings.h>
 
@@ -722,11 +723,7 @@ void CMasternodeMan::ProcessMasternodeConnections(CConnman* connman)
     if(Params().NetworkIDString() == CBaseChainParams::REGTEST) return;
 
     connman->ForEachNode([](CNode* pnode) {
-#ifdef ENABLE_WALLET
-        if(pnode->fMasternode && !privateSendClient.IsMixingMasternode(pnode)) {
-#else
-        if(pnode->fMasternode) {
-#endif // ENABLE_WALLET
+        if(pnode->fMasternode && !g_module_interface->IsMixingMasternode(pnode)) {
             LogPrintf("Closing Masternode connection: peer=%d, addr=%s\n", pnode->GetId(), pnode->addr.ToString());
             pnode->fDisconnect = true;
         }

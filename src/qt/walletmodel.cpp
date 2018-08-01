@@ -30,7 +30,7 @@
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h> // for BackupWallet
 
-#include <privatesend-client.h>
+#include <wallet/privatesend-client.h>
 
 #include <stdint.h>
 
