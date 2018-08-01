@@ -71,15 +71,16 @@ jobs:
         HOST=i686-w64-mingw32
         DPKG_ADD_ARCH="i386"
         DEP_OPTS="NO_QT=1"
-        PACKAGES="python3 nsis g++-mingw-w64-i686 wine-binfmt wine32"
+        PACKAGES="python3 scons g++-mingw-w64-i686 wine-binfmt wine32"
         GOAL="install"
         BITCOIN_CONFIG="--enable-reduce-exports"
 # Win64
     - stage: test
       env: >-
         HOST=x86_64-w64-mingw32
+        DPKG_ADD_ARCH="i386"
         DEP_OPTS="NO_QT=1"
-        PACKAGES="python3 nsis g++-mingw-w64-x86-64 wine-binfmt wine64"
+        PACKAGES="python3 scons g++-mingw-w64-i686 g++-mingw-w64-x86-64 wine-binfmt wine64"
         GOAL="install"
         BITCOIN_CONFIG="--enable-reduce-exports"
 # 32-bit + dash

@@ -17,7 +17,7 @@ packages:
 - "bsdmainutils"
 - "mingw-w64"
 - "g++-mingw-w64"
-- "nsis"
+- "scons"
 - "zip"
 - "ca-certificates"
 - "python"
@@ -30,8 +30,8 @@ script: |
   WRAP_DIR=$HOME/wrapped
   HOSTS="i686-w64-mingw32 x86_64-w64-mingw32"
   CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests"
-  FAKETIME_HOST_PROGS="ar ranlib nm windres strip objcopy"
-  FAKETIME_PROGS="date makensis zip"
+  FAKETIME_HOST_PROGS="ar as ranlib nm windres strip objcopy"
+  FAKETIME_PROGS="date scons zip"
   HOST_CFLAGS="-O2 -g"
   HOST_CXXFLAGS="-O2 -g"
 
@@ -54,7 +54,7 @@ script: |
     echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> ${WRAP_DIR}/${prog}
     echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${prog}
     echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${prog}
-    echo "\$REAL \$@" >> $WRAP_DIR/${prog}
+    echo "\$REAL \"\$@\"" >> $WRAP_DIR/${prog}
     chmod +x ${WRAP_DIR}/${prog}
   done
   }

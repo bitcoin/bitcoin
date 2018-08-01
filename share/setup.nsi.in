@@ -1,4 +1,6 @@
 Name "@PACKAGE_NAME@ (@WINDOWS_BITS@-bit)"
+Unicode true
+SetDateSave off
 
 RequestExecutionLevel highest
 SetCompressor /SOLID lzma
