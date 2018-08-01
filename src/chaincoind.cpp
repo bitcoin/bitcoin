@@ -17,9 +17,15 @@
 #include <noui.h>
 #include <util.h>
 #include <masternodeconfig.h>
+#include <module-interface.h>
 #include <httpserver.h>
 #include <httprpc.h>
 #include <utilstrencodings.h>
+#if ENABLE_WALLET
+#include <wallet/init.h>
+#include <wallet/walletinterface.h>
+#endif
+#include <walletinitinterface.h>
 
 #include <boost/thread.hpp>
 
@@ -60,6 +66,14 @@ void WaitForShutdown()
 bool AppInit(int argc, char* argv[])
 {
     bool fRet = false;
+
+#if ENABLE_WALLET
+    g_wallet_init_interface.reset(new WalletInit);
+    g_module_interface.reset(new WalletInterface);
+#else
+    g_wallet_init_interface.reset(new DummyWalletInit);
+    g_module_interface.reset(new DummyModuleInterface);
+#endif
 
     //
     // Parameters

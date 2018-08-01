@@ -20,7 +20,7 @@
 
 #include <qt/darksendconfig.h>
 #include <masternode-sync.h>
-#include <privatesend-client.h>
+#include <wallet/privatesend-client.h>
 
 #include <QAbstractItemDelegate>
 #include <QPainter>

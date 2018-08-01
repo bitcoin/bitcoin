@@ -18,6 +18,7 @@
 #include <key.h>
 #include <key_io.h>
 #include <keystore.h>
+#include <masternodeconfig.h>
 #include <net.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
@@ -32,10 +33,10 @@
 #include <util.h>
 #include <utilmoneystr.h>
 #include <wallet/fees.h>
+#include <wallet/keepass.h>
 
 #include <governance.h>
-#include <keepass.h>
-#include <privatesend-client.h>
+#include <wallet/privatesend-client.h>
 
 #include <assert.h>
 #include <future>
@@ -5070,11 +5071,30 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
 
 std::atomic<bool> CWallet::fFlushScheduled(false);
 
-void CWallet::postInitProcess(CScheduler& scheduler)
+void CWallet::postInitProcess(CScheduler& scheduler, bool mnconflock)
 {
     // Add wallet transactions that aren't already in a block to mempool
     // Do this here as mempool requires genesis block to be loaded
     ReacceptWalletTransactions();
+
+    if((mnconflock) && (masternodeConfig.getCount() > 0)) {
+        LOCK(cs_wallet);
+        LogPrintf("Locking Masternodes:\n");
+        uint256 mnTxHash;
+        uint32_t outputIndex;
+        for (const auto& mne : masternodeConfig.getEntries()) {
+            mnTxHash.SetHex(mne.getTxHash());
+            outputIndex = (uint32_t)atoi(mne.getOutputIndex());
+            COutPoint outpoint = COutPoint(mnTxHash, outputIndex);
+            // don't lock non-spendable outpoint (i.e. it's already spent or it's not from this wallet at all)
+            if(IsMine(CTxIn(outpoint)) != ISMINE_SPENDABLE) {
+                LogPrintf("  %s %s - IS NOT SPENDABLE, was not locked\n", mne.getTxHash(), mne.getOutputIndex());
+                continue;
+            }
+            LockCoin(outpoint);
+            LogPrintf("  %s %s - locked successfully\n", mne.getTxHash(), mne.getOutputIndex());
+        }
+    }
 
     // Run a thread to flush wallet periodically
     if (!CWallet::fFlushScheduled.exchange(true)) {

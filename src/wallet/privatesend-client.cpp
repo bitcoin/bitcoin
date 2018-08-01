@@ -1,7 +1,7 @@
 // Copyright (c) 2014-2017 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#include <privatesend-client.h>
+#include <wallet/privatesend-client.h>
 
 #include <base58.h>
 #include <wallet/coincontrol.h>
@@ -12,8 +12,8 @@
 #include <masternode-sync.h>
 #include <masternodeman.h>
 #include <netmessagemaker.h>
-#include <privatesend-util.h>
 #include <reverse_iterator.h>
+#include <scheduler.h>
 #include <script/sign.h>
 #include <txmempool.h>
 #include <util.h>
@@ -25,7 +25,6 @@ CPrivateSendClient privateSendClient;
 
 void CPrivateSendClient::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman)
 {
-    if(fMasternodeMode) return;
     if(fLiteMode) return; // ignore all Chaincoin related functionality
     if(!masternodeSync.IsBlockchainSynced()) return;
 
@@ -336,8 +335,6 @@ void CPrivateSendClient::CheckPool()
 //
 void CPrivateSendClient::CheckTimeout()
 {
-    if(fMasternodeMode) return;
-
     CheckQueue();
 
     if(!fEnablePrivateSend) return;
@@ -378,11 +375,6 @@ void CPrivateSendClient::CheckTimeout()
 //
 bool CPrivateSendClient::SendDenominate(const std::vector<CTxDSIn>& vecTxDSIn, const std::vector<CTxOut>& vecTxOut, CConnman* connman)
 {
-    if(fMasternodeMode) {
-        LogPrintf("CPrivateSendClient::SendDenominate -- PrivateSend from a Masternode is not supported currently.\n");
-        return false;
-    }
-
     if(txMyCollateral == CMutableTransaction()) {
         LogPrintf("CPrivateSendClient:SendDenominate -- PrivateSend collateral not set\n");
         return false;
@@ -448,8 +440,6 @@ bool CPrivateSendClient::SendDenominate(const std::vector<CTxDSIn>& vecTxDSIn, c
 // Incoming message from Masternode updating the progress of mixing
 bool CPrivateSendClient::CheckPoolStateUpdate(PoolState nStateNew, int nEntriesCountNew, PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID, int nSessionIDNew)
 {
-    if(fMasternodeMode) return false;
-
     // do not update state when mixing client state is one of these
     if(nState == POOL_STATE_IDLE || nState == POOL_STATE_ERROR || nState == POOL_STATE_SUCCESS) return false;
 
@@ -494,7 +484,8 @@ bool CPrivateSendClient::CheckPoolStateUpdate(PoolState nStateNew, int nEntriesC
 //
 bool CPrivateSendClient::SignFinalTransaction(const CTransaction& finalTransactionNew, CNode* pnode, CConnman* connman)
 {
-    if(fMasternodeMode || pnode == nullptr) return false;
+    if(pnode == nullptr) return false;
+
     CWallet * const pwallet = GetWalletForPSRequest();
 
     finalMutableTransaction = finalTransactionNew;
@@ -583,8 +574,6 @@ bool CPrivateSendClient::SignFinalTransaction(const CTransaction& finalTransacti
 // mixing transaction was completed (failed or successful)
 void CPrivateSendClient::CompletedTransaction(PoolMessage nMessageID)
 {
-    if(fMasternodeMode) return;
-
     if(nMessageID == MSG_SUCCESS) {
         LogPrintf("CompletedTransaction -- success\n");
         nCachedLastSuccessBlock = nCachedBlockHeight;
@@ -686,7 +675,6 @@ bool CPrivateSendClient::CheckAutomaticBackup()
 bool CPrivateSendClient::DoAutomaticDenominating(CConnman* connman, bool fDryRun)
 {
     CWallet * const pwallet = GetWalletForPSRequest();
-    if(fMasternodeMode) return false; // no client-side mixing on masternodes
     if(!fEnablePrivateSend) return false;
     if(!pwallet || pwallet->IsLocked(true)) return false;
     if(nState != POOL_STATE_IDLE) return false;
@@ -1445,34 +1433,27 @@ void CPrivateSendClient::UpdatedBlockTip(const CBlockIndex *pindex)
 
 }
 
-//TODO: Rename/move to core
-void ThreadCheckPrivateSendClient(CConnman& connman)
+void CPrivateSendClient::DoMaintenance(CConnman* connman)
 {
-    if(fLiteMode) return; // disable all Chaincoin specific functionality
-    if(fMasternodeMode) return; // no client-side mixing on masternodes
+    if(fLiteMode) return; // disable all Dash specific functionality
 
-    static bool fOneThread;
-    if(fOneThread) return;
-    fOneThread = true;
+    if(!masternodeSync.IsBlockchainSynced() || ShutdownRequested())
+        return;
 
-    // Make this thread recognisable as the PrivateSend thread
-    RenameThread("chaincoin-ps-client");
+    static unsigned int nTick = 0;
+    static unsigned int nDoAutoNextRun = nTick + PRIVATESEND_AUTO_TIMEOUT_MIN;
 
-    unsigned int nTick = 0;
-    unsigned int nDoAutoNextRun = nTick + PRIVATESEND_AUTO_TIMEOUT_MIN;
-
-    while (true)
-    {
-        MilliSleep(1000);
-
-        if(masternodeSync.IsBlockchainSynced() && !ShutdownRequested()) {
-            nTick++;
-            privateSendClient.CheckTimeout();
-            privateSendClient.ProcessPendingDsaRequest(&connman);
-            if(nDoAutoNextRun == nTick) {
-                privateSendClient.DoAutomaticDenominating(&connman);
-                nDoAutoNextRun = nTick + PRIVATESEND_AUTO_TIMEOUT_MIN + GetRandInt(PRIVATESEND_AUTO_TIMEOUT_MAX - PRIVATESEND_AUTO_TIMEOUT_MIN);
-            }
-        }
+    nTick++;
+    CPrivateSendClient::CheckTimeout();
+    CPrivateSendClient::ProcessPendingDsaRequest(connman);
+    if(nDoAutoNextRun == nTick) {
+        CPrivateSendClient::DoAutomaticDenominating(connman);
+        nDoAutoNextRun = nTick + PRIVATESEND_AUTO_TIMEOUT_MIN + GetRandInt(PRIVATESEND_AUTO_TIMEOUT_MAX - PRIVATESEND_AUTO_TIMEOUT_MIN);
     }
 }
+
+void CPrivateSendClient::ScheduleMaintenance(CScheduler& scheduler, CConnman* connman)
+{
+    scheduler.scheduleEvery(std::bind(&CPrivateSendClient::DoMaintenance, this, connman), 500);
+}
+

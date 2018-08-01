@@ -10,7 +10,6 @@
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <httpserver.h>
-#include <keepass.h>
 #include <validation.h>
 #include <key_io.h>
 #include <net.h>
@@ -31,6 +30,7 @@
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/feebumper.h>
+#include <wallet/keepass.h>
 #include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>

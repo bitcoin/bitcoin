@@ -6,10 +6,17 @@
 #ifndef BITCOIN_INIT_H
 #define BITCOIN_INIT_H
 
+#include <memory>
 #include <string>
 
 class CScheduler;
 class CWallet;
+
+class WalletInitInterface;
+extern std::unique_ptr<WalletInitInterface> g_wallet_init_interface;
+
+class ModuleInterface;
+extern std::unique_ptr<ModuleInterface> g_module_interface;
 
 namespace boost
 {

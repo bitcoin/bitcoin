@@ -3,15 +3,13 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
-#include <dsnotificationinterface.h>
+#include <init.h>
+#include <module-interface.h>
 #include <governance.h>
 #include <masternodeman.h>
 #include <masternode-payments.h>
 #include <masternode-sync.h>
 #include <privatesend.h>
-#ifdef ENABLE_WALLET
-#include <privatesend-client.h>
-#endif // ENABLE_WALLET
 
 void CDSNotificationInterface::InitializeCurrentBlockTip()
 {
@@ -19,17 +17,10 @@ void CDSNotificationInterface::InitializeCurrentBlockTip()
     UpdatedBlockTip(chainActive.Tip(), nullptr, IsInitialBlockDownload());
 }
 
-/*
-void CDSNotificationInterface::BlockChecked(const CBlock& block, const CValidationState& state)
-{
-    masternodeSync.BlockChecked(block);
-}
-
 void CDSNotificationInterface::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock> &block)
 {
-    masternodeSync.NewPoWValidBlock(pindex);
+    masternodeSync.NewPoWValidBlock(pindex, IsInitialBlockDownload(), connman);
 }
-*/
 
 void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
 {
@@ -46,9 +37,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
 
     mnodeman.UpdatedBlockTip(pindexNew);
     CPrivateSend::UpdatedBlockTip(pindexNew);
-#ifdef ENABLE_WALLET
-    privateSendClient.UpdatedBlockTip(pindexNew);
-#endif // ENABLE_WALLET
+    g_module_interface->UpdatedBlockTip(pindexNew);
     mnpayments.UpdatedBlockTip(pindexNew, connman);
     governance.UpdatedBlockTip(pindexNew, connman);
 }

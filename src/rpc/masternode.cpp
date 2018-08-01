@@ -14,7 +14,7 @@
 #include <masternodeconfig.h>
 #include <masternodeman.h>
 #ifdef ENABLE_WALLET
-#include <privatesend-client.h>
+#include <wallet/privatesend-client.h>
 #include <wallet/rpcwallet.h>
 #endif // ENABLE_WALLET
 #include <privatesend-server.h>

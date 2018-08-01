@@ -8,7 +8,7 @@
 #include <masternode.h>
 #include <privatesend.h>
 #include <wallet/wallet.h>
-#include <privatesend-util.h>
+#include <wallet/walletutil.h>
 
 class CPrivateSendClient;
 class CConnman;
@@ -172,7 +172,6 @@ public:
 
     void SetMinBlocksToWait(int nMinBlocksToWaitIn) { nMinBlocksToWait = nMinBlocksToWaitIn; }
 
-
     void ResetPool();
 
     void UnlockCoins();
@@ -190,8 +189,10 @@ public:
     void CheckTimeout();
 
     void UpdatedBlockTip(const CBlockIndex *pindex);
-};
 
-void ThreadCheckPrivateSendClient(CConnman& connman);
+    void DoMaintenance(CConnman* connman);
+
+    void ScheduleMaintenance(CScheduler& scheduler, CConnman* connman);
+};
 
 #endif

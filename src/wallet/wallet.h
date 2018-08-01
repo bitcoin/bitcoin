@@ -1205,7 +1205,7 @@ public:
      * Wallet post-init setup
      * Gives the wallet a chance to register repetitive tasks and complete post-init tasks
      */
-    void postInitProcess(CScheduler& scheduler);
+    void postInitProcess(CScheduler& scheduler, bool mnconflock);
 
     bool BackupWallet(const std::string& strDest);
 

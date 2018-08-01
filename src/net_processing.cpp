@@ -14,6 +14,7 @@
 #include <init.h>
 #include <validation.h>
 #include <merkleblock.h>
+#include <module-interface.h>
 #include <netmessagemaker.h>
 #include <netbase.h>
 #include <policy/fees.h>
@@ -34,7 +35,6 @@
 #include <masternode-payments.h>
 #include <masternode-sync.h>
 #include <masternodeman.h>
-#include <privatesend-client.h>
 #include <privatesend-server.h>
 
 #if defined(NDEBUG)
@@ -3042,7 +3042,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         if (found)
         {
             //probably one the extensions
-            privateSendClient.ProcessMessage(pfrom, strCommand, vRecv, connman);
+            g_module_interface->ProcessMessage(pfrom, strCommand, vRecv, connman);
             privateSendServer.ProcessMessage(pfrom, strCommand, vRecv, connman);
             mnodeman.ProcessMessage(pfrom, strCommand, vRecv, connman);
             mnpayments.ProcessMessage(pfrom, strCommand, vRecv, connman);

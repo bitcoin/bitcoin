@@ -10,11 +10,13 @@
 #include <util.h>
 #include <utilmoneystr.h>
 #include <validation.h>
+#include <wallet/keepass.h>
+#include <wallet/privatesend-client.h>
 #include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
-std::string GetWalletHelpString(bool showDebug)
+std::string WalletInit::GetHelpString(bool showDebug)
 {
     std::string strUsage = HelpMessageGroup(_("Wallet options:"));
     strUsage += HelpMessageOpt("-addresstype", strprintf(_("What type of addresses to use (\"legacy\", \"p2sh-segwit\", or \"bech32\", default: \"%s\")"), FormatOutputType(DEFAULT_ADDRESS_TYPE)));
@@ -43,6 +45,13 @@ std::string GetWalletHelpString(bool showDebug)
     strUsage += HelpMessageOpt("-zapwallettxes=<mode>", _("Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup") +
                                " " + _("(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)"));
 
+    strUsage += HelpMessageGroup(_("PrivateSend options:"));
+    strUsage += HelpMessageOpt("-enableprivatesend=<n>", strprintf(_("Enable use of automated PrivateSend for funds stored in this wallet (0-1, default: %u)"), 0));
+    strUsage += HelpMessageOpt("-privatesendmultisession=<n>", strprintf(_("Enable multiple PrivateSend mixing sessions per block, experimental (0-1, default: %u)"), DEFAULT_PRIVATESEND_MULTISESSION));
+    strUsage += HelpMessageOpt("-privatesendrounds=<n>", strprintf(_("Use N separate masternodes for each denominated input to mix funds (2-16, default: %u)"), DEFAULT_PRIVATESEND_ROUNDS));
+    strUsage += HelpMessageOpt("-privatesendamount=<n>", strprintf(_("Keep N CHC anonymized (default: %u)"), DEFAULT_PRIVATESEND_AMOUNT));
+    strUsage += HelpMessageOpt("-liquidityprovider=<n>", strprintf(_("Provide liquidity to PrivateSend by infrequently mixing coins on a continual basis (0-100, default: %u, 1=very frequent, high fees, 100=very infrequent, low fees)"), DEFAULT_PRIVATESEND_LIQUIDITY));
+
     if (showDebug)
     {
         strUsage += HelpMessageGroup(_("Wallet debugging/testing options:"));
@@ -56,7 +65,7 @@ std::string GetWalletHelpString(bool showDebug)
     return strUsage;
 }
 
-bool WalletParameterInteraction()
+bool WalletInit::ParameterInteraction()
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         for (const std::string& wallet : gArgs.GetArgs("-wallet")) {
@@ -181,10 +190,41 @@ bool WalletParameterInteraction()
     bSpendZeroConfChange = gArgs.GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE);
     fWalletRbf = gArgs.GetBoolArg("-walletrbf", DEFAULT_WALLET_RBF);
 
+    if (gArgs.IsArgSet("-keepass")) {
+        keePassInt.init(); // Initialize KeePass Integration
+    }
+
+    privateSendClient.nLiquidityProvider = std::min(std::max((int)gArgs.GetArg("-liquidityprovider", DEFAULT_PRIVATESEND_LIQUIDITY), MIN_PRIVATESEND_LIQUIDITY), MAX_PRIVATESEND_LIQUIDITY);
+    int nMaxRounds = MAX_PRIVATESEND_ROUNDS;
+    if(privateSendClient.nLiquidityProvider) {
+        // special case for liquidity providers only, normal clients should use default value
+        privateSendClient.SetMinBlocksToWait(privateSendClient.nLiquidityProvider);
+        nMaxRounds = std::numeric_limits<int>::max();
+    }
+
+    privateSendClient.fEnablePrivateSend = gArgs.GetBoolArg("-enableprivatesend", false);
+    privateSendClient.fPrivateSendMultiSession = gArgs.GetBoolArg("-privatesendmultisession", DEFAULT_PRIVATESEND_MULTISESSION);
+    privateSendClient.nPrivateSendRounds = std::min(std::max((int)gArgs.GetArg("-privatesendrounds", DEFAULT_PRIVATESEND_ROUNDS), MIN_PRIVATESEND_ROUNDS), nMaxRounds);
+    privateSendClient.nPrivateSendAmount = std::min(std::max((int)gArgs.GetArg("-privatesendamount", DEFAULT_PRIVATESEND_AMOUNT), MIN_PRIVATESEND_AMOUNT), MAX_PRIVATESEND_AMOUNT);
+
+    int nLiqProvTmp = gArgs.GetArg("-liquidityprovider", DEFAULT_PRIVATESEND_LIQUIDITY);
+    if (nLiqProvTmp > 0) {
+        gArgs.ForceSetArg("-enableprivatesend", "1");
+        LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -enableprivatesend=1\n", __func__, nLiqProvTmp);
+        gArgs.ForceSetArg("-privatesendrounds", itostr(std::numeric_limits<int>::max()));
+        LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -privatesendrounds=%d\n", __func__, nLiqProvTmp, itostr(std::numeric_limits<int>::max()));
+        gArgs.ForceSetArg("-privatesendamount", itostr(MAX_PRIVATESEND_AMOUNT));
+        LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -privatesendamount=%d\n", __func__, nLiqProvTmp, MAX_PRIVATESEND_AMOUNT);
+    }
+
+    LogPrintf("PrivateSend liquidityprovider: %d\n", privateSendClient.nLiquidityProvider);
+    LogPrintf("PrivateSend rounds: %d\n", privateSendClient.nPrivateSendRounds);
+    LogPrintf("PrivateSend amount: %d\n", privateSendClient.nPrivateSendAmount);
+
     return true;
 }
 
-void RegisterWalletRPC(CRPCTable &t)
+void WalletInit::RegisterRPC(CRPCTable &t)
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         return;
@@ -193,7 +233,7 @@ void RegisterWalletRPC(CRPCTable &t)
     RegisterWalletRPCCommands(t);
 }
 
-bool VerifyWallets()
+bool WalletInit::Verify()
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         return true;
@@ -275,7 +315,7 @@ bool VerifyWallets()
     return true;
 }
 
-bool OpenWallets()
+bool WalletInit::Open()
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         LogPrintf("Wallet disabled!\n");
@@ -293,25 +333,33 @@ bool OpenWallets()
     return true;
 }
 
-void StartWallets(CScheduler& scheduler) {
+void WalletInit::Start(CScheduler& scheduler, CConnman* connman)
+{
     for (CWalletRef pwallet : vpwallets) {
-        pwallet->postInitProcess(scheduler);
+        pwallet->postInitProcess(scheduler, gArgs.GetBoolArg("-mnconflock", true) ? true : false);
     }
+    privateSendClient.ScheduleMaintenance(scheduler, connman);
 }
 
-void FlushWallets() {
+void WalletInit::Flush()
+{
     for (CWalletRef pwallet : vpwallets) {
         pwallet->Flush(false);
     }
 }
 
-void StopWallets() {
+void WalletInit::Stop()
+{
     for (CWalletRef pwallet : vpwallets) {
         pwallet->Flush(true);
     }
+    // Stop PrivateSend, release keys
+    privateSendClient.fEnablePrivateSend = false;
+    privateSendClient.ResetPool();
 }
 
-void CloseWallets() {
+void WalletInit::Close()
+{
     for (CWalletRef pwallet : vpwallets) {
         delete pwallet;
     }
