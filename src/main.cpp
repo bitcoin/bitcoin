@@ -30,6 +30,7 @@
 #include "util.h"
 #include "spork.h"
 #include "utilmoneystr.h"
+#include "platform/specialtx.h"
 
 #include <sstream>
 
@@ -1036,6 +1037,9 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     if (!CheckTransaction(tx, state))
         return error("AcceptToMemoryPool: : CheckTransaction failed");
 
+    if (!CheckSpecialTx(tx, chainActive.Tip(), state))
+        return false;
+
     // Coinbase is only valid in a block, not as a loose transaction
     if (tx.IsCoinBase())
         return state.DoS(100, error("AcceptToMemoryPool: : coinbase as individual tx"),
@@ -1979,6 +1983,10 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex
     if (blockUndo.vtxundo.size() + 1 != block.vtx.size())
         return error("DisconnectBlock() : block and undo data inconsistent");
 
+    if (!UndoSpecialTxsInBlock(block, pindex)) {
+        return error("DisconnectBlock() : failed to undo special tx");;
+    }
+
     // undo transactions in reverse order
     for (int i = block.vtx.size() - 1; i >= 0; i--) {
         const CTransaction &tx = block.vtx[i];
@@ -2168,6 +2176,9 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     }
     int64_t nTime1 = GetTimeMicros(); nTimeConnect += nTime1 - nTimeStart;
     LogPrint("bench", "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime1 - nTimeStart), 0.001 * (nTime1 - nTimeStart) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime1 - nTimeStart) / (nInputs-1), nTimeConnect * 0.000001);
+
+    if (!ProcessSpecialTxsInBlock(block, pindex, state))
+        return false;
 
     if(!IsBlockValueValid(block, GetBlockValue(pindex->pprev->nHeight, nFees))){
         return state.DoS(100,
