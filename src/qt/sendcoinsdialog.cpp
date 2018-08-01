@@ -658,7 +658,7 @@ void SendCoinsDialog::updateSmartFeeLabel()
     updateCoinControlState(coin_control);
     coin_control.m_feerate.reset(); // Explicitly use only fee estimation rate for smart fee labels
     FeeCalculation feeCalc;
-    CFeeRate feeRate = CFeeRate(CWallet::GetMinimumFee(1000, coin_control, ::mempool, ::feeEstimator, &feeCalc));
+    CFeeRate feeRate = CFeeRate(CWallet::GetMinimumFee(10, coin_control, ::mempool, ::feeEstimator, &feeCalc));
 
     ui->labelSmartFee->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), feeRate.GetFeePerK()) + "/kB");
 

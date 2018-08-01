@@ -8,6 +8,7 @@ src/microbitcoin-tx
 src/test/test_microbitcoin
 src/test/test_microbitcoin_fuzzy
 src/qt/test/test_microbitcoin-qt
+bin/*
 
 # autoreconf
 Makefile.in
