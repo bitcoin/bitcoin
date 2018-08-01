@@ -28,4 +28,10 @@ namespace Checkpoints {
         return nullptr;
     }
 
+    uint256 GetLatestHardenedCheckpoint()
+    {
+        const MapCheckpoints& checkpoints = Params().Checkpoints().mapCheckpoints;
+        return (checkpoints.rbegin()->second);
+    }
+
 } // namespace Checkpoints

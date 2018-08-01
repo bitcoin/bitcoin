@@ -87,6 +87,7 @@ BITCOIN_CORE_H = \
   chainparamsbase.h \
   chainparamsseeds.h \
   checkpoints.h \
+  checkpointsync.h \
   checkqueue.h \
   clientversion.h \
   coins.h \
@@ -177,7 +178,8 @@ BITCOIN_CORE_H = \
   zmq/zmqnotificationinterface.h \
   zmq/zmqpublishnotifier.h \
 ## --- ppcoin headers start from this line --- ##
-  kernel.h
+  kernel.h \
+  kernelrecord.h
 
 
 obj/build.h: FORCE
@@ -196,6 +198,7 @@ libbitcoin_server_a_SOURCES = \
   blockencodings.cpp \
   chain.cpp \
   checkpoints.cpp \
+  checkpointsync.cpp \
   consensus/tx_verify.cpp \
   httprpc.cpp \
   httpserver.cpp \
@@ -230,6 +233,7 @@ libbitcoin_server_a_SOURCES = \
   versionbits.cpp \
 ## --- ppcoin sources start from this line --- ##
   kernel.cpp \
+  kernelrecord.cpp \
   $(BITCOIN_CORE_H)
 
 if ENABLE_ZMQ

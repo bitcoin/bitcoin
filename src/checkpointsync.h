@@ -4,13 +4,10 @@
 #ifndef PPCOIN_CHECKPOINTSYNC_H
 #define  PPCOIN_CHECKPOINTSYNC_H
 
-#include "net.h"
-#include "netmessagemaker.h"
-#include "util.h"
-
 #define CHECKPOINT_MAX_SPAN (60 * 60 * 4) // max 4 hours before latest block
 
-class uint256;
+#include <netmessagemaker.h>
+
 class CBlock;
 class CBlockIndex;
 class CSyncCheckpoint;
@@ -28,15 +25,12 @@ void SetCheckpointEnforce(bool fEnforce);
 bool AcceptPendingSyncCheckpoint();
 uint256 AutoSelectSyncCheckpoint();
 bool CheckSyncCheckpoint(const uint256& hashBlock, const CBlockIndex* pindexPrev);
-bool WantedByPendingSyncCheckpoint(uint256 hashBlock);
 bool ResetSyncCheckpoint();
 void AskForPendingSyncCheckpoint(CNode* pfrom);
 bool CheckCheckpointPubKey();
 bool SetCheckpointPrivKey(std::string strPrivKey);
 bool SendSyncCheckpoint(uint256 hashCheckpoint);
-bool IsMatureSyncCheckpoint();
 bool IsSyncCheckpointTooOld(unsigned int nSeconds);
-uint256 WantedByOrphan(const CBlock* pblockOrphan);
 
 // Synchronized checkpoint (introduced first in ppcoin)
 class CUnsignedSyncCheckpoint

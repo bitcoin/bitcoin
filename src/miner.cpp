@@ -218,7 +218,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     pblocktemplate->vTxSigOpsCost[0] = WITNESS_SCALE_FACTOR * GetLegacySigOpCount(*pblock->vtx[0]);
 
     CValidationState state;
-    if (!TestBlockValidity(state, chainparams, *pblock, pindexPrev, false, false, false)) {  // peercoin: we do not check block signature here, since we did not sign it yet
+    if (!TestBlockValidity(state, chainparams, *pblock, pindexPrev, false, false)) {
         throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, FormatStateMessage(state)));
     }
     int64_t nTime2 = GetTimeMicros();

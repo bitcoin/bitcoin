@@ -1,7 +1,7 @@
 #ifndef KERNELRECORD_H
 #define KERNELRECORD_H
 
-#include "uint256.h"
+#include <uint256.h>
 
 class CWallet;
 class CWalletTx;
