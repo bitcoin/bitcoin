@@ -1416,7 +1416,7 @@ UniValue listassetallocationtransactions(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
 	if (request.fHelp || 3 < params.size())
 		throw runtime_error("listassetallocationtransactions [count] [from] [{options}]\n"
-			"list asset allocations sent or recieved in this wallet.\n"
+			"list asset allocations sent or recieved in this wallet. -assetallocationindex must be set as a startup parameter to use this function.\n"
 			"[count]          (numeric, optional, default=10) The number of results to return, 0 to return all.\n"
 			"[from]           (numeric, optional, default=0) The number of results to skip.\n"
 			"[options]        (object, optional) A json object with options to filter results\n"
@@ -1443,7 +1443,9 @@ UniValue listassetallocationtransactions(const JSONRPCRequest& request) {
 		from = params[1].get_int();
 	if (params.size() > 2)
 		options = params[2];
-
+	if (!fAssetAllocationIndex) {
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1509 - " + _("Asset allocation index not enabled, you must enable -assetallocationindex as a startup parameter or through syscoin.conf file to use this function.")); 
+	}
 	UniValue oRes(UniValue::VARR);
 	if (!passetallocationtransactionsdb->ScanAssetAllocationIndex(count, from, options, oRes))
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1509 - " + _("Scan failed"));
