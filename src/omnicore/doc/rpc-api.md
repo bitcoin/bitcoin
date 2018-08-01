@@ -691,7 +691,8 @@ Returns a list of token balances for a given currency or property identifier.
   {
     "address" : "address",     // (string) the address
     "balance" : "n.nnnnnnnn",  // (string) the available balance of the address
-    "reserved" : "n.nnnnnnnn"  // (string) the amount reserved by sell offers and accepts
+    "reserved" : "n.nnnnnnnn", // (string) the amount reserved by sell offers and accepts
+    "frozen" : "n.nnnnnnnn"    // (string) the amount frozen by the issuer (applies to managed properties only)
   },
   ...
 ]
@@ -721,7 +722,8 @@ Returns a list of all token balances for a given address.
   {
     "propertyid" : n,          // (number) the property identifier
     "balance" : "n.nnnnnnnn",  // (string) the available balance of the address
-    "reserved" : "n.nnnnnnnn"  // (string) the amount reserved by sell offers and accepts
+    "reserved" : "n.nnnnnnnn", // (string) the amount reserved by sell offers and accepts
+    "frozen" : "n.nnnnnnnn"    // (string) the amount frozen by the issuer (applies to managed properties only)
   },
   ...
 ]
@@ -780,11 +782,11 @@ List wallet transactions, optionally filtered by an address and block boundaries
 
 | Name                | Type    | Presence | Description                                                                                  |
 |---------------------|---------|----------|----------------------------------------------------------------------------------------------|
-| `txid`              | string  | optional | address filter (default: `"*"`)                                                             |
+| `txid`              | string  | optional | address filter (default: `"*"`)                                                              |
 | `count`             | number  | optional | show at most n transactions (default: `10`)                                                  |
 | `skip`              | number  | optional | skip the first n transactions (default: `0`)                                                 |
 | `startblock`        | number  | optional | first block to begin the search (default: `0`)                                               |
-| `endblock`          | number  | optional | last block to include in the search (default: `999999`)                                      |
+| `endblock`          | number  | optional | last block to include in the search (default: `999999999`)                                   |
 
 **Result:**
 ```js
@@ -1055,7 +1057,8 @@ Returns information about a crowdsale.
   "deadline" : nnnnnnnnnn,             // (number) the deadline of the crowdsale as Unix timestamp
   "amountraised" : "n.nnnnnnnn",       // (string) the amount of tokens invested by participants
   "tokensissued" : "n.nnnnnnnn",       // (string) the total number of tokens issued via the crowdsale
-  "addedissuertokens" : "n.nnnnnnnn",  // (string) the amount of tokens granted to the issuer as bonus
+  "issuerbonustokens" : "n.nnnnnnnn",  // (string) the amount of tokens granted to the issuer as bonus
+  "addedissuertokens" : "n.nnnnnnnn",  // (string) the amount of issuer bonus tokens not yet emitted
   "closedearly" : true|false,          // (boolean) whether the crowdsale ended early (if not active)
   "maxtokens" : true|false,            // (boolean) whether the crowdsale ended early due to reaching the limit of max. issuable tokens (if not active)
   "endedtime" : nnnnnnnnnn,            // (number) the time when the crowdsale ended (if closed early)
@@ -1726,6 +1729,8 @@ $ omnicore-cli "omni_createrawtx_change" \
 
 Create the payload for a simple send transaction.
 
+Note: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!
+
 **Arguments:**
 
 | Name                | Type    | Presence | Description                                                                                  |
@@ -1801,6 +1806,8 @@ $ omnicore-cli "omni_createpayload_dexsell" 1 "1.5" "0.75" 25 "0.0005" 1
 
 Create the payload for an accept offer for the specified token and amount.
 
+Note: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!
+
 **Arguments:**
 
 | Name                | Type    | Presence | Description                                                                                  |
@@ -1824,6 +1831,8 @@ $ omnicore-cli "omni_createpayload_dexaccept" 1 "15.0"
 ### omni_createpayload_sto
 
 Creates the payload for a send-to-owners transaction.
+
+Note: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!
 
 **Arguments:**
 
@@ -1969,6 +1978,8 @@ $ omnicore-cli "omni_createpayload_closecrowdsale" 70
 
 Creates the payload to issue or grant new units of managed tokens.
 
+Note: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!
+
 **Arguments:**
 
 | Name                | Type    | Presence | Description                                                                                  |
@@ -1993,6 +2004,8 @@ $ omnicore-cli "omni_createpayload_grant" 51 "7000"
 ### omni_createpayload_revoke
 
 Creates the payload to revoke units of managed tokens.
+
+Note: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!f
 
 **Arguments:**
 
@@ -2042,6 +2055,8 @@ $ omnicore-cli "omni_createpayload_changeissuer" 3
 
 Creates the payload to place a trade offer on the distributed token exchange.
 
+Note: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!
+
 **Arguments:**
 
 | Name                | Type    | Presence | Description                                                                                  |
@@ -2067,6 +2082,8 @@ $ omnicore-cli "omni_createpayload_trade" 31 "250.0" 1 "10.0"
 ### omni_createpayload_canceltradesbyprice
 
 Creates the payload to cancel offers on the distributed token exchange with the specified price.
+
+Note: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!
 
 **Arguments:**
 
@@ -2133,6 +2150,108 @@ Creates the payload to cancel all offers on the distributed token exchange with 
 
 ```bash
 $ omnicore-cli "omni_createpayload_cancelalltrades" 1
+```
+
+---
+
+### omni_createpayload_enablefreezing
+
+Creates the payload to enable address freezing for a centrally managed property.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `propertyid`        | number  | required | the identifier of the tokens                                                                 |
+
+**Result:**
+```js
+"payload"  // (string) the hex-encoded payload
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createpayload_enablefreezing" 3
+```
+
+---
+
+### omni_createpayload_disablefreezing
+
+Creates the payload to disable address freezing for a centrally managed property.
+
+IMPORTANT NOTE:  Disabling freezing for a property will UNFREEZE all frozen addresses for that property!
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `propertyid`        | number  | required | the identifier of the tokens                                                                 |
+
+**Result:**
+```js
+"payload"  // (string) the hex-encoded payload
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createpayload_disablefreezing" 3
+```
+
+---
+
+### omni_createpayload_freeze
+
+Creates the payload to freeze an address for a centrally managed token.
+
+Note: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                                 |
+|---------------------|---------|----------|-------------------------------------------------------------------------------------------------------------|
+| `toaddress`         | string  | required | the address to freeze tokens for                                                                            |
+| `propertyid`        | number  | required | the property to freeze tokens for (must be managed type and have freezing option enabled)                   |
+| `amount`            | string  | required | the amount of tokens to freeze (note: this is unused - once frozen an address cannot send any transactions) |
+
+**Result:**
+```js
+"payload"  // (string) the hex-encoded payload
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createpayload_freeze" "3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs" 31 "100"
+```
+
+---
+
+### omni_createpayload_unfreeze
+
+Creates the payload to unfreeze an address for a centrally managed token.
+
+Note: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                                 |
+|---------------------|---------|----------|-------------------------------------------------------------------------------------------------------------|
+| `toaddress`         | string  | required | the address to unfreeze tokens for                                                                          |
+| `propertyid`        | number  | required | the property to unfreeze tokens for (must be managed type and have freezing option enabled)                 |
+| `amount`            | string  | required | the amount of tokens to unfreeze (note: this is unused)                                                     |
+
+**Result:**
+```js
+"payload"  // (string) the hex-encoded payload
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createpayload_unfreeze" "3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs" 31 "100"
 ```
 
 ---
