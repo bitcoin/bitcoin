@@ -86,9 +86,13 @@ private:
 
 /**
  * Class used by CScheduler clients which may schedule multiple jobs
- * which are required to be run serially. Does not require such jobs
- * to be executed on the same thread, but no two jobs will be executed
- * at the same time.
+ * which are required to be run serially. Jobs may not be run on the
+ * same thread, but no two jobs will be executed
+ * at the same time and memory will be release-acquire consistent
+ * (the scheduler will internally do an acquire before invoking a callback
+ * as well as a release at the end). In practice this means that a callback
+ * B() will be able to observe all of the effects of callback A() which executed
+ * before it.
  */
 class SingleThreadedSchedulerClient {
 private:
@@ -103,6 +107,13 @@ private:
 
 public:
     explicit SingleThreadedSchedulerClient(CScheduler *pschedulerIn) : m_pscheduler(pschedulerIn) {}
+
+    /**
+     * Add a callback to be executed. Callbacks are executed serially
+     * and memory is sequentially consistent between callback executions.
+     * Practially, this means that callbacks can behave as if they are executed
+     * in order by a single thread.
+     */
     void AddToProcessQueue(std::function<void (void)> func);
 
     // Processes all remaining queue members on the calling thread, blocking until queue is empty
