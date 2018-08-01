@@ -1,0 +1,52 @@
+# Windows CI build via the Appveyor service
+
+version: '{build}'
+
+# branches to build
+branches:
+  only:
+    - master
+
+# scripts that are called at very beginning, before repo cloning
+init:
+  - git config --global core.autocrlf input
+
+# Build matrix variables -
+#   * environment
+#   * platform
+#   * configuration
+environment:
+  matrix:
+    - COMPILER: "Visual Studio 12 Win64"
+    - COMPILER: "Visual Studio 14 Win64"
+    - COMPILER: "Visual Studio 15 Win64"
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+
+# build platform, i.e. x86, x64, Any CPU.
+platform:
+  - x86
+  - x64
+
+# build Configuration, i.e. Debug, Release, etc.
+configuration:
+  - Debug
+  - Release
+
+before_build:
+  - echo --------------------------------------------------------------------------------
+  - echo Appveyor environment info:
+  - echo COMPILER = %COMPILER%, CONFIGURATION = %CONFIGURATION%
+  - cmake -h
+
+build_script:
+  - echo --------------------------------------------------------------------------------
+  - echo Build tinyformat
+  - mkdir build
+  - cd build
+  - cmake -G "%COMPILER%" ..
+  - cmake --build . --config %CONFIGURATION%
+
+test_script:
+  # cmake testall target has problems finding the correct configuration, so use ctest directly.
+  - ctest -C %CONFIGURATION%
+
