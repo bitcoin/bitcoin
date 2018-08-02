@@ -28,7 +28,7 @@ static void ResetArgs(const std::string& strArg)
         vecChar.push_back(s.c_str());
 
     std::string error;
-    gArgs.ParseParameters(vecChar.size(), vecChar.data(), error);
+    BOOST_CHECK(gArgs.ParseParameters(vecChar.size(), vecChar.data(), error));
 }
 
 static void SetupArgs(const std::vector<std::string>& args)
