@@ -231,7 +231,7 @@ class ImportMultiTest (BitcoinTestFramework):
         sig_address_3 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
         multi_sig_script = self.nodes[0].createmultisig(2, [sig_address_1['pubkey'], sig_address_2['pubkey'], sig_address_3['pubkey']])
         self.nodes[1].generate(100)
-        transactionid = self.nodes[1].sendtoaddress(multi_sig_script['address'], 10.00)
+        self.nodes[1].sendtoaddress(multi_sig_script['address'], 10.00)
         self.nodes[1].generate(1)
         timestamp = self.nodes[1].getblock(self.nodes[1].getbestblockhash())['mediantime']
 
@@ -258,7 +258,7 @@ class ImportMultiTest (BitcoinTestFramework):
         sig_address_3 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
         multi_sig_script = self.nodes[0].createmultisig(2, [sig_address_1['pubkey'], sig_address_2['pubkey'], sig_address_3['pubkey']])
         self.nodes[1].generate(100)
-        transactionid = self.nodes[1].sendtoaddress(multi_sig_script['address'], 10.00)
+        self.nodes[1].sendtoaddress(multi_sig_script['address'], 10.00)
         self.nodes[1].generate(1)
         timestamp = self.nodes[1].getblock(self.nodes[1].getbestblockhash())['mediantime']
 
@@ -285,7 +285,7 @@ class ImportMultiTest (BitcoinTestFramework):
         sig_address_3 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
         multi_sig_script = self.nodes[0].createmultisig(2, [sig_address_1['pubkey'], sig_address_2['pubkey'], sig_address_3['pubkey']])
         self.nodes[1].generate(100)
-        transactionid = self.nodes[1].sendtoaddress(multi_sig_script['address'], 10.00)
+        self.nodes[1].sendtoaddress(multi_sig_script['address'], 10.00)
         self.nodes[1].generate(1)
         timestamp = self.nodes[1].getblock(self.nodes[1].getbestblockhash())['mediantime']
 
@@ -312,7 +312,7 @@ class ImportMultiTest (BitcoinTestFramework):
         sig_address_3 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
         multi_sig_script = self.nodes[0].createmultisig(2, [sig_address_1['pubkey'], sig_address_2['pubkey'], sig_address_3['pubkey']])
         self.nodes[1].generate(100)
-        transactionid = self.nodes[1].sendtoaddress(multi_sig_script['address'], 10.00)
+        self.nodes[1].sendtoaddress(multi_sig_script['address'], 10.00)
         self.nodes[1].generate(1)
         timestamp = self.nodes[1].getblock(self.nodes[1].getbestblockhash())['mediantime']
 
