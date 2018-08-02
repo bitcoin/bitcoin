@@ -36,11 +36,7 @@ class HelpTest(BitcoinTestFramework):
         output = self.nodes[0].process.stdout.read()
         assert b'version' in output
         self.log.info("Version text received: {} (...)".format(output[0:60]))
-        # Clean up TestNode state
         self.nodes[0].running = False
-        self.nodes[0].process = None
-        self.nodes[0].rpc_connected = False
-        self.nodes[0].rpc = None
 
 if __name__ == '__main__':
     HelpTest().main()
