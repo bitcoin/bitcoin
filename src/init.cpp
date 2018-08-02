@@ -1247,7 +1247,7 @@ bool AppInitMain()
 
     // Only log conf file usage message if conf file actually exists
     fs::path config_file_path = GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME));
-    if(fs::exists(config_file_path))
+    if (fs::exists(config_file_path))
         LogPrintf("Using config file %s\n", config_file_path.string());
 
     LogPrintf("Using at most %i automatic connections (%i file descriptors available)\n", nMaxConnections, nFD);
