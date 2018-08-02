@@ -36,6 +36,7 @@
 #include "omnicore/walletutils.h"
 
 #include "amount.h"
+#include "base58.h"
 #include "chainparams.h"
 #include "init.h"
 #include "main.h"
@@ -886,6 +887,132 @@ UniValue omni_getallbalancesforaddress(const UniValue& params, bool fHelp)
             response.push_back(balanceObj);
         }
     }
+
+    return response;
+}
+
+/** Returns all addresses that may be mine. */
+static std::set<std::string> getWalletAddresses(bool fIncludeWatchOnly)
+{
+    std::set<std::string> result;
+
+#ifdef ENABLE_WALLET
+    LOCK(pwalletMain->cs_wallet);
+
+    BOOST_FOREACH(const PAIRTYPE(CTxDestination, CAddressBookData)& item, pwalletMain->mapAddressBook) {
+        const CBitcoinAddress& address = item.first;
+        isminetype iIsMine = IsMine(*pwalletMain, address.Get());
+
+        if (iIsMine == ISMINE_SPENDABLE || (fIncludeWatchOnly && iIsMine != ISMINE_NO)) {
+            result.insert(address.ToString());
+        }
+    }
+#endif
+
+    return result;
+}
+
+UniValue omni_getwalletbalances(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+            "omni_getwalletbalances ( includewatchonly )\n"
+            "\nReturns a list of the total token balances of the whole wallet.\n"
+            "\nArguments:\n"
+            "1. includewatchonly     (boolean, optional) include balances of watchonly addresses (default: false)\n"
+            "\nResult:\n"
+            "[                           (array of JSON objects)\n"
+            "  {\n"
+            "    \"propertyid\" : n,         (number) the property identifier\n"
+            "    \"name\" : \"name\",            (string) the name of the token\n"
+            "    \"balance\" : \"n.nnnnnnnn\",   (string) the total available balance for the token\n"
+            "    \"reserved\" : \"n.nnnnnnnn\"   (string) the total amount reserved by sell offers and accepts\n"
+            "    \"frozen\" : \"n.nnnnnnnn\"     (string) the total amount frozen by the issuer (applies to managed properties only)\n"
+            "  },\n"
+            "  ...\n"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("omni_getwalletbalances", "")
+            + HelpExampleRpc("omni_getwalletbalances", "")
+        );
+
+    bool fIncludeWatchOnly = false;
+    if (params.size() > 0) {
+        fIncludeWatchOnly = params[0].get_bool();
+    }
+
+    UniValue response(UniValue::VARR);
+
+#ifdef ENABLE_WALLET
+    if (!pwalletMain) {
+        return response;
+    }
+
+    std::set<std::string> addresses = getWalletAddresses(fIncludeWatchOnly);
+
+    BOOST_FOREACH(const std::string& address, addresses) {
+        response.push_back(address);
+
+        // TODO
+    }
+
+#endif
+
+    return response;
+}
+
+UniValue omni_getwalletaddressbalances(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+            "omni_getwalletaddressbalances ( includewatchonly )\n"
+            "\nReturns a list of all token balances for every wallet address.\n"
+            "\nArguments:\n"
+            "1. includewatchonly     (boolean, optional) include balances of watchonly addresses (default: false)\n"
+            "\nResult:\n"
+            "[                           (array of JSON objects)\n"
+            "  {\n"
+            "    \"address\" : \"address\",      (string) the address linked to the following balances\n"
+            "    \"balances\" :\n"
+            "    [\n"
+            "      {\n"
+            "        \"propertyid\" : n,         (number) the property identifier\n"
+            "        \"name\" : \"name\",            (string) the name of the token\n"
+            "        \"balance\" : \"n.nnnnnnnn\",   (string) the available balance for the token\n"
+            "        \"reserved\" : \"n.nnnnnnnn\"   (string) the amount reserved by sell offers and accepts\n"
+            "        \"frozen\" : \"n.nnnnnnnn\"     (string) the amount frozen by the issuer (applies to managed properties only)\n"
+            "      },\n"
+            "      ...\n"
+            "    ]\n"
+            "  },\n"
+            "  ...\n"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("omni_getwalletaddressbalances", "")
+            + HelpExampleRpc("omni_getwalletaddressbalances", "")
+        );
+
+    bool fIncludeWatchOnly = false;
+    if (params.size() > 0) {
+        fIncludeWatchOnly = params[0].get_bool();
+    }
+
+    UniValue response(UniValue::VARR);
+
+#ifdef ENABLE_WALLET
+    if (!pwalletMain) {
+        return response;
+    }
+
+    std::set<std::string> addresses = getWalletAddresses(fIncludeWatchOnly);
+
+    BOOST_FOREACH(const std::string& address, addresses) {
+        response.push_back(address);
+
+        // TODO
+    }
+
+#endif
 
     return response;
 }
@@ -2249,6 +2376,8 @@ static const CRPCCommand commands[] =
     { "omni layer (data retrieval)", "omni_listtransactions",          &omni_listtransactions,           false },
     { "omni layer (data retrieval)", "omni_getfeeshare",               &omni_getfeeshare,                false },
     { "omni layer (configuration)",  "omni_setautocommit",             &omni_setautocommit,              true  },
+    { "omni layer (data retrieval)", "omni_getwalletbalances",         &omni_getwalletbalances,          false },
+    { "omni layer (data retrieval)", "omni_getwalletaddressbalances",  &omni_getwalletaddressbalances,   false },
 #endif
     { "hidden",                      "mscrpc",                         &mscrpc,                          true  },
 
