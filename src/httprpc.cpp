@@ -17,6 +17,8 @@
 #include <crypto/hmac_sha256.h>
 #include <stdio.h>
 
+#include <memory>
+
 #include <boost/algorithm/string.hpp> // boost::trim
 
 /** WWW-Authenticate to present with 401 Unauthorized response */
