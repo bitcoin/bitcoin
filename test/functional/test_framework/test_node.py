@@ -15,6 +15,7 @@ import re
 import subprocess
 import tempfile
 import time
+import urllib.parse
 
 from .authproxy import JSONRPCException
 from .util import (
@@ -180,7 +181,7 @@ class TestNode():
             return self.cli("-rpcwallet={}".format(wallet_name))
         else:
             assert self.rpc_connected and self.rpc, self._node_msg("RPC not connected")
-            wallet_path = "wallet/%s" % wallet_name
+            wallet_path = "wallet/{}".format(urllib.parse.quote(wallet_name))
             return self.rpc / wallet_path
 
     def stop_node(self, expected_stderr=''):
