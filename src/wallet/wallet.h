@@ -1288,7 +1288,7 @@ public:
     void UnsetWalletFlag(uint64_t flag);
 
     /** check if a certain wallet flag is set */
-    bool IsWalletFlagSet(uint64_t flag);
+    bool IsWalletFlagSet(uint64_t flag) const;
 
     /** overwrite all flags by the given uint64_t
        returns false if unknown, non-tolerable flags are present */
