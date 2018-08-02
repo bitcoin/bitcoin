@@ -552,3 +552,29 @@ bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned int nRe
     }
     return (nFound >= nRequired);
 }
+
+// peercoin: entropy bit for stake modifier if chosen by modifier
+unsigned int GetStakeEntropyBit(const CBlock& block)
+{
+    unsigned int nEntropyBit = 0;
+    if (IsProtocolV04(block.nTime))
+    {
+        nEntropyBit = UintToArith256(block.GetHash()).GetLow64() & 1llu;// last bit of block hash
+        if (gArgs.GetBoolArg("-printstakemodifier", false))
+            LogPrintf("GetStakeEntropyBit(v0.4+): nTime=%u hashBlock=%s entropybit=%d\n", block.nTime, block.GetHash().ToString(), nEntropyBit);
+    }
+    else
+    {
+        //ppc - fix this once client can compile
+        // old protocol for entropy bit pre v0.4
+//        uint160 hashSig = Hash160(vchBlockSig);
+//        if (gArgs.GetBoolArg("-printstakemodifier", false))
+//            LogPrintf("GetStakeEntropyBit(v0.3): nTime=%u hashSig=%s", nTime, hashSig.ToString());
+//        hashSig >>= 159; // take the first bit of the hash
+//        nEntropyBit = hashSig.GetLow64();
+//        if (gArgs.GetBoolArg("-printstakemodifier", false))
+//            LogPrintf(" entropybit=%d\n", nEntropyBit);
+    }
+    return nEntropyBit;
+}
+

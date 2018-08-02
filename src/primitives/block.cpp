@@ -10,10 +10,6 @@
 #include <utilstrencodings.h>
 #include <crypto/common.h>
 
-#include <kernel.h>
-#include <arith_uint256.h>
-#include <util.h>
-
 uint256 CBlockHeader::GetHash() const
 {
     return SerializeHash(*this);
@@ -33,29 +29,4 @@ std::string CBlock::ToString() const
         s << "  " << tx->ToString() << "\n";
     }
     return s.str();
-}
-
-// peercoin: entropy bit for stake modifier if chosen by modifier
-unsigned int CBlock::GetStakeEntropyBit() const
-{
-    unsigned int nEntropyBit = 0;
-    if (IsProtocolV04(nTime))
-    {
-        nEntropyBit = UintToArith256(GetHash()).GetLow64() & 1llu;// last bit of block hash
-        if (gArgs.GetBoolArg("-printstakemodifier", false))
-            LogPrintf("GetStakeEntropyBit(v0.4+): nTime=%u hashBlock=%s entropybit=%d\n", nTime, GetHash().ToString(), nEntropyBit);
-    }
-    else
-    {
-        //ppc - fix this once client can compile
-        // old protocol for entropy bit pre v0.4
-//        uint160 hashSig = Hash160(vchBlockSig);
-//        if (gArgs.GetBoolArg("-printstakemodifier", false))
-//            LogPrintf("GetStakeEntropyBit(v0.3): nTime=%u hashSig=%s", nTime, hashSig.ToString());
-//        hashSig >>= 159; // take the first bit of the hash
-//        nEntropyBit = hashSig.GetLow64();
-//        if (gArgs.GetBoolArg("-printstakemodifier", false))
-//            LogPrintf(" entropybit=%d\n", nEntropyBit);
-    }
-    return nEntropyBit;
 }

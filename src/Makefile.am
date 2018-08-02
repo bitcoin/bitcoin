@@ -231,9 +231,7 @@ libbitcoin_server_a_SOURCES = \
   validation.cpp \
   validationinterface.cpp \
   versionbits.cpp \
-## --- ppcoin sources start from this line --- ##
   kernel.cpp \
-  kernelrecord.cpp \
   $(BITCOIN_CORE_H)
 
 if ENABLE_ZMQ
@@ -261,6 +259,7 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/wallet.cpp \
   wallet/walletdb.cpp \
   wallet/walletutil.cpp \
+  kernelrecord.cpp \
   $(BITCOIN_CORE_H)
 
 # crypto primitives library
@@ -432,7 +431,9 @@ peercoin_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
 
 # peercoin-tx binary #
-peercoin_tx_SOURCES = bitcoin-tx.cpp
+peercoin_tx_SOURCES = \
+  bitcoin-tx.cpp \
+  timedatadummy.cpp
 peercoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 peercoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 peercoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
