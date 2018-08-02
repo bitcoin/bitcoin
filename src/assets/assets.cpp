@@ -160,6 +160,21 @@ bool IsAssetNameAnOwner(const std::string& name)
     return IsAssetNameValid(name) && std::regex_match(name, OWNER_INDICATOR);
 }
 
+std::string GetParentName(const std::string& name)
+{
+    if (IsAssetNameASubasset(name)) {
+
+        const auto index = name.find_last_of(SUB_NAME_DELIMITER);
+
+        if (std::string::npos != index)
+        {
+            return name.substr(0, index);
+        }
+    }
+
+    return name;
+}
+
 bool CNewAsset::IsNull() const
 {
     return strName == "";
@@ -1787,6 +1802,50 @@ CAmount GetIssueUniqueAssetBurnAmount()
     return Params().IssueUniqueAssetBurnAmount();
 }
 
+CAmount GetBurnAmount(const AssetType type)
+{
+    switch (type) {
+        case AssetType::ROOT:
+            return GetIssueAssetBurnAmount();
+        case AssetType::SUB:
+            return GetIssueSubAssetBurnAmount();
+        case AssetType::CHANNEL:
+            return 0;
+        case AssetType::OWNER:
+            return 0;
+        case AssetType::UNIQUE:
+            return GetIssueUniqueAssetBurnAmount();
+        case AssetType::VOTE:
+            return 0;
+        case AssetType::REISSUE:
+            return GetReissueAssetBurnAmount();
+        default:
+            return 0;
+    }
+}
+
+std::string GetBurnAddress(const AssetType type)
+{
+    switch (type) {
+        case AssetType::ROOT:
+            return Params().IssueAssetBurnAddress();
+        case AssetType::SUB:
+            return Params().IssueSubAssetBurnAddress();
+        case AssetType::CHANNEL:
+            return "";
+        case AssetType::OWNER:
+            return "";
+        case AssetType::UNIQUE:
+            return Params().IssueUniqueAssetBurnAddress();
+        case AssetType::VOTE:
+            return "";
+        case AssetType::REISSUE:
+            return Params().ReissueAssetBurnAddress();
+        default:
+            return "";
+    }
+}
+
 //! This will get the amount that an address for a certain asset contains from the database if they cache doesn't already have it
 bool GetBestAssetAddressAmount(CAssetsCache& cache, const std::string& assetName, const std::string& address)
 {
@@ -1891,6 +1950,9 @@ std::string EncodeIPFS(std::string decoded){
 
 bool CreateAssetTransaction(CWallet* pwallet, const CNewAsset& asset, const std::string& address, std::pair<int, std::string>& error, std::string& rvnChangeAddress, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRequired)
 {
+
+    std::string change_address = rvnChangeAddress;
+
     // Validate the assets data
     std::string strError;
     if (!asset.IsValid(strError, *passets)) {
@@ -1898,19 +1960,47 @@ bool CreateAssetTransaction(CWallet* pwallet, const CNewAsset& asset, const std:
         return false;
     }
 
-    bool haveChangeAddress = false;
-    if (rvnChangeAddress != "")
-        haveChangeAddress = true;
+    if (!change_address.empty()) {
+        CTxDestination destination = DecodeDestination(change_address);
+        if (!IsValidDestination(destination)) {
+            error = std::make_pair(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raven address: ") + change_address);
+            return false;
+        }
+    } else {
+        // Create a new address
+        std::string strAccount;
 
-    if (haveChangeAddress && !IsValidDestinationString(rvnChangeAddress)) {
-        error = std::make_pair(RPC_INVALID_ADDRESS_OR_KEY, "Change Address isn't a valid RVN address");
+        if (!pwallet->IsLocked()) {
+            pwallet->TopUpKeyPool();
+        }
+
+        // Generate a new key that is added to wallet
+        CPubKey newKey;
+        if (!pwallet->GetKeyFromPool(newKey)) {
+            error = std::make_pair(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+            return false;
+        }
+        CKeyID keyID = newKey.GetID();
+
+        pwallet->SetAddressBook(keyID, strAccount, "receive");
+
+        change_address = EncodeDestination(keyID);
+    }
+
+
+    AssetType assetType;/* = AssetType::ROOT;*/
+//    if (IsAssetNameASubasset(asset.strName))
+//        assetType = AssetType::SUB;
+    if (!IsAssetNameValid(asset.strName, assetType)) {
+        error = std::make_pair(RPC_INVALID_PARAMETER, "Asset name not valid");
         return false;
     }
 
-    CAmount curBalance = pwallet->GetBalance();
+    // Assign the correct burn amount and the correct burn address depending on the type of asset issuance that is happening
+    CAmount burnAmount = GetBurnAmount(assetType);
+    CScript scriptPubKey = GetScriptForDestination(DecodeDestination(GetBurnAddress(assetType)));
 
-    // Get the current burn amount for issuing an asset
-    CAmount burnAmount = GetIssueAssetBurnAmount();
+    CAmount curBalance = pwallet->GetBalance();
 
     // Check to make sure the wallet has the RVN required by the burnAmount
     if (curBalance < burnAmount) {
@@ -1923,15 +2013,10 @@ bool CreateAssetTransaction(CWallet* pwallet, const CNewAsset& asset, const std:
         return false;
     }
 
-    // Get the script for the burn address
-    CScript scriptPubKey = GetScriptForDestination(DecodeDestination(Params().IssueAssetBurnAddress()));
-
     CCoinControl coin_control;
 
-    if (haveChangeAddress) {
-        auto rvnChangeDest = DecodeDestination(rvnChangeAddress);
-        coin_control.destChange = rvnChangeDest;
-    }
+    coin_control.destChange = DecodeDestination(change_address);
+
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
@@ -1940,9 +2025,32 @@ bool CreateAssetTransaction(CWallet* pwallet, const CNewAsset& asset, const std:
     std::vector<CRecipient> vecSend;
     int nChangePosRet = -1;
     bool fSubtractFeeFromAmount = false;
+
     CRecipient recipient = {scriptPubKey, burnAmount, fSubtractFeeFromAmount};
     vecSend.push_back(recipient);
-    if (!pwallet->CreateTransactionWithAsset(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strTxError, coin_control, asset, DecodeDestination(address))) {
+
+    // If the asset is a subasset. We need to send the ownertoken change back to ourselfs
+    if (assetType == AssetType::SUB) {
+        // Get the script for the destination address for the assets
+        CScript scriptTransferOwnerAsset = GetScriptForDestination(DecodeDestination(change_address));
+
+        std::string parent_name = GetParentName(asset.strName);
+        CAssetTransfer assetTransfer(parent_name + OWNER_TAG, OWNER_ASSET_AMOUNT);
+        assetTransfer.ConstructTransaction(scriptTransferOwnerAsset);
+        CRecipient rec = {scriptTransferOwnerAsset, 0, fSubtractFeeFromAmount};
+        vecSend.push_back(rec);
+    }
+
+    // Get the owner outpoints if this is a subasset
+    std::set<COutPoint> myAssetOutPoints;
+    if (assetType == AssetType::SUB) {
+        // Verify that this wallet is the owner for the asset, and get the owner asset outpoint
+        if (!VerifyAssetOwner(GetParentName(asset.strName), myAssetOutPoints, error)) {
+            return false;
+        }
+    }
+
+    if (!pwallet->CreateTransactionWithAsset(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strTxError, coin_control, asset, DecodeDestination(address), myAssetOutPoints, assetType)) {
         if (!fSubtractFeeFromAmount && burnAmount + nFeeRequired > curBalance)
             strTxError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
         error = std::make_pair(RPC_WALLET_ERROR, strTxError);
@@ -2019,29 +2127,9 @@ bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& reissu
         return false;
     }
 
-
-    // Check to make sure this wallet is the owner of the asset
-    if(!CheckAssetOwner(asset_name)) {
-        error = std::make_pair(RPC_INVALID_PARAMS,
-                               std::string("This wallet is not the owner of the asset: ") + asset_name);
-        return false;
-    }
-
-    // Get the outpoint that belongs to the Owner Asset
+    // Verify that this wallet is the owner for the asset, and get the owner asset outpoint
     std::set<COutPoint> myAssetOutPoints;
-    if (!passets->GetAssetsOutPoints(asset_name + OWNER_TAG, myAssetOutPoints)) {
-        error = std::make_pair(RPC_INVALID_PARAMS, std::string("This wallet can't find the owner token information for: ") + asset_name);
-        return false;
-    }
-
-    // Check to make sure we have the right amount of outpoints
-    if (myAssetOutPoints.size() == 0) {
-        error = std::make_pair(RPC_INVALID_PARAMS, std::string("This wallet doesn't own any assets with the name: ") + asset_name + OWNER_TAG);
-        return false;
-    }
-
-    if (myAssetOutPoints.size() != 1) {
-        error = std::make_pair(RPC_INVALID_PARAMS, "Found multiple Owner Assets. Database is out of sync. You might have to run the wallet with -reindex");
+    if (!VerifyAssetOwner(asset_name, myAssetOutPoints, error)) {
         return false;
     }
 
@@ -2185,5 +2273,34 @@ bool SendAssetTransaction(CWallet* pwallet, CWalletTx& transaction, CReserveKey&
         return false;
     }
     txid = transaction.GetHash().GetHex();
+    return true;
+}
+
+bool VerifyAssetOwner(const std::string& asset_name, std::set<COutPoint>& myOwnerOutPoints, std::pair<int, std::string>& error)
+{
+    // Check to make sure this wallet is the owner of the asset
+    if(!CheckAssetOwner(asset_name)) {
+        error = std::make_pair(RPC_INVALID_PARAMS,
+                               std::string("This wallet is not the owner of the asset: ") + asset_name);
+        return false;
+    }
+
+    // Get the outpoint that belongs to the Owner Asset
+    if (!passets->GetAssetsOutPoints(asset_name + OWNER_TAG, myOwnerOutPoints)) {
+        error = std::make_pair(RPC_INVALID_PARAMS, std::string("This wallet can't find the owner token information for: ") + asset_name);
+        return false;
+    }
+
+    // Check to make sure we have the right amount of outpoints
+    if (myOwnerOutPoints.size() == 0) {
+        error = std::make_pair(RPC_INVALID_PARAMS, std::string("This wallet doesn't own any assets with the name: ") + asset_name + OWNER_TAG);
+        return false;
+    }
+
+    if (myOwnerOutPoints.size() != 1) {
+        error = std::make_pair(RPC_INVALID_PARAMS, "Found multiple Owner Assets. Database is out of sync. You might have to run the wallet with -reindex");
+        return false;
+    }
+
     return true;
 }

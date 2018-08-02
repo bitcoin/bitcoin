@@ -101,6 +101,7 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool 
     if (AreAssetsDeployed()) {
         if (assetsCache) {
             if (tx.IsNewAsset()) {
+                std::cout  << "Potentional Add Coins: It was a new asset" << std::endl;
                 CNewAsset asset;
                 std::string strAddress;
                 AssetFromTransaction(tx, asset, strAddress);

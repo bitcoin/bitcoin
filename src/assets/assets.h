@@ -49,17 +49,6 @@ struct CAssetOutputEntry;
 // 50000 * 82 Bytes == 4.1 Mb
 #define MAX_CACHE_ASSETS_SIZE 50000
 
-enum AssetType
-{
-    ROOT,
-    OWNER,
-    SUB,
-    UNIQUE,
-    CHANNEL,
-    VOTE,
-    INVALID
-};
-
 class CAssets {
 public:
     std::map<std::string, std::set<COutPoint> > mapMyUnspentAssets; // Asset Name -> COutPoint
@@ -309,10 +298,13 @@ CAmount GetIssueAssetBurnAmount();
 CAmount GetReissueAssetBurnAmount();
 CAmount GetIssueSubAssetBurnAmount();
 CAmount GetIssueUniqueAssetBurnAmount();
+CAmount GetBurnAmount(const AssetType type);
+std::string GetBurnAddress(const AssetType type);
 
 bool IsAssetNameValid(const std::string& name);
 bool IsAssetNameValid(const std::string& name, AssetType& assetType);
 bool IsAssetNameAnOwner(const std::string& name);
+std::string GetParentName(const std::string& name); // Gets the parent name of a subasset TEST/TESTSUB would return TEST
 
 bool IsAssetNameSizeValid(const std::string& name);
 
@@ -359,6 +351,8 @@ bool GetMyOwnedAssets(CAssetsCache& cache, const std::string prefix, std::vector
 bool GetMyAssetBalance(CAssetsCache& cache, const std::string& assetName, CAmount& balance);
 bool GetMyAssetBalances(CAssetsCache& cache, const std::vector<std::string>& assetNames, std::map<std::string, CAmount>& balances);
 bool GetMyAssetBalances(CAssetsCache& cache, std::map<std::string, CAmount>& balances);
+
+bool VerifyAssetOwner(const std::string& asset_name, std::set<COutPoint>& myOwnerOutPoints, std::pair<int, std::string>& error);
 
 std::string DecodeIPFS(std::string encoded);
 std::string EncodeIPFS(std::string decoded);
