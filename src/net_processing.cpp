@@ -599,10 +599,13 @@ void AddToCompactExtraTransactions(const CTransactionRef& tx)
     size_t max_extra_txn = GetArg("-blockreconstructionextratxn", DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN);
     if (max_extra_txn <= 0)
         return;
-    if (!vExtraTxnForCompact.size())
-        vExtraTxnForCompact.resize(max_extra_txn);
-    vExtraTxnForCompact[vExtraTxnForCompactIt] = std::make_pair(tx->GetHash(), tx);
-    vExtraTxnForCompactIt = (vExtraTxnForCompactIt + 1) % max_extra_txn;
+    {
+        LOCK(cs_main);
+        if (!vExtraTxnForCompact.size())
+            vExtraTxnForCompact.resize(max_extra_txn);
+        vExtraTxnForCompact[vExtraTxnForCompactIt] = std::make_pair(tx->GetHash(), tx);
+        vExtraTxnForCompactIt = (vExtraTxnForCompactIt + 1) % max_extra_txn;
+    }
 }
 
 bool AddOrphanTx(const CTransactionRef& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
