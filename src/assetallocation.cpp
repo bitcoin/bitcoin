@@ -1053,7 +1053,7 @@ int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& a
 
 		// if this tx arrived within the minimum latency period flag it as potentially conflicting
 		if (abs(arrivalTime.second - lastArrivalTime.second) < minLatency) {
-			return ZDAG_MINOR_CONFLICT_OK;
+			return ZDAG_MINOR_CONFLICT;
 		}
 		const uint256& txHash = tx.GetHash();
 		// get asset allocation object from this tx, if for some reason it doesn't have it, just skip (shouldn't happen)
@@ -1067,7 +1067,7 @@ int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& a
 				mapBalances[amountTuple.first] += amountTuple.second;
 				// if running balance overruns the stored balance then we have a potential conflict
 				if (senderBalance < 0) {
-					return ZDAG_MINOR_CONFLICT_OK;
+					return ZDAG_MINOR_CONFLICT;
 				}
 			}
 		}
@@ -1080,7 +1080,7 @@ int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& a
 				mapBalances[inputTuple.first] += rangeCount;
 				// if running balance overruns the stored balance then we have a potential conflict
 				if (senderBalance < 0) {
-					return ZDAG_MINOR_CONFLICT_OK;
+					return ZDAG_MINOR_CONFLICT;
 				}
 			}
 		}
@@ -1118,7 +1118,7 @@ UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
 
 	int nStatus = ZDAG_STATUS_OK;
 	if (assetAllocationConflicts.find(assetAllocationTupleSender) != assetAllocationConflicts.end())
-		nStatus = ZDAG_MAJOR_CONFLICT_OK;
+		nStatus = ZDAG_MAJOR_CONFLICT;
 	else {
 		nStatus = DetectPotentialAssetAllocationSenderConflicts(assetAllocationTupleSender, txid);
 	}
