@@ -26,28 +26,26 @@ static const char* DEFAULT_BITCOIN_CONF_TEXT = R"(##
 # Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6
 #whitebind=<addr>
 
-##############################################################
-##            Quick Primer on addnode vs connect            ##
-##  Let's say for instance you use addnode=4.2.2.4          ##
-##  addnode will connect you to and tell you about the      ##
-##    nodes connected to 4.2.2.4.  In addition it will tell ##
-##    the other nodes connected to it that you exist so     ##
-##    they can connect to you.                              ##
-##  connect will not do the above when you 'connect' to it. ##
-##    It will *only* connect you to 4.2.2.4 and no one else.##
-##                                                          ##
-##  So if you're behind a firewall, or have other problems  ##
-##  finding nodes, add some using 'addnode'.                ##
-##                                                          ##
-##  If you want to stay private, use 'connect' to only      ##
-##  connect to "trusted" nodes.                             ##
-##                                                          ##
-##  If you run multiple nodes on a LAN, there's no need for ##
-##  all of them to open lots of connections.  Instead       ##
-##  'connect' them all to one node that is port forwarded   ##
-##  and has lots of connections.                            ##
-##       Thanks goes to [Noodle] on Freenode.               ##
-##############################################################
+    #############################################################################
+    ##            Quick Primer on addnode vs connect                           ##
+    ##  Let's say for instance you use addnode=4.2.2.4 addnode will connect    ##
+    ##  you to and tell you about the nodes connected to 4.2.2.4. In addition  ##
+    ##  it will tell the other nodes connected to it that you exist so         ##
+    ##  they can connect to you.                                               ##
+    ##                                                                         ##
+    ##  connect will not do the above when you 'connect' to it. It will        ##
+    ##  *only* connect you to 4.2.2.4 and no one else.                         ##
+    ##                                                                         ##
+    ##  So if you're behind a firewall, or have other problems finding nodes,  ##
+    ##  add some using 'addnode'.                                              ##
+    ##                                                                         ##
+    ##  If you want to stay private, use 'connect' to only connect to          ##
+    ##  "trusted" nodes.                                                       ##
+    ##                                                                         ##
+    ##  If you run multiple nodes on a LAN, there's no need for all of them    ##
+    ##  to open lots of connections.  Instead 'connect' them all to one node   ##
+    ##  that is port forwarded and has lots of connections.                    ##
+    #############################################################################
 
 # Use as many addnode= settings as you like to connect to specific peers
 #addnode=69.164.218.197
@@ -81,7 +79,7 @@ static const char* DEFAULT_BITCOIN_CONF_TEXT = R"(##
 # If not, you must set rpcuser and rpcpassword to secure the JSON-RPC api. The first
 # method(DEPRECATED) is to set this pair for the server and client:
 #rpcuser=Ulysseys
-#rpcpassword=YourSuperGreatPasswordNumber_DO_NOT_USE_THIS_OR_YOU_WILL_GET_ROBBED_385593
+#rpcpassword=YourSuperGreatPassword_DO_NOT_USE_THIS_OR_YOU_WILL_GET_ROBBED_385593
 #
 # The second method `rpcauth` can be added to server startup argument. It is set at initialization time
 # using the output from the script in share/rpcauth/rpcauth.py after providing a username:
