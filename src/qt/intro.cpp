@@ -63,10 +63,7 @@ private:
 
 #include <qt/intro.moc>
 
-FreespaceChecker::FreespaceChecker(Intro *_intro)
-{
-    this->intro = _intro;
-}
+FreespaceChecker::FreespaceChecker(Intro *_intro) : intro(_intro) {}
 
 void FreespaceChecker::check()
 {

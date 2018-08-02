@@ -443,11 +443,10 @@ void BerkeleyEnvironment::CheckpointLSN(const std::string& strFile)
 }
 
 
-BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const char* pszMode, bool fFlushOnCloseIn) : pdb(nullptr), activeTxn(nullptr)
+BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const char* pszMode, bool fFlushOnCloseIn)
+   : pdb(nullptr), activeTxn(nullptr), fFlushOnClose(fFlushOnCloseIn), env(database.env)
 {
     fReadOnly = (!strchr(pszMode, '+') && !strchr(pszMode, 'w'));
-    fFlushOnClose = fFlushOnCloseIn;
-    env = database.env;
     if (database.IsDummy()) {
         return;
     }

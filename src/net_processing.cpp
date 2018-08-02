@@ -3218,10 +3218,7 @@ class CompareInvMempoolOrder
 {
     CTxMemPool *mp;
 public:
-    explicit CompareInvMempoolOrder(CTxMemPool *_mempool)
-    {
-        mp = _mempool;
-    }
+    explicit CompareInvMempoolOrder(CTxMemPool *_mempool) : mp(_mempool) {}
 
     bool operator()(std::set<uint256>::iterator a, std::set<uint256>::iterator b)
     {

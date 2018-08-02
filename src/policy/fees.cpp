@@ -175,11 +175,9 @@ public:
 TxConfirmStats::TxConfirmStats(const std::vector<double>& defaultBuckets,
                                 const std::map<double, unsigned int>& defaultBucketMap,
                                unsigned int maxPeriods, double _decay, unsigned int _scale)
-    : buckets(defaultBuckets), bucketMap(defaultBucketMap)
+    : buckets(defaultBuckets), bucketMap(defaultBucketMap), decay(_decay), scale(_scale)
 {
-    decay = _decay;
     assert(_scale != 0 && "_scale must be non-zero");
-    scale = _scale;
     confAvg.resize(maxPeriods);
     for (unsigned int i = 0; i < maxPeriods; i++) {
         confAvg[i].resize(buckets.size());

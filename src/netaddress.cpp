@@ -72,10 +72,9 @@ CNetAddr::CNetAddr(const struct in_addr& ipv4Addr)
     SetRaw(NET_IPV4, (const uint8_t*)&ipv4Addr);
 }
 
-CNetAddr::CNetAddr(const struct in6_addr& ipv6Addr, const uint32_t scope)
+CNetAddr::CNetAddr(const struct in6_addr& ipv6Addr, const uint32_t scope) : scopeId(scope)
 {
     SetRaw(NET_IPV6, (const uint8_t*)&ipv6Addr);
-    scopeId = scope;
 }
 
 unsigned int CNetAddr::GetByte(int n) const
@@ -576,16 +575,13 @@ std::string CService::ToString() const
     return ToStringIPPort();
 }
 
-CSubNet::CSubNet():
-    valid(false)
+CSubNet::CSubNet() : valid(false)
 {
     memset(netmask, 0, sizeof(netmask));
 }
 
-CSubNet::CSubNet(const CNetAddr &addr, int32_t mask)
+CSubNet::CSubNet(const CNetAddr &addr, int32_t mask) : network(addr), valid(true)
 {
-    valid = true;
-    network = addr;
     // Default to /32 (IPv4) or /128 (IPv6), i.e. match single address
     memset(netmask, 255, sizeof(netmask));
 
@@ -607,10 +603,8 @@ CSubNet::CSubNet(const CNetAddr &addr, int32_t mask)
         network.ip[x] &= netmask[x];
 }
 
-CSubNet::CSubNet(const CNetAddr &addr, const CNetAddr &mask)
+CSubNet::CSubNet(const CNetAddr &addr, const CNetAddr &mask) : network(addr), valid(true)
 {
-    valid = true;
-    network = addr;
     // Default to /32 (IPv4) or /128 (IPv6), i.e. match single address
     memset(netmask, 255, sizeof(netmask));
 
@@ -625,11 +619,9 @@ CSubNet::CSubNet(const CNetAddr &addr, const CNetAddr &mask)
         network.ip[x] &= netmask[x];
 }
 
-CSubNet::CSubNet(const CNetAddr &addr):
-    valid(addr.IsValid())
+CSubNet::CSubNet(const CNetAddr &addr) : network(addr), valid(addr.IsValid())
 {
     memset(netmask, 255, sizeof(netmask));
-    network = addr;
 }
 
 bool CSubNet::Match(const CNetAddr &addr) const
