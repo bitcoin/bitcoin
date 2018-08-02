@@ -74,14 +74,14 @@ class FullBlockTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
+        # Very large reorgs cause cs_main to be held for a very long time in ActivateBestChainStep,
+        # which causes RPC to hang, so we need to increase RPC timeouts
+        self.rpc_timeout = 180
         # Must set '-dip3params=2000:2000' to create pre-dip3 blocks only
         self.extra_args = [['-dip3params=2000:2000']]
 
     def setup_nodes(self):
-        # Very large reorgs cause cs_main to be held for a very long time in ActivateBestChainStep,
-        # which causes RPC to hang, so we need to increase RPC timeouts
-        # TODO remove this when bitcoin#13837 gets backported and change it to use self.rpc_timeout
-        self.add_nodes(self.num_nodes, self.extra_args, timewait=180)
+        self.add_nodes(self.num_nodes, self.extra_args)
         self.start_nodes()
 
     def run_test(self):
