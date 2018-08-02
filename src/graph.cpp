@@ -142,13 +142,13 @@ void GraphRemoveCycles(const std::vector<CTransactionRef>& blockVtx, std::vector
 			continue;
 		// remove from graph
 		const int nVertexIndex = (*it).first;
-		if (nVertexIndex >= vertices.size())
+		if (nVertexIndex >= (int)vertices.size())
 			continue;
 		boost::clear_out_edges(vertices[nVertexIndex], graph);
 		const std::vector<int> &vecTx = (*it).second;
 		// mapTxIndex knows of the mapping between vertices and tx vout positions
 		for (auto& nIndex : vecTx) {
-			if (nIndex >= blockVtx.size())
+			if (nIndex >= (int)blockVtx.size())
 				continue;
 			conflictedIndexes.push_back(nIndex);
 		}
@@ -181,7 +181,7 @@ bool DAGTopologicalSort(std::vector<CTransactionRef>& blockVtx, const std::vecto
 		const std::vector<int> &vecTx = (*it).second;
 		// mapTxIndex knows of the mapping between vertices and tx index positions
 		for (auto& nIndex : vecTx) {
-			if (nIndex >= blockVtx.size())
+			if (nIndex >= (int)blockVtx.size())
 				continue;
 			newVtx.emplace_back(blockVtx[nIndex]);
 		}
@@ -189,7 +189,7 @@ bool DAGTopologicalSort(std::vector<CTransactionRef>& blockVtx, const std::vecto
 
 	// add conflicting indexes next (should already be in order)
 	for (auto& nIndex : conflictedIndexes) {
-		if (nIndex >= blockVtx.size())
+		if (nIndex >= (int)blockVtx.size())
 			continue;
 		newVtx.emplace_back(blockVtx[nIndex]);
 	}
