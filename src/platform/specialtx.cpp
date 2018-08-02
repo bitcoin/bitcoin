@@ -9,7 +9,7 @@
 #include "clientversion.h"
 
 #include "specialtx.h"
-//#include "providertx.h"
+#include "governance-vote.h"
 
 bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValidationState& state)
 {
@@ -17,6 +17,8 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValidati
         return true;
 
     switch (tx.nType) {
+        case TRANSACTION_GOVERNANCE_VOTE:
+            return CheckVoteTx(tx, pindex, state);
     }
 
     return state.DoS(100, false, REJECT_INVALID, "bad-tx-type");
@@ -28,6 +30,8 @@ bool ProcessSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValida
         return true;
 
     switch (tx.nType) {
+        case TRANSACTION_GOVERNANCE_VOTE:
+            return true; // handled in batches per block
     }
 
     return state.DoS(100, false, REJECT_INVALID, "bad-tx-type");
@@ -39,6 +43,8 @@ bool UndoSpecialTx(const CTransaction& tx, const CBlockIndex* pindex)
         return true;
 
     switch (tx.nType) {
+        case TRANSACTION_GOVERNANCE_VOTE:
+            return true; // handled in batches per block
     }
 
     return false;

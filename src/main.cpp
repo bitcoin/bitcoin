@@ -929,8 +929,9 @@ int GetIXConfirmations(uint256 nTXHash)
 bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 {
     // check version 3 transaction types
-    if (tx.nVersion >= 3) {
-        if (tx.nType != TRANSACTION_NORMAL) {
+    if (tx.nVersion >= 2) {
+        if (tx.nType != TRANSACTION_NORMAL &&
+            tx.nType != TRANSACTION_GOVERNANCE_VOTE) {
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-type");
         }
         if (tx.IsCoinBase() && tx.nType != TRANSACTION_NORMAL)
