@@ -18,7 +18,7 @@
 #include <fs.h>
 #include <logging.h>
 #include <sync.h>
-#include <tinyformat.h>
+#include <utilstrprintf.h>
 #include <utiltime.h>
 #include <utilmemory.h>
 

@@ -5,7 +5,7 @@
 
 #include <policy/feerate.h>
 
-#include <tinyformat.h>
+#include <utilstrprintf.h>
 
 const std::string CURRENCY_UNIT = "BTC";
 

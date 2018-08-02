@@ -9,8 +9,8 @@
 #include <arith_uint256.h>
 #include <consensus/params.h>
 #include <primitives/block.h>
-#include <tinyformat.h>
 #include <uint256.h>
+#include <utilstrprintf.h>
 
 #include <vector>
 

@@ -5,7 +5,7 @@
 
 #include <utilstrencodings.h>
 
-#include <tinyformat.h>
+#include <utilstrprintf.h>
 
 #include <cstdlib>
 #include <cstring>
@@ -543,4 +543,3 @@ bool ParseFixedPoint(const std::string &val, int decimals, int64_t *amount_out)
 
     return true;
 }
-

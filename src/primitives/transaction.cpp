@@ -6,8 +6,8 @@
 #include <primitives/transaction.h>
 
 #include <hash.h>
-#include <tinyformat.h>
 #include <utilstrencodings.h>
+#include <utilstrprintf.h>
 
 std::string COutPoint::ToString() const
 {
