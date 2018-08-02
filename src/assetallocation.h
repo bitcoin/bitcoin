@@ -90,8 +90,8 @@ static sorted_vector<CAssetAllocationTuple> assetAllocationConflicts;
 enum {
 	ZDAG_NOT_FOUND = -1,
 	ZDAG_STATUS_OK = 0,
-	ZDAG_MINOR_CONFLICT_OK,
-	ZDAG_MAJOR_CONFLICT_OK
+	ZDAG_MINOR_CONFLICT,
+	ZDAG_MAJOR_CONFLICT
 };
 
 class CAssetAllocation {
