@@ -6,7 +6,6 @@
 """
 
 import os
-import re
 import shutil
 
 from test_framework.test_framework import BitcoinTestFramework, initialize_datadir
@@ -23,7 +22,7 @@ class BlocksdirTest(BitcoinTestFramework):
         initialize_datadir(self.options.tmpdir, 0)
         self.log.info("Starting with non exiting blocksdir ...")
         blocksdir_path = os.path.join(self.options.tmpdir, 'blocksdir')
-        self.nodes[0].assert_start_raises_init_error(["-blocksdir=" + blocksdir_path], re.escape('Error: Specified blocks directory "{}" does not exist.'.format(blocksdir_path)))
+        self.nodes[0].assert_start_raises_init_error(["-blocksdir=" + blocksdir_path], 'Error: Specified blocks directory "{}" does not exist.'.format(blocksdir_path))
         os.mkdir(blocksdir_path)
         self.log.info("Starting with exiting blocksdir ...")
         self.start_node(0, ["-blocksdir=" + blocksdir_path])
