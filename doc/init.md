@@ -13,27 +13,32 @@ can be found in the contrib/init folder.
 Service User
 ---------------------------------
 
-All three Linux startup configurations assume the existence of a "bitcoin" user
-and group.  They must be created before attempting to use these scripts.
-The macOS configuration assumes bitcoind will be set up for the current user.
+All three Linux startup configurations assume the existence of a "bitcoin"
+user and group.
+They must be created before attempting to use these scripts.
+The macOS configuration assumes bitcoind will be set up for
+the current user.
 
 Configuration
 ---------------------------------
 
-At a bare minimum, bitcoind requires that the rpcpassword setting be set
-when running as a daemon.  If the configuration file does not exist or this
-setting is not set, bitcoind will shutdown promptly after startup.
+At a bare minimum, bitcoind requires that the rpcpassword setting be
+set when running as a daemon.
+If the configuration file does not exist or this setting is not set,
+bitcoind will shutdown promptly after startup.
 
-This password does not have to be remembered or typed as it is mostly used
-as a fixed token that bitcoind and client programs read from the configuration
-file, however it is recommended that a strong and secure password be used
-as this password is security critical to securing the wallet should the
-wallet be enabled.
+This password does not have to be remembered or typed as it is mostly
+used as a fixed token that bitcoind and client programs read from the
+configuration file, however it is recommended that a strong and secure
+password be used as this password is security critical to securing the
+wallet should the wallet be enabled.
 
-If bitcoind is run with the "-server" flag (set by default), and no rpcpassword is set,
-it will use a special cookie file for authentication. The cookie is generated with random
-content when the daemon starts, and deleted when it exits. Read access to this file
-controls who can access it through RPC.
+If bitcoind is run with the "-server" flag (set by default),
+and no rpcpassword is set, it will use a special cookie file for
+authentication.
+The cookie is generated with random content when the daemon starts,
+and deleted when it exits.
+Read access to this file controls who can access it through RPC.
 
 By default the cookie is stored in the data directory, but it's location can be overridden
 with the option '-rpccookiefile'.
