@@ -159,7 +159,6 @@ EXTENDED_SCRIPTS = [
     'mining_getblocktemplate_longpoll.py',
     'p2p_timeouts.py',
     # vv Tests less than 60s vv
-    'feature_bip9_softforks.py',
     'p2p_feefilter.py',
     'rpc_bind.py',
     # vv Tests less than 30s vv
