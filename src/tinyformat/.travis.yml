@@ -1,0 +1,196 @@
+language: cpp
+
+sudo: false
+
+# C'mon Travis, you're a great service, but why do I need a script to generate my build matrix?
+
+# cat $0 | sed -e 's/^\(.\)/# \1/' -e 's/^$/#/'
+#
+# cat <<EOF
+# matrix:
+#   include:
+#
+# EOF
+#
+#
+# for os in linux ; do
+#     for compiler in g++-5 clang++-3.8 ; do
+#         for buildtype in Release Debug ; do
+#             for std in c++98 c++11 ; do
+# cat <<EOF
+#     - os: $os
+#       compiler: $compiler
+#       env:
+#         - CXX_STD=$std
+#         - COMPILER=$compiler
+#         - BUILD_TYPE=$buildtype
+# EOF
+#                 if [[ $os == linux ]] ; then
+# cat <<EOF
+#       addons:
+#         apt:
+#           sources:
+#             - ubuntu-toolchain-r-test
+#             - llvm-toolchain-precise-3.8
+#           packages:
+#             - $compiler
+# EOF
+#                 fi
+#                 echo
+#             done
+#         done
+#     done
+# done
+matrix:
+  include:
+
+    - os: linux
+      compiler: g++-5
+      env:
+        - CXX_STD=c++98
+        - COMPILER=g++-5
+        - BUILD_TYPE=Release
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.8
+          packages:
+            - g++-5
+
+    - os: linux
+      compiler: g++-5
+      env:
+        - CXX_STD=c++11
+        - COMPILER=g++-5
+        - BUILD_TYPE=Release
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.8
+          packages:
+            - g++-5
+
+    - os: linux
+      compiler: g++-5
+      env:
+        - CXX_STD=c++98
+        - COMPILER=g++-5
+        - BUILD_TYPE=Debug
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.8
+          packages:
+            - g++-5
+
+    - os: linux
+      compiler: g++-5
+      env:
+        - CXX_STD=c++11
+        - COMPILER=g++-5
+        - BUILD_TYPE=Debug
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.8
+          packages:
+            - g++-5
+
+    - os: linux
+      compiler: clang++-3.8
+      env:
+        - CXX_STD=c++98
+        - COMPILER=clang++-3.8
+        - BUILD_TYPE=Release
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.8
+          packages:
+            - clang++-3.8
+
+    - os: linux
+      compiler: clang++-3.8
+      env:
+        - CXX_STD=c++11
+        - COMPILER=clang++-3.8
+        - BUILD_TYPE=Release
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.8
+          packages:
+            - clang++-3.8
+
+    - os: linux
+      compiler: clang++-3.8
+      env:
+        - CXX_STD=c++98
+        - COMPILER=clang++-3.8
+        - BUILD_TYPE=Debug
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.8
+          packages:
+            - clang++-3.8
+
+    - os: linux
+      compiler: clang++-3.8
+      env:
+        - CXX_STD=c++11
+        - COMPILER=clang++-3.8
+        - BUILD_TYPE=Debug
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.8
+          packages:
+            - clang++-3.8
+
+    - os: osx
+      compiler: clang
+      env:
+        - CXX_STD=c++98
+        - COMPILER=clang++
+        - BUILD_TYPE=Release
+
+    - os: osx
+      compiler: clang
+      env:
+        - CXX_STD=c++11
+        - COMPILER=clang++
+        - BUILD_TYPE=Release
+
+    - os: osx
+      compiler: clang
+      env:
+        - CXX_STD=c++98
+        - COMPILER=clang++
+        - BUILD_TYPE=Debug
+
+    - os: osx
+      compiler: clang
+      env:
+        - CXX_STD=c++11
+        - COMPILER=clang++
+        - BUILD_TYPE=Debug
+
+
+before_script:
+  - cmake --version
+
+script:
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_CXX_COMPILER=$COMPILER -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCXX_STD=$CXX_STD ..
+  - make testall
+
