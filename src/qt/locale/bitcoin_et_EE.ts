@@ -257,15 +257,7 @@
         <source>Command-line options</source>
         <translation>Käsurea valikud</translation>
     </message>
-    <message>
-        <source>Usage:</source>
-        <translation>Kasutus:</translation>
-    </message>
-    <message>
-        <source>command-line options</source>
-        <translation>käsurea valikud</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>Intro</name>
     <message>
@@ -507,6 +499,10 @@
     <message>
         <source>Message</source>
         <translation>Sõnum</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Rahakott</translation>
     </message>
     </context>
 <context>
@@ -763,10 +759,6 @@
     </context>
 <context>
     <name>bitcoin-core</name>
-    <message>
-        <source>Options:</source>
-        <translation>Valikud:</translation>
-    </message>
     <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoin Core</translation>
