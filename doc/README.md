@@ -5,7 +5,7 @@ This is the official reference wallet for Dash digital currency and comprises th
 
 Running
 ---------------------
-The following are some helpful notes on how to run Dash on your native platform.
+The following are some helpful notes on how to run Dash Core on your native platform.
 
 ### Unix
 
@@ -20,7 +20,7 @@ Unpack the files into a directory, and then run dash-qt.exe.
 
 ### macOS
 
-Drag Dash-Qt to your applications folder, and then run Dash-Qt.
+Drag Dash Core to your applications folder, and then run Dash Core.
 
 ### Need Help?
 
