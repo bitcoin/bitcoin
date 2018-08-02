@@ -8,8 +8,6 @@ cache:
   - depends/built
   - depends/sdk-sources
   - $HOME/.ccache
-git:
-  depth: 1
 env:
   global:
     - MAKEJOBS=-j3
