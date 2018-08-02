@@ -197,7 +197,6 @@ void CInstantSend::Vote(const uint256& txHash, CConnman& connman)
     CTxLockRequest dummyRequest;
     CTxLockCandidate txLockCandidate(dummyRequest);
     {
-        LOCK(cs_instantsend);
         auto itLockCandidate = mapTxLockCandidates.find(txHash);
         if (itLockCandidate == mapTxLockCandidates.end()) return;
         txLockCandidate = itLockCandidate->second;
