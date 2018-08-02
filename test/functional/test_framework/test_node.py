@@ -56,17 +56,13 @@ class TestNode():
     To make things easier for the test writer, any unrecognised messages will
     be dispatched to the RPC connection."""
 
-    def __init__(self, i, datadir, rpchost, timewait, bitcoind, bitcoin_cli, mocktime, coverage_dir, extra_conf=None, extra_args=None, use_cli=False):
+    def __init__(self, i, datadir, *, rpchost, timewait, bitcoind, bitcoin_cli, mocktime, coverage_dir, extra_conf=None, extra_args=None, use_cli=False):
         self.index = i
         self.datadir = datadir
         self.stdout_dir = os.path.join(self.datadir, "stdout")
         self.stderr_dir = os.path.join(self.datadir, "stderr")
         self.rpchost = rpchost
-        if timewait:
-            self.rpc_timeout = timewait
-        else:
-            # Wait for up to 60 seconds for the RPC server to respond
-            self.rpc_timeout = 60
+        self.rpc_timeout = timewait
         self.binary = bitcoind
         self.coverage_dir = coverage_dir
         if extra_conf != None:
