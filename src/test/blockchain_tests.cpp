@@ -54,7 +54,7 @@ void TestDifficulty(uint32_t nbits, double expected_difficulty)
     RejectDifficultyMismatch(difficulty, expected_difficulty);
 }
 
-BOOST_FIXTURE_TEST_SUITE(blockchain_difficulty_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(blockchain_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(get_difficulty_for_very_low_target)
 {
