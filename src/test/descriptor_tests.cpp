@@ -64,7 +64,7 @@ void Check(const std::string& prv, const std::string& pub, int flags, const std:
     BOOST_CHECK_EQUAL(pub, pub2);
 
     // Check that both can be serialized with private key back to the private version, but not without private key.
-    std::string prv1, prv2;
+    std::string prv1;
     BOOST_CHECK(parse_priv->ToPrivateString(keys_priv, prv1));
     BOOST_CHECK_EQUAL(prv, prv1);
     BOOST_CHECK(!parse_priv->ToPrivateString(keys_pub, prv1));
