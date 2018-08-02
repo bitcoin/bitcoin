@@ -26,73 +26,6 @@ env:
     - SDK_URL=https://bitcoincore.org/depends-sources/sdks
     - WINEDEBUG=fixme-all
     - DOCKER_PACKAGES="build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git ca-certificates ccache"
-  matrix:
-# ARM
-    - >-
-        HOST=arm-linux-gnueabihf
-        PACKAGES="g++-arm-linux-gnueabihf"
-        DEP_OPTS="NO_QT=1"
-        GOAL="install"
-        BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
-# Win32
-    - >-
-        HOST=i686-w64-mingw32
-        DPKG_ADD_ARCH="i386"
-        DEP_OPTS="NO_QT=1"
-        PACKAGES="python3 nsis g++-mingw-w64-i686 wine-binfmt wine32"
-        RUN_TESTS=true
-        GOAL="install"
-        BITCOIN_CONFIG="--enable-reduce-exports"
-# Win64
-    - >-
-        HOST=x86_64-w64-mingw32
-        DEP_OPTS="NO_QT=1"
-        PACKAGES="python3 nsis g++-mingw-w64-x86-64 wine-binfmt wine64"
-        RUN_TESTS=true
-        GOAL="install"
-        BITCOIN_CONFIG="--enable-reduce-exports"
-# 32-bit + dash
-    - >-
-        HOST=i686-pc-linux-gnu
-        PACKAGES="g++-multilib python3-zmq"
-        DEP_OPTS="NO_QT=1"
-        RUN_TESTS=true
-        GOAL="install"
-        BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++"
-        CONFIG_SHELL="/bin/dash"
-# x86_64 Linux (uses qt5 dev package instead of depends Qt to speed up build and avoid timeout)
-    - >-
-        HOST=x86_64-unknown-linux-gnu
-        PACKAGES="python3-zmq qtbase5-dev qttools5-dev-tools protobuf-compiler libdbus-1-dev libharfbuzz-dev libprotobuf-dev"
-        DEP_OPTS="NO_QT=1 NO_UPNP=1 DEBUG=1 ALLOW_HOST_PACKAGES=1"
-        RUN_TESTS=true
-        RUN_BENCH=true
-        GOAL="install"
-        BITCOIN_CONFIG="--enable-zmq --with-gui=qt5 --enable-glibc-back-compat --enable-reduce-exports --enable-debug CXXFLAGS=\"-g0 -O2\""
-# x86_64 Linux (Qt5 & system libs)
-    - >-
-        HOST=x86_64-unknown-linux-gnu
-        PACKAGES="python3-zmq qtbase5-dev qttools5-dev-tools libssl1.0-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libdb5.3++-dev libminiupnpc-dev libzmq3-dev libprotobuf-dev protobuf-compiler libqrencode-dev"
-        NO_DEPENDS=1
-        RUN_TESTS=true
-        GOAL="install"
-        BITCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --enable-glibc-back-compat --enable-reduce-exports --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER"
-# x86_64 Linux, No wallet
-    - >-
-        HOST=x86_64-unknown-linux-gnu
-        PACKAGES="python3"
-        DEP_OPTS="NO_WALLET=1"
-        RUN_TESTS=true
-        GOAL="install"
-        BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
-# Cross-Mac
-    - >-
-        HOST=x86_64-apple-darwin14
-        PACKAGES="cmake imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools python-dev python3-setuptools-git"
-        BITCOIN_CONFIG="--enable-gui --enable-reduce-exports --enable-werror"
-        OSX_SDK=10.11
-        GOAL="all deploy"
-
 before_install:
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
     - BEGIN_FOLD () { echo ""; CURRENT_FOLD_NAME=$1; echo "travis_fold:start:${CURRENT_FOLD_NAME}"; }
@@ -132,9 +65,81 @@ script:
 after_script:
     - echo $TRAVIS_COMMIT_RANGE
     - echo $TRAVIS_COMMIT_LOG
-
 jobs:
   include:
+# ARM
+    - stage: test
+      env: >-
+        HOST=arm-linux-gnueabihf
+        PACKAGES="g++-arm-linux-gnueabihf"
+        DEP_OPTS="NO_QT=1"
+        GOAL="install"
+        BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
+# Win32
+    - stage: test
+      env: >-
+        HOST=i686-w64-mingw32
+        DPKG_ADD_ARCH="i386"
+        DEP_OPTS="NO_QT=1"
+        PACKAGES="python3 nsis g++-mingw-w64-i686 wine-binfmt wine32"
+        RUN_TESTS=true
+        GOAL="install"
+        BITCOIN_CONFIG="--enable-reduce-exports"
+# Win64
+    - stage: test
+      env: >-
+        HOST=x86_64-w64-mingw32
+        DEP_OPTS="NO_QT=1"
+        PACKAGES="python3 nsis g++-mingw-w64-x86-64 wine-binfmt wine64"
+        RUN_TESTS=true
+        GOAL="install"
+        BITCOIN_CONFIG="--enable-reduce-exports"
+# 32-bit + dash
+    - stage: test
+      env: >-
+        HOST=i686-pc-linux-gnu
+        PACKAGES="g++-multilib python3-zmq"
+        DEP_OPTS="NO_QT=1"
+        RUN_TESTS=true
+        GOAL="install"
+        BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++"
+        CONFIG_SHELL="/bin/dash"
+# x86_64 Linux (uses qt5 dev package instead of depends Qt to speed up build and avoid timeout)
+    - stage: test
+      env: >-
+        HOST=x86_64-unknown-linux-gnu
+        PACKAGES="python3-zmq qtbase5-dev qttools5-dev-tools protobuf-compiler libdbus-1-dev libharfbuzz-dev libprotobuf-dev"
+        DEP_OPTS="NO_QT=1 NO_UPNP=1 DEBUG=1 ALLOW_HOST_PACKAGES=1"
+        RUN_TESTS=true
+        RUN_BENCH=true
+        GOAL="install"
+        BITCOIN_CONFIG="--enable-zmq --with-gui=qt5 --enable-glibc-back-compat --enable-reduce-exports --enable-debug CXXFLAGS=\"-g0 -O2\""
+# x86_64 Linux (Qt5 & system libs)
+    - stage: test
+      env: >-
+        HOST=x86_64-unknown-linux-gnu
+        PACKAGES="python3-zmq qtbase5-dev qttools5-dev-tools libssl1.0-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libdb5.3++-dev libminiupnpc-dev libzmq3-dev libprotobuf-dev protobuf-compiler libqrencode-dev"
+        NO_DEPENDS=1
+        RUN_TESTS=true
+        GOAL="install"
+        BITCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --enable-glibc-back-compat --enable-reduce-exports --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER"
+# x86_64 Linux, No wallet
+    - stage: test
+      env: >-
+        HOST=x86_64-unknown-linux-gnu
+        PACKAGES="python3"
+        DEP_OPTS="NO_WALLET=1"
+        RUN_TESTS=true
+        GOAL="install"
+        BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
+# Cross-Mac
+    - stage: test
+      env: >-
+        HOST=x86_64-apple-darwin14
+        PACKAGES="cmake imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools python-dev python3-setuptools-git"
+        OSX_SDK=10.11
+        GOAL="all deploy"
+        BITCOIN_CONFIG="--enable-gui --enable-reduce-exports --enable-werror"
     - stage: lint
       env:
       sudo: false
