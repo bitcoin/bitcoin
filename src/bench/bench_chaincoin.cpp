@@ -27,7 +27,7 @@ main(int argc, char** argv)
 {
     gArgs.ParseParameters(argc, argv);
 
-    if (gArgs.IsArgSet("-?") || gArgs.IsArgSet("-h") || gArgs.IsArgSet("-help")) {
+    if (HelpRequested(gArgs)) {
         std::cout << HelpMessageGroup(_("Options:"))
                   << HelpMessageOpt("-?", _("Print this help message and exit"))
                   << HelpMessageOpt("-list", _("List benchmarks without executing them. Can be combined with -scaling and -filter"))
