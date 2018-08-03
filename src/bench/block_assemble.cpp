@@ -79,9 +79,9 @@ static void AssembleBlock(benchmark::State& state)
         const CChainParams& chainparams = Params();
         thread_group.create_thread(boost::bind(&CScheduler::serviceQueue, &scheduler));
         GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
-        LoadGenesisBlock(chainparams);
+        (void) LoadGenesisBlock(chainparams);
         CValidationState state;
-        ActivateBestChain(state, chainparams);
+        (void) ActivateBestChain(state, chainparams);
         assert(::chainActive.Tip() != nullptr);
         const bool witness_enabled{IsWitnessEnabled(::chainActive.Tip(), chainparams.GetConsensus())};
         assert(witness_enabled);
