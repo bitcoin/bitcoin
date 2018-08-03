@@ -3359,7 +3359,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     for (const auto& tx : block.vtx)
         if (!CheckTransaction(*tx, state, passets, false))
             return state.Invalid(false, state.GetRejectCode(), state.GetRejectReason(),
-                                 strprintf("Transaction check failed (tx hash %s) %s", tx->GetHash().ToString(), state.GetDebugMessage()));
+                                 strprintf("Transaction check failed (tx hash %s) %s %s", tx->GetHash().ToString(), state.GetDebugMessage(), state.GetRejectReason()));
 
     unsigned int nSigOps = 0;
     for (const auto& tx : block.vtx)
