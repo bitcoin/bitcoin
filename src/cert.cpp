@@ -120,7 +120,7 @@ bool CCertDB::CleanupDatabase(int &servicesCleaned)
         boost::this_thread::interruption_point();
         try {
 			if (pcursor->GetKey(key) && key.first == "certi") {
-  				if (!GetCert(key.second, txPos) || chainActive.Tip()->GetMedianTimePast() >= GetCertExpiration(txPos))
+  				if (!GetCert(key.second, txPos) || chainActive.Tip()->GetMedianTimePast() >= (int64_t)GetCertExpiration(txPos))
 				{
 					servicesCleaned++;
 					EraseCert(key.second, true);
@@ -139,7 +139,7 @@ bool GetCert(const vector<unsigned char> &vchCert,
 	uint256 txid;
     if (!pcertdb || !pcertdb->ReadCert(vchCert, txPos))
         return false;
-    if (chainActive.Tip()->GetMedianTimePast() >= GetCertExpiration(txPos)) {
+    if (chainActive.Tip()->GetMedianTimePast() >= (int64_t)GetCertExpiration(txPos)) {
 		txPos.SetNull();
         return false;
     }
@@ -150,7 +150,7 @@ bool GetFirstCert(const vector<unsigned char> &vchCert,
 	CCert& txPos) {
 	if (!pcertdb || !pcertdb->ReadFirstCert(vchCert, txPos))
 		return false;
-	if (chainActive.Tip()->GetMedianTimePast() >= GetCertExpiration(txPos)) {
+	if (chainActive.Tip()->GetMedianTimePast() >= (int64_t)GetCertExpiration(txPos)) {
 		txPos.SetNull();
 		return false;
 	}

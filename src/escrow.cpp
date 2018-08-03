@@ -91,7 +91,6 @@ bool ValidateDepositFee(const float &fDepositPercentage, const CEscrow &escrow) 
 }
 // check that the minimum network fee is found
 bool ValidateNetworkFee(const CEscrow &escrow) {
-	CAmount nTotalWithoutFee = escrow.nAmountOrBidPerUnit*escrow.nQty;
 	return getFeePerByte(escrow.nPaymentOption)*400 <= escrow.nNetworkFee;
 }
 
@@ -103,13 +102,13 @@ uint64_t GetEscrowExpiration(const CEscrow& escrow) {
 		if (paliasdb->ReadAliasUnprunable(escrow.vchBuyerAlias, aliasBuyerPrunable) && !aliasBuyerPrunable.IsNull())
 			nTime = aliasBuyerPrunable.nExpireTime;
 		// buyer is expired try seller
-		if(nTime <= chainActive.Tip()->GetMedianTimePast())
+		if (nTime <= (uint64_t)chainActive.Tip()->GetMedianTimePast())
 		{
 			if (paliasdb->ReadAliasUnprunable(escrow.vchSellerAlias, aliasSellerPrunable) && !aliasSellerPrunable.IsNull())
 			{
 				nTime = aliasSellerPrunable.nExpireTime;
 				// seller is expired try the arbiter
-				if(nTime <= chainActive.Tip()->GetMedianTimePast())
+				if(nTime <= (int64_t)chainActive.Tip()->GetMedianTimePast())
 				{
 					if (paliasdb->ReadAliasUnprunable(escrow.vchArbiterAlias, aliasArbiterPrunable) && !aliasArbiterPrunable.IsNull())
 						nTime = aliasArbiterPrunable.nExpireTime;
@@ -236,7 +235,7 @@ bool CEscrowDB::CleanupDatabase(int &servicesCleaned)
         boost::this_thread::interruption_point();
         try {
 			if (pcursor->GetKey(key) && key.first == "escrowi") {
-  				if (!GetEscrow(key.second, txPos) || chainActive.Tip()->GetMedianTimePast() >= GetEscrowExpiration(txPos))
+  				if (!GetEscrow(key.second, txPos) || chainActive.Tip()->GetMedianTimePast() >= (int64_t)GetEscrowExpiration(txPos))
 				{
 					servicesCleaned++;
 					EraseEscrow(key.second, true);
@@ -255,7 +254,7 @@ bool GetEscrow(const vector<unsigned char> &vchEscrow,
 
 	if (!pescrowdb || !pescrowdb->ReadEscrow(vchEscrow, txPos))
 		return false;
-   if (chainActive.Tip()->GetMedianTimePast() >= GetEscrowExpiration(txPos)) {
+   if (chainActive.Tip()->GetMedianTimePast() >= (int64_t)GetEscrowExpiration(txPos)) {
 		txPos.SetNull();
         return false;
     }
