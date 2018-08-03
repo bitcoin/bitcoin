@@ -18,6 +18,8 @@ BEGIN_FOLD () {
 END_FOLD () {
   RET=$?
   echo "travis_fold:end:${CURRENT_FOLD_NAME}"
-  return $RET
+  if [ $RET != 0 ]; then
+    echo "${CURRENT_FOLD_NAME} failed with status code ${RET}"
+  fi
 }
 
