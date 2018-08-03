@@ -29,13 +29,13 @@ env:
     - WINEDEBUG=fixme-all
     - DOCKER_PACKAGES="build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git ca-certificates ccache"
 before_install:
-  - source .travis/before_install.sh
+  - source .travis/test_03_before_install.sh
 install:
-  - source .travis/install.sh
+  - source .travis/test_04_install.sh
 before_script:
-  - source .travis/before_script.sh
+  - source .travis/test_05_before_script.sh
 script:
-  - source .travis/script.sh
+  - source .travis/test_06_script.sh
 after_script:
   - echo $TRAVIS_COMMIT_RANGE
   - echo $TRAVIS_COMMIT_LOG
@@ -53,7 +53,7 @@ jobs:
       before_script:
         - git fetch --unshallow
       script:
-        - source .travis/lint.sh
+        - source .travis/lint_06_script.sh
 # ARM
     - stage: test
       env: >-
