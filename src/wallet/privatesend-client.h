@@ -102,6 +102,8 @@ private:
     CMutableTransaction txMyCollateral; // client side collateral
     CPendingDsaRequest pendingDsaRequest;
 
+    CWallet* pmixingwallet;
+
     CKeyHolderStorage keyHolderStorage; // storage for keys used in PrepareDenominate
 
     /// Check for process
@@ -166,6 +168,8 @@ public:
         nCachedNumBlocks(std::numeric_limits<int>::max()),
         fCreateAutoBackups(true) { SetNull(); }
 
+    bool getWallet(const std::string walletIn);
+
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman);
 
     void ClearSkippedDenominations() { vecDenominationsSkipped.clear(); }
@@ -181,6 +185,9 @@ public:
     bool GetMixingMasternodeInfo(masternode_info_t& mnInfoRet);
     bool IsMixingMasternode(const CNode* pnode);
 
+    /// one-shot mixing attempt
+    bool DoOnceDenominating(std::string walletIn, CConnman* connman);
+
     /// Passively run mixing in the background according to the configuration in settings
     bool DoAutomaticDenominating(CConnman* connman);
 
@@ -190,9 +197,9 @@ public:
 
     void UpdatedBlockTip(const CBlockIndex *pindex);
 
-    void DoMaintenance(CConnman* connman);
+    void ClientTask (CConnman* connman);
 
-    void ScheduleMaintenance(CScheduler& scheduler, CConnman* connman);
+    void Controller(CScheduler& scheduler, CConnman* connman);
 };
 
 #endif

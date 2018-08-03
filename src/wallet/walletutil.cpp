@@ -27,10 +27,14 @@ fs::path GetWalletDir()
     return path;
 }
 
-CWallet *GetWalletForPSRequest()
+CWallet *GetWalletForPSRequest(std::string requestedWallet)
 {
-    // TODO: Some way to access secondary wallets
-    return vpwallets.empty() ? nullptr : vpwallets[0];
+    for (CWalletRef pwallet : ::vpwallets) {
+        if (pwallet->GetName() == requestedWallet) {
+            return pwallet;
+        }
+    }
+    return ::vpwallets.size() == 1 ? ::vpwallets[0] : nullptr;
 }
 
 CKeyHolder::CKeyHolder(CWallet* pwallet) :

@@ -270,10 +270,6 @@ void OptionsDialog::on_okButton_clicked()
     mapper->submit();
 #ifdef ENABLE_WALLET
     privateSendClient.nCachedNumBlocks = std::numeric_limits<int>::max();
-    if(model) {
-        CWalletRef pwalletMain = vpwallets[0];
-        pwalletMain->MarkDirty();
-    }
 #endif // ENABLE_WALLET
     accept();
     updateDefaultProxyNets();

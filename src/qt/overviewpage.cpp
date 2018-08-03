@@ -524,7 +524,8 @@ void OverviewPage::privateSendStatus()
 }
 
 void OverviewPage::privateSendAuto(){
-    privateSendClient.DoAutomaticDenominating(g_connman.get());
+    const std::string name = walletModel->getWalletName().toStdString();
+    privateSendClient.DoOnceDenominating(name, g_connman.get());
 }
 
 void OverviewPage::privateSendReset(){
@@ -579,6 +580,16 @@ void OverviewPage::togglePrivateSend(){
 
     }
 
+    if (!privateSendClient.fEnablePrivateSend) {
+        const std::string name = walletModel->getWalletName().toUtf8().toStdString();
+        if (!privateSendClient.getWallet(name)) {
+            QMessageBox::warning(this, tr("PrivateSend"),
+                tr("Failed to assign wallet."),
+                QMessageBox::Ok, QMessageBox::Ok);
+            LogPrint(BCLog::PRIVSEND, "OverviewPage::togglePrivateSend -- Failed to assign wallet\n");
+            return;
+        };
+    }
     privateSendClient.fEnablePrivateSend = !privateSendClient.fEnablePrivateSend;
     privateSendClient.nCachedNumBlocks = std::numeric_limits<int>::max();
 
