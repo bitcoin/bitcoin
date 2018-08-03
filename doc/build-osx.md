@@ -41,14 +41,14 @@ from the root of the repository.
 Build Bitcoin Core
 ------------------------
 
-1. Clone the bitcoin source code and cd into `bitcoin`
+1. Clone the Bitcoin Core source code and cd into `bitcoin`
 
         git clone https://github.com/bitcoin/bitcoin
         cd bitcoin
 
-2.  Build bitcoin-core:
+2.  Build Bitcoin Core:
 
-    Configure and build the headless bitcoin binaries as well as the GUI (if Qt is found).
+    Configure and build the headless Bitcoin Core binaries as well as the GUI (if Qt is found).
 
     You can disable the GUI build by passing `--without-gui` to configure.
 
@@ -69,7 +69,7 @@ Running
 
 Bitcoin Core is now available at `./src/bitcoind`
 
-Before running, it's recommended you create an RPC configuration file.
+Before running, it's recommended that you create an RPC configuration file.
 
     echo -e "rpcuser=bitcoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf"
 
@@ -91,6 +91,6 @@ Other commands:
 Notes
 -----
 
-* Tested on OS X 10.8 Mountain Lion through macOS 10.13 High Sierra on 64-bit Intel processors only.
+* Tested on OS X 10.10 Yosemite through macOS 10.13 High Sierra on 64-bit Intel processors only.
 
 * Building with downloaded Qt binaries is not officially supported. See the notes in [#7714](https://github.com/bitcoin/bitcoin/issues/7714)

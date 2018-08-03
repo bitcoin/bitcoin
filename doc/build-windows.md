@@ -10,7 +10,7 @@ and is the platform used to build the Bitcoin Core Windows release binaries.
 * On Windows using [Windows
 Subsystem for Linux (WSL)](https://msdn.microsoft.com/commandline/wsl/about) and the Mingw-w64 cross compiler tool chain.
 
-Other options which may work but which have not been extensively tested are (please contribute instructions):
+Other options which may work, but which have not been extensively tested are (please contribute instructions):
 
 * On Windows using a POSIX compatibility layer application such as [cygwin](http://www.cygwin.com/) or [msys2](http://www.msys2.org/).
 * On Windows using a native compiler tool chain such as [Visual Studio](https://www.visualstudio.com).
@@ -46,7 +46,7 @@ To install WSL on Windows 10 with Fall Creators Update installed (version >= 162
 
 After the bash shell is active, you can follow the instructions below, starting
 with the "Cross-compilation" section. Compiling the 64-bit version is
-recommended but it is possible to compile the 32-bit version.
+recommended, but it is possible to compile the 32-bit version.
 
 Cross-compilation for Ubuntu and Windows Subsystem for Linux
 ------------------------------------------------------------
@@ -77,7 +77,7 @@ Ubuntu Bionic 18.04 <sup>[1](#footnote1)</sup>:
 
     sudo update-alternatives --config x86_64-w64-mingw32-g++ # Set the default mingw32 g++ compiler option to posix.
 
-Once the tool chain is installed the build steps are common:
+Once the toolchain is installed the build steps are common:
 
 Note that for WSL the Bitcoin Core source path MUST be somewhere in the default mount file system, for
 example /usr/src/bitcoin, AND not under /mnt/d/. If this is not the case the dependency autoconf scripts will fail.
@@ -146,5 +146,5 @@ Footnotes
 compiler options to allow a choice between either posix or win32 threads. The default option is win32 threads which is the more
 efficient since it will result in binary code that links directly with the Windows kernel32.lib. Unfortunately, the headers
 required to support win32 threads conflict with some of the classes in the C++11 standard library in particular std::mutex.
-It's not possible to build the bitcoin code using the win32 version of the Mingw-w64 cross compilers (at least not without
-modifying headers in the bitcoin source code).
+It's not possible to build the Bitcoin Core code using the win32 version of the Mingw-w64 cross compilers (at least not without
+modifying headers in the Bitcoin Core source code).

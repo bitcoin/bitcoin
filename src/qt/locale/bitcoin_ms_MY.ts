@@ -30,6 +30,11 @@
         <translation>Padam alamat semasa yang dipilih dari senaraiyang dipilih dari senarai</translation>
     </message>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>Masukkan alamat atau label untuk carian
+</translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>
 Alihkan fail data ke dalam tab semasa</translation>
@@ -131,6 +136,11 @@ Alihkan fail data ke dalam tab semasa</translation>
     <message>
         <source>Repeat new passphrase</source>
         <translation>Ulangi frasa laluan baru</translation>
+    </message>
+    <message>
+        <source>Show password</source>
+        <translation>Tunjukkan kata laluan
+</translation>
     </message>
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
@@ -319,6 +329,15 @@ Alihkan fail data ke dalam tab semasa</translation>
         <translation>Buka &amp;URI...</translation>
     </message>
     <message>
+        <source>Wallet:</source>
+        <translation>dompet</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>dompet lalai
+</translation>
+    </message>
+    <message>
         <source>Click to disable network activity.</source>
         <translation>Tekan untuk lumpuhkan rangkaian</translation>
     </message>
@@ -410,6 +429,21 @@ Alihkan fail data ke dalam tab semasa</translation>
         <source>&amp;Help</source>
         <translation>tolong</translation>
     </message>
+    <message>
+        <source>Tabs toolbar</source>
+        <translation>Bar alat tab
+</translation>
+    </message>
+    <message>
+        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
+        <translation>Request payments (generates QR codes and bitcoin: URIs)
+</translation>
+    </message>
+    <message>
+        <source>Show the list of used sending addresses and labels</source>
+        <translation>Tunjukkan senarai alamat dan label yang digunakan
+</translation>
+    </message>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -471,6 +505,11 @@ Alihkan fail data ke dalam tab semasa</translation>
     </context>
 <context>
     <name>RPCConsole</name>
+    <message>
+        <source>default wallet</source>
+        <translation>dompet lalai
+</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
@@ -488,6 +527,10 @@ Alihkan fail data ke dalam tab semasa</translation>
     <message>
         <source>Label</source>
         <translation>Label</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>dompet</translation>
     </message>
     </context>
 <context>

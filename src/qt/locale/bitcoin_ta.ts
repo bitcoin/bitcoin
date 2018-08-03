@@ -580,6 +580,10 @@
         <source>Address</source>
         <translation>முகவரி</translation>
     </message>
+    <message>
+        <source>Wallet</source>
+        <translation>பணப்பை</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
@@ -712,20 +716,12 @@
         <translation>Bitcoin மையம்</translation>
     </message>
     <message>
-        <source>(default: %u)</source>
-        <translation>(default: %u)</translation>
-    </message>
-    <message>
         <source>Information</source>
         <translation>தகவல்</translation>
     </message>
     <message>
         <source>Warning</source>
         <translation>எச்சரிக்கை</translation>
-    </message>
-    <message>
-        <source>(default: %s)</source>
-        <translation>(default: %s)</translation>
     </message>
     <message>
         <source>Error</source>

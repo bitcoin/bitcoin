@@ -53,7 +53,7 @@ struct CoinEntry {
 
 }
 
-CCoinsViewDB::CCoinsViewDB(size_t nCacheSize, bool fMemory, bool fWipe) : db(GetDataDir() / "chainstate", nCacheSize, fMemory, fWipe, true) 
+CCoinsViewDB::CCoinsViewDB(size_t nCacheSize, bool fMemory, bool fWipe) : db(GetDataDir() / "chainstate", nCacheSize, fMemory, fWipe, true)
 {
 }
 
@@ -160,9 +160,8 @@ bool CBlockTreeDB::WriteReindexing(bool fReindexing) {
         return Erase(DB_REINDEX_FLAG);
 }
 
-bool CBlockTreeDB::ReadReindexing(bool &fReindexing) {
+void CBlockTreeDB::ReadReindexing(bool &fReindexing) {
     fReindexing = Exists(DB_REINDEX_FLAG);
-    return true;
 }
 
 bool CBlockTreeDB::ReadLastBlockFile(int &nFile) {

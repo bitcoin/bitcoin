@@ -30,6 +30,10 @@
         <translation>Ištrinti pasirinktą adresą iš sąrašo</translation>
     </message>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>Įveskite adresą ar žymę į paiešką</translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Eksportuoti informaciją iš dabartinės lentelės į failą</translation>
     </message>
@@ -40,6 +44,10 @@
     <message>
         <source>&amp;Delete</source>
         <translation>&amp;Trinti</translation>
+    </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation>Pasirinkite adresą, kuriam siūsite monetas</translation>
     </message>
     </context>
 <context>
@@ -367,15 +375,7 @@
         <source>Command-line options</source>
         <translation>Komandinės eilutės parametrai</translation>
     </message>
-    <message>
-        <source>Usage:</source>
-        <translation>Naudojimas:</translation>
-    </message>
-    <message>
-        <source>command-line options</source>
-        <translation>komandinės eilutės parametrai</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>Intro</name>
     <message>
@@ -746,6 +746,10 @@
         <source>Address</source>
         <translation>Adresas</translation>
     </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Piniginė</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
@@ -811,6 +815,10 @@
     <message>
         <source>S&amp;end</source>
         <translation>&amp;Siųsti</translation>
+    </message>
+    <message>
+        <source>Transaction fee</source>
+        <translation>Sandorio mokestis</translation>
     </message>
     </context>
 <context>
@@ -950,26 +958,6 @@
 <context>
     <name>bitcoin-core</name>
     <message>
-        <source>Options:</source>
-        <translation>Parinktys:</translation>
-    </message>
-    <message>
-        <source>Specify data directory</source>
-        <translation>Nustatyti duomenų aplanką</translation>
-    </message>
-    <message>
-        <source>Specify your own public address</source>
-        <translation>Nurodykite savo nuosavą viešą adresą</translation>
-    </message>
-    <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>Priimti komandinę eilutę ir JSON-RPC komandas</translation>
-    </message>
-    <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>Dirbti fone kaip šešėlyje ir priimti komandas</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoin branduolys</translation>
     </message>
@@ -986,24 +974,8 @@
         <translation>Informacija</translation>
     </message>
     <message>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>Siųsti atsekimo/derinimo info į konsolę vietoj debug.log failo</translation>
-    </message>
-    <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>Vartotojo vardas JSON-RPC jungimuisi</translation>
-    </message>
-    <message>
         <source>Warning</source>
         <translation>Įspėjimas</translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>Slaptažodis JSON-RPC sujungimams</translation>
-    </message>
-    <message>
-        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>Leisti DNS paiešką sujungimui ir mazgo pridėjimui</translation>
     </message>
     <message>
         <source>Insufficient funds</source>

@@ -276,12 +276,12 @@ public:
     /**
      * Get the help string
      */
-    std::string GetHelpMessage();
+    std::string GetHelpMessage() const;
 
     /**
      * Check whether we know of this arg
      */
-    bool IsArgKnown(const std::string& key, std::string& error);
+    bool IsArgKnown(const std::string& key) const;
 };
 
 extern ArgsManager gArgs;
@@ -354,5 +354,19 @@ std::string CopyrightHolders(const std::string& strPrefix);
  * sched_setschedule().
  */
 int ScheduleBatchPriority(void);
+
+namespace util {
+
+//! Simplification of std insertion
+template <typename Tdst, typename Tsrc>
+inline void insert(Tdst& dst, const Tsrc& src) {
+    dst.insert(dst.begin(), src.begin(), src.end());
+}
+template <typename TsetT, typename Tsrc>
+inline void insert(std::set<TsetT>& dst, const Tsrc& src) {
+    dst.insert(src.begin(), src.end());
+}
+
+} // namespace util
 
 #endif // BITCOIN_UTIL_H

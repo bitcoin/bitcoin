@@ -90,7 +90,7 @@ WalletTxStatus MakeWalletTxStatus(const CWalletTx& wtx)
     WalletTxStatus result;
     auto mi = ::mapBlockIndex.find(wtx.hashBlock);
     CBlockIndex* block = mi != ::mapBlockIndex.end() ? mi->second : nullptr;
-    result.block_height = (block ? block->nHeight : std::numeric_limits<int>::max()),
+    result.block_height = (block ? block->nHeight : std::numeric_limits<int>::max());
     result.blocks_to_maturity = wtx.GetBlocksToMaturity();
     result.depth_in_main_chain = wtx.GetDepthInMainChain();
     result.time_received = wtx.nTimeReceived;
@@ -426,6 +426,7 @@ public:
     }
     unsigned int getConfirmTarget() override { return m_wallet.m_confirm_target; }
     bool hdEnabled() override { return m_wallet.IsHDEnabled(); }
+    bool IsWalletFlagSet(uint64_t flag) override { return m_wallet.IsWalletFlagSet(flag); }
     OutputType getDefaultAddressType() override { return m_wallet.m_default_address_type; }
     OutputType getDefaultChangeType() override { return m_wallet.m_default_change_type; }
     std::unique_ptr<Handler> handleUnload(UnloadFn fn) override

@@ -30,6 +30,10 @@
         <translation>Izbriši trenutno označeni naslov  iz seznama</translation>
     </message>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>Iščite po naslovu ali oznaki</translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Izvozi podatke v trenutnem zavihku v datoteko</translation>
     </message>
@@ -62,8 +66,32 @@
         <translation>Imenik naslovov za prejemanje</translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>To so vaši Bitcoin naslovi za pošiljanje. Pred pošiljanjem vedno preverite količino in prejemnikov naslov.</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>To so vaši Bitcoin naslovi za prejemanje. Priporočeno je, da za vsako transakcijo uporabite nov naslov.</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Kopiraj naslov</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation>Kopiraj &amp;oznako</translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation>&amp;Uredi</translation>
+    </message>
+    <message>
         <source>Export Address List</source>
         <translation>Izvozi seznam naslovov</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Podatki ločenimi z vejico (*.csv)</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -104,12 +132,48 @@
         <translation>Ponovite novo geslo</translation>
     </message>
     <message>
+        <source>Show password</source>
+        <translation>Pokaži geslo</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Vnesite novo geslo za dostop do denarnice. Prosimo, da uporabite geslo sestavljeno iz &lt;b&gt;desetih ali več&lt;/b&gt; naključnih znakov ali &lt;b&gt;osmih ali večih&lt;/b&gt; besed.</translation>
+    </message>
+    <message>
+        <source>Encrypt wallet</source>
+        <translation>Šifriraj denarnico</translation>
+    </message>
+    <message>
+        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
+        <translation>To dejanje zahteva geslo za odklepanje vaše denarnice.</translation>
+    </message>
+    <message>
         <source>Unlock wallet</source>
         <translation>Odkleni denarnico</translation>
     </message>
     <message>
+        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
+        <translation>To dejanje zahteva geslo za dešifriranje vaše denarnice.</translation>
+    </message>
+    <message>
         <source>Decrypt wallet</source>
         <translation>Odšifriraj denarnico</translation>
+    </message>
+    <message>
+        <source>Change passphrase</source>
+        <translation>Spremeni geslo</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>Vnesite staro in novo geslo denarnice.</translation>
+    </message>
+    <message>
+        <source>Confirm wallet encryption</source>
+        <translation>Potrdi šifriranje denarnice</translation>
+    </message>
+    <message>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <translation>Opozorilo: V primeru izgube gesla šifrirane denarnice, boste &lt;b&gt;IZGUBILI VSE SVOJE BITCOINE&lt;/b&gt;!</translation>
     </message>
     </context>
 <context>
@@ -535,27 +599,7 @@
         <source>Command-line options</source>
         <translation>Možnosti ukazne vrstice</translation>
     </message>
-    <message>
-        <source>Usage:</source>
-        <translation>Uporaba:</translation>
-    </message>
-    <message>
-        <source>command-line options</source>
-        <translation>možnosti ukazne vrstice</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>UI možnosti:</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Nastavi jezik, na primer "sl_SI" (privzeto: sistemsko)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Začni minimizirano</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>Intro</name>
     <message>
@@ -1234,6 +1278,10 @@
         <source>Label</source>
         <translation>Oznaka</translation>
     </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Denarnica</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
@@ -1317,10 +1365,6 @@
         <translation>na KiB</translation>
     </message>
     <message>
-        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee, while "total at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>Če je nastavitev zneska provizije po meri enaka 1000 satoshijev, transakcija pa je velika samo 250 bajtov, je obračunani znesek provizije pri nastavitvi "za KiB" samo 250 satoshijev, medtem ko je pri nastavitvi "skupno vsaj" ta znesek 1000 satoshijev. Za transakcije, večje od 1 KiB, se končni znesek pri obeh nastavitvah obračuna na KiB.</translation>
-    </message>
-    <message>
         <source>Hide</source>
         <translation>Skrij</translation>
     </message>
@@ -1375,6 +1419,10 @@
     <message>
         <source>S&amp;end</source>
         <translation>&amp;Pošlji</translation>
+    </message>
+    <message>
+        <source>Transaction fee</source>
+        <translation>Provizija transakcije</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -1595,6 +1643,10 @@
 <context>
     <name>TransactionView</name>
     <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Podatki ločenimi z vejico (*.csv)</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation>Oznaka</translation>
     </message>
@@ -1630,72 +1682,12 @@
 <context>
     <name>bitcoin-core</name>
     <message>
-        <source>Options:</source>
-        <translation>Možnosti:</translation>
-    </message>
-    <message>
-        <source>Specify data directory</source>
-        <translation>Izberite podatkovno mapo</translation>
-    </message>
-    <message>
-        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>Povežite se z vozliščem za pridobitev naslovov soležnikov in nato prekinite povezavo.</translation>
-    </message>
-    <message>
-        <source>Specify your own public address</source>
-        <translation>Določite vaš lasten javni naslov</translation>
-    </message>
-    <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>Sprejemaj ukaze iz ukazne vrstice in preko JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>Teci v ozadju in sprejemaj ukaze</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoin Core</translation>
     </message>
     <message>
-        <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation>Veži dani naslov in tam vedno poslušaj. Za naslove protokola IPv6 uporabite zapis [gostitelj]:vrata.</translation>
-    </message>
-    <message>
-        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation>Izvedi ukaz, ko bo transakcija denarnice se spremenila (V cmd je bil TxID zamenjan za %s)</translation>
-    </message>
-    <message>
-        <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
-        <translation>Nastavi število niti za preverjanje skript (%u do %d, 0 = samodejno, &lt;0 toliko procesorskih jeder naj ostane prostih, privzeto: %d)</translation>
-    </message>
-    <message>
-        <source>&lt;category&gt; can be:</source>
-        <translation>&lt;category&gt; je lahko:</translation>
-    </message>
-    <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>Sprejemaj zunanje povezave (privzeto: 1, razen če ste vklopili opciji -proxy ali -connect)</translation>
-    </message>
-    <message>
-        <source>Block creation options:</source>
-        <translation>Možnosti ustvarjanja blokov:</translation>
-    </message>
-    <message>
-        <source>Connection options:</source>
-        <translation>Izbire povezave:</translation>
-    </message>
-    <message>
         <source>Corrupted block database detected</source>
         <translation>Podatkovna baza blokov je okvarjena</translation>
-    </message>
-    <message>
-        <source>Debugging/Testing options:</source>
-        <translation>Možnosti razhroščevanja in testiranja:</translation>
-    </message>
-    <message>
-        <source>Do not load the wallet and disable wallet RPC calls</source>
-        <translation>Ne naloži denarnice in onemogoči s tem povezane klice RPC</translation>
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>
@@ -1738,10 +1730,6 @@
         <translation>Na voljo ni dovolj deskriptorjev datotek.</translation>
     </message>
     <message>
-        <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
-        <translation>Povezuj se samo z vozlišči na omrežju tipa &lt;net&gt; (IPv4, IPv6 ali onion)</translation>
-    </message>
-    <message>
         <source>Prune cannot be configured with a negative value.</source>
         <translation>Negativne vrednosti parametra funkcije obrezovanja niso sprejemljive.</translation>
     </message>
@@ -1750,64 +1738,12 @@
         <translation>Funkcija obrezovanja ni združljiva z opcijo -txindex.</translation>
     </message>
     <message>
-        <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
-        <translation>Nastavitev velikosti predpomnilnik podatkovne baze v MiB (%d do %d, privzeto: %d)</translation>
-    </message>
-    <message>
-        <source>Specify wallet file (within data directory)</source>
-        <translation>Ime datoteke z denarnico (znotraj podatkovne mape)</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: %u)</source>
-        <translation>Uporabi protokol UPnP za preslikavo vrat za poslušanje (privzeto: %u)</translation>
-    </message>
-    <message>
         <source>Verifying blocks...</source>
         <translation>Preverjam celovitost blokov ...</translation>
     </message>
     <message>
-        <source>Wallet options:</source>
-        <translation>Izbire denarnice:</translation>
-    </message>
-    <message>
-        <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
-        <translation>Iz navedenega vira dovoli povezave na JSON-RPC. Veljavne oblike vrednosti parametra &lt;ip&gt; so: edinstven naslov IP (npr.: 1.2.3.4), kombinacija omrežje/netmask (npr.: 1.2.3.4/255.255.255.0), ali pa kombinacija omrežje/CIDR (1.2.3.4/24). To opcijo lahko navedete večkrat.</translation>
-    </message>
-    <message>
-        <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
-        <translation>Veži dani naslov in sprejemaj povezave samo od navedenih soležnikov. Za naslove protokola IPv6 uporabite zapis [gostitelj]:vrata.</translation>
-    </message>
-    <message>
-        <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
-        <translation>Ustvarjaj nove datoteke s privzetimi sistemskimi dovoljenji, namesto z umask 077. (To pride v poštev samo, kadar imate izklopljeno funkcijo denarnice.)</translation>
-    </message>
-    <message>
-        <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
-        <translation>Odkrij svoj naslov IP (privzeto: 1, če poslušate in sta opciji -externalip in -proxy neaktivni)</translation>
-    </message>
-    <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Napaka: Ni mogoče sprejemati dohodnih povezav (vrnjena napaka: %s)</translation>
-    </message>
-    <message>
-        <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation>Ko bo prejeto ustrezno opozorilo, ali ko bo opažena zelo dolga razvejitev, izvedi navedeni ukazni niz. (Niz %s bo nadomeščen z vsebino sporočila.)</translation>
-    </message>
-    <message>
-        <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
-        <translation>Če opcija -paytxfee ni nastavljena, nastavi znesek provizije tako visoko, da bodo transakcije potrjene v povprečno n blokih. (privzeto: %u)</translation>
-    </message>
-    <message>
-        <source>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</source>
-        <translation>Na vsak posredniški strežnik se prijavi z drugimi naključnimi podatki. Tako je omogočena osamitev tokov v omrežju Tor (privzeto: %u)</translation>
-    </message>
-    <message>
-        <source>(default: %u)</source>
-        <translation>(privzeto: %u)</translation>
-    </message>
-    <message>
-        <source>Connect through SOCKS5 proxy</source>
-        <translation>Poveži se preko posredniškega strežnika SOCKS5</translation>
     </message>
     <message>
         <source>Information</source>
@@ -1816,14 +1752,6 @@
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation>Pri opciji -whitebind morate navesti vrata: %s</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>Pošilja sledilne/razhroščevalne informacije na konzolo namesto v datoteko debug.log</translation>
-    </message>
-    <message>
-        <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation>Ob zagonu skrajšaj datoteko debug.log (privzeto: 1, če ni vklopljena opcija -debug)</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
@@ -1846,60 +1774,12 @@
         <translation>Na tem računalniku ni bilo mogoče vezati naslova %s (vrnjena napaka: %s)</translation>
     </message>
     <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>Uporabniško ime za povezave na JSON-RPC</translation>
-    </message>
-    <message>
         <source>Warning</source>
         <translation>Opozorilo</translation>
     </message>
     <message>
         <source>Zapping all transactions from wallet...</source>
         <translation>Brišem vse transakcije iz denarnice ...</translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>Geslo za povezave na JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>Izvedi ukaz, ko je najden najboljši blok (niz %s v ukazu bo zamenjan s hash vrednostjo bloka)</translation>
-    </message>
-    <message>
-        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>Omogoči poizvedbe DNS za opcije -addnode, -seednode in -connect.</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
-        <translation>Za dostop do soležnikov preko skritih storitev Tor uporabi drug posredniški strežnik SOCKS5 (privzeto: %s)</translation>
-    </message>
-    <message>
-        <source>(default: %s)</source>
-        <translation>(privzeto: %s)</translation>
-    </message>
-    <message>
-        <source>Relay non-P2SH multisig (default: %u)</source>
-        <translation>Posreduj transakcije tipa multisig, ki niso hkrati tipa P2SH. (privzeto: %u)</translation>
-    </message>
-    <message>
-        <source>Specify configuration file (default: %s)</source>
-        <translation>Za shranjevanje konfiguracije uporabi navedeno datoteko. (privzeto: %s)</translation>
-    </message>
-    <message>
-        <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
-        <translation>Vzpostavljanje nove povezave poteče po navedenem št. pretečenih milisekund. (najmanj: 1, privzeto: %d)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: %s)</source>
-        <translation>Za shranjevanje PID uporabi navedeno datoteko. (privzeto: %s)</translation>
-    </message>
-    <message>
-        <source>Spend unconfirmed change when sending transactions (default: %u)</source>
-        <translation>Pri odlivnih transakcijah omogoči trošenje drobiža iz še nepotrjenih plačil (privzeto: %u)</translation>
-    </message>
-    <message>
-        <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
-        <translation>Prekini povezavo s soležnikom, ko št. njegovih kazenskih točk preseže navedeni prag. (privzeto: %u)</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>

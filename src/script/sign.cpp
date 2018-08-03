@@ -11,7 +11,6 @@
 #include <script/standard.h>
 #include <uint256.h>
 
-
 typedef std::vector<unsigned char> valtype;
 
 MutableTransactionSignatureCreator::MutableTransactionSignatureCreator(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int nHashTypeIn) : txTo(txToIn), nIn(nInIn), nHashType(nHashTypeIn), amount(amountIn), checker(txTo, nIn, amountIn) {}
@@ -288,17 +287,10 @@ struct Stacks
     std::vector<valtype> script;
     std::vector<valtype> witness;
 
-    Stacks() {}
-    explicit Stacks(const std::vector<valtype>& scriptSigStack_) : script(scriptSigStack_), witness() {}
+    Stacks() = delete;
+    Stacks(const Stacks&) = delete;
     explicit Stacks(const SignatureData& data) : witness(data.scriptWitness.stack) {
         EvalScript(script, data.scriptSig, SCRIPT_VERIFY_STRICTENC, BaseSignatureChecker(), SigVersion::BASE);
-    }
-
-    SignatureData Output() const {
-        SignatureData result;
-        result.scriptSig = PushAll(script);
-        result.scriptWitness.stack = witness;
-        return result;
     }
 };
 }
@@ -444,6 +436,18 @@ public:
         return true;
     }
 };
+
+template<typename M, typename K, typename V>
+bool LookupHelper(const M& map, const K& key, V& value)
+{
+    auto it = map.find(key);
+    if (it != map.end()) {
+        value = it->second;
+        return true;
+    }
+    return false;
+}
+
 }
 
 const BaseSignatureCreator& DUMMY_SIGNATURE_CREATOR = DummySignatureCreator();
@@ -467,7 +471,6 @@ bool IsSolvable(const SigningProvider& provider, const CScript& script)
     return false;
 }
 
-
 bool PartiallySignedTransaction::IsNull() const
 {
     return !tx && inputs.empty() && outputs.empty() && unknown.empty();
@@ -481,6 +484,7 @@ void PartiallySignedTransaction::Merge(const PartiallySignedTransaction& psbt)
     for (unsigned int i = 0; i < outputs.size(); ++i) {
         outputs[i].Merge(psbt.outputs[i]);
     }
+    unknown.insert(psbt.unknown.begin(), psbt.unknown.end());
 }
 
 bool PartiallySignedTransaction::IsSane() const
@@ -623,4 +627,20 @@ bool PublicOnlySigningProvider::GetCScript(const CScriptID &scriptid, CScript& s
 bool PublicOnlySigningProvider::GetPubKey(const CKeyID &address, CPubKey& pubkey) const
 {
     return m_provider->GetPubKey(address, pubkey);
+}
+
+bool FlatSigningProvider::GetCScript(const CScriptID& scriptid, CScript& script) const { return LookupHelper(scripts, scriptid, script); }
+bool FlatSigningProvider::GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const { return LookupHelper(pubkeys, keyid, pubkey); }
+bool FlatSigningProvider::GetKey(const CKeyID& keyid, CKey& key) const { return LookupHelper(keys, keyid, key); }
+
+FlatSigningProvider Merge(const FlatSigningProvider& a, const FlatSigningProvider& b)
+{
+    FlatSigningProvider ret;
+    ret.scripts = a.scripts;
+    ret.scripts.insert(b.scripts.begin(), b.scripts.end());
+    ret.pubkeys = a.pubkeys;
+    ret.pubkeys.insert(b.pubkeys.begin(), b.pubkeys.end());
+    ret.keys = a.keys;
+    ret.keys.insert(b.keys.begin(), b.keys.end());
+    return ret;
 }

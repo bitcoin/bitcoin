@@ -15,6 +15,9 @@ class TestBitcoinCli(BitcoinTestFramework):
     def run_test(self):
         """Main test logic"""
 
+        cli_response = self.nodes[0].cli("-version").send_cli()
+        assert("Bitcoin Core RPC client version" in cli_response)
+
         self.log.info("Compare responses from gewalletinfo RPC and `bitcoin-cli getwalletinfo`")
         cli_response = self.nodes[0].cli.getwalletinfo()
         rpc_response = self.nodes[0].getwalletinfo()
