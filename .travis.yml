@@ -5,9 +5,9 @@ language: minimal
 cache:
   ccache: true
   directories:
-  - depends/built
-  - depends/sdk-sources
-  - $HOME/.ccache
+    - depends/built
+    - depends/sdk-sources
+    - $HOME/.ccache
 stages:
   - lint
   - test
@@ -37,10 +37,23 @@ before_script:
 script:
   - source .travis/script.sh
 after_script:
-    - echo $TRAVIS_COMMIT_RANGE
-    - echo $TRAVIS_COMMIT_LOG
+  - echo $TRAVIS_COMMIT_RANGE
+  - echo $TRAVIS_COMMIT_LOG
 jobs:
   include:
+# lint stage
+    - stage: lint
+      env:
+      sudo: false
+      cache: false
+      language: python
+      python: '3.6'
+      install:
+        - travis_retry pip install flake8
+      before_script:
+        - git fetch --unshallow
+      script:
+        - source .travis/lint.sh
 # ARM
     - stage: test
       env: >-
@@ -121,15 +134,3 @@ jobs:
         RUN_FUNCTIONAL_TESTS=false
         GOAL="all deploy"
         BITCOIN_CONFIG="--enable-gui --enable-reduce-exports --enable-werror"
-    - stage: lint
-      env:
-      sudo: false
-      cache: false
-      language: python
-      python: '3.6'
-      install:
-        - travis_retry pip install flake8
-      before_script:
-        - git fetch --unshallow
-      script:
-        - source .travis/lint.sh
