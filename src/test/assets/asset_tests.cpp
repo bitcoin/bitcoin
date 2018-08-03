@@ -169,4 +169,15 @@ BOOST_FIXTURE_TEST_SUITE(asset_tests, BasicTestingSetup)
         BOOST_CHECK_MESSAGE(coin.IsAsset(), "New Asset Coin isn't as asset");
     }
 
+    BOOST_AUTO_TEST_CASE(dwg_version_check) {
+
+
+        int32_t version = 0x30000000;
+        int32_t mask = 0xF0000000;
+        int32_t new_version = version & mask;
+        int32_t shifted = new_version >> 28;
+
+        BOOST_CHECK_MESSAGE(shifted == 3, "New version didn't equal 3");
+    }
+
 BOOST_AUTO_TEST_SUITE_END()

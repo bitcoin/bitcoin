@@ -389,13 +389,6 @@ bool Consensus::CheckTxAssets(const CTransaction& tx, CValidationState& state, c
 
     // Check the input values and the output values
     if (totalOutputs.size() != totalInputs.size()) {
-        for (auto out : totalOutputs) {
-            std::cout << out.first << " : " << out.second << std::endl;
-        }
-        std::cout << std::endl;
-        for (auto in : totalInputs) {
-            std::cout << in.first << " : " << in.second << std::endl;
-        }
         return state.DoS(100, false, REJECT_INVALID, "bad-tx-asset-inputs-size-does-not-match-outputs-size");
     }
 

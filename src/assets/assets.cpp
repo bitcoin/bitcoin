@@ -475,7 +475,7 @@ bool ReissueAssetFromScript(const CScript& scriptPubKey, CReissueAsset& reissue,
 
 bool CTransaction::IsNewAsset() const
 {
-    // Reissuing an Asset must contain at least 3 CTxOut( Raven Burn Tx, Any Number of other Outputs ..., Owner Asset Change Tx, Reissue Tx)
+    // Issuing an Asset must contain at least 3 CTxOut( Raven Burn Tx, Any Number of other Outputs ..., Owner Asset Change Tx, Reissue Tx)
     if (vout.size() < 3)
         return false;
 
@@ -667,7 +667,10 @@ void CAssetsCache::AddToAssetBalance(const std::string& strName, const std::stri
         mapAssetsAddressAmount.insert(make_pair(pair, 0));
 
     // Add the new amount to the balance
-    mapAssetsAddressAmount.at(pair) += nAmount;
+    if (IsAssetNameAnOwner(strName))
+        mapAssetsAddressAmount.at(pair) = OWNER_ASSET_AMOUNT;
+    else
+        mapAssetsAddressAmount.at(pair) += nAmount;
 
     // Add to map of addresses
     if (!mapAssetsAddresses.count(strName)) {
@@ -1243,15 +1246,18 @@ bool CAssetsCache::Flush(bool fSoftCopy, bool fFlushDB)
             // Add the new owners to database
             for (auto ownerAsset : setNewOwnerAssetsToAdd) {
 
-                if (!passetsdb->WriteAssetAddressQuantity(ownerAsset.assetName, ownerAsset.address,
-                                                          OWNER_ASSET_AMOUNT)) {
-                    dirty = true;
-                    message = "_Failed Writing Owner Address Balance to database";
-                }
+                auto pair = std::make_pair(ownerAsset.assetName, ownerAsset.address);
+                if (mapAssetsAddressAmount.count(pair)) {
+                        if (!passetsdb->WriteAssetAddressQuantity(ownerAsset.assetName, ownerAsset.address,
+                                                                  mapAssetsAddressAmount.at(pair))) {
+                            dirty = true;
+                            message = "_Failed Writing Owner Address Balance to database";
+                        }
 
-                if (dirty) {
-                    return error("%s : %s", __func__, message);
-                }
+                        if (dirty) {
+                            return error("%s : %s", __func__, message);
+                        }
+                    }
             }
 
             // Undo the transfering by updating the balances in the database
@@ -1437,7 +1443,7 @@ bool IsAssetUnitsValid(const CAmount& units)
 bool CheckIssueBurnTx(const CTxOut& txOut)
 {
     // Check the first transaction is the 500 Burn amount to the burn address
-    if (txOut.nValue != GetIssueAssetBurnAmount())
+    if (!(txOut.nValue == GetIssueAssetBurnAmount() || txOut.nValue == GetIssueSubAssetBurnAmount()))
         return false;
 
     // Extract the destination
@@ -1450,7 +1456,8 @@ bool CheckIssueBurnTx(const CTxOut& txOut)
         return false;
 
     // Check destination address is the burn address
-    if (EncodeDestination(destination) != Params().IssueAssetBurnAddress())
+    auto strDestination = EncodeDestination(destination);
+    if (!(strDestination == Params().IssueAssetBurnAddress() || strDestination == Params().IssueSubAssetBurnAddress()))
         return false;
 
     return true;
@@ -1988,9 +1995,7 @@ bool CreateAssetTransaction(CWallet* pwallet, const CNewAsset& asset, const std:
     }
 
 
-    AssetType assetType;/* = AssetType::ROOT;*/
-//    if (IsAssetNameASubasset(asset.strName))
-//        assetType = AssetType::SUB;
+    AssetType assetType;
     if (!IsAssetNameValid(asset.strName, assetType)) {
         error = std::make_pair(RPC_INVALID_PARAMETER, "Asset name not valid");
         return false;
