@@ -11,10 +11,10 @@
 #include <clientversion.h>
 #include <streams.h>
 
-RecentRequestsTableModel::RecentRequestsTableModel(CWallet *wallet, WalletModel *parent) :
+
+RecentRequestsTableModel::RecentRequestsTableModel(WalletModel *parent) :
     QAbstractTableModel(parent), walletModel(parent)
 {
-    Q_UNUSED(wallet);
     nReceiveRequestsMaxId = 0;
 
     // Load entries from wallet

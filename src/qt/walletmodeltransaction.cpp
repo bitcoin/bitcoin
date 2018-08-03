@@ -4,12 +4,11 @@
 
 #include <qt/walletmodeltransaction.h>
 
+#include <interface/node.h>
 #include <policy/policy.h>
-#include <wallet/wallet.h>
 
 WalletModelTransaction::WalletModelTransaction(const QList<SendCoinsRecipient> &_recipients) :
     recipients(_recipients),
-    walletTransaction(0),
     fee(0)
 {
 }
@@ -19,14 +18,14 @@ QList<SendCoinsRecipient> WalletModelTransaction::getRecipients() const
     return recipients;
 }
 
-CTransactionRef& WalletModelTransaction::getTransaction()
+std::unique_ptr<interface::PendingWalletTx>& WalletModelTransaction::getWtx()
 {
-    return walletTransaction;
+    return wtx;
 }
 
 unsigned int WalletModelTransaction::getTransactionSize()
 {
-    return (!walletTransaction ? 0 : ::GetVirtualTransactionSize(*walletTransaction));
+    return wtx ? wtx->getVirtualSize() : 0;
 }
 
 CAmount WalletModelTransaction::getTransactionFee() const
@@ -41,6 +40,7 @@ void WalletModelTransaction::setTransactionFee(const CAmount& newFee)
 
 void WalletModelTransaction::reassignAmounts(int nChangePosRet)
 {
+    const CTransaction* walletTransaction = &wtx->get();
     int i = 0;
     for (QList<SendCoinsRecipient>::iterator it = recipients.begin(); it != recipients.end(); ++it)
     {
@@ -79,14 +79,4 @@ CAmount WalletModelTransaction::getTotalTransactionAmount() const
         totalTransactionAmount += rcp.amount;
     }
     return totalTransactionAmount;
-}
-
-void WalletModelTransaction::newPossibleKeyChange(CWallet *wallet)
-{
-    keyChange.reset(new CReserveKey(wallet));
-}
-
-CReserveKey *WalletModelTransaction::getPossibleKeyChange()
-{
-    return keyChange.get();
 }

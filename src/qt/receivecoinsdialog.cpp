@@ -95,13 +95,13 @@ void ReceiveCoinsDialog::setModel(WalletModel *_model)
         columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(tableView, AMOUNT_MINIMUM_COLUMN_WIDTH, DATE_COLUMN_WIDTH, this);
 
         // configure bech32 checkbox, disable if launched with legacy as default:
-        if (model->getDefaultAddressType() == OutputType::BECH32) {
+        if (model->wallet().getDefaultAddressType() == OutputType::BECH32) {
             ui->useBech32->setCheckState(Qt::Checked);
         } else {
             ui->useBech32->setCheckState(Qt::Unchecked);
         }
 
-        ui->useBech32->setVisible(model->getDefaultAddressType() != OutputType::LEGACY);
+        ui->useBech32->setVisible(model->wallet().getDefaultAddressType() != OutputType::LEGACY);
     }
 }
 
@@ -144,7 +144,7 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
     QString address;
     QString label = ui->reqLabel->text();
     /* Generate new receiving address */
-    OutputType address_type = model->getDefaultAddressType();
+    OutputType address_type = model->wallet().getDefaultAddressType();
     if (address_type != OutputType::LEGACY) {
         address_type = ui->useBech32->isChecked() ? OutputType::BECH32 : OutputType::P2SH_SEGWIT;
     }

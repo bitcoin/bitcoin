@@ -5,7 +5,7 @@
 #ifndef BITCOIN_QT_OVERVIEWPAGE_H
 #define BITCOIN_QT_OVERVIEWPAGE_H
 
-#include <amount.h>
+#include <interface/wallet.h>
 
 #include <QWidget>
 #include <memory>
@@ -39,8 +39,7 @@ public:
 
 public Q_SLOTS:
     void privateSendStatus();
-    void setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& anonymizedBalance,
-                    const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
+    void setBalance(const interface::WalletBalances& balances);
 
 Q_SIGNALS:
     void transactionClicked(const QModelIndex &index);
@@ -51,13 +50,7 @@ private:
     Ui::OverviewPage *ui;
     ClientModel *clientModel;
     WalletModel *walletModel;
-    CAmount currentBalance;
-    CAmount currentUnconfirmedBalance;
-    CAmount currentImmatureBalance;
-    CAmount currentAnonymizedBalance;
-    CAmount currentWatchOnlyBalance;
-    CAmount currentWatchUnconfBalance;
-    CAmount currentWatchImmatureBalance;
+    interface::WalletBalances m_balances;
     int nDisplayUnit;
     bool fShowAdvancedPSUI;
 

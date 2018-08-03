@@ -2537,6 +2537,46 @@ CAmount CWallet::GetDenominatedBalance(bool unconfirmed) const
     return nTotal;
 }
 
+float CWallet::UpdateProgress() const
+{
+    CAmount nMaxToAnonymize = GetAnonymizableBalance(false, false) + GetAnonymizedBalance();
+
+    // calculate parts of the progress, each of them shouldn't be higher than 1
+    // progress of denominating
+    float denomPart = 0;
+    // mixing progress of denominated balance
+    float anonNormPart = 0;
+    // completeness of full amount anonymization
+    float anonFullPart = 0;
+
+    CAmount denominatedBalance = GetDenominatedBalance() + GetDenominatedBalance(true);
+    denomPart = (float)denominatedBalance / nMaxToAnonymize;
+    denomPart = denomPart > 1 ? 1 : denomPart;
+    denomPart *= 100;
+
+    anonNormPart = (float)GetNormalizedAnonymizedBalance() / nMaxToAnonymize;
+    anonNormPart = anonNormPart > 1 ? 1 : anonNormPart;
+    anonNormPart *= 100;
+
+    anonFullPart = (float)GetAnonymizedBalance() / nMaxToAnonymize;
+    anonFullPart = anonFullPart > 1 ? 1 : anonFullPart;
+    anonFullPart *= 100;
+
+    // apply some weights to them ...
+    float denomWeight = 1;
+    float anonNormWeight = privateSendClient.nPrivateSendRounds;
+    float anonFullWeight = 2;
+    float fullWeight = denomWeight + anonNormWeight + anonFullWeight;
+    // ... and calculate the whole progress
+    float denomPartCalc = ceilf((denomPart * denomWeight / fullWeight) * 100) / 100;
+    float anonNormPartCalc = ceilf((anonNormPart * anonNormWeight / fullWeight) * 100) / 100;
+    float anonFullPartCalc = ceilf((anonFullPart * anonFullWeight / fullWeight) * 100) / 100;
+    float progress = denomPartCalc + anonNormPartCalc + anonFullPartCalc;
+    if(progress >= 100) progress = 100;
+
+    return progress;
+}
+
 CAmount CWallet::GetUnconfirmedBalance() const
 {
     CAmount nTotal = 0;
@@ -3564,8 +3604,9 @@ OutputType CWallet::TransactionChangeType(OutputType change_type, const std::vec
 }
 
 bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CReserveKey& reservekey, CAmount& nFeeRet,
-                                int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign, AvailableCoinsType nCoinType)
+                                int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign, AvailableCoinsType _nCoinType, bool fPrivateSend)
 {
+    AvailableCoinsType nCoinType = fPrivateSend ? ONLY_DENOMINATED : _nCoinType;
     CAmount nValue = 0;
     int nChangePosRequest = nChangePosInOut;
     unsigned int nSubtractFeeFromAmount = 0;

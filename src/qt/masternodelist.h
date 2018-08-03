@@ -3,6 +3,7 @@
 
 #include <primitives/transaction.h>
 #include <qt/platformstyle.h>
+#include <masternodeconfig.h>
 #include <sync.h>
 #include <util.h>
 
@@ -34,6 +35,7 @@ public:
     explicit MasternodeList(const PlatformStyle *platformStyle, QWidget *parent = 0);
     ~MasternodeList();
 
+    static int getCount() {return masternodeConfig.getCount();}
     void setClientModel(ClientModel *clientModel);
     void setWalletModel(WalletModel *walletModel);
     void ShowQRCode(std::string strAlias);
