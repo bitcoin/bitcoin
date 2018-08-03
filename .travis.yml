@@ -5,9 +5,9 @@ language: minimal
 cache:
   ccache: true
   directories:
-  - depends/built
-  - depends/sdk-sources
-  - $HOME/.ccache
+    - depends/built
+    - depends/sdk-sources
+    - $HOME/.ccache
 stages:
   - lint
   - test
@@ -37,10 +37,23 @@ before_script:
 script:
   - source .travis/script.sh
 after_script:
-    - echo $TRAVIS_COMMIT_RANGE
-    - echo $TRAVIS_COMMIT_LOG
+  - echo $TRAVIS_COMMIT_RANGE
+  - echo $TRAVIS_COMMIT_LOG
 jobs:
   include:
+# lint stage
+    - stage: lint
+      env:
+      sudo: false
+      cache: false
+      language: python
+      python: '3.6'
+      install:
+        - travis_retry pip install flake8
+      before_script:
+        - git fetch --unshallow
+      script:
+        - source .travis/lint.sh
 # ARM
     - stage: test
       env: >-
@@ -121,30 +134,3 @@ jobs:
         RUN_FUNCTIONAL_TESTS=false
         GOAL="all deploy"
         BITCOIN_CONFIG="--enable-gui --enable-reduce-exports --enable-werror"
-    - stage: lint
-      env:
-      sudo: false
-      cache: false
-      language: python
-      python: '3.6'
-      install:
-        - travis_retry pip install flake8
-      before_script:
-        - git fetch --unshallow
-      script:
-<<<<<<< HEAD
-        - if [ "$TRAVIS_EVENT_TYPE" = "pull_request" ]; then test/lint/commit-script-check.sh $TRAVIS_COMMIT_RANGE; fi
-        - test/lint/git-subtree-check.sh src/crypto/ctaes
-        - test/lint/git-subtree-check.sh src/secp256k1
-        - test/lint/git-subtree-check.sh src/univalue
-        - test/lint/git-subtree-check.sh src/leveldb
-        - test/lint/check-doc.py
-        - test/lint/check-rpc-mappings.py .
-        - test/lint/lint-all.sh
-        - if [ "$TRAVIS_REPO_SLUG" = "chaincoin/chaincoin" -a "$TRAVIS_EVENT_TYPE" = "cron" ]; then
-              while read LINE; do travis_retry gpg --keyserver hkp://subset.pool.sks-keyservers.net --recv-keys $LINE; done < contrib/verify-commits/trusted-keys &&
-              travis_wait 50 contrib/verify-commits/verify-commits.py;
-          fi
-=======
-        - source .travis/lint.sh
->>>>>>> 4f2f88c7b... move script sections info individual files and comply with shellcheck
