@@ -672,7 +672,7 @@ bool CPrivateSendClient::CheckAutomaticBackup()
 //
 // Passively run mixing in the background to anonymize funds based on the given configuration.
 //
-bool CPrivateSendClient::DoAutomaticDenominating(CConnman* connman, bool fDryRun)
+bool CPrivateSendClient::DoAutomaticDenominating(CConnman* connman)
 {
     CWallet * const pwallet = GetWalletForPSRequest();
     if(!fEnablePrivateSend) return false;
@@ -698,7 +698,7 @@ bool CPrivateSendClient::DoAutomaticDenominating(CConnman* connman, bool fDryRun
         return false;
     }
 
-    if(!fDryRun && pwallet->IsLocked(true)) {
+    if(!pwallet->IsLocked(true)) {
         strAutoDenomResult = _("Wallet is locked.");
         return false;
     }
@@ -747,8 +747,6 @@ bool CPrivateSendClient::DoAutomaticDenominating(CConnman* connman, bool fDryRun
             (float)nBalanceDenominatedConf/COIN,
             (float)nBalanceDenominatedUnconf/COIN,
             (float)nBalanceDenominated/COIN);
-
-    if(fDryRun) return true;
 
     // Check if we have should create more denominated inputs i.e.
     // there are funds to denominate and denominated balance does not exceed

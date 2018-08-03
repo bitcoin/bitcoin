@@ -182,7 +182,7 @@ public:
     bool IsMixingMasternode(const CNode* pnode);
 
     /// Passively run mixing in the background according to the configuration in settings
-    bool DoAutomaticDenominating(CConnman* connman, bool fDryRun=false);
+    bool DoAutomaticDenominating(CConnman* connman);
 
     void ProcessPendingDsaRequest(CConnman* connman);
 
