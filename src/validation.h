@@ -492,7 +492,7 @@ CBlockFileInfo* GetBlockFileInfo(size_t n);
 bool DumpMempool();
 
 /** Load the mempool from disk. */
-bool LoadMempool();
+void LoadMempool();
 
 //! Check whether the block associated with this index entry is pruned or not.
 inline bool IsBlockPruned(const CBlockIndex* pblockindex)

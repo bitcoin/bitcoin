@@ -4681,7 +4681,7 @@ int VersionBitsTipStateSinceHeight(const Consensus::Params& params, Consensus::D
 
 static const uint64_t MEMPOOL_DUMP_VERSION = 1;
 
-bool LoadMempool()
+void LoadMempool()
 {
     const CChainParams& chainparams = Params();
     int64_t nExpiryTimeout = gArgs.GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60;
@@ -4689,7 +4689,7 @@ bool LoadMempool()
     CAutoFile file(filestr, SER_DISK, CLIENT_VERSION);
     if (file.IsNull()) {
         LogPrintf("Failed to open mempool file from disk. Continuing anyway.\n");
-        return false;
+        return;
     }
 
     int64_t count = 0;
@@ -4702,7 +4702,7 @@ bool LoadMempool()
         uint64_t version;
         file >> version;
         if (version != MEMPOOL_DUMP_VERSION) {
-            return false;
+            return;
         }
         uint64_t num;
         file >> num;
@@ -4741,7 +4741,7 @@ bool LoadMempool()
                 ++expired;
             }
             if (ShutdownRequested())
-                return false;
+                return;
         }
         std::map<uint256, CAmount> mapDeltas;
         file >> mapDeltas;
@@ -4751,11 +4751,10 @@ bool LoadMempool()
         }
     } catch (const std::exception& e) {
         LogPrintf("Failed to deserialize mempool data on disk: %s. Continuing anyway.\n", e.what());
-        return false;
+        return;
     }
 
     LogPrintf("Imported mempool transactions from disk: %i succeeded, %i failed, %i expired, %i already there\n", count, failed, expired, already_there);
-    return true;
 }
 
 bool DumpMempool()
