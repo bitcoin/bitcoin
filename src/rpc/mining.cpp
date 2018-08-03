@@ -20,6 +20,7 @@
 #include <rpc/mining.h>
 #include <rpc/server.h>
 #include <shutdown.h>
+#include <tinyformat.h>
 #include <txmempool.h>
 #include <util.h>
 #include <utilstrencodings.h>
@@ -647,7 +648,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     result.pushKV("transactions", transactions);
     result.pushKV("coinbaseaux", aux);
     result.pushKV("coinbasevalue", (int64_t)pblock->vtx[0]->vout[0].nValue);
-    result.pushKV("longpollid", chainActive.Tip()->GetBlockHash().GetHex() + i64tostr(nTransactionsUpdatedLast));
+    result.pushKV("longpollid", strprintf("%s%u", chainActive.Tip()->GetBlockHash().GetHex(), nTransactionsUpdatedLast));
     result.pushKV("target", hashTarget.GetHex());
     result.pushKV("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1);
     result.pushKV("mutable", aMutable);

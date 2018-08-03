@@ -5,12 +5,12 @@
 
 #include <utilstrencodings.h>
 
-#include <tinyformat.h>
-
 #include <cstdlib>
 #include <cstring>
 #include <errno.h>
 #include <limits>
+#include <locale>
+#include <sstream>
 
 static const std::string CHARS_ALPHA_NUM = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
@@ -392,16 +392,6 @@ std::string FormatParagraph(const std::string& in, size_t width, size_t indent)
     return out.str();
 }
 
-std::string i64tostr(int64_t n)
-{
-    return strprintf("%d", n);
-}
-
-std::string itostr(int n)
-{
-    return strprintf("%d", n);
-}
-
 int64_t atoi64(const char* psz)
 {
 #ifdef _MSC_VER
@@ -543,4 +533,3 @@ bool ParseFixedPoint(const std::string &val, int decimals, int64_t *amount_out)
 
     return true;
 }
-

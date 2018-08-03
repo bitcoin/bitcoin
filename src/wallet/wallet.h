@@ -189,14 +189,6 @@ static inline void ReadOrderPos(int64_t& nOrderPos, mapValue_t& mapValue)
     nOrderPos = atoi64(mapValue["n"].c_str());
 }
 
-
-static inline void WriteOrderPos(const int64_t& nOrderPos, mapValue_t& mapValue)
-{
-    if (nOrderPos == -1)
-        return;
-    mapValue["n"] = i64tostr(nOrderPos);
-}
-
 struct COutputEntry
 {
     CTxDestination destination;
@@ -402,7 +394,10 @@ public:
         mapValue_t mapValueCopy = mapValue;
 
         mapValueCopy["fromaccount"] = strFromAccount;
-        WriteOrderPos(nOrderPos, mapValueCopy);
+
+        if (nOrderPos != -1) {
+            mapValueCopy["n"] = strprintf("%d", nOrderPos);
+        }
         if (nTimeSmart) {
             mapValueCopy["timesmart"] = strprintf("%u", nTimeSmart);
         }
@@ -601,7 +596,9 @@ public:
         s << nCreditDebit << nTime << strOtherAccount;
 
         mapValue_t mapValueCopy = mapValue;
-        WriteOrderPos(nOrderPos, mapValueCopy);
+        if (nOrderPos != -1) {
+            mapValueCopy["n"] = strprintf("%d", nOrderPos);
+        }
 
         std::string strCommentCopy = strComment;
         if (!mapValueCopy.empty() || !_ssExtra.empty()) {

@@ -1601,7 +1601,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 vRecv >> LIMITED_STRING(strMsg, CMessageHeader::COMMAND_SIZE) >> ccode >> LIMITED_STRING(strReason, MAX_REJECT_MESSAGE_LENGTH);
 
                 std::ostringstream ss;
-                ss << strMsg << " code " << itostr(ccode) << ": " << strReason;
+                ss << strMsg << strprintf(" code %u: ", ccode) << strReason;
 
                 if (strMsg == NetMsgType::BLOCK || strMsg == NetMsgType::TX)
                 {
