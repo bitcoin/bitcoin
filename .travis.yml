@@ -29,13 +29,13 @@ env:
     - WINEDEBUG=fixme-all
     - DOCKER_PACKAGES="build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git ca-certificates ccache"
 before_install:
-  - source .travis/test_03_before_install.sh
+  - set -o errexit; source .travis/test_03_before_install.sh
 install:
-  - source .travis/test_04_install.sh
+  - set -o errexit; source .travis/test_04_install.sh
 before_script:
-  - source .travis/test_05_before_script.sh
+  - set -o errexit; source .travis/test_05_before_script.sh
 script:
-  - source .travis/test_06_script.sh
+  - set -o errexit; source .travis/test_06_script.sh
 after_script:
   - echo $TRAVIS_COMMIT_RANGE
   - echo $TRAVIS_COMMIT_LOG
@@ -49,11 +49,11 @@ jobs:
       language: python
       python: '3.6'
       install:
-        - source .travis/lint_04_install.sh
+        - set -o errexit; source .travis/lint_04_install.sh
       before_script:
-        - source .travis/lint_05_before_script.sh
+        - set -o errexit; source .travis/lint_05_before_script.sh
       script:
-        - source .travis/lint_06_script.sh
+        - set -o errexit; source .travis/lint_06_script.sh
 # ARM
     - stage: test
       env: >-
