@@ -1133,7 +1133,7 @@ bool BuildAssetAllocationJson(CAssetAllocation& assetallocation, const CAsset& a
 	oAssetAllocation.push_back(Pair("interest_rate", asset.fInterestRate));
     oAssetAllocation.push_back(Pair("txid", assetallocation.txHash.GetHex()));
     oAssetAllocation.push_back(Pair("height", (int)assetallocation.nHeight));
-	oAssetAllocation.push_back(Pair("owner", stringFromVch(assetallocation.vchAliasOrAddress)));
+	oAssetAllocation.push_back(Pair("alias", stringFromVch(assetallocation.vchAliasOrAddress)));
 	oAssetAllocation.push_back(Pair("balance", ValueFromAssetAmount(assetallocation.nBalance, asset.nPrecision, asset.bUseInputRanges)));
 	oAssetAllocation.push_back(Pair("interest_claim_height", (int)assetallocation.nLastInterestClaimHeight));
 	oAssetAllocation.push_back(Pair("memo", stringFromVch(assetallocation.vchMemo)));
