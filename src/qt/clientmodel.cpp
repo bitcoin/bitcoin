@@ -282,7 +282,7 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, int heig
 
 static void NotifyMNSyncProgress(ClientModel *clientmodel, const std::string &title, int nProgress)
 {
-    QMetaObject::invokeMethod(clientmodel, "additionalDataSyncProgressChanged", Qt::QueuedConnection,
+    QMetaObject::invokeMethod(clientmodel, "moduleDataSyncProgress", Qt::QueuedConnection,
                               Q_ARG(QString, QString::fromStdString(title)),
                               Q_ARG(int, nProgress));
 }

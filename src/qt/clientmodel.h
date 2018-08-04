@@ -104,7 +104,7 @@ Q_SIGNALS:
     void numConnectionsChanged(int count);
     void strMasternodesChanged(const QString &strMasternodes);
     void numBlocksChanged(int count, const QDateTime& blockDate, double nVerificationProgress, bool header);
-    void additionalDataSyncProgressChanged(int nSyncProgress);
+    void moduleDataSyncProgress(const QString &title, int nProgress);
     void mempoolSizeChanged(long count, size_t mempoolSizeInBytes);
     void networkActiveChanged(bool networkActive);
     void alertsChanged(const QString &warnings);
