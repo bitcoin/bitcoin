@@ -813,7 +813,7 @@ void ArgsManager::ReadConfigFiles()
     }
 
     const std::string confPath = GetArg("-conf", BITCOIN_CONF_FILENAME);
-    fs::ifstream stream(GetConfigFile(confPath));
+    fsbridge::ifstream stream(GetConfigFile(confPath));
 
     if (stream.good()) {
         ReadConfigStream(stream);
@@ -829,7 +829,7 @@ void ArgsManager::ReadConfigFiles()
             }
 
             for (const std::string& to_include : includeconf) {
-                fs::ifstream include_config(GetConfigFile(to_include));
+                fsbridge::ifstream include_config(GetConfigFile(to_include));
                 if (include_config.good()) {
                     ReadConfigStream(include_config);
                     LogPrintf("Included configuration file %s\n", to_include.c_str());
