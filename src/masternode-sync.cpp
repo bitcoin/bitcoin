@@ -185,20 +185,16 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
         // QUICK MODE (REGTEST ONLY!)
         if(Params().NetworkIDString() == CBaseChainParams::REGTEST)
         {
-            if(nRequestedMasternodeAttempt <= 2) {
+            if (nRequestedMasternodeAssets == MASTERNODE_SYNC_WAITING) {
                 connman.PushMessage(pnode, msgMaker.Make(NetMsgType::GETSPORKS)); //get current network sporks
-            } else if(nRequestedMasternodeAttempt < 4) {
+            } else if (nRequestedMasternodeAssets == MASTERNODE_SYNC_LIST) {
                 mnodeman.DsegUpdate(pnode, connman);
-            } else if(nRequestedMasternodeAttempt < 6) {
-                //sync payment votes
-                
-                connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MASTERNODEPAYMENTSYNC)); //sync payment votes
-                
+            } else if (nRequestedMasternodeAssets == MASTERNODE_SYNC_MNW) {
+                connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MASTERNODEPAYMENTSYNC)); //sync payment votes 
+            } else if (nRequestedMasternodeAssets == MASTERNODE_SYNC_GOVERNANCE) {
                 SendGovernanceSyncRequest(pnode, connman);
-            } else {
-                nRequestedMasternodeAssets = MASTERNODE_SYNC_FINISHED;
             }
-            nRequestedMasternodeAttempt++;
+            SwitchToNextAsset(connman);
             connman.ReleaseNodeVector(vNodesCopy);
             return;
         }
