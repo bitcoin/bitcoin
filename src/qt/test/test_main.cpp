@@ -24,6 +24,10 @@
 
 #include <openssl/ssl.h>
 
+#ifdef WIN32
+#include <shellapi.h>
+#endif
+
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
 #if defined(QT_QPA_PLATFORM_MINIMAL)
@@ -43,6 +47,9 @@ extern void noui_connect();
 // This is all you need to run all the tests
 int main(int argc, char *argv[])
 {
+#ifdef WIN32
+    wchar_t ** wargv = CommandLineToArgvW(GetCommandLineW(), &argc);
+#endif
     SetupEnvironment();
     SetupNetworking();
     SelectParams(CBaseChainParams::MAIN);
@@ -50,7 +57,7 @@ int main(int argc, char *argv[])
     ClearDatadirCache();
     fs::path pathTemp = fs::temp_directory_path() / strprintf("test_bitcoin-qt_%lu_%i", (unsigned long)GetTime(), (int)GetRand(100000));
     fs::create_directories(pathTemp);
-    gArgs.ForceSetArg("-datadir", pathTemp.string());
+    gArgs.ForceSetArg("-datadir", pathTemp.u8string());
 
     bool fInvalid = false;
 
@@ -65,7 +72,11 @@ int main(int argc, char *argv[])
 
     // Don't remove this, it's needed to access
     // QApplication:: and QCoreApplication:: in the tests
+#ifndef WIN32
     QApplication app(argc, argv);
+#else
+    QApplication app(argc, wargv);
+#endif
     app.setApplicationName("Bitcoin-Qt-test");
 
     SSL_library_init();

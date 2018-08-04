@@ -49,7 +49,11 @@ namespace {
 
 class NodeImpl : public Node
 {
+#ifndef WIN32
     bool parseParameters(int argc, const char* const argv[], std::string& error) override
+#else
+    bool parseParameters(int argc, const wchar_t* const argv[], std::string& error) override
+#endif
     {
         return gArgs.ParseParameters(argc, argv, error);
     }

@@ -12,6 +12,10 @@
 #include <errno.h>
 #include <limits>
 
+#ifdef WIN32
+#include <stringapiset.h>
+#endif
+
 static const std::string CHARS_ALPHA_NUM = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
 static const std::string SAFE_CHARS[] =
@@ -544,3 +548,21 @@ bool ParseFixedPoint(const std::string &val, int decimals, int64_t *amount_out)
     return true;
 }
 
+#ifdef WIN32
+std::string WideToUtf8(const std::wstring& wide_string)
+{
+    size_t size = WideCharToMultiByte(CP_UTF8, 0, &*wide_string.begin(), wide_string.size(), nullptr, 0, nullptr, nullptr);
+    std::string utf8_string(size, 0);
+    size = WideCharToMultiByte(CP_UTF8, 0, &*wide_string.begin(), wide_string.size(), &*utf8_string.begin(), utf8_string.size(), nullptr, nullptr);
+    assert(size == utf8_string.size());
+    return utf8_string;
+}
+std::wstring Utf8ToWide(const std::string& utf8_string)
+{
+    size_t size = MultiByteToWideChar(CP_UTF8, 0, &*utf8_string.begin(), utf8_string.size(), nullptr, 0);
+    std::wstring wide_string(size, 0);
+    size = MultiByteToWideChar(CP_UTF8, 0, &*utf8_string.begin(), utf8_string.size(), &*wide_string.begin(), wide_string.size());
+    assert(size == wide_string.size());
+    return wide_string;
+}
+#endif

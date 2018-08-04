@@ -23,6 +23,10 @@
 
 #include <stdio.h>
 
+#ifdef WIN32
+#include <shellapi.h>
+#endif
+
 /* Introduction text for doxygen: */
 
 /*! \mainpage Developer documentation
@@ -54,7 +58,11 @@ static void WaitForShutdown()
 //
 // Start
 //
+#ifndef WIN32
 static bool AppInit(int argc, char* argv[])
+#else
+static bool AppInit(int argc, wchar_t* argv[])
+#endif
 {
     bool fRet = false;
 
@@ -185,10 +193,17 @@ static bool AppInit(int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
+#ifdef WIN32
+    wchar_t ** wargv = CommandLineToArgvW(GetCommandLineW(), &argc);
+#endif
     SetupEnvironment();
 
     // Connect bitcoind signal handlers
     noui_connect();
 
+#ifndef WIN32
     return (AppInit(argc, argv) ? EXIT_SUCCESS : EXIT_FAILURE);
+#else
+    return (AppInit(argc, wargv) ? EXIT_SUCCESS : EXIT_FAILURE);
+#endif
 }

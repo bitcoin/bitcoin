@@ -21,6 +21,14 @@
 
 #include <boost/test/unit_test.hpp>
 
+#ifndef WIN32
+#define _T(TEXT) TEXT
+typedef char _TCHAR;
+#else
+#define _T(TEXT) L##TEXT
+typedef wchar_t _TCHAR;
+#endif
+
 BOOST_FIXTURE_TEST_SUITE(util_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(util_criticalsection)
@@ -206,17 +214,17 @@ BOOST_AUTO_TEST_CASE(util_ParseParameters)
 {
     TestArgsManager testArgs;
     const char* avail_args[] = {"-a", "-b", "-ccc", "-d"};
-    const char *argv_test[] = {"-ignored", "-a", "-b", "-ccc=argument", "-ccc=multiple", "f", "-d=e"};
+    const _TCHAR* argv_test[] = {_T("-ignored"), _T("-a"), _T("-b"), _T("-ccc=argument"), _T("-ccc=multiple"), _T("f"), _T("-d=e")};
 
     std::string error;
     testArgs.SetupArgs(4, avail_args);
-    testArgs.ParseParameters(0, (char**)argv_test, error);
+    testArgs.ParseParameters(0, (_TCHAR**)argv_test, error);
     BOOST_CHECK(testArgs.GetOverrideArgs().empty() && testArgs.GetConfigArgs().empty());
 
-    testArgs.ParseParameters(1, (char**)argv_test, error);
+    testArgs.ParseParameters(1, (_TCHAR**)argv_test, error);
     BOOST_CHECK(testArgs.GetOverrideArgs().empty() && testArgs.GetConfigArgs().empty());
 
-    testArgs.ParseParameters(7, (char**)argv_test, error);
+    testArgs.ParseParameters(7, (_TCHAR**)argv_test, error);
     // expectation: -ignored is ignored (program name argument),
     // -a, -b and -ccc end up in map, -d ignored because it is after
     // a non-option argument (non-GNU option parsing)
@@ -238,11 +246,11 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArg)
 {
     TestArgsManager testArgs;
     const char* avail_args[] = {"-a", "-b", "-c", "-d", "-e", "-f"};
-    const char *argv_test[] = {
-        "ignored", "-a", "-nob", "-c=0", "-d=1", "-e=false", "-f=true"};
+    const _TCHAR* argv_test[] = {
+        _T("ignored"), _T("-a"), _T("-nob"), _T("-c=0"), _T("-d=1"), _T("-e=false"), _T("-f=true")};
     std::string error;
     testArgs.SetupArgs(6, avail_args);
-    testArgs.ParseParameters(7, (char**)argv_test, error);
+    testArgs.ParseParameters(7, (_TCHAR**)argv_test, error);
 
     // Each letter should be set.
     for (char opt : "abcdef")
@@ -275,10 +283,10 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
 
     // Params test
     const char* avail_args[] = {"-foo", "-bar"};
-    const char *argv_test[] = {"ignored", "-nofoo", "-foo", "-nobar=0"};
+    const _TCHAR* argv_test[] = {_T("ignored"), _T("-nofoo"), _T("-foo"), _T("-nobar=0")};
     testArgs.SetupArgs(2, avail_args);
     std::string error;
-    testArgs.ParseParameters(4, (char**)argv_test, error);
+    testArgs.ParseParameters(4, (_TCHAR**)argv_test, error);
 
     // This was passed twice, second one overrides the negative setting.
     BOOST_CHECK(!testArgs.IsArgNegated("-foo"));
@@ -290,7 +298,7 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
 
     // Config test
     const char *conf_test = "nofoo=1\nfoo=1\nnobar=0\n";
-    testArgs.ParseParameters(1, (char**)argv_test, error);
+    testArgs.ParseParameters(1, (_TCHAR**)argv_test, error);
     testArgs.ReadConfigString(conf_test);
 
     // This was passed twice, second one overrides the negative setting,
@@ -303,9 +311,9 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
     BOOST_CHECK(testArgs.GetArg("-bar", "xxx") == "1");
 
     // Combined test
-    const char *combo_test_args[] = {"ignored", "-nofoo", "-bar"};
+    const _TCHAR* combo_test_args[] = {_T("ignored"), _T("-nofoo"), _T("-bar")};
     const char *combo_test_conf = "foo=1\nnobar=1\n";
-    testArgs.ParseParameters(3, (char**)combo_test_args, error);
+    testArgs.ParseParameters(3, (_TCHAR**)combo_test_args, error);
     testArgs.ReadConfigString(combo_test_conf);
 
     // Command line overrides, but doesn't erase old setting
@@ -547,48 +555,48 @@ BOOST_AUTO_TEST_CASE(util_GetChainName)
     const char* avail_args[] = {"-testnet", "-regtest"};
     test_args.SetupArgs(2, avail_args);
 
-    const char* argv_testnet[] = {"cmd", "-testnet"};
-    const char* argv_regtest[] = {"cmd", "-regtest"};
-    const char* argv_test_no_reg[] = {"cmd", "-testnet", "-noregtest"};
-    const char* argv_both[] = {"cmd", "-testnet", "-regtest"};
+    const _TCHAR* argv_testnet[] = {_T("cmd"), _T("-testnet")};
+    const _TCHAR* argv_regtest[] = {_T("cmd"), _T("-regtest")};
+    const _TCHAR* argv_test_no_reg[] = {_T("cmd"), _T("-testnet"), _T("-noregtest")};
+    const _TCHAR* argv_both[] = {_T("cmd"), _T("-testnet"), _T("-regtest")};
 
     // equivalent to "-testnet"
     // regtest in testnet section is ignored
     const char* testnetconf = "testnet=1\nregtest=0\n[test]\nregtest=1";
     std::string error;
 
-    test_args.ParseParameters(0, (char**)argv_testnet, error);
+    test_args.ParseParameters(0, (_TCHAR**)argv_testnet, error);
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "main");
 
-    test_args.ParseParameters(2, (char**)argv_testnet, error);
+    test_args.ParseParameters(2, (_TCHAR**)argv_testnet, error);
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
 
-    test_args.ParseParameters(2, (char**)argv_regtest, error);
+    test_args.ParseParameters(2, (_TCHAR**)argv_regtest, error);
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "regtest");
 
-    test_args.ParseParameters(3, (char**)argv_test_no_reg, error);
+    test_args.ParseParameters(3, (_TCHAR**)argv_test_no_reg, error);
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
 
-    test_args.ParseParameters(3, (char**)argv_both, error);
+    test_args.ParseParameters(3, (_TCHAR**)argv_both, error);
     BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
 
-    test_args.ParseParameters(0, (char**)argv_testnet, error);
+    test_args.ParseParameters(0, (_TCHAR**)argv_testnet, error);
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
 
-    test_args.ParseParameters(2, (char**)argv_testnet, error);
+    test_args.ParseParameters(2, (_TCHAR**)argv_testnet, error);
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
 
-    test_args.ParseParameters(2, (char**)argv_regtest, error);
+    test_args.ParseParameters(2, (_TCHAR**)argv_regtest, error);
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
 
-    test_args.ParseParameters(3, (char**)argv_test_no_reg, error);
+    test_args.ParseParameters(3, (_TCHAR**)argv_test_no_reg, error);
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
 
-    test_args.ParseParameters(3, (char**)argv_both, error);
+    test_args.ParseParameters(3, (_TCHAR**)argv_both, error);
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
 
@@ -596,23 +604,23 @@ BOOST_AUTO_TEST_CASE(util_GetChainName)
     // [test] regtest=1 potentially relevant) doesn't break things
     test_args.SelectConfigNetwork("test");
 
-    test_args.ParseParameters(0, (char**)argv_testnet, error);
+    test_args.ParseParameters(0, (_TCHAR**)argv_testnet, error);
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
 
-    test_args.ParseParameters(2, (char**)argv_testnet, error);
+    test_args.ParseParameters(2, (_TCHAR**)argv_testnet, error);
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
 
-    test_args.ParseParameters(2, (char**)argv_regtest, error);
+    test_args.ParseParameters(2, (_TCHAR**)argv_regtest, error);
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
 
-    test_args.ParseParameters(2, (char**)argv_test_no_reg, error);
+    test_args.ParseParameters(2, (_TCHAR**)argv_test_no_reg, error);
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
 
-    test_args.ParseParameters(3, (char**)argv_both, error);
+    test_args.ParseParameters(3, (_TCHAR**)argv_both, error);
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
 }
@@ -1216,5 +1224,19 @@ BOOST_AUTO_TEST_CASE(test_DirIsWritable)
     BOOST_CHECK_EQUAL(DirIsWritable(tmpdirname), true);
     fs::remove(tmpdirname);
 }
+
+#ifdef WIN32
+BOOST_AUTO_TEST_CASE(test_WinFileLock)
+{
+    fs::path filename = SetDataDir("test_WinFileLock");
+    filename = filename / ".testlock";
+
+    WinFileLock lock1(filename);
+    BOOST_CHECK(lock1.try_lock());
+
+    WinFileLock lock2(filename);
+    BOOST_CHECK(!lock2.try_lock());
+}
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()

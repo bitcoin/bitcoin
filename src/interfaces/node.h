@@ -38,7 +38,11 @@ public:
     virtual ~Node() {}
 
     //! Set command line arguments.
+#ifndef WIN32
     virtual bool parseParameters(int argc, const char* const argv[], std::string& error) = 0;
+#else
+    virtual bool parseParameters(int argc, const wchar_t* const argv[], std::string& error) = 0;
+#endif
 
     //! Set a command line argument if it doesn't already have a value
     virtual bool softSetArg(const std::string& arg, const std::string& value) = 0;

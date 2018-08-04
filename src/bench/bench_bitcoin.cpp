@@ -13,6 +13,10 @@
 
 #include <memory>
 
+#ifdef WIN32
+#include <shellapi.h>
+#endif
+
 static const int64_t DEFAULT_BENCH_EVALUATIONS = 5;
 static const char* DEFAULT_BENCH_FILTER = ".*";
 static const char* DEFAULT_BENCH_SCALING = "1.0";
@@ -48,9 +52,16 @@ static fs::path SetDataDir()
 
 int main(int argc, char** argv)
 {
+#ifdef WIN32
+    wchar_t ** wargv = CommandLineToArgvW(GetCommandLineW(), &argc);
+#endif
     SetupBenchArgs();
     std::string error;
+#ifndef WIN32
     if (!gArgs.ParseParameters(argc, argv, error)) {
+#else
+    if (!gArgs.ParseParameters(argc, wargv, error)) {
+#endif
         fprintf(stderr, "Error parsing command line arguments: %s\n", error.c_str());
         return EXIT_FAILURE;
     }

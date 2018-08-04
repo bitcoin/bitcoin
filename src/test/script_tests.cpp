@@ -19,7 +19,6 @@
 #include <script/bitcoinconsensus.h>
 #endif
 
-#include <fstream>
 #include <stdint.h>
 #include <string>
 #include <vector>

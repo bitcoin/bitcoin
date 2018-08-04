@@ -84,6 +84,8 @@ const int64_t nStartupTime = GetTime();
 const char * const BITCOIN_CONF_FILENAME = "bitcoin.conf";
 const char * const BITCOIN_PID_FILENAME = "bitcoind.pid";
 
+fs::detail::utf8_codecvt_facet g_utf8;
+
 ArgsManager gArgs;
 
 CTranslationInterface translationInterface;
@@ -136,12 +138,40 @@ public:
 }
 instance_of_cinit;
 
+#ifdef WIN32
+WinFileLock::WinFileLock(const fs::path& file)
+{
+    hLockFile = CreateFileW(file.wstring().c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+}
+
+WinFileLock::~WinFileLock()
+{
+    if (hLockFile != INVALID_HANDLE_VALUE) {
+        UnlockFile(hLockFile, 0, 0, 0, 0);
+        CloseHandle(hLockFile);
+    }
+}
+
+WinFileLock::try_lock()
+{
+    if (hLockFile == INVALID_HANDLE_VALUE) {
+        return false;
+    }
+    _OVERLAPPED overlapped = {0};
+    return LockFileEx(hLockFile, LOCKFILE_EXCLUSIVE_LOCK | LOCKFILE_FAIL_IMMEDIATELY, 0, 0, 0, &overlapped);
+}
+#endif
+
 /** A map that contains all the currently held directory locks. After
  * successful locking, these will be held here until the global destructor
  * cleans them up and thus automatically unlocks them, or ReleaseDirectoryLocks
  * is called.
  */
+#ifndef WIN32
 static std::map<std::string, std::unique_ptr<boost::interprocess::file_lock>> dir_locks;
+#else
+static std::map<std::string, std::unique_ptr<WinFileLock>> dir_locks;
+#endif
 /** Mutex to protect dir_locks. */
 static std::mutex cs_dir_locks;
 
@@ -151,25 +181,28 @@ bool LockDirectory(const fs::path& directory, const std::string lockfile_name, b
     fs::path pathLockFile = directory / lockfile_name;
 
     // If a lock for this directory already exists in the map, don't try to re-lock it
-    if (dir_locks.count(pathLockFile.string())) {
+    if (dir_locks.count(pathLockFile.u8string())) {
         return true;
     }
 
     // Create empty lock file if it doesn't exist.
     FILE* file = fsbridge::fopen(pathLockFile, "a");
     if (file) fclose(file);
-
     try {
+#ifndef WIN32
         auto lock = MakeUnique<boost::interprocess::file_lock>(pathLockFile.string().c_str());
+#else
+        auto lock = MakeUnique<WinFileLock>(pathLockFile);
+#endif
         if (!lock->try_lock()) {
             return false;
         }
         if (!probe_only) {
             // Lock successful and we're not just probing, put it into the map
-            dir_locks.emplace(pathLockFile.string(), std::move(lock));
+            dir_locks.emplace(pathLockFile.u8string(), std::move(lock));
         }
     } catch (const boost::interprocess::interprocess_exception& e) {
-        return error("Error while attempting to lock directory %s: %s", directory.string(), e.what());
+        return error("Error while attempting to lock directory %s: %s", directory.u8string(), e.what());
     }
     return true;
 }
@@ -410,14 +443,23 @@ void ArgsManager::SelectConfigNetwork(const std::string& network)
 {
     m_network = network;
 }
-
+#ifndef WIN32
 bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::string& error)
+#else
+bool ArgsManager::ParseParameters(int argc, const wchar_t* const argv[], std::string& error)
+#endif
 {
     LOCK(cs_args);
     m_override_args.clear();
 
     for (int i = 1; i < argc; i++) {
+#ifndef WIN32
         std::string key(argv[i]);
+#else
+        std::string key;
+        std::wstring wkey(argv[i]);
+        key = WideToUtf8(wkey);
+#endif
         std::string val;
         size_t is_index = key.find('=');
         if (is_index != std::string::npos) {
@@ -715,9 +757,9 @@ fs::path GetDefaultDataDir()
     fs::path pathRet;
     char* pszHome = getenv("HOME");
     if (pszHome == nullptr || strlen(pszHome) == 0)
-        pathRet = fs::path("/");
+        pathRet = fs::u8path("/");
     else
-        pathRet = fs::path(pszHome);
+        pathRet = fs::u8path(pszHome);
 #ifdef MAC_OSX
     // Mac
     return pathRet / "Library/Application Support/Bitcoin";
@@ -747,7 +789,7 @@ const fs::path &GetBlocksDir(bool fNetSpecific)
         return path;
 
     if (gArgs.IsArgSet("-blocksdir")) {
-        path = fs::system_complete(gArgs.GetArg("-blocksdir", ""));
+        path = fs::system_complete(fs::u8path(gArgs.GetArg("-blocksdir", "")));
         if (!fs::is_directory(path)) {
             path = "";
             return path;
@@ -776,7 +818,7 @@ const fs::path &GetDataDir(bool fNetSpecific)
         return path;
 
     if (gArgs.IsArgSet("-datadir")) {
-        path = fs::system_complete(gArgs.GetArg("-datadir", ""));
+        path = fs::system_complete(fs::u8path(gArgs.GetArg("-datadir", "")));
         if (!fs::is_directory(path)) {
             path = "";
             return path;
@@ -807,7 +849,7 @@ void ClearDatadirCache()
 
 fs::path GetConfigFile(const std::string& confPath)
 {
-    return AbsPathForConfigVal(fs::path(confPath), false);
+    return AbsPathForConfigVal(fs::u8path(confPath), false);
 }
 
 static std::string TrimString(const std::string& str, const std::string& pattern)
@@ -879,7 +921,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
     }
 
     const std::string confPath = GetArg("-conf", BITCOIN_CONF_FILENAME);
-    fs::ifstream stream(GetConfigFile(confPath));
+    fsbridge::ifstream stream(GetConfigFile(confPath));
 
     // ok to not have a config file
     if (stream.good()) {
@@ -907,7 +949,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
             }
 
             for (const std::string& to_include : includeconf) {
-                fs::ifstream include_config(GetConfigFile(to_include));
+                fsbridge::ifstream include_config(GetConfigFile(to_include));
                 if (include_config.good()) {
                     if (!ReadConfigStream(include_config, error, ignore_invalid_keys)) {
                         return false;
@@ -963,7 +1005,7 @@ std::string ArgsManager::GetChainName() const
 #ifndef WIN32
 fs::path GetPidFile()
 {
-    return AbsPathForConfigVal(fs::path(gArgs.GetArg("-pid", BITCOIN_PID_FILENAME)));
+    return AbsPathForConfigVal(fs::u8path(gArgs.GetArg("-pid", BITCOIN_PID_FILENAME)));
 }
 
 void CreatePidFile(const fs::path &path, pid_t pid)
@@ -980,10 +1022,10 @@ void CreatePidFile(const fs::path &path, pid_t pid)
 bool RenameOver(fs::path src, fs::path dest)
 {
 #ifdef WIN32
-    return MoveFileExA(src.string().c_str(), dest.string().c_str(),
+    return MoveFileExW(src.wstring().c_str(), dest.wstring().c_str(),
                        MOVEFILE_REPLACE_EXISTING) != 0;
 #else
-    int rc = std::rename(src.string().c_str(), dest.string().c_str());
+    int rc = std::rename(src.u8string().c_str(), dest.u8string().c_str());
     return (rc == 0);
 #endif /* WIN32 */
 }
@@ -1126,11 +1168,11 @@ fs::path GetSpecialFolderPath(int nFolder, bool fCreate)
 
     if(SHGetSpecialFolderPathA(nullptr, pszPath, nFolder, fCreate))
     {
-        return fs::path(pszPath);
+        return fs::u8path(pszPath);
     }
 
     LogPrintf("SHGetSpecialFolderPathA() failed, could not obtain requested path.\n");
-    return fs::path("");
+    return fs::u8path("");
 }
 #endif
 
