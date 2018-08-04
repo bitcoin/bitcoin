@@ -1835,7 +1835,7 @@ bool PeercoinContextualBlockChecks(const CBlock& block, CValidationState& state,
     }
 
     // peercoin: compute stake entropy bit for stake modifier
-    unsigned int nEntropyBit = block.GetStakeEntropyBit();
+    unsigned int nEntropyBit = GetStakeEntropyBit(block);
 
     // peercoin: compute stake modifier
     uint64_t nStakeModifier = 0;

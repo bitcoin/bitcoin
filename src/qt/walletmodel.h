@@ -18,6 +18,7 @@
 enum OutputType : int;
 
 class AddressTableModel;
+class MintingTableModel;
 class OptionsModel;
 class PlatformStyle;
 class RecentRequestsTableModel;

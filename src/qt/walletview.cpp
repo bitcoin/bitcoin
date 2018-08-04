@@ -23,6 +23,7 @@
 
 #include <qt/multisigdialog.h>
 #include <qt/mintingview.h>
+#include <wallet/wallet.h>
 
 #include <QAction>
 #include <QActionGroup>
@@ -63,7 +64,7 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     mintingPage->setLayout(vboxMinting);
 
     receiveCoinsPage = new ReceiveCoinsDialog(platformStyle);
-    multisigPage = new MultisigDialog(gui);
+    multisigPage = new MultisigDialog(platformStyle);
     sendCoinsPage = new SendCoinsDialog(platformStyle);
 
     usedSendingAddressesPage = new AddressBookPage(platformStyle, AddressBookPage::ForEditing, AddressBookPage::SendingTab, this);
@@ -195,13 +196,11 @@ void WalletView::gotoHistoryPage()
 
 void WalletView::gotoMintingPage()
 {
-    gui->getMintingAction()->setChecked(true);
     setCurrentWidget(mintingPage);
 }
 
 void WalletView::gotoMultisigPage()
 {
-    gui->getMultisigAction()->setChecked(true);
     setCurrentWidget(multisigPage);
 }
 

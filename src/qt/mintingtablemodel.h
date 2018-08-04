@@ -1,7 +1,6 @@
 #ifndef MINTINGTABLEMODEL_H
 #define MINTINGTABLEMODEL_H
 
-
 #include <QAbstractTableModel>
 #include <QStringList>
 
@@ -59,7 +58,7 @@ private:
     QString formatTxBalance(const KernelRecord *wtx) const;
     QString formatTxCoinDay(const KernelRecord *wtx) const;
 
-public slots:
+public Q_SLOTS:
     void updateTransaction(const QString &hash, int status);
     void updateAge();
     void updateDisplayUnit();

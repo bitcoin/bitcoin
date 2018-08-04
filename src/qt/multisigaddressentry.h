@@ -3,8 +3,8 @@
 
 #include <QFrame>
 
-
 class WalletModel;
+class PlatformStyle;
 
 namespace Ui
 {
@@ -22,18 +22,19 @@ class MultisigAddressEntry : public QFrame
     bool validate();
     QString getPubkey();
 
-  public slots:
+  public Q_SLOTS:
     void setRemoveEnabled(bool enabled);
     void clear();
 
-  signals:
+  Q_SIGNALS:
     void removeEntry(MultisigAddressEntry *entry);
 
   private:
     Ui::MultisigAddressEntry *ui;
     WalletModel *model;
+    const PlatformStyle *platformStyle;
 
-  private slots:
+  private Q_SLOTS:
     void on_pubkey_textChanged(const QString &pubkey);
     void on_pasteButton_clicked();
     void on_deleteButton_clicked();

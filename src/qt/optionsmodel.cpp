@@ -18,6 +18,8 @@
 #include <txdb.h> // for -dbcache defaults
 #include <qt/intro.h>
 
+#include <checkpointsync.h>
+
 #ifdef ENABLE_WALLET
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
@@ -86,7 +88,7 @@ void OptionsModel::Init(bool resetSettings)
 
     if (!settings.contains("fCheckpointEnforce"))
         settings.setValue("fCheckpointEnforce", true);
-	fCheckpointEnforce = settings.value("fCheckpointEnforce", true).toBool();
+    fCheckpointEnforce = settings.value("fCheckpointEnforce", true).toBool();
 
     // These are shared with the core or have a command-line parameter
     // and we want command-line parameters to overwrite the GUI settings.

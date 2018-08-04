@@ -1,13 +1,19 @@
 #ifndef MULTISIGDIALOG_H
 #define MULTISIGDIALOG_H
 
+//#include "multisigaddressentry.h"
+//#include "multisiginputentry.h"
+//#include "sendcoinsentry.h"
+//#include "walletmodel.h"
+
+#include <qt/platformstyle.h>
+
 #include <QDialog>
 
-#include "multisigaddressentry.h"
-#include "multisiginputentry.h"
-#include "sendcoinsentry.h"
-#include "walletmodel.h"
-
+class MultisigAddressEntry;
+class MultisigInputEntry;
+class WalletModel;
+class SendCoinsEntry;
 
 namespace Ui
 {
@@ -19,11 +25,11 @@ class MultisigDialog : public QDialog
     Q_OBJECT;
 
   public:
-    explicit MultisigDialog(QWidget *parent);
+    explicit MultisigDialog(const PlatformStyle *platformStyle, QWidget *parent = 0);
     ~MultisigDialog();
     void setModel(WalletModel *model);
 
-  public slots:
+  public Q_SLOTS:
     MultisigAddressEntry * addPubKey();
     void clear();
     void updateRemoveEnabled();
@@ -33,8 +39,9 @@ class MultisigDialog : public QDialog
   private:
     Ui::MultisigDialog *ui;
     WalletModel *model;
+    const PlatformStyle *platformStyle;
 
-  private slots:
+  private Q_SLOTS:
     void on_createAddressButton_clicked();
     void on_copyMultisigAddressButton_clicked();
     void on_copyRedeemScriptButton_clicked();

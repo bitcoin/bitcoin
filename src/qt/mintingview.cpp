@@ -177,7 +177,7 @@ void MintingView::exportClicked()
     QString filename = GUIUtil::getSaveFileName(
             this,
             tr("Export Minting Data"), QString(),
-            tr("Comma separated file (*.csv)"));
+            tr("Comma separated file (*.csv)"), nullptr);
 
     if (filename.isNull()) return;
 

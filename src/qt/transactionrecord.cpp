@@ -37,12 +37,12 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 
     if (wtx.IsCoinStake()) // peercoin: coinstake transaction
     {
-        TransactionRecord sub(hash, nTime, TransactionRecord::StakeMint, "", -nDebit, wtx.GetValueOut());
+        TransactionRecord sub(hash, nTime, TransactionRecord::StakeMint, "", -nDebit, wtx.tx->GetValueOut());
         CTxDestination address;
-        CTxOut txout = wtx.vout[1];
+        CTxOut txout = wtx.tx->vout[1];
 
         if(ExtractDestination(txout.scriptPubKey, address) && IsMine(*wallet, address))
-            sub.address = CBitcoinAddress(address).ToString();
+            sub.address = EncodeDestination(address);
 
         parts.append(sub);
     }

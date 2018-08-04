@@ -35,14 +35,14 @@ private:
     MintingFilterProxy *mintingProxyModel;
     QMenu *contextMenu;
 
-private slots:
+private Q_SLOTS:
     void contextualMenu(const QPoint &);
     void copyAddress();
     void copyTransactionId();
 
-signals:
+Q_SIGNALS:
 
-public slots:
+public Q_SLOTS:
     void exportClicked();
     void chooseMintingInterval(int idx);
 };

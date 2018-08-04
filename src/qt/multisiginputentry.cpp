@@ -1,17 +1,13 @@
-#include <QApplication>
-#include <QClipboard>
-#include <string>
-#include <vector>
+#include <qt/multisiginputentry.h>
+#include <qt/forms/ui_multisiginputentry.h>
 
-#include "base58.h"
-#include "multisiginputentry.h"
-#include "ui_multisiginputentry.h"
-#include "main.h"
-#include "init.h"
-#include "script.h"
-#include "util.h"
-#include "wallet.h"
-#include "walletmodel.h"
+#include <validation.h>
+#include <chainparams.h>
+#include <script/standard.h>
+#include <base58.h>
+#include <wallet/wallet.h>
+
+#include <QClipboard>
 
 
 MultisigInputEntry::MultisigInputEntry(QWidget *parent) : QFrame(parent), ui(new Ui::MultisigInputEntry), model(0)
@@ -54,14 +50,14 @@ int64_t MultisigInputEntry::getAmount()
 {
     int64_t amount = 0;
     int nOutput = ui->transactionOutput->currentIndex();
-    CTransaction tx;
-    uint256 blockHash = 0;
+    CTransactionRef tx;
+    uint256 blockHash = uint256();
 
-    if(GetTransaction(txHash, tx, blockHash))
+    if(GetTransaction(txHash, tx, Params().GetConsensus(), blockHash))
     {
-        if(nOutput < tx.vout.size())
+        if(nOutput < tx->vout.size())
         {
-            const CTxOut& txOut = tx.vout[nOutput];
+            const CTxOut& txOut = tx->vout[nOutput];
             amount = txOut.nValue;
         }
     }
@@ -96,7 +92,7 @@ void MultisigInputEntry::on_pasteTransactionIdButton_clicked()
 
 void MultisigInputEntry::on_deleteButton_clicked()
 {
-    emit removeEntry(this);
+    Q_EMIT removeEntry(this);
 }
 
 void MultisigInputEntry::on_pasteRedeemScriptButton_clicked()
@@ -112,15 +108,15 @@ void MultisigInputEntry::on_transactionId_textChanged(const QString &transaction
 
     // Make list of transaction outputs
     txHash.SetHex(transactionId.toStdString().c_str());
-    CTransaction tx;
-    uint256 blockHash = 0;
-    if(!GetTransaction(txHash, tx, blockHash))
+    CTransactionRef tx;
+    uint256 blockHash = uint256();
+    if(!GetTransaction(txHash, tx, Params().GetConsensus(), blockHash))
         return;
-    for(int i = 0; i < tx.vout.size(); i++)
+    for(int i = 0; i < tx->vout.size(); i++)
     {
         QString idStr;
         idStr.setNum(i);
-        const CTxOut& txOut = tx.vout[i];
+        const CTxOut& txOut = tx->vout[i];
         int64_t amount = txOut.nValue;
         QString amountStr;
         amountStr.sprintf("%.6f", (double) amount / COIN);
@@ -128,8 +124,7 @@ void MultisigInputEntry::on_transactionId_textChanged(const QString &transaction
         CTxDestination addr;
         if(ExtractDestination(script, addr))
         {
-            CBitcoinAddress address(addr);
-            QString addressStr(address.ToString().c_str());
+            QString addressStr(EncodeDestination(addr).c_str());
             ui->transactionOutput->addItem(idStr + QString(" - ") + addressStr + QString(" - ") + amountStr + QString(" PPC"));
         }
         else
@@ -142,11 +137,11 @@ void MultisigInputEntry::on_transactionOutput_currentIndexChanged(int index)
     if(ui->transactionOutput->itemText(index).isEmpty())
         return;
 
-    CTransaction tx;
-    uint256 blockHash = 0;
-    if(!GetTransaction(txHash, tx, blockHash))
+    CTransactionRef tx;
+    uint256 blockHash = uint256();
+    if(!GetTransaction(txHash, tx, Params().GetConsensus(), blockHash))
         return;
-    const CTxOut& txOut = tx.vout[index];
+    const CTxOut& txOut = tx->vout[index];
     CScript script = txOut.scriptPubKey;
 
     if(script.IsPayToScriptHash())
@@ -157,11 +152,11 @@ void MultisigInputEntry::on_transactionOutput_currentIndexChanged(int index)
         {
             // Try to find the redeem script
             CTxDestination dest;
-            if(ExtractDestination(script, dest))
+            if(ExtractDestination(script, dest) && !vpwallets.empty())
                 {
                     CScriptID scriptID = boost::get<CScriptID>(dest);
                     CScript redeemScript;
-                    if(pwalletMain->GetCScript(scriptID, redeemScript))
+                    if(vpwallets[0]->GetCScript(scriptID, redeemScript))
                         ui->redeemScript->setText(HexStr(redeemScript.begin(), redeemScript.end()).c_str());
                 }
         }
@@ -171,5 +166,5 @@ void MultisigInputEntry::on_transactionOutput_currentIndexChanged(int index)
         ui->redeemScript->setEnabled(false);
     }
 
-    emit updateAmount();
+    Q_EMIT updateAmount();
 }
