@@ -3972,7 +3972,12 @@ bool CWallet::Verify(std::string wallet_file, bool salvage_wallet, std::string& 
         }
     }
 
-    if (!WalletBatch::VerifyEnvironment(wallet_path, error_string)) {
+    try {
+        if (!WalletBatch::VerifyEnvironment(wallet_path, error_string)) {
+            return false;
+        }
+    } catch (const fs::filesystem_error& e) {
+        error_string = strprintf("Error loading wallet %s. %s", wallet_file, e.what());
         return false;
     }
 
