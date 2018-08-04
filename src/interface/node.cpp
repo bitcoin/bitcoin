@@ -280,6 +280,10 @@ class NodeImpl : public Node
     {
         return MakeHandler(::uiInterface.NotifyAlertChanged.connect(fn));
     }
+    std::unique_ptr<Handler> handleNotifyMNSyncProgress(NotifyMNSyncProgressFn fn) override
+    {
+        return MakeHandler(::uiInterface.NotifyMNSyncProgress.connect(fn));
+    }
     std::unique_ptr<Handler> handleBannedListChanged(BannedListChangedFn fn) override
     {
         return MakeHandler(::uiInterface.BannedListChanged.connect(fn));

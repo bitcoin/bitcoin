@@ -88,6 +88,7 @@ private:
     std::unique_ptr<interface::Handler> m_handler_banned_list_changed;
     std::unique_ptr<interface::Handler> m_handler_notify_block_tip;
     std::unique_ptr<interface::Handler> m_handler_notify_header_tip;
+    std::unique_ptr<interface::Handler> m_handler_notify_mn_data;
     OptionsModel *optionsModel;
     PeerTableModel *peerTableModel;
     QString cachedMasternodeCountString;
@@ -103,7 +104,7 @@ Q_SIGNALS:
     void numConnectionsChanged(int count);
     void strMasternodesChanged(const QString &strMasternodes);
     void numBlocksChanged(int count, const QDateTime& blockDate, double nVerificationProgress, bool header);
-    void additionalDataSyncProgressChanged(double nSyncProgress);
+    void additionalDataSyncProgressChanged(int nSyncProgress);
     void mempoolSizeChanged(long count, size_t mempoolSizeInBytes);
     void networkActiveChanged(bool networkActive);
     void alertsChanged(const QString &warnings);

@@ -236,6 +236,10 @@ public:
     using NotifyAlertChangedFn = std::function<void()>;
     virtual std::unique_ptr<Handler> handleNotifyAlertChanged(NotifyAlertChangedFn fn) = 0;
 
+    //! Register handler for MN status messages.
+    using NotifyMNSyncProgressFn = std::function<void(const std::string& title, int progress)>;
+    virtual std::unique_ptr<Handler> handleNotifyMNSyncProgress(NotifyMNSyncProgressFn fn) = 0;
+
     //! Register handler for ban list messages.
     using BannedListChangedFn = std::function<void()>;
     virtual std::unique_ptr<Handler> handleBannedListChanged(BannedListChangedFn fn) = 0;
