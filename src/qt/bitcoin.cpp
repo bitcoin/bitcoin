@@ -144,6 +144,10 @@ BitcoinCore::BitcoinCore(interfaces::Node& node) :
 void BitcoinCore::handleRunawayException(const std::exception *e)
 {
     PrintExceptionContinue(e, "Runaway exception");
+    try {
+        m_node.appShutdown();
+    } catch (...) {
+    }
     Q_EMIT runawayException(QString::fromStdString(m_node.getWarnings("gui")));
 }
 
@@ -365,8 +369,15 @@ void BitcoinApplication::initializeResult(bool success)
     qDebug() << __func__ << ": Initialization result: " << success;
     // Set exit result.
     returnValue = success ? EXIT_SUCCESS : EXIT_FAILURE;
-    if(success)
-    {
+    if (!success) {
+        try {
+            m_node.appShutdown();
+        } catch (...) {
+        }
+        Q_EMIT splashFinished(); // Make sure splash screen doesn't stick around during shutdown
+        return quit(); // Exit first main loop invocation
+    }
+
         // Log this only after AppInitMain finishes, as then logging setup is guaranteed complete
         qWarning() << "Platform customization:" << platformStyle->getName();
 #ifdef ENABLE_WALLET
@@ -416,10 +427,6 @@ void BitcoinApplication::initializeResult(bool success)
         }
 #endif
         pollShutdownTimer->start(200);
-    } else {
-        Q_EMIT splashFinished(); // Make sure splash screen doesn't stick around during shutdown
-        quit(); // Exit first main loop invocation
-    }
 }
 
 void BitcoinApplication::shutdownResult()
@@ -430,7 +437,7 @@ void BitcoinApplication::shutdownResult()
 void BitcoinApplication::handleRunawayException(const QString &message)
 {
     QMessageBox::critical(nullptr, "Runaway exception", BitcoinGUI::tr("A fatal error occurred. Bitcoin can no longer continue safely and will quit.") + QString("\n\n") + message);
-    ::exit(EXIT_FAILURE);
+    std::exit(EXIT_FAILURE);
 }
 
 WId BitcoinApplication::getMainWinId() const
