@@ -75,7 +75,7 @@ protected:
     virtual const char* GetName() const = 0;
 
 public:
-    /// Destructor interrupts sync thread if running and blocks until it exits.
+    /// Derived destructor must interrupt sync thread if running and block until it exits.
     virtual ~BaseIndex();
 
     /// Blocks the current thread until the index is caught up to the current

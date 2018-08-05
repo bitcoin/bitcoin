@@ -211,9 +211,7 @@ void Shutdown()
     if (g_connman) g_connman->Stop();
     peerLogic.reset();
     g_connman.reset();
-    if (g_txindex) {
-        g_txindex.reset();
-    }
+    g_txindex.reset();
 
     StopTorControl();
 

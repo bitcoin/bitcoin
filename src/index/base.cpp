@@ -48,8 +48,6 @@ bool BaseIndex::DB::WriteBestBlock(const CBlockLocator& locator)
 
 BaseIndex::~BaseIndex()
 {
-    Interrupt();
-    Stop();
 }
 
 bool BaseIndex::Init()
