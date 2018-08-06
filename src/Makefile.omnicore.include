@@ -39,6 +39,7 @@ OMNICORE_H = \
   omnicore/tx.h \
   omnicore/uint256_extensions.h \
   omnicore/utilsbitcoin.h \
+  omnicore/utilsui.h \
   omnicore/version.h \
   omnicore/walletcache.h \
   omnicore/walletfetchtxs.h \
@@ -84,6 +85,7 @@ OMNICORE_CPP = \
   omnicore/tally.cpp \
   omnicore/tx.cpp \
   omnicore/utilsbitcoin.cpp \
+  omnicore/utilsui.cpp \
   omnicore/version.cpp \
   omnicore/walletcache.cpp \
   omnicore/walletfetchtxs.cpp \
