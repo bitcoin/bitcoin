@@ -738,6 +738,77 @@ $ omnicore-cli "omni_getallbalancesforaddress" "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S
 
 ---
 
+### omni_getwalletbalances
+
+Returns a list of the total token balances of the whole wallet.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `includewatchonly`  | boolean | optional | include balances of watchonly addresses (default: false)                                     |
+
+**Result:**
+```js
+[                           // (array of JSON objects)
+  {
+    "propertyid" : n,         // (number) the property identifier
+    "name" : "name",            // (string) the name of the token
+    "balance" : "n.nnnnnnnn",   // (string) the total available balance for the token
+    "reserved" : "n.nnnnnnnn"   // (string) the total amount reserved by sell offers and accepts
+    "frozen" : "n.nnnnnnnn"     // (string) the total amount frozen by the issuer (applies to managed properties only)
+  },
+  ...
+]
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_getwalletbalances"
+```
+
+---
+
+### omni_getwalletaddressbalances
+
+Returns a list of all token balances for every wallet address.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `includewatchonly`  | boolean | optional | include balances of watchonly addresses (default: false)                                     |
+
+**Result:**
+```js
+[                           // (array of JSON objects)
+  {
+    "address" : "address",      // (string) the address linked to the following balances
+    "balances" :
+    [
+      {
+        "propertyid" : n,         // (number) the property identifier
+        "name" : "name",            // (string) the name of the token
+        "balance" : "n.nnnnnnnn",   // (string) the available balance for the token
+        "reserved" : "n.nnnnnnnn"   // (string) the amount reserved by sell offers and accepts
+        "frozen" : "n.nnnnnnnn"     // (string) the amount frozen by the issuer (applies to managed properties only)
+      },
+      ...
+    ]
+  },
+  ...
+]
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_getwalletaddressbalances"
+```
+
+---
+
 ### omni_gettransaction
 
 Get detailed information about an Omni transaction.
