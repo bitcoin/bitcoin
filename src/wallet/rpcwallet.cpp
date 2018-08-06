@@ -456,7 +456,7 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid MicroBitcoin address");
 
     // Amount
-    CAmount nAmount = AmountFromValue(request.params[1]) * COIN_RATIO;
+    CAmount nAmount = AmountFromValue(request.params[1]);
     if (nAmount <= 0)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
 
@@ -835,7 +835,7 @@ UniValue movecmd(const JSONRPCRequest& request)
 
     std::string strFrom = AccountFromValue(request.params[0]);
     std::string strTo = AccountFromValue(request.params[1]);
-    CAmount nAmount = AmountFromValue(request.params[2]) * COIN_RATIO;
+    CAmount nAmount = AmountFromValue(request.params[2]);
     if (nAmount <= 0)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
     if (request.params.size() > 3)
@@ -895,7 +895,7 @@ UniValue sendfrom(const JSONRPCRequest& request)
     CBitcoinAddress address(request.params[1].get_str());
     if (!address.IsValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid MicroBitcoin address");
-    CAmount nAmount = AmountFromValue(request.params[2]) * COIN_RATIO;
+    CAmount nAmount = AmountFromValue(request.params[2]);
     if (nAmount <= 0)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
     int nMinDepth = 1;
@@ -1024,7 +1024,7 @@ UniValue sendmany(const JSONRPCRequest& request)
         setAddress.insert(address);
 
         CScript scriptPubKey = GetScriptForDestination(address.Get());
-        CAmount nAmount = AmountFromValue(sendTo[name_]) * COIN_RATIO;
+        CAmount nAmount = AmountFromValue(sendTo[name_]);
         if (nAmount <= 0)
             throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
         totalAmount += nAmount;
@@ -2481,7 +2481,7 @@ UniValue settxfee(const JSONRPCRequest& request)
     LOCK2(cs_main, pwallet->cs_wallet);
 
     // Amount
-    CAmount nAmount = AmountFromValue(request.params[0]) * COIN_RATIO;
+    CAmount nAmount = AmountFromValue(request.params[0]);
 
     payTxFee = CFeeRate(nAmount, 1000);
     return true;
