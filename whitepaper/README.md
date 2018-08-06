@@ -22,7 +22,7 @@ Thank you to the Bitcoin founder and developers. The Ravencoin project was launc
 A blockchain is a ledger showing the quantity of something controlled by a user. It enables one to transfer control of that digital representation to someone else. Of the many possible uses for blockchain technology, the reporting of who owns what is one of its core functions. This is likely why the first, and to date most successful, use case for blockchain technology has been Bitcoin, which was announced by Satoshi Nakamoto on October 31, 2008[1].
 
 
-The Ethereum ERC20 protocol and other projects show tokenized assets that use another blockchain can be created with a wide variety of purposes and structures. Tokens offer several advantages to traditional shares or other participation mechanisms, e.g. faster transfer speed, increased user control and censorship resistance, and a reduction or elimination of the need for a trusted third party.
+The Ethereum ERC20, ERC223 and ERC721 protocols and other projects show tokenized assets that use another blockchain can be created with a wide variety of purposes and structures. Tokens offer several advantages to traditional shares or other participation mechanisms, e.g. faster transfer speed, increased user control and censorship resistance, and a reduction or elimination of the need for a trusted third party.
 
 Bitcoin also has the capability of serving as the rails for tokens by using projects like Omnilayer, RSK, or Counterparty. However, neither Bitcoin nor Ethereum were specifically designed for facilitating ownership of additional assets, and the users and development teams generally prioritize other features.
 
@@ -62,6 +62,7 @@ Assets or tokens can be used for anything the creator’s imagination can conjur
 *  Gold bars
 *  Silver coins
 *  Physical Euros
+*  Artwork
 *  Land Deeds
 *  DC Comics Presents #26
 *  Energy credits (Electricity, Wood, Gas, Oil, Wind)
@@ -89,7 +90,7 @@ Satoshi Nakamoto described bitcoin as an implementation of Wei Dai’s bmoney [1
 
 ## 4. Ravencoin Launch and Algorithm
 
-Ravencoin was announced on October 31, 2018[11] and released binaries for mining on Jan 3, 2018,[12] the respective ninth anniversary of the announcement and launch of Bitcoin. Ravencoin is the bitcoin-like system that will allow users to issue and integrate assets into its blockchain. This will be accomplished in phases which build upon each other.
+Ravencoin was announced on October 31, 2017[11] and released binaries for mining on Jan 3, 2018,[12] the respective ninth anniversary of the announcement and launch of Bitcoin. Ravencoin is the bitcoin-like system that will allow users to issue and integrate assets into its blockchain. This will be accomplished in phases which build upon each other.
 
 \- In progress
 
@@ -109,7 +110,7 @@ Deep into that darkness peering, long I stood there wondering, fearing, Doubting
 </i></p>
 Token names are guaranteed unique. The first to issue a token with a given name is the owner of that token project.
 
-The issuer of a token burns RVN and must provide a unique token name. The issuer determines the quantity issued, the number of decimal places, and whether they will be allowed to issue more of the same token in the future.
+The issuer of a token burns 500 RVN and must provide a unique token name. The issuer determines the quantity issued, the number of decimal places, and whether they will be allowed to issue more of the same token in the future.
 
 Allow the issuance of other tokens using similar method as Mastercoin, Counterparty, or CoinSpark[14].
 
