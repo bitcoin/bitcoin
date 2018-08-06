@@ -994,9 +994,9 @@ UniValue assettransfer(const JSONRPCRequest& request) {
 }
 UniValue assetsend(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
-	if (request.fHelp || params.size() != 4)
+	if (request.fHelp || params.size() != 5)
 		throw runtime_error(
-			"assetsend [asset] ([{\"ownerto\":\"aliasname or address\",\"amount\":amount},...]  or [{\"ownerto\":\"aliasname or address\",\"ranges\":[{\"start\":index,\"end\":index},...]},...]) [memo] [witness]\n"
+			"assetsend [asset] [tmp] ([{\"ownerto\":\"aliasname or address\",\"amount\":amount},...]  or [{\"ownerto\":\"aliasname or address\",\"ranges\":[{\"start\":index,\"end\":index},...]},...]) [memo] [witness]\n"
 			"Send an asset you own to another address/address as an asset allocation. Maximimum recipients is 250.\n"
 			"<asset> Asset guid.\n"
 			"<owner> Alias or address that owns this asset allocation.\n"
@@ -1007,12 +1007,11 @@ UniValue assetsend(const JSONRPCRequest& request) {
 			"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction. Only applicable asset is owned by an alias.\n"
 			"The third parameter can be either an array of address and amounts if sending amount pairs or an array of address and array of start/end pairs of indexes for input ranges.\n"
 			+ HelpRequiringPassphrase());
-
 	// gather & validate inputs
 	vector<unsigned char> vchAsset = vchFromValue(params[0]);
-	UniValue valueTo = params[1];
-	vector<unsigned char> vchMemo = vchFromValue(params[2]);
-	vector<unsigned char> vchWitness = vchFromValue(params[3]);
+	UniValue valueTo = params[2];
+	vector<unsigned char> vchMemo = vchFromValue(params[3]);
+	vector<unsigned char> vchWitness = vchFromValue(params[4]);
 	if (!valueTo.isArray())
 		throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Array of receivers not found");
 

@@ -329,7 +329,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "generate 1"));
 		string guid = arr[1].get_str();
 		
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetsend " + guid + " " + "\"[{\\\"ownerto\\\":\\\"" + address2 + "\\\",\\\"amount\\\":1}]\" '' ''"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetsend " + guid + " tmp " + "\"[{\\\"ownerto\\\":\\\"" + address2 + "\\\",\\\"amount\\\":1}]\" '' ''"));
 		arr = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
 		hex_str = find_value(r.get_obj(), "hex").get_str();
