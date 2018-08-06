@@ -562,23 +562,19 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
     while (nBytes > 0) {
 
         // get current incomplete message, or create a new one
-        if (vRecvMsg.empty() || vRecvMsg.back()->complete()) {
-            vRecvMsg.emplace_back(MakeUnique<CNetMessage>(Params().MessageStart(), SER_NETWORK, INIT_PROTO_VERSION));
+        if (vRecvMsg.empty() || vRecvMsg.back()->Complete()) {
+            vRecvMsg.emplace_back(MakeUnique<NetMessage>(Params().MessageStart(), SER_NETWORK, INIT_PROTO_VERSION));
         }
 
-        CNetMessageRef& msg = vRecvMsg.back();
+        NetMessageBaseRef& msg = vRecvMsg.back();
 
         // absorb network data
-        int handled;
-        if (!msg->in_data)
-            handled = msg->readHeader(pch, nBytes);
-        else
-            handled = msg->readData(pch, nBytes);
+        int handled = msg->Read(pch, nBytes);
 
         if (handled < 0)
             return false;
 
-        if (msg->in_data && msg->hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH) {
+        if (msg->GetMessageSize() > MAX_PROTOCOL_MESSAGE_LENGTH) {
             LogPrint(BCLog::NET, "Oversized message from peer=%i, disconnecting\n", GetId());
             return false;
         }
@@ -586,14 +582,14 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
         pch += handled;
         nBytes -= handled;
 
-        if (msg->complete()) {
+        if (msg->Complete()) {
             //store received bytes per message command
             //to prevent a memory DOS, only allow valid commands
-            mapMsgCmdSize::iterator i = mapRecvBytesPerMsgCmd.find(msg->hdr.pchCommand);
+            mapMsgCmdSize::iterator i = mapRecvBytesPerMsgCmd.find(msg->GetCommandName());
             if (i == mapRecvBytesPerMsgCmd.end())
                 i = mapRecvBytesPerMsgCmd.find(NET_MESSAGE_COMMAND_OTHER);
             assert(i != mapRecvBytesPerMsgCmd.end());
-            i->second += msg->hdr.nMessageSize + CMessageHeader::HEADER_SIZE;
+            i->second += msg->GetMessageSizeWithHeader();
 
             msg->nTime = nTimeMicros;
             complete = true;
@@ -630,7 +626,12 @@ int CNode::GetSendVersion() const
 }
 
 
-int CNetMessage::readHeader(const char *pch, unsigned int nBytes)
+int NetMessage::Read(const char* pch, unsigned int nBytes)
+{
+    return in_data ? ReadData(pch, nBytes) : ReadHeader(pch, nBytes);
+}
+
+int NetMessage::ReadHeader(const char* pch, unsigned int nBytes)
 {
     // copy data to temporary parsing buffer
     unsigned int nRemaining = 24 - nHdrPos;
@@ -661,7 +662,7 @@ int CNetMessage::readHeader(const char *pch, unsigned int nBytes)
     return nCopy;
 }
 
-int CNetMessage::readData(const char *pch, unsigned int nBytes)
+int NetMessage::ReadData(const char* pch, unsigned int nBytes)
 {
     unsigned int nRemaining = hdr.nMessageSize - nDataPos;
     unsigned int nCopy = std::min(nRemaining, nBytes);
@@ -678,13 +679,36 @@ int CNetMessage::readData(const char *pch, unsigned int nBytes)
     return nCopy;
 }
 
-const uint256& CNetMessage::GetMessageHash() const
+const uint256& NetMessage::GetMessageHash() const
 {
-    assert(complete());
+    assert(Complete());
     if (data_hash.IsNull())
         hasher.Finalize(data_hash.begin());
     return data_hash;
 }
+
+bool NetMessage::VerifyMessageStart() const
+{
+    return (memcmp(hdr.pchMessageStart, Params().MessageStart(), CMessageHeader::MESSAGE_START_SIZE) == 0);
+}
+
+bool NetMessage::VerifyHeader() const
+{
+    return hdr.IsValid(Params().MessageStart());
+}
+
+bool NetMessage::VerifyChecksum(std::string& error) const
+{
+    const uint256& hash = GetMessageHash();
+    if (memcmp(hash.begin(), hdr.pchChecksum, CMessageHeader::CHECKSUM_SIZE) != 0) {
+        error = tfm::format("CHECKSUM ERROR expected %s was %s\n",
+            HexStr(hash.begin(), hash.begin() + CMessageHeader::CHECKSUM_SIZE),
+            HexStr(hdr.pchChecksum, hdr.pchChecksum + CMessageHeader::CHECKSUM_SIZE));
+        return false;
+    }
+    return true;
+}
+
 
 size_t CConnman::SocketSendData(CNode *pnode) const EXCLUSIVE_LOCKS_REQUIRED(pnode->cs_vSend)
 {
@@ -1313,9 +1337,9 @@ void CConnman::SocketHandler()
                     size_t nSizeAdded = 0;
                     auto it(pnode->vRecvMsg.begin());
                     for (; it != pnode->vRecvMsg.end(); ++it) {
-                        if (!it->get()->complete())
+                        if (!it->get()->Complete())
                             break;
-                        nSizeAdded += it->get()->vRecv.size() + CMessageHeader::HEADER_SIZE;
+                        nSizeAdded += it->get()->GetMessageSizeWithHeader();
                     }
                     {
                         LOCK(pnode->cs_vProcessMsg);

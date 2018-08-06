@@ -569,9 +569,40 @@ public:
 };
 
 
+// base class for format agnostic network messages
+class NetMessageBase
+{
+public:
+    CDataStream vRecv; // received message data
+    int64_t nTime;     // time (in microseconds) of message receipt.
 
+    NetMessageBase(int nTypeIn, int nVersionIn) : vRecv(nTypeIn, nVersionIn)
+    {
+        nTime = 0;
+    }
+    virtual ~NetMessageBase() {}
 
-class CNetMessage {
+    virtual bool Complete() const = 0;
+    virtual uint32_t GetMessageSize() const = 0;           //returns 0 when message has not yet been parsed
+    virtual uint32_t GetMessageSizeWithHeader() const = 0; //return complete message size including header
+
+    virtual std::string GetCommandName() const = 0; //returns the command name. Returns an empty string when no command name is supported
+
+    virtual void SetVersion(int nVersionIn)
+    {
+        vRecv.SetVersion(nVersionIn);
+    }
+
+    virtual int Read(const char* pch, unsigned int nBytes) = 0; //parse bytes
+
+    virtual bool VerifyMessageStart() const = 0;
+    virtual bool VerifyHeader() const = 0;
+    virtual bool VerifyChecksum(std::string& error) const = 0;
+};
+
+//basic network message for the currently used unencrypted p2p communication
+class NetMessage : public NetMessageBase
+{
 private:
     mutable CHash256 hasher;
     mutable uint256 data_hash;
@@ -582,39 +613,59 @@ public:
     CMessageHeader hdr;             // complete header
     unsigned int nHdrPos;
 
-    CDataStream vRecv;              // received message data
     unsigned int nDataPos;
 
-    int64_t nTime;                  // time (in microseconds) of message receipt.
-
-    CNetMessage(const CMessageHeader::MessageStartChars& pchMessageStartIn, int nTypeIn, int nVersionIn) : hdrbuf(nTypeIn, nVersionIn), hdr(pchMessageStartIn), vRecv(nTypeIn, nVersionIn) {
+    NetMessage(const CMessageHeader::MessageStartChars& pchMessageStartIn, int nTypeIn, int nVersionIn) : NetMessageBase(nTypeIn, nVersionIn), hdrbuf(nTypeIn, nVersionIn), hdr(pchMessageStartIn)
+    {
         hdrbuf.resize(24);
         in_data = false;
         nHdrPos = 0;
         nDataPos = 0;
-        nTime = 0;
     }
 
-    bool complete() const
+    bool Complete() const override
     {
         if (!in_data)
             return false;
         return (hdr.nMessageSize == nDataPos);
     }
 
-    const uint256& GetMessageHash() const;
-
-    void SetVersion(int nVersionIn)
+    uint32_t GetMessageSize() const override
     {
-        hdrbuf.SetVersion(nVersionIn);
-        vRecv.SetVersion(nVersionIn);
+        if (!in_data) {
+            return 0;
+        }
+        return hdr.nMessageSize;
     }
 
-    int readHeader(const char *pch, unsigned int nBytes);
-    int readData(const char *pch, unsigned int nBytes);
+    uint32_t GetMessageSizeWithHeader() const override
+    {
+        return hdr.nMessageSize + CMessageHeader::HEADER_SIZE;
+    }
+
+    std::string GetCommandName() const override
+    {
+        return hdr.pchCommand;
+    }
+
+    const uint256& GetMessageHash() const;
+
+    void SetVersion(int nVersionIn) override
+    {
+        hdrbuf.SetVersion(nVersionIn);
+        NetMessageBase::SetVersion(nVersionIn);
+    }
+
+    int Read(const char* pch, unsigned int nBytes) override;
+    int ReadHeader(const char *pch, unsigned int nBytes);
+    int ReadData(const char *pch, unsigned int nBytes);
+
+    bool VerifyMessageStart() const override;
+    bool VerifyHeader() const override;
+    bool VerifyChecksum(std::string& error) const override;
 };
 
-typedef std::unique_ptr<CNetMessage> CNetMessageRef;
+using NetMessageBaseRef = std::unique_ptr<NetMessageBase>;
 
 /** Information about a peer */
 class CNode
@@ -633,7 +684,7 @@ public:
     CCriticalSection cs_vRecv;
 
     CCriticalSection cs_vProcessMsg;
-    std::list<CNetMessageRef> vProcessMsg GUARDED_BY(cs_vProcessMsg);
+    std::list<NetMessageBaseRef> vProcessMsg GUARDED_BY(cs_vProcessMsg);
     size_t nProcessQueueSize{0};
 
     CCriticalSection cs_sendProcessing;
@@ -754,7 +805,7 @@ private:
     const ServiceFlags nLocalServices;
     const int nMyStartingHeight;
     int nSendVersion{0};
-    std::list<CNetMessageRef> vRecvMsg;  // Used only by SocketHandler thread
+    std::list<NetMessageBaseRef> vRecvMsg;  // Used only by SocketHandler thread
 
     mutable CCriticalSection cs_addrName;
     std::string addrName GUARDED_BY(cs_addrName);
