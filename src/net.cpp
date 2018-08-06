@@ -562,23 +562,23 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
     while (nBytes > 0) {
 
         // get current incomplete message, or create a new one
-        if (vRecvMsg.empty() ||
-            vRecvMsg.back().complete())
-            vRecvMsg.push_back(CNetMessage(Params().MessageStart(), SER_NETWORK, INIT_PROTO_VERSION));
+        if (vRecvMsg.empty() || vRecvMsg.back()->complete()) {
+            vRecvMsg.emplace_back(MakeUnique<CNetMessage>(Params().MessageStart(), SER_NETWORK, INIT_PROTO_VERSION));
+        }
 
-        CNetMessage& msg = vRecvMsg.back();
+        CNetMessageRef& msg = vRecvMsg.back();
 
         // absorb network data
         int handled;
-        if (!msg.in_data)
-            handled = msg.readHeader(pch, nBytes);
+        if (!msg->in_data)
+            handled = msg->readHeader(pch, nBytes);
         else
-            handled = msg.readData(pch, nBytes);
+            handled = msg->readData(pch, nBytes);
 
         if (handled < 0)
             return false;
 
-        if (msg.in_data && msg.hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH) {
+        if (msg->in_data && msg->hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH) {
             LogPrint(BCLog::NET, "Oversized message from peer=%i, disconnecting\n", GetId());
             return false;
         }
@@ -586,16 +586,16 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
         pch += handled;
         nBytes -= handled;
 
-        if (msg.complete()) {
+        if (msg->complete()) {
             //store received bytes per message command
             //to prevent a memory DOS, only allow valid commands
-            mapMsgCmdSize::iterator i = mapRecvBytesPerMsgCmd.find(msg.hdr.pchCommand);
+            mapMsgCmdSize::iterator i = mapRecvBytesPerMsgCmd.find(msg->hdr.pchCommand);
             if (i == mapRecvBytesPerMsgCmd.end())
                 i = mapRecvBytesPerMsgCmd.find(NET_MESSAGE_COMMAND_OTHER);
             assert(i != mapRecvBytesPerMsgCmd.end());
-            i->second += msg.hdr.nMessageSize + CMessageHeader::HEADER_SIZE;
+            i->second += msg->hdr.nMessageSize + CMessageHeader::HEADER_SIZE;
 
-            msg.nTime = nTimeMicros;
+            msg->nTime = nTimeMicros;
             complete = true;
         }
     }
@@ -1313,9 +1313,9 @@ void CConnman::SocketHandler()
                     size_t nSizeAdded = 0;
                     auto it(pnode->vRecvMsg.begin());
                     for (; it != pnode->vRecvMsg.end(); ++it) {
-                        if (!it->complete())
+                        if (!it->get()->complete())
                             break;
-                        nSizeAdded += it->vRecv.size() + CMessageHeader::HEADER_SIZE;
+                        nSizeAdded += it->get()->vRecv.size() + CMessageHeader::HEADER_SIZE;
                     }
                     {
                         LOCK(pnode->cs_vProcessMsg);
