@@ -1298,6 +1298,19 @@ public:
     /** overwrite all flags by the given uint64_t
        returns false if unknown, non-tolerable flags are present */
     bool SetWalletFlags(uint64_t overwriteFlags, bool memOnly);
+
+    /** Returns a bracketed wallet name for displaying in logs, will return [default wallet] if the wallet has no name */
+    const std::string GetDisplayName() const {
+        std::string wallet_name = GetName().length() == 0 ? "default wallet" : GetName();
+        return strprintf("[%s]", wallet_name);
+    };
+
+    /** Prepends the wallet name in logging output to ease debugging in multi-wallet use cases */
+    template<typename... Params>
+    void WalletLogPrintf(std::string fmt, Params... parameters) const {
+        LogPrintf(("%s " + fmt).c_str(), GetDisplayName(), parameters...);
+    };
+
 };
 
 /** A key allocated from the key pool. */

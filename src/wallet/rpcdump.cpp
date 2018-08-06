@@ -524,7 +524,7 @@ UniValue importwallet(const JSONRPCRequest& request)
 
         // Use uiInterface.ShowProgress instead of pwallet.ShowProgress because pwallet.ShowProgress has a cancel button tied to AbortRescan which
         // we don't want for this progress bar shoing the import progress. uiInterface.ShowProgress does not have a cancel button.
-        uiInterface.ShowProgress(_("Importing..."), 0, false); // show progress dialog in GUI
+        uiInterface.ShowProgress(strprintf("%s " + _("Importing..."), pwallet->GetDisplayName()), 0, false); // show progress dialog in GUI
         while (file.good()) {
             uiInterface.ShowProgress("", std::max(1, std::min(99, (int)(((double)file.tellg() / (double)nFilesize) * 100))), false);
             std::string line;
@@ -542,7 +542,7 @@ UniValue importwallet(const JSONRPCRequest& request)
                 assert(key.VerifyPubKey(pubkey));
                 CKeyID keyid = pubkey.GetID();
                 if (pwallet->HaveKey(keyid)) {
-                    LogPrintf("Skipping import of %s (key already present)\n", EncodeDestination(keyid));
+                    pwallet->WalletLogPrintf("Skipping import of %s (key already present)\n", EncodeDestination(keyid));
                     continue;
                 }
                 int64_t nTime = DecodeDumpTime(vstr[1]);
@@ -560,7 +560,7 @@ UniValue importwallet(const JSONRPCRequest& request)
                         fLabel = true;
                     }
                 }
-                LogPrintf("Importing %s...\n", EncodeDestination(keyid));
+                pwallet->WalletLogPrintf("Importing %s...\n", EncodeDestination(keyid));
                 if (!pwallet->AddKeyPubKey(key, pubkey)) {
                     fGood = false;
                     continue;
@@ -574,11 +574,11 @@ UniValue importwallet(const JSONRPCRequest& request)
                 CScript script = CScript(vData.begin(), vData.end());
                 CScriptID id(script);
                 if (pwallet->HaveCScript(id)) {
-                    LogPrintf("Skipping import of %s (script already present)\n", vstr[0]);
+                    pwallet->WalletLogPrintf("Skipping import of %s (script already present)\n", vstr[0]);
                     continue;
                 }
                 if(!pwallet->AddCScript(script)) {
-                    LogPrintf("Error importing script %s\n", vstr[0]);
+                    pwallet->WalletLogPrintf("Error importing script %s\n", vstr[0]);
                     fGood = false;
                     continue;
                 }
@@ -673,10 +673,10 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
             assert(key.VerifyPubKey(pubkey));
             CKeyID keyid = pubkey.GetID();
             if (pwallet->HaveKey(keyid)) {
-                LogPrintf("Skipping import of %s (key already present)\n", EncodeDestination(keyid));
+                pwallet->WalletLogPrintf("Skipping import of %s (key already present)\n", EncodeDestination(keyid));
                 continue;
             }
-            LogPrintf("Importing %s...\n", EncodeDestination(keyid));
+            pwallet->WalletLogPrintf("Importing %s...\n", EncodeDestination(keyid));
             if (!pwallet->AddKeyPubKey(key, pubkey)) {
                 fGood = false;
                 continue;
@@ -705,10 +705,10 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
             assert(key.VerifyPubKey(pubkey));
             CKeyID keyid = pubkey.GetID();
             if (pwallet->HaveKey(keyid)) {
-                LogPrintf("Skipping import of %s (key already present)\n", EncodeDestination(keyid));
+                pwallet->WalletLogPrintf("Skipping import of %s (key already present)\n", EncodeDestination(keyid));
                 continue;
             }
-            LogPrintf("Importing %s...\n", EncodeDestination(keyid));
+            pwallet->WalletLogPrintf("Importing %s...\n", EncodeDestination(keyid));
             if (!pwallet->AddKeyPubKey(key, pubkey)) {
                 fGood = false;
                 continue;
@@ -729,7 +729,7 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
     int nTimeBegin = chainActive[nStartHeight]->GetBlockTime();
     pwallet->UpdateTimeFirstKey(nTimeBegin);
 
-    LogPrintf("Rescanning %i blocks\n", chainActive.Height() - nStartHeight + 1);
+    pwallet->WalletLogPrintf("Rescanning %i blocks\n", chainActive.Height() - nStartHeight + 1);
     WalletRescanReserver reserver(pwallet);
     if (!reserver.reserve()) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
