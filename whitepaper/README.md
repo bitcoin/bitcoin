@@ -106,7 +106,7 @@ Utilize proof of work mining, not because it burns a scarce resource of electric
 
 <p align="center"><i>
 Deep into that darkness peering, long I stood there wondering, fearing, Doubting, dreaming dreams no mortal ever dared to dream before; But the silence was unbroken, and the stillness gave no token.  
-\- Edgar Allen Poe, The Raven
+\- Edgar Allan Poe, The Raven
 </i></p>
 Token names are guaranteed unique. The first to issue a token with a given name is the owner of that token project.
 
