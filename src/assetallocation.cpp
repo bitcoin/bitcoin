@@ -44,10 +44,17 @@ string assetAllocationFromOp(int op) {
         return "<unknown assetallocation op>";
     }
 }
-bool CAssetAllocation::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
+bool CAssetAllocation::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash, const vector<unsigned char> &vchOP, const bool checkHash) {
     try {
         CDataStream dsAsset(vchData, SER_NETWORK, PROTOCOL_VERSION);
         dsAsset >> *this;
+		if (nHeight >= Params().GetConsensus().nShareFeeBlock && (vchOP.empty() || vchOP[0] != OP_ASSETALLOCATION))
+		{
+			SetNull();
+			return false;
+		}
+		if (!checkHash)
+			return true;
 		vector<unsigned char> vchSerializedData;
 		Serialize(vchSerializedData);
 		const uint256 &calculatedHash = Hash(vchSerializedData.begin(), vchSerializedData.end());
@@ -66,13 +73,14 @@ bool CAssetAllocation::UnserializeFromData(const vector<unsigned char> &vchData,
 bool CAssetAllocation::UnserializeFromTx(const CTransaction &tx) {
 	vector<unsigned char> vchData;
 	vector<unsigned char> vchHash;
+	vector<unsigned char> vchOP;
 	int nOut;
-	if(!GetSyscoinData(tx, vchData, vchHash, nOut))
+	if(!GetSyscoinData(tx, vchData, vchHash, vchOP, nOut))
 	{
 		SetNull();
 		return false;
 	}
-	if(!UnserializeFromData(vchData, vchHash))
+	if(!UnserializeFromData(vchData, vchHash, vchOP))
 	{	
 		return false;
 	}
@@ -308,8 +316,9 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 	CAssetAllocation theAssetAllocation;
 	vector<unsigned char> vchData;
 	vector<unsigned char> vchHash;
+	vector<unsigned char> vchOP;
 	int nDataOut;
-	if(!GetSyscoinData(tx, vchData, vchHash, nDataOut) || !theAssetAllocation.UnserializeFromData(vchData, vchHash))
+	if(!GetSyscoinData(tx, vchData, vchHash, vchOP, nDataOut) || !theAssetAllocation.UnserializeFromData(vchData, vchHash, vchOP))
 	{
 		errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Cannot unserialize data inside of this transaction relating to an assetallocation");
 		return true;
@@ -865,8 +874,11 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
 	theAssetAllocation.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
 
+	vector<unsigned char> vchOP;
+	vchOP.push_back(OP_ASSET_ALLOCATION);
+
 	vector<unsigned char> vchHashAsset = vchFromString(hash.GetHex());
-	if (!theAssetAllocation.UnserializeFromData(data, vchHashAsset))
+	if (!theAssetAllocation.UnserializeFromData(data, vchHashAsset, vchOP))
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1505 - " + _("Could not unserialize asset allocation data"));
 	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ASSET_ALLOCATION) << CScript::EncodeOP_N(OP_ASSET_ALLOCATION_SEND) << vchHashAsset << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyFromOrig;
@@ -884,9 +896,8 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
 		CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 	}
 	
-	
 	CScript scriptData;
-	scriptData << OP_RETURN << data;
+	scriptData << OP_RETURN << data << vchOP;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
@@ -962,9 +973,10 @@ UniValue assetallocationcollectinterest(const JSONRPCRequest& request) {
 		scriptPubKeyAlias += scriptPubKeyFromOrig;
 		CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 	}
-	
+	vector<unsigned char> vchOP;
+	vchOP.push_back(OP_ASSETALLOCATION);
 	CScript scriptData;
-	scriptData << OP_RETURN << data;
+	scriptData << OP_RETURN << data << vchOP;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
@@ -1210,7 +1222,9 @@ void AssetAllocationTxToJSON(const int op, const std::vector<unsigned char> &vch
 {
 	string opName = assetFromOp(op);
 	CAssetAllocation assetallocation;
-	if(!assetallocation.UnserializeFromData(vchData, vchHash))
+	vector<unsigned char> vchOP;
+	vchOP.push_back(OP_ASSETALLOCATION);
+	if(!assetallocation.UnserializeFromData(vchData, vchHash, vchOP))
 		return;
 	CAsset dbAsset;
 	GetAsset(assetallocation.vchAsset, dbAsset);

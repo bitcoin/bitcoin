@@ -52,10 +52,17 @@ string certFromOp(int op) {
         return "<unknown cert op>";
     }
 }
-bool CCert::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
+bool CCert::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash, const vector<unsigned char> &vchOP, const bool checkHash) {
     try {
 		CDataStream dsCert(vchData, SER_NETWORK, PROTOCOL_VERSION);
 		dsCert >> *this;
+		if (nHeight >= Params().GetConsensus().nShareFeeBlock && (vchOP.empty() || vchOP[0] != OP_CERT))
+		{
+			SetNull();
+			return false;
+		}
+		if (!checkHash)
+			return true;
 		vector<unsigned char> vchSerializedData;
 		Serialize(vchSerializedData);
 		const uint256 &calculatedHash = Hash(vchSerializedData.begin(), vchSerializedData.end());
@@ -73,13 +80,14 @@ bool CCert::UnserializeFromData(const vector<unsigned char> &vchData, const vect
 bool CCert::UnserializeFromTx(const CTransaction &tx) {
 	vector<unsigned char> vchData;
 	vector<unsigned char> vchHash;
+	vector<unsigned char> vchOP;
 	int nOut;
-	if(!GetSyscoinData(tx, vchData, vchHash, nOut))
+	if(!GetSyscoinData(tx, vchData, vchHash, vchOP, nOut))
 	{
 		SetNull();
 		return false;
 	}
-	if(!UnserializeFromData(vchData, vchHash))
+	if(!UnserializeFromData(vchData, vchHash, vchOP))
 	{	
 		return false;
 	}
@@ -287,9 +295,9 @@ bool CheckCertInputs(const CTransaction &tx, int op, const vector<vector<unsigne
 	// unserialize cert from txn, check for valid
 	CCert theCert;
 	vector<unsigned char> vchData;
-	vector<unsigned char> vchHash;
+	vector<unsigned char> vchHash, vchOP;
 	int nDataOut;
-	if(!GetSyscoinData(tx, vchData, vchHash, nDataOut) || !theCert.UnserializeFromData(vchData, vchHash))
+	if(!GetSyscoinData(tx, vchData, vchHash, vchOP, nDataOut) || !theCert.UnserializeFromData(vchData, vchHash, vchOP))
 	{
 		errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR ERRCODE: 3002 - " + _("Cannot unserialize data inside of this transaction relating to a certificate");
 		return true;
@@ -565,8 +573,10 @@ UniValue certnew(const JSONRPCRequest& request) {
 	CRecipient aliasRecipient;
 	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 
+	vector<unsigned char> vchOP;
+	vchOP.push_back(OP_CERT);
 	CScript scriptData;
-	scriptData << OP_RETURN << data;
+	scriptData << OP_RETURN << data << vchOP;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
@@ -657,8 +667,10 @@ UniValue certupdate(const JSONRPCRequest& request) {
 	CRecipient aliasRecipient;
 	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 		
+	vector<unsigned char> vchOP;
+	vchOP.push_back(OP_CERT);
 	CScript scriptData;
-	scriptData << OP_RETURN << data;
+	scriptData << OP_RETURN << data << vchOP;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
@@ -757,8 +769,10 @@ UniValue certtransfer(const JSONRPCRequest& request) {
 	CRecipient aliasRecipient;
 	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 
+	vector<unsigned char> vchOP;
+	vchOP.push_back(OP_CERT);
 	CScript scriptData;
-	scriptData << OP_RETURN << data;
+	scriptData << OP_RETURN << data << vchOP;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
@@ -850,7 +864,9 @@ void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const
 {
 	string opName = certFromOp(op);
 	CCert cert;
-	if(!cert.UnserializeFromData(vchData, vchHash))
+	vector<unsigned char> vchOP;
+	vchOP.push_back(OP_CERT);
+	if(!cert.UnserializeFromData(vchData, vchHash, vchOP))
 		return;
 
 	CCert dbCert;

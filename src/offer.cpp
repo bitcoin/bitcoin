@@ -144,10 +144,17 @@ string offerFromOp(int op) {
 		return "<unknown offer op>";
 	}
 }
-bool COffer::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
+bool COffer::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash, const vector<unsigned char> &vchOP, const bool checkHash) {
     try {
 		CDataStream dsOffer(vchData, SER_NETWORK, PROTOCOL_VERSION);
 		dsOffer >> *this;
+		if (nHeight >= Params().GetConsensus().nShareFeeBlock && (vchOP.empty() || vchOP[0] != OP_OFFER))
+		{
+			SetNull();
+			return false;
+		}
+		if (!checkHash)
+			return true;
 		vector<unsigned char> vchSerializedData;
 		Serialize(vchSerializedData);
 		const uint256 &calculatedHash = Hash(vchSerializedData.begin(), vchSerializedData.end());
@@ -165,13 +172,14 @@ bool COffer::UnserializeFromData(const vector<unsigned char> &vchData, const vec
 bool COffer::UnserializeFromTx(const CTransaction &tx) {
 	vector<unsigned char> vchData;
 	vector<unsigned char> vchHash;
+	vector<unsigned char> vchOP;
 	int nOut;
-	if(!GetSyscoinData(tx, vchData, vchHash, nOut))
+	if(!GetSyscoinData(tx, vchData, vchHash, vchOP, nOut))
 	{
 		SetNull();
 		return false;
 	}
-	if(!UnserializeFromData(vchData, vchHash))
+	if(!UnserializeFromData(vchData, vchHash, vchOP))
 	{
 		return false;
 	}
@@ -344,10 +352,10 @@ bool CheckOfferInputs(const CTransaction &tx, int op, const vector<vector<unsign
 	// unserialize msg from txn, check for valid
 	COffer theOffer;
 	vector<unsigned char> vchData;
-	vector<unsigned char> vchHash;
+	vector<unsigned char> vchHash, vchOP;
 	CTxDestination payDest, commissionDest, dest, aliasDest;
 	int nDataOut;
-	if(!GetSyscoinData(tx, vchData, vchHash, nDataOut) || !theOffer.UnserializeFromData(vchData, vchHash))
+	if(!GetSyscoinData(tx, vchData, vchHash, vchOP, nDataOut) || !theOffer.UnserializeFromData(vchData, vchHash, vchOP))
 	{
 		errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR ERRCODE: 1000 - " + _("Cannot unserialize data inside of this transaction relating to an offer");
 		return true;
@@ -863,8 +871,10 @@ UniValue offernew(const JSONRPCRequest& request) {
 	CRecipient aliasRecipient;
 	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 
+	vector<unsigned char> vchOP;
+	vchOP.push_back(OP_OFFER);
 	CScript scriptData;
-	scriptData << OP_RETURN << data;
+	scriptData << OP_RETURN << data << vchOP;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
@@ -954,8 +964,10 @@ UniValue offerlink(const JSONRPCRequest& request) {
 	CRecipient aliasRecipient;
 	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 
+	vector<unsigned char> vchOP;
+	vchOP.push_back(OP_OFFER);
 	CScript scriptData;
-	scriptData << OP_RETURN << data;
+	scriptData << OP_RETURN << data << vchOP;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
@@ -1149,8 +1161,10 @@ UniValue offerupdate(const JSONRPCRequest& request) {
 	CRecipient aliasRecipient;
 	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 
+	vector<unsigned char> vchOP;
+	vchOP.push_back(OP_OFFER);
 	CScript scriptData;
-	scriptData << OP_RETURN << data;
+	scriptData << OP_RETURN << data << vchOP;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
@@ -1409,7 +1423,9 @@ void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 {
 	string opName = offerFromOp(op);
 	COffer offer;
-	if(!offer.UnserializeFromData(vchData, vchHash))
+	vector<unsigned char> vchOP;
+	vchOP.push_back(OP_OFFER);
+	if(!offer.UnserializeFromData(vchData, vchHash, vchOP))
 		return;
 
 	COffer dbOffer;

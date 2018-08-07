@@ -73,7 +73,8 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 {
 	vector<unsigned char> vchData;
 	vector<unsigned char> vchHash;
-	if(!GetSyscoinData(scriptPubKey, vchData, vchHash))
+	vector<unsigned char> vchOP;
+	if(!GetSyscoinData(scriptPubKey, vchData, vchHash, vchOP))
 		return false;
 	if(!chainActive.Tip())
 		return false;
@@ -84,9 +85,11 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 	CAssetAllocation assetallocation;
 	CAsset asset;
 	nTime = 0;
-	if (assetallocation.UnserializeFromData(vchData, vchHash) || asset.UnserializeFromData(vchData, vchHash))
+	if (assetallocation.UnserializeFromData(vchData, vchHash, vchOP, false))
 		return false;
-	else if(alias.UnserializeFromData(vchData, vchHash))
+	else if(asset.UnserializeFromData(vchData, vchHash, vchOP, false))
+		return false;
+	else if(alias.UnserializeFromData(vchData, vchHash, vchOP, false))
 	{
 		CAliasUnprunable aliasUnprunable;
 		// we only prune things that we have in our db and that we can verify the last tx is expired
@@ -111,7 +114,7 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 			return true;
 		}
 	}
-	else if(offer.UnserializeFromData(vchData, vchHash))
+	else if(offer.UnserializeFromData(vchData, vchHash, vchOP, false))
 	{
 		if (!pofferdb || !pofferdb->ReadOffer(offer.vchOffer, offer))
 		{
@@ -122,7 +125,7 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 		nTime = GetOfferExpiration(offer);
 		return true; 
 	}
-	else if(cert.UnserializeFromData(vchData, vchHash))
+	else if(cert.UnserializeFromData(vchData, vchHash, vchOP, false))
 	{
 		if (!pcertdb || !pcertdb->ReadCert(cert.vchCert, cert))
 		{
@@ -133,7 +136,7 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 		nTime = GetCertExpiration(cert);
 		return true; 
 	}
-	else if(escrow.UnserializeFromData(vchData, vchHash))
+	else if(escrow.UnserializeFromData(vchData, vchHash, vchOP, false))
 	{
 		if (!pescrowdb || !pescrowdb->ReadEscrow(escrow.vchEscrow, escrow))
 		{
@@ -249,6 +252,7 @@ bool CheckAliasInputs(const CCoinsViewCache &inputs, const CTransaction &tx, int
 	CAliasIndex theAlias;
 	vector<unsigned char> vchData;
 	vector<unsigned char> vchAlias;
+	vector<unsigned char> vchOP;
 	vector<unsigned char> vchHash;
 	int nDataOut;
 	bool aliasData = true;
@@ -263,9 +267,10 @@ bool CheckAliasInputs(const CCoinsViewCache &inputs, const CTransaction &tx, int
 	}
 	// if it has alias data, get it and unserialize the alias from data output
 	if (aliasData) {
-		bool bData = GetSyscoinData(tx, vchData, vchHash, nDataOut);
-		if (bData)
-			theAlias.UnserializeFromData(vchData, vchHash);
+		bool bData = GetSyscoinData(tx, vchData, vchHash, vchOP, nDataOut);
+		if (bData) {
+			theAlias.UnserializeFromData(vchData, vchHash, vchOP);
+		}
 	}
 	if(fJustCheck)
 	{
@@ -281,6 +286,11 @@ bool CheckAliasInputs(const CCoinsViewCache &inputs, const CTransaction &tx, int
 			if(vvchArgs.size() <= 2 || vchHash != vvchArgs[2])
 			{
 				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5001 - " + _("Hash provided doesn't match the calculated hash of the data");
+				return true;
+			}
+			if (nHeight >= Params().GetConsensus().nShareFeeBlock && (vchOP.empty() || vchOP[0] != OP_ALIAS))
+			{
+				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5001 - " + _("Data provided is not an alias payload");
 				return true;
 			}
 		}					
@@ -685,20 +695,20 @@ string stringFromVch(const vector<unsigned char> &vch) {
 	}
 	return res;
 }
-bool GetSyscoinData(const CTransaction &tx, vector<unsigned char> &vchData, vector<unsigned char> &vchHash, int& nOut)
+bool GetSyscoinData(const CTransaction &tx, vector<unsigned char> &vchData, vector<unsigned char> &vchHash, vector<unsigned char> &vchOP, int& nOut)
 {
 	nOut = GetSyscoinDataOutput(tx);
     if(nOut == -1)
 	   return false;
 
 	const CScript &scriptPubKey = tx.vout[nOut].scriptPubKey;
-	return GetSyscoinData(scriptPubKey, vchData, vchHash);
+	return GetSyscoinData(scriptPubKey, vchData, vchHash, vchOP);
 }
 bool IsValidAliasName(const std::vector<unsigned char> &vchAlias)
 {
 	return (vchAlias.size() <= 71 && vchAlias.size() >= 3);
 }
-bool GetSyscoinData(const CScript &scriptPubKey, vector<unsigned char> &vchData, vector<unsigned char> &vchHash)
+bool GetSyscoinData(const CScript &scriptPubKey, vector<unsigned char> &vchData, vector<unsigned char> &vchHash, vector<unsigned char> &vchOP)
 {
 	CScript::const_iterator pc = scriptPubKey.begin();
 	opcodetype opcode;
@@ -710,6 +720,7 @@ bool GetSyscoinData(const CScript &scriptPubKey, vector<unsigned char> &vchData,
 		return false;
 	if (!scriptPubKey.GetOp(pc, opcode, vchHash))
 		return false;
+	scriptPubKey.GetOp(pc, opcode, vchOP);
 	return true;
 }
 void GetAddress(const CAliasIndex& alias, CSyscoinAddress* address,CScript& script,const uint32_t nPaymentOption)
@@ -721,10 +732,17 @@ void GetAddress(const CAliasIndex& alias, CSyscoinAddress* address,CScript& scri
 	address[0] = CSyscoinAddress(addrTmp.Get(), myAddressType);
 	script = GetScriptForDestination(address[0].Get());
 }
-bool CAliasIndex::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
+bool CAliasIndex::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash, const vector<unsigned char> &vchOP, const bool checkHash) {
     try {
 		CDataStream dsAlias(vchData, SER_NETWORK, PROTOCOL_VERSION);
 		dsAlias >> *this;
+		if (nHeight >= Params().GetConsensus().nShareFeeBlock && (vchOP.empty() || vchOP[0] != OP_ALIAS))
+		{
+			SetNull();
+			return false;
+		}
+		if (!checkHash)
+			return true;
 		vector<unsigned char> vchSerializedData;
 		Serialize(vchSerializedData);
 		const uint256 &calculatedHash = Hash(vchSerializedData.begin(), vchSerializedData.end());
@@ -742,13 +760,14 @@ bool CAliasIndex::UnserializeFromData(const vector<unsigned char> &vchData, cons
 bool CAliasIndex::UnserializeFromTx(const CTransaction &tx) {
 	vector<unsigned char> vchData;
 	vector<unsigned char> vchHash;
+	vector<unsigned char> vchOP;
 	int nOut;
-	if(!GetSyscoinData(tx, vchData, vchHash, nOut))
+	if(!GetSyscoinData(tx, vchData, vchHash, vchOP, nOut))
 	{
 		SetNull();
 		return false;
 	}
-	if(!UnserializeFromData(vchData, vchHash))
+	if(!UnserializeFromData(vchData, vchHash, vchOP))
 	{
 		return false;
 	}
@@ -1715,7 +1734,8 @@ UniValue aliasnew(const JSONRPCRequest& request) {
 	DecodeBase58(strAddress, newAlias.vchAddress);
 
 	vector<unsigned char> data;
-	vector<unsigned char> vchHashAlias, vchHashAlias1;
+	vector<unsigned char> vchHashAlias, vchHashAlias1, vchOP;
+	vchOP.push_back(OP_ALIAS);
 	uint256 hash;
 	bool bActivation = false;
 	newAlias1 = newAlias;
@@ -1724,7 +1744,7 @@ UniValue aliasnew(const JSONRPCRequest& request) {
 		data = mapAliasRegistrationData[vchAlias];
 		hash = Hash(data.begin(), data.end());
 		vchHashAlias = vchFromString(hash.GetHex());
-		if (!newAlias.UnserializeFromData(data, vchHashAlias))
+		if (!newAlias.UnserializeFromData(data, vchHashAlias, vchOP))
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5507 - " + _("Cannot unserialize alias registration transaction"));
 		if (strAddress.empty())
 			newAlias1.vchAddress = newAlias.vchAddress;
@@ -1761,9 +1781,10 @@ UniValue aliasnew(const JSONRPCRequest& request) {
 	CRecipient recipient;
 	CreateAliasRecipient(scriptPubKey, recipient);
 	
+	vector<unsigned char> vchOP;
+	vchOP.push_back(OP_ALIAS);
 	CScript scriptData;
-
-	scriptData << OP_RETURN << data;
+	scriptData << OP_RETURN << data << vchOP;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	// calculate a fee if renewal is larger than default.. based on how many years you extend for it will be exponentially more expensive
@@ -1937,9 +1958,10 @@ UniValue aliasnewestimatedfee(const JSONRPCRequest& request) {
 	CreateAliasRecipient(scriptPubKey, recipient);
 	CreateAliasRecipient(scriptPubKey1, recipient1);
 
+	vector<unsigned char> vchOP;
+	vchOP.push_back(OP_ALIAS);
 	CScript scriptData;
-
-	scriptData << OP_RETURN << data;
+	scriptData << OP_RETURN << data << vchOP;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	// calculate a fee if renewal is larger than default.. based on how many years you extend for it will be exponentially more expensive
@@ -2041,8 +2063,10 @@ UniValue aliasupdate(const JSONRPCRequest& request) {
     vector<CRecipient> vecSend;
 	CRecipient recipient;
 	CreateAliasRecipient(scriptPubKey, recipient);
+	vector<unsigned char> vchOP;
+	vchOP.push_back(OP_ALIAS);
 	CScript scriptData;
-	scriptData << OP_RETURN << data;
+	scriptData << OP_RETURN << data << vchOP;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	if (nTime > 0) {
@@ -2139,8 +2163,10 @@ UniValue aliasupdateestimatedfee(const JSONRPCRequest& request) {
 	vector<CRecipient> vecSend;
 	CRecipient recipient;
 	CreateAliasRecipient(scriptPubKey, recipient);
+	vector<unsigned char> vchOP;
+	vchOP.push_back(OP_ALIAS);
 	CScript scriptData;
-	scriptData << OP_RETURN << data;
+	scriptData << OP_RETURN << data << vchOP;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	if (nTime > 0) {
@@ -2190,8 +2216,9 @@ UniValue syscoindecoderawtransaction(const JSONRPCRequest& request) {
 	int nOut;
 	int op;
 	vector<vector<unsigned char> > vvch;
+	vector<unsigned char> vchOP;
 	vector<unsigned char> vchHash;
-	GetSyscoinData(rawTx, vchData, vchHash, nOut);	
+	GetSyscoinData(rawTx, vchData, vchHash, vchOP, nOut);
 	UniValue output(UniValue::VOBJ);
 	char type;
 	if(DecodeAndParseSyscoinTx(rawTx, op,  vvch, type))
@@ -2218,7 +2245,9 @@ void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vec
 {
 	string opName = aliasFromOp(op);
 	CAliasIndex alias;
-	if(!alias.UnserializeFromData(vchData, vchHash))
+	vector<unsigned char> vchOP;
+	vchOP.push_back(OP_ALIAS);
+	if(!alias.UnserializeFromData(vchData, vchHash, vchOP))
 		return;
 	CAliasIndex dbAlias;
 	GetAlias(alias.vchAlias, dbAlias);
@@ -2777,8 +2806,10 @@ UniValue aliasupdatewhitelist(const JSONRPCRequest& request) {
 	vector<CRecipient> vecSend;
 	CRecipient recipient;
 	CreateAliasRecipient(scriptPubKey, recipient);
+	vector<unsigned char> vchOP;
+	vchOP.push_back(OP_ALIAS);
 	CScript scriptData;
-	scriptData << OP_RETURN << data;
+	scriptData << OP_RETURN << data << vchOP;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
@@ -2829,8 +2860,10 @@ UniValue aliasclearwhitelist(const JSONRPCRequest& request) {
 	vector<CRecipient> vecSend;
 	CRecipient recipient;
 	CreateAliasRecipient(scriptPubKey, recipient);
+	vector<unsigned char> vchOP;
+	vchOP.push_back(OP_ALIAS);
 	CScript scriptData;
-	scriptData << OP_RETURN << data;
+	scriptData << OP_RETURN << data << vchOP;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
