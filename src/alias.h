@@ -18,14 +18,7 @@ class COutPoint;
 class CSyscoinAddress;
 class CCoinsViewCache;
 struct CRecipient;
-enum {
-	OP_ALIAS = 125,
-	OP_OFFER = 205,
-	OP_CERT = 88,
-	OP_ESCROW = 23,
-	OP_ASSET = 44,
-	OP_ASSETALLOCATION = 183
-};
+static const char EODMARKER = -125;
 static const unsigned int MAX_GUID_LENGTH = 20;
 static const unsigned int MAX_NAME_LENGTH = 256;
 static const unsigned int MAX_VALUE_LENGTH = 512;
@@ -239,7 +232,7 @@ public:
 	inline void SetNull() { offerWhitelist.SetNull(); nAccessFlags = 2; vchAddress.clear(); vchEncryptionPublicKey.clear(); vchEncryptionPrivateKey.clear(); nAcceptTransferFlags = 3; nExpireTime = 0; vchGUID.clear(); vchAlias.clear(); txHash.SetNull(); nHeight = 0; vchPublicValue.clear(); }
     inline bool IsNull() const { return (vchAlias.empty()); }
 	bool UnserializeFromTx(const CTransaction &tx);
-	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, const std::vector<unsigned char> &vchOP, const bool checkHash = true);
+	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
 	void Serialize(std::vector<unsigned char>& vchData);
 };
 
@@ -330,8 +323,8 @@ std::string GenerateSyscoinGuid();
 bool RemoveAliasScriptPrefix(const CScript& scriptIn, CScript& scriptOut);
 int GetSyscoinDataOutput(const CTransaction& tx);
 bool IsSyscoinDataOutput(const CTxOut& out);
-bool GetSyscoinData(const CTransaction &tx, std::vector<unsigned char> &vchData, std::vector<unsigned char> &vchHash, std::vector<unsigned char> &vchOP, int& nOut);
-bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vchData, std::vector<unsigned char> &vchHash, std::vector<unsigned char> &vchOP);
+bool GetSyscoinData(const CTransaction &tx, std::vector<unsigned char> &vchData, std::vector<unsigned char> &vchHash, int& nOut);
+bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vchData, std::vector<unsigned char> &vchHash);
 bool IsSysServiceExpired(const uint64_t &nTime);
 bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime);
 bool IsSyscoinScript(const CScript& scriptPubKey, int &op, std::vector<std::vector<unsigned char> > &vvchArgs);
