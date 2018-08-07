@@ -1313,6 +1313,8 @@ bool CAssetAllocationTransactionsDB::ScanAssetAllocationIndex(const int count, c
 			}
 			if (assetValue.read(indexItem.second))
 				oRes.push_back(assetValue);
+			if (index >= count + from)
+				break;
 		}
 		if (index >= count + from)
 			break;
