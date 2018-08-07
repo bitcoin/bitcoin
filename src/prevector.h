@@ -159,7 +159,13 @@ private:
 
     T* direct_ptr(difference_type pos) { return reinterpret_cast<T*>(_union.direct) + pos; }
     const T* direct_ptr(difference_type pos) const { return reinterpret_cast<const T*>(_union.direct) + pos; }
-    T* indirect_ptr(difference_type pos) { return reinterpret_cast<T*>(_union.indirect) + pos; }
+    T* indirect_ptr(difference_type pos) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+         // gcc warning: <unnamed struct>::indirect’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+        return reinterpret_cast<T*>(_union.indirect) + pos;
+#pragma GCC diagnostic pop
+    }
     const T* indirect_ptr(difference_type pos) const { return reinterpret_cast<const T*>(_union.indirect) + pos; }
     bool is_direct() const { return _size <= N; }
 
@@ -178,7 +184,11 @@ private:
                 /* FIXME: Because malloc/realloc here won't call new_handler if allocation fails, assert
                     success. These should instead use an allocator or new/delete so that handlers
                     are called as necessary, but performance would be slightly degraded by doing so. */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+                // gcc warning: <unnamed struct>::indirect’ may be used uninitialized in this function [-Wmaybe-uninitialized]
                 _union.indirect = static_cast<char*>(realloc(_union.indirect, ((size_t)sizeof(T)) * new_capacity));
+#pragma GCC diagnostic pop
                 assert(_union.indirect);
                 _union.capacity = new_capacity;
             } else {
