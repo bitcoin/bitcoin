@@ -24,6 +24,7 @@ FUNCTION_NAMES_AND_NUMBER_OF_LEADING_ARGUMENTS=(
     vprintf,1
     vsnprintf,1
     vsprintf,1
+    WalletLogPrintf,0
 )
 
 EXIT_CODE=0
