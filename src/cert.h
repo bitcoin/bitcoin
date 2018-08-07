@@ -84,7 +84,7 @@ public:
 	inline void SetNull() { sCategory.clear(); vchTitle.clear(); nAccessFlags = 2; vchCert.clear(); nHeight = 0; txHash.SetNull(); vchAlias.clear(); vchPubData.clear(); }
     inline bool IsNull() const { return (vchCert.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
-	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
+	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, const bool skipHashCheck = false);
 	void Serialize(std::vector<unsigned char>& vchData);
 };
 

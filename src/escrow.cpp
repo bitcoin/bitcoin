@@ -162,10 +162,12 @@ string escrowFromOp(int op) {
     }
 	return "<unknown escrow op>";
 }
-bool CEscrow::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
+bool CEscrow::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash, const bool skipHashCheck) {
     try {
 		CDataStream dsEscrow(vchData, SER_NETWORK, PROTOCOL_VERSION);
 		dsEscrow >> *this;
+		if (skipHashCheck)
+			return true;
 		vector<unsigned char> vchSerializedData;
 		Serialize(vchSerializedData);
 		const uint256 &calculatedHash = Hash(vchSerializedData.begin(), vchSerializedData.end());

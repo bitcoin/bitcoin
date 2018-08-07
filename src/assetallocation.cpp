@@ -44,10 +44,12 @@ string assetAllocationFromOp(int op) {
         return "<unknown assetallocation op>";
     }
 }
-bool CAssetAllocation::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
+bool CAssetAllocation::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash, const bool skipHashCheck) {
     try {
         CDataStream dsAsset(vchData, SER_NETWORK, PROTOCOL_VERSION);
         dsAsset >> *this;
+		if (skipHashCheck)
+			return true;
 		vector<unsigned char> vchSerializedData;
 		Serialize(vchSerializedData);
 		const uint256 &calculatedHash = Hash(vchSerializedData.begin(), vchSerializedData.end());
