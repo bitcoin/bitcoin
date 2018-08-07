@@ -32,7 +32,26 @@ bool IsAssetOp(int op) {
 		|| op == OP_ASSET_SEND;
 }
 
-
+template <typename Stream, typename Operation>
+void CAsset::SerializationOp(Stream& s, Operation ser_action) {
+	READWRITE(vchPubData);
+	READWRITE(txHash);
+	READWRITE(VARINT(nHeight));
+	READWRITE(vchAsset);
+	READWRITE(vchSymbol);
+	READWRITE(sCategory);
+	READWRITE(vchAliasOrAddress);
+	READWRITE(listAllocationInputs);
+	READWRITE(nBalance);
+	READWRITE(nTotalSupply);
+	READWRITE(nMaxSupply);
+	READWRITE(bUseInputRanges);
+	READWRITE(fInterestRate);
+	READWRITE(bCanAdjustInterestRate);
+	READWRITE(VARINT(nPrecision));
+	if (nHeight >= Params().GetConsensus().nShareFeeBlock)
+		READWRITE(EOD);
+}
 string assetFromOp(int op) {
     switch (op) {
     case OP_ASSET_ACTIVATE:
@@ -47,10 +66,17 @@ string assetFromOp(int op) {
         return "<unknown asset op>";
     }
 }
-bool CAsset::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
+bool CAsset::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash, const bool checkEODOnly) {
     try {
 		CDataStream dsAsset(vchData, SER_NETWORK, PROTOCOL_VERSION);
 		dsAsset >> *this;
+		if (EOD != EODMARKER)
+		{
+			SetNull();
+			return false;
+		}
+		if (checkEODOnly)
+			return true;
 		vector<unsigned char> vchSerializedData;
 		Serialize(vchSerializedData);
 		const uint256 &calculatedHash = Hash(vchSerializedData.begin(), vchSerializedData.end());
