@@ -1089,7 +1089,7 @@ string AssetNew(const string& node, const string& name, const string& alias, con
 	boost::algorithm::to_upper(nameupper);
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
 	BOOST_CHECK(find_value(r.get_obj(), "symbol").get_str() == nameupper);
-	BOOST_CHECK(find_value(r.get_obj(), "owner").get_str() == alias);
+	BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == alias);
 	BOOST_CHECK(find_value(r.get_obj(), "publicvalue").get_str() == pubdata);
 	UniValue balance = find_value(r.get_obj(), "balance");
 	UniValue totalsupply = find_value(r.get_obj(), "total_supply");
