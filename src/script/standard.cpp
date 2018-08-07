@@ -72,40 +72,49 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
         return true;
     }
     /** RVN START */
-    if (scriptPubKey.IsNewAsset()) {
-        typeRet = TX_NEW_ASSET;
+    int nType = 0;
+    bool fIsOwner = false;
+    if (scriptPubKey.IsAssetScript(nType, fIsOwner)) {
+        typeRet = (txnouttype)nType;
         std::vector<unsigned char> hashBytes(scriptPubKey.begin()+3, scriptPubKey.begin()+23);
         vSolutionsRet.push_back(hashBytes);
         return true;
     }
 
-    if (scriptPubKey.IsTransferAsset()) {
-        typeRet = TX_TRANSFER_ASSET;
-        std::vector<unsigned char> hashBytes(scriptPubKey.begin()+3, scriptPubKey.begin()+23);
-        vSolutionsRet.push_back(hashBytes);
-        return true;
-    }
-
-    if (scriptPubKey.IsOwnerAsset()) {
-        typeRet = TX_NEW_ASSET;
-        std::vector<unsigned char> hashBytes(scriptPubKey.begin()+3, scriptPubKey.begin()+23);
-        vSolutionsRet.push_back(hashBytes);
-        return true;
-    }
-
-    if (scriptPubKey.IsReissueAsset()) {
-        typeRet = TX_REISSUE_ASSET;
-        std::vector<unsigned char> hashBytes(scriptPubKey.begin()+3, scriptPubKey.begin()+23);
-        vSolutionsRet.push_back(hashBytes);
-        return true;
-    }
-
-    if (scriptPubKey.IsReservedAsset()) {
-        typeRet = TX_RESERVED_ASSET;
-        std::vector<unsigned char> hashBytes(scriptPubKey.begin()+3, scriptPubKey.begin()+23);
-        vSolutionsRet.push_back(hashBytes);
-        return true;
-    }
+//    if (scriptPubKey.IsNewAsset()) {
+//        typeRet = TX_NEW_ASSET;
+//        std::vector<unsigned char> hashBytes(scriptPubKey.begin()+3, scriptPubKey.begin()+23);
+//        vSolutionsRet.push_back(hashBytes);
+//        return true;
+//    }
+//
+//    if (scriptPubKey.IsTransferAsset()) {
+//        typeRet = TX_TRANSFER_ASSET;
+//        std::vector<unsigned char> hashBytes(scriptPubKey.begin()+3, scriptPubKey.begin()+23);
+//        vSolutionsRet.push_back(hashBytes);
+//        return true;
+//    }
+//
+//    if (scriptPubKey.IsOwnerAsset()) {
+//        typeRet = TX_NEW_ASSET;
+//        std::vector<unsigned char> hashBytes(scriptPubKey.begin()+3, scriptPubKey.begin()+23);
+//        vSolutionsRet.push_back(hashBytes);
+//        return true;
+//    }
+//
+//    if (scriptPubKey.IsReissueAsset()) {
+//        typeRet = TX_REISSUE_ASSET;
+//        std::vector<unsigned char> hashBytes(scriptPubKey.begin()+3, scriptPubKey.begin()+23);
+//        vSolutionsRet.push_back(hashBytes);
+//        return true;
+//    }
+//
+//    if (scriptPubKey.IsReservedAsset()) {
+//        typeRet = TX_RESERVED_ASSET;
+//        std::vector<unsigned char> hashBytes(scriptPubKey.begin()+3, scriptPubKey.begin()+23);
+//        vSolutionsRet.push_back(hashBytes);
+//        return true;
+//    }
     /** RVN END */
 
     int witnessversion;
@@ -223,8 +232,9 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
 {
     std::vector<valtype> vSolutions;
     txnouttype whichType;
-    if (!Solver(scriptPubKey, whichType, vSolutions))
+    if (!Solver(scriptPubKey, whichType, vSolutions)) {
         return false;
+    }
 
     if (whichType == TX_PUBKEY)
     {
@@ -245,7 +255,7 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
         addressRet = CScriptID(uint160(vSolutions[0]));
         return true;
     /** RVN START */
-    } else if (whichType == TX_NEW_ASSET || whichType == TX_REISSUE_ASSET || whichType == TX_TRANSFER_ASSET) {
+    } else if (whichType == TX_NEW_ASSET || whichType == TX_REISSUE_ASSET || whichType == TX_TRANSFER_ASSET || whichType == TX_RESERVED_ASSET) {
         addressRet = CKeyID(uint160(vSolutions[0]));
         return true;
     }
@@ -261,7 +271,7 @@ bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::
     std::vector<valtype> vSolutions;
     if (!Solver(scriptPubKey, typeRet, vSolutions))
         return false;
-    if (typeRet == TX_NULL_DATA){
+    if (typeRet == TX_NULL_DATA) {
         // This is data, not addresses
         return false;
     }

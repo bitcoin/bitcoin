@@ -35,6 +35,8 @@ static const std::regex ROOT_NAME_CHARACTERS("^[A-Z0-9._]{3,}$");
 static const std::regex SUB_NAME_CHARACTERS("^[A-Z0-9._]+$");
 static const std::regex UNIQUE_TAG_CHARACTERS("^[-A-Za-z0-9@$%&*()[\\]{}<>_.;?\\\\:]+$");
 static const std::regex CHANNEL_TAG_CHARACTERS("^[A-Z0-9._]+$");
+static const std::regex VOTE_TAG_CHARACTERS("^[A-Z0-9._]+$");
+
 
 static const std::regex DOUBLE_PUNCTUATION("^.*[._]{2,}.*$");
 static const std::regex LEADING_PUNCTUATION("^[._].*$");
@@ -43,10 +45,12 @@ static const std::regex TRAILING_PUNCTUATION("^.*[._]$");
 static const std::string SUB_NAME_DELIMITER = "/";
 static const std::string UNIQUE_TAG_DELIMITER = "#";
 static const std::string CHANNEL_TAG_DELIMITER = "~";
+static const std::string VOTE_TAG_DELIMITER = "^";
 
 static const std::regex UNIQUE_INDICATOR("^[^#]+#[^#]+$");
 static const std::regex CHANNEL_INDICATOR("^[^~]+~[^~]+$");
 static const std::regex OWNER_INDICATOR("^[^!]+!$");
+static const std::regex VOTE_INDICATOR(R"(^[^^]+\^[^~#!\/]+$)");
 
 static const std::regex RAVEN_NAMES("^RVN|^RAVEN|^RAVENCOIN|^RAVENC0IN|^RAVENCO1N|^RAVENC01N");
 
@@ -70,6 +74,11 @@ bool IsSubNameValid(const std::string& name)
 bool IsUniqueTagValid(const std::string& tag)
 {
     return std::regex_match(tag, UNIQUE_TAG_CHARACTERS);
+}
+
+bool IsVoteTagValid(const std::string& tag)
+{
+    return std::regex_match(tag, VOTE_TAG_CHARACTERS);
 }
 
 bool IsChannelTagValid(const std::string& tag)
@@ -138,6 +147,15 @@ bool IsAssetNameValid(const std::string& name, AssetType& assetType)
         if (!valid) return false;
         assetType = AssetType::OWNER;
         return true;
+    } else if (std::regex_match(name, VOTE_INDICATOR))
+    {
+        if (name.size() > MAX_NAME_LENGTH) return false;
+        std::vector<std::string> parts;
+        boost::split(parts, name, boost::is_any_of(VOTE_TAG_DELIMITER));
+        bool valid = IsNameValidBeforeTag(parts.front()) && IsVoteTagValid(parts.back());
+        if (!valid) return false;
+        assetType = AssetType::VOTE;
+        return true;
     }
     else
     {
@@ -162,14 +180,25 @@ bool IsAssetNameAnOwner(const std::string& name)
 
 std::string GetParentName(const std::string& name)
 {
-    if (IsAssetNameASubasset(name)) {
+    AssetType type;
+    if (!IsAssetNameValid(name, type))
+        return "";
 
-        const auto index = name.find_last_of(SUB_NAME_DELIMITER);
+    auto index = std::string::npos;
+    if (type == AssetType::SUB) {
+        index = name.find_last_of(SUB_NAME_DELIMITER);
+    } else if (type == AssetType::UNIQUE) {
+        index = name.find_last_of(UNIQUE_TAG_DELIMITER);
+    } else if (type == AssetType::CHANNEL) {
+        index = name.find_last_of(CHANNEL_TAG_DELIMITER);
+    } else if (type == AssetType::VOTE) {
+        index = name.find_last_of(VOTE_TAG_DELIMITER);
+    } else if (type == AssetType::ROOT)
+        return name;
 
-        if (std::string::npos != index)
-        {
-            return name.substr(0, index);
-        }
+    if (std::string::npos != index)
+    {
+        return name.substr(0, index);
     }
 
     return name;
@@ -379,7 +408,8 @@ bool OwnerFromTransaction(const CTransaction& tx, std::string& ownerName, std::s
 
 bool TransferAssetFromScript(const CScript& scriptPubKey, CAssetTransfer& assetTransfer, std::string& strAddress)
 {
-    if (!IsScriptTransferAsset(scriptPubKey))
+    int nStartingIndex = 0;
+    if (!IsScriptTransferAsset(scriptPubKey, nStartingIndex))
         return false;
 
     CTxDestination destination;
@@ -403,7 +433,8 @@ bool TransferAssetFromScript(const CScript& scriptPubKey, CAssetTransfer& assetT
 
 bool AssetFromScript(const CScript& scriptPubKey, CNewAsset& assetNew, std::string& strAddress)
 {
-    if (!IsScriptNewAsset(scriptPubKey))
+    int nStartingIndex = 0;
+    if (!IsScriptNewAsset(scriptPubKey, nStartingIndex))
         return false;
 
     CTxDestination destination;
@@ -412,7 +443,7 @@ bool AssetFromScript(const CScript& scriptPubKey, CNewAsset& assetNew, std::stri
     strAddress = EncodeDestination(destination);
 
     std::vector<unsigned char> vchNewAsset;
-    vchNewAsset.insert(vchNewAsset.end(), scriptPubKey.begin() + 31, scriptPubKey.end());
+    vchNewAsset.insert(vchNewAsset.end(), scriptPubKey.begin() + nStartingIndex, scriptPubKey.end());
     CDataStream ssAsset(vchNewAsset, SER_NETWORK, PROTOCOL_VERSION);
 
     try {
@@ -427,7 +458,8 @@ bool AssetFromScript(const CScript& scriptPubKey, CNewAsset& assetNew, std::stri
 
 bool OwnerAssetFromScript(const CScript& scriptPubKey, std::string& assetName, std::string& strAddress)
 {
-    if (!IsScriptOwnerAsset(scriptPubKey))
+    int nStartingIndex = 0;
+    if (!IsScriptOwnerAsset(scriptPubKey, nStartingIndex))
         return false;
 
     CTxDestination destination;
@@ -436,7 +468,7 @@ bool OwnerAssetFromScript(const CScript& scriptPubKey, std::string& assetName, s
     strAddress = EncodeDestination(destination);
 
     std::vector<unsigned char> vchOwnerAsset;
-    vchOwnerAsset.insert(vchOwnerAsset.end(), scriptPubKey.begin() + 31, scriptPubKey.end());
+    vchOwnerAsset.insert(vchOwnerAsset.end(), scriptPubKey.begin() + nStartingIndex, scriptPubKey.end());
     CDataStream ssOwner(vchOwnerAsset, SER_NETWORK, PROTOCOL_VERSION);
 
     try {
@@ -451,7 +483,8 @@ bool OwnerAssetFromScript(const CScript& scriptPubKey, std::string& assetName, s
 
 bool ReissueAssetFromScript(const CScript& scriptPubKey, CReissueAsset& reissue, std::string& strAddress)
 {
-    if (!IsScriptReissueAsset(scriptPubKey))
+    int nStartingIndex = 0;
+    if (!IsScriptReissueAsset(scriptPubKey, nStartingIndex))
         return false;
 
     CTxDestination destination;
@@ -459,9 +492,9 @@ bool ReissueAssetFromScript(const CScript& scriptPubKey, CReissueAsset& reissue,
 
     strAddress = EncodeDestination(destination);
 
-    std::vector<unsigned char> vchTransferAsset;
-    vchTransferAsset.insert(vchTransferAsset.end(), scriptPubKey.begin() + 31, scriptPubKey.end());
-    CDataStream ssReissue(vchTransferAsset, SER_NETWORK, PROTOCOL_VERSION);
+    std::vector<unsigned char> vchReissueAsset;
+    vchReissueAsset.insert(vchReissueAsset.end(), scriptPubKey.begin() + nStartingIndex, scriptPubKey.end());
+    CDataStream ssReissue(vchReissueAsset, SER_NETWORK, PROTOCOL_VERSION);
 
     try {
         ssReissue >> reissue;
@@ -487,9 +520,18 @@ bool CTransaction::IsNewAsset() const
     if (!CheckOwnerDataTx(vout[vout.size() - 2]))
         return false;
 
+    // Get the asset type
+    CNewAsset asset;
+    std::string address;
+    if (!AssetFromScript(vout[vout.size() - 1].scriptPubKey, asset, address))
+        return error("%s : Failed to get new asset from transaction: %s", __func__, this->GetHash().GetHex());
+
+    AssetType assetType;
+    IsAssetNameValid(asset.strName, assetType);
+
     // Check for the Burn CTxOut in one of the vouts ( This is needed because the change CTxOut is places in a random position in the CWalletTx
     for (auto out : vout)
-        if (CheckIssueBurnTx(out))
+        if (CheckIssueBurnTx(out, assetType))
             return true;
 
     return false;
@@ -698,28 +740,35 @@ bool CAssetsCache::TrySpendCoin(const COutPoint& out, const CTxOut& txOut)
             std::string assetName = "";
             CAmount nAmount = -1;
 
-            // Get the New Asset or Transfer Asset from the scriptPubKey
-            if (txOut.scriptPubKey.IsNewAsset()) {
-                CNewAsset asset;
-                if (AssetFromScript(txOut.scriptPubKey, asset, address)) {
-                    assetName = asset.strName;
-                    nAmount = asset.nAmount;
-                }
-            } else if (txOut.scriptPubKey.IsTransferAsset()) {
-                CAssetTransfer transfer;
-                if (TransferAssetFromScript(txOut.scriptPubKey, transfer, address)) {
-                    assetName = transfer.strName;
-                    nAmount = transfer.nAmount;
-                }
-            } else if (txOut.scriptPubKey.IsOwnerAsset()) {
-                if (!OwnerAssetFromScript(txOut.scriptPubKey, assetName, address))
-                    return error("%s : ERROR Failed to get owner asset from the OutPoint: %s", __func__, out.ToString());
-                nAmount = OWNER_ASSET_AMOUNT;
-            } else if (txOut.scriptPubKey.IsReissueAsset()) {
-                CReissueAsset reissue;
-                if (ReissueAssetFromScript(txOut.scriptPubKey, reissue, address)) {
-                    assetName = reissue.strName;
-                    nAmount = reissue.nAmount;
+            int nType = 0;
+            bool fIsOwner = false;
+            if (txOut.scriptPubKey.IsAssetScript(nType, fIsOwner)) {
+                txnouttype  type = (txnouttype)nType;
+
+                // Get the New Asset or Transfer Asset from the scriptPubKey
+                if (type == TX_NEW_ASSET && !fIsOwner) {
+                    CNewAsset asset;
+                    if (AssetFromScript(txOut.scriptPubKey, asset, address)) {
+                        assetName = asset.strName;
+                        nAmount = asset.nAmount;
+                    }
+                } else if (type == TX_TRANSFER_ASSET) {
+                    CAssetTransfer transfer;
+                    if (TransferAssetFromScript(txOut.scriptPubKey, transfer, address)) {
+                        assetName = transfer.strName;
+                        nAmount = transfer.nAmount;
+                    }
+                } else if (type == TX_NEW_ASSET && fIsOwner) {
+                    if (!OwnerAssetFromScript(txOut.scriptPubKey, assetName, address))
+                        return error("%s : ERROR Failed to get owner asset from the OutPoint: %s", __func__,
+                                     out.ToString());
+                    nAmount = OWNER_ASSET_AMOUNT;
+                } else if (type == TX_REISSUE_ASSET) {
+                    CReissueAsset reissue;
+                    if (ReissueAssetFromScript(txOut.scriptPubKey, reissue, address)) {
+                        assetName = reissue.strName;
+                        nAmount = reissue.nAmount;
+                    }
                 }
             }
 
@@ -809,36 +858,49 @@ bool CAssetsCache::UndoAssetCoin(const Coin& coin, const COutPoint& out)
     CAmount nAmount = 0;
 
     // Get the asset tx from the script
-    if (IsScriptNewAsset(coin.out.scriptPubKey)) {
-        CNewAsset asset;
-        if (!AssetFromScript(coin.out.scriptPubKey, asset, strAddress)) {
-            return error("%s : Failed to get asset from script while trying to undo asset spend. OutPoint : %s",
-                         __func__,
-                         out.ToString());
+    txnouttype type;
+    int nType = 0;
+    bool fIsOwner = false;
+    if(coin.out.scriptPubKey.IsAssetScript(nType, fIsOwner)) {
+        type = (txnouttype) nType;
+
+        if (type == TX_NEW_ASSET && !fIsOwner) {
+            CNewAsset asset;
+            if (!AssetFromScript(coin.out.scriptPubKey, asset, strAddress)) {
+                return error("%s : Failed to get asset from script while trying to undo asset spend. OutPoint : %s",
+                             __func__,
+                             out.ToString());
+            }
+            assetName = asset.strName;
+
+            nAmount = asset.nAmount;
+        } else if (type == TX_TRANSFER_ASSET) {
+            CAssetTransfer transfer;
+            if (!TransferAssetFromScript(coin.out.scriptPubKey, transfer, strAddress))
+                return error(
+                        "%s : Failed to get transfer asset from script while trying to undo asset spend. OutPoint : %s",
+                        __func__,
+                        out.ToString());
+
+            assetName = transfer.strName;
+            nAmount = transfer.nAmount;
+        } else if (type == TX_NEW_ASSET && fIsOwner) {
+            std::string ownerName;
+            if (!OwnerAssetFromScript(coin.out.scriptPubKey, ownerName, strAddress))
+                return error(
+                        "%s : Failed to get owner asset from script while trying to undo asset spend. OutPoint : %s",
+                        __func__, out.ToString());
+            assetName = ownerName;
+            nAmount = OWNER_ASSET_AMOUNT;
+        } else if (type == TX_REISSUE_ASSET) {
+            CReissueAsset reissue;
+            if (!ReissueAssetFromScript(coin.out.scriptPubKey, reissue, strAddress))
+                return error(
+                        "%s : Failed to get reissue asset from script while trying to undo asset spend. OutPoint : %s",
+                        __func__, out.ToString());
+            assetName = reissue.strName;
+            nAmount = reissue.nAmount;
         }
-        assetName = asset.strName;
-
-        nAmount = asset.nAmount;
-    } else if (IsScriptTransferAsset(coin.out.scriptPubKey)) {
-        CAssetTransfer transfer;
-        if (!TransferAssetFromScript(coin.out.scriptPubKey, transfer, strAddress))
-            return error("%s : Failed to get transfer asset from script while trying to undo asset spend. OutPoint : %s", __func__,
-                         out.ToString());
-
-        assetName = transfer.strName;
-        nAmount = transfer.nAmount;
-    } else if (IsScriptOwnerAsset(coin.out.scriptPubKey)) {
-        std::string ownerName;
-        if (!OwnerAssetFromScript(coin.out.scriptPubKey, ownerName, strAddress))
-            return error("%s : Failed to get owner asset from script while trying to undo asset spend. OutPoint : %s", __func__, out.ToString());
-        assetName = ownerName;
-        nAmount = OWNER_ASSET_AMOUNT;
-    } else if (IsScriptReissueAsset(coin.out.scriptPubKey)) {
-        CReissueAsset reissue;
-        if (!ReissueAssetFromScript(coin.out.scriptPubKey, reissue, strAddress))
-            return error("%s : Failed to get reissue asset from script while trying to undo asset spend. OutPoint : %s", __func__, out.ToString());
-        assetName = reissue.strName;
-        nAmount = reissue.nAmount;
     }
 
     if (assetName == "" || strAddress == "" || nAmount == 0)
@@ -1440,10 +1502,26 @@ bool IsAssetUnitsValid(const CAmount& units)
     return false;
 }
 
-bool CheckIssueBurnTx(const CTxOut& txOut)
+bool CheckIssueBurnTx(const CTxOut& txOut, const AssetType& type)
 {
-    // Check the first transaction is the 500 Burn amount to the burn address
-    if (!(txOut.nValue == GetIssueAssetBurnAmount() || txOut.nValue == GetIssueSubAssetBurnAmount()))
+    CAmount burnAmount = 0;
+    std::string burnAddress = "";
+
+    if (type == AssetType::SUB) {
+        burnAmount = GetIssueSubAssetBurnAmount();
+        burnAddress = Params().IssueSubAssetBurnAddress();
+    } else if (type == AssetType::ROOT) {
+        burnAmount = GetIssueAssetBurnAmount();
+        burnAddress = Params().IssueAssetBurnAddress();
+    } else if (type == AssetType::UNIQUE) {
+        burnAmount = GetIssueUniqueAssetBurnAmount();
+        burnAddress = Params().IssueUniqueAssetBurnAddress();
+    } else {
+        return false;
+    }
+
+    // Check the first transaction for the required Burn Amount for the asset type
+    if (!(txOut.nValue == burnAmount))
         return false;
 
     // Extract the destination
@@ -1457,7 +1535,7 @@ bool CheckIssueBurnTx(const CTxOut& txOut)
 
     // Check destination address is the burn address
     auto strDestination = EncodeDestination(destination);
-    if (!(strDestination == Params().IssueAssetBurnAddress() || strDestination == Params().IssueSubAssetBurnAddress()))
+    if (!(strDestination == burnAddress))
         return false;
 
     return true;
@@ -1490,7 +1568,8 @@ bool CheckIssueDataTx(const CTxOut& txOut)
     // Verify 'rvnq' is in the transaction
     CScript scriptPubKey = txOut.scriptPubKey;
 
-    return IsScriptNewAsset(scriptPubKey);
+    int nStartingIndex = 0;
+    return IsScriptNewAsset(scriptPubKey, nStartingIndex);
 }
 
 bool CheckReissueDataTx(const CTxOut& txOut)
@@ -1519,10 +1598,16 @@ bool CheckTransferOwnerTx(const CTxOut& txOut)
 
 bool IsScriptNewAsset(const CScript& scriptPubKey)
 {
-    if (scriptPubKey.size() > 39) {
-        if (scriptPubKey[25] == OP_RVN_ASSET && scriptPubKey[27] == RVN_R && scriptPubKey[28] == RVN_V && scriptPubKey[29] == RVN_N && scriptPubKey[30] == RVN_Q) {
-            return true;
-        }
+    int index = 0;
+    return IsScriptNewAsset(scriptPubKey, index);
+}
+
+bool IsScriptNewAsset(const CScript& scriptPubKey, int& nStartingIndex)
+{
+    int nType = 0;
+    bool fIsOwner =false;
+    if (scriptPubKey.IsAssetScript(nType, fIsOwner, nStartingIndex)) {
+        return (txnouttype)nType == TX_NEW_ASSET && !fIsOwner;
     }
 
     return false;
@@ -1530,10 +1615,17 @@ bool IsScriptNewAsset(const CScript& scriptPubKey)
 
 bool IsScriptOwnerAsset(const CScript& scriptPubKey)
 {
-    if (scriptPubKey.size() > 30) {
-        if (scriptPubKey[25] == OP_RVN_ASSET && scriptPubKey[27] == RVN_R && scriptPubKey[28] == RVN_V && scriptPubKey[29] == RVN_N && scriptPubKey[30] == RVN_O) {
-            return true;
-        }
+
+    int index = 0;
+    return IsScriptOwnerAsset(scriptPubKey, index);
+}
+
+bool IsScriptOwnerAsset(const CScript& scriptPubKey, int& nStartingIndex)
+{
+    int nType = 0;
+    bool fIsOwner =false;
+    if (scriptPubKey.IsAssetScript(nType, fIsOwner, nStartingIndex)) {
+        return (txnouttype)nType == TX_NEW_ASSET && fIsOwner;
     }
 
     return false;
@@ -1541,10 +1633,16 @@ bool IsScriptOwnerAsset(const CScript& scriptPubKey)
 
 bool IsScriptReissueAsset(const CScript& scriptPubKey)
 {
-    if (scriptPubKey.size() > 39) {
-        if (scriptPubKey[25] == OP_RVN_ASSET && scriptPubKey[27] == RVN_R && scriptPubKey[28] == RVN_V && scriptPubKey[29] == RVN_N && scriptPubKey[30] == RVN_R) {
-            return true;
-        }
+    int index = 0;
+    return IsScriptReissueAsset(scriptPubKey, index);
+}
+
+bool IsScriptReissueAsset(const CScript& scriptPubKey, int& nStartingIndex)
+{
+    int nType = 0;
+    bool fIsOwner =false;
+    if (scriptPubKey.IsAssetScript(nType, fIsOwner, nStartingIndex)) {
+        return (txnouttype)nType == TX_REISSUE_ASSET;
     }
 
     return false;
@@ -1552,10 +1650,16 @@ bool IsScriptReissueAsset(const CScript& scriptPubKey)
 
 bool IsScriptTransferAsset(const CScript& scriptPubKey)
 {
-    if (scriptPubKey.size() > 30) {
-        if (scriptPubKey[25] == OP_RVN_ASSET && scriptPubKey[27] == RVN_R && scriptPubKey[28] == RVN_V && scriptPubKey[29] == RVN_N && scriptPubKey[30] == RVN_T) {
-            return true;
-        }
+    int index = 0;
+    return IsScriptTransferAsset(scriptPubKey, index);
+}
+
+bool IsScriptTransferAsset(const CScript& scriptPubKey, int& nStartingIndex)
+{
+    int nType = 0;
+    bool fIsOwner =false;
+    if (scriptPubKey.IsAssetScript(nType, fIsOwner, nStartingIndex)) {
+        return (txnouttype)nType == TX_TRANSFER_ASSET;
     }
 
     return false;
@@ -1679,11 +1783,16 @@ bool CAssetsCache::GetAssetIfExists(const std::string& name, CNewAsset& asset)
 
 bool GetAssetFromCoin(const Coin& coin, std::string& strName, CAmount& nAmount)
 {
-    if (!coin.IsAsset())
+    int nType = 0;
+    bool fIsOwner = false;
+    if (!coin.out.scriptPubKey.IsAssetScript(nType, fIsOwner)) {
         return false;
+    }
+
+    txnouttype type = txnouttype(nType);
 
     // Determine the type of asset that the scriptpubkey contains and return the name and amount
-    if (coin.out.scriptPubKey.IsNewAsset()) {
+    if (type == TX_NEW_ASSET && !fIsOwner) {
         CNewAsset asset;
         std::string address;
         if (!AssetFromScript(coin.out.scriptPubKey, asset, address))
@@ -1691,7 +1800,7 @@ bool GetAssetFromCoin(const Coin& coin, std::string& strName, CAmount& nAmount)
         strName = asset.strName;
         nAmount = asset.nAmount;
         return true;
-    } else if (coin.out.scriptPubKey.IsTransferAsset()) {
+    } else if (type == TX_TRANSFER_ASSET) {
         CAssetTransfer asset;
         std::string address;
         if (!TransferAssetFromScript(coin.out.scriptPubKey, asset, address))
@@ -1699,7 +1808,7 @@ bool GetAssetFromCoin(const Coin& coin, std::string& strName, CAmount& nAmount)
         strName = asset.strName;
         nAmount = asset.nAmount;
         return true;
-    } else if (coin.out.scriptPubKey.IsOwnerAsset()) {
+    } else if (type == TX_NEW_ASSET && fIsOwner) {
         std::string name;
         std::string address;
         if (!OwnerAssetFromScript(coin.out.scriptPubKey, name, address))
@@ -1707,7 +1816,7 @@ bool GetAssetFromCoin(const Coin& coin, std::string& strName, CAmount& nAmount)
         strName = name;
         nAmount = OWNER_ASSET_AMOUNT;
         return true;
-    } else if (coin.out.scriptPubKey.IsReissueAsset()) {
+    } else if (type == TX_REISSUE_ASSET) {
         CReissueAsset reissue;
         std::string address;
         if (!ReissueAssetFromScript(coin.out.scriptPubKey, reissue, address))
@@ -1726,8 +1835,17 @@ void GetAssetData(const CScript& script, CAssetOutputEntry& data)
     std::string address = "";
     std::string assetName = "";
 
+
+    int nType = 0;
+    bool fIsOwner = false;
+    if (!script.IsAssetScript(nType, fIsOwner)) {
+        return;
+    }
+
+    txnouttype type = txnouttype(nType);
+
     // Get the New Asset or Transfer Asset from the scriptPubKey
-    if (script.IsNewAsset()) {
+    if (type == TX_NEW_ASSET && !fIsOwner) {
         CNewAsset asset;
         if (AssetFromScript(script, asset, address)) {
             assetName = asset.strName;
@@ -1736,7 +1854,7 @@ void GetAssetData(const CScript& script, CAssetOutputEntry& data)
             data.destination = DecodeDestination(address);
             data.assetName = asset.strName;
         }
-    } else if (script.IsTransferAsset()) {
+    } else if (type == TX_TRANSFER_ASSET) {
         CAssetTransfer transfer;
         if (TransferAssetFromScript(script, transfer, address)) {
             assetName = transfer.strName;
@@ -1745,14 +1863,14 @@ void GetAssetData(const CScript& script, CAssetOutputEntry& data)
             data.destination = DecodeDestination(address);
             data.assetName = transfer.strName;
         }
-    } else if (script.IsOwnerAsset()) {
+    } else if (type == TX_NEW_ASSET && !fIsOwner) {
         if (OwnerAssetFromScript(script, assetName, address)) {
             data.type = ASSET_NEW_STRING;
             data.amount = OWNER_ASSET_AMOUNT;
             data.destination = DecodeDestination(address);
             data.assetName = assetName;
         }
-    } else if (script.IsReissueAsset()) {
+    } else if (type == TX_REISSUE_ASSET) {
         CReissueAsset reissue;
         if (ReissueAssetFromScript(script, reissue, address)) {
             assetName = reissue.strName;

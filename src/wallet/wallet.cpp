@@ -1529,7 +1529,7 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
             address = CNoDestination();
         }
 
-        if (!txout.scriptPubKey.IsAsset()) {
+        if (!txout.scriptPubKey.IsAssetScript()) {
             COutputEntry output = {address, txout.nValue, (int) i};
 
             // If we are debited by the transaction, add the output as a "sent" entry
@@ -1543,7 +1543,7 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
 
         /** RVN START */
         if (AreAssetsDeployed()) {
-            if (txout.scriptPubKey.IsAsset()) {
+            if (txout.scriptPubKey.IsAssetScript()) {
                 CAssetOutputEntry assetoutput;
                 assetoutput.vout = i;
                 GetAssetData(txout.scriptPubKey, assetoutput);
@@ -2696,32 +2696,39 @@ bool CWallet::SelectAssets(const std::map<std::string, std::vector<COutput> >& m
         if (mapAssetTargetValue.at(asset.first) <= 0)
             continue;
 
-        if(!mapValueRet.count(asset.first))
+        if (!mapValueRet.count(asset.first))
             mapValueRet.insert(std::make_pair(asset.first, 0));
 
         for (auto out : asset.second) {
             if (!out.fSpendable)
                 continue;
 
-            if (out.tx->tx->vout[out.i].scriptPubKey.IsNewAsset()) {
+            int nType = 0;
+            bool fIsOwner = false;
+            if (!out.tx->tx->vout[out.i].scriptPubKey.IsAssetScript(nType, fIsOwner))
+                continue;
+
+            txnouttype type = (txnouttype) nType;
+
+            if (type == TX_NEW_ASSET && !fIsOwner) {
                 CNewAsset assetTemp;
                 std::string address;
                 if (!AssetFromScript(out.tx->tx->vout[out.i].scriptPubKey, assetTemp, address))
                     continue;
                 mapValueRet.at(assetTemp.strName) += assetTemp.nAmount;
-            } else if (out.tx->tx->vout[out.i].scriptPubKey.IsTransferAsset()) {
+            } else if (type == TX_TRANSFER_ASSET) {
                 CAssetTransfer transferTemp;
                 std::string address;
                 if (!TransferAssetFromScript(out.tx->tx->vout[out.i].scriptPubKey, transferTemp, address))
                     continue;
                 mapValueRet.at(transferTemp.strName) += transferTemp.nAmount;
-            } else if (out.tx->tx->vout[out.i].scriptPubKey.IsOwnerAsset()) {
+            } else if (type == TX_NEW_ASSET && fIsOwner) {
                 std::string ownerName;
                 std::string address;
                 if (!OwnerAssetFromScript(out.tx->tx->vout[out.i].scriptPubKey, ownerName, address))
                     continue;
                 mapValueRet.at(ownerName) = OWNER_ASSET_AMOUNT;
-            } else if (out.tx->tx->vout[out.i].scriptPubKey.IsReissueAsset()) {
+            } else if (type == TX_REISSUE_ASSET) {
                 CReissueAsset reissueTemp;
                 std::string address;
                 if (!ReissueAssetFromScript(out.tx->tx->vout[out.i].scriptPubKey, reissueTemp, address))
@@ -2730,6 +2737,7 @@ bool CWallet::SelectAssets(const std::map<std::string, std::vector<COutput> >& m
             } else {
                 continue;
             }
+
 
             setCoinsRet.insert(CInputCoin(out.tx, out.i));
 
@@ -2742,11 +2750,13 @@ bool CWallet::SelectAssets(const std::map<std::string, std::vector<COutput> >& m
         }
 
         if (mapValueRet.at(asset.first) < mapAssetTargetValue.at(asset.first)) {
-            return error("%s : Tried to transfer an asset but this wallet didn't have enough, Asset Name: %s, Transfer Amount: %d, Wallet Total: %d", __func__, asset.first, mapValueRet.at(asset.first), mapAssetTargetValue.at(asset.first));
+            return error(
+                    "%s : Tried to transfer an asset but this wallet didn't have enough, Asset Name: %s, Transfer Amount: %d, Wallet Total: %d",
+                    __func__, asset.first, mapValueRet.at(asset.first), mapAssetTargetValue.at(asset.first));
         }
     }
 
-    return true;
+        return true;
 }
 
 /** RVN END */

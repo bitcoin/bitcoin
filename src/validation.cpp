@@ -599,7 +599,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         /** RVN START */
         if (!AreAssetsDeployed()) {
             for (auto out : tx.vout) {
-                if (out.scriptPubKey.IsAsset())
+                if (out.scriptPubKey.IsAssetScript())
                     return state.DoS(100, false, REJECT_INVALID, "bad-txns-contained-asset-when-not-active");
             }
         }
@@ -2099,7 +2099,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
             /** RVN START */
             if (!AreAssetsDeployed()) {
                 for (auto out : tx.vout)
-                    if (out.scriptPubKey.IsAsset())
+                    if (out.scriptPubKey.IsAssetScript())
                         return state.DoS(100, error("%s : Received Block with tx that contained an asset when assets wasn't active", __func__), REJECT_INVALID, "bad-txns-assets-not-active");
             }
 
