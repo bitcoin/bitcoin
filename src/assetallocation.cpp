@@ -371,7 +371,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 	const string &user2 = "";
 	const string &user1 = vchAlias.empty()? stringFromVch(theAssetAllocation.vchAliasOrAddress): stringFromVch(vchAlias);
 
-	const CAssetAllocationTuple assetAllocationTuple(theAssetAllocation.vchAsset, vchAlias.empty()? theAssetAllocation.vchAliasOrAddress): stringFromVch(vchAlias);
+	const CAssetAllocationTuple assetAllocationTuple(theAssetAllocation.vchAsset, vchAlias.empty()? theAssetAllocation.vchAliasOrAddress: stringFromVch(vchAlias));
 
 	string strResponseEnglish = "";
 	string strResponseGUID = "";
@@ -440,7 +440,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 				return true;
 			}
 		}
-		else if (dbAssetAllocation.vchAlias != vchAlias)
+		else if (dbAssetAllocation.vchAliasOrAddress != vchAlias)
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1017 - " + _("Cannot send this asset. Asset allocation owner must sign off on this change");
 			return true;
