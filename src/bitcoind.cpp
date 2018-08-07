@@ -18,6 +18,8 @@
 #include "httprpc.h"
 #include "utilstrencodings.h"
 
+#include "omnicore/utilsui.h"
+
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
@@ -183,6 +185,9 @@ bool AppInit(int argc, char* argv[])
 int main(int argc, char* argv[])
 {
     SetupEnvironment();
+
+    // Indicate no-UI mode
+    fQtMode = false;
 
     // Connect bitcoind signal handlers
     noui_connect();
