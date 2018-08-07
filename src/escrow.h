@@ -161,7 +161,7 @@ public:
 	inline void SetNull() { role = 0; nAmountOrBidPerUnit = 0; vchWitness.clear();  fBidPerUnit = 0;  nDeposit = nArbiterFee = nNetworkFee = nCommission = nShipping = nWitnessFee = 0; extTxId.SetNull(); op = 0; bPaymentAck = bBuyNow = false; redeemTxId.SetNull(); feedback.SetNull(); vchLinkSellerAlias.clear(); vchEscrow.clear(); nHeight = nPaymentOption = 0; txHash.SetNull(); nQty = 0; vchBuyerAlias.clear(); vchArbiterAlias.clear(); vchSellerAlias.clear(); vchOffer.clear(); scriptSigs.clear(); vchRedeemScript.clear(); }
 	inline bool IsNull() const { return (vchEscrow.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
-	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
+	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, const std::vector<unsigned char> &vchOP, const bool checkHash = true);
 	void Serialize(std::vector<unsigned char>& vchData);
 };
 

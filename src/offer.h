@@ -197,7 +197,7 @@ public:
     inline bool IsNull() const { return (vchOffer.empty()); }
 
     bool UnserializeFromTx(const CTransaction &tx);
-	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
+	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, const std::vector<unsigned char> &vchOP, const bool checkHash = true);
 	void Serialize(std::vector<unsigned char>& vchData);
 };
 
