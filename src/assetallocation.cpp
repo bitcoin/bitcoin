@@ -875,7 +875,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
 	uint256 hash = Hash(data.begin(), data.end());
 
 	vector<unsigned char> vchOP;
-	vchOP.push_back(OP_ASSETALLOCATION);
+	vchOP.push_back(OP_ASSET_ALLOCATION);
 
 	vector<unsigned char> vchHashAsset = vchFromString(hash.GetHex());
 	if (!theAssetAllocation.UnserializeFromData(data, vchHashAsset, vchOP))
