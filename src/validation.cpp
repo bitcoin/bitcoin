@@ -678,7 +678,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 		Graph graph;
 		std::vector<vertex_descriptor> vertices;
 		IndexMap mapTxIndex;
-		if (CreateGraphFromVTX(sortedBlock.vtx, graph, vertices, mapTxIndex)) {
+		if (CreateGraphFromVTX(nHeight, sortedBlock.vtx, graph, vertices, mapTxIndex)) {
 			std::vector<int> conflictedIndexes;
 			GraphRemoveCycles(sortedBlock.vtx, conflictedIndexes, graph, vertices, mapTxIndex);
 			if (!sortedBlock.vtx.empty()) {

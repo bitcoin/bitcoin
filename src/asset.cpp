@@ -716,6 +716,8 @@ UniValue assetnew(const JSONRPCRequest& request) {
 	const CSyscoinAddress address(strAliasOrAddress);
 	if (address.IsValid()) {
 		strAddressFrom = strAliasOrAddress;
+		if (chainActive.Tip().nHeight < Params().GetConsensus().nShareFeeBlock)
+			throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1502 - " + _("Please wait until the fork to create this type of asset"));
 	}
 	else {
 		ToLowerCase(vchAliasOrAddress);
