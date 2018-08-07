@@ -7,13 +7,14 @@
 #include <clientversion.h>
 #include <governance.h>
 #include <init.h>
+#include <interface/moduleinterface.h>
 #include <masternode-payments.h>
 #include <masternode-sync.h>
 #include <masternodeman.h>
 #include <messagesigner.h>
-#include <module-interface.h>
 #include <netfulfilledman.h>
 #include <netmessagemaker.h>
+#include <scheduler.h>
 #include <script/standard.h>
 #include <ui_interface.h>
 #include <util.h>
@@ -394,7 +395,6 @@ int CMasternodeMan::CountEnabled(int nProtocolVersion)
     return nCount;
 }
 
-/* Only IPv4 masternodes are allowed in 12.1, saving this for later
 int CMasternodeMan::CountByIP(int nNetworkType)
 {
     LOCK(cs);
@@ -409,7 +409,6 @@ int CMasternodeMan::CountByIP(int nNetworkType)
 
     return nNodeCount;
 }
-*/
 
 void CMasternodeMan::DsegUpdate(CNode* pnode, CConnman* connman)
 {
@@ -723,7 +722,7 @@ void CMasternodeMan::ProcessMasternodeConnections(CConnman* connman)
     if(Params().NetworkIDString() == CBaseChainParams::REGTEST) return;
 
     connman->ForEachNode([](CNode* pnode) {
-        if(pnode->fMasternode && !g_module_interface->IsMixingMasternode(pnode)) {
+        if(pnode->fMasternode && !g_wallet_interface->IsMixingMasternode(pnode)) {
             LogPrintf("Closing Masternode connection: peer=%d, addr=%s\n", pnode->GetId(), pnode->addr.ToString());
             pnode->fDisconnect = true;
         }
@@ -797,7 +796,7 @@ void CMasternodeMan::ProcessPendingMnbRequests(CConnman* connman)
     LogPrint(BCLog::MNODE, "%s -- mapPendingMNB size: %d\n", __func__, mapPendingMNB.size());
 }
 
-void CMasternodeMan::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman)
+void CMasternodeMan::ProcessModuleMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman)
 {
     if(fLiteMode) return; // disable all Chaincoin specific functionality
 
@@ -1629,16 +1628,16 @@ void CMasternodeMan::SetMasternodeLastPing(const COutPoint& outpoint, const CMas
     }
 }
 
-void CMasternodeMan::UpdatedBlockTip(const CBlockIndex *pindex)
+void CMasternodeMan::UpdatedBlockTip(const CBlockIndex *pindexNew)
 {
-    nCachedBlockHeight = pindex->nHeight;
+    nCachedBlockHeight = pindexNew->nHeight;
     LogPrint(BCLog::MNODE, "CMasternodeMan::UpdatedBlockTip -- nCachedBlockHeight=%d\n", nCachedBlockHeight);
 
     CheckSameAddr();
 
     if(fMasternodeMode) {
         // normal wallet does not need to update this every block, doing update on rpc call should be enough
-        UpdateLastPaid(pindex);
+        UpdateLastPaid(pindexNew);
     }
 }
 
@@ -1727,3 +1726,39 @@ void CMasternodeMan::NotifyMasternodeUpdates(CConnman* connman)
     fMasternodesAdded = false;
     fMasternodesRemoved = false;
 }
+
+void CMasternodeMan::ClientTask(CConnman* connman)
+{
+    if(fLiteMode) return; // disable all Dash specific functionality
+
+    if(!masternodeSync.IsBlockchainSynced() || ShutdownRequested())
+        return;
+
+    static unsigned int nTick = 0;
+
+    nTick++;
+
+    // make sure to check all masternodes first
+    mnodeman.Check();
+
+    mnodeman.ProcessPendingMnbRequests(connman);
+    mnodeman.ProcessPendingMnvRequests(connman);
+
+    if(nTick % 60 == 0) {
+        mnodeman.ProcessMasternodeConnections(connman);
+        mnodeman.CheckAndRemove(connman);
+        mnodeman.WarnMasternodeDaemonUpdates();
+    }
+
+    if(fMasternodeMode && (nTick % (60 * 5) == 0)) {
+        mnodeman.DoFullVerificationStep(connman);
+    }
+}
+
+void CMasternodeMan::Controller(CScheduler& scheduler, CConnman* connman)
+{
+    if (!fLiteMode) {
+        scheduler.scheduleEvery(std::bind(&CMasternodeMan::ClientTask, this, connman), 1000);
+    }
+}
+

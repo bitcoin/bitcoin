@@ -8,6 +8,7 @@
 #include <masternodeman.h>
 #include <netbase.h>
 #include <protocol.h>
+#include <scheduler.h>
 
 // Keep track of the active Masternode
 CActiveMasternode activeMasternode;
@@ -246,5 +247,12 @@ void CActiveMasternode::ManageStateRemote()
         nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
         strNotCapableReason = "Masternode not in masternode list";
         LogPrintf("CActiveMasternode::ManageStateRemote -- %s: %s\n", GetStateString(), strNotCapableReason);
+    }
+}
+
+void CActiveMasternode::Controller(CScheduler& scheduler, CConnman* connman)
+{
+    if (!fLiteMode) {
+        scheduler.scheduleEvery(std::bind(&CActiveMasternode::ManageState, this, connman), MASTERNODE_MIN_MNP_SECONDS*1000);
     }
 }

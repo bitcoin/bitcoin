@@ -6,7 +6,6 @@
 #define BITCOIN_WALLET_WALLETUTIL_H
 
 #include <chainparamsbase.h>
-#include <module-interface.h>
 #include <util.h>
 #include <wallet/wallet.h>
 

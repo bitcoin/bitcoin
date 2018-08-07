@@ -9,8 +9,11 @@
 #include <walletinitinterface.h>
 #include <string>
 
+class CPubKey;
 class CRPCTable;
 class CScheduler;
+
+class CWalletInterface;
 
 class WalletInit : public WalletInitInterface {
 public:
@@ -44,6 +47,5 @@ public:
     //! Close all wallets.
     void Close() override;
 };
-
 
 #endif // BITCOIN_WALLET_INIT_H

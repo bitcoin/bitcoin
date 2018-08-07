@@ -76,6 +76,8 @@ public:
 
     bool UpdateSentinelPing(int version);
 
+    void Controller(CScheduler& scheduler, CConnman* connman);
+
 private:
     void ManageStateInitial(CConnman* connman);
     void ManageStateRemote();

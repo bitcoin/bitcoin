@@ -73,3 +73,10 @@ std::string CNetFulfilledRequestManager::ToString() const
     info << "Nodes with fulfilled requests: " << (int)mapFulfilledRequests.size();
     return info.str();
 }
+
+void CNetFulfilledRequestManager::Controller(CScheduler& scheduler)
+{
+    if (!fLiteMode) {
+        scheduler.scheduleEvery(std::bind(&CNetFulfilledRequestManager::CheckAndRemove, this), 60000);
+    }
+}

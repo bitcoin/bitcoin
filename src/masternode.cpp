@@ -8,15 +8,16 @@
 #include <chainparams.h>
 #include <consensus/tx_verify.h>
 #include <init.h>
+#include <interface/moduleinterface.h>
 #include <netbase.h>
 #include <masternode.h>
 #include <masternode-payments.h>
 #include <masternode-sync.h>
 #include <masternodeman.h>
 #include <messagesigner.h>
-#include <module-interface.h>
 #include <script/standard.h>
 #include <util.h>
+#include <walletinitinterface.h>
 
 #include <string>
 
@@ -377,7 +378,7 @@ bool CMasternodeBroadcast::Create(const std::string& strService, const std::stri
     if (!CMessageSigner::GetKeysFromSecret(strKeyMasternode, keyMasternodeNew, pubKeyMasternodeNew))
         return Log(strprintf("Invalid masternode key %s", strKeyMasternode));
 
-    if (!g_module_interface->CheckWalletCollateral(outpoint, destNew, pubKeyCollateralAddressNew, keyCollateralAddressNew, strTxHash, strOutputIndex))
+    if (!g_wallet_interface->CheckMNCollateral(outpoint, destNew, pubKeyCollateralAddressNew, keyCollateralAddressNew, strTxHash, strOutputIndex))
         return Log(strprintf("Could not allocate outpoint %s:%s for masternode %s", strTxHash, strOutputIndex, strService));
 
     CService service;
@@ -834,7 +835,7 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, i
 
     // force update, ignoring cache
     pmn->Check(true);
-    // relay ping for nodes in ENABLED/EXPIRED/WATCHDOG_EXPIRED state only, skip everyone else
+    // relay ping for nodes in ENABLED/EXPIRED/SENTINEL_PING_EXPIRED state only, skip everyone else
     if (!pmn->IsEnabled() && !pmn->IsExpired() && !pmn->IsSentinelPingExpired()) return false;
 
     LogPrint(BCLog::MNODE, "CMasternodePing::CheckAndUpdate -- Masternode ping acceepted and relayed, masternode=%s\n", masternodeOutpoint.ToStringShort());

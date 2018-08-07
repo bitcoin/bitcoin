@@ -83,14 +83,12 @@ int ClientModel::getNumConnections(unsigned int flags) const
 
 QString ClientModel::getMasternodeCountString() const
 {
-    // return tr("Total: %1 (PS compatible: %2 / Enabled: %3) (IPv4: %4, IPv6: %5, TOR: %6)").arg(QString::number((int)mnodeman.size()))
-    return tr("Total: %1 (PS compatible: %2 / Enabled: %3)")
-            .arg(QString::number((int)mnodeman.size()))
+    return tr("Total: %1 (PS compatible: %2 / Enabled: %3) (IPv4: %4, IPv6: %5, TOR: %6)").arg(QString::number((int)mnodeman.size()))
             .arg(QString::number((int)mnodeman.CountEnabled(MIN_PRIVATESEND_PEER_PROTO_VERSION)))
-            .arg(QString::number((int)mnodeman.CountEnabled()));
-            // .arg(QString::number((int)mnodeman.CountByIP(NET_IPV4)))
-            // .arg(QString::number((int)mnodeman.CountByIP(NET_IPV6)))
-            // .arg(QString::number((int)mnodeman.CountByIP(NET_TOR)));
+            .arg(QString::number((int)mnodeman.CountEnabled()))
+            .arg(QString::number((int)mnodeman.CountByIP(NET_IPV4)))
+            .arg(QString::number((int)mnodeman.CountByIP(NET_IPV6)))
+            .arg(QString::number((int)mnodeman.CountByIP(NET_TOR)));
 }
 
 int ClientModel::getHeaderTipHeight() const
@@ -280,11 +278,11 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, int heig
     }
 }
 
-static void NotifyMNSyncProgress(ClientModel *clientmodel, const std::string &title, int nProgress)
+static void NotifyMNSyncProgress(ClientModel *clientmodel, const std::string &title, double nProgress)
 {
     QMetaObject::invokeMethod(clientmodel, "moduleDataSyncProgress", Qt::QueuedConnection,
                               Q_ARG(QString, QString::fromStdString(title)),
-                              Q_ARG(int, nProgress));
+                              Q_ARG(double, nProgress));
 }
 
 void ClientModel::subscribeToCoreSignals()

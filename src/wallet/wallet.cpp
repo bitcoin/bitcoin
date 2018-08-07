@@ -1347,6 +1347,8 @@ void CWallet::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const 
     }
 
     m_last_block_processed = pindex;
+    // quick & dirty
+    privateSendClient.UpdatedBlockTip(pindex, nullptr, IsInitialBlockDownload());
 }
 
 void CWallet::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock) {

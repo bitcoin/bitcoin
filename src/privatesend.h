@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PRIVATESEND_H
-#define PRIVATESEND_H
+#ifndef BITCOIN_PRIVATESEND_H
+#define BITCOIN_PRIVATESEND_H
 
 #include <chain.h>
 #include <chainparams.h>
@@ -21,6 +21,8 @@ static const int PRIVATESEND_AUTO_TIMEOUT_MIN       = 10;
 static const int PRIVATESEND_AUTO_TIMEOUT_MAX       = 30;
 static const int PRIVATESEND_QUEUE_TIMEOUT          = 120;
 static const int PRIVATESEND_SIGNING_TIMEOUT        = 30;
+
+static const int PRIVATESEND_MIN_CONF               = 24;
 
 //! minimum peer version accepted by mixing pool
 static const int MIN_PRIVATESEND_PEER_PROTO_VERSION = 70015;
@@ -365,10 +367,6 @@ private:
 
     static void CheckDSTXes(int nHeight);
 
-    /* Used by TransactionAddedToMemorypool/BlockConnected/Disconnected */
-    static void SyncTransaction(const CTransactionRef& ptx, const CBlockIndex *pindex, int posInBlock);
-
-
 public:
     static void InitStandardDenominations();
     static std::vector<CAmount> GetStandardDenominations() { return vecStandardDenominations; }
@@ -402,9 +400,7 @@ public:
     static CDarksendBroadcastTx GetDSTX(const uint256& hash);
 
     static void UpdatedBlockTip(const CBlockIndex *pindex);
-    static void TransactionAddedToMempool(const CTransactionRef& tx);
+    static void SyncTransaction(const CTransactionRef& ptx, const CBlockIndex *pindex);
 };
 
-void ThreadCheckPrivateSend(CConnman& connman);
-
-#endif
+#endif //BITCOIN_PRIVATESEND_H

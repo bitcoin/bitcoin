@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/validation.h>
-#include <validationinterface.h>
 #include <governance.h>
 #include <governance-object.h>
 #include <governance-validators.h>
@@ -83,7 +82,7 @@ bool CGovernanceManager::SerializeVoteForHash(const uint256& nHash, CDataStream&
     return cmapVoteToObject.Get(nHash,pGovobj) && pGovobj->GetVoteFile().SerializeVoteToStream(nHash, ss);
 }
 
-void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman)
+void CGovernanceManager::ProcessModuleMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman)
 {
     // lite mode is not supported
     if(fLiteMode) return;
@@ -575,7 +574,7 @@ struct sortProposalsByVotes {
     }
 };
 
-void CGovernanceManager::DoMaintenance(CConnman* connman)
+void CGovernanceManager::ClientTask(CConnman* connman)
 {
     if(fLiteMode || !masternodeSync.IsSynced()) return;
 
@@ -1285,23 +1284,18 @@ UniValue CGovernanceManager::ToJson() const
     return jsonObj;
 }
 
-void CGovernanceManager::UpdatedBlockTip(const CBlockIndex *pindex, CConnman* connman)
+void CGovernanceManager::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload, CConnman* connman)
 {
-    // Note this gets called from ActivateBestChain without cs_main being held
-    // so it should be safe to lock our mutex here without risking a deadlock
-    // On the other hand it should be safe for us to access pindex without holding a lock
-    // on cs_main because the CBlockIndex objects are dynamically allocated and
-    // presumably never deleted.
-    if(!pindex) {
+    if(!pindexNew || fLiteMode || fInitialDownload) {
         return;
     }
 
-    nCachedBlockHeight = pindex->nHeight;
+    nCachedBlockHeight = pindexNew->nHeight;
     LogPrint(BCLog::GOV, "CGovernanceManager::UpdatedBlockTip -- nCachedBlockHeight: %d\n", nCachedBlockHeight);
 
     CheckPostponedObjects(connman);
 
-    CSuperblockManager::ExecuteBestSuperblock(pindex->nHeight);
+    CSuperblockManager::ExecuteBestSuperblock(pindexNew->nHeight);
 }
 
 void CGovernanceManager::RequestOrphanObjects(CConnman* connman)
@@ -1350,5 +1344,12 @@ void CGovernanceManager::CleanOrphanObjects()
         if(pairVote.second < nNow) {
             cmmapOrphanVotes.Erase(prevIt->key, prevIt->value);
         }
+    }
+}
+
+void CGovernanceManager::Controller(CScheduler& scheduler, CConnman* connman)
+{
+    if (!fLiteMode) {
+        scheduler.scheduleEvery(std::bind(&CGovernanceManager::ClientTask, this, connman), 60000*5);
     }
 }

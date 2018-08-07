@@ -7,6 +7,7 @@
 
 #include <masternode.h>
 #include <privatesend.h>
+#include <validationinterface.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
@@ -168,9 +169,9 @@ public:
         nCachedNumBlocks(std::numeric_limits<int>::max()),
         fCreateAutoBackups(true) { SetNull(); }
 
-    bool getWallet(const std::string walletIn);
-
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman);
+
+    bool getWallet(const std::string walletIn);
 
     void ClearSkippedDenominations() { vecDenominationsSkipped.clear(); }
 
@@ -183,6 +184,7 @@ public:
     std::string GetStatus();
 
     bool GetMixingMasternodeInfo(masternode_info_t& mnInfoRet);
+
     bool IsMixingMasternode(const CNode* pnode);
 
     /// one-shot mixing attempt
@@ -195,10 +197,8 @@ public:
 
     void CheckTimeout();
 
-    void UpdatedBlockTip(const CBlockIndex *pindex);
-
-    void ClientTask (CConnman* connman);
-
+    void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload);
+    void ClientTask(CConnman* connman);
     void Controller(CScheduler& scheduler, CConnman* connman);
 };
 

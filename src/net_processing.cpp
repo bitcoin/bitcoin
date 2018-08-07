@@ -14,7 +14,6 @@
 #include <init.h>
 #include <validation.h>
 #include <merkleblock.h>
-#include <module-interface.h>
 #include <netmessagemaker.h>
 #include <netbase.h>
 #include <policy/fees.h>
@@ -3043,13 +3042,9 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         if (found)
         {
-            //probably one the extensions
-            g_module_interface->ProcessMessage(pfrom, strCommand, vRecv, connman);
-            privateSendServer.ProcessMessage(pfrom, strCommand, vRecv, connman);
-            mnodeman.ProcessMessage(pfrom, strCommand, vRecv, connman);
-            mnpayments.ProcessMessage(pfrom, strCommand, vRecv, connman);
-            masternodeSync.ProcessMessage(pfrom, strCommand, vRecv);
-            governance.ProcessMessage(pfrom, strCommand, vRecv, connman);
+            //probably for one of the modules
+            GetMainSignals().ProcessModuleMessage(pfrom, strCommand, vRecv, connman);
+            LogPrint(BCLog::NET, "Forwarded message \"%s\" from peer=%d\n", SanitizeString(strCommand), pfrom->GetId());
         } else {
             // Ignore unknown commands for extensibility
             LogPrint(BCLog::NET, "Unknown command \"%s\" from peer=%d\n", SanitizeString(strCommand), pfrom->GetId());

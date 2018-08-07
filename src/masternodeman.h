@@ -161,7 +161,7 @@ public:
     int CountEnabled(int nProtocolVersion = -1);
 
     /// Count Masternodes by network type - NET_IPV4, NET_IPV6, NET_TOR
-    // int CountByIP(int nNetworkType);
+    int CountByIP(int nNetworkType);
 
     void DsegUpdate(CNode* pnode, CConnman* connman);
 
@@ -190,8 +190,6 @@ public:
     void ProcessMasternodeConnections(CConnman* connman);
     std::pair<CService, std::set<uint256> > PopScheduledMnbRequestConnection();
     void ProcessPendingMnbRequests(CConnman* connman);
-
-    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman);
 
     void DoFullVerificationStep(CConnman* connman);
     void CheckSameAddr();
@@ -236,8 +234,6 @@ public:
     bool IsMasternodePingedWithin(const COutPoint& outpoint, int nSeconds, int64_t nTimeToCheckAt = -1);
     void SetMasternodeLastPing(const COutPoint& outpoint, const CMasternodePing& mnp);
 
-    void UpdatedBlockTip(const CBlockIndex *pindex);
-
     void WarnMasternodeDaemonUpdates();
 
     /**
@@ -245,6 +241,13 @@ public:
      * Must be called while not holding the CMasternodeMan::cs mutex
      */
     void NotifyMasternodeUpdates(CConnman* connman);
+
+    void ProcessModuleMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman);
+    void UpdatedBlockTip(const CBlockIndex *pindexNew);
+
+    void ClientTask(CConnman* connman);
+    void Controller(CScheduler& scheduler, CConnman* connman);
+
 
 };
 

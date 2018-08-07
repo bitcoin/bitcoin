@@ -296,9 +296,9 @@ public:
     void SyncSingleObjAndItsVotes(CNode* pnode, const uint256& nProp, const CBloomFilter& filter, CConnman* connman);
     void SyncAll(CNode* pnode, CConnman* connman) const;
 
-    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman);
+    void ClientTask(CConnman* connman);
 
-    void DoMaintenance(CConnman* connman);
+    void Controller(CScheduler& scheduler, CConnman* connman);
 
     CGovernanceObject* FindGovernanceObject(const uint256& nHash);
 
@@ -312,6 +312,10 @@ public:
     void UpdateCachesAndClean();
 
     void CheckAndRemove() {UpdateCachesAndClean();}
+
+    void ProcessModuleMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman);
+
+    void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload, CConnman* connman);
 
     void Clear()
     {
@@ -353,7 +357,6 @@ public:
         }
     }
 
-    void UpdatedBlockTip(const CBlockIndex *pindex, CConnman* connman);
     int64_t GetLastDiffTime() const { return nTimeLastDiff; }
     void UpdateLastDiffTime(int64_t nTimeIn) { nTimeLastDiff = nTimeIn; }
 

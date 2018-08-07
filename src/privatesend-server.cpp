@@ -11,6 +11,7 @@
 #include <masternode-sync.h>
 #include <masternodeman.h>
 #include <netmessagemaker.h>
+#include <scheduler.h>
 #include <script/interpreter.h>
 #include <txmempool.h>
 #include <util.h>
@@ -18,7 +19,7 @@
 
 CPrivateSendServer privateSendServer;
 
-void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman)
+void CPrivateSendServer::ProcessModuleMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman)
 {
     if(!fMasternodeMode) return;
     if(fLiteMode) return; // ignore all Chaincoin related functionality
@@ -899,29 +900,21 @@ void CPrivateSendServer::SetState(PoolState nStateNew)
     nState = nStateNew;
 }
 
-//TODO: Rename/move to core
-void ThreadCheckPrivateSendServer(CConnman& connman)
+void CPrivateSendServer::ClientTask(CConnman* connman)
 {
-    if(fLiteMode) return; // disable all Chaincoin specific functionality
+    if(fLiteMode) return; // disable all Dash specific functionality
     if(!fMasternodeMode) return; // only run on masternodes
 
-    static bool fOneThread;
-    if(fOneThread) return;
-    fOneThread = true;
+    if(!masternodeSync.IsBlockchainSynced() || ShutdownRequested())
+        return;
 
-    // Make this thread recognisable as the PrivateSend thread
-    RenameThread("chaincoin-ps-server");
+    privateSendServer.CheckTimeout(connman);
+    privateSendServer.CheckForCompleteQueue(connman);
+}
 
-    unsigned int nTick = 0;
-
-    while (true)
-    {
-        MilliSleep(1000);
-
-        if(masternodeSync.IsBlockchainSynced() && !ShutdownRequested()) {
-            nTick++;
-            privateSendServer.CheckTimeout(&connman);
-            privateSendServer.CheckForCompleteQueue(&connman);
-        }
+void CPrivateSendServer::Controller(CScheduler& scheduler, CConnman* connman)
+{
+    if (!fLiteMode) {
+        scheduler.scheduleEvery(std::bind(&CPrivateSendServer::ClientTask, this, connman), 1000);
     }
 }

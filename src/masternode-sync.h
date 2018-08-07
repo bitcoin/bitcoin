@@ -22,7 +22,7 @@ static const int MASTERNODE_SYNC_GOVOBJ_VOTE     = 11;
 static const int MASTERNODE_SYNC_FINISHED        = 999;
 
 static const int MASTERNODE_SYNC_TICK_SECONDS    = 6;
-static const int MASTERNODE_SYNC_TIMEOUT_SECONDS = 30; // our blocks are 2.5 minutes so 30 seconds should be fine
+static const int MASTERNODE_SYNC_TIMEOUT_SECONDS = 30; // our blocks are 1.5 minutes so 30 seconds should be fine
 
 static const int MASTERNODE_SYNC_ENOUGH_PEERS    = 6;
 
@@ -71,12 +71,11 @@ public:
     void Reset();
     void SwitchToNextAsset(CConnman* connman);
 
-    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
     void ProcessTick(CConnman* connman);
-
-    void BlockChecked(const CBlock& block);
-    void NewPoWValidBlock(const CBlockIndex *pindex, bool fInitialDownload,CConnman* connman);
+    void ProcessModuleMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman);
     void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload, CConnman* connman);
+
+    void Controller(CScheduler& scheduler, CConnman* connman);
 };
 
 #endif

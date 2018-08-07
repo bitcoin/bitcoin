@@ -7,6 +7,7 @@
 #define BITCOIN_VALIDATIONINTERFACE_H
 
 #include <primitives/transaction.h> // CTransaction(Ref)
+#include <validationinterface.h>
 
 #include <functional>
 #include <memory>
@@ -16,11 +17,13 @@ class CBlockIndex;
 struct CBlockLocator;
 
 class CConnman;
+class CDataStream;
 class CReserveScript;
 class CValidationInterface;
 class CValidationState;
 class CGovernanceVote;
 class CGovernanceObject;
+class CNode;
 class uint256;
 class CScheduler;
 class CTxMemPool;
@@ -123,13 +126,15 @@ protected:
      * has been received and connected to the headers tree, though not validated yet
      */
     virtual void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& block) {}
+    virtual void ProcessModuleMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman) {}
 
     virtual void NotifyGovernanceVote(const CGovernanceVote &vote) {}
     virtual void NotifyGovernanceObject(const CGovernanceObject &object) {}
-
     friend void ::RegisterValidationInterface(CValidationInterface*);
     friend void ::UnregisterValidationInterface(CValidationInterface*);
     friend void ::UnregisterAllValidationInterfaces();
+
+public:
 };
 
 struct MainSignalsInstance;
@@ -168,6 +173,7 @@ public:
     void Broadcast(int64_t nBestBlockTime, CConnman* connman);
     void BlockChecked(const CBlock&, const CValidationState&);
     void NewPoWValidBlock(const CBlockIndex *, const std::shared_ptr<const CBlock>&);
+    void ProcessModuleMessage(CNode*, const std::string&, CDataStream&, CConnman*);
     void NotifyGovernanceVote(const CGovernanceVote&);
     void NotifyGovernanceObject(const CGovernanceObject&);
 };

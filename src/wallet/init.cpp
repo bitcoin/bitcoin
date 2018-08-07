@@ -6,6 +6,8 @@
 #include <wallet/init.h>
 
 #include <chainparams.h>
+#include <init.h>
+#include <interface/moduleinterface.h>
 #include <net.h>
 #include <util.h>
 #include <utilmoneystr.h>
@@ -367,3 +369,30 @@ void WalletInit::Close()
     }
     vpwallets.clear();
 }
+
+class CWalletInterface : public WalletInterface {
+public:
+    /** Check MN Collateral */
+    bool CheckMNCollateral(COutPoint& outpointRet, CTxDestination &destRet, CPubKey& pubKeyRet, CKey& keyRet, const std::string& strTxHash, const std::string& strOutputIndex) override;
+    /** Return MN mixing state */
+    bool IsMixingMasternode(const CNode* pnode) override;
+};
+
+static CWalletInterface g_wallet;
+WalletInterface* const g_wallet_interface = &g_wallet;
+
+bool CWalletInterface::CheckMNCollateral(COutPoint& outpointRet, CTxDestination &destRet, CPubKey& pubKeyRet, CKey& keyRet, const std::string& strTxHash, const std::string& strOutputIndex)
+{
+    bool foundmnout = false;
+    for (CWalletRef pwallet : vpwallets) {
+        if (pwallet->GetMasternodeOutpointAndKeys(outpointRet, destRet, pubKeyRet, keyRet, strTxHash, strOutputIndex))
+            foundmnout = true;
+    }
+    return foundmnout;
+}
+
+bool CWalletInterface::IsMixingMasternode(const CNode* pnode)
+{
+    return privateSendClient.IsMixingMasternode(pnode);
+}
+

@@ -35,7 +35,6 @@
 #include <interface/node.h>
 #include <ui_interface.h>
 #include <util.h>
-#include <masternode-sync.h>
 #include <qt/masternodelist.h>
 #include <qt/proposallist.h>
 
@@ -580,7 +579,7 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel)
         setNumBlocks(m_node.getNumBlocks(), QDateTime::fromTime_t(m_node.getLastBlockTime()), m_node.getVerificationProgress(), false);
         connect(_clientModel, SIGNAL(numBlocksChanged(int,QDateTime,double,bool)), this, SLOT(setNumBlocks(int,QDateTime,double,bool)));
 
-        connect(_clientModel, SIGNAL(moduleDataSyncProgress(int)), this, SLOT(setAdditionalDataSyncProgress(int)));
+        connect(_clientModel, SIGNAL(moduleDataSyncProgress(QString,double)), this, SLOT(setAdditionalDataSyncProgress(QString, double)));
 
         // Receive and report messages from client model
         connect(_clientModel, SIGNAL(message(QString,QString,unsigned int)), this, SLOT(message(QString,QString,unsigned int)));
@@ -1015,7 +1014,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
     }
 #endif // ENABLE_WALLET
 
-    if(!masternodeSync.IsBlockchainSynced())
+    if(!m_node.MNIsBlockchainsynced())
     {
         QString timeBehindText = GUIUtil::formatNiceTimeOffset(secs);
 
@@ -1047,8 +1046,6 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
         tooltip += tr("Last received block was generated %1 ago.").arg(timeBehindText);
         tooltip += QString("<br>");
         tooltip += tr("Transactions after this will not yet be visible.");
-    } else if (fLiteMode) {
-        setAdditionalDataSyncProgress(1);
     }
 
     // Don't word-wrap this (fixed-width) tooltip
@@ -1059,13 +1056,13 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
     progressBar->setToolTip(tooltip);
 }
 
-void BitcoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
+void BitcoinGUI::setAdditionalDataSyncProgress(const QString &title, double nSyncProgress)
 {
     if(!clientModel)
         return;
 
     // No additional data sync should be happening while blockchain is not synced, nothing to update
-    if(!masternodeSync.IsBlockchainSynced())
+    if(!m_node.MNIsBlockchainsynced())
         return;
 
     // Prevent orphan statusbar messages (e.g. hover Quit in main menu, wait until chain-sync starts -> garbelled text)
@@ -1076,7 +1073,6 @@ void BitcoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
     // Set icon state: spinning if catching up, tick otherwise
     QString theme = GUIUtil::getThemeName();
 
-    QString strSyncStatus;
     tooltip = tr("Up to date") + QString(".<br>") + tooltip;
 
 #ifdef ENABLE_WALLET
@@ -1084,7 +1080,7 @@ void BitcoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
         walletFrame->showOutOfSyncWarning(false);
 #endif // ENABLE_WALLET
 
-    if(masternodeSync.IsSynced()) {
+    if(m_node.MNIsSynced()) {
         progressBarLabel->setVisible(false);
         progressBar->setVisible(false);
         labelBlocksIcon->setPixmap(QIcon(":/icons/" + theme + "/synced").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
@@ -1100,9 +1096,8 @@ void BitcoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
         progressBar->setValue(nSyncProgress * 1000000000.0 + 0.5);
     }
 
-    strSyncStatus = QString(masternodeSync.GetSyncStatus().c_str());
-    progressBarLabel->setText(strSyncStatus);
-    tooltip = strSyncStatus + QString("<br>") + tooltip;
+    progressBarLabel->setText(title);
+    tooltip = title + QString("<br>") + tooltip;
 
     // Don't word-wrap this (fixed-width) tooltip
     tooltip = QString("<nobr>") + tooltip + QString("</nobr>");

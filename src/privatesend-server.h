@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PRIVATESENDSERVER_H
-#define PRIVATESENDSERVER_H
+#ifndef BITCOIN_PRIVATESENDSERVER_H
+#define BITCOIN_PRIVATESENDSERVER_H
 
 #include <net.h>
 #include <privatesend.h>
@@ -63,18 +63,17 @@ private:
     void RelayStatus(PoolStatusUpdate nStatusUpdate, CConnman* connman, PoolMessage nMessageID = MSG_NOERR);
     void RelayCompletedTransaction(PoolMessage nMessageID, CConnman* connman);
 
+    void ClientTask(CConnman* connman);
     void SetNull();
 
 public:
     CPrivateSendServer() :
         fUnitTest(false) { SetNull(); }
 
-    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman);
-
+    void ProcessModuleMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman);
     void CheckTimeout(CConnman* connman);
     void CheckForCompleteQueue(CConnman* connman);
+    void Controller(CScheduler& scheduler, CConnman* connman);
 };
 
-void ThreadCheckPrivateSendServer(CConnman& connman);
-
-#endif
+#endif  //BITCOIN_PRIVATESENDSERVER_H

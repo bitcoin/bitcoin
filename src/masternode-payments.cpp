@@ -254,7 +254,7 @@ int CMasternodePayments::GetMinMasternodePaymentsProto() const {
     return MIN_MASTERNODE_PAYMENT_PROTO_VERSION;
 }
 
-void CMasternodePayments::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman)
+void CMasternodePayments::ProcessModuleMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman)
 {
     if(fLiteMode) return; // disable all Chaincoin specific functionality
 
@@ -971,11 +971,11 @@ int CMasternodePayments::GetStorageLimit() const
     return std::max(int(mnodeman.size() * nStorageCoeff), nMinBlocksToStore);
 }
 
-void CMasternodePayments::UpdatedBlockTip(const CBlockIndex *pindex, CConnman* connman)
+void CMasternodePayments::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload, CConnman* connman)
 {
-    if(!pindex) return;
+    if(!pindexNew || fLiteMode || fInitialDownload) return;
 
-    nCachedBlockHeight = pindex->nHeight;
+    nCachedBlockHeight = pindexNew->nHeight;
     LogPrint(BCLog::MNODEPAY, "CMasternodePayments::UpdatedBlockTip -- nCachedBlockHeight=%d\n", nCachedBlockHeight);
 
     int nFutureBlock = nCachedBlockHeight + 10;
@@ -983,3 +983,11 @@ void CMasternodePayments::UpdatedBlockTip(const CBlockIndex *pindex, CConnman* c
     CheckBlockVotes(nFutureBlock - 1);
     ProcessBlock(nFutureBlock, connman);
 }
+
+void CMasternodePayments::Controller(CScheduler& scheduler)
+{
+    if (!fLiteMode) {
+        scheduler.scheduleEvery(std::bind(&CMasternodePayments::CheckAndRemove, this), 60000);
+    }
+}
+

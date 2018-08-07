@@ -20,7 +20,6 @@
 #include <qt/walletmodel.h>
 
 #include <qt/darksendconfig.h>
-#include <masternode-sync.h>
 #include <wallet/privatesend-client.h>
 
 #include <QAbstractItemDelegate>
@@ -146,9 +145,11 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
     connect(ui->listTransactions, SIGNAL(clicked(QModelIndex)), this, SLOT(handleTransactionClicked(QModelIndex)));
 
     // init "out of sync" warning labels
-    ui->labelWalletStatus->setText("(" + tr("out of sync") + ")");
+    // start with displaying the "out of sync" warnings
+    showOutOfSyncWarning(true);
+    connect(ui->labelWalletStatus, SIGNAL(clicked()), this, SLOT(handleOutOfSyncWarningClicks()));
+    connect(ui->labelTransactionsStatus, SIGNAL(clicked()), this, SLOT(handleOutOfSyncWarningClicks()));
     ui->labelPrivateSendSyncStatus->setText("(" + tr("out of sync") + ")");
-    ui->labelTransactionsStatus->setText("(" + tr("out of sync") + ")");
 
     // hide PS frame (helps to preserve saved size)
     // we'll setup and make it visible in updateAdvancedPSUI() later if we are not in litemode
@@ -329,7 +330,7 @@ void OverviewPage::showOutOfSyncWarning(bool fShow)
 
 void OverviewPage::updatePrivateSendProgress()
 {
-    if(!masternodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
+    if(!clientModel->node().MNIsBlockchainsynced() || ShutdownRequested()) return;
 
     QString strAmountAndRounds;
     QString strPrivateSendAmount = BitcoinUnits::formatHtmlWithUnit(nDisplayUnit, privateSendClient.nPrivateSendAmount * COIN, false, BitcoinUnits::separatorAlways);
@@ -404,7 +405,7 @@ void OverviewPage::updateAdvancedPSUI(bool _fShowAdvancedPSUI) {
 
 void OverviewPage::privateSendStatus()
 {
-    if(!masternodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
+    if(!clientModel->node().MNIsBlockchainsynced() || ShutdownRequested()) return;
     CWalletRef pwallet = vpwallets.empty() ? nullptr : vpwallets[0];
     static int64_t nLastDSProgressBlockTime = 0;
 
@@ -429,7 +430,7 @@ void OverviewPage::privateSendStatus()
         ui->labelPrivateSendLastMessage->setText("");
         ui->togglePrivateSend->setText(tr("Start Mixing"));
 
-        QString strEnabled = tr("Disabled");
+        QString strEnabled = tr("Enabled / Not active");
         // Show how many keys left in advanced PS UI mode only
         if (fShowAdvancedPSUI) strEnabled += ", " + strKeysLeftText;
         ui->labelPrivateSendEnabled->setText(strEnabled);

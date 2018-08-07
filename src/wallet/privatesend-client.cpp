@@ -492,7 +492,7 @@ bool CPrivateSendClient::CheckPoolStateUpdate(PoolState nStateNew, int nEntriesC
 //
 bool CPrivateSendClient::SignFinalTransaction(const CTransaction& finalTransactionNew, CNode* pnode, CConnman* connman)
 {
-    if(pnode == nullptr) return false;
+    if(pnode == nullptr || !pmixingwallet) return false;
 
     finalMutableTransaction = finalTransactionNew;
     LogPrintf("CPrivateSendClient::SignFinalTransaction -- finalMutableTransaction=%s\n", finalMutableTransaction.GetHash().ToString());
@@ -611,6 +611,9 @@ bool CPrivateSendClient::WaitForAnotherBlock()
 
 bool CPrivateSendClient::CheckAutomaticBackup()
 {
+    if (!pmixingwallet)
+        return false;
+
     switch(nWalletBackups) {
         case 0:
             LogPrint(BCLog::PRIVSEND, "CPrivateSendClient::CheckAutomaticBackup -- Automatic backups disabled, no mixing available.\n");
@@ -690,12 +693,6 @@ bool CPrivateSendClient::DoOnceDenominating(std::string walletIn, CConnman* conn
 //
 bool CPrivateSendClient::DoAutomaticDenominating(CConnman* connman)
 {
-    if(!pmixingwallet || pmixingwallet->IsLocked(true)) {
-        fEnablePrivateSend = true;
-        return false;
-    }
-
-
     if(nState != POOL_STATE_IDLE) {
         fEnablePrivateSend = true;
         return false;
@@ -703,6 +700,18 @@ bool CPrivateSendClient::DoAutomaticDenominating(CConnman* connman)
 
     if(!masternodeSync.IsMasternodeListSynced()) {
         strAutoDenomResult = _("Can't mix while sync in progress.");
+        fEnablePrivateSend = true;
+        return false;
+    }
+
+    if (!pmixingwallet) {
+        strAutoDenomResult = _("Wallet is not initialized");
+        fEnablePrivateSend = true;
+        return false;
+    }
+
+    if(pmixingwallet->IsLocked(true)) {
+        strAutoDenomResult = _("Wallet is locked.");
         fEnablePrivateSend = true;
         return false;
     }
@@ -941,6 +950,9 @@ bool CPrivateSendClient::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, CCon
 
 bool CPrivateSendClient::StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsAnonymized, CConnman* connman)
 {
+    if (!pmixingwallet)
+        return false;
+
     int nTries = 0;
     int nMnCountEnabled = mnodeman.CountEnabled(MIN_PRIVATESEND_PEER_PROTO_VERSION);
 
@@ -1215,6 +1227,9 @@ bool CPrivateSendClient::PrepareDenominate(int nMinRounds, int nMaxRounds, std::
 // Create collaterals by looping through inputs grouped by addresses
 bool CPrivateSendClient::MakeCollateralAmounts(CConnman* connman)
 {
+    if (!pmixingwallet)
+        return false;
+
     std::vector<CompactTallyItem> vecTally;
     if(!pmixingwallet->SelectCoinsGrouppedByAddresses(vecTally, false)) {
         LogPrint(BCLog::PRIVSEND, "CPrivateSendClient::MakeCollateralAmounts -- SelectCoinsGrouppedByAddresses can't find any inputs!\n");
@@ -1241,6 +1256,9 @@ bool CPrivateSendClient::MakeCollateralAmounts(CConnman* connman)
 // Split up large inputs or create fee sized inputs
 bool CPrivateSendClient::MakeCollateralAmounts(const CompactTallyItem& tallyItem, bool fTryDenominated, CConnman* connman)
 {
+    if (!pmixingwallet)
+        return false;
+
     LOCK2(cs_main, pmixingwallet->cs_wallet);
 
     // denominated input is always a single one, so we can check its amount directly and return early
@@ -1314,6 +1332,9 @@ bool CPrivateSendClient::MakeCollateralAmounts(const CompactTallyItem& tallyItem
 // Create denominations by looping through inputs grouped by addresses
 bool CPrivateSendClient::CreateDenominated(CConnman* connman)
 {
+    if (!pmixingwallet)
+        return false;
+
     LOCK2(cs_main, pmixingwallet->cs_wallet);
 
     std::vector<CompactTallyItem> vecTally;
@@ -1336,6 +1357,9 @@ bool CPrivateSendClient::CreateDenominated(CConnman* connman)
 // Create denominations
 bool CPrivateSendClient::CreateDenominated(const CompactTallyItem& tallyItem, bool fCreateMixingCollaterals, CConnman* connman)
 {
+    if (!pmixingwallet)
+        return false;
+
     std::vector<CRecipient> vecSend;
     CKeyHolderStorage keyHolderStorageDenom;
 
@@ -1460,11 +1484,9 @@ void CPrivateSendClient::SetState(PoolState nStateNew)
     nState = nStateNew;
 }
 
-void CPrivateSendClient::UpdatedBlockTip(const CBlockIndex *pindex)
-{
-    nCachedBlockHeight = pindex->nHeight;
+void CPrivateSendClient::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {
+    privateSendClient.nCachedBlockHeight = pindexNew->nHeight;
     LogPrint(BCLog::PRIVSEND, "CPrivateSendClient::UpdatedBlockTip -- nCachedBlockHeight: %d\n", nCachedBlockHeight);
-
 }
 
 void CPrivateSendClient::ClientTask(CConnman* connman)
