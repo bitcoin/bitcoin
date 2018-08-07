@@ -8,7 +8,7 @@
 using namespace boost;
 using namespace std;
 typedef typename std::vector<int> container;
-bool OrderBasedOnArrivalTime(const &int nHeight, std::vector<CTransactionRef>& blockVtx) {
+bool OrderBasedOnArrivalTime(const int &nHeight, std::vector<CTransactionRef>& blockVtx) {
 	std::vector<vector<unsigned char> > vvchArgs;
 	std::vector<vector<unsigned char> > vvchAliasArgs;
 	std::vector<CTransactionRef> orderedVtx;
@@ -90,7 +90,7 @@ bool OrderBasedOnArrivalTime(const &int nHeight, std::vector<CTransactionRef>& b
 	blockVtx = orderedVtx;
 	return true;
 }
-bool CreateGraphFromVTX(const &int nHeight, const std::vector<CTransactionRef>& blockVtx, Graph &graph, std::vector<vertex_descriptor> &vertices, IndexMap &mapTxIndex) {
+bool CreateGraphFromVTX(const int &nHeight, const std::vector<CTransactionRef>& blockVtx, Graph &graph, std::vector<vertex_descriptor> &vertices, IndexMap &mapTxIndex) {
 	AliasMap mapAliasIndex;
 	std::vector<vector<unsigned char> > vvchArgs;
 	std::vector<vector<unsigned char> > vvchAliasArgs;
@@ -109,7 +109,7 @@ bool CreateGraphFromVTX(const &int nHeight, const std::vector<CTransactionRef>& 
 			{	
 				AliasMap::const_iterator it;
 				CAssetAllocation allocation(tx);
-				if (nHeight >= chainparams.GetConsensus().nShareFeeBlock) {
+				if (nHeight >= Params().GetConsensus().nShareFeeBlock) {
 					sender = stringFromVch(allocation.vchAliasOrAddress);
 					it = mapAliasIndex.find(sender);
 				}
