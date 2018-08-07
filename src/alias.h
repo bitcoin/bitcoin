@@ -18,7 +18,7 @@ class COutPoint;
 class CSyscoinAddress;
 class CCoinsViewCache;
 struct CRecipient;
-
+static const char EODMARKER = -125;
 static const unsigned int MAX_GUID_LENGTH = 20;
 static const unsigned int MAX_NAME_LENGTH = 256;
 static const unsigned int MAX_VALUE_LENGTH = 512;
