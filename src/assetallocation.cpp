@@ -371,7 +371,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 	const string &user2 = "";
 	const string &user1 = vchAlias.empty()? stringFromVch(theAssetAllocation.vchAliasOrAddress): stringFromVch(vchAlias);
 
-	const CAssetAllocationTuple assetAllocationTuple(theAssetAllocation.vchAsset, vchAlias.empty()? theAssetAllocation.vchAliasOrAddress: stringFromVch(vchAlias));
+	const CAssetAllocationTuple assetAllocationTuple(theAssetAllocation.vchAsset, vchAlias.empty()? theAssetAllocation.vchAliasOrAddress: vchAlias);
 
 	string strResponseEnglish = "";
 	string strResponseGUID = "";
