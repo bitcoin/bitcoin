@@ -1124,12 +1124,13 @@ UniValue assetsend(const JSONRPCRequest& request) {
 	if (assetAllocationConflicts.find(assetAllocationTuple) != assetAllocationConflicts.end())
 		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2510 - " + _("This asset allocation is involved in a conflict which must be resolved with Proof-Of-Work. Please wait for a block confirmation and try again..."));
 
-
+	vector<unsigned char> vchOP;
+	vchOP.push_back(OP_ASSET);
 	vector<unsigned char> data;
 	theAssetAllocation.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
 	vector<unsigned char> vchHashAsset = vchFromString(hash.GetHex());
-	if(!theAssetAllocation.UnserializeFromData(data, vchHashAsset))
+	if(!theAssetAllocation.UnserializeFromData(data, vchHashAsset, vchOP))
 		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2510 - " + _("Could not unserialize asset allocation data"));
 
 	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ASSET) << CScript::EncodeOP_N(OP_ASSET_SEND) << vchHashAsset << OP_2DROP << OP_DROP;
@@ -1148,8 +1149,6 @@ UniValue assetsend(const JSONRPCRequest& request) {
 		CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 	}
 
-	vector<unsigned char> vchOP;
-	vchOP.push_back(OP_ASSET);
 	CScript scriptData;
 	scriptData << OP_RETURN << data << vchOP;
 	CRecipient fee;
