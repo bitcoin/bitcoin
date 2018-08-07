@@ -64,7 +64,7 @@ class BIP65Test(BitcoinTestFramework):
     def __init__(self):
         super().__init__()
         self.num_nodes = 1
-        self.extra_args = [['-promiscuousmempoolflags=1', '-whitelist=127.0.0.1', '-dip3params=9000:9000']]
+        self.extra_args = [['-whitelist=127.0.0.1', '-dip3params=9000:9000']]
         self.setup_clean_chain = True
 
     def run_test(self):
@@ -125,12 +125,10 @@ class BIP65Test(BitcoinTestFramework):
         spendtx.rehash()
 
         # First we show that this tx is valid except for CLTV by getting it
-        # accepted to the mempool (which we can achieve with
-        # -promiscuousmempoolflags).
-        node0.send_and_ping(msg_tx(spendtx))
-        assert spendtx.hash in self.nodes[0].getrawmempool()
+        # rejected from the mempool for exactly that reason.
+        assert_raises_jsonrpc(-26, '64: non-mandatory-script-verify-flag (Negative locktime)', self.nodes[0].sendrawtransaction, bytes_to_hex_str(spendtx.serialize()), True)
 
-        # Now we verify that a block with this transaction is invalid.
+        # Now we verify that a block with this transaction is also invalid.
         block.vtx.append(spendtx)
         block.hashMerkleRoot = block.calc_merkle_root()
         block.solve()
