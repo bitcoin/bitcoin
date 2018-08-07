@@ -299,12 +299,12 @@ void OutputGroup::Insert(const CInputCoin& output, int depth, bool from_me, size
     m_from_me &= from_me;
     m_value += output.effective_value;
     m_depth = std::min(m_depth, depth);
-    // m_ancestors is currently the max ancestor count for all coins in the group; however, this is
-    // not ideal, as a wallet will consider e.g. thirty 2-ancestor coins as having two ancestors,
-    // when in reality it has 60 ancestors.
-    m_ancestors = std::max(m_ancestors, ancestors);
-    // m_descendants is the count as seen from the top ancestor, not the descendants as seen from the
-    // coin itself; thus, this value is accurate
+    // ancestors here express the number of ancestors the new coin will end up having, which is
+    // the sum, rather than the max; this will overestimate in the cases where multiple inputs
+    // have common ancestors
+    m_ancestors += ancestors;
+    // descendants is the count as seen from the top ancestor, not the descendants as seen from the
+    // coin itself; thus, this value is counted as the max, not the sum
     m_descendants = std::max(m_descendants, descendants);
     effective_value = m_value;
 }
