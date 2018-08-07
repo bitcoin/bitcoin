@@ -144,10 +144,12 @@ string offerFromOp(int op) {
 		return "<unknown offer op>";
 	}
 }
-bool COffer::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
+bool COffer::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash, const bool skipHashCheck) {
     try {
 		CDataStream dsOffer(vchData, SER_NETWORK, PROTOCOL_VERSION);
 		dsOffer >> *this;
+		if (skipHashCheck)
+			return true;
 		vector<unsigned char> vchSerializedData;
 		Serialize(vchSerializedData);
 		const uint256 &calculatedHash = Hash(vchSerializedData.begin(), vchSerializedData.end());
