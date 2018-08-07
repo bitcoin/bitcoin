@@ -81,8 +81,12 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 	COffer offer;
 	CEscrow escrow;
 	CCert cert;
+	CAssetAllocation assetallocation;
+	CAsset asset;
 	nTime = 0;
-	if(alias.UnserializeFromData(vchData, vchHash, true))
+	if (assetallocation.UnserializeFromData(vchData, vchHash) || asset.UnserializeFromData(vchData, vchHash))
+		return false;
+	else if(alias.UnserializeFromData(vchData, vchHash))
 	{
 		CAliasUnprunable aliasUnprunable;
 		// we only prune things that we have in our db and that we can verify the last tx is expired
@@ -107,7 +111,7 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 			return true;
 		}
 	}
-	else if(offer.UnserializeFromData(vchData, vchHash, true))
+	else if(offer.UnserializeFromData(vchData, vchHash))
 	{
 		if (!pofferdb || !pofferdb->ReadOffer(offer.vchOffer, offer))
 		{
@@ -118,7 +122,7 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 		nTime = GetOfferExpiration(offer);
 		return true; 
 	}
-	else if(cert.UnserializeFromData(vchData, vchHash, true))
+	else if(cert.UnserializeFromData(vchData, vchHash))
 	{
 		if (!pcertdb || !pcertdb->ReadCert(cert.vchCert, cert))
 		{
@@ -129,7 +133,7 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 		nTime = GetCertExpiration(cert);
 		return true; 
 	}
-	else if(escrow.UnserializeFromData(vchData, vchHash, true))
+	else if(escrow.UnserializeFromData(vchData, vchHash))
 	{
 		if (!pescrowdb || !pescrowdb->ReadEscrow(escrow.vchEscrow, escrow))
 		{
@@ -717,12 +721,10 @@ void GetAddress(const CAliasIndex& alias, CSyscoinAddress* address,CScript& scri
 	address[0] = CSyscoinAddress(addrTmp.Get(), myAddressType);
 	script = GetScriptForDestination(address[0].Get());
 }
-bool CAliasIndex::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash, const bool skipHashCheck) {
+bool CAliasIndex::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
     try {
 		CDataStream dsAlias(vchData, SER_NETWORK, PROTOCOL_VERSION);
 		dsAlias >> *this;
-		if (skipHashCheck)
-			return true;
 		vector<unsigned char> vchSerializedData;
 		Serialize(vchSerializedData);
 		const uint256 &calculatedHash = Hash(vchSerializedData.begin(), vchSerializedData.end());

@@ -52,12 +52,10 @@ string certFromOp(int op) {
         return "<unknown cert op>";
     }
 }
-bool CCert::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash, const bool skipHashCheck) {
+bool CCert::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
     try {
 		CDataStream dsCert(vchData, SER_NETWORK, PROTOCOL_VERSION);
 		dsCert >> *this;
-		if (skipHashCheck)
-			return true;
 		vector<unsigned char> vchSerializedData;
 		Serialize(vchSerializedData);
 		const uint256 &calculatedHash = Hash(vchSerializedData.begin(), vchSerializedData.end());
