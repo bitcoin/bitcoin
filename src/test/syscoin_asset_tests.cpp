@@ -417,6 +417,64 @@ BOOST_AUTO_TEST_CASE(generate_big_assetname_address)
 	// its 3 chars now so its ok
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew abc " + newaddress + " " + gooddata + " assets 8 false 1 1 0 false ''"));
 }
+BOOST_AUTO_TEST_CASE(generate_asset_allocation_alias_sync)
+{
+	UniValue r;
+	GenerateBlocks(5);
+	printf("Running generate_asset_allocation_sync...\n");
+	GenerateBlocks(5);
+	AliasNew("node1", "jagassetcollection", "data");
+	AliasNew("node1", "jagassetcollectionreceiver", "data");
+	// setup asset with 5% interest hourly (unit test mode calculates interest hourly not annually)
+	string guid = AssetNew("node1", "cad", "jagassetcollection", "data", "8", "false", "10000", "-1", "0.05");
+
+	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"jagassetcollectionreceiver\\\",\\\"amount\\\":5000}]\"", "memoassetinterest");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectionreceiver false"));
+	UniValue balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetallocationinfo " + guid + " jagassetcollectionreceiver false"));
+	balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "assetallocationinfo " + guid + " jagassetcollectionreceiver false"));
+	balance = find_value(r.get_obj(), "balance");
+	StopNode("node1");
+	StartNode("node1");
+	GenerateBlocks(5);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectionreceiver false"));
+	balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetallocationinfo " + guid + " jagassetcollectionreceiver false"));
+	balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "assetallocationinfo " + guid + " jagassetcollectionreceiver false"));
+	balance = find_value(r.get_obj(), "balance");
+
+}
+BOOST_AUTO_TEST_CASE(generate_asset_allocation_address_sync)
+{
+	UniValue r;
+	GenerateBlocks(5);
+	printf("Running generate_asset_allocation_sync...\n");
+	GenerateBlocks(5);
+	string newaddress = GetNewFundedAddress("node1");
+	string newaddressreceiver = GetNewFundedAddress("node1");
+	// setup asset with 5% interest hourly (unit test mode calculates interest hourly not annually)
+	string guid = AssetNew("node1", "cad", newaddress, "data", "8", "false", "10000", "-1", "0.05");
+
+	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\""+ newaddressreceiver + "\\\",\\\"amount\\\":5000}]\"", "memoassetinterest");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddressreceiver + " false"));
+	UniValue balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetallocationinfo " + guid + " " + newaddressreceiver + " false"));
+	balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "assetallocationinfo " + guid + " " + newaddressreceiver + " false"));
+	balance = find_value(r.get_obj(), "balance");
+	StopNode("node1");
+	StartNode("node1");
+	GenerateBlocks(5);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddressreceiver + " false"));
+	balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetallocationinfo " + guid + " " + newaddressreceiver + " false"));
+	balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "assetallocationinfo " + guid + " " + newaddressreceiver + " false"));
+	balance = find_value(r.get_obj(), "balance");
+
+}
 BOOST_AUTO_TEST_CASE(generate_bad_assetmaxsupply)
 {
 	GenerateBlocks(5);
