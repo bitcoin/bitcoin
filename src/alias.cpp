@@ -1781,6 +1781,8 @@ UniValue aliasnew(const JSONRPCRequest& request) {
 	CRecipient recipient;
 	CreateAliasRecipient(scriptPubKey, recipient);
 	
+	vector<unsigned char> vchOP;
+	vchOP.push_back(OP_ALIAS);
 	CScript scriptData;
 	scriptData << OP_RETURN << data << vchOP;
 	CRecipient fee;
