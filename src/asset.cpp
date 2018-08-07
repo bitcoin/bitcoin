@@ -224,9 +224,8 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 	CAssetAllocation theAssetAllocation;
 	vector<unsigned char> vchData;
 	vector<unsigned char> vchHash;
-	vector<unsigned char> vchOP;
 	int nDataOut;
-	if(!GetSyscoinData(tx, vchData, vchHash, vchOP, nDataOut) || (op != OP_ASSET_SEND &&!theAsset.UnserializeFromData(vchData, vchHash, vchOP)) || (op == OP_ASSET_SEND && !theAssetAllocation.UnserializeFromData(vchData, vchHash, vchOP)))
+	if(!GetSyscoinData(tx, vchData, vchHash, nDataOut) || (op != OP_ASSET_SEND &&!theAsset.UnserializeFromData(vchData, vchHash)) || (op == OP_ASSET_SEND && !theAssetAllocation.UnserializeFromData(vchData, vchHash)))
 	{
 		errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR ERRCODE: 2000 - " + _("Cannot unserialize data inside of this transaction relating to an asset");
 		return true;
