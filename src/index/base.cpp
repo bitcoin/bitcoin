@@ -149,7 +149,7 @@ bool BaseIndex::WriteBestBlock(const CBlockIndex* block_index)
     return true;
 }
 
-void BaseIndex::BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex,
+void BaseIndex::BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex, const std::shared_ptr<const CBlockUndo> &blockundo,
                                const std::vector<CTransactionRef>& txn_conflicted)
 {
     if (!m_synced) {

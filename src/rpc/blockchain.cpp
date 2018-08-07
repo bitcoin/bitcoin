@@ -32,6 +32,9 @@
 #include <validationinterface.h>
 #include <versionbitsinfo.h>
 #include <warnings.h>
+#include <base58.h>
+#include <script/standard.h>
+#include <index/utxoindex.h>
 
 #include <assert.h>
 #include <stdint.h>
@@ -41,6 +44,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/thread/thread.hpp> // boost::thread::interrupt
 
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <condition_variable>
@@ -1088,6 +1092,114 @@ UniValue gettxout(const JSONRPCRequest& request)
     ret.pushKV("coinbase", (bool)coin.fCoinBase);
 
     return ret;
+}
+
+void utxoSetToJson(const SerializableUtxoSet& utxoSet, UniValue& vObjects, unsigned int minConf)
+{
+	for(auto outpoint: utxoSet)
+	{
+		Coin coin;
+		if(minConf == 0)
+		{
+			LOCK(mempool.cs);
+			CCoinsViewMemPool view(pcoinsTip.get(), mempool);
+			if(not view.GetCoin(outpoint, coin))
+				continue;
+		}
+		else if(not pcoinsTip->GetCoin(outpoint, coin))
+			continue;
+	
+		if(coin.out.IsNull() or coin.out.scriptPubKey.IsUnspendable())
+			continue;
+
+		if(coin.nHeight != MEMPOOL_HEIGHT and not (chainActive[coin.nHeight] and chainActive[coin.nHeight]->phashBlock))
+			throw JSONRPCError(RPC_INTERNAL_ERROR, "Internal Error: !chainActive[coins.nHeight]");
+
+		CBlockIndex *pindex = mapBlockIndex.find(pcoinsTip->GetBestBlock())->second;
+
+		int nConfirmations = 0;
+		if ((unsigned int)coin.nHeight != MEMPOOL_HEIGHT)
+			nConfirmations = pindex->nHeight - coin.nHeight + 1;
+		if (nConfirmations < minConf)
+			continue;
+
+		UniValue oScriptPubKey(UniValue::VOBJ);
+		ScriptPubKeyToUniv(coin.out.scriptPubKey, oScriptPubKey, true);
+	
+		UniValue o(UniValue::VOBJ);
+		o.push_back(Pair("confirmations", nConfirmations));
+		o.push_back(Pair("txid", outpoint.hash.GetHex()));
+		o.push_back(Pair("vout", (int)outpoint.n));
+		o.push_back(Pair("value", ValueFromAmount(coin.out.nValue)));
+		o.push_back(Pair("scriptPubKey", oScriptPubKey));
+		o.push_back(Pair("coinbase", (bool)coin.fCoinBase));
+		o.push_back(Pair("bestblockhash", pindex->GetBlockHash().GetHex()));
+		o.push_back(Pair("bestblockheight", pindex->nHeight));
+		o.push_back(Pair("bestblocktime", pindex->GetBlockTime()));
+		if ((unsigned int)coin.nHeight != MEMPOOL_HEIGHT)
+		{
+			o.push_back(Pair("blockhash", chainActive[coin.nHeight]->GetBlockHash().GetHex()));
+			o.push_back(Pair("blockheight", (uint64_t)coin.nHeight));
+			o.push_back(Pair("blocktime", chainActive[coin.nHeight]->GetBlockTime()));
+		}
+		vObjects.push_back(o);
+	}
+}
+
+UniValue getutxoindex(const JSONRPCRequest& request)
+{
+    if (request.fHelp or request.params.size() != 2)
+        throw std::runtime_error(
+            "getutxoindex ( minconf [\"address\",...] ) \n"
+			"\nReturns a list of unspent transaction outputs by address (or script).\n"
+			"Note that passing minconf=0 will include the mempool.\n"
+			"\nTo use this function, you must start bitcoin with the -utxoindex parameter.\n"
+            "\nArguments:\n"
+            "1. minconf          (numeric) Minimum confirmations\n"
+            "2. \"addresses\"    (string) A json array of bitcoin addresses (or scripts)\n"
+			"    [\n"
+            "      \"address\"   (string) bitcoin address (or script)\n"
+            "      ,...\n"
+            "    ]\n"
+        );
+	
+	UniValue retVal;
+	
+	if(not g_utxoindex)
+		throw JSONRPCError(RPC_METHOD_NOT_FOUND, "To use this function, you must start bitcoin with the -utxoindex parameter.");
+
+	RPCTypeCheck(request.params, {UniValue::VNUM, UniValue::VARR});
+
+	unsigned int minConf = request.params[0].get_int();
+	UniValue inputs = request.params[1].get_array();
+    
+    if (minConf < 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative minconf");
+ 
+    UniValue vObjects(UniValue::VARR);
+	
+	for(unsigned int idx = 0; idx < inputs.size(); ++idx)
+	{
+		CScript script;
+		const UniValue& input = inputs[idx];
+        CTxDestination destination = DecodeDestination(input.get_str());
+		if(IsValidDestination(destination))
+		{
+			script = GetScriptForDestination(destination);
+		}
+		else if(IsHex(input.get_str()))
+		{
+			std::vector<unsigned char> data(ParseHex(input.get_str()));
+			script = CScript(data.begin(), data.end());
+		}
+		else
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address or script: " + input.get_str());
+	
+		SerializableUtxoSet utxoSet = g_utxoindex->getUtxosForScript(script, minConf);	
+		utxoSetToJson(utxoSet, vObjects, minConf);
+	}
+
+	return vObjects;
 }
 
 static UniValue verifychain(const JSONRPCRequest& request)
@@ -2204,6 +2316,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         "getmempooldescendants",  &getmempooldescendants,  {"txid","verbose"} },
     { "blockchain",         "getmempoolentry",        &getmempoolentry,        {"txid"} },
     { "blockchain",         "getmempoolinfo",         &getmempoolinfo,         {} },
+	{ "blockchain",         "getutxoindex",			  &getutxoindex,		   {"minconf", "addresses"} },	
     { "blockchain",         "getrawmempool",          &getrawmempool,          {"verbose"} },
     { "blockchain",         "gettxout",               &gettxout,               {"txid","n","include_mempool"} },
     { "blockchain",         "gettxoutsetinfo",        &gettxoutsetinfo,        {} },

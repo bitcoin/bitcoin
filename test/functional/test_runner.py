@@ -88,6 +88,7 @@ BASE_SCRIPTS = [
     'p2p_timeouts.py',
     'wallet_dump.py',
     'wallet_listtransactions.py',
+    'rpc_utxoindex.py',
     # vv Tests less than 60s vv
     'p2p_sendheaders.py',
     'wallet_zapwallettxes.py',
