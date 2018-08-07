@@ -162,17 +162,10 @@ string escrowFromOp(int op) {
     }
 	return "<unknown escrow op>";
 }
-bool CEscrow::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash, const vector<unsigned char> &vchOP, const bool checkHash) {
+bool CEscrow::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
     try {
 		CDataStream dsEscrow(vchData, SER_NETWORK, PROTOCOL_VERSION);
 		dsEscrow >> *this;
-		if (nHeight >= Params().GetConsensus().nShareFeeBlock && (vchOP.empty() || vchOP[0] != OP_ESCROW))
-		{
-			SetNull();
-			return false;
-		}
-		if (!checkHash)
-			return true;
 		vector<unsigned char> vchSerializedData;
 		Serialize(vchSerializedData);
 		const uint256 &calculatedHash = Hash(vchSerializedData.begin(), vchSerializedData.end());
@@ -190,14 +183,13 @@ bool CEscrow::UnserializeFromData(const vector<unsigned char> &vchData, const ve
 bool CEscrow::UnserializeFromTx(const CTransaction &tx) {
 	vector<unsigned char> vchData;
 	vector<unsigned char> vchHash;
-	vector<unsigned char> vchOP;
 	int nOut;
-	if(!GetSyscoinData(tx, vchData, vchHash, vchOP, nOut))
+	if(!GetSyscoinData(tx, vchData, vchHash, nOut))
 	{
 		SetNull();
 		return false;
 	}
-	if(!UnserializeFromData(vchData, vchHash, vchOP))
+	if(!UnserializeFromData(vchData, vchHash))
 	{
 		return false;
 	}
@@ -390,9 +382,9 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 	 // unserialize escrow UniValue from txn, check for valid
     CEscrow theEscrow;
 	vector<unsigned char> vchData;
-	vector<unsigned char> vchHash, vchOP;
+	vector<unsigned char> vchHash;
 	int nDataOut;
-	if(!GetSyscoinData(tx, vchData, vchHash, vchOP, nDataOut) || !theEscrow.UnserializeFromData(vchData, vchHash, vchOP))
+	if(!GetSyscoinData(tx, vchData, vchHash, nDataOut) || !theEscrow.UnserializeFromData(vchData, vchHash))
 	{
 		errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR ERRCODE: 4000 - " + _("Cannot unserialize data inside of this transaction relating to an escrow");
 		return true;
@@ -1088,10 +1080,8 @@ UniValue escrowbid(const JSONRPCRequest& request) {
 	CRecipient aliasRecipient;
 	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 
-	vector<unsigned char> vchOP;
-	vchOP.push_back(OP_ESCROW);
 	CScript scriptData;
-	scriptData << OP_RETURN << data << vchOP;
+	scriptData << OP_RETURN << data;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
@@ -1161,10 +1151,8 @@ UniValue escrowaddshipping(const JSONRPCRequest& request) {
 	CRecipient aliasRecipient;
 	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 
-	vector<unsigned char> vchOP;
-	vchOP.push_back(OP_ESCROW);
 	CScript scriptData;
-	scriptData << OP_RETURN << data << vchOP;
+	scriptData << OP_RETURN << data;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
@@ -1431,10 +1419,8 @@ UniValue escrownew(const JSONRPCRequest& request) {
 	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 
 
-	vector<unsigned char> vchOP;
-	vchOP.push_back(OP_ESCROW);
 	CScript scriptData;
-	scriptData << OP_RETURN << data << vchOP;
+	scriptData << OP_RETURN << data;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
@@ -1511,10 +1497,8 @@ UniValue escrowacknowledge(const JSONRPCRequest& request) {
 	CRecipient aliasRecipient;
 	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 
-	vector<unsigned char> vchOP;
-	vchOP.push_back(OP_ESCROW);
 	CScript scriptData;
-	scriptData << OP_RETURN << data << vchOP;
+	scriptData << OP_RETURN << data;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
@@ -1772,10 +1756,8 @@ UniValue escrowrelease(const JSONRPCRequest& request) {
 	CRecipient aliasRecipient;
 	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 
-	vector<unsigned char> vchOP;
-	vchOP.push_back(OP_ESCROW);
 	CScript scriptData;
-	scriptData << OP_RETURN << data << vchOP;
+	scriptData << OP_RETURN << data;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
@@ -1846,10 +1828,8 @@ UniValue escrowcompleterelease(const JSONRPCRequest& request) {
 	CRecipient aliasRecipient;
 	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 
-	vector<unsigned char> vchOP;
-	vchOP.push_back(OP_ESCROW);
 	CScript scriptData;
-	scriptData << OP_RETURN << data << vchOP;
+	scriptData << OP_RETURN << data;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
@@ -1964,10 +1944,8 @@ UniValue escrowrefund(const JSONRPCRequest& request) {
 	CRecipient aliasRecipient;
 	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 
-	vector<unsigned char> vchOP;
-	vchOP.push_back(OP_ESCROW);
 	CScript scriptData;
-	scriptData << OP_RETURN << data << vchOP;
+	scriptData << OP_RETURN << data;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
@@ -2041,10 +2019,8 @@ UniValue escrowcompleterefund(const JSONRPCRequest& request) {
 	CRecipient aliasRecipient;
 	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 
-	vector<unsigned char> vchOP;
-	vchOP.push_back(OP_ESCROW);
 	CScript scriptData;
-	scriptData << OP_RETURN << data << vchOP;
+	scriptData << OP_RETURN << data;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
@@ -2230,10 +2206,8 @@ UniValue escrowfeedback(const JSONRPCRequest& request) {
 	CRecipient aliasRecipient;
 	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
 
-	vector<unsigned char> vchOP;
-	vchOP.push_back(OP_ESCROW);
 	CScript scriptData;
-	scriptData << OP_RETURN << data << vchOP;
+	scriptData << OP_RETURN << data;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
@@ -2398,9 +2372,7 @@ void EscrowTxToJSON(const int op, const std::vector<unsigned char> &vchData, con
 {
 	
 	CEscrow escrow;
-	vector<unsigned char> vchOP;
-	vchOP.push_back(OP_ESCROW);
-	if(!escrow.UnserializeFromData(vchData, vchHash, vchOP))
+	if(!escrow.UnserializeFromData(vchData, vchHash))
 		return;
 
 	CEscrow dbEscrow;

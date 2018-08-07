@@ -57,6 +57,7 @@ public:
 	unsigned char nPrecision;
 	float fInterestRate;
 	bool bCanAdjustInterestRate;
+	char EOD;
     CAsset() {
         SetNull();
     }
@@ -75,23 +76,8 @@ public:
 	}
 	ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
-	inline void SerializationOp(Stream& s, Operation ser_action) {		
-		READWRITE(vchPubData);
-		READWRITE(txHash);
-		READWRITE(VARINT(nHeight));
-		READWRITE(vchAsset);
-		READWRITE(vchSymbol);
-		READWRITE(sCategory);
-		READWRITE(vchAliasOrAddress);
-		READWRITE(listAllocationInputs);
-		READWRITE(nBalance);
-		READWRITE(nTotalSupply);
-		READWRITE(nMaxSupply);
-		READWRITE(bUseInputRanges);
-		READWRITE(fInterestRate);
-		READWRITE(bCanAdjustInterestRate);
-		READWRITE(VARINT(nPrecision));
-	}
+	void SerializationOp(Stream& s, Operation ser_action);
+
     inline friend bool operator==(const CAsset &a, const CAsset &b) {
         return (
 		a.vchAsset == b.vchAsset
@@ -120,10 +106,10 @@ public:
     inline friend bool operator!=(const CAsset &a, const CAsset &b) {
         return !(a == b);
     }
-	inline void SetNull() { vchSymbol.clear(); nPrecision = 8; bCanAdjustInterestRate = false; fInterestRate = 0;  bUseInputRanges = false; nMaxSupply = 0; nTotalSupply = 0; nBalance = 0; listAllocationInputs.clear(); sCategory.clear(); vchAsset.clear(); nHeight = 0; txHash.SetNull(); vchAliasOrAddress.clear(); vchPubData.clear(); }
+	inline void SetNull() { EOD = 0; vchSymbol.clear(); nPrecision = 8; bCanAdjustInterestRate = false; fInterestRate = 0;  bUseInputRanges = false; nMaxSupply = 0; nTotalSupply = 0; nBalance = 0; listAllocationInputs.clear(); sCategory.clear(); vchAsset.clear(); nHeight = 0; txHash.SetNull(); vchAliasOrAddress.clear(); vchPubData.clear(); }
     inline bool IsNull() const { return (vchAsset.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
-	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, const std::vector<unsigned char> &vchOP, const bool checkHash = true);
+	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, const bool checkEODOnly=false);
 	void Serialize(std::vector<unsigned char>& vchData);
 };
 
