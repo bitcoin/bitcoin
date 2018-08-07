@@ -232,7 +232,7 @@ public:
 	inline void SetNull() { offerWhitelist.SetNull(); nAccessFlags = 2; vchAddress.clear(); vchEncryptionPublicKey.clear(); vchEncryptionPrivateKey.clear(); nAcceptTransferFlags = 3; nExpireTime = 0; vchGUID.clear(); vchAlias.clear(); txHash.SetNull(); nHeight = 0; vchPublicValue.clear(); }
     inline bool IsNull() const { return (vchAlias.empty()); }
 	bool UnserializeFromTx(const CTransaction &tx);
-	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, const bool skipHashCheck=false);
+	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
 	void Serialize(std::vector<unsigned char>& vchData);
 };
 
