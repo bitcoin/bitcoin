@@ -8,8 +8,9 @@
 using namespace boost;
 using namespace std;
 typedef typename std::vector<int> container;
-bool OrderBasedOnArrivalTime(std::vector<CTransactionRef>& blockVtx) {
+bool OrderBasedOnArrivalTime(const &int nHeight, std::vector<CTransactionRef>& blockVtx) {
 	std::vector<vector<unsigned char> > vvchArgs;
+	std::vector<vector<unsigned char> > vvchAliasArgs;
 	std::vector<CTransactionRef> orderedVtx;
 	int op;
 	AssertLockHeld(cs_main);
@@ -27,8 +28,19 @@ bool OrderBasedOnArrivalTime(std::vector<CTransactionRef>& blockVtx) {
 			{
 				ArrivalTimesMap arrivalTimes;
 				CAssetAllocation assetallocation(tx);
-				CAssetAllocationTuple assetAllocationTuple(assetallocation.vchAsset, assetallocation.vchAliasOrAddress);
-				passetallocationdb->ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
+				if (nHeight >= Params().GetConsensus().nShareFeeBlock) {
+					CAssetAllocationTuple assetAllocationTuple(assetallocation.vchAsset, assetallocation.vchAliasOrAddress);
+					passetallocationdb->ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
+				}
+				else {
+					if (!FindAliasInTx(view, tx, vvchAliasArgs)) {
+						continue;
+					}
+					CAssetAllocationTuple assetAllocationTuple(assetallocation.vchAsset, vvchAliasArgs[0]);
+					passetallocationdb->ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
+				}
+
+				
 				ArrivalTimesMap::iterator it = arrivalTimes.find(tx.GetHash());
 				if (it != arrivalTimes.end())
 					orderedIndexes.insert(make_pair((*it).second, n));
@@ -78,9 +90,10 @@ bool OrderBasedOnArrivalTime(std::vector<CTransactionRef>& blockVtx) {
 	blockVtx = orderedVtx;
 	return true;
 }
-bool CreateGraphFromVTX(const std::vector<CTransactionRef>& blockVtx, Graph &graph, std::vector<vertex_descriptor> &vertices, IndexMap &mapTxIndex) {
+bool CreateGraphFromVTX(const &int nHeight, const std::vector<CTransactionRef>& blockVtx, Graph &graph, std::vector<vertex_descriptor> &vertices, IndexMap &mapTxIndex) {
 	AliasMap mapAliasIndex;
 	std::vector<vector<unsigned char> > vvchArgs;
+	std::vector<vector<unsigned char> > vvchAliasArgs;
 	int op;
 	AssertLockHeld(cs_main);
 	CCoinsViewCache view(pcoinsTip);
@@ -93,9 +106,19 @@ bool CreateGraphFromVTX(const std::vector<CTransactionRef>& blockVtx, Graph &gra
 		{
 			if (DecodeAssetAllocationTx(tx, op, vvchArgs))
 			{	
+				AliasMap::const_iterator it;
 				CAssetAllocation allocation(tx);
-				const string& sender = stringFromVch(allocation.vchAliasOrAddress);
-				AliasMap::const_iterator it = mapAliasIndex.find(sender);
+				if (nHeight >= chainparams.GetConsensus().nShareFeeBlock) {
+					const string& sender = stringFromVch(allocation.vchAliasOrAddress);
+					it = mapAliasIndex.find(sender);
+				}
+				else {
+					if (!FindAliasInTx(view, tx, vvchAliasArgs)) {
+						continue;
+					}
+					const string& sender = stringFromVch(vvchAliasArgs[0]);
+					it = mapAliasIndex.find(sender);
+				}
 				if (it == mapAliasIndex.end()) {
 					vertices.push_back(add_vertex(graph));
 					mapAliasIndex[sender] = vertices.size() - 1;

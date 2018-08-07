@@ -369,9 +369,9 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 	
 	const string &user3 = "";
 	const string &user2 = "";
-	const string &user1 = stringFromVch(theAssetAllocation.vchAliasOrAddress);
+	const string &user1 = vchAlias.empty()? stringFromVch(theAssetAllocation.vchAliasOrAddress): stringFromVch(vchAlias);
 
-	const CAssetAllocationTuple assetAllocationTuple(theAssetAllocation.vchAsset, theAssetAllocation.vchAliasOrAddress);
+	const CAssetAllocationTuple assetAllocationTuple(theAssetAllocation.vchAsset, vchAlias.empty()? theAssetAllocation.vchAliasOrAddress): stringFromVch(vchAlias);
 
 	string strResponseEnglish = "";
 	string strResponseGUID = "";
@@ -432,6 +432,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot find sender asset allocation.");
 			return true;
 		}
+		
 		if (vchAlias.empty()) {
 			if (dbAssetAllocation.vchAliasOrAddress != theAssetAllocation.vchAliasOrAddress || !FindAssetOwnerInTx(inputs, tx, user1))
 			{
@@ -439,10 +440,12 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 				return true;
 			}
 		}
-		else if (dbAssetAllocation.vchAliasOrAddress != theAssetAllocation.vchAliasOrAddress || theAssetAllocation.vchAliasOrAddress != vchAlias) {
-			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1016 - " + _("Cannot send this asset. Asset allocation owner must sign off on this change");
+		else if (dbAssetAllocation.vchAlias != vchAlias)
+		{
+			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1017 - " + _("Cannot send this asset. Asset allocation owner must sign off on this change");
 			return true;
 		}
+		
 		if (!bSanityCheck) {
 			bRevert = !fJustCheck;
 			if (bRevert) {
