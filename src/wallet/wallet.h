@@ -38,7 +38,6 @@ extern std::vector<CWalletRef> vpwallets;
 extern CFeeRate payTxFee;
 extern unsigned int nTxConfirmTarget;
 extern bool bSpendZeroConfChange;
-extern bool fWalletRbf;
 extern bool fWalletUnlockMintOnly;
 
 static const unsigned int DEFAULT_KEYPOOL_SIZE = 1000;
@@ -62,8 +61,6 @@ static const bool DEFAULT_SPEND_ZEROCONF_CHANGE = true;
 static const bool DEFAULT_WALLET_REJECT_LONG_CHAINS = false;
 //! -txconfirmtarget default
 static const unsigned int DEFAULT_TX_CONFIRM_TARGET = 6;
-//! -walletrbf default
-static const bool DEFAULT_WALLET_RBF = false;
 static const bool DEFAULT_WALLETBROADCAST = true;
 static const bool DEFAULT_DISABLE_WALLET = false;
 
@@ -1114,9 +1111,6 @@ public:
 
     /* Mark a transaction (and it in-wallet descendants) as abandoned so its inputs may be respent. */
     bool AbandonTransaction(const uint256& hashTx);
-
-    /** Mark a transaction as replaced by another transaction (e.g., BIP 125). */
-    bool MarkReplaced(const uint256& originalHash, const uint256& newHash);
 
     /* Initializes the wallet, returns a new CWallet instance or a null pointer in case of an error */
     static CWallet* CreateWalletFromFile(const std::string walletFile);

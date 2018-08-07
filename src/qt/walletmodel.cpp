@@ -22,12 +22,10 @@
 #include <validation.h>
 #include <net.h> // for g_connman
 #include <policy/fees.h>
-#include <policy/rbf.h>
 #include <sync.h>
 #include <ui_interface.h>
 #include <util.h> // for GetBoolArg
 #include <wallet/coincontrol.h>
-#include <wallet/feebumper.h>
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h> // for BackupWallet
 
@@ -680,72 +678,6 @@ bool WalletModel::abandonTransaction(uint256 hash) const
 {
     LOCK2(cs_main, wallet->cs_wallet);
     return wallet->AbandonTransaction(hash);
-}
-
-bool WalletModel::transactionCanBeBumped(uint256 hash) const
-{
-    return feebumper::TransactionCanBeBumped(wallet, hash);
-}
-
-bool WalletModel::bumpFee(uint256 hash)
-{
-    CCoinControl coin_control;
-    coin_control.signalRbf = true;
-    std::vector<std::string> errors;
-    CAmount old_fee;
-    CAmount new_fee;
-    CMutableTransaction mtx;
-    if (feebumper::CreateTransaction(wallet, hash, coin_control, 0 /* totalFee */, errors, old_fee, new_fee, mtx) != feebumper::Result::OK) {
-        QMessageBox::critical(0, tr("Fee bump error"), tr("Increasing transaction fee failed") + "<br />(" +
-            (errors.size() ? QString::fromStdString(errors[0]) : "") +")");
-         return false;
-    }
-
-    // allow a user based fee verification
-    QString questionString = tr("Do you want to increase the fee?");
-    questionString.append("<br />");
-    questionString.append("<table style=\"text-align: left;\">");
-    questionString.append("<tr><td>");
-    questionString.append(tr("Current fee:"));
-    questionString.append("</td><td>");
-    questionString.append(BitcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), old_fee));
-    questionString.append("</td></tr><tr><td>");
-    questionString.append(tr("Increase:"));
-    questionString.append("</td><td>");
-    questionString.append(BitcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), new_fee - old_fee));
-    questionString.append("</td></tr><tr><td>");
-    questionString.append(tr("New fee:"));
-    questionString.append("</td><td>");
-    questionString.append(BitcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), new_fee));
-    questionString.append("</td></tr></table>");
-    SendConfirmationDialog confirmationDialog(tr("Confirm fee bump"), questionString);
-    confirmationDialog.exec();
-    QMessageBox::StandardButton retval = (QMessageBox::StandardButton)confirmationDialog.result();
-
-    // cancel sign&broadcast if users doesn't want to bump the fee
-    if (retval != QMessageBox::Yes) {
-        return false;
-    }
-
-    WalletModel::UnlockContext ctx(requestUnlock());
-    if(!ctx.isValid())
-    {
-        return false;
-    }
-
-    // sign bumped transaction
-    if (!feebumper::SignTransaction(wallet, mtx)) {
-        QMessageBox::critical(0, tr("Fee bump error"), tr("Can't sign transaction."));
-        return false;
-    }
-    // commit the bumped transaction
-    uint256 txid;
-    if (feebumper::CommitTransaction(wallet, hash, std::move(mtx), errors, txid) != feebumper::Result::OK) {
-        QMessageBox::critical(0, tr("Fee bump error"), tr("Could not commit transaction") + "<br />(" +
-            QString::fromStdString(errors[0])+")");
-         return false;
-    }
-    return true;
 }
 
 bool WalletModel::isWalletEnabled()

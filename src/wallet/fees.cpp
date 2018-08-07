@@ -42,8 +42,7 @@ CAmount GetMinimumFee(unsigned int nTxBytes, const CCoinControl& coin_control, c
     else { // 2. or 4.
         // We will use smart fee estimation
         unsigned int target = coin_control.m_confirm_target ? *coin_control.m_confirm_target : ::nTxConfirmTarget;
-        // By default estimates are economical iff we are signaling opt-in-RBF
-        bool conservative_estimate = !coin_control.signalRbf;
+        bool conservative_estimate = true;
         // Allow to override the default fee estimate mode over the CoinControl instance
         if (coin_control.m_fee_mode == FeeEstimateMode::CONSERVATIVE) conservative_estimate = true;
         else if (coin_control.m_fee_mode == FeeEstimateMode::ECONOMICAL) conservative_estimate = false;

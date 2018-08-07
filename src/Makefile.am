@@ -165,7 +165,6 @@ BITCOIN_CORE_H = \
   wallet/coincontrol.h \
   wallet/crypter.h \
   wallet/db.h \
-  wallet/feebumper.h \
   wallet/fees.h \
   wallet/init.h \
   wallet/rpcwallet.h \
@@ -211,7 +210,6 @@ libbitcoin_server_a_SOURCES = \
   noui.cpp \
   policy/fees.cpp \
   policy/policy.cpp \
-  policy/rbf.cpp \
   pow.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
@@ -251,7 +249,6 @@ libbitcoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_wallet_a_SOURCES = \
   wallet/crypter.cpp \
   wallet/db.cpp \
-  wallet/feebumper.cpp \
   wallet/fees.cpp \
   wallet/init.cpp \
   wallet/rpcdump.cpp \

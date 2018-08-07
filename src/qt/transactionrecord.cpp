@@ -18,7 +18,7 @@
 bool TransactionRecord::showTransaction(const CWalletTx &wtx)
 {
     // There are currently no cases where we hide transactions, but
-    // we may want to use this in the future for things like RBF.
+    // we may want to use this in the future
     return true;
 }
 
