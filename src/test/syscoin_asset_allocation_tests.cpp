@@ -27,22 +27,22 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_alias_sync)
 	GenerateBlocks(5);
 	printf("Running generate_asset_allocation_alias_sync...\n");
 	GenerateBlocks(5);
-	AliasNew("node1", "jagassetcollection", "data");
-	AliasNew("node1", "jagassetcollectionreceiver", "data");
+	AliasNew("node1", "jagassetsync", "data");
+	AliasNew("node1", "jagassetsyncrecv", "data");
 
-	string guid = AssetNew("node1", "cad", "jagassetcollection", "data", "8", "false", "10000", "-1", "0.05");
+	string guid = AssetNew("node1", "cad", "jagassetsync", "data", "8", "false", "10000", "-1", "0.05");
 
-	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"jagassetcollectionreceiver\\\",\\\"amount\\\":5000}]\"", "memoassetinterest");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectionreceiver false"));
+	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"jagassetsyncrecv\\\",\\\"amount\\\":5000}]\"", "memoassetinterest");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetsyncrecv false"));
 	UniValue balance = find_value(r.get_obj(), "balance");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetallocationinfo " + guid + " jagassetcollectionreceiver false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetallocationinfo " + guid + " jagassetsyncrecv false"));
 	balance = find_value(r.get_obj(), "balance");
-	StopNode("node1");
-	StartNode("node1");
-	GenerateBlocks(5, "node1");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectionreceiver false"));
+	StopNode("node2");
+	StartNode("node2");
+	GenerateBlocks(5, "node2");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetsyncrecv false"));
 	balance = find_value(r.get_obj(), "balance");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetallocationinfo " + guid + " jagassetcollectionreceiver false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetallocationinfo " + guid + " jagassetsyncrecv false"));
 	balance = find_value(r.get_obj(), "balance");
 
 }
@@ -61,9 +61,9 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_address_sync)
 	UniValue balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetallocationinfo " + guid + " " + newaddressreceiver + " false"));
 	balance = find_value(r.get_obj(), "balance");
-	StopNode("node1");
-	StartNode("node1");
-	GenerateBlocks(5, "node1");
+	StopNode("node2");
+	StartNode("node2");
+	GenerateBlocks(5, "node2");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddressreceiver + " false"));
 	balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetallocationinfo " + guid + " " + newaddressreceiver + " false"));
