@@ -103,7 +103,7 @@ BOOST_FIXTURE_TEST_SUITE(asset_tests, BasicTestingSetup)
 
         // channel
         BOOST_CHECK(IsAssetNameValid("ABC~1", type));
-        BOOST_CHECK(type == AssetType::CHANNEL);
+        BOOST_CHECK(type == AssetType::MSGCHANNEL);
         BOOST_CHECK(IsAssetNameValid("ABC~STILL_MAX_OF_30.CHARS_1234", type));
 
         BOOST_CHECK(!IsAssetNameValid("MIN~", type));
