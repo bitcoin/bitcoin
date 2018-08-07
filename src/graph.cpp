@@ -97,6 +97,7 @@ bool CreateGraphFromVTX(const &int nHeight, const std::vector<CTransactionRef>& 
 	int op;
 	AssertLockHeld(cs_main);
 	CCoinsViewCache view(pcoinsTip);
+	string sender;
 	for (unsigned int n = 0; n< blockVtx.size(); n++) {
 		const CTransactionRef txRef = blockVtx[n];
 		if (!txRef)
@@ -109,14 +110,14 @@ bool CreateGraphFromVTX(const &int nHeight, const std::vector<CTransactionRef>& 
 				AliasMap::const_iterator it;
 				CAssetAllocation allocation(tx);
 				if (nHeight >= chainparams.GetConsensus().nShareFeeBlock) {
-					const string& sender = stringFromVch(allocation.vchAliasOrAddress);
+					sender = stringFromVch(allocation.vchAliasOrAddress);
 					it = mapAliasIndex.find(sender);
 				}
 				else {
 					if (!FindAliasInTx(view, tx, vvchAliasArgs)) {
 						continue;
 					}
-					const string& sender = stringFromVch(vvchAliasArgs[0]);
+					sender = stringFromVch(vvchAliasArgs[0]);
 					it = mapAliasIndex.find(sender);
 				}
 				if (it == mapAliasIndex.end()) {
