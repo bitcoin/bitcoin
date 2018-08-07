@@ -81,12 +81,8 @@ bool GetTimeToPrune(const CScript& scriptPubKey, uint64_t &nTime)
 	COffer offer;
 	CEscrow escrow;
 	CCert cert;
-	CAssetAllocation assetallocation;
-	CAsset asset;
 	nTime = 0;
-	if (assetallocation.UnserializeFromData(vchData, vchHash) || asset.UnserializeFromData(vchData, vchHash))
-		return false;
-	else if(alias.UnserializeFromData(vchData, vchHash))
+	if(alias.UnserializeFromData(vchData, vchHash))
 	{
 		CAliasUnprunable aliasUnprunable;
 		// we only prune things that we have in our db and that we can verify the last tx is expired
