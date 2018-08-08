@@ -2393,8 +2393,8 @@ public:
         WSACleanup();
 #endif
     }
-}
-instance_of_cnetcleanup;
+};
+CNetCleanup g_instance_of_cnetcleanup;
 
 void CConnman::Interrupt()
 {

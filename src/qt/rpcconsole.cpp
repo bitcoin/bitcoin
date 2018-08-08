@@ -167,7 +167,8 @@ bool RPCConsole::RPCParseCommandLine(interfaces::Node* node, std::string &strRes
         STATE_ESCAPE_DOUBLEQUOTED,
         STATE_COMMAND_EXECUTED,
         STATE_COMMAND_EXECUTED_INNER
-    } state = STATE_EATING_SPACES;
+    };
+    CmdParseState state = STATE_EATING_SPACES;
     std::string curarg;
     UniValue lastResult;
     unsigned nDepthInsideSensitive = 0;

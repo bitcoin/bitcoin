@@ -208,10 +208,8 @@ private:
 
 
     bool RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& inputs, const CChainParams& params) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-} g_chainstate;
-
-
-
+};
+CChainState g_chainstate;
 CCriticalSection cs_main;
 
 BlockMap& mapBlockIndex = g_chainstate.mapBlockIndex;
@@ -4846,4 +4844,5 @@ public:
             delete (*it1).second;
         mapBlockIndex.clear();
     }
-} instance_of_cmaincleanup;
+};
+CMainCleanup g_instance_of_cmaincleanup;
