@@ -1131,7 +1131,7 @@ bool BuildAssetAllocationJson(CAssetAllocation& assetallocation, const CAsset& a
     oAssetAllocation.push_back(Pair("_id", CAssetAllocationTuple(assetallocation.vchAsset, assetallocation.vchAliasOrAddress).ToString()));
 	oAssetAllocation.push_back(Pair("asset", stringFromVch(assetallocation.vchAsset)));
 	oAssetAllocation.push_back(Pair("symbol", stringFromVch(asset.vchSymbol)));
-	oAssetAllocation.push_back(Pair("interest_rate", asset.fInterestRate));
+	oAssetAllocation.push_back(Pair("interest_rate", assetallocation.fInterestRate));
     oAssetAllocation.push_back(Pair("txid", assetallocation.txHash.GetHex()));
     oAssetAllocation.push_back(Pair("height", (int)assetallocation.nHeight));
 	oAssetAllocation.push_back(Pair("alias", stringFromVch(assetallocation.vchAliasOrAddress)));
@@ -1170,7 +1170,7 @@ bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, co
 	oAssetAllocation.push_back(Pair("time", nTime));
 	oAssetAllocation.push_back(Pair("asset", stringFromVch(assetallocation.vchAsset)));
 	oAssetAllocation.push_back(Pair("symbol", stringFromVch(asset.vchSymbol)));
-	oAssetAllocation.push_back(Pair("interest_rate", asset.fInterestRate));
+	oAssetAllocation.push_back(Pair("interest_rate", assetallocation.fInterestRate));
 	oAssetAllocation.push_back(Pair("height", (int)assetallocation.nHeight));
 	oAssetAllocation.push_back(Pair("sender", strSender));
 	oAssetAllocation.push_back(Pair("sender_balance", ValueFromAssetAmount(nSenderBalance, asset.nPrecision, asset.bUseInputRanges)));
