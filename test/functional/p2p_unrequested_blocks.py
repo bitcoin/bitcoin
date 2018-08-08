@@ -78,8 +78,6 @@ class AcceptBlockTest(BitcoinTestFramework):
         test_node = self.nodes[0].add_p2p_connection(P2PInterface())
         # min_work_node connects to node1 (whitelisted)
         min_work_node = self.nodes[1].add_p2p_connection(P2PInterface())
-        test_node.wait_for_verack()
-        min_work_node.wait_for_verack()
 
         # 1. Have nodes mine a block (leave IBD)
         [ n.generate(1) for n in self.nodes ]
@@ -202,7 +200,6 @@ class AcceptBlockTest(BitcoinTestFramework):
         self.nodes[1].disconnect_p2ps()
 
         test_node = self.nodes[0].add_p2p_connection(P2PInterface())
-        test_node.wait_for_verack()
 
         test_node.send_message(msg_block(block_h1f))
 
@@ -287,7 +284,6 @@ class AcceptBlockTest(BitcoinTestFramework):
 
             self.nodes[0].disconnect_p2ps()
             test_node = self.nodes[0].add_p2p_connection(P2PInterface())
-            test_node.wait_for_verack()
 
         # We should have failed reorg and switched back to 290 (but have block 291)
         assert_equal(self.nodes[0].getblockcount(), 290)
