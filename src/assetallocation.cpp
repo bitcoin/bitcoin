@@ -58,7 +58,7 @@ void CAssetAllocation::SerializationOp(Stream& s, Operation ser_action) {
 	if (nHeight >= Params().GetConsensus().nShareFeeBlock)
 		READWRITE(nAccumulatedBalanceSinceLastInterestClaim);
 	else {
-		if(ser_action.ForWrite())
+		if(!ser_action.ForRead())
 			nAccumulatedBalanceSinceLastInterestClaim_old = nAccumulatedBalanceSinceLastInterestClaim;
 		READWRITE(VARINT(nAccumulatedBalanceSinceLastInterestClaim_old));
 		if (ser_action.ForRead())
