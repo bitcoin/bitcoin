@@ -156,7 +156,7 @@ public:
 	inline friend bool operator!=(const CAssetAllocation &a, const CAssetAllocation &b) {
 		return !(a == b);
 	}
-	inline void SetNull() { fInterestRate = 0; fAccumulatedInterestSinceLastInterestClaim = 0; nAccumulatedBalanceSinceLastInterestClaim = 0; vchMemo.clear(); nLastInterestClaimHeight = 0; nBalance = 0; listSendingAllocationAmounts.clear();  listSendingAllocationInputs.clear(); listAllocationInputs.clear(); vchAsset.clear(); vchAliasOrAddress.clear(); nHeight = 0; txHash.SetNull(); }
+	inline void SetNull() { fInterestRate = 0; fAccumulatedInterestSinceLastInterestClaim = 0; nAccumulatedBalanceSinceLastInterestClaim = nAccumulatedBalanceSinceLastInterestClaim_old = 0; vchMemo.clear(); nLastInterestClaimHeight = 0; nBalance = 0; listSendingAllocationAmounts.clear();  listSendingAllocationInputs.clear(); listAllocationInputs.clear(); vchAsset.clear(); vchAliasOrAddress.clear(); nHeight = 0; txHash.SetNull(); }
 	inline bool IsNull() const { return (vchAsset.empty()); }
 	bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
