@@ -47,10 +47,10 @@ static const std::string UNIQUE_TAG_DELIMITER = "#";
 static const std::string CHANNEL_TAG_DELIMITER = "~";
 static const std::string VOTE_TAG_DELIMITER = "^";
 
-static const std::regex UNIQUE_INDICATOR("^[^#]+#[^#]+$");
-static const std::regex CHANNEL_INDICATOR("^[^~]+~[^~]+$");
-static const std::regex OWNER_INDICATOR("^[^!]+!$");
-static const std::regex VOTE_INDICATOR(R"(^[^^]+\^[^~#!\/]+$)");
+static const std::regex UNIQUE_INDICATOR(R"(^[^^~#!]+#[^~#!\/]+$)");
+static const std::regex CHANNEL_INDICATOR(R"(^[^^~#!]+~[^~#!\/]+$)");
+static const std::regex OWNER_INDICATOR(R"(^[^^~#!]+!$)");
+static const std::regex VOTE_INDICATOR(R"(^[^^~#!]+\^[^~#!\/]+$)");
 
 static const std::regex RAVEN_NAMES("^RVN|^RAVEN|^RAVENCOIN|^RAVENC0IN|^RAVENCO1N|^RAVENC01N");
 
@@ -137,7 +137,7 @@ bool IsAssetNameValid(const std::string& name, AssetType& assetType)
         boost::split(parts, name, boost::is_any_of(CHANNEL_TAG_DELIMITER));
         bool valid = IsNameValidBeforeTag(parts.front()) && IsChannelTagValid(parts.back());
         if (!valid) return false;
-        assetType = AssetType::CHANNEL;
+        assetType = AssetType::MSGCHANNEL;
         return true;
     }
     else if (std::regex_match(name, OWNER_INDICATOR))
@@ -189,7 +189,7 @@ std::string GetParentName(const std::string& name)
         index = name.find_last_of(SUB_NAME_DELIMITER);
     } else if (type == AssetType::UNIQUE) {
         index = name.find_last_of(UNIQUE_TAG_DELIMITER);
-    } else if (type == AssetType::CHANNEL) {
+    } else if (type == AssetType::MSGCHANNEL) {
         index = name.find_last_of(CHANNEL_TAG_DELIMITER);
     } else if (type == AssetType::VOTE) {
         index = name.find_last_of(VOTE_TAG_DELIMITER);
@@ -1934,7 +1934,7 @@ CAmount GetBurnAmount(const AssetType type)
             return GetIssueAssetBurnAmount();
         case AssetType::SUB:
             return GetIssueSubAssetBurnAmount();
-        case AssetType::CHANNEL:
+        case AssetType::MSGCHANNEL:
             return 0;
         case AssetType::OWNER:
             return 0;
@@ -1956,7 +1956,7 @@ std::string GetBurnAddress(const AssetType type)
             return Params().IssueAssetBurnAddress();
         case AssetType::SUB:
             return Params().IssueSubAssetBurnAddress();
-        case AssetType::CHANNEL:
+        case AssetType::MSGCHANNEL:
             return "";
         case AssetType::OWNER:
             return "";

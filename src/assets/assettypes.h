@@ -21,7 +21,7 @@ enum AssetType
     OWNER,
     SUB,
     UNIQUE,
-    CHANNEL,
+    MSGCHANNEL,
     VOTE,
     INVALID,
     REISSUE

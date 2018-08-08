@@ -103,8 +103,10 @@ BOOST_FIXTURE_TEST_SUITE(asset_tests, BasicTestingSetup)
 
         // channel
         BOOST_CHECK(IsAssetNameValid("ABC~1", type));
-        BOOST_CHECK(type == AssetType::CHANNEL);
+        BOOST_CHECK(type == AssetType::MSGCHANNEL);
         BOOST_CHECK(IsAssetNameValid("ABC~STILL_MAX_OF_30.CHARS_1234", type));
+        BOOST_CHECK(IsAssetNameValid("TEST/TEST~CHANNEL", type));
+        BOOST_CHECK(type == AssetType::MSGCHANNEL);
 
         BOOST_CHECK(!IsAssetNameValid("MIN~", type));
         BOOST_CHECK(!IsAssetNameValid("ABC~NO~TILDE", type));
@@ -141,19 +143,22 @@ BOOST_FIXTURE_TEST_SUITE(asset_tests, BasicTestingSetup)
         BOOST_CHECK(IsAssetNameValid("ABC/SUB/SUB^VOTE", type));
         BOOST_CHECK(type == AssetType::VOTE);
 
-
         // Check type for different type of sub assets
         BOOST_CHECK(IsAssetNameValid("TEST/UYTH#UNIQUE", type));
         BOOST_CHECK(type == AssetType::UNIQUE);
-
-        BOOST_CHECK(IsAssetNameValid("TEST/UYTH~CHANNEL", type));
-        BOOST_CHECK(type == AssetType::CHANNEL);
 
         BOOST_CHECK(IsAssetNameValid("TEST/UYTH/SUB#UNIQUE", type));
         BOOST_CHECK(type == AssetType::UNIQUE);
 
         BOOST_CHECK(IsAssetNameValid("TEST/UYTH/SUB~CHANNEL", type));
-        BOOST_CHECK(type == AssetType::CHANNEL);
+        BOOST_CHECK(type == AssetType::MSGCHANNEL);
+
+        BOOST_CHECK(!IsAssetNameValid("TEST/UYTH/SUB#UNIQUE^VOTE", type));
+        BOOST_CHECK(!IsAssetNameValid("TEST/UYTH/SUB#UNIQUE#UNIQUE", type));
+        BOOST_CHECK(!IsAssetNameValid("TEST/UYTH/SUB~CHANNEL^VOTE", type));
+        BOOST_CHECK(!IsAssetNameValid("TEST/UYTH/SUB~CHANNEL^UNIQUE", type));
+        BOOST_CHECK(!IsAssetNameValid("TEST/UYTH/SUB~CHANNEL!", type));
+        BOOST_CHECK(!IsAssetNameValid("TEST/UYTH/SUB^VOTE!", type));
 
         // Check ParentName function
         BOOST_CHECK(GetParentName("TEST!") == "TEST!");
