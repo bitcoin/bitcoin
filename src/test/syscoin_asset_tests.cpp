@@ -506,13 +506,20 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_interest_overflow)
 	string guid = AssetNew("node1", "cad", newaddress, "data", "8", "false", "2000000000", "9999999999", "0.25");
 	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"" + newaddress + "\\\",\\\"amount\\\":1000000000}]\"", "memoassetinterest");
 	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"" + newaddressreceiver2 + "\\\",\\\"amount\\\":1000000000}]\"", "memoassetinterest");
-	GenerateBlocks(5000);
+
+	printf("first set of sends...\n");
 	for (int i = 0; i < 5000; i++) {
-		AssetAllocationTransfer(true, "node1", guid, newaddress, "\"[{\\\"ownerto\\\":\\\"" + newaddressreceiver2 + "\\\",\\\"amount\\\":1}]\"", "allocationsendmemo");
+		AssetAllocationTransfer(false, "node1", guid, newaddress, "\"[{\\\"ownerto\\\":\\\"" + newaddressreceiver2 + "\\\",\\\"amount\\\":1}]\"", "allocationsendmemo");
+		if (i % 100)
+			printf("%d out of %d completed...\n", i, 5000);
 	}
+	printf("second set of sends...\n");
 	for (int i = 0; i < 5000; i++) {
-		AssetAllocationTransfer(true, "node1", guid, newaddressreceiver2, "\"[{\\\"ownerto\\\":\\\"" + newaddress + "\\\",\\\"amount\\\":1}]\"", "allocationsendmemo");
+		AssetAllocationTransfer(false, "node1", guid, newaddressreceiver2, "\"[{\\\"ownerto\\\":\\\"" + newaddress + "\\\",\\\"amount\\\":1}]\"", "allocationsendmemo");
+		if (i % 100)
+			printf("%d out of %d completed...\n", i, 5000);
 	}
+	printf("done now claim interest...\n");
 	AssetClaimInterest("node1", guid, newaddress);
 }
 BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_address)
