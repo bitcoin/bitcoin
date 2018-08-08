@@ -1006,12 +1006,41 @@ UniValue omni_getwalletaddressbalances(const UniValue& params, bool fHelp)
 
     std::set<std::string> addresses = getWalletAddresses(fIncludeWatchOnly);
 
+    LOCK(cs_tally);
     BOOST_FOREACH(const std::string& address, addresses) {
-        response.push_back(address);
+        CMPTally* addressTally = getTally(address);
+        if (NULL == addressTally) {
+            continue; // address doesn't have tokens
+        }
 
-        // TODO
+        UniValue arrBalances(UniValue::VARR);
+        uint32_t propertyId = 0;
+        addressTally->init();
+
+        while (0 != (propertyId = addressTally->next())) {
+            CMPSPInfo::Entry property;
+            if (!_my_sps->getSP(propertyId, property)) {
+                continue; // token wasn't found in the DB
+            }
+
+            UniValue objBalance(UniValue::VOBJ);
+            objBalance.push_back(Pair("propertyid", (uint64_t) propertyId));
+            objBalance.push_back(Pair("name", property.name));
+
+            bool nonEmptyBalance = BalanceToJSON(address, propertyId, objBalance, property.isDivisible());
+
+            if (nonEmptyBalance) {
+                arrBalances.push_back(objBalance);
+            }
+        }
+
+        if (arrBalances.size() > 0) {
+            UniValue objEntry(UniValue::VOBJ);
+            objEntry.push_back(Pair("address", address));
+            objEntry.push_back(Pair("balances", arrBalances));
+            response.push_back(objEntry);
+        }
     }
-
 #endif
 
     return response;
