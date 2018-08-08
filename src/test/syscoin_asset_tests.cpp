@@ -508,7 +508,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_interest_overflow)
 	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"" + newaddressreceiver2 + "\\\",\\\"amount\\\":1000000000}]\"", "memoassetinterest");
 	GenerateBlocks(5000);
 	for (int i = 0; i < 5000; i++) {
-		AssetAllocationTransfer(true, "node1", guid, newaddress, "\"[{\\\"ownerto\\\":\\\"" + newaddressreceiver + "\\\",\\\"amount\\\":1}]\"", "allocationsendmemo");
+		AssetAllocationTransfer(true, "node1", guid, newaddress, "\"[{\\\"ownerto\\\":\\\"" + newaddressreceiver2 + "\\\",\\\"amount\\\":1}]\"", "allocationsendmemo");
 	}
 	for (int i = 0; i < 5000; i++) {
 		AssetAllocationTransfer(true, "node1", guid, newaddressreceiver2, "\"[{\\\"ownerto\\\":\\\"" + newaddress + "\\\",\\\"amount\\\":1}]\"", "allocationsendmemo");
