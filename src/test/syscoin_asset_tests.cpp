@@ -496,6 +496,25 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest)
 	balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 824875837095);
 }
+BOOST_AUTO_TEST_CASE(generate_asset_allocation_interest_overflow)
+{
+	GenerateBlocks(5);
+	printf("Running generate_asset_allocation_interest_overflow...\n");
+	GenerateBlocks(5);
+	string newaddress = GetNewFundedAddress("node1");
+	string newaddressreceiver2 = GetNewFundedAddress("node2");
+	string guid = AssetNew("node1", "cad", newaddress, "data", "8", "false", "2000000000", "9999999999", "0.25");
+	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"" + newaddress + "\\\",\\\"amount\\\":1000000000}]\"", "memoassetinterest");
+	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"" + newaddressreceiver2 + "\\\",\\\"amount\\\":1000000000}]\"", "memoassetinterest");
+	GenerateBlocks(5000);
+	for (int i = 0; i < 5000; i++) {
+		AssetAllocationTransfer(true, "node1", guid, newaddress, "\"[{\\\"ownerto\\\":\\\"" + newaddressreceiver + "\\\",\\\"amount\\\":1}]\"", "allocationsendmemo");
+	}
+	for (int i = 0; i < 5000; i++) {
+		AssetAllocationTransfer(true, "node1", guid, newaddressreceiver2, "\"[{\\\"ownerto\\\":\\\"" + newaddress + "\\\",\\\"amount\\\":1}]\"", "allocationsendmemo");
+	}
+	AssetClaimInterest("node1", guid, newaddress);
+}
 BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_address)
 {
 	UniValue r;
