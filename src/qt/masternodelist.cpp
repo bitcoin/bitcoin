@@ -4,8 +4,8 @@
 #include <activemasternode.h>
 #include <qt/clientmodel.h>
 #include <init.h>
+#include <interface/node.h>
 #include <qt/guiutil.h>
-#include <masternode-sync.h>
 #include <masternodeman.h>
 #include <qt/qrdialog.h>
 #include <sync.h>
@@ -399,7 +399,7 @@ void MasternodeList::on_startAllButton_clicked()
 void MasternodeList::on_startMissingButton_clicked()
 {
 
-    if(!masternodeSync.IsMasternodeListSynced()) {
+    if(!clientModel->node().IsMasternodelistSynced()) {
         QMessageBox::critical(this, tr("Command is not available right now"),
             tr("You can't use this command until masternode list is synced"));
         return;

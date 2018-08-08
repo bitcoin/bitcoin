@@ -4,6 +4,7 @@
 
 #include <activemasternode.h>
 #include <checkpoints.h>
+#include <consensus/validation.h>
 #include <governance.h>
 #include <validation.h>
 #include <masternode.h>
@@ -14,6 +15,7 @@
 #include <netmessagemaker.h>
 #include <ui_interface.h>
 #include <util.h>
+
 
 class CMasternodeSync;
 CMasternodeSync masternodeSync;
@@ -84,7 +86,7 @@ void CMasternodeSync::SwitchToNextAsset(CConnman* connman)
         case(MASTERNODE_SYNC_GOVERNANCE):
             LogPrintf("CMasternodeSync::SwitchToNextAsset -- Completed %s in %llds\n", GetAssetName(), GetTime() - nTimeAssetSyncStarted);
             nRequestedMasternodeAssets = MASTERNODE_SYNC_FINISHED;
-            uiInterface.NotifyAdditionalDataSyncProgressChanged(1);
+            uiInterface.NotifyMNSyncProgress("", 1);
             //try to activate our masternode if possible
             activeMasternode.ManageState(connman);
 
@@ -114,7 +116,7 @@ std::string CMasternodeSync::GetSyncStatus()
     }
 }
 
-void CMasternodeSync::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
+void CMasternodeSync::ProcessModuleMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman)
 {
     if (strCommand == NetMsgType::SYNCSTATUSCOUNT) { //Sync status count
 
@@ -132,7 +134,7 @@ void CMasternodeSync::ProcessMessage(CNode* pfrom, const std::string& strCommand
 void CMasternodeSync::ProcessTick(CConnman* connman)
 {
     static int nTick = 0;
-    if(nTick++ % MASTERNODE_SYNC_TICK_SECONDS != 0) return;
+    nTick++;
 
     // reset the sync process if the last call to this function was more than 60 minutes ago (client was in sleep mode)
     static int64_t nTimeLastProcess = GetTime();
@@ -164,9 +166,9 @@ void CMasternodeSync::ProcessTick(CConnman* connman)
     }
 
     // Calculate "progress" for LOG reporting / GUI notification
-    double nSyncProgress = double(nRequestedMasternodeAttempt + (nRequestedMasternodeAssets - 1) * 8) / (8*4);
-    LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nRequestedMasternodeAssets %d nRequestedMasternodeAttempt %d nSyncProgress %f\n", nTick, nRequestedMasternodeAssets, nRequestedMasternodeAttempt, nSyncProgress);
-    uiInterface.NotifyAdditionalDataSyncProgressChanged(nSyncProgress);
+    double nProgress = double(nRequestedMasternodeAttempt + (nRequestedMasternodeAssets - 1) * 8) / (8*4);
+    LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nRequestedMasternodeAssets %d nRequestedMasternodeAttempt %d nSyncProgress %f\n", nTick, nRequestedMasternodeAssets, nRequestedMasternodeAttempt, nProgress);
+    uiInterface.NotifyMNSyncProgress(GetSyncStatus(), nProgress);
 
     std::vector<CNode*> vNodesCopy = connman->CopyNodeVector();
     for (auto& pnode : vNodesCopy)
@@ -382,19 +384,10 @@ void CMasternodeSync::SendGovernanceSyncRequest(CNode* pnode, CConnman* connman)
     }
 }
 
-
-void CMasternodeSync::NewPoWValidBlock(const CBlockIndex *pindex, bool fInitialDownload, CConnman* connman)
-{
-    LogPrint(BCLog::MNODESYNC, "CMasternodeSync::NewPoWValidBlock -- pindex->nHeight: %d\n", pindex->nHeight);
-
-    if (!IsBlockchainSynced()) {
-        // Postpone timeout each time new block header arrives while we are still syncing blockchain
-        BumpAssetLastTime("CMasternodeSync::AcceptedBlockHeader");
-    }
-}
-
 void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload, CConnman* connman)
 {
+    LogPrint(BCLog::MNODESYNC, "CMasternodeSync::UpdatedBlockTip -- pindex->nHeight: %d fInitialDownload=%d\n", pindexNew->nHeight, fInitialDownload);
+
     if (IsFailed() || IsSynced() || !pindexBestHeader)
         return;
 
@@ -408,9 +401,7 @@ void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitia
         if (IsBlockchainSynced()) {
             Reset();
         }
-
-        // no need to check any further while still in IBD mode
-        return;
+        return; // no need to check any further while still in IBD mode
     }
 
     // Note: since we sync headers first, it should be ok to use this
@@ -440,5 +431,17 @@ void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitia
         // Reached best header while being in initial mode.
         // We must be at the tip already, let's move to the next asset.
         SwitchToNextAsset(connman);
+        LogPrint(BCLog::MNODESYNC, "CMasternodeSync::UpdatedBlockTip -- reached tip -- pindexNew->nHeight: %d pindexBestHeader->nHeight: %d fInitialDownload=%d fReachedBestHeader=%d\n",
+                    pindexNew->nHeight, pindexBestHeader->nHeight, fInitialDownload, fReachedBestHeader);
     }
 }
+
+void CMasternodeSync::Controller(CScheduler& scheduler, CConnman* connman)
+{
+    if (fLiteMode) {
+        uiInterface.NotifyMNSyncProgress("", 1);
+    } else {
+        scheduler.scheduleEvery(std::bind(&CMasternodeSync::ProcessTick, this, connman), 1000);
+    }
+}
+

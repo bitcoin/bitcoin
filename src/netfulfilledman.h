@@ -6,6 +6,7 @@
 #define NETFULFILLEDMAN_H
 
 #include <netaddress.h>
+#include <scheduler.h>
 #include <serialize.h>
 #include <sync.h>
 
@@ -44,6 +45,8 @@ public:
     void Clear();
 
     std::string ToString() const;
+
+    void Controller(CScheduler& scheduler);
 };
 
 #endif

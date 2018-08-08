@@ -115,6 +115,7 @@ BITCOIN_CORE_H = \
   init.h \
   interface/handler.h \
   interface/node.h \
+  interface/moduleinterface.h \
   interface/wallet.h \
   key.h \
   key_io.h \
@@ -129,7 +130,6 @@ BITCOIN_CORE_H = \
   memusage.h \
   merkleblock.h \
   miner.h \
-  module-interface.h \
   net.h \
   net_processing.h \
   netaddress.h \
@@ -189,13 +189,11 @@ BITCOIN_CORE_H = \
   wallet/db.h \
   wallet/feebumper.h \
   wallet/fees.h \
-  wallet/init.h \
   wallet/keepass.h \
   wallet/privatesend-client.h \
   wallet/rpcwallet.h \
   wallet/wallet.h \
   wallet/walletdb.h \
-  wallet/walletinterface.h \
   wallet/walletutil.h \
   wallet/coinselection.h \
   warnings.h \
@@ -241,7 +239,6 @@ libbitcoin_server_a_SOURCES = \
   merkleblock.cpp \
   messagesigner.cpp \
   miner.cpp \
-  module-interface.cpp \
   net.cpp \
   netfulfilledman.cpp \
   net_processing.cpp \
@@ -300,7 +297,6 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/rpcwallet.cpp \
   wallet/wallet.cpp \
   wallet/walletdb.cpp \
-  wallet/walletinterface.cpp \
   wallet/walletutil.cpp \
   wallet/coinselection.cpp \
   $(BITCOIN_CORE_H)
@@ -438,6 +434,7 @@ libbitcoin_util_a_SOURCES = \
   compat/strnlen.cpp \
   fs.cpp \
   interface/handler.cpp \
+  interface/moduleinterface.cpp \
   interface/node.cpp \
   random.cpp \
   rpc/protocol.cpp \

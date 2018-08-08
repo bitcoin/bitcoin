@@ -11,6 +11,7 @@
 #include <init.h>
 #include <interface/handler.h>
 #include <interface/wallet.h>
+#include <masternode-sync.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netaddress.h>
@@ -235,6 +236,13 @@ class NodeImpl : public Node
         LOCK(::cs_main);
         return ::pcoinsTip->GetCoin(output, coin);
     }
+    //! Module signals
+
+    std::string getMNSyncStatus() override { return masternodeSync.GetSyncStatus(); }
+    bool IsMasternodelistSynced() override { return masternodeSync.IsMasternodeListSynced(); }
+    bool MNIsBlockchainsynced() override { return masternodeSync.IsBlockchainSynced(); }
+    bool MNIsSynced() override { return masternodeSync.IsSynced(); }
+
     std::vector<std::unique_ptr<Wallet>> getWallets() override
     {
 #ifdef ENABLE_WALLET
@@ -279,6 +287,10 @@ class NodeImpl : public Node
     std::unique_ptr<Handler> handleNotifyAlertChanged(NotifyAlertChangedFn fn) override
     {
         return MakeHandler(::uiInterface.NotifyAlertChanged.connect(fn));
+    }
+    std::unique_ptr<Handler> handleNotifyMNSyncProgress(NotifyMNSyncProgressFn fn) override
+    {
+        return MakeHandler(::uiInterface.NotifyMNSyncProgress.connect(fn));
     }
     std::unique_ptr<Handler> handleBannedListChanged(BannedListChangedFn fn) override
     {

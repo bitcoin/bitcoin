@@ -197,6 +197,12 @@ public:
     //! Get unspent outputs associated with a transaction.
     virtual bool getUnspentOutput(const COutPoint& output, Coin& coin) = 0;
 
+    //! Module signals
+    virtual std::string getMNSyncStatus() = 0;
+    virtual bool IsMasternodelistSynced() = 0;
+    virtual bool MNIsBlockchainsynced() = 0;
+    virtual bool MNIsSynced() = 0;
+
     //! Return interfaces for accessing wallets (if any).
     virtual std::vector<std::unique_ptr<Wallet>> getWallets() = 0;
 
@@ -235,6 +241,10 @@ public:
     //! Register handler for notify alert messages.
     using NotifyAlertChangedFn = std::function<void()>;
     virtual std::unique_ptr<Handler> handleNotifyAlertChanged(NotifyAlertChangedFn fn) = 0;
+
+    //! Register handler for MN status messages.
+    using NotifyMNSyncProgressFn = std::function<void(const std::string& title, double nProgress)>;
+    virtual std::unique_ptr<Handler> handleNotifyMNSyncProgress(NotifyMNSyncProgressFn fn) = 0;
 
     //! Register handler for ban list messages.
     using BannedListChangedFn = std::function<void()>;

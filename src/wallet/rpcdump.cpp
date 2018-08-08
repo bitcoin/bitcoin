@@ -8,7 +8,7 @@
 #include <key_io.h>
 #include <rpc/safemode.h>
 #include <rpc/server.h>
-#include <init.h>
+#include <validation.h>
 #include <script/script.h>
 #include <script/standard.h>
 #include <sync.h>

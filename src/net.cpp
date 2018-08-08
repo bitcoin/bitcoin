@@ -25,7 +25,6 @@
 #include <governance.h>
 #include <masternode-sync.h>
 #include <masternodeman.h>
-#include <privatesend.h>
 
 #include <memory>
 #ifdef WIN32

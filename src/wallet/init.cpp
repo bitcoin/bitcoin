@@ -3,18 +3,55 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <wallet/init.h>
-
 #include <chainparams.h>
+#include <init.h>
+#include <interface/moduleinterface.h>
 #include <net.h>
 #include <util.h>
 #include <utilmoneystr.h>
 #include <validation.h>
 #include <wallet/keepass.h>
 #include <wallet/privatesend-client.h>
+#include <walletinitinterface.h>
 #include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
+
+class WalletInit : public WalletInitInterface {
+public:
+
+    //! Return the wallets help message.
+    std::string GetHelpString(bool showDebug) override;
+
+    //! Wallets parameter interaction
+    bool ParameterInteraction() override;
+
+    //! Register wallet RPCs.
+    void RegisterRPC(CRPCTable &tableRPC) override;
+
+    //! Responsible for reading and validating the -wallet arguments and verifying the wallet database.
+    //  This function will perform salvage on the wallet if requested, as long as only one wallet is
+    //  being loaded (WalletParameterInteraction forbids -salvagewallet, -zapwallettxes or -upgradewallet with multiwallet).
+    bool Verify() override;
+
+    //! Load wallet databases.
+    bool Open() override;
+
+    //! Complete startup of wallets.
+    void Start(CScheduler& scheduler, CConnman* connman) override;
+
+    //! Flush all wallets in preparation for shutdown.
+    void Flush() override;
+
+    //! Stop all wallets. Wallets will be flushed first.
+    void Stop() override;
+
+    //! Close all wallets.
+    void Close() override;
+};
+
+static WalletInit g_wallet_init;
+WalletInitInterface* const g_wallet_init_interface = &g_wallet_init;
 
 std::string WalletInit::GetHelpString(bool showDebug)
 {
@@ -338,7 +375,9 @@ void WalletInit::Start(CScheduler& scheduler, CConnman* connman)
     for (CWalletRef pwallet : vpwallets) {
         pwallet->postInitProcess(scheduler, gArgs.GetBoolArg("-mnconflock", true) ? true : false);
     }
-    privateSendClient.ScheduleMaintenance(scheduler, connman);
+    if (privateSendClient.getWallet(vpwallets[0]->GetName())) {
+        privateSendClient.Controller(scheduler, connman);
+    }
 }
 
 void WalletInit::Flush()
@@ -365,3 +404,30 @@ void WalletInit::Close()
     }
     vpwallets.clear();
 }
+
+class CWalletInterface : public WalletInterface {
+public:
+    /** Check MN Collateral */
+    bool CheckMNCollateral(COutPoint& outpointRet, CTxDestination &destRet, CPubKey& pubKeyRet, CKey& keyRet, const std::string& strTxHash, const std::string& strOutputIndex) override;
+    /** Return MN mixing state */
+    bool IsMixingMasternode(const CNode* pnode) override;
+};
+
+static CWalletInterface g_wallet;
+WalletInterface* const g_wallet_interface = &g_wallet;
+
+bool CWalletInterface::CheckMNCollateral(COutPoint& outpointRet, CTxDestination &destRet, CPubKey& pubKeyRet, CKey& keyRet, const std::string& strTxHash, const std::string& strOutputIndex)
+{
+    bool foundmnout = false;
+    for (CWalletRef pwallet : vpwallets) {
+        if (pwallet->GetMasternodeOutpointAndKeys(outpointRet, destRet, pubKeyRet, keyRet, strTxHash, strOutputIndex))
+            foundmnout = true;
+    }
+    return foundmnout;
+}
+
+bool CWalletInterface::IsMixingMasternode(const CNode* pnode)
+{
+    return privateSendClient.IsMixingMasternode(pnode);
+}
+

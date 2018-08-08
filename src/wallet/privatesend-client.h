@@ -7,6 +7,7 @@
 
 #include <masternode.h>
 #include <privatesend.h>
+#include <validationinterface.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
@@ -102,6 +103,8 @@ private:
     CMutableTransaction txMyCollateral; // client side collateral
     CPendingDsaRequest pendingDsaRequest;
 
+    CWallet* pmixingwallet;
+
     CKeyHolderStorage keyHolderStorage; // storage for keys used in PrepareDenominate
 
     /// Check for process
@@ -168,6 +171,8 @@ public:
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman);
 
+    bool getWallet(const std::string walletIn);
+
     void ClearSkippedDenominations() { vecDenominationsSkipped.clear(); }
 
     void SetMinBlocksToWait(int nMinBlocksToWaitIn) { nMinBlocksToWait = nMinBlocksToWaitIn; }
@@ -179,20 +184,22 @@ public:
     std::string GetStatus();
 
     bool GetMixingMasternodeInfo(masternode_info_t& mnInfoRet);
+
     bool IsMixingMasternode(const CNode* pnode);
 
+    /// one-shot mixing attempt
+    bool DoOnceDenominating(std::string walletIn, CConnman* connman);
+
     /// Passively run mixing in the background according to the configuration in settings
-    bool DoAutomaticDenominating(CConnman* connman, bool fDryRun=false);
+    bool DoAutomaticDenominating(CConnman* connman);
 
     void ProcessPendingDsaRequest(CConnman* connman);
 
     void CheckTimeout();
 
-    void UpdatedBlockTip(const CBlockIndex *pindex);
-
-    void DoMaintenance(CConnman* connman);
-
-    void ScheduleMaintenance(CScheduler& scheduler, CConnman* connman);
+    void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload);
+    void ClientTask(CConnman* connman);
+    void Controller(CScheduler& scheduler, CConnman* connman);
 };
 
 #endif

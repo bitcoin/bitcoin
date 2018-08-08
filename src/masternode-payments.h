@@ -203,7 +203,6 @@ public:
     bool UpdateLastVote(const CMasternodePaymentVote& vote);
 
     int GetMinMasternodePaymentsProto() const;
-    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman);
     std::string GetRequiredPaymentsString(int nBlockHeight) const;
     void FillBlockPayee(CMutableTransaction& txNew, int nBlockHeight, CAmount blockReward, CTxOut& txoutMasternodeRet) const;
     std::string ToString() const;
@@ -214,7 +213,11 @@ public:
     bool IsEnoughData() const;
     int GetStorageLimit() const;
 
-    void UpdatedBlockTip(const CBlockIndex *pindex, CConnman* connman);
+    void ProcessModuleMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman);
+    void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload, CConnman* connman);
+
+    void Controller(CScheduler& scheduler);
+
 };
 
 #endif

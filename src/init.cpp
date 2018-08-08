@@ -21,9 +21,9 @@
 #include <fs.h>
 #include <httpserver.h>
 #include <httprpc.h>
+#include <interface/moduleinterface.h>
 #include <key.h>
 #include <miner.h>
-#include <module-interface.h>
 #include <net.h>
 #include <netbase.h>
 #include <net_processing.h>
@@ -51,7 +51,6 @@
 
 
 #include <activemasternode.h>
-#include <module-interface.h>
 #include <flat-database.h>
 #include <governance.h>
 #include <masternode-payments.h>
@@ -89,14 +88,43 @@ static const bool DEFAULT_STOPAFTERBLOCKIMPORT = false;
 
 std::unique_ptr<CConnman> g_connman;
 std::unique_ptr<PeerLogicValidation> peerLogic;
-std::unique_ptr<WalletInitInterface> g_wallet_init_interface;
-std::unique_ptr<ModuleInterface> g_module_interface;
+
+#if !(ENABLE_WALLET)
+class DummyWalletInit : public WalletInitInterface {
+public:
+
+    std::string GetHelpString(bool showDebug) override {return std::string{};}
+    bool ParameterInteraction() override {return true;}
+    void RegisterRPC(CRPCTable &) override {}
+    bool Verify() override {return true;}
+    bool Open() override {return true;}
+    void Start(CScheduler& scheduler) override {}
+    void Flush() override {}
+    void Stop() override {}
+    void Close() override {}
+};
+
+static DummyWalletInit g_dummy_wallet_init;
+WalletInitInterface* const g_wallet_init_interface = &g_dummy_wallet_init;
+#endif
+
+#if !(ENABLE_WALLET)
+class DummyWallet : public WalletInterface {
+public:
+
+    bool CheckMNCollateral(COutPoint& outpointRet, CTxDestination &destRet, CPubKey& pubKeyRet, CKey& keyRet, const std::string& strTxHash, const std::string& strOutputIndex) override {return false;}
+    bool IsMixingMasternode(const CNode* pnode) override {return false;}
+};
+
+static DummyWallet g_dummy_wallet;
+WalletInterface* const g_wallet_interface = &g_dummy_wallet;
+#endif
 
 #if ENABLE_ZMQ
 static CZMQNotificationInterface* pzmqNotificationInterface = nullptr;
 #endif
 
-static CDSNotificationInterface* pdsNotificationInterface = nullptr;
+static ModuleInterface* pModuleNotificationInterface = nullptr;
 
 #ifdef WIN32
 // Win32 LevelDB doesn't use filedescriptors, and the ones used for
@@ -287,10 +315,10 @@ void Shutdown()
     }
 #endif
 
-    if (pdsNotificationInterface) {
-        UnregisterValidationInterface(pdsNotificationInterface);
-        delete pdsNotificationInterface;
-        pdsNotificationInterface = nullptr;
+    if (pModuleNotificationInterface) {
+        UnregisterValidationInterface(pModuleNotificationInterface);
+        delete pModuleNotificationInterface;
+        pModuleNotificationInterface = nullptr;
     }
 
 #ifndef WIN32
@@ -304,7 +332,6 @@ void Shutdown()
     GetMainSignals().UnregisterBackgroundSignalScheduler();
     GetMainSignals().UnregisterWithMempoolSignals(mempool);
     g_wallet_init_interface->Close();
-    g_wallet_init_interface.reset();
     globalVerifyHandle.reset();
     ECC_Stop();
     LogPrintf("%s: done\n", __func__);
@@ -1426,8 +1453,11 @@ bool AppInitMain()
     }
 #endif
 
-    pdsNotificationInterface = new CDSNotificationInterface(&connman);
-    RegisterValidationInterface(pdsNotificationInterface);
+    pModuleNotificationInterface = new ModuleInterface(&connman);
+
+    if (pModuleNotificationInterface) {
+        RegisterValidationInterface(pModuleNotificationInterface);
+    }
 
     uint64_t nMaxOutboundLimit = 0; //unlimited unless -maxuploadtarget is set
     uint64_t nMaxOutboundTimeframe = MAX_UPLOAD_TIMEFRAME;
@@ -1793,13 +1823,17 @@ bool AppInitMain()
     // force UpdatedBlockTip to initialize nCachedBlockHeight for DS, MN payments and budgets
     // but don't call it directly to prevent triggering of other listeners like zmq etc.
     // GetMainSignals().UpdatedBlockTip(chainActive.Tip());
-    pdsNotificationInterface->InitializeCurrentBlockTip();
+    pModuleNotificationInterface->InitializeCurrentBlockTip();
 
-    // ********************************************************* Step 11d: start chaincoin-ps-<smth> threads
+    // ********************************************************* Step 11d: schedule modules
 
-    threadGroup.create_thread(boost::bind(&ThreadCheckPrivateSend, boost::ref(*g_connman)));
-    if (fMasternodeMode)
-        threadGroup.create_thread(boost::bind(&ThreadCheckPrivateSendServer, boost::ref(*g_connman)));
+    activeMasternode.Controller(scheduler, &connman);
+    privateSendServer.Controller(scheduler, &connman);
+    netfulfilledman.Controller(scheduler);
+    mnodeman.Controller(scheduler, &connman);
+    masternodeSync.Controller(scheduler, &connman);
+    mnpayments.Controller(scheduler);
+    governance.Controller(scheduler, &connman);
 
     if (ShutdownRequested()) {
         return false;
