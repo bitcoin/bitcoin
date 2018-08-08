@@ -57,6 +57,7 @@
 #include <map>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 
 using std::runtime_error;
 using namespace mastercore;
@@ -949,13 +950,71 @@ UniValue omni_getwalletbalances(const UniValue& params, bool fHelp)
     }
 
     std::set<std::string> addresses = getWalletAddresses(fIncludeWatchOnly);
+    std::map<uint32_t, std::tuple<int64_t, int64_t, int64_t>> balances;
 
+    LOCK(cs_tally);
     BOOST_FOREACH(const std::string& address, addresses) {
-        response.push_back(address);
+        CMPTally* addressTally = getTally(address);
+        if (NULL == addressTally) {
+            continue; // address doesn't have tokens
+        }
 
-        // TODO
+        uint32_t propertyId = 0;
+        addressTally->init();
+
+        while (0 != (propertyId = addressTally->next())) {
+            int64_t nAvailable = GetAvailableTokenBalance(address, propertyId);
+            int64_t nReserved = GetReservedTokenBalance(address, propertyId);
+            int64_t nFrozen = GetFrozenTokenBalance(address, propertyId);
+
+            if (!nAvailable && !nReserved && !nFrozen) {
+                continue;
+            }
+
+            std::tuple<int64_t, int64_t, int64_t> currentBalance{0, 0, 0};
+            if (balances.find(propertyId) != balances.end()) {
+                currentBalance = balances[propertyId];
+            }
+
+            currentBalance = std::make_tuple(
+                    std::get<0>(currentBalance) + nAvailable,
+                    std::get<1>(currentBalance) + nReserved,
+                    std::get<2>(currentBalance) + nFrozen
+            );
+
+            balances[propertyId] = currentBalance;
+        }
     }
 
+    for (auto const& item : balances) {
+        uint32_t propertyId = item.first;
+        std::tuple<int64_t, int64_t, int64_t> balance = item.second;
+
+        CMPSPInfo::Entry property;
+        if (!_my_sps->getSP(propertyId, property)) {
+            continue; // token wasn't found in the DB
+        }
+
+        int64_t nAvailable = std::get<0>(balance);
+        int64_t nReserved = std::get<1>(balance);
+        int64_t nFrozen = std::get<2>(balance);
+
+        UniValue objBalance(UniValue::VOBJ);
+        objBalance.push_back(Pair("propertyid", (uint64_t) propertyId));
+        objBalance.push_back(Pair("name", property.name));
+
+        if (property.isDivisible()) {
+            objBalance.push_back(Pair("balance", FormatDivisibleMP(nAvailable)));
+            objBalance.push_back(Pair("reserved", FormatDivisibleMP(nReserved)));
+            objBalance.push_back(Pair("frozen", FormatDivisibleMP(nFrozen)));
+        } else {
+            objBalance.push_back(Pair("balance", FormatIndivisibleMP(nAvailable)));
+            objBalance.push_back(Pair("reserved", FormatIndivisibleMP(nReserved)));
+            objBalance.push_back(Pair("frozen", FormatIndivisibleMP(nFrozen)));
+        }
+
+        response.push_back(objBalance);
+    }
 #endif
 
     return response;
