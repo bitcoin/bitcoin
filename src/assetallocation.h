@@ -106,7 +106,8 @@ public:
 	RangeInputArrayTuples listSendingAllocationInputs;
 	RangeAmountTuples listSendingAllocationAmounts;
 	CAmount nBalance;
-	uint64_t nAccumulatedBalanceSinceLastInterestClaim;
+	uint64_t nAccumulatedBalanceSinceLastInterestClaim_old;
+	double nAccumulatedBalanceSinceLastInterestClaim;
 	float fAccumulatedInterestSinceLastInterestClaim;
 	float fInterestRate;
 	std::vector<unsigned char> vchMemo;
@@ -128,21 +129,8 @@ public:
 	}
 	ADD_SERIALIZE_METHODS;
 	template <typename Stream, typename Operation>
-	inline void SerializationOp(Stream& s, Operation ser_action) {
-		READWRITE(vchAsset);
-		READWRITE(vchAliasOrAddress);
-		READWRITE(txHash);
-		READWRITE(VARINT(nHeight));
-		READWRITE(VARINT(nLastInterestClaimHeight));
-		READWRITE(listAllocationInputs);
-		READWRITE(listSendingAllocationInputs);
-		READWRITE(listSendingAllocationAmounts);
-		READWRITE(nBalance);
-		READWRITE(VARINT(nAccumulatedBalanceSinceLastInterestClaim));
-		READWRITE(fAccumulatedInterestSinceLastInterestClaim);
-		READWRITE(fInterestRate);
-		READWRITE(vchMemo);
-	}
+	void SerializationOp(Stream& s, Operation ser_action);
+
 	inline friend bool operator==(const CAssetAllocation &a, const CAssetAllocation &b) {
 		return (a.vchAsset == b.vchAsset && a.vchAliasOrAddress == b.vchAliasOrAddress
 			);
