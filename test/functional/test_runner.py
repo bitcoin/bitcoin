@@ -115,6 +115,7 @@ BASE_SCRIPTS = [
     'wallet_keypool.py',
     'p2p_mempool.py',
     'mining_prioritisetransaction.py',
+    'p2p_invalid_locator.py',
     'p2p_invalid_block.py',
     'p2p_invalid_tx.py',
     'rpc_createmultisig.py',
