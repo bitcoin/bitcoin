@@ -375,23 +375,24 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 				return true;
 			}
 		}
-		const string &user1 = stringFromVch(dbAsset.IsNull()? theAsset.vchAliasOrAddress: dbAsset.vchAliasOrAddress);
+		const vector<unsigned char> &vchThisAlias = vchAlias.empty() ? theAssetAllocation.vchAliasOrAddress : vchAlias;
+		const string &user1 = stringFromVch(dbAsset.IsNull()? vchThisAlias : dbAsset.vchAliasOrAddress);
 		string user2 = "";
 		string user3 = "";
 		if (op == OP_ASSET_TRANSFER) {
-			user2 = stringFromVch(theAsset.vchAliasOrAddress);
+			user2 = stringFromVch(vchThisAlias);
 		}
 
 		if (op == OP_ASSET_UPDATE) {
 			if (vchAlias.empty()) {
 				if (!FindAssetOwnerInTx(inputs, tx, user1))
 				{
-					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot update this asset. Asset owner must sign off on this change");
+					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot update this asset. Asset owner must sign off on this change");
 					return true;
 				}
 			}
 			else if (dbAsset.vchAliasOrAddress != vchAlias) {
-				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot update this asset. Asset owner must sign off on this change");
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot update this asset. Asset owner must sign off on this change");
 				return true;
 			}
 
@@ -446,18 +447,18 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 
 		if (op == OP_ASSET_SEND) {
 			if (!vchAlias.empty() && CSyscoinAddress(user1).IsValid()) {
-				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1016 - " + _("This asset cannot be sent because owner is an alias but the alias is also a valid syscoin address");
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1016 - " + _("This asset cannot be sent because owner is an alias but the alias is also a valid syscoin address");
 				return true;
 			}
 			if (vchAlias.empty()) {
 				if (dbAsset.vchAliasOrAddress != theAssetAllocation.vchAliasOrAddress || !FindAssetOwnerInTx(inputs, tx, user1))
 				{
-					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot send this asset. Asset owner must sign off on this change");
+					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot send this asset. Asset owner must sign off on this change");
 					return true;
 				}
 			}
-			else if (dbAsset.vchAliasOrAddress != theAssetAllocation.vchAliasOrAddress || theAssetAllocation.vchAliasOrAddress != vchAlias) {
-				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot send this asset. Asset owner must sign off on this change");
+			else if (dbAsset.vchAliasOrAddress != vchAlias) {
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot send this asset. Asset owner must sign off on this change");
 				return true;
 			}
 			theAsset = dbAsset;
@@ -625,12 +626,12 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 			if (vchAlias.empty()) {
 				if (!FindAssetOwnerInTx(inputs, tx, user1))
 				{
-					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot create this asset. Asset owner must sign off on this change");
+					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot create this asset. Asset owner must sign off on this change");
 					return true;
 				}
 			}
 			else if (theAsset.vchAliasOrAddress != vchAlias) {
-				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot create this asset. Asset owner must sign off on this change");
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot create this asset. Asset owner must sign off on this change");
 				return true;
 			}
 			string assetUpper = stringFromVch(theAsset.vchSymbol);
