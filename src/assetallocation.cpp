@@ -45,7 +45,7 @@ string assetAllocationFromOp(int op) {
     }
 }
 template <typename Stream, typename Operation>
-void CAssetAllocationTuple::SerializationOp(Stream& s, Operation ser_action) {
+void CAssetAllocation::SerializationOp(Stream& s, Operation ser_action) {
 	READWRITE(vchAsset);
 	READWRITE(vchAliasOrAddress);
 	READWRITE(txHash);
