@@ -128,7 +128,7 @@ bool IsAssetNameValid(const std::string& name, AssetType& assetType)
         boost::split(parts, name, boost::is_any_of(CHANNEL_TAG_DELIMITER));
         bool valid = IsNameValidBeforeTag(parts.front()) && IsChannelTagValid(parts.back());
         if (!valid) return false;
-        assetType = AssetType::CHANNEL;
+        assetType = AssetType::MSGCHANNEL;
         return true;
     }
     else if (std::regex_match(name, OWNER_INDICATOR))
