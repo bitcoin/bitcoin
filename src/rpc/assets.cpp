@@ -75,7 +75,7 @@ UniValue issue(const JSONRPCRequest& request)
             "3. \"to_address\"            (string), optional, default=\"\"), address asset will be sent to, if it is empty, address will be generated for you\n"
             "4. \"change_address\"        (string), optional, default=\"\"), address the the rvn change will be sent to, if it is empty, change address will be generated for you\n"
             "5. \"units\"                 (integer, optional, default=8, min=0, max=8), the number of decimals precision for the asset (0 for whole units (\"1\"), 8 for max precision (\"1.00000000\")\n"
-            "6. \"reissuable\"            (boolean, optional, default=false), whether future reissuance is allowed\n"
+            "6. \"reissuable\"            (boolean, optional, default=true), whether future reissuance is allowed\n"
             "7. \"has_ipfs\"              (boolean, optional, default=false), whether ifps hash is going to be added to the asset\n"
             "8. \"ipfs_hash\"             (string, optional but required if has_ipfs = 1), an ipfs hash\n"
 
@@ -146,7 +146,7 @@ UniValue issue(const JSONRPCRequest& request)
     int units = 8;
     if (request.params.size() > 4)
         units = request.params[4].get_int();
-    bool reissuable = false;
+    bool reissuable = true;
     if (request.params.size() > 5)
         reissuable = request.params[5].get_bool();
 
@@ -181,7 +181,7 @@ UniValue issue(const JSONRPCRequest& request)
 
 UniValue issuesubasset(const JSONRPCRequest& request)
 {
-    if (request.fHelp || !AreAssetsDeployed() || request.params.size() < 2 || request.params.size() > 8)
+    if (request.fHelp || !AreAssetsDeployed() || request.params.size() < 2 || request.params.size() > 9)
         throw std::runtime_error(
                 "issuesubasset \"parent_asset_name\" \"sub_asset_name\" qty \"( to_address )\" \"( change_address )\" ( units ) ( reissuable ) ( has_ipfs ) \"( ipfs_hash )\"\n"
                 + AssetActivationWarning() +
@@ -192,14 +192,14 @@ UniValue issuesubasset(const JSONRPCRequest& request)
 
                 "\nArguments:\n"
                 "1. \"parent_asset_name\"     (string, required) the parent asset name that is owned by this wallet\n"
-                "1. \"sub_asset_name\"        (string, required) a unique name\n"
-                "2. \"qty\"                   (integer, required) the number of units to be issued\n"
-                "3. \"to_address\"            (string), optional, default=\"\"), address subasset will be sent to, if it is empty, address will be generated for you\n"
-                "4. \"change_address\"        (string), optional, default=\"\"), address the the rvn change will be sent to, if it is empty, change address will be generated for you\n"
-                "5. \"units\"                 (integer, optional, default=8, min=0, max=8), the number of decimals precision for the asset (0 for whole units (\"1\"), 8 for max precision (\"1.00000000\")\n"
-                "6. \"reissuable\"            (boolean, optional, default=false), whether future reissuance is allowed\n"
-                "7. \"has_ipfs\"              (boolean, optional, default=false), whether ifps hash is going to be added to the asset\n"
-                "8. \"ipfs_hash\"             (string, optional but required if has_ipfs = 1), an ipfs hash\n"
+                "2. \"sub_asset_name\"        (string, required) a unique name\n"
+                "3. \"qty\"                   (integer, required) the number of units to be issued\n"
+                "4. \"to_address\"            (string), optional, default=\"\"), address subasset will be sent to, if it is empty, address will be generated for you\n"
+                "5. \"change_address\"        (string), optional, default=\"\"), address the the rvn change will be sent to, if it is empty, change address will be generated for you\n"
+                "6. \"units\"                 (integer, optional, default=8, min=0, max=8), the number of decimals precision for the asset (0 for whole units (\"1\"), 8 for max precision (\"1.00000000\")\n"
+                "7. \"reissuable\"            (boolean, optional, default=true), whether future reissuance is allowed\n"
+                "8. \"has_ipfs\"              (boolean, optional, default=false), whether ifps hash is going to be added to the asset\n"
+                "9. \"ipfs_hash\"             (string, optional but required if has_ipfs = 1), an ipfs hash\n"
 
                 "\nResult:\n"
                 "\"txid\"                     (string) The transaction id\n"
@@ -268,7 +268,7 @@ UniValue issuesubasset(const JSONRPCRequest& request)
     int units = 8;
     if (request.params.size() > 5)
         units = request.params[5].get_int();
-    bool reissuable = false;
+    bool reissuable = true;
     if (request.params.size() > 6)
         reissuable = request.params[6].get_bool();
 
@@ -639,8 +639,8 @@ UniValue transfer(const JSONRPCRequest& request)
 
                 "\nArguments:\n"
                 "1. \"asset_name\"               (string, required) name of asset\n"
-                "3. \"qty\"                      (number, required) number of assets you want to send to the address\n"
-                "2. \"to_address\"               (string, required) address to send the asset to\n"
+                "2. \"qty\"                      (number, required) number of assets you want to send to the address\n"
+                "3. \"to_address\"               (string, required) address to send the asset to\n"
 
                 "\nResult:\n"
                 "txid"

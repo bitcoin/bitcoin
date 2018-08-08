@@ -37,7 +37,6 @@ static const std::regex UNIQUE_TAG_CHARACTERS("^[-A-Za-z0-9@$%&*()[\\]{}<>_.;?\\
 static const std::regex CHANNEL_TAG_CHARACTERS("^[A-Z0-9._]+$");
 static const std::regex VOTE_TAG_CHARACTERS("^[A-Z0-9._]+$");
 
-
 static const std::regex DOUBLE_PUNCTUATION("^.*[._]{2,}.*$");
 static const std::regex LEADING_PUNCTUATION("^[._].*$");
 static const std::regex TRAILING_PUNCTUATION("^.*[._]$");
