@@ -323,6 +323,13 @@ if test "x$enable_werror" = "xyes"; then
   fi
   AX_CHECK_COMPILE_FLAG([-Werror=vla],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=vla"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Werror=thread-safety-analysis],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=thread-safety-analysis"],,[[$CXXFLAG_WERROR]])
+
+  ## Some warnings alert on violations in our dependencies. Only enable them when
+  ## isystem is in use to keep the build clean
+  if test "x$use_isystem" = "xyes"; then
+    AX_CHECK_COMPILE_FLAG([-Werror=documentation],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=documentation"],,[[$CXXFLAG_WERROR]])
+  fi
+  werror_enabled = yes
 fi
 
 if test "x$CXXFLAGS_overridden" = "xno"; then
@@ -343,6 +350,12 @@ if test "x$CXXFLAGS_overridden" = "xno"; then
   AX_CHECK_COMPILE_FLAG([-Wunused-local-typedef],[NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Wno-unused-local-typedef"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wdeprecated-register],[NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Wno-deprecated-register"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wimplicit-fallthrough],[NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Wno-implicit-fallthrough"],,[[$CXXFLAG_WERROR]])
+
+  ## Some warnings alert on violations in our dependencies. Only enable them when
+  ## isystem is in use to keep the build clean
+  if test "x$use_isystem" = "xyes" && test "x$werror_enabled" == "x"; then
+    AX_CHECK_COMPILE_FLAG([-Wdocumentation],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wdocumentation"],,[[$CXXFLAG_WERROR]])
+  fi
 fi
 
 # Check for optional instruction set support. Enabling these does _not_ imply that all code will
