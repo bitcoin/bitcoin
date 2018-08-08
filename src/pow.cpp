@@ -182,25 +182,3 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
 
     return true;
 }
-
-// Used to determine if one of these block heights is failing the check because these were mined with block version of 3 before RIP2 was active.
-bool CheckPOWHeightAssets(const int height)
-{
-    if (Params().NetworkIDString() == "test") {
-        return (height == 319456 ||
-                height == 319468 ||
-                height == 319469 ||
-                height == 319494 ||
-                height == 319500 ||
-                height == 319501 ||
-                height == 319502 ||
-                height == 319520 ||
-                height == 319522 ||
-                height == 319532 ||
-                height == 319533);
-    } else {
-        return false;
-    }
-
-
-}
