@@ -652,6 +652,10 @@ public:
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
 
     /** RVN START */
+    enum class txnouttype;
+    bool IsAssetScript(int& nType, bool& fIsOwner, int& nStartingIndex) const;
+    bool IsAssetScript(int& nType, bool& fIsOwner) const;
+    bool IsAssetScript() const;
     bool IsNewAsset() const;
     bool IsOwnerAsset() const;
     bool IsReissueAsset() const;

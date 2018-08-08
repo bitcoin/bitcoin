@@ -186,7 +186,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, CAssetsCa
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-txouttotal-toolarge");
 
         /** RVN START */
-        if (!AreAssetsDeployed() && txout.scriptPubKey.IsAsset() && !fReindex)
+        if (!AreAssetsDeployed() && txout.scriptPubKey.IsAssetScript() && !fReindex)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-is-asset-and-asset-not-active");
 
         // Check for transfers that don't meet the assets units only if the assetCache is not null
@@ -388,8 +388,9 @@ bool Consensus::CheckTxAssets(const CTransaction& tx, CValidationState& state, c
     }
 
     // Check the input values and the output values
-    if (totalOutputs.size() != totalInputs.size())
+    if (totalOutputs.size() != totalInputs.size()) {
         return state.DoS(100, false, REJECT_INVALID, "bad-tx-asset-inputs-size-does-not-match-outputs-size");
+    }
 
     for (const auto& outValue : totalOutputs) {
         if (!totalInputs.count(outValue.first))

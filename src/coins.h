@@ -79,7 +79,7 @@ public:
     }
 
     bool IsAsset() const {
-        return out.scriptPubKey.IsTransferAsset() || out.scriptPubKey.IsNewAsset() || out.scriptPubKey.IsOwnerAsset() || out.scriptPubKey.IsReissueAsset();
+        return out.scriptPubKey.IsAssetScript();
     }
 
     size_t DynamicMemoryUsage() const {

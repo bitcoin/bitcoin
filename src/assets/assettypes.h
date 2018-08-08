@@ -14,6 +14,19 @@
 
 class CAssetsCache;
 
+
+enum AssetType
+{
+    ROOT,
+    OWNER,
+    SUB,
+    UNIQUE,
+    MSGCHANNEL,
+    VOTE,
+    INVALID,
+    REISSUE
+};
+
 class CNewAsset {
 public:
     std::string strName; // MAX 31 Bytes

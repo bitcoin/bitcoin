@@ -1529,7 +1529,7 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
             address = CNoDestination();
         }
 
-        if (!txout.scriptPubKey.IsAsset()) {
+        if (!txout.scriptPubKey.IsAssetScript()) {
             COutputEntry output = {address, txout.nValue, (int) i};
 
             // If we are debited by the transaction, add the output as a "sent" entry
@@ -1543,7 +1543,7 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
 
         /** RVN START */
         if (AreAssetsDeployed()) {
-            if (txout.scriptPubKey.IsAsset()) {
+            if (txout.scriptPubKey.IsAssetScript()) {
                 CAssetOutputEntry assetoutput;
                 assetoutput.vout = i;
                 GetAssetData(txout.scriptPubKey, assetoutput);
@@ -2696,32 +2696,39 @@ bool CWallet::SelectAssets(const std::map<std::string, std::vector<COutput> >& m
         if (mapAssetTargetValue.at(asset.first) <= 0)
             continue;
 
-        if(!mapValueRet.count(asset.first))
+        if (!mapValueRet.count(asset.first))
             mapValueRet.insert(std::make_pair(asset.first, 0));
 
         for (auto out : asset.second) {
             if (!out.fSpendable)
                 continue;
 
-            if (out.tx->tx->vout[out.i].scriptPubKey.IsNewAsset()) {
+            int nType = 0;
+            bool fIsOwner = false;
+            if (!out.tx->tx->vout[out.i].scriptPubKey.IsAssetScript(nType, fIsOwner))
+                continue;
+
+            txnouttype type = (txnouttype) nType;
+
+            if (type == TX_NEW_ASSET && !fIsOwner) {
                 CNewAsset assetTemp;
                 std::string address;
                 if (!AssetFromScript(out.tx->tx->vout[out.i].scriptPubKey, assetTemp, address))
                     continue;
                 mapValueRet.at(assetTemp.strName) += assetTemp.nAmount;
-            } else if (out.tx->tx->vout[out.i].scriptPubKey.IsTransferAsset()) {
+            } else if (type == TX_TRANSFER_ASSET) {
                 CAssetTransfer transferTemp;
                 std::string address;
                 if (!TransferAssetFromScript(out.tx->tx->vout[out.i].scriptPubKey, transferTemp, address))
                     continue;
                 mapValueRet.at(transferTemp.strName) += transferTemp.nAmount;
-            } else if (out.tx->tx->vout[out.i].scriptPubKey.IsOwnerAsset()) {
+            } else if (type == TX_NEW_ASSET && fIsOwner) {
                 std::string ownerName;
                 std::string address;
                 if (!OwnerAssetFromScript(out.tx->tx->vout[out.i].scriptPubKey, ownerName, address))
                     continue;
                 mapValueRet.at(ownerName) = OWNER_ASSET_AMOUNT;
-            } else if (out.tx->tx->vout[out.i].scriptPubKey.IsReissueAsset()) {
+            } else if (type == TX_REISSUE_ASSET) {
                 CReissueAsset reissueTemp;
                 std::string address;
                 if (!ReissueAssetFromScript(out.tx->tx->vout[out.i].scriptPubKey, reissueTemp, address))
@@ -2731,18 +2738,25 @@ bool CWallet::SelectAssets(const std::map<std::string, std::vector<COutput> >& m
                 continue;
             }
 
+
             setCoinsRet.insert(CInputCoin(out.tx, out.i));
 
             if (mapValueRet.at(asset.first) >= mapAssetTargetValue.at(asset.first))
                 break;
         }
 
+        for (auto pair : mapValueRet) {
+            std::cout << "Selected Assets : " << pair.first << " : " << pair.second << std::endl;
+        }
+
         if (mapValueRet.at(asset.first) < mapAssetTargetValue.at(asset.first)) {
-            return error("%s : Tried to transfer an asset but this wallet didn't have enough, Asset Name: %s, Transfer Amount: %d, Wallet Total: %d", __func__, asset.first, mapValueRet.at(asset.first), mapAssetTargetValue.at(asset.first));
+            return error(
+                    "%s : Tried to transfer an asset but this wallet didn't have enough, Asset Name: %s, Transfer Amount: %d, Wallet Total: %d",
+                    __func__, asset.first, mapValueRet.at(asset.first), mapAssetTargetValue.at(asset.first));
         }
     }
 
-    return true;
+        return true;
 }
 
 /** RVN END */
@@ -2825,12 +2839,10 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
 }
 
 bool CWallet::CreateTransactionWithAsset(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut,
-                               std::string& strFailReason, const CCoinControl& coin_control, const CNewAsset& asset, const CTxDestination destination, bool sign)
+                               std::string& strFailReason, const CCoinControl& coin_control, const CNewAsset& asset, const CTxDestination destination, const std::set<COutPoint>& setAssetOutPoints, const AssetType& type, bool sign)
 {
-
-    std::set<COutPoint> setAssetOutPoints;
     CReissueAsset reissueAsset;
-    return CreateTransactionAll(vecSend, wtxNew, reservekey, nFeeRet, nChangePosInOut, strFailReason, coin_control, true, asset, destination, false, setAssetOutPoints, false, reissueAsset, sign);
+    return CreateTransactionAll(vecSend, wtxNew, reservekey, nFeeRet, nChangePosInOut, strFailReason, coin_control, true, asset, destination, false, setAssetOutPoints, false, reissueAsset, type, sign);
 }
 
 bool CWallet::CreateTransactionWithTransferAsset(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut,
@@ -2843,14 +2855,16 @@ bool CWallet::CreateTransactionWithTransferAsset(const std::vector<CRecipient>& 
     CNewAsset asset;
     CReissueAsset reissueAsset;
     CTxDestination destination;
-    return CreateTransactionAll(vecSend, wtxNew, reservekey, nFeeRet, nChangePosInOut, strFailReason, coin_control, false, asset, destination, true, setAssetOutPoints, false, reissueAsset, sign);
+    AssetType assetType = AssetType::INVALID;
+    return CreateTransactionAll(vecSend, wtxNew, reservekey, nFeeRet, nChangePosInOut, strFailReason, coin_control, false, asset, destination, true, setAssetOutPoints, false, reissueAsset, assetType, sign);
 }
 
 bool CWallet::CreateTransactionWithReissueAsset(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut,
                                          std::string& strFailReason, const CCoinControl& coin_control, const CReissueAsset& reissueAsset, const CTxDestination destination, const std::set<COutPoint>& setAssetOutPoints, bool sign)
 {
     CNewAsset asset;
-    return CreateTransactionAll(vecSend, wtxNew, reservekey, nFeeRet, nChangePosInOut, strFailReason, coin_control, false, asset, destination, false, setAssetOutPoints, true, reissueAsset, sign);
+    AssetType assetType = AssetType::REISSUE;
+    return CreateTransactionAll(vecSend, wtxNew, reservekey, nFeeRet, nChangePosInOut, strFailReason, coin_control, false, asset, destination, false, setAssetOutPoints, true, reissueAsset, assetType, sign);
 }
 
 bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut,
@@ -2861,12 +2875,13 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
     CReissueAsset reissueAsset;
     CTxDestination destination;
     std::set<COutPoint> setAssetOutPoints;
-    return CreateTransactionAll(vecSend, wtxNew, reservekey, nFeeRet, nChangePosInOut, strFailReason, coin_control, false,  asset, destination, false, setAssetOutPoints, false, reissueAsset, sign);
+    AssetType assetType = AssetType::INVALID;
+    return CreateTransactionAll(vecSend, wtxNew, reservekey, nFeeRet, nChangePosInOut, strFailReason, coin_control, false,  asset, destination, false, setAssetOutPoints, false, reissueAsset, assetType, sign);
 }
 
 
 bool CWallet::CreateTransactionAll(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
-                                int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool fNewAsset, const CNewAsset& asset, const CTxDestination destination, bool fTransferAsset, const std::set<COutPoint>& setAssetOutPoints, bool fReissueAsset, const CReissueAsset& reissueAsset, bool sign)
+                                int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool fNewAsset, const CNewAsset& asset, const CTxDestination destination, bool fTransferAsset, const std::set<COutPoint>& setAssetOutPoints, bool fReissueAsset, const CReissueAsset& reissueAsset, const AssetType& assetType, bool sign)
 {
 
     if (!AreAssetsDeployed() && (fTransferAsset || fNewAsset || fReissueAsset))
@@ -2896,7 +2911,7 @@ bool CWallet::CreateTransactionAll(const std::vector<CRecipient>& vecSend, CWall
     for (const auto& recipient : vecSend)
     {
         /** RVN START */
-        if (fTransferAsset || fReissueAsset) {
+        if (fTransferAsset || fReissueAsset || assetType == AssetType::SUB) {
             CAssetTransfer assetTransfer;
             std::string address;
             if (TransferAssetFromScript(recipient.scriptPubKey, assetTransfer, address)) {
@@ -2976,7 +2991,7 @@ bool CWallet::CreateTransactionAll(const std::vector<CRecipient>& vecSend, CWall
             /** RVN START */
             std::vector<COutput> vAvailableCoins;
             std::map<std::string, std::vector<COutput> > mapAssetCoins;
-            if (fTransferAsset || fReissueAsset)
+            if (fTransferAsset || fReissueAsset || assetType == AssetType::SUB)
                 AvailableCoinsWithAssets(vAvailableCoins, mapAssetCoins, setAssetOutPoints, true, true, &coin_control);
             else
                 AvailableCoins(vAvailableCoins, true, &coin_control);
@@ -3059,8 +3074,9 @@ bool CWallet::CreateTransactionAll(const std::vector<CRecipient>& vecSend, CWall
                             else
                                 strFailReason = _("The transaction amount is too small to send after the fee has been deducted");
                         }
-                        else
+                        else {
                             strFailReason = _("Transaction amount too small");
+                        }
                         return false;
                     }
                     txNew.vout.push_back(txout);

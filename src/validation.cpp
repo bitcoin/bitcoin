@@ -599,7 +599,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         /** RVN START */
         if (!AreAssetsDeployed()) {
             for (auto out : tx.vout) {
-                if (out.scriptPubKey.IsAsset())
+                if (out.scriptPubKey.IsAssetScript())
                     return state.DoS(100, false, REJECT_INVALID, "bad-txns-contained-asset-when-not-active");
             }
         }
@@ -2099,7 +2099,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
             /** RVN START */
             if (!AreAssetsDeployed()) {
                 for (auto out : tx.vout)
-                    if (out.scriptPubKey.IsAsset())
+                    if (out.scriptPubKey.IsAssetScript())
                         return state.DoS(100, error("%s : Received Block with tx that contained an asset when assets wasn't active", __func__), REJECT_INVALID, "bad-txns-assets-not-active");
             }
 
@@ -2190,6 +2190,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
             if (tx.IsNewAsset()) {
                 if (!AreAssetsDeployed())
                     return state.DoS(100, false, REJECT_INVALID, "bad-txns-new-asset-when-assets-is-not-active");
+
                 CNewAsset asset;
                 std::string strAddress;
                 if (!AssetFromTransaction(tx, asset, strAddress))
@@ -2201,9 +2202,11 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
                 if (!asset.IsValid(strError, *assetsCache))
                     return state.DoS(100, error("%s: %s", __func__, strError), REJECT_INVALID, "bad-txns-issue-asset");
+
             } else if (tx.IsReissueAsset()) {
                 if (!AreAssetsDeployed())
                     return state.DoS(100, false, REJECT_INVALID, "bad-txns-reissue-asset-when-assets-is-not-active");
+                
                 CReissueAsset reissue;
                 std::string strAddress;
                 if (!ReissueAssetFromTransaction(tx, reissue, strAddress))
