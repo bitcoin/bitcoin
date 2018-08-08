@@ -496,12 +496,12 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 							receiverAllocation.vchAliasOrAddress = receiverAllocationTuple.vchAliasOrAddress;
 							receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
 							receiverAllocation.nLastInterestClaimHeight = nHeight;
+							receiverAllocation.nHeight = nHeight;
+							receiverAllocation.fInterestRate = dbAsset.fInterestRate;
 						}
 						receiverAllocation.txHash = tx.GetHash();
 						if (theAsset.fInterestRate > 0) {
-							if (receiverAllocation.nHeight > 0) {
-								AccumulateInterestSinceLastClaim(receiverAllocation, nHeight);
-							}
+							AccumulateInterestSinceLastClaim(receiverAllocation, nHeight);
 						}
 						receiverAllocation.fInterestRate = theAsset.fInterestRate;
 						receiverAllocation.nHeight = nHeight;
@@ -558,10 +558,11 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 					}
 					if (!bSanityCheck) {
 						if (!GetAssetAllocation(receiverAllocationTuple, receiverAllocation)) {
-							receiverAllocation.SetNull();
 							receiverAllocation.vchAliasOrAddress = receiverAllocationTuple.vchAliasOrAddress;
 							receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
 							receiverAllocation.nLastInterestClaimHeight = nHeight;
+							receiverAllocation.nHeight = nHeight;
+							receiverAllocation.fInterestRate = dbAsset.fInterestRate;
 						}
 
 						receiverAllocation.txHash = tx.GetHash();
