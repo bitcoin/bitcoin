@@ -80,41 +80,6 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
         vSolutionsRet.push_back(hashBytes);
         return true;
     }
-
-//    if (scriptPubKey.IsNewAsset()) {
-//        typeRet = TX_NEW_ASSET;
-//        std::vector<unsigned char> hashBytes(scriptPubKey.begin()+3, scriptPubKey.begin()+23);
-//        vSolutionsRet.push_back(hashBytes);
-//        return true;
-//    }
-//
-//    if (scriptPubKey.IsTransferAsset()) {
-//        typeRet = TX_TRANSFER_ASSET;
-//        std::vector<unsigned char> hashBytes(scriptPubKey.begin()+3, scriptPubKey.begin()+23);
-//        vSolutionsRet.push_back(hashBytes);
-//        return true;
-//    }
-//
-//    if (scriptPubKey.IsOwnerAsset()) {
-//        typeRet = TX_NEW_ASSET;
-//        std::vector<unsigned char> hashBytes(scriptPubKey.begin()+3, scriptPubKey.begin()+23);
-//        vSolutionsRet.push_back(hashBytes);
-//        return true;
-//    }
-//
-//    if (scriptPubKey.IsReissueAsset()) {
-//        typeRet = TX_REISSUE_ASSET;
-//        std::vector<unsigned char> hashBytes(scriptPubKey.begin()+3, scriptPubKey.begin()+23);
-//        vSolutionsRet.push_back(hashBytes);
-//        return true;
-//    }
-//
-//    if (scriptPubKey.IsReservedAsset()) {
-//        typeRet = TX_RESERVED_ASSET;
-//        std::vector<unsigned char> hashBytes(scriptPubKey.begin()+3, scriptPubKey.begin()+23);
-//        vSolutionsRet.push_back(hashBytes);
-//        return true;
-//    }
     /** RVN END */
 
     int witnessversion;
