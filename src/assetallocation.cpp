@@ -44,6 +44,25 @@ string assetAllocationFromOp(int op) {
         return "<unknown assetallocation op>";
     }
 }
+template <typename Stream, typename Operation>
+void CAssetAllocationTuple::SerializationOp(Stream& s, Operation ser_action) {
+	READWRITE(vchAsset);
+	READWRITE(vchAliasOrAddress);
+	READWRITE(txHash);
+	READWRITE(VARINT(nHeight));
+	READWRITE(VARINT(nLastInterestClaimHeight));
+	READWRITE(listAllocationInputs);
+	READWRITE(listSendingAllocationInputs);
+	READWRITE(listSendingAllocationAmounts);
+	READWRITE(nBalance);
+	if (nHeight >= Params().GetConsensus().nShareFeeBlock)
+		READWRITE(nAccumulatedBalanceSinceLastInterestClaim);
+	else
+		READWRITE(VARINT(nAccumulatedBalanceSinceLastInterestClaim_old));
+	READWRITE(fAccumulatedInterestSinceLastInterestClaim);
+	READWRITE(fInterestRate);
+	READWRITE(vchMemo);
+}
 bool CAssetAllocation::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
     try {
         CDataStream dsAsset(vchData, SER_NETWORK, PROTOCOL_VERSION);
