@@ -181,7 +181,7 @@ UniValue issue(const JSONRPCRequest& request)
 
 UniValue issuesubasset(const JSONRPCRequest& request)
 {
-    if (request.fHelp || !AreAssetsDeployed() || request.params.size() < 2 || request.params.size() > 9)
+    if (request.fHelp || !AreAssetsDeployed() || request.params.size() < 3 || request.params.size() > 9)
         throw std::runtime_error(
                 "issuesubasset \"parent_asset_name\" \"sub_asset_name\" qty \"( to_address )\" \"( change_address )\" ( units ) ( reissuable ) ( has_ipfs ) \"( ipfs_hash )\"\n"
                 + AssetActivationWarning() +

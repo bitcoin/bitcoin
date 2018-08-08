@@ -238,6 +238,9 @@ bool CNewAsset::IsValid(std::string& strError, CAssetsCache& assetCache, bool fC
     if (!IsAssetNameValid(std::string(strName)))
         strError = "Invalid parameter: asset_name must only consist of valid characters and have a size between 3 and 30 characters. See help for more details.";
 
+    if (IsAssetNameAnOwner(std::string(strName)))
+        strError = "Invalid parameters: asset_name can't have a '!' at the end of it. See help for more details.";
+
     if (nAmount <= 0)
         strError  = "Invalid parameter: asset amount can't be equal to or less than zero.";
 
