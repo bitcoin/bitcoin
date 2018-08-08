@@ -375,7 +375,8 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 				return true;
 			}
 		}
-		const vector<unsigned char> &vchThisAlias = vchAlias.empty() ? theAssetAllocation.vchAliasOrAddress : vchAlias;
+		const vector<unsigned char> &vchOwner = OP_ASSET_SEND ? theAssetAllocation.vchAliasOrAddress : theAsset.vchAliasOrAddress;
+		const vector<unsigned char> &vchThisAlias = vchAlias.empty() ? vchOwner : vchAlias;
 		const string &user1 = stringFromVch(dbAsset.IsNull()? vchThisAlias : dbAsset.vchAliasOrAddress);
 		string user2 = "";
 		string user3 = "";
