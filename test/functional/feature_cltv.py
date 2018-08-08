@@ -67,7 +67,6 @@ class BIP65Test(BitcoinTestFramework):
 
     def run_test(self):
         self.nodes[0].add_p2p_connection(P2PInterface())
-        self.nodes[0].p2p.wait_for_verack()
 
         self.log.info("Mining %d blocks", CLTV_HEIGHT - 2)
         self.coinbase_blocks = self.nodes[0].generate(CLTV_HEIGHT - 2)

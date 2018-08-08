@@ -231,9 +231,6 @@ class SegWitTest(BitcoinTestFramework):
         # self.std_node is for testing node1 (fRequireStandard=true)
         self.std_node = self.nodes[1].add_p2p_connection(TestP2PConn(), services=NODE_NETWORK | NODE_WITNESS)
 
-        for conn in (self.test_node, self.old_node, self.std_node):
-            conn.wait_for_verack()
-
         assert self.test_node.nServices & NODE_WITNESS != 0
 
         # Keep a place to store utxo's that can be used in later tests
