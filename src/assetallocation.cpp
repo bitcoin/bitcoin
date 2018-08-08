@@ -215,6 +215,8 @@ bool RevertAssetAllocation(const CAssetAllocationTuple &assetAllocationToRemove,
 		dbAssetAllocation.vchAliasOrAddress = assetAllocationToRemove.vchAliasOrAddress;
 		dbAssetAllocation.vchAsset = assetAllocationToRemove.vchAsset;
 		dbAssetAllocation.nLastInterestClaimHeight = nHeight;
+		dbAssetAllocation.nHeight = nHeight;
+		dbAssetAllocation.fInterestRate = asset.fInterestRate;
 	}
 	// write the state back to previous state
 	if (!passetallocationdb->WriteAssetAllocation(dbAssetAllocation, 0, 0, asset, INT64_MAX, "", "", false))
@@ -544,15 +546,14 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 						receiverAllocation.vchAliasOrAddress = receiverAllocationTuple.vchAliasOrAddress;
 						receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
 						receiverAllocation.nLastInterestClaimHeight = nHeight;
+						receiverAllocation.nHeight = nHeight;
 						receiverAllocation.fInterestRate = dbAsset.fInterestRate;
 					}
 					if (!bBalanceOverrun) {
 						receiverAllocation.txHash = tx.GetHash();
 						if (dbAsset.fInterestRate > 0) {
 							// accumulate balances as sender/receiver allocations balances are adjusted
-							if (receiverAllocation.nHeight > 0) {
-								AccumulateInterestSinceLastClaim(receiverAllocation, nHeight);
-							}
+							AccumulateInterestSinceLastClaim(receiverAllocation, nHeight);
 							AccumulateInterestSinceLastClaim(theAssetAllocation, nHeight);
 						}
 						receiverAllocation.fInterestRate = dbAsset.fInterestRate;
@@ -647,6 +648,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 						receiverAllocation.vchAliasOrAddress = receiverAllocationTuple.vchAliasOrAddress;
 						receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
 						receiverAllocation.nLastInterestClaimHeight = nHeight;
+						receiverAllocation.nHeight = nHeight;
 						receiverAllocation.fInterestRate = dbAsset.fInterestRate;
 					}
 					if (!bBalanceOverrun) {

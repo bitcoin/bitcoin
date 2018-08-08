@@ -496,6 +496,8 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 							receiverAllocation.vchAliasOrAddress = receiverAllocationTuple.vchAliasOrAddress;
 							receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
 							receiverAllocation.nLastInterestClaimHeight = nHeight;
+							receiverAllocation.nHeight = nHeight;
+							receiverAllocation.fInterestRate = dbAsset.fInterestRate;
 						}
 						receiverAllocation.txHash = tx.GetHash();
 						if (theAsset.fInterestRate > 0) {
@@ -561,6 +563,8 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 							receiverAllocation.vchAliasOrAddress = receiverAllocationTuple.vchAliasOrAddress;
 							receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
 							receiverAllocation.nLastInterestClaimHeight = nHeight;
+							receiverAllocation.nHeight = nHeight;
+							receiverAllocation.fInterestRate = dbAsset.fInterestRate;
 						}
 
 						receiverAllocation.txHash = tx.GetHash();
