@@ -13,12 +13,19 @@
 /** Maximum length of incoming protocol messages (no message over 4 MB is currently acceptable). */
 static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 4 * 1000 * 1000;
 
+enum class NetMessageType {
+    PLAINTEXT,
+    PLAINTEXT_ENCRYPTION_HANDSHAKE,
+    ENCRYPTED_MSG
+};
+
 // base class for format agnostic network messages
 class NetMessageBase
 {
 public:
     CDataStream vRecv; // received message data
     int64_t nTime;     // time (in microseconds) of message receipt.
+    NetMessageType m_type;
 
     NetMessageBase(int nTypeIn, int nVersionIn) : vRecv(nTypeIn, nVersionIn)
     {
@@ -65,6 +72,7 @@ public:
         in_data = false;
         nHdrPos = 0;
         nDataPos = 0;
+        m_type = NetMessageType::PLAINTEXT;
     }
 
     bool Complete() const override

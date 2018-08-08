@@ -16,6 +16,7 @@
 #include <crypto/common.h>
 #include <crypto/sha256.h>
 #include <primitives/transaction.h>
+#include <net_encryption.h>
 #include <netbase.h>
 #include <scheduler.h>
 #include <ui_interface.h>
@@ -571,12 +572,14 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
     nLastRecv = nTimeMicros / 1000000;
     nRecvBytes += nBytes;
     while (nBytes > 0) {
-
         // get current incomplete message, or create a new one
         if (vRecvMsg.empty() || vRecvMsg.back()->Complete()) {
-            vRecvMsg.emplace_back(MakeUnique<NetMessage>(Params().MessageStart(), SER_NETWORK, INIT_PROTO_VERSION));
+            if (m_encryption_handler && m_encryption_handler->ShouldCryptMsg()) {
+                vRecvMsg.emplace_back(MakeUnique<NetV2Message>(m_encryption_handler, Params().MessageStart(), SER_NETWORK, INIT_PROTO_VERSION));
+            } else {
+                vRecvMsg.emplace_back(MakeUnique<NetMessage>(Params().MessageStart(), SER_NETWORK, INIT_PROTO_VERSION));
+            }
         }
-
         NetMessageBaseRef& msg = vRecvMsg.back();
 
         // absorb network data
@@ -2561,6 +2564,7 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     addrBind(addrBindIn),
     fInbound(fInboundIn),
     nKeyedNetGroup(nKeyedNetGroupIn),
+    m_encryption_handler(nullptr),
     addrKnown(5000, 0.001),
     filterInventoryKnown(50000, 0.000001),
     id(idIn),
@@ -2598,35 +2602,81 @@ bool CConnman::NodeFullyConnected(const CNode* pnode)
 void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 {
     size_t nMessageSize = msg.data.size();
-    size_t nTotalSize = nMessageSize + CMessageHeader::HEADER_SIZE;
-    LogPrint(BCLog::NET, "sending %s (%d bytes) peer=%d\n",  SanitizeString(msg.command.c_str()), nMessageSize, pnode->GetId());
-
-    std::vector<unsigned char> serializedHeader;
-    serializedHeader.reserve(CMessageHeader::HEADER_SIZE);
-    uint256 hash = Hash(msg.data.data(), msg.data.data() + nMessageSize);
-    CMessageHeader hdr(Params().MessageStart(), msg.command.c_str(), nMessageSize);
-    memcpy(hdr.pchChecksum, hash.begin(), CMessageHeader::CHECKSUM_SIZE);
-
-    CVectorWriter{SER_NETWORK, INIT_PROTO_VERSION, serializedHeader, 0, hdr};
+    size_t nTotalSize = nMessageSize;
+    size_t serialized_command_size = ::GetSerializeSize(msg.command, PROTOCOL_VERSION);
+    bool should_crypt = pnode->m_encryption_handler && pnode->m_encryption_handler->ShouldCryptMsg();
+    if (should_crypt) {
+        // add encrypted header size (AAD + MAC TAG + Varlen-Command + inner-message-size)
+        nTotalSize += pnode->m_encryption_handler->GetAADLen() + pnode->m_encryption_handler->GetTagLen() + serialized_command_size;
+    } else {
+        nTotalSize += CMessageHeader::HEADER_SIZE;
+    }
+    LogPrint(BCLog::NET, "sending%s %s (%d bytes) peer=%d\n", should_crypt ? " encrypted" : "", SanitizeString(msg.command.c_str()), nMessageSize, pnode->GetId());
 
     size_t nBytesSent = 0;
-    {
-        LOCK(pnode->cs_vSend);
-        bool optimisticSend(pnode->vSendMsg.empty());
 
-        //log total amount of bytes per command
-        pnode->mapSendBytesPerMsgCmd[msg.command] += nTotalSize;
-        pnode->nSendSize += nTotalSize;
+    if (should_crypt) {
+        std::vector<unsigned char> serialized_envelope;
+        uint32_t envelope_payload_length = serialized_command_size + nMessageSize;
+        serialized_envelope.reserve(3 /* <- packet length */ + serialized_command_size + nMessageSize + pnode->m_encryption_handler->GetTagLen());
 
-        if (pnode->nSendSize > nSendBufferMaxSize)
-            pnode->fPauseSend = true;
-        pnode->vSendMsg.push_back(std::move(serializedHeader));
-        if (nMessageSize)
-            pnode->vSendMsg.push_back(std::move(msg.data));
+        // convert the host 32 bit size into a LE 24bit
+        envelope_payload_length = htole32(envelope_payload_length);
+        uint8_t int24[3];
+        memcpy(int24, &envelope_payload_length, 3);
 
-        // If write queue empty, attempt "optimistic write"
-        if (optimisticSend == true)
-            nBytesSent = SocketSendData(pnode);
+        CVectorWriter{SER_NETWORK, INIT_PROTO_VERSION, serialized_envelope, 0, int24[0], int24[1], int24[2], msg.command};
+        //append the message itself (if there is a message)
+        if (nMessageSize) serialized_envelope.insert(serialized_envelope.end(), msg.data.begin(), msg.data.end());
+
+        //form the AAED (encipher and append tag)
+        if (!pnode->m_encryption_handler->EncryptAppendMAC(serialized_envelope)) {
+            LogPrintf("Encryption failed, peer=%d\n", pnode->GetId());
+            pnode->fDisconnect = true;
+            return;
+        }
+        {
+            LOCK(pnode->cs_vSend);
+            bool optimisticSend(pnode->vSendMsg.empty());
+
+            //log total amount of bytes per command
+            pnode->mapSendBytesPerMsgCmd[msg.command] += nTotalSize;
+            pnode->nSendSize += nTotalSize;
+
+            if (pnode->nSendSize > nSendBufferMaxSize)
+                pnode->fPauseSend = true;
+            pnode->vSendMsg.push_back(std::move(serialized_envelope));
+
+            // If write queue empty, attempt "optimistic write"
+            if (optimisticSend == true)
+                nBytesSent = SocketSendData(pnode);
+        }
+    } else {
+        std::vector<unsigned char> serializedHeader;
+        serializedHeader.reserve(CMessageHeader::HEADER_SIZE);
+        uint256 hash = Hash(msg.data.data(), msg.data.data() + nMessageSize);
+        CMessageHeader hdr(Params().MessageStart(), msg.command.c_str(), nMessageSize);
+        memcpy(hdr.pchChecksum, hash.begin(), CMessageHeader::CHECKSUM_SIZE);
+
+        CVectorWriter{SER_NETWORK, INIT_PROTO_VERSION, serializedHeader, 0, hdr};
+        {
+            LOCK(pnode->cs_vSend);
+            bool optimisticSend(pnode->vSendMsg.empty());
+
+            //log total amount of bytes per command
+            pnode->mapSendBytesPerMsgCmd[msg.command] += nTotalSize;
+            pnode->nSendSize += nTotalSize;
+
+            if (pnode->nSendSize > nSendBufferMaxSize)
+                pnode->fPauseSend = true;
+            pnode->vSendMsg.push_back(std::move(serializedHeader));
+            if (nMessageSize)
+                pnode->vSendMsg.push_back(std::move(msg.data));
+
+            // If write queue empty, attempt "optimistic write"
+            if (optimisticSend == true)
+                nBytesSent = SocketSendData(pnode);
+        }
     }
     if (nBytesSent)
         RecordBytesSent(nBytesSent);

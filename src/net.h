@@ -39,6 +39,7 @@
 class CScheduler;
 class CNode;
 class BanMan;
+class EncryptionHandlerInterface;
 
 /** Time between pings automatically sent out for latency probing and keepalive (in seconds). */
 static const int PING_INTERVAL = 2 * 60;
@@ -634,6 +635,7 @@ public:
     const uint64_t nKeyedNetGroup;
     std::atomic_bool fPauseRecv{false};
     std::atomic_bool fPauseSend{false};
+    std::shared_ptr<EncryptionHandlerInterface> m_encryption_handler;
 
 protected:
     mapMsgCmdSize mapSendBytesPerMsgCmd;
