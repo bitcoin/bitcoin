@@ -231,10 +231,11 @@ bool RevertAssetAllocation(const CAssetAllocationTuple &assetAllocationToRemove,
 	string errorMessage = "";
 	CAssetAllocation dbAssetAllocation;
 	if (!passetallocationdb->ReadLastAssetAllocation(assetAllocationToRemove, dbAssetAllocation)) {
-		dbAssetAllocation.SetNull();
 		dbAssetAllocation.vchAliasOrAddress = assetAllocationToRemove.vchAliasOrAddress;
 		dbAssetAllocation.vchAsset = assetAllocationToRemove.vchAsset;
 		dbAssetAllocation.nLastInterestClaimHeight = nHeight;
+		dbAssetAllocation.nHeight = nHeight;
+		dbAssetAllocation.fInterestRate = asset.fInterestRate;
 	}
 	// write the state back to previous state
 	if (!passetallocationdb->WriteAssetAllocation(dbAssetAllocation, 0, 0, asset, INT64_MAX, "", "", false))
@@ -488,6 +489,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 		theAssetAllocation.nBalance = dbAssetAllocation.nBalance;
 		// cannot modify interest claim height when sending
 		theAssetAllocation.nLastInterestClaimHeight = dbAssetAllocation.nLastInterestClaimHeight;
+		theAssetAllocation.nHeight = nHeight;
+		theAssetAllocation.fInterestRate = dbAssetAllocation.fInterestRate;
 		// get sender assetallocation
 		// if no custom allocations are sent with request
 			// if sender assetallocation has custom allocations, break as invalid assetsend request
@@ -561,18 +564,17 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 					}
 					CAssetAllocation receiverAllocation;
 					if (!GetAssetAllocation(receiverAllocationTuple, receiverAllocation)) {
-						receiverAllocation.SetNull();
 						receiverAllocation.vchAliasOrAddress = receiverAllocationTuple.vchAliasOrAddress;
 						receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
 						receiverAllocation.nLastInterestClaimHeight = nHeight;
+						receiverAllocation.nHeight = nHeight;
+						receiverAllocation.fInterestRate = dbAsset.fInterestRate;
 					}
 					if (!bBalanceOverrun) {
 						receiverAllocation.txHash = tx.GetHash();
 						if (dbAsset.fInterestRate > 0) {
 							// accumulate balances as sender/receiver allocations balances are adjusted
-							if (receiverAllocation.nHeight > 0) {
-								AccumulateInterestSinceLastClaim(receiverAllocation, nHeight);
-							}
+							AccumulateInterestSinceLastClaim(receiverAllocation, nHeight);
 							AccumulateInterestSinceLastClaim(theAssetAllocation, nHeight);
 						}
 						receiverAllocation.fInterestRate = dbAsset.fInterestRate;
@@ -664,10 +666,11 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 					}
 
 					if (!GetAssetAllocation(receiverAllocationTuple, receiverAllocation)) {
-						receiverAllocation.SetNull();
 						receiverAllocation.vchAliasOrAddress = receiverAllocationTuple.vchAliasOrAddress;
 						receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
 						receiverAllocation.nLastInterestClaimHeight = nHeight;
+						receiverAllocation.nHeight = nHeight;
+						receiverAllocation.fInterestRate = dbAsset.fInterestRate;
 					}
 					if (!bBalanceOverrun) {
 						receiverAllocation.txHash = tx.GetHash();
@@ -1151,7 +1154,7 @@ bool BuildAssetAllocationJson(CAssetAllocation& assetallocation, const CAsset& a
     oAssetAllocation.push_back(Pair("_id", CAssetAllocationTuple(assetallocation.vchAsset, assetallocation.vchAliasOrAddress).ToString()));
 	oAssetAllocation.push_back(Pair("asset", stringFromVch(assetallocation.vchAsset)));
 	oAssetAllocation.push_back(Pair("symbol", stringFromVch(asset.vchSymbol)));
-	oAssetAllocation.push_back(Pair("interest_rate", asset.fInterestRate));
+	oAssetAllocation.push_back(Pair("interest_rate", assetallocation.fInterestRate));
     oAssetAllocation.push_back(Pair("txid", assetallocation.txHash.GetHex()));
     oAssetAllocation.push_back(Pair("height", (int)assetallocation.nHeight));
 	oAssetAllocation.push_back(Pair("alias", stringFromVch(assetallocation.vchAliasOrAddress)));
@@ -1190,7 +1193,7 @@ bool BuildAssetAllocationIndexerJson(const CAssetAllocation& assetallocation, co
 	oAssetAllocation.push_back(Pair("time", nTime));
 	oAssetAllocation.push_back(Pair("asset", stringFromVch(assetallocation.vchAsset)));
 	oAssetAllocation.push_back(Pair("symbol", stringFromVch(asset.vchSymbol)));
-	oAssetAllocation.push_back(Pair("interest_rate", asset.fInterestRate));
+	oAssetAllocation.push_back(Pair("interest_rate", assetallocation.fInterestRate));
 	oAssetAllocation.push_back(Pair("height", (int)assetallocation.nHeight));
 	oAssetAllocation.push_back(Pair("sender", strSender));
 	oAssetAllocation.push_back(Pair("sender_balance", ValueFromAssetAmount(nSenderBalance, asset.nPrecision, asset.bUseInputRanges)));
