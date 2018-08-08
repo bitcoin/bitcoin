@@ -182,7 +182,8 @@ void SingleThreadedSchedulerClient::ProcessQueue() {
             }
             instance->MaybeScheduleProcessQueue();
         }
-    } raiicallbacksrunning(this);
+    };
+    RAIICallbacksRunning raiicallbacksrunning(this);
 
     callback();
 }

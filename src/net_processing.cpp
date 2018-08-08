@@ -3784,4 +3784,5 @@ public:
         mapOrphanTransactions.clear();
         mapOrphanTransactionsByPrev.clear();
     }
-} instance_of_cnetprocessingcleanup;
+};
+CNetProcessingCleanup g_instance_of_cnetprocessingcleanup;

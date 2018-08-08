@@ -29,7 +29,8 @@ private:
         MODE_VALID,   //!< everything ok
         MODE_INVALID, //!< network rule violation (DoS value may be set)
         MODE_ERROR,   //!< run-time error
-    } mode;
+    };
+    mode_state mode;
     int nDoS;
     std::string strRejectReason;
     unsigned int chRejectCode;

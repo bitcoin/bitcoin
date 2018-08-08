@@ -32,12 +32,13 @@ static RPCTimerInterface* timerInterface = nullptr;
 /* Map of name to timer. */
 static std::map<std::string, std::unique_ptr<RPCTimerBase> > deadlineTimers;
 
-static struct CRPCSignals
+struct CRPCSignals
 {
     boost::signals2::signal<void ()> Started;
     boost::signals2::signal<void ()> Stopped;
     boost::signals2::signal<void (const CRPCCommand&)> PreCommand;
-} g_rpcSignals;
+};
+static CRPCSignals g_rpcSignals;
 
 void RPCServer::OnStarted(std::function<void ()> slot)
 {
