@@ -212,7 +212,6 @@ bool RevertAssetAllocation(const CAssetAllocationTuple &assetAllocationToRemove,
 	string errorMessage = "";
 	CAssetAllocation dbAssetAllocation;
 	if (!passetallocationdb->ReadLastAssetAllocation(assetAllocationToRemove, dbAssetAllocation)) {
-		dbAssetAllocation.SetNull();
 		dbAssetAllocation.vchAliasOrAddress = assetAllocationToRemove.vchAliasOrAddress;
 		dbAssetAllocation.vchAsset = assetAllocationToRemove.vchAsset;
 		dbAssetAllocation.nLastInterestClaimHeight = nHeight;
@@ -542,10 +541,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 					}
 					CAssetAllocation receiverAllocation;
 					if (!GetAssetAllocation(receiverAllocationTuple, receiverAllocation)) {
-						receiverAllocation.SetNull();
 						receiverAllocation.vchAliasOrAddress = receiverAllocationTuple.vchAliasOrAddress;
 						receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
 						receiverAllocation.nLastInterestClaimHeight = nHeight;
+						receiverAllocation.fInterestRate = dbAsset.fInterestRate;
 					}
 					if (!bBalanceOverrun) {
 						receiverAllocation.txHash = tx.GetHash();
@@ -645,10 +644,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 					}
 
 					if (!GetAssetAllocation(receiverAllocationTuple, receiverAllocation)) {
-						receiverAllocation.SetNull();
 						receiverAllocation.vchAliasOrAddress = receiverAllocationTuple.vchAliasOrAddress;
 						receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
 						receiverAllocation.nLastInterestClaimHeight = nHeight;
+						receiverAllocation.fInterestRate = dbAsset.fInterestRate;
 					}
 					if (!bBalanceOverrun) {
 						receiverAllocation.txHash = tx.GetHash();

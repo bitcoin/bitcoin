@@ -558,7 +558,6 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 					}
 					if (!bSanityCheck) {
 						if (!GetAssetAllocation(receiverAllocationTuple, receiverAllocation)) {
-							receiverAllocation.SetNull();
 							receiverAllocation.vchAliasOrAddress = receiverAllocationTuple.vchAliasOrAddress;
 							receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
 							receiverAllocation.nLastInterestClaimHeight = nHeight;
