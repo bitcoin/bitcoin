@@ -243,7 +243,7 @@ public:
     virtual std::unique_ptr<Handler> handleNotifyAlertChanged(NotifyAlertChangedFn fn) = 0;
 
     //! Register handler for MN status messages.
-    using NotifyMNSyncProgressFn = std::function<void(const std::string& title, double progress)>;
+    using NotifyMNSyncProgressFn = std::function<void(const std::string& title, double nProgress)>;
     virtual std::unique_ptr<Handler> handleNotifyMNSyncProgress(NotifyMNSyncProgressFn fn) = 0;
 
     //! Register handler for ban list messages.

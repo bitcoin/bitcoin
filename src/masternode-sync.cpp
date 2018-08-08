@@ -166,9 +166,9 @@ void CMasternodeSync::ProcessTick(CConnman* connman)
     }
 
     // Calculate "progress" for LOG reporting / GUI notification
-    double nSyncProgress = double(nRequestedMasternodeAttempt + (nRequestedMasternodeAssets - 1) * 8) / (8*4);
-    LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nRequestedMasternodeAssets %d nRequestedMasternodeAttempt %d nSyncProgress %f\n", nTick, nRequestedMasternodeAssets, nRequestedMasternodeAttempt, nSyncProgress);
-    uiInterface.NotifyMNSyncProgress(GetSyncStatus(), nSyncProgress);
+    double nProgress = double(nRequestedMasternodeAttempt + (nRequestedMasternodeAssets - 1) * 8) / (8*4);
+    LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nRequestedMasternodeAssets %d nRequestedMasternodeAttempt %d nSyncProgress %f\n", nTick, nRequestedMasternodeAssets, nRequestedMasternodeAttempt, nProgress);
+    uiInterface.NotifyMNSyncProgress(GetSyncStatus(), nProgress);
 
     std::vector<CNode*> vNodesCopy = connman->CopyNodeVector();
     for (auto& pnode : vNodesCopy)

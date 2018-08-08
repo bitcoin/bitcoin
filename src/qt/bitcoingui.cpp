@@ -579,7 +579,7 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel)
         setNumBlocks(m_node.getNumBlocks(), QDateTime::fromTime_t(m_node.getLastBlockTime()), m_node.getVerificationProgress(), false);
         connect(_clientModel, SIGNAL(numBlocksChanged(int,QDateTime,double,bool)), this, SLOT(setNumBlocks(int,QDateTime,double,bool)));
 
-        connect(_clientModel, SIGNAL(moduleDataSyncProgress(QString,double)), this, SLOT(setAdditionalDataSyncProgress(QString, double)));
+        connect(_clientModel, SIGNAL(moduleDataSyncProgress(QString,double)), this, SLOT(setAdditionalDataSyncProgress(QString,double)));
 
         // Receive and report messages from client model
         connect(_clientModel, SIGNAL(message(QString,QString,unsigned int)), this, SLOT(message(QString,QString,unsigned int)));
@@ -1056,7 +1056,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
     progressBar->setToolTip(tooltip);
 }
 
-void BitcoinGUI::setAdditionalDataSyncProgress(const QString &title, double nSyncProgress)
+void BitcoinGUI::setAdditionalDataSyncProgress(const QString &title, double nProgress)
 {
     if(!clientModel)
         return;
@@ -1091,13 +1091,15 @@ void BitcoinGUI::setAdditionalDataSyncProgress(const QString &title, double nSyn
             .pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
         spinnerFrame = (spinnerFrame + 1) % SPINNER_FRAMES;
 
+        progressBarLabel->setText(title);
+        progressBarLabel->setVisible(true);
         progressBar->setFormat(tr("Synchronizing additional data: %p%"));
         progressBar->setMaximum(1000000000);
-        progressBar->setValue(nSyncProgress * 1000000000.0 + 0.5);
+        progressBar->setValue(nProgress * 1000000000.0 + 0.5);
+        progressBar->setVisible(true);
     }
 
-    progressBarLabel->setText(title);
-    tooltip = title + QString("<br>") + tooltip;
+    tooltip = tr("Module Sync in Progress: %1 %").arg(nProgress);
 
     // Don't word-wrap this (fixed-width) tooltip
     tooltip = QString("<nobr>") + tooltip + QString("</nobr>");
