@@ -366,12 +366,12 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 			return error(errorMessage.c_str());
 		}
 	}
-	
+	const vector<unsigned char> &vchThisAlias = vchAlias.empty() ? theAssetAllocation.vchAliasOrAddress : vchAlias;
 	const string &user3 = "";
 	const string &user2 = "";
-	const string &user1 = vchAlias.empty()? stringFromVch(theAssetAllocation.vchAliasOrAddress): stringFromVch(vchAlias);
+	const string &user1 = stringFromVch(vchThisAlias);
 
-	const CAssetAllocationTuple assetAllocationTuple(theAssetAllocation.vchAsset, vchAlias.empty()? theAssetAllocation.vchAliasOrAddress: vchAlias);
+	const CAssetAllocationTuple assetAllocationTuple(theAssetAllocation.vchAsset, vchThisAlias);
 
 	string strResponseEnglish = "";
 	string strResponseGUID = "";
@@ -466,7 +466,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1016 - " + _("Failed to read from asset DB");
 			return true;
 		}
-		theAssetAllocation.vchAliasOrAddress = dbAssetAllocation.vchAliasOrAddress;
+		theAssetAllocation.vchAliasOrAddress = vchThisAlias;
 		theAssetAllocation.nBalance = dbAssetAllocation.nBalance;
 		// cannot modify interest claim height when sending
 		theAssetAllocation.nLastInterestClaimHeight = dbAssetAllocation.nLastInterestClaimHeight;
