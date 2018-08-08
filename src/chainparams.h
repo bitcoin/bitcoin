@@ -100,6 +100,8 @@ public:
     const std::string& IssueSubAssetBurnAddress() const { return strIssueSubAssetBurnAddress; }
     const std::string& IssueUniqueAssetBurnAddress() const { return strIssueUniqueAssetBurnAddress; }
     const std::string& GlobalBurnAddress() const { return strGlobalBurnAddress; }
+
+    unsigned int DGWActivationBlock() const { return nDGWActivationBlock; }
     /** RVN End **/
 
 protected:
@@ -136,6 +138,8 @@ protected:
 
     // Global Burn Address
     std::string strGlobalBurnAddress;
+
+    unsigned int nDGWActivationBlock;
     /** RVN End **/
 };
 

@@ -218,6 +218,9 @@ public:
 
         //Global Burn Address
         strGlobalBurnAddress = "RXBurnXXXXXXXXXXXXXXXXXXXXXXWUo9FV";
+
+        // DGW Activation
+        nDGWActivationBlock = 341200;
         /** RVN End **/
     }
 };
@@ -319,6 +322,9 @@ public:
 
         // Global Burn Address
         strGlobalBurnAddress = "n1BurnXXXXXXXXXXXXXXXXXXXXXXU1qejP";
+
+        // DGW Activation
+        nDGWActivationBlock = 345000;
         /** RVN End **/
     }
 };
@@ -470,6 +476,9 @@ public:
 
         // Global Burn Address
         strGlobalBurnAddress = "n1BurnXXXXXXXXXXXXXXXXXXXXXXU1qejP";
+
+        // DGW Activation
+        nDGWActivationBlock = 200;
         /** RVN End **/
     }
 };

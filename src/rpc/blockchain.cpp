@@ -1389,6 +1389,12 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
     obj.push_back(Pair("headers",               pindexBestHeader ? pindexBestHeader->nHeight : -1));
     obj.push_back(Pair("bestblockhash",         chainActive.Tip()->GetBlockHash().GetHex()));
     obj.push_back(Pair("difficulty",            (double)GetDifficulty()));
+    if (IsDGWActive(chainActive.Height())) {
+        obj.push_back(Pair("difficulty_algorithm", "DGW-180"));
+    } else {
+        obj.push_back(Pair("difficulty_algorithm", "BTC"));
+        obj.push_back(Pair("DGW_activation_height",    (int)Params().DGWActivationBlock()));
+    }
     obj.push_back(Pair("mediantime",            (int64_t)chainActive.Tip()->GetMedianTimePast()));
     obj.push_back(Pair("verificationprogress",  GuessVerificationProgress(Params().TxData(), chainActive.Tip())));
     obj.push_back(Pair("chainwork",             chainActive.Tip()->nChainWork.GetHex()));
@@ -1413,6 +1419,7 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
 
     const Consensus::Params& consensusParams = Params().GetConsensus();
     //CBlockIndex* tip = chainActive.Tip();
+
 
     UniValue softforks(UniValue::VARR);
     UniValue bip9_softforks(UniValue::VOBJ);
