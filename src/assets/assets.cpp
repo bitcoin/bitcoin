@@ -777,7 +777,7 @@ bool CAssetsCache::TrySpendCoin(const COutPoint& out, const CTxOut& txOut)
             // If we got the address and the assetName, proceed to remove it from the database, and in memory objects
             if (address != "" && assetName != "" && nAmount > 0) {
                 CAssetCacheSpendAsset spend(assetName, address, nAmount);
-                if (mapAssetsAddressAmount.count(make_pair(assetName, address))) {
+                if (GetBestAssetAddressAmount(*this, assetName, address)) {
                     assert(mapAssetsAddressAmount[make_pair(assetName, address)] >= nAmount);
                     mapAssetsAddressAmount[make_pair(assetName, address)] -= nAmount;
                     pairToRemove = std::make_pair(assetName, out);
@@ -789,7 +789,7 @@ bool CAssetsCache::TrySpendCoin(const COutPoint& out, const CTxOut& txOut)
                     // Update the cache so we can save to database
                     vSpentAssets.push_back(spend);
                 } else {
-                    return error("%s : ERROR Failed to find current assets address amount. Asset : , Address : ", __func__, assetName, address);
+                    return error("%s : ERROR Failed to find current assets address amount. Asset %s: , Address : %s", __func__, assetName, address);
                 }
 
             } else {
@@ -1249,7 +1249,6 @@ bool CAssetsCache::Flush(bool fSoftCopy, bool fFlushDB)
 
             // Remove new assets from the database
             for (auto newAsset : setNewAssetsToRemove) {
-
                 passetsCache->Erase(newAsset.asset.strName);
                 if (!passetsdb->EraseAssetData(newAsset.asset.strName)) {
                     dirty = true;
@@ -1296,7 +1295,6 @@ bool CAssetsCache::Flush(bool fSoftCopy, bool fFlushDB)
 
             // Remove the new owners from database
             for (auto ownerAsset : setNewOwnerAssetsToRemove) {
-
                 if (!passetsdb->EraseAssetAddressQuantity(ownerAsset.assetName, ownerAsset.address)) {
                     dirty = true;
                     message = "_Failed Erasing Owner Address Balance from database";
@@ -1309,19 +1307,18 @@ bool CAssetsCache::Flush(bool fSoftCopy, bool fFlushDB)
 
             // Add the new owners to database
             for (auto ownerAsset : setNewOwnerAssetsToAdd) {
-
                 auto pair = std::make_pair(ownerAsset.assetName, ownerAsset.address);
-                if (mapAssetsAddressAmount.count(pair)) {
-                        if (!passetsdb->WriteAssetAddressQuantity(ownerAsset.assetName, ownerAsset.address,
-                                                                  mapAssetsAddressAmount.at(pair))) {
-                            dirty = true;
-                            message = "_Failed Writing Owner Address Balance to database";
-                        }
-
-                        if (dirty) {
-                            return error("%s : %s", __func__, message);
-                        }
+                if (mapAssetsAddressAmount.count(pair) && mapAssetsAddressAmount.at(pair) > 0) {
+                    if (!passetsdb->WriteAssetAddressQuantity(ownerAsset.assetName, ownerAsset.address,
+                                                              mapAssetsAddressAmount.at(pair))) {
+                        dirty = true;
+                        message = "_Failed Writing Owner Address Balance to database";
                     }
+
+                    if (dirty) {
+                        return error("%s : %s", __func__, message);
+                    }
+                }
             }
 
             // Undo the transfering by updating the balances in the database

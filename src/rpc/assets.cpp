@@ -183,7 +183,7 @@ UniValue issuesubasset(const JSONRPCRequest& request)
 {
     if (request.fHelp || !AreAssetsDeployed() || request.params.size() < 3 || request.params.size() > 9)
         throw std::runtime_error(
-                "issuesubasset \"parent_asset_name\" \"sub_asset_name\" qty \"( to_address )\" \"( change_address )\" ( units ) ( reissuable ) ( has_ipfs ) \"( ipfs_hash )\"\n"
+                "issuesubasset \"parent_asset_name\" \"asset_name\" qty \"( to_address )\" \"( change_address )\" ( units ) ( reissuable ) ( has_ipfs ) \"( ipfs_hash )\"\n"
                 + AssetActivationWarning() +
                 "\nIssue a subasset with unique name.\n"
                 "Unit as the number of decimals precision for the subasset (0 for whole units (\"1\"), 8 for max precision (\"1.00000000\")\n"
@@ -192,7 +192,7 @@ UniValue issuesubasset(const JSONRPCRequest& request)
 
                 "\nArguments:\n"
                 "1. \"parent_asset_name\"     (string, required) the parent asset name that is owned by this wallet\n"
-                "2. \"sub_asset_name\"        (string, required) a unique name\n"
+                "2. \"asset_name\"            (string, required) a unique name\n"
                 "3. \"qty\"                   (integer, required) the number of units to be issued\n"
                 "4. \"to_address\"            (string), optional, default=\"\"), address subasset will be sent to, if it is empty, address will be generated for you\n"
                 "5. \"change_address\"        (string), optional, default=\"\"), address the the rvn change will be sent to, if it is empty, change address will be generated for you\n"
@@ -813,7 +813,6 @@ UniValue listassets(const JSONRPCRequest& request)
         );
 
     ObserveSafeMode();
-    LOCK(cs_main);
 
     if (!passetsdb)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "asset db unavailable.");

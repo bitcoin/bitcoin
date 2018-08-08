@@ -196,7 +196,8 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool 
 bool CCoinsViewCache::SpendCoin(const COutPoint &outpoint, Coin* moveout, CAssetsCache* assetsCache) {
 
     CCoinsMap::iterator it = FetchCoin(outpoint);
-    if (it == cacheCoins.end()) return false;
+    if (it == cacheCoins.end())
+        return false;
     cachedCoinsUsage -= it->second.coin.DynamicMemoryUsage();
 
     /** RVN START */
@@ -216,8 +217,9 @@ bool CCoinsViewCache::SpendCoin(const COutPoint &outpoint, Coin* moveout, CAsset
     /** RVN START */
     if (AreAssetsDeployed()) {
         if (assetsCache) {
-            if (!assetsCache->TrySpendCoin(outpoint, tempCoin.out))
+            if (!assetsCache->TrySpendCoin(outpoint, tempCoin.out)) {
                 return error("%s : Failed to try and spend the asset. COutPoint : %s", __func__, outpoint.ToString());
+            }
         }
     }
     /** RVN END */
