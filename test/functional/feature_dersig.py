@@ -10,9 +10,8 @@ Test that the DERSIG soft-fork activates at (regtest) height 1251.
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from test_framework.mininode import *
-from test_framework.blocktools import create_coinbase, create_block
+from test_framework.blocktools import create_coinbase, create_block, create_transaction
 from test_framework.script import CScript
-from io import BytesIO
 
 DERSIG_HEIGHT = 1251
 
@@ -37,15 +36,6 @@ def unDERify(tx):
             newscript.append(i)
     tx.vin[0].scriptSig = CScript(newscript)
 
-def create_transaction(node, coinbase, to_address, amount):
-    from_txid = node.getblock(coinbase)['tx'][0]
-    inputs = [{ "txid" : from_txid, "vout" : 0}]
-    outputs = { to_address : amount }
-    rawtx = node.createrawtransaction(inputs, outputs)
-    signresult = node.signrawtransactionwithwallet(rawtx)
-    tx = CTransaction()
-    tx.deserialize(BytesIO(hex_str_to_bytes(signresult['hex'])))
-    return tx
 
 
 class BIP66Test(BitcoinTestFramework):
@@ -58,12 +48,12 @@ class BIP66Test(BitcoinTestFramework):
         self.nodes[0].add_p2p_connection(P2PInterface())
 
         self.log.info("Mining %d blocks", DERSIG_HEIGHT - 2)
-        self.coinbase_blocks = self.nodes[0].generate(DERSIG_HEIGHT - 2)
+        self.coinbase_txids = [self.nodes[0].getblock(b)['tx'][0] for b in self.nodes[0].generate(DERSIG_HEIGHT - 2)]
         self.nodeaddress = self.nodes[0].getnewaddress()
 
         self.log.info("Test that a transaction with non-DER signature can still appear in a block")
 
-        spendtx = create_transaction(self.nodes[0], self.coinbase_blocks[0],
+        spendtx = create_transaction(self.nodes[0], self.coinbase_txids[0],
                 self.nodeaddress, 1.0)
         unDERify(spendtx)
         spendtx.rehash()
@@ -100,7 +90,7 @@ class BIP66Test(BitcoinTestFramework):
         self.log.info("Test that transactions with non-DER signatures cannot appear in a block")
         block.nVersion = 3
 
-        spendtx = create_transaction(self.nodes[0], self.coinbase_blocks[1],
+        spendtx = create_transaction(self.nodes[0], self.coinbase_txids[1],
                 self.nodeaddress, 1.0)
         unDERify(spendtx)
         spendtx.rehash()
@@ -138,7 +128,7 @@ class BIP66Test(BitcoinTestFramework):
 
         self.log.info("Test that a version 3 block with a DERSIG-compliant transaction is accepted")
         block.vtx[1] = create_transaction(self.nodes[0],
-                self.coinbase_blocks[1], self.nodeaddress, 1.0)
+                self.coinbase_txids[1], self.nodeaddress, 1.0)
         block.hashMerkleRoot = block.calc_merkle_root()
         block.rehash()
         block.solve()
