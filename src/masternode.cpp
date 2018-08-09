@@ -404,7 +404,7 @@ bool CMasternodeBroadcast::Create(const COutPoint& outpoint, const CService& ser
 
     mnbRet = CMasternodeBroadcast(service, outpoint, pubKeyCollateralAddressNew, destNew, pubKeyMasternodeNew, PROTOCOL_VERSION);
 
-    if (!mnbRet.IsValidNetAddr())
+    if (!service.IsRoutable() || IsLimited(service.GetNetwork()))
         return Log(strprintf("Invalid IP address, masternode=%s", outpoint.ToStringShort()));
 
     mnbRet.lastPing = mnp;
@@ -423,7 +423,7 @@ bool CMasternodeBroadcast::SimpleCheck(int& nDos)
     AssertLockHeld(cs_main);
 
     // make sure addr is valid
-    if(!IsValidNetAddr()) {
+    if(!addr.IsRoutable() || IsLimited(addr.GetNetwork())) {
         LogPrintf("CMasternodeBroadcast::SimpleCheck -- Invalid addr, rejected: masternode=%s  addr=%s\n",
                     outpoint.ToStringShort(), addr.ToString());
         return false;
