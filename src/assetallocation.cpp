@@ -495,7 +495,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 		theAssetAllocation.nBalance = dbAssetAllocation.nBalance;
 		// cannot modify interest claim height when sending
 		theAssetAllocation.nLastInterestClaimHeight = dbAssetAllocation.nLastInterestClaimHeight;
-		theAssetAllocation.nHeight = nHeight;
+		theAssetAllocation.nHeight = dbAssetAllocation.nHeight;
 		theAssetAllocation.fInterestRate = dbAssetAllocation.fInterestRate;
 		// get sender assetallocation
 		// if no custom allocations are sent with request
