@@ -313,6 +313,11 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2015 - " + _("Total supply cannot exceed maximum supply");
 				return true;
 			}
+			if(nHeight < Params().GetConsensus().nShareFeeBlock && CSyscoinAddress(theAsset.vchAliasOrAddress).IsValid())
+			{
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2015 - " + _("Please wait until the fork to create this type of asset. It is on block: ") + boost::lexical_cast<string>(Params().GetConsensus().nShareFeeBlock;
+				return true;
+			}
 			break;
 
 		case OP_ASSET_UPDATE:
@@ -719,8 +724,6 @@ UniValue assetnew(const JSONRPCRequest& request) {
 	const CSyscoinAddress address(strAliasOrAddress);
 	if (address.IsValid()) {
 		strAddressFrom = strAliasOrAddress;
-		if (chainActive.Tip()->nHeight < Params().GetConsensus().nShareFeeBlock)
-			throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1502 - " + _("Please wait until the fork to create this type of asset. It is on block: ") + boost::lexical_cast<string>(Params().GetConsensus().nShareFeeBlock));
 	}
 	else {
 		ToLowerCase(vchAliasOrAddress);
