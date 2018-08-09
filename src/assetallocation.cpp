@@ -497,6 +497,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 		theAssetAllocation.nLastInterestClaimHeight = dbAssetAllocation.nLastInterestClaimHeight;
 		theAssetAllocation.nHeight = dbAssetAllocation.nHeight;
 		theAssetAllocation.fInterestRate = dbAssetAllocation.fInterestRate;
+		theAssetAllocation.fAccumulatedInterestSinceLastInterestClaim = dbAssetAllocation.fAccumulatedInterestSinceLastInterestClaim;
+		theAssetAllocation.nAccumulatedBalanceSinceLastInterestClaim = dbAssetAllocation.nAccumulatedBalanceSinceLastInterestClaim;
 		// get sender assetallocation
 		// if no custom allocations are sent with request
 			// if sender assetallocation has custom allocations, break as invalid assetsend request
