@@ -495,6 +495,10 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectionreceiver false"));
 	balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 824875837095);
+	AssetClaimInterest("node1", guid, "jagassetcollectionreceiver");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectionreceiver false"));
+	balance = find_value(r.get_obj(), "balance");
+	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 824875837095);
 }
 BOOST_AUTO_TEST_CASE(generate_asset_allocation_interest_overflow)
 {

@@ -418,7 +418,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1011 - " + _("Failed to read from asset DB");
 			return true;
 		}
-		if (dbAsset.fInterestRate <= 0)
+		if (dbAsset.fInterestRate <= 0 || dbAssetAllocation.fInterestRate <= 0)
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1012 - " + _("Cannot collect interest on this asset, no interest rate has been defined");
 			return true;
