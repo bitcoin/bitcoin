@@ -101,7 +101,8 @@ class AssetTest(RavenTestFramework):
         assert_equal(n0.listassetbalancesbyaddress(address0)["MY_ASSET!"], 1)
 
         self.log.info("Calling reissue()...")
-        n0.reissue(asset_name="MY_ASSET", qty=2000, to_address=address0, change_address="",\
+        address1 = n0.getnewaddress()
+        n0.reissue(asset_name="MY_ASSET", qty=2000, to_address=address0, change_address=address1,\
                    reissuable=False, new_ipfs=ipfs_hash[::-1])
 
         self.log.info("Waiting for ten confirmations after reissue...")
@@ -124,13 +125,33 @@ class AssetTest(RavenTestFramework):
         n0.issue("RAVEN1", 1000)
         n0.issue("RAVEN2", 1000)
         n0.issue("RAVEN3", 1000)
+        n0.generate(1)
+        self.sync_all()
+
+        n0.listassets(asset="RAVEN*", verbose=False, count=2, start=-2)
+
+        self.log.info("Creating some sub-assets...")
+        n0.issue(asset_name="MY_ASSET/SUB1", qty=1000, to_address=address0, change_address=address0, \
+                         units=4, reissuable=True, has_ipfs=True, ipfs_hash=ipfs_hash)
+
+        self.log.info("Waiting for ten confirmations after issuesubasset...")
         n0.generate(10)
         self.sync_all()
+
+        self.log.info("Checkout getassetdata()...")
+        assetdata = n0.getassetdata("MY_ASSET/SUB1")
+        assert_equal(assetdata["name"], "MY_ASSET/SUB1")
+        assert_equal(assetdata["amount"], 1000)
+        assert_equal(assetdata["units"], 4)
+        assert_equal(assetdata["reissuable"], 1)
+        assert_equal(assetdata["has_ipfs"], 1)
+        assert_equal(assetdata["ipfs_hash"], ipfs_hash)
 
         raven_assets = n0.listassets(asset="RAVEN*", verbose=False, count=2, start=-2)
         assert_equal(len(raven_assets), 2)
         assert_equal(raven_assets[0], "RAVEN2")
         assert_equal(raven_assets[1], "RAVEN3")
+        self.sync_all()
 
 
 if __name__ == '__main__':

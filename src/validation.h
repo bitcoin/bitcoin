@@ -521,6 +521,8 @@ bool LoadMempool();
 
 /** RVN START */
 bool AreAssetsDeployed();
+
+bool IsDGWActive(unsigned int nBlockNumber);
 /** RVN END */
 
 #endif // RAVEN_VALIDATION_H

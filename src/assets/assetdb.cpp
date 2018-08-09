@@ -160,12 +160,7 @@ bool CAssetsDB::LoadAssets()
 
 bool CAssetsDB::AssetDir(std::vector<CNewAsset>& assets, const std::string filter, const size_t count, const long start)
 {
-    // flush everything to db
-    LOCK(cs_main);
-    bool flushed = pcoinsTip->Flush();
-    assert(flushed);
-    bool assetFlushed = passets->Flush(false, true);
-    assert(assetFlushed);
+    FlushStateToDisk();
 
     std::unique_ptr<CDBIterator> pcursor(NewIterator());
     pcursor->Seek(std::make_pair(ASSET_FLAG, std::string()));

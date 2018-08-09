@@ -64,7 +64,7 @@ UniValue issue(const JSONRPCRequest& request)
         throw std::runtime_error(
             "issue \"asset_name\" qty \"( to_address )\" \"( change_address )\" ( units ) ( reissuable ) ( has_ipfs ) \"( ipfs_hash )\"\n"
             + AssetActivationWarning() +
-            "\nIssue an asset with unique name.\n"
+            "\nIssue an asset or subasset with unique name.\n"
             "Unit as the number of decimals precision for the asset (0 for whole units (\"1\"), 8 for max precision (\"1.00000000\")\n"
             "Qty should be whole number.\n"
             "Reissuable is true/false for whether additional units can be issued by the original issuer.\n"
@@ -75,7 +75,7 @@ UniValue issue(const JSONRPCRequest& request)
             "3. \"to_address\"            (string), optional, default=\"\"), address asset will be sent to, if it is empty, address will be generated for you\n"
             "4. \"change_address\"        (string), optional, default=\"\"), address the the rvn change will be sent to, if it is empty, change address will be generated for you\n"
             "5. \"units\"                 (integer, optional, default=8, min=0, max=8), the number of decimals precision for the asset (0 for whole units (\"1\"), 8 for max precision (\"1.00000000\")\n"
-            "6. \"reissuable\"            (boolean, optional, default=false), whether future reissuance is allowed\n"
+            "6. \"reissuable\"            (boolean, optional, default=true), whether future reissuance is allowed\n"
             "7. \"has_ipfs\"              (boolean, optional, default=false), whether ifps hash is going to be added to the asset\n"
             "8. \"ipfs_hash\"             (string, optional but required if has_ipfs = 1), an ipfs hash\n"
 
@@ -87,6 +87,7 @@ UniValue issue(const JSONRPCRequest& request)
             + HelpExampleCli("issue", "\"myassetname\" 1000 \"myaddress\"")
             + HelpExampleCli("issue", "\"myassetname\" 1000 \"myaddress\" \"changeaddress\" 4")
             + HelpExampleCli("issue", "\"myassetname\" 1000 \"myaddress\" \"changeaddress\" 2 true")
+            + HelpExampleCli("issue", "\"myassetname/mysubasset\" 1000 \"myaddress\" \"changeaddress\" 2 true")
         );
 
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -146,7 +147,7 @@ UniValue issue(const JSONRPCRequest& request)
     int units = 8;
     if (request.params.size() > 4)
         units = request.params[4].get_int();
-    bool reissuable = false;
+    bool reissuable = true;
     if (request.params.size() > 5)
         reissuable = request.params[5].get_bool();
 
@@ -178,6 +179,7 @@ UniValue issue(const JSONRPCRequest& request)
     result.push_back(txid);
     return result;
 }
+
 
 UniValue listassetbalancesbyaddress(const JSONRPCRequest& request)
 {
@@ -513,8 +515,8 @@ UniValue transfer(const JSONRPCRequest& request)
 
                 "\nArguments:\n"
                 "1. \"asset_name\"               (string, required) name of asset\n"
-                "3. \"qty\"                      (number, required) number of assets you want to send to the address\n"
-                "2. \"to_address\"               (string, required) address to send the asset to\n"
+                "2. \"qty\"                      (number, required) number of assets you want to send to the address\n"
+                "3. \"to_address\"               (string, required) address to send the asset to\n"
 
                 "\nResult:\n"
                 "txid"
@@ -687,7 +689,6 @@ UniValue listassets(const JSONRPCRequest& request)
         );
 
     ObserveSafeMode();
-    LOCK(cs_main);
 
     if (!passetsdb)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "asset db unavailable.");

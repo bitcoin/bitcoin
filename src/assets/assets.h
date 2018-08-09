@@ -49,17 +49,6 @@ struct CAssetOutputEntry;
 // 50000 * 82 Bytes == 4.1 Mb
 #define MAX_CACHE_ASSETS_SIZE 50000
 
-enum AssetType
-{
-    ROOT,
-    OWNER,
-    SUB,
-    UNIQUE,
-    CHANNEL,
-    VOTE,
-    INVALID
-};
-
 class CAssets {
 public:
     std::map<std::string, std::set<COutPoint> > mapMyUnspentAssets; // Asset Name -> COutPoint
@@ -309,10 +298,13 @@ CAmount GetIssueAssetBurnAmount();
 CAmount GetReissueAssetBurnAmount();
 CAmount GetIssueSubAssetBurnAmount();
 CAmount GetIssueUniqueAssetBurnAmount();
+CAmount GetBurnAmount(const AssetType type);
+std::string GetBurnAddress(const AssetType type);
 
 bool IsAssetNameValid(const std::string& name);
 bool IsAssetNameValid(const std::string& name, AssetType& assetType);
 bool IsAssetNameAnOwner(const std::string& name);
+std::string GetParentName(const std::string& name); // Gets the parent name of a subasset TEST/TESTSUB would return TEST
 
 bool IsAssetNameSizeValid(const std::string& name);
 
@@ -323,11 +315,11 @@ bool OwnerFromTransaction(const CTransaction& tx, std::string& ownerName, std::s
 bool ReissueAssetFromTransaction(const CTransaction& tx, CReissueAsset& reissue, std::string& strAddress);
 
 bool TransferAssetFromScript(const CScript& scriptPubKey, CAssetTransfer& assetTransfer, std::string& strAddress);
-bool AssetFromScript(const CScript& scriptPubKey, CNewAsset& assetTransfer, std::string& strAddress);
+bool AssetFromScript(const CScript& scriptPubKey, CNewAsset& asset, std::string& strAddress);
 bool OwnerAssetFromScript(const CScript& scriptPubKey, std::string& assetName, std::string& strAddress);
 bool ReissueAssetFromScript(const CScript& scriptPubKey, CReissueAsset& reissue, std::string& strAddress);
 
-bool CheckIssueBurnTx(const CTxOut& txOut);
+bool CheckIssueBurnTx(const CTxOut& txOut, const AssetType& type);
 bool CheckReissueBurnTx(const CTxOut& txOut);
 
 bool CheckIssueDataTx(const CTxOut& txOut);
@@ -335,6 +327,10 @@ bool CheckOwnerDataTx(const CTxOut& txOut);
 bool CheckReissueDataTx(const CTxOut& txOut);
 bool CheckTransferOwnerTx(const CTxOut& txOut);
 
+bool IsScriptNewAsset(const CScript& scriptPubKey, int& nStartingIndex);
+bool IsScriptOwnerAsset(const CScript& scriptPubKey, int& nStartingIndex);
+bool IsScriptReissueAsset(const CScript& scriptPubKey, int& nStartingIndex);
+bool IsScriptTransferAsset(const CScript& scriptPubKey, int& nStartingIndex);
 bool IsScriptNewAsset(const CScript& scriptPubKey);
 bool IsScriptOwnerAsset(const CScript& scriptPubKey);
 bool IsScriptReissueAsset(const CScript& scriptPubKey);
@@ -359,6 +355,8 @@ bool GetMyOwnedAssets(CAssetsCache& cache, const std::string prefix, std::vector
 bool GetMyAssetBalance(CAssetsCache& cache, const std::string& assetName, CAmount& balance);
 bool GetMyAssetBalances(CAssetsCache& cache, const std::vector<std::string>& assetNames, std::map<std::string, CAmount>& balances);
 bool GetMyAssetBalances(CAssetsCache& cache, std::map<std::string, CAmount>& balances);
+
+bool VerifyAssetOwner(const std::string& asset_name, std::set<COutPoint>& myOwnerOutPoints, std::pair<int, std::string>& error);
 
 std::string DecodeIPFS(std::string encoded);
 std::string EncodeIPFS(std::string decoded);

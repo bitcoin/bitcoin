@@ -218,12 +218,15 @@ public:
 
         //Global Burn Address
         strGlobalBurnAddress = "RXBurnXXXXXXXXXXXXXXXXXXXXXXWUo9FV";
+
+        // DGW Activation
+        nDGWActivationBlock = 338778;
         /** RVN End **/
     }
 };
 
 /**
- * Testnet (v3)
+ * Testnet (v4)
  */
 class CTestNetParams : public CChainParams {
 public:
@@ -247,8 +250,8 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
         consensus.vDeployments[Consensus::DEPLOYMENT_ASSETS].bit = 5;
-        consensus.vDeployments[Consensus::DEPLOYMENT_ASSETS].nStartTime = 1532476800; // July 25, 2018 UTC
-        consensus.vDeployments[Consensus::DEPLOYMENT_ASSETS].nTimeout = 1564012800; // July 25, 2019 UTC
+        consensus.vDeployments[Consensus::DEPLOYMENT_ASSETS].nStartTime = 1533924000; // GMT: Friday, August 10, 2018 6:00:00 PM
+        consensus.vDeployments[Consensus::DEPLOYMENT_ASSETS].nTimeout = 1536516000; // GMT: Sunday, September 9, 2018 6:00:00 PM
 
 
         // The best chain should have at least this much work.
@@ -262,14 +265,74 @@ public:
         pchMessageStart[1] = 0x56;
         pchMessageStart[2] = 0x4E;
         pchMessageStart[3] = 0x54;
-        nDefaultPort = 18767;
+        nDefaultPort = 18768;
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1517350340, 4791361, 0x1e00ffff, 4, 5000 * COIN);
+        // This is used inorder to mine the genesis block. Once found, we can use the nonce and block hash found to create a valid genesis block
+//        /////////////////////////////////////////////////////////////////
+
+
+//        arith_uint256 test;
+//        bool fNegative;
+//        bool fOverflow;
+//        test.SetCompact(0x1e00ffff, &fNegative, &fOverflow);
+//        std::cout << "Test threshold: " << test.GetHex() << "\n\n";
+//
+//        int genesisNonce = 0;
+//        uint256 TempHashHolding = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000");
+//        uint256 BestBlockHash = uint256S("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+//        for (int i=0;i<40000000;i++) {
+//            genesis = CreateGenesisBlock(1533751200, i, 0x1e00ffff, 2, 5000 * COIN);
+//            //genesis.hashPrevBlock = TempHashHolding;
+//            consensus.hashGenesisBlock = genesis.GetHash();
+//
+//            arith_uint256 BestBlockHashArith = UintToArith256(BestBlockHash);
+//            if (UintToArith256(consensus.hashGenesisBlock) < BestBlockHashArith) {
+//                BestBlockHash = consensus.hashGenesisBlock;
+//                std::cout << BestBlockHash.GetHex() << " Nonce: " << i << "\n";
+//                std::cout << "   PrevBlockHash: " << genesis.hashPrevBlock.GetHex() << "\n";
+//            }
+//
+//            TempHashHolding = consensus.hashGenesisBlock;
+//
+//            if (BestBlockHashArith < test) {
+//                genesisNonce = i - 1;
+//                break;
+//            }
+//            //std::cout << consensus.hashGenesisBlock.GetHex() << "\n";
+//        }
+//        std::cout << "\n";
+//        std::cout << "\n";
+//        std::cout << "\n";
+//
+//        std::cout << "hashGenesisBlock to 0x" << BestBlockHash.GetHex() << std::endl;
+//        std::cout << "Genesis Nonce to " << genesisNonce << std::endl;
+//        std::cout << "Genesis Merkle " << genesis.hashMerkleRoot.GetHex() << std::endl;
+//
+//        std::cout << "\n";
+//        std::cout << "\n";
+//        int totalHits = 0;
+//        double totalTime = 0.0;
+//
+//        for(int x = 0; x < 16; x++) {
+//            totalHits += algoHashHits[x];
+//            totalTime += algoHashTotal[x];
+//            std::cout << "hash algo " << x << " hits " << algoHashHits[x] << " total " << algoHashTotal[x] << " avg " << algoHashTotal[x]/algoHashHits[x] << std::endl;
+//        }
+//
+//        std::cout << "Totals: hash algo " <<  " hits " << totalHits << " total " << totalTime << " avg " << totalTime/totalHits << std::endl;
+//
+//        genesis.hashPrevBlock = TempHashHolding;
+//
+//        return;
+
+//        /////////////////////////////////////////////////////////////////
+
+        genesis = CreateGenesisBlock(1533751200, 555705, 0x1e00ffff, 2, 5000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
 
         //Test MerkleRoot and GenesisBlock
-        assert(consensus.hashGenesisBlock == uint256S("0x000000055c6b201ac99ed634953f92bd52239f5b26e090ce3caab6ec81bec921"));
+        assert(consensus.hashGenesisBlock == uint256S("0x0000006ebc14cb6777bedda407702dfbc6b273f1af956bcfd6f4f98a2eb14433"));
         assert(genesis.hashMerkleRoot == uint256S("0x28ff00a867739a352523808d301f504bc4547699398d70faf2266a8bae5f3516"));
 
         vFixedSeeds.clear();
@@ -319,6 +382,9 @@ public:
 
         // Global Burn Address
         strGlobalBurnAddress = "n1BurnXXXXXXXXXXXXXXXXXXXXXXU1qejP";
+
+        // DGW Activation
+        nDGWActivationBlock = 1440;
         /** RVN End **/
     }
 };
@@ -377,7 +443,7 @@ public:
 //        uint256 TempHashHolding = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000");
 //        uint256 BestBlockHash = uint256S("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
 //        for (int i=0;i<40000000;i++) {
-//            genesis = CreateGenesisBlock(1524179366, i, 0x207fffff, 4, 5000 * COIN);
+//            genesis = CreateGenesisBlock(1533751200, i, 0x207fffff, 2, 5000 * COIN);
 //            //genesis.hashPrevBlock = TempHashHolding;
 //            consensus.hashGenesisBlock = genesis.GetHash();
 //
@@ -420,7 +486,7 @@ public:
 //        genesis.hashPrevBlock = TempHashHolding;
 //
 //        return;
-//
+
 //        /////////////////////////////////////////////////////////////////
 
 
@@ -470,6 +536,9 @@ public:
 
         // Global Burn Address
         strGlobalBurnAddress = "n1BurnXXXXXXXXXXXXXXXXXXXXXXU1qejP";
+
+        // DGW Activation
+        nDGWActivationBlock = 200;
         /** RVN End **/
     }
 };
