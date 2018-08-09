@@ -315,7 +315,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 			}
 			if(nHeight < Params().GetConsensus().nShareFeeBlock && CSyscoinAddress(stringFromVch(theAsset.vchAliasOrAddress)).IsValid())
 			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2015 - " + _("Please wait until the fork to create this type of asset. It is on block: ") + boost::lexical_cast<string>(Params().GetConsensus().nShareFeeBlock;
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2015 - " + _("Please wait until the fork to create this type of asset. It is on block: ") + boost::lexical_cast<string>(Params().GetConsensus().nShareFeeBlock);
 				return true;
 			}
 			break;
