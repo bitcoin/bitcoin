@@ -14,6 +14,7 @@
 #include <crypto/siphash.h>
 #include <hash.h>
 #include <limitedmap.h>
+#include <net_encryption.h>
 #include <net_message.h>
 #include <netaddress.h>
 #include <policy/feerate.h>
@@ -81,6 +82,8 @@ static const int64_t DEFAULT_PEER_CONNECT_TIMEOUT = 60;
 static const bool DEFAULT_FORCEDNSSEED = false;
 static const size_t DEFAULT_MAXRECEIVEBUFFER = 5 * 1000;
 static const size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
+
+static const bool DEFAULT_ALLOW_NET_ENCRYPTION = false;
 
 typedef int64_t NodeId;
 

@@ -2582,6 +2582,11 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
         mapRecvBytesPerMsgCmd[msg] = 0;
     mapRecvBytesPerMsgCmd[NET_MESSAGE_COMMAND_OTHER] = 0;
 
+    m_encryption_handler = nullptr;
+    if (gArgs.GetBoolArg("-netencryption", DEFAULT_ALLOW_NET_ENCRYPTION)) {
+        m_encryption_handler = std::make_shared<P2PEncryption>();
+    }
+
     if (fLogIPs) {
         LogPrint(BCLog::NET, "Added connection to %s peer=%d\n", addrName, id);
     } else {
