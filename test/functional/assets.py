@@ -131,7 +131,7 @@ class AssetTest(RavenTestFramework):
         n0.listassets(asset="RAVEN*", verbose=False, count=2, start=-2)
 
         self.log.info("Creating some sub-assets...")
-        n0.issue(parent_asset_name="MY_ASSET/SUB1", qty=1000, to_address=address0, change_address=address0, \
+        n0.issue(asset_name="MY_ASSET/SUB1", qty=1000, to_address=address0, change_address=address0, \
                          units=4, reissuable=True, has_ipfs=True, ipfs_hash=ipfs_hash)
 
         self.log.info("Waiting for ten confirmations after issuesubasset...")
