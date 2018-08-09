@@ -148,8 +148,6 @@ class QuorumDataMessagesTest(DashTestFramework):
             self.log.info("Testing basics of QGETDATA/QDATA")
             p2p_node0 = p2p_connection(node0)
             p2p_mn1 = p2p_connection(mn1.node)
-            p2p_node0.wait_for_verack()
-            p2p_mn1.wait_for_verack()
             id_p2p_node0 = get_mininode_id(node0)
             id_p2p_mn1 = get_mininode_id(mn1.node)
 
@@ -170,7 +168,6 @@ class QuorumDataMessagesTest(DashTestFramework):
             node0.disconnect_p2ps()
             mn1.node.disconnect_p2ps()
             p2p_mn1 = p2p_connection(mn1.node)
-            p2p_mn1.wait_for_verack()
             id_p2p_mn1 = get_mininode_id(mn1.node)
             mnauth(mn1.node, id_p2p_mn1, fake_mnauth_1[0], fake_mnauth_1[1])
             # The masternode should now respond to qgetdata requests
@@ -192,8 +189,6 @@ class QuorumDataMessagesTest(DashTestFramework):
             self.log.info("Test ban score increase for invalid / unexpected QDATA")
             p2p_mn1 = p2p_connection(mn1.node)
             p2p_mn2 = p2p_connection(mn2.node)
-            p2p_mn1.wait_for_verack()
-            p2p_mn2.wait_for_verack()
             id_p2p_mn1 = get_mininode_id(mn1.node)
             id_p2p_mn2 = get_mininode_id(mn2.node)
             mnauth(mn1.node, id_p2p_mn1, fake_mnauth_1[0], fake_mnauth_1[1])
@@ -241,7 +236,6 @@ class QuorumDataMessagesTest(DashTestFramework):
             mn2.node.disconnect_p2ps()
             self.log.info("Test all available error codes")
             p2p_mn1 = p2p_connection(mn1.node)
-            p2p_mn1.wait_for_verack()
             id_p2p_mn1 = get_mininode_id(mn1.node)
             mnauth(mn1.node, id_p2p_mn1, fake_mnauth_1[0], fake_mnauth_1[1])
             qgetdata_invalid_type = msg_qgetdata(quorum_hash_int, 103, 0x01, protx_hash_int)
@@ -258,8 +252,6 @@ class QuorumDataMessagesTest(DashTestFramework):
             # Re-connect to the masternode
             p2p_mn1 = p2p_connection(mn1.node)
             p2p_mn2 = p2p_connection(mn2.node)
-            p2p_mn1.wait_for_verack()
-            p2p_mn2.wait_for_verack()
             id_p2p_mn1 = get_mininode_id(mn1.node)
             id_p2p_mn2 = get_mininode_id(mn2.node)
             assert id_p2p_mn1 is not None
@@ -310,7 +302,6 @@ class QuorumDataMessagesTest(DashTestFramework):
             self.log.info("Test request limiting / banscore increases")
 
             p2p_mn1 = p2p_connection(mn1.node)
-            p2p_mn1.wait_for_verack()
             id_p2p_mn1 = get_mininode_id(mn1.node)
             mnauth(mn1.node, id_p2p_mn1, fake_mnauth_1[0], fake_mnauth_1[1])
             p2p_mn1.test_qgetdata(qgetdata_vvec, 0, self.llmq_threshold, 0)
@@ -326,8 +317,6 @@ class QuorumDataMessagesTest(DashTestFramework):
             # in banscore increase for either of both.
             p2p_mn3_1 = p2p_connection(mn3.node, uacomment_m3_1)
             p2p_mn3_2 = p2p_connection(mn3.node, uacomment_m3_2)
-            p2p_mn3_1.wait_for_verack()
-            p2p_mn3_2.wait_for_verack()
             id_p2p_mn3_1 = get_mininode_id(mn3.node, uacomment_m3_1)
             id_p2p_mn3_2 = get_mininode_id(mn3.node, uacomment_m3_2)
             assert id_p2p_mn3_1 != id_p2p_mn3_2
@@ -357,8 +346,6 @@ class QuorumDataMessagesTest(DashTestFramework):
             force_request_expire()
             p2p_mn3_1 = p2p_connection(mn3.node, uacomment_m3_1)
             p2p_mn3_2 = p2p_connection(mn3.node, uacomment_m3_2)
-            p2p_mn3_1.wait_for_verack()
-            p2p_mn3_2.wait_for_verack()
             id_p2p_mn3_1 = get_mininode_id(mn3.node, uacomment_m3_1)
             id_p2p_mn3_2 = get_mininode_id(mn3.node, uacomment_m3_2)
             assert id_p2p_mn3_1 != id_p2p_mn3_2
@@ -387,8 +374,6 @@ class QuorumDataMessagesTest(DashTestFramework):
                     connect_nodes(node0, i + 1)
                 p2p_node0 = p2p_connection(node0)
                 p2p_mn2 = p2p_connection(mn2.node)
-                p2p_node0.wait_for_verack()
-                p2p_mn2.wait_for_verack()
                 id_p2p_node0 = get_mininode_id(node0)
                 id_p2p_mn2 = get_mininode_id(mn2.node)
                 mnauth(node0, id_p2p_node0, fake_mnauth_1[0], fake_mnauth_1[1])

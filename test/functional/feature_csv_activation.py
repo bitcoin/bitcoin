@@ -187,7 +187,6 @@ class BIP68_112_113Test(BitcoinTestFramework):
 
     def run_test(self):
         self.nodes[0].add_p2p_connection(P2PDataStore())
-        self.nodes[0].p2p.wait_for_verack()
 
         self.log.info("Generate blocks in the past for coinbase outputs.")
         self.coinbase_blocks = self.nodes[0].generate(1 + 16 + 2 * 32 + 1)  # 82 blocks generated for inputs

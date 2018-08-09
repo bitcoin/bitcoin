@@ -28,7 +28,6 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         # Add p2p connection to node0
         node = self.nodes[0]  # convenience reference to the node
         node.add_p2p_connection(P2PDataStore())
-        node.p2p.wait_for_verack()
 
         best_block = node.getblock(node.getbestblockhash())
         tip = int(node.getbestblockhash(), 16)

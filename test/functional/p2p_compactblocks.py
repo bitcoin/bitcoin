@@ -718,8 +718,6 @@ class CompactBlocksTest(BitcoinTestFramework):
         self.second_node = self.nodes[1].add_p2p_connection(TestP2PConn(), services=NODE_NETWORK)
         self.old_node = self.nodes[1].add_p2p_connection(TestP2PConn(), services=NODE_NETWORK)
 
-        self.test_node.wait_for_verack()
-
         # We will need UTXOs to construct transactions in later tests.
         self.make_utxos()
 

@@ -242,7 +242,6 @@ class DashZMQTest (DashTestFramework):
         self.subscribe(instantsend_publishers)
         # Initialize test node
         self.test_node = self.nodes[0].add_p2p_connection(TestP2PConn())
-        self.nodes[0].p2p.wait_for_verack()
         # Make sure all nodes agree
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
         # Create two raw TXs, they will conflict with each other

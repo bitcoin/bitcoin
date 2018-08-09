@@ -75,7 +75,6 @@ class P2PFingerprintTest(BitcoinTestFramework):
     # last month but that have over a month's worth of work are also withheld.
     def run_test(self):
         node0 = self.nodes[0].add_p2p_connection(P2PInterface())
-        node0.wait_for_verack()
 
         # Set node time to 60 days ago
         self.nodes[0].setmocktime(int(time.time()) - 60 * 24 * 60 * 60)

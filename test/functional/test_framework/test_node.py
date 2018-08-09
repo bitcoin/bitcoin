@@ -302,7 +302,7 @@ class TestNode():
                     assert_msg = "dashd should have exited with expected error " + expected_msg
                 self._raise_assertion_error(assert_msg)
 
-    def add_p2p_connection(self, p2p_conn, *args, **kwargs):
+    def add_p2p_connection(self, p2p_conn, *, wait_for_verack=True, **kwargs):
         """Add a p2p connection to the node.
 
         This method adds the p2p connection to the self.p2ps list and also
@@ -312,8 +312,10 @@ class TestNode():
         if 'dstaddr' not in kwargs:
             kwargs['dstaddr'] = '127.0.0.1'
 
-        p2p_conn.peer_connect(*args, **kwargs, net=self.chain)()
+        p2p_conn.peer_connect(**kwargs, net=self.chain)()
         self.p2ps.append(p2p_conn)
+        if wait_for_verack:
+            p2p_conn.wait_for_verack()
 
         return p2p_conn
 

@@ -95,7 +95,6 @@ class LLMQSigningTest(DashTestFramework):
             mn = self.get_mninfo(q['recoveryMembers'][0])
             # Open a P2P connection to it
             p2p_interface = mn.node.add_p2p_connection(P2PInterface())
-            mn.node.p2p.wait_for_verack()
             # Send the last required QSIGSHARE message to the recovery member
             p2p_interface.send_message(msg_qsigshare([sig_share]))
         else:

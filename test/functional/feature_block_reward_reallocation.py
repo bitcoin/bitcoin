@@ -85,7 +85,6 @@ class BlockRewardReallocationTest(DashTestFramework):
             self.nodes[0].generate(10)
 
         self.nodes[0].add_p2p_connection(P2PDataStore())
-        self.nodes[0].p2p.wait_for_verack()
 
         self.log.info("Mine all but one remaining block in the window")
         bi = self.nodes[0].getblockchaininfo()

@@ -240,8 +240,6 @@ class SendHeadersTest(BitcoinTestFramework):
         # Make sure NODE_NETWORK is not set for test_node, so no block download
         # will occur outside of direct fetching
         test_node = self.nodes[0].add_p2p_connection(BaseNode(), services=0)
-        inv_node.wait_for_verack()
-        test_node.wait_for_verack()
 
         # Ensure verack's have been processed by our peer
         inv_node.sync_with_ping()

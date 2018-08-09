@@ -21,8 +21,7 @@ class FakeMNAUTHTest(DashTestFramework):
     def run_test(self):
 
         masternode = self.mninfo[0]
-        p2p_masternode = masternode.node.add_p2p_connection(P2PInterface())
-        p2p_masternode.wait_for_verack()
+        masternode.node.add_p2p_connection(P2PInterface())
 
         protx_hash = masternode.proTxHash
         public_key = masternode.pubKeyOperator
