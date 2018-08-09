@@ -503,7 +503,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_interest_overflow)
 	GenerateBlocks(5);
 	string newaddress = GetNewFundedAddress("node1");
 	string newaddressreceiver2 = GetNewFundedAddress("node1");
-	string guid = AssetNew("node1", "cad", newaddress, "data", "8", "false", "5999999998", "9999999999", "0.25");
+	string guid = AssetNew("node1", "cad", newaddress, "data", "8", "false", "5999999998", "9999999999", "0.00001");
 	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"" + newaddress + "\\\",\\\"amount\\\":5000000000}]\"", "memoassetinterest");
 	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"" + newaddressreceiver2 + "\\\",\\\"amount\\\":10000000}]\"", "memoassetinterest");
 
