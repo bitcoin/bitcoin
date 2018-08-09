@@ -495,10 +495,6 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectionreceiver false"));
 	balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 824875837095);
-	AssetClaimInterest("node1", guid, "jagassetcollectionreceiver");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectionreceiver false"));
-	balance = find_value(r.get_obj(), "balance");
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 824875837095);
 }
 BOOST_AUTO_TEST_CASE(generate_asset_allocation_interest_overflow)
 {
@@ -506,7 +502,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_interest_overflow)
 	printf("Running generate_asset_allocation_interest_overflow...\n");
 	GenerateBlocks(5);
 	string newaddress = GetNewFundedAddress("node1");
-	string newaddressreceiver2 = GetNewFundedAddress("node2");
+	string newaddressreceiver2 = GetNewFundedAddress("node1");
 	string guid = AssetNew("node1", "cad", newaddress, "data", "8", "false", "2000000000", "9999999999", "0.25");
 	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"" + newaddress + "\\\",\\\"amount\\\":1000000000}]\"", "memoassetinterest");
 	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"" + newaddressreceiver2 + "\\\",\\\"amount\\\":1000000000}]\"", "memoassetinterest");
