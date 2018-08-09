@@ -313,7 +313,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2015 - " + _("Total supply cannot exceed maximum supply");
 				return true;
 			}
-			if(nHeight < Params().GetConsensus().nShareFeeBlock && CSyscoinAddress(theAsset.vchAliasOrAddress).IsValid())
+			if(nHeight < Params().GetConsensus().nShareFeeBlock && CSyscoinAddress(stringFromVch(theAsset.vchAliasOrAddress)).IsValid())
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2015 - " + _("Please wait until the fork to create this type of asset. It is on block: ") + boost::lexical_cast<string>(Params().GetConsensus().nShareFeeBlock;
 				return true;
