@@ -284,6 +284,7 @@ CAmount GetAssetAllocationInterest(CAssetAllocation & assetAllocation, const int
 bool ApplyAssetAllocationInterest(CAsset& asset, CAssetAllocation & assetAllocation, const int& nHeight, string& errorMessage) {
 	CAmount nInterest = GetAssetAllocationInterest(assetAllocation, nHeight, errorMessage);
 	if (nInterest <= 0) {
+		errorMessage = _("Total interest exceeded maximum possible range of a 64 bit integer");
 		return false;
 	}
 	// if interest cross max supply, reduce interest to fill up to max supply
