@@ -64,7 +64,7 @@ UniValue issue(const JSONRPCRequest& request)
         throw std::runtime_error(
             "issue \"asset_name\" qty \"( to_address )\" \"( change_address )\" ( units ) ( reissuable ) ( has_ipfs ) \"( ipfs_hash )\"\n"
             + AssetActivationWarning() +
-            "\nIssue an asset with unique name.\n"
+            "\nIssue an asset or subasset with unique name.\n"
             "Unit as the number of decimals precision for the asset (0 for whole units (\"1\"), 8 for max precision (\"1.00000000\")\n"
             "Qty should be whole number.\n"
             "Reissuable is true/false for whether additional units can be issued by the original issuer.\n"
@@ -87,6 +87,7 @@ UniValue issue(const JSONRPCRequest& request)
             + HelpExampleCli("issue", "\"myassetname\" 1000 \"myaddress\"")
             + HelpExampleCli("issue", "\"myassetname\" 1000 \"myaddress\" \"changeaddress\" 4")
             + HelpExampleCli("issue", "\"myassetname\" 1000 \"myaddress\" \"changeaddress\" 2 true")
+            + HelpExampleCli("issue", "\"myassetname/mysubasset\" 1000 \"myaddress\" \"changeaddress\" 2 true")
         );
 
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -178,131 +179,6 @@ UniValue issue(const JSONRPCRequest& request)
     result.push_back(txid);
     return result;
 }
-
-UniValue issuesubasset(const JSONRPCRequest& request)
-{
-    if (request.fHelp || !AreAssetsDeployed() || request.params.size() < 3 || request.params.size() > 9)
-        throw std::runtime_error(
-                "issuesubasset \"parent_asset_name\" \"asset_name\" qty \"( to_address )\" \"( change_address )\" ( units ) ( reissuable ) ( has_ipfs ) \"( ipfs_hash )\"\n"
-                + AssetActivationWarning() +
-                "\nIssue a subasset with unique name.\n"
-                "Unit as the number of decimals precision for the subasset (0 for whole units (\"1\"), 8 for max precision (\"1.00000000\")\n"
-                "Qty should be whole number.\n"
-                "Reissuable is true/false for whether additional units can be issued by the original issuer.\n"
-
-                "\nArguments:\n"
-                "1. \"parent_asset_name\"     (string, required) the parent asset name that is owned by this wallet\n"
-                "2. \"asset_name\"            (string, required) a unique name\n"
-                "3. \"qty\"                   (integer, required) the number of units to be issued\n"
-                "4. \"to_address\"            (string), optional, default=\"\"), address subasset will be sent to, if it is empty, address will be generated for you\n"
-                "5. \"change_address\"        (string), optional, default=\"\"), address the the rvn change will be sent to, if it is empty, change address will be generated for you\n"
-                "6. \"units\"                 (integer, optional, default=8, min=0, max=8), the number of decimals precision for the asset (0 for whole units (\"1\"), 8 for max precision (\"1.00000000\")\n"
-                "7. \"reissuable\"            (boolean, optional, default=true), whether future reissuance is allowed\n"
-                "8. \"has_ipfs\"              (boolean, optional, default=false), whether ifps hash is going to be added to the asset\n"
-                "9. \"ipfs_hash\"             (string, optional but required if has_ipfs = 1), an ipfs hash\n"
-
-                "\nResult:\n"
-                "\"txid\"                     (string) The transaction id\n"
-
-                "\nExamples:\n"
-                + HelpExampleCli("issuesubasset", "\"myassetname\" \"subassetname\" 1000")
-                + HelpExampleCli("issuesubasset", "\"myassetname\" \"subassetname\" 1000 \"myaddress\"")
-                + HelpExampleCli("issuesubasset", "\"myassetname\" \"subassetname\" 1000 \"myaddress\" \"changeaddress\" 4")
-                + HelpExampleCli("issuesubasset", "\"myassetname\" \"subassetname\" 1000 \"myaddress\" \"changeaddress\" 2 true")
-        );
-
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
-        return NullUniValue;
-    }
-
-    ObserveSafeMode();
-    LOCK2(cs_main, pwallet->cs_wallet);
-
-    EnsureWalletIsUnlocked(pwallet);
-
-    std::string parent_asset_name = request.params[0].get_str();
-    std::string asset_name = request.params[1].get_str();
-    CAmount nAmount = AmountFromValue(request.params[2]);
-
-    std::string address = "";
-    if (request.params.size() > 3)
-        address = request.params[3].get_str();
-
-    if (!address.empty()) {
-        CTxDestination destination = DecodeDestination(address);
-        if (!IsValidDestination(destination)) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raven address: ") + address);
-        }
-    } else {
-        // Create a new address
-        std::string strAccount;
-
-        if (!pwallet->IsLocked()) {
-            pwallet->TopUpKeyPool();
-        }
-
-        // Generate a new key that is added to wallet
-        CPubKey newKey;
-        if (!pwallet->GetKeyFromPool(newKey)) {
-            throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
-        }
-        CKeyID keyID = newKey.GetID();
-
-        pwallet->SetAddressBook(keyID, strAccount, "receive");
-
-        address = EncodeDestination(keyID);
-    }
-
-    std::string changeAddress = "";
-    if (request.params.size() > 4)
-        changeAddress = request.params[4].get_str();
-    if (!changeAddress.empty()) {
-        CTxDestination destination = DecodeDestination(changeAddress);
-        if (!IsValidDestination(destination)) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
-                               std::string("Invalid Change Address: Invalid Raven address: ") + changeAddress);
-        }
-    }
-
-    int units = 8;
-    if (request.params.size() > 5)
-        units = request.params[5].get_int();
-    bool reissuable = true;
-    if (request.params.size() > 6)
-        reissuable = request.params[6].get_bool();
-
-    bool has_ipfs = false;
-    if (request.params.size() > 7)
-        has_ipfs = request.params[7].get_bool();
-
-    std::string ipfs_hash = "";
-    if (request.params.size() > 8 && has_ipfs)
-        ipfs_hash = request.params[8].get_str();
-
-    std::string strFullSubAssetName = parent_asset_name + "/" + asset_name;
-    CNewAsset asset(strFullSubAssetName, nAmount, units, reissuable ? 1 : 0, has_ipfs ? 1 : 0, DecodeIPFS(ipfs_hash));
-
-    CReserveKey reservekey(pwallet);
-    CWalletTx transaction;
-    CAmount nRequiredFee;
-    std::pair<int, std::string> error;
-
-    // Create the Transaction
-    if (!CreateAssetTransaction(pwallet, asset, address, error, changeAddress, transaction, reservekey, nRequiredFee))
-        throw JSONRPCError(error.first, error.second);
-
-    // Send the Transaction to the network
-    std::string txid;
-    if (!SendAssetTransaction(pwallet, transaction, reservekey, error, txid))
-        throw JSONRPCError(error.first, error.second);
-
-    UniValue result(UniValue::VARR);
-    result.push_back(txid);
-    return result;
-}
-
-
 
 
 UniValue listassetbalancesbyaddress(const JSONRPCRequest& request)
@@ -870,7 +746,6 @@ static const CRPCCommand commands[] =
 { //  category    name                          actor (function)             argNames
   //  ----------- ------------------------      -----------------------      ----------
     { "assets",   "issue",                      &issue,                      {"asset_name","qty","to_address","change_address","units","reissuable","has_ipfs","ipfs_hash"} },
-    { "assets",   "issuesubasset",              &issuesubasset,              {"parent_asset_name","asset_name","qty","to_address","change_address","units","reissuable","has_ipfs","ipfs_hash"} },
     { "assets",   "listassetbalancesbyaddress", &listassetbalancesbyaddress, {"address"} },
     { "assets",   "getassetdata",               &getassetdata,               {"asset_name"}},
     { "assets",   "listmyassets",               &listmyassets,               {"asset", "verbose", "count", "start"}},
