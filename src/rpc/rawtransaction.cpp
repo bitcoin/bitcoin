@@ -1664,12 +1664,12 @@ UniValue finalizepsct(const JSONRPCRequest& request)
             mtx.vin[i].scriptWitness = psctx.inputs[i].final_script_witness;
         }
         ssTx << mtx;
-        result.push_back(Pair("hex", HexStr(ssTx.begin(), ssTx.end())));
+        result.pushKV("hex", HexStr(ssTx.begin(), ssTx.end()));
     } else {
         ssTx << psctx;
-        result.push_back(Pair("psct", EncodeBase64((unsigned char*)ssTx.data(), ssTx.size())));
+        result.pushKV("psct", EncodeBase64((unsigned char*)ssTx.data(), ssTx.size()));
     }
-    result.push_back(Pair("complete", complete));
+    result.pushKV("complete", complete);
 
     return result;
 }
