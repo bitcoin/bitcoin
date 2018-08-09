@@ -1165,6 +1165,8 @@ bool BuildAssetAllocationJson(CAssetAllocation& assetallocation, const CAsset& a
 	oAssetAllocation.push_back(Pair("alias", stringFromVch(assetallocation.vchAliasOrAddress)));
 	oAssetAllocation.push_back(Pair("balance", ValueFromAssetAmount(assetallocation.nBalance, asset.nPrecision, asset.bUseInputRanges)));
 	oAssetAllocation.push_back(Pair("interest_claim_height", (int)assetallocation.nLastInterestClaimHeight));
+	oAssetAllocation.push_back(Pair("nAccumulatedBalanceSinceLastInterestClaim", assetallocation.nAccumulatedBalanceSinceLastInterestClaim));
+	oAssetAllocation.push_back(Pair("fAccumulatedInterestSinceLastInterestClaim", assetallocation.fAccumulatedInterestSinceLastInterestClaim));
 	oAssetAllocation.push_back(Pair("memo", stringFromVch(assetallocation.vchMemo)));
 	if (bGetInputs) {
 		UniValue oAssetAllocationInputsArray(UniValue::VARR);
