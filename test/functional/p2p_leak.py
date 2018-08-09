@@ -88,11 +88,11 @@ class CNodeNoVerackIdle(CLazyNode):
 class P2PLeakTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.extra_args = [['-banscore='+str(banscore)]]
+        self.extra_args = [['-banscore=' + str(banscore)]]
 
     def run_test(self):
-        no_version_bannode = self.nodes[0].add_p2p_connection(CNodeNoVersionBan(), send_version=False)
-        no_version_idlenode = self.nodes[0].add_p2p_connection(CNodeNoVersionIdle(), send_version=False)
+        no_version_bannode = self.nodes[0].add_p2p_connection(CNodeNoVersionBan(), send_version=False, wait_for_verack=False)
+        no_version_idlenode = self.nodes[0].add_p2p_connection(CNodeNoVersionIdle(), send_version=False, wait_for_verack=False)
         no_verack_idlenode = self.nodes[0].add_p2p_connection(CNodeNoVerackIdle())
 
         wait_until(lambda: no_version_bannode.ever_connected, timeout=10, lock=mininode_lock)
