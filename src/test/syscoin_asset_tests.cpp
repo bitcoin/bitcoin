@@ -508,16 +508,16 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_interest_overflow)
 	AssetSend("node1", guid, "\"[{\\\"ownerto\\\":\\\"" + newaddressreceiver2 + "\\\",\\\"amount\\\":10000000}]\"", "memoassetinterest");
 
 	printf("first set of sends...\n");
-	for (int i = 0; i < 1000; i++) {
+	for (int i = 0; i < 1100; i++) {
 		AssetAllocationTransfer(false, "node1", guid, newaddress, "\"[{\\\"ownerto\\\":\\\"" + newaddressreceiver2 + "\\\",\\\"amount\\\":1}]\"", "allocationsendmemo");
-		if ((i % 10)==0)
-			printf("%d out of %d completed...\n", i, 1000);
+		if ((i % 100)==0)
+			printf("%d out of %d completed...\n", i, 1100);
 	}
 	printf("second set of sends...\n");
-	for (int i = 0; i < 1000; i++) {
+	for (int i = 0; i < 1100; i++) {
 		AssetAllocationTransfer(false, "node1", guid, newaddressreceiver2, "\"[{\\\"ownerto\\\":\\\"" + newaddress + "\\\",\\\"amount\\\":1}]\"", "allocationsendmemo");
-		if ((i % 10)==0)
-			printf("%d out of %d completed...\n", i, 1000);
+		if ((i % 100)==0)
+			printf("%d out of %d completed...\n", i, 1100);
 	}
 	printf("done now claim interest...\n");
 	AssetClaimInterest("node1", guid, newaddress);
