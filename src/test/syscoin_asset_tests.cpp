@@ -496,7 +496,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest)
 	balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8, false), 824875837095);
 }
-BOOST_AUTO_TEST_CASE(generate_asset_allocation_interest_overflow)
+/*BOOST_AUTO_TEST_CASE(generate_asset_allocation_interest_overflow)
 {
 	GenerateBlocks(5);
 	printf("Running generate_asset_allocation_interest_overflow...\n");
@@ -521,7 +521,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_interest_overflow)
 	}
 	printf("done now claim interest...\n");
 	AssetClaimInterest("node1", guid, newaddress);
-}
+}*/
 BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_address)
 {
 	UniValue r;
