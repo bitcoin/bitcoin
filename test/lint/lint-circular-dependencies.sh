@@ -12,6 +12,7 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "chainparamsbase -> util/system -> chainparamsbase"
     "checkpoints -> validation -> checkpoints"
     "index/txindex -> validation -> index/txindex"
+    "index/utxoscriptindex -> validation -> index/utxoscriptindex"
     "policy/fees -> txmempool -> policy/fees"
     "policy/policy -> validation -> policy/policy"
     "qt/addresstablemodel -> qt/walletmodel -> qt/addresstablemodel"

@@ -21,7 +21,7 @@
 #include <httprpc.h>
 #include <interfaces/chain.h>
 #include <index/txindex.h>
-#include <index/utxoindex.h>
+#include <index/utxoscriptindex.h>
 #include <key.h>
 #include <validation.h>
 #include <miner.h>
@@ -202,8 +202,7 @@ void Shutdown(InitInterfaces& interfaces)
     peerLogic.reset();
     g_connman.reset();
     g_txindex.reset();
-    g_utxoscriptindex.reset();
-    
+
     if (g_is_mempool_loaded && gArgs.GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
         DumpMempool();
     }
@@ -224,6 +223,8 @@ void Shutdown(InitInterfaces& interfaces)
     if (pcoinsTip != nullptr) {
         FlushStateToDisk();
     }
+
+    g_utxoscriptindex.reset();
 
     // After there are no more peers/RPC left to give us new data which may generate
     // CValidationInterface callbacks, flush them...
@@ -377,7 +378,7 @@ void SetupServerArgs()
     hidden_args.emplace_back("-sysperms");
 #endif
     gArgs.AddArg("-txindex", strprintf("Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)", DEFAULT_TXINDEX), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-utxoindex", strprintf("Maintain unspent output index by script, used by the getutxoindex rpc call (default: %u)", DEFAULT_UTXOINDEX), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-utxoscriptindex", strprintf("Maintain unspent output index by script, used by the getutxoscriptindex rpc call (default: %u)", DEFAULT_UTXOINDEX), false, OptionsCategory::OPTIONS);
 
     gArgs.AddArg("-addnode=<ip>", "Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info). This option can be specified multiple times to add multiple nodes.", false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-banscore=<n>", strprintf("Threshold for disconnecting misbehaving peers (default: %u)", DEFAULT_BANSCORE_THRESHOLD), false, OptionsCategory::CONNECTION);
@@ -1393,20 +1394,20 @@ bool AppInitMain(InitInterfaces& interfaces)
     nTotalCache -= nBlockTreeDBCache;
     int64_t nTxIndexCache = std::min(nTotalCache / 8, gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX) ? nMaxTxIndexCache << 20 : 0);
     nTotalCache -= nTxIndexCache;
-    int64_t nUtxoIndexCache = std::min(nTotalCache / 8, gArgs.GetBoolArg("-utxoindex", DEFAULT_UTXOINDEX) ? nMaxTxIndexCache << 20 : 0);
-	nTotalCache -= nUtxoIndexCache;
+    int64_t nUtxoScriptIndexCache = std::min(nTotalCache / 8, gArgs.GetBoolArg("-utxoscriptindex", DEFAULT_UTXOINDEX) ? nMaxTxIndexCache << 20 : 0);
+	nTotalCache -= nUtxoScriptIndexCache;
     int64_t nCoinDBCache = std::min(nTotalCache / 2, (nTotalCache / 4) + (1 << 23)); // use 25%-50% of the remainder for disk cache
     nCoinDBCache = std::min(nCoinDBCache, nMaxCoinsDBCache << 20); // cap total coins db cache
     nTotalCache -= nCoinDBCache;
-	nCoinCacheUsage = nTotalCache; // the rest goes to in-memory cache    
+    nCoinCacheUsage = nTotalCache; // the rest goes to in-memory cache
     int64_t nMempoolSizeMax = gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
     LogPrintf("Cache configuration:\n");
     LogPrintf("* Using %.1fMiB for block index database\n", nBlockTreeDBCache * (1.0 / 1024 / 1024));
     if (gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
         LogPrintf("* Using %.1fMiB for transaction index database\n", nTxIndexCache * (1.0 / 1024 / 1024));
     }
-    if (gArgs.GetBoolArg("-utxoindex", DEFAULT_UTXOINDEX)) {
-        LogPrintf("* Using %.1fMiB for transaction index database\n", nUtxoIndexCache * (1.0 / 1024 / 1024));
+    if (gArgs.GetBoolArg("-utxoscriptindex", DEFAULT_UTXOINDEX)) {
+        LogPrintf("* Using %.1fMiB for unspent output by script index database\n", nUtxoScriptIndexCache * (1.0 / 1024 / 1024));
 	}
     LogPrintf("* Using %.1fMiB for chain state database\n", nCoinDBCache * (1.0 / 1024 / 1024));
     LogPrintf("* Using %.1fMiB for in-memory UTXO set (plus up to %.1fMiB of unused mempool space)\n", nCoinCacheUsage * (1.0 / 1024 / 1024), nMempoolSizeMax * (1.0 / 1024 / 1024));
@@ -1588,29 +1589,30 @@ bool AppInitMain(InitInterfaces& interfaces)
         g_txindex->Start();
     }
 
-    if(gArgs.IsArgSet("-utxoindex"))
+    if(gArgs.IsArgSet("-utxoscriptindex"))
     {
-        g_utxoindex = MakeUnique<UtxoIndex>(nUtxoIndexCache, false, fReindex);
-	    
-        if(gArgs.GetBoolArg("-utxoindex", DEFAULT_UTXOINDEX)) 
+        g_utxoscriptindex = MakeUnique<UtxoScriptIndex>(nUtxoScriptIndexCache, false, fReindex);
+
+        if(gArgs.GetBoolArg("-utxoscriptindex", DEFAULT_UTXOINDEX))
         {
             uint256 utxoindexBestBlock;
-            if(not g_utxoindex->ReadBestBlock(utxoindexBestBlock) or utxoindexBestBlock != pcoinsdbview->GetBestBlock()){
-                if(not g_utxoindex->DeleteUtxoIndex()){
-                    LogPrintf("Error deleting utxoindex\n");
-                    return false;	
+            if(not g_utxoscriptindex->ReadBestBlock(utxoindexBestBlock) or utxoindexBestBlock != pcoinsdbview->GetBestBlock()){
+                LogPrintf("Utxo script index best block (%s) not matching current best block (%s)\n", utxoindexBestBlock.ToString(), pcoinsdbview->GetBestBlock().ToString());
+                if(not g_utxoscriptindex->DeleteIndex()){
+                    LogPrintf("Error deleting utxoscriptindex\n");
+                    return false;
                 }
-                if(not g_utxoindex->GenerateUtxoIndex(pcoinsdbview)){
-                    LogPrintf("Error building utxoindex\n");
+                if(not g_utxoscriptindex->GenerateIndex(pcoinsdbview)){
+                    LogPrintf("Error building utxoscriptindex\n");
                     return false;
                 }
             }
-            g_utxoindex->Start();
+            g_utxoscriptindex->Start();
         }
         else
         {
-            g_utxoindex->DeleteUtxoIndex();
-            g_utxoindex.reset();	
+            g_utxoscriptindex->DeleteIndex();
+            g_utxoscriptindex.reset();
         }
     }
 

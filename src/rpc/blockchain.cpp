@@ -32,9 +32,8 @@
 #include <validationinterface.h>
 #include <versionbitsinfo.h>
 #include <warnings.h>
-#include <base58.h>
 #include <script/standard.h>
-#include <index/utxoindex.h>
+#include <index/utxoscriptindex.h>
 
 #include <assert.h>
 #include <stdint.h>
@@ -1108,7 +1107,7 @@ void utxoSetToJson(const SerializableUtxoSet& utxoSet, UniValue& vObjects, unsig
 		}
 		else if(not pcoinsTip->GetCoin(outpoint, coin))
 			continue;
-	
+
 		if(coin.out.IsNull() or coin.out.scriptPubKey.IsUnspendable())
 			continue;
 
@@ -1117,7 +1116,7 @@ void utxoSetToJson(const SerializableUtxoSet& utxoSet, UniValue& vObjects, unsig
 
 		CBlockIndex *pindex = mapBlockIndex.find(pcoinsTip->GetBestBlock())->second;
 
-		int nConfirmations = 0;
+		uint64_t nConfirmations = 0;
 		if ((unsigned int)coin.nHeight != MEMPOOL_HEIGHT)
 			nConfirmations = pindex->nHeight - coin.nHeight + 1;
 		if (nConfirmations < minConf)
@@ -1125,7 +1124,7 @@ void utxoSetToJson(const SerializableUtxoSet& utxoSet, UniValue& vObjects, unsig
 
 		UniValue oScriptPubKey(UniValue::VOBJ);
 		ScriptPubKeyToUniv(coin.out.scriptPubKey, oScriptPubKey, true);
-	
+
 		UniValue o(UniValue::VOBJ);
 		o.push_back(Pair("confirmations", nConfirmations));
 		o.push_back(Pair("txid", outpoint.hash.GetHex()));
@@ -1146,14 +1145,14 @@ void utxoSetToJson(const SerializableUtxoSet& utxoSet, UniValue& vObjects, unsig
 	}
 }
 
-UniValue getutxoindex(const JSONRPCRequest& request)
+UniValue getutxoscriptindex(const JSONRPCRequest& request)
 {
     if (request.fHelp or request.params.size() != 2)
         throw std::runtime_error(
-            "getutxoindex ( minconf [\"address\",...] ) \n"
+            "getutxoscriptindex ( minconf [\"address\",...] ) \n"
 			"\nReturns a list of unspent transaction outputs by address (or script).\n"
 			"Note that passing minconf=0 will include the mempool.\n"
-			"\nTo use this function, you must start bitcoin with the -utxoindex parameter.\n"
+			"\nTo use this function, you must start bitcoin with the -utxoscriptindex parameter.\n"
             "\nArguments:\n"
             "1. minconf          (numeric) Minimum confirmations\n"
             "2. \"addresses\"    (string) A json array of bitcoin addresses (or scripts)\n"
@@ -1161,23 +1160,54 @@ UniValue getutxoindex(const JSONRPCRequest& request)
             "      \"address\"   (string) bitcoin address (or script)\n"
             "      ,...\n"
             "    ]\n"
+            "\nResult\n"
+            "[                   (array of json object)\n"
+            "  {\n"
+            "    \"confirmations\" : n,        (numeric) The number of confirmations\n"
+            "    \"txid\" : \"txid\",          (string)  The transaction id \n"
+            "    \"vout\" : n,                 (numeric) The vout value\n"
+            "    \"value\" : x.xxx,            (numeric) The transaction value in btc\n"
+            "    \"scriptPubKey\" : {          (json object)\n"
+            "       \"asm\" : \"code\",        (string) \n"
+            "       \"hex\" : \"hex\",         (string) \n"
+            "       \"reqSigs\" : n,           (numeric) Number of required signatures\n"
+            "       \"type\" : \"pubkeyhash\", (string) The type, eg pubkeyhash\n"
+            "       \"addresses\" : [          (array of string) array of bitcoin addresses\n"
+            "          \"bitcoinaddress\"      (string) bitcoin address\n"
+            "          ,...\n"
+            "       ]\n"
+            "    },\n"
+            "    \"coinbase\" : true|false     (boolean) Coinbase or not\n"
+            "    \"bestblockhash\" : \"hash\", (string)  The block hash of the best block\n"
+            "    \"bestblockheight\" : n,      (numeric) The block height of the best block\n"
+            "    \"bestblocktime\" : n,        (numeric) The block time of the best block\n"
+            "    \"blockhash\" : \"hash\",     (string)  The block hash of the block the tx is in (only if confirmations > 0)\n"
+            "    \"blockheight\" : n,          (numeric) The block height of the block the tx is in (only if confirmations > 0)\n"
+            "    \"blocktime\" : ttt,          (numeric) The block time in seconds since 1.1.1970 GMT (only if confirmations > 0)\n"
+            "  }\n"
+            "  ,...\n"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getutxoindex", "6 \"[\\\"1PGFqEzfmQch1gKD3ra4k18PNj3tTUUSqg\\\",\\\"1LtvqCaApEdUGFkpKMM4MstjcaL4dKg8SP\\\"]\"")
+            + "\nAs a json rpc call\n"
+            + HelpExampleRpc("getutxoindex", "6, \"[\\\"1PGFqEzfmQch1gKD3ra4k18PNj3tTUUSqg\\\",\\\"1LtvqCaApEdUGFkpKMM4MstjcaL4dKg8SP\\\"]\"")
         );
-	
-	UniValue retVal;
-	
-	if(not g_utxoindex)
-		throw JSONRPCError(RPC_METHOD_NOT_FOUND, "To use this function, you must start bitcoin with the -utxoindex parameter.");
+
+    UniValue retVal;
+
+	if(not g_utxoscriptindex)
+		throw JSONRPCError(RPC_METHOD_NOT_FOUND, "To use this function, you must start bitcoin with the -utxoscriptindex parameter.");
 
 	RPCTypeCheck(request.params, {UniValue::VNUM, UniValue::VARR});
 
-	unsigned int minConf = request.params[0].get_int();
+	int minConf = request.params[0].get_int();
 	UniValue inputs = request.params[1].get_array();
-    
+
     if (minConf < 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative minconf");
- 
+
     UniValue vObjects(UniValue::VARR);
-	
+
 	for(unsigned int idx = 0; idx < inputs.size(); ++idx)
 	{
 		CScript script;
@@ -1194,8 +1224,8 @@ UniValue getutxoindex(const JSONRPCRequest& request)
 		}
 		else
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address or script: " + input.get_str());
-	
-		SerializableUtxoSet utxoSet = g_utxoindex->getUtxosForScript(script, minConf);	
+
+		SerializableUtxoSet utxoSet = g_utxoscriptindex->getUtxosForScript(script, minConf);
 		utxoSetToJson(utxoSet, vObjects, minConf);
 	}
 
@@ -2316,7 +2346,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         "getmempooldescendants",  &getmempooldescendants,  {"txid","verbose"} },
     { "blockchain",         "getmempoolentry",        &getmempoolentry,        {"txid"} },
     { "blockchain",         "getmempoolinfo",         &getmempoolinfo,         {} },
-	{ "blockchain",         "getutxoindex",			  &getutxoindex,		   {"minconf", "addresses"} },	
+    { "blockchain",         "getutxoscriptindex",     &getutxoscriptindex,     {"minconf", "addresses"} },
     { "blockchain",         "getrawmempool",          &getrawmempool,          {"verbose"} },
     { "blockchain",         "gettxout",               &gettxout,               {"txid","n","include_mempool"} },
     { "blockchain",         "gettxoutsetinfo",        &gettxoutsetinfo,        {} },

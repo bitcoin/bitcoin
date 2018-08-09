@@ -88,7 +88,6 @@ BASE_SCRIPTS = [
     'p2p_timeouts.py',
     'wallet_dump.py',
     'wallet_listtransactions.py',
-    'rpc_utxoindex.py',
     # vv Tests less than 60s vv
     'p2p_sendheaders.py',
     'wallet_zapwallettxes.py',
@@ -102,6 +101,7 @@ BASE_SCRIPTS = [
     'wallet_address_types.py',
     'feature_bip68_sequence.py',
     'p2p_feefilter.py',
+    'rpc_utxoindex.py',
     'feature_reindex.py',
     # vv Tests less than 30s vv
     'wallet_keypool_topup.py',

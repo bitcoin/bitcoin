@@ -160,7 +160,7 @@ void CMainSignals::BlockConnected(const std::shared_ptr<const CBlock> &pblock, c
     });
 }
 
-void CMainSignals::BlockDisconnected(const std::shared_ptr<const CBlock> &pblock, 
+void CMainSignals::BlockDisconnected(const std::shared_ptr<const CBlock> &pblock,
 									 const std::shared_ptr<const CBlockUndo> &blockundo) {
     m_internals->m_schedulerClient.AddToProcessQueue([pblock, blockundo, this] {
         m_internals->BlockDisconnected(pblock, blockundo);

@@ -1,5 +1,9 @@
-#include "index/utxoindex.h"
-//#include <util.h>
+// Copyright (c) 2018 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#include <index/utxoscriptindex.h>
+#include <util.h>
 #include <script/standard.h>
 #include <pubkey.h>
 #include <txmempool.h>
@@ -10,27 +14,46 @@
 #include<boost/thread.hpp>
 
 
-std::unique_ptr<UtxoIndex> g_utxoindex;
+std::unique_ptr<UtxoScriptIndex> g_utxoscriptindex;
 
+static ScriptHash ScriptIndexHash(const CScript& in){
+    return Hash160(in.begin(), in.end());
+}
 
-class UtxoIndex::DB : public BaseIndex::DB
+class UtxoScriptIndexDBCursor
+{
+public:
+	UtxoScriptIndexDBCursor(CDBIterator* cursor) : pcursor(cursor){}
+
+	bool GetKey(ScriptHash& key);
+	bool GetValue(SerializableUtxoSet& utxoSet);
+	unsigned int GetValueSize() const;
+
+	bool Valid() const;
+	void Next();
+
+	std::pair<char, ScriptHash> keyTmp;
+	std::unique_ptr<CDBIterator> pcursor;
+};
+
+class UtxoScriptIndex::DB : public BaseIndex::DB
 {
 public:
 	explicit DB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
-	bool WriteUtxos(std::map<CScriptID, SerializableUtxoSet>& scriptUtxos);
-	bool ReadUtxos(const CScriptID&, SerializableUtxoSet& utxoSet);
+	bool WriteUtxos(std::map<ScriptHash, SerializableUtxoSet>& scriptUtxos);
+	bool ReadUtxos(const ScriptHash&, SerializableUtxoSet& utxoSet);
 
-	UtxoIndexDBCursor* Cursor() const;
+	UtxoScriptIndexDBCursor* Cursor() const;
 };
 
-UtxoIndex::DB::DB(size_t nCacheSize, bool fMemory, bool fWipe) :
+UtxoScriptIndex::DB::DB(size_t nCacheSize, bool fMemory, bool fWipe) :
 	BaseIndex::DB(GetDataDir() / "indexes" / "coinsbyscript", nCacheSize, fMemory, fWipe)
 {
 
 }
 
-bool UtxoIndex::DB::WriteUtxos(std::map<CScriptID, SerializableUtxoSet>& scriptUtxos)
+bool UtxoScriptIndex::DB::WriteUtxos(std::map<ScriptHash, SerializableUtxoSet>& scriptUtxos)
 {
 	CDBBatch batch(*this);
 	for(const auto& scriptUtxo: scriptUtxos)
@@ -45,14 +68,14 @@ bool UtxoIndex::DB::WriteUtxos(std::map<CScriptID, SerializableUtxoSet>& scriptU
 	return WriteBatch(batch);
 }
 
-bool UtxoIndex::DB::ReadUtxos(const CScriptID& scriptId, SerializableUtxoSet& utxoSet)
+bool UtxoScriptIndex::DB::ReadUtxos(const ScriptHash& scriptId, SerializableUtxoSet& utxoSet)
 {
 	return Read(std::make_pair(DB_UTXO, scriptId), utxoSet);
 }
 
-UtxoIndexDBCursor* UtxoIndex::DB::Cursor() const
+UtxoScriptIndexDBCursor* UtxoScriptIndex::DB::Cursor() const
 {
-	UtxoIndexDBCursor* cursor = new UtxoIndexDBCursor(
+	UtxoScriptIndexDBCursor* cursor = new UtxoScriptIndexDBCursor(
 									const_cast<CDBWrapper*>(
 										static_cast<const CDBWrapper*>(this))->NewIterator());
 	cursor->pcursor->Seek(DB_UTXO);
@@ -63,7 +86,7 @@ UtxoIndexDBCursor* UtxoIndex::DB::Cursor() const
 	return cursor;
 }
 
-bool UtxoIndexDBCursor::GetKey(CScriptID& key)
+bool UtxoScriptIndexDBCursor::GetKey(ScriptHash& key)
 {
 	if(keyTmp.first == DB_UTXO)
 	{
@@ -73,17 +96,17 @@ bool UtxoIndexDBCursor::GetKey(CScriptID& key)
 	return false;
 }
 
-bool UtxoIndexDBCursor::GetValue(SerializableUtxoSet& utxoSet)
+bool UtxoScriptIndexDBCursor::GetValue(SerializableUtxoSet& utxoSet)
 {
 	return pcursor->GetValue(utxoSet);
 }
 
-bool UtxoIndexDBCursor::Valid() const
+bool UtxoScriptIndexDBCursor::Valid() const
 {
 	return keyTmp.first == DB_UTXO;
 }
 
-void UtxoIndexDBCursor::Next()
+void UtxoScriptIndexDBCursor::Next()
 {
 	pcursor->Next();
 	if(pcursor->Valid() and pcursor->GetKey(keyTmp))
@@ -92,22 +115,22 @@ void UtxoIndexDBCursor::Next()
 		keyTmp.first = 0;
 }
 
-UtxoIndex::UtxoIndex(size_t n_cache_size, bool f_memory, bool f_wipe) :
-	m_db(std::move(MakeUnique<UtxoIndex::DB>(n_cache_size, f_memory, f_wipe)))
+UtxoScriptIndex::UtxoScriptIndex(size_t n_cache_size, bool f_memory, bool f_wipe) :
+	m_db(std::move(MakeUnique<UtxoScriptIndex::DB>(n_cache_size, f_memory, f_wipe)))
 {
 
 }
 
-UtxoIndex::~UtxoIndex() {
-
+UtxoScriptIndex::~UtxoScriptIndex() {
+    UnregisterValidationInterface(this);
 }
 
-void UtxoIndex::Start()
+void UtxoScriptIndex::Start()
 {
 	RegisterValidationInterface(this);
 }
 
-void UtxoIndex::TransactionAddedToMempool(const CTransactionRef &ptxn) {
+void UtxoScriptIndex::TransactionAddedToMempool(const CTransactionRef &ptxn) {
 	LOCK(cs_utxoCacheMempool);
 	const CTransaction &tx = *ptxn;
 	for (unsigned int i = 0; i < tx.vout.size(); i++)
@@ -115,37 +138,36 @@ void UtxoIndex::TransactionAddedToMempool(const CTransactionRef &ptxn) {
 		if (tx.vout[i].IsNull() or tx.vout[i].scriptPubKey.IsUnspendable())
 			continue;
 
-		auto utxoKey = CScriptID(tx.vout[i].scriptPubKey);
+		auto utxoKey = ScriptIndexHash(tx.vout[i].scriptPubKey);
 		utxoCacheMempool[utxoKey].insert(COutPoint(tx.GetHash(), static_cast<uint32_t>(i)));
 	}
 }
 
-void UtxoIndex::TransactionRemovedFromMempool(const CTransactionRef &ptx) {
+void UtxoScriptIndex::TransactionRemovedFromMempool(const CTransactionRef &ptx) {
 	LOCK(cs_utxoCacheMempool);
 	const CTransaction &tx = *ptx;
 	for (unsigned int i = 0; i < tx.vout.size(); i++)
 	{
 		if (tx.vout[i].IsNull() or tx.vout[i].scriptPubKey.IsUnspendable())
 			continue;
-	
-		std::map<CScriptID, SerializableUtxoSet>::iterator it = utxoCacheMempool.find(CScriptID(tx.vout[i].scriptPubKey));
-	    
+
+		std::map<ScriptHash, SerializableUtxoSet>::iterator it = utxoCacheMempool.find(ScriptIndexHash(tx.vout[i].scriptPubKey));
+
 		if (it != utxoCacheMempool.end())
 		{
 	        it->second.erase(COutPoint(tx.GetHash(), static_cast<uint32_t>(i)));
 	        if (it->second.empty())
 	            utxoCacheMempool.erase(it);
 	    }
-	}	
+	}
 }
 
-void UtxoIndex::BlockConnected(	const std::shared_ptr<const CBlock> &block,
+void UtxoScriptIndex::BlockConnected(	const std::shared_ptr<const CBlock> &block,
 								const CBlockIndex *pindex,
 								const std::shared_ptr<const CBlockUndo> &blockundo,
 								const std::vector<CTransactionRef> &txnConflicted)
 {
-	assert(block->vtx.size() > 0);
-	{
+    {
 		LOCK(cs_utxoCache);
 		removeSpentUtxosOnTipConnected(*block, *blockundo);
 		addNewUtxosOnTipConnected(*block);
@@ -153,7 +175,7 @@ void UtxoIndex::BlockConnected(	const std::shared_ptr<const CBlock> &block,
 	WriteBestBlock(block->GetHash());
 }
 
-void UtxoIndex::BlockDisconnected(	const std::shared_ptr<const CBlock> &block,
+void UtxoScriptIndex::BlockDisconnected(	const std::shared_ptr<const CBlock> &block,
 									const std::shared_ptr<const CBlockUndo> &blockundo) {
 	assert(block->vtx.size() > 0);
 	LOCK(cs_utxoCache);
@@ -161,13 +183,13 @@ void UtxoIndex::BlockDisconnected(	const std::shared_ptr<const CBlock> &block,
 	removeUtxosOnTipDisconnected(*block);
 }
 
-BaseIndex::DB& UtxoIndex::GetDB() const { return *m_db; }
+BaseIndex::DB& UtxoScriptIndex::GetDB() const { return *m_db; }
 
-void UtxoIndex::removeUtxo(const CTxOut& txout, const COutPoint outpoint)
+void UtxoScriptIndex::removeUtxo(const CTxOut& txout, const COutPoint outpoint)
 {
 	if(txout.IsNull() or txout.scriptPubKey.IsUnspendable())
 		return;
-	const CScriptID utxoCacheKey = CScriptID(txout.scriptPubKey);
+	const ScriptHash utxoCacheKey = ScriptIndexHash(txout.scriptPubKey);
 	loadToCache(utxoCacheKey);
 	if(utxoCache.count(utxoCacheKey) == 0)
 		return;
@@ -175,7 +197,7 @@ void UtxoIndex::removeUtxo(const CTxOut& txout, const COutPoint outpoint)
 		utxoCacheSet.erase(outpoint);
 }
 
-void UtxoIndex::removeSpentUtxosOnTipConnected(const CBlock& block, const CBlockUndo& blockundo)
+void UtxoScriptIndex::removeSpentUtxosOnTipConnected(const CBlock& block, const CBlockUndo& blockundo)
 {
 
 	for(unsigned int i = 1; i < block.vtx.size(); ++i)
@@ -188,38 +210,43 @@ void UtxoIndex::removeSpentUtxosOnTipConnected(const CBlock& block, const CBlock
 	}
 }
 
-void UtxoIndex::removeUtxosOnTipDisconnected(const CBlock& block)
+void UtxoScriptIndex::removeUtxosOnTipDisconnected(const CBlock& block)
 {
-	for(unsigned int i = block.vtx.size() - 1; i >= 0; --i)
+    if(block.vtx.size() == 0)
+        return;
+
+    unsigned int i = block.vtx.size() - 1;
+    while(true)
 	{
 		for(unsigned int j = 0; j < block.vtx[i]->vout.size(); ++j)
 		{
-			removeUtxo(	block.vtx[i]->vout[j], 
+			removeUtxo(	block.vtx[i]->vout[j],
 						COutPoint(block.vtx[i]->GetHash(), static_cast<uint32_t>(j)));
 		}
 		if(i==0)
 			break;
+        --i;
 	}
 }
 
-void UtxoIndex::loadToCache(const CScriptID& key)
+void UtxoScriptIndex::loadToCache(const ScriptHash& key)
 {
 	if(not utxoCache[key].empty())
 		return;
 	m_db->ReadUtxos(key, utxoCache[key]);
 }
 
-void UtxoIndex::addUtxo(const CScript& scriptPubKey, COutPoint outpoint)
+void UtxoScriptIndex::addUtxo(const CScript& scriptPubKey, COutPoint outpoint)
 {
 	CTxDestination dest;
 	ExtractDestination(scriptPubKey, dest);
-	const CScriptID utxoCacheKey(GetScriptForDestination(dest));	
+	const ScriptHash utxoCacheKey = ScriptIndexHash(GetScriptForDestination(dest));	
 	loadToCache(utxoCacheKey);
 	SerializableUtxoSet& utxoCacheSet = utxoCache[utxoCacheKey];
 	utxoCacheSet.insert(outpoint);
 }
 
-void UtxoIndex::restoreSpentUtxosOnTipDisconnected(const CBlock& block, const CBlockUndo& blockundo)
+void UtxoScriptIndex::restoreSpentUtxosOnTipDisconnected(const CBlock& block, const CBlockUndo& blockundo)
 {
 	for(unsigned int i = block.vtx.size() - 1; i > 0; --i)
 	{
@@ -231,64 +258,69 @@ void UtxoIndex::restoreSpentUtxosOnTipDisconnected(const CBlock& block, const CB
 	}
 }
 
-void UtxoIndex::addNewUtxosOnTipConnected(const CBlock& block)
+void UtxoScriptIndex::addNewUtxosOnTipConnected(const CBlock& block)
 {
 	for(unsigned int i = 0; i < block.vtx.size(); ++i)
 	{
 		for(unsigned int j = 0; j < block.vtx[i]->vout.size(); ++j)
 		{
-			addUtxo(block.vtx[i]->vout[j].scriptPubKey, 
+			addUtxo(block.vtx[i]->vout[j].scriptPubKey,
 					COutPoint(block.vtx[i]->GetHash(), static_cast<uint32_t>(j)));
 		}
 	}
 }
 
-void UtxoIndex::getConfirmedUtxos(SerializableUtxoSet& utxoSet, const CScript& script)
+void UtxoScriptIndex::getConfirmedUtxos(SerializableUtxoSet& utxoSet, const CScript& script)
 {
-	const CScriptID key(script);
+	const ScriptHash key = ScriptIndexHash(script);
 	loadToCache(key);
 	utxoSet.insert(utxoCache[key].begin(), utxoCache[key].end());
 }
 
-void UtxoIndex::appendMempoolUtxos(SerializableUtxoSet& utxoSet, const CScriptID& key)
+void UtxoScriptIndex::appendMempoolUtxos(SerializableUtxoSet& utxoSet, const ScriptHash& key)
 {
 		LOCK(cs_utxoCacheMempool);
 		Coin dummyCoin;
 		utxoSet.insert(utxoCacheMempool[key].begin(), utxoCacheMempool[key].end());
 		LOCK(mempool.cs);
 		CCoinsViewMemPool view(pcoinsTip.get(), mempool);
-		for(const COutPoint& outpoint: utxoSet)
+		std::set<COutPoint> outpointsToErase{};
+        for(const COutPoint& outpoint: utxoSet)
 		{
 			if(not view.GetCoin(outpoint, dummyCoin))
-				utxoSet.erase(outpoint);
+				outpointsToErase.insert(outpoint);
 			if(mempool.isSpent(outpoint))
-				utxoSet.erase(outpoint);
+                outpointsToErase.insert(outpoint);
 		}
+        for(const COutPoint& outpoint: outpointsToErase)
+        {
+            utxoSet.erase(outpoint);
+        }
 }
 
-SerializableUtxoSet UtxoIndex::getUtxosForScript(const CScript& script, unsigned int minConf)
+SerializableUtxoSet UtxoScriptIndex::getUtxosForScript(const CScript& script, unsigned int minConf)
 {
-	const CScriptID key(script);
+	const ScriptHash key = ScriptIndexHash(script);
 	LOCK(cs_utxoCache);
-	
+
 	SerializableUtxoSet retSet{};
 	getConfirmedUtxos(retSet, script);
 	if(minConf == 0)
 		appendMempoolUtxos(retSet, key);
-	
+
 	return retSet;
 }
 
-bool UtxoIndex::Flush()
+bool UtxoScriptIndex::Flush()
 {
 	LOCK(cs_utxoCache);
 	bool writeResult = m_db->WriteUtxos(utxoCache);
 	if(writeResult == true)
-		utxoCache.clear();	
+		utxoCache.clear();
 	return writeResult;
 }
 
-int64_t UtxoIndex::countCoins(const std::unique_ptr<CCoinsViewDB>& coins)
+int64_t UtxoScriptIndex::countCoins(const std::unique_ptr<CCoinsViewDB>& coins)
 {
 	std::unique_ptr<CCoinsViewCursor> coinsCursor(coins->Cursor());
 	int64_t coinsCount = 0;
@@ -300,7 +332,7 @@ int64_t UtxoIndex::countCoins(const std::unique_ptr<CCoinsViewDB>& coins)
 	return coinsCount;
 }
 
-bool UtxoIndex::createUtxoRecordFromCoin(const std::unique_ptr<CCoinsViewCursor>& coinsCursor)
+bool UtxoScriptIndex::createUtxoRecordFromCoin(const std::unique_ptr<CCoinsViewCursor>& coinsCursor)
 {
 	COutPoint outpoint;
 	Coin coin;
@@ -311,7 +343,7 @@ bool UtxoIndex::createUtxoRecordFromCoin(const std::unique_ptr<CCoinsViewCursor>
 	if(not coin.out.IsNull() and not coin.out.scriptPubKey.IsUnspendable())
 	{
 		LOCK(cs_utxoCache);
-		const CScriptID key = CScriptID(coin.out.scriptPubKey);
+		const ScriptHash key = ScriptIndexHash(coin.out.scriptPubKey);
 		if(utxoCache.count(key) == 0)
 		{
 			SerializableUtxoSet utxos;
@@ -324,20 +356,20 @@ bool UtxoIndex::createUtxoRecordFromCoin(const std::unique_ptr<CCoinsViewCursor>
 	return true;
 }
 
-bool UtxoIndex::GenerateUtxoIndex(const std::unique_ptr<CCoinsViewDB>& coins)
+bool UtxoScriptIndex::GenerateIndex(const std::unique_ptr<CCoinsViewDB>& coins)
 {
     int64_t coinsCount = countCoins(coins);
     int64_t coinsProcessed = 0;
-	
-    LogPrintf("GenerateUtxoIndex, coinsCount:%d\n", coinsCount);
-	
+
+    LogPrintf("Generating utxo script index, coinsCount:%d\n", coinsCount);
+
     std::unique_ptr<CCoinsViewCursor> coinsCursor(coins->Cursor());
 
     while(coinsCursor->Valid())
     {
 	    try{
             boost::this_thread::interruption_point();
-		
+
             if(coinsCount > 0 and coinsProcessed % 1000 == 0)
                 uiInterface.ShowProgress(_("Building address index..."), (int)(((double)coinsProcessed / (double)coinsCount) * (double)100), false);
 
@@ -361,11 +393,11 @@ bool UtxoIndex::GenerateUtxoIndex(const std::unique_ptr<CCoinsViewDB>& coins)
 	return true;
 }
 
-bool UtxoIndex::removeUtxoRecord(	const std::unique_ptr<UtxoIndexDBCursor>& cursor,
-									std::map<CScriptID, SerializableUtxoSet>& keysToDelete,
-									int64_t counter)
+bool UtxoScriptIndex::removeUtxoRecord(	const std::unique_ptr<UtxoScriptIndexDBCursor>& cursor,
+									std::map<ScriptHash, SerializableUtxoSet>& keysToDelete,
+									int64_t& counter)
 {
-	CScriptID key;
+	ScriptHash key;
 	if(not cursor->GetKey(key))
 		return false;
 
@@ -380,12 +412,12 @@ bool UtxoIndex::removeUtxoRecord(	const std::unique_ptr<UtxoIndexDBCursor>& curs
 	return true;
 }
 
-bool UtxoIndex::DeleteUtxoIndex()
+bool UtxoScriptIndex::DeleteIndex()
 {
-	LogPrintf("DeleteUtxoIndex\n");
-	std::unique_ptr<UtxoIndexDBCursor> cursor(m_db->Cursor());
-	std::map<CScriptID, SerializableUtxoSet> keysToDelete;
-	
+	LogPrintf("Deleting utxo script index\n");
+	std::unique_ptr<UtxoScriptIndexDBCursor> cursor(m_db->Cursor());
+	std::map<ScriptHash, SerializableUtxoSet> keysToDelete;
+
 	int64_t counter = 0;
 	while(cursor->Valid())
 	{
@@ -406,18 +438,18 @@ bool UtxoIndex::DeleteUtxoIndex()
 		keysToDelete.clear();
 	}
 	WriteBestBlock(uint256());
-	LogPrintf("Address index with %d addresses successfully deleted.\n", counter);	
+	LogPrintf("Address index with %d addresses successfully deleted.\n", counter);
 	return true;
 }
-	
-bool UtxoIndex::WriteBestBlock(const uint256& value)
+
+bool UtxoScriptIndex::WriteBestBlock(const uint256& value)
 {
 	CDBBatch batch(*m_db);
 	batch.Write(DB_UTXO_BEST_BLOCK, value);
 	return m_db->WriteBatch(batch);
 }
-	
-bool UtxoIndex::ReadBestBlock(uint256& value)
+
+bool UtxoScriptIndex::ReadBestBlock(uint256& value)
 {
 	return m_db->Read(DB_UTXO_BEST_BLOCK, value);
 }

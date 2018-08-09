@@ -17,7 +17,7 @@
 #include <cuckoocache.h>
 #include <hash.h>
 #include <index/txindex.h>
-#include <index/utxoindex.h>
+#include <index/utxoscriptindex.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
@@ -2179,8 +2179,8 @@ bool static FlushStateToDisk(const CChainParams& chainparams, CValidationState &
             // Flush the chainstate (which may refer to block index entries).
             if (!pcoinsTip->Flush())
                 return AbortNode(state, "Failed to write to coin database");
-            if(g_utxoindex)
-				if(not g_utxoindex->Flush())
+            if(g_utxoscriptindex)
+				if(not g_utxoscriptindex->Flush())
 					return AbortNode(state, "Failed to write to utxo database");
 			nLastFlush = nNow;
             full_flush_completed = true;
