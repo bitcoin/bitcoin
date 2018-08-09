@@ -948,9 +948,6 @@ BOOST_AUTO_TEST_CASE(generate_asset_collect_interest_every_block)
 	// calc interest expect 5000 (1 + 0.05 / 60) ^ (60(10)) = ~8248
 	for (int i = 0; i <= 60*10; i+=25) {
 		AssetClaimInterest("node1", guid, "jagassetcollectionreceiver1");
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " jagassetcollectionreceiver1 false"));
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "nAccumulatedBalanceSinceLastInterestClaim").get_real(), 0);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "fAccumulatedInterestSinceLastInterestClaim").get_real(), 0);
 		GenerateBlocks(24);
 		printf("Claiming interest %d of out %d...\n", i, 60 * 10);
 	}
