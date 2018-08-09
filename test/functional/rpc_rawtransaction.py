@@ -41,7 +41,7 @@ class RawTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
-        self.extra_args = [["-addresstype=legacy"], ["-addresstype=legacy"], ["-addresstype=legacy"]]
+        self.extra_args = [["-addresstype=legacy", "-txindex"], ["-addresstype=legacy", "-txindex"], ["-addresstype=legacy", "-txindex"]]
 
     def setup_network(self, split=False):
         super().setup_network()
