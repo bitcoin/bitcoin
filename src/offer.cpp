@@ -1481,6 +1481,7 @@ bool COfferDB::ScanOffers(const int count, const int from, const UniValue& oOpti
 			nStartBlock = startblock.get_int();
 	}
 
+	LOCK(cs_offer);
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
 	COffer txPos;

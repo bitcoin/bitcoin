@@ -24,6 +24,7 @@ bool IsCertOp(int op);
 void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry);
 std::string certFromOp(int op);
 bool RemoveCertScriptPrefix(const CScript& scriptIn, CScript& scriptOut);
+static CCriticalSection cs_cert;
 class CCert {
 public:
 	std::vector<unsigned char> vchCert;
@@ -96,6 +97,7 @@ public:
     bool WriteCert(const CCert& cert, const int &op, const int64_t& arrivalTime, const bool &fJustCheck, const bool bNotify=true) {
 		bool writeState = false;;
 		{
+			LOCK(cs_cert);
 			writeState = Write(make_pair(std::string("certi"), cert.vchCert), cert);
 			if (!fJustCheck) {
 				writeState = writeState && Write(make_pair(std::string("certp"), cert.vchCert), cert);
@@ -117,6 +119,7 @@ public:
     }
 
     bool EraseCert(const std::vector<unsigned char>& vchCert, bool cleanup = false) {
+		LOCK(cs_cert);
 		bool eraseState = Erase(make_pair(std::string("certi"), vchCert));
 		if (eraseState) {
 			Erase(make_pair(std::string("certp"), vchCert));
@@ -127,18 +130,23 @@ public:
     }
 
     bool ReadCert(const std::vector<unsigned char>& vchCert, CCert& cert) {
+		LOCK(cs_cert);
         return Read(make_pair(std::string("certi"), vchCert), cert);
     }
 	bool ReadFirstCert(const std::vector<unsigned char>& vchCert, CCert& cert) {
+		LOCK(cs_cert);
 		return Read(make_pair(std::string("certf"), vchCert), cert);
 	}
 	bool ReadLastCert(const std::vector<unsigned char>& vchGuid, CCert& cert) {
+		LOCK(cs_cert);
 		return Read(make_pair(std::string("certp"), vchGuid), cert);
 	}
 	bool ReadISArrivalTimes(const std::vector<unsigned char>& vchCert, ArrivalTimesMap& arrivalTimes) {
+		LOCK(cs_cert);
 		return Read(make_pair(std::string("certa"), vchCert), arrivalTimes);
 	}
 	bool EraseISArrivalTimes(const std::vector<unsigned char>& vchCert) {
+		LOCK(cs_cert);
 		return Erase(make_pair(std::string("certa"), vchCert));
 	}
 	bool CleanupDatabase(int &servicesCleaned);
