@@ -1387,6 +1387,7 @@ bool CAssetDB::ScanAssets(const int count, const int from, const UniValue& oOpti
 			nStartBlock = startblock.get_int();
 		}
 	}
+	LOCK(cs_asset);
 
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();

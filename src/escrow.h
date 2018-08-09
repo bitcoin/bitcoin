@@ -36,6 +36,7 @@ enum EscrowStatus {
 	EscrowRefunded = 4,
 	EscrowRefundComplete = 5
 };
+static CCriticalSection cs_escrow;
 class CEscrow {
 public:
 	std::vector<unsigned char> vchEscrow;
@@ -173,6 +174,7 @@ public:
     bool WriteEscrow( const std::vector<std::vector<unsigned char> > &vvchArgs, const COffer &offer, const CEscrow& escrow) {
 		bool writeState = false;
 		{
+			LOCK(cs_escrow);
 			writeState = Write(make_pair(std::string("escrowi"), escrow.vchEscrow), escrow);
 		}
 		if(writeState)
@@ -183,12 +185,15 @@ public:
 		WriteEscrowBidIndex(offer, escrow, status);
 	}
     bool EraseEscrow(const std::vector<unsigned char>& vchEscrow, bool cleanup = false) {
+		LOCK(cs_escrow);
 		return Erase(make_pair(std::string("escrowi"), vchEscrow));
     }
     bool ReadEscrow(const std::vector<unsigned char>& vchEscrow, CEscrow& escrow) {
+		LOCK(cs_escrow);
         return Read(make_pair(std::string("escrowi"), vchEscrow), escrow);
     }
 	bool ReadEscrowLastTXID(const std::vector<unsigned char>& escrow, uint256& txid) {
+		LOCK(cs_escrow);
 		return Read(make_pair(std::string("escrowlt"), escrow), txid);
 	}
 	bool CleanupDatabase(int &servicesCleaned);

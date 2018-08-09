@@ -26,6 +26,7 @@ static const unsigned int MAX_SYMBOL_LENGTH = 8;
 static const unsigned int MIN_SYMBOL_LENGTH = 1;
 static const unsigned int MAX_ENCRYPTED_GUID_LENGTH = MAX_NAME_LENGTH;
 static const uint64_t ONE_YEAR_IN_SECONDS = 31536000;
+static CCriticalSection cs_alias;
 enum {
 	ALIAS=0,
 	OFFER, 
@@ -245,6 +246,7 @@ public:
 			return false;	
 		bool writeState = false;
 		{
+			LOCK(cs_alias);
 			writeState = Write(make_pair(std::string("namei"), alias.vchAlias), alias) && Write(make_pair(std::string("namea"), address), alias.vchAlias) && Write(make_pair(std::string("nameu"), alias.vchAlias), aliasUnprunable);
 		}
 		if(writeState)
@@ -253,21 +255,27 @@ public:
 	}
 
 	bool EraseAlias(const std::vector<unsigned char>& vchAlias, bool cleanup = false) {
+		LOCK(cs_alias);
 		return Erase(make_pair(std::string("namei"), vchAlias));
 	}
 	bool ReadAlias(const std::vector<unsigned char>& vchAlias, CAliasIndex& alias) {
+		LOCK(cs_alias);
 		return Read(make_pair(std::string("namei"), vchAlias), alias);
 	}
 	bool ReadAddress(const std::vector<unsigned char>& address, std::vector<unsigned char>& name) {
+		LOCK(cs_alias);
 		return Read(make_pair(std::string("namea"), address), name);
 	}
 	bool ReadAliasUnprunable(const std::vector<unsigned char>& alias, CAliasUnprunable& aliasUnprunable) {
+		LOCK(cs_alias);
 		return Read(make_pair(std::string("nameu"), alias), aliasUnprunable);
 	}
 	bool EraseAddress(const std::vector<unsigned char>& address) {
+		LOCK(cs_alias);
 	    return Erase(make_pair(std::string("namea"), address));
 	}
 	bool ExistsAddress(const std::vector<unsigned char>& address) {
+		LOCK(cs_alias);
 	    return Exists(make_pair(std::string("namea"), address));
 	}
 	bool CleanupDatabase(int &servicesCleaned);
