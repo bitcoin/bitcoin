@@ -308,10 +308,6 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
  {
 	UniValue r;
 	printf("Running generate_asset_throughput...\n");
-	StopNode("node1");
-	StartNode("node1", true, "-tpstest");
-	StopNode("node2");
-	StartNode("node2", true, "-tpstest");
 	GenerateBlocks(5, "node1");
 	GenerateBlocks(5, "node3");
 	map<string, string> assetMap;
@@ -382,6 +378,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	printf("assetSentTxVec1 %s\n", assetSendTxVec1.c_str());
 	printf("assetSentTxVec2 %s\n", assetSendTxVec2.c_str());
 	printf("Adding assetsend transactions to queue on sender nodes...\n");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "tpstestsetenabled true"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "tpstestsetenabled true"));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "tpstestadd " + assetSendTxVec1 + " " + boost::lexical_cast<string>(tpstarttime)));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "tpstestadd " + assetSendTxVec2 + " " + boost::lexical_cast<string>(tpstarttime)));
 	float totalTime = 0;
@@ -411,10 +409,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	UniValue tpsresponse2 = r.get_obj();
 	int64_t sendrawelapsedtime2 = find_value(tpsresponse2, "sendrawelapsedtime").get_int64();
 	printf("tpstarttime %lld sendrawelapsedtime1 %lld sendrawelapsedtime2 %lld totaltime %.2f, num responses %d\n", tpstarttime, sendrawelapsedtime1, sendrawelapsedtime2, totalTime, tpsresponse.size());
-	StopNode("node1");
-	StartNode("node1");
-	StopNode("node2");
-	StartNode("node2");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "tpstestsetenabled false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "tpstestsetenabled false"));
 }
 BOOST_AUTO_TEST_CASE(generate_big_assetname)
 {
