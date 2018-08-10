@@ -375,18 +375,16 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	tpstarttime = tpstarttime + 5* microsInSecond; // add 5 seconds to current time for official start time
 	assetSendTxVec1 += "]\"";
 	assetSendTxVec2 += "]\"";
-	printf("assetSentTxVec1 %s\n", assetSendTxVec1.c_str());
-	printf("assetSentTxVec2 %s\n", assetSendTxVec2.c_str());
 	printf("Adding assetsend transactions to queue on sender nodes...\n");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "tpstestsetenabled true"));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "tpstestsetenabled true"));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "tpstestadd " + assetSendTxVec1 + " " + boost::lexical_cast<string>(tpstarttime)));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "tpstestadd " + assetSendTxVec2 + " " + boost::lexical_cast<string>(tpstarttime)));
 	float totalTime = 0;
-	// wait untl start time
+	// wait until start time
 	while (GetTimeMicros() < tpstarttime) {
 		MilliSleep(1000);
-		printf("Waiting for start time, another %d seconds...\n", (GetTimeMicros() - tpstarttime) / microsInSecond);
+		printf("Waiting for start time, another %d seconds...\n", (tpstarttime - GetTimeMicros()) / microsInSecond);
 	}
 	printf("Waiting 10 seconds as per protocol...");
 	// start 10 second wait
