@@ -310,8 +310,9 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
  {
 	UniValue r;
 	printf("Running generate_asset_throughput...\n");
-	StopNode("node1");
-	StopNode("node2");
+	CallRPC("node1", "stop");
+	MilliSleep(1000);
+	CallRPC("node2", "stop");
 	MilliSleep(1000);
 
 	boost::filesystem::path fpath = boost::filesystem::system_complete("../syscoind");
@@ -425,13 +426,15 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	UniValue tpsresponse2 = r.get_obj();
 	int64_t sendrawelapsedtime2 = find_value(tpsresponse2, "sendrawelapsedtime").get_int64();
 	printf("tpstarttime %lld sendrawelapsedtime1 %lld sendrawelapsedtime2 %lld totaltime %.2f, num responses %d\n", tpstarttime, sendrawelapsedtime1, sendrawelapsedtime2, totalTime, tpsresponse.size());
-	StopNode("node1");
-	StopNode("node2");
+	CallRPC("node1", "stop");
+	MilliSleep(1000);
+	CallRPC("node2", "stop");
+	MilliSleep(1000);
 	fpath = boost::filesystem::system_complete("../syscoind");
 	nodePath = fpath.string() + string(" -unittest -datadir=node1");
 	nodePath += string(" -regtest -addressindex");
 	boost::thread t1a(runCommand, nodePath);
-
+	MilliSleep(1000);
 	fpath = boost::filesystem::system_complete("../syscoind");
 	nodePath = fpath.string() + string(" -unittest -datadir=node2");
 	nodePath += string(" -regtest -addressindex");
