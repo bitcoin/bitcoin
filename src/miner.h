@@ -30,6 +30,7 @@ struct CBlockTemplate
     CBlock block;
     std::vector<CAmount> vTxFees;
     std::vector<int64_t> vTxSigOps;
+    uint32_t nPrevBits; // nBits of previous block (for subsidy calculation)
     CTxOut txoutMasternode; // masternode payment
     std::vector<CTxOut> voutSuperblock; // superblock payment
 };

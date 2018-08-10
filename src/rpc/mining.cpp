@@ -385,6 +385,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
             "  \"sizelimit\" : n,                  (numeric) limit of block size\n"
             "  \"curtime\" : ttt,                  (numeric) current timestamp in seconds since epoch (Jan 1 1970 GMT)\n"
             "  \"bits\" : \"xxxxxxxx\",              (string) compressed target of next block\n"
+            "  \"previousbits\" : \"xxxxxxxx\",      (string) compressed target of current highest block\n"
             "  \"height\" : n                      (numeric) The height of the next block\n"
             "  \"masternode\" : {                  (json object) required masternode payee that must be included in the next block\n"
             "      \"payee\" : \"xxxx\",             (string) payee address\n"
@@ -696,6 +697,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     result.push_back(Pair("sizelimit", (int64_t)MaxBlockSize(fDIP0001ActiveAtTip)));
     result.push_back(Pair("curtime", pblock->GetBlockTime()));
     result.push_back(Pair("bits", strprintf("%08x", pblock->nBits)));
+    result.push_back(Pair("previousbits", strprintf("%08x", pblocktemplate->nPrevBits)));
     result.push_back(Pair("height", (int64_t)(pindexPrev->nHeight+1)));
 
     UniValue masternodeObj(UniValue::VOBJ);
