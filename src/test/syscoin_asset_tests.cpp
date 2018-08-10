@@ -306,12 +306,13 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 }
 BOOST_AUTO_TEST_CASE(generate_asset_throughput)
  {
-	StopNode("node1");
-	StopNode("node2");
-	StartNode("node1", true, "-tpstest");
-	StartNode("node2", true, "-tpstest");
 	UniValue r;
 	printf("Running generate_asset_throughput...\n");
+	StopNode("node1");
+	StopNode("node2");
+	MilliSleep(1000);
+	StartNode("node1", true, "-tpstest");
+	StartNode("node2", true, "-tpstest");
 	GenerateBlocks(5, "node1");
 	GenerateBlocks(5, "node3");
 	map<string, string> assetMap;
