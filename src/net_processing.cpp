@@ -3363,11 +3363,14 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                     if (pto->filterInventoryKnown.contains(hash)) {
                         continue;
                     }
-                    // Not in the mempool anymore? don't bother sending it.
-                    auto txinfo = mempool.info(hash);
-                    if (!txinfo.tx) {
-                        continue;
-                    }
+					// SYSCOIN
+					if (!fTPSTestEnabled) {
+						// Not in the mempool anymore? don't bother sending it.
+						auto txinfo = mempool.info(hash);
+						if (!txinfo.tx) {
+							continue;
+						}
+					}
                     if (pto->pfilter && !pto->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;
                     // Send
                     vInv.push_back(CInv(MSG_TX, hash));

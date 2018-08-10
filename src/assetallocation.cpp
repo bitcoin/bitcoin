@@ -828,20 +828,9 @@ UniValue tpstestadd(const JSONRPCRequest& request) {
 			while (GetTimeMicros() < nTPSTestingStartTime) {
 				MilliSleep(0);
 			}
-			const int64_t &nStart = GetTimeMicros();
-			UniValue returnRes;
-			try
-			{
-				for (auto &txReq : vecTPSRawTransactions) {
-					returnRes = sendrawtransaction(txReq);
-					printf("txid %s\n", returnRes.get_str().c_str());
-				}
-			}
-			catch (UniValue& objError)
-			{
-				printf("error in threadpool: %s\n", find_value(objError, "message").get_str().c_str());
-			}
-			
+			for (auto &txReq : vecTPSRawTransactions) {
+				sendrawtransaction(txReq);
+			}	
 			nTPSTestingSendRawElapsedTime = GetTimeMicros() - nStart;
 		});
 		bool isThreadPosted = false;
