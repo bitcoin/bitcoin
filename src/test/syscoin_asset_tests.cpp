@@ -401,7 +401,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	totalTime /= tpsresponse.size();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "tpstestinfo"));
 	UniValue tpsresponse1 = r.get_obj();
-	int64_t teststarttime = find_value(tpsresponse1, "starttime").get_int64();
+	int64_t teststarttime = find_value(tpsresponse1, "teststarttime").get_int64();
 	int64_t sendrawelapsedtime1 = find_value(tpsresponse1, "sendrawelapsedtime").get_int64();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "tpstestinfo"));
 	UniValue tpsresponse2 = r.get_obj();
