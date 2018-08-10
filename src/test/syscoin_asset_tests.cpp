@@ -306,6 +306,10 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 }
 BOOST_AUTO_TEST_CASE(generate_asset_throughput)
  {
+	StopNode("node1");
+	StopNode("node2");
+	StartNode("node1", true, "-tpstest");
+	StartNode("node2", true, "-tpstest");
 	UniValue r;
 	printf("Running generate_asset_throughput...\n");
 	GenerateBlocks(5, "node1");
@@ -407,6 +411,10 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	UniValue tpsresponse2 = r.get_obj();
 	int64_t sendrawelapsedtime2 = find_value(tpsresponse2, "sendrawelapsedtime").get_int64();
 	printf("tpstarttime %lld sendrawelapsedtime1 %lld sendrawelapsedtime2 %lld totaltime %.2f, num responses %d\n", tpstarttime, sendrawelapsedtime1, sendrawelapsedtime2, totalTime, tpsresponse.size());
+	StopNode("node1");
+	StopNode("node2");
+	StartNode("node1");
+	StartNode("node2");
 }
 BOOST_AUTO_TEST_CASE(generate_big_assetname)
 {
