@@ -27,6 +27,9 @@
 
 using namespace std;
 vector<pair<uint256, int64_t> > vecTPSTestReceivedTimes;
+vector<JSONRPCRequest> vecTPSRawTransactions;
+int64_t nTPSTestingSendRawElapsedTime = 0;
+int64_t nTPSTestingStartTime = 0;
 AssetAllocationIndexItemMap AssetAllocationIndex;
 bool IsAssetAllocationOp(int op) {
 	return op == OP_ASSET_ALLOCATION_SEND || op == OP_ASSET_COLLECT_INTEREST;
@@ -727,7 +730,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 		int64_t ms = INT64_MAX;
 		if (fJustCheck) {
 			ms = GetTimeMillis();
-			if(fUnitTest)
+			if(fTPSTest)
 				vecTPSTestReceivedTimes.emplace_back(theAssetAllocation.txHash, ms);
 		}
 		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, 0, 0, dbAsset, ms, "", "", fJustCheck))
@@ -752,15 +755,81 @@ UniValue tpstestinfo(const JSONRPCRequest& request) {
 	if (request.fHelp || 0 != params.size())
 		throw runtime_error("tpstestinfo\n"
 			"Gets TPS Test information for receivers of assetallocation transfers\n");
-
-	UniValue oTPSTestResults(UniValue::VARR);
+	if (!fTPSTest)
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("This function requires tpstest configuration to be set upon startup. Please shutdown and enable it by adding it to your syscoin.conf file and then try again."));
+	UniValue oTPSTestResults(UniValue::VOBJ);
+	UniValue oTPSTestReceivers(UniValue::VARR);
+	oTPSTestResults.push_back(Pair("teststarttime", nTPSTestingStartTime));
+	oTPSTestResults.push_back(Pair("sendrawelapsedtime", nTPSTestingSendRawElapsedTime));
 	for (auto &receivedTime : vecTPSTestReceivedTimes) {
 		UniValue oTPSTestStatusObj(UniValue::VOBJ);
 		oTPSTestStatusObj.push_back(Pair("txid", receivedTime.first.GetHex()));
 		oTPSTestStatusObj.push_back(Pair("time", receivedTime.second));
-		oTPSTestResults.push_back(oTPSTestStatusObj);
+		oTPSTestReceivers.push_back(oTPSTestStatusObj);
 	}
+	oTPSTestResults.push_back(Pair("receivers", oTPSTestReceivers));
 	return oTPSTestResults;
+}
+UniValue tpstestadd(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+	if (request.fHelp || 2 != params.size())
+		throw runtime_error("tpstestadd [{\"tx\":\"hex\"},...] [starttime]\n"
+			"\nAdds raw transactions to the test raw tx queue to be sent to the network at starttime.\n"
+			"\nArguments:\n"
+			"1. \"raw transactions\"                (array, required) A json array of signed raw transaction strings\n"
+			"     [\n"
+			"       {\n"
+			"         \"tx\":\"hex\",    (string, required) The transaction hex\n"
+			"       } \n"
+			"       ,...\n"
+			"     ]\n"
+			"2. starttime                  (numeric, required) Unix epoch time in micro seconds for when to send the raw transaction queue to the network\n"
+			+ HelpExampleCli("tpstestadd", "\"[{\\\"tx\\\":\\\"first raw hex tx\\\"},{\\\"tx\\\":\\\"second raw hex tx\\\"}]\" \"223233433839384\"")
+	if (!fTPSTest)
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("This function requires tpstest configuration to be set upon startup. Please shutdown and enable it by adding it to your syscoin.conf file and then try again."));
+	
+	RPCTypeCheck(params, boost::assign::list_of(UniValue::VARR)(UniValue::VNUM), true);
+	bool bFirstTime = vecTPSRawTransactions.empty();
+	UniValue txs = params[0].get_array();
+	nTPSTestingStartTime = params[1].get_int64();
+	for (unsigned int idx = 0; idx < txs.size(); idx++) {
+		const UniValue& tx = txs[idx];
+		UniValue paramsRawTx(UniValue::VARR);
+		paramsRawTx.push_back(find_value(tx.get_obj() "tx").get_str());
+
+		JSONRPCRequest request;
+		request.params = paramsRawTx;
+		vecTPSRawTransactions.push_back(request);
+	}
+	if (bFirstTime) {
+		// define a task for the worker to process
+		std::packaged_task<void()> task([]() {
+			while (GetTimeMicros() < nTPSTestingStartTime) {
+				MilliSleep(0);
+			}
+			const int64_t &nStart = GetTimeMicros();
+			for (auto &txReq : vecTPSRawTransactions) {
+				sendrawtransaction(txReq);
+			}
+			nTPSTestingSendRawElapsedTime = GetTimeMicros() - nStart;
+		});
+		bool isThreadPosted = false;
+		for (int numTries = 1; numTries <= 50; numTries++)
+		{
+			// send task to threadpool pointer from init.cpp
+			isThreadPosted = threadpool->tryPost(task);
+			if (isThreadPosted)
+			{
+				break;
+			}
+			MilliSleep(10);
+		}
+		if (!isThreadPosted)
+			throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("thread pool queue is full"));
+	}
+	UniValue result(UniValue::VOBJ);
+	result.push_back(Pair("status", "success"));
+	return result;
 }
 UniValue assetallocationsend(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
