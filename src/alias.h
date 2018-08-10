@@ -257,7 +257,6 @@ public:
 		return Read(make_pair(std::string("namei"), vchAlias), alias);
 	}
 	bool ReadAddress(const std::vector<unsigned char>& address, std::vector<unsigned char>& name) {
-		LOCK(cs_alias);
 		return Read(make_pair(std::string("namea"), address), name);
 	}
 	bool ReadAliasUnprunable(const std::vector<unsigned char>& alias, CAliasUnprunable& aliasUnprunable) {
