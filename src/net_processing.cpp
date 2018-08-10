@@ -3364,9 +3364,10 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                         continue;
                     }
 					// SYSCOIN
+					auto txinfo;
 					if (!fTPSTestEnabled) {
 						// Not in the mempool anymore? don't bother sending it.
-						auto txinfo = mempool.info(hash);
+						txinfo = mempool.info(hash);
 						if (!txinfo.tx) {
 							continue;
 						}
