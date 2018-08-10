@@ -374,8 +374,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	tpstarttime = tpstarttime + 5*1000 * 1000; // seconds to microseconds
 	assetSentTxVec1 += "]\"";
 	assetSentTxVec2 += "]\"";
-	printf("assetSentTxVec1 %s\n", assetSentTxVec1.c_str());
-	printf("assetSentTxVec2 %s\n", assetSentTxVec2.c_str());
+	printf("assetSentTxVec1 %s\n", assetSendTxVec1.c_str());
+	printf("assetSentTxVec2 %s\n", assetSendTxVec2.c_str());
 	printf("Sending assetsend transactions to network...\n");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "tpstestadd " + assetSendTxVec1 + " " + boost::lexical_cast<string>(tpstarttime)));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "tpstestadd " + assetSendTxVec2 + " " + boost::lexical_cast<string>(tpstarttime)));
