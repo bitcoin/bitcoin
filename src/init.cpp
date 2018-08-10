@@ -826,10 +826,16 @@ void InitLogging()
     g_logger->m_print_to_file = !gArgs.IsArgNegated("-debuglogfile");
     g_logger->m_file_path = AbsPathForConfigVal(gArgs.GetArg("-debuglogfile", DEFAULT_DEBUGLOGFILE));
 
-    // Add newlines to the logfile to distinguish this execution from the last
+    // Add some ascii-art to the logfile to distinguish this execution from the last
     // one; called before console logging is set up, so this is only sent to
     // debug.log.
-    LogPrintf("\n\n\n\n\n");
+    LogPrintf("\n\n"
+              "___.   .__  __               .__                                     \n"
+              "\\_ |__ |__|/  |_  ____  ____ |__| ____     ____  ___________   ____  \n"
+              " | __ \\|  \\   __\\/ ___\\/  _ \\|  |/    \\  _/ ___\\/  _ \\_  __ \\_/ __ \\ \n"
+              " | \\_\\ \\  ||  | \\  \\__(  <_> )  |   |  \\ \\  \\__(  <_> )  | \\/\\  ___/ \n"
+              " |___  /__||__|  \\___  >____/|__|___|  /  \\___  >____/|__|    \\___  >\n"
+              "     \\/              \\/              \\/       \\/                  \\/ \n");
 
     g_logger->m_print_to_console = gArgs.GetBoolArg("-printtoconsole", !gArgs.GetBoolArg("-daemon", false));
     g_logger->m_log_timestamps = gArgs.GetBoolArg("-logtimestamps", DEFAULT_LOGTIMESTAMPS);
