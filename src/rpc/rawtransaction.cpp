@@ -1170,6 +1170,7 @@ static UniValue sendrawtransaction(const JSONRPCRequest& request)
     g_connman->ForEachNode([&inv](CNode* pnode)
     {
         pnode->PushInventory(inv);
+        pnode->m_cache_dandelion.erase(inv.hash);
     });
 
     return hashTx.GetHex();

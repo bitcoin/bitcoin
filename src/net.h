@@ -36,6 +36,8 @@
 
 class CScheduler;
 class CNode;
+class CTransaction;
+using CTransactionRef = std::shared_ptr<const CTransaction>;
 
 /** Default for -dandelion stem percentage */
 static constexpr int64_t DEFAULT_DANDELION_STEM_PERCENTAGE = 90;
@@ -69,6 +71,8 @@ static const bool DEFAULT_UPNP = USE_UPNP;
 #else
 static const bool DEFAULT_UPNP = false;
 #endif
+/** The maximum size of the per-peer dandelion cache in Byte */
+static constexpr size_t MAX_DANDELION_CACHE_SZ = 1000 * 1000;
 /** The maximum number of entries in mapAskFor */
 static const size_t MAPASKFOR_MAX_SZ = MAX_INV_SZ;
 /** The maximum number of entries in setAskFor (larger due to getdata latency)*/
@@ -714,6 +718,19 @@ public:
     static int64_t m_dandelion_stem_pct_threshold;
 
     std::atomic<bool> m_accept_dandelion{false}; //!< If this peer accepts dandelion txs
+
+    using DandelionCache = std::map</* witness hash */ uint256, std::pair<CTransactionRef, /* expiry */ int64_t>>;
+    /** The dandelion cache
+     * Contains transactions that are
+     * - not in our mempool
+     * - not mined
+     * - not expired
+     */
+    DandelionCache m_cache_dandelion;
+    /** The total size of all txs in the cache */
+    size_t m_cache_dandelion_size{0};
+    /** To check if a tx in the cache might have expired */
+    std::priority_queue<int64_t, std::vector<int64_t>, std::greater<int64_t>> m_cache_expiry;
 
     // inventory based relay
     CRollingBloomFilter filterInventoryKnown;
