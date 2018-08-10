@@ -17,6 +17,7 @@
 #include <chrono>
 #include "ranges.h"
 #include <boost/filesystem.hpp>
+#include <boost/thread.hpp>
 using namespace boost::chrono;
 using namespace std;
 BOOST_GLOBAL_FIXTURE( SyscoinTestingSetup );
