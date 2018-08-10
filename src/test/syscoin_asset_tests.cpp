@@ -304,7 +304,7 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid1);
 	BOOST_CHECK(find_value(r.get_obj(), "symbol").get_str() == "USD");
 }
-/*BOOST_AUTO_TEST_CASE(generate_asset_throughput)
+BOOST_AUTO_TEST_CASE(generate_asset_throughput)
  {
 	UniValue r;
 	printf("Running generate_asset_throughput...\n");
@@ -315,7 +315,7 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 
 	// create 1000 addresses and assets for each asset	
 	printf("creating sender 1000 address/asset...\n");
-	for (int i = 0; i < 1000; i++) {
+	for (int i = 0; i < 100; i++) {
 		string address1 = GetNewFundedAddress("node1");
 		string address2 = GetNewFundedAddress("node1");
 		
@@ -345,7 +345,8 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 
 	GenerateBlocks(10);
 	printf("Creating assetsend transactions...\n");
-	vector<string> assetSendTxVec;
+	string assetSendTxVec1 = "\"[";
+	string assetSendTxVec2 = "\"[";
 	int count = 0;
 	for (auto& assetTuple : assetMap) {
 		count++;
@@ -353,44 +354,52 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 		UniValue arr = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
 		string hex_str = find_value(r.get_obj(), "hex").get_str();
-		
-		assetSendTxVec.push_back(hex_str);
+		if (count <= (assetMap.size() / 2)) {
+			assetSendTxVec1 += "{\\\"tx\\\":\\\"" + assetAddressMap[assetTuple.first] + "\\\"}";
+			if (count < (assetMap.size()/2))
+				assetSendTxVec += ",";
+		}
+		else {
+			assetSendTxVec2 += "{\\\"tx\\\":\\\"" + assetAddressMap[assetTuple.first] + "\\\"}";
+			if (count < assetMap.size())
+				assetSendTxVec += ",";
+		}
+
 		if (count % 100 == 0)
 			 printf("%.2f percentage done\n", 100.0f / (1000.0f / count));
 		
+		
 	}
+	assetSentTxVec1 += "]\"";
+	assetSentTxVec2 += "]\"";
+	printf("assetSentTxVec1 %s\n", assetSentTxVec1.c_str());
+	printf("assetSentTxVec2 %s\n", assetSentTxVec2.c_str());
 	printf("Sending assetsend transactions to network...\n");
-	map<string, int64_t> sendTimes;
-	count = 0;
-	for (auto& hex_str : assetSendTxVec) {
-		count++;
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + hex_str));
-		string txid = find_value(r.get_obj(), "txid").get_str();
-		sendTimes[txid] = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-		if (count % 100 == 0)
-			 printf("%.2f percentage done\n", 100.0f / (1000.0f / count));
-		
-	}
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "tpstestadd " + assetSendTxVec1 + " " + tpstarttime));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "tpstestadd " + assetSendTxVec2 + " " + tpstarttime));
 	printf("Gathering results...\n");
 	float totalTime = 0;
 	// wait 10 seconds	
 	MilliSleep(10000);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "tpstestinfo"));
-	UniValue tpsresponse = r.get_array();
-	for (int i = 0; i < tpsresponse.size(); i++) {
-		UniValue responesObj = tpsresponse[i].get_obj();
+	UniValue tpsresponse = r.get_obj();
+	UniValue tpsresponsereceivers = find_value(tpsresponse, "receivers").get_array();
+	for (int i = 0; i < tpsresponsereceivers.size(); i++) {
+		UniValue responesObj = tpsresponsereceivers[i].get_obj();
 		string txid = find_value(responesObj, "txid").get_str();
 		int64_t timeRecv = find_value(responesObj, "time").get_int64();
-		if (sendTimes.find(txid) == sendTimes.end()) {
-			printf("Cannot find received txid from the sender list! skipping...\n");
-			continue;
-			
-		}
-		totalTime += timeRecv - sendTimes[txid];
+		totalTime += timeRecv - tpstarttime;
 	}
 	totalTime /= tpsresponse.size();
-	printf("totalTime %.2f, num responses %d\n", totalTime, tpsresponse.size());
-}*/
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "tpstestinfo"));
+	UniValue tpsresponse1 = r.get_obj();
+	int64_t teststarttime = find_value(tpsresponse1, "starttime").get_int64();
+	int64_t sendrawelapsedtime1 = find_value(tpsresponse1, "sendrawelapsedtime").get_int64();
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "tpstestinfo"));
+	UniValue tpsresponse2 = r.get_obj();
+	int64_t sendrawelapsedtime2 = find_value(tpsresponse2, "sendrawelapsedtime").get_int64();
+	printf("teststarttime %lld sendrawelapsedtime1 %lld sendrawelapsedtime2 %lld totaltime %.2f, num responses %d\n", teststarttime, totalTime, tpsresponse.size());
+}
 BOOST_AUTO_TEST_CASE(generate_big_assetname)
 {
 	GenerateBlocks(5);
