@@ -371,9 +371,9 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 		
 	}
 	int64_t tpstarttime = GetTimeMicros();
-	tpstarttime = tpstarttime + 5*1000 * 1000; // seconds to microseconds
-	assetSentTxVec1 += "]\"";
-	assetSentTxVec2 += "]\"";
+	tpstarttime = tpstarttime + 5*1000 * 1000; // add 5 seconds to current time for official start time
+	assetSendTxVec1 += "]\"";
+	assetSendTxVec2 += "]\"";
 	printf("assetSentTxVec1 %s\n", assetSendTxVec1.c_str());
 	printf("assetSentTxVec2 %s\n", assetSendTxVec2.c_str());
 	printf("Sending assetsend transactions to network...\n");
@@ -382,7 +382,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	printf("Gathering results...\n");
 	float totalTime = 0;
 	// wait untl start time
-	while (GetTimeMicros() < tpsstarttime) {
+	while (GetTimeMicros() < tpstarttime) {
 		MilliSleep(0);
 		continue;
 	}
