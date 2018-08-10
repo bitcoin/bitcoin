@@ -804,50 +804,50 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 	AssertLockHeld(cs_main);
     if (pfMissingInputs)
         *pfMissingInputs = false;
+	if (!fTPSTestEnabled) {
+		if (!CheckTransaction(tx, state))
+			return false; // state filled in by CheckTransaction
 
-    if (!CheckTransaction(tx, state))
-        return false; // state filled in by CheckTransaction
+		if (!ContextualCheckTransaction(tx, state, chainActive.Tip()))
+			return error("%s: ContextualCheckTransaction: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
 
-    if (!ContextualCheckTransaction(tx, state, chainActive.Tip()))
-        return error("%s: ContextualCheckTransaction: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
+		// Coinbase is only valid in a block, not as a loose transaction
+		if (tx.IsCoinBase())
+			return state.DoS(100, false, REJECT_INVALID, "coinbase");
 
-    // Coinbase is only valid in a block, not as a loose transaction
-    if (tx.IsCoinBase())
-        return state.DoS(100, false, REJECT_INVALID, "coinbase");
+		// Rather not work on nonstandard transactions (unless -testnet/-regtest)
+		std::string reason;
+		if (fRequireStandard && !IsStandardTx(tx, reason))
+			return state.DoS(0, false, REJECT_NONSTANDARD, reason);
 
-    // Rather not work on nonstandard transactions (unless -testnet/-regtest)
-    std::string reason;
-    if (fRequireStandard && !IsStandardTx(tx, reason))
-        return state.DoS(0, false, REJECT_NONSTANDARD, reason);
+		// Only accept nLockTime-using transactions that can be mined in the next
+		// block; we don't want our mempool filled up with transactions that can't
+		// be mined yet.
+		if (!CheckFinalTx(tx, STANDARD_LOCKTIME_VERIFY_FLAGS))
+			return state.DoS(0, false, REJECT_NONSTANDARD, "non-final");
 
-    // Only accept nLockTime-using transactions that can be mined in the next
-    // block; we don't want our mempool filled up with transactions that can't
-    // be mined yet.
-    if (!CheckFinalTx(tx, STANDARD_LOCKTIME_VERIFY_FLAGS))
-        return state.DoS(0, false, REJECT_NONSTANDARD, "non-final");
+		// is it already in the memory pool?
+		if (pool.exists(hash))
+			return state.Invalid(false, REJECT_ALREADY_KNOWN, "txn-already-in-mempool");
 
-    // is it already in the memory pool?
-    if (pool.exists(hash))
-        return state.Invalid(false, REJECT_ALREADY_KNOWN, "txn-already-in-mempool");
+		// If this is a Transaction Lock Request check to see if it's valid
+		if (instantsend.HasTxLockRequest(hash) && !CTxLockRequest(tx).IsValid())
+			return state.DoS(10, error("AcceptToMemoryPool : CTxLockRequest %s is invalid", hash.ToString()),
+				REJECT_INVALID, "bad-txlockrequest");
 
-    // If this is a Transaction Lock Request check to see if it's valid
-    if(instantsend.HasTxLockRequest(hash) && !CTxLockRequest(tx).IsValid())
-        return state.DoS(10, error("AcceptToMemoryPool : CTxLockRequest %s is invalid", hash.ToString()),
-                            REJECT_INVALID, "bad-txlockrequest");
-
-    // Check for conflicts with a completed Transaction Lock
-    BOOST_FOREACH(const CTxIn &txin, tx.vin)
-    {
-        uint256 hashLocked;
-        if(instantsend.GetLockedOutPointTxHash(txin.prevout, hashLocked) && hash != hashLocked)
-            return state.DoS(10, error("AcceptToMemoryPool : Transaction %s conflicts with completed Transaction Lock %s",
-                                    hash.ToString(), hashLocked.ToString()),
-                            REJECT_INVALID, "tx-txlock-conflict");
-    }
-
+		// Check for conflicts with a completed Transaction Lock
+		BOOST_FOREACH(const CTxIn &txin, tx.vin)
+		{
+			uint256 hashLocked;
+			if (instantsend.GetLockedOutPointTxHash(txin.prevout, hashLocked) && hash != hashLocked)
+				return state.DoS(10, error("AcceptToMemoryPool : Transaction %s conflicts with completed Transaction Lock %s",
+					hash.ToString(), hashLocked.ToString()),
+					REJECT_INVALID, "tx-txlock-conflict");
+		}
+	}
     // Check for conflicts with in-memory transactions
     std::set<uint256> setConflicts;
-    {
+	if (!fTPSTestEnabled) {
     LOCK(pool.cs); // protect pool.mapNextTx
     BOOST_FOREACH(const CTxIn &txin, tx.vin)
     {
@@ -988,6 +988,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 				break;
 			}
 		}
+	}
 
 		CTxMemPoolEntry entry(ptx, nFees, nAcceptTime, dPriority, chainActive.Height(),
 			inChainInputValue, fSpendsCoinbase, nSigOps, lp);
