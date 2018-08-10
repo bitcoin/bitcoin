@@ -399,10 +399,12 @@ UniValue gobject(const JSONRPCRequest& request)
         return returnObj;
     }
 
-    if(strCommand == "vote-many")
+    if(strCommand == "vote-many" || strCommand == "vote-alias")
     {
-        if(request.params.size() != 4)
+        if(strCommand == "vote-many" && request.params.size() != 4)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject vote-many <governance-hash> [funding|valid|delete] [yes|no|abstain]'");
+        else if(strCommand == "vote-alias" && request.params.size() != 5)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject vote-alias <governance-hash> [funding|valid|delete] [yes|no|abstain] <alias-name>'");
 
         uint256 hash;
         std::string strVote;
@@ -411,6 +413,10 @@ UniValue gobject(const JSONRPCRequest& request)
         std::string strVoteSignal = request.params[2].get_str();
         std::string strVoteOutcome = request.params[3].get_str();
 
+        std::string strAlias;
+        if (strCommand == "vote-alias") {
+            strAlias = request.params[4].get_str();
+        }
 
         vote_signal_enum_t eVoteSignal = CGovernanceVoting::ConvertVoteSignal(strVoteSignal);
         if(eVoteSignal == VOTE_SIGNAL_NONE) {
@@ -430,6 +436,9 @@ UniValue gobject(const JSONRPCRequest& request)
         UniValue resultsObj(UniValue::VOBJ);
 
         for (const auto& mne : masternodeConfig.getEntries()) {
+            // skip masternode if using "vote-alias" and it's the wrong masternode
+            if(strCommand == "vote-alias" && strAlias != mne.getAlias()) continue;
+
             std::string strError;
             std::vector<unsigned char> vchMasterNodeSignature;
             std::string strMasterNodeSignMessage;
@@ -492,130 +501,6 @@ UniValue gobject(const JSONRPCRequest& request)
 
             resultsObj.push_back(Pair(mne.getAlias(), statusObj));
         }
-
-        UniValue returnObj(UniValue::VOBJ);
-        returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", nSuccessful, nFailed)));
-        returnObj.push_back(Pair("detail", resultsObj));
-
-        return returnObj;
-    }
-
-
-    // MASTERNODES CAN VOTE ON GOVERNANCE OBJECTS ON THE NETWORK FOR VARIOUS SIGNALS AND OUTCOMES
-    if(strCommand == "vote-alias")
-    {
-        if(request.params.size() != 5)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject vote-alias <governance-hash> [funding|valid|delete] [yes|no|abstain] <alias-name>'");
-
-        uint256 hash;
-        std::string strVote;
-
-        // COLLECT NEEDED PARAMETRS FROM USER
-
-        hash = ParseHashV(request.params[1], "Object hash");
-        std::string strVoteSignal = request.params[2].get_str();
-        std::string strVoteOutcome = request.params[3].get_str();
-        std::string strAlias = request.params[4].get_str();
-
-        // CONVERT NAMED SIGNAL/ACTION AND CONVERT
-
-        vote_signal_enum_t eVoteSignal = CGovernanceVoting::ConvertVoteSignal(strVoteSignal);
-        if(eVoteSignal == VOTE_SIGNAL_NONE) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER,
-                               "Invalid vote signal. Please using one of the following: "
-                               "(funding|valid|delete|endorsed)");
-        }
-
-        vote_outcome_enum_t eVoteOutcome = CGovernanceVoting::ConvertVoteOutcome(strVoteOutcome);
-        if(eVoteOutcome == VOTE_OUTCOME_NONE) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please use one of the following: 'yes', 'no' or 'abstain'");
-        }
-
-        // EXECUTE VOTE FOR EACH MASTERNODE, COUNT SUCCESSES VS FAILURES
-
-        int nSuccessful = 0;
-        int nFailed = 0;
-
-        UniValue resultsObj(UniValue::VOBJ);
-
-        for (const auto& mne : masternodeConfig.getEntries())
-        {
-            // IF WE HAVE A SPECIFIC NODE REQUESTED TO VOTE, DO THAT
-            if(strAlias != mne.getAlias()) continue;
-
-            // INIT OUR NEEDED VARIABLES TO EXECUTE THE VOTE
-            std::string strError;
-            std::vector<unsigned char> vchMasterNodeSignature;
-            std::string strMasterNodeSignMessage;
-
-            CPubKey pubKeyCollateralAddress;
-            CKey keyCollateralAddress;
-            CPubKey pubKeyMasternode;
-            CKey keyMasternode;
-
-            // SETUP THE SIGNING KEY FROM MASTERNODE.CONF ENTRY
-
-            UniValue statusObj(UniValue::VOBJ);
-
-            if(!CMessageSigner::GetKeysFromSecret(mne.getPrivKey(), keyMasternode, pubKeyMasternode)) {
-                nFailed++;
-                statusObj.push_back(Pair("result", "failed"));
-                statusObj.push_back(Pair("errorMessage", strprintf("Invalid masternode key %s.", mne.getPrivKey())));
-                resultsObj.push_back(Pair(mne.getAlias(), statusObj));
-                continue;
-            }
-
-            // SEARCH FOR THIS MASTERNODE ON THE NETWORK, THE NODE MUST BE ACTIVE TO VOTE
-
-            uint256 nTxHash;
-            nTxHash.SetHex(mne.getTxHash());
-
-            int nOutputIndex = 0;
-            if(!ParseInt32(mne.getOutputIndex(), &nOutputIndex)) {
-                continue;
-            }
-
-            COutPoint outpoint(nTxHash, nOutputIndex);
-
-            CMasternode mn;
-            bool fMnFound = mnodeman.Get(outpoint, mn);
-
-            if(!fMnFound) {
-                nFailed++;
-                statusObj.push_back(Pair("result", "failed"));
-                statusObj.push_back(Pair("errorMessage", "Masternode must be publicly available on network to vote. Masternode not found."));
-                resultsObj.push_back(Pair(mne.getAlias(), statusObj));
-                continue;
-            }
-
-            // CREATE NEW GOVERNANCE OBJECT VOTE WITH OUTCOME/SIGNAL
-
-            CGovernanceVote vote(outpoint, hash, eVoteSignal, eVoteOutcome);
-            if(!vote.Sign(keyMasternode, pubKeyMasternode)) {
-                nFailed++;
-                statusObj.push_back(Pair("result", "failed"));
-                statusObj.push_back(Pair("errorMessage", "Failure to sign."));
-                resultsObj.push_back(Pair(mne.getAlias(), statusObj));
-                continue;
-            }
-
-            // UPDATE LOCAL DATABASE WITH NEW OBJECT SETTINGS
-
-            CGovernanceException exception;
-            if(governance.ProcessVoteAndRelay(vote, exception, *g_connman)) {
-                nSuccessful++;
-                statusObj.push_back(Pair("result", "success"));
-            }
-            else {
-                nFailed++;
-                statusObj.push_back(Pair("result", "failed"));
-                statusObj.push_back(Pair("errorMessage", exception.GetMessage()));
-            }
-
-            resultsObj.push_back(Pair(mne.getAlias(), statusObj));
-        }
-
-        // REPORT STATS TO THE USER
 
         UniValue returnObj(UniValue::VOBJ);
         returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", nSuccessful, nFailed)));
