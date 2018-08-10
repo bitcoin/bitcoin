@@ -350,17 +350,22 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	int count = 0;
 	int totalSenderNodes = 2;
 	int totalPerSenderNode = assetMap.size() / totalSenderNodes;
-	int senderNodeCount = 1;
+	int senderNodeCount = 0;
+	string vecTX = "\"[";
 	for (auto& assetTuple : assetMap) {
 		count++;
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsend " + assetTuple.first + " " + assetTuple.second+ " " + "\"[{\\\"ownerto\\\":\\\"" + assetAddressMap[assetTuple.first] + "\\\",\\\"amount\\\":1}]\" '' ''"));
 		UniValue arr = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
 		string hex_str = find_value(r.get_obj(), "hex").get_str();
-		BOOST_CHECK_NO_THROW(r = CallRPC("node" + boost::lexical_cast<string>(senderNodeCount), "tpstestadd \"[{\\\"tx\\\":\\\"" + hex_str + "\\\"}]\" 0"));
+		vecTX += "{\\\"tx\\\":\\\"" + hex_str + "\\\"}";
 		if ((count % totalPerSenderNode) == 0) {
+			vecTX += "]\"";
 			senderNodeCount++;
+			BOOST_CHECK_NO_THROW(r = CallRPC("node" + boost::lexical_cast<string>(senderNodeCount), "tpstestadd " + vecTX + " 0"));
 		}
+		else
+			vecTX += ",";
 		
 		if (count % 100 == 0)
 			 printf("%.2f percentage done\n", 100.0f / (1000.0f / count));
