@@ -245,7 +245,9 @@ static const CRPCConvertParam vRPCConvertParams[] =
 	{ "assetsend", 2, "inputs" },
 	{ "listassets", 0, "count" },
 	{ "listassets", 1, "from" },
-	{ "listassets", 2, "options" }
+	{ "listassets", 2, "options" },
+	{ "tpstestadd", 0, "rawrxs" },
+	{ "tpstestadd", 1, "starttime" }
 };
 
 class CRPCConvertTable
