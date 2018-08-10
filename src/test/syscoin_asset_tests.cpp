@@ -16,8 +16,6 @@
 #include <iterator>
 #include <chrono>
 #include "ranges.h"
-#include <boost/filesystem.hpp>
-#include <boost/thread.hpp>
 using namespace boost::chrono;
 using namespace std;
 BOOST_GLOBAL_FIXTURE( SyscoinTestingSetup );
@@ -310,23 +308,10 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
  {
 	UniValue r;
 	printf("Running generate_asset_throughput...\n");
-	CallRPC("node1", "stop");
-	MilliSleep(1000);
-	CallRPC("node2", "stop");
-	MilliSleep(1000);
-
-	boost::filesystem::path fpath = boost::filesystem::system_complete("../syscoind");
-	string nodePath = fpath.string() + string(" -unittest -datadir=node1");
-	nodePath += string(" -regtest -addressindex -tpstest");
-	MilliSleep(1000);
-	boost::thread t(runCommand, nodePath);
-
-	fpath = boost::filesystem::system_complete("../syscoind");
-	nodePath = fpath.string() + string(" -unittest -datadir=node2");
-	nodePath += string(" -regtest -addressindex -tpstest");
-
-	boost::thread t2(runCommand, nodePath);
-	MilliSleep(1000);
+	StopNode("node1");
+	StartNode("node1", true, "-tpstest");
+	StopNode("node2");
+	StartNode("node2", true, "-tpstest");
 	GenerateBlocks(5, "node1");
 	GenerateBlocks(5, "node3");
 	map<string, string> assetMap;
@@ -426,19 +411,10 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	UniValue tpsresponse2 = r.get_obj();
 	int64_t sendrawelapsedtime2 = find_value(tpsresponse2, "sendrawelapsedtime").get_int64();
 	printf("tpstarttime %lld sendrawelapsedtime1 %lld sendrawelapsedtime2 %lld totaltime %.2f, num responses %d\n", tpstarttime, sendrawelapsedtime1, sendrawelapsedtime2, totalTime, tpsresponse.size());
-	CallRPC("node1", "stop");
-	MilliSleep(1000);
-	CallRPC("node2", "stop");
-	MilliSleep(1000);
-	fpath = boost::filesystem::system_complete("../syscoind");
-	nodePath = fpath.string() + string(" -unittest -datadir=node1");
-	nodePath += string(" -regtest -addressindex");
-	boost::thread t1a(runCommand, nodePath);
-	MilliSleep(1000);
-	fpath = boost::filesystem::system_complete("../syscoind");
-	nodePath = fpath.string() + string(" -unittest -datadir=node2");
-	nodePath += string(" -regtest -addressindex");
-	boost::thread t2a(runCommand, nodePath);
+	StopNode("node1");
+	StartNode("node1");
+	StopNode("node2");
+	StartNode("node2");
 }
 BOOST_AUTO_TEST_CASE(generate_big_assetname)
 {
