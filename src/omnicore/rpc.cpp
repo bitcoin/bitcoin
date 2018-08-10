@@ -132,30 +132,21 @@ void MetaDexObjectsToJSON(std::vector<CMPMetaDEx>& vMetaDexObjs, UniValue& respo
 bool BalanceToJSON(const std::string& address, uint32_t property, UniValue& balance_obj, bool divisible)
 {
     // confirmed balance minus unconfirmed, spent amounts
-    int64_t nAvailable = getUserAvailableMPbalance(address, property);
-
-    int64_t nReserved = 0;
-    nReserved += getMPbalance(address, property, ACCEPT_RESERVE);
-    nReserved += getMPbalance(address, property, METADEX_RESERVE);
-    nReserved += getMPbalance(address, property, SELLOFFER_RESERVE);
-
-    int64_t nFrozen = getUserFrozenMPbalance(address, property);
+    int64_t nAvailable = GetAvailableTokenBalance(address, property);
+    int64_t nReserved = GetReservedTokenBalance(address, property);
+    int64_t nFrozen = GetFrozenTokenBalance(address, property);
 
     if (divisible) {
         balance_obj.push_back(Pair("balance", FormatDivisibleMP(nAvailable)));
         balance_obj.push_back(Pair("reserved", FormatDivisibleMP(nReserved)));
-        if (nFrozen != 0) balance_obj.push_back(Pair("frozen", FormatDivisibleMP(nFrozen)));
+        balance_obj.push_back(Pair("frozen", FormatDivisibleMP(nFrozen)));
     } else {
         balance_obj.push_back(Pair("balance", FormatIndivisibleMP(nAvailable)));
         balance_obj.push_back(Pair("reserved", FormatIndivisibleMP(nReserved)));
-        if (nFrozen != 0) balance_obj.push_back(Pair("frozen", FormatIndivisibleMP(nFrozen)));
+        balance_obj.push_back(Pair("frozen", FormatIndivisibleMP(nFrozen)));
     }
 
-    if (nAvailable == 0 && nReserved == 0) {
-        return false;
-    } else {
-        return true;
-    }
+    return (nAvailable || nReserved);
 }
 
 // Obtains details of a fee distribution
@@ -764,6 +755,7 @@ UniValue omni_getbalance(const UniValue& params, bool fHelp)
             "{\n"
             "  \"balance\" : \"n.nnnnnnnn\",   (string) the available balance of the address\n"
             "  \"reserved\" : \"n.nnnnnnnn\"   (string) the amount reserved by sell offers and accepts\n"
+            "  \"frozen\" : \"n.nnnnnnnn\"     (string) the amount frozen by the issuer (applies to managed properties only)\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("omni_getbalance", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\" 1")
@@ -795,6 +787,7 @@ UniValue omni_getallbalancesforid(const UniValue& params, bool fHelp)
             "    \"address\" : \"address\",      (string) the address\n"
             "    \"balance\" : \"n.nnnnnnnn\",   (string) the available balance of the address\n"
             "    \"reserved\" : \"n.nnnnnnnn\"   (string) the amount reserved by sell offers and accepts\n"
+            "    \"frozen\" : \"n.nnnnnnnn\"     (string) the amount frozen by the issuer (applies to managed properties only)\n"
             "  },\n"
             "  ...\n"
             "]\n"
@@ -852,6 +845,7 @@ UniValue omni_getallbalancesforaddress(const UniValue& params, bool fHelp)
             "    \"propertyid\" : n,           (number) the property identifier\n"
             "    \"balance\" : \"n.nnnnnnnn\",   (string) the available balance of the address\n"
             "    \"reserved\" : \"n.nnnnnnnn\"   (string) the amount reserved by sell offers and accepts\n"
+            "    \"frozen\" : \"n.nnnnnnnn\"     (string) the amount frozen by the issuer (applies to managed properties only)\n"
             "  },\n"
             "  ...\n"
             "]\n"
@@ -1565,8 +1559,8 @@ UniValue omni_getactivedexsells(const UniValue& params, bool fHelp)
         uint8_t timeLimit = selloffer.getBlockTimeLimit();
         int64_t sellOfferAmount = selloffer.getOfferAmountOriginal(); //badly named - "Original" implies off the wire, but is amended amount
         int64_t sellBitcoinDesired = selloffer.getBTCDesiredOriginal(); //badly named - "Original" implies off the wire, but is amended amount
-        int64_t amountAvailable = getMPbalance(seller, propertyId, SELLOFFER_RESERVE);
-        int64_t amountAccepted = getMPbalance(seller, propertyId, ACCEPT_RESERVE);
+        int64_t amountAvailable = GetTokenBalance(seller, propertyId, SELLOFFER_RESERVE);
+        int64_t amountAccepted = GetTokenBalance(seller, propertyId, ACCEPT_RESERVE);
 
         // TODO: no math, and especially no rounding here (!)
         // TODO: no math, and especially no rounding here (!)
@@ -1725,7 +1719,7 @@ UniValue omni_listtransactions(const UniValue& params, bool fHelp)
             "2. count                (number, optional) show at most n transactions (default: 10)\n"
             "3. skip                 (number, optional) skip the first n transactions (default: 0)\n"
             "4. startblock           (number, optional) first block to begin the search (default: 0)\n"
-            "5. endblock             (number, optional) last block to include in the search (default: 999999)\n"
+            "5. endblock             (number, optional) last block to include in the search (default: 999999999)\n"
             "\nResult:\n"
             "[                                 (array of JSON objects)\n"
             "  {\n"
