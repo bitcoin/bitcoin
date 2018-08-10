@@ -1487,6 +1487,74 @@ $ omnicore-cli "omni_getcurrentconsensushash"
 
 The RPCs for raw transactions/payloads can be used to decode or create raw Omni transactions.
 
+Raw transactions need to be signed with `"signrawtransaction"` and then broadcasted with `"sendrawtransaction"`.
+
+### omni_createfunded_send
+
+Creates a funded simple send raw transaction.
+
+All coins from the sender are consumed and if there are coins missing, they are taken from the specified fee source. Change is sent to the fee source!
+
+As per default, the unspent outputs of this transaction are locked, to avoid that they are used for the construction of another transaction!
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address to send from                                                                     |
+| `toaddress`         | string  | required | the address of the receiver                                                                  |
+| `propertyid`        | number  | required | the identifier of the tokens to send                                                         |
+| `amount`            | string  | required | the amount to send                                                                           |
+| `feeaddress`        | string  | required | the address that is used to pay for fees, if needed                                          |
+| `lockunspent`       | boolean | optional | lock selected unspent outputs (default: true)                                                |
+
+**Result:**
+```js
+"hex"   // (string) the hex-encoded raw transaction
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createfunded_send" "1DFa5bT6KMEr6ta29QJouainsjaNBsJQhH" \
+    "15cWrfuvMxyxGst2FisrQcvcpF48x6sXoH" 1 "100.0" \
+    "15Jhzz4omEXEyFKbdcccJwuVPea5LqsKM1"
+```
+
+---
+
+### omni_createfunded_sweep
+
+Creates a raw transaction that transfers all available tokens in the given ecosystem to the recipient.
+
+All coins from the sender are consumed and if there are coins missing, they are taken from the specified fee source. Change is sent to the fee source!
+
+As per default, the unspent outputs of this transaction are locked, to avoid that they are used for the construction of another transaction!
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address to send from                                                                     |
+| `toaddress`         | string  | required | the address of the receiver                                                                  |
+| `ecosystem`         | number  | required | the ecosystem of the tokens to send (1 for main ecosystem, 2 for test ecosystem)             |
+| `feeaddress`        | string  | required | the address that is used to pay for fees, if needed                                          |
+| `lockunspent`       | boolean | optional | lock selected unspent outputs (default: true)                                                |
+
+**Result:**
+```js
+"hex"   // (string) the hex-encoded raw transaction
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createfunded_sweep" "1DFa5bT6KMEr6ta29QJouainsjaNBsJQhH" \
+    "15cWrfuvMxyxGst2FisrQcvcpF48x6sXoH" 1 "15Jhzz4omEXEyFKbdcccJwuVPea5LqsKM1"
+```
+
+---
+
 ### omni_decodetransaction
 
 Decodes an Omni transaction.

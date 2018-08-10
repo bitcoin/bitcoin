@@ -114,7 +114,7 @@ UniValue omni_createfunded_sweep(const UniValue& params, bool fHelp)
             "\"hex\"                 (string) the hex-encoded raw transaction\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("omni_createfunded_sweep", "\"1DFa5bT6KMEr6ta29QJouainsjaNBsJQhH\" \"15cWrfuvMxyxGst2FisrQcvcpF48x6sXoH\" 1\"15Jhzz4omEXEyFKbdcccJwuVPea5LqsKM1\"")
+            + HelpExampleCli("omni_createfunded_sweep", "\"1DFa5bT6KMEr6ta29QJouainsjaNBsJQhH\" \"15cWrfuvMxyxGst2FisrQcvcpF48x6sXoH\" 1 \"15Jhzz4omEXEyFKbdcccJwuVPea5LqsKM1\"")
             + HelpExampleRpc("omni_createfunded_sweep", "\"1DFa5bT6KMEr6ta29QJouainsjaNBsJQhH\", \"15cWrfuvMxyxGst2FisrQcvcpF48x6sXoH\", 1, \"15Jhzz4omEXEyFKbdcccJwuVPea5LqsKM1\"")
         );
 
