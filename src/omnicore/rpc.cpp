@@ -132,14 +132,14 @@ void MetaDexObjectsToJSON(std::vector<CMPMetaDEx>& vMetaDexObjs, UniValue& respo
 bool BalanceToJSON(const std::string& address, uint32_t property, UniValue& balance_obj, bool divisible)
 {
     // confirmed balance minus unconfirmed, spent amounts
-    int64_t nAvailable = getUserAvailableMPbalance(address, property);
+    int64_t nAvailable = GetAvailableTokenBalance(address, property);
 
     int64_t nReserved = 0;
-    nReserved += getMPbalance(address, property, ACCEPT_RESERVE);
-    nReserved += getMPbalance(address, property, METADEX_RESERVE);
-    nReserved += getMPbalance(address, property, SELLOFFER_RESERVE);
+    nReserved += GetTokenBalance(address, property, ACCEPT_RESERVE);
+    nReserved += GetTokenBalance(address, property, METADEX_RESERVE);
+    nReserved += GetTokenBalance(address, property, SELLOFFER_RESERVE);
 
-    int64_t nFrozen = getUserFrozenMPbalance(address, property);
+    int64_t nFrozen = GetFrozenTokenBalance(address, property);
 
     if (divisible) {
         balance_obj.push_back(Pair("balance", FormatDivisibleMP(nAvailable)));
@@ -1565,8 +1565,8 @@ UniValue omni_getactivedexsells(const UniValue& params, bool fHelp)
         uint8_t timeLimit = selloffer.getBlockTimeLimit();
         int64_t sellOfferAmount = selloffer.getOfferAmountOriginal(); //badly named - "Original" implies off the wire, but is amended amount
         int64_t sellBitcoinDesired = selloffer.getBTCDesiredOriginal(); //badly named - "Original" implies off the wire, but is amended amount
-        int64_t amountAvailable = getMPbalance(seller, propertyId, SELLOFFER_RESERVE);
-        int64_t amountAccepted = getMPbalance(seller, propertyId, ACCEPT_RESERVE);
+        int64_t amountAvailable = GetTokenBalance(seller, propertyId, SELLOFFER_RESERVE);
+        int64_t amountAccepted = GetTokenBalance(seller, propertyId, ACCEPT_RESERVE);
 
         // TODO: no math, and especially no rounding here (!)
         // TODO: no math, and especially no rounding here (!)

@@ -259,7 +259,7 @@ CMPTally* mastercore::getTally(const std::string& address)
 }
 
 // look at balance for an address
-int64_t getMPbalance(const std::string& address, uint32_t propertyId, TallyType ttype)
+int64_t GetTokenBalance(const std::string& address, uint32_t propertyId, TallyType ttype)
 {
     int64_t balance = 0;
     if (TALLY_TYPE_COUNT <= ttype) {
@@ -279,10 +279,10 @@ int64_t getMPbalance(const std::string& address, uint32_t propertyId, TallyType 
     return balance;
 }
 
-int64_t getUserAvailableMPbalance(const std::string& address, uint32_t propertyId)
+int64_t GetAvailableTokenBalance(const std::string& address, uint32_t propertyId)
 {
-    int64_t money = getMPbalance(address, propertyId, BALANCE);
-    int64_t pending = getMPbalance(address, propertyId, PENDING);
+    int64_t money = GetTokenBalance(address, propertyId, BALANCE);
+    int64_t pending = GetTokenBalance(address, propertyId, PENDING);
 
     if (0 > pending) {
         return (money + pending); // show the decrease in available money
@@ -291,12 +291,12 @@ int64_t getUserAvailableMPbalance(const std::string& address, uint32_t propertyI
     return money;
 }
 
-int64_t getUserFrozenMPbalance(const std::string& address, uint32_t propertyId)
+int64_t GetFrozenTokenBalance(const std::string& address, uint32_t propertyId)
 {
     int64_t frozen = 0;
 
     if (isAddressFrozen(address, propertyId)) {
-        frozen = getMPbalance(address, propertyId, BALANCE);
+        frozen = GetTokenBalance(address, propertyId, BALANCE);
     }
 
     return frozen;
@@ -482,7 +482,7 @@ bool mastercore::update_tally_map(const std::string& who, uint32_t propertyId, i
         assert(!isAddressFrozen(who, propertyId)); // for safety, this should never fail if everything else is working properly.
     }
 
-    before = getMPbalance(who, propertyId, ttype);
+    before = GetTokenBalance(who, propertyId, ttype);
 
     std::unordered_map<std::string, CMPTally>::iterator my_it = mp_tally_map.find(who);
     if (my_it == mp_tally_map.end()) {
@@ -493,7 +493,7 @@ bool mastercore::update_tally_map(const std::string& who, uint32_t propertyId, i
     CMPTally& tally = my_it->second;
     bRet = tally.updateMoney(propertyId, amount, ttype);
 
-    after = getMPbalance(who, propertyId, ttype);
+    after = GetTokenBalance(who, propertyId, ttype);
     if (!bRet) {
         assert(before == after);
         PrintToLog("%s(%s, %u=0x%X, %+d, ttype=%d) ERROR: insufficient balance (=%d)\n", __func__, who, propertyId, propertyId, amount, ttype, before);
@@ -627,10 +627,10 @@ void CheckWalletUpdate(bool forceUpdate)
             // check if the address is spendable (only spendable balances are included in totals)
             if (addressIsMine != ISMINE_SPENDABLE) continue;
             // work out the balances and add to globals
-            global_balance_money[propertyId] += getUserAvailableMPbalance(address, propertyId);
-            global_balance_reserved[propertyId] += getMPbalance(address, propertyId, SELLOFFER_RESERVE);
-            global_balance_reserved[propertyId] += getMPbalance(address, propertyId, METADEX_RESERVE);
-            global_balance_reserved[propertyId] += getMPbalance(address, propertyId, ACCEPT_RESERVE);
+            global_balance_money[propertyId] += GetAvailableTokenBalance(address, propertyId);
+            global_balance_reserved[propertyId] += GetTokenBalance(address, propertyId, SELLOFFER_RESERVE);
+            global_balance_reserved[propertyId] += GetTokenBalance(address, propertyId, METADEX_RESERVE);
+            global_balance_reserved[propertyId] += GetTokenBalance(address, propertyId, ACCEPT_RESERVE);
         }
     }
     // signal an Omni balance change
@@ -1682,7 +1682,7 @@ int mastercore_init()
     // collect the real Exodus balances available at the snapshot time
     // redundant? do we need to show it both pre-parse and post-parse?  if so let's label the printfs accordingly
     if (msc_debug_exo) {
-        int64_t exodus_balance = getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
+        int64_t exodus_balance = GetTokenBalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
         PrintToLog("Exodus balance at start: %s\n", FormatDivisibleMP(exodus_balance));
     }
 
@@ -1705,7 +1705,7 @@ int mastercore_init()
     msc_initial_scan(nWaterlineBlock);
 
     // display Exodus balance
-    int64_t exodus_balance = getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
+    int64_t exodus_balance = GetTokenBalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
     PrintToLog("Exodus balance after initialization: %s\n", FormatDivisibleMP(exodus_balance));
 
     PrintToConsole("Omni Core initialization completed\n");
@@ -1896,7 +1896,7 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
     devmsc = calculate_and_update_devmsc(pBlockIndex->GetBlockTime(), nBlockNow);
 
     if (msc_debug_exo) {
-        int64_t balance = getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
+        int64_t balance = GetTokenBalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
         PrintToLog("devmsc for block %d: %d, Exodus balance: %d\n", nBlockNow, devmsc, FormatDivisibleMP(balance));
     }
 

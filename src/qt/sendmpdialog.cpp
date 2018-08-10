@@ -165,7 +165,7 @@ void SendMPDialog::updateFrom()
         QString spId = ui->propertyComboBox->itemData(ui->propertyComboBox->currentIndex()).toString();
         uint32_t propertyId = spId.toUInt();
         if (propertyId > 0) {
-            ui->balanceLabel->setText(QString::fromStdString("Address Balance: " + FormatMP(propertyId, getUserAvailableMPbalance(currentSetFromAddress, propertyId)) + getTokenLabel(propertyId)));
+            ui->balanceLabel->setText(QString::fromStdString("Address Balance: " + FormatMP(propertyId, GetAvailableTokenBalance(currentSetFromAddress, propertyId)) + getTokenLabel(propertyId)));
         }
         // warning label will be lit if insufficient fees for simple send (16 byte payload)
         if (CheckFee(currentSetFromAddress, 16)) {
@@ -197,8 +197,8 @@ void SendMPDialog::updateProperty()
         }
         if (!includeAddress) continue; //ignore this address, has never transacted in this propertyId
         if (IsMyAddress(address) != ISMINE_SPENDABLE) continue; // ignore this address, it's not spendable
-        if (!getUserAvailableMPbalance(address, propertyId)) continue; // ignore this address, has no available balance to spend
-        ui->sendFromComboBox->addItem(QString::fromStdString(address + " \t" + FormatMP(propertyId, getUserAvailableMPbalance(address, propertyId)) + getTokenLabel(propertyId)));
+        if (!GetAvailableTokenBalance(address, propertyId)) continue; // ignore this address, has no available balance to spend
+        ui->sendFromComboBox->addItem(QString::fromStdString(address + " \t" + FormatMP(propertyId, GetAvailableTokenBalance(address, propertyId)) + getTokenLabel(propertyId)));
     }
 
     // attempt to set from address back to cached value
@@ -280,7 +280,7 @@ void SendMPDialog::sendMPTransaction()
     }
 
     // check if sending address has enough funds
-    int64_t balanceAvailable = getUserAvailableMPbalance(fromAddress.ToString(), propertyId); //getMPbalance(fromAddress.ToString(), propertyId, MONEY);
+    int64_t balanceAvailable = GetAvailableTokenBalance(fromAddress.ToString(), propertyId); //getMPbalance(fromAddress.ToString(), propertyId, MONEY);
     if (sendAmount>balanceAvailable) {
         QMessageBox::critical( this, "Unable to send transaction",
         "The selected sending address does not have a sufficient balance to cover the amount entered.\n\nPlease double-check the transction details thoroughly before retrying your send transaction." );

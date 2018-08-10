@@ -1050,7 +1050,7 @@ int CMPTransaction::logicMath_SimpleSend()
         return (PKT_ERROR_SEND -24);
     }
 
-    int64_t nBalance = getMPbalance(sender, property, BALANCE);
+    int64_t nBalance = GetTokenBalance(sender, property, BALANCE);
     if (nBalance < (int64_t) nValue) {
         PrintToLog("%s(): rejected: sender %s has insufficient balance of property %d [%s < %s]\n",
                 __func__,
@@ -1103,7 +1103,7 @@ int CMPTransaction::logicMath_SendToOwners()
         }
     }
 
-    int64_t nBalance = getMPbalance(sender, property, BALANCE);
+    int64_t nBalance = GetTokenBalance(sender, property, BALANCE);
     if (nBalance < (int64_t) nValue) {
         PrintToLog("%s(): rejected: sender %s has insufficient balance of property %d [%s < %s]\n",
                 __func__,
@@ -1134,7 +1134,7 @@ int CMPTransaction::logicMath_SendToOwners()
 
     // enough coins to pay the fee?
     if (feeProperty != property) {
-        int64_t nBalanceFee = getMPbalance(sender, feeProperty, BALANCE);
+        int64_t nBalanceFee = GetTokenBalance(sender, feeProperty, BALANCE);
         if (nBalanceFee < transferFee) {
             PrintToLog("%s(): rejected: sender %s has insufficient balance of property %d to pay for fee [%s < %s]\n",
                     __func__,
@@ -1146,7 +1146,7 @@ int CMPTransaction::logicMath_SendToOwners()
         }
     } else {
         // special case check, only if distributing MSC or TMSC -- the property the fee will be paid in
-        int64_t nBalanceFee = getMPbalance(sender, feeProperty, BALANCE);
+        int64_t nBalanceFee = GetTokenBalance(sender, feeProperty, BALANCE);
         if (nBalanceFee < ((int64_t) nValue + transferFee)) {
             PrintToLog("%s(): rejected: sender %s has insufficient balance of %d to pay for amount + fee [%s < %s + %s]\n",
                     __func__,
@@ -1438,7 +1438,7 @@ int CMPTransaction::logicMath_MetaDExTrade()
         }
     }
 
-    int64_t nBalance = getMPbalance(sender, property, BALANCE);
+    int64_t nBalance = GetTokenBalance(sender, property, BALANCE);
     if (nBalance < (int64_t) nNewValue) {
         PrintToLog("%s(): rejected: sender %s has insufficient balance of property %d [%s < %s]\n",
                 __func__,
@@ -2014,7 +2014,7 @@ int CMPTransaction::logicMath_RevokeTokens()
         return (PKT_ERROR_TOKENS -42);
     }
 
-    int64_t nBalance = getMPbalance(sender, property, BALANCE);
+    int64_t nBalance = GetTokenBalance(sender, property, BALANCE);
     if (nBalance < (int64_t) nValue) {
         PrintToLog("%s(): rejected: sender %s has insufficient balance of property %d [%s < %s]\n",
                 __func__,

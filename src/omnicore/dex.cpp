@@ -159,7 +159,7 @@ int DEx_offerCreate(const std::string& addressSeller, uint32_t propertyId, int64
     const std::string key = STR_SELLOFFER_ADDR_PROP_COMBO(addressSeller, propertyId);
     if (msc_debug_dex) PrintToLog("%s(%s|%s), nValue=%d)\n", __func__, addressSeller, key, amountOffered);
 
-    const int64_t balanceReallyAvailable = getMPbalance(addressSeller, propertyId, BALANCE);
+    const int64_t balanceReallyAvailable = GetTokenBalance(addressSeller, propertyId, BALANCE);
 
     /**
      * After this feature is enabled, it is no longer valid to create orders, which offer more than
@@ -218,7 +218,7 @@ int DEx_offerDestroy(const std::string& addressSeller, uint32_t propertyId)
         return (DEX_ERROR_SELLOFFER -11); // offer does not exist
     }
 
-    const int64_t amountReserved = getMPbalance(addressSeller, propertyId, SELLOFFER_RESERVE);
+    const int64_t amountReserved = GetTokenBalance(addressSeller, propertyId, SELLOFFER_RESERVE);
 
     // return the remaining reserved amount back to the seller
     if (amountReserved > 0) {
@@ -298,7 +298,7 @@ int DEx_acceptCreate(const std::string& addressBuyer, const std::string& address
     }
 
     int64_t amountReserved = 0;
-    int64_t amountRemainingForSale = getMPbalance(addressSeller, propertyId, SELLOFFER_RESERVE);
+    int64_t amountRemainingForSale = GetTokenBalance(addressSeller, propertyId, SELLOFFER_RESERVE);
 
     // ensure the buyer only can reserve the amount that is still available
     if (amountRemainingForSale >= amountAccepted) {
@@ -524,8 +524,8 @@ int DEx_payment(const uint256& txid, unsigned int vout, const std::string& addre
 
     // reduce the amount of units still desired by the buyer and if 0 destroy the Accept order
     if (p_accept->reduceAcceptAmountRemaining_andIsZero(amountPurchased)) {
-        const int64_t reserveSell = getMPbalance(addressSeller, propertyId, SELLOFFER_RESERVE);
-        const int64_t reserveAccept = getMPbalance(addressSeller, propertyId, ACCEPT_RESERVE);
+        const int64_t reserveSell = GetTokenBalance(addressSeller, propertyId, SELLOFFER_RESERVE);
+        const int64_t reserveAccept = GetTokenBalance(addressSeller, propertyId, ACCEPT_RESERVE);
 
         DEx_acceptDestroy(addressBuyer, addressSeller, propertyId, true);
 

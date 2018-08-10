@@ -154,7 +154,7 @@ void LookupAddressDialog::searchAddress()
         if ((searchText.substr(0,1) == "1") || (searchText.substr(0,1) == "m") || (searchText.substr(0,1) == "n")) ui->addressTypeLabel->setText("Public Key Hash");
         if ((searchText.substr(0,1) == "2") || (searchText.substr(0,1) == "3")) ui->addressTypeLabel->setText("Pay to Script Hash");
         if (IsMyAddress(searchText)) { ui->isMineLabel->setText("Yes"); } else { ui->isMineLabel->setText("No"); }
-        ui->balanceLabel->setText(QString::fromStdString(FormatDivisibleMP(getUserAvailableMPbalance(searchText, 1)) + " OMNI"));
+        ui->balanceLabel->setText(QString::fromStdString(FormatDivisibleMP(GetAvailableTokenBalance(searchText, 1)) + " OMNI"));
         // QR
         #ifdef USE_QRCODE
         ui->QRCode->setText("");
@@ -198,14 +198,14 @@ void LookupAddressDialog::searchAddress()
             for (propertyId = lastFoundPropertyIdMainEco+1; propertyId<10000; propertyId++)
             {
                 foundProperty=false;
-                if (getUserAvailableMPbalance(searchText, propertyId) > 0)
+                if (GetAvailableTokenBalance(searchText, propertyId) > 0)
                 {
                     lastFoundPropertyIdMainEco = propertyId;
                     foundProperty=true;
                     pName[pItem] = getPropertyName(propertyId).c_str();
                     if(pName[pItem].size()>32) pName[pItem]=pName[pItem].substr(0,32)+"...";
                     pName[pItem] += strprintf(" (#%d)", propertyId);
-                    pBal[pItem] = getUserAvailableMPbalance(searchText, propertyId);
+                    pBal[pItem] = GetAvailableTokenBalance(searchText, propertyId);
                     pDivisible[pItem] = isPropertyDivisible(propertyId);
                     pFound[pItem] = true;
                     break;
@@ -217,14 +217,14 @@ void LookupAddressDialog::searchAddress()
             {
                 for (propertyId = lastFoundPropertyIdTestEco+1; propertyId<10000; propertyId++)
                 {
-                    if (getUserAvailableMPbalance(searchText, propertyId+2147483647) > 0)
+                    if (GetAvailableTokenBalance(searchText, propertyId+2147483647) > 0)
                     {
                         lastFoundPropertyIdTestEco = propertyId;
                         foundProperty=true;
                         pName[pItem] = getPropertyName(propertyId+2147483647).c_str();
                         if(pName[pItem].size()>32) pName[pItem]=pName[pItem].substr(0,32)+"...";
                         pName[pItem] += strprintf(" (#%d)", propertyId+2147483647);
-                        pBal[pItem] = getUserAvailableMPbalance(searchText, propertyId+2147483647);
+                        pBal[pItem] = GetAvailableTokenBalance(searchText, propertyId+2147483647);
                         pDivisible[pItem] = isPropertyDivisible(propertyId+2147483647);
                         pFound[pItem] = true;
                         break;
