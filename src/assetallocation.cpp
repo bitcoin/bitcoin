@@ -452,6 +452,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 	}
 	else if (op == OP_ASSET_ALLOCATION_SEND)
 	{
+		LOCK(cs_assetallocation);
 		if (!vchAlias.empty() && CSyscoinAddress(user1).IsValid()) {
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1016 - " + _("This asset allocation cannot be spent because owner is an alias but the alias is also a valid syscoin address");
 			return true;
@@ -887,7 +888,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
 		ToLowerCase(vchAliasOrAddressFrom);
 		strAliasOrAddress = stringFromVch(vchAliasOrAddressFrom);
 	}
-
+	LOCK(cs_assetallocation);
 	CAssetAllocation theAssetAllocation;
 	const CAssetAllocationTuple assetAllocationTuple(vchAsset, vchAliasOrAddressFrom);
 	if (!GetAssetAllocation(assetAllocationTuple, theAssetAllocation))
@@ -1043,7 +1044,7 @@ UniValue assetallocationcollectinterest(const JSONRPCRequest& request) {
 		ToLowerCase(vchAliasOrAddressFrom);
 		strAliasOrAddress = stringFromVch(vchAliasOrAddressFrom);
 	}
-
+	LOCK(cs_assetallocation);
 	CAssetAllocation theAssetAllocation;
 	const CAssetAllocationTuple assetAllocationTuple(vchAsset, vchAliasOrAddressFrom);
 	if (!GetAssetAllocation(assetAllocationTuple, theAssetAllocation))
@@ -1107,6 +1108,7 @@ UniValue assetallocationinfo(const JSONRPCRequest& request) {
 	UniValue oAssetAllocation(UniValue::VOBJ);
 	const CAssetAllocationTuple assetAllocationTuple(vchAsset, vchAliasOrAddressFrom);
 	CAssetAllocation txPos;
+	LOCK(cs_assetallocation);
 	if (!passetallocationdb || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1507 - " + _("Failed to read from assetallocation DB"));
 
@@ -1235,7 +1237,7 @@ UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
 	if(!params[2].get_str().empty())
 		txid.SetHex(params[2].get_str());
 	UniValue oAssetAllocationStatus(UniValue::VOBJ);
-
+	LOCK(cs_assetallocation);
 	const CAssetAllocationTuple assetAllocationTupleSender(vchAsset, vchAliasOrAddressSender);
 
 	int nStatus = ZDAG_STATUS_OK;
@@ -1410,7 +1412,6 @@ bool CAssetAllocationTransactionsDB::ScanAssetAllocationIndex(const int count, c
 			nStartBlock = startblock.get_int();
 		}
 	}
-	LOCK(cs_assetallocationindex);
 	int index = 0;
 	UniValue assetValue;
 	vector<string> contents;
@@ -1570,6 +1571,7 @@ UniValue listassetallocationtransactions(const JSONRPCRequest& request) {
 	if (!fAssetAllocationIndex) {
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1509 - " + _("Asset allocation index not enabled, you must enable -assetallocationindex as a startup parameter or through syscoin.conf file to use this function.")); 
 	}
+	LOCK(cs_assetallocationindex);
 	UniValue oRes(UniValue::VARR);
 	if (!passetallocationtransactionsdb->ScanAssetAllocationIndex(count, from, options, oRes))
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1509 - " + _("Scan failed"));
@@ -1617,7 +1619,7 @@ UniValue listassetallocations(const JSONRPCRequest& request) {
 	if (params.size() > 2) {
 		options = params[2];
 	}
-
+	LOCK(cs_assetallocation);
 	UniValue oRes(UniValue::VARR);
 	if (!passetallocationdb->ScanAssetAllocations(count, from, options, oRes))
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("Scan failed"));

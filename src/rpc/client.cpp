@@ -248,7 +248,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
 	{ "listassets", 2, "options" },
 	{ "tpstestadd", 0, "rawrxs" },
 	{ "tpstestadd", 1, "starttime" },
-	{ "tpstestsetnabled", 0, "enabled" }
+	{ "tpstestsetenabled", 0, "enabled" }
 };
 
 class CRPCConvertTable
