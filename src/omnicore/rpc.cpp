@@ -850,6 +850,7 @@ UniValue omni_getallbalancesforaddress(const UniValue& params, bool fHelp)
             "[                           (array of JSON objects)\n"
             "  {\n"
             "    \"propertyid\" : n,           (number) the property identifier\n"
+            "    \"name\" : \"name\",            (string) the name of the property\n"
             "    \"balance\" : \"n.nnnnnnnn\",   (string) the available balance of the address\n"
             "    \"reserved\" : \"n.nnnnnnnn\"   (string) the amount reserved by sell offers and accepts\n"
             "  },\n"
