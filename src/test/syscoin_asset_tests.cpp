@@ -427,8 +427,15 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	printf("tpstarttime %lld sendrawelapsedtime1 %lld sendrawelapsedtime2 %lld totaltime %.2f, num responses %d\n", tpstarttime, sendrawelapsedtime1, sendrawelapsedtime2, totalTime, tpsresponse.size());
 	StopNode("node1");
 	StopNode("node2");
-	StartNode("node1");
-	StartNode("node2");
+	fpath = boost::filesystem::system_complete("../syscoind");
+	nodePath = fpath.string() + string(" -unittest -datadir=node1");
+	nodePath += string(" -regtest -addressindex");
+	boost::thread t1a(runCommand, nodePath);
+
+	fpath = boost::filesystem::system_complete("../syscoind");
+	nodePath = fpath.string() + string(" -unittest -datadir=node2");
+	nodePath += string(" -regtest -addressindex");
+	boost::thread t2a(runCommand, nodePath);
 }
 BOOST_AUTO_TEST_CASE(generate_big_assetname)
 {
