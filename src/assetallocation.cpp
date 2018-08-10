@@ -756,7 +756,7 @@ UniValue tpstestinfo(const JSONRPCRequest& request) {
 	if (request.fHelp || 0 != params.size())
 		throw runtime_error("tpstestinfo\n"
 			"Gets TPS Test information for receivers of assetallocation transfers\n");
-	if (!fTPSTest)
+	if(!fTPSTest)
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("This function requires tpstest configuration to be set upon startup. Please shutdown and enable it by adding it to your syscoin.conf file and then try again."));
 	UniValue oTPSTestResults(UniValue::VOBJ);
 	UniValue oTPSTestReceivers(UniValue::VARR);
