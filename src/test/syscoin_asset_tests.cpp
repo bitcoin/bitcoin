@@ -315,7 +315,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 
 	// create 1000 addresses and assets for each asset	
 	printf("creating sender 1000 address/asset...\n");
-	for (int i = 0; i < 100; i++) {
+	for (int i = 0; i < 500; i++) {
 		string address1 = GetNewFundedAddress("node1");
 		string address2 = GetNewFundedAddress("node1");
 		
@@ -345,26 +345,23 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 
 	GenerateBlocks(10);
 	printf("Creating assetsend transactions...\n");
-	string assetSendTxVec1 = "\"[";
-	string assetSendTxVec2 = "\"[";
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "tpstestsetenabled true"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "tpstestsetenabled true"));
 	int count = 0;
+	int totalSenderNodes = 2;
+	int totalPerSenderNode = assetMap.size() / totalSenderNodes;
+	int senderNodeCount = 1;
 	for (auto& assetTuple : assetMap) {
 		count++;
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsend " + assetTuple.first + " " + assetTuple.second+ " " + "\"[{\\\"ownerto\\\":\\\"" + assetAddressMap[assetTuple.first] + "\\\",\\\"amount\\\":1}]\" '' ''"));
 		UniValue arr = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
 		string hex_str = find_value(r.get_obj(), "hex").get_str();
-		if (count <= (assetMap.size() / 2)) {
-			assetSendTxVec1 += "{\\\"tx\\\":\\\"" + hex_str + "\\\"}";
-			if (count < (assetMap.size()/2))
-				assetSendTxVec1 += ",";
+		BOOST_CHECK_NO_THROW(r = CallRPC("node" + boost::lexical_cast<string>(senderNodeCount), "tpstestadd \"[{\\\"tx\\\":\\\"" + hex_str + "\\\"}\" 0"));
+		if ((count % totalPerSenderNode) == 0) {
+			senderNodeCount++;
 		}
-		else {
-			assetSendTxVec2 += "{\\\"tx\\\":\\\"" + hex_str + "\\\"}";
-			if (count < assetMap.size())
-				assetSendTxVec2 += ",";
-		}
-
+		
 		if (count % 100 == 0)
 			 printf("%.2f percentage done\n", 100.0f / (1000.0f / count));
 		
@@ -372,23 +369,14 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	}
 	int64_t tpstarttime = GetTimeMicros();
 	int microsInSecond = 1000 * 1000;
-	tpstarttime = tpstarttime + 5* microsInSecond; // add 5 seconds to current time for official start time
-	assetSendTxVec1 += "]\"";
-	assetSendTxVec2 += "]\"";
+	tpstarttime = tpstarttime + 1* microsInSecond;
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "tpstestadd [{}] " + tpstarttime));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "tpstestadd [{}] " + tpstarttime));
 	printf("Adding assetsend transactions to queue on sender nodes...\n");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "tpstestsetenabled true"));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "tpstestsetenabled true"));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "tpstestadd " + assetSendTxVec1 + " " + boost::lexical_cast<string>(tpstarttime)));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "tpstestadd " + assetSendTxVec2 + " " + boost::lexical_cast<string>(tpstarttime)));
 	float totalTime = 0;
-	// wait until start time
-	while (GetTimeMicros() < tpstarttime) {
-		printf("Waiting for start time, another %d seconds...\n", (tpstarttime - GetTimeMicros()) / microsInSecond);
-		MilliSleep(1000);
-	}
-	printf("Waiting 10 seconds as per protocol...\n");
-	// start 10 second wait
-	MilliSleep(10000);
+	printf("Waiting 11 seconds as per protocol...\n");
+	// start 11 second wait
+	MilliSleep(11000);
 	
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "tpstestinfo"));
 	UniValue tpsresponse1 = r.get_obj();
