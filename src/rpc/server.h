@@ -240,6 +240,7 @@ extern UniValue assetallocationsenderstatus(const JSONRPCRequest& request);
 extern UniValue listassetallocationtransactions(const JSONRPCRequest& request);
 extern UniValue listassetallocations(const JSONRPCRequest& request);
 extern UniValue tpstestinfo(const JSONRPCRequest& request);
+extern UniValue tpstestadd(const JSONRPCRequest& request);
 /**
  * Utilities: convert hex-encoded Values
  * (throws error if not hex).
