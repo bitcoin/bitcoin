@@ -1321,6 +1321,39 @@ class msg_cmpctblock():
     def __repr__(self):
         return "msg_cmpctblock(HeaderAndShortIDs=%s)" % repr(self.header_and_shortids)
 
+
+class msg_dandelion_accept():
+    command = b'dandelionacc'
+
+    def __init__(self):
+        pass
+
+    def deserialize(self, f):
+        pass
+
+    def serialize(self):
+        return b""
+
+    def __repr__(self):
+        return "msg_dandelion_accept()"
+
+
+class msg_dandelion_tx():
+    command = b'dandeliontx'
+
+    def __init__(self, tx=CTransaction()):
+        self.tx = tx
+
+    def deserialize(self, f):
+        self.tx.deserialize(f)
+
+    def serialize(self):
+        return self.tx.serialize_with_witness()
+
+    def __repr__(self):
+        return "msg_dandelion_tx(tx=%s)" % (repr(self.tx))
+
+
 class msg_getblocktxn():
     command = b"getblocktxn"
 

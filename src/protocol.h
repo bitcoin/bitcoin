@@ -121,6 +121,11 @@ extern const char *GETHEADERS;
  */
 extern const char *TX;
 /**
+ * The dandelion tx message transmits a single transaction.
+ * @see https://github.com/bitcoin/bips/blob/master/bip-0156.mediawiki
+ */
+extern const char* TX_DANDELION;
+/**
  * The headers message sends one or more block headers to a node which
  * previously requested certain headers with a getheaders message.
  * @since protocol version 31800.
@@ -206,6 +211,12 @@ extern const char *REJECT;
  * @see https://bitcoin.org/en/developer-reference#sendheaders
  */
 extern const char *SENDHEADERS;
+/**
+ * The dandelion message tells the receiving peer that we accept txs
+ * as dandelion tx.
+ * @see https://github.com/bitcoin/bips/blob/master/bip-0156.mediawiki
+ */
+extern const char* ACCEPT_DANDELION;
 /**
  * The feefilter message tells the receiving peer not to inv us any txs
  * which do not meet the specified min fee rate.

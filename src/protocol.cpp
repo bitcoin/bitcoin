@@ -24,6 +24,7 @@ const char *MERKLEBLOCK="merkleblock";
 const char *GETBLOCKS="getblocks";
 const char *GETHEADERS="getheaders";
 const char *TX="tx";
+const char* TX_DANDELION = "dandeliontx";
 const char *HEADERS="headers";
 const char *BLOCK="block";
 const char *GETADDR="getaddr";
@@ -36,6 +37,7 @@ const char *FILTERADD="filteradd";
 const char *FILTERCLEAR="filterclear";
 const char *REJECT="reject";
 const char *SENDHEADERS="sendheaders";
+const char* ACCEPT_DANDELION = "dandelionacc";
 const char *FEEFILTER="feefilter";
 const char *SENDCMPCT="sendcmpct";
 const char *CMPCTBLOCK="cmpctblock";
@@ -56,6 +58,7 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::GETBLOCKS,
     NetMsgType::GETHEADERS,
     NetMsgType::TX,
+    NetMsgType::TX_DANDELION,
     NetMsgType::HEADERS,
     NetMsgType::BLOCK,
     NetMsgType::GETADDR,
@@ -68,6 +71,7 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::FILTERCLEAR,
     NetMsgType::REJECT,
     NetMsgType::SENDHEADERS,
+    NetMsgType::ACCEPT_DANDELION,
     NetMsgType::FEEFILTER,
     NetMsgType::SENDCMPCT,
     NetMsgType::CMPCTBLOCK,
