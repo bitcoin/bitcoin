@@ -24,7 +24,8 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/algorithm/string.hpp>
-
+#include "thread_pool/thread_pool.hpp"
+#include <future>
 using namespace std;
 vector<pair<uint256, int64_t> > vecTPSTestReceivedTimes;
 vector<JSONRPCRequest> vecTPSRawTransactions;
@@ -784,18 +785,18 @@ UniValue tpstestadd(const JSONRPCRequest& request) {
 			"       ,...\n"
 			"     ]\n"
 			"2. starttime                  (numeric, required) Unix epoch time in micro seconds for when to send the raw transaction queue to the network\n"
-			+ HelpExampleCli("tpstestadd", "\"[{\\\"tx\\\":\\\"first raw hex tx\\\"},{\\\"tx\\\":\\\"second raw hex tx\\\"}]\" \"223233433839384\"")
+			+ HelpExampleCli("tpstestadd", "\"[{\\\"tx\\\":\\\"first raw hex tx\\\"},{\\\"tx\\\":\\\"second raw hex tx\\\"}]\" \"223233433839384\"");
 	if (!fTPSTest)
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("This function requires tpstest configuration to be set upon startup. Please shutdown and enable it by adding it to your syscoin.conf file and then try again."));
 	
-	RPCTypeCheck(params, boost::assign::list_of(UniValue::VARR)(UniValue::VNUM), true);
+
 	bool bFirstTime = vecTPSRawTransactions.empty();
 	UniValue txs = params[0].get_array();
 	nTPSTestingStartTime = params[1].get_int64();
 	for (unsigned int idx = 0; idx < txs.size(); idx++) {
 		const UniValue& tx = txs[idx];
 		UniValue paramsRawTx(UniValue::VARR);
-		paramsRawTx.push_back(find_value(tx.get_obj() "tx").get_str());
+		paramsRawTx.push_back(find_value(tx.get_obj(),"tx").get_str());
 
 		JSONRPCRequest request;
 		request.params = paramsRawTx;
