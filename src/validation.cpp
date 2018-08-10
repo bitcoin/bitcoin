@@ -848,65 +848,66 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
     // Check for conflicts with in-memory transactions
     std::set<uint256> setConflicts;
 	if (!fTPSTestEnabled) {
-    LOCK(pool.cs); // protect pool.mapNextTx
-    BOOST_FOREACH(const CTxIn &txin, tx.vin)
-    {
-        auto itConflicting = pool.mapNextTx.find(txin.prevout);
-        if (itConflicting != pool.mapNextTx.end())
-        {
-            const CTransaction *ptxConflicting = itConflicting->second;
-            if (!setConflicts.count(ptxConflicting->GetHash()))
-            {
-                // InstantSend txes are not replacable
-                if(instantsend.HasTxLockRequest(ptxConflicting->GetHash())) {
-                    // this tx conflicts with a Transaction Lock Request candidate
-                    return state.DoS(0, error("AcceptToMemoryPool : Transaction %s conflicts with Transaction Lock Request %s",
-                                            hash.ToString(), ptxConflicting->GetHash().ToString()),
-                                    REJECT_INVALID, "tx-txlockreq-mempool-conflict");
-                } else if (instantsend.HasTxLockRequest(hash)) {
-                    // this tx is a tx lock request and it conflicts with a normal tx
-                    return state.DoS(0, error("AcceptToMemoryPool : Transaction Lock Request %s conflicts with transaction %s",
-                                            hash.ToString(), ptxConflicting->GetHash().ToString()),
-                                    REJECT_INVALID, "txlockreq-tx-mempool-conflict");
-                }
-				// SYSCOIN txs are not replacable
-				else if (ptxConflicting->nVersion == SYSCOIN_TX_VERSION) {
-					return state.DoS(0, error("AcceptToMemoryPool : Syscoin Transaction %s conflicts with Transaction request %s",
-						hash.ToString(), ptxConflicting->GetHash().ToString()),
-						REJECT_INVALID, "txn-mempool-conflict");
-				}
-                // Allow opt-out of transaction replacement by setting
-                // nSequence >= maxint-1 on all inputs.
-                //
-                // maxint-1 is picked to still allow use of nLockTime by
-                // non-replaceable transactions. All inputs rather than just one
-                // is for the sake of multi-party protocols, where we don't
-                // want a single party to be able to disable replacement.
-                //
-                // The opt-out ignores descendants as anyone relying on
-                // first-seen mempool behavior should be checking all
-                // unconfirmed ancestors anyway; doing otherwise is hopelessly
-                // insecure.
-                bool fReplacementOptOut = true;
-                if (fEnableReplacement)
-                {
-                    BOOST_FOREACH(const CTxIn &_txin, ptxConflicting->vin)
-                    {
-                        if (_txin.nSequence < std::numeric_limits<unsigned int>::max()-1)
-                        {
-                            fReplacementOptOut = false;
-                            break;
-                        }
-                    }
-                }
-                if (fReplacementOptOut)
-                    return state.Invalid(false, REJECT_CONFLICT, "txn-mempool-conflict");
+		LOCK(pool.cs); // protect pool.mapNextTx
+		BOOST_FOREACH(const CTxIn &txin, tx.vin)
+		{
+			auto itConflicting = pool.mapNextTx.find(txin.prevout);
+			if (itConflicting != pool.mapNextTx.end())
+			{
+				const CTransaction *ptxConflicting = itConflicting->second;
+				if (!setConflicts.count(ptxConflicting->GetHash()))
+				{
+					// InstantSend txes are not replacable
+					if (instantsend.HasTxLockRequest(ptxConflicting->GetHash())) {
+						// this tx conflicts with a Transaction Lock Request candidate
+						return state.DoS(0, error("AcceptToMemoryPool : Transaction %s conflicts with Transaction Lock Request %s",
+							hash.ToString(), ptxConflicting->GetHash().ToString()),
+							REJECT_INVALID, "tx-txlockreq-mempool-conflict");
+					}
+					else if (instantsend.HasTxLockRequest(hash)) {
+						// this tx is a tx lock request and it conflicts with a normal tx
+						return state.DoS(0, error("AcceptToMemoryPool : Transaction Lock Request %s conflicts with transaction %s",
+							hash.ToString(), ptxConflicting->GetHash().ToString()),
+							REJECT_INVALID, "txlockreq-tx-mempool-conflict");
+					}
+					// SYSCOIN txs are not replacable
+					else if (ptxConflicting->nVersion == SYSCOIN_TX_VERSION) {
+						return state.DoS(0, error("AcceptToMemoryPool : Syscoin Transaction %s conflicts with Transaction request %s",
+							hash.ToString(), ptxConflicting->GetHash().ToString()),
+							REJECT_INVALID, "txn-mempool-conflict");
+					}
+					// Allow opt-out of transaction replacement by setting
+					// nSequence >= maxint-1 on all inputs.
+					//
+					// maxint-1 is picked to still allow use of nLockTime by
+					// non-replaceable transactions. All inputs rather than just one
+					// is for the sake of multi-party protocols, where we don't
+					// want a single party to be able to disable replacement.
+					//
+					// The opt-out ignores descendants as anyone relying on
+					// first-seen mempool behavior should be checking all
+					// unconfirmed ancestors anyway; doing otherwise is hopelessly
+					// insecure.
+					bool fReplacementOptOut = true;
+					if (fEnableReplacement)
+					{
+						BOOST_FOREACH(const CTxIn &_txin, ptxConflicting->vin)
+						{
+							if (_txin.nSequence < std::numeric_limits<unsigned int>::max() - 1)
+							{
+								fReplacementOptOut = false;
+								break;
+							}
+						}
+					}
+					if (fReplacementOptOut)
+						return state.Invalid(false, REJECT_CONFLICT, "txn-mempool-conflict");
 
-                setConflicts.insert(ptxConflicting->GetHash());
-            }
-        }
-    }
-    }
+					setConflicts.insert(ptxConflicting->GetHash());
+				}
+			}
+		}
+	}
 
 	{
 		CCoinsView dummy;
@@ -988,7 +989,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 				break;
 			}
 		}
-	}
+	
 
 		CTxMemPoolEntry entry(ptx, nFees, nAcceptTime, dPriority, chainActive.Height(),
 			inChainInputValue, fSpendsCoinbase, nSigOps, lp);
