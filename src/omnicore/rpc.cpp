@@ -876,9 +876,16 @@ UniValue omni_getallbalancesforaddress(const UniValue& params, bool fHelp)
 
     uint32_t propertyId = 0;
     while (0 != (propertyId = addressTally->next())) {
+        CMPSPInfo::Entry property;
+        if (_my_sps->getSP(propertyId, property)) {
+            continue;
+        }
+
         UniValue balanceObj(UniValue::VOBJ);
         balanceObj.push_back(Pair("propertyid", (uint64_t) propertyId));
-        bool nonEmptyBalance = BalanceToJSON(address, propertyId, balanceObj, isPropertyDivisible(propertyId));
+        balanceObj.push_back(Pair("name", property.name));
+
+        bool nonEmptyBalance = BalanceToJSON(address, propertyId, balanceObj, property.isDivisible());
 
         if (nonEmptyBalance) {
             response.push_back(balanceObj);
