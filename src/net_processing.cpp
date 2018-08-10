@@ -3370,11 +3370,14 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
 						if (!txinfo.tx) {
 							continue;
 						}
+						if (pto->pfilter && !pto->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;
 					}
-                    if (pto->pfilter && !pto->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;
+                    
                     // Send
                     vInv.push_back(CInv(MSG_TX, hash));
                     nRelayedTransactions++;
+					// SYSCOIN
+					if (!fTPSTestEnabled)
                     {
                         // Expire old relay messages
                         while (!vRelayExpiration.empty() && vRelayExpiration.front().first < nNow)
