@@ -48,6 +48,7 @@
 extern bool fMasternodeMode;
 extern bool fUnitTest;
 extern bool fTPSTest;
+extern bool fTPSTestEnabled;
 extern bool fAssetAllocationIndex;
 extern bool fLiteMode;
 extern int nWalletBackups;

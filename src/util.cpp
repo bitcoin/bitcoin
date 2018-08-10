@@ -114,6 +114,7 @@ namespace boost {
 bool fMasternodeMode = false;
 bool fUnitTest = false;
 bool fTPSTest = false;
+bool fTPSTestEnabled = false;
 bool fAssetAllocationIndex = false;
 bool fLiteMode = false;
 /**

@@ -731,7 +731,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 		int64_t ms = INT64_MAX;
 		if (fJustCheck) {
 			ms = GetTimeMillis();
-			if(fTPSTest)
+			if(fTPSTestEnabled)
 				vecTPSTestReceivedTimes.emplace_back(theAssetAllocation.txHash, ms);
 		}
 		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, 0, 0, dbAsset, ms, "", "", fJustCheck))
@@ -757,7 +757,9 @@ UniValue tpstestinfo(const JSONRPCRequest& request) {
 		throw runtime_error("tpstestinfo\n"
 			"Gets TPS Test information for receivers of assetallocation transfers\n");
 	if(!fTPSTest)
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("This function requires tpstest configuration to be set upon startup. Please shutdown and enable it by adding it to your syscoin.conf file and then try again."));
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("This function requires tpstest configuration to be set upon startup. Please shutdown and enable it by adding it to your syscoin.conf file and then call 'tpstestsetenabled true'."));
+	if(!fTPSTestEnabled)
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("This function requires tpstest enabled state. Please make the RPC call to 'tpstestsetenabled' passig in 'true' as the parameter."));
 	UniValue oTPSTestResults(UniValue::VOBJ);
 	UniValue oTPSTestReceivers(UniValue::VARR);
 	oTPSTestResults.push_back(Pair("teststarttime", nTPSTestingStartTime));
@@ -770,6 +772,22 @@ UniValue tpstestinfo(const JSONRPCRequest& request) {
 	}
 	oTPSTestResults.push_back(Pair("receivers", oTPSTestReceivers));
 	return oTPSTestResults;
+}
+UniValue tpstestsetenabled(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+	if (request.fHelp || 1 != params.size())
+		throw runtime_error("tpstestsetenabled [enabled]\n"
+			"\nSet TPS Test to enabled/disabled state. Must have -tpstest configuration set to make this call.\n"
+			"\nArguments:\n"
+			"1. enabled                  (boolean, required) TPS Test enabled state. Set to true for enabled and false for disabled.\n"
+			"\nExample:\n"
+			+ HelpExampleCli("tpstestsetenabled", "true"));
+	if(!fTPSTest)
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("This function requires tpstest configuration to be set upon startup. Please shutdown and enable it by adding it to your syscoin.conf file and then try again."));
+	fTPSTestEnabled = params[0].get_bool();
+	UniValue result(UniValue::VOBJ);
+	result.push_back(Pair("status", "success"));
+	return result;
 }
 UniValue tpstestadd(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
@@ -788,8 +806,9 @@ UniValue tpstestadd(const JSONRPCRequest& request) {
 			"\nExample:\n"
 			+ HelpExampleCli("tpstestadd", "\"[{\\\"tx\\\":\\\"first raw hex tx\\\"},{\\\"tx\\\":\\\"second raw hex tx\\\"}]\" \"223233433839384\""));
 	if (!fTPSTest)
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("This function requires tpstest configuration to be set upon startup. Please shutdown and enable it by adding it to your syscoin.conf file and then try again."));
-	
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("This function requires tpstest configuration to be set upon startup. Please shutdown and enable it by adding it to your syscoin.conf file and then call 'tpstestsetenabled true'."));
+	if (!fTPSTestEnabled)
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("This function requires tpstest enabled state. Please make the RPC call to 'tpstestsetenabled' passig in 'true' as the parameter."));
 
 	bool bFirstTime = vecTPSRawTransactions.empty();
 	UniValue txs = params[0].get_array();
