@@ -830,12 +830,12 @@ void InitLogging()
     // one; called before console logging is set up, so this is only sent to
     // debug.log.
     LogPrintf("\n\n"
-              "___.   .__  __               .__                                     \n"
-              "\\_ |__ |__|/  |_  ____  ____ |__| ____     ____  ___________   ____  \n"
-              " | __ \\|  \\   __\\/ ___\\/  _ \\|  |/    \\  _/ ___\\/  _ \\_  __ \\_/ __ \\ \n"
-              " | \\_\\ \\  ||  | \\  \\__(  <_> )  |   |  \\ \\  \\__(  <_> )  | \\/\\  ___/ \n"
-              " |___  /__||__|  \\___  >____/|__|___|  /  \\___  >____/|__|    \\___  >\n"
-              "     \\/              \\/              \\/       \\/                  \\/ \n");
+              R"(___.   .__  __               .__                                     )" "\n"
+              R"(\_ |__ |__|/  |_  ____  ____ |__| ____     ____  ___________   ____  )" "\n"
+              R"( | __ \|  \   __\/ ___\/  _ \|  |/    \  _/ ___\/  _ \_  __ \_/ __ \ )" "\n"
+              R"( | \_\ \  ||  | \  \__(  <_> )  |   |  \ \  \__(  <_> )  | \/\  ___/ )" "\n"
+              R"( |___  /__||__|  \___  >____/|__|___|  /  \___  >____/|__|    \___  >)" "\n"
+              R"(     \/              \/              \/       \/                  \/ )" "\n");
 
     g_logger->m_print_to_console = gArgs.GetBoolArg("-printtoconsole", !gArgs.GetBoolArg("-daemon", false));
     g_logger->m_log_timestamps = gArgs.GetBoolArg("-logtimestamps", DEFAULT_LOGTIMESTAMPS);
