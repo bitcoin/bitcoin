@@ -410,7 +410,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 		int64_t timeRecv = find_value(responseObj, "time").get_int64();
 		totalTime += timeRecv - tpstarttime;
 	}
-
+	totalTime /= tpsresponsereceivers.size();
 	printf("tpstarttime %lld sendrawelapsedtime1 %lld sendrawelapsedtime2 %lld totaltime %.2f, num responses %d\n", tpstarttime, sendrawelapsedtime1, sendrawelapsedtime2, totalTime, tpsresponsereceivers.size());
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "tpstestsetenabled false"));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "tpstestsetenabled false"));
