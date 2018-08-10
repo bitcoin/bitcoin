@@ -24,6 +24,7 @@
 #include <boost/thread.hpp>
 #include <boost/algorithm/string/case_conv.hpp> // for to_upper()
 
+#include <algorithm>
 #include <memory> // for unique_ptr
 #include <unordered_map>
 
@@ -170,6 +171,53 @@ std::vector<unsigned char> ParseHexV(const UniValue& v, std::string strName)
 std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKey)
 {
     return ParseHexV(find_value(o, strKey), strKey);
+}
+
+int32_t ParseInt32V(const UniValue& v, const std::string &strName)
+{
+    std::string strNum = v.getValStr();
+    int32_t num;
+    if (!ParseInt32(strNum, &num))
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be a 32bit integer (not '"+strNum+"')");
+    return num;
+}
+
+int64_t ParseInt64V(const UniValue& v, const std::string &strName)
+{
+    std::string strNum = v.getValStr();
+    int64_t num;
+    if (!ParseInt64(strNum, &num))
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be a 64bit integer (not '"+strNum+"')");
+    return num;
+}
+
+double ParseDoubleV(const UniValue& v, const std::string &strName)
+{
+    std::string strNum = v.getValStr();
+    double num;
+    if (!ParseDouble(strNum, &num))
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be a be number (not '"+strNum+"')");
+    return num;
+}
+
+bool ParseBoolV(const UniValue& v, const std::string &strName)
+{
+    std::string strBool;
+    if (v.isBool())
+        return v.get_bool();
+    else if (v.isNum())
+        strBool = itostr(v.get_int());
+    else if (v.isStr())
+        strBool = v.get_str();
+
+    std::transform(strBool.begin(), strBool.end(), strBool.begin(), ::tolower);
+
+    if (strBool == "true" || strBool == "yes" || strBool == "1") {
+        return true;
+    } else if (strBool == "false" || strBool == "no" || strBool == "0") {
+        return false;
+    }
+    throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be true, false, yes, no, 1 or 0 (not '"+strBool+"')");
 }
 
 /**
