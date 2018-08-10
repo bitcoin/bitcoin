@@ -918,7 +918,8 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
     bool fBypassLimits = false;
     if (request.params.size() > 3)
         fBypassLimits = request.params[3].get_bool();
-	if (!fTPSTest) {
+
+	if(!fTPSTest){
 		CCoinsViewCache &view = *pcoinsTip;
 		bool fHaveChain = false;
 		for (size_t o = 0; !fHaveChain && o < tx->vout.size(); o++) {
