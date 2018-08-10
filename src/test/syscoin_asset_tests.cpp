@@ -357,12 +357,12 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 		if (count <= (assetMap.size() / 2)) {
 			assetSendTxVec1 += "{\\\"tx\\\":\\\"" + assetAddressMap[assetTuple.first] + "\\\"}";
 			if (count < (assetMap.size()/2))
-				assetSendTxVec += ",";
+				assetSendTxVec1 += ",";
 		}
 		else {
 			assetSendTxVec2 += "{\\\"tx\\\":\\\"" + assetAddressMap[assetTuple.first] + "\\\"}";
 			if (count < assetMap.size())
-				assetSendTxVec += ",";
+				assetSendTxVec2 += ",";
 		}
 
 		if (count % 100 == 0)
@@ -370,6 +370,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 		
 		
 	}
+	int64_t tpstarttime = GetTimeMicros();
+	tpstarttime = tpstarttime + 5*1000 * 1000; // seconds to microseconds
 	assetSentTxVec1 += "]\"";
 	assetSentTxVec2 += "]\"";
 	printf("assetSentTxVec1 %s\n", assetSentTxVec1.c_str());
@@ -379,7 +381,12 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "tpstestadd " + assetSendTxVec2 + " " + tpstarttime));
 	printf("Gathering results...\n");
 	float totalTime = 0;
-	// wait 10 seconds	
+	// wait untl start time
+	while (GetTimeMicros() < tpsstarttime) {
+		MilliSleep(0);
+		continue;
+	}
+	// start 10 second wait
 	MilliSleep(10000);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "tpstestinfo"));
 	UniValue tpsresponse = r.get_obj();
