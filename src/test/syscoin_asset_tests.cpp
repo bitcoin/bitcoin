@@ -357,7 +357,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 		UniValue arr = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
 		string hex_str = find_value(r.get_obj(), "hex").get_str();
-		BOOST_CHECK_NO_THROW(r = CallRPC("node" + boost::lexical_cast<string>(senderNodeCount), "tpstestadd \"[{\\\"tx\\\":\\\"" + hex_str + "\\\"}\" 0"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node" + boost::lexical_cast<string>(senderNodeCount), "tpstestadd \"[{\\\"tx\\\":\\\"" + hex_str + "\\\"}]\" 0"));
 		if ((count % totalPerSenderNode) == 0) {
 			senderNodeCount++;
 		}
