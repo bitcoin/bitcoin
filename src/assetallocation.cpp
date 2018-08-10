@@ -791,8 +791,8 @@ UniValue tpstestsetenabled(const JSONRPCRequest& request) {
 }
 UniValue tpstestadd(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
-	if (request.fHelp || 2 != params.size())
-		throw runtime_error("tpstestadd [{\"tx\":\"hex\"},...] [starttime]\n"
+	if (request.fHelp || 1 < params.size() || params.size() > 2)
+		throw runtime_error("tpstestadd [{\"tx\":\"hex\"},...] [starttime=0]\n"
 			"\nAdds raw transactions to the test raw tx queue to be sent to the network at starttime.\n"
 			"\nArguments:\n"
 			"1. \"raw transactions\"                (array, required) A json array of signed raw transaction strings\n"
@@ -802,7 +802,7 @@ UniValue tpstestadd(const JSONRPCRequest& request) {
 			"       } \n"
 			"       ,...\n"
 			"     ]\n"
-			"2. starttime                  (numeric, required) Unix epoch time in micro seconds for when to send the raw transaction queue to the network\n"
+			"2. starttime                  (numeric, not-required,default 0) Unix epoch time in micro seconds for when to send the raw transaction queue to the network. If set to 0, will not send transactions until you call this function again with a defined starttime.\n"
 			"\nExample:\n"
 			+ HelpExampleCli("tpstestadd", "\"[{\\\"tx\\\":\\\"first raw hex tx\\\"},{\\\"tx\\\":\\\"second raw hex tx\\\"}]\" \"223233433839384\""));
 	if (!fTPSTest)
@@ -825,7 +825,7 @@ UniValue tpstestadd(const JSONRPCRequest& request) {
 	if (bFirstTime) {
 		// define a task for the worker to process
 		std::packaged_task<void()> task([]() {
-			while (GetTimeMicros() < nTPSTestingStartTime) {
+			while (nTPSTestingStartTime <= 0 || GetTimeMicros() < nTPSTestingStartTime) {
 				MilliSleep(0);
 			}
 			const int64_t &nStart = GetTimeMicros();
