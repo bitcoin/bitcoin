@@ -405,7 +405,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "tpstestinfo"));
 	UniValue tpsresponse2 = r.get_obj();
 	int64_t sendrawelapsedtime2 = find_value(tpsresponse2, "sendrawelapsedtime").get_int64();
-	printf("tpstarttime %lld sendrawelapsedtime1 %lld sendrawelapsedtime2 %lld totaltime %.2f, num responses %d\n", tpstarttime, totalTime, tpsresponse.size());
+	printf("tpstarttime %lld sendrawelapsedtime1 %lld sendrawelapsedtime2 %lld totaltime %.2f, num responses %d\n", tpstarttime, sendrawelapsedtime1, sendrawelapsedtime2, totalTime, tpsresponse.size());
 }
 BOOST_AUTO_TEST_CASE(generate_big_assetname)
 {
