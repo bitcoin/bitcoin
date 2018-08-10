@@ -732,8 +732,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 		int64_t ms = INT64_MAX;
 		if (fJustCheck) {
 			ms = GetTimeMillis();
-			if(fTPSTestEnabled)
-				vecTPSTestReceivedTimes.emplace_back(theAssetAllocation.txHash, ms);
+			if(fTPSTest)
+				vecTPSTestReceivedTimes.emplace_back(theAssetAllocation.txHash, GetTimeMicros());
 		}
 		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, 0, 0, dbAsset, ms, "", "", fJustCheck))
 		{
