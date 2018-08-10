@@ -8,6 +8,7 @@
 #include "masternodeman.h"
 #include "netbase.h"
 #include "protocol.h"
+#include "netbase.h"
 
 // Keep track of the active Masternode
 CActiveMasternode activeMasternode;
@@ -159,6 +160,12 @@ void CActiveMasternode::ManageStateInitial(CConnman& connman)
         }
     }
 
+    if (!fFoundLocal && Params().NetworkIDString() == CBaseChainParams::REGTEST) {
+        if (Lookup("127.0.0.1", activeMasternode.service, GetListenPort(), false)) {
+            fFoundLocal = true;
+        }
+    }
+
     if(!fFoundLocal) {
         nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
         strNotCapableReason = "Can't detect valid external address. Please consider using the externalip configuration option if problem persists. Make sure to use IPv4 address only.";
@@ -181,19 +188,20 @@ void CActiveMasternode::ManageStateInitial(CConnman& connman)
         return;
     }
 
-    // Check socket connectivity
-    LogPrintf("CActiveMasternode::ManageStateInitial -- Checking inbound connection to '%s'\n", service.ToString());
-    SOCKET hSocket;
-    bool fConnected = ConnectSocket(service, hSocket, nConnectTimeout) && IsSelectableSocket(hSocket);
-    CloseSocket(hSocket);
+    if(Params().NetworkIDString() != CBaseChainParams::REGTEST) {
+        // Check socket connectivity
+        LogPrintf("CActiveMasternode::ManageStateInitial -- Checking inbound connection to '%s'\n", service.ToString());
+        SOCKET hSocket;
+        bool fConnected = ConnectSocket(service, hSocket, nConnectTimeout) && IsSelectableSocket(hSocket);
+        CloseSocket(hSocket);
 
-    if (!fConnected) {
-        nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
-        strNotCapableReason = "Could not connect to " + service.ToString();
-        LogPrintf("CActiveMasternode::ManageStateInitial -- %s: %s\n", GetStateString(), strNotCapableReason);
-        return;
+        if (!fConnected) {
+            nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
+            strNotCapableReason = "Could not connect to " + service.ToString();
+            LogPrintf("CActiveMasternode::ManageStateInitial -- %s: %s\n", GetStateString(), strNotCapableReason);
+            return;
+        }
     }
-
     // Default to REMOTE
     eType = MASTERNODE_REMOTE;
 

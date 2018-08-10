@@ -1277,6 +1277,31 @@ bool AppInitParameterInteraction()
         }
     }
 
+    if (IsArgSet("-budgetparams")) {
+        // Allow overriding budget parameters for testing
+        if (!chainparams.MineBlocksOnDemand()) {
+            return InitError("Budget parameters may only be overridden on regtest.");
+        }
+
+        std::string strBudgetParams = GetArg("-budgetparams", "");
+        std::vector<std::string> vBudgetParams;
+        boost::split(vBudgetParams, strBudgetParams, boost::is_any_of(":"));
+        if (vBudgetParams.size() != 3) {
+            return InitError("Budget parameters malformed, expecting masternodePaymentsStartBlock:budgetPaymentsStartBlock:superblockStartBlock");
+        }
+        int nMasternodePaymentsStartBlock, nBudgetPaymentsStartBlock, nSuperblockStartBlock;
+        if (!ParseInt32(vBudgetParams[0], &nMasternodePaymentsStartBlock)) {
+            return InitError(strprintf("Invalid nMasternodePaymentsStartBlock (%s)", vBudgetParams[0]));
+        }
+        if (!ParseInt32(vBudgetParams[1], &nBudgetPaymentsStartBlock)) {
+            return InitError(strprintf("Invalid nBudgetPaymentsStartBlock (%s)", vBudgetParams[1]));
+        }
+        if (!ParseInt32(vBudgetParams[2], &nSuperblockStartBlock)) {
+            return InitError(strprintf("Invalid nSuperblockStartBlock (%s)", vBudgetParams[2]));
+        }
+        UpdateRegtestBudgetParameters(nMasternodePaymentsStartBlock, nBudgetPaymentsStartBlock, nSuperblockStartBlock);
+    }
+
     return true;
 }
 

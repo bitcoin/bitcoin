@@ -135,13 +135,14 @@ UniValue masternode(const JSONRPCRequest& request)
 #endif // ENABLE_WALLET
          strCommand != "list" && strCommand != "list-conf" && strCommand != "count" &&
          strCommand != "debug" && strCommand != "current" && strCommand != "winner" && strCommand != "winners" && strCommand != "genkey" &&
-         strCommand != "connect" && strCommand != "status"))
+         strCommand != "connect" && strCommand != "status" && strCommand != "check"))
             throw std::runtime_error(
                 "masternode \"command\"...\n"
                 "Set of commands to execute masternode related actions\n"
                 "\nArguments:\n"
                 "1. \"command\"        (string or set of strings, required) The command to execute\n"
                 "\nAvailable commands:\n"
+                "  check        - Force check all masternodes and remove invalid ones\n"
                 "  count        - Get information about number of masternodes (DEPRECATED options: 'total', 'ps', 'enabled', 'qualify', 'all')\n"
                 "  current      - Print info on current masternode winner to be paid the next block (calculated locally)\n"
                 "  genkey       - Generate new masternodeprivkey\n"
@@ -473,6 +474,26 @@ UniValue masternode(const JSONRPCRequest& request)
             if (strFilter !="" && strPayment.find(strFilter) == std::string::npos) continue;
             obj.push_back(Pair(strprintf("%d", i), strPayment));
         }
+
+        return obj;
+    }
+
+    if (strCommand == "check") {
+        int countBeforeCheck = mnodeman.CountMasternodes();
+        int countEnabledBeforeCheck = mnodeman.CountEnabled();
+
+        mnodeman.CheckAndRemove(*g_connman);
+
+        int countAfterCheck = mnodeman.CountMasternodes();
+        int countEnabledAfterCheck = mnodeman.CountEnabled();
+        int removedCount = std::max(0, countBeforeCheck - countAfterCheck);
+        int removedEnabledCount = std::max(0, countEnabledBeforeCheck - countEnabledAfterCheck);
+
+        UniValue obj(UniValue::VOBJ);
+        obj.push_back(Pair("removedTotalCount", removedCount));
+        obj.push_back(Pair("removedEnabledCount", removedEnabledCount));
+        obj.push_back(Pair("totalCount", countAfterCheck));
+        obj.push_back(Pair("enabledCount", countEnabledAfterCheck));
 
         return obj;
     }
