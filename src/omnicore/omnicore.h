@@ -141,6 +141,7 @@ extern std::set<uint32_t> global_wallet_property_list;
 
 int64_t GetTokenBalance(const std::string& address, uint32_t propertyId, TallyType ttype);
 int64_t GetAvailableTokenBalance(const std::string& address, uint32_t propertyId);
+int64_t GetReservedTokenBalance(const std::string& address, uint32_t propertyId);
 int64_t GetFrozenTokenBalance(const std::string& address, uint32_t propertyId);
 
 /** Global handler to initialize Omni Core. */

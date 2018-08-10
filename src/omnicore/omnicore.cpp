@@ -291,6 +291,16 @@ int64_t GetAvailableTokenBalance(const std::string& address, uint32_t propertyId
     return money;
 }
 
+int64_t GetReservedTokenBalance(const std::string& address, uint32_t propertyId)
+{
+    int64_t nReserved = 0;
+    nReserved += GetTokenBalance(address, propertyId, ACCEPT_RESERVE);
+    nReserved += GetTokenBalance(address, propertyId, METADEX_RESERVE);
+    nReserved += GetTokenBalance(address, propertyId, SELLOFFER_RESERVE);
+
+    return nReserved;
+}
+
 int64_t GetFrozenTokenBalance(const std::string& address, uint32_t propertyId)
 {
     int64_t frozen = 0;

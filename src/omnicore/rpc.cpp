@@ -133,12 +133,7 @@ bool BalanceToJSON(const std::string& address, uint32_t property, UniValue& bala
 {
     // confirmed balance minus unconfirmed, spent amounts
     int64_t nAvailable = GetAvailableTokenBalance(address, property);
-
-    int64_t nReserved = 0;
-    nReserved += GetTokenBalance(address, property, ACCEPT_RESERVE);
-    nReserved += GetTokenBalance(address, property, METADEX_RESERVE);
-    nReserved += GetTokenBalance(address, property, SELLOFFER_RESERVE);
-
+    int64_t nReserved = GetReservedTokenBalance(address, property);
     int64_t nFrozen = GetFrozenTokenBalance(address, property);
 
     if (divisible) {
@@ -151,11 +146,7 @@ bool BalanceToJSON(const std::string& address, uint32_t property, UniValue& bala
         if (nFrozen != 0) balance_obj.push_back(Pair("frozen", FormatIndivisibleMP(nFrozen)));
     }
 
-    if (nAvailable == 0 && nReserved == 0) {
-        return false;
-    } else {
-        return true;
-    }
+    return (nAvailable || nReserved);
 }
 
 // Obtains details of a fee distribution
