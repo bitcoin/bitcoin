@@ -896,8 +896,6 @@ bool CCertDB::ScanCerts(const int count, const int from, const UniValue& oOption
 			nStartBlock = startblock.get_int();
 		}
 	}
-
-	LOCK(cs_cert);
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
 	CCert txPos;

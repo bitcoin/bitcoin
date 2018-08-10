@@ -796,7 +796,6 @@ bool CAliasDB::CleanupDatabase(int &servicesCleaned)
 }
 bool FlushSyscoinDBs() {
 	{
-		LOCK(cs_alias);
 		if (paliasdb != NULL)
 		{
 			if (!paliasdb->Flush()) {
@@ -806,7 +805,6 @@ bool FlushSyscoinDBs() {
 		}
 	}
 	{
-		LOCK(cs_offer);
 		if (pofferdb != NULL)
 		{
 			if (!pofferdb->Flush()) {
@@ -816,7 +814,6 @@ bool FlushSyscoinDBs() {
 		}
 	}
 	{
-		LOCK(cs_cert);
 		if (pcertdb != NULL)
 		{
 			if (!pcertdb->Flush()) {
@@ -826,7 +823,6 @@ bool FlushSyscoinDBs() {
 		}
 	}
 	{
-		LOCK(cs_escrow);
 		if (pescrowdb != NULL)
 		{
 			if (!pescrowdb->Flush()) {
@@ -836,7 +832,6 @@ bool FlushSyscoinDBs() {
 		}
 	}
 	{
-		LOCK(cs_asset);
 		if (passetdb != NULL)
 		{
 			if (!passetdb->Flush()) {
@@ -3095,7 +3090,6 @@ bool CAliasDB::ScanAliases(const int count, const int from, const UniValue& oOpt
 		}
 	}
 
-	LOCK(cs_alias);
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
 	CAliasIndex txPos;

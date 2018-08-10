@@ -452,6 +452,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 		}
 
 		if (op == OP_ASSET_SEND) {
+			LOCK(cs_assetallocation);
 			if (!vchAlias.empty() && CSyscoinAddress(user1).IsValid()) {
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1016 - " + _("This asset cannot be sent because owner is an alias but the alias is also a valid syscoin address");
 				return true;
@@ -520,6 +521,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 							errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2034 - " + _("Failed to write to asset allocation DB");
 							continue;
 						}
+						
 						if (!strResponseEnglish.empty()) {
 							paliasdb->WriteAliasIndexTxHistory(user1, receiverAddress, user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString());
 						}
@@ -561,7 +563,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2038 - " + _("Input not found");
 						return true;
 					}
-					if (!bSanityCheck) {
+					if (!bSanityCheck) {						
 						if (!GetAssetAllocation(receiverAllocationTuple, receiverAllocation)) {
 							receiverAllocation.vchAliasOrAddress = receiverAllocationTuple.vchAliasOrAddress;
 							receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
@@ -592,7 +594,6 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 							errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2039 - " + _("Failed to write to asset allocation DB");
 							return error(errorMessage.c_str());
 						}
-
 						if (!strResponseEnglish.empty()) {
 							paliasdb->WriteAliasIndexTxHistory(user1, receiverAddress, user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString());
 						}
@@ -1387,8 +1388,6 @@ bool CAssetDB::ScanAssets(const int count, const int from, const UniValue& oOpti
 			nStartBlock = startblock.get_int();
 		}
 	}
-	LOCK(cs_asset);
-
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
 	CAsset txPos;

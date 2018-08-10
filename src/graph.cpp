@@ -26,6 +26,7 @@ bool OrderBasedOnArrivalTime(const int &nHeight, std::vector<CTransactionRef>& b
 		{
 			if (DecodeAssetAllocationTx(tx, op, vvchArgs))
 			{
+				LOCK(cs_assetallocation);
 				ArrivalTimesMap arrivalTimes;
 				CAssetAllocation assetallocation(tx);
 				if (nHeight >= Params().GetConsensus().nShareFeeBlock) {
