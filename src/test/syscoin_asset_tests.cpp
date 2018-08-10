@@ -355,12 +355,12 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
 		string hex_str = find_value(r.get_obj(), "hex").get_str();
 		if (count <= (assetMap.size() / 2)) {
-			assetSendTxVec1 += "{\\\"tx\\\":\\\"" + assetAddressMap[assetTuple.first] + "\\\"}";
+			assetSendTxVec1 += "{\\\"tx\\\":\\\"" + hex_str + "\\\"}";
 			if (count < (assetMap.size()/2))
 				assetSendTxVec1 += ",";
 		}
 		else {
-			assetSendTxVec2 += "{\\\"tx\\\":\\\"" + assetAddressMap[assetTuple.first] + "\\\"}";
+			assetSendTxVec2 += "{\\\"tx\\\":\\\"" + hex_str + "\\\"}";
 			if (count < assetMap.size())
 				assetSendTxVec2 += ",";
 		}
