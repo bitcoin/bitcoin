@@ -792,27 +792,30 @@ UniValue tpstestsetenabled(const JSONRPCRequest& request) {
 UniValue tpstestadd(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
 	if (request.fHelp || 1 > params.size() || params.size() > 2)
-		throw runtime_error("tpstestadd [{\"tx\":\"hex\"},...] [starttime=0]\n"
+		throw runtime_error("tpstestadd [starttime] [{\"tx\":\"hex\"},...]\n"
 			"\nAdds raw transactions to the test raw tx queue to be sent to the network at starttime.\n"
 			"\nArguments:\n"
-			"1. \"raw transactions\"                (array, required) A json array of signed raw transaction strings\n"
+			"1. starttime                  (numeric, required) Unix epoch time in micro seconds for when to send the raw transaction queue to the network. If set to 0, will not send transactions until you call this function again with a defined starttime.\n"
+			"2. \"raw transactions\"                (array, not-required) A json array of signed raw transaction strings\n"
 			"     [\n"
 			"       {\n"
 			"         \"tx\":\"hex\",    (string, required) The transaction hex\n"
 			"       } \n"
 			"       ,...\n"
 			"     ]\n"
-			"2. starttime                  (numeric, not-required,default 0) Unix epoch time in micro seconds for when to send the raw transaction queue to the network. If set to 0, will not send transactions until you call this function again with a defined starttime.\n"
 			"\nExample:\n"
-			+ HelpExampleCli("tpstestadd", "\"[{\\\"tx\\\":\\\"first raw hex tx\\\"},{\\\"tx\\\":\\\"second raw hex tx\\\"}]\" \"223233433839384\""));
+			+ HelpExampleCli("tpstestadd", "\"223233433839384\" \"[{\\\"tx\\\":\\\"first raw hex tx\\\"},{\\\"tx\\\":\\\"second raw hex tx\\\"}]\""));
 	if (!fTPSTest)
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("This function requires tpstest configuration to be set upon startup. Please shutdown and enable it by adding it to your syscoin.conf file and then call 'tpstestsetenabled true'."));
 	if (!fTPSTestEnabled)
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("This function requires tpstest enabled state. Please make the RPC call to 'tpstestsetenabled' passig in 'true' as the parameter."));
 
 	bool bFirstTime = vecTPSRawTransactions.empty();
-	UniValue txs = params[0].get_array();
-	nTPSTestingStartTime = params[1].get_int64();
+	nTPSTestingStartTime = params[0].get_int64();
+	UniValue txs;
+	if(params.size() > 1)
+		txs = params[1].get_array();
+	
 	for (unsigned int idx = 0; idx < txs.size(); idx++) {
 		const UniValue& tx = txs[idx];
 		UniValue paramsRawTx(UniValue::VARR);
