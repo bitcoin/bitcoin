@@ -377,8 +377,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	printf("assetSentTxVec1 %s\n", assetSentTxVec1.c_str());
 	printf("assetSentTxVec2 %s\n", assetSentTxVec2.c_str());
 	printf("Sending assetsend transactions to network...\n");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "tpstestadd " + assetSendTxVec1 + " " + tpstarttime));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "tpstestadd " + assetSendTxVec2 + " " + tpstarttime));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "tpstestadd " + assetSendTxVec1 + " " + boost::lexical_cast<string>(tpstarttime)));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "tpstestadd " + assetSendTxVec2 + " " + boost::lexical_cast<string>(tpstarttime)));
 	printf("Gathering results...\n");
 	float totalTime = 0;
 	// wait untl start time
@@ -405,7 +405,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "tpstestinfo"));
 	UniValue tpsresponse2 = r.get_obj();
 	int64_t sendrawelapsedtime2 = find_value(tpsresponse2, "sendrawelapsedtime").get_int64();
-	printf("teststarttime %lld sendrawelapsedtime1 %lld sendrawelapsedtime2 %lld totaltime %.2f, num responses %d\n", teststarttime, totalTime, tpsresponse.size());
+	printf("tpstarttime %lld sendrawelapsedtime1 %lld sendrawelapsedtime2 %lld totaltime %.2f, num responses %d\n", tpstarttime, totalTime, tpsresponse.size());
 }
 BOOST_AUTO_TEST_CASE(generate_big_assetname)
 {
