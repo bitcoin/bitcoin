@@ -311,8 +311,19 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	StopNode("node1");
 	StopNode("node2");
 	MilliSleep(1000);
-	StartNode("node1", true, "-tpstest");
-	StartNode("node2", true, "-tpstest");
+
+	boost::filesystem::path fpath = boost::filesystem::system_complete("../syscoind");
+	string nodePath = fpath.string() + string(" -unittest -datadir=node1");
+	nodePath += string(" -regtest -addressindex -tpstest");
+	MilliSleep(1000);
+	boost::thread t(runCommand, nodePath);
+
+	fpath = boost::filesystem::system_complete("../syscoind");
+	nodePath = fpath.string() + string(" -unittest -datadir=node2");
+	nodePath += string(" -regtest -addressindex -tpstest");
+
+	boost::thread t2(runCommand, nodePath);
+	MilliSleep(1000);
 	GenerateBlocks(5, "node1");
 	GenerateBlocks(5, "node3");
 	map<string, string> assetMap;
