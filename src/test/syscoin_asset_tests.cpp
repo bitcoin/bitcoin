@@ -385,11 +385,10 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	// wait untl start time
 	count = 0;
 	while (GetTimeMicros() < tpstarttime) {
-		MilliSleep(0);
-		count++;
-		if ((count % 1000) == 0)
-			printf("Waiting for start time, another %d seconds\n", (GetTimeMicros() - tpstarttime) / microsInSecond);
+		MilliSleep(1000);
+		printf("Waiting for start time, another %d seconds...\n", (GetTimeMicros() - tpstarttime) / microsInSecond);
 	}
+	print("Waiting 10 seconds as per protocol");
 	// start 10 second wait
 	MilliSleep(10000);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "tpstestinfo"));
