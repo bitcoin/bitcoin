@@ -791,7 +791,7 @@ UniValue tpstestsetenabled(const JSONRPCRequest& request) {
 }
 UniValue tpstestadd(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
-	if (request.fHelp || 1 < params.size() || params.size() > 2)
+	if (request.fHelp || 1 > params.size() || params.size() > 2)
 		throw runtime_error("tpstestadd [{\"tx\":\"hex\"},...] [starttime=0]\n"
 			"\nAdds raw transactions to the test raw tx queue to be sent to the network at starttime.\n"
 			"\nArguments:\n"
