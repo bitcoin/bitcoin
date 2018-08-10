@@ -721,6 +721,7 @@ Returns a list of all token balances for a given address.
 [                          // (array of JSON objects)
   {
     "propertyid" : n,          // (number) the property identifier
+    "name" : "name",           // (string) the name of the property
     "balance" : "n.nnnnnnnn",  // (string) the available balance of the address
     "reserved" : "n.nnnnnnnn", // (string) the amount reserved by sell offers and accepts
     "frozen" : "n.nnnnnnnn"    // (string) the amount frozen by the issuer (applies to managed properties only)

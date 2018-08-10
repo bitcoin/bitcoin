@@ -843,6 +843,7 @@ UniValue omni_getallbalancesforaddress(const UniValue& params, bool fHelp)
             "[                           (array of JSON objects)\n"
             "  {\n"
             "    \"propertyid\" : n,           (number) the property identifier\n"
+            "    \"name\" : \"name\",            (string) the name of the property\n"
             "    \"balance\" : \"n.nnnnnnnn\",   (string) the available balance of the address\n"
             "    \"reserved\" : \"n.nnnnnnnn\"   (string) the amount reserved by sell offers and accepts\n"
             "    \"frozen\" : \"n.nnnnnnnn\"     (string) the amount frozen by the issuer (applies to managed properties only)\n"
@@ -870,9 +871,16 @@ UniValue omni_getallbalancesforaddress(const UniValue& params, bool fHelp)
 
     uint32_t propertyId = 0;
     while (0 != (propertyId = addressTally->next())) {
+        CMPSPInfo::Entry property;
+        if (_my_sps->getSP(propertyId, property)) {
+            continue;
+        }
+
         UniValue balanceObj(UniValue::VOBJ);
         balanceObj.push_back(Pair("propertyid", (uint64_t) propertyId));
-        bool nonEmptyBalance = BalanceToJSON(address, propertyId, balanceObj, isPropertyDivisible(propertyId));
+        balanceObj.push_back(Pair("name", property.name));
+
+        bool nonEmptyBalance = BalanceToJSON(address, propertyId, balanceObj, property.isDivisible());
 
         if (nonEmptyBalance) {
             response.push_back(balanceObj);
