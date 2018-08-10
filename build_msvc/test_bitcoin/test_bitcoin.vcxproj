@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Label="configInitTarget" Project="..\common.init.vcxproj" />
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\test\addrman_tests.cpp" />
+    <ClCompile Include="..\..\src\test\allocator_tests.cpp" />
+    <ClCompile Include="..\..\src\test\amount_tests.cpp" />
+    <ClCompile Include="..\..\src\test\arith_uint256_tests.cpp" />
+    <ClCompile Include="..\..\src\test\base32_tests.cpp" />
+    <ClCompile Include="..\..\src\test\base58_tests.cpp" />
+    <ClCompile Include="..\..\src\test\base64_tests.cpp" />
+    <ClCompile Include="..\..\src\test\bech32_tests.cpp" />
+    <ClCompile Include="..\..\src\test\bip32_tests.cpp" />
+    <ClCompile Include="..\..\src\test\blockchain_tests.cpp" />
+    <ClCompile Include="..\..\src\test\blockencodings_tests.cpp" />
+    <ClCompile Include="..\..\src\test\bloom_tests.cpp" />
+    <ClCompile Include="..\..\src\test\bswap_tests.cpp" />
+    <ClCompile Include="..\..\src\test\checkqueue_tests.cpp" />
+    <ClCompile Include="..\..\src\test\coins_tests.cpp" />
+    <ClCompile Include="..\..\src\test\compress_tests.cpp" />
+    <ClCompile Include="..\..\src\test\crypto_tests.cpp" />
+    <ClCompile Include="..\..\src\test\cuckoocache_tests.cpp" />
+    <ClCompile Include="..\..\src\test\dbwrapper_tests.cpp" />
+    <ClCompile Include="..\..\src\test\denialofservice_tests.cpp" />
+    <ClCompile Include="..\..\src\test\getarg_tests.cpp" />
+    <ClCompile Include="..\..\src\test\hash_tests.cpp" />
+    <ClCompile Include="..\..\src\test\key_tests.cpp" />
+    <ClCompile Include="..\..\src\test\limitedmap_tests.cpp" />
+    <ClCompile Include="..\..\src\test\main_tests.cpp" />
+    <ClCompile Include="..\..\src\test\mempool_tests.cpp" />
+    <ClCompile Include="..\..\src\test\merkle_tests.cpp" />
+    <ClCompile Include="..\..\src\test\miner_tests.cpp" />
+    <ClCompile Include="..\..\src\test\multisig_tests.cpp" />
+    <ClCompile Include="..\..\src\test\netbase_tests.cpp" />
+    <ClCompile Include="..\..\src\test\net_tests.cpp" />
+    <ClCompile Include="..\..\src\test\pmt_tests.cpp" />
+    <ClCompile Include="..\..\src\test\policyestimator_tests.cpp" />
+    <ClCompile Include="..\..\src\test\pow_tests.cpp" />
+    <ClCompile Include="..\..\src\test\prevector_tests.cpp" />
+    <ClCompile Include="..\..\src\test\raii_event_tests.cpp" />
+    <ClCompile Include="..\..\src\test\random_tests.cpp" />
+    <ClCompile Include="..\..\src\test\reverselock_tests.cpp" />
+    <ClCompile Include="..\..\src\test\rpc_tests.cpp" />
+    <ClCompile Include="..\..\src\test\sanity_tests.cpp" />
+    <ClCompile Include="..\..\src\test\scheduler_tests.cpp" />
+    <ClCompile Include="..\..\src\test\scriptnum_tests.cpp" />
+    <ClCompile Include="..\..\src\test\script_p2sh_tests.cpp" />
+    <ClCompile Include="..\..\src\test\script_standard_tests.cpp" />
+    <ClCompile Include="..\..\src\test\script_tests.cpp" />
+    <ClCompile Include="..\..\src\test\serialize_tests.cpp" />
+    <ClCompile Include="..\..\src\test\sighash_tests.cpp" />
+    <ClCompile Include="..\..\src\test\sigopcount_tests.cpp" />
+    <ClCompile Include="..\..\src\test\skiplist_tests.cpp" />
+    <ClCompile Include="..\..\src\test\streams_tests.cpp" />
+    <ClCompile Include="..\..\src\test\test_bitcoin.cpp" />
+    <ClCompile Include="..\..\src\test\test_bitcoin_main.cpp" />
+    <ClCompile Include="..\..\src\test\timedata_tests.cpp" />
+    <ClCompile Include="..\..\src\test\torcontrol_tests.cpp" />
+    <ClCompile Include="..\..\src\test\transaction_tests.cpp" />
+    <ClCompile Include="..\..\src\test\txindex_tests.cpp" />
+    <ClCompile Include="..\..\src\test\txvalidationcache_tests.cpp" />
+    <ClCompile Include="..\..\src\test\uint256_tests.cpp" />
+    <ClCompile Include="..\..\src\test\util_tests.cpp" />
+    <ClCompile Include="..\..\src\test\validation_block_tests.cpp" />
+    <ClCompile Include="..\..\src\test\versionbits_tests.cpp" />
+    <ClCompile Include="..\..\src\wallet\test\accounting_tests.cpp" />
+    <ClCompile Include="..\..\src\wallet\test\coinselector_tests.cpp" />
+    <ClCompile Include="..\..\src\wallet\test\psbt_wallet_tests.cpp" />
+    <ClCompile Include="..\..\src\wallet\test\wallet_crypto_tests.cpp" />
+    <ClCompile Include="..\..\src\wallet\test\wallet_tests.cpp" />
+    <ClCompile Include="..\..\src\wallet\test\wallet_test_fixture.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\libbitcoinconsensus\libbitcoinconsensus.vcxproj">
+      <Project>{2b384fa8-9ee1-4544-93cb-0d733c25e8ce}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_cli\libbitcoin_cli.vcxproj">
+      <Project>{0667528c-d734-4009-adf9-c0d6c4a5a5a6}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_common\libbitcoin_common.vcxproj">
+      <Project>{7c87e378-df58-482e-aa2f-1bc129bc19ce}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_crypto\libbitcoin_crypto.vcxproj">
+      <Project>{6190199c-6cf4-4dad-bfbd-93fa72a760c1}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_server\libbitcoin_server.vcxproj">
+      <Project>{460fee33-1fe1-483f-b3bf-931ff8e969a5}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_util\libbitcoin_util.vcxproj">
+      <Project>{b53a5535-ee9d-4c6f-9a26-f79ee3bc3754}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_wallet\libbitcoin_wallet.vcxproj">
+      <Project>{93b86837-b543-48a5-a89b-7c87abb77df2}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libbitcoin_zmq\libbitcoin_zmq.vcxproj">
+      <Project>{792d487f-f14c-49fc-a9de-3fc150f31c3f}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libunivalue\libunivalue.vcxproj">
+      <Project>{5724ba7d-a09a-4ba8-800b-c4c1561b3d69}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{A56B73DB-D46D-4882-8374-1FE3FFA08F07}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>test_bitcoin</RootNamespace>
+    <VcpkgTriplet Condition="'$(Platform)'=='Win32'">x86-windows-static</VcpkgTriplet>
+    <VcpkgTriplet Condition="'$(Platform)'=='x64'">x64-windows-static</VcpkgTriplet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NOMINMAX;WIN32;HAVE_CONFIG_H;_SCL_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\..\src;..\..\src\univalue\include;..\..\src\test;</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SuppressStartupBanner>false</SuppressStartupBanner>
+      <AdditionalDependencies>boost_test_exec_monitor-vc140-mt-gd.lib;crypt32.lib;Iphlpapi.lib;ws2_32.lib;Shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NOMINMAX;WIN32;HAVE_CONFIG_H;_SCL_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\..\src;..\..\src\univalue\include;..\..\src\test;</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>boost_test_exec_monitor-vc140-mt-gd.lib;crypt32.lib;Iphlpapi.lib;ws2_32.lib;Shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NOMINMAX;WIN32;HAVE_CONFIG_H;_SCL_SECURE_NO_WARNINGS;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\..\src;..\..\src\univalue\include;..\..\src\test;</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>boost_test_exec_monitor-vc140-mt.lib;crypt32.lib;Iphlpapi.lib;ws2_32.lib;Shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NOMINMAX;WIN32;HAVE_CONFIG_H;_SCL_SECURE_NO_WARNINGS;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\..\src;..\..\src\univalue\include;..\..\src\test;</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>boost_test_exec_monitor-vc140-mt.lib;crypt32.lib;Iphlpapi.lib;ws2_32.lib;Shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <Target Name="RawBenchHeaderGen" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>There was an error executing the JSON test header generation task.</ErrorText>
+    </PropertyGroup>
+    <ItemGroup>
+      <JsonTestFile Include="..\..\src\test\data\*.json" />
+    </ItemGroup>
+    <HeaderFromHexdump RawFilePath="%(JsonTestFile.FullPath)" HeaderFilePath="%(JsonTestFile.FullPath).h" SourceHeader="namespace json_tests{ static unsigned const char %(JsonTestFile.Filename)[] = {" SourceFooter="};}" />
+  </Target>
+  <Import Label="configTarget" Project="..\common.vcxproj" />
+  <Import Label="hexdumpTarget" Project="..\msbuild\tasks\hexdump.targets" />
+</Project>

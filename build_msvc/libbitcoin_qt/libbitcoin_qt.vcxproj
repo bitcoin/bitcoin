@@ -1,0 +1,955 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Label="configInitTarget" Project="..\common.init.vcxproj" />
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <VcpkgTriplet Condition="'$(Platform)'=='Win32'">x86-windows-static</VcpkgTriplet>
+    <VcpkgTriplet Condition="'$(Platform)'=='x64'">x64-windows-static</VcpkgTriplet>
+    <ProjectGuid>{2B4ABFF8-D1FD-4845-88C9-1F3C0A6512BF}</ProjectGuid>
+  </PropertyGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\..\src\qt\bitcoin.qrc">
+      <Command>"$(QTDIR)\bincc.exe" -name bitcoin "%(Fullpath)" -o .\GeneratedFiles\qrc_bitcoin.cpp</Command>
+      <Message>Qt rcc generation for %(Identity)</Message>
+      <Outputs>.\GeneratedFiles\qrc_bitcoin.cpp</Outputs>
+      <AdditionalInputs>(QTDIR)\bincc.exe</AdditionalInputs>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\qt\bitcoin_locale.qrc">
+      <Command>"$(QTDIR)\bincc.exe" -name bitcoin_locale "%(Fullpath)" -o .\GeneratedFiles\qrc_bitcoin_locale.cpp</Command>
+      <Message>Qt rcc generation for %(Identity)</Message>
+      <Outputs>.\GeneratedFiles\qrc_bitcoin_locale.cpp</Outputs>
+      <AdditionalInputs>(QTDIR)\bincc.exe</AdditionalInputs>
+    </CustomBuild>
+    <None Include="..\..\src\qt\forms\addressbookpage.ui" />
+    <None Include="..\..\src\qt\forms\askpassphrasedialog.ui" />
+    <None Include="..\..\src\qt\forms\coincontroldialog.ui" />
+    <None Include="..\..\src\qt\forms\debugwindow.ui" />
+    <None Include="..\..\src\qt\forms\editaddressdialog.ui" />
+    <None Include="..\..\src\qt\forms\helpmessagedialog.ui" />
+    <None Include="..\..\src\qt\forms\intro.ui" />
+    <None Include="..\..\src\qt\forms\modaloverlay.ui" />
+    <None Include="..\..\src\qt\forms\openuridialog.ui" />
+    <None Include="..\..\src\qt\forms\optionsdialog.ui" />
+    <None Include="..\..\src\qt\forms\overviewpage.ui" />
+    <None Include="..\..\src\qt\formseceivecoinsdialog.ui" />
+    <None Include="..\..\src\qt\formseceiverequestdialog.ui" />
+    <None Include="..\..\src\qt\forms\sendcoinsdialog.ui" />
+    <None Include="..\..\src\qt\forms\sendcoinsentry.ui" />
+    <None Include="..\..\src\qt\forms\signverifymessagedialog.ui" />
+    <None Include="..\..\src\qt\forms\transactiondescdialog.ui" />
+    <None Include="..\..\src\qt\locale\bitcoin_af.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_af_ZA.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_ar.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_be_BY.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_bg.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_bg_BG.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_ca%40valencia.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_ca.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_ca_ES.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_cs.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_cy.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_da.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_de.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_el.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_el_GR.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_en.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_en_GB.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_eo.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_es.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_es_AR.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_es_CL.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_es_CO.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_es_DO.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_es_ES.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_es_MX.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_es_UY.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_es_VE.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_et.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_et_EE.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_eu_ES.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_fa.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_fa_IR.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_fi.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_fr.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_fr_CA.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_fr_FR.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_gl.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_he.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_hi_IN.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_hr.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_hu.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_id_ID.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_it.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_it_IT.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_ja.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_ka.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_kk_KZ.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_ko_KR.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_ku_IQ.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_ky.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_la.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_lt.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_lv_LV.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_mk_MK.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_mn.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_ms_MY.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_nb.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_ne.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_nl.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_pam.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_pl.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_pt_BR.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_pt_PT.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_ro.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_ro_RO.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_ru.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_ru_RU.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_sk.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_sl_SI.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_sq.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_sr%40latin.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_sr.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_sv.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_ta.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_th_TH.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_tr.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_tr_TR.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_uk.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_ur_PK.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_uz%40Cyrl.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_vi.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_vi_VN.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_zh.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_zh_CN.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_zh_HK.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_zh_TW.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <CustomBuild Include="..\..\src\qt\paymentrequest.proto">
+      <FileType>Document</FileType>
+      <Command>F:\Dependencies\protobuf-cpp-3.4.1\protobuf-3.4.1\cmake\build\vs\Debug\protoc.exe --proto_path=%(RootDir)%(Directory) %(Fullpath) --cpp_out=.\GeneratedFiles</Command>
+      <Message>ProtoBuf source generation %(RootDir)%(Directory) %(Filename)</Message>
+      <Outputs>.\GeneratedFiles\%(Filename).pb.h;.\GeneratedFiles\(%Filename).pb.cc</Outputs>
+      <AdditionalInputs>F:\Dependencies\protobuf-cpp-3.4.1\protobuf-3.4.1\cmake\build\vs\Debug\protoc.exe</AdditionalInputs>
+      <LinkObjects>false</LinkObjects>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">F:\deps\protobuf\protobuf-3.4.1\cmake\build\vs\Debug\protoc.exe --proto_path=%(RootDir)%(Directory) %(Fullpath) --cpp_out=.\GeneratedFiles</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">F:\deps\protobuf\protobuf-3.4.1\cmake\build\vs\Debug\protoc.exe</AdditionalInputs>
+    </CustomBuild>
+    <None Include="..\..\src\qt\macdockiconhandler.mm" />
+    <None Include="..\..\src\qt\macnotificationhandler.mm" />
+    <None Include="..\..\src\qtes\icons\bitcoin.icns">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qtes\src\bitcoin.svg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qtes\src\clock_0.svg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qtes\src\clock_1.svg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qtes\src\clock_2.svg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qtes\src\clock_3.svg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qtes\src\clock_4.svg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qtes\src\connect-0.svg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qtes\src\connect-1.svg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qtes\src\connect-2.svg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qtes\src\connect-3.svg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qtes\src\connect-4.svg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qtes\src\hd_disabled.svg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qtes\src\hd_enabled.svg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qtes\src\mine.svg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qtes\src\network_disabled.svg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qtes\src\qt.svg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qtes\src\transaction0.svg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qtes\src\tx_in.svg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qtes\src\tx_inout.svg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qtes\src\verify.svg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="GeneratedFiles\bitcoin.moc" />
+    <None Include="GeneratedFiles\bitcoinamountfield.moc" />
+    <None Include="GeneratedFiles\intro.moc" />
+    <None Include="GeneratedFiles\overviewpage.moc" />
+    <None Include="GeneratedFilespcconsole.moc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\src\qtes\icons\about.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\about_qt.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\add.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\address-book.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\bitcoin.ico">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\bitcoin.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\bitcoin_testnet.ico">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\chevron.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\clock1.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\clock2.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\clock3.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\clock4.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\clock5.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\configure.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\connect0.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\connect1.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\connect2.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\connect3.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\connect4.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\debugwindow.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\edit.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\editcopy.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\editpaste.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\export.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\eye.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\eye_minus.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\eye_plus.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\filesave.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\fontbigger.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\fontsmaller.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\hd_disabled.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\hd_enabled.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\history.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\info.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\key.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\lock_closed.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\lock_open.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\network_disabled.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\open.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\overview.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\quit.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\iconseceive.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\iconsemove.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\send.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\synced.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\transaction0.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\transaction2.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\transaction_abandoned.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\transaction_conflicted.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\tx_inout.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\tx_input.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\tx_mined.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\tx_output.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\verify.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\icons\warning.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-000.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-001.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-002.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-003.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-004.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-005.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-006.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-007.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-008.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-009.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-010.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-011.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-012.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-013.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-014.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-015.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-016.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-017.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-018.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-019.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-020.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-021.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-022.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-023.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-024.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-025.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-026.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-027.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-028.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-029.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-030.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-031.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-032.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-033.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-034.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\movies\spinner-035.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+    <Image Include="..\..\src\qtes\src\spinner.png">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="GeneratedFiles\qrc_bitcoin.cpp" />
+    <ClCompile Include="GeneratedFiles\qrc_bitcoin_locale.cpp" />
+    <CustomBuild Include="..\..\src\qt\bitcoin.cpp">
+      <Command>"$(QTDIR)\bin\moc.exe" "%(Fullpath)" -o .\GeneratedFiles\%(Filename).moc $(MOC_DEF)</Command>
+      <Message>Qt moc generation for %(Identity)</Message>
+      <Outputs>.\GeneratedFiles\%(Filename).moc</Outputs>
+      <AdditionalInputs>(QTDIR)\bin\moc.exe</AdditionalInputs>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\qt\bitcoinamountfield.cpp">
+      <Command>"$(QTDIR)\bin\moc.exe" "%(Fullpath)" -o .\GeneratedFiles\%(Filename).moc $(MOC_DEF)</Command>
+      <Message>Qt moc generation for %(Identity)</Message>
+      <Outputs>.\GeneratedFiles\%(Filename).moc</Outputs>
+      <AdditionalInputs>(QTDIR)\bin\moc.exe</AdditionalInputs>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\qt\intro.cpp">
+      <Command>"$(QTDIR)\bin\moc.exe" "%(Fullpath)" -o .\GeneratedFiles\%(Filename).moc $(MOC_DEF)</Command>
+      <Message>Qt moc generation for %(Identity)</Message>
+      <Outputs>.\GeneratedFiles\%(Filename).moc</Outputs>
+      <AdditionalInputs>(QTDIR)\bin\moc.exe</AdditionalInputs>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\qt\overviewpage.cpp">
+      <Command>"$(QTDIR)\bin\moc.exe" "%(Fullpath)" -o .\GeneratedFiles\%(Filename).moc $(MOC_DEF)</Command>
+      <Message>Qt moc generation for %(Identity)</Message>
+      <Outputs>.\GeneratedFiles\%(Filename).moc</Outputs>
+      <AdditionalInputs>(QTDIR)\bin\moc.exe</AdditionalInputs>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\qtpcconsole.cpp">
+      <Command>"$(QTDIR)\bin\moc.exe" "%(Fullpath)" -o .\GeneratedFiles\%(Filename).moc $(MOC_DEF)</Command>
+      <Message>Qt moc generation for %(Identity)</Message>
+      <Outputs>.\GeneratedFiles\%(Filename).moc</Outputs>
+      <AdditionalInputs>(QTDIR)\bin\moc.exe</AdditionalInputs>
+    </CustomBuild>
+    <ClCompile Include="GeneratedFiles\moc_addressbookpage.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_addresstablemodel.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_askpassphrasedialog.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_bantablemodel.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_bitcoinaddressvalidator.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_bitcoinamountfield.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_bitcoingui.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_bitcoinunits.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_callback.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_clientmodel.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_coincontroldialog.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_coincontroltreewidget.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_csvmodelwriter.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_editaddressdialog.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_guiconstants.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_guiutil.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_intro.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_macdockiconhandler.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_macnotificationhandler.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_modaloverlay.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_networkstyle.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_notificator.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_openuridialog.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_optionsdialog.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_optionsmodel.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_overviewpage.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_paymentrequestplus.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_paymentserver.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_peertablemodel.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_platformstyle.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_qvalidatedlineedit.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_qvaluecombobox.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_receivecoinsdialog.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_receiverequestdialog.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_recentrequeststablemodel.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_rpcconsole.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_sendcoinsdialog.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_sendcoinsentry.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_signverifymessagedialog.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_splashscreen.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_trafficgraphwidget.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_transactiondesc.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_transactiondescdialog.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_transactionfilterproxy.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_transactionrecord.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_transactiontablemodel.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_transactionview.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_utilitydialog.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_walletframe.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_walletmodel.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_walletmodeltransaction.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_walletview.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_winshutdownmonitor.cpp" />
+    <ClCompile Include="GeneratedFiles\paymentrequest.pb.cc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="GeneratedFiles\paymentrequest.pb.h" />
+    <ClInclude Include="GeneratedFiles\ui_addressbookpage.h" />
+    <ClInclude Include="GeneratedFiles\ui_askpassphrasedialog.h" />
+    <ClInclude Include="GeneratedFiles\ui_coincontroldialog.h" />
+    <ClInclude Include="GeneratedFiles\ui_debugwindow.h" />
+    <ClInclude Include="GeneratedFiles\ui_editaddressdialog.h" />
+    <ClInclude Include="GeneratedFiles\ui_helpmessagedialog.h" />
+    <ClInclude Include="GeneratedFiles\ui_intro.h" />
+    <ClInclude Include="GeneratedFiles\ui_modaloverlay.h" />
+    <ClInclude Include="GeneratedFiles\ui_openuridialog.h" />
+    <ClInclude Include="GeneratedFiles\ui_optionsdialog.h" />
+    <ClInclude Include="GeneratedFiles\ui_overviewpage.h" />
+    <ClInclude Include="GeneratedFiles\ui_receivecoinsdialog.h" />
+    <ClInclude Include="GeneratedFiles\ui_receiverequestdialog.h" />
+    <ClInclude Include="GeneratedFiles\ui_sendcoinsdialog.h" />
+    <ClInclude Include="GeneratedFiles\ui_sendcoinsentry.h" />
+    <ClInclude Include="GeneratedFiles\ui_signverifymessagedialog.h" />
+    <ClInclude Include="GeneratedFiles\ui_transactiondescdialog.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <Linkage-protobuf>static</Linkage-protobuf>
+    <CustomBuildBeforeTargets>ClCompile</CustomBuildBeforeTargets>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <Linkage-protobuf>static</Linkage-protobuf>
+    <CustomBuildBeforeTargets>ClCompile</CustomBuildBeforeTargets>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <Linkage-protobuf>static</Linkage-protobuf>
+    <CustomBuildBeforeTargets>ClCompile</CustomBuildBeforeTargets>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <Linkage-protobuf>static</Linkage-protobuf>
+    <CustomBuildBeforeTargets>ClCompile</CustomBuildBeforeTargets>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <PreprocessorDefinitions>_X86_;WIN32;HAVE_CONFIG_H;_SCL_SECURE_NO_WARNINGS;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>.\GeneratedFiles;..\..\src;..\..\src\univalue\include;.\QtGenerated\mocheaders</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_X86_;WIN32;HAVE_CONFIG_H;_SCL_SECURE_NO_WARNINGS;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>.\GeneratedFiles;..\..\src;..\..\src\univalue\include;.\QtGenerated\mocheaders</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;HAVE_CONFIG_H;_SCL_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>.\GeneratedFiles;..\..\src;..\..\src\univalue\include;.\QtGenerated\mocheaders</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;HAVE_CONFIG_H;_SCL_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>.\GeneratedFiles;..\..\src;..\..\src\univalue\include;.\QtGenerated\mocheaders</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Label="configTarget" Project="..\common.vcxproj" />
+  <Target Name="QtHeadersMocCodeGeneration" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>There was an error executing the Qt headers moc code generation tasks.</ErrorText>
+    </PropertyGroup>
+    <ItemGroup>
+      <QtMocHeaderFiles Include="..\..\src\qt\*.h" />
+    </ItemGroup>
+    <Exec Command="$(QTDIR)\bin\moc.exe &quot;%(QtMocHeaderFiles.Identity)&quot; -o .\GeneratedFiles\moc_%(Filename).cpp $(MOC_DEF)" />
+  </Target>
+  <Target Name="QtFormsCodeGeneration" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>There was an error executing the Qt forms code generation tasks.</ErrorText>
+    </PropertyGroup>
+    <ItemGroup>
+      <QtFormFiles Include="..\..\src\qt\forms\*.ui" />
+    </ItemGroup>
+    <Exec Command="$(QTDIR)\bin\uic.exe &quot;%(QtFormFiles.Identity)&quot; -o .\GeneratedFiles\ui_%(Filename).h" />
+  </Target>
+  <Target Name="QtLocaleCodeGeneration" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>There was an error executing the Qt local code generation tasks.</ErrorText>
+    </PropertyGroup>
+    <ItemGroup>
+      <QtLocaleFiles Include="..\..\src\qt\locale\*.ts" />
+    </ItemGroup>
+    <Exec Command="$(QTDIR)\bin\lrelease.exe &quot;%(QtLocaleFiles.Identity)&quot; -qm ..\..\src\qt\locale\%(Filename).qm" />
+  </Target>
+  <ImportGroup Label="ExtensionTargets">
+    <!--<Import Label="berkleyDbTarget" Project="f:\deps\db-4.8.30\db.targets" />
+    <Import Label="opensslTarget" Project="f:\deps\openssl\1.0.2\openssl.targets" />
+    <Import Label="qtTarget" Project="F:\deps\qt\5.9.2-git-ssl\vc141-x86elease\qt.targets" />
+    <Import Label="protobufTarget" Project="f:\deps\protobuf\protobuf.targets" />-->
+  </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties MocDir=".\GeneratedFiles" UicDir=".\GeneratedFiles" RccDir=".\GeneratedFiles" lupdateOptions="" lupdateOnBuild="0" lreleaseOptions="" Qt5Version_x0020_Win32="5.9.1_vs140_x86" Qt5Version_x0020_x64="5.9.1_vs140_x86" MocOptions="DUNICODE -DWIN32 -DQT_DLL -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB &quot;-I.\GeneratedFiles&quot; &quot;-I.&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I$(QTDIR)\include\QtWidgets&quot;" />
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>
