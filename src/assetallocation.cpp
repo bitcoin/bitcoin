@@ -828,6 +828,8 @@ UniValue tpstestadd(const JSONRPCRequest& request) {
 			while (GetTimeMicros() < nTPSTestingStartTime) {
 				MilliSleep(0);
 			}
+			const int64_t &nStart = GetTimeMicros();
+
 			for (auto &txReq : vecTPSRawTransactions) {
 				sendrawtransaction(txReq);
 			}	
