@@ -11,7 +11,7 @@ from test_framework.util import (
     sync_blocks,
 )
 
-def unidirectional_node_sync_via_rpc(node_src, node_dest):
+def unidirectional_node_sync_via_rpc(self, node_src, node_dest):
     blocks_to_copy = []
     blockhash = node_src.getbestblockhash()
     while True:
@@ -22,16 +22,19 @@ def unidirectional_node_sync_via_rpc(node_src, node_dest):
             blocks_to_copy.append(blockhash)
             blockhash = node_src.getblockheader(blockhash, True)['previousblockhash']
     blocks_to_copy.reverse()
+    self.log.debug("Blocks to copy: %s", blocks_to_copy)
     for blockhash in blocks_to_copy:
         blockdata = node_src.getblock(blockhash, False)
-        assert(node_dest.submitblock(blockdata) in (None, 'inconclusive'))
+        result = node_dest.submitblock(blockdata)
+        assert result in (None, 'inconclusive'), "submitblock returned %r" % result
 
-def node_sync_via_rpc(nodes):
-    for node_src in nodes:
-        for node_dest in nodes:
+def node_sync_via_rpc(self, nodes):
+    for src_idx, node_src in enumerate(nodes):
+        for dest_idx, node_dest in enumerate(nodes):
             if node_src is node_dest:
                 continue
-            unidirectional_node_sync_via_rpc(node_src, node_dest)
+            self.log.debug("Sync from node %r to %r", src_idx, dest_idx)
+            unidirectional_node_sync_via_rpc(self, node_src, node_dest)
 
 class PreciousTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -48,7 +51,7 @@ class PreciousTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getblockcount(), 1)
         hashZ = self.nodes[1].generatetoaddress(2, gen_address(1))[-1]
         assert_equal(self.nodes[1].getblockcount(), 2)
-        node_sync_via_rpc(self.nodes[0:3])
+        node_sync_via_rpc(self, self.nodes[0:3])
         assert_equal(self.nodes[0].getbestblockhash(), hashZ)
 
         self.log.info("Mine blocks A-B-C on Node 0")
@@ -60,7 +63,7 @@ class PreciousTest(BitcoinTestFramework):
         assert(hashC != hashG)
         self.log.info("Connect nodes and check no reorg occurs")
         # Submit competing blocks via RPC so any reorg should occur before we proceed (no way to wait on inaction for p2p sync)
-        node_sync_via_rpc(self.nodes[0:2])
+        node_sync_via_rpc(self, self.nodes[0:2])
         connect_nodes_bi(self.nodes,0,1)
         assert_equal(self.nodes[0].getbestblockhash(), hashC)
         assert_equal(self.nodes[1].getbestblockhash(), hashG)
@@ -97,7 +100,7 @@ class PreciousTest(BitcoinTestFramework):
         assert_equal(self.nodes[2].getblockcount(), 6)
         hashL = self.nodes[2].getbestblockhash()
         self.log.info("Connect nodes and check no reorg occurs")
-        node_sync_via_rpc(self.nodes[1:3])
+        node_sync_via_rpc(self, self.nodes[1:3])
         connect_nodes_bi(self.nodes,1,2)
         connect_nodes_bi(self.nodes,0,2)
         assert_equal(self.nodes[0].getbestblockhash(), hashH)
