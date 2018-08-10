@@ -599,13 +599,10 @@ void AddToCompactExtraTransactions(const CTransactionRef& tx)
     size_t max_extra_txn = GetArg("-blockreconstructionextratxn", DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN);
     if (max_extra_txn <= 0)
         return;
-    {
-        LOCK(cs_main);
-        if (!vExtraTxnForCompact.size())
-            vExtraTxnForCompact.resize(max_extra_txn);
-        vExtraTxnForCompact[vExtraTxnForCompactIt] = std::make_pair(tx->GetHash(), tx);
-        vExtraTxnForCompactIt = (vExtraTxnForCompactIt + 1) % max_extra_txn;
-    }
+    if (!vExtraTxnForCompact.size())
+        vExtraTxnForCompact.resize(max_extra_txn);
+    vExtraTxnForCompact[vExtraTxnForCompactIt] = std::make_pair(tx->GetHash(), tx);
+    vExtraTxnForCompactIt = (vExtraTxnForCompactIt + 1) % max_extra_txn;
 }
 
 bool AddOrphanTx(const CTransactionRef& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -3363,22 +3360,15 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                     if (pto->filterInventoryKnown.contains(hash)) {
                         continue;
                     }
-					// SYSCOIN
-					TxMempoolInfo txinfo;
-					if (!fTPSTestEnabled) {
-						// Not in the mempool anymore? don't bother sending it.
-						txinfo = mempool.info(hash);
-						if (!txinfo.tx) {
-							continue;
-						}
-						if (pto->pfilter && !pto->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;
-					}
-                    
+                    // Not in the mempool anymore? don't bother sending it.
+                    auto txinfo = mempool.info(hash);
+                    if (!txinfo.tx) {
+                        continue;
+                    }
+                    if (pto->pfilter && !pto->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;
                     // Send
                     vInv.push_back(CInv(MSG_TX, hash));
                     nRelayedTransactions++;
-					// SYSCOIN
-					if (!fTPSTestEnabled)
                     {
                         // Expire old relay messages
                         while (!vRelayExpiration.empty() && vRelayExpiration.front().first < nNow)
