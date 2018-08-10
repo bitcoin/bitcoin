@@ -371,7 +371,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 		
 	}
 	int64_t tpstarttime = GetTimeMicros();
-	tpstarttime = tpstarttime + 5*1000 * 1000; // add 5 seconds to current time for official start time
+	int microsInSecond = 1000 * 1000;
+	tpstarttime = tpstarttime + 5* microsInSecond; // add 5 seconds to current time for official start time
 	assetSendTxVec1 += "]\"";
 	assetSendTxVec2 += "]\"";
 	printf("assetSentTxVec1 %s\n", assetSendTxVec1.c_str());
@@ -382,9 +383,12 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	printf("Gathering results...\n");
 	float totalTime = 0;
 	// wait untl start time
+	count = 0;
 	while (GetTimeMicros() < tpstarttime) {
 		MilliSleep(0);
-		continue;
+		count++;
+		if ((count % 1000) == 0)
+			printf("Waiting for start time, another %d seconds\n", (GetTimeMicros() - tpstarttime) / microsInSecond);
 	}
 	// start 10 second wait
 	MilliSleep(10000);
