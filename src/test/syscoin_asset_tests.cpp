@@ -393,12 +393,12 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	UniValue tpsresponse = r.get_obj();
 	UniValue tpsresponsereceivers = find_value(tpsresponse, "receivers").get_array();
 	for (int i = 0; i < tpsresponsereceivers.size(); i++) {
-		UniValue responesObj = tpsresponsereceivers[i].get_obj();
-		string txid = find_value(responesObj, "txid").get_str();
-		int64_t timeRecv = find_value(responesObj, "time").get_int64();
+		UniValue responseObj = tpsresponsereceivers[i].get_obj();
+		string txid = find_value(responseObj, "txid").get_str();
+		int64_t timeRecv = find_value(responseObj, "time").get_int64();
 		totalTime += timeRecv - tpstarttime;
 	}
-	totalTime /= tpsresponse.size();
+	totalTime /= tpsresponsereceivers.size();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "tpstestinfo"));
 	UniValue tpsresponse1 = r.get_obj();
 	int64_t teststarttime = find_value(tpsresponse1, "teststarttime").get_int64();
@@ -406,7 +406,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "tpstestinfo"));
 	UniValue tpsresponse2 = r.get_obj();
 	int64_t sendrawelapsedtime2 = find_value(tpsresponse2, "sendrawelapsedtime").get_int64();
-	printf("tpstarttime %lld sendrawelapsedtime1 %lld sendrawelapsedtime2 %lld totaltime %.2f, num responses %d\n", tpstarttime, sendrawelapsedtime1, sendrawelapsedtime2, totalTime, tpsresponse.size());
+	printf("tpstarttime %lld sendrawelapsedtime1 %lld sendrawelapsedtime2 %lld totaltime %.2f, num responses %d\n", tpstarttime, sendrawelapsedtime1, sendrawelapsedtime2, totalTime, tpsresponsereceivers.size());
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "tpstestsetenabled false"));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "tpstestsetenabled false"));
 }
