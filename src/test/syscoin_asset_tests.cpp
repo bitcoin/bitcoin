@@ -377,8 +377,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	int microsInSecond = 1000 * 1000;
 	tpstarttime = tpstarttime + 1* microsInSecond;
 	printf("Adding assetsend transactions to queue on sender nodes...\n");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "tpstestadd " + tpstarttime));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "tpstestadd " + tpstarttime));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "tpstestadd " + boost::lexical_cast<string>(tpstarttime)));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "tpstestadd " + boost::lexical_cast<string>(tpstarttime)));
 	float totalTime = 0;
 	printf("Waiting 11 seconds as per protocol...\n");
 	// start 11 second wait
