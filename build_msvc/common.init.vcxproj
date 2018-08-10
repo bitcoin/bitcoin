@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+      <PropertyGroup Condition="'$(WindowsTargetPlatformVersion)'=='' and !Exists('$(WindowsSdkDir)\DesignTime\CommonConfiguration\Neutral\Windows.props')">
+        <WindowsTargetPlatformVersion_10 Condition="'$(WindowsTargetPlatformVersion_10)' == ''">$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SDKs\Windows\v10.0@ProductVersion)</WindowsTargetPlatformVersion_10>
+        <WindowsTargetPlatformVersion_10 Condition="'$(WindowsTargetPlatformVersion_10)' == ''">$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Microsoft SDKs\Windows\v10.0@ProductVersion)</WindowsTargetPlatformVersion_10>
+        <!-- Sometimes the version in the registry has to .0 suffix, and sometimes it doesn't. Check and add it -->
+        <WindowsTargetPlatformVersion_10 Condition="'$(WindowsTargetPlatformVersion_10)' != '' and !$(WindowsTargetPlatformVersion_10.EndsWith('.0'))">$(WindowsTargetPlatformVersion_10).0</WindowsTargetPlatformVersion_10>
+
+        <WindowsTargetPlatformVersion>$(WindowsTargetPlatformVersion_10)</WindowsTargetPlatformVersion>
+    </PropertyGroup>
+    <PropertyGroup>
+        <Platform Condition="'$(Platform)' == ''">Win32</Platform>
+    </PropertyGroup>
+</Project>
