@@ -784,8 +784,9 @@ UniValue tpstestadd(const JSONRPCRequest& request) {
 			"       } \n"
 			"       ,...\n"
 			"     ]\n"
-			"2. starttime                  (numeric, required) Unix epoch time in micro seconds for when to send the raw transaction queue to the network\n")
-			+ HelpExampleCli("tpstestadd", "\"[{\\\"tx\\\":\\\"first raw hex tx\\\"},{\\\"tx\\\":\\\"second raw hex tx\\\"}]\" \"223233433839384\"");
+			"2. starttime                  (numeric, required) Unix epoch time in micro seconds for when to send the raw transaction queue to the network\n"
+			"\nExample:\n"
+			+ HelpExampleCli("tpstestadd", "\"[{\\\"tx\\\":\\\"first raw hex tx\\\"},{\\\"tx\\\":\\\"second raw hex tx\\\"}]\" \"223233433839384\""));
 	if (!fTPSTest)
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("This function requires tpstest configuration to be set upon startup. Please shutdown and enable it by adding it to your syscoin.conf file and then try again."));
 	
