@@ -363,6 +363,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 			vecTX += "]\"";
 			senderNodeCount++;
 			BOOST_CHECK_NO_THROW(r = CallRPC("node" + boost::lexical_cast<string>(senderNodeCount), "tpstestadd " + vecTX + " 0"));
+			vecTX = "\"[";
 		}
 		else
 			vecTX += ",";
