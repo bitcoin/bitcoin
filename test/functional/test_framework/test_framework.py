@@ -7,7 +7,7 @@
 import configparser
 from enum import Enum
 import logging
-import optparse
+import argparse
 import os
 import pdb
 import shutil
@@ -96,31 +96,31 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def main(self):
         """Main function. This should not be overridden by the subclass test scripts."""
 
-        parser = optparse.OptionParser(usage="%prog [options]")
-        parser.add_option("--nocleanup", dest="nocleanup", default=False, action="store_true",
-                          help="Leave bitcoinds and test.* datadir on exit or error")
-        parser.add_option("--noshutdown", dest="noshutdown", default=False, action="store_true",
-                          help="Don't stop bitcoinds after the test execution")
-        parser.add_option("--cachedir", dest="cachedir", default=os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + "/../../cache"),
-                          help="Directory for caching pregenerated datadirs (default: %default)")
-        parser.add_option("--tmpdir", dest="tmpdir", help="Root directory for datadirs")
-        parser.add_option("-l", "--loglevel", dest="loglevel", default="INFO",
-                          help="log events at this level and higher to the console. Can be set to DEBUG, INFO, WARNING, ERROR or CRITICAL. Passing --loglevel DEBUG will output all logs to console. Note that logs at all levels are always written to the test_framework.log file in the temporary test directory.")
-        parser.add_option("--tracerpc", dest="trace_rpc", default=False, action="store_true",
-                          help="Print out all RPC calls as they are made")
-        parser.add_option("--portseed", dest="port_seed", default=os.getpid(), type='int',
-                          help="The seed to use for assigning port numbers (default: current process id)")
-        parser.add_option("--coveragedir", dest="coveragedir",
-                          help="Write tested RPC commands into this directory")
-        parser.add_option("--configfile", dest="configfile",
-                          default=os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + "/../../config.ini"),
-                          help="Location of the test framework config file (default: %default)")
-        parser.add_option("--pdbonfailure", dest="pdbonfailure", default=False, action="store_true",
-                          help="Attach a python debugger if test fails")
-        parser.add_option("--usecli", dest="usecli", default=False, action="store_true",
-                          help="use bitcoin-cli instead of RPC for all commands")
+        parser = argparse.ArgumentParser(usage="%(prog)s [options]")
+        parser.add_argument("--nocleanup", dest="nocleanup", default=False, action="store_true",
+                            help="Leave bitcoinds and test.* datadir on exit or error")
+        parser.add_argument("--noshutdown", dest="noshutdown", default=False, action="store_true",
+                            help="Don't stop bitcoinds after the test execution")
+        parser.add_argument("--cachedir", dest="cachedir", default=os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + "/../../cache"),
+                            help="Directory for caching pregenerated datadirs (default: %(default)s)")
+        parser.add_argument("--tmpdir", dest="tmpdir", help="Root directory for datadirs")
+        parser.add_argument("-l", "--loglevel", dest="loglevel", default="INFO",
+                            help="log events at this level and higher to the console. Can be set to DEBUG, INFO, WARNING, ERROR or CRITICAL. Passing --loglevel DEBUG will output all logs to console. Note that logs at all levels are always written to the test_framework.log file in the temporary test directory.")
+        parser.add_argument("--tracerpc", dest="trace_rpc", default=False, action="store_true",
+                            help="Print out all RPC calls as they are made")
+        parser.add_argument("--portseed", dest="port_seed", default=os.getpid(), type=int,
+                            help="The seed to use for assigning port numbers (default: current process id)")
+        parser.add_argument("--coveragedir", dest="coveragedir",
+                            help="Write tested RPC commands into this directory")
+        parser.add_argument("--configfile", dest="configfile",
+                            default=os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + "/../../config.ini"),
+                            help="Location of the test framework config file (default: %(default)s)")
+        parser.add_argument("--pdbonfailure", dest="pdbonfailure", default=False, action="store_true",
+                            help="Attach a python debugger if test fails")
+        parser.add_argument("--usecli", dest="usecli", default=False, action="store_true",
+                            help="use bitcoin-cli instead of RPC for all commands")
         self.add_options(parser)
-        (self.options, self.args) = parser.parse_args()
+        self.options = parser.parse_args()
 
         PortSeed.n = self.options.port_seed
 
