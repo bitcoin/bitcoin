@@ -10,7 +10,7 @@
 class CCoinsViewDB;
 class CBlockTreeDB;
 class CCoinsViewCache;
-class CBlockPolicyEstimator; 
+class CBlockPolicyEstimator;
 class CTxMemPool;
 class CFeeRate;
 
