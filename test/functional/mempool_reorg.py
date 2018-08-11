@@ -11,11 +11,10 @@ that spend (directly or indirectly) coinbase transactions.
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
-# Create one-input, one-output, no-fee transaction:
+
 class MempoolCoinbaseTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.extra_args = [["-checkmempool"]] * 2
 
     alert_filename = None  # Set by setup_network
 
