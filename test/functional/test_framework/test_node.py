@@ -132,7 +132,7 @@ class TestNode():
             assert self.rpc_connected and self.rpc is not None, self._node_msg("Error: no RPC connection")
             return getattr(self.rpc, name)
 
-    def start(self, extra_args=None, stdout=None, stderr=None, *args, **kwargs):
+    def start(self, extra_args=None, *, stdout=None, stderr=None, **kwargs):
         """Start the node."""
         if extra_args is None:
             extra_args = self.extra_args
@@ -157,7 +157,7 @@ class TestNode():
         # add environment variable LIBC_FATAL_STDERR_=1 so that libc errors are written to stderr and not the terminal
         subp_env = dict(os.environ, LIBC_FATAL_STDERR_="1")
 
-        self.process = subprocess.Popen(all_args, env=subp_env, stdout=stdout, stderr=stderr, *args, **kwargs)
+        self.process = subprocess.Popen(all_args, env=subp_env, stdout=stdout, stderr=stderr, **kwargs)
 
         self.running = True
         self.log.debug("dashd started, waiting for RPC to come up")
@@ -215,6 +215,9 @@ class TestNode():
         stderr = self.stderr.read().decode('utf-8').strip()
         if stderr != expected_stderr:
             raise AssertionError("Unexpected stderr {} != {}".format(stderr, expected_stderr))
+
+        self.stdout.close()
+        self.stderr.close()
 
         del self.p2ps[:]
 
