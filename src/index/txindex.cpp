@@ -6,7 +6,7 @@
 #include <shutdown.h>
 #include <ui_interface.h>
 #include <util.h>
-#include <validation.h>
+#include <validation_globals.h>
 
 #include <boost/thread.hpp>
 
