@@ -16,9 +16,10 @@
 #include <QMessageBox>
 
 
-MultisigDialog::MultisigDialog(const PlatformStyle *platformStyle, QWidget *parent) : QDialog(parent), ui(new Ui::MultisigDialog), model(0)
+MultisigDialog::MultisigDialog(const PlatformStyle *_platformStyle, QWidget *parent) : QDialog(parent), ui(new Ui::MultisigDialog), model(0)
 {
     ui->setupUi(this);
+    platformStyle = _platformStyle;
 
 #ifdef Q_WS_MAC // Icons on push buttons are very uncommon on Mac
     ui->addPubKeyButton->setIcon(QIcon());

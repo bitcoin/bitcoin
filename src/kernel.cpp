@@ -565,15 +565,13 @@ unsigned int GetStakeEntropyBit(const CBlock& block)
     }
     else
     {
-        //ppc - fix this once client can compile
         // old protocol for entropy bit pre v0.4
-//        uint160 hashSig = Hash160(vchBlockSig);
-//        if (gArgs.GetBoolArg("-printstakemodifier", false))
-//            LogPrintf("GetStakeEntropyBit(v0.3): nTime=%u hashSig=%s", nTime, hashSig.ToString());
-//        hashSig >>= 159; // take the first bit of the hash
-//        nEntropyBit = hashSig.GetLow64();
-//        if (gArgs.GetBoolArg("-printstakemodifier", false))
-//            LogPrintf(" entropybit=%d\n", nEntropyBit);
+        uint160 hashSig = Hash160(block.vchBlockSig);
+        if (gArgs.GetBoolArg("-printstakemodifier", false))
+            LogPrintf("GetStakeEntropyBit(v0.3): nTime=%u hashSig=%s", block.nTime, hashSig.ToString());
+        nEntropyBit = hashSig.GetDataPtr()[4] >> 31;  // take the first bit of the hash
+        if (gArgs.GetBoolArg("-printstakemodifier", false))
+            LogPrintf(" entropybit=%d\n", nEntropyBit);
     }
     return nEntropyBit;
 }

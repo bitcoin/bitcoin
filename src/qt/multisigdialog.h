@@ -25,7 +25,7 @@ class MultisigDialog : public QDialog
     Q_OBJECT;
 
   public:
-    explicit MultisigDialog(const PlatformStyle *platformStyle, QWidget *parent = 0);
+    explicit MultisigDialog(const PlatformStyle *_platformStyle, QWidget *parent = 0);
     ~MultisigDialog();
     void setModel(WalletModel *model);
 

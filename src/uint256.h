@@ -22,6 +22,11 @@ protected:
     static constexpr int WIDTH = BITS / 8;
     uint8_t data[WIDTH];
 public:
+    const uint32_t *GetDataPtr() const
+    {
+        return (const uint32_t *)data;
+    }
+
     base_blob()
     {
         memset(data, 0, sizeof(data));
