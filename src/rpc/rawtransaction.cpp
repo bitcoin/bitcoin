@@ -932,7 +932,8 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
 		}
 		CValidationState state;
 		bool fMissingInputs;
-		if (!AcceptToMemoryPool(mempool, state, std::move(tx), !fBypassLimits, &fMissingInputs, NULL, false, nMaxRawTxFee, false, true)) {
+		// SYSCOIN
+		if (!AcceptToMemoryPool(mempool, state, std::move(tx), !fBypassLimits, &fMissingInputs, NULL, false, nMaxRawTxFee, false, fTPSTestEnabled)) {
 			if (state.IsInvalid()) {
 				throw JSONRPCError(RPC_TRANSACTION_REJECTED, strprintf("%i: %s", state.GetRejectCode(), state.GetRejectReason()));
 			}
