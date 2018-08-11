@@ -459,17 +459,17 @@ static UniValue echo(const JSONRPCRequest& request)
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
-    { "control",            "getmemoryinfo",          &getmemoryinfo,          {"mode"} },
-    { "control",            "logging",                &logging,                {"include", "exclude"}},
-    { "util",               "validateaddress",        &validateaddress,        {"address"} }, /* uses wallet if enabled */
-    { "util",               "createmultisig",         &createmultisig,         {"nrequired","keys"} },
-    { "util",               "verifymessage",          &verifymessage,          {"address","signature","message"} },
-    { "util",               "signmessagewithprivkey", &signmessagewithprivkey, {"privkey","message"} },
+    { RPCCategory::CONTROL,            "getmemoryinfo",          &getmemoryinfo,          {"mode"} },
+    { RPCCategory::CONTROL,            "logging",                &logging,                {"include", "exclude"}},
+    { RPCCategory::UTIL,               "validateaddress",        &validateaddress,        {"address"} }, /* uses wallet if enabled */
+    { RPCCategory::UTIL,               "createmultisig",         &createmultisig,         {"nrequired","keys"} },
+    { RPCCategory::UTIL,               "verifymessage",          &verifymessage,          {"address","signature","message"} },
+    { RPCCategory::UTIL,               "signmessagewithprivkey", &signmessagewithprivkey, {"privkey","message"} },
 
     /* Not shown in help */
-    { "hidden",             "setmocktime",            &setmocktime,            {"timestamp"}},
-    { "hidden",             "echo",                   &echo,                   {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
-    { "hidden",             "echojson",               &echo,                   {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
+    { RPCCategory::HIDDEN,             "setmocktime",            &setmocktime,            {"timestamp"}},
+    { RPCCategory::HIDDEN,             "echo",                   &echo,                   {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
+    { RPCCategory::HIDDEN,             "echojson",               &echo,                   {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
 };
 
 void RegisterMiscRPCCommands(CRPCTable &t)

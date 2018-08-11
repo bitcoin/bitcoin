@@ -48,7 +48,7 @@ UniValue getzmqnotifications(const JSONRPCRequest& request)
 const CRPCCommand commands[] =
 { //  category              name                                actor (function)                argNames
   //  -----------------     ------------------------            -----------------------         ----------
-    { "zmq",                "getzmqnotifications",              &getzmqnotifications,           {} },
+    { RPCCategory::ZMQ,                "getzmqnotifications",              &getzmqnotifications,           {} },
 };
 
 } // anonymous namespace

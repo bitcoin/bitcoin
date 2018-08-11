@@ -8,6 +8,8 @@
 
 #include <amount.h>
 #include <rpc/protocol.h>
+#include <rpc/rpccategory.h>
+
 #include <uint256.h>
 
 #include <list>
@@ -131,10 +133,10 @@ typedef UniValue(*rpcfn_type)(const JSONRPCRequest& jsonRequest);
 class CRPCCommand
 {
 public:
-    std::string category;
-    std::string name;
-    rpcfn_type actor;
-    std::vector<std::string> argNames;
+    const RPCCategory category;
+    const std::string name;
+    const rpcfn_type actor;
+    const std::vector<std::string> argNames;
 };
 
 /**

@@ -54,7 +54,7 @@ def process_commands(fname):
                 if line.startswith('};'):
                     in_rpcs = False
                 elif '{' in line and '"' in line:
-                    m = re.search('{ *("[^"]*"), *("[^"]*"), *&([^,]*), *{([^}]*)} *},', line)
+                    m = re.search('{ *([A-Za-z]*::[A-Z]*), *("[^"]*"), *&([^,]*), *{([^}]*)} *},', line)
                     assert m, 'No match to table expression: %s' % line
                     name = parse_string(m.group(2))
                     args_str = m.group(4).strip()
