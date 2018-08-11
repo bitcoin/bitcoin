@@ -387,6 +387,15 @@ class P2PInterface(P2PConnection):
         test_function = lambda: self.last_message.get("block") and self.last_message["block"].block.rehash() == blockhash
         wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
+    def wait_for_header(self, blockhash, timeout=60):
+        def test_function():
+            last_headers = self.last_message.get('headers')
+            if not last_headers:
+                return False
+            return last_headers.headers[0].rehash() == blockhash
+
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
+
     def wait_for_getdata(self, timeout=60):
         """Waits for a getdata message.
 
