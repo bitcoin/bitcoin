@@ -350,6 +350,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	int count = 0;
 	int totalSenderNodes = 2;
 	int totalPerSenderNode = assetMap.size() / totalSenderNodes;
+	if (totalPerSenderNode > 100)
+		totalPerSenderNode = 100;
 	int senderNodeCount = 0;
 	string vecTX = "\"[";
 	for (auto& assetTuple : assetMap) {
@@ -362,6 +364,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 		if ((count % totalPerSenderNode) == 0) {
 			vecTX += "]\"";
 			senderNodeCount++;
+			if (senderNodeCount > totalSenderNodes)
+				senderNodeCount = 1;
 			BOOST_CHECK_NO_THROW(r = CallRPC("node" + boost::lexical_cast<string>(senderNodeCount), "tpstestadd 0 " + vecTX));
 			vecTX = "\"[";
 		}
