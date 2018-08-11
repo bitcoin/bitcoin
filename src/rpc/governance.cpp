@@ -223,10 +223,10 @@ UniValue gobject(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Must wait for client to sync with masternode network. Try again in a minute or so.");
         }
 
-        bool fMnFound = mnodeman.Has(activeMasternode.outpoint);
+        bool fMnFound = mnodeman.Has(activeMasternodeInfo.outpoint);
 
-        DBG( std::cout << "gobject: submit activeMasternode.pubKeyMasternode = " << activeMasternode.pubKeyMasternode.GetHash().ToString()
-             << ", outpoint = " << activeMasternode.outpoint.ToStringShort()
+        DBG( std::cout << "gobject: submit activeMasternodeInfo.keyIDMasternode = " << activeMasternodeInfo.keyIDMasternode.ToString()
+             << ", outpoint = " << activeMasternodeInfo.outpoint.ToStringShort()
              << ", params.size() = " << request.params.size()
              << ", fMnFound = " << fMnFound << std::endl; );
 
@@ -274,8 +274,8 @@ UniValue gobject(const JSONRPCRequest& request)
         // Attempt to sign triggers if we are a MN
         if(govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
             if(fMnFound) {
-                govobj.SetMasternodeOutpoint(activeMasternode.outpoint);
-                govobj.Sign(activeMasternode.keyMasternode, activeMasternode.pubKeyMasternode);
+                govobj.SetMasternodeOutpoint(activeMasternodeInfo.outpoint);
+                govobj.Sign(activeMasternodeInfo.keyMasternode, activeMasternodeInfo.keyIDMasternode);
             }
             else {
                 LogPrintf("gobject(submit) -- Object submission rejected because node is not a masternode\n");
@@ -357,7 +357,7 @@ UniValue gobject(const JSONRPCRequest& request)
         UniValue returnObj(UniValue::VOBJ);
 
         CMasternode mn;
-        bool fMnFound = mnodeman.Get(activeMasternode.outpoint, mn);
+        bool fMnFound = mnodeman.Get(activeMasternodeInfo.outpoint, mn);
 
         if(!fMnFound) {
             nFailed++;
@@ -370,7 +370,7 @@ UniValue gobject(const JSONRPCRequest& request)
         }
 
         CGovernanceVote vote(mn.outpoint, hash, eVoteSignal, eVoteOutcome);
-        if(!vote.Sign(activeMasternode.keyMasternode, activeMasternode.pubKeyMasternode)) {
+        if(!vote.Sign(activeMasternodeInfo.keyMasternode, activeMasternodeInfo.keyIDMasternode)) {
             nFailed++;
             statusObj.push_back(Pair("result", "failed"));
             statusObj.push_back(Pair("errorMessage", "Failure to sign."));
@@ -443,8 +443,6 @@ UniValue gobject(const JSONRPCRequest& request)
             std::vector<unsigned char> vchMasterNodeSignature;
             std::string strMasterNodeSignMessage;
 
-            CPubKey pubKeyCollateralAddress;
-            CKey keyCollateralAddress;
             CPubKey pubKeyMasternode;
             CKey keyMasternode;
 
@@ -480,7 +478,7 @@ UniValue gobject(const JSONRPCRequest& request)
             }
 
             CGovernanceVote vote(mn.outpoint, hash, eVoteSignal, eVoteOutcome);
-            if(!vote.Sign(keyMasternode, pubKeyMasternode)){
+            if(!vote.Sign(keyMasternode, pubKeyMasternode.GetID())){
                 nFailed++;
                 statusObj.push_back(Pair("result", "failed"));
                 statusObj.push_back(Pair("errorMessage", "Failure to sign."));

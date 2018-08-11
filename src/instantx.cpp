@@ -233,8 +233,8 @@ void CInstantSend::Vote(CTxLockCandidate& txLockCandidate, CConnman& connman)
 
         int nRank;
         int nMinRequiredProtocol = std::max(MIN_INSTANTSEND_PROTO_VERSION, mnpayments.GetMinMasternodePaymentsProto());
-        if(!mnodeman.GetMasternodeRank(activeMasternode.outpoint, nRank, nLockInputHeight, nMinRequiredProtocol)) {
-            LogPrint("instantsend", "CInstantSend::Vote -- Can't calculate rank for masternode %s\n", activeMasternode.outpoint.ToStringShort());
+        if(!mnodeman.GetMasternodeRank(activeMasternodeInfo.outpoint, nRank, nLockInputHeight, nMinRequiredProtocol)) {
+            LogPrint("instantsend", "CInstantSend::Vote -- Can't calculate rank for masternode %s\n", activeMasternodeInfo.outpoint.ToStringShort());
             continue;
         }
 
@@ -254,7 +254,7 @@ void CInstantSend::Vote(CTxLockCandidate& txLockCandidate, CConnman& connman)
         if(itVoted != mapVotedOutpoints.end()) {
             for (const auto& hash : itVoted->second) {
                 std::map<uint256, CTxLockCandidate>::iterator it2 = mapTxLockCandidates.find(hash);
-                if(it2->second.HasMasternodeVoted(outpointLockPair.first, activeMasternode.outpoint)) {
+                if(it2->second.HasMasternodeVoted(outpointLockPair.first, activeMasternodeInfo.outpoint)) {
                     // we already voted for this outpoint to be included either in the same tx or in a competing one,
                     // skip it anyway
                     fAlreadyVoted = true;
@@ -269,7 +269,7 @@ void CInstantSend::Vote(CTxLockCandidate& txLockCandidate, CConnman& connman)
         }
 
         // we haven't voted for this outpoint yet, let's try to do this now
-        CTxLockVote vote(txHash, outpointLockPair.first, activeMasternode.outpoint);
+        CTxLockVote vote(txHash, outpointLockPair.first, activeMasternodeInfo.outpoint);
 
         if(!vote.Sign()) {
             LogPrintf("CInstantSend::Vote -- Failed to sign consensus vote\n");
@@ -1059,10 +1059,10 @@ bool CTxLockVote::CheckSignature() const
     if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
         uint256 hash = GetSignatureHash();
 
-        if (!CHashSigner::VerifyHash(hash, infoMn.pubKeyMasternode, vchMasternodeSignature, strError)) {
+        if (!CHashSigner::VerifyHash(hash, infoMn.keyIDMasternode, vchMasternodeSignature, strError)) {
             // could be a signature in old format
             std::string strMessage = txHash.ToString() + outpoint.ToStringShort();
-            if(!CMessageSigner::VerifyMessage(infoMn.pubKeyMasternode, vchMasternodeSignature, strMessage, strError)) {
+        if(!CMessageSigner::VerifyMessage(infoMn.keyIDMasternode, vchMasternodeSignature, strMessage, strError)) {
                 // nope, not in old format either
                 LogPrintf("CTxLockVote::CheckSignature -- VerifyMessage() failed, error: %s\n", strError);
                 return false;
@@ -1070,7 +1070,7 @@ bool CTxLockVote::CheckSignature() const
         }
     } else {
         std::string strMessage = txHash.ToString() + outpoint.ToStringShort();
-        if(!CMessageSigner::VerifyMessage(infoMn.pubKeyMasternode, vchMasternodeSignature, strMessage, strError)) {
+        if(!CMessageSigner::VerifyMessage(infoMn.keyIDMasternode, vchMasternodeSignature, strMessage, strError)) {
             LogPrintf("CTxLockVote::CheckSignature -- VerifyMessage() failed, error: %s\n", strError);
             return false;
         }
@@ -1086,24 +1086,24 @@ bool CTxLockVote::Sign()
     if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
         uint256 hash = GetSignatureHash();
 
-        if(!CHashSigner::SignHash(hash, activeMasternode.keyMasternode, vchMasternodeSignature)) {
+        if(!CHashSigner::SignHash(hash, activeMasternodeInfo.keyMasternode, vchMasternodeSignature)) {
             LogPrintf("CTxLockVote::Sign -- SignHash() failed\n");
             return false;
         }
 
-        if (!CHashSigner::VerifyHash(hash, activeMasternode.pubKeyMasternode, vchMasternodeSignature, strError)) {
+        if (!CHashSigner::VerifyHash(hash, activeMasternodeInfo.keyIDMasternode, vchMasternodeSignature, strError)) {
             LogPrintf("CTxLockVote::Sign -- VerifyHash() failed, error: %s\n", strError);
             return false;
         }
     } else {
         std::string strMessage = txHash.ToString() + outpoint.ToStringShort();
 
-        if(!CMessageSigner::SignMessage(strMessage, vchMasternodeSignature, activeMasternode.keyMasternode)) {
+        if(!CMessageSigner::SignMessage(strMessage, vchMasternodeSignature, activeMasternodeInfo.keyMasternode)) {
             LogPrintf("CTxLockVote::Sign -- SignMessage() failed\n");
             return false;
         }
 
-        if(!CMessageSigner::VerifyMessage(activeMasternode.pubKeyMasternode, vchMasternodeSignature, strMessage, strError)) {
+        if(!CMessageSigner::VerifyMessage(activeMasternodeInfo.keyIDMasternode, vchMasternodeSignature, strMessage, strError)) {
             LogPrintf("CTxLockVote::Sign -- VerifyMessage() failed, error: %s\n", strError);
             return false;
         }

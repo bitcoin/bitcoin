@@ -90,8 +90,8 @@ public:
 
     void SetSignature(const std::vector<unsigned char>& vchSigIn) { vchSig = vchSigIn; }
 
-    bool Sign(const CKey& keyMasternode, const CPubKey& pubKeyMasternode);
-    bool CheckSignature(const CPubKey& pubKeyMasternode) const;
+    bool Sign(const CKey& keyMasternode, const CKeyID& keyIDMasternode);
+    bool CheckSignature(const CKeyID& keyIDMasternode) const;
     bool IsValid(bool fSignatureCheck) const;
     void Relay(CConnman& connman) const;
 

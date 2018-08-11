@@ -265,7 +265,7 @@ void CGovernanceObject::SetMasternodeOutpoint(const COutPoint& outpoint)
     masternodeOutpoint = outpoint;
 }
 
-bool CGovernanceObject::Sign(const CKey& keyMasternode, const CPubKey& pubKeyMasternode)
+bool CGovernanceObject::Sign(const CKey& keyMasternode, const CKeyID& keyIDMasternode)
 {
     std::string strError;
 
@@ -277,7 +277,7 @@ bool CGovernanceObject::Sign(const CKey& keyMasternode, const CPubKey& pubKeyMas
             return false;
         }
 
-        if (!CHashSigner::VerifyHash(hash, pubKeyMasternode, vchSig, strError)) {
+        if (!CHashSigner::VerifyHash(hash, keyIDMasternode, vchSig, strError)) {
             LogPrintf("CGovernanceObject::Sign -- VerifyHash() failed, error: %s\n", strError);
             return false;
         }
@@ -288,30 +288,30 @@ bool CGovernanceObject::Sign(const CKey& keyMasternode, const CPubKey& pubKeyMas
             return false;
         }
 
-        if (!CMessageSigner::VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {
+        if(!CMessageSigner::VerifyMessage(keyIDMasternode, vchSig, strMessage, strError)) {
             LogPrintf("CGovernanceObject::Sign -- VerifyMessage() failed, error: %s\n", strError);
             return false;
         }
     }
 
     LogPrint("gobject", "CGovernanceObject::Sign -- pubkey id = %s, masternode = %s\n",
-             pubKeyMasternode.GetID().ToString(), masternodeOutpoint.ToStringShort());
+             keyIDMasternode.ToString(), masternodeOutpoint.ToStringShort());
 
     return true;
 }
 
-bool CGovernanceObject::CheckSignature(const CPubKey& pubKeyMasternode) const
+bool CGovernanceObject::CheckSignature(const CKeyID& keyIDMasternode) const
 {
     std::string strError;
 
     if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
         uint256 hash = GetSignatureHash();
 
-        if (!CHashSigner::VerifyHash(hash, pubKeyMasternode, vchSig, strError)) {
+        if (!CHashSigner::VerifyHash(hash, keyIDMasternode, vchSig, strError)) {
             // could be an old object
             std::string strMessage = GetSignatureMessage();
 
-            if (!CMessageSigner::VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {
+            if(!CMessageSigner::VerifyMessage(keyIDMasternode, vchSig, strMessage, strError)) {
                 // nope, not in old format either
                 LogPrintf("CGovernance::CheckSignature -- VerifyMessage() failed, error: %s\n", strError);
                 return false;
@@ -320,7 +320,7 @@ bool CGovernanceObject::CheckSignature(const CPubKey& pubKeyMasternode) const
     } else {
         std::string strMessage = GetSignatureMessage();
 
-        if (!CMessageSigner::VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {
+        if (!CMessageSigner::VerifyMessage(keyIDMasternode, vchSig, strMessage, strError)) {
             LogPrintf("CGovernance::CheckSignature -- VerifyMessage() failed, error: %s\n", strError);
             return false;
         }
@@ -490,7 +490,7 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingMast
             masternode_info_t infoMn;
             if (!mnodeman.GetMasternodeInfo(masternodeOutpoint, infoMn)) {
 
-                CMasternode::CollateralStatus err = CMasternode::CheckCollateral(masternodeOutpoint, CPubKey());
+                CMasternode::CollateralStatus err = CMasternode::CheckCollateral(masternodeOutpoint, CKeyID());
                 if (err == CMasternode::COLLATERAL_UTXO_NOT_FOUND) {
                     strError = "Failed to find Masternode UTXO, missing masternode=" + strOutpoint + "\n";
                 } else if (err == CMasternode::COLLATERAL_INVALID_AMOUNT) {
@@ -507,8 +507,8 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingMast
             }
 
             // Check that we have a valid MN signature
-            if (!CheckSignature(infoMn.pubKeyMasternode)) {
-                strError = "Invalid masternode signature for: " + strOutpoint + ", pubkey id = " + infoMn.pubKeyMasternode.GetID().ToString();
+            if (!CheckSignature(infoMn.keyIDMasternode)) {
+                strError = "Invalid masternode signature for: " + strOutpoint + ", pubkey id = " + infoMn.keyIDMasternode.ToString();
                 return false;
             }
 

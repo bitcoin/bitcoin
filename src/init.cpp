@@ -1851,10 +1851,13 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
         std::string strMasterNodePrivKey = GetArg("-masternodeprivkey", "");
         if(!strMasterNodePrivKey.empty()) {
-            if(!CMessageSigner::GetKeysFromSecret(strMasterNodePrivKey, activeMasternode.keyMasternode, activeMasternode.pubKeyMasternode))
+            CPubKey pubKeyMasternode;
+            if(!CMessageSigner::GetKeysFromSecret(strMasterNodePrivKey, activeMasternodeInfo.keyMasternode, pubKeyMasternode))
                 return InitError(_("Invalid masternodeprivkey. Please see documenation."));
 
-            LogPrintf("  pubKeyMasternode: %s\n", CBitcoinAddress(activeMasternode.pubKeyMasternode.GetID()).ToString());
+            activeMasternodeInfo.keyIDMasternode = pubKeyMasternode.GetID();
+
+            LogPrintf("  keyIDMasternode: %s\n", CBitcoinAddress(activeMasternodeInfo.keyIDMasternode).ToString());
         } else {
             return InitError(_("You must specify a masternodeprivkey in the configuration. Please see documentation for help."));
         }
@@ -1973,7 +1976,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         scheduler.scheduleEvery(boost::bind(&CNetFulfilledRequestManager::DoMaintenance, boost::ref(netfulfilledman)), 60);
         scheduler.scheduleEvery(boost::bind(&CMasternodeSync::DoMaintenance, boost::ref(masternodeSync), boost::ref(*g_connman)), MASTERNODE_SYNC_TICK_SECONDS);
         scheduler.scheduleEvery(boost::bind(&CMasternodeMan::DoMaintenance, boost::ref(mnodeman), boost::ref(*g_connman)), 1);
-        scheduler.scheduleEvery(boost::bind(&CActiveMasternode::DoMaintenance, boost::ref(activeMasternode), boost::ref(*g_connman)), MASTERNODE_MIN_MNP_SECONDS);
+        scheduler.scheduleEvery(boost::bind(&CActiveLegacyMasternodeManager::DoMaintenance, boost::ref(legacyActiveMasternodeManager), boost::ref(*g_connman)), MASTERNODE_MIN_MNP_SECONDS);
 
         scheduler.scheduleEvery(boost::bind(&CMasternodePayments::DoMaintenance, boost::ref(mnpayments)), 60);
         scheduler.scheduleEvery(boost::bind(&CGovernanceManager::DoMaintenance, boost::ref(governance), boost::ref(*g_connman)), 60 * 5);

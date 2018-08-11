@@ -48,7 +48,7 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
         if(dsa.nInputCount < 0 || dsa.nInputCount > PRIVATESEND_ENTRY_MAX_SIZE) return;
 
         masternode_info_t mnInfo;
-        if(!mnodeman.GetMasternodeInfo(activeMasternode.outpoint, mnInfo)) {
+        if(!mnodeman.GetMasternodeInfo(activeMasternodeInfo.outpoint, mnInfo)) {
             PushStatus(pfrom, STATUS_REJECTED, ERR_MN_LIST, connman);
             return;
         }
@@ -105,7 +105,7 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
         masternode_info_t mnInfo;
         if(!mnodeman.GetMasternodeInfo(dsq.masternodeOutpoint, mnInfo)) return;
 
-        if(!dsq.CheckSignature(mnInfo.pubKeyMasternode)) {
+        if(!dsq.CheckSignature(mnInfo.keyIDMasternode)) {
             // we probably have outdated info
             mnodeman.AskForMN(pfrom, dsq.masternodeOutpoint, connman);
             return;
@@ -363,7 +363,7 @@ void CPrivateSendServer::CommitFinalTransaction(CConnman& connman)
 
     // create and sign masternode dstx transaction
     if(!CPrivateSend::GetDSTX(hashTx)) {
-        CDarksendBroadcastTx dstxNew(finalTransaction, activeMasternode.outpoint, GetAdjustedTime());
+        CDarksendBroadcastTx dstxNew(finalTransaction, activeMasternodeInfo.outpoint, GetAdjustedTime());
         dstxNew.Sign();
         CPrivateSend::AddDSTX(dstxNew);
     }
@@ -524,7 +524,7 @@ void CPrivateSendServer::CheckForCompleteQueue(CConnman& connman)
     if(nState == POOL_STATE_QUEUE && IsSessionReady()) {
         SetState(POOL_STATE_ACCEPTING_ENTRIES);
 
-        CDarksendQueue dsq(nSessionDenom, nSessionInputCount, activeMasternode.outpoint, GetAdjustedTime(), true);
+        CDarksendQueue dsq(nSessionDenom, nSessionInputCount, activeMasternodeInfo.outpoint, GetAdjustedTime(), true);
         LogPrint("privatesend", "CPrivateSendServer::CheckForCompleteQueue -- queue is ready, signing and relaying (%s)\n", dsq.ToString());
         dsq.Sign();
         dsq.Relay(connman);
@@ -739,7 +739,7 @@ bool CPrivateSendServer::CreateNewSession(const CDarksendAccept& dsa, PoolMessag
 
     if(!fUnitTest) {
         //broadcast that I'm accepting entries, only if it's the first entry through
-        CDarksendQueue dsq(dsa.nDenom, dsa.nInputCount, activeMasternode.outpoint, GetAdjustedTime(), false);
+        CDarksendQueue dsq(dsa.nDenom, dsa.nInputCount, activeMasternodeInfo.outpoint, GetAdjustedTime(), false);
         LogPrint("privatesend", "CPrivateSendServer::CreateNewSession -- signing and relaying new queue: %s\n", dsq.ToString());
         dsq.Sign();
         dsq.Relay(connman);
