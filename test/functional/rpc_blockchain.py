@@ -194,13 +194,10 @@ class BlockchainTest(BitcoinTestFramework):
         node.reconsiderblock(b1hash)
 
         res3 = node.gettxoutsetinfo()
-        assert_equal(res['total_amount'], res3['total_amount'])
-        assert_equal(res['transactions'], res3['transactions'])
-        assert_equal(res['height'], res3['height'])
-        assert_equal(res['txouts'], res3['txouts'])
-        assert_equal(res['bogosize'], res3['bogosize'])
-        assert_equal(res['bestblock'], res3['bestblock'])
-        assert_equal(res['hash_serialized_2'], res3['hash_serialized_2'])
+        # The field 'disk_size' is non-deterministic and can thus not be
+        # compared between res and res3.  Everything else should be the same.
+        del res['disk_size'], res3['disk_size']
+        assert_equal(res, res3)
 
     def _test_getblockheader(self):
         node = self.nodes[0]
