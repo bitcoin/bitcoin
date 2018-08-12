@@ -113,7 +113,7 @@ void StartNode(const string &dataDir, bool regTest, const string& extraArgs)
 	{
 		try{
 			printf("Calling getinfo!\n");
-			r = CallRPC(dataDir, "getinfo", regTest);
+			r = CallRPC(dataDir, "getinfo");
 			if(dataDir == "node1")
 			{
 				if(node1LastBlock > find_value(r.get_obj(), "blocks").get_int())
@@ -148,7 +148,7 @@ void StartNode(const string &dataDir, bool regTest, const string& extraArgs)
 				node3LastBlock = 0;
 			}
 			MilliSleep(500);
-			CallRPC(dataDir, "prunesyscoinservices", regTest);
+			CallRPC(dataDir, "prunesyscoinservices");
 			MilliSleep(500);
 		}
 		catch(const runtime_error& error)
