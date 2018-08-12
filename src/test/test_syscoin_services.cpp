@@ -238,7 +238,7 @@ UniValue CallRPC(const string &dataDir, const string& commandWithArgs, bool regT
 UniValue CallRPC(const string &node, const string& command, const string& args, bool readJson)
 {
 	vector<string> vecArgs;
-	boost::algorithm::split(contents, args, boost::is_any_of(" "));
+	boost::algorithm::split(vecArgs, args, boost::is_any_of(" "));
 	string url = "";
 	if (node == "node1")
 		url = "http://127.0.0.1:28379";
@@ -254,10 +254,9 @@ UniValue CallRPC(const string &node, const string& command, const string& args, 
 	}
 	params += "]";
 	UniValue val;
-	path += commandWithArgs;
 	string curlcmd = "curl --user u:p --data-binary '{\"jsonrpc\":\"1.0\",\"id\":\"unittest\",\"method:\"" + command + "\",\"params\":" + params + "}' -H 'content-type:text/plain;' " + url;
 	printf("%s\n", curlcmd);
-	string rawJson = CallExternal(path);
+	string rawJson = CallExternal(curlcmd);
 	if (readJson)
 	{
 		val.read(rawJson);
@@ -835,7 +834,7 @@ string AliasNew(const string& node, const string& aliasname, const string& pubda
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscointxfund", varray1[0].get_str()));
 	varray1 = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction", varray1[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction",+ find_value(r.get_obj(), "hex").get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction",find_value(r.get_obj(), "hex").get_str()));
 
 	GenerateBlocks(5, node);
 	GenerateBlocks(5, node);
