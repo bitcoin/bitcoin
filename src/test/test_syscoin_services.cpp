@@ -256,14 +256,17 @@ UniValue CallRPC1(const string &node, const string& command, const string& args,
 	params += "]";
 	UniValue val;
 	string curlcmd = "curl -s --user u:p --data-binary '{\"jsonrpc\":\"1.0\",\"id\":\"unittest\",\"method\":\"" + command + "\",\"params\":" + params + "}' -H 'content-type:text/plain;' " + url;
-	printf("%s\n", curlcmd.c_str());
 	string rawJson = CallExternal(curlcmd);
-	printf("rawJson %s\n", rawJson.c_str());
 	if (readJson)
 	{
 		val.read(rawJson);
 		if (val.isNull())
 			throw runtime_error("Could not parse rpc results");
+		// try to get error message if exist
+		UniValue errorValue = find_value(val.get_obj(), "error"));
+		if (errorValue.isObj()) {
+			throw runtime_error(find_value(errorValue.get_obj(), "message").get_str()));
+		}
 	}
 	else
 		val.setStr(rawJson);
