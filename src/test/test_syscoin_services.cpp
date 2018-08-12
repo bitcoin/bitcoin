@@ -263,9 +263,9 @@ UniValue CallRPC1(const string &node, const string& command, const string& args,
 		if (val.isNull())
 			throw runtime_error("Could not parse rpc results");
 		// try to get error message if exist
-		UniValue errorValue = find_value(val.get_obj(), "error"));
-		if (errorValue.isObj()) {
-			throw runtime_error(find_value(errorValue.get_obj(), "message").get_str()));
+		UniValue errorValue = find_value(val.get_obj(), "error");
+		if (errorValue.isObject()) {
+			throw runtime_error(find_value(errorValue.get_obj(), "message").get_str());
 		}
 	}
 	else
