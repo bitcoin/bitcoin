@@ -366,14 +366,14 @@ bool CSuperblockManager::GetBestSuperblock(CSuperblock_sptr& pSuperblockRet, int
 }
 
 /**
-*   Create Superblock Payments
+*   Get Superblock Payments
 *
-*   - Create the correct payment structure for a given superblock
+*   - Returns payments for superblock
 */
 
-void CSuperblockManager::CreateSuperblock(CMutableTransaction& txNewRet, int nBlockHeight, std::vector<CTxOut>& voutSuperblockRet)
+bool CSuperblockManager::GetSuperblockPayments(int nBlockHeight, std::vector<CTxOut>& voutSuperblockRet)
 {
-    DBG( std::cout << "CSuperblockManager::CreateSuperblock Start" << std::endl; );
+    DBG( std::cout << "CSuperblockManager::GetSuperblockPayments Start" << std::endl; );
 
     LOCK(governance.cs);
 
@@ -381,18 +381,18 @@ void CSuperblockManager::CreateSuperblock(CMutableTransaction& txNewRet, int nBl
 
     CSuperblock_sptr pSuperblock;
     if(!CSuperblockManager::GetBestSuperblock(pSuperblock, nBlockHeight)) {
-        LogPrint("gobject", "CSuperblockManager::CreateSuperblock -- Can't find superblock for height %d\n", nBlockHeight);
-        DBG( std::cout << "CSuperblockManager::CreateSuperblock Failed to get superblock for height, returning" << std::endl; );
-        return;
+        LogPrint("gobject", "CSuperblockManager::GetSuperblockPayments -- Can't find superblock for height %d\n", nBlockHeight);
+        DBG( std::cout << "CSuperblockManager::GetSuperblockPayments Failed to get superblock for height, returning" << std::endl; );
+        return false;
     }
 
     // make sure it's empty, just in case
     voutSuperblockRet.clear();
 
-    // CONFIGURE SUPERBLOCK OUTPUTS
+    // GET SUPERBLOCK OUTPUTS
 
-    // Superblock payments are appended to the end of the coinbase vout vector
-    DBG( std::cout << "CSuperblockManager::CreateSuperblock Number payments: " << pSuperblock->CountPayments() << std::endl; );
+    // Superblock payments will be appended to the end of the coinbase vout vector
+    DBG( std::cout << "CSuperblockManager::GetSuperblockPayments Number payments: " << pSuperblock->CountPayments() << std::endl; );
 
     // TODO: How many payments can we add before things blow up?
     //       Consider at least following limits:
@@ -400,13 +400,12 @@ void CSuperblockManager::CreateSuperblock(CMutableTransaction& txNewRet, int nBl
     //          - max "budget" available
     for(int i = 0; i < pSuperblock->CountPayments(); i++) {
         CGovernancePayment payment;
-        DBG( std::cout << "CSuperblockManager::CreateSuperblock i = " << i << std::endl; );
+        DBG( std::cout << "CSuperblockManager::GetSuperblockPayments i = " << i << std::endl; );
         if(pSuperblock->GetPayment(i, payment)) {
-            DBG( std::cout << "CSuperblockManager::CreateSuperblock Payment found " << std::endl; );
+            DBG( std::cout << "CSuperblockManager::GetSuperblockPayments Payment found " << std::endl; );
             // SET COINBASE OUTPUT TO SUPERBLOCK SETTING
 
             CTxOut txout = CTxOut(payment.nAmount, payment.script);
-            txNewRet.vout.push_back(txout);
             voutSuperblockRet.push_back(txout);
 
             // PRINT NICE LOG OUTPUT FOR SUPERBLOCK PAYMENT
@@ -417,15 +416,17 @@ void CSuperblockManager::CreateSuperblock(CMutableTransaction& txNewRet, int nBl
 
             // TODO: PRINT NICE N.N DASH OUTPUT
 
-            DBG( std::cout << "CSuperblockManager::CreateSuperblock Before LogPrintf call, nAmount = " << payment.nAmount << std::endl; );
+            DBG( std::cout << "CSuperblockManager::GetSuperblockPayments Before LogPrintf call, nAmount = " << payment.nAmount << std::endl; );
             LogPrintf("NEW Superblock : output %d (addr %s, amount %d)\n", i, address2.ToString(), payment.nAmount);
-            DBG( std::cout << "CSuperblockManager::CreateSuperblock After LogPrintf call " << std::endl; );
+            DBG( std::cout << "CSuperblockManager::GetSuperblockPayments After LogPrintf call " << std::endl; );
         } else {
-            DBG( std::cout << "CSuperblockManager::CreateSuperblock Payment not found " << std::endl; );
+            DBG( std::cout << "CSuperblockManager::GetSuperblockPayments Payment not found " << std::endl; );
         }
     }
 
-    DBG( std::cout << "CSuperblockManager::CreateSuperblock End" << std::endl; );
+    DBG( std::cout << "CSuperblockManager::GetSuperblockPayments End" << std::endl; );
+
+    return true;
 }
 
 bool CSuperblockManager::IsValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward)
@@ -679,7 +680,7 @@ bool CSuperblock::IsValid(const CTransaction& txNew, int nBlockHeight, CAmount b
 
     int nOutputs = txNew.vout.size();
     int nPayments = CountPayments();
-    int nMinerPayments = nOutputs - nPayments;
+    int nMinerAndMasternodePayments = nOutputs - nPayments;
 
     LogPrint("gobject", "CSuperblock::IsValid nOutputs = %d, nPayments = %d, GetDataAsHexString = %s\n",
              nOutputs, nPayments, GetGovernanceObject()->GetDataAsHexString());
@@ -687,7 +688,7 @@ bool CSuperblock::IsValid(const CTransaction& txNew, int nBlockHeight, CAmount b
     // We require an exact match (including order) between the expected
     // superblock payments and the payments actually in the block.
 
-    if(nMinerPayments < 0) {
+    if(nMinerAndMasternodePayments < 0) {
         // This means the block cannot have all the superblock payments
         // so it is not valid.
         // TODO: could that be that we just hit coinbase size limit?
@@ -703,7 +704,7 @@ bool CSuperblock::IsValid(const CTransaction& txNew, int nBlockHeight, CAmount b
         return false;
     }
 
-    // miner should not get more than he would usually get
+    // miner and masternodes should not get more than they would usually get
     CAmount nBlockValue = txNew.GetValueOut();
     if(nBlockValue > blockReward + nPaymentsTotalAmount) {
         LogPrintf("CSuperblock::IsValid -- ERROR: Block invalid, block value limit exceeded: block %lld, limit %lld\n", nBlockValue, blockReward + nPaymentsTotalAmount);

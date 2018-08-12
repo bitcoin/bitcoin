@@ -214,7 +214,7 @@ public:
     void CheckAndRemove();
 
     bool GetBlockPayee(int nBlockHeight, CScript& payeeRet) const;
-    bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight) const;
+    bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward) const;
     bool IsScheduled(const masternode_info_t& mnInfo, int nNotBlockHeight) const;
 
     bool UpdateLastVote(const CMasternodePaymentVote& vote);
@@ -222,7 +222,7 @@ public:
     int GetMinMasternodePaymentsProto() const;
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
     std::string GetRequiredPaymentsString(int nBlockHeight) const;
-    void FillBlockPayee(CMutableTransaction& txNew, int nBlockHeight, CAmount blockReward, CTxOut& txoutMasternodeRet) const;
+    bool GetMasternodeTxOut(int nBlockHeight, CAmount blockReward, CTxOut& txoutMasternodeRet) const;
     std::string ToString() const;
 
     int GetBlockCount() const { return mapMasternodeBlocks.size(); }

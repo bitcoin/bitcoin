@@ -67,7 +67,7 @@ public:
 
     static bool IsSuperblockTriggered(int nBlockHeight);
 
-    static void CreateSuperblock(CMutableTransaction& txNewRet, int nBlockHeight, std::vector<CTxOut>& voutSuperblockRet);
+    static bool GetSuperblockPayments(int nBlockHeight, std::vector<CTxOut>& voutSuperblockRet);
     static void ExecuteBestSuperblock(int nBlockHeight);
 
     static std::string GetRequiredPaymentsString(int nBlockHeight);
