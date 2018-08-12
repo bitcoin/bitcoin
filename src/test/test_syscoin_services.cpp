@@ -255,7 +255,7 @@ UniValue CallRPC1(const string &node, const string& command, const string& args,
 	}
 	params += "]";
 	UniValue val;
-	string curlcmd = "curl -s --user u:p --data-binary '{\"jsonrpc\":\"1.0\",\"id\":\"unittest\",\"method:\"" + command + "\",\"params\":" + params + "}' -H 'content-type:text/plain;' " + url;
+	string curlcmd = "curl -s --user u:p --data-binary '{\"jsonrpc\":\"1.0\",\"id\":\"unittest\",\"method\":\"" + command + "\",\"params\":" + params + "}' -H 'content-type:text/plain;' " + url;
 	printf("%s\n", curlcmd.c_str());
 	string rawJson = CallExternal(curlcmd);
 	printf("rawJson %s\n", rawJson.c_str());
