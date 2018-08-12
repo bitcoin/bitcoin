@@ -3247,14 +3247,15 @@ std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBloc
  *  in ConnectBlock().
  *  Note that -reindex-chainstate skips the validation that happens here!
  */
-static bool ContextualCheckBlockHeader(const CBlockHeader& block, bool fProofOfStake, CValidationState& state, const CChainParams& params, const CBlockIndex* pindexPrev, int64_t nAdjustedTime)
+//ppc - remove fSkipPoWCheck parameter once a solution to checking work in PoS/PoW header is found
+static bool ContextualCheckBlockHeader(const CBlockHeader& block, bool fProofOfStake, CValidationState& state, const CChainParams& params, const CBlockIndex* pindexPrev, int64_t nAdjustedTime, bool fSkipPoWCheck=false)
 {
     assert(pindexPrev != nullptr);
     const int nHeight = pindexPrev->nHeight + 1;
 
     // Check proof of work or proof-of-stake
     const Consensus::Params& consensusParams = params.GetConsensus();
-    if (block.nBits != GetNextTargetRequired(pindexPrev, fProofOfStake, consensusParams))
+    if (!fSkipPoWCheck && block.nBits != GetNextTargetRequired(pindexPrev, fProofOfStake, consensusParams))
         return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of work/proof-of-stake");
 
     // Check against checkpoints
@@ -3282,9 +3283,9 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, bool fProofOfS
 
     // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
     // check for version 2, 3 and 4 upgrades
-    if((block.nVersion < 2 && IsProtocolV06(pindexPrev)) ||
-       (block.nVersion < 3 && nHeight >= consensusParams.BIP66Height) ||
-       (block.nVersion < 4 && nHeight >= consensusParams.BIP65Height))
+    if((block.nVersion < 2 && IsProtocolV06(pindexPrev)))// ||
+//       (block.nVersion < 3 && nHeight >= consensusParams.BIP66Height) ||  //ppc : uncomment this once those rules are activated
+//       (block.nVersion < 4 && nHeight >= consensusParams.BIP65Height))
             return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", block.nVersion),
                                  strprintf("rejected nVersion=0x%08x block", block.nVersion));
 
@@ -3397,8 +3398,10 @@ bool CChainState::AcceptBlockHeader(const CBlockHeader& block, bool fProofOfStak
             return true;
         }
 
-        if (!CheckBlockHeader(block, state, chainparams.GetConsensus()))
-            return error("%s: Consensus::CheckBlockHeader: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
+        //ppc - disabled until a proper solution is found
+        //      assumes that all PoW headers have valid work
+//        if (!CheckBlockHeader(block, state, chainparams.GetConsensus()))
+//            return error("%s: Consensus::CheckBlockHeader: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
 
         // Get prev block index
         CBlockIndex* pindexPrev = nullptr;
@@ -3408,7 +3411,7 @@ bool CChainState::AcceptBlockHeader(const CBlockHeader& block, bool fProofOfStak
         pindexPrev = (*mi).second;
         if (pindexPrev->nStatus & BLOCK_FAILED_MASK)
             return state.DoS(100, error("%s: prev block invalid", __func__), REJECT_INVALID, "bad-prevblk");
-        if (!ContextualCheckBlockHeader(block, fProofOfStake, state, chainparams, pindexPrev, GetAdjustedTime()))
+        if (!ContextualCheckBlockHeader(block, fProofOfStake, state, chainparams, pindexPrev, GetAdjustedTime(), true))
             return error("%s: Consensus::ContextualCheckBlockHeader: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
 
         if (!pindexPrev->IsValid(BLOCK_VALID_SCRIPTS)) {
