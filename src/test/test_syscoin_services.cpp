@@ -238,9 +238,6 @@ UniValue CallRPC(const string &dataDir, const string& commandWithArgs, bool regT
 }
 UniValue CallRPC1(const string &node, const string& command, const string& args)
 {
-	vector<string> vecArgs;
-	if(!args.empty())
-		boost::algorithm::split(vecArgs, args, boost::is_any_of(" "));
 	string url = "";
 	if (node == "node1")
 		url = "http://127.0.0.1:28379";
@@ -248,15 +245,8 @@ UniValue CallRPC1(const string &node, const string& command, const string& args)
 		url = "http://127.0.0.1:38379";
 	else if (node == "node3")
 		url = "http://127.0.0.1:48379";
-	string params = "[";
-	for (int i = 0; i < vecArgs.size(); i++) {
-		params += "\"" + vecArgs[i] + "\"";
-		if (i < vecArgs.size() - 1)
-			params += ",";
-	}
-	params += "]";
 	UniValue val;
-	string curlcmd = "curl -s --user u:p --data-binary '{\"jsonrpc\":\"1.0\",\"id\":\"unittest\",\"method\":\"" + command + "\",\"params\":" + params + "}' -H 'content-type:text/plain;' " + url;
+	string curlcmd = "curl -s --user u:p --data-binary '{\"jsonrpc\":\"1.0\",\"id\":\"unittest\",\"method\":\"" + command + "\",\"params\":[" + args + "]}' -H 'content-type:text/plain;' " + url;
 	string rawJson = CallExternal(curlcmd);
 	
 	val.read(rawJson);
@@ -448,17 +438,17 @@ void GenerateSpendableCoins() {
 	BOOST_CHECK_NO_THROW(r = CallRPC1("node1", "getnewaddress"));
 	string newaddress = r.get_str();
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
-	BOOST_CHECK_THROW(CallRPC1("node1", "sendtoaddress", newaddress + " " + find_value(r.get_obj(), "balance").write()), runtime_error);
+	BOOST_CHECK_THROW(CallRPC1("node1", "sendtoaddress", "\"" + newaddress + "\"," + find_value(r.get_obj(), "balance").write()), runtime_error);
 	GenerateBlocks(10, "node1");
 	BOOST_CHECK_NO_THROW(r = CallRPC1("node2", "getnewaddress"));
 	newaddress = r.get_str();
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
-	BOOST_CHECK_THROW(CallRPC1("node1", "sendtoaddress", newaddress + " 100000"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC1("node1", "sendtoaddress", "\"" + newaddress + "\",100000"), runtime_error);
 	GenerateBlocks(10, "node1");
 	BOOST_CHECK_NO_THROW(r = CallRPC1("node3", "getnewaddress"));
 	newaddress = r.get_str();
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
-	BOOST_CHECK_THROW(CallRPC1("node1", "sendtoaddress",newaddress + " 100000"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC1("node1", "sendtoaddress", "\"" + newaddress + "\",100000"), runtime_error);
 	GenerateBlocks(10, "node1");
 }
 string GetNewFundedAddress(const string &node) {
@@ -811,8 +801,8 @@ string AliasNew(const string& node, const string& aliasname, const string& pubda
 	BOOST_CHECK(privKey.IsValid());
 	BOOST_CHECK(privEncryptionKey.IsValid());
 	BOOST_CHECK(pubKey.IsFullyValid());
-	BOOST_CHECK_NO_THROW(CallRPC1(node, "importprivkey", CSyscoinSecret(privKey).ToString() + " \"\" false"));
-	BOOST_CHECK_NO_THROW(CallRPC1(node, "importprivkey", CSyscoinSecret(privEncryptionKey).ToString() + " \"\" false"));
+	BOOST_CHECK_NO_THROW(CallRPC1(node, "importprivkey", "\"" + CSyscoinSecret(privKey).ToString() + "\",\"\",false"));
+	BOOST_CHECK_NO_THROW(CallRPC1(node, "importprivkey", "\"" + CSyscoinSecret(privEncryptionKey).ToString() + "\",\"\",false"));
 
 	string strEncryptionPrivateKeyHex = HexStr(vchPrivEncryptionKey);
 	string acceptTransfers = "3";
@@ -823,33 +813,33 @@ string AliasNew(const string& node, const string& aliasname, const string& pubda
 		strAddress = newaddress;
 	UniValue r;
 	// registration
-	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "aliasnew",aliasname + " " + pubdata + " " + acceptTransfers +  " " + expireTime + " " + strAddress + " " + strEncryptionPrivateKeyHex + " " + HexStr(vchPubEncryptionKey) + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "aliasnew", "\"" + aliasname + "\",\"" + pubdata + "\"," + acceptTransfers +  "," + expireTime + ",\"" + strAddress + "\",\"" + strEncryptionPrivateKeyHex + "\",\"" + HexStr(vchPubEncryptionKey) + "\",\"" + witness+ "\""));
 	UniValue varray = r.get_array();
-	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "syscointxfund", varray[0].get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "syscointxfund", "\""+ varray[0].get_str() + "\""));
 	varray = r.get_array();
-	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "signrawtransaction", varray[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "syscoinsendrawtransaction",find_value(r.get_obj(), "hex").get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "signrawtransaction", "\"" + varray[0].get_str() +"\""));
+	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "syscoinsendrawtransaction", "\"" + find_value(r.get_obj(), "hex").get_str() + "\""));
 	GenerateBlocks(5, node);
 	// activation
-	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "aliasnew", aliasname + " " + pubdata + " " + acceptTransfers + " " + expireTime + " " + strAddress + " " + strEncryptionPrivateKeyHex + " " + HexStr(vchPubEncryptionKey) + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "aliasnew", "\"" + aliasname + "\",\"" + pubdata + "\"," + acceptTransfers + "," + expireTime + ",\"" + strAddress + "\",\"" + strEncryptionPrivateKeyHex + "\",\"" + HexStr(vchPubEncryptionKey) + "\",\"" + witness + "\""));
 	UniValue varray1 = r.get_array();
-	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "syscointxfund", varray1[0].get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "syscointxfund", "\"" + varray1[0].get_str() + "\""));
 	varray1 = r.get_array();
-	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "signrawtransaction", varray1[0].get_str()));
-	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "syscoinsendrawtransaction",find_value(r.get_obj(), "hex").get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "signrawtransaction", "\"" + varray1[0].get_str() + "\""));
+	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "syscoinsendrawtransaction", "\"" + find_value(r.get_obj(), "hex").get_str() + "\""));
 
 	GenerateBlocks(5, node);
 	GenerateBlocks(5, node);
-	BOOST_CHECK_THROW(CallRPC1(node, "sendtoaddress", aliasname + " 10"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC1(node, "sendtoaddress", "\"" + aliasname + "\",10"), runtime_error);
 	GenerateBlocks(5, node);
-	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "aliasbalance", aliasname));
+	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "aliasbalance", "\"" + aliasname + "\""));
 	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK(balanceAfter >= 10*COIN);
-	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "aliasinfo", aliasname));
+	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "aliasinfo", "\"" + aliasname + "\""));
 
 	if(!otherNode1.empty())
 	{
-		BOOST_CHECK_NO_THROW(r = CallRPC1(otherNode1, "aliasinfo", aliasname));
+		BOOST_CHECK_NO_THROW(r = CallRPC1(otherNode1, "aliasinfo", "\"" + aliasname + "\""));
 		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == aliasname);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), pubdata);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), false);
@@ -858,7 +848,7 @@ string AliasNew(const string& node, const string& aliasname, const string& pubda
 	}
 	if(!otherNode2.empty())
 	{
-		BOOST_CHECK_NO_THROW(r = CallRPC1(otherNode2, "aliasinfo", aliasname));
+		BOOST_CHECK_NO_THROW(r = CallRPC1(otherNode2, "aliasinfo", "\"" + aliasname + "\""));
 		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == aliasname);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), pubdata);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), false);
@@ -1106,15 +1096,15 @@ string AssetNew(const string& node, const string& name, const string& alias, con
 	UniValue r;
 	
 	// "assetnew [name] [alias] [public] [category=assets] [precision=8] [use_inputranges] [supply] [max_supply] [interest_rate] [can_adjust_interest_rate] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "assetnew", name + " " + alias + " " + pubdata + " " + " assets " + " " + precision + " " + useinputranges + " " + supply + " " + maxsupply + " " + interestrate + " " + canadjustinterest + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "assetnew", "\"" + name + "\",\"" + alias + "\",\"" + pubdata + "\",\"" + " assets " + "\"," + precision + "," + useinputranges + "," + supply + "," + maxsupply + "," + interestrate + "," + canadjustinterest + ",\"" + witness + "\""));
 	UniValue arr = r.get_array();
-	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "signrawtransaction", arr[0].get_str()));
+	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "signrawtransaction", "\"" + arr[0].get_str() + "\""));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
-	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "syscoinsendrawtransaction", hex_str));
-	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "decoderawtransaction", hex_str));
+	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "syscoinsendrawtransaction", "\"" + hex_str + "\""));
+	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "decoderawtransaction", "\"" + hex_str + "\""));
 	string guid = arr[1].get_str();
 	GenerateBlocks(5, node);
-	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "assetinfo", guid + " false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "assetinfo", "\"" + guid + "\",false"));
 	int nprecision = atoi(precision);
 	bool binputrange = useinputranges == "true" ? true : false;
 	string nameupper = name;
@@ -1142,7 +1132,7 @@ string AssetNew(const string& node, const string& name, const string& alias, con
 	GenerateBlocks(5, node);
 	if (!otherNode1.empty())
 	{
-		BOOST_CHECK_NO_THROW(r = CallRPC1(otherNode1, "assetinfo", guid + " false"));
+		BOOST_CHECK_NO_THROW(r = CallRPC1(otherNode1, "assetinfo", "\"" + guid + "\",false"));
 		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
 		BOOST_CHECK(find_value(r.get_obj(), "symbol").get_str() == nameupper);
 		BOOST_CHECK(find_value(r.get_obj(), "publicvalue").get_str() == pubdata);
@@ -1159,7 +1149,7 @@ string AssetNew(const string& node, const string& name, const string& alias, con
 	}
 	if (!otherNode2.empty())
 	{
-		BOOST_CHECK_NO_THROW(r = CallRPC1(otherNode2, "assetinfo", guid + " false"));
+		BOOST_CHECK_NO_THROW(r = CallRPC1(otherNode2, "assetinfo", "\"" + guid + "\",false"));
 		BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
 		BOOST_CHECK(find_value(r.get_obj(), "symbol").get_str() == nameupper);
 		BOOST_CHECK(find_value(r.get_obj(), "publicvalue").get_str() == pubdata);
