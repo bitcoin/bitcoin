@@ -438,6 +438,7 @@ void GenerateSpendableCoins() {
 	BOOST_CHECK_NO_THROW(r = CallRPC1("node1", "getnewaddress"));
 	string newaddress = r.get_str();
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getinfo"));
 	BOOST_CHECK_NO_THROW(CallRPC1("node1", "sendtoaddress", "\"" + newaddress + "\"," + find_value(r.get_obj(), "balance").write()));
 	GenerateBlocks(10, "node1");
 	BOOST_CHECK_NO_THROW(r = CallRPC1("node2", "getnewaddress"));
