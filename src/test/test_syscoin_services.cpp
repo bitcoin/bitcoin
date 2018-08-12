@@ -268,6 +268,7 @@ UniValue CallRPC1(const string &node, const string& command, const string& args,
 		if (errorValue.isObject()) {
 			throw runtime_error(find_value(errorValue.get_obj(), "message").get_str());
 		}
+		return find_value(val.get_obj(), "result");
 	}
 	else
 		val.setStr(rawJson);
