@@ -37,12 +37,12 @@ static bool node1Online = false;
 static bool node2Online = false;
 static bool node3Online = false;
 std::map<string, string> mapNodes;
-// create a map between node alias names and URLs to be used in testing for example CallRPC("mynode", "getinfo") would call getinfo on the node alias mynode which would be emplaced as an URL here.
+// create a map between node alias names and URLs to be used in testing for example CallRPC("mynode", "getinfo") would call getinfo on the node alias mynode which would be pushed as a URL here.
 // it is assumed RPC ports are open and u:p is the authentication
 void InitNodeURLMap() {
-	mapNodes.emplace_back("node1", "http://127.0.0.1:28379");
-	mapNodes.emplace_back("node2", "http://127.0.0.1:38379");
-	mapNodes.emplace_back("node3", "http://127.0.0.1:48379");
+	mapNodes["node1"] = "http://127.0.0.1:28379";
+	mapNodes["node2"] = "http://127.0.0.1:38379";
+	mapNodes["node3"] = "http://127.0.0.1:48379";
 }
 // lookup the URL based on node alias passed in
 string LookupURL(const string& node) {
