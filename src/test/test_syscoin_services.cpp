@@ -238,7 +238,8 @@ UniValue CallRPC(const string &dataDir, const string& commandWithArgs, bool regT
 UniValue CallRPC1(const string &node, const string& command, const string& args, bool readJson)
 {
 	vector<string> vecArgs;
-	boost::algorithm::split(vecArgs, args, boost::is_any_of(" "));
+	if(!args.empty())
+		boost::algorithm::split(vecArgs, args, boost::is_any_of(" "));
 	string url = "";
 	if (node == "node1")
 		url = "http://127.0.0.1:28379";
