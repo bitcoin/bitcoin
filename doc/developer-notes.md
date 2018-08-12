@@ -698,6 +698,9 @@ Current subtrees include:
 - src/crypto/ctaes
   - Upstream at https://github.com/bitcoin-core/ctaes ; actively maintained by Core contributors.
 
+- src/tinyformat
+  - Upstream at https://github.com/c42f/tinyformat ; report important PRs to Core to avoid delay.
+
 - src/univalue
   - Upstream at https://github.com/jgarzik/univalue ; report important PRs to Core to avoid delay.
 
