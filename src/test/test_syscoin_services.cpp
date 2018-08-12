@@ -255,7 +255,7 @@ UniValue CallRPC(const string &dataDir, const string& commandWithArgs, bool regT
 UniValue CallRPC1(const string &node, const string& command, const string& args)
 {
 	string url = LookupURL(node);
-	
+	BOOST_CHECK(!url.empty());
 	UniValue val;
 	string curlcmd = "curl -s --user u:p --data-binary '{\"jsonrpc\":\"1.0\",\"id\":\"unittest\",\"method\":\"" + command + "\",\"params\":[" + args + "]}' -H 'content-type:text/plain;' " + url;
 	string rawJson = CallExternal(curlcmd);
