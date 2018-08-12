@@ -8,7 +8,7 @@
  * IPv4 as well as onion addresses are wrapped inside a IPv6 address accordingly.
  */
 
-//ppc  - add those peercoin seeds and remove bitcoin ones
+//ppcTODO  - add those peercoin seeds and remove bitcoin ones
 // Physical IP seeds: 32-bit IPv4 addresses: e.g. 178.33.22.32 = 0x201621b2
 // unsigned int pnSeed[] =
 // {

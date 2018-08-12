@@ -281,7 +281,7 @@ class CTransaction
 {
 public:
     // Default transaction version.
-    static const int32_t CURRENT_VERSION=1; //ppc - change this to 2 after BIP68 fork happens.
+    static const int32_t CURRENT_VERSION=1; //ppcTODO - change this to 2 after BIP68 fork happens.
 
     // Changing the default transaction version requires a two step process: first
     // adapting relay policy by bumping MAX_STANDARD_VERSION, and then later date

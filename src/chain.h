@@ -329,7 +329,7 @@ public:
         nBits          = block.nBits;
         nNonce         = block.nNonce;
 
-        //ppc - check if we need to have prevoutStake and nStakeTime information when using this initialization
+        //ppcTODO - check if we need to have prevoutStake and nStakeTime information when using this initialization
 //        if (block.IsProofOfStake())
 //        {
 //            SetProofOfStake();

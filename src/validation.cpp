@@ -3247,7 +3247,7 @@ std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBloc
  *  in ConnectBlock().
  *  Note that -reindex-chainstate skips the validation that happens here!
  */
-//ppc - remove fSkipPoWCheck parameter once a solution to checking work in PoS/PoW header is found
+//ppcTODO - remove fSkipPoWCheck parameter once a solution to checking work in PoS/PoW header is found
 static bool ContextualCheckBlockHeader(const CBlockHeader& block, bool fProofOfStake, CValidationState& state, const CChainParams& params, const CBlockIndex* pindexPrev, int64_t nAdjustedTime, bool fSkipPoWCheck=false)
 {
     assert(pindexPrev != nullptr);
@@ -3284,7 +3284,7 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, bool fProofOfS
     // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
     // check for version 2, 3 and 4 upgrades
     if((block.nVersion < 2 && IsProtocolV06(pindexPrev)))// ||
-//       (block.nVersion < 3 && nHeight >= consensusParams.BIP66Height) ||  //ppc : uncomment this once those rules are activated
+//       (block.nVersion < 3 && nHeight >= consensusParams.BIP66Height) ||  //ppcTODO : uncomment this once those rules are activated
 //       (block.nVersion < 4 && nHeight >= consensusParams.BIP65Height))
             return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", block.nVersion),
                                  strprintf("rejected nVersion=0x%08x block", block.nVersion));
@@ -3398,7 +3398,7 @@ bool CChainState::AcceptBlockHeader(const CBlockHeader& block, bool fProofOfStak
             return true;
         }
 
-        //ppc - disabled until a proper solution is found
+        //ppcTODO - disabled until a proper solution is found
         //      assumes that all PoW headers have valid work
 //        if (!CheckBlockHeader(block, state, chainparams.GetConsensus()))
 //            return error("%s: Consensus::CheckBlockHeader: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
@@ -3437,7 +3437,7 @@ bool CChainState::AcceptBlockHeader(const CBlockHeader& block, bool fProofOfStak
 
     CheckBlockIndex(chainparams.GetConsensus());
 
-    //ppc - move this somewhere in the upper calls, where pfrom is visible
+    //ppcTODO - move this somewhere in the upper calls, where pfrom is visible
 //    // peercoin: ask for pending sync-checkpoint if any
 //    if (!IsInitialBlockDownload())
 //        AskForPendingSyncCheckpoint(pfrom);
@@ -3453,7 +3453,7 @@ bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& headers, CValidatio
         LOCK(cs_main);
         for (const CBlockHeader& header : headers) {
             CBlockIndex *pindex = nullptr; // Use a temp pindex instead of ppindex to avoid a const_cast
-            bool fProofOfStake = false; //ppc - decide how to transmit PoS information
+            bool fProofOfStake = false; //ppcTODO - decide how to transmit PoS information
             if (!g_chainstate.AcceptBlockHeader(header, fProofOfStake, state, chainparams, &pindex)) {
                 if (first_invalid) *first_invalid = header;
                 return false;
@@ -3601,7 +3601,7 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
     if (!g_chainstate.ActivateBestChain(state, chainparams, pblock))
         return error("%s: ActivateBestChain failed", __func__);
 
-    //ppc: move this somewhere else, because at this point we did not do some PoS checks that can only be done in ConnectBlock()
+    //ppcTODO: move this somewhere else, because at this point we did not do some PoS checks that can only be done in ConnectBlock()
     // otherwise we might send a checkpoint on incorrect PoS block
 //    // peercoin: if responsible for sync-checkpoint send it
 //    if (pfrom && !CSyncCheckpoint::strMasterPrivKey.empty() &&

@@ -106,7 +106,7 @@ void MultisigDialog::updateRemoveEnabled()
     }
 
 
-    //ppc - this was removed in 84b695cc9d4dc90b1ccb99e2d92e1e76e138d911
+    //ppcTODO - this was removed in 84b695cc9d4dc90b1ccb99e2d92e1e76e138d911
     // is it still needed?
 //    enabled = (ui->outputs->count() > 1);
 //    for(int i = 0; i < ui->outputs->count(); i++)
@@ -198,7 +198,7 @@ void MultisigDialog::on_saveMultisigAddressButton_clicked()
     if(!wallet->HaveCScript(CScriptID(script)))
         wallet->AddCScript(script);
     if(!wallet->mapAddressBook.count(DecodeDestination(address)))
-        wallet->SetAddressBook(DecodeDestination(address), label, "");  //ppc - maybe add purpose instead of empty string?
+        wallet->SetAddressBook(DecodeDestination(address), label, "");  //ppcTODO - maybe add purpose instead of empty string?
 }
 
 void MultisigDialog::clear()
@@ -432,7 +432,7 @@ void MultisigDialog::on_signTransactionButton_clicked()
     if(!ctx.isValid())
         return;
 
-    //ppc - not sure how to fix this properly
+    //ppcTODO - not sure how to fix this properly
 //    // Sign what we can
     bool fComplete = true;
 //    for(int i = 0; i < mergedTx.vin.size(); i++)

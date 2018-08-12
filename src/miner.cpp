@@ -514,7 +514,7 @@ static bool ProcessBlockFound(const CBlock* pblock, const CChainParams& chainpar
             return error("PeercoinMiner: generated block is stale");
     }
 
-    //ppc - check if this is still needed
+    //ppcTODO - check if this is still needed
     // Inform about the new block
     //GetMainSignals().BlockFound(pblock->GetHash());
 

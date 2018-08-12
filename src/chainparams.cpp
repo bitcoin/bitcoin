@@ -81,7 +81,7 @@ public:
         consensus.BIP34Hash = uint256S("0");
         consensus.BIP65Height = 0;
         consensus.BIP66Height = 0;
-        //ppc - set above values to correct ones
+        //ppcTODO - set above values to correct ones
         consensus.powLimit =            uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~arith_uint256(0) >> 32;
         consensus.bnInitialHashTarget = uint256S("0000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~arith_uint256(0) >> 40;
 
@@ -148,9 +148,9 @@ public:
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,55);  // peercoin: addresses begin with 'P'
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,117); // peercoin: addresses begin with 'p'
-        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,128); //ppc: leave it as is?
-        base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E};          //ppc: leave it as is?
-        base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4};          //ppc: leave it as is?
+        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,128); //ppcTODO: leave it as is?
+        base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E};          //ppcTODO: leave it as is?
+        base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4};          //ppcTODO: leave it as is?
 
         bech32_hrp = "bc";
 
@@ -195,7 +195,7 @@ public:
         consensus.BIP34Hash = uint256S("0");
         consensus.BIP65Height = 0;
         consensus.BIP66Height = 0;
-        //ppc - set above values to correct ones
+        //ppcTODO - set above values to correct ones
         consensus.powLimit =            uint256S("0000000fffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~arith_uint256(0) >> 28;
         consensus.bnInitialHashTarget = uint256S("00000007ffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~arith_uint256(0) >> 29;
 

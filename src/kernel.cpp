@@ -493,7 +493,7 @@ bool CheckProofOfStake(CValidationState &state, const CTransactionRef& tx, unsig
             return error("%s() : txid mismatch in CheckProofOfStake()", __PRETTY_FUNCTION__);
     }
 
-    //ppc - do we need to verify it here? Wasn't it already verified in script/interpreter.cpp?
+    //ppcTODO - do we need to verify it here? Wasn't it already verified in script/interpreter.cpp?
 //    // Verify signature
 //    Coin coin(txPrev, 0);
 //    if (!VerifySignature(coin, tx, 0, SCRIPT_VERIFY_P2SH, 0))

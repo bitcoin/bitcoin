@@ -55,7 +55,7 @@ UniValue GetNetworkHashPS(int lookup, int height) {
     if (pb == nullptr || !pb->nHeight)
         return 0;
 
-    //ppc - redo this to fit peercoin
+    //ppcTODO - redo this to fit peercoin
     // If lookup is -1, then use blocks since last difficulty change.
 //    if (lookup <= 0)
 //        lookup = pb->nHeight % Params().GetConsensus().DifficultyAdjustmentInterval() + 1;

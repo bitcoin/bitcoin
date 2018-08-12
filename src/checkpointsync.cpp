@@ -172,7 +172,7 @@ bool AcceptPendingSyncCheckpoint()
         CBlockIndex* pindexCheckpoint = mapBlockIndex[hashPendingCheckpoint];
         if (IsSyncCheckpointEnforced() && !chainActive.Contains(pindexCheckpoint))
         {
-            //ppc - redo this somehow
+            //ppcTODO - redo this somehow
 //            CValidationState state;
 //            if (!SetBestChain(state, pindexCheckpoint))
 //            {
@@ -244,7 +244,7 @@ bool ResetSyncCheckpoint()
         const CBlockIndex* pindex = mapBlockIndex[hash];
         if (!chainActive.Contains(pindex))
         {
-            //ppc - redo this somehow
+            //ppcTODO - redo this somehow
 //            // checkpoint block accepted but not yet in main chain
 //            LogPrintf("ResetSyncCheckpoint: SetBestChain to hardened checkpoint %s\n", hash.ToString());
 //            CValidationState state;
@@ -389,7 +389,7 @@ bool CSyncCheckpoint::ProcessSyncCheckpoint(CNode* pfrom)
         // Ask this guy to fill in what we're missing
         if (pfrom)
         {
-            //ppc - redo this somehow
+            //ppcTODO - redo this somehow
 //            pfrom->PushGetBlocks(pindexBest, hashCheckpoint);
 //            // ask directly as well in case rejected earlier by duplicate
 //            // proof-of-stake because getblocks may not get it this time
@@ -404,7 +404,7 @@ bool CSyncCheckpoint::ProcessSyncCheckpoint(CNode* pfrom)
     CBlockIndex* pindexCheckpoint = mapBlockIndex[hashCheckpoint];
     if (IsSyncCheckpointEnforced() && !chainActive.Contains(pindexCheckpoint))
     {
-        //ppc - redo this somehow
+        //ppcTODO - redo this somehow
 //        // checkpoint chain received but not yet main chain
 //        CValidationState state;
 //        if (!SetBestChain(state, pindexCheckpoint))
