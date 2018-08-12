@@ -443,17 +443,17 @@ void GenerateSpendableCoins() {
 	MilliSleep(1000);
 	BOOST_CHECK_NO_THROW(r = CallRPC1("node3", "generate", sBlocks));
 	MilliSleep(1000);
-	BOOST_CHECK_NO_THROW(r = CallRPC1("node1", "getnewaddress", false));
+	BOOST_CHECK_NO_THROW(r = CallRPC1("node1", "getnewaddress", "", false));
 	string newaddress = r.get_str();
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
 	BOOST_CHECK_THROW(CallRPC1("node1", "sendtoaddress", newaddress + " " + find_value(r.get_obj(), "balance").write()), runtime_error);
 	GenerateBlocks(10, "node1");
-	BOOST_CHECK_NO_THROW(r = CallRPC1("node2", "getnewaddress", false));
+	BOOST_CHECK_NO_THROW(r = CallRPC1("node2", "getnewaddress", "", false));
 	newaddress = r.get_str();
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
 	BOOST_CHECK_THROW(CallRPC1("node1", "sendtoaddress", newaddress + " 100000"), runtime_error);
 	GenerateBlocks(10, "node1");
-	BOOST_CHECK_NO_THROW(r = CallRPC1("node3", "getnewaddress", false));
+	BOOST_CHECK_NO_THROW(r = CallRPC1("node3", "getnewaddress", "", false));
 	newaddress = r.get_str();
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
 	BOOST_CHECK_THROW(CallRPC1("node1", "sendtoaddress",newaddress + " 100000"), runtime_error);
@@ -461,7 +461,7 @@ void GenerateSpendableCoins() {
 }
 string GetNewFundedAddress(const string &node) {
 	UniValue r;
-	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "getnewaddress", false));
+	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "getnewaddress", "", false));
 	string newaddress = r.get_str();
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
 	string sendnode = "";
