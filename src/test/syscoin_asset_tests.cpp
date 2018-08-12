@@ -297,10 +297,10 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 	BOOST_CHECK(rArray.size() > 0);
 	BOOST_CHECK_EQUAL(find_value(rArray[0].get_obj(), "_id").get_str(), guid);
 	string guid1 = AssetNew("node1", "usd", "jagassetbig1", gooddata);
-	BOOST_CHECK_NO_THROW(r = CallRPC1("node1", "assetinfo", guid + " false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC1("node1", "assetinfo", "\"" + guid + "\",false"));
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
 	BOOST_CHECK(find_value(r.get_obj(), "symbol").get_str() == "CHF");
-	BOOST_CHECK_NO_THROW(r = CallRPC1("node1", "assetinfo", guid1 + " false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC1("node1", "assetinfo", "\"" + guid1 + "\",false"));
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid1);
 	BOOST_CHECK(find_value(r.get_obj(), "symbol").get_str() == "USD");
 	exit(0);
