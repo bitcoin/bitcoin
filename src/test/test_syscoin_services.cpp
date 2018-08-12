@@ -29,15 +29,31 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/case_conv.hpp> // for to_upper()
 #include "ranges.h"
+#include <map>
 static int node1LastBlock=0;
 static int node2LastBlock=0;
 static int node3LastBlock=0;
 static bool node1Online = false;
 static bool node2Online = false;
 static bool node3Online = false;
+std::map<string, string> mapNodes;
+// create a map between node alias names and URLs to be used in testing for example CallRPC("mynode", "getinfo") would call getinfo on the node alias mynode which would be emplaced as an URL here.
+// it is assumed RPC ports are open and u:p is the authentication
+void InitNodeURLMap() {
+	mapNodes.emplace_back("node1", "http://127.0.0.1:28379");
+	mapNodes.emplace_back("node2", "http://127.0.0.1:38379");
+	mapNodes.emplace_back("node3", "http://127.0.0.1:48379");
+}
+// lookup the URL based on node alias passed in
+string LookupURL(const string& node) {
+	if (mapNodes.find(node) != mapNodes.end())
+		return mapNodes[node];
+	return "";
+}
 // SYSCOIN testing setup
 void StartNodes()
 {
+	InitNodeURLMap();
 	printf("Stopping any test nodes that are running...\n");
 	StopNodes();
 	node1LastBlock=0;
@@ -238,13 +254,8 @@ UniValue CallRPC(const string &dataDir, const string& commandWithArgs, bool regT
 }
 UniValue CallRPC1(const string &node, const string& command, const string& args)
 {
-	string url = "";
-	if (node == "node1")
-		url = "http://127.0.0.1:28379";
-	else if(node == "node2")
-		url = "http://127.0.0.1:38379";
-	else if (node == "node3")
-		url = "http://127.0.0.1:48379";
+	string url = LookupURL(node);
+	
 	UniValue val;
 	string curlcmd = "curl -s --user u:p --data-binary '{\"jsonrpc\":\"1.0\",\"id\":\"unittest\",\"method\":\"" + command + "\",\"params\":[" + args + "]}' -H 'content-type:text/plain;' " + url;
 	string rawJson = CallExternal(curlcmd);
