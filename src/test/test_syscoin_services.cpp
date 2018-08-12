@@ -438,17 +438,17 @@ void GenerateSpendableCoins() {
 	BOOST_CHECK_NO_THROW(r = CallRPC1("node1", "getnewaddress"));
 	string newaddress = r.get_str();
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
-	BOOST_CHECK_THROW(CallRPC1("node1", "sendtoaddress", "\"" + newaddress + "\"," + find_value(r.get_obj(), "balance").write()), runtime_error);
+	BOOST_CHECK_NO_THROW(CallRPC1("node1", "sendtoaddress", "\"" + newaddress + "\"," + find_value(r.get_obj(), "balance").write()));
 	GenerateBlocks(10, "node1");
 	BOOST_CHECK_NO_THROW(r = CallRPC1("node2", "getnewaddress"));
 	newaddress = r.get_str();
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
-	BOOST_CHECK_THROW(CallRPC1("node1", "sendtoaddress", "\"" + newaddress + "\",100000"), runtime_error);
+	BOOST_CHECK_NO_THROW(CallRPC1("node1", "sendtoaddress", "\"" + newaddress + "\",100000"));
 	GenerateBlocks(10, "node1");
 	BOOST_CHECK_NO_THROW(r = CallRPC1("node3", "getnewaddress"));
 	newaddress = r.get_str();
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
-	BOOST_CHECK_THROW(CallRPC1("node1", "sendtoaddress", "\"" + newaddress + "\",100000"), runtime_error);
+	BOOST_CHECK_NO_THROW(CallRPC1("node1", "sendtoaddress", "\"" + newaddress + "\",100000"));
 	GenerateBlocks(10, "node1");
 }
 string GetNewFundedAddress(const string &node) {
@@ -830,7 +830,7 @@ string AliasNew(const string& node, const string& aliasname, const string& pubda
 
 	GenerateBlocks(5, node);
 	GenerateBlocks(5, node);
-	BOOST_CHECK_THROW(CallRPC1(node, "sendtoaddress", "\"" + aliasname + "\",10"), runtime_error);
+	BOOST_CHECK_NO_THROW(CallRPC1(node, "sendtoaddress", "\"" + aliasname + "\",10"));
 	GenerateBlocks(5, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "aliasbalance", "\"" + aliasname + "\""));
 	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
@@ -1096,7 +1096,7 @@ string AssetNew(const string& node, const string& name, const string& alias, con
 	UniValue r;
 	
 	// "assetnew [name] [alias] [public] [category=assets] [precision=8] [use_inputranges] [supply] [max_supply] [interest_rate] [can_adjust_interest_rate] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "assetnew", "\"" + name + "\",\"" + alias + "\",\"" + pubdata + "\",\"" + " assets " + "\"," + precision + "," + useinputranges + "," + supply + "," + maxsupply + "," + interestrate + "," + canadjustinterest + ",\"" + witness + "\""));
+	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "assetnew", "\"" + name + "\",\"" + alias + "\",\"" + pubdata + "\",\"assets\"," + precision + "," + useinputranges + "," + supply + "," + maxsupply + "," + interestrate + "," + canadjustinterest + ",\"" + witness + "\""));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "signrawtransaction", "\"" + arr[0].get_str() + "\""));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
