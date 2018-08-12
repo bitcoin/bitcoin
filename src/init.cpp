@@ -399,6 +399,7 @@ void SetupServerArgs()
     gArgs.AddArg("-bantime=<n>", strprintf("Number of seconds to keep misbehaving peers from reconnecting (default: %u)", DEFAULT_MISBEHAVING_BANTIME), false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-bind=<addr>", "Bind to given address and always listen on it. Use [host]:port notation for IPv6", false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-connect=<ip>", "Connect only to the specified node; -connect=0 disables automatic connections (the rules for this peer are the same as for -addnode). This option can be specified multiple times to connect to multiple nodes.", false, OptionsCategory::CONNECTION);
+    gArgs.AddArg("-dandelion", strprintf("Probability in percent to extend the stem in Dandelion transaction relay by one hop (default: %d, 0 to disable dandelion)", DEFAULT_DANDELION_STEM_PERCENTAGE), false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-discover", "Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)", false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-dns", strprintf("Allow DNS lookups for -addnode, -seednode and -connect (default: %u)", DEFAULT_NAME_LOOKUP), false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-dnsseed", "Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect used)", false, OptionsCategory::CONNECTION);
@@ -793,10 +794,13 @@ void InitParameterInteraction()
             LogPrintf("%s: parameter interaction: -externalip set -> setting -discover=0\n", __func__);
     }
 
-    // disable whitelistrelay in blocksonly mode
     if (gArgs.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY)) {
+        // disable whitelistrelay and dandelion in blocksonly mode
         if (gArgs.SoftSetBoolArg("-whitelistrelay", false))
             LogPrintf("%s: parameter interaction: -blocksonly=1 -> setting -whitelistrelay=0\n", __func__);
+        if (gArgs.SoftSetBoolArg("-dandelion", false)) {
+            LogPrintf("%s: parameter interaction: -blocksonly=1 -> setting -dandelion=0\n", __func__);
+        }
     }
 
     // Forcing relay from whitelisted hosts implies we will accept relays from them in the first place.
@@ -1385,7 +1389,19 @@ bool AppInitMain()
     // see Step 2: parameter interactions for more information about these
     fListen = gArgs.GetBoolArg("-listen", DEFAULT_LISTEN);
     fDiscover = gArgs.GetBoolArg("-discover", true);
-    fRelayTxes = !gArgs.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY);
+    ::fRelayTxes = !gArgs.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY);
+
+    {
+        const int64_t pct = gArgs.GetArg("-dandelion", DEFAULT_DANDELION_STEM_PERCENTAGE);
+        if (pct < 0 || 100 < pct) return InitError(strprintf(_("-dandelion must be 0 or a percentage up to 100, not %s"), gArgs.GetArg("-dandelion", "")));
+        CNode::m_dandelion_stem_pct_threshold = pct;
+        if (CNode::IsDandelionEnabled()) {
+            if (!::fRelayTxes) return InitError("Must disable -dandelion when not accepting normal transactions");
+            LogPrintf("Dandelion transaction relay enabled with fluff probability of %d percent.\n", CNode::m_dandelion_stem_pct_threshold);
+        } else {
+            LogPrintf("Dandelion transaction relay disabled.\n");
+        }
+    }
 
     for (const std::string& strAddr : gArgs.GetArgs("-externalip")) {
         CService addrLocal;

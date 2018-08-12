@@ -14,20 +14,20 @@
 #include <hash.h>
 #include <limitedmap.h>
 #include <netaddress.h>
-#include <policy/feerate.h>
 #include <protocol.h>
 #include <random.h>
 #include <streams.h>
 #include <sync.h>
-#include <uint256.h>
 #include <threadinterrupt.h>
+#include <uint256.h>
 
 #include <atomic>
+#include <condition_variable>
 #include <deque>
+#include <memory>
+#include <queue>
 #include <stdint.h>
 #include <thread>
-#include <memory>
-#include <condition_variable>
 
 #ifndef WIN32
 #include <arpa/inet.h>
@@ -37,12 +37,16 @@
 class CScheduler;
 class CNode;
 
+/** Default for -dandelion stem percentage */
+static constexpr int64_t DEFAULT_DANDELION_STEM_PERCENTAGE = 90;
 /** Time between pings automatically sent out for latency probing and keepalive (in seconds). */
 static const int PING_INTERVAL = 2 * 60;
 /** Time after which to disconnect, after waiting for a ping response (or inactivity). */
 static const int TIMEOUT_INTERVAL = 20 * 60;
 /** Run the feeler connection loop once every 2 minutes or 120 seconds. **/
 static const int FEELER_INTERVAL = 120;
+/** Pick new dandelion peers once every 10 minutes or 600 seconds. */
+static constexpr int INTERVAL_DANDELION = 600;
 /** The maximum number of entries in an 'inv' protocol message */
 static const unsigned int MAX_INV_SZ = 50000;
 /** The maximum number of new addresses to accumulate before announcing. */
@@ -53,6 +57,8 @@ static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 4 * 1000 * 1000;
 static const unsigned int MAX_SUBVERSION_LENGTH = 256;
 /** Maximum number of automatic outgoing nodes */
 static const int MAX_OUTBOUND_CONNECTIONS = 8;
+/** Pick that many dandelion destinations from the outbound peers */
+static constexpr int MAX_OUTBOUND_DANDELION = 2;
 /** Maximum number of addnode outgoing nodes */
 static const int MAX_ADDNODE_CONNECTIONS = 8;
 /** -listen default */
@@ -317,6 +323,16 @@ public:
     */
     int64_t PoissonNextSendInbound(int64_t now, int average_interval_seconds);
 
+    using DandelionPeer = std::pair<CNode*, /* use count */ unsigned>;
+
+    CCriticalSection cs_dandelion_peers;
+    /** Set of all potential dandelion destinations */
+    std::vector<DandelionPeer> m_nodes_dandelion GUARDED_BY(cs_dandelion_peers);
+    /** Assign a new dandelion destination to this peer, if possible */
+    void AssignNewDandelionDestination(CNode* from) EXCLUSIVE_LOCKS_REQUIRED(cs_dandelion_peers);
+    /** Remove this node from the current set of dandelion peers */
+    void RemoveFromDandelionPeers(CNode* node);
+
 private:
     struct ListenSocket {
         SOCKET socket;
@@ -332,6 +348,7 @@ private:
     void AddOneShot(const std::string& strDest);
     void ProcessOneShot();
     void ThreadOpenConnections(std::vector<std::string> connect);
+    void ThreadShuffleDandelionDestinations();
     void ThreadMessageHandler();
     void AcceptConnection(const ListenSocket& hListenSocket);
     void ThreadSocketHandler();
@@ -433,6 +450,7 @@ private:
     std::thread threadDNSAddressSeed;
     std::thread threadSocketHandler;
     std::thread threadOpenAddedConnections;
+    std::thread m_thread_shuffle_dandelion;
     std::thread threadOpenConnections;
     std::thread threadMessageHandler;
 
@@ -692,12 +710,17 @@ public:
     int64_t nNextAddrSend;
     int64_t nNextLocalAddrSend;
 
+    /** dandelion threshold percentage */
+    static int64_t m_dandelion_stem_pct_threshold;
+
+    std::atomic<bool> m_accept_dandelion{false}; //!< If this peer accepts dandelion txs
+
     // inventory based relay
     CRollingBloomFilter filterInventoryKnown;
     // Set of transaction ids we still have to announce.
     // They are sorted by the mempool before relay, so the order is not important.
     std::set<uint256> setInventoryTxToSend;
-    // List of block ids we still have announce.
+    // List of block ids we still have to announce.
     // There is no final sorting before sending, as they are always sent immediately
     // and in the order requested.
     std::vector<uint256> vInventoryBlockToSend;
@@ -755,6 +778,10 @@ private:
     // Our address, as reported by the peer
     CService addrLocal;
     mutable CCriticalSection cs_addrLocal;
+
+    /** Our current dandelion destination */
+    CConnman::DandelionPeer* m_dandelion_destination /* GUARDED_BY(CConnman::cs_dandelion_peers) */ {nullptr};
+
 public:
 
     NodeId GetId() const {
@@ -803,7 +830,19 @@ public:
         nRefCount--;
     }
 
+    /** If this peer is not yet connected or soon to be disconnected */
+    bool IsEphemeral() const
+    {
+        return !fSuccessfullyConnected &&
+               fDisconnect &&
+               fOneShot &&
+               fFeeler;
+    }
 
+    static bool IsDandelionEnabled() { return m_dandelion_stem_pct_threshold != 0; }
+
+    /** Return the current dandelion destination. Try to assign one if it does not exist. */
+    CNode* GetDandelionDestination(CConnman* connman);
 
     void AddAddressKnown(const CAddress& _addr)
     {

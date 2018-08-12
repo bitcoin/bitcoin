@@ -1821,6 +1821,10 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                       (fLogIPs ? strprintf(", peeraddr=%s", pfrom->addr.ToString()) : ""));
         }
 
+        if (CNode::m_dandelion_stem_pct_threshold != 0) {
+            connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::ACCEPT_DANDELION));
+        }
+
         if (pfrom->nVersion >= SENDHEADERS_VERSION) {
             // Tell our peer we prefer to receive headers rather than inv's
             // We send this to non-NODE NETWORK peers as well, because even
@@ -1906,6 +1910,12 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     {
         LOCK(cs_main);
         State(pfrom->GetId())->fPreferHeaders = true;
+    }
+
+    else if (strCommand == NetMsgType::ACCEPT_DANDELION) {
+        LogPrint(BCLog::DANDELION, "Dandelion: peer=%d accepts Dandelion transactions.\n", pfrom->GetId());
+        pfrom->m_accept_dandelion = true;
+        return true;
     }
 
     else if (strCommand == NetMsgType::SENDCMPCT)

@@ -790,6 +790,18 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
     return true;
 }
 
+CNode* CNode::GetDandelionDestination(CConnman* connman)
+{
+    if (!m_dandelion_destination) return nullptr;
+
+    LOCK(connman->cs_dandelion_peers);
+    if (!m_dandelion_destination->first) {
+        // The destination disconnected
+        connman->AssignNewDandelionDestination(this);
+    }
+    return m_dandelion_destination ? m_dandelion_destination->first : nullptr;
+}
+
 void CNode::SetSendVersion(int nVersionIn)
 {
     // Send version may only be changed in the version message, and
@@ -1741,6 +1753,79 @@ int CConnman::GetExtraOutboundCount()
     return std::max(nOutbound - nMaxOutbound, 0);
 }
 
+void CConnman::AssignNewDandelionDestination(CNode* from)
+{
+    unsigned min_use{std::numeric_limits<unsigned>::max()};
+    int max_select = 0;
+    for (DandelionPeer& peer : m_nodes_dandelion) {
+        // Skip peers that disconnected and have been replaced
+        if (!peer.first) continue;
+
+        // But consider at most MAX_OUTBOUND_DANDELION peers
+        ++max_select;
+        if (max_select > MAX_OUTBOUND_DANDELION) break;
+
+        // Src and dst must be different
+        if (from->GetId() == peer.first->GetId()) continue;
+
+        // This is the best candidate so far
+        if (min_use > peer.second) {
+            min_use = peer.second;
+            from->m_dandelion_destination = &peer;
+            break; // They are sorted by use count, so the first one is one of the best ones
+        }
+    }
+    if (from->m_dandelion_destination) {
+        // Increase use count
+        ++(from->m_dandelion_destination->second);
+    }
+}
+
+void CConnman::ThreadShuffleDandelionDestinations()
+{
+    while (!interruptNet) {
+        auto time_micros = GetTimeMicros();
+        time_micros = PoissonNextSend(time_micros, INTERVAL_DANDELION) - time_micros;
+
+        LogPrint(BCLog::DANDELION, "Dandelion: Shuffle Dandelion Destinations.\n");
+        {
+            LOCK(cs_dandelion_peers);
+
+            std::vector<CNode*> all_nodes;
+            ForEachNode([&](CNode* node) { all_nodes.push_back(node); });
+
+            // Collect all potential dandelion nodes
+            m_nodes_dandelion.clear();
+            for (CNode* node : all_nodes) {
+                // Ignore inbound nodes
+                if (node->fInbound) continue;
+                // Ignore nodes that have an empty mempool
+                if (!node->fRelayTxes) continue;
+                // Ignore nodes that are about to be disconnected
+                if (node->IsEphemeral()) continue;
+
+                bool full_dandelion = node->m_accept_dandelion;
+                bool weak_dandelion = //
+                    !node->fClient /* ignore nodes that don't serve blocks */ &&
+                    node->nServices & NODE_WITNESS /* pick nodes that support BIP 144 */ &&
+                    node->nLastTXTime != 0 /* pick nodes that ever sent us a tx */;
+                if (full_dandelion || weak_dandelion) m_nodes_dandelion.emplace_back(node, 0);
+            }
+
+            // Shuffle
+            std::shuffle(m_nodes_dandelion.begin(), m_nodes_dandelion.end(), FastRandomContext());
+            std::shuffle(all_nodes.begin(), all_nodes.end(), FastRandomContext());
+            for (CNode* node : all_nodes) {
+                AssignNewDandelionDestination(node);
+            }
+        }
+
+        if (!interruptNet.sleep_for(std::chrono::milliseconds(time_micros / 1000))) {
+            return;
+        }
+    }
+}
+
 void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
 {
     // Connect to specific addresses
@@ -2369,8 +2454,14 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
         }
         return false;
     }
-    if (connOptions.m_use_addrman_outgoing || !connOptions.m_specified_outgoing.empty())
+    if (connOptions.m_use_addrman_outgoing || !connOptions.m_specified_outgoing.empty()) {
         threadOpenConnections = std::thread(&TraceThread<std::function<void()> >, "opencon", std::function<void()>(std::bind(&CConnman::ThreadOpenConnections, this, connOptions.m_specified_outgoing)));
+    }
+
+    if (CNode::IsDandelionEnabled()) {
+        // Shuffle dandelion destinations
+        m_thread_shuffle_dandelion = std::thread(&TraceThread<std::function<void()>>, "dandelionshuff", [&] { ThreadShuffleDandelionDestinations(); });
+    }
 
     // Process messages
     threadMessageHandler = std::thread(&TraceThread<std::function<void()> >, "msghand", std::function<void()>(std::bind(&CConnman::ThreadMessageHandler, this)));
@@ -2426,6 +2517,8 @@ void CConnman::Stop()
         threadMessageHandler.join();
     if (threadOpenConnections.joinable())
         threadOpenConnections.join();
+    if (m_thread_shuffle_dandelion.joinable())
+        m_thread_shuffle_dandelion.join();
     if (threadOpenAddedConnections.joinable())
         threadOpenAddedConnections.join();
     if (threadDNSAddressSeed.joinable())
@@ -2461,10 +2554,31 @@ void CConnman::Stop()
     semAddnode.reset();
 }
 
+void CConnman::RemoveFromDandelionPeers(CNode* node)
+{
+    if (!CNode::IsDandelionEnabled()) return;
+
+    LOCK(cs_dandelion_peers);
+    if (!node->fSuccessfullyConnected ||
+        node->fOneShot ||
+        node->fFeeler) {
+        // Was never connected (see CNode::IsEphemeral)
+        return;
+    }
+    for (auto it = m_nodes_dandelion.begin(); it != m_nodes_dandelion.end(); ++it) {
+        if (it->first && it->first->GetId() == node->GetId()) {
+            it->first = nullptr;
+            it->second = -1;
+            return;
+        }
+    }
+}
+
 void CConnman::DeleteNode(CNode* pnode)
 {
     assert(pnode);
     bool fUpdateConnectionTime = false;
+    RemoveFromDandelionPeers(pnode);
     m_msgproc->FinalizeNode(pnode->GetId(), fUpdateConnectionTime);
     if(fUpdateConnectionTime) {
         addrman.Connected(pnode->addr);
@@ -2698,6 +2812,8 @@ int CConnman::GetBestHeight() const
 }
 
 unsigned int CConnman::GetReceiveFloodSize() const { return nReceiveFloodSize; }
+
+int64_t CNode::m_dandelion_stem_pct_threshold = DEFAULT_DANDELION_STEM_PERCENTAGE;
 
 CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress& addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress &addrBindIn, const std::string& addrNameIn, bool fInboundIn) :
     nTimeConnected(GetSystemTimeInSeconds()),
