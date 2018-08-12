@@ -1,27 +1,15 @@
+// Copyright (c) 2018 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#include <validation_disk_utils.h>
+#include <clientversion.h>
 #include <validation_globals.h>
 #include <streams.h>
 #include <pow.h>
 #include <utilstrencodings.h>
-#include <clientversion.h>
+#include <vector>
 
-CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& locator)
-{
-    AssertLockHeld(cs_main);
-
-    // Find the latest block common to locator and chain - we expect that
-    // locator.vHave is sorted descending by height.
-    for (const uint256& hash : locator.vHave) {
-        CBlockIndex* pindex = LookupBlockIndex(hash);
-        if (pindex) {
-            if (chain.Contains(pindex))
-                return pindex;
-            if (pindex->GetAncestor(chain.Height()) == chain.Tip()) {
-                return chain.Tip();
-            }
-        }
-    }
-    return chain.Genesis();
-}
 
 bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus::Params& consensusParams)
 {
@@ -109,11 +97,6 @@ bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CBlockIndex* pindex
     return ReadRawBlockFromDisk(block, block_pos, message_start);
 }
 
-fs::path GetBlockPosFilename(const CDiskBlockPos &pos, const char *prefix)
-{
-    return GetBlocksDir() / strprintf("%s%05u.dat", prefix, pos.nFile);
-}
-
 FILE* OpenDiskFile(const CDiskBlockPos &pos, const char *prefix, bool fReadOnly)
 {
     if (pos.IsNull())
@@ -142,3 +125,7 @@ FILE* OpenBlockFile(const CDiskBlockPos &pos, bool fReadOnly) {
     return OpenDiskFile(pos, "blk", fReadOnly);
 }
 
+fs::path GetBlockPosFilename(const CDiskBlockPos &pos, const char *prefix)
+{
+    return GetBlocksDir() / strprintf("%s%05u.dat", prefix, pos.nFile);
+}

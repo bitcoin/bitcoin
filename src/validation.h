@@ -17,7 +17,8 @@
 #include <policy/feerate.h>
 #include <script/script_error.h>
 #include <sync.h>
-#include <validation_globals.h>
+#include <validation_block_utils.h>
+#include <validation_disk_utils.h>
 #include <versionbits.h>
 
 #include <algorithm>
