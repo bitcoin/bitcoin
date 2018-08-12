@@ -1104,7 +1104,7 @@ string AssetNew(const string& node, const string& name, const string& alias, con
 	UniValue r;
 	
 	// "assetnew [name] [alias] [public] [category=assets] [precision=8] [use_inputranges] [supply] [max_supply] [interest_rate] [can_adjust_interest_rate] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC11(node, "assetnew", name + " " + alias + " " + pubdata + " " + " assets " + " " + precision + " " + useinputranges + " " + supply + " " + maxsupply + " " + interestrate + " " + canadjustinterest + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "assetnew", name + " " + alias + " " + pubdata + " " + " assets " + " " + precision + " " + useinputranges + " " + supply + " " + maxsupply + " " + interestrate + " " + canadjustinterest + " " + witness));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "signrawtransaction", arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
