@@ -236,7 +236,7 @@ UniValue CallRPC(const string &dataDir, const string& commandWithArgs, bool regT
 		val.setStr(rawJson);
 	return val;
 }
-UniValue CallRPC1(const string &node, const string& command, const string& args, bool readJson)
+UniValue CallRPC1(const string &node, const string& command, const string& args)
 {
 	vector<string> vecArgs;
 	if(!args.empty())
@@ -258,21 +258,16 @@ UniValue CallRPC1(const string &node, const string& command, const string& args,
 	UniValue val;
 	string curlcmd = "curl -s --user u:p --data-binary '{\"jsonrpc\":\"1.0\",\"id\":\"unittest\",\"method\":\"" + command + "\",\"params\":" + params + "}' -H 'content-type:text/plain;' " + url;
 	string rawJson = CallExternal(curlcmd);
-	if (readJson)
-	{
-		val.read(rawJson);
-		if (val.isNull())
-			throw runtime_error("Could not parse rpc results");
-		// try to get error message if exist
-		UniValue errorValue = find_value(val.get_obj(), "error");
-		if (errorValue.isObject()) {
-			throw runtime_error(find_value(errorValue.get_obj(), "message").get_str());
-		}
-		return find_value(val.get_obj(), "result");
+	
+	val.read(rawJson);
+	if (val.isNull())
+		throw runtime_error("Could not parse rpc results");
+	// try to get error message if exist
+	UniValue errorValue = find_value(val.get_obj(), "error");
+	if (errorValue.isObject()) {
+		throw runtime_error(find_value(errorValue.get_obj(), "message").get_str());
 	}
-	else
-		val.setStr(rawJson);
-	return val;
+	return find_value(val.get_obj(), "result");
 }
 int fsize(FILE *fp){
     int prev=ftell(fp);
@@ -455,12 +450,12 @@ void GenerateSpendableCoins() {
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
 	BOOST_CHECK_THROW(CallRPC1("node1", "sendtoaddress", newaddress + " " + find_value(r.get_obj(), "balance").write()), runtime_error);
 	GenerateBlocks(10, "node1");
-	BOOST_CHECK_NO_THROW(r = CallRPC1("node2", "getnewaddress", "", false));
+	BOOST_CHECK_NO_THROW(r = CallRPC1("node2", "getnewaddress", ""));
 	newaddress = r.get_str();
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
 	BOOST_CHECK_THROW(CallRPC1("node1", "sendtoaddress", newaddress + " 100000"), runtime_error);
 	GenerateBlocks(10, "node1");
-	BOOST_CHECK_NO_THROW(r = CallRPC1("node3", "getnewaddress", "", false));
+	BOOST_CHECK_NO_THROW(r = CallRPC1("node3", "getnewaddress", ""));
 	newaddress = r.get_str();
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
 	BOOST_CHECK_THROW(CallRPC1("node1", "sendtoaddress",newaddress + " 100000"), runtime_error);
@@ -468,7 +463,7 @@ void GenerateSpendableCoins() {
 }
 string GetNewFundedAddress(const string &node) {
 	UniValue r;
-	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "getnewaddress", "", false));
+	BOOST_CHECK_NO_THROW(r = CallRPC1(node, "getnewaddress", ""));
 	string newaddress = r.get_str();
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
 	string sendnode = "";
@@ -816,8 +811,8 @@ string AliasNew(const string& node, const string& aliasname, const string& pubda
 	BOOST_CHECK(privKey.IsValid());
 	BOOST_CHECK(privEncryptionKey.IsValid());
 	BOOST_CHECK(pubKey.IsFullyValid());
-	BOOST_CHECK_NO_THROW(CallRPC1(node, "importprivkey", CSyscoinSecret(privKey).ToString() + " \"\" false", false));
-	BOOST_CHECK_NO_THROW(CallRPC1(node, "importprivkey", CSyscoinSecret(privEncryptionKey).ToString() + " \"\" false", false));
+	BOOST_CHECK_NO_THROW(CallRPC1(node, "importprivkey", CSyscoinSecret(privKey).ToString() + " \"\" false"));
+	BOOST_CHECK_NO_THROW(CallRPC1(node, "importprivkey", CSyscoinSecret(privEncryptionKey).ToString() + " \"\" false"));
 
 	string strEncryptionPrivateKeyHex = HexStr(vchPrivEncryptionKey);
 	string acceptTransfers = "3";
