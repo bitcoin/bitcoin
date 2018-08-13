@@ -370,7 +370,7 @@ void GenerateBlocks(int nBlocks, const string& node)
   GetOtherNodes(node, otherNode1, otherNode2);
   try
   {
-	r = CallRPC(node, "getinfo");
+	r = CallExtRPC(node, "getinfo");
   }
   catch(const runtime_error &e)
   {
@@ -389,7 +389,7 @@ void GenerateBlocks(int nBlocks, const string& node)
   {
 	  try
 	  {
-		r = CallRPC(otherNode1, "getinfo");
+		r = CallExtRPC(otherNode1, "getinfo");
 	  }
 	  catch(const runtime_error &e)
 	  {
