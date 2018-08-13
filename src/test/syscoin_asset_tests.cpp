@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 		string address2 = GetNewFundedAddress("node1");
 
 
-		BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetnew", "\"tpstest\",\"" + address1 + "\",'',\"" + "assets\"," + " 8,false,1,10,0,false,''"));
+		BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetnew", "\"tpstest\",\"" + address1 + "\",'',\"" + "assets\"," + "8,false,1,10,0,false,''"));
 		UniValue arr = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransaction", "\"" + arr[0].get_str() + "\""));
 		string hex_str = find_value(r.get_obj(), "hex").get_str();
