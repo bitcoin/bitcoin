@@ -261,6 +261,8 @@ void PrepareShutdown()
             CFlatDB<CInstantSend> flatdb5("instantsend.dat", "magicInstantSendCache");
             flatdb5.Dump(instantsend);
         }
+        CFlatDB<CSporkManager> flatdb6("sporks.dat", "magicSporkCache");
+        flatdb6.Dump(sporkManager);
     }
 
     UnregisterNodeSignals(GetNodeSignals());
@@ -1959,6 +1961,13 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
             if(!flatdb5.Load(instantsend)) {
                 return InitError(_("Failed to load InstantSend data cache from") + "\n" + (pathDB / strDBName).string());
             }
+        }
+
+        strDBName = "sporks.dat";
+        uiInterface.InitMessage(_("Loading sporks cache..."));
+        CFlatDB<CSporkManager> flatdb6(strDBName, "magicSporkCache");
+        if(!flatdb6.Load(sporkManager)) {
+            return InitError(_("Failed to load sporks cache from") + "\n" + (pathDB / strDBName).string());
         }
     }
 

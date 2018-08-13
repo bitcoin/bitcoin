@@ -929,7 +929,10 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         return instantsend.AlreadyHave(inv.hash);
 
     case MSG_SPORK:
-        return mapSporks.count(inv.hash);
+        {
+            CSporkMessage spork;
+            return sporkManager.GetSporkByHash(inv.hash, spork);
+        }
 
     case MSG_MASTERNODE_PAYMENT_VOTE:
         return mnpayments.mapMasternodePaymentVotes.count(inv.hash);
@@ -1165,8 +1168,9 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                 }
 
                 if (!push && inv.type == MSG_SPORK) {
-                    if(mapSporks.count(inv.hash)) {
-                        connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::SPORK, mapSporks[inv.hash]));
+                    CSporkMessage spork;
+                    if(sporkManager.GetSporkByHash(inv.hash, spork)) {
+                        connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::SPORK, spork));
                         push = true;
                     }
                 }
