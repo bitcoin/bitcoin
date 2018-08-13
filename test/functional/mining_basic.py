@@ -13,7 +13,7 @@ from binascii import b2a_hex
 from decimal import Decimal
 
 from test_framework.blocktools import create_coinbase
-from test_framework.mininode import CBlock
+from test_framework.messages import CBlock
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 
