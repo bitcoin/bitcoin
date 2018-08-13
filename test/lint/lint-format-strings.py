@@ -131,6 +131,32 @@ def parse_function_call_and_arguments(function_name, function_call):
     ['foo(', '123', ')']
     >>> parse_function_call_and_arguments("foo", 'foo("foo")')
     ['foo(', '"foo"', ')']
+    >>> parse_function_call_and_arguments("strprintf", 'strprintf("%s (%d)", std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>,wchar_t>().to_bytes(buf), err);')
+    ['strprintf(', '"%s (%d)",', ' std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>,wchar_t>().to_bytes(buf),', ' err', ')']
+    >>> parse_function_call_and_arguments("strprintf", 'strprintf("%s (%d)", foo<wchar_t>().to_bytes(buf), err);')
+    ['strprintf(', '"%s (%d)",', ' foo<wchar_t>().to_bytes(buf),', ' err', ')']
+    >>> parse_function_call_and_arguments("strprintf", 'strprintf("%s (%d)", foo().to_bytes(buf), err);')
+    ['strprintf(', '"%s (%d)",', ' foo().to_bytes(buf),', ' err', ')']
+    >>> parse_function_call_and_arguments("strprintf", 'strprintf("%s (%d)", foo << 1, err);')
+    ['strprintf(', '"%s (%d)",', ' foo << 1,', ' err', ')']
+    >>> parse_function_call_and_arguments("strprintf", 'strprintf("%s (%d)", foo<bar>() >> 1, err);')
+    ['strprintf(', '"%s (%d)",', ' foo<bar>() >> 1,', ' err', ')']
+    >>> parse_function_call_and_arguments("strprintf", 'strprintf("%s (%d)", foo < 1 ? bar : foobar, err);')
+    ['strprintf(', '"%s (%d)",', ' foo < 1 ? bar : foobar,', ' err', ')']
+    >>> parse_function_call_and_arguments("strprintf", 'strprintf("%s (%d)", foo < 1, err);')
+    ['strprintf(', '"%s (%d)",', ' foo < 1,', ' err', ')']
+    >>> parse_function_call_and_arguments("strprintf", 'strprintf("%s (%d)", foo > 1 ? bar : foobar, err);')
+    ['strprintf(', '"%s (%d)",', ' foo > 1 ? bar : foobar,', ' err', ')']
+    >>> parse_function_call_and_arguments("strprintf", 'strprintf("%s (%d)", foo > 1, err);')
+    ['strprintf(', '"%s (%d)",', ' foo > 1,', ' err', ')']
+    >>> parse_function_call_and_arguments("strprintf", 'strprintf("%s (%d)", foo <= 1, err);')
+    ['strprintf(', '"%s (%d)",', ' foo <= 1,', ' err', ')']
+    >>> parse_function_call_and_arguments("strprintf", 'strprintf("%s (%d)", foo <= bar<1, 2>(1, 2), err);')
+    ['strprintf(', '"%s (%d)",', ' foo <= bar<1, 2>(1, 2),', ' err', ')']
+    >>> parse_function_call_and_arguments("strprintf", 'strprintf("%s (%d)", foo>foo<1,2>(1,2)?bar:foobar,err)');
+    ['strprintf(', '"%s (%d)",', ' foo>foo<1,2>(1,2)?bar:foobar,', 'err', ')']
+    >>> parse_function_call_and_arguments("strprintf", 'strprintf("%s (%d)", foo>foo<1,2>(1,2),err)');
+    ['strprintf(', '"%s (%d)",', ' foo>foo<1,2>(1,2),', 'err', ')']
     """
     assert(type(function_name) is str and type(function_call) is str and function_name)
     remaining = normalize(escape(function_call))
@@ -139,9 +165,10 @@ def parse_function_call_and_arguments(function_name, function_call):
     parts = [expected_function_call]
     remaining = remaining[len(expected_function_call):]
     open_parentheses = 1
+    open_template_arguments = 0
     in_string = False
     parts.append("")
-    for char in remaining:
+    for i, char in enumerate(remaining):
         parts.append(parts.pop() + char)
         if char == "\"":
             in_string = not in_string
@@ -159,6 +186,15 @@ def parse_function_call_and_arguments(function_name, function_call):
             parts.append(parts.pop()[:-1])
             parts.append(char)
             break
+        prev_char = remaining[i - 1] if i - 1 >= 0 else None
+        next_char = remaining[i + 1] if i + 1 <= len(remaining) - 1 else None
+        if char == "<" and next_char not in [" ", "<", "="] and prev_char not in [" ", "<"]:
+            open_template_arguments += 1
+            continue
+        if char == ">" and next_char not in [" ", ">", "="] and prev_char not in [" ", ">"] and open_template_arguments > 0:
+            open_template_arguments -= 1
+        if open_template_arguments > 0:
+            continue
         if char == ",":
             parts.append("")
     return parts
