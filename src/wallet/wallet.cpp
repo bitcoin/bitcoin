@@ -2745,10 +2745,6 @@ bool CWallet::SelectAssets(const std::map<std::string, std::vector<COutput> >& m
                 break;
         }
 
-        for (auto pair : mapValueRet) {
-            std::cout << "Selected Assets : " << pair.first << " : " << pair.second << std::endl;
-        }
-
         if (mapValueRet.at(asset.first) < mapAssetTargetValue.at(asset.first)) {
             return error(
                     "%s : Tried to transfer an asset but this wallet didn't have enough, Asset Name: %s, Transfer Amount: %d, Wallet Total: %d",

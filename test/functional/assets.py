@@ -32,7 +32,7 @@ class AssetTest(RavenTestFramework):
         self.log.info("Calling issue()...")
         address0 = n0.getnewaddress()
         ipfs_hash = "QmacSRmrkVmvJfbCpmU6pK72furJ8E8fbKHindrLxmYMQo"
-        n0.issue(asset_name="MY_ASSET", qty=1000, to_address=address0, change_address="",\
+        n0.issue(asset_name="MY_ASSET", qty=1000, to_address=address0, change_address="", \
                  units=4, reissuable=True, has_ipfs=True, ipfs_hash=ipfs_hash)
 
         self.log.info("Waiting for ten confirmations after issue...")
@@ -70,6 +70,9 @@ class AssetTest(RavenTestFramework):
         assert_equal(n0.listassetbalancesbyaddress(address0)["MY_ASSET"], 1000)
         assert_equal(n0.listassetbalancesbyaddress(address0)["MY_ASSET!"], 1)
 
+        self.log.info("Checking listassetbalancesbyaddress()...")
+        assert_equal(n0.listaddressesbyasset("MY_ASSET"), n1.listaddressesbyasset("MY_ASSET"))
+
         self.log.info("Calling transfer()...")
         address1 = n1.getnewaddress()
         n0.transfer(asset_name="MY_ASSET", qty=200, to_address=address1)
@@ -93,6 +96,9 @@ class AssetTest(RavenTestFramework):
         self.log.info("Checking listassetbalancesbyaddress()...")
         assert_equal(n1.listassetbalancesbyaddress(address1)["MY_ASSET"], 200)
         changeaddress = None
+        assert_equal(n0.listaddressesbyasset("MY_ASSET"), n1.listaddressesbyasset("MY_ASSET"))
+        assert_equal(sum(n0.listaddressesbyasset("MY_ASSET").values()), 1000)
+        assert_equal(sum(n1.listaddressesbyasset("MY_ASSET").values()), 1000)
         for assaddr in n0.listaddressesbyasset("MY_ASSET").keys():
             if n0.validateaddress(assaddr)["ismine"] == True:
                 changeaddress = assaddr
@@ -102,7 +108,7 @@ class AssetTest(RavenTestFramework):
 
         self.log.info("Calling reissue()...")
         address1 = n0.getnewaddress()
-        n0.reissue(asset_name="MY_ASSET", qty=2000, to_address=address0, change_address=address1,\
+        n0.reissue(asset_name="MY_ASSET", qty=2000, to_address=address0, change_address=address1, \
                    reissuable=False, new_ipfs=ipfs_hash[::-1])
 
         self.log.info("Waiting for ten confirmations after reissue...")
@@ -131,8 +137,8 @@ class AssetTest(RavenTestFramework):
         n0.listassets(asset="RAVEN*", verbose=False, count=2, start=-2)
 
         self.log.info("Creating some sub-assets...")
-        n0.issue(asset_name="MY_ASSET/SUB1", qty=1000, to_address=address0, change_address=address0, \
-                         units=4, reissuable=True, has_ipfs=True, ipfs_hash=ipfs_hash)
+        n0.issue(asset_name="MY_ASSET/SUB1", qty=1000, to_address=address0, change_address=address0,\
+                 units=4, reissuable=True, has_ipfs=True, ipfs_hash=ipfs_hash)
 
         self.log.info("Waiting for ten confirmations after issuesubasset...")
         n0.generate(10)
