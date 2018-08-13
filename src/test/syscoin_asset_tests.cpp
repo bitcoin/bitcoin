@@ -282,9 +282,8 @@ BOOST_AUTO_TEST_CASE(generate_range_stress_subtract2)
 BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 {
 	ECC_Start();
-	GenerateSpendableCoins();
 	printf("Running generate_big_assetdata...\n");
-	GenerateBlocks(5);
+	GenerateSpendableCoins();
 	AliasNew("node1", "jagassetbig1", "data");
 	// 256 bytes long
 	string gooddata = "SfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfdd";
@@ -346,14 +345,15 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 
 	GenerateBlocks(10);
 	printf("Creating assetsend transactions...\n");
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "tpstestsetenabled", "true"));
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "tpstestsetenabled", "true"));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node4", "tpstestsetenabled", "true"));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node5", "tpstestsetenabled", "true"));
 	int count = 0;
-	int totalSenderNodes = 2;
-	int totalPerSenderNode = assetMap.size() / totalSenderNodes;
+	int totalSenderNodes = 5;
+	int senderNodeCount = 3;
+	int totalPerSenderNode = assetMap.size() / (totalSenderNodes - senderNodeCount);
 	if (totalPerSenderNode > 100)
 		totalPerSenderNode = 100;
-	int senderNodeCount = 0;
+	
 	string vecTX = "\"[";
 	for (auto& assetTuple : assetMap) {
 		count++;
@@ -382,25 +382,25 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	int microsInSecond = 1000 * 1000;
 	tpstarttime = tpstarttime + 1 * microsInSecond;
 	printf("Adding assetsend transactions to queue on sender nodes...\n");
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "tpstestadd", "\"" + boost::lexical_cast<string>(tpstarttime) + "\""));
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "tpstestadd", "\"" + boost::lexical_cast<string>(tpstarttime) + "\""));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node4", "tpstestadd", "\"" + boost::lexical_cast<string>(tpstarttime) + "\""));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node5", "tpstestadd", "\"" + boost::lexical_cast<string>(tpstarttime) + "\""));
 	float totalTime = 0;
 	printf("Waiting 11 seconds as per protocol...\n");
 	// start 11 second wait
 	MilliSleep(11000);
 
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "tpstestinfo"));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node4", "tpstestinfo"));
 	UniValue tpsresponse1 = r.get_obj();
 	int64_t teststarttime = find_value(tpsresponse1, "teststarttime").get_int64();
 	int64_t sendrawelapsedtime1 = find_value(tpsresponse1, "sendrawelapsedtime").get_int64();
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "tpstestinfo"));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node5", "tpstestinfo"));
 	UniValue tpsresponse2 = r.get_obj();
 	int64_t sendrawelapsedtime2 = find_value(tpsresponse2, "sendrawelapsedtime").get_int64();
 
 	int64_t avgsendrawtime = sendrawelapsedtime1 / (assetMap.size() / 2) + sendrawelapsedtime2 / (assetMap.size() / 2);
 	tpstarttime += avgsendrawtime;
 
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "tpstestinfo"));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node6", "tpstestinfo"));
 	UniValue tpsresponse = r.get_obj();
 	UniValue tpsresponsereceivers = find_value(tpsresponse, "receivers").get_array();
 	for (int i = 0; i < tpsresponsereceivers.size(); i++) {
@@ -411,8 +411,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	}
 	totalTime /= tpsresponsereceivers.size();
 	printf("tpstarttime %lld sendrawelapsedtime1 %lld sendrawelapsedtime2 %lld totaltime %.2f, num responses %d\n", tpstarttime, sendrawelapsedtime1, sendrawelapsedtime2, totalTime, tpsresponsereceivers.size());
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "tpstestsetenabled", "false"));
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "tpstestsetenabled", "false"));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node4", "tpstestsetenabled", "false"));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node5", "tpstestsetenabled", "false"));
 }
 BOOST_AUTO_TEST_CASE(generate_big_assetname)
 {
