@@ -41,7 +41,7 @@ UniValue omni_funded_send(const UniValue& params, bool fHelp)
         throw runtime_error(
             "omni_funded_send \"fromaddress\" \"toaddress\" propertyid \"amount\" \"feeaddress\"\n"
 
-            "\nCreates and sends a funded simple send raw transaction.\n"
+            "\nCreates and sends a funded simple send transaction.\n"
 
             "\nAll coins from the sender are consumed and if there are coins missing, they are taken from the specified fee source. Change is sent to the fee source!\n"
 
@@ -53,7 +53,7 @@ UniValue omni_funded_send(const UniValue& params, bool fHelp)
             "5. feeaddress           (string, required) the address that is used to pay for fees, if needed\n"
 
             "\nResult:\n"
-            "\"hex\"                 (string) the hex-encoded raw transaction\n"
+            "\"hash\"                  (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
             + HelpExampleCli("omni_funded_send", "\"1DFa5bT6KMEr6ta29QJouainsjaNBsJQhH\" \"15cWrfuvMxyxGst2FisrQcvcpF48x6sXoH\" 1 \"100.0\" \"15Jhzz4omEXEyFKbdcccJwuVPea5LqsKM1\"")
@@ -101,7 +101,7 @@ UniValue omni_funded_sendall(const UniValue& params, bool fHelp)
             "4. feeaddress           (string, required) the address that is used to pay for fees, if needed\n"
 
             "\nResult:\n"
-            "\"hex\"                 (string) the hex-encoded raw transaction\n"
+            "\"hash\"                  (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
             + HelpExampleCli("omni_funded_sendall", "\"1DFa5bT6KMEr6ta29QJouainsjaNBsJQhH\" \"15cWrfuvMxyxGst2FisrQcvcpF48x6sXoH\" 1 \"15Jhzz4omEXEyFKbdcccJwuVPea5LqsKM1\"")
