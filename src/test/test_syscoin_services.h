@@ -12,7 +12,8 @@ using namespace std;
 static map<string, float> pegRates;
 /** Testing syscoin services setup that configures a complete environment with 3 nodes.
  */
-UniValue CallRPC(const string &node, const string& command, const string& args="");
+UniValue CallRPC(const string &dataDir, const string& commandWithArgs, bool regTest = true, bool readJson = true);
+UniValue CallExtRPC(const string &node, const string& command, const string& args="");
 void StartNode(const string &dataDir, bool regTest = true, const string& extraArgs="");
 void StopNode(const string &dataDir="node1");
 void StartNodes();
