@@ -345,8 +345,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 
 	GenerateBlocks(10);
 	printf("Creating assetsend transactions...\n");
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node4", "tpstestsetenabled", "true"));
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node5", "tpstestsetenabled", "true"));
+	BOOST_CHECK_NO_THROW(CallExtRPC("node4", "tpstestsetenabled", "true"));
+	BOOST_CHECK_NO_THROW(CallExtRPC("node5", "tpstestsetenabled", "true"));
 	int count = 0;
 	int totalSenderNodes = 5;
 	int senderNodeCount = 3;
@@ -366,7 +366,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 			vecTX += "]\"";
 			senderNodeCount++;
 			if (senderNodeCount > totalSenderNodes)
-				senderNodeCount = 1;
+				senderNodeCount = 3;
 			BOOST_CHECK_NO_THROW(r = CallExtRPC("node" + boost::lexical_cast<string>(senderNodeCount), "tpstestadd", "0," + vecTX));
 			vecTX = "\"[";
 		}
@@ -382,8 +382,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	int microsInSecond = 1000 * 1000;
 	tpstarttime = tpstarttime + 1 * microsInSecond;
 	printf("Adding assetsend transactions to queue on sender nodes...\n");
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node4", "tpstestadd", "\"" + boost::lexical_cast<string>(tpstarttime) + "\""));
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node5", "tpstestadd", "\"" + boost::lexical_cast<string>(tpstarttime) + "\""));
+	BOOST_CHECK_NO_THROW(CallExtRPC("node4", "tpstestadd", "\"" + boost::lexical_cast<string>(tpstarttime) + "\""));
+	BOOST_CHECK_NO_THROW(CallExtRPC("node5", "tpstestadd", "\"" + boost::lexical_cast<string>(tpstarttime) + "\""));
 	float totalTime = 0;
 	printf("Waiting 11 seconds as per protocol...\n");
 	// start 11 second wait
@@ -411,8 +411,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	}
 	totalTime /= tpsresponsereceivers.size();
 	printf("tpstarttime %lld sendrawelapsedtime1 %lld sendrawelapsedtime2 %lld totaltime %.2f, num responses %d\n", tpstarttime, sendrawelapsedtime1, sendrawelapsedtime2, totalTime, tpsresponsereceivers.size());
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node4", "tpstestsetenabled", "false"));
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node5", "tpstestsetenabled", "false"));
+	BOOST_CHECK_NO_THROW(CallExtRPC("node4", "tpstestsetenabled", "false"));
+	BOOST_CHECK_NO_THROW(CallExtRPC("node5", "tpstestsetenabled", "false"));
 }
 BOOST_AUTO_TEST_CASE(generate_big_assetname)
 {
