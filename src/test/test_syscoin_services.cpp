@@ -57,6 +57,7 @@ string LookupURL(const string& node) {
 void StartNodes()
 {
 	printf("Stopping any test nodes that are running...\n");
+	InitNodeURLMap();
 	StopNodes();
 	node1LastBlock = 0;
 	node2LastBlock = 0;
