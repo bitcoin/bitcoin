@@ -299,9 +299,9 @@ struct Stacks
 SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nIn, const CTxOut& txout)
 {
     SignatureData data;
-    assert(tx.vin.size() > nIn);
-    data.scriptSig = tx.vin[nIn].scriptSig;
-    data.scriptWitness = tx.vin[nIn].scriptWitness;
+    const CTxIn& txin = tx.vin.at(nIn);
+    data.scriptSig = txin.scriptSig;
+    data.scriptWitness = txin.scriptWitness;
     Stacks stack(data);
 
     // Get signatures
@@ -398,10 +398,8 @@ bool SignSignature(const SigningProvider &provider, const CScript& fromPubKey, C
 
 bool SignSignature(const SigningProvider &provider, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType)
 {
-    assert(nIn < txTo.vin.size());
-    CTxIn& txin = txTo.vin[nIn];
-    assert(txin.prevout.n < txFrom.vout.size());
-    const CTxOut& txout = txFrom.vout[txin.prevout.n];
+    CTxIn& txin = txTo.vin.at(nIn);
+    const CTxOut& txout = txFrom.vout.at(txin.prevout.n);
 
     return SignSignature(provider, txout.scriptPubKey, txTo, nIn, txout.nValue, nHashType);
 }

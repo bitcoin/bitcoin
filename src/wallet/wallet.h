@@ -463,7 +463,7 @@ public:
     // Get the marginal bytes if spending the specified output from this transaction
     int GetSpendSize(unsigned int out) const
     {
-        return CalculateMaximumSignedInputSize(tx->vout[out], pwallet);
+        return CalculateMaximumSignedInputSize(tx->vout.at(out), pwallet);
     }
 
     void GetAmounts(std::list<COutputEntry>& listReceived,
