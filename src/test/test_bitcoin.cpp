@@ -8,15 +8,17 @@
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
 #include <crypto/sha256.h>
-#include <validation.h>
 #include <miner.h>
 #include <net_processing.h>
 #include <pow.h>
-#include <ui_interface.h>
-#include <streams.h>
-#include <rpc/server.h>
 #include <rpc/register.h>
+#include <rpc/server.h>
 #include <script/sigcache.h>
+#include <streams.h>
+#include <ui_interface.h>
+#include <validation.h>
+
+const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
 void CConnmanTest::AddNode(CNode& node)
 {
