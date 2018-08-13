@@ -407,8 +407,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	int64_t sendrawelapsedtime = 0;
 	for (auto &sender : senders) {
 		BOOST_CHECK_NO_THROW(r = CallExtRPC(sender, "tpstestinfo"));
-		UniValue tpsresponse1 = r.get_obj();
-		sendrawelapsedtime += find_value(tpsresponse1, "sendrawelapsedtime").get_int64();
+		sendrawelapsedtime += find_value(r.get_obj(), "sendrawelapsedtime").get_int64();
 	}
 	// average out the elapsed time to push raw txs and add it to the start time to account for the time to send to network (this shouldn't be part of the throughput metric because tx needs to be on the wire for it to simulate real world transaction event)
 	sendrawelapsedtime /= senders.size();
@@ -419,10 +418,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	UniValue tpsresponse = r.get_obj();
 	UniValue tpsresponsereceivers = find_value(tpsresponse, "receivers").get_array();
 	for (int i = 0; i < tpsresponsereceivers.size(); i++) {
-		UniValue responseObj = tpsresponsereceivers[i].get_obj();
-		string txid = find_value(responseObj, "txid").get_str();
-		int64_t timeRecv = find_value(responseObj, "time").get_int64();
-		totalTime += timeRecv - tpstarttime;
+		const UniValue &responseObj = tpsresponsereceivers[i].get_obj();
+		totalTime += find_value(responseObj, "time").get_int64() - tpstarttime;
 	}
 	// average the start time - received time by the number of responses received (usually number of responses should match number of transactions sent beginning of test)
 	totalTime /= tpsresponsereceivers.size();
