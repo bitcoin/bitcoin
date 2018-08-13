@@ -426,7 +426,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	}
 	// average the start time - received time by the number of responses received (usually number of responses should match number of transactions sent beginning of test)
 	totalTime /= tpsresponsereceivers.size();
-	printf("tpstarttime %lld sendrawelapsedtime1 %lld sendrawelapsedtime2 %lld totaltime %.2f, num responses %d\n", tpstarttime, sendrawelapsedtime1, sendrawelapsedtime2, totalTime, tpsresponsereceivers.size());
+	printf("tpstarttime %lld sendrawelapsedtime %lld totaltime %.2f, num responses %d\n", tpstarttime, sendrawelapsedtime, totalTime, tpsresponsereceivers.size());
 	for (auto &sender : senders)
 		BOOST_CHECK_NO_THROW(CallExtRPC(sender, "tpstestsetenabled", "false"));
 }
