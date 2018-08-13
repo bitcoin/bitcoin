@@ -478,6 +478,10 @@
         <translation>Подключение к пирам...</translation>
     </message>
     <message>
+        <source>Catching up...</source>
+        <translation>Синхронизация...</translation>
+    </message>
+    <message>
         <source>Date: %1
 </source>
         <translation>Дата: %1
@@ -617,8 +621,28 @@
         <translation>Копировать ID транзакции</translation>
     </message>
     <message>
+        <source>Lock unspent</source>
+        <translation>Заблокировать непотраченное</translation>
+    </message>
+    <message>
+        <source>Unlock unspent</source>
+        <translation>Разблокировать непотраченное</translation>
+    </message>
+    <message>
         <source>Copy quantity</source>
         <translation>Копировать количество</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation>Скопировать комиссию</translation>
+    </message>
+    <message>
+        <source>Copy after fee</source>
+        <translation>Скопировать после комиссии</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation>Скопировать байты</translation>
     </message>
     <message>
         <source>Copy dust</source>
@@ -756,6 +780,14 @@
         <translation>Форма</translation>
     </message>
     <message>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
+        <translation>Последние транзакции пока могут быть не видны, поэтому вы можете видеть некорректный баланс ваших кошельков. Отображаемая информация будет верна после завершения синхронизации. Прогресс синхронизации вы можете видеть ниже.</translation>
+    </message>
+    <message>
+        <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <translation>Попытка потратить средства, использованные в транзакциях, которые ещё не синхронизированы, будет отклонена сетью.</translation>
+    </message>
+    <message>
         <source>Number of blocks left</source>
         <translation>Количество оставшихся блоков</translation>
     </message>
@@ -772,6 +804,10 @@
         <translation>Прогресс</translation>
     </message>
     <message>
+        <source>Progress increase per hour</source>
+        <translation>Прогресс за час</translation>
+    </message>
+    <message>
         <source>calculating...</source>
         <translation>выполняется вычисление...</translation>
     </message>
@@ -783,7 +819,11 @@
         <source>Hide</source>
         <translation>Спрятать</translation>
     </message>
-    </context>
+    <message>
+        <source>Unknown. Syncing Headers (%1)...</source>
+        <translation>Не известно. Синхронизация заголовков (%1)...</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -794,7 +834,15 @@
         <source>URI:</source>
         <translation>URI:</translation>
     </message>
-    </context>
+    <message>
+        <source>Select payment request file</source>
+        <translation>Выберите файл запроса платежа</translation>
+    </message>
+    <message>
+        <source>Select payment request file to open</source>
+        <translation>Выберите файл запроса платежа для открытия</translation>
+    </message>
+</context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -1231,6 +1279,14 @@
         <translation>Версия</translation>
     </message>
     <message>
+        <source>Synced Headers</source>
+        <translation>Синхронизировано заголовков</translation>
+    </message>
+    <message>
+        <source>Synced Blocks</source>
+        <translation>Синхронизировано блоков</translation>
+    </message>
+    <message>
         <source>User Agent</source>
         <translation>Пользовательский агент</translation>
     </message>
@@ -1247,6 +1303,26 @@
         <translation>Сервисы</translation>
     </message>
     <message>
+        <source>Connection Time</source>
+        <translation>Время соединения</translation>
+    </message>
+    <message>
+        <source>Last Send</source>
+        <translation>Последние отправленные</translation>
+    </message>
+    <message>
+        <source>Last Receive</source>
+        <translation>Последние полученные</translation>
+    </message>
+    <message>
+        <source>Ping Time</source>
+        <translation>Время отклика Ping</translation>
+    </message>
+    <message>
+        <source>Min Ping</source>
+        <translation>Минимальное время отклика Ping</translation>
+    </message>
+    <message>
         <source>Last block time</source>
         <translation>Время последнего блока</translation>
     </message>
@@ -1257,6 +1333,18 @@
     <message>
         <source>&amp;Console</source>
         <translation>&amp;Консоль</translation>
+    </message>
+    <message>
+        <source>&amp;Network Traffic</source>
+        <translation>&amp;Сетевой трафик</translation>
+    </message>
+    <message>
+        <source>In:</source>
+        <translation>Вход:</translation>
+    </message>
+    <message>
+        <source>Out:</source>
+        <translation>Выход:</translation>
     </message>
     <message>
         <source>1 &amp;hour</source>
@@ -1302,12 +1390,28 @@
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
+        <source>&amp;Label:</source>
+        <translation>&amp;Метка:</translation>
+    </message>
+    <message>
+        <source>&amp;Message:</source>
+        <translation>&amp;Сообщение:</translation>
+    </message>
+    <message>
         <source>Clear all fields of the form.</source>
         <translation>Очистить все поля формы.</translation>
     </message>
     <message>
         <source>Clear</source>
         <translation>Отчистить</translation>
+    </message>
+    <message>
+        <source>Requested payments history</source>
+        <translation>История платежных запросов</translation>
+    </message>
+    <message>
+        <source>&amp;Request payment</source>
+        <translation>&amp;Запросить платеж</translation>
     </message>
     <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
@@ -1349,12 +1453,24 @@
         <translation>QR-код</translation>
     </message>
     <message>
+        <source>Copy &amp;URI</source>
+        <translation>Копировать &amp;URI</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Address</source>
+        <translation>Копировать &amp;Адрес</translation>
+    </message>
+    <message>
         <source>&amp;Save Image...</source>
         <translation>&amp;Сохранить изображение...</translation>
     </message>
     <message>
         <source>Payment information</source>
         <translation>Информация о платеже</translation>
+    </message>
+    <message>
+        <source>URI</source>
+        <translation>URI</translation>
     </message>
     <message>
         <source>Address</source>
@@ -1403,7 +1519,15 @@
         <source>(no message)</source>
         <translation>(нет сообщений)</translation>
     </message>
-    </context>
+    <message>
+        <source>(no amount requested)</source>
+        <translation>(не указана запрашиваемая сумма)</translation>
+    </message>
+    <message>
+        <source>Requested</source>
+        <translation>Запрошено</translation>
+    </message>
+</context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
@@ -1411,8 +1535,20 @@
         <translation>Отправить монеты</translation>
     </message>
     <message>
+        <source>Coin Control Features</source>
+        <translation>Опции управления монетами</translation>
+    </message>
+    <message>
+        <source>Inputs...</source>
+        <translation>Входы...</translation>
+    </message>
+    <message>
         <source>automatically selected</source>
         <translation>выбрано автоматически</translation>
+    </message>
+    <message>
+        <source>Insufficient funds!</source>
+        <translation>Недостаточно средств!</translation>
     </message>
     <message>
         <source>Quantity:</source>
@@ -1439,12 +1575,28 @@
         <translation>Сдача:</translation>
     </message>
     <message>
+        <source>Custom change address</source>
+        <translation>Указать адрес для сдачи</translation>
+    </message>
+    <message>
         <source>Transaction Fee:</source>
         <translation>Комиссия за транзакцию:</translation>
     </message>
     <message>
         <source>Choose...</source>
         <translation>Выбрать...</translation>
+    </message>
+    <message>
+        <source>Warning: Fee estimation is currently not possible.</source>
+        <translation>Предупреждение: оценка комиссии в данный момент невозможна.</translation>
+    </message>
+    <message>
+        <source>collapse fee-settings</source>
+        <translation>свернуть настройки комиссионных</translation>
+    </message>
+    <message>
+        <source>per kilobyte</source>
+        <translation>за килобайт</translation>
     </message>
     <message>
         <source>Hide</source>
@@ -1463,12 +1615,24 @@
         <translation>Отправить нескольким получателям сразу</translation>
     </message>
     <message>
+        <source>Add &amp;Recipient</source>
+        <translation>Добавить &amp;получателя</translation>
+    </message>
+    <message>
         <source>Clear all fields of the form.</source>
         <translation>Очистить все поля формы.</translation>
     </message>
     <message>
         <source>Dust:</source>
         <translation>Пыль:</translation>
+    </message>
+    <message>
+        <source>Confirmation time target:</source>
+        <translation>Целевое время подтверждения</translation>
+    </message>
+    <message>
+        <source>Enable Replace-By-Fee</source>
+        <translation>Включить Replace-By-Fee</translation>
     </message>
     <message>
         <source>Balance:</source>
@@ -1481,6 +1645,18 @@
     <message>
         <source>Copy amount</source>
         <translation>Копировать сумму</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation>Скопировать комиссию</translation>
+    </message>
+    <message>
+        <source>Copy after fee</source>
+        <translation>Скопировать после комиссии</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation>Скопировать байты</translation>
     </message>
     <message>
         <source>Copy dust</source>
@@ -1537,6 +1713,10 @@
 </context>
 <context>
     <name>SendCoinsEntry</name>
+    <message>
+        <source>&amp;Label:</source>
+        <translation>&amp;Метка:</translation>
+    </message>
     <message>
         <source>Choose previously used address</source>
         <translation>Выбрать предыдущий использованный адрес</translation>

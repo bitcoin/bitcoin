@@ -326,6 +326,14 @@
         <translation>Apri &amp;URI...</translation>
     </message>
     <message>
+        <source>Wallet:</source>
+        <translation>Portafoglio:</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>Portafoglio predefinito:</translation>
+    </message>
+    <message>
         <source>Click to disable network activity.</source>
         <translation>Clicca per disattivare la rete.</translation>
     </message>
@@ -344,6 +352,10 @@
     <message>
         <source>Reindexing blocks on disk...</source>
         <translation>Re-indicizzazione blocchi su disco...</translation>
+    </message>
+    <message>
+        <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
+        <translation>Il Proxy è &lt;b&gt;enabled&lt;/b&gt;:%1</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
@@ -511,6 +523,12 @@
         <source>Amount: %1
 </source>
         <translation>Quantità: %1
+</translation>
+    </message>
+    <message>
+        <source>Wallet: %1
+</source>
+        <translation>Portafoglio: %1
 </translation>
     </message>
     <message>
@@ -1029,6 +1047,22 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Rete</translation>
     </message>
     <message>
+        <source>Disables some advanced features but all blocks will still be fully validated. Reverting this setting requires re-downloading the entire blockchain. Actual disk usage may be somewhat higher.</source>
+        <translation>Disattiva alcune funzionalità avanzate, ma tutti i blocchi saranno ancora completamente validati. Per ripristinare questa impostazione è necessario rieseguire il download dell'intera blockchain. L'utilizzo effettivo del disco potrebbe essere leggermente superiore.</translation>
+    </message>
+    <message>
+        <source>Prune &amp;block storage to</source>
+        <translation>Eliminare e bloccare l'archiviazione su</translation>
+    </message>
+    <message>
+        <source>GB</source>
+        <translation>GB</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain.</source>
+        <translation>Per ripristinare questa impostazione è necessario rieseguire il download dell'intera blockchain.</translation>
+    </message>
+    <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
         <translation>(0 = automatico, &lt;0 = lascia questo numero di core liberi)</translation>
     </message>
@@ -1293,6 +1327,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>URI handling</source>
         <translation>Gestione URI</translation>
+    </message>
+    <message>
+        <source>'bitcoin://' is not a valid URI. Use 'bitcoin:' instead.</source>
+        <translation>'bitcoin: //' non è un URI valido. Usa invece "bitcoin:".</translation>
     </message>
     <message>
         <source>Payment request fetch URL is invalid: %1</source>
@@ -1586,6 +1624,14 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Utilizzo memoria</translation>
     </message>
     <message>
+        <source>Wallet: </source>
+        <translation>Portafoglio:</translation>
+    </message>
+    <message>
+        <source>(none)</source>
+        <translation>(nessuno)</translation>
+    </message>
+    <message>
         <source>&amp;Reset</source>
         <translation>&amp;Ripristina</translation>
     </message>
@@ -1754,6 +1800,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>&amp;Elimina Ban</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation>Portafoglio predefinito:</translation>
+    </message>
+    <message>
         <source>Welcome to the %1 RPC console.</source>
         <translation>Benvenuto nella console RPC di %1.</translation>
     </message>
@@ -1776,6 +1826,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>Network activity disabled</source>
         <translation>Attività di rete disabilitata</translation>
+    </message>
+    <message>
+        <source>Executing command without any wallet</source>
+        <translation>Esecuzione del comando senza alcun portafoglio</translation>
     </message>
     <message>
         <source>(node id: %1)</source>
@@ -2062,6 +2116,14 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>minimizza le impostazioni di commissione</translation>
     </message>
     <message>
+        <source>Specify a custom fee per kB (1,000 bytes) of the transaction's virtual size.
+
+Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis per kB" for a transaction size of 500 bytes (half of 1 kB) would ultimately yield a fee of only 50 satoshis.</source>
+        <translation>Specifica una tariffa personalizzata per kB (1.000 byte) della dimensione virtuale della transazione
+
+Nota: poiché la commissione è calcolata su base per byte, una commissione di "100 satoshi per kB" per una dimensione di transazione di 500 byte (metà di 1 kB) alla fine produrrà una commissione di soli 50 satoshi.</translation>
+    </message>
+    <message>
         <source>per kilobyte</source>
         <translation>per kilobyte</translation>
     </message>
@@ -2182,12 +2244,20 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Si puo' aumentare la commissione successivamente (segnalando Replace-By-Fee, BIP-125).</translation>
     </message>
     <message>
+        <source>Please, review your transaction.</source>
+        <translation>Per favore, rivedi la tua transazione.</translation>
+    </message>
+    <message>
         <source>Transaction fee</source>
         <translation>Commissione transazione</translation>
     </message>
     <message>
         <source>Not signalling Replace-By-Fee, BIP-125.</source>
         <translation>Senza segnalare Replace-By-Fee, BIP-125.</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation>Importo totale</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -2639,6 +2709,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Dimensione totale della transazione</translation>
     </message>
     <message>
+        <source>Transaction virtual size</source>
+        <translation>Dimensione virtuale della transazione</translation>
+    </message>
+    <message>
         <source>Output index</source>
         <translation>Indice di output</translation>
     </message>
@@ -3039,7 +3113,11 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <source>The wallet data was successfully saved to %1.</source>
         <translation>Il portamonete è stato correttamente salvato in %1.</translation>
     </message>
-    </context>
+    <message>
+        <source>Cancel</source>
+        <translation>Annulla</translation>
+    </message>
+</context>
 <context>
     <name>bitcoin-core</name>
     <message>
@@ -3227,6 +3305,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Importo non valido per -fallbackfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
+        <source>Upgrading txindex database</source>
+        <translation>Aggiornamento del database txindex</translation>
+    </message>
+    <message>
         <source>Loading P2P addresses...</source>
         <translation>Caricamento indirizzi P2P...</translation>
     </message>
@@ -3265,6 +3347,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>Unable to bind to %s on this computer. %s is probably already running.</source>
         <translation>Impossibile collegarsi a %s su questo computer. Probabilmente %s è già in esecuzione.</translation>
+    </message>
+    <message>
+        <source>Unable to generate keys</source>
+        <translation>Impossibile generare le chiavi</translation>
     </message>
     <message>
         <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
@@ -3501,6 +3587,18 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>Insufficient funds</source>
         <translation>Fondi insufficienti</translation>
+    </message>
+    <message>
+        <source>Can't generate a change-address key. Private keys are disabled for this wallet.</source>
+        <translation>Impossibile generare una chiave di indirizzo di modifica. Le chiavi private sono disabilitate per questo portafoglio.</translation>
+    </message>
+    <message>
+        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>
+        <translation>Impossibile aggiornare un portafoglio diviso non HD senza aggiornamento per supportare il keypool pre-split. Si prega di utilizzare -upgradewallet = 169900 o -upgradewallet senza specificare la versione.</translation>
+    </message>
+    <message>
+        <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
+        <translation>Stima della commissione non riuscita. Fallbackfee è disabilitato. Attendi qualche blocco o abilita -fallbackfee.</translation>
     </message>
     <message>
         <source>Loading block index...</source>

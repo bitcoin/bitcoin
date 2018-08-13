@@ -442,6 +442,10 @@
         <translation>Φόρτωση ευρετηρίου μπλοκ στον σκληρο δισκο...</translation>
     </message>
     <message>
+        <source>Processing blocks on disk...</source>
+        <translation>Φόρτωση ευρετηρίου μπλοκ στον σκληρο δισκο...</translation>
+    </message>
+    <message>
         <source>%1 behind</source>
         <translation>%1 πίσω</translation>
     </message>

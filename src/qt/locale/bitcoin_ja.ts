@@ -47,7 +47,7 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>先のアドレスを選択</translation>
+        <translation>送信先のアドレスを選択</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
