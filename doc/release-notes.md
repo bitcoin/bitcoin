@@ -86,6 +86,11 @@ See detailed [change log](https://github.com/dashpay/dash/compare/v0.12.3.1...da
 - [`f833e2ed6`](https://github.com/dashpay/dash/commit/f833e2ed6) Bump to 0.12.3.2 (#2173)
 
 
+Python Support
+--------------
+
+Support for Python 2 has been discontinued for all test files and tools.
+
 Credits
 =======
 
