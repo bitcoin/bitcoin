@@ -366,7 +366,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 			vecTX += "]\"";
 			senderNodeCount++;
 			if (senderNodeCount > totalSenderNodes)
-				senderNodeCount = 3;
+				senderNodeCount = 4;
 			BOOST_CHECK_NO_THROW(r = CallExtRPC("node" + boost::lexical_cast<string>(senderNodeCount), "tpstestadd", "0," + vecTX));
 			vecTX = "\"[";
 		}
