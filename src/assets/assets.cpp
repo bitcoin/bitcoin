@@ -725,85 +725,81 @@ void CAssetsCache::AddToAssetBalance(const std::string& strName, const std::stri
 
 bool CAssetsCache::TrySpendCoin(const COutPoint& out, const CTxOut& txOut)
 {
-
     if (vpwallets.size() == 0) {
         CAssetCachePossibleMine possibleMine("", out, txOut);
         setPossiblyMineRemove.insert(possibleMine);
         return true;
     }
 
-    std::pair<std::string, COutPoint> pairToRemove = std::make_pair("", COutPoint());
-    for (auto setOuts : mapMyUnspentAssets) {
-        // If we own one of the assets, we need to update our databases and memory
-        if (setOuts.second.count(out)) {
+    // Placeholder strings that will get set if you successfully get the transfer or asset from the script
+    std::string address = "";
+    std::string assetName = "";
+    CAmount nAmount = -1;
 
-            // Placeholder strings that will get set if you successfully get the transfer or asset from the script
-            std::string address = "";
-            std::string assetName = "";
-            CAmount nAmount = -1;
+    // Get the asset tx data
+    int nType = 0;
+    bool fIsOwner = false;
+    if (txOut.scriptPubKey.IsAssetScript(nType, fIsOwner)) {
+        txnouttype  type = (txnouttype)nType;
 
-            int nType = 0;
-            bool fIsOwner = false;
-            if (txOut.scriptPubKey.IsAssetScript(nType, fIsOwner)) {
-                txnouttype  type = (txnouttype)nType;
-
-                // Get the New Asset or Transfer Asset from the scriptPubKey
-                if (type == TX_NEW_ASSET && !fIsOwner) {
-                    CNewAsset asset;
-                    if (AssetFromScript(txOut.scriptPubKey, asset, address)) {
-                        assetName = asset.strName;
-                        nAmount = asset.nAmount;
-                    }
-                } else if (type == TX_TRANSFER_ASSET) {
-                    CAssetTransfer transfer;
-                    if (TransferAssetFromScript(txOut.scriptPubKey, transfer, address)) {
-                        assetName = transfer.strName;
-                        nAmount = transfer.nAmount;
-                    }
-                } else if (type == TX_NEW_ASSET && fIsOwner) {
-                    if (!OwnerAssetFromScript(txOut.scriptPubKey, assetName, address))
-                        return error("%s : ERROR Failed to get owner asset from the OutPoint: %s", __func__,
-                                     out.ToString());
-                    nAmount = OWNER_ASSET_AMOUNT;
-                } else if (type == TX_REISSUE_ASSET) {
-                    CReissueAsset reissue;
-                    if (ReissueAssetFromScript(txOut.scriptPubKey, reissue, address)) {
-                        assetName = reissue.strName;
-                        nAmount = reissue.nAmount;
-                    }
-                }
+        // Get the New Asset or Transfer Asset from the scriptPubKey
+        if (type == TX_NEW_ASSET && !fIsOwner) {
+            CNewAsset asset;
+            if (AssetFromScript(txOut.scriptPubKey, asset, address)) {
+                assetName = asset.strName;
+                nAmount = asset.nAmount;
             }
-
-            // If we got the address and the assetName, proceed to remove it from the database, and in memory objects
-            if (address != "" && assetName != "" && nAmount > 0) {
-                CAssetCacheSpendAsset spend(assetName, address, nAmount);
-                if (GetBestAssetAddressAmount(*this, assetName, address)) {
-                    assert(mapAssetsAddressAmount[make_pair(assetName, address)] >= nAmount);
-                    mapAssetsAddressAmount[make_pair(assetName, address)] -= nAmount;
-                    pairToRemove = std::make_pair(assetName, out);
-
-                    if (mapAssetsAddressAmount[make_pair(assetName, address)] == 0 &&
-                        mapAssetsAddresses.count(assetName))
-                        mapAssetsAddresses.at(assetName).erase(address);
-
-                    // Update the cache so we can save to database
-                    vSpentAssets.push_back(spend);
-                } else {
-                    return error("%s : ERROR Failed to find current assets address amount. Asset %s: , Address : %s", __func__, assetName, address);
-                }
-
-            } else {
-                return error("%s : ERROR Failed to get asset from the OutPoint: %s", __func__, out.ToString());
+        } else if (type == TX_TRANSFER_ASSET) {
+            CAssetTransfer transfer;
+            if (TransferAssetFromScript(txOut.scriptPubKey, transfer, address)) {
+                assetName = transfer.strName;
+                nAmount = transfer.nAmount;
             }
-            break;
+        } else if (type == TX_NEW_ASSET && fIsOwner) {
+            if (!OwnerAssetFromScript(txOut.scriptPubKey, assetName, address))
+                return error("%s : ERROR Failed to get owner asset from the OutPoint: %s", __func__,
+                             out.ToString());
+            nAmount = OWNER_ASSET_AMOUNT;
+        } else if (type == TX_REISSUE_ASSET) {
+            CReissueAsset reissue;
+            if (ReissueAssetFromScript(txOut.scriptPubKey, reissue, address)) {
+                assetName = reissue.strName;
+                nAmount = reissue.nAmount;
+            }
         }
+    } else {
+        // If it isn't an asset tx return true, we only fail if an error occurs
+        return true;
     }
 
-    if (pairToRemove.first != "" && !pairToRemove.second.IsNull() && mapMyUnspentAssets.count(pairToRemove.first)) {
-        mapMyUnspentAssets.at(pairToRemove.first).erase(pairToRemove.second);
+    // If we got the address and the assetName, proceed to remove it from the database, and in memory objects
+    if (address != "" && assetName != "" && nAmount > 0) {
+        CAssetCacheSpendAsset spend(assetName, address, nAmount);
+        if (GetBestAssetAddressAmount(*this, assetName, address)) {
+            assert(mapAssetsAddressAmount[make_pair(assetName, address)] >= nAmount);
+            mapAssetsAddressAmount[make_pair(assetName, address)] -= nAmount;
 
-        // Update the cache so we know which assets set of outpoint we need to save to database
-        setChangeOwnedOutPoints.insert(pairToRemove.first);
+            if (mapAssetsAddressAmount[make_pair(assetName, address)] == 0 &&
+                mapAssetsAddresses.count(assetName))
+                mapAssetsAddresses.at(assetName).erase(address);
+
+            // Update the cache so we can save to database
+            vSpentAssets.push_back(spend);
+        } else {
+            return error("%s : ERROR Failed to find current assets address amount. Asset %s: , Address : %s", __func__, assetName, address);
+        }
+
+    } else {
+        return error("%s : ERROR Failed to get asset from the OutPoint: %s", __func__, out.ToString());
+    }
+    // If we own one of the assets, we need to update our databases and memory
+    if (mapMyUnspentAssets.count(assetName)) {
+        if (mapMyUnspentAssets.at(assetName).count(out)) {
+            mapMyUnspentAssets.at(assetName).erase(out);
+
+            // Update the cache so we know which assets set of outpoint we need to save to database
+            setChangeOwnedOutPoints.insert(assetName);
+        }
     }
 
     return true;
