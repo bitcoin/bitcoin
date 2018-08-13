@@ -8,6 +8,14 @@
 #include "streams.h"
 #include "version.h"
 
+#include "init.h"
+#include "util.h"
+#include "pubkey.h"
+#include "coincontrol.h"
+#include "rpcprotocol.h"
+#include "legacysigner.h"
+
+
 class CTransaction;
 class CBlock;
 class CBlockIndex;

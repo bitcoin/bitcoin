@@ -1427,6 +1427,66 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
             (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue, 0, 1, vCoins, setCoinsRet, nValueRet)));
 }
 
+bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, bool overrideEstimatedFeeRate, const CFeeRate& specificFeeRate, int& nChangePosInOut, std::string& strFailReason, bool includeWatching, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, bool keepReserveKey, const CTxDestination& destChange)
+{
+    std::vector<CRecipient> vecSend;
+
+    // Turn the txout set into a CRecipient vector
+    for (size_t idx = 0; idx < tx.vout.size(); idx++)
+    {
+        const CTxOut& txOut = tx.vout[idx];
+        CRecipient recipient(txOut.scriptPubKey, txOut.nValue, setSubtractFeeFromOutputs.count(idx) == 1);
+        vecSend.push_back(recipient);
+    }
+
+    CCoinControl coinControl;
+    coinControl.destChange = destChange;
+    coinControl.fAllowOtherInputs = true;
+    coinControl.fAllowWatchOnly = includeWatching;
+    coinControl.fOverrideFeeRate = overrideEstimatedFeeRate;
+    coinControl.nFeeRate = specificFeeRate;
+
+    BOOST_FOREACH(const CTxIn& txin, tx.vin)
+        coinControl.Select(txin.prevout);
+
+    int extraPayloadSize = 0;
+    if (tx.nVersion >= 3 && tx.nType != TRANSACTION_NORMAL)
+        extraPayloadSize = (int)tx.extraPayload.size();
+
+    CReserveKey reservekey(this);
+    CWalletTx wtx;
+    if (!CreateTransaction(vecSend, wtx, reservekey, nFeeRet, nChangePosInOut, strFailReason, &coinControl, false, ALL_COINS, extraPayloadSize))
+        return false;
+
+    if (nChangePosInOut != -1)
+        tx.vout.insert(tx.vout.begin() + nChangePosInOut, wtx.vout[nChangePosInOut]);
+
+    // Copy output sizes from new transaction; they may have had the fee subtracted from them
+    for (unsigned int idx = 0; idx < tx.vout.size(); idx++)
+        tx.vout[idx].nValue = wtx.vout[idx].nValue;
+
+    // Add new txins (keeping original txin scriptSig/order)
+    BOOST_FOREACH(const CTxIn& txin, wtx.vin)
+    {
+        if (!coinControl.IsSelected(txin.prevout))
+        {
+            tx.vin.push_back(txin);
+
+            if (lockUnspents)
+            {
+                LOCK2(cs_main, cs_wallet);
+                LockCoin(txin.prevout);
+            }
+        }
+    }
+
+    // optionally keep the change output key
+    if (keepReserveKey)
+        reservekey.KeepKey();
+
+    return true;
+}
+
 bool CWallet::GetMasternodeVinAndKeys(CTxIn& vinRet, CPubKey& pubKeyRet, CKey& keyRet, std::string strTxHash, std::string strOutputIndex)
 {
     // wait for reindex and/or import to finish
@@ -1533,11 +1593,12 @@ bool CWallet::GetBudgetSystemCollateralTX(CWalletTx& tx, uint256 hash)
 
     int64_t nFeeRet = 0;
     std::string strFail = "";
-    vector< pair<CScript, int64_t> > vecSend;
-    vecSend.push_back(make_pair(scriptChange, BUDGET_FEE_TX));
+    vector< CRecipient > vecSend;
+    vecSend.push_back(CRecipient(scriptChange, BUDGET_FEE_TX, false));
+    int nChangePosRet = -1;
 
     CCoinControl *coinControl=NULL;
-    bool success = CreateTransaction(vecSend, tx, reservekey, nFeeRet, strFail, coinControl, ALL_COINS, (CAmount)0);
+    bool success = CreateTransaction(vecSend, tx, reservekey, nFeeRet, nChangePosRet, strFail, coinControl, true, ALL_COINS, (CAmount)0);
     if(!success){
         LogPrintf("GetBudgetSystemCollateralTX: Error - %s\n", strFail);
         return false;
@@ -1563,20 +1624,21 @@ bool CWallet::ConvertList(std::vector<CTxIn> vCoins, std::vector<int64_t>& vecAm
     return true;
 }
 
-bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
-                                CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl, AvailableCoinsType coin_type, CAmount nFeePay)
+bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
+                                int& nChangePosInOut, std::string& strFailReason, const CCoinControl* coinControl, bool sign, AvailableCoinsType coin_type, int extraPayloadSize)
 {
     m_useInstantSend = true;
     CAmount nValue = 0;
+    CAmount nFeePay = 0;
 
-    BOOST_FOREACH (const PAIRTYPE(CScript, CAmount)& s, vecSend)
+    BOOST_FOREACH (const CRecipient& s, vecSend)
     {
         if (nValue < 0)
         {
             strFailReason = _("Transaction amounts must be positive");
             return false;
         }
-        nValue += s.second;
+        nValue += s.nAmount;
     }
     if(nValue > GetSporkValue(SPORK_5_MAX_VALUE) * COIN)
     {
@@ -1609,9 +1671,9 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                 CAmount nTotalValue = nValue + nFeeRet;
                 double dPriority = 0;
                 // vouts to the payees
-                BOOST_FOREACH (const PAIRTYPE(CScript, CAmount)& s, vecSend)
+                BOOST_FOREACH (const CRecipient& s, vecSend)
                 {
-                    CTxOut txout(s.second, s.first);
+                    CTxOut txout(s.nAmount, s.scriptPubKey);
                     if (txout.IsDust(::minRelayTxFee))
                     {
                         strFailReason = _("Transaction amount too small");
@@ -1783,9 +1845,10 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
 bool CWallet::CreateTransaction(CScript scriptPubKey, const CAmount& nValue,
                                 CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl, AvailableCoinsType coin_type, CAmount nFeePay)
 {
-    vector< pair<CScript, CAmount> > vecSend;
-    vecSend.push_back(make_pair(scriptPubKey, nValue));
-    return CreateTransaction(vecSend, wtxNew, reservekey, nFeeRet, strFailReason, coinControl, coin_type, nFeePay);
+    vector<CRecipient> vecSend;
+    vecSend.push_back(CRecipient(scriptPubKey, nValue, false));
+    int nChangePosRet = -1;
+    return CreateTransaction(vecSend, wtxNew, reservekey, nFeeRet, nChangePosRet, strFailReason, coinControl, true, coin_type, nFeePay);
 }
 
 /**
@@ -2342,7 +2405,7 @@ bool CWallet::UpdatedTransaction(const uint256 &hashTx)
     return false;
 }
 
-void CWallet::LockCoin(COutPoint& output)
+void CWallet::LockCoin(const COutPoint& output)
 {
     AssertLockHeld(cs_wallet); // setLockedCoins
     setLockedCoins.insert(output);

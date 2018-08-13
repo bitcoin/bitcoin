@@ -917,7 +917,7 @@ Value sendmany(const Array& params, bool fHelp)
         wtx.mapValue["comment"] = params[3].get_str();
 
     set<CBitcoinAddress> setAddress;
-    vector<pair<CScript, CAmount> > vecSend;
+    std::vector<CRecipient> vecSend;
 
     CAmount totalAmount = 0;
     BOOST_FOREACH(const Pair& s, sendTo)
@@ -934,7 +934,7 @@ Value sendmany(const Array& params, bool fHelp)
         CAmount nAmount = AmountFromValue(s.value_);
         totalAmount += nAmount;
 
-        vecSend.push_back(make_pair(scriptPubKey, nAmount));
+        vecSend.push_back(CRecipient(scriptPubKey, nAmount, false));
     }
 
     EnsureWalletIsUnlocked();
@@ -948,7 +948,8 @@ Value sendmany(const Array& params, bool fHelp)
     CReserveKey keyChange(pwalletMain);
     CAmount nFeeRequired = 0;
     string strFailReason;
-    bool fCreated = pwalletMain->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, strFailReason);
+    int nChangePosRet = -1;
+    bool fCreated = pwalletMain->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, nChangePosRet, strFailReason);
     if (!fCreated)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
     if (!pwalletMain->CommitTransaction(wtx, keyChange))

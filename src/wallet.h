@@ -119,6 +119,17 @@ public:
     StringMap destdata;
 };
 
+struct CRecipient
+{
+    CScript scriptPubKey;
+    CAmount nAmount;
+    bool fSubtractFeeFromAmount;
+
+    CRecipient(CScript scriptPubKey, CAmount nAmount, bool fSubtractFeeFromAmount)
+        : scriptPubKey(scriptPubKey), nAmount(nAmount), fSubtractFeeFromAmount(fSubtractFeeFromAmount)
+    {}
+};
+
 /** 
  * A CWallet is an extension of a keystore, which also maintains a set of transactions and balances,
  * and provides the ability to create new transactions.
@@ -240,7 +251,7 @@ public:
     bool IsSpent(const uint256& hash, unsigned int n) const;
 
     bool IsLockedCoin(uint256 hash, unsigned int n) const;
-    void LockCoin(COutPoint& output);
+    void LockCoin(const COutPoint& output);
     void UnlockCoin(COutPoint& output);
     void UnlockAllCoins();
     void ListLockedCoins(std::vector<COutPoint>& vOutpts);
@@ -318,8 +329,20 @@ public:
     CAmount GetWatchOnlyBalance() const;
     CAmount GetUnconfirmedWatchOnlyBalance() const;
     CAmount GetImmatureWatchOnlyBalance() const;
-    bool CreateTransaction(const std::vector<std::pair<CScript, CAmount> >& vecSend,
-                           CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl = NULL, AvailableCoinsType coin_type=ALL_COINS, CAmount nFeePay=0);
+
+    /**
+     * Insert additional inputs into the transaction by
+     * calling CreateTransaction();
+     */
+    bool FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, bool overrideEstimatedFeeRate, const CFeeRate& specificFeeRate, int& nChangePosInOut, std::string& strFailReason, bool includeWatching, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, bool keepReserveKey = true, const CTxDestination& destChange = CNoDestination());
+
+    /**
+     * Create a new transaction paying the recipients with a set of coins
+     * selected by SelectCoins(); Also create the change output, when needed
+     * @note passing nChangePosInOut as -1 will result in setting a random position
+     */
+    bool CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut,
+                           std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true, AvailableCoinsType coin_type=ALL_COINS, int extraPayloadSize = 0);
     bool CreateTransaction(CScript scriptPubKey, const CAmount& nValue,
                            CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl = NULL, AvailableCoinsType coin_type=ALL_COINS, CAmount nFeePay=0);
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
