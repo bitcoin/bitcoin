@@ -8,13 +8,20 @@
 #include "omnicore/script.h"
 #include "omnicore/walletutils.h"
 
+#include "amount.h"
 #include "base58.h"
 #include "coincontrol.h"
+#include "coins.h"
+#include "consensus/validation.h"
 #include "core_io.h"
+#include "keystore.h"
 #include "main.h"
+#include "primitives/transaction.h"
 #include "script/script.h"
+#include "script/sign.h"
 #include "script/standard.h"
 #include "sync.h"
+#include "txmempool.h"
 #include "uint256.h"
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
@@ -170,7 +177,7 @@ static void UnlockCoins(
 #endif
 
 /**
- * Creates and funds a raw transaction by selecting all coins from the sender
+ * Creates and sends a raw transaction by selecting all coins from the sender
  * and enough coins from a fee source. Change is sent to the fee source!
  */
 int CreateFundedTransaction(
@@ -178,8 +185,7 @@ int CreateFundedTransaction(
         const std::string& receiverAddress,
         const std::string& feeAddress,
         const std::vector<unsigned char>& payload,
-        std::string& retRawTx,
-        bool fLockUnspents)
+        uint256& retTxid)
 {
 #ifdef ENABLE_WALLET
     if (pwalletMain == NULL) {
@@ -265,19 +271,71 @@ int CreateFundedTransaction(
     // restore original locking state
     UnlockCoins(pwalletMain, vLockedCoins);
 
-    // lock selected outputs for this transaction
-    if (fSuccess && fLockUnspents) {
+    // lock selected outputs for this transaction // TODO: could be removed?
+    if (fSuccess) {
         BOOST_FOREACH(const CTxIn& txIn, tx.vin) {
             pwalletMain->LockCoin(txIn.prevout);
         }
     }
 
-    retRawTx = EncodeHexTx(tx);
-
     if (!fSuccess) {
         PrintToLog("%s: ERROR: wallet transaction creation failed: %s\n", __func__, strFailReason);
         return MP_ERR_CREATE_TX;
     }
+
+    // sign the transaction
+
+    // fetch previous transactions (inputs):
+    CCoinsView viewDummy;
+    CCoinsViewCache view(&viewDummy);
+    {
+        LOCK(mempool.cs);
+        CCoinsViewCache &viewChain = *pcoinsTip;
+        CCoinsViewMemPool viewMempool(&viewChain, mempool);
+        view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
+
+        BOOST_FOREACH(const CTxIn& txin, tx.vin) {
+            const uint256& prevHash = txin.prevout.hash;
+            CCoins coins;
+            view.AccessCoins(prevHash); // this is certainly allowed to fail
+        }
+
+        view.SetBackend(viewDummy); // switch back to avoid locking mempool for too long
+    }
+
+    int nHashType = SIGHASH_ALL;
+    const CKeyStore& keystore = *pwalletMain;
+
+    for (unsigned int i = 0; i < tx.vin.size(); i++) {
+        CTxIn& txin = tx.vin[i];
+        const CCoins* coins = view.AccessCoins(txin.prevout.hash);
+        if (coins == NULL || !coins->IsAvailable(txin.prevout.n)) {
+            PrintToLog("%s: ERROR: wallet transaction signing failed: input not found or already spent\n", __func__);
+            continue;
+        }
+        const CScript& prevPubKey = coins->vout[txin.prevout.n].scriptPubKey;
+        const CAmount& amount = coins->vout[txin.prevout.n].nValue;
+
+        SignatureData sigdata;
+        if (!ProduceSignature(MutableTransactionSignatureCreator(&keystore, &tx, i, amount, nHashType), prevPubKey, sigdata)) {
+            PrintToLog("%s: ERROR: wallet transaction signing failed\n", __func__);
+            return MP_ERR_CREATE_TX;
+        }
+
+        UpdateTransaction(tx, i, sigdata);
+    }
+
+    // send the transaction
+
+    CValidationState state;
+
+    if (!AcceptToMemoryPool(mempool, state, tx, false, NULL, false, DEFAULT_TRANSACTION_MAXFEE)) {
+        PrintToLog("%s: ERROR: failed to broadcast transaction: %s\n", __func__, state.GetRejectReason());
+        return MP_ERR_COMMIT_TX;
+    }
+    RelayTransaction(tx);
+
+    retTxid = tx.GetHash();
 
     return 0;
 #else

@@ -21,7 +21,7 @@ int WalletTxBuilder(
         bool commit);
 
 /**
- * Creates and funds a raw transaction by selecting all coins from the sender
+ * Creates and sends a raw transaction by selecting all coins from the sender
  * and enough coins from a fee source. Change is sent to the fee source!
  */
 int CreateFundedTransaction(
@@ -29,8 +29,7 @@ int CreateFundedTransaction(
         const std::string& receiverAddress,
         const std::string& feeAddress,
         const std::vector<unsigned char>& payload,
-        std::string& retRawTx,
-        bool fLockOutputs = false);
+        uint256& retTxid);
 
 
 #endif // OMNICORE_WALLETTXBUILDER_H
