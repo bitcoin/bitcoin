@@ -43,6 +43,9 @@ void InitNodeURLMap() {
 	mapNodes["node1"] = "http://127.0.0.1:28379";
 	mapNodes["node2"] = "http://127.0.0.1:38379";
 	mapNodes["node3"] = "http://127.0.0.1:48379";
+	mapNodes["node4"] = "http://127.0.0.1:48379";
+	mapNodes["node5"] = "http://127.0.0.1:48379";
+	mapNodes["node6"] = "http://127.0.0.1:48379";
 }
 // lookup the URL based on node alias passed in
 string LookupURL(const string& node) {
@@ -241,6 +244,7 @@ UniValue CallRPC(const string &dataDir, const string& commandWithArgs, bool regT
 		path += string(" -regtest ");
 	else
 		path += " ";
+	path += commandWithArgs;
 	string rawJson = CallExternal(path);
 	if (readJson)
 	{
