@@ -35,11 +35,11 @@ using std::runtime_error;
 using namespace mastercore;
 
 
-UniValue omni_createfunded_send(const UniValue& params, bool fHelp)
+UniValue omni_funded_send(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 5)
         throw runtime_error(
-            "omni_createfunded_send \"fromaddress\" \"toaddress\" propertyid \"amount\" \"feeaddress\"\n"
+            "omni_funded_send \"fromaddress\" \"toaddress\" propertyid \"amount\" \"feeaddress\"\n"
 
             "\nCreates and sends a funded simple send raw transaction.\n"
 
@@ -56,8 +56,8 @@ UniValue omni_createfunded_send(const UniValue& params, bool fHelp)
             "\"hex\"                 (string) the hex-encoded raw transaction\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("omni_createfunded_send", "\"1DFa5bT6KMEr6ta29QJouainsjaNBsJQhH\" \"15cWrfuvMxyxGst2FisrQcvcpF48x6sXoH\" 1 \"100.0\" \"15Jhzz4omEXEyFKbdcccJwuVPea5LqsKM1\"")
-            + HelpExampleRpc("omni_createfunded_send", "\"1DFa5bT6KMEr6ta29QJouainsjaNBsJQhH\", \"15cWrfuvMxyxGst2FisrQcvcpF48x6sXoH\", 1, \"100.0\", \"15Jhzz4omEXEyFKbdcccJwuVPea5LqsKM1\"")
+            + HelpExampleCli("omni_funded_send", "\"1DFa5bT6KMEr6ta29QJouainsjaNBsJQhH\" \"15cWrfuvMxyxGst2FisrQcvcpF48x6sXoH\" 1 \"100.0\" \"15Jhzz4omEXEyFKbdcccJwuVPea5LqsKM1\"")
+            + HelpExampleRpc("omni_funded_send", "\"1DFa5bT6KMEr6ta29QJouainsjaNBsJQhH\", \"15cWrfuvMxyxGst2FisrQcvcpF48x6sXoH\", 1, \"100.0\", \"15Jhzz4omEXEyFKbdcccJwuVPea5LqsKM1\"")
         );
 
     // obtain parameters & info
@@ -84,11 +84,11 @@ UniValue omni_createfunded_send(const UniValue& params, bool fHelp)
     return retTxid.ToString();
 }
 
-UniValue omni_createfunded_sweep(const UniValue& params, bool fHelp)
+UniValue omni_funded_sendall(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 4)
         throw runtime_error(
-            "omni_createfunded_sweep \"fromaddress\" \"toaddress\" ecosystem \"feeaddress\"\n"
+            "omni_funded_sendall \"fromaddress\" \"toaddress\" ecosystem \"feeaddress\"\n"
 
             "\nCreates and sends a transaction that transfers all available tokens in the given ecosystem to the recipient.\n"
 
@@ -104,8 +104,8 @@ UniValue omni_createfunded_sweep(const UniValue& params, bool fHelp)
             "\"hex\"                 (string) the hex-encoded raw transaction\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("omni_createfunded_sweep", "\"1DFa5bT6KMEr6ta29QJouainsjaNBsJQhH\" \"15cWrfuvMxyxGst2FisrQcvcpF48x6sXoH\" 1 \"15Jhzz4omEXEyFKbdcccJwuVPea5LqsKM1\"")
-            + HelpExampleRpc("omni_createfunded_sweep", "\"1DFa5bT6KMEr6ta29QJouainsjaNBsJQhH\", \"15cWrfuvMxyxGst2FisrQcvcpF48x6sXoH\", 1, \"15Jhzz4omEXEyFKbdcccJwuVPea5LqsKM1\"")
+            + HelpExampleCli("omni_funded_sendall", "\"1DFa5bT6KMEr6ta29QJouainsjaNBsJQhH\" \"15cWrfuvMxyxGst2FisrQcvcpF48x6sXoH\" 1 \"15Jhzz4omEXEyFKbdcccJwuVPea5LqsKM1\"")
+            + HelpExampleRpc("omni_funded_sendall", "\"1DFa5bT6KMEr6ta29QJouainsjaNBsJQhH\", \"15cWrfuvMxyxGst2FisrQcvcpF48x6sXoH\", 1, \"15Jhzz4omEXEyFKbdcccJwuVPea5LqsKM1\"")
         );
 
     // obtain parameters & info
@@ -1560,8 +1560,8 @@ static const CRPCCommand commands[] =
     { "hidden",                            "omni_senddeactivation",        &omni_senddeactivation,        true  },
     { "hidden",                            "omni_sendactivation",          &omni_sendactivation,          false },
     { "hidden",                            "omni_sendalert",               &omni_sendalert,               true  },
-    { "omni layer (transaction creation)", "omni_createfunded_send",       &omni_createfunded_send,       false },
-    { "omni layer (transaction creation)", "omni_createfunded_sweep",      &omni_createfunded_sweep,      false },
+    { "omni layer (transaction creation)", "omni_funded_send",             &omni_funded_send,             false },
+    { "omni layer (transaction creation)", "omni_funded_sendall",          &omni_funded_sendall,          false },
 
     /* depreciated: */
     { "hidden",                            "sendrawtx_MP",                 &omni_sendrawtx,               false },
