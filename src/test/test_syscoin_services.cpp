@@ -455,12 +455,12 @@ void GenerateSpendableCoins() {
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
 	BOOST_CHECK_NO_THROW(CallExtRPC("node1", "sendtoaddress", "\"" + newaddress + "\",100000"));
 	GenerateBlocks(10, "node1");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "getnewaddress"));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "getnewaddress"));
 	newaddress = r.get_str();
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
 	BOOST_CHECK_NO_THROW(CallExtRPC("node1", "sendtoaddress", "\"" + newaddress + "\",100000"));
 	GenerateBlocks(10, "node1");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "getnewaddress"));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "getnewaddress"));
 	newaddress = r.get_str();
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
 	BOOST_CHECK_NO_THROW(CallExtRPC("node1", "sendtoaddress", "\"" + newaddress + "\",100000"));
