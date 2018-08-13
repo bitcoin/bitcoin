@@ -15,6 +15,7 @@
 #include <validation.h>
 #include <merkleblock.h>
 #include <netmessagemaker.h>
+#include <net_encryption.h>
 #include <netbase.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
@@ -758,8 +759,14 @@ void PeerLogicValidation::InitializeNode(CNode *pnode) {
         LOCK(cs_main);
         mapNodeState.emplace_hint(mapNodeState.end(), std::piecewise_construct, std::forward_as_tuple(nodeid), std::forward_as_tuple(addr, std::move(addrName), pnode->fInbound, pnode->m_manual_connection));
     }
-    if(!pnode->fInbound)
-        PushNodeVersion(pnode, connman, GetTime());
+    if (!pnode->fInbound) {
+        if (gArgs.GetBoolArg("-netencryption", DEFAULT_ALLOW_NET_ENCRYPTION)) {
+            // send an encryption request
+            connman->SendEncryptionHandshakeData(pnode);
+        } else {
+            PushNodeVersion(pnode, connman, GetTime());
+        }
+    }
 }
 
 void PeerLogicValidation::FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTime) {
@@ -1823,9 +1830,44 @@ void static ProcessOrphanTx(CConnman* connman, std::set<uint256>& orphan_work_se
     }
 }
 
-bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CConnman* connman, const std::atomic<bool>& interruptMsgProc, bool enable_bip61)
+bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CConnman* connman, const std::atomic<bool>& interruptMsgProc, bool enable_bip61, const NetMessageType msg_type)
 {
-    LogPrint(BCLog::NET, "received: %s (%u bytes) peer=%d\n", SanitizeString(strCommand), vRecv.size(), pfrom->GetId());
+    /* handling encryption handshake */
+    if (pfrom->nVersion == 0 && msg_type == NetMessageType::PLAINTEXT_ENCRYPTION_HANDSHAKE) {
+        LogPrint(BCLog::NET, "Encryption handshake payload received, peer=%i\n", pfrom->GetId());
+
+        std::vector<unsigned char> handshake_msg;
+        handshake_msg.resize(vRecv.size());
+        memcpy(&handshake_msg[0], &vRecv[0], handshake_msg.size());
+
+        if (!pfrom->fInbound && pfrom->m_encryption_handler) {
+            // we have initiated the encryption
+            // the message does now contain the remote pubkey
+            if (!pfrom->m_encryption_handler->ProcessHandshakeRequestData(handshake_msg)) {
+                LogPrint(BCLog::NET, "Invalid handshake received, peer=%d\n", pfrom->GetId());
+                return false;
+            }
+            pfrom->m_encryption_handler->EnableEncryption(false);
+            LogPrint(BCLog::NET, "Enabling encryption as handshake-initiator, sessionID=%s, peer=%d\n", pfrom->m_encryption_handler->GetSessionID().ToString(), pfrom->GetId());
+
+            // set the trigger to send the vesrion
+            PushNodeVersion(pfrom, connman, GetTime());
+        } else {
+            // encryption handshake response
+            connman->SendEncryptionHandshakeData(pfrom);
+            if (!pfrom->m_encryption_handler->ProcessHandshakeRequestData(handshake_msg)) {
+                LogPrint(BCLog::NET, "Invalid handshake received, peer=%d\n", pfrom->GetId());
+                return false;
+            }
+
+            // enable encryption at this point
+            pfrom->m_encryption_handler->EnableEncryption(true);
+            LogPrint(BCLog::NET, "Enabling encryption as handshake-responder, sessionID=%s, peer=%d\n", pfrom->m_encryption_handler->GetSessionID().ToString(), pfrom->GetId());
+        }
+        return true;
+    }
+
+    LogPrint(BCLog::NET, "received%s: %s (%u bytes) peer=%d\n", msg_type == NetMessageType::ENCRYPTED_MSG ? " encrypted" : "", SanitizeString(strCommand), vRecv.size(), pfrom->GetId());
     if (gArgs.IsArgSet("-dropmessagestest") && GetRand(gArgs.GetArg("-dropmessagestest", 0)) == 0)
     {
         LogPrintf("dropmessagestest DROPPING RECV MESSAGE\n");
@@ -2765,7 +2807,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         } // cs_main
 
         if (fProcessBLOCKTXN)
-            return ProcessMessage(pfrom, NetMsgType::BLOCKTXN, blockTxnMsg, nTimeReceived, chainparams, connman, interruptMsgProc, enable_bip61);
+            return ProcessMessage(pfrom, NetMsgType::BLOCKTXN, blockTxnMsg, nTimeReceived, chainparams, connman, interruptMsgProc, enable_bip61, msg_type);
 
         if (fRevertToHeaderProcessing) {
             // Headers received from HB compact block peers are permitted to be
@@ -3273,7 +3315,7 @@ bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& inter
     bool fRet = false;
     try
     {
-        fRet = ProcessMessage(pfrom, strCommand, vRecv, msg->nTime, chainparams, connman, interruptMsgProc, m_enable_bip61);
+        fRet = ProcessMessage(pfrom, strCommand, vRecv, msg->nTime, chainparams, connman, interruptMsgProc, m_enable_bip61, msg->m_type);
         if (interruptMsgProc)
             return false;
         if (!pfrom->vRecvGetData.empty())

@@ -199,6 +199,7 @@ public:
     bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
 
     void PushMessage(CNode* pnode, CSerializedNetMsg&& msg);
+    void SendEncryptionHandshakeData(CNode* pnode);
 
     template<typename Callable>
     void ForEachNode(Callable&& func)

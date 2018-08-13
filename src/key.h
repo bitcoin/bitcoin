@@ -142,6 +142,11 @@ public:
 
     //! Load private key and check that public key matches.
     bool Load(const CPrivKey& privkey, const CPubKey& vchPubKey, bool fSkipCheck);
+
+    void SetNull()
+    {
+        memory_cleanse(keydata.data(), keydata.size());
+    }
 };
 
 struct CExtKey {

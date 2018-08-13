@@ -576,6 +576,10 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
         if (vRecvMsg.empty() || vRecvMsg.back()->Complete()) {
             if (m_encryption_handler && m_encryption_handler->ShouldCryptMsg()) {
                 vRecvMsg.emplace_back(MakeUnique<NetV2Message>(m_encryption_handler, Params().MessageStart(), SER_NETWORK, INIT_PROTO_VERSION));
+            } else if (gArgs.GetBoolArg("-netencryption", DEFAULT_ALLOW_NET_ENCRYPTION) && nRecvBytes == nBytes /* first message */) {
+                // first bytes can be a network encryption handshake
+                // use a NetMessageEncryptionHandshake with option to fallback to a standard NetMessage (if valid version message is detected)
+                vRecvMsg.emplace_back(MakeUnique<NetMessageEncryptionHandshake>(Params().MessageStart(), SER_NETWORK, INIT_PROTO_VERSION));
             } else {
                 vRecvMsg.emplace_back(MakeUnique<NetMessage>(Params().MessageStart(), SER_NETWORK, INIT_PROTO_VERSION));
             }
@@ -585,8 +589,10 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
         // absorb network data
         int handled = msg->Read(pch, nBytes);
 
-        if (handled < 0)
+        if (handled < 0) {
+            LogPrint(BCLog::NET, "Handled no bytes peer=%i, disconnecting\n", GetId());
             return false;
+        }
 
         if (msg->GetMessageSize() > MAX_PROTOCOL_MESSAGE_LENGTH) {
             LogPrint(BCLog::NET, "Oversized message from peer=%i, disconnecting\n", GetId());
@@ -599,6 +605,25 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
         if (msg->Complete()) {
             RecordRecvBytesPerMsgCmd(msg->GetCommandName(), msg->GetMessageSizeWithHeader());
             msg->nTime = nTimeMicros;
+            if (msg->m_type == NetMessageType::PLAINTEXT_ENCRYPTION_HANDSHAKE && !msg->VerifyHeader()) {
+                // message contains expected network magic and "version" message command
+                // treat as version message
+
+                // keep old message (unique_ptr) in this scope until the decompose loop is done
+                NetMessageBaseRef oldmsg = std::move(vRecvMsg.back());
+                vRecvMsg.pop_back();
+                vRecvMsg.emplace_back(MakeUnique<NetMessage>(Params().MessageStart(), SER_NETWORK, INIT_PROTO_VERSION));
+
+                // read header and make sure it was valid
+                int read_header_bytes = vRecvMsg.back()->Read(oldmsg->vRecv.data(), oldmsg->vRecv.size());
+                if (read_header_bytes != CMessageHeader::HEADER_SIZE) {
+                    return false;
+                }
+                // read data part
+                if (vRecvMsg.back()->Read(oldmsg->vRecv.data() + read_header_bytes, oldmsg->vRecv.size() - read_header_bytes) != 32 - read_header_bytes) {
+                    return false;
+                }
+            }
             complete = true;
         }
     }
@@ -2582,11 +2607,6 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
         mapRecvBytesPerMsgCmd[msg] = 0;
     mapRecvBytesPerMsgCmd[NET_MESSAGE_COMMAND_OTHER] = 0;
 
-    m_encryption_handler = nullptr;
-    if (gArgs.GetBoolArg("-netencryption", DEFAULT_ALLOW_NET_ENCRYPTION)) {
-        m_encryption_handler = std::make_shared<P2PEncryption>();
-    }
-
     if (fLogIPs) {
         LogPrint(BCLog::NET, "Added connection to %s peer=%d\n", addrName, id);
     } else {
@@ -2685,6 +2705,28 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
     }
     if (nBytesSent)
         RecordBytesSent(nBytesSent);
+}
+
+void CConnman::SendEncryptionHandshakeData(CNode* pnode)
+{
+    // initialize encryption, generate ephemeral key
+    assert(pnode->m_encryption_handler == nullptr);
+    pnode->m_encryption_handler = std::make_shared<P2PEncryption>();
+
+    // get encryption handshake data
+    std::vector<unsigned char> handshake_data;
+    pnode->m_encryption_handler->GetHandshakeRequestData(handshake_data);
+
+    // push handshake data
+    LogPrint(BCLog::NET, "Send encryption handshake payload of %d bytes, peer=%d\n", handshake_data.size(), pnode->GetId());
+    {
+        LOCK(pnode->cs_vSend);
+
+        //log total amount of bytes per command
+        pnode->nSendSize += handshake_data.size();
+        pnode->vSendMsg.push_back(std::move(handshake_data));
+        RecordBytesSent(SocketSendData(pnode));
+    }
 }
 
 bool CConnman::ForNode(NodeId id, std::function<bool(CNode* pnode)> func)

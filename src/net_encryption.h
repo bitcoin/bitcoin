@@ -5,6 +5,7 @@
 #ifndef BITCOIN_NET_ENCRYPTION_H
 #define BITCOIN_NET_ENCRYPTION_H
 
+#include <atomic>
 #include <memory>
 
 #include <crypto/chacha_poly_aead.h>
@@ -20,6 +21,9 @@ class EncryptionHandlerInterface
 public:
     virtual ~EncryptionHandlerInterface() {}
 
+    virtual bool GetHandshakeRequestData(std::vector<unsigned char>& handshake_data) = 0;
+    virtual bool ProcessHandshakeRequestData(const std::vector<unsigned char>& handshake_data) = 0;
+
     virtual bool GetLength(CDataStream& data_in, uint32_t& len_out) = 0;
     virtual bool EncryptAppendMAC(std::vector<unsigned char>& data_in_out) = 0;
     virtual bool AuthenticatedAndDecrypt(CDataStream& data_in_out) = 0;
@@ -27,6 +31,8 @@ public:
 
     virtual unsigned int GetTagLen() const = 0;
     virtual unsigned int GetAADLen() const = 0;
+    virtual void EnableEncryption(bool inbound) = 0;
+    virtual uint256 GetSessionID() = 0;
 };
 
 class P2PEncryption : public EncryptionHandlerInterface
@@ -34,9 +40,15 @@ class P2PEncryption : public EncryptionHandlerInterface
 private:
     static constexpr unsigned int TAG_LEN = 16; /* poly1305 128bit MAC tag */
     static constexpr unsigned int AAD_LEN = 3;  /* 24 bit payload length */
+    CKey m_ecdh_key;
+    CPrivKey m_raw_ecdh_secret;
+    uint256 m_session_id;
+
+    std::atomic_bool handshake_done;
 
     CCriticalSection cs;
-    std::unique_ptr<ChaCha20Poly1305AEAD> m_aead_ctx;
+    std::unique_ptr<ChaCha20Poly1305AEAD> m_send_aead_ctx;
+    std::unique_ptr<ChaCha20Poly1305AEAD> m_recv_aead_ctx;
     uint32_t m_recv_seq_nr = 0;
     uint32_t m_recv_seq_nr_aad = 0;
     int m_recv_aad_keystream_pos = 0;
@@ -48,14 +60,19 @@ public:
     P2PEncryption();
     ~P2PEncryption()
     {
-        memory_cleanse(&m_aead_ctx, sizeof(m_aead_ctx));
+        memory_cleanse(&m_send_aead_ctx, sizeof(m_send_aead_ctx));
+        memory_cleanse(&m_recv_aead_ctx, sizeof(m_recv_aead_ctx));
     }
+    bool GetHandshakeRequestData(std::vector<unsigned char>& handshake_data) override;
+    bool ProcessHandshakeRequestData(const std::vector<unsigned char>& handshake_data) override;
 
     bool GetLength(CDataStream& data_in, uint32_t& len_out) override;
     bool EncryptAppendMAC(std::vector<unsigned char>& data_in_out) override;
     bool AuthenticatedAndDecrypt(CDataStream& data_in_out) override;
 
     bool ShouldCryptMsg() override;
+    void EnableEncryption(bool inbound) override;
+    uint256 GetSessionID() override;
 
     unsigned inline int GetTagLen() const override
     {
@@ -68,6 +85,45 @@ public:
     }
 };
 typedef std::shared_ptr<EncryptionHandlerInterface> EncryptionHandlerRef;
+
+//network message for 32byte encryption handshake with fallback option
+class NetMessageEncryptionHandshake : public NetMessageBase
+{
+public:
+    unsigned int m_data_pos;
+
+    NetMessageEncryptionHandshake(const CMessageHeader::MessageStartChars& pchMessageStartIn, int nTypeIn, int nVersionIn) : NetMessageBase(nTypeIn, nVersionIn)
+    {
+        m_data_pos = 0;
+        m_type = NetMessageType::PLAINTEXT_ENCRYPTION_HANDSHAKE;
+    }
+
+    bool Complete() const override
+    {
+        return (m_data_pos == 32);
+    }
+
+    uint32_t GetMessageSize() const override
+    {
+        return vRecv.size();
+    }
+
+    uint32_t GetMessageSizeWithHeader() const override
+    {
+        return vRecv.size();
+    }
+
+    std::string GetCommandName() const override
+    {
+        return "";
+    }
+
+    int Read(const char* pch, unsigned int nBytes) override;
+
+    bool VerifyMessageStart() const override { return true; }
+    bool VerifyHeader() const override;
+    bool VerifyChecksum(std::string& error) const override { return true; }
+};
 
 //encrypted network message after v2 p2p message transport protocol
 class NetV2Message : public NetMessageBase
