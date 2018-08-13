@@ -428,6 +428,21 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1012 - " + _("Cannot collect interest on this asset, no interest rate has been defined");
 			return true;
 		}
+		if (!bSanityCheck) {
+			bRevert = !fJustCheck;
+			if (bRevert) {
+				if (!RevertAssetAllocation(assetAllocationTuple, dbAsset, tx.GetHash(), nHeight, revertedAssetAllocations))
+				{
+					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1014 - " + _("Failed to revert asset allocation");
+					return error(errorMessage.c_str());
+				}
+			}
+		}
+		if (bRevert && !GetAssetAllocation(assetAllocationTuple, dbAssetAllocation))
+		{
+			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot find sender asset allocation.");
+			return true;
+		}
 		theAssetAllocation = dbAssetAllocation;
 		// only apply interest on PoW
 		if (!fJustCheck) {
@@ -475,7 +490,11 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1017 - " + _("Cannot send this asset. Asset allocation owner must sign off on this change");
 			return true;
 		}
-		
+		if (!GetAsset(assetAllocationTuple.vchAsset, dbAsset))
+		{
+			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1016 - " + _("Failed to read from asset DB");
+			return true;
+		}
 		if (!bSanityCheck) {
 			bRevert = !fJustCheck;
 			if (bRevert) {
@@ -489,11 +508,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 		if (bRevert && !GetAssetAllocation(assetAllocationTuple, dbAssetAllocation))
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot find sender asset allocation.");
-			return true;
-		}
-		if (!GetAsset(dbAssetAllocation.vchAsset, dbAsset))
-		{
-			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1016 - " + _("Failed to read from asset DB");
 			return true;
 		}
 		theAssetAllocation.vchAliasOrAddress = vchThisAlias;
