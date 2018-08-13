@@ -2,13 +2,13 @@
 name: "dash-win-0.12"
 enable_cache: true
 suites:
-- "trusty"
+- "bionic"
 architectures:
 - "amd64"
 packages:
 - "curl"
 - "g++"
-- "git-core"
+- "git"
 - "pkg-config"
 - "autoconf"
 - "libtool"
@@ -22,6 +22,7 @@ packages:
 - "ca-certificates"
 - "python"
 - "python3"
+- "rename"
 remotes:
 - "url": "https://github.com/dashpay/dash.git"
   "dir": "dash"
@@ -30,7 +31,7 @@ script: |
   WRAP_DIR=$HOME/wrapped
   HOSTS="i686-w64-mingw32 x86_64-w64-mingw32"
   CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests"
-  FAKETIME_HOST_PROGS="g++ ar ranlib nm windres strip objcopy"
+  FAKETIME_HOST_PROGS="ar ranlib nm windres strip objcopy"
   FAKETIME_PROGS="date makensis zip"
   HOST_CFLAGS="-O2 -g"
   HOST_CXXFLAGS="-O2 -g"
@@ -109,7 +110,7 @@ script: |
     for prog in gcc g++; do
         echo '#!/bin/bash' > ${WRAP_DIR}/${i}-${prog}
         echo "# GCCVERSION=${GCCVERSION}" >> ${WRAP_DIR}/${i}-${prog}
-        echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
+        echo "REAL=\`which -a ${i}-${prog}-posix | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
         echo '# Add the gcc version to the wrapper so that ccache takes this into account (we use CCACHE_COMPILERCHECK=content)' >> ${WRAP_DIR}/${i}-${prog}
         echo "# `${prog} --version | head -1`" >> ${WRAP_DIR}/${i}-${prog}
         echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
