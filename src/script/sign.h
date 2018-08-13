@@ -223,7 +223,8 @@ struct PSBTInput
         // If there is a non-witness utxo, then don't add the witness one.
         if (non_witness_utxo) {
             SerializeToVector(s, PSBT_IN_NON_WITNESS_UTXO);
-            SerializeToVector(s, non_witness_utxo);
+            OverrideStream<Stream> os(&s, s.GetType(), s.GetVersion() | SERIALIZE_TRANSACTION_NO_WITNESS);
+            SerializeToVector(os, non_witness_utxo);
         } else if (!witness_utxo.IsNull()) {
             SerializeToVector(s, PSBT_IN_WITNESS_UTXO);
             SerializeToVector(s, witness_utxo);
@@ -297,13 +298,17 @@ struct PSBTInput
             // Do stuff based on type
             switch(type) {
                 case PSBT_IN_NON_WITNESS_UTXO:
+                {
                     if (non_witness_utxo) {
                         throw std::ios_base::failure("Duplicate Key, input non-witness utxo already provided");
                     } else if (key.size() != 1) {
                         throw std::ios_base::failure("Non-witness utxo key is more than one byte type");
                     }
-                    UnserializeFromVector(s, non_witness_utxo);
+                    // Set the stream to unserialize with witness since this is always a valid network transaction
+                    OverrideStream<Stream> os(&s, s.GetType(), s.GetVersion() & ~SERIALIZE_TRANSACTION_NO_WITNESS);
+                    UnserializeFromVector(os, non_witness_utxo);
                     break;
+                }
                 case PSBT_IN_WITNESS_UTXO:
                     if (!witness_utxo.IsNull()) {
                         throw std::ios_base::failure("Duplicate Key, input witness utxo already provided");
