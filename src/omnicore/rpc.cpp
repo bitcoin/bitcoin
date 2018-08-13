@@ -148,7 +148,7 @@ bool BalanceToJSON(const std::string& address, uint32_t property, UniValue& bala
         balance_obj.push_back(Pair("frozen", FormatIndivisibleMP(nFrozen)));
     }
 
-    return (nAvailable || nReserved);
+    return (nAvailable || nReserved || nFrozen);
 }
 
 // Obtains details of a fee distribution
@@ -874,7 +874,7 @@ UniValue omni_getallbalancesforaddress(const UniValue& params, bool fHelp)
     uint32_t propertyId = 0;
     while (0 != (propertyId = addressTally->next())) {
         CMPSPInfo::Entry property;
-        if (_my_sps->getSP(propertyId, property)) {
+        if (!_my_sps->getSP(propertyId, property)) {
             continue;
         }
 
