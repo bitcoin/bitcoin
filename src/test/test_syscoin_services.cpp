@@ -40,6 +40,7 @@ std::map<string, string> mapNodes;
 // create a map between node alias names and URLs to be used in testing for example CallRPC("mynode", "getinfo") would call getinfo on the node alias mynode which would be pushed as a URL here.
 // it is assumed RPC ports are open and u:p is the authentication
 void InitNodeURLMap() {
+	mapNodes.clear();
 	mapNodes["node1"] = "http://127.0.0.1:28379";
 	mapNodes["node2"] = "http://127.0.0.1:38379";
 	mapNodes["node3"] = "http://127.0.0.1:48379";
@@ -56,8 +57,8 @@ string LookupURL(const string& node) {
 // SYSCOIN testing setup
 void StartNodes()
 {
-	InitNodeURLMap();
 	printf("Stopping any test nodes that are running...\n");
+	InitNodeURLMap();
 	StopNodes();
 	node1LastBlock=0;
 	node2LastBlock=0;
@@ -186,7 +187,7 @@ void StopNode (const string &dataDir) {
 	printf("Stopping %s..\n", dataDir.c_str());
 	UniValue r;
 	try{
-		r = CallRPC(dataDir, "getinfo");
+		r = CallExtRPC(dataDir, "getinfo");
 		if(r.isObject())
 		{
 			if(dataDir == "node1")
@@ -201,7 +202,7 @@ void StopNode (const string &dataDir) {
 	{
 	}
 	try{
-		CallRPC(dataDir, "stop");
+		CallExtRPC(dataDir, "stop");
 	}
 	catch(const runtime_error& error)
 	{
@@ -210,7 +211,7 @@ void StopNode (const string &dataDir) {
 	{
 		try {
 			MilliSleep(1000);
-			CallRPC(dataDir, "getinfo");
+			CallExtRPC(dataDir, "getinfo");
 		}
 		catch (const runtime_error& error)
 		{
