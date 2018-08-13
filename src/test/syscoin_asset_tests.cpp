@@ -292,15 +292,15 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 	UniValue r;
 	string baddata = gooddata + "a";
 	string guid = AssetNew("node1", "chf", "jagassetbig1", gooddata);
-	BOOST_CHECK_NO_THROW(r = CallRPC1("node1", "listassets"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "listassets"));
 	UniValue rArray = r.get_array();
 	BOOST_CHECK(rArray.size() > 0);
 	BOOST_CHECK_EQUAL(find_value(rArray[0].get_obj(), "_id").get_str(), guid);
 	string guid1 = AssetNew("node1", "usd", "jagassetbig1", gooddata);
-	BOOST_CHECK_NO_THROW(r = CallRPC1("node1", "assetinfo", "\"" + guid + "\",false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo", "\"" + guid + "\",false"));
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
 	BOOST_CHECK(find_value(r.get_obj(), "symbol").get_str() == "CHF");
-	BOOST_CHECK_NO_THROW(r = CallRPC1("node1", "assetinfo", "\"" + guid1 + "\",false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo", "\"" + guid1 + "\",false"));
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid1);
 	BOOST_CHECK(find_value(r.get_obj(), "symbol").get_str() == "USD");
 	exit(0);
@@ -321,21 +321,21 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 		string address2 = GetNewFundedAddress("node1");
 		
 		
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetnew tpstest " + address1 + " '' " + " assets " + " 8 false 1 10 0 false ''"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetnew", "\"tpstest\",\"" + address1 + "\",'',\"" + "assets\"," + " 8,false,1,10,0,false,''"));
 		UniValue arr = r.get_array();
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction","\"" + arr[0].get_str() + "\""));
 		string hex_str = find_value(r.get_obj(), "hex").get_str();
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + hex_str));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction", "\"" + hex_str + "\""));
 		
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "generate 1"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "generate", "1"));
 		string guid = arr[1].get_str();
 		
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetsend " + guid + " tmp " + "\"[{\\\"ownerto\\\":\\\"" + address2 + "\\\",\\\"amount\\\":1}]\" '' ''"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetsend", "\""+ guid + "\",\"tmp\"," + "\"[{\\\"ownerto\\\":\\\"" + address2 + "\\\",\\\"amount\\\":1}]\",'',''"));
 		arr = r.get_array();
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction","\"" + arr[0].get_str() + "\""));
 		hex_str = find_value(r.get_obj(), "hex").get_str();
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction " + hex_str));
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "generate 1"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction", "\"" + hex_str + "\""));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "generate","1"));
 		
 		assetMap[guid] = address2;
 		assetAddressMap[guid] = address1;
