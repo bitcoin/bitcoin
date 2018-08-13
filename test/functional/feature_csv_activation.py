@@ -47,7 +47,7 @@ from itertools import product
 from io import BytesIO
 
 from test_framework.blocktools import create_coinbase, create_block, create_transaction
-from test_framework.mininode import ToHex, CTransaction
+from test_framework.messages import ToHex, CTransaction
 from test_framework.mininode import P2PDataStore
 from test_framework.script import (
     CScript,

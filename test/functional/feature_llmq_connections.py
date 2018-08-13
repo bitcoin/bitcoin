@@ -3,15 +3,18 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-from test_framework.test_framework import DashTestFramework
-from test_framework.util import *
-
 '''
 feature_llmq_connections.py
 
 Checks intra quorum connections
 
 '''
+
+import time
+
+from test_framework.test_framework import DashTestFramework
+from test_framework.util import assert_greater_than_or_equal, connect_nodes, wait_until
+
 
 class LLMQConnections(DashTestFramework):
     def set_test_params(self):

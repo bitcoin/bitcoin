@@ -3,10 +3,6 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-from test_framework.mininode import *
-from test_framework.test_framework import DashTestFramework
-from test_framework.util import set_node_times, isolate_node, reconnect_isolated_node
-
 '''
 feature_llmq_is_retroactive.py
 
@@ -16,6 +12,12 @@ We have 6 nodes where node 0 is the control node, nodes 1-5 are masternodes.
 Mempool inconsistencies are simulated via disconnecting/reconnecting node 3
 and by having a higher relay fee on nodes 4 and 5.
 '''
+
+import time
+
+from test_framework.test_framework import DashTestFramework
+from test_framework.util import set_node_times, isolate_node, reconnect_isolated_node
+
 
 class LLMQ_IS_RetroactiveSigning(DashTestFramework):
     def set_test_params(self):

@@ -6,11 +6,13 @@
 #
 # Test deterministic masternodes
 #
+
+from decimal import Decimal
+
 from test_framework.blocktools import create_block, create_coinbase, get_masternode_payment
-from test_framework.messages import uint256_to_string
-from test_framework.mininode import CTransaction, ToHex, FromHex, COIN, CCbTx
+from test_framework.messages import CCbTx, COIN, CTransaction, FromHex, ToHex, uint256_to_string
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import assert_equal, connect_nodes, force_finish_mnsync, get_bip9_status, p2p_port
 
 class Masternode(object):
     pass

@@ -2,13 +2,6 @@
 # Copyright (c) 2015-2021 The Dash Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-import time
-from decimal import Decimal
-
-from test_framework.blocktools import get_masternode_payment, create_coinbase, create_block
-from test_framework.mininode import *
-from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, get_bip9_status
 
 '''
 feature_llmq_is_cl_conflicts.py
@@ -16,6 +9,18 @@ feature_llmq_is_cl_conflicts.py
 Checks conflict handling between ChainLocks and InstantSend
 
 '''
+
+from codecs import encode
+from decimal import Decimal
+import struct
+import time
+
+from test_framework.blocktools import get_masternode_payment, create_coinbase, create_block
+from test_framework.messages import CCbTx, CInv, COIN, CTransaction, FromHex, hash256, msg_clsig, msg_inv, ser_string, ToHex, uint256_from_str, uint256_to_string
+from test_framework.mininode import P2PInterface
+from test_framework.test_framework import DashTestFramework
+from test_framework.util import assert_equal, assert_raises_rpc_error, hex_str_to_bytes, get_bip9_status
+
 
 class TestP2PConn(P2PInterface):
     def __init__(self):

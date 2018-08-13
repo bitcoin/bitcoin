@@ -5,12 +5,14 @@
 """CompactBlocksTest -- test compact blocks (BIP 152,  without segwit support, version 1)
 """
 
-from test_framework.mininode import *
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
-from test_framework.blocktools import create_block, create_coinbase
-from test_framework.script import CScript, OP_TRUE, OP_DROP
+import random
 
+from test_framework.blocktools import create_block, create_coinbase
+from test_framework.messages import BlockTransactions, BlockTransactionsRequest, calculate_shortid, CBlock, CBlockHeader, CInv, COutPoint, CTransaction, CTxIn, CTxOut, FromHex, HeaderAndShortIDs, msg_block, msg_blocktxn, msg_cmpctblock, msg_getblocktxn, msg_getdata, msg_getheaders, msg_headers, msg_inv, msg_sendcmpct, msg_sendheaders, msg_tx, NODE_NETWORK, P2PHeaderAndShortIDs, PrefilledTransaction, ToHex
+from test_framework.mininode import mininode_lock, P2PInterface
+from test_framework.script import CScript, OP_TRUE, OP_DROP
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import assert_equal, wait_until
 
 # TestP2PConn: A peer we use to send messages to dashd, and store responses.
 class TestP2PConn(P2PInterface):

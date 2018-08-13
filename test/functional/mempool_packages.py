@@ -4,9 +4,11 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test descendant package tracking code."""
 
+from decimal import Decimal
+
+from test_framework.messages import COIN
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
-from test_framework.mininode import COIN
+from test_framework.util import assert_equal, assert_raises_rpc_error, satoshi_round
 
 MAX_ANCESTORS = 25
 MAX_DESCENDANTS = 25

@@ -3,18 +3,18 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-import time
-
-from test_framework.mininode import *
-from test_framework.test_framework import DashTestFramework
-from test_framework.util import *
-
 '''
 feature_llmq_chainlocks.py
 
 Checks LLMQs based ChainLocks
 
 '''
+
+import time
+
+from test_framework.test_framework import DashTestFramework
+from test_framework.util import connect_nodes, isolate_node, reconnect_isolated_node
+
 
 class LLMQChainLocksTest(DashTestFramework):
     def set_test_params(self):

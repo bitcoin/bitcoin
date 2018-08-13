@@ -7,13 +7,12 @@
 This file is modified from python-bitcoinlib.
 """
 
-
-from .mininode import CTransaction, CTxOut, sha256, hash256
 from binascii import hexlify
 import hashlib
 import struct
 
 from .bignum import bn2vch
+from .messages import CTransaction, CTxOut, sha256, hash256
 
 MAX_SCRIPT_ELEMENT_SIZE = 520
 

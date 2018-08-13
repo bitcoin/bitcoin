@@ -12,9 +12,11 @@ if uploadtarget has been reached.
 """
 from collections import defaultdict
 
-from test_framework.mininode import *
+from test_framework.messages import CInv, MAX_BLOCK_SIZE, msg_getdata
+from test_framework.mininode import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import assert_equal, mine_large_block, set_node_times
+
 
 class TestP2PConn(P2PInterface):
     def __init__(self):

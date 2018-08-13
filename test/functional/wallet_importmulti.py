@@ -6,7 +6,7 @@
 
 from test_framework import script
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import assert_equal, assert_greater_than, assert_raises_rpc_error, bytes_to_hex_str
 
 class ImportMultiTest (BitcoinTestFramework):
     def set_test_params(self):

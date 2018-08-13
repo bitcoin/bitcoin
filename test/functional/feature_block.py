@@ -8,7 +8,7 @@ import struct
 
 from test_framework.blocktools import create_block, create_coinbase, create_tx_with_script, get_legacy_sigopcount_block
 from test_framework.key import CECKey
-from test_framework.mininode import (
+from test_framework.messages import (
     CBlock,
     COIN,
     COutPoint,

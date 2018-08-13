@@ -4,10 +4,11 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test gettxoutproof and verifytxoutproof RPCs."""
 
+from decimal import Decimal
+
+from test_framework.messages import CMerkleBlock, FromHex, ToHex
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
-from test_framework.mininode import FromHex, ToHex
-from test_framework.messages import CMerkleBlock
+from test_framework.util import assert_equal, assert_raises_rpc_error, connect_nodes
 
 class MerkleBlockTest(BitcoinTestFramework):
     def set_test_params(self):

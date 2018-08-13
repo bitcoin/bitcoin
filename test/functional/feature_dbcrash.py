@@ -31,10 +31,9 @@ import random
 import sys
 import time
 
-from test_framework.mininode import *
-from test_framework.script import *
+from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut, ToHex
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import assert_equal, create_confirmed_utxos, hex_str_to_bytes
 
 HTTP_DISCONNECT_ERRORS = [http.client.CannotSendRequest]
 try:

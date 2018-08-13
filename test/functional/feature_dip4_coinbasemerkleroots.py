@@ -2,9 +2,6 @@
 # Copyright (c) 2015-2021 The Dash Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-from test_framework.mininode import *
-from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_equal
 
 '''
 feature_dip4_coinbasemerkleroots.py
@@ -12,6 +9,14 @@ feature_dip4_coinbasemerkleroots.py
 Checks DIP4 merkle roots in coinbases
 
 '''
+
+from io import BytesIO
+
+from test_framework.messages import CBlock, CBlockHeader, CCbTx, CMerkleBlock, FromHex, hash256, msg_getmnlistd, QuorumId, ser_uint256
+from test_framework.mininode import P2PInterface
+from test_framework.test_framework import DashTestFramework
+from test_framework.util import assert_equal, wait_until
+
 
 class TestP2PConn(P2PInterface):
     def __init__(self):
