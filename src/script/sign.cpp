@@ -361,7 +361,8 @@ bool IsSolvable(const SigningProvider& provider, const CScript& script)
     SignatureData sigs;
     if (ProduceSignature(provider, DUMMY_SIGNATURE_CREATOR, script, sigs)) {
         // VerifyScript check is just defensive, and should never fail.
-        assert(VerifyScript(sigs.scriptSig, script, STANDARD_SCRIPT_VERIFY_FLAGS, DUMMY_CHECKER));
+        bool verified = VerifyScript(sigs.scriptSig, script, STANDARD_SCRIPT_VERIFY_FLAGS, DUMMY_CHECKER);
+        assert(verified);
         return true;
     }
     return false;
