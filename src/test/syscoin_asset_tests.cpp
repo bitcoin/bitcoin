@@ -308,6 +308,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 {
 	UniValue r;
 	printf("Running generate_asset_throughput...\n");
+	ECC_Start();
+	GenerateSpendableCoins();
 	GenerateBlocks(5, "node1");
 	//GenerateBlocks(5, "node3");
 	map<string, string> assetMap;
