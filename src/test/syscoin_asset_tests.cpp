@@ -412,7 +412,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	}
 	// average out the elapsed time to push raw txs and add it to the start time to account for the time to send to network (this shouldn't be part of the throughput metric because tx needs to be on the wire for it to simulate real world transaction event)
 	sendrawelapsedtime /= senders.size();
-	tpstarttime += avgsendrawtime;
+	tpstarttime += sendrawelapsedtime;
 
 	// gather received transfers on the receiver, you can query any receiver node here, in general they all should see the same state after the elapsed time.
 	BOOST_CHECK_NO_THROW(r = CallExtRPC(receiver[0], "tpstestinfo"));
