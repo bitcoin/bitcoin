@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE(generate_range_stress_subtract2)
 	BOOST_CHECK_EQUAL(vecRange_o.size(), 499991);
 	printf("CheckRangeSubtract Completed %ldms\n", ms2-ms1);
 }
-
+/*
 BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 {
 	ECC_Start();
@@ -303,13 +303,13 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid1 + " false"));
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid1);
 	BOOST_CHECK(find_value(r.get_obj(), "symbol").get_str() == "USD");
-}
+}*/
 BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 {
 	UniValue r;
 	printf("Running generate_asset_throughput...\n");
 	GenerateBlocks(5, "node1");
-	GenerateBlocks(5, "node3");
+	//GenerateBlocks(5, "node3");
 	map<string, string> assetMap;
 	map<string, string> assetAddressMap;
 	// setup senders and receiver node aliases
