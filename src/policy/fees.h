@@ -6,6 +6,7 @@
 #define BITCOIN_POLICY_FEES_H
 
 #include <amount.h>
+#include <interfaces/mempool_observer.h>
 #include <policy/feerate.h>
 #include <uint256.h>
 #include <random.h>
@@ -129,7 +130,7 @@ struct FeeCalculation
  * a certain number of blocks.  Every time a block is added to the best chain, this class records
  * stats on the transactions included in that block
  */
-class CBlockPolicyEstimator
+class CBlockPolicyEstimator : public interfaces::MempoolObserver
 {
 private:
     /** Track confirm delays up to 12 blocks for short horizon */
@@ -187,13 +188,13 @@ public:
 
     /** Process all the transactions that have been included in a block */
     void processBlock(unsigned int nBlockHeight,
-                      std::vector<const CTxMemPoolEntry*>& entries);
+                      std::vector<const CTxMemPoolEntry*>& entries) override;
 
     /** Process a transaction accepted to the mempool*/
-    void processTransaction(const CTxMemPoolEntry& entry, bool validFeeEstimate);
+    void processTransaction(const CTxMemPoolEntry& entry, bool validFeeEstimate) override;
 
     /** Remove a transaction from the mempool tracking stats*/
-    bool removeTx(uint256 hash, bool inBlock);
+    void removeTx(const uint256& hash) override;
 
     /** DEPRECATED. Return a feerate estimate */
     CFeeRate estimateFee(int confTarget) const;
@@ -254,6 +255,11 @@ private:
 
     /** Process a transaction confirmed in a block*/
     bool processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry) EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
+
+    /** Remove a transaction from the mempool tracking stats
+     * This allows for inBlock removals
+     */
+    bool removeTx(const uint256& hash, bool inBlock);
 
     /** Helper for estimateSmartFee */
     double estimateCombinedFee(unsigned int confTarget, double successThreshold, bool checkShorterHorizon, EstimationResult *result) const EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);

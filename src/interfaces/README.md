@@ -14,4 +14,6 @@ The following interfaces are defined here:
 
 * [`Init`](init.h) — used by multiprocess code to access interfaces above on startup. Added in [#10102](https://github.com/bitcoin/bitcoin/pull/10102).
 
+* [`MempoolObserver`](mempool_observer.h) — used by fee estimation to be notified on mempool events. Added in [#13949](https://github.com/bitcoin/bitcoin/pull/13949).
+
 The interfaces above define boundaries between major components of bitcoin code (node, wallet, and gui), making it possible for them to run in different processes, and be tested, developed, and understood independently. These interfaces are not currently designed to be stable or to be used externally.

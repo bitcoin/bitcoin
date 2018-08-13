@@ -139,6 +139,7 @@ BITCOIN_CORE_H = \
   init.h \
   interfaces/chain.h \
   interfaces/handler.h \
+  interfaces/mempool_observer.h \
   interfaces/node.h \
   interfaces/wallet.h \
   key.h \
