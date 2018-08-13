@@ -28,7 +28,8 @@ static void DeserializeBlockTest(benchmark::State& state)
     while (state.KeepRunning()) {
         CBlock block;
         stream >> block;
-        assert(stream.Rewind(sizeof(block_bench::block413567)));
+        bool rewound = stream.Rewind(sizeof(block_bench::block413567));
+        assert(rewound);
     }
 }
 
@@ -45,10 +46,12 @@ static void DeserializeAndCheckBlockTest(benchmark::State& state)
     while (state.KeepRunning()) {
         CBlock block; // Note that CBlock caches its checked state, so we need to recreate it here
         stream >> block;
-        assert(stream.Rewind(sizeof(block_bench::block413567)));
+        bool rewound = stream.Rewind(sizeof(block_bench::block413567));
+        assert(rewound);
 
         CValidationState validationState;
-        assert(CheckBlock(block, validationState, chainParams->GetConsensus()));
+        bool checked = CheckBlock(block, validationState, chainParams->GetConsensus());
+        assert(checked);
     }
 }
 
