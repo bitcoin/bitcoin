@@ -23,9 +23,9 @@
 
 from time import sleep
 
-from test_framework.mininode import *
+from test_framework.messages import msg_ping
+from test_framework.mininode import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
 
 class TestP2PConn(P2PInterface):
     def on_version(self, message):

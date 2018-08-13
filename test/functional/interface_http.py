@@ -5,7 +5,7 @@
 """Test the RPC HTTP basics."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import assert_equal, str_to_b64str
 
 import http.client
 import urllib.parse
