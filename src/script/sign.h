@@ -547,7 +547,8 @@ struct PartiallySignedTransaction
         SerializeToVector(s, PSBT_GLOBAL_UNSIGNED_TX);
 
         // Write serialized tx to a stream
-        SerializeToVector(s, *tx);
+        OverrideStream<Stream> os(&s, s.GetType(), s.GetVersion() | SERIALIZE_TRANSACTION_NO_WITNESS);
+        SerializeToVector(os, *tx);
 
         // Write the unknown things
         for (auto& entry : unknown) {
@@ -601,7 +602,9 @@ struct PartiallySignedTransaction
                         throw std::ios_base::failure("Global unsigned tx key is more than one byte type");
                     }
                     CMutableTransaction mtx;
-                    UnserializeFromVector(s, mtx);
+                    // Set the stream to serialize with non-witness since this should always be non-witness
+                    OverrideStream<Stream> os(&s, s.GetType(), s.GetVersion() | SERIALIZE_TRANSACTION_NO_WITNESS);
+                    UnserializeFromVector(os, mtx);
                     tx = std::move(mtx);
                     // Make sure that all scriptSigs and scriptWitnesses are empty
                     for (const CTxIn& txin : tx->vin) {
