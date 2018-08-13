@@ -292,21 +292,21 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 	UniValue r;
 	string baddata = gooddata + "a";
 	string guid = AssetNew("node1", "chf", "jagassetbig1", gooddata);
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "listassets"));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "listassets"));
 	UniValue rArray = r.get_array();
 	BOOST_CHECK(rArray.size() > 0);
 	BOOST_CHECK_EQUAL(find_value(rArray[0].get_obj(), "_id").get_str(), guid);
 	string guid1 = AssetNew("node1", "usd", "jagassetbig1", gooddata);
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo", "\"" + guid + "\",false"));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetinfo", "\"" + guid + "\",false"));
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
 	BOOST_CHECK(find_value(r.get_obj(), "symbol").get_str() == "CHF");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo", "\"" + guid1 + "\",false"));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetinfo", "\"" + guid1 + "\",false"));
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid1);
 	BOOST_CHECK(find_value(r.get_obj(), "symbol").get_str() == "USD");
 	exit(0);
 }
 BOOST_AUTO_TEST_CASE(generate_asset_throughput)
- {
+{
 	UniValue r;
 	printf("Running generate_asset_throughput...\n");
 	GenerateBlocks(5, "node1");
@@ -319,35 +319,35 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	for (int i = 0; i < 500; i++) {
 		string address1 = GetNewFundedAddress("node1");
 		string address2 = GetNewFundedAddress("node1");
-		
-		
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetnew", "\"tpstest\",\"" + address1 + "\",'',\"" + "assets\"," + " 8,false,1,10,0,false,''"));
+
+
+		BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetnew", "\"tpstest\",\"" + address1 + "\",'',\"" + "assets\"," + " 8,false,1,10,0,false,''"));
 		UniValue arr = r.get_array();
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction","\"" + arr[0].get_str() + "\""));
+		BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransaction", "\"" + arr[0].get_str() + "\""));
 		string hex_str = find_value(r.get_obj(), "hex").get_str();
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction", "\"" + hex_str + "\""));
-		
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "generate", "1"));
+		BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "syscoinsendrawtransaction", "\"" + hex_str + "\""));
+
+		BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "generate", "1"));
 		string guid = arr[1].get_str();
-		
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetsend", "\""+ guid + "\",\"tmp\"," + "\"[{\\\"ownerto\\\":\\\"" + address2 + "\\\",\\\"amount\\\":1}]\",'',''"));
+
+		BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetsend", "\"" + guid + "\",\"tmp\"," + "\"[{\\\"ownerto\\\":\\\"" + address2 + "\\\",\\\"amount\\\":1}]\",'',''"));
 		arr = r.get_array();
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction","\"" + arr[0].get_str() + "\""));
+		BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransaction", "\"" + arr[0].get_str() + "\""));
 		hex_str = find_value(r.get_obj(), "hex").get_str();
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsendrawtransaction", "\"" + hex_str + "\""));
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "generate","1"));
-		
+		BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "syscoinsendrawtransaction", "\"" + hex_str + "\""));
+		BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "generate", "1"));
+
 		assetMap[guid] = address2;
 		assetAddressMap[guid] = address1;
 		if (i % 100 == 0)
-			 printf("%.2f percentage done\n", 100.0f / (1000.0f / (i + 1)));
-		
+			printf("%.2f percentage done\n", 100.0f / (1000.0f / (i + 1)));
+
 	}
 
 	GenerateBlocks(10);
 	printf("Creating assetsend transactions...\n");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "tpstestsetenabled true"));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "tpstestsetenabled true"));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "tpstestsetenabled", "true"));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "tpstestsetenabled", "true"));
 	int count = 0;
 	int totalSenderNodes = 2;
 	int totalPerSenderNode = assetMap.size() / totalSenderNodes;
@@ -357,9 +357,9 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	string vecTX = "\"[";
 	for (auto& assetTuple : assetMap) {
 		count++;
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsend " + assetTuple.first + " " + assetTuple.second+ " " + "\"[{\\\"ownerto\\\":\\\"" + assetAddressMap[assetTuple.first] + "\\\",\\\"amount\\\":1}]\" '' ''"));
+		BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationsend \"" + assetTuple.first + "\",\"" + assetTuple.second + "\"," + "\"[{\\\"ownerto\\\":\\\"" + assetAddressMap[assetTuple.first] + "\\\",\\\"amount\\\":1}]\",'',''"));
 		UniValue arr = r.get_array();
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str()));
+		BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransaction", "\"" + arr[0].get_str() + "\""));
 		string hex_str = find_value(r.get_obj(), "hex").get_str();
 		vecTX += "{\\\"tx\\\":\\\"" + hex_str + "\\\"}";
 		if ((count % totalPerSenderNode) == 0) {
@@ -367,40 +367,40 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 			senderNodeCount++;
 			if (senderNodeCount > totalSenderNodes)
 				senderNodeCount = 1;
-			BOOST_CHECK_NO_THROW(r = CallRPC("node" + boost::lexical_cast<string>(senderNodeCount), "tpstestadd 0 " + vecTX));
+			BOOST_CHECK_NO_THROW(r = CallExtRPC("node" + boost::lexical_cast<string>(senderNodeCount), "tpstestadd", "0," + vecTX));
 			vecTX = "\"[";
 		}
 		else
 			vecTX += ",";
-		
+
 		if (count % 100 == 0)
-			 printf("%.2f percentage done\n", 100.0f / (1000.0f / count));
-		
-		
+			printf("%.2f percentage done\n", 100.0f / (1000.0f / count));
+
+
 	}
 	int64_t tpstarttime = GetTimeMicros();
 	int microsInSecond = 1000 * 1000;
-	tpstarttime = tpstarttime + 1* microsInSecond;
+	tpstarttime = tpstarttime + 1 * microsInSecond;
 	printf("Adding assetsend transactions to queue on sender nodes...\n");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "tpstestadd " + boost::lexical_cast<string>(tpstarttime)));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "tpstestadd " + boost::lexical_cast<string>(tpstarttime)));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "tpstestadd", "\"" + boost::lexical_cast<string>(tpstarttime) + "\""));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "tpstestadd", "\"" + boost::lexical_cast<string>(tpstarttime) + "\""));
 	float totalTime = 0;
 	printf("Waiting 11 seconds as per protocol...\n");
 	// start 11 second wait
 	MilliSleep(11000);
-	
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "tpstestinfo"));
+
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "tpstestinfo"));
 	UniValue tpsresponse1 = r.get_obj();
 	int64_t teststarttime = find_value(tpsresponse1, "teststarttime").get_int64();
 	int64_t sendrawelapsedtime1 = find_value(tpsresponse1, "sendrawelapsedtime").get_int64();
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "tpstestinfo"));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "tpstestinfo"));
 	UniValue tpsresponse2 = r.get_obj();
 	int64_t sendrawelapsedtime2 = find_value(tpsresponse2, "sendrawelapsedtime").get_int64();
 
 	int64_t avgsendrawtime = sendrawelapsedtime1 / (assetMap.size() / 2) + sendrawelapsedtime2 / (assetMap.size() / 2);
 	tpstarttime += avgsendrawtime;
 
-	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "tpstestinfo"));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "tpstestinfo"));
 	UniValue tpsresponse = r.get_obj();
 	UniValue tpsresponsereceivers = find_value(tpsresponse, "receivers").get_array();
 	for (int i = 0; i < tpsresponsereceivers.size(); i++) {
@@ -411,8 +411,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	}
 	totalTime /= tpsresponsereceivers.size();
 	printf("tpstarttime %lld sendrawelapsedtime1 %lld sendrawelapsedtime2 %lld totaltime %.2f, num responses %d\n", tpstarttime, sendrawelapsedtime1, sendrawelapsedtime2, totalTime, tpsresponsereceivers.size());
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "tpstestsetenabled false"));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "tpstestsetenabled false"));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "tpstestsetenabled", "false"));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "tpstestsetenabled", "false"));
 }
 BOOST_AUTO_TEST_CASE(generate_big_assetname)
 {
