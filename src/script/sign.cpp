@@ -469,7 +469,8 @@ bool IsSolvable(const SigningProvider& provider, const CScript& script)
     static_assert(STANDARD_SCRIPT_VERIFY_FLAGS & SCRIPT_VERIFY_WITNESS_PUBKEYTYPE, "IsSolvable requires standard script flags to include WITNESS_PUBKEYTYPE");
     if (ProduceSignature(provider, DUMMY_SIGNATURE_CREATOR, script, sigs)) {
         // VerifyScript check is just defensive, and should never fail.
-        assert(VerifyScript(sigs.scriptSig, script, &sigs.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, DUMMY_CHECKER));
+        bool verified = VerifyScript(sigs.scriptSig, script, &sigs.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, DUMMY_CHECKER);
+        assert(verified);
         return true;
     }
     return false;
