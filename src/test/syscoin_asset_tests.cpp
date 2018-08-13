@@ -282,8 +282,9 @@ BOOST_AUTO_TEST_CASE(generate_range_stress_subtract2)
 BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 {
 	ECC_Start();
-	printf("Running generate_big_assetdata...\n");
 	GenerateSpendableCoins();
+	printf("Running generate_big_assetdata...\n");
+	GenerateBlocks(5);
 	AliasNew("node1", "jagassetbig1", "data");
 	// 256 bytes long
 	string gooddata = "SfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfdd";
@@ -291,15 +292,15 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 	UniValue r;
 	string baddata = gooddata + "a";
 	string guid = AssetNew("node1", "chf", "jagassetbig1", gooddata);
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "listassets"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "listassets"));
 	UniValue rArray = r.get_array();
 	BOOST_CHECK(rArray.size() > 0);
 	BOOST_CHECK_EQUAL(find_value(rArray[0].get_obj(), "_id").get_str(), guid);
 	string guid1 = AssetNew("node1", "usd", "jagassetbig1", gooddata);
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetinfo", "\"" + guid + "\",false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid + " false"));
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid);
 	BOOST_CHECK(find_value(r.get_obj(), "symbol").get_str() == "CHF");
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetinfo", "\"" + guid1 + "\",false"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid1 + " false"));
 	BOOST_CHECK(find_value(r.get_obj(), "_id").get_str() == guid1);
 	BOOST_CHECK(find_value(r.get_obj(), "symbol").get_str() == "USD");
 }
