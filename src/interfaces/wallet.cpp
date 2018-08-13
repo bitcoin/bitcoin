@@ -59,7 +59,7 @@ public:
 };
 
 //! Construct wallet tx struct.
-WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx)
+static WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     WalletTx result;
     result.tx = wtx.tx;
@@ -87,7 +87,7 @@ WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx)
 }
 
 //! Construct wallet tx status struct.
-WalletTxStatus MakeWalletTxStatus(const CWalletTx& wtx)
+static WalletTxStatus MakeWalletTxStatus(const CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     WalletTxStatus result;
     auto mi = ::mapBlockIndex.find(wtx.hashBlock);
@@ -106,7 +106,7 @@ WalletTxStatus MakeWalletTxStatus(const CWalletTx& wtx)
 }
 
 //! Construct wallet TxOut struct.
-WalletTxOut MakeWalletTxOut(CWallet& wallet, const CWalletTx& wtx, int n, int depth)
+static WalletTxOut MakeWalletTxOut(CWallet& wallet, const CWalletTx& wtx, int n, int depth) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     WalletTxOut result;
     result.txout = wtx.tx->vout[n];

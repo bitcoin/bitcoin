@@ -307,7 +307,7 @@ void PruneBlockFilesManual(int nManualPruneHeight);
  * plTxnReplaced will be appended to with all transactions replaced from mempool **/
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransactionRef &tx,
                         bool* pfMissingInputs, std::list<CTransactionRef>* plTxnReplaced,
-                        bool bypass_limits, const CAmount nAbsurdFee, bool test_accept=false);
+                        bool bypass_limits, const CAmount nAbsurdFee, bool test_accept=false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 bool GetUTXOCoin(const COutPoint& outpoint, Coin& coin);
 int GetUTXOHeight(const COutPoint& outpoint);
@@ -338,12 +338,12 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight);
  *
  * See consensus/consensus.h for flag definitions.
  */
-bool CheckFinalTx(const CTransaction &tx, int flags = -1);
+bool CheckFinalTx(const CTransaction &tx, int flags = -1) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /**
  * Test whether the LockPoints height and time are still valid on the current chain
  */
-bool TestLockPointValidity(const LockPoints* lp);
+bool TestLockPointValidity(const LockPoints* lp) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /**
  * Check if transaction will be BIP 68 final in the next block to be created.
@@ -356,7 +356,7 @@ bool TestLockPointValidity(const LockPoints* lp);
  *
  * See consensus/consensus.h for flag definitions.
  */
-bool CheckSequenceLocks(const CTransaction &tx, int flags, LockPoints* lp = nullptr, bool useExistingLockPoints = false);
+bool CheckSequenceLocks(const CTransaction &tx, int flags, LockPoints* lp = nullptr, bool useExistingLockPoints = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /**
  * Closure representing one script verification
