@@ -312,13 +312,20 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	GenerateBlocks(5, "node3");
 	map<string, string> assetMap;
 	map<string, string> assetAddressMap;
+	// setup senders and receiver node aliases
+	vector<string> senders;
+	vector<string> receiver;
+	senders.push_back("node4");
+	senders.push_back("node5");
+	receiver.push_back("node6");
+	BOOST_CHECK(receiver.size() == 1);
 
+	int numberOfTransactionToSend = 500;
 	// create 1000 addresses and assets for each asset	
-	printf("creating sender 1000 address/asset...\n");
-	for (int i = 0; i < 500; i++) {
+	printf("creating sender addresses/assets...\n");
+	for (int i = 0; i < numberOfTransactionToSend; i++) {
 		string address1 = GetNewFundedAddress("node1");
 		string address2 = GetNewFundedAddress("node1");
-
 
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetnew tpstest " + address1 + " '' assets 8 false 1 10 0 false ''"));
 		UniValue arr = r.get_array();
@@ -339,7 +346,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 		assetMap[guid] = address2;
 		assetAddressMap[guid] = address1;
 		if (i % 100 == 0)
-			printf("%.2f percentage done\n", 100.0f / (1000.0f / (i + 1)));
+			printf("%.2f percentage done\n", 10.0f / (numberOfTransactionToSend / (i + 1)));
 
 	}
 
@@ -348,12 +355,14 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	BOOST_CHECK_NO_THROW(CallExtRPC("node4", "tpstestsetenabled", "true"));
 	BOOST_CHECK_NO_THROW(CallExtRPC("node5", "tpstestsetenabled", "true"));
 	int count = 0;
-	int totalSenderNodes = 5;
-	int senderNodeCount = 3;
-	int totalPerSenderNode = assetMap.size() / (totalSenderNodes - senderNodeCount);
+	// setup total senders, and amount that we can add to tpstestadd at once (I noticed that if you push more than 100 or so to tpstestadd at once it will crap out)
+	int totalSenderNodes = senders.size();
+	int senderNodeCount = 0;
+	int totalPerSenderNode = assetMap.size() / totalSenderNodes;
 	if (totalPerSenderNode > 100)
 		totalPerSenderNode = 100;
 	
+	// create vector of signed transactions and push them to tpstestadd on every sender node distributed evenly
 	string vecTX = "\"[";
 	for (auto& assetTuple : assetMap) {
 		count++;
@@ -364,43 +373,49 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 		vecTX += "{\\\"tx\\\":\\\"" + hex_str + "\\\"}";
 		if ((count % totalPerSenderNode) == 0) {
 			vecTX += "]\"";
-			senderNodeCount++;
-			if (senderNodeCount > totalSenderNodes)
-				senderNodeCount = 4;
-			BOOST_CHECK_NO_THROW(r = CallExtRPC("node" + boost::lexical_cast<string>(senderNodeCount), "tpstestadd", "0," + vecTX));
+			if (senderNodeCount >= totalSenderNodes)
+				senderNodeCount = 0;
+			BOOST_CHECK_NO_THROW(r = CallExtRPC(senders[senderNodeCount], "tpstestadd", "0," + vecTX));
 			vecTX = "\"[";
+			senderNodeCount++;
 		}
 		else
 			vecTX += ",";
 
 		if (count % 100 == 0)
-			printf("%.2f percentage done\n", 100.0f / (1000.0f / count));
+			printf("%.2f percentage done\n", 10.0f / (numberOfTransactionToSend / count));
 
 
 	}
+	// set the start time to 1 second from now (this needs to be profiled, if the tpstestadd setting time to every node exceeds say 500ms then this time should be extended to account for the latency).
+	// rule of thumb if sender count is high (> 25) then profile how long it takes and multiple by 10 and get ceiling of next second needed to send this rpc to every node to have them sync up
+
+	// this will set a start time to every node which will send the vector of signed txs to the network
 	int64_t tpstarttime = GetTimeMicros();
 	int microsInSecond = 1000 * 1000;
 	tpstarttime = tpstarttime + 1 * microsInSecond;
 	printf("Adding assetsend transactions to queue on sender nodes...\n");
-	BOOST_CHECK_NO_THROW(CallExtRPC("node4", "tpstestadd", "\"" + boost::lexical_cast<string>(tpstarttime) + "\""));
-	BOOST_CHECK_NO_THROW(CallExtRPC("node5", "tpstestadd", "\"" + boost::lexical_cast<string>(tpstarttime) + "\""));
+	for (auto &sender : senders)
+		BOOST_CHECK_NO_THROW(CallExtRPC(sender, "tpstestadd", "\"" + boost::lexical_cast<string>(tpstarttime) + "\""));
+	
 	float totalTime = 0;
 	printf("Waiting 11 seconds as per protocol...\n");
 	// start 11 second wait
 	MilliSleep(11000);
 
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node4", "tpstestinfo"));
-	UniValue tpsresponse1 = r.get_obj();
-	int64_t teststarttime = find_value(tpsresponse1, "teststarttime").get_int64();
-	int64_t sendrawelapsedtime1 = find_value(tpsresponse1, "sendrawelapsedtime").get_int64();
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node5", "tpstestinfo"));
-	UniValue tpsresponse2 = r.get_obj();
-	int64_t sendrawelapsedtime2 = find_value(tpsresponse2, "sendrawelapsedtime").get_int64();
-
-	int64_t avgsendrawtime = sendrawelapsedtime1 / (assetMap.size() / 2) + sendrawelapsedtime2 / (assetMap.size() / 2);
+	// get the elapsed time of each node on how long it took to push the vector of signed txs to the network
+	int64_t sendrawelapsedtime = 0;
+	for (auto &sender : senders) {
+		BOOST_CHECK_NO_THROW(r = CallExtRPC(sender, "tpstestinfo"));
+		UniValue tpsresponse1 = r.get_obj();
+		sendrawelapsedtime += find_value(tpsresponse1, "sendrawelapsedtime").get_int64();
+	}
+	// average out the elapsed time to push raw txs and add it to the start time to account for the time to send to network (this shouldn't be part of the throughput metric because tx needs to be on the wire for it to simulate real world transaction event)
+	sendrawelapsedtime /= senders.size();
 	tpstarttime += avgsendrawtime;
 
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node6", "tpstestinfo"));
+	// gather received transfers on the receiver, you can query any receiver node here, in general they all should see the same state after the elapsed time.
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(receiver[0], "tpstestinfo"));
 	UniValue tpsresponse = r.get_obj();
 	UniValue tpsresponsereceivers = find_value(tpsresponse, "receivers").get_array();
 	for (int i = 0; i < tpsresponsereceivers.size(); i++) {
@@ -409,10 +424,11 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 		int64_t timeRecv = find_value(responseObj, "time").get_int64();
 		totalTime += timeRecv - tpstarttime;
 	}
+	// average the start time - received time by the number of responses received (usually number of responses should match number of transactions sent beginning of test)
 	totalTime /= tpsresponsereceivers.size();
 	printf("tpstarttime %lld sendrawelapsedtime1 %lld sendrawelapsedtime2 %lld totaltime %.2f, num responses %d\n", tpstarttime, sendrawelapsedtime1, sendrawelapsedtime2, totalTime, tpsresponsereceivers.size());
-	BOOST_CHECK_NO_THROW(CallExtRPC("node4", "tpstestsetenabled", "false"));
-	BOOST_CHECK_NO_THROW(CallExtRPC("node5", "tpstestsetenabled", "false"));
+	for (auto &sender : senders)
+		BOOST_CHECK_NO_THROW(CallExtRPC(sender, "tpstestsetenabled", "false"));
 }
 BOOST_AUTO_TEST_CASE(generate_big_assetname)
 {
