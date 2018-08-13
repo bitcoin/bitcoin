@@ -1447,7 +1447,7 @@ string AssetSend(const string& node, const string& name, const string& inputs, c
 	CAmount newfromamount = AssetAmountFromValue(balance, nprecision, binputranges) - inputamount;
 
 	// "assetsend [asset] ( [{\"alias\":\"aliasname\",\"amount\":amount},...] or [{\"alias\":\"aliasname\",\"ranges\":[{\"start\":index,\"end\":index},...]},...] ) [memo] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetsend " + name + " " + inputs + " " + memo + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetsend " + name + " tmp " + inputs + " " + memo + " " + witness));
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
