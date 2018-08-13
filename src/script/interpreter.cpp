@@ -1429,8 +1429,6 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
             std::string str;
             str.assign(ScriptErrorString(*serror));
             std::cout << str << std::endl;
-        } else {
-            std::cout << "serror wasn't set" << std::endl;
         }
         return false;
     }
