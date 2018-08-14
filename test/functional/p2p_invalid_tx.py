@@ -76,7 +76,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         self.reconnect_p2p(num_connections=2)
 
         self.log.info('Test orphan transaction handling ... ')
-        # Create a root transaction that we withhold until all dependend transactions
+        # Create a root transaction that we withhold until all dependent transactions
         # are sent out and in the orphan cache
         SCRIPT_PUB_KEY_OP_TRUE = b'\x51\x75' * 15 + b'\x51'
         tx_withhold = CTransaction()

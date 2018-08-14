@@ -122,7 +122,7 @@ def create_tx_with_script(prevtx, n, script_sig=b"", *, amount, script_pub_key=C
     """Return one-input, one-output transaction object
        spending the prevtx's n-th output with the given amount.
 
-       Can optionally pass scriptPubKey and scriptSig, default is anyone-can-spend ouput.
+       Can optionally pass scriptPubKey and scriptSig, default is anyone-can-spend output.
     """
     tx = CTransaction()
     assert(n < len(prevtx.vout))
