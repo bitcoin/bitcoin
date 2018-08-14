@@ -364,20 +364,20 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 		totalPerSenderNode = 100;
 	
 	// create vector of signed transactions and push them to tpstestadd on every sender node distributed evenly
-	string vecTX = "\"[";
+	string vecTX = "[";
 	for (auto& assetTuple : assetMap) {
 		count++;
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsend " + assetTuple.first + " " + assetTuple.second + " \"[{\\\"ownerto\\\":\\\"" + assetAddressMap[assetTuple.first] + "\\\",\\\"amount\\\":1}]\" '' ''"));
 		UniValue arr = r.get_array();
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransaction " + arr[0].get_str() ));
 		string hex_str = find_value(r.get_obj(), "hex").get_str();
-		vecTX += "{\\\"tx\\\":\\\"" + hex_str + "\\\"}";
+		vecTX += "{\"tx\":\"" + hex_str + "\"}";
 		if ((count % totalPerSenderNode) == 0) {
-			vecTX += "]\"";
+			vecTX += "]";
 			if (senderNodeCount >= totalSenderNodes)
 				senderNodeCount = 0;
 			BOOST_CHECK_NO_THROW(CallExtRPC(senders[senderNodeCount], "tpstestadd", "0," + vecTX));
-			vecTX = "\"[";
+			vecTX = "[";
 			senderNodeCount++;
 		}
 		else
