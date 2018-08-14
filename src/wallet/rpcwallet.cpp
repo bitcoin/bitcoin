@@ -4570,11 +4570,6 @@ bool FillPSCT(const CWallet* pwallet, PartiallySignedTransaction& psctx, const C
         const CTxOut& out = txConst->vout.at(i);
         PSCTOutput& psct_out = psctx.outputs.at(i);
 
-        // Dummy tx so we can use ProduceSignature to get stuff out
-        CMutableTransaction dummy_tx;
-        dummy_tx.vin.push_back(CTxIn());
-        dummy_tx.vout.push_back(CTxOut());
-
         // Fill a SignatureData with output info
         SignatureData sigdata;
         psct_out.FillSignatureData(sigdata);
