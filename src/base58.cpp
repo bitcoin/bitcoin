@@ -164,8 +164,14 @@ void CBase58Data::SetData(const std::vector<unsigned char>& vchVersionIn, const 
     SetData(vchVersionIn, (void*)pbegin, pend - pbegin);
 }
 
-bool CBase58Data::SetString(const char* psz, unsigned int nVersionBytes)
+bool CBase58Data::SetString(const char* psz)
 {
+    unsigned int nVersionBytes = 3;
+    if(Params().NetworkID() == CBaseChainParams::TESTNET)
+    {
+        // Testnet has 't' in front of the prefix
+        nVersionBytes = 4;
+    }
     std::vector<unsigned char> vchTemp;
     bool rc58 = DecodeBase58Check(psz, vchTemp);
     if ((!rc58) || (vchTemp.size() < nVersionBytes)) {
