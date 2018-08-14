@@ -306,7 +306,7 @@ void AssetsDialog::on_sendButton_clicked()
     for (SendAssetsRecipient &rcp : recipients)
     {
         // generate bold amount string
-        QString amount = "<b>" + QString::fromStdString(StringFromAmount(rcp.amount, 8)) + " " + rcp.assetName;
+        QString amount = "<b>" + QString::fromStdString(ValueFromAmountString(rcp.amount, 8)) + " " + rcp.assetName;
         amount.append("</b>");
         // generate monospace address string
         QString address = "<span style='font-family: monospace;'>" + rcp.address;

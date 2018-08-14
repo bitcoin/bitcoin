@@ -383,7 +383,7 @@ void ReissueAssetDialog::onReissueAssetClicked()
     QStringList formatted;
 
     // generate bold amount string
-    QString amount = "<b>" + QString::fromStdString(StringFromAmount(GetReissueAssetBurnAmount(), 8)) + " RVN";
+    QString amount = "<b>" + QString::fromStdString(ValueFromAmountString(GetReissueAssetBurnAmount(), 8)) + " RVN";
     amount.append("</b>");
     // generate monospace address string
     QString addressburn = "<span style='font-family: monospace;'>" + QString::fromStdString(Params().ReissueAssetBurnAddress());
@@ -394,7 +394,7 @@ void ReissueAssetDialog::onReissueAssetClicked()
     formatted.append(recipientElement1);
 
     // generate the bold asset amount
-    QString assetAmount = "<b>" + QString::fromStdString(StringFromAmount(reissueAsset.nAmount, 8)) + " " + QString::fromStdString(reissueAsset.strName);
+    QString assetAmount = "<b>" + QString::fromStdString(ValueFromAmountString(reissueAsset.nAmount, 8)) + " " + QString::fromStdString(reissueAsset.strName);
     assetAmount.append("</b>");
 
     // generate the monospace address string
