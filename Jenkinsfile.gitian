@@ -88,7 +88,7 @@ for(int i = 0; i < targets.size(); i++) {
         }
         stage("${target}/base-vm") {
           dir('gitian-builder') {
-            sh "./bin/make-base-vm --suite trusty --arch amd64 --docker"
+            sh "./bin/make-base-vm --suite bionic --arch amd64 --docker"
           }
         }
 
