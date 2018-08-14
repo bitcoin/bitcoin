@@ -6,6 +6,7 @@
 #ifndef BITCOIN_KEY_IO_H
 #define BITCOIN_KEY_IO_H
 
+#include <attributes.h>
 #include <chainparams.h>
 #include <key.h>
 #include <pubkey.h>
@@ -17,10 +18,10 @@ CKey DecodeSecret(const std::string& str);
 std::string EncodeSecret(const CKey& key);
 
 //! Returns true if and only if extkey is valid (extkey.key.IsValid()) when the function returns.
-bool DecodeExtKey(const std::string& str, CExtKey& extkey);
+NODISCARD bool DecodeExtKey(const std::string& str, CExtKey& extkey);
 std::string EncodeExtKey(const CExtKey& extkey);
 //! Returns true if and only if extpubkey is valid (extpubkey.pubkey.IsValid()) when the function returns.
-bool DecodeExtPubKey(const std::string& str, CExtPubKey& extpubkey);
+NODISCARD bool DecodeExtPubKey(const std::string& str, CExtPubKey& extpubkey);
 std::string EncodeExtPubKey(const CExtPubKey& extpubkey);
 
 std::string EncodeDestination(const CTxDestination& dest);
