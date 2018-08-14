@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	receiver.push_back("node3");
 	BOOST_CHECK(receiver.size() == 1);
 
-	int numberOfTransactionToSend = 100;
+	int numberOfTransactionToSend = 500;
 	// create 1000 addresses and assets for each asset	
 	printf("creating sender addresses/assets...\n");
 	for (int i = 0; i < numberOfTransactionToSend; i++) {
