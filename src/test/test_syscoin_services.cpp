@@ -43,9 +43,7 @@ void InitNodeURLMap() {
 	mapNodes["node1"] = "http://127.0.0.1:28379";
 	mapNodes["node2"] = "http://127.0.0.1:38379";
 	mapNodes["node3"] = "http://127.0.0.1:48379";
-	mapNodes["node4"] = "http://10.2.0.2:8369";
-	mapNodes["node5"] = "http://10.2.0.6:8369";
-	mapNodes["node6"] = "http://10.2.0.10:8369";
+
 }
 // lookup the URL based on node alias passed in
 string LookupURL(const string& node) {
@@ -118,7 +116,7 @@ void StartNode(const string &dataDir, bool regTest, const string& extraArgs)
 		boost::filesystem::remove(boost::filesystem::system_complete(dataDir + "/wallet.dat"));
 	}
 	boost::filesystem::path fpath = boost::filesystem::system_complete("../syscoind");
-	string nodePath = fpath.string() + string(" -unittest -assetallocationindex -datadir=") + dataDir;
+	string nodePath = fpath.string() + string(" -unittest -assetallocationindex -tpstest -datadir=") + dataDir;
 	if (regTest)
 		nodePath += string(" -regtest -addressindex");
 	if (!extraArgs.empty())
