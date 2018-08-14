@@ -161,15 +161,21 @@ void OverviewPage::setBalance(const interfaces::WalletBalances& balances)
 {
     int unit = walletModel->getOptionsModel()->getDisplayUnit();
     m_balances = balances;
-    ui->labelBalance->setText(SyscoinUnits::formatWithUnit(unit, balances.balance, false, SyscoinUnits::separatorAlways));
-    ui->labelUnconfirmed->setText(SyscoinUnits::formatWithUnit(unit, balances.unconfirmed_balance, false, SyscoinUnits::separatorAlways));
-    ui->labelImmature->setText(SyscoinUnits::formatWithUnit(unit, balances.immature_balance, false, SyscoinUnits::separatorAlways));
-    ui->labelTotal->setText(SyscoinUnits::formatWithUnit(unit, balances.balance + balances.unconfirmed_balance + balances.immature_balance, false, SyscoinUnits::separatorAlways));
-    ui->labelWatchAvailable->setText(SyscoinUnits::formatWithUnit(unit, balances.watch_only_balance, false, SyscoinUnits::separatorAlways));
-    ui->labelWatchPending->setText(SyscoinUnits::formatWithUnit(unit, balances.unconfirmed_watch_only_balance, false, SyscoinUnits::separatorAlways));
-    ui->labelWatchImmature->setText(SyscoinUnits::formatWithUnit(unit, balances.immature_watch_only_balance, false, SyscoinUnits::separatorAlways));
-    ui->labelWatchTotal->setText(SyscoinUnits::formatWithUnit(unit, balances.watch_only_balance + balances.unconfirmed_watch_only_balance + balances.immature_watch_only_balance, false, SyscoinUnits::separatorAlways));
-
+    if (walletModel->privateKeysDisabled()) {
+        ui->labelBalance->setText(SyscoinUnits::formatWithUnit(unit, balances.watch_only_balance, false, SyscoinUnits::separatorAlways));
+        ui->labelUnconfirmed->setText(SyscoinUnits::formatWithUnit(unit, balances.unconfirmed_watch_only_balance, false, SyscoinUnits::separatorAlways));
+        ui->labelImmature->setText(SyscoinUnits::formatWithUnit(unit, balances.immature_watch_only_balance, false, SyscoinUnits::separatorAlways));
+        ui->labelTotal->setText(SyscoinUnits::formatWithUnit(unit, balances.watch_only_balance + balances.unconfirmed_watch_only_balance + balances.immature_watch_only_balance, false, SyscoinUnits::separatorAlways));
+    } else {
+        ui->labelBalance->setText(SyscoinUnits::formatWithUnit(unit, balances.balance, false, SyscoinUnits::separatorAlways));
+        ui->labelUnconfirmed->setText(SyscoinUnits::formatWithUnit(unit, balances.unconfirmed_balance, false, SyscoinUnits::separatorAlways));
+        ui->labelImmature->setText(SyscoinUnits::formatWithUnit(unit, balances.immature_balance, false, SyscoinUnits::separatorAlways));
+        ui->labelTotal->setText(SyscoinUnits::formatWithUnit(unit, balances.balance + balances.unconfirmed_balance + balances.immature_balance, false, SyscoinUnits::separatorAlways));
+        ui->labelWatchAvailable->setText(SyscoinUnits::formatWithUnit(unit, balances.watch_only_balance, false, SyscoinUnits::separatorAlways));
+        ui->labelWatchPending->setText(SyscoinUnits::formatWithUnit(unit, balances.unconfirmed_watch_only_balance, false, SyscoinUnits::separatorAlways));
+        ui->labelWatchImmature->setText(SyscoinUnits::formatWithUnit(unit, balances.immature_watch_only_balance, false, SyscoinUnits::separatorAlways));
+        ui->labelWatchTotal->setText(SyscoinUnits::formatWithUnit(unit, balances.watch_only_balance + balances.unconfirmed_watch_only_balance + balances.immature_watch_only_balance, false, SyscoinUnits::separatorAlways));
+    }
     // only show immature (newly mined) balance if it's non-zero, so as not to complicate things
     // for the non-mining users
     bool showImmature = balances.immature_balance != 0;
@@ -178,7 +184,7 @@ void OverviewPage::setBalance(const interfaces::WalletBalances& balances)
     // for symmetry reasons also show immature label when the watch-only one is shown
     ui->labelImmature->setVisible(showImmature || showWatchOnlyImmature);
     ui->labelImmatureText->setVisible(showImmature || showWatchOnlyImmature);
-    ui->labelWatchImmature->setVisible(showWatchOnlyImmature); // show watch-only immature balance
+    ui->labelWatchImmature->setVisible(!walletModel->privateKeysDisabled() && showWatchOnlyImmature); // show watch-only immature balance
 }
 
 // show/hide watch-only labels
@@ -231,8 +237,15 @@ void OverviewPage::setWalletModel(WalletModel *model)
 
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
 
+<<<<<<< HEAD
         updateWatchOnlyLabels(wallet.haveWatchOnly());
         connect(model, SIGNAL(notifyWatchonlyChanged(bool)), this, SLOT(updateWatchOnlyLabels(bool)));
+=======
+        updateWatchOnlyLabels(wallet.haveWatchOnly() && !model->privateKeysDisabled());
+        connect(model, &WalletModel::notifyWatchonlyChanged, [this](bool showWatchOnly) {
+            updateWatchOnlyLabels(showWatchOnly && !walletModel->privateKeysDisabled());
+        });
+>>>>>>> fe1ff5026... Hide spendable label if priveate key is disabled
     }
 
     // update the display unit, to not use the default ("SYS")
