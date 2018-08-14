@@ -71,8 +71,8 @@ void StartNodes()
 	//StopMainNetNodes();
 	printf("Starting 3 nodes in a regtest setup...\n");
 	StartNode("node1");
-	//StartNode("node2");
-	//StartNode("node3");
+	StartNode("node2");
+	StartNode("node3");
 	SelectParams(CBaseChainParams::REGTEST);
 
 }
@@ -104,8 +104,8 @@ void StopMainNetNodes()
 void StopNodes()
 {
 	StopNode("node1");
-	//StopNode("node2");
-	//StopNode("node3");
+	StopNode("node2");
+	StopNode("node3");
 	printf("Done!\n");
 }
 void StartNode(const string &dataDir, bool regTest, const string& extraArgs)
@@ -470,15 +470,15 @@ string GetNewFundedAddress(const string &node) {
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getnewaddress", false, false));
 	string newaddress = r.get_str();
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
-	/*string sendnode = "";
+	string sendnode = "";
 	if (node == "node1")
 		sendnode = "node2";
 	else if (node == "node2")
 		sendnode = "node1";
 	else if (node == "node3")
-		sendnode = "node1";*/
-	BOOST_CHECK_THROW(CallRPC(node, "sendtoaddress " + newaddress + " 10"), runtime_error);
-	//GenerateBlocks(10, sendnode);
+		sendnode = "node1";
+	BOOST_CHECK_THROW(CallRPC(sendnode, "sendtoaddress " + newaddress + " 10"), runtime_error);
+	GenerateBlocks(10, sendnode);
 	GenerateBlocks(10, node);
 	return newaddress;
 }
