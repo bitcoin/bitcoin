@@ -100,11 +100,15 @@ static void RunTest(const TestVector &test) {
 
         // Test private key
         BOOST_CHECK(EncodeExtKey(key) == derive.prv);
-        BOOST_CHECK(DecodeExtKey(derive.prv) == key); //ensure a base58 decoded key also matches
+        CExtKey extkey;
+        BOOST_CHECK(DecodeExtKey(derive.prv, extkey));
+        BOOST_CHECK(extkey == key); // ensure a base58 decoded key also matches
 
         // Test public key
         BOOST_CHECK(EncodeExtPubKey(pubkey) == derive.pub);
-        BOOST_CHECK(DecodeExtPubKey(derive.pub) == pubkey); //ensure a base58 decoded pubkey also matches
+        CExtPubKey extpubkey;
+        BOOST_CHECK(DecodeExtPubKey(derive.pub, extpubkey));
+        BOOST_CHECK(extpubkey == pubkey); // ensure a base58 decoded pubkey also matches
 
         // Derive new keys
         CExtKey keyNew;

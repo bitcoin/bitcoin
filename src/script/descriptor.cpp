@@ -464,9 +464,11 @@ std::unique_ptr<PubkeyProvider> ParsePubkey(const Span<const char>& sp, bool per
             return MakeUnique<ConstPubkeyProvider>(pubkey);
         }
     }
-    CExtKey extkey = DecodeExtKey(str);
-    CExtPubKey extpubkey = DecodeExtPubKey(str);
-    if (!extkey.key.IsValid() && !extpubkey.pubkey.IsValid()) return nullptr;
+    CExtKey extkey;
+    const bool validExtKey = DecodeExtKey(str, extkey);
+    CExtPubKey extpubkey;
+    const bool validExtPubKey = DecodeExtPubKey(str, extpubkey);
+    if (!validExtKey && !validExtPubKey) return nullptr;
     KeyPath path;
     DeriveType type = DeriveType::NO;
     if (split.back() == MakeSpan("*").first(1)) {

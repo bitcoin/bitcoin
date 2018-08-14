@@ -16,9 +16,11 @@
 CKey DecodeSecret(const std::string& str);
 std::string EncodeSecret(const CKey& key);
 
-CExtKey DecodeExtKey(const std::string& str);
+//! Returns true if and only if extkey is valid (extkey.key.IsValid()) when the function returns.
+bool DecodeExtKey(const std::string& str, CExtKey& extkey);
 std::string EncodeExtKey(const CExtKey& extkey);
-CExtPubKey DecodeExtPubKey(const std::string& str);
+//! Returns true if and only if extpubkey is valid (extpubkey.pubkey.IsValid()) when the function returns.
+bool DecodeExtPubKey(const std::string& str, CExtPubKey& extpubkey);
 std::string EncodeExtPubKey(const CExtPubKey& extpubkey);
 
 std::string EncodeDestination(const CTxDestination& dest);
