@@ -75,9 +75,9 @@ public:
         MSG_ERROR = (ICON_ERROR | BTN_OK | MODAL)
     };
 
-#define ADD_SIGNALS_DECL_WRAPPER(signal_name, rtype, args...)                              \
-    rtype signal_name(args);                                                               \
-    using signal_name##Sig = rtype(args);                                                  \
+#define ADD_SIGNALS_DECL_WRAPPER(signal_name, rtype, ...)                                  \
+    rtype signal_name(__VA_ARGS__);                                                        \
+    using signal_name##Sig = rtype(__VA_ARGS__);                                           \
     boost::signals2::connection signal_name##_connect(std::function<signal_name##Sig> fn); \
     void signal_name##_disconnect(std::function<signal_name##Sig> fn);
 
