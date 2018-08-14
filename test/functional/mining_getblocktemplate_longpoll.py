@@ -15,8 +15,8 @@ class LongpollThread(threading.Thread):
     def __init__(self, node):
         threading.Thread.__init__(self)
         # query current longpollid
-        templat = node.getblocktemplate()
-        self.longpollid = templat['longpollid']
+        template = node.getblocktemplate()
+        self.longpollid = template['longpollid']
         # create a new connection to the node, we can't use the same
         # connection from two threads
         self.node = get_rpc_proxy(node.url, 1, timeout=600, coveragedir=node.coverage_dir)
@@ -31,11 +31,11 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
     def run_test(self):
         self.log.info("Warning: this test will take about 70 seconds in the best case. Be patient.")
         self.nodes[0].generate(10)
-        templat = self.nodes[0].getblocktemplate()
-        longpollid = templat['longpollid']
+        template = self.nodes[0].getblocktemplate()
+        longpollid = template['longpollid']
         # longpollid should not change between successive invocations if nothing else happens
-        templat2 = self.nodes[0].getblocktemplate()
-        assert(templat2['longpollid'] == longpollid)
+        template2 = self.nodes[0].getblocktemplate()
+        assert(template2['longpollid'] == longpollid)
 
         # Test 1: test that the longpolling wait if we do nothing
         thr = LongpollThread(self.nodes[0])

@@ -96,7 +96,7 @@ Comment: Site: https://bitcointalk.org/?topic=1756.0
 Files: src/qt/res/icons/proxy.png
        src/qt/res/src/proxy.svg
 Copyright: Cristian Mircea Messel
-Licese: public-domain
+License: public-domain
 
 
 License: Expat
