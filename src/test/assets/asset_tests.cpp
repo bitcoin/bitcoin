@@ -7,6 +7,7 @@
 #include <test/test_raven.h>
 
 #include <boost/test/unit_test.hpp>
+#include "core_write.cpp"
 
 #include <amount.h>
 #include <base58.h>
@@ -216,6 +217,28 @@ BOOST_FIXTURE_TEST_SUITE(asset_tests, BasicTestingSetup)
         int32_t shifted = new_version >> 28;
 
         BOOST_CHECK_MESSAGE(shifted == 3, "New version didn't equal 3");
+    }
+
+    BOOST_AUTO_TEST_CASE(asset_formatting) {
+
+        CAmount amount = 50000010000;
+        BOOST_CHECK(ValueFromAmountString(amount, 4) == "500.0001");
+
+        amount = 100;
+        BOOST_CHECK(ValueFromAmountString(amount, 6) == "0.000001");
+
+        amount = 1000;
+        BOOST_CHECK(ValueFromAmountString(amount, 6) == "0.000010");
+
+        amount = 50010101010;
+        BOOST_CHECK(ValueFromAmountString(amount, 8) == "500.10101010");
+
+        amount = 111111111;
+        BOOST_CHECK(ValueFromAmountString(amount, 8) == "1.11111111");
+
+        amount = 1;
+        BOOST_CHECK(ValueFromAmountString(amount, 8) == "0.00000001");
+
     }
 
 BOOST_AUTO_TEST_SUITE_END()

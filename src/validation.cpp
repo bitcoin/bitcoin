@@ -3521,10 +3521,6 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
             std::string strAddress;
             if (!ReissueAssetFromTransaction(*tx, reissue, strAddress))
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-reissue-asset");
-
-            std::string strError = "";
-            if (!reissue.IsValid(strError, *assetCache))
-                return state.DoS(100, false, REJECT_INVALID, "bad-txns-" + strError);
         }
     }
 
