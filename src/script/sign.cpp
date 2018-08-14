@@ -244,17 +244,33 @@ bool SignPSBTInput(const SigningProvider& provider, const CMutableTransaction& t
     input.FillSignatureData(sigdata);
 
     // Get UTXO
+    bool require_witness_sig = false;
     CTxOut utxo;
     if (input.non_witness_utxo) {
+        // If we're taking our information from a non-witness UTXO, verify that it matches the prevout.
+        if (input.non_witness_utxo->GetHash() != tx.vin[index].prevout.hash) return false;
+        // If both witness and non-witness UTXO are provided, verify that they match. This check shouldn't
+        // matter, as the PSBT deserializer enforces only one of both is provided, and the only way both
+        // can be present is when they're added simultaneously by FillPSBT (in which case they always match).
+        // Still, check in order to not rely on callers to enforce this.
+        if (!input.witness_utxo.IsNull() && input.non_witness_utxo->vout[tx.vin[index].prevout.n] != input.witness_utxo) return false;
         utxo = input.non_witness_utxo->vout[tx.vin[index].prevout.n];
     } else if (!input.witness_utxo.IsNull()) {
         utxo = input.witness_utxo;
+        // When we're taking our information from a witness UTXO, we can't verify it is actually data from
+        // the output being spent. This is safe in case a witness signature is produced (which includes this
+        // information directly in the hash), but not for non-witness signatures. Remember that we require
+        // a witness signature in this situation.
+        require_witness_sig = true;
     } else {
         return false;
     }
 
     MutableTransactionSignatureCreator creator(&tx, index, utxo.nValue, sighash);
+    sigdata.witness = false;
     bool sig_complete = ProduceSignature(provider, creator, utxo.scriptPubKey, sigdata);
+    // Verify that a witness signature was produced in case one was required.
+    if (require_witness_sig && !sigdata.witness) return false;
     input.FromSignatureData(sigdata);
     return sig_complete;
 }
