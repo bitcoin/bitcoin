@@ -28,12 +28,17 @@ public:
     }
 
     std::string formattedQuantity() {
-        int64_t quotient = quantity / COIN;
-        if (units == 0) {
-            return strprintf("%d", quotient);
-        } else {
-            int64_t remainder = quantity % COIN;
-            return strprintf("%d.%0" + std::to_string(units) + "d", quotient, remainder);
+        bool sign = quantity < 0;
+        int64_t n_abs = (sign ? -quantity : quantity);
+        int64_t quotient = n_abs / COIN;
+        int64_t remainder = n_abs % COIN;
+        remainder = remainder / pow(10, 8 - units);
+
+        if (units == 0 && remainder == 0) {
+            return strprintf("%s%d", sign ? "-" : "", quotient);
+        }
+        else {
+            return strprintf("%s%d.%0" + std::to_string(units) + "d", sign ? "-" : "", quotient, remainder);
         }
     }
 

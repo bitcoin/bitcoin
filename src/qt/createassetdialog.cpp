@@ -273,7 +273,7 @@ void CreateAssetDialog::onCreateAssetClicked()
     QStringList formatted;
 
     // generate bold amount string
-    QString amount = "<b>" + QString::fromStdString(StringFromAmount(GetIssueAssetBurnAmount(), 8)) + " RVN";
+    QString amount = "<b>" + QString::fromStdString(ValueFromAmountString(GetIssueAssetBurnAmount(), 8)) + " RVN";
     amount.append("</b>");
     // generate monospace address string
     QString addressburn = "<span style='font-family: monospace;'>" + QString::fromStdString(Params().IssueAssetBurnAddress());
@@ -284,7 +284,7 @@ void CreateAssetDialog::onCreateAssetClicked()
     formatted.append(recipientElement1);
 
     // generate the bold asset amount
-    QString assetAmount = "<b>" + QString::fromStdString(StringFromAmount(asset.nAmount, asset.units)) + " " + QString::fromStdString(asset.strName);
+    QString assetAmount = "<b>" + QString::fromStdString(ValueFromAmountString(asset.nAmount, asset.units)) + " " + QString::fromStdString(asset.strName);
     assetAmount.append("</b>");
 
     // generate the monospace address string

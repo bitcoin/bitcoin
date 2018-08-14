@@ -284,7 +284,7 @@ void SendAssetsEntry::onAssetSelected(int index)
             }
 
             ui->assetAmountLabel->setText(
-                    "Balance: <b>" + QString::fromStdString(StringFromAmount(amount, units)) + "</b> " + name + bang);
+                    "Balance: <b>" + QString::fromStdString(ValueFromAmountString(amount, units)) + "</b> " + name + bang);
 
             ui->messageLabel->hide();
             ui->messageTextLabel->hide();
