@@ -387,10 +387,12 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
             "  \"bits\" : \"xxxxxxxx\",              (string) compressed target of next block\n"
             "  \"previousbits\" : \"xxxxxxxx\",      (string) compressed target of current highest block\n"
             "  \"height\" : n                      (numeric) The height of the next block\n"
-            "  \"masternode\" : {                  (json object) required masternode payee that must be included in the next block\n"
-            "      \"payee\" : \"xxxx\",             (string) payee address\n"
-            "      \"script\" : \"xxxx\",            (string) payee scriptPubKey\n"
-            "      \"amount\": n                   (numeric) required amount to pay\n"
+            "  \"masternode\" : [                  (array) required masternode payments that must be included in the next block\n"
+            "      {\n"
+            "         \"payee\" : \"xxxx\",          (string) payee address\n"
+            "         \"script\" : \"xxxx\",         (string) payee scriptPubKey\n"
+            "         \"amount\": n                (numeric) required amount to pay\n"
+            "      }\n"
             "  },\n"
             "  \"masternode_payments_started\" :  true|false, (boolean) true, if masternode payments started\n"
             "  \"masternode_payments_enforced\" : true|false, (boolean) true, if masternode payments are enforced\n"
@@ -491,10 +493,10 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     }
 
     // when enforcement is on we need information about a masternode payee or otherwise our block is going to be orphaned by the network
-    CScript payee;
+    std::vector<CTxOut> voutMasternodePayments;
     if (sporkManager.IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)
         && !masternodeSync.IsWinnersListSynced()
-        && !mnpayments.GetBlockPayee(chainActive.Height() + 1, payee))
+        && !mnpayments.GetBlockTxOuts(chainActive.Height() + 1, 0, voutMasternodePayments))
             throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Dash Core is downloading masternode winners...");
 
     // next bock is a superblock and we need governance info to correctly construct it
@@ -700,22 +702,26 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     result.push_back(Pair("previousbits", strprintf("%08x", pblocktemplate->nPrevBits)));
     result.push_back(Pair("height", (int64_t)(pindexPrev->nHeight+1)));
 
-    UniValue masternodeObj(UniValue::VOBJ);
-    if(pblocktemplate->txoutMasternode != CTxOut()) {
+    UniValue masternodeObj(UniValue::VARR);
+    for (const auto& txout : pblocktemplate->voutMasternodePayments) {
         CTxDestination address1;
-        ExtractDestination(pblocktemplate->txoutMasternode.scriptPubKey, address1);
+        ExtractDestination(txout.scriptPubKey, address1);
         CBitcoinAddress address2(address1);
-        masternodeObj.push_back(Pair("payee", address2.ToString().c_str()));
-        masternodeObj.push_back(Pair("script", HexStr(pblocktemplate->txoutMasternode.scriptPubKey)));
-        masternodeObj.push_back(Pair("amount", pblocktemplate->txoutMasternode.nValue));
+
+        UniValue obj(UniValue::VOBJ);
+        obj.push_back(Pair("payee", address2.ToString().c_str()));
+        obj.push_back(Pair("script", HexStr(txout.scriptPubKey)));
+        obj.push_back(Pair("amount", txout.nValue));
+        masternodeObj.push_back(obj);
     }
+
     result.push_back(Pair("masternode", masternodeObj));
     result.push_back(Pair("masternode_payments_started", pindexPrev->nHeight + 1 > consensusParams.nMasternodePaymentsStartBlock));
     result.push_back(Pair("masternode_payments_enforced", sporkManager.IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)));
 
     UniValue superblockObjArray(UniValue::VARR);
-    if(pblocktemplate->voutSuperblock.size()) {
-        for (const auto& txout : pblocktemplate->voutSuperblock) {
+    if(pblocktemplate->voutSuperblockPayments.size()) {
+        for (const auto& txout : pblocktemplate->voutSuperblockPayments) {
             UniValue entry(UniValue::VOBJ);
             CTxDestination address1;
             ExtractDestination(txout.scriptPubKey, address1);
