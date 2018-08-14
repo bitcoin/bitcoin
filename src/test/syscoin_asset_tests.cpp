@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	receiver.push_back("node3");
 	BOOST_CHECK(receiver.size() == 1);
 
-	int numberOfTransactionToSend = 500;
+	int numberOfTransactionToSend = 2500;
 	// create 1000 addresses and assets for each asset	
 	printf("creating sender addresses/assets...\n");
 	for (int i = 0; i < numberOfTransactionToSend; i++) {
@@ -346,7 +346,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 		assetMap[guid] = address2;
 		assetAddressMap[guid] = address1;
 		if (i % 100 == 0)
-			printf("%.2f percentage done\n", 10.0f / (numberOfTransactionToSend / (i + 1)));
+			printf("%.2f percentage done\n", 100.0f * ((i + 1)/numberOfTransactionToSend));
 
 	}
 
@@ -384,7 +384,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 			vecTX += ",";
 
 		if (count % 100 == 0)
-			printf("%.2f percentage done\n", 10.0f / (numberOfTransactionToSend / count));
+			printf("%.2f percentage done\n", 100.0f * (count/numberOfTransactionToSend));
 
 
 	}
