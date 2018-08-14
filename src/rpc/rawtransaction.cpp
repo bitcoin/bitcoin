@@ -436,7 +436,7 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
         }
     }
 
-    if (!rbf.isNull() && rbfOptIn != SignalsOptInRBF(rawTx)) {
+    if (!rbf.isNull() && rawTx.vin.size() > 0 && rbfOptIn != SignalsOptInRBF(rawTx)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter combination: Sequence number(s) contradict replaceable option");
     }
 
