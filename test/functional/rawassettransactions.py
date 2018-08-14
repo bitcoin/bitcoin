@@ -85,10 +85,10 @@ class RawAssetTransactionsTest(RavenTestFramework):
         assert_equal(1, self.nodes[0].listmyassets('TEST_ASSET!')['TEST_ASSET!'])
 
         self.sync_all()
-        # ########################################
-        # # transfer
+
+        ########################################
+        # transfer
         remote_to_address = self.nodes[1].getnewaddress()
-        change_asset_address = self.nodes[0].getnewaddress()
         unspent = self.nodes[0].listunspent()[0]
         unspent_asset = self.nodes[0].listmyassets('TEST_ASSET', True)['TEST_ASSET']['outpoints'][0]
         inputs = [
@@ -146,6 +146,50 @@ class RawAssetTransactionsTest(RavenTestFramework):
         tampered_hex = bytes_to_hex_str(tx.serialize())
         assert_raises_rpc_error(-26, "mandatory-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation)",
                                 self.nodes[0].sendrawtransaction, tampered_hex)
+
+        ########################################
+        # try tampering with asset outs so ins and outs don't add up
+        for n in (-20, -2, -1, 1, 2, 20):
+            bad_outputs = {
+                change_address: float(unspent['amount']) - 0.0001,
+                remote_to_address: {
+                    'transfer': {
+                        'TEST_ASSET': 400
+                    }
+                },
+                to_address: {
+                    'transfer': {
+                        'TEST_ASSET': float(unspent_asset['amount']) - (400 + n)
+                    }
+                }
+            }
+            tx_bad_transfer = self.nodes[0].createrawtransaction(inputs, bad_outputs)
+            tx_bad_transfer_signed = self.nodes[0].signrawtransaction(tx_bad_transfer)
+            tx_bad_hex = tx_bad_transfer_signed['hex']
+            assert_raises_rpc_error(-26, "bad-tx-asset-inputs-amount-mismatch-with-outputs-amount",
+                                    self.nodes[0].sendrawtransaction, tx_bad_hex)
+
+        ########################################
+        # try tampering with asset outs so they don't use proper units
+        for n in (-0.1, -0.00000001, 0.1, 0.00000001):
+            bad_outputs = {
+                change_address: float(unspent['amount']) - 0.0001,
+                remote_to_address: {
+                    'transfer': {
+                        'TEST_ASSET': (400 + n)
+                    }
+                },
+                to_address: {
+                    'transfer': {
+                        'TEST_ASSET': float(unspent_asset['amount']) - (400 + n)
+                    }
+                }
+            }
+            tx_bad_transfer = self.nodes[0].createrawtransaction(inputs, bad_outputs)
+            tx_bad_transfer_signed = self.nodes[0].signrawtransaction(tx_bad_transfer)
+            tx_bad_hex = tx_bad_transfer_signed['hex']
+            assert_raises_rpc_error(-26, "bad-txns-transfer-asset-amount-not-match-units",
+                                    self.nodes[0].sendrawtransaction, tx_bad_hex)
 
         ########################################
         # send the good transfer

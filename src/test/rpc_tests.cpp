@@ -38,23 +38,7 @@ UniValue CallRPC(std::string args)
     }
 }
 
-// asset fixtures
-static const std::string ok_address = "R9hNxkyzXrHmpxg7Z1qbW1PrKFriqzXBAU";
-static const std::string bad_address = "X9hNxkyzXrHmpxg7Z1qbW1PrKFriqzXBAU";
-
 BOOST_FIXTURE_TEST_SUITE(rpc_tests, TestingSetup)
-
-BOOST_AUTO_TEST_CASE(rpc_assets_getaddressbalances)
-{
-    // missing required params
-    BOOST_CHECK_THROW(CallRPC("listassetbalancesbyaddress"), std::runtime_error);
-
-    // valid params
-    BOOST_CHECK_NO_THROW(CallRPC(std::string("listassetbalancesbyaddress ")+ok_address));
-
-    // invalid address
-    BOOST_CHECK_THROW(CallRPC(std::string("listassetbalancesbyaddress ")+bad_address), std::runtime_error);
-}
 
 BOOST_AUTO_TEST_CASE(rpc_rawparams)
 {
