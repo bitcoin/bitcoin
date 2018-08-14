@@ -199,31 +199,16 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, CAssetsCa
                     if (!TransferAssetFromScript(txout.scriptPubKey, transfer, address))
                         return state.DoS(100, false, REJECT_INVALID, "bad-txns-transfer-asset-bad-deserialize");
 
-                    // If we aren't reindexing
-                    if (!fReindex) {
-                        // If the transfer is an ownership asset. Check to make sure that it is OWNER_ASSET_AMOUNT
-                        if (IsAssetNameAnOwner(transfer.strName)) {
-                            if (transfer.nAmount != OWNER_ASSET_AMOUNT)
-                                return state.DoS(100, false, REJECT_INVALID, "bad-txns-transfer-owner-amount-was-not-1");
-                        } else {
-                            // For all other types of assets, make sure they are sending the right type of units
-                            CNewAsset asset;
-                            if (!assetCache->GetAssetIfExists(transfer.strName, asset))
-                                return state.DoS(100, false, REJECT_INVALID, "bad-txns-transfer-asset-not-exist");
-
-                            if (asset.strName != transfer.strName)
-                                return state.DoS(100, false, REJECT_INVALID, "bad-txns-asset-database-corrupted");
-
-                            if (transfer.nAmount % int64_t(pow(10, (MAX_UNIT - asset.units))) != 0)
-                                return state.DoS(100, false, REJECT_INVALID,
-                                                 "bad-txns-transfer-asset-amount-not-match-units");
-                        }
+                    // If the transfer is an ownership asset. Check to make sure that it is OWNER_ASSET_AMOUNT
+                    if (IsAssetNameAnOwner(transfer.strName)) {
+                        if (transfer.nAmount != OWNER_ASSET_AMOUNT)
+                            return state.DoS(100, false, REJECT_INVALID, "bad-txns-transfer-owner-amount-was-not-1");
                     }
                 }
             }
         }
-        /** RVN END */
     }
+        /** RVN END */
 
     // Check for duplicate inputs - note that this check is slow so we skip it in CheckBlock
     if (fCheckDuplicateInputs) {
@@ -384,6 +369,35 @@ bool Consensus::CheckTxAssets(const CTransaction& tx, CValidationState& state, c
                 totalOutputs.at(transfer.strName) += transfer.nAmount;
             else
                 totalOutputs.insert(make_pair(transfer.strName, transfer.nAmount));
+
+            if (IsAssetNameAnOwner(transfer.strName)) {
+                if (transfer.nAmount != OWNER_ASSET_AMOUNT)
+                    return state.DoS(100, false, REJECT_INVALID, "bad-txns-transfer-owner-amount-was-not-1");
+            } else {
+                    // For all other types of assets, make sure they are sending the right type of units
+                    CNewAsset asset;
+                    if (!passets->GetAssetIfExists(transfer.strName, asset))
+                        return state.DoS(100, false, REJECT_INVALID, "bad-txns-transfer-asset-not-exist");
+
+                    if (asset.strName != transfer.strName)
+                        return state.DoS(100, false, REJECT_INVALID, "bad-txns-asset-database-corrupted");
+
+                    if (transfer.nAmount % int64_t(pow(10, (MAX_UNIT - asset.units))) != 0)
+                        return state.DoS(100, false, REJECT_INVALID,
+                                         "bad-txns-transfer-asset-amount-not-match-units");
+            }
+        } else if (txout.scriptPubKey.IsReissueAsset()) {
+            CReissueAsset reissue;
+            std::string address;
+            if (!ReissueAssetFromScript(txout.scriptPubKey, reissue, address))
+                return state.DoS(100, false, REJECT_INVALID, "bad-tx-asset-reissue-bad-deserialize");
+
+            std::string strError;
+            if (!reissue.IsValid(strError, *passets)) {
+                return state.DoS(100, false, REJECT_INVALID,
+                                 "bad-txns" + strError);
+            }
+
         }
     }
 
