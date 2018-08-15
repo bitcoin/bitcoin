@@ -104,11 +104,55 @@ static void RunTest(const TestVector &test) {
         BOOST_CHECK(DecodeExtKey(derive.prv, extkey));
         BOOST_CHECK(extkey == key); // ensure a base58 decoded key also matches
 
+        // Test DecodeExtKey with some valid and some invalid private keys
+        CExtKey extkeyTmp;
+        BOOST_CHECK(DecodeExtKey(" " + derive.prv, extkeyTmp));
+        BOOST_CHECK(!DecodeExtKey("_" + derive.prv, extkeyTmp));
+        BOOST_CHECK(DecodeExtKey(derive.prv + " ", extkeyTmp));
+        BOOST_CHECK(!DecodeExtKey(derive.prv + "A", extkeyTmp));
+        BOOST_CHECK(DecodeExtKey("\n" + derive.prv, extkeyTmp));
+        BOOST_CHECK(!DecodeExtKey("A" + derive.prv, extkeyTmp));
+        BOOST_CHECK(DecodeExtKey("\n\n\n\n" + derive.prv + "\n\n\n\n", extkeyTmp));
+        BOOST_CHECK(!DecodeExtKey("invalid" + derive.prv, extkeyTmp));
+        BOOST_CHECK(DecodeExtKey(" \r\t\n" + derive.prv + " \n\t\r", extkeyTmp));
+        BOOST_CHECK(!DecodeExtKey(derive.prv + derive.prv, extkeyTmp));
+        BOOST_CHECK(DecodeExtKey("\r" + derive.prv, extkeyTmp));
+        BOOST_CHECK(!DecodeExtKey("\r\a" + derive.prv, extkeyTmp));
+        BOOST_CHECK(DecodeExtKey("\t" + derive.prv, extkeyTmp));
+        BOOST_CHECK(!DecodeExtKey("\a\t" + derive.prv, extkeyTmp));
+        BOOST_CHECK(DecodeExtKey(derive.prv + "\n", extkeyTmp));
+        BOOST_CHECK(!DecodeExtKey(derive.prv + "\a\n", extkeyTmp));
+        BOOST_CHECK(DecodeExtKey(derive.prv + "\r", extkeyTmp));
+        BOOST_CHECK(!DecodeExtKey(derive.prv + "\r\a", extkeyTmp));
+        BOOST_CHECK(!DecodeExtKey(derive.pub, extkeyTmp));
+
         // Test public key
         BOOST_CHECK(EncodeExtPubKey(pubkey) == derive.pub);
         CExtPubKey extpubkey;
         BOOST_CHECK(DecodeExtPubKey(derive.pub, extpubkey));
         BOOST_CHECK(extpubkey == pubkey); // ensure a base58 decoded pubkey also matches
+
+        // Test DecodeExtPubKey with some valid and some invalid public keys
+        CExtPubKey extpubkeyTmp;
+        BOOST_CHECK(DecodeExtPubKey(" " + derive.pub, extpubkeyTmp));
+        BOOST_CHECK(!DecodeExtPubKey("_" + derive.pub, extpubkeyTmp));
+        BOOST_CHECK(DecodeExtPubKey(derive.pub + " ", extpubkeyTmp));
+        BOOST_CHECK(!DecodeExtPubKey(derive.pub + "A", extpubkeyTmp));
+        BOOST_CHECK(DecodeExtPubKey("\n" + derive.pub, extpubkeyTmp));
+        BOOST_CHECK(!DecodeExtPubKey("A" + derive.pub, extpubkeyTmp));
+        BOOST_CHECK(DecodeExtPubKey("\n\n\n\n" + derive.pub + "\n\n\n\n", extpubkeyTmp));
+        BOOST_CHECK(!DecodeExtPubKey("invalid" + derive.pub, extpubkeyTmp));
+        BOOST_CHECK(DecodeExtPubKey(" \r\t\n" + derive.pub + " \n\t\r", extpubkeyTmp));
+        BOOST_CHECK(!DecodeExtPubKey(derive.pub + derive.pub, extpubkeyTmp));
+        BOOST_CHECK(DecodeExtPubKey("\r" + derive.pub, extpubkeyTmp));
+        BOOST_CHECK(!DecodeExtPubKey("\r\a" + derive.pub, extpubkeyTmp));
+        BOOST_CHECK(DecodeExtPubKey("\t" + derive.pub, extpubkeyTmp));
+        BOOST_CHECK(!DecodeExtPubKey("\a\t" + derive.pub, extpubkeyTmp));
+        BOOST_CHECK(DecodeExtPubKey(derive.pub + "\n", extpubkeyTmp));
+        BOOST_CHECK(!DecodeExtPubKey(derive.pub + "\a\n", extpubkeyTmp));
+        BOOST_CHECK(DecodeExtPubKey(derive.pub + "\r", extpubkeyTmp));
+        BOOST_CHECK(!DecodeExtPubKey(derive.pub + "\r\a", extpubkeyTmp));
+        BOOST_CHECK(!DecodeExtPubKey(derive.prv, extpubkeyTmp));
 
         // Derive new keys
         CExtKey keyNew;
