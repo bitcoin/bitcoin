@@ -221,7 +221,7 @@ void CPrivateSendServer::ProcessModuleMessage(CNode* pfrom, const std::string& s
                 if(GetUTXOCoin(txin.prevout, coin)) {
                     nValueIn += coin.out.nValue;
                 } else {
-                    LogPrintf("DSVIN -- missing input! tx=%s", tx.GetHash().ToString());
+                    LogPrintf("DSVIN -- missing input! tx=%s\n", tx.GetHash().ToString());
                     PushStatus(pfrom, STATUS_REJECTED, ERR_MISSING_TX, connman);
                     return;
                 }
@@ -230,7 +230,7 @@ void CPrivateSendServer::ProcessModuleMessage(CNode* pfrom, const std::string& s
             // There should be no fee in mixing tx
             CAmount nFee = nValueIn - nValueOut;
             if(nFee != 0) {
-                LogPrintf("DSVIN -- there should be no fee in mixing tx! fees: %lld, tx=%s", nFee, tx.GetHash().ToString());
+                LogPrintf("DSVIN -- there should be no fee in mixing tx! fees: %lld, tx=%s\n", nFee, tx.GetHash().ToString());
                 PushStatus(pfrom, STATUS_REJECTED, ERR_FEES, connman);
                 return;
             }
@@ -485,7 +485,7 @@ void CPrivateSendServer::ChargeRandomFees(CConnman* connman)
 
     for (const auto& txCollateral : vecSessionCollaterals) {
         if(GetRandInt(100) > 10) return;
-        LogPrintf("CPrivateSendServer::ChargeRandomFees -- charging random fees, txCollateral=%s", txCollateral->GetHash().ToString());
+        LogPrintf("CPrivateSendServer::ChargeRandomFees -- charging random fees, txCollateral=%s\n", txCollateral->GetHash().ToString());
 
         CValidationState state;
         if(!AcceptToMemoryPool(mempool, state, txCollateral, nullptr, nullptr, false, maxTxFee)) {
