@@ -760,7 +760,9 @@ void PeerLogicValidation::InitializeNode(CNode *pnode) {
         mapNodeState.emplace_hint(mapNodeState.end(), std::piecewise_construct, std::forward_as_tuple(nodeid), std::forward_as_tuple(addr, std::move(addrName), pnode->fInbound, pnode->m_manual_connection));
     }
     if (!pnode->fInbound) {
-        if (gArgs.GetBoolArg("-netencryption", DEFAULT_ALLOW_NET_ENCRYPTION)) {
+        // try to encrypt channels if node has the NODE_P2P_V2 service flag or if it was added manually
+        // TODO: don't try for encryption if it has previously failed
+        if (((pnode->nServices & NODE_P2P_V2) || pnode->m_manual_connection) && gArgs.GetBoolArg("-netencryption", DEFAULT_ALLOW_NET_ENCRYPTION)) {
             // send an encryption request
             connman->SendEncryptionHandshakeData(pnode);
         } else {

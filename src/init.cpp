@@ -1698,6 +1698,11 @@ bool AppInitMain(InitInterfaces& interfaces)
         }
     }
 
+    if (gArgs.GetBoolArg("-netencryption", DEFAULT_ALLOW_NET_ENCRYPTION)) {
+        LogPrintf("Setting NODE_P2P_V2\n");
+        nLocalServices = ServiceFlags(nLocalServices | NODE_P2P_V2);
+    }
+
     if (chainparams.GetConsensus().vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout != 0) {
         // Only advertise witness capabilities if they have a reasonable start time.
         // This allows us to have the code merged without a defined softfork, by setting its
