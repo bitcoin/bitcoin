@@ -4671,7 +4671,7 @@ UniValue walletcreatefundedpsct(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 6)
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 5)
         throw std::runtime_error(
                             "walletcreatefundedpsct [{\"txid\":\"id\",\"vout\":n},...] [{\"address\":amount},{\"data\":\"hex\"},...] ( locktime ) ( replaceable ) ( options bip32derivs )\n"
                             "\nCreates and funds a transaction in the Partially Signed Transaction format. Inputs will be added if supplied inputs are not enough\n"
@@ -4698,9 +4698,8 @@ UniValue walletcreatefundedpsct(const JSONRPCRequest& request)
                             "                             accepted as second parameter.\n"
                             "   ]\n"
                             "3. locktime                  (numeric, optional, default=0) Raw locktime. Non-0 value also locktime-activates inputs\n"
-                            "4. replaceable               (boolean, optional, default=false) Marks this transaction as BIP125 replaceable.\n"
                             "                             Allows this transaction to be replaced by a transaction with higher fees. If provided, it is an error if explicit sequence numbers are incompatible.\n"
-                            "5. options                 (object, optional)\n"
+                            "4. options                 (object, optional)\n"
                             "   {\n"
                             "     \"changeAddress\"          (string, optional, default pool address) The chaincoin address to receive the change\n"
                             "     \"changePosition\"         (numeric, optional, default random) The index of the change output\n"
@@ -4722,7 +4721,7 @@ UniValue walletcreatefundedpsct(const JSONRPCRequest& request)
                             "         \"ECONOMICAL\"\n"
                             "         \"CONSERVATIVE\"\n"
                             "   }\n"
-                            "6. bip32derivs                    (boolean, optiona, default=false) If true, includes the BIP 32 derivation paths for public keys if we know them\n"
+                            "5. bip32derivs                    (boolean, optiona, default=false) If true, includes the BIP 32 derivation paths for public keys if we know them\n"
                             "\nResult:\n"
                             "{\n"
                             "  \"psct\": \"value\",        (string)  The resulting raw transaction (base64-encoded string)\n"
@@ -4738,15 +4737,14 @@ UniValue walletcreatefundedpsct(const JSONRPCRequest& request)
         UniValue::VARR,
         UniValueType(), // ARR or OBJ, checked later
         UniValue::VNUM,
-        UniValue::VBOOL,
         UniValue::VOBJ
         }, true
     );
 
     CAmount fee;
     int change_position;
-    CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], request.params[3]);
-    FundTransaction(pwallet, rawTx, fee, change_position, request.params[4]);
+    CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], request.params[3]["replaceable"]);
+    FundTransaction(pwallet, rawTx, fee, change_position, request.params[3]);
 
     // Make a blank psct
     PartiallySignedTransaction psctx;
@@ -4763,7 +4761,7 @@ UniValue walletcreatefundedpsct(const JSONRPCRequest& request)
     const CTransaction txConst(*psctx.tx);
 
     // Fill transaction with out data but don't sign
-    bool bip32derivs = request.params[5].isNull() ? false : request.params[5].get_bool();
+    bool bip32derivs = request.params[4].isNull() ? false : request.params[5].get_bool();
     FillPSCT(pwallet, psctx, &txConst, 1, false, bip32derivs);
 
     // Serialize the PSCT
@@ -4794,7 +4792,7 @@ static const CRPCCommand commands[] =
     //  --------------------- ------------------------          -----------------------         ----------
     { "rawtransactions",    "fundrawtransaction",               &fundrawtransaction,            {"hexstring","options","iswitness"} },
     { "wallet",             "walletprocesspsct",                &walletprocesspsct,             {"psct","sign","sighashtype","bip32derivs"} },
-    { "wallet",             "walletcreatefundedpsct",           &walletcreatefundedpsct,        {"inputs","outputs","locktime","replaceable","options","bip32derivs"} },
+    { "wallet",             "walletcreatefundedpsct",           &walletcreatefundedpsct,        {"inputs","outputs","locktime","options","bip32derivs"} },
     { "hidden",             "resendwallettransactions",         &resendwallettransactions,      {} },
     { "wallet",             "abandontransaction",               &abandontransaction,            {"txid"} },
     { "wallet",             "abortrescan",                      &abortrescan,                   {} },
