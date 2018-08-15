@@ -9,6 +9,7 @@
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <serialize.h>
+#include <span.h>
 
 class CKeyID;
 class CPubKey;
@@ -51,12 +52,12 @@ public:
     void Serialize(Stream &s) const {
         std::vector<unsigned char> compr;
         if (CompressScript(script, compr)) {
-            s << CFlatData(compr);
+            s << MakeSpan(compr);
             return;
         }
         unsigned int nSize = script.size() + nSpecialScripts;
         s << VARINT(nSize);
-        s << CFlatData(script);
+        s << MakeSpan(script);
     }
 
     template<typename Stream>
@@ -65,7 +66,7 @@ public:
         s >> VARINT(nSize);
         if (nSize < nSpecialScripts) {
             std::vector<unsigned char> vch(GetSpecialScriptSize(nSize), 0x00);
-            s >> CFlatData(vch);
+            s >> MakeSpan(vch);
             DecompressScript(script, nSize, vch);
             return;
         }
@@ -76,7 +77,7 @@ public:
             s.ignore(nSize);
         } else {
             script.resize(nSize);
-            s >> CFlatData(script);
+            s >> MakeSpan(script);
         }
     }
 };
