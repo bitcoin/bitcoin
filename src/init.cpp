@@ -98,7 +98,7 @@ public:
     void RegisterRPC(CRPCTable &) override {}
     bool Verify() override {return true;}
     bool Open() override {return true;}
-    void Start(CScheduler& scheduler) override {}
+    void Start(CScheduler& scheduler, CConnman* connman) override {}
     void Flush() override {}
     void Stop() override {}
     void Close() override {}
@@ -106,9 +106,7 @@ public:
 
 static DummyWalletInit g_dummy_wallet_init;
 WalletInitInterface* const g_wallet_init_interface = &g_dummy_wallet_init;
-#endif
 
-#if !(ENABLE_WALLET)
 class DummyWallet : public WalletInterface {
 public:
 
