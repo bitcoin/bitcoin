@@ -282,6 +282,7 @@ BOOST_AUTO_TEST_CASE(generate_range_stress_subtract2)
 BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 {
 	ECC_Start();
+	StartNodes();
 	GenerateSpendableCoins();
 	printf("Running generate_big_assetdata...\n");
 	GenerateBlocks(5);

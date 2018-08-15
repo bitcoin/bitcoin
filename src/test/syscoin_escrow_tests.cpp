@@ -553,6 +553,7 @@ BOOST_AUTO_TEST_CASE(generate_escrowpruning)
 	BOOST_CHECK_THROW(CallRPC("node3", "escrowinfo " + guid1), runtime_error);
 	// cannot leave feedback on expired escrow
 	BOOST_CHECK_THROW(CallRPC("node2", "escrowfeedback " + guid1 + " buyer feedback 2 seller ''"), runtime_error);
+	StopNodes();
 	ECC_Stop();
 }
 
