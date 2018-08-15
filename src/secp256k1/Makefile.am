@@ -86,7 +86,7 @@ bench_sign_SOURCES = src/bench_sign.c
 bench_sign_LDADD = libsecp256k1.la $(SECP_LIBS) $(SECP_TEST_LIBS) $(COMMON_LIB)
 bench_internal_SOURCES = src/bench_internal.c
 bench_internal_LDADD = $(SECP_LIBS) $(COMMON_LIB)
-bench_internal_CPPFLAGS = -DSECP256K1_BUILD $(SECP_INCLUDES)
+bench_internal_CPPFLAGS = -DSECP256K1_BUILD $(SECP_INCLUDES) -I$(top_srcdir)/src
 endif
 
 TESTS =
