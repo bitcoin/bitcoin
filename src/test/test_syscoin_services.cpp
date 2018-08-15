@@ -2716,7 +2716,7 @@ BasicSyscoinTestingSetup::~BasicSyscoinTestingSetup()
 }
 SyscoinTestingSetup::SyscoinTestingSetup()
 {
-	StartNodes();
+	//StartNodes();
 	// rate converstion to SYS
 	pegRates["USD"] = 2690.1;
 	pegRates["EUR"] = 2695.2;
@@ -2728,13 +2728,13 @@ SyscoinTestingSetup::SyscoinTestingSetup()
 }
 SyscoinTestingSetup::~SyscoinTestingSetup()
 {
-	StopNodes();
+	//StopNodes();
 }
 SyscoinMainNetSetup::SyscoinMainNetSetup()
 {
-	StartMainNetNodes();
+	//StartMainNetNodes();
 }
 SyscoinMainNetSetup::~SyscoinMainNetSetup()
 {
-	StopMainNetNodes();
+	//StopMainNetNodes();
 }
