@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_ADDRDB_H
-#define BITCOIN_ADDRDB_H
+#ifndef BITCOIN_CACHEDB_H
+#define BITCOIN_CACHEDB_H
 
 #include <fs.h>
 #include <serialize.h>
@@ -14,6 +14,11 @@
 
 class CSubNet;
 class CAddrMan;
+class CMasternodeMan;
+class CGovernanceManager;
+class CNetFulfilledRequestManager;
+class CMasternodePayments;
+
 class CDataStream;
 
 typedef enum BanReason
@@ -99,4 +104,50 @@ public:
     bool Read(banmap_t& banSet);
 };
 
-#endif // BITCOIN_ADDRDB_H
+// Chaincoin specific cache files
+
+/** Access to the mncache database (mncache.dat) */
+class CMNCacheDB
+{
+private:
+    fs::path pathMNCache;
+public:
+    CMNCacheDB();
+    bool Write(const CMasternodeMan& mncache);
+    bool Read(CMasternodeMan& mncache);
+};
+
+/** Access to the mnpayments database (mnpayments.dat) */
+class CMNPayDB
+{
+private:
+    fs::path pathMNPay;
+public:
+    CMNPayDB();
+    bool Write(const CMasternodePayments& mnpayments);
+    bool Read(CMasternodePayments& mnpayments);
+};
+
+/** Access to the governance database (governance.dat) */
+class CGovDB
+{
+private:
+    fs::path pathGovernance;
+public:
+    CGovDB();
+    bool Write(const CGovernanceManager& governance);
+    bool Read(CGovernanceManager& governance);
+};
+
+/** Access to the netfulfilled database (netfulfilled.dat) */
+class CNetFulDB
+{
+private:
+    fs::path pathNetfulfilled;
+public:
+    CNetFulDB();
+    bool Write(const CNetFulfilledRequestManager& netfulfilled);
+    bool Read(CNetFulfilledRequestManager& netfulfilled);
+};
+
+#endif // BITCOIN_CACHEDB_H

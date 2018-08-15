@@ -77,12 +77,12 @@ endif
 # chaincoin core #
 BITCOIN_CORE_H = \
   activemasternode.h \
-  addrdb.h \
   addrman.h \
   base58.h \
   bech32.h \
   bloom.h \
   blockencodings.h \
+  cachedb.h \
   chain.h \
   chainparams.h \
   chainparamsbase.h \
@@ -214,11 +214,11 @@ libbitcoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CP
 libbitcoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_server_a_SOURCES = \
   activemasternode.cpp \
-  addrdb.cpp \
   addrman.cpp \
   bloom.cpp \
   blockencodings.cpp \
   chain.cpp \
+  cachedb.cpp \
   checkpoints.cpp \
   consensus/tx_verify.cpp \
   httprpc.cpp \

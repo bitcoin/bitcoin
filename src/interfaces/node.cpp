@@ -4,7 +4,7 @@
 
 #include <interfaces/node.h>
 
-#include <addrdb.h>
+#include <cachedb.h>
 #include <amount.h>
 #include <chain.h>
 #include <chainparams.h>

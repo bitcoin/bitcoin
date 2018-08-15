@@ -3,12 +3,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <addrdb.h>
+#include <cachedb.h>
 
 #include <addrman.h>
 #include <chainparams.h>
 #include <clientversion.h>
+#include <governance.h>
 #include <hash.h>
+#include <netfulfilledman.h>
+#include <masternodeman.h>
+#include <masternode-payments.h>
 #include <random.h>
 #include <streams.h>
 #include <tinyformat.h>
@@ -142,4 +146,66 @@ bool CAddrDB::Read(CAddrMan& addr, CDataStream& ssPeers)
         addr.Clear();
     }
     return ret;
+}
+
+// Chaincoin specific cache files
+
+CMNCacheDB::CMNCacheDB()
+{
+    pathMNCache = GetDataDir() / "mncache.dat";
+}
+
+bool CMNCacheDB::Write(const CMasternodeMan& mncache)
+{
+    return SerializeFileDB("mncache", pathMNCache, mncache);
+}
+
+bool CMNCacheDB::Read(CMasternodeMan& mncache)
+{
+    return DeserializeFileDB(pathMNCache, mncache);
+}
+
+CMNPayDB::CMNPayDB()
+{
+    pathMNPay = GetDataDir() / "mnpayments.dat";
+}
+
+bool CMNPayDB::Write(const CMasternodePayments& mnpayments)
+{
+    return SerializeFileDB("mnpayments", pathMNPay, mnpayments);
+}
+
+bool CMNPayDB::Read(CMasternodePayments& mnpayments)
+{
+    return DeserializeFileDB(pathMNPay, mnpayments);
+}
+
+CGovDB::CGovDB()
+{
+    pathGovernance = GetDataDir() / "governance.dat";
+}
+
+bool CGovDB::Write(const CGovernanceManager& governance)
+{
+    return SerializeFileDB("governance", pathGovernance, governance);
+}
+
+bool CGovDB::Read(CGovernanceManager& governance)
+{
+    return DeserializeFileDB(pathGovernance, governance);
+}
+
+CNetFulDB::CNetFulDB()
+{
+    pathNetfulfilled = GetDataDir() / "netfulfilled.dat";
+}
+
+bool CNetFulDB::Write(const CNetFulfilledRequestManager& netfulfilled)
+{
+    return SerializeFileDB("netfulfilled", pathNetfulfilled, netfulfilled);
+}
+
+bool CNetFulDB::Read(CNetFulfilledRequestManager& netfulfilled)
+{
+    return DeserializeFileDB(pathNetfulfilled, netfulfilled);
 }
