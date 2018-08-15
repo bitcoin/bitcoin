@@ -5,7 +5,7 @@
 
 #include <chainparams.h>
 #include <init.h>
-#include <interface/moduleinterface.h>
+#include <interfaces/moduleinterface.h>
 #include <net.h>
 #include <util.h>
 #include <utilmoneystr.h>

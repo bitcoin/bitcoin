@@ -13,7 +13,7 @@ enum class OutputType;
 class AddressTablePriv;
 class WalletModel;
 
-namespace interface {
+namespace interfaces {
 class Wallet;
 }
 
