@@ -218,7 +218,6 @@ const fs::path &GetDataDir(bool fNetSpecific = true);
 fs::path GetBackupsDir();
 void ClearDatadirCache();
 fs::path GetConfigFile(const std::string& confPath);
-fs::path GetMasternodeConfigFile(const std::string& confPath);
 #ifndef WIN32
 fs::path GetPidFile();
 void CreatePidFile(const fs::path &path, pid_t pid);

@@ -770,22 +770,10 @@ fs::path GetConfigFile(const std::string& confPath)
     return AbsPathForConfigVal(fs::path(confPath), false);
 }
 
-void ArgsManager::ReadConfigFile(const std::string& confPath)
-{
-    fs::ifstream streamConfig(GetConfigFile(confPath));
-    if (!streamConfig.good()){
-        // Create empty chaincoin.conf if it does not excist
-        FILE* configFile = fopen(GetConfigFile(confPath).string().c_str(), "a");
-        if (configFile != nullptr)
-            fclose(configFile);
-        return; // Nothing to read, so just return
-    }
-}
-
 void ArgsManager::ReadConfigStream(std::istream& stream)
 {
     if (!stream.good())
-        return; // No bitcoin.conf file is OK
+        return; // No chaincoin.conf file is OK
 
     {
         LOCK(cs_args);
