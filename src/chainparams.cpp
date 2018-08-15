@@ -79,7 +79,7 @@ public:
     CMainParams() {
         strNetworkID = "main";
         consensus.nSubsidyHalvingInterval = 700800; // PM-Tech: ChainCoin // 2 years
-        consensus.nMasternodePaymentsStartBlock = 1800000; // PM-Tech: to be set after activation, for now we are looking at SegWit activation
+        consensus.nMasternodePaymentsStartBlock = 1572480; // PM-Tech: SegWit activation block
         consensus.nMasternodePaymentsIncreaseBlock = 2250000; // PM-Tech: estimation
         consensus.nMasternodePaymentsIncreasePeriod = 175000; // PM-Tech: approx. 6 months
         consensus.nSuperblockStartBlock = 1550000; // PM-Tech: to be defined
@@ -210,7 +210,7 @@ public:
     CTestNetParams() {
         strNetworkID = "test";
         consensus.nSubsidyHalvingInterval = 56600;
-        consensus.nMasternodePaymentsStartBlock = 25000; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
+        consensus.nMasternodePaymentsStartBlock = 48384; // PM-Tech: SegWit activation block
         consensus.nMasternodePaymentsIncreaseBlock = 4030;
         consensus.nMasternodePaymentsIncreasePeriod = 10;
         consensus.nSuperblockStartBlock = 4200; // NOTE: Should satisfy nSuperblockStartBlock > nBudgetPeymentsStartBlock
