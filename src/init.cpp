@@ -13,6 +13,7 @@
 
 #include <addrman.h>
 #include <amount.h>
+#include <cachedb.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <checkpoints.h>
@@ -51,7 +52,6 @@
 
 
 #include <activemasternode.h>
-#include <flat-database.h>
 #include <governance.h>
 #include <masternode-payments.h>
 #include <masternode-sync.h>
@@ -245,14 +245,14 @@ void Shutdown()
 
     if (!fLiteMode) {
         // STORE DATA CACHES INTO SERIALIZED DAT FILES
-        CFlatDB<CMasternodeMan> flatdb1("mncache.dat", "magicMasternodeCache");
-        flatdb1.Dump(mnodeman);
-        CFlatDB<CMasternodePayments> flatdb2("mnpayments.dat", "magicMasternodePaymentsCache");
-        flatdb2.Dump(mnpayments);
-        CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
-        flatdb3.Dump(governance);
-        CFlatDB<CNetFulfilledRequestManager> flatdb4("netfulfilled.dat", "magicFulfilledCache");
-        flatdb4.Dump(netfulfilledman);
+        CMNCacheDB mncachedb;
+        mncachedb.Write(mnodeman);
+        CMNPayDB mnpaydb;
+        mnpaydb.Write(mnpayments);
+        CGovDB govdb;
+        govdb.Write(governance);
+        CNetFulDB netfuldb;
+        netfuldb.Write(netfulfilledman);
     }
 
     StopTorControl();
@@ -1778,41 +1778,35 @@ bool AppInitMain()
     // LOAD SERIALIZED DAT FILES INTO DATA CACHES FOR INTERNAL USE
 
     if (!fLiteMode) {
-        fs::path pathDB = GetDataDir();
-        std::string strDBName;
-
-        strDBName = "mncache.dat";
         uiInterface.InitMessage(_("Loading masternode cache..."));
-        CFlatDB<CMasternodeMan> flatdb1(strDBName, "magicMasternodeCache");
-        if(!flatdb1.Load(mnodeman)) {
-            return InitError(_("Failed to load masternode cache from") + "\n" + (pathDB / strDBName).string());
+        CMNCacheDB mncachedb;
+        if(!mncachedb.Read(mnodeman)) {
+            LogPrintf("Invalid or missing mncache.dat; recreating\n");
+            mncachedb.Write(mnodeman);
         }
-
+        mnodeman.CheckAndRemove();
         if(mnodeman.size()) {
-            strDBName = "mnpayments.dat";
-            uiInterface.InitMessage(_("Loading masternode payment cache..."));
-            CFlatDB<CMasternodePayments> flatdb2(strDBName, "magicMasternodePaymentsCache");
-            if(!flatdb2.Load(mnpayments)) {
-                return InitError(_("Failed to load masternode payments cache from") + "\n" + (pathDB / strDBName).string());
+            CMNPayDB mnpaydb;
+            if(!mnpaydb.Read(mnpayments)) {
+                LogPrintf("Invalid or missing mnpayments.dat; recreating\n");
+                mnpaydb.Write(mnpayments);
             }
-
-            strDBName = "governance.dat";
-            uiInterface.InitMessage(_("Loading governance cache..."));
-            CFlatDB<CGovernanceManager> flatdb3(strDBName, "magicGovernanceCache");
-            if(!flatdb3.Load(governance)) {
-                return InitError(_("Failed to load governance cache from") + "\n" + (pathDB / strDBName).string());
+            mnpayments.CheckAndRemove();
+            CGovDB govdb;
+            if(!govdb.Read(governance)) {
+                LogPrintf("Invalid or missing governance.dat; recreating\n");
+                govdb.Write(governance);
             }
             governance.InitOnLoad();
         } else {
             uiInterface.InitMessage(_("Masternode cache is empty, skipping payments and governance cache..."));
         }
-
-        strDBName = "netfulfilled.dat";
-        uiInterface.InitMessage(_("Loading fulfilled requests cache..."));
-        CFlatDB<CNetFulfilledRequestManager> flatdb4(strDBName, "magicFulfilledCache");
-        if(!flatdb4.Load(netfulfilledman)) {
-            return InitError(_("Failed to load fulfilled requests cache from") + "\n" + (pathDB / strDBName).string());
+        CNetFulDB netfuldb;
+        if(!netfuldb.Read(netfulfilledman)) {
+            LogPrintf("Invalid or missing netfulfilled.dat; recreating\n");
+            netfuldb.Write(netfulfilledman);
         }
+        netfulfilledman.CheckAndRemove();
     }
 
 
