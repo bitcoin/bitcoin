@@ -346,7 +346,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 		assetMap[guid] = address2;
 		assetAddressMap[guid] = address1;
 		if (i % 100 == 0)
-			printf("%.2f percentage done\n", 100.0f * ((i + 1)/numberOfTransactionToSend));
+			printf("%.2f percentage done\n", 100.0f * ((float)(i + 1)/(float)numberOfTransactionToSend));
 
 	}
 
@@ -384,7 +384,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 			vecTX += ",";
 
 		if (count % 100 == 0)
-			printf("%.2f percentage done\n", 100.0f * (count/numberOfTransactionToSend));
+			printf("%.2f percentage done\n", 100.0f * ((float)count/(float)numberOfTransactionToSend));
 
 
 	}
