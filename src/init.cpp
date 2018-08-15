@@ -1781,18 +1781,21 @@ bool AppInitMain()
         uiInterface.InitMessage(_("Loading masternode cache..."));
         CMNCacheDB mncachedb;
         if(!mncachedb.Read(mnodeman)) {
-            return InitError(_("Failed to load masternode cache.\n"));
+            LogPrintf("Invalid or missing mncache.dat; recreating\n");
+            mncachedb.Write(mnodeman);
         }
         mnodeman.CheckAndRemove();
         if(mnodeman.size()) {
             CMNPayDB mnpaydb;
             if(!mnpaydb.Read(mnpayments)) {
-                return InitError(_("Failed to load masternode payments cache.\n"));
+                LogPrintf("Invalid or missing mnpayments.dat; recreating\n");
+                mnpaydb.Write(mnpayments);
             }
             mnpayments.CheckAndRemove();
             CGovDB govdb;
             if(!govdb.Read(governance)) {
-                return InitError(_("Failed to load governance cache.\n"));
+                LogPrintf("Invalid or missing governance.dat; recreating\n");
+                govdb.Write(governance);
             }
             governance.InitOnLoad();
         } else {
@@ -1800,7 +1803,8 @@ bool AppInitMain()
         }
         CNetFulDB netfuldb;
         if(!netfuldb.Read(netfulfilledman)) {
-            return InitError(_("Failed to load fulfilled requests cache.\n"));
+            LogPrintf("Invalid or missing netfulfilled.dat; recreating\n");
+            netfuldb.Write(netfulfilledman);
         }
         netfulfilledman.CheckAndRemove();
     }
