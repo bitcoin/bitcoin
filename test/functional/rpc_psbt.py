@@ -11,6 +11,8 @@ from test_framework.util import assert_equal, assert_raises_rpc_error, find_outp
 import json
 import os
 
+MAX_BIP125_RBF_SEQUENCE = 0xfffffffd
+
 # Create one-input, one-output, no-fee transaction:
 class PSBTTest(BitcoinTestFramework):
 
@@ -134,6 +136,33 @@ class PSBTTest(BitcoinTestFramework):
         self.nodes[0].sendrawtransaction(finalized)
         self.nodes[0].generate(6)
         self.sync_all()
+
+        # Test additional args in walletcreatepsbt
+        # Make sure both pre-included and funded inputs
+        # have the correct sequence numbers based on
+        # replaceable arg
+        block_height = self.nodes[0].getblockcount()
+        unspent = self.nodes[0].listunspent()[0]
+        psbtx_info = self.nodes[0].walletcreatefundedpsbt([{"txid":unspent["txid"], "vout":unspent["vout"]}], [{self.nodes[2].getnewaddress():unspent["amount"]+1}], block_height+2, {"replaceable":True})
+        decoded_psbt = self.nodes[0].decodepsbt(psbtx_info["psbt"])
+        for tx_in in decoded_psbt["tx"]["vin"]:
+           assert_equal(tx_in["sequence"], MAX_BIP125_RBF_SEQUENCE)
+        assert_equal(decoded_psbt["tx"]["locktime"], block_height+2)
+
+        # Same construction with only locktime set
+        psbtx_info = self.nodes[0].walletcreatefundedpsbt([{"txid":unspent["txid"], "vout":unspent["vout"]}], [{self.nodes[2].getnewaddress():unspent["amount"]+1}], block_height)
+        decoded_psbt = self.nodes[0].decodepsbt(psbtx_info["psbt"])
+        for tx_in in decoded_psbt["tx"]["vin"]:
+            assert tx_in["sequence"] > MAX_BIP125_RBF_SEQUENCE
+        assert_equal(decoded_psbt["tx"]["locktime"], block_height)
+
+        # Same construction without optional arguments
+        psbtx_info = self.nodes[0].walletcreatefundedpsbt([{"txid":unspent["txid"], "vout":unspent["vout"]}], [{self.nodes[2].getnewaddress():unspent["amount"]+1}])
+        decoded_psbt = self.nodes[0].decodepsbt(psbtx_info["psbt"])
+        for tx_in in decoded_psbt["tx"]["vin"]:
+            assert tx_in["sequence"] > MAX_BIP125_RBF_SEQUENCE
+        assert_equal(decoded_psbt["tx"]["locktime"], 0)
+
 
         # BIP 174 Test Vectors
 
