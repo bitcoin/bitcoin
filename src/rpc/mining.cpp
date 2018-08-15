@@ -716,7 +716,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
         masternodeObj.pushKV("amount", pblock->txoutMasternode.nValue);
     }
     result.pushKV("masternode", masternodeObj);
-    result.pushKV("masternode_payments_started", IsWitnessEnabled(pindexPrev, Params().GetConsensus()));
+    result.pushKV("masternode_payments_started", true);
     result.pushKV("masternode_payments_enforced", IsWitnessEnabled(pindexPrev, Params().GetConsensus()));
 
     UniValue superblockObjArray(UniValue::VARR);

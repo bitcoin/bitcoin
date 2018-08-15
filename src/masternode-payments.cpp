@@ -146,8 +146,7 @@ bool IsBlockPayeeValid(const CTransactionRef& txNew, int nBlockHeight, CAmount b
         return true;
     }
 
-    if (IsWitnessEnabled(chainActive.Tip(), consensusParams)) {
-    // PM-Tech: switch after activation if(nBlockHeight >= consensusParams.nMasternodePaymentsStartBlock) {
+    if(nBlockHeight >= consensusParams.nMasternodePaymentsStartBlock) {
         LogPrintf("IsBlockPayeeValid -- ERROR: Invalid masternode payment detected at height %d: %s\n", nBlockHeight, txNew->ToString());
         return false;
     }
