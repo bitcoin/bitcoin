@@ -10,7 +10,6 @@
 #include <checkpoints.h>
 #include <chain.h>
 #include <wallet/coincontrol.h>
-#include <wallet/coinselection.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
 #include <fs.h>
@@ -29,7 +28,6 @@
 #include <scheduler.h>
 #include <timedata.h>
 #include <txmempool.h>
-#include <util.h>
 #include <utilmoneystr.h>
 #include <wallet/fees.h>
 #include <wallet/keepass.h>

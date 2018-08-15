@@ -22,8 +22,6 @@
 #include <wallet/feebumper.h>
 #include <wallet/wallet.h>
 
-#include <memory>
-
 namespace interfaces {
 namespace {
 

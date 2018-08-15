@@ -7,7 +7,6 @@
 #include <util.h>
 
 #include <boost/signals2/connection.hpp>
-#include <memory>
 #include <utility>
 
 namespace interfaces {

@@ -30,7 +30,6 @@
 #include <validationinterface.h>
 
 #include <algorithm>
-#include <memory>
 #include <queue>
 
 // Unconfirmed transactions in the memory pool often depend on other
