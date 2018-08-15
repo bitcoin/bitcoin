@@ -421,7 +421,7 @@ bool openConfigfile()
 
 bool openMNConfigfile()
 {
-    fs::path pathMNConfig = GetMasternodeConfigFile(gArgs.GetArg("-mnconf", MASTERNODE_CONF_FILENAME));
+    fs::path pathMNConfig = GetConfigFile(gArgs.GetArg("-mnconf", MASTERNODE_CONF_FILENAME));
 
     /* Create the file */
     fs::ofstream configMNFile(pathMNConfig, std::ios_base::app);
@@ -626,7 +626,7 @@ TableViewLastColumnResizingFixer::TableViewLastColumnResizingFixer(QTableView* t
 #ifdef WIN32
 fs::path static StartupShortcutPath()
 {
-    std::string chain = ChainNameFromCommandLine();
+    std::string chain = gArgs.GetChainName();
     if (chain == CBaseChainParams::MAIN)
         return GetSpecialFolderPath(CSIDL_STARTUP) / "Chaincoin Core.lnk";
     if (chain == CBaseChainParams::TESTNET) // Remove this special case when CBaseChainParams::TESTNET = "testnet4"
@@ -724,7 +724,7 @@ fs::path static GetAutostartDir()
 
 fs::path static GetAutostartFilePath()
 {
-    std::string chain = ChainNameFromCommandLine();
+    std::string chain = gArgs.GetChainName();
     if (chain == CBaseChainParams::MAIN)
         return GetAutostartDir() / "chaincoincore.desktop";
     return GetAutostartDir() / strprintf("chaincoincore-%s.lnk", chain);
@@ -766,8 +766,8 @@ bool SetStartOnSystemStartup(bool fAutoStart)
         fs::ofstream optionFile(GetAutostartFilePath(), std::ios_base::out|std::ios_base::trunc);
         if (!optionFile.good())
             return false;
-        std::string chain = ChainNameFromCommandLine();
-        // Write a chaincoincore.desktop file to the autostart directory:
+        std::string chain = gArgs.GetChainName();
+        // Write a chaincoin.desktop file to the autostart directory:
         optionFile << "[Desktop Entry]\n";
         optionFile << "Type=Application\n";
         if (chain == CBaseChainParams::MAIN)

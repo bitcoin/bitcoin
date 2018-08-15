@@ -770,46 +770,53 @@ fs::path GetConfigFile(const std::string& confPath)
     return AbsPathForConfigVal(fs::path(confPath), false);
 }
 
-fs::path GetMasternodeConfigFile(const std::string& confPath)
+void ArgsManager::ReadConfigStream(std::istream& stream)
 {
-    fs::path pathConfigFile(gArgs.GetArg("-mnconf", "masternode.conf"));
-    if (!pathConfigFile.is_complete())
-        pathConfigFile = GetDataDir(false) / pathConfigFile;
-    return pathConfigFile;
+    LOCK(cs_args);
+
+    std::set<std::string> setOptions;
+    setOptions.insert("*");
+
+    for (boost::program_options::detail::config_file_iterator it(stream, setOptions), end; it != end; ++it)
+    {
+        // Don't overwrite existing settings so command line settings override chaincoin.conf
+        std::string strKey = std::string("-") + it->string_key;
+        std::string strValue = it->value[0];
+        InterpretNegatedOption(strKey, strValue);
+        if (mapArgs.count(strKey) == 0)
+            mapArgs[strKey] = strValue;
+        mapMultiArgs[strKey].push_back(strValue);
+    }
 }
 
 void ArgsManager::ReadConfigFile(const std::string& confPath)
 {
-    fs::ifstream streamConfig(GetConfigFile(confPath));
-    if (!streamConfig.good()){
-        // Create empty chaincoin.conf if it does not excist
-        FILE* configFile = fopen(GetConfigFile(confPath).string().c_str(), "a");
-        if (configFile != nullptr)
-            fclose(configFile);
-        return; // Nothing to read, so just return
+    fs::ifstream stream(GetConfigFile(confPath));
+
+    // ok to not have a config file
+    if (stream.good()) {
+        ReadConfigStream(stream);
     }
 
-    {
-        LOCK(cs_args);
-        std::set<std::string> setOptions;
-        setOptions.insert("*");
-
-        for (boost::program_options::detail::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
-        {
-            // Don't overwrite existing settings so command line settings override chaincoin.conf
-            std::string strKey = std::string("-") + it->string_key;
-            std::string strValue = it->value[0];
-            InterpretNegatedOption(strKey, strValue);
-            if (mapArgs.count(strKey) == 0)
-                mapArgs[strKey] = strValue;
-            mapMultiArgs[strKey].push_back(strValue);
-        }
-    }
     // If datadir is changed in .conf file:
     ClearDatadirCache();
     if (!fs::is_directory(GetDataDir(false))) {
         throw std::runtime_error(strprintf("specified data directory \"%s\" does not exist.", gArgs.GetArg("-datadir", "").c_str()));
     }
+}
+
+std::string ArgsManager::GetChainName() const
+{
+    bool fRegTest = GetBoolArg("-regtest", false);
+    bool fTestNet = GetBoolArg("-testnet", false);
+
+    if (fTestNet && fRegTest)
+        throw std::runtime_error("Invalid combination of -regtest and -testnet.");
+    if (fRegTest)
+        return CBaseChainParams::REGTEST;
+    if (fTestNet)
+        return CBaseChainParams::TESTNET;
+    return CBaseChainParams::MAIN;
 }
 
 #ifndef WIN32
