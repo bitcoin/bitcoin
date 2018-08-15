@@ -38,3 +38,5 @@ reissue example
 
 "[{\"txid\":\"3f3c22a0544369698d3428ba11a29bbbfe8508938f9a0974b0eff086be24a02e\",\"vout\":0}, {\"txid\":\"f0028b85cc2ca694d2fd0f96c65b4312fb67cc32e056069da3462bf6d32400fc\",\"vout\":2}]" "{\"n2NKWBsA2wFqK7yBuazviueHGT7GXu7KtS\": 4899.988, \"n1ReissueAssetXXXXXXXXXXXXXXWG9NLd\": 100.00, \"mwfL6voyJhhPngjQG2HvaL9Kero4jwmxeZ\": {\"reissue\": {\"asset_name\": \"TEST\", \"asset_quantity\": 25, \"reissuable\": 5}}}"
 
+
+"[{\"txid\":\"21dfb847aa9779f955b605d843f91653aa34ea5f0e28bb73092cd512283b3332\",\"vout\":0}, {\"txid\":\"79daec18288aee4d50091d1f68ce322530240184ac5e67dc13419979814f6af6\",\"vout\":3}]" "{\"mxECLZdXBztyL7nLQBYbFszmDrBE2P9Yt2\": 4999.998, \"mgwGxrmCfzjvBiCQ9dvCEMet6JDb8vJWqN\": {\"transfer\": {\"BLOND\": 500.0001}}, \"mun1hF7VM3iWqWKV8EH7AsKWfu7Nfa7pyg\": {\"transfer\": {\"BLOND\": 499.9999}}}"
