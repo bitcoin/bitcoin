@@ -806,7 +806,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
     if (pfMissingInputs)
         *pfMissingInputs = false;
 	if (!fTPSTestEnabled) {
-		if (fTPSTest)
+		if (nTPSTestingStartTime > 0)
 		{
 			const int64_t &currentTime = GetTimeMicros();
 			if(currentTime >= nTPSTestingStartTime)
