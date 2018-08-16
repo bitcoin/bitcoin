@@ -1489,7 +1489,8 @@ void ListTransactions(const CWalletTx& wtx, const std::string& strAccount, int n
 						if (!assetallocation.listSendingAllocationAmounts.empty()) {
 							for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
 								UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-								oAssetAllocationReceiversObj.push_back(Pair("address", EncodeBase58(amountTuple.first)));
+								// update to owner
+								oAssetAllocationReceiversObj.push_back(Pair("aliasto", EncodeBase58(amountTuple.first)));
 								oAssetAllocationReceiversObj.push_back(Pair("amount", ValueFromAmount(amountTuple.second)));
 								oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
 							}
@@ -1498,7 +1499,8 @@ void ListTransactions(const CWalletTx& wtx, const std::string& strAccount, int n
 						else if (!assetallocation.listSendingAllocationInputs.empty()) {
 							for (auto& inputTuple : assetallocation.listSendingAllocationInputs) {
 								UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-								oAssetAllocationReceiversObj.push_back(Pair("address", EncodeBase58(inputTuple.first)));
+								// TODO update to owner
+								oAssetAllocationReceiversObj.push_back(Pair("aliasto", EncodeBase58(inputTuple.first)));
 								for (auto& inputRange : inputTuple.second) {
 									UniValue oInput(UniValue::VOBJ);
 									oInput.push_back(Pair("start", (int)inputRange.start));
@@ -1584,7 +1586,8 @@ void ListTransactions(const CWalletTx& wtx, const std::string& strAccount, int n
 							if (!assetallocation.listSendingAllocationAmounts.empty()) {
 								for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
 									UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-									oAssetAllocationReceiversObj.push_back(Pair("address", EncodeBase58(amountTuple.first)));
+									// update to owner
+									oAssetAllocationReceiversObj.push_back(Pair("aliasto", EncodeBase58(amountTuple.first)));
 									oAssetAllocationReceiversObj.push_back(Pair("amount", ValueFromAmount(amountTuple.second)));
 									oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
 								}
@@ -1593,7 +1596,8 @@ void ListTransactions(const CWalletTx& wtx, const std::string& strAccount, int n
 							else if (!assetallocation.listSendingAllocationInputs.empty()) {
 								for (auto& inputTuple : assetallocation.listSendingAllocationInputs) {
 									UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-									oAssetAllocationReceiversObj.push_back(Pair("address", EncodeBase58(inputTuple.first)));
+									// TODO change this to owner
+									oAssetAllocationReceiversObj.push_back(Pair("aliasto", EncodeBase58(inputTuple.first)));
 									for (auto& inputRange : inputTuple.second) {
 										UniValue oInput(UniValue::VOBJ);
 										oInput.push_back(Pair("start", (int)inputRange.start));
