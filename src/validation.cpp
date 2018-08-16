@@ -72,6 +72,7 @@
 # error "Syscoin Core cannot be compiled without assertions."
 #endif
 std::vector<std::pair<uint256, int64_t> > vecTPSTestReceivedTimesMempool;
+int64_t nTPSTestingStartTime = 0;
 /**
  * Global state
  */

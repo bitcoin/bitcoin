@@ -30,7 +30,6 @@ using namespace std;
 vector<pair<uint256, int64_t> > vecTPSTestReceivedTimes;
 vector<JSONRPCRequest> vecTPSRawTransactions;
 int64_t nTPSTestingSendRawElapsedTime = 0;
-int64_t nTPSTestingStartTime = 0;
 AssetAllocationIndexItemMap AssetAllocationIndex;
 bool IsAssetAllocationOp(int op) {
 	return op == OP_ASSET_ALLOCATION_SEND || op == OP_ASSET_COLLECT_INTEREST;

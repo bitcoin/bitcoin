@@ -555,6 +555,7 @@ extern CBlockTreeDB *pblocktree;
 
 extern tp::ThreadPool* threadpool;
 extern std::vector<std::pair<uint256, int64_t> > vecTPSTestReceivedTimesMempool;
+extern int64_t nTPSTestingStartTime;
 /**
  * Return the spend height, which is one more than the inputs.GetBestBlock().
  * While checking, GetBestBlock() refers to the parent block. (protected by cs_main)
