@@ -3489,11 +3489,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>애러: 지정한 지갑 폴더 "%s"은 디렉토리가 아닙니다.</translation>
     </message>
     <message>
-        <source>Specified blocks directory "%s" does not exist.
-</source>
-        <translation>지정한 블록 폴더 "%s"는 존재하지 않습니다.</translation>
-    </message>
-    <message>
         <source>The transaction amount is too small to pay the fee</source>
         <translation>거래액이 수수료를 지불하기엔 너무 작습니다</translation>
     </message>

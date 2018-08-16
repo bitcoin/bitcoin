@@ -3437,12 +3437,6 @@
         <translation>Uvedený -walletdir "%s" nie je priečinok</translation>
     </message>
     <message>
-        <source>Specified blocks directory "%s" does not exist.
-</source>
-        <translation>Uvedený priečinok s dátami "%s" neexistuje.
-</translation>
-    </message>
-    <message>
         <source>The transaction amount is too small to pay the fee</source>
         <translation>Suma transakcie je príliš malá na zaplatenie poplatku</translation>
     </message>

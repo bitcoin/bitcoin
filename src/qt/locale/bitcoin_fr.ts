@@ -3480,12 +3480,6 @@ Note : Les frais étant calculés par octet, des frais de « 100 satoshis par
         <translation>Échec de signature de la transaction</translation>
     </message>
     <message>
-        <source>Specified blocks directory "%s" does not exist.
-</source>
-        <translation>Le répertoire de blocs indiqué « %s » n’existe pas.
-</translation>
-    </message>
-    <message>
         <source>The transaction amount is too small to pay the fee</source>
         <translation>Le montant de la transaction est trop bas pour que les frais soient payés</translation>
     </message>

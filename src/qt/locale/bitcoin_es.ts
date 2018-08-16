@@ -3491,12 +3491,6 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
         <translation>El -walletdir "%s" indicado no es un directorio</translation>
     </message>
     <message>
-        <source>Specified blocks directory "%s" does not exist.
-</source>
-        <translation>El directorio de bloques especificado "%s" no existe.
-</translation>
-    </message>
-    <message>
         <source>The transaction amount is too small to pay the fee</source>
         <translation>Cantidad de la transacción demasiado pequeña para pagar la comisión</translation>
     </message>
