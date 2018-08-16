@@ -53,6 +53,10 @@ if ENABLE_AVX2
 LIBBITCOIN_CRYPTO_AVX2 = crypto/libbitcoin_crypto_avx2.a
 LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_AVX2)
 endif
+if ENABLE_AVX512
+LIBBITCOIN_CRYPTO_AVX512 = crypto/libbitcoin_crypto_avx512.a
+LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_AVX512)
+endif
 if ENABLE_SHANI
 LIBBITCOIN_CRYPTO_SHANI = crypto/libbitcoin_crypto_shani.a
 LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_SHANI)
@@ -387,6 +391,12 @@ crypto_libbitcoin_crypto_avx2_a_CPPFLAGS = $(AM_CPPFLAGS)
 crypto_libbitcoin_crypto_avx2_a_CXXFLAGS += $(AVX2_CXXFLAGS)
 crypto_libbitcoin_crypto_avx2_a_CPPFLAGS += -DENABLE_AVX2
 crypto_libbitcoin_crypto_avx2_a_SOURCES = crypto/sha256_avx2.cpp
+
+crypto_libbitcoin_crypto_avx512_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crypto_libbitcoin_crypto_avx512_a_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libbitcoin_crypto_avx512_a_CXXFLAGS += $(AVX512_CXXFLAGS)
+crypto_libbitcoin_crypto_avx512_a_CPPFLAGS += -DENABLE_AVX512
+crypto_libbitcoin_crypto_avx512_a_SOURCES = crypto/sha256_avx512.cpp
 
 crypto_libbitcoin_crypto_shani_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 crypto_libbitcoin_crypto_shani_a_CPPFLAGS = $(AM_CPPFLAGS)

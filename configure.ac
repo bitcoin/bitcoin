@@ -358,6 +358,7 @@ if test "x$use_asm" = "xyes"; then
 AX_CHECK_COMPILE_FLAG([-msse4.2],[[SSE42_CXXFLAGS="-msse4.2"]],,[[$CXXFLAG_WERROR]])
 AX_CHECK_COMPILE_FLAG([-msse4.1],[[SSE41_CXXFLAGS="-msse4.1"]],,[[$CXXFLAG_WERROR]])
 AX_CHECK_COMPILE_FLAG([-mavx -mavx2],[[AVX2_CXXFLAGS="-mavx -mavx2"]],,[[$CXXFLAG_WERROR]])
+AX_CHECK_COMPILE_FLAG([-mavx -mavx2 -mavx512f],[[AVX512_CXXFLAGS="-mavx -mavx2 -mavx512f"]],,[[$CXXFLAG_WERROR]])
 AX_CHECK_COMPILE_FLAG([-msse4 -msha],[[SHANI_CXXFLAGS="-msse4 -msha"]],,[[$CXXFLAG_WERROR]])
 
 TEMP_CXXFLAGS="$CXXFLAGS"
@@ -411,6 +412,27 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
  [ AC_MSG_RESULT(no)]
 )
 CXXFLAGS="$TEMP_CXXFLAGS"
+
+case $host in
+  *mingw*)
+    ;;
+  *)
+    TEMP_CXXFLAGS="$CXXFLAGS"
+    CXXFLAGS="$CXXFLAGS $AVX512_CXXFLAGS"
+    AC_MSG_CHECKING(for AVX512 intrinsics)
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+        #include <stdint.h>
+        #include <immintrin.h>
+      ]],[[
+        __m512i l = _mm512_set1_epi32(0);
+        return _mm_extract_epi32(_mm512_extracti32x4_epi32(l, 3), 3);
+      ]])],
+    [ AC_MSG_RESULT(yes); enable_avx512=yes; AC_DEFINE(ENABLE_AVX512, 1, [Define this symbol to build code that uses AVX512 intrinsics]) ],
+    [ AC_MSG_RESULT(no)]
+    )
+    CXXFLAGS="$TEMP_CXXFLAGS"
+    ;;
+esac
 
 TEMP_CXXFLAGS="$CXXFLAGS"
 CXXFLAGS="$CXXFLAGS $SHANI_CXXFLAGS"
@@ -1462,6 +1484,7 @@ AM_CONDITIONAL([HARDEN],[test x$use_hardening = xyes])
 AM_CONDITIONAL([ENABLE_HWCRC32],[test x$enable_hwcrc32 = xyes])
 AM_CONDITIONAL([ENABLE_SSE41],[test x$enable_sse41 = xyes])
 AM_CONDITIONAL([ENABLE_AVX2],[test x$enable_avx2 = xyes])
+AM_CONDITIONAL([ENABLE_AVX512],[test x$enable_avx512 = xyes])
 AM_CONDITIONAL([ENABLE_SHANI],[test x$enable_shani = xyes])
 AM_CONDITIONAL([USE_ASM],[test x$use_asm = xyes])
 
@@ -1509,6 +1532,7 @@ AC_SUBST(SANITIZER_LDFLAGS)
 AC_SUBST(SSE42_CXXFLAGS)
 AC_SUBST(SSE41_CXXFLAGS)
 AC_SUBST(AVX2_CXXFLAGS)
+AC_SUBST(AVX512_CXXFLAGS)
 AC_SUBST(SHANI_CXXFLAGS)
 AC_SUBST(LIBTOOL_APP_LDFLAGS)
 AC_SUBST(USE_UPNP)
