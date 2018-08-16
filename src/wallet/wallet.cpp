@@ -1113,7 +1113,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
                 wtx.nTimeSmart = std::max(latestEntry, std::min(blocktime, latestNow));
             }
             else
-                LogPrintf("AddToWallet(): found %s in block %s not in index\n",
+                LogPrint("mempool", "AddToWallet(): found %s in block %s not in index\n",
                          wtxIn.GetHash().ToString(),
                          wtxIn.hashBlock.ToString());
         }
@@ -1153,7 +1153,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
     }
 
     //// debug print
-    LogPrintf("AddToWallet %s  %s%s\n", wtxIn.GetHash().ToString(), (fInsertedNew ? "new" : ""), (fUpdated ? "update" : ""));
+    LogPrint("mempool", "AddToWallet %s  %s%s\n", wtxIn.GetHash().ToString(), (fInsertedNew ? "new" : ""), (fUpdated ? "update" : ""));
 
     // Write to disk
     if (fInsertedNew || fUpdated)
