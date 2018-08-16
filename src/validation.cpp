@@ -1346,7 +1346,8 @@ bool CScriptCheck::operator()() {
 int GetSpendHeight(const CCoinsViewCache& inputs)
 {
     LOCK(cs_main);
-    CBlockIndex* pindexPrev = LookupBlockIndex(inputs.GetBestBlock());
+    const CBlockIndex* pindexPrev = LookupBlockIndex(inputs.GetBestBlock());
+    assert(pindexPrev);
     return pindexPrev->nHeight + 1;
 }
 

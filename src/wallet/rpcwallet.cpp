@@ -99,7 +99,9 @@ static void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
     {
         entry.pushKV("blockhash", wtx.hashBlock.GetHex());
         entry.pushKV("blockindex", wtx.nIndex);
-        entry.pushKV("blocktime", LookupBlockIndex(wtx.hashBlock)->GetBlockTime());
+        const CBlockIndex* blockIndex = LookupBlockIndex(wtx.hashBlock);
+        assert(blockIndex);
+        entry.pushKV("blocktime", blockIndex->GetBlockTime());
     } else {
         entry.pushKV("trusted", wtx.IsTrusted());
     }
@@ -4009,6 +4011,7 @@ UniValue rescanblockchain(const JSONRPCRequest& request)
     }
     UniValue response(UniValue::VOBJ);
     response.pushKV("start_height", pindexStart->nHeight);
+    assert(stopBlock);
     response.pushKV("stop_height", stopBlock->nHeight);
     return response;
 }
