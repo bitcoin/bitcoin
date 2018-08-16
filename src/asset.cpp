@@ -1286,7 +1286,7 @@ void AssetTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 					oInput.push_back(Pair("end", (int)inputRange.end));
 					oAssetAllocationReceiversObj.push_back(oInput);
 				}
-				oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
+				oAssetAllocationReceiversArray.push_back(Pair("inputs", oAssetAllocationReceiversObj));
 			}
 		}
 		entry.push_back(Pair("allocations", oAssetAllocationReceiversArray));
