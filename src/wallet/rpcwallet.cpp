@@ -1500,8 +1500,10 @@ void ListTransactions(const CWalletTx& wtx, const std::string& strAccount, int n
 								UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
 								oAssetAllocationReceiversObj.push_back(Pair("address", EncodeBase58(inputTuple.first)));
 								for (auto& inputRange : inputTuple.second) {
-									oAssetAllocationReceiversObj.push_back(Pair("start", (int)inputRange.start));
-									oAssetAllocationReceiversObj.push_back(Pair("end", (int)inputRange.end));
+									UniValue oInput(UniValue::VOBJ);
+									oInput.push_back(Pair("start", (int)inputRange.start));
+									oInput.push_back(Pair("end", (int)inputRange.end));
+									oAssetAllocationReceiversObj.push_back(oInput);
 								}
 								oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
 							}
@@ -1593,8 +1595,10 @@ void ListTransactions(const CWalletTx& wtx, const std::string& strAccount, int n
 									UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
 									oAssetAllocationReceiversObj.push_back(Pair("address", EncodeBase58(inputTuple.first)));
 									for (auto& inputRange : inputTuple.second) {
-										oAssetAllocationReceiversObj.push_back(Pair("start", (int)inputRange.start));
-										oAssetAllocationReceiversObj.push_back(Pair("end", (int)inputRange.end));
+										UniValue oInput(UniValue::VOBJ);
+										oInput.push_back(Pair("start", (int)inputRange.start));
+										oInput.push_back(Pair("end", (int)inputRange.end));
+										oAssetAllocationReceiversObj.push_back(oInput);
 									}
 									oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
 								}
