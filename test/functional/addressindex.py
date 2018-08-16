@@ -16,24 +16,25 @@ import binascii
 
 class AddressIndexTest(RavenTestFramework):
 
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 4
 
     def setup_network(self):
-        self.nodes = []
-        # Nodes 0/1 are "wallet" nodes
-        self.nodes.append(self.start_node(0, self.options.tmpdir, ["-debug", "-relaypriority=0"]))
-        self.nodes.append(self.start_node(1, self.options.tmpdir, ["-debug", "-addressindex"]))
+        self.add_nodes(4, [
+            # Nodes 0/1 are "wallet" nodes
+            ["-debug", "-relaypriority=0"],
+            ["-debug", "-addressindex"],
         # Nodes 2/3 are used for testing
-        self.nodes.append(self.start_node(2, self.options.tmpdir, ["-debug", "-addressindex", "-relaypriority=0"]))
-        self.nodes.append(self.start_node(3, self.options.tmpdir, ["-debug", "-addressindex"]))
-        connect_nodes(self.nodes[0], 1)
-        connect_nodes(self.nodes[0], 2)
-        connect_nodes(self.nodes[0], 3)
+            ["-debug", "-addressindex", "-relaypriority=0"],
+            ["-debug", "-addressindex"]])
 
-        self.is_network_split = False
+        self.start_nodes()
+
+        connect_nodes_bi(self.nodes, 0, 1)
+        connect_nodes_bi(self.nodes, 0, 2)
+        connect_nodes_bi(self.nodes, 0, 3)
+
         self.sync_all()
 
     def run_test(self):

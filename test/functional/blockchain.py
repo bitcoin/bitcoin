@@ -58,6 +58,7 @@ class BlockchainTest(RavenTestFramework):
             'chain',
             'chainwork',
             'difficulty',
+            'difficulty_algorithm',
             'headers',
             'mediantime',
             'pruned',
