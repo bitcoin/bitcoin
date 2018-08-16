@@ -1281,8 +1281,10 @@ void AssetTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 				UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
 				oAssetAllocationReceiversObj.push_back(Pair("owner", stringFromVch(inputTuple.first)));
 				for (auto& inputRange : inputTuple.second) {
-					oAssetAllocationReceiversObj.push_back(Pair("start", (int)inputRange.start));
-					oAssetAllocationReceiversObj.push_back(Pair("end", (int)inputRange.end));
+					UniValue oInput(UniValue::VOBJ);
+					oInput.push_back(Pair("start", (int)inputRange.start));
+					oInput.push_back(Pair("end", (int)inputRange.end));
+					oAssetAllocationReceiversObj.push_back(oInput);
 				}
 				oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
 			}
