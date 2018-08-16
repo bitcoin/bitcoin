@@ -15,24 +15,25 @@ from test_framework.util import *
 
 class TimestampIndexTest(RavenTestFramework):
 
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 4
 
     def setup_network(self):
-        self.nodes = []
-        # Nodes 0/1 are "wallet" nodes
-        self.nodes.append(self.start_node(0, self.options.tmpdir, ["-debug"]))
-        self.nodes.append(self.start_node(1, self.options.tmpdir, ["-debug", "-timestampindex"]))
-        # Nodes 2/3 are used for testing
-        self.nodes.append(self.start_node(2, self.options.tmpdir, ["-debug"]))
-        self.nodes.append(self.start_node(3, self.options.tmpdir, ["-debug", "-timestampindex"]))
-        connect_nodes(self.nodes[0], 1)
-        connect_nodes(self.nodes[0], 2)
-        connect_nodes(self.nodes[0], 3)
+        self.add_nodes(4, [
+            # Nodes 0/1 are "wallet" nodes
+            ["-debug"],
+            ["-debug", "-timestampindex"],
+            # Nodes 2/3 are used for testing
+            ["-debug"],
+            ["-debug", "-timestampindex"]])
 
-        self.is_network_split = False
+        self.start_nodes()
+
+        connect_nodes_bi(self.nodes, 0, 1)
+        connect_nodes_bi(self.nodes, 0, 2)
+        connect_nodes_bi(self.nodes, 0, 3)
+
         self.sync_all()
 
     def run_test(self):

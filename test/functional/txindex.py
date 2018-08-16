@@ -16,24 +16,25 @@ import binascii
 
 class TxIndexTest(RavenTestFramework):
 
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 4
 
     def setup_network(self):
-        self.nodes = []
-        # Nodes 0/1 are "wallet" nodes
-        self.nodes.append(self.start_node(0, self.options.tmpdir, ["-debug"]))
-        self.nodes.append(self.start_node(1, self.options.tmpdir, ["-debug", "-txindex"]))
-        # Nodes 2/3 are used for testing
-        self.nodes.append(self.start_node(2, self.options.tmpdir, ["-debug", "-txindex"]))
-        self.nodes.append(self.start_node(3, self.options.tmpdir, ["-debug", "-txindex"]))
-        connect_nodes(self.nodes[0], 1)
-        connect_nodes(self.nodes[0], 2)
-        connect_nodes(self.nodes[0], 3)
+        self.add_nodes(4, [
+            # Nodes 0/1 are "wallet" nodes
+            ["-debug"],
+            ["-debug", "-txindex"],
+            # Nodes 2/3 are used for testing
+            ["-debug", "-txindex"],
+            ["-debug", "-txindex"]])
 
-        self.is_network_split = False
+        self.start_nodes()
+
+        connect_nodes_bi(self.nodes, 0, 1)
+        connect_nodes_bi(self.nodes, 0, 2)
+        connect_nodes_bi(self.nodes, 0, 3)
+
         self.sync_all()
 
     def run_test(self):
@@ -64,8 +65,8 @@ class TxIndexTest(RavenTestFramework):
 
         # Check verbose raw transaction results
         verbose = self.nodes[3].getrawtransaction(unspent[0]["txid"], 1)
-        assert_equal(verbose["vout"][0]["valueSat"], 5000000000);
-        assert_equal(verbose["vout"][0]["value"], 50);
+        assert_equal(verbose["vout"][0]["valueSat"], 500000000000);
+        assert_equal(verbose["vout"][0]["value"], 5000);
 
         print("Passed\n")
 
