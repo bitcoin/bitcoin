@@ -140,6 +140,10 @@
         <translation>Показать пароль</translation>
     </message>
     <message>
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Введите новый пароль бумажника.&lt;br/&gt;Используйте пароль, состоящий из &lt;b&gt;десяти или более случайных символов&lt;/b&gt;, или &lt;b&gt;восьми или более слов&lt;/b&gt;.</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation>Зашифровать электронный кошелёк</translation>
     </message>
@@ -150,6 +154,10 @@
     <message>
         <source>Unlock wallet</source>
         <translation>Разблокировать бумажник</translation>
+    </message>
+    <message>
+        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
+        <translation>Данная операция требует введения пароля для расшифровки вашего бумажника.</translation>
     </message>
     <message>
         <source>Decrypt wallet</source>
@@ -168,12 +176,24 @@
         <translation>Подтвердить шифрование кошелька</translation>
     </message>
     <message>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <translation>Предупреждение: если вы зашифруете бумажник и потеряете пароль, вы &lt;b&gt;ПОТЕРЯЕТЕ ВСЕ ВАШИ БИТКОИНЫ&lt;/b&gt;!</translation>
+    </message>
+    <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>Вы уверены, что хотите зашифровать ваш кошелёк?</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
         <translation>Кошелёк зашифрован</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed</source>
+        <translation>Не удалось зашифровать бумажник</translation>
+    </message>
+    <message>
+        <source>Wallet unlock failed</source>
+        <translation>Разблокировка бумажника не удалась</translation>
     </message>
     <message>
         <source>Wallet decryption failed</source>

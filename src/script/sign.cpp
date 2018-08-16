@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2017 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -244,17 +244,33 @@ bool SignPSBTInput(const SigningProvider& provider, const CMutableTransaction& t
     input.FillSignatureData(sigdata);
 
     // Get UTXO
+    bool require_witness_sig = false;
     CTxOut utxo;
     if (input.non_witness_utxo) {
+        // If we're taking our information from a non-witness UTXO, verify that it matches the prevout.
+        if (input.non_witness_utxo->GetHash() != tx.vin[index].prevout.hash) return false;
+        // If both witness and non-witness UTXO are provided, verify that they match. This check shouldn't
+        // matter, as the PSBT deserializer enforces only one of both is provided, and the only way both
+        // can be present is when they're added simultaneously by FillPSBT (in which case they always match).
+        // Still, check in order to not rely on callers to enforce this.
+        if (!input.witness_utxo.IsNull() && input.non_witness_utxo->vout[tx.vin[index].prevout.n] != input.witness_utxo) return false;
         utxo = input.non_witness_utxo->vout[tx.vin[index].prevout.n];
     } else if (!input.witness_utxo.IsNull()) {
         utxo = input.witness_utxo;
+        // When we're taking our information from a witness UTXO, we can't verify it is actually data from
+        // the output being spent. This is safe in case a witness signature is produced (which includes this
+        // information directly in the hash), but not for non-witness signatures. Remember that we require
+        // a witness signature in this situation.
+        require_witness_sig = true;
     } else {
         return false;
     }
 
     MutableTransactionSignatureCreator creator(&tx, index, utxo.nValue, sighash);
+    sigdata.witness = false;
     bool sig_complete = ProduceSignature(provider, creator, utxo.scriptPubKey, sigdata);
+    // Verify that a witness signature was produced in case one was required.
+    if (require_witness_sig && !sigdata.witness) return false;
     input.FromSignatureData(sigdata);
     return sig_complete;
 }
@@ -417,22 +433,25 @@ public:
 const DummySignatureChecker DUMMY_CHECKER;
 
 class DummySignatureCreator final : public BaseSignatureCreator {
+private:
+    char m_r_len = 32;
+    char m_s_len = 32;
 public:
-    DummySignatureCreator() {}
+    DummySignatureCreator(char r_len, char s_len) : m_r_len(r_len), m_s_len(s_len) {}
     const BaseSignatureChecker& Checker() const override { return DUMMY_CHECKER; }
     bool CreateSig(const SigningProvider& provider, std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const override
     {
         // Create a dummy signature that is a valid DER-encoding
-        vchSig.assign(72, '\000');
+        vchSig.assign(m_r_len + m_s_len + 7, '\000');
         vchSig[0] = 0x30;
-        vchSig[1] = 69;
+        vchSig[1] = m_r_len + m_s_len + 4;
         vchSig[2] = 0x02;
-        vchSig[3] = 33;
+        vchSig[3] = m_r_len;
         vchSig[4] = 0x01;
-        vchSig[4 + 33] = 0x02;
-        vchSig[5 + 33] = 32;
-        vchSig[6 + 33] = 0x01;
-        vchSig[6 + 33 + 32] = SIGHASH_ALL;
+        vchSig[4 + m_r_len] = 0x02;
+        vchSig[5 + m_r_len] = m_s_len;
+        vchSig[6 + m_r_len] = 0x01;
+        vchSig[6 + m_r_len + m_s_len] = SIGHASH_ALL;
         return true;
     }
 };
@@ -450,7 +469,8 @@ bool LookupHelper(const M& map, const K& key, V& value)
 
 }
 
-const BaseSignatureCreator& DUMMY_SIGNATURE_CREATOR = DummySignatureCreator();
+const BaseSignatureCreator& DUMMY_SIGNATURE_CREATOR = DummySignatureCreator(32, 32);
+const BaseSignatureCreator& DUMMY_MAXIMUM_SIGNATURE_CREATOR = DummySignatureCreator(33, 32);
 const SigningProvider& DUMMY_SIGNING_PROVIDER = SigningProvider();
 
 bool IsSolvable(const SigningProvider& provider, const CScript& script)
@@ -465,7 +485,8 @@ bool IsSolvable(const SigningProvider& provider, const CScript& script)
     static_assert(STANDARD_SCRIPT_VERIFY_FLAGS & SCRIPT_VERIFY_WITNESS_PUBKEYTYPE, "IsSolvable requires standard script flags to include WITNESS_PUBKEYTYPE");
     if (ProduceSignature(provider, DUMMY_SIGNATURE_CREATOR, script, sigs)) {
         // VerifyScript check is just defensive, and should never fail.
-        assert(VerifyScript(sigs.scriptSig, script, &sigs.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, DUMMY_CHECKER));
+        bool verified = VerifyScript(sigs.scriptSig, script, &sigs.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, DUMMY_CHECKER);
+        assert(verified);
         return true;
     }
     return false;

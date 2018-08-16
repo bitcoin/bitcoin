@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2017 The Bitcoin Core developers
+# Copyright (c) 2015-2018 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test BIP65 (CHECKLOCKTIMEVERIFY).
@@ -8,11 +8,13 @@ Test that the CHECKLOCKTIMEVERIFY soft-fork activates at (regtest) block height
 1351.
 """
 
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
-from test_framework.mininode import *
-from test_framework.blocktools import create_coinbase, create_block
+from test_framework.blocktools import create_coinbase, create_block, create_transaction
+from test_framework.messages import CTransaction, msg_block, ToHex
+from test_framework.mininode import mininode_lock, P2PInterface
 from test_framework.script import CScript, OP_1NEGATE, OP_CHECKLOCKTIMEVERIFY, OP_DROP, CScriptNum
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import assert_equal, bytes_to_hex_str, hex_str_to_bytes, wait_until
+
 from io import BytesIO
 
 CLTV_HEIGHT = 1351
@@ -49,34 +51,23 @@ def cltv_validate(node, tx, height):
                                   list(CScript(new_tx.vin[0].scriptSig)))
     return new_tx
 
-def create_transaction(node, coinbase, to_address, amount):
-    from_txid = node.getblock(coinbase)['tx'][0]
-    inputs = [{ "txid" : from_txid, "vout" : 0}]
-    outputs = { to_address : amount }
-    rawtx = node.createrawtransaction(inputs, outputs)
-    signresult = node.signrawtransactionwithwallet(rawtx)
-    tx = CTransaction()
-    tx.deserialize(BytesIO(hex_str_to_bytes(signresult['hex'])))
-    return tx
-
 class BIP65Test(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.extra_args = [['-promiscuousmempoolflags=1', '-whitelist=127.0.0.1']]
+        self.extra_args = [['-whitelist=127.0.0.1']]
         self.setup_clean_chain = True
 
     def run_test(self):
         self.nodes[0].add_p2p_connection(P2PInterface())
-        self.nodes[0].p2p.wait_for_verack()
 
         self.log.info("Mining %d blocks", CLTV_HEIGHT - 2)
-        self.coinbase_blocks = self.nodes[0].generate(CLTV_HEIGHT - 2)
+        self.coinbase_txids = [self.nodes[0].getblock(b)['tx'][0] for b in self.nodes[0].generate(CLTV_HEIGHT - 2)]
         self.nodeaddress = self.nodes[0].getnewaddress()
 
         self.log.info("Test that an invalid-according-to-CLTV transaction can still appear in a block")
 
-        spendtx = create_transaction(self.nodes[0], self.coinbase_blocks[0],
-                self.nodeaddress, 1.0)
+        spendtx = create_transaction(self.nodes[0], self.coinbase_txids[0],
+                self.nodeaddress, amount=1.0)
         cltv_invalidate(spendtx)
         spendtx.rehash()
 
@@ -110,18 +101,19 @@ class BIP65Test(BitcoinTestFramework):
         self.log.info("Test that invalid-according-to-cltv transactions cannot appear in a block")
         block.nVersion = 4
 
-        spendtx = create_transaction(self.nodes[0], self.coinbase_blocks[1],
-                self.nodeaddress, 1.0)
+        spendtx = create_transaction(self.nodes[0], self.coinbase_txids[1],
+                self.nodeaddress, amount=1.0)
         cltv_invalidate(spendtx)
         spendtx.rehash()
 
         # First we show that this tx is valid except for CLTV by getting it
-        # accepted to the mempool (which we can achieve with
-        # -promiscuousmempoolflags).
-        self.nodes[0].p2p.send_and_ping(msg_tx(spendtx))
-        assert spendtx.hash in self.nodes[0].getrawmempool()
+        # rejected from the mempool for exactly that reason.
+        assert_equal(
+            [{'txid': spendtx.hash, 'allowed': False, 'reject-reason': '64: non-mandatory-script-verify-flag (Negative locktime)'}],
+            self.nodes[0].testmempoolaccept(rawtxs=[bytes_to_hex_str(spendtx.serialize())], allowhighfees=True)
+        )
 
-        # Now we verify that a block with this transaction is invalid.
+        # Now we verify that a block with this transaction is also invalid.
         block.vtx.append(spendtx)
         block.hashMerkleRoot = block.calc_merkle_root()
         block.solve()

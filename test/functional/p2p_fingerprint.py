@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017 The Bitcoin Core developers
+# Copyright (c) 2017-2018 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test various fingerprinting protections.
@@ -11,18 +11,18 @@ the node should pretend that it does not have it to avoid fingerprinting.
 import time
 
 from test_framework.blocktools import (create_block, create_coinbase)
+from test_framework.messages import CInv
 from test_framework.mininode import (
-    CInv,
     P2PInterface,
     msg_headers,
     msg_block,
     msg_getdata,
     msg_getheaders,
-    wait_until,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    wait_until,
 )
 
 class P2PFingerprintTest(BitcoinTestFramework):
@@ -75,7 +75,6 @@ class P2PFingerprintTest(BitcoinTestFramework):
     # last month but that have over a month's worth of work are also withheld.
     def run_test(self):
         node0 = self.nodes[0].add_p2p_connection(P2PInterface())
-        node0.wait_for_verack()
 
         # Set node time to 60 days ago
         self.nodes[0].setmocktime(int(time.time()) - 60 * 24 * 60 * 60)

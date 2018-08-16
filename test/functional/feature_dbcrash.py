@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017 The Bitcoin Core developers
+# Copyright (c) 2017-2018 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test recovery from a crash during chainstate writing.
@@ -31,10 +31,9 @@ import random
 import sys
 import time
 
-from test_framework.mininode import *
-from test_framework.script import *
+from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut, ToHex
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import assert_equal, create_confirmed_utxos, hex_str_to_bytes
 
 HTTP_DISCONNECT_ERRORS = [http.client.CannotSendRequest]
 try:

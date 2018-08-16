@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2017 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -143,6 +143,20 @@ bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no
     }
 
     return false;
+}
+
+bool DecodeHexBlockHeader(CBlockHeader& header, const std::string& hex_header)
+{
+    if (!IsHex(hex_header)) return false;
+
+    const std::vector<unsigned char> header_data{ParseHex(hex_header)};
+    CDataStream ser_header(header_data, SER_NETWORK, PROTOCOL_VERSION);
+    try {
+        ser_header >> header;
+    } catch (const std::exception&) {
+        return false;
+    }
+    return true;
 }
 
 bool DecodeHexBlk(CBlock& block, const std::string& strHexBlk)

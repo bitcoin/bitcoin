@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2017 The Bitcoin Core developers
+# Copyright (c) 2016-2018 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test version bits warning system.
@@ -62,10 +62,8 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         return VB_PATTERN.search(alert_text) is not None
 
     def run_test(self):
-        # Handy alias
         node = self.nodes[0]
         node.add_p2p_connection(P2PInterface())
-        node.p2p.wait_for_verack()
 
         # Mine one period worth of blocks
         node.generate(VB_PERIOD)

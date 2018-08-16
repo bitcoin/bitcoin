@@ -175,7 +175,55 @@
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
         <translation>Opozorilo: V primeru izgube gesla šifrirane denarnice, boste &lt;b&gt;IZGUBILI VSE SVOJE BITCOINE&lt;/b&gt;!</translation>
     </message>
-    </context>
+    <message>
+        <source>Are you sure you wish to encrypt your wallet?</source>
+        <translation>Ali ste prepričani, da želite šifrirati svojo denarnico?</translation>
+    </message>
+    <message>
+        <source>Wallet encrypted</source>
+        <translation>Denarnica šifrirana</translation>
+    </message>
+    <message>
+        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>%1 se bo zaprl, da bi dokončal postopek šifriranja. Zapomnite si, da šifriranje vaše denarnice vaših ne more popolnoma zaščititi vaših bitcoinov pred krajami zlonamernih programov, ki bi lahko bili nameščeni na vašem računalniku.</translation>
+    </message>
+    <message>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
+        <translation>POMEMBNO: Vse starejše varnostne kopije denarnice je potrebno zamenjati z novoizdelano, šifrirano, varnostno kopijo. Zaradi varnosti bodo stare varnostne kopije postale neuporabne takoj, ko začnete uporabljati novo, šifrirano denarnico.</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed</source>
+        <translation>Šifriranje denarnice ni uspelo</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
+        <translation>Šifriranje denarnice ni uspelo zaradi notranje napake. Vaša denarnica ni bila šifrirana.</translation>
+    </message>
+    <message>
+        <source>The supplied passphrases do not match.</source>
+        <translation>Navedeni gesli se ne ujemata.</translation>
+    </message>
+    <message>
+        <source>Wallet unlock failed</source>
+        <translation>Denarnice ni bilo mogoče odkleniti.</translation>
+    </message>
+    <message>
+        <source>The passphrase entered for the wallet decryption was incorrect.</source>
+        <translation>Geslo za dešifriranje denarnice, ki ste ga vnesli, ni pravilno.</translation>
+    </message>
+    <message>
+        <source>Wallet decryption failed</source>
+        <translation>Dešifriranje denarnice ni uspelo</translation>
+    </message>
+    <message>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation>Geslo za dostop do denarnice je bilo uspešno spremenjeno.</translation>
+    </message>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>Opozorilo: Vključena je tipka Caps Lock!</translation>
+    </message>
+</context>
 <context>
     <name>BanTableModel</name>
     <message>
@@ -226,6 +274,14 @@
         <translation>Ustavite program</translation>
     </message>
     <message>
+        <source>&amp;About %1</source>
+        <translation>&amp;O nas%1</translation>
+    </message>
+    <message>
+        <source>Show information about %1</source>
+        <translation>Prikaži informacije o %1</translation>
+    </message>
+    <message>
         <source>About &amp;Qt</source>
         <translation>O &amp;Qt</translation>
     </message>
@@ -236,6 +292,10 @@
     <message>
         <source>&amp;Options...</source>
         <translation>&amp;Možnosti ...</translation>
+    </message>
+    <message>
+        <source>Modify configuration options for %1</source>
+        <translation>Spremeni možnosti konfiguracije za %1</translation>
     </message>
     <message>
         <source>&amp;Encrypt Wallet...</source>
@@ -262,8 +322,36 @@
         <translation>Odpri &amp;URI ...</translation>
     </message>
     <message>
+        <source>Wallet:</source>
+        <translation>Denarnica:</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>privzeta denarnica</translation>
+    </message>
+    <message>
+        <source>Click to disable network activity.</source>
+        <translation>Kliknite, da onemogočite omrežno aktivnosti.</translation>
+    </message>
+    <message>
+        <source>Network activity disabled.</source>
+        <translation>Omrežna aktivnost onemogočena.</translation>
+    </message>
+    <message>
+        <source>Click to enable network activity again.</source>
+        <translation>Kliknite, da ponovno vključite omrežno aktivnost.</translation>
+    </message>
+    <message>
+        <source>Syncing Headers (%1%)...</source>
+        <translation>Sinhronizacija glav (%1%)...</translation>
+    </message>
+    <message>
         <source>Reindexing blocks on disk...</source>
         <translation>Poustvarjam kazalo blokov na disku ...</translation>
+    </message>
+    <message>
+        <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
+        <translation>Namestniški strežnik je omogočen&lt;/b&gt;: %1</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
@@ -1159,6 +1247,10 @@
     <message>
         <source>Clear console</source>
         <translation>Počisti konzolo</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>privzeta denarnica</translation>
     </message>
     <message>
         <source>via %1</source>

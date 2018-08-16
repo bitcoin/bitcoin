@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2017 The Bitcoin Core developers
+# Copyright (c) 2014-2018 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet accounts properly when there is a double-spend conflict."""
@@ -19,8 +19,8 @@ class TxnMallTest(BitcoinTestFramework):
         self.num_nodes = 4
 
     def add_options(self, parser):
-        parser.add_option("--mineblock", dest="mine_block", default=False, action="store_true",
-                          help="Test double-spend of 1-confirmed transaction")
+        parser.add_argument("--mineblock", dest="mine_block", default=False, action="store_true",
+                            help="Test double-spend of 1-confirmed transaction")
 
     def setup_network(self):
         # Start with split network:
