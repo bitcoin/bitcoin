@@ -457,9 +457,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1014 - " + _("Failed to write to asset DB");
 				return error(errorMessage.c_str());
 			}
-			if (!bSanityCheck && !strResponseEnglish.empty()) {
-				paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, assetAllocationTuple.ToString());
-			}
 		}
 		if(bSanityCheck)
 			theAssetAllocation = dbAssetAllocation;
@@ -617,11 +614,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1023 - " + _("Failed to write to asset allocation DB");
 						return error(errorMessage.c_str());
 					}
-					if (fJustCheck) {
-						if (!strResponseEnglish.empty()) {
-							paliasdb->WriteAliasIndexTxHistory(user1, receiverAddress, user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString());
-						}
-					}
 				}
 			}
 		}
@@ -724,12 +716,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 						errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1030 - " + _("Failed to write to asset allocation DB");
 						return error(errorMessage.c_str());
 					}
-
-					if (fJustCheck) {
-						if (!strResponseEnglish.empty()) {
-							paliasdb->WriteAliasIndexTxHistory(user1, receiverAddress, user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString());
-						}
-					}
 				}
 			}
 		}
@@ -749,7 +735,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 			if(fTPSTest)
 				vecTPSTestReceivedTimes.emplace_back(theAssetAllocation.txHash, GetTimeMicros());
 		}
-		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, 0, 0, dbAsset, ms, "", "", fJustCheck))
+		const string &user = op == OP_ASSET_COLLECT_INTEREST ? user1 : "";
+		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, 0, 0, dbAsset, ms, user, user, fJustCheck))
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1031 - " + _("Failed to write to asset allocation DB");
 			return error(errorMessage.c_str());

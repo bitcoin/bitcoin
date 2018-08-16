@@ -671,11 +671,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, const vector<vector<unsign
 			theOffer.auctionOffer = linkOffer.auctionOffer;
 		}
 	}
-	if(!bSanityCheck) {
-		if (!strResponseEnglish.empty()) {
-			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theOffer.vchOffer));
-		}
-	}
 	theOffer.nHeight = nHeight;
 	theOffer.txHash = tx.GetHash();
 	// write offer

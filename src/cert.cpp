@@ -463,11 +463,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, const vector<vector<unsigne
 			return true;
 		}
 	}
-	if(!bSanityCheck) {
-		if (!strResponseEnglish.empty()) {
-			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theCert.vchCert));
-		}
-	}
     // set the cert's txn-dependent values
 	theCert.nHeight = nHeight;
 	theCert.txHash = tx.GetHash();

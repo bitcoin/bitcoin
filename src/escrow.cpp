@@ -994,14 +994,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 			}
 		}
 
-		if (!bSanityCheck) {
-			if (!strResponseEnglish.empty()) {
-				user1 = stringFromVch(theEscrow.vchBuyerAlias);
-				user2 = stringFromVch(theEscrow.vchSellerAlias);
-				user3 = stringFromVch(theEscrow.vchArbiterAlias);
-				paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(serializedEscrow.vchEscrow));
-			}
-		}
 		// set the escrow's txn-dependent values
 		theEscrow.txHash = tx.GetHash();
 		theEscrow.nHeight = nHeight;
