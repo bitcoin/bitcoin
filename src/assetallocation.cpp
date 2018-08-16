@@ -827,7 +827,7 @@ UniValue tpstestadd(const JSONRPCRequest& request) {
 	UniValue txs;
 	if(params.size() > 1)
 		txs = params[1].get_array();
-	if (!fTPSTestEnabled) {
+	if (fTPSTestEnabled) {
 		for (unsigned int idx = 0; idx < txs.size(); idx++) {
 			const UniValue& tx = txs[idx];
 			UniValue paramsRawTx(UniValue::VARR);
