@@ -618,7 +618,7 @@ bool CReissueAsset::IsValid(std::string &strError, CAssetsCache& assetCache) con
 
     CNewAsset asset;
     if (!assetCache.GetAssetIfExists(this->strName, asset)) {
-        strError = std::string("Unable to reissue asset: asset_name '") + strName + std::string("' doesn't exsist in the database");
+        strError = std::string("Unable to reissue asset: asset_name '") + strName + std::string("' doesn't exist in the database");
         return false;
     }
 
@@ -813,7 +813,7 @@ bool CAssetsCache::AddToMyUpspentOutPoints(const std::string& strName, const COu
         mapMyUnspentAssets.insert(std::make_pair(strName, setOuts));
     } else {
         if (!mapMyUnspentAssets[strName].insert(out).second)
-            return error("%s: Tried adding an asset to my map of upspent assets, but it already exsisted in the set of assets: %s, COutPoint: %s", __func__, strName, out.ToString());
+            return error("%s: Tried adding an asset to my map of upspent assets, but it already existed in the set of assets: %s, COutPoint: %s", __func__, strName, out.ToString());
     }
 
     // Add the outpoint to the set so we know what we need to database
@@ -1008,12 +1008,12 @@ bool CAssetsCache::RemoveNewAsset(const CNewAsset& asset, const std::string addr
 bool CAssetsCache::AddNewAsset(const CNewAsset& asset, const std::string address)
 {
     if(CheckIfAssetExists(asset.strName))
-        return error("%s: Tried adding new asset, but it already exsisted in the set of assets: %s", __func__, asset.strName);
+        return error("%s: Tried adding new asset, but it already existed in the set of assets: %s", __func__, asset.strName);
 
     // Insert the asset into the assets address map
     if (mapAssetsAddresses.count(asset.strName)) {
         if (mapAssetsAddresses[asset.strName].count(address))
-            return error("%s : Tried adding a new asset and saving its quantity, but it already exsisted in the map of assets addresses: %s", __func__, asset.strName);
+            return error("%s : Tried adding a new asset and saving its quantity, but it already existed in the map of assets addresses: %s", __func__, asset.strName);
 
         mapAssetsAddresses[asset.strName].insert(address);
     } else {
@@ -1152,7 +1152,7 @@ bool CAssetsCache::AddOwnerAsset(const std::string& assetsName, const std::strin
 {
     if (mapAssetsAddresses.count(assetsName)) {
         if (mapAssetsAddresses[assetsName].count(address))
-            return error("%s : Tried adding an owner asset, but it already exsisted in the map of assets addresses: %s",
+            return error("%s : Tried adding an owner asset, but it already existed in the map of assets addresses: %s",
                          __func__, assetsName);
 
         mapAssetsAddresses[assetsName].insert(address);
