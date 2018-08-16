@@ -805,6 +805,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
     if (pfMissingInputs)
         *pfMissingInputs = false;
 	if (!fTPSTestEnabled) {
+		if (fTPSTest)
+		{
+			vecTPSTestReceivedTimesMempool.emplace_back(hash, GetTimeMicros());
+		}
 		if (!CheckTransaction(tx, state))
 			return false; // state filled in by CheckTransaction
 
@@ -844,10 +848,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 					hash.ToString(), hashLocked.ToString()),
 					REJECT_INVALID, "tx-txlock-conflict");
 		}
-	}
-	else
-	{
-		vecTPSTestReceivedTimesMempool.emplace_back(hash, GetTimeMicros());
 	}
     // Check for conflicts with in-memory transactions
     std::set<uint256> setConflicts;
