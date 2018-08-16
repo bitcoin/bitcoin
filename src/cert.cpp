@@ -836,6 +836,7 @@ bool BuildCertIndexerJson(const CCert& cert, UniValue& oCert)
 	oCert.push_back(Pair("title", stringFromVch(cert.vchTitle)));
 	oCert.push_back(Pair("height", (int)cert.nHeight));
 	oCert.push_back(Pair("category", stringFromVch(cert.sCategory)));
+	// TODO change alias to owner in later release with help of BMD team to detect upstream changes
 	oCert.push_back(Pair("alias", stringFromVch(cert.vchAlias)));
 	// TODO remove in later release with help of BMD team to detect upstream issues
 	oCert.push_back(Pair("expires_on", GetCertExpiration(cert)));
