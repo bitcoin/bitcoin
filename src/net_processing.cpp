@@ -762,6 +762,9 @@ void PeerLogicValidation::InitializeNode(CNode *pnode) {
     if (!pnode->fInbound) {
         // try to encrypt channels if node has the NODE_P2P_V2 service flag or if it was added manually
         // TODO: don't try for encryption if it has previously failed
+        LogPrint(BCLog::NET, "Service Flags=%lld peer:%d\n", pnode->nServices, nodeid);
+        LogPrint(BCLog::NET, "Manual Connection=%d peer:%d\n", pnode->m_manual_connection, nodeid);
+        LogPrint(BCLog::NET, "Net encryption=%d peer:%d\n", gArgs.GetBoolArg("-netencryption", DEFAULT_ALLOW_NET_ENCRYPTION), nodeid);
         if (((pnode->nServices & NODE_P2P_V2) || pnode->m_manual_connection) && gArgs.GetBoolArg("-netencryption", DEFAULT_ALLOW_NET_ENCRYPTION)) {
             // send an encryption request
             connman->SendEncryptionHandshakeData(pnode);

@@ -33,6 +33,7 @@ public:
     virtual unsigned int GetAADLen() const = 0;
     virtual void EnableEncryption(bool inbound) = 0;
     virtual uint256 GetSessionID() = 0;
+    virtual bool Rekey(bool send_channel) = 0;
 };
 
 class P2PEncryption : public EncryptionHandlerInterface
@@ -40,11 +41,29 @@ class P2PEncryption : public EncryptionHandlerInterface
 private:
     static constexpr unsigned int TAG_LEN = 16; /* poly1305 128bit MAC tag */
     static constexpr unsigned int AAD_LEN = 3;  /* 24 bit payload length */
+
+    // ChaCha20 must never reuse a {key, nonce} for encryption nor may it be
+    // used to encrypt more than 2^70 bytes under the same {key, nonce}
+    // Re-key after 1GB (RFC4253 / SSH recommendation) or after 1h
+    static constexpr unsigned int REKEY_LIMIT_BYTES = (1024 * 1024 * 1024);
+    static constexpr unsigned int REKEY_LIMIT_TIME = 3600;                     /* rekey after 1h */
+    static constexpr unsigned int ABORT_LIMIT_BYTES = REKEY_LIMIT_BYTES * 1.1; // abort after ~10% tolerance buffer
+    static constexpr unsigned int ABORT_LIMIT_TIME = REKEY_LIMIT_BYTES * 1.1;  // abort after ~10% tolerance buffer
+    static constexpr unsigned int MIN_REKEY_TIME = 10;                         // minimal rekey time to avoid DOS
+
     CKey m_ecdh_key;
     CPrivKey m_raw_ecdh_secret;
+    CPrivKey m_aead_k_1_a;
+    CPrivKey m_aead_k_2_a;
+    CPrivKey m_aead_k_1_b;
+    CPrivKey m_aead_k_2_b;
     uint256 m_session_id;
-
+    bool m_inbound;
     std::atomic_bool handshake_done;
+    int64_t m_time_last_rekey_send = 0;
+    int64_t m_time_last_rekey_recv = 0;
+    uint64_t m_bytes_encrypted = 0; //counter of bytes encrypted with same key
+    uint64_t m_bytes_decrypted = 0; //counter of bytes decrypted with same key
 
     CCriticalSection cs;
     std::unique_ptr<ChaCha20Poly1305AEAD> m_send_aead_ctx;
@@ -55,6 +74,9 @@ private:
     uint32_t m_send_seq_nr = 0;
     uint32_t m_send_seq_nr_aad = 0;
     int m_send_aad_keystream_pos = 0;
+
+    // check if send channel should rekey
+    bool ShouldRekeySend();
 
 public:
     P2PEncryption();
@@ -74,15 +96,19 @@ public:
     void EnableEncryption(bool inbound) override;
     uint256 GetSessionID() override;
 
-    unsigned inline int GetTagLen() const override
+    inline unsigned int GetTagLen() const override
     {
         return TAG_LEN;
     }
 
-    unsigned inline int GetAADLen() const override
+    inline unsigned int GetAADLen() const override
     {
         return AAD_LEN;
     }
+
+    // rekey for either the send or recv channel
+    // may return false if recv channel rekey did not respect limits
+    bool Rekey(bool send_channel) override;
 };
 typedef std::shared_ptr<EncryptionHandlerInterface> EncryptionHandlerRef;
 
@@ -131,6 +157,7 @@ class NetV2Message : public NetMessageBase
 public:
     bool m_in_data;
     uint32_t m_message_size;
+    bool m_rekey_flag;
     unsigned int m_hdr_pos;
     uint32_t m_data_pos;
     std::string m_command_name;
@@ -149,6 +176,7 @@ public:
         m_in_data = 0;
         m_type = NetMessageType::ENCRYPTED_MSG;
         m_command_name.clear();
+        m_rekey_flag = false;
     }
 
     bool Complete() const override
