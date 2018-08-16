@@ -315,11 +315,11 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	map<string, string> assetAddressMap;
 	// setup senders and receiver node aliases
 	vector<string> senders;
-	vector<string> receiver;
+	vector<string> receivers;
 	senders.push_back("node1");
 	senders.push_back("node2");
-	receiver.push_back("node3");
-	BOOST_CHECK(receiver.size() == 1);
+	receivers.push_back("node3");
+	BOOST_CHECK(receivers.size() == 1);
 
 	int numberOfTransactionToSend = 2500;
 	// create 1000 addresses and assets for each asset	
@@ -418,7 +418,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	tpstarttime += sendrawelapsedtime;
 
 	// gather received transfers on the receiver, you can query any receiver node here, in general they all should see the same state after the elapsed time.
-	BOOST_CHECK_NO_THROW(r = CallExtRPC(receiver[0], "tpstestinfo"));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(receivers[0], "tpstestinfo"));
 	UniValue tpsresponse = r.get_obj();
 	UniValue tpsresponsereceivers = find_value(tpsresponse, "receivers").get_array();
 	float totalTime = 0;
