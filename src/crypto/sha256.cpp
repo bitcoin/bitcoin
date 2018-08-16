@@ -29,6 +29,11 @@ namespace sha256d64_avx2
 void Transform_8way(unsigned char* out, const unsigned char* in);
 }
 
+namespace sha256d64_avx512
+{
+void Transform_16way(unsigned char* out, const unsigned char* in);
+}
+
 namespace sha256d64_shani
 {
 void Transform_2way(unsigned char* out, const unsigned char* in);
@@ -461,6 +466,7 @@ TransformD64Type TransformD64 = sha256::TransformD64;
 TransformD64Type TransformD64_2way = nullptr;
 TransformD64Type TransformD64_4way = nullptr;
 TransformD64Type TransformD64_8way = nullptr;
+TransformD64Type TransformD64_16way = nullptr;
 
 bool SelfTest() {
     // Input state (equal to the initial SHA256 state)
@@ -576,8 +582,10 @@ std::string SHA256AutoDetect()
 #if defined(USE_ASM) && (defined(__x86_64__) || defined(__amd64__) || defined(__i386__))
     bool have_sse4 = false;
     bool have_xsave = false;
+    bool have_x512save = false;
     bool have_avx = false;
     bool have_avx2 = false;
+    bool have_avx512 = false;
     bool have_shani = false;
     bool enabled_avx = false;
 
@@ -585,7 +593,9 @@ std::string SHA256AutoDetect()
     (void)have_sse4;
     (void)have_avx;
     (void)have_xsave;
+    (void)have_x512save;
     (void)have_avx2;
+    (void)have_avx512;
     (void)have_shani;
     (void)enabled_avx;
 
@@ -596,11 +606,15 @@ std::string SHA256AutoDetect()
     have_avx = (ecx >> 28) & 1;
     if (have_xsave && have_avx) {
         enabled_avx = AVXEnabled();
+        have_x512save = (eax & 0xe0) == 0xe0;
     }
     if (have_sse4) {
         cpuid(7, 0, eax, ebx, ecx, edx);
         have_avx2 = (ebx >> 5) & 1;
         have_shani = (ebx >> 29) & 1;
+        if (have_x512save) {
+            have_avx512 = (ebx >> 21) & 1;
+        }
     }
 
 #if defined(ENABLE_SHANI) && !defined(BUILD_BITCOIN_INTERNAL)
@@ -630,6 +644,13 @@ std::string SHA256AutoDetect()
     if (have_avx2 && have_avx && enabled_avx) {
         TransformD64_8way = sha256d64_avx2::Transform_8way;
         ret += ",avx2(8way)";
+    }
+#endif
+
+#if defined(ENABLE_AVX512) && !defined(BUILD_BITCOIN_INTERNAL)
+    if (have_avx512 && (have_avx2 || have_shani) && enabled_avx) {
+        TransformD64_8way = sha256d64_avx512::Transform_16way;
+        ret += ",avx512(16way)";
     }
 #endif
 #endif
@@ -697,6 +718,14 @@ CSHA256& CSHA256::Reset()
 
 void SHA256D64(unsigned char* out, const unsigned char* in, size_t blocks)
 {
+    if (TransformD64_16way) {
+        while (blocks >= 16) {
+            TransformD64_16way(out, in);
+            out += 512;
+            in += 1024;
+            blocks -= 16;
+        }
+    }
     if (TransformD64_8way) {
         while (blocks >= 8) {
             TransformD64_8way(out, in);
