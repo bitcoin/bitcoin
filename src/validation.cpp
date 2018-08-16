@@ -71,7 +71,7 @@
 #if defined(NDEBUG)
 # error "Syscoin Core cannot be compiled without assertions."
 #endif
-
+std::vector<std::pair<uint256, int64_t> > vecTPSTestReceivedTimesMempool;
 /**
  * Global state
  */
@@ -844,6 +844,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 					hash.ToString(), hashLocked.ToString()),
 					REJECT_INVALID, "tx-txlock-conflict");
 		}
+	}
+	else
+	{
+		vecTPSTestReceivedTimesMempool.emplace_back(hash, GetTimeMicros());
 	}
     // Check for conflicts with in-memory transactions
     std::set<uint256> setConflicts;

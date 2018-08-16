@@ -400,7 +400,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	for (auto &sender : senders)
 		BOOST_CHECK_NO_THROW(CallExtRPC(sender, "tpstestadd",  boost::lexical_cast<string>(tpstarttime)));
 	
-	float totalTime = 0;
+	
 	printf("Waiting 11 seconds as per protocol...\n");
 	// start 11 second wait
 	MilliSleep(11000);
@@ -419,13 +419,25 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 	BOOST_CHECK_NO_THROW(r = CallExtRPC(receiver[0], "tpstestinfo"));
 	UniValue tpsresponse = r.get_obj();
 	UniValue tpsresponsereceivers = find_value(tpsresponse, "receivers").get_array();
+	float totalTime = 0;
 	for (int i = 0; i < tpsresponsereceivers.size(); i++) {
 		const UniValue &responseObj = tpsresponsereceivers[i].get_obj();
 		totalTime += find_value(responseObj, "time").get_int64() - tpstarttime;
 	}
 	// average the start time - received time by the number of responses received (usually number of responses should match number of transactions sent beginning of test)
 	totalTime /= tpsresponsereceivers.size();
-	printf("tpstarttime %lld sendrawelapsedtime %lld totaltime %.2f, num responses %d\n", tpstarttime, sendrawelapsedtime, totalTime, tpsresponsereceivers.size());
+
+	// avg time per tx it took to hit the mempool
+	UniValue tpsresponsereceiversmempool = find_value(tpsresponse, "receivers_mempool").get_array();
+	float totalTimeMempool = 0;
+	for (int i = 0; i < tpsresponsereceiversmempool.size(); i++) {
+		const UniValue &responseObj = tpsresponsereceiversmempool[i].get_obj();
+		totalTimeMempool += find_value(responseObj, "time").get_int64() - tpstarttime;
+	}
+	// average the start time - received time by the number of responses received (usually number of responses should match number of transactions sent beginning of test)
+	totalTimeMempool /= tpsresponsereceiversmempool.size();
+
+	printf("tpstarttime %lld sendrawelapsedtime %lld totaltime %.2f, totaltime mempool %.2f num responses %d\n", tpstarttime, sendrawelapsedtime, totalTime, totalTimeMempool, tpsresponsereceivers.size());
 	for (auto &sender : senders)
 		BOOST_CHECK_NO_THROW(CallExtRPC(sender, "tpstestsetenabled", "false"));
 }

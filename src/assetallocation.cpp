@@ -762,6 +762,7 @@ UniValue tpstestinfo(const JSONRPCRequest& request) {
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("This function requires tpstest configuration to be set upon startup. Please shutdown and enable it by adding it to your syscoin.conf file and then call 'tpstestsetenabled true'."));
 	UniValue oTPSTestResults(UniValue::VOBJ);
 	UniValue oTPSTestReceivers(UniValue::VARR);
+	UniValue oTPSTestReceiversMempool(UniValue::VARR);
 	oTPSTestResults.push_back(Pair("enabled", fTPSTestEnabled));
 	oTPSTestResults.push_back(Pair("teststarttime", nTPSTestingStartTime));
 	oTPSTestResults.push_back(Pair("sendrawelapsedtime", nTPSTestingSendRawElapsedTime));
@@ -772,6 +773,13 @@ UniValue tpstestinfo(const JSONRPCRequest& request) {
 		oTPSTestReceivers.push_back(oTPSTestStatusObj);
 	}
 	oTPSTestResults.push_back(Pair("receivers", oTPSTestReceivers));
+	for (auto &receivedTime : vecTPSTestReceivedTimesMempool) {
+		UniValue oTPSTestStatusObj(UniValue::VOBJ);
+		oTPSTestStatusObj.push_back(Pair("txid", receivedTime.first.GetHex()));
+		oTPSTestStatusObj.push_back(Pair("time", receivedTime.second));
+		oTPSTestReceiversMempool.push_back(oTPSTestStatusObj);
+	}
+	oTPSTestResults.push_back(Pair("receivers_mempool", oTPSTestReceiversMempool));
 	return oTPSTestResults;
 }
 UniValue tpstestsetenabled(const JSONRPCRequest& request) {
@@ -786,6 +794,12 @@ UniValue tpstestsetenabled(const JSONRPCRequest& request) {
 	if(!fTPSTest)
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("This function requires tpstest configuration to be set upon startup. Please shutdown and enable it by adding it to your syscoin.conf file and then try again."));
 	fTPSTestEnabled = params[0].get_bool();
+	if (!fTPSTestEnabled) {
+		vecTPSTestReceivedTimes.clear();
+		vecTPSTestReceivedTimesMempool.clear();
+		nTPSTestingSendRawElapsedTime = 0;
+		nTPSTestingStartTime = 0;
+	}
 	UniValue result(UniValue::VOBJ);
 	result.push_back(Pair("status", "success"));
 	return result;
