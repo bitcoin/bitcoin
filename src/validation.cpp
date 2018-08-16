@@ -807,7 +807,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 	if (!fTPSTestEnabled) {
 		if (fTPSTest)
 		{
-			vecTPSTestReceivedTimesMempool.emplace_back(hash, GetTimeMicros());
+			const int64_t &currentTime = GetTimeMicros();
+			if(currentTime >= nTPSTestingStartTime)
+				vecTPSTestReceivedTimesMempool.emplace_back(hash, currentTime);
 		}
 		if (!CheckTransaction(tx, state))
 			return false; // state filled in by CheckTransaction
