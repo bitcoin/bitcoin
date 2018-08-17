@@ -143,9 +143,8 @@ def main():
     parser.add_argument('-o', '--os', dest='os', default='lwm', help='Specify which Operating Systems the build is for. Default is %(default)s. l for Linux, w for Windows, m for MacOS')
     parser.add_argument('-j', '--jobs', dest='jobs', default='2', help='Number of processes to use. Default %(default)s')
     parser.add_argument('-m', '--memory', dest='memory', default='2000', help='Memory to allocate in MiB. Default %(default)s')
-    parser.add_argument('-k', '--kvm', action='store_true', dest='kvm', help='Use KVM instead of LXC')
-    parser.add_argument('-d', '--docker', action='store_true', dest='docker', help='Use Docker instead of LXC')
-    parser.add_argument('-S', '--setup', action='store_true', dest='setup', help='Set up the Gitian building environment. Uses LXC. If you want to use KVM, use the --kvm option. Only works on Debian-based systems (Ubuntu, Debian)')
+    parser.add_argument('-V', '--virtualization', dest='virtualization', default='lxc', help='Specify virtualization technology to use: lxc for LXC, kvm for KVM, docker for Docker. Default is %(default)s')
+    parser.add_argument('-S', '--setup', action='store_true', dest='setup', help='Set up the Gitian building environment. Only works on Debian-based systems (Ubuntu, Debian)')
     parser.add_argument('-D', '--detach-sign', action='store_true', dest='detach_sign', help='Create the assert file for detached signing. Will not commit anything.')
     parser.add_argument('-n', '--no-commit', action='store_false', dest='commit_files', help='Do not commit anything to git')
     parser.add_argument('signer', help='GPG signer to sign each build assert file')
@@ -164,16 +163,23 @@ def main():
         args.build=True
         args.sign=True
 
-    if args.kvm and args.docker:
-        raise Exception('Error: cannot have both kvm and docker')
-
     args.sign_prog = 'true' if args.detach_sign else 'gpg --detach-sign'
 
-    # Set enviroment variable USE_LXC or USE_DOCKER, let gitian-builder know that we use lxc or docker
-    if args.docker:
+    args.lxc = 'lxc' in args.virtualization # not used, for uniformity only
+    args.kvm = 'kvm' in args.virtualization
+    args.docker = 'docker' in args.virtualization
+
+    # Set environment variables for gitian-builder: USE_LXC, USE_DOCKER and USE_VBOX
+    os.environ['USE_VBOX'] = ''
+    if args.kvm:
+        os.environ['USE_LXC'] = ''
+        os.environ['USE_DOCKER'] = ''
+    elif args.docker:
+        os.environ['USE_LXC'] = ''
         os.environ['USE_DOCKER'] = '1'
-    elif not args.kvm:
+    else: # default = lxc
         os.environ['USE_LXC'] = '1'
+        os.environ['USE_DOCKER'] = ''
         if not 'GITIAN_HOST_IP' in os.environ.keys():
             os.environ['GITIAN_HOST_IP'] = '10.0.3.1'
         if not 'LXC_GUEST_IP' in os.environ.keys():
