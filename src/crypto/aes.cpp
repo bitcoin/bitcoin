@@ -1,15 +1,15 @@
-// Copyright (c) 2016 The Bitcoin Core developers
+// Copyright (c) 2016-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "aes.h"
-#include "crypto/common.h"
+#include <crypto/aes.h>
+#include <crypto/common.h>
 
 #include <assert.h>
 #include <string.h>
 
 extern "C" {
-#include "crypto/ctaes/ctaes.c"
+#include <crypto/ctaes/ctaes.c>
 }
 
 AES128Encrypt::AES128Encrypt(const unsigned char key[16])
@@ -112,7 +112,6 @@ static int CBCEncrypt(const T& enc, const unsigned char iv[AES_BLOCKSIZE], const
 template <typename T>
 static int CBCDecrypt(const T& dec, const unsigned char iv[AES_BLOCKSIZE], const unsigned char* data, int size, bool pad, unsigned char* out)
 {
-    unsigned char padsize = 0;
     int written = 0;
     bool fail = false;
     const unsigned char* prev = iv;
@@ -136,7 +135,7 @@ static int CBCDecrypt(const T& dec, const unsigned char iv[AES_BLOCKSIZE], const
     if (pad) {
         // If used, padding size is the value of the last decrypted byte. For
         // it to be valid, It must be between 1 and AES_BLOCKSIZE.
-        padsize = *--out;
+        unsigned char padsize = *--out;
         fail = !padsize | (padsize > AES_BLOCKSIZE);
 
         // If not well-formed, treat it as though there's no padding.

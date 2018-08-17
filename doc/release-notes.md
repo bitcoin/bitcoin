@@ -3,12 +3,12 @@ release-notes at release time)
 
 Bitcoin Core version *version* is now available from:
 
-  <https://bitcoin.org/bin/bitcoin-core-*version*/>
+  <https://bitcoincore.org/bin/bitcoin-core-*version*/>
 
 This is a new major version release, including new features, various bugfixes
 and performance improvements, as well as updated translations.
 
-Please report bugs using the issue tracker at github:
+Please report bugs using the issue tracker at GitHub:
 
   <https://github.com/bitcoin/bitcoin/issues>
 
@@ -16,71 +16,51 @@ To receive security and update notifications, please subscribe to:
 
   <https://bitcoincore.org/en/list/announcements/join/>
 
+How to Upgrade
+==============
+
+If you are running an older version, shut it down. Wait until it has completely
+shut down (which might take a few minutes for older versions), then run the
+installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
+or `bitcoind`/`bitcoin-qt` (on Linux).
+
+The first time you run version 0.15.0, your chainstate database will be converted to a
+new format, which will take anywhere from a few minutes to half an hour,
+depending on the speed of your machine.
+
+Note that the block database format also changed in version 0.8.0 and there is no
+automatic upgrade code from before version 0.8 to version 0.15.0. Upgrading
+directly from 0.7.x and earlier without redownloading the blockchain is not supported.
+However, as usual, old wallet versions are still supported.
+
+Downgrading warning
+-------------------
+
+The chainstate database for this release is not compatible with previous
+releases, so if you run 0.15 and then decide to switch back to any
+older version, you will need to run the old release with the `-reindex-chainstate`
+option to rebuild the chainstate data structures in the old format.
+
+If your node has pruning enabled, this will entail re-downloading and
+processing the entire blockchain.
+
 Compatibility
 ==============
 
 Bitcoin Core is extensively tested on multiple operating systems using
-the Linux kernel, macOS 10.8+, and Windows Vista and later.
-
-Microsoft ended support for Windows XP on [April 8th, 2014](https://www.microsoft.com/en-us/WindowsForBusiness/end-of-xp-support).
-No attempt is made to prevent installing or running the software on Windows XP, you
-can still do so at your own risk but be aware that there are known instabilities.
-Please do not report issues about Windows XP to the issue tracker.
+the Linux kernel, macOS 10.10+, and Windows 7 and newer (Windows XP is not supported).
 
 Bitcoin Core should also work on most other Unix-like systems but is not
 frequently tested on them.
 
+From 0.17.0 onwards macOS <10.10 is no longer supported. 0.17.0 is built using Qt 5.9.x, which doesn't
+support versions of macOS older than 10.10.
+
 Notable changes
 ===============
 
-Low-level RPC changes
----------------------
-
-- Error codes have been updated to be more accurate for the following error cases:
-  - `getblock` now returns RPC_MISC_ERROR if the block can't be found on disk (for
-  example if the block has been pruned). Previously returned RPC_INTERNAL_ERROR.
-  - `pruneblockchain` now returns RPC_MISC_ERROR if the blocks cannot be pruned
-  because the node is not in pruned mode. Previously returned RPC_METHOD_NOT_FOUND.
-  - `pruneblockchain` now returns RPC_INVALID_PARAMETER if the blocks cannot be pruned
-  because the supplied timestamp is too late. Previously returned RPC_INTERNAL_ERROR.
-  - `pruneblockchain` now returns RPC_MISC_ERROR if the blocks cannot be pruned
-  because the blockchain is too short. Previously returned RPC_INTERNAL_ERROR.
-  - `setban` now returns RPC_CLIENT_INVALID_IP_OR_SUBNET if the supplied IP address
-  or subnet is invalid. Previously returned RPC_CLIENT_NODE_ALREADY_ADDED.
-  - `setban` now returns RPC_CLIENT_INVALID_IP_OR_SUBNET if the user tries to unban
-  a node that has not previously been banned. Previously returned RPC_MISC_ERROR.
-  - `removeprunedfunds` now returns RPC_WALLET_ERROR if bitcoind is unable to remove
-  the transaction. Previously returned RPC_INTERNAL_ERROR.
-  - `removeprunedfunds` now returns RPC_INVALID_PARAMETER if the transaction does not
-  exist in the wallet. Previously returned RPC_INTERNAL_ERROR.
-  - `fundrawtransaction` now returns RPC_INVALID_ADDRESS_OR_KEY if an invalid change
-  address is provided. Previously returned RPC_INVALID_PARAMETER.
-  - `fundrawtransaction` now returns RPC_WALLET_ERROR if bitcoind is unable to create
-  the transaction. The error message provides further details. Previously returned
-  RPC_INTERNAL_ERROR.
-  - `bumpfee` now returns RPC_INVALID_PARAMETER if the provided transaction has
-  descendants in the wallet. Previously returned RPC_MISC_ERROR.
-  - `bumpfee` now returns RPC_INVALID_PARAMETER if the provided transaction has
-  descendants in the mempool. Previously returned RPC_MISC_ERROR.
-  - `bumpfee` now returns RPC_WALLET_ERROR if the provided transaction has
-  has been mined or conflicts with a mined transaction. Previously returned
-  RPC_INVALID_ADDRESS_OR_KEY.
-  - `bumpfee` now returns RPC_WALLET_ERROR if the provided transaction is not
-  BIP 125 replaceable. Previously returned RPC_INVALID_ADDRESS_OR_KEY.
-  - `bumpfee` now returns RPC_WALLET_ERROR if the provided transaction has already
-  been bumped by a different transaction. Previously returned RPC_INVALID_REQUEST.
-  - `bumpfee` now returns RPC_WALLET_ERROR if the provided transaction contains
-  inputs which don't belong to this wallet. Previously returned RPC_INVALID_ADDRESS_OR_KEY.
-  - `bumpfee` now returns RPC_WALLET_ERROR if the provided transaction has multiple change
-  outputs. Previously returned RPC_MISC_ERROR.
-  - `bumpfee` now returns RPC_WALLET_ERROR if the provided transaction has no change
-  output. Previously returned RPC_MISC_ERROR.
-  - `bumpfee` now returns RPC_WALLET_ERROR if the fee is too high. Previously returned
-  RPC_MISC_ERROR.
-  - `bumpfee` now returns RPC_WALLET_ERROR if the fee is too low. Previously returned
-  RPC_MISC_ERROR.
-  - `bumpfee` now returns RPC_WALLET_ERROR if the change output is too small to bump the
-  fee. Previously returned RPC_MISC_ERROR.
+Example item
+------------
 
 Credits
 =======

@@ -1,14 +1,14 @@
-// Copyright (c) 2015-2016 The Bitcoin Core developers
+// Copyright (c) 2015-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "chain.h"
-#include "chainparams.h"
-#include "streams.h"
-#include "zmqpublishnotifier.h"
-#include "validation.h"
-#include "util.h"
-#include "rpc/server.h"
+#include <chain.h>
+#include <chainparams.h>
+#include <streams.h>
+#include <zmq/zmqpublishnotifier.h>
+#include <validation.h>
+#include <util.h>
+#include <rpc/server.h>
 
 static std::multimap<std::string, CZMQAbstractPublishNotifier*> mapPublishNotifiers;
 
@@ -126,7 +126,7 @@ void CZMQAbstractPublishNotifier::Shutdown()
         zmq_close(psocket);
     }
 
-    psocket = 0;
+    psocket = nullptr;
 }
 
 bool CZMQAbstractPublishNotifier::SendMessage(const char *command, const void* data, size_t size)
@@ -136,7 +136,7 @@ bool CZMQAbstractPublishNotifier::SendMessage(const char *command, const void* d
     /* send three parts, command & data & a LE 4byte sequence number */
     unsigned char msgseq[sizeof(uint32_t)];
     WriteLE32(&msgseq[0], nSequence);
-    int rc = zmq_send_multipart(psocket, command, strlen(command), data, size, msgseq, (size_t)sizeof(uint32_t), (void*)0);
+    int rc = zmq_send_multipart(psocket, command, strlen(command), data, size, msgseq, (size_t)sizeof(uint32_t), nullptr);
     if (rc == -1)
         return false;
 

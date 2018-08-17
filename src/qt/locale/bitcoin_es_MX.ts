@@ -30,6 +30,10 @@
         <translation>Eliminar la dirección actualmente seleccionada de la lista</translation>
     </message>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>Ingrese dirección o capa a buscar </translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Exportar la información en la tabla actual a un archivo</translation>
     </message>
@@ -40,6 +44,50 @@
     <message>
         <source>&amp;Delete</source>
         <translation>&amp;Borrar</translation>
+    </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation>Elija la direccion a donde se enviaran las monedas</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>Elija la dirección para recibir monedas.</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation>Elija</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>Direcciones de Envio</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>Direcciones de recibo</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Estas son tus direcciones de Bitcoin para enviar pagos. Siempre revisa el monto y la dirección de envío antes de enviar monedas.</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>Estas son sus direcciones de Bitcoin para recibir pagos. Se recomienda utilizar una nueva dirección de recepción para cada transacción.</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Copiar dirección</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation>copiar y etiquetar</translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation>Editar</translation>
+    </message>
+    <message>
+        <source>Export Address List</source>
+        <translation>Exportar lista de direcciones </translation>
     </message>
     </context>
 <context>
@@ -325,17 +373,13 @@
         <source>Command-line options</source>
         <translation>opciones de la Linea de comandos</translation>
     </message>
-    <message>
-        <source>Usage:</source>
-        <translation>Uso:</translation>
-    </message>
-    <message>
-        <source>command-line options</source>
-        <translation>Opciones de comando de lineas</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>Intro</name>
+    <message>
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
+    </message>
     <message>
         <source>Error</source>
         <translation>Error</translation>
@@ -369,6 +413,10 @@
         <source>none</source>
         <translation>Ninguno </translation>
     </message>
+    <message>
+        <source>Error</source>
+        <translation>Error</translation>
+    </message>
     </context>
 <context>
     <name>OverviewPage</name>
@@ -389,7 +437,11 @@
         <source>Amount</source>
         <translation>Monto</translation>
     </message>
-    </context>
+    <message>
+        <source>unknown</source>
+        <translation>desconocido</translation>
+    </message>
+</context>
 <context>
     <name>QObject::QObject</name>
     </context>
@@ -436,6 +488,10 @@
         <source>Copy &amp;Address</source>
         <translation>&amp;Copiar dirección</translation>
     </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Cartera</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
@@ -469,10 +525,6 @@
     <message>
         <source>Change:</source>
         <translation>Cambio</translation>
-    </message>
-    <message>
-        <source>fast</source>
-        <translation>rápido</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -593,35 +645,23 @@
         <source>Send Coins</source>
         <translation>Enviar monedas</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Exportar la información en la pestaña actual a un archivo</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>
-    <message>
-        <source>Options:</source>
-        <translation>Opciones:</translation>
-    </message>
     <message>
         <source>Bitcoin Core</source>
         <translation>nucleo Bitcoin</translation>
     </message>
     <message>
-        <source>&lt;category&gt; can be:</source>
-        <translation>&lt;categoria&gt; puede ser:</translation>
-    </message>
-    <message>
         <source>Verifying blocks...</source>
         <translation>Verificando bloques...</translation>
-    </message>
-    <message>
-        <source>Verifying wallet...</source>
-        <translation>Verificando cartera...</translation>
-    </message>
-    <message>
-        <source>Wallet options:</source>
-        <translation>Opciones de cartera:</translation>
     </message>
     <message>
         <source>Information</source>
@@ -630,10 +670,6 @@
     <message>
         <source>Warning</source>
         <translation>Aviso</translation>
-    </message>
-    <message>
-        <source>Loading addresses...</source>
-        <translation>Cargando direcciones...</translation>
     </message>
     <message>
         <source>Loading block index...</source>

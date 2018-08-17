@@ -1,6 +1,4 @@
-#include "fs.h"
-
-#include <boost/filesystem.hpp>
+#include <fs.h>
 
 namespace fsbridge {
 

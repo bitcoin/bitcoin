@@ -2,16 +2,64 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Right-click to edit address or label</source>
+        <translation>पते या लेबल को संपादित करने के लिए दाहिना-क्लिक करें</translation>
+    </message>
+    <message>
         <source>Create a new address</source>
-        <translation>नया पता लिखिए !</translation>
+        <translation>एक नया पता बनाएं</translation>
+    </message>
+    <message>
+        <source>&amp;New</source>
+        <translation>नया</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation>चुनिन्दा पते को सिस्टम क्लिपबोर्ड पर कापी करे !</translation>
     </message>
     <message>
+        <source>Delete the currently selected address from the list</source>
+        <translation>सूची से वर्तमान में चयनित पता हटाएं</translation>
+    </message>
+    <message>
+        <source>Enter address or label to search</source>
+        <translation>ढूँदने के लिए कृपा करके पता या लेबल टाइप करे !</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>डेटा को मौजूदा टैब से एक फ़ाइल में निर्यात करें</translation>
+    </message>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;निर्यात</translation>
+    </message>
+    <message>
         <source>&amp;Delete</source>
         <translation>&amp;मिटाए !!</translation>
+    </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation>सिक्कों को भेजने के लिए पता चुनें</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>सिक्कों को प्राप्त करने के लिए पता चुनें</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>सभी पते भेज रहा है</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>पतों को प्राप्त कर रहा है</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>ये भुगतान भेजने के लिए ये आपके बिटकॉइन पते हैं। हमेशा सिक्के भेजने से पहले राशि और प्राप्तकर्ता पते की जांच करें।</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>भुगतान प्राप्त करने के लिए ये आपके बीटकोइन पते हैं प्रत्येक लेनदेन के लिए एक नया प्राप्त पता उपयोग करने की सिफारिश की जाती है।</translation>
     </message>
     </context>
 <context>
@@ -182,13 +230,13 @@
         <source>version</source>
         <translation>संस्करण</translation>
     </message>
-    <message>
-        <source>Usage:</source>
-        <translation>खपत :</translation>
-    </message>
     </context>
 <context>
     <name>Intro</name>
+    <message>
+        <source>Bitcoin</source>
+        <translation>बीटकोइन</translation>
+    </message>
     <message>
         <source>Error</source>
         <translation>भूल</translation>
@@ -222,6 +270,10 @@
         <source>&amp;Cancel</source>
         <translation>&amp;कैन्सल</translation>
     </message>
+    <message>
+        <source>Error</source>
+        <translation>भूल</translation>
+    </message>
     </context>
 <context>
     <name>OverviewPage</name>
@@ -247,7 +299,11 @@
         <translation>लागू नही
 </translation>
     </message>
-    </context>
+    <message>
+        <source>unknown</source>
+        <translation>अज्ञात</translation>
+    </message>
+</context>
 <context>
     <name>QObject::QObject</name>
     </context>
@@ -282,6 +338,10 @@
     <message>
         <source>Copy &amp;Address</source>
         <translation>&amp;पता कॉपी करे</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>वॉलेट</translation>
     </message>
     </context>
 <context>
@@ -403,28 +463,20 @@
     </context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;निर्यात</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>डेटा को मौजूदा टैब से एक फ़ाइल में निर्यात करें</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>
     <message>
-        <source>Options:</source>
-        <translation>विकल्प:</translation>
-    </message>
-    <message>
-        <source>Specify data directory</source>
-        <translation>डेटा डायरेक्टरी बताएं </translation>
-    </message>
-    <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>बैकग्राउंड में डेमॉन बन कर रन करे तथा कमांड्स स्वीकार करें </translation>
-    </message>
-    <message>
         <source>Verifying blocks...</source>
         <translation>ब्लॉक्स जाँचे जा रहा है...</translation>
-    </message>
-    <message>
-        <source>Verifying wallet...</source>
-        <translation>वॉलेट जाँचा जा रहा है...</translation>
     </message>
     <message>
         <source>Information</source>
@@ -433,10 +485,6 @@
     <message>
         <source>Warning</source>
         <translation>चेतावनी</translation>
-    </message>
-    <message>
-        <source>Loading addresses...</source>
-        <translation>पता पुस्तक आ रही है...</translation>
     </message>
     <message>
         <source>Loading block index...</source>

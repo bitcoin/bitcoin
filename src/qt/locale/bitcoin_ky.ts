@@ -101,6 +101,10 @@
 <context>
     <name>Intro</name>
     <message>
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation>Ката</translation>
     </message>
@@ -148,6 +152,10 @@
     <message>
         <source>none</source>
         <translation>жок</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Ката</translation>
     </message>
     </context>
 <context>
@@ -216,6 +224,10 @@
         <source>Message</source>
         <translation>Билдирүү</translation>
     </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Капчык</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
@@ -283,10 +295,6 @@
     </context>
 <context>
     <name>TransactionDesc</name>
-    <message>
-        <source>%1/offline</source>
-        <translation>%1/тармакта эмес</translation>
-    </message>
     <message>
         <source>Date</source>
         <translation>Дата</translation>

@@ -1,25 +1,25 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "random.h"
+#include <random.h>
 
-#include "crypto/sha512.h"
-#include "support/cleanse.h"
+#include <crypto/sha512.h>
+#include <support/cleanse.h>
 #ifdef WIN32
-#include "compat.h" // for Windows API
+#include <compat.h> // for Windows API
 #include <wincrypt.h>
 #endif
-#include "util.h"             // for LogPrint()
-#include "utilstrencodings.h" // for GetTime()
+#include <logging.h>  // for LogPrint()
+#include <utiltime.h> // for GetTime()
 
 #include <stdlib.h>
-#include <limits>
 #include <chrono>
 #include <thread>
 
 #ifndef WIN32
+#include <fcntl.h>
 #include <sys/time.h>
 #endif
 
@@ -27,22 +27,30 @@
 #include <sys/syscall.h>
 #include <linux/random.h>
 #endif
-#ifdef HAVE_GETENTROPY
+#if defined(HAVE_GETENTROPY) || (defined(HAVE_GETENTROPY_RAND) && defined(MAC_OSX))
 #include <unistd.h>
 #endif
+#if defined(HAVE_GETENTROPY_RAND) && defined(MAC_OSX)
+#include <sys/random.h>
+#endif
 #ifdef HAVE_SYSCTL_ARND
+#include <utilstrencodings.h> // for ARRAYLEN
 #include <sys/sysctl.h>
 #endif
 
 #include <mutex>
 
+#if defined(__x86_64__) || defined(__amd64__) || defined(__i386__)
+#include <cpuid.h>
+#endif
+
 #include <openssl/err.h>
 #include <openssl/rand.h>
 
-static void RandFailure()
+[[noreturn]] static void RandFailure()
 {
     LogPrintf("Failed to read randomness, aborting\n");
-    abort();
+    std::abort();
 }
 
 static inline int64_t GetPerformanceCounter()
@@ -63,6 +71,61 @@ static inline int64_t GetPerformanceCounter()
     // Fall back to using C++11 clock (usually microsecond or nanosecond precision)
     return std::chrono::high_resolution_clock::now().time_since_epoch().count();
 #endif
+}
+
+
+#if defined(__x86_64__) || defined(__amd64__) || defined(__i386__)
+static std::atomic<bool> hwrand_initialized{false};
+static bool rdrand_supported = false;
+static constexpr uint32_t CPUID_F1_ECX_RDRAND = 0x40000000;
+static void RDRandInit()
+{
+    uint32_t eax, ebx, ecx, edx;
+    if (__get_cpuid(1, &eax, &ebx, &ecx, &edx) && (ecx & CPUID_F1_ECX_RDRAND)) {
+        LogPrintf("Using RdRand as an additional entropy source\n");
+        rdrand_supported = true;
+    }
+    hwrand_initialized.store(true);
+}
+#else
+static void RDRandInit() {}
+#endif
+
+static bool GetHWRand(unsigned char* ent32) {
+#if defined(__x86_64__) || defined(__amd64__) || defined(__i386__)
+    assert(hwrand_initialized.load(std::memory_order_relaxed));
+    if (rdrand_supported) {
+        uint8_t ok;
+        // Not all assemblers support the rdrand instruction, write it in hex.
+#ifdef __i386__
+        for (int iter = 0; iter < 4; ++iter) {
+            uint32_t r1, r2;
+            __asm__ volatile (".byte 0x0f, 0xc7, 0xf0;" // rdrand %eax
+                              ".byte 0x0f, 0xc7, 0xf2;" // rdrand %edx
+                              "setc %2" :
+                              "=a"(r1), "=d"(r2), "=q"(ok) :: "cc");
+            if (!ok) return false;
+            WriteLE32(ent32 + 8 * iter, r1);
+            WriteLE32(ent32 + 8 * iter + 4, r2);
+        }
+#else
+        uint64_t r1, r2, r3, r4;
+        __asm__ volatile (".byte 0x48, 0x0f, 0xc7, 0xf0, " // rdrand %rax
+                                "0x48, 0x0f, 0xc7, 0xf3, " // rdrand %rbx
+                                "0x48, 0x0f, 0xc7, 0xf1, " // rdrand %rcx
+                                "0x48, 0x0f, 0xc7, 0xf2; " // rdrand %rdx
+                          "setc %4" :
+                          "=a"(r1), "=b"(r2), "=c"(r3), "=d"(r4), "=q"(ok) :: "cc");
+        if (!ok) return false;
+        WriteLE64(ent32, r1);
+        WriteLE64(ent32 + 8, r2);
+        WriteLE64(ent32 + 16, r3);
+        WriteLE64(ent32 + 24, r4);
+#endif
+        return true;
+    }
+#endif
+    return false;
 }
 
 void RandAddSeed()
@@ -93,7 +156,7 @@ static void RandAddSeedPerfmon()
     const size_t nMaxSize = 10000000; // Bail out at more than 10MB of performance data
     while (true) {
         nSize = vData.size();
-        ret = RegQueryValueExA(HKEY_PERFORMANCE_DATA, "Global", NULL, NULL, vData.data(), &nSize);
+        ret = RegQueryValueExA(HKEY_PERFORMANCE_DATA, "Global", nullptr, nullptr, vData.data(), &nSize);
         if (ret != ERROR_MORE_DATA || vData.size() >= nMaxSize)
             break;
         vData.resize(std::max((vData.size() * 3) / 2, nMaxSize)); // Grow size of buffer exponentially
@@ -117,7 +180,7 @@ static void RandAddSeedPerfmon()
 /** Fallback: get 32 bytes of system entropy from /dev/urandom. The most
  * compatible way to get cryptographic randomness on UNIX-ish platforms.
  */
-void GetDevURandom(unsigned char *ent32)
+static void GetDevURandom(unsigned char *ent32)
 {
     int f = open("/dev/urandom", O_RDONLY);
     if (f == -1) {
@@ -127,6 +190,7 @@ void GetDevURandom(unsigned char *ent32)
     do {
         ssize_t n = read(f, ent32 + have, NUM_OS_RANDOM_BYTES - have);
         if (n <= 0 || n + have > NUM_OS_RANDOM_BYTES) {
+            close(f);
             RandFailure();
         }
         have += n;
@@ -140,7 +204,7 @@ void GetOSRand(unsigned char *ent32)
 {
 #if defined(WIN32)
     HCRYPTPROV hProvider;
-    int ret = CryptAcquireContextW(&hProvider, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
+    int ret = CryptAcquireContextW(&hProvider, nullptr, nullptr, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
     if (!ret) {
         RandFailure();
     }
@@ -167,13 +231,24 @@ void GetOSRand(unsigned char *ent32)
             RandFailure();
         }
     }
-#elif defined(HAVE_GETENTROPY)
+#elif defined(HAVE_GETENTROPY) && defined(__OpenBSD__)
     /* On OpenBSD this can return up to 256 bytes of entropy, will return an
      * error if more are requested.
      * The call cannot return less than the requested number of bytes.
+       getentropy is explicitly limited to openbsd here, as a similar (but not
+       the same) function may exist on other platforms via glibc.
      */
     if (getentropy(ent32, NUM_OS_RANDOM_BYTES) != 0) {
         RandFailure();
+    }
+#elif defined(HAVE_GETENTROPY_RAND) && defined(MAC_OSX)
+    // We need a fallback for OSX < 10.12
+    if (&getentropy != nullptr) {
+        if (getentropy(ent32, NUM_OS_RANDOM_BYTES) != 0) {
+            RandFailure();
+        }
+    } else {
+        GetDevURandom(ent32);
     }
 #elif defined(HAVE_SYSCTL_ARND)
     /* FreeBSD and similar. It is possible for the call to return less
@@ -183,7 +258,7 @@ void GetOSRand(unsigned char *ent32)
     int have = 0;
     do {
         size_t len = NUM_OS_RANDOM_BYTES - have;
-        if (sysctl(name, ARRAYLEN(name), ent32 + have, &len, NULL, 0) != 0) {
+        if (sysctl(name, ARRAYLEN(name), ent32 + have, &len, nullptr, 0) != 0) {
             RandFailure();
         }
         have += len;
@@ -255,6 +330,11 @@ void GetStrongRandBytes(unsigned char* out, int num)
     GetOSRand(buf);
     hasher.Write(buf, 32);
 
+    // Third source: HW RNG, if available.
+    if (GetHWRand(buf)) {
+        hasher.Write(buf, 32);
+    }
+
     // Combine with and update state
     {
         std::unique_lock<std::mutex> lock(cs_rng_state);
@@ -302,6 +382,26 @@ void FastRandomContext::RandomSeed()
     uint256 seed = GetRandHash();
     rng.SetKey(seed.begin(), 32);
     requires_seed = false;
+}
+
+uint256 FastRandomContext::rand256()
+{
+    if (bytebuf_size < 32) {
+        FillByteBuffer();
+    }
+    uint256 ret;
+    memcpy(ret.begin(), bytebuf + 64 - bytebuf_size, 32);
+    bytebuf_size -= 32;
+    return ret;
+}
+
+std::vector<unsigned char> FastRandomContext::randbytes(size_t len)
+{
+    std::vector<unsigned char> ret(len);
+    if (len > 0) {
+        rng.Output(&ret[0], len);
+    }
+    return ret;
 }
 
 FastRandomContext::FastRandomContext(const uint256& seed) : requires_seed(false), bytebuf_size(0), bitbuf_size(0)
@@ -360,4 +460,9 @@ FastRandomContext::FastRandomContext(bool fDeterministic) : requires_seed(!fDete
     }
     uint256 seed;
     rng.SetKey(seed.begin(), 32);
+}
+
+void RandomInit()
+{
+    RDRandInit();
 }

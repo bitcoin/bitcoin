@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Spustelėkite dešinįjį klaviša norint keisti adresą arba etiketę</translation>
+        <translation>Spustelėkite dešinįjį klavišą norint keisti adresą arba etiketę</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -30,6 +30,10 @@
         <translation>Ištrinti pasirinktą adresą iš sąrašo</translation>
     </message>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>Įveskite adresą ar žymę į paiešką</translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Eksportuoti informaciją iš dabartinės lentelės į failą</translation>
     </message>
@@ -41,9 +45,17 @@
         <source>&amp;Delete</source>
         <translation>&amp;Trinti</translation>
     </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation>Pasirinkite adresą, kuriam siūsite monetas</translation>
+    </message>
     </context>
 <context>
     <name>AddressTableModel</name>
+    <message>
+        <source>Address</source>
+        <translation>Adresas</translation>
+    </message>
     </context>
 <context>
     <name>AskPassphraseDialog</name>
@@ -112,6 +124,10 @@
     <message>
         <source>&amp;About %1</source>
         <translation>&amp;Apie %1</translation>
+    </message>
+    <message>
+        <source>Show information about %1</source>
+        <translation>Rodyti informaciją apie %1</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
@@ -246,6 +262,12 @@
         <translation>Vejamasi...</translation>
     </message>
     <message>
+        <source>Date: %1
+</source>
+        <translation>Data: %1
+</translation>
+    </message>
+    <message>
         <source>Sent transaction</source>
         <translation>Sandoris nusiųstas</translation>
     </message>
@@ -353,20 +375,16 @@
         <source>Command-line options</source>
         <translation>Komandinės eilutės parametrai</translation>
     </message>
-    <message>
-        <source>Usage:</source>
-        <translation>Naudojimas:</translation>
-    </message>
-    <message>
-        <source>command-line options</source>
-        <translation>komandinės eilutės parametrai</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>Intro</name>
     <message>
         <source>Welcome</source>
         <translation>Sveiki</translation>
+    </message>
+    <message>
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>Error</source>
@@ -506,6 +524,10 @@
         <translation>Kliento perkrovimas reikalingas nustatymų aktyvavimui</translation>
     </message>
     <message>
+        <source>Error</source>
+        <translation>Klaida</translation>
+    </message>
+    <message>
         <source>This change would require a client restart.</source>
         <translation>Šis pakeitimas reikalautų kliento perkrovimo</translation>
     </message>
@@ -550,7 +572,11 @@
     </context>
 <context>
     <name>PeerTableModel</name>
-    </context>
+    <message>
+        <source>Received</source>
+        <translation>Gauta</translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
     <message>
@@ -569,7 +595,27 @@
         <source>N/A</source>
         <translation>nėra</translation>
     </message>
-    </context>
+    <message>
+        <source>%1 B</source>
+        <translation>%1 B</translation>
+    </message>
+    <message>
+        <source>%1 KB</source>
+        <translation>%1 KB</translation>
+    </message>
+    <message>
+        <source>%1 MB</source>
+        <translation>%1 MB</translation>
+    </message>
+    <message>
+        <source>%1 GB</source>
+        <translation>%1 GB</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>nežinomas</translation>
+    </message>
+</context>
 <context>
     <name>QObject::QObject</name>
     </context>
@@ -643,10 +689,6 @@
         <translation>&amp;Konsolė</translation>
     </message>
     <message>
-        <source>&amp;Clear</source>
-        <translation>Išvalyti</translation>
-    </message>
-    <message>
         <source>Totals</source>
         <translation>Viso:</translation>
     </message>
@@ -657,22 +699,6 @@
     <message>
         <source>Clear console</source>
         <translation>Išvalyti konsolę</translation>
-    </message>
-    <message>
-        <source>%1 B</source>
-        <translation>%1 B</translation>
-    </message>
-    <message>
-        <source>%1 KB</source>
-        <translation>%1 KB</translation>
-    </message>
-    <message>
-        <source>%1 MB</source>
-        <translation>%1 MB</translation>
-    </message>
-    <message>
-        <source>%1 GB</source>
-        <translation>%1 GB</translation>
     </message>
     <message>
         <source>never</source>
@@ -715,6 +741,14 @@
     <message>
         <source>Copy &amp;Address</source>
         <translation>&amp;Kopijuoti adresą</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Adresas</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Piniginė</translation>
     </message>
     </context>
 <context>
@@ -781,6 +815,10 @@
     <message>
         <source>S&amp;end</source>
         <translation>&amp;Siųsti</translation>
+    </message>
+    <message>
+        <source>Transaction fee</source>
+        <translation>Sandorio mokestis</translation>
     </message>
     </context>
 <context>
@@ -900,6 +938,10 @@
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Address</source>
+        <translation>Adresas</translation>
+    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
@@ -916,26 +958,6 @@
 <context>
     <name>bitcoin-core</name>
     <message>
-        <source>Options:</source>
-        <translation>Parinktys:</translation>
-    </message>
-    <message>
-        <source>Specify data directory</source>
-        <translation>Nustatyti duomenų aplanką</translation>
-    </message>
-    <message>
-        <source>Specify your own public address</source>
-        <translation>Nurodykite savo nuosavą viešą adresą</translation>
-    </message>
-    <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>Priimti komandinę eilutę ir JSON-RPC komandas</translation>
-    </message>
-    <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>Dirbti fone kaip šešėlyje ir priimti komandas</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoin branduolys</translation>
     </message>
@@ -948,40 +970,12 @@
         <translation>Tikrinami blokai...</translation>
     </message>
     <message>
-        <source>Verifying wallet...</source>
-        <translation>Tikrinama piniginė...</translation>
-    </message>
-    <message>
         <source>Information</source>
         <translation>Informacija</translation>
     </message>
     <message>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>Siųsti atsekimo/derinimo info į konsolę vietoj debug.log failo</translation>
-    </message>
-    <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>Vartotojo vardas JSON-RPC jungimuisi</translation>
-    </message>
-    <message>
         <source>Warning</source>
         <translation>Įspėjimas</translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>Slaptažodis JSON-RPC sujungimams</translation>
-    </message>
-    <message>
-        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>Leisti DNS paiešką sujungimui ir mazgo pridėjimui</translation>
-    </message>
-    <message>
-        <source>Loading addresses...</source>
-        <translation>Užkraunami adresai...</translation>
-    </message>
-    <message>
-        <source>Invalid -proxy address: '%s'</source>
-        <translation>Neteisingas proxy adresas: '%s'</translation>
     </message>
     <message>
         <source>Insufficient funds</source>
@@ -992,16 +986,8 @@
         <translation>Įkeliamas blokų indeksas...</translation>
     </message>
     <message>
-        <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation>Pridėti mazgą prie sujungti su and attempt to keep the connection open</translation>
-    </message>
-    <message>
         <source>Loading wallet...</source>
         <translation>Užkraunama piniginė...</translation>
-    </message>
-    <message>
-        <source>Cannot write default address</source>
-        <translation>Negalima parašyti įprasto adreso</translation>
     </message>
     <message>
         <source>Rescanning...</source>

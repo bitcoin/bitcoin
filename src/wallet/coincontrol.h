@@ -1,48 +1,48 @@
-// Copyright (c) 2011-2016 The Bitcoin Core developers
+// Copyright (c) 2011-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_WALLET_COINCONTROL_H
 #define BITCOIN_WALLET_COINCONTROL_H
 
-#include "policy/feerate.h"
-#include "primitives/transaction.h"
-#include "wallet/wallet.h"
+#include <policy/feerate.h>
+#include <policy/fees.h>
+#include <primitives/transaction.h>
+#include <wallet/wallet.h>
+
+#include <boost/optional.hpp>
 
 /** Coin Control Features. */
 class CCoinControl
 {
 public:
+    //! Custom change destination, if not set an address is generated
     CTxDestination destChange;
+    //! Override the default change type if set, ignored if destChange is set
+    boost::optional<OutputType> m_change_type;
     //! If false, allows unselected inputs, but requires all selected inputs be used
     bool fAllowOtherInputs;
-    //! Includes watch only addresses which match the ISMINE_WATCH_SOLVABLE criteria
+    //! Includes watch only addresses which are solvable
     bool fAllowWatchOnly;
-    //! Override estimated feerate
+    //! Override automatic min/max checks on fee, m_feerate must be set if true
     bool fOverrideFeeRate;
-    //! Feerate to use if overrideFeeRate is true
-    CFeeRate nFeeRate;
-    //! Override the default confirmation target, 0 = use default
-    int nConfirmTarget;
-    //! Signal BIP-125 replace by fee.
-    bool signalRbf;
+    //! Override the wallet's m_pay_tx_fee if set
+    boost::optional<CFeeRate> m_feerate;
+    //! Override the default confirmation target if set
+    boost::optional<unsigned int> m_confirm_target;
+    //! Override the wallet's m_signal_rbf if set
+    boost::optional<bool> m_signal_bip125_rbf;
+    //! Avoid partial use of funds sent to a given address
+    bool m_avoid_partial_spends;
+    //! Fee estimation mode to control arguments to estimateSmartFee
+    FeeEstimateMode m_fee_mode;
 
     CCoinControl()
     {
         SetNull();
     }
 
-    void SetNull()
-    {
-        destChange = CNoDestination();
-        fAllowOtherInputs = false;
-        fAllowWatchOnly = false;
-        setSelected.clear();
-        nFeeRate = CFeeRate(0);
-        fOverrideFeeRate = false;
-        nConfirmTarget = 0;
-        signalRbf = fWalletRbf;
-    }
+    void SetNull();
 
     bool HasSelected() const
     {

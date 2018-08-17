@@ -46,6 +46,30 @@
 namespace leveldb {
 namespace port {
 
+// AtomicPointer based on <cstdatomic> if available
+#if defined(LEVELDB_ATOMIC_PRESENT)
+class AtomicPointer {
+ private:
+  std::atomic<void*> rep_;
+ public:
+  AtomicPointer() { }
+  explicit AtomicPointer(void* v) : rep_(v) { }
+  inline void* Acquire_Load() const {
+    return rep_.load(std::memory_order_acquire);
+  }
+  inline void Release_Store(void* v) {
+    rep_.store(v, std::memory_order_release);
+  }
+  inline void* NoBarrier_Load() const {
+    return rep_.load(std::memory_order_relaxed);
+  }
+  inline void NoBarrier_Store(void* v) {
+    rep_.store(v, std::memory_order_relaxed);
+  }
+};
+
+#else
+
 // Define MemoryBarrier() if available
 // Windows on x86
 #if defined(OS_WIN) && defined(COMPILER_MSVC) && defined(ARCH_CPU_X86_FAMILY)
@@ -142,28 +166,6 @@ class AtomicPointer {
   }
 };
 
-// AtomicPointer based on <cstdatomic>
-#elif defined(LEVELDB_ATOMIC_PRESENT)
-class AtomicPointer {
- private:
-  std::atomic<void*> rep_;
- public:
-  AtomicPointer() { }
-  explicit AtomicPointer(void* v) : rep_(v) { }
-  inline void* Acquire_Load() const {
-    return rep_.load(std::memory_order_acquire);
-  }
-  inline void Release_Store(void* v) {
-    rep_.store(v, std::memory_order_release);
-  }
-  inline void* NoBarrier_Load() const {
-    return rep_.load(std::memory_order_relaxed);
-  }
-  inline void NoBarrier_Store(void* v) {
-    rep_.store(v, std::memory_order_relaxed);
-  }
-};
-
 // Atomic pointer based on sparc memory barriers
 #elif defined(__sparcv9) && defined(__GNUC__)
 class AtomicPointer {
@@ -228,6 +230,7 @@ class AtomicPointer {
 #else
 #error Please implement AtomicPointer for this platform.
 
+#endif
 #endif
 
 #undef LEVELDB_HAVE_MEMORY_BARRIER

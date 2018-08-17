@@ -1,11 +1,11 @@
-#ifndef _SECP256K1_RECOVERY_
-# define _SECP256K1_RECOVERY_
+#ifndef SECP256K1_RECOVERY_H
+#define SECP256K1_RECOVERY_H
 
-# include "secp256k1.h"
+#include "secp256k1.h"
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif
+#endif
 
 /** Opaque data structured that holds a parsed ECDSA signature,
  *  supporting pubkey recovery.
@@ -103,8 +103,8 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_recover(
     const unsigned char *msg32
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif
-
 #endif
+
+#endif /* SECP256K1_RECOVERY_H */

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Copyright (c) 2014 Wladimir J. van der Laan
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -15,7 +15,6 @@ It will do the following automatically:
 TODO:
 - auto-add new translations to the build system according to the translation process
 '''
-from __future__ import division, print_function
 import subprocess
 import re
 import sys
@@ -31,17 +30,19 @@ SOURCE_LANG = 'bitcoin_en.ts'
 LOCALE_DIR = 'src/qt/locale'
 # Minimum number of messages for translation to be considered at all
 MIN_NUM_MESSAGES = 10
+# Regexp to check for Bitcoin addresses
+ADDRESS_REGEXP = re.compile('([13]|bc1)[a-zA-Z0-9]{30,}')
 
 def check_at_repository_root():
     if not os.path.exists('.git'):
         print('No .git directory found')
         print('Execute this script at the root of the repository', file=sys.stderr)
-        exit(1)
+        sys.exit(1)
 
 def fetch_all_translations():
     if subprocess.call([TX, 'pull', '-f', '-a']):
         print('Error while fetching translations', file=sys.stderr)
-        exit(1)
+        sys.exit(1)
 
 def find_format_specifiers(s):
     '''Find all format specifiers in a string.'''
@@ -123,6 +124,12 @@ def escape_cdata(text):
     text = text.replace('"', '&quot;')
     return text
 
+def contains_bitcoin_addr(text, errors):
+    if text != None and ADDRESS_REGEXP.search(text) != None:
+        errors.append('Translation "%s" contains a bitcoin address. This will be removed.' % (text))
+        return True
+    return False
+
 def postprocess_translations(reduce_diff_hacks=False):
     print('Checking and postprocessing...')
 
@@ -161,7 +168,7 @@ def postprocess_translations(reduce_diff_hacks=False):
                     if translation is None:
                         continue
                     errors = []
-                    valid = check_format_specifiers(source, translation, errors, numerus)
+                    valid = check_format_specifiers(source, translation, errors, numerus) and not contains_bitcoin_addr(translation, errors)
 
                     for error in errors:
                         print('%s: %s' % (filename, error))

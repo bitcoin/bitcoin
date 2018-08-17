@@ -4,8 +4,8 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
-#ifndef _SECP256K1_GROUP_IMPL_H_
-#define _SECP256K1_GROUP_IMPL_H_
+#ifndef SECP256K1_GROUP_IMPL_H
+#define SECP256K1_GROUP_IMPL_H
 
 #include "num.h"
 #include "field.h"
@@ -198,12 +198,6 @@ static void secp256k1_gej_set_infinity(secp256k1_gej *r) {
     secp256k1_fe_clear(&r->x);
     secp256k1_fe_clear(&r->y);
     secp256k1_fe_clear(&r->z);
-}
-
-static void secp256k1_ge_set_infinity(secp256k1_ge *r) {
-    r->infinity = 1;
-    secp256k1_fe_clear(&r->x);
-    secp256k1_fe_clear(&r->y);
 }
 
 static void secp256k1_gej_clear(secp256k1_gej *r) {
@@ -703,4 +697,4 @@ static int secp256k1_gej_has_quad_y_var(const secp256k1_gej *a) {
     return secp256k1_fe_is_quad_var(&yz);
 }
 
-#endif
+#endif /* SECP256K1_GROUP_IMPL_H */

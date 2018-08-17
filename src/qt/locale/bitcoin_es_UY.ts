@@ -26,6 +26,18 @@
         <translation>Cerrar</translation>
     </message>
     <message>
+        <source>Delete the currently selected address from the list</source>
+        <translation>Eliminar la dirección seleccionada de la lista</translation>
+    </message>
+    <message>
+        <source>Enter address or label to search</source>
+        <translation>Ingresar la dirección o etiqueta para buscar</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Exportar los datos en la pestaña actual a un archivo</translation>
+    </message>
+    <message>
         <source>&amp;Export</source>
         <translation>Exportar</translation>
     </message>
@@ -244,6 +256,10 @@
 <context>
     <name>Intro</name>
     <message>
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation>Error</translation>
     </message>
@@ -265,8 +281,16 @@
         <translation>Opciones</translation>
     </message>
     <message>
+        <source>Size of &amp;database cache</source>
+        <translation>Tamaño del cache de la &amp;base de datos</translation>
+    </message>
+    <message>
         <source>W&amp;allet</source>
         <translation>Billetera</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Error</translation>
     </message>
     </context>
 <context>
@@ -284,7 +308,11 @@
     </context>
 <context>
     <name>QObject</name>
-    </context>
+    <message>
+        <source>unknown</source>
+        <translation>desconocido</translation>
+    </message>
+</context>
 <context>
     <name>QObject::QObject</name>
     </context>
@@ -310,6 +338,10 @@
     <message>
         <source>Copy &amp;Address</source>
         <translation>Copiar Dirección</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Billetera</translation>
     </message>
     </context>
 <context>
@@ -435,13 +467,13 @@
     </context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Exportar los datos en la pestaña actual a un archivo</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>
-    <message>
-        <source>Options:</source>
-        <translation>Opciones:</translation>
-    </message>
     <message>
         <source>Information</source>
         <translation>Información</translation>

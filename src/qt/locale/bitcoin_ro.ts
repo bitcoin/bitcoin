@@ -3,11 +3,11 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Click dreapta pentru a modifica adresa o eticheta</translation>
+        <translation>Click dreapta pentru a modifica adresa sau eticheta</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Crează o nouă adresă</translation>
+        <translation>Crează o adresă nouă</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -41,10 +41,74 @@
         <source>&amp;Delete</source>
         <translation>Șterge</translation>
     </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation>Alege adresa căreia să îi trimiți monedele:</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>Alege adresa de primire a monedelor</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation>Alege</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>Adresele de trimitere</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>Adresele de primire</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Acestea sunt adresele tale Bitcoin pentru trimiterea plății. Verifică mereu suma și adresa de primire înainte de trimiterea monedelor.</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>Acestea sunt adresele tale Bitcoin pentru primirea plăților. Este recomandată folosirea de noi adrese de primire pentru fiecare tranzacție.</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>Copiază Adresa</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation>Copiază Eticheta</translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation>Editare</translation>
+    </message>
+    <message>
+        <source>Export Address List</source>
+        <translation>Exporta lista de adrese</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Fisier text separat prin virgule (*.csv)</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Exportul a eșuat</translation>
+    </message>
     </context>
 <context>
     <name>AddressTableModel</name>
-    </context>
+    <message>
+        <source>Label</source>
+        <translation>Etichetă</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Adresă</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(fără etichetă)</translation>
+    </message>
+</context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -63,7 +127,95 @@
         <source>Repeat new passphrase</source>
         <translation>Repetati noua parolă</translation>
     </message>
-    </context>
+    <message>
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Introduceti o parola noua pentru portofel.&lt;br/&gt;Va rugam sa folositi o parola de  &lt;b&gt; zece sau mai multe caractere&lt;/b&gt;, sau &lt;b&gt;mai mult de opt cuvinte&lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <source>Encrypt wallet</source>
+        <translation>Criptează portofelul</translation>
+    </message>
+    <message>
+        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
+        <translation>Această operație cere parola portofelului pentru a debloca portofelul.</translation>
+    </message>
+    <message>
+        <source>Unlock wallet</source>
+        <translation>Deblochează portofelul</translation>
+    </message>
+    <message>
+        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
+        <translation>Aceastea procedură necesită parola partofelului pentru a decripta portofelul</translation>
+    </message>
+    <message>
+        <source>Decrypt wallet</source>
+        <translation>Decriptează portofelul</translation>
+    </message>
+    <message>
+        <source>Change passphrase</source>
+        <translation>Schimbă parola</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>Introdu parola veche si parola nouă pentru portofel</translation>
+    </message>
+    <message>
+        <source>Confirm wallet encryption</source>
+        <translation>Confirmă criptarea portofelului</translation>
+    </message>
+    <message>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <translation>Atenție: Dacă îți criptezi portofelul și uiți parola, îți vei &lt;b&gt; PIERDE TOȚI BITCOINS&lt;/b&gt;!</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to encrypt your wallet?</source>
+        <translation>Ești sigur că vrei să criptezi portofelul?</translation>
+    </message>
+    <message>
+        <source>Wallet encrypted</source>
+        <translation>Portofel criptat</translation>
+    </message>
+    <message>
+        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>%1 se va inchide pentru a termina procesul de criptare. Aduți aminte că prin criptarea portofelului tău virtual, nu îți poți proteja complet monedele virtuale de a fi furate când te-ai infectat cu un virus de tip malware pe calculatorul tau.</translation>
+    </message>
+    <message>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
+        <translation>IMPORTANT: Fiecare backup anterior pe care l-ai facut portofelului tău virtual trebuie înlocuit cu cel nou. Din motive de securitate, backup-urile anteroiare făcute portofelului tău, care nu sunt criptate vor deveni inutilizabile și inutile când vei începe să utilizezi portofelul criptat.</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed</source>
+        <translation>Criptarea portofelului a eșuat</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
+        <translation>Criptarea portofelului a eșuat din cauza unei erori interne. Portofelul tău nu a fost criptat.</translation>
+    </message>
+    <message>
+        <source>The supplied passphrases do not match.</source>
+        <translation>Parola furnizată nu se potrivește.</translation>
+    </message>
+    <message>
+        <source>Wallet unlock failed</source>
+        <translation>Deblocarea portofelului a eșuat</translation>
+    </message>
+    <message>
+        <source>The passphrase entered for the wallet decryption was incorrect.</source>
+        <translation>Parola pe care ai introdus-o pentru decripatrea portofelului nu este corectă.</translation>
+    </message>
+    <message>
+        <source>Wallet decryption failed</source>
+        <translation>Decriptarea portofelului a eșuat</translation>
+    </message>
+    <message>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation>Parola portofelului a fost schimbată cu succes</translation>
+    </message>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>Atenție: Caps Lock este activat!</translation>
+    </message>
+</context>
 <context>
     <name>BanTableModel</name>
     <message>
@@ -79,11 +231,15 @@
     <name>BitcoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
-        <translation>Semnează &amp;mesajul...</translation>
+        <translation>Semnează și trimite...</translation>
     </message>
     <message>
         <source>Synchronizing with network...</source>
         <translation>Se sincronizează cu rețeaua</translation>
+    </message>
+    <message>
+        <source>&amp;Overview</source>
+        <translation>Vizualizare de ansamblu</translation>
     </message>
     <message>
         <source>Node</source>
@@ -102,8 +258,20 @@
         <translation>Navighează în istoricul tranzacțiilor</translation>
     </message>
     <message>
+        <source>E&amp;xit</source>
+        <translation>Ieși din...</translation>
+    </message>
+    <message>
         <source>Quit application</source>
         <translation>Părăsește aplicația</translation>
+    </message>
+    <message>
+        <source>&amp;About %1</source>
+        <translation>&amp;Despre %1</translation>
+    </message>
+    <message>
+        <source>Show information about %1</source>
+        <translation>Arată informații despre %1</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
@@ -140,6 +308,10 @@
     <message>
         <source>Open &amp;URI...</source>
         <translation>Deschide &amp;URI...</translation>
+    </message>
+    <message>
+        <source>Click to enable network activity again.</source>
+        <translation>Click pentru a permite, din nou, activitate rețelei.</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
@@ -218,8 +390,20 @@
         <translation>Cerere plată (generează coduri QR și bitcoin: URIs)</translation>
     </message>
     <message>
+        <source>Show the list of used sending addresses and labels</source>
+        <translation>Afișează lista adreselor de livrare utilizate și etichetele.</translation>
+    </message>
+    <message>
+        <source>Show the list of used receiving addresses and labels</source>
+        <translation>Afișează lista adreselor de primire utilizate și etichetele.</translation>
+    </message>
+    <message>
         <source>Open a bitcoin: URI or payment request</source>
         <translation>Deschide un bitcoin: URI sau cerere de plată</translation>
+    </message>
+    <message>
+        <source>&amp;Command-line options</source>
+        <translation>&amp;Linie de comandă Setări</translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -344,6 +528,38 @@
         <source>Confirmed</source>
         <translation>Confirmat</translation>
     </message>
+    <message>
+        <source>Copy address</source>
+        <translation>Copiază adresa</translation>
+    </message>
+    <message>
+        <source>Copy label</source>
+        <translation>Copiază eticheta</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>Copiază cantitatea</translation>
+    </message>
+    <message>
+        <source>Copy transaction ID</source>
+        <translation>Copiază ID-ul tranzacției</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation>Copiază taxa</translation>
+    </message>
+    <message>
+        <source>yes</source>
+        <translation>da</translation>
+    </message>
+    <message>
+        <source>no</source>
+        <translation>nu</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(fără etichetă)</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -354,6 +570,22 @@
     <message>
         <source>&amp;Address</source>
         <translation>&amp;Adresa</translation>
+    </message>
+    <message>
+        <source>New sending address</source>
+        <translation>Adresă nouă de livrare</translation>
+    </message>
+    <message>
+        <source>Edit receiving address</source>
+        <translation>Modifică adresa de primire</translation>
+    </message>
+    <message>
+        <source>Edit sending address</source>
+        <translation>Modifică adresa de livrare</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Portofelul nu a putut fi deblocat.</translation>
     </message>
     </context>
 <context>
@@ -377,10 +609,6 @@
         <source>(%1-bit)</source>
         <translation>(%1-bit)</translation>
     </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Pornește minimalizat</translation>
-    </message>
     </context>
 <context>
     <name>Intro</name>
@@ -393,6 +621,26 @@
         <translation>Folosește directoriul pentru date din modul implicit.</translation>
     </message>
     <message>
+        <source>Use a custom data directory:</source>
+        <translation>Alege un folder/director personalizat</translation>
+    </message>
+    <message>
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
+    </message>
+    <message>
+        <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
+        <translation>Cel puțin %1 GB va fi stocat în acest folder și va crește în timp.</translation>
+    </message>
+    <message>
+        <source>The wallet will also be stored in this directory.</source>
+        <translation>Portofelul va fi, de asemenea, stocat în acest folder/director.</translation>
+    </message>
+    <message>
+        <source>Error: Specified data directory "%1" cannot be created.</source>
+        <translation>Eroare: Folderul specificat "%1" nu poate fi creat.</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation>Eroare</translation>
     </message>
@@ -403,6 +651,26 @@
     </context>
 <context>
     <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>formular</translation>
+    </message>
+    <message>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
+        <translation>Posibil ca tranzacțiile recente să nu fie vizibile, încă, astfel bilanțul portofelului tău poate fi incorect. Aceste informații vor fi corecte o dată ce portofelul tău a încheiat sincronizarea cu rețeaua bitcoin, conform descrierii de mai jos.</translation>
+    </message>
+    <message>
+        <source>Unknown...</source>
+        <translation>Necunoscut...</translation>
+    </message>
+    <message>
+        <source>calculating...</source>
+        <translation>Se calculează...</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation>Ascunde</translation>
+    </message>
     </context>
 <context>
     <name>OpenURIDialog</name>
@@ -426,16 +694,12 @@
         <translation>MB</translation>
     </message>
     <message>
-        <source>Accept connections from outside</source>
-        <translation>Acceptă conexiuni externe</translation>
-    </message>
-    <message>
-        <source>Allow incoming connections</source>
-        <translation>Acceptă conexiunea care sosește</translation>
-    </message>
-    <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
         <translation>Adresa IP a proxy-ului (ex. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
+    </message>
+    <message>
+        <source>Open Configuration File</source>
+        <translation>Deschide fișierul de Configurare</translation>
     </message>
     <message>
         <source>&amp;Reset Options</source>
@@ -506,12 +770,24 @@
         <translation>Clientul va fi oprit. Dorești sa continui?</translation>
     </message>
     <message>
+        <source>Configuration options</source>
+        <translation>Optiuni de configuratie</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Eroare</translation>
+    </message>
+    <message>
         <source>This change would require a client restart.</source>
         <translation>Această schimbare necesită repornirea clientului.</translation>
     </message>
     </context>
 <context>
     <name>OverviewPage</name>
+    <message>
+        <source>Form</source>
+        <translation>formular</translation>
+    </message>
     <message>
         <source>Available:</source>
         <translation>Disponibil:</translation>
@@ -527,10 +803,30 @@
     </context>
 <context>
     <name>PaymentServer</name>
+    <message>
+        <source>Payment request expired.</source>
+        <translation>Cererea de plată a expirat.</translation>
+    </message>
+    <message>
+        <source>Payment request is not initialized.</source>
+        <translation>Cererea de plată nu este inițializată.</translation>
+    </message>
+    <message>
+        <source>Invalid payment request.</source>
+        <translation>Cerere de plată invalidă.</translation>
+    </message>
     </context>
 <context>
     <name>PeerTableModel</name>
-    </context>
+    <message>
+        <source>Sent</source>
+        <translation>Trimis</translation>
+    </message>
+    <message>
+        <source>Received</source>
+        <translation>Primit</translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
     <message>
@@ -541,13 +837,37 @@
         <source>%1 and %2</source>
         <translation>%1 și %2</translation>
     </message>
+    <message>
+        <source>%1 B</source>
+        <translation>%1 B</translation>
+    </message>
+    <message>
+        <source>%1 KB</source>
+        <translation>%1 KB</translation>
+    </message>
+    <message>
+        <source>%1 MB</source>
+        <translation>%1 MB</translation>
+    </message>
+    <message>
+        <source>%1 GB</source>
+        <translation>%1 GB</translation>
+    </message>
     </context>
 <context>
     <name>QObject::QObject</name>
     </context>
 <context>
     <name>QRImageWidget</name>
-    </context>
+    <message>
+        <source>Save QR Code</source>
+        <translation>Salvează codul QR</translation>
+    </message>
+    <message>
+        <source>PNG Image (*.png)</source>
+        <translation>Imagine PNG (*.png)</translation>
+    </message>
+</context>
 <context>
     <name>RPCConsole</name>
     <message>
@@ -623,22 +943,6 @@
         <translation>1 &amp;an</translation>
     </message>
     <message>
-        <source>%1 B</source>
-        <translation>%1 B</translation>
-    </message>
-    <message>
-        <source>%1 KB</source>
-        <translation>%1 KB</translation>
-    </message>
-    <message>
-        <source>%1 MB</source>
-        <translation>%1 MB</translation>
-    </message>
-    <message>
-        <source>%1 GB</source>
-        <translation>%1 GB</translation>
-    </message>
-    <message>
         <source>Yes</source>
         <translation>Da</translation>
     </message>
@@ -665,16 +969,68 @@
         <source>Remove</source>
         <translation>Elimină</translation>
     </message>
-    </context>
+    <message>
+        <source>Copy label</source>
+        <translation>Copiază eticheta</translation>
+    </message>
+    <message>
+        <source>Copy message</source>
+        <translation>Copiază mesajul</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>Copiază cantitatea</translation>
+    </message>
+</context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>QR Code</source>
+        <translation>Salvează codul QR</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Address</source>
+        <translation>Copiază Adresa</translation>
+    </message>
     <message>
         <source>&amp;Save Image...</source>
         <translation>&amp;Salvează imaginea...</translation>
     </message>
+    <message>
+        <source>Address</source>
+        <translation>Adresă</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>Cantitate</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Etichetă</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Mesaj</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Portofel</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>Etichetă</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Mesaj</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(fără etichetă)</translation>
+    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -702,7 +1058,27 @@
         <source>Change:</source>
         <translation>Schimbă:</translation>
     </message>
-    </context>
+    <message>
+        <source>Hide</source>
+        <translation>Ascunde</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>Copiază cantitatea</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation>Copiază taxa</translation>
+    </message>
+    <message>
+        <source>Payment request expired.</source>
+        <translation>Cererea de plată a expirat.</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(fără etichetă)</translation>
+    </message>
+</context>
 <context>
     <name>SendCoinsEntry</name>
     </context>
@@ -714,24 +1090,180 @@
     </context>
 <context>
     <name>SignVerifyMessageDialog</name>
-    </context>
+    <message>
+        <source>Message verified.</source>
+        <translation>Mesaj verificat.</translation>
+    </message>
+</context>
 <context>
     <name>SplashScreen</name>
     </context>
 <context>
     <name>TrafficGraphWidget</name>
-    </context>
+    <message>
+        <source>KB/s</source>
+        <translation>KB/s</translation>
+    </message>
+</context>
 <context>
     <name>TransactionDesc</name>
-    </context>
+    <message>
+        <source>Generated</source>
+        <translation>Generat</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation>De la</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>La</translation>
+    </message>
+    <message>
+        <source>Credit</source>
+        <translation>Credit</translation>
+    </message>
+    <message>
+        <source>Total credit</source>
+        <translation>Credit total</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Mesaj</translation>
+    </message>
+    <message>
+        <source>Comment</source>
+        <translation>Comentariu</translation>
+    </message>
+    <message>
+        <source>Transaction ID</source>
+        <translation>Transactiune ID</translation>
+    </message>
+    <message>
+        <source>Transaction</source>
+        <translation>Transactiune</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>Cantitate</translation>
+    </message>
+    <message>
+        <source>true</source>
+        <translation>Adevarat</translation>
+    </message>
+    <message>
+        <source>false</source>
+        <translation>Fals</translation>
+    </message>
+</context>
 <context>
     <name>TransactionDescDialog</name>
     </context>
 <context>
     <name>TransactionTableModel</name>
+    <message>
+        <source>Type</source>
+        <translation>tip</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Etichetă</translation>
+    </message>
+    <message>
+        <source>Received with</source>
+        <translation>Obtinut cu</translation>
+    </message>
+    <message>
+        <source>(n/a)</source>
+        <translation>(n/a)</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(fără etichetă)</translation>
+    </message>
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>All</source>
+        <translation>Tot</translation>
+    </message>
+    <message>
+        <source>Today</source>
+        <translation>Astazi</translation>
+    </message>
+    <message>
+        <source>This week</source>
+        <translation>Saptamana aceasta</translation>
+    </message>
+    <message>
+        <source>This month</source>
+        <translation>Luna aceasta</translation>
+    </message>
+    <message>
+        <source>Last month</source>
+        <translation>Luna trecuta</translation>
+    </message>
+    <message>
+        <source>This year</source>
+        <translation>Anul acesta</translation>
+    </message>
+    <message>
+        <source>Received with</source>
+        <translation>Obtinut cu</translation>
+    </message>
+    <message>
+        <source>To yourself</source>
+        <translation>Pentru tine</translation>
+    </message>
+    <message>
+        <source>Other</source>
+        <translation>Altru</translation>
+    </message>
+    <message>
+        <source>Copy address</source>
+        <translation>Copiază adresa</translation>
+    </message>
+    <message>
+        <source>Copy label</source>
+        <translation>Copiază eticheta</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>Copiază cantitatea</translation>
+    </message>
+    <message>
+        <source>Copy transaction ID</source>
+        <translation>Copiază ID-ul tranzacției</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Fisier text separat prin virgule (*.csv)</translation>
+    </message>
+    <message>
+        <source>Confirmed</source>
+        <translation>Confirmat</translation>
+    </message>
+    <message>
+        <source>Type</source>
+        <translation>tip</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Etichetă</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Adresă</translation>
+    </message>
+    <message>
+        <source>ID</source>
+        <translation>ID</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Exportul a eșuat</translation>
+    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
@@ -744,6 +1276,10 @@
     </context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;Exportă</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>
@@ -752,12 +1288,24 @@
         <translation>Bitcoin Core</translation>
     </message>
     <message>
+        <source>Upgrading UTXO database</source>
+        <translation>Actualizarea bazei de date UTXO</translation>
+    </message>
+    <message>
         <source>Information</source>
         <translation>Informație</translation>
     </message>
     <message>
         <source>Warning</source>
         <translation>Atenționare</translation>
+    </message>
+    <message>
+        <source>Loading wallet...</source>
+        <translation>Portofelul se încarcă...</translation>
+    </message>
+    <message>
+        <source>Rescanning...</source>
+        <translation>Rescanare...</translation>
     </message>
     <message>
         <source>Error</source>

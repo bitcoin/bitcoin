@@ -14,6 +14,27 @@ purposes. As such there are repository "maintainers" who are responsible for
 merging pull requests as well as a "lead maintainer" who is responsible for the
 release cycle, overall merging, moderation and appointment of maintainers.
 
+If you're looking for somewhere to start contributing, check out the
+[good first issue](https://github.com/bitcoin/bitcoin/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
+list.
+
+Communication Channels
+----------------------
+
+Most communication about Bitcoin Core development happens on IRC, in the
+#bitcoin-core-dev channel on Freenode. The easiest way to participate on IRC is
+with the web client, [webchat.freenode.net](https://webchat.freenode.net/). Chat
+history logs can be found
+on [botbot.me](https://botbot.me/freenode/bitcoin-core-dev/).
+
+Discussion about code base improvements happens in GitHub issues and on pull
+requests.
+
+The developer
+[mailing list](https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev)
+should be used to discuss complicated or controversial changes before working on
+a patch set.
+
 
 Contributor Workflow
 --------------------
@@ -24,9 +45,9 @@ facilitates social contribution, easy testing and peer review.
 
 To contribute a patch, the workflow is as follows:
 
-  - Fork repository
-  - Create topic branch
-  - Commit patches
+  1. Fork repository
+  1. Create topic branch
+  1. Commit patches
 
 The project coding conventions in the [developer notes](doc/developer-notes.md)
 must be adhered to.
@@ -42,8 +63,8 @@ in init.cpp") in which case a single title line is sufficient. Commit messages s
 helpful to people reading your code in the future, so explain the reasoning for
 your decisions. Further explanation [here](http://chris.beams.io/posts/git-commit/).
 
-If a particular commit references another issue, please add the reference, for
-example `refs #1234`, or `fixes #4321`. Using the `fixes` or `closes` keywords
+If a particular commit references another issue, please add the reference. For
+example: `refs #1234` or `fixes #4321`. Using the `fixes` or `closes` keywords
 will cause the corresponding issue to be closed when the pull request is merged.
 
 Please refer to the [Git manual](https://git-scm.com/doc) for more information
@@ -81,7 +102,11 @@ Examples:
     Qt: Add feed bump button
     Trivial: Fix typo in init.cpp
 
-If a pull request is specifically not to be considered for merging (yet) please
+Note that translations should not be submitted as pull requests, please see
+[Translation Process](https://github.com/bitcoin/bitcoin/blob/master/doc/translation_process.md) 
+for more information on helping with translations.
+
+If a pull request is not to be considered for merging (yet), please
 prefix the title with [WIP] or use [Tasks Lists](https://help.github.com/articles/basic-writing-and-formatting-syntax/#task-lists)
 in the body of the pull request to indicate tasks are pending.
 
@@ -94,6 +119,8 @@ At this stage one should expect comments and review from other contributors. You
 can add more commits to your pull request by committing them locally and pushing
 to your fork until you have satisfied all feedback.
 
+Note: Code review is a burdensome but important part of the development process, and as such, certain types of pull requests are rejected. In general, if the **improvements** do not warrant the **review effort** required, the PR has a high chance of being rejected. It is up to the PR author to convince the reviewers that the changes warrant the review effort, and if reviewers are "Concept NAK'ing" the PR, the author may need to present arguments and/or do research backing their suggested changes.
+
 Squashing Commits
 ---------------------------
 If your pull request is accepted for merging, you may be asked by a maintainer
@@ -102,10 +129,10 @@ before it will be merged. The basic squashing workflow is shown below.
 
     git checkout your_branch_name
     git rebase -i HEAD~n
-    # n is normally the number of commits in the pull
-    # set commits from 'pick' to 'squash', save and quit
-    # on the next screen, edit/refine commit messages
-    # save and quit
+    # n is normally the number of commits in the pull request.
+    # Set commits (except the one in the first line) from 'pick' to 'squash', save and quit.
+    # On the next screen, edit/refine commit messages.
+    # Save and quit.
     git push -f # (force push to GitHub)
 
 If you have problems with squashing (or other workflows with `git`), you can
@@ -153,6 +180,14 @@ behaviour of code within the pull request (bugs must be preserved as is).
 Project maintainers aim for a quick turnaround on refactoring pull requests, so
 where possible keep them short, uncomplex and easy to verify.
 
+Pull requests that refactor the code should not be made by new contributors. It
+requires a certain level of experience to know where the code belongs to and to
+understand the full ramification (including rebase effort of open pull requests).
+
+Trivial pull requests or pull requests that refactor the code with no clear
+benefits may be immediately closed by the maintainers to reduce unnecessary
+workload on reviewing.
+
 
 "Decision Making" Process
 -------------------------
@@ -170,13 +205,13 @@ judge the general consensus of contributors.
 
 In general, all pull requests must:
 
-  - have a clear use case, fix a demonstrable bug or serve the greater good of
+  - Have a clear use case, fix a demonstrable bug or serve the greater good of
     the project (for example refactoring for modularisation);
-  - be well peer reviewed;
-  - have unit tests and functional tests where appropriate;
-  - follow code style guidelines;
-  - not break the existing test suite;
-  - where bugs are fixed, where possible, there should be unit tests
+  - Be well peer reviewed;
+  - Have unit tests and functional tests where appropriate;
+  - Follow code style guidelines ([C++](doc/developer-notes.md), [functional tests](test/functional/README.md));
+  - Not break the existing test suite;
+  - Where bugs are fixed, where possible, there should be unit tests
     demonstrating the bug and also proving the fix. This helps prevent regression.
 
 Patches that change Bitcoin consensus rules are considerably more involved than

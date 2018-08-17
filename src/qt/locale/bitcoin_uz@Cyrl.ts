@@ -30,6 +30,10 @@
         <translation>Жорий танланган манзилни рўйхатдан ўчириш</translation>
     </message>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>Излаш учун манзил ёки ёрлиқни киритинг</translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Жорий ички ойна ичидаги маълумотларни файлга экспорт қилиш</translation>
     </message>
@@ -413,15 +417,7 @@
         <source>Command-line options</source>
         <translation>Буйруқлар сатри мосламалари</translation>
     </message>
-    <message>
-        <source>Usage:</source>
-        <translation>Фойдаланиш:</translation>
-    </message>
-    <message>
-        <source>command-line options</source>
-        <translation>буйруқлар қатори орқали мослаш</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>Intro</name>
     <message>
@@ -435,6 +431,10 @@
     <message>
         <source>Use a custom data directory:</source>
         <translation>Бошқа маълумотлар директориясида фойдаланинг:</translation>
+    </message>
+    <message>
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -498,20 +498,8 @@
         <translation>Мавзуларни &amp;тўғрилаш скрипти миқдори</translation>
     </message>
     <message>
-        <source>Accept connections from outside</source>
-        <translation>Ташқаридан уланишларга рози бўлиш</translation>
-    </message>
-    <message>
-        <source>Allow incoming connections</source>
-        <translation>Кирувчи уланишларга рухсат бериш</translation>
-    </message>
-    <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
         <translation>Прокси IP манзили (масалан: IPv4: 127.0.0.1 / IPv6: ::1)</translation>
-    </message>
-    <message>
-        <source>Third party transaction URLs</source>
-        <translation>Бегона тараф ўтказмалари URL манзиллари</translation>
     </message>
     <message>
         <source>&amp;Network</source>
@@ -584,6 +572,10 @@
     <message>
         <source>Client restart required to activate changes.</source>
         <translation>Ўзгаришлар амалга ошиши учун мижозни қайта ишга тушириш талаб қилинади.</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Хатолик</translation>
     </message>
     <message>
         <source>This change would require a client restart.</source>
@@ -709,7 +701,27 @@
         <source>%1 and %2</source>
         <translation>%1 ва %2</translation>
     </message>
-    </context>
+    <message>
+        <source>%1 B</source>
+        <translation>%1 Б</translation>
+    </message>
+    <message>
+        <source>%1 KB</source>
+        <translation>%1 КБ</translation>
+    </message>
+    <message>
+        <source>%1 MB</source>
+        <translation>%1 МБ</translation>
+    </message>
+    <message>
+        <source>%1 GB</source>
+        <translation>%1 ГБ</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>Номаълум</translation>
+    </message>
+</context>
 <context>
     <name>QObject::QObject</name>
     </context>
@@ -815,10 +827,6 @@
         <translation>&amp;Тармоқ трафиги</translation>
     </message>
     <message>
-        <source>&amp;Clear</source>
-        <translation>&amp;Тозалаш</translation>
-    </message>
-    <message>
         <source>Totals</source>
         <translation>Жами</translation>
     </message>
@@ -837,30 +845,6 @@
     <message>
         <source>Clear console</source>
         <translation>Терминални тозалаш</translation>
-    </message>
-    <message>
-        <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
-        <translation>Тарихни кўриш учун тепага ва пастга кўрсаткичларидан фойдаланинг, экранни тозалаш учун &lt;b&gt;Ctrl-L&lt;/b&gt; тугмалар бирикмасидан фойдаланинг.</translation>
-    </message>
-    <message>
-        <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
-        <translation>Мавжуд буйруқларни кўриш учун &lt;b&gt;help&lt;/b&gt; деб ёзинг.</translation>
-    </message>
-    <message>
-        <source>%1 B</source>
-        <translation>%1 Б</translation>
-    </message>
-    <message>
-        <source>%1 KB</source>
-        <translation>%1 КБ</translation>
-    </message>
-    <message>
-        <source>%1 MB</source>
-        <translation>%1 МБ</translation>
-    </message>
-    <message>
-        <source>%1 GB</source>
-        <translation>%1 ГБ</translation>
     </message>
     <message>
         <source>via %1</source>
@@ -904,10 +888,6 @@
     <message>
         <source>&amp;Message:</source>
         <translation>&amp;Хабар:</translation>
-    </message>
-    <message>
-        <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
-        <translation>Олдинги фойдаланилган қабул қилинган манзиллардан биридан қайта фойдаланилсин. Хавсизлик ва махфийлик муаммолар мавжуд манзиллардан қайта фойдаланилмоқда. Бундан тўлов сўров қайта яратилмагунича фойдаланманг.</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
@@ -967,6 +947,10 @@
     <message>
         <source>&amp;Save Image...</source>
         <translation>Расмни &amp;сақлаш</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Ҳамён</translation>
     </message>
     </context>
 <context>
@@ -1039,14 +1023,6 @@
         <translation>Тавсия этилган</translation>
     </message>
     <message>
-        <source>normal</source>
-        <translation>Нормал</translation>
-    </message>
-    <message>
-        <source>fast</source>
-        <translation>Тезкор</translation>
-    </message>
-    <message>
         <source>Send to multiple recipients at once</source>
         <translation>Бирданига бир нечта қабул қилувчиларга жўнатиш</translation>
     </message>
@@ -1073,6 +1049,10 @@
     <message>
         <source>S&amp;end</source>
         <translation>Жў&amp;натиш</translation>
+    </message>
+    <message>
+        <source>Transaction fee</source>
+        <translation>Ўтказма тўлови</translation>
     </message>
     </context>
 <context>
@@ -1192,48 +1172,16 @@
 <context>
     <name>bitcoin-core</name>
     <message>
-        <source>Options:</source>
-        <translation>Танламалар:</translation>
-    </message>
-    <message>
-        <source>Specify data directory</source>
-        <translation>Маълумотлар директориясини кўрсатинг</translation>
-    </message>
-    <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>Буйруқлар сатри ва JSON-RPC буйруқларига рози бўлинг</translation>
-    </message>
-    <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>Демон сифатида орқа фонда ишга туширинг ва буйруқларга рози бўлинг</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoin Core</translation>
-    </message>
-    <message>
-        <source>Connection options:</source>
-        <translation>Уланиш кўрсаткичлари:</translation>
     </message>
     <message>
         <source>Information</source>
         <translation>Маълумот</translation>
     </message>
     <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>JSON-RPC уланишлари учун фойдаланувчи номи</translation>
-    </message>
-    <message>
         <source>Warning</source>
         <translation>Диққат</translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>JSON-RPC уланишлари учун парол</translation>
-    </message>
-    <message>
-        <source>Loading addresses...</source>
-        <translation>Манзиллар юкланмоқда...</translation>
     </message>
     <message>
         <source>Insufficient funds</source>

@@ -1,18 +1,18 @@
-// Copyright (c) 2012-2016 The Bitcoin Core developers
+// Copyright (c) 2012-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "consensus/tx_verify.h"
-#include "pubkey.h"
-#include "key.h"
-#include "script/script.h"
-#include "script/standard.h"
-#include "uint256.h"
-#include "test/test_bitcoin.h"
+#include <consensus/tx_verify.h>
+#include <consensus/validation.h>
+#include <pubkey.h>
+#include <key.h>
+#include <script/script.h>
+#include <script/standard.h>
+#include <uint256.h>
+#include <test/test_bitcoin.h>
 
 #include <vector>
 
-#include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 
 // Helpers:
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(GetSigOpCount)
  * Verifies script execution of the zeroth scriptPubKey of tx output and
  * zeroth scriptSig and witness of tx input.
  */
-ScriptError VerifyWithFlag(const CTransaction& output, const CMutableTransaction& input, int flags)
+static ScriptError VerifyWithFlag(const CTransaction& output, const CMutableTransaction& input, int flags)
 {
     ScriptError error;
     CTransaction inputi(input);
@@ -82,7 +82,7 @@ ScriptError VerifyWithFlag(const CTransaction& output, const CMutableTransaction
  * and witness such that spendingTx spends output zero of creationTx.
  * Also inserts creationTx's output into the coins view.
  */
-void BuildTxs(CMutableTransaction& spendingTx, CCoinsViewCache& coins, CMutableTransaction& creationTx, const CScript& scriptPubKey, const CScript& scriptSig, const CScriptWitness& witness)
+static void BuildTxs(CMutableTransaction& spendingTx, CCoinsViewCache& coins, CMutableTransaction& creationTx, const CScript& scriptPubKey, const CScript& scriptSig, const CScriptWitness& witness)
 {
     creationTx.nVersion = 1;
     creationTx.vin.resize(1);
@@ -102,7 +102,7 @@ void BuildTxs(CMutableTransaction& spendingTx, CCoinsViewCache& coins, CMutableT
     spendingTx.vout[0].nValue = 1;
     spendingTx.vout[0].scriptPubKey = CScript();
 
-    coins.ModifyCoins(creationTx.GetHash())->FromTx(creationTx, 0);
+    AddCoins(coins, creationTx, 0);
 }
 
 BOOST_AUTO_TEST_CASE(GetTxSigOpCost)

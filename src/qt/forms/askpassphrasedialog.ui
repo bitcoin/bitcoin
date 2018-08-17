@@ -93,6 +93,13 @@
       </widget>
      </item>
      <item row="3" column="1">
+      <widget class="QCheckBox" name="toggleShowPasswordButton">
+       <property name="text">
+        <string>Show password</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
       <widget class="QLabel" name="capsLabel">
        <property name="font">
         <font>

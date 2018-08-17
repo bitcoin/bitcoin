@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <PropertyGroup>
+      <BuildDependsOn>
+          CopyConfig;
+          $(BuildDependsOn);
+      </BuildDependsOn>
+  </PropertyGroup>
+  <Target Name="CopyConfig"
+          Inputs="$(MSBuildThisFileDirectory)bitcoin_config.h"
+          Outputs="$(MSBuildThisFileDirectory)..\src\config\bitcoin-config.h">
+      <Copy SourceFiles="$(MSBuildThisFileDirectory)bitcoin_config.h" DestinationFiles="$(MSBuildThisFileDirectory)..\src\config\bitcoin-config.h" />
+  </Target>
+</Project>
