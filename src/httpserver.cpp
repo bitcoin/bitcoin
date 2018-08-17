@@ -239,6 +239,18 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
         return;
     }
 
+    if (LogAcceptCategory(BCLog::HTTP)) {
+        // Dump headers if request is valid
+        LogPrint(BCLog::HTTP, "Request headers:\n");
+        for (auto i : hreq->GetHeaders()) {
+            if (EqualHeaders(i.first, "Authorization")) {
+                LogPrint(BCLog::HTTP, "  %s: %s\n", i.first, "***");
+            } else {
+                LogPrint(BCLog::HTTP, "  %s: %s\n", i.first, i.second);
+            }
+        }
+    }
+
     // Find registered handler for prefix
     std::string strURI = hreq->GetURI();
     std::string path;
