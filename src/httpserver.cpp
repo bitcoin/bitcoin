@@ -646,6 +646,11 @@ HTTPRequest::RequestMethod HTTPRequest::GetRequestMethod() const
     }
 }
 
+bool EqualHeaders(const std::string& h1, const std::string& h2)
+{
+    return evutil_ascii_strcasecmp(h1.c_str(), h2.c_str()) == 0;
+}
+
 void RegisterHTTPHandler(const std::string &prefix, bool exactMatch, const HTTPRequestHandler &handler)
 {
     LogPrint(BCLog::HTTP, "Registering HTTP handler for %s (exactmatch %d)\n", prefix, exactMatch);

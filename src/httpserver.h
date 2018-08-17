@@ -51,6 +51,8 @@ void UnregisterHTTPHandler(const std::string &prefix, bool exactMatch);
  */
 struct event_base* EventBase();
 
+bool EqualHeaders(const std::string& h1, const std::string& h2);
+
 /** In-flight HTTP request.
  * Thin C++ wrapper around evhttp_request.
  */
