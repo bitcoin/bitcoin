@@ -1226,23 +1226,6 @@ bool CAssetsCache::Flush(bool fSoftCopy, bool fFlushDB)
             bool dirty = false;
             std::string message;
 
-            // Save the assets that have been spent by erasing the quantity in the database
-            for (auto spentAsset : vSpentAssets) {
-                auto pair = make_pair(spentAsset.assetName, spentAsset.address);
-                if (mapAssetsAddressAmount.count(pair)) {
-                    if (mapAssetsAddressAmount.at(make_pair(spentAsset.assetName, spentAsset.address)) == 0) {
-                        if (!passetsdb->EraseAssetAddressQuantity(spentAsset.assetName, spentAsset.address)) {
-                            dirty = true;
-                            message = "_Failed Erasing a Spent Asset, from database";
-                        }
-
-                        if (dirty) {
-                            return error("%s : %s", __func__, message);
-                        }
-                    }
-                }
-            }
-
             // Remove new assets from the database
             for (auto newAsset : setNewAssetsToRemove) {
                 passetsCache->Erase(newAsset.asset.strName);
@@ -1379,7 +1362,7 @@ bool CAssetsCache::Flush(bool fSoftCopy, bool fFlushDB)
 
                     if (mapAssetsAddressAmount.count(pair)) {
                         if (!passetsdb->WriteAssetAddressQuantity(pair.first, pair.second,
-                                                                  mapAssetsAddressAmount[pair])) {
+                                                                  mapAssetsAddressAmount.at(pair))) {
                             dirty = true;
                             message = "_Failed Writing reissue asset quantity to the address quantity database";
                         }
@@ -1448,6 +1431,32 @@ bool CAssetsCache::Flush(bool fSoftCopy, bool fFlushDB)
 
                     if (dirty) {
                         return error("%s : %s", __func__, message);
+                    }
+                }
+            }
+
+            // Save the assets that have been spent by erasing the quantity in the database
+            for (auto spentAsset : vSpentAssets) {
+                auto pair = make_pair(spentAsset.assetName, spentAsset.address);
+                if (mapAssetsAddressAmount.count(pair)) {
+                    if (mapAssetsAddressAmount.at(make_pair(spentAsset.assetName, spentAsset.address)) == 0) {
+                        if (!passetsdb->EraseAssetAddressQuantity(spentAsset.assetName, spentAsset.address)) {
+                            dirty = true;
+                            message = "_Failed Erasing a Spent Asset, from database";
+                        }
+
+                        if (dirty) {
+                            return error("%s : %s", __func__, message);
+                        }
+                    } else  {
+                        if (!passetsdb->WriteAssetAddressQuantity(spentAsset.assetName, spentAsset.address, mapAssetsAddressAmount.at(pair))) {
+                            dirty = true;
+                            message = "_Failed Erasing a Spent Asset, from database";
+                        }
+
+                        if (dirty) {
+                            return error("%s : %s", __func__, message);
+                        }
                     }
                 }
             }
