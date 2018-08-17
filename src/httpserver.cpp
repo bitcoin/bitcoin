@@ -239,6 +239,18 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
         return;
     }
 
+    if (LogAcceptCategory(BCLog::HTTP)) {
+        // Dump headers if request is valid
+        LogPrint(BCLog::HTTP, "Request headers:\n");
+        for (auto i : hreq->GetHeaders()) {
+            if (EqualHeaders(i.first, "Authorization")) {
+                LogPrint(BCLog::HTTP, "  %s: %s\n", i.first, "***");
+            } else {
+                LogPrint(BCLog::HTTP, "  %s: %s\n", i.first, i.second);
+            }
+        }
+    }
+
     // Find registered handler for prefix
     std::string strURI = hreq->GetURI();
     std::string path;
@@ -536,7 +548,7 @@ HTTPRequest::~HTTPRequest()
     // evhttpd cleans up the request, as long as a reply was sent.
 }
 
-std::pair<bool, std::string> HTTPRequest::GetHeader(const std::string& hdr)
+std::pair<bool, std::string> HTTPRequest::GetHeader(const std::string& hdr) const
 {
     const struct evkeyvalq* headers = evhttp_request_get_input_headers(req);
     assert(headers);
@@ -545,6 +557,18 @@ std::pair<bool, std::string> HTTPRequest::GetHeader(const std::string& hdr)
         return std::make_pair(true, val);
     else
         return std::make_pair(false, "");
+}
+
+std::map<std::string, std::string> HTTPRequest::GetHeaders() const
+{
+    const struct evkeyvalq *header = evhttp_request_get_input_headers(req);
+    struct evkeyval* kv = header->tqh_first;
+    std::map<std::string, std::string> headers;
+    while (kv) {
+        headers.emplace(kv->key, kv->value);
+        kv = kv->next.tqe_next;
+    }
+    return headers;
 }
 
 std::string HTTPRequest::ReadBody()
@@ -606,7 +630,7 @@ void HTTPRequest::WriteReply(int nStatus, const std::string& strReply)
     req = nullptr; // transferred back to main thread
 }
 
-CService HTTPRequest::GetPeer()
+CService HTTPRequest::GetPeer() const
 {
     evhttp_connection* con = evhttp_request_get_connection(req);
     CService peer;
@@ -620,12 +644,12 @@ CService HTTPRequest::GetPeer()
     return peer;
 }
 
-std::string HTTPRequest::GetURI()
+std::string HTTPRequest::GetURI() const
 {
     return evhttp_request_get_uri(req);
 }
 
-HTTPRequest::RequestMethod HTTPRequest::GetRequestMethod()
+HTTPRequest::RequestMethod HTTPRequest::GetRequestMethod() const
 {
     switch (evhttp_request_get_command(req)) {
     case EVHTTP_REQ_GET:
@@ -644,6 +668,11 @@ HTTPRequest::RequestMethod HTTPRequest::GetRequestMethod()
         return UNKNOWN;
         break;
     }
+}
+
+bool EqualHeaders(const std::string& h1, const std::string& h2)
+{
+    return evutil_ascii_strcasecmp(h1.c_str(), h2.c_str()) == 0;
 }
 
 void RegisterHTTPHandler(const std::string &prefix, bool exactMatch, const HTTPRequestHandler &handler)

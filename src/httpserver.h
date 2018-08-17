@@ -5,6 +5,7 @@
 #ifndef BITCOIN_HTTPSERVER_H
 #define BITCOIN_HTTPSERVER_H
 
+#include <map>
 #include <string>
 #include <stdint.h>
 #include <functional>
@@ -51,6 +52,8 @@ void UnregisterHTTPHandler(const std::string &prefix, bool exactMatch);
  */
 struct event_base* EventBase();
 
+bool EqualHeaders(const std::string& h1, const std::string& h2);
+
 /** In-flight HTTP request.
  * Thin C++ wrapper around evhttp_request.
  */
@@ -74,21 +77,26 @@ public:
 
     /** Get requested URI.
      */
-    std::string GetURI();
+    std::string GetURI() const;
 
     /** Get CService (address:ip) for the origin of the http request.
      */
-    CService GetPeer();
+    CService GetPeer() const;
 
     /** Get request method.
      */
-    RequestMethod GetRequestMethod();
+    RequestMethod GetRequestMethod() const;
 
     /**
      * Get the request header specified by hdr, or an empty string.
      * Return a pair (isPresent,string).
      */
-    std::pair<bool, std::string> GetHeader(const std::string& hdr);
+    std::pair<bool, std::string> GetHeader(const std::string& hdr) const;
+
+    /**
+     * Get the request headers.
+     */
+    std::map<std::string, std::string> GetHeaders() const;
 
     /**
      * Read request body.
