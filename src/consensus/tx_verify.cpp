@@ -323,7 +323,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
 }
 
 //! Check to make sure that the inputs and outputs CAmount match exactly.
-bool Consensus::CheckTxAssets(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs)
+bool Consensus::CheckTxAssets(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, const bool fRunningUnitTests)
 {
     // are the actual inputs available?
     if (!inputs.HaveInputs(tx)) {
@@ -370,10 +370,11 @@ bool Consensus::CheckTxAssets(const CTransaction& tx, CValidationState& state, c
             else
                 totalOutputs.insert(make_pair(transfer.strName, transfer.nAmount));
 
-            if (IsAssetNameAnOwner(transfer.strName)) {
-                if (transfer.nAmount != OWNER_ASSET_AMOUNT)
-                    return state.DoS(100, false, REJECT_INVALID, "bad-txns-transfer-owner-amount-was-not-1");
-            } else {
+            if (!fRunningUnitTests) {
+                if (IsAssetNameAnOwner(transfer.strName)) {
+                    if (transfer.nAmount != OWNER_ASSET_AMOUNT)
+                        return state.DoS(100, false, REJECT_INVALID, "bad-txns-transfer-owner-amount-was-not-1");
+                } else {
                     // For all other types of assets, make sure they are sending the right type of units
                     CNewAsset asset;
                     if (!passets->GetAssetIfExists(transfer.strName, asset))
@@ -385,6 +386,7 @@ bool Consensus::CheckTxAssets(const CTransaction& tx, CValidationState& state, c
                     if (transfer.nAmount % int64_t(pow(10, (MAX_UNIT - asset.units))) != 0)
                         return state.DoS(100, false, REJECT_INVALID,
                                          "bad-txns-transfer-asset-amount-not-match-units");
+                }
             }
         } else if (txout.scriptPubKey.IsReissueAsset()) {
             CReissueAsset reissue;
@@ -392,10 +394,12 @@ bool Consensus::CheckTxAssets(const CTransaction& tx, CValidationState& state, c
             if (!ReissueAssetFromScript(txout.scriptPubKey, reissue, address))
                 return state.DoS(100, false, REJECT_INVALID, "bad-tx-asset-reissue-bad-deserialize");
 
-            std::string strError;
-            if (!reissue.IsValid(strError, *passets)) {
-                return state.DoS(100, false, REJECT_INVALID,
-                                 "bad-txns" + strError);
+            if (!fRunningUnitTests) {
+                std::string strError;
+                if (!reissue.IsValid(strError, *passets)) {
+                    return state.DoS(100, false, REJECT_INVALID,
+                                     "bad-txns" + strError);
+                }
             }
 
         }

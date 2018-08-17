@@ -32,7 +32,7 @@ namespace Consensus {
 bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee);
 
 /** RVN START */
-bool CheckTxAssets(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs);
+bool CheckTxAssets(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, const bool fRunningUnitTests = false);
 /** RVN END */
 } // namespace Consensus
 
