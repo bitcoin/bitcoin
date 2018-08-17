@@ -5,6 +5,7 @@
 #ifndef BITCOIN_HTTPSERVER_H
 #define BITCOIN_HTTPSERVER_H
 
+#include <map>
 #include <string>
 #include <stdint.h>
 #include <functional>
@@ -91,6 +92,11 @@ public:
      * Return a pair (isPresent,string).
      */
     std::pair<bool, std::string> GetHeader(const std::string& hdr) const;
+
+    /**
+     * Get the request headers.
+     */
+    std::map<std::string, std::string> GetHeaders() const;
 
     /**
      * Read request body.

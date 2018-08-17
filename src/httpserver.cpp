@@ -547,6 +547,18 @@ std::pair<bool, std::string> HTTPRequest::GetHeader(const std::string& hdr) cons
         return std::make_pair(false, "");
 }
 
+std::map<std::string, std::string> HTTPRequest::GetHeaders() const
+{
+    const struct evkeyvalq *header = evhttp_request_get_input_headers(req);
+    struct evkeyval* kv = header->tqh_first;
+    std::map<std::string, std::string> headers;
+    while (kv) {
+        headers.emplace(kv->key, kv->value);
+        kv = kv->next.tqe_next;
+    }
+    return headers;
+}
+
 std::string HTTPRequest::ReadBody()
 {
     struct evbuffer* buf = evhttp_request_get_input_buffer(req);
