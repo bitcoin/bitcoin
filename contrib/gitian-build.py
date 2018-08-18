@@ -7,9 +7,9 @@ import sys
 
 def setup():
     global args, workdir
-    programs = ['ruby', 'git', 'apt-cacher-ng', 'make', 'wget']
+    programs = ['ruby', 'git', 'make', 'wget']
     if args.kvm:
-        programs += ['python-vm-builder', 'qemu-kvm', 'qemu-utils']
+        programs += ['apt-cacher-ng', 'python-vm-builder', 'qemu-kvm', 'qemu-utils']
     elif args.docker:
         dockers = ['docker.io', 'docker-ce']
         for i in dockers:
@@ -20,7 +20,7 @@ def setup():
             print('Cannot find any way to install docker', file=sys.stderr)
             exit(1)
     else:
-        programs += ['lxc', 'debootstrap']
+        programs += ['apt-cacher-ng', 'lxc', 'debootstrap']
     subprocess.check_call(['sudo', 'apt-get', 'install', '-qq'] + programs)
     if not os.path.isdir('gitian.sigs'):
         subprocess.check_call(['git', 'clone', 'https://github.com/bitcoin-core/gitian.sigs.git'])
