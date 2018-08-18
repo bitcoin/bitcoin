@@ -315,12 +315,15 @@ P2PEncryption::P2PEncryption() : handshake_done(false)
     m_aead_k_2_a.resize(32);
     m_aead_k_1_b.resize(32);
     m_aead_k_2_b.resize(32);
-    m_ecdh_key.MakeNewKey(true);
-    if (m_ecdh_key.GetPubKey()[0] == 3) {
-        // the encryption handshake will only use 32byte pubkeys
-        // force EVEN (0x02) pubkey be negating the private key in case of ODD (0x03) pubkeys
-        m_ecdh_key.Negate();
-    }
+    // loop until we have generate a key where its pubkey does not match the network magic
+    do {
+        m_ecdh_key.MakeNewKey(true);
+        if (m_ecdh_key.GetPubKey()[0] == 3) {
+            // the encryption handshake will only use 32byte pubkeys
+            // force EVEN (0x02) pubkey be negating the private key in case of ODD (0x03) pubkeys
+            m_ecdh_key.Negate();
+        }
+    } while (memcmp(&m_ecdh_key.GetPubKey()[1], Params().MessageStart(), 4) == 0);
     assert(m_ecdh_key.IsValid());
 }
 
