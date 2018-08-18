@@ -1458,7 +1458,7 @@ void ListTransactions(const CWalletTx& wtx, const std::string& strAccount, int n
             entry.push_back(Pair("abandoned", wtx.isAbandoned()));
 			// SYSCOIN
 			const CTransaction& tx = *wtx.tx;
-			if (tx.nVersion == SYSCOIN_TX_VERSION && (IsSyscoinScript(tx.vout[s.vout].scriptPubKey, op, vvchArgs) || (tx.vout[s.vout].scriptPubKey[0] == OP_RETURN && DecodeAndParseSyscoinTx(tx, op, vvchArgs, type))))
+			if (tx.nVersion == SYSCOIN_TX_VERSION && DecodeAndParseSyscoinTx(tx, op, vvchArgs, type))
 			{
 				int aliasOp;
 				vector<vector<unsigned char> > aliasVvch;
@@ -1555,7 +1555,7 @@ void ListTransactions(const CWalletTx& wtx, const std::string& strAccount, int n
                     WalletTxToJSON(wtx, entry);
 				// SYSCOIN
 				const CTransaction& tx = *wtx.tx;
-				if (tx.nVersion == SYSCOIN_TX_VERSION && (IsSyscoinScript(tx.vout[r.vout].scriptPubKey, op, vvchArgs) || (tx.vout[r.vout].scriptPubKey[0] == OP_RETURN && DecodeAndParseSyscoinTx(tx, op, vvchArgs, type))))
+				if (tx.nVersion == SYSCOIN_TX_VERSION && DecodeAndParseSyscoinTx(tx, op, vvchArgs, type))
 				{
 					int aliasOp;
 					vector<vector<unsigned char> > aliasVvch;
