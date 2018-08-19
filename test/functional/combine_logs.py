@@ -25,10 +25,6 @@ def main():
     parser.add_argument('--html', dest='html', action='store_true', help='outputs the combined log as html. Requires jinja2. pip install jinja2')
     args, unknown_args = parser.parse_known_args()
 
-    if args.color and os.name != 'posix':
-        print("Color output requires posix terminal colors.")
-        sys.exit(1)
-
     if args.html and args.color:
         print("Only one out of --color or --html should be specified")
         sys.exit(1)
