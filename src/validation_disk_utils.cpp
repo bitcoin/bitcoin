@@ -4,12 +4,15 @@
 
 #include <validation_disk_utils.h>
 #include <clientversion.h>
-#include <validation_globals.h>
+#include <logging.h>
 #include <streams.h>
+#include <sync.h>
 #include <pow.h>
 #include <utilstrencodings.h>
-#include <vector>
 
+#include <cstring>
+#include <vector>
+#include <boost/filesystem/operations.hpp>
 
 bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus::Params& consensusParams)
 {

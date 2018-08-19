@@ -6,6 +6,10 @@
 #define BITCOIN_VALIDATION_BLOCK_UTILS_H
 
 #include <validation_globals.h>
+#include <chain.h>
+#include <primitives/block.h>
+#include <sync.h>
+#include <uint256.h>
 
 inline CBlockIndex* LookupBlockIndex(const uint256& hash)
 {

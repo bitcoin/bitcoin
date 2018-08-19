@@ -8,19 +8,41 @@
 #include <chain.h>
 #include <util.h>
 #include <protocol.h>
+#include <uint256.h>
+#include <script/script.h> //CScript
+#include <sync.h>
+#include <policy/feerate.h>
+#include <txdb.h>
+#include <coins.h>
 
+#include <atomic>
 #include <unordered_map>
 
-class CCoinsViewDB;
-class CBlockTreeDB;
-class CCoinsViewCache;
-class CBlockPolicyEstimator;
 class CTxMemPool;
-class CFeeRate;
+class CBlockPolicyEstimator;
+
+/** Default for -permitbaremultisig */
+static const bool DEFAULT_PERMIT_BAREMULTISIG = true;
+static const bool DEFAULT_CHECKPOINTS_ENABLED = true;
+static const bool DEFAULT_TXINDEX = false;
+static const unsigned int DEFAULT_BANSCORE_THRESHOLD = 100;
+/** Default for -persistmempool */
+static const bool DEFAULT_PERSIST_MEMPOOL = true;
+/** Default for -mempoolreplacement */
+static const bool DEFAULT_ENABLE_REPLACEMENT = true;
+/** Default for using fee filter */
+static const bool DEFAULT_FEEFILTER = true;
 
 struct BlockHasher
 {
     size_t operator()(const uint256& hash) const { return hash.GetCheapHash(); }
+};
+
+enum DisconnectResult
+{
+    DISCONNECT_OK,      // All good.
+    DISCONNECT_UNCLEAN, // Rolled back, but UTXO set was inconsistent with block.
+    DISCONNECT_FAILED   // Something else went wrong.
 };
 
 extern CScript COINBASE_FLAGS;

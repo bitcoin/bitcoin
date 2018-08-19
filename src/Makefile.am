@@ -259,6 +259,7 @@ libbitcoin_server_a_SOURCES = \
   txmempool.cpp \
   ui_interface.cpp \
   validation.cpp \
+  validation_globals.cpp \
   validation_block_utils.cpp \
   validation_disk_utils.cpp \
   validationinterface.cpp \

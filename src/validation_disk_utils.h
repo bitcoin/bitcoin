@@ -5,10 +5,14 @@
 #ifndef BITCOIN_VALIDATION_DISK_UTILS_H
 #define BITCOIN_VALIDATION_DISK_UTILS_H
 
-#include <validation_globals.h>
+#include <chain.h>
+#include <consensus/params.h>
 #include <primitives/block.h>
 #include <protocol.h>
+#include <validation_globals.h>
+
 #include <stdio.h>
+#include <vector>
 
 
 FILE* OpenDiskFile(const CDiskBlockPos &pos, const char *prefix, bool fReadOnly);
