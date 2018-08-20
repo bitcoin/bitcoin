@@ -42,8 +42,18 @@ public:
     explicit OptionsDialog(QWidget *parent, bool enableWallet);
     ~OptionsDialog();
 
+    enum Tab {
+        TAB_MAIN,
+        TAB_WALLET,
+        TAB_COINJOIN,
+        TAB_NETWORK,
+        TAB_DISPLAY,
+        TAB_APPEARANCE,
+    };
+
     void setModel(OptionsModel *model);
     void setMapper();
+    void setCurrentTab(OptionsDialog::Tab tab);
 
 private Q_SLOTS:
     /** custom tab buttons clicked */
