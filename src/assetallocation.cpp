@@ -743,7 +743,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 		// debug
 		if (fDebug)
 			LogPrintf("CONNECTED ASSET ALLOCATION: op=%s assetallocation=%s hash=%s height=%d fJustCheck=%d at time %lld\n",
-				assetFromOp(op).c_str(),
+				assetAllocationFromOp(op).c_str(),
 				assetAllocationTuple.ToString().c_str(),
 				tx.GetHash().ToString().c_str(),
 				nHeight,
