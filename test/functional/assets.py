@@ -12,6 +12,8 @@ from test_framework.util import (
     assert_is_hash_string,
 )
 
+import string
+
 class AssetTest(RavenTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
@@ -28,6 +30,8 @@ class AssetTest(RavenTestFramework):
         n2.generate(431)
         self.sync_all()
         assert_equal(n0.getbalance(), 5000)
+        n0.generate(431)
+        self.sync_all()
 
         self.log.info("Calling issue()...")
         address0 = n0.getnewaddress()
@@ -159,6 +163,44 @@ class AssetTest(RavenTestFramework):
         assert_equal(raven_assets[1], "RAVEN3")
         self.sync_all()
 
+        self.log.info("Issuing chained assets in depth issue()...")
+        chain_address = n0.getnewaddress()
+        chain_string = "CHAIN1"
+        n0.issue(asset_name=chain_string, qty=1000, to_address=chain_address, change_address="", \
+                 units=4, reissuable=True, has_ipfs=True, ipfs_hash=ipfs_hash)
+
+        for c in string.ascii_uppercase:
+            chain_string += '/' + c
+            if len(chain_string) > 30:
+                break
+            n0.issue(asset_name=chain_string, qty=1000, to_address=chain_address, change_address="", \
+                     units=4, reissuable=True, has_ipfs=True, ipfs_hash=ipfs_hash)
+
+        n0.generate(1)
+        self.sync_all()
+
+        chain_assets = n1.listassets(asset="CHAIN1*", verbose=False)
+        print(len(chain_assets))
+        assert_equal(len(chain_assets), 13)
+
+        self.log.info("Issuing chained assets in width issue()...")
+        chain_address = n0.getnewaddress()
+        chain_string = "CHAIN2"
+        n0.issue(asset_name=chain_string, qty=1000, to_address=chain_address, change_address="", \
+                 units=4, reissuable=True, has_ipfs=True, ipfs_hash=ipfs_hash)
+
+        for c in string.ascii_uppercase:
+            asset_name = chain_string + '/' + c
+
+            n0.issue(asset_name=asset_name, qty=1000, to_address=chain_address, change_address="", \
+                     units=4, reissuable=True, has_ipfs=True, ipfs_hash=ipfs_hash)
+
+        n0.generate(1)
+        self.sync_all()
+
+        chain_assets = n1.listassets(asset="CHAIN2/*", verbose=False)
+        print(len(chain_assets))
+        assert_equal(len(chain_assets), 26)
 
 if __name__ == '__main__':
     AssetTest().main()

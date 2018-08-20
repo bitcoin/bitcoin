@@ -186,14 +186,24 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, CAssetsCa
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-txouttotal-toolarge");
 
         /** RVN START */
-        if (!AreAssetsDeployed() && txout.scriptPubKey.IsAssetScript() && !fReindex)
+        bool isAsset = false;
+        int nType;
+        bool fIsOwner;
+        if (txout.scriptPubKey.IsAssetScript(nType, fIsOwner))
+            isAsset = true;
+
+        // Make sure that all asset tx have a nValue of zero RVN
+        if (isAsset && txout.nValue != 0)
+            return state.DoS(100, false, REJECT_INVALID, "bad-txns-asset-tx-amount-isn't-zero");
+
+        if (!AreAssetsDeployed() && isAsset && !fReindex)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-is-asset-and-asset-not-active");
 
         // Check for transfers that don't meet the assets units only if the assetCache is not null
-        if (AreAssetsDeployed()) {
+        if (AreAssetsDeployed() && isAsset) {
             if (assetCache) {
                 // Get the transfer transaction data from the scriptPubKey
-                if (txout.scriptPubKey.IsTransferAsset()) {
+                if ((txnouttype) nType == TX_TRANSFER_ASSET) {
                     CAssetTransfer transfer;
                     std::string address;
                     if (!TransferAssetFromScript(txout.scriptPubKey, transfer, address))
@@ -237,6 +247,9 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, CAssetsCa
         if (assetCache) {
             // Get the new asset from the transaction
             if (tx.IsNewAsset()) {
+                if(!tx.VerifyNewAsset())
+                    return state.DoS(100, false, REJECT_INVALID, "bad-txns-verifying-issue-asset");
+
                 CNewAsset asset;
                 std::string strAddress;
                 if (!AssetFromTransaction(tx, asset, strAddress))
@@ -251,6 +264,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, CAssetsCa
                     return state.DoS(100, false, REJECT_INVALID, "bad-txns-" + strError);
 
             } else if (tx.IsReissueAsset()) {
+
                 CReissueAsset reissue;
                 std::string strAddress;
                 if (!ReissueAssetFromTransaction(tx, reissue, strAddress))
@@ -343,7 +357,7 @@ bool Consensus::CheckTxAssets(const CTransaction& tx, CValidationState& state, c
             std::string strName;
             CAmount nAmount;
 
-            if (!GetAssetFromCoin(coin, strName, nAmount))
+            if (!GetAssetInfoFromCoin(coin, strName, nAmount))
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-failed-to-get-asset-from-script");
 
             // Add to the total value of assets in the inputs
@@ -401,21 +415,26 @@ bool Consensus::CheckTxAssets(const CTransaction& tx, CValidationState& state, c
                                      "bad-txns" + strError);
                 }
             }
-
         }
     }
 
-    // Check the input values and the output values
-    if (totalOutputs.size() != totalInputs.size()) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-tx-asset-inputs-size-does-not-match-outputs-size");
+    for (const auto& outValue : totalOutputs) {
+        if (!totalInputs.count(outValue.first)) {
+            std::string errorMsg;
+            errorMsg = strprintf("Bad Transaction - Trying to create outpoint for asset that you don't have: %s", outValue.first);
+            return state.DoS(100, false, REJECT_INVALID, "bad-tx-inputs-outputs-mismatch " + errorMsg);
+        }
+
+        if (totalInputs.at(outValue.first) != outValue.second) {
+            std::string errorMsg;
+            errorMsg = strprintf("Bad Transaction - Assets would be burnt %s", outValue.first);
+            return state.DoS(100, false, REJECT_INVALID, "bad-tx-inputs-outputs-mismatch " + errorMsg);
+        }
     }
 
-    for (const auto& outValue : totalOutputs) {
-        if (!totalInputs.count(outValue.first))
-            return state.DoS(100, false, REJECT_INVALID, "bad-tx-asset-inputs-does-not-have-asset-that-is-in-outputs");
-
-        if (totalInputs.at(outValue.first) != outValue.second)
-            return state.DoS(100, false, REJECT_INVALID, "bad-tx-asset-inputs-amount-mismatch-with-outputs-amount");
+    // Check the input size and the output size
+    if (totalOutputs.size() != totalInputs.size()) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-tx-asset-inputs-size-does-not-match-outputs-size");
     }
 
     return true;

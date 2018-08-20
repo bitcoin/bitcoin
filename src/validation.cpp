@@ -2191,6 +2191,9 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
                 if (!AreAssetsDeployed())
                     return state.DoS(100, false, REJECT_INVALID, "bad-txns-new-asset-when-assets-is-not-active");
 
+                if (!tx.VerifyNewAsset())
+                    return state.DoS(100, false, REJECT_INVALID, "bad-txns-issue-asset-failed-verify");
+
                 CNewAsset asset;
                 std::string strAddress;
                 if (!AssetFromTransaction(tx, asset, strAddress))
@@ -2206,6 +2209,9 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
             } else if (tx.IsReissueAsset()) {
                 if (!AreAssetsDeployed())
                     return state.DoS(100, false, REJECT_INVALID, "bad-txns-reissue-asset-when-assets-is-not-active");
+
+                if (!tx.VerifyReissueAsset(view))
+                    return state.DoS(100, false, REJECT_INVALID, "bad-txns-reissue-asset-failed-verify");
                 
                 CReissueAsset reissue;
                 std::string strAddress;

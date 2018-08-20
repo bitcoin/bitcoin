@@ -239,6 +239,9 @@ BOOST_FIXTURE_TEST_SUITE(asset_tests, BasicTestingSetup)
         amount = 1;
         BOOST_CHECK(ValueFromAmountString(amount, 8) == "0.00000001");
 
+        amount = 40000000;
+        BOOST_CHECK(ValueFromAmountString(amount, 8) == "0.40000000");
+
     }
 
 BOOST_AUTO_TEST_SUITE_END()

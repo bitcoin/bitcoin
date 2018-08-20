@@ -15,6 +15,8 @@
 
 static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
 
+class CCoinsViewCache;
+
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
 {
@@ -326,7 +328,9 @@ public:
 
     /** RVN START */
     bool IsNewAsset() const;
+    bool VerifyNewAsset() const;
     bool IsReissueAsset() const;
+    bool VerifyReissueAsset(CCoinsViewCache& view) const;
     /** RVN END */
 
     /**

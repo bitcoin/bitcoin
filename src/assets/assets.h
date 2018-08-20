@@ -338,13 +338,13 @@ bool IsScriptTransferAsset(const CScript& scriptPubKey);
 
 bool IsNewOwnerTxValid(const CTransaction& tx, const std::string& assetName, const std::string& address, std::string& errorMsg);
 
-bool CheckAssetOwner(const std::string& assetName);
 void GetAllOwnedAssets(std::vector<std::string>& names);
 void GetAllMyAssets(std::vector<std::string>& names);
 
 void UpdatePossibleAssets();
 
-bool GetAssetFromCoin(const Coin& coin, std::string& strName, CAmount& nAmount);
+bool GetAssetInfoFromCoin(const Coin& coin, std::string& strName, CAmount& nAmount);
+bool GetAssetInfoFromScript(const CScript& scriptPubKey, std::string& strName, CAmount& nAmount);
 
 void GetAssetData(const CScript& script, CAssetOutputEntry& data);
 
@@ -356,7 +356,8 @@ bool GetMyAssetBalance(CAssetsCache& cache, const std::string& assetName, CAmoun
 bool GetMyAssetBalances(CAssetsCache& cache, const std::vector<std::string>& assetNames, std::map<std::string, CAmount>& balances);
 bool GetMyAssetBalances(CAssetsCache& cache, std::map<std::string, CAmount>& balances);
 
-bool VerifyAssetOwner(const std::string& asset_name, std::set<COutPoint>& myOwnerOutPoints, std::pair<int, std::string>& error);
+/** Verifies that this wallet owns the give asset */
+bool VerifyWalletHasAsset(const std::string& asset_name, std::pair<int, std::string>& pairError);
 
 std::string DecodeIPFS(std::string encoded);
 std::string EncodeIPFS(std::string decoded);
