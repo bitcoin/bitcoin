@@ -1371,19 +1371,20 @@ void AssetAllocationTxToJSON(const int op, const std::vector<unsigned char> &vch
 			oAssetAllocationReceiversObj.push_back(Pair("amount", ValueFromAssetAmount(amountTuple.second, dbAsset.nPrecision, dbAsset.bUseInputRanges)));
 			oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
 		}
-
 	}
 	else if (!assetallocation.listSendingAllocationInputs.empty()) {
 		for (auto& inputTuple : assetallocation.listSendingAllocationInputs) {
-			UniValue oAssetAllocationReceiversObj(UniValue::VARR);
+			UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
+			UniValue oAssetAllocationInputsArray(UniValue::VARR);
 			oAssetAllocationReceiversObj.push_back(Pair("owner", stringFromVch(inputTuple.first)));
 			for (auto& inputRange : inputTuple.second) {
 				UniValue oInput(UniValue::VOBJ);
 				oInput.push_back(Pair("start", (int)inputRange.start));
 				oInput.push_back(Pair("end", (int)inputRange.end));
-				oAssetAllocationReceiversObj.push_back(oInput);
+				oAssetAllocationInputsArray.push_back(oInput);
 			}
-			oAssetAllocationReceiversArray.push_back(Pair("inputs", oAssetAllocationReceiversObj));
+			oAssetAllocationReceiversObj.push_back(Pair("inputs", oAssetAllocationInputsArray));
+			oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
 		}
 	}
 	entry.push_back(Pair("allocations", oAssetAllocationReceiversArray));

@@ -1498,16 +1498,17 @@ void ListTransactions(const CWalletTx& wtx, const std::string& strAccount, int n
 						}
 						else if (!assetallocation.listSendingAllocationInputs.empty()) {
 							for (auto& inputTuple : assetallocation.listSendingAllocationInputs) {
-								UniValue oAssetAllocationReceiversObj(UniValue::VARR);
-								// TODO update to owner
+								UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
+								UniValue oAssetAllocationInputsArray(UniValue::VARR);
 								oAssetAllocationReceiversObj.push_back(Pair("aliasto", stringFromVch(inputTuple.first)));
 								for (auto& inputRange : inputTuple.second) {
 									UniValue oInput(UniValue::VOBJ);
 									oInput.push_back(Pair("start", (int)inputRange.start));
 									oInput.push_back(Pair("end", (int)inputRange.end));
-									oAssetAllocationReceiversObj.push_back(oInput);
+									oAssetAllocationInputsArray.push_back(oInput);
 								}
-								oAssetAllocationReceiversArray.push_back(Pair("inputs", oAssetAllocationReceiversObj));
+								oAssetAllocationReceiversObj.push_back(Pair("inputs", oAssetAllocationInputsArray));
+								oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
 							}
 						}
 					}
@@ -1595,16 +1596,17 @@ void ListTransactions(const CWalletTx& wtx, const std::string& strAccount, int n
 							}
 							else if (!assetallocation.listSendingAllocationInputs.empty()) {
 								for (auto& inputTuple : assetallocation.listSendingAllocationInputs) {
-									UniValue oAssetAllocationReceiversObj(UniValue::VARR);
-									// TODO change this to owner
+									UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
+									UniValue oAssetAllocationInputsArray(UniValue::VARR);
 									oAssetAllocationReceiversObj.push_back(Pair("aliasto", stringFromVch(inputTuple.first)));
 									for (auto& inputRange : inputTuple.second) {
 										UniValue oInput(UniValue::VOBJ);
 										oInput.push_back(Pair("start", (int)inputRange.start));
 										oInput.push_back(Pair("end", (int)inputRange.end));
-										oAssetAllocationReceiversObj.push_back(oInput);
+										oAssetAllocationInputsArray.push_back(oInput);
 									}
-									oAssetAllocationReceiversArray.push_back(Pair("inputs", oAssetAllocationReceiversObj));
+									oAssetAllocationReceiversObj.push_back(Pair("inputs", oAssetAllocationInputsArray));
+									oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
 								}
 							}
 						}
