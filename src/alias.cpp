@@ -2203,9 +2203,9 @@ void SysTxToJSON(const int op, const vector<unsigned char> &vchData, const vecto
 		EscrowTxToJSON(op, vchData, vchHash, entry);
 	else if(type == OFFER)
 		OfferTxToJSON(op, vchData, vchHash, entry);
-	else if (type == ASSET)
+	else if (type == ASSET && op != OP_ASSET_SEND)
 		AssetTxToJSON(op, vchData, vchHash, entry);
-	else if (type == ASSETALLOCATION)
+	else if (type == ASSETALLOCATION || && op == OP_ASSET_SEND)
 		AssetAllocationTxToJSON(op, vchData, vchHash, entry);
 }
 void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash, UniValue &entry)
