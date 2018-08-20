@@ -570,6 +570,9 @@ public:
     CAddress addr;
     // Bind address of our side of the connection
     CAddress addrBind;
+    // encryption details
+    bool m_is_encrypted = 0;
+    uint256 m_encryption_session_id;
 };
 
 /** Information about a peer */

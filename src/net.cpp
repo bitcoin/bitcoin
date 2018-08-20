@@ -550,6 +550,12 @@ void CNode::copyStats(CNodeStats &stats)
     // Leave string empty if addrLocal invalid (not filled in yet)
     CService addrLocalUnlocked = GetAddrLocal();
     stats.addrLocal = addrLocalUnlocked.IsValid() ? addrLocalUnlocked.ToString() : "";
+
+    // copy encryption details
+    stats.m_is_encrypted = m_encryption_handler && m_encryption_handler->ShouldCryptMsg();
+    if (stats.m_is_encrypted) {
+        stats.m_encryption_session_id = m_encryption_handler->GetSessionID();
+    }
 }
 #undef X
 

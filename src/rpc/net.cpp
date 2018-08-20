@@ -201,6 +201,11 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
                 recvPerMsgCmd.pushKV(i.first, i.second);
         }
         obj.pushKV("bytesrecv_per_msg", recvPerMsgCmd);
+        obj.pushKV("encrypted", stats.m_is_encrypted);
+        if (stats.m_is_encrypted) {
+            obj.pushKV("encryption_session_id", stats.m_encryption_session_id.ToString());
+        }
+
 
         ret.push_back(obj);
     }
