@@ -1362,15 +1362,15 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoindecoderawtransaction " + arr[0].get_str()));
+
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + hex_str));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoindecoderawtransaction " + hex_str));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "txtype").get_str(), "assetallocationsend");
 	if (!theAssetAllocation.listSendingAllocationAmounts.empty())
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "allocations").get_array().size(), theAssetAllocation.listSendingAllocationAmounts.size());
 	else if (!theAssetAllocation.listSendingAllocationInputs.empty())
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "allocations").get_array().size(), theAssetAllocation.listSendingAllocationInputs.size());
 
-
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + hex_str));
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str));
 	string txid = find_value(r.get_obj(), "txid").get_str();
 	if (usezdag) {
@@ -1457,12 +1457,6 @@ string AssetSend(const string& node, const string& name, const string& inputs, c
 	UniValue arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransaction " + arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoindecoderawtransaction " + arr[0].get_str()));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "txtype").get_str(), "assetsend");
-	if(!theAssetAllocation.listSendingAllocationAmounts.empty())
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "allocations").get_array().size(), theAssetAllocation.listSendingAllocationAmounts.size());
-	else if (!theAssetAllocation.listSendingAllocationInputs.empty())
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "allocations").get_array().size(), theAssetAllocation.listSendingAllocationInputs.size());
 	if (completetx) {
 		BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsendrawtransaction " + hex_str));
 		BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str));
@@ -1494,6 +1488,12 @@ string AssetSend(const string& node, const string& name, const string& inputs, c
 
 		}
 	}
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoindecoderawtransaction " + hex_str));
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "txtype").get_str(), "assetsend");
+	if (!theAssetAllocation.listSendingAllocationAmounts.empty())
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "allocations").get_array().size(), theAssetAllocation.listSendingAllocationAmounts.size());
+	else if (!theAssetAllocation.listSendingAllocationInputs.empty())
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "allocations").get_array().size(), theAssetAllocation.listSendingAllocationInputs.size());
 	return hex_str;
 
 }
