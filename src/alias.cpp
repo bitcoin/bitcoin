@@ -2203,9 +2203,9 @@ void SysTxToJSON(const int op, const vector<unsigned char> &vchData, const vecto
 		EscrowTxToJSON(op, vchData, vchHash, entry);
 	else if(type == OFFER)
 		OfferTxToJSON(op, vchData, vchHash, entry);
-	else if (type == ASSET && op != OP_ASSET_SEND)
+	else if (type == ASSET)
 		AssetTxToJSON(op, vchData, vchHash, entry);
-	else if (type == ASSETALLOCATION || op == OP_ASSET_SEND)
+	else if (type == ASSETALLOCATION)
 		AssetAllocationTxToJSON(op, vchData, vchHash, entry);
 }
 void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash, UniValue &entry)
@@ -2973,11 +2973,18 @@ string GetSyscoinTransactionDescription(const CTransaction& tx, const int op, st
 			strResponse = _("Asset Sent");
 			responseEnglish = "Asset Sent";
 		}
-
-		CAsset asset(tx);
-		if (!asset.IsNull()) {
-			responseGUID = stringFromVch(asset.vchAsset);
-		}		
+		if (op == OP_ASSET_SEND) {
+			CAssetAllocation assetallocation(tx);
+			if (!assetallocation.IsNull()) {
+				responseGUID = stringFromVch(assetallocation.vchAsset);
+			}
+		}
+		else {
+			CAsset asset(tx);
+			if (!asset.IsNull()) {
+				responseGUID = stringFromVch(asset.vchAsset);
+			}
+		}
 	} else 
 	if (type == ASSETALLOCATION) {
 		// message from op code
