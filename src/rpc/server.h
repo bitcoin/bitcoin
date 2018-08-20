@@ -21,8 +21,6 @@
 
 static const unsigned int DEFAULT_RPC_SERIALIZE_VERSION = 1;
 
-class CRPCCommand;
-
 namespace RPCServer
 {
     void OnStarted(std::function<void ()> slot);
@@ -130,9 +128,8 @@ void RPCRunLater(const std::string& name, std::function<void(void)> func, int64_
 
 typedef UniValue(*rpcfn_type)(const JSONRPCRequest& jsonRequest);
 
-class CRPCCommand
+struct CRPCCommand
 {
-public:
     const RPCCategory category;
     const std::string name;
     const rpcfn_type actor;
