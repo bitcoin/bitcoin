@@ -179,6 +179,7 @@ BASE_SCRIPTS = [
     'feature_dersig.py',
     'feature_cltv.py',
     'rpc_uptime.py',
+    'p2p_encryption.py',
     'wallet_resendwallettransactions.py',
     'wallet_fallbackfee.py',
     'feature_minchainwork.py',
