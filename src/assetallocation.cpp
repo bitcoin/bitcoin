@@ -39,6 +39,8 @@ string CAssetAllocationTuple::ToString() const {
 }
 string assetAllocationFromOp(int op) {
     switch (op) {
+	case OP_ASSET_SEND:
+		return "assetsend";
 	case OP_ASSET_ALLOCATION_SEND:
 		return "assetallocationsend";
 	case OP_ASSET_COLLECT_INTEREST:
