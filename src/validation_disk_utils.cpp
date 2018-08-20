@@ -12,7 +12,6 @@
 
 #include <cstring>
 #include <vector>
-#include <boost/filesystem/operations.hpp>
 
 bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus::Params& consensusParams)
 {

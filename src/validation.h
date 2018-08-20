@@ -175,8 +175,7 @@ bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& block, CValidationS
 
 /** Check whether enough disk space is available for an incoming block */
 bool CheckDiskSpace(uint64_t nAdditionalBytes = 0, bool blocks_dir = false);
-/** Translation to a filesystem path */
-fs::path GetBlockPosFilename(const CDiskBlockPos &pos, const char *prefix);
+
 /** Import blocks from an external file */
 bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskBlockPos *dbp = nullptr);
 /** Ensures we have a genesis block in the block tree, possibly writing one to disk. */

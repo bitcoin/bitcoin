@@ -9,6 +9,8 @@
 #include <core_io.h>
 #include <httpserver.h>
 #include <validation.h>
+#include <validation_disk_utils.h>
+#include <validation_block_utils.h>
 #include <key_io.h>
 #include <net.h>
 #include <outputtype.h>

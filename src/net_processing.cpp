@@ -12,6 +12,9 @@
 #include <consensus/validation.h>
 #include <hash.h>
 #include <validation.h>
+#include <validation_globals.h>
+#include <validation_disk_utils.h>
+#include <validation_block_utils.h>
 #include <merkleblock.h>
 #include <netmessagemaker.h>
 #include <netbase.h>

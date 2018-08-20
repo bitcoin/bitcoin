@@ -26,6 +26,7 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
 bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CDiskBlockPos& pos, const CMessageHeader::MessageStartChars& message_start);
 bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CBlockIndex* pindex, const CMessageHeader::MessageStartChars& message_start);
 
+/** Translation to a filesystem path */
 fs::path GetBlockPosFilename(const CDiskBlockPos &pos, const char *prefix);
 
 #endif // BITCOIN_VALIDATION_DISK_UTILS_H

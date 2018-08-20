@@ -15,6 +15,8 @@
 #include <key_io.h>
 #include <keystore.h>
 #include <validation.h>
+#include <validation_disk_utils.h>
+#include <validation_block_utils.h>
 #include <net.h>
 #include <policy/fees.h>
 #include <policy/policy.h>

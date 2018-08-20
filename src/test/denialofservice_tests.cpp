@@ -13,6 +13,7 @@
 #include <serialize.h>
 #include <util.h>
 #include <validation.h>
+#include <validation_globals.h>
 
 #include <test/test_bitcoin.h>
 

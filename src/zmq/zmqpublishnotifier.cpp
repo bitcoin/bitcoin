@@ -6,7 +6,7 @@
 #include <chainparams.h>
 #include <streams.h>
 #include <zmq/zmqpublishnotifier.h>
-#include <validation.h>
+#include <validation_disk_utils.h>
 #include <util.h>
 #include <rpc/server.h>
 
