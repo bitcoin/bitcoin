@@ -9,6 +9,7 @@
 #include <addrman.h>
 #include <blockencodings.h>
 #include <chain.h>
+#include <chainparams.h>
 #include <coins.h>
 #include <compressor.h>
 #include <consensus/merkle.h>
@@ -280,6 +281,7 @@ static int test_one_input(std::vector<uint8_t> buffer) {
 static std::unique_ptr<ECCVerifyHandle> globalVerifyHandle;
 void initialize() {
     globalVerifyHandle = MakeUnique<ECCVerifyHandle>();
+    SelectParams(CBaseChainParams::MAIN);
 }
 
 // This function is used by libFuzzer
