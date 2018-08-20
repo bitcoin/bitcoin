@@ -143,7 +143,8 @@ bool DecodeAndParseAssetAllocationTx(const CTransaction& tx, int& op,
 		vector<vector<unsigned char> >& vvch, char &type)
 {
 	CAssetAllocation assetallocation;
-	bool decode = DecodeAssetAllocationTx(tx, op, vvch);
+	// parse asset allocation, if not try to parse asset
+	bool decode = DecodeAssetAllocationTx(tx, op, vvch)? true: DecodeAssetTx(tx, op, vvch);
 	bool parse = assetallocation.UnserializeFromTx(tx);
 	if (decode&&parse) {
 		type = ASSETALLOCATION;

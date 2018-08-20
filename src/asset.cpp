@@ -113,6 +113,8 @@ bool GetAsset(const vector<unsigned char> &vchAsset,
 bool DecodeAndParseAssetTx(const CTransaction& tx, int& op,
 		vector<vector<unsigned char> >& vvch, char &type)
 {
+	if (op == OP_ASSET_SEND)
+		return false;
 	CAsset asset;
 	bool decode = DecodeAssetTx(tx, op, vvch);
 	bool parse = asset.UnserializeFromTx(tx);
