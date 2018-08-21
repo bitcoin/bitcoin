@@ -30,7 +30,7 @@ TrafficGraphWidget::TrafficGraphWidget(QWidget *parent) :
     trafficGraphData(TrafficGraphData::Range_30m)
 {
     timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), SLOT(updateRates()));
+    connect(timer, &QTimer::timeout, this, &TrafficGraphWidget::updateRates);
     timer->setInterval(TrafficGraphData::SMALLEST_SAMPLE_PERIOD);
     timer->start();
 }
