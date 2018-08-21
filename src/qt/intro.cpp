@@ -303,11 +303,11 @@ void Intro::startThread()
     FreespaceChecker *executor = new FreespaceChecker(this);
     executor->moveToThread(thread);
 
-    connect(executor, SIGNAL(reply(int,QString,quint64)), this, SLOT(setStatus(int,QString,quint64)));
-    connect(this, SIGNAL(requestCheck()), executor, SLOT(check()));
+    connect(executor, &FreespaceChecker::reply, this, &Intro::setStatus);
+    connect(this, &Intro::requestCheck, executor, &FreespaceChecker::check);
     /*  make sure executor object is deleted in its own thread */
-    connect(this, SIGNAL(stopThread()), executor, SLOT(deleteLater()));
-    connect(this, SIGNAL(stopThread()), thread, SLOT(quit()));
+    connect(this, &Intro::stopThread, executor, &QObject::deleteLater);
+    connect(this, &Intro::stopThread, thread, &QThread::quit);
 
     thread->start();
 }
