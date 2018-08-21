@@ -40,8 +40,8 @@ processing the entire blockchain.
 
 It is not recommended that users downgrade their version.  This version contains
 changes that *will* fork the chain, users not running 2.0.4 (or later) will be not
-participate in this fork process and will be left on the old chain which will not 
-be valid.
+be able to participate in this fork process and will be left on the old chain which 
+will not be valid.
 
 Compatibility
 ==============
