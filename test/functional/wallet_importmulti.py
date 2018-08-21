@@ -446,6 +446,27 @@ class ImportMultiTest (BitcoinTestFramework):
                 "timestamp": "",
             }])
 
+        # Importing multiple public keys with 2-of-2 p2sh multisig
+        self.log.info("Pubkeys should be available after importing 2-of-2 p2sh multisig with pubkeys")
+        addr1 = self.nodes[1].getnewaddress()
+        addr2 = self.nodes[1].getnewaddress()
+        pub1 = self.nodes[1].getaddressinfo(addr1)['pubkey']
+        pub2 = self.nodes[1].getaddressinfo(addr2)['pubkey']
+        ms = self.nodes[1].createmultisig(2, [pub1, pub2])
+        result = self.nodes[0].importmulti(
+            [{
+                'scriptPubKey' : { 'address' : ms['address'] },
+                'redeemscript' : ms['redeemScript'],
+                'pubkeys' : [pub1, pub2],
+                "timestamp": "now",
+            }]
+        )
+        assert_equal(result[0]['success'], True)
+        import_pub1 = self.nodes[0].getaddressinfo(addr1)['pubkey']
+        assert_equal(pub1, import_pub1)
+        import_pub2 = self.nodes[0].getaddressinfo(addr2)['pubkey']
+        assert_equal(pub2, import_pub2)
+
 
 if __name__ == '__main__':
     ImportMultiTest ().main ()
