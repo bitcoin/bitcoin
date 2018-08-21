@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Script to issue assets on the Ravencoin platform
 # Reads from a csv file
 # Template Google Spreadsheet at:  

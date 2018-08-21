@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Script to find signed contract_urls
 # Reads from a Ravencoin node - make sure its running
 # Runs through the assets looking for ones with meta data
