@@ -85,6 +85,16 @@ public:
 
         if (ser_action.ForRead())
         {
+            CKeyID key;
+            if (!CBitcoinAddress(sAddress).GetKeyID(key))
+            {
+                // If it failed to get a key with the address
+                // then the address could be an old one
+                if (CBitcoinAddressOld(sAddress).GetKeyID(key))
+                {
+                    sAddress = CBitcoinAddress(key).ToString();
+                }
+            }
             address = QString::fromStdString(sAddress);
             label = QString::fromStdString(sLabel);
             message = QString::fromStdString(sMessage);

@@ -77,6 +77,7 @@ protected:
     //! the actually encoded data
     typedef std::vector<unsigned char, zero_after_free_allocator<unsigned char> > vector_uchar;
     vector_uchar vchData;
+    bool m_isOld;
 
     CBase58Data();
     void SetData(const std::vector<unsigned char> &vchVersionIn, const void* pdata, size_t nSize);
@@ -109,14 +110,28 @@ public:
     bool IsValid() const;
     bool IsValid(const CChainParams &params) const;
 
-    CBitcoinAddress() {}
+    CBitcoinAddress() { }
     CBitcoinAddress(const CTxDestination &dest) { Set(dest); }
-    CBitcoinAddress(const std::string& strAddress) { SetString(strAddress); }
+    CBitcoinAddress(const std::string& strAddress, bool isOld = false)
+    {
+        this->m_isOld = isOld;
+        SetString(strAddress);
+    }
     CBitcoinAddress(const char* pszAddress) { SetString(pszAddress); }
 
     CTxDestination Get() const;
     bool GetKeyID(CKeyID &keyID) const;
     bool IsScript() const;
+};
+
+// The same as CBitcoinAddress but isOld is set true by default
+class CBitcoinAddressOld : public CBitcoinAddress
+{
+public:
+    CBitcoinAddressOld(const std::string& strAddress)
+        : CBitcoinAddress(strAddress, true)
+    {
+    }
 };
 
 /**

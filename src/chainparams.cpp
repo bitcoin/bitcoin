@@ -168,6 +168,7 @@ public:
 
         // Crown addresses start with 'CRW'
         base58Prefixes[PUBKEY_ADDRESS] = list_of(0x01)(0x75)(0x07).convert_to_container<std::vector<unsigned char> >();
+        base58PrefixesOld[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,28);                   // Crown script addresses start with 'C'
         base58Prefixes[SECRET_KEY]     = std::vector<unsigned char>(1,128);                  // Crown private keys start with '5'
         base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x04)(0x88)(0xB2)(0x1E).convert_to_container<std::vector<unsigned char> >();
