@@ -493,7 +493,14 @@ bool CMasternodeMan::GetMasternodeInfo(const CScript& payee, masternode_info_t& 
     if (!ExtractDestination(payee, dest) || !boost::get<CKeyID>(&dest))
         return false;
     CKeyID keyId = *boost::get<CKeyID>(&dest);
-    return GetMasternodeInfo(keyId, mnInfoRet);
+    LOCK(cs);
+    for (const auto& mnpair : mapMasternodes) {
+        if (mnpair.second.keyIDCollateralAddress == keyId) {
+            mnInfoRet = mnpair.second.GetInfo();
+            return true;
+        }
+    }
+    return false;
 }
 
 bool CMasternodeMan::Has(const COutPoint& outpoint)
