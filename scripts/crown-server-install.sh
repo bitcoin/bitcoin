@@ -137,8 +137,13 @@ download_package() {
         dir=$HOME/crown-temp
         mkdir -p $dir
     fi
+    # 32 or 64 bit? If getconf fails we'll assume 64
+    BITS=$(getconf LONG_BIT 2>/dev/null)
+    if [ $? -ne 0 ]; then
+       BITS=64
+    fi
     # Change this later to take latest release version.
-    wget "https://github.com/Crowndev/crowncoin/releases/download/$LATEST_RELEASE/Crown-Linux64.zip" -O $dir/crown.zip
+    wget "https://github.com/Crowndev/crowncoin/releases/download/$LATEST_RELEASE/Crown-Linux$BITS.zip" -O $dir/crown.zip
 }
 
 install_package() {
