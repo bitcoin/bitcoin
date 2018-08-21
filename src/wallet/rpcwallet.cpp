@@ -1486,12 +1486,14 @@ void ListTransactions(const CWalletTx& wtx, const std::string& strAccount, int n
 
 					CAssetAllocation assetallocation(tx);
 					if (!assetallocation.IsNull()) {
+						CAsset dbAsset;
+						GetAsset(assetallocation.vchAsset, dbAsset);
 						if (!assetallocation.listSendingAllocationAmounts.empty()) {
 							for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
 								UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
 								// update to owner
 								oAssetAllocationReceiversObj.push_back(Pair("aliasto", stringFromVch(amountTuple.first)));
-								oAssetAllocationReceiversObj.push_back(Pair("amount", ValueFromAmount(amountTuple.second)));
+								oAssetAllocationReceiversObj.push_back(Pair("amount", ValueFromAssetAmount(amountTuple.second, dbAsset.nPrecision, dbAsset.bUseInputRanges)));
 								oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
 							}
 
@@ -1584,12 +1586,14 @@ void ListTransactions(const CWalletTx& wtx, const std::string& strAccount, int n
 
 						CAssetAllocation assetallocation(tx);
 						if (!assetallocation.IsNull()) {
+							CAsset dbAsset;
+							GetAsset(assetallocation.vchAsset, dbAsset);
 							if (!assetallocation.listSendingAllocationAmounts.empty()) {
 								for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
 									UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
 									// update to owner
 									oAssetAllocationReceiversObj.push_back(Pair("aliasto", stringFromVch(amountTuple.first)));
-									oAssetAllocationReceiversObj.push_back(Pair("amount", ValueFromAmount(amountTuple.second)));
+									oAssetAllocationReceiversObj.push_back(Pair("amount", ValueFromAssetAmount(amountTuple.second, dbAsset.nPrecision, dbAsset.bUseInputRanges)));
 									oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
 								}
 
