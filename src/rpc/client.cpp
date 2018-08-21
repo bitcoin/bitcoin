@@ -139,6 +139,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "setban", 3, "absolute" },
     { "setbip69enabled", 0, "enabled" },
     { "setnetworkactive", 0, "state" },
+    { "setprivatesendrounds", 0, "rounds" },
+    { "setprivatesendamount", 0, "amount" },
     { "getmempoolancestors", 1, "verbose" },
     { "getmempooldescendants", 1, "verbose" },
     { "spork", 1, "value" },
