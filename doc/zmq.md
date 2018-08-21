@@ -34,8 +34,8 @@ buffering or reassembly.
 ## Prerequisites
 
 The ZeroMQ feature in Bitcoin Core requires ZeroMQ API version 4.x or
-newer. Typically, it is packaged by distributions as something like
-*libzmq3-dev*. The C++ wrapper for ZeroMQ is *not* needed.
+newer and the C++ language bindings.  Typically, it is packaged by
+distributions as something like *libzmq3-dev*.
 
 In order to run the example Python client scripts in contrib/ one must
 also install *python3-zmq*, though this is not necessary for daemon

@@ -24,7 +24,7 @@ public:
     */
     bool SendMessage(const char *command, const void* data, size_t size);
 
-    bool Initialize(void *pcontext) override;
+    bool Initialize(zmq::context_t& context) override;
     void Shutdown() override;
 };
 

@@ -10,14 +10,13 @@
 #include <streams.h>
 #include <util.h>
 
-void zmqError(const char *str)
+void zmqError(const char* msg, const zmq::error_t& exc)
 {
-    LogPrint(BCLog::ZMQ, "zmq: Error: %s, errno=%s\n", str, zmq_strerror(errno));
+    LogPrint(BCLog::ZMQ, "zmq: %s: %s, errno=%s\n", msg, exc.what(), exc.num());
 }
 
-CZMQNotificationInterface::CZMQNotificationInterface() : pcontext(nullptr)
-{
-}
+CZMQNotificationInterface::CZMQNotificationInterface() : context(1)
+{}
 
 CZMQNotificationInterface::~CZMQNotificationInterface()
 {
@@ -82,21 +81,12 @@ CZMQNotificationInterface* CZMQNotificationInterface::Create()
 bool CZMQNotificationInterface::Initialize()
 {
     LogPrint(BCLog::ZMQ, "zmq: Initialize notification interface\n");
-    assert(!pcontext);
-
-    pcontext = zmq_init(1);
-
-    if (!pcontext)
-    {
-        zmqError("Unable to initialize context");
-        return false;
-    }
 
     std::list<CZMQAbstractNotifier*>::iterator i=notifiers.begin();
     for (; i!=notifiers.end(); ++i)
     {
         CZMQAbstractNotifier *notifier = *i;
-        if (notifier->Initialize(pcontext))
+        if (notifier->Initialize(context))
         {
             LogPrint(BCLog::ZMQ, "  Notifier %s ready (address = %s)\n", notifier->GetType(), notifier->GetAddress());
         }
@@ -119,17 +109,11 @@ bool CZMQNotificationInterface::Initialize()
 void CZMQNotificationInterface::Shutdown()
 {
     LogPrint(BCLog::ZMQ, "zmq: Shutdown notification interface\n");
-    if (pcontext)
+    for (std::list<CZMQAbstractNotifier*>::iterator i=notifiers.begin(); i!=notifiers.end(); ++i)
     {
-        for (std::list<CZMQAbstractNotifier*>::iterator i=notifiers.begin(); i!=notifiers.end(); ++i)
-        {
-            CZMQAbstractNotifier *notifier = *i;
-            LogPrint(BCLog::ZMQ, "   Shutdown notifier %s at %s\n", notifier->GetType(), notifier->GetAddress());
-            notifier->Shutdown();
-        }
-        zmq_ctx_destroy(pcontext);
-
-        pcontext = nullptr;
+        CZMQAbstractNotifier *notifier = *i;
+        LogPrint(BCLog::ZMQ, "   Shutdown notifier %s at %s\n", notifier->GetType(), notifier->GetAddress());
+        notifier->Shutdown();
     }
 }
 
