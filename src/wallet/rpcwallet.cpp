@@ -1487,7 +1487,7 @@ void ListTransactions(const CWalletTx& wtx, const std::string& strAccount, int n
 					if (!assetallocation.IsNull()) {
 						CAsset dbAsset;
 						GetAsset(assetallocation.vchAsset, dbAsset);
-						strResponse = strResponseEnglish + " " + sringFromVch(dbAsset.vchSymbol);
+						strResponse = strResponseEnglish + " " + stringFromVch(dbAsset.vchSymbol);
 						if (!assetallocation.listSendingAllocationAmounts.empty()) {
 							for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
 								UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
