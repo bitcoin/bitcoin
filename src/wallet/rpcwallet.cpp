@@ -4023,7 +4023,7 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 6)
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 5)
         throw std::runtime_error(
             RPCHelpMan{"walletcreatefundedpsbt",
                 "\nCreates and funds a transaction in the Partially Signed Transaction format. Inputs will be added if supplied inputs are not enough\n"
