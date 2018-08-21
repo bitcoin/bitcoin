@@ -174,7 +174,7 @@ template<typename X> const X& ReadWriteAsHelper(const X& x) { return x; }
 #define READWRITEAS(type, obj) (::SerReadWriteMany(s, ser_action, ReadWriteAsHelper<type>(obj)))
 
 /**
- * Implement three methods for serializable objects. These are actually wrappers over
+ * Implement two methods for serializable objects. These are actually wrappers over
  * "SerializationOp" template, which implements the body of each class' serialization
  * code. Adding "ADD_SERIALIZE_METHODS" in the body of the class causes these wrappers to be
  * added as members.
