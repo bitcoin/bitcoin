@@ -35,6 +35,7 @@ using namespace std;
 #include "offer.h"
 #include "escrow.h"
 #include "assetallocation.h"
+#include "asset.h"
 #include "coincontrol.h"
 extern bool GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, std::vector<unsigned char> &vchPubKey);
 extern std::string stringFromVch(const std::vector<unsigned char> &vch);
