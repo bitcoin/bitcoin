@@ -12,14 +12,15 @@ class MempoolLimitTest(RavenTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
-        self.extra_args = [["-maxmempool=5", "-spendzeroconfchange=0"]]
+        self.extra_args = [["-maxmempool=9", "-spendzeroconfchange=0"]]
+        self.thirtyTransactions = 9  #tx are created in groups of 30.  Value here will be multiplied by thirty for the number of tx.
 
     def run_test(self):
         txouts = gen_return_txouts()
         relayfee = self.nodes[0].getnetworkinfo()['relayfee']
 
         txids = []
-        utxos = create_confirmed_utxos(relayfee, self.nodes[0], 91)
+        utxos = create_confirmed_utxos(relayfee, self.nodes[0], self.thirtyTransactions*30)
 
         #create a mempool tx that will be evicted
         us0 = utxos.pop()
@@ -34,7 +35,7 @@ class MempoolLimitTest(RavenTestFramework):
 
         relayfee = self.nodes[0].getnetworkinfo()['relayfee']
         base_fee = relayfee*100
-        for i in range (3):
+        for i in range (self.thirtyTransactions):
             txids.append([])
             txids[i] = create_lots_of_big_transactions(self.nodes[0], txouts, utxos[30*i:30*i+30], 30, (i+1)*base_fee)
 
