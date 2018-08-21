@@ -1471,9 +1471,7 @@ void ListTransactions(const CWalletTx& wtx, const std::string& strAccount, int n
 				string strResponseEnglish = "";
 				string strResponseGUID = "";
 				strResponse = GetSyscoinTransactionDescription(tx, op, strResponseEnglish, type, strResponseGUID);
-				entry.push_back(Pair("systx", strResponse));
-				entry.push_back(Pair("systype", strResponseEnglish));
-				entry.push_back(Pair("sysguid", strResponseGUID));
+				
 				if (op == OP_ASSET_ALLOCATION_SEND || op == OP_ASSET_SEND) {
 					for (auto& vin : tx.vin) {
 						if (!pwalletMain || !pwalletMain->mapWallet.count(vin.prevout.hash)) break;
@@ -1489,6 +1487,7 @@ void ListTransactions(const CWalletTx& wtx, const std::string& strAccount, int n
 					if (!assetallocation.IsNull()) {
 						CAsset dbAsset;
 						GetAsset(assetallocation.vchAsset, dbAsset);
+						strResponse = strResponseEnglish + " " + sringFromVch(dbAsset.vchSymbol);
 						if (!assetallocation.listSendingAllocationAmounts.empty()) {
 							for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
 								UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
@@ -1516,6 +1515,9 @@ void ListTransactions(const CWalletTx& wtx, const std::string& strAccount, int n
 						}
 					}
 				}
+				entry.push_back(Pair("systx", strResponse));
+				entry.push_back(Pair("systype", strResponseEnglish));
+				entry.push_back(Pair("sysguid", strResponseGUID));
 				entry.push_back(Pair("sysallocations", oAssetAllocationReceiversArray));
 				entry.push_back(Pair("sysalias", aliasName));
 			}
