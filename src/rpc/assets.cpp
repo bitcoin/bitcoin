@@ -66,12 +66,11 @@ UniValue issue(const JSONRPCRequest& request)
             + AssetActivationWarning() +
             "\nIssue an asset or subasset with unique name.\n"
             "Unit as the number of decimals precision for the asset (0 for whole units (\"1\"), 8 for max precision (\"1.00000000\")\n"
-            "Qty should be whole number.\n"
             "Reissuable is true/false for whether additional units can be issued by the original issuer.\n"
 
             "\nArguments:\n"
             "1. \"asset_name\"            (string, required) a unique name\n"
-            "2. \"qty\"                   (integer, required) the number of units to be issued\n"
+            "2. \"qty\"                   (numeric, required) the number of units to be issued\n"
             "3. \"to_address\"            (string), optional, default=\"\"), address asset will be sent to, if it is empty, address will be generated for you\n"
             "4. \"change_address\"        (string), optional, default=\"\"), address the the rvn change will be sent to, if it is empty, change address will be generated for you\n"
             "5. \"units\"                 (integer, optional, default=8, min=0, max=8), the number of decimals precision for the asset (0 for whole units (\"1\"), 8 for max precision (\"1.00000000\")\n"
@@ -515,7 +514,7 @@ UniValue transfer(const JSONRPCRequest& request)
 
                 "\nArguments:\n"
                 "1. \"asset_name\"               (string, required) name of asset\n"
-                "2. \"qty\"                      (number, required) number of assets you want to send to the address\n"
+                "2. \"qty\"                      (numeric, required) number of assets you want to send to the address\n"
                 "3. \"to_address\"               (string, required) address to send the asset to\n"
 
                 "\nResult:\n"
@@ -580,7 +579,7 @@ UniValue reissue(const JSONRPCRequest& request)
 
                 "\nArguments:\n"
                 "1. \"asset_name\"               (string, required) name of asset that is being reissued\n"
-                "2. \"qty\"                      (number, required) number of assets to reissue\n"
+                "2. \"qty\"                      (numeric, required) number of assets to reissue\n"
                 "3. \"to_address\"               (string, required) address to send the asset to\n"
                 "4. \"change_address\"           (string, optional) address that the change of the transaction will be sent to\n"
                 "5. \"reissuable\"               (boolean, optional, default=true), whether future reissuance is allowed\n"
