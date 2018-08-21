@@ -861,7 +861,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight, CConnman& connman)
     ExtractDestination(payee, address1);
     CBitcoinAddress address2(address1);
 
-    LogPrintf("CMasternodePayments::%s -- vote: payee=%s, nBlockHeight=%d\n", address2.ToString(), nBlockHeight);
+    LogPrintf("CMasternodePayments::%s -- vote: payee=%s, nBlockHeight=%d\n", __func__, address2.ToString(), nBlockHeight);
 
     // SIGN MESSAGE TO NETWORK WITH OUR MASTERNODE KEYS
 
