@@ -7,6 +7,8 @@ Bitcoin Core is the original Bitcoin client and it builds the backbone of the ne
 
 To download Bitcoin Core, visit [bitcoincore.org](https://bitcoincore.org/en/releases/).
 
+The main source code repository is [hosted on GitHub](https://github.com/bitcoin/bitcoin/).
+
 Running
 ---------------------
 The following are some helpful notes on how to run Bitcoin Core on your native platform.
@@ -20,11 +22,25 @@ Unpack the files into a directory and run:
 
 ### Windows
 
-Unpack the files into a directory, and then run bitcoin-qt.exe.
+Unpack the files into a directory, and then run:
+
+- `bitcoin-qt.exe`
 
 ### macOS
 
 Drag Bitcoin Core to your applications folder, and then run Bitcoin Core.
+
+### Files
+
+* `./bin/bitcoin-cli` (Command Line Interface)
+* `./bin/bitcoind` (headless daemon)
+* `./bin/bitcoin-qt` (GUI)
+* `./bin/bitcoin-tx` (hex-encoded transaction tool)
+* `./bin/test_bitcoin` (runs the unit tests)
+* `./include/bitcoinconsensus.h` (lib header)
+* `./lib/libbitcoinconsensus.so.0.0.0` (shared lib)
+* `./share/man/man1/` (man pages)
+* `./share/doc/` (documentation)
 
 ### Need Help?
 
