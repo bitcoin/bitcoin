@@ -76,8 +76,8 @@ public:
     uint256 GetHash() const;
     uint256 GetSignatureHash() const;
 
-    bool Sign(const CKey& key);
-    bool CheckSignature(const CKeyID& pubKeyId) const;
+    bool Sign(const CKey& key, bool fSporkSixActive);
+    bool CheckSignature(const CKeyID& pubKeyId, bool fSporkSixActive) const;
     void Relay(CConnman& connman);
 };
 
