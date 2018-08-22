@@ -149,6 +149,7 @@ public:
         nLocalServices = connOptions.nLocalServices;
         nMaxConnections = connOptions.nMaxConnections;
         nMaxOutbound = std::min(connOptions.nMaxOutbound, connOptions.nMaxConnections);
+        m_use_addrman_outgoing = connOptions.m_use_addrman_outgoing;
         nMaxAddnode = connOptions.nMaxAddnode;
         nMaxFeeler = connOptions.nMaxFeeler;
         nBestHeight = connOptions.nBestHeight;
@@ -174,6 +175,7 @@ public:
     void Stop();
     void Interrupt();
     bool GetNetworkActive() const { return fNetworkActive; };
+    bool GetUseAddrmanOutgoing() const { return m_use_addrman_outgoing; };
     void SetNetworkActive(bool active);
     void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, bool fOneShot = false, bool fFeeler = false, bool manual_connection = false);
     bool CheckIncomingNonce(uint64_t nonce);
@@ -416,6 +418,7 @@ private:
     int nMaxOutbound;
     int nMaxAddnode;
     int nMaxFeeler;
+    bool m_use_addrman_outgoing;
     std::atomic<int> nBestHeight;
     CClientUIInterface* clientInterface;
     NetEventsInterface* m_msgproc;
