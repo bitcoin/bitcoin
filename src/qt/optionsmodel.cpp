@@ -90,7 +90,7 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("theme", "");
 
     if (!settings.contains("fShowMasternodesTab"))
-        settings.setValue("fShowMasternodesTab", MasternodeList::getCount());
+        settings.setValue("fShowMasternodesTab", m_node.MNConfigCount());
 
     // PrivateSend
     if (!settings.contains("fShowAdvancedPSUI"))

@@ -1,9 +1,9 @@
 #ifndef MASTERNODELIST_H
 #define MASTERNODELIST_H
 
+#include <interfaces/node.h>
 #include <primitives/transaction.h>
 #include <qt/platformstyle.h>
-#include <masternodeconfig.h>
 #include <sync.h>
 #include <util.h>
 
@@ -22,6 +22,10 @@ namespace Ui {
 class ClientModel;
 class WalletModel;
 
+namespace interfaces {
+    class Node;
+}
+
 QT_BEGIN_NAMESPACE
 class QModelIndex;
 QT_END_NAMESPACE
@@ -32,10 +36,10 @@ class MasternodeList : public QWidget
     Q_OBJECT
 
 public:
-    explicit MasternodeList(const PlatformStyle *platformStyle, QWidget *parent = 0);
+    explicit MasternodeList(interfaces::Node& node, const PlatformStyle *platformStyle, QWidget *parent = 0);
     ~MasternodeList();
 
-    static int getCount() {return masternodeConfig.getCount();}
+    int getCount() {return m_node.MNConfigCount();}
     void setClientModel(ClientModel *clientModel);
     void setWalletModel(WalletModel *walletModel);
     void ShowQRCode(std::string strAlias);
@@ -56,6 +60,7 @@ Q_SIGNALS:
     void doubleClicked(const QModelIndex&);
 
 private:
+    interfaces::Node& m_node;
     QTimer *timer;
     Ui::MasternodeList *ui;
     ClientModel *clientModel;

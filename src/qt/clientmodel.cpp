@@ -23,10 +23,6 @@
 #include <util.h>
 #include <warnings.h>
 
-#include <masternodeman.h>
-#include <masternode-sync.h>
-#include <privatesend.h>
-
 #include <stdint.h>
 
 #include <QDebug>
@@ -83,12 +79,12 @@ int ClientModel::getNumConnections(unsigned int flags) const
 
 QString ClientModel::getMasternodeCountString() const
 {
-    return tr("Total: %1 (PS compatible: %2 / Enabled: %3) (IPv4: %4, IPv6: %5, TOR: %6)").arg(QString::number((int)mnodeman.size()))
-            .arg(QString::number((int)mnodeman.CountEnabled(MIN_PRIVATESEND_PEER_PROTO_VERSION)))
-            .arg(QString::number((int)mnodeman.CountEnabled()))
-            .arg(QString::number((int)mnodeman.CountByIP(NET_IPV4)))
-            .arg(QString::number((int)mnodeman.CountByIP(NET_IPV6)))
-            .arg(QString::number((int)mnodeman.CountByIP(NET_TOR)));
+    return tr("Total: %1 (PS compatible: %2 / Enabled: %3) (IPv4: %4, IPv6: %5, TOR: %6)").arg(QString::number((int)m_node.getMNcount().size))
+            .arg(QString::number((int)m_node.getMNcount().compatible))
+            .arg(QString::number((int)m_node.getMNcount().enabled))
+            .arg(QString::number((int)m_node.getMNcount().countIPv4))
+            .arg(QString::number((int)m_node.getMNcount().countIPv6))
+            .arg(QString::number((int)m_node.getMNcount().countTOR));
 }
 
 int ClientModel::getHeaderTipHeight() const

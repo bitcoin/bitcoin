@@ -8,6 +8,7 @@
 #include <cachedb.h>     // For banmap_t
 #include <amount.h>     // For CAmount
 #include <init.h>       // For HelpMessageMode
+#include <masternodeconfig.h> // For CMasternodeConfig::CMasternodeEntry
 #include <net.h>        // For CConnman::NumConnections
 #include <netaddress.h> // For Network
 
@@ -33,6 +34,8 @@ namespace interfaces {
 
 class Handler;
 class Wallet;
+
+struct MasterNodeCount;
 
 //! Top-level interface for a bitcoin node (bitcoind process).
 class Node
@@ -202,6 +205,10 @@ public:
     virtual bool IsMasternodelistSynced() = 0;
     virtual bool MNIsBlockchainsynced() = 0;
     virtual bool MNIsSynced() = 0;
+    virtual int MNConfigCount() = 0;
+    virtual std::vector<CMasternodeConfig::CMasternodeEntry>& MNgetEntries() = 0;
+
+    virtual MasterNodeCount getMNcount() = 0;
 
     //! Return interfaces for accessing wallets (if any).
     virtual std::vector<std::unique_ptr<Wallet>> getWallets() = 0;
@@ -259,6 +266,22 @@ public:
     using NotifyHeaderTipFn =
         std::function<void(bool initial_download, int height, int64_t block_time, double verification_progress)>;
     virtual std::unique_ptr<Handler> handleNotifyHeaderTip(NotifyHeaderTipFn fn) = 0;
+};
+
+struct MasterNodeCount
+{
+    int size = 0;
+    int compatible = 0;
+    int enabled = 0;
+    int countIPv4 = 0;
+    int countIPv6 = 0;
+    int countTOR = 0;
+
+    bool MNcountChanged(const MasterNodeCount& prev) const
+    {
+        return size != prev.size || compatible != prev.compatible ||
+                countIPv4 != prev.countIPv4 || countIPv6 != prev.countIPv6 || countTOR != prev.countTOR;
+    }
 };
 
 //! Return implementation of Node interface.

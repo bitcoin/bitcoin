@@ -26,8 +26,9 @@ int GetOffsetFromUtc()
 #endif
 }
 
-MasternodeList::MasternodeList(const PlatformStyle *platformStyle, QWidget *parent) :
+MasternodeList::MasternodeList(interfaces::Node& node, const PlatformStyle *platformStyle, QWidget *parent) :
     QWidget(parent),
+    m_node(node),
     ui(new Ui::MasternodeList),
     clientModel(0),
     walletModel(0)
@@ -92,6 +93,8 @@ void MasternodeList::setClientModel(ClientModel *model)
 void MasternodeList::setWalletModel(WalletModel *model)
 {
     this->walletModel = model;
+    updateMyNodeList(true);
+    updateNodeList();
 }
 
 void MasternodeList::showContextMenu(const QPoint &point)
@@ -105,7 +108,7 @@ void MasternodeList::StartAlias(std::string strAlias)
     std::string strStatusHtml;
     strStatusHtml += "<center>Alias: " + strAlias;
 
-    for (const auto& mne : masternodeConfig.getEntries()) {
+    for (const auto& mne : m_node.MNgetEntries()) {
         if(mne.getAlias() == strAlias) {
             std::string strError;
             CMasternodeBroadcast mnb;
@@ -142,7 +145,7 @@ void MasternodeList::StartAll(std::string strCommand)
     int nCountFailed = 0;
     std::string strFailedHtml;
 
-    for (const auto& mne : masternodeConfig.getEntries()) {
+    for (const auto& mne : m_node.MNgetEntries()) {
         std::string strError;
         CMasternodeBroadcast mnb;
 
@@ -246,7 +249,7 @@ void MasternodeList::updateMyNodeList(bool fForce)
     int nSelectedRow = selected.count() ? selected.at(0).row() : 0;
 
     ui->tableWidgetMyMasternodes->setSortingEnabled(false);
-    for (const auto& mne : masternodeConfig.getEntries()) {
+    for (const auto& mne : m_node.MNgetEntries()) {
         int32_t nOutputIndex = 0;
         if(!ParseInt32(mne.getOutputIndex(), &nOutputIndex)) {
             continue;
@@ -479,7 +482,7 @@ void MasternodeList::ShowQRCode(std::string strAlias) {
     CMasternode mn;
     bool fFound = false;
 
-    for (CMasternodeConfig::CMasternodeEntry mne : masternodeConfig.getEntries()) {
+    for (auto mne : m_node.MNgetEntries()) {
         if (strAlias != mne.getAlias()) {
             continue;
         }
