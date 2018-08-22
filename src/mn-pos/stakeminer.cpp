@@ -1,19 +1,22 @@
 #include "stakeminer.h"
 #include "kernel.h"
 
-bool SearchTimeSpan(CKernel& kernel, uint64_t nTimeStart, uint64_t nTimeEnd, const uint64_t nAmount, const arith_uint256& nTarget)
+//! Search a specific period of timestamps to see if a valid proof hash is created
+bool SearchTimeSpan(CKernel& kernel, uint64_t nTimeStart, uint64_t nTimeEnd, const uint256& nTarget)
 {
     uint64_t nTimeStake = nTimeStart;
     kernel.SetStakeTime(nTimeStart);
 
-    bool isValid = kernel.IsValidProof(nTarget, nAmount);
-    while (!isValid && nTimeStake <= nTimeEnd) {
+    while (!kernel.IsValidProof(nTarget)) {
         ++nTimeStake;
         kernel.SetStakeTime(nTimeStake);
-        isValid = kernel.IsValidProof(nTarget, nAmount);
+
+        //Searched through the requested period
+        if (nTimeStake > nTimeEnd)
+            break;
     }
 
-    return isValid;
+    return kernel.IsValidProof(nTarget);
 }
 
 

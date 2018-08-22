@@ -1,4 +1,5 @@
 
+#include <iostream>
 #include "kernel.h"
 #include "../streams.h"
 #include "../hash.h"
@@ -10,28 +11,43 @@
  * Block Time: The time that the block containing the outpoint was added to the blockchain
  * Stake Time: The time that the stake hash is being created
  */
-CKernel::CKernel(const arith_uint256& txidOutPoint, const unsigned int nOutPoint, const arith_uint256& nStakeModifier,
+CKernel::CKernel(const std::pair<uint256, unsigned int>& outpoint, const uint64_t nAmount, const uint256& nStakeModifier,
                  const uint64_t& nTimeBlockFrom, const uint64_t& nTimeStake)
 {
-    this->txidOutPoint = txidOutPoint;
-    this->nOutPoint = nOutPoint;
+    this->outpoint = outpoint;
+    this->nAmount = nAmount;
     this->nStakeModifier = nStakeModifier;
     this->nTimeBlockFrom = nTimeBlockFrom;
     this->nTimeStake = nTimeStake;
 }
 
-arith_uint256 CKernel::GetStakeHash()
+uint64_t CKernel::GetAmount() const
 {
-    CDataStream ss(SER_GETHASH, 0);
-    ss << txidOutPoint << nOutPoint << nStakeModifier << nTimeBlockFrom << nTimeStake;
-    uint256 hash = Hash(ss.begin(), ss.end());
-
-    return UintToArith256(hash);
+    return nAmount;
 }
 
-bool CKernel::IsValidProof(const arith_uint256& nTarget, int64_t nAmount)
+uint256 CKernel::GetStakeHash()
 {
-    return GetStakeHash() < nAmount * nTarget;
+    CDataStream ss(SER_GETHASH, 0);
+    ss << outpoint.first << outpoint.second << nStakeModifier << nTimeBlockFrom << nTimeStake;
+    return Hash(ss.begin(), ss.end());
+}
+
+uint64_t CKernel::GetTime() const
+{
+    return nTimeStake;
+}
+
+bool CKernel::CheckProof(const arith_uint256& target, const arith_uint256& hash, const uint64_t nAmount)
+{
+    return hash < nAmount * target;
+}
+
+bool CKernel::IsValidProof(const uint256& nTarget)
+{
+    arith_uint256 target = UintToArith256(nTarget);
+    arith_uint256 hashProof = UintToArith256(GetStakeHash());
+    return CheckProof(target, hashProof, nAmount);
 }
 
 void CKernel::SetStakeTime(uint64_t nTime)
