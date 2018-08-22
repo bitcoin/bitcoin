@@ -49,6 +49,11 @@ struct CAssetOutputEntry;
 // 50000 * 82 Bytes == 4.1 Mb
 #define MAX_CACHE_ASSETS_SIZE 50000
 
+// Create map that store that state of current reissued transaction that the mempool as accepted.
+// If an asset name is in this map, any other reissue transactions wont be accepted into the mempool
+extern std::map<uint256, std::string> mapReissuedTx;
+extern std::map<std::string, uint256> mapReissuedAssets;
+
 class CAssets {
 public:
     std::map<std::string, std::set<COutPoint> > mapMyUnspentAssets; // Asset Name -> COutPoint

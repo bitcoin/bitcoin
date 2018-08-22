@@ -28,6 +28,9 @@
 #include "utilmoneystr.h"
 #include "coins.h"
 
+std::map<uint256, std::string> mapReissuedTx;
+std::map<std::string, uint256> mapReissuedAssets;
+
 // excluding owner tag ('!')
 static const auto MAX_NAME_LENGTH = 30;
 

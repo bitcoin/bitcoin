@@ -1456,6 +1456,9 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                     break;
                 }
 
+                if (!passetsdb->ReadReissuedMempoolState())
+                    LogPrintf("Database failed to load last Reissued Mempool State. Will have to start from empty state");
+
                 LogPrintf("Loaded Assets from database without error\nCache of assets size: %d\nNumber of assets I have: %d\n", passetsCache->Size(), passets->mapMyUnspentAssets.size());
 
                 if (fReset) {

@@ -337,7 +337,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
 }
 
 //! Check to make sure that the inputs and outputs CAmount match exactly.
-bool Consensus::CheckTxAssets(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, const bool fRunningUnitTests)
+bool Consensus::CheckTxAssets(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, std::vector<std::pair<std::string, uint256> >& vPairReissueAssets, const bool fRunningUnitTests)
 {
     // are the actual inputs available?
     if (!inputs.HaveInputs(tx)) {
@@ -414,6 +414,13 @@ bool Consensus::CheckTxAssets(const CTransaction& tx, CValidationState& state, c
                     return state.DoS(100, false, REJECT_INVALID,
                                      "bad-txns" + strError);
                 }
+            }
+
+            if (mapReissuedAssets.count(reissue.strName)) {
+                if (mapReissuedAssets.at(reissue.strName) != tx.GetHash())
+                    return state.DoS(100, false, REJECT_INVALID, "bad-tx-reissue-chaining-not-allowed");
+            } else {
+                vPairReissueAssets.emplace_back(std::make_pair(reissue.strName, tx.GetHash()));
             }
         }
     }

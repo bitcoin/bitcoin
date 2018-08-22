@@ -10,6 +10,7 @@ from test_framework.test_framework import RavenTestFramework
 from test_framework.util import (
     assert_equal,
     assert_is_hash_string,
+    assert_raises_rpc_error
 )
 
 import string
@@ -180,7 +181,6 @@ class AssetTest(RavenTestFramework):
         self.sync_all()
 
         chain_assets = n1.listassets(asset="CHAIN1*", verbose=False)
-        print(len(chain_assets))
         assert_equal(len(chain_assets), 13)
 
         self.log.info("Issuing chained assets in width issue()...")
@@ -199,8 +199,37 @@ class AssetTest(RavenTestFramework):
         self.sync_all()
 
         chain_assets = n1.listassets(asset="CHAIN2/*", verbose=False)
-        print(len(chain_assets))
         assert_equal(len(chain_assets), 26)
+
+
+        self.log.info("Chaining reissue transactions...")
+        address0 = n0.getnewaddress()
+        n0.issue(asset_name="CHAIN_REISSUE", qty=1000, to_address=address0, change_address="", \
+                 units=4, reissuable=True, has_ipfs=False)
+
+        n0.generate(1)
+        self.sync_all()
+
+        n0.reissue(asset_name="CHAIN_REISSUE", qty=1000, to_address=address0, change_address="", \
+                    reissuable=True)
+        assert_raises_rpc_error(-4, "Error: The transaction was rejected! Reason given: bad-tx-reissue-chaining-not-allowed", n0.reissue, "CHAIN_REISSUE", 1000, address0, "", True)
+
+        n0.generate(1)
+        self.sync_all()
+
+        n0.reissue(asset_name="CHAIN_REISSUE", qty=1000, to_address=address0, change_address="", \
+                   reissuable=True)
+
+        n0.generate(1)
+        self.sync_all()
+
+        assetdata = n0.getassetdata("CHAIN_REISSUE")
+        assert_equal(assetdata["name"], "CHAIN_REISSUE")
+        assert_equal(assetdata["amount"], 3000)
+        assert_equal(assetdata["units"], 4)
+        assert_equal(assetdata["reissuable"], 1)
+        assert_equal(assetdata["has_ipfs"], 0)
+
 
 if __name__ == '__main__':
     AssetTest().main()

@@ -16,6 +16,7 @@ static const char ASSET_FLAG = 'A';
 static const char ASSET_ADDRESS_QUANTITY_FLAG = 'B';
 static const char MY_ASSET_FLAG = 'M';
 static const char BLOCK_ASSET_UNDO_DATA = 'U';
+static const char MEMPOOL_REISSUED_TX = 'Z';
 
 CAssetsDB::CAssetsDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assets", nCacheSize, fMemory, fWipe) {
 }
@@ -77,15 +78,32 @@ bool CAssetsDB::WriteBlockUndoAssetData(const uint256& blockhash, const std::vec
     return Write(std::make_pair(BLOCK_ASSET_UNDO_DATA, blockhash), vIPFSHashes);
 }
 
-bool CAssetsDB::ReadBlockUndoAssetData(const uint256 &blockhash,
-                                       std::vector<std::pair<std::string, std::string> > &vIPFSHashes) {
-
+bool CAssetsDB::ReadBlockUndoAssetData(const uint256 &blockhash, std::vector<std::pair<std::string, std::string> > &vIPFSHashes)
+{
     // If it exists, return the read value.
     if (Exists(std::make_pair(BLOCK_ASSET_UNDO_DATA, blockhash)))
-        return Read(std::make_pair(BLOCK_ASSET_UNDO_DATA, blockhash), vIPFSHashes);
+           return Read(std::make_pair(BLOCK_ASSET_UNDO_DATA, blockhash), vIPFSHashes);
 
     // If it doesn't exist, we just return true because we don't want to fail just because it didn't exist in the db
     return true;
+}
+
+bool CAssetsDB::WriteReissuedMempoolState()
+{
+    return Write(MEMPOOL_REISSUED_TX, mapReissuedAssets);
+}
+
+bool CAssetsDB::ReadReissuedMempoolState()
+{
+    mapReissuedAssets.clear();
+    mapReissuedTx.clear();
+    // If it exists, return the read value.
+    bool rv = Read(MEMPOOL_REISSUED_TX, mapReissuedAssets);
+    if (rv) {
+        for (auto pair : mapReissuedAssets)
+            mapReissuedTx.insert(std::make_pair(pair.second, pair.first));
+    }
+    return rv;
 }
 
 bool CAssetsDB::LoadAssets()
