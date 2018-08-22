@@ -26,6 +26,20 @@ Unpack the files into a directory, and then run bitcoin-qt.exe.
 
 Drag Bitcoin Core to your applications folder, and then run Bitcoin Core.
 
+### Files
+
+* ./bin/bitcoin-cli (Command Line Interface)
+* ./bin/bitcoind (headless daemon)
+* ./bin/bitcoin-qt (GUI)
+* ./bin/bitcoin-tx (hex-encoded transaction tool)
+* ./bin/test_bitcoin (runs the unit tests)
+* ./include/bitcoinconsensus.h (lib header)
+* ./lib/libbitcoinconsensus.so.0.0.0 (shared lib)
+* ./share/man/man1/bitcoin-cli.1 (man pages)
+* ./share/man/man1/bitcoind.1
+* ./share/man/man1/bitcoin-qt.1
+* ./share/man/man1/bitcoin-tx.1
+
 ### Need Help?
 
 * See the documentation at the [Bitcoin Wiki](https://en.bitcoin.it/wiki/Main_Page)
