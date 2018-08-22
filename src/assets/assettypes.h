@@ -27,6 +27,13 @@ enum AssetType
     REISSUE
 };
 
+enum IssueAssetType
+{
+    ISSUE_ROOT = 0,
+    ISSUE_SUB = 1,
+    ISSUE_UNIQUE = 2
+};
+
 class CNewAsset {
 public:
     std::string strName; // MAX 31 Bytes

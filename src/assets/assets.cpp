@@ -849,10 +849,7 @@ bool CAssetsCache::TrySpendCoin(const COutPoint& out, const CTxOut& txOut)
 
             // Update the cache so we can save to database
             vSpentAssets.push_back(spend);
-        } else {
-            return error("%s : ERROR Failed to find current assets address amount. Asset %s: , Address : %s", __func__, assetName, address);
         }
-
     } else {
         return error("%s : ERROR Failed to get asset from the OutPoint: %s", __func__, out.ToString());
     }
@@ -1955,12 +1952,17 @@ void GetAssetData(const CScript& script, CAssetOutputEntry& data)
     }
 }
 
-void GetAllOwnedAssets(std::vector<std::string>& names)
+void GetAllOwnedAssets(CWallet* pwallet, std::vector<std::string>& names)
 {
-    for (auto owned : passets->mapMyUnspentAssets) {
-        if (IsAssetNameAnOwner(owned.first)) {
-            names.emplace_back(owned.first);
-        }
+    if(!pwallet)
+        return;
+
+    std::map<std::string, std::vector<COutput> > mapAssets;
+    pwallet->AvailableAssets(mapAssets);
+
+    for (auto item : mapAssets) {
+        if (IsAssetNameAnOwner(item.first))
+            names.emplace_back(item.first);
     }
 }
 

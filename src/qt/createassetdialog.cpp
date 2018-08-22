@@ -41,9 +41,13 @@ CreateAssetDialog::CreateAssetDialog(const PlatformStyle *_platformStyle, QWidge
     connect(ui->unitBox, SIGNAL(valueChanged(int)), this, SLOT(onUnitChanged(int)));
     connect(ui->rvnChangeBox, SIGNAL(clicked()), this, SLOT(onCustomAddressClicked()));
     connect(ui->changeAddressText, SIGNAL(textChanged(QString)), this, SLOT(onChangeAddressChanged(QString)));
+    connect(ui->assetType, SIGNAL(activated(int)), this, SLOT(onAssetTypeActivated(int)));
+    connect(ui->assetList, SIGNAL(activated(int)), this, SLOT(onAssetListActivated(int)));
 
     // Setup the default values
     setUpValues();
+
+    format = "%1<font color=green>%2%3</font>";
 }
 
 CreateAssetDialog::~CreateAssetDialog()
@@ -67,6 +71,30 @@ void CreateAssetDialog::setUpValues()
     CheckFormState();
 
     ui->unitExampleLabel->setStyleSheet("font-weight: bold");
+
+    // Setup the asset types
+    QStringList list;
+    list.append(tr("Main Asset"));
+    list.append(tr("Sub Asset"));
+//    list.append(tr("Unique Asset"));
+    ui->assetType->addItems(list);
+    type = ISSUE_ROOT;
+    ui->assetTypeLabel->setText(tr("Asset Type") + ":");
+
+    // Setup the asset list
+    ui->assetList->hide();
+    std::vector<std::string> names;
+    GetAllOwnedAssets(model->getWallet(), names);
+    for (auto item : names) {
+        std::string name = QString::fromStdString(item).split("!").first().toStdString();
+        if (name.size() != 30)
+            ui->assetList->addItem(QString::fromStdString(name));
+    }
+    ui->assetFullName->setTextFormat(Qt::RichText);
+    ui->assetFullName->setStyleSheet("font-weight: bold");
+
+    ui->assetType->setStyleSheet("font-weight: bold");
+
 }
 
 void CreateAssetDialog::toggleIPFSText()
@@ -129,8 +157,19 @@ void CreateAssetDialog::CheckFormState()
 
     const CTxDestination dest = DecodeDestination(ui->addressText->text().toStdString());
 
+    QString name = GetAssetName();
+
     AssetType assetType;
-    bool assetNameValid = IsAssetNameValid(ui->nameText->text().toStdString(), assetType) && assetType == AssetType::ROOT;
+    bool assetNameValid = IsAssetNameValid(name.toStdString(), assetType);
+    if (assetNameValid && assetType == ROOT && type != ISSUE_ROOT)
+        return;
+
+    if (assetNameValid && assetType == SUB && type != ISSUE_SUB)
+        return;
+
+    if (assetNameValid && assetType == UNIQUE && type != ISSUE_UNIQUE)
+        return;
+
     if (!(IsValidDestination(dest) || ui->addressText->text().isEmpty()) && assetNameValid) {
         ui->addressText->setStyleSheet("border: 1px solid red");
         showMessage("Warning: Invalid Raven address");
@@ -170,7 +209,7 @@ void CreateAssetDialog::ipfsStateChanged()
 
 void CreateAssetDialog::checkAvailabilityClicked()
 {
-    QString name = ui->nameText->text();
+    QString name = GetAssetName();
 
     LOCK(cs_main);
     if (passets) {
@@ -197,25 +236,59 @@ void CreateAssetDialog::checkAvailabilityClicked()
 
 void CreateAssetDialog::onNameChanged(QString name)
 {
+    // Update the displayed name to uppercase if the type only accepts uppercase
+    name = name.toUpper();
+    UpdateAssetNameToUpper();
+
+    QString assetName = name;
+
+    // Get the identifier for the asset type
+    QString identifier = GetSpecialCharacter();
+
     if (name.size() == 0) {
         hideMessage();
+        ui->availabilityButton->setDisabled(true);
+        updatePresentedAssetName(name);
         return;
     }
 
-    if (name.size() < 3) {
-        ui->nameText->setStyleSheet("border: 1px solid red");
-        showMessage("Invalid: Minimum of 3 character in length");
-        return;
+    if (type == ISSUE_ROOT) {
+        if (name.size() < 3) {
+            ui->nameText->setStyleSheet("border: 1px solid red");
+            showMessage("Invalid: Minimum of 3 character in length");
+            ui->availabilityButton->setDisabled(true);
+            return;
+        }
+
+        AssetType assetType;
+        if (IsAssetNameValid(name.toStdString(), assetType) && assetType == ROOT) {
+            hideMessage();
+            ui->availabilityButton->setDisabled(false);
+
+        } else {
+            ui->nameText->setStyleSheet("border: 1px solid red");
+            showMessage("Invalid: Max Size 30 Characters. Allowed characters include: A-Z 0-9 . _");
+        }
+    } else if (type == ISSUE_SUB || type == ISSUE_UNIQUE) {
+        if (name.size() == 0) {
+            hideMessage();
+            ui->availabilityButton->setDisabled(true);
+            return;
+        }
+
+        AssetType assetType;
+        if (IsAssetNameValid(ui->assetList->currentText().toStdString() + identifier.toStdString() + name.toStdString(), assetType) && (assetType == SUB || assetType == UNIQUE)) {
+            hideMessage();
+            ui->availabilityButton->setDisabled(false);
+        } else {
+            ui->nameText->setStyleSheet("border: 1px solid red");
+            showMessage("Invalid: Max Size 30 Characters. Allowed characters include: A-Z 0-9 . _");
+            ui->availabilityButton->setDisabled(true);
+        }
     }
 
-    AssetType assetType;
-    if (!IsAssetNameValid(name.toStdString(), assetType) || assetType != AssetType::ROOT) {
-        ui->nameText->setStyleSheet("border: 1px solid red");
-        showMessage("Invalid: Max Size 30 Characters. Allowed characters include: A-Z 0-9 . _");
-    } else {
-        hideMessage();
-        ui->availabilityButton->setDisabled(false);
-    }
+    // Set the assetName
+    updatePresentedAssetName(format.arg(type == ISSUE_ROOT ? "" : ui->assetList->currentText(), identifier, name));
 
     checkedAvailablity = false;
     disableCreateButton();
@@ -244,8 +317,8 @@ void CreateAssetDialog::onCreateAssetClicked()
     } else {
         address = ui->addressText->text();
     }
+    QString name = GetAssetName();
 
-    QString name = ui->nameText->text();
     CAmount quantity = ui->quantitySpinBox->value() * COIN;
     int units = ui->unitBox->value();
     bool reissuable = ui->reissuableBox->isChecked();
@@ -398,4 +471,88 @@ void CreateAssetDialog::onCustomAddressClicked()
 void CreateAssetDialog::onChangeAddressChanged(QString changeAddress)
 {
     CheckFormState();
+}
+
+void CreateAssetDialog::onAssetTypeActivated(int index)
+{
+    // Update the selected type
+    type = index;
+
+    // Get the identifier for the asset type
+    QString identifier = GetSpecialCharacter();
+
+    if (index != 0) {
+        ui->assetList->show();
+    } else {
+        ui->assetList->hide();
+    }
+
+    UpdateAssetNameMaxSize();
+
+    // Set assetName
+    updatePresentedAssetName(format.arg(type == ISSUE_ROOT ? "" : ui->assetList->currentText(), identifier, ui->nameText->text()));
+
+    if (ui->nameText->text().size())
+        ui->availabilityButton->setDisabled(false);
+    else
+        ui->availabilityButton->setDisabled(true);
+    ui->createAssetButton->setDisabled(true);
+}
+
+void CreateAssetDialog::onAssetListActivated(int index)
+{
+    // Get the identifier for the asset type
+    QString identifier = GetSpecialCharacter();
+
+    UpdateAssetNameMaxSize();
+
+    // Set assetName
+    updatePresentedAssetName(format.arg(type == ISSUE_ROOT ? "" : ui->assetList->currentText(), identifier, ui->nameText->text()));
+
+    if (ui->nameText->text().size())
+        ui->availabilityButton->setDisabled(false);
+    else
+        ui->availabilityButton->setDisabled(true);
+    ui->createAssetButton->setDisabled(true);
+}
+
+void CreateAssetDialog::updatePresentedAssetName(QString name)
+{
+    ui->assetFullName->setText(name);
+}
+
+QString CreateAssetDialog::GetSpecialCharacter()
+{
+    if (type == ISSUE_SUB)
+        return "/";
+    else if (type == ISSUE_UNIQUE)
+        return "#";
+
+    return "";
+}
+
+QString CreateAssetDialog::GetAssetName()
+{
+    if (type == ISSUE_ROOT)
+        return ui->nameText->text();
+    else if (type == ISSUE_SUB)
+        return ui->assetList->currentText() + "/" + ui->nameText->text();
+    else if (type == ISSUE_UNIQUE)
+        return ui->assetList->currentText() + "#" + ui->nameText->text();
+}
+
+void CreateAssetDialog::UpdateAssetNameMaxSize()
+{
+    if (type == ISSUE_ROOT) {
+        ui->nameText->setMaxLength(30);
+    } else if (type == ISSUE_SUB || type == ISSUE_UNIQUE) {
+        ui->nameText->setMaxLength(30 - (ui->assetList->currentText().size() + 1));
+    }
+}
+
+void CreateAssetDialog::UpdateAssetNameToUpper()
+{
+    if (type == ISSUE_ROOT || type == ISSUE_SUB) {
+        ui->nameText->setText(ui->nameText->text().toUpper());
+    }
 }

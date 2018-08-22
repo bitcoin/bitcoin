@@ -309,7 +309,7 @@ void SendAssetsEntry::onSendOwnershipChanged()
     if (ui->ownerCheckBox->isChecked()) {
         LOCK(cs_main);
         std::vector<std::string> names;
-        GetAllOwnedAssets(names);
+        GetAllOwnedAssets(model->getWallet(), names);
 
         QStringList list;
         for (auto name: names)

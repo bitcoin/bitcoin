@@ -7,13 +7,43 @@
     <x>0</x>
     <y>0</y>
     <width>1001</width>
-    <height>436</height>
+    <height>516</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string notr="true">Transaction details</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_10">
+     <item>
+      <widget class="QLabel" name="assetTypeLabel">
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="assetType"/>
+     </item>
+     <item>
+      <widget class="QComboBox" name="assetList"/>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_4">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
@@ -28,8 +58,21 @@
        <property name="toolTip">
         <string>A-Z 0-9 and . or _ as the second character</string>
        </property>
+       <property name="maxLength">
+        <number>30</number>
+       </property>
        <property name="placeholderText">
         <string>The name of the asset you would like to create</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="assetFullName">
+       <property name="text">
+        <string/>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
       </widget>
      </item>

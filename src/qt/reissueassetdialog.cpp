@@ -71,7 +71,7 @@ void ReissueAssetDialog::setUpValues()
 
     LOCK(cs_main);
     std::vector<std::string> assets;
-    GetAllOwnedAssets(assets);
+    GetAllOwnedAssets(model->getWallet(), assets);
 
     ui->comboBox->addItem("Select an asset");
 
