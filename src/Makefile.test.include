@@ -89,6 +89,8 @@ BITCOIN_TESTS =\
   test/crypto_tests.cpp \
   test/cuckoocache_tests.cpp \
   test/DoS_tests.cpp \
+  test/evo_deterministicmns_tests.cpp \
+  test/evo_simplifiedmns_tests.cpp \
   test/getarg_tests.cpp \
   test/governance_validators_tests.cpp \
   test/hash_tests.cpp \
