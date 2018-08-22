@@ -24,7 +24,9 @@
 
 #include "test/testutil.h"
 
+#include "evo/specialtx.h"
 #include "evo/deterministicmns.h"
+#include "evo/cbtx.h"
 
 #include <memory>
 
@@ -146,6 +148,22 @@ CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns,
     block.vtx.resize(1);
     BOOST_FOREACH(const CMutableTransaction& tx, txns)
         block.vtx.push_back(MakeTransactionRef(tx));
+
+    // Manually update CbTx as we modified the block here
+    if (block.vtx[0]->nType == TRANSACTION_COINBASE) {
+        CCbTx cbTx;
+        if (!GetTxPayload(*block.vtx[0], cbTx)) {
+            BOOST_ASSERT(false);
+        }
+        CValidationState state;
+        if (!CalcCbTxMerkleRootMNList(block, chainActive.Tip(), cbTx.merkleRootMNList, state)) {
+            BOOST_ASSERT(false);
+        }
+        CMutableTransaction tmpTx = *block.vtx[0];
+        SetTxPayload(tmpTx, cbTx);
+        block.vtx[0] = MakeTransactionRef(tmpTx);
+    }
+
     // IncrementExtraNonce creates a valid coinbase and merkleRoot
     unsigned int extraNonce = 0;
     IncrementExtraNonce(&block, chainActive.Tip(), extraNonce);
