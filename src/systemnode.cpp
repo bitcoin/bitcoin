@@ -225,7 +225,8 @@ arith_uint256 CSystemnode::CalculateScore(int64_t nBlockHeight) const
 
     // Find the block hash where tx got SYSTEMNODE_MIN_CONFIRMATIONS
     CBlockIndex *pblockIndex = chainActive[GetInputHeight(vin) + SYSTEMNODE_MIN_CONFIRMATIONS - 1];
-    assert(pblockIndex);
+    if (!pblockIndex)
+        return arith_uint256();
     uint256 collateralMinConfBlockHash = pblockIndex->GetBlockHash();
 
     uint256 hash = uint256();
