@@ -47,7 +47,7 @@ public:
      * @note do NOT call global GetDataDir() before calling this function, this
      * will cause the wrong path to be cached.
      */
-    static bool showIfNeeded(interfaces::Node& node, bool& did_show_intro, bool& prune);
+    static bool showIfNeeded(bool& did_show_intro, bool& prune);
 
 Q_SIGNALS:
     void requestCheck();
