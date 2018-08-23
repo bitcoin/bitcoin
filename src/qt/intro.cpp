@@ -6,6 +6,7 @@
 #include <config/syscoin-config.h>
 #endif
 
+#include <chainparams.h>
 #include <fs.h>
 #include <qt/intro.h>
 #include <qt/forms/ui_intro.h>
@@ -200,13 +201,13 @@ bool Intro::showIfNeeded(interfaces::Node& node, bool& did_show_intro, bool& pru
     {
         /* Use selectParams here to guarantee Params() can be used by node interface */
         try {
-            node.selectParams(gArgs.GetChainName());
+            SelectParams(gArgs.GetChainName());
         } catch (const std::exception&) {
             return false;
         }
 
         /* If current default data directory does not exist, let the user choose one */
-        Intro intro(0, node.getAssumedBlockchainSize(), node.getAssumedChainStateSize());
+        Intro intro(0, Params().AssumedBlockchainSize(), Params().AssumedChainStateSize());
         intro.setDataDirectory(dataDir);
         intro.setWindowIcon(QIcon(":icons/syscoin"));
         did_show_intro = true;
@@ -244,7 +245,7 @@ bool Intro::showIfNeeded(interfaces::Node& node, bool& did_show_intro, bool& pru
      * (to be consistent with syscoind behavior)
      */
     if(dataDir != GUIUtil::getDefaultDataDirectory()) {
-        node.softSetArg("-datadir", GUIUtil::qstringToBoostPath(dataDir).string()); // use OS locale for path setting
+        gArgs.SoftSetArg("-datadir", GUIUtil::qstringToBoostPath(dataDir).string()); // use OS locale for path setting
     }
     return true;
 }
