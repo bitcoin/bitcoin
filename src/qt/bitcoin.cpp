@@ -196,10 +196,9 @@ void BitcoinCore::shutdown()
 static int qt_argc = 1;
 static const char* qt_argv = "bitcoin-qt";
 
-BitcoinApplication::BitcoinApplication(interfaces::Node& node):
+BitcoinApplication::BitcoinApplication():
     QApplication(qt_argc, const_cast<char **>(&qt_argv)),
     coreThread(nullptr),
-    m_node(node),
     optionsModel(nullptr),
     clientModel(nullptr),
     window(nullptr),
@@ -249,12 +248,13 @@ void BitcoinApplication::createPaymentServer()
 
 void BitcoinApplication::createOptionsModel(bool resetSettings)
 {
-    optionsModel = new OptionsModel(m_node, this, resetSettings);
+    optionsModel = new OptionsModel(this, resetSettings);
+    optionsModel->setNode(node());
 }
 
 void BitcoinApplication::createWindow(const NetworkStyle *networkStyle)
 {
-    window = new BitcoinGUI(m_node, platformStyle, networkStyle, nullptr);
+    window = new BitcoinGUI(node(), platformStyle, networkStyle, nullptr);
 
     pollShutdownTimer = new QTimer(window);
     connect(pollShutdownTimer, &QTimer::timeout, window, &BitcoinGUI::detectShutdown);
@@ -262,17 +262,25 @@ void BitcoinApplication::createWindow(const NetworkStyle *networkStyle)
 
 void BitcoinApplication::createSplashScreen(const NetworkStyle *networkStyle)
 {
-    SplashScreen *splash = new SplashScreen(m_node, nullptr, networkStyle);
+    assert(!m_splash);
+    m_splash = new SplashScreen(nullptr, networkStyle);
+    m_splash->setNode(node());
     // We don't hold a direct pointer to the splash screen after creation, but the splash
     // screen will take care of deleting itself when finish() happens.
-    splash->show();
-    connect(this, &BitcoinApplication::splashFinished, splash, &SplashScreen::finish);
-    connect(this, &BitcoinApplication::requestedShutdown, splash, &QWidget::close);
+    m_splash->show();
+    connect(this, &BitcoinApplication::splashFinished, m_splash, &SplashScreen::finish);
+    connect(this, &BitcoinApplication::requestedShutdown, m_splash, &QWidget::close);
+}
+
+void BitcoinApplication::setNode(interfaces::Node& node)
+{
+    assert(!m_node);
+    m_node = &node;
 }
 
 bool BitcoinApplication::baseInitialize()
 {
-    return m_node.baseInitialize();
+    return node().baseInitialize();
 }
 
 void BitcoinApplication::startThread()
@@ -280,7 +288,7 @@ void BitcoinApplication::startThread()
     if(coreThread)
         return;
     coreThread = new QThread(this);
-    BitcoinCore *executor = new BitcoinCore(m_node);
+    BitcoinCore *executor = new BitcoinCore(node());
     executor->moveToThread(coreThread);
 
     /*  communication to and from thread */
@@ -334,7 +342,7 @@ void BitcoinApplication::requestShutdown()
     window->unsubscribeFromCoreSignals();
     // Request node shutdown, which can interrupt long operations, like
     // rescanning a wallet.
-    m_node.startShutdown();
+    node().startShutdown();
     // Unsetting the client model can cause the current thread to wait for node
     // to complete an operation, like wait for a RPC execution to complete.
     window->setClientModel(nullptr);
@@ -356,7 +364,7 @@ void BitcoinApplication::initializeResult(bool success, interfaces::BlockAndHead
     {
         // Log this only after AppInitMain finishes, as then logging setup is guaranteed complete
         qInfo() << "Platform customization:" << platformStyle->getName();
-        clientModel = new ClientModel(m_node, optionsModel);
+        clientModel = new ClientModel(node(), optionsModel);
         window->setClientModel(clientModel, &tip_info);
 #ifdef ENABLE_WALLET
         if (WalletModel::isWalletEnabled()) {
@@ -456,7 +464,8 @@ int GuiMain(int argc, char* argv[])
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif
 
-    BitcoinApplication app(*node);
+    BitcoinApplication app;
+    app.setNode(*node);
 
     /// 2. Parse command-line options. We do this after qt in order to show an error if there are problems parsing these
     // Command-line options take precedence:
@@ -612,10 +621,10 @@ int GuiMain(int argc, char* argv[])
         }
     } catch (const std::exception& e) {
         PrintExceptionContinue(&e, "Runaway exception");
-        app.handleRunawayException(QString::fromStdString(node->getWarnings().translated));
+        app.handleRunawayException(QString::fromStdString(app.node().getWarnings().translated));
     } catch (...) {
         PrintExceptionContinue(nullptr, "Runaway exception");
-        app.handleRunawayException(QString::fromStdString(node->getWarnings().translated));
+        app.handleRunawayException(QString::fromStdString(app.node().getWarnings().translated));
     }
     return rv;
 }
