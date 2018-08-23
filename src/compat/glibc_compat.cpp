@@ -54,6 +54,12 @@ __asm(".symver log2f_old,log2f@GLIBC_2.2.5");
 __asm(".symver log2f_old,log2f@GLIBC_2.4");
 #elif defined(__aarch64__)
 __asm(".symver log2f_old,log2f@GLIBC_2.17");
+#elif defined(__powerpc64__)
+#  ifdef WORDS_BIGENDIAN
+__asm(".symver log2f_old,log2f@GLIBC_2.3");
+#  else
+__asm(".symver log2f_old,log2f@GLIBC_2.17");
+#  endif
 #elif defined(__riscv)
 __asm(".symver log2f_old,log2f@GLIBC_2.27");
 #endif
