@@ -64,6 +64,7 @@ enum class OptionsCategory {
     COMMANDS,
     REGISTER_COMMANDS,
     CLI_COMMANDS,
+    IPC,
 
     HIDDEN // Always the last option to avoid printing these in the help
 };
