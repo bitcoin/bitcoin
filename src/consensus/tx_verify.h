@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 #include <vector>
+#include <string>
 
 class CBlockIndex;
 class CCoinsViewCache;
