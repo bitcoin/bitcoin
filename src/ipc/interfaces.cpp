@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/args.h>
 #include <common/system.h>
 #include <interfaces/init.h>
 #include <interfaces/ipc.h>
@@ -55,6 +56,35 @@ public:
         m_protocol->serve(fd, m_exe_name, m_init);
         exit_status = EXIT_SUCCESS;
         return true;
+    }
+    std::unique_ptr<interfaces::Init> connectAddress(std::string& address) override
+    {
+        if (address.empty() || address == "0") return nullptr;
+        int fd;
+        if (address == "auto") {
+            // Treat "auto" the same as "unix" except don't treat it an as error
+            // if the connection is not accepted. Just return null so the caller
+            // can work offline without a connection, or spawn a new
+            // bitcoin-node process and connect to it.
+            address = "unix";
+            try {
+                fd = m_process->connect(gArgs.GetDataDirNet(), "bitcoin-node", address);
+            } catch (const std::system_error& e) {
+                // If connection type is auto and socket path isn't accepting connections, or doesn't exist, catch the error and return null;
+                if (e.code() == std::errc::connection_refused || e.code() == std::errc::no_such_file_or_directory) {
+                    return nullptr;
+                }
+                throw;
+            }
+        } else {
+            fd = m_process->connect(gArgs.GetDataDirNet(), "bitcoin-node", address);
+        }
+        return m_protocol->connect(fd, m_exe_name);
+    }
+    void listenAddress(std::string& address) override
+    {
+        int fd = m_process->bind(gArgs.GetDataDirNet(), m_exe_name, address);
+        m_protocol->listen(fd, m_exe_name, m_init);
     }
     void addCleanup(std::type_index type, void* iface, std::function<void()> cleanup) override
     {
