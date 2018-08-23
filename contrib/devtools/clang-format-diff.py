@@ -13,6 +13,7 @@
 # Open Source License
 #
 # Copyright (c) 2007-2015 University of Illinois at Urbana-Champaign.
+# Copyright (c) 2014-2018 The Syscoin Core developers
 # All rights reserved.
 #
 # Developed by:

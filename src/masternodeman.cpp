@@ -1,4 +1,5 @@
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2017-2018 The Syscoin Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,6 +7,7 @@
 #include "addrman.h"
 #include "alert.h"
 #include "clientversion.h"
+#include "init.h"
 #include "governance.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
@@ -159,8 +161,6 @@ void CMasternodeMan::Check()
 {
 	// SYSCOIN remove csmain lock
     LOCK(cs);
-
-    LogPrint("masternode", "CMasternodeMan::Check -- nLastSentinelPingTime=%d, IsSentinelPingActive()=%d\n", nLastSentinelPingTime, IsSentinelPingActive());
 
     for (auto& mnpair : mapMasternodes) {
         // NOTE: internally it checks only every MASTERNODE_CHECK_SECONDS seconds
@@ -765,14 +765,11 @@ void CMasternodeMan::ProcessPendingMnbRequests(CConnman& connman)
         bool fDone = connman.ForNode(itPendingMNB->first, [&](CNode* pnode) {
             // compile request vector
             std::vector<CInv> vToFetch;
-            std::set<uint256>& setHashes = itPendingMNB->second.second;
-            std::set<uint256>::iterator it = setHashes.begin();
-            while(it != setHashes.end()) {
-                if(*it != uint256()) {
-                    vToFetch.push_back(CInv(MSG_MASTERNODE_ANNOUNCE, *it));
-                    LogPrint("masternode", "-- asking for mnb %s from addr=%s\n", it->ToString(), pnode->addr.ToString());
+            for (auto& nHash : itPendingMNB->second.second) {
+                if(nHash != uint256()) {
+                    vToFetch.push_back(CInv(MSG_MASTERNODE_ANNOUNCE, nHash));
+                    LogPrint("masternode", "-- asking for mnb %s from addr=%s\n", nHash.ToString(), pnode->addr.ToString());
                 }
-                ++it;
             }
 
             // ask for data
@@ -791,7 +788,6 @@ void CMasternodeMan::ProcessPendingMnbRequests(CConnman& connman)
             ++itPendingMNB;
         }
     }
-    LogPrint("masternode", "%s -- mapPendingMNB size: %d\n", __func__, mapPendingMNB.size());
 }
 
 void CMasternodeMan::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
@@ -987,28 +983,26 @@ void CMasternodeMan::DoFullVerificationStep(CConnman& connman)
     rank_pair_vec_t vecMasternodeRanks;
     GetMasternodeRanks(vecMasternodeRanks, nCachedBlockHeight - 1, MIN_POSE_PROTO_VERSION);
 
-	LOCK(cs);
-
-    int nCount = 0;
+    std::vector<CAddress> vAddr;
+    {
+    LOCK(cs);
 
     int nMyRank = -1;
     int nRanksTotal = (int)vecMasternodeRanks.size();
 
     // send verify requests only if we are in top MAX_POSE_RANK
-    rank_pair_vec_t::iterator it = vecMasternodeRanks.begin();
-    while(it != vecMasternodeRanks.end()) {
-        if(it->first > MAX_POSE_RANK) {
+    for (auto& rankPair : vecMasternodeRanks) {
+        if(rankPair.first > MAX_POSE_RANK) {
             LogPrint("masternode", "CMasternodeMan::DoFullVerificationStep -- Must be in top %d to send verify request\n",
                         (int)MAX_POSE_RANK);
             return;
         }
-        if(it->second.outpoint == activeMasternode.outpoint) {
-            nMyRank = it->first;
+        if(rankPair.second.outpoint == activeMasternode.outpoint) {
+            nMyRank = rankPair.first;
             LogPrint("masternode", "CMasternodeMan::DoFullVerificationStep -- Found self at rank %d/%d, verifying up to %d masternodes\n",
                         nMyRank, nRanksTotal, (int)MAX_POSE_CONNECTIONS);
             break;
         }
-        ++it;
     }
 
     // edge case: list is too short and this masternode is not enabled
@@ -1019,14 +1013,7 @@ void CMasternodeMan::DoFullVerificationStep(CConnman& connman)
     int nOffset = MAX_POSE_RANK + nMyRank - 1;
     if(nOffset >= (int)vecMasternodeRanks.size()) return;
 
-    std::vector<const CMasternode*> vSortedByAddr;
-    for (const auto& mnpair : mapMasternodes) {
-        vSortedByAddr.push_back(&mnpair.second);
-    }
-
-    sort(vSortedByAddr.begin(), vSortedByAddr.end(), CompareByAddr());
-
-    it = vecMasternodeRanks.begin() + nOffset;
+    auto it = vecMasternodeRanks.begin() + nOffset;
     while(it != vecMasternodeRanks.end()) {
         if(it->second.IsPoSeVerified() || it->second.IsPoSeBanned()) {
             LogPrint("masternode", "CMasternodeMan::DoFullVerificationStep -- Already %s%s%s masternode %s address %s, skipping...\n",
@@ -1041,16 +1028,22 @@ void CMasternodeMan::DoFullVerificationStep(CConnman& connman)
         }
         LogPrint("masternode", "CMasternodeMan::DoFullVerificationStep -- Verifying masternode %s rank %d/%d address %s\n",
                     it->second.outpoint.ToStringShort(), it->first, nRanksTotal, it->second.addr.ToString());
-        if(SendVerifyRequest(CAddress(it->second.addr, NODE_NETWORK), vSortedByAddr, connman)) {
-            nCount++;
-            if(nCount >= MAX_POSE_CONNECTIONS) break;
+        CAddress addr = CAddress(it->second.addr, NODE_NETWORK);
+        if(CheckVerifyRequestAddr(addr, connman)) {
+            vAddr.push_back(addr);
+            if((int)vAddr.size() >= MAX_POSE_CONNECTIONS) break;
         }
         nOffset += MAX_POSE_CONNECTIONS;
         if(nOffset >= (int)vecMasternodeRanks.size()) break;
         it += MAX_POSE_CONNECTIONS;
     }
+    } // cs
 
-    LogPrint("masternode", "CMasternodeMan::DoFullVerificationStep -- Sent verification requests to %d masternodes\n", nCount);
+    for (const auto& addr : vAddr) {
+        PrepareVerifyRequest(addr, connman);
+    }
+
+    LogPrint("masternode", "CMasternodeMan::DoFullVerificationStep -- Prepared verification requests for %d masternodes\n", vAddr.size());
 }
 
 // This function tries to find masternodes with the same addr,
@@ -1111,23 +1104,25 @@ void CMasternodeMan::CheckSameAddr()
     }
 }
 
-bool CMasternodeMan::SendVerifyRequest(const CAddress& addr, const std::vector<const CMasternode*>& vSortedByAddr, CConnman& connman)
+bool CMasternodeMan::CheckVerifyRequestAddr(const CAddress& addr, CConnman& connman)
 {
     if(netfulfilledman.HasFulfilledRequest(addr, strprintf("%s", NetMsgType::MNVERIFY)+"-request")) {
         // we already asked for verification, not a good idea to do this too often, skip it
-        LogPrint("masternode", "CMasternodeMan::SendVerifyRequest -- too many requests, skipping... addr=%s\n", addr.ToString());
+        LogPrint("masternode", "CMasternodeMan::%s -- too many requests, skipping... addr=%s\n", __func__, addr.ToString());
         return false;
     }
 
-    if (connman.IsMasternodeOrDisconnectRequested(addr)) return false;
+    return !connman.IsMasternodeOrDisconnectRequested(addr);
+}
 
+void CMasternodeMan::PrepareVerifyRequest(const CAddress& addr, CConnman& connman)
+{
     connman.AddPendingMasternode(addr);
     // use random nonce, store it and require node to reply with correct one later
     CMasternodeVerification mnv(addr, GetRandInt(999999), nCachedBlockHeight - 1);
     LOCK(cs_mapPendingMNV);
     mapPendingMNV.insert(std::make_pair(addr, std::make_pair(GetTime(), mnv)));
-    LogPrintf("CMasternodeMan::SendVerifyRequest -- verifying node using nonce %d addr=%s\n", mnv.nonce, addr.ToString());
-    return true;
+    LogPrintf("CMasternodeMan::%s -- verifying node using nonce %d addr=%s\n", __func__, mnv.nonce, addr.ToString());
 }
 
 void CMasternodeMan::ProcessPendingMnvRequests(CConnman& connman)
@@ -1157,7 +1152,6 @@ void CMasternodeMan::ProcessPendingMnvRequests(CConnman& connman)
             ++itPendingMNV;
         }
     }
-    LogPrint("masternode", "%s -- mapPendingMNV size: %d\n", __func__, mapPendingMNV.size());
 }
 
 void CMasternodeMan::SendVerifyReply(CNode* pnode, CMasternodeVerification& mnv, CConnman& connman)
@@ -1515,15 +1509,15 @@ bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CNode* pfrom, CMasternodeBr
         // if it matches our Masternode privkey...
         if(fMasternodeMode && mnb.pubKeyMasternode == activeMasternode.pubKeyMasternode) {
             mnb.nPoSeBanScore = -MASTERNODE_POSE_BAN_MAX_SCORE;
-            if(mnb.nProtocolVersion == PROTOCOL_VERSION) {
-                // ... and PROTOCOL_VERSION, then we've been remotely activated ...
+            if(mnb.nProtocolVersion == MIN_PEER_PROTO_VERSION) {
+                // ... and MIN_PEER_PROTO_VERSION, then we've been remotely activated ...
                 LogPrintf("CMasternodeMan::CheckMnbAndUpdateMasternodeList -- Got NEW Masternode entry: masternode=%s  sigTime=%lld  addr=%s\n",
                             mnb.outpoint.ToStringShort(), mnb.sigTime, mnb.addr.ToString());
                 activeMasternode.ManageState(connman);
             } else {
                 // ... otherwise we need to reactivate our node, do not add it to the list and do not relay
                 // but also do not ban the node we get this message from
-                LogPrintf("CMasternodeMan::CheckMnbAndUpdateMasternodeList -- wrong PROTOCOL_VERSION, re-activate your MN: message nProtocolVersion=%d  PROTOCOL_VERSION=%d\n", mnb.nProtocolVersion, PROTOCOL_VERSION);
+                LogPrintf("CMasternodeMan::CheckMnbAndUpdateMasternodeList -- wrong MIN_PEER_PROTO_VERSION, re-activate your MN: message nProtocolVersion=%d  MIN_PEER_PROTO_VERSION=%d\n", mnb.nProtocolVersion, MIN_PEER_PROTO_VERSION);
                 return false;
             }
         }
@@ -1709,4 +1703,31 @@ unsigned int CMasternodeMan::GetStartHeight(const masternode_info_t& mnInfo) {
 	if (nHeight > 0)
 		return nHeight;
 	return 0;
+}
+void CMasternodeMan::DoMaintenance(CConnman& connman)
+{
+    if(fLiteMode) return; // disable all Syscoin specific functionality
+
+    if(!masternodeSync.IsBlockchainSynced() || ShutdownRequested())
+        return;
+
+    static unsigned int nTick = 0;
+
+    nTick++;
+
+    // make sure to check all masternodes first
+    mnodeman.Check();
+
+    mnodeman.ProcessPendingMnbRequests(connman);
+    mnodeman.ProcessPendingMnvRequests(connman);
+
+    if(nTick % 10 == 0) {
+        mnodeman.ProcessMasternodeConnections(connman);
+        mnodeman.CheckAndRemove(connman);
+        mnodeman.WarnMasternodeDaemonUpdates();
+    }
+
+    if(fMasternodeMode && (nTick % 50 == 0)) {
+        mnodeman.DoFullVerificationStep(connman);
+    }
 }

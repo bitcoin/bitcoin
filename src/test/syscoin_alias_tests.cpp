@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2017 The Syscoin Core developers
+// Copyright (c) 2016-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -368,11 +368,7 @@ BOOST_AUTO_TEST_CASE (generate_alias_offerexpiry_resync)
 	// change offer to an older alias, expire the alias and ensure that on resync the offer seems to be expired still
 	AliasNew("node1", "aliasold", "changeddata1");
 	printf("Sleeping 5 seconds between the creation of the two aliases for this test...\n");
-	MilliSleep(5000);
-	GenerateBlocks(5, "node1");
-	GenerateBlocks(5, "node2");
-	GenerateBlocks(5, "node3");
-	GenerateBlocks(50);
+	SleepFor(10000);
 	AliasNew("node1", "aliasnew", "changeddata1");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo aliasold"));
 	int64_t aliasoldexpiry = find_value(r.get_obj(), "expires_on").get_int64();	
@@ -792,7 +788,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpiredbuyback)
 	AliasNew("node1", "aliasexpirebuyback", "somedata2");
 	// run the test with node3 offline to test pruning with renewing alias
 	StopNode("node3");
-	MilliSleep(500);
+	SleepFor(1000);
 	AliasNew("node1", "aliasexpirebuyback1", "somedata1");
 	GenerateBlocks(5, "node1");
 	ExpireAlias("aliasexpirebuyback1");
@@ -1001,11 +997,11 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	string aliasexpirenode2address = AliasNew("node2", "aliasexpirednode2", "somedata");
 	string offerguid = OfferNew("node1", "aliasexpire0", "category", "title", "100", "1.00", "description", "USD");
 	string certguid = CertNew("node1", "aliasexpire", "certtitle", "pubdata");
-	MilliSleep(2500);
+	SleepFor(3000);
 	AliasNew("node3", "aliasexpire3", "somedata");
 	StopNode("node3");
 	printf("Sleeping 5 seconds between the creation of aliases for this test...\n");
-	MilliSleep(5000);	
+	SleepFor(5000);
 	GenerateBlocks(5, "node1");
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
@@ -1018,7 +1014,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	const string &escrowguid = EscrowNewBuyItNow("node2", "node1", "aliasexpirednode2", offerguid, "1", "aliasexpire3");
 	string aliasexpire2node2address = AliasNew("node2", "aliasexpire2node2", "pubdata");
 	string certgoodguid = CertNew("node1", "aliasexpire2", "certtitle", "pubdata");
-	ExpireAlias("aliasexpirednode2");
+	ExpireAlias("aliasexpire3");
 	GenerateBlocks(5, "node2");
 	
 	AliasNew("node1", "aliasexpire", "pubdata");
@@ -1122,6 +1118,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 
 	ExpireAlias("aliasexpire2");
 	AliasNew("node2", "aliasexpirednode2", "somedataa");
+	SleepFor(5000);
 	AliasNew("node1", "aliasexpire2", "somedatab");
 	// should fail:  transferring to a good alias but owner alias has expired and recreated (all services on old alias are now expired as a result even though alias was recreated, this is due to network pruning of expired services)
 	BOOST_CHECK_THROW(CallRPC("node1", "certtransfer " + certguid + " aliasexpirednode2 '' 2 ''"), runtime_error);
@@ -1133,6 +1130,10 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	// should fail: generate a cert using expired alias
 	BOOST_CHECK_THROW(CallRPC("node1", "certnew aliasexpire2 jag1 pubdata certificates ''"), runtime_error);
 	// renew alias after expiry
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo aliasexpirednode2"));
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasinfo aliasexpirednode2"));
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), true);
 	AliasNew("node2", "aliasexpirednode2", "somedata1");
 }
 BOOST_AUTO_TEST_SUITE_END ()

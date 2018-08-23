@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2017 The Syscoin Core developers
+// Copyright (c) 2015-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,7 +26,6 @@ static const unsigned int MAX_SYMBOL_LENGTH = 8;
 static const unsigned int MIN_SYMBOL_LENGTH = 1;
 static const unsigned int MAX_ENCRYPTED_GUID_LENGTH = MAX_NAME_LENGTH;
 static const uint64_t ONE_YEAR_IN_SECONDS = 31536000;
-static CCriticalSection cs_alias;
 enum {
 	ALIAS=0,
 	OFFER, 
@@ -245,37 +244,28 @@ public:
 		if(address.empty())
 			return false;	
 		bool writeState = false;
-		{
-			LOCK(cs_alias);
-			writeState = Write(make_pair(std::string("namei"), alias.vchAlias), alias) && Write(make_pair(std::string("namea"), address), alias.vchAlias) && Write(make_pair(std::string("nameu"), alias.vchAlias), aliasUnprunable);
-		}
+		writeState = Write(make_pair(std::string("namei"), alias.vchAlias), alias) && Write(make_pair(std::string("namea"), address), alias.vchAlias) && Write(make_pair(std::string("nameu"), alias.vchAlias), aliasUnprunable);
 		if(writeState)
 			WriteAliasIndex(alias, op);
 		return writeState;
 	}
 
 	bool EraseAlias(const std::vector<unsigned char>& vchAlias, bool cleanup = false) {
-		LOCK(cs_alias);
 		return Erase(make_pair(std::string("namei"), vchAlias));
 	}
 	bool ReadAlias(const std::vector<unsigned char>& vchAlias, CAliasIndex& alias) {
-		LOCK(cs_alias);
 		return Read(make_pair(std::string("namei"), vchAlias), alias);
 	}
 	bool ReadAddress(const std::vector<unsigned char>& address, std::vector<unsigned char>& name) {
-		LOCK(cs_alias);
 		return Read(make_pair(std::string("namea"), address), name);
 	}
 	bool ReadAliasUnprunable(const std::vector<unsigned char>& alias, CAliasUnprunable& aliasUnprunable) {
-		LOCK(cs_alias);
 		return Read(make_pair(std::string("nameu"), alias), aliasUnprunable);
 	}
 	bool EraseAddress(const std::vector<unsigned char>& address) {
-		LOCK(cs_alias);
 	    return Erase(make_pair(std::string("namea"), address));
 	}
 	bool ExistsAddress(const std::vector<unsigned char>& address) {
-		LOCK(cs_alias);
 	    return Exists(make_pair(std::string("namea"), address));
 	}
 	bool CleanupDatabase(int &servicesCleaned);
@@ -310,7 +300,7 @@ void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient);
 void CreateAliasRecipient(const CScript& scriptPubKey, CRecipient& recipient);
 void CreateFeeRecipient(CScript& scriptPubKey, const std::vector<unsigned char>& data, CRecipient& recipient);
 void CreateAliasRecipient(const CScript& scriptPubKey, CRecipient& recipient);
-CAmount GetDataFee(const CScript& scriptPubKey);
+CAmount GetDataFee(const CScript& scriptPubKey, bool bRequired=false);
 bool IsAliasOp(int op);
 bool GetAlias(const std::vector<unsigned char> &vchAlias, CAliasIndex& alias);
 bool CheckParam(const UniValue& params, const unsigned int index);
@@ -349,4 +339,5 @@ bool IsOutpointMature(const COutPoint& outpoint, bool fUseInstantSend = false);
 UniValue syscointxfund_helper(const std::vector<unsigned char> &vchAlias, const std::vector<unsigned char> &vchWitness, const CRecipient &aliasRecipient, std::vector<CRecipient> &vecSend);
 bool FlushSyscoinDBs();
 void ToLowerCase(std::vector<unsigned char>& vchValue);
+bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, const std::string& ownerAddressToMatch);
 #endif // ALIAS_H

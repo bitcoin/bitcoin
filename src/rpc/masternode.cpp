@@ -1,4 +1,5 @@
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2017-2018 The Syscoin Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -557,12 +558,12 @@ UniValue masternodelist(const JSONRPCRequest& request)
                     strOutpoint.find(strFilter) == std::string::npos) continue;
                 obj.push_back(Pair(strOutpoint, strAddress));
             } else if (strMode == "daemon") {
-                std::string strDaemon = mn.lastPing.nDaemonVersion >= DEFAULT_DAEMON_VERSION ? FormatVersion(mn.lastPing.nDaemonVersion) : "Unknown";
+                std::string strDaemon = mn.lastPing.GetDaemonString();
                 if (strFilter !="" && strDaemon.find(strFilter) == std::string::npos &&
                     strOutpoint.find(strFilter) == std::string::npos) continue;
                 obj.push_back(Pair(strOutpoint, strDaemon));
             } else if (strMode == "sentinel") {
-                std::string strSentinel = mn.lastPing.nSentinelVersion > DEFAULT_SENTINEL_VERSION ? SafeIntVersionToString(mn.lastPing.nSentinelVersion) : "Unknown";
+                std::string strSentinel = mn.lastPing.GetSentinelString();
                 if (strFilter !="" && strSentinel.find(strFilter) == std::string::npos &&
                     strOutpoint.find(strFilter) == std::string::npos) continue;
                 obj.push_back(Pair(strOutpoint, strSentinel));
@@ -589,7 +590,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
                                CSyscoinAddress(mn.pubKeyCollateralAddress.GetID()).ToString() << " " <<
                                (int64_t)mn.lastPing.sigTime << " " << std::setw(8) <<
                                (int64_t)(mn.lastPing.sigTime - mn.sigTime) << " " <<
-                               SafeIntVersionToString(mn.lastPing.nSentinelVersion) << " "  <<
+                               mn.lastPing.GetSentinelString() << " "  <<
                                (mn.lastPing.fSentinelIsCurrent ? "current" : "expired") << " " <<
                                mn.addr.ToString();
                 std::string strInfo = streamInfo.str();
@@ -603,7 +604,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
                                mn.GetStatus() << " " <<
                                mn.nProtocolVersion << " " <<
                                mn.lastPing.nDaemonVersion << " " <<
-                               SafeIntVersionToString(mn.lastPing.nSentinelVersion) << " " <<
+                               mn.lastPing.GetSentinelString() << " " <<
                                (mn.lastPing.fSentinelIsCurrent ? "current" : "expired") << " " <<
                                (int64_t)mn.lastPing.sigTime << " " <<
                                (int64_t)(mn.lastPing.sigTime - mn.sigTime) << " " <<
@@ -617,8 +618,8 @@ UniValue masternodelist(const JSONRPCRequest& request)
                 objMN.push_back(Pair("payee", CSyscoinAddress(mn.pubKeyCollateralAddress.GetID()).ToString()));
                 objMN.push_back(Pair("status", mn.GetStatus()));
                 objMN.push_back(Pair("protocol", mn.nProtocolVersion));
-                objMN.push_back(Pair("daemonversion", mn.lastPing.nDaemonVersion >= DEFAULT_DAEMON_VERSION ? FormatVersion(mn.lastPing.nDaemonVersion) : "Unknown"));
-                objMN.push_back(Pair("sentinelversion", mn.lastPing.nSentinelVersion > DEFAULT_SENTINEL_VERSION ? SafeIntVersionToString(mn.lastPing.nSentinelVersion) : "Unknown"));
+                objMN.push_back(Pair("daemonversion", mn.lastPing.GetDaemonString()));
+                objMN.push_back(Pair("sentinelversion", mn.lastPing.GetSentinelString()));
                 objMN.push_back(Pair("sentinelstate", (mn.lastPing.fSentinelIsCurrent ? "current" : "expired")));
                 objMN.push_back(Pair("lastseen", (int64_t)mn.lastPing.sigTime));
                 objMN.push_back(Pair("activeseconds", (int64_t)(mn.lastPing.sigTime - mn.sigTime)));
@@ -664,7 +665,7 @@ bool DecodeHexVecMnb(std::vector<CMasternodeBroadcast>& vecMnb, std::string strH
         return false;
 
     std::vector<unsigned char> mnbData(ParseHex(strHexMnb));
-    CDataStream ssData(mnbData, SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream ssData(mnbData, SER_NETWORK, MIN_PEER_PROTO_VERSION);
     try {
         ssData >> vecMnb;
     }
@@ -738,7 +739,7 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
                 statusObj.push_back(Pair("result", fResult ? "successful" : "failed"));
                 if(fResult) {
                     vecMnb.push_back(mnb);
-                    CDataStream ssVecMnb(SER_NETWORK, PROTOCOL_VERSION);
+                    CDataStream ssVecMnb(SER_NETWORK, MIN_PEER_PROTO_VERSION);
                     ssVecMnb << vecMnb;
                     statusObj.push_back(Pair("hex", HexStr(ssVecMnb)));
                 } else {
@@ -771,9 +772,6 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
             EnsureWalletIsUnlocked();
         }
 
-        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
-        mnEntries = masternodeConfig.getEntries();
-
         int nSuccessful = 0;
         int nFailed = 0;
 
@@ -801,7 +799,7 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
             resultsObj.push_back(Pair("status", statusObj));
         }
 
-        CDataStream ssVecMnb(SER_NETWORK, PROTOCOL_VERSION);
+        CDataStream ssVecMnb(SER_NETWORK, MIN_PEER_PROTO_VERSION);
         ssVecMnb << vecMnb;
         UniValue returnObj(UniValue::VOBJ);
         returnObj.push_back(Pair("overall", strprintf("Successfully created broadcast messages for %d masternodes, failed to create %d, total %d", nSuccessful, nFailed, nSuccessful + nFailed)));

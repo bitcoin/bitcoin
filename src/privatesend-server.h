@@ -1,4 +1,5 @@
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2017-2018 The Syscoin Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -73,8 +74,8 @@ public:
 
     void CheckTimeout(CConnman& connman);
     void CheckForCompleteQueue(CConnman& connman);
-};
 
-void ThreadCheckPrivateSendServer(CConnman& connman);
+    void DoMaintenance(CConnman& connman);
+};
 
 #endif

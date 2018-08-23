@@ -1,4 +1,4 @@
-# Copyright (c) 2013-2016 The Syscoin Core developers
+# Copyright (c) 2013-2016 The Bitcoin Core developers
 # Copyright (c) 2014-2018 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -86,7 +86,6 @@ SYSCOIN_CORE_H = \
   escrow.h \
   feedback.h \
   auxpow.h \
-  thread_pool.hpp \
   thread_pool/fixed_function.hpp \
   thread_pool/mpmc_bounded_queue.hpp \
   thread_pool/thread_pool.hpp \
@@ -209,7 +208,7 @@ SYSCOIN_CORE_H = \
   wallet/walletdb.h \
   warnings.h \
   zmq/zmqabstractnotifier.h \
-  zmq/zmqconfig.h\
+  zmq/zmqconfig.h \
   zmq/zmqnotificationinterface.h \
   zmq/zmqpublishnotifier.h
 

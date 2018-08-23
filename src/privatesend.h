@@ -1,4 +1,5 @@
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2017-2018 The Syscoin Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -391,7 +392,5 @@ public:
     static void UpdatedBlockTip(const CBlockIndex *pindex);
     static void SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex, int posInBlock);
 };
-
-void ThreadCheckPrivateSend(CConnman& connman);
 
 #endif

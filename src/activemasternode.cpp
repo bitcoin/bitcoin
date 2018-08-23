@@ -1,4 +1,5 @@
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2017-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -208,7 +209,7 @@ void CActiveMasternode::ManageStateRemote()
     mnodeman.CheckMasternode(pubKeyMasternode, true);
     masternode_info_t infoMn;
     if(mnodeman.GetMasternodeInfo(pubKeyMasternode, infoMn)) {
-        if(infoMn.nProtocolVersion != PROTOCOL_VERSION) {
+        if(infoMn.nProtocolVersion != MIN_PEER_PROTO_VERSION) {
             nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
             strNotCapableReason = "Invalid protocol version";
             LogPrintf("CActiveMasternode::ManageStateRemote -- %s: %s\n", GetStateString(), strNotCapableReason);
