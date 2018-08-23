@@ -28,6 +28,8 @@ Common `host-platform-triplets` for cross compilation are:
 - `x86_64-apple-darwin16` for macOS
 - `arm-linux-gnueabihf` for Linux ARM 32 bit
 - `aarch64-linux-gnu` for Linux ARM 64 bit
+- `powerpc64-linux-gnu` for Linux POWER 64-bit (big endian)
+- `powerpc64le-linux-gnu` for Linux POWER 64-bit (little endian)
 - `riscv32-linux-gnu` for Linux RISC-V 32 bit
 - `riscv64-linux-gnu` for Linux RISC-V 64 bit
 - `armv7a-linux-android` for Android ARM 32 bit
@@ -60,6 +62,10 @@ For linux ARM cross compilation:
 For linux AARCH64 cross compilation:
 
     sudo apt-get install g++-aarch64-linux-gnu binutils-aarch64-linux-gnu
+
+For linux POWER 64-bit cross compilation (there are no packages for 32-bit):
+
+    sudo apt-get install g++-powerpc64-linux-gnu binutils-powerpc64-linux-gnu g++-powerpc64le-linux-gnu binutils-powerpc64le-linux-gnu
 
 For linux RISC-V 64-bit cross compilation (there are no packages for 32-bit):
 
