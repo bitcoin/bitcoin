@@ -37,6 +37,7 @@ public:
     }
     std::unique_ptr<interfaces::Echo> makeEcho() override { return interfaces::MakeEcho(); }
     interfaces::Ipc* ipc() override { return m_ipc.get(); }
+    bool canListenIpc() override { return true; }
     node::NodeContext& m_node;
     std::unique_ptr<interfaces::Ipc> m_ipc;
 };

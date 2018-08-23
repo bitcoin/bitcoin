@@ -109,10 +109,11 @@ int fork_daemon(bool nochdir, bool noclose, TokenPipeEnd& endpoint)
 
 #endif
 
-static bool ParseArgs(ArgsManager& args, int argc, char* argv[])
+static bool ParseArgs(NodeContext& node, int argc, char* argv[])
 {
+    ArgsManager& args{*Assert(node.args)};
     // If Qt is used, parameters/bitcoin.conf are parsed in qt/bitcoin.cpp's main()
-    SetupServerArgs(args);
+    SetupServerArgs(args, node.init->canListenIpc());
     std::string error;
     if (!args.ParseParameters(argc, argv, error)) {
         return InitError(Untranslated(strprintf("Error parsing command line arguments: %s", error)));
@@ -268,7 +269,7 @@ MAIN_FUNCTION
 
     // Interpret command line arguments
     ArgsManager& args = *Assert(node.args);
-    if (!ParseArgs(args, argc, argv)) return EXIT_FAILURE;
+    if (!ParseArgs(node, argc, argv)) return EXIT_FAILURE;
     // Process early info return commands such as -help or -version
     if (ProcessInitCommands(args)) return EXIT_SUCCESS;
 
