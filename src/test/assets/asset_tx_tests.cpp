@@ -396,4 +396,62 @@ BOOST_FIXTURE_TEST_SUITE(asset_tx_tests, BasicTestingSetup)
         BOOST_CHECK_MESSAGE(!Consensus::CheckTxAssets(tx2, state, coins, vReissueAssets, true), "CheckTxAssets should of failed");
     }
 
+    BOOST_AUTO_TEST_CASE(asset_tx_issue_units) {
+
+        std::string error;
+        CAssetsCache cache;
+
+        // Amount = 1.00000000
+        CNewAsset asset("ASSET", CAmount(100000000), 8, false, false, "");
+        BOOST_CHECK_MESSAGE(asset.IsValid(error, cache, false, false), "Test1: " + error);
+
+        // Amount = 1.00000000
+        asset = CNewAsset("ASSET", CAmount(100000000), 0, false, false, "");
+        BOOST_CHECK_MESSAGE(asset.IsValid(error, cache, false, false), "Test2: " + error);
+
+        // Amount = 0.10000000
+        asset = CNewAsset("ASSET", CAmount(10000000), 8, false, false, "");
+        BOOST_CHECK_MESSAGE(asset.IsValid(error, cache, false, false), "Test3: " + error);
+
+        // Amount = 0.10000000
+        asset = CNewAsset("ASSET", CAmount(10000000), 2, false, false, "");
+        BOOST_CHECK_MESSAGE(asset.IsValid(error, cache, false, false), "Test4: " + error);
+
+        // Amount = 0.10000000
+        asset = CNewAsset("ASSET", CAmount(10000000), 0, false, false, "");
+        BOOST_CHECK_MESSAGE(!asset.IsValid(error, cache, false, false), "Test5: " + error);
+
+        // Amount = 0.01000000
+        asset = CNewAsset("ASSET", CAmount(1000000), 0, false, false, "");
+        BOOST_CHECK_MESSAGE(!asset.IsValid(error, cache, false, false), "Test6: " + error);
+
+        // Amount = 0.01000000
+        asset = CNewAsset("ASSET", CAmount(1000000), 1, false, false, "");
+        BOOST_CHECK_MESSAGE(!asset.IsValid(error, cache, false, false), "Test7: " + error);
+
+        // Amount = 0.01000000
+        asset = CNewAsset("ASSET", CAmount(1000000), 2, false, false, "");
+        BOOST_CHECK_MESSAGE(asset.IsValid(error, cache, false, false), "Test8: " + error);
+
+        // Amount = 0.00000001
+        asset = CNewAsset("ASSET", CAmount(1), 8, false, false, "");
+        BOOST_CHECK_MESSAGE(asset.IsValid(error, cache, false, false), "Test9: " + error);
+
+        // Amount = 0.00000010
+        asset = CNewAsset("ASSET", CAmount(10), 7, false, false, "");
+        BOOST_CHECK_MESSAGE(asset.IsValid(error, cache, false, false), "Test10: " + error);
+
+        // Amount = 0.00000001
+        asset = CNewAsset("ASSET", CAmount(1), 7 , false, false, "");
+        BOOST_CHECK_MESSAGE(!asset.IsValid(error, cache, false, false), "Test11: " + error);
+
+        // Amount = 0.00000100
+        asset = CNewAsset("ASSET", CAmount(100), 6, false, false, "");
+        BOOST_CHECK_MESSAGE(asset.IsValid(error, cache, false, false), "Test12: " + error);
+
+        // Amount = 0.00000100
+        asset = CNewAsset("ASSET", CAmount(100), 5, false, false, "");
+        BOOST_CHECK_MESSAGE(!asset.IsValid(error, cache, false, false), "Test13: " + error);
+    }
+
 BOOST_AUTO_TEST_SUITE_END()

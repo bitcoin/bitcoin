@@ -239,28 +239,52 @@ bool CNewAsset::IsValid(std::string& strError, CAssetsCache& assetCache, bool fC
         }
     }
 
-    if (!IsAssetNameValid(std::string(strName)))
+    if (!IsAssetNameValid(std::string(strName))) {
         strError = "Invalid parameter: asset_name must only consist of valid characters and have a size between 3 and 30 characters. See help for more details.";
+        return false;
+    }
 
-    if (IsAssetNameAnOwner(std::string(strName)))
+    if (IsAssetNameAnOwner(std::string(strName))) {
         strError = "Invalid parameters: asset_name can't have a '!' at the end of it. See help for more details.";
+        return false;
+    }
 
-    if (nAmount <= 0)
-        strError  = "Invalid parameter: asset amount can't be equal to or less than zero.";
+    if (nAmount <= 0) {
+        strError = "Invalid parameter: asset amount can't be equal to or less than zero.";
+        return false;
+    }
 
-    if (units < 0 || units > 8)
-        strError  = "Invalid parameter: units must be between 0-8.";
+    if (nAmount > MAX_MONEY) {
+        strError = "Invalid parameter: asset amount greater than max money: " + MAX_MONEY / COIN;
+        return false;
+    }
 
-    if (nReissuable != 0 && nReissuable != 1)
-        strError  = "Invalid parameter: reissuable must be 0 or 1";
+    if (units < 0 || units > 8) {
+        strError = "Invalid parameter: units must be between 0-8.";
+        return false;
+    }
 
-    if (nHasIPFS != 0 && nHasIPFS != 1)
-        strError  = "Invalid parameter: has_ipfs must be 0 or 1.";
+    if (!CheckAmountWithUnits(nAmount, units)) {
+        strError = "Invalid parameter: amount must be divisible by the smaller unit assigned to the asset";
+        return false;
+    }
 
-    if (nHasIPFS && strIPFSHash.size() != 34)
-        strError  = "Invalid parameter: ipfs_hash must be 34 bytes.";
+    if (nReissuable != 0 && nReissuable != 1) {
+        strError = "Invalid parameter: reissuable must be 0 or 1";
+        return false;
+    }
 
-    return strError == "";
+    if (nHasIPFS != 0 && nHasIPFS != 1) {
+        strError = "Invalid parameter: has_ipfs must be 0 or 1.";
+        return false;
+    }
+
+    if (nHasIPFS && strIPFSHash.size() != 34) {
+        strError = "Invalid parameter: ipfs_hash must be 34 bytes.";
+        return false;
+    }
+
+    return true;
 }
 
 CNewAsset::CNewAsset(const CNewAsset& asset)
@@ -696,8 +720,8 @@ bool CReissueAsset::IsValid(std::string &strError, CAssetsCache& assetCache) con
         return false;
     }
 
-    if (nAmount % int64_t(pow(10, (MAX_UNIT - asset.units))) != 0) {
-        strError = "Unable to reissue asset: amount must be divisable by the smaller unit assigned to the asset";
+    if (!CheckAmountWithUnits(nAmount, asset.units)) {
+        strError = "Unable to reissue asset: amount must be divisible by the smaller unit assigned to the asset";
         return false;
     }
 
@@ -2472,4 +2496,10 @@ bool VerifyWalletHasAsset(const std::string& asset_name, std::pair<int, std::str
 
     pairError = std::make_pair(RPC_INVALID_REQUEST, strprintf("Wallet doesn't have asset: %s", asset_name));
     return false;
+}
+
+// Return true if the amount is valid with the units passed in
+bool CheckAmountWithUnits(const CAmount& nAmount, const uint8_t nUnits)
+{
+    return nAmount % int64_t(pow(10, (MAX_UNIT - nUnits))) == 0;
 }

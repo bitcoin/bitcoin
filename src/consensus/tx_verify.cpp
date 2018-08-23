@@ -397,9 +397,8 @@ bool Consensus::CheckTxAssets(const CTransaction& tx, CValidationState& state, c
                     if (asset.strName != transfer.strName)
                         return state.DoS(100, false, REJECT_INVALID, "bad-txns-asset-database-corrupted");
 
-                    if (transfer.nAmount % int64_t(pow(10, (MAX_UNIT - asset.units))) != 0)
-                        return state.DoS(100, false, REJECT_INVALID,
-                                         "bad-txns-transfer-asset-amount-not-match-units");
+                    if (!CheckAmountWithUnits(transfer.nAmount, asset.units))
+                        return state.DoS(100, false, REJECT_INVALID, "bad-txns-transfer-asset-amount-not-match-units");
                 }
             }
         } else if (txout.scriptPubKey.IsReissueAsset()) {
