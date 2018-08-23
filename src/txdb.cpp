@@ -18,14 +18,16 @@
 
 #include <boost/thread.hpp>
 
-static const char DB_COIN = 'C';
-static const char DB_COINS = 'c';
-static const char DB_BLOCK_FILES = 'f';
-static const char DB_BLOCK_INDEX = 'b';
-
+// chainstate keys
+static const char DB_COIN = 'C';       // key prefix
+static const char DB_COINS = 'c';      // obsolete key prefix
 static const char DB_BEST_BLOCK = 'B';
 static const char DB_HEAD_BLOCKS = 'H';
-static const char DB_FLAG = 'F';
+
+// blocks/index keys
+static const char DB_BLOCK_FILES = 'f';  // key prefix
+static const char DB_BLOCK_INDEX = 'b';  // key prefix
+static const char DB_FLAG = 'F';         // key prefix
 static const char DB_REINDEX_FLAG = 'R';
 static const char DB_LAST_BLOCK = 'l';
 
