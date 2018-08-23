@@ -252,7 +252,7 @@ public:
         resize(n);
     }
 
-    explicit prevector(size_type n, const T& val = T()) : _size(0) {
+    explicit prevector(size_type n, const T& val) : _size(0) {
         change_capacity(n);
         _size += n;
         fill(item_ptr(0), n, val);
