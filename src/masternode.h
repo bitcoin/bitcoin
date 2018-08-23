@@ -1,4 +1,5 @@
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2017-2018 The Syscoin Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -77,6 +78,9 @@ public:
     bool SimpleCheck(int& nDos);
     bool CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, int& nDos, CConnman& connman);
     void Relay(CConnman& connman);
+
+    std::string GetSentinelString() const;
+    std::string GetDaemonString() const;
 
     explicit operator bool() const;
 };
@@ -394,7 +398,7 @@ public:
     {
         // Note: doesn't match serialization
 
-        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+        CHashWriter ss(SER_GETHASH, MIN_PEER_PROTO_VERSION);
         // adding dummy values here to match old hashing format
         ss << masternodeOutpoint1;
         ss << masternodeOutpoint2;
@@ -408,7 +412,7 @@ public:
     {
         // Note: doesn't match serialization
 
-        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+        CHashWriter ss(SER_GETHASH, MIN_PEER_PROTO_VERSION);
         ss << addr;
         ss << nonce;
         ss << blockHash;
@@ -419,7 +423,7 @@ public:
     {
         // Note: doesn't match serialization
 
-        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+        CHashWriter ss(SER_GETHASH, MIN_PEER_PROTO_VERSION);
         ss << masternodeOutpoint1;
         ss << masternodeOutpoint2;
         ss << addr;

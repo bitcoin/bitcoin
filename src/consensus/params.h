@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -60,6 +61,7 @@ struct Params {
     uint256 nSuperblockStartHash;
     int nSuperblockCycle; // in blocks
     int nGovernanceMinQuorum; // Min absolute vote count to trigger an action
+	int nShareFeeBlock; // when to start enforcing 50/50 sharing of tx fees with masternodes
     int nGovernanceFilterElements;
     int nMasternodeMinimumConfirmations;
     /** Block height and hash at which BIP34 becomes active */

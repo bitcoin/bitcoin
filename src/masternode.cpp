@@ -1,4 +1,5 @@
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2017-2018 The Syscoin Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -22,7 +23,7 @@
 
 
 CMasternode::CMasternode() :
-    masternode_info_t{ MASTERNODE_ENABLED, PROTOCOL_VERSION, GetAdjustedTime()},
+    masternode_info_t{ MASTERNODE_ENABLED, MIN_PEER_PROTO_VERSION, GetAdjustedTime()},
     fAllowMixingTx(true)
 {}
 
@@ -75,13 +76,13 @@ bool CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb, CConnman& co
     // if it matches our Masternode privkey...
     if(fMasternodeMode && pubKeyMasternode == activeMasternode.pubKeyMasternode) {
         nPoSeBanScore = -MASTERNODE_POSE_BAN_MAX_SCORE;
-        if(nProtocolVersion == PROTOCOL_VERSION) {
-            // ... and PROTOCOL_VERSION, then we've been remotely activated ...
+        if(nProtocolVersion == MIN_PEER_PROTO_VERSION) {
+            // ... and MIN_PEER_PROTO_VERSION, then we've been remotely activated ...
             activeMasternode.ManageState(connman);
         } else {
             // ... otherwise we need to reactivate our node, do not add it to the list and do not relay
             // but also do not ban the node we get this message from
-            LogPrintf("CMasternode::UpdateFromNewBroadcast -- wrong PROTOCOL_VERSION, re-activate your MN: message nProtocolVersion=%d  PROTOCOL_VERSION=%d\n", nProtocolVersion, PROTOCOL_VERSION);
+            LogPrintf("CMasternode::UpdateFromNewBroadcast -- wrong MIN_PEER_PROTO_VERSION, re-activate your MN: message nProtocolVersion=%d  MIN_PEER_PROTO_VERSION=%d\n", nProtocolVersion, MIN_PEER_PROTO_VERSION);
             return false;
         }
     }
@@ -96,7 +97,7 @@ bool CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb, CConnman& co
 arith_uint256 CMasternode::CalculateScore(const uint256& blockHash) const
 {
     // Deterministically calculate a "score" for a Masternode based on any given (block)hash
-    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+    CHashWriter ss(SER_GETHASH, MIN_PEER_PROTO_VERSION);
     ss << outpoint << nCollateralMinConfBlockHash << blockHash;
     return UintToArith256(ss.GetHash());
 }
@@ -177,7 +178,7 @@ void CMasternode::Check(bool fForce)
                    // masternode doesn't meet payment protocol requirements ...
     bool fRequireUpdate = nProtocolVersion < mnpayments.GetMinMasternodePaymentsProto() ||
                    // or it's our own node and we just updated it to the new protocol but we are still waiting for activation ...
-                   (fOurMasternode && nProtocolVersion < PROTOCOL_VERSION);
+                   (fOurMasternode && nProtocolVersion < MIN_PEER_PROTO_VERSION);
 
     if(fRequireUpdate) {
         nActiveState = MASTERNODE_UPDATE_REQUIRED;
@@ -217,9 +218,9 @@ void CMasternode::Check(bool fForce)
             return;
         }
 
+        // part 1: expire based on syscoind ping
         bool fSentinelPingActive = masternodeSync.IsSynced() && mnodeman.IsSentinelPingActive();
-        bool fSentinelPingExpired = fSentinelPingActive && (!lastPing.fSentinelIsCurrent || !IsPingedWithin(MASTERNODE_SENTINEL_PING_MAX_SECONDS));
-
+        bool fSentinelPingExpired = fSentinelPingActive && !IsPingedWithin(MASTERNODE_SENTINEL_PING_MAX_SECONDS);
         LogPrint("masternode", "CMasternode::Check -- outpoint=%s, GetAdjustedTime()=%d, fSentinelPingExpired=%d\n",
                 outpoint.ToStringShort(), GetAdjustedTime(), fSentinelPingExpired);
 
@@ -230,15 +231,31 @@ void CMasternode::Check(bool fForce)
             }
             return;
         }
-
     }
 
-    // Allow MNs to become ENABLED immediately in regtest/devnet
-    // On mainnet/testnet, we require them to be in PRE_ENABLED state for some time before they get into ENABLED state
+    // We require MNs to be in PRE_ENABLED until they either start to expire or receive a ping and go into ENABLED state
+    // Works on mainnet/testnet only and not the case on regtest/devnet.
     if (Params().NetworkIDString() != CBaseChainParams::REGTEST && Params().NetworkIDString() != CBaseChainParams::DEVNET) {
         if (lastPing.sigTime - sigTime < MASTERNODE_MIN_MNP_SECONDS) {
             nActiveState = MASTERNODE_PRE_ENABLED;
             if (nActiveStatePrev != nActiveState) {
+                LogPrint("masternode", "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());
+            }
+            return;
+        }
+    }
+
+    if(!fWaitForPing || fOurMasternode) {
+        // part 2: expire based on sentinel info
+        bool fSentinelPingActive = masternodeSync.IsSynced() && mnodeman.IsSentinelPingActive();
+        bool fSentinelPingExpired = fSentinelPingActive && !lastPing.fSentinelIsCurrent;
+
+        LogPrint("masternode", "CMasternode::Check -- outpoint=%s, GetAdjustedTime()=%d, fSentinelPingExpired=%d\n",
+                outpoint.ToStringShort(), GetAdjustedTime(), fSentinelPingExpired);
+
+        if(fSentinelPingExpired) {
+            nActiveState = MASTERNODE_SENTINEL_PING_EXPIRED;
+            if(nActiveStatePrev != nActiveState) {
                 LogPrint("masternode", "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());
             }
             return;
@@ -326,7 +343,7 @@ void CMasternode::UpdateLastPaid(const CBlockIndex *pindex, int nMaxBlocksToScan
 			const CAmount & nMasternodePayment = GetBlockSubsidy(BlockReading->nHeight, chainparams.GetConsensus(), nTotal, false, true, payee.nStartHeight);
 
             for (const auto& txout : block.vtx[0]->vout)
-                if(mnpayee == txout.scriptPubKey && nMasternodePayment == txout.nValue) {
+                if(mnpayee == txout.scriptPubKey && nMasternodePayment <= txout.nValue) {
                     nBlockLastPaid = BlockReading->nHeight;
                     nTimeLastPaid = BlockReading->nTime;
                     LogPrint("mnpayments", "CMasternode::UpdateLastPaidBlock -- searching for block with payment to %s -- found new %d\n", outpoint.ToStringShort(), nBlockLastPaid);
@@ -359,8 +376,8 @@ bool CMasternodeBroadcast::Create(const std::string& strService, const std::stri
         return false;
     };
 
-    //need correct blocks to send ping
-    if (!fOffline && !masternodeSync.IsBlockchainSynced())
+    // Wait for sync to finish because mnb simply won't be relayed otherwise
+    if (!fOffline && !masternodeSync.IsSynced())
         return Log("Sync in progress. Must wait until sync is complete to start Masternode");
 
     if (!CMessageSigner::GetKeysFromSecret(strKeyMasternode, keyMasternodeNew, pubKeyMasternodeNew))
@@ -403,7 +420,7 @@ bool CMasternodeBroadcast::Create(const COutPoint& outpoint, const CService& ser
     if (!mnp.Sign(keyMasternodeNew, pubKeyMasternodeNew))
         return Log(strprintf("Failed to sign ping, masternode=%s", outpoint.ToStringShort()));
 
-    mnbRet = CMasternodeBroadcast(service, outpoint, pubKeyCollateralAddressNew, pubKeyMasternodeNew, PROTOCOL_VERSION);
+    mnbRet = CMasternodeBroadcast(service, outpoint, pubKeyCollateralAddressNew, pubKeyMasternodeNew, MIN_PEER_PROTO_VERSION);
 
     if (!mnbRet.IsValidNetAddr())
         return Log(strprintf("Invalid IP address, masternode=%s", outpoint.ToStringShort()));
@@ -441,8 +458,8 @@ bool CMasternodeBroadcast::SimpleCheck(int& nDos)
     }
 
     if(nProtocolVersion < mnpayments.GetMinMasternodePaymentsProto()) {
-        LogPrintf("CMasternodeBroadcast::SimpleCheck -- ignoring outdated Masternode: masternode=%s  nProtocolVersion=%d\n", outpoint.ToStringShort(), nProtocolVersion);
-        return false;
+        LogPrintf("CMasternodeBroadcast::SimpleCheck -- outdated Masternode: masternode=%s  nProtocolVersion=%d\n", outpoint.ToStringShort(), nProtocolVersion);
+        nActiveState = MASTERNODE_UPDATE_REQUIRED;
     }
 
     CScript pubkeyScript;
@@ -595,7 +612,7 @@ uint256 CMasternodeBroadcast::GetHash() const
 {
     // Note: doesn't match serialization
 
-    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+    CHashWriter ss(SER_GETHASH, MIN_PEER_PROTO_VERSION);
     ss << outpoint;
     ss << pubKeyCollateralAddress;
     ss << sigTime;
@@ -842,6 +859,16 @@ void CMasternodePing::Relay(CConnman& connman)
 
     CInv inv(MSG_MASTERNODE_PING, GetHash());
     connman.RelayInv(inv);
+}
+
+std::string CMasternodePing::GetSentinelString() const
+{
+    return nSentinelVersion > DEFAULT_SENTINEL_VERSION ? SafeIntVersionToString(nSentinelVersion) : "Unknown";
+}
+
+std::string CMasternodePing::GetDaemonString() const
+{
+    return nDaemonVersion > DEFAULT_DAEMON_VERSION ? FormatVersion(nDaemonVersion) : "Unknown";
 }
 
 void CMasternode::AddGovernanceVote(uint256 nGovernanceObjectHash)

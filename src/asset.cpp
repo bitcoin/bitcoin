@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2017 The Syscoin Core developers
+// Copyright (c) 2017-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -49,19 +49,16 @@ string assetFromOp(int op) {
 }
 bool CAsset::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
     try {
-        CDataStream dsAsset(vchData, SER_NETWORK, PROTOCOL_VERSION);
-        dsAsset >> *this;
-
-		vector<unsigned char> vchAssetData;
-		Serialize(vchAssetData);
-		const uint256 &calculatedHash = Hash(vchAssetData.begin(), vchAssetData.end());
-		const vector<unsigned char> &vchRandAsset = vchFromValue(calculatedHash.GetHex());
-		if(vchRandAsset != vchHash)
-		{
+		CDataStream dsAsset(vchData, SER_NETWORK, PROTOCOL_VERSION);
+		dsAsset >> *this;
+		vector<unsigned char> vchSerializedData;
+		Serialize(vchSerializedData);
+		const uint256 &calculatedHash = Hash(vchSerializedData.begin(), vchSerializedData.end());
+		const vector<unsigned char> &vchRand = vchFromValue(calculatedHash.GetHex());
+		if (vchRand != vchHash) {
 			SetNull();
 			return false;
 		}
-
     } catch (std::exception &e) {
 		SetNull();
         return false;
@@ -116,6 +113,8 @@ bool GetAsset(const vector<unsigned char> &vchAsset,
 bool DecodeAndParseAssetTx(const CTransaction& tx, int& op,
 		vector<vector<unsigned char> >& vvch, char &type)
 {
+	if (op == OP_ASSET_SEND)
+		return false;
 	CAsset asset;
 	bool decode = DecodeAssetTx(tx, op, vvch);
 	bool parse = asset.UnserializeFromTx(tx);
@@ -173,7 +172,7 @@ bool DecodeAssetScript(const CScript& script, int& op,
 		}
 		if (!(opcode >= 0 && opcode <= OP_PUSHDATA4))
 			return false;
-		vvch.push_back(vch);
+		vvch.emplace_back(std::move(vch));
 	}
 
 	// move the pc to after any DROP or NOP
@@ -200,7 +199,7 @@ bool RemoveAssetScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
 	scriptOut = CScript(pc, scriptIn.end());
 	return true;
 }
-bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias,
+bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int op, const vector<vector<unsigned char> > &vvchArgs, const vector<unsigned char> &vchAlias,
         bool fJustCheck, int nHeight, sorted_vector<CAssetAllocationTuple> &revertedAssetAllocations, string &errorMessage, bool bSanityCheck) {
 	if (!paliasdb || !passetdb)
 		return false;
@@ -222,7 +221,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 	int nDataOut;
 	if(!GetSyscoinData(tx, vchData, vchHash, nDataOut) || (op != OP_ASSET_SEND &&!theAsset.UnserializeFromData(vchData, vchHash)) || (op == OP_ASSET_SEND && !theAssetAllocation.UnserializeFromData(vchData, vchHash)))
 	{
-		errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR ERRCODE: 2000 - " + _("Cannot unserialize data inside of this transaction relating to a asset");
+		errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR ERRCODE: 2000 - " + _("Cannot unserialize data inside of this transaction relating to an asset");
 		return true;
 	}
 
@@ -242,8 +241,7 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 		}
 			
 	}
-	
-	CAliasIndex alias;
+
 	string retError = "";
 	if(fJustCheck)
 	{
@@ -317,6 +315,11 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2015 - " + _("Total supply cannot exceed maximum supply");
 				return true;
 			}
+			if(nHeight < Params().GetConsensus().nShareFeeBlock && CSyscoinAddress(stringFromVch(theAsset.vchAliasOrAddress)).IsValid())
+			{
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2015 - " + _("Please wait until the fork to create this type of asset. It is on block: ") + boost::lexical_cast<string>(Params().GetConsensus().nShareFeeBlock);
+				return true;
+			}
 			break;
 
 		case OP_ASSET_UPDATE:
@@ -367,12 +370,6 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 		}
 	}
 	if (!fJustCheck) {
-		const string &user1 = stringFromVch(vvchAlias);
-		string user2 = "";
-		string user3 = "";
-		if (op == OP_ASSET_TRANSFER) {
-			user2 = stringFromVch(theAsset.vchAlias);
-		}
 		string strResponseEnglish = "";
 		string strResponseGUID = "";
 		CTransaction txTmp;
@@ -385,16 +382,28 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 				return true;
 			}
 		}
+		const vector<unsigned char> &vchOwner = op == OP_ASSET_SEND ? theAssetAllocation.vchAliasOrAddress : theAsset.vchAliasOrAddress;
+		const vector<unsigned char> &vchThisAlias = vchAlias.empty() ? vchOwner : vchAlias;
+		const string &user1 = stringFromVch(dbAsset.IsNull()? vchThisAlias : dbAsset.vchAliasOrAddress);
+		string user2 = "";
+		string user3 = "";
+		if (op == OP_ASSET_TRANSFER) {
+			user2 = stringFromVch(vchThisAlias);
+		}
 
-		if (op == OP_ASSET_UPDATE || op == OP_ASSET_TRANSFER || op == OP_ASSET_SEND)
-		{
-			if (dbAsset.vchAlias != vvchAlias)
-			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Cannot edit this asset. Asset owner must sign off on this change");
+		if (op == OP_ASSET_UPDATE) {
+			if (vchAlias.empty()) {
+				if (!FindAssetOwnerInTx(inputs, tx, user1))
+				{
+					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot update this asset. Asset owner must sign off on this change");
+					return true;
+				}
+			}
+			else if (dbAsset.vchAliasOrAddress != vchAlias) {
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot update this asset. Asset owner must sign off on this change");
 				return true;
 			}
-		}
-		if (op == OP_ASSET_UPDATE) {
+
 			CAmount increaseBalanceByAmount = theAsset.nBalance;
 			theAsset.nBalance = dbAsset.nBalance;
 			if (!theAsset.listAllocationInputs.empty()) {
@@ -445,10 +454,26 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 		}
 
 		if (op == OP_ASSET_SEND) {
+			LOCK(cs_assetallocation);
+			if (!vchAlias.empty() && CSyscoinAddress(user1).IsValid()) {
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1016 - " + _("This asset cannot be sent because owner is an alias but the alias is also a valid syscoin address");
+				return true;
+			}
+			if (vchAlias.empty()) {
+				if (dbAsset.vchAliasOrAddress != theAssetAllocation.vchAliasOrAddress || !FindAssetOwnerInTx(inputs, tx, user1))
+				{
+					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot send this asset. Asset owner must sign off on this change");
+					return true;
+				}
+			}
+			else if (dbAsset.vchAliasOrAddress != vchAlias) {
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot send this asset. Asset owner must sign off on this change");
+				return true;
+			}
 			theAsset = dbAsset;
 
 			CAssetAllocation dbAssetAllocation;
-			const CAssetAllocationTuple allocationTuple(theAssetAllocation.vchAsset, vvchAlias);
+			const CAssetAllocationTuple allocationTuple(theAssetAllocation.vchAsset, dbAsset.vchAliasOrAddress);
 			GetAssetAllocation(allocationTuple, dbAssetAllocation);
 			if (!theAssetAllocation.listSendingAllocationAmounts.empty()) {
 				if (dbAsset.bUseInputRanges) {
@@ -470,36 +495,33 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 					return true;
 				}
 				for (auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
-
 					if (!bSanityCheck) {
 						CAssetAllocation receiverAllocation;
 						const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, amountTuple.first);
 						// don't need to check for existance of allocation because it may not exist, may be creating it here for the first time for receiver
 						GetAssetAllocation(receiverAllocationTuple, receiverAllocation);
 						if (receiverAllocation.IsNull()) {
-							receiverAllocation.vchAlias = receiverAllocationTuple.vchAlias;
+							receiverAllocation.vchAliasOrAddress = receiverAllocationTuple.vchAliasOrAddress;
 							receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
 							receiverAllocation.nLastInterestClaimHeight = nHeight;
+							receiverAllocation.nHeight = nHeight;
+							receiverAllocation.fInterestRate = dbAsset.fInterestRate;
 						}
 						receiverAllocation.txHash = tx.GetHash();
 						if (theAsset.fInterestRate > 0) {
-							if (receiverAllocation.nHeight > 0) {
-								AccumulateInterestSinceLastClaim(receiverAllocation, nHeight);
-							}
+							AccumulateInterestSinceLastClaim(receiverAllocation, nHeight);
 						}
 						receiverAllocation.fInterestRate = theAsset.fInterestRate;
 						receiverAllocation.nHeight = nHeight;
 						receiverAllocation.vchMemo = theAssetAllocation.vchMemo;
 						receiverAllocation.nBalance += amountTuple.second;
+						const string& receiverAddress = stringFromVch(receiverAllocation.vchAliasOrAddress);
 						// adjust sender balance
 						theAsset.nBalance -= amountTuple.second;
-						if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, dbAsset.nBalance - nTotal, amountTuple.second, dbAsset, INT64_MAX, vvchAlias, receiverAllocation.vchAlias, fJustCheck))
+						if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, dbAsset.nBalance - nTotal, amountTuple.second, dbAsset, INT64_MAX, user1, receiverAddress, fJustCheck))
 						{
 							errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2034 - " + _("Failed to write to asset allocation DB");
 							continue;
-						}
-						if (strResponseEnglish != "") {
-							paliasdb->WriteAliasIndexTxHistory(user1, stringFromVch(receiverAllocation.vchAlias), user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString());
 						}
 					}
 				}
@@ -514,15 +536,15 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 				vector<CAmount> rangeTotals;
 				for (auto& inputTuple : theAssetAllocation.listSendingAllocationInputs) {
 					const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.vchAsset, inputTuple.first);
-					const unsigned int rangeTotal = validateRangesAndGetCount(inputTuple.second);
+					const unsigned int &rangeTotal = validateRangesAndGetCount(inputTuple.second);
 					if (rangeTotal == 0)
 					{
 						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2036 - " + _("Invalid input range");
 						return true;
 					}
 					const CAmount rangeTotalAmount = rangeTotal;
-					rangeTotals.push_back(rangeTotalAmount);
-					nTotal += rangeTotalAmount;
+					rangeTotals.emplace_back(std::move(rangeTotalAmount));
+					nTotal += rangeTotals.back();
 				}
 				if (theAsset.nBalance < nTotal) {
 					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2037 - " + _("Sender balance is insufficient");
@@ -539,12 +561,13 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 						errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2038 - " + _("Input not found");
 						return true;
 					}
-					if (!bSanityCheck) {
+					if (!bSanityCheck) {						
 						if (!GetAssetAllocation(receiverAllocationTuple, receiverAllocation)) {
-							receiverAllocation.SetNull();
-							receiverAllocation.vchAlias = receiverAllocationTuple.vchAlias;
+							receiverAllocation.vchAliasOrAddress = receiverAllocationTuple.vchAliasOrAddress;
 							receiverAllocation.vchAsset = receiverAllocationTuple.vchAsset;
 							receiverAllocation.nLastInterestClaimHeight = nHeight;
+							receiverAllocation.nHeight = nHeight;
+							receiverAllocation.fInterestRate = dbAsset.fInterestRate;
 						}
 
 						receiverAllocation.txHash = tx.GetHash();
@@ -558,20 +581,16 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 						receiverAllocation.listAllocationInputs = outputMerge;
 						receiverAllocation.nBalance += rangeTotals[i];
 
-
+						const string& receiverAddress = stringFromVch(receiverAllocation.vchAliasOrAddress);
 						// figure out senders subtracted ranges and balance
 						vector<CRange> outputSubtract;
 						subtractRanges(dbAsset.listAllocationInputs, input.second, outputSubtract);
 						theAsset.listAllocationInputs = outputSubtract;
 						theAsset.nBalance -= rangeTotals[i];
-						if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, dbAsset.nBalance - nTotal, rangeTotals[i], dbAsset, INT64_MAX, vvchAlias, receiverAllocation.vchAlias, fJustCheck))
+						if (!passetallocationdb->WriteAssetAllocation(receiverAllocation, dbAsset.nBalance - nTotal, rangeTotals[i], dbAsset, INT64_MAX, user1, receiverAddress, fJustCheck))
 						{
 							errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2039 - " + _("Failed to write to asset allocation DB");
 							return error(errorMessage.c_str());
-						}
-
-						if (strResponseEnglish != "") {
-							paliasdb->WriteAliasIndexTxHistory(user1, stringFromVch(receiverAllocation.vchAlias), user3, tx.GetHash(), nHeight, strResponseEnglish, receiverAllocationTuple.ToString());
 						}
 					}
 				}
@@ -584,8 +603,8 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 			theAsset.bCanAdjustInterestRate = dbAsset.bCanAdjustInterestRate;
 			theAsset.nPrecision = dbAsset.nPrecision;
 			theAsset.vchSymbol = dbAsset.vchSymbol;
-			if (theAsset.vchAlias.empty())
-				theAsset.vchAlias = dbAsset.vchAlias;
+			if (theAsset.vchAliasOrAddress.empty())
+				theAsset.vchAliasOrAddress = dbAsset.vchAliasOrAddress;
 			if (theAsset.vchPubData.empty())
 				theAsset.vchPubData = dbAsset.vchPubData;
 			if (theAsset.sCategory.empty())
@@ -607,6 +626,17 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 		}
 		if (op == OP_ASSET_ACTIVATE)
 		{
+			if (vchAlias.empty()) {
+				if (!FindAssetOwnerInTx(inputs, tx, user1))
+				{
+					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot create this asset. Asset owner must sign off on this change");
+					return true;
+				}
+			}
+			else if (theAsset.vchAliasOrAddress != vchAlias) {
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot create this asset. Asset owner must sign off on this change");
+				return true;
+			}
 			string assetUpper = stringFromVch(theAsset.vchSymbol);
 			boost::algorithm::to_upper(assetUpper);
 			theAsset.vchSymbol = vchFromString(assetUpper);
@@ -620,11 +650,6 @@ bool CheckAssetInputs(const CTransaction &tx, int op, const vector<vector<unsign
 			// with input ranges precision is forced to 0
 			if(theAsset.bUseInputRanges)
 				theAsset.nPrecision = 0;
-		}
-		if (!bSanityCheck  && op != OP_ASSET_SEND) {
-			if (strResponseEnglish != "") {
-				paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theAsset.vchAsset));
-			}
 		}
 		// set the asset's txn-dependent values
 		theAsset.nHeight = nHeight;
@@ -653,9 +678,9 @@ UniValue assetnew(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
     if (request.fHelp || params.size() != 11)
         throw runtime_error(
-			"assetnew [symbol] [alias] [public value] [category=assets] [precision=8] [use_inputranges] [supply] [max_supply] [interest_rate] [can_adjust_interest_rate] [witness]\n"
+			"assetnew [symbol] [owner] [public value] [category=assets] [precision=8] [use_inputranges] [supply] [max_supply] [interest_rate] [can_adjust_interest_rate] [witness]\n"
 						"<symbol> symbol of asset in uppercase, 1 characters miniumum, 8 characters max.\n"
-						"<alias> An alias you own.\n"
+						"<owner> An alias or address that you own.\n"
                         "<public value> public data, 256 characters max.\n"
 						"<category> category, 256 characters max. Defaults to assets.\n"
 						"<precision> Precision of balances. Must be between 0 and 8. The lower it is the higher possible max_supply is available since the supply is represented as a 64 bit integer. With a precision of 8 the max supply is 10 billion.\n"
@@ -664,12 +689,12 @@ UniValue assetnew(const JSONRPCRequest& request) {
 						"<max_supply> Maximum supply of this asset. Set to -1 for uncapped. Depends on the precision value that is set, the lower the precision the higher max_supply can be.\n"
 						"<interest_rate> The annual interest rate if any. Money supply is still capped to total supply. Should be between 0 and 1 and represents a percentage divided by 100.\n"
 						"<can_adjust_interest_rate> Ability to adjust interest rate through assetupdate in the future.\n"
-						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
+						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction. Only applicable asset is owned by an alias.\n"
 						+ HelpRequiringPassphrase());
     vector<unsigned char> vchName = vchFromString(params[0].get_str());
 	string strName = stringFromVch(vchName);
 	boost::algorithm::to_upper(strName);
-	vector<unsigned char> vchAlias = vchFromValue(params[1]);
+	vector<unsigned char> vchAliasOrAddress = vchFromValue(params[1]);
 	vector<unsigned char> vchPubData = vchFromString(params[2].get_str());
 	string strCategory = "assets";
 	strCategory = params[3].get_str();
@@ -684,22 +709,32 @@ UniValue assetnew(const JSONRPCRequest& request) {
 	float fInterestRate = params[8].get_real();
 	bool bCanAdjustInterestRate = params[9].get_bool();
 	vchWitness = vchFromValue(params[10]);
-	// check for alias existence in DB
-	CAliasIndex theAlias;
-	ToLowerCase(vchAlias);
-	if (!GetAlias(vchAlias, theAlias))
-		throw runtime_error("SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2500 - " + _("failed to read alias from alias DB"));
 
-	
-    // this is a syscoin transaction
-    CWalletTx wtx;
+	string strAddressFrom;
+	string strAliasOrAddress = stringFromVch(vchAliasOrAddress);
+	const CSyscoinAddress address(strAliasOrAddress);
+	if (address.IsValid()) {
+		strAddressFrom = strAliasOrAddress;
+	}
+	else {
+		ToLowerCase(vchAliasOrAddress);
+		strAliasOrAddress = stringFromVch(vchAliasOrAddress);
+	}
 
-    CScript scriptPubKeyOrig;
-	CSyscoinAddress aliasAddress;
-	GetAddress(theAlias, &aliasAddress, scriptPubKeyOrig);
+	CScript scriptPubKeyFromOrig;
+	CAliasIndex fromAlias;
+	if (!strAddressFrom.empty()) {
+		scriptPubKeyFromOrig = GetScriptForDestination(address.Get());
+	}
+	else {
+		// check for alias existence in DB
+		if (!GetAlias(vchAliasOrAddress, fromAlias))
+			throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1502 - " + _("Failed to read sender alias from DB"));
+		CSyscoinAddress fromAddr;
+		GetAddress(fromAlias, &fromAddr, scriptPubKeyFromOrig);
+	}
 
-
-    CScript scriptPubKey,scriptPubKeyAlias;
+    CScript scriptPubKey;
 
 	// calculate net
     // build asset object
@@ -708,7 +743,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
 	newAsset.vchAsset = vchFromString(GenerateSyscoinGuid());
 	newAsset.sCategory = vchFromString(strCategory);
 	newAsset.vchPubData = vchPubData;
-	newAsset.vchAlias = vchAlias;
+	newAsset.vchAliasOrAddress = vchAliasOrAddress;
 	newAsset.nBalance = nBalance;
 	newAsset.nMaxSupply = nMaxSupply;
 	newAsset.bUseInputRanges = bUseInputRanges;
@@ -724,28 +759,32 @@ UniValue assetnew(const JSONRPCRequest& request) {
 	newAsset.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
  	
-    vector<unsigned char> vchHashAsset = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashAsset = vchFromString(hash.GetHex());
 
     scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ASSET) << CScript::EncodeOP_N(OP_ASSET_ACTIVATE) << vchHashAsset << OP_2DROP << OP_DROP;
-    scriptPubKey += scriptPubKeyOrig;
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theAlias.vchAlias << theAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
-	scriptPubKeyAlias += scriptPubKeyOrig;
+    scriptPubKey += scriptPubKeyFromOrig;
 
 	// use the script pub key to create the vecsend which sendmoney takes and puts it into vout
 	vector<CRecipient> vecSend;
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
+
 	CRecipient aliasRecipient;
-	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
-		
+	if (strAddressFrom.empty()) {
+		CScript scriptPubKeyAlias;
+		scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << fromAlias.vchAlias << fromAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
+		scriptPubKeyAlias += scriptPubKeyFromOrig;
+		CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
+	}
+
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
 
-	UniValue res = syscointxfund_helper(vchAlias, vchWitness, aliasRecipient, vecSend);
+	UniValue res = syscointxfund_helper(vchAliasOrAddress, vchWitness, aliasRecipient, vecSend);
 	res.push_back(stringFromVch(newAsset.vchAsset));
 	return res;
 }
@@ -761,7 +800,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
 						"<category> Category, 256 characters max. Defaults to assets\n"
 						"<supply> New supply of asset. Can mint more supply up to total_supply amount or if max_supply is -1 then minting is uncapped. If greator than zero, minting is assumed otherwise set to 0 to not mint any additional tokens.\n"
 						"<interest_rate> The annual interest rate if any. Money supply is still capped to total supply. Should be between 0 and 1 and represents a percentage divided by 100. Can only set if this asset allows adjustment of interest rate.\n"
-						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
+						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction. Only applicable asset is owned by an alias.\n"
 						+ HelpRequiringPassphrase());
 	vector<unsigned char> vchAsset = vchFromValue(params[0]);
 	string strData = "";
@@ -773,26 +812,39 @@ UniValue assetupdate(const JSONRPCRequest& request) {
 	float fInterestRate = params[4].get_real();
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[5]);
-    // this is a syscoind txn
-    CWalletTx wtx;
-    CScript scriptPubKeyOrig;
+
+    CScript scriptPubKeyFromOrig;
 	CAsset theAsset;
-	
+	string strAddress;
+
     if (!GetAsset( vchAsset, theAsset))
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Could not find a asset with this key"));
+
+	string strAddressFrom;
+	const string& strAliasOrAddress = stringFromVch(theAsset.vchAliasOrAddress);
+	const CSyscoinAddress address(strAliasOrAddress);
+	if (address.IsValid()) {
+		strAddressFrom = strAliasOrAddress;
+	}
+
 	UniValue param3 = params[3];
 	CAmount nBalance = 0;
 	if(param3.get_str() != "0")
 		nBalance = AssetAmountFromValue(param3, theAsset.nPrecision, theAsset.bUseInputRanges);
 	CAliasIndex theAlias;
-
-	if (!GetAlias(theAsset.vchAlias, theAlias))
-		throw runtime_error("SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2502 - " + _("Failed to read alias from alias DB"));
-
+	
+	CAliasIndex fromAlias;
+	if (!strAddressFrom.empty()) {
+		scriptPubKeyFromOrig = GetScriptForDestination(address.Get());
+	}
+	else {
+		if (!GetAlias(theAsset.vchAliasOrAddress, fromAlias))
+			throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1502 - " + _("Failed to read sender alias from DB"));
+		CSyscoinAddress fromAddr;
+		GetAddress(fromAlias, &fromAddr, scriptPubKeyFromOrig);
+	}
 	CAsset copyAsset = theAsset;
 	theAsset.ClearAsset();
-	CSyscoinAddress aliasAddress;
-	GetAddress(theAlias, &aliasAddress, scriptPubKeyOrig);
 
     // create ASSETUPDATE txn keys
     CScript scriptPubKey;
@@ -818,19 +870,22 @@ UniValue assetupdate(const JSONRPCRequest& request) {
 	theAsset.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
  	
-    vector<unsigned char> vchHashAsset = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashAsset = vchFromString(hash.GetHex());
     scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ASSET) << CScript::EncodeOP_N(OP_ASSET_UPDATE) << vchHashAsset << OP_2DROP << OP_DROP;
-    scriptPubKey += scriptPubKeyOrig;
+    scriptPubKey += scriptPubKeyFromOrig;
 
 	vector<CRecipient> vecSend;
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
-	CScript scriptPubKeyAlias;
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theAlias.vchAlias << theAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
-	scriptPubKeyAlias += scriptPubKeyOrig;
+
 	CRecipient aliasRecipient;
-	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
+	if (strAddressFrom.empty()) {
+		CScript scriptPubKeyAlias;
+		scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << fromAlias.vchAlias << fromAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
+		scriptPubKeyAlias += scriptPubKeyFromOrig;
+		CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
+	}
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -839,62 +894,79 @@ UniValue assetupdate(const JSONRPCRequest& request) {
 	vecSend.push_back(fee);
 	
 	
-	return syscointxfund_helper(theAlias.vchAlias, vchWitness, aliasRecipient, vecSend);
+	return syscointxfund_helper(vchFromString(strAliasOrAddress), vchWitness, aliasRecipient, vecSend);
 }
 
 UniValue assettransfer(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
  if (request.fHelp || params.size() != 3)
         throw runtime_error(
-			"assettransfer [asset] [alias] [witness]\n"
-						"Transfer a asset allocation you own to another alias.\n"
+			"assettransfer [asset] [ownerto] [witness]\n"
+						"Transfer a asset allocation you own to another address.\n"
 						"<asset> Asset guid.\n"
-						"<alias> alias to transfer to.\n"
-						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"	
+						"<ownerto> Alias or address to transfer to.\n"
+						"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction. Only applicable asset is owned by an alias.\n"	
 						+ HelpRequiringPassphrase());
 
     // gather & validate inputs
 	vector<unsigned char> vchAsset = vchFromValue(params[0]);
-	vector<unsigned char> vchAlias = vchFromValue(params[1]);
-
+	vector<unsigned char> vchAliasOrAddressTo = vchFromValue(params[1]);
 	vector<unsigned char> vchWitness;
 	vchWitness = vchFromValue(params[2]);
-	// check for alias existence in DB
-	CAliasIndex toAlias;
-	ToLowerCase(vchAlias);
-	if (!GetAlias(vchAlias, toAlias))
-		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2503 - " + _("Failed to read alias from DB"));
 
-    // this is a syscoin txn
-    CWalletTx wtx;
     CScript scriptPubKeyOrig, scriptPubKeyFromOrig;
-
+	string strAddress;
 	CAsset theAsset;
     if (!GetAsset( vchAsset, theAsset))
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2504 - " + _("Could not find a asset with this key"));
-
-	CAliasIndex fromAlias;
-	if(!GetAlias(theAsset.vchAlias, fromAlias))
-	{
-		 throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2505 - " + _("Could not find the asset alias"));
+        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2505 - " + _("Could not find a asset with this key"));
+	
+	string strAddressFrom;
+	const string& strAliasOrAddress = stringFromVch(theAsset.vchAliasOrAddress);
+	const CSyscoinAddress addressFrom(strAliasOrAddress);
+	if (addressFrom.IsValid()) {
+		strAddressFrom = strAliasOrAddress;
 	}
 
-	CSyscoinAddress sendAddr;
-	GetAddress(toAlias, &sendAddr, scriptPubKeyOrig);
-	CSyscoinAddress fromAddr;
-	GetAddress(fromAlias, &fromAddr, scriptPubKeyFromOrig);
+
+	const CSyscoinAddress addressTo(stringFromVch(vchAliasOrAddressTo));
+	if (addressTo.IsValid()) {
+		scriptPubKeyOrig = GetScriptForDestination(addressTo.Get());
+	}
+	else {
+		CAliasIndex toAlias;
+		// check for alias existence in DB
+		ToLowerCase(vchAliasOrAddressTo);
+		if (!GetAlias(vchAliasOrAddressTo, toAlias))
+			throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1502 - " + _("Failed to read receiving alias from DB"));
+		CSyscoinAddress toAddr;
+		GetAddress(toAlias, &toAddr, scriptPubKeyOrig);
+	}
+
+	CAliasIndex fromAlias;
+	if (!strAddressFrom.empty()) {
+		scriptPubKeyFromOrig = GetScriptForDestination(addressFrom.Get());
+	}
+	else {
+		// check for alias existence in DB
+		if (!GetAlias(theAsset.vchAliasOrAddress, fromAlias))
+			throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1502 - " + _("Failed to read sender alias from DB"));
+		CSyscoinAddress fromAddr;
+		GetAddress(fromAlias, &fromAddr, scriptPubKeyFromOrig);
+
+	}
+	
 
 	CAsset copyAsset = theAsset;
 	theAsset.ClearAsset();
     CScript scriptPubKey;
-	theAsset.vchAlias = toAlias.vchAlias;
-
+	
+	theAsset.vchAliasOrAddress = vchAliasOrAddressTo;
 
 	vector<unsigned char> data;
 	theAsset.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
  	
-    vector<unsigned char> vchHashAsset = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashAsset = vchFromString(hash.GetHex());
     scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ASSET) << CScript::EncodeOP_N(OP_ASSET_TRANSFER) << vchHashAsset << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
     // send the asset pay txn
@@ -903,11 +975,13 @@ UniValue assettransfer(const JSONRPCRequest& request) {
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
 
-	CScript scriptPubKeyAlias;
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << fromAlias.vchAlias << fromAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
-	scriptPubKeyAlias += scriptPubKeyFromOrig;
 	CRecipient aliasRecipient;
-	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
+	if (strAddressFrom.empty()) {
+		CScript scriptPubKeyAlias;
+		scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << fromAlias.vchAlias << fromAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
+		scriptPubKeyAlias += scriptPubKeyFromOrig;
+		CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
+	}
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -915,64 +989,79 @@ UniValue assettransfer(const JSONRPCRequest& request) {
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
 	
-	return syscointxfund_helper(fromAlias.vchAlias, vchWitness, aliasRecipient, vecSend);
+	return syscointxfund_helper(vchFromString(strAliasOrAddress), vchWitness, aliasRecipient, vecSend);
 }
 UniValue assetsend(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
 	if (request.fHelp || params.size() != 5)
 		throw runtime_error(
-			"assetsend [asset] [aliasfrom] ( [{\"aliasto\":\"aliasname\",\"amount\":amount},...] or [{\"aliasto\":\"aliasname\",\"ranges\":[{\"start\":index,\"end\":index},...]},...] ) [memo] [witness]\n"
-			"Send an asset you own to another alias as an asset allocation. Maximimum recipients is 250.\n"
+			"assetsend [asset] [tmp] ([{\"ownerto\":\"aliasname or address\",\"amount\":amount},...]  or [{\"ownerto\":\"aliasname or address\",\"ranges\":[{\"start\":index,\"end\":index},...]},...]) [memo] [witness]\n"
+			"Send an asset you own to another address/address as an asset allocation. Maximimum recipients is 250.\n"
 			"<asset> Asset guid.\n"
-			"<aliasfrom> Alias to transfer from.\n"
-			"<aliasto> Alias to transfer to.\n"
+			"<owner> Alias or address that owns this asset allocation.\n"
+			"<ownerto> Alias or address to transfer to.\n"
 			"<amount> Quantity of asset to send.\n"
 			"<ranges> Ranges of inputs to send in integers specified in the start and end fields.\n"
 			"<memo> Message to include in this asset allocation transfer.\n"
-			"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction.\n"
-			"The third parameter can be either an array of alias and amounts if sending amount pairs or an array of alias and array of start/end pairs of indexes for input ranges.\n"
+			"<witness> Witness alias name that will sign for web-of-trust notarization of this transaction. Only applicable asset is owned by an alias.\n"
+			"The third parameter can be either an array of address and amounts if sending amount pairs or an array of address and array of start/end pairs of indexes for input ranges.\n"
 			+ HelpRequiringPassphrase());
-
 	// gather & validate inputs
 	vector<unsigned char> vchAsset = vchFromValue(params[0]);
-	vector<unsigned char> vchAliasFrom = vchFromValue(params[1]);
 	UniValue valueTo = params[2];
 	vector<unsigned char> vchMemo = vchFromValue(params[3]);
 	vector<unsigned char> vchWitness = vchFromValue(params[4]);
 	if (!valueTo.isArray())
 		throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Array of receivers not found");
 
-	// check for alias existence in DB
-	CAliasIndex fromAlias;
-	ToLowerCase(vchAliasFrom);
-	if (!GetAlias(vchAliasFrom, fromAlias))
-		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2506 - " + _("Failed to read sender alias from DB"));
-
-	// this is a syscoin txn
-	CWalletTx wtx;
-	CScript scriptPubKeyFromOrig;
-
 	CAsset theAsset;
 	if (!GetAsset(vchAsset, theAsset))
 		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2507 - " + _("Could not find a asset with this key"));
 
+	string strAddressFrom;
+	const string& strAliasOrAddress = stringFromVch(theAsset.vchAliasOrAddress);
+	const CSyscoinAddress addressFrom(strAliasOrAddress);
+	if (addressFrom.IsValid()) {
+		strAddressFrom = strAliasOrAddress;
+	}
+
+	string strAddress;
+
+	CScript scriptPubKeyFromOrig;
+	CAliasIndex fromAlias;
+	if (!strAddressFrom.empty()) {
+		scriptPubKeyFromOrig = GetScriptForDestination(addressFrom.Get());
+	}
+	else {
+		if (!GetAlias(theAsset.vchAliasOrAddress, fromAlias))
+			throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1502 - " + _("Failed to read sender alias from DB"));
+		CSyscoinAddress fromAddr;
+		GetAddress(fromAlias, &fromAddr, scriptPubKeyFromOrig);
+	}
+
 	CAliasIndex toAlias;
 	CAssetAllocation theAssetAllocation;
-	theAssetAllocation.vchAsset = vchAsset;
 	theAssetAllocation.vchMemo = vchMemo;
+	theAssetAllocation.vchAsset = vchAsset;
+	theAssetAllocation.vchAliasOrAddress = theAsset.vchAliasOrAddress;
 
 	UniValue receivers = valueTo.get_array();
 	for (unsigned int idx = 0; idx < receivers.size(); idx++) {
 		const UniValue& receiver = receivers[idx];
 		if (!receiver.isObject())
-			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"alias'\",\"inputranges\" or \"amount\"}");
+			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"ownerto'\",\"inputranges\" or \"amount\"}");
 
-	
 		UniValue receiverObj = receiver.get_obj();
-		vector<unsigned char> vchAliasTo = vchFromValue(find_value(receiverObj, "aliasto"));
-		ToLowerCase(vchAliasTo);
-		if (!GetAlias(vchAliasTo, toAlias))
-			throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2508 - " + _("Failed to read recipient alias from DB"));
+		UniValue toObj = find_value(receiverObj, "ownerto");
+		if(toObj.isNull())
+			toObj = find_value(receiverObj, "aliasto");
+		vector<unsigned char> vchAliasOrAddressTo;
+		vchAliasOrAddressTo = vchFromValue(toObj);
+		if (!CSyscoinAddress(stringFromVch(vchAliasOrAddressTo)).IsValid()) {
+			ToLowerCase(vchAliasOrAddressTo);
+			if (!GetAlias(vchAliasOrAddressTo, toAlias))
+				throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("Failed to read recipient alias from DB"));
+		}
 
 		UniValue inputRangeObj = find_value(receiverObj, "ranges");
 		UniValue amountObj = find_value(receiverObj, "amount");
@@ -991,30 +1080,27 @@ UniValue assetsend(const JSONRPCRequest& request) {
 					throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "end range not found for an input");
 				vectorOfRanges.push_back(CRange(startRangeObj.get_int(), endRangeObj.get_int()));
 			}
-			theAssetAllocation.listSendingAllocationInputs.push_back(make_pair(vchAliasTo, vectorOfRanges));
+			theAssetAllocation.listSendingAllocationInputs.push_back(make_pair(vchAliasOrAddressTo, vectorOfRanges));
 		}
-		else if (amountObj.isNum()){
+		else if (amountObj.isNum()) {
 			const CAmount &amount = AssetAmountFromValue(amountObj, theAsset.nPrecision, theAsset.bUseInputRanges);
 			if (amount <= 0)
 				throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
-			theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(vchAliasTo, amount));
+			theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(vchAliasOrAddressTo, amount));
 		}
 		else
 			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected inputrange as string or amount as number in receiver array");
 
 	}
 
-	CSyscoinAddress fromAddr;
-	GetAddress(fromAlias, &fromAddr, scriptPubKeyFromOrig);
-
 	CScript scriptPubKey;
 
-	CAssetAllocationTuple assetAllocationTuple(vchAsset, vchAliasFrom);
+	const CAssetAllocationTuple assetAllocationTuple(vchAsset, theAsset.vchAliasOrAddress);
 	if (!fUnitTest) {
-		// check to see if a transaction for this asset/alias tuple has arrived before minimum latency period
+		// check to see if a transaction for this asset/address tuple has arrived before minimum latency period
 		ArrivalTimesMap arrivalTimes;
 		passetallocationdb->ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
-		const int64_t & nNow = duration_cast<seconds>(system_clock::now().time_since_epoch()).count();
+		const int64_t & nNow = GetTimeMillis();
 		for (auto& arrivalTime : arrivalTimes) {
 			// if this tx arrived within the minimum latency period flag it as potentially conflicting
 			if ((nNow - (arrivalTime.second / 1000)) < ZDAG_MINIMUM_LATENCY_SECONDS) {
@@ -1029,8 +1115,10 @@ UniValue assetsend(const JSONRPCRequest& request) {
 	vector<unsigned char> data;
 	theAssetAllocation.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
+	vector<unsigned char> vchHashAsset = vchFromString(hash.GetHex());
+	if(!theAssetAllocation.UnserializeFromData(data, vchHashAsset))
+		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2510 - " + _("Could not unserialize asset allocation data"));
 
-	vector<unsigned char> vchHashAsset = vchFromValue(hash.GetHex());
 	scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_ASSET) << CScript::EncodeOP_N(OP_ASSET_SEND) << vchHashAsset << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyFromOrig;
 	// send the asset pay txn
@@ -1039,11 +1127,13 @@ UniValue assetsend(const JSONRPCRequest& request) {
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
 
-	CScript scriptPubKeyAlias;
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << fromAlias.vchAlias << fromAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
-	scriptPubKeyAlias += scriptPubKeyFromOrig;
 	CRecipient aliasRecipient;
-	CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
+	if (strAddressFrom.empty()) {
+		CScript scriptPubKeyAlias;
+		scriptPubKeyAlias << CScript::EncodeOP_N(OP_SYSCOIN_ALIAS) << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << fromAlias.vchAlias << fromAlias.vchGUID << vchFromString("") << vchWitness << OP_2DROP << OP_2DROP << OP_2DROP;
+		scriptPubKeyAlias += scriptPubKeyFromOrig;
+		CreateAliasRecipient(scriptPubKeyAlias, aliasRecipient);
+	}
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -1052,7 +1142,7 @@ UniValue assetsend(const JSONRPCRequest& request) {
 	vecSend.push_back(fee);
 
 
-	return syscointxfund_helper(fromAlias.vchAlias, vchWitness, aliasRecipient, vecSend);
+	return syscointxfund_helper(vchFromString(strAliasOrAddress), vchWitness, aliasRecipient, vecSend);
 }
 
 UniValue assetinfo(const JSONRPCRequest& request) {
@@ -1089,7 +1179,7 @@ bool BuildAssetJson(const CAsset& asset, const bool bGetInputs, UniValue& oAsset
 	oAsset.push_back(Pair("time", nTime));
 	oAsset.push_back(Pair("publicvalue", stringFromVch(asset.vchPubData)));
 	oAsset.push_back(Pair("category", stringFromVch(asset.sCategory)));
-	oAsset.push_back(Pair("alias", stringFromVch(asset.vchAlias)));
+	oAsset.push_back(Pair("alias", stringFromVch(asset.vchAliasOrAddress)));
 	oAsset.push_back(Pair("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision, asset.bUseInputRanges)));
 	oAsset.push_back(Pair("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision, asset.bUseInputRanges)));
 	oAsset.push_back(Pair("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision, asset.bUseInputRanges)));
@@ -1125,7 +1215,7 @@ bool BuildAssetIndexerHistoryJson(const CAsset& asset, UniValue& oAsset)
 	oAsset.push_back(Pair("time", nTime));
 	oAsset.push_back(Pair("publicvalue", stringFromVch(asset.vchPubData)));
 	oAsset.push_back(Pair("category", stringFromVch(asset.sCategory)));
-	oAsset.push_back(Pair("alias", stringFromVch(asset.vchAlias)));
+	oAsset.push_back(Pair("alias", stringFromVch(asset.vchAliasOrAddress)));
 	oAsset.push_back(Pair("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision, asset.bUseInputRanges)));
 	oAsset.push_back(Pair("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision, asset.bUseInputRanges)));
 	oAsset.push_back(Pair("interest_rate", asset.fInterestRate));
@@ -1137,7 +1227,7 @@ bool BuildAssetIndexerJson(const CAsset& asset, UniValue& oAsset)
 	oAsset.push_back(Pair("symbol", stringFromVch(asset.vchSymbol)));
 	oAsset.push_back(Pair("height", (int)asset.nHeight));
 	oAsset.push_back(Pair("category", stringFromVch(asset.sCategory)));
-	oAsset.push_back(Pair("alias", stringFromVch(asset.vchAlias)));
+	oAsset.push_back(Pair("alias", stringFromVch(asset.vchAliasOrAddress)));
 	oAsset.push_back(Pair("use_input_ranges", asset.bUseInputRanges));
 	oAsset.push_back(Pair("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision, asset.bUseInputRanges)));
 	oAsset.push_back(Pair("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision, asset.bUseInputRanges)));
@@ -1164,8 +1254,8 @@ void AssetTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 	if(!asset.vchPubData.empty() && asset.vchPubData != dbAsset.vchPubData)
 		entry.push_back(Pair("publicvalue", stringFromVch(asset.vchPubData)));
 
-	if(!asset.vchAlias.empty() && asset.vchAlias != dbAsset.vchAlias)
-		entry.push_back(Pair("alias", stringFromVch(asset.vchAlias)));
+	if (!asset.vchAliasOrAddress.empty() && asset.vchAliasOrAddress != dbAsset.vchAliasOrAddress)
+		entry.push_back(Pair("owner", stringFromVch(asset.vchAliasOrAddress)));
 
 	if (!asset.sCategory.empty() && asset.sCategory != dbAsset.sCategory)
 		entry.push_back(Pair("category", stringFromVch(asset.sCategory)));
@@ -1182,7 +1272,7 @@ void AssetTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 		if (!assetallocation.listSendingAllocationAmounts.empty()) {
 			for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
 				UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-				oAssetAllocationReceiversObj.push_back(Pair("aliasto", stringFromVch(amountTuple.first)));
+				oAssetAllocationReceiversObj.push_back(Pair("owner", stringFromVch(amountTuple.first)));
 				oAssetAllocationReceiversObj.push_back(Pair("amount", ValueFromAssetAmount(amountTuple.second, dbAsset.nPrecision, dbAsset.bUseInputRanges)));
 				oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
 			}
@@ -1191,11 +1281,15 @@ void AssetTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 		else if (!assetallocation.listSendingAllocationInputs.empty()) {
 			for (auto& inputTuple : assetallocation.listSendingAllocationInputs) {
 				UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
+				UniValue oAssetAllocationInputsArray(UniValue::VARR);
 				oAssetAllocationReceiversObj.push_back(Pair("aliasto", stringFromVch(inputTuple.first)));
 				for (auto& inputRange : inputTuple.second) {
-					oAssetAllocationReceiversObj.push_back(Pair("start", (int)inputRange.start));
-					oAssetAllocationReceiversObj.push_back(Pair("end", (int)inputRange.end));
+					UniValue oInput(UniValue::VOBJ);
+					oInput.push_back(Pair("start", (int)inputRange.start));
+					oInput.push_back(Pair("end", (int)inputRange.end));
+					oAssetAllocationInputsArray.push_back(oInput);
 				}
+				oAssetAllocationReceiversObj.push_back(Pair("inputs", oAssetAllocationInputsArray));
 				oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
 			}
 		}
@@ -1266,7 +1360,7 @@ bool AssetRange(const CAmount& amount, int precision, bool isInputRange)
 }
 bool CAssetDB::ScanAssets(const int count, const int from, const UniValue& oOptions, UniValue& oRes) {
 	string strTxid = "";
-	vector<unsigned char> vchAlias, vchAsset;
+	vector<unsigned char> vchAliasOrAddress, vchAsset;
 	int nStartBlock = 0;
 	if (!oOptions.isNull()) {
 		const UniValue &txid = find_value(oOptions, "txid");
@@ -1278,9 +1372,9 @@ bool CAssetDB::ScanAssets(const int count, const int from, const UniValue& oOpti
 			vchAsset = vchFromValue(assetObj);
 		}
 
-		const UniValue &aliasObj = find_value(oOptions, "alias");
-		if (aliasObj.isStr()) {
-			vchAlias = vchFromValue(aliasObj);
+		const UniValue &alias = find_value(oOptions, "owner");
+		if (alias.isStr()) {
+			vchAliasOrAddress = vchFromValue(alias);
 		}
 
 		const UniValue &startblock = find_value(oOptions, "startblock");
@@ -1288,8 +1382,6 @@ bool CAssetDB::ScanAssets(const int count, const int from, const UniValue& oOpti
 			nStartBlock = startblock.get_int();
 		}
 	}
-	LOCK(cs_asset);
-
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
 	CAsset txPos;
@@ -1317,7 +1409,7 @@ bool CAssetDB::ScanAssets(const int count, const int from, const UniValue& oOpti
 					pcursor->Next();
 					continue;
 				}
-				if (!vchAlias.empty() && vchAlias != txPos.vchAlias)
+				if (!vchAliasOrAddress.empty() && vchAliasOrAddress != txPos.vchAliasOrAddress)
 				{
 					pcursor->Next();
 					continue;
@@ -1355,14 +1447,14 @@ UniValue listassets(const JSONRPCRequest& request) {
 			"[options]        (object, optional) A json object with options to filter results\n"
 			"    {\n"
 			"      \"txid\":txid					(string) Transaction ID to filter results for\n"
-			"	     \"asset\":guid					(string) Asset GUID to filter.\n"
-			"      \"alias\":alias				(string) Owner alias name to filter.\n"
-			"      \"startblock\":block 	(number) Earliest block to filter from. Block number is the block at which the transaction would have confirmed.\n"
+			"	   \"asset\":guid					(string) Asset GUID to filter.\n"
+			"      \"owner\":string					(string) Alias or address to filter.\n"
+			"      \"startblock\":block 			(number) Earliest block to filter from. Block number is the block at which the transaction would have confirmed.\n"
 			"    }\n"
 			+ HelpExampleCli("listassets", "0")
 			+ HelpExampleCli("listassets", "10 10")
-			+ HelpExampleCli("listassets", "0 0 '{\"alias\":\"owner-alias\"}'")
-			+ HelpExampleCli("listassets", "0 0 '{\"asset\":\"32bff1fa844c124\",\"alias\":\"owner-alias\",\"startblock\":0}'")
+			+ HelpExampleCli("listassets", "0 0 '{\"owner\":\"SfaT8dGhk1zaQkk8bujMfgWw3szxReej4S\"}'")
+			+ HelpExampleCli("listassets", "0 0 '{\"asset\":\"32bff1fa844c124\",\"owner\":\"SfaT8dGhk1zaQkk8bujMfgWw3szxReej4S\",\"startblock\":0}'")
 		);
 	UniValue options;
 	int count = 10;

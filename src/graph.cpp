@@ -8,7 +8,7 @@
 using namespace boost;
 using namespace std;
 typedef typename std::vector<int> container;
-bool OrderBasedOnArrivalTime(std::vector<CTransactionRef>& blockVtx) {
+bool OrderBasedOnArrivalTime(const int &nHeight, std::vector<CTransactionRef>& blockVtx) {
 	std::vector<vector<unsigned char> > vvchArgs;
 	std::vector<vector<unsigned char> > vvchAliasArgs;
 	std::vector<CTransactionRef> orderedVtx;
@@ -26,13 +26,22 @@ bool OrderBasedOnArrivalTime(std::vector<CTransactionRef>& blockVtx) {
 		{
 			if (DecodeAssetAllocationTx(tx, op, vvchArgs))
 			{
-				if (!FindAliasInTx(view, tx, vvchAliasArgs)) {
-					continue;
-				}
+				LOCK(cs_assetallocation);
 				ArrivalTimesMap arrivalTimes;
 				CAssetAllocation assetallocation(tx);
-				CAssetAllocationTuple assetAllocationTuple(assetallocation.vchAsset, vvchAliasArgs[0]);
-				passetallocationdb->ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
+				if (nHeight >= Params().GetConsensus().nShareFeeBlock) {
+					CAssetAllocationTuple assetAllocationTuple(assetallocation.vchAsset, assetallocation.vchAliasOrAddress);
+					passetallocationdb->ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
+				}
+				else {
+					if (!FindAliasInTx(view, tx, vvchAliasArgs)) {
+						continue;
+					}
+					CAssetAllocationTuple assetAllocationTuple(assetallocation.vchAsset, vvchAliasArgs[0]);
+					passetallocationdb->ReadISArrivalTimes(assetAllocationTuple, arrivalTimes);
+				}
+
+				
 				ArrivalTimesMap::iterator it = arrivalTimes.find(tx.GetHash());
 				if (it != arrivalTimes.end())
 					orderedIndexes.insert(make_pair((*it).second, n));
@@ -82,13 +91,14 @@ bool OrderBasedOnArrivalTime(std::vector<CTransactionRef>& blockVtx) {
 	blockVtx = orderedVtx;
 	return true;
 }
-bool CreateGraphFromVTX(const std::vector<CTransactionRef>& blockVtx, Graph &graph, std::vector<vertex_descriptor> &vertices, IndexMap &mapTxIndex) {
+bool CreateGraphFromVTX(const int &nHeight, const std::vector<CTransactionRef>& blockVtx, Graph &graph, std::vector<vertex_descriptor> &vertices, IndexMap &mapTxIndex) {
 	AliasMap mapAliasIndex;
 	std::vector<vector<unsigned char> > vvchArgs;
 	std::vector<vector<unsigned char> > vvchAliasArgs;
 	int op;
 	AssertLockHeld(cs_main);
 	CCoinsViewCache view(pcoinsTip);
+	string sender;
 	for (unsigned int n = 0; n< blockVtx.size(); n++) {
 		const CTransactionRef txRef = blockVtx[n];
 		if (!txRef)
@@ -97,20 +107,26 @@ bool CreateGraphFromVTX(const std::vector<CTransactionRef>& blockVtx, Graph &gra
 		if (tx.nVersion == SYSCOIN_TX_VERSION)
 		{
 			if (DecodeAssetAllocationTx(tx, op, vvchArgs))
-			{
-				
-				if (!FindAliasInTx(view, tx, vvchAliasArgs)) {
-					continue;
+			{	
+				AliasMap::const_iterator it;
+				CAssetAllocation allocation(tx);
+				if (nHeight >= Params().GetConsensus().nShareFeeBlock) {
+					sender = stringFromVch(allocation.vchAliasOrAddress);
+					it = mapAliasIndex.find(sender);
 				}
-				
-				const string& sender = stringFromVch(vvchAliasArgs[0]);
-				AliasMap::const_iterator it = mapAliasIndex.find(sender);
+				else {
+					if (!FindAliasInTx(view, tx, vvchAliasArgs)) {
+						continue;
+					}
+					sender = stringFromVch(vvchAliasArgs[0]);
+					it = mapAliasIndex.find(sender);
+				}
 				if (it == mapAliasIndex.end()) {
 					vertices.push_back(add_vertex(graph));
 					mapAliasIndex[sender] = vertices.size() - 1;
 				}
 				mapTxIndex[mapAliasIndex[sender]].push_back(n);
-				CAssetAllocation allocation(tx);
+				
 				if (!allocation.listSendingAllocationAmounts.empty()) {
 					for (auto& allocationInstance : allocation.listSendingAllocationAmounts) {
 						const string& receiver = stringFromVch(allocationInstance.first);
@@ -151,13 +167,13 @@ void GraphRemoveCycles(const std::vector<CTransactionRef>& blockVtx, std::vector
 			continue;
 		// remove from graph
 		const int nVertexIndex = (*it).first;
-		if (nVertexIndex >= vertices.size())
+		if (nVertexIndex >= (int)vertices.size())
 			continue;
 		boost::clear_out_edges(vertices[nVertexIndex], graph);
 		const std::vector<int> &vecTx = (*it).second;
 		// mapTxIndex knows of the mapping between vertices and tx vout positions
 		for (auto& nIndex : vecTx) {
-			if (nIndex >= blockVtx.size())
+			if (nIndex >= (int)blockVtx.size())
 				continue;
 			conflictedIndexes.push_back(nIndex);
 		}
@@ -190,7 +206,7 @@ bool DAGTopologicalSort(std::vector<CTransactionRef>& blockVtx, const std::vecto
 		const std::vector<int> &vecTx = (*it).second;
 		// mapTxIndex knows of the mapping between vertices and tx index positions
 		for (auto& nIndex : vecTx) {
-			if (nIndex >= blockVtx.size())
+			if (nIndex >= (int)blockVtx.size())
 				continue;
 			newVtx.emplace_back(blockVtx[nIndex]);
 		}
@@ -198,7 +214,7 @@ bool DAGTopologicalSort(std::vector<CTransactionRef>& blockVtx, const std::vecto
 
 	// add conflicting indexes next (should already be in order)
 	for (auto& nIndex : conflictedIndexes) {
-		if (nIndex >= blockVtx.size())
+		if (nIndex >= (int)blockVtx.size())
 			continue;
 		newVtx.emplace_back(blockVtx[nIndex]);
 	}

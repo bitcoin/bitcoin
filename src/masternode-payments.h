@@ -1,4 +1,5 @@
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2017-2018 The Syscoin Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -24,7 +25,7 @@ static const int MNPAYMENTS_SIGNATURES_TOTAL            = 10;
 // V1 - Last protocol version before update
 // V2 - Newest protocol version
 static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1 = 70206;
-static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_2 = PROTOCOL_VERSION;
+static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_2 = MIN_PEER_PROTO_VERSION;
 
 extern CCriticalSection cs_vecPayees;
 extern CCriticalSection cs_mapMasternodeBlocks;
@@ -34,8 +35,8 @@ extern CMasternodePayments mnpayments;
 
 /// TODO: all 4 functions do not belong here really, they should be refactored/moved somewhere (main.cpp ?)
 bool IsBlockValueValid(const CBlock& block, int nBlockHeight,  const CAmount &blockReward, const CAmount &nFee, std::string& strErrorRet);
-bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, const CAmount &blockReward, CAmount& nTotalRewardWithMasternodes);
-void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount &blockReward, CTxOut& txoutMasternodeRet, std::vector<CTxOut>& voutSuperblockRet);
+bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, const CAmount &blockReward, const CAmount& fees, CAmount& nTotalRewardWithMasternodes);
+void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount &blockReward, CAmount& fees, CTxOut& txoutMasternodeRet, std::vector<CTxOut>& voutSuperblockRet);
 std::string GetRequiredPaymentsString(int nBlockHeight);
 
 class CMasternodePayee
@@ -104,7 +105,7 @@ public:
 	bool GetBestPayee(CScript& payeeRet, int &nStartHeightBlock) const;
     bool HasPayeeWithVotes(const CScript& payeeIn, int nVotesReq, CMasternodePayee& payee) const;
 
-    bool IsTransactionValid(const CTransaction& txNew, const int64_t &nHeight, CAmount& nTotalRewardWithMasternodes) const;
+    bool IsTransactionValid(const CTransaction& txNew, const int64_t &nHeight, const CAmount& fee, CAmount& nTotalRewardWithMasternodes) const;
 
     std::string GetRequiredPaymentsString() const;
 };
@@ -114,8 +115,8 @@ class CMasternodePaymentVote
 {
 public:
     COutPoint masternodeOutpoint;
-	int nStartHeight;
     int nBlockHeight;
+    int nStartHeight;
     CScript payee;
     std::vector<unsigned char> vchSig;
 
@@ -211,7 +212,7 @@ public:
 
     bool GetBlockPayee(int nBlockHeight, CScript& payeeRet) const;
 	bool GetBlockPayee(int nBlockHeight, CScript& payee, int &nStartHeightBlock) const;
-    bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight, CAmount& nTotalRewardWithMasternodes) const;
+    bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight, const CAmount& fee, CAmount& nTotalRewardWithMasternodes) const;
     bool IsScheduled(const masternode_info_t& mnInfo, int nNotBlockHeight) const;
 
     bool UpdateLastVote(const CMasternodePaymentVote& vote);
@@ -219,7 +220,7 @@ public:
     int GetMinMasternodePaymentsProto() const;
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
     std::string GetRequiredPaymentsString(int nBlockHeight) const;
-    void FillBlockPayee(CMutableTransaction& txNew, int nBlockHeight, CAmount &blockReward, CTxOut& txoutMasternodeRet) const;
+    void FillBlockPayee(CMutableTransaction& txNew, int nBlockHeight, CAmount &blockReward, CAmount &fees,  CTxOut& txoutMasternodeRet) const;
     std::string ToString() const;
 
     int GetBlockCount() const { return mapMasternodeBlocks.size(); }
@@ -229,6 +230,8 @@ public:
     int GetStorageLimit() const;
 
     void UpdatedBlockTip(const CBlockIndex *pindex, CConnman& connman);
+
+    void DoMaintenance() { CheckAndRemove(); }
 };
 
 #endif

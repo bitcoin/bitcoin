@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2017 The Syscoin Core developers
+// Copyright (c) 2016-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,6 +13,7 @@ static map<string, float> pegRates;
 /** Testing syscoin services setup that configures a complete environment with 3 nodes.
  */
 UniValue CallRPC(const string &dataDir, const string& commandWithArgs, bool regTest = true, bool readJson = true);
+UniValue CallExtRPC(const string &node, const string& command, const string& args="");
 void StartNode(const string &dataDir, bool regTest = true, const string& extraArgs="");
 void StopNode(const string &dataDir="node1");
 void StartNodes();
@@ -21,9 +22,11 @@ void StopMainNetNodes();
 void StopNodes();
 void GenerateBlocks(int nBlocks, const string& node="node1");
 void GenerateSpendableCoins();
+string GetNewFundedAddress(const string &node);
 void GenerateMainNetBlocks(int nBlocks, const string& node);
 string CallExternal(string &cmd);
 void SetSysMocktime(const int64_t& expiryTime);
+void SleepFor(const int& seconds, bool actualSleep=false);
 void ExpireAlias(const string& alias);
 void CheckRangeSubtract(const string& originalRanges, const string& subtractRanges, const string& expectedOutputRanges);
 void CheckRangeMerge(const string& originalRanges, const string& newRanges, const string& expectedOutputRanges);

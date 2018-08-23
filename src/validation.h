@@ -1,6 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Syscoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,6 +21,8 @@
 #include "versionbits.h"
 #include "spentindex.h"
 
+#include "thread_pool/thread_pool.hpp"
+
 #include <algorithm>
 #include <exception>
 #include <map>
@@ -33,7 +36,6 @@
 
 #include <boost/unordered_map.hpp>
 #include <boost/filesystem/path.hpp>
-
 class CBlockIndex;
 class CBlockTreeDB;
 class CBloomFilter;
@@ -149,7 +151,6 @@ static const unsigned int MAX_BLOCKS_TO_ANNOUNCE = 8;
 static const int MAX_UNCONNECTING_HEADERS = 10;
 
 static const bool DEFAULT_PEERBLOOMFILTERS = true;
-
 struct BlockHasher
 {
     size_t operator()(const uint256& hash) const { return hash.GetCheapHash(); }
@@ -169,6 +170,7 @@ extern std::atomic_bool fImporting;
 extern bool fReindex;
 extern int nScriptCheckThreads;
 extern bool fTxIndex;
+extern bool fLogThreadpool;
 extern bool fAddressIndex;
 extern bool fIsBareMultisigStd;
 extern bool fRequireStandard;
@@ -465,7 +467,7 @@ public:
         scriptPubKey(scriptPubKeyIn),
         ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), cacheStore(cacheIn), error(SCRIPT_ERR_UNKNOWN_ERROR) { }
 
-    bool operator()();
+    bool operator()() const;
 
     void swap(CScriptCheck &check) {
         scriptPubKey.swap(check.scriptPubKey);
@@ -551,6 +553,9 @@ extern CCoinsViewCache *pcoinsTip;
 /** Global variable that points to the active block tree (protected by cs_main) */
 extern CBlockTreeDB *pblocktree;
 
+extern tp::ThreadPool* threadpool;
+extern std::vector<std::pair<uint256, int64_t> > vecTPSTestReceivedTimesMempool;
+extern int64_t nTPSTestingStartTime;
 /**
  * Return the spend height, which is one more than the inputs.GetBestBlock().
  * While checking, GetBestBlock() refers to the parent block. (protected by cs_main)

@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2017 The Syscoin Core developers
+// Copyright (c) 2017-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,7 +18,7 @@ class CCoinsViewCache;
 class CBlock;
 class CAliasIndex;
 
-bool CheckAssetInputs(const CTransaction &tx, int op, const std::vector<std::vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vvchAlias, bool fJustCheck, int nHeight, sorted_vector<CAssetAllocationTuple> &revertedAssetAllocations, std::string &errorMessage, bool bSanityCheck=false);
+bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int op, const std::vector<std::vector<unsigned char> > &vvchArgs, const std::vector<unsigned char> &vchAlias, bool fJustCheck, int nHeight, sorted_vector<CAssetAllocationTuple> &revertedAssetAllocations, std::string &errorMessage, bool bSanityCheck=false);
 bool DecodeAssetTx(const CTransaction& tx, int& op, std::vector<std::vector<unsigned char> >& vvch);
 bool DecodeAndParseAssetTx(const CTransaction& tx, int& op, std::vector<std::vector<unsigned char> >& vvch, char& type);
 bool DecodeAssetScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
@@ -39,12 +39,11 @@ static const CAmount MAX_INPUTRANGE_ASSET = 10000000;
 */
 static const CAmount MAX_ASSET = 1000000000000000000LL - 1LL;
 inline bool AssetRange(const CAmount& nValue, bool bUseInputRange) { return (nValue > 0 && nValue <= (bUseInputRange? MAX_INPUTRANGE_ASSET: MAX_ASSET)); }
-static CCriticalSection cs_asset;
 class CAsset {
 public:
 	std::vector<unsigned char> vchAsset;
 	std::vector<unsigned char> vchSymbol;
-	std::vector<unsigned char> vchAlias;
+	std::vector<unsigned char> vchAliasOrAddress;
 	// if allocations are tracked by individual inputs
 	std::vector<CRange> listAllocationInputs;
     uint256 txHash;
@@ -70,7 +69,7 @@ public:
 		vchPubData.clear();
 		sCategory.clear();
 		listAllocationInputs.clear();
-		vchAlias.clear();
+		vchAliasOrAddress.clear();
 		vchSymbol.clear();
 
 	}
@@ -83,7 +82,7 @@ public:
 		READWRITE(vchAsset);
 		READWRITE(vchSymbol);
 		READWRITE(sCategory);
-		READWRITE(vchAlias);
+		READWRITE(vchAliasOrAddress);
 		READWRITE(listAllocationInputs);
 		READWRITE(nBalance);
 		READWRITE(nTotalSupply);
@@ -103,7 +102,7 @@ public:
 		vchPubData = b.vchPubData;
 		txHash = b.txHash;
         nHeight = b.nHeight;
-		vchAlias = b.vchAlias;
+		vchAliasOrAddress = b.vchAliasOrAddress;
 		vchAsset = b.vchAsset;
 		sCategory = b.sCategory;
 		listAllocationInputs = b.listAllocationInputs;
@@ -121,7 +120,7 @@ public:
     inline friend bool operator!=(const CAsset &a, const CAsset &b) {
         return !(a == b);
     }
-	inline void SetNull() { vchSymbol.clear(); nPrecision = 8; bCanAdjustInterestRate = false; fInterestRate = 0;  bUseInputRanges = false; nMaxSupply = 0; nTotalSupply = 0; nBalance = 0; listAllocationInputs.clear(); sCategory.clear(); vchAsset.clear(); nHeight = 0; txHash.SetNull(); vchAlias.clear(); vchPubData.clear(); }
+	inline void SetNull() { vchSymbol.clear(); nPrecision = 8; bCanAdjustInterestRate = false; fInterestRate = 0;  bUseInputRanges = false; nMaxSupply = 0; nTotalSupply = 0; nBalance = 0; listAllocationInputs.clear(); sCategory.clear(); vchAsset.clear(); nHeight = 0; txHash.SetNull(); vchAliasOrAddress.clear(); vchPubData.clear(); }
     inline bool IsNull() const { return (vchAsset.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
@@ -135,26 +134,20 @@ public:
 
     bool WriteAsset(const CAsset& asset, const int &op) {
 		bool writeState = false;
-		{
-			LOCK(cs_asset);
-			writeState = Write(make_pair(std::string("asseti"), asset.vchAsset), asset);
-		}
+		writeState = Write(make_pair(std::string("asseti"), asset.vchAsset), asset);
 		if(writeState)
 			WriteAssetIndex(asset, op);
         return writeState;
     }
 	bool EraseAsset(const std::vector<unsigned char>& vchAsset, bool cleanup = false) {
-		LOCK(cs_asset);
 		return Erase(make_pair(std::string("asseti"), vchAsset));
 	}
     bool ReadAsset(const std::vector<unsigned char>& vchAsset, CAsset& asset) {
-		LOCK(cs_asset);
         return Read(make_pair(std::string("asseti"), vchAsset), asset);
     }
 	void WriteAssetIndex(const CAsset& asset, const int &op);
 	void WriteAssetIndexHistory(const CAsset& asset, const int &op);
 	bool ScanAssets(const int count, const int from, const UniValue& oOptions, UniValue& oRes);
-
 };
 bool GetAsset(const std::vector<unsigned char> &vchAsset,CAsset& txPos);
 bool BuildAssetJson(const CAsset& asset, const bool bGetInputs, UniValue& oName);

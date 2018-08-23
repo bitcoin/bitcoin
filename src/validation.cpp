@@ -1,6 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Syscoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -63,20 +64,20 @@
 #include "graph.h"
 #include "base58.h"
 #include "rpc/server.h"
-#include "thread_pool.hpp"
+#include "thread_pool/thread_pool.hpp"
 #include <future>
 #include <functional>
 #include "cuckoocache.h"
 #if defined(NDEBUG)
 # error "Syscoin Core cannot be compiled without assertions."
 #endif
-
+std::vector<std::pair<uint256, int64_t> > vecTPSTestReceivedTimesMempool;
+int64_t nTPSTestingStartTime = 0;
 /**
  * Global state
  */
 
-CCriticalSection cs_main, scriptCheckMapCS, scriptExecutionCacheCS;
-
+CCriticalSection cs_main;
 BlockMap mapBlockIndex;
 CChain chainActive;
 CBlockIndex *pindexBestHeader = NULL;
@@ -86,7 +87,8 @@ int nScriptCheckThreads = 0;
 // SYSCOIN
 int64_t nLastMultithreadMempoolFailure = 0;
 bool fLoaded = false;
-tp::ThreadPool threadpool;
+bool fLogThreadpool = false;
+tp::ThreadPool *threadpool = NULL;
 std::atomic_bool fImporting(false);
 bool fReindex = false;
 bool fTxIndex = true;
@@ -610,58 +612,66 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 	if (nHeight == 0)
 		nHeight = chainActive.Height()+1;
 	std::string errorMessage;
-	bool good = false;
-
+	bool good = true;
+	const std::vector<unsigned char> &emptyVch = vchFromString("");
 	if (block.vtx.empty() && tx.nVersion == SYSCOIN_TX_VERSION) {
+		bool foundAliasInput = true;
+		if (!DecodeAliasTx(tx, op, vvchAliasArgs))
 		{
-			if (!DecodeAliasTx(tx, op, vvchAliasArgs))
-			{
-				if (!FindAliasInTx(inputs, tx, vvchAliasArgs)) {
-					return state.DoS(100, false, REJECT_INVALID, "no-alias-input-found-mempool");
-				}
-				// it is assumed if no alias output is found, then it is for another service so this would be an alias update
-				op = OP_ALIAS_UPDATE;
-
+			if (!FindAliasInTx(inputs, tx, vvchAliasArgs)) {
+				// must be address backed asset or asset allocation (try validate as such)
+				foundAliasInput = false;
 			}
-			errorMessage.clear();
-			good = CheckAliasInputs(inputs, tx, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bSanity);
-			if (!errorMessage.empty())
-				return state.DoS(100, false, REJECT_INVALID, errorMessage);
-	
-			if (good)
-			{
-				if (DecodeAssetAllocationTx(tx, op, vvchArgs))
-				{
-					errorMessage.clear();
-					good = CheckAssetAllocationInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedAssetAllocations, errorMessage, bSanity);
-				}
-				else if (DecodeEscrowTx(tx, op, vvchArgs))
-				{
-					errorMessage.clear();
-					good = CheckEscrowInputs(tx, op, vvchArgs, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bSanity);
-				}
-				else if (DecodeOfferTx(tx, op, vvchArgs))
-				{
-					errorMessage.clear();
-					good = CheckOfferInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedOffers, errorMessage, bSanity);
-				}
-				else if (DecodeAssetTx(tx, op, vvchArgs))
-				{
-					errorMessage.clear();
-					good = CheckAssetInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedAssetAllocations, errorMessage, bSanity);
-				}
-				else if (DecodeCertTx(tx, op, vvchArgs))
-				{
-					errorMessage.clear();
-					good = CheckCertInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedCerts, errorMessage, bSanity);
-				}
-			}
-			else
-				return state.DoS(100, false, REJECT_INVALID, "syscoin-inputs-error");
+			// it is assumed if no alias output is found, then it is for another service so this would be an alias update
+			op = OP_ALIAS_UPDATE;
 
-			if (!good || !errorMessage.empty())
-				return state.DoS(100, false, REJECT_INVALID, errorMessage);
 		}
+		errorMessage.clear();
+		if (foundAliasInput)
+			good = CheckAliasInputs(inputs, tx, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bSanity);
+		if (!errorMessage.empty())
+			return state.DoS(100, false, REJECT_INVALID, errorMessage);
+
+		if (good)
+		{
+			if (DecodeAssetAllocationTx(tx, op, vvchArgs))
+			{
+				errorMessage.clear();
+				good = CheckAssetAllocationInputs(tx, inputs, op, vvchArgs, foundAliasInput ? vvchAliasArgs[0] : emptyVch, fJustCheck, nHeight, revertedAssetAllocations, errorMessage, bSanity);
+			}
+			else if (DecodeOfferTx(tx, op, vvchArgs))
+			{
+				if (!foundAliasInput)
+					return state.DoS(100, false, REJECT_INVALID, "no-alias-input-found-mempool");
+				errorMessage.clear();
+				good = CheckOfferInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedOffers, errorMessage, bSanity);
+			}
+			else if (DecodeCertTx(tx, op, vvchArgs))
+			{
+				if (!foundAliasInput)
+					return state.DoS(100, false, REJECT_INVALID, "no-alias-input-found-mempool");
+				errorMessage.clear();
+				good = CheckCertInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedCerts, errorMessage, bSanity);
+			}
+			else if (DecodeEscrowTx(tx, op, vvchArgs))
+			{
+				if (!foundAliasInput)
+					return state.DoS(100, false, REJECT_INVALID, "no-alias-input-found-mempool");
+				errorMessage.clear();
+				good = CheckEscrowInputs(tx, op, vvchArgs, vvchAliasArgs, fJustCheck, nHeight, errorMessage, bSanity);
+			}
+			else if (DecodeAssetTx(tx, op, vvchArgs))
+			{
+				errorMessage.clear();
+				good = CheckAssetInputs(tx, inputs, op, vvchArgs, foundAliasInput ? vvchAliasArgs[0] : emptyVch, fJustCheck, nHeight, revertedAssetAllocations, errorMessage, bSanity);
+			}
+		}
+		else
+			return state.DoS(100, false, REJECT_INVALID, "syscoin-inputs-error");
+
+		if (!good || !errorMessage.empty())
+			return state.DoS(100, false, REJECT_INVALID, errorMessage);
+		return true;
 	}
 	else if (!block.vtx.empty()) {
 		CBlock sortedBlock;
@@ -669,7 +679,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 		Graph graph;
 		std::vector<vertex_descriptor> vertices;
 		IndexMap mapTxIndex;
-		if (CreateGraphFromVTX(sortedBlock.vtx, graph, vertices, mapTxIndex)) {
+		if (CreateGraphFromVTX(nHeight, sortedBlock.vtx, graph, vertices, mapTxIndex)) {
 			std::vector<int> conflictedIndexes;
 			GraphRemoveCycles(sortedBlock.vtx, conflictedIndexes, graph, vertices, mapTxIndex);
 			if (!sortedBlock.vtx.empty()) {
@@ -683,63 +693,68 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 		if (fJustCheck)
 			return true;
 
-		good = true;
 		for (unsigned int i = 0; i < sortedBlock.vtx.size(); i++)
 		{
 			const CTransaction &tx = *sortedBlock.vtx[i];
 			if (tx.nVersion == SYSCOIN_TX_VERSION)
 			{
-				good = false;
+				bool foundAliasInput = true;
+				good = true;
 				if (!DecodeAliasTx(tx, op, vvchAliasArgs))
 				{
 					if (!FindAliasInTx(inputs, tx, vvchAliasArgs)) {
-						if (fDebug)
-							LogPrintf("CheckSyscoinInputs: FindAliasInTx failed\n");
-						return true;
+						foundAliasInput = false;
 					}
 					// it is assumed if no alias output is found, then it is for another service so this would be an alias update
 					op = OP_ALIAS_UPDATE;
 				}
 				errorMessage.clear();
-				good = CheckAliasInputs(inputs, tx, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage);
+				if(foundAliasInput)
+					good = CheckAliasInputs(inputs, tx, op, vvchAliasArgs, fJustCheck, nHeight, errorMessage);
 				if (fDebug && !errorMessage.empty())
 					LogPrintf("%s\n", errorMessage.c_str());
 
-				if (!vvchAliasArgs.empty() && good)
+				if (good)
 				{
 					if (DecodeAssetAllocationTx(tx, op, vvchArgs))
 					{
 						errorMessage.clear();
-						good = CheckAssetAllocationInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedAssetAllocations, errorMessage);
+						good = CheckAssetAllocationInputs(tx, inputs, op, vvchArgs, foundAliasInput ? vvchAliasArgs[0] : emptyVch, fJustCheck, nHeight, revertedAssetAllocations, errorMessage);
 						if (fDebug && !errorMessage.empty())
 							LogPrintf("%s\n", errorMessage.c_str());
 
 					}
-					else if (DecodeEscrowTx(tx, op, vvchArgs))
+					else if (DecodeOfferTx(tx, op, vvchArgs))
 					{
+						if (!foundAliasInput)
+							return true;
 						errorMessage.clear();
-						good = CheckEscrowInputs(tx, op, vvchArgs, vvchAliasArgs, fJustCheck, nHeight, errorMessage);
+						good = CheckOfferInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedOffers, errorMessage);
 						if (fDebug && !errorMessage.empty())
 							LogPrintf("%s\n", errorMessage.c_str());
 					}
-					else if (DecodeOfferTx(tx, op, vvchArgs))
+					else if (DecodeCertTx(tx, op, vvchArgs))
 					{
+						if (!foundAliasInput)
+							return true;
 						errorMessage.clear();
-						good = CheckOfferInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedOffers, errorMessage);
+						good = CheckCertInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedCerts, errorMessage);
+						if (fDebug && !errorMessage.empty())
+							LogPrintf("%s\n", errorMessage.c_str());
+					}
+					else if (DecodeEscrowTx(tx, op, vvchArgs))
+					{
+						if (!foundAliasInput)
+							return true;
+						errorMessage.clear();
+						good = CheckEscrowInputs(tx, op, vvchArgs, vvchAliasArgs, fJustCheck, nHeight, errorMessage);
 						if (fDebug && !errorMessage.empty())
 							LogPrintf("%s\n", errorMessage.c_str());
 					}
 					else if (DecodeAssetTx(tx, op, vvchArgs))
 					{
 						errorMessage.clear();
-						good = CheckAssetInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedAssetAllocations, errorMessage);
-						if (fDebug && !errorMessage.empty())
-							LogPrintf("%s\n", errorMessage.c_str());
-					}
-					else if (DecodeCertTx(tx, op, vvchArgs))
-					{
-						errorMessage.clear();
-						good = CheckCertInputs(tx, op, vvchArgs, vvchAliasArgs[0], fJustCheck, nHeight, revertedCerts, errorMessage);
+						good = CheckAssetInputs(tx, inputs, op, vvchArgs, foundAliasInput ? vvchAliasArgs[0] : emptyVch, fJustCheck, nHeight, revertedAssetAllocations, errorMessage);
 						if (fDebug && !errorMessage.empty())
 							LogPrintf("%s\n", errorMessage.c_str());
 					}
@@ -754,8 +769,6 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
 		if ((nFlushIndexBlocks % 200) == 0 && !FlushSyscoinDBs())
 			return state.DoS(0, false, REJECT_INVALID, "Failed to flush syscoin databases");
 	}
-
-
 	return true;
 }
 /** Convert CValidationState to a human-readable message for logging */
@@ -779,7 +792,6 @@ static bool IsCurrentForFeeEstimation()
     return true;
 }
 static CCheckQueue<CScriptCheck> scriptcheckqueue(128);
-static std::map<uint256, std::vector<CScriptCheck> > scriptCheckMap;
 static CuckooCache::cache<uint256, SignatureCacheHasher> scriptExecutionCache;
 static uint256 scriptExecutionCacheNonce(GetRandHash());
 
@@ -793,109 +805,116 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 	AssertLockHeld(cs_main);
     if (pfMissingInputs)
         *pfMissingInputs = false;
+	if (!fTPSTestEnabled) {
+		if (nTPSTestingStartTime > 0)
+		{
+			const int64_t &currentTime = GetTimeMicros();
+			if(currentTime >= nTPSTestingStartTime)
+				vecTPSTestReceivedTimesMempool.emplace_back(hash, currentTime);
+		}
+		if (!CheckTransaction(tx, state))
+			return false; // state filled in by CheckTransaction
 
-    if (!CheckTransaction(tx, state))
-        return false; // state filled in by CheckTransaction
+		if (!ContextualCheckTransaction(tx, state, chainActive.Tip()))
+			return error("%s: ContextualCheckTransaction: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
 
-    if (!ContextualCheckTransaction(tx, state, chainActive.Tip()))
-        return error("%s: ContextualCheckTransaction: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
+		// Coinbase is only valid in a block, not as a loose transaction
+		if (tx.IsCoinBase())
+			return state.DoS(100, false, REJECT_INVALID, "coinbase");
 
-    // Coinbase is only valid in a block, not as a loose transaction
-    if (tx.IsCoinBase())
-        return state.DoS(100, false, REJECT_INVALID, "coinbase");
+		// Rather not work on nonstandard transactions (unless -testnet/-regtest)
+		std::string reason;
+		if (fRequireStandard && !IsStandardTx(tx, reason))
+			return state.DoS(0, false, REJECT_NONSTANDARD, reason);
 
-    // Rather not work on nonstandard transactions (unless -testnet/-regtest)
-    std::string reason;
-    if (fRequireStandard && !IsStandardTx(tx, reason))
-        return state.DoS(0, false, REJECT_NONSTANDARD, reason);
+		// Only accept nLockTime-using transactions that can be mined in the next
+		// block; we don't want our mempool filled up with transactions that can't
+		// be mined yet.
+		if (!CheckFinalTx(tx, STANDARD_LOCKTIME_VERIFY_FLAGS))
+			return state.DoS(0, false, REJECT_NONSTANDARD, "non-final");
 
-    // Only accept nLockTime-using transactions that can be mined in the next
-    // block; we don't want our mempool filled up with transactions that can't
-    // be mined yet.
-    if (!CheckFinalTx(tx, STANDARD_LOCKTIME_VERIFY_FLAGS))
-        return state.DoS(0, false, REJECT_NONSTANDARD, "non-final");
+		// is it already in the memory pool?
+		if (pool.exists(hash))
+			return state.Invalid(false, REJECT_ALREADY_KNOWN, "txn-already-in-mempool");
 
-    // is it already in the memory pool?
-    if (pool.exists(hash))
-        return state.Invalid(false, REJECT_ALREADY_KNOWN, "txn-already-in-mempool");
+		// If this is a Transaction Lock Request check to see if it's valid
+		if (instantsend.HasTxLockRequest(hash) && !CTxLockRequest(tx).IsValid())
+			return state.DoS(10, error("AcceptToMemoryPool : CTxLockRequest %s is invalid", hash.ToString()),
+				REJECT_INVALID, "bad-txlockrequest");
 
-    // If this is a Transaction Lock Request check to see if it's valid
-    if(instantsend.HasTxLockRequest(hash) && !CTxLockRequest(tx).IsValid())
-        return state.DoS(10, error("AcceptToMemoryPool : CTxLockRequest %s is invalid", hash.ToString()),
-                            REJECT_INVALID, "bad-txlockrequest");
-
-    // Check for conflicts with a completed Transaction Lock
-    BOOST_FOREACH(const CTxIn &txin, tx.vin)
-    {
-        uint256 hashLocked;
-        if(instantsend.GetLockedOutPointTxHash(txin.prevout, hashLocked) && hash != hashLocked)
-            return state.DoS(10, error("AcceptToMemoryPool : Transaction %s conflicts with completed Transaction Lock %s",
-                                    hash.ToString(), hashLocked.ToString()),
-                            REJECT_INVALID, "tx-txlock-conflict");
-    }
-
+		// Check for conflicts with a completed Transaction Lock
+		BOOST_FOREACH(const CTxIn &txin, tx.vin)
+		{
+			uint256 hashLocked;
+			if (instantsend.GetLockedOutPointTxHash(txin.prevout, hashLocked) && hash != hashLocked)
+				return state.DoS(10, error("AcceptToMemoryPool : Transaction %s conflicts with completed Transaction Lock %s",
+					hash.ToString(), hashLocked.ToString()),
+					REJECT_INVALID, "tx-txlock-conflict");
+		}
+	}
     // Check for conflicts with in-memory transactions
     std::set<uint256> setConflicts;
-    {
-    LOCK(pool.cs); // protect pool.mapNextTx
-    BOOST_FOREACH(const CTxIn &txin, tx.vin)
-    {
-        auto itConflicting = pool.mapNextTx.find(txin.prevout);
-        if (itConflicting != pool.mapNextTx.end())
-        {
-            const CTransaction *ptxConflicting = itConflicting->second;
-            if (!setConflicts.count(ptxConflicting->GetHash()))
-            {
-                // InstantSend txes are not replacable
-                if(instantsend.HasTxLockRequest(ptxConflicting->GetHash())) {
-                    // this tx conflicts with a Transaction Lock Request candidate
-                    return state.DoS(0, error("AcceptToMemoryPool : Transaction %s conflicts with Transaction Lock Request %s",
-                                            hash.ToString(), ptxConflicting->GetHash().ToString()),
-                                    REJECT_INVALID, "tx-txlockreq-mempool-conflict");
-                } else if (instantsend.HasTxLockRequest(hash)) {
-                    // this tx is a tx lock request and it conflicts with a normal tx
-                    return state.DoS(0, error("AcceptToMemoryPool : Transaction Lock Request %s conflicts with transaction %s",
-                                            hash.ToString(), ptxConflicting->GetHash().ToString()),
-                                    REJECT_INVALID, "txlockreq-tx-mempool-conflict");
-                }
-				// SYSCOIN txs are not replacable
-				else if (ptxConflicting->nVersion == SYSCOIN_TX_VERSION) {
-					return state.DoS(0, error("AcceptToMemoryPool : Syscoin Transaction %s conflicts with Transaction request %s",
-						hash.ToString(), ptxConflicting->GetHash().ToString()),
-						REJECT_INVALID, "txn-mempool-conflict");
-				}
-                // Allow opt-out of transaction replacement by setting
-                // nSequence >= maxint-1 on all inputs.
-                //
-                // maxint-1 is picked to still allow use of nLockTime by
-                // non-replaceable transactions. All inputs rather than just one
-                // is for the sake of multi-party protocols, where we don't
-                // want a single party to be able to disable replacement.
-                //
-                // The opt-out ignores descendants as anyone relying on
-                // first-seen mempool behavior should be checking all
-                // unconfirmed ancestors anyway; doing otherwise is hopelessly
-                // insecure.
-                bool fReplacementOptOut = true;
-                if (fEnableReplacement)
-                {
-                    BOOST_FOREACH(const CTxIn &_txin, ptxConflicting->vin)
-                    {
-                        if (_txin.nSequence < std::numeric_limits<unsigned int>::max()-1)
-                        {
-                            fReplacementOptOut = false;
-                            break;
-                        }
-                    }
-                }
-                if (fReplacementOptOut)
-                    return state.Invalid(false, REJECT_CONFLICT, "txn-mempool-conflict");
+	if (!fTPSTestEnabled) {
+		LOCK(pool.cs); // protect pool.mapNextTx
+		BOOST_FOREACH(const CTxIn &txin, tx.vin)
+		{
+			auto itConflicting = pool.mapNextTx.find(txin.prevout);
+			if (itConflicting != pool.mapNextTx.end())
+			{
+				const CTransaction *ptxConflicting = itConflicting->second;
+				if (!setConflicts.count(ptxConflicting->GetHash()))
+				{
+					// InstantSend txes are not replacable
+					if (instantsend.HasTxLockRequest(ptxConflicting->GetHash())) {
+						// this tx conflicts with a Transaction Lock Request candidate
+						return state.DoS(0, error("AcceptToMemoryPool : Transaction %s conflicts with Transaction Lock Request %s",
+							hash.ToString(), ptxConflicting->GetHash().ToString()),
+							REJECT_INVALID, "tx-txlockreq-mempool-conflict");
+					}
+					else if (instantsend.HasTxLockRequest(hash)) {
+						// this tx is a tx lock request and it conflicts with a normal tx
+						return state.DoS(0, error("AcceptToMemoryPool : Transaction Lock Request %s conflicts with transaction %s",
+							hash.ToString(), ptxConflicting->GetHash().ToString()),
+							REJECT_INVALID, "txlockreq-tx-mempool-conflict");
+					}
+					// SYSCOIN txs are not replacable
+					else if (ptxConflicting->nVersion == SYSCOIN_TX_VERSION) {
+						return state.DoS(0, error("AcceptToMemoryPool : Syscoin Transaction %s conflicts with Transaction request %s",
+							hash.ToString(), ptxConflicting->GetHash().ToString()),
+							REJECT_INVALID, "txn-mempool-conflict");
+					}
+					// Allow opt-out of transaction replacement by setting
+					// nSequence >= maxint-1 on all inputs.
+					//
+					// maxint-1 is picked to still allow use of nLockTime by
+					// non-replaceable transactions. All inputs rather than just one
+					// is for the sake of multi-party protocols, where we don't
+					// want a single party to be able to disable replacement.
+					//
+					// The opt-out ignores descendants as anyone relying on
+					// first-seen mempool behavior should be checking all
+					// unconfirmed ancestors anyway; doing otherwise is hopelessly
+					// insecure.
+					bool fReplacementOptOut = true;
+					if (fEnableReplacement)
+					{
+						BOOST_FOREACH(const CTxIn &_txin, ptxConflicting->vin)
+						{
+							if (_txin.nSequence < std::numeric_limits<unsigned int>::max() - 1)
+							{
+								fReplacementOptOut = false;
+								break;
+							}
+						}
+					}
+					if (fReplacementOptOut)
+						return state.Invalid(false, REJECT_CONFLICT, "txn-mempool-conflict");
 
-                setConflicts.insert(ptxConflicting->GetHash());
-            }
-        }
-    }
-    }
+					setConflicts.insert(ptxConflicting->GetHash());
+				}
+			}
+		}
+	}
 
 	{
 		CCoinsView dummy;
@@ -977,6 +996,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 				break;
 			}
 		}
+	
 
 		CTxMemPoolEntry entry(ptx, nFees, nAcceptTime, dPriority, chainActive.Height(),
 			inChainInputValue, fSpendsCoinbase, nSigOps, lp);
@@ -1207,11 +1227,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 				return false;
 			}
 		}
-		else
-		{
-			LOCK(scriptCheckMapCS);
-			scriptCheckMap[hash] = vChecks;
-		}
 		// Remove conflicting transactions from the mempool
 		BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
 		{
@@ -1251,82 +1266,159 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 			if (!pool.exists(hash))
 				return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
 		}
-		if (bMultiThreaded)
+		if (bMultiThreaded && threadpool != NULL)
 		{
+			// track worker thread metrics
+			static int totalWorkerCount = 0;
+			static int totalExecutionCount = 0;
 
-			std::packaged_task<void()> t([&pool, ptx, hash, coins_to_uncache, hashCacheEntry]() {
-				CValidationState vstate;
+			static int totalCheckCount = 0;
+			static int totalCheckMicros = 0;
+
+			static int totalSyscoinCheckCount = 0;
+			static int totalSyscoinCheckMicros = 0;
+
+			static int concurrentExecutionCount = 0;
+			static int maxConcurrentExecutionCount = 0;
+
+			static int64_t totalExecutionMicros = 0;
+			static int64_t minExecutionMicros = 1000000000;
+			static int64_t maxExecutionMicros = 0;
+
+			// define a task for the worker to process
+			std::packaged_task<void()> task([&pool, ptx, hash, coins_to_uncache, hashCacheEntry, vChecks]() {
+				// metrics
+				int64_t time;
+				if (fLogThreadpool) {
+					time = GetTimeMicros();
+					concurrentExecutionCount += 1;
+				}
+				int thisCheckCount = 0;
+				int thisSyscoinCheckCount = 0;
+				int thisCheckMicros = 0;
+				int thisSyscoinCheckMicros = 0;
+				
+
+				CValidationState validationState;
+				CCoinsViewCache coinsViewCache(pcoinsTip);
 				const CTransaction& txIn = *ptx;
-				bool checkFailed = false;
-				CCoinsViewCache vView(pcoinsTip);
+				bool isCheckPassing = true;  // optimistic in case vChecks is empty
+				for (auto &check : vChecks)
 				{
-					LOCK(scriptCheckMapCS);
-					std::vector<CScriptCheck> &vCheckRef = scriptCheckMap[hash];
-					for (auto& check : vCheckRef) {
-						if (!check())
-						{
-							checkFailed = true;
-							break;
-						}
-					}
-				}
-				if (checkFailed) {
-					LOCK2(cs_main, mempool.cs);
-					LogPrint("mempool", "%s: %s\n", "CheckInputs Error", hash.ToString());
-					BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
-						pcoinsTip->Uncache(hashTx);
-					pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
-					pool.ClearPrioritisation(hash);
-					// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
-					CValidationState stateDummy;
-					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
-					nLastMultithreadMempoolFailure = GetTime();
+					if (fLogThreadpool) 
+						thisCheckCount += 1;
+					isCheckPassing = check();
+					if (!isCheckPassing)
 					{
-						LOCK(scriptCheckMapCS);
-						scriptCheckMap.erase(hash);
+						nLastMultithreadMempoolFailure = GetTime();
+						LOCK2(cs_main, mempool.cs);
+						LogPrint("mempool", "%s: %s\n", "CheckInputs Error", hash.ToString());
+						BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
+							pcoinsTip->Uncache(hashTx);
+						pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
+						pool.ClearPrioritisation(hash);
+						// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
+						CValidationState stateDummy;
+						FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
+						break;
 					}
-					return;
 				}
-				if (!CheckSyscoinInputs(txIn, vstate, vView, true, chainActive.Height(), CBlock()))
+				if (fLogThreadpool) {
+					// how long did we run check()'s
+					thisCheckMicros = GetTimeMicros() - time;
+				}
+
+				if (isCheckPassing)
 				{
-					LOCK2(cs_main, mempool.cs);
-					LogPrint("mempool", "%s: %s\n", "CheckSyscoinInputs Error", hash.ToString());
-					BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
-						pcoinsTip->Uncache(hashTx);
-					pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
-					pool.ClearPrioritisation(hash);
-					// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
-					CValidationState stateDummy;
-					FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
-					nLastMultithreadMempoolFailure = GetTime();
+					int64_t syscoinCheckTime;
+					if (fLogThreadpool) {
+						syscoinCheckTime = GetTimeMicros();
+						thisSyscoinCheckCount += 1;
+					}
+					if (!CheckSyscoinInputs(txIn, validationState, coinsViewCache, true, chainActive.Height(), CBlock()))
 					{
-						LOCK(scriptCheckMapCS);
-						scriptCheckMap.erase(hash);
+						nLastMultithreadMempoolFailure = GetTime();
+						LOCK2(cs_main, mempool.cs);
+						LogPrint("mempool", "%s: %s\n", "CheckSyscoinInputs Error", hash.ToString());
+						BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
+							pcoinsTip->Uncache(hashTx);
+						pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
+						pool.ClearPrioritisation(hash);
+						// After we've (potentially) uncached entries, ensure our coins cache is still within its size limits	
+						CValidationState stateDummy;
+						FlushStateToDisk(stateDummy, FLUSH_STATE_PERIODIC);
 					}
-					return;
-				}
-				{
-					LOCK2(scriptCheckMapCS, scriptExecutionCacheCS);
-					scriptCheckMap.erase(hash);
 					scriptExecutionCache.insert(hashCacheEntry);
+					if (fLogThreadpool) {
+						// how long did we run CheckSyscoinInputs()'s
+						thisSyscoinCheckMicros = GetTimeMicros() - syscoinCheckTime;
+					}
+				}
+				if (fLogThreadpool) {
+					// metrics
+					const int64_t &thisExecutionMicros = GetTimeMicros() - time;
+					if (thisExecutionMicros < minExecutionMicros) {
+						minExecutionMicros = thisExecutionMicros;
+					}
+					if (thisExecutionMicros > maxExecutionMicros) {
+						maxExecutionMicros = thisExecutionMicros;
+					}
+					if (concurrentExecutionCount > maxConcurrentExecutionCount) {
+						maxConcurrentExecutionCount = concurrentExecutionCount;
+					}
+					totalCheckCount += thisCheckCount;
+					totalCheckMicros += thisCheckMicros;
+					totalSyscoinCheckCount += thisSyscoinCheckCount;
+					totalSyscoinCheckMicros += thisSyscoinCheckMicros;
+
+					totalExecutionMicros += thisExecutionMicros;
+
+
+					// indicate that this thread is done
+					concurrentExecutionCount -= 1;
 				}
 			});
-			int numTries = 100;
-			while (!threadpool.tryPost(t)) {
-				numTries--;
-				if (numTries <= 0)
-					return state.DoS(0, false,
-						REJECT_INVALID, "threadpool-full", false,
-						"AcceptToMemoryPoolWorker: thread pool queue is full");
-				LogPrintf("AcceptToMemoryPoolWorker: thread pool queue is full");
-				MilliSleep(1);
+			if(fLogThreadpool)
+				totalExecutionCount ++;
+			// every 100th transaction or when not in unit test mode
+			if (fLogThreadpool && totalCheckCount > 0 && totalSyscoinCheckCount > 0 && totalExecutionCount > 0 && (!fUnitTest || (fUnitTest && totalExecutionCount % 100 == 0))) {
+				int avgCheckMicros = totalCheckMicros / totalCheckCount;
+				int avgSyscoinCheckMicros = totalSyscoinCheckMicros / totalSyscoinCheckCount;
+				int avgExecutionMicros = totalExecutionMicros / totalExecutionCount;
+				const std::string &messageCounts = "THREADPOOL::%s:Signature check executions - concurrent: %d, max concurrent: %d, total calls: %d\n";
+				const std::string &messageInternals = "THREADPOOL::%s:Signature check internals - check(%d): total %lld, avg %lld microseconds, syscoin(%d): total %lld, avg %lld microseconds\n";
+				const std::string &messageMicros = "THREADPOOL::%s:Signature check timing - avg: %lld, min: %lld, max: %lld, total: %lld microseconds\n";
+				LogPrint("threadpool", messageCounts, hash.ToString(), concurrentExecutionCount, maxConcurrentExecutionCount, totalExecutionCount);
+				LogPrint("threadpool", messageInternals, hash.ToString(), totalCheckCount, totalCheckMicros, avgCheckMicros, totalSyscoinCheckCount, totalSyscoinCheckMicros, avgSyscoinCheckMicros);
+				LogPrint("threadpool", messageMicros, hash.ToString(), avgExecutionMicros, minExecutionMicros, maxExecutionMicros, totalExecutionMicros);
+			}
+
+			// retry if the threadpool queue is full and return error if we can't post
+			bool isThreadPosted = false;
+			for (int numTries = 1; numTries <= 50; numTries++)
+			{
+				// send task to threadpool pointer from init.cpp
+				isThreadPosted = threadpool->tryPost(task);
+				if (isThreadPosted)
+				{
+					totalWorkerCount += 1;
+					if(!fUnitTest)
+						LogPrint("threadpool", "THREADPOOL::%s:Signature check task #%d added in %d tries\n", hash.ToString(), totalWorkerCount, numTries);
+					break;
+				}
+				LogPrintf("THREADPOOL::AcceptToMemoryPoolWorker: thread pool queue is full\n");
+				MilliSleep(10);
+			}
+			if (!isThreadPosted)
+			{
+				return state.DoS(0, false, REJECT_INVALID, "threadpool-full", false, "AcceptToMemoryPoolWorker: thread pool queue is full");
 			}
 		}
 	}
 
 	GetMainSignals().SyncTransaction(tx, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
-	
-    return true;
+
+	return true;
 }
 
 bool AcceptToMemoryPoolWithTime(CTxMemPool& pool, CValidationState &state, const CTransactionRef &tx, bool fLimitFree,
@@ -1639,12 +1731,12 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, C
 		nSubsidy *= 0.75;
 		if (nHeight > 0 && nStartHeight > 0) {
 			unsigned int nDifferenceInBlocks = 0;
-			if (nStartHeight < nHeight)
-				nDifferenceInBlocks = (nHeight - nStartHeight);
+			if (nHeight > (int)nStartHeight)
+				nDifferenceInBlocks = (nHeight - (int)nStartHeight);
 			// the first three intervals should discount rewards to incentivize bonding over longer terms (we add 3% premium every interval)
 			double fSubsidyAdjustmentPercentage = 0;
 			for (int i = 1; i <= consensusParams.nTotalSeniorityIntervals; i++) {
-				const int &nTotalSeniorityBlocks = i*consensusParams.nSeniorityInterval;
+				const unsigned int &nTotalSeniorityBlocks = i*consensusParams.nSeniorityInterval;
 				if (nDifferenceInBlocks <= nTotalSeniorityBlocks)
 					break;
 				fSubsidyAdjustmentPercentage += 0.03;
@@ -1813,9 +1905,9 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight)
     UpdateCoins(tx, inputs, txundo, nHeight);
 }
 
-bool CScriptCheck::operator()() {
+bool CScriptCheck::operator()() const {
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
-    if (!VerifyScript(scriptSig, scriptPubKey, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, cacheStore), &error)) {
+    if (!VerifyScript(scriptSig, scriptPubKey, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, cacheStore))) {
         return false;
     }
     return true;
@@ -1945,7 +2037,6 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 			if (cacheFullScriptStore && !pvChecks) {
 				// We executed all of the provided scripts, and were told to
 				// cache the result. Do so now.
-				LOCK(scriptExecutionCacheCS);
 				scriptExecutionCache.insert(hashCacheEntry);
 			}
         }
@@ -2649,8 +2740,11 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 	CAmount nTotalRewardWithMasternodes;
 	const CAmount &blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus(), nTotalRewardWithMasternodes);
 
-	if (!IsBlockPayeeValid(*block.vtx[0], pindex->nHeight, blockReward, nTotalRewardWithMasternodes)) {
-		mapRejectedBlocks.insert(std::make_pair(block.GetHash(), GetTime()));
+	if (!IsBlockPayeeValid(*block.vtx[0], pindex->nHeight, blockReward, nFees, nTotalRewardWithMasternodes)) {
+		{
+			LOCK(cs_main);
+			mapRejectedBlocks.insert(std::make_pair(block.GetHash(), GetTime()));
+		}
 		return state.DoS(0, error("ConnectBlock(SYS): couldn't find masternode or superblock payments"),
 			REJECT_INVALID, "bad-cb-payee");
 	}
@@ -2768,9 +2862,9 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode, int n
     if (nLastSetChain == 0) {
         nLastSetChain = nNow;
     }
-    int64_t nMempoolSizeMax = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
-    int64_t cacheSize = pcoinsTip->DynamicMemoryUsage() * DB_PEAK_USAGE_FACTOR;
-    int64_t nTotalSpace = nCoinCacheUsage + std::max<int64_t>(nMempoolSizeMax - nMempoolUsage, 0);
+    size_t nMempoolSizeMax = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
+    size_t cacheSize = pcoinsTip->DynamicMemoryUsage() * DB_PEAK_USAGE_FACTOR;
+    size_t nTotalSpace = nCoinCacheUsage + std::max<int64_t>(nMempoolSizeMax - nMempoolUsage, 0);
     // The cache is large and we're within 10% and 10 MiB of the limit, but we have time now (not in the middle of a block processing).
     bool fCacheLarge = mode == FLUSH_STATE_PERIODIC && cacheSize > std::max((9 * nTotalSpace) / 10, nTotalSpace - MAX_BLOCK_COINSDB_USAGE * 1024 * 1024);
     // The cache is over the limit, we have to write now.
@@ -2906,14 +3000,16 @@ void static UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams) {
             }
         }
     }
-    LogPrintf("%s: new best=%s height=%d version=0x%08x log2_work=%.8f tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)", __func__,
-      chainActive.Tip()->GetBlockHash().ToString(), chainActive.Height(), chainActive.Tip()->nVersion,
-      log(chainActive.Tip()->nChainWork.getdouble())/log(2.0), (unsigned long)chainActive.Tip()->nChainTx,
-      DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()),
-      GuessVerificationProgress(chainParams.TxData(), chainActive.Tip()), pcoinsTip->DynamicMemoryUsage() * (1.0 / (1<<20)), pcoinsTip->GetCacheSize());
-    if (!warningMessages.empty())
-        LogPrintf(" warning='%s'", boost::algorithm::join(warningMessages, ", "));
-    LogPrintf("\n");
+	if (fDebug) {
+		LogPrintf("%s: new best=%s height=%d version=0x%08x log2_work=%.8f tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)", __func__,
+			chainActive.Tip()->GetBlockHash().ToString(), chainActive.Height(), chainActive.Tip()->nVersion,
+			log(chainActive.Tip()->nChainWork.getdouble()) / log(2.0), (unsigned long)chainActive.Tip()->nChainTx,
+			DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()),
+			GuessVerificationProgress(chainParams.TxData(), chainActive.Tip()), pcoinsTip->DynamicMemoryUsage() * (1.0 / (1 << 20)), pcoinsTip->GetCacheSize());
+		if (!warningMessages.empty())
+			LogPrintf(" warning='%s'", boost::algorithm::join(warningMessages, ", "));
+		LogPrintf("\n");
+	}
 }
 
 /** Disconnect chainActive's tip. You probably want to call mempool.removeForReorg and manually re-limit mempool size after this, with cs_main held. */
@@ -4007,7 +4103,7 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
     if (!ActivateBestChain(state, chainparams, pblock))
         return error("%s: ActivateBestChain failed", __func__);
 
-    LogPrintf("%s : ACCEPTED\n", __func__);
+    LogPrint("net", "%s : ACCEPTED\n", __func__);
     return true;
 }
 

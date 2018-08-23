@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2017 The Syscoin Core developers
+// Copyright (c) 2015-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -21,9 +21,7 @@
 #include <boost/thread.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/range/adaptor/reversed.hpp>
-#include <chrono>
 
-using namespace std::chrono;
 using namespace std;
 
 bool IsCertOp(int op) {
@@ -56,19 +54,16 @@ string certFromOp(int op) {
 }
 bool CCert::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
     try {
-        CDataStream dsCert(vchData, SER_NETWORK, PROTOCOL_VERSION);
-        dsCert >> *this;
-
-		vector<unsigned char> vchCertData;
-		Serialize(vchCertData);
-		const uint256 &calculatedHash = Hash(vchCertData.begin(), vchCertData.end());
-		const vector<unsigned char> &vchRandCert = vchFromValue(calculatedHash.GetHex());
-		if(vchRandCert != vchHash)
-		{
+		CDataStream dsCert(vchData, SER_NETWORK, PROTOCOL_VERSION);
+		dsCert >> *this;
+		vector<unsigned char> vchSerializedData;
+		Serialize(vchSerializedData);
+		const uint256 &calculatedHash = Hash(vchSerializedData.begin(), vchSerializedData.end());
+		const vector<unsigned char> &vchRand = vchFromValue(calculatedHash.GetHex());
+		if (vchRand != vchHash) {
 			SetNull();
 			return false;
 		}
-
     } catch (std::exception &e) {
 		SetNull();
         return false;
@@ -125,7 +120,7 @@ bool CCertDB::CleanupDatabase(int &servicesCleaned)
         boost::this_thread::interruption_point();
         try {
 			if (pcursor->GetKey(key) && key.first == "certi") {
-  				if (!GetCert(key.second, txPos) || chainActive.Tip()->GetMedianTimePast() >= GetCertExpiration(txPos))
+  				if (!GetCert(key.second, txPos) || chainActive.Tip()->GetMedianTimePast() >= (int64_t)GetCertExpiration(txPos))
 				{
 					servicesCleaned++;
 					EraseCert(key.second, true);
@@ -144,7 +139,7 @@ bool GetCert(const vector<unsigned char> &vchCert,
 	uint256 txid;
     if (!pcertdb || !pcertdb->ReadCert(vchCert, txPos))
         return false;
-    if (chainActive.Tip()->GetMedianTimePast() >= GetCertExpiration(txPos)) {
+    if (chainActive.Tip()->GetMedianTimePast() >= (int64_t)GetCertExpiration(txPos)) {
 		txPos.SetNull();
         return false;
     }
@@ -155,7 +150,7 @@ bool GetFirstCert(const vector<unsigned char> &vchCert,
 	CCert& txPos) {
 	if (!pcertdb || !pcertdb->ReadFirstCert(vchCert, txPos))
 		return false;
-	if (chainActive.Tip()->GetMedianTimePast() >= GetCertExpiration(txPos)) {
+	if (chainActive.Tip()->GetMedianTimePast() >= (int64_t)GetCertExpiration(txPos)) {
 		txPos.SetNull();
 		return false;
 	}
@@ -222,7 +217,7 @@ bool DecodeCertScript(const CScript& script, int& op,
 		}
 		if (!(opcode >= 0 && opcode <= OP_PUSHDATA4))
 			return false;
-		vvch.push_back(vch);
+		vvch.emplace_back(std::move(vch));
 	}
 
 	// move the pc to after any DROP or NOP
@@ -457,15 +452,15 @@ bool CheckCertInputs(const CTransaction &tx, int op, const vector<vector<unsigne
 	}
 	else
 	{
+		if (theCert.vchAlias != vvchAlias)
+		{
+			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 3015 - " + _("Cannot create this certificate. Certificate owner must sign off on this change.");
+			return true;
+		}
 		if (fJustCheck && GetCert(theCert.vchCert, theCert))
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 3022 - " + _("Certificate already exists");
 			return true;
-		}
-	}
-	if(!bSanityCheck) {
-		if (strResponseEnglish != "") {
-			paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(theCert.vchCert));
 		}
 	}
     // set the cert's txn-dependent values
@@ -475,7 +470,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, const vector<vector<unsigne
 	if (!bSanityCheck) {
 		int64_t ms = INT64_MAX;
 		if (fJustCheck) {
-			ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+			ms = GetTimeMillis();
 		}
 		if (!pcertdb->WriteCert(theCert, op, ms, fJustCheck))
 		{
@@ -550,7 +545,7 @@ UniValue certnew(const JSONRPCRequest& request) {
 	newCert.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
  	
-    vector<unsigned char> vchHashCert = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashCert = vchFromString(hash.GetHex());
 
     scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_CERT) << CScript::EncodeOP_N(OP_CERT_ACTIVATE) << vchHashCert << OP_2DROP << OP_DROP;
     scriptPubKey += scriptPubKeyOrig;
@@ -611,7 +606,7 @@ UniValue certupdate(const JSONRPCRequest& request) {
 	if (!fUnitTest) {
 		ArrivalTimesMap arrivalTimes;
 		pcertdb->ReadISArrivalTimes(vchCert, arrivalTimes);
-		const int64_t & nNow = duration_cast<seconds>(system_clock::now().time_since_epoch()).count();
+		const int64_t & nNow = GetTimeMillis();
 		for (auto& arrivalTime : arrivalTimes) {
 			// if this tx arrived within the minimum latency period flag it as potentially conflicting
 			if ((nNow - (arrivalTime.second / 1000)) < ZDAG_MINIMUM_LATENCY_SECONDS) {
@@ -643,7 +638,7 @@ UniValue certupdate(const JSONRPCRequest& request) {
 	theCert.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
  	
-    vector<unsigned char> vchHashCert = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashCert = vchFromString(hash.GetHex());
     scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_CERT) << CScript::EncodeOP_N(OP_CERT_UPDATE) << vchHashCert << OP_2DROP << OP_DROP;
     scriptPubKey += scriptPubKeyOrig;
 
@@ -708,7 +703,7 @@ UniValue certtransfer(const JSONRPCRequest& request) {
 	if (!fUnitTest) {
 		ArrivalTimesMap arrivalTimes;
 		pcertdb->ReadISArrivalTimes(vchCert, arrivalTimes);
-		const int64_t & nNow = duration_cast<seconds>(system_clock::now().time_since_epoch()).count();
+		const int64_t & nNow = GetTimeMillis();
 		for (auto& arrivalTime : arrivalTimes) {
 			// if this tx arrived within the minimum latency period flag it as potentially conflicting
 			if ((nNow - (arrivalTime.second / 1000)) < ZDAG_MINIMUM_LATENCY_SECONDS) {
@@ -742,7 +737,7 @@ UniValue certtransfer(const JSONRPCRequest& request) {
 	theCert.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
  	
-    vector<unsigned char> vchHashCert = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashCert = vchFromString(hash.GetHex());
     scriptPubKey << CScript::EncodeOP_N(OP_SYSCOIN_CERT) << CScript::EncodeOP_N(OP_CERT_TRANSFER) << vchHashCert << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
     // send the cert pay txn
@@ -841,7 +836,9 @@ bool BuildCertIndexerJson(const CCert& cert, UniValue& oCert)
 	oCert.push_back(Pair("title", stringFromVch(cert.vchTitle)));
 	oCert.push_back(Pair("height", (int)cert.nHeight));
 	oCert.push_back(Pair("category", stringFromVch(cert.sCategory)));
+	// TODO change alias to owner in later release with help of BMD team to detect upstream changes
 	oCert.push_back(Pair("alias", stringFromVch(cert.vchAlias)));
+	// TODO remove in later release with help of BMD team to detect upstream issues
 	oCert.push_back(Pair("expires_on", GetCertExpiration(cert)));
 	return true;
 }
@@ -895,8 +892,6 @@ bool CCertDB::ScanCerts(const int count, const int from, const UniValue& oOption
 			nStartBlock = startblock.get_int();
 		}
 	}
-
-	LOCK(cs_cert);
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
 	CCert txPos;

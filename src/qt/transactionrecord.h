@@ -1,4 +1,5 @@
-// Copyright (c) 2011-2014 The Syscoin Core developers
+// Copyright (c) 2011-2014 The Bitcoin Core developers
+// Copyright (c) 2014-2016 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,7 +21,7 @@ class TransactionStatus
 {
 public:
     TransactionStatus():
-        countsForBalance(false), sortKey(""),
+        countsForBalance(false), lockedByInstantSend(false), sortKey(""),
         matures_in(0), status(Offline), depth(0), open_for(0), cur_num_blocks(-1)
     { }
 
@@ -42,6 +43,8 @@ public:
 
     /// Transaction counts towards available balance
     bool countsForBalance;
+    /// Transaction was locked via InstantSend
+    bool lockedByInstantSend;
     /// Sorting key based on status
     std::string sortKey;
 

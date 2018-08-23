@@ -24,35 +24,4 @@ When a wallet InstantSend transaction is successfully locked a shell command pro
 ```
 
 #### RPC
-
-Details pertaining to an observed "Transaction Lock" can also be retrieved through RPC, it’s important however to understand the underlying mechanism.
-
-By default, the Syscoin Core daemon will launch using the following constant:
-
-```
-static const int DEFAULT_INSTANTSEND_DEPTH = 5;
-```
-
-This value can be overridden by passing the following argument to the Syscoin Core daemon:
-
-```
--instantsenddepth=<n>
-```
-
-The key thing to understand is that this value indicates the number of "confirmations" a successful Transaction Lock represents. When Wallet RPC commands are performed (such as `listsinceblock`) this attribute is taken into account when returning information about the transaction. The value in `confirmations` field you see through RPC is showing the number of `"Blockchain Confirmations" + "InstantSend Depth"` (assuming the funds were sent via InstantSend).
-
-There is also a field named `bcconfirmations`. The value in this field represents the total number of `"Blockchain Confirmations"` for a given transaction without taking into account whether it was InstantSend or not.
-
-**Examples**
-* InstantSend transaction just occurred:
-    * confirmations: 5
-    * bcconfirmations: 0
-* InstantSend transaction received one confirmation from blockchain:
-    * confirmations: 6
-    * bcconfirmations: 1
-* non-InstantSend transaction just occurred:
-    * confirmations: 0
-    * bcconfirmations: 0
-* non-InstantSend transaction received one confirmation from blockchain:
-    * confirmations: 1
-    * bcconfirmations: 1
+Details pertaining to an observed "Transaction Lock" can also be retrieved through RPC. There is a boolean field named `instantlock` which indicates whether a given transaction is locked via InstantSend. This field is present in the output of some wallet RPC commands e.g. `listsinceblock`, `gettransaction` etc. as well as in the output of some mempool RPC commands e.g. `getmempoolentry` and a couple of others like `getrawmempool` (for `verbose=true` only).

@@ -1,6 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Syscoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -46,6 +47,8 @@
 
 extern bool fMasternodeMode;
 extern bool fUnitTest;
+extern bool fTPSTest;
+extern bool fTPSTestEnabled;
 extern bool fAssetAllocationIndex;
 extern bool fLiteMode;
 extern int nWalletBackups;

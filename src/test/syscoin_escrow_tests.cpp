@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2017 The Syscoin Core developers
+// Copyright (c) 2016-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -547,12 +547,13 @@ BOOST_AUTO_TEST_CASE(generate_escrowpruning)
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_bool(), false);
 	ExpireAlias("buyeraliasprune");
 	StartNode("node3");
-	MilliSleep(1500);
+	SleepFor(2000);
 	GenerateBlocks(5, "node3");
 	// node3 shouldn't find the service
 	BOOST_CHECK_THROW(CallRPC("node3", "escrowinfo " + guid1), runtime_error);
 	// cannot leave feedback on expired escrow
 	BOOST_CHECK_THROW(CallRPC("node2", "escrowfeedback " + guid1 + " buyer feedback 2 seller ''"), runtime_error);
+	StopNodes();
 	ECC_Stop();
 }
 
