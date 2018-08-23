@@ -1,5 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -179,9 +180,11 @@ public:
 extern CRPCTable tableRPC;
 // SYSCOIN service rpc functions
 extern UniValue aliasnew(const JSONRPCRequest& request);
+extern UniValue aliasnewestimatedfee(const JSONRPCRequest& request);
 extern UniValue syscointxfund(const JSONRPCRequest& request);
 
 extern UniValue aliasupdate(const JSONRPCRequest& request);
+extern UniValue aliasupdateestimatedfee(const JSONRPCRequest& request);
 extern UniValue aliasinfo(const JSONRPCRequest& request);
 extern UniValue aliasbalance(const JSONRPCRequest& request);
 extern UniValue aliasbalancemulti(const JSONRPCRequest& request);
@@ -237,6 +240,8 @@ extern UniValue assetallocationsenderstatus(const JSONRPCRequest& request);
 extern UniValue listassetallocationtransactions(const JSONRPCRequest& request);
 extern UniValue listassetallocations(const JSONRPCRequest& request);
 extern UniValue tpstestinfo(const JSONRPCRequest& request);
+extern UniValue tpstestadd(const JSONRPCRequest& request);
+extern UniValue tpstestsetenabled(const JSONRPCRequest& request);
 /**
  * Utilities: convert hex-encoded Values
  * (throws error if not hex).
@@ -263,4 +268,3 @@ std::string JSONRPCExecBatch(const UniValue& vReq);
 void RPCNotifyBlockChange(bool ibd, const CBlockIndex *);
 
 #endif // SYSCOIN_RPCSERVER_H
-
