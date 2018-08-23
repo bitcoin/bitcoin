@@ -663,6 +663,31 @@ void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) 
     }
 }
 
+/** RVN START */
+// AvailableCoins + LockedCoins grouped by wallet address (put change in one group with wallet address)
+void WalletModel::listAssets(std::map<QString, std::map<QString, std::vector<COutput> > >& mapCoins) const
+{
+    std::map<QString, std::map<QString, std::vector<COutput> > > mapSortedByAssetName;
+    auto list = wallet->ListAssets();
+
+    for (auto& group : list) {
+        auto address = QString::fromStdString(EncodeDestination(group.first));
+
+        for (auto& coin : group.second) {
+            auto out = coin.tx->tx->vout[coin.i];
+            std::string strAssetName;
+            CAmount nAmount;
+            if (!GetAssetInfoFromScript(out.scriptPubKey, strAssetName, nAmount))
+                continue;
+
+            QString assetName = QString::fromStdString(strAssetName);
+            auto& assetMap = mapCoins[assetName];
+            assetMap[address].emplace_back(coin);
+        }
+    }
+}
+/** RVN END */
+
 bool WalletModel::isLockedCoin(uint256 hash, unsigned int n) const
 {
     LOCK2(cs_main, wallet->cs_wallet);

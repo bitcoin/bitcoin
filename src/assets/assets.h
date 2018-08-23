@@ -45,6 +45,7 @@ class CWallet;
 class CReserveKey;
 class CWalletTx;
 struct CAssetOutputEntry;
+class CCoinControl;
 
 // 50000 * 82 Bytes == 4.1 Mb
 #define MAX_CACHE_ASSETS_SIZE 50000
@@ -345,8 +346,10 @@ bool IsScriptTransferAsset(const CScript& scriptPubKey);
 
 bool IsNewOwnerTxValid(const CTransaction& tx, const std::string& assetName, const std::string& address, std::string& errorMsg);
 
-void GetAllOwnedAssets(CWallet* pwallet, std::vector<std::string>& names);
-void GetAllMyAssets(std::vector<std::string>& names);
+void GetAllAdministrativeAssets(CWallet *pwallet, std::vector<std::string> &names);
+void GetAllMyAssets(CWallet* pwallet, std::vector<std::string>& names, bool fIncludeAdministrator = false, bool fOnlyAdministrator = false);
+/** TO BE USED ONLY ON STARTUP */
+void GetAllMyAssetsFromCache(std::vector<std::string>& names);
 
 void UpdatePossibleAssets();
 
@@ -371,6 +374,6 @@ std::string EncodeIPFS(std::string decoded);
 
 bool CreateAssetTransaction(CWallet* pwallet, const CNewAsset& asset, const std::string& address, std::pair<int, std::string>& error, std::string& rvnChangeAddress, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRequired);
 bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& asset, const std::string& address, const std::string& changeAddress, std::pair<int, std::string>& error, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRequired);
-bool CreateTransferAssetTransaction(CWallet* pwallet, const std::vector< std::pair<CAssetTransfer, std::string> >vTransfers, const std::string& changeAddress, std::pair<int, std::string>& error, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRequired);
+bool CreateTransferAssetTransaction(CWallet* pwallet, const CCoinControl& coinControl, const std::vector< std::pair<CAssetTransfer, std::string> >vTransfers, const std::string& changeAddress, std::pair<int, std::string>& error, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRequired);
 bool SendAssetTransaction(CWallet* pwallet, CWalletTx& transaction, CReserveKey& reserveKey, std::pair<int, std::string>& error, std::string& txid);
 #endif //RAVENCOIN_ASSET_PROTOCOL_H

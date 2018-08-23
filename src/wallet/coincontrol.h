@@ -33,6 +33,14 @@ public:
     //! Fee estimation mode to control arguments to estimateSmartFee
     FeeEstimateMode m_fee_mode;
 
+    /** RVN START */
+    //! Name of the asset that is selected, used when sending assets with coincontrol
+    std::string strAssetSelected;
+    //! If this is being used for assets
+    bool fForAssets;
+    /** RVN END */
+
+
     CCoinControl()
     {
         SetNull();
@@ -49,6 +57,8 @@ public:
         m_confirm_target.reset();
         signalRbf = fWalletRbf;
         m_fee_mode = FeeEstimateMode::UNSET;
+        strAssetSelected = "";
+        fForAssets = false;
     }
 
     bool HasSelected() const
@@ -69,11 +79,14 @@ public:
     void UnSelect(const COutPoint& output)
     {
         setSelected.erase(output);
+        if (!setSelected.size())
+            strAssetSelected = "";
     }
 
     void UnSelectAll()
     {
         setSelected.clear();
+        strAssetSelected = "";
     }
 
     void ListSelected(std::vector<COutPoint>& vOutpoints) const

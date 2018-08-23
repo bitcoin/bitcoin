@@ -872,6 +872,12 @@ public:
     std::map<CTxDestination, std::vector<COutput>> ListCoins() const;
 
     /**
+     * Return list of available assets and locked assets grouped by non-change output address.
+     */
+    std::map<CTxDestination, std::vector<COutput>> ListAssets() const;
+
+
+    /**
      * Find non-change parent output.
      */
     const CTxOut& FindNonChangeParentOutput(const CTransaction& tx, int output) const;

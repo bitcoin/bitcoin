@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>729</width>
-    <height>150</height>
+    <height>202</height>
    </rect>
   </property>
   <property name="focusPolicy">
@@ -59,12 +59,12 @@
        </widget>
       </item>
       <item>
-       <widget class="QCheckBox" name="ownerCheckBox">
+       <widget class="QCheckBox" name="administratorCheckBox">
         <property name="toolTip">
          <string>This transfer will send the ownership asset to the address specified</string>
         </property>
         <property name="text">
-         <string>Send Ownership Asset</string>
+         <string>Send Administrator Asset</string>
         </property>
        </widget>
       </item>

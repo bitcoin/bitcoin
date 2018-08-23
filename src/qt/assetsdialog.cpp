@@ -10,7 +10,7 @@
 #include "addresstablemodel.h"
 #include "ravenunits.h"
 #include "clientmodel.h"
-#include "coincontroldialog.h"
+#include "assetcontroldialog.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
 #include "platformstyle.h"
@@ -78,7 +78,7 @@ AssetsDialog::AssetsDialog(const PlatformStyle *_platformStyle, QWidget *parent)
         ui->sendButton->setIcon(_platformStyle->SingleColorIcon(":/icons/send"));
     }
 
-    GUIUtil::setupAddressWidget(ui->lineEditCoinControlChange, this);
+    GUIUtil::setupAddressWidget(ui->lineEditAssetControlChange, this);
 
     addEntry();
 
@@ -86,9 +86,9 @@ AssetsDialog::AssetsDialog(const PlatformStyle *_platformStyle, QWidget *parent)
     connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
 
     // Coin Control
-    connect(ui->pushButtonCoinControl, SIGNAL(clicked()), this, SLOT(coinControlButtonClicked()));
-    connect(ui->checkBoxCoinControlChange, SIGNAL(stateChanged(int)), this, SLOT(coinControlChangeChecked(int)));
-    connect(ui->lineEditCoinControlChange, SIGNAL(textEdited(const QString &)), this, SLOT(coinControlChangeEdited(const QString &)));
+    connect(ui->pushButtonAssetControl, SIGNAL(clicked()), this, SLOT(assetControlButtonClicked()));
+    connect(ui->checkBoxAssetControlChange, SIGNAL(stateChanged(int)), this, SLOT(assetControlChangeChecked(int)));
+    connect(ui->lineEditAssetControlChange, SIGNAL(textEdited(const QString &)), this, SLOT(assetControlChangeEdited(const QString &)));
 
     // Coin Control: clipboard actions
     QAction *clipboardQuantityAction = new QAction(tr("Copy quantity"), this);
@@ -98,20 +98,20 @@ AssetsDialog::AssetsDialog(const PlatformStyle *_platformStyle, QWidget *parent)
     QAction *clipboardBytesAction = new QAction(tr("Copy bytes"), this);
     QAction *clipboardLowOutputAction = new QAction(tr("Copy dust"), this);
     QAction *clipboardChangeAction = new QAction(tr("Copy change"), this);
-    connect(clipboardQuantityAction, SIGNAL(triggered()), this, SLOT(coinControlClipboardQuantity()));
-    connect(clipboardAmountAction, SIGNAL(triggered()), this, SLOT(coinControlClipboardAmount()));
-    connect(clipboardFeeAction, SIGNAL(triggered()), this, SLOT(coinControlClipboardFee()));
-    connect(clipboardAfterFeeAction, SIGNAL(triggered()), this, SLOT(coinControlClipboardAfterFee()));
-    connect(clipboardBytesAction, SIGNAL(triggered()), this, SLOT(coinControlClipboardBytes()));
-    connect(clipboardLowOutputAction, SIGNAL(triggered()), this, SLOT(coinControlClipboardLowOutput()));
-    connect(clipboardChangeAction, SIGNAL(triggered()), this, SLOT(coinControlClipboardChange()));
-    ui->labelCoinControlQuantity->addAction(clipboardQuantityAction);
-    ui->labelCoinControlAmount->addAction(clipboardAmountAction);
-    ui->labelCoinControlFee->addAction(clipboardFeeAction);
-    ui->labelCoinControlAfterFee->addAction(clipboardAfterFeeAction);
-    ui->labelCoinControlBytes->addAction(clipboardBytesAction);
-    ui->labelCoinControlLowOutput->addAction(clipboardLowOutputAction);
-    ui->labelCoinControlChange->addAction(clipboardChangeAction);
+    connect(clipboardQuantityAction, SIGNAL(triggered()), this, SLOT(assetControlClipboardQuantity()));
+    connect(clipboardAmountAction, SIGNAL(triggered()), this, SLOT(assetControlClipboardAmount()));
+    connect(clipboardFeeAction, SIGNAL(triggered()), this, SLOT(assetControlClipboardFee()));
+    connect(clipboardAfterFeeAction, SIGNAL(triggered()), this, SLOT(assetControlClipboardAfterFee()));
+    connect(clipboardBytesAction, SIGNAL(triggered()), this, SLOT(assetControlClipboardBytes()));
+    connect(clipboardLowOutputAction, SIGNAL(triggered()), this, SLOT(assetControlClipboardLowOutput()));
+    connect(clipboardChangeAction, SIGNAL(triggered()), this, SLOT(assetControlClipboardChange()));
+    ui->labelAssetControlQuantity->addAction(clipboardQuantityAction);
+    ui->labelAssetControlAmount->addAction(clipboardAmountAction);
+    ui->labelAssetControlFee->addAction(clipboardFeeAction);
+    ui->labelAssetControlAfterFee->addAction(clipboardAfterFeeAction);
+    ui->labelAssetControlBytes->addAction(clipboardBytesAction);
+    ui->labelAssetControlLowOutput->addAction(clipboardLowOutputAction);
+    ui->labelAssetControlChange->addAction(clipboardChangeAction);
 
     // init transaction fee section
     QSettings settings;
@@ -186,29 +186,29 @@ void AssetsDialog::setModel(WalletModel *_model)
         updateDisplayUnit();
 
         // Coin Control
-        connect(_model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(coinControlUpdateLabels()));
-        connect(_model->getOptionsModel(), SIGNAL(coinControlFeaturesChanged(bool)), this, SLOT(coinControlFeatureChanged(bool)));
+        connect(_model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(assetControlUpdateLabels()));
+        connect(_model->getOptionsModel(), SIGNAL(coinControlFeaturesChanged(bool)), this, SLOT(assetControlFeatureChanged(bool)));
 
 
-        ui->frameCoinControl->setVisible(false);
+        ui->frameAssetControl->setVisible(false);
         //TODO Turn on the coin control features for assets
-//        ui->frameCoinControl->setVisible(_model->getOptionsModel()->getCoinControlFeatures());
-        coinControlUpdateLabels();
+        ui->frameAssetControl->setVisible(_model->getOptionsModel()->getCoinControlFeatures());
+        assetControlUpdateLabels();
 
         // fee section
         for (const int &n : confTargets) {
             ui->confTargetSelector->addItem(tr("%1 (%2 blocks)").arg(GUIUtil::formatNiceTimeOffset(n*Params().GetConsensus().nPowTargetSpacing)).arg(n));
         }
         connect(ui->confTargetSelector, SIGNAL(currentIndexChanged(int)), this, SLOT(updateSmartFeeLabel()));
-        connect(ui->confTargetSelector, SIGNAL(currentIndexChanged(int)), this, SLOT(coinControlUpdateLabels()));
+        connect(ui->confTargetSelector, SIGNAL(currentIndexChanged(int)), this, SLOT(assetControlUpdateLabels()));
         connect(ui->groupFee, SIGNAL(buttonClicked(int)), this, SLOT(updateFeeSectionControls()));
-        connect(ui->groupFee, SIGNAL(buttonClicked(int)), this, SLOT(coinControlUpdateLabels()));
-        connect(ui->customFee, SIGNAL(valueChanged()), this, SLOT(coinControlUpdateLabels()));
+        connect(ui->groupFee, SIGNAL(buttonClicked(int)), this, SLOT(assetControlUpdateLabels()));
+        connect(ui->customFee, SIGNAL(valueChanged()), this, SLOT(assetControlUpdateLabels()));
         connect(ui->checkBoxMinimumFee, SIGNAL(stateChanged(int)), this, SLOT(setMinimumFee()));
         connect(ui->checkBoxMinimumFee, SIGNAL(stateChanged(int)), this, SLOT(updateFeeSectionControls()));
-        connect(ui->checkBoxMinimumFee, SIGNAL(stateChanged(int)), this, SLOT(coinControlUpdateLabels()));
+        connect(ui->checkBoxMinimumFee, SIGNAL(stateChanged(int)), this, SLOT(assetControlUpdateLabels()));
         connect(ui->optInRBF, SIGNAL(stateChanged(int)), this, SLOT(updateSmartFeeLabel()));
-        connect(ui->optInRBF, SIGNAL(stateChanged(int)), this, SLOT(coinControlUpdateLabels()));
+        connect(ui->optInRBF, SIGNAL(stateChanged(int)), this, SLOT(assetControlUpdateLabels()));
         ui->customFee->setSingleStep(GetRequiredFee(1000));
         updateFeeSectionControls();
         updateMinFeeLabel();
@@ -289,12 +289,21 @@ void AssetsDialog::on_sendButton_clicked()
         vTransfers.emplace_back(std::make_pair(CAssetTransfer(recipient.assetName.toStdString(), recipient.amount), recipient.address.toStdString()));
     }
 
+    // Always use a CCoinControl instance, use the AssetControlDialog instance if CoinControl has been enabled
+    CCoinControl ctrl;
+    if (model->getOptionsModel()->getCoinControlFeatures())
+        ctrl = *AssetControlDialog::assetControl;
+
+    ctrl.fForAssets = true;
+
+    updateAssetControlState(ctrl);
+
     CWalletTx tx;
     CReserveKey reservekey(model->getWallet());
     std::pair<int, std::string> error;
     CAmount nFeeRequired;
 
-    if (!CreateTransferAssetTransaction(model->getWallet(), vTransfers, "", error, tx, reservekey, nFeeRequired)) {
+    if (!CreateTransferAssetTransaction(model->getWallet(), ctrl, vTransfers, "", error, tx, reservekey, nFeeRequired)) {
         QMessageBox msgBox;
         msgBox.setText(QString::fromStdString(error.second));
         msgBox.exec();
@@ -379,8 +388,8 @@ void AssetsDialog::on_sendButton_clicked()
     if (sendStatus.status == WalletModel::OK)
     {
         accept();
-        CoinControlDialog::coinControl->UnSelectAll();
-        coinControlUpdateLabels();
+        AssetControlDialog::assetControl->UnSelectAll();
+        assetControlUpdateLabels();
     }
     fNewRecipientAllowed = true;
 }
@@ -411,20 +420,31 @@ SendAssetsEntry *AssetsDialog::addEntry()
 {
     LOCK(cs_main);
     std::vector<std::string> assets;
-    GetAllMyAssets(assets);
+    if (model)
+        GetAllMyAssets(model->getWallet(), assets);
+    else // If the model isn't present. Grab the list of assets that the cache thinks you own
+        GetAllMyAssetsFromCache(assets);
 
     QStringList list;
-    for (auto name : assets) {
-        if (!IsAssetNameAnOwner(name))
-            list << QString::fromStdString(name);
+    bool fIsOwner = false;
+    bool fIsAssetControl = false;
+    if (AssetControlDialog::assetControl->HasSelected()) {
+        list << QString::fromStdString(AssetControlDialog::assetControl->strAssetSelected);
+        fIsOwner = IsAssetNameAnOwner(AssetControlDialog::assetControl->strAssetSelected);
+        fIsAssetControl = true;
+    } else {
+        for (auto name : assets) {
+            if (!IsAssetNameAnOwner(name))
+                list << QString::fromStdString(name);
+        }
     }
 
     SendAssetsEntry *entry = new SendAssetsEntry(platformStyle, list, this);
     entry->setModel(model);
     ui->entries->addWidget(entry);
     connect(entry, SIGNAL(removeEntry(SendAssetsEntry*)), this, SLOT(removeEntry(SendAssetsEntry*)));
-    connect(entry, SIGNAL(payAmountChanged()), this, SLOT(coinControlUpdateLabels()));
-    connect(entry, SIGNAL(subtractFeeFromAmountChanged()), this, SLOT(coinControlUpdateLabels()));
+    connect(entry, SIGNAL(payAmountChanged()), this, SLOT(assetControlUpdateLabels()));
+    connect(entry, SIGNAL(subtractFeeFromAmountChanged()), this, SLOT(assetControlUpdateLabels()));
 
     // Focus the field, so that entry can start immediately
     entry->clear();
@@ -435,14 +455,20 @@ SendAssetsEntry *AssetsDialog::addEntry()
     if(bar)
         bar->setSliderPosition(bar->maximum());
 
+    entry->IsAssetControl(fIsAssetControl, fIsOwner);
+
+    if (list.size() == 1)
+        entry->setCurrentIndex(1);
+
     updateTabsAndLabels();
+
     return entry;
 }
 
 void AssetsDialog::updateTabsAndLabels()
 {
     setupTabChain(0);
-    coinControlUpdateLabels();
+    assetControlUpdateLabels();
 }
 
 void AssetsDialog::removeEntry(SendAssetsEntry* entry)
@@ -658,7 +684,7 @@ void AssetsDialog::updateMinFeeLabel()
         );
 }
 
-void AssetsDialog::updateCoinControlState(CCoinControl& ctrl)
+void AssetsDialog::updateAssetControlState(CCoinControl& ctrl)
 {
     if (ui->radioCustomFee->isChecked()) {
         ctrl.m_feerate = CFeeRate(ui->customFee->value());
@@ -676,7 +702,7 @@ void AssetsDialog::updateSmartFeeLabel()
     if(!model || !model->getOptionsModel())
         return;
     CCoinControl coin_control;
-    updateCoinControlState(coin_control);
+    updateAssetControlState(coin_control);
     coin_control.m_feerate.reset(); // Explicitly use only fee estimation rate for smart fee labels
     FeeCalculation feeCalc;
     CFeeRate feeRate = CFeeRate(GetMinimumFee(1000, coin_control, ::mempool, ::feeEstimator, &feeCalc));
@@ -703,147 +729,148 @@ void AssetsDialog::updateSmartFeeLabel()
 }
 
 // Coin Control: copy label "Quantity" to clipboard
-void AssetsDialog::coinControlClipboardQuantity()
+void AssetsDialog::assetControlClipboardQuantity()
 {
-    GUIUtil::setClipboard(ui->labelCoinControlQuantity->text());
+    GUIUtil::setClipboard(ui->labelAssetControlQuantity->text());
 }
 
 // Coin Control: copy label "Amount" to clipboard
-void AssetsDialog::coinControlClipboardAmount()
+void AssetsDialog::assetControlClipboardAmount()
 {
-    GUIUtil::setClipboard(ui->labelCoinControlAmount->text().left(ui->labelCoinControlAmount->text().indexOf(" ")));
+    GUIUtil::setClipboard(ui->labelAssetControlAmount->text().left(ui->labelAssetControlAmount->text().indexOf(" ")));
 }
 
 // Coin Control: copy label "Fee" to clipboard
-void AssetsDialog::coinControlClipboardFee()
+void AssetsDialog::assetControlClipboardFee()
 {
-    GUIUtil::setClipboard(ui->labelCoinControlFee->text().left(ui->labelCoinControlFee->text().indexOf(" ")).replace(ASYMP_UTF8, ""));
+    GUIUtil::setClipboard(ui->labelAssetControlFee->text().left(ui->labelAssetControlFee->text().indexOf(" ")).replace(ASYMP_UTF8, ""));
 }
 
 // Coin Control: copy label "After fee" to clipboard
-void AssetsDialog::coinControlClipboardAfterFee()
+void AssetsDialog::assetControlClipboardAfterFee()
 {
-    GUIUtil::setClipboard(ui->labelCoinControlAfterFee->text().left(ui->labelCoinControlAfterFee->text().indexOf(" ")).replace(ASYMP_UTF8, ""));
+    GUIUtil::setClipboard(ui->labelAssetControlAfterFee->text().left(ui->labelAssetControlAfterFee->text().indexOf(" ")).replace(ASYMP_UTF8, ""));
 }
 
 // Coin Control: copy label "Bytes" to clipboard
-void AssetsDialog::coinControlClipboardBytes()
+void AssetsDialog::assetControlClipboardBytes()
 {
-    GUIUtil::setClipboard(ui->labelCoinControlBytes->text().replace(ASYMP_UTF8, ""));
+    GUIUtil::setClipboard(ui->labelAssetControlBytes->text().replace(ASYMP_UTF8, ""));
 }
 
 // Coin Control: copy label "Dust" to clipboard
-void AssetsDialog::coinControlClipboardLowOutput()
+void AssetsDialog::assetControlClipboardLowOutput()
 {
-    GUIUtil::setClipboard(ui->labelCoinControlLowOutput->text());
+    GUIUtil::setClipboard(ui->labelAssetControlLowOutput->text());
 }
 
 // Coin Control: copy label "Change" to clipboard
-void AssetsDialog::coinControlClipboardChange()
+void AssetsDialog::assetControlClipboardChange()
 {
-    GUIUtil::setClipboard(ui->labelCoinControlChange->text().left(ui->labelCoinControlChange->text().indexOf(" ")).replace(ASYMP_UTF8, ""));
+    GUIUtil::setClipboard(ui->labelAssetControlChange->text().left(ui->labelAssetControlChange->text().indexOf(" ")).replace(ASYMP_UTF8, ""));
 }
 
 // Coin Control: settings menu - coin control enabled/disabled by user
-void AssetsDialog::coinControlFeatureChanged(bool checked)
+void AssetsDialog::assetControlFeatureChanged(bool checked)
 {
-    ui->frameCoinControl->setVisible(checked);
+    ui->frameAssetControl->setVisible(checked);
 
     if (!checked && model) // coin control features disabled
-        CoinControlDialog::coinControl->SetNull();
+        AssetControlDialog::assetControl->SetNull();
 
-    coinControlUpdateLabels();
+    assetControlUpdateLabels();
 }
 
 // Coin Control: button inputs -> show actual coin control dialog
-void AssetsDialog::coinControlButtonClicked()
+void AssetsDialog::assetControlButtonClicked()
 {
-    CoinControlDialog dlg(platformStyle);
+    AssetControlDialog dlg(platformStyle);
     dlg.setModel(model);
     dlg.exec();
-    coinControlUpdateLabels();
+    assetControlUpdateLabels();
+    assetControlUpdateSendCoinsDialog();
 }
 
 // Coin Control: checkbox custom change address
-void AssetsDialog::coinControlChangeChecked(int state)
+void AssetsDialog::assetControlChangeChecked(int state)
 {
     if (state == Qt::Unchecked)
     {
-        CoinControlDialog::coinControl->destChange = CNoDestination();
-        ui->labelCoinControlChangeLabel->clear();
+        AssetControlDialog::assetControl->destChange = CNoDestination();
+        ui->labelAssetControlChangeLabel->clear();
     }
     else
         // use this to re-validate an already entered address
-        coinControlChangeEdited(ui->lineEditCoinControlChange->text());
+        assetControlChangeEdited(ui->lineEditAssetControlChange->text());
 
-    ui->lineEditCoinControlChange->setEnabled((state == Qt::Checked));
+    ui->lineEditAssetControlChange->setEnabled((state == Qt::Checked));
 }
 
 // Coin Control: custom change address changed
-void AssetsDialog::coinControlChangeEdited(const QString& text)
+void AssetsDialog::assetControlChangeEdited(const QString& text)
 {
     if (model && model->getAddressTableModel())
     {
         // Default to no change address until verified
-        CoinControlDialog::coinControl->destChange = CNoDestination();
-        ui->labelCoinControlChangeLabel->setStyleSheet("QLabel{color:red;}");
+        AssetControlDialog::assetControl->destChange = CNoDestination();
+        ui->labelAssetControlChangeLabel->setStyleSheet("QLabel{color:red;}");
 
         const CTxDestination dest = DecodeDestination(text.toStdString());
 
         if (text.isEmpty()) // Nothing entered
         {
-            ui->labelCoinControlChangeLabel->setText("");
+            ui->labelAssetControlChangeLabel->setText("");
         }
         else if (!IsValidDestination(dest)) // Invalid address
         {
-            ui->labelCoinControlChangeLabel->setText(tr("Warning: Invalid Raven address"));
+            ui->labelAssetControlChangeLabel->setText(tr("Warning: Invalid Raven address"));
         }
         else // Valid address
         {
             if (!model->IsSpendable(dest)) {
-                ui->labelCoinControlChangeLabel->setText(tr("Warning: Unknown change address"));
+                ui->labelAssetControlChangeLabel->setText(tr("Warning: Unknown change address"));
 
                 // confirmation dialog
                 QMessageBox::StandardButton btnRetVal = QMessageBox::question(this, tr("Confirm custom change address"), tr("The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?"),
                                                                               QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
 
                 if(btnRetVal == QMessageBox::Yes)
-                    CoinControlDialog::coinControl->destChange = dest;
+                    AssetControlDialog::assetControl->destChange = dest;
                 else
                 {
-                    ui->lineEditCoinControlChange->setText("");
-                    ui->labelCoinControlChangeLabel->setStyleSheet("QLabel{color:black;}");
-                    ui->labelCoinControlChangeLabel->setText("");
+                    ui->lineEditAssetControlChange->setText("");
+                    ui->labelAssetControlChangeLabel->setStyleSheet("QLabel{color:black;}");
+                    ui->labelAssetControlChangeLabel->setText("");
                 }
             }
             else // Known change address
             {
-                ui->labelCoinControlChangeLabel->setStyleSheet("QLabel{color:black;}");
+                ui->labelAssetControlChangeLabel->setStyleSheet("QLabel{color:black;}");
 
                 // Query label
                 QString associatedLabel = model->getAddressTableModel()->labelForAddress(text);
                 if (!associatedLabel.isEmpty())
-                    ui->labelCoinControlChangeLabel->setText(associatedLabel);
+                    ui->labelAssetControlChangeLabel->setText(associatedLabel);
                 else
-                    ui->labelCoinControlChangeLabel->setText(tr("(no label)"));
+                    ui->labelAssetControlChangeLabel->setText(tr("(no label)"));
 
-                CoinControlDialog::coinControl->destChange = dest;
+                AssetControlDialog::assetControl->destChange = dest;
             }
         }
     }
 }
 
 // Coin Control: update labels
-void AssetsDialog::coinControlUpdateLabels()
+void AssetsDialog::assetControlUpdateLabels()
 {
     if (!model || !model->getOptionsModel())
         return;
 
-    updateCoinControlState(*CoinControlDialog::coinControl);
+    updateAssetControlState(*AssetControlDialog::assetControl);
 
     // set pay amounts
-    CoinControlDialog::payAmounts.clear();
-    CoinControlDialog::fSubtractFeeFromAmount = false;
+    AssetControlDialog::payAmounts.clear();
+    AssetControlDialog::fSubtractFeeFromAmount = false;
 
     for(int i = 0; i < ui->entries->count(); ++i)
     {
@@ -851,27 +878,27 @@ void AssetsDialog::coinControlUpdateLabels()
         if(entry && !entry->isHidden())
         {
             SendAssetsRecipient rcp = entry->getValue();
-            CoinControlDialog::payAmounts.append(rcp.amount);
+            AssetControlDialog::payAmounts.append(rcp.amount);
 //            if (rcp.fSubtractFeeFromAmount)
-//                CoinControlDialog::fSubtractFeeFromAmount = true;
+//                AssetControlDialog::fSubtractFeeFromAmount = true;
         }
     }
 
-    if (CoinControlDialog::coinControl->HasSelected())
+    if (AssetControlDialog::assetControl->HasSelected())
     {
         // actual coin control calculation
-        CoinControlDialog::updateLabels(model, this);
+        AssetControlDialog::updateLabels(model, this);
 
         // show coin control stats
-        ui->labelCoinControlAutomaticallySelected->hide();
-        ui->widgetCoinControl->show();
+        ui->labelAssetControlAutomaticallySelected->hide();
+        ui->widgetAssetControl->show();
     }
     else
     {
         // hide coin control stats
-        ui->labelCoinControlAutomaticallySelected->show();
-        ui->widgetCoinControl->hide();
-        ui->labelCoinControlInsuffFunds->hide();
+        ui->labelAssetControlAutomaticallySelected->show();
+        ui->widgetAssetControl->hide();
+        ui->labelAssetControlInsuffFunds->hide();
     }
 }
 
@@ -936,5 +963,21 @@ void AssetsDialog::mineButtonClicked()
     }
 
     generateBlocks(coinbase_script, num_generate, max_tries, true);
+}
+
+void AssetsDialog::assetControlUpdateSendCoinsDialog()
+{
+    AssetControlDialog::assetControl->HasSelected();
+    for(int i = 0; i < ui->entries->count(); ++i)
+    {
+        SendAssetsEntry *entry = qobject_cast<SendAssetsEntry*>(ui->entries->itemAt(i)->widget());
+        if(entry)
+        {
+            removeEntry(entry);
+        }
+    }
+
+    addEntry();
+
 }
 /** RVN END */

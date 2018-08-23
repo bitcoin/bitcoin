@@ -265,7 +265,10 @@ public:
     void getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<COutput>& vOutputs);
     bool isSpent(const COutPoint& outpoint) const;
     void listCoins(std::map<QString, std::vector<COutput> >& mapCoins) const;
-
+    /** RVN START */
+    // Map of asset name to map of address to CTxOut
+    void listAssets(std::map<QString, std::map<QString, std::vector<COutput> > >& mapCoins) const;
+    /** RVN END */
     bool isLockedCoin(uint256 hash, unsigned int n) const;
     void lockCoin(COutPoint& output);
     void unlockCoin(COutPoint& output);
