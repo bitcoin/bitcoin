@@ -219,10 +219,9 @@ void SyscoinCore::shutdown()
 static int qt_argc = 1;
 static const char* qt_argv = "syscoin-qt";
 
-SyscoinApplication::SyscoinApplication(interfaces::Node& node):
+SyscoinApplication::SyscoinApplication():
     QApplication(qt_argc, const_cast<char **>(&qt_argv)),
     coreThread(nullptr),
-    m_node(node),
     optionsModel(nullptr),
     clientModel(nullptr),
     window(nullptr),
@@ -272,12 +271,13 @@ void SyscoinApplication::createPaymentServer()
 
 void SyscoinApplication::createOptionsModel(bool resetSettings)
 {
-    optionsModel = new OptionsModel(m_node, this, resetSettings);
+    optionsModel = new OptionsModel(this, resetSettings);
+    optionsModel->setNode(node());
 }
 
 void SyscoinApplication::createWindow(const NetworkStyle *networkStyle)
 {
-    window = new SyscoinGUI(m_node, platformStyle, networkStyle, nullptr);
+    window = new SyscoinGUI(node(), platformStyle, networkStyle, nullptr);
 
     pollShutdownTimer = new QTimer(window);
     connect(pollShutdownTimer, &QTimer::timeout, window, &SyscoinGUI::detectShutdown);
@@ -285,17 +285,25 @@ void SyscoinApplication::createWindow(const NetworkStyle *networkStyle)
 
 void SyscoinApplication::createSplashScreen(const NetworkStyle *networkStyle)
 {
-    SplashScreen *splash = new SplashScreen(m_node, nullptr, networkStyle);
+    assert(!m_splash);
+    m_splash = new SplashScreen(nullptr, networkStyle);
+    m_splash->setNode(node());
     // We don't hold a direct pointer to the splash screen after creation, but the splash
     // screen will take care of deleting itself when finish() happens.
-    splash->show();
-    connect(this, &SyscoinApplication::splashFinished, splash, &SplashScreen::finish);
-    connect(this, &SyscoinApplication::requestedShutdown, splash, &QWidget::close);
+    m_splash->show();
+    connect(this, &SyscoinApplication::splashFinished, m_splash, &SplashScreen::finish);
+    connect(this, &SyscoinApplication::requestedShutdown, m_splash, &QWidget::close);
+}
+
+void SyscoinApplication::setNode(interfaces::Node& node)
+{
+    assert(!m_node);
+    m_node = &node;
 }
 // SYSCOIN
 bool SyscoinApplication::baseInitialize(char* argv[])
 {
-    return m_node.baseInitialize(argv);
+    return node().baseInitialize(argv);
 }
 
 void SyscoinApplication::startThread()
@@ -303,7 +311,7 @@ void SyscoinApplication::startThread()
     if(coreThread)
         return;
     coreThread = new QThread(this);
-    SyscoinCore *executor = new SyscoinCore(m_node);
+    SyscoinCore *executor = new SyscoinCore(node());
     executor->moveToThread(coreThread);
 
     /*  communication to and from thread */
@@ -359,7 +367,7 @@ void SyscoinApplication::requestShutdown()
     window->unsubscribeFromCoreSignals();
     // Request node shutdown, which can interrupt long operations, like
     // rescanning a wallet.
-    m_node.startShutdown();
+    node().startShutdown();
     // Unsetting the client model can cause the current thread to wait for node
     // to complete an operation, like wait for a RPC execution to complete.
     window->setClientModel(nullptr);
@@ -381,7 +389,7 @@ void SyscoinApplication::initializeResult(bool success, interfaces::BlockAndHead
     {
         // Log this only after AppInitMain finishes, as then logging setup is guaranteed complete
         qInfo() << "Platform customization:" << platformStyle->getName();
-        clientModel = new ClientModel(m_node, optionsModel);
+        clientModel = new ClientModel(node(), optionsModel);
         window->setClientModel(clientModel, &tip_info);
 #ifdef ENABLE_WALLET
         if (WalletModel::isWalletEnabled()) {
@@ -482,7 +490,8 @@ int GuiMain(int argc, char* argv[])
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif
 
-    SyscoinApplication app(*node);
+    SyscoinApplication app;
+    app.setNode(*node);
 
     /// 2. Parse command-line options. We do this after qt in order to show an error if there are problems parsing these
     // Command-line options take precedence:
@@ -639,10 +648,10 @@ int GuiMain(int argc, char* argv[])
         }
     } catch (const std::exception& e) {
         PrintExceptionContinue(&e, "Runaway exception");
-        app.handleRunawayException(QString::fromStdString(node->getWarnings().translated));
+        app.handleRunawayException(QString::fromStdString(app.node().getWarnings().translated));
     } catch (...) {
         PrintExceptionContinue(nullptr, "Runaway exception");
-        app.handleRunawayException(QString::fromStdString(node->getWarnings().translated));
+        app.handleRunawayException(QString::fromStdString(app.node().getWarnings().translated));
     }
     return rv;
 }
