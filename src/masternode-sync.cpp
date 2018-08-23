@@ -1,4 +1,5 @@
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2017-2018 The Syscoin Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -133,7 +134,7 @@ void CMasternodeSync::ProcessMessage(CNode* pfrom, const std::string& strCommand
 void CMasternodeSync::ProcessTick(CConnman& connman)
 {
     static int nTick = 0;
-    if(nTick++ % MASTERNODE_SYNC_TICK_SECONDS != 0) return;
+    nTick++;
 
     // reset the sync process if the last call to this function was more than 60 minutes ago (client was in sleep mode)
     static int64_t nTimeLastProcess = GetTime();
@@ -184,20 +185,16 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
         // QUICK MODE (REGTEST ONLY!)
         if(Params().NetworkIDString() == CBaseChainParams::REGTEST)
         {
-            if(nRequestedMasternodeAttempt <= 2) {
+            if (nRequestedMasternodeAssets == MASTERNODE_SYNC_WAITING) {
                 connman.PushMessage(pnode, msgMaker.Make(NetMsgType::GETSPORKS)); //get current network sporks
-            } else if(nRequestedMasternodeAttempt < 4) {
+            } else if (nRequestedMasternodeAssets == MASTERNODE_SYNC_LIST) {
                 mnodeman.DsegUpdate(pnode, connman);
-            } else if(nRequestedMasternodeAttempt < 6) {
-                //sync payment votes
-                
-                connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MASTERNODEPAYMENTSYNC)); //sync payment votes
-                
+            } else if (nRequestedMasternodeAssets == MASTERNODE_SYNC_MNW) {
+                connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MASTERNODEPAYMENTSYNC)); //sync payment votes 
+            } else if (nRequestedMasternodeAssets == MASTERNODE_SYNC_GOVERNANCE) {
                 SendGovernanceSyncRequest(pnode, connman);
-            } else {
-                nRequestedMasternodeAssets = MASTERNODE_SYNC_FINISHED;
             }
-            nRequestedMasternodeAttempt++;
+            SwitchToNextAsset(connman);
             connman.ReleaseNodeVector(vNodesCopy);
             return;
         }
@@ -257,6 +254,12 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
                     return;
                 }
 
+	            // request from three peers max
+				if (nRequestedMasternodeAttempt > 2) {
+					connman.ReleaseNodeVector(vNodesCopy);
+					return;
+					
+				}
                 // only request once from each peer
                 if(netfulfilledman.HasFulfilledRequest(pnode->addr, "masternode-list-sync")) continue;
                 netfulfilledman.AddFulfilledRequest(pnode->addr, "masternode-list-sync");
@@ -300,6 +303,13 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
                     connman.ReleaseNodeVector(vNodesCopy);
                     return;
                 }
+
+				// request from three peers max
+				if (nRequestedMasternodeAttempt > 2) {
+					connman.ReleaseNodeVector(vNodesCopy);
+					return;
+
+				}
 
                 // only request once from each peer
                 if(netfulfilledman.HasFulfilledRequest(pnode->addr, "masternode-payment-sync")) continue;

@@ -1,6 +1,7 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Syscoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -109,7 +110,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "signrawtransaction", 1, "prevtxs" },
     { "signrawtransaction", 2, "privkeys" },
     { "sendrawtransaction", 1, "allowhighfees" },
-    { "sendrawtransaction", 2, "instantsend" },    
+    { "sendrawtransaction", 2, "instantsend" },
+    { "sendrawtransaction", 3, "bypasslimits" },
     { "fundrawtransaction", 1, "options" },
     { "gettxout", 1, "n" },
     { "gettxout", 2, "include_mempool" },
@@ -172,6 +174,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
 	{ "aliasupdatewhitelist", 1, "aliases" },
 	{ "aliasnew", 2, "accept_transfers_flags" },
 	{ "aliasnew", 3, "expire_timestamp" },
+	{ "aliasnewestimatedfee", 2, "accept_transfers_flags" },
+	{ "aliasnewestimatedfee", 3, "expire_timestamp" },
 	{ "syscointxfund", 1, "addresses" },
 	{ "syscointxfund", 2, "instantsend" },
 	{ "aliasbalance", 1, "instantsend" },
@@ -179,6 +183,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
 	{ "aliasbalancemulti", 1, "instantsend" },
 	{ "aliasupdate", 3, "accept_transfers_flags" },
 	{ "aliasupdate", 4, "expire_timestamp" },
+	{ "aliasupdateestimatedfee", 3, "accept_transfers_flags" },
+	{ "aliasupdateestimatedfee", 4, "expire_timestamp" },
 	{ "listaliases", 0, "count" },
 	{ "listaliases", 1, "from" },
 	{ "listaliases", 2, "options" },
@@ -239,7 +245,10 @@ static const CRPCConvertParam vRPCConvertParams[] =
 	{ "assetsend", 2, "inputs" },
 	{ "listassets", 0, "count" },
 	{ "listassets", 1, "from" },
-	{ "listassets", 2, "options" }
+	{ "listassets", 2, "options" },
+	{ "tpstestadd", 0, "starttime" },
+	{ "tpstestadd", 1, "rawrxs" },
+	{ "tpstestsetenabled", 0, "enabled" }
 };
 
 class CRPCConvertTable

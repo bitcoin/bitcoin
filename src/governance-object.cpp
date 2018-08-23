@@ -1,4 +1,5 @@
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2017-2018 The Syscoin Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -240,7 +241,7 @@ uint256 CGovernanceObject::GetHash() const
 
     // CREATE HASH OF ALL IMPORTANT PIECES OF DATA
 
-    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+    CHashWriter ss(SER_GETHASH, MIN_PEER_PROTO_VERSION);
     ss << nHashParent;
     ss << nRevision;
     ss << nTime;
@@ -581,7 +582,7 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
     // GET CONFIRMATIONS FOR TRANSACTION
 
     AssertLockHeld(cs_main);
-    int nConfirmationsIn = instantsend.GetConfirmations(nCollateralHash);
+    int nConfirmationsIn = 0;
     if (nBlockHash != uint256()) {
         BlockMap::iterator mi = mapBlockIndex.find(nBlockHash);
         if (mi != mapBlockIndex.end() && (*mi).second) {
@@ -592,7 +593,8 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
         }
     }
 
-    if(nConfirmationsIn < GOVERNANCE_FEE_CONFIRMATIONS) {
+    if((nConfirmationsIn < GOVERNANCE_FEE_CONFIRMATIONS)  &&
+       (!instantsend.IsLockedInstantSendTransaction(nCollateralHash))){
         strError = strprintf("Collateral requires at least %d confirmations to be relayed throughout the network (it has only %d)", GOVERNANCE_FEE_CONFIRMATIONS, nConfirmationsIn);
         if (nConfirmationsIn >= GOVERNANCE_MIN_RELAY_FEE_CONFIRMATIONS) {
             fMissingConfirmations = true;
@@ -686,11 +688,8 @@ void CGovernanceObject::UpdateSentinelVariables()
 
     // CALCULATE THE MINUMUM VOTE COUNT REQUIRED FOR FULL SIGNAL
 
-    // todo - 12.1 - should be set to `10` after governance vote compression is implemented
     int nAbsVoteReq = std::max(Params().GetConsensus().nGovernanceMinQuorum, nMnCount / 10);
     int nAbsDeleteReq = std::max(Params().GetConsensus().nGovernanceMinQuorum, (2 * nMnCount) / 3);
-    // todo - 12.1 - Temporarily set to 1 for testing - reverted
-    //nAbsVoteReq = 1;
 
     // SET SENTINEL FLAGS TO FALSE
 
@@ -712,30 +711,6 @@ void CGovernanceObject::UpdateSentinelVariables()
     if(GetAbsoluteYesCount(VOTE_SIGNAL_ENDORSED) >= nAbsVoteReq) fCachedEndorsed = true;
 
     if(GetAbsoluteNoCount(VOTE_SIGNAL_VALID) >= nAbsVoteReq) fCachedValid = false;
-}
-
-void CGovernanceObject::swap(CGovernanceObject& first, CGovernanceObject& second) // nothrow
-{
-    // enable ADL (not necessary in our case, but good practice)
-    using std::swap;
-
-    // by swapping the members of two classes,
-    // the two classes are effectively swapped
-    swap(first.nHashParent, second.nHashParent);
-    swap(first.nRevision, second.nRevision);
-    swap(first.nTime, second.nTime);
-    swap(first.nDeletionTime, second.nDeletionTime);
-    swap(first.nCollateralHash, second.nCollateralHash);
-    swap(first.vchData, second.vchData);
-    swap(first.nObjectType, second.nObjectType);
-
-    // swap all cached valid flags
-    swap(first.fCachedFunding, second.fCachedFunding);
-    swap(first.fCachedValid, second.fCachedValid);
-    swap(first.fCachedDelete, second.fCachedDelete);
-    swap(first.fCachedEndorsed, second.fCachedEndorsed);
-    swap(first.fDirtyCache, second.fDirtyCache);
-    swap(first.fExpired, second.fExpired);
 }
 
 void CGovernanceObject::CheckOrphanVotes(CConnman& connman)

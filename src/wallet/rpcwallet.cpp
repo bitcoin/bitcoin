@@ -1,5 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
 // Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -34,6 +35,7 @@ using namespace std;
 #include "offer.h"
 #include "escrow.h"
 #include "assetallocation.h"
+#include "asset.h"
 #include "coincontrol.h"
 extern bool GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, std::vector<unsigned char> &vchPubKey);
 extern std::string stringFromVch(const std::vector<unsigned char> &vch);
@@ -69,7 +71,7 @@ void EnsureWalletIsUnlocked()
 
 void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
 {
-    int confirms = wtx.GetDepthInMainChain(false);
+    int confirms = wtx.GetDepthInMainChain();
     bool fLocked = instantsend.IsLockedInstantSendTransaction(wtx.GetHash());
     entry.push_back(Pair("confirmations", confirms));
     entry.push_back(Pair("instantlock", fLocked));
@@ -689,12 +691,12 @@ UniValue getreceivedbyaddress(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw std::runtime_error(
-            "getreceivedbyaddress \"address\" ( minconf addlockconf )\n"
+            "getreceivedbyaddress \"address\" ( minconf addlocked )\n"
             "\nReturns the total amount received by the given address in transactions with at least minconf confirmations.\n"
             "\nArguments:\n"
             "1. \"address\"         (string, required) The syscoin address for transactions.\n"
             "2. minconf             (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
-            "3. addlockconf         (bool, optional, default=false) Whether to add " + std::to_string(nInstantSendDepth) + " confirmations to transactions locked via InstantSend.\n"
+            "3. addlocked           (bool, optional, default=false) Whether to include transactions locked via InstantSend.\n"
             "\nResult:\n"
             "amount   (numeric) The total amount in " + CURRENCY_UNIT + " received at this address.\n"
             "\nExamples:\n"
@@ -722,7 +724,7 @@ UniValue getreceivedbyaddress(const JSONRPCRequest& request)
     int nMinDepth = 1;
     if (request.params.size() > 1)
         nMinDepth = request.params[1].get_int();
-    bool fAddLockConf = (request.params.size() > 2 && request.params[2].get_bool());
+    bool fAddLocked = (request.params.size() > 2 && request.params[2].get_bool());
 
     // Tally
     CAmount nAmount = 0;
@@ -734,7 +736,7 @@ UniValue getreceivedbyaddress(const JSONRPCRequest& request)
 
         BOOST_FOREACH(const CTxOut& txout, wtx.tx->vout)
             if (txout.scriptPubKey == scriptPubKey)
-                if (wtx.GetDepthInMainChain(fAddLockConf) >= nMinDepth)
+                if ((wtx.GetDepthInMainChain() >= nMinDepth) || (fAddLocked && wtx.IsLockedByInstantSend()))
                     nAmount += txout.nValue;
     }
 
@@ -749,12 +751,12 @@ UniValue getreceivedbyaccount(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw std::runtime_error(
-            "getreceivedbyaccount \"account\" ( minconf addlockconf )\n"
+            "getreceivedbyaccount \"account\" ( minconf addlocked )\n"
             "\nDEPRECATED. Returns the total amount received by addresses with <account> in transactions with specified minimum number of confirmations.\n"
             "\nArguments:\n"
             "1. \"account\"      (string, required) The selected account, may be the default account using \"\".\n"
             "2. minconf        (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
-            "3. addlockconf    (bool, optional, default=false) Whether to add " + std::to_string(nInstantSendDepth) + " confirmations to transactions locked via InstantSend.\n"
+            "3. addlocked      (bool, optional, default=false) Whether to include transactions locked via InstantSend.\n"
             "\nResult:\n"
             "amount            (numeric) The total amount in " + CURRENCY_UNIT + " received for this account.\n"
             "\nExamples:\n"
@@ -774,7 +776,7 @@ UniValue getreceivedbyaccount(const JSONRPCRequest& request)
     int nMinDepth = 1;
     if (request.params.size() > 1)
         nMinDepth = request.params[1].get_int();
-    bool fAddLockConf = (request.params.size() > 2 && request.params[2].get_bool());
+    bool fAddLocked = (request.params.size() > 2 && request.params[2].get_bool());
 
     // Get the set of pub keys assigned to account
     std::string strAccount = AccountFromValue(request.params[0]);
@@ -792,7 +794,7 @@ UniValue getreceivedbyaccount(const JSONRPCRequest& request)
         {
             CTxDestination address;
             if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*pwalletMain, address) && setAddress.count(address))
-                if (wtx.GetDepthInMainChain(fAddLockConf) >= nMinDepth)
+                if ((wtx.GetDepthInMainChain() >= nMinDepth) || (fAddLocked && wtx.IsLockedByInstantSend()))
                     nAmount += txout.nValue;
         }
     }
@@ -808,7 +810,7 @@ UniValue getbalance(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() > 4)
         throw std::runtime_error(
-            "getbalance ( \"account\" minconf addlockconf include_watchonly )\n"
+            "getbalance ( \"account\" minconf addlocked include_watchonly )\n"
             "\nIf account is not specified, returns the server's total available balance.\n"
             "If account is specified (DEPRECATED), returns the balance in the account.\n"
             "Note that the account \"\" is not the same as leaving the parameter out.\n"
@@ -816,7 +818,7 @@ UniValue getbalance(const JSONRPCRequest& request)
             "\nArguments:\n"
             "1. \"account\"        (string, optional) DEPRECATED. The selected account, or \"*\" for entire wallet. It may be the default account using \"\".\n"
             "2. minconf          (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
-            "3. addlockconf      (bool, optional, default=false) Whether to add " + std::to_string(nInstantSendDepth) + " confirmations to transactions locked via InstantSend.\n"
+            "3. addlocked      (bool, optional, default=false) Whether to add  balance from transactions locked via InstantSend.\n"
             "4. include_watchonly (bool, optional, default=false) Also include balance in watch-only addresses (see 'importaddress')\n"
             "\nResult:\n"
             "amount              (numeric) The total amount in " + CURRENCY_UNIT + " received for this account.\n"
@@ -837,7 +839,7 @@ UniValue getbalance(const JSONRPCRequest& request)
     int nMinDepth = 1;
     if (request.params.size() > 1)
         nMinDepth = request.params[1].get_int();
-    bool fAddLockConf = (request.params.size() > 2 && request.params[2].get_bool());
+    bool fAddLocked = (request.params.size() > 2 && request.params[2].get_bool());
     isminefilter filter = ISMINE_SPENDABLE;
     if(request.params.size() > 3)
         if(request.params[3].get_bool())
@@ -859,7 +861,7 @@ UniValue getbalance(const JSONRPCRequest& request)
             std::list<COutputEntry> listReceived;
             std::list<COutputEntry> listSent;
             wtx.GetAmounts(listReceived, listSent, allFee, strSentAccount, filter);
-            if (wtx.GetDepthInMainChain(fAddLockConf) >= nMinDepth)
+            if ((wtx.GetDepthInMainChain() >= nMinDepth) || (fAddLocked && wtx.IsLockedByInstantSend()))
             {
                 BOOST_FOREACH(const COutputEntry& r, listReceived)
                     nBalance += r.amount;
@@ -873,7 +875,7 @@ UniValue getbalance(const JSONRPCRequest& request)
 
     std::string strAccount = AccountFromValue(request.params[0]);
 
-    CAmount nBalance = pwalletMain->GetAccountBalance(strAccount, nMinDepth, filter, fAddLockConf);
+    CAmount nBalance = pwalletMain->GetAccountBalance(strAccount, nMinDepth, filter, fAddLocked);
 
     return ValueFromAmount(nBalance);
 }
@@ -948,7 +950,7 @@ UniValue sendfrom(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 3 || request.params.size() > 7)
         throw std::runtime_error(
-            "sendfrom \"fromaccount\" \"toaddress\" amount ( minconf addlockconf \"comment\" \"comment_to\" )\n"
+            "sendfrom \"fromaccount\" \"toaddress\" amount ( minconf addlocked \"comment\" \"comment_to\" )\n"
             "\nDEPRECATED (use sendtoaddress). Sent an amount from an account to a syscoin address."
             + HelpRequiringPassphrase() + "\n"
             "\nArguments:\n"
@@ -959,7 +961,7 @@ UniValue sendfrom(const JSONRPCRequest& request)
             "2. \"toaddress\"         (string, required) The syscoin address to send funds to.\n"
             "3. amount              (numeric or string, required) The amount in " + CURRENCY_UNIT + " (transaction fee is added on top).\n"
             "4. minconf             (numeric, optional, default=1) Only use funds with at least this many confirmations.\n"
-            "5. addlockconf         (bool, optional, default=false) Whether to add " + std::to_string(nInstantSendDepth) + " confirmations to transactions locked via InstantSend.\n"
+            "5. addlocked         (bool, optional, default=false) Whether to include transactions locked via InstantSend.\n"
             "6. \"comment\"           (string, optional) A comment used to store what the transaction is for. \n"
             "                       This is not part of the transaction, just kept in your wallet.\n"
             "7. \"comment_to\"        (string, optional) An optional comment to store the name of the person or organization \n"
@@ -988,7 +990,7 @@ UniValue sendfrom(const JSONRPCRequest& request)
     int nMinDepth = 1;
     if (request.params.size() > 3)
         nMinDepth = request.params[3].get_int();
-    bool fAddLockConf = (request.params.size() > 4 && request.params[4].get_bool());
+    bool fAddLocked = (request.params.size() > 4 && request.params[4].get_bool());
 
     CWalletTx wtx;
     wtx.strFromAccount = strAccount;
@@ -1000,7 +1002,7 @@ UniValue sendfrom(const JSONRPCRequest& request)
     EnsureWalletIsUnlocked();
 
     // Check funds
-    CAmount nBalance = pwalletMain->GetAccountBalance(strAccount, nMinDepth, ISMINE_SPENDABLE, fAddLockConf);
+    CAmount nBalance = pwalletMain->GetAccountBalance(strAccount, nMinDepth, ISMINE_SPENDABLE, fAddLocked);
     if (nAmount > nBalance)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
 
@@ -1017,7 +1019,7 @@ UniValue sendmany(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 8)
         throw std::runtime_error(
-            "sendmany \"fromaccount\" {\"address\":amount,...} ( minconf addlockconf \"comment\" [\"address\",...] subtractfeefromamount use_is use_ps )\n"
+            "sendmany \"fromaccount\" {\"address\":amount,...} ( minconf addlocked \"comment\" [\"address\",...] subtractfeefromamount use_is use_ps )\n"
             "\nSend multiple times. Amounts are double-precision floating point numbers."
             + HelpRequiringPassphrase() + "\n"
             "\nArguments:\n"
@@ -1028,7 +1030,7 @@ UniValue sendmany(const JSONRPCRequest& request)
             "      ,...\n"
             "    }\n"
             "3. minconf                 (numeric, optional, default=1) Only use the balance confirmed at least this many times.\n"
-            "4. addlockconf             (bool, optional, default=false) Whether to add " + std::to_string(nInstantSendDepth) + " confirmations to transactions locked via InstantSend.\n"
+            "4. addlocked               (bool, optional, default=false) Whether to include transactions locked via InstantSend.\n"
             "5. \"comment\"               (string, optional) A comment\n"
             "6. subtractfeefromamount   (array, optional) A json array with addresses.\n"
             "                           The fee will be equally deducted from the amount of each selected address.\n"
@@ -1062,7 +1064,7 @@ UniValue sendmany(const JSONRPCRequest& request)
     int nMinDepth = 1;
     if (request.params.size() > 2)
         nMinDepth = request.params[2].get_int();
-    bool fAddLockConf = (request.params.size() > 3 && request.params[3].get_bool());
+    bool fAddLocked = (request.params.size() > 3 && request.params[3].get_bool());
 
     CWalletTx wtx;
     wtx.strFromAccount = strAccount;
@@ -1108,7 +1110,7 @@ UniValue sendmany(const JSONRPCRequest& request)
     EnsureWalletIsUnlocked();
 
     // Check funds
-    CAmount nBalance = pwalletMain->GetAccountBalance(strAccount, nMinDepth, ISMINE_SPENDABLE, fAddLockConf);
+    CAmount nBalance = pwalletMain->GetAccountBalance(strAccount, nMinDepth, ISMINE_SPENDABLE, fAddLocked);
     if (totalAmount > nBalance)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
 
@@ -1209,7 +1211,7 @@ UniValue ListReceived(const UniValue& params, bool fByAccounts)
     int nMinDepth = 1;
     if (params.size() > 0)
         nMinDepth = params[0].get_int();
-    bool fAddLockConf = (params.size() > 1 && params[1].get_bool());
+    bool fAddLocked = (params.size() > 1 && params[1].get_bool());
 
     // Whether to include empty accounts
     bool fIncludeEmpty = false;
@@ -1230,8 +1232,8 @@ UniValue ListReceived(const UniValue& params, bool fByAccounts)
         if (wtx.IsCoinBase() || !CheckFinalTx(*wtx.tx))
             continue;
 
-        int nDepth = wtx.GetDepthInMainChain(fAddLockConf);
-        if (nDepth < nMinDepth)
+        int nDepth = wtx.GetDepthInMainChain();
+        if ((nDepth < nMinDepth) && !(fAddLocked && wtx.IsLockedByInstantSend()))
             continue;
 
         BOOST_FOREACH(const CTxOut& txout, wtx.tx->vout)
@@ -1335,11 +1337,11 @@ UniValue listreceivedbyaddress(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() > 4)
         throw std::runtime_error(
-            "listreceivedbyaddress ( minconf addlockconf include_empty include_watchonly)\n"
-            "\nList balances by receiving address.\n"
+            "listreceivedbyaddress ( minconf addlocked include_empty include_watchonly)\n"
+            "\nList incoming payments grouped by receiving address.\n"
             "\nArguments:\n"
             "1. minconf           (numeric, optional, default=1) The minimum number of confirmations before payments are included.\n"
-            "2. addlockconf       (bool, optional, default=false) Whether to add " + std::to_string(nInstantSendDepth) + " confirmations to transactions locked via InstantSend.\n"
+            "2. addlocked         (bool, optional, default=false) Whether to include transactions locked via InstantSend.\n"
             "3. include_empty     (bool, optional, default=false) Whether to include addresses that haven't received any payments.\n"
             "4. include_watchonly (bool, optional, default=false) Whether to include watch-only addresses (see 'importaddress').\n"
 
@@ -1351,8 +1353,8 @@ UniValue listreceivedbyaddress(const JSONRPCRequest& request)
             "    \"account\" : \"accountname\",         (string) DEPRECATED. The account of the receiving address. The default account is \"\".\n"
             "    \"amount\" : x.xxx,                  (numeric) The total amount in " + CURRENCY_UNIT + " received by the address\n"
             "    \"confirmations\" : n                (numeric) The number of confirmations of the most recent transaction included.\n"
-            "                                                 If 'addlockconf' is true, the minimum number of confirmations is calculated\n"
-            "                                                 including additional " + std::to_string(nInstantSendDepth) + " confirmations for transactions locked via InstantSend\n"
+            "                                                 If 'addlocked' is true, the number of confirmations can be less than\n"
+            "                                                 configured for transactions locked via InstantSend\n"
             "    \"label\" : \"label\",               (string) A comment for the address/transaction, if any\n"
             "    \"txids\": [\n"
             "       n,                                (numeric) The ids of transactions received with the address \n"
@@ -1380,11 +1382,11 @@ UniValue listreceivedbyaccount(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() > 4)
         throw std::runtime_error(
-            "listreceivedbyaccount ( minconf addlockconf include_empty include_watchonly)\n"
-            "\nDEPRECATED. List balances by account.\n"
+            "listreceivedbyaccount ( minconf addlocked include_empty include_watchonly)\n"
+            "\nDEPRECATED. List incoming payments grouped by account.\n"
             "\nArguments:\n"
             "1. minconf           (numeric, optional, default=1) The minimum number of confirmations before payments are included.\n"
-            "2. addlockconf       (bool, optional, default=false) Whether to add " + std::to_string(nInstantSendDepth) + " confirmations to transactions locked via InstantSend.\n"
+            "2. addlocked         (bool, optional, default=false) Whether to include transactions locked via InstantSend.\n"
             "3. include_empty     (bool, optional, default=false) Whether to include accounts that haven't received any payments.\n"
             "4. include_watchonly (bool, optional, default=false) Whether to include watch-only addresses (see 'importaddress').\n"
 
@@ -1457,7 +1459,7 @@ void ListTransactions(const CWalletTx& wtx, const std::string& strAccount, int n
             entry.push_back(Pair("abandoned", wtx.isAbandoned()));
 			// SYSCOIN
 			const CTransaction& tx = *wtx.tx;
-			if (tx.nVersion == SYSCOIN_TX_VERSION && (IsSyscoinScript(tx.vout[s.vout].scriptPubKey, op, vvchArgs) || (tx.vout[s.vout].scriptPubKey[0] == OP_RETURN && DecodeAndParseSyscoinTx(tx, op, vvchArgs, type))))
+			if (tx.nVersion == SYSCOIN_TX_VERSION && DecodeAndParseSyscoinTx(tx, op, vvchArgs, type))
 			{
 				int aliasOp;
 				vector<vector<unsigned char> > aliasVvch;
@@ -1469,9 +1471,7 @@ void ListTransactions(const CWalletTx& wtx, const std::string& strAccount, int n
 				string strResponseEnglish = "";
 				string strResponseGUID = "";
 				strResponse = GetSyscoinTransactionDescription(tx, op, strResponseEnglish, type, strResponseGUID);
-				entry.push_back(Pair("systx", strResponse));
-				entry.push_back(Pair("systype", strResponseEnglish));
-				entry.push_back(Pair("sysguid", strResponseGUID));
+				
 				if (op == OP_ASSET_ALLOCATION_SEND || op == OP_ASSET_SEND) {
 					for (auto& vin : tx.vin) {
 						if (!pwalletMain || !pwalletMain->mapWallet.count(vin.prevout.hash)) break;
@@ -1485,11 +1485,15 @@ void ListTransactions(const CWalletTx& wtx, const std::string& strAccount, int n
 
 					CAssetAllocation assetallocation(tx);
 					if (!assetallocation.IsNull()) {
+						CAsset dbAsset;
+						GetAsset(assetallocation.vchAsset, dbAsset);
+						strResponse = strResponseEnglish + " " + stringFromVch(dbAsset.vchSymbol);
 						if (!assetallocation.listSendingAllocationAmounts.empty()) {
 							for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
 								UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
+								// update to owner
 								oAssetAllocationReceiversObj.push_back(Pair("aliasto", stringFromVch(amountTuple.first)));
-								oAssetAllocationReceiversObj.push_back(Pair("amount", ValueFromAmount(amountTuple.second)));
+								oAssetAllocationReceiversObj.push_back(Pair("amount", ValueFromAssetAmount(amountTuple.second, dbAsset.nPrecision, dbAsset.bUseInputRanges)));
 								oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
 							}
 
@@ -1497,16 +1501,23 @@ void ListTransactions(const CWalletTx& wtx, const std::string& strAccount, int n
 						else if (!assetallocation.listSendingAllocationInputs.empty()) {
 							for (auto& inputTuple : assetallocation.listSendingAllocationInputs) {
 								UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
+								UniValue oAssetAllocationInputsArray(UniValue::VARR);
 								oAssetAllocationReceiversObj.push_back(Pair("aliasto", stringFromVch(inputTuple.first)));
 								for (auto& inputRange : inputTuple.second) {
-									oAssetAllocationReceiversObj.push_back(Pair("start", (int)inputRange.start));
-									oAssetAllocationReceiversObj.push_back(Pair("end", (int)inputRange.end));
+									UniValue oInput(UniValue::VOBJ);
+									oInput.push_back(Pair("start", (int)inputRange.start));
+									oInput.push_back(Pair("end", (int)inputRange.end));
+									oAssetAllocationInputsArray.push_back(oInput);
 								}
+								oAssetAllocationReceiversObj.push_back(Pair("inputs", oAssetAllocationInputsArray));
 								oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
 							}
 						}
 					}
 				}
+				entry.push_back(Pair("systx", strResponse));
+				entry.push_back(Pair("systype", strResponseEnglish));
+				entry.push_back(Pair("sysguid", strResponseGUID));
 				entry.push_back(Pair("sysallocations", oAssetAllocationReceiversArray));
 				entry.push_back(Pair("sysalias", aliasName));
 			}
@@ -1515,7 +1526,7 @@ void ListTransactions(const CWalletTx& wtx, const std::string& strAccount, int n
     }
 
     // Received
-    if (listReceived.size() > 0 && wtx.GetDepthInMainChain() >= nMinDepth)
+    if (listReceived.size() > 0 && ((wtx.GetDepthInMainChain() >= nMinDepth) || wtx.IsLockedByInstantSend()))
     {
         BOOST_FOREACH(const COutputEntry& r, listReceived)
         {
@@ -1550,7 +1561,7 @@ void ListTransactions(const CWalletTx& wtx, const std::string& strAccount, int n
                     WalletTxToJSON(wtx, entry);
 				// SYSCOIN
 				const CTransaction& tx = *wtx.tx;
-				if (tx.nVersion == SYSCOIN_TX_VERSION && (IsSyscoinScript(tx.vout[r.vout].scriptPubKey, op, vvchArgs) || (tx.vout[r.vout].scriptPubKey[0] == OP_RETURN && DecodeAndParseSyscoinTx(tx, op, vvchArgs, type))))
+				if (tx.nVersion == SYSCOIN_TX_VERSION && DecodeAndParseSyscoinTx(tx, op, vvchArgs, type))
 				{
 					int aliasOp;
 					vector<vector<unsigned char> > aliasVvch;
@@ -1578,11 +1589,14 @@ void ListTransactions(const CWalletTx& wtx, const std::string& strAccount, int n
 
 						CAssetAllocation assetallocation(tx);
 						if (!assetallocation.IsNull()) {
+							CAsset dbAsset;
+							GetAsset(assetallocation.vchAsset, dbAsset);
 							if (!assetallocation.listSendingAllocationAmounts.empty()) {
 								for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
 									UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
+									// update to owner
 									oAssetAllocationReceiversObj.push_back(Pair("aliasto", stringFromVch(amountTuple.first)));
-									oAssetAllocationReceiversObj.push_back(Pair("amount", ValueFromAmount(amountTuple.second)));
+									oAssetAllocationReceiversObj.push_back(Pair("amount", ValueFromAssetAmount(amountTuple.second, dbAsset.nPrecision, dbAsset.bUseInputRanges)));
 									oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
 								}
 
@@ -1590,11 +1604,15 @@ void ListTransactions(const CWalletTx& wtx, const std::string& strAccount, int n
 							else if (!assetallocation.listSendingAllocationInputs.empty()) {
 								for (auto& inputTuple : assetallocation.listSendingAllocationInputs) {
 									UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
+									UniValue oAssetAllocationInputsArray(UniValue::VARR);
 									oAssetAllocationReceiversObj.push_back(Pair("aliasto", stringFromVch(inputTuple.first)));
 									for (auto& inputRange : inputTuple.second) {
-										oAssetAllocationReceiversObj.push_back(Pair("start", (int)inputRange.start));
-										oAssetAllocationReceiversObj.push_back(Pair("end", (int)inputRange.end));
+										UniValue oInput(UniValue::VOBJ);
+										oInput.push_back(Pair("start", (int)inputRange.start));
+										oInput.push_back(Pair("end", (int)inputRange.end));
+										oAssetAllocationInputsArray.push_back(oInput);
 									}
+									oAssetAllocationReceiversObj.push_back(Pair("inputs", oAssetAllocationInputsArray));
 									oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
 								}
 							}
@@ -1761,11 +1779,11 @@ UniValue listaccounts(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() > 3)
         throw std::runtime_error(
-            "listaccounts ( minconf addlockconf include_watchonly)\n"
+            "listaccounts ( minconf addlocked include_watchonly)\n"
             "\nDEPRECATED. Returns Object that has account names as keys, account balances as values.\n"
             "\nArguments:\n"
             "1. minconf             (numeric, optional, default=1) Only include transactions with at least this many confirmations\n"
-            "2. addlockconf         (bool, optional, default=false) Whether to add " + std::to_string(nInstantSendDepth) + " confirmations to transactions locked via InstantSend.\n"
+            "2. addlocked           (bool, optional, default=false) Whether to include transactions locked via InstantSend.\n"
             "3. include_watchonly   (bool, optional, default=false) Include balances in watch-only addresses (see 'importaddress')\n"
             "\nResult:\n"
             "{                    (json object where keys are account names, and values are numeric balances\n"
@@ -1788,7 +1806,7 @@ UniValue listaccounts(const JSONRPCRequest& request)
     int nMinDepth = 1;
     if (request.params.size() > 0)
         nMinDepth = request.params[0].get_int();
-    bool fAddLockConf = (request.params.size() > 1 && request.params[1].get_bool());
+    bool fAddLocked = (request.params.size() > 1 && request.params[1].get_bool());
     isminefilter includeWatchonly = ISMINE_SPENDABLE;
     if(request.params.size() > 2)
         if(request.params[2].get_bool())
@@ -1807,14 +1825,14 @@ UniValue listaccounts(const JSONRPCRequest& request)
         std::string strSentAccount;
         std::list<COutputEntry> listReceived;
         std::list<COutputEntry> listSent;
-        int nDepth = wtx.GetDepthInMainChain(fAddLockConf);
+        int nDepth = wtx.GetDepthInMainChain();
         if (wtx.GetBlocksToMaturity() > 0 || nDepth < 0)
             continue;
         wtx.GetAmounts(listReceived, listSent, nFee, strSentAccount, includeWatchonly);
         mapAccountBalances[strSentAccount] -= nFee;
         BOOST_FOREACH(const COutputEntry& s, listSent)
             mapAccountBalances[strSentAccount] -= s.amount;
-        if (nDepth >= nMinDepth)
+        if ((nDepth >= nMinDepth) || (fAddLocked && wtx.IsLockedByInstantSend()))
         {
             BOOST_FOREACH(const COutputEntry& r, listReceived)
                 if (pwalletMain->mapAddressBook.count(r.destination))
@@ -1930,7 +1948,7 @@ UniValue listsinceblock(const JSONRPCRequest& request)
     {
         CWalletTx tx = (*it).second;
 
-        if (depth == -1 || tx.GetDepthInMainChain(false) < depth)
+        if (depth == -1 || tx.GetDepthInMainChain() < depth)
             ListTransactions(tx, "*", 0, true, transactions, filter);
     }
 
@@ -2835,7 +2853,7 @@ UniValue listunspent(const JSONRPCRequest& request)
         entry.push_back(Pair("confirmations", out.nDepth));
         entry.push_back(Pair("spendable", out.fSpendable));
         entry.push_back(Pair("solvable", out.fSolvable));
-        entry.push_back(Pair("ps_rounds", pwalletMain->GetOutpointPrivateSendRounds(COutPoint(out.tx->GetHash(), out.i))));
+        entry.push_back(Pair("ps_rounds", pwalletMain->GetCappedOutpointPrivateSendRounds(COutPoint(out.tx->GetHash(), out.i))));
         results.push_back(entry);
     }
 
@@ -3103,11 +3121,11 @@ static const CRPCCommand commands[] =
     { "wallet",             "getaccountaddress",        &getaccountaddress,        true,   {"account"} },
     { "wallet",             "getaccount",               &getaccount,               true,   {"address"} },
     { "wallet",             "getaddressesbyaccount",    &getaddressesbyaccount,    true,   {"account"} },
-    { "wallet",             "getbalance",               &getbalance,               false,  {"account","minconf","addlockconf","include_watchonly"} },
+    { "wallet",             "getbalance",               &getbalance,               false,  {"account","minconf","addlocked","include_watchonly"} },
     { "wallet",             "getnewaddress",            &getnewaddress,            true,   {"account"} },
     { "wallet",             "getrawchangeaddress",      &getrawchangeaddress,      true,   {} },
-    { "wallet",             "getreceivedbyaccount",     &getreceivedbyaccount,     false,  {"account","minconf","addlockconf"} },
-    { "wallet",             "getreceivedbyaddress",     &getreceivedbyaddress,     false,  {"address","minconf","addlockconf"} },
+    { "wallet",             "getreceivedbyaccount",     &getreceivedbyaccount,     false,  {"account","minconf","addlocked"} },
+    { "wallet",             "getreceivedbyaddress",     &getreceivedbyaddress,     false,  {"address","minconf","addlocked"} },
     { "wallet",             "gettransaction",           &gettransaction,           false,  {"txid","include_watchonly"} },
     { "wallet",             "getunconfirmedbalance",    &getunconfirmedbalance,    false,  {} },
     { "wallet",             "getwalletinfo",            &getwalletinfo,            false,  {} },
@@ -3118,19 +3136,19 @@ static const CRPCCommand commands[] =
     { "wallet",             "importprunedfunds",        &importprunedfunds,        true,   {"rawtransaction","txoutproof"} },
     { "wallet",             "importpubkey",             &importpubkey,             true,   {"pubkey","label","rescan"} },
     { "wallet",             "keypoolrefill",            &keypoolrefill,            true,   {"newsize"} },
-    { "wallet",             "listaccounts",             &listaccounts,             false,  {"minconf","addlockconf","include_watchonly"} },
+    { "wallet",             "listaccounts",             &listaccounts,             false,  {"minconf","addlocked","include_watchonly"} },
     { "wallet",             "listaddressgroupings",     &listaddressgroupings,     false,  {} },
     { "wallet",             "listaddressbalances",      &listaddressbalances,      false,  {"minamount"} },
     { "wallet",             "listlockunspent",          &listlockunspent,          false,  {} },
-    { "wallet",             "listreceivedbyaccount",    &listreceivedbyaccount,    false,  {"minconf","addlockconf","include_empty","include_watchonly"} },
-    { "wallet",             "listreceivedbyaddress",    &listreceivedbyaddress,    false,  {"minconf","addlockconf","include_empty","include_watchonly"} },
+    { "wallet",             "listreceivedbyaccount",    &listreceivedbyaccount,    false,  {"minconf","addlocked","include_empty","include_watchonly"} },
+    { "wallet",             "listreceivedbyaddress",    &listreceivedbyaddress,    false,  {"minconf","addlocked","include_empty","include_watchonly"} },
     { "wallet",             "listsinceblock",           &listsinceblock,           false,  {"blockhash","target_confirmations","include_watchonly"} },
     { "wallet",             "listtransactions",         &listtransactions,         false,  {"account","count","skip","include_watchonly"} },
     { "wallet",             "listunspent",              &listunspent,              false,  {"minconf","maxconf","addresses","include_unsafe"} },
     { "wallet",             "lockunspent",              &lockunspent,              true,   {"unlock","transactions"} },
     { "wallet",             "move",                     &movecmd,                  false,  {"fromaccount","toaccount","amount","minconf","comment"} },
-    { "wallet",             "sendfrom",                 &sendfrom,                 false,  {"fromaccount","toaddress","amount","minconf","addlockconf","comment","comment_to"} },
-    { "wallet",             "sendmany",                 &sendmany,                 false,  {"fromaccount","amounts","minconf","addlockconf","comment","subtractfeefrom"} },
+    { "wallet",             "sendfrom",                 &sendfrom,                 false,  {"fromaccount","toaddress","amount","minconf","addlocked","comment","comment_to"} },
+    { "wallet",             "sendmany",                 &sendmany,                 false,  {"fromaccount","amounts","minconf","addlocked","comment","subtractfeefrom"} },
     { "wallet",             "sendtoaddress",            &sendtoaddress,            false,  {"address","amount","comment","comment_to","subtractfeefromamount"} },
     { "wallet",             "setaccount",               &setaccount,               true,   {"address","account"} },
     { "wallet",             "settxfee",                 &settxfee,                 true,   {"amount"} },

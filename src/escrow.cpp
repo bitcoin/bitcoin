@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2017 The Syscoin Core developers
+// Copyright (c) 2015-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -91,7 +91,6 @@ bool ValidateDepositFee(const float &fDepositPercentage, const CEscrow &escrow) 
 }
 // check that the minimum network fee is found
 bool ValidateNetworkFee(const CEscrow &escrow) {
-	CAmount nTotalWithoutFee = escrow.nAmountOrBidPerUnit*escrow.nQty;
 	return getFeePerByte(escrow.nPaymentOption)*400 <= escrow.nNetworkFee;
 }
 
@@ -103,13 +102,13 @@ uint64_t GetEscrowExpiration(const CEscrow& escrow) {
 		if (paliasdb->ReadAliasUnprunable(escrow.vchBuyerAlias, aliasBuyerPrunable) && !aliasBuyerPrunable.IsNull())
 			nTime = aliasBuyerPrunable.nExpireTime;
 		// buyer is expired try seller
-		if(nTime <= chainActive.Tip()->GetMedianTimePast())
+		if (nTime <= (uint64_t)chainActive.Tip()->GetMedianTimePast())
 		{
 			if (paliasdb->ReadAliasUnprunable(escrow.vchSellerAlias, aliasSellerPrunable) && !aliasSellerPrunable.IsNull())
 			{
 				nTime = aliasSellerPrunable.nExpireTime;
 				// seller is expired try the arbiter
-				if(nTime <= chainActive.Tip()->GetMedianTimePast())
+				if(nTime <= (int64_t)chainActive.Tip()->GetMedianTimePast())
 				{
 					if (paliasdb->ReadAliasUnprunable(escrow.vchArbiterAlias, aliasArbiterPrunable) && !aliasArbiterPrunable.IsNull())
 						nTime = aliasArbiterPrunable.nExpireTime;
@@ -165,15 +164,13 @@ string escrowFromOp(int op) {
 }
 bool CEscrow::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
     try {
-        CDataStream dsEscrow(vchData, SER_NETWORK, PROTOCOL_VERSION);
-        dsEscrow >> *this;
-
-		vector<unsigned char> vchEscrowData;
-		Serialize(vchEscrowData);
-		const uint256 &calculatedHash = Hash(vchEscrowData.begin(), vchEscrowData.end());
-		const vector<unsigned char> &vchRandEscrow = vchFromValue(calculatedHash.GetHex());
-		if(vchRandEscrow != vchHash)
-		{
+		CDataStream dsEscrow(vchData, SER_NETWORK, PROTOCOL_VERSION);
+		dsEscrow >> *this;
+		vector<unsigned char> vchSerializedData;
+		Serialize(vchSerializedData);
+		const uint256 &calculatedHash = Hash(vchSerializedData.begin(), vchSerializedData.end());
+		const vector<unsigned char> &vchRand = vchFromValue(calculatedHash.GetHex());
+		if (vchRand != vchHash) {
 			SetNull();
 			return false;
 		}
@@ -238,7 +235,7 @@ bool CEscrowDB::CleanupDatabase(int &servicesCleaned)
         boost::this_thread::interruption_point();
         try {
 			if (pcursor->GetKey(key) && key.first == "escrowi") {
-  				if (!GetEscrow(key.second, txPos) || chainActive.Tip()->GetMedianTimePast() >= GetEscrowExpiration(txPos))
+  				if (!GetEscrow(key.second, txPos) || chainActive.Tip()->GetMedianTimePast() >= (int64_t)GetEscrowExpiration(txPos))
 				{
 					servicesCleaned++;
 					EraseEscrow(key.second, true);
@@ -257,7 +254,7 @@ bool GetEscrow(const vector<unsigned char> &vchEscrow,
 
 	if (!pescrowdb || !pescrowdb->ReadEscrow(vchEscrow, txPos))
 		return false;
-   if (chainActive.Tip()->GetMedianTimePast() >= GetEscrowExpiration(txPos)) {
+   if (chainActive.Tip()->GetMedianTimePast() >= (int64_t)GetEscrowExpiration(txPos)) {
 		txPos.SetNull();
         return false;
     }
@@ -322,7 +319,7 @@ bool DecodeEscrowScript(const CScript& script, int& op,
 		}
 		if (!(opcode >= 0 && opcode <= OP_PUSHDATA4))
 			return false;
-		vvch.push_back(vch);
+		vvch.emplace_back(std::move(vch));
 	}
 
 	// move the pc to after any DROP or NOP
@@ -661,7 +658,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4040 - " + _("Linked offer auction requires a witness signature for each bid but none provided");
 						return true;
 					}
-				}
+				}	
 				theEscrow.fBidPerUnit = serializedEscrow.fBidPerUnit;
 				theEscrow.nAmountOrBidPerUnit = serializedEscrow.nAmountOrBidPerUnit;
 				theEscrow.txHash = tx.GetHash();
@@ -910,6 +907,11 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 		}
 		else
 		{
+			if (vvchAliasArgs[0] != theEscrow.vchBuyerAlias)
+			{
+				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4064 - " + _("Only buyer can initiate an escrow");
+				return true;
+			}
 			COffer myLinkOffer;
 			if (fJustCheck && GetEscrow(serializedEscrow.vchEscrow, theEscrow))
 			{
@@ -992,14 +994,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, const vector<vector<unsig
 			}
 		}
 
-		if (!bSanityCheck) {
-			if (strResponseEnglish != "") {
-				user1 = stringFromVch(theEscrow.vchBuyerAlias);
-				user2 = stringFromVch(theEscrow.vchSellerAlias);
-				user3 = stringFromVch(theEscrow.vchArbiterAlias);
-				paliasdb->WriteAliasIndexTxHistory(user1, user2, user3, tx.GetHash(), nHeight, strResponseEnglish, stringFromVch(serializedEscrow.vchEscrow));
-			}
-		}
 		// set the escrow's txn-dependent values
 		theEscrow.txHash = tx.GetHash();
 		theEscrow.nHeight = nHeight;
@@ -1064,7 +1058,7 @@ UniValue escrowbid(const JSONRPCRequest& request) {
 	theEscrow.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
 
-	vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
+	vector<unsigned char> vchHashEscrow = vchFromString(hash.GetHex());
 
 	CScript scriptPubKeyOrigBuyer;
 	scriptPubKeyOrigBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_BID) << vchHashEscrow << OP_2DROP << OP_DROP;
@@ -1135,7 +1129,7 @@ UniValue escrowaddshipping(const JSONRPCRequest& request) {
 	theEscrow.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
 
-	vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
+	vector<unsigned char> vchHashEscrow = vchFromString(hash.GetHex());
 
 	CScript scriptPubKeyOrigBuyer;
 	scriptPubKeyOrigBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_ADD_SHIPPING) << vchHashEscrow << OP_2DROP << OP_DROP;
@@ -1401,7 +1395,7 @@ UniValue escrownew(const JSONRPCRequest& request) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4517 - " + _("Cannot include deposit when using Buy It Now"));
 	}
 
-    vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashEscrow = vchFromString(hash.GetHex());
 	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_ACTIVATE) << vchHashEscrow << OP_2DROP << OP_DROP;
 	scriptPubKeyBuyer += scriptPubKeyAliasOrig;
 
@@ -1479,7 +1473,7 @@ UniValue escrowacknowledge(const JSONRPCRequest& request) {
 	escrow.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
 
-	vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
+	vector<unsigned char> vchHashEscrow = vchFromString(hash.GetHex());
 
 	CScript scriptPubKeyOrigBuyer;
 
@@ -1738,7 +1732,7 @@ UniValue escrowrelease(const JSONRPCRequest& request) {
 	escrow.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
 
-    vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashEscrow = vchFromString(hash.GetHex());
 
     CScript scriptPubKeyOrigSeller;
 
@@ -1814,7 +1808,7 @@ UniValue escrowcompleterelease(const JSONRPCRequest& request) {
 	escrow.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
 
-    vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashEscrow = vchFromString(hash.GetHex());
     scriptPubKeyBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_RELEASE_COMPLETE) << vchHashEscrow << OP_2DROP << OP_DROP;
     scriptPubKeyBuyer += sellerScript;
 	vector<CRecipient> vecSend;
@@ -1926,7 +1920,7 @@ UniValue escrowrefund(const JSONRPCRequest& request) {
 	escrow.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
 
-	vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
+	vector<unsigned char> vchHashEscrow = vchFromString(hash.GetHex());
 
 	CScript scriptPubKeyOrigSeller;
 
@@ -2005,7 +1999,7 @@ UniValue escrowcompleterefund(const JSONRPCRequest& request) {
 	escrow.Serialize(data);
 	uint256 hash = Hash(data.begin(), data.end());
 
-	vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
+	vector<unsigned char> vchHashEscrow = vchFromString(hash.GetHex());
 	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_SYSCOIN_ESCROW) << CScript::EncodeOP_N(OP_ESCROW_REFUND_COMPLETE) << vchHashEscrow << OP_2DROP << OP_DROP;
 	scriptPubKeyBuyer += buyerScript;
 	vector<CRecipient> vecSend;
@@ -2173,7 +2167,7 @@ UniValue escrowfeedback(const JSONRPCRequest& request) {
 	escrow.Serialize(data);
     uint256 hash = Hash(data.begin(), data.end());
 
-    vector<unsigned char> vchHashEscrow = vchFromValue(hash.GetHex());
+    vector<unsigned char> vchHashEscrow = vchFromString(hash.GetHex());
 	CScript scriptPubKeyBuyer, scriptPubKeySeller,scriptPubKeyArbiter;
 	vector<CRecipient> vecSend;
 	CRecipient recipientBuyer, recipientSeller, recipientArbiter;
@@ -2425,7 +2419,6 @@ bool CEscrowDB::ScanEscrows(const int count, const int from, const UniValue& oOp
 		}
 	}
 
-	LOCK(cs_escrow);
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
 	CEscrow txPos;

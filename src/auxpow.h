@@ -1,6 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2014-2016 Daniel Kraft
+// Copyright (c) 2014-2017 The Syscoin Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -94,8 +95,9 @@ public:
 	*  0  : in memory pool, waiting to be included in a block
 	* >=1 : this many blocks deep in the main chain
 	*/
-	int GetDepthInMainChain(const CBlockIndex* &pindexRet, bool enableIX = true) const;
-	int GetDepthInMainChain(bool enableIX = true) const { const CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet, enableIX); }
+	int GetDepthInMainChain(const CBlockIndex* &pindexRet) const;
+	int GetDepthInMainChain() const { const CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet); }
+	bool IsLockedByInstantSend() const;
 	bool IsInMainChain() const { const CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet) > 0; }
 	int GetBlocksToMaturity() const;
 	bool hashUnset() const { return (hashBlock.IsNull() || hashBlock == ABANDON_HASH); }
