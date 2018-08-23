@@ -190,8 +190,7 @@ void CZMQNotificationInterface::BlockConnected( const std::shared_ptr<const CBlo
     }
 }
 
-void CZMQNotificationInterface::BlockDisconnected(  const std::shared_ptr<const CBlock>& pblock,
-													const std::shared_ptr<const CBlockUndo> &blockundo)
+void CZMQNotificationInterface::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const std::shared_ptr<const CBlockUndo> &blockundo)
 {
     for (const CTransactionRef& ptx : pblock->vtx) {
         // Do a normal notify for each transaction removed in block disconnection

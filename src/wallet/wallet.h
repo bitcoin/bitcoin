@@ -895,7 +895,7 @@ public:
     void TransactionAddedToMempool(const CTransactionRef& tx) override;
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex *pindex, const std::shared_ptr<const CBlockUndo> &blockundo, const std::vector<CTransactionRef>& vtxConflicted) override;
     void BlockDisconnected( const std::shared_ptr<const CBlock>& pblock,
-							const std::shared_ptr<const CBlockUndo> &blockundo) override;
+                            const std::shared_ptr<const CBlockUndo> &blockundo) override;
     int64_t RescanFromTime(int64_t startTime, const WalletRescanReserver& reserver, bool update);
     CBlockIndex* ScanForWalletTransactions(CBlockIndex* pindexStart, CBlockIndex* pindexStop, const WalletRescanReserver& reserver, bool fUpdate = false);
     void TransactionRemovedFromMempool(const CTransactionRef &ptx) override;

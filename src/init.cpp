@@ -1395,7 +1395,7 @@ bool AppInitMain(InitInterfaces& interfaces)
     int64_t nTxIndexCache = std::min(nTotalCache / 8, gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX) ? nMaxTxIndexCache << 20 : 0);
     nTotalCache -= nTxIndexCache;
     int64_t nUtxoScriptIndexCache = std::min(nTotalCache / 8, gArgs.GetBoolArg("-utxoscriptindex", DEFAULT_UTXOINDEX) ? nMaxTxIndexCache << 20 : 0);
-	nTotalCache -= nUtxoScriptIndexCache;
+    nTotalCache -= nUtxoScriptIndexCache;
     int64_t nCoinDBCache = std::min(nTotalCache / 2, (nTotalCache / 4) + (1 << 23)); // use 25%-50% of the remainder for disk cache
     nCoinDBCache = std::min(nCoinDBCache, nMaxCoinsDBCache << 20); // cap total coins db cache
     nTotalCache -= nCoinDBCache;
@@ -1408,7 +1408,7 @@ bool AppInitMain(InitInterfaces& interfaces)
     }
     if (gArgs.GetBoolArg("-utxoscriptindex", DEFAULT_UTXOINDEX)) {
         LogPrintf("* Using %.1fMiB for unspent output by script index database\n", nUtxoScriptIndexCache * (1.0 / 1024 / 1024));
-	}
+    }
     LogPrintf("* Using %.1fMiB for chain state database\n", nCoinDBCache * (1.0 / 1024 / 1024));
     LogPrintf("* Using %.1fMiB for in-memory UTXO set (plus up to %.1fMiB of unused mempool space)\n", nCoinCacheUsage * (1.0 / 1024 / 1024), nMempoolSizeMax * (1.0 / 1024 / 1024));
 
@@ -1596,13 +1596,13 @@ bool AppInitMain(InitInterfaces& interfaces)
         if(gArgs.GetBoolArg("-utxoscriptindex", DEFAULT_UTXOINDEX))
         {
             uint256 utxoindexBestBlock;
-            if(not g_utxoscriptindex->ReadBestBlock(utxoindexBestBlock) or utxoindexBestBlock != pcoinsdbview->GetBestBlock()){
+            if(!(g_utxoscriptindex->ReadBestBlock(utxoindexBestBlock)) || utxoindexBestBlock != pcoinsdbview->GetBestBlock()){
                 LogPrintf("Utxo script index best block (%s) not matching current best block (%s)\n", utxoindexBestBlock.ToString(), pcoinsdbview->GetBestBlock().ToString());
-                if(not g_utxoscriptindex->DeleteIndex()){
+                if(!(g_utxoscriptindex->DeleteIndex())){
                     LogPrintf("Error deleting utxoscriptindex\n");
                     return false;
                 }
-                if(not g_utxoscriptindex->GenerateIndex(pcoinsdbview)){
+                if(!(g_utxoscriptindex->GenerateIndex(pcoinsdbview))){
                     LogPrintf("Error building utxoscriptindex\n");
                     return false;
                 }

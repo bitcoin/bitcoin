@@ -22,12 +22,12 @@
 struct MainSignalsInstance {
     boost::signals2::signal<void (const CBlockIndex *, const CBlockIndex *, bool fInitialDownload)> UpdatedBlockTip;
     boost::signals2::signal<void (const CTransactionRef &)> TransactionAddedToMempool;
-    boost::signals2::signal<void (	const std::shared_ptr<const CBlock> &,
-									const CBlockIndex *pindex, 
-									const std::shared_ptr<const CBlockUndo> &blockundo, 
-									const std::vector<CTransactionRef>&)> BlockConnected;
-    boost::signals2::signal<void (	const std::shared_ptr<const CBlock> &,
-									const std::shared_ptr<const CBlockUndo> &)> BlockDisconnected;
+    boost::signals2::signal<void (const std::shared_ptr<const CBlock> &,
+                                  const CBlockIndex *pindex,
+                                  const std::shared_ptr<const CBlockUndo> &blockundo,
+                                  const std::vector<CTransactionRef>&)> BlockConnected;
+    boost::signals2::signal<void (const std::shared_ptr<const CBlock> &,
+                                  const std::shared_ptr<const CBlockUndo> &)> BlockDisconnected;
     boost::signals2::signal<void (const CTransactionRef &)> TransactionRemovedFromMempool;
     boost::signals2::signal<void (const CBlockLocator &)> ChainStateFlushed;
     boost::signals2::signal<void (int64_t nBestBlockTime, CConnman* connman)> Broadcast;
@@ -161,7 +161,7 @@ void CMainSignals::BlockConnected(const std::shared_ptr<const CBlock> &pblock, c
 }
 
 void CMainSignals::BlockDisconnected(const std::shared_ptr<const CBlock> &pblock,
-									 const std::shared_ptr<const CBlockUndo> &blockundo) {
+                                     const std::shared_ptr<const CBlockUndo> &blockundo) {
     m_internals->m_schedulerClient.AddToProcessQueue([pblock, blockundo, this] {
         m_internals->BlockDisconnected(pblock, blockundo);
     });

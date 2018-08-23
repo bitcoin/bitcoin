@@ -1572,8 +1572,8 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
 {
     bool fClean = true;
 
-	if(not blockUndo)
-		blockUndo = std::make_shared<CBlockUndo>();
+    if(!blockUndo)
+        blockUndo = std::make_shared<CBlockUndo>();
 
     if (!UndoReadFromDisk(*blockUndo, pindex)) {
         error("DisconnectBlock(): failure reading undo data");
@@ -1971,8 +1971,8 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     int64_t nTime2 = GetTimeMicros(); nTimeForks += nTime2 - nTime1;
     LogPrint(BCLog::BENCH, "    - Fork checks: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime2 - nTime1), nTimeForks * MICRO, nTimeForks * MILLI / nBlocksTotal);
 
-	if(not blockundo)
-		blockundo = std::make_shared<CBlockUndo>();
+    if(!blockundo)
+        blockundo = std::make_shared<CBlockUndo>();
 
     CCheckQueueControl<CScriptCheck> control(fScriptChecks && nScriptCheckThreads ? &scriptcheckqueue : nullptr);
 
@@ -2180,9 +2180,9 @@ bool static FlushStateToDisk(const CChainParams& chainparams, CValidationState &
             if (!pcoinsTip->Flush())
                 return AbortNode(state, "Failed to write to coin database");
             if(g_utxoscriptindex)
-				if(not g_utxoscriptindex->Flush())
-					return AbortNode(state, "Failed to write to utxo database");
-			nLastFlush = nNow;
+                if(!(g_utxoscriptindex->Flush()))
+                    return AbortNode(state, "Failed to write to utxo database");
+            nLastFlush = nNow;
             full_flush_completed = true;
         }
     }
@@ -2303,7 +2303,7 @@ bool CChainState::DisconnectTip(CValidationState& state, const CChainParams& cha
     // Read block from disk.
     std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
     std::shared_ptr<CBlockUndo> blockundo = std::make_shared<CBlockUndo>();
-	CBlock& block = *pblock;
+    CBlock& block = *pblock;
     if (!ReadBlockFromDisk(block, pindexDelete, chainparams.GetConsensus()))
         return AbortNode(state, "Failed to read block");
     // Apply the block atomically to the chain state.
@@ -2353,7 +2353,7 @@ struct PerBlockConnectTrace {
     CBlockIndex* pindex = nullptr;
     std::shared_ptr<const CBlock> pblock;
     std::shared_ptr<std::vector<CTransactionRef>> conflictedTxs;
-	std::shared_ptr<const CBlockUndo> pblockundo;
+    std::shared_ptr<const CBlockUndo> pblockundo;
     PerBlockConnectTrace() : conflictedTxs(std::make_shared<std::vector<CTransactionRef>>()) {}
 };
 /**
@@ -2387,14 +2387,14 @@ public:
     }
 
     void BlockConnected(CBlockIndex* pindex,
-						std::shared_ptr<const CBlock> pblock,
-						std::shared_ptr<CBlockUndo> pblockundo) {
+                        std::shared_ptr<const CBlock> pblock,
+                        std::shared_ptr<CBlockUndo> pblockundo) {
         assert(!blocksConnected.back().pindex);
         assert(pindex);
         assert(pblock);
         blocksConnected.back().pindex = pindex;
         blocksConnected.back().pblock = std::move(pblock);
-		blocksConnected.back().pblockundo = std::move(pblockundo);
+        blocksConnected.back().pblockundo = std::move(pblockundo);
         blocksConnected.emplace_back();
     }
 
@@ -2443,7 +2443,7 @@ bool CChainState::ConnectTip(CValidationState& state, const CChainParams& chainp
     int64_t nTime2 = GetTimeMicros(); nTimeReadFromDisk += nTime2 - nTime1;
     int64_t nTime3;
     LogPrint(BCLog::BENCH, "  - Load block from disk: %.2fms [%.2fs]\n", (nTime2 - nTime1) * MILLI, nTimeReadFromDisk * MICRO);
-	std::shared_ptr<CBlockUndo> blockundo = std::make_shared<CBlockUndo>();
+    std::shared_ptr<CBlockUndo> blockundo = std::make_shared<CBlockUndo>();
     {
         CCoinsViewCache view(pcoinsTip.get());
         bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams, blockundo);

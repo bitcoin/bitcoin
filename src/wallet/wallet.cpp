@@ -1185,7 +1185,8 @@ void CWallet::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const 
     m_last_block_processed = pindex;
 }
 
-void CWallet::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock) {
+void CWallet::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock,
+                                const std::shared_ptr<const CBlockUndo> &blockundo) {
     auto locked_chain = chain().lock();
     LOCK(cs_wallet);
 
