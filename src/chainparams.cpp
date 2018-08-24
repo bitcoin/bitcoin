@@ -374,7 +374,7 @@ std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain)
 
 void SelectParams(const std::string& network)
 {
-    SelectBaseParams(network);
+    gArgs.SelectConfigNetwork(network);
     globalChainParams = CreateChainParams(network);
 }
 

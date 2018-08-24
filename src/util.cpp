@@ -411,6 +411,11 @@ void ArgsManager::SelectConfigNetwork(const std::string& network)
     m_network = network;
 }
 
+const std::string& ArgsManager::ConfigNetwork() const
+{
+    return m_network;
+}
+
 bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::string& error)
 {
     LOCK(cs_args);
@@ -756,7 +761,7 @@ const fs::path &GetBlocksDir(bool fNetSpecific)
         path = GetDataDir(false);
     }
     if (fNetSpecific)
-        path /= BaseParams().DataDir();
+        path /= ::GetDataDir(gArgs.ConfigNetwork());
 
     path /= "blocks";
     fs::create_directories(path);
@@ -785,7 +790,7 @@ const fs::path &GetDataDir(bool fNetSpecific)
         path = GetDefaultDataDir();
     }
     if (fNetSpecific)
-        path /= BaseParams().DataDir();
+        path /= ::GetDataDir(gArgs.ConfigNetwork());
 
     if (fs::create_directories(path)) {
         // This is the first run, create wallets subdirectory too
@@ -958,6 +963,14 @@ std::string ArgsManager::GetChainName() const
     if (fTestNet)
         return CBaseChainParams::TESTNET;
     return CBaseChainParams::MAIN;
+}
+
+void SetupChainParamsBaseOptions()
+{
+    gArgs.AddArg("-regtest", "Enter regression test mode, which uses a special chain in which blocks can be solved instantly. "
+                            "This is intended for regression testing tools and app development.",
+        true, OptionsCategory::CHAINPARAMS);
+    gArgs.AddArg("-testnet", "Use the test chain", false, OptionsCategory::CHAINPARAMS);
 }
 
 #ifndef WIN32

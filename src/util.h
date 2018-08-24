@@ -167,6 +167,9 @@ public:
      */
     void SelectConfigNetwork(const std::string& network);
 
+    /** @return the network in use */
+    const std::string& ConfigNetwork() const;
+
     bool ParseParameters(int argc, const char* const argv[], std::string& error);
     bool ReadConfigFiles(std::string& error, bool ignore_invalid_keys = false);
 
@@ -285,6 +288,11 @@ public:
 };
 
 extern ArgsManager gArgs;
+
+/**
+ * Set the chain name arguments for ArgsManager::GetChainName
+ */
+void SetupChainParamsBaseOptions();
 
 /**
  * @return true if help has been requested via a command-line arg
