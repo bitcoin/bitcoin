@@ -151,12 +151,20 @@ def read_symbols(executable, imports=True) -> List[Tuple[str, str, str]]:
         raise IOError('Could not read symbols for {}: {}'.format(executable, stderr.strip()))
     syms = []
     for line in stdout.splitlines():
-        line = line.split()
-        if 'Machine:' in line:
-            arch = line[-1]
-        if len(line)>7 and re.match('[0-9]+:$', line[0]):
-            (sym, _, version) = line[7].partition('@')
-            is_import = line[6] == 'UND'
+        words = line.split()
+        if 'Machine:' in words:
+            arch = words[-1]
+
+        # NOTE: POWER architecture has two different offsets for symbols, which readelf includes in its output as an extra column.
+        #
+        # For example:
+        #     4: 0000000000000000     0 FUNC    GLOBAL DEFAULT [<localentry>: 8]   UND memcpy@GLIBC_2.17 (2)
+        #
+        # Relevant POWER docs: http://openpowerfoundation.org/wp-content/uploads/resources/leabi/content/dbdoclet.50655241_95185.html
+        m = re.match(r'^\s*\d+:\s*[\da-f]+\s+\d+\s+(?:(?:\S+\s+){3})(?:\[.*\]\s+)?(\S+)\s+(\S+).*$', line)
+        if m:
+            (sym, _, version) = m.group(2).partition('@')
+            is_import = (m.group(1) == 'UND')
             if version.startswith('@'):
                 version = version[1:]
             if is_import == imports:
