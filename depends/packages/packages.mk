@@ -1,6 +1,6 @@
 packages:=boost libevent
 
-qt_packages = zlib
+qt_packages = libpng zlib
 
 qrencode_packages = qrencode
 
