@@ -552,6 +552,17 @@ void CNode::copyStats(CNodeStats &stats)
 }
 #undef X
 
+void CNode::RecordRecvBytesPerMsgCmd(const std::string& cmd, uint32_t bytes)
+{
+    //store received bytes per message command
+    //to prevent a memory DOS, only allow valid commands
+    mapMsgCmdSize::iterator i = mapRecvBytesPerMsgCmd.find(cmd);
+    if (i == mapRecvBytesPerMsgCmd.end())
+        i = mapRecvBytesPerMsgCmd.find(NET_MESSAGE_COMMAND_OTHER);
+    assert(i != mapRecvBytesPerMsgCmd.end());
+    i->second += bytes;
+}
+
 bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete)
 {
     complete = false;
@@ -583,14 +594,7 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
         nBytes -= handled;
 
         if (msg->Complete()) {
-            //store received bytes per message command
-            //to prevent a memory DOS, only allow valid commands
-            mapMsgCmdSize::iterator i = mapRecvBytesPerMsgCmd.find(msg->GetCommandName());
-            if (i == mapRecvBytesPerMsgCmd.end())
-                i = mapRecvBytesPerMsgCmd.find(NET_MESSAGE_COMMAND_OTHER);
-            assert(i != mapRecvBytesPerMsgCmd.end());
-            i->second += msg->GetMessageSizeWithHeader();
-
+            RecordRecvBytesPerMsgCmd(msg->GetCommandName(), msg->GetMessageSizeWithHeader());
             msg->nTime = nTimeMicros;
             complete = true;
         }
