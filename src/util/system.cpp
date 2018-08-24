@@ -172,14 +172,15 @@ public:
      *  See also comments around ArgsManager::ArgsManager() below. */
     static inline bool UseDefaultSection(const ArgsManager& am, const std::string& arg) EXCLUSIVE_LOCKS_REQUIRED(am.cs_args)
     {
-        return (am.m_network == CBaseChainParams::MAIN || am.m_network_only_args.count(arg) == 0);
+        return ((BaseParamsSelected() && BaseParams().ChainName() == CBaseChainParams::MAIN)
+            || am.m_network_only_args.count(arg) == 0);
     }
 
     /** Convert regular argument into the network-specific setting */
-    static inline std::string NetworkArg(const ArgsManager& am, const std::string& arg)
+    static inline std::string NetworkArg(const std::string& network, const std::string& arg)
     {
         assert(arg.length() > 1 && arg[0] == '-');
-        return "-" + am.m_network + "." + arg.substr(1);
+        return "-" + network + "." + arg.substr(1);
     }
 
     /** Find arguments in a map and add them to a vector */
@@ -229,8 +230,8 @@ public:
         // But in contrast we return the first argument seen in a config file,
         // so "foo=bar \n foo=baz" in the config file gives
         // GetArg(am,"foo")={true,"bar"}
-        if (!am.m_network.empty()) {
-            found_result = GetArgHelper(am.m_config_args, NetworkArg(am, arg));
+        if (BaseParamsSelected()) {
+            found_result = GetArgHelper(am.m_config_args, NetworkArg(BaseParams().ChainName(), arg));
             if (found_result.first) {
                 return found_result;
             }
@@ -331,10 +332,10 @@ const std::set<std::string> ArgsManager::GetUnsuitableSectionOnlyArgs() const
     LOCK(cs_args);
 
     // if there's no section selected, don't worry
-    if (m_network.empty()) return std::set<std::string> {};
+    if (!BaseParamsSelected()) return std::set<std::string> {};
 
     // if it's okay to use the default section for this network, don't worry
-    if (m_network == CBaseChainParams::MAIN) return std::set<std::string> {};
+    if (BaseParams().ChainName() == CBaseChainParams::MAIN) return std::set<std::string> {};
 
     for (const auto& arg : m_network_only_args) {
         std::pair<bool, std::string> found_result;
@@ -344,7 +345,7 @@ const std::set<std::string> ArgsManager::GetUnsuitableSectionOnlyArgs() const
         if (found_result.first) continue;
 
         // if there's a network-specific value for this option, it's fine
-        found_result = ArgsManagerHelper::GetArgHelper(m_config_args, ArgsManagerHelper::NetworkArg(*this, arg));
+        found_result = ArgsManagerHelper::GetArgHelper(m_config_args, ArgsManagerHelper::NetworkArg(BaseParams().ChainName(), arg));
         if (found_result.first) continue;
 
         // if there isn't a default value for this option, it's fine
@@ -370,12 +371,6 @@ const std::list<SectionInfo> ArgsManager::GetUnrecognizedSections() const
     std::list<SectionInfo> unrecognized = m_config_sections;
     unrecognized.remove_if([](const SectionInfo& appeared){ return available_sections.find(appeared.m_name) != available_sections.end(); });
     return unrecognized;
-}
-
-void ArgsManager::SelectConfigNetwork(const std::string& network)
-{
-    LOCK(cs_args);
-    m_network = network;
 }
 
 bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::string& error)
@@ -458,8 +453,8 @@ std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg) const
     LOCK(cs_args);
 
     ArgsManagerHelper::AddArgs(result, m_override_args, strArg);
-    if (!m_network.empty()) {
-        ArgsManagerHelper::AddArgs(result, m_config_args, ArgsManagerHelper::NetworkArg(*this, strArg));
+    if (BaseParamsSelected()) {
+        ArgsManagerHelper::AddArgs(result, m_config_args, ArgsManagerHelper::NetworkArg(BaseParams().ChainName(), strArg));
     }
 
     if (ArgsManagerHelper::UseDefaultSection(*this, strArg)) {
@@ -482,8 +477,8 @@ bool ArgsManager::IsArgNegated(const std::string& strArg) const
     const auto& ov = m_override_args.find(strArg);
     if (ov != m_override_args.end()) return ov->second.empty();
 
-    if (!m_network.empty()) {
-        const auto& cfs = m_config_args.find(ArgsManagerHelper::NetworkArg(*this, strArg));
+    if (BaseParamsSelected()) {
+        const auto& cfs = m_config_args.find(ArgsManagerHelper::NetworkArg(BaseParams().ChainName(), strArg));
         if (cfs != m_config_args.end()) return cfs->second.empty();
     }
 

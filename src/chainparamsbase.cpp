@@ -6,7 +6,6 @@
 #include <chainparamsbase.h>
 
 #include <tinyformat.h>
-#include <util/system.h>
 #include <util/memory.h>
 
 #include <assert.h>
@@ -26,17 +25,26 @@ const CBaseChainParams& BaseParams()
 std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain)
 {
     if (chain == CBaseChainParams::MAIN)
-        return MakeUnique<CBaseChainParams>("", 8332);
+        return MakeUnique<CBaseChainParams>(chain, "", 8332);
     else if (chain == CBaseChainParams::TESTNET)
-        return MakeUnique<CBaseChainParams>("testnet3", 18332);
+        return MakeUnique<CBaseChainParams>(chain, "testnet3", 18332);
     else if (chain == CBaseChainParams::REGTEST)
-        return MakeUnique<CBaseChainParams>("regtest", 18443);
+        return MakeUnique<CBaseChainParams>(chain, "regtest", 18443);
     else
         throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
+}
+
+bool BaseParamsSelected()
+{
+    return globalChainBaseParams != nullptr;
 }
 
 void SelectBaseParams(const std::string& chain)
 {
     globalChainBaseParams = CreateBaseChainParams(chain);
-    gArgs.SelectConfigNetwork(chain);
+}
+
+void UnselectBaseParams()
+{
+    globalChainBaseParams.reset();
 }

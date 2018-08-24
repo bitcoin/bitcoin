@@ -22,6 +22,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+void UnselectBaseParams();
+
 BOOST_FIXTURE_TEST_SUITE(util_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(util_criticalsection)
@@ -184,7 +186,7 @@ BOOST_AUTO_TEST_CASE(util_ParseParameters)
     // a non-option argument (non-GNU option parsing)
     BOOST_CHECK(testArgs.GetOverrideArgs().size() == 3 && testArgs.GetConfigArgs().empty());
     BOOST_CHECK(testArgs.IsArgSet("-a") && testArgs.IsArgSet("-b") && testArgs.IsArgSet("-ccc")
-                && !testArgs.IsArgSet("f") && !testArgs.IsArgSet("-d"));
+                && !testArgs.IsArgSet("-d"));
     BOOST_CHECK(testArgs.GetOverrideArgs().count("-a") && testArgs.GetOverrideArgs().count("-b") && testArgs.GetOverrideArgs().count("-ccc")
                 && !testArgs.GetOverrideArgs().count("f") && !testArgs.GetOverrideArgs().count("-d"));
 
@@ -296,15 +298,17 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
        "noh=1\n"
        "noi=1\n"
        "i=1\n"
-       "sec1.ccc=extend1\n"
+       "test.ccc=extend1\n"
        "\n"
-       "[sec1]\n"
+       "[test]\n"
        "ccc=extend2\n"
        "d=eee\n"
        "h=1\n"
-       "[sec2]\n"
+       "[regtest]\n"
        "ccc=extend3\n"
        "iii=2\n";
+
+    UnselectBaseParams();
 
     TestArgsManager test_args;
     const char* avail_args[] = {"-a", "-b", "-ccc", "-d", "-e", "-fff", "-ggg", "-h", "-i", "-iii"};
@@ -312,7 +316,7 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
 
     test_args.ReadConfigString(str_config);
     // expectation: a, b, ccc, d, fff, ggg, h, i end up in map
-    // so do sec1.ccc, sec1.d, sec1.h, sec2.ccc, sec2.iii
+    // so do test.ccc, test.d, test.h, regtest.ccc, regtest.iii
 
     BOOST_CHECK(test_args.GetOverrideArgs().empty());
     BOOST_CHECK(test_args.GetConfigArgs().size() == 13);
@@ -326,10 +330,10 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
                 && test_args.GetConfigArgs().count("-h")
                 && test_args.GetConfigArgs().count("-i")
                );
-    BOOST_CHECK(test_args.GetConfigArgs().count("-sec1.ccc")
-                && test_args.GetConfigArgs().count("-sec1.h")
-                && test_args.GetConfigArgs().count("-sec2.ccc")
-                && test_args.GetConfigArgs().count("-sec2.iii")
+    BOOST_CHECK(test_args.GetConfigArgs().count("-test.ccc")
+                && test_args.GetConfigArgs().count("-test.h")
+                && test_args.GetConfigArgs().count("-regtest.ccc")
+                && test_args.GetConfigArgs().count("-regtest.iii")
                );
 
     BOOST_CHECK(test_args.IsArgSet("-a")
@@ -400,7 +404,7 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     BOOST_CHECK(!test_args.IsArgNegated("-zzz"));
 
     // Test sections work
-    test_args.SelectConfigNetwork("sec1");
+    SelectBaseParams(CBaseChainParams::TESTNET);
 
     // same as original
     BOOST_CHECK(test_args.GetArg("-a", "xxx") == ""
@@ -417,11 +421,11 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     // section takes priority for multiple values
     BOOST_CHECK(test_args.GetArg("-ccc", "xxx") == "extend1");
     // check multiple values works
-    const std::vector<std::string> sec1_ccc_expected = {"extend1","extend2","argument","multiple"};
-    const auto& sec1_ccc_res = test_args.GetArgs("-ccc");
-    BOOST_CHECK_EQUAL_COLLECTIONS(sec1_ccc_res.begin(), sec1_ccc_res.end(), sec1_ccc_expected.begin(), sec1_ccc_expected.end());
+    const std::vector<std::string> test_ccc_expected = {"extend1","extend2","argument","multiple"};
+    const auto& test_ccc_res = test_args.GetArgs("-ccc");
+    BOOST_CHECK_EQUAL_COLLECTIONS(test_ccc_res.begin(), test_ccc_res.end(), test_ccc_expected.begin(), test_ccc_expected.end());
 
-    test_args.SelectConfigNetwork("sec2");
+    SelectBaseParams(CBaseChainParams::REGTEST);
 
     // same as original
     BOOST_CHECK(test_args.GetArg("-a", "xxx") == ""
@@ -437,9 +441,9 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     // section takes priority for multiple values
     BOOST_CHECK(test_args.GetArg("-ccc", "xxx") == "extend3");
     // check multiple values works
-    const std::vector<std::string> sec2_ccc_expected = {"extend3","argument","multiple"};
-    const auto& sec2_ccc_res = test_args.GetArgs("-ccc");
-    BOOST_CHECK_EQUAL_COLLECTIONS(sec2_ccc_res.begin(), sec2_ccc_res.end(), sec2_ccc_expected.begin(), sec2_ccc_expected.end());
+    const std::vector<std::string> regtest_ccc_expected = {"extend3","argument","multiple"};
+    const auto& regtest_ccc_res = test_args.GetArgs("-ccc");
+    BOOST_CHECK_EQUAL_COLLECTIONS(regtest_ccc_res.begin(), regtest_ccc_res.end(), regtest_ccc_expected.begin(), regtest_ccc_expected.end());
 
     // Test section only options
 
@@ -447,18 +451,18 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     test_args.SetNetworkOnlyArg("-ccc");
     test_args.SetNetworkOnlyArg("-h");
 
-    test_args.SelectConfigNetwork(CBaseChainParams::MAIN);
+    SelectBaseParams(CBaseChainParams::MAIN);
     BOOST_CHECK(test_args.GetArg("-d", "xxx") == "e");
     BOOST_CHECK(test_args.GetArgs("-ccc").size() == 2);
     BOOST_CHECK(test_args.GetArg("-h", "xxx") == "0");
 
-    test_args.SelectConfigNetwork("sec1");
+    SelectBaseParams(CBaseChainParams::TESTNET);
     BOOST_CHECK(test_args.GetArg("-d", "xxx") == "eee");
     BOOST_CHECK(test_args.GetArgs("-d").size() == 1);
     BOOST_CHECK(test_args.GetArgs("-ccc").size() == 2);
     BOOST_CHECK(test_args.GetArg("-h", "xxx") == "1");
 
-    test_args.SelectConfigNetwork("sec2");
+    SelectBaseParams(CBaseChainParams::REGTEST);
     BOOST_CHECK(test_args.GetArg("-d", "xxx") == "xxx");
     BOOST_CHECK(test_args.GetArgs("-d").size() == 0);
     BOOST_CHECK(test_args.GetArgs("-ccc").size() == 1);
@@ -469,42 +473,44 @@ BOOST_AUTO_TEST_CASE(util_GetArg)
 {
     TestArgsManager testArgs;
     testArgs.GetOverrideArgs().clear();
-    testArgs.GetOverrideArgs()["strtest1"] = {"string..."};
+    testArgs.GetOverrideArgs()["-strtest1"] = {"string..."};
     // strtest2 undefined on purpose
-    testArgs.GetOverrideArgs()["inttest1"] = {"12345"};
-    testArgs.GetOverrideArgs()["inttest2"] = {"81985529216486895"};
+    testArgs.GetOverrideArgs()["-inttest1"] = {"12345"};
+    testArgs.GetOverrideArgs()["-inttest2"] = {"81985529216486895"};
     // inttest3 undefined on purpose
-    testArgs.GetOverrideArgs()["booltest1"] = {""};
+    testArgs.GetOverrideArgs()["-booltest1"] = {""};
     // booltest2 undefined on purpose
-    testArgs.GetOverrideArgs()["booltest3"] = {"0"};
-    testArgs.GetOverrideArgs()["booltest4"] = {"1"};
+    testArgs.GetOverrideArgs()["-booltest3"] = {"0"};
+    testArgs.GetOverrideArgs()["-booltest4"] = {"1"};
 
     // priorities
-    testArgs.GetOverrideArgs()["pritest1"] = {"a", "b"};
-    testArgs.GetConfigArgs()["pritest2"] = {"a", "b"};
-    testArgs.GetOverrideArgs()["pritest3"] = {"a"};
-    testArgs.GetConfigArgs()["pritest3"] = {"b"};
-    testArgs.GetOverrideArgs()["pritest4"] = {"a","b"};
-    testArgs.GetConfigArgs()["pritest4"] = {"c","d"};
+    testArgs.GetOverrideArgs()["-pritest1"] = {"a", "b"};
+    testArgs.GetConfigArgs()["-pritest2"] = {"a", "b"};
+    testArgs.GetOverrideArgs()["-pritest3"] = {"a"};
+    testArgs.GetConfigArgs()["-pritest3"] = {"b"};
+    testArgs.GetOverrideArgs()["-pritest4"] = {"a","b"};
+    testArgs.GetConfigArgs()["-pritest4"] = {"c","d"};
 
-    BOOST_CHECK_EQUAL(testArgs.GetArg("strtest1", "default"), "string...");
-    BOOST_CHECK_EQUAL(testArgs.GetArg("strtest2", "default"), "default");
-    BOOST_CHECK_EQUAL(testArgs.GetArg("inttest1", -1), 12345);
-    BOOST_CHECK_EQUAL(testArgs.GetArg("inttest2", -1), 81985529216486895LL);
-    BOOST_CHECK_EQUAL(testArgs.GetArg("inttest3", -1), -1);
-    BOOST_CHECK_EQUAL(testArgs.GetBoolArg("booltest1", false), true);
-    BOOST_CHECK_EQUAL(testArgs.GetBoolArg("booltest2", false), false);
-    BOOST_CHECK_EQUAL(testArgs.GetBoolArg("booltest3", false), false);
-    BOOST_CHECK_EQUAL(testArgs.GetBoolArg("booltest4", false), true);
+    BOOST_CHECK_EQUAL(testArgs.GetArg("-strtest1", "default"), "string...");
+    BOOST_CHECK_EQUAL(testArgs.GetArg("-strtest2", "default"), "default");
+    BOOST_CHECK_EQUAL(testArgs.GetArg("-inttest1", -1), 12345);
+    BOOST_CHECK_EQUAL(testArgs.GetArg("-inttest2", -1), 81985529216486895LL);
+    BOOST_CHECK_EQUAL(testArgs.GetArg("-inttest3", -1), -1);
+    BOOST_CHECK_EQUAL(testArgs.GetBoolArg("-booltest1", false), true);
+    BOOST_CHECK_EQUAL(testArgs.GetBoolArg("-booltest2", false), false);
+    BOOST_CHECK_EQUAL(testArgs.GetBoolArg("-booltest3", false), false);
+    BOOST_CHECK_EQUAL(testArgs.GetBoolArg("-booltest4", false), true);
 
-    BOOST_CHECK_EQUAL(testArgs.GetArg("pritest1", "default"), "b");
-    BOOST_CHECK_EQUAL(testArgs.GetArg("pritest2", "default"), "a");
-    BOOST_CHECK_EQUAL(testArgs.GetArg("pritest3", "default"), "a");
-    BOOST_CHECK_EQUAL(testArgs.GetArg("pritest4", "default"), "b");
+    BOOST_CHECK_EQUAL(testArgs.GetArg("-pritest1", "default"), "b");
+    BOOST_CHECK_EQUAL(testArgs.GetArg("-pritest2", "default"), "a");
+    BOOST_CHECK_EQUAL(testArgs.GetArg("-pritest3", "default"), "a");
+    BOOST_CHECK_EQUAL(testArgs.GetArg("-pritest4", "default"), "b");
 }
 
 BOOST_AUTO_TEST_CASE(util_GetChainName)
 {
+    UnselectBaseParams();
+
     TestArgsManager test_args;
     const char* avail_args[] = {"-testnet", "-regtest"};
     test_args.SetupArgs(2, avail_args);
@@ -556,7 +562,7 @@ BOOST_AUTO_TEST_CASE(util_GetChainName)
 
     // check setting the network to test (and thus making
     // [test] regtest=1 potentially relevant) doesn't break things
-    test_args.SelectConfigNetwork("test");
+    SelectBaseParams(CBaseChainParams::TESTNET);
 
     BOOST_CHECK(test_args.ParseParameters(0, (char**)argv_testnet, error));
     test_args.ReadConfigString(testnetconf);
@@ -774,7 +780,7 @@ BOOST_FIXTURE_TEST_CASE(util_ArgsMerge, ArgsMergeTestingSetup)
     // Results file is formatted like:
     //
     //   <input> || <IsArgSet/IsArgNegated/GetArg output> | <GetArgs output> | <GetUnsuitable output>
-    BOOST_CHECK_EQUAL(out_sha_hex, "b835eef5977d69114eb039a976201f8c7121f34fe2b7ea2b73cafb516e5c9dc8");
+    BOOST_CHECK_EQUAL(out_sha_hex, "6e84c6b6a1702f5c2247d175e7e1ad76c342be58b95bf2b7ed7e271d38197a14");
 }
 
 // Similar test as above, but for ArgsManager::GetChainName function.

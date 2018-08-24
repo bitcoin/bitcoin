@@ -163,11 +163,6 @@ protected:
 public:
     ArgsManager();
 
-    /**
-     * Select the network in use
-     */
-    void SelectConfigNetwork(const std::string& network);
-
     NODISCARD bool ParseParameters(int argc, const char* const argv[], std::string& error);
     NODISCARD bool ReadConfigFiles(std::string& error, bool ignore_invalid_keys = false);
 

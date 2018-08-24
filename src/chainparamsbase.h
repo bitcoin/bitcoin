@@ -21,13 +21,16 @@ public:
     static const std::string TESTNET;
     static const std::string REGTEST;
 
+    const std::string& ChainName() const { return m_chain_name; }
     const std::string& DataDir() const { return strDataDir; }
     int RPCPort() const { return nRPCPort; }
 
     CBaseChainParams() = delete;
-    CBaseChainParams(const std::string& data_dir, int rpc_port) : nRPCPort(rpc_port), strDataDir(data_dir) {}
+    CBaseChainParams(const std::string& chain_name, const std::string& data_dir, int rpc_port)
+        : m_chain_name(chain_name), nRPCPort(rpc_port), strDataDir(data_dir) {}
 
 private:
+    std::string m_chain_name;
     int nRPCPort;
     std::string strDataDir;
 };
@@ -38,6 +41,11 @@ private:
  * @throws a std::runtime_error if the chain is not supported.
  */
 std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain);
+
+/**
+ * @return true if BaseParams have been selected, false if not
+ */
+bool BaseParamsSelected();
 
 /**
  * Return the currently selected parameters. This won't change after app
