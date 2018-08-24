@@ -47,6 +47,8 @@ MAX_VERSIONS = {
 
 # Ignore symbols that are exported as part of every executable
 IGNORE_EXPORTS = {
+    '__bss_start__',
+    '_bss_end__', '__bss_end__', '__end__',
 '_edata', '_end', '_init', '__bss_start', '_fini', '_IO_stdin_used', 'stdin', 'stdout', 'stderr'
 }
 READELF_CMD = os.getenv('READELF', '/usr/bin/readelf')
