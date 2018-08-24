@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blockfilter.h>
+#include <crypto/siphash.h>
 #include <hash.h>
 #include <primitives/transaction.h>
 #include <script/script.h>

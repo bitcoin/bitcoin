@@ -7,6 +7,7 @@
 #include <coins.h>
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
+#include <crypto/sha256.h>
 #include <miner.h>
 #include <policy/policy.h>
 #include <pow.h>
