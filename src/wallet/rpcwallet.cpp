@@ -4739,7 +4739,7 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
     const CTransaction txConst(*psbtx.tx);
 
     // Fill transaction with out data but don't sign
-    bool bip32derivs = request.params[4].isNull() ? false : request.params[5].get_bool();
+    bool bip32derivs = request.params[4].isNull() ? false : request.params[4].get_bool();
     FillPSBT(pwallet, psbtx, &txConst, 1, false, bip32derivs);
 
     // Serialize the PSBT
