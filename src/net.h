@@ -713,6 +713,8 @@ private:
     // Our address, as reported by the peer
     CService addrLocal GUARDED_BY(cs_addrLocal);
     mutable CCriticalSection cs_addrLocal;
+
+    void RecordRecvBytesPerMsgCmd(const std::string& cmd, uint32_t bytes) EXCLUSIVE_LOCKS_REQUIRED(cs_vRecv);
 public:
 
     NodeId GetId() const {
