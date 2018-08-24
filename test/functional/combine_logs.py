@@ -79,7 +79,8 @@ def get_log_events(source, logfile):
                     timestamp = time_match.group()
                 # if it doesn't have a timestamp, it's a continuation line of the previous log.
                 else:
-                    event += "\n" + line
+                    # Add the line. Prefix with space equivalent to the source + timestamp so log lines are aligned
+                    event += "                                   " + line
             # Flush the final event
             yield LogEvent(timestamp=timestamp, source=source, event=event.rstrip())
     except FileNotFoundError:
@@ -98,7 +99,11 @@ def print_logs(log_events, color=False, html=False):
             colors["reset"] = "\033[0m"     # Reset font color
 
         for event in log_events:
-            print("{0} {1: <5} {2} {3}".format(colors[event.source.rstrip()], event.source, event.event, colors["reset"]))
+            lines = event.event.splitlines()
+            print("{0} {1: <5} {2} {3}".format(colors[event.source.rstrip()], event.source, lines[0], colors["reset"]))
+            if len(lines) > 1:
+                for line in lines[1:]:
+                    print("{0}{1}{2}".format(colors[event.source.rstrip()], line, colors["reset"]))
 
     else:
         try:
