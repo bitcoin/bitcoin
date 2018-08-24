@@ -585,6 +585,16 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             ssKey >> strAddress;
             ssKey >> strKey;
             ssValue >> strValue;
+
+            CKeyID key;
+            if (!CBitcoinAddress(strAddress).GetKeyID(key))
+            {
+                if (CBitcoinAddressOld(strAddress).GetKeyID(key))
+                {
+                    strAddress = CBitcoinAddress(key).ToString();
+                }
+            }
+
             if (!pwallet->LoadDestData(CBitcoinAddress(strAddress).Get(), strKey, strValue))
             {
                 strErr = "Error reading wallet database: LoadDestData failed";
