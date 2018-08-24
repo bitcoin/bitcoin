@@ -1162,7 +1162,7 @@ void CWallet::TransactionRemovedFromMempool(const CTransactionRef &ptx) {
     }
 }
 
-void CWallet::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex *pindex, const std::vector<CTransactionRef>& vtxConflicted) {
+void CWallet::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex *pindex, const std::shared_ptr<const CBlockUndo> &blockundo, const std::vector<CTransactionRef>& vtxConflicted) {
     auto locked_chain = chain().lock();
     LOCK(cs_wallet);
     // TODO: Temporarily ensure that mempool removals are notified before

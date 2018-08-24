@@ -16,6 +16,9 @@ class UTXOIndexTest(BitcoinTestFramework):
         self.num_nodes = 3
         self.extra_args = [["-utxoscriptindex"], [], []]
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def check_utxoscriptindex(self, node_id, minConf, addr, expected_txid):
         txouts = self.nodes[node_id].getutxoscriptindex(minConf, (addr,))
         txid = txouts[0]["txid"]
@@ -31,7 +34,7 @@ class UTXOIndexTest(BitcoinTestFramework):
 
         # Check that there's no UTXO on any of the nodes
         for node in self.nodes:
-            assert_equal(len(node.listunspent()), 0)
+            assert_equal(node.listunspent(), [])
 
         # mining
         self.nodes[0].generate(101)

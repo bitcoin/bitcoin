@@ -9,8 +9,7 @@
 #include <scheduler.h>
 #include <txmempool.h>
 #include <util/system.h>
-#include <undo.h> 
-#include <util.h>
+#include <undo.h>
 #include <validation.h>
 
 #include <list>

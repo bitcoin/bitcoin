@@ -1126,20 +1126,20 @@ void utxoSetToJson(const SerializableUtxoSet& utxoSet, UniValue& vObjects, unsig
         ScriptPubKeyToUniv(coin.out.scriptPubKey, oScriptPubKey, true);
 
         UniValue o(UniValue::VOBJ);
-        o.push_back(Pair("confirmations", nConfirmations));
-        o.push_back(Pair("txid", outpoint.hash.GetHex()));
-        o.push_back(Pair("vout", (int)outpoint.n));
-        o.push_back(Pair("value", ValueFromAmount(coin.out.nValue)));
-        o.push_back(Pair("scriptPubKey", oScriptPubKey));
-        o.push_back(Pair("coinbase", (bool)coin.fCoinBase));
-        o.push_back(Pair("bestblockhash", pindex->GetBlockHash().GetHex()));
-        o.push_back(Pair("bestblockheight", pindex->nHeight));
-        o.push_back(Pair("bestblocktime", pindex->GetBlockTime()));
+        o.pushKV("confirmations", nConfirmations);
+        o.pushKV("txid", outpoint.hash.GetHex());
+        o.pushKV("vout", (int)outpoint.n);
+        o.pushKV("value", ValueFromAmount(coin.out.nValue));
+        o.pushKV("scriptPubKey", oScriptPubKey);
+        o.pushKV("coinbase", (bool)coin.fCoinBase);
+        o.pushKV("bestblockhash", pindex->GetBlockHash().GetHex());
+        o.pushKV("bestblockheight", pindex->nHeight);
+        o.pushKV("bestblocktime", pindex->GetBlockTime());
         if ((unsigned int)coin.nHeight != MEMPOOL_HEIGHT)
         {
-            o.push_back(Pair("blockhash", chainActive[coin.nHeight]->GetBlockHash().GetHex()));
-            o.push_back(Pair("blockheight", (uint64_t)coin.nHeight));
-            o.push_back(Pair("blocktime", chainActive[coin.nHeight]->GetBlockTime()));
+            o.pushKV("blockhash", chainActive[coin.nHeight]->GetBlockHash().GetHex());
+            o.pushKV("blockheight", (uint64_t)coin.nHeight);
+            o.pushKV("blocktime", chainActive[coin.nHeight]->GetBlockTime());
         }
         vObjects.push_back(o);
     }

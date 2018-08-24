@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <index/utxoscriptindex.h>
-#include <util.h>
 #include <script/standard.h>
 #include <pubkey.h>
 #include <txmempool.h>
