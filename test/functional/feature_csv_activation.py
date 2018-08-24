@@ -165,11 +165,11 @@ class BIP68_112_113Test(BitcoinTestFramework):
         block.solve()
         return block
 
-    def sync_blocks(self, blocks, success=True, reject_code=None, reject_reason=None, request_block=True):
+    def sync_blocks(self, blocks, success=True):
         """Sends blocks to test node. Syncs and verifies that tip has advanced to most recent block.
 
         Call with success = False if the tip shouldn't advance to the most recent block."""
-        self.nodes[0].p2p.send_blocks_and_test(blocks, self.nodes[0], success=success, reject_code=reject_code, reject_reason=reject_reason, request_block=request_block)
+        self.nodes[0].p2p.send_blocks_and_test(blocks, self.nodes[0], success=success)
 
     def run_test(self):
         self.nodes[0].add_p2p_connection(P2PDataStore())
