@@ -11,6 +11,7 @@
 #include <random.h>
 
 #include <secp256k1.h>
+#include <secp256k1_ecdh.h>
 #include <secp256k1_recovery.h>
 
 static secp256k1_context* secp256k1_context_sign = nullptr;
@@ -283,6 +284,17 @@ bool CKey::Derive(CKey& keyChild, ChainCode &ccChild, unsigned int nChild, const
     keyChild.fCompressed = true;
     keyChild.fValid = ret;
     return ret;
+}
+
+bool CKey::ComputeECDHSecret(const CPubKey& pubkey, CPrivKey& secret_out) const
+{
+    secp256k1_pubkey pubkey_internal;
+    if (!secp256k1_ec_pubkey_parse(secp256k1_context_sign, &pubkey_internal, pubkey.data(), pubkey.size())) {
+        return false;
+    }
+
+    secret_out.resize(32);
+    return secp256k1_ecdh(secp256k1_context_sign, &secret_out[0], &pubkey_internal, keydata.data()) == 1;
 }
 
 bool CExtKey::Derive(CExtKey &out, unsigned int _nChild) const {
