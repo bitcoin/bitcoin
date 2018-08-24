@@ -150,6 +150,26 @@ BOOST_AUTO_TEST_CASE(key_test1)
     BOOST_CHECK(key2C.SignCompact(hashMsg, detsigc));
     BOOST_CHECK(detsig == ParseHex("1c52d8a32079c11e79db95af63bb9600c5b04f21a9ca33dc129c2bfa8ac9dc1cd561d8ae5e0f6c1a16bde3719c64c2fd70e404b6428ab9a69566962e8771b5944d"));
     BOOST_CHECK(detsigc == ParseHex("2052d8a32079c11e79db95af63bb9600c5b04f21a9ca33dc129c2bfa8ac9dc1cd561d8ae5e0f6c1a16bde3719c64c2fd70e404b6428ab9a69566962e8771b5944d"));
+
+    // test EC Diffie-Hellman secret computation
+    CPrivKey secret1;
+    CPrivKey secret2;
+    BOOST_CHECK(key1C.ComputeECDHSecret(pubkey2, secret1));
+    BOOST_CHECK(key2C.ComputeECDHSecret(pubkey1, secret2));
+    BOOST_CHECK(secret1.size() == 32);
+    BOOST_CHECK(secret1 == secret2);
+    // invalid pubkey test
+    std::vector<unsigned char> pubkeydata;
+    pubkeydata.insert(pubkeydata.end(), pubkey1C.begin(), pubkey1C.end());
+    pubkeydata[0] = 0xFF;
+    CPubKey pubkey1_invalid(pubkeydata);
+    BOOST_CHECK(key2.ComputeECDHSecret(pubkey1_invalid, secret2) == false);
+    pubkeydata[0] = 0x03;
+    CPubKey pubkey2_invalid(pubkeydata);
+    BOOST_CHECK(key2.ComputeECDHSecret(pubkey2_invalid, secret2) == true);
+    pubkeydata[9] = 0xFF;
+    CPubKey pubkey3_invalid(pubkeydata);
+    BOOST_CHECK(key2.ComputeECDHSecret(pubkey3_invalid, secret2) == false);
 }
 
 BOOST_AUTO_TEST_CASE(key_signature_tests)
