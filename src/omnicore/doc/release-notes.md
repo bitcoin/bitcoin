@@ -1,5 +1,5 @@
-p Omni Core v0.3.1
-===================
+Omni Core v0.3.1
+================
 
 v0.3.1 is a minor release and not consensus critical in terms of the Omni Layer protocol rules. Besides other improvemens, this release provides two new RPCs to create funded transactions, two new RPCs to query token wallet balances, and signficant stability and performance gains of Omni Core.
 
@@ -352,6 +352,7 @@ The following list includes relevant pull requests merged into this release:
 - #744 Clarify that bitcoins are meant in funded RPCs
 - #631 Bump version to Omni Core 0.3.1
 - #632 Add release notes for Omni Core 0.3.1
+- #746 Fix typo in release notes
 ```
 
 Credits
