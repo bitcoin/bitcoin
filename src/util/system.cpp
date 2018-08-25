@@ -99,8 +99,6 @@ const char * const BITCOIN_PID_FILENAME = "dashd.pid";
 
 ArgsManager gArgs;
 
-CTranslationInterface translationInterface;
-
 /** Init OpenSSL library multithreading support */
 static std::unique_ptr<CCriticalSection[]> ppmutexOpenSSL;
 void locking_callback(int mode, int i, const char* file, int line) NO_THREAD_SAFETY_ANALYSIS
