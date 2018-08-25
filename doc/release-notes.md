@@ -1,6 +1,6 @@
 Chaincoin Core version 0.16.1 is now available from:
 
-  <https://chaincoin.org/bin/chaincoin-core-0.16.1/>
+  <https://github.com/chaincoin/chaincoin/releases/tag/v0.16.1/>
 
 This is a new major version release, including new features, various bugfixes
 and performance improvements, as well as updated translations.
