@@ -696,7 +696,7 @@ $ omnicore-cli "omni_sendrawtx" \
 
 Creates and sends a funded simple send transaction.
 
-All coins from the sender are consumed and if there are coins missing, they are taken from the specified fee source. Change is sent to the fee source!
+All bitcoins from the sender are consumed and if there are bitcoins missing, they are taken from the specified fee source. Change is sent to the fee source!
 
 **Arguments:**
 
@@ -727,7 +727,7 @@ $ omnicore-cli "omni_funded_send" "1DFa5bT6KMEr6ta29QJouainsjaNBsJQhH" \
 
 Creates and sends a transaction that transfers all available tokens in the given ecosystem to the recipient.
 
-All coins from the sender are consumed and if there are coins missing, they are taken from the specified fee source. Change is sent to the fee source!
+All bitcoins from the sender are consumed and if there are bitcoins missing, they are taken from the specified fee source. Change is sent to the fee source!
 
 **Arguments:**
 

@@ -43,7 +43,7 @@ UniValue omni_funded_send(const UniValue& params, bool fHelp)
 
             "\nCreates and sends a funded simple send transaction.\n"
 
-            "\nAll coins from the sender are consumed and if there are coins missing, they are taken from the specified fee source. Change is sent to the fee source!\n"
+            "\nAll bitcoins from the sender are consumed and if there are bitcoins missing, they are taken from the specified fee source. Change is sent to the fee source!\n"
 
             "\nArguments:\n"
             "1. fromaddress          (string, required) the address to send from\n"
@@ -92,7 +92,7 @@ UniValue omni_funded_sendall(const UniValue& params, bool fHelp)
 
             "\nCreates and sends a transaction that transfers all available tokens in the given ecosystem to the recipient.\n"
 
-            "\nAll coins from the sender are consumed and if there are coins missing, they are taken from the specified fee source. Change is sent to the fee source!\n"
+            "\nAll bitcoins from the sender are consumed and if there are bitcoins missing, they are taken from the specified fee source. Change is sent to the fee source!\n"
 
             "\nArguments:\n"
             "1. fromaddress          (string, required) the address to send from\n"
