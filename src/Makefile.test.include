@@ -10,6 +10,7 @@ TEST_SRCDIR = test
 TEST_BINARY=test/test_dash$(EXEEXT)
 
 JSON_TEST_FILES = \
+  test/data/blockfilters.json \
   test/data/script_tests.json \
   test/data/base58_keys_valid.json \
   test/data/base58_encode_decode.json \
@@ -39,6 +40,7 @@ BITCOIN_TESTS =\
   test/bip39_tests.cpp \
   test/blockchain_tests.cpp \
   test/blockencodings_tests.cpp \
+  test/blockfilter_tests.cpp \
   test/bloom_tests.cpp \
   test/bls_tests.cpp \
   test/bswap_tests.cpp \
