@@ -215,6 +215,7 @@ public:
 
     void UnloadBlockIndex();
 
+    // This may return nullptr:
     const CBlockIndex* GetBestHeader();
 private:
     bool ActivateBestChainStep(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, ConnectTrace& connectTrace) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
@@ -494,7 +495,10 @@ static bool IsCurrentForFeeEstimation() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         return false;
     if (chainActive.Tip()->GetBlockTime() < (GetTime() - MAX_FEE_ESTIMATION_TIP_AGE))
         return false;
-    if (chainActive.Height() < GetBestHeader()->nHeight - 1)
+    const CBlockIndex* best_header = GetBestHeader();
+    if (best_header == nullptr)
+        return false;
+    if (chainActive.Height() < best_header->nHeight - 1)
         return false;
     return true;
 }
@@ -2809,8 +2813,9 @@ static void NotifyHeaderTip() LOCKS_EXCLUDED(cs_main) {
             pindexHeaderOld = pindexHeader;
         }
     }
-    // Send block tip changed notifications without cs_main
-    if (fNotify) {
+    // Send block tip changed notifications without cs_main, except in the
+    // (unlikely) event there aren't any header candidates.
+    if (fNotify && pindexHeader != nullptr) {
         uiInterface.NotifyHeaderTip(fInitialBlockDownload, pindexHeader);
     }
 }
