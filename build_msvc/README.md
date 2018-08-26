@@ -47,4 +47,10 @@ The instructions below use vcpkg to install the dependencies.
     leveldb:x64-windows-static
 ```
 
+- Use Python to generate *.vcxproj from Makefile
+
+```
+    PS >python msvc-autogen.py
+```
+
 - Build in Visual Studio.

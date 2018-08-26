@@ -6,6 +6,8 @@ platform: x64
 environment:
   APPVEYOR_SAVE_CACHE_ON_ERROR: true
 cache: C:\tools\vcpkg\installed\
+init:
+- cmd: set PATH=C:\Python36-x64;%PATH%
 before_build:
 - ps: >-
     $packages = @(
@@ -28,6 +30,7 @@ before_build:
     git -C C:\Tools\vcpkg pull # This is a temporary fix, can be removed after appveyor update its image to include Microsoft/vcpkg#4046
 
     Invoke-Expression -Command "vcpkg install $all_packages"
+- cmd: python build_msvc\msvc-autogen.py
 build:
   project: build_msvc\bitcoin.sln
   parallel: true
