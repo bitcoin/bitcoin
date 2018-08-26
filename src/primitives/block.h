@@ -6,6 +6,7 @@
 #ifndef BITCOIN_PRIMITIVES_BLOCK_H
 #define BITCOIN_PRIMITIVES_BLOCK_H
 
+#include <atomic>
 #include <primitives/transaction.h>
 #include <serialize.h>
 #include <uint256.h>
@@ -76,7 +77,7 @@ public:
     std::vector<CTransactionRef> vtx;
 
     // memory only
-    mutable bool fChecked;
+    mutable std::atomic<bool> fChecked;
 
     CBlock()
     {
@@ -87,6 +88,23 @@ public:
     {
         SetNull();
         *(static_cast<CBlockHeader*>(this)) = header;
+    }
+
+    CBlock(const CBlock &block)
+        :CBlock(static_cast<CBlockHeader>(block))
+    {
+        vtx = block.vtx;
+        fChecked = false;
+    }
+
+    CBlock& operator=(const CBlock& block)
+    {
+        fChecked = false;
+
+        *(static_cast<CBlockHeader*>(this)) = block;
+        vtx = block.vtx;
+
+        return *this;
     }
 
     ADD_SERIALIZE_METHODS;
