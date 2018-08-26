@@ -1245,10 +1245,12 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
 
     LOCK(cs_main);
 
+    const CBlockIndex* best_header = GetBestHeader();
+
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("chain",                 Params().NetworkIDString());
     obj.pushKV("blocks",                (int)chainActive.Height());
-    obj.pushKV("headers",               GetBestHeader()->nHeight);
+    obj.pushKV("headers",               best_header == nullptr ? chainActive.Height() : best_header->nHeight);
     obj.pushKV("bestblockhash",         chainActive.Tip()->GetBlockHash().GetHex());
     obj.pushKV("difficulty",            (double)GetDifficulty(chainActive.Tip()));
     obj.pushKV("mediantime",            (int64_t)chainActive.Tip()->GetMedianTimePast());
