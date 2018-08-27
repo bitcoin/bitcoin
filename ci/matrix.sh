@@ -29,10 +29,11 @@ export DOCKER_RUN_IN_BUILDER="docker run -t --rm -w $SRC_DIR $DOCKER_RUN_ARGS $B
 # Default values for targets
 export GOAL="install"
 export SDK_URL=${SDK_URL:-https://bitcoincore.org/depends-sources/sdks}
-export MAKEJOBS="-j4"
+MAKEJOBS="-j$(nproc)"
+export MAKEJOBS
 
-export RUN_UNITTESTS=false
-export RUN_INTEGRATIONTESTS=false
+export RUN_UNITTESTS=true
+export RUN_INTEGRATIONTESTS=true
 
 if [ "$BUILD_TARGET" = "arm-linux" ]; then
   export HOST=arm-linux-gnueabihf
@@ -40,55 +41,50 @@ if [ "$BUILD_TARGET" = "arm-linux" ]; then
   # -Wno-psabi is to disable ABI warnings: "note: parameter passing for argument of type ... changed in GCC 7.1"
   # This could be removed once the ABI change warning does not show up by default
   export BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports CXXFLAGS=-Wno-psabi"
+  export RUN_UNITTESTS=false
+  export RUN_INTEGRATIONTESTS=false
 elif [ "$BUILD_TARGET" = "win32" ]; then
   export HOST=i686-w64-mingw32
   export DPKG_ADD_ARCH="i386"
   export BITCOIN_CONFIG="--enable-gui --enable-reduce-exports --disable-miner"
   export DIRECT_WINE_EXEC_TESTS=true
-  export RUN_UNITTESTS=true
 elif [ "$BUILD_TARGET" = "win64" ]; then
   export HOST=x86_64-w64-mingw32
   export DPKG_ADD_ARCH="i386"
   export BITCOIN_CONFIG="--enable-gui --enable-reduce-exports --disable-miner"
   export DIRECT_WINE_EXEC_TESTS=true
-  export RUN_UNITTESTS=true
 elif [ "$BUILD_TARGET" = "linux32" ]; then
   export HOST=i686-pc-linux-gnu
   export BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports --enable-crash-hooks LDFLAGS=-static-libstdc++"
   export USE_SHELL="/bin/dash"
   export PYZMQ=true
-  export RUN_UNITTESTS=true
-  export RUN_INTEGRATIONTESTS=true
 elif [ "$BUILD_TARGET" = "linux64" ]; then
   export HOST=x86_64-unknown-linux-gnu
   export DEP_OPTS="NO_UPNP=1 DEBUG=1"
   export BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports --enable-crash-hooks"
   export CPPFLAGS="-DDEBUG_LOCKORDER -DENABLE_DASH_DEBUG -DARENA_DEBUG"
   export PYZMQ=true
-  export RUN_UNITTESTS=true
-  export RUN_INTEGRATIONTESTS=true
 elif [ "$BUILD_TARGET" = "linux64_cxx17" ]; then
   export HOST=x86_64-unknown-linux-gnu
   export DEP_OPTS="NO_UPNP=1 DEBUG=1"
-  export BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports --enable-crash-hooks --enable-c++17"
+  export BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports --enable-crash-hooks --enable-c++17 --with-sanitizers=undefined"
   export CPPFLAGS="-DDEBUG_LOCKORDER -DENABLE_DASH_DEBUG -DARENA_DEBUG"
   export PYZMQ=true
-  export RUN_UNITTESTS=true
-  export RUN_INTEGRATIONTESTS=true
+  export RUN_INTEGRATIONTESTS=false
 elif [ "$BUILD_TARGET" = "linux64_nowallet" ]; then
   export HOST=x86_64-unknown-linux-gnu
   export DEP_OPTS="NO_WALLET=1"
   export BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
-  export RUN_UNITTESTS=true
 elif [ "$BUILD_TARGET" = "linux64_release" ]; then
   export HOST=x86_64-unknown-linux-gnu
   export DEP_OPTS="NO_UPNP=1"
   export BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports"
   export PYZMQ=true
-  export RUN_UNITTESTS=true
 elif [ "$BUILD_TARGET" = "mac" ]; then
   export HOST=x86_64-apple-darwin14
   export BITCOIN_CONFIG="--enable-gui --enable-reduce-exports --disable-miner"
   export OSX_SDK=10.11
   export GOAL="all deploy"
+  export RUN_UNITTESTS=false
+  export RUN_INTEGRATIONTESTS=false
 fi
