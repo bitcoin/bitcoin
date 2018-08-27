@@ -221,6 +221,17 @@ static GCSFilter::ElementSet BasicFilterElements(const CBlock& block,
     return elements;
 }
 
+BlockFilter::BlockFilter(BlockFilterType filter_type, const uint256& block_hash,
+                         std::vector<unsigned char> filter)
+    : m_filter_type(filter_type), m_block_hash(block_hash)
+{
+    GCSFilter::Params params;
+    if (!BuildParams(params)) {
+        throw std::invalid_argument("unknown filter_type");
+    }
+    m_filter = GCSFilter(params, std::move(filter));
+}
+
 BlockFilter::BlockFilter(BlockFilterType filter_type, const CBlock& block, const CBlockUndo& block_undo)
     : m_filter_type(filter_type), m_block_hash(block.GetHash())
 {

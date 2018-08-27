@@ -101,6 +101,17 @@ BOOST_AUTO_TEST_CASE(blockfilter_basic_test)
     for (const CScript& script : excluded_scripts) {
         BOOST_CHECK(!filter.Match(GCSFilter::Element(script.begin(), script.end())));
     }
+
+    // Test serialization/unserialization.
+    BlockFilter block_filter2;
+
+    CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+    stream << block_filter;
+    stream >> block_filter2;
+
+    BOOST_CHECK_EQUAL(block_filter.GetFilterType(), block_filter2.GetFilterType());
+    BOOST_CHECK_EQUAL(block_filter.GetBlockHash(), block_filter2.GetBlockHash());
+    BOOST_CHECK(block_filter.GetEncodedFilter() == block_filter2.GetEncodedFilter());
 }
 
 BOOST_AUTO_TEST_CASE(blockfilters_json_test)

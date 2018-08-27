@@ -103,11 +103,17 @@ private:
 
 public:
 
-    // Construct a new BlockFilter of the specified type from a block.
+    BlockFilter() = default;
+
+    //! Reconstruct a BlockFilter from parts.
+    BlockFilter(BlockFilterType filter_type, const uint256& block_hash,
+                std::vector<unsigned char> filter);
+
+    //! Construct a new BlockFilter of the specified type from a block.
     BlockFilter(BlockFilterType filter_type, const CBlock& block, const CBlockUndo& block_undo);
 
     BlockFilterType GetFilterType() const { return m_filter_type; }
-
+    const uint256& GetBlockHash() const { return m_block_hash; }
     const GCSFilter& GetFilter() const { return m_filter; }
 
     const std::vector<unsigned char>& GetEncodedFilter() const
@@ -115,10 +121,10 @@ public:
         return m_filter.GetEncoded();
     }
 
-    // Compute the filter hash.
+    //! Compute the filter hash.
     uint256 GetHash() const;
 
-    // Compute the filter header given the previous one.
+    //! Compute the filter header given the previous one.
     uint256 ComputeHeader(const uint256& prev_header) const;
 
     template <typename Stream>
