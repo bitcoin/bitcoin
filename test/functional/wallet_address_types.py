@@ -143,7 +143,7 @@ class AddressTypeTest(BitcoinTestFramework):
             assert(False)
 
     def test_change_output_type(self, node_sender, destinations, expected_type):
-        txid = self.nodes[node_sender].sendmany(fromaccount="", amounts=dict.fromkeys(destinations, 0.001))
+        txid = self.nodes[node_sender].sendmany(dummy="", amounts=dict.fromkeys(destinations, 0.001))
         raw_tx = self.nodes[node_sender].getrawtransaction(txid)
         tx = self.nodes[node_sender].decoderawtransaction(raw_tx)
 

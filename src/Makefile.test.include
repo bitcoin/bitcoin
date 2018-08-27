@@ -96,7 +96,6 @@ BITCOIN_TESTS =\
 
 if ENABLE_WALLET
 BITCOIN_TESTS += \
-  wallet/test/accounting_tests.cpp \
   wallet/test/psbt_wallet_tests.cpp \
   wallet/test/wallet_tests.cpp \
   wallet/test/wallet_crypto_tests.cpp \

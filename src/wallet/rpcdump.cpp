@@ -1150,7 +1150,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
             "      \"keys\": [\"<key>\", ... ]                               , (array, optional) Array of strings giving private keys whose corresponding public keys must occur in the output or redeemscript\n"
             "      \"internal\": <true>                                    , (boolean, optional, default: false) Stating whether matching outputs should be treated as not incoming payments\n"
             "      \"watchonly\": <true>                                   , (boolean, optional, default: false) Stating whether matching outputs should be considered watched even when they're not spendable, only allowed if keys are empty\n"
-            "      \"label\": <label>                                      , (string, optional, default: '') Label to assign to the address (aka account name, for now), only allowed with internal=false\n"
+            "      \"label\": <label>                                      , (string, optional, default: '') Label to assign to the address, only allowed with internal=false\n"
             "    }\n"
             "  ,...\n"
             "  ]\n"
