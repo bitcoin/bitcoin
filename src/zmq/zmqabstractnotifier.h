@@ -7,6 +7,8 @@
 
 #include <zmq/zmqconfig.h>
 
+#include <memory>
+
 class CBlockIndex;
 class CZMQAbstractNotifier;
 
@@ -15,7 +17,7 @@ typedef CZMQAbstractNotifier* (*CZMQNotifierFactory)();
 class CZMQAbstractNotifier
 {
 public:
-    CZMQAbstractNotifier() : psocket(nullptr) { }
+    CZMQAbstractNotifier() = default;
     virtual ~CZMQAbstractNotifier();
 
     template <typename T>
@@ -29,14 +31,14 @@ public:
     std::string GetAddress() const { return address; }
     void SetAddress(const std::string &a) { address = a; }
 
-    virtual bool Initialize(void *pcontext) = 0;
+    virtual bool Initialize(zmq::context_t& context) = 0;
     virtual void Shutdown() = 0;
 
     virtual bool NotifyBlock(const CBlockIndex *pindex);
     virtual bool NotifyTransaction(const CTransaction &transaction);
 
 protected:
-    void *psocket;
+    std::shared_ptr<zmq::socket_t> psocket;
     std::string type;
     std::string address;
 };

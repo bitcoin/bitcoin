@@ -18,38 +18,28 @@ static const char *MSG_RAWBLOCK  = "rawblock";
 static const char *MSG_RAWTX     = "rawtx";
 
 // Internal function to send multipart message
-static int zmq_send_multipart(void *sock, const void* data, size_t size, ...)
+static int zmq_send_multipart(zmq::socket_t& sock, const void* data, size_t size, ...)
 {
     va_list args;
     va_start(args, size);
 
     while (1)
     {
-        zmq_msg_t msg;
-
-        int rc = zmq_msg_init_size(&msg, size);
-        if (rc != 0)
-        {
-            zmqError("Unable to initialize ZMQ msg");
-            va_end(args);
-            return -1;
-        }
-
-        void *buf = zmq_msg_data(&msg);
-        memcpy(buf, data, size);
+        zmq::message_t msg(data, size);
 
         data = va_arg(args, const void*);
 
-        rc = zmq_msg_send(&msg, sock, data ? ZMQ_SNDMORE : 0);
-        if (rc == -1)
-        {
-            zmqError("Unable to send ZMQ msg");
-            zmq_msg_close(&msg);
+        try {
+            if (!sock.send(msg, data ? ZMQ_SNDMORE : 0)) {
+                // Handle EAGAIN in the same way as other errors.
+                throw zmq::error_t();
+            }
+        }
+        catch (const zmq::error_t& exc) {
+            zmqError("Unable to send ZMQ msg", exc);
             va_end(args);
             return -1;
         }
-
-        zmq_msg_close(&msg);
 
         if (!data)
             break;
@@ -60,27 +50,22 @@ static int zmq_send_multipart(void *sock, const void* data, size_t size, ...)
     return 0;
 }
 
-bool CZMQAbstractPublishNotifier::Initialize(void *pcontext)
+bool CZMQAbstractPublishNotifier::Initialize(zmq::context_t& context)
 {
-    assert(!psocket);
+    assert(psocket == nullptr);
 
     // check if address is being used by other publish notifier
     std::multimap<std::string, CZMQAbstractPublishNotifier*>::iterator i = mapPublishNotifiers.find(address);
 
     if (i==mapPublishNotifiers.end())
     {
-        psocket = zmq_socket(pcontext, ZMQ_PUB);
-        if (!psocket)
-        {
-            zmqError("Failed to create socket");
-            return false;
+        try {
+            psocket = std::make_shared<zmq::socket_t>(context, ZMQ_PUB);
+            psocket->bind(address);
         }
-
-        int rc = zmq_bind(psocket, address.c_str());
-        if (rc!=0)
-        {
-            zmqError("Failed to bind address");
-            zmq_close(psocket);
+        catch (const zmq::error_t& exc) {
+            zmqError("Failed to create or bind socket", exc);
+            psocket.reset();
             return false;
         }
 
@@ -101,7 +86,7 @@ bool CZMQAbstractPublishNotifier::Initialize(void *pcontext)
 
 void CZMQAbstractPublishNotifier::Shutdown()
 {
-    assert(psocket);
+    assert(psocket != nullptr);
 
     int count = mapPublishNotifiers.count(address);
 
@@ -122,11 +107,10 @@ void CZMQAbstractPublishNotifier::Shutdown()
     {
         LogPrint(BCLog::ZMQ, "Close socket at address %s\n", address);
         int linger = 0;
-        zmq_setsockopt(psocket, ZMQ_LINGER, &linger, sizeof(linger));
-        zmq_close(psocket);
+        psocket->setsockopt(ZMQ_LINGER, &linger, sizeof(linger));
     }
 
-    psocket = nullptr;
+    psocket.reset();
 }
 
 bool CZMQAbstractPublishNotifier::SendMessage(const char *command, const void* data, size_t size)
@@ -136,7 +120,7 @@ bool CZMQAbstractPublishNotifier::SendMessage(const char *command, const void* d
     /* send three parts, command & data & a LE 4byte sequence number */
     unsigned char msgseq[sizeof(uint32_t)];
     WriteLE32(&msgseq[0], nSequence);
-    int rc = zmq_send_multipart(psocket, command, strlen(command), data, size, msgseq, (size_t)sizeof(uint32_t), nullptr);
+    int rc = zmq_send_multipart(*psocket, command, strlen(command), data, size, msgseq, (size_t)sizeof(uint32_t), nullptr);
     if (rc == -1)
         return false;
 
@@ -177,7 +161,7 @@ bool CZMQPublishRawBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
         CBlock block;
         if(!ReadBlockFromDisk(block, pindex, consensusParams))
         {
-            zmqError("Can't read block from disk");
+            LogPrint(BCLog::ZMQ, "zmq: Can't read block from disk\n");
             return false;
         }
 

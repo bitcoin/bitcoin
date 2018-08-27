@@ -13,12 +13,12 @@
 #include <string>
 
 #if ENABLE_ZMQ
-#include <zmq.h>
+#include <zmq.hpp>
 #endif
 
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 
-void zmqError(const char *str);
+void zmqError(const char* msg, const zmq::error_t& exc);
 
 #endif // BITCOIN_ZMQ_ZMQCONFIG_H
