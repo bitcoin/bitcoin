@@ -25,11 +25,20 @@ public:
     typedef std::vector<unsigned char> Element;
     typedef std::unordered_set<Element, ByteVectorHash> ElementSet;
 
+    struct Params
+    {
+        uint64_t m_siphash_k0;
+        uint64_t m_siphash_k1;
+        uint8_t m_P;  //!< Golomb-Rice coding parameter
+        uint32_t m_M;  //!< Inverse false positive rate
+
+        Params(uint64_t siphash_k0 = 0, uint64_t siphash_k1 = 0, uint8_t P = 0, uint32_t M = 1)
+            : m_siphash_k0(siphash_k0), m_siphash_k1(siphash_k1), m_P(P), m_M(M)
+        {}
+    };
+
 private:
-    uint64_t m_siphash_k0;
-    uint64_t m_siphash_k1;
-    uint8_t m_P;  //!< Golomb-Rice coding parameter
-    uint32_t m_M;  //!< Inverse false positive rate
+    Params m_params;
     uint32_t m_N;  //!< Number of elements in the filter
     uint64_t m_F;  //!< Range of element hashes, F = N * M
     std::vector<unsigned char> m_encoded;
@@ -45,19 +54,16 @@ private:
 public:
 
     /** Constructs an empty filter. */
-    GCSFilter(uint64_t siphash_k0 = 0, uint64_t siphash_k1 = 0, uint8_t P = 0, uint32_t M = 0);
+    explicit GCSFilter(const Params& params = Params());
 
     /** Reconstructs an already-created filter from an encoding. */
-    GCSFilter(uint64_t siphash_k0, uint64_t siphash_k1, uint8_t P, uint32_t M,
-              std::vector<unsigned char> encoded_filter);
+    GCSFilter(const Params& params, std::vector<unsigned char> encoded_filter);
 
     /** Builds a new filter from the params and set of elements. */
-    GCSFilter(uint64_t siphash_k0, uint64_t siphash_k1, uint8_t P, uint32_t M,
-              const ElementSet& elements);
+    GCSFilter(const Params& params, const ElementSet& elements);
 
-    uint8_t GetP() const { return m_P; }
     uint32_t GetN() const { return m_N; }
-    uint32_t GetM() const { return m_M; }
+    const Params& GetParams() const { return m_params; }
     const std::vector<unsigned char>& GetEncoded() const { return m_encoded; }
 
     /**
@@ -92,6 +98,8 @@ private:
     BlockFilterType m_filter_type;
     uint256 m_block_hash;
     GCSFilter m_filter;
+
+    bool BuildParams(GCSFilter::Params& params) const;
 
 public:
 
@@ -131,15 +139,11 @@ public:
 
         m_filter_type = static_cast<BlockFilterType>(filter_type);
 
-        switch (m_filter_type) {
-        case BlockFilterType::BASIC:
-            m_filter = GCSFilter(m_block_hash.GetUint64(0), m_block_hash.GetUint64(1),
-                                 BASIC_FILTER_P, BASIC_FILTER_M, std::move(encoded_filter));
-            break;
-
-        default:
+        GCSFilter::Params params;
+        if (!BuildParams(params)) {
             throw std::ios_base::failure("unknown filter_type");
         }
+        m_filter = GCSFilter(params, std::move(encoded_filter));
     }
 };
 

@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(gcsfilter_test)
         excluded_elements.insert(std::move(element2));
     }
 
-    GCSFilter filter(0, 0, 10, 1 << 10, included_elements);
+    GCSFilter filter({0, 0, 10, 1 << 10}, included_elements);
     for (const auto& element : included_elements) {
         BOOST_CHECK(filter.Match(element));
 
@@ -37,6 +37,19 @@ BOOST_AUTO_TEST_CASE(gcsfilter_test)
         BOOST_CHECK(filter.MatchAny(excluded_elements));
         excluded_elements.erase(insertion.first);
     }
+}
+
+BOOST_AUTO_TEST_CASE(gcsfilter_default_constructor)
+{
+    GCSFilter filter;
+    BOOST_CHECK_EQUAL(filter.GetN(), 0);
+    BOOST_CHECK_EQUAL(filter.GetEncoded().size(), 1);
+
+    const GCSFilter::Params& params = filter.GetParams();
+    BOOST_CHECK_EQUAL(params.m_siphash_k0, 0);
+    BOOST_CHECK_EQUAL(params.m_siphash_k1, 0);
+    BOOST_CHECK_EQUAL(params.m_P, 0);
+    BOOST_CHECK_EQUAL(params.m_M, 1);
 }
 
 BOOST_AUTO_TEST_CASE(blockfilter_basic_test)
