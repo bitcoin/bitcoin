@@ -28,7 +28,7 @@
 #include <memory>
 #include <vector>
 
-const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
+const std::function<std::string(const char*)> G_TRANSLATION_FUN;
 
 enum TEST_ID {
     CBLOCK_DESERIALIZE=0,
