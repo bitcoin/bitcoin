@@ -2,7 +2,7 @@
 #
 # This script is executed inside the builder image
 
-export LC_ALL=C
+export LC_ALL=C.UTF-8
 
 set -e
 
@@ -14,9 +14,6 @@ if [ "$RUN_INTEGRATIONTESTS" != "true" ]; then
   echo "Skipping integration tests"
   exit 0
 fi
-
-# override LC_ALL to allow special characters and emojis in filenames
-export LC_ALL=C.UTF-8
 
 export LD_LIBRARY_PATH=$BUILD_DIR/depends/$HOST/lib
 

@@ -2,7 +2,7 @@
 #
 # This script is executed inside the builder image
 
-export LC_ALL=C
+export LC_ALL=C.UTF-8
 
 set -e
 

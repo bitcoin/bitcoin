@@ -3,7 +3,7 @@
 # This script is meant to be sourced into the actual build script. It contains the build matrix and will set all
 # necessary environment variables for the request build target
 
-export LC_ALL=C
+export LC_ALL=C.UTF-8
 
 export BUILD_TARGET=${BUILD_TARGET:-linux64}
 export PULL_REQUEST=${PULL_REQUEST:-false}
