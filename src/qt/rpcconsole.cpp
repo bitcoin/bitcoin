@@ -784,7 +784,7 @@ void RPCConsole::clear(bool clearHistory)
     // (when using width/height on an img, Qt uses nearest instead of linear interpolation)
     QString iconPath = ":/icons/" + GUIUtil::getThemeName() + "/";
     QString iconName = "";
-    
+
     for(int i=0; ICON_MAPPING[i].url; ++i)
     {
         iconName = ICON_MAPPING[i].source;
@@ -1228,16 +1228,16 @@ void RPCConsole::banSelectedNode(int bantime)
         // Get currently selected peer address
         NodeId id = nodes.at(i).data().toLongLong();
 
-    // Get currently selected peer address
-    int detailNodeRow = clientModel->getPeerTableModel()->getRowByNodeId(id);
-    if(detailNodeRow < 0)
-        return;
+        // Get currently selected peer address
+        int detailNodeRow = clientModel->getPeerTableModel()->getRowByNodeId(id);
+        if(detailNodeRow < 0)
+            return;
 
-	// Find possible nodes, ban it and clear the selected node
-	const CNodeCombinedStats *stats = clientModel->getPeerTableModel()->getNodeStats(detailNodeRow);
-	if(stats) {
-            m_node.ban(stats->nodeStats.addr, BanReasonManuallyAdded, bantime);
-	}
+      	// Find possible nodes, ban it and clear the selected node
+      	const CNodeCombinedStats *stats = clientModel->getPeerTableModel()->getNodeStats(detailNodeRow);
+      	if(stats) {
+                  m_node.ban(stats->nodeStats.addr, BanReasonManuallyAdded, bantime);
+      	}
     }
     clearSelectedNode();
     clientModel->getBanTableModel()->refresh();
