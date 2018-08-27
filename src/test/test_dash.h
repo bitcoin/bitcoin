@@ -143,7 +143,7 @@ CBlock getBlock13b8a();
 // BOOST_CHECK_EXCEPTION predicates to check the specific validation error
 class HasReason {
 public:
-    HasReason(const std::string& reason) : m_reason(reason) {}
+    explicit HasReason(const std::string& reason) : m_reason(reason) {}
     bool operator() (const std::runtime_error& e) const {
         return std::string(e.what()).find(m_reason) != std::string::npos;
     };

@@ -34,7 +34,7 @@ namespace {
 class PendingWalletTxImpl : public PendingWalletTx
 {
 public:
-    PendingWalletTxImpl(CWallet& wallet) : m_wallet(wallet), m_key(&wallet) {}
+    explicit PendingWalletTxImpl(CWallet& wallet) : m_wallet(wallet), m_key(&wallet) {}
 
     const CTransaction& get() override { return *m_tx; }
 
@@ -178,7 +178,7 @@ class WalletImpl : public Wallet
 public:
     CoinJoinImpl m_coinjoin;
 
-    WalletImpl(const std::shared_ptr<CWallet>& wallet) : m_shared_wallet(wallet), m_wallet(*wallet.get()), m_coinjoin(*wallet.get()) {}
+    explicit WalletImpl(const std::shared_ptr<CWallet>& wallet) : m_shared_wallet(wallet), m_wallet(*wallet.get()), m_coinjoin(*wallet.get()) {}
 
     void markDirty() override
     {
