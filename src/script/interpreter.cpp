@@ -935,7 +935,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                         //serror is set
                         return false;
                     }
-                    bool fSuccess = checker.CheckSig(vchSig, vchPubKey, scriptCode, sigversion);
+                    bool fSuccess = checker.CheckSig(vchSig, vchPubKey, scriptCode, sigversion, nullptr, nullptr);
 
                     if (!fSuccess && (flags & SCRIPT_VERIFY_NULLFAIL) && vchSig.size())
                         return set_error(serror, SCRIPT_ERR_SIG_NULLFAIL);
@@ -999,6 +999,8 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     }
 
                     bool fSuccess = true;
+                    uint256 sighash_copy;
+                    int sighash_copy_type = -1;
                     while (fSuccess && nSigsCount > 0)
                     {
                         valtype& vchSig    = stacktop(-isig);
@@ -1013,7 +1015,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                         }
 
                         // Check signature
-                        bool fOk = checker.CheckSig(vchSig, vchPubKey, scriptCode, sigversion);
+                        bool fOk = checker.CheckSig(vchSig, vchPubKey, scriptCode, sigversion, &sighash_copy, &sighash_copy_type);
 
                         if (fOk) {
                             isig++;
@@ -1307,20 +1309,30 @@ bool GenericTransactionSignatureChecker<T>::VerifySignature(const std::vector<un
 }
 
 template <class T>
-bool GenericTransactionSignatureChecker<T>::CheckSig(const std::vector<unsigned char>& vchSigIn, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const
+bool GenericTransactionSignatureChecker<T>::CheckSig(const std::vector<unsigned char>& vchSigIn, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion, uint256* sighash_copy, int* sighash_copy_type) const
 {
     CPubKey pubkey(vchPubKey);
     if (!pubkey.IsValid())
         return false;
 
-    // Hash type is one byte tacked on to the end of the signature
+    // Hash type is one byte unsigned char tacked on to the end of the signature
+    // The 'unsigned' attribute is consensus critical, as the unsigned char is cast to an int and serialized in SignatureHash()
     std::vector<unsigned char> vchSig(vchSigIn);
     if (vchSig.empty())
         return false;
     int nHashType = vchSig.back();
     vchSig.pop_back();
 
-    uint256 sighash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, sigversion, this->txdata);
+    uint256 sighash;
+    if (sighash_copy_type && sighash_copy && *sighash_copy_type == nHashType)
+        sighash = *sighash_copy;
+    else {
+        sighash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, sigversion, this->txdata);
+        if (sighash_copy_type && sighash_copy) {
+            *sighash_copy = sighash;
+            *sighash_copy_type = nHashType;
+        }
+    }
 
     if (!VerifySignature(vchSig, pubkey, sighash))
         return false;
