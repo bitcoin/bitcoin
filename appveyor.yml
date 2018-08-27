@@ -7,6 +7,7 @@ environment:
   APPVEYOR_SAVE_CACHE_ON_ERROR: true
   CLCACHE_SERVER: 1
   PACKAGES: boost-filesystem boost-signals2 boost-interprocess boost-test libevent openssl zeromq berkeleydb secp256k1 leveldb
+  PYTHONIOENCODING: utf-8
 cache:
 - C:\tools\vcpkg\installed
 - C:\Users\appveyor\clcache
@@ -15,6 +16,8 @@ init:
 - cmd: set PATH=C:\Python36-x64;C:\Python36-x64\Scripts;%PATH%
 install:
 - cmd: pip install git+https://github.com/frerich/clcache.git
+# Disable zmq test for now since python zmq library on Windows would cause Access violation sometimes.
+# - cmd: pip install zmq
 - ps:  $packages = $env:PACKAGES -Split ' '
 - ps:  for ($i=0; $i -lt $packages.length; $i++) {
            $env:ALL_PACKAGES += $packages[$i] + ":" + $env:PLATFORM + "-windows-static "
@@ -40,6 +43,17 @@ after_build:
 - cmd: move build_msvc\%PLATFORM%\%CONFIGURATION%\*.iobj build_msvc\cache\
 - cmd: move build_msvc\%PLATFORM%\%CONFIGURATION%\*.ipdb build_msvc\cache\
 - cmd: del C:\Users\appveyor\clcache\stats.txt
+before_test:
+- ps:  ${conf_ini} = (Get-Content([IO.Path]::Combine(${env:APPVEYOR_BUILD_FOLDER}, "test", "config.ini.in")))
+- ps:  ${conf_ini} = $conf_ini.Replace("@abs_top_srcdir@", ${env:APPVEYOR_BUILD_FOLDER}).Replace("@abs_top_builddir@", ${env:APPVEYOR_BUILD_FOLDER}).Replace("@EXEEXT@", ".exe")
+- ps:  ${conf_ini} = $conf_ini.Replace("@ENABLE_WALLET_TRUE@", "").Replace("@BUILD_BITCOIN_UTILS_TRUE@", "").Replace("@BUILD_BITCOIND_TRUE@", "").Replace("@ENABLE_ZMQ_TRUE@", "")
+- ps:  ${utf8} = New-Object System.Text.UTF8Encoding ${false}
+- ps:  '[IO.File]::WriteAllLines([IO.Path]::Combine(${env:APPVEYOR_BUILD_FOLDER}, "test", "config.ini"), $conf_ini, ${utf8})'
+- ps:  move "build_msvc\${env:PLATFORM}\${env:CONFIGURATION}\*.exe" src
 test_script:
-- cmd: build_msvc\%PLATFORM%\%CONFIGURATION%\test_bitcoin.exe
+- cmd: src\test_bitcoin.exe
+- ps:  src\bench_bitcoin.exe -evals=1 -scaling=0
+- ps:  python test\util\bitcoin-util-test.py
+- cmd: python test\util\rpcauth-test.py
+- cmd: python test\functional\test_runner.py --force --quiet --combinedlogslen=4000 --exclude "feature_notifications,wallet_multiwallet,wallet_multiwallet.py --usecli"
 deploy: off
