@@ -44,7 +44,7 @@ BEGIN_FOLD build
 DOCKER_EXEC make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && DOCKER_EXEC make $GOAL V=1 ; false )
 END_FOLD
 
-if [ "$RUN_TESTS" = "true" ]; then
+if [ "$RUN_UNIT_TESTS" = "true" ]; then
   BEGIN_FOLD unit-tests
   DOCKER_EXEC LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/depends/$HOST/lib make $MAKEJOBS check VERBOSE=1
   END_FOLD
@@ -60,7 +60,7 @@ if [ "$TRAVIS_EVENT_TYPE" = "cron" ]; then
   extended="--extended --exclude feature_pruning,feature_dbcrash"
 fi
 
-if [ "$RUN_TESTS" = "true" ]; then
+if [ "$RUN_FUNCTIONAL_TESTS" = "true" ]; then
   BEGIN_FOLD functional-tests
   DOCKER_EXEC test/functional/test_runner.py --combinedlogslen=4000 --coverage --quiet --failfast ${extended}
   END_FOLD
