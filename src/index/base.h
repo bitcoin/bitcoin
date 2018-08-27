@@ -80,6 +80,10 @@ protected:
     /// commit more index state.
     virtual bool CommitInternal(CDBBatch& batch);
 
+    /// Rewind index to an earlier chain tip during a chain reorg. The tip must
+    /// be an ancestor of the current best block.
+    virtual bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip);
+
     virtual DB& GetDB() const = 0;
 
     /// Get the name of the index for display in logs.
