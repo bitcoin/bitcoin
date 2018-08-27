@@ -716,9 +716,10 @@ bool CPrivateSendClient::DoAutomaticDenominating(CConnman* connman)
         return false;
     }
 
-    if(!CheckAutomaticBackup())
+    if(!CheckAutomaticBackup()) {
         fEnablePrivateSend = true;
         return false;
+    }
 
     if(GetEntriesCount() > 0) {
         strAutoDenomResult = _("Mixing in progress...");
@@ -790,9 +791,10 @@ bool CPrivateSendClient::DoAutomaticDenominating(CConnman* connman)
     // Check if we have should create more denominated inputs i.e.
     // there are funds to denominate and denominated balance does not exceed
     // max amount to mix yet.
-    if(nBalanceAnonimizableNonDenom >= nValueMin + CPrivateSend::GetCollateralAmount() && nBalanceDenominated < nPrivateSendAmount*COIN)
+    if(nBalanceAnonimizableNonDenom >= nValueMin + CPrivateSend::GetCollateralAmount() && nBalanceDenominated < nPrivateSendAmount*COIN) {
         fEnablePrivateSend = true;
         return CreateDenominated(connman);
+    }
 
     //check if we have the collateral sized inputs
     if(!pmixingwallet->HasCollateralInputs())
@@ -1517,4 +1519,3 @@ void CPrivateSendClient::Controller(CScheduler& scheduler, CConnman* connman)
         scheduler.scheduleEvery(std::bind(&CPrivateSendClient::ClientTask, this, connman), 1000);
     }
 }
-

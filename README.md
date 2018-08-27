@@ -28,9 +28,8 @@ information or see https://opensource.org/licenses/MIT.
 Development Process
 -------------------
 
-The `master` branch is meant to be stable. Development is normally done in separate branches.
-[Tags](https://github.com/ChainCoinUnlimited/chaincoin/tags) are created to indicate new official,
-stable release versions of Chaincoin Core.
+The `master` branch is regularly built and tested, but is not guaranteed to be completely stable. [Tags](https://github.com/chaincoin/chaincoin/tags) are created
+regularly to indicate new official, stable release versions of Chaincoin Core.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
