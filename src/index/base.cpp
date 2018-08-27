@@ -113,6 +113,11 @@ void BaseIndex::ThreadSync()
                     Commit();
                     break;
                 }
+                if (pindex_next->pprev != pindex && !Rewind(pindex, pindex_next->pprev)) {
+                    FatalError("%s: Failed to rewind index %s to a previous chain tip",
+                               __func__, GetName());
+                    return;
+                }
                 pindex = pindex_next;
             }
 
@@ -167,6 +172,22 @@ bool BaseIndex::CommitInternal(CDBBatch& batch)
     return true;
 }
 
+bool BaseIndex::Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip)
+{
+    assert(current_tip == m_best_block_index);
+    assert(current_tip->GetAncestor(new_tip->nHeight) == new_tip);
+
+    // In the case of a reorg, ensure persisted block locator is not stale.
+    m_best_block_index = new_tip;
+    if (!Commit()) {
+        // If commit fails, revert the best block index to avoid corruption.
+        m_best_block_index = current_tip;
+        return false;
+    }
+
+    return true;
+}
+
 void BaseIndex::BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex,
                                const std::vector<CTransactionRef>& txn_conflicted)
 {
@@ -192,6 +213,11 @@ void BaseIndex::BlockConnected(const std::shared_ptr<const CBlock>& block, const
                       "known best chain (tip=%s); not updating index\n",
                       __func__, pindex->GetBlockHash().ToString(),
                       best_block_index->GetBlockHash().ToString());
+            return;
+        }
+        if (best_block_index != pindex->pprev && !Rewind(best_block_index, pindex->pprev)) {
+            FatalError("%s: Failed to rewind index %s to a previous chain tip",
+                       __func__, GetName());
             return;
         }
     }
