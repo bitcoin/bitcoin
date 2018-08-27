@@ -21,7 +21,7 @@ use the autogen script to prepare the build environment.
     make
 
 Precompiled binaries are available at github, see
-https://github.com/ChainCoinUnlimited/chaincoin-binaries
+https://github.com/chaincoin/chaincoin/releases
 
 Always verify the signatures and checksums.
 
