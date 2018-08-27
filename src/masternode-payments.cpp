@@ -706,30 +706,9 @@ std::string CMasternodePayments::GetRequiredPaymentsString(int nBlockHeight) con
 
 bool CMasternodePayments::IsTransactionValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward) const
 {
-    std::vector<CTxOut> voutMasternodePayments;
-    if (!GetBlockTxOuts(nBlockHeight, blockReward, voutMasternodePayments)) {
-        LogPrintf("CMasternodePayments::%s -- ERROR failed to get payees for block at height %s\n", __func__, nBlockHeight);
-        return false;
-    }
-
-    for (const auto& txout : voutMasternodePayments) {
-        bool found = false;
-        for (const auto& txout2 : txNew.vout) {
-            if (txout == txout2) {
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            CTxDestination dest;
-            if (!ExtractDestination(txout.scriptPubKey, dest))
-                assert(false);
-            LogPrintf("CMasternodePayments::%s -- ERROR failed to find expected payee %s in block at height %s\n", __func__, CBitcoinAddress(dest).ToString(), nBlockHeight);
-            return false;
-        }
-    }
-
-    return true;
+    LOCK(cs_mapMasternodeBlocks);
+    const auto it = mapMasternodeBlocks.find(nBlockHeight);
+    return it == mapMasternodeBlocks.end() ? true : it->second.IsTransactionValid(txNew);
 }
 
 void CMasternodePayments::CheckAndRemove()
