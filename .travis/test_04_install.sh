@@ -6,6 +6,9 @@
 
 export LC_ALL=C.UTF-8
 
+# linux build - uses docker
+if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+
 travis_retry docker pull "$DOCKER_NAME_TAG"
 env | grep -E '^(CCACHE_|WINEDEBUG|LC_ALL|BOOST_TEST_RANDOM|CONFIG_SHELL)' | tee /tmp/env
 if [[ $HOST = *-mingw32 ]]; then
@@ -23,4 +26,13 @@ fi
 
 travis_retry DOCKER_EXEC apt-get update
 travis_retry DOCKER_EXEC apt-get install --no-install-recommends --no-upgrade -qq $PACKAGES $DOCKER_PACKAGES
+
+# macOS build - does not use docker, but might require some packages
+elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
+
+for package in $PACKAGES; do
+  brew install $package || true # brew fails if the package is already available
+done
+
+fi
 

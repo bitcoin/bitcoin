@@ -11,6 +11,10 @@ export TRAVIS_COMMIT_LOG
 
 OUTDIR=$BASE_OUTDIR/$TRAVIS_PULL_REQUEST/$TRAVIS_JOB_NUMBER-$HOST
 BITCOIN_CONFIG_ALL="--disable-dependency-tracking --prefix=$TRAVIS_BUILD_DIR/depends/$HOST --bindir=$OUTDIR/bin --libdir=$OUTDIR/lib"
+
+# Linux build - uses docker
+if [ "$TRAVIS_OS_NAME" == "linux" ]; then
+
 if [ -z "$NO_DEPENDS" ]; then
   DOCKER_EXEC ccache --max-size=$CCACHE_SIZE
 fi
@@ -65,3 +69,56 @@ if [ "$RUN_FUNCTIONAL_TESTS" = "true" ]; then
   DOCKER_EXEC test/functional/test_runner.py --combinedlogslen=4000 --coverage --quiet --failfast ${extended}
   END_FOLD
 fi
+
+# macOS build - does not use docker
+elif [ "$TRAVIS_OS_NAME" == "osx" ]; then
+
+BEGIN_FOLD autogen
+./autogen.sh || (EXIT_CODE=$?; echo "./autogen.sh exited with $EXIT_CODE"; exit $EXIT_CODE)
+echo "mkdir build"
+mkdir build || (echo "could not create build directory"; exit 1)
+echo "cd build"
+cd build || exit 1
+END_FOLD
+
+echo "configure"
+BEGIN_FOLD configure
+../configure --cache-file=config.cache $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( cat config.log && false)
+END_FOLD
+
+BEGIN_FOLD distdir
+make distdir VERSION=$HOST
+cd bitcoin-$HOST || exit 1
+END_FOLD distdir
+
+BEGIN_FOLD configure
+./configure --cache-file=../config.cache $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( cat config.log && false)
+END_FOLD
+
+BEGIN_FOLD compile
+make $MAKEJOBS $GOAL  || ( echo "Build failure. Verbose build follows." && make $GOAL V=1 ; false )
+END_FOLD
+
+if [ "$RUN_UNIT_TESTS" = "true" ]; then
+  BEGIN_FOLD unit-tests
+  LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/depends/$HOST/lib make $MAKEJOBS check VERBOSE=1
+  END_FOLD
+fi
+
+if [ "$RUN_BENCH" = "true" ]; then
+  BEGIN_FOLD bench
+  LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/depends/$HOST/lib $OUTDIR/bin/bench_bitcoin -scaling=0.001
+  END_FOLD
+fi
+
+if [ "$TRAVIS_EVENT_TYPE" = "cron" ]; then
+  extended="--extended --exclude feature_pruning,feature_dbcrash"
+fi
+if [ "$RUN_FUNCTIONAL_TESTS" = "true" ]; then
+  BEGIN_FOLD functional-tests
+  ./test/functional/test_runner.py --combinedlogslen=4000 --coverage --quiet --failfast ${extended}
+  END_FOLD
+fi
+
+fi # end if os selection
+

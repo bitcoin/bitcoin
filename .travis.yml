@@ -53,6 +53,15 @@ jobs:
         - set -o errexit; source .travis/lint_05_before_script.sh
       script:
         - set -o errexit; source .travis/lint_06_script.sh
+# macOS native
+    - stage: test
+      os: osx
+      osx_image: xcode9.4
+      env: >
+        HOST=osx
+        PACKAGES="berkeley-db4 libtool boost miniupnpc pkg-config protobuf qt libevent librsvg"
+        GOAL=install
+        BITCOIN_CONFIG="--enable-gui --enable-reduce-exports --enable-werror"
 # ARM
     - stage: test
       env: >-
@@ -133,3 +142,4 @@ jobs:
         RUN_FUNCTIONAL_TESTS=false
         GOAL="all deploy"
         BITCOIN_CONFIG="--enable-gui --enable-reduce-exports --enable-werror"
+
