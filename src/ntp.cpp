@@ -80,9 +80,12 @@ struct pkt {
   uint8_t  mac[5 * sizeof(uint32_t)]; /* mac */
 };
 
-const int nServersCount = 162;
+const int nServersCount = 154;
 
-std::string NtpServers[162] = {
+std::string NtpServers[nServersCount] = {
+    // Apple
+    "time.apple.com",
+
     // Microsoft
     "time.windows.com",
 
@@ -96,12 +99,6 @@ std::string NtpServers[162] = {
     "clock.sjc.he.net",
     "clock.nyc.he.net",
 
-    // SixXS
-    "ntp.sixxs.net",
-    "ntp.eu.sixxs.net",
-    "ntp.us.sixxs.net",
-    "ntp.ap.sixxs.net",
-
     // Russian Federation
     "ntp.karelia.pro",
     "ntp.alpet.me",
@@ -114,12 +111,11 @@ std::string NtpServers[162] = {
     "ntp3.stratum2.ru",
     "ntp4.stratum2.ru",
     "ntp5.stratum2.ru",
-    "ntp6.stratum2.ru",
-    "ntp7.stratum2.ru",
     "ntp1.stratum1.ru",
     "ntp2.stratum1.ru",
     "ntp3.stratum1.ru",
     "ntp4.stratum1.ru",
+    "ntp5.stratum1.ru",
     "ntp1.vniiftri.ru",
     "ntp2.vniiftri.ru",
     "ntp3.vniiftri.ru",
@@ -143,14 +139,18 @@ std::string NtpServers[162] = {
     "sundial.columbia.edu",
     "ntp-1.ece.cmu.edu",
     "ntp-2.ece.cmu.edu",
+    "ntp-3.ece.cmu.edu",
     "ntp1.cs.wisc.edu",
     "ntp2.cs.wisc.edu",
     "ntp3.cs.wisc.edu",
+    "ntp4.cs.wisc.edu",
     "ntp-01.caltech.edu",
     "ntp-02.caltech.edu",
     "ntp-03.caltech.edu",
     "ntp-04.caltech.edu",
+    "nist0-pa.ustiming.org",
     "nist1-pa.ustiming.org",
+    "nist2-pa.ustiming.org",
     "time.nist.gov",
     "time-a.nist.gov",
     "time-b.nist.gov",
@@ -159,19 +159,14 @@ std::string NtpServers[162] = {
     "time-nw.nist.gov",
     "nist1-macon.macon.ga.us",
     "nist.netservicesgroup.com",
-    "nisttime.carsoncity.k12.mi.us",
-    "nist1-lnk.binary.net",
     "wwv.nist.gov",
     "time-a.timefreq.bldrdoc.gov",
     "time-b.timefreq.bldrdoc.gov",
     "time-c.timefreq.bldrdoc.gov",
     "utcnist.colorado.edu",
     "utcnist2.colorado.edu",
-    "ntp-nist.ldsbc.net",
     "nist1-lv.ustiming.org",
     "time-nw.nist.gov",
-    "nist-time-server.eoni.com",
-    "nist-time-server.eoni.com",
     "ntp1.bu.edu",
     "ntp2.bu.edu",
     "ntp3.bu.edu",
@@ -179,7 +174,6 @@ std::string NtpServers[162] = {
     "1.us.pool.ntp.org",
     "2.us.pool.ntp.org",
     "3.us.pool.ntp.org",
-    "wwv.otc.psu.edu",
     "otc1.psu.edu",
     "otc2.psu.edu",
     "now.okstate.edu",
@@ -243,8 +237,6 @@ std::string NtpServers[162] = {
     "time.nrc.ca",
     "timelord.uregina.ca",
     "tock.utoronto.ca",
-    "www1.cmc.ec.gc.ca",
-    "www2.cmc.ec.gc.ca",
     "0.ca.pool.ntp.org",
     "1.ca.pool.ntp.org",
     "2.ca.pool.ntp.org",
