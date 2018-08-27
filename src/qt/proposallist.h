@@ -5,15 +5,20 @@
 #ifndef BITCOIN_QT_PROPOSALLIST_H
 #define BITCOIN_QT_PROPOSALLIST_H
 
-#include "guiutil.h"
-#include "proposaltablemodel.h"
-#include "columnalignedlayout.h"
+#include <interfaces/node.h>
+#include <qt/guiutil.h>
+#include <qt/proposaltablemodel.h>
+#include <qt/columnalignedlayout.h>
 #include <QWidget>
 #include <QKeyEvent>
 #include <QTimer>
 
 class PlatformStyle;
 class ProposalFilterProxy;
+
+namespace interfaces {
+    class Node;
+}
 
 QT_BEGIN_NAMESPACE
 class QComboBox;
@@ -34,7 +39,7 @@ class ProposalList : public QWidget
     Q_OBJECT
 
 public:
-    explicit ProposalList(const PlatformStyle *platformStyle, QWidget *parent = 0);
+    explicit ProposalList(interfaces::Node& node, const PlatformStyle *platformStyle, QWidget *parent = 0);
 
     void setModel();
 
@@ -62,6 +67,7 @@ public:
     };
 
 private:
+    interfaces::Node& m_node;
     ProposalTableModel *proposalTableModel;
     ProposalFilterProxy *proposalProxyModel;
     QTableView *proposalList;

@@ -228,6 +228,9 @@ public:
     //! Get default change type.
     virtual OutputType getDefaultChangeType() = 0;
 
+    //! Return PrivateSend Rounds.
+    virtual int GetPSRounds() = 0;
+
     //! Register handler for show progress messages.
     using ShowProgressFn = std::function<void(const std::string& title, int progress)>;
     virtual std::unique_ptr<Handler> handleShowProgress(ShowProgressFn fn) = 0;

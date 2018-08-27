@@ -21,8 +21,6 @@
 #include <wallet/coincontrol.h>
 #include <wallet/wallet.h>
 
-#include <wallet/privatesend-client.h>
-
 #include <stdint.h>
 
 #include <QDebug>
@@ -80,13 +78,13 @@ void WalletModel::pollBalanceChanged()
         return;
     }
 
-    if(fForceCheckBalanceChanged || m_node.getNumBlocks() != cachedNumBlocks || privateSendClient.nPrivateSendRounds != cachedPrivateSendRounds)
+    if(fForceCheckBalanceChanged || m_node.getNumBlocks() != cachedNumBlocks || m_wallet->GetPSRounds() != cachedPrivateSendRounds)
     {
         fForceCheckBalanceChanged = false;
 
         // Balance and number of transactions might have changed
         cachedNumBlocks = m_node.getNumBlocks();
-        cachedPrivateSendRounds = privateSendClient.nPrivateSendRounds;
+        cachedPrivateSendRounds = m_wallet->GetPSRounds();
 
         checkBalanceChanged(new_balances);
         if(transactionTableModel)

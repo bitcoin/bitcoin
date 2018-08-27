@@ -20,6 +20,7 @@
 #include <uint256.h>
 #include <validation.h>
 #include <wallet/feebumper.h>
+#include <wallet/privatesend-client.h>
 #include <wallet/wallet.h>
 
 namespace interfaces {
@@ -414,6 +415,9 @@ public:
     bool hdEnabled() override { return m_wallet.IsHDEnabled(); }
     OutputType getDefaultAddressType() override { return m_wallet.m_default_address_type; }
     OutputType getDefaultChangeType() override { return m_wallet.m_default_change_type; }
+
+    int GetPSRounds() override { return privateSendClient.nPrivateSendRounds; }
+
     std::unique_ptr<Handler> handleShowProgress(ShowProgressFn fn) override
     {
         return MakeHandler(m_wallet.ShowProgress.connect(fn));

@@ -12,6 +12,8 @@
 #include <interfaces/handler.h>
 #include <interfaces/wallet.h>
 #include <masternode-sync.h>
+#include <masternodeconfig.h>
+#include <masternodeman.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netaddress.h>
@@ -20,6 +22,7 @@
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <primitives/block.h>
+#include <privatesend.h>
 #include <rpc/server.h>
 #include <scheduler.h>
 #include <sync.h>
@@ -242,6 +245,19 @@ class NodeImpl : public Node
     bool IsMasternodelistSynced() override { return masternodeSync.IsMasternodeListSynced(); }
     bool MNIsBlockchainsynced() override { return masternodeSync.IsBlockchainSynced(); }
     bool MNIsSynced() override { return masternodeSync.IsSynced(); }
+    int MNConfigCount() override { return masternodeConfig.getCount(); }
+    std::vector<CMasternodeConfig::CMasternodeEntry>& MNgetEntries() override { return masternodeConfig.getEntries(); }
+
+    MasterNodeCount getMNcount() override
+    {
+        MasterNodeCount result;
+        result.size = mnodeman.size();
+        result.compatible = mnodeman.CountEnabled(MIN_PRIVATESEND_PEER_PROTO_VERSION);
+        result.countIPv4 = mnodeman.CountByIP(NET_IPV4);
+        result.countIPv6 = mnodeman.CountByIP(NET_IPV6);
+        result.countTOR = mnodeman.CountByIP(NET_TOR);
+        return result;
+    }
 
     std::vector<std::unique_ptr<Wallet>> getWallets() override
     {

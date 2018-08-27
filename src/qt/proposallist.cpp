@@ -2,21 +2,21 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "proposallist.h"
-#include "guiutil.h"
-#include "platformstyle.h"
-#include "optionsmodel.h"
-#include "proposalfilterproxy.h"
-#include "proposalrecord.h"
-#include "proposaltablemodel.h"
-#include "masternodeman.h"
-#include "masternodeconfig.h"
-#include "masternode.h"
-#include "messagesigner.h"
-#include "util.h"
-#include "governance.h"
+#include <qt/proposallist.h>
+#include <qt/guiutil.h>
+#include <qt/platformstyle.h>
+#include <qt/optionsmodel.h>
+#include <qt/proposalfilterproxy.h>
+#include <qt/proposalrecord.h>
+#include <qt/proposaltablemodel.h>
+
+#include <masternodeman.h>
+#include <masternode.h>
+#include <messagesigner.h>
+#include <util.h>
+#include <governance.h>
  
-#include "ui_interface.h"
+#include <ui_interface.h>
 
 #include <QComboBox>
 #include <QDateTimeEdit>
@@ -38,8 +38,9 @@
 /** Date format for persistence */
 static const char* PERSISTENCE_DATE_FORMAT = "yyyy-MM-dd";
 
-ProposalList::ProposalList(const PlatformStyle *platformStyle, QWidget *parent) :
-    QWidget(parent), proposalTableModel(0), proposalProxyModel(0),
+ProposalList::ProposalList(interfaces::Node& node, const PlatformStyle *platformStyle, QWidget *parent) :
+    QWidget(parent), m_node(node),
+    proposalTableModel(0), proposalProxyModel(0),
     proposalList(0), columnResizingFixer(0)
 {
     proposalTableModel = new ProposalTableModel(platformStyle, this); 
@@ -460,7 +461,7 @@ void ProposalList::vote_click_handler(const std::string voteString)
     int nSuccessful = 0;
     int nFailed = 0;
 
-    for (const auto& mne : masternodeConfig.getEntries()) {
+    for (const auto& mne : m_node.MNgetEntries()) {
         std::string strError;
         std::vector<unsigned char> vchMasterNodeSignature;
         std::string strMasterNodeSignMessage;
