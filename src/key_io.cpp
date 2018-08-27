@@ -24,7 +24,7 @@ private:
     const CChainParams& m_params;
 
 public:
-    DestinationEncoder(const CChainParams& params) : m_params(params) {}
+    explicit DestinationEncoder(const CChainParams& params) : m_params(params) {}
 
     std::string operator()(const CKeyID& id) const
     {
