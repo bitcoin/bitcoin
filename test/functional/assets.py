@@ -10,7 +10,7 @@ from test_framework.test_framework import RavenTestFramework
 from test_framework.util import (
     assert_equal,
     assert_is_hash_string,
-    assert_raises_rpc_error
+    assert_raises_rpc_error,
 )
 
 import string
@@ -20,19 +20,19 @@ class AssetTest(RavenTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 3
 
-    def run_test(self):
-        self.log.info("Running test!")
-
+    def activate_assets(self):
+        self.log.info("Generating RVN for node[0] and activating assets...")
         n0, n1, n2 = self.nodes[0], self.nodes[1], self.nodes[2]
 
-        self.log.info("Generating RVN for node[0] and activating assets...")
         n0.generate(1)
         self.sync_all()
-        n2.generate(431)
-        self.sync_all()
-        assert_equal(n0.getbalance(), 5000)
         n0.generate(431)
         self.sync_all()
+        assert_equal("active", n0.getblockchaininfo()['bip9_softforks']['assets']['status'])
+
+    def big_test(self):
+        self.log.info("Running big test!")
+        n0, n1, n2 = self.nodes[0], self.nodes[1], self.nodes[2]
 
         self.log.info("Calling issue()...")
         address0 = n0.getnewaddress()
@@ -164,8 +164,36 @@ class AssetTest(RavenTestFramework):
         assert_equal(raven_assets[1], "RAVEN3")
         self.sync_all()
 
+    def issue_param_checks(self):
+        self.log.info("Checking bad parameter handling!")
+        n0, n1, n2 = self.nodes[0], self.nodes[1], self.nodes[2]
+
+        # just plain bad asset name
+        assert_raises_rpc_error(-8, "Invalid asset name: bad-asset-name", \
+            n0.issue, "bad-asset-name");
+
+        # trying to issue things that can't be issued
+        assert_raises_rpc_error(-8, "Unsupported asset type: OWNER", \
+            n0.issue, "AN_OWNER!");
+        assert_raises_rpc_error(-8, "Unsupported asset type: MSGCHANNEL", \
+            n0.issue, "A_MSGCHANNEL~CHANNEL_4");
+        assert_raises_rpc_error(-8, "Unsupported asset type: VOTE", \
+            n0.issue, "A_VOTE^PEDRO");
+
+        # check bad unique params
+        assert_raises_rpc_error(-8, "Invalid parameters for issuing a unique asset.", \
+            n0.issue, "A_UNIQUE#ASSET", 2)
+        assert_raises_rpc_error(-8, "Invalid parameters for issuing a unique asset.", \
+            n0.issue, "A_UNIQUE#ASSET", 1, "", "", 1)
+        assert_raises_rpc_error(-8, "Invalid parameters for issuing a unique asset.", \
+            n0.issue, "A_UNIQUE#ASSET", 1, "", "", 0, True)
+
+    def chain_assets(self):
         self.log.info("Issuing chained assets in depth issue()...")
+        n0, n1, n2 = self.nodes[0], self.nodes[1], self.nodes[2]
+
         chain_address = n0.getnewaddress()
+        ipfs_hash = "QmacSRmrkVmvJfbCpmU6pK72furJ8E8fbKHindrLxmYMQo"
         chain_string = "CHAIN1"
         n0.issue(asset_name=chain_string, qty=1000, to_address=chain_address, change_address="", \
                  units=4, reissuable=True, has_ipfs=True, ipfs_hash=ipfs_hash)
@@ -201,7 +229,6 @@ class AssetTest(RavenTestFramework):
         chain_assets = n1.listassets(asset="CHAIN2/*", verbose=False)
         assert_equal(len(chain_assets), 26)
 
-
         self.log.info("Chaining reissue transactions...")
         address0 = n0.getnewaddress()
         n0.issue(asset_name="CHAIN_REISSUE", qty=1000, to_address=address0, change_address="", \
@@ -211,7 +238,7 @@ class AssetTest(RavenTestFramework):
         self.sync_all()
 
         n0.reissue(asset_name="CHAIN_REISSUE", qty=1000, to_address=address0, change_address="", \
-                    reissuable=True)
+                   reissuable=True)
         assert_raises_rpc_error(-4, "Error: The transaction was rejected! Reason given: bad-tx-reissue-chaining-not-allowed", n0.reissue, "CHAIN_REISSUE", 1000, address0, "", True)
 
         n0.generate(1)
@@ -230,6 +257,11 @@ class AssetTest(RavenTestFramework):
         assert_equal(assetdata["reissuable"], 1)
         assert_equal(assetdata["has_ipfs"], 0)
 
+    def run_test(self):
+        self.activate_assets();
+        self.big_test();
+        self.issue_param_checks();
+        self.chain_assets();
 
 if __name__ == '__main__':
     AssetTest().main()

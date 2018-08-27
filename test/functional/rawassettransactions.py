@@ -6,7 +6,7 @@
 """Test the rawtransaction RPCs for asset transactions.
 """
 from io import BytesIO
-
+from pprint import *
 from test_framework.test_framework import RavenTestFramework
 from test_framework.util import *
 from test_framework.mininode import CTransaction, CScriptTransfer
@@ -14,19 +14,27 @@ from test_framework.mininode import CTransaction, CScriptTransfer
 class RawAssetTransactionsTest(RavenTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 2
+        self.num_nodes = 3
+
+    def activate_assets(self):
+        self.log.info("Generating RVN for node[0] and activating assets...")
+        n0, n1, n2 = self.nodes[0], self.nodes[1], self.nodes[2]
+
+        n0.generate(1)
+        self.sync_all()
+        n0.generate(431)
+        self.sync_all()
+        assert_equal("active", n0.getblockchaininfo()['bip9_softforks']['assets']['status'])
 
     def issue_reissue_transfer_test(self):
-        ########################################
-        # activate assets
-        self.nodes[0].generate(500)
-        self.sync_all()
+        self.log.info("Doing a big issue-reissue-transfer test...")
+        n0, n1, n2 = self.nodes[0], self.nodes[1], self.nodes[2]
 
         ########################################
         # issue
-        to_address = self.nodes[0].getnewaddress()
-        change_address = self.nodes[0].getnewaddress()
-        unspent = self.nodes[0].listunspent()[0]
+        to_address = n0.getnewaddress()
+        change_address = n0.getnewaddress()
+        unspent = n0.listunspent()[0]
         inputs = [{k: unspent[k] for k in ['txid', 'vout']}]
         outputs = {
             'n1issueAssetXXXXXXXXXXXXXXXXWdnemQ': 500,
@@ -41,21 +49,21 @@ class RawAssetTransactionsTest(RavenTestFramework):
                 }
             }
         }
-        tx_issue = self.nodes[0].createrawtransaction(inputs, outputs)
-        tx_issue_signed = self.nodes[0].signrawtransaction(tx_issue)
-        tx_issue_hash = self.nodes[0].sendrawtransaction(tx_issue_signed['hex'])
+        tx_issue = n0.createrawtransaction(inputs, outputs)
+        tx_issue_signed = n0.signrawtransaction(tx_issue)
+        tx_issue_hash = n0.sendrawtransaction(tx_issue_signed['hex'])
         assert_is_hash_string(tx_issue_hash)
         self.log.info("issue tx: " + tx_issue_hash)
 
-        self.nodes[0].generate(1)
+        n0.generate(1)
         self.sync_all()
-        assert_equal(1000, self.nodes[0].listmyassets('TEST_ASSET')['TEST_ASSET'])
-        assert_equal(1, self.nodes[0].listmyassets('TEST_ASSET!')['TEST_ASSET!'])
+        assert_equal(1000, n0.listmyassets('TEST_ASSET')['TEST_ASSET'])
+        assert_equal(1, n0.listmyassets('TEST_ASSET!')['TEST_ASSET!'])
 
         ########################################
         # reissue
-        unspent = self.nodes[0].listunspent()[0]
-        unspent_asset_owner = self.nodes[0].listmyassets('TEST_ASSET!', True)['TEST_ASSET!']['outpoints'][0]
+        unspent = n0.listunspent()[0]
+        unspent_asset_owner = n0.listmyassets('TEST_ASSET!', True)['TEST_ASSET!']['outpoints'][0]
 
         inputs = [
             {k: unspent[k] for k in ['txid', 'vout']},
@@ -73,24 +81,24 @@ class RawAssetTransactionsTest(RavenTestFramework):
             }
         }
 
-        tx_reissue = self.nodes[0].createrawtransaction(inputs, outputs)
-        tx_reissue_signed = self.nodes[0].signrawtransaction(tx_reissue)
-        tx_reissue_hash = self.nodes[0].sendrawtransaction(tx_reissue_signed['hex'])
+        tx_reissue = n0.createrawtransaction(inputs, outputs)
+        tx_reissue_signed = n0.signrawtransaction(tx_reissue)
+        tx_reissue_hash = n0.sendrawtransaction(tx_reissue_signed['hex'])
         assert_is_hash_string(tx_reissue_hash)
         self.log.info("reissue tx: " + tx_reissue_hash)
 
-        self.nodes[0].generate(1)
+        n0.generate(1)
         self.sync_all()
-        assert_equal(2000, self.nodes[0].listmyassets('TEST_ASSET')['TEST_ASSET'])
-        assert_equal(1, self.nodes[0].listmyassets('TEST_ASSET!')['TEST_ASSET!'])
+        assert_equal(2000, n0.listmyassets('TEST_ASSET')['TEST_ASSET'])
+        assert_equal(1, n0.listmyassets('TEST_ASSET!')['TEST_ASSET!'])
 
         self.sync_all()
 
         ########################################
         # transfer
-        remote_to_address = self.nodes[1].getnewaddress()
-        unspent = self.nodes[0].listunspent()[0]
-        unspent_asset = self.nodes[0].listmyassets('TEST_ASSET', True)['TEST_ASSET']['outpoints'][0]
+        remote_to_address = n1.getnewaddress()
+        unspent = n0.listunspent()[0]
+        unspent_asset = n0.listmyassets('TEST_ASSET', True)['TEST_ASSET']['outpoints'][0]
         inputs = [
             {k: unspent[k] for k in ['txid', 'vout']},
             {k: unspent_asset[k] for k in ['txid', 'vout']},
@@ -108,8 +116,8 @@ class RawAssetTransactionsTest(RavenTestFramework):
                 }
             }
         }
-        tx_transfer = self.nodes[0].createrawtransaction(inputs, outputs)
-        tx_transfer_signed = self.nodes[0].signrawtransaction(tx_transfer)
+        tx_transfer = n0.createrawtransaction(inputs, outputs)
+        tx_transfer_signed = n0.signrawtransaction(tx_transfer)
         tx_hex = tx_transfer_signed['hex']
 
         ########################################
@@ -122,7 +130,7 @@ class RawAssetTransactionsTest(RavenTestFramework):
         tx.vin[1].scriptSig = hex_str_to_bytes(tampered_sig)
         tampered_hex = bytes_to_hex_str(tx.serialize())
         assert_raises_rpc_error(-26, "mandatory-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation)",
-                                self.nodes[0].sendrawtransaction, tampered_hex)
+                                n0.sendrawtransaction, tampered_hex)
 
         ########################################
         # try tampering with the asset script
@@ -145,7 +153,7 @@ class RawAssetTransactionsTest(RavenTestFramework):
             t2.deserialize(BytesIO(hex_str_to_bytes(tampered_transfer)))
         tampered_hex = bytes_to_hex_str(tx.serialize())
         assert_raises_rpc_error(-26, "mandatory-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation)",
-                                self.nodes[0].sendrawtransaction, tampered_hex)
+                                n0.sendrawtransaction, tampered_hex)
 
         ########################################
         # try tampering with asset outs so ins and outs don't add up
@@ -163,11 +171,11 @@ class RawAssetTransactionsTest(RavenTestFramework):
                     }
                 }
             }
-            tx_bad_transfer = self.nodes[0].createrawtransaction(inputs, bad_outputs)
-            tx_bad_transfer_signed = self.nodes[0].signrawtransaction(tx_bad_transfer)
+            tx_bad_transfer = n0.createrawtransaction(inputs, bad_outputs)
+            tx_bad_transfer_signed = n0.signrawtransaction(tx_bad_transfer)
             tx_bad_hex = tx_bad_transfer_signed['hex']
-            assert_raises_rpc_error(-26, "bad-tx-asset-inputs-amount-mismatch-with-outputs-amount",
-                                    self.nodes[0].sendrawtransaction, tx_bad_hex)
+            assert_raises_rpc_error(-26, "bad-tx-inputs-outputs-mismatch Bad Transaction - Assets would be burnt TEST_ASSET",
+                                    n0.sendrawtransaction, tx_bad_hex)
 
         ########################################
         # try tampering with asset outs so they don't use proper units
@@ -185,27 +193,79 @@ class RawAssetTransactionsTest(RavenTestFramework):
                     }
                 }
             }
-            tx_bad_transfer = self.nodes[0].createrawtransaction(inputs, bad_outputs)
-            tx_bad_transfer_signed = self.nodes[0].signrawtransaction(tx_bad_transfer)
+            tx_bad_transfer = n0.createrawtransaction(inputs, bad_outputs)
+            tx_bad_transfer_signed = n0.signrawtransaction(tx_bad_transfer)
             tx_bad_hex = tx_bad_transfer_signed['hex']
             assert_raises_rpc_error(-26, "bad-txns-transfer-asset-amount-not-match-units",
-                                    self.nodes[0].sendrawtransaction, tx_bad_hex)
+                                    n0.sendrawtransaction, tx_bad_hex)
 
         ########################################
         # send the good transfer
-        tx_transfer_hash = self.nodes[0].sendrawtransaction(tx_hex)
+        tx_transfer_hash = n0.sendrawtransaction(tx_hex)
         assert_is_hash_string(tx_transfer_hash)
         self.log.info("transfer tx: " + tx_transfer_hash)
 
-        self.nodes[0].generate(1)
+        n0.generate(1)
         self.sync_all()
-        assert_equal(1600, self.nodes[0].listmyassets('TEST_ASSET')['TEST_ASSET'])
-        assert_equal(1, self.nodes[0].listmyassets('TEST_ASSET!')['TEST_ASSET!'])
-        assert_equal(400, self.nodes[1].listmyassets('TEST_ASSET')['TEST_ASSET'])
+        assert_equal(1600, n0.listmyassets('TEST_ASSET')['TEST_ASSET'])
+        assert_equal(1, n0.listmyassets('TEST_ASSET!')['TEST_ASSET!'])
+        assert_equal(400, n1.listmyassets('TEST_ASSET')['TEST_ASSET'])
+
+
+    def unique_assets_test(self):
+        self.log.info("Testing unique assets...")
+        n0, n1, n2 = self.nodes[0], self.nodes[1], self.nodes[2]
+
+        root = "RINGU"
+        owner = f"{root}!"
+        n0.issue(root)
+        n0.generate(1)
+        self.sync_all()
+
+        asset_tags = ["myprecious1", "bind3", "gold7", "men9"]
+        ipfs_hashes = ["QmWWQSuPMS6aXCbZKpEjPHPUZN2NjB3YrhJTHsV4X3vb2t"] * len(asset_tags)
+
+        to_address = n0.getnewaddress()
+        change_address = n0.getnewaddress()
+        unspent = n0.listunspent()[0]
+        unspent_asset_owner = n0.listmyassets(owner, True)[owner]['outpoints'][0]
+
+        inputs = [
+            {k: unspent[k] for k in ['txid', 'vout']},
+            {k: unspent_asset_owner[k] for k in ['txid', 'vout']},
+        ]
+
+        burn = 5 * len(asset_tags)
+        outputs = {
+            'n1issueUniqueAssetXXXXXXXXXXS4695i': burn,
+            change_address: float(unspent['amount']) - (burn + 0.0001),
+            to_address: {
+                'issue_unique': {
+                    'root_name':    root,
+                    'asset_tags':   asset_tags,
+                    'ipfs_hashes':  ipfs_hashes,
+                }
+            }
+        }
+
+        hex = n0.createrawtransaction(inputs, outputs)
+        signed_hex = n0.signrawtransaction(hex)['hex']
+        tx_hash = n0.sendrawtransaction(signed_hex)
+        n0.generate(1)
+        self.sync_all()
+
+        for tag in asset_tags:
+            asset_name = f"{root}#{tag}"
+            assert_equal(1, n0.listmyassets()[asset_name])
+            assert_equal(1, n0.listassets(asset_name, True)[asset_name]['has_ipfs'])
+            assert_equal(ipfs_hashes[0], n0.listassets(asset_name, True)[asset_name]['ipfs_hash'])
 
 
     def run_test(self):
+        self.activate_assets()
         self.issue_reissue_transfer_test()
+        self.unique_assets_test()
+
 
 if __name__ == '__main__':
     RawAssetTransactionsTest().main()

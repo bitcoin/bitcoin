@@ -161,6 +161,27 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool 
                 if (!assetsCache->AddPossibleOutPoint(possibleMine))
                     error("%s: Failed to add an reissued asset I own to my Unspent Asset Cache. Asset Name : %s",
                           __func__, reissue.strName);
+            } else if (tx.IsNewUniqueAsset()) {
+                for (int n = 0; n < tx.vout.size(); n++) {
+                    auto out = tx.vout[n];
+
+                    CNewAsset asset;
+                    std::string strAddress;
+
+                    if (IsScriptNewUniqueAsset(out.scriptPubKey)) {
+                        AssetFromScript(out.scriptPubKey, asset, strAddress);
+
+                        // Add the new asset to cache
+                        if (!assetsCache->AddNewAsset(asset, strAddress))
+                            error("%s : Failed at adding a new asset to our cache. asset: %s", __func__,
+                                  asset.strName);
+
+                        CAssetCachePossibleMine possibleMine(asset.strName, COutPoint(tx.GetHash(), n), out);
+                        if (!assetsCache->AddPossibleOutPoint(possibleMine))
+                            error("%s: Failed to add an asset I own to my Unspent Asset Cache. Asset Name : %s",
+                                  __func__, asset.strName);
+                    }
+                }
             }
         }
     }

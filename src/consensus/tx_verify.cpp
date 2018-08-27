@@ -209,11 +209,24 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, CAssetsCa
                     if (!TransferAssetFromScript(txout.scriptPubKey, transfer, address))
                         return state.DoS(100, false, REJECT_INVALID, "bad-txns-transfer-asset-bad-deserialize");
 
+                    // Check asset name validity and get type
+                    AssetType assetType;
+                    if (!IsAssetNameValid(transfer.strName, assetType)) {
+                        return state.DoS(100, false, REJECT_INVALID, "bad-txns-transfer-asset-name-invalid");
+                    }
+
                     // If the transfer is an ownership asset. Check to make sure that it is OWNER_ASSET_AMOUNT
                     if (IsAssetNameAnOwner(transfer.strName)) {
                         if (transfer.nAmount != OWNER_ASSET_AMOUNT)
                             return state.DoS(100, false, REJECT_INVALID, "bad-txns-transfer-owner-amount-was-not-1");
                     }
+
+                    // If the transfer is a unique asset. Check to make sure that it is UNIQUE_ASSET_AMOUNT
+                    if (assetType == AssetType::UNIQUE) {
+                        if (transfer.nAmount != UNIQUE_ASSET_AMOUNT)
+                            return state.DoS(100, false, REJECT_INVALID, "bad-txns-transfer-unique-amount-was-not-1");
+                    }
+
                 }
             }
         }
@@ -245,7 +258,6 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, CAssetsCa
     /** RVN START */
     if (AreAssetsDeployed()) {
         if (assetCache) {
-            // Get the new asset from the transaction
             if (tx.IsNewAsset()) {
                 if(!tx.VerifyNewAsset())
                     return state.DoS(100, false, REJECT_INVALID, "bad-txns-verifying-issue-asset");
@@ -284,6 +296,50 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, CAssetsCa
 
                 if (!foundOwnerAsset)
                     return state.DoS(100, false, REJECT_INVALID, "bad-txns-reissue-asset-bad-owner-asset");
+            } else if (tx.IsNewUniqueAsset()) {
+
+                std::string assetRoot = "";
+                int assetCount = 0;
+
+                for (auto out : tx.vout) {
+                    CNewAsset asset;
+                    std::string strAddress;
+
+                    if (IsScriptNewUniqueAsset(out.scriptPubKey)) {
+                        if (!AssetFromScript(out.scriptPubKey, asset, strAddress))
+                            return state.DoS(100, false, REJECT_INVALID, "bad-txns-issue-unique-asset");
+
+                        std::string strError = "";
+                        if (!asset.IsValid(strError, *assetCache, fMemPoolCheck, fCheckDuplicateInputs))
+                            return state.DoS(100, false, REJECT_INVALID, "bad-txns-" + strError);
+
+                        std::string root = GetParentName(asset.strName);
+                        if (assetRoot.compare("") == 0)
+                            assetRoot = root;
+                        if (assetRoot.compare(root) != 0)
+                            return state.DoS(100, false, REJECT_INVALID, "bad-txns-issue-unique-asset-mismatched-root");
+
+                        assetCount += 1;
+                    }
+                }
+
+                if (assetCount < 1)
+                    return state.DoS(100, false, REJECT_INVALID, "bad-txns-issue-unique-asset-no-outputs");
+
+                bool foundOwnerAsset = false;
+                for (auto out : tx.vout) {
+                    CAssetTransfer transfer;
+                    std::string transferAddress;
+                    if (TransferAssetFromScript(out.scriptPubKey, transfer, transferAddress)) {
+                        if (assetRoot + OWNER_TAG == transfer.strName) {
+                            foundOwnerAsset = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!foundOwnerAsset)
+                    return state.DoS(100, false, REJECT_INVALID, "bad-txns-issue-unique-asset-bad-owner-asset");
             }
         }
     }

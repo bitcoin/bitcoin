@@ -33,6 +33,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "issue", 4, "units" },
     { "issue", 5, "reissuable" },
     { "issue", 6, "has_ipfs" },
+    { "issueunique", 1, "asset_tags"},
+    { "issueunique", 2, "ipfs_hashes"},
     { "transfer", 1, "qty"},
     { "reissue", 1, "qty"},
     { "reissue", 4, "reissuable"},

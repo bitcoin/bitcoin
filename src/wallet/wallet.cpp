@@ -2999,11 +2999,11 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
     return true;
 }
 
-bool CWallet::CreateTransactionWithAsset(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut,
-                               std::string& strFailReason, const CCoinControl& coin_control, const CNewAsset& asset, const CTxDestination destination, const AssetType& type, bool sign)
+bool CWallet::CreateTransactionWithAssets(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut,
+                               std::string& strFailReason, const CCoinControl& coin_control, const std::vector<CNewAsset> assets, const CTxDestination destination, const AssetType& type, bool sign)
 {
     CReissueAsset reissueAsset;
-    return CreateTransactionAll(vecSend, wtxNew, reservekey, nFeeRet, nChangePosInOut, strFailReason, coin_control, true, asset, destination, false, false, reissueAsset, type, sign);
+    return CreateTransactionAll(vecSend, wtxNew, reservekey, nFeeRet, nChangePosInOut, strFailReason, coin_control, true, assets, destination, false, false, reissueAsset, type, sign);
 }
 
 bool CWallet::CreateTransactionWithTransferAsset(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut,
@@ -3035,16 +3035,32 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
     return CreateTransactionAll(vecSend, wtxNew, reservekey, nFeeRet, nChangePosInOut, strFailReason, coin_control, false,  asset, destination, false, false, reissueAsset, assetType, sign);
 }
 
+bool CWallet::CreateTransactionAll(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey,
+                                   CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason,
+                                   const CCoinControl& coin_control, bool fNewAsset, const CNewAsset& asset,
+                                   const CTxDestination destination, bool fTransferAsset, bool fReissueAsset,
+                                   const CReissueAsset& reissueAsset, const AssetType& assetType, bool sign)
+{
+    std::vector<CNewAsset> assets;
+    assets.push_back(asset);
+    return CreateTransactionAll(vecSend, wtxNew, reservekey, nFeeRet, nChangePosInOut, strFailReason, coin_control,
+                                fNewAsset, assets, destination, fTransferAsset, fReissueAsset, reissueAsset, assetType,
+                                sign);
+}
 
-bool CWallet::CreateTransactionAll(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
-                                int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool fNewAsset, const CNewAsset& asset, const CTxDestination destination, bool fTransferAsset, bool fReissueAsset, const CReissueAsset& reissueAsset, const AssetType& assetType, bool sign)
+bool CWallet::CreateTransactionAll(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey,
+                                   CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason,
+                                   const CCoinControl& coin_control, bool fNewAsset,
+                                   const std::vector<CNewAsset> assets, const CTxDestination destination,
+                                   bool fTransferAsset, bool fReissueAsset, const CReissueAsset& reissueAsset,
+                                   const AssetType& assetType, bool sign)
 {
 
+    /** RVN START */
     if (!AreAssetsDeployed() && (fTransferAsset || fNewAsset || fReissueAsset))
         return false;
 
-    /** RVN START */
-    if (fNewAsset && (asset.IsNull() || !IsValidDestination(destination)))
+    if (fNewAsset && (assets.size() < 1 || !IsValidDestination(destination)))
         return error("%s : Tried creating a new asset transaction and the asset was null or the destination was invalid", __func__);
 
     if ((fNewAsset && fTransferAsset) || (fReissueAsset && fTransferAsset) || (fReissueAsset && fNewAsset))
@@ -3061,7 +3077,7 @@ bool CWallet::CreateTransactionAll(const std::vector<CRecipient>& vecSend, CWall
     for (const auto& recipient : vecSend)
     {
         /** RVN START */
-        if (fTransferAsset || fReissueAsset || assetType == AssetType::SUB) {
+        if (fTransferAsset || fReissueAsset || assetType == AssetType::SUB || assetType == AssetType::UNIQUE) {
             CAssetTransfer assetTransfer;
             std::string address;
             if (TransferAssetFromScript(recipient.scriptPubKey, assetTransfer, address)) {
@@ -3141,7 +3157,7 @@ bool CWallet::CreateTransactionAll(const std::vector<CRecipient>& vecSend, CWall
             /** RVN START */
             std::vector<COutput> vAvailableCoins;
             std::map<std::string, std::vector<COutput> > mapAssetCoins;
-            if (fTransferAsset || fReissueAsset || assetType == AssetType::SUB)
+            if (fTransferAsset || fReissueAsset || assetType == AssetType::SUB || assetType == AssetType::UNIQUE)
                 AvailableCoinsWithAssets(vAvailableCoins, mapAssetCoins, true, &coin_control);
             else
                 AvailableCoins(vAvailableCoins, true, &coin_control);
@@ -3315,18 +3331,21 @@ bool CWallet::CreateTransactionAll(const std::vector<CRecipient>& vecSend, CWall
                 /** RVN START */
                 if (AreAssetsDeployed()) {
                     if (fNewAsset) {
-                        // Create the asset transaction and push it back so it is the last CTxOut in the transaction
-                        CScript scriptPubKey = GetScriptForDestination(destination);
-                        CScript ownerScript = GetScriptForDestination(destination);
+                        for (auto asset : assets) {
+                            // Create the owner token output for non-unique assets
+                            if (assetType != AssetType::UNIQUE) {
+                                CScript ownerScript = GetScriptForDestination(destination);
+                                asset.ConstructOwnerTransaction(ownerScript);
+                                CTxOut ownerTxOut(0, ownerScript);
+                                txNew.vout.push_back(ownerTxOut);
+                            }
 
-                        asset.ConstructTransaction(scriptPubKey);
-                        asset.ConstructOwnerTransaction(ownerScript);
-
-                        CTxOut ownerTxOut(0, ownerScript);
-                        txNew.vout.push_back(ownerTxOut);
-
-                        CTxOut newTxOut(0, scriptPubKey);
-                        txNew.vout.push_back(newTxOut);
+                            // Create the asset transaction and push it back so it is the last CTxOut in the transaction
+                            CScript scriptPubKey = GetScriptForDestination(destination);
+                            asset.ConstructTransaction(scriptPubKey);
+                            CTxOut newTxOut(0, scriptPubKey);
+                            txNew.vout.push_back(newTxOut);
+                        }
                     } else if (fReissueAsset) {
                         // Create the asset transaction and push it back so it is the last CTxOut in the transaction
                         CScript reissueScript = GetScriptForDestination(destination);

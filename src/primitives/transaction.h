@@ -329,6 +329,8 @@ public:
     /** RVN START */
     bool IsNewAsset() const;
     bool VerifyNewAsset() const;
+    bool IsNewUniqueAsset() const;
+    bool VerifyNewUniqueAsset(CCoinsViewCache& view) const;
     bool IsReissueAsset() const;
     bool VerifyReissueAsset(CCoinsViewCache& view) const;
     /** RVN END */
