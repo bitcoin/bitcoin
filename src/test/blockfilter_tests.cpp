@@ -174,4 +174,16 @@ BOOST_AUTO_TEST_CASE(blockfilters_json_test)
     }
 }
 
+BOOST_AUTO_TEST_CASE(blockfilter_type_names)
+{
+    BOOST_CHECK_EQUAL(BlockFilterTypeName(BlockFilterType::BASIC), "basic");
+    BOOST_CHECK_EQUAL(BlockFilterTypeName(static_cast<BlockFilterType>(255)), "");
+
+    BlockFilterType filter_type;
+    BOOST_CHECK(BlockFilterTypeByName("basic", filter_type));
+    BOOST_CHECK_EQUAL(filter_type, BlockFilterType::BASIC);
+
+    BOOST_CHECK(!BlockFilterTypeByName("unknown", filter_type));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

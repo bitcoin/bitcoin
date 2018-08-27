@@ -15,6 +15,10 @@ static constexpr int GCS_SER_TYPE = SER_NETWORK;
 /// Protocol version used to serialize parameters in GCS filter encoding.
 static constexpr int GCS_SER_VERSION = 0;
 
+static const std::map<BlockFilterType, std::string> g_filter_types = {
+    {BlockFilterType::BASIC, "basic"},
+};
+
 template <typename OStream>
 static void GolombRiceEncode(BitStreamWriter<OStream>& bitwriter, uint8_t P, uint64_t x)
 {
@@ -195,6 +199,23 @@ bool GCSFilter::MatchAny(const ElementSet& elements) const
 {
     const std::vector<uint64_t> queries = BuildHashedSet(elements);
     return MatchInternal(queries.data(), queries.size());
+}
+
+const std::string& BlockFilterTypeName(BlockFilterType filter_type)
+{
+    static std::string unknown_retval = "";
+    auto it = g_filter_types.find(filter_type);
+    return it != g_filter_types.end() ? it->second : unknown_retval;
+}
+
+bool BlockFilterTypeByName(const std::string& name, BlockFilterType& filter_type) {
+    for (const auto& entry : g_filter_types) {
+        if (entry.second == name) {
+            filter_type = entry.first;
+            return true;
+        }
+    }
+    return false;
 }
 
 static GCSFilter::ElementSet BasicFilterElements(const CBlock& block,
