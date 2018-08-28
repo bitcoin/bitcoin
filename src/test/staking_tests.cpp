@@ -1,10 +1,13 @@
 #include <boost/test/unit_test.hpp>
 #include <iostream>
 
-#include "../mn-pos/kernel.h"
-#include "../mn-pos/stakeminer.h"
-#include "../utiltime.h"
-#include "../amount.h"
+#include "amount.h"
+#include "arith_uint256.h"
+#include "utiltime.h"
+
+#include "mn-pos/kernel.h"
+#include "mn-pos/stakeminer.h"
+
 
 BOOST_AUTO_TEST_SUITE(staking_tests)
 
@@ -16,7 +19,7 @@ BOOST_AUTO_TEST_CASE(stakeminer)
     unsigned int nTimeBlockFrom = 100000;
     unsigned int nTimeStake = nTimeBlockFrom + (60*60*48);
     uint64_t nAmount = 10000 * COIN;
-    CKernel kernel(outpoint, nAmount, nModifier, nTimeBlockFrom, nTimeStake);
+    Kernel kernel(outpoint, nAmount, nModifier, nTimeBlockFrom, nTimeStake);
 
     //A moderately easy difficulty target to hit
     arith_uint256 aTarget;
@@ -27,7 +30,8 @@ BOOST_AUTO_TEST_CASE(stakeminer)
     //Start searching from the current time and do not stop until a valid hash is found
     uint64_t nSearchStart = GetTime();
     bool found = false;
-    while (!found) {
+    while (!found)
+    {
         uint64_t nSearchEnd = nSearchStart + 180;
         found = SearchTimeSpan(kernel, nSearchStart, nSearchStart + 180, nTarget);
         nSearchStart = nSearchEnd + 1;
@@ -48,9 +52,9 @@ BOOST_AUTO_TEST_CASE(proof_validity)
     arith_uint256 hash = UintToArith256(hashReq) - 1;
     target /= nAmount; //Need to compare the hash divided by the amount because it gets multiplied inside the check
 
-    BOOST_CHECK_MESSAGE(CKernel::CheckProof(target, hash, nAmount), "failed to pass hash proof that is valid");
-    BOOST_CHECK_MESSAGE(!CKernel::CheckProof(target, hash + 1, nAmount), "hash that is equal to target was considered valid proof hash");
-    BOOST_CHECK_MESSAGE(!CKernel::CheckProof(target, hash + 2, nAmount), "hash that is greater than target was considered valid proof hash");
+    BOOST_CHECK_MESSAGE(Kernel::CheckProof(target, hash, nAmount), "failed to pass hash proof that is valid");
+    BOOST_CHECK_MESSAGE(!Kernel::CheckProof(target, hash + 1, nAmount), "hash that is equal to target was considered valid proof hash");
+    BOOST_CHECK_MESSAGE(!Kernel::CheckProof(target, hash + 2, nAmount), "hash that is greater than target was considered valid proof hash");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

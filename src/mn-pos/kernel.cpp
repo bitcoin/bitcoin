@@ -1,8 +1,10 @@
 
 #include <iostream>
+#include <arith_uint256.h>
 #include "kernel.h"
 #include "../streams.h"
 #include "../hash.h"
+#include "proofpointer.h"
 
 /*
  * A 'proof hash' (also referred to as a 'kernel') is comprised of the following:
@@ -11,46 +13,46 @@
  * Block Time: The time that the block containing the outpoint was added to the blockchain
  * Stake Time: The time that the stake hash is being created
  */
-CKernel::CKernel(const std::pair<uint256, unsigned int>& outpoint, const uint64_t nAmount, const uint256& nStakeModifier,
+Kernel::Kernel(const std::pair<uint256, unsigned int>& outpoint, const uint64_t nAmount, const uint256& nStakeModifier,
                  const uint64_t& nTimeBlockFrom, const uint64_t& nTimeStake)
 {
-    this->outpoint = outpoint;
-    this->nAmount = nAmount;
-    this->nStakeModifier = nStakeModifier;
-    this->nTimeBlockFrom = nTimeBlockFrom;
-    this->nTimeStake = nTimeStake;
+    m_outpoint = outpoint;
+    m_nAmount = nAmount;
+    m_nStakeModifier = nStakeModifier;
+    m_nTimeBlockFrom = nTimeBlockFrom;
+    m_nTimeStake = nTimeStake;
 }
 
-uint64_t CKernel::GetAmount() const
+uint64_t Kernel::GetAmount() const
 {
-    return nAmount;
+    return m_nAmount;
 }
 
-uint256 CKernel::GetStakeHash()
+uint256 Kernel::GetStakeHash()
 {
     CDataStream ss(SER_GETHASH, 0);
-    ss << outpoint.first << outpoint.second << nStakeModifier << nTimeBlockFrom << nTimeStake;
+    ss << m_outpoint.first << m_outpoint.second << m_nStakeModifier << m_nTimeBlockFrom << m_nTimeStake;
     return Hash(ss.begin(), ss.end());
 }
 
-uint64_t CKernel::GetTime() const
+uint64_t Kernel::GetTime() const
 {
-    return nTimeStake;
+    return m_nTimeStake;
 }
 
-bool CKernel::CheckProof(const arith_uint256& target, const arith_uint256& hash, const uint64_t nAmount)
+bool Kernel::CheckProof(const arith_uint256& target, const arith_uint256& hash, const uint64_t nAmount)
 {
     return hash < nAmount * target;
 }
 
-bool CKernel::IsValidProof(const uint256& nTarget)
+bool Kernel::IsValidProof(const uint256& nTarget)
 {
     arith_uint256 target = UintToArith256(nTarget);
     arith_uint256 hashProof = UintToArith256(GetStakeHash());
-    return CheckProof(target, hashProof, nAmount);
+    return CheckProof(target, hashProof, m_nAmount);
 }
 
-void CKernel::SetStakeTime(uint64_t nTime)
+void Kernel::SetStakeTime(uint64_t nTime)
 {
-    this->nTimeStake = nTime;
+    m_nTimeStake = nTime;
 }
