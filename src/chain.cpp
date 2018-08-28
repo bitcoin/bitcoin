@@ -6,6 +6,7 @@
 
 #include "chain.h"
 #include "versionbits.h"
+#include "chainparams.h"
 
 /**
  * CChain implementation
@@ -174,5 +175,5 @@ const CBlockIndex* LastCommonAncestor(const CBlockIndex* pa, const CBlockIndex* 
 
 bool CBlockIndex::IsMicroBitcoin() const
 {
-    return nTime > 1527625482; // 525000
+    return nTime > Params().GetConsensus().hardforkTimestamp;
 }
