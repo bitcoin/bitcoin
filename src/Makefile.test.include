@@ -154,7 +154,15 @@ CLEAN_BITCOIN_TEST = test/*.gcda test/*.gcno $(GENERATED_TEST_FILES)
 
 CLEANFILES += $(CLEAN_BITCOIN_TEST)
 
+if TARGET_WINDOWS
 bitcoin_test: $(TEST_BINARY)
+else
+if ENABLE_BENCH
+bitcoin_test: $(TEST_BINARY) $(BENCH_BINARY)
+else
+bitcoin_test: $(TEST_BINARY)
+endif
+endif
 
 bitcoin_test_check: $(TEST_BINARY) FORCE
 	$(MAKE) check-TESTS TESTS=$^
@@ -167,6 +175,13 @@ check-local: $(BITCOIN_TESTS:.cpp=.cpp.test)
 	$(PYTHON) $(top_builddir)/test/util/bitcoin-util-test.py
 	@echo "Running test/util/rpcauth-test.py..."
 	$(PYTHON) $(top_builddir)/test/util/rpcauth-test.py
+if TARGET_WINDOWS
+else
+if ENABLE_BENCH
+	@echo "Running bench/bench_bitcoin -evals=1 -scaling=0..."
+	$(BENCH_BINARY) -evals=1 -scaling=0 > /dev/null
+endif
+endif
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
 if EMBEDDED_UNIVALUE
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C univalue check
