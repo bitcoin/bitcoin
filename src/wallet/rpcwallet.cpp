@@ -4596,7 +4596,7 @@ UniValue walletprocesspsbt(const JSONRPCRequest& request)
             "       \"ALL|ANYONECANPAY\"\n"
             "       \"NONE|ANYONECANPAY\"\n"
             "       \"SINGLE|ANYONECANPAY\"\n"
-            "4. bip32derivs                    (boolean, optiona, default=false) If true, includes the BIP 32 derivation paths for public keys if we know them\n"
+            "4. bip32derivs                    (boolean, optional, default=false) If true, includes the BIP 32 derivation paths for public keys if we know them\n"
 
             "\nResult:\n"
             "{\n"
@@ -4698,7 +4698,7 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
                             "         \"ECONOMICAL\"\n"
                             "         \"CONSERVATIVE\"\n"
                             "   }\n"
-                            "5. bip32derivs                    (boolean, optiona, default=false) If true, includes the BIP 32 derivation paths for public keys if we know them\n"
+                            "5. bip32derivs                    (boolean, optional, default=false) If true, includes the BIP 32 derivation paths for public keys if we know them\n"
                             "\nResult:\n"
                             "{\n"
                             "  \"psbt\": \"value\",        (string)  The resulting raw transaction (base64-encoded string)\n"
