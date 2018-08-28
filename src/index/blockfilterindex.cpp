@@ -4,6 +4,7 @@
 
 #include <map>
 
+#include <dbwrapper.h>
 #include <index/blockfilterindex.h>
 #include <util/system.h>
 #include <validation.h>
@@ -143,6 +144,26 @@ bool BlockFilterIndex::CommitInternal(CDBBatch& batch)
     return BaseIndex::CommitInternal(batch);
 }
 
+bool BlockFilterIndex::ReadFilterFromDisk(const FlatFilePos& pos, BlockFilter& filter) const
+{
+    CAutoFile filein(m_filter_fileseq->Open(pos, true), SER_DISK, CLIENT_VERSION);
+    if (filein.IsNull()) {
+        return false;
+    }
+
+    uint256 block_hash;
+    std::vector<unsigned char> encoded_filter;
+    try {
+        filein >> block_hash >> encoded_filter;
+        filter = BlockFilter(GetFilterType(), block_hash, std::move(encoded_filter));
+    }
+    catch (const std::exception& e) {
+        return error("%s: Failed to deserialize block filter from disk: %s", __func__, e.what());
+    }
+
+    return true;
+}
+
 size_t BlockFilterIndex::WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& filter)
 {
     assert(filter.GetFilterType() == GetFilterType());
@@ -279,4 +300,135 @@ bool BlockFilterIndex::Rewind(const CBlockIndex* current_tip, const CBlockIndex*
     if (!m_db->WriteBatch(batch)) return false;
 
     return BaseIndex::Rewind(current_tip, new_tip);
+}
+
+static bool LookupOne(const CDBWrapper& db, const CBlockIndex* block_index, DBVal& result)
+{
+    // First check if the result is stored under the height index and the value there matches the
+    // block hash. This should be the case if the block is on the active chain.
+    std::pair<uint256, DBVal> read_out;
+    if (!db.Read(DBHeightKey(block_index->nHeight), read_out)) {
+        return false;
+    }
+    if (read_out.first == block_index->GetBlockHash()) {
+        result = std::move(read_out.second);
+        return true;
+    }
+
+    // If value at the height index corresponds to an different block, the result will be stored in
+    // the hash index.
+    return db.Read(DBHashKey(block_index->GetBlockHash()), result);
+}
+
+static bool LookupRange(CDBWrapper& db, const std::string& index_name, int start_height,
+                        const CBlockIndex* stop_index, std::vector<DBVal>& results)
+{
+    if (start_height < 0) {
+        return error("%s: start height (%d) is negative", __func__, start_height);
+    }
+    if (start_height > stop_index->nHeight) {
+        return error("%s: start height (%d) is greater than stop height (%d)",
+                     __func__, start_height, stop_index->nHeight);
+    }
+
+    size_t results_size = static_cast<size_t>(stop_index->nHeight - start_height + 1);
+    std::vector<std::pair<uint256, DBVal>> values(results_size);
+
+    DBHeightKey key(start_height);
+    std::unique_ptr<CDBIterator> db_it(db.NewIterator());
+    db_it->Seek(DBHeightKey(start_height));
+    for (int height = start_height; height <= stop_index->nHeight; ++height) {
+        if (!db_it->Valid() || !db_it->GetKey(key) || key.height != height) {
+            return false;
+        }
+
+        size_t i = static_cast<size_t>(height - start_height);
+        if (!db_it->GetValue(values[i])) {
+            return error("%s: unable to read value in %s at key (%c, %d)",
+                         __func__, index_name, DB_BLOCK_HEIGHT, height);
+        }
+
+        db_it->Next();
+    }
+
+    results.resize(results_size);
+
+    // Iterate backwards through block indexes collecting results in order to access the block hash
+    // of each entry in case we need to look it up in the hash index.
+    for (const CBlockIndex* block_index = stop_index;
+         block_index && block_index->nHeight >= start_height;
+         block_index = block_index->pprev) {
+        uint256 block_hash = block_index->GetBlockHash();
+
+        size_t i = static_cast<size_t>(block_index->nHeight - start_height);
+        if (block_hash == values[i].first) {
+            results[i] = std::move(values[i].second);
+            continue;
+        }
+
+        if (!db.Read(DBHashKey(block_hash), results[i])) {
+            return error("%s: unable to read value in %s at key (%c, %s)",
+                         __func__, index_name, DB_BLOCK_HASH, block_hash.ToString());
+        }
+    }
+
+    return true;
+}
+
+bool BlockFilterIndex::LookupFilter(const CBlockIndex* block_index, BlockFilter& filter_out) const
+{
+    DBVal entry;
+    if (!LookupOne(*m_db, block_index, entry)) {
+        return false;
+    }
+
+    return ReadFilterFromDisk(entry.pos, filter_out);
+}
+
+bool BlockFilterIndex::LookupFilterHeader(const CBlockIndex* block_index, uint256& header_out) const
+{
+    DBVal entry;
+    if (!LookupOne(*m_db, block_index, entry)) {
+        return false;
+    }
+
+    header_out = entry.header;
+    return true;
+}
+
+bool BlockFilterIndex::LookupFilterRange(int start_height, const CBlockIndex* stop_index,
+                                         std::vector<BlockFilter>& filters_out) const
+{
+    std::vector<DBVal> entries;
+    if (!LookupRange(*m_db, m_name, start_height, stop_index, entries)) {
+        return false;
+    }
+
+    filters_out.resize(entries.size());
+    auto filter_pos_it = filters_out.begin();
+    for (const auto& entry : entries) {
+        if (!ReadFilterFromDisk(entry.pos, *filter_pos_it)) {
+            return false;
+        }
+        ++filter_pos_it;
+    }
+
+    return true;
+}
+
+bool BlockFilterIndex::LookupFilterHashRange(int start_height, const CBlockIndex* stop_index,
+                                             std::vector<uint256>& hashes_out) const
+
+{
+    std::vector<DBVal> entries;
+    if (!LookupRange(*m_db, m_name, start_height, stop_index, entries)) {
+        return false;
+    }
+
+    hashes_out.clear();
+    hashes_out.reserve(entries.size());
+    for (const auto& entry : entries) {
+        hashes_out.push_back(entry.hash);
+    }
+    return true;
 }

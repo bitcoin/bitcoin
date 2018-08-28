@@ -27,6 +27,7 @@ private:
     FlatFilePos m_next_filter_pos;
     std::unique_ptr<FlatFileSeq> m_filter_fileseq;
 
+    bool ReadFilterFromDisk(const FlatFilePos& pos, BlockFilter& filter) const;
     size_t WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& filter);
 
 protected:
@@ -48,6 +49,20 @@ public:
                               size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
 
     BlockFilterType GetFilterType() const { return m_filter_type; }
+
+    /** Get a single filter by block. */
+    bool LookupFilter(const CBlockIndex* block_index, BlockFilter& filter_out) const;
+
+    /** Get a single filter header by block. */
+    bool LookupFilterHeader(const CBlockIndex* block_index, uint256& header_out) const;
+
+    /** Get a range of filters between two heights on a chain. */
+    bool LookupFilterRange(int start_height, const CBlockIndex* stop_index,
+                           std::vector<BlockFilter>& filters_out) const;
+
+    /** Get a range of filter hashes between two heights on a chain. */
+    bool LookupFilterHashRange(int start_height, const CBlockIndex* stop_index,
+                               std::vector<uint256>& hashes_out) const;
 };
 
 #endif // BITCOIN_INDEX_BLOCKFILTERINDEX_H
