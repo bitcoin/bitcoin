@@ -1,4 +1,5 @@
-// Copyright (c) 2014-2015 The Crown developers
+// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2018 The Crown developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -52,6 +53,19 @@ public:
     CScript collateralPubKey;
     CMasternode* pSubmittedToMasternode;
     CSystemnode* pSubmittedToSystemnode;
+};
+
+/** Helper class for signing hashes and checking their signatures
+ */
+class CHashSigner
+{
+public:
+    /// Sign the hash, returns true if successful
+    static bool SignHash(const uint256& hash, const CKey& key, std::vector<unsigned char>& vchSigRet);
+    /// Verify the hash signature, returns true if succcessful
+    static bool VerifyHash(const uint256& hash, const CPubKey& pubkey, const std::vector<unsigned char>& vchSig, std::string& strErrorRet);
+    /// Verify the hash signature, returns true if succcessful
+    static bool VerifyHash(const uint256& hash, const CKeyID& keyID, const std::vector<unsigned char>& vchSig, std::string& strErrorRet);
 };
 
 void ThreadCheckLegacySigner();
