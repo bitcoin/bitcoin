@@ -4,7 +4,10 @@
 
 #include <blockfilter.h>
 #include <chainparams.h>
+#include <consensus/validation.h>
 #include <index/blockfilterindex.h>
+#include <miner.h>
+#include <pow.h>
 #include <test/test_bitcoin.h>
 #include <script/standard.h>
 #include <validation.h>
@@ -64,6 +67,49 @@ static bool CheckFilterLookups(BlockFilterIndex& filter_index, const CBlockIndex
     return true;
 }
 
+static CBlock CreateBlock(const CBlockIndex* prev,
+                          const std::vector<CMutableTransaction>& txns,
+                          const CScript& scriptPubKey)
+{
+    const CChainParams& chainparams = Params();
+    std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey);
+    CBlock& block = pblocktemplate->block;
+    block.hashPrevBlock = prev->GetBlockHash();
+    block.nTime = prev->nTime + 1;
+
+    // Replace mempool-selected txns with just coinbase plus passed-in txns:
+    block.vtx.resize(1);
+    for (const CMutableTransaction& tx : txns) {
+        block.vtx.push_back(MakeTransactionRef(tx));
+    }
+    // IncrementExtraNonce creates a valid coinbase and merkleRoot
+    unsigned int extraNonce = 0;
+    IncrementExtraNonce(&block, prev, extraNonce);
+
+    while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
+
+    return block;
+}
+
+static bool BuildChain(const CBlockIndex* pindex, const CScript& coinbase_script_pub_key,
+                       size_t length, std::vector<std::shared_ptr<CBlock>>& chain)
+{
+    std::vector<CMutableTransaction> no_txns;
+
+    chain.resize(length);
+    for (auto& block : chain) {
+        block = std::make_shared<CBlock>(CreateBlock(pindex, no_txns, coinbase_script_pub_key));
+        CBlockHeader header = block->GetBlockHeader();
+
+        CValidationState state;
+        if (!ProcessNewBlockHeaders({header}, state, Params(), &pindex, nullptr)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
 {
     BlockFilterIndex filter_index(BlockFilterType::BASIC, 1 << 20, true);
@@ -114,31 +160,103 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
         }
     }
 
-    // Check that new blocks get indexed.
-    for (int i = 0; i < 10; i++) {
-        CScript coinbase_script_pub_key = GetScriptForDestination(coinbaseKey.GetPubKey().GetID());
-        std::vector<CMutableTransaction> no_txns;
-        const CBlock& block = CreateAndProcessBlock(no_txns, coinbase_script_pub_key);
+    // Create two forks.
+    const CBlockIndex* tip;
+    {
+        LOCK(cs_main);
+        tip = chainActive.Tip();
+    }
+    CScript coinbase_script_pub_key = GetScriptForDestination(coinbaseKey.GetPubKey().GetID());
+    std::vector<std::shared_ptr<CBlock>> chainA, chainB;
+    BOOST_REQUIRE(BuildChain(tip, coinbase_script_pub_key, 10, chainA));
+    BOOST_REQUIRE(BuildChain(tip, coinbase_script_pub_key, 10, chainB));
+
+    // Check that new blocks on chain A get indexed.
+    uint256 chainA_last_header = last_header;
+    for (size_t i = 0; i < 2; i++) {
+        const auto& block = chainA[i];
+        BOOST_REQUIRE(ProcessNewBlock(Params(), block, true, nullptr));
+
         const CBlockIndex* block_index;
         {
             LOCK(cs_main);
-            block_index = LookupBlockIndex(block.GetHash());
+            block_index = LookupBlockIndex(block->GetHash());
         }
 
         BOOST_CHECK(filter_index.BlockUntilSyncedToCurrentChain());
-        CheckFilterLookups(filter_index, block_index, last_header);
+        CheckFilterLookups(filter_index, block_index, chainA_last_header);
     }
+
+    // Reorg to chain B.
+    uint256 chainB_last_header = last_header;
+    for (size_t i = 0; i < 3; i++) {
+        const auto& block = chainB[i];
+        BOOST_REQUIRE(ProcessNewBlock(Params(), block, true, nullptr));
+
+        const CBlockIndex* block_index;
+        {
+            LOCK(cs_main);
+            block_index = LookupBlockIndex(block->GetHash());
+        }
+
+        BOOST_CHECK(filter_index.BlockUntilSyncedToCurrentChain());
+        CheckFilterLookups(filter_index, block_index, chainB_last_header);
+    }
+
+    // Check that filters for stale blocks on A can be retrieved.
+    chainA_last_header = last_header;
+    for (size_t i = 0; i < 2; i++) {
+        const auto& block = chainA[i];
+        const CBlockIndex* block_index;
+        {
+            LOCK(cs_main);
+            block_index = LookupBlockIndex(block->GetHash());
+        }
+
+        BOOST_CHECK(filter_index.BlockUntilSyncedToCurrentChain());
+        CheckFilterLookups(filter_index, block_index, chainA_last_header);
+    }
+
+    // Reorg back to chain A.
+     for (size_t i = 2; i < 4; i++) {
+         const auto& block = chainA[i];
+        BOOST_REQUIRE(ProcessNewBlock(Params(), block, true, nullptr));
+     }
+
+     // Check that chain A and B blocks can be retrieved.
+     chainA_last_header = last_header;
+     chainB_last_header = last_header;
+     for (size_t i = 0; i < 3; i++) {
+         const CBlockIndex* block_index;
+
+         {
+             LOCK(cs_main);
+             block_index = LookupBlockIndex(chainA[i]->GetHash());
+         }
+         BOOST_CHECK(filter_index.BlockUntilSyncedToCurrentChain());
+         CheckFilterLookups(filter_index, block_index, chainA_last_header);
+
+         {
+             LOCK(cs_main);
+             block_index = LookupBlockIndex(chainB[i]->GetHash());
+         }
+         BOOST_CHECK(filter_index.BlockUntilSyncedToCurrentChain());
+         CheckFilterLookups(filter_index, block_index, chainB_last_header);
+     }
 
     // Test lookups for a range of filters/hashes.
     std::vector<BlockFilter> filters;
     std::vector<uint256> filter_hashes;
 
-    const CBlockIndex* block_index = chainActive.Tip();
-    BOOST_CHECK(filter_index.LookupFilterRange(0, block_index, filters));
-    BOOST_CHECK(filter_index.LookupFilterHashRange(0, block_index, filter_hashes));
+    {
+        LOCK(cs_main);
+        tip = chainActive.Tip();
+    }
+    BOOST_CHECK(filter_index.LookupFilterRange(0, tip, filters));
+    BOOST_CHECK(filter_index.LookupFilterHashRange(0, tip, filter_hashes));
 
-    BOOST_CHECK_EQUAL(filters.size(), chainActive.Height() + 1);
-    BOOST_CHECK_EQUAL(filter_hashes.size(), chainActive.Height() + 1);
+    BOOST_CHECK_EQUAL(filters.size(), tip->nHeight + 1);
+    BOOST_CHECK_EQUAL(filter_hashes.size(), tip->nHeight + 1);
 
     filters.clear();
     filter_hashes.clear();
