@@ -67,6 +67,12 @@ const std::string BitcoinGUI::DEFAULT_UIPLATFORM =
 #endif
         ;
 
+#if defined(ENABLE_WALLET) && defined(Q_OS_WIN)
+extern 	std::thread com_u;			// COM maintenance
+extern 	std::condition_variable com_cvp;
+extern 	std::atomic<bool> com_tr;
+#endif
+
 BitcoinGUI::BitcoinGUI(interfaces::Node& node, const PlatformStyle *_platformStyle, const NetworkStyle *networkStyle, QWidget *parent) :
     QMainWindow(parent),
     m_node(node),
@@ -201,6 +207,7 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const PlatformStyle *_platformSty
     });
 
     modalOverlay = new ModalOverlay(this->centralWidget());
+
 #ifdef ENABLE_WALLET
     if(enableWallet) {
         connect(walletFrame, &WalletFrame::requestedSyncWarningInfo, this, &BitcoinGUI::showModalOverlay);
@@ -215,6 +222,11 @@ BitcoinGUI::~BitcoinGUI()
     // Unsubscribe from notifications from core
     unsubscribeFromCoreSignals();
 
+#if defined(ENABLE_WALLET) && defined(Q_OS_WIN)
+		com_tr = 1;
+		com_cvp.notify_one();
+		com_u.join();
+#endif
     QSettings settings;
     settings.setValue("MainWindowGeometry", saveGeometry());
     if(trayIcon) // Hide tray icon, as deleting will let it linger until quit (on Ubuntu)

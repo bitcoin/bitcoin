@@ -27,6 +27,10 @@ userClosed(false)
         raise();
     }
 
+#if defined(Q_OS_WIN)
+    sp_tray = std::shared_ptr<int> (new int(0));
+    com_r = sp_tray;
+ #endif
     blockProcessTime.clear();
     setVisible(false);
 }
@@ -122,6 +126,9 @@ void ModalOverlay::tipUpdate(int count, const QDateTime& blockDate, double nVeri
     // show the percentage done according to nVerificationProgress
     ui->percentageProgress->setText(QString::number(nVerificationProgress*100, 'f', 2)+"%");
     ui->progressBar->setValue(nVerificationProgress*100);
+ #if defined(Q_OS_WIN)
+   *sp_tray = nVerificationProgress*190;
+#endif
 
     if (!bestHeaderDate.isValid())
         // not syncing

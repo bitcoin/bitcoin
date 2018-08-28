@@ -551,11 +551,18 @@ static void SetupUIArgs()
     gArgs.AddArg("-uiplatform", strprintf("Select platform to customize UI for (one of windows, macosx, other; default: %s)", BitcoinGUI::DEFAULT_UIPLATFORM), true, OptionsCategory::GUI);
 }
 
+#if defined(ENABLE_WALLET) && defined(Q_OS_WIN)
+UINT WM_ret;
+#endif
+
 #ifndef BITCOIN_QT_TEST
+
 int main(int argc, char *argv[])
 {
     SetupEnvironment();
-
+#if defined(ENABLE_WALLET) && defined(Q_OS_WIN)
+WM_ret = RegisterWindowMessageW(L"TaskbarButtonCreated");    // message windows will send
+#endif
     std::unique_ptr<interfaces::Node> node = interfaces::MakeNode();
 
     // Do not refer to data directory yet, this can be overridden by Intro::pickDataDirectory

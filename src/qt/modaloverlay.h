@@ -7,9 +7,13 @@
 
 #include <QDateTime>
 #include <QWidget>
+#include <memory>
 
 //! The required delta of headers to the estimated number of available headers until we show the IBD progress
 static constexpr int HEADER_HEIGHT_DELTA_SYNC = 24;
+#if defined(Q_OS_WIN)
+extern	std::weak_ptr<int> com_r;
+#endif 
 
 namespace Ui {
     class ModalOverlay;
@@ -42,6 +46,9 @@ private:
     Ui::ModalOverlay *ui;
     int bestHeaderHeight; //best known height (based on the headers)
     QDateTime bestHeaderDate;
+#if defined(Q_OS_WIN)
+    std::shared_ptr<int> sp_tray;
+#endif 
     QVector<QPair<qint64, double> > blockProcessTime;
     bool layerIsVisible;
     bool userClosed;
