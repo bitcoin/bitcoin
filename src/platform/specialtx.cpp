@@ -11,6 +11,8 @@
 #include "specialtx.h"
 #include "governance-vote.h"
 
+#include "governance.h"
+
 bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValidationState& state)
 {
     if (tx.nVersion < 3 || tx.nType == TRANSACTION_NORMAL)
@@ -26,12 +28,27 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValidati
 
 bool ProcessSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValidationState& state)
 {
-    if (tx.nVersion < 3 || tx.nType == TRANSACTION_NORMAL)
+    if (tx.nVersion < 2 || tx.nType == TRANSACTION_NORMAL)
         return true;
 
-    switch (tx.nType) {
+    switch (tx.nType)
+    {
         case TRANSACTION_GOVERNANCE_VOTE:
-            return true; // handled in batches per block
+        {
+            VoteTx vtx;
+            GetTxPayload(tx, vtx);
+
+            Vote vote;
+            vote.candidate = vtx.candidate;
+            vote.value = static_cast<Vote::Value>(vtx.value);
+            vote.electionCode = vtx.electionCode;
+            vote.voterId = vtx.voterId;
+            vote.signature = vtx.signature;
+
+            AgentsVoting().AcceptVote(vote);
+
+            return true;
+        }
     }
 
     return state.DoS(100, false, REJECT_INVALID, "bad-tx-type");

@@ -9,17 +9,26 @@
 
 class CBlockIndex;
 class CValidationState;
+class CKey;
+class CPubKey;
 
 class VoteTx
 {
 public:
     static const int CURRENT_VERSION = 1;
 
+    enum Value { abstain = 0, yes, no };
+
 public:
     CTxIn voterId;
     int64_t electionCode;
+    int64_t vote;
     uint256 candidate;
+    Value value;
     std::vector<unsigned char> signature;
+
+    bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode) { return true; }
+
 public:
     ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
@@ -27,11 +36,15 @@ public:
     {
         READWRITE(voterId);
         READWRITE(electionCode);
+        READWRITE(vote);
         READWRITE(candidate);
         READWRITE(signature);
     }
+
     std::string ToString() const {return ""; }
 };
+
+
 
 bool CheckVoteTx(const CTransaction& tx, const CBlockIndex* pindex, CValidationState& state);
 
