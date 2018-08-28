@@ -12,6 +12,7 @@
 #include "main.h"
 #include "ui_interface.h"
 #include "util.h"
+#include "platform/rpc/rpcagents.h"
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #endif
@@ -385,6 +386,7 @@ static const CRPCCommand vRPCCommands[] =
     { "wallet",             "walletpassphrase",       &walletpassphrase,       true,      false,      true },
     { "wallet",             "update",                 &update,                 true,      false,      true },
 #endif // ENABLE_WALLET
+    { "platform",           "agents",                 &agents,                 true,      true,       false },
 };
 
 CRPCTable::CRPCTable()
