@@ -63,11 +63,11 @@
     </message>
     <message>
         <source>These are your MicroBitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>支払送信するためのビットコインアドレスです。コインを送付する前に、いつも残高と受信アドレスの確認をしてください。</translation>
+        <translation>支払送信するためのマイクロビットコインアドレスです。コインを送付する前に、いつも残高と受信アドレスの確認をしてください。</translation>
     </message>
     <message>
         <source>These are your MicroBitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>支払の受信をするためのビットコインアドレスです。それぞれの処理に新規に受信アドレスを使用することを推奨します。</translation>
+        <translation>支払の受信をするためのマイクロビットコインアドレスです。それぞれの処理に新規に受信アドレスを使用することを推奨します。</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -169,7 +169,7 @@
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR MicroBitcoINS&lt;/b&gt;!</source>
-        <translation>注意: 財布の暗号化やパスフレーズを忘れた場合、 &lt;b&gt;あなたのビットコインはすべて失われます。&lt;/b&gt;!</translation>
+        <translation>注意: 財布の暗号化やパスフレーズを忘れた場合、 &lt;b&gt;あなたのマイクロビットコインはすべて失われます。&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -181,7 +181,7 @@
     </message>
     <message>
         <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your MicroBitcoins from being stolen by malware infecting your computer.</source>
-        <translation>暗号化処理を終了させるために、すぐに%1を閉じるでしょう。あなたのコンピュータに感染したマルウェアによって、盗まれたビットコインは暗号化をしていても完全に守ることができないことを覚えておいてください。</translation>
+        <translation>暗号化処理を終了させるために、すぐに%1を閉じるでしょう。あなたのコンピュータに感染したマルウェアによって、盗まれたマイクロビットコインは暗号化をしていても完全に守ることができないことを覚えておいてください。</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -339,7 +339,7 @@
     </message>
     <message>
         <source>Send coins to a MicroBitcoin address</source>
-        <translation>ビットコインアドレスにコインを送信</translation>
+        <translation>マイクロビットコインアドレスにコインを送信</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -363,7 +363,7 @@
     </message>
     <message>
         <source>MicroBitcoin</source>
-        <translation>ビットコイン</translation>
+        <translation>マイクロビットコイン</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -391,11 +391,11 @@
     </message>
     <message>
         <source>Sign messages with your MicroBitcoin addresses to prove you own them</source>
-        <translation>所有者であることを証明するためにビットコインアドレスのメッセージにサイン</translation>
+        <translation>所有者であることを証明するためにマイクロビットコインアドレスのメッセージにサイン</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified MicroBitcoin addresses</source>
-        <translation>署名された特定のビットコインアドレスを確認するために、メッセージを確認</translation>
+        <translation>署名された特定のマイクロビットコインアドレスを確認するために、メッセージを確認</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -415,7 +415,7 @@
     </message>
     <message>
         <source>Request payments (generates QR codes and MicroBitcoin: URIs)</source>
-        <translation>支払の要求 (QRコードとビットコインのURIを作成)</translation>
+        <translation>支払の要求 (QRコードとマイクロビットコインのURIを作成)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -427,7 +427,7 @@
     </message>
     <message>
         <source>Open a MicroBitcoin: URI or payment request</source>
-        <translation>ビットコインのURIまたは支払要求を開く</translation>
+        <translation>マイクロビットコインのURIまたは支払要求を開く</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -471,7 +471,7 @@
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible MicroBitcoin command-line options</source>
-        <translation>ビットコインのコマンドラインオプションとして可能なリストの取得の%1ヘルプメッセージを表示</translation>
+        <translation>マイクロビットコインのコマンドラインオプションとして可能なリストの取得の%1ヘルプメッセージを表示</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -541,7 +541,7 @@
     </message>
     <message>
         <source>A fatal error occurred. MicroBitcoin can no longer continue safely and will quit.</source>
-        <translation>致命的なエラーが発生しました。ビットコインは安全に終了することができません。</translation>
+        <translation>致命的なエラーが発生しました。マイクロビットコインは安全に終了することができません。</translation>
     </message>
 </context>
 <context>
@@ -735,7 +735,7 @@
     </message>
     <message>
         <source>The entered address "%1" is not a valid MicroBitcoin address.</source>
-        <translation>入寮されたアドレス "%1" は正当なビットコインアドレスではありません。</translation>
+        <translation>入寮されたアドレス "%1" は正当なマイクロビットコインアドレスではありません。</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book.</source>
@@ -867,11 +867,11 @@
     </message>
     <message>
         <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the MicroBitcoin network, as detailed below.</source>
-        <translation>最近のトランザクションが表示できない可能性があります。従って、ウォレットの残高が正しくない可能性があります。この情報はビットコインネットワークに接続し、同期処理を完了させると正しくなります。詳細は以下になります。</translation>
+        <translation>最近のトランザクションが表示できない可能性があります。従って、ウォレットの残高が正しくない可能性があります。この情報はマイクロビットコインネットワークに接続し、同期処理を完了させると正しくなります。詳細は以下になります。</translation>
     </message>
     <message>
         <source>Attempting to spend MicroBitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation>使用したビットコインで、未処理となっているものは、ネットワークによって受領されません。</translation>
+        <translation>使用したマイクロビットコインで、未処理となっているものは、ネットワークによって受領されません。</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -1029,7 +1029,7 @@
     </message>
     <message>
         <source>Automatically open the MicroBitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>自動絵的にルータのビットコインのクライアントポートが開きます。この機能はルータがUPnPをサポートし、有効であるときに動作します。</translation>
+        <translation>自動絵的にルータのマイクロビットコインのクライアントポートが開きます。この機能はルータがUPnPをサポートし、有効であるときに動作します。</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -1037,7 +1037,7 @@
     </message>
     <message>
         <source>Connect to the MicroBitcoin network through a SOCKS5 proxy.</source>
-        <translation>SOCKS5プロキシを使用してビットコインネットワークへ接続</translation>
+        <translation>SOCKS5プロキシを使用してマイクロビットコインネットワークへ接続</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1073,7 +1073,7 @@
     </message>
     <message>
         <source>Connect to the MicroBitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Tor秘匿ネットワークのための区切られたSOCKS5を経由して、ビットコインネットワークに接続</translation>
+        <translation>Tor秘匿ネットワークのための区切られたSOCKS5を経由して、マイクロビットコインネットワークに接続</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
@@ -1172,7 +1172,7 @@
     </message>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the MicroBitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>表示されている情報は、期限切れの可能性があります。ウォレットは自動的にビットコインネットワークへの接続が確立した後に同期化されます。しかし、処理はまだ、完了していません。</translation>
+        <translation>表示されている情報は、期限切れの可能性があります。ウォレットは自動的にマイクロビットコインネットワークへの接続が確立した後に同期化されます。しかし、処理はまだ、完了していません。</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -1247,7 +1247,7 @@
     </message>
     <message>
         <source>Cannot start MicroBitcoin: click-to-pay handler</source>
-        <translation>ビットコインを開始できません: click-to-pay handler</translation>
+        <translation>マイクロビットコインを開始できません: click-to-pay handler</translation>
     </message>
     <message>
         <source>URI handling</source>
@@ -1263,7 +1263,7 @@
     </message>
     <message>
         <source>URI cannot be parsed! This can be caused by an invalid MicroBitcoin address or malformed URI parameters.</source>
-        <translation>URLはパースできませんでした! 原因はビットコインアドレスが無効であるか、URIパラメータの形式が間違っている可能性があります。</translation>
+        <translation>URLはパースできませんでした! 原因はマイクロビットコインアドレスが無効であるか、URIパラメータの形式が間違っている可能性があります。</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1357,7 +1357,7 @@
     </message>
     <message>
         <source>Enter a MicroBitcoin address (e.g. %1)</source>
-        <translation>ビットコインアドレスの入力 (例 %1)</translation>
+        <translation>マイクロビットコインアドレスの入力 (例 %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1745,7 +1745,7 @@
     </message>
     <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the MicroBitcoin network.</source>
-        <translation>支払要求に添付されたオプションメッセージは、要求を開いたときに表示されます。メモ: メッセージは、ビットコインネットワーク上で支払と一緒に送信されません。</translation>
+        <translation>支払要求に添付されたオプションメッセージは、要求を開いたときに表示されます。メモ: メッセージは、マイクロビットコインネットワーク上で支払と一緒に送信されません。</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
@@ -1974,7 +1974,7 @@
     </message>
     <message>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for MicroBitcoin transactions than the network can process.</source>
-        <translation>最小の料金のみ支払いは、ブロック内の処理容量よりも小さい場合に限り、問題ありません。しかし、ネットワークの処理できる量よりも、ビットコイン処理のほうが需要があり、最終的にその確認処理が実行されないことに注意する必要があります。</translation>
+        <translation>最小の料金のみ支払いは、ブロック内の処理容量よりも小さい場合に限り、問題ありません。しかし、ネットワークの処理できる量よりも、マイクロビットコイン処理のほうが需要があり、最終的にその確認処理が実行されないことに注意する必要があります。</translation>
     </message>
     <message>
         <source>(read the tooltip)</source>
@@ -2122,7 +2122,7 @@
     </message>
     <message>
         <source>Warning: Invalid MicroBitcoin address</source>
-        <translation>注意: 無効なビットコインアドレス</translation>
+        <translation>注意: 無効なマイクロビットコインアドレス</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -2165,7 +2165,7 @@
     </message>
     <message>
         <source>The MicroBitcoin address to send the payment to</source>
-        <translation>支払に送信するビットコインアドレス</translation>
+        <translation>支払に送信するマイクロビットコインアドレス</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -2209,7 +2209,7 @@
     </message>
     <message>
         <source>A message that was attached to the MicroBitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the MicroBitcoin network.</source>
-        <translation>参考資料に保存された処理のビットコインURIは、メッセージに添付されます。メモ: このメッセージはビットコイン上で送信されません。</translation>
+        <translation>参考資料に保存された処理のマイクロビットコインURIは、メッセージに添付されます。メモ: このメッセージはマイクロビットコイン上で送信されません。</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -2254,11 +2254,11 @@
     </message>
     <message>
         <source>You can sign messages/agreements with your addresses to prove you can receive MicroBitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>送信されたビットコインを受信できることを証明するために、アドレスのメッセージや同意事項に署名できます。フィッシング攻撃が署名を利用する可能性があるので、署名が曖昧やランダムでないことに注意してください。詳細な明細のみに署名されます。</translation>
+        <translation>送信されたマイクロビットコインを受信できることを証明するために、アドレスのメッセージや同意事項に署名できます。フィッシング攻撃が署名を利用する可能性があるので、署名が曖昧やランダムでないことに注意してください。詳細な明細のみに署名されます。</translation>
     </message>
     <message>
         <source>The MicroBitcoin address to sign the message with</source>
-        <translation>メッセージ署名するためのビットコインアドレス</translation>
+        <translation>メッセージ署名するためのマイクロビットコインアドレス</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2290,7 +2290,7 @@
     </message>
     <message>
         <source>Sign the message to prove you own this MicroBitcoin address</source>
-        <translation>ビットコインアドレスを証明するために、メッセージに署名</translation>
+        <translation>マイクロビットコインアドレスを証明するために、メッセージに署名</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -2314,11 +2314,11 @@
     </message>
     <message>
         <source>The MicroBitcoin address the message was signed with</source>
-        <translation>メッセージのビットコインアドレスはサインされています</translation>
+        <translation>メッセージのマイクロビットコインアドレスはサインされています</translation>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified MicroBitcoin address</source>
-        <translation>特定のビットコインアドレスと署名されているメッセージであることを確認してください。</translation>
+        <translation>特定のマイクロビットコインアドレスと署名されているメッセージであることを確認してください。</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
