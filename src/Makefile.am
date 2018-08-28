@@ -221,6 +221,16 @@ libbitcoin_server_a_SOURCES = \
   txdb.cpp \
   txmempool.cpp \
   dbdetails.cpp \
+  platform/agent.cpp \
+  platform/agent.h \
+  platform/governance.cpp \
+  platform/governance.h \
+  platform/governance-vote.cpp \
+  platform/governance-vote.h \
+  platform/specialtx.h \
+  platform/specialtx.cpp \
+  platform/rpc/rpcagents.cpp \
+  platform/rpc/rpcagents.h \
   $(JSON_H) \
   $(BITCOIN_CORE_H)
 
