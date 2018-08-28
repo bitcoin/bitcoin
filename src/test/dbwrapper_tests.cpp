@@ -262,7 +262,7 @@ struct StringContentsSerializer {
                 try {
                     READWRITE(c);
                     str.push_back(c);
-                } catch (const std::ios_base::failure& e) {
+                } catch (const std::ios_base::failure&) {
                     break;
                 }
             }
