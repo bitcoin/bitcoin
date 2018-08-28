@@ -183,4 +183,7 @@ bool ConvertBits(const O& outfn, I it, I end) {
     return true;
 }
 
+/** Parse an HD keypaths like "m/7/0'/2000". */
+bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypath);
+
 #endif // BITCOIN_UTILSTRENCODINGS_H
