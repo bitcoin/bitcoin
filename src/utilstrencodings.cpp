@@ -7,6 +7,7 @@
 
 #include <tinyformat.h>
 
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <errno.h>
@@ -583,4 +584,16 @@ bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypa
         first = false;
     }
     return true;
+}
+
+void Downcase(std::string& str)
+{
+    std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c){return ToLower(c);});
+}
+
+std::string Capitalize(std::string str)
+{
+    if (str.empty()) return str;
+    str[0] = ToUpper(str.front());
+    return str;
 }
