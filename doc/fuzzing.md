@@ -2,7 +2,7 @@ Fuzz-testing Bitcoin Core
 ==========================
 
 A special test harness `test_bitcoin_fuzzy` is provided to provide an easy
-entry point for fuzzers and the like. In this document we'll describe how to
+entry point for fuzzers and the like. In this document we will describe how to
 use it with AFL.
 
 Building AFL
@@ -44,7 +44,7 @@ Preparing fuzzing
 
 AFL needs an input directory with examples, and an output directory where it
 will place examples that it found. These can be anywhere in the file system,
-we'll define environment variables to make it easy to reference them.
+we will define environment variables to make it easy to reference them.
 
 ```
 mkdir inputs

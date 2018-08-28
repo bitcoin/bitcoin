@@ -1871,7 +1871,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             if (nANow - addr.nLastTry < 600 && nTries < 30)
                 continue;
 
-            // for non-feelers, require all the services we'll want,
+            // for non-feelers, require all the services we will want,
             // for feelers, only require they be a full node (only because most
             // SPV clients don't have a good address DB available)
             if (!fFeeler && !HasAllDesirableServiceFlags(addr.nServices)) {

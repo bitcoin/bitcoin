@@ -83,7 +83,7 @@ contrib/macdeploy/custom_dsstore.py.
 
 As of OS X 10.9 Mavericks, using an Apple-blessed key to sign binaries is a
 requirement in order to satisfy the new Gatekeeper requirements. Because this
-private key cannot be shared, we'll have to be a bit creative in order for the
+private key cannot be shared, we will have to be a bit creative in order for the
 build process to remain somewhat deterministic. Here's how it works:
 
 - Builders use Gitian to create an unsigned release. This outputs an unsigned

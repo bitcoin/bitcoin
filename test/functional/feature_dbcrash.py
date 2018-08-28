@@ -66,7 +66,7 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
     def setup_network(self):
         self.add_nodes(self.num_nodes, extra_args=self.extra_args)
         self.start_nodes()
-        # Leave them unconnected, we'll use submitblock directly in this test
+        # Leave them unconnected, we will use submitblock directly in this test
 
     def restart_node(self, node_index, expected_tip):
         """Start up a given node id, wait for the tip to reach the given block hash, and calculate the utxo hash.
@@ -129,7 +129,7 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
         """Use submitblock to sync node3's chain with the other nodes
 
         If submitblock fails, restart the node and get the new utxo hash.
-        If any nodes crash while updating, we'll compare utxo hashes to
+        If any nodes crash while updating, we will compare utxo hashes to
         ensure recovery was successful."""
 
         node3_utxo_hash = self.nodes[3].gettxoutsetinfo()['hash_serialized_2']

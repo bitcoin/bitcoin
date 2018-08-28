@@ -342,7 +342,7 @@ bool LockedPool::new_arena(size_t size, size_t align)
     // If this is the first arena, handle this specially: Cap the upper size
     // by the process limit. This makes sure that the first arena will at least
     // be locked. An exception to this is if the process limit is 0:
-    // in this case no memory can be locked at all so we'll skip past this logic.
+    // in this case no memory can be locked at all so we will skip past this logic.
     if (arenas.empty()) {
         size_t limit = allocator->GetLimit();
         if (limit > 0) {

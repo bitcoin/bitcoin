@@ -364,7 +364,7 @@ class PruneTest(BitcoinTestFramework):
         # Extend this chain past the PruneAfterHeight
         # N0=N1=N2 **...*(1020)
 
-        self.log.info("Check that we'll exceed disk space target if we have a very high stale block rate")
+        self.log.info("Check that we will exceed disk space target if we have a very high stale block rate")
         self.create_chain_with_staleblocks()
         # Disconnect N0
         # And mine a 24 block chain on N1 and a separate 25 block chain on N0

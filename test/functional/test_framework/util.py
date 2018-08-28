@@ -515,7 +515,7 @@ def gen_return_txouts():
     script_pubkey = "6a4d0200"  # OP_RETURN OP_PUSH2 512 bytes
     for i in range(512):
         script_pubkey = script_pubkey + "01"
-    # concatenate 128 txouts of above script_pubkey which we'll insert before the txout for change
+    # concatenate 128 txouts of above script_pubkey which we will insert before the txout for change
     txouts = "81"
     for k in range(128):
         # add txout value

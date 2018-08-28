@@ -898,7 +898,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         self.test_getblocktxn_handler(self.nodes[1], self.segwit_node, 2)
         self.test_getblocktxn_handler(self.nodes[1], self.old_node, 1)
 
-        # Test that if we submitblock to node1, we'll get a compact block
+        # Test that if we submitblock to node1, we will get a compact block
         # announcement to all peers.
         # (Post-segwit activation, blocks won't propagate from node0 to node1
         # automatically, so don't bother testing a block announced to node0.)

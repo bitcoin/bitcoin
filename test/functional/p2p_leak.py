@@ -54,7 +54,7 @@ class CLazyNode(P2PInterface):
     def on_getblocktxn(self, message): self.bad_message(message)
     def on_blocktxn(self, message): self.bad_message(message)
 
-# Node that never sends a version. We'll use this to send a bunch of messages
+# Node that never sends a version. We will use this to send a bunch of messages
 # anyway, and eventually get disconnected.
 class CNodeNoVersionBan(CLazyNode):
     # send a bunch of veracks without sending a message. This should get us disconnected.

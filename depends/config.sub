@@ -1539,7 +1539,7 @@ else
 # "-sun"), then you have to tell the case statement up towards the top
 # that MANUFACTURER isn't an operating system.  Otherwise, code above
 # will signal an error saying that MANUFACTURER isn't an operating
-# system, and we'll never get to this point.
+# system, and we will never get to this point.
 
 case $basic_machine in
 	score-*)

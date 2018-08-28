@@ -531,7 +531,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         tx2a_hex = txToHex(tx2a)
         self.nodes[0].sendrawtransaction(tx2a_hex, True)
 
-        # Lower fee, but we'll prioritise it
+        # Lower fee, but we will prioritise it
         tx2b = CTransaction()
         tx2b.vin = [CTxIn(tx1_outpoint, nSequence=0)]
         tx2b.vout = [CTxOut(int(1.01 * COIN), CScript([b'a' * 35]))]

@@ -95,7 +95,7 @@ static const int MAX_CMPCTBLOCK_DEPTH = 5;
 static const int MAX_BLOCKTXN_DEPTH = 10;
 /** Size of the "block download window": how far ahead of our current height do we fetch?
  *  Larger windows tolerate larger download speed differences between peer, but increase the potential
- *  degree of disordering of blocks on disk (which make reindexing and pruning harder). We'll probably
+ *  degree of disordering of blocks on disk (which make reindexing and pruning harder). We will probably
  *  want to make this a per-peer adaptive value at some point. */
 static const unsigned int BLOCK_DOWNLOAD_WINDOW = 1024;
 /** Time to wait (in seconds) between writing blocks/block index to disk. */

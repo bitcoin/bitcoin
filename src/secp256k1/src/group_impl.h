@@ -32,7 +32,7 @@
  *   P = (int(P.order()) / int(order)) * P
  *   assert(P.order() == order)
  *
- * 3. Print the values. You'll need to use a vim macro or something to
+ * 3. Print the values. You will need to use a vim macro or something to
  *    split the hex output into 4-byte chunks.
  *   print "%x %x" % P.xy()
  */

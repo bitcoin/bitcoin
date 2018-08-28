@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(singlethreadedscheduler_ordered)
     // create more threads than queues
     // if the queues only permit execution of one task at once then
     // the extra threads should effectively be doing nothing
-    // if they don't we'll get out of order behaviour
+    // if they don't we will get out of order behaviour
     boost::thread_group threads;
     for (int i = 0; i < 5; ++i) {
         threads.create_thread(boost::bind(&CScheduler::serviceQueue, &scheduler));

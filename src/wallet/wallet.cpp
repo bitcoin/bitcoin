@@ -3643,7 +3643,7 @@ void CWallet::GetKeyBirthTimes(std::map<CTxDestination, int64_t> &mapKeyBirth) c
         }
     }
 
-    // map in which we'll infer heights of other keys
+    // map in which we will infer heights of other keys
     CBlockIndex *pindexMax = chainActive[std::max(0, chainActive.Height() - 144)]; // the tip can be reorganized; use a 144-block safety margin
     std::map<CKeyID, CBlockIndex*> mapKeyFirstBlock;
     for (const CKeyID &keyid : GetKeys()) {

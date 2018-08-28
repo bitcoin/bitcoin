@@ -1534,7 +1534,7 @@ class SegWitTest(BitcoinTestFramework):
         self.update_witness_block_with_transactions(block, [tx])
         test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
 
-        # Now try to spend it. Send it to a P2WSH output, which we'll
+        # Now try to spend it. Send it to a P2WSH output, which we will
         # use in the next test.
         witness_program = CScript([pubkey, CScriptOp(OP_CHECKSIG)])
         witness_hash = sha256(witness_program)
@@ -1559,7 +1559,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # Test 2: P2WSH
         # Try to spend the P2WSH output created in last test.
-        # Send it to a P2SH(P2WSH) output, which we'll use in the next test.
+        # Send it to a P2SH(P2WSH) output, which we will use in the next test.
         p2sh_witness_hash = hash160(script_wsh)
         script_p2sh = CScript([OP_HASH160, p2sh_witness_hash, OP_EQUAL])
         script_sig = CScript([script_wsh])

@@ -916,7 +916,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         // flags to cache our script execution flags. This is, of course,
         // useless if the next block has different script flags from the
         // previous one, but because the cache tracks script flags for us it
-        // will auto-invalidate and we'll just have a few blocks of extra
+        // will auto-invalidate and we will just have a few blocks of extra
         // misses on soft-fork activation.
         //
         // This is also useful in case of bugs in the standard flags that cause
@@ -4195,7 +4195,7 @@ bool CChainState::RewindBlockIndex(const CChainParams& params)
     }
 
     // Reduce validity flag and have-data flags.
-    // We do this after actual disconnecting, otherwise we'll end up writing the lack of data
+    // We do this after actual disconnecting, otherwise we will end up writing the lack of data
     // to disk before writing the chainstate, resulting in a failure to continue if interrupted.
     for (const auto& entry : mapBlockIndex) {
         CBlockIndex* pindexIter = entry.second;

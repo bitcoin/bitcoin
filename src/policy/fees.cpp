@@ -261,7 +261,7 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
     unsigned int startbucket = requireGreater ? maxbucketindex : 0;
     int step = requireGreater ? -1 : 1;
 
-    // We'll combine buckets until we have enough samples.
+    // We will combine buckets until we have enough samples.
     // The near and far variables will define the range we've combined
     // The best variables are the last range we saw which still had a high
     // enough confirmation rate to count as success.
@@ -407,7 +407,7 @@ void TxConfirmStats::Read(CAutoFile& filein, int nFileVersion, size_t numBuckets
 {
     // Read data file and do some very basic sanity checking
     // buckets and bucketMap are not updated yet, so don't access them
-    // If there is a read failure, we'll just discard this entire object anyway
+    // If there is a read failure, we will just discard this entire object anyway
     size_t maxConfirms, maxPeriods;
 
     // The current version will store the decay with each individual TxConfirmStats and also keep a scale factor

@@ -512,7 +512,7 @@ static void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vec
     CNodeState *state = State(nodeid);
     assert(state != nullptr);
 
-    // Make sure pindexBestKnownBlock is up to date, we'll need it.
+    // Make sure pindexBestKnownBlock is up to date, we will need it.
     ProcessBlockAvailability(nodeid);
 
     if (state->pindexBestKnownBlock == nullptr || state->pindexBestKnownBlock->nChainWork < chainActive.Tip()->nChainWork || state->pindexBestKnownBlock->nChainWork < nMinimumChainWork) {
@@ -1400,7 +1400,7 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
             hashLastBlock = header.GetHash();
         }
 
-        // If we don't have the last header, then they'll have given us
+        // If we don't have the last header, then they will have given us
         // something new (if these headers are valid).
         if (!LookupBlockIndex(hashLastBlock)) {
             received_new_header = true;

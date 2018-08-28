@@ -2067,7 +2067,7 @@ TEST(DBTest, Randomized) {
       if ((step % 100) == 0) {
         ASSERT_TRUE(CompareIterators(step, &model, db_, NULL, NULL));
         ASSERT_TRUE(CompareIterators(step, &model, db_, model_snap, db_snap));
-        // Save a snapshot from each DB this time that we'll use next
+        // Save a snapshot from each DB this time that we will use next
         // time we compare things, to make sure the current state is
         // preserved with the snapshot
         if (model_snap != NULL) model.ReleaseSnapshot(model_snap);

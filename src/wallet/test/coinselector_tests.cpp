@@ -395,7 +395,7 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
         add_coin(MIN_CHANGE * 5 / 10);
 
         // try making 1 * MIN_CHANGE from the 1.5 * MIN_CHANGE
-        // we'll get change smaller than MIN_CHANGE whatever happens, so can expect MIN_CHANGE exactly
+        // we will get change smaller than MIN_CHANGE whatever happens, so can expect MIN_CHANGE exactly
         BOOST_CHECK( testWallet.SelectCoinsMinConf(MIN_CHANGE, filter_confirmed, GroupCoins(vCoins), setCoinsRet, nValueRet, coin_selection_params, bnb_used));
         BOOST_CHECK_EQUAL(nValueRet, MIN_CHANGE);
 
