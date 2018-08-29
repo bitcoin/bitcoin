@@ -119,7 +119,7 @@ def get_virtual_size(witness_block):
     vsize = int((3 * base_size + total_size + 3) / 4)
     return vsize
 
-def test_transaction_acceptance(rpc, p2p, tx, with_witness, accepted, reason=None):
+def test_transaction_acceptance(node, p2p, tx, with_witness, accepted, reason=None):
     """Send a transaction to the node and check that it's accepted to the mempool
 
     - Submit the transaction over the p2p interface
@@ -129,13 +129,13 @@ def test_transaction_acceptance(rpc, p2p, tx, with_witness, accepted, reason=Non
         tx_message = msg_witness_tx(tx)
     p2p.send_message(tx_message)
     p2p.sync_with_ping()
-    assert_equal(tx.hash in rpc.getrawmempool(), accepted)
+    assert_equal(tx.hash in node.getrawmempool(), accepted)
     if (reason is not None and not accepted):
         # Check the rejection reason as well.
         with mininode_lock:
             assert_equal(p2p.last_message["reject"].reason, reason)
 
-def test_witness_block(rpc, p2p, block, accepted, with_witness=True, reason=None):
+def test_witness_block(node, p2p, block, accepted, with_witness=True, reason=None):
     """Send a block to the node and check that it's accepted
 
     - Submit the block over the p2p interface
@@ -145,7 +145,7 @@ def test_witness_block(rpc, p2p, block, accepted, with_witness=True, reason=None
     else:
         p2p.send_message(msg_block(block))
     p2p.sync_with_ping()
-    assert_equal(rpc.getbestblockhash() == block.hash, accepted)
+    assert_equal(node.getbestblockhash() == block.hash, accepted)
     if (reason is not None and not accepted):
         # Check the rejection reason as well.
         with mininode_lock:
