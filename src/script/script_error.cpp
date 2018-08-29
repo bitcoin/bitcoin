@@ -89,9 +89,9 @@ const char* ScriptErrorString(const ScriptError serror)
         case SCRIPT_ERR_WITNESS_PUBKEYTYPE:
             return "Using non-compressed keys in segwit";
         case SCRIPT_ERR_ILLEGAL_FORKID:
-            return "Illegal use of SIGHASH_FORKID";
+            return "Illegal use of SIGHASH_FORKID_OLD";
         case SCRIPT_ERR_MUST_USE_FORKID:
-            return "Signature must use SIGHASH_FORKID";
+            return "Signature must use SIGHASH_FORKID_OLD";
         case SCRIPT_ERR_UNKNOWN_ERROR:
         case SCRIPT_ERR_ERROR_COUNT:
         default: break;

@@ -65,7 +65,7 @@ static const unsigned int STANDARD_SCRIPT_VERIFY_FLAGS = MANDATORY_SCRIPT_VERIFY
                                                          SCRIPT_VERIFY_WITNESS |
                                                          SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM |
                                                          SCRIPT_VERIFY_WITNESS_PUBKEYTYPE |
-                                                         SCRIPT_ENABLE_SIGHASH_FORKID;
+                                                         SCRIPT_ENABLE_SIGHASH_FORKID_OLD;
 
 /** For convenience, standard but not mandatory verify flags. */
 static const unsigned int STANDARD_NOT_MANDATORY_VERIFY_FLAGS = STANDARD_SCRIPT_VERIFY_FLAGS & ~MANDATORY_SCRIPT_VERIFY_FLAGS;

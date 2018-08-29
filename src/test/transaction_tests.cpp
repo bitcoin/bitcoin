@@ -53,7 +53,7 @@ static std::map<std::string, unsigned int> mapFlagNames = {
     {std::string("WITNESS"), (unsigned int)SCRIPT_VERIFY_WITNESS},
     {std::string("DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM},
     {std::string("WITNESS_PUBKEYTYPE"), (unsigned int)SCRIPT_VERIFY_WITNESS_PUBKEYTYPE},
-    {std::string("ENABLE_SIGHASH_FORKID"), (unsigned int)SCRIPT_ENABLE_SIGHASH_FORKID},
+    {std::string("ENABLE_SIGHASH_FORKID_OLD"), (unsigned int)SCRIPT_ENABLE_SIGHASH_FORKID_OLD},
 };
 
 unsigned int ParseScriptFlags(std::string strFlags)
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
                 if (mapprevOutValues.count(tx.vin[i].prevout)) {
                     amount = mapprevOutValues[tx.vin[i].prevout];
                 }
-                unsigned int verify_flags = ParseScriptFlags(test[2].get_str()) | SCRIPT_ENABLE_SIGHASH_FORKID;
+                unsigned int verify_flags = ParseScriptFlags(test[2].get_str()) | SCRIPT_ENABLE_SIGHASH_FORKID_OLD;
                 const CScriptWitness *witness = &tx.vin[i].scriptWitness;
                 BOOST_CHECK_MESSAGE(VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout],
                                                  witness, verify_flags, TransactionSignatureChecker(&tx, i, amount, txdata), &err),
@@ -370,7 +370,7 @@ void CreateCreditAndSpend(const CKeyStore& keystore, const CScript& outscript, C
     inputm.vout.resize(1);
     inputm.vout[0].nValue = 1;
     inputm.vout[0].scriptPubKey = CScript();
-    bool ret = SignSignature(keystore, *output, inputm, 0, SIGHASH_ALL | SIGHASH_FORKID);
+    bool ret = SignSignature(keystore, *output, inputm, 0, SIGHASH_ALL | SIGHASH_FORKID_OLD);
     assert(ret == success);
     CDataStream ssin(SER_NETWORK, PROTOCOL_VERSION);
     ssin << inputm;
@@ -426,12 +426,12 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction) {
     CScript scriptPubKey = CScript() << OP_0 << std::vector<unsigned char>(hash.begin(), hash.end());
 
     std::vector<int> sigHashes;
-    sigHashes.push_back(SIGHASH_NONE | SIGHASH_FORKID | SIGHASH_ANYONECANPAY);
-    sigHashes.push_back(SIGHASH_SINGLE | SIGHASH_FORKID | SIGHASH_ANYONECANPAY);
-    sigHashes.push_back(SIGHASH_ALL | SIGHASH_FORKID | SIGHASH_ANYONECANPAY);
-    sigHashes.push_back(SIGHASH_NONE | SIGHASH_FORKID);
-    sigHashes.push_back(SIGHASH_SINGLE | SIGHASH_FORKID);
-    sigHashes.push_back(SIGHASH_ALL | SIGHASH_FORKID);
+    sigHashes.push_back(SIGHASH_NONE | SIGHASH_FORKID_OLD | SIGHASH_ANYONECANPAY);
+    sigHashes.push_back(SIGHASH_SINGLE | SIGHASH_FORKID_OLD | SIGHASH_ANYONECANPAY);
+    sigHashes.push_back(SIGHASH_ALL | SIGHASH_FORKID_OLD | SIGHASH_ANYONECANPAY);
+    sigHashes.push_back(SIGHASH_NONE | SIGHASH_FORKID_OLD);
+    sigHashes.push_back(SIGHASH_SINGLE | SIGHASH_FORKID_OLD);
+    sigHashes.push_back(SIGHASH_ALL | SIGHASH_FORKID_OLD);
 
     // create a big transaction of 4500 inputs signed by the same key
     for(uint32_t ij = 0; ij < 4500; ij++) {

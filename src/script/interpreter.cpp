@@ -186,7 +186,7 @@ bool static IsDefinedHashtypeSignature(const valtype &vchSig) {
     if (vchSig.size() == 0) {
         return false;
     }
-    unsigned char nHashType = vchSig[vchSig.size() - 1] & (~(SIGHASH_ANYONECANPAY | SIGHASH_FORKID));
+    unsigned char nHashType = vchSig[vchSig.size() - 1] & (~(SIGHASH_ANYONECANPAY | SIGHASH_FORKID_OLD));
     if (nHashType < SIGHASH_ALL || nHashType > SIGHASH_SINGLE)
         return false;
 
@@ -204,10 +204,10 @@ static uint32_t GetHashType(const valtype &vchSig) {
 static void CleanupScriptCode(CScript &scriptCode,
                               const std::vector<uint8_t> &vchSig,
                               uint32_t flags) {
-    // Drop the signature in scripts when SIGHASH_FORKID is not used.
+    // Drop the signature in scripts when SIGHASH_FORKID_OLD is not used.
     uint32_t nHashType = GetHashType(vchSig);
-    if (!(flags & SCRIPT_ENABLE_SIGHASH_FORKID) ||
-        !(nHashType & SIGHASH_FORKID)) {
+    if (!(flags & SCRIPT_ENABLE_SIGHASH_FORKID_OLD) ||
+        !(nHashType & SIGHASH_FORKID_OLD)) {
         scriptCode.FindAndDelete(CScript(vchSig));
     }
 }
@@ -227,8 +227,8 @@ bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned i
         if (!IsDefinedHashtypeSignature(vchSig)) {
             return set_error(serror, SCRIPT_ERR_SIG_HASHTYPE);
         }
-        bool usesForkId = GetHashType(vchSig) & SIGHASH_FORKID;
-        bool forkIdEnabled = flags & SCRIPT_ENABLE_SIGHASH_FORKID;
+        bool usesForkId = GetHashType(vchSig) & SIGHASH_FORKID_OLD;
+        bool forkIdEnabled = flags & SCRIPT_ENABLE_SIGHASH_FORKID_OLD;
         if (!forkIdEnabled && usesForkId) {
             return set_error(serror, SCRIPT_ERR_ILLEGAL_FORKID);
         }

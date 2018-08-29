@@ -24,7 +24,7 @@ enum
     SIGHASH_ALL = 1,
     SIGHASH_NONE = 2,
     SIGHASH_SINGLE = 3,
-    SIGHASH_FORKID = 0xb8,
+    SIGHASH_FORKID_OLD = 0xb8,
     SIGHASH_ANYONECANPAY = 0x80,
 };
 
@@ -108,9 +108,9 @@ enum
     //
     SCRIPT_VERIFY_WITNESS_PUBKEYTYPE = (1U << 15),
 
-    // Do we accept signature using SIGHASH_FORKID
+    // Do we accept signature using SIGHASH_FORKID_OLD
     //
-    SCRIPT_ENABLE_SIGHASH_FORKID = (1U << 16),
+    SCRIPT_ENABLE_SIGHASH_FORKID_OLD = (1U << 16),
 };
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);
