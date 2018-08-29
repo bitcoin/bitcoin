@@ -91,7 +91,7 @@
     </layout>
    </item>
    <item>
-    <widget class="QFrame" name="frameCoinControl">
+    <widget class="QFrame" name="frameAssetControl">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
        <horstretch>0</horstretch>
@@ -110,7 +110,7 @@
      <property name="frameShadow">
       <enum>QFrame::Sunken</enum>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayoutCoinControl2">
+     <layout class="QVBoxLayout" name="verticalLayoutAssetControl2">
       <property name="spacing">
        <number>0</number>
       </property>
@@ -127,7 +127,7 @@
        <number>6</number>
       </property>
       <item>
-       <layout class="QVBoxLayout" name="verticalLayoutCoinControl" stretch="0,0,0,0,1">
+       <layout class="QVBoxLayout" name="verticalLayoutAssetControl" stretch="0,0,0,0,1">
         <property name="spacing">
          <number>0</number>
         </property>
@@ -138,12 +138,12 @@
          <number>10</number>
         </property>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayoutCoinControl1">
+         <layout class="QHBoxLayout" name="horizontalLayoutAssetControl1">
           <property name="bottomMargin">
            <number>15</number>
           </property>
           <item>
-           <widget class="QLabel" name="labelCoinControlFeatures">
+           <widget class="QLabel" name="labelAssetControlFeatures">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
               <horstretch>0</horstretch>
@@ -160,14 +160,14 @@
              <string notr="true">font-weight:bold;</string>
             </property>
             <property name="text">
-             <string>Coin Control Features</string>
+             <string>Asset Control Features</string>
             </property>
            </widget>
           </item>
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayoutCoinControl2" stretch="0,0,0,0">
+         <layout class="QHBoxLayout" name="horizontalLayoutAssetControl2" stretch="0,0,0,0">
           <property name="spacing">
            <number>8</number>
           </property>
@@ -175,7 +175,7 @@
            <number>10</number>
           </property>
           <item>
-           <widget class="QPushButton" name="pushButtonCoinControl">
+           <widget class="QPushButton" name="pushButtonAssetControl">
             <property name="styleSheet">
              <string notr="true"/>
             </property>
@@ -188,7 +188,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="labelCoinControlAutomaticallySelected">
+           <widget class="QLabel" name="labelAssetControlAutomaticallySelected">
             <property name="text">
              <string>automatically selected</string>
             </property>
@@ -198,7 +198,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="labelCoinControlInsuffFunds">
+           <widget class="QLabel" name="labelAssetControlInsuffFunds">
             <property name="font">
              <font>
               <weight>75</weight>
@@ -217,7 +217,7 @@
            </widget>
           </item>
           <item>
-           <spacer name="horizontalSpacerCoinControl">
+           <spacer name="horizontalSpacerAssetControl">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
@@ -232,7 +232,7 @@
          </layout>
         </item>
         <item>
-         <widget class="QWidget" name="widgetCoinControl" native="true">
+         <widget class="QWidget" name="widgetAssetControl" native="true">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
             <horstretch>0</horstretch>
@@ -248,7 +248,7 @@
           <property name="styleSheet">
            <string notr="true"/>
           </property>
-          <layout class="QHBoxLayout" name="horizontalLayoutCoinControl5">
+          <layout class="QHBoxLayout" name="horizontalLayoutAssetControl5">
            <property name="leftMargin">
             <number>0</number>
            </property>
@@ -262,7 +262,7 @@
             <number>0</number>
            </property>
            <item>
-            <layout class="QHBoxLayout" name="horizontalLayoutCoinControl3" stretch="0,0,0,1">
+            <layout class="QHBoxLayout" name="horizontalLayoutAssetControl3" stretch="0,0,0,1">
              <property name="spacing">
               <number>20</number>
              </property>
@@ -273,7 +273,7 @@
               <number>10</number>
              </property>
              <item>
-              <layout class="QFormLayout" name="formLayoutCoinControl1">
+              <layout class="QFormLayout" name="formLayoutAssetControl1">
                <property name="horizontalSpacing">
                 <number>10</number>
                </property>
@@ -290,7 +290,7 @@
                 <number>6</number>
                </property>
                <item row="0" column="0">
-                <widget class="QLabel" name="labelCoinControlQuantityText">
+                <widget class="QLabel" name="labelAssetControlQuantityText">
                  <property name="font">
                   <font>
                    <weight>75</weight>
@@ -306,7 +306,7 @@
                 </widget>
                </item>
                <item row="0" column="1">
-                <widget class="QLabel" name="labelCoinControlQuantity">
+                <widget class="QLabel" name="labelAssetControlQuantity">
                  <property name="cursor">
                   <cursorShape>IBeamCursor</cursorShape>
                  </property>
@@ -325,7 +325,7 @@
                 </widget>
                </item>
                <item row="1" column="0">
-                <widget class="QLabel" name="labelCoinControlBytesText">
+                <widget class="QLabel" name="labelAssetControlBytesText">
                  <property name="font">
                   <font>
                    <weight>75</weight>
@@ -338,7 +338,7 @@
                 </widget>
                </item>
                <item row="1" column="1">
-                <widget class="QLabel" name="labelCoinControlBytes">
+                <widget class="QLabel" name="labelAssetControlBytes">
                  <property name="cursor">
                   <cursorShape>IBeamCursor</cursorShape>
                  </property>
@@ -356,7 +356,7 @@
               </layout>
              </item>
              <item>
-              <layout class="QFormLayout" name="formLayoutCoinControl2">
+              <layout class="QFormLayout" name="formLayoutAssetControl2">
                <property name="horizontalSpacing">
                 <number>10</number>
                </property>
@@ -373,7 +373,7 @@
                 <number>6</number>
                </property>
                <item row="0" column="0">
-                <widget class="QLabel" name="labelCoinControlAmountText">
+                <widget class="QLabel" name="labelAssetControlAmountText">
                  <property name="font">
                   <font>
                    <weight>75</weight>
@@ -389,7 +389,7 @@
                 </widget>
                </item>
                <item row="0" column="1">
-                <widget class="QLabel" name="labelCoinControlAmount">
+                <widget class="QLabel" name="labelAssetControlAmount">
                  <property name="cursor">
                   <cursorShape>IBeamCursor</cursorShape>
                  </property>
@@ -405,7 +405,7 @@
                 </widget>
                </item>
                <item row="1" column="0">
-                <widget class="QLabel" name="labelCoinControlLowOutputText">
+                <widget class="QLabel" name="labelAssetControlLowOutputText">
                  <property name="font">
                   <font>
                    <weight>75</weight>
@@ -418,7 +418,7 @@
                 </widget>
                </item>
                <item row="1" column="1">
-                <widget class="QLabel" name="labelCoinControlLowOutput">
+                <widget class="QLabel" name="labelAssetControlLowOutput">
                  <property name="cursor">
                   <cursorShape>IBeamCursor</cursorShape>
                  </property>
@@ -436,7 +436,7 @@
               </layout>
              </item>
              <item>
-              <layout class="QFormLayout" name="formLayoutCoinControl3">
+              <layout class="QFormLayout" name="formLayoutAssetControl3">
                <property name="horizontalSpacing">
                 <number>10</number>
                </property>
@@ -453,7 +453,7 @@
                 <number>6</number>
                </property>
                <item row="0" column="0">
-                <widget class="QLabel" name="labelCoinControlFeeText">
+                <widget class="QLabel" name="labelAssetControlFeeText">
                  <property name="font">
                   <font>
                    <weight>75</weight>
@@ -469,7 +469,7 @@
                 </widget>
                </item>
                <item row="0" column="1">
-                <widget class="QLabel" name="labelCoinControlFee">
+                <widget class="QLabel" name="labelAssetControlFee">
                  <property name="cursor">
                   <cursorShape>IBeamCursor</cursorShape>
                  </property>
@@ -487,7 +487,7 @@
               </layout>
              </item>
              <item>
-              <layout class="QFormLayout" name="formLayoutCoinControl4">
+              <layout class="QFormLayout" name="formLayoutAssetControl4">
                <property name="horizontalSpacing">
                 <number>10</number>
                </property>
@@ -504,7 +504,7 @@
                 <number>6</number>
                </property>
                <item row="0" column="0">
-                <widget class="QLabel" name="labelCoinControlAfterFeeText">
+                <widget class="QLabel" name="labelAssetControlAfterFeeText">
                  <property name="font">
                   <font>
                    <weight>75</weight>
@@ -520,7 +520,7 @@
                 </widget>
                </item>
                <item row="0" column="1">
-                <widget class="QLabel" name="labelCoinControlAfterFee">
+                <widget class="QLabel" name="labelAssetControlAfterFee">
                  <property name="cursor">
                   <cursorShape>IBeamCursor</cursorShape>
                  </property>
@@ -536,7 +536,7 @@
                 </widget>
                </item>
                <item row="1" column="0">
-                <widget class="QLabel" name="labelCoinControlChangeText">
+                <widget class="QLabel" name="labelAssetControlChangeText">
                  <property name="font">
                   <font>
                    <weight>75</weight>
@@ -549,7 +549,7 @@
                 </widget>
                </item>
                <item row="1" column="1">
-                <widget class="QLabel" name="labelCoinControlChange">
+                <widget class="QLabel" name="labelAssetControlChange">
                  <property name="cursor">
                   <cursorShape>IBeamCursor</cursorShape>
                  </property>
@@ -572,7 +572,7 @@
          </widget>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayoutCoinControl4" stretch="0,0,0">
+         <layout class="QHBoxLayout" name="horizontalLayoutAssetControl4" stretch="0,0,0">
           <property name="spacing">
            <number>12</number>
           </property>
@@ -586,7 +586,7 @@
            <number>5</number>
           </property>
           <item>
-           <widget class="QCheckBox" name="checkBoxCoinControlChange">
+           <widget class="QCheckBox" name="checkBoxAssetControlChange">
             <property name="toolTip">
              <string>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</string>
             </property>
@@ -596,7 +596,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QValidatedLineEdit" name="lineEditCoinControlChange">
+           <widget class="QValidatedLineEdit" name="lineEditAssetControlChange">
             <property name="enabled">
              <bool>false</bool>
             </property>
@@ -609,7 +609,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="labelCoinControlChangeLabel">
+           <widget class="QLabel" name="labelAssetControlChangeLabel">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
               <horstretch>0</horstretch>
@@ -633,7 +633,7 @@
          </layout>
         </item>
         <item>
-         <spacer name="verticalSpacerCoinControl">
+         <spacer name="verticalSpacerAssetControl">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
           </property>

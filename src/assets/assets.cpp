@@ -266,7 +266,7 @@ bool CNewAsset::IsValid(std::string& strError, CAssetsCache& assetCache, bool fC
     }
 
     if (nAmount > MAX_MONEY) {
-        strError = "Invalid parameter: asset amount greater than max money: " + MAX_MONEY / COIN;
+        strError = "Invalid parameter: asset amount greater than max money: " + std::to_string(MAX_MONEY / COIN);
         return false;
     }
 
@@ -2113,7 +2113,15 @@ void GetAssetData(const CScript& script, CAssetOutputEntry& data)
     }
 }
 
-void GetAllOwnedAssets(CWallet* pwallet, std::vector<std::string>& names)
+void GetAllAdministrativeAssets(CWallet *pwallet, std::vector<std::string> &names)
+{
+    if(!pwallet)
+        return;
+
+    GetAllMyAssets(pwallet, names, true, true);
+}
+
+void GetAllMyAssets(CWallet* pwallet, std::vector<std::string>& names, bool fIncludeAdministrator, bool fOnlyAdministrator)
 {
     if(!pwallet)
         return;
@@ -2122,16 +2130,27 @@ void GetAllOwnedAssets(CWallet* pwallet, std::vector<std::string>& names)
     pwallet->AvailableAssets(mapAssets);
 
     for (auto item : mapAssets) {
-        if (IsAssetNameAnOwner(item.first))
+        bool isOwner = IsAssetNameAnOwner(item.first);
+
+        if (isOwner) {
+            if (fOnlyAdministrator || fIncludeAdministrator)
+                names.emplace_back(item.first);
+        } else {
+            if (fOnlyAdministrator)
+                continue;
             names.emplace_back(item.first);
+        }
     }
 }
 
-void GetAllMyAssets(std::vector<std::string>& names)
+void GetAllMyAssetsFromCache(std::vector<std::string>& names)
 {
-    for (auto owned : passets->mapMyUnspentAssets) {
+    if (!passets)
+        return;
+
+    for (auto owned : passets->mapMyUnspentAssets)
         names.emplace_back(owned.first);
-    }
+
 }
 
 CAmount GetIssueAssetBurnAmount()
@@ -2550,7 +2569,7 @@ bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& reissu
     return true;
 }
 
-bool CreateTransferAssetTransaction(CWallet* pwallet, const std::vector< std::pair<CAssetTransfer, std::string> >vTransfers, const std::string& changeAddress, std::pair<int, std::string>& error, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRequired)
+bool CreateTransferAssetTransaction(CWallet* pwallet, const CCoinControl& coinControl, const std::vector< std::pair<CAssetTransfer, std::string> >vTransfers, const std::string& changeAddress, std::pair<int, std::string>& error, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRequired)
 {
     // Initialize Values for transaction
     std::string strTxError;
@@ -2610,10 +2629,8 @@ bool CreateTransferAssetTransaction(CWallet* pwallet, const std::vector< std::pa
         vecSend.push_back(recipient);
     }
 
-    CCoinControl coin_control;
-
     // Create and send the transaction
-    if (!pwallet->CreateTransactionWithTransferAsset(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strTxError, coin_control)) {
+    if (!pwallet->CreateTransactionWithTransferAsset(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strTxError, coinControl)) {
         if (!fSubtractFeeFromAmount && nFeeRequired > curBalance) {
             error = std::make_pair(RPC_WALLET_ERROR, strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired)));
             return false;

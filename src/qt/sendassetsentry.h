@@ -39,6 +39,9 @@ public:
 
     void setValue(const SendAssetsRecipient &value);
     void setAddress(const QString &address);
+    void CheckOwnerBox();
+    void IsAssetControl(bool fIsAssetControl, bool fIsOwner);
+    void setCurrentIndex(int index);
 
     /** Set up the tab chain manually, as Qt messes up the tab chain by default in some cases
      *  (issue https://bugreports.qt-project.org/browse/QTBUG-10907).
@@ -46,6 +49,9 @@ public:
     QWidget *setupTabChain(QWidget *prev);
 
     void setFocus();
+
+    bool fUsingAssetControl;
+
 
 public Q_SLOTS:
     void clear();

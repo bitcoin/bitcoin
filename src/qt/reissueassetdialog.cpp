@@ -59,6 +59,9 @@ ReissueAssetDialog::~ReissueAssetDialog()
 /** Helper Methods */
 void ReissueAssetDialog::setUpValues()
 {
+    if (!model)
+        return;
+
     ui->reissuableBox->setCheckState(Qt::CheckState::Checked);
     ui->ipfsText->hide();
     ui->ipfsHashLabel->hide();
@@ -71,7 +74,7 @@ void ReissueAssetDialog::setUpValues()
 
     LOCK(cs_main);
     std::vector<std::string> assets;
-    GetAllOwnedAssets(model->getWallet(), assets);
+    GetAllAdministrativeAssets(model->getWallet(), assets);
 
     ui->comboBox->addItem("Select an asset");
 
@@ -345,6 +348,9 @@ void ReissueAssetDialog::onAddressNameChanged(QString address)
 
 void ReissueAssetDialog::onReissueAssetClicked()
 {
+    if (!model)
+        return;
+
     QString address;
     if (ui->addressText->text().isEmpty()) {
         address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, "", "");
@@ -366,7 +372,6 @@ void ReissueAssetDialog::onReissueAssetClicked()
         ipfsDecoded = DecodeIPFS(ui->ipfsText->text().toStdString());
 
     CReissueAsset reissueAsset(name.toStdString(), quantity, reissuable ? 1 : 0, ipfsDecoded);
-
 
     CWalletTx tx;
     CReserveKey reservekey(model->getWallet());

@@ -714,8 +714,10 @@ UniValue transfer(const JSONRPCRequest& request)
     CWalletTx transaction;
     CAmount nRequiredFee;
 
+    CCoinControl ctrl;
+
     // Create the Transaction
-    if (!CreateTransferAssetTransaction(pwallet, vTransfers, "", error, transaction, reservekey, nRequiredFee))
+    if (!CreateTransferAssetTransaction(pwallet, ctrl, vTransfers, "", error, transaction, reservekey, nRequiredFee))
         throw JSONRPCError(error.first, error.second);
 
     // Send the Transaction to the network

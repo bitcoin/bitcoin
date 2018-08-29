@@ -84,7 +84,7 @@ void CreateAssetDialog::setUpValues()
     // Setup the asset list
     ui->assetList->hide();
     std::vector<std::string> names;
-    GetAllOwnedAssets(model->getWallet(), names);
+    GetAllAdministrativeAssets(model->getWallet(), names);
     for (auto item : names) {
         std::string name = QString::fromStdString(item).split("!").first().toStdString();
         if (name.size() != 30)
@@ -539,6 +539,7 @@ QString CreateAssetDialog::GetAssetName()
         return ui->assetList->currentText() + "/" + ui->nameText->text();
     else if (type == ISSUE_UNIQUE)
         return ui->assetList->currentText() + "#" + ui->nameText->text();
+    return "";
 }
 
 void CreateAssetDialog::UpdateAssetNameMaxSize()

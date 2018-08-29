@@ -125,6 +125,11 @@ QString RavenUnits::formatWithUnit(int unit, const CAmount& amount, bool plussig
     return format(unit, amount, plussign, separators) + QString(" ") + name(unit);
 }
 
+QString RavenUnits::formatWithCustomName(QString customName, const CAmount& amount, bool plussign, SeparatorStyle separators)
+{
+    return format(RVN, amount, plussign, separators) + QString(" ") + customName;
+}
+
 QString RavenUnits::formatHtmlWithUnit(int unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
 {
     QString str(formatWithUnit(unit, amount, plussign, separators));

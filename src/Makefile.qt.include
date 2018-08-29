@@ -98,6 +98,7 @@ QT_TS = \
 QT_FORMS_UI = \
   qt/forms/addressbookpage.ui \
   qt/forms/askpassphrasedialog.ui \
+  qt/forms/assetcontroldialog.ui \
   qt/forms/coincontroldialog.ui \
   qt/forms/editaddressdialog.ui \
   qt/forms/helpmessagedialog.ui \
@@ -122,6 +123,8 @@ QT_MOC_CPP = \
   qt/moc_addressbookpage.cpp \
   qt/moc_addresstablemodel.cpp \
   qt/moc_askpassphrasedialog.cpp \
+  qt/moc_assetcontroldialog.cpp \
+  qt/moc_assetcontroltreewidget.cpp \
   qt/moc_bantablemodel.cpp \
   qt/moc_ravenaddressvalidator.cpp \
   qt/moc_ravenamountfield.cpp \
@@ -196,6 +199,8 @@ RAVEN_QT_H = \
   qt/addressbookpage.h \
   qt/addresstablemodel.h \
   qt/askpassphrasedialog.h \
+  qt/assetcontroldialog.h \
+  qt/assetcontroltreewidget.h \
   qt/assetsdialog.h \
   qt/createassetdialog.h \
   qt/bantablemodel.h \
@@ -343,6 +348,8 @@ RAVEN_QT_WALLET_CPP = \
   qt/addressbookpage.cpp \
   qt/addresstablemodel.cpp \
   qt/askpassphrasedialog.cpp \
+  qt/assetcontroldialog.cpp \
+  qt/assetcontroltreewidget.cpp \
   qt/assetsdialog.cpp \
   qt/createassetdialog.cpp \
   qt/coincontroldialog.cpp \
