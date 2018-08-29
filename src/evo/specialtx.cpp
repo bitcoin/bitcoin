@@ -12,14 +12,14 @@
 
 #include "specialtx.h"
 
-bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValidationState& state)
+bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {
     AssertLockHeld(cs_main);
 
     if (tx.nVersion < 3 || tx.nType == TRANSACTION_NORMAL)
         return true;
 
-    if (pindex && VersionBitsState(pindex->pprev, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0003, versionbitscache) != THRESHOLD_ACTIVE) {
+    if (pindexPrev && VersionBitsState(pindexPrev, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0003, versionbitscache) != THRESHOLD_ACTIVE) {
         return state.DoS(10, false, REJECT_INVALID, "bad-tx-type");
     }
 
@@ -55,7 +55,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
 {
     for (int i = 0; i < (int)block.vtx.size(); i++) {
         const CTransaction& tx = *block.vtx[i];
-        if (!CheckSpecialTx(tx, pindex, state))
+        if (!CheckSpecialTx(tx, pindex->pprev, state))
             return false;
         if (!ProcessSpecialTx(tx, pindex, state))
             return false;

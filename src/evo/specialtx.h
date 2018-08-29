@@ -13,7 +13,7 @@ class CBlock;
 class CBlockIndex;
 class CValidationState;
 
-bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValidationState& state);
+bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
 bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& state);
 bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex);
 
