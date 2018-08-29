@@ -36,7 +36,7 @@ static std::shared_ptr<CBlock> PrepareBlock(const CScript& coinbase_scriptPubKey
 }
 
 
-static CTxIn MineBlock(const CScript& coinbase_scriptPubKey)
+static std::shared_ptr<CBlock> MineBlock(const CScript& coinbase_scriptPubKey)
 {
     auto block = PrepareBlock(coinbase_scriptPubKey);
 
@@ -48,7 +48,7 @@ static CTxIn MineBlock(const CScript& coinbase_scriptPubKey)
     bool processed{ProcessNewBlock(Params(), block, true, nullptr)};
     assert(processed);
 
-    return CTxIn{block->vtx[0]->GetHash(), 0};
+    return block;
 }
 
 
@@ -72,10 +72,12 @@ static void AssembleBlock(benchmark::State& state)
     boost::thread_group thread_group;
     CScheduler scheduler;
     {
+        LOCK(cs_main);
         ::pblocktree.reset(new CBlockTreeDB(1 << 20, true));
         ::pcoinsdbview.reset(new CCoinsViewDB(1 << 23, true));
         ::pcoinsTip.reset(new CCoinsViewCache(pcoinsdbview.get()));
-
+    }
+    {
         const CChainParams& chainparams = Params();
         thread_group.create_thread(boost::bind(&CScheduler::serviceQueue, &scheduler));
         GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
@@ -89,10 +91,12 @@ static void AssembleBlock(benchmark::State& state)
 
     // Collect some loose transactions that spend the coinbases of our mined blocks
     constexpr size_t NUM_BLOCKS{200};
+    std::array<std::shared_ptr<CBlock>, NUM_BLOCKS> blocks;
     std::array<CTransactionRef, NUM_BLOCKS - COINBASE_MATURITY + 1> txs;
     for (size_t b{0}; b < NUM_BLOCKS; ++b) {
         CMutableTransaction tx;
-        tx.vin.push_back(MineBlock(SCRIPT_PUB));
+        blocks.at(b) = MineBlock(SCRIPT_PUB);
+        tx.vin.emplace_back(blocks.at(b)->vtx[0]->GetHash(), 0);
         tx.vin.back().scriptWitness = witness;
         tx.vout.emplace_back(1337, SCRIPT_PUB);
         if (NUM_BLOCKS - b >= COINBASE_MATURITY)
