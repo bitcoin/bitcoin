@@ -751,14 +751,17 @@ private:
  * signrawtransactionwithkey and signrawtransactionwithwallet,
  * as long as the conflicting transaction is not yet confirmed.
  */
-class CCoinsViewMemPool : public CCoinsViewBacked
+template <class P>
+class CoinsViewMemPool : public CCoinsViewBacked
 {
 protected:
-    const CTxMemPool& mempool;
+    const P& m_tx_pool;
 
 public:
-    CCoinsViewMemPool(CCoinsView* baseIn, const CTxMemPool& mempoolIn);
-    bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
+    CoinsViewMemPool(CCoinsView* baseIn, const P& mempoolIn)
+        : CCoinsViewBacked(baseIn), m_tx_pool(mempoolIn) {}
+
+    bool GetCoin(const COutPoint& outpoint, Coin& coin) const override EXCLUSIVE_LOCKS_REQUIRED(m_tx_pool.cs);
 };
 
 /**

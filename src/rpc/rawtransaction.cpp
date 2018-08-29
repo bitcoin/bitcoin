@@ -633,7 +633,7 @@ static UniValue combinerawtransaction(const JSONRPCRequest& request)
         LOCK(cs_main);
         LOCK(mempool.cs);
         CCoinsViewCache &viewChain = *pcoinsTip;
-        CCoinsViewMemPool viewMempool(&viewChain, mempool);
+        CoinsViewMemPool<CTxMemPool> viewMempool(&viewChain, mempool);
         view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
 
         for (const CTxIn& txin : mergedTx.vin) {
@@ -1495,7 +1495,7 @@ UniValue utxoupdatepsbt(const JSONRPCRequest& request)
     {
         LOCK2(cs_main, mempool.cs);
         CCoinsViewCache &viewChain = *pcoinsTip;
-        CCoinsViewMemPool viewMempool(&viewChain, mempool);
+        CoinsViewMemPool<CTxMemPool> viewMempool(&viewChain, mempool);
         view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
 
         for (const CTxIn& txin : psbtx.tx->vin) {

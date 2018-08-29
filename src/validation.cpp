@@ -255,7 +255,7 @@ bool CheckSequenceLocks(const CTxMemPool& pool, const CTransaction& tx, int flag
     }
     else {
         // pcoinsTip contains the UTXO set for ::ChainActive().Tip()
-        CCoinsViewMemPool viewMemPool(pcoinsTip.get(), pool);
+        CoinsViewMemPool<CTxMemPool> viewMemPool(pcoinsTip.get(), pool);
         std::vector<int> prevheights;
         prevheights.resize(tx.vin.size());
         for (size_t txinIndex = 0; txinIndex < tx.vin.size(); txinIndex++) {
@@ -508,7 +508,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         CCoinsViewCache view(&dummy);
 
         LockPoints lp;
-        CCoinsViewMemPool viewMemPool(pcoinsTip.get(), pool);
+        CoinsViewMemPool<CTxMemPool> viewMemPool(pcoinsTip.get(), pool);
         view.SetBackend(viewMemPool);
 
         // do all inputs exist?

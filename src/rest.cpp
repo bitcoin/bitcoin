@@ -504,7 +504,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
             // use db+mempool as cache backend in case user likes to query mempool
             LOCK2(cs_main, mempool.cs);
             CCoinsViewCache& viewChain = *pcoinsTip;
-            CCoinsViewMemPool viewMempool(&viewChain, mempool);
+            CoinsViewMemPool<CTxMemPool> viewMempool(&viewChain, mempool);
             process_utxos(viewMempool, mempool);
         } else {
             LOCK(cs_main);  // no need to lock mempool!
