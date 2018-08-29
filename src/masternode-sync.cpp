@@ -186,8 +186,10 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
         {
             if (nRequestedMasternodeAssets == MASTERNODE_SYNC_WAITING) {
                 connman.PushMessage(pnode, msgMaker.Make(NetMsgType::GETSPORKS)); //get current network sporks
+                SwitchToNextAsset(connman);
             } else if (nRequestedMasternodeAssets == MASTERNODE_SYNC_LIST) {
                 mnodeman.DsegUpdate(pnode, connman);
+                SwitchToNextAsset(connman);
             } else if (nRequestedMasternodeAssets == MASTERNODE_SYNC_MNW) {
                 //sync payment votes
                 if(pnode->nVersion == 70208) {
@@ -195,10 +197,11 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
                 } else {
                     connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MASTERNODEPAYMENTSYNC)); //sync payment votes
                 }
+                SwitchToNextAsset(connman);
             } else if (nRequestedMasternodeAssets == MASTERNODE_SYNC_GOVERNANCE) {
                 SendGovernanceSyncRequest(pnode, connman);
+                SwitchToNextAsset(connman);
             }
-            SwitchToNextAsset(connman);
             connman.ReleaseNodeVector(vNodesCopy);
             return;
         }
