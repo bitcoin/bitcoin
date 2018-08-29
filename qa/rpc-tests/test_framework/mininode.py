@@ -357,33 +357,44 @@ class CTransaction(object):
     def __init__(self, tx=None):
         if tx is None:
             self.nVersion = 1
+            self.nType = 0
             self.vin = []
             self.vout = []
             self.nLockTime = 0
+            self.vExtraPayload = None
             self.sha256 = None
             self.hash = None
         else:
             self.nVersion = tx.nVersion
+            self.nType = tx.nType
             self.vin = copy.deepcopy(tx.vin)
             self.vout = copy.deepcopy(tx.vout)
             self.nLockTime = tx.nLockTime
+            self.vExtraPayload = tx.vExtraPayload
             self.sha256 = tx.sha256
             self.hash = tx.hash
 
     def deserialize(self, f):
-        self.nVersion = struct.unpack("<i", f.read(4))[0]
+        ver32bit = struct.unpack("<i", f.read(4))[0]
+        self.nVersion = ver32bit & 0xffff
+        self.nType = (ver32bit >> 16) & 0xffff
         self.vin = deser_vector(f, CTxIn)
         self.vout = deser_vector(f, CTxOut)
         self.nLockTime = struct.unpack("<I", f.read(4))[0]
+        if self.nType != 0:
+            self.vExtraPayload = deser_string(f)
         self.sha256 = None
         self.hash = None
 
     def serialize(self):
         r = b""
-        r += struct.pack("<i", self.nVersion)
+        ver32bit = int(self.nVersion | (self.nType << 16))
+        r += struct.pack("<i", ver32bit)
         r += ser_vector(self.vin)
         r += ser_vector(self.vout)
         r += struct.pack("<I", self.nLockTime)
+        if self.nType != 0:
+            r += ser_string(self.vExtraPayload)
         return r
 
     def rehash(self):

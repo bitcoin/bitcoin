@@ -11,6 +11,11 @@
 #include "serialize.h"
 #include "uint256.h"
 
+/** Transaction types */
+enum {
+    TRANSACTION_NORMAL = 0,
+};
+
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
 {
@@ -215,17 +220,19 @@ public:
     // adapting relay policy by bumping MAX_STANDARD_VERSION, and then later date
     // bumping the default CURRENT_VERSION at which point both CURRENT_VERSION and
     // MAX_STANDARD_VERSION will be equal.
-    static const int32_t MAX_STANDARD_VERSION=2;
+    static const int32_t MAX_STANDARD_VERSION=3;
 
     // The local variables are made const to prevent unintended modification
     // without updating the cached hash value. However, CTransaction is not
     // actually immutable; deserialization and assignment are implemented,
     // and bypass the constness. This is safe, as they update the entire
     // structure, including the hash.
-    const int32_t nVersion;
+    const int16_t nVersion;
+    const int16_t nType;
     const std::vector<CTxIn> vin;
     const std::vector<CTxOut> vout;
     const uint32_t nLockTime;
+    const std::vector<uint8_t> vExtraPayload; // only available for special transaction types
 
 private:
     /** Memory only. */
@@ -243,10 +250,13 @@ public:
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {
-        s << this->nVersion;
+        int32_t n32bitVersion = this->nVersion | (this->nType << 16);
+        s << n32bitVersion;
         s << vin;
         s << vout;
         s << nLockTime;
+        if (this->nVersion >= 3 && this->nType != TRANSACTION_NORMAL)
+            s << vExtraPayload;
     }
 
     /** This deserializing constructor is provided instead of an Unserialize method.
@@ -301,10 +311,12 @@ public:
 /** A mutable version of CTransaction. */
 struct CMutableTransaction
 {
-    int32_t nVersion;
+    int16_t nVersion;
+    int16_t nType;
     std::vector<CTxIn> vin;
     std::vector<CTxOut> vout;
     uint32_t nLockTime;
+    std::vector<uint8_t> vExtraPayload; // only available for special transaction types
 
     CMutableTransaction();
     CMutableTransaction(const CTransaction& tx);
@@ -313,10 +325,18 @@ struct CMutableTransaction
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(this->nVersion);
+        int32_t n32bitVersion = this->nVersion | (this->nType << 16);
+        READWRITE(n32bitVersion);
+        if (ser_action.ForRead()) {
+            this->nVersion = (int16_t) (n32bitVersion & 0xffff);
+            this->nType = (int16_t) ((n32bitVersion >> 16) & 0xffff);
+        }
         READWRITE(vin);
         READWRITE(vout);
         READWRITE(nLockTime);
+        if (this->nVersion >= 3 && this->nType != TRANSACTION_NORMAL) {
+            READWRITE(vExtraPayload);
+        }
     }
 
     template <typename Stream>
