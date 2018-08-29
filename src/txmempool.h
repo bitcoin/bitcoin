@@ -542,12 +542,12 @@ private:
     typedef std::map<txiter, TxLinks, CompareIteratorByHash> txlinksMap;
     txlinksMap mapLinks;
 
-    void UpdateParent(txiter entry, txiter parent, bool add);
-    void UpdateChild(txiter entry, txiter child, bool add);
-
     std::vector<indexed_transaction_set::const_iterator> GetSortedDepthAndScore() const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
 public:
+    void UpdateParent(txiter entry, txiter parent, bool add);
+    void UpdateChild(txiter entry, txiter child, bool add);
+
     indirectmap<COutPoint, const CTransaction*> mapNextTx GUARDED_BY(cs);
     std::map<uint256, CAmount> mapDeltas;
 
@@ -572,7 +572,7 @@ public:
     // and any other callers may break wallet's in-mempool tracking (due to
     // lack of CValidationInterface::TransactionAddedToMempool callbacks).
     void addUnchecked(const CTxMemPoolEntry& entry, bool validFeeEstimate = true) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
-    void addUnchecked(const CTxMemPoolEntry& entry, setEntries& setAncestors, bool validFeeEstimate = true) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
+    void addUnchecked(const CTxMemPoolEntry& entry, const setEntries& setAncestors, bool validFeeEstimate = true) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
 
     void removeRecursive(const CTransaction& tx, MemPoolRemovalReason reason = MemPoolRemovalReason::UNKNOWN) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeForReorg(const CCoinsViewCache* pcoins, unsigned int nMemPoolHeight, int flags) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
@@ -691,16 +691,26 @@ public:
         return (mapTx.count(hash) != 0);
     }
 
+    template <typename UpdateStruct>
+    void Modify(txiter it, const UpdateStruct& update_object) EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    void InsertLinks(txiter newit) EXCLUSIVE_LOCKS_REQUIRED(cs) { mapLinks.emplace(newit, TxLinks{}); }
+    void EraseLinks(txiter it) EXCLUSIVE_LOCKS_REQUIRED(cs) { mapLinks.erase(it); }
+    void InsertNextTx(const std::pair<const COutPoint*, const CTransaction*>& next_tx) EXCLUSIVE_LOCKS_REQUIRED(cs) { mapNextTx.insert(next_tx); }
+    void EraseNextTx(const COutPoint& out) EXCLUSIVE_LOCKS_REQUIRED(cs) { mapNextTx.erase(out); }
+
+    std::pair<txiter, bool> Insert(const CTxMemPoolEntry& entry) EXCLUSIVE_LOCKS_REQUIRED(cs) { return mapTx.insert(entry); }
+    void EraseTx(txiter it) EXCLUSIVE_LOCKS_REQUIRED(cs) { mapTx.erase(it); }
+
     CTransactionRef get(const uint256& hash) const;
     TxMempoolInfo info(const uint256& hash) const;
     std::vector<TxMempoolInfo> infoAll() const;
 
     size_t DynamicMemoryUsage() const;
 
-    boost::signals2::signal<void (CTransactionRef)> NotifyEntryAdded;
-    boost::signals2::signal<void (CTransactionRef, MemPoolRemovalReason)> NotifyEntryRemoved;
+    boost::signals2::signal<void(CTransactionRef)> NotifyEntryAdded;
+    boost::signals2::signal<void(CTransactionRef, MemPoolRemovalReason)> NotifyEntryRemoved;
 
-private:
     /** UpdateForDescendants is used by UpdateTransactionsFromBlock to update
      *  the descendants for a single transaction that has been added to the
      *  mempool but may have child transactions in the mempool, eg during a
@@ -718,7 +728,7 @@ private:
             cacheMap &cachedDescendants,
             const std::set<uint256> &setExclude) EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** Update ancestors of hash to add/remove it as a descendant transaction. */
-    void UpdateAncestorsOf(bool add, txiter hash, setEntries &setAncestors) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void UpdateAncestorsOf(bool add, txiter hash, const setEntries& setAncestors) EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** Set ancestor state for an entry */
     void UpdateEntryForAncestors(txiter it, const setEntries &setAncestors) EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** For each transaction being removed, update ancestors and any direct children.
