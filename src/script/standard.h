@@ -56,20 +56,20 @@ static const unsigned int MANDATORY_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH;
 
 enum txnouttype
 {
-    TX_NONSTANDARD,
+    TX_NONSTANDARD = 0,
     // 'standard' transaction types:
-    TX_PUBKEY,
-    TX_PUBKEYHASH,
-    TX_SCRIPTHASH,
-    TX_MULTISIG,
-    TX_NULL_DATA, //!< unspendable OP_RETURN script that carries data
-    TX_WITNESS_V0_SCRIPTHASH,
-    TX_WITNESS_V0_KEYHASH,
+    TX_PUBKEY = 1,
+    TX_PUBKEYHASH = 2,
+    TX_SCRIPTHASH = 3,
+    TX_MULTISIG = 4,
+    TX_NULL_DATA = 5, //!< unspendable OP_RETURN script that carries data
+    TX_WITNESS_V0_SCRIPTHASH = 6,
+    TX_WITNESS_V0_KEYHASH = 7,
     /** RVN START */
-    TX_NEW_ASSET,
-    TX_REISSUE_ASSET,
-    TX_TRANSFER_ASSET,
-    TX_RESERVED_ASSET
+    TX_NEW_ASSET = 8,
+    TX_REISSUE_ASSET = 9,
+    TX_TRANSFER_ASSET = 10,
+    TX_RESERVED_ASSET = 11
     /** RVN END */
 };
 

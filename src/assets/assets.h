@@ -308,7 +308,9 @@ CAmount GetReissueAssetBurnAmount();
 CAmount GetIssueSubAssetBurnAmount();
 CAmount GetIssueUniqueAssetBurnAmount();
 CAmount GetBurnAmount(const AssetType type);
+CAmount GetBurnAmount(const int nType);
 std::string GetBurnAddress(const AssetType type);
+std::string GetBurnAddress(const int nType);
 
 bool IsAssetNameValid(const std::string& name);
 bool IsAssetNameValid(const std::string& name, AssetType& assetType);
