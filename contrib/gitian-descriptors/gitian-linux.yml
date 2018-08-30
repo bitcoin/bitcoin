@@ -174,14 +174,10 @@ script: |
     make ${MAKEOPTS}
     make ${MAKEOPTS} -C src check-security
 
-    #TODO: This is a quick hack that disables symbol checking for arm.
-    #      Instead, we should investigate why these are popping up.
-    #      For aarch64, we'll need to bump up the min GLIBC version, as the abi
-    #      support wasn't introduced until 2.17.
     case $i in
-       aarch64-*) : ;;
-       arm-*) : ;;
-       riscv64-*) : ;;
+       aarch64-*) make ${MAKEOPTS} -C src check-symbols BITCOIN_SYMBOL_CHECK_OPTIONS='--allow-library ld-linux-aarch64.so.1 --max-version GLIBC_2.17' ;;
+       arm-*) make ${MAKEOPTS} -C src check-symbols BITCOIN_SYMBOL_CHECK_OPTIONS='--allow-library ld-linux-armhf.so.3' ;;
+       riscv64-*) make ${MAKEOPTS} -C src check-symbols BITCOIN_SYMBOL_CHECK_OPTIONS='--allow-library ld-linux-riscv64-lp64d.so.1 --max-version GLIBC_2.27 --allow-library libatomic.so.1 --max-version LIBATOMIC_1.0 --allow-all-exports' ;;
        *) make ${MAKEOPTS} -C src check-symbols ;;
     esac
 

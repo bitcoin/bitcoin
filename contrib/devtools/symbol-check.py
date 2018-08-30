@@ -11,6 +11,7 @@ Example usage:
 
     find ../gitian-builder/build -type f -executable | xargs python contrib/devtools/symbol-check.py
 '''
+import argparse
 import subprocess
 import re
 import sys
@@ -46,6 +47,8 @@ MAX_VERSIONS = {
 
 # Ignore symbols that are exported as part of every executable
 IGNORE_EXPORTS = {
+    '__bss_start__',
+    '_bss_end__', '__bss_end__', '__end__',
 '_edata', '_end', '_init', '__bss_start', '_fini', '_IO_stdin_used', 'stdin', 'stdout', 'stderr'
 }
 READELF_CMD = os.getenv('READELF', '/usr/bin/readelf')
@@ -100,10 +103,10 @@ def read_symbols(executable, imports=True):
         raise IOError('Could not read symbols for %s: %s' % (executable, stderr.strip()))
     syms = []
     for line in stdout.splitlines():
-        line = line.split()
-        if len(line)>7 and re.match('[0-9]+:$', line[0]):
-            (sym, _, version) = line[7].partition('@')
-            is_import = line[6] == 'UND'
+        m = re.match(r'^\s*\d+:\s*[\da-f]+\s+\d+\s(?:(?:\S+\s+){3})(?:\[.*\]\s+)?(\S+)\s+(\S+).*$', line)
+        if m:
+            (sym, _, version) = m.group(2).partition('@')
+            is_import = (m.group(1) == 'UND')
             if version.startswith('@'):
                 version = version[1:]
             if is_import == imports:
@@ -138,23 +141,62 @@ def read_libraries(filename):
     return libraries
 
 if __name__ == '__main__':
+    ap = argparse.ArgumentParser()
+
+    ap.set_defaults(
+        max_versions=dict(MAX_VERSIONS),
+        allow_exports=set(IGNORE_EXPORTS),
+        allow_libraries=set(ALLOWED_LIBRARIES),
+    )
+
+    class SetVersionAction(argparse.Action):
+        def __call__(self, parser, namespace, value, option_string=None):
+            value = value.partition('_')
+            try:
+                parsed_version = tuple(map(int, value[2].split('.')))
+            except:
+                value = (None, None)  # raise format exception
+            if not value[1]:
+                raise argparse.ArgumentError(self, 'must be in the format %s' % (self.metavar,))
+            getattr(namespace, self.dest)[value[0]] = parsed_version
+    ap.add_argument('--max-version', dest='max_versions', metavar='LIBNAME_VERSION', action=SetVersionAction, help='limit symbol version')
+
+    class AddAction(argparse.Action):
+        def __call__(self, parser, namespace, value, option_string=None):
+            getattr(namespace, self.dest).add(value)
+    class RemoveAction(argparse.Action):
+        def __call__(self, parser, namespace, value, option_string=None):
+            dest_set = getattr(namespace, self.dest)
+            if value in dest_set:
+                dest_set.remove(value)
+
+    ap.add_argument('--allow-export', dest='allow_exports', metavar='SYMBOL', action=AddAction, help='allow SYMBOL to be exported')
+    ap.add_argument('--no-allow-export', dest='allow_exports', metavar='SYMBOL', action=RemoveAction, help='disallow SYMBOL to be exported')
+    ap.add_argument('--allow-all-exports', dest='allow_all_exports', action='store_true', default=False, help='allow anything to be exported')
+    ap.add_argument('--allow-library', dest='allow_libraries', metavar='FILENAME', action=AddAction, help='allow library to be linked')
+    ap.add_argument('--no-allow-library', dest='allow_libraries', metavar='FILENAME', action=RemoveAction, help='disallow library to be linked')
+
+    ap.add_argument('binaries', nargs='+', help='binaries to check')
+    opts = ap.parse_args()
+
     cppfilt = CPPFilt()
     retval = 0
-    for filename in sys.argv[1:]:
+    for filename in opts.binaries:
         # Check imported symbols
         for sym,version in read_symbols(filename, True):
-            if version and not check_version(MAX_VERSIONS, version):
+            if version and not check_version(opts.max_versions, version):
                 print('%s: symbol %s from unsupported version %s' % (filename, cppfilt(sym), version))
                 retval = 1
-        # Check exported symbols
-        for sym,version in read_symbols(filename, False):
-            if sym in IGNORE_EXPORTS:
-                continue
-            print('%s: export of symbol %s not allowed' % (filename, cppfilt(sym)))
-            retval = 1
+        if not opts.allow_all_exports:
+            # Check exported symbols
+            for sym,version in read_symbols(filename, False):
+                if sym in opts.allow_exports:
+                    continue
+                print('%s: export of symbol %s not allowed' % (filename, cppfilt(sym)))
+                retval = 1
         # Check dependency libraries
         for library_name in read_libraries(filename):
-            if library_name not in ALLOWED_LIBRARIES:
+            if library_name not in opts.allow_libraries:
                 print('%s: NEEDED library %s is not allowed' % (filename, library_name))
                 retval = 1
 
