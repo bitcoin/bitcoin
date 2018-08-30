@@ -22,6 +22,7 @@
 #include <httprpc.h>
 #include <interfaces/chain.h>
 #include <index/txindex.h>
+#include <index/runner.h>
 #include <key.h>
 #include <validation.h>
 #include <miner.h>
@@ -184,9 +185,7 @@ void Interrupt()
     InterruptMapPort();
     if (g_connman)
         g_connman->Interrupt();
-    if (g_txindex) {
-        g_txindex->Interrupt();
-    }
+    InterruptIndex(g_txindex.get());
 }
 
 void Shutdown(InitInterfaces& interfaces)
@@ -217,7 +216,7 @@ void Shutdown(InitInterfaces& interfaces)
     // using the other before destroying them.
     if (peerLogic) UnregisterValidationInterface(peerLogic.get());
     if (g_connman) g_connman->Stop();
-    if (g_txindex) g_txindex->Stop();
+    StopIndex(g_txindex.get());
 
     StopTorControl();
 
@@ -1641,7 +1640,7 @@ bool AppInitMain(InitInterfaces& interfaces)
     // ********************************************************* Step 8: start indexers
     if (gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
         g_txindex = MakeUnique<TxIndex>(nTxIndexCache, false, fReindex);
-        g_txindex->Start();
+        StartIndex(g_txindex.get());
     }
 
     // ********************************************************* Step 9: load wallet

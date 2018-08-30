@@ -4,29 +4,15 @@
 
 #include <chainparams.h>
 #include <index/base.h>
-#include <shutdown.h>
-#include <tinyformat.h>
-#include <ui_interface.h>
+#include <index/error.h>
+#include <threadinterrupt.h>
 #include <util/system.h>
 #include <validation.h>
-#include <warnings.h>
 
 constexpr char DB_BEST_BLOCK = 'B';
 
 constexpr int64_t SYNC_LOG_INTERVAL = 30; // seconds
 constexpr int64_t SYNC_LOCATOR_WRITE_INTERVAL = 30; // seconds
-
-template<typename... Args>
-static void FatalError(const char* fmt, const Args&... args)
-{
-    std::string strMessage = tfm::format(fmt, args...);
-    SetMiscWarning(strMessage);
-    LogPrintf("*** %s\n", strMessage);
-    uiInterface.ThreadSafeMessageBox(
-        "Error: A fatal internal error occurred, see debug.log for details",
-        "", CClientUIInterface::MSG_ERROR);
-    StartShutdown();
-}
 
 BaseIndex::DB::DB(const fs::path& path, size_t n_cache_size, bool f_memory, bool f_wipe, bool f_obfuscate) :
     CDBWrapper(path, n_cache_size, f_memory, f_wipe, f_obfuscate)
@@ -44,12 +30,6 @@ bool BaseIndex::DB::ReadBestBlock(CBlockLocator& locator) const
 bool BaseIndex::DB::WriteBestBlock(const CBlockLocator& locator)
 {
     return Write(DB_BEST_BLOCK, locator);
-}
-
-BaseIndex::~BaseIndex()
-{
-    Interrupt();
-    Stop();
 }
 
 bool BaseIndex::Init()
@@ -85,7 +65,7 @@ static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev) EXCLUSIV
     return chainActive.Next(chainActive.FindFork(pindex_prev));
 }
 
-void BaseIndex::ThreadSync()
+void BaseIndex::ThreadSync(CThreadInterrupt* interrupt)
 {
     const CBlockIndex* pindex = m_best_block_index.load();
     if (!m_synced) {
@@ -94,7 +74,7 @@ void BaseIndex::ThreadSync()
         int64_t last_log_time = 0;
         int64_t last_locator_write_time = 0;
         while (true) {
-            if (m_interrupt) {
+            if (interrupt && *interrupt) {
                 WriteBestBlock(pindex);
                 return;
             }
@@ -251,32 +231,4 @@ bool BaseIndex::BlockUntilSyncedToCurrentChain()
     LogPrintf("%s: %s is catching up on block notifications\n", __func__, GetName());
     SyncWithValidationInterfaceQueue();
     return true;
-}
-
-void BaseIndex::Interrupt()
-{
-    m_interrupt();
-}
-
-void BaseIndex::Start()
-{
-    // Need to register this ValidationInterface before running Init(), so that
-    // callbacks are not missed if Init sets m_synced to true.
-    RegisterValidationInterface(this);
-    if (!Init()) {
-        FatalError("%s: %s failed to initialize", __func__, GetName());
-        return;
-    }
-
-    m_thread_sync = std::thread(&TraceThread<std::function<void()>>, GetName(),
-                                std::bind(&BaseIndex::ThreadSync, this));
-}
-
-void BaseIndex::Stop()
-{
-    UnregisterValidationInterface(this);
-
-    if (m_thread_sync.joinable()) {
-        m_thread_sync.join();
-    }
 }

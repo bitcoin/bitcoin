@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
+#include <index/runner.h>
 #include <index/txindex.h>
 #include <script/standard.h>
 #include <test/test_bitcoin.h>
@@ -29,7 +30,7 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
     // BlockUntilSyncedToCurrentChain should return false before txindex is started.
     BOOST_CHECK(!txindex.BlockUntilSyncedToCurrentChain());
 
-    txindex.Start();
+    IndexRunner runner(&txindex);
 
     // Allow tx index to catch up with the block index.
     constexpr int64_t timeout_ms = 10 * 1000;
@@ -68,14 +69,6 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
             BOOST_ERROR("Read incorrect tx");
         }
     }
-
-    // shutdown sequence (c.f. Shutdown() in init.cpp)
-    txindex.Stop();
-
-    threadGroup.interrupt_all();
-    threadGroup.join_all();
-
-    // Rest of shutdown sequence and destructors happen in ~TestingSetup()
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -4,6 +4,7 @@
 
 #include <index/txindex.h>
 #include <shutdown.h>
+#include <txdb.h>
 #include <ui_interface.h>
 #include <util/system.h>
 #include <validation.h>
