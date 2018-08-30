@@ -2713,7 +2713,6 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     nMyStartingHeight(nMyStartingHeightIn)
 {
     addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;
-    filterInventoryKnown.reset();
 
     for (const std::string &msg : getAllNetMessageTypes())
         mapRecvBytesPerMsgCmd[msg] = 0;
