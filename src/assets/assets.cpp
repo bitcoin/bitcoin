@@ -1700,13 +1700,13 @@ bool CheckIssueBurnTx(const CTxOut& txOut, const AssetType& type, const int numb
     CAmount burnAmount = 0;
     std::string burnAddress = "";
 
-    if (type == AssetType::SUB) {
+    if (type == SUB) {
         burnAmount = GetIssueSubAssetBurnAmount();
         burnAddress = Params().IssueSubAssetBurnAddress();
-    } else if (type == AssetType::ROOT) {
+    } else if (type == ROOT) {
         burnAmount = GetIssueAssetBurnAmount();
         burnAddress = Params().IssueAssetBurnAddress();
-    } else if (type == AssetType::UNIQUE) {
+    } else if (type == UNIQUE) {
         burnAmount = GetIssueUniqueAssetBurnAmount();
         burnAddress = Params().IssueUniqueAssetBurnAddress();
     } else {
@@ -2173,44 +2173,54 @@ CAmount GetIssueUniqueAssetBurnAmount()
     return Params().IssueUniqueAssetBurnAmount();
 }
 
+CAmount GetBurnAmount(const int nType)
+{
+    return GetBurnAmount((AssetType(nType)));
+}
+
 CAmount GetBurnAmount(const AssetType type)
 {
     switch (type) {
-        case AssetType::ROOT:
+        case ROOT:
             return GetIssueAssetBurnAmount();
-        case AssetType::SUB:
+        case SUB:
             return GetIssueSubAssetBurnAmount();
-        case AssetType::MSGCHANNEL:
+        case MSGCHANNEL:
             return 0;
-        case AssetType::OWNER:
+        case OWNER:
             return 0;
-        case AssetType::UNIQUE:
+        case UNIQUE:
             return GetIssueUniqueAssetBurnAmount();
-        case AssetType::VOTE:
+        case VOTE:
             return 0;
-        case AssetType::REISSUE:
+        case REISSUE:
             return GetReissueAssetBurnAmount();
         default:
             return 0;
     }
 }
 
+std::string GetBurnAddress(const int nType)
+{
+    return GetBurnAddress((AssetType(nType)));
+}
+
 std::string GetBurnAddress(const AssetType type)
 {
     switch (type) {
-        case AssetType::ROOT:
+        case ROOT:
             return Params().IssueAssetBurnAddress();
-        case AssetType::SUB:
+        case SUB:
             return Params().IssueSubAssetBurnAddress();
-        case AssetType::MSGCHANNEL:
+        case MSGCHANNEL:
             return "";
-        case AssetType::OWNER:
+        case OWNER:
             return "";
-        case AssetType::UNIQUE:
+        case UNIQUE:
             return Params().IssueUniqueAssetBurnAddress();
-        case AssetType::VOTE:
+        case VOTE:
             return "";
-        case AssetType::REISSUE:
+        case REISSUE:
             return Params().ReissueAssetBurnAddress();
         default:
             return "";
