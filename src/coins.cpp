@@ -162,7 +162,7 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool 
                     error("%s: Failed to add an reissued asset I own to my Unspent Asset Cache. Asset Name : %s",
                           __func__, reissue.strName);
             } else if (tx.IsNewUniqueAsset()) {
-                for (int n = 0; n < tx.vout.size(); n++) {
+                for (int n = 0; n < (int)tx.vout.size(); n++) {
                     auto out = tx.vout[n];
 
                     CNewAsset asset;

@@ -316,7 +316,7 @@ UniValue issueunique(const JSONRPCRequest& request)
     }
 
     std::vector<CNewAsset> assets;
-    for (int i = 0; i < assetTags.size(); i++) {
+    for (int i = 0; i < (int)assetTags.size(); i++) {
         std::string tag = assetTags[i].get_str();
 
         if (!IsUniqueTagValid(tag)) {

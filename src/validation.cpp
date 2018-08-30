@@ -1734,7 +1734,7 @@ static DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* 
                         }
                     }
                 } else if (tx.IsNewUniqueAsset()) {
-                    for (int n = 0; n < tx.vout.size(); n++) {
+                    for (int n = 0; n < (int)tx.vout.size(); n++) {
                         auto out = tx.vout[n];
                         CNewAsset asset;
                         std::string strAddress;
