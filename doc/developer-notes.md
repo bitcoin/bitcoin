@@ -476,6 +476,21 @@ class A
 }
 ```
 
+- Prefer initialization to assignment in constructors.
+
+  - An initialization explicitly states that initialization, rather than
+    assignment, is done and can be more elegant and efficient. Prevents
+    "use before set" errors. (C.49 in the C++ Core Guidelines)
+
+```
+class A {
+    std::string s;
+public:
+    A(std::string sIn) : s(sIn) { } // Good
+    // A(std::string sIn) { s = sIn; } // Bad
+};
+```
+
 - By default, declare single-argument constructors `explicit`.
 
   - *Rationale*: This is a precaution to avoid unintended conversions that might
