@@ -203,7 +203,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, CAssetsCa
         if (AreAssetsDeployed() && isAsset) {
             if (assetCache) {
                 // Get the transfer transaction data from the scriptPubKey
-                if ((txnouttype) nType == TX_TRANSFER_ASSET) {
+                if ( nType == TX_TRANSFER_ASSET) {
                     CAssetTransfer transfer;
                     std::string address;
                     if (!TransferAssetFromScript(txout.scriptPubKey, transfer, address))

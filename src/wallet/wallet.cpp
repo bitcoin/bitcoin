@@ -2291,22 +2291,22 @@ void CWallet::AvailableCoinsAll(std::vector<COutput>& vCoins, std::map<std::stri
                 // Looking for Asset Tx OutPoints Only
                 if (fGetAssets && AreAssetsDeployed() && pcoin->tx->vout[i].scriptPubKey.IsAssetScript(nType, fIsOwner)) {
 
-                    if ((txnouttype) nType == TX_TRANSFER_ASSET) {
+                    if ( nType == TX_TRANSFER_ASSET) {
                         if (TransferAssetFromScript(pcoin->tx->vout[i].scriptPubKey, assetTransfer, address)) {
                             strAssetName = assetTransfer.strName;
                             fWasTransferAssetOutPoint = true;
                         }
-                    } else if ((txnouttype) nType == TX_NEW_ASSET && !fIsOwner) {
+                    } else if ( nType == TX_NEW_ASSET && !fIsOwner) {
                         if (AssetFromScript(pcoin->tx->vout[i].scriptPubKey, asset, address)) {
                             strAssetName = asset.strName;
                             fWasNewAssetOutPoint = true;
                         }
-                    } else if ((txnouttype) nType == TX_NEW_ASSET && fIsOwner) {
+                    } else if ( nType == TX_NEW_ASSET && fIsOwner) {
                         if (OwnerAssetFromScript(pcoin->tx->vout[i].scriptPubKey, ownerName, address)) {
                             strAssetName = ownerName;
                             fWasOwnerAssetOutPoint = true;
                         }
-                    } else if ((txnouttype) nType == TX_REISSUE_ASSET) {
+                    } else if ( nType == TX_REISSUE_ASSET) {
                         if (ReissueAssetFromScript(pcoin->tx->vout[i].scriptPubKey, reissue, address)) {
                             strAssetName = reissue.strName;
                             fWasReissueAssetOutPoint = true;
@@ -2808,7 +2808,7 @@ bool CWallet::SelectAssetsMinConf(const CAmount& nTargetValue, const int nConfMi
 
         //-------------------------------
 
-        int nType = 0;
+        int nType = -1;
         bool fIsOwner = false;
         if (!coin.txout.scriptPubKey.IsAssetScript(nType, fIsOwner)) {
             // TODO - Remove std::cout this before mainnet release
@@ -2816,28 +2816,26 @@ bool CWallet::SelectAssetsMinConf(const CAmount& nTargetValue, const int nConfMi
             continue;
         }
 
-        txnouttype type = (txnouttype) nType;
-
         CAmount nTempAmount = 0;
-        if (type == TX_NEW_ASSET && !fIsOwner) { // Root/Sub Asset
+        if (nType == TX_NEW_ASSET && !fIsOwner) { // Root/Sub Asset
             CNewAsset assetTemp;
             std::string address;
             if (!AssetFromScript(coin.txout.scriptPubKey, assetTemp, address))
                 continue;
             nTempAmount = assetTemp.nAmount;
-        } else if (type == TX_TRANSFER_ASSET) { // Transfer Asset
+        } else if (nType == TX_TRANSFER_ASSET) { // Transfer Asset
             CAssetTransfer transferTemp;
             std::string address;
             if (!TransferAssetFromScript(coin.txout.scriptPubKey, transferTemp, address))
                 continue;
             nTempAmount = transferTemp.nAmount;
-        } else if (type == TX_NEW_ASSET && fIsOwner) { // Owner Asset
+        } else if (nType == TX_NEW_ASSET && fIsOwner) { // Owner Asset
             std::string ownerName;
             std::string address;
             if (!OwnerAssetFromScript(coin.txout.scriptPubKey, ownerName, address))
                 continue;
             nTempAmount = OWNER_ASSET_AMOUNT;
-        } else if (type == TX_REISSUE_ASSET) { // Reissue Asset
+        } else if (nType == TX_REISSUE_ASSET) { // Reissue Asset
             CReissueAsset reissueTemp;
             std::string address;
             if (!ReissueAssetFromScript(coin.txout.scriptPubKey, reissueTemp, address))

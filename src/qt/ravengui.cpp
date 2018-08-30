@@ -117,6 +117,7 @@ RavenGUI::RavenGUI(const PlatformStyle *_platformStyle, const NetworkStyle *netw
     openRPCConsoleAction(0),
     openAction(0),
     showHelpMessageAction(0),
+    assetAction(0),
     trayIcon(0),
     trayIconMenu(0),
     notificator(0),
@@ -125,8 +126,8 @@ RavenGUI::RavenGUI(const PlatformStyle *_platformStyle, const NetworkStyle *netw
     modalOverlay(0),
     prevBlocks(0),
     spinnerFrame(0),
-    platformStyle(_platformStyle),
-    assetAction(0)
+    platformStyle(_platformStyle)
+
 {
     QSettings settings;
     if (!restoreGeometry(settings.value("MainWindowGeometry").toByteArray())) {

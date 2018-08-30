@@ -633,7 +633,7 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
                     rawTx.vout.push_back(out);
 
                     // Create the assets
-                    for (int i = 0; i < asset_tags.size(); i++) {
+                    for (int i = 0; i < (int)asset_tags.size(); i++) {
 
                         // Create a new asset
                         CNewAsset asset;
