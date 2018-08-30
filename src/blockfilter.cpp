@@ -2,6 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <mutex>
+#include <sstream>
+
 #include <blockfilter.h>
 #include <crypto/siphash.h>
 #include <hash.h>
@@ -216,6 +219,40 @@ bool BlockFilterTypeByName(const std::string& name, BlockFilterType& filter_type
         }
     }
     return false;
+}
+
+const std::vector<BlockFilterType>& AllBlockFilterTypes()
+{
+    static std::vector<BlockFilterType> types;
+
+    static std::once_flag flag;
+    std::call_once(flag, []() {
+            types.reserve(g_filter_types.size());
+            for (auto entry : g_filter_types) {
+                types.push_back(entry.first);
+            }
+        });
+
+    return types;
+}
+
+const std::string& ListBlockFilterTypes()
+{
+    static std::string type_list;
+
+    static std::once_flag flag;
+    std::call_once(flag, []() {
+            std::stringstream ret;
+            bool first = true;
+            for (auto entry : g_filter_types) {
+                if (!first) ret << ", ";
+                ret << entry.second;
+                first = false;
+            }
+            type_list = ret.str();
+        });
+
+    return type_list;
 }
 
 static GCSFilter::ElementSet BasicFilterElements(const CBlock& block,
