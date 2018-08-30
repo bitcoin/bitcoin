@@ -182,11 +182,11 @@ protected:
     };
 
     mutable CCriticalSection cs_args;
-    std::map<std::string, std::vector<std::string>> m_override_args;
-    std::map<std::string, std::vector<std::string>> m_config_args;
-    std::string m_network;
-    std::set<std::string> m_network_only_args;
-    std::map<OptionsCategory, std::map<std::string, Arg>> m_available_args;
+    std::map<std::string, std::vector<std::string>> m_override_args GUARDED_BY(cs_args);
+    std::map<std::string, std::vector<std::string>> m_config_args GUARDED_BY(cs_args);
+    std::string m_network GUARDED_BY(cs_args);
+    std::set<std::string> m_network_only_args GUARDED_BY(cs_args);
+    std::map<OptionsCategory, std::map<std::string, Arg>> m_available_args GUARDED_BY(cs_args);
 
     bool ReadConfigStream(std::istream& stream, std::string& error, bool ignore_invalid_keys = false);
 
@@ -310,7 +310,10 @@ public:
     /**
      * Clear available arguments
      */
-    void ClearArgs() { m_available_args.clear(); }
+    void ClearArgs() {
+        LOCK(cs_args);
+        m_available_args.clear();
+    }
 
     /**
      * Get the help string
