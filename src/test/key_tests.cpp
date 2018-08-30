@@ -188,4 +188,13 @@ BOOST_AUTO_TEST_CASE(key_signature_tests)
     BOOST_CHECK(found_small);
 }
 
+BOOST_AUTO_TEST_CASE(key_priv_compress_tests)
+{
+    CKey key;
+    key.MakeNewKey(false);
+    BOOST_CHECK(key.GetPrivKey().size() == CKey::PRIVATE_KEY_SIZE);
+    key.MakeNewKey(true);
+    BOOST_CHECK(key.GetPrivKey().size() == CKey::COMPRESSED_PRIVATE_KEY_SIZE);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
