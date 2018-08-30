@@ -4,10 +4,10 @@
 
 //#include <amount.h>
 //#include <base58.h>
-#include <assets/assets.h>
-#include <assets/assetdb.h>
+#include "assets/assets.h"
+#include "assets/assetdb.h"
 #include <map>
-#include <tinyformat.h>
+#include "tinyformat.h"
 //#include <rpc/server.h>
 //#include <script/standard.h>
 //#include <utilstrencodings.h>
@@ -39,6 +39,22 @@
 std::string AssetActivationWarning()
 {
     return AreAssetsDeployed() ? "" : "\nTHIS COMMAND IS NOT YET ACTIVE!\nhttps://github.com/RavenProject/rips/blob/master/rip-0002.mediawiki\n";
+}
+
+std::string AssetTypeToString(AssetType& assetType)
+{
+    switch (assetType)
+    {
+        case ROOT:          return "ROOT";
+        case SUB:           return "SUB";
+        case UNIQUE:        return "UNIQUE";
+        case OWNER:         return "OWNER";
+        case MSGCHANNEL:    return "MSGCHANNEL";
+        case VOTE:          return "VOTE";
+        case REISSUE:       return "REISSUE";
+        case INVALID:       return "INVALID";
+        default:            return "UNKNOWN";
+    }
 }
 
 UniValue UnitValueFromAmount(const CAmount& amount, const std::string asset_name)
@@ -111,7 +127,7 @@ UniValue issue(const JSONRPCRequest& request)
 
     // Check assetType supported
     if (!(assetType == AssetType::ROOT || assetType == AssetType::SUB || assetType == AssetType::UNIQUE)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Unsupported asset type: ") + PrintAssetType(assetType));
+        throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Unsupported asset type: ") + AssetTypeToString(assetType));
     }
 
     CAmount nAmount = COIN;

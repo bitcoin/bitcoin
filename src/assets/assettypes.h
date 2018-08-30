@@ -1,13 +1,14 @@
-//
+// Copyright (c) 2018 The Raven Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 // Created by Jeremy Anderson on 5/15/18.
-//
 
 #ifndef RAVENCOIN_NEWASSET_H
 #define RAVENCOIN_NEWASSET_H
 
-#include <amount.h>
 #include <string>
 #include <unordered_map>
+#include "amount.h"
 #include "serialize.h"
 
 #define MAX_UNIT 8
@@ -27,21 +28,9 @@ enum AssetType
     INVALID = 7
 };
 
-std::string PrintAssetType(AssetType& assetType) {
-    switch (assetType) {
-        case ROOT:          return "ROOT";
-        case SUB:           return "SUB";
-        case UNIQUE:        return "UNIQUE";
-        case OWNER:         return "OWNER";
-        case MSGCHANNEL:    return "MSGCHANNEL";
-        case VOTE:          return "VOTE";
-        case REISSUE:       return "REISSUE";
-        case INVALID:       return "INVALID";
-        default:            return "UNKNOWN";
-    }
-}
 
-class CNewAsset {
+class CNewAsset
+{
 public:
     std::string strName; // MAX 31 Bytes
     CAmount nAmount;     // 8 Bytes
@@ -82,7 +71,8 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
         READWRITE(strName);
         READWRITE(nAmount);
         READWRITE(units);
@@ -101,7 +91,8 @@ public:
     }
 };
 
-class CAssetTransfer {
+class CAssetTransfer
+{
 public:
     std::string strName;
     CAmount nAmount;
@@ -121,7 +112,8 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
         READWRITE(strName);
         READWRITE(nAmount);
     }
@@ -131,7 +123,8 @@ public:
     void ConstructTransaction(CScript& script) const;
 };
 
-class CReissueAsset {
+class CReissueAsset
+{
 public:
     std::string strName;
     CAmount nAmount;
@@ -154,7 +147,8 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
         READWRITE(strName);
         READWRITE(nAmount);
         READWRITE(nReissuable);
@@ -180,7 +174,8 @@ struct CAssetCacheNewAsset
         this->address = address;
     }
 
-    bool operator<(const CAssetCacheNewAsset& rhs) const {
+    bool operator<(const CAssetCacheNewAsset& rhs) const
+    {
         return asset.strName < rhs.asset.strName;
     }
 };
@@ -198,7 +193,8 @@ struct CAssetCacheReissueAsset
         this->out = out;
     }
 
-    bool operator<(const CAssetCacheReissueAsset& rhs) const {
+    bool operator<(const CAssetCacheReissueAsset& rhs) const
+    {
         return out < rhs.out;
     }
 
@@ -244,7 +240,8 @@ struct CAssetCacheNewOwner
         this->address = address;
     }
 
-    bool operator<(const CAssetCacheNewOwner& rhs) const {
+    bool operator<(const CAssetCacheNewOwner& rhs) const
+    {
 
         return assetName < rhs.assetName;
 //        if (assetName < rhs.assetName)
@@ -301,12 +298,14 @@ struct CAssetCachePossibleMine
 
 // Least Recently Used Cache
 template<typename cache_key_t, typename cache_value_t>
-class CLRUCache {
+class CLRUCache
+{
 public:
     typedef typename std::pair<cache_key_t, cache_value_t> key_value_pair_t;
     typedef typename std::list<key_value_pair_t>::iterator list_iterator_t;
 
-    CLRUCache(size_t max_size) : maxSize(max_size) {
+    CLRUCache(size_t max_size) : maxSize(max_size)
+    {
     }
     CLRUCache()
     {
@@ -317,13 +316,15 @@ public:
     {
         auto it = cacheItemsMap.find(key);
         cacheItemsList.push_front(key_value_pair_t(key, value));
-        if (it != cacheItemsMap.end()) {
+        if (it != cacheItemsMap.end())
+        {
             cacheItemsList.erase(it->second);
             cacheItemsMap.erase(it);
         }
         cacheItemsMap[key] = cacheItemsList.begin();
 
-        if (cacheItemsMap.size() > maxSize) {
+        if (cacheItemsMap.size() > maxSize)
+        {
             auto last = cacheItemsList.end();
             last--;
             cacheItemsMap.erase(last->first);
@@ -334,7 +335,8 @@ public:
     void Erase(const cache_key_t& key)
     {
         auto it = cacheItemsMap.find(key);
-        if (it != cacheItemsMap.end()) {
+        if (it != cacheItemsMap.end())
+        {
             cacheItemsList.erase(it->second);
             cacheItemsMap.erase(it);
         }
@@ -343,9 +345,12 @@ public:
     const cache_value_t& Get(const cache_key_t& key)
     {
         auto it = cacheItemsMap.find(key);
-        if (it == cacheItemsMap.end()) {
+        if (it == cacheItemsMap.end())
+        {
             throw std::range_error("There is no such key in cache");
-        } else {
+        }
+        else
+        {
             cacheItemsList.splice(cacheItemsList.begin(), cacheItemsList, it->second);
             return it->second->second;
         }
