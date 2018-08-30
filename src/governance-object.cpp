@@ -493,6 +493,8 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingMast
                 CMasternode::CollateralStatus err = CMasternode::CheckCollateral(masternodeOutpoint, CKeyID());
                 if (err == CMasternode::COLLATERAL_UTXO_NOT_FOUND) {
                     strError = "Failed to find Masternode UTXO, missing masternode=" + strOutpoint + "\n";
+                } else if (err == CMasternode::COLLATERAL_UTXO_NOT_PROTX) {
+                    strError = "Masternode UTXO is not a ProTx, missing masternode=" + strOutpoint + "\n";
                 } else if (err == CMasternode::COLLATERAL_INVALID_AMOUNT) {
                     strError = "Masternode UTXO should have 1000 DASH, missing masternode=" + strOutpoint + "\n";
                 } else if (err == CMasternode::COLLATERAL_INVALID_PUBKEY) {

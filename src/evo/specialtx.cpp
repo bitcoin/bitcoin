@@ -1,4 +1,4 @@
-// Copyright (c) 2017 The Dash Core developers
+// Copyright (c) 2018 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,6 +11,7 @@
 #include "chainparams.h"
 
 #include "specialtx.h"
+#include "deterministicmns.h"
 
 bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {
@@ -24,6 +25,8 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
     }
 
     switch (tx.nType) {
+        case TRANSACTION_PROVIDER_REGISTER:
+            return CheckProRegTx(tx, pindexPrev, state);
     }
 
     return state.DoS(10, false, REJECT_INVALID, "bad-tx-type");
@@ -35,6 +38,8 @@ bool ProcessSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValida
         return true;
 
     switch (tx.nType) {
+        case TRANSACTION_PROVIDER_REGISTER:
+            return true; // handled in batches per block
     }
 
     return state.DoS(100, false, REJECT_INVALID, "bad-tx-type");
@@ -46,6 +51,8 @@ bool UndoSpecialTx(const CTransaction& tx, const CBlockIndex* pindex)
         return true;
 
     switch (tx.nType) {
+        case TRANSACTION_PROVIDER_REGISTER:
+            return true; // handled in batches per block
     }
 
     return false;
@@ -61,6 +68,9 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
             return false;
     }
 
+    if (!deterministicMNManager->ProcessBlock(block, pindex->pprev, state))
+        return false;
+
     return true;
 }
 
@@ -71,6 +81,10 @@ bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex)
         if (!UndoSpecialTx(tx, pindex))
             return false;
     }
+
+    if (!deterministicMNManager->UndoBlock(block, pindex))
+        return false;
+
     return true;
 }
 

@@ -106,7 +106,10 @@ BITCOIN_CORE_H = \
   core_io.h \
   core_memusage.h \
   cuckoocache.h \
+  evo/evodb.h \
   evo/specialtx.h \
+  evo/providertx.h \
+  evo/deterministicmns.h \
   privatesend.h \
   privatesend-client.h \
   privatesend-server.h \
@@ -217,7 +220,10 @@ libdash_server_a_SOURCES = \
   chain.cpp \
   checkpoints.cpp \
   dsnotificationinterface.cpp \
+  evo/evodb.cpp \
   evo/specialtx.cpp \
+  evo/providertx.cpp \
+  evo/deterministicmns.cpp \
   httprpc.cpp \
   httpserver.cpp \
   init.cpp \
@@ -254,6 +260,7 @@ libdash_server_a_SOURCES = \
   rpc/misc.cpp \
   rpc/net.cpp \
   rpc/rawtransaction.cpp \
+  rpc/rpcevo.cpp \
   rpc/server.cpp \
   script/sigcache.cpp \
   script/ismine.cpp \

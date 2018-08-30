@@ -33,6 +33,8 @@
 #include "privatesend-client.h"
 #include "spork.h"
 
+#include "evo/providertx.h"
+
 #include <assert.h>
 
 #include <boost/algorithm/string/replace.hpp>
@@ -1116,9 +1118,14 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
                          wtxIn.hashBlock.ToString());
         }
         AddToSpends(hash);
+
+        uint32_t proTxCollateralIdx = GetProTxCollateralIndex(*wtx.tx);
         for(unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
             if (IsMine(wtx.tx->vout[i]) && !IsSpent(hash, i)) {
                 setWalletUTXO.insert(COutPoint(hash, i));
+                if (i == proTxCollateralIdx) {
+                    LockCoin(COutPoint(hash, i));
+                }
             }
         }
     }
@@ -3968,9 +3975,13 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
     {
         LOCK2(cs_main, cs_wallet);
         for (auto& pair : mapWallet) {
+            uint32_t proTxCollateralIdx = GetProTxCollateralIndex(*pair.second.tx);
             for(unsigned int i = 0; i < pair.second.tx->vout.size(); ++i) {
                 if (IsMine(pair.second.tx->vout[i]) && !IsSpent(pair.first, i)) {
                     setWalletUTXO.insert(COutPoint(pair.first, i));
+                    if (i == proTxCollateralIdx) {
+                        LockCoin(COutPoint(pair.first, i));
+                    }
                 }
             }
         }
@@ -4622,6 +4633,19 @@ void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts)
          it != setLockedCoins.end(); it++) {
         COutPoint outpt = (*it);
         vOutpts.push_back(outpt);
+    }
+}
+
+void CWallet::ListProTxCoins(std::vector<COutPoint>& vOutpts)
+{
+    AssertLockHeld(cs_wallet);
+    for (const auto &o : setWalletUTXO) {
+        if (mapWallet.count(o.hash)) {
+            const auto &p = mapWallet[o.hash];
+            if (IsProTxCollateral(*p.tx, o.n)) {
+                vOutpts.emplace_back(o);
+            }
+        }
     }
 }
 
