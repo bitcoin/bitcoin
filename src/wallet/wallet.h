@@ -117,7 +117,7 @@ public:
     int64_t nTime;
     CPubKey vchPubKey;
     bool fInternal; // for change outputs
-    bool m_pre_split; // For keys generated before keypool split upgrade
+    bool m_pre_split = false; // For keys generated before keypool split upgrade
 
     CKeyPool();
     CKeyPool(const CPubKey& vchPubKeyIn, bool internalIn);

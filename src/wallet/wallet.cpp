@@ -4204,10 +4204,9 @@ bool CWallet::BackupWallet(const std::string& strDest)
     return database->Backup(strDest);
 }
 
-CKeyPool::CKeyPool() : nTime(GetTime()), fInternal(false), m_pre_split(false) {}
+CKeyPool::CKeyPool() : nTime(GetTime()), fInternal(false) {}
 
-CKeyPool::CKeyPool(const CPubKey& vchPubKeyIn, bool internalIn)
-    : nTime(GetTime()), vchPubKey(vchPubKeyIn), fInternal(internalIn), m_pre_split(false) {}
+CKeyPool::CKeyPool(const CPubKey& vchPubKeyIn, bool internalIn) : nTime(GetTime()), vchPubKey(vchPubKeyIn), fInternal(internalIn) {}
 
 CWalletKey::CWalletKey(int64_t nExpires) : nTimeCreated(nExpires ? GetTime() : 0), nTimeExpires(nExpires) {}
 
