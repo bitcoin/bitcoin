@@ -240,6 +240,194 @@ UniValue protx_register(const JSONRPCRequest& request)
     return SignAndSendSpecialTx(tx);
 }
 
+void protx_update_service_help()
+{
+    throw std::runtime_error(
+            "protx update_service \"proTxHash\" \"ipAndPort\" protocolVersion (\"operatorPayoutAddress\")\n"
+            "\nCreates and sends a ProUpServTx to the network. This will update the address and protocol version\n"
+            "of a masternode. The operator key of the masternode must be known to your wallet.\n"
+            "If this is done for a masternode that got PoSe-banned, the ProUpServTx will also revive this masternode.\n"
+            "\nArguments:\n"
+            "1. \"proTxHash\"                (string, required) The hash of the initial ProRegTx.\n"
+            "2. \"ipAndPort\"                (string, required) IP and port in the form \"IP:PORT\".\n"
+            "                              Must be unique on the network.\n"
+            "3. \"protocolVersion\"          (numeric, required) The protocol version of your masternode.\n"
+            "                              Can be 0 to default to the clients protocol version\n"
+            "4. \"operatorPayoutAddress\"    (string, optional) The address used for operator reward payments.\n"
+            "                              Only allowed when the ProRegTx had a non-zero operatorReward value.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("protx", "update_service \"0123456701234567012345670123456701234567012345670123456701234567\" \"1.2.3.4:1234\" 0")
+    );
+}
+
+UniValue protx_update_service(const JSONRPCRequest& request)
+{
+    if (request.fHelp || (request.params.size() != 4 && request.params.size() != 5))
+        protx_update_service_help();
+
+    CProUpServTx ptx;
+    ptx.nVersion = CProRegTx::CURRENT_VERSION;
+    ptx.proTxHash = ParseHashV(request.params[1], "proTxHash");
+
+    if (!Lookup(request.params[2].get_str().c_str(), ptx.addr, Params().GetDefaultPort(), false)) {
+        throw std::runtime_error(strprintf("invalid network address %s", request.params[3].get_str()));
+    }
+
+    ptx.nProtocolVersion = ParseInt32V(request.params[3], "protocolVersion");
+    if (ptx.nProtocolVersion == 0) {
+        ptx.nProtocolVersion = PROTOCOL_VERSION;
+    }
+
+    if (request.params.size() > 4) {
+        CBitcoinAddress payoutAddress(request.params[4].get_str());
+        if (!payoutAddress.IsValid())
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid operator payout address: %s", request.params[4].get_str()));
+        ptx.scriptOperatorPayout = GetScriptForDestination(payoutAddress.Get());
+    }
+
+    auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(ptx.proTxHash);
+    if (!dmn) {
+        throw std::runtime_error(strprintf("masternode with proTxHash %s not found", ptx.proTxHash.ToString()));
+    }
+
+    CKey keyOperator;
+    if (!pwalletMain->GetKey(dmn->pdmnState->keyIDOperator, keyOperator)) {
+        throw std::runtime_error(strprintf("operator key %s not found in your wallet", dmn->pdmnState->keyIDOperator.ToString()));
+    }
+
+    CMutableTransaction tx;
+    tx.nVersion = 3;
+    tx.nType = TRANSACTION_PROVIDER_UPDATE_SERVICE;
+
+    FundSpecialTx(tx, ptx);
+    SignSpecialTxPayload(tx, ptx, keyOperator);
+    SetTxPayload(tx, ptx);
+
+    return SignAndSendSpecialTx(tx);
+}
+
+void protx_update_registrar_help()
+{
+    throw std::runtime_error(
+            "protx update_registrar \"proTxHash\" \"operatorKeyAddr\" \"votingKeyAddr\" operatorReward \"payoutAddress\"\n"
+            "\nCreates and sends a ProUpRegTx to the network. This will update the operator key, voting key and payout\n"
+            "address of the masternode specified by \"proTxHash\".\n"
+            "The owner key of the masternode must be known to your wallet.\n"
+            "\nArguments:\n"
+            "1. \"proTxHash\"           (string, required) The hash of the initial ProRegTx.\n"
+            "2. \"operatorKeyAddr\"     (string, required) The operator key address. The private key does not have to be known by your wallet.\n"
+            "                         It has to match the private key which is later used when operating the masternode.\n"
+            "                         If set to \"0\" or an empty string, the last on-chain operator key of the masternode will be used.\n"
+            "3. \"votingKeyAddr\"       (string, required) The voting key address. The private key does not have to be known by your wallet.\n"
+            "                         It has to match the private key which is later used when voting on proposals.\n"
+            "                         If set to \"0\" or an empty string, the last on-chain voting key of the masternode will be used.\n"
+            "5. \"payoutAddress\"       (string, required) The dash address to use for masternode reward payments\n"
+            "                         Must match \"collateralAddress\" of initial ProRegTx.\n"
+            "                         If set to \"0\" or an empty string, the last on-chain payout address of the masternode will be used.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("protx", "update_registrar \"0123456701234567012345670123456701234567012345670123456701234567\" \"<operatorKeyAddr>\" \"0\" \"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\"")
+    );
+}
+
+UniValue protx_update_registrar(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 5)
+        protx_update_registrar_help();
+
+    CProUpRegTx ptx;
+    ptx.nVersion = CProRegTx::CURRENT_VERSION;
+    ptx.proTxHash = ParseHashV(request.params[1], "proTxHash");
+
+    auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(ptx.proTxHash);
+    if (!dmn) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("masternode %s not found", ptx.proTxHash.ToString()));
+    }
+    ptx.keyIDOperator = dmn->pdmnState->keyIDOperator;
+    ptx.keyIDVoting = dmn->pdmnState->keyIDVoting;
+    ptx.scriptPayout = dmn->pdmnState->scriptPayout;
+
+    if (request.params[2].get_str() != "0" && request.params[2].get_str() != "") {
+        ptx.keyIDOperator = ParsePubKeyIDFromAddress(request.params[2].get_str(), "operator address");
+    }
+    if (request.params[3].get_str() != "0" && request.params[3].get_str() != "") {
+        ptx.keyIDVoting = ParsePubKeyIDFromAddress(request.params[3].get_str(), "operator address");
+    }
+
+    CBitcoinAddress payoutAddress(request.params[4].get_str());
+    if (!payoutAddress.IsValid())
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid payout address: %s", request.params[4].get_str()));
+    ptx.scriptPayout = GetScriptForDestination(payoutAddress.Get());
+
+    CKey keyOwner;
+    if (!pwalletMain->GetKey(dmn->pdmnState->keyIDOwner, keyOwner)) {
+        throw std::runtime_error(strprintf("owner key %s not found in your wallet", dmn->pdmnState->keyIDOwner.ToString()));
+    }
+
+    CMutableTransaction tx;
+    tx.nVersion = 3;
+    tx.nType = TRANSACTION_PROVIDER_UPDATE_REGISTRAR;
+
+    FundSpecialTx(tx, ptx);
+    SignSpecialTxPayload(tx, ptx, keyOwner);
+    SetTxPayload(tx, ptx);
+
+    return SignAndSendSpecialTx(tx);
+}
+
+void protx_revoke_help()
+{
+    throw std::runtime_error(
+            "protx revoke \"proTxHash\"\n"
+            "\nCreates and sends a ProUpRevTx to the network. This will revoke the operator key of the masternode and\n"
+            "put it into the PoSe-banned state. It will also set the service and protocol version fields of the masternode\n"
+            "to zero. Use this in case your operator key got compromised or you want to stop providing your service\n"
+            "to the masternode owner.\n"
+            "The operator key of the masternode must be known to your wallet.\n"
+            "\nArguments:\n"
+            "1. \"proTxHash\"           (string, required) The hash of the initial ProRegTx.\n"
+            "2. reason                  (numeric, optional) The reason for revocation.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("protx", "revoke \"0123456701234567012345670123456701234567012345670123456701234567\" \"<operatorKeyAddr>\"")
+    );
+}
+
+UniValue protx_revoke(const JSONRPCRequest& request)
+{
+    if (request.fHelp || (request.params.size() != 2 && request.params.size() != 3))
+        protx_revoke_help();
+
+    CProUpRevTx ptx;
+    ptx.nVersion = CProRegTx::CURRENT_VERSION;
+    ptx.proTxHash = ParseHashV(request.params[1], "proTxHash");
+
+    if (request.params.size() > 2) {
+        int32_t nReason = ParseInt32V(request.params[2], "reason");
+        if (nReason < 0 || nReason >= CProUpRevTx::REASON_LAST)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("invalid reason %d, must be between 0 and %d", nReason, CProUpRevTx::REASON_LAST));
+        ptx.nReason = (uint16_t)nReason;
+    }
+
+    auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(ptx.proTxHash);
+    if (!dmn) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("masternode %s not found", ptx.proTxHash.ToString()));
+    }
+
+    CKey keyOperator;
+    if (!pwalletMain->GetKey(dmn->pdmnState->keyIDOperator, keyOperator)) {
+        throw std::runtime_error(strprintf("operator key %s not found in your wallet", dmn->pdmnState->keyIDOwner.ToString()));
+    }
+
+    CMutableTransaction tx;
+    tx.nVersion = 3;
+    tx.nType = TRANSACTION_PROVIDER_UPDATE_REVOKE;
+
+    FundSpecialTx(tx, ptx);
+    SignSpecialTxPayload(tx, ptx, keyOperator);
+    SetTxPayload(tx, ptx);
+
+    return SignAndSendSpecialTx(tx);
+}
+
 void protx_list_help()
 {
     throw std::runtime_error(
@@ -380,8 +568,11 @@ UniValue protx(const JSONRPCRequest& request)
                 "\nArguments:\n"
                 "1. \"command\"        (string, required) The command to execute\n"
                 "\nAvailable commands:\n"
-                "  register    - Create and send ProTx to network\n"
-                "  list        - List ProTxs\n"
+                "  register          - Create and send ProTx to network\n"
+                "  list              - List ProTxs\n"
+                "  update_service    - Create and send ProUpServTx to network\n"
+                "  update_registrar  - Create and send ProUpRegTx to network\n"
+                "  revoke            - Create and send ProUpRevTx to network\n"
         );
     }
 
@@ -391,6 +582,12 @@ UniValue protx(const JSONRPCRequest& request)
         return protx_register(request);
     } else if (command == "list") {
         return protx_list(request);
+    } else if (command == "update_service") {
+        return protx_update_service(request);
+    } else if (command == "update_registrar") {
+        return protx_update_registrar(request);
+    } else if (command == "revoke") {
+        return protx_revoke(request);
     } else {
         throw std::runtime_error("invalid command: " + command);
     }

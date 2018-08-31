@@ -29,6 +29,9 @@
 #include "wallet/wallet.h"
 #endif
 
+#include "evo/specialtx.h"
+#include "evo/providertx.h"
+
 #include <stdint.h>
 
 #include <boost/assign/list_of.hpp>
@@ -125,6 +128,36 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
     if (!tx.vExtraPayload.empty()) {
         entry.push_back(Pair("extraPayloadSize", (int)tx.vExtraPayload.size()));
         entry.push_back(Pair("extraPayload", HexStr(tx.vExtraPayload)));
+    }
+
+    if (tx.nType == TRANSACTION_PROVIDER_REGISTER) {
+        CProRegTx proTx;
+        if (GetTxPayload(tx, proTx)) {
+            UniValue proTxObj;
+            proTx.ToJson(proTxObj);
+            entry.push_back(Pair("proTx", proTxObj));
+        }
+    } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
+        CProUpServTx proTx;
+        if (GetTxPayload(tx, proTx)) {
+            UniValue proTxObj;
+            proTx.ToJson(proTxObj);
+            entry.push_back(Pair("proUpServTx", proTxObj));
+        }
+    } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
+        CProUpRegTx proTx;
+        if (GetTxPayload(tx, proTx)) {
+            UniValue proTxObj;
+            proTx.ToJson(proTxObj);
+            entry.push_back(Pair("proUpRegTx", proTxObj));
+        }
+    } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REVOKE) {
+        CProUpRevTx proTx;
+        if (GetTxPayload(tx, proTx)) {
+            UniValue proTxObj;
+            proTx.ToJson(proTxObj);
+            entry.push_back(Pair("proUpRevTx", proTxObj));
+        }
     }
 
     if (!hashBlock.IsNull()) {

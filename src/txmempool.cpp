@@ -446,8 +446,20 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
         if (!GetTxPayload(tx, proTx)) {
             assert(false);
         }
-        mapProTxRegisterAddresses.emplace(proTx.addr, tx.GetHash());
+        mapProTxAddresses.emplace(proTx.addr, tx.GetHash());
         mapProTxPubKeyIDs.emplace(proTx.keyIDOwner, tx.GetHash());
+        mapProTxPubKeyIDs.emplace(proTx.keyIDOperator, tx.GetHash());
+    } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
+        CProUpServTx proTx;
+        if (!GetTxPayload(tx, proTx)) {
+            assert(false);
+        }
+        mapProTxAddresses.emplace(proTx.addr, tx.GetHash());
+    } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
+        CProUpRegTx proTx;
+        if (!GetTxPayload(tx, proTx)) {
+            assert(false);
+        }
         mapProTxPubKeyIDs.emplace(proTx.keyIDOperator, tx.GetHash());
     }
 
@@ -626,13 +638,25 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
     } else
         vTxHashes.clear();
 
-    if (it->GetTx().nVersion >= 3 && it->GetTx().nType == TRANSACTION_PROVIDER_REGISTER) {
+    if (it->GetTx().nType == TRANSACTION_PROVIDER_REGISTER) {
         CProRegTx proTx;
         if (!GetTxPayload(it->GetTx(), proTx)) {
             assert(false);
         }
-        mapProTxRegisterAddresses.erase(proTx.addr);
+        mapProTxAddresses.erase(proTx.addr);
         mapProTxPubKeyIDs.erase(proTx.keyIDOwner);
+        mapProTxPubKeyIDs.erase(proTx.keyIDOperator);
+    } else if (it->GetTx().nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
+        CProUpServTx proTx;
+        if (!GetTxPayload(it->GetTx(), proTx)) {
+            assert(false);
+        }
+        mapProTxAddresses.erase(proTx.addr);
+    } else if (it->GetTx().nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
+        CProUpRegTx proTx;
+        if (!GetTxPayload(it->GetTx(), proTx)) {
+            assert(false);
+        }
         mapProTxPubKeyIDs.erase(proTx.keyIDOperator);
     }
 
@@ -762,33 +786,51 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
     }
 }
 
+void CTxMemPool::removeProTxPubKeyConflicts(const CTransaction &tx, const CKeyID &keyId)
+{
+    if (mapProTxPubKeyIDs.count(keyId)) {
+        uint256 conflictHash = mapProTxPubKeyIDs[keyId];
+        if (conflictHash != tx.GetHash() && mapTx.count(conflictHash)) {
+            removeRecursive(mapTx.find(conflictHash)->GetTx(), MemPoolRemovalReason::CONFLICT);
+        }
+    }
+}
+
 void CTxMemPool::removeProTxConflicts(const CTransaction &tx)
 {
-    if (tx.nType != TRANSACTION_PROVIDER_REGISTER)
-        return;
+    if (tx.nType == TRANSACTION_PROVIDER_REGISTER) {
+        CProRegTx proTx;
+        if (!GetTxPayload(tx, proTx)) {
+            assert(false);
+        }
 
-    CProRegTx proTx;
-    if (!GetTxPayload(tx, proTx)) {
-        assert(false);
-    }
+        if (mapProTxAddresses.count(proTx.addr)) {
+            uint256 conflictHash = mapProTxAddresses[proTx.addr];
+            if (conflictHash != tx.GetHash() && mapTx.count(conflictHash)) {
+                removeRecursive(mapTx.find(conflictHash)->GetTx(), MemPoolRemovalReason::CONFLICT);
+            }
+        }
+        removeProTxPubKeyConflicts(tx, proTx.keyIDOwner);
+        removeProTxPubKeyConflicts(tx, proTx.keyIDOperator);
+    } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
+        CProUpServTx proTx;
+        if (!GetTxPayload(tx, proTx)) {
+            assert(false);
+        }
 
-    if (mapProTxRegisterAddresses.count(proTx.addr)) {
-        uint256 conflictHash = mapProTxRegisterAddresses[proTx.addr];
-        if (conflictHash != tx.GetHash() && mapTx.count(conflictHash)) {
-            removeRecursive(mapTx.find(conflictHash)->GetTx(), MemPoolRemovalReason::CONFLICT);
+        if (mapProTxAddresses.count(proTx.addr)) {
+            uint256 conflictHash = mapProTxAddresses[proTx.addr];
+            if (conflictHash != tx.GetHash() && mapTx.count(conflictHash)) {
+                removeRecursive(mapTx.find(conflictHash)->GetTx(), MemPoolRemovalReason::CONFLICT);
+            }
         }
-    }
-    if (mapProTxPubKeyIDs.count(proTx.keyIDOwner)) {
-        uint256 conflictHash = mapProTxPubKeyIDs[proTx.keyIDOwner];
-        if (conflictHash != tx.GetHash() && mapTx.count(conflictHash)) {
-            removeRecursive(mapTx.find(conflictHash)->GetTx(), MemPoolRemovalReason::CONFLICT);
+    } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
+        CProUpRegTx proTx;
+        if (!GetTxPayload(tx, proTx)) {
+            assert(false);
         }
-    }
-    if (mapProTxPubKeyIDs.count(proTx.keyIDOperator)) {
-        uint256 conflictHash = mapProTxPubKeyIDs[proTx.keyIDOperator];
-        if (conflictHash != tx.GetHash() && mapTx.count(conflictHash)) {
-            removeRecursive(mapTx.find(conflictHash)->GetTx(), MemPoolRemovalReason::CONFLICT);
-        }
+
+        removeProTxPubKeyConflicts(tx, proTx.keyIDOperator);
     }
 }
 
@@ -830,7 +872,7 @@ void CTxMemPool::_clear()
     mapLinks.clear();
     mapTx.clear();
     mapNextTx.clear();
-    mapProTxRegisterAddresses.clear();
+    mapProTxAddresses.clear();
     mapProTxPubKeyIDs.clear();
     totalTxSize = 0;
     cachedInnerUsage = 0;
@@ -1071,12 +1113,25 @@ TxMempoolInfo CTxMemPool::info(const uint256& hash) const
 
 bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
     LOCK(cs);
-    if (tx.nVersion < 3 || tx.nType != TRANSACTION_PROVIDER_REGISTER)
-        return false;
-    CProRegTx proTx;
-    if (!GetTxPayload(tx, proTx))
-        assert(false);
-    return mapProTxRegisterAddresses.count(proTx.addr) || mapProTxPubKeyIDs.count(proTx.keyIDOwner) || mapProTxPubKeyIDs.count(proTx.keyIDOperator);
+    if (tx.nType == TRANSACTION_PROVIDER_REGISTER) {
+        CProRegTx proTx;
+        if (!GetTxPayload(tx, proTx))
+            assert(false);
+        return mapProTxAddresses.count(proTx.addr) || mapProTxPubKeyIDs.count(proTx.keyIDOwner) || mapProTxPubKeyIDs.count(proTx.keyIDOperator);
+    } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
+        CProUpServTx proTx;
+        if (!GetTxPayload(tx, proTx))
+            assert(false);
+        auto it = mapProTxAddresses.find(proTx.addr);
+        return it != mapProTxAddresses.end() && it->second != proTx.proTxHash;
+    } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
+        CProUpRegTx proTx;
+        if (!GetTxPayload(tx, proTx))
+            assert(false);
+        auto it = mapProTxPubKeyIDs.find(proTx.keyIDOperator);
+        return it != mapProTxPubKeyIDs.end() && it->second != proTx.proTxHash;
+    }
+    return false;
 }
 
 CFeeRate CTxMemPool::estimateFee(int nBlocks) const
