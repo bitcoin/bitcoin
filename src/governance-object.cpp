@@ -177,8 +177,10 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         }
     }
 
+    bool onlyOwnerAllowed = nObjectType == GOVERNANCE_OBJECT_PROPOSAL;
+
     // Finally check that the vote is actually valid (done last because of cost of signature verification)
-    if(!vote.IsValid(true)) {
+    if(!vote.IsValid(onlyOwnerAllowed)) {
         std::ostringstream ostr;
         ostr << "CGovernanceObject::ProcessVote -- Invalid vote"
                 << ", MN outpoint = " << vote.GetMasternodeOutpoint().ToStringShort()
@@ -265,53 +267,53 @@ void CGovernanceObject::SetMasternodeOutpoint(const COutPoint& outpoint)
     masternodeOutpoint = outpoint;
 }
 
-bool CGovernanceObject::Sign(const CKey& keyMasternode, const CKeyID& keyIDMasternode)
+bool CGovernanceObject::Sign(const CKey& key, const CKeyID& keyID)
 {
     std::string strError;
 
     if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
         uint256 hash = GetSignatureHash();
 
-        if (!CHashSigner::SignHash(hash, keyMasternode, vchSig)) {
+        if (!CHashSigner::SignHash(hash, key, vchSig)) {
             LogPrintf("CGovernanceObject::Sign -- SignHash() failed\n");
             return false;
         }
 
-        if (!CHashSigner::VerifyHash(hash, keyIDMasternode, vchSig, strError)) {
+        if (!CHashSigner::VerifyHash(hash, keyID, vchSig, strError)) {
             LogPrintf("CGovernanceObject::Sign -- VerifyHash() failed, error: %s\n", strError);
             return false;
         }
     } else {
         std::string strMessage = GetSignatureMessage();
-        if (!CMessageSigner::SignMessage(strMessage, vchSig, keyMasternode)) {
+        if (!CMessageSigner::SignMessage(strMessage, vchSig, key)) {
             LogPrintf("CGovernanceObject::Sign -- SignMessage() failed\n");
             return false;
         }
 
-        if(!CMessageSigner::VerifyMessage(keyIDMasternode, vchSig, strMessage, strError)) {
+        if(!CMessageSigner::VerifyMessage(keyID, vchSig, strMessage, strError)) {
             LogPrintf("CGovernanceObject::Sign -- VerifyMessage() failed, error: %s\n", strError);
             return false;
         }
     }
 
     LogPrint("gobject", "CGovernanceObject::Sign -- pubkey id = %s, masternode = %s\n",
-             keyIDMasternode.ToString(), masternodeOutpoint.ToStringShort());
+             keyID.ToString(), masternodeOutpoint.ToStringShort());
 
     return true;
 }
 
-bool CGovernanceObject::CheckSignature(const CKeyID& keyIDMasternode) const
+bool CGovernanceObject::CheckSignature(const CKeyID& keyID) const
 {
     std::string strError;
 
     if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
         uint256 hash = GetSignatureHash();
 
-        if (!CHashSigner::VerifyHash(hash, keyIDMasternode, vchSig, strError)) {
+        if (!CHashSigner::VerifyHash(hash, keyID, vchSig, strError)) {
             // could be an old object
             std::string strMessage = GetSignatureMessage();
 
-            if(!CMessageSigner::VerifyMessage(keyIDMasternode, vchSig, strMessage, strError)) {
+            if(!CMessageSigner::VerifyMessage(keyID, vchSig, strMessage, strError)) {
                 // nope, not in old format either
                 LogPrintf("CGovernance::CheckSignature -- VerifyMessage() failed, error: %s\n", strError);
                 return false;
@@ -320,7 +322,7 @@ bool CGovernanceObject::CheckSignature(const CKeyID& keyIDMasternode) const
     } else {
         std::string strMessage = GetSignatureMessage();
 
-        if (!CMessageSigner::VerifyMessage(keyIDMasternode, vchSig, strMessage, strError)) {
+        if (!CMessageSigner::VerifyMessage(keyID, vchSig, strMessage, strError)) {
             LogPrintf("CGovernance::CheckSignature -- VerifyMessage() failed, error: %s\n", strError);
             return false;
         }
@@ -509,8 +511,8 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingMast
             }
 
             // Check that we have a valid MN signature
-            if (!CheckSignature(infoMn.keyIDMasternode)) {
-                strError = "Invalid masternode signature for: " + strOutpoint + ", pubkey id = " + infoMn.keyIDMasternode.ToString();
+            if (!CheckSignature(infoMn.keyIDOperator)) {
+                strError = "Invalid masternode signature for: " + strOutpoint + ", pubkey id = " + infoMn.keyIDOperator.ToString();
                 return false;
             }
 

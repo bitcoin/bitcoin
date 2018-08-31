@@ -56,7 +56,7 @@ void CPrivateSendClient::ProcessMessage(CNode* pfrom, const std::string& strComm
         masternode_info_t infoMn;
         if(!mnodeman.GetMasternodeInfo(dsq.masternodeOutpoint, infoMn)) return;
 
-        if(!dsq.CheckSignature(infoMn.keyIDMasternode)) {
+        if(!dsq.CheckSignature(infoMn.keyIDOperator)) {
             // we probably have outdated info
             mnodeman.AskForMN(pfrom, dsq.masternodeOutpoint, connman);
             return;

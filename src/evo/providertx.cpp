@@ -76,6 +76,16 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
     if (!ptx.scriptPayout.IsPayToPublicKeyHash())
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-payee");
 
+    CTxDestination payoutDest;
+    if (!ExtractDestination(ptx.scriptPayout, payoutDest)) {
+        // should not happen as we checked script types before
+        return state.DoS(10, false, REJECT_INVALID, "bad-protx-payee-dest");
+    }
+    // don't allow reuse of collateral key for other keys (don't allow people to put the collateral key onto an online server)
+    if (payoutDest == CTxDestination(ptx.keyIDOwner) || payoutDest == CTxDestination(ptx.keyIDOperator) || payoutDest == CTxDestination(ptx.keyIDVoting)) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-protx-payee-reuse");
+    }
+
     // This is a temporary restriction that will be lifted later
     // It is required while we are transitioning from the old MN list to the deterministic list
     if (tx.vout[ptx.nCollateralIndex].scriptPubKey != ptx.scriptPayout)

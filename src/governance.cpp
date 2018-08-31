@@ -684,7 +684,10 @@ void CGovernanceManager::SyncSingleObjAndItsVotes(CNode* pnode, const uint256& n
 
     for (const auto& vote : fileVotes.GetVotes()) {
         uint256 nVoteHash = vote.GetHash();
-        if(filter.contains(nVoteHash) || !vote.IsValid(true)) {
+
+        bool onlyOwnerAllowed = govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL;
+
+        if(filter.contains(nVoteHash) || !vote.IsValid(onlyOwnerAllowed)) {
             continue;
         }
         pnode->PushInventory(CInv(MSG_GOVERNANCE_OBJECT_VOTE, nVoteHash));

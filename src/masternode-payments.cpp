@@ -420,7 +420,7 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, const std::string& strCom
         }
 
         int nDos = 0;
-        if(!vote.CheckSignature(mnInfo.keyIDMasternode, nCachedBlockHeight, nDos)) {
+        if(!vote.CheckSignature(mnInfo.keyIDOperator, nCachedBlockHeight, nDos)) {
             if(nDos) {
                 LOCK(cs_main);
                 LogPrintf("MASTERNODEPAYMENTVOTE -- ERROR: invalid signature\n");
@@ -480,12 +480,12 @@ bool CMasternodePaymentVote::Sign()
     if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
         uint256 hash = GetSignatureHash();
 
-        if(!CHashSigner::SignHash(hash, activeMasternodeInfo.keyMasternode, vchSig)) {
+        if(!CHashSigner::SignHash(hash, activeMasternodeInfo.keyOperator, vchSig)) {
             LogPrintf("CMasternodePaymentVote::%s -- SignHash() failed\n", __func__);
             return false;
         }
 
-        if (!CHashSigner::VerifyHash(hash, activeMasternodeInfo.keyIDMasternode, vchSig, strError)) {
+        if (!CHashSigner::VerifyHash(hash, activeMasternodeInfo.keyIDOperator, vchSig, strError)) {
             LogPrintf("CMasternodePaymentVote::%s -- VerifyHash() failed, error: %s\n", __func__, strError);
             return false;
         }
@@ -494,12 +494,12 @@ bool CMasternodePaymentVote::Sign()
                     std::to_string(nBlockHeight) +
                     ScriptToAsmStr(payee);
 
-        if(!CMessageSigner::SignMessage(strMessage, vchSig, activeMasternodeInfo.keyMasternode)) {
+        if(!CMessageSigner::SignMessage(strMessage, vchSig, activeMasternodeInfo.keyOperator)) {
             LogPrintf("CMasternodePaymentVote::%s -- SignMessage() failed\n", __func__);
             return false;
         }
 
-        if(!CMessageSigner::VerifyMessage(activeMasternodeInfo.keyIDMasternode, vchSig, strMessage, strError)) {
+        if(!CMessageSigner::VerifyMessage(activeMasternodeInfo.keyIDOperator, vchSig, strMessage, strError)) {
             LogPrintf("CMasternodePaymentVote::%s -- VerifyMessage() failed, error: %s\n", __func__, strError);
             return false;
         }
@@ -939,7 +939,7 @@ void CMasternodePaymentVote::Relay(CConnman& connman) const
     connman.RelayInv(inv);
 }
 
-bool CMasternodePaymentVote::CheckSignature(const CKeyID& keyIDMasternode, int nValidationHeight, int &nDos) const
+bool CMasternodePaymentVote::CheckSignature(const CKeyID& keyIDOperator, int nValidationHeight, int &nDos) const
 {
     // do not ban by default
     nDos = 0;
@@ -948,12 +948,12 @@ bool CMasternodePaymentVote::CheckSignature(const CKeyID& keyIDMasternode, int n
     if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
         uint256 hash = GetSignatureHash();
 
-        if (!CHashSigner::VerifyHash(hash, keyIDMasternode, vchSig, strError)) {
+        if (!CHashSigner::VerifyHash(hash, keyIDOperator, vchSig, strError)) {
             // could be a signature in old format
             std::string strMessage = masternodeOutpoint.ToStringShort() +
                         std::to_string(nBlockHeight) +
                         ScriptToAsmStr(payee);
-            if(!CMessageSigner::VerifyMessage(keyIDMasternode, vchSig, strMessage, strError)) {
+            if(!CMessageSigner::VerifyMessage(keyIDOperator, vchSig, strMessage, strError)) {
                 // nope, not in old format either
                 // Only ban for future block vote when we are already synced.
                 // Otherwise it could be the case when MN which signed this vote is using another key now
@@ -970,7 +970,7 @@ bool CMasternodePaymentVote::CheckSignature(const CKeyID& keyIDMasternode, int n
                     std::to_string(nBlockHeight) +
                     ScriptToAsmStr(payee);
 
-        if (!CMessageSigner::VerifyMessage(keyIDMasternode, vchSig, strMessage, strError)) {
+        if (!CMessageSigner::VerifyMessage(keyIDOperator, vchSig, strMessage, strError)) {
             // Only ban for future block vote when we are already synced.
             // Otherwise it could be the case when MN which signed this vote is using another key now
             // and we have no idea about the old one.

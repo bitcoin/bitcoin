@@ -169,8 +169,8 @@ public:
     bool Has(const COutPoint& outpoint);
 
     bool GetMasternodeInfo(const COutPoint& outpoint, masternode_info_t& mnInfoRet);
-    bool GetMasternodeInfo(const CKeyID& keyIDMasternode, masternode_info_t& mnInfoRet);
-    bool GetMasternodeInfo(const CPubKey& pubKeyMasternode, masternode_info_t& mnInfoRet);
+    bool GetMasternodeInfo(const CKeyID& keyIDOperator, masternode_info_t& mnInfoRet);
+    bool GetMasternodeInfo(const CPubKey& pubKeyOperator, masternode_info_t& mnInfoRet);
     bool GetMasternodeInfo(const CScript& payee, masternode_info_t& mnInfoRet);
 
     /// Find an entry in the masternode list that is next to be paid
@@ -230,7 +230,7 @@ public:
     bool AddGovernanceVote(const COutPoint& outpoint, uint256 nGovernanceObjectHash);
     void RemoveGovernanceObject(uint256 nGovernanceObjectHash);
 
-    void CheckMasternode(const CKeyID& keyIDMasternode, bool fForce);
+    void CheckMasternode(const CKeyID& keyIDOperator, bool fForce);
 
     bool IsMasternodePingedWithin(const COutPoint& outpoint, int nSeconds, int64_t nTimeToCheckAt = -1);
     void SetMasternodeLastPing(const COutPoint& outpoint, const CMasternodePing& mnp);

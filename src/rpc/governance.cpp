@@ -236,7 +236,7 @@ UniValue gobject_submit(const JSONRPCRequest& request)
 
     bool fMnFound = mnodeman.Has(activeMasternodeInfo.outpoint);
 
-    DBG( std::cout << "gobject: submit activeMasternodeInfo.keyIDMasternode = " << activeMasternodeInfo.keyIDMasternode.ToString()
+    DBG( std::cout << "gobject: submit activeMasternodeInfo.keyIDOperator = " << activeMasternodeInfo.keyIDOperator.ToString()
          << ", outpoint = " << activeMasternodeInfo.outpoint.ToStringShort()
          << ", params.size() = " << request.params.size()
          << ", fMnFound = " << fMnFound << std::endl; );
@@ -286,7 +286,7 @@ UniValue gobject_submit(const JSONRPCRequest& request)
     if(govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
         if(fMnFound) {
             govobj.SetMasternodeOutpoint(activeMasternodeInfo.outpoint);
-            govobj.Sign(activeMasternodeInfo.keyMasternode, activeMasternodeInfo.keyIDMasternode);
+            govobj.Sign(activeMasternodeInfo.keyOperator, activeMasternodeInfo.keyIDOperator);
         }
         else {
             LogPrintf("gobject(submit) -- Object submission rejected because node is not a masternode\n");
@@ -389,7 +389,7 @@ UniValue gobject_vote_conf(const JSONRPCRequest& request)
     }
 
     CGovernanceVote vote(mn.outpoint, hash, eVoteSignal, eVoteOutcome);
-    if(!vote.Sign(activeMasternodeInfo.keyMasternode, activeMasternodeInfo.keyIDMasternode)) {
+    if(!vote.Sign(activeMasternodeInfo.keyOperator, activeMasternodeInfo.keyIDOperator)) {
         nFailed++;
         statusObj.push_back(Pair("result", "failed"));
         statusObj.push_back(Pair("errorMessage", "Failure to sign."));
@@ -428,12 +428,12 @@ UniValue VoteWithMasternodeList(const std::vector<CMasternodeConfig::CMasternode
     UniValue resultsObj(UniValue::VOBJ);
 
     for (const auto& mne : entries) {
-        CPubKey pubKeyMasternode;
-        CKey keyMasternode;
+        CPubKey pubKeyOperator;
+        CKey keyOperator;
 
         UniValue statusObj(UniValue::VOBJ);
 
-        if(!CMessageSigner::GetKeysFromSecret(mne.getPrivKey(), keyMasternode, pubKeyMasternode)){
+        if(!CMessageSigner::GetKeysFromSecret(mne.getPrivKey(), keyOperator, pubKeyOperator)) {
             nFailed++;
             statusObj.push_back(Pair("result", "failed"));
             statusObj.push_back(Pair("errorMessage", "Masternode signing error, could not set key correctly"));
@@ -463,7 +463,7 @@ UniValue VoteWithMasternodeList(const std::vector<CMasternodeConfig::CMasternode
         }
 
         CGovernanceVote vote(mn.outpoint, hash, eVoteSignal, eVoteOutcome);
-        if(!vote.Sign(keyMasternode, pubKeyMasternode.GetID())){
+        if(!vote.Sign(keyOperator, pubKeyOperator.GetID())) {
             nFailed++;
             statusObj.push_back(Pair("result", "failed"));
             statusObj.push_back(Pair("errorMessage", "Failure to sign."));
@@ -981,6 +981,16 @@ UniValue voteraw(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please use one of the following: 'yes', 'no' or 'abstain'");
     }
 
+    int govObjType;
+    {
+        LOCK(governance.cs);
+        CGovernanceObject *pGovObj = governance.FindGovernanceObject(hashGovObj);
+        if (!pGovObj) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Governance object not found");
+        }
+        govObjType = pGovObj->GetObjectType();
+    }
+
     int64_t nTime = request.params[5].get_int64();
     std::string strSig = request.params[6].get_str();
     bool fInvalid = false;
@@ -1001,7 +1011,9 @@ UniValue voteraw(const JSONRPCRequest& request)
     vote.SetTime(nTime);
     vote.SetSignature(vchSig);
 
-    if(!vote.IsValid(true)) {
+    bool onlyOwnerAllowed = govObjType == GOVERNANCE_OBJECT_PROPOSAL;
+
+    if(!vote.IsValid(onlyOwnerAllowed)) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Failure to verify vote.");
     }
 

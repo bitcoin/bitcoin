@@ -159,7 +159,7 @@ public:
     uint256 GetSignatureHash() const;
 
     bool Sign();
-    bool CheckSignature(const CKeyID& keyIDMasternode, int nValidationHeight, int &nDos) const;
+    bool CheckSignature(const CKeyID& keyIDOperator, int nValidationHeight, int &nDos) const;
 
     bool IsValid(CNode* pnode, int nValidationHeight, std::string& strError, CConnman& connman) const;
     void Relay(CConnman& connman) const;
