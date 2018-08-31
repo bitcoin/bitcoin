@@ -30,7 +30,12 @@ struct BIP9Deployment {
     int bit;
     /** Start MedianTime for version bits miner confirmation. Can be a date in the past */
     int64_t nStartTime;
-    /** Timeout/expiry MedianTime for the deployment attempt. */
+    /** Timeout/expiry MedianTime for the deployment attempt.
+     * Setting to 0 will prevent advertising presence of softfork,
+     * allowing code to be merged without defining the softfork's
+     * activation parameters.
+     */
+
     int64_t nTimeout;
 
     /** Constant for nTimeout very far in the future. */
