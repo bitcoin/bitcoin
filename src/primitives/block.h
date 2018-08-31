@@ -82,6 +82,7 @@ class CBlock : public CBlockHeader
 public:
     // network and disk
     std::vector<CTransaction> vtx;
+    std::vector<unsigned char> vchBlockSig;
 
     // memory only
     mutable CScript payee;
@@ -106,12 +107,14 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(*(CBlockHeader*)this);
         READWRITE(vtx);
+        READWRITE(vchBlockSig);
     }
 
     void SetNull()
     {
         CBlockHeader::SetNull();
         vtx.clear();
+        vchBlockSig.clear();
         fChecked = false;
         vMerkleTree.clear();
         payee = CScript();
@@ -139,6 +142,8 @@ public:
 
     std::vector<uint256> GetMerkleBranch(int nIndex) const;
     static uint256 CheckMerkleBranch(uint256 hash, const std::vector<uint256>& vMerkleBranch, int nIndex);
+    bool IsProofOfStake() const;
+    bool IsProofOfWork() const;
     std::string ToString() const;
 };
 

@@ -118,6 +118,16 @@ uint256 CBlock::CheckMerkleBranch(uint256 hash, const std::vector<uint256>& vMer
     return hash;
 }
 
+bool CBlock::IsProofOfStake() const
+{
+    return vtx.size() > 1 && !vtx[1].vin.empty() && vtx[1].vin[0].prevout.IsNull();
+}
+
+bool CBlock::IsProofOfWork() const
+{
+    return !IsProofOfStake();
+}
+
 std::string CBlock::ToString() const
 {
     std::stringstream s;

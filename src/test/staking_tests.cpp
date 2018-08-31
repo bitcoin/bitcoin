@@ -4,6 +4,7 @@
 #include "amount.h"
 #include "arith_uint256.h"
 #include "utiltime.h"
+#include "primitives/block.h"
 
 #include "mn-pos/kernel.h"
 #include "mn-pos/stakeminer.h"
@@ -55,6 +56,21 @@ BOOST_AUTO_TEST_CASE(proof_validity)
     BOOST_CHECK_MESSAGE(Kernel::CheckProof(target, hash, nAmount), "failed to pass hash proof that is valid");
     BOOST_CHECK_MESSAGE(!Kernel::CheckProof(target, hash + 1, nAmount), "hash that is equal to target was considered valid proof hash");
     BOOST_CHECK_MESSAGE(!Kernel::CheckProof(target, hash + 2, nAmount), "hash that is greater than target was considered valid proof hash");
+}
+
+BOOST_AUTO_TEST_CASE(block_type)
+{
+    CBlock block;
+    CMutableTransaction tx;
+    uint256 txid = uint256S("1");
+    tx.vin.emplace_back(CTxIn(COutPoint(uint256(), -1), CScript()));
+    tx.vin.emplace_back(CTxIn(COutPoint(txid, 0), CScript()));
+    block.vtx.emplace_back(CTransaction());
+    block.vtx.emplace_back(tx);
+    BOOST_CHECK_MESSAGE(block.IsProofOfStake(), "Proof of Stake block failed IsProofOfStake() test");
+
+    CBlock blockPoW;
+    BOOST_CHECK_MESSAGE(blockPoW.IsProofOfWork(), "Proof of Work block failed IsProofOfWork() test");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
