@@ -69,7 +69,7 @@ class WorkQueue
 {
 private:
     /** Mutex protects entire object */
-    CWaitableCriticalSection cs;
+    Mutex cs;
     std::condition_variable cond;
     std::deque<std::unique_ptr<WorkItem>> queue;
     bool running;
