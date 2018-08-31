@@ -365,6 +365,7 @@ libbitcoin_consensus_a_SOURCES = \
   serialize.h \
   span.h \
   tinyformat.h \
+  tinyformat/tinyformat.h \
   uint256.cpp \
   uint256.h \
   utilstrencodings.cpp \
