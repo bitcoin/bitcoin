@@ -145,6 +145,7 @@ BITCOIN_CORE_H = \
   mn-pos/kernel.h \
   mn-pos/proofpointer.h \
   mn-pos/stakeminer.h \
+  mn-pos/stakevalidation.h \
   nodeconfig.h \
   systemnode.h \
   systemnode-payments.h \
@@ -206,6 +207,7 @@ libbitcoin_server_a_SOURCES = \
   miner.cpp \
   mn-pos/kernel.cpp \
   mn-pos/stakeminer.cpp \
+  mn-pos/stakevalidation.cpp \
   net.cpp \
   noui.cpp \
   pow.cpp \

@@ -3,11 +3,13 @@
 
 #include "amount.h"
 #include "arith_uint256.h"
+#include "key.h"
 #include "utiltime.h"
 #include "primitives/block.h"
 
 #include "mn-pos/kernel.h"
 #include "mn-pos/stakeminer.h"
+#include "mn-pos/stakevalidation.h"
 
 
 BOOST_AUTO_TEST_SUITE(staking_tests)
@@ -71,6 +73,38 @@ BOOST_AUTO_TEST_CASE(block_type)
 
     CBlock blockPoW;
     BOOST_CHECK_MESSAGE(blockPoW.IsProofOfWork(), "Proof of Work block failed IsProofOfWork() test");
+}
+
+BOOST_AUTO_TEST_CASE(block_signature)
+{
+    //Dummy PoS Block
+    CBlock block;
+    CMutableTransaction tx;
+    uint256 txid = uint256S("1");
+    tx.vin.emplace_back(CTxIn(COutPoint(uint256(), -1), CScript()));
+    tx.vin.emplace_back(CTxIn(COutPoint(txid, 0), CScript()));
+    block.vtx.emplace_back(CTransaction());
+    block.vtx.emplace_back(tx);
+
+    CKey keyMasternode;
+    keyMasternode.MakeNewKey(true);
+    std::vector<unsigned char> vchSig;
+    BOOST_CHECK_MESSAGE(keyMasternode.Sign(block.GetHash(), vchSig), "failed to sign block with key");
+
+    //Correct signature
+    block.vchBlockSig = vchSig;
+    BOOST_CHECK_MESSAGE(CheckBlockSignature(block, keyMasternode.GetPubKey()), "block signature validation failed");
+
+    //Sign with different key
+    CKey keyOther;
+    keyOther.MakeNewKey(true);
+    BOOST_CHECK_MESSAGE(!CheckBlockSignature(block, keyOther.GetPubKey()), "considered block signature valid when it "
+                                                                           "should not have");
+    //Sign wrong hash
+    vchSig.clear();
+    BOOST_CHECK_MESSAGE(keyMasternode.Sign(uint256S("123456789"), vchSig), "failed to sign block with key");
+    block.vchBlockSig = vchSig;
+    BOOST_CHECK_MESSAGE(!CheckBlockSignature(block, keyMasternode.GetPubKey()), "Validated signature that was not valid");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
