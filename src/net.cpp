@@ -1227,7 +1227,7 @@ void CConnman::ThreadSocketHandler()
         if(vNodesSize != nPrevNodeCount) {
             nPrevNodeCount = vNodesSize;
             if(clientInterface)
-                clientInterface->NotifyNumConnectionsChanged(nPrevNodeCount);
+                clientInterface->NotifyNumConnectionsChanged(vNodesSize);
         }
 
         //
