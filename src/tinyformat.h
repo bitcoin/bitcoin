@@ -1052,17 +1052,20 @@ TINYFORMAT_FOREACH_ARGNUM(TINYFORMAT_MAKE_FORMAT_FUNCS)
 
 #endif
 
-// Added for Bitcoin Core
-template<typename... Args>
-std::string format(const std::string &fmt, const Args&... args)
-{
-    std::ostringstream oss;
-    format(oss, fmt.c_str(), args...);
-    return oss.str();
-}
-
 } // namespace tinyformat
 
-#define strprintf tfm::format
+// Added for Bitcoin Core
+template<typename... Args>
+std::string strprintf(const std::string& fmt, const Args&... args) noexcept
+{
+    std::ostringstream oss;
+    try {
+        tfm::format(oss, fmt.c_str(), args...);
+    } catch (const tinyformat::format_error& fmterr) {
+        fprintf(stderr, "Format error: %s (fmt=\"%s\")\n", fmterr.what(), fmt.c_str());
+        std::terminate();
+    }
+    return oss.str();
+}
 
 #endif // TINYFORMAT_H_INCLUDED
