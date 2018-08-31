@@ -42,6 +42,60 @@ BOOST_AUTO_TEST_CASE(dbwrapper)
     }
 }
 
+BOOST_AUTO_TEST_CASE(dbwrapper_basic_data)
+{
+    // Perform tests both obfuscated and non-obfuscated.
+    for (bool obfuscate : {false, true}) {
+        fs::path ph = SetDataDir(std::string("dbwrapper_1").append(obfuscate ? "_true" : "_false"));
+        //CDBWrapper dbw(ph, (1 << 20), true, false, obfuscate);
+        CDBWrapper dbw(ph, (1 << 20), false, true, obfuscate);
+
+        uint256 res;
+        // Ensure that we're doing real obfuscation when obfuscate=true
+        BOOST_CHECK(obfuscate != is_null_key(dbwrapper_private::GetObfuscateKey(dbw)));
+ 
+        //Simulate block raw data - "b + block hash"
+        std::string block_tag = "b";
+        uint256 block_hash = InsecureRand256();
+        std::string key_block = block_tag + block_hash.ToString();
+
+        uint256 in_block = InsecureRand256();
+        BOOST_CHECK(dbw.Write(key_block, in_block));
+        BOOST_CHECK(dbw.Read(key_block, res));
+        BOOST_CHECK_EQUAL(res.ToString(), in_block.ToString());    
+
+        //Simulate file raw data - "f + file_number"
+        std::string file_tag = "f";
+        uint32_t file_number = InsecureRand32();
+        std::string key_file = strprintf("%s%04x", file_tag,file_number);
+
+        uint256 in_file_info = InsecureRand256();
+        BOOST_CHECK(dbw.Write(key_file, in_file_info));
+        BOOST_CHECK(dbw.Read(key_file, res));
+        BOOST_CHECK_EQUAL(res.ToString(), in_file_info.ToString());
+
+        //Simulate transaction raw data - "t + transaction hash"
+        std::string transaction_tag = "t";
+        uint256 transaction_hash = InsecureRand256();
+        std::string key_transaction = transaction_tag + transaction_hash.ToString();
+
+        uint256 in_transaction = InsecureRand256();
+        BOOST_CHECK(dbw.Write(key_transaction, in_transaction));
+        BOOST_CHECK(dbw.Read(key_transaction, res));
+        BOOST_CHECK_EQUAL(res.ToString(), in_transaction.ToString());      
+
+        //Simulate UTXO raw data - "c + transaction hash"
+        std::string utxo_tag = "c";
+        uint256 utxo_hash = InsecureRand256();
+        std::string key_utxo = utxo_tag + utxo_hash.ToString();
+
+        uint256 in_utxo = InsecureRand256();
+        BOOST_CHECK(dbw.Write(key_utxo, in_utxo));
+        BOOST_CHECK(dbw.Read(key_utxo, res));
+        BOOST_CHECK_EQUAL(res.ToString(), in_utxo.ToString()); 
+   }
+}
+
 // Test batch operations
 BOOST_AUTO_TEST_CASE(dbwrapper_batch)
 {
