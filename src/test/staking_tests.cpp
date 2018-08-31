@@ -60,13 +60,45 @@ BOOST_AUTO_TEST_CASE(proof_validity)
     BOOST_CHECK_MESSAGE(!Kernel::CheckProof(target, hash + 2, nAmount), "hash that is greater than target was considered valid proof hash");
 }
 
+BOOST_AUTO_TEST_CASE(transaction_type)
+{
+    CTxIn txIn;
+    txIn.scriptSig << OP_PROOFOFSTAKE;
+    CMutableTransaction tx;
+    tx.vin.emplace_back(txIn);
+    tx.vout.emplace_back(CTxOut());
+
+    CTransaction txCoinStake(tx);
+    BOOST_CHECK_MESSAGE(txCoinStake.IsCoinStake(), "coinstake transaction not marked as coinstake");
+    BOOST_CHECK_MESSAGE(!txCoinStake.IsCoinBase(), "coinstake transaction is marked as coinbase");
+
+    tx.vin.clear();
+    txCoinStake = tx;
+    BOOST_CHECK_MESSAGE(!txCoinStake.IsCoinStake(), "tx with no inputs is marked as coinstake");
+
+    tx.vin.emplace_back(CTxIn());
+    txCoinStake = tx;
+    BOOST_CHECK_MESSAGE(!txCoinStake.IsCoinStake(), "tx with null input but no PoS mark is marked as coinstake");
+
+    tx.vin.clear();
+    tx.vin.emplace_back(txIn);
+    tx.vout.emplace_back(CTxOut());
+    txCoinStake = tx;
+    BOOST_CHECK_MESSAGE(!txCoinStake.IsCoinStake(), "tx with two outputs is marked as coinstake");
+
+    tx.vout.clear();
+    txCoinStake = tx;
+    BOOST_CHECK_MESSAGE(!txCoinStake.IsCoinStake(), "tx with no outputs is marked as coinstake");
+}
+
 BOOST_AUTO_TEST_CASE(block_type)
 {
     CBlock block;
     CMutableTransaction tx;
-    uint256 txid = uint256S("1");
-    tx.vin.emplace_back(CTxIn(COutPoint(uint256(), -1), CScript()));
-    tx.vin.emplace_back(CTxIn(COutPoint(txid, 0), CScript()));
+    CTxIn txIn;
+    txIn.scriptSig << OP_PROOFOFSTAKE;
+    tx.vin.emplace_back(txIn);
+    tx.vout.emplace_back(CTxOut());
     block.vtx.emplace_back(CTransaction());
     block.vtx.emplace_back(tx);
     BOOST_CHECK_MESSAGE(block.IsProofOfStake(), "Proof of Stake block failed IsProofOfStake() test");

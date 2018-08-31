@@ -243,6 +243,11 @@ bool CScript::IsPayToScriptHash() const
             (*this)[22] == OP_EQUAL);
 }
 
+bool CScript::IsProofOfStakeMarker() const
+{
+    return (this->size() == 1 && (*this)[0] == OP_PROOFOFSTAKE);
+}
+
 bool CScript::IsPushOnly() const
 {
     const_iterator pc = begin();

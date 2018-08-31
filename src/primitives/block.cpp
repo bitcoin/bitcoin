@@ -120,7 +120,7 @@ uint256 CBlock::CheckMerkleBranch(uint256 hash, const std::vector<uint256>& vMer
 
 bool CBlock::IsProofOfStake() const
 {
-    return vtx.size() > 1 && !vtx[1].vin.empty() && vtx[1].vin[0].prevout.IsNull();
+    return vtx.size() > 1 && vtx[1].IsCoinStake();
 }
 
 bool CBlock::IsProofOfWork() const
