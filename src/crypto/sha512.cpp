@@ -2,6 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <support/cleanse.h>
+
 #include <crypto/sha512.h>
 
 #include <crypto/common.h>
@@ -204,4 +206,10 @@ CSHA512& CSHA512::Reset()
     bytes = 0;
     sha512::Initialize(s);
     return *this;
+}
+
+void CSHA512::MemoryCleanse() {
+    bytes = 0;
+    sha512::Initialize(s);
+    memory_cleanse(buf, sizeof(buf));
 }

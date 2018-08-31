@@ -23,6 +23,7 @@ public:
     CSHA512& Write(const unsigned char* data, size_t len);
     void Finalize(unsigned char hash[OUTPUT_SIZE]);
     CSHA512& Reset();
+    void MemoryCleanse();
 };
 
 #endif // BITCOIN_CRYPTO_SHA512_H
