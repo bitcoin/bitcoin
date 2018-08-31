@@ -339,7 +339,7 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
 
         modtxscoreiter modit = mapModifiedTx.get<ancestor_score>().begin();
         if (mi == mempool.mapTx.get<ancestor_score>().end()) {
-            // We're out of entries in mapTx; use the entry from mapModifiedTx
+            // We are out of entries in mapTx; use the entry from mapModifiedTx
             iter = modit->iter;
             fUsingModified = true;
         } else {
@@ -390,7 +390,7 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
 
             if (nConsecutiveFailed > MAX_CONSECUTIVE_FAILURES && nBlockWeight >
                     nBlockMaxWeight - 4000) {
-                // Give up if we're close to full and haven't succeeded in a while
+                // Give up if we are close to full and haven't succeeded in a while
                 break;
             }
             continue;

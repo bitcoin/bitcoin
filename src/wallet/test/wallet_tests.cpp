@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(ComputeTimeSmart)
     // Test that updating existing transaction does not change smart time.
     BOOST_CHECK_EQUAL(AddTx(m_wallet, 1, 200, 220), 100);
 
-    // New transaction should use clock time if there's no block time.
+    // New transaction should use clock time if there is no block time.
     BOOST_CHECK_EQUAL(AddTx(m_wallet, 2, 300, 0), 300);
 
     // New transaction should use block time if lower than clock time.

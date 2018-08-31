@@ -518,7 +518,7 @@ class P2PDataStore(P2PInterface):
             wait_until(lambda: self.reject_reason_received == reject_reason, lock=mininode_lock)
 
     def send_txs_and_test(self, txs, node, *, success=True, expect_disconnect=False, reject_code=None, reject_reason=None):
-        """Send txs to test node and test whether they're accepted to the mempool.
+        """Send txs to test node and test whether they are accepted to the mempool.
 
          - add all txs to our tx_store
          - send tx messages for all txs

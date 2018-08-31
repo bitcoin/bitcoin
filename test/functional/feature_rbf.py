@@ -319,7 +319,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
         tx1a_txid = int(tx1a_txid, 16)
 
-        # Direct spend an output of the transaction we're replacing.
+        # Direct spend an output of the transaction we are replacing.
         tx2 = CTransaction()
         tx2.vin = [CTxIn(utxo1, nSequence=0), CTxIn(utxo2, nSequence=0)]
         tx2.vin.append(CTxIn(COutPoint(tx1a_txid, 0), nSequence=0))

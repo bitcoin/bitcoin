@@ -1535,7 +1535,7 @@ else
 # The value should be what the vendor currently ships out the door with their
 # machine or put another way, the most popular os provided with the machine.
 
-# Note that if you're going to try to match "-MANUFACTURER" here (say,
+# Note that if you are going to try to match "-MANUFACTURER" here (say,
 # "-sun"), then you have to tell the case statement up towards the top
 # that MANUFACTURER isn't an operating system.  Otherwise, code above
 # will signal an error saying that MANUFACTURER isn't an operating

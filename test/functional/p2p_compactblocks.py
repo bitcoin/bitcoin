@@ -549,11 +549,11 @@ class CompactBlocksTest(BitcoinTestFramework):
         assert_equal(absolute_indexes, [6, 7, 8, 9, 10])
 
         # Now give an incorrect response.
-        # Note that it's possible for bitcoind to be smart enough to know we're
-        # lying, since it could check to see if the shortid matches what we're
+        # Note that it's possible for bitcoind to be smart enough to know we are
+        # lying, since it could check to see if the shortid matches what we are
         # sending, and eg disconnect us for misbehavior.  If that behavior
         # change was made, we could just modify this test by having a
-        # different peer provide the block further down, so that we're still
+        # different peer provide the block further down, so that we are still
         # verifying that the block isn't marked bad permanently. This is good
         # enough for now.
         msg = msg_blocktxn()
@@ -612,7 +612,7 @@ class CompactBlocksTest(BitcoinTestFramework):
                 test_node.last_message.pop("blocktxn", None)
             current_height -= 1
 
-        # Next request should send a full block response, as we're past the
+        # Next request should send a full block response, as we are past the
         # allowed depth for a blocktxn response.
         block_hash = node.getblockhash(current_height)
         msg.block_txn_request = BlockTransactionsRequest(int(block_hash, 16), [0])
@@ -713,7 +713,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         del block.vtx[3]
         block.hashMerkleRoot = block.calc_merkle_root()
         if use_segwit:
-            # If we're testing with segwit, also drop the coinbase witness,
+            # If we are testing with segwit, also drop the coinbase witness,
             # but include the witness commitment.
             add_witness_commitment(block)
             block.vtx[0].wit.vtxinwit = []

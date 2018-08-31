@@ -155,7 +155,7 @@ another 2,016 blocks, segwit will activate.
 
 For more information about segwit, please see the [segwit FAQ][], the
 [segwit wallet developers guide][] or BIPs [141][BIP141], [143][BIP143],
-[144][BIP144], and [145][BIP145].  If you're a miner or mining pool
+[144][BIP144], and [145][BIP145].  If you are a miner or mining pool
 operator, please see the [versionbits FAQ][] for information about
 signaling support for a soft fork.
 

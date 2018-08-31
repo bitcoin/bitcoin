@@ -1726,7 +1726,7 @@ void CConnman::SetTryNewOutboundPeer(bool flag)
 // Exclude peers that are marked for disconnect, or are going to be
 // disconnected soon (eg one-shots and feelers)
 // Also exclude peers that haven't finished initial connection handshake yet
-// (so that we don't decide we're over our desired connection limit, and then
+// (so that we don't decide we are over our desired connection limit, and then
 // evict some peer that has finished the handshake)
 int CConnman::GetExtraOutboundCount()
 {
@@ -1808,7 +1808,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                     // Netgroups for inbound and addnode peers are not excluded because our goal here
                     // is to not use multiple of our limited outbound slots on a single netgroup
                     // but inbound and addnode peers do not use our outbound slots.  Inbound peers
-                    // also have the added issue that they're attacker controlled and could be used
+                    // also have the added issue that they are attacker controlled and could be used
                     // to prevent us from connecting to particular hosts if we used them here.
                     setConnected.insert(pnode->addr.GetGroup());
                     nOutbound++;
@@ -2786,7 +2786,7 @@ void CNode::AskFor(const CInv& inv)
     if (!setAskFor.insert(inv.hash).second)
         return;
 
-    // We're using mapAskFor as a priority queue,
+    // We are using mapAskFor as a priority queue,
     // the key is the earliest time the request can be sent
     int64_t nRequestTime;
     limitedmap<uint256, int64_t>::const_iterator it = mapAlreadyAskedFor.find(inv.hash);

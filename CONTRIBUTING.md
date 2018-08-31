@@ -14,7 +14,7 @@ purposes. As such there are repository "maintainers" who are responsible for
 merging pull requests as well as a "lead maintainer" who is responsible for the
 release cycle, overall merging, moderation and appointment of maintainers.
 
-If you're looking for somewhere to start contributing, check out the
+If you are looking for somewhere to start contributing, check out the
 [good first issue](https://github.com/bitcoin/bitcoin/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
 list.
 
@@ -264,7 +264,7 @@ a worthwhile change based on the judgement of the maintainers.
 
 As most reviewers are themselves developers with their own projects, the review
 process can be quite lengthy, and some amount of patience is required. If you find
-that you've been waiting for a pull request to be given attention for several
+that you have been waiting for a pull request to be given attention for several
 months, there may be a number of reasons for this, some of which you can do something
 about:
 
@@ -287,7 +287,7 @@ about:
     find the person touching the code you are touching before you and see if you can find
     them and give them a nudge. Don't be incessant about the nudging though.
   - Finally, if all else fails, ask on IRC or elsewhere for someone to give your pull request
-    a look. If you think you've been waiting an unreasonably long amount of time (month+) for
+    a look. If you think you have been waiting an unreasonably long amount of time (month+) for
     no particular reason (few lines changed, etc), this is totally fine. Try to return the favor
     when someone else is asking for feedback on their code, and universe balances out.
 

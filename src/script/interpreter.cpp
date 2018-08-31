@@ -1344,7 +1344,7 @@ bool GenericTransactionSignatureChecker<T>::CheckLockTime(const CScriptNum& nLoc
     ))
         return false;
 
-    // Now that we know we're comparing apples-to-apples, the
+    // Now that we know we are comparing apples-to-apples, the
     // comparison is a simple numeric one.
     if (nLockTime > (int64_t)txTo->nLockTime)
         return false;
@@ -1404,7 +1404,7 @@ bool GenericTransactionSignatureChecker<T>::CheckSequence(const CScriptNum& nSeq
         return false;
     }
 
-    // Now that we know we're comparing apples-to-apples, the
+    // Now that we know we are comparing apples-to-apples, the
     // comparison is a simple numeric one.
     if (nSequenceMasked > txToSequenceMasked)
         return false;

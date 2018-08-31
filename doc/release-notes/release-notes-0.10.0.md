@@ -185,7 +185,7 @@ OpenSSL has code in their source repository for derandomization
 and reduction in timing leaks that we've eagerly wanted to use for a
 long time, but this functionality has still not made its
 way into a released version of OpenSSL. Libsecp256k1 achieves
-significantly stronger protection: As far as we're aware this is
+significantly stronger protection: As far as we are aware this is
 the only deployed implementation of constant time signing for
 the curve Bitcoin uses and we have reason to believe that
 libsecp256k1 is better tested and more thoroughly reviewed

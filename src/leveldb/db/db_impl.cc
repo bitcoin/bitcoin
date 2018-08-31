@@ -903,7 +903,7 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
     compact->smallest_snapshot = snapshots_.oldest()->number_;
   }
 
-  // Release mutex while we're actually doing the compaction work
+  // Release mutex while we are actually doing the compaction work
   mutex_.Unlock();
 
   Iterator* input = versions_->MakeInputIterator(compact->compaction);

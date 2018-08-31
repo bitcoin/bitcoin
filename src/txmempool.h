@@ -222,7 +222,7 @@ public:
         return f1 < f2;
     }
 
-    // Return the fee/size we're using for sorting this entry.
+    // Return the fee/size we are using for sorting this entry.
     void GetModFeeAndSize(const CTxMemPoolEntry &a, double &mod_fee, double &size) const
     {
         // Compare feerate with descendants to feerate of the transaction, and
@@ -295,7 +295,7 @@ public:
         return f1 > f2;
     }
 
-    // Return the fee/size we're using for sorting this entry.
+    // Return the fee/size we are using for sorting this entry.
     template <typename T>
     void GetModFeeAndSize(const T &a, double &mod_fee, double &size) const
     {
@@ -420,7 +420,7 @@ public:
  * be descendant transactions of a tx coming from a disconnected block that are
  * unreachable from just looking at transactions in the mempool (the linking
  * transactions may also be in the disconnected block, waiting to be added).
- * Because of this, there's not much benefit in trying to search for in-mempool
+ * Because of this, there is not much benefit in trying to search for in-mempool
  * children in addUnchecked().  Instead, in the special case of transactions
  * being added from a disconnected block, we require the caller to clean up the
  * state, to account for in-mempool, out-of-block descendants for all the

@@ -155,7 +155,7 @@ void CZMQNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, co
 
 void CZMQNotificationInterface::TransactionAddedToMempool(const CTransactionRef& ptx)
 {
-    // Used by BlockConnected and BlockDisconnected as well, because they're
+    // Used by BlockConnected and BlockDisconnected as well, because they are
     // all the same external callback.
     const CTransaction& tx = *ptx;
 

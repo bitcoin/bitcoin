@@ -167,7 +167,7 @@ static UniValue getnewaddress(const JSONRPCRequest& request)
 
     LOCK(pwallet->cs_wallet);
 
-    // Parse the label first so we don't generate a key if there's an error
+    // Parse the label first so we don't generate a key if there is an error
     std::string label;
     if (!request.params[0].isNull())
         label = LabelFromValue(request.params[0]);
@@ -351,7 +351,7 @@ static UniValue sendtoaddress(const JSONRPCRequest& request)
             "3. \"comment\"            (string, optional) A comment used to store what the transaction is for. \n"
             "                             This is not part of the transaction, just kept in your wallet.\n"
             "4. \"comment_to\"         (string, optional) A comment to store the name of the person or organization \n"
-            "                             to which you're sending the transaction. This is not part of the \n"
+            "                             to which you are sending the transaction. This is not part of the \n"
             "                             transaction, just kept in your wallet.\n"
             "5. subtractfeefromamount  (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
             "                             The recipient will receive less bitcoins than you enter in the amount field.\n"
@@ -1619,7 +1619,7 @@ static UniValue listsinceblock(const JSONRPCRequest& request)
             "    <structure is the same as \"transactions\" above, only present if include_removed=true>\n"
             "    Note: transactions that were re-added in the active chain will appear as-is in this array, and may thus have a positive confirmation count.\n"
             "  ],\n"
-            "  \"lastblock\": \"lastblockhash\"     (string) The hash of the block (target_confirmations-1) from the best block on the main chain. This is typically used to feed back into listsinceblock the next time you call it. So you would generally use a target_confirmations of say 6, so you will be continually re-notified of transactions until they've reached 6 confirmations plus any new ones\n"
+            "  \"lastblock\": \"lastblockhash\"     (string) The hash of the block (target_confirmations-1) from the best block on the main chain. This is typically used to feed back into listsinceblock the next time you call it. So you would generally use a target_confirmations of say 6, so you will be continually re-notified of transactions until they have reached 6 confirmations plus any new ones\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("listsinceblock", "")
@@ -2514,7 +2514,7 @@ static UniValue loadwallet(const JSONRPCRequest& request)
     if (fs::symlink_status(wallet_path).type() == fs::file_not_found) {
         throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Wallet " + wallet_file + " not found.");
     } else if (fs::is_directory(wallet_path)) {
-        // The given filename is a directory. Check that there's a wallet.dat file.
+        // The given filename is a directory. Check that there is a wallet.dat file.
         fs::path wallet_dat_file = wallet_path / "wallet.dat";
         if (fs::symlink_status(wallet_dat_file).type() == fs::file_not_found) {
             throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Directory " + wallet_file + " does not contain a wallet.dat file.");
@@ -2574,7 +2574,7 @@ static UniValue createwallet(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_WALLET_ERROR, "Wallet " + wallet_name + " already exists.");
     }
 
-    // Wallet::Verify will check if we're trying to create a wallet with a duplication name.
+    // Wallet::Verify will check if we are trying to create a wallet with a duplication name.
     if (!CWallet::Verify(wallet_name, false, error, warning)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Wallet file verification failed: " + error);
     }
@@ -2636,7 +2636,7 @@ static UniValue unloadwallet(const JSONRPCRequest& request)
     // The wallet will be destroyed once the last shared pointer is released.
     wallet->NotifyUnload();
 
-    // There's no point in waiting for the wallet to unload.
+    // There is no point in waiting for the wallet to unload.
     // At this point this method should never fail. The unloading could only
     // fail due to an unexpected error which would cause a process termination.
 

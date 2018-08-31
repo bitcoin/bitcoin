@@ -41,7 +41,7 @@ Coding Style (General)
 ----------------------
 
 Various coding styles have been used during the history of the codebase,
-and the result is not very consistent. However, we're now trying to converge to
+and the result is not very consistent. However, we are now trying to converge to
 a single style, which is specified below. When writing patches, favor the new
 style over attempting to mimic the surrounding style, except for move-only
 commits.

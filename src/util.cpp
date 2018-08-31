@@ -160,7 +160,7 @@ bool LockDirectory(const fs::path& directory, const std::string lockfile_name, b
         return error("Error while attempting to lock directory %s: %s", directory.string(), lock->GetReason());
     }
     if (!probe_only) {
-        // Lock successful and we're not just probing, put it into the map
+        // Lock successful and we are not just probing, put it into the map
         dir_locks.emplace(pathLockFile.string(), std::move(lock));
     }
     return true;
@@ -374,7 +374,7 @@ void ArgsManager::WarnForSectionOnlyArgs()
 {
     LOCK(cs_args);
 
-    // if there's no section selected, don't worry
+    // if there is no section selected, don't worry
     if (m_network.empty()) return;
 
     // if it's okay to use the default section for this network, don't worry
@@ -387,7 +387,7 @@ void ArgsManager::WarnForSectionOnlyArgs()
         found_result = ArgsManagerHelper::GetArgHelper(m_override_args, arg);
         if (found_result.first) continue;
 
-        // if there's a network-specific value for this option, it's fine
+        // if there is a network-specific value for this option, it's fine
         found_result = ArgsManagerHelper::GetArgHelper(m_config_args, ArgsManagerHelper::NetworkArg(*this, arg));
         if (found_result.first) continue;
 

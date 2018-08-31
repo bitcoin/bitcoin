@@ -61,8 +61,8 @@ public:
     // and interrupted using boost::interrupt_thread
     void serviceQueue();
 
-    // Tell any threads running serviceQueue to stop as soon as they're
-    // done servicing whatever task they're currently servicing (drain=false)
+    // Tell any threads running serviceQueue to stop as soon as they are
+    // done servicing whatever task they are currently servicing (drain=false)
     // or when there is no work left to be done (drain=true)
     void stop(bool drain=false);
 

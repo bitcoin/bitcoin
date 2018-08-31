@@ -158,7 +158,7 @@ public:
                              double minSuccess, bool requireGreater, unsigned int nBlockHeight,
                              EstimationResult *result = nullptr) const;
 
-    /** Return the max number of confirms we're tracking */
+    /** Return the max number of confirms we are tracking */
     unsigned int GetMaxConfirms() const { return scale * confAvg.size(); }
 
     /** Write state of estimation data to a file*/
@@ -265,7 +265,7 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
     // The near and far variables will define the range we've combined
     // The best variables are the last range we saw which still had a high
     // enough confirmation rate to count as success.
-    // The cur variables are the current range we're counting.
+    // The cur variables are the current range we are counting.
     unsigned int curNearBucket = startbucket;
     unsigned int bestNearBucket = startbucket;
     unsigned int curFarBucket = startbucket;
@@ -352,7 +352,7 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
         for (unsigned int j = minBucket; j <= maxBucket; j++) {
             if (txCtAvg[j] < txSum)
                 txSum -= txCtAvg[j];
-            else { // we're in the right bucket
+            else { // we are in the right bucket
                 median = avg[j] / txCtAvg[j];
                 break;
             }
@@ -559,14 +559,14 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
 
     if (txHeight != nBestSeenHeight) {
         // Ignore side chains and re-orgs; assuming they are random they don't
-        // affect the estimate.  We'll potentially double count transactions in 1-block reorgs.
+        // affect the estimate.  We will potentially double count transactions in 1-block reorgs.
         // Ignore txs if BlockPolicyEstimator is not in sync with chainActive.Tip().
         // It will be synced next time a block is processed.
         return;
     }
 
     // Only want to be updating estimates when our blockchain is synced,
-    // otherwise we'll miscalculate how many blocks its taking to get included.
+    // otherwise we will miscalculate how many blocks its taking to get included.
     if (!validFeeEstimate) {
         untrackedTxs++;
         return;
@@ -620,7 +620,7 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
         // Ignore side chains and re-orgs; assuming they are random
         // they don't affect the estimate.
         // And if an attacker can re-org the chain at will, then
-        // you've got much bigger problems than "attacker can influence
+        // you have got much bigger problems than "attacker can influence
         // transaction fees."
         return;
     }
@@ -694,7 +694,7 @@ CFeeRate CBlockPolicyEstimator::estimateRawFee(int confTarget, double successThr
     }
 
     LOCK(cs_feeEstimator);
-    // Return failure if trying to analyze a target we're not tracking
+    // Return failure if trying to analyze a target we are not tracking
     if (confTarget <= 0 || (unsigned int)confTarget > stats->GetMaxConfirms())
         return CFeeRate(0);
     if (successThreshold > 1)
@@ -829,7 +829,7 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
     double median = -1;
     EstimationResult tempResult;
 
-    // Return failure if trying to analyze a target we're not tracking
+    // Return failure if trying to analyze a target we are not tracking
     if (confTarget <= 0 || (unsigned int)confTarget > longStats->GetMaxConfirms()) {
         return CFeeRate(0);  // error condition
     }

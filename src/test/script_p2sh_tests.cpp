@@ -331,7 +331,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     BOOST_CHECK(SignSignature(keystore, txFrom, txTo, 0, SIGHASH_ALL));
     BOOST_CHECK(SignSignature(keystore, txFrom, txTo, 1, SIGHASH_ALL));
     BOOST_CHECK(SignSignature(keystore, txFrom, txTo, 2, SIGHASH_ALL));
-    // SignSignature doesn't know how to sign these. We're
+    // SignSignature doesn't know how to sign these. We are
     // not testing validating signatures, so just create
     // dummy signatures that DO include the correct P2SH scripts:
     txTo.vin[3].scriptSig << OP_11 << OP_11 << std::vector<unsigned char>(oneAndTwo.begin(), oneAndTwo.end());

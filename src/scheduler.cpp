@@ -68,7 +68,7 @@ void CScheduler::serviceQueue()
                     break; // Exit loop after timeout, it means we reached the time of the event
             }
 #endif
-            // If there are multiple threads, the queue can empty while we're waiting (another
+            // If there are multiple threads, the queue can empty while we are waiting (another
             // thread may service the task we were waiting on).
             if (shouldStop() || taskQueue.empty())
                 continue;

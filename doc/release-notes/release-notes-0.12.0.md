@@ -295,7 +295,7 @@ To detect conflicts with historical transactions in the chain a one-time
 
 Unlike earlier versions, unconfirmed but non-conflicting transactions will never
 get a negative confirmation count. They are not treated as spendable unless
-they're coming from ourself (change) and accepted into our local mempool,
+they are coming from ourself (change) and accepted into our local mempool,
 however. The new "trusted" field in the `listtransactions` RPC output
 indicates whether outputs of an unconfirmed transaction are considered
 spendable.
@@ -750,7 +750,7 @@ git merge commit are mentioned.
 - #7063 `6abf6eb` [Tests] Add prioritisetransaction RPC test (Suhas Daftuar)
 - #7137 `16f4a6e` Tests: Explicitly set chain limits in replace-by-fee test (Suhas Daftuar)
 - #7216 `9572e49` Removed offline testnet DNSSeed 'alexykot.me'. (tnull)
-- #7209 `f3ad812` test: don't override BITCOIND and BITCOINCLI if they're set (Wladimir J. van der Laan)
+- #7209 `f3ad812` test: don't override BITCOIND and BITCOINCLI if they are set (Wladimir J. van der Laan)
 - #7226 `301f16a` Tests: Add more tests to p2p-fullblocktest (Suhas Daftuar)
 - #7153 `9ef7c54` [Tests] Add mempool_limit.py test (Jonas Schnelli)
 - #7170 `453c567` tests: Disable Tor interaction (Wladimir J. van der Laan)

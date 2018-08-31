@@ -20,7 +20,7 @@ static const int64_t MAX_MAX_SIG_CACHE_SIZE = 16384;
 class CPubKey;
 
 /**
- * We're hashing a nonce into the entries themselves, so we don't need extra
+ * We are hashing a nonce into the entries themselves, so we don't need extra
  * blinding in the set hash computation.
  *
  * This may exhibit platform endian dependent behavior but because these are

@@ -107,8 +107,8 @@ class ExampleTest(BitcoinTestFramework):
 
         self.setup_nodes()
 
-        # In this test, we're not connecting node2 to node0 or node1. Calls to
-        # sync_all() should not include node2, since we're not expecting it to
+        # In this test, we are not connecting node2 to node0 or node1. Calls to
+        # sync_all() should not include node2, since we are not expecting it to
         # sync.
         connect_nodes(self.nodes[0], 1)
         self.sync_all([self.nodes[0:1]])
@@ -121,7 +121,7 @@ class ExampleTest(BitcoinTestFramework):
     def custom_method(self):
         """Do some custom behaviour for this test
 
-        Define it in a method here because you're going to use it repeatedly.
+        Define it in a method here because you are going to use it repeatedly.
         If you think it's useful in general, consider moving it to the base
         BitcoinTestFramework class so other tests can use it."""
 
@@ -140,7 +140,7 @@ class ExampleTest(BitcoinTestFramework):
         # Notice above how we called an RPC by calling a method with the same
         # name on the node object. Notice also how we used a keyword argument
         # to specify a named RPC argument. Neither of those are defined on the
-        # node object. Instead there's some __getattr__() magic going on under
+        # node object. Instead there is some __getattr__() magic going on under
         # the covers to dispatch unrecognised attribute calls to the RPC
         # interface.
 

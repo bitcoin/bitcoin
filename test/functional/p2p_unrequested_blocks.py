@@ -292,7 +292,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getbestblockhash(), all_blocks[286].hash)
         assert_equal(self.nodes[0].getblock(block_291.hash)["confirmations"], -1)
 
-        # Now send a new header on the invalid chain, indicating we're forked off, and expect to get disconnected
+        # Now send a new header on the invalid chain, indicating we are forked off, and expect to get disconnected
         block_293 = create_block(block_292.sha256, create_coinbase(293), block_292.nTime+1)
         block_293.solve()
         headers_message = msg_headers()

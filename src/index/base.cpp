@@ -234,7 +234,7 @@ bool BaseIndex::BlockUntilSyncedToCurrentChain()
     }
 
     {
-        // Skip the queue-draining stuff if we know we're caught up with
+        // Skip the queue-draining stuff if we know we are caught up with
         // chainActive.Tip().
         LOCK(cs_main);
         const CBlockIndex* chain_tip = chainActive.Tip();

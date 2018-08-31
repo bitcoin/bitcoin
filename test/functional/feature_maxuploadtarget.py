@@ -105,7 +105,7 @@ class MaxUploadTest(BitcoinTestFramework):
 
         # Requesting the current block on p2p_conns[1] should succeed indefinitely,
         # even when over the max upload target.
-        # We'll try 800 times
+        # We will try 800 times
         getdata_request.inv = [CInv(2, big_new_block)]
         for i in range(800):
             p2p_conns[1].send_message(getdata_request)

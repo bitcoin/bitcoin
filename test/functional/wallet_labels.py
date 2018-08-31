@@ -20,7 +20,7 @@ class WalletLabelsTest(BitcoinTestFramework):
         self.num_nodes = 1
 
     def run_test(self):
-        # Check that there's no UTXO on the node
+        # Check that there is no UTXO on the node
         node = self.nodes[0]
         assert_equal(len(node.listunspent()), 0)
 
@@ -61,7 +61,7 @@ class WalletLabelsTest(BitcoinTestFramework):
         node.generate(1)
 
         # we want to reset so that the "" label has what's expected.
-        # otherwise we're off by exactly the fee amount as that's mined
+        # otherwise we are off by exactly the fee amount as that's mined
         # and matures in the next 100 blocks
         amount_to_send = 1.0
 

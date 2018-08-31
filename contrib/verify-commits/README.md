@@ -14,7 +14,7 @@ Remember that you can't use an untrusted script to verify itself. This means
 that checking out code, then running `verify-commits.py` against `HEAD` is
 _not_ safe, because the version of `verify-commits.py` that you just ran could
 be backdoored. Instead, you need to use a trusted version of verify-commits
-prior to checkout to make sure you're checking out only code signed by trusted
+prior to checkout to make sure you are checking out only code signed by trusted
 keys:
 
     git fetch origin && \

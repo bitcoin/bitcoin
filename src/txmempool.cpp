@@ -69,7 +69,7 @@ void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap &cachedDescendan
         for (txiter childEntry : setChildren) {
             cacheMap::iterator cacheIt = cachedDescendants.find(childEntry);
             if (cacheIt != cachedDescendants.end()) {
-                // We've already calculated this one, just add the entries for this set
+                // We have already calculated this one, just add the entries for this set
                 // but don't traverse again.
                 for (txiter cacheEntry : cacheIt->second) {
                     setAllDescendants.insert(cacheEntry);
@@ -166,7 +166,7 @@ bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, setEntr
             }
         }
     } else {
-        // If we're not searching for parents, we require this to be an
+        // If we are not searching for parents, we require this to be an
         // entry in the mempool already.
         txiter it = mapTx.iterator_to(entry);
         parentHashes = GetMemPoolParents(it);
@@ -251,11 +251,11 @@ void CTxMemPool::UpdateForRemoveFromMempool(const setEntries &entriesToRemove, b
     // transaction
     const uint64_t nNoLimit = std::numeric_limits<uint64_t>::max();
     if (updateDescendants) {
-        // updateDescendants should be true whenever we're not recursively
+        // updateDescendants should be true whenever we are not recursively
         // removing a tx and all its descendants, eg when a transaction is
         // confirmed in a block.
         // Here we only update statistics and not data in mapLinks (which
-        // we need to preserve until we're finished with all operations that
+        // we need to preserve until we are finished with all operations that
         // need to traverse the mempool).
         for (txiter removeIt : entriesToRemove) {
             setEntries setDescendants;
@@ -285,7 +285,7 @@ void CTxMemPool::UpdateForRemoveFromMempool(const setEntries &entriesToRemove, b
         // has no children, and in the case of a reorg where that assumption is
         // false, the in-mempool children aren't linked to the in-block tx's
         // until UpdateTransactionsFromBlock() is called.
-        // So if we're being called during a reorg, ie before
+        // So if we are being called during a reorg, ie before
         // UpdateTransactionsFromBlock() has been called, then mapLinks[] will
         // differ from the set of mempool parents we'd calculate by searching,
         // and it's important that we use the mapLinks[] notion of ancestor
@@ -388,7 +388,7 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
     // children, because such children would be orphans.
     // An exception to that is if a transaction enters that used to be in a block.
     // In that case, our disconnect block logic will call UpdateTransactionsFromBlock
-    // to clean up the mess we're leaving here.
+    // to clean up the mess we are leaving here.
 
     // Update ancestors with information about this tx
     for (const uint256 &phash : setParentTransactions) {

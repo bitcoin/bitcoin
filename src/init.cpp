@@ -589,10 +589,10 @@ struct CImportingNow
 };
 
 
-// If we're using -prune with -reindex, then delete block files that will be ignored by the
+// If we are using -prune with -reindex, then delete block files that will be ignored by the
 // reindex.  Since reindexing works by starting at block file 0 and looping until a blockfile
 // is missing, do the same here to delete any later block files after a gap.  Also delete all
-// rev files since they'll be rewritten by the reindex anyway.  This ensures that vinfoBlockFile
+// rev files since they will be rewritten by the reindex anyway.  This ensures that vinfoBlockFile
 // is in sync with what's actually on disk by the time we start downloading, so that pruning
 // works correctly.
 static void CleanupBlockRevFiles()
@@ -1457,7 +1457,7 @@ bool AppInitMain()
 
                 if (fReset) {
                     pblocktree->WriteReindexing(true);
-                    //If we're reindexing in prune mode, wipe away unusable block files and all undo data files
+                    //If we are reindexing in prune mode, wipe away unusable block files and all undo data files
                     if (fPruneMode)
                         CleanupBlockRevFiles();
                 }
@@ -1474,7 +1474,7 @@ bool AppInitMain()
                 }
 
                 // If the loaded chain has a wrong genesis, bail out immediately
-                // (we're likely using a testnet datadir, or the other way around).
+                // (we are likely using a testnet datadir, or the other way around).
                 if (!mapBlockIndex.empty() && !LookupBlockIndex(chainparams.GetConsensus().hashGenesisBlock)) {
                     return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
                 }
@@ -1487,7 +1487,7 @@ bool AppInitMain()
                 }
 
                 // At this point blocktree args are consistent with what's on disk.
-                // If we're not mid-reindex (based on disk + args), add a genesis block on disk
+                // If we are not mid-reindex (based on disk + args), add a genesis block on disk
                 // (otherwise we use the one already on disk).
                 // This is called again in ThreadImport after the reindex completes.
                 if (!fReindex && !LoadGenesisBlock(chainparams)) {
@@ -1495,7 +1495,7 @@ bool AppInitMain()
                     break;
                 }
 
-                // At this point we're either in reindex or we've loaded a useful
+                // At this point we are either in reindex or we've loaded a useful
                 // block tree into mapBlockIndex!
 
                 pcoinsdbview.reset(new CCoinsViewDB(nCoinDBCache, false, fReset || fReindexChainState));
@@ -1528,7 +1528,7 @@ bool AppInitMain()
                 }
 
                 if (!fReset) {
-                    // Note that RewindBlockIndex MUST run even if we're about to -reindex-chainstate.
+                    // Note that RewindBlockIndex MUST run even if we are about to -reindex-chainstate.
                     // It both disconnects blocks based on chainActive, and drops block data in
                     // mapBlockIndex based on lack of available witness data.
                     uiInterface.InitMessage(_("Rewinding blocks..."));

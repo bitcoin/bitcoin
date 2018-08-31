@@ -19,7 +19,7 @@ outgoing connections, but more is possible.
 	                to explicitly disable access to hidden service.
 
 	-listen         When using -proxy, listening is disabled by default. If you want
-	                to run a hidden service (see next section), you'll need to enable
+	                to run a hidden service (see next section), you will need to enable
 	                it explicitly.
 
 	-connect=X      When behind a Tor proxy, you can specify .onion addresses instead
@@ -54,17 +54,17 @@ your bitcoind's P2P listen port (8333 by default).
 	                Tor proxy typically runs), .onion addresses are given
 	                preference for your node to advertise itself with.
 
-	-listen         You'll need to enable listening for incoming connections, as this
+	-listen         You will need to enable listening for incoming connections, as this
 	                is off by default behind a proxy.
 
 	-discover       When -externalip is specified, no attempt is made to discover local
 	                IPv4 or IPv6 addresses. If you want to run a dual stack, reachable
-	                from both Tor and IPv4 (or IPv6), you'll need to either pass your
+	                from both Tor and IPv4 (or IPv6), you will need to either pass your
 	                other addresses using -externalip, or explicitly enable -discover.
 	                Note that both addresses of a dual-stack system may be easily
 	                linkable using traffic analysis.
 
-In a typical situation, where you're only reachable via Tor, this should suffice:
+In a typical situation, where you are only reachable via Tor, this should suffice:
 
 	./bitcoind -proxy=127.0.0.1:9050 -externalip=57qr3yd1nyntf5k.onion -listen
 

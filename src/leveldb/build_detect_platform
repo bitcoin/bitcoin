@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Detects OS we're compiling on and outputs a file specified by the first
+# Detects OS we are compiling on and outputs a file specified by the first
 # argument, which in turn gets read while processing Makefile.
 #
 # The output will set the following variables:

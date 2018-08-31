@@ -387,7 +387,7 @@ class CScript(bytes):
     """Serialized script
 
     A bytes subclass, so you can use this directly whenever bytes are accepted.
-    Note that this means that indexing does *not* work - you'll get an index by
+    Note that this means that indexing does *not* work - you will get an index by
     byte rather than opcode. This format was chosen for efficiency so that the
     general case would not require creating a lot of little CScriptOP objects.
 
