@@ -10,8 +10,6 @@ export LC_ALL=C
 
 EXPECTED_CIRCULAR_DEPENDENCIES=(
     "chainparamsbase -> util -> chainparamsbase"
-    "checkpoints -> validation -> checkpoints"
-    "index/txindex -> validation -> index/txindex"
     "policy/fees -> txmempool -> policy/fees"
     "policy/policy -> validation -> policy/policy"
     "qt/addresstablemodel -> qt/walletmodel -> qt/addresstablemodel"

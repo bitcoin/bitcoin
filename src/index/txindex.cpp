@@ -6,8 +6,8 @@
 #include <shutdown.h>
 #include <ui_interface.h>
 #include <util.h>
-#include <validation.h>
-
+#include <validation_globals.h>
+#include <validation_disk_utils.h>
 #include <boost/thread.hpp>
 
 constexpr char DB_BEST_BLOCK = 'B';

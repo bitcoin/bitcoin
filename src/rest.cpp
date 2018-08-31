@@ -10,6 +10,8 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <validation.h>
+#include <validation_disk_utils.h>
+#include <validation_block_utils.h>
 #include <httpserver.h>
 #include <rpc/blockchain.h>
 #include <rpc/server.h>

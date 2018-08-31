@@ -21,7 +21,9 @@
 #include <httprpc.h>
 #include <index/txindex.h>
 #include <key.h>
-#include <validation.h>
+#include <validation_globals.h>
+#include <validation_disk_utils.h>
+#include <validation_block_utils.h>
 #include <miner.h>
 #include <netbase.h>
 #include <net.h>

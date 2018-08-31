@@ -185,6 +185,9 @@ BITCOIN_CORE_H = \
   utilmoneystr.h \
   utiltime.h \
   validation.h \
+  validation_globals.h \
+  validation_block_utils.h \
+  validation_disk_utils.h \
   validationinterface.h \
   versionbits.h \
   walletinitinterface.h \
@@ -256,6 +259,9 @@ libbitcoin_server_a_SOURCES = \
   txmempool.cpp \
   ui_interface.cpp \
   validation.cpp \
+  validation_globals.cpp \
+  validation_block_utils.cpp \
+  validation_disk_utils.cpp \
   validationinterface.cpp \
   versionbits.cpp \
   $(BITCOIN_CORE_H)

@@ -24,6 +24,7 @@
 #include <util.h>
 #include <utilmoneystr.h>
 #include <validationinterface.h>
+#include <validation_globals.h>
 
 #include <algorithm>
 #include <queue>
