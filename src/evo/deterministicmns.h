@@ -27,7 +27,7 @@ class CDeterministicMNState
 public:
     int nRegisteredHeight{-1};
     int nLastPaidHeight{0};
-    int nPoSePenality{0};
+    int nPoSePenalty{0};
     int nPoSeRevivedHeight{-1};
     int nPoSeBanHeight{-1};
 
@@ -60,7 +60,7 @@ public:
     {
         READWRITE(nRegisteredHeight);
         READWRITE(nLastPaidHeight);
-        READWRITE(nPoSePenality);
+        READWRITE(nPoSePenalty);
         READWRITE(nPoSeRevivedHeight);
         READWRITE(nPoSeBanHeight);
         READWRITE(keyIDOwner);
@@ -76,7 +76,7 @@ public:
     {
         return nRegisteredHeight == rhs.nRegisteredHeight &&
                nLastPaidHeight == rhs.nLastPaidHeight &&
-               nPoSePenality == rhs.nPoSePenality &&
+               nPoSePenalty == rhs.nPoSePenalty &&
                nPoSeRevivedHeight == rhs.nPoSeRevivedHeight &&
                nPoSeBanHeight == rhs.nPoSeBanHeight &&
                keyIDOwner == rhs.keyIDOwner &&

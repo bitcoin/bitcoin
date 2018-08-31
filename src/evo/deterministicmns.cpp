@@ -32,9 +32,9 @@ std::string CDeterministicMNState::ToString() const
         operatorRewardAddress = CBitcoinAddress(dest).ToString();
     }
 
-    return strprintf("CDeterministicMNState(nRegisteredHeight=%d, nLastPaidHeight=%d, nPoSePenality=%d, nPoSeRevivedHeight=%d, nPoSeBanHeight=%d, "
+    return strprintf("CDeterministicMNState(nRegisteredHeight=%d, nLastPaidHeight=%d, nPoSePenalty=%d, nPoSeRevivedHeight=%d, nPoSeBanHeight=%d, "
                      "keyIDOwner=%s, keyIDOperator=%s, keyIDVoting=%s, addr=%s, nProtocolVersion=%d, payoutAddress=%s, operatorRewardAddress=%s)",
-                     nRegisteredHeight, nLastPaidHeight, nPoSePenality, nPoSeRevivedHeight, nPoSeBanHeight,
+                     nRegisteredHeight, nLastPaidHeight, nPoSePenalty, nPoSeRevivedHeight, nPoSeBanHeight,
                      keyIDOwner.ToString(), keyIDOperator.ToString(), keyIDVoting.ToString(), addr.ToStringIPPort(false), nProtocolVersion, payoutAddress, operatorRewardAddress);
 }
 
@@ -44,7 +44,7 @@ void CDeterministicMNState::ToJson(UniValue& obj) const
     obj.setObject();
     obj.push_back(Pair("registeredHeight", nRegisteredHeight));
     obj.push_back(Pair("lastPaidHeight", nLastPaidHeight));
-    obj.push_back(Pair("PoSePenality", nPoSePenality));
+    obj.push_back(Pair("PoSePenalty", nPoSePenalty));
     obj.push_back(Pair("PoSeRevivedHeight", nPoSeRevivedHeight));
     obj.push_back(Pair("PoSeBanHeight", nPoSeBanHeight));
     obj.push_back(Pair("keyIDOwner", keyIDOwner.ToString()));
