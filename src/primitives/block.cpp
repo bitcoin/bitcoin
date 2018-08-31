@@ -7,8 +7,9 @@
 
 #include <hash.h>
 #include <tinyformat.h>
-#include <utilstrencodings.h>
 #include <crypto/common.h>
+
+#include <sstream>
 
 uint256 CBlockHeader::GetHash() const
 {
