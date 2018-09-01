@@ -557,7 +557,7 @@ class SegWitTest(BitcoinTestFramework):
         for node in [self.nodes[0], self.nodes[2]]:
             gbt_results = node.getblocktemplate()
             block_version = gbt_results['version']
-            # If we're not indicating segwit support, we will still be
+            # If we are not indicating segwit support, we will still be
             # signalling for segwit activation.
             assert_equal((block_version & (1 << VB_WITNESS_BIT) != 0), node == self.nodes[0])
             # If we don't specify the segwit rule, then we won't get a default
@@ -796,7 +796,7 @@ class SegWitTest(BitcoinTestFramework):
         block = self.build_next_block()
         self.update_witness_block_with_transactions(block, [spend_tx])
 
-        # If we're after activation, then sending this with witnesses should be valid.
+        # If we are after activation, then sending this with witnesses should be valid.
         # This no longer works before activation, because SCRIPT_VERIFY_WITNESS
         # is always set.
         # TODO: rewrite this test to make clear that it only works after activation.
@@ -1073,7 +1073,7 @@ class SegWitTest(BitcoinTestFramework):
         # Extra witness data should not be allowed.
         test_witness_block(self.nodes[0], self.test_node, block, accepted=False)
 
-        # Try extra signature data.  Ok if we're not spending a witness output.
+        # Try extra signature data.  Ok if we are not spending a witness output.
         block.vtx[1].wit.vtxinwit = []
         block.vtx[1].vin[0].scriptSig = CScript([OP_0])
         block.vtx[1].rehash()
@@ -1534,7 +1534,7 @@ class SegWitTest(BitcoinTestFramework):
         self.update_witness_block_with_transactions(block, [tx])
         test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
 
-        # Now try to spend it. Send it to a P2WSH output, which we'll
+        # Now try to spend it. Send it to a P2WSH output, which we will
         # use in the next test.
         witness_program = CScript([pubkey, CScriptOp(OP_CHECKSIG)])
         witness_hash = sha256(witness_program)
@@ -1559,7 +1559,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # Test 2: P2WSH
         # Try to spend the P2WSH output created in last test.
-        # Send it to a P2SH(P2WSH) output, which we'll use in the next test.
+        # Send it to a P2SH(P2WSH) output, which we will use in the next test.
         p2sh_witness_hash = hash160(script_wsh)
         script_p2sh = CScript([OP_HASH160, p2sh_witness_hash, OP_EQUAL])
         script_sig = CScript([script_wsh])
@@ -1579,7 +1579,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # Test 3: P2SH(P2WSH)
         # Try to spend the P2SH output created in the last test.
-        # Send it to a P2PKH output, which we'll use in the next test.
+        # Send it to a P2PKH output, which we will use in the next test.
         script_pubkey = get_p2pkh_script(pubkeyhash)
         tx4 = CTransaction()
         tx4.vin.append(CTxIn(COutPoint(tx3.sha256, 0), script_sig))
@@ -1722,7 +1722,7 @@ class SegWitTest(BitcoinTestFramework):
 
             block.vtx.append(tx)
 
-            # Test the block periodically, if we're close to maxblocksize
+            # Test the block periodically, if we are close to maxblocksize
             if (get_virtual_size(block) > MAX_BLOCK_BASE_SIZE - 1000):
                 self.update_witness_block_with_transactions(block, [])
                 test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
@@ -1812,7 +1812,7 @@ class SegWitTest(BitcoinTestFramework):
         self.nodes[0].generate(1)
         sync_blocks(self.nodes)
 
-        # We'll add an unnecessary witness to this transaction that would cause
+        # We will add an unnecessary witness to this transaction that would cause
         # it to be non-standard, to test that violating policy with a witness
         # doesn't blind a node to a transaction.  Transactions
         # rejected for having a witness shouldn't be added
@@ -1977,7 +1977,7 @@ class SegWitTest(BitcoinTestFramework):
         script_pubkey = CScript([OP_0, witness_hash])
 
         sigops_per_script = 20 * 5 + 193 * 1
-        # We'll produce 2 extra outputs, one with a program that would take us
+        # We will produce 2 extra outputs, one with a program that would take us
         # over max sig ops, and one with a program that would exactly reach max
         # sig ops
         outputs = (MAX_SIGOP_COST // sigops_per_script) + 2

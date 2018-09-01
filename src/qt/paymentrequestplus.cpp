@@ -64,7 +64,7 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
     if (!IsInitialized())
         return false;
 
-    // One day we'll support more PKI types, but just
+    // One day we will support more PKI types, but just
     // x509 for now:
     const EVP_MD* digestAlgorithm = nullptr;
     if (paymentRequest.pki_type() == "x509+sha256") {

@@ -190,8 +190,8 @@ case $host_os in
         # (non-functional) versions of the pthreads routines, so link-based
         # tests will erroneously succeed. (N.B.: The stubs are missing
         # pthread_cleanup_push, or rather a function called by this macro,
-        # so we could check for that, but who knows whether they'll stub
-        # that too in a future libc.)  So we'll check first for the
+        # so we could check for that, but who knows whether they will stub
+        # that too in a future libc.)  So we will check first for the
         # standard Solaris way of linking pthreads (-mt -lpthread).
 
         ax_pthread_flags="-mt,pthread pthread $ax_pthread_flags"

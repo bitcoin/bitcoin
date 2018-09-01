@@ -69,7 +69,7 @@ public:
                 append_codepoint(codepoint_);
         }
     }
-    // Check that we're in a state where the string can be ended
+    // Check that we are in a state where the string can be ended
     // No open sequences, no open surrogate pairs, etc
     bool finalize()
     {

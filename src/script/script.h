@@ -225,10 +225,10 @@ public:
             // number of bytes.
             //
             // If the most-significant-byte - excluding the sign bit - is zero
-            // then we're not minimal. Note how this test also rejects the
+            // then we are not minimal. Note how this test also rejects the
             // negative-zero encoding, 0x80.
             if ((vch.back() & 0x7f) == 0) {
-                // One exception: if there's more than one byte and the most
+                // One exception: if there is more than one byte and the most
                 // significant bit of the second-most-significant-byte is set
                 // it would conflict with the sign bit. An example of this case
                 // is +-255, which encode to 0xff00 and 0xff80 respectively.
@@ -482,7 +482,7 @@ public:
     CScript& operator<<(const CScript& b)
     {
         // I'm not sure if this should push the script or concatenate scripts.
-        // If there's ever a use for pushing a script onto a script, delete this member fn
+        // If there is ever a use for pushing a script onto a script, delete this member fn
         assert(!"Warning: Pushing a CScript onto a CScript with << is probably not intended, use + to concatenate!");
         return *this;
     }

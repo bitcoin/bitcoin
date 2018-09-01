@@ -61,7 +61,7 @@ class MaxUploadTest(BitcoinTestFramework):
         # Now mine a big block
         mine_large_block(self.nodes[0], self.utxo_cache)
 
-        # Store the hash; we'll request this later
+        # Store the hash; we will request this later
         big_old_block = self.nodes[0].getbestblockhash()
         old_block_size = self.nodes[0].getblock(big_old_block, True)['size']
         big_old_block = int(big_old_block, 16)
@@ -72,7 +72,7 @@ class MaxUploadTest(BitcoinTestFramework):
         # Mine one more block, so that the prior block looks old
         mine_large_block(self.nodes[0], self.utxo_cache)
 
-        # We'll be requesting this new block too
+        # We will be requesting this new block too
         big_new_block = self.nodes[0].getbestblockhash()
         big_new_block = int(big_new_block, 16)
 
@@ -105,7 +105,7 @@ class MaxUploadTest(BitcoinTestFramework):
 
         # Requesting the current block on p2p_conns[1] should succeed indefinitely,
         # even when over the max upload target.
-        # We'll try 800 times
+        # We will try 800 times
         getdata_request.inv = [CInv(2, big_new_block)]
         for i in range(800):
             p2p_conns[1].send_message(getdata_request)

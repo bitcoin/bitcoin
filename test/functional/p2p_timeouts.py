@@ -12,13 +12,13 @@
 
 - Start all three nodes
 - Wait 1 second
-- Assert that we're connected
+- Assert that we are connected
 - Send a ping to no_verack_node and no_version_node
 - Wait 30 seconds
-- Assert that we're still connected
+- Assert that we are still connected
 - Send a ping to no_verack_node and no_version_node
 - Wait 31 seconds
-- Assert that we're no longer connected (timeout to receive version/verack is 60 seconds)
+- Assert that we are no longer connected (timeout to receive version/verack is 60 seconds)
 """
 
 from time import sleep

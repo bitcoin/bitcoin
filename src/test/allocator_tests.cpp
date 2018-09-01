@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(lockedpool_tests_mock)
     BOOST_CHECK(a4);
     void *a5 = pool.alloc(LockedPool::ARENA_SIZE / 2);
     BOOST_CHECK(a5);
-    // We've passed a count of three arenas, so this allocation should fail
+    // We have passed a count of three arenas, so this allocation should fail
     void *a6 = pool.alloc(16);
     BOOST_CHECK(!a6);
 

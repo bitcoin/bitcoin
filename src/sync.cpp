@@ -174,7 +174,7 @@ void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLi
 void DeleteLock(void* cs)
 {
     if (!lockdata.available) {
-        // We're already shutting down.
+        // We are already shutting down.
         return;
     }
     std::lock_guard<std::mutex> lock(lockdata.dd_mutex);

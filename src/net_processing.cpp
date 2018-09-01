@@ -143,7 +143,7 @@ namespace {
     /** Number of preferable block download peers. */
     int nPreferredDownload GUARDED_BY(cs_main) = 0;
 
-    /** Number of peers from which we're downloading blocks. */
+    /** Number of peers from which we are downloading blocks. */
     int nPeersWithValidatedDownloads GUARDED_BY(cs_main) = 0;
 
     /** Number of outbound peers with m_chain_sync.m_protect. */
@@ -185,7 +185,7 @@ struct CBlockReject {
  * Maintain validation-specific state about nodes, protected by cs_main, instead
  * by CNode's own locks. This simplifies asynchronous operation, where
  * processing of incoming data is done after the ProcessMessage call returns,
- * and we're no longer holding the node's locks.
+ * and we are no longer holding the node's locks.
  */
 struct CNodeState {
     //! The peer's address
@@ -214,7 +214,7 @@ struct CNodeState {
     bool fSyncStarted;
     //! When to potentially disconnect peer for stalling headers download
     int64_t nHeadersSyncTimeout;
-    //! Since when we're stalling block download progress (in microseconds), or 0.
+    //! Since when we are stalling block download progress (in microseconds), or 0.
     int64_t nStallingSince;
     std::list<QueuedBlock> vBlocksInFlight;
     //! When the first entry in vBlocksInFlight started downloading. Don't care when vBlocksInFlight is empty.
@@ -389,7 +389,7 @@ static bool MarkBlockAsInFlight(NodeId nodeid, const uint256& hash, const CBlock
     state->nBlocksInFlight++;
     state->nBlocksInFlightValidHeaders += it->fValidatedHeaders;
     if (state->nBlocksInFlight == 1) {
-        // We're starting a block download (batch) from this peer.
+        // We are starting a block download (batch) from this peer.
         state->nDownloadingSince = GetTimeMicros();
     }
     if (state->nBlocksInFlightValidHeaders == 1 && pindex != nullptr) {
@@ -512,7 +512,7 @@ static void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vec
     CNodeState *state = State(nodeid);
     assert(state != nullptr);
 
-    // Make sure pindexBestKnownBlock is up to date, we'll need it.
+    // Make sure pindexBestKnownBlock is up to date, we will need it.
     ProcessBlockAvailability(nodeid);
 
     if (state->pindexBestKnownBlock == nullptr || state->pindexBestKnownBlock->nChainWork < chainActive.Tip()->nChainWork || state->pindexBestKnownBlock->nChainWork < nMinimumChainWork) {
@@ -1003,8 +1003,8 @@ void PeerLogicValidation::BlockChecked(const CBlock& block, const CValidationSta
     }
     // Check that:
     // 1. The block is valid
-    // 2. We're not in initial block download
-    // 3. This is currently the best block we're aware of. We haven't updated
+    // 2. We are not in initial block download
+    // 3. This is currently the best block we are aware of. We haven't updated
     //    the tip yet so we have no way to check this directly here. Instead we
     //    just check that there are currently no other blocks in flight.
     else if (state.IsValid() &&
@@ -1227,7 +1227,7 @@ void static ProcessGetBlockData(CNode* pfrom, const CChainParams& chainparams, c
             }
             else if (inv.type == MSG_CMPCT_BLOCK)
             {
-                // If a peer is asking for old blocks, we're almost guaranteed
+                // If a peer is asking for old blocks, we are almost guaranteed
                 // they won't have a useful mempool to match against a compact block,
                 // and we don't feel like constructing the object for them, so
                 // instead we respond with the full, non-compact block.
@@ -1400,7 +1400,7 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
             hashLastBlock = header.GetHash();
         }
 
-        // If we don't have the last header, then they'll have given us
+        // If we don't have the last header, then they will have given us
         // something new (if these headers are valid).
         if (!LookupBlockIndex(hashLastBlock)) {
             received_new_header = true;
@@ -1499,8 +1499,8 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
                 }
                 pindexWalk = pindexWalk->pprev;
             }
-            // If pindexWalk still isn't on our main chain, we're looking at a
-            // very large reorg at a time we think we're close to caught up to
+            // If pindexWalk still isn't on our main chain, we are looking at a
+            // very large reorg at a time we think we are close to caught up to
             // the main chain -- this shouldn't really happen.  Bail out on the
             // direct fetch and rely on parallel download instead.
             if (!chainActive.Contains(pindexWalk)) {
@@ -1534,7 +1534,7 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
                 }
             }
         }
-        // If we're in IBD, we want outbound peers that will serve us a useful
+        // If we are in IBD, we want outbound peers that will serve us a useful
         // chain. Disconnect peers that are on chains with insufficient work.
         if (IsInitialBlockDownload() && nCount != MAX_HEADERS_RESULTS) {
             // When nCount < MAX_HEADERS_RESULTS, we know we have no more
@@ -2061,7 +2061,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             pfrom->PushInventory(CInv(MSG_BLOCK, pindex->GetBlockHash()));
             if (--nLimit <= 0)
             {
-                // When this block is requested, we'll send an inv that'll
+                // When this block is requested, we will send an inv that'll
                 // trigger the peer to getblocks the next batch of inventory.
                 LogPrint(BCLog::NET, "  getblocks stopping at limit %d %s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
                 pfrom->hashContinue = pindex->GetBlockHash();
@@ -2108,7 +2108,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             inv.type = State(pfrom->GetId())->fWantsCmpctWitness ? MSG_WITNESS_BLOCK : MSG_BLOCK;
             inv.hash = req.blockhash;
             pfrom->vRecvGetData.push_back(inv);
-            // The message processing loop will go around again (without pausing) and we'll respond then (without cs_main)
+            // The message processing loop will go around again (without pausing) and we will respond then (without cs_main)
             return true;
         }
 
@@ -2459,7 +2459,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             return true;
         }
 
-        // If we're not close to tip yet, give up and let parallel block fetch work its magic
+        // If we are not close to tip yet, give up and let parallel block fetch work its magic
         if (!fAlreadyInFlight && !CanDirectFetch(chainparams.GetConsensus()))
             return true;
 
@@ -2571,7 +2571,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // our anti-DoS protections in AcceptBlock, which filters
             // unrequested blocks that might be trying to waste our resources
             // (eg disk space). Because we only try to reconstruct blocks when
-            // we're close to caught up (via the CanDirectFetch() requirement
+            // we are close to caught up (via the CanDirectFetch() requirement
             // above, combined with the behavior of not requesting blocks until
             // we have a chain with at least nMinimumChainWork), and we ignore
             // compact blocks with less work than our tip, it is safe to treat
@@ -3100,7 +3100,7 @@ void PeerLogicValidation::ConsiderEviction(CNode *pto, int64_t time_in_seconds)
                 state.m_chain_sync.m_sent_getheaders = false;
             }
         } else if (state.m_chain_sync.m_timeout == 0 || (state.m_chain_sync.m_work_header != nullptr && state.pindexBestKnownBlock != nullptr && state.pindexBestKnownBlock->nChainWork >= state.m_chain_sync.m_work_header->nChainWork)) {
-            // Our best block known by this peer is behind our tip, and we're either noticing
+            // Our best block known by this peer is behind our tip, and we are either noticing
             // that for the first time, OR this peer was able to catch up to some earlier point
             // where we checked against our tip.
             // Either way, set a new timeout based on current tip.
@@ -3112,7 +3112,7 @@ void PeerLogicValidation::ConsiderEviction(CNode *pto, int64_t time_in_seconds)
             // of our tip, when we first detected it was behind. Send a single getheaders
             // message to give the peer a chance to update us.
             if (state.m_chain_sync.m_sent_getheaders) {
-                // They've run out of time to catch up!
+                // They have run out of time to catch up!
                 LogPrintf("Disconnecting outbound peer %d for old chain, best known block = %s\n", pto->GetId(), state.pindexBestKnownBlock != nullptr ? state.pindexBestKnownBlock->GetBlockHash().ToString() : "<none>");
                 pto->fDisconnect = true;
             } else {
@@ -3167,7 +3167,7 @@ void PeerLogicValidation::EvictExtraOutboundPeers(int64_t time_in_seconds)
                 // Only disconnect a peer that has been connected to us for
                 // some reasonable fraction of our check-frequency, to give
                 // it time for new information to have arrived.
-                // Also don't disconnect any peer we're trying to download a
+                // Also don't disconnect any peer we are trying to download a
                 // block from.
                 CNodeState &state = *State(pnode->GetId());
                 if (time_in_seconds - pnode->nTimeConnected > MINIMUM_CONNECT_TIME && state.nBlocksInFlight == 0) {
@@ -3321,7 +3321,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
             pindexBestHeader = chainActive.Tip();
         bool fFetch = state.fPreferredDownload || (nPreferredDownload == 0 && !pto->fClient && !pto->fOneShot); // Download if this is a nice peer, or we have no nice peers and this one might do.
         if (!state.fSyncStarted && !pto->fClient && !fImporting && !fReindex) {
-            // Only actively request headers from a single peer, unless we're close to today.
+            // Only actively request headers from a single peer, unless we are close to today.
             if ((nSyncStarted == 0 && fFetch) || pindexBestHeader->GetBlockTime() > GetAdjustedTime() - 24 * 60 * 60) {
                 state.fSyncStarted = true;
                 state.nHeadersSyncTimeout = GetTimeMicros() + HEADERS_DOWNLOAD_TIMEOUT_BASE + HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER * (GetAdjustedTime() - pindexBestHeader->GetBlockTime())/(consensusParams.nPowTargetSpacing);
@@ -3354,7 +3354,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
         //
         {
             // If we have less than MAX_BLOCKS_TO_ANNOUNCE in our
-            // list of block hashes we're relaying, and our peer wants
+            // list of block hashes we are relaying, and our peer wants
             // headers announcements, then find the first header
             // not yet known to our peer but would connect, and send.
             // If no header would connect, or if we have too many
@@ -3418,7 +3418,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
             if (!fRevertToInv && !vHeaders.empty()) {
                 if (vHeaders.size() == 1 && state.fPreferHeaderAndIDs) {
                     // We only send up to 1 block as header-and-ids, as otherwise
-                    // probably means we're doing an initial-ish-sync or they're slow
+                    // probably means we are doing an initial-ish-sync or they are slow
                     LogPrint(BCLog::NET, "%s sending header-and-ids %s to peer=%d\n", __func__,
                             vHeaders.front().GetHash().ToString(), pto->GetId());
 
@@ -3469,7 +3469,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                     const CBlockIndex* pindex = LookupBlockIndex(hashToAnnounce);
                     assert(pindex);
 
-                    // Warn if we're announcing a block that is not on the main chain.
+                    // Warn if we are announcing a block that is not on the main chain.
                     // This should be very rare and could be optimized out.
                     // Just log for now.
                     if (chainActive[pindex->nHeight] != pindex) {
@@ -3626,7 +3626,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
         if (!vInv.empty())
             connman->PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
 
-        // Detect whether we're stalling
+        // Detect whether we are stalling
         nNow = GetTimeMicros();
         if (state.nStallingSince && state.nStallingSince < nNow - 1000000 * BLOCK_STALLING_TIMEOUT) {
             // Stalling only triggers when the block download window cannot move. During normal steady state,
@@ -3637,7 +3637,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
             return true;
         }
         // In case there is a block that has been in flight from this peer for 2 + 0.5 * N times the block interval
-        // (with N the number of peers from which we're downloading validated blocks), disconnect due to timeout.
+        // (with N the number of peers from which we are downloading validated blocks), disconnect due to timeout.
         // We compensate for other peers to prevent killing off peers due to our own downstream link
         // being saturated. We only count validated in-flight blocks so peers can't advertise non-existing block hashes
         // to unreasonably increase our timeout.
@@ -3726,7 +3726,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                     vGetData.clear();
                 }
             } else {
-                //If we're not going to ask, don't expect a response.
+                //If we are not going to ask, don't expect a response.
                 pto->setAskFor.erase(inv.hash);
             }
             pto->mapAskFor.erase(pto->mapAskFor.begin());

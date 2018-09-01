@@ -152,7 +152,7 @@ Bitcoin Core 0.15.0 contains the following changes to the RPC interface and `bit
 
 * When running Bitcoin Core with a single wallet, there are **no** changes to the RPC interface or `bitcoin-cli`. All RPC calls and `bitcoin-cli` commands continue to work as before.
 * When running Bitcoin Core with multi-wallet, all *node-level* RPC methods continue to work as before. HTTP RPC requests should be send to the normal `<RPC IP address>:<RPC port>` endpoint, and `bitcoin-cli` commands should be run as before. A *node-level* RPC method is any method which does not require access to the wallet.
-* When running Bitcoin Core with multi-wallet, *wallet-level* RPC methods must specify the wallet for which they're intended in every request. HTTP RPC requests should be send to the `<RPC IP address>:<RPC port>/wallet/<wallet name>` endpoint, for example `127.0.0.1:8332/wallet/wallet1.dat`. `bitcoin-cli` commands should be run with a `-rpcwallet` option, for example `bitcoin-cli -rpcwallet=wallet1.dat getbalance`.
+* When running Bitcoin Core with multi-wallet, *wallet-level* RPC methods must specify the wallet for which they are intended in every request. HTTP RPC requests should be send to the `<RPC IP address>:<RPC port>/wallet/<wallet name>` endpoint, for example `127.0.0.1:8332/wallet/wallet1.dat`. `bitcoin-cli` commands should be run with a `-rpcwallet` option, for example `bitcoin-cli -rpcwallet=wallet1.dat getbalance`.
 * A new *node-level* `listwallets` RPC method is added to display which wallets are currently loaded. The names returned by this method are the same as those used in the HTTP endpoint and for the `rpcwallet` argument.
 
 Note that while multi-wallet is now fully supported, the RPC multi-wallet interface should be considered unstable for version 0.15.0, and there may backwards-incompatible changes in future versions.
@@ -205,7 +205,7 @@ Low-level RPC changes
 ---------------------
 
 - When using Bitcoin Core in multi-wallet mode, RPC requests for wallet methods must specify
-  the wallet that they're intended for. See [Multi-wallet support](#multi-wallet-support) for full details.
+  the wallet that they are intended for. See [Multi-wallet support](#multi-wallet-support) for full details.
 
 - The new database model no longer stores information about transaction
   versions of unspent outputs (See [Performance improvements](#performance-improvements)). This means that:
@@ -321,7 +321,7 @@ Low-level RPC changes
 - #10310 `f4b15e2` [doc] Add hint about getmempoolentry to getrawmempool help (kallewoof)
 - #8704 `96c850c` [RPC] Transaction details in getblock (achow101)
 - #8952 `9390845` Add query options to listunspent RPC call (pedrobranco)
-- #10413 `08ac35a` Fix docs (there's no rpc command setpaytxfee) (RHavar)
+- #10413 `08ac35a` Fix docs (there is no rpc command setpaytxfee) (RHavar)
 - #8384 `e317c0d` Add witness data output to TxInError messages (instagibbs)
 - #9571 `4677151` RPC: getblockchaininfo returns BIP signaling statistics  (pinheadmz)
 - #10450 `ef2d062` Fix bumpfee rpc "errors" return value (ryanofsky)

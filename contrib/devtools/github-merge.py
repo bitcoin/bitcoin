@@ -7,7 +7,7 @@
 # github repository, inspect it, sign it and optionally push it.
 
 # The following temporary branches are created/overwritten and deleted:
-# * pull/$PULL/base (the current master we're merging onto)
+# * pull/$PULL/base (the current master we are merging onto)
 # * pull/$PULL/head (the current state of the remote pull request)
 # * pull/$PULL/merge (github's merge)
 # * pull/$PULL/local-merge (our merge)

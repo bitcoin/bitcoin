@@ -155,8 +155,8 @@ class BIP68Test(BitcoinTestFramework):
                         should_pass = False
 
                     # Figure out what the median-time-past was for the confirmed input
-                    # Note that if an input has N confirmations, we're going back N blocks
-                    # from the tip so that we're looking up MTP of the block
+                    # Note that if an input has N confirmations, we are going back N blocks
+                    # from the tip so that we are looking up MTP of the block
                     # PRIOR to the one the input appears in, as per the BIP68 spec.
                     orig_time = self.get_median_time_past(utxos[j]["confirmations"])
                     cur_time = self.get_median_time_past(0) # MTP of the tip

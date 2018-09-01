@@ -272,7 +272,7 @@ bool AddressTableModel::setData(const QModelIndex &index, const QVariant &value,
                 editStatus = DUPLICATE_ADDRESS;
                 return false;
             }
-            // Double-check that we're not overwriting a receiving address
+            // Double-check that we are not overwriting a receiving address
             else if(rec->type == AddressTableEntry::Sending)
             {
                 // Remove old entry

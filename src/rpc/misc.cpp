@@ -264,7 +264,7 @@ static UniValue setmocktime(const JSONRPCRequest& request)
     if (!Params().MineBlocksOnDemand())
         throw std::runtime_error("setmocktime for regression testing (-regtest mode) only");
 
-    // For now, don't change mocktime if we're in the middle of validation, as
+    // For now, don't change mocktime if we are in the middle of validation, as
     // this could have an effect on mempool time-based eviction, as well as
     // IsCurrentForFeeEstimation() and IsInitialBlockDownload().
     // TODO: figure out the right way to synchronize around mocktime, and

@@ -704,7 +704,7 @@ inline const char* streamStateFromFormat(std::ostream& out, bool& spacePadPositi
     while(*c == 'l' || *c == 'h' || *c == 'L' ||
           *c == 'j' || *c == 'z' || *c == 't')
         ++c;
-    // 5) We're up to the conversion specifier character.
+    // 5) We are up to the conversion specifier character.
     // Set stream flags based on conversion specifier (thanks to the
     // boost::format class for forging the way here).
     bool intConversion = false;

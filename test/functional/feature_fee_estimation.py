@@ -128,7 +128,7 @@ class EstimateFeeTest(BitcoinTestFramework):
 
     def setup_network(self):
         """
-        We'll setup the network to have 3 nodes that all mine with different parameters.
+        We will setup the network to have 3 nodes that all mine with different parameters.
         But first we need to use one node to create a lot of outputs
         which we will use to generate our transactions.
         """

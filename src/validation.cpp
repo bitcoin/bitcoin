@@ -263,7 +263,7 @@ namespace {
     int nLastBlockFile = 0;
     /** Global flag to indicate we should check to see if there are
      *  block/undo files that should be deleted.  Set on startup
-     *  or if we allocate more file space when we're in prune mode
+     *  or if we allocate more file space when we are in prune mode
      */
     bool fCheckForPruning = false;
 
@@ -332,7 +332,7 @@ bool CheckFinalTx(const CTransaction &tx, int flags)
     const int nBlockHeight = chainActive.Height() + 1;
 
     // BIP113 requires that time-locked transactions have nLockTime set to
-    // less than the median time of the previous block they're contained in.
+    // less than the median time of the previous block they are contained in.
     // When the next block is created its previous block will be the current
     // chain tip, so we use that to calculate the median time passed to
     // IsFinalTx() if LOCKTIME_MEDIAN_TIME_PAST is set.
@@ -422,7 +422,7 @@ bool CheckSequenceLocks(const CTransaction &tx, int flags, LockPoints* lp, bool 
             // CheckSequenceLocks to indicate the LockPoints validity
             int maxInputHeight = 0;
             for (int height : prevheights) {
-                // Can ignore mempool inputs since we'll fail if they had non-zero locks
+                // Can ignore mempool inputs since we will fail if they had non-zero locks
                 if (height != tip->nHeight+1) {
                     maxInputHeight = std::max(maxInputHeight, height);
                 }
@@ -916,11 +916,11 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         // flags to cache our script execution flags. This is, of course,
         // useless if the next block has different script flags from the
         // previous one, but because the cache tracks script flags for us it
-        // will auto-invalidate and we'll just have a few blocks of extra
+        // will auto-invalidate and we will just have a few blocks of extra
         // misses on soft-fork activation.
         //
         // This is also useful in case of bugs in the standard flags that cause
-        // transactions to pass as valid when they're actually invalid. For
+        // transactions to pass as valid when they are actually invalid. For
         // instance the STRICTENC flag was incorrectly allowing certain
         // CHECKSIG NOT scripts to pass, even though they were invalid.
         //
@@ -1826,7 +1826,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     if (!CheckBlock(block, state, chainparams.GetConsensus(), !fJustCheck, !fJustCheck)) {
         if (state.CorruptionPossible()) {
             // We don't write down blocks to disk if they may have been
-            // corrupted, so this should be impossible unless we're having hardware
+            // corrupted, so this should be impossible unless we are having hardware
             // problems.
             return AbortNode(state, "Corrupt block found indicating potential hardware failure; shutting down");
         }
@@ -1849,7 +1849,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
 
     bool fScriptChecks = true;
     if (!hashAssumeValid.IsNull()) {
-        // We've been configured with the hash of a block which has been externally verified to have a valid history.
+        // We have been configured with the hash of a block which has been externally verified to have a valid history.
         // A suitable default value is included with the software and updated from time to time.  Because validity
         //  relative to a piece of software is an objective fact these defaults can be easily reviewed.
         // This setting doesn't force the selection of any particular chain but makes validating some faster by
@@ -1896,7 +1896,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     // time BIP34 activated, in each of the existing pairs the duplicate coinbase had overwritten the first
     // before the first had been spent.  Since those coinbases are sufficiently buried it's no longer possible to create further
     // duplicate transactions descending from the known pairs either.
-    // If we're on the known chain at height greater than where BIP34 activated, we can save the db accesses needed for the BIP30 check.
+    // If we are on the known chain at height greater than where BIP34 activated, we can save the db accesses needed for the BIP30 check.
 
     // BIP34 requires that a block at height X (block X) has its coinbase
     // scriptSig start with a CScriptNum of X (indicated height X).  The above
@@ -1949,7 +1949,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     // BIP30 checking again.
     assert(pindex->pprev);
     CBlockIndex *pindexBIP34height = pindex->pprev->GetAncestor(chainparams.GetConsensus().BIP34Height);
-    //Only continue to enforce if we're below BIP34 activation height or the block hash at that height doesn't correspond.
+    //Only continue to enforce if we are below BIP34 activation height or the block hash at that height doesn't correspond.
     fEnforceBIP30 = fEnforceBIP30 && (!pindexBIP34height || !(pindexBIP34height->GetBlockHash() == chainparams.GetConsensus().BIP34Hash));
 
     // TODO: Remove BIP30 checking from block height 1,983,702 on, once we have a
@@ -2034,7 +2034,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         if (!tx.IsCoinBase())
         {
             std::vector<CScriptCheck> vChecks;
-            bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
+            bool fCacheResults = fJustCheck; /* Don't cache results if we are actually connecting blocks (still consult the cache, though) */
             if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, fCacheResults, txdata[i], nScriptCheckThreads ? &vChecks : nullptr))
                 return error("ConnectBlock(): CheckInputs on %s failed with %s",
                     tx.GetHash().ToString(), FormatStateMessage(state));
@@ -2088,9 +2088,9 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
 
 /**
  * Update the on-disk chain state.
- * The caches and indexes are flushed depending on the mode we're called with
- * if they're too large, if it's been a while since the last write,
- * or always and in all cases if we're in prune mode and are deleting files.
+ * The caches and indexes are flushed depending on the mode we are called with
+ * if they are too large, if it's been a while since the last write,
+ * or always and in all cases if we are in prune mode and are deleting files.
  *
  * If FlushStateMode::NONE is used, then FlushStateToDisk(...) won't do anything
  * besides checking if we need to prune.
@@ -2133,7 +2133,7 @@ bool static FlushStateToDisk(const CChainParams& chainparams, CValidationState &
         int64_t nMempoolSizeMax = gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
         int64_t cacheSize = pcoinsTip->DynamicMemoryUsage();
         int64_t nTotalSpace = nCoinCacheUsage + std::max<int64_t>(nMempoolSizeMax - nMempoolUsage, 0);
-        // The cache is large and we're within 10% and 10 MiB of the limit, but we have time now (not in the middle of a block processing).
+        // The cache is large and we are within 10% and 10 MiB of the limit, but we have time now (not in the middle of a block processing).
         bool fCacheLarge = mode == FlushStateMode::PERIODIC && cacheSize > std::max((9 * nTotalSpace) / 10, nTotalSpace - MAX_BLOCK_COINSDB_USAGE * 1024 * 1024);
         // The cache is over the limit, we have to write now.
         bool fCacheCritical = mode == FlushStateMode::IF_NEEDED && cacheSize > nTotalSpace;
@@ -2516,7 +2516,7 @@ CBlockIndex* CChainState::FindMostWorkChain() {
                     if (fFailedChain) {
                         pindexFailed->nStatus |= BLOCK_FAILED_CHILD;
                     } else if (fMissingData) {
-                        // If we're missing data, then add back to mapBlocksUnlinked,
+                        // If we are missing data, then add back to mapBlocksUnlinked,
                         // so that if the block arrives in the future we can try adding
                         // to setBlockIndexCandidates again.
                         mapBlocksUnlinked.insert(std::make_pair(pindexFailed->pprev, pindexFailed));
@@ -2543,7 +2543,7 @@ void CChainState::PruneBlockIndexCandidates() {
     while (it != setBlockIndexCandidates.end() && setBlockIndexCandidates.value_comp()(*it, chainActive.Tip())) {
         setBlockIndexCandidates.erase(it++);
     }
-    // Either the current tip or a successor of it we're working towards is left in setBlockIndexCandidates.
+    // Either the current tip or a successor of it we are working towards is left in setBlockIndexCandidates.
     assert(!setBlockIndexCandidates.empty());
 }
 
@@ -2610,7 +2610,7 @@ bool CChainState::ActivateBestChainStep(CValidationState& state, const CChainPar
             } else {
                 PruneBlockIndexCandidates();
                 if (!pindexOldTip || chainActive.Tip()->nChainWork > pindexOldTip->nChainWork) {
-                    // We're in a better position than we were. Return temporarily to release the lock.
+                    // We are in a better position than we were. Return temporarily to release the lock.
                     fContinue = false;
                     break;
                 }
@@ -2665,7 +2665,7 @@ static void NotifyHeaderTip() LOCKS_EXCLUDED(cs_main) {
  * call may be quite long during reindexing or a substantial reorg.
  */
 bool CChainState::ActivateBestChain(CValidationState &state, const CChainParams& chainparams, std::shared_ptr<const CBlock> pblock) {
-    // Note that while we're often called here from ProcessNewBlock, this is
+    // Note that while we are often called here from ProcessNewBlock, this is
     // far from a guarantee. Things in the P2P/RPC will often end up calling
     // us in the middle of ProcessNewBlock - do not assume pblock is set
     // sanely for performance or correctness!
@@ -4093,7 +4093,7 @@ bool CChainState::ReplayBlocks(const CChainParams& params, CCoinsView* view)
     CCoinsViewCache cache(view);
 
     std::vector<uint256> hashHeads = view->GetHeadBlocks();
-    if (hashHeads.empty()) return true; // We're already in a consistent state.
+    if (hashHeads.empty()) return true; // We are already in a consistent state.
     if (hashHeads.size() != 2) return error("ReplayBlocks(): unknown inconsistent state");
 
     uiInterface.ShowProgress(_("Replaying blocks..."), 0, false);
@@ -4178,7 +4178,7 @@ bool CChainState::RewindBlockIndex(const CChainParams& params)
     while (chainActive.Height() >= nHeight) {
         if (fPruneMode && !(chainActive.Tip()->nStatus & BLOCK_HAVE_DATA)) {
             // If pruning, don't try rewinding past the HAVE_DATA point;
-            // since older blocks can't be served anyway, there's
+            // since older blocks can't be served anyway, there is
             // no need to walk further, and trying to DisconnectTip()
             // will fail (and require a needless reindex/redownload
             // of the blockchain).
@@ -4195,7 +4195,7 @@ bool CChainState::RewindBlockIndex(const CChainParams& params)
     }
 
     // Reduce validity flag and have-data flags.
-    // We do this after actual disconnecting, otherwise we'll end up writing the lack of data
+    // We do this after actual disconnecting, otherwise we will end up writing the lack of data
     // to disk before writing the chainstate, resulting in a failure to continue if interrupted.
     for (const auto& entry : mapBlockIndex) {
         CBlockIndex* pindexIter = entry.second;
@@ -4253,7 +4253,7 @@ bool RewindBlockIndex(const CChainParams& params) {
 
     if (chainActive.Tip() != nullptr) {
         // FlushStateToDisk can possibly read chainActive. Be conservative
-        // and skip it here, we're about to -reindex-chainstate anyway, so
+        // and skip it here, we are about to -reindex-chainstate anyway, so
         // it'll get called a bunch real soon.
         CValidationState state;
         if (!FlushStateToDisk(params, state, FlushStateMode::ALWAYS)) {
@@ -4326,7 +4326,7 @@ bool CChainState::LoadGenesisBlock(const CChainParams& chainparams)
 {
     LOCK(cs_main);
 
-    // Check whether we're already initialized by checking for genesis in
+    // Check whether we are already initialized by checking for genesis in
     // mapBlockIndex. Note that we can't use chainActive here, since it is
     // set based on the coins db, not the block index db, which is the only
     // thing loaded at this point.
@@ -4592,7 +4592,7 @@ void CChainState::CheckBlockIndex(const Consensus::Params& consensusParams)
         if (!(pindex->nStatus & BLOCK_HAVE_DATA)) assert(!foundInUnlinked); // Can't be in mapBlocksUnlinked if we don't HAVE_DATA
         if (pindexFirstMissing == nullptr) assert(!foundInUnlinked); // We aren't missing data for any parent -- cannot be in mapBlocksUnlinked.
         if (pindex->pprev && (pindex->nStatus & BLOCK_HAVE_DATA) && pindexFirstNeverProcessed == nullptr && pindexFirstMissing != nullptr) {
-            // We HAVE_DATA for this block, have received data for all parents at some point, but we're currently missing data for some parent.
+            // We HAVE_DATA for this block, have received data for all parents at some point, but we are currently missing data for some parent.
             assert(fHavePruned); // We must have pruned.
             // This block may have entered mapBlocksUnlinked if:
             //  - it has a descendant that at some point had more work than the
@@ -4636,7 +4636,7 @@ void CChainState::CheckBlockIndex(const Consensus::Params& consensusParams)
             // Find which child we just visited.
             std::pair<std::multimap<CBlockIndex*,CBlockIndex*>::iterator,std::multimap<CBlockIndex*,CBlockIndex*>::iterator> rangePar = forward.equal_range(pindexPar);
             while (rangePar.first->second != pindex) {
-                assert(rangePar.first != rangePar.second); // Our parent must have at least the node we're coming from as child.
+                assert(rangePar.first != rangePar.second); // Our parent must have at least the node we are coming from as child.
                 rangePar.first++;
             }
             // Proceed to the next one.

@@ -42,7 +42,7 @@ from one to the next, until the Extractor can convert it to a real transaction.
 In order to permit parallel operation, **Combiners** can be employed which merge
 metadata from different PSBTs for the same unsigned transaction.
 
-The names above in bold are the names of the roles defined in BIP174. They're
+The names above in bold are the names of the roles defined in BIP174. They are
 useful in understanding the underlying steps, but in practice, software and
 hardware implementations will typically implement multiple roles simultaneously.
 
@@ -81,7 +81,7 @@ hardware implementations will typically implement multiple roles simultaneously.
 
 #### Multisig with multiple Bitcoin Core instances
 
-Alice, Bob, and Carol want to create a 2-of-3 multisig address. They're all using
+Alice, Bob, and Carol want to create a 2-of-3 multisig address. They are all using
 Bitcoin Core. We assume their wallets only contain the multisig funds. In case
 they also have a personal wallet, this can be accomplished through the
 multiwallet feature - possibly resulting in a need to add `-rpcwallet=name` to

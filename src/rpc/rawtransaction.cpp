@@ -250,7 +250,7 @@ static UniValue gettxoutproof(const JSONRPCRequest& request)
     } else {
         LOCK(cs_main);
 
-        // Loop through txids and try to find which block they're in. Exit loop once a block is found.
+        // Loop through txids and try to find which block they are in. Exit loop once a block is found.
         for (const auto& tx : setTxids) {
             const Coin& coin = AccessByTxid(*pcoinsTip, tx);
             if (!coin.IsSpent()) {
@@ -865,7 +865,7 @@ UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival
         const CAmount& amount = coin.out.nValue;
 
         SignatureData sigdata = DataFromTransaction(mtx, i, coin.out);
-        // Only sign SIGHASH_SINGLE if there's a corresponding output:
+        // Only sign SIGHASH_SINGLE if there is a corresponding output:
         if (!fHashSingle || (i < mtx.vout.size())) {
             ProduceSignature(*keystore, MutableTransactionSignatureCreator(&mtx, i, amount, nHashType), prevPubKey, sigdata);
         }

@@ -109,7 +109,7 @@ check or whatever).
 * Ask you whether to push the result upstream.
 
 This means that there are no potential race conditions (where a
-pullreq gets updated while you're reviewing it, but before you click
+pullreq gets updated while you are reviewing it, but before you click
 merge), and when using GPG signatures, that even a compromised GitHub
 couldn't mess with the sources.
 

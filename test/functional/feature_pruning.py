@@ -74,9 +74,9 @@ class PruneTest(BitcoinTestFramework):
         if not os.path.isfile(os.path.join(self.prunedir, "blk00000.dat")):
             raise AssertionError("blk00000.dat is missing, pruning too early")
         self.log.info("Success")
-        self.log.info("Though we're already using more than 550MiB, current usage: %d" % calc_usage(self.prunedir))
+        self.log.info("Though we are already using more than 550MiB, current usage: %d" % calc_usage(self.prunedir))
         self.log.info("Mining 25 more blocks should cause the first block file to be pruned")
-        # Pruning doesn't run until we're allocating another chunk, 20 full blocks past the height cutoff will ensure this
+        # Pruning doesn't run until we are allocating another chunk, 20 full blocks past the height cutoff will ensure this
         for i in range(25):
             mine_large_block(self.nodes[0], self.utxo_cache_0)
 
@@ -136,8 +136,8 @@ class PruneTest(BitcoinTestFramework):
         self.log.info("Invalidating block %s at height %d" % (badhash,invalidheight))
         self.nodes[1].invalidateblock(badhash)
 
-        # We've now switched to our previously mined-24 block fork on node 1, but that's not what we want
-        # So invalidate that fork as well, until we're on the same chain as node 0/2 (but at an ancestor 288 blocks ago)
+        # We have now switched to our previously mined-24 block fork on node 1, but that's not what we want
+        # So invalidate that fork as well, until we are on the same chain as node 0/2 (but at an ancestor 288 blocks ago)
         mainchainhash = self.nodes[0].getblockhash(invalidheight - 1)
         curhash = self.nodes[1].getblockhash(invalidheight - 1)
         while curhash != mainchainhash:
@@ -359,12 +359,12 @@ class PruneTest(BitcoinTestFramework):
         self.stop_node(3)
         self.stop_node(4)
 
-        self.log.info("Check that we haven't started pruning yet because we're below PruneAfterHeight")
+        self.log.info("Check that we haven't started pruning yet because we are below PruneAfterHeight")
         self.test_height_min()
         # Extend this chain past the PruneAfterHeight
         # N0=N1=N2 **...*(1020)
 
-        self.log.info("Check that we'll exceed disk space target if we have a very high stale block rate")
+        self.log.info("Check that we will exceed disk space target if we have a very high stale block rate")
         self.create_chain_with_staleblocks()
         # Disconnect N0
         # And mine a 24 block chain on N1 and a separate 25 block chain on N0

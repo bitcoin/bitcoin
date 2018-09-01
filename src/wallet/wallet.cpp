@@ -773,7 +773,7 @@ DBErrors CWallet::ReorderTransactions()
             if (!nOrderPosOff)
                 continue;
 
-            // Since we're changing the order, write it back
+            // Since we are changing the order, write it back
             if (!batch.WriteTx(*pwtx))
                 return DBErrors::LOAD_FAIL;
         }
@@ -815,7 +815,7 @@ bool CWallet::MarkReplaced(const uint256& originalHash, const uint256& newHash)
 
     CWalletTx& wtx = (*mi).second;
 
-    // Ensure for now that we're not overwriting data
+    // Ensure for now that we are not overwriting data
     assert(wtx.mapValue.count("replaced_by_txid") == 0);
 
     wtx.mapValue["replaced_by_txid"] = newHash.ToString();
@@ -1188,7 +1188,7 @@ void CWallet::BlockUntilSyncedToCurrentChain() {
     AssertLockNotHeld(cs_wallet);
 
     {
-        // Skip the queue-draining stuff if we know we're caught up with
+        // Skip the queue-draining stuff if we know we are caught up with
         // chainActive.Tip()...
         // We could also take cs_wallet here, and call m_last_block_processed
         // protected by cs_wallet instead of cs_main, but as long as we need
@@ -1989,7 +1989,7 @@ void CWallet::ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman
     if (fFirst)
         return;
 
-    // Only do it if there's been a new block since last time
+    // Only do it if there is been a new block since last time
     if (nBestBlockTime < nLastResend)
         return;
     nLastResend = GetTime();
@@ -2588,7 +2588,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
     //
     // A simple way to think about this is from the wallet's point of view we
     // always want the blockchain to move forward. By setting nLockTime this
-    // way we're basically making the statement that we only want this
+    // way we are basically making the statement that we only want this
     // transaction to appear in the next block; we don't want to potentially
     // encourage reorgs by allowing transactions to appear at lower heights
     // than the next block in forks of the best chain.
@@ -3643,7 +3643,7 @@ void CWallet::GetKeyBirthTimes(std::map<CTxDestination, int64_t> &mapKeyBirth) c
         }
     }
 
-    // map in which we'll infer heights of other keys
+    // map in which we will infer heights of other keys
     CBlockIndex *pindexMax = chainActive[std::max(0, chainActive.Height() - 144)]; // the tip can be reorganized; use a 144-block safety margin
     std::map<CKeyID, CBlockIndex*> mapKeyFirstBlock;
     for (const CKeyID &keyid : GetKeys()) {
@@ -3651,7 +3651,7 @@ void CWallet::GetKeyBirthTimes(std::map<CTxDestination, int64_t> &mapKeyBirth) c
             mapKeyFirstBlock[keyid] = pindexMax;
     }
 
-    // if there are no such keys, we're done
+    // if there are no such keys, we are done
     if (mapKeyFirstBlock.empty())
         return;
 
@@ -4177,7 +4177,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(const std::string& name, 
 
     uiInterface.LoadWallet(walletInstance);
 
-    // Register with the validation interface. It's ok to do this after rescan since we're still holding cs_main.
+    // Register with the validation interface. It's ok to do this after rescan since we are still holding cs_main.
     RegisterValidationInterface(walletInstance.get());
 
     walletInstance->SetBroadcastTransactions(gArgs.GetBoolArg("-walletbroadcast", DEFAULT_WALLETBROADCAST));
@@ -4270,7 +4270,7 @@ bool CWalletTx::AcceptToMemoryPool(const CAmount& nAbsurdFee, CValidationState& 
     // entered-mempool callback, if we did not there would be a race where a
     // user could call sendmoney in a loop and hit spurious out of funds errors
     // because we think that this newly generated transaction's change is
-    // unavailable as we're not yet aware that it is in the mempool.
+    // unavailable as we are not yet aware that it is in the mempool.
     bool ret = ::AcceptToMemoryPool(mempool, state, tx, nullptr /* pfMissingInputs */,
                                 nullptr /* plTxnReplaced */, false /* bypass_limits */, nAbsurdFee);
     fInMempool |= ret;

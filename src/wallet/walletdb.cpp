@@ -33,7 +33,7 @@ bool WalletBatch::WriteName(const std::string& strAddress, const std::string& st
 bool WalletBatch::EraseName(const std::string& strAddress)
 {
     // This should only be used for sending addresses, never for receiving addresses,
-    // receiving addresses must always have an address book entry if they're not change return.
+    // receiving addresses must always have an address book entry if they are not change return.
     return EraseIC(std::make_pair(std::string("name"), strAddress));
 }
 

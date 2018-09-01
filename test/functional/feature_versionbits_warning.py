@@ -73,7 +73,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         self.send_blocks_with_version(node.p2p, VB_THRESHOLD - 1, VB_UNKNOWN_VERSION)
         node.generate(VB_PERIOD - VB_THRESHOLD + 1)
 
-        # Check that we're not getting any versionbit-related errors in get*info()
+        # Check that we are not getting any versionbit-related errors in get*info()
         assert(not VB_PATTERN.match(node.getmininginfo()["warnings"]))
         assert(not VB_PATTERN.match(node.getnetworkinfo()["warnings"]))
 
@@ -94,7 +94,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         # Stop-start the node. This is required because bitcoind will only warn once about unknown versions or unknown rules activating.
         self.restart_node(0)
 
-        # Generating one block guarantees that we'll get out of IBD
+        # Generating one block guarantees that we will get out of IBD
         node.generate(1)
         wait_until(lambda: not node.getblockchaininfo()['initialblockdownload'], timeout=10, lock=mininode_lock)
         # Generating one more block will be enough to generate an error.

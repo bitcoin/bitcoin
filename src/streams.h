@@ -327,7 +327,7 @@ public:
         assert(last - first > 0);
         if (it == vch.begin() + nReadPos && (unsigned int)(last - first) <= nReadPos)
         {
-            // special case for inserting at the front when there's room
+            // special case for inserting at the front when there is room
             nReadPos -= (last - first);
             memcpy(&vch[nReadPos], &first[0], last - first);
         }
@@ -341,7 +341,7 @@ public:
         assert(last - first > 0);
         if (it == vch.begin() + nReadPos && (unsigned int)(last - first) <= nReadPos)
         {
-            // special case for inserting at the front when there's room
+            // special case for inserting at the front when there is room
             nReadPos -= (last - first);
             memcpy(&vch[nReadPos], &first[0], last - first);
         }
@@ -615,7 +615,7 @@ public:
 /** Non-refcounted RAII wrapper for FILE*
  *
  * Will automatically close the file when it goes out of scope if not null.
- * If you're returning the file pointer, return file.release().
+ * If you are returning the file pointer, return file.release().
  * If you need to close the file early, use file.fclose() instead of fclose(file).
  */
 class CAutoFile
@@ -736,7 +736,7 @@ private:
     FILE *src;            // source file
     uint64_t nSrcPos;     // how many bytes have been read from source
     uint64_t nReadPos;    // how many bytes have been read from this
-    uint64_t nReadLimit;  // up to which position we're allowed to read
+    uint64_t nReadLimit;  // up to which position we are allowed to read
     uint64_t nRewind;     // how many bytes we guarantee to rewind
     std::vector<char> vchBuf; // the buffer
 
@@ -786,7 +786,7 @@ public:
         }
     }
 
-    // check whether we're at the end of the source file
+    // check whether we are at the end of the source file
     bool eof() const {
         return nReadPos == nSrcPos && feof(src);
     }

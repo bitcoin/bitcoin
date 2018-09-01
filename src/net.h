@@ -722,7 +722,7 @@ public:
     std::atomic<int64_t> nLastTXTime;
 
     // Ping time measurement:
-    // The pong reply we're expecting, or 0 if no pong expected.
+    // The pong reply we are expecting, or 0 if no pong expected.
     std::atomic<uint64_t> nPingNonceSent;
     // Time (in usec) the last ping was sent, or 0 if no ping was ever sent.
     std::atomic<int64_t> nPingUsecStart;

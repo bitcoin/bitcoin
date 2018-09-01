@@ -306,7 +306,7 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
 
         // we can't make 38 cents only if we disallow new coins:
         BOOST_CHECK(!testWallet.SelectCoinsMinConf(38 * CENT, filter_standard, GroupCoins(vCoins), setCoinsRet, nValueRet, coin_selection_params, bnb_used));
-        // we can't even make 37 cents if we don't allow new coins even if they're from us
+        // we can't even make 37 cents if we don't allow new coins even if they are from us
         BOOST_CHECK(!testWallet.SelectCoinsMinConf(38 * CENT, filter_standard_extra, GroupCoins(vCoins), setCoinsRet, nValueRet, coin_selection_params, bnb_used));
         // but we can make 37 cents if we accept new coins from ourself
         BOOST_CHECK( testWallet.SelectCoinsMinConf(37 * CENT, filter_standard, GroupCoins(vCoins), setCoinsRet, nValueRet, coin_selection_params, bnb_used));
@@ -395,7 +395,7 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
         add_coin(MIN_CHANGE * 5 / 10);
 
         // try making 1 * MIN_CHANGE from the 1.5 * MIN_CHANGE
-        // we'll get change smaller than MIN_CHANGE whatever happens, so can expect MIN_CHANGE exactly
+        // we will get change smaller than MIN_CHANGE whatever happens, so can expect MIN_CHANGE exactly
         BOOST_CHECK( testWallet.SelectCoinsMinConf(MIN_CHANGE, filter_confirmed, GroupCoins(vCoins), setCoinsRet, nValueRet, coin_selection_params, bnb_used));
         BOOST_CHECK_EQUAL(nValueRet, MIN_CHANGE);
 
@@ -424,7 +424,7 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
         BOOST_CHECK_EQUAL(nValueRet, 500000 * COIN); // we should get the exact amount
         BOOST_CHECK_EQUAL(setCoinsRet.size(), 10U); // in ten coins
 
-        // if there's not enough in the smaller coins to make at least 1 * MIN_CHANGE change (0.5+0.6+0.7 < 1.0+1.0),
+        // if there is not enough in the smaller coins to make at least 1 * MIN_CHANGE change (0.5+0.6+0.7 < 1.0+1.0),
         // we need to try finding an exact subset anyway
 
         // sometimes it will fail, and so we use the next biggest coin:

@@ -525,7 +525,7 @@ class FullBlockTest(BitcoinTestFramework):
         #  -> b31 (8) -> b33 (9) -> b35 (10) -> b39 (11) -> b42 (12) -> b43 (13) -> b44 (14)
         #                                                                                   \-> ??? (15)
 
-        # The next few blocks are going to be created "by hand" since they'll do funky things, such as having
+        # The next few blocks are going to be created "by hand" since they will do funky things, such as having
         # the first transaction be non-coinbase, etc.  The purpose of b44 is to make sure this works.
         self.log.info("Build block 44 manually")
         height = self.block_heights[self.tip.sha256] + 1

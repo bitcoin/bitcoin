@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     }
 
     // If we add one more peer, something should get marked for eviction
-    // on the next check (since we're mocking the time to be in the future, the
+    // on the next check (since we are mocking the time to be in the future, the
     // required time connected check should be satisfied).
     AddRandomOutboundPeer(vNodes, *peerLogic);
 

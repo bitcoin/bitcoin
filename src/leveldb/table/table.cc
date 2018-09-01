@@ -69,7 +69,7 @@ Status Table::Open(const Options& options,
   }
 
   if (s.ok()) {
-    // We've successfully read the footer and the index block: we're
+    // We have successfully read the footer and the index block: we are
     // ready to serve requests.
     Rep* rep = new Table::Rep;
     rep->options = options;
@@ -268,7 +268,7 @@ uint64_t Table::ApproximateOffsetOf(const Slice& key) const {
       result = handle.offset();
     } else {
       // Strange: we can't decode the block handle in the index block.
-      // We'll just return the offset of the metaindex block, which is
+      // We will just return the offset of the metaindex block, which is
       // close to the whole file size for this case.
       result = rep_->metaindex_handle.offset();
     }

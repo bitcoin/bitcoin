@@ -357,7 +357,7 @@ def disconnect_nodes(from_connection, node_num):
         except JSONRPCException as e:
             # If this node is disconnected between calculating the peer id
             # and issuing the disconnect, don't worry about it.
-            # This avoids a race condition if we're mass-disconnecting peers.
+            # This avoids a race condition if we are mass-disconnecting peers.
             if e.error['code'] != -29: # RPC_CLIENT_NODE_NOT_CONNECTED
                 raise
 
@@ -380,7 +380,7 @@ def sync_blocks(rpc_connections, *, wait=1, timeout=60):
     Wait until everybody has the same tip.
 
     sync_blocks needs to be called with an rpc_connections set that has least
-    one node already synced to the latest, stable tip, otherwise there's a
+    one node already synced to the latest, stable tip, otherwise there is a
     chance it might return before all nodes are stably synced.
     """
     stop_time = time.time() + timeout
@@ -515,7 +515,7 @@ def gen_return_txouts():
     script_pubkey = "6a4d0200"  # OP_RETURN OP_PUSH2 512 bytes
     for i in range(512):
         script_pubkey = script_pubkey + "01"
-    # concatenate 128 txouts of above script_pubkey which we'll insert before the txout for change
+    # concatenate 128 txouts of above script_pubkey which we will insert before the txout for change
     txouts = "81"
     for k in range(128):
         # add txout value

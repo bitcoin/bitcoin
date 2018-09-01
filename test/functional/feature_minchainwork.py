@@ -35,7 +35,7 @@ class MinimumChainWorkTest(BitcoinTestFramework):
         # This test relies on the chain setup being:
         # node0 <- node1 <- node2
         # Before leaving IBD, nodes prefer to download blocks from outbound
-        # peers, so ensure that we're mining on an outbound peer and testing
+        # peers, so ensure that we are mining on an outbound peer and testing
         # block relay to inbound peers.
         self.setup_nodes()
         for i in range(self.num_nodes-1):
@@ -58,7 +58,7 @@ class MinimumChainWorkTest(BitcoinTestFramework):
         # Sleep a few seconds and verify that node2 didn't get any new blocks
         # or headers.  We sleep, rather than sync_blocks(node0, node1) because
         # it's reasonable either way for node1 to get the blocks, or not get
-        # them (since they're below node1's minchainwork).
+        # them (since they are below node1's minchainwork).
         time.sleep(3)
 
         self.log.info("Verifying node 2 has no more blocks than before")

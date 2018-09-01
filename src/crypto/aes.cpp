@@ -138,7 +138,7 @@ static int CBCDecrypt(const T& dec, const unsigned char iv[AES_BLOCKSIZE], const
         unsigned char padsize = *--out;
         fail = !padsize | (padsize > AES_BLOCKSIZE);
 
-        // If not well-formed, treat it as though there's no padding.
+        // If not well-formed, treat it as though there is no padding.
         padsize *= !fail;
 
         // All padding must equal the last byte otherwise it's not well-formed

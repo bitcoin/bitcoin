@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper)
         uint256 in = InsecureRand256();
         uint256 res;
 
-        // Ensure that we're doing real obfuscation when obfuscate=true
+        // Ensure that we are doing real obfuscation when obfuscate=true
         BOOST_CHECK(obfuscate != is_null_key(dbwrapper_private::GetObfuscateKey(dbw)));
 
         BOOST_CHECK(dbw.Write(key, in));
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper_iterator)
 // Test that we do not obfuscation if there is existing data.
 BOOST_AUTO_TEST_CASE(existing_data_no_obfuscate)
 {
-    // We're going to share this fs::path between two wrappers
+    // We are going to share this fs::path between two wrappers
     fs::path ph = SetDataDir("existing_data_no_obfuscate");
     create_directories(ph);
 
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(existing_data_no_obfuscate)
 // Ensure that we start obfuscating during a reindex.
 BOOST_AUTO_TEST_CASE(existing_data_reindex)
 {
-    // We're going to share this fs::path between two wrappers
+    // We are going to share this fs::path between two wrappers
     fs::path ph = SetDataDir("existing_data_reindex");
     create_directories(ph);
 

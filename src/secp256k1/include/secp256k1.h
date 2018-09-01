@@ -141,7 +141,7 @@ typedef int (*secp256k1_nonce_function)(
 #  define SECP256K1_ARG_NONNULL(_x)
 # endif
 
-/** All flags' lower 8 bits indicate what they're for. Do not use directly. */
+/** All flags' lower 8 bits indicate what they are for. Do not use directly. */
 #define SECP256K1_FLAGS_TYPE_MASK ((1 << 8) - 1)
 #define SECP256K1_FLAGS_TYPE_CONTEXT (1 << 0)
 #define SECP256K1_FLAGS_TYPE_COMPRESSION (1 << 1)
@@ -394,7 +394,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_verify(
  *  Args: ctx:    a secp256k1 context object
  *  Out:  sigout: a pointer to a signature to fill with the normalized form,
  *                or copy if the input was already normalized. (can be NULL if
- *                you're only interested in whether the input was already
+ *                you are only interested in whether the input was already
  *                normalized).
  *  In:   sigin:  a pointer to a signature to check/normalize (cannot be NULL,
  *                can be identical to sigout)
