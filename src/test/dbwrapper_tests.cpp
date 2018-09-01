@@ -51,6 +51,9 @@ BOOST_AUTO_TEST_CASE(dbwrapper_basic_data)
         CDBWrapper dbw(ph, (1 << 20), false, true, obfuscate);
 
         uint256 res;
+        uint32_t res_uint_32;
+        bool res_bool;
+
         // Ensure that we're doing real obfuscation when obfuscate=true
         BOOST_CHECK(obfuscate != is_null_key(dbwrapper_private::GetObfuscateKey(dbw)));
  
@@ -93,6 +96,38 @@ BOOST_AUTO_TEST_CASE(dbwrapper_basic_data)
         BOOST_CHECK(dbw.Write(key_utxo, in_utxo));
         BOOST_CHECK(dbw.Read(key_utxo, res));
         BOOST_CHECK_EQUAL(res.ToString(), in_utxo.ToString()); 
+
+        //Simulate last block file number - "l"
+        char key_last_blockfile_number = 'l';
+        uint32_t lastblockfilenumber = InsecureRand32();
+        BOOST_CHECK(dbw.Write(key_last_blockfile_number, lastblockfilenumber));
+        BOOST_CHECK(dbw.Read(key_last_blockfile_number, res_uint_32));
+        BOOST_CHECK_EQUAL(lastblockfilenumber, res_uint_32);  
+
+        //Simulate Is Reindexing - "R"
+        char key_IsReindexing = 'R';
+        bool isInReindexing = InsecureRandBool();
+        BOOST_CHECK(dbw.Write(key_IsReindexing, isInReindexing));
+        BOOST_CHECK(dbw.Read(key_IsReindexing, res_bool));
+        BOOST_CHECK_EQUAL(isInReindexing, res_bool);   
+
+        //Simulate last block hash up to which UXTO covers - 'B'
+        char key_lastblockhash_uxto = 'B';
+        uint256 lastblock_hash = InsecureRand256();
+        BOOST_CHECK(dbw.Write(key_lastblockhash_uxto, lastblock_hash));
+        BOOST_CHECK(dbw.Read(key_lastblockhash_uxto, res));
+        BOOST_CHECK_EQUAL(lastblock_hash, res); 
+
+        //Simulate file raw data - "F + filename_number + filename"
+        std::string file_option_tag = "F";
+        uint8_t filename_length = InsecureRandBits(8);
+        std::string filename = "randomfilename";
+        std::string key_file_option = strprintf("%s%01x%s", file_option_tag,filename_length,filename);
+
+        bool in_file_bool = InsecureRandBool();
+        BOOST_CHECK(dbw.Write(key_file_option, in_file_bool));
+        BOOST_CHECK(dbw.Read(key_file_option, res_bool));
+        BOOST_CHECK_EQUAL(res_bool, in_file_bool);                      
    }
 }
 
