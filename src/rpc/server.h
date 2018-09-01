@@ -8,6 +8,8 @@
 
 #include <amount.h>
 #include <rpc/protocol.h>
+#include <rpc/rpccategory.h>
+
 #include <uint256.h>
 
 #include <list>
@@ -18,8 +20,6 @@
 #include <univalue.h>
 
 static const unsigned int DEFAULT_RPC_SERIALIZE_VERSION = 1;
-
-class CRPCCommand;
 
 namespace RPCServer
 {
@@ -128,13 +128,12 @@ void RPCRunLater(const std::string& name, std::function<void(void)> func, int64_
 
 typedef UniValue(*rpcfn_type)(const JSONRPCRequest& jsonRequest);
 
-class CRPCCommand
+struct CRPCCommand
 {
-public:
-    std::string category;
-    std::string name;
-    rpcfn_type actor;
-    std::vector<std::string> argNames;
+    const RPCCategory category;
+    const std::string name;
+    const rpcfn_type actor;
+    const std::vector<std::string> argNames;
 };
 
 /**

@@ -29,7 +29,7 @@ static UniValue rpcNestedTest_rpc(const JSONRPCRequest& request)
 
 static const CRPCCommand vRPCCommands[] =
 {
-    { "test", "rpcNestedTest", &rpcNestedTest_rpc, {} },
+    { RPCCategory::TEST, "rpcNestedTest", &rpcNestedTest_rpc, {} },
 };
 
 void RPCNestedTests::rpcNestedTests()

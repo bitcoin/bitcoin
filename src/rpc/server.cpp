@@ -18,6 +18,7 @@
 #include <boost/signals2/signal.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
+#include <boost/optional.hpp>
 
 #include <memory> // for unique_ptr
 #include <unordered_map>
@@ -152,12 +153,13 @@ std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKey)
 std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest& helpreq) const
 {
     std::string strRet;
-    std::string category;
+    boost::optional<RPCCategory> category;
+
     std::set<rpcfn_type> setDone;
     std::vector<std::pair<std::string, const CRPCCommand*> > vCommands;
 
     for (const auto& entry : mapCommands)
-        vCommands.push_back(make_pair(entry.second->category + entry.first, entry.second));
+        vCommands.emplace_back(rpccategory::Label(entry.second->category) + entry.first, entry.second);
     sort(vCommands.begin(), vCommands.end());
 
     JSONRPCRequest jreq(helpreq);
@@ -168,7 +170,7 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
     {
         const CRPCCommand *pcmd = command.second;
         std::string strMethod = pcmd->name;
-        if ((strCommand != "" || pcmd->category == "hidden") && strMethod != strCommand)
+        if ((strCommand != "" || pcmd->category == RPCCategory::HIDDEN) && strMethod != strCommand)
             continue;
         jreq.strMethod = strMethod;
         try
@@ -188,10 +190,10 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
 
                 if (category != pcmd->category)
                 {
-                    if (!category.empty())
+                    if (category)
                         strRet += "\n";
                     category = pcmd->category;
-                    strRet += "== " + Capitalize(category) + " ==\n";
+                    strRet += "== " + rpccategory::Label(*category) + " ==\n";
                 }
             }
             strRet += strHelp + "\n";
@@ -259,9 +261,9 @@ static const CRPCCommand vRPCCommands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
     /* Overall control/query calls */
-    { "control",            "help",                   &help,                   {"command"}  },
-    { "control",            "stop",                   &stop,                   {}  },
-    { "control",            "uptime",                 &uptime,                 {}  },
+    { RPCCategory::CONTROL,            "help",                   &help,                   {"command"}  },
+    { RPCCategory::CONTROL,            "stop",                   &stop,                   {}  },
+    { RPCCategory::CONTROL,            "uptime",                 &uptime,                 {}  },
 };
 
 CRPCTable::CRPCTable()

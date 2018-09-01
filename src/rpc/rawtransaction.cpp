@@ -1794,23 +1794,23 @@ UniValue converttopsbt(const JSONRPCRequest& request)
 static const CRPCCommand commands[] =
 { //  category              name                            actor (function)            argNames
   //  --------------------- ------------------------        -----------------------     ----------
-    { "rawtransactions",    "getrawtransaction",            &getrawtransaction,         {"txid","verbose","blockhash"} },
-    { "rawtransactions",    "createrawtransaction",         &createrawtransaction,      {"inputs","outputs","locktime","replaceable"} },
-    { "rawtransactions",    "decoderawtransaction",         &decoderawtransaction,      {"hexstring","iswitness"} },
-    { "rawtransactions",    "decodescript",                 &decodescript,              {"hexstring"} },
-    { "rawtransactions",    "sendrawtransaction",           &sendrawtransaction,        {"hexstring","allowhighfees"} },
-    { "rawtransactions",    "combinerawtransaction",        &combinerawtransaction,     {"txs"} },
-    { "rawtransactions",    "signrawtransaction",           &signrawtransaction,        {"hexstring","prevtxs","privkeys","sighashtype"} }, /* uses wallet if enabled */
-    { "rawtransactions",    "signrawtransactionwithkey",    &signrawtransactionwithkey, {"hexstring","privkeys","prevtxs","sighashtype"} },
-    { "rawtransactions",    "testmempoolaccept",            &testmempoolaccept,         {"rawtxs","allowhighfees"} },
-    { "rawtransactions",    "decodepsbt",                   &decodepsbt,                {"psbt"} },
-    { "rawtransactions",    "combinepsbt",                  &combinepsbt,               {"txs"} },
-    { "rawtransactions",    "finalizepsbt",                 &finalizepsbt,              {"psbt", "extract"} },
-    { "rawtransactions",    "createpsbt",                   &createpsbt,                {"inputs","outputs","locktime","replaceable"} },
-    { "rawtransactions",    "converttopsbt",                &converttopsbt,             {"hexstring","permitsigdata","iswitness"} },
+    { RPCCategory::RAWTRANSACTIONS,    "getrawtransaction",            &getrawtransaction,         {"txid","verbose","blockhash"} },
+    { RPCCategory::RAWTRANSACTIONS,    "createrawtransaction",         &createrawtransaction,      {"inputs","outputs","locktime","replaceable"} },
+    { RPCCategory::RAWTRANSACTIONS,    "decoderawtransaction",         &decoderawtransaction,      {"hexstring","iswitness"} },
+    { RPCCategory::RAWTRANSACTIONS,    "decodescript",                 &decodescript,              {"hexstring"} },
+    { RPCCategory::RAWTRANSACTIONS,    "sendrawtransaction",           &sendrawtransaction,        {"hexstring","allowhighfees"} },
+    { RPCCategory::RAWTRANSACTIONS,    "combinerawtransaction",        &combinerawtransaction,     {"txs"} },
+    { RPCCategory::RAWTRANSACTIONS,    "signrawtransaction",           &signrawtransaction,        {"hexstring","prevtxs","privkeys","sighashtype"} }, /* uses wallet if enabled */
+    { RPCCategory::RAWTRANSACTIONS,    "signrawtransactionwithkey",    &signrawtransactionwithkey, {"hexstring","privkeys","prevtxs","sighashtype"} },
+    { RPCCategory::RAWTRANSACTIONS,    "testmempoolaccept",            &testmempoolaccept,         {"rawtxs","allowhighfees"} },
+    { RPCCategory::RAWTRANSACTIONS,    "decodepsbt",                   &decodepsbt,                {"psbt"} },
+    { RPCCategory::RAWTRANSACTIONS,    "combinepsbt",                  &combinepsbt,               {"txs"} },
+    { RPCCategory::RAWTRANSACTIONS,    "finalizepsbt",                 &finalizepsbt,              {"psbt", "extract"} },
+    { RPCCategory::RAWTRANSACTIONS,    "createpsbt",                   &createpsbt,                {"inputs","outputs","locktime","replaceable"} },
+    { RPCCategory::RAWTRANSACTIONS,    "converttopsbt",                &converttopsbt,             {"hexstring","permitsigdata","iswitness"} },
 
-    { "blockchain",         "gettxoutproof",                &gettxoutproof,             {"txids", "blockhash"} },
-    { "blockchain",         "verifytxoutproof",             &verifytxoutproof,          {"proof"} },
+    { RPCCategory::BLOCKCHAIN,         "gettxoutproof",                &gettxoutproof,             {"txids", "blockhash"} },
+    { RPCCategory::BLOCKCHAIN,         "verifytxoutproof",             &verifytxoutproof,          {"proof"} },
 };
 
 void RegisterRawTransactionRPCCommands(CRPCTable &t)

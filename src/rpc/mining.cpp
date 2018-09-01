@@ -971,20 +971,19 @@ static UniValue estimaterawfee(const JSONRPCRequest& request)
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
-    { "mining",             "getnetworkhashps",       &getnetworkhashps,       {"nblocks","height"} },
-    { "mining",             "getmininginfo",          &getmininginfo,          {} },
-    { "mining",             "prioritisetransaction",  &prioritisetransaction,  {"txid","dummy","fee_delta"} },
-    { "mining",             "getblocktemplate",       &getblocktemplate,       {"template_request"} },
-    { "mining",             "submitblock",            &submitblock,            {"hexdata","dummy"} },
-    { "mining",             "submitheader",           &submitheader,           {"hexdata"} },
+    { RPCCategory::MINING,             "getnetworkhashps",       &getnetworkhashps,       {"nblocks","height"} },
+    { RPCCategory::MINING,             "getmininginfo",          &getmininginfo,          {} },
+    { RPCCategory::MINING,             "prioritisetransaction",  &prioritisetransaction,  {"txid","dummy","fee_delta"} },
+    { RPCCategory::MINING,             "getblocktemplate",       &getblocktemplate,       {"template_request"} },
+    { RPCCategory::MINING,             "submitblock",            &submitblock,            {"hexdata","dummy"} },
+    { RPCCategory::MINING,             "submitheader",           &submitheader,           {"hexdata"} },
 
+    { RPCCategory::GENERATING,         "generatetoaddress",      &generatetoaddress,      {"nblocks","address","maxtries"} },
 
-    { "generating",         "generatetoaddress",      &generatetoaddress,      {"nblocks","address","maxtries"} },
+    { RPCCategory::HIDDEN,             "estimatefee",            &estimatefee,            {} },
+    { RPCCategory::UTIL,               "estimatesmartfee",       &estimatesmartfee,       {"conf_target", "estimate_mode"} },
 
-    { "hidden",             "estimatefee",            &estimatefee,            {} },
-    { "util",               "estimatesmartfee",       &estimatesmartfee,       {"conf_target", "estimate_mode"} },
-
-    { "hidden",             "estimaterawfee",         &estimaterawfee,         {"conf_target", "threshold"} },
+    { RPCCategory::HIDDEN,             "estimaterawfee",         &estimaterawfee,         {"conf_target", "threshold"} },
 };
 
 void RegisterMiningRPCCommands(CRPCTable &t)

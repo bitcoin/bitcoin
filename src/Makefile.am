@@ -157,6 +157,7 @@ BITCOIN_CORE_H = \
   rpc/server.h \
   rpc/rawtransaction.h \
   rpc/register.h \
+  rpc/rpccategory.h \
   rpc/util.h \
   scheduler.h \
   script/descriptor.h \
@@ -246,6 +247,7 @@ libbitcoin_server_a_SOURCES = \
   rpc/misc.cpp \
   rpc/net.cpp \
   rpc/rawtransaction.cpp \
+  rpc/rpccategory.cpp \
   rpc/server.cpp \
   rpc/util.cpp \
   script/sigcache.cpp \
