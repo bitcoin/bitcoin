@@ -82,11 +82,28 @@ int NetV2Message::Read(const char* pch, unsigned bytes)
             // m_message_size holds the packet size excluding the MAC
 
             // initially check the message
+            // the first byte of the message is a ASCII command string size from 1-12
+            // or a short ID (>12)
+            uint8_t size_or_shortid;
             try {
-                vRecv >> m_command_name;
+                vRecv >> size_or_shortid;
             } catch (const std::exception&) {
                 LogPrint(BCLog::NET, "Invalid command name\n");
                 return false;
+            }
+            if (size_or_shortid == 0) return false; //0 is invalid
+            if (size_or_shortid <= 12) {
+                // string command
+                if (vRecv.size() < size_or_shortid) return false;
+
+                m_command_name.resize(size_or_shortid);
+                vRecv.read(&m_command_name[0], size_or_shortid);
+            }
+            else {
+                // must be a short ID
+                if (!GetCommandFromShortCommandID(size_or_shortid, m_command_name)) {
+                    return false; // short ID not found
+                }
             }
             // vRecv points now to the plaintext message payload (MAC is removed)
 

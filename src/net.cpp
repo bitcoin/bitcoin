@@ -2635,8 +2635,17 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
     size_t nMessageSize = msg.data.size();
     size_t nTotalSize = nMessageSize;
     size_t serialized_command_size = ::GetSerializeSize(msg.command, PROTOCOL_VERSION);
+    uint8_t cmd_short_id = 0;
     bool should_crypt = pnode->m_encryption_handler && pnode->m_encryption_handler->ShouldCryptMsg();
     if (should_crypt) {
+        // the crypted protocol supports short command IDs
+        cmd_short_id = GetShortCommandIDFromCommand(msg.command);
+        if (cmd_short_id != 0) {
+            // if no short ID is available, use a size between 1-12 (always one byte)
+            assert(msg.command.size() <= 12);
+            serialized_command_size = 1;
+        }
+
         // add encrypted header size (AAD + MAC TAG + Varlen-Command + inner-message-size)
         nTotalSize += pnode->m_encryption_handler->GetAADLen() + pnode->m_encryption_handler->GetTagLen() + serialized_command_size;
     } else {
@@ -2656,7 +2665,14 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
         uint8_t int24[3];
         memcpy(int24, &envelope_payload_length, 3);
 
-        CVectorWriter{SER_NETWORK, INIT_PROTO_VERSION, serialized_envelope, 0, int24[0], int24[1], int24[2], msg.command};
+        CVectorWriter vector_writer(SER_NETWORK, INIT_PROTO_VERSION, serialized_envelope, 0, int24[0], int24[1], int24[2]);
+        if (cmd_short_id) {
+            // append the single byte short ID...
+            vector_writer << cmd_short_id;
+        } else {
+            // or the ASCII command string
+            vector_writer << msg.command;
+        }
         //append the message itself (if there is a message)
         if (nMessageSize) serialized_envelope.insert(serialized_envelope.end(), msg.data.begin(), msg.data.end());
 

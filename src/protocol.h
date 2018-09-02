@@ -90,6 +90,7 @@ extern const char *ADDR;
  * @see https://bitcoin.org/en/developer-reference#inv
  */
 extern const char *INV;
+const uint8_t INV_SHORT_ID=13; //short ID defined in BIPXXX
 /**
  * The getdata message requests one or more data objects from another node.
  * @see https://bitcoin.org/en/developer-reference#getdata
@@ -127,6 +128,7 @@ extern const char *TX;
  * @see https://bitcoin.org/en/developer-reference#headers
  */
 extern const char *HEADERS;
+const uint8_t HEADERS_SHORT_ID=14; //default short ID defined in BIPXXX
 /**
  * The block message transmits a single serialized block.
  * @see https://bitcoin.org/en/developer-reference#block
@@ -151,6 +153,7 @@ extern const char *MEMPOOL;
  * @see https://bitcoin.org/en/developer-reference#ping
  */
 extern const char *PING;
+const uint8_t PING_SHORT_ID=15; //default short ID defined in BIPXXX
 /**
  * The pong message replies to a ping message, proving to the pinging node that
  * the ponging node is still alive.
@@ -158,6 +161,7 @@ extern const char *PING;
  * @see https://bitcoin.org/en/developer-reference#pong
  */
 extern const char *PONG;
+const uint8_t PONG_SHORT_ID=16; //default short ID defined in BIPXXX
 /**
  * The notfound message is a reply to a getdata message which requested an
  * object the receiving node does not have available for relay.
@@ -242,6 +246,17 @@ extern const char *BLOCKTXN;
 
 /* Get a vector of all valid message types (see above) */
 const std::vector<std::string> &getAllNetMessageTypes();
+
+// Short Command IDs are a low bandwidth representations of a message type
+// The mapping is a peer to peer agreement
+
+// returns the short command ID for a command
+// returns 0 of no short command ID has been found
+uint8_t GetShortCommandIDFromCommand(const std::string cmd);
+
+// returns the command (string) from a short command ID
+// returns an empty string if short command ID has not been found
+bool GetCommandFromShortCommandID(uint8_t shortID, std::string& cmd);
 
 /** nServices flags */
 enum ServiceFlags : uint64_t {
