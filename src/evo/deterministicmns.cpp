@@ -328,9 +328,11 @@ bool CDeterministicMNManager::UndoBlock(const CBlock& block, const CBlockIndex* 
     LOCK(cs);
 
     int nHeight = pindex->nHeight;
+    uint256 blockHash = block.GetHash();
 
-    evoDb.Erase(std::make_pair(DB_LIST_DIFF, block.GetHash()));
-    evoDb.Erase(std::make_pair(DB_LIST_SNAPSHOT, block.GetHash()));
+    evoDb.Erase(std::make_pair(DB_LIST_DIFF, blockHash));
+    evoDb.Erase(std::make_pair(DB_LIST_SNAPSHOT, blockHash));
+    mnListsCache.erase(blockHash);
 
     if (nHeight == GetSpork15Value()) {
         LogPrintf("CDeterministicMNManager::%s -- spork15 is not active anymore. nHeight=%d\n", __func__, nHeight);
