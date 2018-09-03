@@ -268,6 +268,8 @@ extern const char *MNGOVERNANCESYNC;
 extern const char *MNGOVERNANCEOBJECT;
 extern const char *MNGOVERNANCEOBJECTVOTE;
 extern const char *MNVERIFY;
+extern const char *GETMNLISTDIFF;
+extern const char *MNLISTDIFF;
 };
 
 /* Get a vector of all valid message types (see above) */

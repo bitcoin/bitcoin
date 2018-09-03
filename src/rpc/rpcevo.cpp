@@ -20,6 +20,7 @@
 #include "evo/specialtx.h"
 #include "evo/providertx.h"
 #include "evo/deterministicmns.h"
+#include "evo/simplifiedmns.h"
 
 #ifdef ENABLE_WALLET
 extern UniValue signrawtransaction(const JSONRPCRequest& request);
@@ -558,6 +559,60 @@ UniValue protx_list(const JSONRPCRequest& request)
     return ret;
 }
 
+void protx_diff_help()
+{
+    throw std::runtime_error(
+            "protx diff \"baseBlock\" \"block\"\n"
+            "\nCalculates a diff between two deterministic masternode lists. The result also contains proof data.\n"
+            "specified, it defaults to \"wallet\". All types have the optional argument \"detailed\" which if set to\n"
+            "\"true\" will result in a detailed list to be returned. If set to \"false\", only the hashes of the ProTx\n"
+            "will be returned.\n"
+            "\nAvailable types:\n"
+            "  wallet (detailed)              - List only ProTx which are found in your wallet. This will also include ProTx which\n"
+            "                                   failed PoSe verfication\n"
+            "  valid (height) (detailed)      - List only ProTx which are active/valid at the given chain height. If height is not\n"
+            "                                   specified, it defaults to the current chain-tip\n"
+            "  registered (height) (detaileD) - List all ProTx which are registered at the given chain height. If height is not\n"
+            "                                   specified, it defaults to the current chain-tip. This will also include ProTx\n"
+            "                                   which failed PoSe verification at that height\n"
+    );
+}
+
+static uint256 ParseBlock(const UniValue& v, std::string strName)
+{
+    AssertLockHeld(cs_main);
+
+    try {
+        return ParseHashV(v, strName);
+    } catch (...) {
+        int h = ParseInt32V(v, strName);
+        if (h < 1 || h > chainActive.Height())
+            throw std::runtime_error(strprintf("%s must be a block hash or chain height and not %s", strName, v.getValStr()));
+        return *chainActive[h]->phashBlock;
+    }
+}
+
+UniValue protx_diff(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 3)
+        protx_diff_help();
+
+    LOCK(cs_main);
+    uint256 baseBlockHash = ParseBlock(request.params[1], "baseBlock");
+    uint256 blockHash = ParseBlock(request.params[2], "block");
+
+    CSimplifiedMNListDiff mnListDiff;
+    std::string strError;
+    if (!BuildSimplifiedMNListDiff(baseBlockHash, blockHash, mnListDiff, strError)) {
+        throw std::runtime_error(strError);
+    }
+
+    UniValue ret;
+    mnListDiff.ToJson(ret);
+    return ret;
+}
+
+
 UniValue protx(const JSONRPCRequest& request)
 {
     if (request.params.empty()) {
@@ -573,6 +628,7 @@ UniValue protx(const JSONRPCRequest& request)
                 "  update_service    - Create and send ProUpServTx to network\n"
                 "  update_registrar  - Create and send ProUpRegTx to network\n"
                 "  revoke            - Create and send ProUpRevTx to network\n"
+                "  diff              - Calculate a diff and a proof between two masternode lists\n"
         );
     }
 
@@ -588,6 +644,8 @@ UniValue protx(const JSONRPCRequest& request)
         return protx_update_registrar(request);
     } else if (command == "revoke") {
         return protx_revoke(request);
+    } else if (command == "diff") {
+        return protx_diff(request);
     } else {
         throw std::runtime_error("invalid command: " + command);
     }
