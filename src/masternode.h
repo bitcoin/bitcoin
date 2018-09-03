@@ -9,6 +9,8 @@
 #include "validation.h"
 #include "spork.h"
 
+#include "evo/deterministicmns.h"
+
 class CMasternode;
 class CMasternodeBroadcast;
 class CConnman;
@@ -214,6 +216,7 @@ public:
     CMasternode(const CMasternode& other);
     CMasternode(const CMasternodeBroadcast& mnb);
     CMasternode(CService addrNew, COutPoint outpointNew, CPubKey pubKeyCollateralAddressNew, CPubKey pubKeyMasternodeNew, int nProtocolVersionIn);
+    CMasternode(const uint256 &proTxHash, const CDeterministicMNCPtr& dmn);
 
     ADD_SERIALIZE_METHODS;
 

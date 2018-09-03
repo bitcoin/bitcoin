@@ -52,6 +52,17 @@ CMasternode::CMasternode(const CMasternodeBroadcast& mnb) :
     fAllowMixingTx(true)
 {}
 
+CMasternode::CMasternode(const uint256 &proTxHash, const CDeterministicMNCPtr& dmn) :
+    masternode_info_t{ MASTERNODE_ENABLED, dmn->pdmnState->nProtocolVersion, GetAdjustedTime(),
+                       COutPoint(proTxHash, dmn->nCollateralIndex), dmn->pdmnState->addr, CKeyID(), dmn->pdmnState->keyIDOwner, dmn->pdmnState->keyIDOperator, dmn->pdmnState->keyIDVoting},
+    fAllowMixingTx(true)
+{
+    CTxDestination dest;
+    if (!ExtractDestination(dmn->pdmnState->scriptPayout, dest) || !boost::get<CKeyID>(&dest))
+        assert(false); // should not happen (previous verification forbids non p2pkh/p2pk
+    keyIDCollateralAddress = *boost::get<CKeyID>(&dest);
+}
+
 //
 // When a new masternode broadcast is sent, update our information
 //

@@ -149,6 +149,9 @@ public:
     /// This is dummy overload to be used for dumping/loading mncache.dat
     void CheckAndRemove() {}
 
+    void AddDeterministicMasternodes();
+    void RemoveNonDeterministicMasternodes();
+
     /// Clear Masternode vector
     void Clear();
 
@@ -181,7 +184,7 @@ public:
     /// Find a random entry
     masternode_info_t FindRandomNotInVec(const std::vector<COutPoint> &vecToExclude, int nProtocolVersion = -1);
 
-    std::map<COutPoint, CMasternode> GetFullMasternodeMap() { return mapMasternodes; }
+    std::map<COutPoint, CMasternode> GetFullMasternodeMap();
 
     bool GetMasternodeRanks(rank_pair_vec_t& vecMasternodeRanksRet, int nBlockHeight = -1, int nMinProtocol = 0);
     bool GetMasternodeRank(const COutPoint &outpoint, int& nRankRet, int nBlockHeight = -1, int nMinProtocol = 0);
@@ -243,7 +246,7 @@ public:
      * Called to notify CGovernanceManager that the masternode index has been updated.
      * Must be called while not holding the CMasternodeMan::cs mutex
      */
-    void NotifyMasternodeUpdates(CConnman& connman);
+    void NotifyMasternodeUpdates(CConnman& connman, bool forceAddedChecks = false, bool forceRemovedChecks = false);
 
     void DoMaintenance(CConnman &connman);
 };
