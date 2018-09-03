@@ -506,9 +506,16 @@ CDeterministicMNList CDeterministicMNManager::GetListForBlock(const uint256& blo
 
     uint256 blockHashTmp = blockHash;
     CDeterministicMNList snapshot;
-    std::vector<CDeterministicMNListDiff> vecDiff;
+    std::list<CDeterministicMNListDiff> listDiff;
 
     while(true) {
+        // try using cache before reading from disk
+        it = mnListsCache.find(blockHashTmp);
+        if (it != mnListsCache.end()) {
+            snapshot = it->second;
+            break;
+        }
+
         if (evoDb.Read(std::make_pair(DB_LIST_SNAPSHOT, blockHashTmp), snapshot)) {
             break;
         }
@@ -519,11 +526,11 @@ CDeterministicMNList CDeterministicMNManager::GetListForBlock(const uint256& blo
             break;
         }
 
-        vecDiff.emplace(vecDiff.begin(), diff);
+        listDiff.emplace_front(diff);
         blockHashTmp = diff.prevBlockHash;
     }
 
-    for (const auto& diff : vecDiff) {
+    for (const auto& diff : listDiff) {
         if (diff.HasChanges()) {
             snapshot = snapshot.ApplyDiff(diff);
         } else {
