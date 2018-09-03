@@ -53,6 +53,7 @@ class QComboBox;
 class QDateTime;
 class QProgressBar;
 class QProgressDialog;
+class QWinTaskbarButton;
 QT_END_NAMESPACE
 
 namespace GUIUtil {
@@ -172,6 +173,9 @@ private:
     Notificator* notificator = nullptr;
     RPCConsole* rpcConsole = nullptr;
     HelpMessageDialog* helpMessageDialog = nullptr;
+#ifdef BITCOIN_QT_WIN_TASKBAR
+    QWinTaskbarButton* m_taskbar_button = nullptr;
+#endif
     ModalOverlay* modalOverlay = nullptr;
 
     QMenu* m_network_context_menu = new QMenu(this);
