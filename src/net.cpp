@@ -1216,7 +1216,8 @@ void CConnman::DisconnectNodes()
 }
 
 void CConnman::InactivityCheck(CNode *pnode) {
-    int64_t nTime = GetSystemTimeInSeconds();
+    int64_t micro_time = GetTimeMicros();
+    int64_t nTime = micro_time / 1000000;
     if (nTime - pnode->nTimeConnected > 60)
     {
         if (pnode->nLastRecv == 0 || pnode->nLastSend == 0)
@@ -1234,9 +1235,9 @@ void CConnman::InactivityCheck(CNode *pnode) {
             LogPrintf("socket receive timeout: %is\n", nTime - pnode->nLastRecv);
             pnode->fDisconnect = true;
         }
-        else if (pnode->nPingNonceSent && pnode->nPingUsecStart + TIMEOUT_INTERVAL * 1000000 < GetTimeMicros())
+        else if (pnode->nPingNonceSent && pnode->nPingUsecStart + TIMEOUT_INTERVAL * 1000000 < micro_time)
         {
-            LogPrintf("ping timeout: %fs\n", 0.000001 * (GetTimeMicros() - pnode->nPingUsecStart));
+            LogPrintf("ping timeout: %fs\n", 0.000001 * (micro_time - pnode->nPingUsecStart));
             pnode->fDisconnect = true;
         }
         else if (!pnode->fSuccessfullyConnected)
