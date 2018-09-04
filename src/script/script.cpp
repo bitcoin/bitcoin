@@ -273,9 +273,6 @@ bool CScript::IsAssetScript(int& nType, bool& fIsOwner, int& nStartingIndex) con
                 } else if ((*this)[index] == RVN_R) {
                     nType = TX_REISSUE_ASSET;
                     return true;
-                } else {
-                    nType = TX_RESERVED_ASSET;
-                    return false;
                 }
             }
         }
@@ -321,16 +318,6 @@ bool CScript::IsTransferAsset() const
     bool fIsOwner = false;
     if (IsAssetScript(nType, fIsOwner))
         return nType == TX_TRANSFER_ASSET;
-
-    return false;
-}
-
-bool CScript::IsReservedAsset() const
-{
-    int nType = 0;
-    bool fIsOwner = false;
-    if (!IsAssetScript(nType, fIsOwner))
-        return nType == TX_RESERVED_ASSET;
 
     return false;
 }

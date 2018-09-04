@@ -37,7 +37,6 @@
 #define ASSET_TRANSFER_STRING "transfer_asset"
 #define ASSET_NEW_STRING "new_asset"
 #define ASSET_REISSUE_STRING "reissue_asset"
-#define ASSET_RESERVED_STRING "reserved_asset"
 
 class CScript;
 class CDataStream;

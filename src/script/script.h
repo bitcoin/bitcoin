@@ -660,7 +660,6 @@ public:
     bool IsOwnerAsset() const;
     bool IsReissueAsset() const;
     bool IsTransferAsset() const;
-    bool IsReservedAsset() const;
     bool IsAsset() const;
     /** RVN END */
 
