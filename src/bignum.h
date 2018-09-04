@@ -2,8 +2,6 @@
 // Copyright (c) 2009-2012 The Bitcoin developers
 // Copyright (c) 2011-2018 The Peercoin developers
 // Copyright (c) 2018-2018 The Emercoin developers
-// Distributed under the GPL3 software license, see the accompanying
-// file COPYING or http://www.gnu.org/licenses/gpl.html.
 #ifndef BITCOIN_BIGNUM_H
 #define BITCOIN_BIGNUM_H
 

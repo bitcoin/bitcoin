@@ -28,6 +28,11 @@ public:
     uint32_t nBits;
     uint32_t nNonce;
 
+    // peercoin: A copy from CBlockIndex.nFlags from other clients. We need this information because we are using headers-first syncronization.
+    int32_t nFlags;
+    // peercoin: Used in CheckProofOfStake().
+    static const int32_t NORMAL_SERIALIZE_SIZE=80;
+
     CBlockHeader()
     {
         SetNull();
@@ -43,6 +48,10 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
+
+        // peercoin: do not serialize nFlags when computing hash
+        if (!(s.GetType() & SER_GETHASH) && s.GetType() & SER_POSMARKER)
+            READWRITE(nFlags);
     }
 
     void SetNull()
@@ -53,6 +62,7 @@ public:
         nTime = 0;
         nBits = 0;
         nNonce = 0;
+        nFlags = 0;
     }
 
     bool IsNull() const

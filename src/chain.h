@@ -328,19 +328,6 @@ public:
         nTime          = block.nTime;
         nBits          = block.nBits;
         nNonce         = block.nNonce;
-
-        //ppcTODO - check if we need to have prevoutStake and nStakeTime information when using this initialization
-//        if (block.IsProofOfStake())
-//        {
-//            SetProofOfStake();
-//            prevoutStake = block.vtx[1].vin[0].prevout;
-//            nStakeTime = block.vtx[1].nTime;
-//        }
-//        else
-//        {
-//            prevoutStake.SetNull();
-//            nStakeTime = 0;
-//        }
     }
 
     CDiskBlockPos GetBlockPos() const {
