@@ -642,7 +642,7 @@ bool CSubNet::Match(const CNetAddr &addr) const
     return true;
 }
 
-static inline int NetmaskBits(uint8_t x)
+static int NetmaskBits(uint8_t x)
 {
     switch(x) {
     case 0x00: return 0;

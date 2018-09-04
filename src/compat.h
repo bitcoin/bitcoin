@@ -102,7 +102,7 @@ typedef void* sockopt_arg_type;
 typedef char* sockopt_arg_type;
 #endif
 
-bool static inline IsSelectableSocket(const SOCKET& s) {
+bool inline IsSelectableSocket(const SOCKET& s) {
 #ifdef WIN32
     return true;
 #else

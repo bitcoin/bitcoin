@@ -35,7 +35,7 @@ std::once_flag LockedPoolManager::init_flag;
 // Utilities
 //
 /** Align up to power of 2 */
-static inline size_t align_up(size_t x, size_t align)
+static size_t align_up(size_t x, size_t align)
 {
     return (x + align - 1) & ~(align - 1);
 }

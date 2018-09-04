@@ -9,15 +9,15 @@
 #include <primitives/block.h>
 #include <memusage.h>
 
-static inline size_t RecursiveDynamicUsage(const CScript& script) {
+inline size_t RecursiveDynamicUsage(const CScript& script) {
     return memusage::DynamicUsage(script);
 }
 
-static inline size_t RecursiveDynamicUsage(const COutPoint& out) {
+inline size_t RecursiveDynamicUsage(const COutPoint& out) {
     return 0;
 }
 
-static inline size_t RecursiveDynamicUsage(const CTxIn& in) {
+inline size_t RecursiveDynamicUsage(const CTxIn& in) {
     size_t mem = RecursiveDynamicUsage(in.scriptSig) + RecursiveDynamicUsage(in.prevout) + memusage::DynamicUsage(in.scriptWitness.stack);
     for (std::vector<std::vector<unsigned char> >::const_iterator it = in.scriptWitness.stack.begin(); it != in.scriptWitness.stack.end(); it++) {
          mem += memusage::DynamicUsage(*it);
@@ -25,11 +25,11 @@ static inline size_t RecursiveDynamicUsage(const CTxIn& in) {
     return mem;
 }
 
-static inline size_t RecursiveDynamicUsage(const CTxOut& out) {
+inline size_t RecursiveDynamicUsage(const CTxOut& out) {
     return RecursiveDynamicUsage(out.scriptPubKey);
 }
 
-static inline size_t RecursiveDynamicUsage(const CTransaction& tx) {
+inline size_t RecursiveDynamicUsage(const CTransaction& tx) {
     size_t mem = memusage::DynamicUsage(tx.vin) + memusage::DynamicUsage(tx.vout);
     for (std::vector<CTxIn>::const_iterator it = tx.vin.begin(); it != tx.vin.end(); it++) {
         mem += RecursiveDynamicUsage(*it);
@@ -40,7 +40,7 @@ static inline size_t RecursiveDynamicUsage(const CTransaction& tx) {
     return mem;
 }
 
-static inline size_t RecursiveDynamicUsage(const CMutableTransaction& tx) {
+inline size_t RecursiveDynamicUsage(const CMutableTransaction& tx) {
     size_t mem = memusage::DynamicUsage(tx.vin) + memusage::DynamicUsage(tx.vout);
     for (std::vector<CTxIn>::const_iterator it = tx.vin.begin(); it != tx.vin.end(); it++) {
         mem += RecursiveDynamicUsage(*it);
@@ -51,7 +51,7 @@ static inline size_t RecursiveDynamicUsage(const CMutableTransaction& tx) {
     return mem;
 }
 
-static inline size_t RecursiveDynamicUsage(const CBlock& block) {
+inline size_t RecursiveDynamicUsage(const CBlock& block) {
     size_t mem = memusage::DynamicUsage(block.vtx);
     for (const auto& tx : block.vtx) {
         mem += memusage::DynamicUsage(tx) + RecursiveDynamicUsage(*tx);
@@ -59,12 +59,12 @@ static inline size_t RecursiveDynamicUsage(const CBlock& block) {
     return mem;
 }
 
-static inline size_t RecursiveDynamicUsage(const CBlockLocator& locator) {
+inline size_t RecursiveDynamicUsage(const CBlockLocator& locator) {
     return memusage::DynamicUsage(locator.vHave);
 }
 
 template<typename X>
-static inline size_t RecursiveDynamicUsage(const std::shared_ptr<X>& p) {
+inline size_t RecursiveDynamicUsage(const std::shared_ptr<X>& p) {
     return p ? memusage::DynamicUsage(p) + RecursiveDynamicUsage(*p) : 0;
 }
 

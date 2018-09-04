@@ -312,7 +312,7 @@ void SetServiceFlagsIBDCache(bool status);
  * == GetDesirableServiceFlags(services), ie determines whether the given
  * set of service flags are sufficient for a peer to be "relevant".
  */
-static inline bool HasAllDesirableServiceFlags(ServiceFlags services) {
+inline bool HasAllDesirableServiceFlags(ServiceFlags services) {
     return !(GetDesirableServiceFlags(services) & (~services));
 }
 
@@ -320,7 +320,7 @@ static inline bool HasAllDesirableServiceFlags(ServiceFlags services) {
  * Checks if a peer with the given service flags may be capable of having a
  * robust address-storage DB.
  */
-static inline bool MayHaveUsefulAddressDB(ServiceFlags services) {
+inline bool MayHaveUsefulAddressDB(ServiceFlags services) {
     return (services & NODE_NETWORK) || (services & NODE_NETWORK_LIMITED);
 }
 

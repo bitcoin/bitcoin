@@ -437,7 +437,7 @@ int atoi(const std::string& str)
 static const int64_t UPPER_BOUND = 1000000000000000000LL - 1LL;
 
 /** Helper function for ParseFixedPoint */
-static inline bool ProcessMantissaDigit(char ch, int64_t &mantissa, int &mantissa_tzeros)
+static bool ProcessMantissaDigit(char ch, int64_t &mantissa, int &mantissa_tzeros)
 {
     if(ch == '0')
         ++mantissa_tzeros;

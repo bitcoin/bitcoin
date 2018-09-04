@@ -230,7 +230,7 @@ CRollingBloomFilter::CRollingBloomFilter(const unsigned int nElements, const dou
 }
 
 /* Similar to CBloomFilter::Hash */
-static inline uint32_t RollingBloomHash(unsigned int nHashNum, uint32_t nTweak, const std::vector<unsigned char>& vDataToHash) {
+static uint32_t RollingBloomHash(unsigned int nHashNum, uint32_t nTweak, const std::vector<unsigned char>& vDataToHash) {
     return MurmurHash3(nHashNum * 0xFBA4C795 + nTweak, vDataToHash);
 }
 
@@ -238,7 +238,7 @@ static inline uint32_t RollingBloomHash(unsigned int nHashNum, uint32_t nTweak, 
 // A replacement for x % n. This assumes that x and n are 32bit integers, and x is a uniformly random distributed 32bit value
 // which should be the case for a good hash.
 // See https://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/
-static inline uint32_t FastMod(uint32_t x, size_t n) {
+static uint32_t FastMod(uint32_t x, size_t n) {
     return ((uint64_t)x * (uint64_t)n) >> 32;
 }
 
