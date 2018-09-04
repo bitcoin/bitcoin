@@ -1484,7 +1484,7 @@ int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wall
     // Look up the inputs.  We should have already checked that this transaction
     // IsAllFromMe(ISMINE_SPENDABLE), so every input should already be in our
     // wallet, with a valid index into the vout array, and the ability to sign.
-    for (auto& input : tx.vin) {
+    for (const CTxIn& input : tx.vin) {
         const auto mi = wallet->mapWallet.find(input.prevout.hash);
         if (mi == wallet->mapWallet.end()) {
             return -1;
@@ -1723,7 +1723,7 @@ void CWallet::ReacceptWalletTransactions()
     }
 
     // Try to add wallet transactions to memory pool
-    for (std::pair<const int64_t, CWalletTx*>& item : mapSorted) {
+    for (const std::pair<const int64_t, CWalletTx*>& item : mapSorted) {
         CWalletTx& wtx = *(item.second);
         CValidationState state;
         wtx.AcceptToMemoryPool(maxTxFee, state);
@@ -1969,7 +1969,7 @@ std::vector<uint256> CWallet::ResendWalletTransactionsBefore(int64_t nTime, CCon
             continue;
         mapSorted.insert(std::make_pair(wtx.nTimeReceived, &wtx));
     }
-    for (std::pair<const unsigned int, CWalletTx*>& item : mapSorted)
+    for (const std::pair<const unsigned int, CWalletTx*>& item : mapSorted)
     {
         CWalletTx& wtx = *item.second;
         if (wtx.RelayWalletTransaction(connman))
@@ -2260,7 +2260,7 @@ std::map<CTxDestination, std::vector<COutput>> CWallet::ListCoins() const
 
     AvailableCoins(availableCoins);
 
-    for (auto& coin : availableCoins) {
+    for (const COutput& coin : availableCoins) {
         CTxDestination address;
         if (coin.fSpendable &&
             ExtractDestination(FindNonChangeParentOutput(*coin.tx->tx, coin.i).scriptPubKey, address)) {
@@ -2270,7 +2270,7 @@ std::map<CTxDestination, std::vector<COutput>> CWallet::ListCoins() const
 
     std::vector<COutPoint> lockedCoins;
     ListLockedCoins(lockedCoins);
-    for (const auto& output : lockedCoins) {
+    for (const COutPoint& output : lockedCoins) {
         auto it = mapWallet.find(output.hash);
         if (it != mapWallet.end()) {
             int depth = it->second.GetDepthInMainChain();
@@ -3146,17 +3146,17 @@ bool CWallet::NewKeyPool()
         LOCK(cs_wallet);
         WalletBatch batch(*database);
 
-        for (int64_t nIndex : setInternalKeyPool) {
+        for (const int64_t nIndex : setInternalKeyPool) {
             batch.ErasePool(nIndex);
         }
         setInternalKeyPool.clear();
 
-        for (int64_t nIndex : setExternalKeyPool) {
+        for (const int64_t nIndex : setExternalKeyPool) {
             batch.ErasePool(nIndex);
         }
         setExternalKeyPool.clear();
 
-        for (int64_t nIndex : set_pre_split_keypool) {
+        for (const int64_t nIndex : set_pre_split_keypool) {
             batch.ErasePool(nIndex);
         }
         set_pre_split_keypool.clear();
@@ -3433,7 +3433,7 @@ std::set< std::set<CTxDestination> > CWallet::GetAddressGroupings()
         {
             bool any_mine = false;
             // group all input addresses with each other
-            for (CTxIn txin : pcoin->tx->vin)
+            for (const CTxIn& txin : pcoin->tx->vin)
             {
                 CTxDestination address;
                 if(!IsMine(txin)) /* If this input isn't mine, ignore it */
@@ -3447,7 +3447,7 @@ std::set< std::set<CTxDestination> > CWallet::GetAddressGroupings()
             // group change with input addresses
             if (any_mine)
             {
-               for (CTxOut txout : pcoin->tx->vout)
+               for (const CTxOut& txout : pcoin->tx->vout)
                    if (IsChange(txout))
                    {
                        CTxDestination txoutAddr;
@@ -3483,7 +3483,7 @@ std::set< std::set<CTxDestination> > CWallet::GetAddressGroupings()
         // make a set of all the groups hit by this new group
         std::set< std::set<CTxDestination>* > hits;
         std::map< CTxDestination, std::set<CTxDestination>* >::iterator it;
-        for (CTxDestination address : _grouping)
+        for (const CTxDestination& address : _grouping)
             if ((it = setmap.find(address)) != setmap.end())
                 hits.insert((*it).second);
 
@@ -3498,12 +3498,12 @@ std::set< std::set<CTxDestination> > CWallet::GetAddressGroupings()
         uniqueGroupings.insert(merged);
 
         // update setmap
-        for (CTxDestination element : *merged)
+        for (const CTxDestination& element : *merged)
             setmap[element] = merged;
     }
 
     std::set< std::set<CTxDestination> > ret;
-    for (std::set<CTxDestination>* uniqueGrouping : uniqueGroupings)
+    for (const std::set<CTxDestination>* uniqueGrouping : uniqueGroupings)
     {
         ret.insert(*uniqueGrouping);
         delete uniqueGrouping;

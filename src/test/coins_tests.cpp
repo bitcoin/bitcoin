@@ -736,7 +736,7 @@ static void CheckAddCoinBase(CAmount base_value, CAmount cache_value, CAmount mo
 template <typename... Args>
 static void CheckAddCoin(Args&&... args)
 {
-    for (CAmount base_value : {ABSENT, PRUNED, VALUE1})
+    for (const CAmount base_value : {ABSENT, PRUNED, VALUE1})
         CheckAddCoinBase(base_value, std::forward<Args>(args)...);
 }
 
@@ -848,10 +848,10 @@ BOOST_AUTO_TEST_CASE(ccoins_write)
     // they would be too repetitive (the parent cache is never updated in these
     // cases). The loop below covers these cases and makes sure the parent cache
     // is always left unchanged.
-    for (CAmount parent_value : {ABSENT, PRUNED, VALUE1})
-        for (CAmount child_value : {ABSENT, PRUNED, VALUE2})
-            for (char parent_flags : parent_value == ABSENT ? ABSENT_FLAGS : FLAGS)
-                for (char child_flags : child_value == ABSENT ? ABSENT_FLAGS : CLEAN_FLAGS)
+    for (const CAmount parent_value : {ABSENT, PRUNED, VALUE1})
+        for (const CAmount child_value : {ABSENT, PRUNED, VALUE2})
+            for (const char parent_flags : parent_value == ABSENT ? ABSENT_FLAGS : FLAGS)
+                for (const char child_flags : child_value == ABSENT ? ABSENT_FLAGS : CLEAN_FLAGS)
                     CheckWriteCoins(parent_value, child_value, parent_value, parent_flags, child_flags, parent_flags);
 }
 
