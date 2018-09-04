@@ -10,8 +10,7 @@ class CBlockIndex;
 class UniValue;
 
 /**
- * Get the difficulty of the net wrt to the given block index, or the chain tip if
- * not provided.
+ * Get the difficulty of the net wrt to the given block index.
  *
  * @return A floating point number that is a multiple of the main net minimum
  * difficulty (4295032833 hashes).
