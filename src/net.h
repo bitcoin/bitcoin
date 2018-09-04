@@ -337,6 +337,7 @@ private:
     void ThreadMessageHandler();
     void AcceptConnection(const ListenSocket& hListenSocket);
     void DisconnectNodes();
+    void InactivityChecks();
     void InactivityCheck(CNode *pnode);
     void ThreadSocketHandler();
     void ThreadDNSAddressSeed();
