@@ -882,11 +882,22 @@ void CMasternodeMan::ProcessMasternodeConnections(CConnman& connman)
     //we don't care about this for regtest
     if(Params().NetworkIDString() == CBaseChainParams::REGTEST) return;
 
-    connman.ForEachNode(CConnman::AllNodes, [](CNode* pnode) {
+    std::vector<masternode_info_t> vecMnInfo; // will be empty when no wallet
 #ifdef ENABLE_WALLET
-        if(pnode->fMasternode && !privateSendClient.IsMixingMasternode(pnode)) {
-#else
-        if(pnode->fMasternode) {
+    privateSendClient.GetMixingMasternodesInfo(vecMnInfo);
+#endif // ENABLE_WALLET
+
+    connman.ForEachNode(CConnman::AllNodes, [&vecMnInfo](CNode* pnode) {
+        if (pnode->fMasternode) {
+#ifdef ENABLE_WALLET
+            bool fFound = false;
+            for (const auto& mnInfo : vecMnInfo) {
+                if (pnode->addr == mnInfo.addr) {
+                    fFound = true;
+                    break;
+                }
+            }
+            if (fFound) return; // do NOT disconnect mixing masternodes
 #endif // ENABLE_WALLET
             LogPrintf("Closing Masternode connection: peer=%d, addr=%s\n", pnode->id, pnode->addr.ToString());
             pnode->fDisconnect = true;

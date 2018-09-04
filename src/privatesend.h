@@ -348,13 +348,10 @@ public:
 };
 
 // base class
-class CPrivateSendBase
+class CPrivateSendBaseSession
 {
 protected:
     mutable CCriticalSection cs_darksend;
-
-    // The current mixing sessions in progress on the network
-    std::vector<CDarksendQueue> vecDarksendQueue;
 
     std::vector<CDarkSendEntry> vecEntries; // Masternode/clients entries
 
@@ -366,19 +363,45 @@ protected:
     CMutableTransaction finalMutableTransaction; // the finalized transaction ready for signing
 
     void SetNull();
-    void CheckQueue();
 
 public:
-    int nSessionDenom; //Users must submit an denom matching this
+    int nSessionDenom; //Users must submit a denom matching this
     int nSessionInputCount; //Users must submit a count matching this
 
-    CPrivateSendBase() { SetNull(); }
+    CPrivateSendBaseSession() :
+        vecEntries(),
+        nState(POOL_STATE_IDLE),
+        nTimeLastSuccessfulStep(0),
+        nSessionID(0),
+        finalMutableTransaction(),
+        nSessionDenom(0),
+        nSessionInputCount(0)
+        {}
+    CPrivateSendBaseSession(const CPrivateSendBaseSession& other) { /* dummy copy constructor*/ SetNull(); }
 
-    int GetQueueSize() const { return vecDarksendQueue.size(); }
     int GetState() const { return nState; }
     std::string GetStateString() const;
 
     int GetEntriesCount() const { return vecEntries.size(); }
+};
+
+// base class
+class CPrivateSendBaseManager
+{
+protected:
+    mutable CCriticalSection cs_vecqueue;
+
+    // The current mixing sessions in progress on the network
+    std::vector<CDarksendQueue> vecDarksendQueue;
+
+    void SetNull();
+    void CheckQueue();
+
+public:
+    CPrivateSendBaseManager() : vecDarksendQueue() {}
+
+    int GetQueueSize() const { return vecDarksendQueue.size(); }
+    bool GetQueueItemAndTry(CDarksendQueue& dsqRet);
 };
 
 // helper class

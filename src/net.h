@@ -65,7 +65,7 @@ static const int MAX_OUTBOUND_CONNECTIONS = 8;
 /** Maximum number of addnode outgoing nodes */
 static const int MAX_ADDNODE_CONNECTIONS = 8;
 /** Maximum number if outgoing masternodes */
-static const int MAX_OUTBOUND_MASTERNODE_CONNECTIONS = 20;
+static const int MAX_OUTBOUND_MASTERNODE_CONNECTIONS = 30;
 /** -listen default */
 static const bool DEFAULT_LISTEN = true;
 /** -upnp default */

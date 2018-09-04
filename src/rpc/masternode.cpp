@@ -63,7 +63,7 @@ UniValue privatesend(const JSONRPCRequest& request)
 
         privateSendClient.fEnablePrivateSend = true;
         bool result = privateSendClient.DoAutomaticDenominating(*g_connman);
-        return "Mixing " + (result ? "started successfully" : ("start failed: " + privateSendClient.GetStatus() + ", will retry"));
+        return "Mixing " + (result ? "started successfully" : ("start failed: " + privateSendClient.GetStatuses() + ", will retry"));
     }
 
     if(request.params[0].get_str() == "stop") {
@@ -88,19 +88,25 @@ UniValue getpoolinfo(const JSONRPCRequest& request)
             "Returns an object containing mixing pool related information.\n");
 
 #ifdef ENABLE_WALLET
-    CPrivateSendBase* pprivateSendBase = fMasternodeMode ? (CPrivateSendBase*)&privateSendServer : (CPrivateSendBase*)&privateSendClient;
+    CPrivateSendBaseManager* pprivateSendBaseManager = fMasternodeMode ? (CPrivateSendBaseManager*)&privateSendServer : (CPrivateSendBaseManager*)&privateSendClient;
 
     UniValue obj(UniValue::VOBJ);
-    obj.push_back(Pair("state",             pprivateSendBase->GetStateString()));
-    obj.push_back(Pair("mixing_mode",       (!fMasternodeMode && privateSendClient.fPrivateSendMultiSession) ? "multi-session" : "normal"));
-    obj.push_back(Pair("queue",             pprivateSendBase->GetQueueSize()));
-    obj.push_back(Pair("entries",           pprivateSendBase->GetEntriesCount()));
-    obj.push_back(Pair("status",            privateSendClient.GetStatus()));
+    // TODO:
+    // obj.push_back(Pair("state",             pprivateSendBase->GetStateString()));
+    obj.push_back(Pair("queue",             pprivateSendBaseManager->GetQueueSize()));
+    // obj.push_back(Pair("entries",           pprivateSendBase->GetEntriesCount()));
+    obj.push_back(Pair("status",            privateSendClient.GetStatuses()));
 
-    masternode_info_t mnInfo;
-    if (privateSendClient.GetMixingMasternodeInfo(mnInfo)) {
-        obj.push_back(Pair("outpoint",      mnInfo.outpoint.ToStringShort()));
-        obj.push_back(Pair("addr",          mnInfo.addr.ToString()));
+    std::vector<masternode_info_t> vecMnInfo;
+    if (privateSendClient.GetMixingMasternodesInfo(vecMnInfo)) {
+        UniValue pools(UniValue::VARR);
+        for (const auto& mnInfo : vecMnInfo) {
+            UniValue pool(UniValue::VOBJ);
+            pool.push_back(Pair("outpoint",      mnInfo.outpoint.ToStringShort()));
+            pool.push_back(Pair("addr",          mnInfo.addr.ToString()));
+            pools.push_back(pool);
+        }
+        obj.push_back(Pair("pools", pools));
     }
 
     if (pwalletMain) {

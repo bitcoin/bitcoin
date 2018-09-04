@@ -10,17 +10,20 @@
 #include "wallet/wallet.h"
 #include "privatesend-util.h"
 
-class CPrivateSendClient;
+class CPrivateSendClientManager;
 class CConnman;
 
 static const int DENOMS_COUNT_MAX                   = 100;
 
+static const int MIN_PRIVATESEND_SESSIONS           = 1;
 static const int MIN_PRIVATESEND_ROUNDS             = 2;
 static const int MIN_PRIVATESEND_AMOUNT             = 2;
 static const int MIN_PRIVATESEND_LIQUIDITY          = 0;
+static const int MAX_PRIVATESEND_SESSIONS           = 10;
 static const int MAX_PRIVATESEND_ROUNDS             = 16;
 static const int MAX_PRIVATESEND_AMOUNT             = MAX_MONEY / COIN;
 static const int MAX_PRIVATESEND_LIQUIDITY          = 100;
+static const int DEFAULT_PRIVATESEND_SESSIONS       = 4;
 static const int DEFAULT_PRIVATESEND_ROUNDS         = 4;
 static const int DEFAULT_PRIVATESEND_AMOUNT         = 1000;
 static const int DEFAULT_PRIVATESEND_LIQUIDITY      = 0;
@@ -34,7 +37,7 @@ static const int PRIVATESEND_KEYS_THRESHOLD_WARNING = 100;
 static const int PRIVATESEND_KEYS_THRESHOLD_STOP    = 50;
 
 // The main object for accessing mixing
-extern CPrivateSendClient privateSendClient;
+extern CPrivateSendClientManager privateSendClient;
 
 class CPendingDsaRequest
 {
@@ -75,22 +78,10 @@ public:
     }
 };
 
-/** Used to keep track of current status of mixing pool
- */
-class CPrivateSendClient : public CPrivateSendBase
+class CPrivateSendClientSession : public CPrivateSendBaseSession
 {
 private:
-    // Keep track of the used Masternodes
-    std::vector<COutPoint> vecMasternodesUsed;
-
-    std::vector<CAmount> vecDenominationsSkipped;
     std::vector<COutPoint> vecOutPointLocked;
-
-    int nCachedLastSuccessBlock;
-    int nMinBlocksToWait; // how many blocks to wait after one successful mixing tx in non-multisession mode
-
-    // Keep track of current block height
-    int nCachedBlockHeight;
 
     int nEntriesCount;
     bool fLastEntryAccepted;
@@ -104,19 +95,6 @@ private:
 
     CKeyHolderStorage keyHolderStorage; // storage for keys used in PrepareDenominate
 
-    /// Check for process
-    void CheckPool();
-    void CompletedTransaction(PoolMessage nMessageID);
-
-    bool IsDenomSkipped(CAmount nDenomValue);
-
-    bool WaitForAnotherBlock();
-
-    // Make sure we have enough keys since last backup
-    bool CheckAutomaticBackup();
-    bool JoinExistingQueue(CAmount nBalanceNeedsAnonymized, CConnman& connman);
-    bool StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsAnonymized, CConnman& connman);
-
     /// Create denominations
     bool CreateDenominated(CConnman& connman);
     bool CreateDenominated(const CompactTallyItem& tallyItem, bool fCreateMixingCollaterals, CConnman& connman);
@@ -125,8 +103,9 @@ private:
     bool MakeCollateralAmounts(CConnman& connman);
     bool MakeCollateralAmounts(const CompactTallyItem& tallyItem, bool fTryDenominated, CConnman& connman);
 
-    /// As a client, submit part of a future mixing transaction to a Masternode to start the process
-    bool SubmitDenominate(CConnman& connman);
+    bool JoinExistingQueue(CAmount nBalanceNeedsAnonymized, CConnman& connman);
+    bool StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsAnonymized, CConnman& connman);
+
     /// step 1: prepare denominated inputs and outputs
     bool PrepareDenominate(int nMinRounds, int nMaxRounds, std::string& strErrorRet, std::vector<CTxDSIn>& vecTxDSInRet, std::vector<CTxOut>& vecTxOutRet);
     /// step 2: send denominated inputs and outputs prepared in step 1
@@ -137,6 +116,10 @@ private:
     // Set the 'state' value, with some logging and capturing when the state changed
     void SetState(PoolState nStateNew);
 
+    /// Check for process
+    void CheckPool();
+    void CompletedTransaction(PoolMessage nMessageID);
+
     /// As a client, check and sign the final transaction
     bool SignFinalTransaction(const CTransaction& finalTransactionNew, CNode* pnode, CConnman& connman);
 
@@ -145,6 +128,68 @@ private:
     void SetNull();
 
 public:
+    CPrivateSendClientSession() :
+        vecOutPointLocked(),
+        nEntriesCount(0),
+        fLastEntryAccepted(false),
+        strLastMessage(),
+        strAutoDenomResult(),
+        infoMixingMasternode(),
+        txMyCollateral(),
+        pendingDsaRequest(),
+        keyHolderStorage()
+        {}
+    CPrivateSendClientSession(const CPrivateSendClientSession& other) { /* dummy copy constructor*/ SetNull(); }
+
+    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
+
+    void UnlockCoins();
+
+    void ResetPool();
+
+    std::string GetStatus(bool fWaitForBlock);
+
+    bool GetMixingMasternodeInfo(masternode_info_t& mnInfoRet) const;
+
+    /// Passively run mixing in the background according to the configuration in settings
+    bool DoAutomaticDenominating(CConnman& connman, bool fDryRun=false);
+
+    /// As a client, submit part of a future mixing transaction to a Masternode to start the process
+    bool SubmitDenominate(CConnman& connman);
+
+    bool ProcessPendingDsaRequest(CConnman& connman);
+
+    bool CheckTimeout();
+};
+
+/** Used to keep track of current status of mixing pool
+ */
+class CPrivateSendClientManager : public CPrivateSendBaseManager
+{
+private:
+    // Keep track of the used Masternodes
+    std::vector<COutPoint> vecMasternodesUsed;
+
+    std::vector<CAmount> vecDenominationsSkipped;
+
+    // TODO: or map<denom, CPrivateSendClientSession> ??
+    std::vector<CPrivateSendClientSession> vecSessions;
+    mutable CCriticalSection cs_vecsessions;
+
+    int nCachedLastSuccessBlock;
+    int nMinBlocksToWait; // how many blocks to wait after one successful mixing tx in non-multisession mode
+    std::string strAutoDenomResult;
+
+    // Keep track of current block height
+    int nCachedBlockHeight;
+
+    bool WaitForAnotherBlock();
+
+    // Make sure we have enough keys since last backup
+    bool CheckAutomaticBackup();
+
+public:
+    int nPrivateSendSessions;
     int nPrivateSendRounds;
     int nPrivateSendAmount;
     int nLiquidityProvider;
@@ -154,40 +199,49 @@ public:
     int nCachedNumBlocks; //used for the overview screen
     bool fCreateAutoBackups; //builtin support for automatic backups
 
-    CPrivateSendClient() :
+    CPrivateSendClientManager() :
+        vecMasternodesUsed(),
+        vecDenominationsSkipped(),
+        vecSessions(),
         nCachedLastSuccessBlock(0),
         nMinBlocksToWait(1),
-        txMyCollateral(CMutableTransaction()),
+        strAutoDenomResult(),
+        nCachedBlockHeight(0),
         nPrivateSendRounds(DEFAULT_PRIVATESEND_ROUNDS),
         nPrivateSendAmount(DEFAULT_PRIVATESEND_AMOUNT),
         nLiquidityProvider(DEFAULT_PRIVATESEND_LIQUIDITY),
         fEnablePrivateSend(false),
         fPrivateSendMultiSession(DEFAULT_PRIVATESEND_MULTISESSION),
         nCachedNumBlocks(std::numeric_limits<int>::max()),
-        fCreateAutoBackups(true) { SetNull(); }
+        fCreateAutoBackups(true)
+        {}
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
 
+    bool IsDenomSkipped(const CAmount& nDenomValue);
+    void AddSkippedDenom(const CAmount& nDenomValue);
     void ClearSkippedDenominations() { vecDenominationsSkipped.clear(); }
 
     void SetMinBlocksToWait(int nMinBlocksToWaitIn) { nMinBlocksToWait = nMinBlocksToWaitIn; }
 
-
     void ResetPool();
 
-    void UnlockCoins();
+    std::string GetStatuses();
+    std::string GetSessionDenoms();
 
-    std::string GetStatus();
-
-    bool GetMixingMasternodeInfo(masternode_info_t& mnInfoRet);
-    bool IsMixingMasternode(const CNode* pnode);
+    bool GetMixingMasternodesInfo(std::vector<masternode_info_t>& vecMnInfoRet) const;
 
     /// Passively run mixing in the background according to the configuration in settings
     bool DoAutomaticDenominating(CConnman& connman, bool fDryRun=false);
 
+    void CheckTimeout();
+
     void ProcessPendingDsaRequest(CConnman& connman);
 
-    void CheckTimeout();
+    void AddUsedMasternode(const COutPoint& outpointMn);
+    masternode_info_t GetNotUsedMasternode();
+
+    void UpdatedSuccessBlock();
 
     void UpdatedBlockTip(const CBlockIndex *pindex);
 
