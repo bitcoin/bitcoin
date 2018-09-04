@@ -226,7 +226,7 @@ public:
 };
 
 /**
- * Testnet (v4)
+ * Testnet (v5)
  */
 class CTestNetParams : public CChainParams {
 public:
@@ -251,7 +251,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
         consensus.vDeployments[Consensus::DEPLOYMENT_ASSETS].bit = 5;
         consensus.vDeployments[Consensus::DEPLOYMENT_ASSETS].nStartTime = 1533924000; // GMT: Friday, August 10, 2018 6:00:00 PM
-        consensus.vDeployments[Consensus::DEPLOYMENT_ASSETS].nTimeout = 1536516000; // GMT: Sunday, September 9, 2018 6:00:00 PM
+        consensus.vDeployments[Consensus::DEPLOYMENT_ASSETS].nTimeout = 1538351999; // GMT: Sunday, September 30, 2018 11:59:59 PM
 
 
         // The best chain should have at least this much work.
@@ -265,8 +265,10 @@ public:
         pchMessageStart[1] = 0x56;
         pchMessageStart[2] = 0x4E;
         pchMessageStart[3] = 0x54;
-        nDefaultPort = 18768;
+        nDefaultPort = 18769;
         nPruneAfterHeight = 1000;
+
+        uint32_t nGenesisTime = 1536166800;  // Wednesday, September 5, 2018 11:00:00 AM GMT-06:00 DST
 
         // This is used inorder to mine the genesis block. Once found, we can use the nonce and block hash found to create a valid genesis block
 //        /////////////////////////////////////////////////////////////////
@@ -282,7 +284,7 @@ public:
 //        uint256 TempHashHolding = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000");
 //        uint256 BestBlockHash = uint256S("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
 //        for (int i=0;i<40000000;i++) {
-//            genesis = CreateGenesisBlock(1533751200, i, 0x1e00ffff, 2, 5000 * COIN);
+//            genesis = CreateGenesisBlock(nGenesisTime, i, 0x1e00ffff, 2, 5000 * COIN);
 //            //genesis.hashPrevBlock = TempHashHolding;
 //            consensus.hashGenesisBlock = genesis.GetHash();
 //
@@ -328,12 +330,12 @@ public:
 
 //        /////////////////////////////////////////////////////////////////
 
-        genesis = CreateGenesisBlock(1533751200, 555705, 0x1e00ffff, 2, 5000 * COIN);
+        genesis = CreateGenesisBlock(nGenesisTime, 20563145, 0x1e00ffff, 2, 5000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
 
         //Test MerkleRoot and GenesisBlock
-        assert(consensus.hashGenesisBlock == uint256S("0x0000006ebc14cb6777bedda407702dfbc6b273f1af956bcfd6f4f98a2eb14433"));
-        assert(genesis.hashMerkleRoot == uint256S("0x28ff00a867739a352523808d301f504bc4547699398d70faf2266a8bae5f3516"));
+        assert(consensus.hashGenesisBlock == uint256S("0x0000006fc55e8cd1948d013b47c47ce1922ce5d89775aac15c1586812a5fff6f"));
+        assert(genesis.hashMerkleRoot == uint256S("28ff00a867739a352523808d301f504bc4547699398d70faf2266a8bae5f3516"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -384,7 +386,7 @@ public:
         strGlobalBurnAddress = "n1BurnXXXXXXXXXXXXXXXXXXXXXXU1qejP";
 
         // DGW Activation
-        nDGWActivationBlock = 1440;
+        nDGWActivationBlock = 200;
         /** RVN End **/
     }
 };
