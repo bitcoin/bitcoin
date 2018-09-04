@@ -757,6 +757,11 @@ private:
     std::mutex mutexScanning;
     friend class WalletRescanReserver;
 
+    /**
+     * The current wallet batch for encrypted keys; only set temporarily while
+     * certain member functions are executing.  The memory is not owned by the
+     * CWallet instance.
+     */
     WalletBatch *encrypted_batch GUARDED_BY(cs_wallet) = nullptr;
 
     //! the current wallet version: clients below this version are not able to load the wallet
@@ -933,8 +938,6 @@ public:
     {
         // Should not have slots connected at this point.
         assert(NotifyUnload.empty());
-        delete encrypted_batch;
-        encrypted_batch = nullptr;
     }
 
     bool IsCrypted() const { return fUseCrypto; }

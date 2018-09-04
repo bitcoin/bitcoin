@@ -361,7 +361,7 @@ bool CWallet::AddKeyPubKeyWithDB(WalletBatch& batch, const CKey& secret, const C
     // FillableSigningProvider has no concept of wallet databases, but calls AddCryptedKey
     // which is overridden below.  To avoid flushes, the database handle is
     // tunneled through to it.
-    bool needsDB = !encrypted_batch;
+    const bool needsDB = (encrypted_batch == nullptr);
     if (needsDB) {
         encrypted_batch = &batch;
     }
@@ -887,38 +887,37 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
     {
         LOCK(cs_wallet);
         mapMasterKeys[++nMasterKeyMaxID] = kMasterKey;
-        assert(!encrypted_batch);
-        encrypted_batch = new WalletBatch(*database);
-        if (!encrypted_batch->TxnBegin()) {
-            delete encrypted_batch;
-            encrypted_batch = nullptr;
-            return false;
-        }
-        encrypted_batch->WriteMasterKey(nMasterKeyMaxID, kMasterKey);
+        assert(encrypted_batch == nullptr);
 
-        if (!EncryptKeys(_vMasterKey))
         {
-            encrypted_batch->TxnAbort();
-            delete encrypted_batch;
+            std::unique_ptr<WalletBatch> batch(new WalletBatch(*database));
+            encrypted_batch = batch.get();
+
+            if (!batch->TxnBegin()) {
+                encrypted_batch = nullptr;
+                return false;
+            }
+            batch->WriteMasterKey(nMasterKeyMaxID, kMasterKey);
+
+            if (!EncryptKeys(_vMasterKey))
+            {
+                batch->TxnAbort();
+                // We now probably have half of our keys encrypted in memory, and half not...
+                // die and let the user reload the unencrypted wallet.
+                assert(false);
+            }
+
+            // Encryption was introduced in version 0.4.0
+            SetMinVersion(FEATURE_WALLETCRYPT, batch.get(), true);
+
+            if (!batch->TxnCommit()) {
+                // We now have keys encrypted in memory, but not on disk...
+                // die to avoid confusion and let the user reload the unencrypted wallet.
+                assert(false);
+            }
+
             encrypted_batch = nullptr;
-            // We now probably have half of our keys encrypted in memory, and half not...
-            // die and let the user reload the unencrypted wallet.
-            assert(false);
         }
-
-        // Encryption was introduced in version 0.4.0
-        SetMinVersion(FEATURE_WALLETCRYPT, encrypted_batch, true);
-
-        if (!encrypted_batch->TxnCommit()) {
-            delete encrypted_batch;
-            encrypted_batch = nullptr;
-            // We now have keys encrypted in memory, but not on disk...
-            // die to avoid confusion and let the user reload the unencrypted wallet.
-            assert(false);
-        }
-
-        delete encrypted_batch;
-        encrypted_batch = nullptr;
 
         Lock();
         Unlock(strWalletPassphrase);
