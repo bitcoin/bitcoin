@@ -1215,6 +1215,13 @@ void CConnman::DisconnectNodes()
     }
 }
 
+void CConnman::InactivityChecks() {
+    LOCK(cs_vNodes);
+    for (CNode* pnode : vNodes) {
+        InactivityCheck(pnode);
+    }
+}
+
 void CConnman::InactivityCheck(CNode *pnode) {
     int64_t micro_time = GetTimeMicros();
     int64_t nTime = micro_time / 1000000;
@@ -1253,6 +1260,7 @@ void CConnman::ThreadSocketHandler()
     unsigned int nPrevNodeCount = 0;
     while (!interruptNet)
     {
+        InactivityChecks();
         DisconnectNodes();
         size_t vNodesSize;
         {
@@ -1452,12 +1460,6 @@ void CConnman::ThreadSocketHandler()
                     RecordBytesSent(nBytes);
                 }
             }
-
-            //
-            // Inactivity checking
-            //
-            InactivityCheck(pnode);
-
         }
         {
             LOCK(cs_vNodes);
