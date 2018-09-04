@@ -1215,42 +1215,42 @@ void CConnman::DisconnectNodes()
     }
 }
 
-void CConnman::InactivityChecks() {
-    LOCK(cs_vNodes);
-    for (CNode* pnode : vNodes) {
-        InactivityCheck(pnode);
-    }
-}
-
-void CConnman::InactivityCheck(CNode *pnode) {
-    int64_t micro_time = GetTimeMicros();
-    int64_t nTime = micro_time / 1000000;
-    if (nTime - pnode->nTimeConnected > 60)
+void CConnman::InactivityChecks()
+{
+    int64_t micro_time, nTime;
     {
-        if (pnode->nLastRecv == 0 || pnode->nLastSend == 0)
-        {
-            LogPrint(BCLog::NET, "socket no message in first 60 seconds, %d %d from %d\n", pnode->nLastRecv != 0, pnode->nLastSend != 0, pnode->GetId());
-            pnode->fDisconnect = true;
-        }
-        else if (nTime - pnode->nLastSend > TIMEOUT_INTERVAL)
-        {
-            LogPrintf("socket sending timeout: %is\n", nTime - pnode->nLastSend);
-            pnode->fDisconnect = true;
-        }
-        else if (nTime - pnode->nLastRecv > (pnode->nVersion > BIP0031_VERSION ? TIMEOUT_INTERVAL : 90*60))
-        {
-            LogPrintf("socket receive timeout: %is\n", nTime - pnode->nLastRecv);
-            pnode->fDisconnect = true;
-        }
-        else if (pnode->nPingNonceSent && pnode->nPingUsecStart + TIMEOUT_INTERVAL * 1000000 < micro_time)
-        {
-            LogPrintf("ping timeout: %fs\n", 0.000001 * (micro_time - pnode->nPingUsecStart));
-            pnode->fDisconnect = true;
-        }
-        else if (!pnode->fSuccessfullyConnected)
-        {
-            LogPrint(BCLog::NET, "version handshake timeout from %d\n", pnode->GetId());
-            pnode->fDisconnect = true;
+        LOCK(cs_vNodes);
+        micro_time = GetTimeMicros();
+        nTime = micro_time / 1000000;
+        for (CNode* pnode : vNodes) {
+            if (nTime - pnode->nTimeConnected > 60)
+            {
+                if (pnode->nLastRecv == 0 || pnode->nLastSend == 0)
+                {
+                    LogPrint(BCLog::NET, "socket no message in first 60 seconds, %d %d from %d\n", pnode->nLastRecv != 0, pnode->nLastSend != 0, pnode->GetId());
+                    pnode->fDisconnect = true;
+                }
+                else if (nTime - pnode->nLastSend > TIMEOUT_INTERVAL)
+                {
+                    LogPrintf("socket sending timeout: %is\n", nTime - pnode->nLastSend);
+                    pnode->fDisconnect = true;
+                }
+                else if (nTime - pnode->nLastRecv > (pnode->nVersion > BIP0031_VERSION ? TIMEOUT_INTERVAL : 90*60))
+                {
+                    LogPrintf("socket receive timeout: %is\n", nTime - pnode->nLastRecv);
+                    pnode->fDisconnect = true;
+                }
+                else if (pnode->nPingNonceSent && pnode->nPingUsecStart + TIMEOUT_INTERVAL * 1000000 < micro_time)
+                {
+                    LogPrintf("ping timeout: %fs\n", 0.000001 * (micro_time - pnode->nPingUsecStart));
+                    pnode->fDisconnect = true;
+                }
+                else if (!pnode->fSuccessfullyConnected)
+                {
+                    LogPrint(BCLog::NET, "version handshake timeout from %d\n", pnode->GetId());
+                    pnode->fDisconnect = true;
+                }
+            }
         }
     }
 }
