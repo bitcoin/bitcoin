@@ -250,6 +250,34 @@ std::vector<CKeyID> GetAffectedKeys(const CScript& spk, const SigningProvider& p
     return ret;
 }
 
+namespace {
+
+/**
+ * A class that utilises RAII to change a value temporarily and reset it
+ * to the previous value when it goes out of scope.
+ */
+template<typename T>
+class WithScopedValue
+{
+private:
+    T& m_reference;
+    const T m_old_value;
+
+public:
+    explicit WithScopedValue(T& reference, const T& new_value)
+        : m_reference(reference), m_old_value(reference)
+    {
+        m_reference = new_value;
+    }
+
+    ~WithScopedValue()
+    {
+        m_reference = m_old_value;
+    }
+};
+
+} // anonymous namespace
+
 const CWalletTx* CWallet::GetWalletTx(const uint256& hash) const
 {
     LOCK(cs_wallet);
@@ -361,15 +389,15 @@ bool CWallet::AddKeyPubKeyWithDB(WalletBatch& batch, const CKey& secret, const C
     // FillableSigningProvider has no concept of wallet databases, but calls AddCryptedKey
     // which is overridden below.  To avoid flushes, the database handle is
     // tunneled through to it.
-    const bool needsDB = (encrypted_batch == nullptr);
-    if (needsDB) {
-        encrypted_batch = &batch;
+    {
+        std::unique_ptr<WithScopedValue<WalletBatch*>> set_encrypted_batch;
+        if (encrypted_batch == nullptr) {
+            set_encrypted_batch.reset(new WithScopedValue<WalletBatch*>(encrypted_batch, &batch));
+        }
+        if (!AddKeyPubKeyInner(secret, pubkey)) {
+            return false;
+        }
     }
-    if (!AddKeyPubKeyInner(secret, pubkey)) {
-        if (needsDB) encrypted_batch = nullptr;
-        return false;
-    }
-    if (needsDB) encrypted_batch = nullptr;
 
     // check if we need to remove from watch-only
     CScript script;
@@ -891,10 +919,9 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 
         {
             std::unique_ptr<WalletBatch> batch(new WalletBatch(*database));
-            encrypted_batch = batch.get();
+            WithScopedValue<WalletBatch*> set_encrypted_batch(encrypted_batch, batch.get());
 
             if (!batch->TxnBegin()) {
-                encrypted_batch = nullptr;
                 return false;
             }
             batch->WriteMasterKey(nMasterKeyMaxID, kMasterKey);
@@ -915,8 +942,6 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
                 // die to avoid confusion and let the user reload the unencrypted wallet.
                 assert(false);
             }
-
-            encrypted_batch = nullptr;
         }
 
         Lock();
