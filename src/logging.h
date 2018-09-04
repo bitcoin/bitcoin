@@ -129,7 +129,7 @@ bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str);
 template<typename... Args> std::string FormatStringFromLogArgs(const char *fmt, const Args&... args) { return fmt; }
 
 inline void MarkUsed() {}
-template<typename T, typename... Args> inline void MarkUsed(const T& t, const Args&... args)
+template<typename T, typename... Args> void MarkUsed(const T& t, const Args&... args)
 {
     (void)t;
     MarkUsed(args...);

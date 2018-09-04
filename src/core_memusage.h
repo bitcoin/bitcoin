@@ -64,7 +64,7 @@ inline size_t RecursiveDynamicUsage(const CBlockLocator& locator) {
 }
 
 template<typename X>
-inline size_t RecursiveDynamicUsage(const std::shared_ptr<X>& p) {
+size_t RecursiveDynamicUsage(const std::shared_ptr<X>& p) {
     return p ? memusage::DynamicUsage(p) + RecursiveDynamicUsage(*p) : 0;
 }
 

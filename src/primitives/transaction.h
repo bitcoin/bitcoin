@@ -27,7 +27,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
+    void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(hash);
         READWRITE(n);
     }
@@ -104,7 +104,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
+    void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(prevout);
         READWRITE(scriptSig);
         READWRITE(nSequence);
@@ -144,7 +144,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
+    void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(nValue);
         READWRITE(scriptPubKey);
     }
@@ -194,7 +194,7 @@ struct CMutableTransaction;
  * - uint32_t nLockTime
  */
 template<typename Stream, typename TxType>
-inline void UnserializeTransaction(TxType& tx, Stream& s) {
+void UnserializeTransaction(TxType& tx, Stream& s) {
     const bool fAllowWitness = !(s.GetVersion() & SERIALIZE_TRANSACTION_NO_WITNESS);
 
     s >> tx.nVersion;
@@ -229,7 +229,7 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
 }
 
 template<typename Stream, typename TxType>
-inline void SerializeTransaction(const TxType& tx, Stream& s) {
+void SerializeTransaction(const TxType& tx, Stream& s) {
     const bool fAllowWitness = !(s.GetVersion() & SERIALIZE_TRANSACTION_NO_WITNESS);
 
     s << tx.nVersion;
@@ -300,7 +300,7 @@ public:
     CTransaction(CMutableTransaction &&tx);
 
     template <typename Stream>
-    inline void Serialize(Stream& s) const {
+    void Serialize(Stream& s) const {
         SerializeTransaction(*this, s);
     }
 
@@ -368,13 +368,13 @@ struct CMutableTransaction
     explicit CMutableTransaction(const CTransaction& tx);
 
     template <typename Stream>
-    inline void Serialize(Stream& s) const {
+    void Serialize(Stream& s) const {
         SerializeTransaction(*this, s);
     }
 
 
     template <typename Stream>
-    inline void Unserialize(Stream& s) {
+    void Unserialize(Stream& s) {
         UnserializeTransaction(*this, s);
     }
 
@@ -401,6 +401,6 @@ struct CMutableTransaction
 
 typedef std::shared_ptr<const CTransaction> CTransactionRef;
 inline CTransactionRef MakeTransactionRef() { return std::make_shared<const CTransaction>(); }
-template <typename Tx> inline CTransactionRef MakeTransactionRef(Tx&& txIn) { return std::make_shared<const CTransaction>(std::forward<Tx>(txIn)); }
+template <typename Tx> CTransactionRef MakeTransactionRef(Tx&& txIn) { return std::make_shared<const CTransaction>(std::forward<Tx>(txIn)); }
 
 #endif // BITCOIN_PRIMITIVES_TRANSACTION_H
