@@ -5,36 +5,41 @@ configuration: Release
 platform: x64
 environment:
   APPVEYOR_SAVE_CACHE_ON_ERROR: true
-cache: C:\tools\vcpkg\installed\
+  CLCACHE_SERVER: 1
+  PACKAGES: boost-filesystem boost-signals2 boost-interprocess boost-test libevent openssl zeromq berkeleydb secp256k1 leveldb
+cache:
+- C:\tools\vcpkg\installed
+- C:\Users\appveyor\clcache
+- build_msvc\cache
 init:
-- cmd: set PATH=C:\Python36-x64;%PATH%
+- cmd: set PATH=C:\Python36-x64;C:\Python36-x64\Scripts;%PATH%
+install:
+- cmd: pip install git+https://github.com/frerich/clcache.git
+- ps:  $packages = $env:PACKAGES -Split ' '
+- ps:  for ($i=0; $i -lt $packages.length; $i++) {
+           $env:ALL_PACKAGES += $packages[$i] + ":" + $env:PLATFORM + "-windows-static "
+       }
+- cmd: git -C C:\Tools\vcpkg pull # This is a temporary fix, can be removed after appveyor update its image to include Microsoft/vcpkg#4046
+- cmd: vcpkg install %ALL_PACKAGES%
+- cmd: vcpkg upgrade --no-dry-run
+- cmd: del /s /q C:\Tools\vcpkg\installed\%PLATFORM%-windows-static\debug # Remove unused debug library
 before_build:
-- ps: >-
-    $packages = @(
-        "boost-filesystem",
-        "boost-signals2",
-        "boost-interprocess",
-        "boost-test",
-        "libevent",
-        "openssl",
-        "zeromq",
-        "berkeleydb",
-        "secp256k1",
-        "leveldb"
-    )
-
-    for ($i=0; $i -lt $packages.length; $i++) {
-        $all_packages += $packages[$i] + ":" + $env:PLATFORM + "-windows-static "
-    }
-
-    git -C C:\Tools\vcpkg pull # This is a temporary fix, can be removed after appveyor update its image to include Microsoft/vcpkg#4046
-
-    Invoke-Expression -Command "vcpkg install $all_packages"
+- cmd: if not exist build_msvc\cache\ (del build_msvc\cache & mkdir build_msvc\cache)
+- cmd: if not exist build_msvc\%PLATFORM%\%CONFIGURATION%\ (mkdir build_msvc\%PLATFORM%\%CONFIGURATION%)
+- cmd: if exist build_msvc\cache\*.iobj (move build_msvc\cache\* build_msvc\%PLATFORM%\%CONFIGURATION%\)
+- cmd: clcache -M 2147483648
 - cmd: python build_msvc\msvc-autogen.py
-build:
-  project: build_msvc\bitcoin.sln
-  parallel: true
-  verbosity: minimal
+- ps:  $files = (Get-ChildItem -Recurse | where {$_.extension -eq ".vcxproj"}).FullName
+- ps:  for ($i = 0; $i -lt $files.length; $i++) {
+           (Get-Content $files[$i]).Replace("</RuntimeLibrary>", "</RuntimeLibrary><DebugInformationFormat>None</DebugInformationFormat>").Replace("NDEBUG;", "") | Set-Content $files[$i]
+       }
+- ps:  Start-Process clcache-server
+build_script:
+- cmd: msbuild /p:TrackFileAccess=false /p:CLToolExe=clcache.exe build_msvc\bitcoin.sln /m /v:q /nowarn:C4244;C4267;C4715 /nologo
+after_build:
+- cmd: move build_msvc\%PLATFORM%\%CONFIGURATION%\*.iobj build_msvc\cache\
+- cmd: move build_msvc\%PLATFORM%\%CONFIGURATION%\*.ipdb build_msvc\cache\
+- cmd: del C:\Users\appveyor\clcache\stats.txt
 test_script:
-- cmd: build_msvc\%PLATFORM%\Release\test_bitcoin.exe
+- cmd: build_msvc\%PLATFORM%\%CONFIGURATION%\test_bitcoin.exe
 deploy: off
