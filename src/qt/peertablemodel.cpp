@@ -68,7 +68,7 @@ public:
             node.getNodesStats(nodes_stats);
             cachedNodeStats.reserve(nodes_stats.size());
 
-            for (auto& node_stats : nodes_stats)
+            for (const auto& node_stats : nodes_stats)
             {
                 CNodeCombinedStats stats;
                 stats.nodeStats = std::get<0>(node_stats);

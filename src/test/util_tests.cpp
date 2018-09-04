@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArg)
     testArgs.ParseParameters(7, (char**)argv_test, error);
 
     // Each letter should be set.
-    for (char opt : "abcdef")
+    for (const char opt : "abcdef")
         BOOST_CHECK(testArgs.IsArgSet({'-', opt}) || !opt);
 
     // Nothing else should be in the map
@@ -340,7 +340,7 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
                 && test_args.GetArg("-iii", "xxx") == "xxx"
                );
 
-    for (bool def : {false, true}) {
+    for (const bool def : {false, true}) {
         BOOST_CHECK(test_args.GetBoolArg("-a", def)
                      && test_args.GetBoolArg("-b", def)
                      && !test_args.GetBoolArg("-ccc", def)

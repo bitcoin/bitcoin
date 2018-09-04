@@ -204,7 +204,7 @@ void SplashScreen::unsubscribeFromCoreSignals()
 #ifdef ENABLE_WALLET
     m_handler_load_wallet->disconnect();
 #endif // ENABLE_WALLET
-    for (auto& handler : m_connected_wallet_handlers) {
+    for (const auto& handler : m_connected_wallet_handlers) {
         handler->disconnect();
     }
     m_connected_wallet_handlers.clear();
