@@ -416,7 +416,7 @@ void BitcoinApplication::requestShutdown()
 
 #ifdef ENABLE_WALLET
     window->removeAllWallets();
-    for (WalletModel *walletModel : m_wallet_models) {
+    for (const WalletModel* walletModel : m_wallet_models) {
         delete walletModel;
     }
     m_wallet_models.clear();

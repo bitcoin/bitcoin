@@ -344,7 +344,7 @@ CNode* CConnman::FindNode(const CService& addr)
 bool CConnman::CheckIncomingNonce(uint64_t nonce)
 {
     LOCK(cs_vNodes);
-    for (CNode* pnode : vNodes) {
+    for (const CNode* pnode : vNodes) {
         if (!pnode->fSuccessfullyConnected && !pnode->fInbound && pnode->GetLocalNonce() == nonce)
             return false;
     }
@@ -1614,7 +1614,7 @@ void CConnman::ThreadDNSAddressSeed()
 
         LOCK(cs_vNodes);
         int nRelevant = 0;
-        for (auto pnode : vNodes) {
+        for (const CNode* pnode : vNodes) {
             nRelevant += pnode->fSuccessfullyConnected && !pnode->fFeeler && !pnode->fOneShot && !pnode->m_manual_connection && !pnode->fInbound;
         }
         if (nRelevant >= 2) {
@@ -1733,7 +1733,7 @@ int CConnman::GetExtraOutboundCount()
     int nOutbound = 0;
     {
         LOCK(cs_vNodes);
-        for (CNode* pnode : vNodes) {
+        for (const CNode* pnode : vNodes) {
             if (!pnode->fInbound && !pnode->m_manual_connection && !pnode->fFeeler && !pnode->fDisconnect && !pnode->fOneShot && pnode->fSuccessfullyConnected) {
                 ++nOutbound;
             }
@@ -1803,7 +1803,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         std::set<std::vector<unsigned char> > setConnected;
         {
             LOCK(cs_vNodes);
-            for (CNode* pnode : vNodes) {
+            for (const CNode* pnode : vNodes) {
                 if (!pnode->fInbound && !pnode->m_manual_connection) {
                     // Netgroups for inbound and addnode peers are not excluded because our goal here
                     // is to not use multiple of our limited outbound slots on a single netgroup
