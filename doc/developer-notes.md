@@ -693,3 +693,8 @@ A few guidelines for introducing and reviewing new RPC interfaces:
 
   - *Rationale*: If a RPC response is not a JSON object then it is harder to avoid API breakage if
     new data in the response is needed.
+
+
+IRC Required Commit
+---------------------
+Required to register on IRC
