@@ -32,7 +32,7 @@ folders = [
     "src/qt/res/images",
     "share/pixmaps"
 ]
-basePath = subprocess.check_output([git, 'rev-parse', '--show-toplevel'], universal_newlines=True).rstrip('\n')
+basePath = subprocess.check_output([git, 'rev-parse', '--show-toplevel'], universal_newlines=True, encoding='utf8').rstrip('\n')
 totalSaveBytes = 0
 noHashChange = True
 
@@ -54,7 +54,7 @@ for folder in folders:
                 sys.exit(0)
 
             #verify
-            if "Not a PNG file" in subprocess.check_output([pngcrush, "-n", "-v", file_path], stderr=subprocess.STDOUT, universal_newlines=True):
+            if "Not a PNG file" in subprocess.check_output([pngcrush, "-n", "-v", file_path], stderr=subprocess.STDOUT, universal_newlines=True, encoding='utf8'):
                 print("PNG file "+file+" is corrupted after crushing, check out pngcursh version")
                 sys.exit(1)
 
