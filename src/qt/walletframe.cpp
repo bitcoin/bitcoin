@@ -14,10 +14,11 @@
 #include <QHBoxLayout>
 #include <QLabel>
 
-WalletFrame::WalletFrame(const PlatformStyle *_platformStyle, BitcoinGUI *_gui) :
+WalletFrame::WalletFrame(interfaces::Node& node, const PlatformStyle *_platformStyle, BitcoinGUI *_gui) :
     QFrame(_gui),
     gui(_gui),
-    platformStyle(_platformStyle)
+    platformStyle(_platformStyle),
+    m_node(node)
 {
     // Leave HBox hook for adding a list view later
     QHBoxLayout *walletFrameLayout = new QHBoxLayout(this);
@@ -51,7 +52,7 @@ bool WalletFrame::addWallet(WalletModel *walletModel)
         return false;
     }
 
-    WalletView *walletView = new WalletView(platformStyle, this);
+    WalletView *walletView = new WalletView(m_node, platformStyle, this);
     walletView->setBitcoinGUI(gui);
     walletView->setClientModel(clientModel);
     walletView->setWalletModel(walletModel);

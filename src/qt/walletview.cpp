@@ -9,7 +9,6 @@
 #include <qt/bitcoingui.h>
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>
-#include <masternodeconfig.h>
 #include <qt/optionsmodel.h>
 #include <qt/overviewpage.h>
 #include <qt/platformstyle.h>
@@ -33,14 +32,15 @@
 #include <QSettings>
 #include <QVBoxLayout>
 
-WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
+WalletView::WalletView(interfaces::Node& node, const PlatformStyle *_platformStyle, QWidget *parent):
     QStackedWidget(parent),
     clientModel(0),
     walletModel(0),
-    platformStyle(_platformStyle)
+    platformStyle(_platformStyle),
+    m_node(node)
 {
     // Create tabs
-    overviewPage = new OverviewPage(platformStyle);
+    overviewPage = new OverviewPage(m_node, platformStyle);
 
     transactionsPage = new QWidget(this);
     QVBoxLayout *vbox = new QVBoxLayout();
@@ -84,11 +84,11 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
 
     QSettings settings;
     if (!fLiteMode && settings.value("fShowMasternodesTab").toBool()) {
-        masternodeListPage = new MasternodeList(clientModel->node(), platformStyle);
+        masternodeListPage = new MasternodeList(m_node, platformStyle);
         addWidget(masternodeListPage);
     }
 
-    proposalListPage = new ProposalList(clientModel->node(), platformStyle);
+    proposalListPage = new ProposalList(m_node, platformStyle);
     addWidget(proposalListPage);
 
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page

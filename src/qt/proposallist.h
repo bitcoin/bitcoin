@@ -5,10 +5,11 @@
 #ifndef BITCOIN_QT_PROPOSALLIST_H
 #define BITCOIN_QT_PROPOSALLIST_H
 
-#include <interfaces/node.h>
+#include <qt/clientmodel.h>
+#include <qt/columnalignedlayout.h>
 #include <qt/guiutil.h>
 #include <qt/proposaltablemodel.h>
-#include <qt/columnalignedlayout.h>
+
 #include <QWidget>
 #include <QKeyEvent>
 #include <QTimer>
@@ -18,7 +19,8 @@ class ProposalFilterProxy;
 
 namespace interfaces {
     class Node;
-}
+};
+
 
 QT_BEGIN_NAMESPACE
 class QComboBox;

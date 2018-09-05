@@ -1,16 +1,14 @@
-#include <qt/masternodelist.h>
 #include <qt/forms/ui_masternodelist.h>
 
-#include <activemasternode.h>
-#include <qt/clientmodel.h>
-#include <init.h>
-#include <interfaces/node.h>
 #include <qt/guiutil.h>
-#include <masternodeman.h>
+#include <qt/masternodelist.h>
 #include <qt/qrdialog.h>
-#include <sync.h>
-#include <wallet/wallet.h>
 #include <qt/walletmodel.h>
+
+#include <masternode.h>
+#include <masternodeman.h>
+#include <sync.h>
+#include <utilstrencodings.h>
 
 #include <QTimer>
 #include <QMessageBox>
@@ -93,8 +91,10 @@ void MasternodeList::setClientModel(ClientModel *model)
 void MasternodeList::setWalletModel(WalletModel *model)
 {
     this->walletModel = model;
-    updateMyNodeList(true);
-    updateNodeList();
+    if(model) {
+        updateMyNodeList(true);
+        updateNodeList();
+    }
 }
 
 void MasternodeList::showContextMenu(const QPoint &point)
@@ -249,6 +249,7 @@ void MasternodeList::updateMyNodeList(bool fForce)
     int nSelectedRow = selected.count() ? selected.at(0).row() : 0;
 
     ui->tableWidgetMyMasternodes->setSortingEnabled(false);
+    if(!clientModel) return;
     for (const auto& mne : m_node.MNgetEntries()) {
         int32_t nOutputIndex = 0;
         if(!ParseInt32(mne.getOutputIndex(), &nOutputIndex)) {
@@ -402,7 +403,7 @@ void MasternodeList::on_startAllButton_clicked()
 void MasternodeList::on_startMissingButton_clicked()
 {
 
-    if(!clientModel->node().IsMasternodelistSynced()) {
+    if(!m_node.IsMasternodelistSynced()) {
         QMessageBox::critical(this, tr("Command is not available right now"),
             tr("You can't use this command until masternode list is synced"));
         return;

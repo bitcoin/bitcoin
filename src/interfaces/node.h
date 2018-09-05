@@ -279,7 +279,7 @@ struct MasterNodeCount
 
     bool MNcountChanged(const MasterNodeCount& prev) const
     {
-        return size != prev.size || compatible != prev.compatible ||
+        return size != prev.size || compatible != prev.compatible || enabled != prev.enabled ||
                 countIPv4 != prev.countIPv4 || countIPv6 != prev.countIPv6 || countTOR != prev.countTOR;
     }
 };

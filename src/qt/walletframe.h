@@ -15,6 +15,10 @@ class SendCoinsRecipient;
 class WalletModel;
 class WalletView;
 
+namespace interfaces {
+    class Node;
+};
+
 QT_BEGIN_NAMESPACE
 class QStackedWidget;
 QT_END_NAMESPACE
@@ -31,7 +35,7 @@ class WalletFrame : public QFrame
     Q_OBJECT
 
 public:
-    explicit WalletFrame(const PlatformStyle *platformStyle, BitcoinGUI *_gui = 0);
+    explicit WalletFrame(interfaces::Node& node, const PlatformStyle *platformStyle, BitcoinGUI *_gui = 0);
     ~WalletFrame();
 
     void setClientModel(ClientModel *clientModel);
@@ -58,6 +62,7 @@ private:
     bool bOutOfSync;
 
     const PlatformStyle *platformStyle;
+    interfaces::Node& m_node;
 
 public:
     WalletView *currentWalletView();

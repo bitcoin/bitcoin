@@ -5,7 +5,7 @@
 #ifndef BITCOIN_QT_PROPOSALTABLEMODEL_H
 #define BITCOIN_QT_PROPOSALTABLEMODEL_H
 
-#include "bitcoinunits.h"
+#include <qt/bitcoinunits.h>
 
 #include <QAbstractTableModel>
 #include <QStringList>
@@ -22,12 +22,17 @@ class PlatformStyle;
 class ProposalRecord;
 class ProposalTablePriv;
 
+namespace interfaces {
+    class Node;
+};
+
+
 class ProposalTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 
 public:
-    explicit ProposalTableModel(const PlatformStyle *platformStyle, QObject *parent = 0);
+    explicit ProposalTableModel(interfaces::Node& node, const PlatformStyle *platformStyle, QObject *parent = 0);
     ~ProposalTableModel();
 
     enum ColumnIndex {
@@ -62,6 +67,7 @@ public:
     QModelIndex index(int row, int column, const QModelIndex & parent = QModelIndex()) const;
 
 private:
+    interfaces::Node& m_node;
     QNetworkAccessManager *networkManager;
     QNetworkReply *currentReply;
 

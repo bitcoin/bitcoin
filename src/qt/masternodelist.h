@@ -2,7 +2,7 @@
 #define MASTERNODELIST_H
 
 #include <interfaces/node.h>
-#include <primitives/transaction.h>
+#include <qt/clientmodel.h>
 #include <qt/platformstyle.h>
 #include <sync.h>
 #include <util.h>
@@ -24,7 +24,7 @@ class WalletModel;
 
 namespace interfaces {
     class Node;
-}
+};
 
 QT_BEGIN_NAMESPACE
 class QModelIndex;
@@ -39,7 +39,7 @@ public:
     explicit MasternodeList(interfaces::Node& node, const PlatformStyle *platformStyle, QWidget *parent = 0);
     ~MasternodeList();
 
-    int getCount() {return m_node.MNConfigCount();}
+    int getCount() {return clientModel->node().MNConfigCount();}
     void setClientModel(ClientModel *clientModel);
     void setWalletModel(WalletModel *walletModel);
     void ShowQRCode(std::string strAlias);

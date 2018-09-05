@@ -10,6 +10,7 @@
 #include <qt/proposalrecord.h>
 #include <qt/proposaltablemodel.h>
 
+#include <interfaces/node.h>
 #include <masternodeman.h>
 #include <masternode.h>
 #include <messagesigner.h>
@@ -43,7 +44,7 @@ ProposalList::ProposalList(interfaces::Node& node, const PlatformStyle *platform
     proposalTableModel(0), proposalProxyModel(0),
     proposalList(0), columnResizingFixer(0)
 {
-    proposalTableModel = new ProposalTableModel(platformStyle, this); 
+    proposalTableModel = new ProposalTableModel(m_node, platformStyle, this);
     QSettings settings;
 
     setContentsMargins(0,0,0,0);
