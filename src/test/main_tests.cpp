@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(subsidy_limit_test)
         nSum += nSubsidy * 400;
         BOOST_CHECK(MoneyRange(nSum));
     }
-    BOOST_CHECK_EQUAL(nSum, 2241010160000000ULL);
+    BOOST_CHECK_EQUAL(nSum, CAmount{2241010160000000});
 }
 
 bool ReturnFalse() { return false; }
