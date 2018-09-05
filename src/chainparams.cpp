@@ -125,7 +125,10 @@ public:
         nMinerThreads = 0;
         nTargetTimespan = 14 * 24 * 60 * 60; // Crown: 2 weeks
         nTargetSpacing = 1 * 60; // Crown: 1 minutes
-        nMaxTipAge = 6 * 60 * 60; 
+        nMaxTipAge = 6 * 60 * 60;
+
+        nAuxpowChainId = 20;
+        nPoSChainId = 22;
 
         /**
          * Build the genesis block. Note that the output of the genesis coinbase cannot

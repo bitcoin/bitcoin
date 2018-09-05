@@ -75,6 +75,8 @@ public:
      */
     void SetAuxpow (CAuxPow* apow);
 
+    void SetProofOfStake(bool fProofOfStake);
+
 };
 
 class CBlock : public CBlockHeader

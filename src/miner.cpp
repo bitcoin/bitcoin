@@ -108,7 +108,10 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
     txNew.vout[0].scriptPubKey = scriptPubKeyIn;
 
     /* Initialise the block version.  */
-    const int32_t nChainId = Params().AuxpowChainId();
+    int32_t nChainId = Params().AuxpowChainId();
+    if (chainActive.Height() > Params().PoSStartHeight())
+        nChainId = Params().PoSChainId();
+
     pblock->nVersion.SetBaseVersion(CBlockHeader::CURRENT_VERSION, nChainId);
 
 

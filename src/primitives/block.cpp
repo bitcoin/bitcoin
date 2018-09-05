@@ -24,6 +24,11 @@ void CBlockHeader::SetAuxpow (CAuxPow* apow)
     }
 }
 
+void CBlockHeader::SetProofOfStake(bool fProofOfStake)
+{
+    nVersion.SetProofOfStake(fProofOfStake);
+}
+
 uint256 CBlock::BuildMerkleTree(bool* fMutated) const
 {
     /* WARNING! If you're reading this because you're learning about crypto

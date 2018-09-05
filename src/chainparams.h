@@ -84,7 +84,9 @@ public:
     int64_t StartMasternodePayments() const { return nStartMasternodePayments; }
     CBaseChainParams::Network NetworkID() const { return networkID; }
     /* Return the auxpow chain ID.  */
-    inline int32_t AuxpowChainId () const { return 20; }
+    inline int32_t AuxpowChainId () const { return nAuxpowChainId; }
+    int32_t PoSChainId () const { return nPoSChainId; }
+    int PoSStartHeight() const { return nBlockPoSStart; }
     /* Return start height of auxpow and the retarget interval change.  */
     virtual int AuxpowStartHeight() const = 0;
     /* Return whether or not to enforce strict chain ID checks.  */
@@ -127,6 +129,9 @@ protected:
     std::string strLegacySignerDummyAddress;
     std::string strDevfundAddress;
     int64_t nStartMasternodePayments;
+    int32_t nAuxpowChainId;
+    int32_t nPoSChainId;
+    int nBlockPoSStart;
 };
 
 /** 
