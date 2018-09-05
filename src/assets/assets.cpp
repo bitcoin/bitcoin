@@ -27,6 +27,7 @@
 #include "wallet/coincontrol.h"
 #include "utilmoneystr.h"
 #include "coins.h"
+#include "wallet/wallet.h"
 
 std::map<uint256, std::string> mapReissuedTx;
 std::map<std::string, uint256> mapReissuedAssets;
@@ -2091,7 +2092,7 @@ void GetAssetData(const CScript& script, CAssetOutputEntry& data)
             data.destination = DecodeDestination(address);
             data.assetName = transfer.strName;
         }
-    } else if (type == TX_NEW_ASSET && !fIsOwner) {
+    } else if (type == TX_NEW_ASSET && fIsOwner) {
         if (OwnerAssetFromScript(script, assetName, address)) {
             data.type = ASSET_NEW_STRING;
             data.amount = OWNER_ASSET_AMOUNT;
@@ -2353,22 +2354,13 @@ bool CreateAssetTransaction(CWallet* pwallet, const std::vector<CNewAsset> asset
             return false;
         }
     } else {
-        // Create a new address
-        std::string strAccount;
-
-        if (!pwallet->IsLocked()) {
-            pwallet->TopUpKeyPool();
-        }
-
-        // Generate a new key that is added to wallet
-        CPubKey newKey;
-        if (!pwallet->GetKeyFromPool(newKey)) {
-            error = std::make_pair(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+        // no coin control: send change to newly generated address
+        CKeyID keyID;
+        std::string strFailReason;
+        if (!pwallet->CreateNewChangeAddress(reservekey, keyID, strFailReason)) {
+            error = std::make_pair(RPC_WALLET_KEYPOOL_RAN_OUT, strFailReason);
             return false;
         }
-        CKeyID keyID = newKey.GetID();
-
-        pwallet->SetAddressBook(keyID, strAccount, "receive");
 
         change_address = EncodeDestination(keyID);
     }
@@ -2413,7 +2405,6 @@ bool CreateAssetTransaction(CWallet* pwallet, const std::vector<CNewAsset> asset
     CCoinControl coin_control;
 
     coin_control.destChange = DecodeDestination(change_address);
-
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
@@ -2474,22 +2465,12 @@ bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& reissu
             return false;
         }
     } else {
-        // Create a new address
-        std::string strAccount;
-
-        if (!pwallet->IsLocked()) {
-            pwallet->TopUpKeyPool();
-        }
-
-        // Generate a new key that is added to wallet
-        CPubKey newKey;
-        if (!pwallet->GetKeyFromPool(newKey)) {
-            error = std::make_pair(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+        CKeyID keyID;
+        std::string strFailReason;
+        if (!pwallet->CreateNewChangeAddress(reservekey, keyID, strFailReason)) {
+            error = std::make_pair(RPC_WALLET_KEYPOOL_RAN_OUT, strFailReason);
             return false;
         }
-        CKeyID keyID = newKey.GetID();
-
-        pwallet->SetAddressBook(keyID, strAccount, "receive");
 
         change_address = EncodeDestination(keyID);
     }

@@ -195,8 +195,9 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     sub.type = TransactionRecord::Reissue;
                 else if (data.type == ASSET_TRANSFER_STRING)
                     sub.type = TransactionRecord::TransferFrom;
-                else
+                else {
                     sub.type = TransactionRecord::Other;
+                }
 
                 if (IsAssetNameAnOwner(sub.assetName))
                     sub.units = OWNER_UNITS;
