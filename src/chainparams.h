@@ -43,6 +43,12 @@ public:
         MAX_BASE58_TYPES
     };
 
+    enum AddressType
+    {
+        NEW_ADDRESS_TYPE,
+        DEPRECATED_ADDRESS_TYPE
+    };
+
     const uint256& HashGenesisBlock() const { return hashGenesisBlock; }
     const CMessageHeader::MessageStartChars& MessageStart() const { return pchMessageStart; }
     const std::vector<unsigned char>& AlertKey() const { return vAlertPubKey; }
@@ -77,9 +83,9 @@ public:
     /** Return the BIP70 network string (main, test or regtest) */
     std::string NetworkIDString() const { return strNetworkID; }
     const std::vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
-    const std::vector<unsigned char>& Base58Prefix(Base58Type type, bool isOld = false) const
+    const std::vector<unsigned char>& Base58Prefix(Base58Type type, AddressType addressType = NEW_ADDRESS_TYPE) const
     {
-        if (isOld)
+        if (addressType == DEPRECATED_ADDRESS_TYPE)
         {
             return base58PrefixesOld[type];
         }

@@ -42,7 +42,7 @@ BOOST_FIXTURE_TEST_SUITE(Prefix_tests, PrefixFixture)
         // Check that the address is invalid for new prefixes
         BOOST_CHECK(!CBitcoinAddress(oldAddress).GetKeyID(key));
         // Check that the address is valid for old prefixes
-        BOOST_CHECK(CBitcoinAddress(oldAddress, true).GetKeyID(key));
+        BOOST_CHECK(CBitcoinAddress(oldAddress, CChainParams::DEPRECATED_ADDRESS_TYPE).GetKeyID(key));
     }
 
     BOOST_AUTO_TEST_CASE(NewAddressCheck)
@@ -51,13 +51,13 @@ BOOST_FIXTURE_TEST_SUITE(Prefix_tests, PrefixFixture)
         // Check that the address is valid for new prefixes
         BOOST_CHECK(CBitcoinAddress(newAddress).GetKeyID(key));
         // Check that the address is invalid for old prefixes
-        BOOST_CHECK(!CBitcoinAddress(newAddress, true).GetKeyID(key));
+        BOOST_CHECK(!CBitcoinAddress(newAddress, CChainParams::DEPRECATED_ADDRESS_TYPE).GetKeyID(key));
     }
 
     BOOST_AUTO_TEST_CASE(KeyIdCheck)
     {
         CKeyID key;
-        BOOST_CHECK(CBitcoinAddress(oldAddress, true).GetKeyID(key));
+        BOOST_CHECK(CBitcoinAddress(oldAddress, CChainParams::DEPRECATED_ADDRESS_TYPE).GetKeyID(key));
         std::string newAddress = CBitcoinAddress(key).ToString();
 
         CKeyID newKey;
@@ -71,7 +71,7 @@ BOOST_FIXTURE_TEST_SUITE(Prefix_tests, PrefixFixture)
         // Check that the old address is deprecated
         BOOST_CHECK(CBitcoinAddress(oldAddressMultisig).IsDeprecated());
         // Get destination for old address
-        CTxDestination dest = CBitcoinAddress(oldAddressMultisig, true).Get();
+        CTxDestination dest = CBitcoinAddress(oldAddressMultisig, CChainParams::DEPRECATED_ADDRESS_TYPE).Get();
         // Check that the new address is not deprecated
         BOOST_CHECK(!CBitcoinAddress(dest).IsDeprecated());
     }
@@ -83,7 +83,7 @@ BOOST_FIXTURE_TEST_SUITE(Prefix_tests, PrefixFixture)
         // Get destination for new address
         CTxDestination dest = CBitcoinAddress(newAddressMultisig).Get();
         // Check that the old address not deprecated
-        BOOST_CHECK(CBitcoinAddress(dest, true).IsDeprecated());
+        BOOST_CHECK(CBitcoinAddress(dest, CChainParams::DEPRECATED_ADDRESS_TYPE).IsDeprecated());
     }
 
     // TESTNET check
@@ -94,7 +94,7 @@ BOOST_FIXTURE_TEST_SUITE(Prefix_tests, PrefixFixture)
         // Check that the address is invalid for new prefixes
         BOOST_CHECK(!CBitcoinAddress(testnetOldAddress).GetKeyID(key));
         // Check that the address is valid for old prefixes
-        BOOST_CHECK(CBitcoinAddress(testnetOldAddress, true).GetKeyID(key));
+        BOOST_CHECK(CBitcoinAddress(testnetOldAddress, CChainParams::DEPRECATED_ADDRESS_TYPE).GetKeyID(key));
     }
 
     BOOST_AUTO_TEST_CASE(TestnetNewAddressCheck)
@@ -104,14 +104,14 @@ BOOST_FIXTURE_TEST_SUITE(Prefix_tests, PrefixFixture)
         // Check that the address is valid for new prefixes
         BOOST_CHECK(CBitcoinAddress(testnetNewAddress).GetKeyID(key));
         // Check that the address is invalid for old prefixes
-        BOOST_CHECK(!CBitcoinAddress(testnetNewAddress, true).GetKeyID(key));
+        BOOST_CHECK(!CBitcoinAddress(testnetNewAddress, CChainParams::DEPRECATED_ADDRESS_TYPE).GetKeyID(key));
     }
 
     BOOST_AUTO_TEST_CASE(TestnetKeyIdCheck)
     {
         SelectParams(CBaseChainParams::TESTNET);
         CKeyID key;
-        BOOST_CHECK(CBitcoinAddress(testnetOldAddress, true).GetKeyID(key));
+        BOOST_CHECK(CBitcoinAddress(testnetOldAddress, CChainParams::DEPRECATED_ADDRESS_TYPE).GetKeyID(key));
         std::string newAddress = CBitcoinAddress(key).ToString();
 
         CKeyID newKey;
@@ -126,7 +126,7 @@ BOOST_FIXTURE_TEST_SUITE(Prefix_tests, PrefixFixture)
         // Check that the old address is deprecated
         BOOST_CHECK(CBitcoinAddress(testnetOldAddressMultisig).IsDeprecated());
         // Get destination for old address
-        CTxDestination dest = CBitcoinAddress(testnetOldAddressMultisig, true).Get();
+        CTxDestination dest = CBitcoinAddress(testnetOldAddressMultisig, CChainParams::DEPRECATED_ADDRESS_TYPE).Get();
         // Check that the new address is not deprecated
         BOOST_CHECK(!CBitcoinAddress(dest).IsDeprecated());
     }
@@ -139,7 +139,7 @@ BOOST_FIXTURE_TEST_SUITE(Prefix_tests, PrefixFixture)
         // Get destination for new address
         CTxDestination dest = CBitcoinAddress(testnetNewAddressMultisig).Get();
         // Check that the old address not deprecated
-        BOOST_CHECK(CBitcoinAddress(dest, true).IsDeprecated());
+        BOOST_CHECK(CBitcoinAddress(dest, CChainParams::DEPRECATED_ADDRESS_TYPE).IsDeprecated());
     }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -77,9 +77,9 @@ protected:
     //! the actually encoded data
     typedef std::vector<unsigned char, zero_after_free_allocator<unsigned char> > vector_uchar;
     vector_uchar vchData;
-    bool m_isOld;
+    CChainParams::AddressType m_addressType;
 
-    CBase58Data(bool isOld = false);
+    CBase58Data(CChainParams::AddressType = CChainParams::NEW_ADDRESS_TYPE);
     void SetData(const std::vector<unsigned char> &vchVersionIn, const void* pdata, size_t nSize);
     void SetData(const std::vector<unsigned char> &vchVersionIn, const unsigned char *pbegin, const unsigned char *pend);
 
@@ -111,13 +111,13 @@ public:
     bool IsValid(const CChainParams &params) const;
 
     CBitcoinAddress() { }
-    CBitcoinAddress(const CTxDestination &dest, bool isOld = false)
-        : CBase58Data(isOld)
+    CBitcoinAddress(const CTxDestination &dest, CChainParams::AddressType addressType = CChainParams::NEW_ADDRESS_TYPE)
+        : CBase58Data(addressType)
     {
         Set(dest);
     }
-    CBitcoinAddress(const std::string& strAddress, bool isOld = false)
-        : CBase58Data(isOld)
+    CBitcoinAddress(const std::string& strAddress, CChainParams::AddressType addressType = CChainParams::NEW_ADDRESS_TYPE)
+        : CBase58Data(addressType)
     {
         SetString(strAddress);
     }
