@@ -45,6 +45,15 @@ void CSimplifiedMNListEntry::ToJson(UniValue& obj) const
     obj.push_back(Pair("isValid", isValid));
 }
 
+CSimplifiedMNList::CSimplifiedMNList(const std::vector<CSimplifiedMNListEntry>& smlEntries)
+{
+    mnList = smlEntries;
+
+    std::sort(mnList.begin(), mnList.end(), [&](const CSimplifiedMNListEntry& a, const CSimplifiedMNListEntry& b) {
+        return a.proRegTxHash.Compare(b.proRegTxHash) < 0;
+    });
+}
+
 CSimplifiedMNList::CSimplifiedMNList(const CDeterministicMNList& dmnList)
 {
     mnList.reserve(dmnList.all_count());

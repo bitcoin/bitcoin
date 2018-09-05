@@ -24,7 +24,9 @@
 
 #include "test/testutil.h"
 
+#include "evo/specialtx.h"
 #include "evo/deterministicmns.h"
+#include "evo/cbtx.h"
 
 #include <memory>
 
@@ -100,12 +102,12 @@ TestingSetup::~TestingSetup()
         boost::filesystem::remove_all(pathTemp);
 }
 
-TestChain100Setup::TestChain100Setup() : TestingSetup(CBaseChainParams::REGTEST)
+TestChainSetup::TestChainSetup(int blockCount) : TestingSetup(CBaseChainParams::REGTEST)
 {
     // Generate a 100-block chain:
     coinbaseKey.MakeNewKey(true);
-    CScript scriptPubKey = CScript() <<  ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
-    for (int i = 0; i < COINBASE_MATURITY; i++)
+    CScript scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
+    for (int i = 0; i < blockCount; i++)
     {
         std::vector<CMutableTransaction> noTxns;
         CBlock b = CreateAndProcessBlock(noTxns, scriptPubKey);
@@ -118,7 +120,25 @@ TestChain100Setup::TestChain100Setup() : TestingSetup(CBaseChainParams::REGTEST)
 // scriptPubKey, and try to add it to the current chain.
 //
 CBlock
-TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey)
+TestChainSetup::CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey)
+{
+    const CChainParams& chainparams = Params();
+    auto block = CreateBlock(txns, scriptPubKey);
+
+    std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
+    ProcessNewBlock(chainparams, shared_pblock, true, NULL);
+
+    CBlock result = block;
+    return result;
+}
+
+CBlock TestChainSetup::CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns, const CKey& scriptKey)
+{
+    CScript scriptPubKey = CScript() <<  ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
+    return CreateAndProcessBlock(txns, scriptPubKey);
+}
+
+CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey)
 {
     const CChainParams& chainparams = Params();
     std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey);
@@ -128,20 +148,39 @@ TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>&
     block.vtx.resize(1);
     BOOST_FOREACH(const CMutableTransaction& tx, txns)
         block.vtx.push_back(MakeTransactionRef(tx));
+
+    // Manually update CbTx as we modified the block here
+    if (block.vtx[0]->nType == TRANSACTION_COINBASE) {
+        CCbTx cbTx;
+        if (!GetTxPayload(*block.vtx[0], cbTx)) {
+            BOOST_ASSERT(false);
+        }
+        CValidationState state;
+        if (!CalcCbTxMerkleRootMNList(block, chainActive.Tip(), cbTx.merkleRootMNList, state)) {
+            BOOST_ASSERT(false);
+        }
+        CMutableTransaction tmpTx = *block.vtx[0];
+        SetTxPayload(tmpTx, cbTx);
+        block.vtx[0] = MakeTransactionRef(tmpTx);
+    }
+
     // IncrementExtraNonce creates a valid coinbase and merkleRoot
     unsigned int extraNonce = 0;
     IncrementExtraNonce(&block, chainActive.Tip(), extraNonce);
 
     while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
 
-    std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
-    ProcessNewBlock(chainparams, shared_pblock, true, NULL);
-
     CBlock result = block;
     return result;
 }
 
-TestChain100Setup::~TestChain100Setup()
+CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns, const CKey& scriptKey)
+{
+    CScript scriptPubKey = CScript() <<  ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
+    return CreateBlock(txns, scriptPubKey);
+}
+
+TestChainSetup::~TestChainSetup()
 {
 }
 

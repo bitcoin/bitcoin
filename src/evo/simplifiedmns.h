@@ -54,6 +54,7 @@ public:
 
 public:
     CSimplifiedMNList() {}
+    CSimplifiedMNList(const std::vector<CSimplifiedMNListEntry>& smlEntries);
     CSimplifiedMNList(const CDeterministicMNList& dmnList);
 
     uint256 CalcMerkleRoot(bool *pmutated = NULL) const;
