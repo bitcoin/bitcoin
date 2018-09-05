@@ -3,5 +3,9 @@ share/pixmaps/peercoin16.png usr/share/pixmaps
 share/pixmaps/peercoin32.png usr/share/pixmaps
 share/pixmaps/peercoin128.png usr/share/pixmaps
 share/pixmaps/peercoin256.png usr/share/pixmaps
+share/pixmaps/peercoin-testnet32.png usr/share/pixmaps
+share/pixmaps/peercoin-testnet128.png usr/share/pixmaps
+share/pixmaps/peercoin-testnet256.png usr/share/pixmaps
 debian/peercoin-qt.desktop usr/share/applications
+debian/peercoin-testnet-qt.desktop usr/share/applications
 debian/peercoin-qt.protocol usr/share/kde4/services/
