@@ -20,7 +20,7 @@
 uint256 CBlockHeader::GetHash(const Consensus::Params& consensusParams) const
 {
     // if (IsMicroBitcoin())
-    if (nTime > consensusParams.hardforkTimestamp)
+    if (nTime > consensusParams.mbcTimestamp)
     {
         XCoin::CGroestlHashWriter ss(SER_GETHASH, PROTOCOL_VERSION); // GRS
         ss << *this;
@@ -38,7 +38,7 @@ uint256 CBlockHeader::GetHash() const
 
 bool CBlockHeader::IsMicroBitcoin() const
 {
-    return nTime > Params().GetConsensus().hardforkTimestamp;
+    return nTime > Params().GetConsensus().mbcTimestamp;
 }
 
 std::string CBlock::ToString() const

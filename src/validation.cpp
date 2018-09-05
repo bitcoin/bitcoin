@@ -1082,7 +1082,7 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus:
     }
 
     // bool isFork = block.nTime >= 1527625482;
-    bool isFork = block.nTime > consensusParams.hardforkTimestamp;
+    bool isFork = block.nTime > consensusParams.mbcTimestamp;
 
     // Check the header
     if (!CheckProofOfWork(block.GetHash(), block.nBits, isFork, consensusParams))
@@ -1098,7 +1098,7 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
     if (block.GetHash() != pindex->GetBlockHash())
         return error("ReadBlockFromDisk(CBlock&, CBlockIndex*): GetHash() doesn't match index for %s at %s",
                 pindex->ToString(), pindex->GetBlockPos().ToString());
-    if (pindex->nHeight >= consensusParams.hardforkHeight && !block.IsMicroBitcoin())
+    if (pindex->nHeight >= consensusParams.mbcHeight && !block.IsMicroBitcoin())
         return error("ReadBlockFromDisk(CBlock&, CBlockIndex*): Wrong hardfork version for %s at %s", pindex->ToString(), pindex->GetBlockPos().ToString());
     return true;
 }
@@ -1108,7 +1108,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
     const CAmount initSubsidy = 50 * COIN * COIN_RATIO;
 
     // Old subsidy
-    if (nHeight < consensusParams.hardforkHeight)
+    if (nHeight < consensusParams.mbcHeight)
     {
         const int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
         // Force block reward to zero when right shift is undefined.
@@ -1125,10 +1125,10 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 
     // New subsidy
     const int halvingRatio = (consensusParams.nSubsidyHalvingInterval * 10) / consensusParams.nSubsidyHalvingInterval;
-    const CAmount initSubsidyMBC = initSubsidy >> (consensusParams.hardforkHeight / consensusParams.nSubsidyHalvingInterval);
-    const int lastSubsidyHeightBTC = (consensusParams.hardforkHeight / consensusParams.nSubsidyHalvingInterval) * consensusParams.nSubsidyHalvingInterval;
-    const int remainSubsidyHeightBTC = consensusParams.nSubsidyHalvingInterval - (consensusParams.hardforkHeight - lastSubsidyHeightBTC);
-    const int newSubsidyHeightMBC = consensusParams.hardforkHeight + remainSubsidyHeightBTC * halvingRatio;
+    const CAmount initSubsidyMBC = initSubsidy >> (consensusParams.mbcHeight / consensusParams.nSubsidyHalvingInterval);
+    const int lastSubsidyHeightBTC = (consensusParams.mbcHeight / consensusParams.nSubsidyHalvingInterval) * consensusParams.nSubsidyHalvingInterval;
+    const int remainSubsidyHeightBTC = consensusParams.nSubsidyHalvingInterval - (consensusParams.mbcHeight - lastSubsidyHeightBTC);
+    const int newSubsidyHeightMBC = consensusParams.mbcHeight + remainSubsidyHeightBTC * halvingRatio;
     if (nHeight < newSubsidyHeightMBC) {
         const CAmount nSubsidy = initSubsidyMBC / halvingRatio;
         return nSubsidy;
@@ -1821,7 +1821,7 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
     }
 
     // After hardfork we start accepting replay protected txns 
-    if (pindex->nHeight >= consensusparams.hardforkHeight) {
+    if (pindex->nHeight >= consensusparams.mbcHeight) {
         flags |= SCRIPT_VERIFY_STRICTENC;
         flags |= SCRIPT_ENABLE_SIGHASH_FORKID_OLD;
     }
@@ -2100,7 +2100,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
     LogPrint(BCLog::BENCH, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime3 - nTime2), 0.001 * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime3 - nTime2) / (nInputs-1), nTimeConnect * 0.000001);
 
-    auto isPremineBlock = pindex->nHeight == chainparams.GetConsensus().hardforkHeight;
+    auto isPremineBlock = pindex->nHeight == chainparams.GetConsensus().mbcHeight;
     auto premineValue = chainparams.GetConsensus().premineValue;
 
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus());
@@ -3128,7 +3128,7 @@ static bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, 
 static bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true)
 {
     // bool isFork = block.nTime >= 1527625482;
-    bool isFork = block.nTime > consensusParams.hardforkTimestamp;
+    bool isFork = block.nTime > consensusParams.mbcTimestamp;
 
     // Check proof of work matches claimed amount
     if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, isFork, consensusParams))
@@ -3272,7 +3272,7 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
     const int nHeight = pindexPrev->nHeight + 1;
 
     // Check hardfork version
-    if (nHeight >= Params().GetConsensus().hardforkHeight && !block.IsMicroBitcoin())
+    if (nHeight >= Params().GetConsensus().mbcHeight && !block.IsMicroBitcoin())
         return state.DoS(0, false, REJECT_INVALID, "not-hardfork", false, "incorrect block version");
 
     // Check proof of work
@@ -4522,7 +4522,7 @@ void static CheckBlockIndex(const Consensus::Params& consensusParams)
         assert((pindexFirstNotTransactionsValid != nullptr) == (pindex->nChainTx == 0));
         assert(pindex->nHeight == nHeight); // nHeight must be consistent.
         // Check hardfork version
-        if (pindex->nHeight >= consensusParams.hardforkHeight)
+        if (pindex->nHeight >= consensusParams.mbcHeight)
             assert(pindex->IsMicroBitcoin());
         assert(pindex->pprev == nullptr || pindex->nChainWork >= pindex->pprev->nChainWork); // For every block except the genesis block, the chainwork must be larger than the parent's.
         assert(nHeight < 2 || (pindex->pskip && (pindex->pskip->nHeight < nHeight))); // The pskip pointer must point back for all but the first 2 blocks.

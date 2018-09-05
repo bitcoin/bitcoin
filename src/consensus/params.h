@@ -70,8 +70,8 @@ struct Params {
     uint256 nMinimumChainWork;
     uint256 defaultAssumeValid;
 
-    int hardforkHeight;
-    int64_t hardforkTimestamp;
+    int mbcHeight;
+    int64_t mbcTimestamp;
     std::string premineAddress;
     CAmount premineValue;
 };

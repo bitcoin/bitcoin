@@ -102,10 +102,10 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     int nHeight = pindexLast->nHeight + 1;
 
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
-    const auto isHardfork = nHeight >= params.hardforkHeight;
+    const auto isHardfork = nHeight >= params.mbcHeight;
 
     // Pow limit start for warm-up period
-    if (isHardfork && nHeight < params.hardforkHeight + params.nWarmUpWindow)
+    if (isHardfork && nHeight < params.mbcHeight + params.nWarmUpWindow)
     {
         return UintToArith256(params.powLimitStart).GetCompact();
     }

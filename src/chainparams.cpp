@@ -110,10 +110,11 @@ public:
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x0000000000000000005214481d2d96f898e3d5416e43359c145944a909d242e0"); //506067
 
-        consensus.hardforkHeight = 525001;
-        consensus.hardforkTimestamp = 1527625482; // Tuesday, 29 May 2018 р., 20:24:42
+        consensus.mbcHeight = 525001;
+        consensus.mbcTimestamp = 1527625482; // Tuesday, 29 May 2018 р., 20:24:42
         consensus.premineValue = 1050000 * COIN * COIN_RATIO; // 5%
         consensus.premineAddress = "BfrckfYi7xaSGmMec4T2keu6xczQSx7rxo";
+        consensus.replyFixHeight = 999999999;
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -236,10 +237,11 @@ public:
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x0000000002e9e7b00e1f6dc5123a04aad68dd0f0968d8c7aa45f6640795c37b1"); //1135275
 
-        consensus.hardforkHeight = 1;
-        consensus.hardforkTimestamp = 1231006505; // Tuesday, 29 May 2018 р., 20:24:42
+        consensus.mbcHeight = 1;
+        consensus.mbcTimestamp = 1231006505; // Tuesday, 29 May 2018 р., 20:24:42
         consensus.premineValue = 10000000 * COIN * COIN_RATIO;
         consensus.premineAddress = "Vxsgbd7An4686EyvU4yGR39cikq9rHnhYi";
+        consensus.replyFixHeight = 999999999;
 
         pchBitcoinMessageStart[0] = 0x0a;
         pchBitcoinMessageStart[1] = 0x10;
@@ -331,10 +333,11 @@ public:
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x00");
 
-        consensus.hardforkHeight = 1000;
-        consensus.hardforkTimestamp = 1527625482; // Tuesday, 29 May 2018 р., 20:24:42
+        consensus.mbcHeight = 1000;
+        consensus.mbcTimestamp = 1527625482; // Tuesday, 29 May 2018 р., 20:24:42
         consensus.premineValue = 2000000 * COIN * COIN_RATIO;
         consensus.premineAddress = "BfrckfYi7xaSGmMec4T2keu6xczQSx7rxo";
+        consensus.replyFixHeight = 999999999;
 
         pchBitcoinMessageStart[0] = 0xfa;
         pchBitcoinMessageStart[1] = 0xbf;

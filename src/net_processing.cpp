@@ -3193,7 +3193,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
         if (!state.fSyncStarted && !pto->fClient && !fImporting && !fReindex) {
             // Only actively request headers from a single peer, unless we're close to today.
             if ((nSyncStarted == 0 && fFetch) || pindexBestHeader->GetBlockTime() > GetAdjustedTime() - 24 * 60 * 60) {
-                const auto powTargetSpacing = pindexBestHeader->nHeight >= consensusParams.hardforkHeight
+                const auto powTargetSpacing = pindexBestHeader->nHeight >= consensusParams.mbcHeight
                         ? consensusParams.nPowTargetSpacing
                         : consensusParams.nBtcPowTargetSpacing;
 

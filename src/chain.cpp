@@ -175,5 +175,5 @@ const CBlockIndex* LastCommonAncestor(const CBlockIndex* pa, const CBlockIndex* 
 
 bool CBlockIndex::IsMicroBitcoin() const
 {
-    return nTime > Params().GetConsensus().hardforkTimestamp;
+    return nTime > Params().GetConsensus().mbcTimestamp;
 }
