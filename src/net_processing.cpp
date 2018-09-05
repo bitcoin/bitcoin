@@ -1757,7 +1757,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             }
 
             // Get recent addresses
-            if (pfrom->fOneShot || pfrom->nVersion >= CADDR_TIME_VERSION || connman->GetAddressCount() < 1000)
+            if (pfrom->fOneShot || pfrom->nVersion >= CADDR_TIME_VERSION || connman->GetAddressCount() < ADDRMAN_GETADDR_MAX)
             {
                 connman->PushMessage(pfrom, CNetMsgMaker(nSendVersion).Make(NetMsgType::GETADDR));
                 pfrom->fGetAddr = true;
@@ -1851,9 +1851,9 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         vRecv >> vAddr;
 
         // Don't want addr from older versions unless seeding
-        if (pfrom->nVersion < CADDR_TIME_VERSION && connman->GetAddressCount() > 1000)
+        if (pfrom->nVersion < CADDR_TIME_VERSION && connman->GetAddressCount() > ADDRMAN_GETADDR_MAX)
             return true;
-        if (vAddr.size() > 1000)
+        if (vAddr.size() > MAX_ADDR_TO_SEND)
         {
             LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 20, strprintf("message addr size() = %u", vAddr.size()));
@@ -1889,7 +1889,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 vAddrOk.push_back(addr);
         }
         connman->AddNewAddresses(vAddrOk, pfrom->addr, 2 * 60 * 60);
-        if (vAddr.size() < 1000)
+        if (vAddr.size() < ADDRMAN_GETADDR_MAX)
             pfrom->fGetAddr = false;
         if (pfrom->fOneShot)
             pfrom->fDisconnect = true;
