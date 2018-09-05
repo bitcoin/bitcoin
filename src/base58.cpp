@@ -147,6 +147,9 @@ bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRe
 
 CBase58Data::CBase58Data(CChainParams::AddressType addressType)
     : m_addressType(addressType)
+    , m_VersionBytes(3)
+    , m_VersionBytesTest(4)
+    , m_versionBytesOld(1)
 {
     vchVersion.clear();
     vchData.clear();
@@ -165,18 +168,24 @@ void CBase58Data::SetData(const std::vector<unsigned char>& vchVersionIn, const 
     SetData(vchVersionIn, (void*)pbegin, pend - pbegin);
 }
 
-bool CBase58Data::SetString(const char* psz)
+unsigned int CBase58Data::GetVersionBytes() const
 {
-    unsigned int nVersionBytes = 3;
+    unsigned int nVersionBytes = m_VersionBytes;
     if(Params().NetworkID() == CBaseChainParams::TESTNET)
     {
         // Testnet has 't' in front of the prefix
-        nVersionBytes = 4;
+        nVersionBytes = m_VersionBytesTest;
     }
     if (m_addressType == CChainParams::DEPRECATED_ADDRESS_TYPE)
     {
-        nVersionBytes = 1;
+        nVersionBytes = m_versionBytesOld;
     }
+    return nVersionBytes;
+}
+
+bool CBase58Data::SetString(const char* psz)
+{
+    unsigned int nVersionBytes = GetVersionBytes();
     std::vector<unsigned char> vchTemp;
     bool rc58 = DecodeBase58Check(psz, vchTemp);
     if ((!rc58) || (vchTemp.size() < nVersionBytes)) {

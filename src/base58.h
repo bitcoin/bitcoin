@@ -94,6 +94,14 @@ public:
     bool operator>=(const CBase58Data& b58) const { return CompareTo(b58) >= 0; }
     bool operator< (const CBase58Data& b58) const { return CompareTo(b58) <  0; }
     bool operator> (const CBase58Data& b58) const { return CompareTo(b58) >  0; }
+
+private:
+    const unsigned int m_VersionBytes;
+    const unsigned int m_VersionBytesTest;
+    const unsigned int m_versionBytesOld;
+
+private:
+    unsigned int GetVersionBytes() const;
 };
 
 /** base58-encoded Crown addresses.
