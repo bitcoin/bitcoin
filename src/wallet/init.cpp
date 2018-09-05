@@ -318,21 +318,21 @@ bool WalletInit::Verify()
         }
 
         std::string strError;
-        if (!CWalletDB::VerifyEnvironment(wallet_path, strError)) {
+        if (!WalletBatch::VerifyEnvironment(wallet_path, strError)) {
             return InitError(strError);
         }
 
         if (gArgs.GetBoolArg("-salvagewallet", false)) {
             // Recover readable keypairs:
-            CWallet dummyWallet("dummy", CWalletDBWrapper::CreateDummy());
+            CWallet dummyWallet("dummy", WalletDatabase::CreateDummy());
             std::string backup_filename;
-            if (!CWalletDB::Recover(wallet_path, (void *)&dummyWallet, CWalletDB::RecoverKeysOnlyFilter, backup_filename)) {
+            if (!WalletBatch::Recover(wallet_path, (void *)&dummyWallet, WalletBatch::RecoverKeysOnlyFilter, backup_filename)) {
                 return false;
             }
         }
 
         std::string strWarning;
-        bool dbV = CWalletDB::VerifyDatabaseFile(wallet_path, strWarning, strError);
+        bool dbV = WalletBatch::VerifyDatabaseFile(wallet_path, strWarning, strError);
         if (!strWarning.empty()) {
             InitWarning(strWarning);
         }
