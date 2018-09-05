@@ -113,6 +113,7 @@ CTransaction& CTransaction::operator=(const CTransaction &tx) {
     *const_cast<std::vector<CTxOut>*>(&vout) = tx.vout;
     *const_cast<unsigned int*>(&nLockTime) = tx.nLockTime;
     *const_cast<uint256*>(&hash) = tx.hash;
+    *const_cast<std::vector<uint8_t>*>(&extraPayload) = tx.extraPayload;
     return *this;
 }
 

@@ -24,7 +24,6 @@ public:
     int64_t electionCode;
     int64_t vote;
     uint256 candidate;
-    Value value;
     std::vector<unsigned char> signature;
 
     bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode) { return true; }

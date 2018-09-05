@@ -21,7 +21,7 @@ public:
     {
         std::vector<uint256> result;
 
-        result = boost::accumulate(m_votes, result, AppendVote);
+        return boost::accumulate(m_votes, result, AppendVote);
     }
 
     static std::vector<uint256>& AppendVote(std::vector<uint256>& result, std::pair<uint256, int> vote)

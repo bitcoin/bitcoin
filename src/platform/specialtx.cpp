@@ -26,7 +26,7 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValidati
     return state.DoS(100, false, REJECT_INVALID, "bad-tx-type");
 }
 
-bool ProcessSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValidationState& state)
+bool ProcessSpecialTx(bool justCheck, const CTransaction& tx, const CBlockIndex* pindex, CValidationState& state)
 {
     if (tx.nVersion < 2 || tx.nType == TRANSACTION_NORMAL)
         return true;
@@ -35,12 +35,15 @@ bool ProcessSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValida
     {
         case TRANSACTION_GOVERNANCE_VOTE:
         {
+            if (justCheck)
+                return true;
+
             VoteTx vtx;
             GetTxPayload(tx, vtx);
 
             Vote vote;
             vote.candidate = vtx.candidate;
-            vote.value = static_cast<Vote::Value>(vtx.value);
+            vote.value = static_cast<Vote::Value>(vtx.vote);
             vote.electionCode = vtx.electionCode;
             vote.voterId = vtx.voterId;
             vote.signature = vtx.signature;
@@ -67,13 +70,13 @@ bool UndoSpecialTx(const CTransaction& tx, const CBlockIndex* pindex)
     return false;
 }
 
-bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& state)
+bool ProcessSpecialTxsInBlock(bool justCheck, const CBlock& block, const CBlockIndex* pindex, CValidationState& state)
 {
     for (int i = 0; i < (int)block.vtx.size(); i++) {
         const CTransaction& tx = block.vtx[i];
         if (!CheckSpecialTx(tx, pindex, state))
             return false;
-        if (!ProcessSpecialTx(tx, pindex, state))
+        if (!ProcessSpecialTx(justCheck, tx, pindex, state))
             return false;
     }
 

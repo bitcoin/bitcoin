@@ -21,7 +21,7 @@ class CBlockIndex;
 class CValidationState;
 
 bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValidationState& state);
-bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& state);
+bool ProcessSpecialTxsInBlock(bool justCheck, const CBlock& block, const CBlockIndex* pindex, CValidationState& state);
 bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex);
 
 template <typename T>
