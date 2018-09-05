@@ -17,7 +17,7 @@ std::string COutPoint::ToString() const
 CTxIn::CTxIn(COutPoint prevoutIn, CScript scriptSigIn, uint32_t nSequenceIn)
     : prevout(prevoutIn), scriptSig(scriptSigIn), nSequence(nSequenceIn) {}
 
-CTxIn::CTxIn(uint256 hashPrevTx, uint32_t nOut, CScript scriptSigIn, uint32_t nSequenceIn)
+CTxIn::CTxIn(const uint256& hashPrevTx, uint32_t nOut, CScript scriptSigIn, uint32_t nSequenceIn)
     : prevout(COutPoint(hashPrevTx, nOut)), scriptSig(scriptSigIn), nSequence(nSequenceIn) {}
 
 std::string CTxIn::ToString() const
