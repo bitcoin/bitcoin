@@ -311,8 +311,6 @@ public:
 
     void UpdateCachesAndClean();
 
-    void CheckAndRemove() {UpdateCachesAndClean();}
-
     void ProcessModuleMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman);
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload, CConnman* connman);
