@@ -283,9 +283,8 @@ CAmount GetAssetAllocationInterest(CAssetAllocation & assetAllocation, const int
 	const int &nBlockDifference = nHeight - assetAllocation.nLastInterestClaimHeight;
 	// apply compound annual interest to get total interest since last time interest was collected
 	const CAmount& nBalanceOverTimeDifference = assetAllocation.nAccumulatedBalanceSinceLastInterestClaim / nBlockDifference;
-	const double& fInterestOverTimeDifference = assetAllocation.fAccumulatedInterestSinceLastInterestClaim / nBlockDifference;
-	// get interest only and apply externally to this function, compound to every block to allow people to claim interest at any time per block
-	return ((nBalanceOverTimeDifference*pow((1 + (fInterestOverTimeDifference / nInterestBlockTerm)), nBlockDifference))) - nBalanceOverTimeDifference;
+	const long double& fInterestOverTimeDifference = assetAllocation.fAccumulatedInterestSinceLastInterestClaim / nBlockDifference;
+	return (((long double)nBalanceOverTimeDifference*powl((1.0 + (fInterestOverTimeDifference / nInterestBlockTerm)), nBlockDifference))) - nBalanceOverTimeDifference;
 }
 bool ApplyAssetAllocationInterest(CAsset& asset, CAssetAllocation & assetAllocation, const int& nHeight, string& errorMessage) {
 	CAmount nInterest = GetAssetAllocationInterest(assetAllocation, nHeight, errorMessage);
@@ -558,7 +557,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 				}
 			}
 			const CAmount &nBalanceAfterSend = dbAssetAllocation.nBalance - nTotal;
-			if (nBalanceAfterSend < -1000) {
+			if (nBalanceAfterSend < 0) {
 				bBalanceOverrun = true;
 				if(bSanityCheck)
 					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1021 - " + _("Sender balance is insufficient");
@@ -608,8 +607,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 						receiverAllocation.vchMemo = theAssetAllocation.vchMemo;
 						receiverAllocation.nBalance += amountTuple.second;
 						theAssetAllocation.nBalance -= amountTuple.second;
-						if (theAssetAllocation.nBalance < 0)
-							theAssetAllocation.nBalance = 0;
 
 					}
 					const string& receiverAddress = stringFromVch(receiverAllocation.vchAliasOrAddress);
