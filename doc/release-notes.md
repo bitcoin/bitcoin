@@ -157,7 +157,8 @@ prefixing the option with the network, such as:
 
 The `addnode=`, `connect=`, `port=`, `bind=`, `rpcport=`, `rpcbind=`
 and `wallet=` options will only apply to mainnet when specified in the
-configuration file, unless a network is specified.
+configuration file, unless a network is specified. The options to choose a
+network (`regtest=` and `testnet=`) must be specified outside of sections.
 
 'label' and 'account' APIs for wallet
 -------------------------------------
