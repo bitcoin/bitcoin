@@ -332,6 +332,12 @@ def get_auth_cookie(datadir):
         raise ValueError("No RPC credentials")
     return user, password
 
+# If a cookie file exists in the given datadir, delete it.
+def delete_cookie_file(datadir):
+    if os.path.isfile(os.path.join(datadir, "regtest", ".cookie")):
+        logger.debug("Deleting leftover cookie file")
+        os.remove(os.path.join(datadir, "regtest", ".cookie"))
+
 def get_bip9_status(node, key):
     info = node.getblockchaininfo()
     return info['bip9_softforks'][key]
