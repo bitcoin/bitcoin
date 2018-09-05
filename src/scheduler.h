@@ -111,7 +111,7 @@ public:
     /**
      * Add a callback to be executed. Callbacks are executed serially
      * and memory is release-acquire consistent between callback executions.
-     * Practially, this means that callbacks can behave as if they are executed
+     * Practically, this means that callbacks can behave as if they are executed
      * in order by a single thread.
      */
     void AddToProcessQueue(std::function<void ()> func);

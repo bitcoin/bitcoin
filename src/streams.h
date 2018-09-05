@@ -527,7 +527,7 @@ public:
     explicit BitStreamReader(IStream& istream) : m_istream(istream) {}
 
     /** Read the specified number of bits from the stream. The data is returned
-     * in the nbits least signficant bits of a 64-bit uint.
+     * in the nbits least significant bits of a 64-bit uint.
      */
     uint64_t Read(int nbits) {
         if (nbits < 0 || nbits > 64) {

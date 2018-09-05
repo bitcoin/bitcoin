@@ -89,7 +89,7 @@ class PSBTTest(BitcoinTestFramework):
         # Unless we allow it to convert and strip signatures
         self.nodes[0].converttopsbt(signedtx['hex'], True)
 
-        # Explicilty allow converting non-empty txs
+        # Explicitly allow converting non-empty txs
         new_psbt = self.nodes[0].converttopsbt(rawtx['hex'])
         self.nodes[0].decodepsbt(new_psbt)
 
