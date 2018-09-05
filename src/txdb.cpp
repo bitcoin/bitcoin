@@ -126,7 +126,7 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
                 ssKey >> txhash;
                 ss << txhash;
                 ss << VARINT(coins.nVersion);
-                ss << (coins.fCoinBase ? 'c' : 'n');
+                ss << (coins.fBlockReward ? 'c' : 'n');
                 ss << VARINT(coins.nHeight);
                 stats.nTransactions++;
                 for (unsigned int i=0; i<coins.vout.size(); i++) {
