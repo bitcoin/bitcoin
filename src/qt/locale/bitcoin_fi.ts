@@ -500,6 +500,11 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <translation>Suojaa yksityiset avaimet, jotka kuuluvat lompakkoosi</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Decrypt wallet only for minting. Sending coins will still require the password.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+7"/>
         <source>Sign messages with your Peercoin addresses to prove you own them</source>
         <translation>Allekirjoita viestisi omalla Peercoin -osoitteellasi todistaaksesi, että omistat ne</translation>
@@ -508,6 +513,11 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <location line="+2"/>
         <source>Verify messages to ensure they were signed with specified Peercoin addresses</source>
         <translation>Varmista, että viestisi on allekirjoitettu määritetyllä Peercoin -osoitteella</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>UI to create multisig addresses</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+28"/>

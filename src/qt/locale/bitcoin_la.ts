@@ -498,6 +498,11 @@ Hoc productum continet programmata composita ab OpenSSL Project pro utendo in Op
         <translation>Cifra claves privatas quae cassidili tui sunt</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Decrypt wallet only for minting. Sending coins will still require the password.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+7"/>
         <source>Sign messages with your Peercoin addresses to prove you own them</source>
         <translation>Signa nuntios cum tuis inscriptionibus Peercoin ut demonstres te eas possidere</translation>
@@ -506,6 +511,11 @@ Hoc productum continet programmata composita ab OpenSSL Project pro utendo in Op
         <location line="+2"/>
         <source>Verify messages to ensure they were signed with specified Peercoin addresses</source>
         <translation>Verifica nuntios ut certus sis eos signatos esse cum specificatis inscriptionibus Peercoin</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>UI to create multisig addresses</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+28"/>

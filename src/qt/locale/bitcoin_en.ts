@@ -536,6 +536,11 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Verify messages to ensure they were signed with specified Peercoin addresses</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>UI to create multisig addresses</source>
+        <translation>UI to create multisig addresses</translation>
+    </message>
+    <message>
         <location line="+5"/>
         <source>&amp;Chatroom</source>
         <translation type="unfinished"></translation>

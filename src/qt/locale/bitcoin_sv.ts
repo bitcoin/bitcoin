@@ -500,6 +500,11 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
         <translation>Kryptera de privata nycklar som tillhör din plånbok</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Decrypt wallet only for minting. Sending coins will still require the password.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+7"/>
         <source>Sign messages with your Peercoin addresses to prove you own them</source>
         <translation>Signera meddelanden med din Peercoinadress för att bevisa att du äger dem</translation>
@@ -508,6 +513,11 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
         <location line="+2"/>
         <source>Verify messages to ensure they were signed with specified Peercoin addresses</source>
         <translation>Verifiera meddelanden för att vara säker på att de var signerade med den specificerade Peercoin-adressen</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>UI to create multisig addresses</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+28"/>
