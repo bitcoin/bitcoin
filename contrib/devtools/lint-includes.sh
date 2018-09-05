@@ -19,17 +19,6 @@ for HEADER_FILE in $(filter_suffix h); do
         echo
         EXIT_CODE=1
     fi
-    CPP_FILE=${HEADER_FILE/%\.h/.cpp}
-    if [[ ! -e $CPP_FILE ]]; then
-        continue
-    fi
-    DUPLICATE_INCLUDES_IN_HEADER_AND_CPP_FILES=$(grep -hE "^#include " <(sort -u < "${HEADER_FILE}") <(sort -u < "${CPP_FILE}") | grep -E "^#include " | sort | uniq -d)
-    if [[ ${DUPLICATE_INCLUDES_IN_HEADER_AND_CPP_FILES} != "" ]]; then
-        echo "Include(s) from ${HEADER_FILE} duplicated in ${CPP_FILE}:"
-        echo "${DUPLICATE_INCLUDES_IN_HEADER_AND_CPP_FILES}"
-        echo
-        EXIT_CODE=1
-    fi
 done
 for CPP_FILE in $(filter_suffix cpp); do
     DUPLICATE_INCLUDES_IN_CPP_FILE=$(grep -E "^#include " < "${CPP_FILE}" | sort | uniq -d)
