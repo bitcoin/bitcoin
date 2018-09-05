@@ -931,7 +931,8 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     // check version 3 transaction types
     if (tx.nVersion >= 2) {
         if (tx.nType != TRANSACTION_NORMAL &&
-            tx.nType != TRANSACTION_GOVERNANCE_VOTE) {
+            tx.nType != TRANSACTION_GOVERNANCE_VOTE &&
+            tx.nType != TRANSACTION_TOKEN_REGISTER) {
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-type");
         }
         if (tx.IsCoinBase() && tx.nType != TRANSACTION_NORMAL)

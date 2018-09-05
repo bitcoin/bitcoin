@@ -10,6 +10,7 @@
 
 #include "specialtx.h"
 #include "governance-vote.h"
+#include "token/token-registration-tx.h" // TODO: refactoring - handlers registration in the tx impl. Special tx itself shouldn't know about handlers
 
 #include "governance.h"
 
@@ -21,6 +22,9 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValidati
     switch (tx.nType) {
         case TRANSACTION_GOVERNANCE_VOTE:
             return CheckVoteTx(tx, pindex, state);
+
+        case TRANSACTION_TOKEN_REGISTER:
+            return Platform::CheckNfTokenRegistrationTx(tx, pindex, state);
     }
 
     return state.DoS(100, false, REJECT_INVALID, "bad-tx-type");
@@ -52,6 +56,9 @@ bool ProcessSpecialTx(bool justCheck, const CTransaction& tx, const CBlockIndex*
 
             return true;
         }
+
+        case TRANSACTION_TOKEN_REGISTER:
+            return true; // handled in batches per block
     }
 
     return state.DoS(100, false, REJECT_INVALID, "bad-tx-type");
@@ -64,6 +71,9 @@ bool UndoSpecialTx(const CTransaction& tx, const CBlockIndex* pindex)
 
     switch (tx.nType) {
         case TRANSACTION_GOVERNANCE_VOTE:
+            return true; // handled in batches per block
+
+        case TRANSACTION_TOKEN_REGISTER:
             return true; // handled in batches per block
     }
 

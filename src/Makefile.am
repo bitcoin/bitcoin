@@ -231,6 +231,8 @@ libbitcoin_server_a_SOURCES = \
   platform/specialtx.cpp \
   platform/rpc/rpcagents.cpp \
   platform/rpc/rpcagents.h \
+  platform/token/token-registraton-tx.cpp \
+  platform/token/token-registraton-tx.h \
   $(JSON_H) \
   $(BITCOIN_CORE_H)
 
