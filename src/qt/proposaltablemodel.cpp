@@ -2,23 +2,23 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "proposaltablemodel.h"
+#include <qt/proposaltablemodel.h>
 
-#include "guiconstants.h"
-#include "guiutil.h"
-#include "optionsmodel.h"
-#include "platformstyle.h"
-#include "proposalrecord.h"
-#include "masternodeman.h"
+#include <qt/guiconstants.h>
+#include <qt/guiutil.h>
+#include <qt/optionsmodel.h>
+#include <qt/platformstyle.h>
+#include <qt/proposalrecord.h>
 #include <governance.h>
-#include "governance-vote.h"
-#include "governance-object.h"
+#include <governance-vote.h>
+#include <governance-object.h>
+#include <interfaces/node.h>
 
-#include "core_io.h"
-#include "validation.h"
-#include "sync.h"
-#include "uint256.h"
-#include "util.h"
+#include <core_io.h>
+#include <validation.h>
+#include <sync.h>
+#include <uint256.h>
+#include <util.h>
  
 #include <QColor>
 #include <QDateTime>
@@ -38,8 +38,9 @@ static int column_alignments[] = {
         Qt::AlignRight|Qt::AlignVCenter
     };
 
-ProposalTableModel::ProposalTableModel(const PlatformStyle *platformStyle, QObject *parent):
+ProposalTableModel::ProposalTableModel(interfaces::Node& node, const PlatformStyle *platformStyle, QObject *parent):
         QAbstractTableModel(parent),
+        m_node(node),
         platformStyle(platformStyle)
 {
     columns << tr("Proposal") << tr("Amount") << tr("Start Date") << tr("End Date") << tr("Yes") << tr("No") << tr("Abs. Yes") << tr("Percentage");
@@ -59,7 +60,7 @@ void ProposalTableModel::refreshProposals() {
     beginResetModel();
     proposalRecords.clear();
 
-    int mnCount = mnodeman.CountEnabled();
+    int mnCount = m_node.getMNcount().enabled;
 
     std::vector<const CGovernanceObject*> objs = governance.GetAllNewerThan(0);
 

@@ -252,7 +252,8 @@ class NodeImpl : public Node
     {
         MasterNodeCount result;
         result.size = mnodeman.size();
-        result.compatible = mnodeman.CountEnabled(MIN_PRIVATESEND_PEER_PROTO_VERSION);
+        result.compatible = mnodeman.CountMasternodes(MIN_PRIVATESEND_PEER_PROTO_VERSION);
+        result.enabled = mnodeman.CountEnabled(MIN_PRIVATESEND_PEER_PROTO_VERSION);
         result.countIPv4 = mnodeman.CountByIP(NET_IPV4);
         result.countIPv6 = mnodeman.CountByIP(NET_IPV6);
         result.countTOR = mnodeman.CountByIP(NET_TOR);
