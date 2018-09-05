@@ -3389,6 +3389,7 @@ bool CWallet::GetMasternodeOutpointAndKeys(COutPoint& outpointRet, CTxDestinatio
     // wait for reindex and/or import to finish
     if (fImporting || fReindex) return false;
 
+    LOCK2(cs_main, cs_wallet);
     // Find possible candidates
     std::vector<COutput> vPossibleCoins;
     AvailableCoins(vPossibleCoins, true, nullptr, ONLY_1000);
