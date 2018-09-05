@@ -2,11 +2,11 @@ To be able to use nested vms, install docker-machine-kvm plugin from https://git
 
 Create new docker-machine with kvm plugin, make sure that network is started (virsh net-start default)
 
-	docker-machine create -d kvm kvmmachine --kvm-cpu-count	2 --kvm-memory 4096
+	docker-machine create -d kvm --kvm-cpu-count	2 --kvm-memory 4096 --kvm-disk-size 40000 default
 
 Start and login into docker-machine host to activate kvm module, ie
 
-	docker-machine ssh kvmmachine sudo modprobe kvm_intel
+	docker-machine ssh default sudo modprobe kvm_intel
 
 From Peercoin repository root build the peergitian/base image:
 
