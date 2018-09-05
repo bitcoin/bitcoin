@@ -174,7 +174,7 @@ In general, all pull requests must:
     the project (for example refactoring for modularisation);
   - be well peer reviewed;
   - have unit tests and functional tests where appropriate;
-  - follow code style guidelines;
+  - follow [code style guidelines](/doc/developer-notes.md);
   - not break the existing test suite;
   - where bugs are fixed, where possible, there should be unit tests
     demonstrating the bug and also proving the fix. This helps prevent regression.
