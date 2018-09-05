@@ -471,7 +471,7 @@ class SegWitTest(BitcoinTestFramework):
         blocks are permitted to contain witnesses)."""
 
         # node2 doesn't need to be connected for this test.
-        # (If it's connected, node0 may propogate an invalid block to it over
+        # (If it's connected, node0 may propagate an invalid block to it over
         # compact blocks and the nodes would have inconsistent tips.)
         disconnect_nodes(self.nodes[0], 2)
 

@@ -1740,7 +1740,7 @@ UniValue converttopsbt(const JSONRPCRequest& request)
                             "                              will continue. If false, RPC will fail if any signatures are present.\n"
                             "3. iswitness               (boolean, optional) Whether the transaction hex is a serialized witness transaction.\n"
                             "                              If iswitness is not present, heuristic tests will be used in decoding. If true, only witness deserializaion\n"
-                            "                              will be tried. If false, only non-witness deserialization wil be tried. Only has an effect if\n"
+                            "                              will be tried. If false, only non-witness deserialization will be tried. Only has an effect if\n"
                             "                              permitsigdata is true.\n"
                             "\nResult:\n"
                             "  \"psbt\"        (string)  The resulting raw transaction (base64-encoded string)\n"

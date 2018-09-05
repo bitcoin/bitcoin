@@ -89,7 +89,7 @@ class NodeNetworkLimitedTest(BitcoinTestFramework):
             sync_blocks([self.nodes[0], self.nodes[2]], timeout=5)
         except:
             pass
-        # node2 must remain at heigh 0
+        # node2 must remain at height 0
         assert_equal(self.nodes[2].getblockheader(self.nodes[2].getbestblockhash())['height'], 0)
 
         # now connect also to node 1 (non pruned)
