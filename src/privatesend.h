@@ -51,7 +51,6 @@ enum PoolMessage {
     MSG_NOERR,
     MSG_SUCCESS,
     MSG_ENTRIES_ADDED,
-    ERR_INVALID_INPUT_COUNT,
     MSG_POOL_MIN = ERR_ALREADY_HAVE,
     MSG_POOL_MAX = MSG_ENTRIES_ADDED
 };
@@ -100,18 +99,15 @@ class CDarksendAccept
 {
 public:
     int nDenom;
-    int nInputCount;
     CMutableTransaction txCollateral;
 
     CDarksendAccept() :
         nDenom(0),
-        nInputCount(0),
         txCollateral(CMutableTransaction())
         {};
 
-    CDarksendAccept(int nDenom, int nInputCount, const CMutableTransaction& txCollateral) :
+    CDarksendAccept(int nDenom, const CMutableTransaction& txCollateral) :
         nDenom(nDenom),
-        nInputCount(nInputCount),
         txCollateral(txCollateral)
         {};
 
@@ -121,10 +117,9 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(nDenom);
         int nVersion = s.GetVersion();
-        if (nVersion > 70208) {
+        if (nVersion > 70208 && nVersion <= 70210) {
+            int nInputCount = 0;
             READWRITE(nInputCount);
-        } else if (ser_action.ForRead()) {
-            nInputCount = 0;
         }
         READWRITE(txCollateral);
     }
@@ -179,7 +174,6 @@ class CDarksendQueue
 {
 public:
     int nDenom;
-    int nInputCount;
     COutPoint masternodeOutpoint;
     int64_t nTime;
     bool fReady; //ready for submit
@@ -189,7 +183,6 @@ public:
 
     CDarksendQueue() :
         nDenom(0),
-        nInputCount(0),
         masternodeOutpoint(COutPoint()),
         nTime(0),
         fReady(false),
@@ -197,9 +190,8 @@ public:
         fTried(false)
         {}
 
-    CDarksendQueue(int nDenom, int nInputCount, COutPoint outpoint, int64_t nTime, bool fReady) :
+    CDarksendQueue(int nDenom, COutPoint outpoint, int64_t nTime, bool fReady) :
         nDenom(nDenom),
-        nInputCount(nInputCount),
         masternodeOutpoint(outpoint),
         nTime(nTime),
         fReady(fReady),
@@ -213,10 +205,9 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(nDenom);
         int nVersion = s.GetVersion();
-        if (nVersion > 70208) {
+        if (nVersion > 70208 && nVersion <= 70210) {
+            int nInputCount = 0;
             READWRITE(nInputCount);
-        } else if (ser_action.ForRead()) {
-            nInputCount = 0;
         }
         if (nVersion == 70208 && (s.GetType() & SER_NETWORK)) {
             // converting from/to old format
@@ -258,13 +249,13 @@ public:
 
     std::string ToString() const
     {
-        return strprintf("nDenom=%d, nInputCount=%d, nTime=%lld, fReady=%s, fTried=%s, masternode=%s",
-                        nDenom, nInputCount, nTime, fReady ? "true" : "false", fTried ? "true" : "false", masternodeOutpoint.ToStringShort());
+        return strprintf("nDenom=%d, nTime=%lld, fReady=%s, fTried=%s, masternode=%s",
+                        nDenom, nTime, fReady ? "true" : "false", fTried ? "true" : "false", masternodeOutpoint.ToStringShort());
     }
 
     friend bool operator==(const CDarksendQueue& a, const CDarksendQueue& b)
     {
-        return a.nDenom == b.nDenom && a.nInputCount == b.nInputCount && a.masternodeOutpoint == b.masternodeOutpoint && a.nTime == b.nTime && a.fReady == b.fReady;
+        return a.nDenom == b.nDenom && a.masternodeOutpoint == b.masternodeOutpoint && a.nTime == b.nTime && a.fReady == b.fReady;
     }
 };
 
@@ -366,7 +357,6 @@ protected:
 
 public:
     int nSessionDenom; //Users must submit a denom matching this
-    int nSessionInputCount; //Users must submit a count matching this
 
     CPrivateSendBaseSession() :
         vecEntries(),
@@ -374,8 +364,7 @@ public:
         nTimeLastSuccessfulStep(0),
         nSessionID(0),
         finalMutableTransaction(),
-        nSessionDenom(0),
-        nSessionInputCount(0)
+        nSessionDenom(0)
         {}
     CPrivateSendBaseSession(const CPrivateSendBaseSession& other) { /* dummy copy constructor*/ SetNull(); }
 
