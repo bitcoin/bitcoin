@@ -5184,7 +5184,7 @@ bool AutoBackupWallet (CWallet* wallet, std::string walletFile, std::string& str
         }
 
         // Create backup of the ...
-        std::string dateTimeStr = DateTimeStrFormat(".%Y-%m-%d-%H-%M", GetTime());
+        std::string dateTimeStr = FormatISO8601DateTime(GetTime());
         if (wallet)
         {
             // ... opened wallet
