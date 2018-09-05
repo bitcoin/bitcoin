@@ -79,7 +79,7 @@ protected:
     vector_uchar vchData;
     bool m_isOld;
 
-    CBase58Data();
+    CBase58Data(bool isOld = false);
     void SetData(const std::vector<unsigned char> &vchVersionIn, const void* pdata, size_t nSize);
     void SetData(const std::vector<unsigned char> &vchVersionIn, const unsigned char *pbegin, const unsigned char *pend);
 
@@ -111,27 +111,22 @@ public:
     bool IsValid(const CChainParams &params) const;
 
     CBitcoinAddress() { }
-    CBitcoinAddress(const CTxDestination &dest) { Set(dest); }
-    CBitcoinAddress(const std::string& strAddress, bool isOld = false)
+    CBitcoinAddress(const CTxDestination &dest, bool isOld = false)
+        : CBase58Data(isOld)
     {
-        this->m_isOld = isOld;
+        Set(dest);
+    }
+    CBitcoinAddress(const std::string& strAddress, bool isOld = false)
+        : CBase58Data(isOld)
+    {
         SetString(strAddress);
     }
     CBitcoinAddress(const char* pszAddress) { SetString(pszAddress); }
 
     CTxDestination Get() const;
+    bool IsDeprecated() const;
     bool GetKeyID(CKeyID &keyID) const;
     bool IsScript() const;
-};
-
-// The same as CBitcoinAddress but isOld is set true by default
-class CBitcoinAddressOld : public CBitcoinAddress
-{
-public:
-    CBitcoinAddressOld(const std::string& strAddress)
-        : CBitcoinAddress(strAddress, true)
-    {
-    }
 };
 
 /**

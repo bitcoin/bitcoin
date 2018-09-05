@@ -145,8 +145,8 @@ bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRe
     return DecodeBase58Check(str.c_str(), vchRet);
 }
 
-CBase58Data::CBase58Data()
-    : m_isOld(false)
+CBase58Data::CBase58Data(bool isOld)
+    : m_isOld(isOld)
 {
     vchVersion.clear();
     vchData.clear();
@@ -276,6 +276,15 @@ CTxDestination CBitcoinAddress::Get() const
         return CScriptID(id);
     else
         return CNoDestination();
+}
+
+bool CBitcoinAddress::IsDeprecated() const
+{
+    // If the old constructed address is valid then it's deprecated
+    if (CBitcoinAddress(this->ToString(), true).IsValid())
+        return true;
+
+    return false;
 }
 
 bool CBitcoinAddress::GetKeyID(CKeyID& keyID) const
