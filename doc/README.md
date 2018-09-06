@@ -22,7 +22,9 @@ Unpack the files into a directory and run:
 
 ### Windows
 
-Unpack the files into a directory, and then run bitcoin-qt.exe.
+Unpack the files into a directory, and then run 
+
+- `bitcoin-qt.exe`
 
 ### macOS
 
