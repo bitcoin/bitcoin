@@ -230,7 +230,7 @@ bool CPrivateSend::IsCollateralValid(const CTransaction& txCollateral)
         return false;
     }
 
-    LogPrint(BCLog::PRIVSEND, "CPrivateSend::IsCollateralValid -- %s", txCollateral.ToString());
+    LogPrint(BCLog::PRIVSEND, "CPrivateSend::IsCollateralValid -- %s\n", txCollateral.ToString());
 
     {
         LOCK(cs_main);

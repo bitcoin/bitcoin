@@ -3350,7 +3350,7 @@ bool CWallet::SelectCoinsGrouppedByAddresses(std::vector<CompactTallyItem>& vecT
         std::string strMessage = "SelectCoinsGrouppedByAddresses - vecTallyRet:\n";
         for (const auto& item : vecTallyRet)
             strMessage += strprintf("  %s %f\n", EncodeDestination(item.txdest).c_str(), float(item.nAmount)/COIN);
-        LogPrint(BCLog::SELECTCOINS, "%s", strMessage);
+        LogPrint(BCLog::SELECTCOINS, "%s\n", strMessage);
     }
 
     return vecTallyRet.size() > 0;

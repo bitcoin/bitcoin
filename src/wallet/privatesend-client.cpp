@@ -181,7 +181,7 @@ void CPrivateSendClient::ProcessMessage(CNode* pfrom, const std::string& strComm
             return;
         }
 
-        LogPrint(BCLog::PRIVSEND, "DSFINALTX -- txNew %s", txNew.ToString());
+        LogPrint(BCLog::PRIVSEND, "DSFINALTX -- txNew %s\n", txNew.ToString());
 
         //check to see if input is spent already? (and probably not confirmed)
         SignFinalTransaction(txNew, pfrom, connman);

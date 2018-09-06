@@ -80,7 +80,7 @@ bool IsBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockRewar
     if(nBlockHeight >= consensusParams.nSuperblockStartBlock) {
         if(CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
             if(CSuperblockManager::IsValid(MakeTransactionRef(std::move(*block.vtx[0])), nBlockHeight, blockReward)) {
-                LogPrint(BCLog::GOV, "IsBlockValueValid -- Valid superblock at height %d: %s", nBlockHeight, block.vtx[0]->ToString());
+                LogPrint(BCLog::GOV, "IsBlockValueValid -- Valid superblock at height %d: %s\n", nBlockHeight, block.vtx[0]->ToString());
                 // all checks are done in CSuperblock::IsValid, nothing to do here
                 return true;
             }
@@ -125,7 +125,7 @@ bool IsBlockPayeeValid(const CTransactionRef& txNew, int nBlockHeight, CAmount b
     if(nBlockHeight >= consensusParams.nSuperblockStartBlock) {
         if(CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
             if(CSuperblockManager::IsValid(txNew, nBlockHeight, blockReward)) {
-                LogPrint(BCLog::GOV, "IsBlockPayeeValid -- Valid superblock at height %d: %s", nBlockHeight, txNew->ToString());
+                LogPrint(BCLog::GOV, "IsBlockPayeeValid -- Valid superblock at height %d: %s\n", nBlockHeight, txNew->ToString());
                 return true;
             }
 
@@ -142,7 +142,7 @@ bool IsBlockPayeeValid(const CTransactionRef& txNew, int nBlockHeight, CAmount b
 
     // IF THIS ISN'T A SUPERBLOCK OR SUPERBLOCK IS INVALID, IT SHOULD PAY A MASTERNODE DIRECTLY
     if(mnpayments.IsTransactionValid(txNew, nBlockHeight)) {
-        LogPrint(BCLog::MNODEPAY, "IsBlockPayeeValid -- Valid masternode payment at height %d: %s", nBlockHeight, txNew->ToString());
+        LogPrint(BCLog::MNODEPAY, "IsBlockPayeeValid -- Valid masternode payment at height %d: %s\n", nBlockHeight, txNew->ToString());
         return true;
     }
 
@@ -169,7 +169,7 @@ void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount blo
 
     // FILL BLOCK PAYEE WITH MASTERNODE PAYMENT OTHERWISE
     mnpayments.FillBlockPayee(txNew, nBlockHeight, blockReward, txoutMasternodeRet);
-    LogPrint(BCLog::MNODEPAY, "FillBlockPayments -- nBlockHeight %d blockReward %lld txoutMasternodeRet %s txNew %s",
+    LogPrint(BCLog::MNODEPAY, "FillBlockPayments -- nBlockHeight %d blockReward %lld txoutMasternodeRet %s txNew %s\n",
                             nBlockHeight, blockReward, txoutMasternodeRet.ToString(), txNew.GetHash().ToString());
 }
 
@@ -784,7 +784,7 @@ void CMasternodePayments::CheckBlockVotes(int nBlockHeight)
     }
 
     if (mapMasternodesDidNotVote.empty()) {
-        LogPrint(BCLog::MNODEPAY, "%s", debugStr);
+        LogPrint(BCLog::MNODEPAY, "%s\n", debugStr);
         return;
     }
 
@@ -793,7 +793,7 @@ void CMasternodePayments::CheckBlockVotes(int nBlockHeight)
         debugStr += strprintf("    - %s: %d\n", item.first.ToStringShort(), item.second);
     }
 
-    LogPrint(BCLog::MNODEPAY, "%s", debugStr);
+    LogPrint(BCLog::MNODEPAY, "%s\n", debugStr);
 }
 
 void CMasternodePaymentVote::Relay(CConnman* connman) const
