@@ -8,11 +8,13 @@ cache:
   - depends/built
   - depends/sdk-sources
   - $HOME/.ccache
+stages:
+  - check_doc
+  - test
 env:
   global:
     - MAKEJOBS=-j3
     - RUN_TESTS=false
-    - CHECK_DOC=0
     - BOOST_TEST_RANDOM=1$TRAVIS_BUILD_ID
     - CCACHE_SIZE=100M
     - CCACHE_TEMPDIR=/tmp/.ccache-temp
@@ -22,7 +24,7 @@ env:
     - WINEDEBUG=fixme-all
   matrix:
 # ARM
-    - HOST=arm-linux-gnueabihf PACKAGES="g++-arm-linux-gnueabihf python3-pip shellcheck" DEP_OPTS="NO_QT=1" CHECK_DOC=1 GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
+    - HOST=arm-linux-gnueabihf PACKAGES="g++-arm-linux-gnueabihf" DEP_OPTS="NO_QT=1" GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
 # Win32
     - HOST=i686-w64-mingw32 DPKG_ADD_ARCH="i386" DEP_OPTS="NO_QT=1" PACKAGES="python3 nsis g++-mingw-w64-i686 wine1.6" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-reduce-exports"
 # Win64
@@ -44,17 +46,7 @@ install:
     - if [ -n "$DPKG_ADD_ARCH" ]; then sudo dpkg --add-architecture "$DPKG_ADD_ARCH" ; fi
     - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get update; fi
     - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get install --no-install-recommends --no-upgrade -qq $PACKAGES; fi
-    - if [ "$CHECK_DOC" = 1 -a "$TRAVIS_EVENT_TYPE" = "pull_request" ]; then travis_retry pip3 install flake8 --user; fi
 before_script:
-    - if [ "$CHECK_DOC" = 1 ]; then git fetch --unshallow; fi
-    - if [ "$CHECK_DOC" = 1 -a "$TRAVIS_EVENT_TYPE" = "pull_request" ]; then contrib/devtools/commit-script-check.sh $TRAVIS_COMMIT_RANGE; fi
-    - if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/git-subtree-check.sh src/crypto/ctaes; fi
-    - if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/git-subtree-check.sh src/secp256k1; fi
-    - if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/git-subtree-check.sh src/univalue; fi
-    - if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/git-subtree-check.sh src/leveldb; fi
-    - if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/check-doc.py; fi
-    - if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/check-rpc-mappings.py .; fi
-    - if [ "$CHECK_DOC" = 1 -a "$TRAVIS_EVENT_TYPE" = "pull_request" ]; then contrib/devtools/lint-all.sh; fi
     - unset CC; unset CXX
     - mkdir -p depends/SDKs depends/sdk-sources
     - if [ -n "$OSX_SDK" -a ! -f depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz ]; then curl --location --fail $SDK_URL/MacOSX${OSX_SDK}.sdk.tar.gz -o depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz; fi
@@ -63,8 +55,6 @@ before_script:
     # Start xvfb if needed, as documented at https://docs.travis-ci.com/user/gui-and-headless-browsers/#Using-xvfb-to-Run-Tests-That-Require-a-GUI
     - if [ "$NEED_XVFB" = 1 ]; then export DISPLAY=:99.0; /sbin/start-stop-daemon --start --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -ac; fi
 script:
-    - if [ "$CHECK_DOC" = 1 -a "$TRAVIS_REPO_SLUG" = "chaincoin/chaincoin" -a "$TRAVIS_PULL_REQUEST" = "false" ]; then while read LINE; do travis_retry gpg --keyserver hkp://subset.pool.sks-keyservers.net --recv-keys $LINE; done < contrib/verify-commits/trusted-keys; fi
-    - if [ "$CHECK_DOC" = 1 -a "$TRAVIS_REPO_SLUG" = "chaincoin/chaincoin" -a "$TRAVIS_EVENT_TYPE" = "cron" ]; then travis_wait 30 contrib/verify-commits/verify-commits.sh; fi
     - export TRAVIS_COMMIT_LOG=`git log --format=fuller -1`
     - if [ -n "$USE_SHELL" ]; then export CONFIG_SHELL="$USE_SHELL"; fi
     - OUTDIR=$BASE_OUTDIR/$TRAVIS_PULL_REQUEST/$TRAVIS_JOB_NUMBER-$HOST
@@ -84,3 +74,28 @@ script:
 after_script:
     - echo $TRAVIS_COMMIT_RANGE
     - echo $TRAVIS_COMMIT_LOG
+
+jobs:
+  include:
+    - stage: check_doc
+      sudo: false
+      addons:
+        apt:
+          packages:
+            - python3-pip
+            - shellcheck
+      install:
+        - if [ "$TRAVIS_EVENT_TYPE" = "pull_request" ]; then travis_retry pip3 install flake8 --user; fi
+      before_script:
+        - git fetch --unshallow
+        - if [ "$TRAVIS_EVENT_TYPE" = "pull_request" ]; then contrib/devtools/commit-script-check.sh $TRAVIS_COMMIT_RANGE; fi
+        - contrib/devtools/git-subtree-check.sh src/crypto/ctaes
+        - contrib/devtools/git-subtree-check.sh src/secp256k1
+        - contrib/devtools/git-subtree-check.sh src/univalue
+        - contrib/devtools/git-subtree-check.sh src/leveldb
+        - contrib/devtools/check-doc.py
+        - contrib/devtools/check-rpc-mappings.py .
+        - if [ "$TRAVIS_EVENT_TYPE" = "pull_request" ]; then contrib/devtools/lint-all.sh; fi
+      script:
+        - if [ "$TRAVIS_REPO_SLUG" = "chaincoin/chaincoin" -a "$TRAVIS_PULL_REQUEST" = "false" ]; then while read LINE; do travis_retry gpg --keyserver hkp://subset.pool.sks-keyservers.net --recv-keys $LINE; done < contrib/verify-commits/trusted-keys; fi
+        - if [ "$TRAVIS_REPO_SLUG" = "chaincoin/chaincoin" -a "$TRAVIS_EVENT_TYPE" = "cron" ]; then travis_wait 30 contrib/verify-commits/verify-commits.sh; fi
