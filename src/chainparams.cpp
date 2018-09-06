@@ -114,7 +114,8 @@ public:
         consensus.mbcTimestamp = 1527625482; // Tuesday, 29 May 2018 р., 20:24:42
         consensus.premineValue = 1050000 * COIN * COIN_RATIO; // 5%
         consensus.premineAddress = "BfrckfYi7xaSGmMec4T2keu6xczQSx7rxo";
-        consensus.replyFixHeight = 999999999;
+        consensus.replyFixHeight = 999999999; // Not activated yet
+        signSwithchTime = 2000000000; // Not activated yet
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.

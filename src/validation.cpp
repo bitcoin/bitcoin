@@ -1821,14 +1821,18 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
     }
 
     // After hardfork we start accepting replay protected txns 
-    if (pindex->nHeight >= consensusparams.mbcHeight) {
+    if (pindex->nHeight >= consensusparams.mbcHeight && pindex->nHeight < consensusparams.replyFixHeight) {
         flags |= SCRIPT_VERIFY_STRICTENC;
         flags |= SCRIPT_ENABLE_SIGHASH_FORKID_OLD;
     }
 
+    if (pindex->nHeight >= consensusparams.replyFixHeight) {
+        flags |= SCRIPT_VERIFY_STRICTENC;
+        flags |= SCRIPT_ENABLE_SIGHASH_FORKID;
+    }
+
     return flags;
 }
-
 
 
 static int64_t nTimeCheck = 0;

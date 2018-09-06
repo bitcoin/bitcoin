@@ -781,8 +781,14 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
             "       \"NONE\"\n"
             "       \"SINGLE\"\n"
             "       \"ALL|ANYONECANPAY\"\n"
+            "       \"ALL|FORKID\"\n"
+            "       \"ALL|FORKID|ANYONECANPAY\"\n"
             "       \"NONE|ANYONECANPAY\"\n"
+            "       \"NONE|FORKID\"\n"
+            "       \"NONE|FORKID|ANYONECANPAY\"\n"
             "       \"SINGLE|ANYONECANPAY\"\n"
+            "       \"SINGLE|FORKID\"\n"
+            "       \"SINGLE|FORKID|ANYONECANPAY\"\n"
 
             "\nResult:\n"
             "{\n"
@@ -925,8 +931,10 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
 #else
     const CKeyStore& keystore = tempKeystore;
 #endif
-
-    int nHashType = SIGHASH_ALL | SIGHASH_FORKID_OLD;
+    int nHashType = SIGHASH_ALL | SIGHASH_FORKID;
+    if (chainActive.Height() < Params().GetConsensus().replyFixHeight) {
+        nHashType = SIGHASH_ALL | SIGHASH_FORKID_OLD;
+    }
     if (request.params.size() > 3 && !request.params[3].isNull()) {
         static std::map<std::string, int> mapSigHashValues = {
             {std::string("ALL"), int(SIGHASH_ALL)},
@@ -935,12 +943,20 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
             {std::string("NONE|ANYONECANPAY"), int(SIGHASH_NONE|SIGHASH_ANYONECANPAY)},
             {std::string("SINGLE"), int(SIGHASH_SINGLE)},
             {std::string("SINGLE|ANYONECANPAY"), int(SIGHASH_SINGLE|SIGHASH_ANYONECANPAY)},
-            {std::string("ALL|FORKID"), int(SIGHASH_ALL|SIGHASH_FORKID_OLD)},
-            {std::string("NONE|FORKID"), int(SIGHASH_NONE|SIGHASH_FORKID_OLD)},
-            {std::string("SINGLE|FORKID"), int(SIGHASH_SINGLE|SIGHASH_FORKID_OLD)},
-            {std::string("ALL|FORKID|ANYONECANPAY"), int(SIGHASH_ALL|SIGHASH_FORKID_OLD|SIGHASH_ANYONECANPAY)},
-            {std::string("NONE|FORKID|ANYONECANPAY"), int(SIGHASH_NONE|SIGHASH_FORKID_OLD|SIGHASH_ANYONECANPAY)},
-            {std::string("SINGLE|FORKID|ANYONECANPAY"), int(SIGHASH_SINGLE|SIGHASH_FORKID_OLD|SIGHASH_ANYONECANPAY)},
+            // Old reply protection
+            {std::string("ALL|FORKID_OLD"), int(SIGHASH_ALL|SIGHASH_FORKID_OLD)},
+            {std::string("NONE|FORKID_OLD"), int(SIGHASH_NONE|SIGHASH_FORKID_OLD)},
+            {std::string("SINGLE|FORKID_OLD"), int(SIGHASH_SINGLE|SIGHASH_FORKID_OLD)},
+            {std::string("ALL|FORKID_OLD|ANYONECANPAY"), int(SIGHASH_ALL|SIGHASH_FORKID_OLD|SIGHASH_ANYONECANPAY)},
+            {std::string("NONE|FORKID_OLD|ANYONECANPAY"), int(SIGHASH_NONE|SIGHASH_FORKID_OLD|SIGHASH_ANYONECANPAY)},
+            {std::string("SINGLE|FORKID_OLD|ANYONECANPAY"), int(SIGHASH_SINGLE|SIGHASH_FORKID_OLD|SIGHASH_ANYONECANPAY)},
+            // Reply protection
+            {std::string("ALL|FORKID"), int(SIGHASH_ALL|SIGHASH_FORKID)},
+            {std::string("NONE|FORKID"), int(SIGHASH_NONE|SIGHASH_FORKID)},
+            {std::string("SINGLE|FORKID"), int(SIGHASH_SINGLE|SIGHASH_FORKID)},
+            {std::string("ALL|FORKID|ANYONECANPAY"), int(SIGHASH_ALL|SIGHASH_FORKID|SIGHASH_ANYONECANPAY)},
+            {std::string("NONE|FORKID|ANYONECANPAY"), int(SIGHASH_NONE|SIGHASH_FORKID|SIGHASH_ANYONECANPAY)},
+            {std::string("SINGLE|FORKID|ANYONECANPAY"), int(SIGHASH_SINGLE|SIGHASH_FORKID|SIGHASH_ANYONECANPAY)},
         };
         std::string strHashType = request.params[3].get_str();
         if (mapSigHashValues.count(strHashType))

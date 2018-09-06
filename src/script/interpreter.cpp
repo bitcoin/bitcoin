@@ -201,13 +201,16 @@ static uint32_t GetHashType(const valtype &vchSig) {
     return vchSig[vchSig.size() - 1];
 }
 
-static void CleanupScriptCode(CScript &scriptCode,
-                              const std::vector<uint8_t> &vchSig,
-                              uint32_t flags) {
-    // Drop the signature in scripts when SIGHASH_FORKID_OLD is not used.
+static void CleanupScriptCode(CScript &scriptCode, const std::vector<uint8_t> &vchSig, uint32_t flags) {
     uint32_t nHashType = GetHashType(vchSig);
+    // Drop the signature in scripts when SIGHASH_FORKID_OLD is not used.
     if (!(flags & SCRIPT_ENABLE_SIGHASH_FORKID_OLD) ||
         !(nHashType & SIGHASH_FORKID_OLD)) {
+        scriptCode.FindAndDelete(CScript(vchSig));
+    }
+    // Drop the signature in scripts when SIGHASH_FORKID is not used.
+    if (!(flags & SCRIPT_ENABLE_SIGHASH_FORKID) ||
+        !(nHashType & SIGHASH_FORKID)) {
         scriptCode.FindAndDelete(CScript(vchSig));
     }
 }
@@ -227,14 +230,27 @@ bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned i
         if (!IsDefinedHashtypeSignature(vchSig)) {
             return set_error(serror, SCRIPT_ERR_SIG_HASHTYPE);
         }
-        bool usesForkId = GetHashType(vchSig) & SIGHASH_FORKID_OLD;
-        bool forkIdEnabled = flags & SCRIPT_ENABLE_SIGHASH_FORKID_OLD;
-        if (!forkIdEnabled && usesForkId) {
+
+        // Old reply protection
+        bool usesForkIdOld = GetHashType(vchSig) & SIGHASH_FORKID_OLD;
+        bool forkIdOldEnabled = flags & SCRIPT_ENABLE_SIGHASH_FORKID_OLD;
+        if (!forkIdOldEnabled && usesForkIdOld) {
+            return set_error(serror, SCRIPT_ERR_ILLEGAL_FORKID_OLD);
+        }
+        if (forkIdOldEnabled && !usesForkIdOld) {
+            return set_error(serror, SCRIPT_ERR_MUST_USE_FORKID_OLD);
+        }
+
+        // Reply protection
+        bool usesForkId = GetHashType(vchSig) & SIGHASH_FORKID;
+        bool forkIdEnabled = flags & SCRIPT_ENABLE_SIGHASH_FORKID;
+        if (!forkIdEnabled && !forkIdOldEnabled && usesForkId) {
             return set_error(serror, SCRIPT_ERR_ILLEGAL_FORKID);
         }
-        if (forkIdEnabled && !usesForkId) {
+        if (forkIdEnabled && !forkIdOldEnabled && !usesForkId) {
             return set_error(serror, SCRIPT_ERR_MUST_USE_FORKID);
         }
+
     }
     return true;
 }

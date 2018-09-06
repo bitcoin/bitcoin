@@ -13,6 +13,8 @@
 #include "script/standard.h"
 #include "uint256.h"
 
+#include "utiltime.h"
+#include "chainparams.h"
 
 typedef std::vector<unsigned char> valtype;
 
@@ -418,6 +420,14 @@ bool DummySignatureCreator::CreateSig(std::vector<unsigned char>& vchSig, const 
     vchSig[4 + 33] = 0x02;
     vchSig[5 + 33] = 32;
     vchSig[6 + 33] = 0x01;
-    vchSig[6 + 33 + 32] = SIGHASH_ALL | SIGHASH_FORKID_OLD;
+
+    // Remove this after reply fix fork!
+    // if (GetTime() > 2527625482) {
+    if (GetTime() > Params().signSwithchTime) {
+        vchSig[6 + 33 + 32] = SIGHASH_ALL | SIGHASH_FORKID;
+    } else {
+        vchSig[6 + 33 + 32] = SIGHASH_ALL | SIGHASH_FORKID_OLD;
+    }
+
     return true;
 }
