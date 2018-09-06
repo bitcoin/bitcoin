@@ -11,6 +11,8 @@
 
 #include <atomic>
 #include <cstdint>
+#include <list>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -19,15 +21,7 @@ static const bool DEFAULT_LOGIPS        = false;
 static const bool DEFAULT_LOGTIMESTAMPS = true;
 extern const char * const DEFAULT_DEBUGLOGFILE;
 
-extern bool fPrintToConsole;
-extern bool fPrintToDebugLog;
-
-extern bool fLogTimestamps;
-extern bool fLogTimeMicros;
 extern bool fLogIPs;
-extern std::atomic<bool> fReopenDebugLog;
-
-extern std::atomic<uint32_t> logCategories;
 
 struct CLogCategoryActive
 {
@@ -67,11 +61,65 @@ namespace BCLog {
         PRIVSEND    = (1 << 26),
         ALL         = ~(uint32_t)0,
     };
-}
+
+    class Logger
+    {
+    private:
+        FILE* m_fileout = nullptr;
+        std::mutex m_file_mutex;
+        std::list<std::string> m_msgs_before_open;
+
+        /**
+         * m_started_new_line is a state variable that will suppress printing of
+         * the timestamp when multiple calls are made that don't end in a
+         * newline.
+         */
+        std::atomic_bool m_started_new_line{true};
+
+        /** Log categories bitfield. */
+        std::atomic<uint32_t> m_categories{0};
+
+        std::string LogTimestampStr(const std::string& str);
+
+    public:
+        bool m_print_to_console = false;
+        bool m_print_to_file = false;
+
+        bool m_log_timestamps = DEFAULT_LOGTIMESTAMPS;
+        bool m_log_time_micros = DEFAULT_LOGTIMEMICROS;
+
+        fs::path m_file_path;
+        std::atomic<bool> m_reopen_file{false};
+
+        /** Send a string to the log output */
+        int LogPrintStr(const std::string &str);
+
+        /** Returns whether logs will be written to any output */
+        bool Enabled() const { return m_print_to_console || m_print_to_file; }
+
+        bool OpenDebugLog();
+        void ShrinkDebugFile();
+
+        uint32_t GetCategoryMask() const { return m_categories.load(); }
+
+        void EnableCategory(LogFlags flag);
+        bool EnableCategory(const std::string& str);
+        void DisableCategory(LogFlags flag);
+        bool DisableCategory(const std::string& str);
+
+        bool WillLogCategory(LogFlags category) const;
+
+        bool DefaultShrinkDebugFile() const;
+    };
+
+} // namespace BCLog
+
+extern BCLog::Logger* const g_logger;
+
 /** Return true if log accepts specified category */
-static inline bool LogAcceptCategory(uint32_t category)
+static inline bool LogAcceptCategory(BCLog::LogFlags category)
 {
-    return (logCategories.load(std::memory_order_relaxed) & category) != 0;
+    return g_logger->WillLogCategory(category);
 }
 
 /** Returns a string with the log categories. */
@@ -80,11 +128,8 @@ std::string ListLogCategories();
 /** Returns a vector of the active log categories. */
 std::vector<CLogCategoryActive> ListActiveLogCategories();
 
-/** Return true if str parses as a log category and set the flags in f */
-bool GetLogCategory(uint32_t *f, const std::string *str);
-
-/** Send a string to the log output */
-int LogPrintStr(const std::string &str);
+/** Return true if str parses as a log category and set the flag */
+bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str);
 
 /** Get format string from VA_ARGS for error reporting */
 template<typename... Args> std::string FormatStringFromLogArgs(const char *fmt, const Args&... args) { return fmt; }
@@ -105,7 +150,7 @@ template<typename T, typename... Args> static inline void MarkUsed(const T& t, c
 #define LogPrint(category, ...) do { MarkUsed(__VA_ARGS__); } while(0)
 #else
 #define LogPrintf(...) do { \
-    if (fPrintToConsole || fPrintToDebugLog) { \
+    if (g_logger->Enabled()) { \
         std::string _log_msg_; /* Unlikely name to avoid shadowing variables */ \
         try { \
             _log_msg_ = tfm::format(__VA_ARGS__); \
@@ -113,7 +158,7 @@ template<typename T, typename... Args> static inline void MarkUsed(const T& t, c
             /* Original format string will have newline so don't add one here */ \
             _log_msg_ = "Error \"" + std::string(fmterr.what()) + "\" while formatting log message: " + FormatStringFromLogArgs(__VA_ARGS__); \
         } \
-        LogPrintStr(_log_msg_); \
+        g_logger->LogPrintStr(_log_msg_); \
     } \
 } while(0)
 
@@ -123,9 +168,5 @@ template<typename T, typename... Args> static inline void MarkUsed(const T& t, c
     } \
 } while(0)
 #endif
-
-fs::path GetDebugLogPath();
-bool OpenDebugLog();
-void ShrinkDebugFile();
 
 #endif // BITCOIN_LOGGING_H
