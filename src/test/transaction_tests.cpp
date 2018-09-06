@@ -344,7 +344,7 @@ BOOST_AUTO_TEST_CASE(test_Get)
     BOOST_CHECK_EQUAL(coins.GetValueIn(t1), (50+21+22)*CENT);
 }
 
-void CreateCreditAndSpend(const CKeyStore& keystore, const CScript& outscript, CTransactionRef& output, CMutableTransaction& input, bool success = true)
+static void CreateCreditAndSpend(const CKeyStore& keystore, const CScript& outscript, CTransactionRef& output, CMutableTransaction& input, bool success = true)
 {
     CMutableTransaction outputm;
     outputm.nVersion = 1;
@@ -382,7 +382,7 @@ void CreateCreditAndSpend(const CKeyStore& keystore, const CScript& outscript, C
     assert(input.vin[0].scriptWitness.stack == inputm.vin[0].scriptWitness.stack);
 }
 
-void CheckWithFlag(const CTransactionRef& output, const CMutableTransaction& input, int flags, bool success)
+static void CheckWithFlag(const CTransactionRef& output, const CMutableTransaction& input, int flags, bool success)
 {
     ScriptError error;
     CTransaction inputi(input);
@@ -405,7 +405,7 @@ static CScript PushAll(const std::vector<valtype>& values)
     return result;
 }
 
-void ReplaceRedeemScript(CScript& script, const CScript& redeemScript)
+static void ReplaceRedeemScript(CScript& script, const CScript& redeemScript)
 {
     std::vector<valtype> stack;
     EvalScript(stack, script, SCRIPT_VERIFY_STRICTENC, BaseSignatureChecker(), SigVersion::BASE);

@@ -88,7 +88,7 @@ CScript ParseScript(const std::string& s)
 }
 
 // Check that all of the input and output scripts of a transaction contains valid opcodes
-bool CheckTxScriptsSanity(const CMutableTransaction& tx)
+static bool CheckTxScriptsSanity(const CMutableTransaction& tx)
 {
     // Check input scripts for non-coinbase txs
     if (!CTransaction(tx).IsCoinBase()) {

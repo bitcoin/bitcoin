@@ -17,7 +17,7 @@
 BOOST_FIXTURE_TEST_SUITE(arith_uint256_tests, BasicTestingSetup)
 
 /// Convert vector to arith_uint256, via uint256 blob
-inline arith_uint256 arith_uint256V(const std::vector<unsigned char>& vch)
+static inline arith_uint256 arith_uint256V(const std::vector<unsigned char>& vch)
 {
     return UintToArith256(uint256(vch));
 }
@@ -53,7 +53,7 @@ const unsigned char MaxArray[] =
 const arith_uint256 MaxL = arith_uint256V(std::vector<unsigned char>(MaxArray,MaxArray+32));
 
 const arith_uint256 HalfL = (OneL << 255);
-std::string ArrayToString(const unsigned char A[], unsigned int width)
+static std::string ArrayToString(const unsigned char A[], unsigned int width)
 {
     std::stringstream Stream;
     Stream << std::hex;
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE( basics ) // constructors, equality, inequality
     tmpL = ~MaxL; BOOST_CHECK(tmpL == ~MaxL);
 }
 
-void shiftArrayRight(unsigned char* to, const unsigned char* from, unsigned int arrayLength, unsigned int bitsToShift)
+static void shiftArrayRight(unsigned char* to, const unsigned char* from, unsigned int arrayLength, unsigned int bitsToShift)
 {
     for (unsigned int T=0; T < arrayLength; ++T)
     {
@@ -136,7 +136,7 @@ void shiftArrayRight(unsigned char* to, const unsigned char* from, unsigned int 
     }
 }
 
-void shiftArrayLeft(unsigned char* to, const unsigned char* from, unsigned int arrayLength, unsigned int bitsToShift)
+static void shiftArrayLeft(unsigned char* to, const unsigned char* from, unsigned int arrayLength, unsigned int bitsToShift)
 {
     for (unsigned int T=0; T < arrayLength; ++T)
     {
@@ -369,7 +369,7 @@ BOOST_AUTO_TEST_CASE( divide )
 }
 
 
-bool almostEqual(double d1, double d2)
+static bool almostEqual(double d1, double d2)
 {
     return fabs(d1-d2) <= 4*fabs(d1)*std::numeric_limits<double>::epsilon();
 }

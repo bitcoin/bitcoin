@@ -58,8 +58,8 @@ BOOST_AUTO_TEST_CASE(subsidy_limit_test)
     BOOST_CHECK_EQUAL(nSum, CAmount{2241010160000000});
 }
 
-bool ReturnFalse() { return false; }
-bool ReturnTrue() { return true; }
+static bool ReturnFalse() { return false; }
+static bool ReturnTrue() { return true; }
 
 BOOST_AUTO_TEST_CASE(test_combiner_all)
 {

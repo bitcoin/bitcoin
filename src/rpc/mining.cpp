@@ -50,7 +50,7 @@ unsigned int ParseConfirmTarget(const UniValue& value)
  * or from the last difficulty change if 'lookup' is nonpositive.
  * If 'height' is nonnegative, compute the estimate at the time when a given block was found.
  */
-UniValue GetNetworkHashPS(int lookup, int height) {
+static UniValue GetNetworkHashPS(int lookup, int height) {
     CBlockIndex *pb = chainActive.Tip();
 
     if (height >= 0 && height < chainActive.Height())
@@ -87,7 +87,7 @@ UniValue GetNetworkHashPS(int lookup, int height) {
     return workDiff.getdouble() / timeDiff;
 }
 
-UniValue getnetworkhashps(const JSONRPCRequest& request)
+static UniValue getnetworkhashps(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 2)
         throw std::runtime_error(
@@ -157,7 +157,7 @@ UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGen
     return blockHashes;
 }
 
-UniValue generatetoaddress(const JSONRPCRequest& request)
+static UniValue generatetoaddress(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 3)
         throw std::runtime_error(
@@ -191,7 +191,7 @@ UniValue generatetoaddress(const JSONRPCRequest& request)
     return generateBlocks(coinbaseScript, nGenerate, nMaxTries, false);
 }
 
-UniValue getmininginfo(const JSONRPCRequest& request)
+static UniValue getmininginfo(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
@@ -230,7 +230,7 @@ UniValue getmininginfo(const JSONRPCRequest& request)
 
 
 // NOTE: Unlike wallet RPC (which use BTC values), mining RPCs follow GBT (BIP 22) in using satoshi amounts
-UniValue prioritisetransaction(const JSONRPCRequest& request)
+static UniValue prioritisetransaction(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 3)
         throw std::runtime_error(
@@ -284,7 +284,7 @@ static UniValue BIP22ValidationResult(const CValidationState& state)
     return "valid?";
 }
 
-std::string gbt_vb_name(const Consensus::DeploymentPos pos) {
+static std::string gbt_vb_name(const Consensus::DeploymentPos pos) {
     const struct VBDeploymentInfo& vbinfo = VersionBitsDeploymentInfo[pos];
     std::string s = vbinfo.name;
     if (!vbinfo.gbt_force) {
@@ -293,7 +293,7 @@ std::string gbt_vb_name(const Consensus::DeploymentPos pos) {
     return s;
 }
 
-UniValue getblocktemplate(const JSONRPCRequest& request)
+static UniValue getblocktemplate(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
@@ -757,7 +757,7 @@ protected:
     }
 };
 
-UniValue submitblock(const JSONRPCRequest& request)
+static UniValue submitblock(const JSONRPCRequest& request)
 {
     // We allow 2 arguments for compliance with BIP22. Argument 2 is ignored.
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2) {
@@ -827,13 +827,13 @@ UniValue submitblock(const JSONRPCRequest& request)
     return BIP22ValidationResult(sc.state);
 }
 
-UniValue estimatefee(const JSONRPCRequest& request)
+static UniValue estimatefee(const JSONRPCRequest& request)
 {
     throw JSONRPCError(RPC_METHOD_DEPRECATED, "estimatefee was removed in v0.17.\n"
         "Clients should use estimatesmartfee.");
 }
 
-UniValue estimatesmartfee(const JSONRPCRequest& request)
+static UniValue estimatesmartfee(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
@@ -894,7 +894,7 @@ UniValue estimatesmartfee(const JSONRPCRequest& request)
     return result;
 }
 
-UniValue estimaterawfee(const JSONRPCRequest& request)
+static UniValue estimaterawfee(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(

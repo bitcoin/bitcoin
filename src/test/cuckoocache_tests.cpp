@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_SUITE(cuckoocache_tests);
 
 /** insecure_GetRandHash fills in a uint256 from local_rand_ctx
  */
-void insecure_GetRandHash(uint256& t)
+static void insecure_GetRandHash(uint256& t)
 {
     uint32_t* ptr = (uint32_t*)t.begin();
     for (uint8_t j = 0; j < 8; ++j)
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(test_cuckoocache_no_fakes)
  * inserted into a megabytes sized cache
  */
 template <typename Cache>
-double test_cache(size_t megabytes, double load)
+static double test_cache(size_t megabytes, double load)
 {
     local_rand_ctx = FastRandomContext(true);
     std::vector<uint256> hashes;
@@ -109,7 +109,7 @@ double test_cache(size_t megabytes, double load)
  * how you measure around load 1.0 as after load 1.0 your normalized hit rate
  * becomes effectively perfect, ignoring freshness.
  */
-double normalize_hit_rate(double hits, double load)
+static double normalize_hit_rate(double hits, double load)
 {
     return hits * std::max(load, 1.0);
 }
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(cuckoocache_hit_rate_ok)
 /** This helper checks that erased elements are preferentially inserted onto and
  * that the hit rate of "fresher" keys is reasonable*/
 template <typename Cache>
-void test_cache_erase(size_t megabytes)
+static void test_cache_erase(size_t megabytes)
 {
     double load = 1;
     local_rand_ctx = FastRandomContext(true);
@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(cuckoocache_erase_ok)
 }
 
 template <typename Cache>
-void test_cache_erase_parallel(size_t megabytes)
+static void test_cache_erase_parallel(size_t megabytes)
 {
     double load = 1;
     local_rand_ctx = FastRandomContext(true);
@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(cuckoocache_erase_parallel_ok)
 
 
 template <typename Cache>
-void test_cache_generations()
+static void test_cache_generations()
 {
     // This test checks that for a simulation of network activity, the fresh hit
     // rate is never below 99%, and the number of times that it is worse than

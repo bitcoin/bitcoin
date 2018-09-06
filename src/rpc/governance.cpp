@@ -916,7 +916,7 @@ UniValue voteraw(const JSONRPCRequest& request)
     }
 }
 
-UniValue getgovernanceinfo(const JSONRPCRequest& request)
+static UniValue getgovernanceinfo(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0) {
         throw std::runtime_error(
@@ -959,7 +959,7 @@ UniValue getgovernanceinfo(const JSONRPCRequest& request)
     return obj;
 }
 
-UniValue getsuperblockbudget(const JSONRPCRequest& request)
+static UniValue getsuperblockbudget(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1) {
         throw std::runtime_error(
