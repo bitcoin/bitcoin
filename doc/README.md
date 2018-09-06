@@ -38,9 +38,9 @@ Drag Bitcoin Core to your applications folder, and then run Bitcoin Core.
 * `./include/bitcoinconsensus.h` (lib header)
 * `./lib/libbitcoinconsensus.so.0.0.0` (shared lib)
 * `./share/man/man1/bitcoin-cli.1` (man pages)
-* ./share/man/man1/bitcoind.1`
-* ./share/man/man1/bitcoin-qt.1`
-* ./share/man/man1/bitcoin-tx.1`
+* `./share/man/man1/bitcoind.1`
+* `./share/man/man1/bitcoin-qt.1`
+* `./share/man/man1/bitcoin-tx.1`
 
 ### Need Help?
 
