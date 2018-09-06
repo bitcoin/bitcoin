@@ -386,9 +386,50 @@ class CScriptWitness():
             return False
         return True
 
+class CScriptOwner():
+    def __init__(self):
+        self.name = b""
+
+    def deserialize(self, f):
+        self.name = deser_string(f)
+
+    def serialize(self):
+        r = b""
+        r += ser_string(self.name)
+        return r
+
+
+class CScriptIssue():
+    def __init__(self):
+        self.name = b""
+        self.amount = 0
+        self.units = 0
+        self.reissuable = 1
+        self.has_ipfs = 0
+        self.ipfs_hash = b""
+
+    def deserialize(self, f):
+        self.name = deser_string(f)
+        self.amount = struct.unpack("<q", f.read(8))[0]
+        self.units = struct.unpack("B", f.read(1))[0]
+        self.reissuable = struct.unpack("B", f.read(1))[0]
+        self.has_ipfs = struct.unpack("B", f.read(1))[0]
+        self.ipfs_hash = deser_string(f)
+
+    def serialize(self):
+        r = b""
+        r += ser_string(self.name)
+        r += struct.pack("<q", self.amount)
+        r += struct.pack("B", self.units)
+        r += struct.pack("B", self.reissuable)
+        r += struct.pack("B", self.has_ipfs)
+        r += ser_string(self.ipfs_hash)
+        return r
+
+
 class CScriptTransfer():
     def __init__(self):
-        self.name = None
+        self.name = b""
         self.amount = 0
 
     def deserialize(self, f):

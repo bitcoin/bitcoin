@@ -340,6 +340,16 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, CAssetsCa
 
                 if (!foundOwnerAsset)
                     return state.DoS(100, false, REJECT_INVALID, "bad-txns-issue-unique-asset-bad-owner-asset");
+            } else {
+                // Fail if transaction contains any new or reissue asset scripts and hasn't conformed to one of the
+                // above transaction types.
+                for (auto out : tx.vout) {
+                    int nType;
+                    bool _isOwner;
+                    if (out.scriptPubKey.IsAssetScript(nType, _isOwner))
+                        if (nType == TX_NEW_ASSET || nType == TX_REISSUE_ASSET)
+                            return state.DoS(100, false, REJECT_INVALID, "bad-txns-bad-new-asset-transaction");
+                }
             }
         }
     }

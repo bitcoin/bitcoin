@@ -564,7 +564,7 @@ bool CTransaction::IsNewAsset() const
 //! To be called on CTransactions where IsNewAsset returns true
 bool CTransaction::VerifyNewAsset() const
 {
-    // Issuing an Asset must contain at least 3 CTxOut( Raven Burn Tx, Any Number of other Outputs ..., Owner Asset Change Tx, Reissue Tx)
+    // Issuing an Asset must contain at least 3 CTxOut( Raven Burn Tx, Any Number of other Outputs ..., Owner Asset Tx, New Asset Tx)
     if (vout.size() < 3)
         return false;
 
