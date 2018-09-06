@@ -615,6 +615,38 @@ UniValue decodescript(const JSONRPCRequest& request)
         // P2SH cannot be wrapped in a P2SH. If this script is already a P2SH,
         // don't return the address for a P2SH of the P2SH.
         r.pushKV("p2sh", EncodeDestination(CScriptID(script)));
+        // P2SH and witness programs cannot be wrapped in P2WSH, if this script
+        // is a witness program, don't return addresses for a segwit programs.
+        if (type.get_str() == "pubkey" || type.get_str() == "pubkeyhash" || type.get_str() == "multisig" || type.get_str() == "nonstandard") {
+            txnouttype which_type;
+            std::vector<std::vector<unsigned char>> solutions_data;
+            Solver(script, which_type, solutions_data);
+            // Uncompressed pubkeys cannot be used with segwit checksigs.
+            // If the script contains an uncompressed pubkey, skip encoding of a segwit program.
+            if ((which_type == TX_PUBKEY) || (which_type == TX_MULTISIG)) {
+                for (const auto& solution : solutions_data) {
+                    if ((solution.size() != 1) && !CPubKey(solution).IsCompressed()) {
+                        return r;
+                    }
+                }
+            }
+            UniValue sr(UniValue::VOBJ);
+            CScript segwitScr;
+            if (which_type == TX_PUBKEY) {
+                segwitScr = GetScriptForDestination(WitnessV0KeyHash(Hash160(solutions_data[0].begin(), solutions_data[0].end())));
+            } else if (which_type == TX_PUBKEYHASH) {
+                segwitScr = GetScriptForDestination(WitnessV0KeyHash(solutions_data[0]));
+            } else {
+                // Scripts that are not fit for P2WPKH are encoded as P2WSH.
+                // Newer segwit program versions should be considered when then become available.
+                uint256 scriptHash;
+                CSHA256().Write(script.data(), script.size()).Finalize(scriptHash.begin());
+                segwitScr = GetScriptForDestination(WitnessV0ScriptHash(scriptHash));
+            }
+            ScriptPubKeyToUniv(segwitScr, sr, true);
+            sr.pushKV("p2sh-segwit", EncodeDestination(CScriptID(segwitScr)));
+            r.pushKV("segwit", sr);
+        }
     }
 
     return r;
