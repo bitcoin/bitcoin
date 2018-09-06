@@ -1698,6 +1698,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 LogPrint(BCLog::NET, "Unparseable reject message received\n");
             }
         }
+        return true;
     }
 
     else if (strCommand == NetMsgType::VERSION)
