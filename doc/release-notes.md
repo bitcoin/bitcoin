@@ -224,6 +224,14 @@ Low-level RPC changes
 - The `getwalletinfo` RPC method now returns an `hdseedid` value, which is always the same as the incorrectly-named `hdmasterkeyid` value. `hdmasterkeyid` will be removed in V0.18.
 - The `getaddressinfo` RPC method now returns an `hdseedid` value, which is always the same as the incorrectly-named `hdmasterkeyid` value. `hdmasterkeyid` will be removed in V0.18.
 
+- Parts of the `validateaddress` RPC method have been deprecated and moved to
+  `getaddressinfo`. Clients must transition to using `getaddressinfo` to access
+  this information before upgrading to v0.18. The following deprecated fields
+  have moved to `getaddressinfo` and will only be shown with
+  `-deprecatedrpc=validateaddress`: `ismine`, `iswatchonly`, `script`, `hex`,
+  `pubkeys`, `sigsrequired`, `pubkey`, `addresses`, `embedded`, `iscompressed`,
+  `account`, `timestamp`, `hdkeypath`, `hdmasterkeyid`.
+
 Other API changes
 -----------------
 
