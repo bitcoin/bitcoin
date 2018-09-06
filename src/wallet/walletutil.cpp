@@ -27,16 +27,6 @@ fs::path GetWalletDir()
     return path;
 }
 
-CWallet *GetWalletForPSRequest(std::string requestedWallet)
-{
-    for (CWalletRef pwallet : ::vpwallets) {
-        if (pwallet->GetName() == requestedWallet) {
-            return pwallet;
-        }
-    }
-    return ::vpwallets.size() == 1 ? ::vpwallets[0] : nullptr;
-}
-
 CKeyHolder::CKeyHolder(CWallet* pwallet) :
     reserveKey(pwallet)
 {

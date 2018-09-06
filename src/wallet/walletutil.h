@@ -18,7 +18,6 @@ fs::path GetWalletDir();
  * @param[in]
  * @return nullptr if no wallet should be used, or a pointer to the CWallet
  */
-CWallet *GetWalletForPSRequest(std::string requestedWallet);
 
 class CKeyHolder
 {

@@ -231,8 +231,14 @@ public:
     //! Get default change type.
     virtual OutputType getDefaultChangeType() = 0;
 
+    //! Get keys left since last backup.
+    virtual int64_t GetKeysLeftSinceBackup() = 0;
+
     //! Return PrivateSend Rounds.
     virtual int GetPSRounds() = 0;
+
+    //! Return result of automatic wallet backup.
+    virtual bool DoAutoBackup(std::string walletIn, std::string& strBackupWarning, std::string& strBackupError) = 0;
 
     //! Register handler for show progress messages.
     using ShowProgressFn = std::function<void(const std::string& title, int progress)>;

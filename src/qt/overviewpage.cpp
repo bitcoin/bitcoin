@@ -407,7 +407,6 @@ void OverviewPage::updateAdvancedPSUI(bool _fShowAdvancedPSUI) {
 void OverviewPage::privateSendStatus()
 {
     if(!m_node.MNIsBlockchainsynced() || m_node.shutdownRequested()) return;
-    CWalletRef pwallet = vpwallets.empty() ? nullptr : vpwallets[0];
     static int64_t nLastDSProgressBlockTime = 0;
 
     int nBestHeight = m_node.getNumBlocks();
@@ -416,8 +415,8 @@ void OverviewPage::privateSendStatus()
     if(((nBestHeight - privateSendClient.nCachedNumBlocks) / (GetTimeMillis() - nLastDSProgressBlockTime + 1) > 1)) return;
     nLastDSProgressBlockTime = GetTimeMillis();
 
-    QString strKeysLeftText(tr("keys left: %1").arg(pwallet->nKeysLeftSinceAutoBackup));
-    if(pwallet->nKeysLeftSinceAutoBackup < PRIVATESEND_KEYS_THRESHOLD_WARNING) {
+    QString strKeysLeftText(tr("keys left: %1").arg(walletModel->wallet().GetKeysLeftSinceBackup()));
+    if(walletModel->wallet().GetKeysLeftSinceBackup() < PRIVATESEND_KEYS_THRESHOLD_WARNING) {
         strKeysLeftText = "<span style='color:red;'>" + strKeysLeftText + "</span>";
     }
     ui->labelPrivateSendEnabled->setToolTip(strKeysLeftText);
@@ -441,7 +440,7 @@ void OverviewPage::privateSendStatus()
 
     // Warn user that wallet is running out of keys
     // NOTE: we do NOT warn user and do NOT create autobackups if mixing is not running
-    if (nWalletBackups > 0 && pwallet->nKeysLeftSinceAutoBackup < PRIVATESEND_KEYS_THRESHOLD_WARNING) {
+    if (nWalletBackups > 0 && walletModel->wallet().GetKeysLeftSinceBackup() < PRIVATESEND_KEYS_THRESHOLD_WARNING) {
         QSettings settings;
         if(settings.value("fLowKeysWarning").toBool()) {
             QString strWarn =   tr("Very low number of keys left since last automatic backup!") + "<br><br>" +
@@ -458,7 +457,8 @@ void OverviewPage::privateSendStatus()
 
         std::string strBackupWarning;
         std::string strBackupError;
-        if(!AutoBackupWallet(pwallet, nullptr, strBackupWarning, strBackupError)) {
+        const std::string name = walletModel->getWalletName().toStdString();
+        if(!walletModel->wallet().DoAutoBackup(name, strBackupWarning, strBackupError)) {
             if (!strBackupWarning.empty()) {
                 // It's still more or less safe to continue but warn user anyway
                 LogPrintf("OverviewPage::privateSendStatus -- WARNING! Something went wrong on automatic backup: %s\n", strBackupWarning);
