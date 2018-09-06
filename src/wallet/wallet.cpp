@@ -41,10 +41,12 @@
 
 #include <boost/algorithm/string/replace.hpp>
 
-static std::vector<CWallet*> vpwallets;
+static CCriticalSection cs_wallets;
+static std::vector<CWallet*> vpwallets GUARDED_BY(cs_wallets);
 
 bool AddWallet(CWallet* wallet)
 {
+    LOCK(cs_wallets);
     assert(wallet);
     std::vector<CWallet*>::const_iterator i = std::find(vpwallets.begin(), vpwallets.end(), wallet);
     if (i != vpwallets.end()) return false;
@@ -54,6 +56,7 @@ bool AddWallet(CWallet* wallet)
 
 bool RemoveWallet(CWallet* wallet)
 {
+    LOCK(cs_wallets);
     assert(wallet);
     std::vector<CWallet*>::iterator i = std::find(vpwallets.begin(), vpwallets.end(), wallet);
     if (i == vpwallets.end()) return false;
@@ -63,16 +66,19 @@ bool RemoveWallet(CWallet* wallet)
 
 bool HasWallets()
 {
+    LOCK(cs_wallets);
     return !vpwallets.empty();
 }
 
 std::vector<CWallet*> GetWallets()
 {
+    LOCK(cs_wallets);
     return vpwallets;
 }
 
 CWallet* GetWallet(const std::string& name)
 {
+    LOCK(cs_wallets);
     for (CWallet* wallet : vpwallets) {
         if (wallet->GetName() == name) return wallet;
     }
