@@ -47,8 +47,6 @@ static std::mutex cs_blockchange;
 static std::condition_variable cond_blockchange;
 static CUpdatedBlock latestblock;
 
-extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry);
-
 /* Calculate the difficulty for a given block index,
  * or the block index of the given chain.
  */
