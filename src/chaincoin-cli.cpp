@@ -30,30 +30,26 @@ static const int DEFAULT_HTTP_CLIENT_TIMEOUT=900;
 static const bool DEFAULT_NAMED=false;
 static const int CONTINUE_EXECUTION=-1;
 
-static std::string HelpMessageCli()
+static void SetupCliArgs()
 {
     const auto defaultBaseParams = CreateBaseChainParams(CBaseChainParams::MAIN);
     const auto testnetBaseParams = CreateBaseChainParams(CBaseChainParams::TESTNET);
-    std::string strUsage;
-    strUsage += HelpMessageGroup(_("Options:"));
-    strUsage += HelpMessageOpt("-?", _("This help message"));
-    strUsage += HelpMessageOpt("-conf=<file>", strprintf(_("Specify configuration file. Relative paths will be prefixed by datadir location. (default: %s)"), CHAINCOIN_CONF_FILENAME));
-    strUsage += HelpMessageOpt("-datadir=<dir>", _("Specify data directory"));
-    strUsage += HelpMessageOpt("-getinfo", _("Get general information from the remote server. Note that unlike server-side RPC calls, the results of -getinfo is the result of multiple non-atomic requests. Some entries in the result may represent results from different states (e.g. wallet balance may be as of a different block from the chain state reported)"));
-    AppendParamsHelpMessages(strUsage);
-    strUsage += HelpMessageOpt("-named", strprintf(_("Pass named instead of positional arguments (default: %s)"), DEFAULT_NAMED));
-    strUsage += HelpMessageOpt("-rpcclienttimeout=<n>", strprintf(_("Timeout in seconds during HTTP requests, or 0 for no timeout. (default: %d)"), DEFAULT_HTTP_CLIENT_TIMEOUT));
-    strUsage += HelpMessageOpt("-rpcconnect=<ip>", strprintf(_("Send commands to node running on <ip> (default: %s)"), DEFAULT_RPCCONNECT));
-    strUsage += HelpMessageOpt("-rpcpassword=<pw>", _("Password for JSON-RPC connections"));
-    strUsage += HelpMessageOpt("-rpcport=<port>", strprintf(_("Connect to JSON-RPC on <port> (default: %u or testnet: %u)"), defaultBaseParams->RPCPort(), testnetBaseParams->RPCPort()));
-    strUsage += HelpMessageOpt("-rpcuser=<user>", _("Username for JSON-RPC connections"));
-    strUsage += HelpMessageOpt("-rpcwait", _("Wait for RPC server to start"));
-    strUsage += HelpMessageOpt("-rpcwallet=<walletname>", _("Send RPC for non-default wallet on RPC server (needs to exactly match corresponding -wallet option passed to chaincoind)"));
-    strUsage += HelpMessageOpt("-stdin", _("Read extra arguments from standard input, one per line until EOF/Ctrl-D (recommended for sensitive information such as passphrases).  When combined with -stdinrpcpass, the first line from standard input is used for the RPC password."));
-    strUsage += HelpMessageOpt("-stdinrpcpass", strprintf(_("Read RPC password from standard input as a single line.  When combined with -stdin, the first line from standard input is used for the RPC password.")));
-    strUsage += HelpMessageOpt("-usewallet=<walletname>", _("Send RPC for non-default wallet on RPC server (argument is wallet filename in chaincoind directory, required if chaincoind/-Qt runs with multiple wallets)"));
 
-    return strUsage;
+    gArgs.AddArg("-?", _("This help message"), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-conf=<file>", strprintf(_("Specify configuration file. Relative paths will be prefixed by datadir location. (default: %s)"), CHAINCOIN_CONF_FILENAME), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-datadir=<dir>", _("Specify data directory"), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-getinfo", _("Get general information from the remote server. Note that unlike server-side RPC calls, the results of -getinfo is the result of multiple non-atomic requests. Some entries in the result may represent results from different states (e.g. wallet balance may be as of a different block from the chain state reported)"), false, OptionsCategory::OPTIONS);
+    SetupChainParamsBaseOptions();
+    gArgs.AddArg("-named", strprintf(_("Pass named instead of positional arguments (default: %s)"), DEFAULT_NAMED), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-rpcclienttimeout=<n>", strprintf(_("Timeout in seconds during HTTP requests, or 0 for no timeout. (default: %d)"), DEFAULT_HTTP_CLIENT_TIMEOUT), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-rpcconnect=<ip>", strprintf(_("Send commands to node running on <ip> (default: %s)"), DEFAULT_RPCCONNECT), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-rpcpassword=<pw>", _("Password for JSON-RPC connections"), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-rpcport=<port>", strprintf(_("Connect to JSON-RPC on <port> (default: %u or testnet: %u)"), defaultBaseParams->RPCPort(), testnetBaseParams->RPCPort()), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-rpcuser=<user>", _("Username for JSON-RPC connections"), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-rpcwait", _("Wait for RPC server to start"), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-rpcwallet=<walletname>", _("Send RPC for non-default wallet on RPC server (needs to exactly match corresponding -wallet option passed to bitcoind)"), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-stdin", _("Read extra arguments from standard input, one per line until EOF/Ctrl-D (recommended for sensitive information such as passphrases).  When combined with -stdinrpcpass, the first line from standard input is used for the RPC password."), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-stdinrpcpass", strprintf(_("Read RPC password from standard input as a single line.  When combined with -stdin, the first line from standard input is used for the RPC password.")), false, OptionsCategory::OPTIONS);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -84,6 +80,7 @@ static int AppInitRPC(int argc, char* argv[])
     //
     // Parameters
     //
+    SetupCliArgs();
     gArgs.ParseParameters(argc, argv);
     if (argc < 2 || HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {
         std::string strUsage = strprintf(_("%s RPC client version"), _(PACKAGE_NAME)) + " " + FormatFullVersion() + "\n";
@@ -94,7 +91,7 @@ static int AppInitRPC(int argc, char* argv[])
                   "  chaincoin-cli [options] help                " + _("List commands") + "\n" +
                   "  chaincoin-cli [options] help <command>      " + _("Get help for a command") + "\n";
 
-            strUsage += "\n" + HelpMessageCli();
+            strUsage += "\n" + gArgs.GetHelpMessage();
         }
 
         fprintf(stdout, "%s", strUsage.c_str());
