@@ -374,7 +374,7 @@ void WalletInit::Start(CScheduler& scheduler, CConnman* connman) const
     for (CWallet* pwallet : GetWallets()) {
         pwallet->postInitProcess(scheduler, gArgs.GetBoolArg("-mnconflock", true) ? true : false);
     }
-    if(!GetWallets().empty()) privateSendClient.Controller(scheduler, connman);
+    if(HasWallets()) privateSendClient.Controller(scheduler, connman);
 }
 
 void WalletInit::Flush() const
