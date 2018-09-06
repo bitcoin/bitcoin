@@ -9,7 +9,7 @@ cache:
   - depends/sdk-sources
   - $HOME/.ccache
 stages:
-  - check_doc
+  - lint
   - test
 env:
   global:
@@ -77,7 +77,7 @@ after_script:
 
 jobs:
   include:
-    - stage: check_doc
+    - stage: lint
       sudo: false
       addons:
         apt:
