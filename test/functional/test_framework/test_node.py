@@ -10,6 +10,7 @@ from enum import Enum
 import http.client
 import json
 import logging
+import os
 import re
 import subprocess
 import tempfile
@@ -55,9 +56,11 @@ class TestNode():
     To make things easier for the test writer, any unrecognised messages will
     be dispatched to the RPC connection."""
 
-    def __init__(self, i, datadir, rpchost, timewait, bitcoind, bitcoin_cli, stderr, mocktime, coverage_dir, extra_conf=None, extra_args=None, use_cli=False):
+    def __init__(self, i, datadir, rpchost, timewait, bitcoind, bitcoin_cli, mocktime, coverage_dir, extra_conf=None, extra_args=None, use_cli=False):
         self.index = i
         self.datadir = datadir
+        self.stdout_dir = os.path.join(self.datadir, "stdout")
+        self.stderr_dir = os.path.join(self.datadir, "stderr")
         self.rpchost = rpchost
         if timewait:
             self.rpc_timeout = timewait
@@ -65,7 +68,6 @@ class TestNode():
             # Wait for up to 60 seconds for the RPC server to respond
             self.rpc_timeout = 60
         self.binary = bitcoind
-        self.stderr = stderr
         self.coverage_dir = coverage_dir
         if extra_conf != None:
             append_config(datadir, extra_conf)
@@ -124,17 +126,29 @@ class TestNode():
             assert self.rpc_connected and self.rpc is not None, self._node_msg("Error: no RPC connection")
             return getattr(self.rpc, name)
 
-    def start(self, extra_args=None, stderr=None, *args, **kwargs):
+    def start(self, extra_args=None, stdout=None, stderr=None, *args, **kwargs):
         """Start the node."""
         if extra_args is None:
             extra_args = self.extra_args
+
+        # Add a new stdout and stderr file each time bitcoind is started
         if stderr is None:
-            stderr = self.stderr
+            stderr = tempfile.NamedTemporaryFile(dir=self.stderr_dir, delete=False)
+        if stdout is None:
+            stdout = tempfile.NamedTemporaryFile(dir=self.stdout_dir, delete=False)
+        self.stderr = stderr
+        self.stdout = stdout
+
         # Delete any existing cookie file -- if such a file exists (eg due to
         # unclean shutdown), it will get overwritten anyway by bitcoind, and
         # potentially interfere with our attempt to authenticate
         delete_cookie_file(self.datadir)
-        self.process = subprocess.Popen(self.args + extra_args, stderr=stderr, *args, **kwargs)
+
+        # add environment variable LIBC_FATAL_STDERR_=1 so that libc errors are written to stderr and not the terminal
+        subp_env = dict(os.environ, LIBC_FATAL_STDERR_="1")
+
+        self.process = subprocess.Popen(self.args + extra_args, env=subp_env, stdout=stdout, stderr=stderr, *args, **kwargs)
+
         self.running = True
         self.log.debug("bitcoind started, waiting for RPC to come up")
 
@@ -174,7 +188,7 @@ class TestNode():
             wallet_path = "wallet/%s" % wallet_name
             return self.rpc / wallet_path
 
-    def stop_node(self):
+    def stop_node(self, expected_stderr=''):
         """Stop the node."""
         if not self.running:
             return
@@ -183,6 +197,13 @@ class TestNode():
             self.stop()
         except http.client.CannotSendRequest:
             self.log.exception("Unable to stop node.")
+
+        # Check that stderr is as expected
+        self.stderr.seek(0)
+        stderr = self.stderr.read().decode('utf-8').strip()
+        if stderr != expected_stderr:
+            raise AssertionError("Unexpected stderr {} != {}".format(stderr, expected_stderr))
+
         del self.p2ps[:]
 
     def is_node_stopped(self):
@@ -217,9 +238,10 @@ class TestNode():
 
         Will throw if bitcoind starts without an error.
         Will throw if an expected_msg is provided and it does not match bitcoind's stdout."""
-        with tempfile.SpooledTemporaryFile(max_size=2**16) as log_stderr:
+        with tempfile.NamedTemporaryFile(dir=self.stderr_dir, delete=False) as log_stderr, \
+             tempfile.NamedTemporaryFile(dir=self.stdout_dir, delete=False) as log_stdout:
             try:
-                self.start(extra_args, stderr=log_stderr, *args, **kwargs)
+                self.start(extra_args, stdout=log_stdout, stderr=log_stderr, *args, **kwargs)
                 self.wait_for_rpc_connection()
                 self.stop_node()
                 self.wait_until_stopped()
