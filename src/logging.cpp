@@ -204,15 +204,13 @@ std::string BCLog::Logger::LogTimestampStr(const std::string &str)
     return strStamped;
 }
 
-int BCLog::Logger::LogPrintStr(const std::string &str)
+void BCLog::Logger::LogPrintStr(const std::string &str)
 {
-    int ret = 0; // Returns total number of characters written
-
     std::string strTimestamped = LogTimestampStr(str);
 
     if (m_print_to_console) {
         // print to console
-        ret = fwrite(strTimestamped.data(), 1, strTimestamped.size(), stdout);
+        fwrite(strTimestamped.data(), 1, strTimestamped.size(), stdout);
         fflush(stdout);
     }
     if (m_print_to_file) {
@@ -220,7 +218,6 @@ int BCLog::Logger::LogPrintStr(const std::string &str)
 
         // buffer if we haven't opened the log yet
         if (m_fileout == nullptr) {
-            ret = strTimestamped.length();
             m_msgs_before_open.push_back(strTimestamped);
         }
         else
@@ -228,14 +225,16 @@ int BCLog::Logger::LogPrintStr(const std::string &str)
             // reopen the log file, if requested
             if (m_reopen_file) {
                 m_reopen_file = false;
-                if (fsbridge::freopen(m_file_path,"a",m_fileout) != nullptr)
-                    setbuf(m_fileout, nullptr); // unbuffered
+                m_fileout = fsbridge::freopen(m_file_path, "a", m_fileout);
+                if (!m_fileout) {
+                    return;
+                }
+                setbuf(m_fileout, nullptr); // unbuffered
             }
 
-            ret = FileWriteStr(strTimestamped, m_fileout);
+            FileWriteStr(strTimestamped, m_fileout);
         }
     }
-    return ret;
 }
 
 void BCLog::Logger::ShrinkDebugFile()
