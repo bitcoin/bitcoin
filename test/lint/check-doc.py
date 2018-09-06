@@ -34,15 +34,19 @@ def main():
     args_need_doc = args_used.difference(args_docd)
     args_unknown = args_docd.difference(args_used)
 
-    print("Args used        : {}".format(len(args_used)))
-    print("Args documented  : {}".format(len(args_docd)))
-    print("Args undocumented: {}".format(len(args_need_doc)))
-    print(args_need_doc)
-    print("Args unknown     : {}".format(len(args_unknown)))
-    print(args_unknown)
+    if args_need_doc:
+        print("The following args are undocumented:")
+        for undocumented_arg in sorted(args_need_doc):
+            print("* {}".format(undocumented_arg))
+        print("")
+
+    if args_unknown:
+        print("The following args are unknown:")
+        for unknown_arg in sorted(args_unknown):
+            print("* {}".format(unknown_arg))
+        print("")
 
     sys.exit(len(args_need_doc))
-
 
 if __name__ == "__main__":
     main()
