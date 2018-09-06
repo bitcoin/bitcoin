@@ -215,10 +215,10 @@ public:
 
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x00");
+        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000005634d096686def750e9842"); // 176000
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x00");
+        consensus.defaultAssumeValid = uint256S("0x92025d074fdd503b0f0f4d4a11dcfbc8a57509d0a196bb400ebdb19556d61b0d"); // 176000
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -283,13 +283,20 @@ public:
 		checkpointData = {
 			{
 				{ 0, uint256S("0x000006e5c08d6d2414435b294210266753b05a75f90e926dd5e6082306812622") },
+				{ 100000, uint256S("28b16c3500a8ede47d2a2373f9a5f9a25f38273daf3b4da2ba0001ca80fe6c4b") },
+				{ 150000, uint256S("8e1a7181aaa84885d741b803d18d283663d0b25f8763224281dcc09c4fa874c9") },
+				{ 170000, uint256S("98f57b8ca0834c19edad1dd01ebe13809956ec35b57b5d0b237eb7fee0a59965") },
+				{ 170001, uint256S("796579749c97a1bb0414457a7833ac9968b93987292ccda9481172ae548b1588") },
+				{ 171000, uint256S("4f2a4785a18e693c3283cc2c66c9f2b93f3fd20b8ee958f23b7a9f30800d13d2") },
+				{ 176000, uint256S("92025d074fdd503b0f0f4d4a11dcfbc8a57509d0a196bb400ebdb19556d61b0d") },
 			}
 		};
 
 		chainTxData = ChainTxData{
-			0,
-			0,
-			0
+			// Data from rpc: getchaintxstats 4096 92025d074fdd503b0f0f4d4a11dcfbc8a57509d0a196bb400ebdb19556d61b0d
+			/* nTime    */ 1536219041,
+			/* nTxCount */ 307792,
+			/* dTxRate  */ 0.019
 		};
     }
 };
