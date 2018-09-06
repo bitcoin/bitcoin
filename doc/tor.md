@@ -1,5 +1,4 @@
-TOR SUPPORT IN CHAINCOIN
-======================
+# TOR SUPPORT IN CHAINCOIN
 
 It is possible to run Chaincoin as a Tor hidden service, and connect to such services.
 
@@ -7,8 +6,7 @@ The following directions assume you have a Tor proxy running on port 9050. Many 
 configure Tor.
 
 
-1. Run chaincoin behind a Tor proxy
----------------------------------
+## 1. Run chaincoin behind a Tor proxy
 
 The first step is running Chaincoin behind a Tor proxy. This will already make all
 outgoing connections be anonymized, but more is possible.
@@ -34,12 +32,12 @@ In a typical situation, this suffices to run behind a Tor proxy:
 	./chaincoind -proxy=127.0.0.1:9050
 
 
-2. Run a chaincoin hidden server
-------------------------------
+## 2. Run a chaincoin hidden server
 
 If you configure your Tor system accordingly, it is possible to make your node also
 reachable from the Tor network. Add these lines to your /etc/tor/torrc (or equivalent
-config file):
+config file): *Needed for Tor version 0.2.7.0 and older versions of Tor only. For newer
+versions of Tor see [Section 3](#3-automatically-listen-on-tor).*
 
 	HiddenServiceDir /var/lib/tor/chaincoin-service/
 	HiddenServicePort 11994 127.0.0.1:11994
@@ -88,8 +86,7 @@ for normal IPv4/IPv6 communication, use:
 
 	./chaincoind -onion=127.0.0.1:9050 -externalip=57qr3yd1nyntf5k.onion -discover
 
-3. Automatically listen on Tor
---------------------------------
+## 3. Automatically listen on Tor
 
 Starting with Tor version 0.2.7.1 it is possible, through Tor's control socket
 API, to create and destroy 'ephemeral' hidden services programmatically.
@@ -115,8 +112,7 @@ which has the appropriate permissions. An alternative authentication method is t
 of the `-torpassword` flag and a `hash-password` which can be enabled and specified in 
 Tor configuration.
 
-4. Privacy recommendations
----------------------------
+## 4. Privacy recommendations
 
 - Do not add anything but chaincoin ports to the hidden service created in section 2.
   If you run a web service too, create a new hidden service for that.
