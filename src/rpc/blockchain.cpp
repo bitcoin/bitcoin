@@ -1619,11 +1619,86 @@ UniValue reconsiderblock(const JSONRPCRequest& request)
 
     return NullUniValue;
 }
+UniValue getchaintxstats(const JSONRPCRequest& request)
+{
+	if (request.fHelp || request.params.size() > 2)
+		throw std::runtime_error(
+			"getchaintxstats ( nblocks blockhash )\n"
+			"\nCompute statistics about the total number and rate of transactions in the chain.\n"
+			"\nArguments:\n"
+			"1. nblocks      (numeric, optional) Size of the window in number of blocks (default: one month).\n"
+			"2. \"blockhash\"  (string, optional) The hash of the block that ends the window.\n"
+			"\nResult:\n"
+			"{\n"
+			"  \"time\": xxxxx,                         (numeric) The timestamp for the final block in the window in UNIX format.\n"
+			"  \"txcount\": xxxxx,                      (numeric) The total number of transactions in the chain up to that point.\n"
+			"  \"window_final_block_hash\": \"...\",      (string) The hash of the final block in the window.\n"
+			"  \"window_block_count\": xxxxx,           (numeric) Size of the window in number of blocks.\n"
+			"  \"window_tx_count\": xxxxx,              (numeric) The number of transactions in the window. Only returned if \"window_block_count\" is > 0.\n"
+			"  \"window_interval\": xxxxx,              (numeric) The elapsed time in the window in seconds. Only returned if \"window_block_count\" is > 0.\n"
+			"  \"txrate\": x.xx,                        (numeric) The average rate of transactions per second in the window. Only returned if \"window_interval\" is > 0.\n"
+			"}\n"
+			"\nExamples:\n"
+			+ HelpExampleCli("getchaintxstats", "")
+			+ HelpExampleRpc("getchaintxstats", "2016")
+		);
 
+	const CBlockIndex* pindex;
+	int blockcount = 30 * 24 * 60 * 60 / Params().GetConsensus().nPowTargetSpacing; // By default: 1 month
+
+	if (request.params[1].isNull()) {
+		LOCK(cs_main);
+		pindex = chainActive.Tip();
+	}
+	else {
+		uint256 hash = uint256S(request.params[1].get_str());
+		LOCK(cs_main);
+		pindex = mapBlockIndex[hash];
+		if (!pindex) {
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+		}
+		if (!chainActive.Contains(pindex)) {
+			throw JSONRPCError(RPC_INVALID_PARAMETER, "Block is not in main chain");
+		}
+	}
+
+	assert(pindex != nullptr);
+
+	if (request.params[0].isNull()) {
+		blockcount = std::max(0, std::min(blockcount, pindex->nHeight - 1));
+	}
+	else {
+		blockcount = request.params[0].get_int();
+
+		if (blockcount < 0 || (blockcount > 0 && blockcount >= pindex->nHeight)) {
+			throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid block count: should be between 0 and the block's height - 1");
+		}
+	}
+
+	const CBlockIndex* pindexPast = pindex->GetAncestor(pindex->nHeight - blockcount);
+	int nTimeDiff = pindex->GetMedianTimePast() - pindexPast->GetMedianTimePast();
+	int nTxDiff = pindex->nChainTx - pindexPast->nChainTx;
+
+	UniValue ret(UniValue::VOBJ);
+	ret.pushKV("time", (int64_t)pindex->nTime);
+	ret.pushKV("txcount", (int64_t)pindex->nChainTx);
+	ret.pushKV("window_final_block_hash", pindex->GetBlockHash().GetHex());
+	ret.pushKV("window_block_count", blockcount);
+	if (blockcount > 0) {
+		ret.pushKV("window_tx_count", nTxDiff);
+		ret.pushKV("window_interval", nTimeDiff);
+		if (nTimeDiff > 0) {
+			ret.pushKV("txrate", ((double)nTxDiff) / nTimeDiff);
+		}
+	}
+
+	return ret;
+}
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         okSafe argNames
   //  --------------------- ------------------------  -----------------------  ------ ----------
     { "blockchain",         "getblockchaininfo",      &getblockchaininfo,      true,  {} },
+	{ "blockchain",         "getchaintxstats",        &getchaintxstats,		   true,  { "nblocks", "blockhash" } },
     { "blockchain",         "getbestblockhash",       &getbestblockhash,       true,  {} },
     { "blockchain",         "getblockcount",          &getblockcount,          true,  {} },
     { "blockchain",         "getblock",               &getblock,               true,  {"blockhash","verbose"} },
