@@ -150,7 +150,7 @@ def check_PE_DYNAMIC_BASE(executable):
 def check_PE_HIGH_ENTROPY_VA(executable):
     '''PIE: DllCharacteristics bit 0x20 signifies high-entropy ASLR'''
     (arch,bits) = get_PE_dll_characteristics(executable)
-    if arch == 'i386:x86-64': 
+    if arch == 'i386:x86-64':
         reqbits = IMAGE_DLL_CHARACTERISTICS_HIGH_ENTROPY_VA
     else: # Unnecessary on 32-bit
         assert(arch == 'i386')

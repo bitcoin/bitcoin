@@ -79,9 +79,9 @@ class ProxyTest(BitcoinTestFramework):
         # Note: proxies are not used to connect to local nodes
         # this is because the proxy to use is based on CService.GetNetwork(), which return NET_UNROUTABLE for localhost
         args = [
-            ['-listen', '-proxy=%s:%i' % (self.conf1.addr),'-proxyrandomize=1'], 
-            ['-listen', '-proxy=%s:%i' % (self.conf1.addr),'-onion=%s:%i' % (self.conf2.addr),'-proxyrandomize=0'], 
-            ['-listen', '-proxy=%s:%i' % (self.conf2.addr),'-proxyrandomize=1'], 
+            ['-listen', '-proxy=%s:%i' % (self.conf1.addr),'-proxyrandomize=1'],
+            ['-listen', '-proxy=%s:%i' % (self.conf1.addr),'-onion=%s:%i' % (self.conf2.addr),'-proxyrandomize=0'],
+            ['-listen', '-proxy=%s:%i' % (self.conf2.addr),'-proxyrandomize=1'],
             []
             ]
         if self.have_ipv6:

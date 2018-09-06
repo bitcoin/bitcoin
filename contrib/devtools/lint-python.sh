@@ -61,6 +61,8 @@
 # F823 local variable name … referenced before assignment
 # F831 duplicate argument name in function definition
 # F841 local variable 'foo' is assigned to but never used
+# W191 indentation contains tabs
+# W291 trailing whitespace
 # W292 no newline at end of file
 # W293 blank line contains whitespace
 # W504 line break after binary operator
@@ -71,4 +73,4 @@
 # W605 invalid escape sequence "x"
 # W606 'async' and 'await' are reserved keywords starting with Python 3.7
 
-flake8 --ignore=B,C,E,F,I,N,W --select=E112,E113,E115,E116,E125,E131,E133,E223,E224,E242,E266,E271,E272,E273,E274,E275,E304,E306,E401,E402,E502,E701,E702,E703,E714,E721,E741,E742,E743,F401,E901,E902,F402,F404,F406,F407,F601,F602,F621,F622,F631,F701,F702,F703,F704,F705,F706,F707,F811,F812,F821,F822,F823,F831,F841,W292,W293,W504,W601,W602,W603,W604,W605,W606 .
+flake8 --ignore=B,C,E,F,I,N,W --select=E112,E113,E115,E116,E125,E131,E133,E223,E224,E242,E266,E271,E272,E273,E274,E275,E304,E306,E401,E402,E502,E701,E702,E703,E714,E721,E741,E742,E743,F401,E901,E902,F402,F404,F406,F407,F601,F602,F621,F622,F631,F701,F702,F703,F704,F705,F706,F707,F811,F812,F821,F822,F823,F831,F841,W191,W291,W292,W293,W504,W601,W602,W603,W604,W605,W606 .
