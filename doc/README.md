@@ -5,7 +5,6 @@ Setup
 ---------------------
 Bitcoin Core is the original Bitcoin client and it builds the backbone of the network. It downloads and, by default, stores the entire history of Bitcoin transactions (which is currently more than 100 GBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
 
-
 To download Bitcoin Core, visit [bitcoincore.org](https://bitcoincore.org/en/releases/).
 
 The main source code repository is [hosted on GitHub](https://github.com/bitcoin/bitcoin/).
@@ -31,17 +30,17 @@ Drag Bitcoin Core to your applications folder, and then run Bitcoin Core.
 
 ### Files
 
-* ./bin/bitcoin-cli (Command Line Interface)
-* ./bin/bitcoind (headless daemon)
-* ./bin/bitcoin-qt (GUI)
-* ./bin/bitcoin-tx (hex-encoded transaction tool)
-* ./bin/test_bitcoin (runs the unit tests)
-* ./include/bitcoinconsensus.h (lib header)
-* ./lib/libbitcoinconsensus.so.0.0.0 (shared lib)
-* ./share/man/man1/bitcoin-cli.1 (man pages)
-* ./share/man/man1/bitcoind.1
-* ./share/man/man1/bitcoin-qt.1
-* ./share/man/man1/bitcoin-tx.1
+* `./bin/bitcoin-cli` (Command Line Interface)
+* `./bin/bitcoind` (headless daemon)
+* `./bin/bitcoin-qt` (GUI)
+* `./bin/bitcoin-tx` (hex-encoded transaction tool)
+* `./bin/test_bitcoin` (runs the unit tests)
+* `./include/bitcoinconsensus.h` (lib header)
+* `./lib/libbitcoinconsensus.so.0.0.0` (shared lib)
+* `./share/man/man1/bitcoin-cli.1` (man pages)
+* ./share/man/man1/bitcoind.1`
+* ./share/man/man1/bitcoin-qt.1`
+* ./share/man/man1/bitcoin-tx.1`
 
 ### Need Help?
 
@@ -99,3 +98,4 @@ License
 Distributed under the [MIT software license](/COPYING).
 This product includes software developed by the OpenSSL Project for use in the [OpenSSL Toolkit](https://www.openssl.org/). This product includes
 cryptographic software written by Eric Young ([eay@cryptsoft.com](mailto:eay@cryptsoft.com)), and UPnP software written by Thomas Bernard.
+
