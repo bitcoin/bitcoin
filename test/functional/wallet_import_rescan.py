@@ -46,10 +46,10 @@ class Variant(collections.namedtuple("Variant", "call data rescan prune")):
         if self.call == Call.single:
             if self.data == Data.address:
                 response = self.try_rpc(self.node.importaddress, self.address["address"], self.label,
-                                               self.rescan == Rescan.yes)
+                                        self.rescan == Rescan.yes)
             elif self.data == Data.pub:
                 response = self.try_rpc(self.node.importpubkey, self.address["pubkey"], self.label,
-                                               self.rescan == Rescan.yes)
+                                        self.rescan == Rescan.yes)
             elif self.data == Data.priv:
                 response = self.try_rpc(self.node.importprivkey, self.key, self.label, self.rescan == Rescan.yes)
             assert_equal(response, None)

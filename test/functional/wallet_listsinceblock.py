@@ -150,26 +150,26 @@ class ListSinceBlockTest (BitcoinTestFramework):
 
         # send from nodes[1] using utxo to nodes[0]
         change = '%.8f' % (float(utxo['amount']) - 1.0003)
-        recipientDict = {
+        recipient_dict = {
             self.nodes[0].getnewaddress(): 1,
             self.nodes[1].getnewaddress(): change,
         }
-        utxoDicts = [{
+        utxo_dicts = [{
             'txid': utxo['txid'],
             'vout': utxo['vout'],
         }]
         txid1 = self.nodes[1].sendrawtransaction(
             self.nodes[1].signrawtransactionwithwallet(
-                self.nodes[1].createrawtransaction(utxoDicts, recipientDict))['hex'])
+                self.nodes[1].createrawtransaction(utxo_dicts, recipient_dict))['hex'])
 
         # send from nodes[2] using utxo to nodes[3]
-        recipientDict2 = {
+        recipient_dict2 = {
             self.nodes[3].getnewaddress(): 1,
             self.nodes[2].getnewaddress(): change,
         }
         self.nodes[2].sendrawtransaction(
             self.nodes[2].signrawtransactionwithwallet(
-                self.nodes[2].createrawtransaction(utxoDicts, recipientDict2))['hex'])
+                self.nodes[2].createrawtransaction(utxo_dicts, recipient_dict2))['hex'])
 
         # generate on both sides
         lastblockhash = self.nodes[1].generate(3)[2]
@@ -225,16 +225,16 @@ class ListSinceBlockTest (BitcoinTestFramework):
         utxos = self.nodes[2].listunspent()
         utxo = utxos[0]
         change = '%.8f' % (float(utxo['amount']) - 1.0003)
-        recipientDict = {
+        recipient_dict = {
             self.nodes[0].getnewaddress(): 1,
             self.nodes[2].getnewaddress(): change,
         }
-        utxoDicts = [{
+        utxo_dicts = [{
             'txid': utxo['txid'],
             'vout': utxo['vout'],
         }]
         signedtxres = self.nodes[2].signrawtransactionwithwallet(
-                self.nodes[2].createrawtransaction(utxoDicts, recipientDict))
+            self.nodes[2].createrawtransaction(utxo_dicts, recipient_dict))
         assert signedtxres['complete']
 
         signedtx = signedtxres['hex']
