@@ -45,7 +45,7 @@ void CPrivateSendServer::ProcessModuleMessage(CNode* pfrom, const std::string& s
         CDarksendAccept dsa;
         vRecv >> dsa;
 
-        LogPrint(BCLog::PRIVSEND, "DSACCEPT -- nDenom %d (%s)  txCollateral %s", dsa.nDenom, CPrivateSend::GetDenominationsToString(dsa.nDenom), dsa.txCollateral.GetHash().ToString());
+//        LogPrint(BCLog::PRIVSEND, "DSACCEPT -- nDenom %d (%s)  txCollateral %s\n", dsa.nDenom, CPrivateSend::GetDenominationsToString(dsa.nDenom), dsa.txCollateral.GetHash().ToString());
 
         if(dsa.nInputCount < 0 || dsa.nInputCount > (int)PRIVATESEND_ENTRY_MAX_SIZE) return;
 
@@ -156,7 +156,7 @@ void CPrivateSendServer::ProcessModuleMessage(CNode* pfrom, const std::string& s
         CDarkSendEntry entry;
         vRecv >> entry;
 
-        LogPrint(BCLog::PRIVSEND, "DSVIN -- txCollateral %s", entry.txCollateral->ToString());
+        LogPrint(BCLog::PRIVSEND, "DSVIN -- txCollateral %s\n", entry.txCollateral->ToString());
 
         if(entry.vecTxDSIn.size() > PRIVATESEND_ENTRY_MAX_SIZE) {
             LogPrintf("DSVIN -- ERROR: too many inputs! %d/%d\n", entry.vecTxDSIn.size(), PRIVATESEND_ENTRY_MAX_SIZE);
@@ -327,7 +327,7 @@ void CPrivateSendServer::CreateFinalTransaction(CConnman* connman)
     }
 
     finalMutableTransaction = txNew;
-    LogPrint(BCLog::PRIVSEND, "CPrivateSendServer::CreateFinalTransaction -- finalMutableTransaction=%s", txNew.GetHash().ToString());
+    LogPrint(BCLog::PRIVSEND, "CPrivateSendServer::CreateFinalTransaction -- finalMutableTransaction=%s\n", txNew.GetHash().ToString());
 
     // request signatures from clients
     RelayFinalTransaction(finalMutableTransaction, connman);
@@ -341,7 +341,7 @@ void CPrivateSendServer::CommitFinalTransaction(CConnman* connman)
     CTransactionRef finalTransaction = MakeTransactionRef(finalMutableTransaction);
     uint256 hashTx = finalTransaction->GetHash();
 
-    LogPrint(BCLog::PRIVSEND, "CPrivateSendServer::CommitFinalTransaction -- finalTransaction=%s", finalTransaction->ToString());
+    LogPrint(BCLog::PRIVSEND, "CPrivateSendServer::CommitFinalTransaction -- finalTransaction=%s\n", finalTransaction->ToString());
 
     {
         // See if the transaction is valid
