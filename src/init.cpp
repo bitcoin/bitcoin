@@ -1761,7 +1761,7 @@ bool AppInitMain()
     fLiteMode = gArgs.GetBoolArg("-litemode", false);
     fMasternodeMode = gArgs.GetBoolArg("-masternode", false);
 
-    if(fMasternodeMode && fTxIndex == false) {
+    if(fMasternodeMode && !g_txindex) {
         return InitError("Enabling Masternode support requires turning on transaction indexing."
                   "Please add txindex=1 to your configuration and start with -reindex");
     }
