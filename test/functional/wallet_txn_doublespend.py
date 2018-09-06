@@ -10,6 +10,7 @@ from test_framework.util import *
 class TxnMallTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
+        self.extra_args = [['-deprecatedrpc=accounts']] * 4
 
     def __init__(self):
         super().__init__()
