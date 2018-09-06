@@ -122,6 +122,7 @@ BITCOIN_CORE_H = \
   keystore.h \
   dbwrapper.h \
   limitedmap.h \
+  logging.h \
   masternode.h \
   masternode-payments.h \
   masternode-sync.h \
@@ -437,6 +438,7 @@ libbitcoin_util_a_SOURCES = \
   interfaces/handler.cpp \
   interfaces/moduleinterface.cpp \
   interfaces/node.cpp \
+  logging.cpp \
   random.cpp \
   rpc/protocol.cpp \
   rpc/util.cpp \
