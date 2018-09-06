@@ -1306,7 +1306,13 @@ class FullBlockTest(BitcoinTestFramework):
         self.nodes[0].disconnect_p2ps()
         self.nodes[0].add_p2p_connection(P2PDataStore())
         network_thread_start()
-        self.nodes[0].p2p.wait_for_verack()
+        # We need to wait for the initial getheaders from the peer before we
+        # start populating our blockstore. If we don't, then we may run ahead
+        # to the next subtest before we receive the getheaders. We'd then send
+        # an INV for the next block and receive two getheaders - one for the
+        # IBD and one for the INV. We'd respond to both and could get
+        # unexpectedly disconnected if the DoS score for that error is 50.
+        self.nodes[0].p2p.wait_for_getheaders(timeout=5)
 
     def sync_blocks(self, blocks, success=True, reject_code=None, reject_reason=None, request_block=True, reconnect=False, timeout=60):
         """Sends blocks to test node. Syncs and verifies that tip has advanced to most recent block.
