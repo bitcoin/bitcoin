@@ -9,6 +9,7 @@
 class DummyWalletInit : public WalletInitInterface {
 public:
 
+    bool HasWalletSupport() const override {return false;}
     void AddWalletOptions() const override;
     bool ParameterInteraction() const override {return true;}
     void RegisterRPC(CRPCTable &) const override {}
