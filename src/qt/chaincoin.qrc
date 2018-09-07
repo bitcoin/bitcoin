@@ -117,6 +117,7 @@
         <file alias="fontsmaller">res/icons/crownium/fontsmaller.png</file>
         <file alias="transaction_abandoned">res/icons/crownium/transaction_abandoned.png</file>
         <file alias="network_disabled">res/icons/crownium/network_disabled.png</file>
+        <file alias="proxy">res/icons/crownium/proxy.png</file>
     </qresource>
     <qresource prefix="/icons/light">
         <file alias="address-book">res/icons/light/address-book.png</file>
@@ -165,7 +166,7 @@
         <file alias="drkblue_editcopy">res/icons/light/drkblue_editcopy.png</file>
         <file alias="drkblue_remove">res/icons/light/drkblue_remove.png</file>
         <file alias="browse">res/icons/light/browse.png</file>
-        <file>res/icons/light/about.png</file>
+        <file alias="about">res/icons/light/about.png</file>
         <file alias="about_qt">res/icons/light/about_qt.png</file>
         <file alias="verify">res/icons/light/verify.png</file>
         <file alias="hd_enabled">res/icons/light/hd_enabled.png</file>
@@ -174,6 +175,7 @@
         <file alias="fontsmaller">res/icons/light/fontsmaller.png</file>
         <file alias="transaction_abandoned">res/icons/light/transaction_abandoned.png</file>
         <file alias="network_disabled">res/icons/light/network_disabled.png</file>
+        <file alias="proxy">res/icons/light/proxy.png</file>
     </qresource>
     <qresource prefix="/icons/trad">
         <file alias="address-book">res/icons/trad/address-book.png</file>
@@ -231,6 +233,7 @@
         <file alias="fontsmaller">res/icons/trad/fontsmaller.png</file>
         <file alias="transaction_abandoned">res/icons/trad/transaction_abandoned.png</file>
         <file alias="network_disabled">res/icons/trad/network_disabled.png</file>
+        <file alias="proxy">res/icons/trad/proxy.png</file>
     </qresource>
     <qresource prefix="/css">
         <file alias="drkblue">res/css/drkblue.css</file>
@@ -341,6 +344,7 @@
         <file alias="address-book">res/icons/green/address-book.png</file>
         <file alias="address-book2">res/icons/green/address-book2.png</file>
         <file alias="browse">res/icons/green/browse.png</file>
+        <file alias="transaction_0">res/icons/green/transaction0.png</file>
         <file alias="transaction_1">res/icons/green/clock1.png</file>
         <file alias="transaction_2">res/icons/green/clock2.png</file>
         <file alias="transaction_3">res/icons/green/clock3.png</file>
@@ -373,12 +377,12 @@
         <file alias="lock_open">res/icons/green/lock_open.png</file>
         <file alias="masternodes">res/icons/green/masternodes.png</file>
         <file alias="network">res/icons/green/network.png</file>
-        <file>res/icons/green/new.png</file>
-        <file>res/icons/green/notsynced.png</file>
+        <file alias="new">res/icons/green/new.png</file>
+        <file alias="notsynced">res/icons/green/notsynced.png</file>
         <file alias="open">res/icons/green/open.png</file>
         <file alias="overview">res/icons/green/overview.png</file>
-        <file>res/icons/green/qrcode.png</file>
-        <file>res/icons/green/questionmark.png</file>
+        <file alias="qrcode">res/icons/green/qrcode.png</file>
+        <file alias="questionmark">res/icons/green/questionmark.png</file>
         <file alias="quit">res/icons/green/quit.png</file>
         <file alias="receiving_addresses">res/icons/green/receive.png</file>
         <file alias="proposal">res/icons/green/proposal.png</file>
@@ -388,8 +392,7 @@
         <file alias="synced">res/icons/green/synced.png</file>
         <file alias="transaction_abandoned">res/icons/green/transaction_abandoned.png</file>
         <file alias="transaction_conflicted">res/icons/green/transaction_conflicted.png</file>
-        <file alias="transaction_0">res/icons/green/transaction0.png</file>
-        <file>res/icons/green/transactions.png</file>
+        <file alias="transactions">res/icons/green/transactions.png</file>
         <file alias="tx_inout">res/icons/green/tx_inout.png</file>
         <file alias="tx_input">res/icons/green/tx_input.png</file>
         <file alias="tx_mined">res/icons/green/tx_mined.png</file>
@@ -399,6 +402,7 @@
         <file alias="about">res/icons/green/about.png</file>
         <file alias="peer">res/icons/green/peers.png</file>
         <file alias="network_disabled">res/icons/green/network_disabled.png</file>
+        <file alias="proxy">res/icons/green/proxy.png</file>
     </qresource>
     <qresource prefix="/images/green">
         <file alias="about">res/images/green/about.png</file>
