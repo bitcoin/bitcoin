@@ -288,7 +288,8 @@ CAmount GetAssetAllocationInterest(CAssetAllocation & assetAllocation, const int
 	const boost::multiprecision::cpp_dec_float_50& fInterestOverTimeDifference = boost::multiprecision::cpp_dec_float_50(assetAllocation.fAccumulatedInterestSinceLastInterestClaim / nBlockDifference);
 	const boost::multiprecision::cpp_dec_float_50& nInterestPerBlock = fInterestOverTimeDifference / nInterestBlockTerm;
 	const boost::multiprecision::cpp_dec_float_50& powcalc = boost::multiprecision::pow(boost::multiprecision::cpp_dec_float_50(1.0) + nInterestPerBlock, nBlockDifference);
-	const boost::multiprecision::cpp_dec_float_50& result = (powcalc*nBalanceOverTimeDifference) - nBalanceOverTimeDifference;
+	boost::multiprecision::cpp_dec_float_50 result = powcalc*nBalanceOverTimeDifference;
+	result = result - nBalanceOverTimeDifference;
 	return result.convert_to<CAmount>();
 }
 bool ApplyAssetAllocationInterest(CAsset& asset, CAssetAllocation & assetAllocation, const int& nHeight, string& errorMessage) {
