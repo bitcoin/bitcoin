@@ -279,12 +279,16 @@ CAmount GetAssetAllocationInterest(CAssetAllocation & assetAllocation, const int
 		errorMessage = _("Not enough blocks have passed since the last claim, please wait some more time...");
 		return 0;
 	}
-	const int &nInterestBlockTerm = fUnitTest? ONE_HOUR_IN_BLOCKS: ONE_YEAR_IN_BLOCKS;
-	const int &nBlockDifference = nHeight - assetAllocation.nLastInterestClaimHeight;
+	const boost::multiprecision::cpp_dec_float_50 &nInterestBlockTerm = fUnitTest? boost::multiprecision::cpp_dec_float_50(ONE_HOUR_IN_BLOCKS): boost::multiprecision::cpp_dec_float_50(ONE_YEAR_IN_BLOCKS);
+	const boost::multiprecision::cpp_dec_float_50 &nBlockDifference = boost::multiprecision::cpp_dec_float_50(nHeight - assetAllocation.nLastInterestClaimHeight);
+
 	// apply compound annual interest to get total interest since last time interest was collected
-	const CAmount& nBalanceOverTimeDifference = assetAllocation.nAccumulatedBalanceSinceLastInterestClaim / nBlockDifference;
-	const long double& fInterestOverTimeDifference = assetAllocation.fAccumulatedInterestSinceLastInterestClaim / nBlockDifference;
-	return (((long double)nBalanceOverTimeDifference*powl((1.0 + (fInterestOverTimeDifference / nInterestBlockTerm)), nBlockDifference))) - nBalanceOverTimeDifference;
+	const boost::multiprecision::cpp_dec_float_50& nBalanceOverTimeDifference = boost::multiprecision::cpp_dec_float_50(assetAllocation.nAccumulatedBalanceSinceLastInterestClaim / nBlockDifference);
+	const boost::multiprecision::cpp_dec_float_50& fInterestOverTimeDifference = boost::multiprecision::cpp_dec_float_50(assetAllocation.fAccumulatedInterestSinceLastInterestClaim / nBlockDifference);
+	const boost::multiprecision::cpp_dec_float_50& nInterestPerBlock = fInterestOverTimeDifference / nInterestBlockTerm;
+	const boost::multiprecision::cpp_dec_float_50& powcalc = boost::multiprecision::pow(boost::multiprecision::cpp_dec_float_50(1.0) + nInterestPerBlock, nBlockDifference);
+	const boost::multiprecision::cpp_dec_float_50& result = (powcalc*nBalanceOverTimeDifference) - nBalanceOverTimeDifference;
+	return result.convert_to<CAmount>();
 }
 bool ApplyAssetAllocationInterest(CAsset& asset, CAssetAllocation & assetAllocation, const int& nHeight, string& errorMessage) {
 	CAmount nInterest = GetAssetAllocationInterest(assetAllocation, nHeight, errorMessage);
