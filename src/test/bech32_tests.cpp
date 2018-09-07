@@ -57,6 +57,8 @@ BOOST_AUTO_TEST_CASE(bip173_testvectors_invalid)
         "A1G7SGD8",
         "10a06t8",
         "1qzzfhee",
+        "a12UEL5L",
+        "A12uEL5L",
     };
     for (const std::string& str : CASES) {
         auto ret = bech32::Decode(str);
