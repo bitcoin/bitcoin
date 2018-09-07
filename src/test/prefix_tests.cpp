@@ -78,11 +78,11 @@ BOOST_FIXTURE_TEST_SUITE(Prefix_tests, PrefixFixture)
 
     BOOST_AUTO_TEST_CASE(NewAddressCheckMultisig)
     {
-        // Check that the new address is deprecated
+        // Check that the new address is not deprecated
         BOOST_CHECK(!CBitcoinAddress(newAddressMultisig).IsDeprecated());
         // Get destination for new address
         CTxDestination dest = CBitcoinAddress(newAddressMultisig).Get();
-        // Check that the old address not deprecated
+        // Check that the old address deprecated
         BOOST_CHECK(CBitcoinAddress(dest, CChainParams::DEPRECATED_ADDRESS_TYPE).IsDeprecated());
     }
 
@@ -134,11 +134,11 @@ BOOST_FIXTURE_TEST_SUITE(Prefix_tests, PrefixFixture)
     BOOST_AUTO_TEST_CASE(TestnetNewAddressCheckMultisig)
     {
         SelectParams(CBaseChainParams::TESTNET);
-        // Check that the new address is deprecated
+        // Check that the new address is not deprecated
         BOOST_CHECK(!CBitcoinAddress(testnetNewAddressMultisig).IsDeprecated());
         // Get destination for new address
         CTxDestination dest = CBitcoinAddress(testnetNewAddressMultisig).Get();
-        // Check that the old address not deprecated
+        // Check that the old address deprecated
         BOOST_CHECK(CBitcoinAddress(dest, CChainParams::DEPRECATED_ADDRESS_TYPE).IsDeprecated());
     }
 
