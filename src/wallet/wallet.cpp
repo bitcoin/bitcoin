@@ -31,7 +31,6 @@
 #include <txmempool.h>
 #include <utilmoneystr.h>
 #include <wallet/fees.h>
-#include <wallet/keepass.h>
 
 #include <governance.h>
 #include <wallet/privatesend-client.h>
@@ -407,23 +406,6 @@ bool CWallet::LoadWatchOnly(const CScript &dest)
 
 bool CWallet::Unlock(const SecureString& strWalletPassphrase, bool fForMixingOnly)
 {
-    SecureString strWalletPassphraseFinal;
-
-    if (!IsLocked()) // was already fully unlocked, not only for mixing
-        return true;
-
-    // Verify KeePassIntegration
-    if (strWalletPassphrase == "keepass" && gArgs.GetBoolArg("-keepass", false)) {
-        try {
-            strWalletPassphraseFinal = keePassInt.retrievePassphrase();
-        } catch (std::exception& e) {
-            LogPrintf("CWallet::Unlock could not retrieve passphrase from KeePass: Error: %s\n", e.what());
-            return false;
-        }
-    } else {
-        strWalletPassphraseFinal = strWalletPassphrase;
-    }
-
     CCrypter crypter;
     CKeyingMaterial _vMasterKey;
 
@@ -431,7 +413,7 @@ bool CWallet::Unlock(const SecureString& strWalletPassphrase, bool fForMixingOnl
         LOCK(cs_wallet);
         for (const MasterKeyMap::value_type& pMasterKey : mapMasterKeys)
         {
-            if (!crypter.SetKeyFromPassphrase(strWalletPassphraseFinal, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
+            if (!crypter.SetKeyFromPassphrase(strWalletPassphrase, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
                 return false;
             if (!crypter.Decrypt(pMasterKey.second.vchCryptedKey, _vMasterKey))
                 continue; // try another master key
@@ -450,23 +432,7 @@ bool CWallet::Unlock(const SecureString& strWalletPassphrase, bool fForMixingOnl
 
 bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase, const SecureString& strNewWalletPassphrase)
 {
-    bool fWasLocked = IsLocked(true);
-    bool bUseKeePass = false;
-
-    SecureString strOldWalletPassphraseFinal;
-
-    // Verify KeePassIntegration
-    if(strOldWalletPassphrase == "keepass" && gArgs.GetBoolArg("-keepass", false)) {
-        bUseKeePass = true;
-        try {
-            strOldWalletPassphraseFinal = keePassInt.retrievePassphrase();
-        } catch (std::exception& e) {
-            LogPrintf("CWallet::ChangeWalletPassphrase -- could not retrieve passphrase from KeePass: Error: %s\n", e.what());
-            return false;
-        }
-    } else {
-        strOldWalletPassphraseFinal = strOldWalletPassphrase;
-    }
+    bool fWasLocked = IsLocked();
 
     {
         LOCK(cs_wallet);
@@ -476,7 +442,7 @@ bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase,
         CKeyingMaterial _vMasterKey;
         for (MasterKeyMap::value_type& pMasterKey : mapMasterKeys)
         {
-            if(!crypter.SetKeyFromPassphrase(strOldWalletPassphraseFinal, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
+            if(!crypter.SetKeyFromPassphrase(strOldWalletPassphrase, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
                 return false;
             if (!crypter.Decrypt(pMasterKey.second.vchCryptedKey, _vMasterKey))
                 return false;
@@ -502,18 +468,6 @@ bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase,
                 WalletBatch(*database).WriteMasterKey(pMasterKey.first, pMasterKey.second);
                 if (fWasLocked)
                     Lock();
-
-                // Update KeePass if necessary
-                if(bUseKeePass) {
-                    LogPrintf("CWallet::ChangeWalletPassphrase -- Updating KeePass with new passphrase.\n");
-                    try {
-                        keePassInt.updatePassphrase(strNewWalletPassphrase);
-                    } catch (std::exception& e) {
-                        LogPrintf("CWallet::ChangeWalletPassphrase -- could not update passphrase in KeePass: Error: %s\n", e.what());
-                        return false;
-                    }
-                }
-
                 return true;
             }
         }
@@ -771,16 +725,6 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         // Need to completely rewrite the wallet file; if we don't, bdb might keep
         // bits of the unencrypted private key in slack space in the database file.
         database->Rewrite();
-
-        // Update KeePass if necessary
-        if(gArgs.GetBoolArg("-keepass", false)) {
-            LogPrintf("CWallet::EncryptWallet -- Updating KeePass with new passphrase.\n");
-            try {
-                keePassInt.updatePassphrase(strWalletPassphrase);
-            } catch (std::exception& e) {
-                LogPrintf("CWallet::EncryptWallet -- could not update passphrase in KeePass: Error: %s\n", e.what());
-            }
-        }
 
     }
     NotifyStatusChanged(this);
@@ -3216,9 +3160,12 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, CAmount nValueMin, CAmount 
     vecTxDSInRet.clear();
     vCoinsRet.clear();
     nValueRet = 0;
-
     std::vector<COutput> vCoins;
-    AvailableCoins(vCoins, true, nullptr, ONLY_DENOMINATED);
+
+    {
+        LOCK(cs_wallet);
+        AvailableCoins(vCoins, true, nullptr, ONLY_DENOMINATED);
+    }
 
     std::random_shuffle(vCoins.rbegin(), vCoins.rend(), GetRandInt);
 
@@ -3367,15 +3314,17 @@ bool CWallet::SelectCoinsGrouppedByAddresses(std::vector<CompactTallyItem>& vecT
     return vecTallyRet.size() > 0;
 }
 
-bool CWallet::SelectCoinsDark(CAmount nValueMin, CAmount nValueMax, std::vector<CTxIn>& vecTxInRet, CAmount& nValueRet, int nPrivateSendRoundsMin, int nPrivateSendRoundsMax) const
+bool CWallet::SelectPrivateCoins(CAmount nValueMin, CAmount nValueMax, std::vector<CTxIn>& vecTxInRet, CAmount& nValueRet, int nPrivateSendRoundsMin, int nPrivateSendRoundsMax) const
 {
     CCoinControl *coinControl=nullptr;
 
     vecTxInRet.clear();
     nValueRet = 0;
-
     std::vector<COutput> vCoins;
-    AvailableCoins(vCoins, true, coinControl, nPrivateSendRoundsMin < 0 ? ONLY_NONDENOMINATED : ONLY_DENOMINATED);
+    {
+        LOCK(cs_wallet);
+       AvailableCoins(vCoins, true, coinControl, nPrivateSendRoundsMin < 0 ? ONLY_NONDENOMINATED : ONLY_DENOMINATED);
+    }
 
     //order the array so largest nondenom are first, then denominations, then very small inputs.
     std::sort(vCoins.rbegin(), vCoins.rend(), CompareByPriority());
@@ -3517,6 +3466,7 @@ int CWallet::CountInputsWithAmount(CAmount nInputAmount)
 
 bool CWallet::HasCollateralInputs(bool fOnlyConfirmed) const
 {
+    LOCK(cs_wallet);
     std::vector<COutput> vCoins;
     AvailableCoins(vCoins, fOnlyConfirmed, nullptr, ONLY_PRIVATESEND_COLLATERAL);
 

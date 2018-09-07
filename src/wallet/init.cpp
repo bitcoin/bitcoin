@@ -10,7 +10,6 @@
 #include <util.h>
 #include <utilmoneystr.h>
 #include <validation.h>
-#include <wallet/keepass.h>
 #include <wallet/privatesend-client.h>
 #include <walletinitinterface.h>
 #include <wallet/rpcwallet.h>
@@ -163,10 +162,6 @@ bool WalletInit::ParameterInteraction() const
             return InitError(strprintf(_("Invalid amount for -maxtxfee=<amount>: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)"),
                                        gArgs.GetArg("-maxtxfee", ""), ::minRelayTxFee.ToString()));
         }
-    }
-
-    if (gArgs.IsArgSet("-keepass")) {
-        keePassInt.init(); // Initialize KeePass Integration
     }
 
     privateSendClient.nLiquidityProvider = std::min(std::max((int)gArgs.GetArg("-liquidityprovider", DEFAULT_PRIVATESEND_LIQUIDITY), MIN_PRIVATESEND_LIQUIDITY), MAX_PRIVATESEND_LIQUIDITY);
