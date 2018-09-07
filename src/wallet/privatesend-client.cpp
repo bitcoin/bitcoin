@@ -494,7 +494,8 @@ bool CPrivateSendClient::SignFinalTransaction(const CTransaction& finalTransacti
 {
     if(pnode == nullptr || !pmixingwallet) return false;
 
-    finalMutableTransaction = finalTransactionNew;
+    CMutableTransaction tx {finalTransactionNew};
+    finalMutableTransaction = tx;
     LogPrintf("CPrivateSendClient::SignFinalTransaction -- finalMutableTransaction=%s\n", finalMutableTransaction.GetHash().ToString());
 
     std::vector<CTxIn> sigs;
