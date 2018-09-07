@@ -91,7 +91,9 @@ enum WalletFeature
 
     FEATURE_NO_DEFAULT_KEY = 159900, // Wallet without a default key written
 
-    FEATURE_LATEST = FEATURE_COMPRPUBKEY // HD is optional, use FEATURE_COMPRPUBKEY as latest version
+    FEATURE_PRE_SPLIT_KEYPOOL = 169900, // Upgraded to HD SPLIT and can have a pre-split keypool
+
+    FEATURE_LATEST = FEATURE_PRE_SPLIT_KEYPOOL
 };
 
 enum class OutputType {
@@ -141,6 +143,7 @@ public:
     int64_t nTime;
     CPubKey vchPubKey;
     bool fInternal; // for change outputs
+    bool m_pre_split; // For keys generated before keypool split upgrade
 
     CKeyPool();
     CKeyPool(const CPubKey& vchPubKeyIn, bool internalIn);
@@ -163,9 +166,18 @@ public:
                    (this will be the case for any wallet before the HD chain split version) */
                 fInternal = false;
             }
+            try {
+                READWRITE(m_pre_split);
+            }
+            catch (std::ios_base::failure&) {
+                /* flag as postsplit address if we can't read the m_pre_split boolean
+                   (this will be the case for any wallet that upgrades to HD chain split)*/
+                m_pre_split = false;
+            }
         }
         else {
             READWRITE(fInternal);
+            READWRITE(m_pre_split);
         }
     }
 };
@@ -759,7 +771,8 @@ private:
 
     std::set<int64_t> setInternalKeyPool;
     std::set<int64_t> setExternalKeyPool;
-    int64_t m_max_keypool_index;
+    std::set<int64_t> set_pre_split_keypool;
+    int64_t m_max_keypool_index = 0;
     std::map<CKeyID, int64_t> m_pool_key_to_index;
 
     int64_t nTimeFirstKey;
@@ -825,6 +838,7 @@ public:
     const std::string& GetName() const { return m_name; }
 
     void LoadKeyPool(int64_t nIndex, const CKeyPool &keypool);
+    void MarkPreSplitKeys();
 
     // Map from Key ID to key metadata.
     std::map<CKeyID, CKeyMetadata> mapKeyMetadata;
@@ -1234,6 +1248,9 @@ public:
 
     /* Generates a new HD master key (will not be activated) */
     CPubKey GenerateNewHDMasterKey();
+
+    /* Derives a new HD master key (will not be activated) */
+    CPubKey DeriveNewMasterHDKey(const CKey& key);
 
     /* Set the current HD master key (will reset the chain child index counters)
        Sets the master key's version based on the current wallet version (so the
