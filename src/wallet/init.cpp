@@ -19,6 +19,9 @@
 class WalletInit : public WalletInitInterface {
 public:
 
+    //! Was the wallet component compiled in.
+    bool HasWalletSupport() const override {return true;}
+
     //! Return the wallets help message.
     void AddWalletOptions() const override;
 
