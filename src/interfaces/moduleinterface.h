@@ -40,4 +40,6 @@ public:
     virtual ~WalletInterface() {}
 };
 
+extern const WalletInterface& g_wallet_interface;
+
 #endif // BITCOIN_MODULEINTERFACE_H
