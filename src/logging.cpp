@@ -122,7 +122,6 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::MNODE, "mnode"},
     {BCLog::MNODESYNC, "mnodesync"},
     {BCLog::MNODEPAY, "mnodepay"},
-    {BCLog::KEEPASS, "keepass"},
     {BCLog::GOV, "gov"},
     {BCLog::PRIVSEND, "privsend"},
     {BCLog::ALL, "1"},

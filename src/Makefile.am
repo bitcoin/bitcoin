@@ -194,7 +194,6 @@ BITCOIN_CORE_H = \
   wallet/db.h \
   wallet/feebumper.h \
   wallet/fees.h \
-  wallet/keepass.h \
   wallet/privatesend-client.h \
   wallet/rpcwallet.h \
   wallet/wallet.h \
@@ -296,7 +295,6 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/feebumper.cpp \
   wallet/fees.cpp \
   wallet/init.cpp \
-  wallet/keepass.cpp \
   wallet/privatesend-client.cpp \
   wallet/rpcdump.cpp \
   wallet/rpcwallet.cpp \

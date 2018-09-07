@@ -29,7 +29,6 @@
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/feebumper.h>
-#include <wallet/keepass.h>
 #include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
@@ -2985,56 +2984,6 @@ static UniValue getwalletinfo(const JSONRPCRequest& request)
     if (!masterKeyID.IsNull())
         obj.pushKV("hdmasterkeyid", masterKeyID.GetHex());
     return obj;
-}
-
-UniValue keepass(const JSONRPCRequest& request) {
-    std::string strCommand;
-
-    if (request.params.size() >= 1)
-        strCommand = request.params[0].get_str();
-
-    if (request.fHelp  ||
-        (strCommand != "genkey" && strCommand != "init" && strCommand != "setpassphrase"))
-        throw std::runtime_error(
-            "keepass <genkey|init|setpassphrase>\n");
-
-    if (strCommand == "genkey")
-    {
-        SecureString sResult;
-        // Generate RSA key
-        SecureString sKey = CKeePassIntegrator::generateKeePassKey();
-        sResult = "Generated Key: ";
-        sResult += sKey;
-        return sResult.c_str();
-    }
-    else if(strCommand == "init")
-    {
-        // Generate base64 encoded 256 bit RSA key and associate with KeePassHttp
-        SecureString sResult;
-        SecureString sKey;
-        std::string strId;
-        keePassInt.rpcAssociate(strId, sKey);
-        sResult = "Association successful. Id: ";
-        sResult += strId.c_str();
-        sResult += " - Key: ";
-        sResult += sKey.c_str();
-        return sResult.c_str();
-    }
-    else if(strCommand == "setpassphrase")
-    {
-        if(request.params.size() != 2) {
-            return "setlogin: invalid number of parameters. Requires a passphrase";
-        }
-
-        SecureString sPassphrase = SecureString(request.params[1].get_str().c_str());
-
-        keePassInt.updatePassphrase(sPassphrase);
-
-        return "setlogin: Updated credentials.";
-    }
-
-    return "Invalid command";
-
 }
 
 static UniValue listwallets(const JSONRPCRequest& request)
