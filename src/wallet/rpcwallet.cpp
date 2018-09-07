@@ -3059,7 +3059,7 @@ UniValue loadwallet(const JSONRPCRequest& request)
     }
     AddWallet(wallet);
 
-    wallet->postInitProcess();
+    wallet->postInitProcess(gArgs.GetBoolArg("-mnconflock", true) ? true : false);
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("name", wallet->GetName());
