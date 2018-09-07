@@ -5,4 +5,4 @@ Previously, wallets could only be loaded at startup, by specifying `-wallet` par
 
 The wallet can be specified as file/directory basename (which must be located in the `walletdir` directory), or as an absolute path to a file/directory.
 
-This feature is currently only available through the RPC interface. Wallets loaded in this way will not display in the bitcoin-qt GUI.
+This feature is currently only available through the RPC interface. Wallets loaded in this way will display in the bitcoin-qt GUI.
