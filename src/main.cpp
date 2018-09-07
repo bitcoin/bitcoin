@@ -1408,7 +1408,7 @@ bool AcceptableInputs(CTxMemPool& pool, CValidationState &state, const CTransact
 }
 
 /** Return transaction in tx, and if it was found inside a block, its hash is placed in hashBlock */
-bool GetTransaction(const uint256 &hash, CTransaction &txOut, uint256 &hashBlock, bool fAllowSlow)
+bool GetTransaction(const uint256 &hash, CTransaction &txOut, uint256& hashBlock, bool fAllowSlow)
 {
     CBlockIndex *pindexSlow = NULL;
     {
@@ -2073,7 +2073,7 @@ void ThreadScriptCheck() {
     scriptcheckqueue.Thread();
 }
 
-bool CheckBlockProofPointer(const CBlock& block, CPubKey& pubkeyMasternode)
+bool CheckBlockProofPointer(const CBlock& block, CPubKey& pubkeyMasternode, COutPoint& outpoint)
 {
     StakePointer stakePointer = block.stakePointer;
     if (!mapBlockIndex.count(stakePointer.hashBlock))
@@ -2097,8 +2097,10 @@ bool CheckBlockProofPointer(const CBlock& block, CPubKey& pubkeyMasternode)
             if (!ExtractDestination(tx.vout[stakePointer.nPos].scriptPubKey, dest))
                 return error("%s: failed to get destination from scriptPubKey", __func__);
 
-            if (CBitcoinAddress(stakePointer.hashPubKey).ToString() != CBitcoinAddress(dest).ToString())
-                return error("%s: Pubkeyhash from proof does not match stakepointer", __func__);
+//            if (CBitcoinAddress(stakePointer.hashPubKey).ToString() != CBitcoinAddress(dest).ToString())
+//                return error("%s: Pubkeyhash from proof does not match stakepointer", __func__);
+
+            outpoint = COutPoint(stakePointer.txid, stakePointer.nPos);
 
             found = true;
             break;
@@ -2128,13 +2130,26 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                     "pow-end");
 
         CPubKey pubkeyMasternode;
-        if (!CheckBlockProofPointer(block, pubkeyMasternode))
+        COutPoint outpoint;
+        if (!CheckBlockProofPointer(block, pubkeyMasternode, outpoint))
             return state.DoS(100, error("%s: Invalid block proof pointer", __func__), REJECT_INVALID,
                              "signature-invalid");
 
         if (!CheckBlockSignature(block, pubkeyMasternode))
             return state.DoS(100, error("%s: Invalid signature", __func__), REJECT_INVALID,
                              "signature-invalid");
+
+        CTransaction txPayment;
+        uint256 hashPrevBlock;
+        if (!GetTransaction(outpoint.hash, txPayment, hashPrevBlock, true)) {
+            return state.DoS(100, error("%s: Cannot find MN or SN payment", __func__), REJECT_INVALID, "tx-invalid");
+        }
+
+        CBlockIndex* pindexFrom = mapBlockIndex.at(block.stakePointer.hashBlock);
+
+        if (!CheckProofOfStake(block, pindexFrom, outpoint, txPayment)) {
+            return state.DoS(100, error("%s: Proof of Stake check failed", __func__), REJECT_INVALID, "PoS invalid");
+        }
 
     } else if (block.IsProofOfStake()) {
         return state.DoS(100, error("%s: Proof of Stake block submitted before PoW end", __func__), REJECT_INVALID,

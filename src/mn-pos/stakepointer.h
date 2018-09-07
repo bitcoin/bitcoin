@@ -2,6 +2,7 @@
 #define CROWNCOIN_PROOFPOINTER_H
 
 #include "uint256.h"
+#include "serialize.h"
 
 /*
  *  Crown's masternode staking consensus layer use a "staking node proof pointer" that will point to the most recent
@@ -28,6 +29,16 @@ struct StakePointer
         txid = uint256();
         hashPubKey = uint160();
         nPos = 0;
+    }
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        READWRITE(hashBlock);
+        READWRITE(txid);
+        READWRITE(nPos);
+        READWRITE(hashPubKey);
     }
 };
 
