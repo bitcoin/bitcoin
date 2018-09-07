@@ -386,6 +386,27 @@ class CScriptWitness():
             return False
         return True
 
+class CScriptReissue():
+    def __init__(self):
+        self.name = b""
+        self.amount = 0
+        self.reissuable = 1
+        self.ipfs_hash = b""
+
+    def deserialize(self, f):
+        self.name = deser_string(f)
+        self.amount = struct.unpack("<q", f.read(8))[0]
+        self.reissuable = struct.unpack("B", f.read(1))[0]
+        self.ipfs_hash = deser_string(f)
+
+    def serialize(self):
+        r = b""
+        r += ser_string(self.name)
+        r += struct.pack("<q", self.amount)
+        r += struct.pack("B", self.reissuable)
+        r += ser_string(self.ipfs_hash)
+        return r
+
 class CScriptOwner():
     def __init__(self):
         self.name = b""

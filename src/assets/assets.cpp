@@ -554,6 +554,10 @@ bool CTransaction::IsNewAsset() const
     if (!CheckIssueDataTx(vout[vout.size() - 1]))
         return false;
 
+    // Check to make sure the owner asset is created
+    if (!CheckOwnerDataTx(vout[vout.size() - 2]))
+        return false;
+
     // Don't overlap with IsNewUniqueAsset()
     if (IsScriptNewUniqueAsset(vout[vout.size() - 1].scriptPubKey))
         return false;

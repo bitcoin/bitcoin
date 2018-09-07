@@ -51,6 +51,115 @@ class RawAssetTransactionsTest(RavenTestFramework):
         self.sync_all()
         assert_equal("active", n0.getblockchaininfo()['bip9_softforks']['assets']['status'])
 
+    def reissue_tampering_test(self):
+        self.log.info("Tampering with raw reissues...")
+
+        n0, n1, n2 = self.nodes[0], self.nodes[1], self.nodes[2]
+
+        ########################################
+        # issue a couple of assets
+        asset_name = 'REISSUE_TAMPERING'
+        owner_name = f"{asset_name}!"
+        alternate_asset_name = 'ANOTHER_ASSET'
+        alternate_owner_name = f"{alternate_asset_name}!"
+        n0.sendrawtransaction(get_tx_issue_hex(n0, asset_name, 1000))
+        n0.sendrawtransaction(get_tx_issue_hex(n0, alternate_asset_name, 1000))
+        n0.generate(1)
+
+        ########################################
+        # try a reissue with no owner input
+        to_address = n0.getnewaddress()
+        unspent = n0.listunspent()[0]
+        inputs = [
+            {k: unspent[k] for k in ['txid', 'vout']},
+        ]
+        outputs = {
+            'n1ReissueAssetXXXXXXXXXXXXXXWG9NLd': 100,
+            n0.getnewaddress(): float(unspent['amount']) - 100.0001,
+            to_address: {
+                'reissue': {
+                    'asset_name':       asset_name,
+                    'asset_quantity':   1000,
+                }
+            }
+        }
+        tx_hex = n0.createrawtransaction(inputs, outputs)
+        tx_signed = n0.signrawtransaction(tx_hex)['hex']
+        assert_raises_rpc_error(-26, "bad-tx-inputs-outputs-mismatch Bad Transaction - " +
+                                f"Trying to create outpoint for asset that you don't have: {owner_name}",
+                                n0.sendrawtransaction, tx_signed)
+
+        ########################################
+        # try a reissue where the owner input doesn't match the asset name
+        unspent_asset_owner = n0.listmyassets(alternate_owner_name, True)[alternate_owner_name]['outpoints'][0]
+        inputs = [
+            {k: unspent[k] for k in ['txid', 'vout']},
+            {k: unspent_asset_owner[k] for k in ['txid', 'vout']},
+        ]
+        tx_hex = n0.createrawtransaction(inputs, outputs)
+        tx_signed = n0.signrawtransaction(tx_hex)['hex']
+        assert_raises_rpc_error(-26, "bad-tx-inputs-outputs-mismatch Bad Transaction - " +
+                                f"Trying to create outpoint for asset that you don't have: {owner_name}",
+                                n0.sendrawtransaction, tx_signed)
+
+        ########################################
+        # fix it to use the right input
+        unspent_asset_owner = n0.listmyassets(owner_name, True)[owner_name]['outpoints'][0]
+        inputs = [
+            {k: unspent[k] for k in ['txid', 'vout']},
+            {k: unspent_asset_owner[k] for k in ['txid', 'vout']},
+        ]
+        tx_hex = n0.createrawtransaction(inputs, outputs)
+
+        ########################################
+        # try tampering to change the name of the asset being issued
+        tx = CTransaction()
+        f = BytesIO(hex_str_to_bytes(tx_hex))
+        tx.deserialize(f)
+        rvnr = '72766e72' #rvnr
+        op_drop = '75'
+        for n in range(0, len(tx.vout)):
+            out = tx.vout[n]
+            if rvnr in bytes_to_hex_str(out.scriptPubKey):
+                script_hex = bytes_to_hex_str(out.scriptPubKey)
+                reissue_script_hex = script_hex[script_hex.index(rvnr) + len(rvnr):-len(op_drop)]
+                f = BytesIO(hex_str_to_bytes(reissue_script_hex))
+                reissue = CScriptReissue()
+                reissue.deserialize(f)
+                reissue.name = alternate_asset_name.encode()
+                tampered_reissue = bytes_to_hex_str(reissue.serialize())
+                tampered_script = script_hex[:script_hex.index(rvnr)] + rvnr + tampered_reissue + op_drop
+                tx.vout[n].scriptPubKey = hex_str_to_bytes(tampered_script)
+        tx_hex_bad = bytes_to_hex_str(tx.serialize())
+        tx_signed = n0.signrawtransaction(tx_hex_bad)['hex']
+        assert_raises_rpc_error(-26, "bad-txns-reissue-asset-bad-owner-asset", n0.sendrawtransaction, tx_signed)
+
+        ########################################
+        # try tampering to remove owner output
+        tx = CTransaction()
+        f = BytesIO(hex_str_to_bytes(tx_hex))
+        tx.deserialize(f)
+        rvnt = '72766e74' #rvnt
+        # remove the owner output from vout
+        bad_vout = list(filter(lambda out : rvnt not in bytes_to_hex_str(out.scriptPubKey), tx.vout))
+        tx.vout = bad_vout
+        tx_hex_bad = bytes_to_hex_str(tx.serialize())
+        tx_signed = n0.signrawtransaction(tx_hex_bad)['hex']
+        assert_raises_rpc_error(-26, "bad-txns-reissue-asset-bad-owner-asset",
+                                n0.sendrawtransaction, tx_signed)
+
+        ########################################
+        # try tampering to remove asset output...
+        # ...this is actually ok, just an awkward donation to reissue burn address!
+
+        ########################################
+        # reissue!
+        tx_signed = n0.signrawtransaction(tx_hex)['hex']
+        tx_hash = n0.sendrawtransaction(tx_signed)
+        assert_is_hash_string(tx_hash)
+        n0.generate(1)
+        assert_equal(2000, n0.listmyassets(asset_name)[asset_name])
+
     def issue_tampering_test(self):
         self.log.info("Tampering with raw issues...")
 
@@ -72,7 +181,7 @@ class RawAssetTransactionsTest(RavenTestFramework):
         tx.vout = bad_vout
         tx_bad_issue = bytes_to_hex_str(tx.serialize())
         tx_bad_issue_signed = n0.signrawtransaction(tx_bad_issue)['hex']
-        assert_raises_rpc_error(-26, "bad-txns-verifying-issue-asset",
+        assert_raises_rpc_error(-26, "bad-txns-bad-asset-transaction",
                                 n0.sendrawtransaction, tx_bad_issue_signed)
 
         ########################################
@@ -86,7 +195,7 @@ class RawAssetTransactionsTest(RavenTestFramework):
         tx.vout = bad_vout
         tx_bad_issue = bytes_to_hex_str(tx.serialize())
         tx_bad_issue_signed = n0.signrawtransaction(tx_bad_issue)['hex']
-        assert_raises_rpc_error(-26, "bad-txns-bad-new-asset-transaction",
+        assert_raises_rpc_error(-26, "bad-txns-bad-asset-transaction",
                                 n0.sendrawtransaction, tx_bad_issue_signed)
 
         ########################################
@@ -113,6 +222,25 @@ class RawAssetTransactionsTest(RavenTestFramework):
         tx_bad_issue = bytes_to_hex_str(tx.serialize())
         tx_bad_issue_signed = n0.signrawtransaction(tx_bad_issue)['hex']
         assert_raises_rpc_error(-26, "bad-txns-verifying-issue-asset",
+                                n0.sendrawtransaction, tx_bad_issue_signed)
+
+        ########################################
+        # try tampering to make owner output script invalid
+        tx = CTransaction()
+        f = BytesIO(hex_str_to_bytes(tx_issue_hex))
+        tx.deserialize(f)
+        rvno = '72766e6f' #rvno
+        RVNO = '52564e4f' #RVNO
+        # change the owner output script type to be invalid
+        for n in range(0, len(tx.vout)):
+            out = tx.vout[n]
+            if rvno in bytes_to_hex_str(out.scriptPubKey):
+                owner_script_hex = bytes_to_hex_str(out.scriptPubKey)
+                tampered_script = owner_script_hex.replace(rvno, RVNO)
+                tx.vout[n].scriptPubKey = hex_str_to_bytes(tampered_script)
+        tx_bad_issue = bytes_to_hex_str(tx.serialize())
+        tx_bad_issue_signed = n0.signrawtransaction(tx_bad_issue)['hex']
+        assert_raises_rpc_error(-26, "bad-txns-bad-asset-script",
                                 n0.sendrawtransaction, tx_bad_issue_signed)
 
         ########################################
@@ -298,6 +426,69 @@ class RawAssetTransactionsTest(RavenTestFramework):
                                     n0.sendrawtransaction, tx_bad_hex)
 
         ########################################
+        # try tampering to change the output asset name to one that doesn't exist
+        tx = CTransaction()
+        f = BytesIO(hex_str_to_bytes(tx_hex))
+        tx.deserialize(f)
+        rvnt = '72766e74' #rvnt
+        op_drop = '75'
+        # change asset name
+        for n in range(0, len(tx.vout)):
+            out = tx.vout[n]
+            if rvnt in bytes_to_hex_str(out.scriptPubKey):
+                script_hex = bytes_to_hex_str(out.scriptPubKey)
+                f = BytesIO(hex_str_to_bytes(script_hex[script_hex.index(rvnt) + len(rvnt):-len(op_drop)]))
+                transfer = CScriptTransfer()
+                transfer.deserialize(f)
+                transfer.name = b"ASSET_DOES_NOT_EXIST"
+                tampered_transfer = bytes_to_hex_str(transfer.serialize())
+                tampered_script = script_hex[:script_hex.index(rvnt)] + rvnt + tampered_transfer + op_drop
+                tx.vout[n].scriptPubKey = hex_str_to_bytes(tampered_script)
+        tampered_hex = bytes_to_hex_str(tx.serialize())
+        assert_raises_rpc_error(-26, "bad-txns-transfer-asset-not-exist",
+                                n0.sendrawtransaction, tampered_hex)
+
+        ########################################
+        # try tampering to change the output asset name to one that exists
+        alternate_asset_name = "ALTERNATE"
+        n0.issue(alternate_asset_name)
+        n0.generate(1)
+        tx = CTransaction()
+        f = BytesIO(hex_str_to_bytes(tx_hex))
+        tx.deserialize(f)
+        rvnt = '72766e74' #rvnt
+        op_drop = '75'
+        # change asset name
+        for n in range(0, len(tx.vout)):
+            out = tx.vout[n]
+            if rvnt in bytes_to_hex_str(out.scriptPubKey):
+                script_hex = bytes_to_hex_str(out.scriptPubKey)
+                f = BytesIO(hex_str_to_bytes(script_hex[script_hex.index(rvnt) + len(rvnt):-len(op_drop)]))
+                transfer = CScriptTransfer()
+                transfer.deserialize(f)
+                transfer.name = alternate_asset_name.encode()
+                tampered_transfer = bytes_to_hex_str(transfer.serialize())
+                tampered_script = script_hex[:script_hex.index(rvnt)] + rvnt + tampered_transfer + op_drop
+                tx.vout[n].scriptPubKey = hex_str_to_bytes(tampered_script)
+        tampered_hex = bytes_to_hex_str(tx.serialize())
+        assert_raises_rpc_error(-26, "bad-tx-inputs-outputs-mismatch Bad Transaction - " +
+                                f"Trying to create outpoint for asset that you don't have: {alternate_asset_name}",
+                                n0.sendrawtransaction, tampered_hex)
+
+        ########################################
+        # try tampering to remove the asset output
+        tx = CTransaction()
+        f = BytesIO(hex_str_to_bytes(tx_hex))
+        tx.deserialize(f)
+        rvnt = '72766e74' #rvnt
+        # remove the transfer output from vout
+        bad_vout = list(filter(lambda out : rvnt not in bytes_to_hex_str(out.scriptPubKey), tx.vout))
+        tx.vout = bad_vout
+        tampered_hex = bytes_to_hex_str(tx.serialize())
+        assert_raises_rpc_error(-26, "bad-tx-asset-inputs-size-does-not-match-outputs-size",
+                                n0.sendrawtransaction, tampered_hex)
+
+        ########################################
         # send the good transfer
         tx_transfer_hash = n0.sendrawtransaction(tx_hex)
         assert_is_hash_string(tx_transfer_hash)
@@ -364,6 +555,7 @@ class RawAssetTransactionsTest(RavenTestFramework):
         self.issue_reissue_transfer_test()
         self.unique_assets_test()
         self.issue_tampering_test()
+        self.reissue_tampering_test()
 
 
 if __name__ == '__main__':

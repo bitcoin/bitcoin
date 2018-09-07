@@ -341,14 +341,20 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, CAssetsCa
                 if (!foundOwnerAsset)
                     return state.DoS(100, false, REJECT_INVALID, "bad-txns-issue-unique-asset-bad-owner-asset");
             } else {
-                // Fail if transaction contains any new or reissue asset scripts and hasn't conformed to one of the
-                // above transaction types.
+                // Fail if transaction contains any non-transfer asset scripts and hasn't conformed to one of the
+                // above transaction types.  Also fail if it contains OP_RVN_ASSET opcode but wasn't a valid script.
                 for (auto out : tx.vout) {
                     int nType;
                     bool _isOwner;
-                    if (out.scriptPubKey.IsAssetScript(nType, _isOwner))
-                        if (nType == TX_NEW_ASSET || nType == TX_REISSUE_ASSET)
-                            return state.DoS(100, false, REJECT_INVALID, "bad-txns-bad-new-asset-transaction");
+                    if (out.scriptPubKey.IsAssetScript(nType, _isOwner)) {
+                        if (nType != TX_TRANSFER_ASSET) {
+                            return state.DoS(100, false, REJECT_INVALID, "bad-txns-bad-asset-transaction");
+                        }
+                    } else {
+                        if (out.scriptPubKey.Find(OP_RVN_ASSET) > 0) {
+                            return state.DoS(100, false, REJECT_INVALID, "bad-txns-bad-asset-script");
+                        }
+                    }
                 }
             }
         }
