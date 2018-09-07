@@ -4,7 +4,7 @@
 #include "kernel.h"
 #include "../streams.h"
 #include "../hash.h"
-#include "proofpointer.h"
+#include "stakepointer.h"
 
 /*
  * A 'proof hash' (also referred to as a 'kernel') is comprised of the following:

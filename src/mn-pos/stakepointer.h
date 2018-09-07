@@ -21,6 +21,14 @@ struct StakePointer
     uint256 txid;
     unsigned int nPos;
     uint160 hashPubKey;
+
+    void SetNull()
+    {
+        hashBlock = uint256();
+        txid = uint256();
+        hashPubKey = uint160();
+        nPos = 0;
+    }
 };
 
 #endif //CROWNCOIN_PROOFPOINTER_H

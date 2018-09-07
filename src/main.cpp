@@ -38,6 +38,8 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/thread.hpp>
+#include <mn-pos/stakevalidation.h>
+#include <mn-pos/stakepointer.h>
 
 using namespace boost;
 using namespace std;
@@ -2071,6 +2073,41 @@ void ThreadScriptCheck() {
     scriptcheckqueue.Thread();
 }
 
+bool CheckBlockProofPointer(const CBlock& block, CPubKey& pubkeyMasternode)
+{
+    StakePointer stakePointer = block.stakePointer;
+    if (!mapBlockIndex.count(stakePointer.hashBlock))
+        return error("%s: Unknown block hash %s", __func__, stakePointer.hashBlock.GetHex());
+
+    CBlockIndex* pindexFrom = mapBlockIndex.at(stakePointer.hashBlock);
+    if (!chainActive.Contains(pindexFrom))
+        return error("%s: Block %s is not in the block chain", __func__, stakePointer.hashBlock.GetHex());
+
+    CBlock blockFrom;
+    if (!ReadBlockFromDisk(blockFrom, pindexFrom))
+        return error("%s: Failed to read block from disk", __func__);
+
+    bool found = false;
+    for (const auto& tx : block.vtx) {
+        if (tx.GetHash() == stakePointer.txid) {
+            if (tx.vout.size() <= stakePointer.nPos)
+                return error("%s: vout too small", __func__);
+
+            CTxDestination dest;
+            if (!ExtractDestination(tx.vout[stakePointer.nPos].scriptPubKey, dest))
+                return error("%s: failed to get destination from scriptPubKey", __func__);
+
+            if (CBitcoinAddress(stakePointer.hashPubKey).ToString() != CBitcoinAddress(dest).ToString())
+                return error("%s: Pubkeyhash from proof does not match stakepointer", __func__);
+
+            found = true;
+            break;
+        }
+    }
+
+    return found;
+}
+
 static int64_t nTimeVerify = 0;
 static int64_t nTimeConnect = 0;
 static int64_t nTimeIndex = 0;
@@ -2083,6 +2120,26 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     // Check it again in case a previous version let a bad block in
     if (!CheckBlock(block, state, !fJustCheck, !fJustCheck))
         return false;
+
+    // Proof of Stake validation
+    if (pindex->nHeight >= Params().PoSStartHeight()) {
+        if (block.IsProofOfWork())
+            return state.DoS(100, error("%s: Proof of Work block submitted after PoW end", __func__), REJECT_INVALID,
+                    "pow-end");
+
+        CPubKey pubkeyMasternode;
+        if (!CheckBlockProofPointer(block, pubkeyMasternode))
+            return state.DoS(100, error("%s: Invalid block proof pointer", __func__), REJECT_INVALID,
+                             "signature-invalid");
+
+        if (!CheckBlockSignature(block, pubkeyMasternode))
+            return state.DoS(100, error("%s: Invalid signature", __func__), REJECT_INVALID,
+                             "signature-invalid");
+
+    } else if (block.IsProofOfStake()) {
+        return state.DoS(100, error("%s: Proof of Stake block submitted before PoW end", __func__), REJECT_INVALID,
+                         "pos-early");
+    }
 
     // verify that the view's current state corresponds to the previous block
     uint256 hashPrevBlock = pindex->pprev == NULL ? uint256() : pindex->pprev->GetBlockHash();

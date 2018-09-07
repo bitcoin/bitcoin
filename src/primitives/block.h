@@ -13,6 +13,7 @@
 #include "uint256.h"
 
 #include <boost/shared_ptr.hpp>
+#include <mn-pos/stakepointer.h>
 
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
@@ -85,6 +86,7 @@ public:
     // network and disk
     std::vector<CTransaction> vtx;
     std::vector<unsigned char> vchBlockSig;
+    StakePointer stakePointer;
 
     // memory only
     mutable CScript payee;
@@ -109,7 +111,12 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(*(CBlockHeader*)this);
         READWRITE(vtx);
-        READWRITE(vchBlockSig);
+
+        //Only applicable to PoS blocks
+        if (this->IsProofOfStake()) {
+            READWRITE(vchBlockSig);
+            READWRITE(stakePointer);
+        }
     }
 
     void SetNull()
@@ -117,6 +124,7 @@ public:
         CBlockHeader::SetNull();
         vtx.clear();
         vchBlockSig.clear();
+        stakePointer.SetNull();
         fChecked = false;
         vMerkleTree.clear();
         payee = CScript();
