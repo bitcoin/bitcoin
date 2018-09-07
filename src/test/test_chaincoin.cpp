@@ -30,7 +30,7 @@ void CConnmanTest::ClearNodes()
 {
     LOCK(g_connman->cs_vNodes);
     for (CNode* node : g_connman->vNodes) {
-            delete node;
+        delete node;
     }
     g_connman->vNodes.clear();
 }
@@ -123,7 +123,6 @@ TestChain100Setup::TestChain100Setup() : TestingSetup(CBaseChainParams::REGTEST)
 {
     // CreateAndProcessBlock() does not support building SegWit blocks, so don't activate in these tests.
     // TODO: fix the code to support SegWit blocks.
-    std::cout << "here" << std::endl;
     UpdateVersionBitsParameters(Consensus::DEPLOYMENT_SEGWIT, 0, Consensus::BIP9Deployment::NO_TIMEOUT);
     // Generate a 100-block chain:
     coinbaseKey.MakeNewKey(true);
