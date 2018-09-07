@@ -32,12 +32,21 @@ public:
     enum Base58Type {
         PUBKEY_ADDRESS,
         SCRIPT_ADDRESS,
+        IDENTITY_ADDRESS,
+        APP_SERVICE_ADDRESS,
+        TITLE_ADDRESS,
         SECRET_KEY,     // BIP16
         EXT_PUBLIC_KEY, // BIP32
         EXT_SECRET_KEY, // BIP32
         EXT_COIN_TYPE,  // BIP44
 
         MAX_BASE58_TYPES
+    };
+
+    enum AddressType
+    {
+        NEW_ADDRESS_TYPE,
+        DEPRECATED_ADDRESS_TYPE
     };
 
     const uint256& HashGenesisBlock() const { return hashGenesisBlock; }
@@ -74,7 +83,14 @@ public:
     /** Return the BIP70 network string (main, test or regtest) */
     std::string NetworkIDString() const { return strNetworkID; }
     const std::vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
-    const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
+    const std::vector<unsigned char>& Base58Prefix(Base58Type type, AddressType addressType = NEW_ADDRESS_TYPE) const
+    {
+        if (addressType == DEPRECATED_ADDRESS_TYPE)
+        {
+            return base58PrefixesOld[type];
+        }
+        return base58Prefixes[type];
+    }
     const std::vector<CAddress>& FixedSeeds() const { return vFixedSeeds; }
     virtual const Checkpoints::CCheckpointData& Checkpoints() const = 0;
     int PoolMaxTransactions() const { return nPoolMaxTransactions; }
@@ -111,6 +127,7 @@ protected:
     long nMaxTipAge;
     std::vector<CDNSSeedData> vSeeds;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
+    std::vector<unsigned char> base58PrefixesOld[MAX_BASE58_TYPES];
     CBaseChainParams::Network networkID;
     std::string strNetworkID;
     CBlock genesis;

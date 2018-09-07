@@ -585,6 +585,15 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             ssKey >> strAddress;
             ssKey >> strKey;
             ssValue >> strValue;
+
+            if (CBitcoinAddress(strAddress).IsDeprecated())
+            {
+                // If the address is deprecated then get the new address
+                // based on destination of old one
+                CTxDestination key = CBitcoinAddress(strAddress, CChainParams::DEPRECATED_ADDRESS_TYPE).Get();
+                strAddress = CBitcoinAddress(key).ToString();
+            }
+
             if (!pwallet->LoadDestData(CBitcoinAddress(strAddress).Get(), strKey, strValue))
             {
                 strErr = "Error reading wallet database: LoadDestData failed";
