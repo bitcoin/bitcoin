@@ -22,55 +22,8 @@
 // they can be included inside by changing public keys to private keys (WIF
 // format), and changing xpubs by xprvs.
 //
-// 1. Examples
-//
-// A P2PK descriptor with a fixed public key:
-// - pk(0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798)
-//
-// A P2SH-P2WSH-P2PKH descriptor with a fixed public key:
-// - sh(wsh(pkh(02e493dbf1c10d80f3581e4904930b1404cc6c13900ee0758474fa94abe8c4cd13)))
-//
-// A bare 1-of-2 multisig descriptor:
-// - multi(1,022f8bde4d1a07209355b4a7250a5c5128e88b84bddc619ab7cba8d569b240efe4,025cbdf0646e5db4eaa398f365f2ea7a0e3d419b7e0330e39ce92bddedcac4f9bc)
-//
-// A chain of P2PKH outputs (this needs the corresponding private key to derive):
-// - pkh(xpub68Gmy5EdvgibQVfPdqkBBCHxA5htiqg55crXYuXoQRKfDBFA1WEjWgP6LHhwBZeNK1VTsfTFUHCdrfp1bgwQ9xv5ski8PX9rL2dZXvgGDnw/1'/2/*)
-//
-// 2. Grammar description:
-//
-// X: xpub or xprv encoded extended key
-// I: decimal encoded integer
-// H: Hex encoded byte array
-// A: Address in P2PKH, P2SH, or Bech32 encoding
-//
-// S (Scripts):
-// * pk(P): Pay-to-pubkey (P2PK) output for public key P.
-// * pkh(P): Pay-to-pubkey-hash (P2PKH) output for public key P.
-// * wpkh(P): Pay-to-witness-pubkey-hash (P2WPKH) output for public key P.
-// * sh(S): Pay-to-script-hash (P2SH) output for script S
-// * wsh(S): Pay-to-witness-script-hash (P2WSH) output for script S
-// * combo(P): combination of P2PK, P2PKH, P2WPKH, and P2SH-P2WPKH for public key P.
-// * multi(I,L): k-of-n multisig for given public keys
-// * addr(A): Output to address
-// * raw(H): scriptPubKey with raw bytes
-//
-// P (Public keys):
-// * H: fixed public key (or WIF-encoded private key)
-// * E: extended public key
-// * E/*: (ranged) all unhardened direct children of an extended public key
-// * E/*': (ranged) all hardened direct children of an extended public key
-//
-// L (Comma-separated lists of public keys):
-// * P
-// * L,P
-//
-// E (Extended public keys):
-// * X
-// * E/I: unhardened child
-// * E/I': hardened child
-// * E/Ih: hardened child (alternative notation)
-//
-// The top level is S.
+// Reference documentation about the descriptor language can be found in
+// doc/descriptors.md.
 
 /** Interface for parsed descriptor objects. */
 struct Descriptor {

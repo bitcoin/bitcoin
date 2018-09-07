@@ -14,8 +14,8 @@
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <interfaces/wallet.h>
-#include <util.h>
 #include <ui_interface.h>
+#include <util.h>
 #include <version.h>
 
 #include <QApplication>
@@ -23,6 +23,8 @@
 #include <QDesktopWidget>
 #include <QPainter>
 #include <QRadialGradient>
+
+#include <boost/bind.hpp>
 
 SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const NetworkStyle *networkStyle) :
     QWidget(0, f), curAlignment(0), m_node(node)
@@ -198,7 +200,7 @@ void SplashScreen::unsubscribeFromCoreSignals()
     // Disconnect signals from client
     m_handler_init_message->disconnect();
     m_handler_show_progress->disconnect();
-    for (auto& handler : m_connected_wallet_handlers) {
+    for (const auto& handler : m_connected_wallet_handlers) {
         handler->disconnect();
     }
     m_connected_wallet_handlers.clear();

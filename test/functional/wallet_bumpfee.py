@@ -31,7 +31,7 @@ class BumpFeeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
-        self.extra_args = [["-deprecatedrpc=addwitnessaddress", "-walletrbf={}".format(i)]
+        self.extra_args = [["-deprecatedrpc=addwitnessaddress", "-walletrbf={}".format(i), "-mintxfee=0.00002"]
                            for i in range(self.num_nodes)]
 
     def run_test(self):
@@ -190,6 +190,8 @@ def test_dust_to_fee(rbf_node, dest_address):
 
 
 def test_settxfee(rbf_node, dest_address):
+    assert_raises_rpc_error(-8, "txfee cannot be less than min relay tx fee", rbf_node.settxfee, Decimal('0.000005'))
+    assert_raises_rpc_error(-8, "txfee cannot be less than wallet min fee", rbf_node.settxfee, Decimal('0.000015'))
     # check that bumpfee reacts correctly to the use of settxfee (paytxfee)
     rbfid = spend_one_input(rbf_node, dest_address)
     requested_feerate = Decimal("0.00025000")

@@ -20,6 +20,12 @@ class CTransaction;
 
 struct CMutableTransaction;
 
+struct KeyOriginInfo
+{
+    unsigned char fingerprint[4];
+    std::vector<uint32_t> path;
+};
+
 /** An interface to be implemented by keystores that support signing. */
 class SigningProvider
 {
@@ -28,19 +34,24 @@ public:
     virtual bool GetCScript(const CScriptID &scriptid, CScript& script) const { return false; }
     virtual bool GetPubKey(const CKeyID &address, CPubKey& pubkey) const { return false; }
     virtual bool GetKey(const CKeyID &address, CKey& key) const { return false; }
+    virtual bool GetKeyOrigin(const CKeyID& id, KeyOriginInfo& info) const { return false; }
 };
 
 extern const SigningProvider& DUMMY_SIGNING_PROVIDER;
 
-class PublicOnlySigningProvider : public SigningProvider
+class HidingSigningProvider : public SigningProvider
 {
 private:
+    const bool m_hide_secret;
+    const bool m_hide_origin;
     const SigningProvider* m_provider;
 
 public:
-    PublicOnlySigningProvider(const SigningProvider* provider) : m_provider(provider) {}
-    bool GetCScript(const CScriptID &scriptid, CScript& script) const;
-    bool GetPubKey(const CKeyID &address, CPubKey& pubkey) const;
+    HidingSigningProvider(const SigningProvider* provider, bool hide_secret, bool hide_origin) : m_hide_secret(hide_secret), m_hide_origin(hide_origin), m_provider(provider) {}
+    bool GetCScript(const CScriptID& scriptid, CScript& script) const override;
+    bool GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const override;
+    bool GetKey(const CKeyID& keyid, CKey& key) const override;
+    bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override;
 };
 
 struct FlatSigningProvider final : public SigningProvider
@@ -98,7 +109,7 @@ struct SignatureData {
     CScript witness_script; ///< The witnessScript (if any) for the input. witnessScripts are used in P2WSH outputs.
     CScriptWitness scriptWitness; ///< The scriptWitness of an input. Contains complete signatures or the traditional partial signatures format. scriptWitness is part of a transaction input per BIP 144.
     std::map<CKeyID, SigPair> signatures; ///< BIP 174 style partial signatures for the input. May contain all signatures necessary for producing a final scriptSig or scriptWitness.
-    std::map<CKeyID, CPubKey> misc_pubkeys;
+    std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>> misc_pubkeys;
 
     SignatureData() {}
     explicit SignatureData(const CScript& script) : scriptSig(script) {}
@@ -155,7 +166,7 @@ void UnserializeFromVector(Stream& s, X&... args)
 
 // Deserialize HD keypaths into a map
 template<typename Stream>
-void DeserializeHDKeypaths(Stream& s, const std::vector<unsigned char>& key, std::map<CPubKey, std::vector<uint32_t>>& hd_keypaths)
+void DeserializeHDKeypaths(Stream& s, const std::vector<unsigned char>& key, std::map<CPubKey, KeyOriginInfo>& hd_keypaths)
 {
     // Make sure that the key is the size of pubkey + 1
     if (key.size() != CPubKey::PUBLIC_KEY_SIZE + 1 && key.size() != CPubKey::COMPRESSED_PUBLIC_KEY_SIZE + 1) {
@@ -172,25 +183,31 @@ void DeserializeHDKeypaths(Stream& s, const std::vector<unsigned char>& key, std
 
     // Read in key path
     uint64_t value_len = ReadCompactSize(s);
-    std::vector<uint32_t> keypath;
-    for (unsigned int i = 0; i < value_len; i += sizeof(uint32_t)) {
+    if (value_len % 4 || value_len == 0) {
+        throw std::ios_base::failure("Invalid length for HD key path");
+    }
+
+    KeyOriginInfo keypath;
+    s >> keypath.fingerprint;
+    for (unsigned int i = 4; i < value_len; i += sizeof(uint32_t)) {
         uint32_t index;
         s >> index;
-        keypath.push_back(index);
+        keypath.path.push_back(index);
     }
 
     // Add to map
-    hd_keypaths.emplace(pubkey, keypath);
+    hd_keypaths.emplace(pubkey, std::move(keypath));
 }
 
 // Serialize HD keypaths to a stream from a map
 template<typename Stream>
-void SerializeHDKeypaths(Stream& s, const std::map<CPubKey, std::vector<uint32_t>>& hd_keypaths, uint8_t type)
+void SerializeHDKeypaths(Stream& s, const std::map<CPubKey, KeyOriginInfo>& hd_keypaths, uint8_t type)
 {
     for (auto keypath_pair : hd_keypaths) {
         SerializeToVector(s, type, MakeSpan(keypath_pair.first));
-        WriteCompactSize(s, keypath_pair.second.size() * sizeof(uint32_t));
-        for (auto& path : keypath_pair.second) {
+        WriteCompactSize(s, (keypath_pair.second.path.size() + 1) * sizeof(uint32_t));
+        s << keypath_pair.second.fingerprint;
+        for (const auto& path : keypath_pair.second.path) {
             s << path;
         }
     }
@@ -205,7 +222,7 @@ struct PSBTInput
     CScript witness_script;
     CScript final_script_sig;
     CScriptWitness final_script_witness;
-    std::map<CPubKey, std::vector<uint32_t>> hd_keypaths;
+    std::map<CPubKey, KeyOriginInfo> hd_keypaths;
     std::map<CKeyID, SigPair> partial_sigs;
     std::map<std::vector<unsigned char>, std::vector<unsigned char>> unknown;
     int sighash_type = 0;
@@ -418,7 +435,7 @@ struct PSBTOutput
 {
     CScript redeem_script;
     CScript witness_script;
-    std::map<CPubKey, std::vector<uint32_t>> hd_keypaths;
+    std::map<CPubKey, KeyOriginInfo> hd_keypaths;
     std::map<std::vector<unsigned char>, std::vector<unsigned char>> unknown;
 
     bool IsNull() const;
@@ -687,7 +704,7 @@ bool SignSignature(const SigningProvider &provider, const CScript& fromPubKey, C
 bool SignSignature(const SigningProvider &provider, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType);
 
 /** Signs a PSBTInput, verifying that all provided data matches what is being signed. */
-bool SignPSBTInput(const SigningProvider& provider, const CMutableTransaction& tx, PSBTInput& input, SignatureData& sigdata, int index, int sighash = 1);
+bool SignPSBTInput(const SigningProvider& provider, const CMutableTransaction& tx, PSBTInput& input, int index, int sighash = SIGHASH_ALL);
 
 /** Extract signature data from a transaction input, and insert it. */
 SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nIn, const CTxOut& txout);

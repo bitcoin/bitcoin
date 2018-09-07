@@ -19,11 +19,6 @@
 #include <timedata.h>
 #include <util.h>
 #include <utilstrencodings.h>
-#ifdef ENABLE_WALLET
-#include <wallet/rpcwallet.h>
-#include <wallet/wallet.h>
-#include <wallet/walletdb.h>
-#endif
 #include <warnings.h>
 
 #include <stdint.h>
@@ -67,28 +62,17 @@ static UniValue validateaddress(const JSONRPCRequest& request)
     ret.pushKV("isvalid", isValid);
     if (isValid)
     {
+        std::string currentAddress = EncodeDestination(dest);
+        ret.pushKV("address", currentAddress);
 
-#ifdef ENABLE_WALLET
-        if (HasWallets() && IsDeprecatedRPCEnabled("validateaddress")) {
-            ret.pushKVs(getaddressinfo(request));
-        }
-#endif
-        if (ret["address"].isNull()) {
-            std::string currentAddress = EncodeDestination(dest);
-            ret.pushKV("address", currentAddress);
+        CScript scriptPubKey = GetScriptForDestination(dest);
+        ret.pushKV("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end()));
 
-            CScript scriptPubKey = GetScriptForDestination(dest);
-            ret.pushKV("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end()));
-
-            UniValue detail = DescribeAddress(dest);
-            ret.pushKVs(detail);
-        }
+        UniValue detail = DescribeAddress(dest);
+        ret.pushKVs(detail);
     }
     return ret;
 }
-
-// Needed even with !ENABLE_WALLET, to pass (ignored) pointers around
-class CWallet;
 
 static UniValue createmultisig(const JSONRPCRequest& request)
 {
@@ -130,8 +114,7 @@ static UniValue createmultisig(const JSONRPCRequest& request)
         if (IsHex(keys[i].get_str()) && (keys[i].get_str().length() == 66 || keys[i].get_str().length() == 130)) {
             pubkeys.push_back(HexToPubKey(keys[i].get_str()));
         } else {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid public key: %s\nNote that from v0.16, createmultisig no longer accepts addresses."
-            " Users must use addmultisigaddress to create multisig addresses with addresses known to the wallet.", keys[i].get_str()));
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid public key: %s\n.", keys[i].get_str()));
         }
     }
 
@@ -461,7 +444,7 @@ static const CRPCCommand commands[] =
   //  --------------------- ------------------------  -----------------------  ----------
     { "control",            "getmemoryinfo",          &getmemoryinfo,          {"mode"} },
     { "control",            "logging",                &logging,                {"include", "exclude"}},
-    { "util",               "validateaddress",        &validateaddress,        {"address"} }, /* uses wallet if enabled */
+    { "util",               "validateaddress",        &validateaddress,        {"address"} },
     { "util",               "createmultisig",         &createmultisig,         {"nrequired","keys"} },
     { "util",               "verifymessage",          &verifymessage,          {"address","signature","message"} },
     { "util",               "signmessagewithprivkey", &signmessagewithprivkey, {"privkey","message"} },
