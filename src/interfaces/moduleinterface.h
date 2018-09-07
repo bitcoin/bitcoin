@@ -33,9 +33,9 @@ private:
 class WalletInterface {
 public:
     /** Check MN Collateral */
-    virtual bool CheckMNCollateral(COutPoint& outpointRet, CTxDestination &destRet, CPubKey& pubKeyRet, CKey& keyRet, const std::string& strTxHash, const std::string& strOutputIndex) = 0;
+    virtual bool CheckMNCollateral(COutPoint& outpointRet, CTxDestination &destRet, CPubKey& pubKeyRet, CKey& keyRet, const std::string& strTxHash, const std::string& strOutputIndex) const = 0;
     /** Return MN mixing state */
-    virtual bool IsMixingMasternode(const CNode* pnode) = 0;
+    virtual bool IsMixingMasternode(const CNode* pnode) const = 0;
 
     virtual ~WalletInterface() {}
 };

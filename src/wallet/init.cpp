@@ -311,15 +311,14 @@ void WalletInit::Close() const
 class CWalletInterface : public WalletInterface {
 public:
     /** Check MN Collateral */
-    bool CheckMNCollateral(COutPoint& outpointRet, CTxDestination &destRet, CPubKey& pubKeyRet, CKey& keyRet, const std::string& strTxHash, const std::string& strOutputIndex) override;
+    bool CheckMNCollateral(COutPoint& outpointRet, CTxDestination &destRet, CPubKey& pubKeyRet, CKey& keyRet, const std::string& strTxHash, const std::string& strOutputIndex) const override;
     /** Return MN mixing state */
-    bool IsMixingMasternode(const CNode* pnode) override;
+    bool IsMixingMasternode(const CNode* pnode) const override;
 };
 
-static CWalletInterface g_wallet;
-WalletInterface* const g_wallet_interface = &g_wallet;
+const WalletInterface& g_wallet_interface = CWalletInterface();
 
-bool CWalletInterface::CheckMNCollateral(COutPoint& outpointRet, CTxDestination &destRet, CPubKey& pubKeyRet, CKey& keyRet, const std::string& strTxHash, const std::string& strOutputIndex)
+bool CWalletInterface::CheckMNCollateral(COutPoint& outpointRet, CTxDestination &destRet, CPubKey& pubKeyRet, CKey& keyRet, const std::string& strTxHash, const std::string& strOutputIndex) const
 {
     bool foundmnout = false;
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
@@ -329,7 +328,7 @@ bool CWalletInterface::CheckMNCollateral(COutPoint& outpointRet, CTxDestination 
     return foundmnout;
 }
 
-bool CWalletInterface::IsMixingMasternode(const CNode* pnode)
+bool CWalletInterface::IsMixingMasternode(const CNode* pnode) const
 {
     return privateSendClient.IsMixingMasternode(pnode);
 }

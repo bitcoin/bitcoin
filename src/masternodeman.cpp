@@ -723,7 +723,7 @@ void CMasternodeMan::ProcessMasternodeConnections(CConnman* connman)
     if(Params().NetworkIDString() == CBaseChainParams::REGTEST) return;
 
     connman->ForEachNode([](CNode* pnode) {
-        if(pnode->fMasternode && !g_wallet_interface->IsMixingMasternode(pnode)) {
+        if(pnode->fMasternode && !g_wallet_interface.IsMixingMasternode(pnode)) {
             LogPrintf("Closing Masternode connection: peer=%d, addr=%s\n", pnode->GetId(), pnode->addr.ToString());
             pnode->fDisconnect = true;
         }

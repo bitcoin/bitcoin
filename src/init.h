@@ -17,7 +17,7 @@ class WalletInitInterface;
 extern const WalletInitInterface& g_wallet_init_interface;
 
 class WalletInterface;
-extern WalletInterface* const g_wallet_interface;
+extern const WalletInterface&  g_wallet_interface;
 
 namespace boost
 {
