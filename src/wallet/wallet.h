@@ -1250,7 +1250,7 @@ public:
     /* Generates a new HD seed (will not be activated) */
     CPubKey GenerateNewSeed();
 
-    /* Derives a new HD master key (will not be activated) */
+    /* Derives a new HD seed (will not be activated) */
     CPubKey DeriveNewSeed(const CKey& key);
 
     /* Set the current HD seed (will reset the chain child index counters)
