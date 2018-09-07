@@ -70,7 +70,6 @@ class CCoinControl;
 class COutput;
 class CReserveKey;
 class CScript;
-class CScheduler;
 class CTxMemPool;
 class CBlockPolicyEstimator;
 class CWalletTx;
@@ -719,9 +718,8 @@ class WalletRescanReserver; //forward declarations for ScanForWalletTransactions
 class CWallet final : public CCryptoKeyStore, public CValidationInterface
 {
 private:
-    static std::atomic<bool> fFlushScheduled;
-    std::atomic<bool> fAbortRescan;
-    std::atomic<bool> fScanningWallet; //controlled by WalletRescanReserver
+    std::atomic<bool> fAbortRescan{false};
+    std::atomic<bool> fScanningWallet{false}; // controlled by WalletRescanReserver
     std::mutex mutexScanning;
     friend class WalletRescanReserver;
 
@@ -1228,6 +1226,9 @@ public:
     /** Mark a transaction as replaced by another transaction (e.g., BIP 125). */
     bool MarkReplaced(const uint256& originalHash, const uint256& newHash);
 
+    //! Verify wallet naming and perform salvage on the wallet if required
+    static bool Verify(std::string wallet_file, bool salvage_wallet, std::string& error_string, std::string& warning_string);
+
     /* Initializes the wallet, returns a new CWallet instance or a null pointer in case of an error */
     static CWallet* CreateWalletFromFile(const std::string& name, const fs::path& path);
 
@@ -1235,7 +1236,7 @@ public:
      * Wallet post-init setup
      * Gives the wallet a chance to register repetitive tasks and complete post-init tasks
      */
-    void postInitProcess(CScheduler& scheduler, bool mnconflock);
+    void postInitProcess(bool mnconflock);
 
     bool BackupWallet(const std::string& strDest);
 
