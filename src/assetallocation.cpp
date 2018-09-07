@@ -28,6 +28,7 @@
 #include <future>
 #include <boost/multiprecision/cpp_dec_float.hpp>
 using namespace std;
+using namespace boost::multiprecision;
 vector<pair<uint256, int64_t> > vecTPSTestReceivedTimes;
 vector<JSONRPCRequest> vecTPSRawTransactions;
 int64_t nTPSTestingSendRawElapsedTime = 0;
@@ -280,17 +281,16 @@ CAmount GetAssetAllocationInterest(CAssetAllocation & assetAllocation, const int
 		errorMessage = _("Not enough blocks have passed since the last claim, please wait some more time...");
 		return 0;
 	}
-	const boost::multiprecision::cpp_dec_float_50 &nInterestBlockTerm = fUnitTest ? boost::multiprecision::cpp_dec_float_50(ONE_HOUR_IN_BLOCKS) : boost::multiprecision::cpp_dec_float_50(ONE_YEAR_IN_BLOCKS);
-	const boost::multiprecision::cpp_dec_float_50 &nBlockDifference = boost::multiprecision::cpp_dec_float_50(nHeight - assetAllocation.nLastInterestClaimHeight);
+	const cpp_dec_float_50 &nInterestBlockTerm = fUnitTest ? cpp_dec_float_50(ONE_HOUR_IN_BLOCKS) : cpp_dec_float_50(ONE_YEAR_IN_BLOCKS);
+	const cpp_dec_float_50 &nBlockDifference = cpp_dec_float_50(nHeight - assetAllocation.nLastInterestClaimHeight);
 
 	// apply compound annual interest to get total interest since last time interest was collected
-	const boost::multiprecision::cpp_dec_float_50& nBalanceOverTimeDifference = boost::multiprecision::cpp_dec_float_50(assetAllocation.nAccumulatedBalanceSinceLastInterestClaim / nBlockDifference);
-	const boost::multiprecision::cpp_dec_float_50& fInterestOverTimeDifference = boost::multiprecision::cpp_dec_float_50(assetAllocation.fAccumulatedInterestSinceLastInterestClaim / nBlockDifference);
-	const boost::multiprecision::cpp_dec_float_50& nInterestPerBlock = fInterestOverTimeDifference / nInterestBlockTerm;
-	const boost::multiprecision::cpp_dec_float_50& powcalc = boost::multiprecision::pow(boost::multiprecision::cpp_dec_float_50(1.0) + nInterestPerBlock, nBlockDifference);
-	boost::multiprecision::cpp_dec_float_50 result = powcalc*nBalanceOverTimeDifference;
-	result = result - nBalanceOverTimeDifference;
-	return result.convert_to<CAmount>();
+	const cpp_dec_float_50& nBalanceOverTimeDifference = cpp_dec_float_50(assetAllocation.nAccumulatedBalanceSinceLastInterestClaim / nBlockDifference);
+	const cpp_dec_float_50& fInterestOverTimeDifference = cpp_dec_float_50(assetAllocation.fAccumulatedInterestSinceLastInterestClaim / nBlockDifference);
+	const cpp_dec_float_50& nInterestPerBlock = fInterestOverTimeDifference / nInterestBlockTerm;
+	const cpp_dec_float_50& a = cpp_dec_float_50(1.0) + nInterestPerBlock;
+	const auto powcalc = boost::multiprecision::pow(a, nBlockDifference);
+	return cpp_dec_float_50((powcalc*nBalanceOverTimeDifference) - nBalanceOverTimeDifference).convert_to<CAmount>();
 }
 bool ApplyAssetAllocationInterest(CAsset& asset, CAssetAllocation & assetAllocation, const int& nHeight, string& errorMessage) {
 	CAmount nInterest = GetAssetAllocationInterest(assetAllocation, nHeight, errorMessage);
