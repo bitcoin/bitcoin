@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>576</width>
-    <height>481</height>
+    <width>617</width>
+    <height>503</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -948,7 +948,7 @@ https://www.transifex.com/projects/p/chaincoin/</string>
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_4">
        <item>
-        <spacer name="verticalSpacer">
+        <spacer name="verticalSpacer1">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
