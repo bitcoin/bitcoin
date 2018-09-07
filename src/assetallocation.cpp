@@ -557,7 +557,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 				}
 			}
 			const CAmount &nBalanceAfterSend = dbAssetAllocation.nBalance - nTotal;
-			if (nBalanceAfterSend < -1000) {
+			if (nBalanceAfterSend < 0) {
 				bBalanceOverrun = true;
 				if(bSanityCheck)
 					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1021 - " + _("Sender balance is insufficient");
@@ -607,8 +607,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 						receiverAllocation.vchMemo = theAssetAllocation.vchMemo;
 						receiverAllocation.nBalance += amountTuple.second;
 						theAssetAllocation.nBalance -= amountTuple.second;
-						if (theAssetAllocation.nBalance < 0)
-							theAssetAllocation.nBalance = 0;
 
 					}
 					const string& receiverAddress = stringFromVch(receiverAllocation.vchAliasOrAddress);
