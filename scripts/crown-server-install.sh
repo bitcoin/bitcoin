@@ -110,22 +110,25 @@ handle_arguments()
 }
 
 install_dependencies() {
-    sudo apt-get install ufw unzip -y
+    sudo apt-get install curl ufw unzip -y
 }
 
 create_swap() {
-    sudo mkdir -p /var/cache/swap/   
-    sudo dd if=/dev/zero of=/var/cache/swap/myswap bs=1M count=1024
-    sudo mkswap /var/cache/swap/myswap
-    sudo swapon /var/cache/swap/myswap
-    swap_line='/var/cache/swap/myswap   none    swap    sw  0   0'
-    # Add the line only once 
-    sudo grep -q -F "$swap_line" /etc/fstab || echo "$swap_line" | sudo tee --append /etc/fstab > /dev/null
-    cat /etc/fstab
+    if [ `sudo swapon | wc -l` -lt 2 ]; then
+        sudo mkdir -p /var/cache/swap/   
+        sudo dd if=/dev/zero of=/var/cache/swap/myswap bs=1M count=1024
+        sudo chmod 600 /var/cache/swap/myswap
+        sudo mkswap /var/cache/swap/myswap
+        sudo swapon /var/cache/swap/myswap
+        swap_line='/var/cache/swap/myswap   none    swap    sw  0   0'
+        # Add the line only once 
+        sudo grep -q -F "$swap_line" /etc/fstab || echo "$swap_line" | sudo tee --append /etc/fstab > /dev/null
+        cat /etc/fstab
+    fi
 }
 
 update_repos() {
-    sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" update
+    sudo apt-get update
     sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade
 }
 
@@ -148,9 +151,9 @@ download_package() {
 
 install_package() {
     sudo unzip -d $dir/crown $dir/crown.zip
-    cp -f $dir/crown/*/bin/* /usr/local/bin/
-    cp -f $dir/crown/*/lib/* /usr/local/lib/
-    rm -rf $tmp
+    sudo cp -f $dir/crown/*/bin/* /usr/local/bin/
+#    sudo cp -f $dir/crown/*/lib/* /usr/local/lib/
+    sudo rm -rf $dir
 }
 
 configure_conf() {
@@ -188,13 +191,18 @@ configure_firewall() {
 }
 
 add_cron_job() {
-    (crontab -l 2>/dev/null; echo "@reboot /usr/local/bin/crownd") | crontab -
+    cron_line="@reboot /usr/local/bin/crownd"
+    if [ `crontab -l 2>/dev/null | grep "$cron_line" | wc -l` -eq 0 ]; then
+        (crontab -l 2>/dev/null; echo "$cron_line") | crontab -
+    fi
 }
 
 main() {
-    # Stop crownd (in case it's running)
-    /usr/local/bin/crown-cli stop
-    # Install Packages
+    # (Quietly) Stop crownd (in case it's running)
+    /usr/local/bin/crown-cli stop 2>/dev/null
+    # Update Repos
+    update_repos
+    # Install dependencies
     install_dependencies
     # Download the latest release
     download_package
@@ -204,18 +212,18 @@ main() {
     if [ "$install" = true ] ; then
         # Create swap to help with sync
         create_swap
-        # Update Repos
-        update_repos
         # Create folder structures and configure crown.conf
         configure_conf
         # Configure firewall
         configure_firewall
-        # Add cron job to restart crownd on reboot
-        add_cron_job
     fi
+
+    # Ensure there is a cron job to restart crownd on reboot
+    add_cron_job
     # Start Crownd to begin sync
     /usr/local/bin/crownd
 }
 
 handle_arguments "$@"
 main
+
