@@ -117,6 +117,7 @@ class AssetTest(RavenTestFramework):
                    reissuable=False, new_ipfs=ipfs_hash[::-1])
 
         self.log.info("Waiting for ten confirmations after reissue...")
+        self.sync_all()
         n0.generate(10)
         self.sync_all()
 
@@ -145,6 +146,7 @@ class AssetTest(RavenTestFramework):
         n0.issue(asset_name="MY_ASSET/SUB1", qty=1000, to_address=address0, change_address=address0,\
                  units=4, reissuable=True, has_ipfs=True, ipfs_hash=ipfs_hash)
 
+        self.sync_all()
         self.log.info("Waiting for ten confirmations after issuesubasset...")
         n0.generate(10)
         self.sync_all()

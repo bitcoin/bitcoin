@@ -45,6 +45,7 @@ public:
     }
 
     CNewAsset(const std::string& strName, const CAmount& nAmount, const int& units, const int& nReissuable, const int& nHasIPFS, const std::string& strIPFSHash);
+    CNewAsset(const std::string& strName, const CAmount& nAmount);
 
     CNewAsset(const CNewAsset& asset);
     CNewAsset& operator=(const CNewAsset& asset);
