@@ -12,7 +12,11 @@ from test_framework.messages import msg_block
 from test_framework.mininode import mininode_lock, P2PInterface
 from test_framework.script import CScript
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, bytes_to_hex_str, wait_until
+from test_framework.util import (
+    assert_equal,
+    bytes_to_hex_str,
+    wait_until,
+)
 
 DERSIG_HEIGHT = 1251
 
@@ -42,7 +46,7 @@ def unDERify(tx):
 class BIP66Test(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.extra_args = [['-whitelist=127.0.0.1']]
+        self.extra_args = [['-whitelist=127.0.0.1', '-par=1', '-enablebip61']]  # Use only one script thread to get the exact reject reason for testing
         self.setup_clean_chain = True
 
     def run_test(self):
@@ -78,15 +82,11 @@ class BIP66Test(BitcoinTestFramework):
         block.nVersion = 2
         block.rehash()
         block.solve()
-        self.nodes[0].p2p.send_and_ping(msg_block(block))
-        assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
 
-        wait_until(lambda: "reject" in self.nodes[0].p2p.last_message.keys(), lock=mininode_lock)
-        with mininode_lock:
-            assert_equal(self.nodes[0].p2p.last_message["reject"].code, REJECT_OBSOLETE)
-            assert_equal(self.nodes[0].p2p.last_message["reject"].reason, b'bad-version(0x00000002)')
-            assert_equal(self.nodes[0].p2p.last_message["reject"].data, block.sha256)
-            del self.nodes[0].p2p.last_message["reject"]
+        with self.nodes[0].assert_debug_log(expected_msgs=['{}, bad-version(0x00000002)'.format(block.hash)]):
+            self.nodes[0].p2p.send_and_ping(msg_block(block))
+            assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
+            self.nodes[0].p2p.sync_with_ping()
 
         self.log.info("Test that transactions with non-DER signatures cannot appear in a block")
         block.nVersion = 3
@@ -109,23 +109,16 @@ class BIP66Test(BitcoinTestFramework):
         block.rehash()
         block.solve()
 
-        self.nodes[0].p2p.send_and_ping(msg_block(block))
-        assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
+        with self.nodes[0].assert_debug_log(expected_msgs=['CheckInputs on {} failed with non-mandatory-script-verify-flag (Non-canonical DER signature)'.format(block.vtx[-1].hash)]):
+            self.nodes[0].p2p.send_and_ping(msg_block(block))
+            assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
+            self.nodes[0].p2p.sync_with_ping()
 
         wait_until(lambda: "reject" in self.nodes[0].p2p.last_message.keys(), lock=mininode_lock)
         with mininode_lock:
-            # We can receive different reject messages depending on whether
-            # bitcoind is running with multiple script check threads. If script
-            # check threads are not in use, then transaction script validation
-            # happens sequentially, and bitcoind produces more specific reject
-            # reasons.
             assert self.nodes[0].p2p.last_message["reject"].code in [REJECT_INVALID, REJECT_NONSTANDARD]
             assert_equal(self.nodes[0].p2p.last_message["reject"].data, block.sha256)
-            if self.nodes[0].p2p.last_message["reject"].code == REJECT_INVALID:
-                # Generic rejection when a block is invalid
-                assert_equal(self.nodes[0].p2p.last_message["reject"].reason, b'block-validation-failed')
-            else:
-                assert b'Non-canonical DER signature' in self.nodes[0].p2p.last_message["reject"].reason
+            assert b'Non-canonical DER signature' in self.nodes[0].p2p.last_message["reject"].reason
 
         self.log.info("Test that a version 3 block with a DERSIG-compliant transaction is accepted")
         block.vtx[1] = create_transaction(self.nodes[0], self.coinbase_txids[1], self.nodeaddress, amount=1.0)

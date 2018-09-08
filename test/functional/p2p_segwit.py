@@ -41,7 +41,6 @@ from test_framework.messages import (
 from test_framework.mininode import (
     P2PInterface,
     mininode_lock,
-    wait_until,
 )
 from test_framework.script import (
     CScript,
@@ -124,32 +123,23 @@ def test_transaction_acceptance(node, p2p, tx, with_witness, accepted, reason=No
 
     - Submit the transaction over the p2p interface
     - use the getrawmempool rpc to check for acceptance."""
-    tx_message = msg_tx(tx)
-    if with_witness:
-        tx_message = msg_witness_tx(tx)
-    p2p.send_message(tx_message)
-    p2p.sync_with_ping()
-    assert_equal(tx.hash in node.getrawmempool(), accepted)
-    if (reason is not None and not accepted):
-        # Check the rejection reason as well.
-        with mininode_lock:
-            assert_equal(p2p.last_message["reject"].reason, reason)
+    reason = [reason] if reason else []
+    with node.assert_debug_log(expected_msgs=reason):
+        p2p.send_message(msg_witness_tx(tx) if with_witness else msg_tx(tx))
+        p2p.sync_with_ping()
+        assert_equal(tx.hash in node.getrawmempool(), accepted)
 
 def test_witness_block(node, p2p, block, accepted, with_witness=True, reason=None):
     """Send a block to the node and check that it's accepted
 
     - Submit the block over the p2p interface
     - use the getbestblockhash rpc to check for acceptance."""
-    if with_witness:
-        p2p.send_message(msg_witness_block(block))
-    else:
-        p2p.send_message(msg_block(block))
-    p2p.sync_with_ping()
-    assert_equal(node.getbestblockhash() == block.hash, accepted)
-    if (reason is not None and not accepted):
-        # Check the rejection reason as well.
-        with mininode_lock:
-            assert_equal(p2p.last_message["reject"].reason, reason)
+    reason = [reason] if reason else []
+    with node.assert_debug_log(expected_msgs=reason):
+        p2p.send_message(msg_witness_block(block) if with_witness else msg_block(block))
+        p2p.sync_with_ping()
+        assert_equal(node.getbestblockhash() == block.hash, accepted)
+
 
 class TestP2PConn(P2PInterface):
     def __init__(self):
@@ -349,8 +339,7 @@ class SegWitTest(BitcoinTestFramework):
         self.update_witness_block_with_transactions(block, [tx])
         # Sending witness data before activation is not allowed (anti-spam
         # rule).
-        test_witness_block(self.nodes[0], self.test_node, block, accepted=False)
-        wait_until(lambda: 'reject' in self.test_node.last_message and self.test_node.last_message["reject"].reason ==  b"unexpected-witness")
+        test_witness_block(self.nodes[0], self.test_node, block, accepted=False, reason='unexpected-witness')
 
         # But it should not be permanently marked bad...
         # Resend without witness information.
@@ -497,7 +486,7 @@ class SegWitTest(BitcoinTestFramework):
         self.update_witness_block_with_transactions(block, [tx])
         # Verify that segwit isn't activated. A block serialized with witness
         # should be rejected prior to activation.
-        test_witness_block(self.nodes[0], self.test_node, block, accepted=False, with_witness=True, reason=b'unexpected-witness')
+        test_witness_block(self.nodes[0], self.test_node, block, accepted=False, with_witness=True, reason='unexpected-witness')
         # Now send the block without witness. It should be accepted
         test_witness_block(self.nodes[0], self.test_node, block, accepted=True, with_witness=False)
 
@@ -523,7 +512,7 @@ class SegWitTest(BitcoinTestFramework):
 
             # When the block is serialized with a witness, the block will be rejected because witness
             # data isn't allowed in blocks that don't commit to witness data.
-            test_witness_block(self.nodes[0], self.test_node, block, accepted=False, with_witness=True, reason=b'unexpected-witness')
+            test_witness_block(self.nodes[0], self.test_node, block, accepted=False, with_witness=True, reason='unexpected-witness')
 
             # When the block is serialized without witness, validation fails because the transaction is
             # invalid (transactions are always validated with SCRIPT_VERIFY_WITNESS so a segwit v0 transaction
@@ -1343,9 +1332,9 @@ class SegWitTest(BitcoinTestFramework):
 
         # Node will not be blinded to the transaction
         self.std_node.announce_tx_and_wait_for_getdata(tx3)
-        test_transaction_acceptance(self.nodes[1], self.std_node, tx3, True, False, b'tx-size')
+        test_transaction_acceptance(self.nodes[1], self.std_node, tx3, True, False, 'tx-size')
         self.std_node.announce_tx_and_wait_for_getdata(tx3)
-        test_transaction_acceptance(self.nodes[1], self.std_node, tx3, True, False, b'tx-size')
+        test_transaction_acceptance(self.nodes[1], self.std_node, tx3, True, False, 'tx-size')
 
         # Remove witness stuffing, instead add extra witness push on stack
         tx3.vout[0] = CTxOut(tx2.vout[0].nValue - 1000, CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE]))
@@ -1454,10 +1443,7 @@ class SegWitTest(BitcoinTestFramework):
         tx3.rehash()
         # Spending a higher version witness output is not allowed by policy,
         # even with fRequireStandard=false.
-        test_transaction_acceptance(self.nodes[0], self.test_node, tx3, with_witness=True, accepted=False)
-        self.test_node.sync_with_ping()
-        with mininode_lock:
-            assert(b"reserved for soft-fork upgrades" in self.test_node.last_message["reject"].reason)
+        test_transaction_acceptance(self.nodes[0], self.test_node, tx3, with_witness=True, accepted=False, reason="reserved for soft-fork upgrades")
 
         # Building a block with the transaction must be valid, however.
         block = self.build_next_block()
@@ -1551,7 +1537,7 @@ class SegWitTest(BitcoinTestFramework):
         tx2.rehash()
 
         # Should fail policy test.
-        test_transaction_acceptance(self.nodes[0], self.test_node, tx2, True, False, b'non-mandatory-script-verify-flag (Using non-compressed keys in segwit)')
+        test_transaction_acceptance(self.nodes[0], self.test_node, tx2, True, False, 'non-mandatory-script-verify-flag (Using non-compressed keys in segwit)')
         # But passes consensus.
         block = self.build_next_block()
         self.update_witness_block_with_transactions(block, [tx2])
@@ -1571,7 +1557,7 @@ class SegWitTest(BitcoinTestFramework):
         sign_p2pk_witness_input(witness_program, tx3, 0, SIGHASH_ALL, tx2.vout[0].nValue, key)
 
         # Should fail policy test.
-        test_transaction_acceptance(self.nodes[0], self.test_node, tx3, True, False, b'non-mandatory-script-verify-flag (Using non-compressed keys in segwit)')
+        test_transaction_acceptance(self.nodes[0], self.test_node, tx3, True, False, 'non-mandatory-script-verify-flag (Using non-compressed keys in segwit)')
         # But passes consensus.
         block = self.build_next_block()
         self.update_witness_block_with_transactions(block, [tx3])
@@ -1588,7 +1574,7 @@ class SegWitTest(BitcoinTestFramework):
         sign_p2pk_witness_input(witness_program, tx4, 0, SIGHASH_ALL, tx3.vout[0].nValue, key)
 
         # Should fail policy test.
-        test_transaction_acceptance(self.nodes[0], self.test_node, tx4, True, False, b'non-mandatory-script-verify-flag (Using non-compressed keys in segwit)')
+        test_transaction_acceptance(self.nodes[0], self.test_node, tx4, True, False, 'non-mandatory-script-verify-flag (Using non-compressed keys in segwit)')
         block = self.build_next_block()
         self.update_witness_block_with_transactions(block, [tx4])
         test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
@@ -1825,7 +1811,7 @@ class SegWitTest(BitcoinTestFramework):
         tx2.rehash()
         # This will be rejected due to a policy check:
         # No witness is allowed, since it is not a witness program but a p2sh program
-        test_transaction_acceptance(self.nodes[1], self.std_node, tx2, True, False, b'bad-witness-nonstandard')
+        test_transaction_acceptance(self.nodes[1], self.std_node, tx2, True, False, 'bad-witness-nonstandard')
 
         # If we send without witness, it should be accepted.
         test_transaction_acceptance(self.nodes[1], self.std_node, tx2, False, True)
@@ -1897,13 +1883,13 @@ class SegWitTest(BitcoinTestFramework):
         # Testing native P2WSH
         # Witness stack size, excluding witnessScript, over 100 is non-standard
         p2wsh_txs[0].wit.vtxinwit[0].scriptWitness.stack = [pad] * 101 + [scripts[0]]
-        test_transaction_acceptance(self.nodes[1], self.std_node, p2wsh_txs[0], True, False, b'bad-witness-nonstandard')
+        test_transaction_acceptance(self.nodes[1], self.std_node, p2wsh_txs[0], True, False, 'bad-witness-nonstandard')
         # Non-standard nodes should accept
         test_transaction_acceptance(self.nodes[0], self.test_node, p2wsh_txs[0], True, True)
 
         # Stack element size over 80 bytes is non-standard
         p2wsh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * 81] * 100 + [scripts[1]]
-        test_transaction_acceptance(self.nodes[1], self.std_node, p2wsh_txs[1], True, False, b'bad-witness-nonstandard')
+        test_transaction_acceptance(self.nodes[1], self.std_node, p2wsh_txs[1], True, False, 'bad-witness-nonstandard')
         # Non-standard nodes should accept
         test_transaction_acceptance(self.nodes[0], self.test_node, p2wsh_txs[1], True, True)
         # Standard nodes should accept if element size is not over 80 bytes
@@ -1917,16 +1903,16 @@ class SegWitTest(BitcoinTestFramework):
 
         # witnessScript size at 3601 bytes is non-standard
         p2wsh_txs[3].wit.vtxinwit[0].scriptWitness.stack = [pad, pad, pad, scripts[3]]
-        test_transaction_acceptance(self.nodes[1], self.std_node, p2wsh_txs[3], True, False, b'bad-witness-nonstandard')
+        test_transaction_acceptance(self.nodes[1], self.std_node, p2wsh_txs[3], True, False, 'bad-witness-nonstandard')
         # Non-standard nodes should accept
         test_transaction_acceptance(self.nodes[0], self.test_node, p2wsh_txs[3], True, True)
 
         # Repeating the same tests with P2SH-P2WSH
         p2sh_txs[0].wit.vtxinwit[0].scriptWitness.stack = [pad] * 101 + [scripts[0]]
-        test_transaction_acceptance(self.nodes[1], self.std_node, p2sh_txs[0], True, False, b'bad-witness-nonstandard')
+        test_transaction_acceptance(self.nodes[1], self.std_node, p2sh_txs[0], True, False, 'bad-witness-nonstandard')
         test_transaction_acceptance(self.nodes[0], self.test_node, p2sh_txs[0], True, True)
         p2sh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * 81] * 100 + [scripts[1]]
-        test_transaction_acceptance(self.nodes[1], self.std_node, p2sh_txs[1], True, False, b'bad-witness-nonstandard')
+        test_transaction_acceptance(self.nodes[1], self.std_node, p2sh_txs[1], True, False, 'bad-witness-nonstandard')
         test_transaction_acceptance(self.nodes[0], self.test_node, p2sh_txs[1], True, True)
         p2sh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * 80] * 100 + [scripts[1]]
         test_transaction_acceptance(self.nodes[1], self.std_node, p2sh_txs[1], True, True)
@@ -1934,7 +1920,7 @@ class SegWitTest(BitcoinTestFramework):
         test_transaction_acceptance(self.nodes[0], self.test_node, p2sh_txs[2], True, True)
         test_transaction_acceptance(self.nodes[1], self.std_node, p2sh_txs[2], True, True)
         p2sh_txs[3].wit.vtxinwit[0].scriptWitness.stack = [pad, pad, pad, scripts[3]]
-        test_transaction_acceptance(self.nodes[1], self.std_node, p2sh_txs[3], True, False, b'bad-witness-nonstandard')
+        test_transaction_acceptance(self.nodes[1], self.std_node, p2sh_txs[3], True, False, 'bad-witness-nonstandard')
         test_transaction_acceptance(self.nodes[0], self.test_node, p2sh_txs[3], True, True)
 
         self.nodes[0].generate(1)  # Mine and clean up the mempool of non-standard node
