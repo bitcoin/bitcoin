@@ -6,6 +6,6 @@
 class Kernel;
 class uint256;
 
-bool SearchTimeSpan(Kernel& kernel, uint64_t nTimeStart, uint64_t nTimeEnd, const uint256& nTarget);
+bool SearchTimeSpan(Kernel& kernel, uint32_t nTimeStart, uint32_t nTimeEnd, const uint256& nTarget);
 
 #endif //CROWN_CORE_STAKEMINER_H

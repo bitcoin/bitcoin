@@ -15,6 +15,7 @@
 #include "chainparams.h"
 #include "clientversion.h"
 #include "primitives/transaction.h"
+#include "miner.h"
 #include "ui_interface.h"
 #include "legacysigner.h"
 #include "wallet.h"
@@ -1225,8 +1226,20 @@ void ThreadDNSAddressSeed()
 
 
 
-
-
+void ThreadStakeMiner()
+{
+    LogPrintf("ThreadStakeMiner started\n");
+    CWallet* pwallet = pwalletMain;
+    try {
+        BitcoinMiner(pwallet, true);
+        boost::this_thread::interruption_point();
+    } catch (std::exception& e) {
+        LogPrintf("ThreadStakeMinter() exception \n");
+    } catch (...) {
+        LogPrintf("ThreadStakeMinter() error \n");
+    }
+    LogPrintf("ThreadStakeMinter exiting,\n");
+}
 
 void DumpAddresses()
 {
@@ -1740,6 +1753,10 @@ void StartNode(boost::thread_group& threadGroup)
 
     // Dump network addresses
     threadGroup.create_thread(boost::bind(&LoopForever<void (*)()>, "dumpaddr", &DumpAddresses, DUMP_ADDRESSES_INTERVAL * 1000));
+
+    // Stake miner thread
+    if (GetBoolArg("-staking", false))
+        threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "stake-miner", &ThreadStakeMiner));
 
 }
 

@@ -246,6 +246,7 @@ libbitcoin_wallet_a_SOURCES = \
   masternode-payments.cpp \
   masternode-sync.cpp \
   masternodeconfig.cpp \
+  mn-pos/stakeminer.cpp \
   nodeconfig.cpp \
   masternodeman.cpp \
   systemnode-sync.cpp \

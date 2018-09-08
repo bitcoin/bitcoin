@@ -92,20 +92,20 @@ void UpdateTime(CBlockHeader* pblock, const CBlockIndex* pindexPrev)
         pblock->nBits = GetNextWorkRequired(pindexPrev, pblock);
 }
 
-CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
+CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, bool fProofOfStake)
 {
     // Create new block
-    auto_ptr<CBlockTemplate> pblocktemplate(new CBlockTemplate());
+    std::unique_ptr<CBlockTemplate> pblocktemplate(new CBlockTemplate());
     if(!pblocktemplate.get())
         return NULL;
     CBlock *pblock = &pblocktemplate->block; // pointer for convenience
 
     // Create coinbase tx
-    CMutableTransaction txNew;
-    txNew.vin.resize(1);
-    txNew.vin[0].prevout.SetNull();
-    txNew.vout.resize(1);
-    txNew.vout[0].scriptPubKey = scriptPubKeyIn;
+    CMutableTransaction txCoinbase;
+    txCoinbase.vin.resize(1);
+    txCoinbase.vin[0].prevout.SetNull();
+    txCoinbase.vout.resize(1);
+    txCoinbase.vout[0].scriptPubKey = scriptPubKeyIn;
 
     /* Initialise the block version.  */
     int32_t nChainId = Params().AuxpowChainId();
@@ -113,6 +113,29 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         nChainId = Params().PoSChainId();
 
     pblock->nVersion.SetBaseVersion(CBlockHeader::CURRENT_VERSION, nChainId);
+
+    if (fProofOfStake) {
+        pblock->nTime = GetAdjustedTime();
+        CBlockIndex* pindexPrev = chainActive.Tip();
+        pblock->nBits = GetNextWorkRequired(pindexPrev, pblock);
+        CMutableTransaction txCoinStake;
+        bool fStakeFound = false;
+        uint32_t nTxNewTime = 0;
+        int nHeight = pindexPrev->nHeight + 1;
+        uint32_t nTime = pblock->nTime;
+        uint32_t nBits = pblock->nBits;
+        if (pwallet->CreateCoinStake(nHeight, nBits, nTime, txCoinStake, nTxNewTime)) {
+            pblock->nTime = nTxNewTime;
+            pblock->vtx.clear();
+            txCoinbase.vout[0].scriptPubKey = CScript();
+            pblock->vtx.emplace_back(txCoinbase);
+            pblock->vtx.emplace_back(CTransaction(txCoinStake));
+            fStakeFound = true;
+        }
+
+        if (!fStakeFound)
+            return NULL;
+    }
 
 
     // -regtest only: allow overriding block.nVersion with
@@ -146,7 +169,8 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         CCoinsViewCache view(pcoinsTip);
 
         // Add our coinbase tx as first transaction
-        pblock->vtx.push_back(txNew);
+        if (!fProofOfStake)
+            pblock->vtx.push_back(txCoinbase);
         pblocktemplate->vTxFees.push_back(-1); // updated at end
         pblocktemplate->vTxSigOps.push_back(-1); // updated at end
 
@@ -329,16 +353,16 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         }
 
         // Masternode and general budget payments
-        FillBlockPayee(txNew, nFees);
-        SNFillBlockPayee(txNew, nFees);
+        FillBlockPayee(txCoinbase, nFees);
+        SNFillBlockPayee(txCoinbase, nFees);
 
         // Make payee
-	    if(txNew.vout.size() > 1){
-            pblock->payee = txNew.vout[1].scriptPubKey;
+	    if(txCoinbase.vout.size() > 1){
+            pblock->payee = txCoinbase.vout[1].scriptPubKey;
         }
         // Make SNpayee
-	    if(txNew.vout.size() > 2){
-            pblock->payeeSN = txNew.vout[2].scriptPubKey;
+	    if(txCoinbase.vout.size() > 2){
+            pblock->payeeSN = txCoinbase.vout[2].scriptPubKey;
         }
 
         nLastBlockTx = nBlockTx;
@@ -346,20 +370,28 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         LogPrintf("CreateNewBlock(): total size %u\n", nBlockSize);
 
         // Compute final coinbase transaction.
-        txNew.vin[0].scriptSig = CScript() << nHeight << OP_0;
-        pblock->vtx[0] = txNew;
+        txCoinbase.vin[0].scriptSig = CScript() << nHeight << OP_0;
+        pblock->vtx[0] = txCoinbase;
         pblocktemplate->vTxFees[0] = -nFees;
 
         // Fill in header
         pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
-        UpdateTime(pblock, pindexPrev);
+        if (!fProofOfStake)
+            UpdateTime(pblock, pindexPrev);
         pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock);
         pblock->nNonce         = 0;
         pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(pblock->vtx[0]);
 
+        // Sign Block
+        if (fProofOfStake) {
+            //todo - Add Stake Pointer and then sign block CPSC-27
+        }
+
         CValidationState state;
-        if (!TestBlockValidity(state, *pblock, pindexPrev, false, false))
-            throw std::runtime_error("CreateNewBlock() : TestBlockValidity failed");
+        if (!TestBlockValidity(state, *pblock, pindexPrev, false, false)) {
+            LogPrintf("CreateNewBlock() : TestBlockValidity failed");
+            return NULL;
+        }
     }
 
     return pblocktemplate.release();
@@ -384,7 +416,6 @@ void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned
     pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 }
 
-#ifdef ENABLE_WALLET
 //////////////////////////////////////////////////////////////////////////////
 //
 // Internal miner
@@ -427,14 +458,14 @@ bool static ScanHash(const CBlockHeader *pblock, uint32_t& nNonce, uint256 *phas
     }
 }
 
-CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey)
+CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey, CWallet* pwallet, bool fProofOfStake)
 {
     CPubKey pubkey;
     if (!reservekey.GetReservedKey(pubkey))
         return NULL;
 
     CScript scriptPubKey = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
-    return CreateNewBlock(scriptPubKey);
+    return CreateNewBlock(scriptPubKey, pwallet, fProofOfStake);
 }
 
 bool ProcessBlockFound(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
@@ -466,7 +497,7 @@ bool ProcessBlockFound(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
     return true;
 }
 
-void static BitcoinMiner(CWallet *pwallet)
+void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
 {
     LogPrintf("CrownMiner started\n");
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
@@ -499,14 +530,20 @@ void static BitcoinMiner(CWallet *pwallet)
             unsigned int nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
             CBlockIndex* pindexPrev = chainActive.Tip();
 
-            auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(reservekey));
-            if (!pblocktemplate.get())
+            std::unique_ptr<CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(reservekey, pwallet, fProofOfStake));
+            if (!pblocktemplate)
             {
                 LogPrintf("Error in CrownnMiner: Keypool ran out, please call keypoolrefill before restarting the mining thread\n");
                 return;
             }
             CBlock *pblock = &pblocktemplate->block;
             IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
+
+            //Proof of Stake Miner
+            if (fProofOfStake) {
+                ProcessBlockFound(pblock, *pwallet, reservekey);
+                continue;
+            }
 
             LogPrintf("Running CrownMiner with %u transactions in block (%u bytes)\n", pblock->vtx.size(),
                 ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION));
@@ -634,7 +671,5 @@ void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads)
 
     minerThreads = new boost::thread_group();
     for (int i = 0; i < nThreads; i++)
-        minerThreads->create_thread(boost::bind(&BitcoinMiner, pwallet));
+        minerThreads->create_thread(boost::bind(&BitcoinMiner, pwallet, false));
 }
-
-#endif // ENABLE_WALLET

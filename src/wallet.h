@@ -55,6 +55,7 @@ static const int SYSTEMNODE_COLLATERAL = 500;
 
 class CAccountingEntry;
 class CCoinControl;
+class CMasternode;
 class COutput;
 class CReserveKey;
 class CScript;
@@ -324,6 +325,8 @@ public:
                            CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl = NULL, AvailableCoinsType coin_type=ALL_COINS, CAmount nFeePay=0);
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
     bool CreateCollateralTransaction(CMutableTransaction& txCollateral, std::string& strReason);
+    bool GetMyMasternodes(std::vector<CMasternode*>& vActiveMasternodes);
+    bool CreateCoinStake(const int nHeight, const uint32_t& nBits, const uint32_t& nTime, CMutableTransaction& txCoinStake, uint32_t& nTxNewTime);
     bool ConvertList(std::vector<CTxIn> vCoins, std::vector<int64_t>& vecAmounts);
 
     static CFeeRate minTxFee;

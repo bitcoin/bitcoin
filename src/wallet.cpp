@@ -11,6 +11,9 @@
 #include "coincontrol.h"
 #include "net.h"
 #include "masternode-budget.h"
+#include "masternodeconfig.h"
+#include "mn-pos/kernel.h"
+#include "mn-pos/stakeminer.h"
 #include "instantx.h"
 #include "script/script.h"
 #include "script/sign.h"
@@ -1838,6 +1841,55 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
         wtxNew.RelayWalletTransaction(m_useInstantSend? "ix" : "tx");
     }
     return true;
+}
+
+bool CWallet::GetMyMasternodes(std::vector<CMasternode*>& vActiveMasternodes)
+{
+    //todo lock - CPSC-28
+    std::vector<CNodeEntry> mnEntries = masternodeConfig.getEntries();
+
+    for (auto& mne : mnEntries) {
+        CTxIn vin = CTxIn(uint256S(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
+        CMasternode* pmn = mnodeman.Find(vin);
+        if (!pmn)
+            continue;
+        vActiveMasternodes.emplace_back(pmn);
+    }
+
+    return static_cast<bool>(vActiveMasternodes.size());
+}
+
+#define STAKE_SEARCH_INTERVAL 30
+bool CWallet::CreateCoinStake(const int nHeight, const uint32_t& nBits, const uint32_t& nTime, CMutableTransaction& txCoinStake, uint32_t& nTxNewTime)
+{
+    //todo lock -CPSC-28
+    std::vector<CMasternode*> vMasternodes;
+    if (!GetMyMasternodes(vMasternodes))
+        return false;
+
+    //Create kernels from active masternodes and see if any create a successful proof
+    auto nAmountMN = static_cast<CAmount>(MASTERNODE_COLLATERAL);
+    for (auto* pmn : vMasternodes) {
+        auto pOutpoint = std::make_pair(pmn->vin.prevout.hash, pmn->vin.prevout.n);
+        uint256 nStakeModifier;//todo - Stake Modifier Generation CPSC-29
+        Kernel kernel(pOutpoint, nAmountMN, nStakeModifier, nTime, nTxNewTime);
+        uint256 nTarget = ArithToUint256(arith_uint256().SetCompact(nBits));
+
+        if (!SearchTimeSpan(kernel, nTime, nTime + STAKE_SEARCH_INTERVAL, nTarget))
+            continue;
+
+        LogPrintf("%s: Found valid kernel for mn collateral %s\n", __func__, pmn->vin.prevout.ToString());
+
+        //Add stake payment to coinstake tx
+        CAmount nBlockReward = GetBlockValue(nHeight, 0); //Do not add fees until after they are packaged into the block
+        CScript scriptBlockReward = GetScriptForDestination(pmn->pubkey.GetID());
+        CTxOut out(nBlockReward, scriptBlockReward);
+        txCoinStake.vout.emplace_back(out);
+        nTxNewTime = kernel.GetTime();
+        return true;
+    }
+
+    return false;
 }
 
 CAmount CWallet::GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarget, const CTxMemPool& pool)

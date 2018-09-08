@@ -2,7 +2,7 @@
 #include "kernel.h"
 
 //! Search a specific period of timestamps to see if a valid proof hash is created
-bool SearchTimeSpan(Kernel& kernel, uint64_t nTimeStart, uint64_t nTimeEnd, const uint256& nTarget)
+bool SearchTimeSpan(Kernel& kernel, uint32_t nTimeStart, uint32_t nTimeEnd, const uint256& nTarget)
 {
     uint64_t nTimeStake = nTimeStart;
     kernel.SetStakeTime(nTimeStart);
