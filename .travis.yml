@@ -43,7 +43,7 @@ env:
 # Win64
     - HOST=x86_64-w64-mingw32 DPKG_ADD_ARCH="i386" DEP_OPTS="NO_QT=1" PPA="ppa:bitcoin/bitcoin" PACKAGES="python3 nsis g++-mingw-w64-x86-64 wine1.7 bc" RUN_TESTS=false GOAL="install" SYSCOIN_CONFIG="--enable-gui --enable-reduce-exports" MAKEJOBS="-j4" WINE=true
 # syscoindd
-    - HOST=x86_64-unknown-linux-gnu PPA="ppa:bitcoin/bitcoin" PACKAGES="bc python3-zmq" DEP_OPTS="NO_QT=1 NO_UPNP=1 DEBUG=1" RUN_TESTS=false GOAL="install" SYSCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports" CPPFLAGS="-DDEBUG_LOCKORDER -DENABLE_SYS_DEBUG" PYZMQ=true
+#    - HOST=x86_64-unknown-linux-gnu PPA="ppa:bitcoin/bitcoin" PACKAGES="bc python3-zmq" DEP_OPTS="NO_QT=1 NO_UPNP=1 DEBUG=1" RUN_TESTS=false GOAL="install" SYSCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports" CPPFLAGS="-DDEBUG_LOCKORDER -DENABLE_SYS_DEBUG" PYZMQ=true
 # No wallet
 #    - HOST=x86_64-unknown-linux-gnu PPA="ppa:bitcoin/bitcoin" PACKAGES="python3" DEP_OPTS="NO_WALLET=1" RUN_TESTS=true GOAL="install" SYSCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
 # Cross-Mac
