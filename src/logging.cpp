@@ -226,6 +226,53 @@ void BCLog::Logger::LogPrintStr(const std::string &str)
                     m_fileout = new_fileout;
                 }
             }
+            //limit the max size of log
+            if (m_log_maxsize > 0) {
+                uint32_t sz = fs::file_size(m_file_path);
+                if (sz > 0 && sz + strTimestamped.size() > m_log_maxsize) {
+                    std::string originname = m_file_path.string();
+                    std::string ext;
+
+                    uint32_t i = originname.rfind(".");
+                    if (i != std::string::npos && i + 1 < originname.size()) {
+                        ext = originname.substr(i + 1);
+                        originname = originname.substr(0, i);
+                    }
+                    fclose(m_fileout);
+
+                    int id = 0;
+                    std::string newfilename;
+                    int64_t nTimeMicros = GetTimeMicros();
+                    std::string strStamped = FormatISO8601DateTime(nTimeMicros / 1000000);
+                    std::replace(strStamped.begin(), strStamped.end(), ':', '_');
+                    while (true) {
+                        std::ostringstream s;
+                        s << originname << "-" << strStamped;
+                        if (id > 0) {
+                            s << "-" << id;
+                        }
+                        if (!ext.empty()) {
+                            s << "." << ext;
+                        }
+                        if (fs::exists(s.str())) {
+                            id++;
+                            continue;
+                        }
+                        newfilename = s.str();
+                        break;
+                    }
+
+                    m_file_path = newfilename.c_str();
+                    try {
+                        m_fileout = fsbridge::fopen(m_file_path, "a");
+                        if (m_fileout != nullptr) {
+                            setbuf(m_fileout, nullptr); // unbuffered
+                        } 
+                    } catch (const fs::filesystem_error&) {
+                        return;
+                    }
+                }
+            }
             FileWriteStr(strTimestamped, m_fileout);
         }
     }

@@ -20,7 +20,7 @@ static const bool DEFAULT_LOGTIMEMICROS = false;
 static const bool DEFAULT_LOGIPS        = false;
 static const bool DEFAULT_LOGTIMESTAMPS = true;
 extern const char * const DEFAULT_DEBUGLOGFILE;
-
+static const uint32_t DEFAULT_MAX_LOG_SIZE = 0;
 extern bool fLogIPs;
 
 struct CLogCategoryActive
@@ -81,7 +81,7 @@ namespace BCLog {
 
         bool m_log_timestamps = DEFAULT_LOGTIMESTAMPS;
         bool m_log_time_micros = DEFAULT_LOGTIMEMICROS;
-
+        uint32_t m_log_maxsize = DEFAULT_MAX_LOG_SIZE;
         fs::path m_file_path;
         std::atomic<bool> m_reopen_file{false};
 
