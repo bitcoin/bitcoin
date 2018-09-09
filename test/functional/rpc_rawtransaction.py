@@ -44,6 +44,9 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.num_nodes = 3
         self.extra_args = [["-addresstype=legacy"], ["-addresstype=legacy"], ["-addresstype=legacy"]]
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def setup_network(self, split=False):
         super().setup_network()
         connect_nodes_bi(self.nodes, 0, 2)

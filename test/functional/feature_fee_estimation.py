@@ -126,6 +126,9 @@ class EstimateFeeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def setup_network(self):
         """
         We'll setup the network to have 3 nodes that all mine with different parameters.

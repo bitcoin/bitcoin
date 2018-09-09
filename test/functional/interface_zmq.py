@@ -5,14 +5,15 @@
 """Test the ZMQ notification interface."""
 import struct
 
-from test_framework.test_framework import (
-    BitcoinTestFramework, skip_if_no_bitcoind_zmq, skip_if_no_py3_zmq)
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import CTransaction
-from test_framework.util import (assert_equal,
-                                 bytes_to_hex_str,
-                                 hash256,
-                                )
+from test_framework.util import (
+    assert_equal,
+    bytes_to_hex_str,
+    hash256,
+)
 from io import BytesIO
+
 
 class ZMQSubscriber:
     def __init__(self, socket, topic):
@@ -37,10 +38,12 @@ class ZMQTest (BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
 
-    def setup_nodes(self):
-        skip_if_no_py3_zmq()
-        skip_if_no_bitcoind_zmq(self)
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_py3_zmq()
+        self.skip_if_no_bitcoind_zmq()
+        self.skip_if_no_wallet()
 
+    def setup_nodes(self):
         # Import keys
         self.add_nodes(self.num_nodes)
         self.start_nodes()

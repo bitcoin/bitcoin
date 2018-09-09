@@ -45,6 +45,9 @@ class BIP66Test(BitcoinTestFramework):
         self.extra_args = [['-whitelist=127.0.0.1']]
         self.setup_clean_chain = True
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def run_test(self):
         self.nodes[0].add_p2p_connection(P2PInterface())
 
