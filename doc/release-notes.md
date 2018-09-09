@@ -48,27 +48,17 @@ support versions of macOS older than 10.10.
 Notable changes
 ===============
 
+Command line option changes
+---------------------------
 
-Changed command-line options
-----------------------------
+The `-enablebip61` command line option (introduced in Chaincoin Core 0.17.0) is
+used to toggle sending of BIP 61 reject messages. Reject messages have no use
+case on the P2P network and are only logged for debugging by most network
+nodes. The option will now by default be off for improved privacy and security
+as well as reduced upload usage. The option can explicitly be turned on for
+local-network debugging purposes.
 
-- `-includeconf=<file>` can be used to include additional configuration files.
-Only works inside the `chaincoin.conf` file, not inside included files or from
-command-line. Multiple files may be included. Can be disabled from command-
-line via `-noincludeconf`. Note that multi-argument commands like
-`-includeconf` will override preceding `-noincludeconf`, i.e.
-
-noincludeconf=1
-includeconf=relative.conf
-
-as chaincoin.conf will still include `relative.conf`.
-
-GUI changes
------------
-
-- Block storage can be limited under Preferences, in the Main tab. Undoing this setting requires downloading the full blockchain again. This mode is incompatible with -txindex and -rescan.
-
-RPC changes
+Example item
 ------------
 
 ### Low-level changes
