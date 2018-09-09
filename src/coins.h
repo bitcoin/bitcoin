@@ -39,7 +39,7 @@ public:
     uint32_t nHeight : 31;
 
     // peercoin: whether transaction is a coinstake
-    bool fCoinStake;
+    unsigned int fCoinStake : 1;
 
     // peercoin: transaction timestamp
     unsigned int nTime;
@@ -54,6 +54,8 @@ public:
         out.SetNull();
         fCoinBase = false;
         nHeight = 0;
+        fCoinStake = false;
+        nTime = 0;
     }
 
     //! empty constructor

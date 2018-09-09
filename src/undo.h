@@ -25,7 +25,6 @@ class TxInUndoSerializer
 public:
     template<typename Stream>
     void Serialize(Stream &s) const {
-        ::Serialize(s, VARINT(txout->nHeight * 2 + (txout->fCoinBase ? 1 : 0)));
         ::Serialize(s, VARINT(txout->nHeight * 4 + (txout->fCoinBase ? 1 : 0) + (txout->fCoinStake ? 2 : 0)));
         ::Serialize(s, VARINT(txout->nTime));
         if (txout->nHeight > 0) {
