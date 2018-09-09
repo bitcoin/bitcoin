@@ -20,6 +20,9 @@ class AbandonConflictTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.extra_args = [["-minrelaytxfee=0.00001"], []]
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def run_test(self):
         self.nodes[1].generate(100)
         sync_blocks(self.nodes)

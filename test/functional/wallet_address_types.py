@@ -63,6 +63,7 @@ from test_framework.util import (
     sync_mempools,
 )
 
+
 class AddressTypeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 6
@@ -72,8 +73,11 @@ class AddressTypeTest(BitcoinTestFramework):
             ["-addresstype=p2sh-segwit", "-changetype=bech32"],
             ["-addresstype=bech32"],
             ["-changetype=p2sh-segwit"],
-            []
+            [],
         ]
+
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
 
     def setup_network(self):
         self.setup_nodes()

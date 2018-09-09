@@ -12,6 +12,9 @@ class DeprecatedRpcTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.extra_args = [[], ["-deprecatedrpc=validateaddress", "-deprecatedrpc=accounts"]]
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def run_test(self):
         # This test should be used to verify correct behaviour of deprecated
         # RPC methods with and without the -deprecatedrpc flags. For example:

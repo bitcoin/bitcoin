@@ -42,6 +42,9 @@ class FeeFilterTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def run_test(self):
         node1 = self.nodes[1]
         node0 = self.nodes[0]

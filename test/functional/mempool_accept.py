@@ -40,6 +40,9 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
             '-acceptnonstdtxn=0',  # Try to mimic main-net
         ]] * self.num_nodes
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def check_mempool_result(self, result_expected, *args, **kwargs):
         """Wrapper to check result of testmempoolaccept on node_0's mempool"""
         result_test = self.nodes[0].testmempoolaccept(*args, **kwargs)

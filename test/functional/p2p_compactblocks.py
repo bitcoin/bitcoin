@@ -102,6 +102,9 @@ class CompactBlocksTest(BitcoinTestFramework):
         self.extra_args = [["-vbparams=segwit:0:0"], ["-vbparams=segwit:0:999999999999", "-txindex", "-deprecatedrpc=addwitnessaddress"]]
         self.utxos = []
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def build_block_on_tip(self, node, segwit=False):
         height = node.getblockcount()
         tip = node.getbestblockhash()
