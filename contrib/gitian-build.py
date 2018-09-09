@@ -4,6 +4,7 @@ import argparse
 import os
 import subprocess
 import sys
+import shutil
 
 def setup():
     global args, workdir
@@ -26,12 +27,18 @@ def setup():
         subprocess.check_call(['git', 'clone', 'https://github.com/bitcoin-core/gitian.sigs.git'])
     if not os.path.isdir('bitcoin-detached-sigs'):
         subprocess.check_call(['git', 'clone', 'https://github.com/bitcoin-core/bitcoin-detached-sigs.git'])
-    if not os.path.isdir('gitian-builder'):
+    if not os.path.isdir('gitian-builder/.git'):
+        if os.path.isdir('gitian-builder/inputs'):
+            shutil.move('gitian-builder/inputs', 'gitian-builder-inputs')
         subprocess.check_call(['git', 'clone', 'https://github.com/devrandom/gitian-builder.git'])
+        if os.path.isdir('gitian-builder-inputs'):
+            shutil.move('gitian-builder-inputs', 'gitian-builder/inputs')
     if not os.path.isdir('bitcoin'):
         subprocess.check_call(['git', 'clone', 'https://github.com/bitcoin/bitcoin.git'])
     os.chdir('gitian-builder')
-    make_image_prog = ['bin/make-base-vm', '--suite', 'bionic', '--arch', 'amd64']
+    distro = subprocess.check_output(['lsb_release', '-is']).decode("utf-8").strip('\n').lower()
+    suite = subprocess.check_output(['lsb_release', '-cs']).decode("utf-8").strip('\n')
+    make_image_prog = ['bin/make-base-vm', '--distro', distro, '--suite', suite, '--arch', 'amd64']
     if args.docker:
         make_image_prog += ['--docker']
     elif not args.kvm:
