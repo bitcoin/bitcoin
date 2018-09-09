@@ -117,8 +117,12 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
         amountWidget->setFixedWidth(118);
     } else {
         amountWidget->setFixedWidth(125);
-    }  
-    amountWidget->setValidator(new QDoubleValidator(0, 1e20, 8, this));
+    }
+    QDoubleValidator *amountValidator = new QDoubleValidator(0, 1e20, 8, this);
+    QLocale amountLocale(QLocale::C);
+    amountLocale.setNumberOptions(QLocale::RejectGroupSeparator);
+    amountValidator->setLocale(amountLocale);
+    amountWidget->setValidator(amountValidator);
     amountWidget->setObjectName("amountWidget");
     hlayout->addWidget(amountWidget);
 
