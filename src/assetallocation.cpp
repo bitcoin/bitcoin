@@ -26,7 +26,9 @@
 #include <boost/algorithm/string.hpp>
 #include "thread_pool/thread_pool.hpp"
 #include <future>
+#include <boost/multiprecision/cpp_dec_float.hpp>
 using namespace std;
+using namespace boost::multiprecision;
 vector<pair<uint256, int64_t> > vecTPSTestReceivedTimes;
 vector<JSONRPCRequest> vecTPSRawTransactions;
 int64_t nTPSTestingSendRawElapsedTime = 0;
@@ -279,12 +281,15 @@ CAmount GetAssetAllocationInterest(CAssetAllocation & assetAllocation, const int
 		errorMessage = _("Not enough blocks have passed since the last claim, please wait some more time...");
 		return 0;
 	}
-	const int &nInterestBlockTerm = fUnitTest? ONE_HOUR_IN_BLOCKS: ONE_YEAR_IN_BLOCKS;
-	const int &nBlockDifference = nHeight - assetAllocation.nLastInterestClaimHeight;
+	const cpp_dec_float_50 &nInterestBlockTerm = fUnitTest ? cpp_dec_float_50(ONE_HOUR_IN_BLOCKS) : cpp_dec_float_50(ONE_YEAR_IN_BLOCKS);
+	const cpp_dec_float_50 &nBlockDifference = cpp_dec_float_50(nHeight - assetAllocation.nLastInterestClaimHeight);
+
 	// apply compound annual interest to get total interest since last time interest was collected
-	const CAmount& nBalanceOverTimeDifference = assetAllocation.nAccumulatedBalanceSinceLastInterestClaim / nBlockDifference;
-	const long double& fInterestOverTimeDifference = assetAllocation.fAccumulatedInterestSinceLastInterestClaim / nBlockDifference;
-	return (((long double)nBalanceOverTimeDifference*powl((1.0 + (fInterestOverTimeDifference / nInterestBlockTerm)), nBlockDifference))) - nBalanceOverTimeDifference;
+	const cpp_dec_float_50& nBalanceOverTimeDifference = cpp_dec_float_50(assetAllocation.nAccumulatedBalanceSinceLastInterestClaim / nBlockDifference);
+	const cpp_dec_float_50& fInterestOverTimeDifference = cpp_dec_float_50(assetAllocation.fAccumulatedInterestSinceLastInterestClaim / nBlockDifference);
+	const cpp_dec_float_50& nInterestPerBlock = fInterestOverTimeDifference / nInterestBlockTerm;
+	const cpp_dec_float_50& powcalc = (boost::multiprecision::pow(cpp_dec_float_50(1.0) + nInterestPerBlock, nBlockDifference)*nBalanceOverTimeDifference) - nBalanceOverTimeDifference;
+	return powcalc.convert_to<CAmount>();
 }
 bool ApplyAssetAllocationInterest(CAsset& asset, CAssetAllocation & assetAllocation, const int& nHeight, string& errorMessage) {
 	CAmount nInterest = GetAssetAllocationInterest(assetAllocation, nHeight, errorMessage);
@@ -557,7 +562,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 				}
 			}
 			const CAmount &nBalanceAfterSend = dbAssetAllocation.nBalance - nTotal;
-			if (nBalanceAfterSend < -1000) {
+			if (nBalanceAfterSend < 0) {
 				bBalanceOverrun = true;
 				if(bSanityCheck)
 					errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1021 - " + _("Sender balance is insufficient");
@@ -607,8 +612,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 						receiverAllocation.vchMemo = theAssetAllocation.vchMemo;
 						receiverAllocation.nBalance += amountTuple.second;
 						theAssetAllocation.nBalance -= amountTuple.second;
-						if (theAssetAllocation.nBalance < 0)
-							theAssetAllocation.nBalance = 0;
 
 					}
 					const string& receiverAddress = stringFromVch(receiverAllocation.vchAliasOrAddress);
@@ -739,7 +742,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 				vecTPSTestReceivedTimes.emplace_back(theAssetAllocation.txHash, GetTimeMicros());
 		}
 		const string &user = op == OP_ASSET_COLLECT_INTEREST ? user1 : "";
-		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, 0, 0, dbAsset, ms, user, user, fJustCheck))
+		if (!passetallocationdb->WriteAssetAllocation(theAssetAllocation, theAssetAllocation.nBalance, 0, dbAsset, ms, user, user, fJustCheck))
 		{
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1031 - " + _("Failed to write to asset allocation DB");
 			return error(errorMessage.c_str());
