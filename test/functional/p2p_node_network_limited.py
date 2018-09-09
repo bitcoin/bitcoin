@@ -34,6 +34,9 @@ class NodeNetworkLimitedTest(BitcoinTestFramework):
         self.num_nodes = 3
         self.extra_args = [['-prune=550', '-addrmantest'], [], []]
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def disconnect_all(self):
         disconnect_nodes(self.nodes[0], 1)
         disconnect_nodes(self.nodes[1], 0)

@@ -26,6 +26,9 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         self.num_nodes = 1
         self.setup_clean_chain = True
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def bootstrap_p2p(self, *, num_connections=1):
         """Add a P2P connection to the node.
 
