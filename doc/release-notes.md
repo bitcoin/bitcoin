@@ -59,6 +59,16 @@ support versions of macOS older than 10.10.
 Notable changes
 ===============
 
+Command line option changes
+---------------------------
+
+The `-enablebip61` command line option (introduced in Bitcoin Core 0.17.0) is
+used to toggle sending of BIP 61 reject messages. Reject messages have no use
+case on the P2P network and are only logged for debugging by most network
+nodes. The option will now by default be off for improved privacy and security
+as well as reduced upload usage. The option can explicitly be turned on for
+local-network debugging purposes.
+
 Example item
 ------------
 
