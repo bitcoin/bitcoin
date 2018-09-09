@@ -1029,10 +1029,17 @@ void RavenGUI::showEvent(QShowEvent *event)
 void RavenGUI::incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label, const QString& assetName)
 {
     // On new transaction, make an info balloon
-    QString msg = tr("Date: %1\n").arg(date) +
-                  tr("Amount: %1\n").arg(amount) +
-                  tr("Asset: %1\n").arg(assetName) +
-                  tr("Type: %1\n").arg(type);
+    QString msg = tr("Date: %1\n").arg(date);
+    if (assetName == "RVN")
+        msg += tr("Amount: %1\n").arg(RavenUnits::formatWithUnit(unit, amount, true));
+    else
+        msg += tr("Amount: %1\n").arg(amount);
+
+    if (assetName != "RVN")
+        msg += tr("Asset: %1\n").arg(assetName);
+
+    msg += tr("Type: %1\n").arg(type);
+    
     if (!label.isEmpty())
         msg += tr("Label: %1\n").arg(label);
     else if (!address.isEmpty())
