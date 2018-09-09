@@ -20,6 +20,9 @@ class MempoolPackagesTest(BitcoinTestFramework):
         self.setup_clean_chain = False
         self.extra_args = [["-maxorphantx=1000"], ["-maxorphantx=1000", "-limitancestorcount=5"]]
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     # Build a transaction that spends parent_txid:vout
     # Return amount sent
     def chain_transaction(self, node, parent_txid, vout, value, fee, num_outputs):

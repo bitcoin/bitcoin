@@ -14,6 +14,9 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         self.num_nodes = 1
         self.extra_args = [["-checkmempool"]]
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def run_test(self):
         node0_address = self.nodes[0].getnewaddress()
         # Spend block 1/2/3's coinbase transactions

@@ -43,6 +43,9 @@ class RESTTest (BitcoinTestFramework):
         self.num_nodes = 2
         self.extra_args = [["-rest"], []]
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def test_rest_request(self, uri, http_method='GET', req_type=ReqType.JSON, body='', status=200, ret_type=RetType.JSON):
         rest_uri = '/rest' + uri
         if req_type == ReqType.JSON:

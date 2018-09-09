@@ -18,6 +18,9 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.extra_args = [["-checkmempool"]] * 2
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     alert_filename = None  # Set by setup_network
 
     def run_test(self):

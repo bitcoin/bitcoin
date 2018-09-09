@@ -11,6 +11,9 @@ from test_framework.util import assert_equal, assert_raises_rpc_error
 
 class KeyPoolTest(BitcoinTestFramework):
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def run_test(self):
         nodes = self.nodes
         addr_before_encrypting = nodes[0].getnewaddress()
