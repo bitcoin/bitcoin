@@ -346,15 +346,29 @@ bool RPCIsInWarmup(std::string *outStatus)
     return fRPCInWarmup;
 }
 
-void JSONRPCRequest::parse(const UniValue& valRequest)
+void JSONRPCRequest::parse(const UniValue& valRequest, bool *is_notification)
 {
     // Parse request
     if (!valRequest.isObject())
         throw JSONRPCError(RPC_INVALID_REQUEST, "Invalid Request object");
     const UniValue& request = valRequest.get_obj();
 
-    // Parse id now so errors from here on will have the id
-    id = find_value(request, "id");
+    enum UniValue::keystatus status;
+    id = find_value(request, "id", &status);
+    if (status == UniValue::KEY_NOT_PRESENT) {
+        if (is_notification) { *is_notification = true; }
+    } // we just leave it otherwise, don't care
+
+    // JSON-RPC 2.0 compliance
+    if (fStrictJSONRPCSpec) {
+        UniValue valJsonRPC = find_value(request, "jsonrpc");
+        if (valJsonRPC.isNull())
+            throw JSONRPCError(RPC_INVALID_REQUEST, "Missing jsonrpc field");
+        if (!valJsonRPC.isStr())
+            throw JSONRPCError(RPC_INVALID_REQUEST, "jsonrpc field must be a string");
+        if (valJsonRPC.get_str() != "2.0")
+            throw JSONRPCError(RPC_INVALID_REQUEST, "jsonrpc field must be equal to '2.0'");
+    }
 
     // Parse method
     UniValue valMethod = find_value(request, "method");
@@ -386,22 +400,27 @@ bool IsDeprecatedRPCEnabled(const std::string& method)
     return find(enabled_methods.begin(), enabled_methods.end(), method) != enabled_methods.end();
 }
 
-static UniValue JSONRPCExecOne(JSONRPCRequest jreq, const UniValue& req)
+UniValue JSONRPCExecOne(JSONRPCRequest jreq, const UniValue& req)
 {
     UniValue rpc_result(UniValue::VOBJ);
 
     try {
-        jreq.parse(req);
+        bool is_notification = false;
+        if (fStrictJSONRPCSpec) {
+            jreq.parse(req, &is_notification);
+            // If is_notification, we still need to execute, so we
+            //     don't return until a few lines down here.
+        } else {
+            jreq.parse(req);
+        }
 
         UniValue result = tableRPC.execute(jreq);
+        if (is_notification) return NullUniValue;
+
         rpc_result = JSONRPCReplyObj(result, NullUniValue, jreq.id);
-    }
-    catch (const UniValue& objError)
-    {
+    } catch (const UniValue& objError) {
         rpc_result = JSONRPCReplyObj(NullUniValue, objError, jreq.id);
-    }
-    catch (const std::exception& e)
-    {
+    } catch (const std::exception& e) {
         rpc_result = JSONRPCReplyObj(NullUniValue,
                                      JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq.id);
     }
@@ -409,13 +428,23 @@ static UniValue JSONRPCExecOne(JSONRPCRequest jreq, const UniValue& req)
     return rpc_result;
 }
 
-std::string JSONRPCExecBatch(const JSONRPCRequest& jreq, const UniValue& vReq)
+UniValue JSONRPCExecBatch(const JSONRPCRequest& jreq, const UniValue& vReq)
 {
     UniValue ret(UniValue::VARR);
-    for (unsigned int reqIdx = 0; reqIdx < vReq.size(); reqIdx++)
-        ret.push_back(JSONRPCExecOne(jreq, vReq[reqIdx]));
+    for (unsigned int reqIdx = 0; reqIdx < vReq.size(); reqIdx++) {
+        UniValue singleret;
+        singleret = JSONRPCExecOne(jreq, vReq[reqIdx]);
+        if (fStrictJSONRPCSpec && singleret.isNull())
+            // fStrictJSONRPCSpec check doubled up here.
+            continue;
+        ret.push_back(singleret);
+    }
 
-    return ret.write() + "\n";
+    if (ret.size() == 0) {
+        return NullUniValue;
+    }
+
+    return ret;
 }
 
 /**

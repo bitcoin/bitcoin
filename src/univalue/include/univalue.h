@@ -14,12 +14,15 @@
 #include <map>
 #include <cassert>
 
+#include <stdexcept>
+
 #include <sstream>        // .get_int64()
 #include <utility>        // std::pair
 
 class UniValue {
 public:
     enum VType { VNULL, VOBJ, VARR, VSTR, VNUM, VBOOL, };
+    enum keystatus { KEY_NOT_PRESENT, KEY_PRESENT };
 
     UniValue() { typ = VNULL; }
     UniValue(UniValue::VType initialType, const std::string& initialStr = "") {
@@ -180,7 +183,7 @@ public:
     bool push_back(std::pair<std::string,UniValue> pear) {
         return pushKV(pear.first, pear.second);
     }
-    friend const UniValue& find_value( const UniValue& obj, const std::string& name);
+    friend const UniValue& find_value(const UniValue& obj, const std::string& name, enum UniValue::keystatus *status);
 };
 
 //
@@ -302,6 +305,6 @@ static inline bool json_isspace(int ch)
 
 extern const UniValue NullUniValue;
 
-const UniValue& find_value( const UniValue& obj, const std::string& name);
+const UniValue& find_value(const UniValue& obj, const std::string& name, enum UniValue::keystatus *status=NULL);
 
 #endif // __UNIVALUE_H__

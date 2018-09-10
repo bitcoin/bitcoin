@@ -96,6 +96,7 @@ BASE_SCRIPTS = [
     'mempool_spend_coinbase.py',
     'mempool_reorg.py',
     'mempool_persist.py',
+    'interface_jsonrpc2.py',
     'wallet_multiwallet.py',
     'wallet_multiwallet.py --usecli',
     'wallet_disableprivatekeys.py',

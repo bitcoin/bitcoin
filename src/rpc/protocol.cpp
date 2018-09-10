@@ -21,11 +21,18 @@
  *
  * 1.0 spec: http://json-rpc.org/wiki/specification
  * 1.2 spec: http://jsonrpc.org/historical/json-rpc-over-http.html
+ *
+ * By passing -strictjsonrpcspec one can force Bitcoin to speak strict 2.0.
+ *
  */
+
+bool fStrictJSONRPCSpec = false;
 
 UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params, const UniValue& id)
 {
     UniValue request(UniValue::VOBJ);
+    if (fStrictJSONRPCSpec)
+        request.pushKV("jsonrpc", "2.0");
     request.pushKV("method", strMethod);
     request.pushKV("params", params);
     request.pushKV("id", id);
@@ -35,12 +42,24 @@ UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params,
 UniValue JSONRPCReplyObj(const UniValue& result, const UniValue& error, const UniValue& id)
 {
     UniValue reply(UniValue::VOBJ);
-    if (!error.isNull())
-        reply.pushKV("result", NullUniValue);
-    else
-        reply.pushKV("result", result);
-    reply.pushKV("error", error);
-    reply.pushKV("id", id);
+    if (fStrictJSONRPCSpec) {
+        // New, JSON-RPC 2.0 compliant behaviour
+        if (!result.isNull() && error.isNull())
+            reply.pushKV("result", result);
+        else
+            reply.pushKV("error", error);
+        reply.pushKV("jsonrpc", "2.0");
+        reply.pushKV("id", id);
+    } else {
+        // Old, mixed 1.0/1.1/2.0 behaviour (incompatible with clients that
+        //      expect strict compliance with JSON-RPC 2.0)
+        if (!error.isNull())
+            reply.pushKV("result", NullUniValue);
+        else
+            reply.pushKV("result", result);
+        reply.pushKV("error", error);
+        reply.pushKV("id", id);
+    }
     return reply;
 }
 

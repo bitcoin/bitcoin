@@ -26,7 +26,7 @@ ServiceProxy class:
 
 - HTTP connections persist for the life of the AuthServiceProxy object
   (if server supports HTTP/1.1)
-- sends protocol 'version', per JSON-RPC 1.1
+- sends protocol 'jsonrpc', per JSON-RPC 2.0
 - sends proper, incrementing 'id'
 - sends Basic HTTP authentication headers
 - parses all JSON numbers that look like floats as Decimal
@@ -126,7 +126,7 @@ class AuthServiceProxy():
                                    json.dumps(args, default=EncodeDecimal, ensure_ascii=self.ensure_ascii)))
         if args and argsn:
             raise ValueError('Cannot handle both named and positional arguments')
-        return {'version': '1.1',
+        return {'jsonrpc': '2.0',
                 'method': self._service_name,
                 'params': args or argsn,
                 'id': AuthServiceProxy.__id_count}
@@ -134,8 +134,16 @@ class AuthServiceProxy():
     def __call__(self, *args, **argsn):
         postdata = json.dumps(self.get_request(*args, **argsn), default=EncodeDecimal, ensure_ascii=self.ensure_ascii)
         response = self._request('POST', self.__url.path, postdata.encode('utf-8'))
-        if response['error'] is not None:
-            raise JSONRPCException(response['error'])
+
+        try:
+            err = response['error']
+        except KeyError:
+            # Likely we're in JSON-RPC 2.0 mode, which doesn't return error
+            #   if result is in the response
+            err = None
+
+        if err is not None:
+            raise JSONRPCException(err)
         elif 'result' not in response:
             raise JSONRPCException({
                 'code': -343, 'message': 'missing JSON-RPC result'})

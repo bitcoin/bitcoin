@@ -183,21 +183,21 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
         // Set the URI
         jreq.URI = req->GetURI();
 
-        std::string strReply;
-        // singleton request
+        UniValue ret;
         if (valRequest.isObject()) {
-            jreq.parse(valRequest);
-
-            UniValue result = tableRPC.execute(jreq);
-
-            // Send reply
-            strReply = JSONRPCReply(result, NullUniValue, jreq.id);
-
-        // array of requests
-        } else if (valRequest.isArray())
-            strReply = JSONRPCExecBatch(jreq, valRequest.get_array());
-        else
+            ret = JSONRPCExecOne(jreq, valRequest);
+        } else if (valRequest.isArray()) {
+            ret = JSONRPCExecBatch(jreq, valRequest.get_array());
+        } else {
             throw JSONRPCError(RPC_PARSE_ERROR, "Top-level object parse error");
+        }
+
+        if (ret.isNull()) {
+            // JSON-RPC 2.0: return nothing at all
+            return false;
+        }
+
+        std::string strReply(ret.write() + "\n");
 
         req->WriteHeader("Content-Type", "application/json");
         req->WriteReply(HTTP_OK, strReply);

@@ -48,7 +48,7 @@ public:
     std::string peerAddr;
 
     JSONRPCRequest() : id(NullUniValue), params(NullUniValue), fHelp(false) {}
-    void parse(const UniValue& valRequest);
+    void parse(const UniValue& valRequest, bool *is_notification=nullptr);
 };
 
 /** Query whether RPC is running */
@@ -201,7 +201,8 @@ extern std::string HelpExampleRpc(const std::string& methodname, const std::stri
 void StartRPC();
 void InterruptRPC();
 void StopRPC();
-std::string JSONRPCExecBatch(const JSONRPCRequest& jreq, const UniValue& vReq);
+UniValue JSONRPCExecOne(JSONRPCRequest jreq, const UniValue& req);
+UniValue JSONRPCExecBatch(const JSONRPCRequest& jreq, const UniValue& vReq);
 
 // Retrieves any serialization flags requested in command line argument
 int RPCSerializationFlags();
