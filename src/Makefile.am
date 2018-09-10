@@ -336,7 +336,7 @@ crypto_libbitcoin_crypto_base_a_SOURCES = \
   crypto/sha512.h
 
 # x11
-crypto_libbitcoin_crypto_a_SOURCES += \
+crypto_libbitcoin_crypto_base_a_SOURCES += \
   crypto/blake.c \
   crypto/bmw.c \
   crypto/cubehash.c \
