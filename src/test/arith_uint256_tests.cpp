@@ -198,13 +198,6 @@ BOOST_AUTO_TEST_CASE( shifts ) { // "<<"  ">>"  "<<="  ">>="
 
 BOOST_AUTO_TEST_CASE( unaryOperators ) // !    ~    -
 {
-    BOOST_CHECK(!ZeroL);
-    BOOST_CHECK(!(!OneL));
-    for (unsigned int i = 0; i < 256; ++i)
-        BOOST_CHECK(!(!(OneL<<i)));
-    BOOST_CHECK(!(!R1L));
-    BOOST_CHECK(!(!MaxL));
-
     BOOST_CHECK(~ZeroL == MaxL);
 
     unsigned char TmpArray[32];

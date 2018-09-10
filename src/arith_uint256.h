@@ -64,14 +64,6 @@ public:
 
     explicit base_uint(const std::string& str);
 
-    bool operator!() const
-    {
-        for (int i = 0; i < WIDTH; i++)
-            if (pn[i] != 0)
-                return false;
-        return true;
-    }
-
     const base_uint operator~() const
     {
         base_uint ret;
