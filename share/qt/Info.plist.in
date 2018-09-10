@@ -29,10 +29,10 @@
   <string>????</string>
 
   <key>CFBundleExecutable</key>
-  <string>Bitcoin-Qt</string>
+  <string>MicroBitcoin-Qt</string>
   
   <key>CFBundleName</key>
-  <string>Bitcoin-Qt</string>
+  <string>MicroBitcoin-Qt</string>
 
   <key>LSHasLocalizedDisplayName</key>
   <true/>
