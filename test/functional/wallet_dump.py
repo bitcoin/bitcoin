@@ -29,50 +29,54 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
             # only read non comment lines
             if line[0] != "#" and len(line) > 10:
                 # split out some data
-                key_label, comment = line.split("#")
-                # key = key_label.split(" ")[0]
-                keytype = key_label.split(" ")[2]
-                if len(comment) > 1:
-                    addr_keypath = comment.split(" addr=")[1]
-                    addr = addr_keypath.split(" ")[0]
+                key_date_label, comment = line.split("#")
+                key_date_label = key_date_label.split(" ")
+                # key = key_date_label[0]
+                date = key_date_label[1]
+                keytype = key_date_label[2]
+                if not len(comment) or date.startswith('1970'):
+                    continue
+
+                addr_keypath = comment.split(" addr=")[1]
+                addr = addr_keypath.split(" ")[0]
+                keypath = None
+                if keytype == "inactivehdseed=1":
+                    # ensure the old master is still available
+                    assert (hd_master_addr_old == addr)
+                elif keytype == "hdseed=1":
+                    # ensure we have generated a new hd master key
+                    assert (hd_master_addr_old != addr)
+                    hd_master_addr_ret = addr
+                elif keytype == "script=1":
+                    # scripts don't have keypaths
                     keypath = None
-                    if keytype == "inactivehdseed=1":
-                        # ensure the old master is still available
-                        assert(hd_master_addr_old == addr)
-                    elif keytype == "hdseed=1":
-                        # ensure we have generated a new hd master key
-                        assert(hd_master_addr_old != addr)
-                        hd_master_addr_ret = addr
-                    elif keytype == "script=1":
-                        # scripts don't have keypaths
-                        keypath = None
-                    else:
-                        keypath = addr_keypath.rstrip().split("hdkeypath=")[1]
+                else:
+                    keypath = addr_keypath.rstrip().split("hdkeypath=")[1]
 
-                    # count key types
-                    for addrObj in addrs:
-                        if addrObj['address'] == addr.split(",")[0] and addrObj['hdkeypath'] == keypath and keytype == "label=":
-                            # a labeled entry in the wallet should contain both a native address
-                            # and the p2sh-p2wpkh address that was added at wallet setup
-                            if len(addr.split(",")) == 2:
-                                addr_list = addr.split(",")
-                                # the entry should be of the first key in the wallet
-                                assert_equal(addrs[0]['address'], addr_list[0])
-                                witness_addr_ret = addr_list[1]
-                            found_addr += 1
-                            break
-                        elif keytype == "change=1":
-                            found_addr_chg += 1
-                            break
-                        elif keytype == "reserve=1":
-                            found_addr_rsv += 1
-                            break
+                # count key types
+                for addrObj in addrs:
+                    if addrObj['address'] == addr.split(",")[0] and addrObj['hdkeypath'] == keypath and keytype == "label=":
+                        # a labeled entry in the wallet should contain both a native address
+                        # and the p2sh-p2wpkh address that was added at wallet setup
+                        if len(addr.split(",")) == 2:
+                            addr_list = addr.split(",")
+                            # the entry should be of the first key in the wallet
+                            assert_equal(addrs[0]['address'], addr_list[0])
+                            witness_addr_ret = addr_list[1]
+                        found_addr += 1
+                        break
+                    elif keytype == "change=1":
+                        found_addr_chg += 1
+                        break
+                    elif keytype == "reserve=1":
+                        found_addr_rsv += 1
+                        break
 
-                    # count scripts
-                    for script_addr in script_addrs:
-                        if script_addr == addr.rstrip() and keytype == "script=1":
-                            found_script_addr += 1
-                            break
+                # count scripts
+                for script_addr in script_addrs:
+                    if script_addr == addr.rstrip() and keytype == "script=1":
+                        found_script_addr += 1
+                        break
 
         return found_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_ret, witness_addr_ret
 
@@ -116,9 +120,9 @@ class WalletDumpTest(BitcoinTestFramework):
             read_dump(wallet_unenc_dump, addrs, script_addrs, None)
         assert_equal(found_addr, test_addr_count)  # all keys must be in the dump
         assert_equal(found_script_addr, 2)  # all scripts must be in the dump
-        assert_equal(found_addr_chg, 50)  # 50 blocks where mined
-        assert_equal(found_addr_rsv, 90*2) # 90 keys plus 100% internal keys
-        assert_equal(witness_addr_ret, witness_addr) # p2sh-p2wsh address added to the first key
+        assert_equal(found_addr_chg, 0)  # 0 blocks where mined
+        assert_equal(found_addr_rsv, 90 * 2)  # 90 keys plus 100% internal keys
+        assert_equal(witness_addr_ret, witness_addr)  # p2sh-p2wsh address added to the first key
 
         #encrypt wallet, restart, unlock and dump
         self.nodes[0].node_encrypt_wallet('test')
@@ -132,8 +136,8 @@ class WalletDumpTest(BitcoinTestFramework):
             read_dump(wallet_enc_dump, addrs, script_addrs, hd_master_addr_unenc)
         assert_equal(found_addr, test_addr_count)
         assert_equal(found_script_addr, 2)
-        assert_equal(found_addr_chg, 90*2 + 50)  # old reserve keys are marked as change now
-        assert_equal(found_addr_rsv, 90*2)
+        assert_equal(found_addr_chg, 90 * 2)  # old reserve keys are marked as change now
+        assert_equal(found_addr_rsv, 90 * 2)
         assert_equal(witness_addr_ret, witness_addr)
 
         # Overwriting should fail
