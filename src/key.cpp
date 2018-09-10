@@ -89,15 +89,15 @@ static int ec_privkey_import_der(const secp256k1_context* ctx, unsigned char *ou
  * will be set to the number of bytes used in the buffer.
  * key32 must point to a 32-byte raw private key.
  */
-static int ec_privkey_export_der(const secp256k1_context *ctx, unsigned char *privkey, size_t *privkeylen, const unsigned char *key32, int compressed) {
-    assert(*privkeylen >= CKey::PRIVATE_KEY_SIZE);
+static int ec_privkey_export_der(const secp256k1_context *ctx, unsigned char *privkey, size_t *privkeylen, const unsigned char *key32, unsigned int compressed) {
     secp256k1_pubkey pubkey;
     size_t pubkeylen = 0;
     if (!secp256k1_ec_pubkey_create(ctx, &pubkey, key32)) {
         *privkeylen = 0;
         return 0;
     }
-    if (compressed) {
+    if (compressed == SECP256K1_EC_COMPRESSED) {
+        assert(*privkeylen >= CKey::COMPRESSED_PRIVATE_KEY_SIZE);
         static const unsigned char begin[] = {
             0x30,0x81,0xD3,0x02,0x01,0x01,0x04,0x20
         };
@@ -117,11 +117,13 @@ static int ec_privkey_export_der(const secp256k1_context *ctx, unsigned char *pr
         memcpy(ptr, key32, 32); ptr += 32;
         memcpy(ptr, middle, sizeof(middle)); ptr += sizeof(middle);
         pubkeylen = CPubKey::COMPRESSED_PUBLIC_KEY_SIZE;
-        secp256k1_ec_pubkey_serialize(ctx, ptr, &pubkeylen, &pubkey, SECP256K1_EC_COMPRESSED);
+        secp256k1_ec_pubkey_serialize(ctx, ptr, &pubkeylen, &pubkey, compressed);
         ptr += pubkeylen;
         *privkeylen = ptr - privkey;
         assert(*privkeylen == CKey::COMPRESSED_PRIVATE_KEY_SIZE);
     } else {
+        assert(compressed == SECP256K1_EC_UNCOMPRESSED);
+        assert(*privkeylen >= CKey::PRIVATE_KEY_SIZE);
         static const unsigned char begin[] = {
             0x30,0x82,0x01,0x13,0x02,0x01,0x01,0x04,0x20
         };
@@ -143,7 +145,7 @@ static int ec_privkey_export_der(const secp256k1_context *ctx, unsigned char *pr
         memcpy(ptr, key32, 32); ptr += 32;
         memcpy(ptr, middle, sizeof(middle)); ptr += sizeof(middle);
         pubkeylen = CPubKey::PUBLIC_KEY_SIZE;
-        secp256k1_ec_pubkey_serialize(ctx, ptr, &pubkeylen, &pubkey, SECP256K1_EC_UNCOMPRESSED);
+        secp256k1_ec_pubkey_serialize(ctx, ptr, &pubkeylen, &pubkey, compressed);
         ptr += pubkeylen;
         *privkeylen = ptr - privkey;
         assert(*privkeylen == CKey::PRIVATE_KEY_SIZE);
