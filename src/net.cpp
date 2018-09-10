@@ -1260,6 +1260,7 @@ void CConnman::ThreadSocketHandler()
     unsigned int nPrevNodeCount = 0;
     while (!interruptNet)
     {
+        InactivityChecks();
         DisconnectNodes();
 
         //
@@ -1467,8 +1468,6 @@ void CConnman::ThreadSocketHandler()
             if(clientInterface)
                 clientInterface->NotifyNumConnectionsChanged(vNodesSize);
         }
-
-        InactivityChecks();
     }
 }
 
