@@ -130,9 +130,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.options.bitcoind = os.getenv("BITCOIND", default=config["environment"]["BUILDDIR"] + '/src/bitcoind' + config["environment"]["EXEEXT"])
         self.options.bitcoincli = os.getenv("BITCOINCLI", default=config["environment"]["BUILDDIR"] + '/src/bitcoin-cli' + config["environment"]["EXEEXT"])
 
-        os.environ['PATH'] = config['environment']['BUILDDIR'] + os.pathsep + \
-                             config['environment']['BUILDDIR'] + os.path.sep + "qt" + os.pathsep + \
-                             os.environ['PATH']
+        os.environ['PATH'] = os.pathsep.join([
+            os.path.join(config['environment']['BUILDDIR'], 'src'),
+            os.path.join(config['environment']['BUILDDIR'], 'src', 'qt'),
+            os.environ['PATH']
+        ])
 
         # Set up temp directory and start logging
         if self.options.tmpdir:
