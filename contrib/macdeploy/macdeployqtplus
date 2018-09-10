@@ -773,7 +773,7 @@ if config.dmg is not None:
         for path, dirs, files in os.walk("dist"):
             for file in files:
                 size += os.path.getsize(os.path.join(path, file))
-        size += int(size * 0.16.1)
+        size += int(size * 0.15)
         
         if verbose >= 3:
             print("Creating temp image for modification...")
