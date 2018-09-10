@@ -231,6 +231,9 @@ public:
     /// Get window identifier of QMainWindow (BitcoinGUI)
     WId getMainWinId() const;
 
+    /// Setup platform style
+    void setupPlatformStyle();
+
 public Q_SLOTS:
     void initializeResult(bool success);
     void shutdownResult();
@@ -317,10 +320,14 @@ BitcoinApplication::BitcoinApplication(interfaces::Node& node, int &argc, char *
     paymentServer(0),
     m_wallet_models(),
 #endif
-    returnValue(0)
+    returnValue(0),
+    platformStyle(0)
 {
     setQuitOnLastWindowClosed(false);
+}
 
+void BitcoinApplication::setupPlatformStyle()
+{
     // UI per-platform customization
     // This must be done inside the BitcoinApplication constructor, or after it, because
     // PlatformStyle::instantiate requires a QApplication
@@ -564,15 +571,9 @@ int main(int argc, char *argv[])
 
     std::unique_ptr<interfaces::Node> node = interfaces::MakeNode();
 
-    /// 1. Parse command-line options. These take precedence over anything else.
-    // Command-line options take precedence:
-    node->setupServerArgs();
-    SetupUIArgs();
-    node->parseParameters(argc, argv);
-
     // Do not refer to data directory yet, this can be overridden by Intro::pickDataDirectory
 
-    /// 2. Basic Qt initialization (not dependent on parameters or configuration)
+    /// 1. Basic Qt initialization (not dependent on parameters or configuration)
 #if QT_VERSION < 0x050000
     // Internal string conversion is all UTF-8
     QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
@@ -611,6 +612,20 @@ int main(int argc, char *argv[])
     qRegisterMetaType<WalletModel*>("WalletModel*");
 #endif
 
+    /// 2. Parse command-line options. We do this after qt in order to show an error if there are problems parsing these
+    // Command-line options take precedence:
+    node->setupServerArgs();
+    SetupUIArgs();
+    std::string error;
+    if (!node->parseParameters(argc, argv, error)) {
+        QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
+            QObject::tr("Error parsing command line arguments: %1.").arg(QString::fromStdString(error)));
+        return EXIT_FAILURE;
+    }
+
+    // Now that the QApplication is setup and we have parsed our parameters, we can set the platform style
+    app.setupPlatformStyle();
+
     /// 3. Application identification
     // must be set before OptionsModel is initialized or translations are loaded,
     // as it is used to locate QSettings
@@ -646,11 +661,9 @@ int main(int argc, char *argv[])
                               QObject::tr("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(gArgs.GetArg("-datadir", ""))));
         return EXIT_FAILURE;
     }
-    try {
-        node->readConfigFiles();
-    } catch (const std::exception& e) {
+    if (!node->readConfigFiles(error)) {
         QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
-                              QObject::tr("Error: Cannot parse configuration file: %1. Only use key=value syntax.").arg(e.what()));
+            QObject::tr("Error: Cannot parse configuration file: %1.").arg(QString::fromStdString(error)));
         return EXIT_FAILURE;
     }
 
