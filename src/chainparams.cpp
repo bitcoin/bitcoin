@@ -79,7 +79,7 @@ public:
         consensus.BIP34Height = 0;
         consensus.BIP34Hash = uint256S("0");
         consensus.BIP65Height = 0;
-        consensus.BIP66Height = 0;
+        consensus.BIP66Height = 9999999;   // peercoin: fails on block 204614
         //ppcTODO - set above values to correct ones
         consensus.powLimit =            uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~arith_uint256(0) >> 32;
         consensus.bnInitialHashTarget = uint256S("0000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~arith_uint256(0) >> 40;
