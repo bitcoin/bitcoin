@@ -5,9 +5,11 @@
 #ifndef BITCOIN_RPC_BLOCKCHAIN_H
 #define BITCOIN_RPC_BLOCKCHAIN_H
 
-#include <vector>
-#include <stdint.h>
 #include <amount.h>
+#include <attributes.h>
+
+#include <stdint.h>
+#include <vector>
 
 class CBlock;
 class CBlockIndex;
@@ -24,7 +26,7 @@ static constexpr int NUM_GETBLOCKSTATS_PERCENTILES = 5;
 double GetDifficulty(const CBlockIndex* blockindex);
 
 /** Callback for when block tip changed. */
-void RPCNotifyBlockChange(bool ibd, const CBlockIndex *);
+void RPCNotifyBlockChange(bool, const CBlockIndex *);
 
 /** Block description to JSON */
 UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool txDetails = false);

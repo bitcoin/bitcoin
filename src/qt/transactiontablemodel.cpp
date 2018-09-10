@@ -2,8 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <qt/transactiontablemodel.h>
-
 #include <qt/addresstablemodel.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
@@ -11,8 +9,10 @@
 #include <qt/platformstyle.h>
 #include <qt/transactiondesc.h>
 #include <qt/transactionrecord.h>
+#include <qt/transactiontablemodel.h>
 #include <qt/walletmodel.h>
 
+#include <attributes.h>
 #include <core_io.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
@@ -722,7 +722,7 @@ static void NotifyTransactionChanged(TransactionTableModel *ttm, const uint256 &
     notification.invoke(ttm);
 }
 
-static void ShowProgress(TransactionTableModel *ttm, const std::string &title, int nProgress)
+static void ShowProgress(TransactionTableModel *ttm, const std::string, int nProgress)
 {
     if (nProgress == 0)
         fQueueNotifications = true;
