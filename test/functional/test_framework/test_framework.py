@@ -158,6 +158,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 raise SkipTest("--usecli specified but test does not support using CLI")
             self.setup_chain()
             self.setup_network()
+            self.import_deterministic_coinbase_privkeys()
             self.run_test()
             success = TestStatus.PASSED
         except JSONRPCException as e:
@@ -246,6 +247,19 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             extra_args = self.extra_args
         self.add_nodes(self.num_nodes, extra_args)
         self.start_nodes()
+
+    def import_deterministic_coinbase_privkeys(self):
+        if self.setup_clean_chain:
+            return
+
+        for n in self.nodes:
+            try:
+                n.getwalletinfo()
+            except JSONRPCException as e:
+                assert str(e).startswith('Method not found')
+                continue
+
+            n.importprivkey(n.get_deterministic_priv_key()[1])
 
     def run_test(self):
         """Tests must override this method to define test logic"""
@@ -415,7 +429,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # Create cache directories, run bitcoinds:
             for i in range(MAX_NODES):
                 datadir = initialize_datadir(self.options.cachedir, i)
-                args = [self.options.bitcoind, "-datadir=" + datadir]
+                args = [self.options.bitcoind, "-datadir=" + datadir, '-disablewallet']
                 if i > 0:
                     args.append("-connect=127.0.0.1:" + str(p2p_port(0)))
                 self.nodes.append(TestNode(i, get_datadir_path(self.options.cachedir, i), extra_conf=["bind=127.0.0.1"], extra_args=[], rpchost=None, timewait=self.rpc_timewait, bitcoind=self.options.bitcoind, bitcoin_cli=self.options.bitcoincli, mocktime=self.mocktime, coverage_dir=None))
@@ -439,7 +453,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 for peer in range(4):
                     for j in range(25):
                         set_node_times(self.nodes, block_time)
-                        self.nodes[peer].generate(1)
+                        self.nodes[peer].generatetoaddress(1, self.nodes[peer].get_deterministic_priv_key()[0])
                         block_time += 10 * 60
                     # Must sync before next peer starts generating blocks
                     sync_blocks(self.nodes)
@@ -453,8 +467,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 return os.path.join(get_datadir_path(self.options.cachedir, n), "regtest", *paths)
 
             for i in range(MAX_NODES):
+                os.rmdir(cache_path(i, 'wallets'))  # Remove empty wallets dir
                 for entry in os.listdir(cache_path(i)):
-                    if entry not in ['wallets', 'chainstate', 'blocks']:
+                    if entry not in ['chainstate', 'blocks']:
                         os.remove(cache_path(i, entry))
 
         for i in range(self.num_nodes):
