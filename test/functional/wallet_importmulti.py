@@ -6,11 +6,16 @@
 
 from test_framework import script
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_greater_than, assert_raises_rpc_error
+from test_framework.util import (
+    assert_equal,
+    assert_greater_than,
+    assert_raises_rpc_error,
+    bytes_to_hex_str,
+)
 
-class ImportMultiTest (BitcoinTestFramework):
-    def __init__(self):
-        super().__init__()
+
+class ImportMultiTest(BitcoinTestFramework):
+    def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [["-addresstype=legacy"], ["-addresstype=legacy"]]
         self.setup_clean_chain = True
@@ -40,7 +45,7 @@ class ImportMultiTest (BitcoinTestFramework):
 
         # RPC importmulti -----------------------------------------------
 
-        # Chaincoin Address
+        # Bitcoin Address
         self.log.info("Should import an address")
         address = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
         result = self.nodes[1].importmulti([{
