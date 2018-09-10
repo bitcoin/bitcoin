@@ -402,7 +402,7 @@ std::unique_ptr<T> MakeUnique(Args&&... args)
  * CPU-intensive and non-interactive. See SCHED_BATCH in sched(7) for details.
  *
  * @return The return value of sched_setschedule(), or 1 on systems without
- * sched_setchedule().
+ * sched_setschedule().
  */
 int ScheduleBatchPriority(void);
 
