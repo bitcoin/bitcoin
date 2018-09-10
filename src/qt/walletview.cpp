@@ -17,6 +17,7 @@
 #include "sendcoinsdialog.h"
 #include "signverifymessagedialog.h"
 #include "transactiontablemodel.h"
+#include "assettablemodel.h"
 #include "transactionview.h"
 #include "walletmodel.h"
 #include "assetsdialog.h"
@@ -169,7 +170,7 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
     }
 }
 
-void WalletView::processNewTransaction(const QModelIndex& parent, int start, int /*end*/)
+void WalletView::processNewTransaction(const QModelIndex& parent, int start, int end)
 {
     // Prevent balloon-spam when initial block download is in progress
     if (!walletModel || !clientModel || clientModel->inInitialBlockDownload())
@@ -179,15 +180,23 @@ void WalletView::processNewTransaction(const QModelIndex& parent, int start, int
     if (!ttm || ttm->processingQueuedTransactions())
         return;
 
-    QString date = ttm->index(start, TransactionTableModel::Date, parent).data().toString();
-    qint64 amount = ttm->index(start, TransactionTableModel::Amount, parent).data(Qt::EditRole).toULongLong();
-    QString type = ttm->index(start, TransactionTableModel::Type, parent).data().toString();
-    QModelIndex index = ttm->index(start, 0, parent);
-    QString address = ttm->data(index, TransactionTableModel::AddressRole).toString();
-    QString label = ttm->data(index, TransactionTableModel::LabelRole).toString();
-    QString assetName = ttm->data(index, TransactionTableModel::AssetNameRole).toString();
+    /** RVN START */
+    // With the addition of asset transactions, there can be multiple transaction that need notifications
+    // so we need to loop through all new transaction that were added to the transaction table and display
+    // notifications for each individual transaction
+    for (int i = start; i <= end; i++) {
+        QString date = ttm->index(i, TransactionTableModel::Date, parent).data().toString();
+        qint64 amount = ttm->index(i, TransactionTableModel::Amount, parent).data(Qt::EditRole).toULongLong();
+        QString type = ttm->index(i, TransactionTableModel::Type, parent).data().toString();
+        QModelIndex index = ttm->index(i, 0, parent);
+        QString address = ttm->data(index, TransactionTableModel::AddressRole).toString();
+        QString label = ttm->data(index, TransactionTableModel::LabelRole).toString();
+        QString assetName = ttm->data(index, TransactionTableModel::AssetNameRole).toString();
 
-    Q_EMIT incomingTransaction(date, walletModel->getOptionsModel()->getDisplayUnit(), amount, type, address, label, assetName);
+        Q_EMIT incomingTransaction(date, walletModel->getOptionsModel()->getDisplayUnit(), amount, type, address, label,
+                                   assetName);
+    }
+    /** RVN START */
 
     /** Everytime we get an new transaction. We should check to see if assets are enabled or not */
     overviewPage->showAssets();

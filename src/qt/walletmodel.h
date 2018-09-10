@@ -342,7 +342,7 @@ Q_SIGNALS:
     // Coins sent: from wallet, to recipient, in (serialized) transaction:
     void coinsSent(CWallet* wallet, SendCoinsRecipient recipient, QByteArray transaction);
 
-    // Asset sent: from wallet, to recupient, in (serialized) transaction:
+    // Asset sent: from wallet, to recipient, in (serialized) transaction:
     void assetsSent(CWallet* wallet, SendAssetsRecipient recipient, QByteArray transaction);
 
     // Show progress dialog e.g. for rescan

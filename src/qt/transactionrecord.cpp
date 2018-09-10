@@ -189,11 +189,11 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 sub.credit = data.amount;
                 sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
 
-                if (data.type == ASSET_NEW_STRING)
+                if (data.type == TX_NEW_ASSET)
                     sub.type = TransactionRecord::Issue;
-                else if (data.type == ASSET_REISSUE_STRING)
+                else if (data.type == TX_REISSUE_ASSET)
                     sub.type = TransactionRecord::Reissue;
-                else if (data.type == ASSET_TRANSFER_STRING)
+                else if (data.type == TX_TRANSFER_ASSET)
                     sub.type = TransactionRecord::TransferFrom;
                 else {
                     sub.type = TransactionRecord::Other;
@@ -230,7 +230,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 sub.credit = -data.amount;
                 sub.involvesWatchAddress = false;
 
-                if (data.type == ASSET_TRANSFER_STRING)
+                if (data.type == TX_TRANSFER_ASSET)
                     sub.type = TransactionRecord::TransferTo;
                 else
                     sub.type = TransactionRecord::Other;

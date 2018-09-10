@@ -36,6 +36,7 @@
 #include "init.h"
 #include "ui_interface.h"
 #include "util.h"
+#include "core_io.h"
 
 #include <iostream>
 
@@ -1033,7 +1034,7 @@ void RavenGUI::incomingTransaction(const QString& date, int unit, const CAmount&
     if (assetName == "RVN")
         msg += tr("Amount: %1\n").arg(RavenUnits::formatWithUnit(unit, amount, true));
     else
-        msg += tr("Amount: %1\n").arg(amount);
+        msg += tr("Amount: %1\n").arg(QString::fromStdString(ValueFromAmountString(amount, 8)));
 
     if (assetName != "RVN")
         msg += tr("Asset: %1\n").arg(assetName);

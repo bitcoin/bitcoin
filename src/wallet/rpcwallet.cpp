@@ -1576,7 +1576,7 @@ void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const std::s
             for (const CAssetOutputEntry &data : listAssetsReceived) {
                 UniValue entry(UniValue::VOBJ);
 
-                entry.push_back(Pair("asset_type", data.type));
+                entry.push_back(Pair("asset_type", GetTxnOutputType(data.type)));
                 entry.push_back(Pair("asset_name", data.assetName));
                 entry.push_back(Pair("amount", ValueFromAmount(data.amount)));
                 entry.push_back(Pair("destination", EncodeDestination(data.destination)));
@@ -1590,7 +1590,7 @@ void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const std::s
             for (const CAssetOutputEntry &data : listAssetsSent) {
                 UniValue entry(UniValue::VOBJ);
 
-                entry.push_back(Pair("asset_type", data.type));
+                entry.push_back(Pair("asset_type", GetTxnOutputType(data.type)));
                 entry.push_back(Pair("asset_name", data.assetName));
                 entry.push_back(Pair("amount", ValueFromAmount(data.amount)));
                 entry.push_back(Pair("destination", EncodeDestination(data.destination)));

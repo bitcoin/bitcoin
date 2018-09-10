@@ -190,7 +190,7 @@ struct COutputEntry
 /** RVN START */
 struct CAssetOutputEntry
 {
-    std::string type;
+    txnouttype type;
     std::string assetName;
     CTxDestination destination;
     CAmount amount;
