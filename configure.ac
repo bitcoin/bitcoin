@@ -733,6 +733,10 @@ fi
 
 AC_CHECK_HEADERS([endian.h sys/endian.h byteswap.h stdio.h stdlib.h unistd.h strings.h sys/types.h sys/stat.h sys/select.h sys/prctl.h])
 
+AC_CHECK_DECLS([getifaddrs, freeifaddrs],,,
+    [#include <sys/types.h>
+    #include <ifaddrs.h>]
+)
 AC_CHECK_DECLS([strnlen])
 
 # Check for daemon(3), unrelated to --with-daemon (although used by it)
