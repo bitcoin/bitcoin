@@ -115,7 +115,7 @@ public:
         consensus.premineValue = 1050000 * COIN * COIN_RATIO; // 5%
         consensus.premineAddress = "BfrckfYi7xaSGmMec4T2keu6xczQSx7rxo";
         consensus.replyFixHeight = 580000;
-        signSwithchTime = 1536706800;
+        signSwithchTime = 1536696000;
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
