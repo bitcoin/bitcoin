@@ -3176,7 +3176,7 @@ UniValue createwallet(const JSONRPCRequest& request)
     }
     AddWallet(wallet);
 
-    wallet->postInitProcess();
+    wallet->postInitProcess(false);
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("name", wallet->GetName());
