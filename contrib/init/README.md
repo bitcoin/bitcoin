@@ -5,7 +5,7 @@ Upstart: chaincoind.conf
 OpenRC:  chaincoind.openrc
          chaincoind.openrcconf
 CentOS:  chaincoind.init
-OS X:    org.chaincoin.chaincoind.plist
+macOS:    org.chaincoin.chaincoind.plist
 ```
 have been made available to assist packagers in creating node packages here.
 

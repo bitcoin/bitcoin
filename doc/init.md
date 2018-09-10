@@ -15,7 +15,7 @@ Service User
 
 All three Linux startup configurations assume the existence of a "chaincoin" user
 and group.  They must be created before attempting to use these scripts.
-The OS X configuration assumes chaincoind will be set up for the current user.
+The macOS configuration assumes chaincoind will be set up for the current user.
 
 Configuration
 ---------------------------------
@@ -65,7 +65,7 @@ reasons to make the configuration file and data directory only readable by the
 chaincoin user and group.  Access to chaincoin-cli and other chaincoind rpc clients
 can then be controlled by group membership.
 
-### Mac OS X
+### macOS
 
 Binary:              `/usr/local/bin/chaincoind`  
 Configuration file:  `~/Library/Application Support/Chaincoin/chaincoin.conf`  
@@ -112,7 +112,7 @@ Using this script, you can adjust the path and flags to the chaincoind program b
 setting the CHAINCOIND and FLAGS environment variables in the file
 /etc/sysconfig/chaincoind. You can also use the DAEMONOPTS environment variable here.
 
-### Mac OS X
+### macOS
 
 Copy org.chaincoin.chaincoind.plist into ~/Library/LaunchAgents. Load the launch agent by
 running `launchctl load ~/Library/LaunchAgents/org.chaincoin.chaincoind.plist`.
