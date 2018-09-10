@@ -441,6 +441,7 @@ void SetupServerArgs()
     gArgs.AddArg("-discover", _("Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)"), false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-dns", _("Allow DNS lookups for -addnode, -seednode and -connect") + " " + strprintf(_("(default: %u)"), DEFAULT_NAME_LOOKUP), false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-dnsseed", _("Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect used)"), false, OptionsCategory::CONNECTION);
+    gArgs.AddArg("-enablebip61", strprintf(_("Send reject messages per BIP61 (default: %u)"), DEFAULT_ENABLE_BIP61), false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-externalip=<ip>", _("Specify your own public address"), false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-forcednsseed", strprintf(_("Always query for peer addresses via DNS lookup (default: %u)"), DEFAULT_FORCEDNSSEED), false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-listen", _("Accept connections from outside (default: 1 if no -proxy or -connect)"), false, OptionsCategory::CONNECTION);
@@ -1162,6 +1163,8 @@ bool AppInitParameterInteraction()
 
     if (gArgs.GetBoolArg("-peerbloomfilters", DEFAULT_PEERBLOOMFILTERS))
         nLocalServices = ServiceFlags(nLocalServices | NODE_BLOOM);
+
+    g_enable_bip61 = gArgs.GetBoolArg("-enablebip61", DEFAULT_ENABLE_BIP61);
 
     if (gArgs.GetArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION) < 0)
         return InitError("rpcserialversion must be non-negative.");
