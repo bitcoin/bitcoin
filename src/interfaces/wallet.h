@@ -381,7 +381,7 @@ struct WalletTxOut
 
 //! Return implementation of Wallet interface. This function will be undefined
 //! in builds where ENABLE_WALLET is false.
-std::unique_ptr<Wallet> MakeWallet(CWallet& wallet);
+std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet);
 
 } // namespace interfaces
 

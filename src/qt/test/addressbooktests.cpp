@@ -56,15 +56,15 @@ void EditAddressAndSubmit(
 void TestAddAddressesToSendBook()
 {
     TestChain100Setup test;
-    CWallet wallet("mock", WalletDatabase::CreateMock());
+    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>("mock", WalletDatabase::CreateMock());
     bool firstRun;
-    wallet.LoadWallet(firstRun);
+    wallet->LoadWallet(firstRun);
 
     auto build_address = [&wallet]() {
         CKey key;
         key.MakeNewKey(true);
         CTxDestination dest(GetDestinationForKey(
-            key.GetPubKey(), wallet.m_default_address_type));
+            key.GetPubKey(), wallet->m_default_address_type));
 
         return std::make_pair(dest, QString::fromStdString(EncodeDestination(dest)));
     };
@@ -87,13 +87,13 @@ void TestAddAddressesToSendBook()
     std::tie(std::ignore, new_address) = build_address();
 
     {
-        LOCK(wallet.cs_wallet);
-        wallet.SetAddressBook(r_key_dest, r_label.toStdString(), "receive");
-        wallet.SetAddressBook(s_key_dest, s_label.toStdString(), "send");
+        LOCK(wallet->cs_wallet);
+        wallet->SetAddressBook(r_key_dest, r_label.toStdString(), "receive");
+        wallet->SetAddressBook(s_key_dest, s_label.toStdString(), "send");
     }
 
     auto check_addbook_size = [&wallet](int expected_size) {
-        QCOMPARE(static_cast<int>(wallet.mapAddressBook.size()), expected_size);
+        QCOMPARE(static_cast<int>(wallet->mapAddressBook.size()), expected_size);
     };
 
     // We should start with the two addresses we added earlier and nothing else.
@@ -103,9 +103,9 @@ void TestAddAddressesToSendBook()
     std::unique_ptr<const PlatformStyle> platformStyle(PlatformStyle::instantiate("other"));
     auto node = interfaces::MakeNode();
     OptionsModel optionsModel(*node);
-    AddWallet(&wallet);
+    AddWallet(wallet);
     WalletModel walletModel(std::move(node->getWallets()[0]), *node, platformStyle.get(), &optionsModel);
-    RemoveWallet(&wallet);
+    RemoveWallet(wallet);
     EditAddressDialog editAddressDialog(EditAddressDialog::NewSendingAddress);
     editAddressDialog.setModel(walletModel.getAddressTableModel());
 

@@ -25,7 +25,8 @@ CPrivateSendClient privateSendClient;
 
 bool CPrivateSendClient::getWallet(const std::string walletIn)
 {
-    pmixingwallet = GetWallet(walletIn);
+    std::shared_ptr<CWallet> const pwallet = GetWallet(walletIn);
+    pmixingwallet = pwallet.get();
     if (!pmixingwallet)
         return false;
     else
@@ -654,8 +655,9 @@ bool CPrivateSendClient::CheckAutomaticBackup()
             LogPrint(BCLog::PRIVSEND, "CPrivateSendClient::CheckAutomaticBackup -- Trying to create new backup.\n");
             std::string warningString;
             std::string errorString;
+            std::shared_ptr<CWallet> const pwallet = GetWallet(pmixingwallet->GetName());
 
-            if(!AutoBackupWallet(pmixingwallet, "", warningString, errorString)) {
+            if(!AutoBackupWallet(pwallet, "", warningString, errorString)) {
                 if(!warningString.empty()) {
                     // There were some issues saving backup but yet more or less safe to continue
                     LogPrintf("CPrivateSendClient::CheckAutomaticBackup -- WARNING! Something went wrong on automatic backup: %s\n", warningString);
