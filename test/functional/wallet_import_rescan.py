@@ -26,7 +26,7 @@ import collections
 import enum
 import itertools
 
-Call = enum.Enum("Call", "single multi")
+Call = enum.Enum("Call", "single multiaddress multiscript")
 Data = enum.Enum("Data", "address pub priv")
 Rescan = enum.Enum("Rescan", "no yes late_timestamp")
 
@@ -53,11 +53,11 @@ class Variant(collections.namedtuple("Variant", "call data rescan prune")):
                 response = self.try_rpc(self.node.importprivkey, privkey=self.key, rescan=rescan)
             assert_equal(response, None)
 
-        elif self.call == Call.multi:
+        elif self.call in (Call.multiaddress, Call.multiscript):
             response = self.node.importmulti([{
                 "scriptPubKey": {
                     "address": self.address["address"]
-                },
+                } if self.call == Call.multiaddress else self.address["scriptPubKey"],
                 "timestamp": timestamp + TIMESTAMP_WINDOW + (1 if self.rescan == Rescan.late_timestamp else 0),
                 "pubkeys": [self.address["pubkey"]] if self.data == Data.pub else [],
                 "keys": [self.key] if self.data == Data.priv else [],
@@ -126,7 +126,7 @@ class ImportRescanTest(BitcoinTestFramework):
         for i, variant in enumerate(IMPORT_VARIANTS):
             variant.address = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress())
             variant.key = self.nodes[1].dumpprivkey(variant.address["address"])
-            variant.initial_amount = 10 - (i + 1) / 4.0
+            variant.initial_amount = 1 - (i + 1) / 64
             variant.initial_txid = self.nodes[0].sendtoaddress(variant.address["address"], variant.initial_amount)
 
         # Generate a block containing the initial transactions, then another
@@ -156,7 +156,7 @@ class ImportRescanTest(BitcoinTestFramework):
 
         # Create new transactions sending to each address.
         for i, variant in enumerate(IMPORT_VARIANTS):
-            variant.sent_amount = 10 - (2 * i + 1) / 8.0
+            variant.sent_amount = 1 - (2 * i + 1) / 128
             variant.sent_txid = self.nodes[0].sendtoaddress(variant.address["address"], variant.sent_amount)
 
         # Generate a block containing the new transactions.
