@@ -878,16 +878,9 @@ UniValue masternode(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "DEPRECATED, please use start-all instead");
 #endif // ENABLE_WALLET
 
-    if ((request.fHelp && strCommand.empty())  ||
-        (
-#ifdef ENABLE_WALLET
-            strCommand != "start-alias" && strCommand != "start-all" && strCommand != "start-missing" &&
-         strCommand != "start-disabled" && strCommand != "outputs" &&
-#endif // ENABLE_WALLET
-         strCommand != "list" && strCommand != "list-conf" && strCommand != "count" &&
-         strCommand != "debug" && strCommand != "current" && strCommand != "winner" && strCommand != "winners" && strCommand != "genkey" &&
-         strCommand != "connect" && strCommand != "status" && strCommand != "check"))
-            masternode_help();
+    if (request.fHelp && strCommand.empty()) {
+        masternode_help();
+    }
 
     if (strCommand == "list") {
         return masternode_list(request);
@@ -925,9 +918,10 @@ UniValue masternode(const JSONRPCRequest& request)
         return masternode_winners(request);
     } else if (strCommand == "check") {
         return masternode_check(request);
+    } else {
+        masternode_help();
+        return UniValue::VNULL; // avoid compiler warnings
     }
-
-    throw std::runtime_error("invalid command: " + strCommand);
 }
 
 UniValue masternodelist(const JSONRPCRequest& request)
