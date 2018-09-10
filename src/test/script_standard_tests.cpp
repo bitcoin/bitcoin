@@ -726,6 +726,32 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
         BOOST_CHECK(!isInvalid);
     }
 
+    // witness unspendable
+    {
+        CBasicKeyStore keystore;
+        keystore.AddKey(keys[0]);
+
+        scriptPubKey.clear();
+        scriptPubKey << OP_0 << ToByteVector(ParseHex("aabb"));
+
+        result = IsMine(keystore, scriptPubKey, isInvalid);
+        BOOST_CHECK_EQUAL(result, ISMINE_NO);
+        BOOST_CHECK(!isInvalid);
+    }
+
+    // witness unknown
+    {
+        CBasicKeyStore keystore;
+        keystore.AddKey(keys[0]);
+
+        scriptPubKey.clear();
+        scriptPubKey << OP_16 << ToByteVector(ParseHex("aabb"));
+
+        result = IsMine(keystore, scriptPubKey, isInvalid);
+        BOOST_CHECK_EQUAL(result, ISMINE_NO);
+        BOOST_CHECK(!isInvalid);
+    }
+
     // Nonstandard
     {
         CBasicKeyStore keystore;
