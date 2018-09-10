@@ -577,36 +577,36 @@ std::string ArgsManager::GetHelpMessage()
 {
     const bool show_debug = gArgs.GetBoolArg("-help-debug", false);
 
-    std::string usage = HelpMessageGroup(_("Options:"));
+    std::string usage = HelpMessageGroup("Options:");
 
     OptionsCategory last_cat = OptionsCategory::OPTIONS;
     for (auto& arg : m_available_args) {
         if (arg.first.first != last_cat) {
             last_cat = arg.first.first;
             if (last_cat == OptionsCategory::CONNECTION)
-                usage += HelpMessageGroup(_("Connection options:"));
+                usage += HelpMessageGroup("Connection options:");
             else if (last_cat == OptionsCategory::ZMQ)
-                usage += HelpMessageGroup(_("ZeroMQ notification options:"));
+                usage += HelpMessageGroup("ZeroMQ notification options:");
             else if (last_cat == OptionsCategory::DEBUG_TEST)
-                usage += HelpMessageGroup(_("Debugging/Testing options:"));
+                usage += HelpMessageGroup("Debugging/Testing options:");
             else if (last_cat == OptionsCategory::NODE_RELAY)
-                usage += HelpMessageGroup(_("Node relay options:"));
+                usage += HelpMessageGroup("Node relay options:");
             else if (last_cat == OptionsCategory::BLOCK_CREATION)
-                usage += HelpMessageGroup(_("Block creation options:"));
+                usage += HelpMessageGroup("Block creation options:");
             else if (last_cat == OptionsCategory::RPC)
-                usage += HelpMessageGroup(_("RPC server options:"));
+                usage += HelpMessageGroup("RPC server options:");
             else if (last_cat == OptionsCategory::WALLET)
-                usage += HelpMessageGroup(_("Wallet options:"));
+                usage += HelpMessageGroup("Wallet options:");
             else if (last_cat == OptionsCategory::WALLET_DEBUG_TEST && show_debug)
-                usage += HelpMessageGroup(_("Wallet debugging/testing options:"));
+                usage += HelpMessageGroup("Wallet debugging/testing options:");
             else if (last_cat == OptionsCategory::CHAINPARAMS)
-                usage += HelpMessageGroup(_("Chain selection options:"));
+                usage += HelpMessageGroup("Chain selection options:");
             else if (last_cat == OptionsCategory::GUI)
-                usage += HelpMessageGroup(_("UI Options:"));
+                usage += HelpMessageGroup("UI Options:");
             else if (last_cat == OptionsCategory::COMMANDS)
-                usage += HelpMessageGroup(_("Commands:"));
+                usage += HelpMessageGroup("Commands:");
             else if (last_cat == OptionsCategory::REGISTER_COMMANDS)
-                usage += HelpMessageGroup(_("Register Commands:"));
+                usage += HelpMessageGroup("Register Commands:");
         }
         if (show_debug || !arg.second.second) {
             usage += HelpMessageOpt(arg.first.second, arg.second.first);

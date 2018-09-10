@@ -35,21 +35,21 @@ static void SetupCliArgs()
     const auto defaultBaseParams = CreateBaseChainParams(CBaseChainParams::MAIN);
     const auto testnetBaseParams = CreateBaseChainParams(CBaseChainParams::TESTNET);
 
-    gArgs.AddArg("-?", _("This help message"), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-conf=<file>", strprintf(_("Specify configuration file. Relative paths will be prefixed by datadir location. (default: %s)"), CHAINCOIN_CONF_FILENAME), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-datadir=<dir>", _("Specify data directory"), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-getinfo", _("Get general information from the remote server. Note that unlike server-side RPC calls, the results of -getinfo is the result of multiple non-atomic requests. Some entries in the result may represent results from different states (e.g. wallet balance may be as of a different block from the chain state reported)"), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-?", "This help message", false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-conf=<file>", strprintf("Specify configuration file. Relative paths will be prefixed by datadir location. (default: %s)", CHAINCOIN_CONF_FILENAME), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-datadir=<dir>", "Specify data directory", false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-getinfo", "Get general information from the remote server. Note that unlike server-side RPC calls, the results of -getinfo is the result of multiple non-atomic requests. Some entries in the result may represent results from different states (e.g. wallet balance may be as of a different block from the chain state reported)", false, OptionsCategory::OPTIONS);
     SetupChainParamsBaseOptions();
-    gArgs.AddArg("-named", strprintf(_("Pass named instead of positional arguments (default: %s)"), DEFAULT_NAMED), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-rpcclienttimeout=<n>", strprintf(_("Timeout in seconds during HTTP requests, or 0 for no timeout. (default: %d)"), DEFAULT_HTTP_CLIENT_TIMEOUT), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-rpcconnect=<ip>", strprintf(_("Send commands to node running on <ip> (default: %s)"), DEFAULT_RPCCONNECT), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-rpcpassword=<pw>", _("Password for JSON-RPC connections"), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-rpcport=<port>", strprintf(_("Connect to JSON-RPC on <port> (default: %u or testnet: %u)"), defaultBaseParams->RPCPort(), testnetBaseParams->RPCPort()), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-rpcuser=<user>", _("Username for JSON-RPC connections"), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-rpcwait", _("Wait for RPC server to start"), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-rpcwallet=<walletname>", _("Send RPC for non-default wallet on RPC server (needs to exactly match corresponding -wallet option passed to bitcoind)"), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-stdin", _("Read extra arguments from standard input, one per line until EOF/Ctrl-D (recommended for sensitive information such as passphrases).  When combined with -stdinrpcpass, the first line from standard input is used for the RPC password."), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-stdinrpcpass", strprintf(_("Read RPC password from standard input as a single line.  When combined with -stdin, the first line from standard input is used for the RPC password.")), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-named", strprintf("Pass named instead of positional arguments (default: %s)", DEFAULT_NAMED), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-rpcclienttimeout=<n>", strprintf("Timeout in seconds during HTTP requests, or 0 for no timeout. (default: %d)", DEFAULT_HTTP_CLIENT_TIMEOUT), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-rpcconnect=<ip>", strprintf("Send commands to node running on <ip> (default: %s)", DEFAULT_RPCCONNECT), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-rpcpassword=<pw>", "Password for JSON-RPC connections", false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-rpcport=<port>", strprintf("Connect to JSON-RPC on <port> (default: %u or testnet: %u)", defaultBaseParams->RPCPort(), testnetBaseParams->RPCPort()), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-rpcuser=<user>", "Username for JSON-RPC connections", false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-rpcwait", "Wait for RPC server to start", false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-rpcwallet=<walletname>", "Send RPC for non-default wallet on RPC server (needs to exactly match corresponding -wallet option passed to bitcoind)", false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-stdin", "Read extra arguments from standard input, one per line until EOF/Ctrl-D (recommended for sensitive information such as passphrases).  When combined with -stdinrpcpass, the first line from standard input is used for the RPC password.", false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-stdinrpcpass", strprintf("Read RPC password from standard input as a single line.  When combined with -stdin, the first line from standard input is used for the RPC password."), false, OptionsCategory::OPTIONS);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -83,13 +83,13 @@ static int AppInitRPC(int argc, char* argv[])
     SetupCliArgs();
     gArgs.ParseParameters(argc, argv);
     if (argc < 2 || HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {
-        std::string strUsage = strprintf(_("%s RPC client version"), _(PACKAGE_NAME)) + " " + FormatFullVersion() + "\n";
+        std::string strUsage = strprintf("%s RPC client version", PACKAGE_NAME) + " " + FormatFullVersion() + "\n";
         if (!gArgs.IsArgSet("-version")) {
-            strUsage += "\n" + _("Usage:") + "\n" +
-                  "  chaincoin-cli [options] <command> [params]  " + _("Send command to Chaincoin Core") + "\n" +
-                  "  chaincoin-cli [options] -named <command> [name=value] ... " + strprintf(_("Send command to %s (with named arguments)"), _(PACKAGE_NAME)) + "\n" +
-                  "  chaincoin-cli [options] help                " + _("List commands") + "\n" +
-                  "  chaincoin-cli [options] help <command>      " + _("Get help for a command") + "\n";
+            strUsage += "\n" + "Usage:" + "\n" +
+                  "  chaincoin-cli [options] <command> [params]  " + "Send command to Chaincoin Core" + "\n" +
+                  "  chaincoin-cli [options] -named <command> [name=value] ... " + strprintf("Send command to %s (with named arguments)", _(PACKAGE_NAME)) + "\n" +
+                  "  chaincoin-cli [options] help                " + "List commands" + "\n" +
+                  "  chaincoin-cli [options] help <command>      " + "Get help for a command" + "\n";
 
             strUsage += "\n" + gArgs.GetHelpMessage();
         }
@@ -365,7 +365,7 @@ static UniValue CallRPC(BaseRequestHandler *rh, const std::string& strMethod, co
     } else if (response.status == HTTP_UNAUTHORIZED) {
         if (failedToGetAuthCookie) {
             throw std::runtime_error(strprintf(
-                _("Could not locate RPC credentials. No authentication cookie could be found, and RPC password is not set.  See -rpcpassword and -stdinrpcpass.  Configuration file: (%s)"),
+                "Could not locate RPC credentials. No authentication cookie could be found, and RPC password is not set.  See -rpcpassword and -stdinrpcpass.  Configuration file: (%s)",
                 GetConfigFile(gArgs.GetArg("-conf", CHAINCOIN_CONF_FILENAME)).string().c_str()));
         } else {
             throw std::runtime_error("Authorization failed: Incorrect rpcuser or rpcpassword");

@@ -68,8 +68,8 @@ HelpMessageDialog::HelpMessageDialog(interfaces::Node& node, QWidget *parent, He
         ui->helpMessage->setVisible(false);
     } else if (helpMode == cmdline) {
         setWindowTitle(tr("Command-line options"));
-        QString header = tr("Usage:") + "\n" +
-            "  chaincoin-qt [" + tr("command-line options") + "]                     " + "\n";
+        QString header = "Usage:\n"
+            "  chaincoin-qt [command-line options]                     \n";
         QTextCursor cursor(ui->helpMessage->document());
         cursor.insertText(version);
         cursor.insertBlock();
