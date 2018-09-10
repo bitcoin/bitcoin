@@ -115,12 +115,14 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
 {
     AssertLockHeld(cs_main);
     UniValue result(UniValue::VOBJ);
-    if (blockindex) result.pushKV("hash", blockindex->GetBlockHash().GetHex());
+    result.pushKV("hash", block.GetHash().GetHex());
     int confirmations = -1;
     // Only report confirmations if the block is on the main chain
-    if (blockindex && chainActive.Contains(blockindex))
+    if (blockindex && chainActive.Contains(blockindex)) {
         confirmations = chainActive.Height() - blockindex->nHeight + 1;
-    result.pushKV("confirmations", confirmations);
+    }
+    // Confirmations still reported as -1 otherwise
+    if (blockindex) result.pushKV("confirmations", confirmations);
     result.pushKV("strippedsize", (int)::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS));
     result.pushKV("size", (int)::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION));
     result.pushKV("weight", (int)::GetBlockWeight(block));
@@ -147,10 +149,9 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
     result.pushKV("bits", strprintf("%08x", block.nBits));
     if (blockindex) result.pushKV("difficulty", GetDifficulty(blockindex));
     if (blockindex) result.pushKV("chainwork", blockindex->nChainWork.GetHex());
-    if (blockindex) result.pushKV("nTx", (uint64_t)blockindex->nTx);
+    result.pushKV("nTx", (uint64_t)block.vtx.size());
 
-    if (blockindex && blockindex->pprev)
-        result.pushKV("previousblockhash", blockindex->pprev->GetBlockHash().GetHex());
+    result.pushKV("previousblockhash", block.hashPrevBlock.GetHex());
     CBlockIndex *pnext = blockindex ? chainActive.Next(blockindex) : nullptr;
     if (pnext)
         result.pushKV("nextblockhash", pnext->GetBlockHash().GetHex());
