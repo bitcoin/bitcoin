@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'debugwindow.ui'
 **
-** Created by: Qt User Interface Compiler version 5.5.1
+** Created by: Qt User Interface Compiler version 5.11.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
@@ -10,9 +10,8 @@
 #define UI_DEBUGWINDOW_H
 
 #include <QtCore/QVariant>
-#include <QtWidgets/QAction>
+#include <QtGui/QIcon>
 #include <QtWidgets/QApplication>
-#include <QtWidgets/QButtonGroup>
 #include <QtWidgets/QFrame>
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QGroupBox>
@@ -406,7 +405,9 @@ public:
         QIcon icon2;
         icon2.addFile(QStringLiteral(":/icons/remove"), QSize(), QIcon::Normal, QIcon::Off);
         clearButton->setIcon(icon2);
+#ifndef QT_NO_SHORTCUT
         clearButton->setShortcut(QStringLiteral("Ctrl+L"));
+#endif // QT_NO_SHORTCUT
         clearButton->setAutoDefault(false);
         clearButton->setFlat(true);
 
@@ -910,101 +911,101 @@ public:
 
     void retranslateUi(QWidget *RPCConsole)
     {
-        RPCConsole->setWindowTitle(QApplication::translate("RPCConsole", "Debug window", 0));
-        label_9->setText(QApplication::translate("RPCConsole", "General", 0));
-        label_6->setText(QApplication::translate("RPCConsole", "Client version", 0));
-        clientVersion->setText(QApplication::translate("RPCConsole", "N/A", 0));
-        labelClientUserAgent->setText(QApplication::translate("RPCConsole", "User Agent", 0));
-        clientUserAgent->setText(QApplication::translate("RPCConsole", "N/A", 0));
-        label_berkeleyDBVersion->setText(QApplication::translate("RPCConsole", "Using BerkeleyDB version", 0));
-        berkeleyDBVersion->setText(QApplication::translate("RPCConsole", "N/A", 0));
-        label_12->setText(QApplication::translate("RPCConsole", "Datadir", 0));
-        dataDir->setText(QApplication::translate("RPCConsole", "N/A", 0));
-        label_13->setText(QApplication::translate("RPCConsole", "Startup time", 0));
-        startupTime->setText(QApplication::translate("RPCConsole", "N/A", 0));
-        labelNetwork->setText(QApplication::translate("RPCConsole", "Network", 0));
-        label_8->setText(QApplication::translate("RPCConsole", "Name", 0));
-        networkName->setText(QApplication::translate("RPCConsole", "N/A", 0));
-        label_7->setText(QApplication::translate("RPCConsole", "Number of connections", 0));
-        numberOfConnections->setText(QApplication::translate("RPCConsole", "N/A", 0));
-        label_10->setText(QApplication::translate("RPCConsole", "Block chain", 0));
-        label_3->setText(QApplication::translate("RPCConsole", "Current number of blocks", 0));
-        numberOfBlocks->setText(QApplication::translate("RPCConsole", "N/A", 0));
-        labelLastBlockTime->setText(QApplication::translate("RPCConsole", "Last block time", 0));
-        lastBlockTime->setText(QApplication::translate("RPCConsole", "N/A", 0));
-        labelMempoolTitle->setText(QApplication::translate("RPCConsole", "Memory Pool", 0));
-        labelNumberOfTransactions->setText(QApplication::translate("RPCConsole", "Current number of transactions", 0));
-        mempoolNumberTxs->setText(QApplication::translate("RPCConsole", "N/A", 0));
-        labelMemoryUsage->setText(QApplication::translate("RPCConsole", "Memory usage", 0));
-        mempoolSize->setText(QApplication::translate("RPCConsole", "N/A", 0));
-        labelDebugLogfile->setText(QApplication::translate("RPCConsole", "Debug log file", 0));
+        RPCConsole->setWindowTitle(QApplication::translate("RPCConsole", "Debug window", nullptr));
+        label_9->setText(QApplication::translate("RPCConsole", "General", nullptr));
+        label_6->setText(QApplication::translate("RPCConsole", "Client version", nullptr));
+        clientVersion->setText(QApplication::translate("RPCConsole", "N/A", nullptr));
+        labelClientUserAgent->setText(QApplication::translate("RPCConsole", "User Agent", nullptr));
+        clientUserAgent->setText(QApplication::translate("RPCConsole", "N/A", nullptr));
+        label_berkeleyDBVersion->setText(QApplication::translate("RPCConsole", "Using BerkeleyDB version", nullptr));
+        berkeleyDBVersion->setText(QApplication::translate("RPCConsole", "N/A", nullptr));
+        label_12->setText(QApplication::translate("RPCConsole", "Datadir", nullptr));
+        dataDir->setText(QApplication::translate("RPCConsole", "N/A", nullptr));
+        label_13->setText(QApplication::translate("RPCConsole", "Startup time", nullptr));
+        startupTime->setText(QApplication::translate("RPCConsole", "N/A", nullptr));
+        labelNetwork->setText(QApplication::translate("RPCConsole", "Network", nullptr));
+        label_8->setText(QApplication::translate("RPCConsole", "Name", nullptr));
+        networkName->setText(QApplication::translate("RPCConsole", "N/A", nullptr));
+        label_7->setText(QApplication::translate("RPCConsole", "Number of connections", nullptr));
+        numberOfConnections->setText(QApplication::translate("RPCConsole", "N/A", nullptr));
+        label_10->setText(QApplication::translate("RPCConsole", "Block chain", nullptr));
+        label_3->setText(QApplication::translate("RPCConsole", "Current number of blocks", nullptr));
+        numberOfBlocks->setText(QApplication::translate("RPCConsole", "N/A", nullptr));
+        labelLastBlockTime->setText(QApplication::translate("RPCConsole", "Last block time", nullptr));
+        lastBlockTime->setText(QApplication::translate("RPCConsole", "N/A", nullptr));
+        labelMempoolTitle->setText(QApplication::translate("RPCConsole", "Memory Pool", nullptr));
+        labelNumberOfTransactions->setText(QApplication::translate("RPCConsole", "Current number of transactions", nullptr));
+        mempoolNumberTxs->setText(QApplication::translate("RPCConsole", "N/A", nullptr));
+        labelMemoryUsage->setText(QApplication::translate("RPCConsole", "Memory usage", nullptr));
+        mempoolSize->setText(QApplication::translate("RPCConsole", "N/A", nullptr));
+        labelDebugLogfile->setText(QApplication::translate("RPCConsole", "Debug log file", nullptr));
 #ifndef QT_NO_TOOLTIP
-        openDebugLogfileButton->setToolTip(QApplication::translate("RPCConsole", "Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.", 0));
+        openDebugLogfileButton->setToolTip(QApplication::translate("RPCConsole", "Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.", nullptr));
 #endif // QT_NO_TOOLTIP
-        openDebugLogfileButton->setText(QApplication::translate("RPCConsole", "&Open", 0));
-        tabWidget->setTabText(tabWidget->indexOf(tab_info), QApplication::translate("RPCConsole", "&Information", 0));
+        openDebugLogfileButton->setText(QApplication::translate("RPCConsole", "&Open", nullptr));
+        tabWidget->setTabText(tabWidget->indexOf(tab_info), QApplication::translate("RPCConsole", "&Information", nullptr));
         fontSmallerButton->setText(QString());
 #ifndef QT_NO_TOOLTIP
-        fontSmallerButton->setToolTip(QApplication::translate("RPCConsole", "Decrease font size", 0));
+        fontSmallerButton->setToolTip(QApplication::translate("RPCConsole", "Decrease font size", nullptr));
 #endif // QT_NO_TOOLTIP
 #ifndef QT_NO_TOOLTIP
-        fontBiggerButton->setToolTip(QApplication::translate("RPCConsole", "Increase font size", 0));
+        fontBiggerButton->setToolTip(QApplication::translate("RPCConsole", "Increase font size", nullptr));
 #endif // QT_NO_TOOLTIP
         fontBiggerButton->setText(QString());
 #ifndef QT_NO_TOOLTIP
-        clearButton->setToolTip(QApplication::translate("RPCConsole", "Clear console", 0));
+        clearButton->setToolTip(QApplication::translate("RPCConsole", "Clear console", nullptr));
 #endif // QT_NO_TOOLTIP
         clearButton->setText(QString());
         promptIcon->setText(QString());
         lineEdit->setPlaceholderText(QString());
-        tabWidget->setTabText(tabWidget->indexOf(tab_console), QApplication::translate("RPCConsole", "&Console", 0));
-        btnClearTrafficGraph->setText(QApplication::translate("RPCConsole", "&Reset", 0));
-        groupBox->setTitle(QApplication::translate("RPCConsole", "Totals", 0));
-        label_16->setText(QApplication::translate("RPCConsole", "Received", 0));
-        label_17->setText(QApplication::translate("RPCConsole", "Sent", 0));
-        tabWidget->setTabText(tabWidget->indexOf(tab_nettraffic), QApplication::translate("RPCConsole", "&Network Traffic", 0));
-        banHeading->setText(QApplication::translate("RPCConsole", "Banned peers", 0));
-        peerHeading->setText(QApplication::translate("RPCConsole", "Select a peer to view detailed information.", 0));
-        label_30->setText(QApplication::translate("RPCConsole", "Whitelisted", 0));
-        peerWhitelisted->setText(QApplication::translate("RPCConsole", "N/A", 0));
-        label_23->setText(QApplication::translate("RPCConsole", "Direction", 0));
-        peerDirection->setText(QApplication::translate("RPCConsole", "N/A", 0));
-        label_21->setText(QApplication::translate("RPCConsole", "Version", 0));
-        peerVersion->setText(QApplication::translate("RPCConsole", "N/A", 0));
-        label_28->setText(QApplication::translate("RPCConsole", "User Agent", 0));
-        peerSubversion->setText(QApplication::translate("RPCConsole", "N/A", 0));
-        label_4->setText(QApplication::translate("RPCConsole", "Services", 0));
-        peerServices->setText(QApplication::translate("RPCConsole", "N/A", 0));
-        label_29->setText(QApplication::translate("RPCConsole", "Starting Block", 0));
-        peerHeight->setText(QApplication::translate("RPCConsole", "N/A", 0));
-        label_27->setText(QApplication::translate("RPCConsole", "Synced Headers", 0));
-        peerSyncHeight->setText(QApplication::translate("RPCConsole", "N/A", 0));
-        label_25->setText(QApplication::translate("RPCConsole", "Synced Blocks", 0));
-        peerCommonHeight->setText(QApplication::translate("RPCConsole", "N/A", 0));
-        label_24->setText(QApplication::translate("RPCConsole", "Ban Score", 0));
-        peerBanScore->setText(QApplication::translate("RPCConsole", "N/A", 0));
-        label_22->setText(QApplication::translate("RPCConsole", "Connection Time", 0));
-        peerConnTime->setText(QApplication::translate("RPCConsole", "N/A", 0));
-        label_15->setText(QApplication::translate("RPCConsole", "Last Send", 0));
-        peerLastSend->setText(QApplication::translate("RPCConsole", "N/A", 0));
-        label_19->setText(QApplication::translate("RPCConsole", "Last Receive", 0));
-        peerLastRecv->setText(QApplication::translate("RPCConsole", "N/A", 0));
-        label_18->setText(QApplication::translate("RPCConsole", "Sent", 0));
-        peerBytesSent->setText(QApplication::translate("RPCConsole", "N/A", 0));
-        label_20->setText(QApplication::translate("RPCConsole", "Received", 0));
-        peerBytesRecv->setText(QApplication::translate("RPCConsole", "N/A", 0));
-        label_26->setText(QApplication::translate("RPCConsole", "Ping Time", 0));
-        peerPingTime->setText(QApplication::translate("RPCConsole", "N/A", 0));
+        tabWidget->setTabText(tabWidget->indexOf(tab_console), QApplication::translate("RPCConsole", "&Console", nullptr));
+        btnClearTrafficGraph->setText(QApplication::translate("RPCConsole", "&Reset", nullptr));
+        groupBox->setTitle(QApplication::translate("RPCConsole", "Totals", nullptr));
+        label_16->setText(QApplication::translate("RPCConsole", "Received", nullptr));
+        label_17->setText(QApplication::translate("RPCConsole", "Sent", nullptr));
+        tabWidget->setTabText(tabWidget->indexOf(tab_nettraffic), QApplication::translate("RPCConsole", "&Network Traffic", nullptr));
+        banHeading->setText(QApplication::translate("RPCConsole", "Banned peers", nullptr));
+        peerHeading->setText(QApplication::translate("RPCConsole", "Select a peer to view detailed information.", nullptr));
+        label_30->setText(QApplication::translate("RPCConsole", "Whitelisted", nullptr));
+        peerWhitelisted->setText(QApplication::translate("RPCConsole", "N/A", nullptr));
+        label_23->setText(QApplication::translate("RPCConsole", "Direction", nullptr));
+        peerDirection->setText(QApplication::translate("RPCConsole", "N/A", nullptr));
+        label_21->setText(QApplication::translate("RPCConsole", "Version", nullptr));
+        peerVersion->setText(QApplication::translate("RPCConsole", "N/A", nullptr));
+        label_28->setText(QApplication::translate("RPCConsole", "User Agent", nullptr));
+        peerSubversion->setText(QApplication::translate("RPCConsole", "N/A", nullptr));
+        label_4->setText(QApplication::translate("RPCConsole", "Services", nullptr));
+        peerServices->setText(QApplication::translate("RPCConsole", "N/A", nullptr));
+        label_29->setText(QApplication::translate("RPCConsole", "Starting Block", nullptr));
+        peerHeight->setText(QApplication::translate("RPCConsole", "N/A", nullptr));
+        label_27->setText(QApplication::translate("RPCConsole", "Synced Headers", nullptr));
+        peerSyncHeight->setText(QApplication::translate("RPCConsole", "N/A", nullptr));
+        label_25->setText(QApplication::translate("RPCConsole", "Synced Blocks", nullptr));
+        peerCommonHeight->setText(QApplication::translate("RPCConsole", "N/A", nullptr));
+        label_24->setText(QApplication::translate("RPCConsole", "Ban Score", nullptr));
+        peerBanScore->setText(QApplication::translate("RPCConsole", "N/A", nullptr));
+        label_22->setText(QApplication::translate("RPCConsole", "Connection Time", nullptr));
+        peerConnTime->setText(QApplication::translate("RPCConsole", "N/A", nullptr));
+        label_15->setText(QApplication::translate("RPCConsole", "Last Send", nullptr));
+        peerLastSend->setText(QApplication::translate("RPCConsole", "N/A", nullptr));
+        label_19->setText(QApplication::translate("RPCConsole", "Last Receive", nullptr));
+        peerLastRecv->setText(QApplication::translate("RPCConsole", "N/A", nullptr));
+        label_18->setText(QApplication::translate("RPCConsole", "Sent", nullptr));
+        peerBytesSent->setText(QApplication::translate("RPCConsole", "N/A", nullptr));
+        label_20->setText(QApplication::translate("RPCConsole", "Received", nullptr));
+        peerBytesRecv->setText(QApplication::translate("RPCConsole", "N/A", nullptr));
+        label_26->setText(QApplication::translate("RPCConsole", "Ping Time", nullptr));
+        peerPingTime->setText(QApplication::translate("RPCConsole", "N/A", nullptr));
 #ifndef QT_NO_TOOLTIP
-        peerPingWaitLabel->setToolTip(QApplication::translate("RPCConsole", "The duration of a currently outstanding ping.", 0));
+        peerPingWaitLabel->setToolTip(QApplication::translate("RPCConsole", "The duration of a currently outstanding ping.", nullptr));
 #endif // QT_NO_TOOLTIP
-        peerPingWaitLabel->setText(QApplication::translate("RPCConsole", "Ping Wait", 0));
-        peerPingWait->setText(QApplication::translate("RPCConsole", "N/A", 0));
-        peerMinPingLabel->setText(QApplication::translate("RPCConsole", "Min Ping", 0));
-        peerMinPing->setText(QApplication::translate("RPCConsole", "N/A", 0));
-        label_timeoffset->setText(QApplication::translate("RPCConsole", "Time Offset", 0));
-        timeoffset->setText(QApplication::translate("RPCConsole", "N/A", 0));
-        tabWidget->setTabText(tabWidget->indexOf(tab_peers), QApplication::translate("RPCConsole", "&Peers", 0));
+        peerPingWaitLabel->setText(QApplication::translate("RPCConsole", "Ping Wait", nullptr));
+        peerPingWait->setText(QApplication::translate("RPCConsole", "N/A", nullptr));
+        peerMinPingLabel->setText(QApplication::translate("RPCConsole", "Min Ping", nullptr));
+        peerMinPing->setText(QApplication::translate("RPCConsole", "N/A", nullptr));
+        label_timeoffset->setText(QApplication::translate("RPCConsole", "Time Offset", nullptr));
+        timeoffset->setText(QApplication::translate("RPCConsole", "N/A", nullptr));
+        tabWidget->setTabText(tabWidget->indexOf(tab_peers), QApplication::translate("RPCConsole", "&Peers", nullptr));
     } // retranslateUi
 
 };

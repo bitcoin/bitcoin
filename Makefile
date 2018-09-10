@@ -238,7 +238,8 @@ am__DIST_COMMON = $(srcdir)/Makefile.in \
 	$(top_srcdir)/test/functional/test_runner.py \
 	$(top_srcdir)/test/util/bitcoin-util-test.py COPYING \
 	build-aux/compile build-aux/config.guess build-aux/config.sub \
-	build-aux/install-sh build-aux/ltmain.sh build-aux/missing
+	build-aux/depcomp build-aux/install-sh build-aux/ltmain.sh \
+	build-aux/missing
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -304,30 +305,30 @@ BOOST_LIBS = -L/usr/lib/x86_64-linux-gnu -lboost_system -lboost_filesystem -lboo
 BOOST_PROGRAM_OPTIONS_LIB = -lboost_program_options
 BOOST_SYSTEM_LIB = -lboost_system
 BOOST_THREAD_LIB = -lboost_thread
-BOOST_UNIT_TEST_FRAMEWORK_LIB = 
+BOOST_UNIT_TEST_FRAMEWORK_LIB = -lboost_unit_test_framework
 BREW = 
 CC = gcc
 CCACHE = 
 CCDEPMODE = depmode=gcc3
-CFLAGS = -g -O2 -g3 -O0
+CFLAGS = -g -O2
 CLIENT_VERSION_BUILD = 0
 CLIENT_VERSION_IS_RELEASE = true
 CLIENT_VERSION_MAJOR = 0
 CLIENT_VERSION_MINOR = 16
-CLIENT_VERSION_REVISION = 1
+CLIENT_VERSION_REVISION = 2
 COPYRIGHT_HOLDERS = The %s developers
 COPYRIGHT_HOLDERS_FINAL = The MicroBitcoin developers
 COPYRIGHT_HOLDERS_SUBSTITUTION = MicroBitcoin
 COPYRIGHT_YEAR = 2018
 CPP = gcc -E
 CPPFILT = /usr/bin/c++filt
-CPPFLAGS =  -DDEBUG -DDEBUG_LOCKORDER -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS
+CPPFLAGS =  -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS
 CRYPTO_CFLAGS = 
 CRYPTO_LIBS = -lcrypto
 CXX = g++ -std=c++11
 CXXCPP = g++ -std=c++11 -E
 CXXDEPMODE = depmode=gcc3
-CXXFLAGS = -g -O2 -g3 -O0 -Wall -Wextra -Wformat -Wvla -Wformat-security -Wno-unused-parameter
+CXXFLAGS = -g -O2 -Wall -Wextra -Wformat -Wvla -Wformat-security -Wno-unused-parameter
 CYGPATH_W = echo
 DEFS = -DHAVE_CONFIG_H
 DEPDIR = .deps
@@ -377,10 +378,10 @@ LIBTOOL = $(SHELL) $(top_builddir)/libtool
 LIBTOOL_APP_LDFLAGS = 
 LIPO = 
 LN_S = ln -s
-LRELEASE = 
+LRELEASE = /usr/lib/x86_64-linux-gnu/qt5/bin/lrelease
 LTLIBOBJS = 
 LT_SYS_LIBRARY_PATH = 
-LUPDATE = 
+LUPDATE = /usr/lib/x86_64-linux-gnu/qt5/bin/lupdate
 MAINT = 
 MAKEINFO = ${SHELL} /home/vova/Shared/MicroBitcoin/build-aux/missing makeinfo
 MAKENSIS = 
@@ -388,7 +389,7 @@ MANIFEST_TOOL = :
 MINIUPNPC_CPPFLAGS = 
 MINIUPNPC_LIBS = 
 MKDIR_P = /bin/mkdir -p
-MOC = 
+MOC = /usr/lib/x86_64-linux-gnu/qt5/bin/moc
 MOC_DEFS = -DHAVE_CONFIG_H -I$(srcdir)
 NM = /usr/bin/nm -B
 NMEDIT = 
@@ -403,10 +404,10 @@ OTOOL64 =
 PACKAGE = microbitcoin
 PACKAGE_BUGREPORT = https://github.com/MicroBitcoinOrg/MicroBitcoin/issues
 PACKAGE_NAME = MicroBitcoin
-PACKAGE_STRING = MicroBitcoin 0.16.1
+PACKAGE_STRING = MicroBitcoin 0.16.2
 PACKAGE_TARNAME = microbitcoin
 PACKAGE_URL = https://microbitcoin.org/
-PACKAGE_VERSION = 0.16.1
+PACKAGE_VERSION = 0.16.2
 PATH_SEPARATOR = :
 PIC_FLAGS = -fPIC
 PIE_FLAGS = -fPIE
@@ -414,9 +415,9 @@ PKG_CONFIG = /usr/bin/pkg-config
 PKG_CONFIG_LIBDIR = 
 PKG_CONFIG_PATH = 
 PORT = 
-PROTOBUF_CFLAGS = 
-PROTOBUF_LIBS = 
-PROTOC = 
+PROTOBUF_CFLAGS = -pthread
+PROTOBUF_LIBS = -lprotobuf -pthread -lpthread
+PROTOC = /usr/bin/protoc
 PTHREAD_CC = gcc
 PTHREAD_CFLAGS = -pthread
 PTHREAD_LIBS = 
@@ -426,28 +427,28 @@ QR_CFLAGS =
 QR_LIBS = 
 QT4_CFLAGS = 
 QT4_LIBS = 
-QT5_CFLAGS = 
-QT5_LIBS = 
+QT5_CFLAGS = -I/usr/include/x86_64-linux-gnu/qt5/QtNetwork -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/x86_64-linux-gnu/qt5
+QT5_LIBS = -lQt5Network -lQt5Widgets -lQt5Gui -lQt5Core
 QTPLATFORM_CFLAGS = 
 QTPLATFORM_LIBS = 
 QTPRINT_CFLAGS = 
 QTPRINT_LIBS = 
 QTXCBQPA_CFLAGS = 
 QTXCBQPA_LIBS = 
-QT_DBUS_CFLAGS = 
-QT_DBUS_INCLUDES = 
-QT_DBUS_LIBS = 
-QT_INCLUDES = 
+QT_DBUS_CFLAGS = -I/usr/include/x86_64-linux-gnu/qt5/QtDBus -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/x86_64-linux-gnu/qt5
+QT_DBUS_INCLUDES = -I/usr/include/x86_64-linux-gnu/qt5/QtDBus -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/x86_64-linux-gnu/qt5
+QT_DBUS_LIBS = -lQt5DBus -lQt5Core
+QT_INCLUDES = -I/usr/include/x86_64-linux-gnu/qt5/QtNetwork -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/x86_64-linux-gnu/qt5
 QT_LDFLAGS = 
-QT_LIBS = 
-QT_PIE_FLAGS = 
-QT_SELECT = qt
-QT_TEST_CFLAGS = 
-QT_TEST_INCLUDES = 
-QT_TEST_LIBS = 
+QT_LIBS = -lQt5Network -lQt5Widgets -lQt5Gui -lQt5Core
+QT_PIE_FLAGS = -fPIC
+QT_SELECT = qt5
+QT_TEST_CFLAGS = -I/usr/include/x86_64-linux-gnu/qt5/QtTest -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/x86_64-linux-gnu/qt5
+QT_TEST_INCLUDES = -I/usr/include/x86_64-linux-gnu/qt5/QtTest -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/x86_64-linux-gnu/qt5
+QT_TEST_LIBS = -lQt5Test -lQt5Core
 QT_TRANSLATION_DIR = 
 RANLIB = /usr/bin/ranlib
-RCC = 
+RCC = /usr/lib/x86_64-linux-gnu/qt5/bin/rcc
 READELF = /usr/bin/readelf
 RELDFLAGS = 
 RSVG_CONVERT = 
@@ -458,14 +459,14 @@ SSE42_CXXFLAGS = -msse4.2
 SSL_CFLAGS = 
 SSL_LIBS = -lssl
 STRIP = /usr/bin/strip
-TESTDEFS = 
+TESTDEFS =  -DBOOST_TEST_DYN_LINK
 TIFFCP = 
-UIC = 
+UIC = /usr/lib/x86_64-linux-gnu/qt5/bin/uic
 UNIVALUE_CFLAGS = -I$(srcdir)/univalue/include
 UNIVALUE_LIBS = univalue/libunivalue.la
 USE_QRCODE = 
 USE_UPNP = 
-VERSION = 0.16.1
+VERSION = 0.16.2
 WINDOWS_BITS = 
 WINDRES = 
 X11XCB_CFLAGS = 
@@ -550,7 +551,7 @@ OSX_BACKGROUND_IMAGE_DPIS = 36 72
 OSX_DSSTORE_GEN = $(top_srcdir)/contrib/macdeploy/custom_dsstore.py
 OSX_DEPLOY_SCRIPT = $(top_srcdir)/contrib/macdeploy/macdeployqtplus
 OSX_FANCY_PLIST = $(top_srcdir)/contrib/macdeploy/fancy.plist
-OSX_INSTALLER_ICONS = $(top_srcdir)/src/qt/res/icons/bitcoin.icns
+OSX_INSTALLER_ICONS = $(top_srcdir)/src/qt/res/icons/microbitcoin.icns
 OSX_PLIST = $(top_builddir)/share/qt/Info.plist #not installed
 OSX_QT_TRANSLATIONS = da,de,es,hu,ru,uk,zh_CN,zh_TW
 DIST_DOCS = $(wildcard doc/*.md) $(wildcard doc/release-notes/*.md)
@@ -584,7 +585,7 @@ COVERAGE_INFO = baseline.info \
   test_bitcoin_coverage.info test_bitcoin.info
 
 OSX_APP_BUILT = $(OSX_APP)/Contents/PkgInfo $(OSX_APP)/Contents/Resources/empty.lproj \
-  $(OSX_APP)/Contents/Resources/bitcoin.icns $(OSX_APP)/Contents/Info.plist \
+  $(OSX_APP)/Contents/Resources/microbitcoin.icns $(OSX_APP)/Contents/Info.plist \
   $(OSX_APP)/Contents/MacOS/MicroBitcoin-Qt $(OSX_APP)/Contents/Resources/Base.lproj/InfoPlist.strings
 
 APP_DIST_DIR = $(top_builddir)/dist
@@ -1192,7 +1193,7 @@ $(OSX_APP)/Contents/Info.plist: $(OSX_PLIST)
 	$(MKDIR_P) $(@D)
 	$(INSTALL_DATA) $< $@
 
-$(OSX_APP)/Contents/Resources/bitcoin.icns: $(OSX_INSTALLER_ICONS)
+$(OSX_APP)/Contents/Resources/microbitcoin.icns: $(OSX_INSTALLER_ICONS)
 	$(MKDIR_P) $(@D)
 	$(INSTALL_DATA) $< $@
 

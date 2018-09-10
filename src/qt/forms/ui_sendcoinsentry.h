@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'sendcoinsentry.ui'
 **
-** Created by: Qt User Interface Compiler version 5.5.1
+** Created by: Qt User Interface Compiler version 5.11.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
@@ -10,14 +10,12 @@
 #define UI_SENDCOINSENTRY_H
 
 #include <QtCore/QVariant>
-#include <QtWidgets/QAction>
+#include <QtGui/QIcon>
 #include <QtWidgets/QApplication>
-#include <QtWidgets/QButtonGroup>
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QFrame>
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QHBoxLayout>
-#include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QStackedWidget>
@@ -445,59 +443,63 @@ public:
     void retranslateUi(QStackedWidget *SendCoinsEntry)
     {
 #ifndef QT_NO_TOOLTIP
-        SendCoins->setToolTip(QApplication::translate("SendCoinsEntry", "This is a normal payment.", 0));
+        SendCoins->setToolTip(QApplication::translate("SendCoinsEntry", "This is a normal payment.", nullptr));
 #endif // QT_NO_TOOLTIP
-        payToLabel->setText(QApplication::translate("SendCoinsEntry", "Pay &To:", 0));
+        payToLabel->setText(QApplication::translate("SendCoinsEntry", "Pay &To:", nullptr));
 #ifndef QT_NO_TOOLTIP
-        payTo->setToolTip(QApplication::translate("SendCoinsEntry", "The MicroBitcoin address to send the payment to", 0));
+        payTo->setToolTip(QApplication::translate("SendCoinsEntry", "The MicroBitcoin address to send the payment to", nullptr));
 #endif // QT_NO_TOOLTIP
 #ifndef QT_NO_TOOLTIP
-        addressBookButton->setToolTip(QApplication::translate("SendCoinsEntry", "Choose previously used address", 0));
+        addressBookButton->setToolTip(QApplication::translate("SendCoinsEntry", "Choose previously used address", nullptr));
 #endif // QT_NO_TOOLTIP
         addressBookButton->setText(QString());
-        addressBookButton->setShortcut(QApplication::translate("SendCoinsEntry", "Alt+A", 0));
+#ifndef QT_NO_SHORTCUT
+        addressBookButton->setShortcut(QApplication::translate("SendCoinsEntry", "Alt+A", nullptr));
+#endif // QT_NO_SHORTCUT
 #ifndef QT_NO_TOOLTIP
-        pasteButton->setToolTip(QApplication::translate("SendCoinsEntry", "Paste address from clipboard", 0));
+        pasteButton->setToolTip(QApplication::translate("SendCoinsEntry", "Paste address from clipboard", nullptr));
 #endif // QT_NO_TOOLTIP
         pasteButton->setText(QString());
-        pasteButton->setShortcut(QApplication::translate("SendCoinsEntry", "Alt+P", 0));
+#ifndef QT_NO_SHORTCUT
+        pasteButton->setShortcut(QApplication::translate("SendCoinsEntry", "Alt+P", nullptr));
+#endif // QT_NO_SHORTCUT
 #ifndef QT_NO_TOOLTIP
-        deleteButton->setToolTip(QApplication::translate("SendCoinsEntry", "Remove this entry", 0));
+        deleteButton->setToolTip(QApplication::translate("SendCoinsEntry", "Remove this entry", nullptr));
 #endif // QT_NO_TOOLTIP
         deleteButton->setText(QString());
-        labellLabel->setText(QApplication::translate("SendCoinsEntry", "&Label:", 0));
+        labellLabel->setText(QApplication::translate("SendCoinsEntry", "&Label:", nullptr));
 #ifndef QT_NO_TOOLTIP
-        addAsLabel->setToolTip(QApplication::translate("SendCoinsEntry", "Enter a label for this address to add it to the list of used addresses", 0));
+        addAsLabel->setToolTip(QApplication::translate("SendCoinsEntry", "Enter a label for this address to add it to the list of used addresses", nullptr));
 #endif // QT_NO_TOOLTIP
-        amountLabel->setText(QApplication::translate("SendCoinsEntry", "A&mount:", 0));
+        amountLabel->setText(QApplication::translate("SendCoinsEntry", "A&mount:", nullptr));
 #ifndef QT_NO_TOOLTIP
-        checkboxSubtractFeeFromAmount->setToolTip(QApplication::translate("SendCoinsEntry", "The fee will be deducted from the amount being sent. The recipient will receive less microbitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.", 0));
+        checkboxSubtractFeeFromAmount->setToolTip(QApplication::translate("SendCoinsEntry", "The fee will be deducted from the amount being sent. The recipient will receive less microbitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.", nullptr));
 #endif // QT_NO_TOOLTIP
-        checkboxSubtractFeeFromAmount->setText(QApplication::translate("SendCoinsEntry", "S&ubtract fee from amount", 0));
-        messageLabel->setText(QApplication::translate("SendCoinsEntry", "Message:", 0));
+        checkboxSubtractFeeFromAmount->setText(QApplication::translate("SendCoinsEntry", "S&ubtract fee from amount", nullptr));
+        messageLabel->setText(QApplication::translate("SendCoinsEntry", "Message:", nullptr));
 #ifndef QT_NO_TOOLTIP
-        messageTextLabel->setToolTip(QApplication::translate("SendCoinsEntry", "A message that was attached to the microbitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the MicroBitcoin network.", 0));
+        messageTextLabel->setToolTip(QApplication::translate("SendCoinsEntry", "A message that was attached to the microbitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the MicroBitcoin network.", nullptr));
 #endif // QT_NO_TOOLTIP
 #ifndef QT_NO_TOOLTIP
-        SendCoins_UnauthenticatedPaymentRequest->setToolTip(QApplication::translate("SendCoinsEntry", "This is an unauthenticated payment request.", 0));
+        SendCoins_UnauthenticatedPaymentRequest->setToolTip(QApplication::translate("SendCoinsEntry", "This is an unauthenticated payment request.", nullptr));
 #endif // QT_NO_TOOLTIP
-        payToLabel_is->setText(QApplication::translate("SendCoinsEntry", "Pay To:", 0));
+        payToLabel_is->setText(QApplication::translate("SendCoinsEntry", "Pay To:", nullptr));
 #ifndef QT_NO_TOOLTIP
-        deleteButton_is->setToolTip(QApplication::translate("SendCoinsEntry", "Remove this entry", 0));
+        deleteButton_is->setToolTip(QApplication::translate("SendCoinsEntry", "Remove this entry", nullptr));
 #endif // QT_NO_TOOLTIP
         deleteButton_is->setText(QString());
-        memoLabel_is->setText(QApplication::translate("SendCoinsEntry", "Memo:", 0));
-        amountLabel_is->setText(QApplication::translate("SendCoinsEntry", "A&mount:", 0));
+        memoLabel_is->setText(QApplication::translate("SendCoinsEntry", "Memo:", nullptr));
+        amountLabel_is->setText(QApplication::translate("SendCoinsEntry", "A&mount:", nullptr));
 #ifndef QT_NO_TOOLTIP
-        SendCoins_AuthenticatedPaymentRequest->setToolTip(QApplication::translate("SendCoinsEntry", "This is an authenticated payment request.", 0));
+        SendCoins_AuthenticatedPaymentRequest->setToolTip(QApplication::translate("SendCoinsEntry", "This is an authenticated payment request.", nullptr));
 #endif // QT_NO_TOOLTIP
-        payToLabel_s->setText(QApplication::translate("SendCoinsEntry", "Pay To:", 0));
+        payToLabel_s->setText(QApplication::translate("SendCoinsEntry", "Pay To:", nullptr));
 #ifndef QT_NO_TOOLTIP
-        deleteButton_s->setToolTip(QApplication::translate("SendCoinsEntry", "Remove this entry", 0));
+        deleteButton_s->setToolTip(QApplication::translate("SendCoinsEntry", "Remove this entry", nullptr));
 #endif // QT_NO_TOOLTIP
         deleteButton_s->setText(QString());
-        memoLabel_s->setText(QApplication::translate("SendCoinsEntry", "Memo:", 0));
-        amountLabel_s->setText(QApplication::translate("SendCoinsEntry", "A&mount:", 0));
+        memoLabel_s->setText(QApplication::translate("SendCoinsEntry", "Memo:", nullptr));
+        amountLabel_s->setText(QApplication::translate("SendCoinsEntry", "A&mount:", nullptr));
         Q_UNUSED(SendCoinsEntry);
     } // retranslateUi
 

@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'receivecoinsdialog.ui'
 **
-** Created by: Qt User Interface Compiler version 5.5.1
+** Created by: Qt User Interface Compiler version 5.11.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
@@ -10,9 +10,8 @@
 #define UI_RECEIVECOINSDIALOG_H
 
 #include <QtCore/QVariant>
-#include <QtWidgets/QAction>
+#include <QtGui/QIcon>
 #include <QtWidgets/QApplication>
-#include <QtWidgets/QButtonGroup>
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QFrame>
 #include <QtWidgets/QGridLayout>
@@ -254,47 +253,47 @@ public:
     void retranslateUi(QWidget *ReceiveCoinsDialog)
     {
 #ifndef QT_NO_TOOLTIP
-        reuseAddress->setToolTip(QApplication::translate("ReceiveCoinsDialog", "Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.", 0));
+        reuseAddress->setToolTip(QApplication::translate("ReceiveCoinsDialog", "Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.", nullptr));
 #endif // QT_NO_TOOLTIP
-        reuseAddress->setText(QApplication::translate("ReceiveCoinsDialog", "R&euse an existing receiving address (not recommended)", 0));
+        reuseAddress->setText(QApplication::translate("ReceiveCoinsDialog", "R&euse an existing receiving address (not recommended)", nullptr));
         label_4->setText(QString());
 #ifndef QT_NO_TOOLTIP
-        label_3->setToolTip(QApplication::translate("ReceiveCoinsDialog", "An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the MicroBitcoin network.", 0));
+        label_3->setToolTip(QApplication::translate("ReceiveCoinsDialog", "An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the MicroBitcoin network.", nullptr));
 #endif // QT_NO_TOOLTIP
-        label_3->setText(QApplication::translate("ReceiveCoinsDialog", "&Message:", 0));
+        label_3->setText(QApplication::translate("ReceiveCoinsDialog", "&Message:", nullptr));
 #ifndef QT_NO_TOOLTIP
-        reqLabel->setToolTip(QApplication::translate("ReceiveCoinsDialog", "An optional label to associate with the new receiving address.", 0));
+        reqLabel->setToolTip(QApplication::translate("ReceiveCoinsDialog", "An optional label to associate with the new receiving address.", nullptr));
 #endif // QT_NO_TOOLTIP
 #ifndef QT_NO_TOOLTIP
-        reqMessage->setToolTip(QApplication::translate("ReceiveCoinsDialog", "An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the MicroBitcoin network.", 0));
+        reqMessage->setToolTip(QApplication::translate("ReceiveCoinsDialog", "An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the MicroBitcoin network.", nullptr));
 #endif // QT_NO_TOOLTIP
-        label_5->setText(QApplication::translate("ReceiveCoinsDialog", "Use this form to request payments. All fields are <b>optional</b>.", 0));
+        label_5->setText(QApplication::translate("ReceiveCoinsDialog", "Use this form to request payments. All fields are <b>optional</b>.", nullptr));
 #ifndef QT_NO_TOOLTIP
-        label_2->setToolTip(QApplication::translate("ReceiveCoinsDialog", "An optional label to associate with the new receiving address.", 0));
+        label_2->setToolTip(QApplication::translate("ReceiveCoinsDialog", "An optional label to associate with the new receiving address.", nullptr));
 #endif // QT_NO_TOOLTIP
-        label_2->setText(QApplication::translate("ReceiveCoinsDialog", "&Label:", 0));
+        label_2->setText(QApplication::translate("ReceiveCoinsDialog", "&Label:", nullptr));
 #ifndef QT_NO_TOOLTIP
-        label->setToolTip(QApplication::translate("ReceiveCoinsDialog", "An optional amount to request. Leave this empty or zero to not request a specific amount.", 0));
+        label->setToolTip(QApplication::translate("ReceiveCoinsDialog", "An optional amount to request. Leave this empty or zero to not request a specific amount.", nullptr));
 #endif // QT_NO_TOOLTIP
-        label->setText(QApplication::translate("ReceiveCoinsDialog", "&Amount:", 0));
+        label->setText(QApplication::translate("ReceiveCoinsDialog", "&Amount:", nullptr));
 #ifndef QT_NO_TOOLTIP
-        reqAmount->setToolTip(QApplication::translate("ReceiveCoinsDialog", "An optional amount to request. Leave this empty or zero to not request a specific amount.", 0));
+        reqAmount->setToolTip(QApplication::translate("ReceiveCoinsDialog", "An optional amount to request. Leave this empty or zero to not request a specific amount.", nullptr));
 #endif // QT_NO_TOOLTIP
-        receiveButton->setText(QApplication::translate("ReceiveCoinsDialog", "&Request payment", 0));
+        receiveButton->setText(QApplication::translate("ReceiveCoinsDialog", "&Request payment", nullptr));
 #ifndef QT_NO_TOOLTIP
-        clearButton->setToolTip(QApplication::translate("ReceiveCoinsDialog", "Clear all fields of the form.", 0));
+        clearButton->setToolTip(QApplication::translate("ReceiveCoinsDialog", "Clear all fields of the form.", nullptr));
 #endif // QT_NO_TOOLTIP
-        clearButton->setText(QApplication::translate("ReceiveCoinsDialog", "Clear", 0));
+        clearButton->setText(QApplication::translate("ReceiveCoinsDialog", "Clear", nullptr));
         label_7->setText(QString());
-        label_6->setText(QApplication::translate("ReceiveCoinsDialog", "Requested payments history", 0));
+        label_6->setText(QApplication::translate("ReceiveCoinsDialog", "Requested payments history", nullptr));
 #ifndef QT_NO_TOOLTIP
-        showRequestButton->setToolTip(QApplication::translate("ReceiveCoinsDialog", "Show the selected request (does the same as double clicking an entry)", 0));
+        showRequestButton->setToolTip(QApplication::translate("ReceiveCoinsDialog", "Show the selected request (does the same as double clicking an entry)", nullptr));
 #endif // QT_NO_TOOLTIP
-        showRequestButton->setText(QApplication::translate("ReceiveCoinsDialog", "Show", 0));
+        showRequestButton->setText(QApplication::translate("ReceiveCoinsDialog", "Show", nullptr));
 #ifndef QT_NO_TOOLTIP
-        removeRequestButton->setToolTip(QApplication::translate("ReceiveCoinsDialog", "Remove the selected entries from the list", 0));
+        removeRequestButton->setToolTip(QApplication::translate("ReceiveCoinsDialog", "Remove the selected entries from the list", nullptr));
 #endif // QT_NO_TOOLTIP
-        removeRequestButton->setText(QApplication::translate("ReceiveCoinsDialog", "Remove", 0));
+        removeRequestButton->setText(QApplication::translate("ReceiveCoinsDialog", "Remove", nullptr));
         Q_UNUSED(ReceiveCoinsDialog);
     } // retranslateUi
 

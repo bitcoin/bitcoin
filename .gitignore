@@ -81,6 +81,7 @@ src/qt/bitcoin-qt.includes
 
 # Compilation and Qt preprocessor part
 *.qm
+Makefile
 bitcoin-qt
 Bitcoin-Qt.app
 background.tiff*

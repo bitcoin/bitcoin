@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'intro.ui'
 **
-** Created by: Qt User Interface Compiler version 5.5.1
+** Created by: Qt User Interface Compiler version 5.11.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
@@ -10,13 +10,10 @@
 #define UI_INTRO_H
 
 #include <QtCore/QVariant>
-#include <QtWidgets/QAction>
 #include <QtWidgets/QApplication>
-#include <QtWidgets/QButtonGroup>
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QDialogButtonBox>
 #include <QtWidgets/QHBoxLayout>
-#include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QPushButton>
@@ -202,15 +199,15 @@ public:
 
     void retranslateUi(QDialog *Intro)
     {
-        Intro->setWindowTitle(QApplication::translate("Intro", "Welcome", 0));
-        welcomeLabel->setText(QApplication::translate("Intro", "Welcome to %1.", 0));
-        storageLabel->setText(QApplication::translate("Intro", "As this is the first time the program is launched, you can choose where %1 will store its data.", 0));
-        dataDirDefault->setText(QApplication::translate("Intro", "Use the default data directory", 0));
-        dataDirCustom->setText(QApplication::translate("Intro", "Use a custom data directory:", 0));
+        Intro->setWindowTitle(QApplication::translate("Intro", "Welcome", nullptr));
+        welcomeLabel->setText(QApplication::translate("Intro", "Welcome to %1.", nullptr));
+        storageLabel->setText(QApplication::translate("Intro", "As this is the first time the program is launched, you can choose where %1 will store its data.", nullptr));
+        dataDirDefault->setText(QApplication::translate("Intro", "Use the default data directory", nullptr));
+        dataDirCustom->setText(QApplication::translate("Intro", "Use a custom data directory:", nullptr));
         freeSpace->setText(QString());
-        lblExplanation1->setText(QApplication::translate("Intro", "When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.", 0));
-        lblExplanation2->setText(QApplication::translate("Intro", "This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.", 0));
-        lblExplanation3->setText(QApplication::translate("Intro", "If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.", 0));
+        lblExplanation1->setText(QApplication::translate("Intro", "When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.", nullptr));
+        lblExplanation2->setText(QApplication::translate("Intro", "This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.", nullptr));
+        lblExplanation3->setText(QApplication::translate("Intro", "If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.", nullptr));
     } // retranslateUi
 
 };

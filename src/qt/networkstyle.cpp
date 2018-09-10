@@ -28,6 +28,7 @@ NetworkStyle::NetworkStyle(const QString &_appName, const int iconColorHueShift,
 {
     // load pixmap
     QPixmap pixmap(":/icons/bitcoin");
+    QPixmap pixmapimage(":/icons/microbitcoin");
 
     if(iconColorHueShift != 0 && iconColorSaturationReduction != 0)
     {
@@ -75,7 +76,8 @@ NetworkStyle::NetworkStyle(const QString &_appName, const int iconColorHueShift,
 #endif
     }
 
-    appIcon             = QIcon(pixmap);
+    appIcon             = QIcon(pixmapimage);
+    appSplash           = QIcon(pixmap);
     trayAndWindowIcon   = QIcon(pixmap.scaled(QSize(256,256)));
 }
 

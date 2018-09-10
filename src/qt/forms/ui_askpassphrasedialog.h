@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'askpassphrasedialog.ui'
 **
-** Created by: Qt User Interface Compiler version 5.5.1
+** Created by: Qt User Interface Compiler version 5.11.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
@@ -10,13 +10,10 @@
 #define UI_ASKPASSPHRASEDIALOG_H
 
 #include <QtCore/QVariant>
-#include <QtWidgets/QAction>
 #include <QtWidgets/QApplication>
-#include <QtWidgets/QButtonGroup>
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QDialogButtonBox>
 #include <QtWidgets/QFormLayout>
-#include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QVBoxLayout>
@@ -127,10 +124,10 @@ public:
 
     void retranslateUi(QDialog *AskPassphraseDialog)
     {
-        AskPassphraseDialog->setWindowTitle(QApplication::translate("AskPassphraseDialog", "Passphrase Dialog", 0));
-        passLabel1->setText(QApplication::translate("AskPassphraseDialog", "Enter passphrase", 0));
-        passLabel2->setText(QApplication::translate("AskPassphraseDialog", "New passphrase", 0));
-        passLabel3->setText(QApplication::translate("AskPassphraseDialog", "Repeat new passphrase", 0));
+        AskPassphraseDialog->setWindowTitle(QApplication::translate("AskPassphraseDialog", "Passphrase Dialog", nullptr));
+        passLabel1->setText(QApplication::translate("AskPassphraseDialog", "Enter passphrase", nullptr));
+        passLabel2->setText(QApplication::translate("AskPassphraseDialog", "New passphrase", nullptr));
+        passLabel3->setText(QApplication::translate("AskPassphraseDialog", "Repeat new passphrase", nullptr));
         capsLabel->setText(QString());
     } // retranslateUi
 
