@@ -58,6 +58,7 @@ class BlockchainTest(BitcoinTestFramework):
         self._test_getnetworkhashps()
         self._test_stopatheight()
         self._test_waitforblockheight()
+        self._test_getblock_decodeblock()
         assert self.nodes[0].verifychain(4, 0)
 
     def _test_getblockchaininfo(self):
@@ -290,6 +291,55 @@ class BlockchainTest(BitcoinTestFramework):
         assert_waitforheight(current_height)
         assert_waitforheight(current_height + 1)
 
+    def _test_getblock_decodeblock(self):
+        self.log.info("Test decodeblock and getblock args")
+
+        self.restart_node(0, [])
+
+        # Ensure mempool is clear, make 2 empty blocks after
+        # We are looking at one buried by one confirmation
+        empty_block = self.nodes[0].generate(3)[-2]
+        block_hex = self.nodes[0].getblock(empty_block, 0) # no verbose
+        assert(isinstance(block_hex, str)) # Not json obj
+        block_details_1 = self.nodes[0].getblock(empty_block) # default of 1
+        block_details_2 = self.nodes[0].getblock(empty_block, 2)
+        raw_details_1 = self.nodes[0].decodeblock(block_hex) # default of 1
+        raw_details_2 = self.nodes[0].decodeblock(block_hex, 2)
+
+        assert_equal(block_details_1["hash"], raw_details_1["hash"])
+        assert_equal(block_details_1["size"], raw_details_1["size"])
+        assert_equal(block_details_1["weight"], raw_details_1["weight"])
+        assert_equal(block_details_1["strippedsize"], raw_details_1["strippedsize"])
+        assert_equal(block_details_1["version"], raw_details_1["version"])
+        assert_equal(block_details_1["versionHex"], raw_details_1["versionHex"])
+        assert_equal(block_details_1["merkleroot"], raw_details_1["merkleroot"])
+
+        # Tx list is identical(only coinbase)
+        assert_equal(len(block_details_1["tx"]), 1)
+        assert_equal(len(raw_details_2["tx"]), 1)
+        assert_equal(block_details_2["tx"], raw_details_2["tx"])
+        assert_equal(block_details_1["tx"], raw_details_1["tx"])
+
+        # Contextual chain fields missing from raw decode
+        assert("confirmations" not in raw_details_1)
+        assert("height" not in raw_details_1)
+        assert("mediantime" not in raw_details_1)
+        assert("nextblockhash" not in raw_details_1)
+        assert("difficulty" not in raw_details_1)
+        assert("chainwork" not in raw_details_1)
+
+        assert("confirmations" in block_details_1)
+        assert("height" in block_details_1)
+        assert("mediantime" in block_details_1)
+        assert("nextblockhash" in block_details_1)
+        assert("difficulty" in block_details_1)
+        assert("chainwork" in block_details_1)
+
+        # Only high-verbosity calls have full tx
+        assert_raises_rpc_error(-22, 'TX decode failed', self.nodes[0].decoderawtransaction, block_details_1["tx"][0])
+        assert_raises_rpc_error(-22, 'TX decode failed', self.nodes[0].decoderawtransaction, raw_details_1["tx"][0])
+        self.nodes[0].decoderawtransaction(block_details_2["tx"][0]["hex"])
+        self.nodes[0].decoderawtransaction(raw_details_2["tx"][0]["hex"])
 
 if __name__ == '__main__':
     BlockchainTest().main()
