@@ -30,8 +30,8 @@ SOURCE_LANG = 'chaincoin_en.ts'
 LOCALE_DIR = 'src/qt/locale'
 # Minimum number of messages for translation to be considered at all
 MIN_NUM_MESSAGES = 10
-# Regexp to check for Bitcoin addresses
-ADDRESS_REGEXP = re.compile('([13]|bc1)[a-zA-Z0-9]{30,}')
+# Regexp to check for Chaincoin addresses
+ADDRESS_REGEXP = re.compile('([C2]|chc)[a-zA-Z0-9]{30,}')
 
 def check_at_repository_root():
     if not os.path.exists('.git'):
@@ -131,7 +131,7 @@ def escape_cdata(text):
 
 def contains_bitcoin_addr(text, errors):
     if text != None and ADDRESS_REGEXP.search(text) != None:
-        errors.append('Translation "%s" contains a bitcoin address. This will be removed.' % (text))
+        errors.append('Translation "%s" contains a chaincoin address. This will be removed.' % (text))
         return True
     return False
 
