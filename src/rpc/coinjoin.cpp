@@ -160,7 +160,7 @@ static UniValue getcoinjoininfo(const JSONRPCRequest& request)
 
     return obj;
 }
-
+// clang-format off
 static const CRPCCommand commands[] =
     { //  category              name                      actor (function)         argNames
         //  --------------------- ------------------------  ---------------------------------
@@ -170,7 +170,7 @@ static const CRPCCommand commands[] =
         { "dash",               "coinjoin",               &coinjoin,               {} },
 #endif // ENABLE_WALLET
 };
-
+// clang-format on
 void RegisterCoinJoinRPCCommands(CRPCTable &t)
 {
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)

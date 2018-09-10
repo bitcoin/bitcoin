@@ -1162,7 +1162,7 @@ static UniValue getsuperblockbudget(const JSONRPCRequest& request)
 
     return ValueFromAmount(CSuperblock::GetPaymentsLimit(nBlockHeight));
 }
-
+// clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
@@ -1173,7 +1173,7 @@ static const CRPCCommand commands[] =
     { "dash",               "voteraw",                &voteraw,                {"tx_hash","tx_index","gov_hash","signal","outcome","time","sig"} },
 
 };
-
+// clang-format on
 void RegisterGovernanceRPCCommands(CRPCTable &t)
 {
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)

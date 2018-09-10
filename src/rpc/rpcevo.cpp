@@ -1287,14 +1287,14 @@ static UniValue _bls(const JSONRPCRequest& request)
         bls_help();
     }
 }
-
+// clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)
   //  --------------------- ------------------------  -----------------------
     { "evo",                "bls",                    &_bls,                   {}  },
     { "evo",                "protx",                  &protx,                  {}  },
 };
-
+// clang-format on
 void RegisterEvoRPCCommands(CRPCTable &tableRPC)
 {
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++) {
