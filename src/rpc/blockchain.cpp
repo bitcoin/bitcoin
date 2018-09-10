@@ -115,16 +115,16 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
 {
     AssertLockHeld(cs_main);
     UniValue result(UniValue::VOBJ);
-    result.pushKV("hash", blockindex->GetBlockHash().GetHex());
+    if (blockindex) result.pushKV("hash", blockindex->GetBlockHash().GetHex());
     int confirmations = -1;
     // Only report confirmations if the block is on the main chain
-    if (chainActive.Contains(blockindex))
+    if (blockindex && chainActive.Contains(blockindex))
         confirmations = chainActive.Height() - blockindex->nHeight + 1;
     result.pushKV("confirmations", confirmations);
     result.pushKV("strippedsize", (int)::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS));
     result.pushKV("size", (int)::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION));
     result.pushKV("weight", (int)::GetBlockWeight(block));
-    result.pushKV("height", blockindex->nHeight);
+    if (blockindex) result.pushKV("height", blockindex->nHeight);
     result.pushKV("version", block.nVersion);
     result.pushKV("versionHex", strprintf("%08x", block.nVersion));
     result.pushKV("merkleroot", block.hashMerkleRoot.GetHex());
@@ -142,16 +142,16 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
     }
     result.pushKV("tx", txs);
     result.pushKV("time", block.GetBlockTime());
-    result.pushKV("mediantime", (int64_t)blockindex->GetMedianTimePast());
+    if (blockindex) result.pushKV("mediantime", (int64_t)blockindex->GetMedianTimePast());
     result.pushKV("nonce", (uint64_t)block.nNonce);
     result.pushKV("bits", strprintf("%08x", block.nBits));
-    result.pushKV("difficulty", GetDifficulty(blockindex));
-    result.pushKV("chainwork", blockindex->nChainWork.GetHex());
-    result.pushKV("nTx", (uint64_t)blockindex->nTx);
+    if (blockindex) result.pushKV("difficulty", GetDifficulty(blockindex));
+    if (blockindex) result.pushKV("chainwork", blockindex->nChainWork.GetHex());
+    if (blockindex) result.pushKV("nTx", (uint64_t)blockindex->nTx);
 
-    if (blockindex->pprev)
+    if (blockindex && blockindex->pprev)
         result.pushKV("previousblockhash", blockindex->pprev->GetBlockHash().GetHex());
-    CBlockIndex *pnext = chainActive.Next(blockindex);
+    CBlockIndex *pnext = blockindex ? chainActive.Next(blockindex) : nullptr;
     if (pnext)
         result.pushKV("nextblockhash", pnext->GetBlockHash().GetHex());
     return result;
