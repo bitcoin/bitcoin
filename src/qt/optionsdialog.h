@@ -53,6 +53,7 @@ private Q_SLOTS:
     
     void on_hideTrayIcon_stateChanged(int fState);
 
+    void togglePruneWarning(bool enabled);
     void showRestartWarning(bool fPersistent = false);
     void clearStatusLabel();
     void updateProxyValidationState();
