@@ -168,6 +168,11 @@ class EstimateFeeTest(BitcoinTestFramework):
                     newmem.append(utx)
             self.memutxo = newmem
 
+    def import_deterministic_coinbase_privkeys(self):
+        self.start_nodes()
+        super().import_deterministic_coinbase_privkeys()
+        self.stop_nodes()
+
     def run_test(self):
         self.log.info("This test is time consuming, please be patient")
         self.log.info("Splitting inputs so we can generate tx's")
