@@ -15,6 +15,7 @@
 #include <rpc/server.h>
 #include <init.h>
 #include <noui.h>
+#include <shutdown.h>
 #include <util.h>
 #include <masternodeconfig.h>
 #include <httpserver.h>

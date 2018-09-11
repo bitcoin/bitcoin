@@ -16,6 +16,7 @@
 #include <netmessagemaker.h>
 #include <scheduler.h>
 #include <script/standard.h>
+#include <shutdown.h>
 #include <ui_interface.h>
 #include <util.h>
 #include <warnings.h>

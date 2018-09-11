@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <index/txindex.h>
-#include <init.h>
+#include <shutdown.h>
 #include <ui_interface.h>
 #include <util.h>
 #include <validation.h>

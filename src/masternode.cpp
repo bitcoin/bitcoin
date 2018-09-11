@@ -16,6 +16,7 @@
 #include <masternodeman.h>
 #include <messagesigner.h>
 #include <script/standard.h>
+#include <shutdown.h>
 #include <util.h>
 #include <walletinitinterface.h>
 
