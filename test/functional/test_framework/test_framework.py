@@ -359,7 +359,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.log = logging.getLogger('TestFramework')
         self.log.setLevel(logging.DEBUG)
         # Create file handler to log all messages
-        fh = logging.FileHandler(self.options.tmpdir + '/test_framework.log')
+        fh = logging.FileHandler(self.options.tmpdir + '/test_framework.log', encoding='utf-8')
         fh.setLevel(logging.DEBUG)
         # Create console handler to log messages to stderr. By default this logs only error messages, but can be configured with --loglevel.
         ch = logging.StreamHandler(sys.stdout)
