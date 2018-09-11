@@ -85,3 +85,31 @@ def get_legacy_sigopcount_tx(tx, fAccurate=True):
         # scriptSig might be of type bytes, so convert to CScript for the moment
         count += CScript(j.scriptSig).GetSigOpCount(fAccurate)
     return count
+
+# Identical to GetMasternodePayment in C++ code
+def get_masternode_payment(nHeight, blockValue):
+    ret = int(blockValue / 5)
+
+    nMNPIBlock = 350
+    nMNPIPeriod = 10
+
+    if nHeight > nMNPIBlock:
+        ret += int(blockValue / 20)
+    if nHeight > nMNPIBlock+(nMNPIPeriod* 1):
+        ret += int(blockValue / 20)
+    if nHeight > nMNPIBlock+(nMNPIPeriod* 2):
+        ret += int(blockValue / 20)
+    if nHeight > nMNPIBlock+(nMNPIPeriod* 3):
+        ret += int(blockValue / 40)
+    if nHeight > nMNPIBlock+(nMNPIPeriod* 4):
+        ret += int(blockValue / 40)
+    if nHeight > nMNPIBlock+(nMNPIPeriod* 5):
+        ret += int(blockValue / 40)
+    if nHeight > nMNPIBlock+(nMNPIPeriod* 6):
+        ret += int(blockValue / 40)
+    if nHeight > nMNPIBlock+(nMNPIPeriod* 7):
+        ret += int(blockValue / 40)
+    if nHeight > nMNPIBlock+(nMNPIPeriod* 9):
+        ret += int(blockValue / 40)
+
+    return ret
