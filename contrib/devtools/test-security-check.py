@@ -9,7 +9,7 @@ import subprocess
 import unittest
 
 def write_testcode(filename):
-    with open(filename, 'w') as f:
+    with open(filename, 'w', encoding="utf8") as f:
         f.write('''
     #include <stdio.h>
     int main()

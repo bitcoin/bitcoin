@@ -44,7 +44,7 @@ def process_commands(fname):
     """Find and parse dispatch table in implementation file `fname`."""
     cmds = []
     in_rpcs = False
-    with open(fname, "r") as f:
+    with open(fname, "r", encoding="utf8") as f:
         for line in f:
             line = line.rstrip()
             if not in_rpcs:
@@ -70,7 +70,7 @@ def process_mapping(fname):
     """Find and parse conversion table in implementation file `fname`."""
     cmds = []
     in_rpcs = False
-    with open(fname, "r") as f:
+    with open(fname, "r", encoding="utf8") as f:
         for line in f:
             line = line.rstrip()
             if not in_rpcs:

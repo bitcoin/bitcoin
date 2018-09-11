@@ -191,7 +191,7 @@ def main():
     merge_branch = 'pull/'+pull+'/merge'
     local_merge_branch = 'pull/'+pull+'/local-merge'
 
-    devnull = open(os.devnull,'w')
+    devnull = open(os.devnull, 'w', encoding="utf8")
     try:
         subprocess.check_call([GIT,'checkout','-q',branch])
     except subprocess.CalledProcessError:
