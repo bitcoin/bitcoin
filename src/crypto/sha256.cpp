@@ -536,6 +536,14 @@ void inline cpuid(uint32_t leaf, uint32_t subleaf, uint32_t& a, uint32_t& b, uin
 {
   __asm__ ("cpuid" : "=a"(a), "=b"(b), "=c"(c), "=d"(d) : "0"(leaf), "2"(subleaf));
 }
+
+/** Check whether the OS has enabled AVX registers. */
+bool AVXEnabled()
+{
+    uint32_t a, d;
+    __asm__("xgetbv" : "=a"(a), "=d"(d) : "c"(0));
+    return (a & 6) == 6;
+}
 #endif
 } // namespace
 
@@ -544,6 +552,7 @@ std::string SHA256AutoDetect()
 {
     std::string ret = "standard";
 #if defined(USE_ASM) && (defined(__x86_64__) || defined(__amd64__) || defined(__i386__))
+    (void)AVXEnabled; // Silence unused warning (in case ENABLE_AVX2 is not defined)
     uint32_t eax, ebx, ecx, edx;
     cpuid(1, 0, eax, ebx, ecx, edx);
     if ((ecx >> 19) & 1) {
@@ -555,10 +564,14 @@ std::string SHA256AutoDetect()
         TransformD64_4way = sha256d64_sse41::Transform_4way;
         ret = "sse4(1way+4way)";
 #if defined(ENABLE_AVX2) && !defined(BUILD_BITCOIN_INTERNAL)
-        cpuid(7, 0, eax, ebx, ecx, edx);
-        if ((ebx >> 5) & 1) {
-            TransformD64_8way = sha256d64_avx2::Transform_8way;
-            ret += ",avx2(8way)";
+        if (((ecx >> 27) & 1) && ((ecx >> 28) & 1)) { // XSAVE and AVX
+            cpuid(7, 0, eax, ebx, ecx, edx);
+            if ((ebx >> 5) & 1) { // AVX2 flag
+                if (AVXEnabled()) { // OS has enabled AVX registers
+                    TransformD64_8way = sha256d64_avx2::Transform_8way;
+                    ret += ",avx2(8way)";
+                }
+            }
         }
 #endif
 #else
