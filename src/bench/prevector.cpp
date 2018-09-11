@@ -42,7 +42,7 @@ static void PrevectorClear(benchmark::State& state)
             t0.resize(28);
             t0.clear();
             t1.resize(29);
-            t0.clear();
+            t1.clear();
         }
     }
 }
@@ -64,11 +64,11 @@ static void PrevectorResize(benchmark::State& state)
 
 #define PREVECTOR_TEST(name, nontrivops, trivops)                       \
     static void Prevector ## name ## Nontrivial(benchmark::State& state) { \
-        PrevectorResize<nontrivial_t>(state);                           \
+        Prevector ## name<nontrivial_t>(state);                         \
     }                                                                   \
     BENCHMARK(Prevector ## name ## Nontrivial, nontrivops);             \
     static void Prevector ## name ## Trivial(benchmark::State& state) { \
-        PrevectorResize<trivial_t>(state);                              \
+        Prevector ## name<trivial_t>(state);                            \
     }                                                                   \
     BENCHMARK(Prevector ## name ## Trivial, trivops);
 
