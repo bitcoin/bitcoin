@@ -242,7 +242,8 @@ public:
         consensus.mbcTimestamp = 1231006505; // Tuesday, 29 May 2018 р., 20:24:42
         consensus.premineValue = 10000000 * COIN * COIN_RATIO;
         consensus.premineAddress = "Vxsgbd7An4686EyvU4yGR39cikq9rHnhYi";
-        consensus.replyFixHeight = 999999999;
+        consensus.replyFixHeight = 1211;
+        signSwithchTime = 1536634657;
 
         pchBitcoinMessageStart[0] = 0x0a;
         pchBitcoinMessageStart[1] = 0x10;
