@@ -182,13 +182,18 @@ bool WalletInit::Verify() const
 
     if (gArgs.IsArgSet("-walletdir")) {
         fs::path wallet_dir = gArgs.GetArg("-walletdir", "");
-        if (!fs::exists(wallet_dir)) {
+        boost::system::error_code error;
+        // The canonical path cleans the path, preventing >1 Berkeley environment instances for the same directory
+        fs::path canonical_wallet_dir = fs::canonical(wallet_dir, error);
+        if (error || !fs::exists(wallet_dir)) {
             return InitError(strprintf(_("Specified -walletdir \"%s\" does not exist"), wallet_dir.string()));
         } else if (!fs::is_directory(wallet_dir)) {
             return InitError(strprintf(_("Specified -walletdir \"%s\" is not a directory"), wallet_dir.string()));
+        // The canonical path transforms relative paths into absolute ones, so we check the non-canonical version
         } else if (!wallet_dir.is_absolute()) {
             return InitError(strprintf(_("Specified -walletdir \"%s\" is a relative path"), wallet_dir.string()));
         }
+        gArgs.ForceSetArg("-walletdir", canonical_wallet_dir.string());
     }
 
     LogPrintf("Using wallet directory %s\n", GetWalletDir().string());
