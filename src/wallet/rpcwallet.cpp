@@ -4494,14 +4494,14 @@ void AddKeypathToMap(const CWallet* pwallet, const CKeyID& keyID, std::map<CPubK
     hd_keypaths.emplace(vchPubKey, keypath);
 }
 
-bool FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& psbtx, const CTransaction* txConst, int sighash_type, bool sign, bool bip32derivs)
+bool FillPSCT(const CWallet* pwallet, PartiallySignedTransaction& psctx, const CTransaction* txConst, int sighash_type, bool sign, bool bip32derivs)
 {
     LOCK(pwallet->cs_wallet);
     // Get all of the previous transactions
     bool complete = true;
     for (unsigned int i = 0; i < txConst->vin.size(); ++i) {
         const CTxIn& txin = txConst->vin[i];
-        PSBTInput& input = psbtx.inputs.at(i);
+        PSCTInput& input = psctx.inputs.at(i);
 
         // If we don't know about this input, skip it and let someone else deal with it
         const uint256& txhash = txin.prevout.hash;
@@ -4515,14 +4515,14 @@ bool FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& psbtx, const C
 
         // Get the Sighash type
         if (sign && input.sighash_type > 0 && input.sighash_type != sighash_type) {
-            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Specified Sighash and sighash in PSBT do not match.");
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Specified Sighash and sighash in PSCT do not match.");
         }
 
         SignatureData sigdata;
         if (sign) {
-            complete &= SignPSBTInput(*pwallet, *psbtx.tx, input, sigdata, i, sighash_type);
+            complete &= SignPSCTInput(*pwallet, *psctx.tx, input, sigdata, i, sighash_type);
         } else {
-            complete &= SignPSBTInput(PublicOnlySigningProvider(pwallet), *psbtx.tx, input, sigdata, i, sighash_type);
+            complete &= SignPSCTInput(PublicOnlySigningProvider(pwallet), *psctx.tx, input, sigdata, i, sighash_type);
         }
 
         // Drop the unnecessary UTXO
@@ -4543,7 +4543,7 @@ bool FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& psbtx, const C
     // Fill in the bip32 keypaths and redeemscripts for the outputs so that hardware wallets can identify change
     for (unsigned int i = 0; i < txConst->vout.size(); ++i) {
         const CTxOut& out = txConst->vout.at(i);
-        PSBTOutput& psbt_out = psbtx.outputs.at(i);
+        PSCTOutput& psct_out = psctx.outputs.at(i);
 
         // Dummy tx so we can use ProduceSignature to get stuff out
         CMutableTransaction dummy_tx;
@@ -4552,23 +4552,23 @@ bool FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& psbtx, const C
 
         // Fill a SignatureData with output info
         SignatureData sigdata;
-        psbt_out.FillSignatureData(sigdata);
+        psct_out.FillSignatureData(sigdata);
 
-        MutableTransactionSignatureCreator creator(psbtx.tx.get_ptr(), 0, out.nValue, 1);
+        MutableTransactionSignatureCreator creator(psctx.tx.get_ptr(), 0, out.nValue, 1);
         ProduceSignature(*pwallet, creator, out.scriptPubKey, sigdata);
-        psbt_out.FromSignatureData(sigdata);
+        psct_out.FromSignatureData(sigdata);
 
         // Get public key paths
         if (bip32derivs) {
             for (const auto& pubkey_it : sigdata.misc_pubkeys) {
-                AddKeypathToMap(pwallet, pubkey_it.first, psbt_out.hd_keypaths);
+                AddKeypathToMap(pwallet, pubkey_it.first, psct_out.hd_keypaths);
             }
         }
     }
     return complete;
 }
 
-UniValue walletprocesspsbt(const JSONRPCRequest& request)
+UniValue walletprocesspsct(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -4579,15 +4579,15 @@ UniValue walletprocesspsbt(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 4)
         throw std::runtime_error(
-            "walletprocesspsbt \"psbt\" ( sign \"sighashtype\" bip32derivs )\n"
-            "\nUpdate a PSBT with input information from our wallet and then sign inputs\n"
+            "walletprocesspsct \"psct\" ( sign \"sighashtype\" bip32derivs )\n"
+            "\nUpdate a PSCT with input information from our wallet and then sign inputs\n"
             "that we can sign for.\n"
             + HelpRequiringPassphrase(pwallet) + "\n"
 
             "\nArguments:\n"
-            "1. \"psbt\"                      (string, required) The transaction base64 string\n"
+            "1. \"psct\"                      (string, required) The transaction base64 string\n"
             "2. sign                          (boolean, optional, default=true) Also sign the transaction when updating\n"
-            "3. \"sighashtype\"            (string, optional, default=ALL) The signature hash type to sign with if not specified by the PSBT. Must be one of\n"
+            "3. \"sighashtype\"            (string, optional, default=ALL) The signature hash type to sign with if not specified by the PSCT. Must be one of\n"
             "       \"ALL\"\n"
             "       \"NONE\"\n"
             "       \"SINGLE\"\n"
@@ -4598,21 +4598,21 @@ UniValue walletprocesspsbt(const JSONRPCRequest& request)
 
             "\nResult:\n"
             "{\n"
-            "  \"psbt\" : \"value\",          (string) The base64-encoded partially signed transaction\n"
+            "  \"psct\" : \"value\",          (string) The base64-encoded partially signed transaction\n"
             "  \"complete\" : true|false,   (boolean) If the transaction has a complete set of signatures\n"
             "  ]\n"
             "}\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("walletprocesspsbt", "\"psbt\"")
+            + HelpExampleCli("walletprocesspsct", "\"psct\"")
         );
 
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VBOOL, UniValue::VSTR});
 
     // Unserialize the transaction
-    PartiallySignedTransaction psbtx;
+    PartiallySignedTransaction psctx;
     std::string error;
-    if (!DecodePSBT(psbtx, request.params[0].get_str(), error)) {
+    if (!DecodePSCT(psctx, request.params[0].get_str(), error)) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
     }
 
@@ -4621,23 +4621,23 @@ UniValue walletprocesspsbt(const JSONRPCRequest& request)
 
     // Use CTransaction for the constant parts of the
     // transaction to avoid rehashing.
-    const CTransaction txConst(*psbtx.tx);
+    const CTransaction txConst(*psctx.tx);
 
     // Fill transaction with our data and also sign
     bool sign = request.params[1].isNull() ? true : request.params[1].get_bool();
     bool bip32derivs = request.params[3].isNull() ? false : request.params[3].get_bool();
-    bool complete = FillPSBT(pwallet, psbtx, &txConst, nHashType, sign, bip32derivs);
+    bool complete = FillPSCT(pwallet, psctx, &txConst, nHashType, sign, bip32derivs);
 
     UniValue result(UniValue::VOBJ);
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-    ssTx << psbtx;
-    result.push_back(Pair("psbt", EncodeBase64((unsigned char*)ssTx.data(), ssTx.size())));
+    ssTx << psctx;
+    result.push_back(Pair("psct", EncodeBase64((unsigned char*)ssTx.data(), ssTx.size())));
     result.push_back(Pair("complete", complete));
 
     return result;
 }
 
-UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
+UniValue walletcreatefundedpsct(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -4648,7 +4648,7 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 6)
         throw std::runtime_error(
-                            "walletcreatefundedpsbt [{\"txid\":\"id\",\"vout\":n},...] [{\"address\":amount},{\"data\":\"hex\"},...] ( locktime ) ( replaceable ) ( options bip32derivs )\n"
+                            "walletcreatefundedpsct [{\"txid\":\"id\",\"vout\":n},...] [{\"address\":amount},{\"data\":\"hex\"},...] ( locktime ) ( replaceable ) ( options bip32derivs )\n"
                             "\nCreates and funds a transaction in the Partially Signed Transaction format. Inputs will be added if supplied inputs are not enough\n"
                             "Implements the Creator and Updater roles.\n"
                             "\nArguments:\n"
@@ -4700,13 +4700,13 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
                             "6. bip32derivs                    (boolean, optiona, default=false) If true, includes the BIP 32 derivation paths for public keys if we know them\n"
                             "\nResult:\n"
                             "{\n"
-                            "  \"psbt\": \"value\",        (string)  The resulting raw transaction (base64-encoded string)\n"
+                            "  \"psct\": \"value\",        (string)  The resulting raw transaction (base64-encoded string)\n"
                             "  \"fee\":       n,         (numeric) Fee in " + CURRENCY_UNIT + " the resulting transaction pays\n"
                             "  \"changepos\": n          (numeric) The position of the added change output, or -1\n"
                             "}\n"
                             "\nExamples:\n"
                             "\nCreate a transaction with no inputs\n"
-                            + HelpExampleCli("walletcreatefundedpsbt", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"data\\\":\\\"00010203\\\"}]\"")
+                            + HelpExampleCli("walletcreatefundedpsct", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"data\\\":\\\"00010203\\\"}]\"")
                             );
 
     RPCTypeCheck(request.params, {
@@ -4723,30 +4723,30 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
     CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], request.params[3]);
     FundTransaction(pwallet, rawTx, fee, change_position, request.params[4]);
 
-    // Make a blank psbt
-    PartiallySignedTransaction psbtx;
-    psbtx.tx = rawTx;
+    // Make a blank psct
+    PartiallySignedTransaction psctx;
+    psctx.tx = rawTx;
     for (unsigned int i = 0; i < rawTx.vin.size(); ++i) {
-        psbtx.inputs.push_back(PSBTInput());
+        psctx.inputs.push_back(PSCTInput());
     }
     for (unsigned int i = 0; i < rawTx.vout.size(); ++i) {
-        psbtx.outputs.push_back(PSBTOutput());
+        psctx.outputs.push_back(PSCTOutput());
     }
 
     // Use CTransaction for the constant parts of the
     // transaction to avoid rehashing.
-    const CTransaction txConst(*psbtx.tx);
+    const CTransaction txConst(*psctx.tx);
 
     // Fill transaction with out data but don't sign
     bool bip32derivs = request.params[5].isNull() ? false : request.params[5].get_bool();
-    FillPSBT(pwallet, psbtx, &txConst, 1, false, bip32derivs);
+    FillPSCT(pwallet, psctx, &txConst, 1, false, bip32derivs);
 
-    // Serialize the PSBT
+    // Serialize the PSCT
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-    ssTx << psbtx;
+    ssTx << psctx;
 
     UniValue result(UniValue::VOBJ);
-    result.pushKV("psbt", EncodeBase64((unsigned char*)ssTx.data(), ssTx.size()));
+    result.pushKV("psct", EncodeBase64((unsigned char*)ssTx.data(), ssTx.size()));
     result.pushKV("fee", ValueFromAmount(fee));
     result.pushKV("changepos", change_position);
     return result;
@@ -4768,8 +4768,8 @@ static const CRPCCommand commands[] =
 { //  category              name                                actor (function)                argNames
     //  --------------------- ------------------------          -----------------------         ----------
     { "rawtransactions",    "fundrawtransaction",               &fundrawtransaction,            {"hexstring","options","iswitness"} },
-    { "wallet",             "walletprocesspsbt",                &walletprocesspsbt,             {"psbt","sign","sighashtype","bip32derivs"} },
-    { "wallet",             "walletcreatefundedpsbt",           &walletcreatefundedpsbt,        {"inputs","outputs","locktime","replaceable","options","bip32derivs"} },
+    { "wallet",             "walletprocesspsct",                &walletprocesspsct,             {"psct","sign","sighashtype","bip32derivs"} },
+    { "wallet",             "walletcreatefundedpsct",           &walletcreatefundedpsct,        {"inputs","outputs","locktime","replaceable","options","bip32derivs"} },
     { "hidden",             "resendwallettransactions",         &resendwallettransactions,      {} },
     { "wallet",             "abandontransaction",               &abandontransaction,            {"txid"} },
     { "wallet",             "abortrescan",                      &abortrescan,                   {} },

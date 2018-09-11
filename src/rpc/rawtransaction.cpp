@@ -1275,15 +1275,15 @@ static std::string WriteHDKeypath(std::vector<uint32_t>& keypath)
     return keypath_str;
 }
 
-UniValue decodepsbt(const JSONRPCRequest& request)
+UniValue decodepsct(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-            "decodepsbt \"psbt\"\n"
+            "decodepsct \"psct\"\n"
             "\nReturn a JSON object representing the serialized, base64-encoded partially signed Bitcoin transaction.\n"
 
             "\nArguments:\n"
-            "1. \"psbt\"            (string, required) The PSBT base64 string\n"
+            "1. \"psct\"            (string, required) The PSCT base64 string\n"
 
             "\nResult:\n"
             "{\n"
@@ -1370,19 +1370,19 @@ UniValue decodepsbt(const JSONRPCRequest& request)
             "    }\n"
             "    ,...\n"
             "  ]\n"
-            "  \"fee\" : fee                      (numeric, optional) The transaction fee paid if all UTXOs slots in the PSBT have been filled.\n"
+            "  \"fee\" : fee                      (numeric, optional) The transaction fee paid if all UTXOs slots in the PSCT have been filled.\n"
             "}\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("decodepsbt", "\"psbt\"")
+            + HelpExampleCli("decodepsct", "\"psct\"")
     );
 
     RPCTypeCheck(request.params, {UniValue::VSTR});
 
     // Unserialize the transactions
-    PartiallySignedTransaction psbtx;
+    PartiallySignedTransaction psctx;
     std::string error;
-    if (!DecodePSBT(psbtx, request.params[0].get_str(), error)) {
+    if (!DecodePSCT(psctx, request.params[0].get_str(), error)) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
     }
 
@@ -1390,12 +1390,12 @@ UniValue decodepsbt(const JSONRPCRequest& request)
 
     // Add the decoded tx
     UniValue tx_univ(UniValue::VOBJ);
-    TxToUniv(CTransaction(*psbtx.tx), uint256(), tx_univ, false);
+    TxToUniv(CTransaction(*psctx.tx), uint256(), tx_univ, false);
     result.pushKV("tx", tx_univ);
 
     // Unknown data
     UniValue unknowns(UniValue::VOBJ);
-    for (auto entry : psbtx.unknown) {
+    for (auto entry : psctx.unknown) {
         unknowns.pushKV(HexStr(entry.first), HexStr(entry.second));
     }
     result.pushKV("unknown", unknowns);
@@ -1404,8 +1404,8 @@ UniValue decodepsbt(const JSONRPCRequest& request)
     CAmount total_in = 0;
     bool have_all_utxos = true;
     UniValue inputs(UniValue::VARR);
-    for (unsigned int i = 0; i < psbtx.inputs.size(); ++i) {
-        const PSBTInput& input = psbtx.inputs[i];
+    for (unsigned int i = 0; i < psctx.inputs.size(); ++i) {
+        const PSCTInput& input = psctx.inputs[i];
         UniValue in(UniValue::VOBJ);
         // UTXOs
         if (!input.witness_utxo.IsNull()) {
@@ -1424,7 +1424,7 @@ UniValue decodepsbt(const JSONRPCRequest& request)
             UniValue non_wit(UniValue::VOBJ);
             TxToUniv(*input.non_witness_utxo, uint256(), non_wit, false);
             in.pushKV("non_witness_utxo", non_wit);
-            total_in += input.non_witness_utxo->vout[psbtx.tx->vin[i].prevout.n].nValue;
+            total_in += input.non_witness_utxo->vout[psctx.tx->vin[i].prevout.n].nValue;
         } else {
             have_all_utxos = false;
         }
@@ -1503,8 +1503,8 @@ UniValue decodepsbt(const JSONRPCRequest& request)
     // outputs
     CAmount output_value = 0;
     UniValue outputs(UniValue::VARR);
-    for (unsigned int i = 0; i < psbtx.outputs.size(); ++i) {
-        const PSBTOutput& output = psbtx.outputs[i];
+    for (unsigned int i = 0; i < psctx.outputs.size(); ++i) {
+        const PSCTOutput& output = psctx.outputs[i];
         UniValue out(UniValue::VOBJ);
         // Redeem script and witness script
         if (!output.redeem_script.empty()) {
@@ -1547,7 +1547,7 @@ UniValue decodepsbt(const JSONRPCRequest& request)
         outputs.push_back(out);
 
         // Fee calculation
-        output_value += psbtx.tx->vout[i].nValue;
+        output_value += psctx.tx->vout[i].nValue;
     }
     result.pushKV("outputs", outputs);
     if (have_all_utxos) {
@@ -1557,128 +1557,128 @@ UniValue decodepsbt(const JSONRPCRequest& request)
     return result;
 }
 
-UniValue combinepsbt(const JSONRPCRequest& request)
+UniValue combinepsct(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-            "combinepsbt [\"psbt\",...]\n"
+            "combinepsct [\"psct\",...]\n"
             "\nCombine multiple partially signed Bitcoin transactions into one transaction.\n"
             "Implements the Combiner role.\n"
             "\nArguments:\n"
             "1. \"txs\"                   (string) A json array of base64 strings of partially signed transactions\n"
             "    [\n"
-            "      \"psbt\"             (string) A base64 string of a PSBT\n"
+            "      \"psct\"             (string) A base64 string of a PSCT\n"
             "      ,...\n"
             "    ]\n"
 
             "\nResult:\n"
-            "  \"psbt\"          (string) The base64-encoded partially signed transaction\n"
+            "  \"psct\"          (string) The base64-encoded partially signed transaction\n"
             "\nExamples:\n"
-            + HelpExampleCli("combinepsbt", "[\"mybase64_1\", \"mybase64_2\", \"mybase64_3\"]")
+            + HelpExampleCli("combinepsct", "[\"mybase64_1\", \"mybase64_2\", \"mybase64_3\"]")
         );
 
     RPCTypeCheck(request.params, {UniValue::VARR}, true);
 
     // Unserialize the transactions
-    std::vector<PartiallySignedTransaction> psbtxs;
+    std::vector<PartiallySignedTransaction> psctxs;
     UniValue txs = request.params[0].get_array();
     for (unsigned int i = 0; i < txs.size(); ++i) {
-        PartiallySignedTransaction psbtx;
+        PartiallySignedTransaction psctx;
         std::string error;
-        if (!DecodePSBT(psbtx, txs[i].get_str(), error)) {
+        if (!DecodePSCT(psctx, txs[i].get_str(), error)) {
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
         }
-        psbtxs.push_back(psbtx);
+        psctxs.push_back(psctx);
     }
 
-    PartiallySignedTransaction merged_psbt(psbtxs[0]); // Copy the first one
+    PartiallySignedTransaction merged_psct(psctxs[0]); // Copy the first one
 
     // Merge
-    for (auto it = std::next(psbtxs.begin()); it != psbtxs.end(); ++it) {
-        if (*it != merged_psbt) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "PSBTs do not refer to the same transactions.");
+    for (auto it = std::next(psctxs.begin()); it != psctxs.end(); ++it) {
+        if (*it != merged_psct) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "PSCTs do not refer to the same transactions.");
         }
-        merged_psbt.Merge(*it);
+        merged_psct.Merge(*it);
     }
-    if (!merged_psbt.IsSane()) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Merged PSBT is inconsistent");
+    if (!merged_psct.IsSane()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Merged PSCT is inconsistent");
     }
 
     UniValue result(UniValue::VOBJ);
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-    ssTx << merged_psbt;
+    ssTx << merged_psct;
     return EncodeBase64((unsigned char*)ssTx.data(), ssTx.size());
 }
 
-UniValue finalizepsbt(const JSONRPCRequest& request)
+UniValue finalizepsct(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
-            "finalizepsbt \"psbt\" ( extract )\n"
-            "Finalize the inputs of a PSBT. If the transaction is fully signed, it will produce a\n"
-            "network serialized transaction which can be broadcast with sendrawtransaction. Otherwise a PSBT will be\n"
+            "finalizepsct \"psct\" ( extract )\n"
+            "Finalize the inputs of a PSCT. If the transaction is fully signed, it will produce a\n"
+            "network serialized transaction which can be broadcast with sendrawtransaction. Otherwise a PSCT will be\n"
             "created which has the final_scriptSig and final_scriptWitness fields filled for inputs that are complete.\n"
             "Implements the Finalizer and Extractor roles.\n"
             "\nArguments:\n"
-            "1. \"psbt\"                 (string) A base64 string of a PSBT\n"
+            "1. \"psct\"                 (string) A base64 string of a PSCT\n"
             "2. \"extract\"              (boolean, optional, default=true) If true and the transaction is complete, \n"
-            "                             extract and return the complete transaction in normal network serialization instead of the PSBT.\n"
+            "                             extract and return the complete transaction in normal network serialization instead of the PSCT.\n"
 
             "\nResult:\n"
             "{\n"
-            "  \"psbt\" : \"value\",          (string) The base64-encoded partially signed transaction if not extracted\n"
+            "  \"psct\" : \"value\",          (string) The base64-encoded partially signed transaction if not extracted\n"
             "  \"hex\" : \"value\",           (string) The hex-encoded network transaction if extracted\n"
             "  \"complete\" : true|false,   (boolean) If the transaction has a complete set of signatures\n"
             "  ]\n"
             "}\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("finalizepsbt", "\"psbt\"")
+            + HelpExampleCli("finalizepsct", "\"psct\"")
         );
 
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VBOOL}, true);
 
     // Unserialize the transactions
-    PartiallySignedTransaction psbtx;
+    PartiallySignedTransaction psctx;
     std::string error;
-    if (!DecodePSBT(psbtx, request.params[0].get_str(), error)) {
+    if (!DecodePSCT(psctx, request.params[0].get_str(), error)) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
     }
 
     // Get all of the previous transactions
     bool complete = true;
-    for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
-        PSBTInput& input = psbtx.inputs.at(i);
+    for (unsigned int i = 0; i < psctx.tx->vin.size(); ++i) {
+        PSCTInput& input = psctx.inputs.at(i);
 
         SignatureData sigdata;
-        complete &= SignPSBTInput(DUMMY_SIGNING_PROVIDER, *psbtx.tx, input, sigdata, i, 1);
+        complete &= SignPSCTInput(DUMMY_SIGNING_PROVIDER, *psctx.tx, input, sigdata, i, 1);
     }
 
     UniValue result(UniValue::VOBJ);
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     bool extract = request.params[1].isNull() || (!request.params[1].isNull() && request.params[1].get_bool());
     if (complete && extract) {
-        CMutableTransaction mtx(*psbtx.tx);
+        CMutableTransaction mtx(*psctx.tx);
         for (unsigned int i = 0; i < mtx.vin.size(); ++i) {
-            mtx.vin[i].scriptSig = psbtx.inputs[i].final_script_sig;
-            mtx.vin[i].scriptWitness = psbtx.inputs[i].final_script_witness;
+            mtx.vin[i].scriptSig = psctx.inputs[i].final_script_sig;
+            mtx.vin[i].scriptWitness = psctx.inputs[i].final_script_witness;
         }
         ssTx << mtx;
         result.push_back(Pair("hex", HexStr(ssTx.begin(), ssTx.end())));
     } else {
-        ssTx << psbtx;
-        result.push_back(Pair("psbt", EncodeBase64((unsigned char*)ssTx.data(), ssTx.size())));
+        ssTx << psctx;
+        result.push_back(Pair("psct", EncodeBase64((unsigned char*)ssTx.data(), ssTx.size())));
     }
     result.push_back(Pair("complete", complete));
 
     return result;
 }
 
-UniValue createpsbt(const JSONRPCRequest& request)
+UniValue createpsct(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 4)
         throw std::runtime_error(
-                            "createpsbt [{\"txid\":\"id\",\"vout\":n},...] [{\"address\":amount},{\"data\":\"hex\"},...] ( locktime ) ( replaceable )\n"
+                            "createpsct [{\"txid\":\"id\",\"vout\":n},...] [{\"address\":amount},{\"data\":\"hex\"},...] ( locktime ) ( replaceable )\n"
                             "\nCreates a transaction in the Partially Signed Transaction format.\n"
                             "Implements the Creator role.\n"
                             "\nArguments:\n"
@@ -1706,9 +1706,9 @@ UniValue createpsbt(const JSONRPCRequest& request)
                             "4. replaceable               (boolean, optional, default=false) Marks this transaction as BIP125 replaceable.\n"
                             "                             Allows this transaction to be replaced by a transaction with higher fees. If provided, it is an error if explicit sequence numbers are incompatible.\n"
                             "\nResult:\n"
-                            "  \"psbt\"        (string)  The resulting raw transaction (base64-encoded string)\n"
+                            "  \"psct\"        (string)  The resulting raw transaction (base64-encoded string)\n"
                             "\nExamples:\n"
-                            + HelpExampleCli("createpsbt", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"data\\\":\\\"00010203\\\"}]\"")
+                            + HelpExampleCli("createpsct", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"data\\\":\\\"00010203\\\"}]\"")
                             );
 
 
@@ -1722,30 +1722,30 @@ UniValue createpsbt(const JSONRPCRequest& request)
 
     CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], request.params[3]);
 
-    // Make a blank psbt
-    PartiallySignedTransaction psbtx;
-    psbtx.tx = rawTx;
+    // Make a blank psct
+    PartiallySignedTransaction psctx;
+    psctx.tx = rawTx;
     for (unsigned int i = 0; i < rawTx.vin.size(); ++i) {
-        psbtx.inputs.push_back(PSBTInput());
+        psctx.inputs.push_back(PSCTInput());
     }
     for (unsigned int i = 0; i < rawTx.vout.size(); ++i) {
-        psbtx.outputs.push_back(PSBTOutput());
+        psctx.outputs.push_back(PSCTOutput());
     }
 
-    // Serialize the PSBT
+    // Serialize the PSCT
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-    ssTx << psbtx;
+    ssTx << psctx;
 
     return EncodeBase64((unsigned char*)ssTx.data(), ssTx.size());
 }
 
-UniValue converttopsbt(const JSONRPCRequest& request)
+UniValue converttopsct(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw std::runtime_error(
-                            "converttopsbt \"hexstring\" ( permitsigdata iswitness )\n"
-                            "\nConverts a network serialized transaction to a PSBT. This should be used only with createrawtransaction and fundrawtransaction\n"
-                            "createpsbt and walletcreatefundedpsbt should be used for new applications.\n"
+                            "converttopsct \"hexstring\" ( permitsigdata iswitness )\n"
+                            "\nConverts a network serialized transaction to a PSCT. This should be used only with createrawtransaction and fundrawtransaction\n"
+                            "createpsct and walletcreatefundedpsct should be used for new applications.\n"
                             "\nArguments:\n"
                             "1. \"hexstring\"              (string, required) The hex string of a raw transaction\n"
                             "2. permitsigdata           (boolean, optional, default=false) If true, any signatures in the input will be discarded and conversion.\n"
@@ -1755,12 +1755,12 @@ UniValue converttopsbt(const JSONRPCRequest& request)
                             "                              will be tried. If false, only non-witness deserialization wil be tried. Only has an effect if\n"
                             "                              permitsigdata is true.\n"
                             "\nResult:\n"
-                            "  \"psbt\"        (string)  The resulting raw transaction (base64-encoded string)\n"
+                            "  \"psct\"        (string)  The resulting raw transaction (base64-encoded string)\n"
                             "\nExamples:\n"
                             "\nCreate a transaction\n"
                             + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"data\\\":\\\"00010203\\\"}]\"") +
-                            "\nConvert the transaction to a PSBT\n"
-                            + HelpExampleCli("converttopsbt", "\"rawtransaction\"")
+                            "\nConvert the transaction to a PSCT\n"
+                            + HelpExampleCli("converttopsct", "\"rawtransaction\"")
                             );
 
 
@@ -1786,19 +1786,19 @@ UniValue converttopsbt(const JSONRPCRequest& request)
         input.scriptWitness.SetNull();
     }
 
-    // Make a blank psbt
-    PartiallySignedTransaction psbtx;
-    psbtx.tx = tx;
+    // Make a blank psct
+    PartiallySignedTransaction psctx;
+    psctx.tx = tx;
     for (unsigned int i = 0; i < tx.vin.size(); ++i) {
-        psbtx.inputs.push_back(PSBTInput());
+        psctx.inputs.push_back(PSCTInput());
     }
     for (unsigned int i = 0; i < tx.vout.size(); ++i) {
-        psbtx.outputs.push_back(PSBTOutput());
+        psctx.outputs.push_back(PSCTOutput());
     }
 
-    // Serialize the PSBT
+    // Serialize the PSCT
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-    ssTx << psbtx;
+    ssTx << psctx;
 
     return EncodeBase64((unsigned char*)ssTx.data(), ssTx.size());
 }
@@ -1815,11 +1815,11 @@ static const CRPCCommand commands[] =
     { "rawtransactions",    "signrawtransaction",           &signrawtransaction,        {"hexstring","prevtxs","privkeys","sighashtype"} }, /* uses wallet if enabled */
     { "rawtransactions",    "signrawtransactionwithkey",    &signrawtransactionwithkey, {"hexstring","privkeys","prevtxs","sighashtype"} },
     { "rawtransactions",    "testmempoolaccept",            &testmempoolaccept,         {"rawtxs","allowhighfees"} },
-    { "rawtransactions",    "decodepsbt",                   &decodepsbt,                {"psbt"} },
-    { "rawtransactions",    "combinepsbt",                  &combinepsbt,               {"txs"} },
-    { "rawtransactions",    "finalizepsbt",                 &finalizepsbt,              {"psbt", "extract"} },
-    { "rawtransactions",    "createpsbt",                   &createpsbt,                {"inputs","outputs","locktime","replaceable"} },
-    { "rawtransactions",    "converttopsbt",                &converttopsbt,             {"hexstring","permitsigdata","iswitness"} },
+    { "rawtransactions",    "decodepsct",                   &decodepsct,                {"psct"} },
+    { "rawtransactions",    "combinepsct",                  &combinepsct,               {"txs"} },
+    { "rawtransactions",    "finalizepsct",                 &finalizepsct,              {"psct", "extract"} },
+    { "rawtransactions",    "createpsct",                   &createpsct,                {"inputs","outputs","locktime","replaceable"} },
+    { "rawtransactions",    "converttopsct",                &converttopsct,             {"hexstring","permitsigdata","iswitness"} },
 
     { "blockchain",         "gettxoutproof",                &gettxoutproof,             {"txids", "blockhash"} },
     { "blockchain",         "verifytxoutproof",             &verifytxoutproof,          {"proof"} },
