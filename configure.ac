@@ -844,7 +844,7 @@ fi
 BITCOIN_QT_INIT
 
 dnl sets $chaincoin_enable_qt, $chaincoin_enable_qt_test, $chaincoin_enable_qt_dbus
-BITCOIN_QT_CONFIGURE([$use_pkgconfig], [qt5])
+BITCOIN_QT_CONFIGURE([$use_pkgconfig])
 
 if test x$build_chaincoin_utils$build_chaincoind$chaincoin_enable_qt$use_tests$use_bench = xnonononono; then
     use_boost=no
@@ -1429,7 +1429,6 @@ echo "Options used to compile and link:"
 echo "  with wallet   = $enable_wallet"
 echo "  with gui / qt = $chaincoin_enable_qt"
 if test x$chaincoin_enable_qt != xno; then
-    echo "    qt version  = $chaincoin_qt_got_major_vers"
     echo "    with qr     = $use_qr"
 fi
 echo "  with zmq      = $use_zmq"

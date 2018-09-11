@@ -64,9 +64,7 @@ public:
 
             interfaces::Node::NodesStats nodes_stats;
             node.getNodesStats(nodes_stats);
-#if QT_VERSION >= 0x040700
             cachedNodeStats.reserve(nodes_stats.size());
-#endif
             for (auto& node_stats : nodes_stats)
             {
                 CNodeCombinedStats stats;
