@@ -3076,7 +3076,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     } else {
         bool found = false;
         const std::vector<std::string> &allMessages = getAllNetMessageTypes();
-        for (const std::string msg : allMessages) {
+        for (const auto& msg : allMessages) {
             if(msg == strCommand) {
                 found = true;
                 break;

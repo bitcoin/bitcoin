@@ -810,7 +810,7 @@ void CPrivateSendServer::RelayFinalTransaction(const CTransaction& txFinal, CCon
             __func__, nSessionID, nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom));
 
     // final mixing tx with empty signatures should be relayed to mixing participants only
-    for (const auto entry : vecEntries) {
+    for (const auto& entry : vecEntries) {
         bool fOk = connman->ForNode(entry.addr, [&txFinal, &connman, this](CNode* pnode) {
             CNetMsgMaker msgMaker(pnode->GetSendVersion());
             connman->PushMessage(pnode, msgMaker.Make(NetMsgType::DSFINALTX, nSessionID, txFinal));
@@ -835,7 +835,7 @@ void CPrivateSendServer::RelayStatus(PoolStatusUpdate nStatusUpdate, CConnman* c
 {
     unsigned int nDisconnected{};
     // status updates should be relayed to mixing participants only
-    for (const auto entry : vecEntries) {
+    for (const auto& entry : vecEntries) {
         // make sure everyone is still connected
         bool fOk = connman->ForNode(entry.addr, [&nStatusUpdate, &nMessageID, &connman, this](CNode* pnode) {
             PushStatus(pnode, nStatusUpdate, nMessageID, connman);
