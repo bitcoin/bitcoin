@@ -29,6 +29,7 @@
 
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
+#include <noui.h>
 #include <rpc/server.h>
 #include <stacktraces.h>
 #include <ui_interface.h>
@@ -70,9 +71,9 @@ Q_DECLARE_METATYPE(bool*)
 Q_DECLARE_METATYPE(CAmount)
 Q_DECLARE_METATYPE(uint256)
 
-static void InitMessage(const std::string &message)
+static void InitMessage(const std::string& message)
 {
-    LogPrintf("init message: %s\n", message);
+    noui_InitMessage(message);
 }
 
 /** Translate string to current locale using Qt. */
