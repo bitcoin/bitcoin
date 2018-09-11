@@ -527,7 +527,6 @@ public:
     bool IsTrusted() const;
 
     int64_t GetTxTime() const;
-    int GetRequestCount() const;
 
     // RelayWalletTransaction may only be called if fBroadcastTransactions!
     bool RelayWalletTransaction(CConnman* connman);
@@ -891,15 +890,14 @@ public:
     typedef std::multimap<int64_t, TxPair > TxItems;
     TxItems wtxOrdered;
 
-    int64_t nOrderPosNext;
-    uint64_t nAccountingEntryNumber;
-    std::map<uint256, int> mapRequestCount;
+    int64_t nOrderPosNext = 0;
+    uint64_t nAccountingEntryNumber = 0;
 
     std::map<CTxDestination, CAddressBookData> mapAddressBook;
 
     std::set<COutPoint> setLockedCoins;
 
-    int64_t nKeysLeftSinceAutoBackup;
+    int64_t nKeysLeftSinceAutoBackup = 0;
 
     const CWalletTx* GetWalletTx(const uint256& hash) const;
 
@@ -1171,16 +1169,6 @@ public:
     bool DelAddressBook(const CTxDestination& address);
 
     const std::string& GetLabelName(const CScript& scriptPubKey) const;
-
-    void Inventory(const uint256 &hash) override
-    {
-        {
-            LOCK(cs_wallet);
-            std::map<uint256, int>::iterator mi = mapRequestCount.find(hash);
-            if (mi != mapRequestCount.end())
-                (*mi).second++;
-        }
-    }
 
     void GetScriptForMining(std::shared_ptr<CReserveScript> &script);
 
