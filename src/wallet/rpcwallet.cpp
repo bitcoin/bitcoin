@@ -4525,8 +4525,8 @@ bool FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& psbtx, const C
             complete &= SignPSBTInput(PublicOnlySigningProvider(pwallet), *psbtx.tx, input, sigdata, i, sighash_type);
         }
 
-        if (it != pwallet->mapWallet.end()) {
-            // Drop the unnecessary UTXO if we added both from the wallet.
+        // If both UTXO types are present, drop the unnecessary one.
+        if (input.non_witness_utxo && !input.witness_utxo.IsNull()) {
             if (sigdata.witness) {
                 input.non_witness_utxo = nullptr;
             } else {
