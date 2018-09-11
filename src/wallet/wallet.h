@@ -1198,6 +1198,6 @@ public:
 // Use DummySignatureCreator, which inserts 71 byte signatures everywhere.
 // NOTE: this requires that all inputs must be in mapWallet (eg the tx should
 // be IsAllFromMe).
-int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, bool use_max_sig = false);
-int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, const std::vector<CTxOut>& txouts, bool use_max_sig = false);
+template <typename T>
+int64_t CalculateMaximumSignedTxSize(const T& tx, const CWallet* wallet, bool use_max_sig = false);
 #endif // BITCOIN_WALLET_WALLET_H

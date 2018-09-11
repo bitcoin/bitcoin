@@ -1480,7 +1480,8 @@ bool CWallet::DummySignTx(CMutableTransaction &txNew, const std::vector<CTxOut> 
     return true;
 }
 
-int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, bool use_max_sig)
+template <typename T>
+int64_t CalculateMaximumSignedTxSize(const T& tx, const CWallet* wallet, bool use_max_sig)
 {
     std::vector<CTxOut> txouts;
     // Look up the inputs.  We should have already checked that this transaction
@@ -1494,12 +1495,8 @@ int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wall
         assert(input.prevout.n < mi->second.tx->vout.size());
         txouts.emplace_back(mi->second.tx->vout[input.prevout.n]);
     }
-    return CalculateMaximumSignedTxSize(tx, wallet, txouts, use_max_sig);
-}
 
-// txouts needs to be in the order of tx.vin
-int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, const std::vector<CTxOut>& txouts, bool use_max_sig)
-{
+    // txouts needs to be in the order of tx.vin
     CMutableTransaction txNew(tx);
     if (!wallet->DummySignTx(txNew, txouts, use_max_sig)) {
         // This should never happen, because IsAllFromMe(ISMINE_SPENDABLE)
@@ -1508,6 +1505,8 @@ int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wall
     }
     return GetVirtualTransactionSize(txNew);
 }
+template int64_t CalculateMaximumSignedTxSize(const CTransaction&, const CWallet*, bool);
+template int64_t CalculateMaximumSignedTxSize(const CMutableTransaction&, const CWallet*, bool);
 
 int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* wallet, bool use_max_sig)
 {

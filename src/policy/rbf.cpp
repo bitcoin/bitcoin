@@ -4,15 +4,18 @@
 
 #include <policy/rbf.h>
 
-bool SignalsOptInRBF(const CTransaction &tx)
+template <typename T>
+bool SignalsOptInRBF(const T& tx)
 {
-    for (const CTxIn &txin : tx.vin) {
+    for (const CTxIn& txin : tx.vin) {
         if (txin.nSequence < std::numeric_limits<unsigned int>::max()-1) {
             return true;
         }
     }
     return false;
 }
+template bool SignalsOptInRBF(const CTransaction&);
+template bool SignalsOptInRBF(const CMutableTransaction&);
 
 RBFTransactionState IsRBFOptIn(const CTransaction &tx, CTxMemPool &pool)
 {

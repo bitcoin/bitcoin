@@ -33,7 +33,8 @@ int ParseSighashString(const UniValue& sighash);
 // core_write.cpp
 UniValue ValueFromAmount(const CAmount& amount);
 std::string FormatScript(const CScript& script);
-std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags = 0);
+template <typename T>
+std::string EncodeHexTx(const T& tx, const int serializeFlags = 0);
 std::string SighashToStr(unsigned char sighash_type);
 void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex);
 void ScriptToUniv(const CScript& script, UniValue& out, bool include_address);

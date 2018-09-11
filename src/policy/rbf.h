@@ -15,9 +15,12 @@ enum class RBFTransactionState {
     FINAL
 };
 
-// Check whether the sequence numbers on this transaction are signaling
-// opt-in to replace-by-fee, according to BIP 125
-bool SignalsOptInRBF(const CTransaction &tx);
+/**
+ * Check whether the sequence numbers on this transaction are signaling
+ * opt-in to replace-by-fee, according to BIP 125
+ */
+template <typename T>
+bool SignalsOptInRBF(const T& tx);
 
 // Determine whether an in-mempool transaction is signaling opt-in to RBF
 // according to BIP 125
