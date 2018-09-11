@@ -17,7 +17,7 @@ pkg install autoconf automake boost-libs git gmake libevent libtool openssl pkgc
 For the wallet (optional):
 ```
 ./contrib/install_db4.sh `pwd`
-export BDB_PREFIX='$PWD/db4'
+export BDB_PREFIX="$PWD/db4"
 ```
 
 See [dependencies.md](dependencies.md) for a complete overview.
