@@ -27,6 +27,12 @@
     "description": "Creates a blank transaction when nothing is piped into bitcoin-tx (output in json)"
   },
   { "exec": "./bitcoin-tx",
+    "args": ["-create", "nversion=1foo"],
+    "return_code": 1,
+    "error_txt": "error: Invalid TX version requested",
+    "description": "Tests the check for invalid nversion value"
+  },
+  { "exec": "./bitcoin-tx",
     "args": ["-", "delin=1"],
     "input": "tx394b54bb.hex",
     "output_cmp": "tt-delin1-out.hex",
@@ -44,6 +50,13 @@
     "return_code": 1,
     "error_txt": "error: Invalid TX input index '31'",
     "description": "Attempts to delete an input with a bad index from a transaction. Expected to fail."
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-", "delin=1foo"],
+    "input": "tx394b54bb.hex",
+    "return_code": 1,
+    "error_txt": "error: Invalid TX input index",
+    "description": "Tests the check for an invalid input index with delin"
   },
   { "exec": "./bitcoin-tx",
     "args": ["-", "delout=1"],
@@ -65,6 +78,13 @@
     "description": "Attempts to delete an output with a bad index from a transaction. Expected to fail."
   },
   { "exec": "./bitcoin-tx",
+    "args": ["-", "delout=1foo"],
+    "input": "tx394b54bb.hex",
+    "return_code": 1,
+    "error_txt": "error: Invalid TX output index",
+    "description": "Tests the check for an invalid output index with delout"
+  },
+  { "exec": "./bitcoin-tx",
     "args": ["-", "locktime=317000"],
     "input": "tx394b54bb.hex",
     "output_cmp": "tt-locktime317000-out.hex",
@@ -75,6 +95,29 @@
     "input": "tx394b54bb.hex",
     "output_cmp": "tt-locktime317000-out.json",
     "description": "Adds an nlocktime to a transaction (output in json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "locktime=317000foo"],
+    "return_code": 1,
+    "error_txt": "error: Invalid TX locktime requested",
+    "description": "Tests the check for invalid locktime value"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
+     "replaceable=0foo"],
+    "return_code": 1,
+    "error_txt": "error: Invalid TX input index",
+    "description": "Tests the check for an invalid input index with replaceable"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0x"],
+    "return_code": 1,
+    "error_txt": "error: invalid TX input vout",
+    "description": "Tests the check for an invalid vout value when adding an input"
   },
   { "exec": "./bitcoin-tx",
     "args":
@@ -224,6 +267,18 @@
       "outaddr=0.001:193P6LtvS4nCnkDvM9uXn1gsSRqh4aDAz7"],
     "output_cmp": "txcreatesignv2.hex",
     "description": "Creates a new transaction with a single input and a single output, and then signs the transaction"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+      "in=4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485:0",
+      "set=privatekeys:[\"5HpHagT65TZzG1PH3CSu63k8DbpvD8s5ip4nEB3kEsreAnchuDf\"]",
+      "set=prevtxs:[{\"txid\":\"4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485\",\"vout\":\"0foo\",\"scriptPubKey\":\"76a91491b24bf9f5288532960ac687abb035127b1d28a588ac\"}]",
+      "sign=ALL",
+      "outaddr=0.001:193P6LtvS4nCnkDvM9uXn1gsSRqh4aDAz7"],
+    "return_code": 1,
+    "error_txt": "error: prevtxs internal object typecheck fail",
+    "description": "Tests the check for invalid vout index in prevtxs for sign"
   },
   { "exec": "./bitcoin-tx",
     "args":
