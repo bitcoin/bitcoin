@@ -1175,6 +1175,17 @@ void CPrivateSendClientManager::ProcessPendingDsaRequest(CConnman& connman)
 
 bool CPrivateSendClientSession::SubmitDenominate(CConnman& connman)
 {
+    // This is just a local helper
+    auto GetStartRound = [](bool fMixLowest, bool fScanFromTheMiddle) -> int
+    {
+        if (fScanFromTheMiddle) {
+            return privateSendClient.nPrivateSendRounds / 2;
+        } else if (!fMixLowest) {
+            return privateSendClient.nPrivateSendRounds - 1;
+        }
+        return 0;
+    };
+
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
     std::string strError;
@@ -1182,44 +1193,26 @@ bool CPrivateSendClientSession::SubmitDenominate(CConnman& connman)
     std::vector<CTxOut> vecTxOutRet;
     // lean towards "highest" branch but still mix via "lowest" one someties
     bool fMixLowest = privateSendClient.nLiquidityProvider || (GetRandInt(4) == 0);
+    // Try to use only inputs with the same number of rounds, from low to high, or vice versa
+    int nLoopStep = fMixLowest ? 1 : -1;
     // lean towards edges but still mix starting from the middle someties
     // Note: liqudity providers always start from 0
     bool fScanFromTheMiddle = (privateSendClient.nLiquidityProvider == 0) && (GetRandInt(4) == 0);
 
-    int nRoundStart{0};
-    if (fScanFromTheMiddle) {
-        nRoundStart = privateSendClient.nPrivateSendRounds / 2;
-    } else if (!fMixLowest) {
-        nRoundStart = privateSendClient.nPrivateSendRounds - 1;
-    }
+    int nRoundStart = GetStartRound(fMixLowest, fScanFromTheMiddle);
+    int nRoundEdge = GetStartRound(fMixLowest, false);
 
     // Submit transaction to the pool if we get here
-    if (fMixLowest) {
-        // Try to use only inputs with the same number of rounds, from low to high
-        while (true) {
-            for(int i = nRoundStart; i < privateSendClient.nPrivateSendRounds; i++) {
-                if(PrepareDenominate(i, i, strError, vecTxDSInRet, vecTxOutRet)) {
-                    LogPrintf("CPrivateSendClientSession::SubmitDenominate -- Running PrivateSend denominate for %d rounds, success\n", i);
-                    return SendDenominate(vecTxDSInRet, vecTxOutRet, connman);
-                }
-                LogPrint("privatesend", "CPrivateSendClientSession::SubmitDenominate -- Running PrivateSend denominate for %d rounds, error: %s\n", i, strError);
+    while (true) {
+        for (int i = nRoundStart; i >= 0 && i < privateSendClient.nPrivateSendRounds; i += nLoopStep) {
+            if (PrepareDenominate(i, i, strError, vecTxDSInRet, vecTxOutRet)) {
+                LogPrintf("CPrivateSendClientSession::SubmitDenominate -- Running PrivateSend denominate for %d rounds, success\n", i);
+                return SendDenominate(vecTxDSInRet, vecTxOutRet, connman);
             }
-            if (nRoundStart == 0) break;
-            nRoundStart = 0;
+            LogPrint("privatesend", "CPrivateSendClientSession::SubmitDenominate -- Running PrivateSend denominate for %d rounds, error: %s\n", i, strError);
         }
-    } else {
-        // Try to use only inputs with the same number of rounds, from high to low
-        while (true) {
-            for(int i = nRoundStart; i > 0; i--) {
-                if(PrepareDenominate(i, i, strError, vecTxDSInRet, vecTxOutRet)) {
-                    LogPrintf("CPrivateSendClientSession::SubmitDenominate -- Running PrivateSend denominate for %d rounds, success\n", i);
-                    return SendDenominate(vecTxDSInRet, vecTxOutRet, connman);
-                }
-                LogPrint("privatesend", "CPrivateSendClientSession::SubmitDenominate -- Running PrivateSend denominate for %d rounds, error: %s\n", i, strError);
-            }
-            if (nRoundStart == privateSendClient.nPrivateSendRounds) break;
-            nRoundStart = privateSendClient.nPrivateSendRounds;
-        }
+        if (nRoundStart == nRoundEdge) break;
+        nRoundStart = nRoundEdge;
     }
 
     // We failed? That's strange but let's just make final attempt and try to mix everything
