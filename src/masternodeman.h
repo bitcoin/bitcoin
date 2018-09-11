@@ -160,7 +160,7 @@ public:
     /// Masternode nProtocolVersion should match or be above the one specified in param here.
     int CountEnabled(int nProtocolVersion = -1);
 
-    /// Count Masternodes by network type - NET_IPV4, NET_IPV6, NET_TOR
+    /// Count Masternodes by network type - NET_IPV4, NET_IPV6, NET_ONION
     int CountByIP(int nNetworkType);
 
     void DsegUpdate(CNode* pnode, CConnman* connman);

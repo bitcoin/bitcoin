@@ -239,7 +239,7 @@ class NodeImpl : public Node
         result.enabled = mnodeman.CountEnabled(MIN_PRIVATESEND_PEER_PROTO_VERSION);
         result.countIPv4 = mnodeman.CountByIP(NET_IPV4);
         result.countIPv6 = mnodeman.CountByIP(NET_IPV6);
-        result.countTOR = mnodeman.CountByIP(NET_TOR);
+        result.countTOR = mnodeman.CountByIP(NET_ONION);
         return result;
     }
 

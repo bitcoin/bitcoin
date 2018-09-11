@@ -402,7 +402,7 @@ int CMasternodeMan::CountByIP(int nNetworkType)
 
     for (const auto& mnpair : mapMasternodes)
         if ((nNetworkType == NET_IPV4 && mnpair.second.addr.IsIPv4()) ||
-            (nNetworkType == NET_TOR  && mnpair.second.addr.IsTor())  ||
+            (nNetworkType == NET_ONION  && mnpair.second.addr.IsTor())  ||
             (nNetworkType == NET_IPV6 && mnpair.second.addr.IsIPv6())) {
                 nNodeCount++;
         }
