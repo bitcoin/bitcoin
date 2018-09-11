@@ -1,11 +1,7 @@
 #ifdef ENABLE_AVX2
 
 #include <stdint.h>
-#if defined(_MSC_VER)
 #include <immintrin.h>
-#elif defined(__GNUC__)
-#include <x86intrin.h>
-#endif
 
 #include <crypto/sha256.h>
 #include <crypto/common.h>
