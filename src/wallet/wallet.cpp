@@ -3045,7 +3045,7 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, CAmount nValueMin, CAmount 
             CTxIn txin = CTxIn(out.tx->GetHash(), out.i);
 
             int nRounds = GetCappedOutpointPrivateSendRounds(txin.prevout);
-            if(nRounds >= nPrivateSendRoundsMax) continue;
+            if(nRounds > nPrivateSendRoundsMax) continue;
             if(nRounds < nPrivateSendRoundsMin) continue;
 
             for (const auto& nBit : vecBits) {
@@ -3199,7 +3199,7 @@ bool CWallet::SelectCoinsDark(CAmount nValueMin, CAmount nValueMax, std::vector<
             CTxIn txin = CTxIn(out.tx->GetHash(),out.i);
 
             int nRounds = GetCappedOutpointPrivateSendRounds(txin.prevout);
-            if(nRounds >= nPrivateSendRoundsMax) continue;
+            if(nRounds > nPrivateSendRoundsMax) continue;
             if(nRounds < nPrivateSendRoundsMin) continue;
 
             nValueRet += out.tx->tx->vout[out.i].nValue;
