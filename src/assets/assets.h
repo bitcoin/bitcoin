@@ -132,12 +132,12 @@ public :
     std::set<CAssetCachePossibleMine> setPossiblyMineAdd;
     std::set<CAssetCachePossibleMine> setPossiblyMineRemove;
 
-    CAssetsCache()
+    CAssetsCache() : CAssets()
     {
         SetNull();
     }
 
-    CAssetsCache(const CAssetsCache& cache)
+    CAssetsCache(const CAssetsCache& cache) : CAssets(cache)
     {
         this->mapMyUnspentAssets = cache.mapMyUnspentAssets;
         this->mapAssetsAddressAmount = cache.mapAssetsAddressAmount;
