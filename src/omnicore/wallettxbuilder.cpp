@@ -203,7 +203,7 @@ int CreateFundedTransaction(
     }
 
     // add reference output, if there is one
-    if (!receiverAddress.empty()) {
+    if (!receiverAddress.empty() && receiverAddress != feeAddress) {
         CScript scriptPubKey = GetScriptForDestination(CBitcoinAddress(receiverAddress).Get());
         vecSend.push_back(std::make_pair(scriptPubKey, GetDustThreshold(scriptPubKey)));
     }
@@ -232,7 +232,7 @@ int CreateFundedTransaction(
         PrintToLog("%s: ERROR: sender %s has no coins\n", __func__, senderAddress);
         return MP_INPUTS_INVALID;
     }
-    
+
     // prepare sources for fees
     std::set<CTxDestination> feeSources;
     feeSources.insert(CBitcoinAddress(feeAddress).Get());
@@ -243,6 +243,11 @@ int CreateFundedTransaction(
     LockUnrelatedCoins(pwalletMain, feeSources, vLockedCoins);
 
     fSuccess = pwalletMain->CreateTransaction(vecRecipients, wtxNew, reserveKey, nFeeRequired, nChangePosRet, strFailReason, &coinControl, false);
+
+    if (fSuccess && nChangePosRet == -1 && receiverAddress == feeAddress) {
+        fSuccess = false;
+        strFailReason = "send to self without change";
+    }
 
     // to restore the original order of inputs, create a new transaction and add
     // inputs and outputs step by step
