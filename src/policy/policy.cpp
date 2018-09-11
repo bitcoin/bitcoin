@@ -25,7 +25,7 @@ CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
     if (txout.scriptPubKey.IsUnspendable())
         return 0;
 
-    size_t nSize = GetSerializeSize(txout, SER_DISK, 0)+148u;
+    size_t nSize = GetSerializeSize(txout)+148u;
     return dustRelayFeeIn.GetFee(nSize);
 }
 
@@ -68,7 +68,7 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
     // almost as much to process as they cost the sender in fees, because
     // computing signature hashes is O(ninputs*txsize). Limiting transactions
     // to MAX_STANDARD_TX_SIZE mitigates CPU exhaustion attacks.
-    unsigned int sz = GetSerializeSize(tx, SER_NETWORK, CTransaction::CURRENT_VERSION);
+    unsigned int sz = GetSerializeSize(tx, CTransaction::CURRENT_VERSION);
     if (sz >= MAX_STANDARD_TX_SIZE) {
         reason = "tx-size";
         return false;

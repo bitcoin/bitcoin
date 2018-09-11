@@ -2286,7 +2286,7 @@ int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wall
     if (!wallet->DummySignTx(txNew, txouts, use_max_sig)) {
         return -1;
     }
-    return ::GetSerializeSize(txNew, SER_NETWORK, PROTOCOL_VERSION);
+    return ::GetSerializeSize(txNew, PROTOCOL_VERSION);
 }
 
 int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* wallet, bool use_max_sig)
@@ -2298,7 +2298,7 @@ int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* wallet, 
         // implies that we can sign for every input.
         return -1;
     }
-    return ::GetSerializeSize(txn.vin[0], SER_NETWORK, PROTOCOL_VERSION);
+    return ::GetSerializeSize(txn.vin[0], PROTOCOL_VERSION);
 }
 
 void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,

@@ -142,7 +142,7 @@ CTransactionBuilder::CTransactionBuilder(std::shared_ptr<CWallet> pwalletIn, con
         nBytesBase = CalculateMaximumSignedTxSize(CTransaction(dummyTx), pwallet.get(), false);
     }
     // Calculate the output size
-    nBytesOutput = ::GetSerializeSize(CTxOut(0, dummyScript), SER_NETWORK, PROTOCOL_VERSION);
+    nBytesOutput = ::GetSerializeSize(CTxOut(0, dummyScript), PROTOCOL_VERSION);
     // Just to make sure..
     Clear();
 }

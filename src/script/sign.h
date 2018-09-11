@@ -138,7 +138,7 @@ struct SignatureData {
 template<typename Stream, typename... X>
 void SerializeToVector(Stream& s, const X&... args)
 {
-    WriteCompactSize(s, GetSerializeSizeMany(s, args...));
+    WriteCompactSize(s, GetSerializeSizeMany(s.GetVersion(), args...));
     SerializeMany(s, args...);
 }
 
