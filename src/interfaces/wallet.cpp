@@ -450,6 +450,10 @@ public:
         return AutoBackupWallet(pwallet, nullptr, strBackupWarning, strBackupError);
     }
 
+    std::unique_ptr<Handler> handleUnload(UnloadFn fn) override
+    {
+        return MakeHandler(m_wallet.NotifyUnload.connect(fn));
+    }
     std::unique_ptr<Handler> handleShowProgress(ShowProgressFn fn) override
     {
         return MakeHandler(m_wallet.ShowProgress.connect(fn));
