@@ -4525,6 +4525,13 @@ bool FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& psbtx, const C
             complete &= SignPSBTInput(PublicOnlySigningProvider(pwallet), *psbtx.tx, input, sigdata, i, sighash_type);
         }
 
+        if (sigdata.witness) {
+            // Convert the non-witness utxo to witness
+            if (input.witness_utxo.IsNull() && input.non_witness_utxo) {
+                input.witness_utxo = input.non_witness_utxo->vout[txin.prevout.n];
+            }
+        }
+
         // If both UTXO types are present, drop the unnecessary one.
         if (input.non_witness_utxo && !input.witness_utxo.IsNull()) {
             if (sigdata.witness) {
