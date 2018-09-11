@@ -1578,7 +1578,7 @@ void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const std::s
 
                 entry.push_back(Pair("asset_type", GetTxnOutputType(data.type)));
                 entry.push_back(Pair("asset_name", data.assetName));
-                entry.push_back(Pair("amount", ValueFromAmount(data.amount)));
+                entry.push_back(Pair("amount", ValueFromAmount(data.nAmount)));
                 entry.push_back(Pair("destination", EncodeDestination(data.destination)));
                 entry.push_back(Pair("vout", data.vout));
                 entry.push_back(Pair("category", "receive"));
@@ -1592,7 +1592,7 @@ void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const std::s
 
                 entry.push_back(Pair("asset_type", GetTxnOutputType(data.type)));
                 entry.push_back(Pair("asset_name", data.assetName));
-                entry.push_back(Pair("amount", ValueFromAmount(data.amount)));
+                entry.push_back(Pair("amount", ValueFromAmount(data.nAmount)));
                 entry.push_back(Pair("destination", EncodeDestination(data.destination)));
                 entry.push_back(Pair("vout", data.vout));
                 entry.push_back(Pair("category", "send"));
