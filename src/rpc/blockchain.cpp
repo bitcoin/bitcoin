@@ -1981,6 +1981,38 @@ static UniValue savemempool(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
+static UniValue clearmempool(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 0) {
+        throw std::runtime_error(
+            "clearmempool\n"
+            "\nRemoves all transactions from the mempool.\n"
+            "It will fail if a previous dump is still being loaded.\n"
+            "\nResult:\n"
+            "{                               (json object)\n"
+            "  \"transactions_removed\": n,    (numeric) The number of evicted transactions\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("clearmempool", "")
+            + HelpExampleRpc("clearmempool", "")
+        );
+    }
+
+    if (!g_is_mempool_loaded) {
+        throw JSONRPCError(RPC_MISC_ERROR, "The mempool was not loaded yet");
+    }
+
+    LOCK2(cs_main, mempool.cs);
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("transactions_removed", mempool.size());
+
+    mempool.clear();
+    mempool.check(pcoinsTip.get());
+
+    return result;
+}
+
 //! Search for a given set of pubkey scripts
 bool FindScriptPubKey(std::atomic<int>& scan_progress, const std::atomic<bool>& should_abort, int64_t& count, CCoinsViewCursor* cursor, const std::set<CScript>& needles, std::map<COutPoint, Coin>& out_results) {
     scan_progress = 0;
@@ -2215,6 +2247,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         "gettxoutsetinfo",        &gettxoutsetinfo,        {} },
     { "blockchain",         "pruneblockchain",        &pruneblockchain,        {"height"} },
     { "blockchain",         "savemempool",            &savemempool,            {} },
+    { "blockchain",         "clearmempool",           &clearmempool,           {} },
     { "blockchain",         "verifychain",            &verifychain,            {"checklevel","nblocks"} },
 
     { "blockchain",         "preciousblock",          &preciousblock,          {"blockhash"} },

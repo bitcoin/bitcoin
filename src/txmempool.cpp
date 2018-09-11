@@ -580,6 +580,7 @@ void CTxMemPool::_clear()
     mapLinks.clear();
     mapTx.clear();
     mapNextTx.clear();
+    mapDeltas.clear();
     totalTxSize = 0;
     cachedInnerUsage = 0;
     lastRollingFeeUpdate = GetTime();
@@ -713,6 +714,9 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
         const CTransaction& tx = it2->GetTx();
         assert(it2 != mapTx.end());
         assert(&tx == it->second);
+    }
+    for (const auto& entry : mapDeltas) {
+        assert(mapTx.count(entry.first) > 0);
     }
 
     assert(totalTxSize == checkTotal);

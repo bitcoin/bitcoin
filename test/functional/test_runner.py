@@ -120,6 +120,7 @@ BASE_SCRIPTS = [
     'p2p_invalid_tx.py',
     'rpc_createmultisig.py',
     'feature_versionbits_warning.py',
+    'mempool_clear.py',
     'rpc_preciousblock.py',
     'wallet_importprunedfunds.py',
     'rpc_zmq.py',
