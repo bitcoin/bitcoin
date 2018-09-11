@@ -12,6 +12,8 @@ class CRPCTable;
 
 class WalletInitInterface {
 public:
+    /** Is the wallet component enabled */
+    virtual bool HasWalletSupport() const = 0;
     /** Get wallet help string */
     virtual void AddWalletOptions() const = 0;
     /** Check wallet parameter interaction */
@@ -33,5 +35,7 @@ public:
 
     virtual ~WalletInitInterface() {}
 };
+
+extern const WalletInitInterface& g_wallet_init_interface;
 
 #endif // BITCOIN_WALLETINITINTERFACE_H
