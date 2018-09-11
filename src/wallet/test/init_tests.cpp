@@ -55,4 +55,24 @@ BOOST_AUTO_TEST_CASE(walletinit_verify_walletdir_is_not_relative)
     BOOST_CHECK(result == false);
 }
 
+BOOST_AUTO_TEST_CASE(walletinit_verify_walletdir_no_trailing)
+{
+    SetWalletDir(m_walletdir_path_cases["trailing"]);
+    bool result = g_wallet_init_interface.Verify();
+    BOOST_CHECK(result == true);
+    fs::path walletdir = gArgs.GetArg("-walletdir", "");
+    fs::path expected_path = fs::canonical(m_walletdir_path_cases["default"]);
+    BOOST_CHECK(walletdir == expected_path);
+}
+
+BOOST_AUTO_TEST_CASE(walletinit_verify_walletdir_no_trailing2)
+{
+    SetWalletDir(m_walletdir_path_cases["trailing2"]);
+    bool result = g_wallet_init_interface.Verify();
+    BOOST_CHECK(result == true);
+    fs::path walletdir = gArgs.GetArg("-walletdir", "");
+    fs::path expected_path = fs::canonical(m_walletdir_path_cases["default"]);
+    BOOST_CHECK(walletdir == expected_path);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
