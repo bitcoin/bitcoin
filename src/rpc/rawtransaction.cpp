@@ -7,6 +7,7 @@
 
 #include <chain.h>
 #include <coins.h>
+#include <compat/byteswap.h>
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <index/txindex.h>
@@ -340,80 +341,25 @@ static UniValue verifytxoutproof(const JSONRPCRequest& request)
     return res;
 }
 
-static UniValue createrawtransaction(const JSONRPCRequest& request)
+CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, const UniValue& rbf)
 {
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 4) {
-        throw std::runtime_error(
-            // clang-format off
-            "createrawtransaction [{\"txid\":\"id\",\"vout\":n},...] [{\"address\":amount},{\"data\":\"hex\"},...] ( locktime ) ( replaceable )\n"
-            "\nCreate a transaction spending the given inputs and creating new outputs.\n"
-            "Outputs can be addresses or data.\n"
-            "Returns hex-encoded raw transaction.\n"
-            "Note that the transaction's inputs are not signed, and\n"
-            "it is not stored in the wallet or transmitted to the network.\n"
-
-            "\nArguments:\n"
-            "1. \"inputs\"                (array, required) A json array of json objects\n"
-            "     [\n"
-            "       {\n"
-            "         \"txid\":\"id\",      (string, required) The transaction id\n"
-            "         \"vout\":n,         (numeric, required) The output number\n"
-            "         \"sequence\":n      (numeric, optional) The sequence number\n"
-            "       } \n"
-            "       ,...\n"
-            "     ]\n"
-            "2. \"outputs\"               (array, required) a json array with outputs (key-value pairs)\n"
-            "   [\n"
-            "    {\n"
-            "      \"address\": x.xxx,    (obj, optional) A key-value pair. The key (string) is the chaincoin address, the value (float or string) is the amount in " + CURRENCY_UNIT + "\n"
-            "    },\n"
-            "    {\n"
-            "      \"data\": \"hex\"        (obj, optional) A key-value pair. The key must be \"data\", the value is hex encoded data\n"
-            "    }\n"
-            "    ,...                     More key-value pairs of the above form. For compatibility reasons, a dictionary, which holds the key-value pairs directly, is also\n"
-            "                             accepted as second parameter.\n"
-            "   ]\n"
-            "3. locktime                  (numeric, optional, default=0) Raw locktime. Non-0 value also locktime-activates inputs\n"
-            "4. replaceable               (boolean, optional, default=false) Marks this transaction as BIP125 replaceable.\n"
-            "                             Allows this transaction to be replaced by a transaction with higher fees. If provided, it is an error if explicit sequence numbers are incompatible.\n"
-            "\nResult:\n"
-            "\"transaction\"            (string) hex string of the transaction\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"address\\\":0.01}]\"")
-            + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"data\\\":\\\"00010203\\\"}]\"")
-            + HelpExampleRpc("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\", \"[{\\\"address\\\":0.01}]\"")
-            + HelpExampleRpc("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\", \"[{\\\"data\\\":\\\"00010203\\\"}]\"")
-            // clang-format on
-        );
-    }
-
-    RPCTypeCheck(request.params, {
-        UniValue::VARR,
-        UniValueType(), // ARR or OBJ, checked later
-        UniValue::VNUM,
-        UniValue::VBOOL
-        }, true
-    );
-    if (request.params[0].isNull() || request.params[1].isNull())
+    if (inputs_in.isNull() || outputs_in.isNull())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, arguments 1 and 2 must be non-null");
 
-    UniValue inputs = request.params[0].get_array();
-    const bool outputs_is_obj = request.params[1].isObject();
-    UniValue outputs = outputs_is_obj ?
-                           request.params[1].get_obj() :
-                           request.params[1].get_array();
+    UniValue inputs = inputs_in.get_array();
+    const bool outputs_is_obj = outputs_in.isObject();
+    UniValue outputs = outputs_is_obj ? outputs_in.get_obj() : outputs_in.get_array();
 
     CMutableTransaction rawTx;
 
-    if (!request.params[2].isNull()) {
-        int64_t nLockTime = request.params[2].get_int64();
+    if (!locktime.isNull()) {
+        int64_t nLockTime = locktime.get_int64();
         if (nLockTime < 0 || nLockTime > std::numeric_limits<uint32_t>::max())
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, locktime out of range");
         rawTx.nLockTime = nLockTime;
     }
 
-    bool rbfOptIn = request.params[3].isTrue();
+    bool rbfOptIn = rbf.isTrue();
 
     for (unsigned int idx = 0; idx < inputs.size(); idx++) {
         const UniValue& input = inputs[idx];
@@ -493,9 +439,70 @@ static UniValue createrawtransaction(const JSONRPCRequest& request)
         }
     }
 
-    if (!request.params[3].isNull() && rbfOptIn != SignalsOptInRBF(rawTx)) {
+    if (!rbf.isNull() && rbfOptIn != SignalsOptInRBF(rawTx)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter combination: Sequence number(s) contradict replaceable option");
     }
+
+    return rawTx;
+}
+
+static UniValue createrawtransaction(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 4) {
+        throw std::runtime_error(
+            // clang-format off
+            "createrawtransaction [{\"txid\":\"id\",\"vout\":n},...] [{\"address\":amount},{\"data\":\"hex\"},...] ( locktime ) ( replaceable )\n"
+            "\nCreate a transaction spending the given inputs and creating new outputs.\n"
+            "Outputs can be addresses or data.\n"
+            "Returns hex-encoded raw transaction.\n"
+            "Note that the transaction's inputs are not signed, and\n"
+            "it is not stored in the wallet or transmitted to the network.\n"
+
+            "\nArguments:\n"
+            "1. \"inputs\"                (array, required) A json array of json objects\n"
+            "     [\n"
+            "       {\n"
+            "         \"txid\":\"id\",      (string, required) The transaction id\n"
+            "         \"vout\":n,         (numeric, required) The output number\n"
+            "         \"sequence\":n      (numeric, optional) The sequence number\n"
+            "       } \n"
+            "       ,...\n"
+            "     ]\n"
+            "2. \"outputs\"               (array, required) a json array with outputs (key-value pairs)\n"
+            "   [\n"
+            "    {\n"
+            "      \"address\": x.xxx,    (obj, optional) A key-value pair. The key (string) is the bitcoin address, the value (float or string) is the amount in " + CURRENCY_UNIT + "\n"
+            "    },\n"
+            "    {\n"
+            "      \"data\": \"hex\"        (obj, optional) A key-value pair. The key must be \"data\", the value is hex encoded data\n"
+            "    }\n"
+            "    ,...                     More key-value pairs of the above form. For compatibility reasons, a dictionary, which holds the key-value pairs directly, is also\n"
+            "                             accepted as second parameter.\n"
+            "   ]\n"
+            "3. locktime                  (numeric, optional, default=0) Raw locktime. Non-0 value also locktime-activates inputs\n"
+            "4. replaceable               (boolean, optional, default=false) Marks this transaction as BIP125 replaceable.\n"
+            "                             Allows this transaction to be replaced by a transaction with higher fees. If provided, it is an error if explicit sequence numbers are incompatible.\n"
+            "\nResult:\n"
+            "\"transaction\"              (string) hex string of the transaction\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"address\\\":0.01}]\"")
+            + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"data\\\":\\\"00010203\\\"}]\"")
+            + HelpExampleRpc("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\", \"[{\\\"address\\\":0.01}]\"")
+            + HelpExampleRpc("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\", \"[{\\\"data\\\":\\\"00010203\\\"}]\"")
+            // clang-format on
+        );
+    }
+
+    RPCTypeCheck(request.params, {
+        UniValue::VARR,
+        UniValueType(), // ARR or OBJ, checked later
+        UniValue::VNUM,
+        UniValue::VBOOL
+        }, true
+    );
+
+    CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], request.params[3]);
 
     return EncodeHexTx(rawTx);
 }
@@ -840,23 +847,7 @@ UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival
         }
     }
 
-    int nHashType = SIGHASH_ALL;
-    if (!hashType.isNull()) {
-        static std::map<std::string, int> mapSigHashValues = {
-            {std::string("ALL"), int(SIGHASH_ALL)},
-            {std::string("ALL|ANYONECANPAY"), int(SIGHASH_ALL|SIGHASH_ANYONECANPAY)},
-            {std::string("NONE"), int(SIGHASH_NONE)},
-            {std::string("NONE|ANYONECANPAY"), int(SIGHASH_NONE|SIGHASH_ANYONECANPAY)},
-            {std::string("SINGLE"), int(SIGHASH_SINGLE)},
-            {std::string("SINGLE|ANYONECANPAY"), int(SIGHASH_SINGLE|SIGHASH_ANYONECANPAY)},
-        };
-        std::string strHashType = hashType.get_str();
-        if (mapSigHashValues.count(strHashType)) {
-            nHashType = mapSigHashValues[strHashType];
-        } else {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid sighash param");
-        }
-    }
+    int nHashType = ParseSighashString(hashType);
 
     bool fHashSingle = ((nHashType & ~SIGHASH_ANYONECANPAY) == SIGHASH_SINGLE);
 
@@ -1265,6 +1256,553 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
     return result;
 }
 
+static std::string WriteHDKeypath(std::vector<uint32_t>& keypath)
+{
+    std::string keypath_str = "m";
+    for (uint32_t num : keypath) {
+        keypath_str += "/";
+        bool hardened = false;
+        if (num & 0x80000000) {
+            hardened = true;
+            num &= ~0x80000000;
+        }
+
+        keypath_str += std::to_string(num);
+        if (hardened) {
+            keypath_str += "'";
+        }
+    }
+    return keypath_str;
+}
+
+UniValue decodepsct(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1)
+        throw std::runtime_error(
+            "decodepsct \"psct\"\n"
+            "\nReturn a JSON object representing the serialized, base64-encoded partially signed Bitcoin transaction.\n"
+
+            "\nArguments:\n"
+            "1. \"psct\"            (string, required) The PSCT base64 string\n"
+
+            "\nResult:\n"
+            "{\n"
+            "  \"tx\" : {                   (json object) The decoded network-serialized unsigned transaction.\n"
+            "    ...                                      The layout is the same as the output of decoderawtransaction.\n"
+            "  },\n"
+            "  \"unknown\" : {                (json object) The unknown global fields\n"
+            "    \"key\" : \"value\"            (key-value pair) An unknown key-value pair\n"
+            "     ...\n"
+            "  },\n"
+            "  \"inputs\" : [                 (array of json objects)\n"
+            "    {\n"
+            "      \"non_witness_utxo\" : {   (json object, optional) Decoded network transaction for non-witness UTXOs\n"
+            "        ...\n"
+            "      },\n"
+            "      \"witness_utxo\" : {            (json object, optional) Transaction output for witness UTXOs\n"
+            "        \"amount\" : x.xxx,           (numeric) The value in " + CURRENCY_UNIT + "\n"
+            "        \"scriptPubKey\" : {          (json object)\n"
+            "          \"asm\" : \"asm\",            (string) The asm\n"
+            "          \"hex\" : \"hex\",            (string) The hex\n"
+            "          \"type\" : \"pubkeyhash\",    (string) The type, eg 'pubkeyhash'\n"
+            "          \"address\" : \"address\"     (string) Bitcoin address if there is one\n"
+            "        }\n"
+            "      },\n"
+            "      \"partial_signatures\" : {             (json object, optional)\n"
+            "        \"pubkey\" : \"signature\",           (string) The public key and signature that corresponds to it.\n"
+            "        ,...\n"
+            "      }\n"
+            "      \"sighash\" : \"type\",                  (string, optional) The sighash type to be used\n"
+            "      \"redeem_script\" : {       (json object, optional)\n"
+            "          \"asm\" : \"asm\",            (string) The asm\n"
+            "          \"hex\" : \"hex\",            (string) The hex\n"
+            "          \"type\" : \"pubkeyhash\",    (string) The type, eg 'pubkeyhash'\n"
+            "        }\n"
+            "      \"witness_script\" : {       (json object, optional)\n"
+            "          \"asm\" : \"asm\",            (string) The asm\n"
+            "          \"hex\" : \"hex\",            (string) The hex\n"
+            "          \"type\" : \"pubkeyhash\",    (string) The type, eg 'pubkeyhash'\n"
+            "        }\n"
+            "      \"bip32_derivs\" : {          (json object, optional)\n"
+            "        \"pubkey\" : {                     (json object, optional) The public key with the derivation path as the value.\n"
+            "          \"master_fingerprint\" : \"fingerprint\"     (string) The fingerprint of the master key\n"
+            "          \"path\" : \"path\",                         (string) The path\n"
+            "        }\n"
+            "        ,...\n"
+            "      }\n"
+            "      \"final_scriptsig\" : {       (json object, optional)\n"
+            "          \"asm\" : \"asm\",            (string) The asm\n"
+            "          \"hex\" : \"hex\",            (string) The hex\n"
+            "        }\n"
+            "       \"final_scriptwitness\": [\"hex\", ...] (array of string) hex-encoded witness data (if any)\n"
+            "      \"unknown\" : {                (json object) The unknown global fields\n"
+            "        \"key\" : \"value\"            (key-value pair) An unknown key-value pair\n"
+            "         ...\n"
+            "      },\n"
+            "    }\n"
+            "    ,...\n"
+            "  ]\n"
+            "  \"outputs\" : [                 (array of json objects)\n"
+            "    {\n"
+            "      \"redeem_script\" : {       (json object, optional)\n"
+            "          \"asm\" : \"asm\",            (string) The asm\n"
+            "          \"hex\" : \"hex\",            (string) The hex\n"
+            "          \"type\" : \"pubkeyhash\",    (string) The type, eg 'pubkeyhash'\n"
+            "        }\n"
+            "      \"witness_script\" : {       (json object, optional)\n"
+            "          \"asm\" : \"asm\",            (string) The asm\n"
+            "          \"hex\" : \"hex\",            (string) The hex\n"
+            "          \"type\" : \"pubkeyhash\",    (string) The type, eg 'pubkeyhash'\n"
+            "      }\n"
+            "      \"bip32_derivs\" : [          (array of json objects, optional)\n"
+            "        {\n"
+            "          \"pubkey\" : \"pubkey\",                     (string) The public key this path corresponds to\n"
+            "          \"master_fingerprint\" : \"fingerprint\"     (string) The fingerprint of the master key\n"
+            "          \"path\" : \"path\",                         (string) The path\n"
+            "          }\n"
+            "        }\n"
+            "        ,...\n"
+            "      ],\n"
+            "      \"unknown\" : {                (json object) The unknown global fields\n"
+            "        \"key\" : \"value\"            (key-value pair) An unknown key-value pair\n"
+            "         ...\n"
+            "      },\n"
+            "    }\n"
+            "    ,...\n"
+            "  ]\n"
+            "  \"fee\" : fee                      (numeric, optional) The transaction fee paid if all UTXOs slots in the PSCT have been filled.\n"
+            "}\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("decodepsct", "\"psct\"")
+    );
+
+    RPCTypeCheck(request.params, {UniValue::VSTR});
+
+    // Unserialize the transactions
+    PartiallySignedTransaction psctx;
+    std::string error;
+    if (!DecodePSCT(psctx, request.params[0].get_str(), error)) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
+    }
+
+    UniValue result(UniValue::VOBJ);
+
+    // Add the decoded tx
+    UniValue tx_univ(UniValue::VOBJ);
+    TxToUniv(CTransaction(*psctx.tx), uint256(), tx_univ, false);
+    result.pushKV("tx", tx_univ);
+
+    // Unknown data
+    UniValue unknowns(UniValue::VOBJ);
+    for (auto entry : psctx.unknown) {
+        unknowns.pushKV(HexStr(entry.first), HexStr(entry.second));
+    }
+    result.pushKV("unknown", unknowns);
+
+    // inputs
+    CAmount total_in = 0;
+    bool have_all_utxos = true;
+    UniValue inputs(UniValue::VARR);
+    for (unsigned int i = 0; i < psctx.inputs.size(); ++i) {
+        const PSCTInput& input = psctx.inputs[i];
+        UniValue in(UniValue::VOBJ);
+        // UTXOs
+        if (!input.witness_utxo.IsNull()) {
+            const CTxOut& txout = input.witness_utxo;
+
+            UniValue out(UniValue::VOBJ);
+
+            out.pushKV("amount", ValueFromAmount(txout.nValue));
+            total_in += txout.nValue;
+
+            UniValue o(UniValue::VOBJ);
+            ScriptToUniv(txout.scriptPubKey, o, true);
+            out.pushKV("scriptPubKey", o);
+            in.pushKV("witness_utxo", out);
+        } else if (input.non_witness_utxo) {
+            UniValue non_wit(UniValue::VOBJ);
+            TxToUniv(*input.non_witness_utxo, uint256(), non_wit, false);
+            in.pushKV("non_witness_utxo", non_wit);
+            total_in += input.non_witness_utxo->vout[psctx.tx->vin[i].prevout.n].nValue;
+        } else {
+            have_all_utxos = false;
+        }
+
+        // Partial sigs
+        if (!input.partial_sigs.empty()) {
+            UniValue partial_sigs(UniValue::VOBJ);
+            for (const auto& sig : input.partial_sigs) {
+                partial_sigs.pushKV(HexStr(sig.second.first), HexStr(sig.second.second));
+            }
+            in.pushKV("partial_signatures", partial_sigs);
+        }
+
+        // Sighash
+        if (input.sighash_type > 0) {
+            in.pushKV("sighash", SighashToStr((unsigned char)input.sighash_type));
+        }
+
+        // Redeem script and witness script
+        if (!input.redeem_script.empty()) {
+            UniValue r(UniValue::VOBJ);
+            ScriptToUniv(input.redeem_script, r, false);
+            in.pushKV("redeem_script", r);
+        }
+        if (!input.witness_script.empty()) {
+            UniValue r(UniValue::VOBJ);
+            ScriptToUniv(input.witness_script, r, false);
+            in.pushKV("witness_script", r);
+        }
+
+        // keypaths
+        if (!input.hd_keypaths.empty()) {
+            UniValue keypaths(UniValue::VARR);
+            for (auto entry : input.hd_keypaths) {
+                UniValue keypath(UniValue::VOBJ);
+                keypath.pushKV("pubkey", HexStr(entry.first));
+
+                uint32_t fingerprint = entry.second.at(0);
+                keypath.pushKV("master_fingerprint", strprintf("%08x", bswap_32(fingerprint)));
+
+                entry.second.erase(entry.second.begin());
+                keypath.pushKV("path", WriteHDKeypath(entry.second));
+                keypaths.push_back(keypath);
+            }
+            in.pushKV("bip32_derivs", keypaths);
+        }
+
+        // Final scriptSig and scriptwitness
+        if (!input.final_script_sig.empty()) {
+            UniValue scriptsig(UniValue::VOBJ);
+            scriptsig.pushKV("asm", ScriptToAsmStr(input.final_script_sig, true));
+            scriptsig.pushKV("hex", HexStr(input.final_script_sig));
+            in.pushKV("final_scriptSig", scriptsig);
+        }
+        if (!input.final_script_witness.IsNull()) {
+            UniValue txinwitness(UniValue::VARR);
+            for (const auto& item : input.final_script_witness.stack) {
+                txinwitness.push_back(HexStr(item.begin(), item.end()));
+            }
+            in.pushKV("final_scriptwitness", txinwitness);
+        }
+
+        // Unknown data
+        if (input.unknown.size() > 0) {
+            UniValue unknowns(UniValue::VOBJ);
+            for (auto entry : input.unknown) {
+                unknowns.pushKV(HexStr(entry.first), HexStr(entry.second));
+            }
+            in.pushKV("unknown", unknowns);
+        }
+
+        inputs.push_back(in);
+    }
+    result.pushKV("inputs", inputs);
+
+    // outputs
+    CAmount output_value = 0;
+    UniValue outputs(UniValue::VARR);
+    for (unsigned int i = 0; i < psctx.outputs.size(); ++i) {
+        const PSCTOutput& output = psctx.outputs[i];
+        UniValue out(UniValue::VOBJ);
+        // Redeem script and witness script
+        if (!output.redeem_script.empty()) {
+            UniValue r(UniValue::VOBJ);
+            ScriptToUniv(output.redeem_script, r, false);
+            out.pushKV("redeem_script", r);
+        }
+        if (!output.witness_script.empty()) {
+            UniValue r(UniValue::VOBJ);
+            ScriptToUniv(output.witness_script, r, false);
+            out.pushKV("witness_script", r);
+        }
+
+        // keypaths
+        if (!output.hd_keypaths.empty()) {
+            UniValue keypaths(UniValue::VARR);
+            for (auto entry : output.hd_keypaths) {
+                UniValue keypath(UniValue::VOBJ);
+                keypath.pushKV("pubkey", HexStr(entry.first));
+
+                uint32_t fingerprint = entry.second.at(0);
+                keypath.pushKV("master_fingerprint", strprintf("%08x", bswap_32(fingerprint)));
+
+                entry.second.erase(entry.second.begin());
+                keypath.pushKV("path", WriteHDKeypath(entry.second));
+                keypaths.push_back(keypath);
+            }
+            out.pushKV("bip32_derivs", keypaths);
+        }
+
+        // Unknown data
+        if (output.unknown.size() > 0) {
+            UniValue unknowns(UniValue::VOBJ);
+            for (auto entry : output.unknown) {
+                unknowns.pushKV(HexStr(entry.first), HexStr(entry.second));
+            }
+            out.pushKV("unknown", unknowns);
+        }
+
+        outputs.push_back(out);
+
+        // Fee calculation
+        output_value += psctx.tx->vout[i].nValue;
+    }
+    result.pushKV("outputs", outputs);
+    if (have_all_utxos) {
+        result.pushKV("fee", ValueFromAmount(total_in - output_value));
+    }
+
+    return result;
+}
+
+UniValue combinepsct(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1)
+        throw std::runtime_error(
+            "combinepsct [\"psct\",...]\n"
+            "\nCombine multiple partially signed Bitcoin transactions into one transaction.\n"
+            "Implements the Combiner role.\n"
+            "\nArguments:\n"
+            "1. \"txs\"                   (string) A json array of base64 strings of partially signed transactions\n"
+            "    [\n"
+            "      \"psct\"             (string) A base64 string of a PSCT\n"
+            "      ,...\n"
+            "    ]\n"
+
+            "\nResult:\n"
+            "  \"psct\"          (string) The base64-encoded partially signed transaction\n"
+            "\nExamples:\n"
+            + HelpExampleCli("combinepsct", "[\"mybase64_1\", \"mybase64_2\", \"mybase64_3\"]")
+        );
+
+    RPCTypeCheck(request.params, {UniValue::VARR}, true);
+
+    // Unserialize the transactions
+    std::vector<PartiallySignedTransaction> psctxs;
+    UniValue txs = request.params[0].get_array();
+    for (unsigned int i = 0; i < txs.size(); ++i) {
+        PartiallySignedTransaction psctx;
+        std::string error;
+        if (!DecodePSCT(psctx, txs[i].get_str(), error)) {
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
+        }
+        psctxs.push_back(psctx);
+    }
+
+    PartiallySignedTransaction merged_psct(psctxs[0]); // Copy the first one
+
+    // Merge
+    for (auto it = std::next(psctxs.begin()); it != psctxs.end(); ++it) {
+        if (*it != merged_psct) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "PSCTs do not refer to the same transactions.");
+        }
+        merged_psct.Merge(*it);
+    }
+    if (!merged_psct.IsSane()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Merged PSCT is inconsistent");
+    }
+
+    UniValue result(UniValue::VOBJ);
+    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+    ssTx << merged_psct;
+    return EncodeBase64((unsigned char*)ssTx.data(), ssTx.size());
+}
+
+UniValue finalizepsct(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+        throw std::runtime_error(
+            "finalizepsct \"psct\" ( extract )\n"
+            "Finalize the inputs of a PSCT. If the transaction is fully signed, it will produce a\n"
+            "network serialized transaction which can be broadcast with sendrawtransaction. Otherwise a PSCT will be\n"
+            "created which has the final_scriptSig and final_scriptWitness fields filled for inputs that are complete.\n"
+            "Implements the Finalizer and Extractor roles.\n"
+            "\nArguments:\n"
+            "1. \"psct\"                 (string) A base64 string of a PSCT\n"
+            "2. \"extract\"              (boolean, optional, default=true) If true and the transaction is complete, \n"
+            "                             extract and return the complete transaction in normal network serialization instead of the PSCT.\n"
+
+            "\nResult:\n"
+            "{\n"
+            "  \"psct\" : \"value\",          (string) The base64-encoded partially signed transaction if not extracted\n"
+            "  \"hex\" : \"value\",           (string) The hex-encoded network transaction if extracted\n"
+            "  \"complete\" : true|false,   (boolean) If the transaction has a complete set of signatures\n"
+            "  ]\n"
+            "}\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("finalizepsct", "\"psct\"")
+        );
+
+    RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VBOOL}, true);
+
+    // Unserialize the transactions
+    PartiallySignedTransaction psctx;
+    std::string error;
+    if (!DecodePSCT(psctx, request.params[0].get_str(), error)) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
+    }
+
+    // Get all of the previous transactions
+    bool complete = true;
+    for (unsigned int i = 0; i < psctx.tx->vin.size(); ++i) {
+        PSCTInput& input = psctx.inputs.at(i);
+
+        SignatureData sigdata;
+        complete &= SignPSCTInput(DUMMY_SIGNING_PROVIDER, *psctx.tx, input, sigdata, i, 1);
+    }
+
+    UniValue result(UniValue::VOBJ);
+    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+    bool extract = request.params[1].isNull() || (!request.params[1].isNull() && request.params[1].get_bool());
+    if (complete && extract) {
+        CMutableTransaction mtx(*psctx.tx);
+        for (unsigned int i = 0; i < mtx.vin.size(); ++i) {
+            mtx.vin[i].scriptSig = psctx.inputs[i].final_script_sig;
+            mtx.vin[i].scriptWitness = psctx.inputs[i].final_script_witness;
+        }
+        ssTx << mtx;
+        result.push_back(Pair("hex", HexStr(ssTx.begin(), ssTx.end())));
+    } else {
+        ssTx << psctx;
+        result.push_back(Pair("psct", EncodeBase64((unsigned char*)ssTx.data(), ssTx.size())));
+    }
+    result.push_back(Pair("complete", complete));
+
+    return result;
+}
+
+UniValue createpsct(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 4)
+        throw std::runtime_error(
+                            "createpsct [{\"txid\":\"id\",\"vout\":n},...] [{\"address\":amount},{\"data\":\"hex\"},...] ( locktime ) ( replaceable )\n"
+                            "\nCreates a transaction in the Partially Signed Transaction format.\n"
+                            "Implements the Creator role.\n"
+                            "\nArguments:\n"
+                            "1. \"inputs\"                (array, required) A json array of json objects\n"
+                            "     [\n"
+                            "       {\n"
+                            "         \"txid\":\"id\",      (string, required) The transaction id\n"
+                            "         \"vout\":n,         (numeric, required) The output number\n"
+                            "         \"sequence\":n      (numeric, optional) The sequence number\n"
+                            "       } \n"
+                            "       ,...\n"
+                            "     ]\n"
+                            "2. \"outputs\"               (array, required) a json array with outputs (key-value pairs)\n"
+                            "   [\n"
+                            "    {\n"
+                            "      \"address\": x.xxx,    (obj, optional) A key-value pair. The key (string) is the bitcoin address, the value (float or string) is the amount in " + CURRENCY_UNIT + "\n"
+                            "    },\n"
+                            "    {\n"
+                            "      \"data\": \"hex\"        (obj, optional) A key-value pair. The key must be \"data\", the value is hex encoded data\n"
+                            "    }\n"
+                            "    ,...                     More key-value pairs of the above form. For compatibility reasons, a dictionary, which holds the key-value pairs directly, is also\n"
+                            "                             accepted as second parameter.\n"
+                            "   ]\n"
+                            "3. locktime                  (numeric, optional, default=0) Raw locktime. Non-0 value also locktime-activates inputs\n"
+                            "4. replaceable               (boolean, optional, default=false) Marks this transaction as BIP125 replaceable.\n"
+                            "                             Allows this transaction to be replaced by a transaction with higher fees. If provided, it is an error if explicit sequence numbers are incompatible.\n"
+                            "\nResult:\n"
+                            "  \"psct\"        (string)  The resulting raw transaction (base64-encoded string)\n"
+                            "\nExamples:\n"
+                            + HelpExampleCli("createpsct", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"data\\\":\\\"00010203\\\"}]\"")
+                            );
+
+
+    RPCTypeCheck(request.params, {
+        UniValue::VARR,
+        UniValueType(), // ARR or OBJ, checked later
+        UniValue::VNUM,
+        UniValue::VBOOL,
+        }, true
+    );
+
+    CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], request.params[3]);
+
+    // Make a blank psct
+    PartiallySignedTransaction psctx;
+    psctx.tx = rawTx;
+    for (unsigned int i = 0; i < rawTx.vin.size(); ++i) {
+        psctx.inputs.push_back(PSCTInput());
+    }
+    for (unsigned int i = 0; i < rawTx.vout.size(); ++i) {
+        psctx.outputs.push_back(PSCTOutput());
+    }
+
+    // Serialize the PSCT
+    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+    ssTx << psctx;
+
+    return EncodeBase64((unsigned char*)ssTx.data(), ssTx.size());
+}
+
+UniValue converttopsct(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
+        throw std::runtime_error(
+                            "converttopsct \"hexstring\" ( permitsigdata iswitness )\n"
+                            "\nConverts a network serialized transaction to a PSCT. This should be used only with createrawtransaction and fundrawtransaction\n"
+                            "createpsct and walletcreatefundedpsct should be used for new applications.\n"
+                            "\nArguments:\n"
+                            "1. \"hexstring\"              (string, required) The hex string of a raw transaction\n"
+                            "2. permitsigdata           (boolean, optional, default=false) If true, any signatures in the input will be discarded and conversion.\n"
+                            "                              will continue. If false, RPC will fail if any signatures are present.\n"
+                            "3. iswitness               (boolean, optional) Whether the transaction hex is a serialized witness transaction.\n"
+                            "                              If iswitness is not present, heuristic tests will be used in decoding. If true, only witness deserializaion\n"
+                            "                              will be tried. If false, only non-witness deserialization wil be tried. Only has an effect if\n"
+                            "                              permitsigdata is true.\n"
+                            "\nResult:\n"
+                            "  \"psct\"        (string)  The resulting raw transaction (base64-encoded string)\n"
+                            "\nExamples:\n"
+                            "\nCreate a transaction\n"
+                            + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"data\\\":\\\"00010203\\\"}]\"") +
+                            "\nConvert the transaction to a PSCT\n"
+                            + HelpExampleCli("converttopsct", "\"rawtransaction\"")
+                            );
+
+
+    RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VBOOL, UniValue::VBOOL}, true);
+
+    // parse hex string from parameter
+    CMutableTransaction tx;
+    bool permitsigdata = request.params[1].isNull() ? false : request.params[1].get_bool();
+    bool witness_specified = !request.params[2].isNull();
+    bool iswitness = witness_specified ? request.params[2].get_bool() : false;
+    bool try_witness = permitsigdata ? (witness_specified ? iswitness : true) : false;
+    bool try_no_witness = permitsigdata ? (witness_specified ? !iswitness : true) : true;
+    if (!DecodeHexTx(tx, request.params[0].get_str(), try_no_witness, try_witness)) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+    }
+
+    // Remove all scriptSigs and scriptWitnesses from inputs
+    for (CTxIn& input : tx.vin) {
+        if ((!input.scriptSig.empty() || !input.scriptWitness.IsNull()) && (request.params[1].isNull() || (!request.params[1].isNull() && request.params[1].get_bool()))) {
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Inputs must not have scriptSigs and scriptWitnesses");
+        }
+        input.scriptSig.clear();
+        input.scriptWitness.SetNull();
+    }
+
+    // Make a blank psct
+    PartiallySignedTransaction psctx;
+    psctx.tx = tx;
+    for (unsigned int i = 0; i < tx.vin.size(); ++i) {
+        psctx.inputs.push_back(PSCTInput());
+    }
+    for (unsigned int i = 0; i < tx.vout.size(); ++i) {
+        psctx.outputs.push_back(PSCTOutput());
+    }
+
+    // Serialize the PSCT
+    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+    ssTx << psctx;
+
+    return EncodeBase64((unsigned char*)ssTx.data(), ssTx.size());
+}
+
 static const CRPCCommand commands[] =
 { //  category              name                            actor (function)            argNames
   //  --------------------- ------------------------        -----------------------     ----------
@@ -1277,6 +1815,11 @@ static const CRPCCommand commands[] =
     { "rawtransactions",    "signrawtransaction",           &signrawtransaction,        {"hexstring","prevtxs","privkeys","sighashtype"} }, /* uses wallet if enabled */
     { "rawtransactions",    "signrawtransactionwithkey",    &signrawtransactionwithkey, {"hexstring","privkeys","prevtxs","sighashtype"} },
     { "rawtransactions",    "testmempoolaccept",            &testmempoolaccept,         {"rawtxs","allowhighfees"} },
+    { "rawtransactions",    "decodepsct",                   &decodepsct,                {"psct"} },
+    { "rawtransactions",    "combinepsct",                  &combinepsct,               {"txs"} },
+    { "rawtransactions",    "finalizepsct",                 &finalizepsct,              {"psct", "extract"} },
+    { "rawtransactions",    "createpsct",                   &createpsct,                {"inputs","outputs","locktime","replaceable"} },
+    { "rawtransactions",    "converttopsct",                &converttopsct,             {"hexstring","permitsigdata","iswitness"} },
 
     { "blockchain",         "gettxoutproof",                &gettxoutproof,             {"txids", "blockhash"} },
     { "blockchain",         "verifytxoutproof",             &verifytxoutproof,          {"proof"} },
