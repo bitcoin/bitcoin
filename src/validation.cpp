@@ -2973,10 +2973,8 @@ void CChainState::ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pi
                 mapBlocksUnlinked.erase(it);
             }
         }
-    } else {
-        if (pindexNew->pprev && pindexNew->pprev->IsValid(BLOCK_VALID_TREE)) {
-            mapBlocksUnlinked.insert(std::make_pair(pindexNew->pprev, pindexNew));
-        }
+    } else if (pindexNew->pprev->IsValid(BLOCK_VALID_TREE)) {
+        mapBlocksUnlinked.insert(std::make_pair(pindexNew->pprev, pindexNew));
     }
 }
 
@@ -3349,14 +3347,13 @@ bool CChainState::AcceptBlockHeader(const CBlockHeader& block, CValidationState&
     // Check for duplicate
     uint256 hash = block.GetHash();
     BlockMap::iterator miSelf = mapBlockIndex.find(hash);
-    CBlockIndex *pindex = nullptr;
     if (hash != chainparams.GetConsensus().hashGenesisBlock) {
         if (miSelf != mapBlockIndex.end()) {
             // Block header is already known.
-            pindex = miSelf->second;
+            CBlockIndex *pindexLocal = miSelf->second;
             if (ppindex)
-                *ppindex = pindex;
-            if (pindex->nStatus & BLOCK_FAILED_MASK)
+                *ppindex = pindexLocal;
+            if (pindexLocal->nStatus & BLOCK_FAILED_MASK)
                 return state.Invalid(error("%s: block %s is marked invalid", __func__, hash.ToString()), 0, "duplicate");
             return true;
         }
@@ -3393,8 +3390,7 @@ bool CChainState::AcceptBlockHeader(const CBlockHeader& block, CValidationState&
             }
         }
     }
-    if (pindex == nullptr)
-        pindex = AddToBlockIndex(block);
+    CBlockIndex *pindex = AddToBlockIndex(block);
 
     if (ppindex)
         *ppindex = pindex;
@@ -4005,7 +4001,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
             return error("%s: *** found bad block at %d, hash=%s (%s)\n", __func__,
                          pindex->nHeight, pindex->GetBlockHash().ToString(), FormatStateMessage(state));
         // check level 2: verify undo validity
-        if (nCheckLevel >= 2 && pindex) {
+        if (nCheckLevel >= 2) {
             CBlockUndo undo;
             if (!pindex->GetUndoPos().IsNull()) {
                 if (!UndoReadFromDisk(undo, pindex)) {

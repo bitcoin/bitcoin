@@ -90,8 +90,7 @@ private:
                         nTotal--;
                         bool fRet = fAllOk;
                         // reset the status for new work later
-                        if (fMaster)
-                            fAllOk = true;
+                        fAllOk = true;
                         // return the current status
                         return fRet;
                     }
