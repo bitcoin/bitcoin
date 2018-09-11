@@ -33,7 +33,8 @@ std::map<uint256, std::string> mapReissuedTx;
 std::map<std::string, uint256> mapReissuedAssets;
 
 // excluding owner tag ('!')
-static const auto MAX_NAME_LENGTH = 30;
+static const auto MAX_NAME_LENGTH = 31;
+static const auto MAX_CHANNEL_NAME_LENGTH = 12;
 
 // min lengths are expressed by quantifiers
 static const std::regex ROOT_NAME_CHARACTERS("^[A-Z0-9._]{3,}$");
@@ -140,13 +141,14 @@ bool IsAssetNameValid(const std::string& name, AssetType& assetType)
         std::vector<std::string> parts;
         boost::split(parts, name, boost::is_any_of(CHANNEL_TAG_DELIMITER));
         bool valid = IsNameValidBeforeTag(parts.front()) && IsChannelTagValid(parts.back());
+        if (parts.back().size() > MAX_CHANNEL_NAME_LENGTH) return false;
         if (!valid) return false;
         assetType = AssetType::MSGCHANNEL;
         return true;
     }
     else if (std::regex_match(name, OWNER_INDICATOR))
     {
-        if (name.size() > MAX_NAME_LENGTH + 1) return false;
+        if (name.size() > MAX_NAME_LENGTH) return false;
         bool valid = IsNameValidBeforeTag(name.substr(0, name.size() - 1));
         if (!valid) return false;
         assetType = AssetType::OWNER;
@@ -163,7 +165,7 @@ bool IsAssetNameValid(const std::string& name, AssetType& assetType)
     }
     else
     {
-        if (name.size() > MAX_NAME_LENGTH) return false;
+        if (name.size() > MAX_NAME_LENGTH - 1) return false;  //Assets and sub-assets need to leave one extra char for OWNER indicator
         bool valid = IsNameValidBeforeTag(name);
         if (!valid) return false;
         assetType = IsAssetNameASubasset(name) ? AssetType::SUB : AssetType::ROOT;
