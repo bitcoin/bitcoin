@@ -6,6 +6,8 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
+from test_framework.mininode import FromHex, ToHex
+from test_framework.messages import CMerkleBlock
 
 class MerkleBlockTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -78,6 +80,27 @@ class MerkleBlockTest(BitcoinTestFramework):
         # We can't get a proof if we specify transactions from different blocks
         assert_raises_rpc_error(-5, "Not all transactions found in specified or retrieved block", self.nodes[2].gettxoutproof, [txid1, txid3])
 
+        # Now we'll try tweaking a proof.
+        proof = self.nodes[3].gettxoutproof([txid1, txid2])
+        assert txid1 in self.nodes[0].verifytxoutproof(proof)
+        assert txid2 in self.nodes[1].verifytxoutproof(proof)
+
+        tweaked_proof = FromHex(CMerkleBlock(), proof)
+
+        # Make sure that our serialization/deserialization is working
+        assert txid1 in self.nodes[2].verifytxoutproof(ToHex(tweaked_proof))
+
+        # Check to see if we can go up the merkle tree and pass this off as a
+        # single-transaction block
+        tweaked_proof.txn.nTransactions = 1
+        tweaked_proof.txn.vHash = [tweaked_proof.header.hashMerkleRoot]
+        tweaked_proof.txn.vBits = [True] + [False]*7
+
+        for n in self.nodes:
+            assert not n.verifytxoutproof(ToHex(tweaked_proof))
+
+        # TODO: try more variants, eg transactions at different depths, and
+        # verify that the proofs are invalid
 
 if __name__ == '__main__':
     MerkleBlockTest().main()
