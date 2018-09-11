@@ -79,6 +79,7 @@
 
 #if ENABLE_ZMQ
 #include <zmq/zmqnotificationinterface.h>
+#include <zmq/zmqrpc.h>
 #endif
 
 bool fFeeEstimatesInitialized = false;
@@ -124,10 +125,6 @@ public:
 
 static DummyWallet g_dummy_wallet;
 WalletInterface* const g_wallet_interface = &g_dummy_wallet;
-#endif
-
-#if ENABLE_ZMQ
-static CZMQNotificationInterface* pzmqNotificationInterface = nullptr;
 #endif
 
 static ModuleInterface* pModuleNotificationInterface = nullptr;
@@ -309,10 +306,10 @@ void Shutdown()
     g_wallet_init_interface.Stop();
 
 #if ENABLE_ZMQ
-    if (pzmqNotificationInterface) {
-        UnregisterValidationInterface(pzmqNotificationInterface);
-        delete pzmqNotificationInterface;
-        pzmqNotificationInterface = nullptr;
+    if (g_zmq_notification_interface) {
+        UnregisterValidationInterface(g_zmq_notification_interface);
+        delete g_zmq_notification_interface;
+        g_zmq_notification_interface = nullptr;
     }
 #endif
 
@@ -1348,6 +1345,9 @@ bool AppInitMain()
      */
     RegisterAllCoreRPCCommands(tableRPC);
     g_wallet_init_interface.RegisterRPC(tableRPC);
+#if ENABLE_ZMQ
+    RegisterZMQRPCCommands(tableRPC);
+#endif
 
     /* Start the RPC server already.  It will be started in "warmup" mode
      * and not really process calls already (but it will signify connections
@@ -1465,10 +1465,10 @@ bool AppInitMain()
     }
 
 #if ENABLE_ZMQ
-    pzmqNotificationInterface = CZMQNotificationInterface::Create();
+    g_zmq_notification_interface = CZMQNotificationInterface::Create();
 
-    if (pzmqNotificationInterface) {
-        RegisterValidationInterface(pzmqNotificationInterface);
+    if (g_zmq_notification_interface) {
+        RegisterValidationInterface(g_zmq_notification_interface);
     }
 #endif
 
