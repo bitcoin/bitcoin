@@ -6,6 +6,8 @@
 #
 # Check for specified flake8 warnings in python files.
 
+export LC_ALL=C
+
 # E101 indentation contains mixed spaces and tabs
 # E112 expected an indented block
 # E113 unexpected indentation
