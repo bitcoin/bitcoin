@@ -467,6 +467,8 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
 
     LOCK(cs_main);
 
+    std::string backup_file = (SetDataDir("importwallet_rescan") / "wallet.backup").string();
+
     // Import key into wallet and call dumpwallet to create backup file.
     {
         std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>("dummy", WalletDatabase::CreateDummy());
@@ -476,7 +478,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
 
         JSONRPCRequest request;
         request.params.setArray();
-        request.params.push_back((pathTemp / "wallet.backup").string());
+        request.params.push_back(backup_file);
         AddWallet(wallet);
         ::dumpwallet(request);
         RemoveWallet(wallet);
@@ -489,7 +491,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
 
         JSONRPCRequest request;
         request.params.setArray();
-        request.params.push_back((pathTemp / "wallet.backup").string());
+        request.params.push_back(backup_file);
         AddWallet(wallet);
         ::importwallet(request);
         RemoveWallet(wallet);
