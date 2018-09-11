@@ -193,7 +193,7 @@ struct CAssetOutputEntry
     txnouttype type;
     std::string assetName;
     CTxDestination destination;
-    CAmount amount;
+    CAmount nAmount;
     int vout;
 };
 /** RVN END */
@@ -1059,6 +1059,7 @@ public:
      * filter, otherwise returns 0
      */
     CAmount GetDebit(const CTxIn& txin, const isminefilter& filter) const;
+    CAmount GetDebit(const CTxIn& txin, const isminefilter& filter, CAssetOutputEntry& assetData) const;
     isminetype IsMine(const CTxOut& txout) const;
     CAmount GetCredit(const CTxOut& txout, const isminefilter& filter) const;
     bool IsChange(const CTxOut& txout) const;

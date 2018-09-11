@@ -186,7 +186,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 
                 sub.address = EncodeDestination(data.destination);
                 sub.assetName = data.assetName;
-                sub.credit = data.amount;
+                sub.credit = data.nAmount;
                 sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
 
                 if (data.type == TX_NEW_ASSET)
@@ -198,6 +198,8 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 else {
                     sub.type = TransactionRecord::Other;
                 }
+
+                sub.units = DEFAULT_UNITS;
 
                 if (IsAssetNameAnOwner(sub.assetName))
                     sub.units = OWNER_UNITS;
@@ -227,7 +229,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 sub.idx = data.vout;
                 sub.address = EncodeDestination(data.destination);
                 sub.assetName = data.assetName;
-                sub.credit = -data.amount;
+                sub.credit = -data.nAmount;
                 sub.involvesWatchAddress = false;
 
                 if (data.type == TX_TRANSFER_ASSET)

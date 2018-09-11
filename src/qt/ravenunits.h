@@ -11,6 +11,11 @@
 #include <QAbstractListModel>
 #include <QString>
 
+// Asset units
+#define MAX_ASSET_UNITS 8
+#define MIN_ASSET_UNITS 0
+
+
 // U+2009 THIN SPACE = UTF-8 E2 80 89
 #define REAL_THIN_SP_CP 0x2009
 #define REAL_THIN_SP_UTF8 "\xE2\x80\x89"
@@ -86,11 +91,11 @@ public:
     //! Number of decimals left
     static int decimals(int unit);
     //! Format as string
-    static QString format(int unit, const CAmount& amount, bool plussign=false, SeparatorStyle separators=separatorStandard);
+    static QString format(int unit, const CAmount& amount, bool plussign=false, SeparatorStyle separators=separatorStandard, const int nAssetUnit = MIN_ASSET_UNITS - 1);
     //! Format as string (with unit)
     static QString formatWithUnit(int unit, const CAmount& amount, bool plussign=false, SeparatorStyle separators=separatorStandard);
     //! Format as string (with custom name)
-    static QString formatWithCustomName(QString customName, const CAmount& amount, bool plussign=false, SeparatorStyle separators=separatorStandard);
+    static QString formatWithCustomName(QString customName, const CAmount& amount, int unit = MAX_ASSET_UNITS, bool plussign=false, SeparatorStyle separators=separatorStandard);
     //! Format as HTML string (with unit)
     static QString formatHtmlWithUnit(int unit, const CAmount& amount, bool plussign=false, SeparatorStyle separators=separatorStandard);
     //! Parse string to coin amount

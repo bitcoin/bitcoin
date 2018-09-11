@@ -81,15 +81,15 @@ int RavenUnits::decimals(int unit)
     }
 }
 
-QString RavenUnits::format(int unit, const CAmount& nIn, bool fPlus, SeparatorStyle separators)
+QString RavenUnits::format(int unit, const CAmount& nIn, bool fPlus, SeparatorStyle separators, const int nAssetUnit)
 {
     // Note: not using straight sprintf here because we do NOT want
     // localized number formatting.
-    if(!valid(unit))
+    if(nAssetUnit < 0 && !valid(unit))
         return QString(); // Refuse to format invalid unit
     qint64 n = (qint64)nIn;
     qint64 coin = factor(unit);
-    int num_decimals = decimals(unit);
+    int num_decimals = nAssetUnit >= 0 ? nAssetUnit : decimals(unit);
     qint64 n_abs = (n > 0 ? n : -n);
     qint64 quotient = n_abs / coin;
     qint64 remainder = n_abs % coin;
@@ -108,6 +108,10 @@ QString RavenUnits::format(int unit, const CAmount& nIn, bool fPlus, SeparatorSt
         quotient_str.insert(0, '-');
     else if (fPlus && n > 0)
         quotient_str.insert(0, '+');
+
+    if (nAssetUnit == MIN_ASSET_UNITS)
+        return quotient_str;
+
     return quotient_str + QString(".") + remainder_str;
 }
 
@@ -125,9 +129,9 @@ QString RavenUnits::formatWithUnit(int unit, const CAmount& amount, bool plussig
     return format(unit, amount, plussign, separators) + QString(" ") + name(unit);
 }
 
-QString RavenUnits::formatWithCustomName(QString customName, const CAmount& amount, bool plussign, SeparatorStyle separators)
+QString RavenUnits::formatWithCustomName(QString customName, const CAmount& amount, int unit, bool plussign, SeparatorStyle separators)
 {
-    return format(RVN, amount, plussign, separators) + QString(" ") + customName;
+    return format(RVN, amount, plussign, separators, unit) + QString(" ") + customName;
 }
 
 QString RavenUnits::formatHtmlWithUnit(int unit, const CAmount& amount, bool plussign, SeparatorStyle separators)

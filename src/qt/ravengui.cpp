@@ -1034,10 +1034,7 @@ void RavenGUI::incomingTransaction(const QString& date, int unit, const CAmount&
     if (assetName == "RVN")
         msg += tr("Amount: %1\n").arg(RavenUnits::formatWithUnit(unit, amount, true));
     else
-        msg += tr("Amount: %1\n").arg(QString::fromStdString(ValueFromAmountString(amount, 8)));
-
-    if (assetName != "RVN")
-        msg += tr("Asset: %1\n").arg(assetName);
+        msg += tr("Amount: %1\n").arg(RavenUnits::formatWithCustomName(assetName, amount, MAX_ASSET_UNITS, true));
 
     msg += tr("Type: %1\n").arg(type);
     
