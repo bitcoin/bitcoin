@@ -29,6 +29,7 @@ protected:
     void NotifyTransactionLock(const CTransaction &tx) override;
     void NotifyGovernanceVote(const CGovernanceVote& vote) override;
     void NotifyGovernanceObject(const CGovernanceObject& object) override;
+    void NotifyInstantSendDoubleSpendAttempt(const CTransaction &currentTx, const CTransaction &previousTx) override;
 
 
 private:

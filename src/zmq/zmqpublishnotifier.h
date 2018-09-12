@@ -60,6 +60,12 @@ public:
     bool NotifyGovernanceObject(const CGovernanceObject &object) override;
 };
 
+class CZMQPublishHashInstantSendDoubleSpendNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+    bool NotifyInstantSendDoubleSpendAttempt(const CTransaction &currentTx, const CTransaction &previousTx) override;
+};
+
 class CZMQPublishRawBlockNotifier : public CZMQAbstractPublishNotifier
 {
 public:
@@ -88,5 +94,11 @@ class CZMQPublishRawGovernanceObjectNotifier : public CZMQAbstractPublishNotifie
 {
 public:
     bool NotifyGovernanceObject(const CGovernanceObject &object) override;
+};
+
+class CZMQPublishRawInstantSendDoubleSpendNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+    bool NotifyInstantSendDoubleSpendAttempt(const CTransaction &currentTx, const CTransaction &previousTx) override;
 };
 #endif // BITCOIN_ZMQ_ZMQPUBLISHNOTIFIER_H

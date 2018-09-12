@@ -28,6 +28,7 @@ void RegisterValidationInterface(CValidationInterface* pwalletIn) {
     g_signals.NewPoWValidBlock.connect(boost::bind(&CValidationInterface::NewPoWValidBlock, pwalletIn, _1, _2));
     g_signals.NotifyGovernanceObject.connect(boost::bind(&CValidationInterface::NotifyGovernanceObject, pwalletIn, _1));
     g_signals.NotifyGovernanceVote.connect(boost::bind(&CValidationInterface::NotifyGovernanceVote, pwalletIn, _1));
+    g_signals.NotifyInstantSendDoubleSpendAttempt.connect(boost::bind(&CValidationInterface::NotifyInstantSendDoubleSpendAttempt, pwalletIn, _1, _2));
 }
 
 void UnregisterValidationInterface(CValidationInterface* pwalletIn) {
@@ -46,6 +47,7 @@ void UnregisterValidationInterface(CValidationInterface* pwalletIn) {
     g_signals.AcceptedBlockHeader.disconnect(boost::bind(&CValidationInterface::AcceptedBlockHeader, pwalletIn, _1));
     g_signals.NotifyGovernanceObject.disconnect(boost::bind(&CValidationInterface::NotifyGovernanceObject, pwalletIn, _1));
     g_signals.NotifyGovernanceVote.disconnect(boost::bind(&CValidationInterface::NotifyGovernanceVote, pwalletIn, _1));
+    g_signals.NotifyInstantSendDoubleSpendAttempt.disconnect(boost::bind(&CValidationInterface::NotifyInstantSendDoubleSpendAttempt, pwalletIn, _1, _2));
 }
 
 void UnregisterAllValidationInterfaces() {
@@ -64,4 +66,5 @@ void UnregisterAllValidationInterfaces() {
     g_signals.AcceptedBlockHeader.disconnect_all_slots();
     g_signals.NotifyGovernanceObject.disconnect_all_slots();
     g_signals.NotifyGovernanceVote.disconnect_all_slots();
+    g_signals.NotifyInstantSendDoubleSpendAttempt.disconnect_all_slots();
 }
