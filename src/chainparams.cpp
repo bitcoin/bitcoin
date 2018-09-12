@@ -355,11 +355,11 @@ const CChainParams &Params() {
 std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain)
 {
     if (chain == CBaseChainParams::MAIN)
-        return std::unique_ptr<CChainParams>(new CMainParams());
+        return MakeUnique<CMainParams>();
     else if (chain == CBaseChainParams::TESTNET)
-        return std::unique_ptr<CChainParams>(new CTestNetParams());
+        return MakeUnique<CTestNetParams>();
     else if (chain == CBaseChainParams::REGTEST)
-        return std::unique_ptr<CChainParams>(new CRegTestParams());
+        return MakeUnique<CRegTestParams>();
     throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }
 
