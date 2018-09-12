@@ -787,14 +787,12 @@ static bool AppInitServers()
     RPCServer::OnStopped(&OnRPCStopped);
     if (!InitHTTPServer())
         return false;
-    if (!StartRPC())
-        return false;
+    StartRPC();
     if (!StartHTTPRPC())
         return false;
     if (gArgs.GetBoolArg("-rest", DEFAULT_REST_ENABLE) && !StartREST())
         return false;
-    if (!StartHTTPServer())
-        return false;
+    StartHTTPServer();
     return true;
 }
 
@@ -993,7 +991,7 @@ bool AppInitParameterInteraction()
     // also see: InitParameterInteraction()
 
     if (!fs::is_directory(GetBlocksDir(false))) {
-        return InitError(strprintf(_("Specified blocks directory \"%s\" does not exist.\n"), gArgs.GetArg("-blocksdir", "").c_str()));
+        return InitError(strprintf(_("Specified blocks directory \"%s\" does not exist."), gArgs.GetArg("-blocksdir", "").c_str()));
     }
 
     // if using block pruning, then disallow txindex

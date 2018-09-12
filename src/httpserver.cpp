@@ -423,7 +423,7 @@ std::thread threadHTTP;
 std::future<bool> threadResult;
 static std::vector<std::thread> g_thread_http_workers;
 
-bool StartHTTPServer()
+void StartHTTPServer()
 {
     LogPrint(BCLog::HTTP, "Starting HTTP server\n");
     int rpcThreads = std::max((long)gArgs.GetArg("-rpcthreads", DEFAULT_HTTP_THREADS), 1L);
@@ -435,7 +435,6 @@ bool StartHTTPServer()
     for (int i = 0; i < rpcThreads; i++) {
         g_thread_http_workers.emplace_back(HTTPWorkQueueRun, workQueue);
     }
-    return true;
 }
 
 void InterruptHTTPServer()
