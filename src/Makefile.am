@@ -329,6 +329,8 @@ libdash_server_a_SOURCES = \
   httprpc.cpp \
   httpserver.cpp \
   index/txindex.cpp \
+  interfaces/handler.cpp \
+  interfaces/node.cpp \
   init.cpp \
   dbwrapper.cpp \
   governance/governance.cpp \
@@ -590,8 +592,6 @@ libdash_util_a_SOURCES = \
   compat/glibcxx_sanity.cpp \
   compat/strnlen.cpp \
   fs.cpp \
-  interfaces/handler.cpp \
-  interfaces/node.cpp \
   logging.cpp \
   random.cpp \
   rpc/protocol.cpp \
