@@ -23,7 +23,7 @@
 #include <httpserver.h>
 #include <httprpc.h>
 #include <index/txindex.h>
-#include <interfaces/moduleinterface.h>
+#include <interfaces/modules.h>
 #include <key.h>
 #include <miner.h>
 #include <net.h>

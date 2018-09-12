@@ -132,7 +132,7 @@ BITCOIN_CORE_H = \
   init.h \
   interfaces/handler.h \
   interfaces/node.h \
-  interfaces/moduleinterface.h \
+  interfaces/modules.h \
   interfaces/wallet.h \
   key.h \
   key_io.h \
@@ -247,6 +247,9 @@ libbitcoin_server_a_SOURCES = \
   httpserver.cpp \
   index/base.cpp \
   index/txindex.cpp \
+  interfaces/handler.cpp \
+  interfaces/modules.cpp \
+  interfaces/node.cpp \
   init.cpp \
   dbwrapper.cpp \
   governance.cpp \
@@ -478,9 +481,6 @@ libbitcoin_util_a_SOURCES = \
   compat/glibcxx_sanity.cpp \
   compat/strnlen.cpp \
   fs.cpp \
-  interfaces/handler.cpp \
-  interfaces/moduleinterface.cpp \
-  interfaces/node.cpp \
   logging.cpp \
   random.cpp \
   rpc/protocol.cpp \

@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
-#include <interfaces/moduleinterface.h>
+#include <interfaces/modules.h>
 #include <governance.h>
 #include <masternodeman.h>
 #include <masternode-payments.h>

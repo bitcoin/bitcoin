@@ -7,7 +7,7 @@
 #include <clientversion.h>
 #include <governance.h>
 #include <init.h>
-#include <interfaces/moduleinterface.h>
+#include <interfaces/modules.h>
 #include <masternode-payments.h>
 #include <masternode-sync.h>
 #include <masternodeman.h>

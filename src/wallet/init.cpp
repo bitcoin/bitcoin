@@ -5,7 +5,7 @@
 
 #include <chainparams.h>
 #include <init.h>
-#include <interfaces/moduleinterface.h>
+#include <interfaces/modules.h>
 #include <net.h>
 #include <scheduler.h>
 #include <outputtype.h>

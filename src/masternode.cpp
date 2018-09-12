@@ -8,7 +8,7 @@
 #include <chainparams.h>
 #include <consensus/tx_verify.h>
 #include <init.h>
-#include <interfaces/moduleinterface.h>
+#include <interfaces/modules.h>
 #include <netbase.h>
 #include <masternode.h>
 #include <masternode-payments.h>
