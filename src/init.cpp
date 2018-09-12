@@ -799,6 +799,15 @@ void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
         StartShutdown();
     }
     } // End scope of CImportingNow
+
+    // force UpdatedBlockTip to initialize nCachedBlockHeight for DS, MN payments and budgets
+    // but don't call it directly to prevent triggering of other listeners like zmq etc.
+    // GetMainSignals().UpdatedBlockTip(chainActive.Tip());
+    pdsNotificationInterface->InitializeCurrentBlockTip();
+
+    if (activeMasternodeManager && fDIP0003ActiveAtTip)
+        activeMasternodeManager->Init();
+
     LoadMempool();
     fDumpMempoolLater = !fRequestShutdown;
 }
@@ -2001,18 +2010,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         }
     }
 
-
-    // ********************************************************* Step 11c: update block tip in Dash modules
-
-    // force UpdatedBlockTip to initialize nCachedBlockHeight for DS, MN payments and budgets
-    // but don't call it directly to prevent triggering of other listeners like zmq etc.
-    // GetMainSignals().UpdatedBlockTip(chainActive.Tip());
-    pdsNotificationInterface->InitializeCurrentBlockTip();
-
-    if (activeMasternodeManager && fDIP0003ActiveAtTip)
-        activeMasternodeManager->Init();
-
-    // ********************************************************* Step 11d: schedule Dash-specific tasks
+    // ********************************************************* Step 11c: schedule Dash-specific tasks
 
     if (!fLiteMode) {
         scheduler.scheduleEvery(boost::bind(&CNetFulfilledRequestManager::DoMaintenance, boost::ref(netfulfilledman)), 60);
