@@ -338,6 +338,7 @@ private:
     void AcceptConnection(const ListenSocket& hListenSocket);
     void DisconnectNodes();
     void InactivityChecks();
+    void NotifyNumConnectionsChanged();
     void ThreadSocketHandler();
     void ThreadDNSAddressSeed();
 
@@ -408,6 +409,7 @@ private:
     std::list<CNode*> vNodesDisconnected;
     mutable CCriticalSection cs_vNodes;
     std::atomic<NodeId> nLastNodeId;
+    size_t nPrevNodeCount;
 
     /** Services this instance offers */
     ServiceFlags nLocalServices;
