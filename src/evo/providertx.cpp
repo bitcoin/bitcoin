@@ -190,11 +190,11 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
 
         // This is a temporary restriction that will be lifted later
         // It is required while we are transitioning from the old MN list to the deterministic list
-        CTransactionRef proRegTx;
-        uint256 tmpHashBlock;
-        if (!GetTransaction(ptx.proTxHash, proRegTx, Params().GetConsensus(), tmpHashBlock))
+        Coin coin;
+        if (!GetUTXOCoin(COutPoint(dmn->proTxHash, dmn->nCollateralIndex), coin) || coin.IsSpent()) {
             return state.DoS(100, false, REJECT_INVALID, "bad-protx-payee-collateral");
-        if (proRegTx->vout[dmn->nCollateralIndex].scriptPubKey != ptx.scriptPayout)
+        }
+        if (coin.out.scriptPubKey != ptx.scriptPayout)
             return state.DoS(10, false, REJECT_INVALID, "bad-protx-payee-collateral");
 
         if (mnList.HasUniqueProperty(ptx.keyIDOperator)) {
