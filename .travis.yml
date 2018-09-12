@@ -81,15 +81,13 @@ after_script:
 jobs:
   include:
     - stage: lint
+      env:
       sudo: false
       cache: false
-      addons:
-        apt:
-          packages:
-            - python3-pip
-            - shellcheck
+      language: python
+      python: '3.6'
       install:
-        - travis_retry pip3 install flake8 --user
+        - travis_retry pip install flake8
       before_script:
         - git fetch --unshallow
       script:
