@@ -855,8 +855,8 @@ bool CReissueAsset::IsValid(std::string &strError, CAssetsCache& assetCache) con
         return false;
     }
 
-    if (nAmount <= 0) {
-        strError = "Unable to reissue asset: amount must be 1 or larger";
+    if (nAmount < 0) {
+        strError = "Unable to reissue asset: amount must be 0 or larger";
         return false;
     }
 
