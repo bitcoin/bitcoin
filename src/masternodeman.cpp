@@ -863,7 +863,7 @@ void CMasternodeMan::ProcessModuleMessage(CNode* pfrom, const std::string& strCo
         if(nDos > 0) {
             // if anything significant failed, mark that node
             Misbehaving(pfrom->GetId(), nDos);
-        } else if(pmn != NULL) {
+        } else if(pmn != nullptr) {
             // nothing significant failed, mn is a known one too
             return;
         }

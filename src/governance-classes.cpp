@@ -197,7 +197,7 @@ void CGovernanceTriggerManager::CleanAndRemove()
 
         if(remove) {
             DBG(
-                std::string strDataAsPlainString = "NULL";
+                std::string strDataAsPlainString = "not found";
                 if(pObj) {
                     strDataAsPlainString = pObj->GetDataAsPlainString();
                 }
