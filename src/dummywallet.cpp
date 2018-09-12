@@ -7,6 +7,8 @@
 #include <util.h>
 #include <walletinitinterface.h>
 
+class CWallet;
+
 class DummyWalletInit : public WalletInitInterface {
 public:
 
@@ -42,3 +44,18 @@ public:
 
 const WalletInterface& g_wallet_interface = DummyWallet();
 
+std::vector<std::shared_ptr<CWallet>> GetWallets()
+{
+    throw std::logic_error("Wallet function called in non-wallet build.");
+}
+
+namespace interfaces {
+
+class Wallet;
+
+std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet)
+{
+    throw std::logic_error("Wallet function called in non-wallet build.");
+}
+
+} // namespace interfaces
