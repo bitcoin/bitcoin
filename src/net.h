@@ -229,7 +229,7 @@ public:
     void SetServices(const CService &addr, ServiceFlags nServices);
     void MarkAddressGood(const CAddress& addr);
     void AddNewAddresses(const std::vector<CAddress>& vAddr, const CAddress& addrFrom, int64_t nTimePenalty = 0);
-    std::vector<CAddress> GetAddresses();
+    std::vector<CAddress> GetAddresses(const CRollingBloomFilter& addr_known);
 
     // Denial-of-service detection/prevention
     // The idea is to detect peers that are behaving

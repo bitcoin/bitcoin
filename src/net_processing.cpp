@@ -2744,9 +2744,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         pfrom->fSentAddr = true;
 
         pfrom->vAddrToSend.clear();
-        std::vector<CAddress> vAddr = connman->GetAddresses();
         FastRandomContext insecure_rand;
-        for (const CAddress &addr : vAddr)
+        for (const CAddress &addr : connman->GetAddresses(pfrom->addrKnown))
             pfrom->PushAddress(addr, insecure_rand);
         return true;
     }
