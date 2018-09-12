@@ -768,7 +768,7 @@ bool BerkeleyDatabase::Backup(const std::string& strDest)
                 env->mapFileUseCount.erase(strFile);
 
                 // Copy wallet file
-                fs::path pathSrc = GetWalletDir() / strFile;
+                fs::path pathSrc = env->Directory() / strFile;
                 fs::path pathDest(strDest);
                 if (fs::is_directory(pathDest))
                     pathDest /= strFile;
