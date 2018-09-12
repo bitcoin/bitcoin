@@ -339,6 +339,7 @@ private:
     void DisconnectNodes();
     void InactivityChecks();
     void NotifyNumConnectionsChanged();
+    void SocketHandler();
     void ThreadSocketHandler();
     void ThreadDNSAddressSeed();
 
