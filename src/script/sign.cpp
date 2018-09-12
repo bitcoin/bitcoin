@@ -427,7 +427,7 @@ bool DummySignatureCreator::CreateSig(std::vector<unsigned char>& vchSig, const 
     // } else {
     //     vchSig[6 + 33 + 32] = SIGHASH_ALL | SIGHASH_FORKID_OLD;
     // }
-    vchSig[6 + 33 + 32] = SIGHASH_ALL | SIGHASH_FORKID;
+    vchSig[6 + 33 + 32] = SIGHASH_ALL | SIGHASH_FORKID_OLD;
 
     return true;
 }
