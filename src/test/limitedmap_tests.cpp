@@ -50,10 +50,10 @@ BOOST_AUTO_TEST_CASE(limitedmap_test)
         // use the iterator to check for the expected key and value
         BOOST_CHECK(it->first == i);
         BOOST_CHECK(it->second == i + 1);
-        
+
         // use find to check for the value
         BOOST_CHECK(map.find(i)->second == i + 1);
-        
+
         // update and recheck
         map.update(it, i + 2);
         BOOST_CHECK(map.find(i)->second == i + 2);
