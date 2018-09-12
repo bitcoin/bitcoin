@@ -63,6 +63,17 @@ class TestNode():
         self.rpc = None
         self.url = None
         self.log = logging.getLogger('TestFramework.node%d' % i)
+        self.cleanup_on_exit = True # Whether to kill the node when this object goes away
+
+    def __del__(self):
+        # Ensure that we don't leave any ravend processes lying around after
+        # the test ends
+        if self.process and self.cleanup_on_exit:
+            # Should only happen on test failure
+            # Avoid using logger, as that may have already been shutdown when
+            # this destructor is called.
+            print("Cleaning up leftover process")
+            self.process.kill()
 
     def __getattr__(self, *args, **kwargs):
         """Dispatches any unrecognised messages to the RPC connection."""

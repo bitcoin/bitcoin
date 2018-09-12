@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2014-2016 The Bitcoin Core developers
-# Copyright (c) 2017 The Raven Core developers
+# Copyright (c) 2017-2018 The Raven Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Run regression test suite.
@@ -14,7 +14,7 @@ For a description of arguments recognized by test scripts, see
 `test/functional/test_framework/test_framework.py:RavenTestFramework.main`.
 
 """
-
+from collections import deque
 import argparse
 import configparser
 import datetime
@@ -55,113 +55,118 @@ TEST_EXIT_SKIPPED = 77
 BASE_SCRIPTS= [
     # Scripts that are run by the travis build process.
     # Longest test should go first, to favor running tests in parallel
-    'wallet-hd.py',
-    'walletbackup.py',
-    # vv Tests less than 5m vv
-    #'p2p-fullblocktest.py', TODO - fix comptool.TestInstance timeout (
-    'fundrawtransaction.py',
-    #'p2p-compactblocks.py' - TODO - refactor to assume segwit is always active
-    # 'segwit.py', TODO fix mininode rehash methods to use X16R
-    # vv Tests less than 2m vv
-    'wallet.py',
-    'wallet-accounts.py',
-    # 'p2p-segwit.py',TODO - refactor to assume segwit is always active
-    'wallet-dump.py',
-    'listtransactions.py',
-    # vv Tests less than 60s vv
-    # 'sendheaders.py', TODO fix mininode rehash methods to use X16R
-    'zapwallettxes.py',
-    'importmulti.py',
+    # 'p2p_fingerprint.py',         TODO - fix mininode rehash methods to use X16R
+    # 'p2p_invalid_block.py',       TODO - fix mininode rehash methods to use X16R
+    # 'p2p_invalid_tx.py',          TODO - fix mininode rehash methods to use X16R
+    # 'feature_segwit.py',          TODO - fix mininode rehash methods to use X16R
+    # 'p2p_sendheaders.py',         TODO - fix mininode rehash methods to use X16R
+    # 'feature_nulldummy.py',       TODO - fix mininode rehash methods to use X16R
+    # 'mining_basic.py',            TODO - fix mininode rehash methods to use X16R
+    # 'feature_dersig.py',          TODO - fix mininode rehash methods to use X16R
+    # 'feature_cltv.py',            TODO - fix mininode rehash methods to use X16R
+    # 'p2p_fullblock.py',           TODO - fix comptool.TestInstance timeout
+    # 'p2p_compactblocks.py',       TODO - refactor to assume segwit is always active
+    # 'p2p_segwit.py',              TODO - refactor to assume segwit is always active
+    # 'feature_csv_activation.py',  TODO - currently testing softfork activations, we need to test the features
+    # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv Tests less than 2m vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    'wallet_backup.py',
+    'wallet_hd.py',
+    # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv Tests less than 45s vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    'rpc_fundrawtransaction.py',
+    # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv Tests less than 30s vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+#    'wallet_basic.py',
     'mempool_limit.py',
-    'merkle_blocks.py',
-    'receivedby.py',
-    'abandonconflict.py',
-    #'bip68-112-113-p2p.py', - TODO - currently testing softfork activations, we need to test the features
-    'rawtransactions.py',
-    'reindex.py',
-    # vv Tests less than 30s vv
-    'keypool-topup.py',
-    'zmq_test.py',
-    'raven_cli.py',
-    'mempool_resurrect_test.py',
-    'txn_doublespend.py --mineblock',
-    'txn_clone.py',
-    'getchaintips.py',
-    'rest.py',
-    'mempool_spendcoinbase.py',
-    'mempool_reorg.py',
+    'feature_assets.py',
+    'mining_prioritisetransaction.py',
+    # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv Tests less than 15s vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    'rpc_rawtransaction.py',
+    'rpc_addressindex.py',
+    'wallet_dump.py',
+    'wallet_bumpfee.py',
     'mempool_persist.py',
-    'multiwallet.py',
-    'httpbasics.py',
-    'multi_rpc.py',
-    'proxy_test.py',
-    'signrawtransactions.py',
-    'addressindex.py',
-    'timestampindex.py',
-    'spentindex.py',
-    'txindex.py',
-    'disconnect_ban.py',
-    'decodescript.py',
-    'blockchain.py',
-    'deprecated_rpc.py',
-    'disablewallet.py',
-    'net.py',
-    'keypool.py',
-    'p2p-mempool.py',
-    'prioritise_transaction.py',
-    # 'invalidblockrequest.py', TODO fix mininode rehash methods to use X16R
-    # 'invalidtxrequest.py', TODO fix mininode rehash methods to use X16R
-    'p2p-versionbits-warning.py',
-    'preciousblock.py',
-    'importprunedfunds.py',
-    'signmessages.py',
-    # 'nulldummy.py',  TODO fix mininode rehash methods to use X16R
-    'import-rescan.py',
-    # 'mining.py', TODO fix mininode rehash methods to use X16R
-    'bumpfee.py',
-    'rpcnamedargs.py',
-    'listsinceblock.py',
-    'p2p-leaktests.py',
-    'wallet-encryption.py',
-    # 'bipdersig-p2p.py', TODO fix mininode rehash methods to use X16R
-    # 'bip65-cltv-p2p.py', TODO fix mininode rehash methods to use X16R
-    'uptime.py',
-    'resendwallettransactions.py',
-    'minchainwork.py',
-    # 'p2p-fingerprint.py', TODO fix mininode rehash methods to use X16R
-    'uacomment.py',
-    'assets.py',
-    'listmyassets.py',
-    'rawassettransactions.py',
+    'rpc_timestampindex.py',
+    'wallet_listreceivedby.py',
+    'interface_rest.py',
+    'wallet_keypool_topup.py',
+    'wallet_import_rescan.py',
+    'wallet_abandonconflict.py',
+    'rpc_blockchain.py',
+    'p2p_leak.py',
+    'p2p_versionbits.py',
+    'rpc_spentindex.py',
+    'feature_rawassettransactions.py',
+    'wallet_importmulti.py',
+    'wallet_accounts.py',
+    # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv Tests less than 5s vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    'wallet_listtransactions.py',
+    'feature_minchainwork.py',
+    'wallet_encryption.py',
+    'feature_listmyassets.py',
+    'mempool_reorg.py',
+    'rpc_merkle_blocks.py',
+    'feature_reindex.py',
+    'rpc_decodescript.py',
+    'wallet_keypool.py',
+    'wallet_listsinceblock.py',
+    'wallet_zapwallettxes.py',
+    'wallet_multiwallet.py',
+    'interface_zmq.py',
+    # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv Tests less than 3s vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    'rpc_getchaintips.py',
+    'wallet_txn_clone.py',
+    'wallet_txn_doublespend.py --mineblock',
+    'feature_uacomment.py',
+    'rpc_users.py',
+    'feature_proxy.py',
+    'rpc_txindex.py',
+    'p2p_disconnect_ban.py',
+    'wallet_importprunedfunds.py',
+    'feature_unique_assets.py',
+    'rpc_preciousblock.py',
+    'rpc_net.py',
+    'interface_raven_cli.py',
+    'mempool_resurrect.py',
+    'rpc_signrawtransaction.py',
+    'wallet_resendtransactions.py',
+    'rpc_signmessage.py',
+    'rpc_deprecated.py',
+    'wallet_disable.py',
+    'interface_http.py',
+    'mempool_spend_coinbase.py',
+    'p2p_mempool.py',
+    'rpc_named_arguments.py',
+    'rpc_uptime.py',
+    # Don't append tests at the end to avoid merge conflicts
+    # Put them in a random line within the section that fits their approximate run-time
 ]
 
 EXTENDED_SCRIPTS = [
     # These tests are not run by the travis build process.
     # Longest test should go first, to favor running tests in parallel
-    'pruning.py',
-    # vv Tests less than 20m vv
-    'smartfees.py',
-    # vv Tests less than 5m vv
-    'maxuploadtarget.py',
+    'feature_pruning.py',
+    # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv Tests less than 20m vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    'feature_fee_estimation.py',
+    # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv Tests less than 5m vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    'feature_maxuploadtarget.py',
     'mempool_packages.py',
-    'dbcrash.py',
-    # vv Tests less than 2m vv
-    'bip68-sequence.py',
-    'getblocktemplate_longpoll.py',
-    'p2p-timeouts.py',
-    # vv Tests less than 60s vv
-    # use this for future soft fork testing --> 'bip9-softforks.py',
-    'p2p-feefilter.py',
-    'rpcbind_test.py',
-    # vv Tests less than 30s vv
-    'assumevalid.py',
+    'feature_dbcrash.py',
+    # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv Tests less than 2m vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    'feature_bip68_sequence.py',
+    'mining_getblocktemplate_longpoll.py',
+    'p2p_timeouts.py',
+    # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv Tests less than 60s vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    # use this for future soft fork testing --> 'feature_bip_softforks.py',
+    'p2p_feefilter.py',
+    'rpc_bind.py',
+    # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv Tests less than 30s vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    'feature_assumevalid.py',
     #'example_test.py',
-    'txn_doublespend.py',
-    'txn_clone.py --mineblock',
-    'notifications.py',
-    'invalidateblock.py',
-    #'p2p-acceptblock.py',
-    'replace-by-fee.py',
+    'wallet_txn_doublespend.py',
+    'wallet_txn_clone.py --mineblock',
+    'feature_notifications.py',
+    'rpc_invalidateblock.py',
+    #'p2p_acceptblock.py',
+    'feature_rbf.py',
 ]
 
 # Place EXTENDED_SCRIPTS first since it has the 3 longest running tests
@@ -174,6 +179,7 @@ NON_SCRIPTS = [
     "test_runner.py",
 ]
 
+
 def main():
     # Parse arguments and pass through unrecognised args
     parser = argparse.ArgumentParser(add_help=False,
@@ -182,6 +188,7 @@ def main():
                                      epilog='''
     Help text and arguments for individual test script:''',
                                      formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('--combinedlogslen', '-c', type=int, default=0, help='print a combined log (of length n lines) from all test nodes and test framework to the console on failure.')
     parser.add_argument('--coverage', action='store_true', help='generate a basic coverage report for the RPC interface')
     parser.add_argument('--exclude', '-x', help='specify a comma-separated-list of scripts to exclude.')
     parser.add_argument('--extended', action='store_true', help='run the extended test suite in addition to the basic tests')
@@ -201,7 +208,7 @@ def main():
     # Read config generated by configure.
     config = configparser.ConfigParser()
     configfile = os.path.abspath(os.path.dirname(__file__)) + "/../config.ini"
-    config.read_file(open(configfile))
+    config.read_file(open(configfile, encoding="utf8"))
 
     passon_args.append("--configfile=%s" % configfile)
 
@@ -273,13 +280,15 @@ def main():
         sys.exit(0)
 
     check_script_list(config["environment"]["SRCDIR"])
+    check_script_prefixes()
 
     if not args.keepcache:
         shutil.rmtree("%s/test/cache" % config["environment"]["BUILDDIR"], ignore_errors=True)
 
-    run_tests(test_list, config["environment"]["SRCDIR"], config["environment"]["BUILDDIR"], config["environment"]["EXEEXT"], tmpdir, args.jobs, args.coverage, passon_args)
+    run_tests(test_list, config["environment"]["SRCDIR"], config["environment"]["BUILDDIR"], config["environment"]["EXEEXT"], tmpdir, args.jobs, args.coverage, passon_args, args.combinedlogslen)
 
-def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_coverage=False, args=[]):
+
+def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_coverage=False, args=[], combined_logs_len=0):
     # Warn if ravend is already running (unix only)
     try:
         if subprocess.check_output(["pidof", "ravend"]) is not None:
@@ -332,7 +341,7 @@ def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_cove
     max_len_name = len(max(test_list, key=len))
 
     for _ in range(len(test_list)):
-        test_result, stdout, stderr = job_queue.get_next()
+        test_result, testdir, stdout, stderr = job_queue.get_next()
         test_results.append(test_result)
         if test_result.status == "Passed":
             logging.debug("\n%s%s%s passed, Duration: %s s" % (BOLD[1], test_result.name, BOLD[0], test_result.time))
@@ -343,6 +352,17 @@ def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_cove
             print("\n%s%s%s failed, Duration: %s s\n" % (BOLD[1], test_result.name, BOLD[0], test_result.time))
             print(BOLD[1] + 'stdout:\n' + BOLD[0] + stdout + '\n')
             print(BOLD[1] + 'stderr:\n' + BOLD[0] + stderr + '\n')
+
+            if combined_logs_len and os.path.isdir(testdir):
+                # Print the final `combinedlogslen` lines of the combined logs
+                print('{}Combine the logs and print the last {} lines ...{}'.format(BOLD[1], combined_logs_len, BOLD[0]))
+                print('\n============')
+                print('{}Combined log for {}:{}'.format(BOLD[1], testdir, BOLD[0]))
+                print('============\n')
+                combined_logs, _ = subprocess.Popen([os.path.join(tests_dir, 'combine_logs.py'), '-c', testdir], universal_newlines=True, stdout=subprocess.PIPE).communicate()
+                print("\n".join(deque(combined_logs.splitlines(), 4000)))
+                print("\n".join(deque(combined_logs.splitlines(), combined_logs_len)))
+
         logging.debug("%s / %s tests ran" % (job_queue.num_finished, job_queue.num_jobs))
 
     print_results(test_results, max_len_name, (int(time.time() - time0)))
@@ -360,6 +380,7 @@ def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_cove
     all_passed = all(map(lambda test_result: test_result.was_successful, test_results))
 
     sys.exit(not all_passed)
+
 
 def print_results(test_results, max_len_name, runtime):
     results = "\n" + BOLD[1] + "%s | %s | %s\n\n" % ("TEST".ljust(max_len_name), "STATUS   ", "DURATION") + BOLD[0]
@@ -379,14 +400,16 @@ def print_results(test_results, max_len_name, runtime):
     results += "Runtime: %s s\n" % (runtime)
     print(results)
 
+
 class TestHandler:
     """
     Trigger the test scripts passed in via the list.
     """
 
+
     def __init__(self, num_tests_parallel, tests_dir, tmpdir, test_list=None, flags=None):
         assert(num_tests_parallel >= 1)
-        self.num_jobs = num_tests_parallel
+        self.num_parallel_jobs = num_tests_parallel
         self.tests_dir = tests_dir
         self.tmpdir = tmpdir
         self.test_list = test_list
@@ -394,38 +417,32 @@ class TestHandler:
         self.num_running = 0
         self.num_finished = 0
         self.num_jobs = len(test_list)
-        # In case there is a graveyard of zombie ravends, we can apply a
-        # pseudorandom offset to hopefully jump over them.
-        # (625 is PORT_RANGE/MAX_NODES)
-        self.portseed_offset = int(time.time() * 1000) % 625
         self.jobs = []
 
+
     def get_next(self):
-        while self.num_running < self.num_jobs and self.test_list:
+        while self.num_running < self.num_parallel_jobs and self.test_list:
             # Add tests
             self.num_running += 1
             t = self.test_list.pop(0)
-            portseed = len(self.test_list) + self.portseed_offset
+            portseed = len(self.test_list)
             portseed_arg = ["--portseed={}".format(portseed)]
             log_stdout = tempfile.SpooledTemporaryFile(max_size=2**16)
             log_stderr = tempfile.SpooledTemporaryFile(max_size=2**16)
             test_argv = t.split()
-            tmpdir = ["--tmpdir=%s/%s_%s" % (self.tmpdir, re.sub(".py$", "", test_argv[0]), portseed)]
+            testdir = "{}/{}_{}".format(self.tmpdir, re.sub(".py$", "", test_argv[0]), portseed)
+            tmpdir_arg = ["--tmpdir={}".format(testdir)]
             self.jobs.append((t,
                               time.time(),
-                              subprocess.Popen([self.tests_dir + test_argv[0]] + test_argv[1:] + self.flags + portseed_arg + tmpdir,
-                                               universal_newlines=True,
-                                               stdout=log_stdout,
-                                               stderr=log_stderr),
-                              log_stdout,
-                              log_stderr))
+                              subprocess.Popen([self.tests_dir + test_argv[0]] + test_argv[1:] + self.flags + portseed_arg + tmpdir_arg,
+                                               universal_newlines=True, stdout=log_stdout, stderr=log_stderr), testdir, log_stdout,log_stderr))
         if not self.jobs:
             raise IndexError('pop from empty list')
         while True:
             # Return first proc that finishes
             time.sleep(.5)
             for j in self.jobs:
-                (name, time0, proc, log_out, log_err) = j
+                (name, time0, proc, testdir, log_out, log_err) = j
                 if os.getenv('TRAVIS') == 'true' and int(time.time() - time0) > 20 * 60:
                     # In travis, timeout individual tests after 20 minutes (to stop tests hanging and not
                     # providing useful output.
@@ -444,8 +461,9 @@ class TestHandler:
                     self.num_finished += 1
                     self.jobs.remove(j)
 
-                    return TestResult(name, status, int(time.time() - time0)), stdout, stderr
+                    return TestResult(name, status, int(time.time() - time0)), testdir, stdout, stderr
             print('.', end='', flush=True)
+
 
 class TestResult():
     def __init__(self, name, status, time):
@@ -485,6 +503,26 @@ def check_script_list(src_dir):
         if os.getenv('TRAVIS') == 'true':
             # On travis this warning is an error to prevent merging incomplete commits into master
             sys.exit(1)
+
+
+def check_script_prefixes():
+    """Check that no more than `EXPECTED_VIOLATION_COUNT` of the
+       test scripts don't start with one of the allowed name prefixes."""
+    EXPECTED_VIOLATION_COUNT = 0
+    # LEEWAY is provided as a transition measure, so that pull-requests
+    # that introduce new tests that don't conform with the naming
+    # convention don't immediately cause the tests to fail.
+    LEEWAY = 1
+    good_prefixes_re = re.compile("(example|feature|interface|mempool|mining|p2p|rpc|wallet)_")
+    bad_script_names = [script for script in ALL_SCRIPTS if good_prefixes_re.match(script) is None]
+    if len(bad_script_names) < EXPECTED_VIOLATION_COUNT:
+        print("{}HURRAY!{} Number of functional tests violating naming convention reduced!".format(BOLD[1], BOLD[0]))
+        print("Consider reducing EXPECTED_VIOLATION_COUNT from %d to %d" % (EXPECTED_VIOLATION_COUNT, len(bad_script_names)))
+    elif len(bad_script_names) > EXPECTED_VIOLATION_COUNT:
+        print("WARNING: %d tests not meeting naming conventions.  Please rename with allowed prefix. (expected %d):" % (len(bad_script_names), EXPECTED_VIOLATION_COUNT))
+        print("  %s" % ("\n  ".join(sorted(bad_script_names))))
+        assert len(bad_script_names) <= EXPECTED_VIOLATION_COUNT + LEEWAY, "Too many tests not following naming convention! (%d found, expected: <= %d)" % (len(bad_script_names), EXPECTED_VIOLATION_COUNT)
+
 
 class RPCCoverage():
     """
@@ -538,7 +576,7 @@ class RPCCoverage():
         if not os.path.isfile(coverage_ref_filename):
             raise RuntimeError("No coverage reference found")
 
-        with open(coverage_ref_filename, 'r') as f:
+        with open(coverage_ref_filename, 'r', encoding="utf8") as f:
             all_cmds.update([i.strip() for i in f.readlines()])
 
         for root, dirs, files in os.walk(self.dir):
@@ -547,7 +585,7 @@ class RPCCoverage():
                     coverage_filenames.add(os.path.join(root, filename))
 
         for filename in coverage_filenames:
-            with open(filename, 'r') as f:
+            with open(filename, 'r', encoding="utf8") as f:
                 covered_cmds.update([i.strip() for i in f.readlines()])
 
         return all_cmds - covered_cmds
