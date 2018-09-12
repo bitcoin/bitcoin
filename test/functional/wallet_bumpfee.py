@@ -34,8 +34,9 @@ class BumpFeeTest(RavenTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
-        self.extra_args = [["-prematurewitness", "-walletprematurewitness", "-walletrbf={}".format(i)]
-                           for i in range(self.num_nodes)]
+        self.extra_args = [
+            ["-prematurewitness", "-walletprematurewitness", "-mempoolreplacement", "-walletrbf={}".format(i)] for i in
+            range(self.num_nodes)]
 
     def run_test(self):
         # Encrypt wallet for test_locked_wallet_fails test
@@ -155,7 +156,7 @@ def test_notmine_bumpfee_fails(rbf_node, peer_node, dest_address):
     signedtx = peer_node.signrawtransaction(signedtx["hex"])
     rbfid = rbf_node.sendrawtransaction(signedtx["hex"])
     assert_raises_rpc_error(-4, "Transaction contains inputs that don't belong to this wallet",
-                          rbf_node.bumpfee, rbfid)
+                            rbf_node.bumpfee, rbfid)
 
 
 def test_bumpfee_with_descendant_fails(rbf_node, rbf_node_address, dest_address):
@@ -186,7 +187,7 @@ def test_dust_to_fee(rbf_node, dest_address):
     full_bumped_tx = rbf_node.getrawtransaction(bumped_tx["txid"], 1)
     assert_equal(bumped_tx["fee"], Decimal("0.00050000"))
     assert_equal(len(fulltx["vout"]), 2)
-    assert_equal(len(full_bumped_tx["vout"]), 1)  #change output is eliminated
+    assert_equal(len(full_bumped_tx["vout"]), 1)  # change output is eliminated
 
 
 def test_settxfee(rbf_node, dest_address):
@@ -215,7 +216,7 @@ def test_rebumping_not_replaceable(rbf_node, dest_address):
     rbfid = spend_one_input(rbf_node, dest_address)
     bumped = rbf_node.bumpfee(rbfid, {"totalFee": 10000, "replaceable": False})
     assert_raises_rpc_error(-4, "Transaction is not BIP 125 replaceable", rbf_node.bumpfee, bumped["txid"],
-                          {"totalFee": 20000})
+                            {"totalFee": 20000})
 
 
 def test_unconfirmed_not_spendable(rbf_node, rbf_node_address):
@@ -266,7 +267,7 @@ def test_locked_wallet_fails(rbf_node, dest_address):
     rbfid = spend_one_input(rbf_node, dest_address)
     rbf_node.walletlock()
     assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first.",
-                          rbf_node.bumpfee, rbfid)
+                            rbf_node.bumpfee, rbfid)
 
 
 def spend_one_input(node, dest_address):
