@@ -150,4 +150,17 @@ private:
 
 std::string urlDecode(const std::string &urlEncoded);
 
+/** RPC server related metrics.
+ */
+class RPCServerStats
+{
+public:
+    int64_t start_time_micros;
+    uint64_t num_http_requests;
+};
+
+/** Compute and return RPC metrics.
+ */
+RPCServerStats GetRPCServerStats();
+
 #endif // BITCOIN_HTTPSERVER_H
