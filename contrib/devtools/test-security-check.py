@@ -32,11 +32,11 @@ class TestSecurityChecks(unittest.TestCase):
         cc = 'gcc'
         write_testcode(source)
 
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-zexecstack','-fno-stack-protector','-Wl,-znorelro']),
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-zexecstack','-fno-stack-protector','-Wl,-znorelro','-no-pie','-fno-PIE']),
                 (1, executable+': failed PIE NX RELRO Canary'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fno-stack-protector','-Wl,-znorelro']),
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fno-stack-protector','-Wl,-znorelro','-no-pie','-fno-PIE']),
                 (1, executable+': failed PIE RELRO Canary'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-znorelro']),
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-znorelro','-no-pie','-fno-PIE']),
                 (1, executable+': failed PIE RELRO'))
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-znorelro','-pie','-fPIE']),
                 (1, executable+': failed RELRO'))
@@ -49,9 +49,9 @@ class TestSecurityChecks(unittest.TestCase):
         cc = 'i686-w64-mingw32-gcc'
         write_testcode(source)
 
-        self.assertEqual(call_security_check(cc, source, executable, []),
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--no-nxcompat','-Wl,--no-dynamicbase']),
                 (1, executable+': failed DYNAMIC_BASE NX'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat']),
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--no-dynamicbase']),
                 (1, executable+': failed DYNAMIC_BASE'))
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--dynamicbase']),
                 (0, ''))
@@ -61,9 +61,9 @@ class TestSecurityChecks(unittest.TestCase):
         cc = 'x86_64-w64-mingw32-gcc'
         write_testcode(source)
 
-        self.assertEqual(call_security_check(cc, source, executable, []), (1, executable+': failed DYNAMIC_BASE NX\n'+executable+': warning HIGH_ENTROPY_VA'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat']), (1, executable+': failed DYNAMIC_BASE\n'+executable+': warning HIGH_ENTROPY_VA'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--dynamicbase']), (0, executable+': warning HIGH_ENTROPY_VA'))
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--no-nxcompat','-Wl,--no-dynamicbase','-Wl,--no-high-entropy-va']), (1, executable+': failed DYNAMIC_BASE HIGH_ENTROPY_VA NX'))
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--no-dynamicbase','-Wl,--no-high-entropy-va']), (1, executable+': failed DYNAMIC_BASE HIGH_ENTROPY_VA'))
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--dynamicbase','-Wl,--no-high-entropy-va']), (1, executable+': failed HIGH_ENTROPY_VA'))
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--dynamicbase','-Wl,--high-entropy-va']), (0, ''))
 
 if __name__ == '__main__':
