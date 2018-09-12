@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'modaloverlay.ui'
 **
-** Created by: Qt User Interface Compiler version 5.11.1
+** Created by: Qt User Interface Compiler version 5.5.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
@@ -10,10 +10,12 @@
 #define UI_MODALOVERLAY_H
 
 #include <QtCore/QVariant>
-#include <QtGui/QIcon>
+#include <QtWidgets/QAction>
 #include <QtWidgets/QApplication>
+#include <QtWidgets/QButtonGroup>
 #include <QtWidgets/QFormLayout>
 #include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QProgressBar>
 #include <QtWidgets/QPushButton>
@@ -256,21 +258,21 @@ public:
 
     void retranslateUi(ModalOverlay *ModalOverlay)
     {
-        ModalOverlay->setWindowTitle(QApplication::translate("ModalOverlay", "Form", nullptr));
+        ModalOverlay->setWindowTitle(QApplication::translate("ModalOverlay", "Form", 0));
         warningIcon->setText(QString());
-        infoText->setText(QApplication::translate("ModalOverlay", "Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the MicroBitcoin network, as detailed below.", nullptr));
-        infoTextStrong->setText(QApplication::translate("ModalOverlay", "Attempting to spend microbitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.", nullptr));
-        labelNumberOfBlocksLeft->setText(QApplication::translate("ModalOverlay", "Number of blocks left", nullptr));
-        numberOfBlocksLeft->setText(QApplication::translate("ModalOverlay", "Unknown...", nullptr));
-        labelLastBlockTime->setText(QApplication::translate("ModalOverlay", "Last block time", nullptr));
-        newestBlockDate->setText(QApplication::translate("ModalOverlay", "Unknown...", nullptr));
-        labelSyncDone->setText(QApplication::translate("ModalOverlay", "Progress", nullptr));
+        infoText->setText(QApplication::translate("ModalOverlay", "Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the MicroBitcoin network, as detailed below.", 0));
+        infoTextStrong->setText(QApplication::translate("ModalOverlay", "Attempting to spend microbitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.", 0));
+        labelNumberOfBlocksLeft->setText(QApplication::translate("ModalOverlay", "Number of blocks left", 0));
+        numberOfBlocksLeft->setText(QApplication::translate("ModalOverlay", "Unknown...", 0));
+        labelLastBlockTime->setText(QApplication::translate("ModalOverlay", "Last block time", 0));
+        newestBlockDate->setText(QApplication::translate("ModalOverlay", "Unknown...", 0));
+        labelSyncDone->setText(QApplication::translate("ModalOverlay", "Progress", 0));
         progressBar->setFormat(QString());
-        labelProgressIncrease->setText(QApplication::translate("ModalOverlay", "Progress increase per hour", nullptr));
-        progressIncreasePerH->setText(QApplication::translate("ModalOverlay", "calculating...", nullptr));
-        labelEstimatedTimeLeft->setText(QApplication::translate("ModalOverlay", "Estimated time left until synced", nullptr));
-        expectedTimeLeft->setText(QApplication::translate("ModalOverlay", "calculating...", nullptr));
-        closeButton->setText(QApplication::translate("ModalOverlay", "Hide", nullptr));
+        labelProgressIncrease->setText(QApplication::translate("ModalOverlay", "Progress increase per hour", 0));
+        progressIncreasePerH->setText(QApplication::translate("ModalOverlay", "calculating...", 0));
+        labelEstimatedTimeLeft->setText(QApplication::translate("ModalOverlay", "Estimated time left until synced", 0));
+        expectedTimeLeft->setText(QApplication::translate("ModalOverlay", "calculating...", 0));
+        closeButton->setText(QApplication::translate("ModalOverlay", "Hide", 0));
     } // retranslateUi
 
 };

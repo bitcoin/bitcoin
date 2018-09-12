@@ -115,7 +115,7 @@ public:
         consensus.premineValue = 1050000 * COIN * COIN_RATIO; // 5%
         consensus.premineAddress = "BfrckfYi7xaSGmMec4T2keu6xczQSx7rxo";
         consensus.replyFixHeight = 580000;
-        signSwithchTime = 1536696000;
+        // signSwithchTime = 1536696000;
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -242,8 +242,8 @@ public:
         consensus.mbcTimestamp = 1231006505; // Tuesday, 29 May 2018 р., 20:24:42
         consensus.premineValue = 10000000 * COIN * COIN_RATIO;
         consensus.premineAddress = "Vxsgbd7An4686EyvU4yGR39cikq9rHnhYi";
-        consensus.replyFixHeight = 1211;
-        signSwithchTime = 1536634657;
+        consensus.replyFixHeight = 1215;
+        // signSwithchTime = 1536634657;
 
         pchBitcoinMessageStart[0] = 0x0a;
         pchBitcoinMessageStart[1] = 0x10;

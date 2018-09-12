@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'sendcoinsdialog.ui'
 **
-** Created by: Qt User Interface Compiler version 5.11.1
+** Created by: Qt User Interface Compiler version 5.5.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
@@ -10,7 +10,7 @@
 #define UI_SENDCOINSDIALOG_H
 
 #include <QtCore/QVariant>
-#include <QtGui/QIcon>
+#include <QtWidgets/QAction>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QButtonGroup>
 #include <QtWidgets/QCheckBox>
@@ -20,6 +20,7 @@
 #include <QtWidgets/QFrame>
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QRadioButton>
@@ -799,69 +800,69 @@ public:
 
     void retranslateUi(QDialog *SendCoinsDialog)
     {
-        SendCoinsDialog->setWindowTitle(QApplication::translate("SendCoinsDialog", "Send Coins", nullptr));
-        labelCoinControlFeatures->setText(QApplication::translate("SendCoinsDialog", "Coin Control Features", nullptr));
-        pushButtonCoinControl->setText(QApplication::translate("SendCoinsDialog", "Inputs...", nullptr));
-        labelCoinControlAutomaticallySelected->setText(QApplication::translate("SendCoinsDialog", "automatically selected", nullptr));
-        labelCoinControlInsuffFunds->setText(QApplication::translate("SendCoinsDialog", "Insufficient funds!", nullptr));
-        labelCoinControlQuantityText->setText(QApplication::translate("SendCoinsDialog", "Quantity:", nullptr));
-        labelCoinControlBytesText->setText(QApplication::translate("SendCoinsDialog", "Bytes:", nullptr));
-        labelCoinControlAmountText->setText(QApplication::translate("SendCoinsDialog", "Amount:", nullptr));
-        labelCoinControlLowOutputText->setText(QApplication::translate("SendCoinsDialog", "Dust:", nullptr));
-        labelCoinControlFeeText->setText(QApplication::translate("SendCoinsDialog", "Fee:", nullptr));
-        labelCoinControlAfterFeeText->setText(QApplication::translate("SendCoinsDialog", "After Fee:", nullptr));
-        labelCoinControlChangeText->setText(QApplication::translate("SendCoinsDialog", "Change:", nullptr));
+        SendCoinsDialog->setWindowTitle(QApplication::translate("SendCoinsDialog", "Send Coins", 0));
+        labelCoinControlFeatures->setText(QApplication::translate("SendCoinsDialog", "Coin Control Features", 0));
+        pushButtonCoinControl->setText(QApplication::translate("SendCoinsDialog", "Inputs...", 0));
+        labelCoinControlAutomaticallySelected->setText(QApplication::translate("SendCoinsDialog", "automatically selected", 0));
+        labelCoinControlInsuffFunds->setText(QApplication::translate("SendCoinsDialog", "Insufficient funds!", 0));
+        labelCoinControlQuantityText->setText(QApplication::translate("SendCoinsDialog", "Quantity:", 0));
+        labelCoinControlBytesText->setText(QApplication::translate("SendCoinsDialog", "Bytes:", 0));
+        labelCoinControlAmountText->setText(QApplication::translate("SendCoinsDialog", "Amount:", 0));
+        labelCoinControlLowOutputText->setText(QApplication::translate("SendCoinsDialog", "Dust:", 0));
+        labelCoinControlFeeText->setText(QApplication::translate("SendCoinsDialog", "Fee:", 0));
+        labelCoinControlAfterFeeText->setText(QApplication::translate("SendCoinsDialog", "After Fee:", 0));
+        labelCoinControlChangeText->setText(QApplication::translate("SendCoinsDialog", "Change:", 0));
 #ifndef QT_NO_TOOLTIP
-        checkBoxCoinControlChange->setToolTip(QApplication::translate("SendCoinsDialog", "If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.", nullptr));
+        checkBoxCoinControlChange->setToolTip(QApplication::translate("SendCoinsDialog", "If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.", 0));
 #endif // QT_NO_TOOLTIP
-        checkBoxCoinControlChange->setText(QApplication::translate("SendCoinsDialog", "Custom change address", nullptr));
+        checkBoxCoinControlChange->setText(QApplication::translate("SendCoinsDialog", "Custom change address", 0));
         labelCoinControlChangeLabel->setText(QString());
-        labelFeeHeadline->setText(QApplication::translate("SendCoinsDialog", "Transaction Fee:", nullptr));
+        labelFeeHeadline->setText(QApplication::translate("SendCoinsDialog", "Transaction Fee:", 0));
         labelFeeMinimized->setText(QString());
-        buttonChooseFee->setText(QApplication::translate("SendCoinsDialog", "Choose...", nullptr));
+        buttonChooseFee->setText(QApplication::translate("SendCoinsDialog", "Choose...", 0));
 #ifndef QT_NO_TOOLTIP
-        fallbackFeeWarningLabel->setToolTip(QApplication::translate("SendCoinsDialog", "Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.", nullptr));
+        fallbackFeeWarningLabel->setToolTip(QApplication::translate("SendCoinsDialog", "Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.", 0));
 #endif // QT_NO_TOOLTIP
-        fallbackFeeWarningLabel->setText(QApplication::translate("SendCoinsDialog", "Warning: Fee estimation is currently not possible.", nullptr));
+        fallbackFeeWarningLabel->setText(QApplication::translate("SendCoinsDialog", "Warning: Fee estimation is currently not possible.", 0));
 #ifndef QT_NO_TOOLTIP
-        buttonMinimizeFee->setToolTip(QApplication::translate("SendCoinsDialog", "collapse fee-settings", nullptr));
+        buttonMinimizeFee->setToolTip(QApplication::translate("SendCoinsDialog", "collapse fee-settings", 0));
 #endif // QT_NO_TOOLTIP
-        buttonMinimizeFee->setText(QApplication::translate("SendCoinsDialog", "Hide", nullptr));
+        buttonMinimizeFee->setText(QApplication::translate("SendCoinsDialog", "Hide", 0));
 #ifndef QT_NO_TOOLTIP
-        labelCustomPerKilobyte->setToolTip(QApplication::translate("SendCoinsDialog", "If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then \"per kilobyte\" only pays 250 satoshis in fee, while \"total at least\" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.", nullptr));
+        labelCustomPerKilobyte->setToolTip(QApplication::translate("SendCoinsDialog", "If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then \"per kilobyte\" only pays 250 satoshis in fee, while \"total at least\" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.", 0));
 #endif // QT_NO_TOOLTIP
-        labelCustomPerKilobyte->setText(QApplication::translate("SendCoinsDialog", "per kilobyte", nullptr));
+        labelCustomPerKilobyte->setText(QApplication::translate("SendCoinsDialog", "per kilobyte", 0));
 #ifndef QT_NO_TOOLTIP
-        checkBoxMinimumFee->setToolTip(QApplication::translate("SendCoinsDialog", "Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for MicroBitcoin transactions than the network can process.", nullptr));
+        checkBoxMinimumFee->setToolTip(QApplication::translate("SendCoinsDialog", "Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for MicroBitcoin transactions than the network can process.", 0));
 #endif // QT_NO_TOOLTIP
         checkBoxMinimumFee->setText(QString());
 #ifndef QT_NO_TOOLTIP
-        labelMinFeeWarning->setToolTip(QApplication::translate("SendCoinsDialog", "Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for MicroBitcoin transactions than the network can process.", nullptr));
+        labelMinFeeWarning->setToolTip(QApplication::translate("SendCoinsDialog", "Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for MicroBitcoin transactions than the network can process.", 0));
 #endif // QT_NO_TOOLTIP
-        labelMinFeeWarning->setText(QApplication::translate("SendCoinsDialog", "(read the tooltip)", nullptr));
-        radioSmartFee->setText(QApplication::translate("SendCoinsDialog", "Recommended:", nullptr));
-        radioCustomFee->setText(QApplication::translate("SendCoinsDialog", "Custom:", nullptr));
+        labelMinFeeWarning->setText(QApplication::translate("SendCoinsDialog", "(read the tooltip)", 0));
+        radioSmartFee->setText(QApplication::translate("SendCoinsDialog", "Recommended:", 0));
+        radioCustomFee->setText(QApplication::translate("SendCoinsDialog", "Custom:", 0));
         labelSmartFee->setText(QString());
         labelFeeEstimation->setText(QString());
-        labelSmartFee2->setText(QApplication::translate("SendCoinsDialog", "(Smart fee not initialized yet. This usually takes a few blocks...)", nullptr));
-        labelSmartFee3->setText(QApplication::translate("SendCoinsDialog", "Confirmation time target:", nullptr));
-        optInRBF->setText(QApplication::translate("SendCoinsDialog", "Request Replace-By-Fee", nullptr));
+        labelSmartFee2->setText(QApplication::translate("SendCoinsDialog", "(Smart fee not initialized yet. This usually takes a few blocks...)", 0));
+        labelSmartFee3->setText(QApplication::translate("SendCoinsDialog", "Confirmation time target:", 0));
+        optInRBF->setText(QApplication::translate("SendCoinsDialog", "Request Replace-By-Fee", 0));
 #ifndef QT_NO_TOOLTIP
-        optInRBF->setToolTip(QApplication::translate("SendCoinsDialog", "Indicates that the sender may wish to replace this transaction with a new one paying higher fees (prior to being confirmed).", nullptr));
+        optInRBF->setToolTip(QApplication::translate("SendCoinsDialog", "Indicates that the sender may wish to replace this transaction with a new one paying higher fees (prior to being confirmed).", 0));
 #endif // QT_NO_TOOLTIP
 #ifndef QT_NO_TOOLTIP
-        sendButton->setToolTip(QApplication::translate("SendCoinsDialog", "Confirm the send action", nullptr));
+        sendButton->setToolTip(QApplication::translate("SendCoinsDialog", "Confirm the send action", 0));
 #endif // QT_NO_TOOLTIP
-        sendButton->setText(QApplication::translate("SendCoinsDialog", "S&end", nullptr));
+        sendButton->setText(QApplication::translate("SendCoinsDialog", "S&end", 0));
 #ifndef QT_NO_TOOLTIP
-        clearButton->setToolTip(QApplication::translate("SendCoinsDialog", "Clear all fields of the form.", nullptr));
+        clearButton->setToolTip(QApplication::translate("SendCoinsDialog", "Clear all fields of the form.", 0));
 #endif // QT_NO_TOOLTIP
-        clearButton->setText(QApplication::translate("SendCoinsDialog", "Clear &All", nullptr));
+        clearButton->setText(QApplication::translate("SendCoinsDialog", "Clear &All", 0));
 #ifndef QT_NO_TOOLTIP
-        addButton->setToolTip(QApplication::translate("SendCoinsDialog", "Send to multiple recipients at once", nullptr));
+        addButton->setToolTip(QApplication::translate("SendCoinsDialog", "Send to multiple recipients at once", 0));
 #endif // QT_NO_TOOLTIP
-        addButton->setText(QApplication::translate("SendCoinsDialog", "Add &Recipient", nullptr));
-        label->setText(QApplication::translate("SendCoinsDialog", "Balance:", nullptr));
+        addButton->setText(QApplication::translate("SendCoinsDialog", "Add &Recipient", 0));
+        label->setText(QApplication::translate("SendCoinsDialog", "Balance:", 0));
     } // retranslateUi
 
 };

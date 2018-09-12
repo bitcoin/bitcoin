@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'overviewpage.ui'
 **
-** Created by: Qt User Interface Compiler version 5.11.1
+** Created by: Qt User Interface Compiler version 5.5.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
@@ -10,11 +10,13 @@
 #define UI_OVERVIEWPAGE_H
 
 #include <QtCore/QVariant>
-#include <QtGui/QIcon>
+#include <QtWidgets/QAction>
 #include <QtWidgets/QApplication>
+#include <QtWidgets/QButtonGroup>
 #include <QtWidgets/QFrame>
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QListView>
 #include <QtWidgets/QPushButton>
@@ -342,45 +344,45 @@ public:
 
     void retranslateUi(QWidget *OverviewPage)
     {
-        OverviewPage->setWindowTitle(QApplication::translate("OverviewPage", "Form", nullptr));
-        label_5->setText(QApplication::translate("OverviewPage", "Balances", nullptr));
+        OverviewPage->setWindowTitle(QApplication::translate("OverviewPage", "Form", 0));
+        label_5->setText(QApplication::translate("OverviewPage", "Balances", 0));
 #ifndef QT_NO_TOOLTIP
-        labelWalletStatus->setToolTip(QApplication::translate("OverviewPage", "The displayed information may be out of date. Your wallet automatically synchronizes with the MicroBitcoin network after a connection is established, but this process has not completed yet.", nullptr));
+        labelWalletStatus->setToolTip(QApplication::translate("OverviewPage", "The displayed information may be out of date. Your wallet automatically synchronizes with the MicroBitcoin network after a connection is established, but this process has not completed yet.", 0));
 #endif // QT_NO_TOOLTIP
         labelWalletStatus->setText(QString());
 #ifndef QT_NO_TOOLTIP
-        labelWatchPending->setToolTip(QApplication::translate("OverviewPage", "Unconfirmed transactions to watch-only addresses", nullptr));
+        labelWatchPending->setToolTip(QApplication::translate("OverviewPage", "Unconfirmed transactions to watch-only addresses", 0));
 #endif // QT_NO_TOOLTIP
 #ifndef QT_NO_TOOLTIP
-        labelUnconfirmed->setToolTip(QApplication::translate("OverviewPage", "Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance", nullptr));
+        labelUnconfirmed->setToolTip(QApplication::translate("OverviewPage", "Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance", 0));
 #endif // QT_NO_TOOLTIP
 #ifndef QT_NO_TOOLTIP
-        labelWatchImmature->setToolTip(QApplication::translate("OverviewPage", "Mined balance in watch-only addresses that has not yet matured", nullptr));
+        labelWatchImmature->setToolTip(QApplication::translate("OverviewPage", "Mined balance in watch-only addresses that has not yet matured", 0));
 #endif // QT_NO_TOOLTIP
-        labelTotalText->setText(QApplication::translate("OverviewPage", "Total:", nullptr));
+        labelTotalText->setText(QApplication::translate("OverviewPage", "Total:", 0));
 #ifndef QT_NO_TOOLTIP
-        labelImmature->setToolTip(QApplication::translate("OverviewPage", "Mined balance that has not yet matured", nullptr));
+        labelImmature->setToolTip(QApplication::translate("OverviewPage", "Mined balance that has not yet matured", 0));
 #endif // QT_NO_TOOLTIP
-        labelImmatureText->setText(QApplication::translate("OverviewPage", "Immature:", nullptr));
+        labelImmatureText->setText(QApplication::translate("OverviewPage", "Immature:", 0));
 #ifndef QT_NO_TOOLTIP
-        labelTotal->setToolTip(QApplication::translate("OverviewPage", "Your current total balance", nullptr));
-#endif // QT_NO_TOOLTIP
-#ifndef QT_NO_TOOLTIP
-        labelWatchTotal->setToolTip(QApplication::translate("OverviewPage", "Current total balance in watch-only addresses", nullptr));
-#endif // QT_NO_TOOLTIP
-        labelWatchonly->setText(QApplication::translate("OverviewPage", "Watch-only:", nullptr));
-        labelBalanceText->setText(QApplication::translate("OverviewPage", "Available:", nullptr));
-#ifndef QT_NO_TOOLTIP
-        labelBalance->setToolTip(QApplication::translate("OverviewPage", "Your current spendable balance", nullptr));
+        labelTotal->setToolTip(QApplication::translate("OverviewPage", "Your current total balance", 0));
 #endif // QT_NO_TOOLTIP
 #ifndef QT_NO_TOOLTIP
-        labelWatchAvailable->setToolTip(QApplication::translate("OverviewPage", "Your current balance in watch-only addresses", nullptr));
+        labelWatchTotal->setToolTip(QApplication::translate("OverviewPage", "Current total balance in watch-only addresses", 0));
 #endif // QT_NO_TOOLTIP
-        labelPendingText->setText(QApplication::translate("OverviewPage", "Pending:", nullptr));
-        labelSpendable->setText(QApplication::translate("OverviewPage", "Spendable:", nullptr));
-        label_4->setText(QApplication::translate("OverviewPage", "Recent transactions", nullptr));
+        labelWatchonly->setText(QApplication::translate("OverviewPage", "Watch-only:", 0));
+        labelBalanceText->setText(QApplication::translate("OverviewPage", "Available:", 0));
 #ifndef QT_NO_TOOLTIP
-        labelTransactionsStatus->setToolTip(QApplication::translate("OverviewPage", "The displayed information may be out of date. Your wallet automatically synchronizes with the MicroBitcoin network after a connection is established, but this process has not completed yet.", nullptr));
+        labelBalance->setToolTip(QApplication::translate("OverviewPage", "Your current spendable balance", 0));
+#endif // QT_NO_TOOLTIP
+#ifndef QT_NO_TOOLTIP
+        labelWatchAvailable->setToolTip(QApplication::translate("OverviewPage", "Your current balance in watch-only addresses", 0));
+#endif // QT_NO_TOOLTIP
+        labelPendingText->setText(QApplication::translate("OverviewPage", "Pending:", 0));
+        labelSpendable->setText(QApplication::translate("OverviewPage", "Spendable:", 0));
+        label_4->setText(QApplication::translate("OverviewPage", "Recent transactions", 0));
+#ifndef QT_NO_TOOLTIP
+        labelTransactionsStatus->setToolTip(QApplication::translate("OverviewPage", "The displayed information may be out of date. Your wallet automatically synchronizes with the MicroBitcoin network after a connection is established, but this process has not completed yet.", 0));
 #endif // QT_NO_TOOLTIP
         labelTransactionsStatus->setText(QString());
     } // retranslateUi

@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'receiverequestdialog.ui'
 **
-** Created by: Qt User Interface Compiler version 5.11.1
+** Created by: Qt User Interface Compiler version 5.5.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
@@ -10,10 +10,13 @@
 #define UI_RECEIVEREQUESTDIALOG_H
 
 #include <QtCore/QVariant>
+#include <QtWidgets/QAction>
 #include <QtWidgets/QApplication>
+#include <QtWidgets/QButtonGroup>
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QDialogButtonBox>
 #include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QHeaderView>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QSpacerItem>
 #include <QtWidgets/QTextEdit>
@@ -115,11 +118,11 @@ public:
     void retranslateUi(QDialog *ReceiveRequestDialog)
     {
 #ifndef QT_NO_TOOLTIP
-        lblQRCode->setToolTip(QApplication::translate("ReceiveRequestDialog", "QR Code", nullptr));
+        lblQRCode->setToolTip(QApplication::translate("ReceiveRequestDialog", "QR Code", 0));
 #endif // QT_NO_TOOLTIP
-        btnCopyURI->setText(QApplication::translate("ReceiveRequestDialog", "Copy &URI", nullptr));
-        btnCopyAddress->setText(QApplication::translate("ReceiveRequestDialog", "Copy &Address", nullptr));
-        btnSaveAs->setText(QApplication::translate("ReceiveRequestDialog", "&Save Image...", nullptr));
+        btnCopyURI->setText(QApplication::translate("ReceiveRequestDialog", "Copy &URI", 0));
+        btnCopyAddress->setText(QApplication::translate("ReceiveRequestDialog", "Copy &Address", 0));
+        btnSaveAs->setText(QApplication::translate("ReceiveRequestDialog", "&Save Image...", 0));
         Q_UNUSED(ReceiveRequestDialog);
     } // retranslateUi
 

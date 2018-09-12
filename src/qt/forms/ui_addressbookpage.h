@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'addressbookpage.ui'
 **
-** Created by: Qt User Interface Compiler version 5.11.1
+** Created by: Qt User Interface Compiler version 5.5.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
@@ -10,8 +10,9 @@
 #define UI_ADDRESSBOOKPAGE_H
 
 #include <QtCore/QVariant>
-#include <QtGui/QIcon>
+#include <QtWidgets/QAction>
 #include <QtWidgets/QApplication>
+#include <QtWidgets/QButtonGroup>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
@@ -128,25 +129,25 @@ public:
     void retranslateUi(QWidget *AddressBookPage)
     {
 #ifndef QT_NO_TOOLTIP
-        tableView->setToolTip(QApplication::translate("AddressBookPage", "Right-click to edit address or label", nullptr));
+        tableView->setToolTip(QApplication::translate("AddressBookPage", "Right-click to edit address or label", 0));
 #endif // QT_NO_TOOLTIP
 #ifndef QT_NO_TOOLTIP
-        newAddress->setToolTip(QApplication::translate("AddressBookPage", "Create a new address", nullptr));
+        newAddress->setToolTip(QApplication::translate("AddressBookPage", "Create a new address", 0));
 #endif // QT_NO_TOOLTIP
-        newAddress->setText(QApplication::translate("AddressBookPage", "&New", nullptr));
+        newAddress->setText(QApplication::translate("AddressBookPage", "&New", 0));
 #ifndef QT_NO_TOOLTIP
-        copyAddress->setToolTip(QApplication::translate("AddressBookPage", "Copy the currently selected address to the system clipboard", nullptr));
+        copyAddress->setToolTip(QApplication::translate("AddressBookPage", "Copy the currently selected address to the system clipboard", 0));
 #endif // QT_NO_TOOLTIP
-        copyAddress->setText(QApplication::translate("AddressBookPage", "&Copy", nullptr));
+        copyAddress->setText(QApplication::translate("AddressBookPage", "&Copy", 0));
 #ifndef QT_NO_TOOLTIP
-        deleteAddress->setToolTip(QApplication::translate("AddressBookPage", "Delete the currently selected address from the list", nullptr));
+        deleteAddress->setToolTip(QApplication::translate("AddressBookPage", "Delete the currently selected address from the list", 0));
 #endif // QT_NO_TOOLTIP
-        deleteAddress->setText(QApplication::translate("AddressBookPage", "&Delete", nullptr));
+        deleteAddress->setText(QApplication::translate("AddressBookPage", "&Delete", 0));
 #ifndef QT_NO_TOOLTIP
-        exportButton->setToolTip(QApplication::translate("AddressBookPage", "Export the data in the current tab to a file", nullptr));
+        exportButton->setToolTip(QApplication::translate("AddressBookPage", "Export the data in the current tab to a file", 0));
 #endif // QT_NO_TOOLTIP
-        exportButton->setText(QApplication::translate("AddressBookPage", "&Export", nullptr));
-        closeButton->setText(QApplication::translate("AddressBookPage", "C&lose", nullptr));
+        exportButton->setText(QApplication::translate("AddressBookPage", "&Export", 0));
+        closeButton->setText(QApplication::translate("AddressBookPage", "C&lose", 0));
         Q_UNUSED(AddressBookPage);
     } // retranslateUi
 
