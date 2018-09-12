@@ -385,8 +385,8 @@ bool VerifyWalletHasAsset(const std::string& asset_name, std::pair<int, std::str
 std::string DecodeIPFS(std::string encoded);
 std::string EncodeIPFS(std::string decoded);
 
-bool CreateAssetTransaction(CWallet* pwallet, const CNewAsset& asset, const std::string& address, std::pair<int, std::string>& error, std::string& rvnChangeAddress, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRequired);
-bool CreateAssetTransaction(CWallet* pwallet, const std::vector<CNewAsset> assets, const std::string& address, std::pair<int, std::string>& error, std::string& rvnChangeAddress, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRequired);
+bool CreateAssetTransaction(CWallet* pwallet, CCoinControl& coinControl, const CNewAsset& asset, const std::string& address, std::pair<int, std::string>& error, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRequired);
+bool CreateAssetTransaction(CWallet* pwallet, CCoinControl& coinControl, const std::vector<CNewAsset> assets, const std::string& address, std::pair<int, std::string>& error, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRequired);
 bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& asset, const std::string& address, const std::string& changeAddress, std::pair<int, std::string>& error, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRequired);
 bool CreateTransferAssetTransaction(CWallet* pwallet, const CCoinControl& coinControl, const std::vector< std::pair<CAssetTransfer, std::string> >vTransfers, const std::string& changeAddress, std::pair<int, std::string>& error, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRequired);
 bool SendAssetTransaction(CWallet* pwallet, CWalletTx& transaction, CReserveKey& reserveKey, std::pair<int, std::string>& error, std::string& txid);

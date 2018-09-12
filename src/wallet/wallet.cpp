@@ -2257,14 +2257,14 @@ void CWallet::AvailableCoinsAll(std::vector<COutput>& vCoins, std::map<std::stri
 
             for (unsigned int i = 0; i < pcoin->tx->vout.size(); i++) {
 
-                if (coinControl && coinControl->fForAssets && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint((*it).first, i)) && pcoin->tx->vout[i].scriptPubKey.IsAssetScript()) {
+                int nType;
+                bool fIsOwner;
+                bool isAssetScript = pcoin->tx->vout[i].scriptPubKey.IsAssetScript(nType, fIsOwner);
+                if (coinControl && !isAssetScript && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint((*it).first, i)))
                     continue;
-                }
-                else {
-                    if (coinControl && !coinControl->fForAssets && coinControl->HasSelected() && !coinControl->fAllowOtherInputs &&
-                        !coinControl->IsSelected(COutPoint((*it).first, i)))
-                        continue;
-                }
+
+                if (coinControl && isAssetScript && coinControl->HasAssetSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsAssetSelected(COutPoint((*it).first, i)))
+                    continue;
 
                 if (IsLockedCoin((*it).first, i))
                     continue;
@@ -2294,11 +2294,8 @@ void CWallet::AvailableCoinsAll(std::vector<COutput>& vCoins, std::map<std::stri
                 bool fWasReissueAssetOutPoint = false;
                 std::string strAssetName;
 
-                int nType;
-                bool fIsOwner;
-
                 // Looking for Asset Tx OutPoints Only
-                if (fGetAssets && AreAssetsDeployed() && pcoin->tx->vout[i].scriptPubKey.IsAssetScript(nType, fIsOwner)) {
+                if (fGetAssets && AreAssetsDeployed() && isAssetScript) {
 
                     if ( nType == TX_TRANSFER_ASSET) {
                         if (TransferAssetFromScript(pcoin->tx->vout[i].scriptPubKey, assetTransfer, address)) {
@@ -2372,7 +2369,7 @@ void CWallet::AvailableCoinsAll(std::vector<COutput>& vCoins, std::map<std::stri
                         continue;
 
                     // We only want RVN OutPoints. Don't include Asset OutPoints
-                    if (pcoin->tx->vout[i].scriptPubKey.IsAssetScript())
+                    if (isAssetScript)
                         continue;
 
                     vCoins.push_back(COutput(pcoin, i, nDepth, fSpendableIn, fSolvableIn, safeTx));
@@ -2718,7 +2715,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
     std::vector<COutput> vCoins(vAvailableCoins);
 
     // coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
-    if (coinControl && !coinControl->fForAssets && coinControl->HasSelected() && !coinControl->fAllowOtherInputs)
+    if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs)
     {
         for (const COutput& out : vCoins)
         {
@@ -2735,7 +2732,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
     CAmount nValueFromPresetInputs = 0;
 
     std::vector<COutPoint> vPresetInputs;
-    if (coinControl && !coinControl->fForAssets)
+    if (coinControl)
         coinControl->ListSelected(vPresetInputs);
     for (const COutPoint& outpoint : vPresetInputs)
     {
@@ -2753,7 +2750,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
     }
 
     // remove preset inputs from vCoins
-    for (std::vector<COutput>::iterator it = vCoins.begin(); it != vCoins.end() && coinControl && !coinControl->fForAssets && coinControl->HasSelected();)
+    for (std::vector<COutput>::iterator it = vCoins.begin(); it != vCoins.end() && coinControl && coinControl->HasSelected();)
     {
         if (setPresetCoins.count(CInputCoin(it->tx, it->i)))
             it = vCoins.erase(it);

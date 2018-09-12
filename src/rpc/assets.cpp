@@ -202,8 +202,11 @@ UniValue issue(const JSONRPCRequest& request)
     CAmount nRequiredFee;
     std::pair<int, std::string> error;
 
+    CCoinControl crtl;
+    crtl.destChange = DecodeDestination(changeAddress);
+
     // Create the Transaction
-    if (!CreateAssetTransaction(pwallet, asset, address, error, changeAddress, transaction, reservekey, nRequiredFee))
+    if (!CreateAssetTransaction(pwallet, crtl, asset, address, error, transaction, reservekey, nRequiredFee))
         throw JSONRPCError(error.first, error.second);
 
     // Send the Transaction to the network
@@ -344,8 +347,12 @@ UniValue issueunique(const JSONRPCRequest& request)
     CAmount nRequiredFee;
     std::pair<int, std::string> error;
 
+    CCoinControl crtl;
+
+    crtl.destChange = DecodeDestination(changeAddress);
+
     // Create the Transaction
-    if (!CreateAssetTransaction(pwallet, assets, address, error, changeAddress, transaction, reservekey, nRequiredFee))
+    if (!CreateAssetTransaction(pwallet, crtl, assets, address, error, transaction, reservekey, nRequiredFee))
         throw JSONRPCError(error.first, error.second);
 
     // Send the Transaction to the network

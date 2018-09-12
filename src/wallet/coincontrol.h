@@ -36,10 +36,7 @@ public:
     /** RVN START */
     //! Name of the asset that is selected, used when sending assets with coincontrol
     std::string strAssetSelected;
-    //! If this is being used for assets
-    bool fForAssets;
     /** RVN END */
-
 
     CCoinControl()
     {
@@ -58,7 +55,7 @@ public:
         signalRbf = fWalletRbf;
         m_fee_mode = FeeEstimateMode::UNSET;
         strAssetSelected = "";
-        fForAssets = false;
+        setAssetsSelected.clear();
     }
 
     bool HasSelected() const
@@ -66,15 +63,31 @@ public:
         return (setSelected.size() > 0);
     }
 
+    bool HasAssetSelected() const
+    {
+        return (setAssetsSelected.size() > 0);
+    }
+
     bool IsSelected(const COutPoint& output) const
     {
         return (setSelected.count(output) > 0);
+    }
+
+    bool IsAssetSelected(const COutPoint& output) const
+    {
+        return (setAssetsSelected.count(output) > 0);
     }
 
     void Select(const COutPoint& output)
     {
         setSelected.insert(output);
     }
+
+    void SelectAsset(const COutPoint& output)
+    {
+        setAssetsSelected.insert(output);
+    }
+
 
     void UnSelect(const COutPoint& output)
     {
@@ -83,10 +96,18 @@ public:
             strAssetSelected = "";
     }
 
+    void UnSelectAsset(const COutPoint& output)
+    {
+        setAssetsSelected.erase(output);
+        if (!setSelected.size())
+            strAssetSelected = "";
+    }
+
     void UnSelectAll()
     {
         setSelected.clear();
         strAssetSelected = "";
+        setAssetsSelected.clear();
     }
 
     void ListSelected(std::vector<COutPoint>& vOutpoints) const
@@ -94,8 +115,14 @@ public:
         vOutpoints.assign(setSelected.begin(), setSelected.end());
     }
 
+    void ListSelectedAssets(std::vector<COutPoint>& vOutpoints) const
+    {
+        vOutpoints.assign(setAssetsSelected.begin(), setAssetsSelected.end());
+    }
+
 private:
     std::set<COutPoint> setSelected;
+    std::set<COutPoint> setAssetsSelected;
 };
 
 #endif // RAVEN_WALLET_COINCONTROL_H
