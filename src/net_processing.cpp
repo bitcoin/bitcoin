@@ -164,6 +164,18 @@ namespace {
     /** Expiration-time ordered list of (expire time, relay map entry) pairs. */
     std::deque<std::pair<int64_t, MapRelay::iterator>> vRelayExpiration GUARDED_BY(cs_main);
 
+    void AddToMapRelay(CTransactionRef &&txref, NodeId peer, int64_t time_now) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+    {
+        const uint256& hash = txref->GetHash();
+        auto ret = mapRelay.emplace(hash, RelayEntry(std::move(txref)));
+        // Add this peer to the node map indicating which peers we will allow
+        // to download the transaction
+        ret.first->second.m_node_set.insert(peer);
+        if (ret.second) {
+            vRelayExpiration.push_back(std::make_pair(time_now + 15 * 60 * 1000000, ret.first));
+        }
+    }
+
     std::atomic<int64_t> nTimeBestReceived(0); // Used only to inform the wallet of when we last received a block
 
     struct IteratorComparator
@@ -3616,12 +3628,23 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                             vRelayExpiration.pop_front();
                         }
 
-                        auto ret = mapRelay.emplace(hash, RelayEntry(std::move(txinfo.tx)));
-                        // Add this peer to the node map indicating which peers
-                        // we will allow to download the transaction
-                        ret.first->second.m_node_set.insert(pto->GetId());
-                        if (ret.second) {
-                            vRelayExpiration.push_back(std::make_pair(nNow + 15 * 60 * 1000000, ret.first));
+                        AddToMapRelay(std::move(txinfo.tx), pto->GetId(), nNow);
+
+                        // Add all ancestors of this transaction to mapRelay as
+                        // well, so that if a peer is missing a parent
+                        // transaction, we will provide it on request.
+                        {
+                            LOCK(mempool.cs);
+                            auto tx_iter = mempool.GetIter(hash);
+                            if (tx_iter) {
+                                CTxMemPool::setEntries ancestors;
+                                uint64_t no_limit = std::numeric_limits<uint64_t>::max();
+                                std::string dummy;
+                                mempool.CalculateMemPoolAncestors(**tx_iter, ancestors, no_limit, no_limit, no_limit, no_limit, dummy, false);
+                                for (auto ancestor_it : ancestors) {
+                                    AddToMapRelay(ancestor_it->GetSharedTx(), pto->GetId(), nNow);
+                                }
+                            }
                         }
                     }
                     if (vInv.size() == MAX_INV_SZ) {
