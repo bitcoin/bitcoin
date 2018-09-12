@@ -91,9 +91,9 @@ BOOST_FIXTURE_TEST_SUITE(asset_tests, BasicTestingSetup)
         // unique
         BOOST_CHECK(IsAssetNameValid("ABC#AZaz09", type));
         BOOST_CHECK(type == AssetType::UNIQUE);
-        BOOST_CHECK(IsAssetNameValid("ABC#@$%&*()[]{}<>-_.;?\\:", type));
+        BOOST_CHECK(IsAssetNameValid("ABC#abc123ABC@$%&*()[]{}-_.?:", type));
         BOOST_CHECK(!IsAssetNameValid("ABC#no!bangs", type));
-        BOOST_CHECK(IsAssetNameValid("ABC/THING#_STILL_30_MAX------_", type));
+        BOOST_CHECK(IsAssetNameValid("ABC/THING#_STILL_31_MAX-------_", type));
 
         BOOST_CHECK(!IsAssetNameValid("MIN#", type));
         BOOST_CHECK(!IsAssetNameValid("ABC#NO#HASH", type));
@@ -105,7 +105,8 @@ BOOST_FIXTURE_TEST_SUITE(asset_tests, BasicTestingSetup)
         // channel
         BOOST_CHECK(IsAssetNameValid("ABC~1", type));
         BOOST_CHECK(type == AssetType::MSGCHANNEL);
-        BOOST_CHECK(IsAssetNameValid("ABC~STILL_MAX_OF_30.CHARS_1234", type));
+        BOOST_CHECK(IsAssetNameValid("ABC~MAX_OF_12_CR", type));
+        BOOST_CHECK(!IsAssetNameValid("ABC~MAX_OF_12_CHR", type));
         BOOST_CHECK(IsAssetNameValid("TEST/TEST~CHANNEL", type));
         BOOST_CHECK(type == AssetType::MSGCHANNEL);
 
@@ -140,7 +141,8 @@ BOOST_FIXTURE_TEST_SUITE(asset_tests, BasicTestingSetup)
         BOOST_CHECK(!IsAssetNameValid("ABC^VOTING_IS_31_CHARACTERS_LN!"));
         BOOST_CHECK(IsAssetNameValid("ABC/SUB/SUB/SUB/SUB^VOTE"));
         BOOST_CHECK(IsAssetNameValid("ABC/SUB/SUB/SUB/SUB/SUB/30^VOT"));
-        BOOST_CHECK(!IsAssetNameValid("ABC/SUB/SUB/SUB/SUB/SUB/31^VOTE"));
+        BOOST_CHECK(IsAssetNameValid("ABC/SUB/SUB/SUB/SUB/SUB/31^VOTE"));
+        BOOST_CHECK(!IsAssetNameValid("ABC/SUB/SUB/SUB/SUB/SUB/32X^VOTE"));
         BOOST_CHECK(IsAssetNameValid("ABC/SUB/SUB^VOTE", type));
         BOOST_CHECK(type == AssetType::VOTE);
 
