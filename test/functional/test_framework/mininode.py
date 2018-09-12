@@ -179,7 +179,7 @@ class P2PConnection(asyncio.Protocol):
             raise IOError('Not connected')
         self._log_message("send", message)
         tmsg = self._build_message(message)
-        NetworkThread.network_event_loop.call_soon_threadsafe(lambda: self._transport and self._transport.write(tmsg))
+        NetworkThread.network_event_loop.call_soon_threadsafe(lambda: self._transport and not self._transport.is_closing() and self._transport.write(tmsg))
 
     # Class utility methods
 
