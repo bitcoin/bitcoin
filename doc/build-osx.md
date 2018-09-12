@@ -43,14 +43,14 @@ from the root of the repository.
 Build Chaincoin Core
 ------------------------
 
-1. Clone the chaincoin source code and cd into `chaincoin`
+1. Clone the Chaincoin Core source code and cd into `chaincoin`
 
         git clone https://github.com/chaincoin/chaincoin
         cd chaincoin
 
-2.  Build chaincoin-core:
+2.  Build Chaincoin Core:
 
-    Configure and build the headless chaincoin binaries as well as the GUI (if Qt is found).
+    Configure and build the headless Chaincoin Core binaries as well as the GUI (if Qt is found).
 
     You can disable the GUI build by passing `--without-gui` to configure.
 
@@ -71,7 +71,7 @@ Running
 
 Chaincoin Core is now available at `./src/chaincoind`
 
-Before running, it's recommended you create an RPC configuration file.
+Before running, it's recommended that you create an RPC configuration file.
 
     echo -e "rpcuser=chaincoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Chaincoin/chaincoin.conf"
 

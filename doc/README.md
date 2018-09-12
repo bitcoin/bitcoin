@@ -9,7 +9,7 @@ To download Chaincoin Core, visit [chaincoin.org](https://www.chaincoin.org/chai
 
 Running
 ---------------------
-The following are some helpful notes on how to run Chaincoin on your native platform.
+The following are some helpful notes on how to run Chaincoin Core on your native platform.
 
 ### Unix
 
@@ -24,11 +24,18 @@ Unpack the files into a directory, and then run chaincoin-qt.exe.
 
 ### macOS
 
-Drag Chaincoin-Core to your applications folder, and then run Chaincoin-Core.
+Drag Chaincoin Core to your applications folder, and then run Chaincoin Core.
+
+### Need Help?
+
+* See the documentation at the [Bitcoin Wiki](https://en.bitcoin.it/wiki/Main_Page)
+for help and more information.
+* Ask for help on [#bitcoin](http://webchat.freenode.net?channels=bitcoin) on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net?channels=bitcoin).
+* Ask for help on the [BitcoinTalk](https://bitcointalk.org/) forums, in the [Technical Support board](https://bitcointalk.org/index.php?board=4.0).
 
 Building
 ---------------------
-The following are developer notes on how to build Chaincoin on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
+The following are developer notes on how to build Chaincoin Core on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
 
 - [Dependencies](dependencies.md)
 - [macOS Build Notes](build-osx.md)
