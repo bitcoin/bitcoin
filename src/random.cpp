@@ -54,7 +54,7 @@
     std::abort();
 }
 
-static inline int64_t GetPerformanceCounter()
+static int64_t GetPerformanceCounter()
 {
     // Read the hardware time stamp counter when available.
     // See https://en.wikipedia.org/wiki/Time_Stamp_Counter for more information.

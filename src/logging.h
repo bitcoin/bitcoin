@@ -111,7 +111,7 @@ namespace BCLog {
 extern BCLog::Logger* const g_logger;
 
 /** Return true if log accepts specified category */
-static inline bool LogAcceptCategory(BCLog::LogFlags category)
+inline bool LogAcceptCategory(BCLog::LogFlags category)
 {
     return g_logger->WillLogCategory(category);
 }
@@ -128,8 +128,8 @@ bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str);
 /** Get format string from VA_ARGS for error reporting */
 template<typename... Args> std::string FormatStringFromLogArgs(const char *fmt, const Args&... args) { return fmt; }
 
-static inline void MarkUsed() {}
-template<typename T, typename... Args> static inline void MarkUsed(const T& t, const Args&... args)
+inline void MarkUsed() {}
+template<typename T, typename... Args> void MarkUsed(const T& t, const Args&... args)
 {
     (void)t;
     MarkUsed(args...);

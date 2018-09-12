@@ -170,7 +170,7 @@ static std::vector<uint256> BlockGetMerkleBranch(const CBlock& block, const std:
     return vMerkleBranch;
 }
 
-static inline int ctz(uint32_t i) {
+static int ctz(uint32_t i) {
     if (i == 0) return 0;
     int j = 0;
     while (!(i & 1)) {

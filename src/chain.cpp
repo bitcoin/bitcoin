@@ -67,10 +67,10 @@ CBlockIndex* CChain::FindEarliestAtLeast(int64_t nTime) const
 }
 
 /** Turn the lowest '1' bit in the binary representation of a number into a '0'. */
-int static inline InvertLowestOne(int n) { return n & (n - 1); }
+int static InvertLowestOne(int n) { return n & (n - 1); }
 
 /** Compute what height to jump back to with the CBlockIndex::pskip pointer. */
-int static inline GetSkipHeight(int height) {
+int static GetSkipHeight(int height) {
     if (height < 2)
         return 0;
 

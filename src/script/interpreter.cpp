@@ -53,7 +53,7 @@ bool CastToBool(const valtype& vch)
  */
 #define stacktop(i)  (stack.at(stack.size()+(i)))
 #define altstacktop(i)  (altstack.at(altstack.size()+(i)))
-static inline void popstack(std::vector<valtype>& stack)
+static void popstack(std::vector<valtype>& stack)
 {
     if (stack.empty())
         throw std::runtime_error("popstack(): stack empty");
