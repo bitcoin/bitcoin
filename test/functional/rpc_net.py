@@ -12,6 +12,7 @@ from decimal import Decimal
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
     assert_greater_than_or_equal,
     assert_raises_rpc_error,
     connect_nodes_bi,
@@ -31,6 +32,7 @@ class NetTest(BitcoinTestFramework):
         self._test_getnetworkinginfo()
         self._test_getaddednodeinfo()
         self._test_getpeerinfo()
+        self._test_getnetworkrpcinfo()
 
     def _test_connection_count(self):
         # connect_nodes_bi connects each node to the other
@@ -100,6 +102,13 @@ class NetTest(BitcoinTestFramework):
         assert_equal(peer_info[1][0]['addrbind'], peer_info[0][0]['addr'])
         assert_equal(peer_info[0][0]['minfeefilter'], Decimal("0.00000500"))
         assert_equal(peer_info[1][0]['minfeefilter'], Decimal("0.00001000"))
+
+    def _test_getnetworkrpcinfo(self):
+        first_result = self.nodes[0].getnetworkrpcinfo()
+        second_result = self.nodes[0].getnetworkrpcinfo()
+
+        assert_greater_than(second_result['uptime_micros'], first_result['uptime_micros'])
+        assert_greater_than(second_result['total_requests'], first_result['total_requests'])
 
 if __name__ == '__main__':
     NetTest().main()
