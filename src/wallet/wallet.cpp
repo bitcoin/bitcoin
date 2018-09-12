@@ -5399,7 +5399,7 @@ bool CWallet::AutoBackupWallet(const fs::path& wallet_path, std::string& strBack
                 fs::copy_file(sourceFile, backupFile);
                 LogPrintf("Creating backup of %s -> %s\n", sourceFile.string(), backupFile.string());
             } catch(fs::filesystem_error &error) {
-                strBackupWarningRet = strprintf(_("Failed to create backup, error: %s"), error.what());
+                strBackupWarningRet = strprintf(_("Failed to create backup, error: %s"), fsbridge::get_filesystem_error_message(error));
                 LogPrintf("%s\n", strBackupWarningRet);
                 nWalletBackups = -1;
                 return false;
@@ -5438,7 +5438,7 @@ bool CWallet::AutoBackupWallet(const fs::path& wallet_path, std::string& strBack
                 fs::remove(file.second);
                 LogPrintf("Old backup deleted: %s\n", file.second);
             } catch(fs::filesystem_error &error) {
-                strBackupWarningRet = strprintf(_("Failed to delete backup, error: %s"), error.what());
+                strBackupWarningRet = strprintf(_("Failed to delete backup, error: %s"), fsbridge::get_filesystem_error_message(error));
                 LogPrintf("%s\n", strBackupWarningRet);
                 return false;
             }
