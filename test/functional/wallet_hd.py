@@ -21,6 +21,9 @@ class WalletHDTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.extra_args = [[], ['-keypool=0']]
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def run_test(self):
         # Make sure can't switch off usehd after wallet creation
         self.stop_node(1)

@@ -15,6 +15,9 @@ class MerkleBlockTest(BitcoinTestFramework):
         # Nodes 0/1 are "wallet" nodes, Nodes 2/3 are used for testing
         self.extra_args = [[], [], [], ["-txindex"]]
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def setup_network(self):
         self.setup_nodes()
         connect_nodes(self.nodes[0], 1)
