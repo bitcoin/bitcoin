@@ -3393,9 +3393,9 @@ UniValue listminting(const JSONRPCRequest& request)
     if(request.params.size() > 0)
         count = request.params[0].get_int();
 
-    int64_t from = 0;
-    if(request.params.size() > 1)
-        from = request.params[1].get_int();
+//    int64_t from = 0;
+//    if(request.params.size() > 1)
+//        from = request.params[1].get_int();
 
     UniValue ret(UniValue::VARR);
 
@@ -3412,7 +3412,7 @@ UniValue listminting(const JSONRPCRequest& request)
         for (auto& kr : txList) {
             if(!kr.spent) {
 
-                if(count > 0 && ret.size() >= count) {
+                if(count > 0 && (int32_t)ret.size() >= count) {
                     break;
                 }
 
