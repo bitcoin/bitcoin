@@ -4682,7 +4682,7 @@ int VersionBitsTipStateSinceHeight(const Consensus::Params& params, Consensus::D
 
 static const uint64_t MEMPOOL_DUMP_VERSION = 1;
 
-bool LoadMempool(void)
+bool LoadMempool()
 {
     const CChainParams& chainparams = Params();
     int64_t nExpiryTimeout = gArgs.GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60;
@@ -4759,7 +4759,7 @@ bool LoadMempool(void)
     return true;
 }
 
-bool DumpMempool(void)
+bool DumpMempool()
 {
     int64_t start = GetTimeMicros();
 
