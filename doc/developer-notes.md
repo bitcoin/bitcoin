@@ -512,7 +512,7 @@ Strings and formatting
   - *Rationale*: These functions do overflow checking, and avoid pesky locale issues.
 
 - Avoid using locale dependent functions if possible. You can use the provided
-  [`lint-locale-dependence.sh`](/contrib/devtools/lint-locale-dependence.sh)
+  [`lint-locale-dependence.sh`](/test/lint/lint-locale-dependence.sh)
   to check for accidental use of locale dependent functions.
 
   - *Rationale*: Unnecessary locale dependence can cause bugs that are very tricky to isolate and fix.
