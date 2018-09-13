@@ -27,6 +27,7 @@ public:
         return *this;
     }
     void Finalize(unsigned char hash[OUTPUT_SIZE]);
+    void Finalizese(unsigned char hash[OUTPUT_SIZE]);
 };
 
 #endif // BITCOIN_CRYPTO_HMAC_SHA512_H
