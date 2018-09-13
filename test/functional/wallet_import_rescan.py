@@ -132,7 +132,7 @@ class ImportRescanTest(BitcoinTestFramework):
 
         self.add_nodes(self.num_nodes, extra_args=extra_args)
 
-        # Import keys
+        # Import keys with pruning disabled
         self.start_nodes(extra_args=[[]] * self.num_nodes)
         super().import_deterministic_coinbase_privkeys()
         self.stop_nodes()

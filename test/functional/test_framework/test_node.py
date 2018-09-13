@@ -110,7 +110,7 @@ class TestNode():
     def get_deterministic_priv_key(self):
         """Return a deterministic priv key in base58, that only depends on the node's index"""
         PRIV_KEYS = [
-            # adress , privkey
+            # address , privkey
             ('yYdShjQSptFKitYLksFEUSwHe4hnbar5rf', 'cMfbiEsnG5b8Gwm6vEgfWvZLuXZNC4zsN2y7Es3An9xHRWRjmwgR'),
             ('yfTFJgvq65UZsb9RBbpdYAAzsJoCGXqH2w', 'cStuFACUD1N6JjKQxNLUQ443qJUtSzLitKKEkA8x6utxTPZTLUtA'),
             ('yU3w4VDjKhHiZpWszkUZVnFTS56AfgdfPV', 'cQb5yh2sTiG7dsxxbXHhWSBLMByYT7jY49A1kC7zKhgL9WNHysWW'),

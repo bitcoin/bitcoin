@@ -45,12 +45,6 @@ class ZMQTest (BitcoinTestFramework):
         skip_if_no_py3_zmq()
         skip_if_no_bitcoind_zmq(self)
 
-        # Import keys
-        self.add_nodes(self.num_nodes)
-        self.start_nodes()
-        super().import_deterministic_coinbase_privkeys()
-        self.stop_nodes()
-
         import zmq
 
         # Initialize ZMQ context and socket.
@@ -70,11 +64,12 @@ class ZMQTest (BitcoinTestFramework):
         self.rawblock = ZMQSubscriber(socket, b"rawblock")
         self.rawtx = ZMQSubscriber(socket, b"rawtx")
 
-        self.nodes[0].extra_args = ["-zmqpub%s=%s" % (sub.topic.decode(), address) for sub in [self.hashblock, self.hashtx, self.rawblock, self.rawtx]]
+        self.extra_args = [
+            ["-zmqpub%s=%s" % (sub.topic.decode(), address) for sub in [self.hashblock, self.hashtx, self.rawblock, self.rawtx]],
+            [],
+        ]
+        self.add_nodes(self.num_nodes, self.extra_args)
         self.start_nodes()
-
-    def import_deterministic_coinbase_privkeys(self):
-        pass
 
     def run_test(self):
         try:
