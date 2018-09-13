@@ -180,7 +180,7 @@ void AssetControlDialog::setModel(WalletModel *_model)
 void AssetControlDialog::buttonBoxClicked(QAbstractButton* button)
 {
     if (ui->buttonBox->buttonRole(button) == QDialogButtonBox::AcceptRole) {
-        if (AssetControlDialog::assetControl->HasSelected())
+        if (AssetControlDialog::assetControl->HasAssetSelected())
             AssetControlDialog::assetControl->strAssetSelected = ui->assetList->currentText().toStdString();
         done(QDialog::Accepted); // closes the dialog
     }
@@ -390,11 +390,11 @@ void AssetControlDialog::viewItemChanged(QTreeWidgetItem* item, int column)
         COutPoint outpt(uint256S(item->text(COLUMN_TXHASH).toStdString()), item->text(COLUMN_VOUT_INDEX).toUInt());
 
         if (item->checkState(COLUMN_CHECKBOX) == Qt::Unchecked)
-            assetControl->UnSelect(outpt);
+            assetControl->UnSelectAsset(outpt);
         else if (item->isDisabled()) // locked (this happens if "check all" through parent node)
             item->setCheckState(COLUMN_CHECKBOX, Qt::Unchecked);
         else
-            assetControl->Select(outpt);
+            assetControl->SelectAsset(outpt);
 
         // selection changed -> update labels
         if (ui->treeWidget->isEnabled()) // do not update on every click for (un)select all
@@ -459,7 +459,7 @@ void AssetControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
 
     std::vector<COutPoint> vCoinControl;
     std::vector<COutput>   vOutputs;
-    assetControl->ListSelected(vCoinControl);
+    assetControl->ListSelectedAssets(vCoinControl);
     model->getOutputs(vCoinControl, vOutputs);
 
     for (const COutput& out : vOutputs) {
@@ -469,7 +469,7 @@ void AssetControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         COutPoint outpt(txhash, out.i);
         if (model->isSpent(outpt))
         {
-            assetControl->UnSelect(outpt);
+            assetControl->UnSelectAsset(outpt);
             continue;
         }
 
@@ -722,13 +722,13 @@ void AssetControlDialog::updateView()
             // disable locked coins
             if (model->isLockedCoin(txhash, out.i)) {
                 COutPoint outpt(txhash, out.i);
-                assetControl->UnSelect(outpt); // just to be sure
+                assetControl->UnSelectAsset(outpt); // just to be sure
                 itemOutput->setDisabled(true);
                 itemOutput->setIcon(COLUMN_CHECKBOX, platformStyle->SingleColorIcon(":/icons/lock_closed"));
             }
 
             // set checkbox
-            if (assetControl->IsSelected(COutPoint(txhash, out.i)))
+            if (assetControl->IsAssetSelected(COutPoint(txhash, out.i)))
                 itemOutput->setCheckState(COLUMN_CHECKBOX, Qt::Checked);
         }
 

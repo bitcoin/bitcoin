@@ -2344,16 +2344,16 @@ std::string EncodeIPFS(std::string decoded){
     return EncodeBase58(unsignedCharData);
 };
 
-bool CreateAssetTransaction(CWallet* pwallet, const CNewAsset& asset, const std::string& address, std::pair<int, std::string>& error, std::string& rvnChangeAddress, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRequired)
+bool CreateAssetTransaction(CWallet* pwallet, CCoinControl& coinControl, const CNewAsset& asset, const std::string& address, std::pair<int, std::string>& error, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRequired)
 {
     std::vector<CNewAsset> assets;
     assets.push_back(asset);
-    return CreateAssetTransaction(pwallet, assets, address, error, rvnChangeAddress, wtxNew, reservekey, nFeeRequired);
+    return CreateAssetTransaction(pwallet, coinControl, assets, address, error, wtxNew, reservekey, nFeeRequired);
 }
 
-bool CreateAssetTransaction(CWallet* pwallet, const std::vector<CNewAsset> assets, const std::string& address, std::pair<int, std::string>& error, std::string& rvnChangeAddress, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRequired)
+bool CreateAssetTransaction(CWallet* pwallet, CCoinControl& coinControl, const std::vector<CNewAsset> assets, const std::string& address, std::pair<int, std::string>& error, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRequired)
 {
-    std::string change_address = rvnChangeAddress;
+    std::string change_address = EncodeDestination(coinControl.destChange);
 
     // Validate the assets data
     std::string strError;
@@ -2380,6 +2380,7 @@ bool CreateAssetTransaction(CWallet* pwallet, const std::vector<CNewAsset> asset
         }
 
         change_address = EncodeDestination(keyID);
+        coinControl.destChange = DecodeDestination(change_address);
     }
 
     AssetType assetType;
@@ -2419,10 +2420,6 @@ bool CreateAssetTransaction(CWallet* pwallet, const std::vector<CNewAsset> asset
         return false;
     }
 
-    CCoinControl coin_control;
-
-    coin_control.destChange = DecodeDestination(change_address);
-
     LOCK2(cs_main, pwallet->cs_wallet);
 
     // Create and send the transaction
@@ -2455,7 +2452,7 @@ bool CreateAssetTransaction(CWallet* pwallet, const std::vector<CNewAsset> asset
         }
     }
 
-    if (!pwallet->CreateTransactionWithAssets(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strTxError, coin_control, assets, DecodeDestination(address), assetType)) {
+    if (!pwallet->CreateTransactionWithAssets(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strTxError, coinControl, assets, DecodeDestination(address), assetType)) {
         if (!fSubtractFeeFromAmount && burnAmount + nFeeRequired > curBalance)
             strTxError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
         error = std::make_pair(RPC_WALLET_ERROR, strTxError);

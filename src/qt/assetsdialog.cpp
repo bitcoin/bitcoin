@@ -294,8 +294,6 @@ void AssetsDialog::on_sendButton_clicked()
     if (model->getOptionsModel()->getCoinControlFeatures())
         ctrl = *AssetControlDialog::assetControl;
 
-    ctrl.fForAssets = true;
-
     updateAssetControlState(ctrl);
 
     CWalletTx tx;
@@ -428,7 +426,7 @@ SendAssetsEntry *AssetsDialog::addEntry()
     QStringList list;
     bool fIsOwner = false;
     bool fIsAssetControl = false;
-    if (AssetControlDialog::assetControl->HasSelected()) {
+    if (AssetControlDialog::assetControl->HasAssetSelected()) {
         list << QString::fromStdString(AssetControlDialog::assetControl->strAssetSelected);
         fIsOwner = IsAssetNameAnOwner(AssetControlDialog::assetControl->strAssetSelected);
         fIsAssetControl = true;
@@ -884,7 +882,7 @@ void AssetsDialog::assetControlUpdateLabels()
         }
     }
 
-    if (AssetControlDialog::assetControl->HasSelected())
+    if (AssetControlDialog::assetControl->HasAssetSelected())
     {
         // actual coin control calculation
         AssetControlDialog::updateLabels(model, this);
@@ -912,7 +910,9 @@ void AssetsDialog::createAssetButtonClicked()
         return;
     }
 
-    CreateAssetDialog dlg(platformStyle, 0, model);
+    CreateAssetDialog dlg(platformStyle, 0, model, clientModel);
+    dlg.setModel(model);
+    dlg.setClientModel(clientModel);
     dlg.exec();
 }
 
@@ -967,7 +967,7 @@ void AssetsDialog::mineButtonClicked()
 
 void AssetsDialog::assetControlUpdateSendCoinsDialog()
 {
-    AssetControlDialog::assetControl->HasSelected();
+    AssetControlDialog::assetControl->HasAssetSelected();
     for(int i = 0; i < ui->entries->count(); ++i)
     {
         SendAssetsEntry *entry = qobject_cast<SendAssetsEntry*>(ui->entries->itemAt(i)->widget());
