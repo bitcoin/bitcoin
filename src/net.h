@@ -339,6 +339,7 @@ private:
     void DisconnectNodes();
     void InactivityChecks();
     void NotifyNumConnectionsChanged();
+    void SocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set);
     void SocketHandler();
     void ThreadSocketHandler();
     void ThreadDNSAddressSeed();
