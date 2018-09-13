@@ -19,6 +19,9 @@ class PSBTTest(BitcoinTestFramework):
        # TODO: remove -txindex. Currently required for getrawtransaction call.
         self.extra_args = [[], ["-txindex"], ["-txindex"]]
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def run_test(self):
         # Create and fund a raw tx for sending 10 BTC
         psbtx1 = self.nodes[0].walletcreatefundedpsbt([], {self.nodes[2].getnewaddress():10})['psbt']

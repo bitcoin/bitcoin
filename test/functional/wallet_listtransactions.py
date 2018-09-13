@@ -13,6 +13,9 @@ class ListTransactionsTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.set_cache_mocktime()
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def run_test(self):
         # Simple send, 0 to 1:
         txid = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.1)

@@ -150,6 +150,9 @@ class BIP68_112_113Test(BitcoinTestFramework):
     def setup_network(self):
         self.setup_nodes()
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def generate_blocks(self, number, version, test_blocks=None):
         if test_blocks is None:
             test_blocks = []

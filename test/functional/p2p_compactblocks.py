@@ -96,6 +96,9 @@ class CompactBlocksTest(BitcoinTestFramework):
         self.extra_args = [["-txindex"]] * 2
         self.utxos = []
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def build_block_on_tip(self, node):
         height = node.getblockcount()
         tip = node.getbestblockhash()

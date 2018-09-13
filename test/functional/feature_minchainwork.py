@@ -31,6 +31,9 @@ class MinimumChainWorkTest(BitcoinTestFramework):
         self.extra_args = [[], ["-minimumchainwork=0x65"], ["-minimumchainwork=0x65"]]
         self.node_min_work = [0, 101, 101]
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def setup_network(self):
         # Force CanDirectFetch to return false (otherwise nMinimumChainWork is ignored)
         self.bump_mocktime(21 * 2.6 * 60)

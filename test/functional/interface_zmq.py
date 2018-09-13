@@ -7,17 +7,18 @@ import struct
 
 from codecs import encode
 
-from test_framework.test_framework import (
-    BitcoinTestFramework, skip_if_no_bitcoind_zmq, skip_if_no_py3_zmq)
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import dashhash
-from test_framework.util import (assert_equal,
-                                 hash256,
-                                 )
+from test_framework.util import (
+    assert_equal,
+    hash256,
+    )
 
 ADDRESS = "tcp://127.0.0.1:28332"
 
 def dashhash_helper(b):
     return encode(dashhash(b)[::-1], 'hex_codec').decode('ascii')
+
 
 class ZMQSubscriber:
     def __init__(self, socket, topic):
@@ -42,10 +43,12 @@ class ZMQTest (BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
 
-    def setup_nodes(self):
-        skip_if_no_py3_zmq()
-        skip_if_no_bitcoind_zmq(self)
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_py3_zmq()
+        self.skip_if_no_bitcoind_zmq()
+        self.skip_if_no_wallet()
 
+    def setup_nodes(self):
         import zmq
 
         # Initialize ZMQ context and socket.
@@ -66,7 +69,7 @@ class ZMQTest (BitcoinTestFramework):
 
         self.extra_args = [
             ["-zmqpub%s=%s" % (sub.topic.decode(), ADDRESS) for sub in [self.hashblock, self.hashtx, self.rawblock, self.rawtx]],
-            [],
+            []
         ]
         self.add_nodes(self.num_nodes, self.extra_args)
         self.start_nodes()

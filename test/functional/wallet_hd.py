@@ -23,6 +23,9 @@ class WalletHDTest(BitcoinTestFramework):
         self.add_nodes(self.num_nodes, self.extra_args)
         self.start_nodes()
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def run_test(self):
         # Make sure can't switch off usehd after wallet creation
         self.stop_node(1)

@@ -12,6 +12,9 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         self.num_nodes = 1
         self.extra_args = [['--walletbroadcast=false']]
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def run_test(self):
         # Should raise RPC_WALLET_ERROR (-4) if walletbroadcast is disabled.
         assert_raises_rpc_error(-4, "Error: Wallet transaction broadcasting is disabled with -walletbroadcast", self.nodes[0].resendwallettransactions)

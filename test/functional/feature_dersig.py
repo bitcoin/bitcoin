@@ -62,6 +62,9 @@ class BIP66Test(BitcoinTestFramework):
             },
         )
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def run_test(self):
         self.nodes[0].add_p2p_connection(P2PInterface())
 

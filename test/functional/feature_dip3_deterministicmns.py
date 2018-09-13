@@ -28,6 +28,9 @@ class DIP3Test(BitcoinTestFramework):
         self.extra_args += ["-dip3params=135:150"]
 
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def setup_network(self):
         self.disable_mocktime()
         self.add_nodes(1)

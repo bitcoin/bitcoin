@@ -26,6 +26,9 @@ class WalletLabelsTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.extra_args = [['-deprecatedrpc=accounts', "-paytxfee=0.0001"], ["-paytxfee=0.0001"]]
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def run_test(self):
         """Run the test twice - once using the accounts API and once using the labels API."""
         self.log.info("Test accounts API")

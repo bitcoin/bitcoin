@@ -83,6 +83,9 @@ class WalletDumpTest(BitcoinTestFramework):
         self.extra_args = [["-keypool=90", "-usehd=1"]]
         self.rpc_timeout = 120
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def setup_network(self):
         # TODO remove this when usehd=1 becomes the default
         # use our own cache and -usehd=1 as extra arg as the default cache is run with -usehd=0
