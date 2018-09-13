@@ -35,13 +35,13 @@ class GetblockstatsTest(BitcoinTestFramework):
     ]
 
     def add_options(self, parser):
-        parser.add_option('--gen-test-data', dest='gen_test_data',
-                          default=False, action='store_true',
-                          help='Generate test data')
-        parser.add_option('--test-data', dest='test_data',
-                          default='data/rpc_getblockstats.json',
-                          action='store', metavar='FILE',
-                          help='Test data file')
+        parser.add_argument('--gen-test-data', dest='gen_test_data',
+                            default=False, action='store_true',
+                            help='Generate test data')
+        parser.add_argument('--test-data', dest='test_data',
+                            default='data/rpc_getblockstats.json',
+                            action='store', metavar='FILE',
+                            help='Test data file')
 
     def set_test_params(self):
         self.num_nodes = 2
