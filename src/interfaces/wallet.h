@@ -366,8 +366,8 @@ struct WalletTxOut
     bool is_spent = false;
 };
 
-//! Return implementation of Wallet interface. This function will be undefined
-//! in builds where ENABLE_WALLET is false.
+//! Return implementation of Wallet interface. This function is defined in
+//! dummywallet.cpp and throws if the wallet component is not compiled.
 std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet);
 
 } // namespace interfaces
