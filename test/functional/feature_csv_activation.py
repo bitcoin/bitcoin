@@ -47,7 +47,7 @@ from itertools import product
 from io import BytesIO
 import time
 
-from test_framework.blocktools import create_coinbase, create_block
+from test_framework.blocktools import create_coinbase, create_block, create_transaction
 from test_framework.messages import ToHex, CTransaction
 from test_framework.mininode import P2PDataStore
 from test_framework.script import (
@@ -84,15 +84,6 @@ def relative_locktime(sdf, srhb, stf, srlb):
 
 def all_rlt_txs(txs):
     return [tx['tx'] for tx in txs]
-
-def create_transaction(node, txid, to_address, amount):
-    inputs = [{"txid": txid, "vout": 0}]
-    outputs = {to_address: amount}
-    rawtx = node.createrawtransaction(inputs, outputs)
-    tx = CTransaction()
-    f = BytesIO(hex_str_to_bytes(rawtx))
-    tx.deserialize(f)
-    return tx
 
 def sign_transaction(node, unsignedtx):
     rawtx = ToHex(unsignedtx)
