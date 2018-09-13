@@ -2650,6 +2650,76 @@ static UniValue loadwallet(const JSONRPCRequest& request)
     return obj;
 }
 
+static UniValue setwalletflag(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2) {
+        std::string flags = "";
+        for (auto& it : WALLET_FLAG_MAP)
+            if (it.second & MUTABLE_WALLET_FLAGS)
+                flags += (flags == "" ? "" : ", ") + it.first;
+        throw std::runtime_error(
+            RPCHelpMan{"setwalletflag",
+                "\nChange the state of the given wallet flag for a wallet.\n",
+                {
+                    {"flag", RPCArg::Type::STR, RPCArg::Optional::NO, "The name of the flag to change. Current available flags: " + flags},
+                    {"value", RPCArg::Type::BOOL, /* default */ "true", "The new state."},
+                },
+                RPCResult{
+            "{\n"
+            "    \"flag_name\": string   (string) The name of the flag that was modified\n"
+            "    \"flag_state\": bool    (bool) The new state of the flag\n"
+            "    \"warnings\": string    (string) Any warnings associated with the change\n"
+            "}\n"
+                },
+                RPCExamples{
+                    HelpExampleCli("setwalletflag", "avoid_reuse")
+                  + HelpExampleRpc("setwalletflag", "\"avoid_reuse\"")
+                },
+            }.ToString());
+    }
+
+    std::string flag_str = request.params[0].get_str();
+    bool value = request.params[1].isNull() || request.params[1].get_bool();
+
+    if (!WALLET_FLAG_MAP.count(flag_str)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Unknown wallet flag: %s", flag_str));
+    }
+
+    auto flag = WALLET_FLAG_MAP.at(flag_str);
+
+    if (!(flag & MUTABLE_WALLET_FLAGS)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Wallet flag is immutable: %s", flag_str));
+    }
+
+    UniValue res(UniValue::VOBJ);
+
+    if (pwallet->IsWalletFlagSet(flag) == value) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Wallet flag is already set to %s: %s", value ? "true" : "false", flag_str));
+    }
+
+    res.pushKV("flag_name", flag_str);
+    res.pushKV("flag_state", value);
+
+    if (value) {
+        pwallet->SetWalletFlag(flag);
+    } else {
+        pwallet->UnsetWalletFlag(flag);
+    }
+
+    if (flag && value && WALLET_FLAG_CAVEATS.count(flag)) {
+        res.pushKV("warnings", WALLET_FLAG_CAVEATS.at(flag));
+    }
+
+    return res;
+}
+
 static UniValue createwallet(const JSONRPCRequest& request)
 {
     const RPCHelpMan help{
@@ -4232,6 +4302,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "sethdseed",                        &sethdseed,                     {"newkeypool","seed"} },
     { "wallet",             "setlabel",                         &setlabel,                      {"address","label"} },
     { "wallet",             "settxfee",                         &settxfee,                      {"amount"} },
+    { "wallet",             "setwalletflag",                    &setwalletflag,                 {"flag","value"} },
     { "wallet",             "signmessage",                      &signmessage,                   {"address","message"} },
     { "wallet",             "signrawtransactionwithwallet",     &signrawtransactionwithwallet,  {"hexstring","prevtxs","sighashtype"} },
     { "wallet",             "unloadwallet",                     &unloadwallet,                  {"wallet_name"} },
