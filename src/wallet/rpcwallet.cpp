@@ -4653,8 +4653,8 @@ UniValue walletprocesspsct(const JSONRPCRequest& request)
     UniValue result(UniValue::VOBJ);
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << psctx;
-    result.push_back(Pair("psct", EncodeBase64((unsigned char*)ssTx.data(), ssTx.size())));
-    result.push_back(Pair("complete", complete));
+    result.pushKV("psct", EncodeBase64((unsigned char*)ssTx.data(), ssTx.size()));
+    result.pushKV("complete", complete);
 
     return result;
 }
