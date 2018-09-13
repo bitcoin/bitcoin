@@ -19,8 +19,6 @@
 
 using namespace std;
 
-extern CCriticalSection cs_budget;
-
 class CBudgetManager;
 class BudgetDraftBroadcast;
 class BudgetDraft;
@@ -64,7 +62,7 @@ private:
     //hold txes until they mature enough to use
     map<uint256, uint256> mapCollateralTxids;
 
-public:
+private:
     // critical section to protect the inner data structures
     mutable CCriticalSection cs;
 
@@ -79,6 +77,7 @@ public:
     std::map<uint256, BudgetDraftVote> mapSeenBudgetDraftVotes;
     std::map<uint256, BudgetDraftVote> mapOrphanBudgetDraftVotes;
 
+public:
     CBudgetManager()
     {
         mapProposals.clear();
@@ -105,7 +104,7 @@ public:
     CBudgetProposal *FindProposal(uint256 nHash);
     BudgetDraft *FindBudgetDraft(uint256 nHash);
 
-    CAmount GetTotalBudget(int nHeight);
+    static CAmount GetTotalBudget(int nHeight);
 
     std::vector<CBudgetProposal *> GetBudget();
     std::vector<CBudgetProposal *> GetAllProposals();
@@ -115,11 +114,27 @@ public:
     bool UpdateBudgetDraft(const BudgetDraftVote &vote, CNode *pfrom, std::string &strError);
     void SubmitBudgetDraft();
 
+    bool HasItem(uint256 hash) const
+    {
+        LOCK(cs);
+
+        return
+            mapSeenMasternodeBudgetProposals.count(hash) ||
+            mapSeenMasternodeBudgetVotes.count(hash) ||
+            mapSeenBudgetDrafts.count(hash) ||
+            mapSeenBudgetDraftVotes.count(hash);
+    }
+
+    const BudgetDraftBroadcast* GetSeenBudgetDraft(uint256 hash) const;
+    const BudgetDraftVote* GetSeenBudgetDraftVote(uint256 hash) const;
+    const CBudgetProposal* GetSeenProposal(uint256 hash) const;
+    const CBudgetVote* GetSeenVote(uint256 hash) const;
+
     bool AddProposal(const CBudgetProposal &budgetProposal, bool checkCollateral = true);
 
     // SubmitProposalVote is used when current node submits a vote. ReceiveProposalVote is used when
     // a vote is received from a peer
-    bool CanSubmitVotes(int blockStart, int blockEnd) const;
+    static bool CanSubmitVotes(int blockStart, int blockEnd);
     bool SubmitProposalVote(const CBudgetVote& vote, std::string& strError);
     bool ReceiveProposalVote(const CBudgetVote &vote, CNode *pfrom, std::string &strError);
 
@@ -258,8 +273,6 @@ public:
     bool IsAutoChecked() const { return m_autoChecked; }
     //total crown paid out by this budget
     CAmount GetTotalPayout() const;
-    //vote on this finalized budget as a masternode
-    void SubmitVote();
 
     void MarkSynced();
     int Sync(CNode* pfrom, bool fPartial) const;
@@ -289,6 +302,10 @@ public:
 
 public:
     bool fValid;
+
+private:
+    //vote on this finalized budget as a masternode
+    void SubmitVote();
 
 private:
     // critical section to protect the inner data structures

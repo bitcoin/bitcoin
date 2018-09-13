@@ -196,6 +196,8 @@ void CBudgetManager::CheckOrphanVotes()
 
 void CBudgetManager::SubmitBudgetDraft()
 {
+    LOCK(cs);
+
     static int nSubmittedHeight = 0; // height at which final budget was submitted last time
     int nCurrentHeight;
 
@@ -343,6 +345,8 @@ void CBudgetManager::SubmitBudgetDraft()
 
 bool CBudgetManager::AddBudgetDraft(const BudgetDraft &budgetDraft, bool checkCollateral)
 {
+    LOCK(cs);
+
     std::string strError = "";
     if(!budgetDraft.IsValid(strError, checkCollateral))
         return false;
@@ -369,11 +373,14 @@ bool CBudgetManager::AddProposal(const CBudgetProposal& budgetProposal, bool che
     }
 
     mapProposals.insert(make_pair(budgetProposal.GetHash(), budgetProposal));
+    mapSeenMasternodeBudgetProposals.insert(make_pair(budgetProposal.GetHash(), budgetProposal));
     return true;
 }
 
 void CBudgetManager::CheckAndRemove()
 {
+    LOCK(cs);
+
     LogPrintf("CBudgetManager::CheckAndRemove\n");
 
     std::string strError = "";
@@ -475,6 +482,8 @@ BudgetDraft* CBudgetManager::FindBudgetDraft(uint256 nHash)
 
 CBudgetProposal* CBudgetManager::FindProposal(const std::string &strProposalName)
 {
+    LOCK(cs);
+
     //find the prop with the highest yes count
 
     int nYesCount = -99999;
@@ -507,6 +516,8 @@ CBudgetProposal *CBudgetManager::FindProposal(uint256 nHash)
 
 bool CBudgetManager::IsBudgetPaymentBlock(int nBlockHeight) const
 {
+    LOCK(cs);
+
     const BudgetDraft* bestBudget = GetMostVotedBudget(nBlockHeight);
     if (bestBudget == NULL)
         return false;
@@ -832,7 +843,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, const std::string& strCommand,
     if(fLiteMode) return;
     if(!masternodeSync.IsBlockchainSynced()) return;
 
-    LOCK(cs_budget);
+    LOCK(cs);
 
     if (strCommand == "mnvs") { //Masternode vote sync
         uint256 nProp;
@@ -1152,8 +1163,44 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial) const
 
 }
 
+const BudgetDraftBroadcast* CBudgetManager::GetSeenBudgetDraft(uint256 hash) const
+{
+    std::map<uint256, BudgetDraftBroadcast>::const_iterator found = mapSeenBudgetDrafts.find(hash);
+    if (found == mapSeenBudgetDrafts.end())
+        return NULL;
+    else
+        return &found->second;
+}
+const BudgetDraftVote* CBudgetManager::GetSeenBudgetDraftVote(uint256 hash) const
+{
+    std::map<uint256, BudgetDraftVote>::const_iterator found = mapSeenBudgetDraftVotes.find(hash);
+    if (found == mapSeenBudgetDraftVotes.end())
+        return NULL;
+    else
+        return &found->second;
+}
+const CBudgetProposal* CBudgetManager::GetSeenProposal(uint256 hash) const
+{
+    std::map<uint256, CBudgetProposalBroadcast>::const_iterator found = mapSeenMasternodeBudgetProposals.find(hash);
+    if (found == mapSeenMasternodeBudgetProposals.end())
+        return NULL;
+    else
+        return &found->second;
+}
+const CBudgetVote* CBudgetManager::GetSeenVote(uint256 hash) const
+{
+    std::map<uint256, CBudgetVote>::const_iterator found = mapSeenMasternodeBudgetVotes.find(hash);
+    if (found == mapSeenMasternodeBudgetVotes.end())
+        return NULL;
+    else
+        return &found->second;
+}
+
+
 bool CBudgetManager::SubmitProposalVote(const CBudgetVote& vote, std::string& strError)
 {
+    LOCK(cs);
+
     DebugLogBudget(vote, CAddress(), "VR");
     map<uint256, CBudgetProposal>::iterator found = mapProposals.find(vote.nProposalHash);
     if (found == mapProposals.end())
@@ -1170,10 +1217,14 @@ bool CBudgetManager::SubmitProposalVote(const CBudgetVote& vote, std::string& st
     }
 
     DebugLogBudget(vote, CAddress(), "VA");
-    return proposal.AddOrUpdateVote(vote, strError);
+    if (proposal.AddOrUpdateVote(vote, strError))
+    {
+        mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+        return true;
+    }
 }
 
-bool CBudgetManager::CanSubmitVotes(int blockStart, int blockEnd) const
+bool CBudgetManager::CanSubmitVotes(int blockStart, int blockEnd)
 {
     const int height = chainActive.Height();
 
@@ -1282,6 +1333,7 @@ bool CBudgetManager::UpdateBudgetDraft(const BudgetDraftVote& vote, CNode* pfrom
         i->second.DiscontinueOlderVotes(vote);
     }
 
+    mapSeenBudgetDraftVotes.insert(make_pair(vote.GetHash(), vote));
     return true;
 }
 
@@ -1509,6 +1561,7 @@ int CBudgetProposal::GetBlockEndCycle() const
 
 int CBudgetProposal::GetTotalPaymentCount() const
 {
+    LOCK(cs);
     return (GetBlockEndCycle() - GetBlockStartCycle()) / GetBudgetPaymentCycleBlocks();
 }
 
@@ -1675,6 +1728,8 @@ BudgetDraft::BudgetDraft(const BudgetDraft& other)
 
 void BudgetDraft::DiscontinueOlderVotes(const BudgetDraftVote& newerVote)
 {
+    LOCK(m_cs);
+
     std::map<uint256, BudgetDraftVote>::iterator found = m_votes.find(newerVote.vin.prevout.GetHash());
     if (found == m_votes.end())
         return;
@@ -1821,6 +1876,7 @@ bool BudgetDraft::AutoCheck()
 // If masternode voted for a proposal, but is now invalid -- remove the vote
 void BudgetDraft::CleanAndRemove(bool fSignatureCheck)
 {
+    LOCK(m_cs);
     std::map<uint256, BudgetDraftVote>::iterator it = m_votes.begin();
 
     while(it != m_votes.end()) {
@@ -1875,6 +1931,7 @@ bool BudgetDraft::ComparePayments(const CTxBudgetPayment& a, const CTxBudgetPaym
 
 std::string BudgetDraft::GetStatus() const
 {
+    LOCK(m_cs);
     std::string retBadHashes = "";
     std::string retBadPayeeOrAmount = "";
 
@@ -1915,6 +1972,8 @@ uint256 BudgetDraft::GetHash() const
 
 bool BudgetDraft::IsValid(std::string& strError, bool fCheckCollateral) const
 {
+    LOCK(m_cs);
+
     assert(boost::is_sorted(m_payments, ComparePayments));
     //must be the correct block for payment to happen (once a month)
     if(m_blockStart % GetBudgetPaymentCycleBlocks() != 0) {strError = "Invalid BlockStart"; return false;}
@@ -1968,6 +2027,8 @@ bool BudgetDraft::IsValid(bool fCheckCollateral) const
 
 bool BudgetDraft::IsSubmittedManually() const
 {
+    LOCK(m_cs);
+
     return m_feeTransactionHash != uint256();
 }
 
@@ -1990,6 +2051,8 @@ void BudgetDraft::ResetAutoChecked()
 
 bool BudgetDraft::IsTransactionValid(const CTransaction& txNew, int nBlockHeight) const
 {
+    LOCK(m_cs);
+
     assert(boost::is_sorted(m_payments, ComparePayments));
 
     if(nBlockHeight != GetBlockStart()) {
@@ -2017,6 +2080,8 @@ bool BudgetDraft::IsTransactionValid(const CTransaction& txNew, int nBlockHeight
 
 const std::vector<CTxBudgetPayment>& BudgetDraft::GetBudgetPayments() const
 {
+    LOCK(m_cs);
+
     return m_payments;
 }
 
@@ -2041,7 +2106,6 @@ void BudgetDraft::SubmitVote()
     if(budget.UpdateBudgetDraft(vote, NULL, strError)){
         LogPrintf("BudgetDraft::SubmitVote  - new finalized budget vote - %s\n", vote.GetHash().ToString());
 
-        budget.mapSeenBudgetDraftVotes.insert(make_pair(vote.GetHash(), vote));
         vote.Relay();
         m_voteSubmittedTime = GetTime();
     } else {
@@ -2051,6 +2115,8 @@ void BudgetDraft::SubmitVote()
 
 void BudgetDraft::MarkSynced()
 {
+    LOCK(m_cs);
+
     if (!fValid)
         return;
 
@@ -2063,6 +2129,8 @@ void BudgetDraft::MarkSynced()
 
 int BudgetDraft::Sync(CNode* pfrom, bool fPartial) const
 {
+    LOCK(m_cs);
+
     if (!fValid)
         return 0;
 
@@ -2088,6 +2156,8 @@ int BudgetDraft::Sync(CNode* pfrom, bool fPartial) const
 
 void BudgetDraft::ResetSync()
 {
+    LOCK(m_cs);
+
     if (!fValid)
         return;
 
@@ -2263,6 +2333,8 @@ bool BudgetDraftVote::SignatureValid(bool fSignatureCheck)
 
 std::string CBudgetManager::ToString() const
 {
+    LOCK(cs);
+
     std::ostringstream info;
 
     info << "Proposals: " << (int)mapProposals.size() <<
