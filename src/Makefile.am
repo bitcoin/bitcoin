@@ -349,7 +349,7 @@ crypto_libbitcoin_crypto_base_a_SOURCES = \
   crypto/sha512.cpp \
   crypto/sha512.h
 
-# x11
+# c11
 crypto_libbitcoin_crypto_base_a_SOURCES += \
   crypto/blake.c \
   crypto/bmw.c \
@@ -410,11 +410,6 @@ libbitcoin_consensus_a_SOURCES = \
   consensus/validation.h \
   hash.cpp \
   hash.h \
-  masternode.cpp \
-  masternode-payments.cpp \
-  masternode-sync.cpp \
-  masternodeconfig.cpp \
-  masternodeman.cpp \
   prevector.h \
   primitives/block.cpp \
   primitives/block.h \
@@ -442,7 +437,6 @@ libbitcoin_consensus_a_SOURCES = \
 libbitcoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_common_a_SOURCES = \
-  arith_uint256.cpp \
   base58.cpp \
   bech32.cpp \
   chainparams.cpp \
@@ -487,7 +481,6 @@ libbitcoin_util_a_SOURCES = \
   support/cleanse.cpp \
   sync.cpp \
   threadinterrupt.cpp \
-  uint256.cpp \
   util.cpp \
   utilmoneystr.cpp \
   utilstrencodings.cpp \
