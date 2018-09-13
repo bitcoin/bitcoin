@@ -24,7 +24,7 @@ enum
     SIGHASH_ALL = 1,
     SIGHASH_NONE = 2,
     SIGHASH_SINGLE = 3,
-    SIGHASH_FORKID = 0x56,
+    SIGHASH_FORKID = 0x60, // thanks ymgve :3
     SIGHASH_FORKID_OLD = 0xb8,
     SIGHASH_ANYONECANPAY = 0x80,
 };
