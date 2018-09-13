@@ -44,9 +44,12 @@ class NULLDUMMYTest(BitcoinTestFramework):
         # normal segwit activation here (and don't use the default always-on behaviour).
         self.extra_args = [['-whitelist=127.0.0.1', '-vbparams=segwit:0:999999999999', '-addresstype=legacy', "-deprecatedrpc=addwitnessaddress"]]
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def run_test(self):
         self.address = self.nodes[0].getnewaddress()
-        self.ms_address = self.nodes[0].addmultisigaddress(1,[self.address])['address']
+        self.ms_address = self.nodes[0].addmultisigaddress(1, [self.address])['address']
         self.wit_address = self.nodes[0].addwitnessaddress(self.address)
         self.wit_ms_address = self.nodes[0].addmultisigaddress(1, [self.address], '', 'p2sh-segwit')['address']
 

@@ -18,6 +18,9 @@ class MempoolPackagesTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.extra_args = [["-maxorphantx=1000"], ["-maxorphantx=1000", "-limitancestorcount=5"]]
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     # Build a transaction that spends parent_txid:vout
     # Return amount sent
     def chain_transaction(self, node, parent_txid, vout, value, fee, num_outputs):
@@ -34,7 +37,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         return (txid, send_value)
 
     def run_test(self):
-        ''' Mine some blocks and have them mature. '''
+        # Mine some blocks and have them mature.
         self.nodes[0].generate(101)
         utxo = self.nodes[0].listunspent(10)
         txid = utxo[0]['txid']

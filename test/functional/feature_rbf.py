@@ -61,17 +61,26 @@ def make_utxo(node, amount, confirmed=True, scriptPubKey=CScript([1])):
 
     return COutPoint(int(txid, 16), 0)
 
-class ReplaceByFeeTest(BitcoinTestFramework):
 
+class ReplaceByFeeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.extra_args= [["-maxorphantx=1000",
-                           "-whitelist=127.0.0.1",
-                           "-limitancestorcount=50",
-                           "-limitancestorsize=101",
-                           "-limitdescendantcount=200",
-                           "-limitdescendantsize=101"],
-                           ["-mempoolreplacement=0"]]
+        self.extra_args = [
+            [
+                "-maxorphantx=1000",
+                "-whitelist=127.0.0.1",
+                "-limitancestorcount=50",
+                "-limitancestorsize=101",
+                "-limitdescendantcount=200",
+                "-limitdescendantsize=101",
+            ],
+            [
+                "-mempoolreplacement=0",
+            ],
+        ]
+
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
 
     def run_test(self):
         # Leave IBD

@@ -44,6 +44,13 @@ TEST_EXIT_FAILED = 1
 TEST_EXIT_SKIPPED = 77
 
 
+class SkipTest(Exception):
+    """This exception is raised to skip a test"""
+
+    def __init__(self, message):
+        self.message = message
+
+
 class BitcoinTestMetaClass(type):
     """Metaclass for BitcoinTestFramework.
 
@@ -156,8 +163,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         try:
             if self.options.usecli and not self.supports_cli:
                 raise SkipTest("--usecli specified but test does not support using CLI")
+            self.skip_test_if_missing_module()
             self.setup_chain()
             self.setup_network()
+            self.import_deterministic_coinbase_privkeys()
             self.run_test()
             success = TestStatus.PASSED
         except JSONRPCException as e:
@@ -220,6 +229,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """Override this method to add command-line options to the test"""
         pass
 
+    def skip_test_if_missing_module(self):
+        """Override this method to skip a test if a module is not compiled"""
+        pass
+
     def setup_chain(self):
         """Override this method to customize blockchain setup"""
         self.log.info("Initializing test directory " + self.options.tmpdir)
@@ -246,6 +259,19 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             extra_args = self.extra_args
         self.add_nodes(self.num_nodes, extra_args)
         self.start_nodes()
+
+    def import_deterministic_coinbase_privkeys(self):
+        if self.setup_clean_chain:
+            return
+
+        for n in self.nodes:
+            try:
+                n.getwalletinfo()
+            except JSONRPCException as e:
+                assert str(e).startswith('Method not found')
+                continue
+
+            n.importprivkey(n.get_deterministic_priv_key()[1])
 
     def run_test(self):
         """Tests must override this method to define test logic"""
@@ -415,7 +441,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # Create cache directories, run bitcoinds:
             for i in range(MAX_NODES):
                 datadir = initialize_datadir(self.options.cachedir, i)
-                args = [self.options.bitcoind, "-datadir=" + datadir]
+                args = [self.options.bitcoind, "-datadir=" + datadir, '-disablewallet']
                 if i > 0:
                     args.append("-connect=127.0.0.1:" + str(p2p_port(0)))
                 self.nodes.append(TestNode(i, get_datadir_path(self.options.cachedir, i), extra_conf=["bind=127.0.0.1"], extra_args=[], rpchost=None, timewait=self.rpc_timewait, bitcoind=self.options.bitcoind, bitcoin_cli=self.options.bitcoincli, mocktime=self.mocktime, coverage_dir=None))
@@ -439,7 +465,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 for peer in range(4):
                     for j in range(25):
                         set_node_times(self.nodes, block_time)
-                        self.nodes[peer].generate(1)
+                        self.nodes[peer].generatetoaddress(1, self.nodes[peer].get_deterministic_priv_key()[0])
                         block_time += 10 * 60
                     # Must sync before next peer starts generating blocks
                     sync_blocks(self.nodes)
@@ -453,8 +479,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 return os.path.join(get_datadir_path(self.options.cachedir, n), "regtest", *paths)
 
             for i in range(MAX_NODES):
+                os.rmdir(cache_path(i, 'wallets'))  # Remove empty wallets dir
                 for entry in os.listdir(cache_path(i)):
-                    if entry not in ['wallets', 'chainstate', 'blocks']:
+                    if entry not in ['chainstate', 'blocks']:
                         os.remove(cache_path(i, entry))
 
         for i in range(self.num_nodes):
@@ -471,30 +498,45 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         for i in range(self.num_nodes):
             initialize_datadir(self.options.tmpdir, i)
 
+    def skip_if_no_py3_zmq(self):
+        """Attempt to import the zmq package and skip the test if the import fails."""
+        try:
+            import zmq  # noqa
+        except ImportError:
+            raise SkipTest("python3-zmq module not available.")
 
-class SkipTest(Exception):
-    """This exception is raised to skip a test"""
-    def __init__(self, message):
-        self.message = message
+    def skip_if_no_bitcoind_zmq(self):
+        """Skip the running test if bitcoind has not been compiled with zmq support."""
+        if not self.is_zmq_compiled():
+            raise SkipTest("bitcoind has not been built with zmq enabled.")
 
+    def skip_if_no_wallet(self):
+        """Skip the running test if wallet has not been compiled."""
+        if not self.is_wallet_compiled():
+            raise SkipTest("wallet has not been compiled.")
 
-def skip_if_no_py3_zmq():
-    """Attempt to import the zmq package and skip the test if the import fails."""
-    try:
-        import zmq  # noqa
-    except ImportError:
-        raise SkipTest("python3-zmq module not available.")
+    def skip_if_no_cli(self):
+        """Skip the running test if bitcoin-cli has not been compiled."""
+        if not self.is_cli_compiled():
+            raise SkipTest("bitcoin-cli has not been compiled.")
 
+    def is_cli_compiled(self):
+        """Checks whether bitcoin-cli was compiled."""
+        config = configparser.ConfigParser()
+        config.read_file(open(self.options.configfile))
 
-def skip_if_no_bitcoind_zmq(test_instance):
-    """Skip the running test if bitcoind has not been compiled with zmq support."""
-    if not is_zmq_enabled(test_instance):
-        raise SkipTest("bitcoind has not been built with zmq enabled.")
+        return config["components"].getboolean("ENABLE_UTILS")
 
+    def is_wallet_compiled(self):
+        """Checks whether the wallet module was compiled."""
+        config = configparser.ConfigParser()
+        config.read_file(open(self.options.configfile))
 
-def is_zmq_enabled(test_instance):
-    """Checks whether zmq is enabled or not."""
-    config = configparser.ConfigParser()
-    config.read_file(open(test_instance.options.configfile))
+        return config["components"].getboolean("ENABLE_WALLET")
 
-    return config["components"].getboolean("ENABLE_ZMQ")
+    def is_zmq_compiled(self):
+        """Checks whether the zmq module was compiled."""
+        config = configparser.ConfigParser()
+        config.read_file(open(self.options.configfile))
+
+        return config["components"].getboolean("ENABLE_ZMQ")
