@@ -158,7 +158,7 @@ void SingleThreadedSchedulerClient::MaybeScheduleProcessQueue() {
 }
 
 void SingleThreadedSchedulerClient::ProcessQueue() {
-    std::function<void (void)> callback;
+    std::function<void ()> callback;
     {
         LOCK(m_cs_callbacks_pending);
         if (m_are_callbacks_running) return;
@@ -186,7 +186,7 @@ void SingleThreadedSchedulerClient::ProcessQueue() {
     callback();
 }
 
-void SingleThreadedSchedulerClient::AddToProcessQueue(std::function<void (void)> func) {
+void SingleThreadedSchedulerClient::AddToProcessQueue(std::function<void ()> func) {
     assert(m_pscheduler);
 
     {
