@@ -218,7 +218,8 @@ void static NegateSignatureS(std::vector<unsigned char>& vchSig) {
         carry = (n < 0);
     }
     assert(carry == 0);
-    if (s.size() > 1 && s[0] == 0 && s[1] < 0x80) {
+    assert(s.size() > 1);
+    if (s[0] == 0 && s[1] < 0x80) {
         s.erase(s.begin());
     }
 

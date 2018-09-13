@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
             keys.assign(1,key[i]);
             keys.push_back(key[j]);
             s = sign_multisig(escrow, keys, txTo[2], 0);
-            if (i < j && i < 3 && j < 3)
+            if (i < j && j < 3)
             {
                 BOOST_CHECK_MESSAGE(VerifyScript(s, escrow, nullptr, flags, MutableTransactionSignatureChecker(&txTo[2], 0, amount), &err), strprintf("escrow 1: %d %d", i, j));
                 BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
