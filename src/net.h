@@ -31,6 +31,7 @@
 
 #ifndef WIN32
 #include <arpa/inet.h>
+#include <poll.h>
 #endif
 
 

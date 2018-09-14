@@ -1269,6 +1269,7 @@ void CConnman::NotifyNumConnectionsChanged()
     }
 }
 
+#ifdef WIN32
 void CConnman::SocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set)
 {
     struct timeval timeout;
@@ -1368,6 +1369,78 @@ void CConnman::SocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_s
         }
     }
 }
+#else
+void CConnman::SocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set)
+{
+    std::vector<struct pollfd> pollfds;
+
+    for (const ListenSocket& hListenSocket : vhListenSocket) {
+        if (hListenSocket.socket == INVALID_SOCKET) continue;
+
+        struct pollfd pollfd;
+        memset(&pollfd, 0, sizeof(struct pollfd));
+        pollfd.fd = hListenSocket.socket;
+        pollfd.events = POLLIN;
+        pollfds.push_back(pollfd);
+    }
+
+    {
+        LOCK(cs_vNodes);
+        for (CNode* pnode : vNodes)
+        {
+            // Implement the following logic:
+            // * If there is data to send, select() for sending data. As this only
+            //   happens when optimistic write failed, we choose to first drain the
+            //   write buffer in this case before receiving more. This avoids
+            //   needlessly queueing received data, if the remote peer is not themselves
+            //   receiving data. This means properly utilizing TCP flow control signalling.
+            // * Otherwise, if there is space left in the receive buffer, select() for
+            //   receiving data.
+            // * Hand off all complete messages to the processor, to be handled without
+            //   blocking here.
+
+            bool select_recv = !pnode->fPauseRecv;
+            bool select_send;
+            {
+                LOCK(pnode->cs_vSend);
+                select_send = !pnode->vSendMsg.empty();
+            }
+
+            LOCK(pnode->cs_hSocket);
+            if (pnode->hSocket == INVALID_SOCKET)
+                continue;
+
+            struct pollfd pollfd;
+            memset(&pollfd, 0, sizeof(struct pollfd));
+            pollfd.fd = pnode->hSocket;
+
+            if (select_send) {
+                pollfd.events = POLLOUT;
+                continue;
+            }
+            if (select_recv) {
+                pollfd.events = POLLIN;
+            }
+            pollfds.push_back(pollfd);
+        }
+    }
+
+    int nPoll = poll(&pollfds[0], pollfds.size(), 50);
+
+    if (nPoll < 0) {
+        if (errno == EINTR) return;
+        LogPrint(BCLog::NET, "poll errno %s\n", strerror(errno));
+    }
+
+    if (interruptNet) return;
+
+    for (struct pollfd pollfd : pollfds) {
+        if (pollfd.revents & POLLIN) recv_set.insert(pollfd.fd);
+        if (pollfd.revents & POLLOUT) send_set.insert(pollfd.fd);
+        if (pollfd.revents & (POLLERR|POLLHUP)) error_set.insert(pollfd.fd);
+    }
+}
+#endif
 
 void CConnman::SocketHandler()
 {
