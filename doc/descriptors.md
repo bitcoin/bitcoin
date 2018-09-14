@@ -1,6 +1,6 @@
-# Support for Output Descriptors in Bitcoin Core
+# Support for Output Descriptors in Chaincoin Core
 
-Since Bitcoin Core v0.17, there is support for Output Descriptors in the
+Since Chaincoin Core v0.17, there is support for Output Descriptors in the
 `scantxoutset` RPC call. This is a simple language which can be used to
 describe collections of output scripts.
 
@@ -86,7 +86,7 @@ not contain "p2" for brevity.
 ### Multisig
 
 Several pieces of software use multi-signature (multisig) scripts based
-on Bitcoin's OP_CHECKMULTISIG opcode. To support these, we introduce the
+on Chaincoin's OP_CHECKMULTISIG opcode. To support these, we introduce the
 `multi(k,key_1,key_2,...,key_n)` function. It represents a *k-of-n*
 multisig policy, where any *k* out of the *n* provided public keys must
 sign.
@@ -118,7 +118,7 @@ steps, or for dumping wallet descriptors including private key material.
 ### Compatibility with old wallets
 
 In order to easily represent the sets of scripts currently supported by
-existing Bitcoin Core wallets, a convenience function `combo` is
+existing Chaincoin Core wallets, a convenience function `combo` is
 provided, which takes as input a public key, and constructs the P2PK,
 P2PKH, P2WPKH, and P2SH-P2WPH scripts for that key. In case the key is
 uncompressed, it only constructs P2PK and P2PKH.
