@@ -4,13 +4,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include "streams.h"
-#include <version.h>
+#include "version.h"
 #include "assets/assets.h"
 #include "script.h"
 
 #include "tinyformat.h"
 #include "utilstrencodings.h"
-#include "script/standard.h"
+#include "standard.h"
 
 const char* GetOpName(opcodetype opcode)
 {
@@ -459,7 +459,7 @@ bool GetAssetAmountFromScript(const CScript& script, CAmount& nAmount)
     return false;
 }
 
-bool IsScriptNewAsset(const CScript& scriptPubKey, int& nStartingIndex)
+bool ScriptNewAsset(const CScript& scriptPubKey, int& nStartingIndex)
 {
     int nType = 0;
     bool fIsOwner =false;
@@ -470,7 +470,7 @@ bool IsScriptNewAsset(const CScript& scriptPubKey, int& nStartingIndex)
     return false;
 }
 
-bool IsScriptTransferAsset(const CScript& scriptPubKey, int& nStartingIndex)
+bool ScriptTransferAsset(const CScript& scriptPubKey, int& nStartingIndex)
 {
     int nType = 0;
     bool fIsOwner =false;
@@ -481,7 +481,7 @@ bool IsScriptTransferAsset(const CScript& scriptPubKey, int& nStartingIndex)
     return false;
 }
 
-bool IsScriptReissueAsset(const CScript& scriptPubKey, int& nStartingIndex)
+bool ScriptReissueAsset(const CScript& scriptPubKey, int& nStartingIndex)
 {
     int nType = 0;
     bool fIsOwner =false;
@@ -496,7 +496,7 @@ bool IsScriptReissueAsset(const CScript& scriptPubKey, int& nStartingIndex)
 bool AmountFromNewAssetScript(const CScript& scriptPubKey, CAmount& nAmount)
 {
     int nStartingIndex = 0;
-    if (!IsScriptNewAsset(scriptPubKey, nStartingIndex))
+    if (!ScriptNewAsset(scriptPubKey, nStartingIndex))
         return false;
 
     std::vector<unsigned char> vchNewAsset;
@@ -518,7 +518,7 @@ bool AmountFromNewAssetScript(const CScript& scriptPubKey, CAmount& nAmount)
 bool AmountFromTransferScript(const CScript& scriptPubKey, CAmount& nAmount)
 {
     int nStartingIndex = 0;
-    if (!IsScriptTransferAsset(scriptPubKey, nStartingIndex))
+    if (!ScriptTransferAsset(scriptPubKey, nStartingIndex))
         return false;
 
     std::vector<unsigned char> vchAsset;
@@ -540,7 +540,7 @@ bool AmountFromTransferScript(const CScript& scriptPubKey, CAmount& nAmount)
 bool AmountFromReissueScript(const CScript& scriptPubKey, CAmount& nAmount)
 {
     int nStartingIndex = 0;
-    if (!IsScriptReissueAsset(scriptPubKey, nStartingIndex))
+    if (!ScriptReissueAsset(scriptPubKey, nStartingIndex))
         return false;
 
     std::vector<unsigned char> vchNewAsset;

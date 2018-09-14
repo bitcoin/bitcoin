@@ -723,8 +723,8 @@ bool GetAssetAmountFromScript(const CScript& script, CAmount& nAmount);
 bool AmountFromNewAssetScript(const CScript& scriptPubKey, CAmount& nAmount);
 bool AmountFromTransferScript(const CScript& scriptPubKey, CAmount& nAmount);
 bool AmountFromReissueScript(const CScript& scriptPubKey, CAmount& nAmount);
-bool IsScriptNewAsset(const CScript& scriptPubKey, int& nStartingIndex);
-bool IsScriptTransferAsset(const CScript& scriptPubKey, int& nStartingIndex);
-bool IsScriptReissueAsset(const CScript& scriptPubKey, int& nStartingIndex);
+bool ScriptNewAsset(const CScript& scriptPubKey, int& nStartingIndex);
+bool ScriptTransferAsset(const CScript& scriptPubKey, int& nStartingIndex);
+bool ScriptReissueAsset(const CScript& scriptPubKey, int& nStartingIndex);
 
 #endif // RAVEN_SCRIPT_SCRIPT_H

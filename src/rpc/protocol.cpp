@@ -12,7 +12,6 @@
 #include "utilstrencodings.h"
 #include "utiltime.h"
 #include "version.h"
-#include "univalue.h"
 
 #include <stdint.h>
 #include <fstream>

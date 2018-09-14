@@ -214,6 +214,7 @@ libraven_server_a_SOURCES = \
   noui.cpp \
   assets/assets.cpp \
   assets/assetdb.cpp \
+  assets/assettypes.cpp \
   policy/fees.cpp \
   policy/policy.cpp \
   policy/rbf.cpp \
