@@ -357,6 +357,8 @@ I ReadVarInt(Stream& is)
 }
 
 #define FLATDATA(obj) REF(CFlatData((char*)&(obj), (char*)&(obj) + sizeof(obj)))
+#define FIXEDBITSET(obj, size) REF(CFixedBitSet(REF(obj), (size)))
+#define DYNBITSET(obj) REF(CDynamicBitSet(REF(obj)))
 #define VARINT(obj) REF(WrapVarInt(REF(obj)))
 #define COMPACTSIZE(obj) REF(CCompactSize(REF(obj)))
 #define LIMITED_STRING(obj,n) REF(LimitedString< n >(REF(obj)))
@@ -398,6 +400,67 @@ public:
     void Unserialize(Stream& s)
     {
         s.read(pbegin, pend - pbegin);
+    }
+};
+
+class CFixedBitSet
+{
+protected:
+    std::vector<bool>& vec;
+    size_t size;
+
+public:
+    CFixedBitSet(std::vector<bool>& vecIn, size_t sizeIn) : vec(vecIn), size(sizeIn) {}
+
+    template<typename Stream>
+    void Serialize(Stream& s) const
+    {
+        std::vector<unsigned char> vBytes((size + 7) / 8);
+        size_t ms = std::min(size, vec.size());
+        for (size_t p = 0; p < ms; p++)
+            vBytes[p / 8] |= vec[p] << (p % 8);
+        s.write((char*)vBytes.data(), vBytes.size());
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        vec.resize(size);
+
+        std::vector<unsigned char> vBytes((size + 7) / 8);
+        s.read((char*)vBytes.data(), vBytes.size());
+        for (size_t p = 0; p < size; p++)
+            vec[p] = (vBytes[p / 8] & (1 << (p % 8))) != 0;
+        if (vBytes.size() * 8 != size) {
+            size_t rem = vBytes.size() * 8 - size;
+            uint8_t m = (uint8_t)(0xff << rem);
+            if (vBytes[vBytes.size() - 1] & m) {
+                throw std::ios_base::failure("Out-of-range bits set");
+            }
+        }
+    }
+};
+
+class CDynamicBitSet
+{
+protected:
+    std::vector<bool>& vec;
+
+public:
+    explicit CDynamicBitSet(std::vector<bool>& vecIn) : vec(vecIn) {}
+
+    template<typename Stream>
+    void Serialize(Stream& s) const
+    {
+        WriteCompactSize(s, vec.size());
+        CFixedBitSet(REF(vec), vec.size()).Serialize(s);
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        vec.resize(ReadCompactSize(s));
+        CFixedBitSet(vec, vec.size()).Unserialize(s);
     }
 };
 
@@ -511,6 +574,12 @@ template<typename Stream, typename T, typename A> inline void Unserialize(Stream
  */
 template<typename Stream, typename K, typename T> void Serialize(Stream& os, const std::pair<K, T>& item);
 template<typename Stream, typename K, typename T> void Unserialize(Stream& is, std::pair<K, T>& item);
+
+/**
+ * pair
+ */
+template<typename Stream, typename... Elements> void Serialize(Stream& os, const std::tuple<Elements...>& item);
+template<typename Stream, typename... Elements> void Unserialize(Stream& is, std::tuple<Elements...>& item);
 
 /**
  * map
@@ -732,6 +801,45 @@ void Unserialize(Stream& is, std::pair<K, T>& item)
     Unserialize(is, item.second);
 }
 
+/**
+ * tuple
+ */
+template<typename Stream, bool for_read, int index, typename... Ts>
+struct SerializeDeserializeTuple {
+    void operator() (Stream&s, std::tuple<Ts...>& t) {
+        SerializeDeserializeTuple<Stream, for_read, index - 1, Ts...>{}(s, t);
+        if (for_read) {
+            s >> std::get<index>(t);
+        } else {
+            s << std::get<index>(t);
+        }
+    }
+};
+
+template<typename Stream, bool for_read, typename... Ts>
+struct SerializeDeserializeTuple<Stream, for_read, 0, Ts...> {
+    void operator() (Stream&s, std::tuple<Ts...>& t) {
+        if (for_read) {
+            s >> std::get<0>(t);
+        } else {
+            s << std::get<0>(t);
+        }
+    }
+};
+
+template<typename Stream, typename... Elements>
+void Serialize(Stream& os, const std::tuple<Elements...>& item)
+{
+    const auto size = std::tuple_size<std::tuple<Elements...>>::value;
+    SerializeDeserializeTuple<Stream, false, size - 1, Elements...>{}(os, const_cast<std::tuple<Elements...>&>(item));
+}
+
+template<typename Stream, typename... Elements>
+void Unserialize(Stream& is, std::tuple<Elements...>& item)
+{
+    const auto size = std::tuple_size<std::tuple<Elements...>>::value;
+    SerializeDeserializeTuple<Stream, true, size - 1, Elements...>{}(is, item);
+}
 
 
 /**
