@@ -85,6 +85,7 @@ BITCOIN_CORE_H = \
   addrman.h \
   alert.h \
   base58.h \
+  batchedlogger.h \
   bip39.h \
   bip39_english.h \
   blockencodings.h \
@@ -224,6 +225,7 @@ libdash_server_a_SOURCES = \
   addrman.cpp \
   addrdb.cpp \
   alert.cpp \
+  batchedlogger.cpp \
   bloom.cpp \
   blockencodings.cpp \
   chain.cpp \
