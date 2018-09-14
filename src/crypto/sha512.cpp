@@ -2,9 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <crypto/sha512.h>
-
+#include <attributes.h>
 #include <crypto/common.h>
+#include <crypto/sha512.h>
 
 #include <string.h>
 
@@ -22,7 +22,7 @@ uint64_t inline sigma0(uint64_t x) { return (x >> 1 | x << 63) ^ (x >> 8 | x << 
 uint64_t inline sigma1(uint64_t x) { return (x >> 19 | x << 45) ^ (x >> 61 | x << 3) ^ (x >> 6); }
 
 /** One round of SHA-512. */
-void inline Round(uint64_t a, uint64_t b, uint64_t c, uint64_t& d, uint64_t e, uint64_t f, uint64_t g, uint64_t& h, uint64_t k, uint64_t w)
+ALLOW_WRAPAROUND void inline Round(uint64_t a, uint64_t b, uint64_t c, uint64_t& d, uint64_t e, uint64_t f, uint64_t g, uint64_t& h, uint64_t k, uint64_t w)
 {
     uint64_t t1 = h + Sigma1(e) + Ch(e, f, g) + k + w;
     uint64_t t2 = Sigma0(a) + Maj(a, b, c);
@@ -44,7 +44,7 @@ void inline Initialize(uint64_t* s)
 }
 
 /** Perform one SHA-512 transformation, processing a 128-byte chunk. */
-void Transform(uint64_t* s, const unsigned char* chunk)
+ALLOW_WRAPAROUND void Transform(uint64_t* s, const unsigned char* chunk)
 {
     uint64_t a = s[0], b = s[1], c = s[2], d = s[3], e = s[4], f = s[5], g = s[6], h = s[7];
     uint64_t w0, w1, w2, w3, w4, w5, w6, w7, w8, w9, w10, w11, w12, w13, w14, w15;

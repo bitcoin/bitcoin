@@ -7,6 +7,7 @@
 #define BITCOIN_CHAIN_H
 
 #include <arith_uint256.h>
+#include <attributes.h>
 #include <consensus/params.h>
 #include <primitives/block.h>
 #include <tinyformat.h>
@@ -474,7 +475,7 @@ public:
     }
 
     /** Return the maximal height in the chain. Is equal to chain.Tip() ? chain.Tip()->nHeight : -1. */
-    int Height() const {
+    WARNING_UNINTENTIONAL_WRAPAROUND int Height() const {
         return vChain.size() - 1;
     }
 

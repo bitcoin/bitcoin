@@ -5,8 +5,9 @@
 // Based on the public domain implementation 'merged' by D. J. Bernstein
 // See https://cr.yp.to/chacha.html.
 
-#include <crypto/common.h>
+#include <attributes.h>
 #include <crypto/chacha20.h>
+#include <crypto/common.h>
 
 #include <string.h>
 
@@ -71,7 +72,7 @@ void ChaCha20::Seek(uint64_t pos)
     input[13] = pos >> 32;
 }
 
-void ChaCha20::Output(unsigned char* c, size_t bytes)
+ALLOW_WRAPAROUND void ChaCha20::Output(unsigned char* c, size_t bytes)
 {
     uint32_t x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15;
     uint32_t j0, j1, j2, j3, j4, j5, j6, j7, j8, j9, j10, j11, j12, j13, j14, j15;

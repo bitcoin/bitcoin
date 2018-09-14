@@ -5,17 +5,17 @@
 #ifndef BITCOIN_PREVECTOR_H
 #define BITCOIN_PREVECTOR_H
 
-#include <assert.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
+#include <attributes.h>
+#include <compat.h>
 
 #include <algorithm>
+#include <assert.h>
 #include <cstddef>
 #include <iterator>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 #include <type_traits>
-
-#include <compat.h>
 
 #pragma pack(push, 1)
 /** Implements a drop-in replacement for std::vector<T> which stores up to N
@@ -293,8 +293,8 @@ public:
     iterator end() { return iterator(item_ptr(size())); }
     const_iterator end() const { return const_iterator(item_ptr(size())); }
 
-    reverse_iterator rbegin() { return reverse_iterator(item_ptr(size() - 1)); }
-    const_reverse_iterator rbegin() const { return const_reverse_iterator(item_ptr(size() - 1)); }
+    WARNING_UNINTENTIONAL_WRAPAROUND reverse_iterator rbegin() { return reverse_iterator(item_ptr(size() - 1)); }
+    WARNING_UNINTENTIONAL_WRAPAROUND const_reverse_iterator rbegin() const { return const_reverse_iterator(item_ptr(size() - 1)); }
     reverse_iterator rend() { return reverse_iterator(item_ptr(-1)); }
     const_reverse_iterator rend() const { return const_reverse_iterator(item_ptr(-1)); }
 

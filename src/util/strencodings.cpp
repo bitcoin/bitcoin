@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <attributes.h>
 #include <util/strencodings.h>
 
 #include <tinyformat.h>
@@ -106,7 +107,7 @@ std::vector<unsigned char> ParseHex(const std::string& str)
     return ParseHex(str.c_str());
 }
 
-void SplitHostPort(std::string in, int &portOut, std::string &hostOut) {
+WARNING_UNINTENTIONAL_WRAPAROUND void SplitHostPort(std::string in, int &portOut, std::string &hostOut) {
     size_t colon = in.find_last_of(':');
     // if a : is found, and it either follows a [...], or no other : is in the string, treat it as port separator
     bool fHaveColon = colon != in.npos;

@@ -2,9 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <crypto/ripemd160.h>
-
+#include <attributes.h>
 #include <crypto/common.h>
+#include <crypto/ripemd160.h>
 
 #include <string.h>
 
@@ -32,7 +32,7 @@ void inline Initialize(uint32_t* s)
 
 uint32_t inline rol(uint32_t x, int i) { return (x << i) | (x >> (32 - i)); }
 
-void inline Round(uint32_t& a, uint32_t b, uint32_t& c, uint32_t d, uint32_t e, uint32_t f, uint32_t x, uint32_t k, int r)
+ALLOW_WRAPAROUND void inline Round(uint32_t& a, uint32_t b, uint32_t& c, uint32_t d, uint32_t e, uint32_t f, uint32_t x, uint32_t k, int r)
 {
     a = rol(a + f + x + k, r) + e;
     c = rol(c, 10);
@@ -51,7 +51,7 @@ void inline R42(uint32_t& a, uint32_t b, uint32_t& c, uint32_t d, uint32_t e, ui
 void inline R52(uint32_t& a, uint32_t b, uint32_t& c, uint32_t d, uint32_t e, uint32_t x, int r) { Round(a, b, c, d, e, f1(b, c, d), x, 0, r); }
 
 /** Perform a RIPEMD-160 transformation, processing a 64-byte chunk. */
-void Transform(uint32_t* s, const unsigned char* chunk)
+ALLOW_WRAPAROUND void Transform(uint32_t* s, const unsigned char* chunk)
 {
     uint32_t a1 = s[0], b1 = s[1], c1 = s[2], d1 = s[3], e1 = s[4];
     uint32_t a2 = a1, b2 = b1, c2 = c1, d2 = d1, e2 = e1;

@@ -2,10 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <core_io.h>
-
+#include <attributes.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
+#include <core_io.h>
 #include <key_io.h>
 #include <script/script.h>
 #include <script/standard.h>
@@ -26,7 +26,7 @@ UniValue ValueFromAmount(const CAmount& amount)
             strprintf("%s%d.%08d", sign ? "-" : "", quotient, remainder));
 }
 
-std::string FormatScript(const CScript& script)
+WARNING_UNINTENTIONAL_WRAPAROUND std::string FormatScript(const CScript& script)
 {
     std::string ret;
     CScript::const_iterator it = script.begin();

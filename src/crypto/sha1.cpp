@@ -2,9 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <crypto/sha1.h>
-
+#include <attributes.h>
 #include <crypto/common.h>
+#include <crypto/sha1.h>
 
 #include <string.h>
 
@@ -15,7 +15,7 @@ namespace
 namespace sha1
 {
 /** One round of SHA-1. */
-void inline Round(uint32_t a, uint32_t& b, uint32_t c, uint32_t d, uint32_t& e, uint32_t f, uint32_t k, uint32_t w)
+ALLOW_WRAPAROUND void inline Round(uint32_t a, uint32_t& b, uint32_t c, uint32_t d, uint32_t& e, uint32_t f, uint32_t k, uint32_t w)
 {
     e += ((a << 5) | (a >> 27)) + f + k + w;
     b = (b << 30) | (b >> 2);
@@ -43,7 +43,7 @@ const uint32_t k3 = 0x8F1BBCDCul;
 const uint32_t k4 = 0xCA62C1D6ul;
 
 /** Perform a SHA-1 transformation, processing a 64-byte chunk. */
-void Transform(uint32_t* s, const unsigned char* chunk)
+ALLOW_WRAPAROUND void Transform(uint32_t* s, const unsigned char* chunk)
 {
     uint32_t a = s[0], b = s[1], c = s[2], d = s[3], e = s[4];
     uint32_t w0, w1, w2, w3, w4, w5, w6, w7, w8, w9, w10, w11, w12, w13, w14, w15;

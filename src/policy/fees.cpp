@@ -3,10 +3,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <attributes.h>
+#include <clientversion.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
-
-#include <clientversion.h>
 #include <primitives/transaction.h>
 #include <streams.h>
 #include <txmempool.h>
@@ -241,7 +241,7 @@ void TxConfirmStats::UpdateMovingAverages()
 }
 
 // returns -1 on error conditions
-double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
+WARNING_UNINTENTIONAL_WRAPAROUND double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
                                          double successBreakPoint, bool requireGreater,
                                          unsigned int nBlockHeight, EstimationResult *result) const
 {

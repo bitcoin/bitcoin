@@ -2,8 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <crypto/sha256.h>
+#include <attributes.h>
 #include <crypto/common.h>
+#include <crypto/sha256.h>
 
 #include <assert.h>
 #include <string.h>
@@ -53,7 +54,7 @@ uint32_t inline sigma0(uint32_t x) { return (x >> 7 | x << 25) ^ (x >> 18 | x <<
 uint32_t inline sigma1(uint32_t x) { return (x >> 17 | x << 15) ^ (x >> 19 | x << 13) ^ (x >> 10); }
 
 /** One round of SHA-256. */
-void inline Round(uint32_t a, uint32_t b, uint32_t c, uint32_t& d, uint32_t e, uint32_t f, uint32_t g, uint32_t& h, uint32_t k)
+ALLOW_WRAPAROUND void inline Round(uint32_t a, uint32_t b, uint32_t c, uint32_t& d, uint32_t e, uint32_t f, uint32_t g, uint32_t& h, uint32_t k)
 {
     uint32_t t1 = h + Sigma1(e) + Ch(e, f, g) + k;
     uint32_t t2 = Sigma0(a) + Maj(a, b, c);
@@ -75,7 +76,7 @@ void inline Initialize(uint32_t* s)
 }
 
 /** Perform a number of SHA-256 transformations, processing 64-byte chunks. */
-void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks)
+ALLOW_WRAPAROUND void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks)
 {
     while (blocks--) {
         uint32_t a = s[0], b = s[1], c = s[2], d = s[3], e = s[4], f = s[5], g = s[6], h = s[7];

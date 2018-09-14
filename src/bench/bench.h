@@ -5,12 +5,14 @@
 #ifndef BITCOIN_BENCH_BENCH_H
 #define BITCOIN_BENCH_BENCH_H
 
+#include <attributes.h>
+
+#include <chrono>
 #include <functional>
 #include <limits>
 #include <map>
 #include <string>
 #include <vector>
-#include <chrono>
 
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/stringize.hpp>
@@ -67,7 +69,7 @@ public:
     {
     }
 
-    inline bool KeepRunning()
+    WARNING_UNINTENTIONAL_WRAPAROUND inline bool KeepRunning()
     {
         if (m_num_iters_left--) {
             return true;

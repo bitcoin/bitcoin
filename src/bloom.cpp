@@ -2,13 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <attributes.h>
 #include <bloom.h>
-
-#include <primitives/transaction.h>
 #include <hash.h>
+#include <primitives/transaction.h>
+#include <random.h>
 #include <script/script.h>
 #include <script/standard.h>
-#include <random.h>
 #include <streams.h>
 
 #include <math.h>
@@ -230,7 +230,7 @@ CRollingBloomFilter::CRollingBloomFilter(const unsigned int nElements, const dou
 }
 
 /* Similar to CBloomFilter::Hash */
-static inline uint32_t RollingBloomHash(unsigned int nHashNum, uint32_t nTweak, const std::vector<unsigned char>& vDataToHash) {
+ALLOW_WRAPAROUND static inline uint32_t RollingBloomHash(unsigned int nHashNum, uint32_t nTweak, const std::vector<unsigned char>& vDataToHash) {
     return MurmurHash3(nHashNum * 0xFBA4C795 + nTweak, vDataToHash);
 }
 

@@ -6,6 +6,7 @@
 #ifndef BITCOIN_ARITH_UINT256_H
 #define BITCOIN_ARITH_UINT256_H
 
+#include <attributes.h>
 #include <assert.h>
 #include <cstring>
 #include <stdexcept>
@@ -168,7 +169,7 @@ public:
     base_uint& operator*=(const base_uint& b);
     base_uint& operator/=(const base_uint& b);
 
-    base_uint& operator++()
+    WARNING_UNINTENTIONAL_WRAPAROUND base_uint& operator++()
     {
         // prefix operator
         int i = 0;
