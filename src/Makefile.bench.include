@@ -19,6 +19,7 @@ bench_bench_dash_SOURCES = \
   bench/bls_dkg.cpp \
   bench/checkblock.cpp \
   bench/checkqueue.cpp \
+  bench/ecdsa.cpp \
   bench/Examples.cpp \
   bench/rollingbloom.cpp \
   bench/crypto_hash.cpp \

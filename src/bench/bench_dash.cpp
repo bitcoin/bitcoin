@@ -17,6 +17,8 @@ int
 main(int argc, char** argv)
 {
     ECC_Start();
+    ECCVerifyHandle verifyHandle;
+
     BLSInit();
     SetupEnvironment();
     fPrintToDebugLog = false; // don't want to write to debug.log file
