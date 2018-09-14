@@ -314,11 +314,16 @@ void CTxMemPoolEntry::UpdateDescendantState(int64_t modifySize, CAmount modifyFe
 
 void CTxMemPoolEntry::UpdateAncestorState(int64_t modifySize, CAmount modifyFee, int64_t modifyCount, int64_t modifySigOps)
 {
+    // An unsigned integer wraparound may take place here (modifySize is allowed to be negative).
     nSizeWithAncestors += modifySize;
     assert(int64_t(nSizeWithAncestors) > 0);
+
     nModFeesWithAncestors += modifyFee;
+
+    // An unsigned integer wraparound may take place here (modifyCount is allowed to be negative).
     nCountWithAncestors += modifyCount;
     assert(int64_t(nCountWithAncestors) > 0);
+
     nSigOpCostWithAncestors += modifySigOps;
     assert(int(nSigOpCostWithAncestors) >= 0);
 }
