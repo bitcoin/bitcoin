@@ -4,7 +4,7 @@
 <context>
     <name>AddressBookPage</name>
     <message>
-        <location filename="../forms/addressbookpage.ui" line="+30"/>
+        <location filename="../forms/addressbookpage.ui" line="+37"/>
         <source>Right-click to edit address or label</source>
         <translation type="unfinished"></translation>
     </message>
@@ -39,7 +39,12 @@
         <translation>Delete the currently selected address from the list</translation>
     </message>
     <message>
-        <location line="+26"/>
+        <location line="-63"/>
+        <source>Enter address or label to search</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+89"/>
         <source>Export the data in the current tab to a file</source>
         <translation>Export the data in the current tab to a file</translation>
     </message>
@@ -54,7 +59,7 @@
         <translation>&amp;Delete</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="+51"/>
+        <location filename="../addressbookpage.cpp" line="+86"/>
         <source>Choose the address to send coins to</source>
         <translation type="unfinished"></translation>
     </message>
@@ -84,12 +89,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>These are your Chaincoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>&amp;Copy Address</source>
         <translation type="unfinished"></translation>
     </message>
@@ -104,7 +109,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+193"/>
+        <location line="+177"/>
         <source>Export Address List</source>
         <translation type="unfinished"></translation>
     </message>
@@ -127,7 +132,7 @@
 <context>
     <name>AddressTableModel</name>
     <message>
-        <location filename="../addresstablemodel.cpp" line="+169"/>
+        <location filename="../addresstablemodel.cpp" line="+165"/>
         <source>Label</source>
         <translation type="unfinished"></translation>
     </message>
@@ -301,7 +306,7 @@
 <context>
     <name>BanTableModel</name>
     <message>
-        <location filename="../bantablemodel.cpp" line="+89"/>
+        <location filename="../bantablemodel.cpp" line="+88"/>
         <source>IP/Netmask</source>
         <translation type="unfinished"></translation>
     </message>
@@ -314,27 +319,27 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+387"/>
+        <location filename="../bitcoingui.cpp" line="+334"/>
         <source>Sign &amp;message...</source>
         <translation>Sign &amp;message...</translation>
     </message>
     <message>
-        <location line="+563"/>
+        <location line="+615"/>
         <source>Synchronizing with network...</source>
         <translation>Synchronizing with network...</translation>
     </message>
     <message>
-        <location line="-660"/>
+        <location line="-712"/>
         <source>&amp;Overview</source>
         <translation>&amp;Overview</translation>
     </message>
     <message>
-        <location line="-145"/>
+        <location line="-141"/>
         <source>Node</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+146"/>
+        <location line="+142"/>
         <source>Show general overview of wallet</source>
         <translation>Show general overview of wallet</translation>
     </message>
@@ -514,7 +519,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+481"/>
+        <location line="+146"/>
+        <source>Wallet:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+85"/>
+        <source>default wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+302"/>
         <source>Click to disable network activity.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -539,7 +554,12 @@
         <translation>Reindexing blocks on disk...</translation>
     </message>
     <message>
-        <location line="-577"/>
+        <location line="+385"/>
+        <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-1014"/>
         <source>Backup wallet to another location</source>
         <translation>Backup wallet to another location</translation>
     </message>
@@ -559,12 +579,12 @@
         <translation>&amp;Verify message...</translation>
     </message>
     <message>
-        <location line="-246"/>
+        <location line="-242"/>
         <source>Wallet</source>
         <translation>Wallet</translation>
     </message>
     <message>
-        <location line="+154"/>
+        <location line="+150"/>
         <source>&amp;Send</source>
         <translation>&amp;Send</translation>
     </message>
@@ -629,7 +649,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+535"/>
+        <location line="+587"/>
         <source>Indexing blocks on disk...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -664,12 +684,12 @@
     <message>
         <location line="-240"/>
         <location line="+8"/>
-        <location line="+314"/>
+        <location line="+312"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>
     <message>
-        <location line="-692"/>
+        <location line="-742"/>
         <source>Open $URI...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -699,7 +719,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+602"/>
+        <location line="+652"/>
         <source>Warning</source>
         <translation>Warning</translation>
     </message>
@@ -709,12 +729,12 @@
         <translation>Information</translation>
     </message>
     <message>
-        <location line="-57"/>
+        <location line="-58"/>
         <source>Up to date</source>
         <translation>Up to date</translation>
     </message>
     <message>
-        <location line="-389"/>
+        <location line="-386"/>
         <source>%1 client</source>
         <translation type="unfinished"></translation>
     </message>
@@ -743,17 +763,22 @@
         <translation>Catching up...</translation>
     </message>
     <message>
-        <location line="+70"/>
+        <location line="+69"/>
         <source>Synchronizing additional data: %p%</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+6"/>
+        <source>Module Sync in Progress: %1 %</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+12"/>
         <source>Chaincoin Core</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+119"/>
+        <location line="+120"/>
         <source>Date: %1
 </source>
         <translation type="unfinished"></translation>
@@ -765,7 +790,13 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
+        <source>Wallet: %1
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Type: %1
 </source>
         <translation type="unfinished"></translation>
@@ -818,7 +849,7 @@
         <translation>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../chaincoin.cpp" line="+533"/>
+        <location filename="../chaincoin.cpp" line="+531"/>
         <source>A fatal error occurred. Chaincoin can no longer continue safely and will quit.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -826,8 +857,8 @@
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="+85"/>
-        <source>Total: %1 (PS compatible: %2 / Enabled: %3)</source>
+        <location filename="../clientmodel.cpp" line="+81"/>
+        <source>Total: %1 (PS compatible: %2 / Enabled: %3) (IPv4: %4, IPv6: %5, TOR: %6)</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -934,7 +965,7 @@
         <translation type="unfinished">Confirmed</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="+58"/>
+        <location filename="../coincontroldialog.cpp" line="+59"/>
         <source>Copy address</source>
         <translation type="unfinished"></translation>
     </message>
@@ -995,17 +1026,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+148"/>
+        <location line="+138"/>
         <source>Please switch to &quot;List mode&quot; to use this function.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+197"/>
+        <location line="+196"/>
         <source>Non-anonymized input selected. &lt;b&gt;PrivateSend will be disabled.&lt;/b&gt;&lt;br&gt;&lt;br&gt;If you still want to use PrivateSend, please deselect all non-nonymized inputs first and then check PrivateSend checkbox again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+27"/>
         <source>(%1 locked)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1030,8 +1061,8 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+49"/>
-        <location line="+51"/>
+        <location line="+46"/>
+        <location line="+53"/>
         <source>(no label)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1159,12 +1190,7 @@
         <translation>&amp;Address</translation>
     </message>
     <message>
-        <location filename="../editaddressdialog.cpp" line="+31"/>
-        <source>New receiving address</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+4"/>
+        <location filename="../editaddressdialog.cpp" line="+30"/>
         <source>New sending address</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1179,17 +1205,22 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+72"/>
+        <location line="+75"/>
         <source>The entered address &quot;%1&quot; is not a valid Chaincoin address.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+5"/>
-        <source>The entered address &quot;%1&quot; is already in the address book.</source>
+        <location line="+33"/>
+        <source>Address &quot;%1&quot; already exists as a receiving address with label &quot;%2&quot; and so cannot be added as a sending address.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+5"/>
+        <source>The entered address &quot;%1&quot; is already in the address book with label &quot;%2&quot;.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-28"/>
         <source>Could not unlock wallet.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1202,7 +1233,7 @@
 <context>
     <name>FreespaceChecker</name>
     <message>
-        <location filename="../intro.cpp" line="+77"/>
+        <location filename="../intro.cpp" line="+78"/>
         <source>A new data directory will be created.</source>
         <translation>A new data directory will be created.</translation>
     </message>
@@ -1230,14 +1261,9 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <location filename="../utilitydialog.cpp" line="+37"/>
+        <location filename="../utilitydialog.cpp" line="+38"/>
         <source>version</source>
         <translation type="unfinished">version</translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>Chaincoin Core</source>
-        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+5"/>
@@ -1256,58 +1282,13 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Usage:</source>
-        <translation type="unfinished">Usage:</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>command-line options</source>
-        <translation type="unfinished">command-line options</translation>
-    </message>
-    <message>
-        <location line="+9"/>
-        <source>UI Options:</source>
+        <location line="+51"/>
+        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Chaincoin in your wallet is comprised of different &quot;inputs&quot; which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type=&quot;1&quot;&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.01 CHC, 0.1 CHC, 1 CHC and 10 CHC -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called &quot;masternodes.&quot; These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know &quot;who&quot; you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users&apos; wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it&apos;s called a &quot;round.&quot; Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be anonymized. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these &quot;change addresses.&quot; Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more info see &lt;a href=&quot;https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend&quot;&gt;https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend&lt;/a&gt;         </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
-        <source>Choose data directory on startup (default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Start minimized</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Show splash screen on startup (default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Reset all settings changed in the GUI</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+42"/>
+        <location line="-4"/>
         <source>PrivateSend information</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Chaincoin in your wallet is comprised of different &quot;inputs&quot; which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times..&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type=&quot;1&quot;&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.01 CHC, 0.1 CHC, 1 CHC and 10 CHC -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called &quot;masternodes.&quot; These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know &quot;who&quot; you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users&apos; wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it&apos;s called a &quot;round.&quot; Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be anonymized. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these &quot;change addresses.&quot; Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more info see &lt;a href=&quot;https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend&quot;&gt;https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend&lt;/a&gt;         </source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1364,7 +1345,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+26"/>
+        <location line="+27"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>
@@ -1404,53 +1385,53 @@
     </message>
     <message>
         <location line="+34"/>
-        <location filename="../masternodelist.cpp" line="+499"/>
+        <location filename="../masternodelist.cpp" line="+506"/>
         <source>Alias</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+5"/>
-        <location line="+133"/>
+        <location line="+136"/>
         <source>Address</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-128"/>
-        <location line="+133"/>
+        <location line="-131"/>
+        <location line="+136"/>
         <location filename="../masternodelist.cpp" line="+5"/>
         <source>Protocol</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-128"/>
-        <location line="+133"/>
+        <location line="-131"/>
+        <location line="+136"/>
         <location filename="../masternodelist.cpp" line="+3"/>
         <source>Status</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-128"/>
-        <location line="+133"/>
+        <location line="-131"/>
+        <location line="+136"/>
         <location filename="../masternodelist.cpp" line="+2"/>
         <source>Active</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-128"/>
-        <location line="+133"/>
+        <location line="-131"/>
+        <location line="+136"/>
         <location filename="../masternodelist.cpp" line="+1"/>
         <source>Last Seen</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-128"/>
-        <location line="+133"/>
+        <location line="-131"/>
+        <location line="+136"/>
         <location filename="../masternodelist.cpp" line="-2"/>
         <source>Payee</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-120"/>
+        <location line="-123"/>
         <source>S&amp;tart alias</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1486,17 +1467,17 @@
     </message>
     <message>
         <location line="+7"/>
-        <location line="+119"/>
+        <location line="+122"/>
         <source>0</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-94"/>
+        <location line="-97"/>
         <source>All Masternodes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+63"/>
         <source>Filter List:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1511,12 +1492,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../masternodelist.cpp" line="-446"/>
+        <location filename="../masternodelist.cpp" line="-455"/>
         <source>Start alias</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+288"/>
+        <location line="+297"/>
         <source>Confirm masternode start</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1691,7 +1672,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../openuridialog.cpp" line="+47"/>
+        <location filename="../openuridialog.cpp" line="+45"/>
         <source>Select payment request file to open</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1709,7 +1690,27 @@
         <translation>&amp;Main</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+31"/>
+        <source>Disables some advanced features but all blocks will still be fully validated. Reverting this setting requires re-downloading the entire blockchain. Actual disk usage may be somewhat higher.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Prune &amp;block storage to</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>GB</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Reverting this setting requires re-downloading the entire blockchain.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+12"/>
         <source>Size of &amp;database cache</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1867,7 +1868,7 @@
         <translation>&amp;Network</translation>
     </message>
     <message>
-        <location line="-262"/>
+        <location line="-325"/>
         <source>Automatically start Chaincoin Core after logging in to the system.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1877,7 +1878,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+65"/>
+        <location line="+128"/>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2047,28 +2048,28 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation>&amp;Cancel</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+94"/>
+        <location filename="../optionsdialog.cpp" line="+104"/>
         <source>default</source>
         <translation>default</translation>
     </message>
     <message>
-        <location line="+64"/>
+        <location line="+56"/>
         <source>none</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+84"/>
+        <location line="+89"/>
         <source>Confirm options reset</source>
         <translation>Confirm options reset</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+62"/>
+        <location line="+63"/>
         <source>Client restart required to activate changes.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-62"/>
+        <location line="-63"/>
         <source>Client will be shut down. Do you want to proceed?</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2093,7 +2094,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+46"/>
         <source>This change would require a client restart.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2111,7 +2112,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation>Form</translation>
     </message>
     <message>
-        <location line="+292"/>
+        <location line="+309"/>
         <source>Watch-only:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2146,24 +2147,28 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation>Mined balance that has not yet matured</translation>
     </message>
     <message>
-        <location line="-160"/>
+        <location line="-177"/>
         <source>Balances</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
-        <location line="+355"/>
-        <location line="+258"/>
+        <location line="+392"/>
+        <location line="+254"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Chaincoin network after a connection is established, but this process has not completed yet.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-476"/>
+        <location line="-485"/>
         <source>Total:</source>
         <translation>Total:</translation>
     </message>
     <message>
-        <location line="+61"/>
+        <location line="-145"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The displayed information may be out of date. Your wallet automatically synchronizes with the Chaincoin network after a connection is established, but this process has not completed yet.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+206"/>
         <source>Your current total balance</source>
         <translation>Your current total balance</translation>
     </message>
@@ -2178,7 +2183,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+84"/>
+        <location line="+97"/>
         <source>Status:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2263,7 +2268,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+35"/>
         <source>Recent transactions</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2283,9 +2288,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="+150"/>
-        <location line="+1"/>
-        <location line="+1"/>
+        <location filename="../overviewpage.cpp" line="+153"/>
         <source>out of sync</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2296,26 +2299,26 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+4"/>
-        <location line="+307"/>
-        <location line="+155"/>
+        <location line="+258"/>
+        <location line="+167"/>
         <source>Start Mixing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-460"/>
-        <location line="+463"/>
+        <location line="-423"/>
+        <location line="+426"/>
         <source>Stop Mixing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-295"/>
+        <location line="-259"/>
         <location line="+6"/>
         <source>No inputs detected</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
         <location line="-2"/>
-        <location line="+20"/>
+        <location line="+18"/>
         <location line="+10"/>
         <source>%n Rounds</source>
         <translation type="unfinished">
@@ -2334,42 +2337,28 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+58"/>
+        <location line="+17"/>
         <source>Overall progress</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Denominated</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Mixed</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Anonymized</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message numerus="yes">
-        <location line="+1"/>
-        <source>Denominated inputs have %5 of %n rounds on average</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-        </translation>
-    </message>
-    <message>
-        <location line="+35"/>
+        <location line="+34"/>
         <source>keys left: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+15"/>
-        <location line="+48"/>
-        <location line="+140"/>
+        <source>Enabled / Not active</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Note: You can turn this message off in options.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <location line="+151"/>
         <location line="+1"/>
         <location line="+1"/>
         <location line="+3"/>
@@ -2377,7 +2366,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-180"/>
+        <location line="-192"/>
         <source>Very low number of keys left since last automatic backup!</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2387,24 +2376,20 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Note: You turn this message off in options.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../forms/overviewpage.ui" line="+125"/>
-        <location filename="../overviewpage.cpp" line="+3"/>
-        <location line="+12"/>
+        <location filename="../forms/overviewpage.ui" line="+138"/>
+        <location filename="../overviewpage.cpp" line="+6"/>
+        <location line="+13"/>
         <location line="+8"/>
-        <location line="+61"/>
+        <location line="+62"/>
         <location line="+15"/>
         <location line="+9"/>
         <location line="+14"/>
+        <location line="+13"/>
         <source>PrivateSend</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="-106"/>
+        <location filename="../overviewpage.cpp" line="-120"/>
         <source>WARNING! Something went wrong on automatic backup</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2447,7 +2432,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished">N/A</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+17"/>
         <source>PrivateSend was successfully reset.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2466,21 +2451,27 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <source>Wallet is locked and user declined to unlock. Disabling PrivateSend.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <location line="+13"/>
+        <source>Failed to assign wallet.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>PaymentServer</name>
     <message>
-        <location filename="../paymentserver.cpp" line="+327"/>
-        <location line="+214"/>
+        <location filename="../paymentserver.cpp" line="+317"/>
+        <location line="+215"/>
         <location line="+42"/>
-        <location line="+111"/>
+        <location line="+110"/>
         <location line="+14"/>
         <location line="+18"/>
         <source>Payment request error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-296"/>
+        <location line="-316"/>
+        <location line="+21"/>
         <location line="+13"/>
         <location line="+7"/>
         <source>URI handling</source>
@@ -2497,12 +2488,17 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-115"/>
+        <location line="-116"/>
         <source>Cannot start chaincoin: click-to-pay handler</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+123"/>
+        <location line="+82"/>
+        <source>&apos;chaincoin://&apos; is not a valid URI. Use &apos;bitcoin:&apos; instead.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+42"/>
         <source>URI cannot be parsed! This can be caused by an invalid Chaincoin address or malformed URI parameters.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2522,12 +2518,12 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <location line="+31"/>
         <location line="+10"/>
         <location line="+17"/>
-        <location line="+86"/>
+        <location line="+85"/>
         <source>Payment request rejected</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-153"/>
+        <location line="-152"/>
         <source>Payment request network doesn&apos;t match client network.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2558,12 +2554,12 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+55"/>
+        <location line="+65"/>
         <source>Refund from %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+42"/>
+        <location line="+31"/>
         <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2596,7 +2592,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
 <context>
     <name>PeerTableModel</name>
     <message>
-        <location filename="../peertablemodel.cpp" line="+121"/>
+        <location filename="../peertablemodel.cpp" line="+109"/>
         <source>User Agent</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2629,17 +2625,17 @@ https://www.transifex.com/projects/p/chaincoin/</source>
 <context>
     <name>ProposalList</name>
     <message>
-        <location filename="../proposallist.cpp" line="+56"/>
+        <location filename="../proposallist.cpp" line="+57"/>
         <source>Enter proposal name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+5"/>
         <source>Min amount</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+6"/>
         <location line="+11"/>
         <source>All</source>
         <translation type="unfinished"></translation>
@@ -2681,27 +2677,27 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+5"/>
         <source>Min yes votes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+6"/>
         <source>Min no votes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+7"/>
         <source>Min abs. yes votes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+6"/>
         <source>Min percentage</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+31"/>
         <source>Vote Yes</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2751,12 +2747,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Visit statistics website</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+80"/>
+        <location line="+81"/>
         <source>minute(s)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2809,7 +2800,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
 <context>
     <name>ProposalTableModel</name>
     <message>
-        <location filename="../proposaltablemodel.cpp" line="+45"/>
+        <location filename="../proposaltablemodel.cpp" line="+46"/>
         <source>Proposal</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2892,17 +2883,17 @@ https://www.transifex.com/projects/p/chaincoin/</source>
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../bitcoinunits.cpp" line="+243"/>
+        <location filename="../bitcoinunits.cpp" line="+244"/>
         <source>Amount</source>
         <translation type="unfinished">Amount</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="+131"/>
+        <location filename="../guiutil.cpp" line="+116"/>
         <source>Enter a Chaincoin address (e.g. %1)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+822"/>
+        <location line="+748"/>
         <source>%1 d</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3012,7 +3003,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../chaincoin.cpp" line="+186"/>
+        <location filename="../chaincoin.cpp" line="+200"/>
         <source>%1 didn&apos;t yet exit safely...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3025,13 +3016,18 @@ https://www.transifex.com/projects/p/chaincoin/</source>
 <context>
     <name>QObject::QObject</name>
     <message>
-        <location filename="../chaincoin.cpp" line="-94"/>
+        <location filename="../chaincoin.cpp" line="-87"/>
         <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
-        <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
+        <location line="-38"/>
+        <source>Error parsing command line arguments: %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+43"/>
+        <source>Error: Cannot parse configuration file: %1.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3094,7 +3090,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
 <context>
     <name>QRImageWidget</name>
     <message>
-        <location filename="../receiverequestdialog.cpp" line="+35"/>
+        <location filename="../receiverequestdialog.cpp" line="+32"/>
         <source>&amp;Save Image...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3129,7 +3125,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <location line="+23"/>
         <location line="+19"/>
         <location line="+20"/>
-        <location line="+623"/>
+        <location line="+639"/>
         <location line="+23"/>
         <location line="+23"/>
         <location line="+23"/>
@@ -3151,7 +3147,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation>N/A</translation>
     </message>
     <message>
-        <location line="-1148"/>
+        <location line="-1164"/>
         <source>Client version</source>
         <translation>Client version</translation>
     </message>
@@ -3236,7 +3232,17 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+478"/>
+        <location line="+248"/>
+        <source>Wallet: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>(none)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+238"/>
         <source>&amp;Reset</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3264,8 +3270,8 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+59"/>
-        <location filename="../rpcconsole.cpp" line="+499"/>
-        <location line="+729"/>
+        <location filename="../rpcconsole.cpp" line="+504"/>
+        <location line="+771"/>
         <source>Select a peer to view detailed information.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3300,8 +3306,8 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-754"/>
-        <location line="+662"/>
+        <location line="-770"/>
+        <location line="+678"/>
         <source>User Agent</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3366,7 +3372,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-1230"/>
+        <location line="-1246"/>
         <source>Last block time</source>
         <translation>Last block time</translation>
     </message>
@@ -3381,7 +3387,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation>&amp;Console</translation>
     </message>
     <message>
-        <location line="+195"/>
+        <location line="+211"/>
         <source>&amp;Network Traffic</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3391,7 +3397,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="-405"/>
+        <location filename="../rpcconsole.cpp" line="-418"/>
         <source>In:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3401,17 +3407,17 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/debugwindow.ui" line="-604"/>
+        <location filename="../forms/debugwindow.ui" line="-620"/>
         <source>Debug log file</source>
         <translation>Debug log file</translation>
     </message>
     <message>
-        <location line="+441"/>
+        <location line="+457"/>
         <source>Clear console</source>
         <translation>Clear console</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="-229"/>
+        <location filename="../rpcconsole.cpp" line="-257"/>
         <source>1 &amp;hour</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3449,7 +3455,12 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+140"/>
+        <location line="+54"/>
+        <source>default wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+114"/>
         <source>Welcome to the %1 RPC console.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3479,7 +3490,17 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+247"/>
+        <location line="+73"/>
+        <source>Executing command without any wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Executing command using &quot;%1&quot; wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+189"/>
         <source>(node id: %1)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3694,7 +3715,12 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+2"/>
+        <source>Wallet</source>
+        <translation type="unfinished">Wallet</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3746,7 +3772,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+639"/>
+        <location filename="../sendcoinsdialog.cpp" line="+635"/>
         <source>Send Coins</source>
         <translation>Send Coins</translation>
     </message>
@@ -3831,7 +3857,12 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+51"/>
+        <source>Specify a custom fee per kB (1,000 bytes) of the transaction&apos;s virtual size. Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 chuffs per kB&quot; for a transaction size of 500 bytes (half of 1 kB) would ultimately yield a fee of only 50 chuffs.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>per kilobyte</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3886,12 +3917,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+74"/>
-        <source>If the custom fee is set to 1000 chuffs and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 chuffs in fee,&lt;br /&gt;while &quot;at least&quot; pays 1000 chuffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+30"/>
+        <location line="+104"/>
         <location line="+13"/>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for chaincoin transactions than the network can process.</source>
         <translation type="unfinished"></translation>
@@ -3937,7 +3963,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation>S&amp;end</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="-532"/>
+        <location filename="../sendcoinsdialog.cpp" line="-527"/>
         <source>Copy quantity</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3977,15 +4003,15 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+70"/>
-        <location line="+6"/>
-        <location line="+9"/>
+        <location line="+71"/>
+        <location line="+4"/>
+        <location line="+8"/>
         <source>using</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-15"/>
-        <location line="+6"/>
+        <location line="-12"/>
+        <location line="+4"/>
         <source>anonymous funds</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3995,12 +4021,12 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+4"/>
         <source>any available funds (not anonymous)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+68"/>
+        <location line="+72"/>
         <location line="+5"/>
         <location line="+5"/>
         <location line="+4"/>
@@ -4013,28 +4039,38 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+9"/>
-        <source>added as transaction fee</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+15"/>
-        <source>Total Amount %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+42"/>
         <source>or</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="-19"/>
         <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-57"/>
+        <source>from wallet %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+36"/>
+        <source>Please, review your transaction.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Transaction fee</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+16"/>
         <source>Not signalling Replace-By-Fee, BIP-125.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Total Amount</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4043,7 +4079,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+205"/>
+        <location line="+192"/>
         <source>The recipient address is not valid. Please recheck.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4093,7 +4129,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location line="+42"/>
+        <location line="+43"/>
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation>
             <numerusform>Estimated to begin confirmation within %n block.</numerusform>
@@ -4235,7 +4271,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../sendcoinsentry.cpp" line="+31"/>
+        <location filename="../sendcoinsentry.cpp" line="+30"/>
         <source>Enter a label for this address to add it to your address book</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4252,7 +4288,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
 <context>
     <name>ShutdownWindow</name>
     <message>
-        <location filename="../utilitydialog.cpp" line="+71"/>
+        <location filename="../utilitydialog.cpp" line="+75"/>
         <source>Chaincoin Core is shutting down...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4373,12 +4409,12 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation>Reset all verify message fields</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="+33"/>
+        <location filename="../signverifymessagedialog.cpp" line="+31"/>
         <source>Click &quot;Sign Message&quot; to generate signature</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+103"/>
+        <location line="+102"/>
         <location line="+78"/>
         <source>The entered address is invalid.</source>
         <translation type="unfinished"></translation>
@@ -4452,7 +4488,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation>[testnet]</translation>
     </message>
     <message>
-        <location filename="../splashscreen.cpp" line="+46"/>
+        <location filename="../splashscreen.cpp" line="+45"/>
         <source>Version %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4475,7 +4511,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
 <context>
     <name>TrafficGraphWidget</name>
     <message>
-        <location filename="../trafficgraphwidget.cpp" line="+80"/>
+        <location filename="../trafficgraphwidget.cpp" line="+81"/>
         <source>KB/s</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4483,7 +4519,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
 <context>
     <name>TransactionDesc</name>
     <message numerus="yes">
-        <location filename="../transactiondesc.cpp" line="+31"/>
+        <location filename="../transactiondesc.cpp" line="+32"/>
         <source>Open for %n more block(s)</source>
         <translation>
             <numerusform>Open for %n more block</numerusform>
@@ -4498,11 +4534,6 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     <message>
         <location line="+6"/>
         <source>conflicted with a transaction with %1 confirmations</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>%1/offline</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4536,25 +4567,12 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+24"/>
         <source>Status</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+5"/>
-        <source>, has not been successfully broadcast yet</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message numerus="yes">
-        <location line="+2"/>
-        <source>, broadcast through %n node(s)</source>
-        <translation>
-            <numerusform>, broadcast through %n node</numerusform>
-            <numerusform>, broadcast through %n nodes</numerusform>
-        </translation>
-    </message>
-    <message>
-        <location line="+4"/>
+        <location line="+3"/>
         <source>Date</source>
         <translation type="unfinished">Date</translation>
     </message>
@@ -4570,7 +4588,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+5"/>
-        <location line="+12"/>
+        <location line="+14"/>
         <location line="+72"/>
         <source>From</source>
         <translation type="unfinished"></translation>
@@ -4583,12 +4601,12 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     <message>
         <location line="+1"/>
         <location line="+20"/>
-        <location line="+69"/>
+        <location line="+70"/>
         <source>To</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-87"/>
+        <location line="-88"/>
         <source>own address</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4604,16 +4622,16 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="+36"/>
         <location line="+12"/>
-        <location line="+53"/>
-        <location line="+26"/>
         <location line="+54"/>
+        <location line="+30"/>
+        <location line="+58"/>
         <source>Credit</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location line="-143"/>
+        <location line="-152"/>
         <source>matures in %n more block(s)</source>
         <translation>
             <numerusform>matures in %n more block</numerusform>
@@ -4626,14 +4644,14 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+59"/>
-        <location line="+25"/>
-        <location line="+54"/>
+        <location line="+60"/>
+        <location line="+26"/>
+        <location line="+61"/>
         <source>Debit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-69"/>
+        <location line="-77"/>
         <source>Total debit</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4648,18 +4666,18 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+22"/>
         <source>Net amount</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+10"/>
+        <location line="+12"/>
         <source>Message</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-8"/>
+        <location line="-10"/>
         <source>Comment</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4671,6 +4689,16 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     <message>
         <location line="+1"/>
         <source>Transaction total size</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transaction virtual size</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Output index</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4699,7 +4727,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+21"/>
         <source>Amount</source>
         <translation type="unfinished">Amount</translation>
     </message>
@@ -4728,22 +4756,22 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <source>This pane shows a detailed description of the transaction</source>
         <translation>This pane shows a detailed description of the transaction</translation>
     </message>
+    <message>
+        <location filename="../transactiondescdialog.cpp" line="+23"/>
+        <source>Details for %1</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="+248"/>
+        <location filename="../transactiontablemodel.cpp" line="+226"/>
         <source>Date</source>
         <translation type="unfinished">Date</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Type</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>Address / Label</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
@@ -4757,11 +4785,6 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     <message>
         <location line="+3"/>
         <source>Open until %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Offline</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4795,12 +4818,12 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>This block was not received by any other nodes and will probably not be accepted!</source>
+        <location line="-79"/>
+        <source>Label</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+82"/>
         <source>Generated but not accepted</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4870,7 +4893,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+219"/>
+        <location line="+214"/>
         <source>(no label)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4999,17 +5022,17 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+6"/>
         <source>Enter address, transaction id, or label to search</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+4"/>
         <source>Min amount</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+48"/>
         <source>Abandon transaction</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5059,7 +5082,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+215"/>
+        <location line="+213"/>
         <source>Export Transaction History</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5137,7 +5160,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
 <context>
     <name>UnitDisplayStatusBarControl</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+129"/>
+        <location filename="../bitcoingui.cpp" line="+160"/>
         <source>Unit to show amounts in. Click to select another unit.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5145,7 +5168,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
 <context>
     <name>WalletFrame</name>
     <message>
-        <location filename="../walletframe.cpp" line="+28"/>
+        <location filename="../walletframe.cpp" line="+30"/>
         <source>No wallet has been loaded.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5153,12 +5176,12 @@ https://www.transifex.com/projects/p/chaincoin/</source>
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="+314"/>
+        <location filename="../walletmodel.cpp" line="+223"/>
         <source>Send Coins</source>
         <translation type="unfinished">Send Coins</translation>
     </message>
     <message>
-        <location line="+406"/>
+        <location line="+321"/>
         <location line="+39"/>
         <location line="+6"/>
         <source>Fee bump error</source>
@@ -5208,7 +5231,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
 <context>
     <name>WalletView</name>
     <message>
-        <location filename="../walletview.cpp" line="+49"/>
+        <location filename="../walletview.cpp" line="+50"/>
         <source>&amp;Export</source>
         <translation type="unfinished">&amp;Export</translation>
     </message>
@@ -5223,7 +5246,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+239"/>
+        <location line="+245"/>
         <source>Backup Wallet</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5252,6 +5275,11 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <source>The wallet data was successfully saved to %1.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <location line="+63"/>
+        <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>chaincoin-core</name>
@@ -5263,51 +5291,11 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+1"/>
-        <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Accept relayed transactions received from whitelisted peers even when not relaying transactions (default: %d)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation type="unfinished">Bind to given address and always listen on it. Use [host]:port notation for IPv6</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+4"/>
+        <location line="+6"/>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5317,28 +5305,8 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Connect only to the specified node(s); -connect=0 disables automatic connections (the rules for this peer are the same as for -addnode)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+7"/>
         <source>Disable all Chaincoin specific functionality (Masternodes, PrivateSend, Governance) (0-1, default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5348,11 +5316,6 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+3"/>
-        <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+2"/>
         <source>Enable multiple PrivateSend mixing sessions per block, experimental (0-1, default: %u)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5363,21 +5326,11 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+3"/>
-        <source>Equivalent bytes per sigop in transactions for relay and mining (default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+2"/>
         <source>Error loading %s: You can&apos;t enable HD on an already existing non-HD wallet</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+2"/>
-        <source>Error loading wallet %s. -wallet parameter must only specify a filename (not a path).</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5388,111 +5341,21 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+2"/>
-        <source>Exclude debugging information for a category. Can be used in conjunction with -debug=1 to output debug logs for all categories except one or more specified categories.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation type="unfinished">Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation type="unfinished">Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation type="unfinished">Execute command when the best block changes (%s in cmd is replaced by block hash)</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Extra transactions to keep in memory for compact block reconstructions (default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
-        <source>Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Force relay of transactions from whitelisted peers even if they violate local relay policy (default: %d)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+7"/>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>If this block is in the chain assume that it and its ancestors are valid and potentially skip their script verification (0 to verify all, default: %s, testnet: %s)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+4"/>
+        <location line="+9"/>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: &apos;%s&apos; (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Maximum allowed median peer time offset adjustment. Local perspective of time may be influenced by peers forward or backward by this amount. (default: %u seconds)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Maximum total fees (in %s) to use in a single wallet transaction or raw transaction; setting this too low may abort large transactions (default: %s)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Number of seconds to keep misbehaving peers from reconnecting (default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+2"/>
         <source>Please check that your computer&apos;s date and time are correct! If your clock is wrong, %s will not work properly.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5523,47 +5386,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+3"/>
-        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect used)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Reduce storage requirements by pruning (deleting) old blocks. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, &gt;%u = target size in MiB to use for block files)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+5"/>
         <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Sets the serialization of raw transaction or block hex returned in non-verbose mode, non-segwit(0) or segwit(1) (default: %d)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Specify directory to hold wallets (default: &lt;datadir&gt;/wallets if it exists, otherwise &lt;datadir&gt;)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Specify location of debug log file: this can be an absolute path or a path relative to the data directory (default: %s)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5573,17 +5396,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+2"/>
-        <source>Support filtering of blocks and transaction with bloom filters (default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+2"/>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer&apos;s date and time being set incorrectly. Only rebuild the block database if you are sure that your computer&apos;s date and time are correct</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>The fee rate (in %s/kB) that indicates your tolerance for discarding change by adding it to the fee (default: %s). Note: An output is discarded if it is dust at this rate, but we will always discard up to the dust relay fee and a discard fee above that is limited by the fee estimate for the longest target</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5592,12 +5405,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+5"/>
         <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5609,11 +5417,6 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     <message>
         <location line="+6"/>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5653,32 +5456,12 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+3"/>
-        <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. The client then connects normally using the rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt; pair of arguments. This option can be specified multiple times</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+6"/>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Wallet is locked, can&apos;t replenish keypool! Automatic backups and mixing are disabled, please unlock your wallet to replenish keypool.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Wallet will not create transactions that violate mempool chain limits (default: %u)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5692,7 +5475,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+6"/>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5709,31 +5492,6 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     <message>
         <location line="+4"/>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>What type of addresses to use (&quot;legacy&quot;, &quot;p2sh-segwit&quot;, or &quot;bech32&quot;, default: &quot;%s&quot;)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>What type of change to use (&quot;legacy&quot;, &quot;p2sh-segwit&quot;, or &quot;bech32&quot;). Default is same as -addresstype, except when -addresstype=p2sh-segwit a native segwit output is used when sending to a native segwit address)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>Whether to save the mempool on shutdown and load on restart (default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5773,16 +5531,6 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+1"/>
-        <source>(default: %s)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>(default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>(must be %d for mainnet)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5793,63 +5541,13 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+1"/>
-        <source>&lt;category&gt; can be:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation type="unfinished">Accept command line and JSON-RPC commands</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Accept public REST requests (default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation type="unfinished">Allow DNS lookups for -addnode, -seednode and -connect</translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Already have that input.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Always query for peer addresses via DNS lookup (default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Append comment to the user agent string</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Attempt to recover private keys from a corrupt wallet on startup</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Automatic backups disabled</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Automatically create Tor hidden service (default: %d)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Block creation options:</source>
-        <translation type="unfinished">Block creation options:</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5877,12 +5575,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Chain selection options:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Change index out of range</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5893,22 +5586,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+1"/>
-        <source>Connect through SOCKS5 proxy</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation type="unfinished">Connect to a node to retrieve peer addresses, and disconnect</translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Connecting to masternode...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Connection options:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5928,16 +5606,6 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+1"/>
-        <source>Debugging/Testing options:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Do not load the wallet and disable wallet RPC calls</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Do you want to rebuild the block database now?</source>
         <translation type="unfinished">Do you want to rebuild the block database now?</translation>
     </message>
@@ -5953,32 +5621,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+1"/>
-        <source>Enable publish hash block in &lt;address&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Enable publish hash transaction in &lt;address&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Enable publish raw block in &lt;address&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Enable publish raw transaction in &lt;address&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Enable the client to act as a masternode (0-1, default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Enable transaction replacement in the memory pool (default: %u)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -6012,7 +5655,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Error loading %s: Wallet corrupted</source>
         <translation type="unfinished"></translation>
     </message>
@@ -6033,17 +5676,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+1"/>
-        <source>Error loading wallet %s. -wallet filename must be a regular file.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Error loading wallet %s. Invalid characters in -wallet filename.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -6103,26 +5736,6 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+1"/>
-        <source>Failed to load fulfilled requests cache from</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Failed to load governance cache from</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Failed to load masternode cache from</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Failed to load masternode payments cache from</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Failed to parse host:port string</source>
         <translation type="unfinished"></translation>
     </message>
@@ -6138,11 +5751,6 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+1"/>
-        <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Found enough users, signing ( waiting %s )</source>
         <translation type="unfinished"></translation>
     </message>
@@ -6153,22 +5761,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+1"/>
-        <source>How many blocks to check at startup (default: %u, 0 = all)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Importing...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Imports blocks from external blk000??.dat file on startup</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Include IP addresses in debug output (default: %u)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -6192,12 +5785,52 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished">Information</translation>
     </message>
     <message>
-        <location line="-180"/>
+        <location line="-119"/>
         <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+181"/>
+        <location line="-88"/>
+        <source>Can&apos;t generate a change-address key. Private keys are disabled for this wallet.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Group outputs by address, selecting all or none, instead of selecting on a per-output basis. Privacy is improved as an address is only used once (unless someone sends to it after spending from it), but may result in slightly higher fees as suboptimal coin selection may result due to the added limitation (default: %u)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+39"/>
+        <source>This is a pre-release test build - use at your own risk - do not use for privatesend, mining or merchant applications</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+47"/>
+        <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+37"/>
+        <source>Cannot write to data directory &apos;%s&apos;; check permissions.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Error loading %s: Private keys can only be disabled during creation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+27"/>
         <source>Initialization sanity check failed. %s is shutting down.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -6272,17 +5905,22 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
+        <location line="+46"/>
+        <source>Specified blocks directory &quot;%s&quot; does not exist.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>
+        <location line="+45"/>
+        <source>Upgrading txindex database</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
+        <source>Verifying and backing up wallet(s)...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-92"/>
         <source>Keypool ran out, please call keypoolrefill first</source>
         <translation type="unfinished"></translation>
     </message>
@@ -6303,16 +5941,6 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+1"/>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Listen for connections on &lt;port&gt; (default: %u or testnet: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Loading P2P addresses...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -6328,33 +5956,13 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+1"/>
-        <source>Loading fulfilled requests cache...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Loading governance cache...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Loading masternode cache...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Loading masternode payment cache...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Loading wallet...</source>
         <translation type="unfinished">Loading wallet...</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Location of the auth cookie (default: data dir)</source>
-        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
@@ -6368,22 +5976,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+1"/>
-        <source>Maintain at most &lt;n&gt; connections to peers (default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Make the wallet broadcast transactions</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Masternode cache is empty, skipping payments and governance cache...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Masternode options:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -6399,16 +5992,6 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     <message>
         <location line="+1"/>
         <source>Masternodes are not supported in lite mode.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -6448,11 +6031,6 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+1"/>
-        <source>Node relay options:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Non-standard public key detected.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -6478,47 +6056,12 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+1"/>
-        <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Options:</source>
-        <translation type="unfinished">Options:</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Password for JSON-RPC connections</source>
-        <translation type="unfinished">Password for JSON-RPC connections</translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Port: %d</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Prepend debug output with timestamp (default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Print this help message and exit</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Print version and exit</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>PrivateSend is idle.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>PrivateSend options:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -6548,42 +6091,12 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+1"/>
-        <source>RPC server options:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Rebuild chain state and block index from the blk*.dat files on disk</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Rebuild chain state from the currently indexed blocks</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Relay and mine data carrier transactions (default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Relay non-P2SH multisig (default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Replaying blocks...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Rescan the block chain for missing wallet transactions on startup</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -6598,21 +6111,6 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+1"/>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation type="unfinished">Run in the background as a daemon and accept commands</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation type="unfinished">Send trace/debug info to console instead of debug.log file</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Send transactions with full-RBF opt-in enabled (RPC only, default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Session not complete!</source>
         <translation type="unfinished"></translation>
     </message>
@@ -6623,38 +6121,8 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+1"/>
-        <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Set key pool size to &lt;n&gt; (default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Set maximum BIP141 block weight (default: %d)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Set the masternode private key</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Set the number of threads to service RPC calls (default: %d)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Show all debugging options (usage: --help -help-debug)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation type="unfinished">Shrink debug.log file on client startup (default: 1 when no -debug)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -6677,43 +6145,8 @@ https://www.transifex.com/projects/p/chaincoin/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Specify configuration file (default: %s)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Specify data directory</source>
-        <translation type="unfinished">Specify data directory</translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Specify masternode configuration file (default: %s)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Specify pid file (default: %s)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Specify wallet file (within data directory)</source>
-        <translation type="unfinished">Specify wallet file (within data directory)</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Specify your own public address</source>
-        <translation type="unfinished">Specify your own public address</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Spend unconfirmed change when sending transactions (default: %u)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -6808,22 +6241,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+1"/>
-        <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Too many %f denominations, removing.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Tor control port password (default: empty)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Tor control port to use if onion listening enabled (default: %s)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -6898,17 +6316,12 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+1"/>
+        <source>Unable to generate keys</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Unable to start HTTP server. See debug log for details.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Unknown address type &apos;%s&apos;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Unknown change type &apos;%s&apos;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -6948,43 +6361,18 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+1"/>
-        <source>Upgrade wallet to latest format on startup</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Upgrading UTXO database</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Use UPnP to map the listening port (default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Use the test chain</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Username for JSON-RPC connections</source>
-        <translation type="unfinished">Username for JSON-RPC connections</translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Verifying blocks...</source>
         <translation type="unfinished">Verifying blocks...</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Verifying wallet(s)...</source>
-        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
@@ -6998,22 +6386,17 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+1"/>
-        <source>Wallet debugging/testing options:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Wallet is locked.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Wallet needed to be rewritten: restart %s to complete</source>
+        <source>Wallet is not initialized</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Wallet options:</source>
+        <source>Wallet needed to be rewritten: restart %s to complete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -7033,17 +6416,7 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     </message>
     <message>
         <location line="+1"/>
-        <source>Whether to operate in a blocks only mode (default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Will retry...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -7059,11 +6432,6 @@ https://www.transifex.com/projects/p/chaincoin/</source>
     <message>
         <location line="+1"/>
         <source>Zapping all transactions from wallet...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>ZeroMQ notification options:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
