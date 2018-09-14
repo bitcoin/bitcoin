@@ -680,6 +680,9 @@ void WalletModel::listAssets(std::map<QString, std::map<QString, std::vector<COu
             if (!GetAssetInfoFromScript(out.scriptPubKey, strAssetName, nAmount))
                 continue;
 
+            if (nAmount == 0)
+                continue;
+
             QString assetName = QString::fromStdString(strAssetName);
             auto& assetMap = mapCoins[assetName];
             assetMap[address].emplace_back(coin);

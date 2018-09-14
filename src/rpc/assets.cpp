@@ -45,14 +45,14 @@ std::string AssetTypeToString(AssetType& assetType)
 {
     switch (assetType)
     {
-        case ROOT:          return "ROOT";
-        case SUB:           return "SUB";
-        case UNIQUE:        return "UNIQUE";
-        case OWNER:         return "OWNER";
-        case MSGCHANNEL:    return "MSGCHANNEL";
-        case VOTE:          return "VOTE";
-        case REISSUE:       return "REISSUE";
-        case INVALID:       return "INVALID";
+        case AssetType::ROOT:          return "ROOT";
+        case AssetType::SUB:           return "SUB";
+        case AssetType::UNIQUE:        return "UNIQUE";
+        case AssetType::OWNER:         return "OWNER";
+        case AssetType::MSGCHANNEL:    return "MSGCHANNEL";
+        case AssetType::VOTE:          return "VOTE";
+        case AssetType::REISSUE:       return "REISSUE";
+        case AssetType::INVALID:       return "INVALID";
         default:            return "UNKNOWN";
     }
 }
@@ -819,8 +819,11 @@ UniValue reissue(const JSONRPCRequest& request)
     CWalletTx transaction;
     CAmount nRequiredFee;
 
+    CCoinControl crtl;
+    crtl.destChange = DecodeDestination(changeAddress);
+
     // Create the Transaction
-    if (!CreateReissueAssetTransaction(pwallet, reissueAsset, address, changeAddress, error, transaction, reservekey, nRequiredFee))
+    if (!CreateReissueAssetTransaction(pwallet, crtl, reissueAsset, address, error, transaction, reservekey, nRequiredFee))
         throw JSONRPCError(error.first, error.second);
 
     // Send the Transaction to the network

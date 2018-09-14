@@ -491,7 +491,6 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         }
         else nBytesInputs += 148;
     }
-
     // calculation
     if (nQuantity > 0)
     {

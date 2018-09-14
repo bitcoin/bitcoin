@@ -6,17 +6,15 @@
 #ifndef RAVENCOIN_ASSET_PROTOCOL_H
 #define RAVENCOIN_ASSET_PROTOCOL_H
 
-#include <amount.h>
+#include "amount.h"
+#include "tinyformat.h"
+#include "assettypes.h"
 
 #include <string>
 #include <set>
 #include <map>
 #include <unordered_map>
 #include <list>
-#include <tinyformat.h>
-#include "serialize.h"
-#include "primitives/transaction.h"
-#include "assettypes.h"
 
 #define RVN_R 114
 #define RVN_V 118
@@ -369,7 +367,7 @@ void UpdatePossibleAssets();
 bool GetAssetInfoFromCoin(const Coin& coin, std::string& strName, CAmount& nAmount);
 bool GetAssetInfoFromScript(const CScript& scriptPubKey, std::string& strName, CAmount& nAmount);
 
-void GetAssetData(const CScript& script, CAssetOutputEntry& data);
+bool GetAssetData(const CScript& script, CAssetOutputEntry& data);
 
 bool GetBestAssetAddressAmount(CAssetsCache& cache, const std::string& assetName, const std::string& address);
 
@@ -387,7 +385,7 @@ std::string EncodeIPFS(std::string decoded);
 
 bool CreateAssetTransaction(CWallet* pwallet, CCoinControl& coinControl, const CNewAsset& asset, const std::string& address, std::pair<int, std::string>& error, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRequired);
 bool CreateAssetTransaction(CWallet* pwallet, CCoinControl& coinControl, const std::vector<CNewAsset> assets, const std::string& address, std::pair<int, std::string>& error, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRequired);
-bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& asset, const std::string& address, const std::string& changeAddress, std::pair<int, std::string>& error, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRequired);
+bool CreateReissueAssetTransaction(CWallet* pwallet, CCoinControl& coinControl, const CReissueAsset& asset, const std::string& address, std::pair<int, std::string>& error, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRequired);
 bool CreateTransferAssetTransaction(CWallet* pwallet, const CCoinControl& coinControl, const std::vector< std::pair<CAssetTransfer, std::string> >vTransfers, const std::string& changeAddress, std::pair<int, std::string>& error, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRequired);
 bool SendAssetTransaction(CWallet* pwallet, CWalletTx& transaction, CReserveKey& reserveKey, std::pair<int, std::string>& error, std::string& txid);
 #endif //RAVENCOIN_ASSET_PROTOCOL_H

@@ -7,16 +7,17 @@
 #define RAVENCOIN_NEWASSET_H
 
 #include <string>
+#include <list>
 #include <unordered_map>
 #include "amount.h"
-#include "serialize.h"
+#include "primitives/transaction.h"
 
 #define MAX_UNIT 8
 
 class CAssetsCache;
 
 
-enum AssetType
+enum class AssetType
 {
     ROOT = 0,
     SUB = 1,
@@ -28,6 +29,13 @@ enum AssetType
     INVALID = 7
 };
 
+int IntFromAssetType(AssetType type) {
+    return (int)type;
+}
+
+AssetType AssetTypeFromInt(int nType) {
+    return (AssetType)nType;
+}
 
 class CNewAsset
 {
@@ -216,17 +224,7 @@ struct CAssetCacheNewTransfer
 
     bool operator<(const CAssetCacheNewTransfer& rhs ) const
     {
-
         return out < rhs.out;
-//        if (transfer.strName < rhs.transfer.strName)
-//            return true;
-//
-//        if (rhs.transfer.strName == transfer.strName && address == rhs.address && transfer.nAmount == rhs.transfer.nAmount && out == rhs.out) {
-//            return false;
-//        } else if (rhs.transfer.strName == transfer.strName && (address != rhs.address || transfer.nAmount != rhs.transfer.nAmount || out == rhs.out))
-//            return true;
-//
-//        return false;
     }
 };
 
@@ -245,8 +243,6 @@ struct CAssetCacheNewOwner
     {
 
         return assetName < rhs.assetName;
-//        if (assetName < rhs.assetName)
-//            return true;
     }
 };
 

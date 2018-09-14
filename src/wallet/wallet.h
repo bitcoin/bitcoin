@@ -29,7 +29,7 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <assets/assettypes.h>
+
 
 typedef CWallet* CWalletRef;
 extern std::vector<CWalletRef> vpwallets;
@@ -84,6 +84,8 @@ class CWalletTx;
 struct FeeCalculation;
 enum class FeeEstimateMode;
 class CNewAsset;
+class CReissueAsset;
+enum class AssetType;
 
 /** (client) version numbers for particular wallet features */
 enum WalletFeature
