@@ -27,7 +27,7 @@ class GetblockstatsTest(BitcoinTestFramework):
         'maxfee',
         'maxfeerate',
         'medianfee',
-        'medianfeerate',
+        'feerate_percentiles',
         'minfee',
         'minfeerate',
         'totalfee',
