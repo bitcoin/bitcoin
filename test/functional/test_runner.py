@@ -110,6 +110,7 @@ BASE_SCRIPTS = [
     'rpc_decodescript.py',
     'rpc_blockchain.py',
     'rpc_deprecated.py',
+    'p2p_txchain_relay.py',
     'wallet_disable.py',
     'rpc_net.py',
     'wallet_keypool.py',
