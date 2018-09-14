@@ -94,15 +94,14 @@ def sign_transaction(node, unsignedtx):
     return tx
 
 def create_bip112special(node, input, txversion, address):
-    tx = create_transaction(node, input, address, Decimal("49.98"))
+    tx = create_transaction(node, input, address, amount=Decimal("49.98"))
     tx.nVersion = txversion
     signtx = sign_transaction(node, tx)
     signtx.vin[0].scriptSig = CScript([-1, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(signtx.vin[0].scriptSig)))
     return signtx
 
 def send_generic_input_tx(node, coinbases, address):
-    amount = Decimal("49.99")
-    return node.sendrawtransaction(ToHex(sign_transaction(node, create_transaction(node, node.getblock(coinbases.pop())['tx'][0], address, amount))))
+    return node.sendrawtransaction(ToHex(sign_transaction(node, create_transaction(node, node.getblock(coinbases.pop())['tx'][0], address, amount=Decimal("49.99")))))
 
 def create_bip68txs(node, bip68inputs, txversion, address, locktime_delta=0):
     """Returns a list of bip68 transactions with different bits set."""
@@ -110,7 +109,7 @@ def create_bip68txs(node, bip68inputs, txversion, address, locktime_delta=0):
     assert(len(bip68inputs) >= 16)
     for i, (sdf, srhb, stf, srlb) in enumerate(product(*[[True, False]] * 4)):
         locktime = relative_locktime(sdf, srhb, stf, srlb)
-        tx = create_transaction(node, bip68inputs[i], address, Decimal("49.98"))
+        tx = create_transaction(node, bip68inputs[i], address, amount=Decimal("49.98"))
         tx.nVersion = txversion
         tx.vin[0].nSequence = locktime + locktime_delta
         tx = sign_transaction(node, tx)
@@ -125,7 +124,7 @@ def create_bip112txs(node, bip112inputs, varyOP_CSV, txversion, address, locktim
     assert(len(bip112inputs) >= 16)
     for i, (sdf, srhb, stf, srlb) in enumerate(product(*[[True, False]] * 4)):
         locktime = relative_locktime(sdf, srhb, stf, srlb)
-        tx = create_transaction(node, bip112inputs[i], address, Decimal("49.98"))
+        tx = create_transaction(node, bip112inputs[i], address, amount=Decimal("49.98"))
         if (varyOP_CSV):  # if varying OP_CSV, nSequence is fixed
             tx.vin[0].nSequence = BASE_RELATIVE_LOCKTIME + locktime_delta
         else:  # vary nSequence instead, OP_CSV is fixed
@@ -269,10 +268,10 @@ class BIP68_112_113Test(BitcoinTestFramework):
 
         # Test both version 1 and version 2 transactions for all tests
         # BIP113 test transaction will be modified before each use to put in appropriate block time
-        bip113tx_v1 = create_transaction(self.nodes[0], bip113input, self.nodeaddress, Decimal("49.98"))
+        bip113tx_v1 = create_transaction(self.nodes[0], bip113input, self.nodeaddress, amount=Decimal("49.98"))
         bip113tx_v1.vin[0].nSequence = 0xFFFFFFFE
         bip113tx_v1.nVersion = 1
-        bip113tx_v2 = create_transaction(self.nodes[0], bip113input, self.nodeaddress, Decimal("49.98"))
+        bip113tx_v2 = create_transaction(self.nodes[0], bip113input, self.nodeaddress, amount=Decimal("49.98"))
         bip113tx_v2.vin[0].nSequence = 0xFFFFFFFE
         bip113tx_v2.nVersion = 2
 
