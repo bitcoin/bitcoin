@@ -26,7 +26,7 @@ def gen_root_asset_name():
     return name
 
 def gen_unique_asset_name(root):
-    tag_ab = "-ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@$%&*()[]{}<>_.;?\\:"
+    tag_ab = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@$%&*()[]{}_.?\\:"
     name = root + "#"
     tag_size = random.randint(1, 15)
     for _ in range(1, tag_size+1):
