@@ -7,7 +7,7 @@ import struct
 
 from test_framework.test_framework import (
     BitcoinTestFramework, skip_if_no_bitcoind_zmq, skip_if_no_py3_zmq)
-from test_framework.mininode import CTransaction
+from test_framework.messages import CTransaction
 from test_framework.util import (assert_equal,
                                  bytes_to_hex_str,
                                  hash256,

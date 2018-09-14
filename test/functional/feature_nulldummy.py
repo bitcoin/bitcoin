@@ -13,11 +13,12 @@ Generate 427 more blocks.
 [Policy/Consensus] Check that the new NULLDUMMY rules are enforced on the 432nd block.
 """
 
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
-from test_framework.messages import CTransaction
 from test_framework.blocktools import create_coinbase, create_block, create_transaction, add_witness_commitment
+from test_framework.messages import CTransaction
 from test_framework.script import CScript
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import assert_equal, assert_raises_rpc_error, bytes_to_hex_str
+
 import time
 
 NULLDUMMY_ERROR = "non-mandatory-script-verify-flag (Dummy CHECKMULTISIG argument must be zero) (code 64)"

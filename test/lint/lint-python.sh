@@ -30,6 +30,8 @@ export LC_ALL=C
 # E306 expected 1 blank line before a nested definition
 # E401 multiple imports on one line
 # E402 module level import not at top of file
+# F403 'from foo_module import *' used; unable to detect undefined names
+# F405 foo_function may be undefined, or defined from star imports: bar_module
 # E502 the backslash is redundant between brackets
 # E701 multiple statements on one line (colon)
 # E702 multiple statements on one line (semicolon)
@@ -77,4 +79,4 @@ export LC_ALL=C
 # W605 invalid escape sequence "x"
 # W606 'async' and 'await' are reserved keywords starting with Python 3.7
 
-flake8 --ignore=B,C,E,F,I,N,W --select=E101,E112,E113,E115,E116,E125,E129,E131,E133,E223,E224,E242,E266,E271,E272,E273,E274,E275,E304,E306,E401,E402,E502,E701,E702,E703,E714,E721,E741,E742,E743,F401,E901,E902,F402,F404,F406,F407,F601,F602,F621,F622,F631,F701,F702,F703,F704,F705,F706,F707,F811,F812,F821,F822,F823,F831,F841,W191,W291,W292,W293,W504,W601,W602,W603,W604,W605,W606 .
+flake8 --ignore=B,C,E,F,I,N,W --select=E101,E112,E113,E115,E116,E125,E129,E131,E133,E223,E224,E242,E266,E271,E272,E273,E274,E275,E304,E306,E401,E402,E502,E701,E702,E703,E714,E721,E741,E742,E743,E901,E902,F401,F402,F403,F404,F405,F406,F407,F601,F602,F621,F622,F631,F701,F702,F703,F704,F705,F706,F707,F811,F812,F821,F822,F823,F831,F841,W191,W291,W292,W293,W504,W601,W602,W603,W604,W605,W606 .

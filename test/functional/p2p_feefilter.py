@@ -4,11 +4,13 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test processing of feefilter messages."""
 
-from test_framework.mininode import *
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from decimal import Decimal
 import time
 
+from test_framework.messages import msg_feefilter
+from test_framework.mininode import mininode_lock, P2PInterface
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import sync_blocks, sync_mempools
 
 def hashToHex(hash):
     return format(hash, '064x')
