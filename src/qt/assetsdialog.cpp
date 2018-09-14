@@ -38,25 +38,6 @@
 #include <core_io.h>
 #include <rpc/mining.h>
 
-static const std::array<int, 9> confTargets = { {2, 4, 6, 12, 24, 48, 144, 504, 1008} };
-int getConfTargetForIndexAssets(int index) {
-    if (index+1 > static_cast<int>(confTargets.size())) {
-        return confTargets.back();
-    }
-    if (index < 0) {
-        return confTargets[0];
-    }
-    return confTargets[index];
-}
-int getIndexForConfTargetAssets(int target) {
-    for (unsigned int i = 0; i < confTargets.size(); i++) {
-        if (confTargets[i] >= target) {
-            return i;
-        }
-    }
-    return confTargets.size() - 1;
-}
-
 AssetsDialog::AssetsDialog(const PlatformStyle *_platformStyle, QWidget *parent) :
         QDialog(parent),
         ui(new Ui::AssetsDialog),
@@ -227,9 +208,9 @@ void AssetsDialog::setModel(WalletModel *_model)
             settings.remove("nSmartFeeSliderPosition");
         }
         if (settings.value("nConfTarget").toInt() == 0)
-            ui->confTargetSelector->setCurrentIndex(getIndexForConfTargetAssets(model->getDefaultConfirmTarget()));
+            ui->confTargetSelector->setCurrentIndex(getIndexForConfTarget(model->getDefaultConfirmTarget()));
         else
-            ui->confTargetSelector->setCurrentIndex(getIndexForConfTargetAssets(settings.value("nConfTarget").toInt()));
+            ui->confTargetSelector->setCurrentIndex(getIndexForConfTarget(settings.value("nConfTarget").toInt()));
     }
 }
 
@@ -238,7 +219,7 @@ AssetsDialog::~AssetsDialog()
     QSettings settings;
     settings.setValue("fFeeSectionMinimized", fFeeMinimized);
     settings.setValue("nFeeRadio", ui->groupFee->checkedId());
-    settings.setValue("nConfTarget", getConfTargetForIndexAssets(ui->confTargetSelector->currentIndex()));
+    settings.setValue("nConfTarget", getConfTargetForIndex(ui->confTargetSelector->currentIndex()));
     settings.setValue("nTransactionFee", (qint64)ui->customFee->value());
     settings.setValue("fPayOnlyMinFee", ui->checkBoxMinimumFee->isChecked());
 
@@ -691,7 +672,7 @@ void AssetsDialog::updateAssetControlState(CCoinControl& ctrl)
     }
     // Avoid using global defaults when sending money from the GUI
     // Either custom fee will be used or if not selected, the confirmation target from dropdown box
-    ctrl.m_confirm_target = getConfTargetForIndexAssets(ui->confTargetSelector->currentIndex());
+    ctrl.m_confirm_target = getConfTargetForIndex(ui->confTargetSelector->currentIndex());
     ctrl.signalRbf = ui->optInRBF->isChecked();
 }
 
@@ -925,7 +906,9 @@ void AssetsDialog::ressieAssetButtonClicked()
         return;
     }
 
-    ReissueAssetDialog dlg(platformStyle, 0, model);
+    ReissueAssetDialog dlg(platformStyle, 0, model, clientModel);
+    dlg.setModel(model);
+    dlg.setClientModel(clientModel);
     dlg.exec();
 }
 

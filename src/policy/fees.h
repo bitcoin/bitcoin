@@ -15,6 +15,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <array>
 
 class CAutoFile;
 class CFeeRate;
@@ -294,5 +295,10 @@ private:
     std::set<double> feeset;
     FastRandomContext insecure_rand;
 };
+
+
+static const std::array<int, 9> confTargets = { {2, 4, 6, 12, 24, 48, 144, 504, 1008} };
+int getConfTargetForIndex(int index);
+int getIndexForConfTarget(int target);
 
 #endif /*RAVEN_POLICYESTIMATOR_H */

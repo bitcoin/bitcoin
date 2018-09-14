@@ -124,7 +124,7 @@ bool IsAssetNameASubasset(const std::string& name)
 
 bool IsAssetNameValid(const std::string& name, AssetType& assetType)
 {
-    assetType = INVALID;
+    assetType = AssetType::INVALID;
     if (std::regex_match(name, UNIQUE_INDICATOR))
     {
         if (name.size() > MAX_NAME_LENGTH) return false;
@@ -880,7 +880,7 @@ void CReissueAsset::ConstructTransaction(CScript& script) const
 
 bool CReissueAsset::IsNull() const
 {
-    return strName == "" || nAmount == 0;
+    return strName == "" || nAmount < 0;
 }
 
 bool CAssetsCache::GetAssetsOutPoints(const std::string& strName, std::set<COutPoint>& outpoints)
@@ -1718,13 +1718,13 @@ bool CheckIssueBurnTx(const CTxOut& txOut, const AssetType& type, const int numb
     CAmount burnAmount = 0;
     std::string burnAddress = "";
 
-    if (type == SUB) {
+    if (type == AssetType::SUB) {
         burnAmount = GetIssueSubAssetBurnAmount();
         burnAddress = Params().IssueSubAssetBurnAddress();
-    } else if (type == ROOT) {
+    } else if (type == AssetType::ROOT) {
         burnAmount = GetIssueAssetBurnAmount();
         burnAddress = Params().IssueAssetBurnAddress();
-    } else if (type == UNIQUE) {
+    } else if (type == AssetType::UNIQUE) {
         burnAmount = GetIssueUniqueAssetBurnAmount();
         burnAddress = Params().IssueUniqueAssetBurnAddress();
     } else {
@@ -1828,7 +1828,6 @@ bool IsScriptNewAsset(const CScript& scriptPubKey, int& nStartingIndex)
     if (scriptPubKey.IsAssetScript(nType, fIsOwner, nStartingIndex)) {
         return nType == TX_NEW_ASSET && !fIsOwner;
     }
-
     return false;
 }
 
@@ -2025,52 +2024,16 @@ bool CAssetsCache::GetAssetIfExists(const std::string& name, CNewAsset& asset)
     return false;
 }
 
-bool GetAssetInfoFromScript(const CScript& scriptPubKey, std::string& strName, CAmount& nAmount) {
-
-    int nType = 0;
-    bool fIsOwner = false;
-    if (!scriptPubKey.IsAssetScript(nType, fIsOwner)) {
+bool GetAssetInfoFromScript(const CScript& scriptPubKey, std::string& strName, CAmount& nAmount)
+{
+    CAssetOutputEntry data;
+    if(!GetAssetData(scriptPubKey, data))
         return false;
-    }
 
-    txnouttype type = txnouttype(nType);
+    strName = data.assetName;
+    nAmount = data.nAmount;
 
-    // Determine the type of asset that the scriptpubkey contains and return the name and amount
-    if (type == TX_NEW_ASSET && !fIsOwner) {
-        CNewAsset asset;
-        std::string address;
-        if (!AssetFromScript(scriptPubKey, asset, address))
-            return false;
-        strName = asset.strName;
-        nAmount = asset.nAmount;
-        return true;
-    } else if (type == TX_TRANSFER_ASSET) {
-        CAssetTransfer asset;
-        std::string address;
-        if (!TransferAssetFromScript(scriptPubKey, asset, address))
-            return false;
-        strName = asset.strName;
-        nAmount = asset.nAmount;
-        return true;
-    } else if (type == TX_NEW_ASSET && fIsOwner) {
-        std::string name;
-        std::string address;
-        if (!OwnerAssetFromScript(scriptPubKey, name, address))
-            return false;
-        strName = name;
-        nAmount = OWNER_ASSET_AMOUNT;
-        return true;
-    } else if (type == TX_REISSUE_ASSET) {
-        CReissueAsset reissue;
-        std::string address;
-        if (!ReissueAssetFromScript(scriptPubKey, reissue, address))
-            return false;
-        strName = reissue.strName;
-        nAmount = reissue.nAmount;
-        return true;
-    }
-
-    return false;
+    return true;
 }
 
 bool GetAssetInfoFromCoin(const Coin& coin, std::string& strName, CAmount& nAmount)
@@ -2078,17 +2041,16 @@ bool GetAssetInfoFromCoin(const Coin& coin, std::string& strName, CAmount& nAmou
     return GetAssetInfoFromScript(coin.out.scriptPubKey, strName, nAmount);
 }
 
-void GetAssetData(const CScript& script, CAssetOutputEntry& data)
+bool GetAssetData(const CScript& script, CAssetOutputEntry& data)
 {
     // Placeholder strings that will get set if you successfully get the transfer or asset from the script
     std::string address = "";
     std::string assetName = "";
 
-
     int nType = 0;
     bool fIsOwner = false;
     if (!script.IsAssetScript(nType, fIsOwner)) {
-        return;
+        return false;
     }
 
     txnouttype type = txnouttype(nType);
@@ -2101,6 +2063,7 @@ void GetAssetData(const CScript& script, CAssetOutputEntry& data)
             data.nAmount = asset.nAmount;
             data.destination = DecodeDestination(address);
             data.assetName = asset.strName;
+            return true;
         }
     } else if (type == TX_TRANSFER_ASSET) {
         CAssetTransfer transfer;
@@ -2109,6 +2072,7 @@ void GetAssetData(const CScript& script, CAssetOutputEntry& data)
             data.nAmount = transfer.nAmount;
             data.destination = DecodeDestination(address);
             data.assetName = transfer.strName;
+            return true;
         }
     } else if (type == TX_NEW_ASSET && fIsOwner) {
         if (OwnerAssetFromScript(script, assetName, address)) {
@@ -2116,6 +2080,7 @@ void GetAssetData(const CScript& script, CAssetOutputEntry& data)
             data.nAmount = OWNER_ASSET_AMOUNT;
             data.destination = DecodeDestination(address);
             data.assetName = assetName;
+            return true;
         }
     } else if (type == TX_REISSUE_ASSET) {
         CReissueAsset reissue;
@@ -2124,8 +2089,11 @@ void GetAssetData(const CScript& script, CAssetOutputEntry& data)
             data.nAmount = reissue.nAmount;
             data.destination = DecodeDestination(address);
             data.assetName = reissue.strName;
+            return true;
         }
     }
+
+    return false;
 }
 
 void GetAllAdministrativeAssets(CWallet *pwallet, std::vector<std::string> &names)
@@ -2196,19 +2164,19 @@ CAmount GetBurnAmount(const int nType)
 CAmount GetBurnAmount(const AssetType type)
 {
     switch (type) {
-        case ROOT:
+        case AssetType::ROOT:
             return GetIssueAssetBurnAmount();
-        case SUB:
+        case AssetType::SUB:
             return GetIssueSubAssetBurnAmount();
-        case MSGCHANNEL:
+        case AssetType::MSGCHANNEL:
             return 0;
-        case OWNER:
+        case AssetType::OWNER:
             return 0;
-        case UNIQUE:
+        case AssetType::UNIQUE:
             return GetIssueUniqueAssetBurnAmount();
-        case VOTE:
+        case AssetType::VOTE:
             return 0;
-        case REISSUE:
+        case AssetType::REISSUE:
             return GetReissueAssetBurnAmount();
         default:
             return 0;
@@ -2223,19 +2191,19 @@ std::string GetBurnAddress(const int nType)
 std::string GetBurnAddress(const AssetType type)
 {
     switch (type) {
-        case ROOT:
+        case AssetType::ROOT:
             return Params().IssueAssetBurnAddress();
-        case SUB:
+        case AssetType::SUB:
             return Params().IssueSubAssetBurnAddress();
-        case MSGCHANNEL:
+        case AssetType::MSGCHANNEL:
             return "";
-        case OWNER:
+        case AssetType::OWNER:
             return "";
-        case UNIQUE:
+        case AssetType::UNIQUE:
             return Params().IssueUniqueAssetBurnAddress();
-        case VOTE:
+        case AssetType::VOTE:
             return "";
-        case REISSUE:
+        case AssetType::REISSUE:
             return Params().ReissueAssetBurnAddress();
         default:
             return "";
@@ -2461,10 +2429,10 @@ bool CreateAssetTransaction(CWallet* pwallet, CCoinControl& coinControl, const s
     return true;
 }
 
-bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& reissueAsset, const std::string& address, const std::string& changeAddress, std::pair<int, std::string>& error, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRequired)
+bool CreateReissueAssetTransaction(CWallet* pwallet, CCoinControl& coinControl, const CReissueAsset& reissueAsset, const std::string& address, std::pair<int, std::string>& error, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRequired)
 {
     std::string asset_name = reissueAsset.strName;
-    std::string change_address = changeAddress;
+    std::string change_address = EncodeDestination(coinControl.destChange);
 
     // Check that validitity of the address
     if (!IsValidDestinationString(address)) {
@@ -2487,6 +2455,7 @@ bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& reissu
         }
 
         change_address = EncodeDestination(keyID);
+        coinControl.destChange = DecodeDestination(change_address);
     }
 
     // Check the assets name
@@ -2550,9 +2519,6 @@ bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& reissu
     // Get the script for the burn address
     CScript scriptPubKeyBurn = GetScriptForDestination(DecodeDestination(Params().ReissueAssetBurnAddress()));
 
-    CCoinControl coin_control;
-    coin_control.destChange = DecodeDestination(change_address);
-
     // Create and send the transaction
     std::string strTxError;
     std::vector<CRecipient> vecSend;
@@ -2562,7 +2528,7 @@ bool CreateReissueAssetTransaction(CWallet* pwallet, const CReissueAsset& reissu
     CRecipient recipient2 = {scriptTransferOwnerAsset, 0, fSubtractFeeFromAmount};
     vecSend.push_back(recipient);
     vecSend.push_back(recipient2);
-    if (!pwallet->CreateTransactionWithReissueAsset(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strTxError, coin_control, reissueAsset, DecodeDestination(address))) {
+    if (!pwallet->CreateTransactionWithReissueAsset(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strTxError, coinControl, reissueAsset, DecodeDestination(address))) {
         if (!fSubtractFeeFromAmount && burnAmount + nFeeRequired > curBalance)
             strTxError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
         error = std::make_pair(RPC_WALLET_ERROR, strTxError);

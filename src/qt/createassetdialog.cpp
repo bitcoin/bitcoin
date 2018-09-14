@@ -25,34 +25,13 @@
 #include <wallet/wallet.h>
 #include <core_io.h>
 #include <policy/policy.h>
-
+#include "assets/assettypes.h"
 
 #include <QModelIndex>
 #include <QDebug>
 #include <QMessageBox>
 #include <QClipboard>
 #include <QSettings>
-
-static const std::array<int, 9> confTargets = { {2, 4, 6, 12, 24, 48, 144, 504, 1008} };
-
-int getConfTargetForIndex(int index) {
-    if (index+1 > static_cast<int>(confTargets.size())) {
-        return confTargets.back();
-    }
-    if (index < 0) {
-        return confTargets[0];
-    }
-    return confTargets[index];
-}
-
-int getIndexForConfTarget(int target) {
-    for (unsigned int i = 0; i < confTargets.size(); i++) {
-        if (confTargets[i] >= target) {
-            return i;
-        }
-    }
-    return confTargets.size() - 1;
-}
 
 CreateAssetDialog::CreateAssetDialog(const PlatformStyle *_platformStyle, QWidget *parent, WalletModel* model, ClientModel *client) :
         QDialog(parent, Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint | Qt::WindowMaximizeButtonHint),
@@ -217,11 +196,11 @@ void CreateAssetDialog::setUpValues()
 
     // Setup the asset types
     QStringList list;
-    list.append(tr("Main Asset") + " (" + RavenUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), GetBurnAmount(ROOT)) + ")");
-    list.append(tr("Sub Asset") + " (" + RavenUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), GetBurnAmount(SUB)) + ")");
-    list.append(tr("Unique Asset") + " (" + RavenUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), GetBurnAmount(UNIQUE)) + ")");
+    list.append(tr("Main Asset") + " (" + RavenUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), GetBurnAmount(AssetType::ROOT)) + ")");
+    list.append(tr("Sub Asset") + " (" + RavenUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), GetBurnAmount(AssetType::SUB)) + ")");
+    list.append(tr("Unique Asset") + " (" + RavenUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), GetBurnAmount(AssetType::UNIQUE)) + ")");
     ui->assetType->addItems(list);
-    type = ROOT;
+    type = IntFromAssetType(AssetType::ROOT);
     ui->assetTypeLabel->setText(tr("Asset Type") + ":");
 
     // Setup the asset list
@@ -258,9 +237,9 @@ void CreateAssetDialog::setBalance(const CAmount& balance, const CAmount& unconf
 void CreateAssetDialog::updateDisplayUnit()
 {
     setBalance(model->getBalance(), 0, 0, 0, 0, 0);
-//    ui->customFee->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
-//    updateMinFeeLabel();
-//    updateSmartFeeLabel();
+    ui->customFee->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
+    updateMinFeeLabel();
+    updateSmartFeeLabel();
 }
 
 void CreateAssetDialog::toggleIPFSText()
@@ -321,13 +300,13 @@ void CreateAssetDialog::CheckFormState()
 
     AssetType assetType;
     bool assetNameValid = IsAssetNameValid(name.toStdString(), assetType);
-    if (assetNameValid && assetType == ROOT && type != ROOT)
+    if (assetNameValid && assetType == AssetType::ROOT && type != IntFromAssetType(AssetType::ROOT))
         return;
 
-    if (assetNameValid && assetType == SUB && type != SUB)
+    if (assetNameValid && assetType == AssetType::SUB && type != IntFromAssetType(AssetType::SUB))
         return;
 
-    if (assetNameValid && assetType == UNIQUE && type != UNIQUE)
+    if (assetNameValid && assetType == AssetType::UNIQUE && type != IntFromAssetType(AssetType::UNIQUE))
         return;
 
     if (!(IsValidDestination(dest) || ui->addressText->text().isEmpty()) && assetNameValid) {
@@ -391,7 +370,7 @@ void CreateAssetDialog::checkAvailabilityClicked()
 void CreateAssetDialog::onNameChanged(QString name)
 {
     // Update the displayed name to uppercase if the type only accepts uppercase
-    name = type == UNIQUE ? name : name.toUpper();
+    name = type == IntFromAssetType(AssetType::UNIQUE) ? name : name.toUpper();
     UpdateAssetNameToUpper();
 
     QString assetName = name;
@@ -406,7 +385,7 @@ void CreateAssetDialog::onNameChanged(QString name)
         return;
     }
 
-    if (type == ROOT) {
+    if (type == IntFromAssetType(AssetType::ROOT)) {
         if (name.size() < 3) {
             ui->nameText->setStyleSheet("border: 1px solid red");
             showMessage("Invalid: Minimum of 3 character in length");
@@ -415,7 +394,7 @@ void CreateAssetDialog::onNameChanged(QString name)
         }
 
         AssetType assetType;
-        if (IsAssetNameValid(name.toStdString(), assetType) && assetType == ROOT) {
+        if (IsAssetNameValid(name.toStdString(), assetType) && assetType == AssetType::ROOT) {
             hideMessage();
             ui->availabilityButton->setDisabled(false);
 
@@ -423,7 +402,7 @@ void CreateAssetDialog::onNameChanged(QString name)
             ui->nameText->setStyleSheet("border: 1px solid red");
             showMessage("Invalid: Max Size 30 Characters. Allowed characters include: A-Z 0-9 . _");
         }
-    } else if (type == SUB || type == UNIQUE) {
+    } else if (type == IntFromAssetType(AssetType::SUB) || type == IntFromAssetType(AssetType::UNIQUE)) {
         if (name.size() == 0) {
             hideMessage();
             ui->availabilityButton->setDisabled(true);
@@ -431,7 +410,7 @@ void CreateAssetDialog::onNameChanged(QString name)
         }
 
         AssetType assetType;
-        if (IsAssetNameValid(ui->assetList->currentText().toStdString() + identifier.toStdString() + name.toStdString(), assetType) && (assetType == SUB || assetType == UNIQUE)) {
+        if (IsAssetNameValid(ui->assetList->currentText().toStdString() + identifier.toStdString() + name.toStdString(), assetType) && (assetType == AssetType::SUB || assetType == AssetType::UNIQUE)) {
             hideMessage();
             ui->availabilityButton->setDisabled(false);
         } else {
@@ -442,7 +421,7 @@ void CreateAssetDialog::onNameChanged(QString name)
     }
 
     // Set the assetName
-    updatePresentedAssetName(format.arg(type == ROOT ? "" : ui->assetList->currentText(), identifier, name));
+    updatePresentedAssetName(format.arg(type == IntFromAssetType(AssetType::ROOT) ? "" : ui->assetList->currentText(), identifier, name));
 
     checkedAvailablity = false;
     disableCreateButton();
@@ -622,9 +601,8 @@ void CreateAssetDialog::onAssetTypeActivated(int index)
     type = index;
 
     // Make sure the type is only the the supported issue types
-    if(!(type == ROOT || type == SUB || type == UNIQUE))
-        type = ROOT;
-
+    if(!(type == IntFromAssetType(AssetType::ROOT) || type == IntFromAssetType(AssetType::SUB) || type == IntFromAssetType(AssetType::UNIQUE)))
+        type = IntFromAssetType(AssetType::ROOT);
 
     // Get the identifier for the asset type
     QString identifier = GetSpecialCharacter();
@@ -638,7 +616,7 @@ void CreateAssetDialog::onAssetTypeActivated(int index)
     UpdateAssetNameMaxSize();
 
     // Set assetName
-    updatePresentedAssetName(format.arg(type == ROOT ? "" : ui->assetList->currentText(), identifier, ui->nameText->text()));
+    updatePresentedAssetName(format.arg(type == IntFromAssetType(AssetType::ROOT) ? "" : ui->assetList->currentText(), identifier, ui->nameText->text()));
 
     if (ui->nameText->text().size())
         ui->availabilityButton->setDisabled(false);
@@ -658,7 +636,7 @@ void CreateAssetDialog::onAssetListActivated(int index)
     UpdateAssetNameMaxSize();
 
     // Set assetName
-    updatePresentedAssetName(format.arg(type == ROOT ? "" : ui->assetList->currentText(), identifier, ui->nameText->text()));
+    updatePresentedAssetName(format.arg(type == IntFromAssetType(AssetType::ROOT) ? "" : ui->assetList->currentText(), identifier, ui->nameText->text()));
 
     if (ui->nameText->text().size())
         ui->availabilityButton->setDisabled(false);
@@ -674,9 +652,9 @@ void CreateAssetDialog::updatePresentedAssetName(QString name)
 
 QString CreateAssetDialog::GetSpecialCharacter()
 {
-    if (type == SUB)
+    if (type == IntFromAssetType(AssetType::SUB))
         return "/";
-    else if (type == UNIQUE)
+    else if (type == IntFromAssetType(AssetType::UNIQUE))
         return "#";
 
     return "";
@@ -684,27 +662,27 @@ QString CreateAssetDialog::GetSpecialCharacter()
 
 QString CreateAssetDialog::GetAssetName()
 {
-    if (type == ROOT)
+    if (type == IntFromAssetType(AssetType::ROOT))
         return ui->nameText->text();
-    else if (type == SUB)
+    else if (type == IntFromAssetType(AssetType::SUB))
         return ui->assetList->currentText() + "/" + ui->nameText->text();
-    else if (type == UNIQUE)
+    else if (type == IntFromAssetType(AssetType::UNIQUE))
         return ui->assetList->currentText() + "#" + ui->nameText->text();
     return "";
 }
 
 void CreateAssetDialog::UpdateAssetNameMaxSize()
 {
-    if (type == ROOT) {
+    if (type == IntFromAssetType(AssetType::ROOT)) {
         ui->nameText->setMaxLength(30);
-    } else if (type == SUB || type == UNIQUE) {
+    } else if (type == IntFromAssetType(AssetType::SUB) || type == IntFromAssetType(AssetType::UNIQUE)) {
         ui->nameText->setMaxLength(30 - (ui->assetList->currentText().size() + 1));
     }
 }
 
 void CreateAssetDialog::UpdateAssetNameToUpper()
 {
-    if (type == ROOT || type == SUB) {
+    if (type == IntFromAssetType(AssetType::ROOT) || type == IntFromAssetType(AssetType::SUB)) {
         ui->nameText->setText(ui->nameText->text().toUpper());
     }
 }
