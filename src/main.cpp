@@ -2121,7 +2121,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     AssertLockHeld(cs_main);
     // Check it again in case a previous version let a bad block in
     if (!CheckBlock(block, state, !fJustCheck, !fJustCheck))
-        return false;
+        return error("%s: Check block failed", __func__);
 
     // Proof of Stake validation
     if (pindex->nHeight >= Params().PoSStartHeight()) {
