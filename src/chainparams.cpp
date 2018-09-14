@@ -221,6 +221,9 @@ public:
 
         // DGW Activation
         nDGWActivationBlock = 338778;
+
+        nMaxReorganizationDepth = 55; // 55 at 1 minute block timespan is +/- 55 minutes.
+        nMinReorganizationPeers = 3;
         /** RVN End **/
     }
 };
