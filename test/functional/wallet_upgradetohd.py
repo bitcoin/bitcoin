@@ -139,8 +139,8 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
         self.log.info("Same mnemonic, same mnemonic passphrase, encrypt wallet on upgrade, should recover all coins after rescan")
         walletpass = "111pass222"
         # Upgrading and encrypting at the saame time results in a warning
-        assert_equal(node.upgradetohd(mnemonic, "", walletpass), "Wallet successfully upgraded and encrypted, Dash Core server is stopping. Remember to make a backup before restarting.")
-        # Wallet encryption results in node shutdown
+        assert node.upgradetohd(mnemonic, "", walletpass)
+        node.stop()
         node.wait_until_stopped()
         self.start_node(0, extra_args=['-rescan'])
         assert_raises_rpc_error(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.", node.dumphdinfo)
@@ -161,13 +161,12 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
         self.log.info("Same mnemonic, same mnemonic passphrase, encrypt wallet first, should recover all coins on upgrade after rescan")
         walletpass = "111pass222"
         node.encryptwallet(walletpass)
-        # Wallet encryption results in node shutdown
+        node.stop()
         node.wait_until_stopped()
         self.start_node(0, extra_args=['-rescan'])
         assert_raises_rpc_error(-14, "Cannot upgrade encrypted wallet to HD without the wallet passphrase", node.upgradetohd, mnemonic)
         assert_raises_rpc_error(-14, "The wallet passphrase entered was incorrect", node.upgradetohd, mnemonic, "", "wrongpass")
         assert(node.upgradetohd(mnemonic, "", walletpass))
-        # Note: upgrading an already encrypted wallet does not result in node shutdown
         assert_raises_rpc_error(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.", node.dumphdinfo)
         node.walletpassphrase(walletpass, 100)
         assert_equal(mnemonic, node.dumphdinfo()['mnemonic'])

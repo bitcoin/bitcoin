@@ -556,6 +556,7 @@ void BerkeleyBatch::Close()
         LOCK(cs_db);
         --env->mapFileUseCount[strFile];
     }
+    env->m_db_in_use.notify_all();
 }
 
 void BerkeleyEnvironment::CloseDb(const std::string& strFile)
@@ -570,6 +571,32 @@ void BerkeleyEnvironment::CloseDb(const std::string& strFile)
             mapDb[strFile] = nullptr;
         }
     }
+}
+
+void BerkeleyEnvironment::ReloadDbEnv()
+{
+    // Make sure that no Db's are in use
+    AssertLockNotHeld(cs_db);
+    std::unique_lock<CCriticalSection> lock(cs_db);
+    m_db_in_use.wait(lock, [this](){
+        for (auto& count : mapFileUseCount) {
+            if (count.second > 0) return false;
+        }
+        return true;
+    });
+
+    std::vector<std::string> filenames;
+    for (auto it : mapDb) {
+        filenames.push_back(it.first);
+    }
+    // Close the individual Db's
+    for (const std::string& filename : filenames) {
+        CloseDb(filename);
+    }
+    // Reset the environment
+    Flush(true); // This will flush and close the environment
+    Reset();
+    Open(true);
 }
 
 bool BerkeleyBatch::Rewrite(BerkeleyDatabase& database, const char* pszSkip)
@@ -697,7 +724,6 @@ void BerkeleyEnvironment::Flush(bool fShutdown)
                 if (!fMockDb) {
                     fs::remove_all(fs::path(strPath) / "database");
                 }
-                g_dbenvs.erase(strPath);
             }
         }
     }
@@ -796,6 +822,17 @@ void BerkeleyDatabase::Flush(bool shutdown)
 {
     if (!IsDummy()) {
         env->Flush(shutdown);
-        if (shutdown) env = nullptr;
+        if (shutdown) {
+            LOCK(cs_db);
+            g_dbenvs.erase(env->Directory().string());
+            env = nullptr;
+        }
+    }
+}
+
+void BerkeleyDatabase::ReloadDbEnv()
+{
+    if (!IsDummy()) {
+        env->ReloadDbEnv();
     }
 }
