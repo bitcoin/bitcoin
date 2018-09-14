@@ -84,6 +84,13 @@ bool IsWalletLoaded(const fs::path& wallet_path)
     return database && database->IsDatabaseLoaded(database_filename);
 }
 
+/**
+ * @param[in] wallet_path Path to wallet directory. Or (for backwards compatibility only) a path to a berkeley btree data file inside a wallet directory.
+ * @param[out] database_filename Filename of berkeley btree data file inside the wallet directory.
+ * @return A shared pointer to the BerkeleyEnvironment object for the wallet directory, never empty because ~BerkeleyEnvironment
+ * erases the weak pointer from the g_dbenvs map.
+ * @post A new BerkeleyEnvironment weak pointer is inserted into g_dbenvs if the directory path key was not already in the map.
+ */
 std::shared_ptr<BerkeleyEnvironment> GetWalletEnv(const fs::path& wallet_path, std::string& database_filename)
 {
     fs::path env_directory;
@@ -218,6 +225,7 @@ bool BerkeleyEnvironment::Open(bool retry)
     return true;
 }
 
+//! Construct an in-memory mock Berkeley environment for testing and as a place-holder for g_dbenvs emplace
 BerkeleyEnvironment::BerkeleyEnvironment()
 {
     Reset();
