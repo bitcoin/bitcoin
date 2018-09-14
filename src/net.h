@@ -888,9 +888,14 @@ public:
 
     void AddInventoryKnown(const CInv& inv)
     {
+        AddInventoryKnown(inv.hash);
+    }
+
+    void AddInventoryKnown(const uint256& hash)
+    {
         {
             LOCK(cs_inventory);
-            filterInventoryKnown.insert(inv.hash);
+            filterInventoryKnown.insert(hash);
         }
     }
 
@@ -908,8 +913,12 @@ public:
             LogPrint("net", "PushInventory --  inv: %s peer=%d\n", inv.ToString(), id);
             vInventoryBlockToSend.push_back(inv.hash);
         } else {
-            LogPrint("net", "PushInventory --  inv: %s peer=%d\n", inv.ToString(), id);
-            vInventoryOtherToSend.push_back(inv);
+            if (!filterInventoryKnown.contains(inv.hash)) {
+                LogPrint("net", "PushInventory --  inv: %s peer=%d\n", inv.ToString(), id);
+                vInventoryOtherToSend.push_back(inv);
+            } else {
+                LogPrint("net", "PushInventory --  filtered inv: %s peer=%d\n", inv.ToString(), id);
+            }
         }
     }
 
