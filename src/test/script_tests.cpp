@@ -369,7 +369,7 @@ public:
         std::vector<unsigned char> vchSig, r, s;
         uint32_t iter = 0;
         do {
-            key.Sign(hash, vchSig, iter++);
+            key.Sign(hash, vchSig, false, iter++);
             if ((lenS == 33) != (vchSig[5 + vchSig[3]] == 33)) {
                 NegateSignatureS(vchSig);
             }
