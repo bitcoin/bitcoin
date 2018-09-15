@@ -8,6 +8,7 @@
 #include <clientversion.h>
 #include <core_io.h>
 #include <validation.h>
+#include <httpserver.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netbase.h>
@@ -491,6 +492,33 @@ static UniValue getnetworkinfo(const JSONRPCRequest& request)
     return obj;
 }
 
+static UniValue getnetworkrpcinfo(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 0)
+        throw std::runtime_error(
+            "getnetworkrpcinfo\n"
+            "Returns an object containing various state info regarding RPC service.\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"total_requests\": xxxxx,  (numeric) Lifetime total number of RPC requests processed.\n"
+            "  \"uptime_micros\": xxxxx,   (numeric) Uptime of RPC server in microseconds.\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getnetworkrpcinfo", "")
+            + HelpExampleRpc("getnetworkrpcinfo", "")
+        );
+
+    RPCServerStats rpc_stats = GetRPCServerStats();
+
+    int64_t uptime_micros = GetTimeMicros() - rpc_stats.start_time_micros;
+
+    UniValue obj(UniValue::VOBJ);
+    obj.pushKV("total_requests", rpc_stats.num_http_requests);
+    obj.pushKV("uptime_micros", uptime_micros);
+
+    return obj;
+}
+
 static UniValue setban(const JSONRPCRequest& request)
 {
     std::string strCommand;
@@ -638,6 +666,7 @@ static const CRPCCommand commands[] =
     { "network",            "getaddednodeinfo",       &getaddednodeinfo,       {"node"} },
     { "network",            "getnettotals",           &getnettotals,           {} },
     { "network",            "getnetworkinfo",         &getnetworkinfo,         {} },
+    { "network",            "getnetworkrpcinfo",      &getnetworkrpcinfo,      {} },
     { "network",            "setban",                 &setban,                 {"subnet", "command", "bantime", "absolute"} },
     { "network",            "listbanned",             &listbanned,             {} },
     { "network",            "clearbanned",            &clearbanned,            {} },

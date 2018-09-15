@@ -41,6 +41,12 @@
 /** Maximum size of http request (request line + headers) */
 static const size_t MAX_HEADERS_SIZE = 8192;
 
+/** Global record containing HTTP server performance statistics */
+static RPCServerStats g_rpcserverstats = {0, 0};
+
+/** Mutex to serialize writes to server performance statistics */
+static std::recursive_mutex g_rpcserverstats_mutex;
+
 /** HTTP request work item */
 class HTTPWorkItem final : public HTTPClosure
 {
@@ -226,6 +232,9 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
 
     LogPrint(BCLog::HTTP, "Received a %s request for %s from %s\n",
              RequestMethodString(hreq->GetRequestMethod()), hreq->GetURI(), hreq->GetPeer().ToString());
+
+    std::lock_guard<std::recursive_mutex> rpcserverstats_guard(g_rpcserverstats_mutex);
+    ++g_rpcserverstats.num_http_requests;
 
     // Early address-based allow check
     if (!ClientAllowed(hreq->GetPeer())) {
@@ -432,9 +441,14 @@ void StartHTTPServer()
     threadResult = task.get_future();
     threadHTTP = std::thread(std::move(task), eventBase);
 
+    std::lock_guard<std::recursive_mutex> rpcserverstats_guard(g_rpcserverstats_mutex);
+    g_rpcserverstats.num_http_requests = 0;
+
     for (int i = 0; i < rpcThreads; i++) {
         g_thread_http_workers.emplace_back(HTTPWorkQueueRun, workQueue);
     }
+
+    g_rpcserverstats.start_time_micros = GetTimeMicros();
 }
 
 void InterruptHTTPServer()
@@ -523,7 +537,7 @@ void HTTPEvent::trigger(struct timeval* tv)
         evtimer_add(ev, tv); // trigger after timeval passed
 }
 HTTPRequest::HTTPRequest(struct evhttp_request* _req) : req(_req),
-                                                       replySent(false)
+                                                      replySent(false)
 {
 }
 HTTPRequest::~HTTPRequest()
@@ -602,6 +616,7 @@ void HTTPRequest::WriteReply(int nStatus, const std::string& strReply)
         }
     });
     ev->trigger(nullptr);
+
     replySent = true;
     req = nullptr; // transferred back to main thread
 }
@@ -676,4 +691,9 @@ std::string urlDecode(const std::string &urlEncoded) {
         }
     }
     return res;
+}
+
+RPCServerStats GetRPCServerStats() {
+    std::lock_guard<std::recursive_mutex> rpcserverstats_guard(g_rpcserverstats_mutex);
+    return g_rpcserverstats;
 }
