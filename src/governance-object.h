@@ -303,40 +303,13 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action)
     {
         // SERIALIZE DATA FOR SAVING/LOADING OR NETWORK FUNCTIONS
-        int nVersion = s.GetVersion();
         READWRITE(nHashParent);
         READWRITE(nRevision);
         READWRITE(nTime);
         READWRITE(nCollateralHash);
-        if (nVersion == 70208 && (s.GetType() & SER_NETWORK)) {
-            // converting from/to old format
-            std::string strDataHex;
-            if (ser_action.ForRead()) {
-                READWRITE(LIMITED_STRING(strDataHex, MAX_GOVERNANCE_OBJECT_DATA_SIZE));
-                vchData = ParseHex(strDataHex);
-            } else {
-                strDataHex = HexStr(vchData);
-                READWRITE(LIMITED_STRING(strDataHex, MAX_GOVERNANCE_OBJECT_DATA_SIZE));
-            }
-        } else {
-            // using new format directly
-            READWRITE(vchData);
-        }
+        READWRITE(vchData);
         READWRITE(nObjectType);
-        if (nVersion == 70208 && (s.GetType() & SER_NETWORK)) {
-            // converting from/to old format
-            CTxIn txin;
-            if (ser_action.ForRead()) {
-                READWRITE(txin);
-                masternodeOutpoint = txin.prevout;
-            } else {
-                txin = CTxIn(masternodeOutpoint);
-                READWRITE(txin);
-            }
-        } else {
-            // using new format directly
-            READWRITE(masternodeOutpoint);
-        }
+        READWRITE(masternodeOutpoint);
         if (!(s.GetType() & SER_GETHASH)) {
             READWRITE(vchSig);
         }

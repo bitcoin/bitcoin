@@ -420,12 +420,6 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, const std::string& strCom
         // but this is a heavy one so it's better to finish sync first.
         if (!masternodeSync.IsSynced()) return;
 
-        // DEPRECATED, should be removed on next protocol bump
-        if(pfrom->nVersion == 70208) {
-            int nCountNeeded;
-            vRecv >> nCountNeeded;
-        }
-
         if(netfulfilledman.HasFulfilledRequest(pfrom->addr, NetMsgType::MASTERNODEPAYMENTSYNC)) {
             LOCK(cs_main);
             // Asking for the payments list multiple times in a short period of time is no good

@@ -53,43 +53,15 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
-        int nVersion = s.GetVersion();
-        if (nVersion == 70208 && (s.GetType() & SER_NETWORK)) {
-            // converting from/to old format
-            CTxIn txin{};
-            if (ser_action.ForRead()) {
-                READWRITE(txin);
-                masternodeOutpoint = txin.prevout;
-            } else {
-                txin = CTxIn(masternodeOutpoint);
-                READWRITE(txin);
-            }
-        } else {
-            // using new format directly
-            READWRITE(masternodeOutpoint);
-        }
+        READWRITE(masternodeOutpoint);
         READWRITE(blockHash);
         READWRITE(sigTime);
         if (!(s.GetType() & SER_GETHASH)) {
             READWRITE(vchSig);
         }
-        if(ser_action.ForRead() && s.size() == 0) {
-            // TODO: drop this after migration to 70209
-            fSentinelIsCurrent = false;
-            nSentinelVersion = DEFAULT_SENTINEL_VERSION;
-            nDaemonVersion = DEFAULT_DAEMON_VERSION;
-            return;
-        }
         READWRITE(fSentinelIsCurrent);
         READWRITE(nSentinelVersion);
-        if(ser_action.ForRead() && s.size() == 0) {
-            // TODO: drop this after migration to 70209
-            nDaemonVersion = DEFAULT_DAEMON_VERSION;
-            return;
-        }
-        if (!(nVersion == 70208 && (s.GetType() & SER_NETWORK))) {
-            READWRITE(nDaemonVersion);
-        }
+        READWRITE(nDaemonVersion);
     }
 
     uint256 GetHash() const;
@@ -223,21 +195,7 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
         LOCK(cs);
-        int nVersion = s.GetVersion();
-        if (nVersion == 70208 && (s.GetType() & SER_NETWORK)) {
-            // converting from/to old format
-            CTxIn txin{};
-            if (ser_action.ForRead()) {
-                READWRITE(txin);
-                outpoint = txin.prevout;
-            } else {
-                txin = CTxIn(outpoint);
-                READWRITE(txin);
-            }
-        } else {
-            // using new format directly
-            READWRITE(outpoint);
-        }
+        READWRITE(outpoint);
         READWRITE(addr);
         READWRITE(pubKeyCollateralAddress);
         READWRITE(pubKeyMasternode);
@@ -384,21 +342,7 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
-        int nVersion = s.GetVersion();
-        if (nVersion == 70208 && (s.GetType() & SER_NETWORK)) {
-            // converting from/to old format
-            CTxIn txin{};
-            if (ser_action.ForRead()) {
-                READWRITE(txin);
-                outpoint = txin.prevout;
-            } else {
-                txin = CTxIn(outpoint);
-                READWRITE(txin);
-            }
-        } else {
-            // using new format directly
-            READWRITE(outpoint);
-        }
+        READWRITE(outpoint);
         READWRITE(addr);
         READWRITE(pubKeyCollateralAddress);
         READWRITE(pubKeyMasternode);
@@ -458,27 +402,8 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
-        int nVersion = s.GetVersion();
-        if (nVersion == 70208 && (s.GetType() & SER_NETWORK)) {
-            // converting from/to old format
-            CTxIn txin1{};
-            CTxIn txin2{};
-            if (ser_action.ForRead()) {
-                READWRITE(txin1);
-                READWRITE(txin2);
-                masternodeOutpoint1 = txin1.prevout;
-                masternodeOutpoint2 = txin2.prevout;
-            } else {
-                txin1 = CTxIn(masternodeOutpoint1);
-                txin2 = CTxIn(masternodeOutpoint2);
-                READWRITE(txin1);
-                READWRITE(txin2);
-            }
-        } else {
-            // using new format directly
-            READWRITE(masternodeOutpoint1);
-            READWRITE(masternodeOutpoint2);
-        }
+        READWRITE(masternodeOutpoint1);
+        READWRITE(masternodeOutpoint2);
         READWRITE(addr);
         READWRITE(nonce);
         READWRITE(nBlockHeight);
