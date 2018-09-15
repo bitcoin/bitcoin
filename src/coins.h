@@ -87,7 +87,7 @@ public:
     int nVersion;
 
     void FromTx(const CTransaction &tx, int nHeightIn) {
-        fBlockReward = tx.IsCoinBase();
+        fBlockReward = tx.IsCoinBase() || tx.IsCoinStake();
         vout = tx.vout;
         nHeight = nHeightIn;
         nVersion = tx.nVersion;

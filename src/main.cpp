@@ -1831,7 +1831,7 @@ void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCach
             if (coins->vout.size() == 0) {
                 CTxInUndo& undo = txundo.vprevout.back();
                 undo.nHeight = coins->nHeight;
-                undo.fCoinBase = coins->fBlockReward; //todo - make sure undo is correct
+                undo.fBlockReward = coins->fBlockReward; //todo - make sure undo is correct
                 undo.nVersion = coins->nVersion;
             }
         }
@@ -2018,7 +2018,7 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex
                     if (!coins->IsPruned())
                         fClean = fClean && error("DisconnectBlock() : undo data overwriting existing transaction");
                     coins->Clear();
-                    coins->fBlockReward = undo.fCoinBase;
+                    coins->fBlockReward = undo.fBlockReward;
                     coins->nHeight = undo.nHeight;
                     coins->nVersion = undo.nVersion;
                 } else {
@@ -2460,7 +2460,7 @@ bool static DisconnectTip(CValidationState &state) {
         if (tx.IsCoinBase() || tx.IsCoinStake() || !AcceptToMemoryPool(mempool, stateDummy, tx, false, NULL))
             mempool.remove(tx, removed, true);
     }
-    mempool.removeCoinbaseSpends(pcoinsTip, pindexDelete->nHeight);
+    mempool.removeBlockRewardSpends(pcoinsTip, pindexDelete->nHeight);
     mempool.check(pcoinsTip);
     // Update chainActive and related variables.
     UpdateTip(pindexDelete->pprev);
