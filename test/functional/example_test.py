@@ -85,6 +85,8 @@ class ExampleTest(BitcoinTestFramework):
 
         # self.log.info("I've finished set_test_params")  # Oops! Can't run self.log before run_test()
 
+    # Use skip_test_if_missing_module() to skip the test if your test requires certain modules to be present.
+    # This test uses generate which requires wallet to be compiled
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
@@ -166,7 +168,7 @@ class ExampleTest(BitcoinTestFramework):
 
         for i in range(10):
             # Use the mininode and blocktools functionality to manually build a block
-            # Calling the generate() rpc is easier, but this allows us to exactly
+            # Calling the generatetoaddress()/generate() rpc is easier, but this allows us to exactly
             # control the blocks and transactions.
             block = create_block(self.tip, create_coinbase(height), self.block_time)
             block.solve()

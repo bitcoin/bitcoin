@@ -271,7 +271,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 assert str(e).startswith('Method not found')
                 continue
 
-            n.importprivkey(n.get_deterministic_priv_key()[1])
+            n.importprivkey(n.get_deterministic_priv_key().key)
 
     def run_test(self):
         """Tests must override this method to define test logic"""
@@ -420,11 +420,12 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def _initialize_chain(self):
         """Initialize a pre-mined blockchain for use by the test.
 
-        Create a cache of a 200-block-long chain (with wallet) for MAX_NODES
+        Create a cache of a 200-block-long chain (with wallet only if the wallet is compiled) for MAX_NODES
         Afterward, create num_nodes copies from the cache."""
 
         assert self.num_nodes <= MAX_NODES
         create_cache = False
+        wallet_compiled = self.is_wallet_compiled()
         for i in range(MAX_NODES):
             if not os.path.isdir(get_datadir_path(self.options.cachedir, i)):
                 create_cache = True
@@ -465,7 +466,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 for peer in range(4):
                     for j in range(25):
                         set_node_times(self.nodes, block_time)
-                        self.nodes[peer].generatetoaddress(1, self.nodes[peer].get_deterministic_priv_key()[0])
+                        if wallet_compiled:
+                            self.nodes[peer].generate(1)
+                        else:
+                            self.nodes[peer].generatetoaddress(1, self.nodes[peer].get_deterministic_priv_key().address)
                         block_time += 10 * 60
                     # Must sync before next peer starts generating blocks
                     sync_blocks(self.nodes)

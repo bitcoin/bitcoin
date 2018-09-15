@@ -16,9 +16,6 @@ class BlocksdirTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 1
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
     def run_test(self):
         self.stop_node(0)
         shutil.rmtree(self.nodes[0].datadir)
@@ -30,7 +27,7 @@ class BlocksdirTest(BitcoinTestFramework):
         self.log.info("Starting with existing blocksdir ...")
         self.start_node(0, ["-blocksdir=" + blocksdir_path])
         self.log.info("mining blocks..")
-        self.nodes[0].generate(10)
+        self.nodes[0].generatetoaddress(10, self.nodes[0].get_deterministic_priv_key().address)
         assert os.path.isfile(os.path.join(blocksdir_path, "regtest", "blocks", "blk00000.dat"))
         assert os.path.isdir(os.path.join(self.nodes[0].datadir, "regtest", "blocks", "index"))
 
