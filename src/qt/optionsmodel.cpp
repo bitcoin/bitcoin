@@ -117,6 +117,11 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("bSpendZeroConfChange", true);
     if (!m_node.softSetBoolArg("-spendzeroconfchange", settings.value("bSpendZeroConfChange").toBool()))
         addOverriddenOption("-spendzeroconfchange");
+
+    if (!settings.contains("strAddressType"))
+        settings.setValue("strAddressType", QString::fromStdString(FormatOutputType(OUTPUT_TYPE_DEFAULT)));
+    if (!gArgs.SoftSetArg("-addresstype", settings.value("strAddressType").toString().toStdString()))
+        addOverriddenOption("-addresstype");
 #endif
 
     // Network
@@ -395,6 +400,27 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             if (settings.value("bSpendZeroConfChange") != value) {
                 settings.setValue("bSpendZeroConfChange", value);
                 setRestartRequired(true);
+            }
+            break;
+        case AddressTypeLegacy:
+            if (value.toBool()) {
+                settings.setValue("strAddressType", QString::fromStdString(FormatOutputType(OUTPUT_TYPE_LEGACY)));
+                g_address_type = OUTPUT_TYPE_LEGACY;
+                g_change_type = ParseOutputType(gArgs.GetArg("-changetype", ""), g_address_type);
+            }
+            break;
+        case AddressTypeP2SHSegWit:
+            if (value.toBool()) {
+                settings.setValue("strAddressType", QString::fromStdString(FormatOutputType(OUTPUT_TYPE_P2SH_SEGWIT)));
+                g_address_type = OUTPUT_TYPE_P2SH_SEGWIT;
+                g_change_type = ParseOutputType(gArgs.GetArg("-changetype", ""), g_address_type);
+            }
+            break;
+        case AddressTypeBech32:
+            if (value.toBool()) {
+                settings.setValue("strAddressType", QString::fromStdString(FormatOutputType(OUTPUT_TYPE_BECH32)));
+                g_address_type = OUTPUT_TYPE_BECH32;
+                g_change_type = ParseOutputType(gArgs.GetArg("-changetype", ""), g_address_type);
             }
             break;
 #endif

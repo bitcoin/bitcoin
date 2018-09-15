@@ -153,6 +153,7 @@ void OptionsDialog::setModel(OptionsModel *_model)
         mapper->toFirst();
 
         updateDefaultProxyNets();
+        setActiveAddressType();
     }
 
     /* warn when one of the following settings changes by user action (placed here so init via mapper doesn't trigger them) */
@@ -196,6 +197,10 @@ void OptionsDialog::setMapper()
     /* Wallet */
     mapper->addMapping(ui->spendZeroConfChange, OptionsModel::SpendZeroConfChange);
     mapper->addMapping(ui->coinControlFeatures, OptionsModel::CoinControlFeatures);
+
+    mapper->addMapping(ui->addressTypeLegacy, OptionsModel::AddressTypeLegacy);
+    mapper->addMapping(ui->addressTypeP2SHSegWit, OptionsModel::AddressTypeP2SHSegWit);
+    mapper->addMapping(ui->addressTypeBech32, OptionsModel::AddressTypeBech32);
 
     /* Network */
     mapper->addMapping(ui->mapPortUpnp, OptionsModel::MapPortUPnP);
@@ -349,6 +354,23 @@ void OptionsDialog::updateDefaultProxyNets()
     strProxy = proxy.proxy.ToStringIP() + ":" + proxy.proxy.ToStringPort();
     strDefaultProxyGUI = ui->proxyIp->text() + ":" + ui->proxyPort->text();
     (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachTor->setChecked(true) : ui->proxyReachTor->setChecked(false);
+}
+
+void OptionsDialog::setActiveAddressType() {
+    switch(g_address_type) {
+    case OUTPUT_TYPE_LEGACY:
+        ui->addressTypeLegacy->setChecked(true);
+        break;
+    case OUTPUT_TYPE_P2SH_SEGWIT:
+        ui->addressTypeP2SHSegWit->setChecked(true);
+        break;
+    case OUTPUT_TYPE_BECH32:
+        ui->addressTypeBech32->setChecked(true);
+        break;
+    case OUTPUT_TYPE_NONE:
+    default:
+        break;
+    }
 }
 
 ProxyAddressValidator::ProxyAddressValidator(QObject *parent) :
