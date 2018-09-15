@@ -28,13 +28,13 @@ env:
     - WINEDEBUG=fixme-all
     - DOCKER_PACKAGES="build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git ca-certificates ccache"
 before_install:
-  - set -o errexit; source .travis/test_03_before_install.sh
+  - set -o errexit; if ! source .travis/test_03_before_install.sh; then set +o errexit; false; fi
 install:
-  - set -o errexit; source .travis/test_04_install.sh
+  - set -o errexit; if ! source .travis/test_04_install.sh; then set +o errexit; false; fi
 before_script:
-  - set -o errexit; source .travis/test_05_before_script.sh
+  - set -o errexit; if ! source .travis/test_05_before_script.sh; then set +o errexit; false; fi
 script:
-  - if [ $SECONDS -gt 1200 ]; then set +o errexit; echo "Travis early exit to cache current state"; false; else set -o errexit; source .travis/test_06_script.sh; fi
+  - if [ $SECONDS -gt 1200 ]; then set +o errexit; echo "Travis early exit to cache current state"; false; else set -o errexit; if ! source .travis/test_06_script.sh; then set +o errexit; false; fi; fi
 after_script:
   - echo $TRAVIS_COMMIT_RANGE
   - echo $TRAVIS_COMMIT_LOG
