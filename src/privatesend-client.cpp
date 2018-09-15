@@ -457,7 +457,7 @@ void CPrivateSendClientManager::CheckTimeout()
 // Execute a mixing denomination via a Masternode.
 // This is only ran from clients
 //
-bool CPrivateSendClientSession::SendDenominate(const std::vector<CTxDSIn>& vecTxDSIn, const std::vector<CTxOut>& vecTxOut, CConnman& connman)
+bool CPrivateSendClientSession::SendDenominate(const std::vector< std::pair<CTxDSIn, CTxOut> >& vecPSInOutPairsIn, CConnman& connman)
 {
     if(fMasternodeMode) {
         LogPrintf("CPrivateSendClientSession::SendDenominate -- PrivateSend from a Masternode is not supported currently.\n");
@@ -473,8 +473,8 @@ bool CPrivateSendClientSession::SendDenominate(const std::vector<CTxDSIn>& vecTx
     for (const auto& txin : txMyCollateral.vin)
         vecOutPointLocked.push_back(txin.prevout);
 
-    for (const auto& txdsin : vecTxDSIn)
-        vecOutPointLocked.push_back(txdsin.prevout);
+    for (const auto& pair : vecPSInOutPairsIn)
+        vecOutPointLocked.push_back(pair.first.prevout);
 
     // we should already be connected to a Masternode
     if(!nSessionID) {
@@ -498,28 +498,22 @@ bool CPrivateSendClientSession::SendDenominate(const std::vector<CTxDSIn>& vecTx
 
     LogPrintf("CPrivateSendClientSession::SendDenominate -- Added transaction to pool.\n");
 
-    {
-        // construct a pseudo tx, for debugging purpuses only
+    CMutableTransaction tx; // for debug purposes only
+    std::vector<CTxDSIn> vecTxDSInTmp;
+    std::vector<CTxOut> vecTxOutTmp;
 
-        CMutableTransaction tx;
-
-        for (const auto& txdsin : vecTxDSIn) {
-            LogPrint("privatesend", "CPrivateSendClientSession::SendDenominate -- txdsin=%s\n", txdsin.ToString());
-            tx.vin.push_back(txdsin);
-        }
-
-        for (const CTxOut& txout : vecTxOut) {
-            LogPrint("privatesend", "CPrivateSendClientSession::SendDenominate -- txout=%s\n", txout.ToString());
-            tx.vout.push_back(txout);
-        }
-
-        LogPrintf("CPrivateSendClientSession::SendDenominate -- Submitting partial tx %s", tx.ToString());
+    for (const auto& pair : vecPSInOutPairsIn) {
+        vecTxDSInTmp.emplace_back(pair.first);
+        vecTxOutTmp.emplace_back(pair.second);
+        tx.vin.emplace_back(pair.first);
+        tx.vout.emplace_back(pair.second);
     }
 
+    LogPrintf("CPrivateSendClientSession::SendDenominate -- Submitting partial tx %s", tx.ToString());
+
     // store our entry for later use
-    CDarkSendEntry entry(vecTxDSIn, vecTxOut, txMyCollateral);
-    vecEntries.push_back(entry);
-    RelayIn(entry, connman);
+    vecEntries.emplace_back(vecTxDSInTmp, vecTxOutTmp, txMyCollateral);
+    RelayIn(vecEntries.back(), connman);
     nTimeLastSuccessfulStep = GetTime();
 
     return true;
@@ -1029,14 +1023,12 @@ bool CPrivateSendClientSession::JoinExistingQueue(CAmount nBalanceNeedsAnonymize
 
         LogPrint("privatesend", "CPrivateSendClientSession::JoinExistingQueue -- found valid queue: %s\n", dsq.ToString());
 
-        CAmount nValueInTmp = 0;
-        std::vector<CTxDSIn> vecTxDSInTmp;
-        std::vector<COutput> vCoinsTmp;
+        std::vector< std::pair<CTxDSIn, CTxOut> > vecPSInOutPairsTmp;
         CAmount nMinAmount = vecStandardDenoms[vecBits.front()];
         CAmount nMaxAmount = nBalanceNeedsAnonymized;
 
         // Try to match their denominations if possible, select exact number of denominations
-        if(!pwalletMain->SelectCoinsByDenominations(dsq.nDenom, nMinAmount, nMaxAmount, vecTxDSInTmp, vCoinsTmp, nValueInTmp, 0, privateSendClient.nPrivateSendRounds - 1, true)) {
+        if (!pwalletMain->SelectPSInOutPairsByDenominations(dsq.nDenom, nMinAmount, nMaxAmount, vecPSInOutPairsTmp)) {
             LogPrintf("CPrivateSendClientSession::JoinExistingQueue -- Couldn't match %d denominations %d (%s)\n", vecBits.front(), dsq.nDenom, CPrivateSend::GetDenominationsToString(dsq.nDenom));
             continue;
         }
@@ -1189,8 +1181,13 @@ bool CPrivateSendClientSession::SubmitDenominate(CConnman& connman)
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
     std::string strError;
-    std::vector<CTxDSIn> vecTxDSInRet;
-    std::vector<CTxOut> vecTxOutRet;
+    std::vector< std::pair<CTxDSIn, CTxOut> > vecPSInOutPairs, vecPSInOutPairsTmp;
+
+    if (!SelectDenominate(strError, vecPSInOutPairs)) {
+        LogPrintf("CPrivateSendClientSession::SubmitDenominate -- SelectDenominate failed, error: %s\n", strError);
+        return false;
+    }
+
     // lean towards "highest" branch but still mix via "lowest" one someties
     bool fMixLowest = privateSendClient.nLiquidityProvider || (GetRandInt(4) == 0);
     // Try to use only inputs with the same number of rounds, from low to high, or vice versa
@@ -1205,9 +1202,9 @@ bool CPrivateSendClientSession::SubmitDenominate(CConnman& connman)
     // Submit transaction to the pool if we get here
     while (true) {
         for (int i = nRoundStart; i >= 0 && i < privateSendClient.nPrivateSendRounds; i += nLoopStep) {
-            if (PrepareDenominate(i, i, strError, vecTxDSInRet, vecTxOutRet)) {
+            if (PrepareDenominate(i, i, strError, vecPSInOutPairs, vecPSInOutPairsTmp)) {
                 LogPrintf("CPrivateSendClientSession::SubmitDenominate -- Running PrivateSend denominate for %d rounds, success\n", i);
-                return SendDenominate(vecTxDSInRet, vecTxOutRet, connman);
+                return SendDenominate(vecPSInOutPairsTmp, connman);
             }
             LogPrint("privatesend", "CPrivateSendClientSession::SubmitDenominate -- Running PrivateSend denominate for %d rounds, error: %s\n", i, strError);
         }
@@ -1216,9 +1213,9 @@ bool CPrivateSendClientSession::SubmitDenominate(CConnman& connman)
     }
 
     // We failed? That's strange but let's just make final attempt and try to mix everything
-    if(PrepareDenominate(0, privateSendClient.nPrivateSendRounds - 1, strError, vecTxDSInRet, vecTxOutRet)) {
+    if (PrepareDenominate(0, privateSendClient.nPrivateSendRounds - 1, strError, vecPSInOutPairs, vecPSInOutPairsTmp)) {
         LogPrintf("CPrivateSendClientSession::SubmitDenominate -- Running PrivateSend denominate for all rounds, success\n");
-        return SendDenominate(vecTxDSInRet, vecTxOutRet, connman);
+        return SendDenominate(vecPSInOutPairsTmp, connman);
     }
 
     // Should never actually get here but just in case
@@ -1227,9 +1224,9 @@ bool CPrivateSendClientSession::SubmitDenominate(CConnman& connman)
     return false;
 }
 
-bool CPrivateSendClientSession::PrepareDenominate(int nMinRounds, int nMaxRounds, std::string& strErrorRet, std::vector<CTxDSIn>& vecTxDSInRet, std::vector<CTxOut>& vecTxOutRet)
+bool CPrivateSendClientSession::SelectDenominate(std::string& strErrorRet, std::vector< std::pair<CTxDSIn, CTxOut> >& vecPSInOutPairsRet)
 {
-    if(!pwalletMain) {
+    if (!pwalletMain) {
         strErrorRet = "Wallet is not initialized";
         return false;
     }
@@ -1244,101 +1241,76 @@ bool CPrivateSendClientSession::PrepareDenominate(int nMinRounds, int nMaxRounds
         return false;
     }
 
-    // make sure returning vectors are empty before filling them up
-    vecTxDSInRet.clear();
-    vecTxOutRet.clear();
+    vecPSInOutPairsRet.clear();
 
-    // ** find the coins we'll use
-    std::vector<CTxDSIn> vecTxDSIn;
-    std::vector<COutput> vCoins;
-    CAmount nValueIn = 0;
-
-    /*
-        Select the coins we'll use
-
-        if nMinRounds >= 0 it means only denominated inputs are going in and coming out
-    */
     std::vector<int> vecBits;
     if (!CPrivateSend::GetDenominationsBits(nSessionDenom, vecBits)) {
         strErrorRet = "Incorrect session denom";
         return false;
     }
     std::vector<CAmount> vecStandardDenoms = CPrivateSend::GetStandardDenominations();
-    bool fSelected = pwalletMain->SelectCoinsByDenominations(nSessionDenom, vecStandardDenoms[vecBits.front()], CPrivateSend::GetMaxPoolAmount(), vecTxDSIn, vCoins, nValueIn, nMinRounds, nMaxRounds, true);
-    if (nMinRounds >= 0 && !fSelected) {
+
+    bool fSelected = pwalletMain->SelectPSInOutPairsByDenominations(nSessionDenom, vecStandardDenoms[vecBits.front()], CPrivateSend::GetMaxPoolAmount(), vecPSInOutPairsRet);
+    if (!fSelected) {
         strErrorRet = "Can't select current denominated inputs";
         return false;
     }
 
-    LogPrintf("CPrivateSendClientSession::PrepareDenominate -- max value: %f\n", (double)nValueIn/COIN);
+    return true;
+}
 
-    {
-        LOCK(pwalletMain->cs_wallet);
-        for (const auto& txin : vecTxDSIn) {
-            pwalletMain->LockCoin(txin.prevout);
-        }
+bool CPrivateSendClientSession::PrepareDenominate(int nMinRounds, int nMaxRounds, std::string& strErrorRet, const std::vector< std::pair<CTxDSIn, CTxOut> >& vecPSInOutPairsIn, std::vector< std::pair<CTxDSIn, CTxOut> >& vecPSInOutPairsRet)
+{
+    std::vector<int> vecBits;
+    if (!CPrivateSend::GetDenominationsBits(nSessionDenom, vecBits)) {
+        strErrorRet = "Incorrect session denom";
+        return false;
     }
 
-    CAmount nValueLeft = nValueIn;
+    for (const auto& pair : vecPSInOutPairsIn) {
+        pwalletMain->LockCoin(pair.first.prevout);
+    }
 
     // Try to add every needed denomination, repeat up to 5-PRIVATESEND_ENTRY_MAX_SIZE times.
     // NOTE: No need to randomize order of inputs because they were
-    // initially shuffled in CWallet::SelectCoinsByDenominations already.
-    int nStep = 0;
+    // initially shuffled in CWallet::SelectPSInOutPairsByDenominations already.
     int nStepsMax = 5 + GetRandInt(PRIVATESEND_ENTRY_MAX_SIZE - 5 + 1);
+    int nDenomResult{0};
 
-    while (nStep < nStepsMax) {
+    std::vector<CAmount> vecStandardDenoms = CPrivateSend::GetStandardDenominations();
+    std::vector<int> vecSteps(vecStandardDenoms.size(), 0);
+    vecPSInOutPairsRet.clear();
+
+    for (const auto& pair: vecPSInOutPairsIn) {
+        if (pair.second.nRounds < nMinRounds || pair.second.nRounds > nMaxRounds) {
+            // unlock unused coins
+            pwalletMain->UnlockCoin(pair.first.prevout);
+            continue;
+        }
+        bool fFound = false;
         for (const auto& nBit : vecBits) {
+            if (vecSteps[nBit] >= nStepsMax) break;
             CAmount nValueDenom = vecStandardDenoms[nBit];
-            if (nValueLeft - nValueDenom < 0) continue;
-
-            // Note: this relies on a fact that both vectors MUST have same size
-            std::vector<CTxDSIn>::iterator it = vecTxDSIn.begin();
-            std::vector<COutput>::iterator it2 = vCoins.begin();
-            while (it2 != vCoins.end()) {
-                // we have matching inputs
-                if ((*it2).tx->tx->vout[(*it2).i].nValue == nValueDenom) {
-                    // add new input in resulting vector
-                    vecTxDSInRet.push_back(*it);
-                    // remove corresponding items from initial vectors
-                    vecTxDSIn.erase(it);
-                    vCoins.erase(it2);
-
-                    CScript scriptDenom = keyHolderStorage.AddKey(pwalletMain);
-
-                    // add new output
-                    CTxOut txout(nValueDenom, scriptDenom);
-                    vecTxOutRet.push_back(txout);
-
-                    // subtract denomination amount
-                    nValueLeft -= nValueDenom;
-
-                    // step is complete
-                    break;
-                }
-                ++it;
-                ++it2;
+            if (pair.second.nValue == nValueDenom) {
+                CScript scriptDenom = keyHolderStorage.AddKey(pwalletMain);
+                vecPSInOutPairsRet.emplace_back(pair.first, CTxOut(nValueDenom, scriptDenom));
+                fFound = true;
+                nDenomResult |= 1 << nBit;
+                // step is complete
+                ++vecSteps[nBit];
+                break;
             }
         }
-        nStep++;
-        if(nValueLeft == 0) break;
-    }
-
-    {
-        // unlock unused coins
-        LOCK(pwalletMain->cs_wallet);
-        for (const auto& txin : vecTxDSIn) {
-            pwalletMain->UnlockCoin(txin.prevout);
+        if (!fFound) {
+            // unlock unused coins
+            pwalletMain->UnlockCoin(pair.first.prevout);
         }
     }
 
-    if (CPrivateSend::GetDenominations(vecTxOutRet) != nSessionDenom) {
-        {
-            // unlock used coins on failure
-            LOCK(pwalletMain->cs_wallet);
-            for (const auto& txin : vecTxDSInRet) {
-                pwalletMain->UnlockCoin(txin.prevout);
-            }
+    if (nDenomResult != nSessionDenom) {
+        // unlock used coins on failure
+        for (const auto& pair : vecPSInOutPairsRet) {
+            pwalletMain->UnlockCoin(pair.first.prevout);
         }
         keyHolderStorage.ReturnAll();
         strErrorRet = "Can't prepare current denominated outputs";
