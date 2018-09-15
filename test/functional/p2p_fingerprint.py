@@ -30,9 +30,6 @@ class P2PFingerprintTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 1
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
     # Build a chain of blocks on top of given one
     def build_chain(self, nblocks, prev_hash, prev_height, prev_median_time):
         blocks = []
@@ -83,7 +80,7 @@ class P2PFingerprintTest(BitcoinTestFramework):
         self.nodes[0].setmocktime(int(time.time()) - 60 * 24 * 60 * 60)
 
         # Generating a chain of 10 blocks
-        block_hashes = self.nodes[0].generate(nblocks=10)
+        block_hashes = self.nodes[0].generatetoaddress(nblocks=10, self.nodes[0].get_deterministic_priv_key().address)
 
         # Create longer chain starting 2 blocks before current tip
         height = len(block_hashes) - 2
@@ -114,7 +111,7 @@ class P2PFingerprintTest(BitcoinTestFramework):
 
         # Longest chain is extended so stale is much older than chain tip
         self.nodes[0].setmocktime(0)
-        tip = self.nodes[0].generate(nblocks=1)[0]
+        tip = self.nodes[0].generatetoaddress(nblocks=1, self.nodes[0].get_deterministic_priv_key().address)[0]
         assert_equal(self.nodes[0].getblockcount(), 14)
 
         # Send getdata & getheaders to refresh last received getheader message

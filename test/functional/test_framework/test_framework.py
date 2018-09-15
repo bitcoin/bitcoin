@@ -271,7 +271,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 assert str(e).startswith('Method not found')
                 continue
 
-            n.importprivkey(n.get_deterministic_priv_key()[1])
+            n.importprivkey(n.get_deterministic_priv_key().key)
 
     def run_test(self):
         """Tests must override this method to define test logic"""
@@ -465,7 +465,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 for peer in range(4):
                     for j in range(25):
                         set_node_times(self.nodes, block_time)
-                        self.nodes[peer].generatetoaddress(1, self.nodes[peer].get_deterministic_priv_key()[0])
+                        self.nodes[peer].generatetoaddress(1, self.nodes[peer].get_deterministic_priv_key().address)
                         block_time += 10 * 60
                     # Must sync before next peer starts generating blocks
                     sync_blocks(self.nodes)

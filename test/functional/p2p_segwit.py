@@ -188,9 +188,6 @@ class SegWitTest(BitcoinTestFramework):
         # This test tests SegWit both pre and post-activation, so use the normal BIP9 activation.
         self.extra_args = [["-whitelist=127.0.0.1", "-vbparams=segwit:0:999999999999"], ["-whitelist=127.0.0.1", "-acceptnonstdtxn=0", "-vbparams=segwit:0:999999999999"], ["-whitelist=127.0.0.1", "-vbparams=segwit:0:0"]]
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
     def setup_network(self):
         self.setup_nodes()
         connect_nodes(self.nodes[0], 1)
@@ -303,7 +300,7 @@ class SegWitTest(BitcoinTestFramework):
         self.test_node.sync_with_ping()  # make sure the block was processed
         txid = block.vtx[0].sha256
 
-        self.nodes[0].generate(99)  # let the block mature
+        self.nodes[0].generatetoaddress(99, self.nodes[0].get_deterministic_priv_key().address)  # let the block mature
 
         # Create a transaction that spends the coinbase
         tx = CTransaction()
@@ -320,7 +317,7 @@ class SegWitTest(BitcoinTestFramework):
         assert(tx.hash in self.nodes[0].getrawmempool())
         # Save this transaction for later
         self.utxo.append(UTXO(tx.sha256, 0, 49 * 100000000))
-        self.nodes[0].generate(1)
+        self.nodes[0].generatetoaddress(1, self.nodes[0].get_deterministic_priv_key().address)
 
     @subtest
     def test_unnecessary_witness_before_segwit_activation(self):
@@ -539,7 +536,7 @@ class SegWitTest(BitcoinTestFramework):
         # Will need to rewrite the tests here if we are past the first period
         assert(height < VB_PERIOD - 1)
         # Advance to end of period, status should now be 'started'
-        self.nodes[0].generate(VB_PERIOD - height - 1)
+        self.nodes[0].generatetoaddress(VB_PERIOD - height - 1, self.nodes[0].get_deterministic_priv_key().address)
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'started')
         self.segwit_status = 'started'
 
@@ -595,11 +592,11 @@ class SegWitTest(BitcoinTestFramework):
         """Mine enough blocks to lock in segwit, but don't activate."""
         height = self.nodes[0].getblockcount()
         # Advance to end of period, and verify lock-in happens at the end
-        self.nodes[0].generate(VB_PERIOD - 1)
+        self.nodes[0].generatetoaddress(VB_PERIOD - 1, self.nodes[0].get_deterministic_priv_key().address)
         height = self.nodes[0].getblockcount()
         assert((height % VB_PERIOD) == VB_PERIOD - 2)
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'started')
-        self.nodes[0].generate(1)
+        self.nodes[0].generatetoaddress(1, self.nodes[0].get_deterministic_priv_key().address)
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'locked_in')
         self.segwit_status = 'locked_in'
 
@@ -639,7 +636,7 @@ class SegWitTest(BitcoinTestFramework):
         test_transaction_acceptance(self.nodes[0], self.test_node, tx, with_witness=False, accepted=True)
 
         # Cleanup: mine the first transaction and update utxo
-        self.nodes[0].generate(1)
+        self.nodes[0].generate(1, self.nodes[0].get_deterministic_priv_key().address)
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
 
         self.utxo.pop(0)
@@ -667,7 +664,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # Mine it on test_node to create the confirmed output.
         test_transaction_acceptance(self.nodes[0], self.test_node, p2sh_tx, with_witness=True, accepted=True)
-        self.nodes[0].generate(1)
+        self.nodes[0].generate(1, self.nodes[0].get_deterministic_priv_key().address)
         sync_blocks(self.nodes)
 
         # Now test standardness of v0 P2WSH outputs.
@@ -717,7 +714,7 @@ class SegWitTest(BitcoinTestFramework):
             assert_equal(self.nodes[0].testmempoolaccept([bytes_to_hex_str(tx3.serialize_with_witness())]), [{'txid': tx3.hash, 'allowed': True}])
         test_transaction_acceptance(self.nodes[0], self.test_node, tx3, with_witness=True, accepted=True)
 
-        self.nodes[0].generate(1)
+        self.nodes[0].generatetoaddress(1, self.nodes[0].get_deterministic_priv_key().address)
         sync_blocks(self.nodes)
         self.utxo.pop(0)
         self.utxo.append(UTXO(tx3.sha256, 0, tx3.vout[0].nValue))
@@ -727,9 +724,9 @@ class SegWitTest(BitcoinTestFramework):
     def advance_to_segwit_active(self):
         """Mine enough blocks to activate segwit."""
         height = self.nodes[0].getblockcount()
-        self.nodes[0].generate(VB_PERIOD - (height % VB_PERIOD) - 2)
+        self.nodes[0].generatetoaddress(VB_PERIOD - (height % VB_PERIOD) - 2, self.nodes[0].get_deterministic_priv_key().address)
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'locked_in')
-        self.nodes[0].generate(1)
+        self.nodes[0].generatetoaddress(1, self.nodes[0].get_deterministic_priv_key().address)
         assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'active')
         self.segwit_status = 'active'
 
@@ -1369,7 +1366,7 @@ class SegWitTest(BitcoinTestFramework):
         assert(vsize != raw_tx["size"])
 
         # Cleanup: mine the transactions and update utxo for next test
-        self.nodes[0].generate(1)
+        self.nodes[0].generatetoaddress(1, self.nodes[0].get_deterministic_priv_key().address)
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
 
         self.utxo.pop(0)
@@ -1414,7 +1411,7 @@ class SegWitTest(BitcoinTestFramework):
             self.utxo.pop(0)
             temp_utxo.append(UTXO(tx.sha256, 0, tx.vout[0].nValue))
 
-        self.nodes[0].generate(1)  # Mine all the transactions
+        self.nodes[0].generatetoaddress(1, self.nodes[0].get_deterministic_priv_key().address)  # Mine all the transactions
         sync_blocks(self.nodes)
         assert(len(self.nodes[0].getrawmempool()) == 0)
 
@@ -1479,14 +1476,14 @@ class SegWitTest(BitcoinTestFramework):
         spend_tx.rehash()
 
         # Now test a premature spend.
-        self.nodes[0].generate(98)
+        self.nodes[0].generatetoaddress(98, self.nodes[0].get_deterministic_priv_key().address)
         sync_blocks(self.nodes)
         block2 = self.build_next_block()
         self.update_witness_block_with_transactions(block2, [spend_tx])
         test_witness_block(self.nodes[0], self.test_node, block2, accepted=False)
 
         # Advancing one more block should allow the spend.
-        self.nodes[0].generate(1)
+        self.nodes[0].generatetoaddress(1, self.nodes[0].get_deterministic_priv_key().address)
         block2 = self.build_next_block()
         self.update_witness_block_with_transactions(block2, [spend_tx])
         test_witness_block(self.nodes[0], self.test_node, block2, accepted=True)
@@ -1798,7 +1795,7 @@ class SegWitTest(BitcoinTestFramework):
         tx.vout.append(CTxOut(self.utxo[0].nValue - 1000, script_pubkey))
         tx.rehash()
         test_transaction_acceptance(self.nodes[0], self.test_node, tx, False, True)
-        self.nodes[0].generate(1)
+        self.nodes[0].generatetoaddress(1, self.nodes[0].get_deterministic_priv_key().address)
         sync_blocks(self.nodes)
 
         # We'll add an unnecessary witness to this transaction that would cause
@@ -1827,7 +1824,7 @@ class SegWitTest(BitcoinTestFramework):
         test_transaction_acceptance(self.nodes[0], self.test_node, tx2, False, True)
         test_transaction_acceptance(self.nodes[0], self.test_node, tx3, False, True)
 
-        self.nodes[0].generate(1)
+        self.nodes[0].generatetoaddress(1, self.nodes[0].get_deterministic_priv_key().address)
         sync_blocks(self.nodes)
 
         # Update our utxo list; we spent the first entry.
@@ -1863,7 +1860,7 @@ class SegWitTest(BitcoinTestFramework):
         txid = tx.sha256
         test_transaction_acceptance(self.nodes[0], self.test_node, tx, with_witness=False, accepted=True)
 
-        self.nodes[0].generate(1)
+        self.nodes[0].generatetoaddress(1, self.nodes[0].get_deterministic_priv_key().address)
         sync_blocks(self.nodes)
 
         # Creating transactions for tests
@@ -1926,7 +1923,7 @@ class SegWitTest(BitcoinTestFramework):
         test_transaction_acceptance(self.nodes[1], self.std_node, p2sh_txs[3], True, False, 'bad-witness-nonstandard')
         test_transaction_acceptance(self.nodes[0], self.test_node, p2sh_txs[3], True, True)
 
-        self.nodes[0].generate(1)  # Mine and clean up the mempool of non-standard node
+        self.nodes[0].generatetoaddress(1, self.nodes[0].get_deterministic_priv_key().address)  # Mine and clean up the mempool of non-standard node
         # Valid but non-standard transactions in a block should be accepted by standard node
         sync_blocks(self.nodes)
         assert_equal(len(self.nodes[0].getrawmempool()), 0)

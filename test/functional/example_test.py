@@ -85,8 +85,9 @@ class ExampleTest(BitcoinTestFramework):
 
         # self.log.info("I've finished set_test_params")  # Oops! Can't run self.log before run_test()
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
+    # Use skip_test_if_missing_module() to skip the test if the required module is missing
+    # def skip_test_if_missing_module(self):
+    #     self.skip_if_no_wallet()
 
     # Use add_options() to add specific command-line options for your test.
     # In practice this is not used very much, since the tests are mostly written
@@ -138,7 +139,7 @@ class ExampleTest(BitcoinTestFramework):
         self.nodes[0].add_p2p_connection(BaseNode())
 
         # Generating a block on one of the nodes will get us out of IBD
-        blocks = [int(self.nodes[0].generate(nblocks=1)[0], 16)]
+        blocks = [int(self.nodes[0].generatetoaddress(nblocks=1, self.nodes[0].get_deterministic_priv_key().address)[0], 16)]
         self.sync_all([self.nodes[0:2]])
 
         # Notice above how we called an RPC by calling a method with the same
@@ -166,7 +167,7 @@ class ExampleTest(BitcoinTestFramework):
 
         for i in range(10):
             # Use the mininode and blocktools functionality to manually build a block
-            # Calling the generate() rpc is easier, but this allows us to exactly
+            # Calling the generatetoaddress()/generate() rpc is easier, but this allows us to exactly
             # control the blocks and transactions.
             block = create_block(self.tip, create_coinbase(height), self.block_time)
             block.solve()

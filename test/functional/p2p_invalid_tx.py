@@ -25,10 +25,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
-
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
+        
     def bootstrap_p2p(self, *, num_connections=1):
         """Add a P2P connection to the node.
 
@@ -64,7 +61,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         node.p2p.send_blocks_and_test([block], node, success=True)
 
         self.log.info("Mature the block.")
-        self.nodes[0].generate(100)
+        self.nodes[0].generatetoaddress(100, self.nodes[0].get_deterministic_priv_key().address)
 
         # b'\x64' is OP_NOTIF
         # Transaction will be rejected with code 16 (REJECT_INVALID)
