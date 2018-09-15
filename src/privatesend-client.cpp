@@ -1327,7 +1327,7 @@ bool CPrivateSendClientSession::MakeCollateralAmounts(CConnman& connman)
     if (!pwalletMain) return false;
 
     std::vector<CompactTallyItem> vecTally;
-    if(!pwalletMain->SelectCoinsGrouppedByAddresses(vecTally, false)) {
+    if(!pwalletMain->SelectCoinsGrouppedByAddresses(vecTally, false, false)) {
         LogPrint("privatesend", "CPrivateSendClientSession::MakeCollateralAmounts -- SelectCoinsGrouppedByAddresses can't find any inputs!\n");
         return false;
     }
@@ -1521,6 +1521,9 @@ bool CPrivateSendClientSession::CreateDenominated(const CompactTallyItem& tallyI
         fSkip = !fSkip;
     } while (nOutputsTotal == 0 && !fSkip);
     LogPrintf("CPrivateSendClientSession::CreateDenominated -- 3 - nOutputsTotal: %d, nValueLeft: %f\n", nOutputsTotal, (float)nValueLeft/COIN);
+
+    // No reasons to create mixing collaterals if we can't create denoms to mix
+    if (nOutputsTotal == 0) return false;
 
     // if we have anything left over, it will be automatically send back as change - there is no need to send it manually
 
