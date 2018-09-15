@@ -57,7 +57,7 @@ if [ "$RUN_BENCH" = "true" ]; then
 fi
 
 if [ "$TRAVIS_EVENT_TYPE" = "cron" ]; then
-  extended="--extended --exclude feature_pruning,feature_dbcrash"
+  extended="--extended --exclude feature_pruning"
 fi
 
 if [ "$RUN_FUNCTIONAL_TESTS" = "true" ]; then
