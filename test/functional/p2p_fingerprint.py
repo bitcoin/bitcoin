@@ -111,7 +111,7 @@ class P2PFingerprintTest(BitcoinTestFramework):
 
         # Longest chain is extended so stale is much older than chain tip
         self.nodes[0].setmocktime(0)
-        tip = self.nodes[0].generatetoaddress(nblocks=1, self.nodes[0].get_deterministic_priv_key().address)[0]
+        tip = self.nodes[0].generatetoaddress(1, self.nodes[0].get_deterministic_priv_key().address)[0]
         assert_equal(self.nodes[0].getblockcount(), 14)
 
         # Send getdata & getheaders to refresh last received getheader message
