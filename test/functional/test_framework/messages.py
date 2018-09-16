@@ -1232,6 +1232,23 @@ class msg_mempool:
         return "msg_mempool()"
 
 
+class msg_notfound:
+    __slots__ = ("vec", )
+    command = b"notfound"
+
+    def __init__(self, vec=None):
+        self.vec = vec or []
+
+    def deserialize(self, f):
+        self.vec = deser_vector(f, CInv)
+
+    def serialize(self):
+        return ser_vector(self.vec)
+
+    def __repr__(self):
+        return "msg_notfound(vec=%s)" % (repr(self.vec))
+
+
 class msg_sendheaders:
     __slots__ = ()
     command = b"sendheaders"
