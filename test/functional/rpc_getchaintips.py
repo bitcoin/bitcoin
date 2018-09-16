@@ -17,9 +17,6 @@ class GetChainTipsTest (BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
     def run_test(self):
         tips = self.nodes[0].getchaintips()
         assert_equal(len(tips), 1)

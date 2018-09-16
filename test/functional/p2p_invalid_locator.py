@@ -14,10 +14,7 @@ class InvalidLocatorTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = False
-
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
+    
     def run_test(self):
         node = self.nodes[0]  # convenience reference to the node
         node.generatetoaddress(1, node.get_deterministic_priv_key().address)  # Get node out of IBD
