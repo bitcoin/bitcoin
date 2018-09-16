@@ -2499,9 +2499,9 @@ void CConnman::AddNewAddresses(const std::vector<CAddress>& vAddr, const CAddres
     addrman.Add(vAddr, addrFrom, nTimePenalty);
 }
 
-std::vector<CAddress> CConnman::GetAddresses()
+std::vector<CAddress> CConnman::GetAddresses(const CRollingBloomFilter& addr_known)
 {
-    return addrman.GetAddr();
+    return addrman.GetAddr(addr_known);
 }
 
 bool CConnman::AddNode(const std::string& strNode)

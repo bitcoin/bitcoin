@@ -6,6 +6,7 @@
 #ifndef BITCOIN_ADDRMAN_H
 #define BITCOIN_ADDRMAN_H
 
+#include <bloom.h>
 #include <netaddress.h>
 #include <protocol.h>
 #include <random.h>
@@ -172,7 +173,7 @@ public:
 #define ADDRMAN_GETADDR_MAX_PCT 23
 
 //! the maximum number of nodes to return in a getaddr call
-#define ADDRMAN_GETADDR_MAX 2500
+#define ADDRMAN_GETADDR_MAX 1000
 
 //! Convenience
 #define ADDRMAN_TRIED_BUCKET_COUNT (1 << ADDRMAN_TRIED_BUCKET_COUNT_LOG2)
@@ -274,7 +275,7 @@ protected:
 #endif
 
     //! Select several addresses at once.
-    void GetAddr_(std::vector<CAddress> &vAddr);
+    void GetAddr_(std::vector<CAddress> &vAddr, const CRollingBloomFilter& addr_known);
 
     //! Mark an entry as currently-connected-to.
     void Connected_(const CService &addr, int64_t nTime);
@@ -607,13 +608,13 @@ public:
     }
 
     //! Return a bunch of addresses, selected at random.
-    std::vector<CAddress> GetAddr()
+    std::vector<CAddress> GetAddr(const CRollingBloomFilter& addr_known)
     {
         Check();
         std::vector<CAddress> vAddr;
         {
             LOCK(cs);
-            GetAddr_(vAddr);
+            GetAddr_(vAddr, addr_known);
         }
         Check();
         return vAddr;
