@@ -96,7 +96,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         self.restart_node(0)
 
         # Generating one block guarantees that we'll get out of IBD
-        node.generate(1, node_deterministic_address)
+        node.generatetoaddress(1, node_deterministic_address)
         wait_until(lambda: not node.getblockchaininfo()['initialblockdownload'], timeout=10, lock=mininode_lock)
         # Generating one more block will be enough to generate an error.
         node.generatetoaddress(1, node_deterministic_address)
