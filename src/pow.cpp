@@ -13,6 +13,9 @@
 
 #include "bignum.h"
 
+// Rejected in favor of LWMA2
+// https://github.com/zawy12/difficulty-algorithms/issues/31 - DGW issues
+// https://github.com/zawy12/difficulty-algorithms/issues/3 - LWMA2 description
 unsigned int static DarkGravityWave3(const CBlockIndex* pindexLast, const Consensus::Params& params) {
     /* current difficulty formula, darkcoin - DarkGravity v3, written by Evan Duffield - evan@darkcoin.io */
     const CBlockIndex *BlockLastSolved = pindexLast;
@@ -84,6 +87,61 @@ unsigned int static DarkGravityWave3(const CBlockIndex* pindexLast, const Consen
     return bnNew.GetCompact();
 }
 
+// LWMA for BTC clones
+// Copyright (c) 2017-2018 The Bitcoin Gold developers
+// Copyright (c) 2018 Zawy (M.I.T license continued)
+// Algorithm by zawy, a modification of WT-144 by Tom Harding
+// Code by h4x3rotab of BTC Gold, modified/updated by zawy
+// Updated to LWMA2 by iamstenman
+// https://github.com/zawy12/difficulty-algorithms/issues/3#issuecomment-388386175
+
+unsigned int Lwma2CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Consensus::Params& params)
+{   
+    const int64_t T = params.nPowTargetSpacing;
+    const int64_t N = 90; 
+    const int64_t k = N * (N + 1) * T / 2;
+    const int height = pindexLast->nHeight;
+    assert(height > N);
+
+    arith_uint256 sum_target, previous_diff, next_target;
+    int64_t t = 0, j = 0, solvetime, solvetime_sum;
+
+    // Loop through N most recent blocks. 
+    for (int i = height - N + 1; i <= height; i++) {
+        const CBlockIndex* block = pindexLast->GetAncestor(i);
+        const CBlockIndex* block_Prev = block->GetAncestor(i - 1);
+        solvetime = block->GetBlockTime() - block_Prev->GetBlockTime();
+        solvetime = std::max(-6*T, std::min(solvetime, 6 * T));
+        j++;
+        t += solvetime * j; // Weighted solvetime sum.
+        arith_uint256 target;
+        target.SetCompact(block->nBits);
+        sum_target += target / (k * N);
+
+        if (i > height - 3)
+        {
+            solvetime_sum += solvetime;
+        }
+        if (i == height)
+        {
+            previous_diff = target.SetCompact(block->nBits); // Latest block target
+        }
+    }
+
+    // Keep t reasonable to >= 1/10 of expected t.
+    if (t < k / 10 ) {
+        t = k / 10;
+    }
+    next_target = t * sum_target;
+
+    if (solvetime_sum < (8 * T) / 10)
+    {
+        next_target = previous_diff * 100 / 106;
+    }
+
+    return next_target.GetCompact();
+}
+
 static unsigned int BitcoinNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
     // Go back by what we want to be 14 days worth of blocks
@@ -103,6 +161,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
     const auto isHardfork = nHeight >= params.mbcHeight;
+    const auto isLwma2 = nHeight >= params.lwma2Height;
 
     // Pow limit start for warm-up period
     if (isHardfork && nHeight < params.mbcHeight + params.nWarmUpWindow)
@@ -139,9 +198,12 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
         return pindexLast->nBits;
     }
 
-    return pblock->IsMicroBitcoin()
-        ? DarkGravityWave3(pindexLast, params)
-        : BitcoinNextWorkRequired(pindexLast, pblock, params);
+    if (isLwma2)
+    {
+        return Lwma2CalculateNextWorkRequired(pindexLast, params);
+    } else {
+        return pblock->IsMicroBitcoin() ? DarkGravityWave3(pindexLast, params) : BitcoinNextWorkRequired(pindexLast, pblock, params);
+    }
 }
 
 unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)
