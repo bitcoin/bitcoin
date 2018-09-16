@@ -468,7 +468,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                         set_node_times(self.nodes, block_time)
                         if wallet_compiled:
                             self.nodes[peer].generate(1)
-                        else
+                        else:
                             self.nodes[peer].generatetoaddress(1, self.nodes[peer].get_deterministic_priv_key().address)
                         block_time += 10 * 60
                     # Must sync before next peer starts generating blocks

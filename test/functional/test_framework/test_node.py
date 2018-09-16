@@ -17,6 +17,7 @@ import subprocess
 import tempfile
 import time
 import urllib.parse
+import collections
 
 from .authproxy import JSONRPCException
 from .util import (
@@ -99,7 +100,7 @@ class TestNode():
 
     def get_deterministic_priv_key(self):
         """Return a deterministic priv key in base58, that only depends on the node's index"""
-        address_key_pair = namedtuple('address_key_pair', ['address', 'key'])
+        address_key_pair = collections.namedtuple('address_key_pair', ['address', 'key'])
         PRIV_KEYS = [
             # address , privkey
             address_key_pair('mjTkW3DjgyZck4KbiRusZsqTgaYTxdSz6z', 'cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW'),
