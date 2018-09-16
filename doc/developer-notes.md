@@ -444,6 +444,14 @@ General C++
   - *Rationale*: `MakeUnique` is concise and ensures exception safety in complex expressions.
     `MakeUnique` is a temporary project local implementation of `std::make_unique` (C++14).
 
+- Do not rely on unsigned wrap-around semantics unless there are good reasons for doing so (e.g. hash functions).
+  Functions that intentionally rely on unsigned wrap-around semantics should be annotated using `ALLOW_WRAPAROUND`.
+  Functions that unintentionally trigger unsigned wrap-arounds should be annotated using
+  `WARNING_UNINTENTIONAL_WRAPAROUND` while awaiting being fixed.
+
+  - *Rationale*: Intentional use of modular arithmetic needs to be annotated because unintended wraps are often bugs
+  and we use instrumentation (e.g. `-fsanitize`) to look for those bugs.
+
 C++ data structures
 --------------------
 
