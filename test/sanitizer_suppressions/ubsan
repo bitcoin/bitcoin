@@ -4,7 +4,6 @@ bool:wallet/wallet.cpp
 float-divide-by-zero:policy/fees.cpp
 float-divide-by-zero:validation.cpp
 float-divide-by-zero:wallet/wallet.cpp
-nonnull-attribute:support/cleanse.cpp
 unsigned-integer-overflow:arith_uint256.h
 unsigned-integer-overflow:basic_string.h
 unsigned-integer-overflow:bench/bench.h
