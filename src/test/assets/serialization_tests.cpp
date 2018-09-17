@@ -42,7 +42,7 @@ BOOST_FIXTURE_TEST_SUITE(serialization_tests, BasicTestingSetup)
 
         // Create asset
         std::string name = "SERIALIZATION";
-        CReissueAsset reissue(name, 100000000, 0, "");
+        CReissueAsset reissue(name, 100000000, 0, 0, "");
 
         // Create destination
         CTxDestination dest = DecodeDestination("mfe7MqgYZgBuXzrT2QTFqZwBXwRDqagHTp"); // Testnet Address

@@ -1307,7 +1307,7 @@ void static InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state
     }
 }
 
-void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txundo, int nHeight, CAssetsCache* assetCache, std::pair<std::string, std::string>* undoIPFSHash)
+void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txundo, int nHeight, CAssetsCache* assetCache, std::pair<std::string, CBlockAssetUndo>* undoAssetData)
 {
     // mark inputs spent
     if (!tx.IsCoinBase()) {
@@ -1319,7 +1319,7 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txund
         }
     }
     // add outputs
-    AddCoins(inputs, tx, nHeight, false, assetCache, undoIPFSHash); /** RVN START */ /* Pass assetCache into function */ /** RVN END */
+    AddCoins(inputs, tx, nHeight, false, assetCache, undoAssetData); /** RVN START */ /* Pass assetCache into function */ /** RVN END */
 }
 
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight)
@@ -1610,12 +1610,12 @@ static DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* 
         return DISCONNECT_FAILED;
     }
 
-    std::vector<std::pair<std::string, std::string> > vIPFSHashes;
-    if (!passetsdb->ReadBlockUndoAssetData(block.GetHash(), vIPFSHashes)) {
+    std::vector<std::pair<std::string, CBlockAssetUndo> > vUndoData;
+    if (!passetsdb->ReadBlockUndoAssetData(block.GetHash(), vUndoData)) {
         error("DisconnectBlock(): block asset undo data inconsistent");
         return DISCONNECT_FAILED;
     }
-
+    
     std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
     std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
     std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
@@ -1728,7 +1728,7 @@ static DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* 
                     if (assetsCache->ContainsAsset(reissue.strName)) {
                         if (!assetsCache->RemoveReissueAsset(reissue, strAddress,
                                                              COutPoint(tx.GetHash(), tx.vout.size() - 1),
-                                                             vIPFSHashes)) {
+                                                             vUndoData)) {
                             error("%s : Failed to Undo Reissue Asset. Asset Name : %s", __func__, reissue.strName);
                             return DISCONNECT_FAILED;
                         }
@@ -2087,7 +2087,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     LogPrint(BCLog::BENCH, "    - Fork checks: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime2 - nTime1), nTimeForks * MICRO, nTimeForks * MILLI / nBlocksTotal);
 
     CBlockUndo blockundo;
-    std::vector<std::pair<std::string, std::string> > vUndoIPFSHashes;
+    std::vector<std::pair<std::string, CBlockAssetUndo> > vUndoAssetData;
 
     CCheckQueueControl<CScriptCheck> control(fScriptChecks && nScriptCheckThreads ? &scriptcheckqueue : nullptr);
 
@@ -2319,15 +2319,15 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         }
         /** RVN START */
         // Create the basic empty string pair for the undoblock
-        std::pair<std::string, std::string> undoPair = std::make_pair("", "");
-        std::pair<std::string, std::string>* undoIPFSHash = &undoPair;
+        std::pair<std::string, CBlockAssetUndo> undoPair = std::make_pair("", CBlockAssetUndo());
+        std::pair<std::string, CBlockAssetUndo>* undoAssetData = &undoPair;
         /** RVN END */
 
-        UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight, assetsCache, undoIPFSHash);
+        UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight, assetsCache, undoAssetData);
 
         /** RVN START */
-        if (!undoIPFSHash->first.empty()) {
-            vUndoIPFSHashes.emplace_back(*undoIPFSHash);
+        if (!undoAssetData->first.empty()) {
+            vUndoAssetData.emplace_back(*undoAssetData);
         }
         /** RVN END */
 
@@ -2367,8 +2367,8 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
             pindex->nStatus |= BLOCK_HAVE_UNDO;
         }
 
-        if (vUndoIPFSHashes.size()) {
-            if (!passetsdb->WriteBlockUndoAssetData(block.GetHash(), vUndoIPFSHashes))
+        if (vUndoAssetData.size()) {
+            if (!passetsdb->WriteBlockUndoAssetData(block.GetHash(), vUndoAssetData))
                 return AbortNode(state, "Failed to write asset undo data");
         }
 

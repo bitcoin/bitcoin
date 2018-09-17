@@ -813,7 +813,7 @@ void CAssetTransfer::ConstructTransaction(CScript& script) const
     script << OP_RVN_ASSET << ToByteVector(vchMessage) << OP_DROP;
 }
 
-CReissueAsset::CReissueAsset(const std::string &strAssetName, const CAmount &nAmount, const int &nReissuable,
+CReissueAsset::CReissueAsset(const std::string &strAssetName, const CAmount &nAmount, const int &nUnits, const int &nReissuable,
                              const std::string &strIPFSHash)
 {
 
@@ -821,6 +821,7 @@ CReissueAsset::CReissueAsset(const std::string &strAssetName, const CAmount &nAm
     this->strIPFSHash = strIPFSHash;
     this->nReissuable = int8_t(nReissuable);
     this->nAmount = nAmount;
+    this->nUnits = nUnits;
 }
 
 bool CReissueAsset::IsValid(std::string &strError, CAssetsCache& assetCache) const
@@ -857,6 +858,16 @@ bool CReissueAsset::IsValid(std::string &strError, CAssetsCache& assetCache) con
 
     if (nAmount < 0) {
         strError = "Unable to reissue asset: amount must be 0 or larger";
+        return false;
+    }
+
+    if (nUnits > MAX_UNIT || nUnits < -1) {
+        strError = "Unable to reissue asset: unit must be less than 8 and greater than -1";
+        return false;
+    }
+
+    if (nUnits < asset.units && nUnits != -1) {
+        strError = "Unable to reissue asset: unit must be larger than current unit selection";
         return false;
     }
 
@@ -1272,6 +1283,9 @@ bool CAssetsCache::AddReissueAsset(const CReissueAsset& reissue, const std::stri
     if (!mapReissuedAssetData.count(reissue.strName)) {
         assetData.nAmount += reissue.nAmount;
         assetData.nReissuable = reissue.nReissuable;
+        if (reissue.nUnits != -1)
+            assetData.units = reissue.nUnits;
+
         if (reissue.strIPFSHash != "") {
             assetData.nHasIPFS = 1;
             assetData.strIPFSHash = reissue.strIPFSHash;
@@ -1297,7 +1311,7 @@ bool CAssetsCache::AddReissueAsset(const CReissueAsset& reissue, const std::stri
 }
 
 //! Changes Memory Only
-bool CAssetsCache::RemoveReissueAsset(const CReissueAsset& reissue, const std::string address, const COutPoint& out, const std::vector<std::pair<std::string, std::string> >& vUndoIPFS)
+bool CAssetsCache::RemoveReissueAsset(const CReissueAsset& reissue, const std::string address, const COutPoint& out, const std::vector<std::pair<std::string, CBlockAssetUndo> >& vUndoIPFS)
 {
     auto pair = std::make_pair(reissue.strName, address);
 
@@ -1332,10 +1346,12 @@ bool CAssetsCache::RemoveReissueAsset(const CReissueAsset& reissue, const std::s
     assetData.nReissuable = 1;
 
     // Find the ipfs hash in the undoblock data and restore the ipfs hash to its previous hash
-    for (auto undoIPFS : vUndoIPFS) {
-        if (undoIPFS.first == reissue.strName) {
-            assetData.strIPFSHash = undoIPFS.second;
-
+    for (auto undoItem : vUndoIPFS) {
+        if (undoItem.first == reissue.strName) {
+            if (undoItem.second.fChangedIPFS)
+                assetData.strIPFSHash = undoItem.second.strIPFS;
+            if(undoItem.second.fChangedUnits)
+                assetData.units = undoItem.second.nUnits;
             if (assetData.strIPFSHash == "")
                 assetData.nHasIPFS = 0;
             break;
