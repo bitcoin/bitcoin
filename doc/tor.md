@@ -88,7 +88,7 @@ for normal IPv4/IPv6 communication, use:
 
 ## 3. Automatically listen on Tor
 
-Starting with Tor version 0.2.7.1 it is possible, through Tor's control socket
+Starting with Tor version 0.2.7.1 it is possible, through Tor's control protocol 
 API, to create and destroy 'ephemeral' hidden services programmatically.
 Bitcoin Core has been updated to make use of this.
 
