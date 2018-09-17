@@ -14,21 +14,18 @@ class InvalidateTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 3
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
     def setup_network(self):
         self.setup_nodes()
 
     def run_test(self):
         self.log.info("Make sure we repopulate setBlockIndexCandidates after InvalidateBlock:")
         self.log.info("Mine 4 blocks on Node 0")
-        self.nodes[0].generate(4)
+        self.nodes[0].generatetoaddress(4, self.nodes[0].get_deterministic_priv_key().address)
         assert(self.nodes[0].getblockcount() == 4)
         besthash = self.nodes[0].getbestblockhash()
 
         self.log.info("Mine competing 6 blocks on Node 1")
-        self.nodes[1].generate(6)
+        self.nodes[1].generatetoaddress(6, self.nodes[1].get_deterministic_priv_key().address)
         assert(self.nodes[1].getblockcount() == 6)
 
         self.log.info("Connect nodes to force a reorg")
@@ -56,7 +53,7 @@ class InvalidateTest(BitcoinTestFramework):
         self.nodes[2].invalidateblock(self.nodes[2].getblockhash(3))
         assert(self.nodes[2].getblockcount() == 2)
         self.log.info("..and then mine a block")
-        self.nodes[2].generate(1)
+        self.nodes[2].generatetoaddress(1, self.nodes[2].get_deterministic_priv_key().address)
         self.log.info("Verify all nodes are at the right height")
         time.sleep(5)
         assert_equal(self.nodes[2].getblockcount(), 3)

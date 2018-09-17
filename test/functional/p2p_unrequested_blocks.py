@@ -66,9 +66,6 @@ class AcceptBlockTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.extra_args = [[], ["-minimumchainwork=0x10"]]
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
     def setup_network(self):
         # Node0 will be used to test behavior of processing unrequested blocks
         # from peers which are not whitelisted, while Node1 will be used for
@@ -85,8 +82,8 @@ class AcceptBlockTest(BitcoinTestFramework):
         min_work_node = self.nodes[1].add_p2p_connection(P2PInterface())
 
         # 1. Have nodes mine a block (leave IBD)
-        [ n.generate(1) for n in self.nodes ]
-        tips = [ int("0x" + n.getbestblockhash(), 0) for n in self.nodes ]
+        [n.generatetoaddress(1, n.get_deterministic_priv_key().address) for n in self.nodes]
+        tips = [int("0x" + n.getbestblockhash(), 0) for n in self.nodes]
 
         # 2. Send one block that builds on each tip.
         # This should be accepted by node0
