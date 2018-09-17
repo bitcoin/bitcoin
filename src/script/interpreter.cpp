@@ -294,6 +294,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
     opcodetype opcode;
     valtype vchPushValue;
     std::vector<bool> vfExec;
+    bool fExec = true;
     std::vector<valtype> altstack;
     set_error(serror, SCRIPT_ERR_UNKNOWN_ERROR);
     if (script.size() > MAX_SCRIPT_SIZE)
@@ -305,8 +306,6 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
     {
         while (pc < pend)
         {
-            bool fExec = !count(vfExec.begin(), vfExec.end(), false);
-
             //
             // Read instruction
             //
@@ -485,6 +484,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                         if (opcode == OP_NOTIF)
                             fValue = !fValue;
                         popstack(stack);
+                        fExec = fValue;
                     }
                     vfExec.push_back(fValue);
                 }
@@ -495,6 +495,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     if (vfExec.empty())
                         return set_error(serror, SCRIPT_ERR_UNBALANCED_CONDITIONAL);
                     vfExec.back() = !vfExec.back();
+                    fExec = fExec ? false : !count(vfExec.begin(), vfExec.end(), false);
                 }
                 break;
 
@@ -503,6 +504,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     if (vfExec.empty())
                         return set_error(serror, SCRIPT_ERR_UNBALANCED_CONDITIONAL);
                     vfExec.pop_back();
+                    fExec = fExec ? true : !count(vfExec.begin(), vfExec.end(), false);
                 }
                 break;
 
