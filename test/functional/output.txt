@@ -1,0 +1,111 @@
+Why does logging require wallet?
+Does -reindex use the wallet? As in while reindexing are the wallet transactions generated again?
+
+Files:
+
+combine_logs.py NA
+create_cache.py NA
+example_test.py changed
+feature_assumevalid.py  depends on wallet
+feature_bip68_sequence.py* depends on wallet
+feature_block.py* was previously marked as dependent on wallet, but it is not dependent?
+feature_blocksdir.py* changed
+feature_cltv.py* depends on wallet
+feature_config_args.py* depends on wallet
+feature_csv_activation.py* depends on wallet
+feature_dbcrash.py* depends on wallet
+feature_dersig.py* depends on wallet
+feature_fee_estimation.py* depends on wallet
+feature_help.py* NA
+feature_includeconf.py* NA
+feature_logging.py* was previously marked as dependent on wallet, but it is not dependent?
+feature_maxuploadtarget.py* depends on wallet
+feature_minchainwork.py* changed
+feature_notifications.py* depends on wallet
+feature_nulldummy.py* depends on wallet 
+feature_proxy.py* NA
+feature_pruning.py* depends on wallet
+feature_rbf.py* depends on wallet
+feature_reindex.py* depends on wallet?
+feature_segwit.py* depends on wallet
+feature_uacomment.py* NA
+feature_versionbits_warning.py* changed
+interface_bitcoin_cli.py* depends on wallet
+interface_http.py* NA
+interface_rest.py* depends on wallet
+interface_zmq.py* depends on wallet
+mempool_accept.py* depends on wallet
+mempool_limit.py* depends on wallet
+mempool_packages.py* depends on wallet
+mempool_persist.py* depends on wallet
+mempool_reorg.py* depends on wallet
+mempool_resurrect.py* depends on wallet
+mempool_spend_coinbase.py* depends on wallet
+mining_basic.py* uses wallet has a bug, uses 1 more node than required, does not require wallet but uses initalize
+mining_getblocktemplate_longpoll.py* uses wallet
+mining_prioritisetransaction.py* uses wallet,  but 1 more than required
+p2p_compactblocks.py* uses wallet
+p2p_disconnect_ban.py* NA
+p2p_feefilter.py* depends on wallet
+p2p_fingerprint.py* changed
+p2p_invalid_block.py* changed
+p2p_invalid_locator.py* requires intilize to change
+p2p_invalid_tx.py* changed
+p2p_leak.py* depends on initlize
+p2p_mempool.py* NA
+p2p_node_network_limited.py* -- I think this test is not doing what it claims
+p2p_segwit.py*  changed
+p2p_sendheaders.py* changed
+p2p_timeouts.py* NA
+p2p_unrequested_blocks.py changed
+README.md
+rpc_bind.py* NA
+rpc_blockchain.py* depends on initialze
+rpc_createmultisig.py* depends on wallet
+rpc_decodescript.py* NA
+rpc_deprecated.py* NA
+rpc_fundrawtransaction.py* depends on wallet
+rpc_getblockstats.py* NA
+rpc_getchaintips.py* depends on intilze
+rpc_help.py* NA
+rpc_invalidateblock.py* changed
+rpc_named_arguments.py* NA
+rpc_net.py* NA
+rpc_preciousblock.py* changed
+rpc_psbt.py* depends on wallet 
+rpc_rawtransaction.py* depends on wallet
+rpc_scantxoutset.py* depends on wallet
+rpc_signmessage.py* depends on wallet
+rpc_signrawtransaction.py* depends on wallet
+rpc_txoutproof.py* depends on wallet
+rpc_uptime.py* NA
+rpc_users.py* NA
+rpc_zmq.py*
+test_framework/
+test_runner.py*
+wallet_abandonconflict.py*
+wallet_address_types.py*
+wallet_backup.py*
+wallet_basic.py*
+wallet_bumpfee.py*
+wallet_disable.py*
+wallet_disableprivatekeys.py*
+wallet_dump.py*
+wallet_encryption.py*
+wallet_fallbackfee.py*
+wallet_groups.py*
+wallet_hd.py*
+wallet_import_rescan.py*
+wallet_importmulti.py*
+wallet_importprunedfunds.py*
+wallet_keypool.py*
+wallet_keypool_topup.py*
+wallet_labels.py*
+wallet_listreceivedby.py*
+wallet_listsinceblock.py*
+wallet_listtransactions.py*
+wallet_multiwallet.py*
+wallet_resendwallettransactions.py*
+wallet_txn_clone.py*
+wallet_txn_doublespend.py*
+wallet_zapwallettxes.py*
