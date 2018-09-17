@@ -5,11 +5,12 @@
 #ifndef CROWN_PLATFORM_NF_TOKEN_REGISTRATION_TX_H
 #define CROWN_PLATFORM_NF_TOKEN_REGISTRATION_TX_H
 
+#include "key.h"
 #include "serialize.h"
-#include "uint256.h"
-#include "pubkey.h"
+#include "nf-token.h"
 
 class CTransaction;
+class CMutableTransaction;
 class CBlockIndex;
 class CValidationState;
 
@@ -18,31 +19,37 @@ namespace Platform
     class NfTokenRegistrationTx
     {
     public:
-        static const int CURRENT_VERSION = 1;
+        NfTokenRegistrationTx(const NfToken & nfToken)
+            : m_version(CURRENT_VERSION)
+            , m_nfToken(nfToken)
+        {}
 
-    public:
-        uint16_t version;
-        uint256 token;
-        CKeyID tokenOwnerKeyId;
-        CKeyID metadataAdminKeyId; // if metadata key id is null, the onwer key is used instead
-        std::vector<unsigned char> metadata;
-        std::vector<unsigned char> signature; // owner signature
+        bool Sign(CKey & privKey, CPubKey & pubKey);
 
-    public:
         ADD_SERIALIZE_METHODS
 
         template<typename Stream, typename Operation>
         inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
         {
-            READWRITE(version);
-            READWRITE(token);
-            READWRITE(tokenOwnerKeyId);
-            READWRITE(metadataAdminKeyId);
-            READWRITE(metadata);
+            READWRITE(m_version);
+            READWRITE(m_nfToken.tokenTypeId);
+            READWRITE(m_nfToken.tokenId);
+            READWRITE(m_nfToken.tokenOwnerKeyId);
+            READWRITE(m_nfToken.metadataAdminKeyId);
+            READWRITE(m_nfToken.metadata);
             READWRITE(signature);
         }
 
         std::string ToString() const;
+
+    public:
+        static const int CURRENT_VERSION = 1;
+        std::vector<unsigned char> signature; // TODO: temp public to conform the template signing function
+
+    private:
+        uint16_t m_version;
+        NfToken m_nfToken;
+        // TODO: std::vector<unsigned char> m_signature;
     };
 
     bool CheckNfTokenRegistrationTx(const CTransaction& tx, const CBlockIndex* pIndex, CValidationState& state);
