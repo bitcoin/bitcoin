@@ -37,6 +37,8 @@ static inline uint64_t InsecureRandBits(int bits) { return insecure_rand_ctx.ran
 static inline uint64_t InsecureRandRange(uint64_t range) { return insecure_rand_ctx.randrange(range); }
 static inline bool InsecureRandBool() { return insecure_rand_ctx.randbool(); }
 
+static constexpr CAmount CENT{1000000};
+
 /** Basic testing setup.
  * This just configures logging and chain parameters.
  */
