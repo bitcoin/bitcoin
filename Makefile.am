@@ -294,5 +294,29 @@ clean-docs:
 
 clean-local: clean-docs
 	rm -rf coverage_percent.txt test_bitcoin.coverage/ total.coverage/ test/tmp/ cache/ $(OSX_APP)
-	rm -rf test/functional/__pycache__ test/functional/test_framework/__pycache__ test/cache
+	rm -rf test/functional/__pycache__ test/functional/test_framework/__pycache__ test/cache share/rpcauth/__pycache__
 
+# These autogen.sh generated files don't get deleted by distclean
+AUTOGEN_LEFTOVER_FILES = \
+    aclocal.m4 \
+    build-aux/compile \
+    build-aux/config.guess \
+    build-aux/config.sub \
+    build-aux/depcomp \
+    build-aux/install-sh \
+    build-aux/ltmain.sh \
+    build-aux/m4/libtool.m4 \
+    build-aux/m4/lt~obsolete.m4 \
+    build-aux/m4/ltoptions.m4 \
+    build-aux/m4/ltsugar.m4 \
+    build-aux/m4/ltversion.m4 \
+    build-aux/missing \
+    build-aux/test-driver \
+    configure \
+    doc/man/Makefile.in \
+    Makefile.in
+
+distclean-local:
+	$(foreach file,$(AUTOGEN_LEFTOVER_FILES), rm -f $(file) src/secp256k1/$(file) src/univalue/$(file);)
+	rm -f src/secp256k1/src/libsecp256k1-config.h.{in,in~} src/univalue/univalue-config.h.{in,in~}
+	rm -rf autom4te.cache src/secp256k1/autom4te.cache src/univalue/autom4te.cache

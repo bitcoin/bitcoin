@@ -565,6 +565,9 @@ clean-local:
 	-rm -f config.h
 	-rm -rf test/__pycache__
 
+distclean-local:
+	-rm -rf config/bitcoin-config.h.in config/bitcoin-config.h.in~ Makefile.in test/*.cpp.log wallet/test/*.cpp.log
+
 .rc.o:
 	@test -f $(WINDRES)
 	## FIXME: How to get the appropriate modulename_CPPFLAGS in here?
