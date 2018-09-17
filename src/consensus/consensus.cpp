@@ -20,4 +20,3 @@ unsigned int GetMaxBlockSerializedSize()
 
     return MAX_BLOCK_SERIALIZED_SIZE;
 }
-

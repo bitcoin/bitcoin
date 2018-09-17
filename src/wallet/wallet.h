@@ -19,6 +19,7 @@
 #include "wallet/crypter.h"
 #include "wallet/walletdb.h"
 #include "wallet/rpcwallet.h"
+#include "assets/assettypes.h"
 
 #include <algorithm>
 #include <atomic>
@@ -83,9 +84,6 @@ class CBlockPolicyEstimator;
 class CWalletTx;
 struct FeeCalculation;
 enum class FeeEstimateMode;
-class CNewAsset;
-class CReissueAsset;
-enum class AssetType;
 
 /** (client) version numbers for particular wallet features */
 enum WalletFeature

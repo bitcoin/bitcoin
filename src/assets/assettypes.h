@@ -16,7 +16,6 @@
 
 class CAssetsCache;
 
-
 enum class AssetType
 {
     ROOT = 0,
@@ -29,13 +28,8 @@ enum class AssetType
     INVALID = 7
 };
 
-int IntFromAssetType(AssetType type) {
-    return (int)type;
-}
-
-AssetType AssetTypeFromInt(int nType) {
-    return (AssetType)nType;
-}
+int IntFromAssetType(AssetType type);
+AssetType AssetTypeFromInt(int nType);
 
 class CNewAsset
 {
