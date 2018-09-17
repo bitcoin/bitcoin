@@ -1825,6 +1825,8 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     uint256 hashPrevBlock = pindex->pprev == nullptr ? uint256() : pindex->pprev->GetBlockHash();
     assert(hashPrevBlock == view.GetBestBlock());
 
+    nBlocksTotal++;
+
     // Special case for the genesis block, skipping connection of its transactions
     // (its coinbase is unspendable)
     if (block.GetHash() == chainparams.GetConsensus().hashGenesisBlock) {
@@ -1832,8 +1834,6 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
             view.SetBestBlock(pindex->GetBlockHash());
         return true;
     }
-
-    nBlocksTotal++;
 
     bool fScriptChecks = true;
     if (!hashAssumeValid.IsNull()) {

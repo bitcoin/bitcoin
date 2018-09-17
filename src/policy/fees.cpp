@@ -374,14 +374,18 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
         failBucket.leftMempool = failNum;
     }
 
-    LogPrint(BCLog::ESTIMATEFEE, "FeeEst: %d %s%.0f%% decay %.5f: feerate: %g from (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out) Fail: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out)\n",
+    double pass_bucket_sum = passBucket.totalConfirmed + passBucket.inMempool + passBucket.leftMempool;
+    double fail_bucket_sum = failBucket.totalConfirmed + failBucket.inMempool + failBucket.leftMempool;
+    if (pass_bucket_sum > 0 && fail_bucket_sum > 0) {
+        LogPrint(BCLog::ESTIMATEFEE, "FeeEst: %d %s%.0f%% decay %.5f: feerate: %g from (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out) Fail: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out)\n",
              confTarget, requireGreater ? ">" : "<", 100.0 * successBreakPoint, decay,
              median, passBucket.start, passBucket.end,
-             100 * passBucket.withinTarget / (passBucket.totalConfirmed + passBucket.inMempool + passBucket.leftMempool),
+             100 * passBucket.withinTarget / pass_bucket_sum,
              passBucket.withinTarget, passBucket.totalConfirmed, passBucket.inMempool, passBucket.leftMempool,
              failBucket.start, failBucket.end,
-             100 * failBucket.withinTarget / (failBucket.totalConfirmed + failBucket.inMempool + failBucket.leftMempool),
+             100 * failBucket.withinTarget / fail_bucket_sum,
              failBucket.withinTarget, failBucket.totalConfirmed, failBucket.inMempool, failBucket.leftMempool);
+    }
 
 
     if (result) {
