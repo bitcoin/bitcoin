@@ -31,9 +31,6 @@ class MinimumChainWorkTest(BitcoinTestFramework):
         self.extra_args = [[], ["-minimumchainwork=0x65"], ["-minimumchainwork=0x65"]]
         self.node_min_work = [0, 101, 101]
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
     def setup_network(self):
         # Force CanDirectFetch to return false (otherwise nMinimumChainWork is ignored)
         self.bump_mocktime(21 * 2.6 * 60)
@@ -56,7 +53,8 @@ class MinimumChainWorkTest(BitcoinTestFramework):
 
         num_blocks_to_generate = int((self.node_min_work[1] - starting_chain_work) / REGTEST_WORK_PER_BLOCK)
         self.log.info("Generating %d blocks on node0", num_blocks_to_generate)
-        hashes = self.nodes[0].generate(num_blocks_to_generate)
+        hashes = self.nodes[0].generatetoaddress(num_blocks_to_generate,
+                                                 self.nodes[0].get_deterministic_priv_key().address)
 
         self.log.info("Node0 current chain work: %s", self.nodes[0].getblockheader(hashes[-1])['chainwork'])
 
@@ -77,7 +75,7 @@ class MinimumChainWorkTest(BitcoinTestFramework):
         assert_equal(self.nodes[2].getblockcount(), starting_blockcount)
 
         self.log.info("Generating one more block")
-        self.nodes[0].generate(1)
+        self.nodes[0].generatetoaddress(1, self.nodes[0].get_deterministic_priv_key().address)
 
         self.log.info("Verifying nodes are all synced")
 
