@@ -226,7 +226,12 @@ def main():
     logging.basicConfig(format='%(message)s', level=logging_level)
 
     # Create base test directory
-    tmpdir = "%s/test_runner_₿_🏃_%s" % (args.tmpdirprefix, datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
+    try:
+        tmpdir_name = "/test_runner_₿_🏃_"
+        tmpdir_name.encode(sys.getfilesystemencoding())
+    except UnicodeEncodeError:
+        tmpdir_name = "/test_runner_"
+    tmpdir = ("%s" + tmpdir_name + "%s") % (args.tmpdirprefix, datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
     os.makedirs(tmpdir)
 
     logging.debug("Temporary test directory at %s" % tmpdir)
