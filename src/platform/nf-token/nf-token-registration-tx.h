@@ -19,9 +19,11 @@ namespace Platform
     class NfTokenRegistrationTx
     {
     public:
+        NfTokenRegistrationTx()
+        {}
+
         NfTokenRegistrationTx(const NfToken & nfToken)
-            : m_version(CURRENT_VERSION)
-            , m_nfToken(nfToken)
+            : m_nfToken(nfToken)
         {}
 
         bool Sign(CKey & privKey, CPubKey & pubKey);
@@ -42,17 +44,17 @@ namespace Platform
 
         std::string ToString() const;
 
+        static bool CheckTx(const CTransaction& tx, const CBlockIndex* pIndex, CValidationState& state);
+
     public:
         static const int CURRENT_VERSION = 1;
         std::vector<unsigned char> signature; // TODO: temp public to conform the template signing function
 
     private:
-        uint16_t m_version;
+        uint16_t m_version{CURRENT_VERSION};
         NfToken m_nfToken;
         // TODO: std::vector<unsigned char> m_signature;
     };
-
-    bool CheckNfTokenRegistrationTx(const CTransaction& tx, const CBlockIndex* pIndex, CValidationState& state);
 }
 
 

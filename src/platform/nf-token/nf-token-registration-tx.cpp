@@ -4,7 +4,7 @@
 
 #include "nf-token-registration-tx.h"
 #include "primitives/transaction.h"
-#include "specialtx.h"
+#include "platform/specialtx.h"
 
 #include "sync.h"
 #include "main.h"
@@ -26,23 +26,26 @@ namespace Platform
         return true;
     }
 
-    bool CheckNfTokenRegistrationTx(const CTransaction& tx, const CBlockIndex* pIndex, CValidationState& state)
+    bool NfTokenRegistrationTx::CheckTx(const CTransaction& tx, const CBlockIndex* pIndex, CValidationState& state)
     {
         AssertLockHeld(cs_main);
 
         NfTokenRegistrationTx nfTokenRegTx;
-        if (!GetTxPayload(tx, tokenRegTX))
+        if (!GetTxPayload(tx, nfTokenRegTx))
             return state.DoS(100, false, REJECT_INVALID, "bad-tx-payload");
 
-        if (nfTokenRegTx.version != NfTokenRegistrationTx::CURRENT_VERSION)
-            return stage.DoS(100, false, REJECT_INVALID, "bad-token-reg-tx-version");
+        if (nfTokenRegTx.m_version != NfTokenRegistrationTx::CURRENT_VERSION)
+            return state.DoS(100, false, REJECT_INVALID, "bad-token-reg-tx-version");
 
-        if (nfTokenRegTx.token.IsNull())
-            return stage.DoS(10, false, REJECT_INVALID, "bad-token-reg-tx-token");
+        if (nfTokenRegTx.m_nfToken.tokenId.IsNull())
+            return state.DoS(10, false, REJECT_INVALID, "bad-token-reg-tx-token");
 
-        if (nfTokenRegTx.tokenOwnerKeyId.IsNull())
-            return stage.DoS(10, false, REJECT_INVALID, "bad-token-reg-tx-owner-key-null");
+        if (nfTokenRegTx.m_nfToken.tokenOwnerKeyId.IsNull())
+            return state.DoS(10, false, REJECT_INVALID, "bad-token-reg-tx-owner-key-null");
 
-        return CheckNfTokenTxSignature(tx, nfTokenRegTx, nfTokenRegTx.tokenOwnerKeyId, state);
+        if (nfTokenRegTx.m_nfToken.metadataAdminKeyId.IsNull())
+            return state.DoS(10, false, REJECT_INVALID, "bad-token-reg-tx-metadata-admin-key-null");
+
+        return CheckNfTokenTxSignature(tx, nfTokenRegTx, nfTokenRegTx.m_nfToken.tokenOwnerKeyId, state);
     }
 }
