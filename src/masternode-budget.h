@@ -86,6 +86,7 @@ public:
 
     void ClearSeen()
     {
+        LOCK(cs);
         mapSeenMasternodeBudgetProposals.clear();
         mapSeenMasternodeBudgetVotes.clear();
         mapSeenBudgetDrafts.clear();
@@ -251,26 +252,26 @@ public:
     bool IsValid(bool fCheckCollateral=true) const;
     bool VerifySignature(const CPubKey& pubKey) const;
 
-    bool IsVoteSubmitted() const { return m_voteSubmittedTime.is_initialized(); }
+    bool IsVoteSubmitted() const { LOCK(m_cs);return m_voteSubmittedTime.is_initialized(); }
     void ResetAutoChecked();
     bool IsSubmittedManually() const;
 
-    uint256 GetFeeTxHash() const { return m_feeTransactionHash; }
-    const std::map<uint256, BudgetDraftVote>& GetVotes() const { return m_votes; }
-    const std::map<uint256, BudgetDraftVote>& GetObsoleteVotes() const { return m_obsoleteVotes; }
+    uint256 GetFeeTxHash() const { LOCK(m_cs); return m_feeTransactionHash; }
+    const std::map<uint256, BudgetDraftVote>& GetVotes() const { LOCK(m_cs); return m_votes; }
+    const std::map<uint256, BudgetDraftVote>& GetObsoleteVotes() const { LOCK(m_cs); return m_obsoleteVotes; }
     void DiscontinueOlderVotes(const BudgetDraftVote& newerVote);
     std::string GetProposals() const;
-    int GetBlockStart() const {return m_blockStart;}
-    int GetBlockEnd() const {return m_blockStart;} // Paid in single block
-    int GetVoteCount() const {return (int)m_votes.size();}
+    int GetBlockStart() const {LOCK(m_cs); return m_blockStart;}
+    int GetBlockEnd() const {LOCK(m_cs); return m_blockStart;} // Paid in single block
+    int GetVoteCount() const {LOCK(m_cs); return (int)m_votes.size();}
     const std::vector<CTxBudgetPayment>& GetBudgetPayments() const;
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight) const;
 
-    const CTxIn& MasternodeSubmittedId() const { return m_masternodeSubmittedId; }
+    const CTxIn& MasternodeSubmittedId() const { LOCK(m_cs); return m_masternodeSubmittedId; }
 
     //check to see if we should vote on this
     bool AutoCheck();
-    bool IsAutoChecked() const { return m_autoChecked; }
+    bool IsAutoChecked() const { LOCK(m_cs); return m_autoChecked; }
     //total crown paid out by this budget
     CAmount GetTotalPayout() const;
 
