@@ -1505,12 +1505,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         return true;
     }
 
-    // peercoin: set/unset network serialization mode for new clients
-    if (pfrom->nVersion <= OLD_VERSION)
-        vRecv.SetType(vRecv.GetType() & ~SER_POSMARKER);
-    else
-        vRecv.SetType(vRecv.GetType() | SER_POSMARKER);
-
     if (!(pfrom->GetLocalServices() & NODE_BLOOM) &&
               (strCommand == NetMsgType::FILTERLOAD ||
                strCommand == NetMsgType::FILTERADD))
@@ -1746,6 +1740,12 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         Misbehaving(pfrom->GetId(), 1);
         return false;
     }
+
+    // peercoin: set/unset network serialization mode for new clients
+    if (pfrom->nVersion <= OLD_VERSION)
+        vRecv.SetType(vRecv.GetType() & ~SER_POSMARKER);
+    else
+        vRecv.SetType(vRecv.GetType() | SER_POSMARKER);
 
     // At this point, the outgoing message serialization version can't change.
     const CNetMsgMaker msgMaker(pfrom->GetSendVersion());
