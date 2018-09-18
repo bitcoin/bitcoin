@@ -68,9 +68,13 @@ BASE_SCRIPTS= [
     # 'p2p_compactblocks.py',       TODO - refactor to assume segwit is always active
     # 'p2p_segwit.py',              TODO - refactor to assume segwit is always active
     # 'feature_csv_activation.py',  TODO - currently testing softfork activations, we need to test the features
+    # 'example_test.py',
     # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv Tests less than 2m vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     'wallet_backup.py',
     'wallet_hd.py',
+    'p2p_timeouts.py',
+    'mining_getblocktemplate_longpoll.py',
+    'feature_maxuploadtarget.py',
     # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv Tests less than 45s vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     'rpc_fundrawtransaction.py',
     # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv Tests less than 30s vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -91,6 +95,7 @@ BASE_SCRIPTS= [
     'wallet_import_rescan.py',
     'wallet_abandonconflict.py',
     'rpc_blockchain.py',
+    'p2p_feefilter.py',
     'p2p_leak.py',
     'p2p_versionbits.py',
     'rpc_spentindex.py',
@@ -111,6 +116,7 @@ BASE_SCRIPTS= [
     'wallet_zapwallettxes.py',
     'wallet_multiwallet.py',
     'interface_zmq.py',
+    'rpc_invalidateblock.py',
     # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv Tests less than 3s vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     'rpc_getchaintips.py',
     'wallet_txn_clone.py',
@@ -121,18 +127,23 @@ BASE_SCRIPTS= [
     'rpc_txindex.py',
     'p2p_disconnect_ban.py',
     'wallet_importprunedfunds.py',
+    'rpc_bind.py',
     'feature_unique_assets.py',
     'rpc_preciousblock.py',
+    'feature_notifications.py',
     'rpc_net.py',
     'interface_raven_cli.py',
     'mempool_resurrect.py',
     'rpc_signrawtransaction.py',
     'wallet_resendtransactions.py',
+    'wallet_txn_clone.py --mineblock',
     'rpc_signmessage.py',
     'rpc_deprecated.py',
+    'wallet_txn_doublespend.py',
     'wallet_disable.py',
     'interface_http.py',
     'mempool_spend_coinbase.py',
+    'feature_bip68_sequence.py',
     'p2p_mempool.py',
     'rpc_named_arguments.py',
     'rpc_uptime.py',
@@ -143,30 +154,16 @@ BASE_SCRIPTS= [
 EXTENDED_SCRIPTS = [
     # These tests are not run by the travis build process.
     # Longest test should go first, to favor running tests in parallel
-    'feature_pruning.py',
+    # 'p2p_acceptblock.py',
+    # 'feature_rbf.py',
+    # 'feature_assumevalid.py',
+    # 'mempool_packages.py',
+    # 'feature_bip_softforks.py', # use this for future soft fork testing
+    # 'feature_pruning.py',
     # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv Tests less than 20m vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     'feature_fee_estimation.py',
     # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv Tests less than 5m vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    'feature_maxuploadtarget.py',
-    'mempool_packages.py',
     'feature_dbcrash.py',
-    # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv Tests less than 2m vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    'feature_bip68_sequence.py',
-    'mining_getblocktemplate_longpoll.py',
-    'p2p_timeouts.py',
-    # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv Tests less than 60s vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    # use this for future soft fork testing --> 'feature_bip_softforks.py',
-    'p2p_feefilter.py',
-    'rpc_bind.py',
-    # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv Tests less than 30s vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    'feature_assumevalid.py',
-    #'example_test.py',
-    'wallet_txn_doublespend.py',
-    'wallet_txn_clone.py --mineblock',
-    'feature_notifications.py',
-    'rpc_invalidateblock.py',
-    #'p2p_acceptblock.py',
-    'feature_rbf.py',
 ]
 
 # Place EXTENDED_SCRIPTS first since it has the 3 longest running tests
