@@ -50,6 +50,7 @@ class CReserveKey;
 class CWalletTx;
 struct CAssetOutputEntry;
 class CCoinControl;
+struct CBlockAssetUndo;
 
 // 50000 * 82 Bytes == 4.1 Mb
 #define MAX_CACHE_ASSETS_SIZE 50000
@@ -238,7 +239,7 @@ public :
     bool RemoveNewAsset(const CNewAsset& asset, const std::string address);
     bool RemoveTransfer(const CAssetTransfer& transfer, const std::string& address, const COutPoint& out);
     bool RemoveOwnerAsset(const std::string& assetsName, const std::string address);
-    bool RemoveReissueAsset(const CReissueAsset& reissue, const std::string address, const COutPoint& out, const std::vector<std::pair<std::string, std::string> >& vUndoIPFS);
+    bool RemoveReissueAsset(const CReissueAsset& reissue, const std::string address, const COutPoint& out, const std::vector<std::pair<std::string, CBlockAssetUndo> >& vUndoIPFS);
     bool UndoAssetCoin(const Coin& coin, const COutPoint& out);
 
     // Cache only add asset functions

@@ -73,16 +73,16 @@ bool CAssetsDB::EraseMyOutPoints(const std::string& assetName)
     return true;
 }
 
-bool CAssetsDB::WriteBlockUndoAssetData(const uint256& blockhash, const std::vector<std::pair<std::string, std::string> >& vIPFSHashes)
+bool CAssetsDB::WriteBlockUndoAssetData(const uint256& blockhash, const std::vector<std::pair<std::string, CBlockAssetUndo> >& assetUndoData)
 {
-    return Write(std::make_pair(BLOCK_ASSET_UNDO_DATA, blockhash), vIPFSHashes);
+    return Write(std::make_pair(BLOCK_ASSET_UNDO_DATA, blockhash), assetUndoData);
 }
 
-bool CAssetsDB::ReadBlockUndoAssetData(const uint256 &blockhash, std::vector<std::pair<std::string, std::string> > &vIPFSHashes)
+bool CAssetsDB::ReadBlockUndoAssetData(const uint256 &blockhash, std::vector<std::pair<std::string, CBlockAssetUndo> > &assetUndoData)
 {
     // If it exists, return the read value.
     if (Exists(std::make_pair(BLOCK_ASSET_UNDO_DATA, blockhash)))
-           return Read(std::make_pair(BLOCK_ASSET_UNDO_DATA, blockhash), vIPFSHashes);
+           return Read(std::make_pair(BLOCK_ASSET_UNDO_DATA, blockhash), assetUndoData);
 
     // If it doesn't exist, we just return true because we don't want to fail just because it didn't exist in the db
     return true;

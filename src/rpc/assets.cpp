@@ -756,9 +756,9 @@ UniValue transfer(const JSONRPCRequest& request)
 
 UniValue reissue(const JSONRPCRequest& request)
 {
-    if (request.fHelp || !AreAssetsDeployed() || request.params.size() > 6 || request.params.size() < 3)
+    if (request.fHelp || !AreAssetsDeployed() || request.params.size() > 7 || request.params.size() < 3)
         throw std::runtime_error(
-                "reissue \"asset_name\" qty \"to_address\" \"change_address\" ( reissuable ) \"( new_ipfs )\" \n"
+                "reissue \"asset_name\" qty \"to_address\" \"change_address\" ( reissuable ) ( new_unit) \"( new_ipfs )\" \n"
                 + AssetActivationWarning() +
                 "\nReissues a quantity of an asset to an owned address if you own the Owner Token"
                 "\nCan change the reissuable flag during reissuance"
@@ -770,14 +770,15 @@ UniValue reissue(const JSONRPCRequest& request)
                 "3. \"to_address\"               (string, required) address to send the asset to\n"
                 "4. \"change_address\"           (string, optional) address that the change of the transaction will be sent to\n"
                 "5. \"reissuable\"               (boolean, optional, default=true), whether future reissuance is allowed\n"
-                "6. \"new_ifps\"                 (string, optional, default=\"\"), whether to update the current ipfshash\n"
+                "6. \"new_unit\"                 (numeric, optional, default=-1), the new units that will be associated with the asset\n"
+                "7. \"new_ifps\"                 (string, optional, default=\"\"), whether to update the current ipfshash\n"
 
                 "\nResult:\n"
                 "\"txid\"                     (string) The transaction id\n"
 
                 "\nExamples:\n"
                 + HelpExampleCli("reissue", "\"asset_name\" 20 \"address\"")
-                + HelpExampleCli("reissue", "\"asset_name\" 20 \"address\" \"change_address\" \"true\" \"Qmd286K6pohQcTKYqnS1YhWrCiS4gz7Xi34sdwMe9USZ7u\"")
+                + HelpExampleCli("reissue", "\"asset_name\" 20 \"address\" \"change_address\" \"true\" 8 \"Qmd286K6pohQcTKYqnS1YhWrCiS4gz7Xi34sdwMe9USZ7u\"")
         );
 
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -805,14 +806,19 @@ UniValue reissue(const JSONRPCRequest& request)
         reissuable = request.params[4].get_bool();
     }
 
-    std::string newipfs = "";
+    int newUnits = -1;
     if (request.params.size() > 5) {
-        newipfs = request.params[5].get_str();
+        newUnits = request.params[5].get_int();
+    }
+
+    std::string newipfs = "";
+    if (request.params.size() > 6) {
+        newipfs = request.params[6].get_str();
         if (newipfs.length() != 46)
             throw JSONRPCError(RPC_INVALID_PARAMS, std::string("Invalid IPFS hash (must be 46 characters"));
     }
 
-    CReissueAsset reissueAsset(asset_name, nAmount, reissuable, DecodeIPFS(newipfs));
+    CReissueAsset reissueAsset(asset_name, nAmount, newUnits, reissuable, DecodeIPFS(newipfs));
 
     std::pair<int, std::string> error;
     CReserveKey reservekey(pwallet);

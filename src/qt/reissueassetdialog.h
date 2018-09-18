@@ -77,6 +77,7 @@ private Q_SLOTS:
     void onAddressNameChanged(QString address);
     void onReissueAssetClicked();
     void onReissueBoxChanged();
+    void onUnitChanged(int value);
 
     //CoinControl
     void coinControlFeatureChanged(bool);

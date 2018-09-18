@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1260</width>
-    <height>1089</height>
+    <width>1454</width>
+    <height>1185</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -662,6 +662,44 @@
          </layout>
         </item>
         <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_6">
+          <item>
+           <widget class="QLabel" name="unitLabel">
+            <property name="text">
+             <string>Unit:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="unitSpinBox">
+            <property name="maximum">
+             <number>8</number>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="unitExampleLabel">
+            <property name="text">
+             <string>e.g. 1.00000000</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_9">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+        <item>
          <layout class="QHBoxLayout" name="horizontalLayout_4">
           <item>
            <widget class="QCheckBox" name="reissuableBox">
@@ -797,6 +835,19 @@
           </property>
          </widget>
         </item>
+        <item>
+         <spacer name="verticalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>100</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
        </layout>
       </item>
      </layout>
@@ -854,7 +905,7 @@
           <property name="sizeHint" stdset="0">
            <size>
             <width>5</width>
-            <height>500</height>
+            <height>250</height>
            </size>
           </property>
          </spacer>

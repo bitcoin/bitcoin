@@ -38,6 +38,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "transfer", 1, "qty"},
     { "reissue", 1, "qty"},
     { "reissue", 4, "reissuable"},
+    { "reissue", 5, "new_unit"},
     { "listmyassets", 1, "verbose" },
     { "listmyassets", 2, "count" },
     { "listmyassets", 3, "start"},

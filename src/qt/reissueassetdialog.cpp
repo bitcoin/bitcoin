@@ -53,6 +53,7 @@ ReissueAssetDialog::ReissueAssetDialog(const PlatformStyle *_platformStyle, QWid
     connect(ui->addressText, SIGNAL(textChanged(QString)), this, SLOT(onAddressNameChanged(QString)));
     connect(ui->reissueAssetButton, SIGNAL(clicked()), this, SLOT(onReissueAssetClicked()));
     connect(ui->reissuableBox, SIGNAL(clicked()), this, SLOT(onReissueBoxChanged()));
+    connect(ui->unitSpinBox, SIGNAL(valueChanged(int)), this, SLOT(onUnitChanged(int)));
     this->asset = new CNewAsset();
     asset->SetNull();
 
@@ -195,6 +196,8 @@ void ReissueAssetDialog::setUpValues()
     ui->ipfsText->hide();
     hideMessage();
 
+    ui->unitExampleLabel->setStyleSheet("font-weight: bold");
+
     LOCK(cs_main);
     std::vector<std::string> assets;
     GetAllAdministrativeAssets(model->getWallet(), assets);
@@ -323,7 +326,7 @@ void ReissueAssetDialog::CheckFormState()
     }
 
     // Keep the button disabled if no changes have been made
-    if (!ui->ipfsBox->isChecked() && ui->reissuableBox->isChecked() && ui->quantitySpinBox->value() == 0) {
+    if (!ui->ipfsBox->isChecked() && ui->reissuableBox->isChecked() && ui->quantitySpinBox->value() == 0 && ui->unitSpinBox->value() == asset->units) {
         hideMessage();
         return;
     }
@@ -339,6 +342,7 @@ void ReissueAssetDialog::disableAll()
     ui->reissuableBox->setDisabled(true);
     ui->ipfsBox->setDisabled(true);
     ui->reissueAssetButton->setDisabled(true);
+    ui->unitSpinBox->setDisabled(true);
 
     asset->SetNull();
 }
@@ -349,6 +353,7 @@ void ReissueAssetDialog::enableDataEntry()
     ui->addressText->setDisabled(false);
     ui->reissuableBox->setDisabled(false);
     ui->ipfsBox->setDisabled(false);
+    ui->unitSpinBox->setDisabled(false);
 }
 
 void ReissueAssetDialog::buildUpdatedData()
@@ -371,6 +376,12 @@ void ReissueAssetDialog::buildUpdatedData()
     else
         quantity = formatBlack.arg(tr("Total Quantity"), ":", QString::fromStdString(ss.str())) + "\n";
 
+    QString units;
+    if (ui->unitSpinBox->value() != asset->units)
+        units = formatGreen.arg(tr("Units"), ":", QString::number(ui->unitSpinBox->value())) + "\n";
+    else
+        units = formatBlack.arg(tr("Units"), ":", QString::number(ui->unitSpinBox->value())) + "\n";
+
     QString reissue;
     if (ui->reissuableBox->isChecked())
         reissue = formatBlack.arg(tr("Can Reisssue"), ":", reissuable) + "\n";
@@ -386,6 +397,7 @@ void ReissueAssetDialog::buildUpdatedData()
 
     ui->updatedAssetData->append(name);
     ui->updatedAssetData->append(quantity);
+    ui->updatedAssetData->append(units);
     ui->updatedAssetData->append(reissue);
     ui->updatedAssetData->append(ipfs);
     ui->updatedAssetData->show();
@@ -430,12 +442,16 @@ void ReissueAssetDialog::onAssetSelected(int index)
         ss.precision(asset->units);
         ss << std::fixed << value.get_real();
 
+        ui->unitSpinBox->setValue(asset->units);
+        ui->unitSpinBox->setMinimum(asset->units);
+
         ui->quantitySpinBox->setMaximum(21000000000 - value.get_real());
 
         ui->currentAssetData->clear();
         // Create the QString to display to the user
         QString name = formatBlack.arg(tr("Name"), ":", QString::fromStdString(asset->strName)) + "\n";
         QString quantity = formatBlack.arg(tr("Current Quantity"), ":", QString::fromStdString(ss.str())) + "\n";
+        QString units = formatBlack.arg(tr("Current Units"), ":", QString::number(ui->unitSpinBox->value()));
         QString reissue = formatBlack.arg(tr("Can Reissue"), ":", tr("Yes")) + "\n";
         QString ipfs;
         if (asset->nHasIPFS)
@@ -443,6 +459,7 @@ void ReissueAssetDialog::onAssetSelected(int index)
 
         ui->currentAssetData->append(name);
         ui->currentAssetData->append(quantity);
+        ui->currentAssetData->append(units);
         ui->currentAssetData->append(reissue);
         ui->currentAssetData->append(ipfs);
 
@@ -510,7 +527,7 @@ void ReissueAssetDialog::onAddressNameChanged(QString address)
 
 void ReissueAssetDialog::onReissueAssetClicked()
 {
-    if (!model)
+    if (!model || !asset)
         return;
 
     QString address;
@@ -525,6 +542,10 @@ void ReissueAssetDialog::onReissueAssetClicked()
     bool reissuable = ui->reissuableBox->isChecked();
     bool hasIPFS = ui->ipfsBox->isChecked();
 
+    int unit = ui->unitSpinBox->value();
+    if (unit == asset->units)
+        unit = -1;
+
     // Always use a CCoinControl instance, use the CoinControlDialog instance if CoinControl has been enabled
     CCoinControl ctrl;
     if (model->getOptionsModel()->getCoinControlFeatures())
@@ -536,7 +557,9 @@ void ReissueAssetDialog::onReissueAssetClicked()
     if (hasIPFS)
         ipfsDecoded = DecodeIPFS(ui->ipfsText->text().toStdString());
 
-    CReissueAsset reissueAsset(name.toStdString(), quantity, reissuable ? 1 : 0, ipfsDecoded);
+    // TODO Get the units and replace -1 with it
+
+    CReissueAsset reissueAsset(name.toStdString(), quantity, unit, reissuable ? 1 : 0, ipfsDecoded);
 
     CWalletTx tx;
     CReserveKey reservekey(model->getWallet());
@@ -921,4 +944,24 @@ void ReissueAssetDialog::updateMinFeeLabel()
         ui->checkBoxMinimumFee->setText(tr("Pay only the required fee of %1").arg(
                 RavenUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), GetRequiredFee(1000)) + "/kB")
         );
+}
+
+void ReissueAssetDialog::onUnitChanged(int value)
+{
+    QString text;
+    text += "e.g. 1";
+    // Add the period
+    if (value > 0)
+        text += ".";
+
+    // Add the remaining zeros
+    for (int i = 0; i < value; i++) {
+        text += "0";
+    }
+
+    ui->unitExampleLabel->setText(text);
+
+    buildUpdatedData();
+    CheckFormState();
+
 }

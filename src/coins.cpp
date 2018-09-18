@@ -93,7 +93,7 @@ void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin&& coin, bool possi
     cachedCoinsUsage += it->second.coin.DynamicMemoryUsage();
 }
 
-void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool check, CAssetsCache* assetsCache, std::pair<std::string, std::string>* undoIPFSHash) {
+void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool check, CAssetsCache* assetsCache, std::pair<std::string, CBlockAssetUndo>* undoAssetData) {
     bool fCoinbase = tx.IsCoinBase();
     const uint256& txid = tx.GetHash();
 
@@ -150,10 +150,11 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool 
                     error("%s: Failed to reissue an asset. Asset Name : %s", __func__, reissue.strName);
 
                 // Set the old IPFSHash for the blockundo
-                if (reissue.strIPFSHash != "") {
-                    auto pair = std::make_pair(reissue.strName, asset.strIPFSHash);
-                    undoIPFSHash->first = reissue.strName; // Asset Name
-                    undoIPFSHash->second = asset.strIPFSHash; // Old Assets IPFSHash
+                bool fIPFSChanged = !reissue.strIPFSHash.empty();
+                bool fUnitsChanged = reissue.nUnits != -1;
+                if (fIPFSChanged || fUnitsChanged) {
+                    undoAssetData->first = reissue.strName; // Asset Name
+                    undoAssetData->second = CBlockAssetUndo {fIPFSChanged, fUnitsChanged, asset.strIPFSHash, asset.units}; // ipfschanged, unitchanged, Old Assets IPFSHash, old units
                 }
 
                 CAssetCachePossibleMine possibleMine(reissue.strName, COutPoint(tx.GetHash(), reissueIndex),
