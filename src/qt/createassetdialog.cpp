@@ -298,25 +298,21 @@ void CreateAssetDialog::CheckFormState()
 
     QString name = GetAssetName();
 
-    AssetType assetType;
-    bool assetNameValid = IsAssetNameValid(name.toStdString(), assetType);
-    if (assetNameValid && assetType == AssetType::ROOT && type != IntFromAssetType(AssetType::ROOT))
-        return;
+    std::string error;
+    bool assetNameValid = IsTypeCheckNameValid(AssetTypeFromInt(type), name.toStdString(), error);
 
-    if (assetNameValid && assetType == AssetType::SUB && type != IntFromAssetType(AssetType::SUB))
-        return;
-
-    if (assetNameValid && assetType == AssetType::UNIQUE && type != IntFromAssetType(AssetType::UNIQUE))
-        return;
-
-    if (!(IsValidDestination(dest) || ui->addressText->text().isEmpty()) && assetNameValid) {
-        ui->addressText->setStyleSheet("border: 1px solid red");
-        showMessage("Warning: Invalid Raven address");
+    if (!assetNameValid && name.size() != 0) {
+        ui->nameText->setStyleSheet("border: 1px solid red");
+        showMessage(tr(error.c_str()));
+        ui->availabilityButton->setDisabled(true);
         return;
     }
 
-    if (!assetNameValid)
+    if (!(IsValidDestination(dest) || ui->addressText->text().isEmpty()) && assetNameValid) {
+        ui->addressText->setStyleSheet("border: 1px solid red");
+        showMessage(tr("Warning: Invalid Raven address"));
         return;
+    }
 
     if (ui->ipfsBox->isChecked() && ui->ipfsText->text().size() != 46) {
         ui->ipfsText->setStyleSheet("border: 1px solid red");
@@ -349,7 +345,7 @@ void CreateAssetDialog::checkAvailabilityClicked()
         CNewAsset asset;
         if (passets->GetAssetIfExists(name.toStdString(), asset)) {
             ui->nameText->setStyleSheet("border: 1px solid red");
-            showMessage("Invalid: Asset name already in use");
+            showMessage(tr("Invalid: Asset name already in use"));
             disableCreateButton();
             checkedAvailablity = false;
             return;
@@ -359,7 +355,7 @@ void CreateAssetDialog::checkAvailabilityClicked()
         }
     } else {
         checkedAvailablity = false;
-        showMessage("Error: Asset Database not in sync");
+        showMessage(tr("Error: Asset Database not in sync"));
         disableCreateButton();
         return;
     }
@@ -386,21 +382,15 @@ void CreateAssetDialog::onNameChanged(QString name)
     }
 
     if (type == IntFromAssetType(AssetType::ROOT)) {
-        if (name.size() < 3) {
-            ui->nameText->setStyleSheet("border: 1px solid red");
-            showMessage("Invalid: Minimum of 3 character in length");
-            ui->availabilityButton->setDisabled(true);
-            return;
-        }
-
-        AssetType assetType;
-        if (IsAssetNameValid(name.toStdString(), assetType) && assetType == AssetType::ROOT) {
+        std::string error;
+        auto strName = GetAssetName();
+        if (IsTypeCheckNameValid(AssetType::ROOT, strName.toStdString(), error)) {
             hideMessage();
             ui->availabilityButton->setDisabled(false);
-
         } else {
             ui->nameText->setStyleSheet("border: 1px solid red");
-            showMessage("Invalid: Max Size 30 Characters. Allowed characters include: A-Z 0-9 . _");
+            showMessage(tr(error.c_str()));
+            ui->availabilityButton->setDisabled(true);
         }
     } else if (type == IntFromAssetType(AssetType::SUB) || type == IntFromAssetType(AssetType::UNIQUE)) {
         if (name.size() == 0) {
@@ -409,13 +399,15 @@ void CreateAssetDialog::onNameChanged(QString name)
             return;
         }
 
-        AssetType assetType;
-        if (IsAssetNameValid(ui->assetList->currentText().toStdString() + identifier.toStdString() + name.toStdString(), assetType) && (assetType == AssetType::SUB || assetType == AssetType::UNIQUE)) {
+        std::string error;
+        auto assetType = AssetTypeFromInt(type);
+        auto strName = GetAssetName();
+        if (IsTypeCheckNameValid(assetType, strName.toStdString(), error)) {
             hideMessage();
             ui->availabilityButton->setDisabled(false);
         } else {
             ui->nameText->setStyleSheet("border: 1px solid red");
-            showMessage("Invalid: Max Size 30 Characters. Allowed characters include: A-Z 0-9 . _");
+            showMessage(tr(error.c_str()));
             ui->availabilityButton->setDisabled(true);
         }
     }
