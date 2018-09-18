@@ -143,6 +143,12 @@ BITCOIN_CORE_H = \
   masternodeman.h \
   masternodeconfig.h \
   nodeconfig.h \
+  platform/nf-token/nf-token-registration-tx-builder.h \
+  platform/nf-token/nf-token-registration-tx.h \
+  platform/nf-token/nf-token-type.h \
+  platform/nf-token/nf-token.h \
+  platform/rpc/rpc-nf-token.h \
+  platform/rpc/specialtx-rpc-utils.h \
   systemnode.h \
   systemnode-payments.h \
   systemnode-sync.h \
@@ -227,13 +233,14 @@ libbitcoin_server_a_SOURCES = \
   platform/governance.h \
   platform/governance-vote.cpp \
   platform/governance-vote.h \
+  platform/nf-token/nf-token-registration-tx.cpp \
   platform/specialtx.h \
   platform/specialtx.cpp \
   platform/rpc/rpcagents.cpp \
   platform/rpc/rpcagents.h \
-  platform/token/token-registraton-tx.cpp \
-  platform/token/token-registraton-tx.h \
-  $(JSON_H) \
+  platform/rpc/rpc-nf-token.cpp \
+  platform/rpc/specialtx-rpc-utils.cpp \
+    $(JSON_H) \
   $(BITCOIN_CORE_H)
 
 # wallet: shared between crownd and crown-qt, but only linked
