@@ -149,7 +149,7 @@ public:
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,55);  // peercoin: addresses begin with 'P'
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,117); // peercoin: addresses begin with 'p'
-        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,128); //ppcTODO: leave it as is?
+        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,183);
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E};          //ppcTODO: leave it as is?
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4};          //ppcTODO: leave it as is?
 
