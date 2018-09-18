@@ -718,7 +718,6 @@ public:
 //! These are needed because script.h and script.cpp do not have access to asset.h and asset.cpp functions. This is
 //! because the make file compiles them at different times. This is becauses script files are compiled with other
 //! consensus files, and asset files are compiled with core files
-class CNewAsset;
 bool GetAssetAmountFromScript(const CScript& script, CAmount& nAmount);
 bool AmountFromNewAssetScript(const CScript& scriptPubKey, CAmount& nAmount);
 bool AmountFromTransferScript(const CScript& scriptPubKey, CAmount& nAmount);
