@@ -4082,25 +4082,25 @@ bool static AlreadyHave(const CInv& inv)
         }
         return false;
     case MSG_BUDGET_VOTE:
-        if(budget.mapSeenMasternodeBudgetVotes.count(inv.hash)) {
+        if(budget.HasItem(inv.hash)) {
             masternodeSync.AddedBudgetItem(inv.hash);
             return true;
         }
         return false;
     case MSG_BUDGET_PROPOSAL:
-        if(budget.mapSeenMasternodeBudgetProposals.count(inv.hash)) {
+        if(budget.HasItem(inv.hash)) {
             masternodeSync.AddedBudgetItem(inv.hash);
             return true;
         }
         return false;
     case MSG_BUDGET_FINALIZED_VOTE:
-        if(budget.mapSeenBudgetDraftVotes.count(inv.hash)) {
+        if(budget.HasItem(inv.hash)) {
             masternodeSync.AddedBudgetItem(inv.hash);
             return true;
         }
         return false;
     case MSG_BUDGET_FINALIZED:
-        if(budget.mapSeenBudgetDrafts.count(inv.hash)) {
+        if(budget.HasItem(inv.hash)) {
             masternodeSync.AddedBudgetItem(inv.hash);
             return true;
         }
@@ -4283,40 +4283,44 @@ void static ProcessGetData(CNode* pfrom)
                     }
                 }
                 if (!pushed && inv.type == MSG_BUDGET_VOTE) {
-                    if(budget.mapSeenMasternodeBudgetVotes.count(inv.hash)){
+                    const BudgetDraftVote* item = budget.GetSeenBudgetDraftVote(inv.hash);
+                    if(item){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << budget.mapSeenMasternodeBudgetVotes[inv.hash];
+                        ss << *item;
                         pfrom->PushMessage("mvote", ss);
                         pushed = true;
                     }
                 }
 
                 if (!pushed && inv.type == MSG_BUDGET_PROPOSAL) {
-                    if(budget.mapSeenMasternodeBudgetProposals.count(inv.hash)){
+                    const CBudgetProposal* item = budget.GetSeenProposal(inv.hash);
+                    if(item){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << budget.mapSeenMasternodeBudgetProposals[inv.hash];
+                        ss << *item;
                         pfrom->PushMessage("mprop", ss);
                         pushed = true;
                     }
                 }
 
                 if (!pushed && inv.type == MSG_BUDGET_FINALIZED_VOTE) {
-                    if(budget.mapSeenBudgetDraftVotes.count(inv.hash)){
+                    const BudgetDraftVote* item = budget.GetSeenBudgetDraftVote(inv.hash);
+                    if(item){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << budget.mapSeenBudgetDraftVotes[inv.hash];
+                        ss << *item;
                         pfrom->PushMessage("fbvote", ss);
                         pushed = true;
                     }
                 }
 
                 if (!pushed && inv.type == MSG_BUDGET_FINALIZED) {
-                    if(budget.mapSeenBudgetDrafts.count(inv.hash)){
+                    const BudgetDraftBroadcast* item = budget.GetSeenBudgetDraft(inv.hash);
+                    if(item){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << budget.mapSeenBudgetDrafts[inv.hash];
+                        ss << item->Budget();
                         pfrom->PushMessage("fbs", ss);
                         pushed = true;
                     }
