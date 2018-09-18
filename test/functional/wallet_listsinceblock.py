@@ -12,6 +12,7 @@ class ListSinceBlockTest (RavenTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
         self.setup_clean_chain = True
+        self.extra_args = [["-maxreorg=10000"], ["-maxreorg=10000"], ["-maxreorg=10000"], ["-maxreorg=10000"]]
 
     def run_test(self):
         self.nodes[2].generate(101)

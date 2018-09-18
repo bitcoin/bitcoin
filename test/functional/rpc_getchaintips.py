@@ -17,6 +17,7 @@ from test_framework.util import assert_equal
 class GetChainTipsTest (RavenTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
+        self.extra_args = [["-maxreorg=10000"], ["-maxreorg=10000"], ["-maxreorg=10000"], ["-maxreorg=10000"]]
 
     def run_test (self):
         tips = self.nodes[0].getchaintips ()
