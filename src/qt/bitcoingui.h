@@ -215,7 +215,7 @@ private:
      @param[in] status            current hd enabled status
      @see WalletModel::EncryptionStatus
      */
-    void setHDStatus(int hdEnabled);
+    void setHDStatus(bool privkeyDisabled, int hdEnabled);
 
 public Q_SLOTS:
     bool handlePaymentRequest(const SendCoinsRecipient& recipient);
