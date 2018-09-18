@@ -72,6 +72,10 @@ Build requirements:
 
     sudo apt-get install build-essential libtool autotools-dev automake pkg-config libssl-dev libevent-dev bsdmainutils python3 libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev
 
+Build requirements if you use the [depends system](/depends/README.md):
+
+    sudo apt-get install build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils
+
 BerkeleyDB is required for the wallet.
 
 **For Ubuntu only:** db4.8 packages are available [here](https://launchpad.net/~bitcoin/+archive/bitcoin).
@@ -278,6 +282,7 @@ To build executables for ARM:
     cd depends
     make HOST=arm-linux-gnueabihf NO_QT=1
     cd ..
+    ./autogen.sh
     ./configure --prefix=$PWD/depends/arm-linux-gnueabihf --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++
     make
 

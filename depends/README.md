@@ -33,6 +33,8 @@ No other options are needed, the paths are automatically configured.
 Install the required dependencies: Ubuntu & Debian
 --------------------------------------------------
 
+These instructions assume Ubuntu 18.04 or newer. For Ubuntu 16.04 see [v0.16 version](https://github.com/bitcoin/bitcoin/blob/0.16/depends/README.md#install-the-required-dependencies-ubuntu--debian) of this document.
+
 For macOS cross compilation:
 
     sudo apt-get install curl librsvg2-bin libtiff-tools bsdmainutils cmake imagemagick libcap-dev libz-dev libbz2-dev python-setuptools
@@ -43,7 +45,9 @@ For Win32/Win64 cross compilation:
 
 For linux (including i386, ARM) cross compilation:
 
-    sudo apt-get install curl g++-aarch64-linux-gnu g++-4.8-aarch64-linux-gnu gcc-4.8-aarch64-linux-gnu binutils-aarch64-linux-gnu g++-arm-linux-gnueabihf g++-4.8-arm-linux-gnueabihf gcc-4.8-arm-linux-gnueabihf binutils-arm-linux-gnueabihf g++-4.8-multilib gcc-4.8-multilib binutils-gold bsdmainutils
+    sudo apt-get install curl g++-arm-linux-gnueabihf g++-aarch64-linux-gnu \
+    binutils-arm-linux-gnueabihf binutils-aarch64-linux-gnu \
+    g++-4.8-multilib gcc-4.8-multilib binutils-gold
 
 For linux RISC-V 64-bit cross compilation (there are no packages for 32-bit):
 
@@ -81,4 +85,3 @@ Additional targets:
 
 - [description.md](description.md): General description of the depends system
 - [packages.md](packages.md): Steps for adding packages
-
