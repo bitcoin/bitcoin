@@ -100,12 +100,12 @@ UniValue issue(const JSONRPCRequest& request)
             "\"txid\"                     (string) The transaction id\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("issue", "\"myassetname\" 1000")
-            + HelpExampleCli("issue", "\"myassetname\" 1000 \"myaddress\"")
-            + HelpExampleCli("issue", "\"myassetname\" 1000 \"myaddress\" \"changeaddress\" 4")
-            + HelpExampleCli("issue", "\"myassetname\" 1000 \"myaddress\" \"changeaddress\" 2 true")
-            + HelpExampleCli("issue", "\"myassetname/mysubasset\" 1000 \"myaddress\" \"changeaddress\" 2 true")
-            + HelpExampleCli("issue", "\"myassetname#uniquetag\"")
+            + HelpExampleCli("issue", "\"ASSET_NAME\" 1000")
+            + HelpExampleCli("issue", "\"ASSET_NAME\" 1000 \"myaddress\"")
+            + HelpExampleCli("issue", "\"ASSET_NAME\" 1000 \"myaddress\" \"changeaddress\" 4")
+            + HelpExampleCli("issue", "\"ASSET_NAME\" 1000 \"myaddress\" \"changeaddress\" 2 true")
+            + HelpExampleCli("issue", "\"ASSET_NAME/SUB_ASSET\" 1000 \"myaddress\" \"changeaddress\" 2 true")
+            + HelpExampleCli("issue", "\"ASSET_NAME#uniquetag\"")
         );
 
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -429,7 +429,7 @@ UniValue getassetdata(const JSONRPCRequest& request)
                 "}\n"
 
                 "\nExamples:\n"
-                + HelpExampleCli("getallassets", "\"assetname\"")
+                + HelpExampleCli("getallassets", "\"ASSET_NAME\"")
         );
 
 
@@ -508,8 +508,8 @@ UniValue listmyassets(const JSONRPCRequest &request)
 
                 "\nExamples:\n"
                 + HelpExampleRpc("listmyassets", "")
-                + HelpExampleCli("listmyassets", "asset")
-                + HelpExampleCli("listmyassets", "\"asset*\" true 10 20")
+                + HelpExampleCli("listmyassets", "ASSET")
+                + HelpExampleCli("listmyassets", "\"ASSET*\" true 10 20")
         );
 
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -662,8 +662,8 @@ UniValue listaddressesbyasset(const JSONRPCRequest &request)
                 "]\n"
 
                 "\nExamples:\n"
-                + HelpExampleCli("getassetsaddresses", "assetname")
-                + HelpExampleCli("getassetsaddresses", "assetname")
+                + HelpExampleCli("getassetsaddresses", "ASSET_NAME")
+                + HelpExampleCli("getassetsaddresses", "ASSET_NAME")
         );
 
     LOCK(cs_main);
@@ -709,8 +709,8 @@ UniValue transfer(const JSONRPCRequest& request)
                 "]\n"
 
                 "\nExamples:\n"
-                + HelpExampleCli("transfer", "\"asset_name\" 20 \"address\"")
-                + HelpExampleCli("transfer", "\"asset_name\" 20 \"address\"")
+                + HelpExampleCli("transfer", "\"ASSET_NAME\" 20 \"address\"")
+                + HelpExampleCli("transfer", "\"ASSET_NAME\" 20 \"address\"")
         );
 
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -777,8 +777,8 @@ UniValue reissue(const JSONRPCRequest& request)
                 "\"txid\"                     (string) The transaction id\n"
 
                 "\nExamples:\n"
-                + HelpExampleCli("reissue", "\"asset_name\" 20 \"address\"")
-                + HelpExampleCli("reissue", "\"asset_name\" 20 \"address\" \"change_address\" \"true\" 8 \"Qmd286K6pohQcTKYqnS1YhWrCiS4gz7Xi34sdwMe9USZ7u\"")
+                + HelpExampleCli("reissue", "\"ASSET_NAME\" 20 \"address\"")
+                + HelpExampleCli("reissue", "\"ASSET_NAME\" 20 \"address\" \"change_address\" \"true\" 8 \"Qmd286K6pohQcTKYqnS1YhWrCiS4gz7Xi34sdwMe9USZ7u\"")
         );
 
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -879,8 +879,8 @@ UniValue listassets(const JSONRPCRequest& request)
 
                 "\nExamples:\n"
                 + HelpExampleRpc("listassets", "")
-                + HelpExampleCli("listassets", "asset")
-                + HelpExampleCli("listassets", "\"asset*\" true 10 20")
+                + HelpExampleCli("listassets", "ASSET")
+                + HelpExampleCli("listassets", "\"ASSET*\" true 10 20")
         );
 
     ObserveSafeMode();
