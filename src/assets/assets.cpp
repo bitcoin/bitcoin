@@ -253,9 +253,21 @@ bool CNewAsset::IsValid(std::string& strError, CAssetsCache& assetCache, bool fC
         }
     }
 
-    if (!IsAssetNameValid(std::string(strName))) {
+    AssetType assetType;
+    if (!IsAssetNameValid(std::string(strName), assetType)) {
         strError = "Invalid parameter: asset_name must only consist of valid characters and have a size between 3 and 30 characters. See help for more details.";
         return false;
+    }
+
+    if (assetType == AssetType::UNIQUE) {
+        if (units != UNIQUE_ASSET_UNITS) {
+            strError = "Invalid parameter: units must be " + std::to_string(UNIQUE_ASSET_UNITS / COIN);
+            return false;
+        }
+        if (nAmount != UNIQUE_ASSET_AMOUNT) {
+            strError = "Invalid parameter: amount must be " + std::to_string(UNIQUE_ASSET_AMOUNT);
+            return false;
+        }
     }
 
     if (IsAssetNameAnOwner(std::string(strName))) {

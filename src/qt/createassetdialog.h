@@ -59,6 +59,8 @@ private:
     QString GetAssetName();
     void UpdateAssetNameMaxSize();
     void UpdateAssetNameToUpper();
+    void setUniqueSelected();
+    void clearSelected();
 
     //CoinControl
     // Update the passed in CCoinControl with state from the GUI

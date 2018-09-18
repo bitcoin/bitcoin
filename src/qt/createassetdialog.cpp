@@ -604,6 +604,12 @@ void CreateAssetDialog::onAssetTypeActivated(int index)
     if(!(type == IntFromAssetType(AssetType::ROOT) || type == IntFromAssetType(AssetType::SUB) || type == IntFromAssetType(AssetType::UNIQUE)))
         type = IntFromAssetType(AssetType::ROOT);
 
+    // If the type is UNIQUE, set the units and amount to the correct value, and disable them.
+    if (type == IntFromAssetType(AssetType::UNIQUE))
+        setUniqueSelected();
+    else
+        clearSelected();
+
     // Get the identifier for the asset type
     QString identifier = GetSpecialCharacter();
 
@@ -951,4 +957,23 @@ void CreateAssetDialog::updateMinFeeLabel()
         ui->checkBoxMinimumFee->setText(tr("Pay only the required fee of %1").arg(
                 RavenUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), GetRequiredFee(1000)) + "/kB")
         );
+}
+
+void CreateAssetDialog::setUniqueSelected()
+{
+    ui->reissuableBox->setChecked(false);
+    ui->quantitySpinBox->setValue(1);
+    ui->unitBox->setValue(0);
+    ui->reissuableBox->setDisabled(true);
+    ui->unitBox->setDisabled(true);
+    ui->quantitySpinBox->setDisabled(true);
+}
+
+void CreateAssetDialog::clearSelected()
+{
+    ui->reissuableBox->setDisabled(false);
+    ui->unitBox->setDisabled(false);
+    ui->quantitySpinBox->setDisabled(false);
+    ui->reissuableBox->setChecked(true);
+    ui->unitBox->setValue(8);
 }
