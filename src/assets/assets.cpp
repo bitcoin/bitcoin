@@ -39,7 +39,7 @@ static const auto MAX_CHANNEL_NAME_LENGTH = 12;
 // min lengths are expressed by quantifiers
 static const std::regex ROOT_NAME_CHARACTERS("^[A-Z0-9._]{3,}$");
 static const std::regex SUB_NAME_CHARACTERS("^[A-Z0-9._]+$");
-static const std::regex UNIQUE_TAG_CHARACTERS(R"(^[-A-Za-z0-9@$%&*()[\]{}_.?:]+$)");
+static const std::regex UNIQUE_TAG_CHARACTERS("^[-A-Za-z0-9@$%&*()[\\]{}_.?:]+$");
 static const std::regex CHANNEL_TAG_CHARACTERS("^[A-Z0-9._]+$");
 static const std::regex VOTE_TAG_CHARACTERS("^[A-Z0-9._]+$");
 
@@ -122,66 +122,108 @@ bool IsAssetNameASubasset(const std::string& name)
     return parts.size() > 1;
 }
 
-bool IsAssetNameValid(const std::string& name, AssetType& assetType)
+bool IsAssetNameValid(const std::string& name, AssetType& assetType, std::string& error)
 {
     assetType = AssetType::INVALID;
     if (std::regex_match(name, UNIQUE_INDICATOR))
     {
-        if (name.size() > MAX_NAME_LENGTH) return false;
-        std::vector<std::string> parts;
-        boost::split(parts, name, boost::is_any_of(UNIQUE_TAG_DELIMITER));
-        bool valid = IsNameValidBeforeTag(parts.front()) && IsUniqueTagValid(parts.back());
-        if (!valid) return false;
-        assetType = AssetType::UNIQUE;
-        return true;
+        bool ret = IsTypeCheckNameValid(AssetType::UNIQUE, name, error);
+        if (ret)
+            assetType = AssetType::UNIQUE;
+
+        return ret;
     }
     else if (std::regex_match(name, CHANNEL_INDICATOR))
     {
-        if (name.size() > MAX_NAME_LENGTH) return false;
-        std::vector<std::string> parts;
-        boost::split(parts, name, boost::is_any_of(CHANNEL_TAG_DELIMITER));
-        bool valid = IsNameValidBeforeTag(parts.front()) && IsChannelTagValid(parts.back());
-        if (parts.back().size() > MAX_CHANNEL_NAME_LENGTH) return false;
-        if (!valid) return false;
-        assetType = AssetType::MSGCHANNEL;
-        return true;
+        bool ret = IsTypeCheckNameValid(AssetType::MSGCHANNEL, name, error);
+        if (ret)
+            assetType = AssetType::MSGCHANNEL;
+
+        return ret;
     }
     else if (std::regex_match(name, OWNER_INDICATOR))
     {
-        if (name.size() > MAX_NAME_LENGTH) return false;
-        bool valid = IsNameValidBeforeTag(name.substr(0, name.size() - 1));
-        if (!valid) return false;
-        assetType = AssetType::OWNER;
-        return true;
-    } else if (std::regex_match(name, VOTE_INDICATOR))
+        bool ret = IsTypeCheckNameValid(AssetType::OWNER, name, error);
+        if (ret)
+            assetType = AssetType::OWNER;
+
+        return ret;
+    }
+    else if (std::regex_match(name, VOTE_INDICATOR))
     {
-        if (name.size() > MAX_NAME_LENGTH) return false;
-        std::vector<std::string> parts;
-        boost::split(parts, name, boost::is_any_of(VOTE_TAG_DELIMITER));
-        bool valid = IsNameValidBeforeTag(parts.front()) && IsVoteTagValid(parts.back());
-        if (!valid) return false;
-        assetType = AssetType::VOTE;
-        return true;
+        bool ret = IsTypeCheckNameValid(AssetType::VOTE, name, error);
+        if (ret)
+            assetType = AssetType::VOTE;
+
+        return ret;
     }
     else
     {
-        if (name.size() > MAX_NAME_LENGTH - 1) return false;  //Assets and sub-assets need to leave one extra char for OWNER indicator
-        bool valid = IsNameValidBeforeTag(name);
-        if (!valid) return false;
-        assetType = IsAssetNameASubasset(name) ? AssetType::SUB : AssetType::ROOT;
-        return true;
+        auto type = IsAssetNameASubasset(name) ? AssetType::SUB : AssetType::ROOT;
+        bool ret = IsTypeCheckNameValid(type, name, error);
+        if (ret)
+            assetType = type;
+
+        return ret;
     }
 }
 
 bool IsAssetNameValid(const std::string& name)
 {
     AssetType _assetType;
-    return IsAssetNameValid(name, _assetType);
+    std::string _error;
+    return IsAssetNameValid(name, _assetType, _error);
+}
+
+bool IsAssetNameValid(const std::string& name, AssetType& assetType)
+{
+    std::string _error;
+    return IsAssetNameValid(name, assetType, _error);
 }
 
 bool IsAssetNameAnOwner(const std::string& name)
 {
     return IsAssetNameValid(name) && std::regex_match(name, OWNER_INDICATOR);
+}
+
+// TODO get the string translated below
+bool IsTypeCheckNameValid(const AssetType type, const std::string& name, std::string& error)
+{
+    if (type == AssetType::UNIQUE) {
+        if (name.size() > MAX_NAME_LENGTH) { error = "Name is greater than max length of " + std::to_string(MAX_NAME_LENGTH); return false; }
+        std::vector<std::string> parts;
+        boost::split(parts, name, boost::is_any_of(UNIQUE_TAG_DELIMITER));
+        bool valid = IsNameValidBeforeTag(parts.front()) && IsUniqueTagValid(parts.back());
+        if (!valid) { error = "Unique name contains invalid characters (Valid characters are: A-Z a-z 0-9 @ $ % & * ( ) [ ] { } _ . ? : -)";  return false; }
+        return true;
+    } else if (type == AssetType::MSGCHANNEL) {
+        if (name.size() > MAX_NAME_LENGTH) { error = "Name is greater than max length of " + std::to_string(MAX_NAME_LENGTH); return false; }
+        std::vector<std::string> parts;
+        boost::split(parts, name, boost::is_any_of(CHANNEL_TAG_DELIMITER));
+        bool valid = IsNameValidBeforeTag(parts.front()) && IsChannelTagValid(parts.back());
+        if (parts.back().size() > MAX_CHANNEL_NAME_LENGTH) { error = "Channel name is greater than max length of " + std::to_string(MAX_CHANNEL_NAME_LENGTH); return false; }
+        if (!valid) { error = "Message Channel name contains invalid characters (Valid characters are: A-Z 0-9 _ .) (special characters can't be the first or last characters)";  return false; }
+        return true;
+    } else if (type == AssetType::OWNER) {
+        if (name.size() > MAX_NAME_LENGTH) { error = "Name is greater than max length of " + std::to_string(MAX_NAME_LENGTH); return false; }
+        bool valid = IsNameValidBeforeTag(name.substr(0, name.size() - 1));
+        if (!valid) { error = "Owner name contains invalid characters (Valid characters are: A-Z 0-9 _ .) (special characters can't be the first or last characters)";  return false; }
+        return true;
+    } else if (type == AssetType::VOTE) {
+        if (name.size() > MAX_NAME_LENGTH) { error = "Name is greater than max length of " + std::to_string(MAX_NAME_LENGTH); return false; }
+        std::vector<std::string> parts;
+        boost::split(parts, name, boost::is_any_of(VOTE_TAG_DELIMITER));
+        bool valid = IsNameValidBeforeTag(parts.front()) && IsVoteTagValid(parts.back());
+        if (!valid) { error = "Vote name contains invalid characters (Valid characters are: A-Z 0-9 _ .) (special characters can't be the first or last characters)";  return false; }
+        return true;
+    } else {
+        if (name.size() > MAX_NAME_LENGTH - 1) { error = "Name is greater than max length of " + std::to_string(MAX_NAME_LENGTH - 1); return false; }  //Assets and sub-assets need to leave one extra char for OWNER indicator
+        if (!IsAssetNameASubasset(name) && name.size() < MIN_ASSET_LENGTH) { error = "Name must be contain " + std::to_string(MIN_ASSET_LENGTH) + " characters"; return false; }
+        bool valid = IsNameValidBeforeTag(name);
+        if (!valid && IsAssetNameASubasset(name) && name.size() < 3) { error = "Name must have at least 3 characters (Valid characters are: A-Z 0-9 _ .)";  return false; }
+        if (!valid) { error = "Name contains invalid characters (Valid characters are: A-Z 0-9 _ .) (special characters can't be the first or last characters)";  return false; }
+        return true;
+    }
 }
 
 std::string GetParentName(const std::string& name)

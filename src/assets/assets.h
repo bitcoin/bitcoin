@@ -316,12 +316,13 @@ std::string GetBurnAddress(const int nType);
 
 bool IsAssetNameValid(const std::string& name);
 bool IsAssetNameValid(const std::string& name, AssetType& assetType);
+bool IsAssetNameValid(const std::string& name, AssetType& assetType, std::string& error);
 bool IsUniqueTagValid(const std::string& tag);
 bool IsAssetNameAnOwner(const std::string& name);
 std::string GetParentName(const std::string& name); // Gets the parent name of a subasset TEST/TESTSUB would return TEST
 std::string GetUniqueAssetName(const std::string& parent, const std::string& tag);
 
-bool IsAssetNameSizeValid(const std::string& name);
+bool IsTypeCheckNameValid(const AssetType type, const std::string& name, std::string& error);
 
 bool IsAssetUnitsValid(const CAmount& units);
 
