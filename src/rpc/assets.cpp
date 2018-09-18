@@ -947,7 +947,7 @@ static const CRPCCommand commands[] =
     { "assets",   "listmyassets",               &listmyassets,               {"asset", "verbose", "count", "start"}},
     { "assets",   "listaddressesbyasset",       &listaddressesbyasset,       {"asset_name"}},
     { "assets",   "transfer",                   &transfer,                   {"asset_name", "qty", "to_address"}},
-    { "assets",   "reissue",                    &reissue,                    {"asset_name", "qty", "to_address", "change_address", "reissuable", "new_ipfs"}},
+    { "assets",   "reissue",                    &reissue,                    {"asset_name", "qty", "to_address", "change_address", "reissuable", "new_unit", "new_ipfs"}},
     { "assets",   "listassets",                 &listassets,                 {"asset", "verbose", "count", "start"}}
 };
 

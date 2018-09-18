@@ -114,7 +114,7 @@ class AssetTest(RavenTestFramework):
         self.log.info("Calling reissue()...")
         address1 = n0.getnewaddress()
         n0.reissue(asset_name="MY_ASSET", qty=2000, to_address=address0, change_address=address1, \
-                   reissuable=False, new_ipfs=ipfs_hash[::-1])
+                   reissuable=False, new_unit=-1, new_ipfs=ipfs_hash[::-1])
 
         self.log.info("Waiting for ten confirmations after reissue...")
         self.sync_all()

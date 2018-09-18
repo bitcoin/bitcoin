@@ -268,6 +268,10 @@ bool CNewAsset::IsValid(std::string& strError, CAssetsCache& assetCache, bool fC
             strError = "Invalid parameter: amount must be " + std::to_string(UNIQUE_ASSET_AMOUNT);
             return false;
         }
+        if (nReissuable != 0) {
+            strError = "Invalid parameter: reissuable must be 0";
+            return false;
+        }
     }
 
     if (IsAssetNameAnOwner(std::string(strName))) {

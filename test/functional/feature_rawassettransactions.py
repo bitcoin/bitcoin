@@ -12,7 +12,7 @@ from test_framework.util import *
 from test_framework.mininode import *
 
 
-def get_tx_issue_hex(node, asset_name, asset_quantity):
+def get_tx_issue_hex(node, asset_name, asset_quantity, asset_units=0):
     to_address = node.getnewaddress()
     change_address = node.getnewaddress()
     unspent = node.listunspent()[0]
@@ -24,7 +24,7 @@ def get_tx_issue_hex(node, asset_name, asset_quantity):
             'issue': {
                 'asset_name':       asset_name,
                 'asset_quantity':   asset_quantity,
-                'units':            0,
+                'units':            asset_units,
                 'reissuable':       1,
                 'has_ipfs':         0,
             }
@@ -509,7 +509,6 @@ class RawAssetTransactionsTest(RavenTestFramework):
         owner = f"{root}!"
         n0.issue(root)
         n0.generate(1)
-        self.sync_all()
 
         asset_tags = ["myprecious1", "bind3", "gold7", "men9"]
         ipfs_hashes = ["QmWWQSuPMS6aXCbZKpEjPHPUZN2NjB3YrhJTHsV4X3vb2t"] * len(asset_tags)
@@ -550,13 +549,85 @@ class RawAssetTransactionsTest(RavenTestFramework):
             assert_equal(ipfs_hashes[0], n0.listassets(asset_name, True)[asset_name]['ipfs_hash'])
 
 
+    def unique_assets_via_issue_test(self):
+        self.log.info("Testing unique assets via issue...")
+        n0, n1, n2 = self.nodes[0], self.nodes[1], self.nodes[2]
+
+        root = "RINGU2"
+        owner = f"{root}!"
+        n0.issue(root)
+        n0.generate(1)
+
+        asset_name = f"{root}#unique"
+
+        to_address = n0.getnewaddress()
+        change_address = n0.getnewaddress()
+        owner_change_address = n0.getnewaddress()
+        unspent = n0.listunspent()[0]
+        unspent_asset_owner = n0.listmyassets(owner, True)[owner]['outpoints'][0]
+
+        inputs = [
+            {k: unspent[k] for k in ['txid', 'vout']},
+            {k: unspent_asset_owner[k] for k in ['txid', 'vout']},
+        ]
+
+        burn = 5
+        outputs = {
+            'n1issueUniqueAssetXXXXXXXXXXS4695i': burn,
+            change_address: float(unspent['amount']) - (burn + 0.0001),
+            owner_change_address: {
+                'transfer': {
+                    owner: 1,
+                }
+            },
+            to_address: {
+                'issue': {
+                    'asset_name':       asset_name,
+                    'asset_quantity':   100000000,
+                    'units':            0,
+                    'reissuable':       0,
+                    'has_ipfs':         0,
+                }
+            },
+        }
+
+        ########################################
+        # bad qty
+        for n in (2, 20, 20000):
+            outputs[to_address]['issue']['asset_quantity'] = n
+            assert_raises_rpc_error(-8, "Invalid parameter: amount must be 100000000", n0.createrawtransaction, inputs, outputs)
+        outputs[to_address]['issue']['asset_quantity'] = 1
+
+        ########################################
+        # bad units
+        for n in (1, 2, 3, 4, 5, 6, 7, 8):
+            outputs[to_address]['issue']['units'] = n
+            assert_raises_rpc_error(-8, "Invalid parameter: units must be 0", n0.createrawtransaction, inputs, outputs)
+        outputs[to_address]['issue']['units'] = 0
+
+        ########################################
+        # reissuable
+        outputs[to_address]['issue']['reissuable'] = 1
+        assert_raises_rpc_error(-8, "Invalid parameter: reissuable must be 0", n0.createrawtransaction, inputs, outputs)
+        outputs[to_address]['issue']['reissuable'] = 0
+
+        ########################################
+        # ok
+        hex = n0.signrawtransaction(n0.createrawtransaction(inputs, outputs))['hex']
+        n0.sendrawtransaction(hex)
+        n0.generate(1)
+        assert_equal(1, n0.listmyassets()[root])
+        assert_equal(1, n0.listmyassets()[asset_name])
+        assert_equal(1, n0.listmyassets()[owner])
+
+
     def run_test(self):
         self.activate_assets()
         self.issue_reissue_transfer_test()
         self.unique_assets_test()
         self.issue_tampering_test()
         self.reissue_tampering_test()
-
+        self.unique_assets_via_issue_test()
 
 if __name__ == '__main__':
     RawAssetTransactionsTest().main()
