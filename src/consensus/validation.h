@@ -22,6 +22,9 @@ static const unsigned char REJECT_NONSTANDARD = 0x40;
 // static const unsigned char REJECT_DUST = 0x41; // part of BIP 61
 static const unsigned char REJECT_INSUFFICIENTFEE = 0x42;
 static const unsigned char REJECT_CHECKPOINT = 0x43;
+/** RVN START */
+static const unsigned char REJECT_MAXREORGDEPTH = 0x44;
+/** RVN END */
 
 /** Capture information about block/transaction validation */
 class CValidationState {
