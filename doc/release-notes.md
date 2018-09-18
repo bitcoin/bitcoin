@@ -1,6 +1,6 @@
-Bitcoin Core version 0.16.3 is now available from:
+Bitcoin Core version 0.16.x is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-0.16.3/>
+  <https://bitcoincore.org/bin/bitcoin-core-0.16.x/>
 
 This is a new minor version release, with various bugfixes
 as well as updated translations.
@@ -49,42 +49,22 @@ frequently tested on them.
 Notable changes
 ===============
 
-Denial-of-Service vulnerability
--------------------------------
+(to be filled in)
 
-A denial-of-service vulnerability exploitable by miners has been discovered in
-Bitcoin Core versions 0.14.0 up to 0.16.2. It is recommended to upgrade any of
-the vulnerable versions to 0.16.3 as soon as possible.
-
-0.16.3 change log
+0.16.x change log
 ------------------
 
-### Consensus
-- #14249 `696b936` Fix crash bug with duplicate inputs within a transaction (TheBlueMatt, sdaftuar)
-
-### RPC and other APIs
-- #13547 `212ef1f` Make `signrawtransaction*` give an error when amount is needed but missing (ajtowns)
-
-### Miscellaneous
-- #13655 `1cdbea7` bitcoinconsensus: invalid flags error should be set to `bitcoinconsensus_err` (afk11)
-
-### Documentation
-- #13844 `11b9dbb` correct the help output for -prune (hebasto)
+(to be filled in)
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
-- Anthony Towns
-- Hennadii Stepanov
-- Matt Corallo
-- Suhas Daftuar
-- Thomas Kerin
-- Wladimir J. van der Laan
+(to be filled in)
 
 And to those that reported security issues:
 
-- beardnboobies
+(to be filled in)
 
 As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
