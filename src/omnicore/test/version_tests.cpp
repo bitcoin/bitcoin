@@ -23,12 +23,12 @@ BOOST_AUTO_TEST_CASE(version_comparison)
 
 BOOST_AUTO_TEST_CASE(version_string)
 {
-    BOOST_CHECK_EQUAL(OmniCoreVersion(), "0.3.1");
+    BOOST_CHECK_EQUAL(OmniCoreVersion(), "0.3.1.99");
 }
 
 BOOST_AUTO_TEST_CASE(version_number)
 {
-    BOOST_CHECK_EQUAL(OMNICORE_VERSION, 30001000);
+    BOOST_CHECK_EQUAL(OMNICORE_VERSION, 30001099);
 }
 
 BOOST_AUTO_TEST_CASE(config_package_version)

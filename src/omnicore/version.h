@@ -21,7 +21,7 @@
 #define OMNICORE_VERSION_PATCH       1
 
 // Non-public build number/revision (usually zero)
-#define OMNICORE_VERSION_BUILD       0
+#define OMNICORE_VERSION_BUILD       99
 
 #endif // HAVE_CONFIG_H
 
