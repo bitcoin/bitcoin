@@ -148,14 +148,14 @@ public:
     };
 
 private:
-    size_type _size;
+    size_type _size = 0;
     union direct_or_indirect {
         char direct[sizeof(T) * N];
         struct {
             size_type capacity;
             char* indirect;
         };
-    } _union;
+    } _union = {};
 
     T* direct_ptr(difference_type pos) { return reinterpret_cast<T*>(_union.direct) + pos; }
     const T* direct_ptr(difference_type pos) const { return reinterpret_cast<const T*>(_union.direct) + pos; }
@@ -246,34 +246,34 @@ public:
         fill(item_ptr(0), first, last);
     }
 
-    prevector() : _size(0), _union{{}} {}
+    prevector() {}
 
-    explicit prevector(size_type n) : prevector() {
+    explicit prevector(size_type n) {
         resize(n);
     }
 
-    explicit prevector(size_type n, const T& val) : prevector() {
+    explicit prevector(size_type n, const T& val) {
         change_capacity(n);
         _size += n;
         fill(item_ptr(0), n, val);
     }
 
     template<typename InputIterator>
-    prevector(InputIterator first, InputIterator last) : prevector() {
+    prevector(InputIterator first, InputIterator last) {
         size_type n = last - first;
         change_capacity(n);
         _size += n;
         fill(item_ptr(0), first, last);
     }
 
-    prevector(const prevector<N, T, Size, Diff>& other) : prevector() {
+    prevector(const prevector<N, T, Size, Diff>& other) {
         size_type n = other.size();
         change_capacity(n);
         _size += n;
         fill(item_ptr(0), other.begin(),  other.end());
     }
 
-    prevector(prevector<N, T, Size, Diff>&& other) : prevector() {
+    prevector(prevector<N, T, Size, Diff>&& other) {
         swap(other);
     }
 
