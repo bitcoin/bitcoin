@@ -11,6 +11,8 @@ from test_framework.util import *
 class TxnMallTest(RavenTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
+        self.extra_args = [["-maxreorg=10000".format(i)] for i in range(self.num_nodes)]
+
 
     def add_options(self, parser):
         parser.add_option("--mineblock", dest="mine_block", default=False, action="store_true",
