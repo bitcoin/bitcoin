@@ -247,6 +247,45 @@ BerkeleyEnvironment::VerifyResult BerkeleyEnvironment::Verify(const std::string&
     return (fRecovered ? VerifyResult::RECOVER_OK : VerifyResult::RECOVER_FAIL);
 }
 
+BerkeleyBatch::SafeDbt::SafeDbt(u_int32_t flags)
+{
+    m_dbt.set_flags(flags);
+}
+
+BerkeleyBatch::SafeDbt::SafeDbt(void *data, size_t size)
+    : m_dbt(data, size)
+{
+}
+
+BerkeleyBatch::SafeDbt::~SafeDbt()
+{
+    if (m_dbt.get_data() != nullptr) {
+        // Clear memory, e.g. in case it was a private key
+        memory_cleanse(m_dbt.get_data(), m_dbt.get_size());
+        // under DB_DBT_MALLOC, data is malloced by the Dbt, but must be
+        // freed by the caller.
+        // https://docs.oracle.com/cd/E17275_01/html/api_reference/C/dbt.html
+        if (m_dbt.get_flags() & DB_DBT_MALLOC) {
+            free(m_dbt.get_data());
+        }
+    }
+}
+
+const void* BerkeleyBatch::SafeDbt::get_data() const
+{
+    return m_dbt.get_data();
+}
+
+u_int32_t BerkeleyBatch::SafeDbt::get_size() const
+{
+    return m_dbt.get_size();
+}
+
+BerkeleyBatch::SafeDbt::operator Dbt*()
+{
+    return &m_dbt;
+}
+
 bool BerkeleyBatch::Recover(const fs::path& file_path, void *callbackDataIn, bool (*recoverKVcallback)(void* callbackData, CDataStream ssKey, CDataStream ssValue), std::string& newFilename)
 {
     std::string filename;
