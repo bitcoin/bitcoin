@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # Copyright 2014 BitPay Inc.
 # Copyright 2016-2017 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
