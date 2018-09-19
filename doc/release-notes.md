@@ -1,10 +1,10 @@
-Bitcoin Core version *0.15.1* is now available from:
+Bitcoin Core version *0.15.2* is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-0.15.x/>
+  <https://bitcoincore.org/bin/bitcoin-core-0.15.2/>
 
 or
 
-  <https://bitcoin.org/bin/bitcoin-core-0.15.x/>
+  <https://bitcoin.org/bin/bitcoin-core-0.15.2/>
 
 This is a new minor version release, including various bugfixes and
 performance improvements, as well as updated translations.
@@ -62,15 +62,56 @@ frequently tested on them.
 Notable changes
 ===============
 
-0.15.x Change log
+Denial-of-Service vulnerability CVE-2018-17144
+-------------------------------
+
+A denial-of-service vulnerability exploitable by miners has been discovered in
+Bitcoin Core versions 0.14.0 up to 0.16.2. It is recommended to upgrade any of
+the vulnerable versions to 0.15.2 or 0.16.3 as soon as possible.
+
+0.15.2 Change log
 =================
 
+### Build system
+
+- #11995 `9bb1a16` depends: Fix Qt build with XCode 9.2(fanquake)
+- #12946 `93b9a61` depends: Fix Qt build with XCode 9.3(fanquake)
+- #13544 `9fd3e00` depends: Update Qt download url (fanquake)
+- #11847 `cb7ef31` Make boost::multi_index comparators const (sdaftuar)
+
+### Consensus
+- #14247 `4b8a3f5` Fix crash bug with duplicate inputs within a transaction (TheBlueMatt, sdaftuar)
+ 
+### RPC
+- #11676 `7af2457` contrib/init: Update openrc-run filename (Luke Dashjr)
+- #11277 `7026845` Fix uninitialized URI in batch RPC requests (Russell Yanofsky)
+ 
+### Wallet
+- #11289 `3f1db56` Wrap dumpwallet warning and note scripts aren't dumped (MeshCollider)
+- #11289 `42ea47d` Add wallet backup text to import*, add* and dumpwallet RPCs (MeshCollider)
+- #11590 `6372a75` [Wallet] always show help-line of wallet encryption calls (Jonas Schnelli)
+
+### bitcoin-tx
+
+- #11554 `a69cc07` Sanity-check script sizes in bitcoin-tx (TheBlueMatt)
+
+### Tests
+- #11277 `3a6cdd4` Add test for multiwallet batch RPC calls (Russell Yanofsky)
+- #11647 `1c8c7f8` Add missing batch rpc calls to python coverage logs (Russell Yanofsky)
+- #11277 `1036c43` Add missing multiwallet rpc calls to python coverage logs (Russell Yanofsky)
+- #11277 `305f768` Limit AuthServiceProxyWrapper.\_\_getattr\_\_ wrapping (Russell Yanofsky)
+- #11277 `2eea279` Make AuthServiceProxy.\_batch method usable (Russell Yanofsky)
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
-(todo)
-
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
+- fanquake
+- Jonas Schnelli
+- Luke Dashjr
+- Matt Corallo
+- MeshCollider
+- Russell Yanofsky
+- Suhas Daftuar
+- Wladimir J. van der Laan
