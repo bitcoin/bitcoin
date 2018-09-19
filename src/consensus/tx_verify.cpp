@@ -233,7 +233,6 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, CAssetsCa
     }
         /** RVN END */
 
-    // Check for duplicate inputs - note that this check is slow so we skip it in CheckBlock
     if (fCheckDuplicateInputs) {
         std::set<COutPoint> vInOutPoints;
         for (const auto& txin : tx.vin)
