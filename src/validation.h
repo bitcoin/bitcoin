@@ -115,8 +115,9 @@ static const unsigned int AVG_ADDRESS_BROADCAST_INTERVAL = 30;
  *  Blocks and whitelisted receivers bypass this, outbound peers get half this delay. */
 static const unsigned int INVENTORY_BROADCAST_INTERVAL = 5;
 /** Maximum number of inventory items to send per transmission.
- *  Limits the impact of low-fee transaction floods. */
-static const unsigned int INVENTORY_BROADCAST_MAX = 7 * INVENTORY_BROADCAST_INTERVAL;
+ *  Limits the impact of low-fee transaction floods.
+ *  We have 4 times smaller block times in Dash, so we need to push 4 times more invs per 1MB. */
+static const unsigned int INVENTORY_BROADCAST_MAX_PER_1MB_BLOCK = 4 * 7 * INVENTORY_BROADCAST_INTERVAL;
 /** Block download timeout base, expressed in millionths of the block interval (i.e. 2.5 min) */
 static const int64_t BLOCK_DOWNLOAD_TIMEOUT_BASE = 1000000;
 /** Additional block download timeout per parallel downloading peer (i.e. 1.25 min) */
