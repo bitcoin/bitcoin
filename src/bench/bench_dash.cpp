@@ -95,7 +95,7 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-    std::unique_ptr<benchmark::Printer> printer(new benchmark::ConsolePrinter());
+    std::unique_ptr<benchmark::Printer> printer = MakeUnique<benchmark::ConsolePrinter>();
     std::string printer_arg = gArgs.GetArg("-printer", DEFAULT_BENCH_PRINTER);
     if ("plot" == printer_arg) {
         printer.reset(new benchmark::PlotlyPrinter(
