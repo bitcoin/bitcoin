@@ -7,7 +7,6 @@
 #include <chain.h>
 #include <consensus/validation.h>
 #include <core_io.h>
-#include <httpserver.h>
 #include <validation.h>
 #include <key_io.h>
 #include <net.h>
@@ -32,15 +31,27 @@
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
 
-#include <stdint.h>
-
+#include <event2/http.h> // for evhttp_uridecode
 #include <univalue.h>
 
 #include <functional>
+#include <stdint.h>
+
+static std::string urlDecode(const std::string &urlEncoded) {
+    std::string res;
+    if (!urlEncoded.empty()) {
+        char *decoded = evhttp_uridecode(urlEncoded.c_str(), 0, nullptr);
+        if (decoded) {
+            res = std::string(decoded);
+            free(decoded);
+        }
+    }
+    return res;
+}
 
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
 
-bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string& wallet_name)
+static bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string& wallet_name)
 {
     if (request.URI.substr(0, WALLET_ENDPOINT_BASE.size()) == WALLET_ENDPOINT_BASE) {
         // wallet endpoint was used

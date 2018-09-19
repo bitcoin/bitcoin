@@ -16,7 +16,6 @@
 #include <noui.h>
 #include <shutdown.h>
 #include <util.h>
-#include <httpserver.h>
 #include <httprpc.h>
 #include <utilstrencodings.h>
 #include <walletinitinterface.h>
