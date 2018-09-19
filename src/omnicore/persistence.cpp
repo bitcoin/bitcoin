@@ -659,18 +659,21 @@ int RestoreInMemoryState(const std::string& filename, int what, bool verifyHash)
  */
 int LoadMostRelevantInMemoryState()
 {
+    PrintToLog("Trying to load most relevant state into memory..\n");
     int res = -1;
     // check the SP database and roll it back to its latest valid state
     // according to the active chain
     uint256 spWatermark;
     if (!_my_sps->getWatermark(spWatermark)) {
-        //trigger a full reparse, if the SP database has no watermark
+        // trigger a full reparse, if the SP database has no watermark
+        PrintToLog("Failed to load historical state: SP database has no watermark\n");
         return -1;
     }
 
     CBlockIndex const *spBlockIndex = GetBlockIndex(spWatermark);
     if (NULL == spBlockIndex) {
-        //trigger a full reparse, if the watermark isn't a real block
+        // trigger a full reparse, if the watermark isn't a real block
+        PrintToLog("Failed to load historical state: watermark isn't a real block\n");
         return -1;
     }
 
@@ -678,6 +681,7 @@ int LoadMostRelevantInMemoryState()
         int remainingSPs = _my_sps->popBlock(spBlockIndex->GetBlockHash());
         if (remainingSPs < 0) {
             // trigger a full reparse, if the levelDB cannot roll back
+            PrintToLog("Failed to load historical state: no valid state found after rolling back SP database\n");
             return -1;
         } /*else if (remainingSPs == 0) {
       // potential optimization here?
@@ -751,6 +755,7 @@ int LoadMostRelevantInMemoryState()
         // go to the previous block
         if (_my_sps->popBlock(curTip->GetBlockHash()) <= 0) {
             // trigger a full reparse, if the levelDB cannot roll back
+            PrintToLog("Failed to load historical state: no valid state found after rolling back SP database (2)\n");
             return -1;
         }
         curTip = curTip->pprev;
@@ -762,6 +767,7 @@ int LoadMostRelevantInMemoryState()
 
     if (persistedBlocks.size() == 0) {
         // trigger a reparse if we exhausted the persistence files without success
+        PrintToLog("Failed to load historical state: no valid state found after exhausting persistence files\n");
         return -1;
     }
 

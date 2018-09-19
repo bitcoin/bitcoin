@@ -1507,6 +1507,7 @@ static int msc_initial_scan(int nFirstBlock)
  */
 void clear_all_state()
 {
+    PrintToLog("Clearing all state..\n");
     LOCK2(cs_tally, cs_pending);
 
     // Memory based storage
