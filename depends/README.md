@@ -30,21 +30,34 @@ Common `host-platform-triplets` for cross compilation are:
 
 No other options are needed, the paths are automatically configured.
 
-Install the required dependencies: Ubuntu & Debian
---------------------------------------------------
+### Install the required dependencies: Ubuntu & Debian
 
-For macOS cross compilation:
+First, install the common dependencies:
 
-    sudo apt-get install curl librsvg2-bin libtiff-tools bsdmainutils cmake imagemagick libcap-dev libz-dev libbz2-dev python-setuptools
+    sudo apt-get install autoconf automake cmake bsdmainutils ca-certificates curl faketime g++ libtool pkg-config
 
-For Win32/Win64 cross compilation:
+#### For macOS cross compilation:
+
+    sudo apt-get install librsvg2-bin libtiff-tools imagemagick libcap-dev libz-dev libbz2-dev python-setuptools
+
+#### For Win32/Win64 cross compilation:
 
 - see [build-windows.md](../doc/build-windows.md#cross-compilation-for-ubuntu-and-windows-subsystem-for-linux)
 
-For linux (including i386, ARM) cross compilation:
+#### For linux (including i386, ARM) cross compilation:
 
-    sudo apt-get install curl g++-aarch64-linux-gnu g++-4.8-aarch64-linux-gnu gcc-4.8-aarch64-linux-gnu binutils-aarch64-linux-gnu g++-arm-linux-gnueabihf g++-4.8-arm-linux-gnueabihf gcc-4.8-arm-linux-gnueabihf binutils-arm-linux-gnueabihf g++-4.8-multilib gcc-4.8-multilib binutils-gold bsdmainutils
+Common linux dependencies:
 
+    sudo apt-get install g++-multilib binutils-gold bsdmainutils
+
+For linux ARM cross compilation:
+
+    sudo apt-get install g++-aarch64-linux-gnu binutils-aarch64-linux-gnu
+
+For linux AARCH64 cross compilation:
+
+    sudo apt-get install g++-arm-linux-gnueabihf binutils-arm-linux-gnueabihf
+    
 For linux RISC-V 64-bit cross compilation (there are no packages for 32-bit):
 
     sudo apt-get install curl g++-riscv64-linux-gnu binutils-riscv64-linux-gnu
@@ -52,7 +65,7 @@ For linux RISC-V 64-bit cross compilation (there are no packages for 32-bit):
 RISC-V known issue: gcc-7.3.0 and gcc-7.3.1 result in a broken `test_bitcoin` executable (see https://github.com/bitcoin/bitcoin/pull/13543),
 this is apparently fixed in gcc-8.1.0.
 
-Dependency Options:
+### Dependency Options
 The following can be set when running make: make FOO=bar
 
     SOURCES_PATH: downloaded sources will be placed here
@@ -70,7 +83,7 @@ The following can be set when running make: make FOO=bar
 If some packages are not built, for example `make NO_WALLET=1`, the appropriate
 options will be passed to bitcoin's configure. In this case, `--disable-wallet`.
 
-Additional targets:
+### Additional targets
 
     download: run 'make download' to fetch all sources without building them
     download-osx: run 'make download-osx' to fetch all sources needed for macOS builds
