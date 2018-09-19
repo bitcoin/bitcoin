@@ -32,35 +32,31 @@ No other options are needed, the paths are automatically configured.
 
 ### Install the required dependencies: Ubuntu & Debian
 
-First, install the common dependencies:
+#### For macOS cross compilation
 
-    sudo apt-get install autoconf automake cmake bsdmainutils ca-certificates curl faketime g++ libtool pkg-config
+    sudo apt-get install curl librsvg2-bin libtiff-tools bsdmainutils cmake imagemagick libcap-dev libz-dev libbz2-dev python-setuptools
 
-#### For macOS cross compilation:
-
-    sudo apt-get install librsvg2-bin libtiff-tools imagemagick libcap-dev libz-dev libbz2-dev python-setuptools
-
-#### For Win32/Win64 cross compilation:
+#### For Win32/Win64 cross compilation
 
 - see [build-windows.md](../doc/build-windows.md#cross-compilation-for-ubuntu-and-windows-subsystem-for-linux)
 
-#### For linux (including i386, ARM) cross compilation:
+#### For linux (including i386, ARM) cross compilation
 
 Common linux dependencies:
 
-    sudo apt-get install g++-multilib binutils-gold bsdmainutils
+    sudo apt-get install make automake cmake curl g++-multilib libtool binutils-gold bsdmainutils pkg-config python3
 
 For linux ARM cross compilation:
 
-    sudo apt-get install g++-aarch64-linux-gnu binutils-aarch64-linux-gnu
+    sudo apt-get install g++-arm-linux-gnueabihf binutils-arm-linux-gnueabihf
 
 For linux AARCH64 cross compilation:
 
-    sudo apt-get install g++-arm-linux-gnueabihf binutils-arm-linux-gnueabihf
-    
+    sudo apt-get install g++-aarch64-linux-gnu binutils-aarch64-linux-gnu
+
 For linux RISC-V 64-bit cross compilation (there are no packages for 32-bit):
 
-    sudo apt-get install curl g++-riscv64-linux-gnu binutils-riscv64-linux-gnu
+    sudo apt-get install g++-riscv64-linux-gnu binutils-riscv64-linux-gnu
 
 RISC-V known issue: gcc-7.3.0 and gcc-7.3.1 result in a broken `test_bitcoin` executable (see https://github.com/bitcoin/bitcoin/pull/13543),
 this is apparently fixed in gcc-8.1.0.
