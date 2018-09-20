@@ -339,7 +339,6 @@ public:
         finalMutableTransaction(),
         nSessionDenom(0)
         {}
-    CPrivateSendBaseSession(const CPrivateSendBaseSession& other) { /* dummy copy constructor*/ SetNull(); }
 
     int GetState() const { return nState; }
     std::string GetStateString() const;
