@@ -104,6 +104,7 @@ UniValue issue(const JSONRPCRequest& request)
             + HelpExampleCli("issue", "\"ASSET_NAME\" 1000 \"myaddress\"")
             + HelpExampleCli("issue", "\"ASSET_NAME\" 1000 \"myaddress\" \"changeaddress\" 4")
             + HelpExampleCli("issue", "\"ASSET_NAME\" 1000 \"myaddress\" \"changeaddress\" 2 true")
+            + HelpExampleCli("issue", "\"ASSET_NAME\" 1000 \"myaddress\" \"changeaddress\" 8 false true QmTqu3Lk3gmTsQVtjU7rYYM37EAW4xNmbuEAp2Mjr4AV7E")
             + HelpExampleCli("issue", "\"ASSET_NAME/SUB_ASSET\" 1000 \"myaddress\" \"changeaddress\" 2 true")
             + HelpExampleCli("issue", "\"ASSET_NAME#uniquetag\"")
         );
