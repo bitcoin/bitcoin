@@ -4,6 +4,7 @@
 
 #include <support/lockedpool.h>
 #include <support/cleanse.h>
+#include <util.h>
 
 #if defined(HAVE_CONFIG_H)
 #include <config/bitcoin-config.h>
@@ -396,9 +397,9 @@ void LockedPoolManager::CreateInstance()
     // have a static deinitialization order/problem, but the check in
     // LockedPoolManagerBase's destructor helps us detect if that ever happens.
 #ifdef WIN32
-    std::unique_ptr<LockedPageAllocator> allocator(new Win32LockedPageAllocator());
+    std::unique_ptr<LockedPageAllocator> allocator = MakeUnique<Win32LockedPageAllocator>();
 #else
-    std::unique_ptr<LockedPageAllocator> allocator(new PosixLockedPageAllocator());
+    std::unique_ptr<LockedPageAllocator> allocator = MakeUnique<PosixLockedPageAllocator>();
 #endif
     static LockedPoolManager instance(std::move(allocator));
     LockedPoolManager::_instance = &instance;
