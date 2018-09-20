@@ -177,7 +177,7 @@ class BitcoinApplication: public QApplication
     Q_OBJECT
 public:
     explicit BitcoinApplication(interfaces::Node& node, int &argc, char **argv);
-    ~BitcoinApplication();
+    ~BitcoinApplication() override;
 
 #ifdef ENABLE_WALLET
     /// Create payment server
