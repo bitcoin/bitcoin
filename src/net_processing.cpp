@@ -1046,7 +1046,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                         // chain if they are valid, and no more than a max reorg depth than the best header
                         // chain we know about.
                         send = mi->second->IsValid(BLOCK_VALID_SCRIPTS) &&
-                            StaleBlockRequestAllowed(mi->second, consensusParams) && (chainActive.Height() - mi->second->nHeight < Params().MaxReorganizationDepth());
+                            StaleBlockRequestAllowed(mi->second, consensusParams) && (chainActive.Height() - (mi->second->nHeight-1) < Params().MaxReorganizationDepth());
                         if (!send) {
                             LogPrintf("%s: ignoring request from peer=%i for old block that isn't in the main chain\n", __func__, pfrom->GetId());
                         }
