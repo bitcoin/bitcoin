@@ -11,6 +11,7 @@ libs = [
     'libbitcoin_crypto',
     'libbitcoin_server',
     'libbitcoin_util',
+    'libbitcoin_wallet_tool',
     'libbitcoin_wallet',
     'libbitcoin_zmq',
 ]
