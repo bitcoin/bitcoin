@@ -3528,8 +3528,12 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
     int nMaxReorgDepth = gArgs.GetArg("-maxreorg", Params().MaxReorganizationDepth());
     int nMinReorgPeers = gArgs.GetArg("-minreorgpeers", Params().MinReorganizationPeers());
     bool fGreaterThanMaxReorg = chainActive.Height() - nHeight >= nMaxReorgDepth;
-    if (fGreaterThanMaxReorg && g_connman && (int)g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) > nMinReorgPeers && !IsInitialBlockDownload())
-        return state.DoS(1, error("%s: forked chain older than max reorganization depth (height %d), with connections (count %d), and (initial download %s)", __func__, nHeight, g_connman ? g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) : -1, IsInitialBlockDownload() ? "true" : "false"), REJECT_MAXREORGDEPTH, "bad-fork-prior-to-maxreorgdepth");
+    if (fGreaterThanMaxReorg && g_connman) {
+        int nCurrentNodeCount = g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL);
+        bool bIsInitialBlockDownload = IsInitialBlockDownload();
+        if ((nCurrentNodeCount >= nMinReorgPeers) && !bIsInitialBlockDownload)
+            return state.DoS(1, error("%s: forked chain older than max reorganization depth (height %d), with connections (count %d), and (initial download %s)", __func__, nHeight, nCurrentNodeCount, bIsInitialBlockDownload ? "true" : "false"), REJECT_MAXREORGDEPTH, "bad-fork-prior-to-maxreorgdepth");
+    }
 
     // Check proof of work
     const Consensus::Params& consensusParams = params.GetConsensus();
