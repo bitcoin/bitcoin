@@ -230,7 +230,7 @@ public:
 };
 
 /**
- * Testnet (v5)
+ * Testnet (v6)
  */
 class CTestNetParams : public CChainParams {
 public:
@@ -269,10 +269,10 @@ public:
         pchMessageStart[1] = 0x56;
         pchMessageStart[2] = 0x4E;
         pchMessageStart[3] = 0x54;
-        nDefaultPort = 18769;
+        nDefaultPort = 18770;
         nPruneAfterHeight = 1000;
 
-        uint32_t nGenesisTime = 1536166800;  // Wednesday, September 5, 2018 11:00:00 AM GMT-06:00 DST
+        uint32_t nGenesisTime = 1537466400;  // Thursday, September 20, 2018 12:00:00 PM GMT-06:00
 
         // This is used inorder to mine the genesis block. Once found, we can use the nonce and block hash found to create a valid genesis block
 //        /////////////////////////////////////////////////////////////////
@@ -334,11 +334,11 @@ public:
 
 //        /////////////////////////////////////////////////////////////////
 
-        genesis = CreateGenesisBlock(nGenesisTime, 20563145, 0x1e00ffff, 2, 5000 * COIN);
+        genesis = CreateGenesisBlock(nGenesisTime, 15615880, 0x1e00ffff, 2, 5000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
 
         //Test MerkleRoot and GenesisBlock
-        assert(consensus.hashGenesisBlock == uint256S("0x0000006fc55e8cd1948d013b47c47ce1922ce5d89775aac15c1586812a5fff6f"));
+        assert(consensus.hashGenesisBlock == uint256S("0x000000ecfc5e6324a079542221d00e10362bdc894d56500c414060eea8a3ad5a"));
         assert(genesis.hashMerkleRoot == uint256S("28ff00a867739a352523808d301f504bc4547699398d70faf2266a8bae5f3516"));
 
         vFixedSeeds.clear();
