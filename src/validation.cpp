@@ -3527,7 +3527,7 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
     //If this is a reorg, check that it is not too deep
     int nMaxReorgDepth = gArgs.GetArg("-maxreorg", Params().MaxReorganizationDepth());
     int nMinReorgPeers = gArgs.GetArg("-minreorgpeers", Params().MinReorganizationPeers());
-    bool fGreaterThanMaxReorg = chainActive.Height() - nHeight >= nMaxReorgDepth;
+    bool fGreaterThanMaxReorg = chainActive.Height() - (nHeight - 1) >= nMaxReorgDepth;
     if (fGreaterThanMaxReorg && g_connman) {
         int nCurrentNodeCount = g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL);
         bool bIsInitialBlockDownload = IsInitialBlockDownload();
