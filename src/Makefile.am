@@ -143,7 +143,7 @@ BITCOIN_CORE_H = \
   masternodeman.h \
   masternodeconfig.h \
   mn-pos/kernel.h \
-  mn-pos/proofpointer.h \
+  mn-pos/stakepointer.h \
   mn-pos/stakeminer.h \
   mn-pos/stakevalidation.h \
   nodeconfig.h \
