@@ -98,6 +98,57 @@ class RawTransactionsTest(BitcoinTestFramework):
         # Test `createrawtransaction` invalid `replaceable`
         assert_raises_rpc_error(-3, "Expected type bool", self.nodes[0].createrawtransaction, [], {}, 0, 'foo')
 
+        for type in ["bech32", "p2sh-segwit", "legacy"]:
+            addr = self.nodes[0].getnewaddress("", type)
+            addrinfo = self.nodes[0].validateaddress(addr)
+            pubkey = addrinfo["scriptPubKey"]
+
+            self.log.info('sendrawtransaction with missing prevtx info (%s)' %(type))
+
+            # Test `signrawtransaction` invalid `prevtxs`
+            inputs  = [ {'txid' : txid, 'vout' : 3, 'sequence' : 1000}]
+            outputs = { self.nodes[0].getnewaddress() : 1 }
+            rawtx   = self.nodes[0].createrawtransaction(inputs, outputs)
+
+            prevtx = dict(txid=txid, scriptPubKey=pubkey, vout=3, amount=1)
+            succ = self.nodes[0].signrawtransaction(rawtx, [prevtx])
+            assert succ["complete"]
+            if type == "legacy":
+                del prevtx["amount"]
+                succ = self.nodes[0].signrawtransaction(rawtx, [prevtx])
+                assert succ["complete"]
+
+            if type != "legacy":
+                assert_raises_rpc_error(-3, "Missing amount", self.nodes[0].signrawtransaction, rawtx, [
+                    {
+                        "txid": txid,
+                        "scriptPubKey": pubkey,
+                        "vout": 3,
+                    }
+                ])
+
+            assert_raises_rpc_error(-3, "Missing vout", self.nodes[0].signrawtransaction, rawtx, [
+                {
+                    "txid": txid,
+                    "scriptPubKey": pubkey,
+                    "amount": 1,
+                }
+            ])
+            assert_raises_rpc_error(-3, "Missing txid", self.nodes[0].signrawtransaction, rawtx, [
+                {
+                    "scriptPubKey": pubkey,
+                    "vout": 3,
+                    "amount": 1,
+                }
+            ])
+            assert_raises_rpc_error(-3, "Missing scriptPubKey", self.nodes[0].signrawtransaction, rawtx, [
+                {
+                    "txid": txid,
+                    "vout": 3,
+                    "amount": 1
+                }
+            ])
+
         #########################################
         # sendrawtransaction with missing input #
         #########################################

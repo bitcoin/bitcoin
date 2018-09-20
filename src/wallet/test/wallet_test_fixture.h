@@ -9,6 +9,8 @@
 
 #include <wallet/wallet.h>
 
+#include <memory>
+
 /** Testing setup and teardown for wallet.
  */
 struct WalletTestingSetup: public TestingSetup {

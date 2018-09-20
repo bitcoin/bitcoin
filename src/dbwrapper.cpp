@@ -4,6 +4,7 @@
 
 #include <dbwrapper.h>
 
+#include <memory>
 #include <random.h>
 
 #include <leveldb/cache.h>

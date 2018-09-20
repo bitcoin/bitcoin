@@ -4,6 +4,7 @@
 
 #include <wallet/wallet.h>
 
+#include <memory>
 #include <set>
 #include <stdint.h>
 #include <utility>

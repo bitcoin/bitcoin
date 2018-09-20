@@ -16,6 +16,7 @@
 #include <wallet/wallet.h>
 
 #include <cstdlib>
+#include <memory>
 
 #include <openssl/x509_vfy.h>
 
