@@ -28,7 +28,6 @@ static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_2 = 70210;
 
 extern CCriticalSection cs_vecPayees;
 extern CCriticalSection cs_mapMasternodeBlocks;
-extern CCriticalSection cs_mapMasternodePayeeVotes;
 
 extern CMasternodePayments mnpayments;
 

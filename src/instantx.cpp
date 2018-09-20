@@ -777,18 +777,6 @@ bool CInstantSend::GetTxLockVote(const uint256& hash, CTxLockVote& txLockVoteRet
     return true;
 }
 
-bool CInstantSend::IsInstantSendReadyToLock(const uint256& txHash)
-{
-    if(!fEnableInstantSend || GetfLargeWorkForkFound() || GetfLargeWorkInvalidChainFound() ||
-        !sporkManager.IsSporkActive(SPORK_2_INSTANTSEND_ENABLED)) return false;
-
-    LOCK(cs_instantsend);
-    // There must be a successfully verified lock request
-    // and all outputs must be locked (i.e. have enough signatures)
-    std::map<uint256, CTxLockCandidate>::iterator it = mapTxLockCandidates.find(txHash);
-    return it != mapTxLockCandidates.end() && it->second.IsAllOutPointsReady();
-}
-
 void CInstantSend::Clear()
 {
     LOCK(cs_instantsend);

@@ -621,13 +621,11 @@ UniValue masternode_info(const JSONRPCRequest& request)
 
     CTransactionRef tx;
     uint256 hashBlock;
-    bool fromMempool = false;
 
     auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(proTxHash);
     if (!dmn) {
         tx = mempool.get(proTxHash);
         if (tx) {
-            fromMempool = true;
             if (tx->nVersion < 3 || tx->nType != TRANSACTION_PROVIDER_REGISTER)
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "TX is not a ProTx");
             CProRegTx tmpProTx;

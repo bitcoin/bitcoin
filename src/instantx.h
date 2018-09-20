@@ -36,7 +36,6 @@ static const int INSTANTSEND_LOCK_TIMEOUT_SECONDS   = 15;
 static const int INSTANTSEND_FAILED_TIMEOUT_SECONDS = 60;
 
 extern bool fEnableInstantSend;
-extern int nInstantSendDepth;
 extern int nCompleteTXLocks;
 
 /**
@@ -81,8 +80,6 @@ private:
     /// Update UI and notify external script if any
     void UpdateLockedTransaction(const CTxLockCandidate& txLockCandidate);
     bool ResolveConflicts(const CTxLockCandidate& txLockCandidate);
-
-    bool IsInstantSendReadyToLock(const uint256 &txHash);
 
 public:
     mutable CCriticalSection cs_instantsend;

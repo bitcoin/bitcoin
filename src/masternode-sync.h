@@ -7,8 +7,6 @@
 #include "chain.h"
 #include "net.h"
 
-#include <univalue.h>
-
 class CMasternodeSync;
 
 static const int MASTERNODE_SYNC_FAILED          = -1;
@@ -23,8 +21,6 @@ static const int MASTERNODE_SYNC_FINISHED        = 999;
 
 static const int MASTERNODE_SYNC_TICK_SECONDS    = 6;
 static const int MASTERNODE_SYNC_TIMEOUT_SECONDS = 30; // our blocks are 2.5 minutes so 30 seconds should be fine
-
-static const int MASTERNODE_SYNC_ENOUGH_PEERS    = 6;
 
 extern CMasternodeSync masternodeSync;
 

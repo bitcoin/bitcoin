@@ -13,12 +13,8 @@
 #include "util.h"
 
 class CSuperblock;
-class CGovernanceTrigger;
 class CGovernanceTriggerManager;
 class CSuperblockManager;
-
-static const int TRIGGER_UNKNOWN            = -1;
-static const int TRIGGER_SUPERBLOCK         = 1000;
 
 typedef std::shared_ptr<CSuperblock> CSuperblock_sptr;
 
@@ -40,7 +36,6 @@ class CGovernanceTriggerManager
 private:
     typedef std::map<uint256, CSuperblock_sptr> trigger_m_t;
     typedef trigger_m_t::iterator trigger_m_it;
-    typedef trigger_m_t::const_iterator trigger_m_cit;
 
     trigger_m_t mapTrigger;
 

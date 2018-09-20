@@ -135,7 +135,6 @@ public:
 
     /// Ask (source) node for mnb
     void AskForMN(CNode *pnode, const COutPoint& outpoint, CConnman& connman);
-    void AskForMnb(CNode *pnode, const uint256 &hash);
 
     bool PoSeBan(const COutPoint &outpoint);
     bool AllowMixing(const COutPoint &outpoint);

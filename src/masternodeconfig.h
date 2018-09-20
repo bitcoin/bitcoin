@@ -36,40 +36,20 @@ public:
             return alias;
         }
 
-        void setAlias(const std::string& alias) {
-            this->alias = alias;
-        }
-
         const std::string& getOutputIndex() const {
             return outputIndex;
-        }
-
-        void setOutputIndex(const std::string& outputIndex) {
-            this->outputIndex = outputIndex;
         }
 
         const std::string& getPrivKey() const {
             return privKey;
         }
 
-        void setPrivKey(const std::string& privKey) {
-            this->privKey = privKey;
-        }
-
         const std::string& getTxHash() const {
             return txHash;
         }
 
-        void setTxHash(const std::string& txHash) {
-            this->txHash = txHash;
-        }
-
         const std::string& getIp() const {
             return ip;
-        }
-
-        void setIp(const std::string& ip) {
-            this->ip = ip;
         }
     };
 
