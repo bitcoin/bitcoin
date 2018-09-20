@@ -12,6 +12,7 @@ class InvalidateTest(RavenTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
+        self.extra_args = [["-maxreorg=10000".format(i)] for i in range(self.num_nodes)]
 
     def setup_network(self):
         self.setup_nodes()
