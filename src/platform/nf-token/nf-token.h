@@ -13,13 +13,22 @@ namespace Platform
     class NfToken
     {
     public:
-        static const uint32_t UKNOWN_TOKEN_TYPE_ID = -1;
+        /// NF token protocol unique name/identifier, can be represented as a base32 string, 12 symbols max
+        uint64_t tokenProtocolName{UKNOWN_TOKEN_PROTOCOL};
 
-        uint32_t tokenTypeId{UKNOWN_TOKEN_TYPE_ID};  // nf-token type unique identifier
-        uint256 tokenId;                             // nf-token unique identifier, can be a sha256 hash, tokenProtocolId + tokenId must be globally unique
-        CKeyID tokenOwnerKeyId;                      // public key id of the owner of the nf-token
-        CKeyID metadataAdminKeyId;                   // public key id of th metadata operator, may be null
-        std::vector<unsigned char> metadata;         // metadata buffer
+        /// NF token unique identifier, can be a sha256 hash, tokenProtocolName + tokenId must be globally unique
+        uint256 tokenId;
+
+        /// Public key id of the owner of the nf-token
+        CKeyID tokenOwnerKeyId;
+
+        /// Public key id of th metadata operator, may be null
+        CKeyID metadataAdminKeyId;
+
+        /// Metadata buffer
+        std::vector<unsigned char> metadata;
+
+        static const uint64_t UKNOWN_TOKEN_PROTOCOL = -1;
     };
 }
 

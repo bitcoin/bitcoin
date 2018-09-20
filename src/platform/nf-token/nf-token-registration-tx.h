@@ -34,7 +34,7 @@ namespace Platform
         inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
         {
             READWRITE(m_version);
-            READWRITE(m_nfToken.tokenTypeId);
+            READWRITE(m_nfToken.tokenProtocolName);
             READWRITE(m_nfToken.tokenId);
             READWRITE(m_nfToken.tokenOwnerKeyId);
             READWRITE(m_nfToken.metadataAdminKeyId);

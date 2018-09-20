@@ -145,7 +145,7 @@ BITCOIN_CORE_H = \
   nodeconfig.h \
   platform/nf-token/nf-token-registration-tx-builder.h \
   platform/nf-token/nf-token-registration-tx.h \
-  platform/nf-token/nf-token-type.h \
+  platform/nf-token/nf-token-protocol.h \
   platform/nf-token/nf-token.h \
   platform/rpc/rpc-nf-token.h \
   platform/rpc/specialtx-rpc-utils.h \
