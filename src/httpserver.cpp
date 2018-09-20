@@ -507,7 +507,7 @@ static void httpevent_callback_fn(evutil_socket_t, short, void* data)
         delete self;
 }
 
-HTTPEvent::HTTPEvent(struct event_base* base, bool _deleteWhenTriggered, const std::function<void(void)>& _handler):
+HTTPEvent::HTTPEvent(struct event_base* base, bool _deleteWhenTriggered, const std::function<void()>& _handler):
     deleteWhenTriggered(_deleteWhenTriggered), handler(_handler)
 {
     ev = event_new(base, -1, 0, httpevent_callback_fn, this);

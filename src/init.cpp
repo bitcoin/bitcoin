@@ -994,7 +994,7 @@ void PeriodicStats()
  *  Ensure that Dash Core is running in a usable environment with all
  *  necessary library support.
  */
-static bool InitSanityCheck(void)
+static bool InitSanityCheck()
 {
     if(!ECC_InitSanityCheck()) {
         InitError("Elliptic curve cryptography sanity check failure. Aborting.");

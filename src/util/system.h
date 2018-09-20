@@ -385,7 +385,7 @@ std::string CopyrightHolders(const std::string& strPrefix, unsigned int nStartYe
  * @return The return value of sched_setschedule(), or 1 on systems without
  * sched_setchedule().
  */
-int ScheduleBatchPriority(void);
+int ScheduleBatchPriority();
 
 namespace util {
 

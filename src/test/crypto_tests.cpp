@@ -233,7 +233,7 @@ static void TestPoly1305(const std::string &hexmessage, const std::string &hexke
     BOOST_CHECK(tag == tagres);
 }
 
-static std::string LongTestString(void) {
+static std::string LongTestString() {
     std::string ret;
     for (int i=0; i<200000; i++) {
         ret += (unsigned char)(i);
