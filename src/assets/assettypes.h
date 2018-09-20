@@ -7,6 +7,7 @@
 #define RAVENCOIN_NEWASSET_H
 
 #include <string>
+#include <sstream>
 #include <list>
 #include <unordered_map>
 #include "amount.h"
@@ -30,6 +31,35 @@ enum class AssetType
 
 int IntFromAssetType(AssetType type);
 AssetType AssetTypeFromInt(int nType);
+
+const char IPFS_SHA2_256 = 0x12;
+const char IPFS_SHA2_256_LEN = 0x20;
+
+template <typename Stream, typename Operation>
+void ReadWriteIPFSHash(Stream& s, Operation ser_action, std::string& strIPFSHash)
+{
+    // assuming 34-byte IPFS SHA2-256 decoded hash (0x12, 0x20, 32 more bytes)
+    if (ser_action.ForRead())
+    {
+        strIPFSHash = "";
+        if (!s.empty() and s.size() >= 34) {
+            char _sha2_256;
+            ::Unserialize(s, _sha2_256);
+            std::basic_string<char> hash;
+            ::Unserialize(s, hash);
+            std::ostringstream os;
+            os << IPFS_SHA2_256 << IPFS_SHA2_256_LEN << hash.substr(0, 32);
+            strIPFSHash = os.str();
+        }
+    }
+    else
+    {
+        if (strIPFSHash.length() == 34) {
+            ::Serialize(s, IPFS_SHA2_256);
+            ::Serialize(s, strIPFSHash.substr(2));
+        }
+    }
+};
 
 class CNewAsset
 {
@@ -81,7 +111,9 @@ public:
         READWRITE(units);
         READWRITE(nReissuable);
         READWRITE(nHasIPFS);
-        READWRITE(strIPFSHash);
+        if (nHasIPFS == 1) {
+            ReadWriteIPFSHash(s, ser_action, strIPFSHash);
+        }
     }
 };
 
@@ -158,7 +190,7 @@ public:
         READWRITE(nAmount);
         READWRITE(nUnits);
         READWRITE(nReissuable);
-        READWRITE(strIPFSHash);
+        ReadWriteIPFSHash(s, ser_action, strIPFSHash);
     }
 
     CReissueAsset(const std::string& strAssetName, const CAmount& nAmount, const int& nUnits, const int& nReissuable, const std::string& strIPFSHash);

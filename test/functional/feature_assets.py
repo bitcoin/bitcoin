@@ -7,11 +7,8 @@
 
 """
 from test_framework.test_framework import RavenTestFramework
-from test_framework.util import (
-    assert_equal,
-    assert_is_hash_string,
-    assert_raises_rpc_error,
-)
+from test_framework.util import *
+
 
 import string
 
@@ -36,7 +33,7 @@ class AssetTest(RavenTestFramework):
 
         self.log.info("Calling issue()...")
         address0 = n0.getnewaddress()
-        ipfs_hash = "QmacSRmrkVmvJfbCpmU6pK72furJ8E8fbKHindrLxmYMQo"
+        ipfs_hash = "QmcvyefkqQX3PpjpY5L8B2yMd47XrVwAipr6cxUt2zvYU8"
         n0.issue(asset_name="MY_ASSET", qty=1000, to_address=address0, change_address="", \
                  units=4, reissuable=True, has_ipfs=True, ipfs_hash=ipfs_hash)
 
@@ -113,8 +110,9 @@ class AssetTest(RavenTestFramework):
 
         self.log.info("Calling reissue()...")
         address1 = n0.getnewaddress()
+        ipfs_hash2 = "QmcvyefkqQX3PpjpY5L8B2yMd47XrVwAipr6cxUt2zvYU8"
         n0.reissue(asset_name="MY_ASSET", qty=2000, to_address=address0, change_address=address1, \
-                   reissuable=False, new_unit=-1, new_ipfs=ipfs_hash[::-1])
+                   reissuable=False, new_unit=-1, new_ipfs=ipfs_hash2)
 
         self.log.info("Waiting for ten confirmations after reissue...")
         self.sync_all()
@@ -128,7 +126,7 @@ class AssetTest(RavenTestFramework):
         assert_equal(assetdata["units"], 4)
         assert_equal(assetdata["reissuable"], 0)
         assert_equal(assetdata["has_ipfs"], 1)
-        assert_equal(assetdata["ipfs_hash"], ipfs_hash[::-1])
+        assert_equal(assetdata["ipfs_hash"], ipfs_hash2)
 
         self.log.info("Checking listassetbalancesbyaddress()...")
         assert_equal(n0.listassetbalancesbyaddress(address0)["MY_ASSET"], 2000)
@@ -259,11 +257,80 @@ class AssetTest(RavenTestFramework):
         assert_equal(assetdata["reissuable"], 1)
         assert_equal(assetdata["has_ipfs"], 0)
 
+    def ipfs_state(self):
+        self.log.info("Checking ipfs hash state changes...")
+        n0 = self.nodes[0]
+
+        asset_name1 = "ASSET111"
+        asset_name2 = "ASSET222"
+        address1 = n0.getnewaddress()
+        address2 = n0.getnewaddress()
+        ipfs_hash = "QmcvyefkqQX3PpjpY5L8B2yMd47XrVwAipr6cxUt2zvYU8"
+        bad_hash = "RncvyefkqQX3PpjpY5L8B2yMd47XrVwAipr6cxUt2zvYU8"
+
+        ########################################
+        # bad hash (isn't a valid multihash sha2-256)
+        try:
+            n0.issue(asset_name=asset_name1, qty=1000, to_address=address1, change_address=address2, \
+                     units=0, reissuable=True, has_ipfs=True, ipfs_hash=bad_hash)
+        except JSONRPCException as e:
+            if "Invalid IPFS hash (doesn't start with 'Qm')" not in e.error['message']:
+                raise AssertionError("Expected substring not found:" + e.error['message'])
+        except Exception as e:
+            raise AssertionError("Unexpected exception raised: " + type(e).__name__)
+        else:
+            raise AssertionError("No exception raised")
+
+        ########################################
+        # no hash
+        n0.issue(asset_name=asset_name2, qty=1000, to_address=address1, change_address=address2, \
+                 units=0, reissuable=True, has_ipfs=False)
+        n0.generate(1)
+        ad = n0.getassetdata(asset_name2)
+        assert_equal(0, ad['has_ipfs'])
+        assert_does_not_contain_key('ipfs_hash', ad)
+
+        ########################################
+        # reissue w/ bad hash
+        try:
+            n0.reissue(asset_name=asset_name2, qty=2000, to_address=address1, change_address=address2, \
+                       reissuable=True, new_unit=-1, new_ipfs=bad_hash)
+        except JSONRPCException as e:
+            if "Invalid IPFS hash (doesn't start with 'Qm')" not in e.error['message']:
+                raise AssertionError("Expected substring not found:" + e.error['message'])
+        except Exception as e:
+            raise AssertionError("Unexpected exception raised: " + type(e).__name__)
+        else:
+            raise AssertionError("No exception raised")
+
+        ########################################
+        # reissue w/ hash
+        n0.reissue(asset_name=asset_name2, qty=2000, to_address=address1, change_address=address2, \
+                   reissuable=True, new_unit=-1, new_ipfs=ipfs_hash)
+        n0.generate(1)
+        ad = n0.getassetdata(asset_name2)
+        assert_equal(1, ad['has_ipfs'])
+        assert_equal(ipfs_hash, ad['ipfs_hash'])
+
+        ########################################
+        # invalidate and reconsider
+        best = n0.getbestblockhash()
+        n0.invalidateblock(n0.getbestblockhash())
+        ad = n0.getassetdata(asset_name2)
+        assert_equal(0, ad['has_ipfs'])
+        assert_does_not_contain_key('ipfs_hash', ad)
+        n0.reconsiderblock(best)
+        ad = n0.getassetdata(asset_name2)
+        assert_equal(1, ad['has_ipfs'])
+        assert_equal(ipfs_hash, ad['ipfs_hash'])
+
+
     def run_test(self):
-        self.activate_assets();
-        self.big_test();
-        self.issue_param_checks();
-        self.chain_assets();
+        self.activate_assets()
+        self.big_test()
+        self.issue_param_checks()
+        self.chain_assets()
+        self.ipfs_state()
 
 if __name__ == '__main__':
     AssetTest().main()

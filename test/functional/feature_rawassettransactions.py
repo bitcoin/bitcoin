@@ -621,6 +621,60 @@ class RawAssetTransactionsTest(RavenTestFramework):
         assert_equal(1, n0.listmyassets()[owner])
 
 
+    def bad_ipfs_hash(self):
+        self.log.info("Testing bad ipfs_hash...")
+        n0 = self.nodes[0]
+
+        asset_name = 'SOME_OTHER_ASSET_3'
+        owner = f"{asset_name}!"
+        to_address = n0.getnewaddress()
+        change_address = n0.getnewaddress()
+        unspent = n0.listunspent()[0]
+        bad_hash = "RncvyefkqQX3PpjpY5L8B2yMd47XrVwAipr6cxUt2zvYU8"
+
+        ########################################
+        # issue
+        inputs = [{k: unspent[k] for k in ['txid', 'vout']}]
+        outputs = {
+            'n1issueAssetXXXXXXXXXXXXXXXXWdnemQ': 500,
+            change_address: float(unspent['amount']) - 500.0001,
+            to_address: {
+                'issue': {
+                    'asset_name':       asset_name,
+                    'asset_quantity':   1,
+                    'units':            0,
+                    'reissuable':       1,
+                    'has_ipfs':         1,
+                    'ipfs_hash':        bad_hash,
+                }
+            }
+        }
+        assert_raises_rpc_error(-8, "Invalid parameter: ipfs_hash must start with 'Qm'.", n0.createrawtransaction, inputs, outputs)
+
+        ########################################
+        # reissue
+        n0.issue(asset_name=asset_name, qty=1000, to_address=to_address, change_address=change_address, \
+                 units=0, reissuable=True, has_ipfs=False)
+        n0.generate(1)
+        unspent_asset_owner = n0.listmyassets(owner, True)[owner]['outpoints'][0]
+        inputs = [
+            {k: unspent[k] for k in ['txid', 'vout']},
+            {k: unspent_asset_owner[k] for k in ['txid', 'vout']},
+        ]
+        outputs = {
+            'n1ReissueAssetXXXXXXXXXXXXXXWG9NLd': 100,
+            change_address: float(unspent['amount']) - 100.0001,
+            to_address: {
+                'reissue': {
+                    'asset_name':       asset_name,
+                    'asset_quantity':   1000,
+                    'ipfs_hash':        bad_hash,
+                }
+            }
+        }
+        assert_raises_rpc_error(-8, "Invalid parameter: ipfs_hash must start with 'Qm'.", n0.createrawtransaction, inputs, outputs)
+
+
     def run_test(self):
         self.activate_assets()
         self.issue_reissue_transfer_test()
@@ -628,6 +682,7 @@ class RawAssetTransactionsTest(RavenTestFramework):
         self.issue_tampering_test()
         self.reissue_tampering_test()
         self.unique_assets_via_issue_test()
+        self.bad_ipfs_hash()
 
 if __name__ == '__main__':
     RawAssetTransactionsTest().main()

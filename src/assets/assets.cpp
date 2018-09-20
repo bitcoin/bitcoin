@@ -356,6 +356,14 @@ bool CNewAsset::IsValid(std::string& strError, CAssetsCache& assetCache, bool fC
         return false;
     }
 
+    if (nHasIPFS) {
+        std::string encoded = EncodeIPFS(strIPFSHash);
+        if (encoded.substr(0,2) != "Qm") {
+            strError = "Invalid parameter: ipfs_hash must start with 'Qm'.";
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -912,6 +920,14 @@ bool CReissueAsset::IsValid(std::string &strError, CAssetsCache& assetCache) con
     if (strIPFSHash != "" && strIPFSHash.size() != 34) {
         strError = "Unable to reissue asset: new ipfs_hash must be 34 bytes.";
         return false;
+    }
+
+    if (strIPFSHash != "") {
+        std::string encoded = EncodeIPFS(strIPFSHash);
+        if (encoded.substr(0,2) != "Qm") {
+            strError = "Invalid parameter: ipfs_hash must start with 'Qm'.";
+            return false;
+        }
     }
 
     if (nAmount < 0) {
