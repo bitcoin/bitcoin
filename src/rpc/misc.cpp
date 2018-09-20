@@ -244,7 +244,7 @@ UniValue validateaddress(const JSONRPCRequest& request)
                 ret.push_back(Pair("timestamp", it->second.nCreateTime));
                 if (!it->second.hdKeypath.empty()) {
                     ret.push_back(Pair("hdkeypath", it->second.hdKeypath));
-                    ret.push_back(Pair("hdmasterkeyid", it->second.hdMasterKeyID.GetHex()));
+                    ret.push_back(Pair("hd_seed_id", it->second.hd_seed_id.GetHex()));
                 }
             }
         }
