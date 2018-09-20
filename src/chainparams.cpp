@@ -224,7 +224,7 @@ public:
         nDGWActivationBlock = 338778;
 
         nMaxReorganizationDepth = 60; // 60 at 1 minute block timespan is +/- 60 minutes.
-        nMinReorganizationPeers = 3;
+        nMinReorganizationPeers = 4;
         /** RVN End **/
     }
 };
@@ -394,7 +394,7 @@ public:
         nDGWActivationBlock = 200;
 
         nMaxReorganizationDepth = 60; // 60 at 1 minute block timespan is +/- 60 minutes.
-        nMinReorganizationPeers = 3;
+        nMinReorganizationPeers = 4;
         /** RVN End **/
 
     }
@@ -552,7 +552,7 @@ public:
         nDGWActivationBlock = 200;
 
         nMaxReorganizationDepth = 60; // 60 at 1 minute block timespan is +/- 60 minutes.
-        nMinReorganizationPeers = 3;
+        nMinReorganizationPeers = 4;
         /** RVN End **/
     }
 };
