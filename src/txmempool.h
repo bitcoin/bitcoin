@@ -348,7 +348,6 @@ enum class MemPoolRemovalReason {
     REORG,       //! Removed for reorganization
     BLOCK,       //! Removed for block
     CONFLICT,    //! Removed for conflict with in-block transaction
-    REPLACED     //! Removed for replacement
 };
 
 class SaltedTxidHasher
@@ -374,8 +373,7 @@ public:
  * example, the following new transactions will not be added to the mempool:
  * - a transaction which doesn't meet the minimum fee requirements.
  * - a new transaction that double-spends an input of a transaction already in
- * the pool where the new transaction does not meet the Replace-By-Fee
- * requirements as defined in BIP 125.
+ * the pool.
  * - a non-standard transaction.
  *
  * CTxMemPool::mapTx, and CTxMemPoolEntry bookkeeping:

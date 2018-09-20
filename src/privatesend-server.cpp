@@ -335,7 +335,7 @@ void CPrivateSendServer::CommitFinalTransaction(CConnman& connman)
         TRY_LOCK(cs_main, lockMain);
         CValidationState validationState;
         mempool.PrioritiseTransaction(hashTx, hashTx.ToString(), 1000, 0.1*COIN);
-        if(!lockMain || !AcceptToMemoryPool(mempool, validationState, finalTransaction, false, NULL, NULL, false, maxTxFee, true))
+        if(!lockMain || !AcceptToMemoryPool(mempool, validationState, finalTransaction, false, NULL, false, maxTxFee, true))
         {
             LogPrintf("CPrivateSendServer::CommitFinalTransaction -- AcceptToMemoryPool() error: Transaction not valid\n");
             SetNull();
@@ -437,7 +437,7 @@ void CPrivateSendServer::ChargeFees(CConnman& connman)
         LOCK(cs_main);
 
         CValidationState state;
-        if(!AcceptToMemoryPool(mempool, state, vecOffendersCollaterals[0], false, NULL, NULL, false, maxTxFee)) {
+        if(!AcceptToMemoryPool(mempool, state, vecOffendersCollaterals[0], false, NULL, false, maxTxFee)) {
             // should never really happen
             LogPrintf("CPrivateSendServer::ChargeFees -- ERROR: AcceptToMemoryPool failed!\n");
         } else {
@@ -469,7 +469,7 @@ void CPrivateSendServer::ChargeRandomFees(CConnman& connman)
         LogPrintf("CPrivateSendServer::ChargeRandomFees -- charging random fees, txCollateral=%s", txCollateral->ToString());
 
         CValidationState state;
-        if(!AcceptToMemoryPool(mempool, state, txCollateral, false, NULL, NULL, false, maxTxFee)) {
+        if(!AcceptToMemoryPool(mempool, state, txCollateral, false, NULL, false, maxTxFee)) {
             // should never really happen
             LogPrintf("CPrivateSendServer::ChargeRandomFees -- ERROR: AcceptToMemoryPool failed!\n");
         } else {
