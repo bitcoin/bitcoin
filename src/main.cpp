@@ -1636,7 +1636,11 @@ int64_t GetBlockValue(int nHeight, const CAmount &nFees)
     // Subsidy is cut in half every 2,100,000 blocks which will occur approximately every 4 years.
     nSubsidy >>= halvings;
 
-    if(Params().NetworkID() == CBaseChainParams::TESTNET){
+    if(Params().NetworkID() == CBaseChainParams::TESTNET)
+    {
+        if (nHeight == 1)
+            return 1000000 * COIN;
+
         if(nHeight > 20000) nSubsidy -= nSubsidy/10;
     } else {
         if(nHeight > 1265000) nSubsidy -= nSubsidy/10;
