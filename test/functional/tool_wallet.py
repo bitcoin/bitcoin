@@ -77,5 +77,26 @@ class ToolWalletTest(BitcoinTestFramework):
         ''')
         self.assert_tool_output(out, '-name=' + wallet_dir(), 'info')
 
+        out = textwrap.dedent('''\
+            Topping up keypool...
+            Wallet info
+            ===========
+            Encrypted: no
+            HD (hd seed available): yes
+            Keypool Size: 2000
+            Transactions: 0
+            Address Book: 0
+        ''')
+        self.assert_tool_output(out, '-name=' + wallet_dir('foo'), 'create')
+
+        self.start_node(0, ['-wallet=' + wallet_dir('foo')])
+        out = self.nodes[0].getwalletinfo()
+        self.stop_node(0)
+
+        assert_equal(0, out['txcount'])
+        assert_equal(1000, out['keypoolsize'])
+        assert_equal(1000, out['keypoolsize_hd_internal'])
+        assert_equal(True, 'hdseedid' in out)
+
 if __name__ == '__main__':
     ToolWalletTest().main()
