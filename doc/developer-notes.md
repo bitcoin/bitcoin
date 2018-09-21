@@ -434,6 +434,14 @@ General C++
       not linking the other is confusing. Please avoid that. Moving functions from
       the `.h` to the `.cpp` should not result in build errors
 
+- Intentionally unused parameters should be unnamed.
+  Other intentionally unused entities should be marked with the `MAYBE_UNUSED` annotation.
+  This will suppress unused entities warnings for intentionally unused entities.
+  `MAYBE_UNUSED` is a project local equivalent to `[[maybe_unused]` (C++17).
+
+  - *Rationale*: Adding suppression annotations for intentionally unused entities allows
+    us to enable warnings for the unintentional cases. These are the ones we want to fix.
+
 - Use the RAII (Resource Acquisition Is Initialization) paradigm where possible. For example by using
   `unique_ptr` for allocations in a function.
 
