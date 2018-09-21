@@ -13,6 +13,7 @@
 #include "uint256.h"
 
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
@@ -48,7 +49,7 @@ public:
             if (readWriteAuxPow)
             {
                 if (ser_action.ForRead())
-                    auxpow.reset (new CAuxPow());
+                    auxpow = boost::make_shared<CAuxPow>();
                 assert(auxpow);
                 READWRITE(*auxpow);
             }

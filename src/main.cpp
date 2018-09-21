@@ -173,7 +173,7 @@ namespace {
     std::map<uint256, CAuxPow> mapAuxPow;
 
     /** Indicator to start/stop headers sync **/
-    bool headerSyncStopped = false;
+    bool g_headerSyncStopped = false;
 } // anon namespace
 
 //////////////////////////////////////////////////////////////////////////////
@@ -4946,9 +4946,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                     std::string strError = "invalid header received " + header.GetHash().ToString();
                     return error(strError.c_str());
                 }
-            } else {
-                // If block header is accepted successfully keep auxpow to use for blocks
-                mapAuxPow.insert(std::pair<uint256, CAuxPow>(header.GetHash(), *(header.auxpow)));
+            }
+            else
+            {
+                if (header.nVersion.IsAuxpow())
+                {
+                    // If block header is accepted successfully keep auxpow to use for blocks
+                    mapAuxPow.insert(std::pair<uint256, CAuxPow>(header.GetHash(), *(header.auxpow)));
+                }
             }
         }
 
@@ -4956,7 +4961,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             UpdateBlockAvailability(pfrom->GetId(), pindexLast->GetBlockHash());
 
         // Don't let headers sync to go further more than 50.000 blocks
-        if (pindexBestHeader->nHeight - chainActive.Tip()->nHeight < 50000)
+        if (pindexBestHeader->nHeight - chainActive.Tip()->nHeight < MAX_HEADERS_IN_MEMORY)
         {
             if (nCount == MAX_HEADERS_RESULTS && pindexLast && hasNewHeaders) {
                 // Headers message had its maximum size; the peer may have more headers.
@@ -4968,7 +4973,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         }
         else
         {
-            headerSyncStopped = true;
+            g_headerSyncStopped = true;
         }
 
         CheckBlockIndex();
@@ -5501,10 +5506,11 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
             }
         }
 
-        // Restart headers sync if synced blocks coint is almost equal to headers
-        if (headerSyncStopped && (pindexBestHeader->nHeight - chainActive.Tip()->nHeight < 5000))
+        // Restart headers sync if synced blocks coint is 10% behinde from headers
+        const int restartLimit = (MAX_HEADERS_IN_MEMORY * 10) / 100;
+        if (g_headerSyncStopped && (pindexBestHeader->nHeight - chainActive.Tip()->nHeight < restartLimit))
         {
-            headerSyncStopped = false;
+            g_headerSyncStopped = false;
             pto->PushMessage("getheaders", chainActive.GetLocator(pindexBestHeader), uint256());
         }
 
