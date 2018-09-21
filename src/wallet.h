@@ -327,6 +327,7 @@ public:
     bool CreateCollateralTransaction(CMutableTransaction& txCollateral, std::string& strReason);
     bool GetMyMasternodes(std::vector<CMasternode*>& vActiveMasternodes);
     bool CreateCoinStake(const int nHeight, const uint32_t& nBits, const uint32_t& nTime, CMutableTransaction& txCoinStake, uint32_t& nTxNewTime);
+    bool GetRecentStakePointer(StakePointer& stakePointer);
     bool ConvertList(std::vector<CTxIn> vCoins, std::vector<int64_t>& vecAmounts);
 
     static CFeeRate minTxFee;

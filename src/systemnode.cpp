@@ -323,7 +323,7 @@ int64_t CSystemnode::SecondsSincePayment() const
     return month + UintToArith256(hash).GetCompact(false);
 }
 
-int64_t CSystemnode::GetLastPaid() const
+int64_t CSystemnode::GetLastPaid(const CBlockIndex *BlockReading) const
 {
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(pindexPrev == NULL) return false;
@@ -341,7 +341,7 @@ int64_t CSystemnode::GetLastPaid() const
 
     if (chainActive.Tip() == NULL) return false;
 
-    const CBlockIndex *BlockReading = chainActive.Tip();
+    BlockReading = chainActive.Tip();
 
     int nMnCount = snodeman.CountEnabled()*1.25;
     int n = 0;

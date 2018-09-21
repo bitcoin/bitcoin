@@ -1892,6 +1892,80 @@ bool CWallet::CreateCoinStake(const int nHeight, const uint32_t& nBits, const ui
     return false;
 }
 
+bool CWallet::GetRecentStakePointer(StakePointer& stakePointer)
+{
+    if (fMasterNode && activeMasternode.status == ACTIVE_MASTERNODE_STARTED) {
+
+        // find pointer to active CMasternode object
+        CMasternode* pactiveMN = mnodeman.Find(activeMasternode.vin);
+        if (!pactiveMN) {
+            LogPrintf("GetRecentStakePointer -- Couldn't find CMasternode object for active masternode\n");
+            return false;
+        }
+
+        // get block index of last mn payment
+        CBlockIndex* pblockLastPaid;
+        if (!pactiveMN->GetLastPaid(pblockLastPaid) || !pblockLastPaid) {
+            LogPrintf("GetRecentStakePointer -- Couldn't find last paid block\n");
+            return false;
+        }
+
+        CBlock blockLastPaid;
+        if (!ReadBlockFromDisk(blockLastPaid, pblockLastPaid)) {
+            LogPrintf("GetRecentStakePointer -- Failed reading block from disk\n");
+            return false;
+        }
+
+        CScript scriptMNPubKey;
+        scriptMNPubKey = GetScriptForDestination(pactiveMN->pubkey.GetID());
+        for (CTransaction& tx : blockLastPaid.vtx) {
+            if (tx.IsCoinBase() && tx.vout[1].scriptPubKey == scriptMNPubKey) {
+                stakePointer.hashBlock = pblockLastPaid->GetBlockHash();
+                stakePointer.txid = tx.GetHash();
+                stakePointer.nPos = 1;
+                stakePointer.hashPubKey = pactiveMN->pubkey.GetID();
+                return true;
+            }
+        }
+        LogPrintf("GetRecentStakePointer -- Couldn't find Masternode payment tx in block\n");
+
+    } else if (fSystemNode && activeSystemnode.status == ACTIVE_SYSTEMNODE_STARTED) {
+
+        CSystemnode* pactiveSN = snodeman.Find(activeSystemnode.vin);
+        if (!pactiveSN) {
+            LogPrintf("GetRecentStakePointer -- Couldn't find CSystemnode object for active systemnode\n");
+            return false;
+        }
+
+        CBlockIndex* pblockLastPaid;
+        if (!pactiveSN->GetLastPaid(pblockLastPaid) || !pblockLastPaid) {
+            LogPrintf("GetRecentStakePointer -- Couldn't find last paid block\n");
+            return false;
+        }
+
+        CBlock blockLastPaid;
+        if (!ReadBlockFromDisk(blockLastPaid, pblockLastPaid)) {
+            LogPrintf("GetRecentStakePointer -- Failed reading block from disk\n");
+            return false;
+        }
+
+        CScript scriptSNPubKey;
+        scriptSNPubKey = GetScriptForDestination(pactiveSN->pubkey.GetID());
+        for (CTransaction& tx : blockLastPaid.vtx) {
+            if (tx.IsCoinBase() && tx.vout[2].scriptPubKey == scriptSNPubKey) {
+                stakePointer.hashBlock = pblockLastPaid->GetBlockHash();
+                stakePointer.txid = tx.GetHash();
+                stakePointer.nPos = 2;
+                stakePointer.hashPubKey = pactiveSN->pubkey.GetID();
+                return true;
+            }
+        }
+        LogPrintf("GetRecentStakePointer -- Couldn't find Systemnode payment tx in block\n");
+    }
+
+    return false;
+}
+
 CAmount CWallet::GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarget, const CTxMemPool& pool)
 {
     // payTxFee is user-set "I want to pay this much"

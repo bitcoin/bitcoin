@@ -384,7 +384,35 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
 
         // Sign Block
         if (fProofOfStake) {
-            //todo - Add Stake Pointer and then sign block CPSC-27
+            StakePointer stakePointer;
+            if (!pwallet->GetRecentStakePointer(stakePointer)) {
+                LogPrintf("CreateNewBlock() : Failed to find stake pointer\n");
+                return NULL;
+            }
+            pblock->stakePointer = stakePointer;
+
+            CTxIn txInCollateralAddress;
+            CPubKey pubKeyCollateralAddress;
+            CKey keyCollateralAddress;
+            std::vector<unsigned char> vchSig;
+
+            if (fMasterNode && pwallet->GetMasternodeVinAndKeys(txInCollateralAddress, pubKeyCollateralAddress,
+                                                                keyCollateralAddress)) {
+                if (!keyCollateralAddress.Sign(pblock->GetHash(), vchSig)) {
+                    LogPrintf("CreateNewBlock() : Failed to sign block as masternode\n");
+                    return NULL;
+                }
+            } else if (fSystemNode && pwallet->GetSystemnodeVinAndKeys(txInCollateralAddress, pubKeyCollateralAddress,
+                                                                       keyCollateralAddress)) {
+                if (!keyCollateralAddress.Sign(pblock->GetHash(), vchSig)) {
+                    LogPrintf("CreateNewBlock() : Failed to sign block as systemnode\n");
+                    return NULL;
+                }
+            } else {
+                LogPrintf("CreateNewBlock() : Failed to obtain key for block signature\n");
+                return NULL;
+            }
+            pblock->vchBlockSig = vchSig;
         }
 
         CValidationState state;

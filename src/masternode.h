@@ -264,7 +264,7 @@ public:
         return strStatus;
     }
 
-    int64_t GetLastPaid() const;
+    int64_t GetLastPaid(const CBlockIndex *BlockReading = nullptr) const;
 };
 
 //
