@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
   ccache \
   bsdmainutils \
   python3-pip python3-dev \
+  cmake \
   && rm -rf /var/lib/apt/lists
 
 # Python stuff
