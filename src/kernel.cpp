@@ -30,11 +30,6 @@ unsigned int nProtocolV05TestSwitchTime = 1447700000;
 const unsigned int nProtocolV06SwitchTime     = 1513050000; // Tue 12 Dec 03:40:00 UTC 2017
 const unsigned int nProtocolV06TestSwitchTime = 1508198400; // Tue 17 Oct 00:00:00 UTC 2017
 
-
-// Modifier interval: time to elapse before new modifier is computed
-// Set to 6-hour for production network and 20-minute for test network
-unsigned int nModifierInterval = MODIFIER_INTERVAL;
-
 // Hard checkpoints of stake modifiers to ensure they are deterministic
 static std::map<int, unsigned int> mapStakeModifierCheckpoints =
     boost::assign::map_list_of
@@ -100,7 +95,7 @@ static bool GetLastStakeModifier(const CBlockIndex* pindex, uint64_t& nStakeModi
 static int64_t GetStakeModifierSelectionIntervalSection(int nSection)
 {
     assert (nSection >= 0 && nSection < 64);
-    return (nModifierInterval * 63 / (63 + ((63 - nSection) * (MODIFIER_INTERVAL_RATIO - 1))));
+    return (Params().GetConsensus().nModifierInterval * 63 / (63 + ((63 - nSection) * (MODIFIER_INTERVAL_RATIO - 1))));
 }
 
 // Get stake modifier selection interval (in seconds)
@@ -176,6 +171,7 @@ static bool SelectBlockFromCandidates(
 // blocks.
 bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t &nStakeModifier, bool& fGeneratedStakeModifier)
 {
+    const Consensus::Params& params = Params().GetConsensus();
     const CBlockIndex* pindexPrev = pindexCurrent->pprev;
     nStakeModifier = 0;
     fGeneratedStakeModifier = false;
@@ -191,13 +187,13 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t &nStake
         return error("ComputeNextStakeModifier: unable to get last modifier");
     if (gArgs.GetBoolArg("-debug", false))
         LogPrintf("ComputeNextStakeModifier: prev modifier=0x%016x time=%s epoch=%u\n", nStakeModifier, DateTimeStrFormat(nModifierTime), (unsigned int)nModifierTime);
-    if (nModifierTime / nModifierInterval >= pindexPrev->GetBlockTime() / nModifierInterval)
+    if (nModifierTime / params.nModifierInterval >= pindexPrev->GetBlockTime() / params.nModifierInterval)
     {
         if (gArgs.GetBoolArg("-debug", false))
             LogPrintf("ComputeNextStakeModifier: no new interval keep current modifier: pindexPrev nHeight=%d nTime=%u\n", pindexPrev->nHeight, (unsigned int)pindexPrev->GetBlockTime());
         return true;
     }
-    if (nModifierTime / nModifierInterval >= pindexCurrent->GetBlockTime() / nModifierInterval)
+    if (nModifierTime / params.nModifierInterval >= pindexCurrent->GetBlockTime() / params.nModifierInterval)
     {
         // v0.4+ requires current block timestamp also be in a different modifier interval
         if (IsProtocolV04(pindexCurrent->nTime))
@@ -215,9 +211,9 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t &nStake
 
     // Sort candidate blocks by timestamp
     vector<pair<int64_t, uint256> > vSortedByTimestamp;
-    vSortedByTimestamp.reserve(64 * nModifierInterval / Params().GetConsensus().nStakeTargetSpacing);
+    vSortedByTimestamp.reserve(64 * params.nModifierInterval / params.nStakeTargetSpacing);
     int64_t nSelectionInterval = GetStakeModifierSelectionInterval();
-    int64_t nSelectionIntervalStart = (pindexPrev->GetBlockTime() / nModifierInterval) * nModifierInterval - nSelectionInterval;
+    int64_t nSelectionIntervalStart = (pindexPrev->GetBlockTime() / params.nModifierInterval) * params.nModifierInterval - nSelectionInterval;
     const CBlockIndex* pindex = pindexPrev;
     while (pindex && pindex->GetBlockTime() >= nSelectionIntervalStart)
     {

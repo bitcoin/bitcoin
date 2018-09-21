@@ -91,7 +91,7 @@ public:
         consensus.nPowTargetSpacing = consensus.nStakeTargetSpacing;
         consensus.nStakeMinAge = 60 * 60 * 24 * 30; // minimum age for coin age
         consensus.nStakeMaxAge = 60 * 60 * 24 * 90;
-        consensus.nModifierInterval = 6 * 60 * 60;
+        consensus.nModifierInterval = 6 * 60 * 60; // Modifier interval: time to elapse before new modifier is computed
         consensus.nCoinbaseMaturity = 500;
 
         consensus.fPowAllowMinDifficultyBlocks = false;
@@ -206,7 +206,7 @@ public:
         consensus.nPowTargetSpacing = consensus.nStakeTargetSpacing;
         consensus.nStakeMinAge = 60 * 60 * 24; // test net min age is 1 day
         consensus.nStakeMaxAge = 60 * 60 * 24 * 90;
-        consensus.nModifierInterval = 60 * 20; // test net modifier interval is 20 minutes
+        consensus.nModifierInterval = 60 * 20; // Modifier interval: time to elapse before new modifier is computed
         consensus.nCoinbaseMaturity = 60;
 
         consensus.fPowAllowMinDifficultyBlocks = true;
@@ -228,7 +228,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1493596800; // May 1st 2017
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000002830dab7f76dbb7d63");
+        consensus.nMinimumChainWork = uint256S("0x00");
 
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x0000000002e9e7b00e1f6dc5123a04aad68dd0f0968d8c7aa45f6640795c37b1"); //1135275
