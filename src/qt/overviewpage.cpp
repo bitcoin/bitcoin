@@ -328,8 +328,12 @@ void OverviewPage::displayAssetInfo()
         case THRESHOLD_DEFINED:
             if (currentTime < startTime)
                 status = tr("Waiting until ") + date;
-            else
-                status = tr("Waiting");
+            else {
+                auto cycleWidth = Params().GetConsensus().nMinerConfirmationWindow;
+                QString currentCount;
+                currentCount.sprintf("%d of %d blocks", chainActive.Height() % cycleWidth, cycleWidth);
+                status = tr("Waiting - ") +  currentCount;
+            }
             break;
         case THRESHOLD_STARTED:
             status = tr("Voting Started");
