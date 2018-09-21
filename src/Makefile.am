@@ -88,7 +88,7 @@ endif
 if BUILD_BITCOIN_UTILS
   bin_PROGRAMS += bitcoin-cli bitcoin-tx
 if ENABLE_WALLET
-  bin_PROGRAMS += bitcoin-wallet-tool
+  bin_PROGRAMS += bitcoin-wallet
 endif
 endif
 
@@ -522,16 +522,16 @@ bitcoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 #
 
 # bitcoin-wallet-tool binary #
-bitcoin_wallet_tool_SOURCES = bitcoin-wallet-tool.cpp
-bitcoin_wallet_tool_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-bitcoin_wallet_tool_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-bitcoin_wallet_tool_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+bitcoin_wallet_SOURCES = bitcoin-wallet.cpp
+bitcoin_wallet_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+bitcoin_wallet_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+bitcoin_wallet_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-bitcoin_wallet_tool_SOURCES += bitcoin-wallet-tool-res.rc
+bitcoin_wallet_SOURCES += bitcoin-wallet-res.rc
 endif
 
-bitcoin_wallet_tool_LDADD = \
+bitcoin_wallet_LDADD = \
   $(LIBBITCOIN_WALLET_TOOL) \
   $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_SERVER) \
@@ -539,14 +539,12 @@ bitcoin_wallet_tool_LDADD = \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO) \
-  $(LIBUNIVALUE) \
-  $(LIBBITCOIN_ZMQ) \
   $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-bitcoin_wallet_tool_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS)
+bitcoin_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS)
 #
 
 # bitcoinconsensus library #

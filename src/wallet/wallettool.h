@@ -13,7 +13,7 @@ namespace WalletTool {
 std::shared_ptr<CWallet> CreateWallet(const std::string& name, const fs::path& path);
 std::shared_ptr<CWallet> LoadWallet(const std::string& name, const fs::path& path);
 void WalletShowInfo(CWallet* wallet_instance);
-bool executeWalletToolFunc(const std::string& method, const std::string& file);
+bool ExecuteWalletToolFunc(const std::string& command, const std::string& file);
 
 } // namespace WalletTool
 

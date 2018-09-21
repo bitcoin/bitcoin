@@ -44,7 +44,7 @@ static bool WalletAppInit(int argc, char* argv[])
     if (argc < 2 || HelpRequested(gArgs)) {
         std::string usage = strprintf(_("%s wallet-tool version"), PACKAGE_NAME) + " " + FormatFullVersion() + "\n\n" +
                                       _("Usage:") + "\n" +
-                                     "  bitcoin-wallet-tool [options] <command>\n\n" +
+                                     "  bitcoin-wallet [options] <command>\n\n" +
                                      gArgs.GetHelpMessage();
 
         fprintf(stdout, "%s", usage.c_str());
@@ -96,7 +96,7 @@ int main(int argc, char* argv[])
 
     ECCVerifyHandle globalVerifyHandle;
     ECC_Start();
-    if (!WalletTool::executeWalletToolFunc(method, name))
+    if (!WalletTool::ExecuteWalletToolFunc(method, name))
         return EXIT_FAILURE;
     ECC_Stop();
     return EXIT_SUCCESS;

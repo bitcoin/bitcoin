@@ -11,7 +11,7 @@
 namespace WalletTool {
 
 // The standard wallet deleter function blocks on the validation interface
-// queue, which doesn't exist for the bitcoin-wallet-tool. Define our own
+// queue, which doesn't exist for the bitcoin-wallet. Define our own
 // deleter here.
 static void WalletToolReleaseWallet(CWallet* wallet)
 {
@@ -54,7 +54,14 @@ static std::shared_ptr<CWallet> LoadWallet(const std::string& name, const fs::pa
 
     std::shared_ptr<CWallet> wallet_instance(new CWallet(name, WalletDatabase::Create(path)), WalletToolReleaseWallet);
     bool first_run;
-    DBErrors load_wallet_ret = wallet_instance->LoadWallet(first_run);
+    DBErrors load_wallet_ret;
+    try {
+        load_wallet_ret = wallet_instance->LoadWallet(first_run);
+    } catch (const std::runtime_error) {
+        fprintf(stderr, "Error loading %s. Is wallet being used by other process?\n", name.c_str());
+        return nullptr;
+    }
+
     if (load_wallet_ret != DBErrors::LOAD_OK) {
         wallet_instance = nullptr;
         if (load_wallet_ret == DBErrors::CORRUPT) {
@@ -93,22 +100,22 @@ static void WalletShowInfo(CWallet* wallet_instance)
     fprintf(stdout, "Address Book: %zu\n", wallet_instance->mapAddressBook.size());
 }
 
-bool executeWalletToolFunc(const std::string& method, const std::string& name)
+bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
 {
     fs::path path = fs::absolute(name, GetWalletDir());
 
-    if (method == "create") {
+    if (command == "create") {
         std::shared_ptr<CWallet> wallet_instance = CreateWallet(name, path);
         if (wallet_instance) {
             WalletShowInfo(wallet_instance.get());
             wallet_instance->Flush();
         }
-    } else if (method == "info") {
+    } else if (command == "info") {
         std::shared_ptr<CWallet> wallet_instance = LoadWallet(name, path);
         if (!wallet_instance) return false;
         WalletShowInfo(wallet_instance.get());
         wallet_instance->Flush();
-    } else if (method == "salvage") {
+    } else if (command == "salvage") {
         // Recover readable keypairs:
         std::string error;
         if (!WalletBatch::VerifyEnvironment(path, error)) {
@@ -124,11 +131,11 @@ bool executeWalletToolFunc(const std::string& method, const std::string& name)
         }
         //TODO, set wallets best block to genesis to enforce a rescan
         fprintf(stdout, "Salvage successful. Please rescan your wallet.\n");
-    } else if (method == "zaptxs") {
+    } else if (command == "zaptxs") {
         // needed to restore wallet transaction meta data after -zapwallettxes
         std::vector<CWalletTx> vWtx;
 
-        std::unique_ptr<CWallet> tempWallet = MakeUnique<CWallet>(name, WalletDatabase::Create(path));
+        std::shared_ptr<CWallet> tempWallet = MakeUnique<CWallet>(name, WalletDatabase::Create(path));
         DBErrors nZapWalletRet = tempWallet->ZapWalletTx(vWtx);
         if (nZapWalletRet != DBErrors::LOAD_OK) {
             fprintf(stderr, "Error loading %s: Wallet corrupted", name.c_str());
@@ -136,7 +143,7 @@ bool executeWalletToolFunc(const std::string& method, const std::string& name)
         }
         fprintf(stdout, "Zaptxs successful executed. Please rescan your wallet.\n");
     } else {
-        fprintf(stderr, "Unknown command\n");
+        fprintf(stderr, "Invalid command: %s\n", command.c_str());
         return false;
     }
 
