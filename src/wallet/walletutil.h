@@ -6,8 +6,11 @@
 #define BITCOIN_WALLET_WALLETUTIL_H
 
 #include <chainparamsbase.h>
+#include <fs.h>
 #include <util.h>
 #include <wallet/wallet.h>
+
+#include <vector>
 
 //! Get the path of the wallet directory.
 fs::path GetWalletDir();
@@ -47,5 +50,8 @@ public:
     void ReturnAll();
 
 };
+
+//! Get wallets in wallet directory.
+std::vector<fs::path> ListWalletDir();
 
 #endif // BITCOIN_WALLET_WALLETUTIL_H
