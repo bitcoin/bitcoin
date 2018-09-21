@@ -23,6 +23,7 @@ protected:
     void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override;
     void SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock) override;
     void NotifyMasternodeListChanged(const CDeterministicMNList& newList) override;
+    void NotifyChainLock(const CBlockIndex* pindex);
 
 private:
     CConnman& connman;

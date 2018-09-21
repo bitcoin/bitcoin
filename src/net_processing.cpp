@@ -50,6 +50,7 @@
 #include "llmq/quorums_debug.h"
 #include "llmq/quorums_dkgsessionmgr.h"
 #include "llmq/quorums_init.h"
+#include "llmq/quorums_instantsend.h"
 #include "llmq/quorums_signing.h"
 #include "llmq/quorums_signing_shares.h"
 
@@ -976,6 +977,8 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         return llmq::quorumSigningManager->AlreadyHave(inv);
     case MSG_CLSIG:
         return llmq::chainLocksHandler->AlreadyHave(inv);
+    case MSG_IXLOCK:
+        return llmq::quorumInstantSendManager->AlreadyHave(inv);
     }
 
     // Don't know what it is, just say we already got one
@@ -1292,6 +1295,14 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     llmq::CChainLockSig o;
                     if (llmq::chainLocksHandler->GetChainLockByHash(inv.hash, o)) {
                         connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::CLSIG, o));
+                        push = true;
+                    }
+                }
+
+                if (!push && (inv.type == MSG_IXLOCK)) {
+                    llmq::CInstantXLock o;
+                    if (llmq::quorumInstantSendManager->GetInstantXLockByHash(inv.hash, o)) {
+                        connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::IXLOCK, o));
                         push = true;
                     }
                 }
@@ -1775,6 +1786,9 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                                 doubleRequestDelay = 5 * 1000000;
                                 break;
                             case MSG_CLSIG:
+                                doubleRequestDelay = 5 * 1000000;
+                                break;
+                            case MSG_IXLOCK:
                                 doubleRequestDelay = 5 * 1000000;
                                 break;
                         }
@@ -2943,6 +2957,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             llmq::quorumSigSharesManager->ProcessMessage(pfrom, strCommand, vRecv, connman);
             llmq::quorumSigningManager->ProcessMessage(pfrom, strCommand, vRecv, connman);
             llmq::chainLocksHandler->ProcessMessage(pfrom, strCommand, vRecv, connman);
+            llmq::quorumInstantSendManager->ProcessMessage(pfrom, strCommand, vRecv, connman);
         }
         else
         {

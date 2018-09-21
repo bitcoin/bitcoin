@@ -18,6 +18,7 @@
 
 #include "llmq/quorums.h"
 #include "llmq/quorums_chainlocks.h"
+#include "llmq/quorums_instantsend.h"
 #include "llmq/quorums_dkgsessionmgr.h"
 
 void CDSNotificationInterface::InitializeCurrentBlockTip()
@@ -72,6 +73,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
 
 void CDSNotificationInterface::SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock)
 {
+    llmq::quorumInstantSendManager->SyncTransaction(tx, pindex, posInBlock);
     instantsend.SyncTransaction(tx, pindex, posInBlock);
     CPrivateSend::SyncTransaction(tx, pindex, posInBlock);
 }
@@ -81,4 +83,9 @@ void CDSNotificationInterface::NotifyMasternodeListChanged(const CDeterministicM
     governance.CheckMasternodeOrphanObjects(connman);
     governance.CheckMasternodeOrphanVotes(connman);
     governance.UpdateCachesAndClean();
+}
+
+void CDSNotificationInterface::NotifyChainLock(const CBlockIndex* pindex)
+{
+    llmq::quorumInstantSendManager->NotifyChainLock(pindex);
 }

@@ -10,6 +10,7 @@
 #include "quorums_chainlocks.h"
 #include "quorums_debug.h"
 #include "quorums_dkgsessionmgr.h"
+#include "quorums_instantsend.h"
 #include "quorums_signing.h"
 #include "quorums_signing_shares.h"
 
@@ -29,10 +30,13 @@ void InitLLMQSystem(CEvoDB& evoDb, CScheduler* scheduler, bool unitTests)
     quorumSigSharesManager = new CSigSharesManager();
     quorumSigningManager = new CSigningManager(unitTests);
     chainLocksHandler = new CChainLocksHandler(scheduler);
+    quorumInstantSendManager = new CInstantSendManager(scheduler);
 }
 
 void DestroyLLMQSystem()
 {
+    delete quorumInstantSendManager;
+    quorumInstantSendManager = nullptr;
     delete chainLocksHandler;
     chainLocksHandler = nullptr;
     delete quorumSigningManager;
@@ -64,10 +68,16 @@ void StartLLMQSystem()
     if (chainLocksHandler) {
         chainLocksHandler->RegisterAsRecoveredSigsListener();
     }
+    if (quorumInstantSendManager) {
+        quorumInstantSendManager->RegisterAsRecoveredSigsListener();
+    }
 }
 
 void StopLLMQSystem()
 {
+    if (quorumInstantSendManager) {
+        quorumInstantSendManager->UnregisterAsRecoveredSigsListener();
+    }
     if (chainLocksHandler) {
         chainLocksHandler->UnregisterAsRecoveredSigsListener();
     }
