@@ -4978,11 +4978,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     {
         CBlock block;
         // Auxpow should be received with headers so no need to get it with blocks
-        block.readWriteAuxPow = false;
+        if (pfrom->nVersion > AUXPOW_SEND_VERSION)
+        {
+            block.readWriteAuxPow = false;
+        }
         vRecv >> block;
 
         bool processBlock = true;
-        if (block.nVersion.IsAuxpow())
+        if (block.nVersion.IsAuxpow() && pfrom->nVersion > AUXPOW_SEND_VERSION)
         {
             std::map<uint256, CAuxPow>::iterator auxIt = mapAuxPow.find(block.GetHash());
             if (auxIt != mapAuxPow.end())
