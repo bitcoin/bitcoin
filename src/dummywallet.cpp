@@ -39,6 +39,16 @@ std::vector<std::shared_ptr<CWallet>> GetWallets()
     throw std::logic_error("Wallet function called in non-wallet build.");
 }
 
+std::shared_ptr<CWallet> CreateWallet(const std::string& /* wallet_file */, uint64_t /* wallet_creation_flags */, std::string& error, std::string& /* warning */)
+{
+    throw std::logic_error("Wallet function called in non-wallet build.");
+}
+
+std::shared_ptr<CWallet> LoadWallet(const std::string& /* wallet_file */, std::string& /* error */, std::string& /* warning */)
+{
+    throw std::logic_error("Wallet function called in non-wallet build.");
+}
+
 namespace interfaces {
 
 class Wallet;

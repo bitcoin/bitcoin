@@ -332,14 +332,14 @@ void BitcoinGUI::createActions()
     openAction = new QAction(platformStyle->TextColorIcon(":/icons/open"), tr("Open &URI..."), this);
     openAction->setStatusTip(tr("Open a bitcoin: URI or payment request"));
 
-    m_new_wallet_action = new QAction(platformStyle->TextColorIcon(":/icons/open"), tr("New &Wallet..."), this);
+    m_new_wallet_action = new QAction(platformStyle->TextColorIcon(":/icons/open"), tr("New &Wallet"), this);
     m_new_wallet_action->setStatusTip(tr("Create a wallet"));
 
-    m_open_wallet_action = new QAction(platformStyle->TextColorIcon(":/icons/open"), tr("Open &Wallet..."), this);
+    m_open_wallet_action = new QAction(platformStyle->TextColorIcon(":/icons/open"), tr("Open &Wallet"), this);
     m_open_wallet_action->setStatusTip(tr("Open a wallet"));
 
-    m_close_wallet_action = new QAction(platformStyle->TextColorIcon(":/icons/open"), tr("Close Wallet..."), this);
-    m_close_wallet_action->setStatusTip(tr("Close wallet..."));
+    m_close_wallet_action = new QAction(platformStyle->TextColorIcon(":/icons/open"), tr("Close Wallet"), this);
+    m_close_wallet_action->setStatusTip(tr("Close wallet"));
 
     showHelpMessageAction = new QAction(platformStyle->TextColorIcon(":/icons/info"), tr("&Command-line options"), this);
     showHelpMessageAction->setMenuRole(QAction::NoRole);
@@ -393,6 +393,7 @@ void BitcoinGUI::createMenuBar()
         file->addAction(m_new_wallet_action);
         file->addAction(m_open_wallet_action);
         file->addAction(m_close_wallet_action);
+        file->addSeparator();
         file->addAction(openAction);
         file->addAction(backupWalletAction);
         file->addAction(signMessageAction);
@@ -713,7 +714,7 @@ void BitcoinGUI::openClicked()
 
 void BitcoinGUI::newWallet()
 {
-    QString file_name = QFileDialog::getSaveFileName(this, tr("New Wallet"));
+    QString file_name = QFileDialog::getSaveFileName(this, tr("New Wallet"), QString::fromStdString(m_node.getWalletDir()));
     if (file_name.isEmpty()) return;
 
     std::string error, warning;
@@ -728,7 +729,7 @@ void BitcoinGUI::newWallet()
 
 void BitcoinGUI::openWallet()
 {
-    QString file_name = QFileDialog::getExistingDirectory(this, tr("Open Wallet"), QString(), QFileDialog::DontResolveSymlinks);
+    QString file_name = QFileDialog::getOpenFileName(this, tr("Open Wallet"), QString::fromStdString(m_node.getWalletDir()), QString(), nullptr, QFileDialog::DontResolveSymlinks);
     if (file_name.isEmpty()) return;
 
     std::string error, warning;
