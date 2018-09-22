@@ -18,11 +18,12 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
     Also check that the old hd_master is inactive
     """
     with open(file_name, encoding='utf8') as inputfile:
-        found_addr = 0
+        found_legacy_addr = 0
+        found_p2sh_segwit_addr = 0
+        found_bech32_addr = 0
         found_script_addr = 0
         found_addr_chg = 0
         found_addr_rsv = 0
-        witness_addr_ret = None
         hd_master_addr_ret = None
         for line in inputfile:
             # only read non comment lines
@@ -59,14 +60,14 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
                 # count key types
                 for addrObj in addrs:
                     if addrObj['address'] == addr.split(",")[0] and addrObj['hdkeypath'] == keypath and keytype == "label=":
-                        # a labeled entry in the wallet should contain both a native address
-                        # and the p2sh-p2wpkh address that was added at wallet setup
-                        if len(addr.split(",")) == 2:
-                            addr_list = addr.split(",")
-                            # the entry should be of the first key in the wallet
-                            assert_equal(addrs[0]['address'], addr_list[0])
-                            witness_addr_ret = addr_list[1]
-                        found_addr += 1
+                        if addr.startswith('m') or addr.startswith('n'):
+                            # P2PKH address
+                            found_legacy_addr += 1
+                        elif addr.startswith('2'):
+                            # P2SH-segwit address
+                            found_p2sh_segwit_addr += 1
+                        elif addr.startswith('bcrt1'):
+                            found_bech32_addr += 1
                         break
                     elif keytype == "change=1":
                         found_addr_chg += 1
@@ -81,13 +82,13 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
                         found_script_addr += 1
                         break
 
-        return found_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_ret, witness_addr_ret
+        return found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_ret
 
 
 class WalletDumpTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.extra_args = [["-keypool=90", "-addresstype=legacy", "-deprecatedrpc=addwitnessaddress"]]
+        self.extra_args = [["-keypool=90", "-addresstype=legacy"]]
         self.rpc_timeout = 120
 
     def skip_test_if_missing_module(self):
@@ -101,34 +102,38 @@ class WalletDumpTest(BitcoinTestFramework):
         wallet_unenc_dump = os.path.join(self.nodes[0].datadir, "wallet.unencrypted.dump")
         wallet_enc_dump = os.path.join(self.nodes[0].datadir, "wallet.encrypted.dump")
 
-        # generate 20 addresses to compare against the dump
-        # but since we add a p2sh-p2wpkh address for the first pubkey in the
-        # wallet, we will expect 21 addresses in the dump
-        test_addr_count = 20
+        # generate 30 addresses to compare against the dump
+        # - 10 legacy P2PKH
+        # - 10 P2SH-segwit
+        # - 10 bech32
+        test_addr_count = 10
         addrs = []
-        for i in range(0, test_addr_count):
-            addr = self.nodes[0].getnewaddress()
-            vaddr = self.nodes[0].getaddressinfo(addr)  # required to get hd keypath
-            addrs.append(vaddr)
-        # Should be a no-op:
-        self.nodes[0].keypoolrefill()
+        for address_type in ['legacy', 'p2sh-segwit', 'bech32']:
+            for i in range(0, test_addr_count):
+                addr = self.nodes[0].getnewaddress(address_type=address_type)
+                vaddr = self.nodes[0].getaddressinfo(addr)  # required to get hd keypath
+                addrs.append(vaddr)
 
-        # Test scripts dump by adding a P2SH witness and a 1-of-1 multisig address
-        witness_addr = self.nodes[0].addwitnessaddress(addrs[0]["address"], True)
+        # Test scripts dump by adding a 1-of-1 multisig address
         multisig_addr = self.nodes[0].addmultisigaddress(1, [addrs[1]["address"]])["address"]
-        script_addrs = [witness_addr, multisig_addr]
+
+        # Refill the keypool. getnewaddress() refills the keypool *before* taking a key from
+        # the keypool, so the final call to getnewaddress leaves the keypool with one key below
+        # its capacity
+        self.nodes[0].keypoolrefill()
 
         # dump unencrypted wallet
         result = self.nodes[0].dumpwallet(wallet_unenc_dump)
         assert_equal(result['filename'], wallet_unenc_dump)
 
-        found_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_unenc, witness_addr_ret = \
-            read_dump(wallet_unenc_dump, addrs, script_addrs, None)
-        assert_equal(found_addr, test_addr_count)  # all keys must be in the dump
-        assert_equal(found_script_addr, 2)  # all scripts must be in the dump
+        found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_unenc = \
+            read_dump(wallet_unenc_dump, addrs, [multisig_addr], None)
+        assert_equal(found_legacy_addr, test_addr_count)  # all keys must be in the dump
+        assert_equal(found_p2sh_segwit_addr, test_addr_count)  # all keys must be in the dump
+        assert_equal(found_bech32_addr, test_addr_count)  # all keys must be in the dump
+        assert_equal(found_script_addr, 1)  # all scripts must be in the dump
         assert_equal(found_addr_chg, 0)  # 0 blocks where mined
         assert_equal(found_addr_rsv, 90 * 2)  # 90 keys plus 100% internal keys
-        assert_equal(witness_addr_ret, witness_addr)  # p2sh-p2wsh address added to the first key
 
         # encrypt wallet, restart, unlock and dump
         self.nodes[0].encryptwallet('test')
@@ -137,13 +142,14 @@ class WalletDumpTest(BitcoinTestFramework):
         self.nodes[0].keypoolrefill()
         self.nodes[0].dumpwallet(wallet_enc_dump)
 
-        found_addr, found_script_addr, found_addr_chg, found_addr_rsv, _, witness_addr_ret = \
-            read_dump(wallet_enc_dump, addrs, script_addrs, hd_master_addr_unenc)
-        assert_equal(found_addr, test_addr_count)
-        assert_equal(found_script_addr, 2)
+        found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_addr_chg, found_addr_rsv, _ = \
+            read_dump(wallet_enc_dump, addrs, [multisig_addr], hd_master_addr_unenc)
+        assert_equal(found_legacy_addr, test_addr_count)  # all keys must be in the dump
+        assert_equal(found_p2sh_segwit_addr, test_addr_count)  # all keys must be in the dump
+        assert_equal(found_bech32_addr, test_addr_count)  # all keys must be in the dump
+        assert_equal(found_script_addr, 1)
         assert_equal(found_addr_chg, 90 * 2)  # old reserve keys are marked as change now
         assert_equal(found_addr_rsv, 90 * 2)
-        assert_equal(witness_addr_ret, witness_addr)
 
         # Overwriting should fail
         assert_raises_rpc_error(-8, "already exists", lambda: self.nodes[0].dumpwallet(wallet_enc_dump))
