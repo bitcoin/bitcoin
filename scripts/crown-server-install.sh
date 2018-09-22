@@ -152,7 +152,7 @@ download_package() {
 install_package() {
     sudo unzip -d $dir/crown $dir/crown.zip
     sudo cp -f $dir/crown/*/bin/* /usr/local/bin/
-#    sudo cp -f $dir/crown/*/lib/* /usr/local/lib/
+    sudo cp -f $dir/crown/*/lib/* /usr/local/lib/
     sudo rm -rf $dir
 }
 
