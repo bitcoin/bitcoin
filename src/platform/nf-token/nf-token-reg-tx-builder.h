@@ -2,39 +2,39 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef CROWN_PLATFORM_NF_TOKEN_REGISTRATION_TX_BUILDER_H
-#define CROWN_PLATFORM_NF_TOKEN_REGISTRATION_TX_BUILDER_H
+#ifndef CROWN_PLATFORM_NF_TOKEN_REG_TX_BUILDER_H
+#define CROWN_PLATFORM_NF_TOKEN_REG_TX_BUILDER_H
 
 #include "rpcserver.h"
 #include "platform/rpc/specialtx-rpc-utils.h"
-#include "nf-token-registration-tx.h"
+#include "nf-token-reg-tx.h"
 
 namespace Platform
 {
-    class NfTokenRegistrationTxBuilder
+    class NfTokenRegTxBuilder
     {
     public:
-        NfTokenRegistrationTxBuilder & SetTokenType(const json_spirit::Value & tokenTypeSymbol)
+        NfTokenRegTxBuilder & SetTokenProtocol(const json_spirit::Value & tokenProtocolName)
         {
-            // convert string to the token type id
-            m_nfToken.tokenTypeId = -1; //TODO: use as a common token type for now
+            //TODO: convert base 32 string to the token type name/id
+            //m_nfToken.tokenProtocolName;
             return *this;
         }
 
-        NfTokenRegistrationTxBuilder & SetTokenId(const json_spirit::Value & tokenIdHexValue)
+        NfTokenRegTxBuilder & SetTokenId(const json_spirit::Value & tokenIdHexValue)
         {
             m_nfToken.tokenId = ParseHashV(tokenIdHexValue.get_str(), "nfTokenId");
             return *this;
         }
 
-        NfTokenRegistrationTxBuilder & SetTokenOwnerKey(const json_spirit::Value & tokenOwnerKeyOrAddress, CKey & ownerPrivKey)
+        NfTokenRegTxBuilder & SetTokenOwnerKey(const json_spirit::Value & tokenOwnerKeyOrAddress, CKey & ownerPrivKey)
         {
             ownerPrivKey = ParsePrivKeyOrAddress(tokenOwnerKeyOrAddress.get_str());
             m_nfToken.tokenOwnerKeyId = ownerPrivKey.GetPubKey().GetID();
             return *this;
         }
 
-        NfTokenRegistrationTxBuilder & SetMetadataAdminKey(const json_spirit::Value & metadataAdminAddress)
+        NfTokenRegTxBuilder & SetMetadataAdminKey(const json_spirit::Value & metadataAdminAddress)
         {
             if (!metadataAdminAddress.get_str().empty() && metadataAdminAddress.get_str() != "0")
             {
@@ -43,20 +43,20 @@ namespace Platform
             return *this;
         }
 
-        NfTokenRegistrationTxBuilder & SetMetadata(const json_spirit::Value & metadata)
+        NfTokenRegTxBuilder & SetMetadata(const json_spirit::Value & metadata)
         {
             //TODO: convert to vector, if binary then also convert from hex
             //m_nfToken.metadata = metadata.get_array();
             return *this;
         }
 
-        NfTokenRegistrationTx BuildTx()
+        NfTokenRegTx BuildTx()
         {
             if (m_nfToken.metadataAdminKeyId.IsNull())
             {
                 m_nfToken.metadataAdminKeyId = m_nfToken.tokenOwnerKeyId;
             }
-            NfTokenRegistrationTx regTx(m_nfToken);
+            NfTokenRegTx regTx(std::move(m_nfToken));
             //regTx.Sign(m_ownerKey, m_ownerPubKey);
             return regTx;
         }
@@ -68,4 +68,4 @@ namespace Platform
     };
 }
 
-#endif // CROWN_PLATFORM_NF_TOKEN_REGISTRATION_TX_BUILDER_H
+#endif // CROWN_PLATFORM_NF_TOKEN_REG_TX_BUILDER_H

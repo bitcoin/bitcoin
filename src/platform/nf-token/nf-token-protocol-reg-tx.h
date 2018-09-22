@@ -22,7 +22,7 @@ namespace Platform
         NfTokenProtocolRegTx()
         {}
 
-        NfTokenProtocolRegTx(NfTokenProtocol nfTokenProtocol)
+        explicit NfTokenProtocolRegTx(NfTokenProtocol nfTokenProtocol)
             : m_nfTokenProtocol(std::move(nfTokenProtocol))
         {}
 

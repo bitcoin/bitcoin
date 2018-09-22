@@ -2,7 +2,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "nf-token-registration-tx.h"
+#include "nf-token-reg-tx.h"
 #include "primitives/transaction.h"
 #include "platform/specialtx.h"
 
@@ -26,15 +26,15 @@ namespace Platform
         return true;
     }
 
-    bool NfTokenRegistrationTx::CheckTx(const CTransaction& tx, const CBlockIndex* pIndex, CValidationState& state)
+    bool NfTokenRegTx::CheckTx(const CTransaction& tx, const CBlockIndex* pIndex, CValidationState& state)
     {
         AssertLockHeld(cs_main);
 
-        NfTokenRegistrationTx nfTokenRegTx;
+        NfTokenRegTx nfTokenRegTx;
         if (!GetTxPayload(tx, nfTokenRegTx))
             return state.DoS(100, false, REJECT_INVALID, "bad-tx-payload");
 
-        if (nfTokenRegTx.m_version != NfTokenRegistrationTx::CURRENT_VERSION)
+        if (nfTokenRegTx.m_version != NfTokenRegTx::CURRENT_VERSION)
             return state.DoS(100, false, REJECT_INVALID, "bad-token-reg-tx-version");
 
         if (nfTokenRegTx.m_nfToken.tokenId.IsNull())

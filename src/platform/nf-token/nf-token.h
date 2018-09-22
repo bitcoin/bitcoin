@@ -5,6 +5,7 @@
 #ifndef CROWN_PLATFORM_NF_TOKEN_H
 #define CROWN_PLATFORM_NF_TOKEN_H
 
+#include "serialize.h"
 #include "uint256.h"
 #include "pubkey.h"
 
@@ -29,6 +30,18 @@ namespace Platform
         std::vector<unsigned char> metadata;
 
         static const uint64_t UKNOWN_TOKEN_PROTOCOL = -1;
+
+    public:
+        ADD_SERIALIZE_METHODS
+        template<typename Stream, typename Operation>
+        inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+        {
+            READWRITE(tokenProtocolName);
+            READWRITE(tokenId);
+            READWRITE(tokenOwnerKeyId);
+            READWRITE(metadataAdminKeyId);
+            READWRITE(metadata);
+        }
     };
 }
 

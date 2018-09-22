@@ -143,8 +143,8 @@ BITCOIN_CORE_H = \
   masternodeman.h \
   masternodeconfig.h \
   nodeconfig.h \
-  platform/nf-token/nf-token-registration-tx-builder.h \
-  platform/nf-token/nf-token-registration-tx.h \
+  platform/nf-token/nf-token-reg-tx-builder.h \
+  platform/nf-token/nf-token-reg-tx.h \
   platform/nf-token/nf-token-protocol.h \
   platform/nf-token/nf-token.h \
   platform/rpc/rpc-nf-token.h \
@@ -233,7 +233,7 @@ libbitcoin_server_a_SOURCES = \
   platform/governance.h \
   platform/governance-vote.cpp \
   platform/governance-vote.h \
-  platform/nf-token/nf-token-registration-tx.cpp \
+  platform/nf-token/nf-token-reg-tx.cpp \
   platform/specialtx.h \
   platform/specialtx.cpp \
   platform/rpc/rpcagents.cpp \
