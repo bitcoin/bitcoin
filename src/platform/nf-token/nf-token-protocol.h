@@ -5,9 +5,9 @@
 #ifndef CROWN_PLATFORM_NF_TOKEN_PROTOCOL_H
 #define CROWN_PLATFORM_NF_TOKEN_PROTOCOL_H
 
+#include "serialize.h"
 #include "uint256.h"
 #include "pubkey.h"
-
 
 namespace Platform
 {
@@ -42,8 +42,20 @@ namespace Platform
         /// Owner of the NF token protocol
         CKeyID tokenProtocolOwnerId;
 
-        // TODO: move to the tx class
-        std::vector<unsigned char> signature;
+    public:
+        ADD_SERIALIZE_METHODS
+        template<typename Stream, typename Operation>
+        inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+        {
+            READWRITE(tokenProtocolName);
+            READWRITE(tokenProtocolSymbol);
+            READWRITE(tokenProtocolLongName);
+            READWRITE(tokenMetadataSchemaUri);
+            READWRITE(tokenMetadataMimeType);
+            READWRITE(isTokenTransferrable);
+            READWRITE(isTokenImmutable);
+            READWRITE(tokenProtocolOwnerId);
+        }
     };
 
     /* Examples:
