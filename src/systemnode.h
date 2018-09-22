@@ -233,7 +233,9 @@ public:
 
         return strStatus;
     }
-    int64_t GetLastPaid(const CBlockIndex *BlockReading = nullptr) const;
+    int64_t GetLastPaid() const;
+
+    bool GetRecentPaymentBlocks(std::vector<const CBlockIndex*>& vPaymentBlocks, bool limitMostRecent = false) const;
 };
 
 //

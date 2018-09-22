@@ -239,7 +239,7 @@ int64_t CMasternode::SecondsSincePayment() const
     return month + UintToArith256(hash).GetCompact(false);
 }
 
-int64_t CMasternode::GetLastPaid(const CBlockIndex *BlockReading) const
+int64_t CMasternode::GetLastPaid() const
 {
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(pindexPrev == NULL) return false;
@@ -257,7 +257,7 @@ int64_t CMasternode::GetLastPaid(const CBlockIndex *BlockReading) const
 
     if (chainActive.Tip() == NULL) return false;
 
-    BlockReading = chainActive.Tip();
+    const CBlockIndex *BlockReading = chainActive.Tip();
 
     int nMnCount = mnodeman.CountEnabled()*1.25;
     int n = 0;
@@ -282,6 +282,46 @@ int64_t CMasternode::GetLastPaid(const CBlockIndex *BlockReading) const
     }
 
     return 0;
+}
+
+#define PAYMENT_BLOCK_DEPTH 2000
+
+// Find all blocks where MN received reward within defined block depth
+// Used for generating stakepointers
+bool CMasternode::GetRecentPaymentBlocks(std::vector<const CBlockIndex*>& vPaymentBlocks, bool limitMostRecent) const
+{
+    vPaymentBlocks.clear();
+    if (chainActive.Tip() == NULL) return false;
+
+    const CBlockIndex *BlockReading = chainActive.Tip();
+    int nBlockLimit = BlockReading->nHeight - PAYMENT_BLOCK_DEPTH;
+    if (nBlockLimit < 1)
+        nBlockLimit = 1;
+
+    CScript mnpayee;
+    mnpayee = GetScriptForDestination(pubkey.GetID());
+
+    bool fBlockFound = false;
+    while (BlockReading && BlockReading->nHeight >= nBlockLimit) {
+
+        if(masternodePayments.mapMasternodeBlocks.count(BlockReading->nHeight)){
+            /*
+                Search for this payee, with at least 2 votes. This will aid in consensus allowing the network
+                to converge on the same payees quickly, then keep the same schedule.
+            */
+            if(masternodePayments.mapMasternodeBlocks[BlockReading->nHeight].HasPayeeWithVotes(mnpayee, 2)){
+                vPaymentBlocks.emplace_back(BlockReading);
+                fBlockFound = true;
+                if (limitMostRecent)
+                    return fBlockFound;
+            }
+        }
+
+        if (BlockReading->pprev == NULL) { assert(BlockReading); break; }
+        BlockReading = BlockReading->pprev;
+    }
+
+    return fBlockFound;
 }
 
 CMasternodeBroadcast::CMasternodeBroadcast()

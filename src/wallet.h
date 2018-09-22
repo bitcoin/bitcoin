@@ -17,6 +17,7 @@
 #include "main.h"
 #include "ui_interface.h"
 #include "util.h"
+#include "systemnode.h"
 #include "wallet_ismine.h"
 #include "walletdb.h"
 
@@ -154,6 +155,8 @@ private:
     void AddToSpends(const uint256& wtxid);
 
     void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>);
+
+    uint256 GenerateStakeModifier(const CBlockIndex* prewardBlockIndex) const;
 
 public:
 //    bool SelectCoins(int64_t nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet, const CCoinControl *coinControl = NULL, AvailableCoinsType coin_type=ALL_COINS, bool useIX = true) const;
@@ -326,6 +329,8 @@ public:
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
     bool CreateCollateralTransaction(CMutableTransaction& txCollateral, std::string& strReason);
     bool GetMyMasternodes(std::vector<CMasternode*>& vActiveMasternodes);
+    bool GetActiveMasternode(CMasternode *&activeStakingNode);
+    bool GetActiveSystemnode(CSystemnode *&activeStakingNode);
     bool CreateCoinStake(const int nHeight, const uint32_t& nBits, const uint32_t& nTime, CMutableTransaction& txCoinStake, uint32_t& nTxNewTime);
     bool GetRecentStakePointer(StakePointer& stakePointer);
     bool ConvertList(std::vector<CTxIn> vCoins, std::vector<int64_t>& vecAmounts);

@@ -1859,30 +1859,107 @@ bool CWallet::GetMyMasternodes(std::vector<CMasternode*>& vActiveMasternodes)
     return static_cast<bool>(vActiveMasternodes.size());
 }
 
+bool CWallet::GetActiveMasternode(CMasternode *&activeStakingNode)
+{
+    activeStakingNode = NULL;
+    if (activeMasternode.status == ACTIVE_MASTERNODE_STARTED)
+        activeStakingNode = mnodeman.Find(activeMasternode.vin);
+    return activeStakingNode;
+}
+
+bool CWallet::GetActiveSystemnode(CSystemnode *&activeStakingNode)
+{
+    activeStakingNode = NULL;
+    if (activeSystemnode.status == ACTIVE_SYSTEMNODE_STARTED)
+        activeStakingNode = snodeman.Find(activeSystemnode.vin);
+    return activeStakingNode;
+}
+
+#define STAKE_MODIFIER_DEPTH 100
+// Return hash for a block that precedes stake pointer
+uint256 CWallet::GenerateStakeModifier(const CBlockIndex* prewardBlockIndex) const
+{
+    if (!prewardBlockIndex)
+        return uint256();
+
+    const CBlockIndex* pstakeModBlockIndex = prewardBlockIndex->GetAncestor(prewardBlockIndex->nHeight - STAKE_MODIFIER_DEPTH);
+    if (!pstakeModBlockIndex) {
+        LogPrintf("GenerateStakeModifier -- Failed retrieving block index for stake modifier\n");
+        return uint256();
+    }
+
+    return pstakeModBlockIndex->GetBlockHash();
+}
+
 #define STAKE_SEARCH_INTERVAL 30
 bool CWallet::CreateCoinStake(const int nHeight, const uint32_t& nBits, const uint32_t& nTime, CMutableTransaction& txCoinStake, uint32_t& nTxNewTime)
 {
-    //todo lock -CPSC-28
-    std::vector<CMasternode*> vMasternodes;
-    if (!GetMyMasternodes(vMasternodes))
-        return false;
+    CTxIn* pvinActiveNode;
+    CPubKey* ppubkeyActiveNode;
+    int nActiveNodeInputHeight;
+    std::vector<const CBlockIndex*> vBlocksLastPaid;
+    CAmount nAmountMN;
 
-    //Create kernels from active masternodes and see if any create a successful proof
-    auto nAmountMN = static_cast<CAmount>(MASTERNODE_COLLATERAL);
-    for (auto* pmn : vMasternodes) {
-        auto pOutpoint = std::make_pair(pmn->vin.prevout.hash, pmn->vin.prevout.n);
-        uint256 nStakeModifier;//todo - Stake Modifier Generation CPSC-29
+    //! Maybe have a polymorphic base class for masternode and systemnode?
+    if (fMasterNode) {
+        CMasternode* activeStakingNode;
+        if (!GetActiveMasternode(activeStakingNode)) {
+            LogPrintf("CreateCoinStake -- Couldn't find CMasternode object for active masternode\n");
+            return false;
+        }
+        if (!activeStakingNode->GetRecentPaymentBlocks(vBlocksLastPaid)) {
+            LogPrintf("CreateCoinStake -- Couldn't find recent payment blocks for MN\n");
+            return false;
+        }
+        pvinActiveNode = &activeStakingNode->vin;
+        ppubkeyActiveNode = &activeStakingNode->pubkey;
+        nActiveNodeInputHeight = chainActive.Height() - activeStakingNode->GetMasternodeInputAge();
+        nAmountMN = static_cast<CAmount>(MASTERNODE_COLLATERAL);
+
+    } else if (fSystemNode) {
+        CSystemnode* activeStakingNode;
+        if (!GetActiveSystemnode(activeStakingNode)) {
+            LogPrintf("CreateCoinStake -- Couldn't find CSystemnode object for active systemnode\n");
+            return false;
+        }
+        if (!activeStakingNode->GetRecentPaymentBlocks(vBlocksLastPaid)) {
+            LogPrintf("CreateCoinStake -- Couldn't find recent payment blocks for SN\n");
+            return false;
+        }
+        pvinActiveNode = &activeStakingNode->vin;
+        ppubkeyActiveNode = &activeStakingNode->pubkey;
+        nActiveNodeInputHeight = chainActive.Height() - activeStakingNode->GetSystemnodeInputAge();
+        nAmountMN = static_cast<CAmount>(SYSTEMNODE_COLLATERAL);
+
+    } else {
+        LogPrintf("CreateCoinStake -- Must be masternode or system to create coin stake!\n");
+        return false;
+    }
+
+    auto pOutpoint = std::make_pair(pvinActiveNode->prevout.hash, pvinActiveNode->prevout.n);
+
+    //Create kernels for each valid stake pointer and see if any create a successful proof
+    for (auto* pblockIndex : vBlocksLastPaid) {
+        // check that collateral transaction happened long enough before this stake pointer
+        if (pblockIndex->nHeight - STAKE_MODIFIER_DEPTH <= nActiveNodeInputHeight)
+            continue;
+
+        // generate stake modifier based off block that happened before this stake pointer
+        uint256 nStakeModifier = GenerateStakeModifier(pblockIndex);
+        if (nStakeModifier == uint256())
+            continue;
+
         Kernel kernel(pOutpoint, nAmountMN, nStakeModifier, nTime, nTxNewTime);
         uint256 nTarget = ArithToUint256(arith_uint256().SetCompact(nBits));
 
         if (!SearchTimeSpan(kernel, nTime, nTime + STAKE_SEARCH_INTERVAL, nTarget))
             continue;
 
-        LogPrintf("%s: Found valid kernel for mn collateral %s\n", __func__, pmn->vin.prevout.ToString());
+        LogPrintf("%s: Found valid kernel for mn/sn collateral %s\n", __func__, pvinActiveNode->prevout.ToString());
 
         //Add stake payment to coinstake tx
         CAmount nBlockReward = GetBlockValue(nHeight, 0); //Do not add fees until after they are packaged into the block
-        CScript scriptBlockReward = GetScriptForDestination(pmn->pubkey.GetID());
+        CScript scriptBlockReward = GetScriptForDestination(ppubkeyActiveNode->GetID());
         CTxOut out(nBlockReward, scriptBlockReward);
         txCoinStake.vout.emplace_back(out);
         nTxNewTime = kernel.GetTime();
@@ -1894,21 +1971,22 @@ bool CWallet::CreateCoinStake(const int nHeight, const uint32_t& nBits, const ui
 
 bool CWallet::GetRecentStakePointer(StakePointer& stakePointer)
 {
-    if (fMasterNode && activeMasternode.status == ACTIVE_MASTERNODE_STARTED) {
+    if (fMasterNode) {
 
         // find pointer to active CMasternode object
-        CMasternode* pactiveMN = mnodeman.Find(activeMasternode.vin);
-        if (!pactiveMN) {
+        CMasternode* pactiveMN;
+        if (!GetActiveMasternode(pactiveMN)) {
             LogPrintf("GetRecentStakePointer -- Couldn't find CMasternode object for active masternode\n");
             return false;
         }
 
         // get block index of last mn payment
-        CBlockIndex* pblockLastPaid;
-        if (!pactiveMN->GetLastPaid(pblockLastPaid) || !pblockLastPaid) {
+        std::vector<const CBlockIndex*> vBlocksLastPaid;
+        if (!pactiveMN->GetRecentPaymentBlocks(vBlocksLastPaid, true)) {
             LogPrintf("GetRecentStakePointer -- Couldn't find last paid block\n");
             return false;
         }
+        const CBlockIndex* pblockLastPaid = vBlocksLastPaid.front();
 
         CBlock blockLastPaid;
         if (!ReadBlockFromDisk(blockLastPaid, pblockLastPaid)) {
@@ -1929,19 +2007,20 @@ bool CWallet::GetRecentStakePointer(StakePointer& stakePointer)
         }
         LogPrintf("GetRecentStakePointer -- Couldn't find Masternode payment tx in block\n");
 
-    } else if (fSystemNode && activeSystemnode.status == ACTIVE_SYSTEMNODE_STARTED) {
+    } else if (fSystemNode) {
 
-        CSystemnode* pactiveSN = snodeman.Find(activeSystemnode.vin);
-        if (!pactiveSN) {
+        CSystemnode* pactiveSN;
+        if (!GetActiveSystemnode(pactiveSN)) {
             LogPrintf("GetRecentStakePointer -- Couldn't find CSystemnode object for active systemnode\n");
             return false;
         }
 
-        CBlockIndex* pblockLastPaid;
-        if (!pactiveSN->GetLastPaid(pblockLastPaid) || !pblockLastPaid) {
+        std::vector<const CBlockIndex*> vBlocksLastPaid;
+        if (!pactiveSN->GetRecentPaymentBlocks(vBlocksLastPaid, true)) {
             LogPrintf("GetRecentStakePointer -- Couldn't find last paid block\n");
             return false;
         }
+        const CBlockIndex* pblockLastPaid = vBlocksLastPaid.front();
 
         CBlock blockLastPaid;
         if (!ReadBlockFromDisk(blockLastPaid, pblockLastPaid)) {
