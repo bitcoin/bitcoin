@@ -307,6 +307,7 @@ UniValue importaddress(const JSONRPCRequest& request)
 
     {
         LOCK2(cs_main, pwallet->cs_wallet);
+        EnsureWalletIsUnlocked(pwallet);
 
         CTxDestination dest = DecodeDestination(request.params[0].get_str());
         if (IsValidDestination(dest)) {
@@ -384,6 +385,7 @@ UniValue importprunedfunds(const JSONRPCRequest& request)
     wtx.hashBlock = merkleBlock.header.GetHash();
 
     LOCK2(cs_main, pwallet->cs_wallet);
+    EnsureWalletIsUnlocked(pwallet);
 
     if (pwallet->IsMine(*wtx.tx)) {
         pwallet->AddToWallet(wtx, false);
@@ -414,6 +416,7 @@ UniValue removeprunedfunds(const JSONRPCRequest& request)
         );
 
     LOCK2(cs_main, pwallet->cs_wallet);
+    EnsureWalletIsUnlocked(pwallet);
 
     uint256 hash;
     hash.SetHex(request.params[0].get_str());
@@ -486,6 +489,7 @@ UniValue importpubkey(const JSONRPCRequest& request)
 
     {
         LOCK2(cs_main, pwallet->cs_wallet);
+        EnsureWalletIsUnlocked(pwallet);
 
         for (const auto& dest : GetAllDestinationsForKey(pubKey)) {
             ImportAddress(pwallet, dest, strLabel);
