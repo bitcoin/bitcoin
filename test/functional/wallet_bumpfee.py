@@ -29,7 +29,6 @@ class BumpFeeTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.setup_clean_chain = True
         self.extra_args = [[
-            "-deprecatedrpc=addwitnessaddress",
             "-walletrbf={}".format(i),
             "-mintxfee=0.00002",
         ] for i in range(self.num_nodes)]
@@ -104,8 +103,7 @@ def test_segwit_bumpfee_succeeds(rbf_node, dest_address):
     # which spends it, and make sure bumpfee can be called on it.
 
     segwit_in = next(u for u in rbf_node.listunspent() if u["amount"] == Decimal("0.001"))
-    segwit_out = rbf_node.getaddressinfo(rbf_node.getnewaddress())
-    rbf_node.addwitnessaddress(segwit_out["address"])
+    segwit_out = rbf_node.getaddressinfo(rbf_node.getnewaddress(address_type='p2sh-segwit'))
     segwitid = send_to_witness(
         use_p2wsh=False,
         node=rbf_node,
