@@ -98,7 +98,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         self.num_nodes = 2
         # This test was written assuming SegWit is activated using BIP9 at height 432 (3x confirmation window).
         # TODO: Rewrite this test to support SegWit being always active.
-        self.extra_args = [["-vbparams=segwit:0:0"], ["-vbparams=segwit:0:999999999999", "-txindex", "-deprecatedrpc=addwitnessaddress"]]
+        self.extra_args = [["-vbparams=segwit:0:0"], ["-vbparams=segwit:0:999999999999", "-txindex"]]
         self.utxos = []
 
     def skip_test_if_missing_module(self):
@@ -264,7 +264,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         if use_witness_address:
             # Want at least one segwit spend, so move all funds to
             # a witness address.
-            address = node.addwitnessaddress(address)
+            address = node.getnewaddress(address_type='bech32')
             value_to_send = node.getbalance()
             node.sendtoaddress(address, satoshi_round(value_to_send - Decimal(0.1)))
             node.generate(1)
