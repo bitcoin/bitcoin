@@ -804,10 +804,10 @@ int64_t CWallet::IncOrderPosNext(WalletBatch *batch)
 
 void CWallet::MarkDirty()
 {
-    {
-        LOCK(cs_wallet);
-        for (std::pair<const uint256, CWalletTx>& item : mapWallet)
-            item.second.MarkDirty();
+    AssertLockHeld(cs_wallet);
+
+    for (std::pair<const uint256, CWalletTx>& item : mapWallet) {
+        item.second.MarkDirty();
     }
 }
 
