@@ -771,8 +771,8 @@ class SegWitTest(BitcoinTestFramework):
         # segwit-aware would also reject this for failing CLEANSTACK.
         test_transaction_acceptance(self.nodes[0], self.test_node, spend_tx, with_witness=False, accepted=False)
 
-        # Try to put the witness script in the script_sig, should also fail.
-        spend_tx.vin[0].script_sig = CScript([p2wsh_pubkey, b'a'])
+        # Try to put the witness script in the scriptSig, should also fail.
+        spend_tx.vin[0].scriptSig = CScript([p2wsh_pubkey, b'a'])
         spend_tx.rehash()
         test_transaction_acceptance(self.nodes[0], self.test_node, spend_tx, with_witness=False, accepted=False)
 
