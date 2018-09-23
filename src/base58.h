@@ -101,7 +101,7 @@ private:
     const unsigned int m_versionBytesOld;
 
 private:
-    unsigned int GetVersionBytes() const;
+    virtual unsigned int GetVersionBytes() const;
 };
 
 /** base58-encoded Crown addresses.
@@ -151,6 +151,8 @@ public:
 
     CBitcoinSecret(const CKey& vchSecret) { SetKey(vchSecret); }
     CBitcoinSecret() {}
+private:
+    unsigned int GetVersionBytes() const;
 };
 
 template<typename K, int Size, CChainParams::Base58Type Type> class CBitcoinExtKeyBase : public CBase58Data
