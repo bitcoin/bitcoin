@@ -150,6 +150,7 @@ CBase58Data::CBase58Data(CChainParams::AddressType addressType)
     , m_VersionBytes(3)
     , m_VersionBytesTest(4)
     , m_versionBytesOld(1)
+    , m_versionBytesPrivateKey(1)
 {
     vchVersion.clear();
     vchData.clear();
@@ -343,5 +344,5 @@ bool CBitcoinSecret::SetString(const std::string& strSecret)
 
 unsigned int CBitcoinSecret::GetVersionBytes() const
 {
-    return 1;
+    return m_versionBytesPrivateKey;
 }
