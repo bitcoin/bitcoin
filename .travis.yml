@@ -121,7 +121,7 @@ jobs:
     - stage: test
       env: >-
         HOST=x86_64-unknown-linux-gnu
-        PACKAGES="python3"
+        PACKAGES="python3-zmq"
         DEP_OPTS="NO_WALLET=1"
         GOAL="install"
         BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
