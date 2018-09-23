@@ -3,7 +3,6 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the dumpwallet RPC."""
-
 import os
 
 from test_framework.test_framework import BitcoinTestFramework
@@ -107,9 +106,9 @@ class WalletDumpTest(BitcoinTestFramework):
         # wallet, we will expect 21 addresses in the dump
         test_addr_count = 20
         addrs = []
-        for i in range(0,test_addr_count):
+        for i in range(0, test_addr_count):
             addr = self.nodes[0].getnewaddress()
-            vaddr= self.nodes[0].getaddressinfo(addr) #required to get hd keypath
+            vaddr = self.nodes[0].getaddressinfo(addr)  # required to get hd keypath
             addrs.append(vaddr)
         # Should be a no-op:
         self.nodes[0].keypoolrefill()
@@ -131,7 +130,7 @@ class WalletDumpTest(BitcoinTestFramework):
         assert_equal(found_addr_rsv, 90 * 2)  # 90 keys plus 100% internal keys
         assert_equal(witness_addr_ret, witness_addr)  # p2sh-p2wsh address added to the first key
 
-        #encrypt wallet, restart, unlock and dump
+        # encrypt wallet, restart, unlock and dump
         self.nodes[0].encryptwallet('test')
         self.nodes[0].walletpassphrase('test', 10)
         # Should be a no-op:
@@ -155,13 +154,13 @@ class WalletDumpTest(BitcoinTestFramework):
 
         # Make sure the address is not IsMine before import
         result = self.nodes[0].getaddressinfo(multisig_addr)
-        assert(result['ismine'] == False)
+        assert not result['ismine']
 
         self.nodes[0].importwallet(wallet_unenc_dump)
 
         # Now check IsMine is true
         result = self.nodes[0].getaddressinfo(multisig_addr)
-        assert(result['ismine'] == True)
+        assert result['ismine']
 
 if __name__ == '__main__':
     WalletDumpTest().main()

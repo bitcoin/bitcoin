@@ -13,19 +13,16 @@ can be disabled or reordered if needed for debugging. If new test cases are
 added in the future, they should try to follow the same convention and not
 make assumptions about execution order.
 """
-
 from decimal import Decimal
+import io
 
 from test_framework.blocktools import add_witness_commitment, create_block, create_coinbase, send_to_witness
 from test_framework.messages import BIP125_SEQUENCE_NUMBER, CTransaction
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_greater_than, assert_raises_rpc_error, bytes_to_hex_str, connect_nodes_bi, hex_str_to_bytes, sync_mempools
 
-import io
-
 WALLET_PASSPHRASE = "test"
 WALLET_PASSPHRASE_TIMEOUT = 3600
-
 
 class BumpFeeTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -157,7 +154,7 @@ def test_notmine_bumpfee_fails(rbf_node, peer_node, dest_address):
     signedtx = peer_node.signrawtransactionwithwallet(signedtx["hex"])
     rbfid = rbf_node.sendrawtransaction(signedtx["hex"])
     assert_raises_rpc_error(-4, "Transaction contains inputs that don't belong to this wallet",
-                          rbf_node.bumpfee, rbfid)
+                            rbf_node.bumpfee, rbfid)
 
 
 def test_bumpfee_with_descendant_fails(rbf_node, rbf_node_address, dest_address):
@@ -187,11 +184,11 @@ def test_dust_to_fee(rbf_node, dest_address):
     # (32-byte p2sh-pwpkh output size + 148 p2pkh spend estimate) * 10k(discard_rate) / 1000 = 1800
     # P2SH outputs are slightly "over-discarding" due to the IsDust calculation assuming it will
     # be spent as a P2PKH.
-    bumped_tx = rbf_node.bumpfee(rbfid, {"totalFee": 50000-1800})
+    bumped_tx = rbf_node.bumpfee(rbfid, {"totalFee": 50000 - 1800})
     full_bumped_tx = rbf_node.getrawtransaction(bumped_tx["txid"], 1)
     assert_equal(bumped_tx["fee"], Decimal("0.00050000"))
     assert_equal(len(fulltx["vout"]), 2)
-    assert_equal(len(full_bumped_tx["vout"]), 1)  #change output is eliminated
+    assert_equal(len(full_bumped_tx["vout"]), 1)  # change output is eliminated
 
 
 def test_settxfee(rbf_node, dest_address):
@@ -222,7 +219,7 @@ def test_rebumping_not_replaceable(rbf_node, dest_address):
     rbfid = spend_one_input(rbf_node, dest_address)
     bumped = rbf_node.bumpfee(rbfid, {"totalFee": 10000, "replaceable": False})
     assert_raises_rpc_error(-4, "Transaction is not BIP 125 replaceable", rbf_node.bumpfee, bumped["txid"],
-                          {"totalFee": 20000})
+                            {"totalFee": 20000})
 
 
 def test_unconfirmed_not_spendable(rbf_node, rbf_node_address):
@@ -276,7 +273,7 @@ def test_locked_wallet_fails(rbf_node, dest_address):
     rbfid = spend_one_input(rbf_node, dest_address)
     rbf_node.walletlock()
     assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first.",
-                          rbf_node.bumpfee, rbfid)
+                            rbf_node.bumpfee, rbfid)
 
 
 def spend_one_input(node, dest_address):
