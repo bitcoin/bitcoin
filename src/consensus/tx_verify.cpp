@@ -162,7 +162,7 @@ int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& i
     return nSigOps;
 }
 
-bool CheckTransaction(const CTransaction& tx, CValidationState &state, CAssetsCache* assetCache, bool fCheckDuplicateInputs, bool fMemPoolCheck)
+bool CheckTransaction(const CTransaction& tx, CValidationState &state, CAssetsCache* assetCache, bool fCheckDuplicateInputs, bool fMemPoolCheck, bool fCheckAssetDuplicate)
 {
     // Basic checks that don't depend on any context
     if (tx.vin.empty())
@@ -271,7 +271,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, CAssetsCa
                 if (!IsNewOwnerTxValid(tx, asset.strName, strAddress, strError))
                     return state.DoS(100, false, REJECT_INVALID, strError);
 
-                if (!asset.IsValid(strError, *assetCache, fMemPoolCheck, fCheckDuplicateInputs))
+                if (!asset.IsValid(strError, *assetCache, fMemPoolCheck, fCheckAssetDuplicate))
                     return state.DoS(100, false, REJECT_INVALID, "bad-txns-" + strError);
 
             } else if (tx.IsReissueAsset()) {
@@ -309,7 +309,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, CAssetsCa
                             return state.DoS(100, false, REJECT_INVALID, "bad-txns-issue-unique-asset");
 
                         std::string strError = "";
-                        if (!asset.IsValid(strError, *assetCache, fMemPoolCheck, fCheckDuplicateInputs))
+                        if (!asset.IsValid(strError, *assetCache, fMemPoolCheck, fCheckAssetDuplicate))
                             return state.DoS(100, false, REJECT_INVALID, "bad-txns-" + strError);
 
                         std::string root = GetParentName(asset.strName);
