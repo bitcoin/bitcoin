@@ -69,3 +69,15 @@ test/config.ini
 background.tiff
 background.tiff.png
 background.tiff@2x.png
+
+test/cache/*
+
+!src/leveldb*/Makefile
+
+/doc/doxygen/
+
+libbitcoinconsensus.pc
+contrib/devtools/split-debug.sh
+
+# Output from running db4 installation
+db4/
