@@ -105,7 +105,7 @@ static std::string AvailableDataFormatsString()
     return formats;
 }
 
-static bool ParseHashStr(const std::string& strReq, uint256& v)
+static bool ParseHexHashStr(const std::string& strReq, uint256& v)
 {
     if (!IsHex(strReq) || (strReq.size() != 64))
         return false;
@@ -141,7 +141,7 @@ static bool rest_headers(HTTPRequest* req,
 
     std::string hashStr = path[1];
     uint256 hash;
-    if (!ParseHashStr(hashStr, hash))
+    if (!ParseHexHashStr(hashStr, hash))
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
 
     std::vector<const CBlockIndex *> headers;
@@ -210,7 +210,7 @@ static bool rest_block(HTTPRequest* req,
     const RetFormat rf = ParseDataFormat(hashStr, strURIPart);
 
     uint256 hash;
-    if (!ParseHashStr(hashStr, hash))
+    if (!ParseHexHashStr(hashStr, hash))
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
 
     CBlock block;
@@ -354,7 +354,7 @@ static bool rest_tx(HTTPRequest* req, const std::string& strURIPart)
     const RetFormat rf = ParseDataFormat(hashStr, strURIPart);
 
     uint256 hash;
-    if (!ParseHashStr(hashStr, hash))
+    if (!ParseHexHashStr(hashStr, hash))
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
 
     if (g_txindex) {
