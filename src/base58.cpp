@@ -340,3 +340,8 @@ bool CBitcoinSecret::SetString(const std::string& strSecret)
 {
     return SetString(strSecret.c_str());
 }
+
+unsigned int CBitcoinSecret::GetVersionBytes() const
+{
+    return m_versionBytesPrivateKey;
+}

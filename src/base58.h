@@ -78,6 +78,7 @@ protected:
     typedef std::vector<unsigned char, zero_after_free_allocator<unsigned char> > vector_uchar;
     vector_uchar vchData;
     CChainParams::AddressType m_addressType;
+    static const unsigned int m_versionBytesPrivateKey = 1;
 
     CBase58Data(CChainParams::AddressType = CChainParams::NEW_ADDRESS_TYPE);
     void SetData(const std::vector<unsigned char> &vchVersionIn, const void* pdata, size_t nSize);
@@ -101,7 +102,7 @@ private:
     const unsigned int m_versionBytesOld;
 
 private:
-    unsigned int GetVersionBytes() const;
+    virtual unsigned int GetVersionBytes() const;
 };
 
 /** base58-encoded Crown addresses.
@@ -151,6 +152,8 @@ public:
 
     CBitcoinSecret(const CKey& vchSecret) { SetKey(vchSecret); }
     CBitcoinSecret() {}
+private:
+    unsigned int GetVersionBytes() const;
 };
 
 template<typename K, int Size, CChainParams::Base58Type Type> class CBitcoinExtKeyBase : public CBase58Data
