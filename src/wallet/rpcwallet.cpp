@@ -3116,6 +3116,8 @@ UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
 
     // Sign the transaction
     LOCK2(cs_main, pwallet->cs_wallet);
+    EnsureWalletIsUnlocked(pwallet);
+
     return SignTransaction(mtx, request.params[1], pwallet, false, request.params[2]);
 }
 
