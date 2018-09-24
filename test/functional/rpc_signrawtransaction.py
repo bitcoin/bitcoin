@@ -48,7 +48,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
     def test_with_lock_outputs(self):
         """Test correct error reporting when trying to sign a locked output"""
         self.nodes[0].encryptwallet("password")
-        self.restart_node(0)
+
         rawTx = '020000000156b958f78e3f24e0b2f4e4db1255426b0902027cb37e3ddadb52e37c3557dddb0000000000ffffffff01c0a6b929010000001600149a2ee8c77140a053f36018ac8124a6ececc1668a00000000'
 
         assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].signrawtransactionwithwallet, rawTx)
