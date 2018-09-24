@@ -65,7 +65,7 @@ static void AssembleBlock(benchmark::State& state)
 
     // Switch to regtest so we can mine faster
     // Also segwit is active, so we can include witness transactions
-    SelectParams(CBaseChainParams::REGTEST);
+    SelectParams(ChainType::REGTEST);
 
     InitScriptExecutionCache();
 

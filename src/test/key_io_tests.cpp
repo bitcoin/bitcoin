@@ -25,7 +25,7 @@ BOOST_AUTO_TEST_CASE(key_io_valid_parse)
     UniValue tests = read_json(std::string(json_tests::key_io_valid, json_tests::key_io_valid + sizeof(json_tests::key_io_valid)));
     CKey privkey;
     CTxDestination destination;
-    SelectParams(CBaseChainParams::MAIN);
+    SelectParams(ChainType::MAIN);
 
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
         UniValue test = tests[idx];
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(key_io_valid_gen)
         }
     }
 
-    SelectParams(CBaseChainParams::MAIN);
+    SelectParams(ChainType::MAIN);
 }
 
 

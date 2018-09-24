@@ -314,12 +314,12 @@ static void OnRPCStopped()
 
 void SetupServerArgs()
 {
-    const auto defaultBaseParams = CreateBaseChainParams(CBaseChainParams::MAIN);
-    const auto testnetBaseParams = CreateBaseChainParams(CBaseChainParams::TESTNET);
-    const auto regtestBaseParams = CreateBaseChainParams(CBaseChainParams::REGTEST);
-    const auto defaultChainParams = CreateChainParams(CBaseChainParams::MAIN);
-    const auto testnetChainParams = CreateChainParams(CBaseChainParams::TESTNET);
-    const auto regtestChainParams = CreateChainParams(CBaseChainParams::REGTEST);
+    const auto defaultBaseParams = CreateBaseChainParams(ChainType::MAIN);
+    const auto testnetBaseParams = CreateBaseChainParams(ChainType::TESTNET);
+    const auto regtestBaseParams = CreateBaseChainParams(ChainType::REGTEST);
+    const auto defaultChainParams = CreateChainParams(ChainType::MAIN);
+    const auto testnetChainParams = CreateChainParams(ChainType::TESTNET);
+    const auto regtestChainParams = CreateChainParams(ChainType::REGTEST);
 
     // Hidden Options
     std::vector<std::string> hidden_args = {"-h", "-help",

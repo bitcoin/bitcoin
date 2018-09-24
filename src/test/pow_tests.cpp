@@ -16,7 +16,7 @@ BOOST_FIXTURE_TEST_SUITE(pow_tests, BasicTestingSetup)
 /* Test calculation of next difficulty target with no constraints applying */
 BOOST_AUTO_TEST_CASE(get_next_work)
 {
-    const auto chainParams = CreateChainParams(CBaseChainParams::MAIN);
+    const auto chainParams = CreateChainParams(ChainType::MAIN);
     int64_t nLastRetargetTime = 1261130161; // Block #30240
     CBlockIndex pindexLast;
     pindexLast.nHeight = 32255;
@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(get_next_work)
 /* Test the constraint on the upper bound for next work */
 BOOST_AUTO_TEST_CASE(get_next_work_pow_limit)
 {
-    const auto chainParams = CreateChainParams(CBaseChainParams::MAIN);
+    const auto chainParams = CreateChainParams(ChainType::MAIN);
     int64_t nLastRetargetTime = 1231006505; // Block #0
     CBlockIndex pindexLast;
     pindexLast.nHeight = 2015;
@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(get_next_work_pow_limit)
 /* Test the constraint on the lower bound for actual time taken */
 BOOST_AUTO_TEST_CASE(get_next_work_lower_limit_actual)
 {
-    const auto chainParams = CreateChainParams(CBaseChainParams::MAIN);
+    const auto chainParams = CreateChainParams(ChainType::MAIN);
     int64_t nLastRetargetTime = 1279008237; // Block #66528
     CBlockIndex pindexLast;
     pindexLast.nHeight = 68543;
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(get_next_work_lower_limit_actual)
 /* Test the constraint on the upper bound for actual time taken */
 BOOST_AUTO_TEST_CASE(get_next_work_upper_limit_actual)
 {
-    const auto chainParams = CreateChainParams(CBaseChainParams::MAIN);
+    const auto chainParams = CreateChainParams(ChainType::MAIN);
     int64_t nLastRetargetTime = 1263163443; // NOTE: Not an actual block time
     CBlockIndex pindexLast;
     pindexLast.nHeight = 46367;
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(get_next_work_upper_limit_actual)
 
 BOOST_AUTO_TEST_CASE(GetBlockProofEquivalentTime_test)
 {
-    const auto chainParams = CreateChainParams(CBaseChainParams::MAIN);
+    const auto chainParams = CreateChainParams(ChainType::MAIN);
     std::vector<CBlockIndex> blocks(10000);
     for (int i = 0; i < 10000; i++) {
         blocks[i].pprev = i ? &blocks[i - 1] : nullptr;

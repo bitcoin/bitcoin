@@ -33,9 +33,9 @@ static const int CONTINUE_EXECUTION=-1;
 
 static void SetupCliArgs()
 {
-    const auto defaultBaseParams = CreateBaseChainParams(CBaseChainParams::MAIN);
-    const auto testnetBaseParams = CreateBaseChainParams(CBaseChainParams::TESTNET);
-    const auto regtestBaseParams = CreateBaseChainParams(CBaseChainParams::REGTEST);
+    const auto defaultBaseParams = CreateBaseChainParams(ChainType::MAIN);
+    const auto testnetBaseParams = CreateBaseChainParams(ChainType::TESTNET);
+    const auto regtestBaseParams = CreateBaseChainParams(ChainType::REGTEST);
 
     gArgs.AddArg("-?", "This help message", false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-version", "Print version and exit", false, OptionsCategory::OPTIONS);
