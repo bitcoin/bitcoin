@@ -825,12 +825,6 @@ static UniValue submitheader(const JSONRPCRequest& request)
     throw JSONRPCError(RPC_VERIFY_ERROR, state.GetRejectReason());
 }
 
-static UniValue estimatefee(const JSONRPCRequest& request)
-{
-    throw JSONRPCError(RPC_METHOD_DEPRECATED, "estimatefee was removed in v0.17.\n"
-        "Clients should use estimatesmartfee.");
-}
-
 static UniValue estimatesmartfee(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
@@ -1008,7 +1002,6 @@ static const CRPCCommand commands[] =
     { "hidden",             "generatetoaddress",      &generatetoaddress,      {"nblocks","address","maxtries"} }, // Hidden as it isn't functional, just an error to let people know if miner isn't compiled
 #endif // ENABLE_MINER
 
-    { "hidden",             "estimatefee",            &estimatefee,            {} },
     { "util",               "estimatesmartfee",       &estimatesmartfee,       {"conf_target", "estimate_mode"} },
 
     { "hidden",             "estimaterawfee",         &estimaterawfee,         {"conf_target", "threshold"} },
