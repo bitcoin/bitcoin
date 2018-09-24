@@ -1159,9 +1159,22 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     }
 }
 
+void CConnman::NotifyNumConnectionsChanged()
+{
+    size_t vNodesSize;
+    {
+        LOCK(cs_vNodes);
+        vNodesSize = vNodes.size();
+    }
+    if(vNodesSize != nPrevNodeCount) {
+        nPrevNodeCount = vNodesSize;
+        if(clientInterface)
+            clientInterface->NotifyNumConnectionsChanged(vNodesSize);
+    }
+}
+
 void CConnman::ThreadSocketHandler()
 {
-    unsigned int nPrevNodeCount = 0;
     while (!interruptNet)
     {
         //
@@ -1225,16 +1238,7 @@ void CConnman::ThreadSocketHandler()
                 }
             }
         }
-        size_t vNodesSize;
-        {
-            LOCK(cs_vNodes);
-            vNodesSize = vNodes.size();
-        }
-        if(vNodesSize != nPrevNodeCount) {
-            nPrevNodeCount = vNodesSize;
-            if(clientInterface)
-                clientInterface->NotifyNumConnectionsChanged(vNodesSize);
-        }
+        NotifyNumConnectionsChanged();
 
         //
         // Find which sockets have data to receive
@@ -2263,6 +2267,7 @@ CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In) : nSeed0(nSeed0In), nSe
     setBannedIsDirty = false;
     fAddressesInitialized = false;
     nLastNodeId = 0;
+    nPrevNodeCount = 0;
     nSendBufferMaxSize = 0;
     nReceiveFloodSize = 0;
     flagInterruptMsgProc = false;
