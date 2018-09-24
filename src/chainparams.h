@@ -107,6 +107,7 @@ protected:
  * @throws a std::runtime_error if the chain is not supported.
  */
 std::unique_ptr<const CChainParams> CreateChainParams(const std::string& chain);
+std::unique_ptr<const CChainParams> CreateChainParams(const ChainType& chain);
 
 /**
  * Return the currently selected parameters. This won't change after app
@@ -119,5 +120,6 @@ const CChainParams &Params();
  * @throws std::runtime_error when the chain is not supported.
  */
 void SelectParams(const std::string& chain);
+void SelectParams(const ChainType& chain);
 
 #endif // BITCOIN_CHAINPARAMS_H

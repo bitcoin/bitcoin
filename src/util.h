@@ -33,6 +33,8 @@
 
 #include <boost/thread/condition_variable.hpp> // for boost::thread_interrupted
 
+enum class ChainType;
+
 // Application startup time (used for uptime calculation)
 int64_t GetStartupTime();
 
@@ -157,6 +159,7 @@ public:
      * Select the network in use
      */
     void SelectConfigNetwork(const std::string& network);
+    void SelectConfigNetwork(const ChainType& network);
 
     bool ParseParameters(int argc, const char* const argv[], std::string& error);
     bool ReadConfigFiles(std::string& error, bool ignore_invalid_keys = false);

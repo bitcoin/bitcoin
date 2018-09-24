@@ -51,6 +51,7 @@ public:
 
     //! Choose network parameters.
     virtual void selectParams(const std::string& network) = 0;
+    virtual void selectParams(const ChainType& network) = 0;
 
     //! Get network name.
     virtual std::string getNetwork() = 0;

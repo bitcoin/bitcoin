@@ -407,6 +407,12 @@ void ArgsManager::SelectConfigNetwork(const std::string& network)
     m_network = network;
 }
 
+void ArgsManager::SelectConfigNetwork(const ChainType& network)
+{
+    LOCK(cs_args);
+    m_network = FormatChainType(network);
+}
+
 bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::string& error)
 {
     LOCK(cs_args);
