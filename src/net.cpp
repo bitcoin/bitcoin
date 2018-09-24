@@ -1228,6 +1228,71 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     }
 }
 
+void CConnman::DisconnectNodes()
+{
+    {
+        LOCK(cs_vNodes);
+        // Disconnect unused nodes
+        for (auto it = vNodes.begin(); it != vNodes.end(); )
+        {
+            CNode* pnode = *it;
+            if (pnode->fDisconnect)
+            {
+                if (fLogIPs) {
+                    LogPrintf("ThreadSocketHandler -- removing node: peer=%d addr=%s nRefCount=%d fInbound=%d fMasternode=%d\n",
+                          pnode->GetId(), pnode->addr.ToString(), pnode->GetRefCount(), pnode->fInbound, pnode->fMasternode);
+                } else {
+                    LogPrintf("ThreadSocketHandler -- removing node: peer=%d nRefCount=%d fInbound=%d fMasternode=%d\n",
+                          pnode->GetId(), pnode->GetRefCount(), pnode->fInbound, pnode->fMasternode);
+                }
+
+                // remove from vNodes
+                it = vNodes.erase(it);
+
+                // release outbound grant (if any)
+                pnode->grantOutbound.Release();
+
+                // close socket and cleanup
+                pnode->CloseSocketDisconnect();
+
+                // hold in disconnected pool until all refs are released
+                pnode->Release();
+                vNodesDisconnected.push_back(pnode);
+            } else {
+                ++it;
+            }
+        }
+    }
+    {
+        // Delete disconnected nodes
+        std::list<CNode*> vNodesDisconnectedCopy = vNodesDisconnected;
+        for (auto it = vNodesDisconnected.begin(); it != vNodesDisconnected.end(); )
+        {
+            CNode* pnode = *it;
+            // wait until threads are done using it
+            bool fDelete = false;
+            if (pnode->GetRefCount() <= 0) {
+                {
+                    TRY_LOCK(pnode->cs_inventory, lockInv);
+                    if (lockInv) {
+                        TRY_LOCK(pnode->cs_vSend, lockSend);
+                        if (lockSend) {
+                            fDelete = true;
+                        }
+                    }
+                }
+                if (fDelete) {
+                    it = vNodesDisconnected.erase(it);
+                    DeleteNode(pnode);
+                }
+            }
+            if (!fDelete) {
+                ++it;
+            }
+        }
+    }
+}
+
 void CConnman::NotifyNumConnectionsChanged()
 {
     size_t vNodesSize;
@@ -1246,70 +1311,7 @@ void CConnman::ThreadSocketHandler()
 {
     while (!interruptNet)
     {
-        //
-        // Disconnect nodes
-        //
-        {
-            LOCK(cs_vNodes);
-            // Disconnect unused nodes
-            for (auto it = vNodes.begin(); it != vNodes.end(); )
-            {
-                CNode* pnode = *it;
-                if (pnode->fDisconnect)
-                {
-                    if (fLogIPs) {
-                        LogPrintf("ThreadSocketHandler -- removing node: peer=%d addr=%s nRefCount=%d fInbound=%d fMasternode=%d\n",
-                              pnode->GetId(), pnode->addr.ToString(), pnode->GetRefCount(), pnode->fInbound, pnode->fMasternode);
-                    } else {
-                        LogPrintf("ThreadSocketHandler -- removing node: peer=%d nRefCount=%d fInbound=%d fMasternode=%d\n",
-                              pnode->GetId(), pnode->GetRefCount(), pnode->fInbound, pnode->fMasternode);
-                    }
-
-                    // remove from vNodes
-                    it = vNodes.erase(it);
-
-                    // release outbound grant (if any)
-                    pnode->grantOutbound.Release();
-
-                    // close socket and cleanup
-                    pnode->CloseSocketDisconnect();
-
-                    // hold in disconnected pool until all refs are released
-                    pnode->Release();
-                    vNodesDisconnected.push_back(pnode);
-                } else {
-                    ++it;
-                }
-            }
-        }
-        {
-            // Delete disconnected nodes
-            std::list<CNode*> vNodesDisconnectedCopy = vNodesDisconnected;
-            for (auto it = vNodesDisconnected.begin(); it != vNodesDisconnected.end(); )
-            {
-                CNode* pnode = *it;
-                // wait until threads are done using it
-                bool fDelete = false;
-                if (pnode->GetRefCount() <= 0) {
-                    {
-                        TRY_LOCK(pnode->cs_inventory, lockInv);
-                        if (lockInv) {
-                            TRY_LOCK(pnode->cs_vSend, lockSend);
-                            if (lockSend) {
-                                fDelete = true;
-                            }
-                        }
-                    }
-                    if (fDelete) {
-                        it = vNodesDisconnected.erase(it);
-                        DeleteNode(pnode);
-                    }
-                }
-                if (!fDelete) {
-                    ++it;
-                }
-            }
-        }
+        DisconnectNodes();
         NotifyNumConnectionsChanged();
 
         //
