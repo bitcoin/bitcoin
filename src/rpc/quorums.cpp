@@ -240,7 +240,7 @@ static UniValue quorum_info(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
     }
 
-    uint256 quorumHash = ParseHashV(request.params[1], "quorumHash");
+    uint256 quorumHash(ParseHashV(request.params[1], "quorumHash"));
     bool includeSkShare = false;
     if (!request.params[2].isNull()) {
         includeSkShare = ParseBoolV(request.params[2], "includeSkShare");
@@ -381,7 +381,7 @@ static UniValue quorum_memberof(const JSONRPCRequest& request)
 {
     quorum_memberof_help(request);
 
-    uint256 protxHash = ParseHashV(request.params[0], "proTxHash");
+    uint256 protxHash(ParseHashV(request.params[0], "proTxHash"));
     int scanQuorumsCount = -1;
     if (!request.params[1].isNull()) {
         scanQuorumsCount = ParseInt32V(request.params[1], "scanQuorumsCount");
@@ -530,8 +530,8 @@ static UniValue quorum_sigs_cmd(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
     }
 
-    uint256 id = ParseHashV(request.params[1], "id");
-    uint256 msgHash = ParseHashV(request.params[2], "msgHash");
+    uint256 id(ParseHashV(request.params[1], "id"));
+    uint256 msgHash(ParseHashV(request.params[2], "msgHash"));
 
     if (cmd == "quorumsign") {
         uint256 quorumHash;
@@ -590,7 +590,7 @@ static UniValue quorum_sigs_cmd(const JSONRPCRequest& request)
             return llmq_ctx.sigman->VerifyRecoveredSig(llmqType, *llmq_ctx.qman, signHeight, id, msgHash, sig, 0) ||
                    llmq_ctx.sigman->VerifyRecoveredSig(llmqType, *llmq_ctx.qman, signHeight, id, msgHash, sig, signOffset);
         } else {
-            uint256 quorumHash = ParseHashV(request.params[4], "quorumHash");
+            uint256 quorumHash(ParseHashV(request.params[4], "quorumHash"));
             llmq::CQuorumCPtr quorum = llmq_ctx.qman->GetQuorum(llmqType, quorumHash);
 
             if (!quorum) {
@@ -642,7 +642,7 @@ static UniValue quorum_selectquorum(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
     }
 
-    uint256 id = ParseHashV(request.params[1], "id");
+    uint256 id(ParseHashV(request.params[1], "id"));
 
     UniValue ret(UniValue::VOBJ);
 
@@ -723,7 +723,7 @@ static UniValue quorum_getdata(const JSONRPCRequest& request)
 
     NodeId nodeId = ParseInt64V(request.params[0], "nodeId");
     Consensus::LLMQType llmqType = static_cast<Consensus::LLMQType>(ParseInt32V(request.params[1], "llmqType"));
-    uint256 quorumHash = ParseHashV(request.params[2], "quorumHash");
+    uint256 quorumHash(ParseHashV(request.params[2], "quorumHash"));
     uint16_t nDataMask = static_cast<uint16_t>(ParseInt32V(request.params[3], "dataMask"));
     uint256 proTxHash;
 
@@ -871,7 +871,7 @@ static UniValue verifychainlock(const JSONRPCRequest& request)
 {
     verifychainlock_help(request);
 
-    const uint256 nBlockHash = ParseHashV(request.params[0], "blockHash");
+    const uint256 nBlockHash(ParseHashV(request.params[0], "blockHash"));
 
     CBLSSignature chainLockSig;
     if (!chainLockSig.SetHexStr(request.params[1].get_str())) {
@@ -915,8 +915,8 @@ static UniValue verifyislock(const JSONRPCRequest& request)
 {
     verifyislock_help(request);
 
-    uint256 id = ParseHashV(request.params[0], "id");
-    uint256 txid = ParseHashV(request.params[1], "txid");
+    uint256 id(ParseHashV(request.params[0], "id"));
+    uint256 txid(ParseHashV(request.params[1], "txid"));
 
     CBLSSignature sig;
     if (!sig.SetHexStr(request.params[2].get_str())) {

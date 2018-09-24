@@ -374,7 +374,7 @@ static UniValue waitforblock(const JSONRPCRequest& request)
     }.Check(request);
     int timeout = 0;
 
-    uint256 hash = uint256S(request.params[0].get_str());
+    uint256 hash(ParseHashV(request.params[0], "blockhash"));
 
     if (!request.params[1].isNull())
         timeout = request.params[1].get_int();
@@ -634,7 +634,7 @@ static UniValue getmempoolancestors(const JSONRPCRequest& request)
     if (!request.params[1].isNull())
         fVerbose = request.params[1].get_bool();
 
-    uint256 hash = ParseHashV(request.params[0], "parameter 1");
+    uint256 hash(ParseHashV(request.params[0], "parameter 1"));
 
     const CTxMemPool& mempool = EnsureMemPool(request.context);
     LOCK(mempool.cs);
@@ -698,7 +698,7 @@ static UniValue getmempooldescendants(const JSONRPCRequest& request)
     if (!request.params[1].isNull())
         fVerbose = request.params[1].get_bool();
 
-    uint256 hash = ParseHashV(request.params[0], "parameter 1");
+    uint256 hash(ParseHashV(request.params[0], "parameter 1"));
 
     const CTxMemPool& mempool = EnsureMemPool(request.context);
     LOCK(mempool.cs);
@@ -749,7 +749,7 @@ static UniValue getmempoolentry(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    uint256 hash = ParseHashV(request.params[0], "parameter 1");
+    uint256 hash(ParseHashV(request.params[0], "parameter 1"));
 
     const CTxMemPool& mempool = EnsureMemPool(request.context);
     LOCK(mempool.cs);
@@ -862,8 +862,7 @@ static UniValue getblockheader(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    std::string strHash = request.params[0].get_str();
-    uint256 hash(uint256S(strHash));
+    uint256 hash(ParseHashV(request.params[0], "hash"));
 
     bool fVerbose = true;
     if (!request.params[1].isNull())
@@ -936,8 +935,7 @@ static UniValue getblockheaders(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    std::string strHash = request.params[0].get_str();
-    uint256 hash(uint256S(strHash));
+    uint256 hash(ParseHashV(request.params[0], "blockhash"));
 
     const CBlockIndex* pblockindex;
     const CBlockIndex* tip;
@@ -1048,8 +1046,7 @@ static UniValue getmerkleblocks(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Filter is not within size constraints");
     }
 
-    std::string strHash = request.params[1].get_str();
-    uint256 hash(uint256S(strHash));
+    uint256 hash(ParseHashV(request.params[1], "blockhash"));
 
     const CBlockIndex* pblockindex = g_chainman.m_blockman.LookupBlockIndex(hash);
     if (!pblockindex) {
@@ -1154,8 +1151,7 @@ static UniValue getblock(const JSONRPCRequest& request)
                 },
     }.Check(request);
 
-    std::string strHash = request.params[0].get_str();
-    uint256 hash(uint256S(strHash));
+    uint256 hash(ParseHashV(request.params[0], "blockhash"));
 
     int verbosity = 1;
     if (!request.params[1].isNull()) {
@@ -1356,8 +1352,7 @@ static UniValue gettxout(const JSONRPCRequest& request)
 
     UniValue ret(UniValue::VOBJ);
 
-    std::string strHash = request.params[0].get_str();
-    uint256 hash(uint256S(strHash));
+    uint256 hash(ParseHashV(request.params[0], "txid"));
     int n = request.params[1].get_int();
     COutPoint out(hash, n);
     bool fMempool = true;
@@ -1805,8 +1800,7 @@ static UniValue preciousblock(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    std::string strHash = request.params[0].get_str();
-    uint256 hash(uint256S(strHash));
+    uint256 hash(ParseHashV(request.params[0], "blockhash"));
     CBlockIndex* pblockindex;
 
     {
@@ -1841,8 +1835,7 @@ static UniValue invalidateblock(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    std::string strHash = request.params[0].get_str();
-    uint256 hash(uint256S(strHash));
+    uint256 hash(ParseHashV(request.params[0], "blockhash"));
     CValidationState state;
 
     CBlockIndex* pblockindex;
@@ -1881,8 +1874,7 @@ static UniValue reconsiderblock(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    std::string strHash = request.params[0].get_str();
-    uint256 hash(uint256S(strHash));
+    uint256 hash(ParseHashV(request.params[0], "blockhash"));
 
     {
         LOCK(cs_main);
@@ -1937,7 +1929,7 @@ static UniValue getchaintxstats(const JSONRPCRequest& request)
         LOCK(cs_main);
         pindex = ::ChainActive().Tip();
     } else {
-        uint256 hash = uint256S(request.params[1].get_str());
+        uint256 hash(ParseHashV(request.params[1], "blockhash"));
         LOCK(cs_main);
         pindex = g_chainman.m_blockman.LookupBlockIndex(hash);
         if (!pindex) {
@@ -2114,8 +2106,7 @@ static UniValue getblockstats(const JSONRPCRequest& request)
 
         pindex = ::ChainActive()[height];
     } else {
-        const uint256 hash = ParseHashV(request.params[0], "parameter 1");
-
+        const uint256 hash(ParseHashV(request.params[0], "hash_or_height"));
         pindex = g_chainman.m_blockman.LookupBlockIndex(hash);
         if (!pindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
@@ -2307,8 +2298,7 @@ static UniValue getspecialtxes(const JSONRPCRequest& request)
 
     LOCK(cs_main);
 
-    std::string strHash = request.params[0].get_str();
-    uint256 hash(uint256S(strHash));
+    uint256 hash(ParseHashV(request.params[0], "blockhash"));
 
     int nTxType = -1;
     if (!request.params[1].isNull()) {
@@ -2637,7 +2627,7 @@ static UniValue getblockfilter(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    uint256 block_hash = ParseHashV(request.params[0], "blockhash");
+    uint256 block_hash(ParseHashV(request.params[0], "blockhash"));
     std::string filtertype_name = "basic";
     if (!request.params[1].isNull()) {
         filtertype_name = request.params[1].get_str();
