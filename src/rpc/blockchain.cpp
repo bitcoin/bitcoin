@@ -30,6 +30,7 @@
 #include <utilstrencodings.h>
 #include <hash.h>
 #include <validationinterface.h>
+#include <versionbitsinfo.h>
 #include <warnings.h>
 
 #include <assert.h>
