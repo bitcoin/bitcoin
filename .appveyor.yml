@@ -55,5 +55,5 @@ test_script:
 - ps:  src\bench_bitcoin.exe -evals=1 -scaling=0
 - ps:  python test\util\bitcoin-util-test.py
 - cmd: python test\util\rpcauth-test.py
-- cmd: python test\functional\test_runner.py --force --quiet --combinedlogslen=4000 --exclude "wallet_multiwallet,wallet_multiwallet.py --usecli"
+- cmd: python test\functional\test_runner.py --force --quiet --combinedlogslen=4000 --exclude wallet_multiwallet
 deploy: off

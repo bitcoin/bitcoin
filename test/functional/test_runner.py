@@ -285,11 +285,13 @@ def main():
 
     # Remove the test cases that the user has explicitly asked to exclude.
     if args.exclude:
-        exclude_tests = [re.sub("\.py$", "", test) + (".py" if ".py" not in test else "") for test in args.exclude.split(',')]
+        exclude_tests = [test.split('.py')[0] for test in args.exclude.split(',')]
         for exclude_test in exclude_tests:
-            if exclude_test in test_list:
-                test_list.remove(exclude_test)
-            else:
+            # Remove <test_name>.py and <test_name>.py --arg from the test list
+            exclude_list = [test for test in test_list if test.split('.py')[0] == exclude_test]
+            for exclude_item in exclude_list:
+                test_list.remove(exclude_item)
+            if not exclude_list:
                 print("{}WARNING!{} Test '{}' not found in current test list.".format(BOLD[1], BOLD[0], exclude_test))
 
     if not test_list:
