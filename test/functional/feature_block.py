@@ -395,7 +395,7 @@ class FullBlockTest(BitcoinTestFramework):
         txout_b37 = b37.vtx[1]
         tx = self.create_and_sign_transaction(out[11], 0)
         b37 = self.update_block(37, [tx])
-        self.sync_blocks([b37], success=False, reject_reason='bad-txns-inputs-missingorspent', reconnect=True)
+        self.sync_blocks([b37], success=False, reject_reason='bad-txns-inputs-duplicate', reconnect=True)
 
         # attempt to spend b37's first non-coinbase tx, at which point b37 was still considered valid
         self.move_tip(35)
@@ -866,7 +866,7 @@ class FullBlockTest(BitcoinTestFramework):
         tx1 = self.create_and_sign_transaction(out[20], out[20].vout[0].nValue)
         tx2 = self.create_and_sign_transaction(tx1, 1)
         b66 = self.update_block(66, [tx2, tx1])
-        self.sync_blocks([b66], success=False, reject_reason='bad-txns-inputs-missingorspent', reconnect=True)
+        self.sync_blocks([b66], success=False, reject_reason='bad-txns-longchain-ord', reconnect=True)
 
         # Attempt to double-spend a transaction created in a block
         #
@@ -881,7 +881,7 @@ class FullBlockTest(BitcoinTestFramework):
         tx2 = self.create_and_sign_transaction(tx1, 1)
         tx3 = self.create_and_sign_transaction(tx1, 2)
         b67 = self.update_block(67, [tx1, tx2, tx3])
-        self.sync_blocks([b67], success=False, reject_reason='bad-txns-inputs-missingorspent', reconnect=True)
+        self.sync_blocks([b67], success=False, reject_reason='bad-txns-inputs-duplicate', reconnect=True)
 
         # More tests of block subsidy
         #

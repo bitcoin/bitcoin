@@ -3075,6 +3075,232 @@ static bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state,
     return true;
 }
 
+/* CheckInputInvariants checks for three criticial invariants for the inputs in a block:
+ * 1) No Duplicate Inputs
+ * 2) Only one Coinbase (implied by 1)
+ * 3) No Null Inputs other than coinbase (implied by 1 and 5)
+ * 4) All long-chains are in order
+ *
+ * It does not check
+ * 5) First txn is coinbase
+ */
+static bool CheckInputInvariants(const CBlock& block, CValidationState& state)
+{
+    /* This duplication checking algorithm uses a probabilistic filter to check
+     * for collisions efficiently.  This is faster than the naive construction,
+     * using a set, which requires more allocation and comparisons of uint256s.
+     *
+     * First we create a bitset table with 1<<21 elements. This is around 300
+     * KB, so we construct it on the heap. We also create 8 pseudo-random
+     * functions based on PCG. Each PCG function considers looks at 64 bits of
+     * the prevout's hash, and the increment is xor'd with the index. Although
+     * each hash is not dependent on the entire hash, a single 64-bit collision
+     * would be expected with 4-billion UTXOS, and even then that would not
+     * trigger a collision in this algorithm directly as there are 3 other
+     * 64-bit hashes to collide.
+     *
+     *
+     * Then, we iterate through the inputs one by one in order, hashing them using
+     * our PCG hash functions.
+     *
+     * We then check if all 8 hashes are set in the table yet. If they are, we
+     * do a linear scan through the inputs to see if it was a true collision,
+     * and reject the txn.
+     *
+     * Otherwise, we set the 8 bits corresponding to the hashes and continue.
+     *
+     * ------------------------------------------------------------------------
+     * Analysis
+     * ------------------------------------------------------------------------
+     * From the perspective of the N+1st prevout, assuming the transaction does
+     * not double spend:
+     *
+     * Up to N*8 hashes have been set in the table already (potentially fewer if
+     * collisions)
+     *
+     * For each of the 8 hashes h_1...h_8, P(bit set in table for h_i) =
+     * (N*8)/1<<21
+     *
+     * Each of these probabilities is independent
+     *
+     * Therefore the total probability of a false collision on all bits is:
+     * ((N*8)/2**21)**8
+     *
+     * The cost of a false collision is to do N comparisons.
+     *
+     * Therefore, the expression for the expected number of comparisons is:
+     *
+     * Sum[i*( i*8 / 2**21)**8, {i, 0, M}]
+     *
+     * Based on an input being at least 41 bytes, and a block being 1M bytes
+     * max, there are a maximum of 24390 inputs, so M = 24390
+     *
+     * The total expected number of direct comparisons for M=24930 is therefore
+     * 0.33 with this algorithm.
+     *
+     * The worst case for this algorithm from a denial of service perspective
+     * with an invalid block would be to do a transaction where the last two
+     * elements are a collision. In this case, the scan would require to scan all
+     * N elements to find the conflict.
+     *
+     * ------------------------------------------------------------------------
+     *  Extensions
+     * ------------------------------------------------------------------------
+     *
+     * - Single Coinbase / Null Input Check
+     *     Note that the first element checked is the coinbase transaction,
+     *     whose input is null. Therefore, any subsequent null input would be a
+     *     collision with that null, enabling us to not null check every
+     *     subsequent entry. This has 0 overhead.
+     * - Long Chain Check
+     *     We also scan for the presence of the outputs of a transaction in the
+     *     table as we go (without insertion), which detects an out-of-order
+     *     spend in a long-chain within a block.
+     *
+     *     The worst case behavior for a block under this additional scan is for
+     *     all inputs to be spent and then all outputs to be created. Any other
+     *     pattern of inputs and outputs would be strictly less work. A minimal
+     *     output is 9 bytes -- there are at most 1e6/9 outputs. Thus, we can
+     *     model it as:
+     *
+     *     Max[((1-x)*1e6/9)(x*1e6/41)*(8*x*(1e6/41) / 2**21)**8 +
+     *         Sum[ i*( i*8 / 2**21)**8, {i, 0, x*1e6/41}], {x, 0, 1}]
+     *
+     *     That is:
+     *       The most amount of work for a given fraction x of block space devoted to
+     *       inputs, which is the expected amount of work for checking a table with
+     *       x*1e6/41 entries (1-x)*1e6/9 additional times plus the expected  work
+     *       for deduplicating just the inputs.
+     *
+     *     This expression is at most ~0.7 expected comparisons worst case, which is
+     *     still perfectly acceptable.
+     */
+
+
+    const auto pcg = [](uint64_t start, uint64_t inc) {
+        uint64_t nxt = (inc | 1) + (start * 6364136223846793005ULL);
+        uint32_t x = (nxt ^ (nxt >> 18)) >> 27;
+        uint32_t r = nxt >> 59;
+        return (x >> r) | (x << (31 & (-r)));
+
+    };
+    const uint64_t k1 = GetRand(std::numeric_limits<uint64_t>::max());
+    const uint64_t k2 = GetRand(std::numeric_limits<uint64_t>::max());
+    const uint64_t k3 = GetRand(std::numeric_limits<uint64_t>::max());
+    const uint64_t k4 = GetRand(std::numeric_limits<uint64_t>::max());
+    const uint64_t k5 = GetRand(std::numeric_limits<uint64_t>::max());
+    const uint64_t k6 = GetRand(std::numeric_limits<uint64_t>::max());
+    const uint64_t k7 = GetRand(std::numeric_limits<uint64_t>::max());
+    const uint64_t k8 = GetRand(std::numeric_limits<uint64_t>::max());
+    struct pos {
+        uint32_t a : 21;
+        uint32_t b : 21;
+        uint32_t c : 21;
+        bool empty_1 : 1;
+        uint32_t d : 21;
+        uint32_t e : 21;
+        uint32_t f : 21;
+        bool empty_2 : 1;
+        uint32_t g : 21;
+        uint32_t h : 21;
+        uint32_t unused : 22;
+    };
+    auto hasher = [k1, k2, k3, k4, k5, k6, k7, k8, pcg](const COutPoint& out) {
+        return pos{
+            pcg(out.hash.GetUint64(0) ^ k1, 1 | ((((uint64_t)out.n) << 1) ^ k1)),
+            pcg(out.hash.GetUint64(0) ^ k2, 1 | ((((uint64_t)out.n) << 1) ^ k2)),
+            pcg(out.hash.GetUint64(1) ^ k3, 1 | ((((uint64_t)out.n) << 1) ^ k3)),
+            false,
+            pcg(out.hash.GetUint64(1) ^ k4, 1 | ((((uint64_t)out.n) << 1) ^ k4)),
+            pcg(out.hash.GetUint64(2) ^ k5, 1 | ((((uint64_t)out.n) << 1) ^ k5)),
+            pcg(out.hash.GetUint64(2) ^ k6, 1 | ((((uint64_t)out.n) << 1) ^ k6)),
+            false,
+            pcg(out.hash.GetUint64(3) ^ k7, 1 | ((((uint64_t)out.n) << 1) ^ k7)),
+            pcg(out.hash.GetUint64(3) ^ k8, 1 | ((((uint64_t)out.n) << 1) ^ k8)),
+            0,
+        };
+    };
+
+    std::unique_ptr<std::bitset<1 << 21>> pTable = MakeUnique<std::bitset<1 << 21>>();
+    auto& table = *pTable.get();
+    for (auto txit = block.vtx.cbegin(); txit != block.vtx.cend(); ++txit) {
+        const auto& tx = **txit;
+        // Check that the outpoints being created by this transaction have
+        // not been spent by an earlier transaction (causing an invalid
+        // longchain). We can check this before inserting this transaction's
+        // inputs because it would cause a sha256 hash cycle for it to
+        // conflict.
+        COutPoint outpoint{tx.GetHash(), 0};
+        for (size_t n = 0; n < tx.vout.size(); ++n) {
+            outpoint.n = n;
+            const auto hash = hasher(outpoint);
+            if (table[hash.a] && table[hash.b] &&
+                table[hash.c] && table[hash.d] &&
+                table[hash.e] && table[hash.f] &&
+                table[hash.g] && table[hash.h]) {
+                for (auto txit2 = block.vtx.cbegin(); txit2 != txit; ++txit2) {
+                    const auto& tx2 = **txit2;
+                    auto elem = std::find_if(tx2.vin.cbegin(), tx2.vin.cend(),
+                        [&](const CTxIn& x) { return x.prevout == outpoint; });
+                    if (elem != tx2.vin.cend()) {
+                        return state.DoS(100, false, REJECT_INVALID, "bad-txns-longchain-ord");
+                    }
+                }
+            }
+        }
+        // Now check that none of this transaction's inputs are a double
+        // spend of a previous input in the block.
+        for (auto txinit = tx.vin.cbegin(); txinit != tx.vin.cend(); ++txinit) {
+            const COutPoint& prevout = txinit->prevout;
+            const auto hash = hasher(prevout);
+            if (!table[hash.a] || !table[hash.b] ||
+                !table[hash.c] || !table[hash.d] ||
+                !table[hash.e] || !table[hash.f] ||
+                !table[hash.g] || !table[hash.h]) {
+                table[hash.a] = true;
+                table[hash.b] = true;
+                table[hash.c] = true;
+                table[hash.d] = true;
+                table[hash.e] = true;
+                table[hash.f] = true;
+                table[hash.g] = true;
+                table[hash.h] = true;
+            } else {
+                // These are kept just to emulate some of the previous error
+                // messages (some of the time). They can eventually be
+                // eliminated.
+                if (tx.IsCoinBase()) {
+                    return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple", false, "more than one coinbase");
+                }
+                if (prevout.IsNull()) {
+                    return state.DoS(10, false, REJECT_INVALID, "bad-txns-prevout-null");
+                }
+                // If we have a potential collision, perform expensive check over
+                // all prior transactions, starting with the current transaction.
+
+                // Check current transaction up to the input txinit
+                auto match = std::find_if(tx.vin.begin(), txinit,
+                    [&](const CTxIn& x) { return x.prevout == prevout; });
+                // If the iterator outputs anything except for txinit, then we have found a conflict
+                if (match != txinit) {
+                    return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-duplicate");
+                }
+                // Check prior transaction's inputs for conflict
+                for (auto txit2 = block.vtx.cbegin(); txit2 != txit; ++txit2) {
+                    const auto& tx2 = **txit2;
+                    match = std::find_if(tx2.vin.cbegin(), tx2.vin.cend(),
+                        [&](const CTxIn& x) { return x.prevout == prevout; });
+                    if (match != tx2.vin.cend()) {
+                        return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-duplicate");
+                    }
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
 bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW, bool fCheckMerkleRoot)
 {
     // These are checks that are independent of context.
@@ -3111,16 +3337,19 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     if (block.vtx.empty() || block.vtx.size() * WITNESS_SCALE_FACTOR > MAX_BLOCK_WEIGHT || ::GetSerializeSize(block, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * WITNESS_SCALE_FACTOR > MAX_BLOCK_WEIGHT)
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-length", false, "size limits failed");
 
-    // First transaction must be coinbase, the rest must not be
+    // First transaction must be coinbase
     if (block.vtx.empty() || !block.vtx[0]->IsCoinBase())
         return state.DoS(100, false, REJECT_INVALID, "bad-cb-missing", false, "first tx is not coinbase");
-    for (unsigned int i = 1; i < block.vtx.size(); i++)
-        if (block.vtx[i]->IsCoinBase())
-            return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple", false, "more than one coinbase");
+
+    // Check transactions for duplicate inputs, longchain order, no null inputs, singular coinbase
+    if (!CheckInputInvariants(block, state))
+        return false;
+
 
     // Check transactions
+    //
     for (const auto& tx : block.vtx)
-        if (!CheckTransaction(*tx, state, true))
+        if (!CheckTransaction(*tx, state, false, false))
             return state.Invalid(false, state.GetRejectCode(), state.GetRejectReason(),
                                  strprintf("Transaction check failed (tx hash %s) %s", tx->GetHash().ToString(), state.GetDebugMessage()));
 
