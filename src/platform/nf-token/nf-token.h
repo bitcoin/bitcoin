@@ -14,10 +14,10 @@ namespace Platform
     class NfToken
     {
     public:
-        /// NF token protocol unique name/identifier, can be represented as a base32 string, 12 symbols max
-        uint64_t tokenProtocolName{UKNOWN_TOKEN_PROTOCOL};
+        /// NF token protocol unique symbol/identifier, can be represented as a base32 string, 12 symbols max
+        uint64_t tokenProtocolId{UKNOWN_TOKEN_PROTOCOL};
 
-        /// NF token unique identifier, can be a sha256 hash, tokenProtocolName + tokenId must be globally unique
+        /// NF token unique identifier, can be a sha256 hash, tokenProtocolId + tokenId must be globally unique
         uint256 tokenId;
 
         /// Public key id of the owner of the nf-token
@@ -36,7 +36,7 @@ namespace Platform
         template<typename Stream, typename Operation>
         inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
         {
-            READWRITE(tokenProtocolName);
+            READWRITE(tokenProtocolId);
             READWRITE(tokenId);
             READWRITE(tokenOwnerKeyId);
             READWRITE(metadataAdminKeyId);

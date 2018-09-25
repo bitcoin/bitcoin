@@ -14,10 +14,10 @@ namespace Platform
     class NfTokenRegTxBuilder
     {
     public:
-        NfTokenRegTxBuilder & SetTokenProtocol(const json_spirit::Value & tokenProtocolName)
+        NfTokenRegTxBuilder & SetTokenProtocol(const json_spirit::Value & tokenProtocolId)
         {
             //TODO: convert base 32 string to the token type name/id
-            //m_nfToken.tokenProtocolName;
+            //m_nfToken.tokenProtocolId;
             return *this;
         }
 

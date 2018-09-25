@@ -14,18 +14,15 @@ namespace Platform
     class NfTokenProtocol
     {
     public:
-        /// NF token protocol unique name/identifier, should be a meaningful name descrbing this NF token type
+        /// NF token protocol unique symbol/identifier, can be an a abbreviated name descrbing this NF token type
         /// Represented as a base32 string, can only contain characters: .abcdefghijklmnopqrstuvwxyz12345
-        /// Minimum length 6(TODO:?) symbols, maximum length 12 symbols
-        /// The minimum length requirement comes from the Token/Token Protocol Capture Attack (working title)
-        uint64_t tokenProtocolName;
+        /// Minimum length 3 symbols, maximum length 12 symbols
+        uint64_t tokenProtocolId;
 
-        /// Abbreviated name for this NF token type/protocol
-        /// Minimum length 3 symbols, maximum length 6/12(TODO:?) symbols
-        std::string tokenProtocolSymbol;
-
-        /// Optional full NF token type name, maximum length is 260(TODO:?) symbols
-        std::string tokenProtocolLongName;
+        /// Full name for this NF token type/protocol
+        /// Minimum length 3 symbols, maximum length 24(TODO:?) symbols
+        /// Characters TODO:
+        std::string tokenProtocolName;
 
         /// URI to schema (json/xml/binary) descibing metadata format
         std::string tokenMetadataSchemaUri;
@@ -47,9 +44,8 @@ namespace Platform
         template<typename Stream, typename Operation>
         inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
         {
+            READWRITE(tokenProtocolId);
             READWRITE(tokenProtocolName);
-            READWRITE(tokenProtocolSymbol);
-            READWRITE(tokenProtocolLongName);
             READWRITE(tokenMetadataSchemaUri);
             READWRITE(tokenMetadataMimeType);
             READWRITE(isTokenTransferrable);
@@ -59,33 +55,29 @@ namespace Platform
     };
 
     /* Examples:
+    tokenProtocolId = nfg;
     tokenProtocolName = nftoken.glbl;
-    tokenProtocolSymbol = nfg;
-    tokenProtocolLongName = nftoken-global;
     tokenMetadataSchemaUri = null;
     tokenMetadataMimeType = null;
     tokenImmutable = false;
     tokenTransferrable = false;
 
+    tokenProtocolId = cks;
     tokenProtocolName = ercS21.kitts;
-    tokenProtocolSymbol = cks;
-    tokenProtocolLongName = erc721-cryptokitties;
     tokenMetadataSchemaUri = https://erc721-json-schema-url;
     tokenMetadataMimeType = text/uri-list;
     tokenImmutable = false;
     tokenTransferrable = false;
 
+    tokenProtocolId = crd;
     tokenProtocolName = crown.id;
-    tokenProtocolSymbol = crd;
-    tokenProtocolLongName = crown-id;
     tokenMetadataSchemaUri = https://binary-schema;
     tokenMetadataMimeType = application/x-binary;
     tokenImmutable = false;
     tokenTransferrable = false;
 
-    tokenProtocolName = docproof;
     tokenProtocolSymbol = doc;
-    tokenProtocolLongName = Document Proofs;
+    tokenProtocolName = docproof;
     tokenMetadataSchemaUri = https://document-desciption-schema;
     tokenMetadataMimeType = text/plain;
     tokenImmutable = true;
