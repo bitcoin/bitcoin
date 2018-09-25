@@ -9,16 +9,17 @@
 #ifndef BITCOIN_UTIL_MONEYSTR_H
 #define BITCOIN_UTIL_MONEYSTR_H
 
-#include <stdint.h>
-#include <string>
-
 #include <amount.h>
+#include <attributes.h>
+
+#include <cstdint>
+#include <string>
 
 /* Do not use these functions to represent or parse monetary amounts to or from
  * JSON but use AmountFromValue and ValueFromAmount for that.
  */
 std::string FormatMoney(const CAmount& n);
-bool ParseMoney(const std::string& str, CAmount& nRet);
-bool ParseMoney(const char* pszIn, CAmount& nRet);
+NODISCARD bool ParseMoney(const std::string& str, CAmount& nRet);
+NODISCARD bool ParseMoney(const char* pszIn, CAmount& nRet);
 
 #endif // BITCOIN_UTIL_MONEYSTR_H
