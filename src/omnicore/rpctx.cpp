@@ -46,11 +46,11 @@ UniValue omni_funded_send(const UniValue& params, bool fHelp)
             "\nAll bitcoins from the sender are consumed and if there are bitcoins missing, they are taken from the specified fee source. Change is sent to the fee source!\n"
 
             "\nArguments:\n"
-            "1. fromaddress          (string, required) the address to send from\n"
+            "1. fromaddress          (string, required) the address to send the tokens from\n"
             "2. toaddress            (string, required) the address of the receiver\n"
             "3. propertyid           (number, required) the identifier of the tokens to send\n"
             "4. amount               (string, required) the amount to send\n"
-            "5. feeaddress           (string, required) the address that is used to pay for fees, if needed\n"
+            "5. feeaddress           (string, required) the address that is used for change and to pay for fees, if needed\n"
 
             "\nResult:\n"
             "\"hash\"                  (string) the hex-encoded transaction hash\n"
@@ -95,10 +95,10 @@ UniValue omni_funded_sendall(const UniValue& params, bool fHelp)
             "\nAll bitcoins from the sender are consumed and if there are bitcoins missing, they are taken from the specified fee source. Change is sent to the fee source!\n"
 
             "\nArguments:\n"
-            "1. fromaddress          (string, required) the address to send from\n"
+            "1. fromaddress          (string, required) the address to the tokens send from\n"
             "2. toaddress            (string, required) the address of the receiver\n"
             "3. ecosystem            (number, required) the ecosystem of the tokens to send (1 for main ecosystem, 2 for test ecosystem)\n"
-            "4. feeaddress           (string, required) the address that is used to pay for fees, if needed\n"
+            "4. feeaddress           (string, required) the address that is used for change and to pay for fees, if needed\n"
 
             "\nResult:\n"
             "\"hash\"                  (string) the hex-encoded transaction hash\n"
