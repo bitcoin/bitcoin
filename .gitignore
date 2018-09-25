@@ -94,6 +94,7 @@ qrc_*.cpp
 # Mac specific
 .DS_Store
 build
+.idea
 
 #lcov
 *.gcno
