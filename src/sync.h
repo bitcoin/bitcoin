@@ -117,7 +117,6 @@ void PrintLockContention(const char* pszName, const char* pszFile, int nLine);
 template <typename Mutex, typename Base = typename Mutex::UniqueLock>
 class SCOPED_LOCKABLE UniqueLock : public Base
 {
-private:
     void Enter(const char* pszName, const char* pszFile, int nLine)
     {
         EnterCritical(pszName, pszFile, nLine, (void*)(Base::mutex()));
@@ -199,7 +198,6 @@ using DebugLock = UniqueLock<typename std::remove_reference<typename std::remove
 
 class CSemaphore
 {
-private:
     std::condition_variable condition;
     std::mutex mutex;
     int value;
@@ -236,7 +234,6 @@ public:
 /** RAII-style semaphore lock */
 class CSemaphoreGrant
 {
-private:
     CSemaphore* sem;
     bool fHaveGrant;
 

@@ -571,7 +571,6 @@ public:
 
 
 class CNetMessage {
-private:
     mutable CHash256 hasher;
     mutable uint256 data_hash;
 public:

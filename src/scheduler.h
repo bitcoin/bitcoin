@@ -95,7 +95,6 @@ private:
  * before it.
  */
 class SingleThreadedSchedulerClient {
-private:
     CScheduler *m_pscheduler;
 
     CCriticalSection m_cs_callbacks_pending;

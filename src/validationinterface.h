@@ -154,7 +154,6 @@ protected:
 
 struct MainSignalsInstance;
 class CMainSignals {
-private:
     std::unique_ptr<MainSignalsInstance> m_internals;
 
     friend void ::RegisterValidationInterface(CValidationInterface*);

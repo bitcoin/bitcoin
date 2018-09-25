@@ -129,7 +129,6 @@ typedef enum ReadStatus_t
 } ReadStatus;
 
 class CBlockHeaderAndShortTxIDs {
-private:
     mutable uint64_t shorttxidk0, shorttxidk1;
     uint64_t nonce;
 

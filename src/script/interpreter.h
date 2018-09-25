@@ -165,7 +165,6 @@ public:
 template <class T>
 class GenericTransactionSignatureChecker : public BaseSignatureChecker
 {
-private:
     const T* txTo;
     unsigned int nIn;
     const CAmount amount;

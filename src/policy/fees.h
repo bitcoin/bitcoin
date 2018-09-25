@@ -135,7 +135,6 @@ struct FeeCalculation
  */
 class CBlockPolicyEstimator
 {
-private:
     /** Track confirm delays up to 12 blocks for short horizon */
     static constexpr unsigned int SHORT_BLOCK_PERIODS = 12;
     static constexpr unsigned int SHORT_SCALE = 1;
@@ -273,7 +272,6 @@ private:
 
 class FeeFilterRounder
 {
-private:
     static constexpr double MAX_FILTER_FEERATE = 1e7;
     /** FEE_FILTER_SPACING is just used to provide some quantization of fee
      * filter results.  Historically it reused FEE_SPACING, but it is completely

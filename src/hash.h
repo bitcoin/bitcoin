@@ -19,7 +19,6 @@ typedef uint256 ChainCode;
 
 /** A hasher class for Bitcoin's 256-bit hash (double SHA-256). */
 class CHash256 {
-private:
     CSHA256 sha;
 public:
     static const size_t OUTPUT_SIZE = CSHA256::OUTPUT_SIZE;
@@ -43,7 +42,6 @@ public:
 
 /** A hasher class for Bitcoin's 160-bit hash (SHA-256 + RIPEMD-160). */
 class CHash160 {
-private:
     CSHA256 sha;
 public:
     static const size_t OUTPUT_SIZE = CRIPEMD160::OUTPUT_SIZE;
@@ -115,7 +113,6 @@ inline uint160 Hash160(const prevector<N, unsigned char>& vch)
 /** A writer stream (for serialization) that computes a 256-bit hash. */
 class CHashWriter
 {
-private:
     CHash256 ctx;
 
     const int nType;
@@ -150,7 +147,6 @@ public:
 template<typename Source>
 class CHashVerifier : public CHashWriter
 {
-private:
     Source* source;
 
 public:
@@ -197,7 +193,6 @@ void BIP32Hash(const ChainCode &chainCode, unsigned int nChild, unsigned char he
 /** SipHash-2-4 */
 class CSipHasher
 {
-private:
     uint64_t v[4];
     uint64_t tmp;
     int count;

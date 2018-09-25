@@ -159,7 +159,6 @@ public:
 template <typename Element, typename Hash>
 class cache
 {
-private:
     /** table stores all the elements */
     std::vector<Element> table;
 

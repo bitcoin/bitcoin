@@ -48,7 +48,6 @@ class CDBBatch
 {
     friend class CDBWrapper;
 
-private:
     const CDBWrapper &parent;
     leveldb::WriteBatch batch;
 
@@ -116,7 +115,6 @@ public:
 
 class CDBIterator
 {
-private:
     const CDBWrapper &parent;
     leveldb::Iterator *piter;
 
@@ -176,7 +174,6 @@ public:
 class CDBWrapper
 {
     friend const std::vector<unsigned char>& dbwrapper_private::GetObfuscateKey(const CDBWrapper &w);
-private:
     //! custom environment this database is using (may be nullptr in case of default environment)
     leveldb::Env* penv;
 

@@ -35,7 +35,6 @@ uint64_t DecompressAmount(uint64_t nAmount);
  */
 class CScriptCompressor
 {
-private:
     /**
      * make this static for now (there are only 6 special scripts defined)
      * this can potentially be extended together with a new nVersion for
@@ -85,7 +84,6 @@ public:
 /** wrapper for CTxOut that provides a more compact serialization */
 class CTxOutCompressor
 {
-private:
     CTxOut &txout;
 
 public:

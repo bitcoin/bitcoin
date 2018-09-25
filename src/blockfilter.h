@@ -87,7 +87,6 @@ enum BlockFilterType : uint8_t
  */
 class BlockFilter
 {
-private:
     BlockFilterType m_filter_type;
     uint256 m_block_hash;
     GCSFilter m_filter;

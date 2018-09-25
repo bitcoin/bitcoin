@@ -142,7 +142,6 @@ public:
  */
 class CRPCTable
 {
-private:
     std::map<std::string, const CRPCCommand*> mapCommands;
 public:
     CRPCTable();

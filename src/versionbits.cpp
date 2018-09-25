@@ -165,7 +165,6 @@ namespace
  * Class to implement versionbits logic.
  */
 class VersionBitsConditionChecker : public AbstractThresholdConditionChecker {
-private:
     const Consensus::DeploymentPos id;
 
 protected:

@@ -21,7 +21,6 @@ class CNetAddr;
 template <typename T>
 class CMedianFilter
 {
-private:
     std::vector<T> vValues;
     std::vector<T> vSorted;
     unsigned int nSize;

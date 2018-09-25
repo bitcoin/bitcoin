@@ -41,7 +41,6 @@ extern const SigningProvider& DUMMY_SIGNING_PROVIDER;
 
 class HidingSigningProvider : public SigningProvider
 {
-private:
     const bool m_hide_secret;
     const bool m_hide_origin;
     const SigningProvider* m_provider;

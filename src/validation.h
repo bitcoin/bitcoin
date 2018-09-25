@@ -355,7 +355,6 @@ bool CheckSequenceLocks(const CTransaction &tx, int flags, LockPoints* lp = null
  */
 class CScriptCheck
 {
-private:
     CTxOut m_tx_out;
     const CTransaction *ptxTo;
     unsigned int nIn;

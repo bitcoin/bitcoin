@@ -433,7 +433,6 @@ public:
 
 /** An in-memory indexed chain of blocks. */
 class CChain {
-private:
     std::vector<CBlockIndex*> vChain;
 
 public:
