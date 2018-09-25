@@ -24,7 +24,6 @@ static const unsigned char REJECT_CHECKPOINT = 0x43;
 
 /** Capture information about block/transaction validation */
 class CValidationState {
-private:
     enum mode_state {
         MODE_VALID,   //!< everything ok
         MODE_INVALID, //!< network rule violation (DoS value may be set)

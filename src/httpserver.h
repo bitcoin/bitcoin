@@ -56,7 +56,6 @@ struct event_base* EventBase();
  */
 class HTTPRequest
 {
-private:
     struct evhttp_request* req;
     bool replySent;
 

@@ -104,7 +104,6 @@ class ConnectTrace;
  * functions (eventually this will also be via callbacks).
  */
 class CChainState {
-private:
     /**
      * The set of all CBlockIndex entries with BLOCK_VALID_TRANSACTIONS (for itself and all ancestors) and
      * as good as our current tip or better. Entries may be failed, though, and pruning nodes may be
@@ -1703,7 +1702,6 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
  */
 class WarningBitsConditionChecker : public AbstractThresholdConditionChecker
 {
-private:
     int bit;
 
 public:
@@ -2365,7 +2363,6 @@ struct PerBlockConnectTrace {
  * it away and make a new one.
  */
 class ConnectTrace {
-private:
     std::vector<PerBlockConnectTrace> blocksConnected;
     CTxMemPool &pool;
 

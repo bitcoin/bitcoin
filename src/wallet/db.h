@@ -27,7 +27,6 @@ static const bool DEFAULT_WALLET_PRIVDB = true;
 
 class BerkeleyEnvironment
 {
-private:
     bool fDbEnvInit;
     bool fMockDb;
     // Don't change into fs::path, as that can result in

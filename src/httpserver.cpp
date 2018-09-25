@@ -67,7 +67,6 @@ private:
 template <typename WorkItem>
 class WorkQueue
 {
-private:
     /** Mutex protects entire object */
     Mutex cs;
     std::condition_variable cond;

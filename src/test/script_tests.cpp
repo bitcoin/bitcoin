@@ -277,7 +277,6 @@ enum class WitnessMode {
 
 class TestBuilder
 {
-private:
     //! Actually executed script
     CScript script;
     //! The P2SH redeemscript

@@ -20,7 +20,6 @@ struct DereferencingComparator { bool operator()(const T a, const T b) const { r
  */
 template <class K, class T>
 class indirectmap {
-private:
     typedef std::map<const K*, T, DereferencingComparator<const K*> > base;
     base m;
 public:

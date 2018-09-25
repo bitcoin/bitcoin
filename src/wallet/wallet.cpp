@@ -106,7 +106,6 @@ std::string COutput::ToString() const
 
 /** A class to identify which pubkeys a script and a keystore have in common. */
 class CAffectedKeysVisitor : public boost::static_visitor<void> {
-private:
     const CKeyStore &keystore;
     std::vector<CKeyID> &vKeys;
 

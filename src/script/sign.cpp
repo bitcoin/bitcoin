@@ -291,7 +291,6 @@ bool SignPSBTInput(const SigningProvider& provider, const CMutableTransaction& t
 
 class SignatureExtractorChecker final : public BaseSignatureChecker
 {
-private:
     SignatureData& sigdata;
     BaseSignatureChecker& checker;
 
@@ -446,7 +445,6 @@ public:
 const DummySignatureChecker DUMMY_CHECKER;
 
 class DummySignatureCreator final : public BaseSignatureCreator {
-private:
     char m_r_len = 32;
     char m_s_len = 32;
 public:

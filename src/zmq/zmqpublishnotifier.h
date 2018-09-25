@@ -11,7 +11,6 @@ class CBlockIndex;
 
 class CZMQAbstractPublishNotifier : public CZMQAbstractNotifier
 {
-private:
     uint32_t nSequence; //!< upcounting per message sequence number
 
 public:

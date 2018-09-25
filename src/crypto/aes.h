@@ -18,7 +18,6 @@ static const int AES256_KEYSIZE = 32;
 /** An encryption class for AES-128. */
 class AES128Encrypt
 {
-private:
     AES128_ctx ctx;
 
 public:
@@ -30,7 +29,6 @@ public:
 /** A decryption class for AES-128. */
 class AES128Decrypt
 {
-private:
     AES128_ctx ctx;
 
 public:
@@ -42,7 +40,6 @@ public:
 /** An encryption class for AES-256. */
 class AES256Encrypt
 {
-private:
     AES256_ctx ctx;
 
 public:
@@ -54,7 +51,6 @@ public:
 /** A decryption class for AES-256. */
 class AES256Decrypt
 {
-private:
     AES256_ctx ctx;
 
 public:

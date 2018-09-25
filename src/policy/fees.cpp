@@ -71,7 +71,6 @@ bool FeeModeFromString(const std::string& mode_string, FeeEstimateMode& fee_esti
  */
 class TxConfirmStats
 {
-private:
     //Define the buckets we will group transactions into
     const std::vector<double>& buckets;              // The upper-bound of the range for the bucket (inclusive)
     const std::map<double, unsigned int>& bucketMap; // Map of bucket upper-bound to index into all vectors by bucket

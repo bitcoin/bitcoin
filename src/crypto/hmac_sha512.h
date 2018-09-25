@@ -13,7 +13,6 @@
 /** A hasher class for HMAC-SHA-512. */
 class CHMAC_SHA512
 {
-private:
     CSHA512 outer;
     CSHA512 inner;
 

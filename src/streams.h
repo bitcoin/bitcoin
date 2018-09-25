@@ -143,7 +143,6 @@ private:
  */
 class VectorReader
 {
-private:
     const int m_type;
     const int m_version;
     const std::vector<unsigned char>& m_data;
@@ -513,7 +512,6 @@ public:
 template <typename IStream>
 class BitStreamReader
 {
-private:
     IStream& m_istream;
 
     /// Buffered byte read in from the input stream. A new byte is read into the
@@ -556,7 +554,6 @@ public:
 template <typename OStream>
 class BitStreamWriter
 {
-private:
     OStream& m_ostream;
 
     /// Buffered byte waiting to be written to the output stream. The byte is
@@ -620,7 +617,6 @@ public:
  */
 class CAutoFile
 {
-private:
     const int nType;
     const int nVersion;
 
@@ -729,7 +725,6 @@ public:
  */
 class CBufferedFile
 {
-private:
     const int nType;
     const int nVersion;
 

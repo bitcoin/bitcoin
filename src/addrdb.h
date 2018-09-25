@@ -79,7 +79,6 @@ typedef std::map<CSubNet, CBanEntry> banmap_t;
 /** Access to the (IP) address database (peers.dat) */
 class CAddrDB
 {
-private:
     fs::path pathAddr;
 public:
     CAddrDB();
@@ -91,7 +90,6 @@ public:
 /** Access to the banlist database (banlist.dat) */
 class CBanDB
 {
-private:
     fs::path pathBanlist;
 public:
     CBanDB();

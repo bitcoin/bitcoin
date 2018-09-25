@@ -13,7 +13,6 @@
 /** A hasher class for HMAC-SHA-256. */
 class CHMAC_SHA256
 {
-private:
     CSHA256 outer;
     CSHA256 inner;
 

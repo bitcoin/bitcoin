@@ -64,7 +64,6 @@ class CTxMemPool;
 
 class CTxMemPoolEntry
 {
-private:
     const CTransactionRef tx;
     const CAmount nFee;             //!< Cached to avoid expensive parent-transaction lookups
     const size_t nTxWeight;         //!< ... and avoid recomputing tx weight (also used for GetTxSize())
@@ -354,7 +353,6 @@ enum class MemPoolRemovalReason {
 
 class SaltedTxidHasher
 {
-private:
     /** Salt */
     const uint64_t k0, k1;
 
@@ -440,7 +438,6 @@ public:
  */
 class CTxMemPool
 {
-private:
     uint32_t nCheckFrequency GUARDED_BY(cs); //!< Value n means that n times in 2^32 we check.
     unsigned int nTransactionsUpdated; //!< Used by getblocktemplate to trigger CreateNewBlock() invocation
     CBlockPolicyEstimator* minerPolicyEstimator;

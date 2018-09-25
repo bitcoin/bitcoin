@@ -20,7 +20,6 @@ namespace
 {
 class DestinationEncoder : public boost::static_visitor<std::string>
 {
-private:
     const CChainParams& m_params;
 
 public:

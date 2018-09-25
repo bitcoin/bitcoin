@@ -76,7 +76,6 @@ namespace wallet_crypto_tests
 class CCrypter
 {
 friend class wallet_crypto_tests::TestCrypter; // for test access to chKey/chIV
-private:
     std::vector<unsigned char, secure_allocator<unsigned char>> vchKey;
     std::vector<unsigned char, secure_allocator<unsigned char>> vchIV;
     bool fKeySet;
@@ -114,8 +113,6 @@ public:
  */
 class CCryptoKeyStore : public CBasicKeyStore
 {
-private:
-
     CKeyingMaterial vMasterKey GUARDED_BY(cs_KeyStore);
 
     //! if fUseCrypto is true, mapKeys must be empty

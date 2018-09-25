@@ -42,7 +42,6 @@ public:
 
 class CachingTransactionSignatureChecker : public TransactionSignatureChecker
 {
-private:
     bool store;
 
 public:

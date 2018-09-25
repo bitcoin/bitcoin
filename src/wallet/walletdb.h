@@ -138,7 +138,6 @@ public:
  */
 class WalletBatch
 {
-private:
     template <typename K, typename T>
     bool WriteIC(const K& key, const T& value, bool fOverwrite = true)
     {

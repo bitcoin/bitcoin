@@ -1092,7 +1092,6 @@ namespace {
 template <class T>
 class CTransactionSignatureSerializer
 {
-private:
     const T& txTo;             //!< reference to the spending transaction (the one being serialized)
     const CScript& scriptCode; //!< output script being consumed
     const unsigned int nIn;    //!< input index of txTo being signed

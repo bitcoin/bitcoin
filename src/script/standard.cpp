@@ -240,7 +240,6 @@ namespace
 {
 class CScriptVisitor : public boost::static_visitor<bool>
 {
-private:
     CScript *script;
 public:
     explicit CScriptVisitor(CScript *scriptin) { script = scriptin; }

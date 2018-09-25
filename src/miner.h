@@ -123,7 +123,6 @@ struct update_for_parent_inclusion
 /** Generate a new block, without valid proof-of-work */
 class BlockAssembler
 {
-private:
     // The constructed block template
     std::unique_ptr<CBlockTemplate> pblocktemplate;
     // A convenience pointer that always refers to the CBlock in pblocktemplate

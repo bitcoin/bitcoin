@@ -18,7 +18,6 @@ extern const std::string CURRENCY_UNIT;
  */
 class CFeeRate
 {
-private:
     CAmount nSatoshisPerK; // unit is satoshis-per-1,000-bytes
 
 public:

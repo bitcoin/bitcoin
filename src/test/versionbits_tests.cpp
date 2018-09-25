@@ -18,7 +18,6 @@ static const Consensus::Params paramsDummy = Consensus::Params();
 
 class TestConditionChecker : public AbstractThresholdConditionChecker
 {
-private:
     mutable ThresholdConditionCache cache;
 
 public:

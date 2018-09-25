@@ -11,7 +11,6 @@
 /** A hasher class for RIPEMD-160. */
 class CRIPEMD160
 {
-private:
     uint32_t s[5];
     unsigned char buf[64];
     uint64_t bytes;

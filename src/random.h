@@ -43,7 +43,6 @@ void GetStrongRandBytes(unsigned char* buf, int num);
  * This class is not thread-safe.
  */
 class FastRandomContext {
-private:
     bool requires_seed;
     ChaCha20 rng;
 

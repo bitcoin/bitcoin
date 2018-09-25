@@ -207,7 +207,6 @@ struct COutputEntry
 /** A transaction with a merkle branch linking it to the block chain. */
 class CMerkleTx
 {
-private:
   /** Constant used in hashBlock to indicate tx has been abandoned */
     static const uint256 ABANDON_HASH;
 
@@ -291,7 +290,6 @@ int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* pwallet,
  */
 class CWalletTx : public CMerkleTx
 {
-private:
     const CWallet* pwallet;
 
 public:
@@ -585,7 +583,6 @@ class WalletRescanReserver; //forward declarations for ScanForWalletTransactions
  */
 class CWallet final : public CCryptoKeyStore, public CValidationInterface
 {
-private:
     std::atomic<bool> fAbortRescan{false};
     std::atomic<bool> fScanningWallet{false}; // controlled by WalletRescanReserver
     std::mutex mutexScanning;
@@ -1162,7 +1159,6 @@ public:
 /** RAII object to check and reserve a wallet rescan */
 class WalletRescanReserver
 {
-private:
     CWallet* m_wallet;
     bool m_could_reserve;
 public:

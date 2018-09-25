@@ -29,7 +29,6 @@ class CCheckQueueControl;
 template <typename T>
 class CCheckQueue
 {
-private:
     //! Mutex to protect the inner state
     boost::mutex mutex;
 
@@ -170,7 +169,6 @@ public:
 template <typename T>
 class CCheckQueueControl
 {
-private:
     CCheckQueue<T> * const pqueue;
     bool fDone;
 
