@@ -181,6 +181,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
     }
 
     // Check for duplicate inputs - note that this check is slow so we skip it in CheckBlock
+    // UPDATE: not skipped anymore in CheckBlock due to fix for crash bug with duplicate inputs within a transaction (#14247)
     if (fCheckDuplicateInputs) {
         std::set<COutPoint> vInOutPoints;
         for (const auto& txin : tx.vin)
