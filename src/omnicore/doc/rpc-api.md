@@ -702,11 +702,11 @@ All bitcoins from the sender are consumed and if there are bitcoins missing, the
 
 | Name                | Type    | Presence | Description                                                                                  |
 |---------------------|---------|----------|----------------------------------------------------------------------------------------------|
-| `fromaddress`       | string  | required | the address to send from                                                                     |
+| `fromaddress`       | string  | required | the address to send the tokens from                                                          |
 | `toaddress`         | string  | required | the address of the receiver                                                                  |
 | `propertyid`        | number  | required | the identifier of the tokens to send                                                         |
 | `amount`            | string  | required | the amount to send                                                                           |
-| `feeaddress`        | string  | required | the address that is used to pay for fees, if needed                                          |
+| `feeaddress`        | string  | required | the address that is used for change and to pay for fees, if needed                           |
 
 **Result:**
 ```js
@@ -733,10 +733,10 @@ All bitcoins from the sender are consumed and if there are bitcoins missing, the
 
 | Name                | Type    | Presence | Description                                                                                  |
 |---------------------|---------|----------|----------------------------------------------------------------------------------------------|
-| `fromaddress`       | string  | required | the address to send from                                                                     |
+| `fromaddress`       | string  | required | the address to send the tokens from                                                          |
 | `toaddress`         | string  | required | the address of the receiver                                                                  |
 | `ecosystem`         | number  | required | the ecosystem of the tokens to send (1 for main ecosystem, 2 for test ecosystem)             |
-| `feeaddress`        | string  | required | the address that is used to pay for fees, if needed                                          |
+| `feeaddress`        | string  | required | the address that is used for change and to pay for fees, if needed                           |
 
 **Result:**
 ```js
