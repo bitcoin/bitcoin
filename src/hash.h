@@ -229,4 +229,5 @@ public:
 uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256& val);
 uint64_t SipHashUint256Extra(uint64_t k0, uint64_t k1, const uint256& val, uint32_t extra);
 
+std::tuple<uint64_t, uint64_t, uint64_t> SipHashUint256Extra192(uint64_t k0, uint64_t k1, const uint256& val, uint32_t extra);
 #endif // BITCOIN_HASH_H
