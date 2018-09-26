@@ -749,7 +749,7 @@ AC_CHECK_DECLS([le16toh, le32toh, le64toh, htole16, htole32, htole64, be16toh, b
                  #include <sys/endian.h>
                  #endif])
 
-AC_CHECK_DECLS([bswap_16, bswap_32, bswap_64],,,
+AC_CHECK_DECLS([bswap_16, bswap_32, bswap_64],,[AC_CHECK_DECLS([__builtin_bswap16, __builtin_bswap32, __builtin_bswap64])],
 		[#if HAVE_BYTESWAP_H
                  #include <byteswap.h>
                  #endif])
