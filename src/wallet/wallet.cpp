@@ -40,7 +40,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
 // SYSCOIN services
-#include "alias.h"
+#include "services/alias.h"
 
 CWallet* pwalletMain = NULL;
 /** Transaction fee set by the user */
