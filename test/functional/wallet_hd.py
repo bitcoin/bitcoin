@@ -25,12 +25,6 @@ class WalletHDTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        # Make sure can't switch off usehd after wallet creation
-        self.stop_node(1)
-        self.nodes[1].assert_start_raises_init_error(['-usehd=0'], "Error: Error loading : You can't disable HD on an already existing HD wallet")
-        self.start_node(1)
-        connect_nodes_bi(self.nodes, 0, 1)
-
         # Make sure we use hd, keep masterkeyid
         masterkeyid = self.nodes[1].getwalletinfo()['hdseedid']
         assert_equal(masterkeyid, self.nodes[1].getwalletinfo()['hdmasterkeyid'])
