@@ -651,12 +651,13 @@ int main(int argc, char *argv[])
     // - Needs to be done before createOptionsModel
 
     // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
-    try {
-        node->selectParams(gArgs.GetChainName());
-    } catch(std::exception &e) {
-        QMessageBox::critical(0, QObject::tr(PACKAGE_NAME), QObject::tr("Error: %1").arg(e.what()));
+    const auto chain = gArgs.GetChainType(error);
+    if (!chain) {
+        fprintf(stderr, "Error: %s\n", error.c_str());
+        QMessageBox::critical(0, QObject::tr(PACKAGE_NAME), QObject::tr("Error: %1").arg(QString::fromStdString(error)));
         return EXIT_FAILURE;
     }
+    node->selectParams(*chain);
 #ifdef ENABLE_WALLET
     // Parse URIs on command line -- this can affect Params()
     PaymentServer::ipcParseCommandLine(*node, argc, argv);

@@ -101,12 +101,12 @@ static bool AppInit(int argc, char* argv[])
             return false;
         }
         // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
-        try {
-            SelectParams(gArgs.GetChainName());
-        } catch (const std::exception& e) {
-            fprintf(stderr, "Error: %s\n", e.what());
+        const auto chain = gArgs.GetChainType(error);
+        if (!chain) {
+            fprintf(stderr, "Error: %s\n", error.c_str());
             return false;
         }
+        SelectParams(*chain);
 
         // Error out when loose non-argument tokens are encountered on command line
         for (int i = 1; i < argc; i++) {

@@ -7,8 +7,8 @@
 #include <rpc/server.h>
 #include <wallet/db.h>
 
-WalletTestingSetup::WalletTestingSetup(const std::string& chainName):
-    TestingSetup(chainName), m_wallet("mock", WalletDatabase::CreateMock())
+WalletTestingSetup::WalletTestingSetup(const ChainType& chain)
+    : TestingSetup(chain), m_wallet("mock", WalletDatabase::CreateMock())
 {
     bool fFirstRun;
     m_wallet.LoadWallet(fFirstRun);

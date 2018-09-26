@@ -39,14 +39,13 @@ enum class ChainType {
     REGTEST,
 };
 
+bool ParseChainType(const std::string& str, ChainType& chain);
 const std::string& FormatChainType(const ChainType& chain);
 
 /**
  * Creates and returns a std::unique_ptr<CBaseChainParams> of the chosen chain.
  * @returns a CBaseChainParams* of the chosen chain.
- * @throws a std::runtime_error if the chain is not supported.
  */
-std::unique_ptr<const CBaseChainParams> CreateBaseChainParams(const std::string& chain);
 std::unique_ptr<const CBaseChainParams> CreateBaseChainParams(const ChainType& chain);
 
 /**
@@ -61,7 +60,6 @@ void SetupChainParamsBaseOptions();
 const CBaseChainParams& BaseParams();
 
 /** Sets the params returned by Params() to those for the given network. */
-void SelectBaseParams(const std::string& chain);
 void SelectBaseParams(const ChainType& chain);
 
 #endif // BITCOIN_CHAINPARAMSBASE_H

@@ -522,12 +522,14 @@ TableViewLastColumnResizingFixer::TableViewLastColumnResizingFixer(QTableView* t
 #ifdef WIN32
 fs::path static StartupShortcutPath()
 {
-    std::string chain = gArgs.GetChainName();
-    if (chain == CBaseChainParams::MAIN)
+    std::string error;
+    const auto chain = gArgs.GetChainName(error);
+    if (!chain) throw std::runtime_error(error);
+    if (*chain == CBaseChainParams::MAIN)
         return GetSpecialFolderPath(CSIDL_STARTUP) / "Bitcoin.lnk";
-    if (chain == CBaseChainParams::TESTNET) // Remove this special case when CBaseChainParams::TESTNET = "testnet4"
+    if (*chain == CBaseChainParams::TESTNET) // Remove this special case when CBaseChainParams::TESTNET = "testnet4"
         return GetSpecialFolderPath(CSIDL_STARTUP) / "Bitcoin (testnet).lnk";
-    return GetSpecialFolderPath(CSIDL_STARTUP) / strprintf("Bitcoin (%s).lnk", chain);
+    return GetSpecialFolderPath(CSIDL_STARTUP) / strprintf("Bitcoin (%s).lnk", *chain);
 }
 
 bool GetStartOnSystemStartup()
@@ -605,10 +607,12 @@ fs::path static GetAutostartDir()
 
 fs::path static GetAutostartFilePath()
 {
-    std::string chain = gArgs.GetChainName();
-    if (chain == CBaseChainParams::MAIN)
+    std::string error;
+    const auto chain = gArgs.GetChainName(error);
+    if (!chain) throw std::runtime_error(error);
+    if (*chain == CBaseChainParams::MAIN)
         return GetAutostartDir() / "bitcoin.desktop";
-    return GetAutostartDir() / strprintf("bitcoin-%s.lnk", chain);
+    return GetAutostartDir() / strprintf("bitcoin-%s.lnk", *chain);
 }
 
 bool GetStartOnSystemStartup()
@@ -647,14 +651,16 @@ bool SetStartOnSystemStartup(bool fAutoStart)
         fs::ofstream optionFile(GetAutostartFilePath(), std::ios_base::out|std::ios_base::trunc);
         if (!optionFile.good())
             return false;
-        std::string chain = gArgs.GetChainName();
+        std::string error;
+        const auto chain = gArgs.GetChainName(error);
+        if (!chain) throw std::runtime_error(error);
         // Write a bitcoin.desktop file to the autostart directory:
         optionFile << "[Desktop Entry]\n";
         optionFile << "Type=Application\n";
-        if (chain == CBaseChainParams::MAIN)
+        if (*chain == CBaseChainParams::MAIN)
             optionFile << "Name=Bitcoin\n";
         else
-            optionFile << strprintf("Name=Bitcoin (%s)\n", chain);
+            optionFile << strprintf("Name=Bitcoin (%s)\n", *chain);
         optionFile << "Exec=" << pszExePath << strprintf(" -min -testnet=%d -regtest=%d\n", gArgs.GetBoolArg("-testnet", false), gArgs.GetBoolArg("-regtest", false));
         optionFile << "Terminal=false\n";
         optionFile << "Hidden=false\n";

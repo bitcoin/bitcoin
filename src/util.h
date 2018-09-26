@@ -31,6 +31,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include <boost/optional.hpp>
 #include <boost/thread/condition_variable.hpp> // for boost::thread_interrupted
 
 enum class ChainType;
@@ -248,9 +249,11 @@ public:
 
     /**
      * Looks for -regtest, -testnet and returns the appropriate BIP70 chain name.
-     * @return CBaseChainParams::MAIN by default; raises runtime error if an invalid combination is given.
+     * @return CBaseChainParams::MAIN by default, none if error is set
      */
-    std::string GetChainName() const;
+    boost::optional<std::string> GetChainName(std::string& error) const;
+
+    boost::optional<ChainType> GetChainType(std::string& error) const;
 
     /**
      * Add argument

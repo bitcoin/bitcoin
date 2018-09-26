@@ -89,12 +89,12 @@ static int AppInitRawTx(int argc, char* argv[])
     }
 
     // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
-    try {
-        SelectParams(gArgs.GetChainName());
-    } catch (const std::exception& e) {
-        fprintf(stderr, "Error: %s\n", e.what());
+    const auto chain = gArgs.GetChainType(error);
+    if (!chain) {
+        fprintf(stderr, "Error: %s\n", error.c_str());
         return EXIT_FAILURE;
     }
+    SelectParams(*chain);
 
     fCreateBlank = gArgs.GetBoolArg("-create", false);
 

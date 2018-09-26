@@ -912,12 +912,13 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
             emptyIncludeConf = m_override_args.count("-includeconf") == 0;
         }
         if (emptyIncludeConf) {
-            std::string chain_id = GetChainName();
+            const auto chain_id = GetChainName(error);
+            if (!chain_id) return false;
             std::vector<std::string> includeconf(GetArgs("-includeconf"));
             {
                 // We haven't set m_network yet (that happens in SelectParams()), so manually check
                 // for network.includeconf args.
-                std::vector<std::string> includeconf_net(GetArgs(std::string("-") + chain_id + ".includeconf"));
+                std::vector<std::string> includeconf_net(GetArgs(std::string("-") + *chain_id + ".includeconf"));
                 includeconf.insert(includeconf.end(), includeconf_net.begin(), includeconf_net.end());
             }
 
@@ -926,7 +927,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
             {
                 LOCK(cs_args);
                 m_config_args.erase("-includeconf");
-                m_config_args.erase(std::string("-") + chain_id + ".includeconf");
+                m_config_args.erase(std::string("-") + *chain_id + ".includeconf");
             }
 
             for (const std::string& to_include : includeconf) {
@@ -945,12 +946,13 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
             // Warn about recursive -includeconf
             includeconf = GetArgs("-includeconf");
             {
-                std::vector<std::string> includeconf_net(GetArgs(std::string("-") + chain_id + ".includeconf"));
+                std::vector<std::string> includeconf_net(GetArgs(std::string("-") + *chain_id + ".includeconf"));
                 includeconf.insert(includeconf.end(), includeconf_net.begin(), includeconf_net.end());
-                std::string chain_id_final = GetChainName();
-                if (chain_id_final != chain_id) {
+                const auto chain_id_final = GetChainName(error);
+                if (!chain_id_final) return false;
+                if (*chain_id_final != *chain_id) {
                     // Also warn about recursive includeconf for the chain that was specified in one of the includeconfs
-                    includeconf_net = GetArgs(std::string("-") + chain_id_final + ".includeconf");
+                    includeconf_net = GetArgs(std::string("-") + *chain_id_final + ".includeconf");
                     includeconf.insert(includeconf.end(), includeconf_net.begin(), includeconf_net.end());
                 }
             }
@@ -969,19 +971,28 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
     return true;
 }
 
-std::string ArgsManager::GetChainName() const
+boost::optional<std::string> ArgsManager::GetChainName(std::string& error) const
+{
+    auto chain = GetChainType(error);
+    if (!chain) return {};
+    return FormatChainType(*chain);
+}
+
+boost::optional<ChainType> ArgsManager::GetChainType(std::string& error) const
 {
     LOCK(cs_args);
     bool fRegTest = ArgsManagerHelper::GetNetBoolArg(*this, "-regtest");
     bool fTestNet = ArgsManagerHelper::GetNetBoolArg(*this, "-testnet");
 
-    if (fTestNet && fRegTest)
-        throw std::runtime_error("Invalid combination of -regtest and -testnet.");
+    if (fTestNet && fRegTest) {
+        error = "Invalid combination of -regtest and -testnet.";
+        return {};
+    }
     if (fRegTest)
-        return CBaseChainParams::REGTEST;
+        return ChainType::REGTEST;
     if (fTestNet)
-        return CBaseChainParams::TESTNET;
-    return CBaseChainParams::MAIN;
+        return ChainType::TESTNET;
+    return ChainType::MAIN;
 }
 
 #ifndef WIN32

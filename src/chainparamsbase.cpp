@@ -15,6 +15,23 @@ const std::string CBaseChainParams::MAIN = "main";
 const std::string CBaseChainParams::TESTNET = "test";
 const std::string CBaseChainParams::REGTEST = "regtest";
 
+bool ParseChainType(const std::string& str, ChainType& chain)
+{
+    if (str == CBaseChainParams::MAIN) {
+        chain = ChainType::MAIN;
+        return true;
+    }
+    if (str == CBaseChainParams::TESTNET) {
+        chain = ChainType::TESTNET;
+        return true;
+    }
+    if (str == CBaseChainParams::REGTEST) {
+        chain = ChainType::REGTEST;
+        return true;
+    }
+    return false;
+}
+
 const std::string& FormatChainType(const ChainType& chain)
 {
     switch (chain) {
@@ -45,18 +62,6 @@ const CBaseChainParams& BaseParams()
     return *globalChainBaseParams;
 }
 
-std::unique_ptr<const CBaseChainParams> CreateBaseChainParams(const std::string& chain)
-{
-    if (chain == CBaseChainParams::MAIN)
-        return MakeUnique<CBaseChainParams>("", 8332);
-    else if (chain == CBaseChainParams::TESTNET)
-        return MakeUnique<CBaseChainParams>("testnet3", 18332);
-    else if (chain == CBaseChainParams::REGTEST)
-        return MakeUnique<CBaseChainParams>("regtest", 18443);
-    else
-        throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
-}
-
 std::unique_ptr<const CBaseChainParams> CreateBaseChainParams(const ChainType& chain)
 {
     switch (chain) {
@@ -69,12 +74,6 @@ std::unique_ptr<const CBaseChainParams> CreateBaseChainParams(const ChainType& c
         // no default case, so the compiler can warn about missing cases
     }
     assert(false);
-}
-
-void SelectBaseParams(const std::string& chain)
-{
-    globalChainBaseParams = CreateBaseChainParams(chain);
-    gArgs.SelectConfigNetwork(chain);
 }
 
 void SelectBaseParams(const ChainType& chain)

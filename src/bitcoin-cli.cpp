@@ -133,12 +133,12 @@ static int AppInitRPC(int argc, char* argv[])
         return EXIT_FAILURE;
     }
     // Check for -testnet or -regtest parameter (BaseParams() calls are only valid after this clause)
-    try {
-        SelectBaseParams(gArgs.GetChainName());
-    } catch (const std::exception& e) {
-        fprintf(stderr, "Error: %s\n", e.what());
+    const auto chain = gArgs.GetChainType(error);
+    if (!chain) {
+        fprintf(stderr, "Error: %s\n", error.c_str());
         return EXIT_FAILURE;
     }
+    SelectBaseParams(*chain);
     return CONTINUE_EXECUTION;
 }
 
