@@ -184,6 +184,8 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
             }
         }
     }
+    bool fLocked = instantsend.IsLockedInstantSendTransaction(txid);
+    entry.push_back(Pair("instantlock", fLocked));
 }
 
 UniValue getrawtransaction(const JSONRPCRequest& request)
@@ -249,6 +251,7 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
             "  \"confirmations\" : n,      (numeric) The confirmations\n"
             "  \"time\" : ttt,             (numeric) The transaction time in seconds since epoch (Jan 1 1970 GMT)\n"
             "  \"blocktime\" : ttt         (numeric) The block time in seconds since epoch (Jan 1 1970 GMT)\n"
+            "  \"instantlock\" : true|false, (bool) Current transaction lock state\n"
             "}\n"
 
             "\nExamples:\n"
