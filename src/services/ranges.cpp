@@ -1,5 +1,5 @@
 // A C++ program for merging overlapping ranges
-#include "ranges.h"
+#include "services/ranges.h"
 using namespace std;
 // Compares two ranges according to their starting range index.
 bool compareRange(const CRange &i1, const CRange &i2)
