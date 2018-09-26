@@ -7,6 +7,7 @@
 import os
 
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_node import ErrorMatch
 
 
 class ConfArgsTest(BitcoinTestFramework):
@@ -31,6 +32,14 @@ class ConfArgsTest(BitcoinTestFramework):
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
             conf.write('nono\n')
         self.nodes[0].assert_start_raises_init_error(expected_msg='Error reading configuration file: parse error on line 1: nono, if you intended to specify a negated option, use nono=1 instead')
+
+        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+            conf.write('vbparams=a:b\n')
+        self.nodes[0].assert_start_raises_init_error(expected_msg='Version bits parameters malformed, expecting deployment:start:end', match=ErrorMatch.PARTIAL_REGEX)
+
+        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+            conf.write('testnet=1\n')
+        self.nodes[0].assert_start_raises_init_error(expected_msg='Invalid combination of -regtest and -testnet.', match=ErrorMatch.PARTIAL_REGEX)
 
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
             conf.write('')  # clear

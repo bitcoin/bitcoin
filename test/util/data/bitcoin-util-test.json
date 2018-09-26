@@ -1,5 +1,65 @@
 [
   { "exec": "./bitcoin-tx",
+    "args": ["-regtest", "-testnet"],
+    "return_code": 1,
+    "error_txt": "Invalid combination of -regtest and -testnet.",
+    "description": "Tests for invalid chain selection"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-regtest", "-vbparams=a:b"],
+    "return_code": 1,
+    "error_txt": "Version bits parameters malformed, expecting deployment:start:end",
+    "description": "Tests for invalid vbparams"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-regtest", "-vbparams=a:b:c"],
+    "return_code": 1,
+    "error_txt": "Invalid nStartTime (b)",
+    "description": "Tests for invalid vbparams"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-regtest", "-vbparams=a:0:c"],
+    "return_code": 1,
+    "error_txt": "Invalid nTimeout (c)",
+    "description": "Tests for invalid vbparams"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-regtest", "-vbparams=a:0:0"],
+    "return_code": 1,
+    "error_txt": "Invalid deployment (a)",
+    "description": "Tests for invalid vbparams"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-unknown_arg"],
+    "return_code": 1,
+    "error_txt": "Error parsing command line arguments: Invalid parameter -unknown_arg",
+    "description": "Tests for invalid arg"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": [],
+    "return_code": 1,
+    "error_txt": "Error: too few parameters",
+    "description": "Tests for too few parameters"
+  },
+  { "exec": "./bitcoin-cli",
+    "args": ["-unknown_arg"],
+    "return_code": 1,
+    "error_txt": "Error parsing command line arguments: Invalid parameter -unknown_arg",
+    "description": "Tests for invalid arg"
+  },
+  { "exec": "./bitcoin-cli",
+    "args": [],
+    "return_code": 1,
+    "error_txt": "Error: too few parameters",
+    "description": "Tests for too few parameters"
+  },
+  { "exec": "./bitcoin-cli",
+    "args": ["-datadir=/tmp/does/not/exist/"],
+    "return_code": 1,
+    "error_txt": "Error: Specified data directory \"/tmp/does/not/exist/\" does not exist.",
+    "description": "Tests for wrong datadir"
+  },
+  { "exec": "./bitcoin-tx",
     "args": ["-create", "nversion=1"],
     "output_cmp": "blanktxv1.hex",
     "description": "Creates a blank v1 transaction"
