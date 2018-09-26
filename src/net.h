@@ -31,6 +31,7 @@
 
 #ifndef WIN32
 #include <arpa/inet.h>
+#include <poll.h>
 #endif
 
 
@@ -336,6 +337,11 @@ private:
     void ThreadOpenConnections(std::vector<std::string> connect);
     void ThreadMessageHandler();
     void AcceptConnection(const ListenSocket& hListenSocket);
+    void DisconnectNodes();
+    void InactivityChecks();
+    void NotifyNumConnectionsChanged();
+    void SocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set);
+    void SocketHandler();
     void ThreadSocketHandler();
     void ThreadDNSAddressSeed();
 
@@ -406,6 +412,7 @@ private:
     std::list<CNode*> vNodesDisconnected;
     mutable CCriticalSection cs_vNodes;
     std::atomic<NodeId> nLastNodeId;
+    size_t nPrevNodeCount;
 
     /** Services this instance offers */
     ServiceFlags nLocalServices;
