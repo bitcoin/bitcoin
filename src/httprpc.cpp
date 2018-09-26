@@ -65,6 +65,8 @@ private:
 static std::string strRPCUserColonPass;
 /* Stored RPC timer interface (for unregistration) */
 static HTTPRPCTimerInterface* httpRPCTimerInterface = 0;
+/* RPC CORS Domain, allowed Origin */
+static std::string strRPCCORSDomain;
 
 static void JSONErrorReply(HTTPRequest* req, const UniValue& objError, const UniValue& id)
 {
@@ -355,6 +357,8 @@ static bool InitRPCAuthentication()
         LogPrintf("Config options rpcuser and rpcpassword will soon be deprecated. Locally-run instances may remove rpcuser to use cookie-based auth, or may be replaced with rpcauth. Please see share/rpcuser for rpcauth auth generation.\n");
         strRPCUserColonPass = GetArg("-rpcuser", "") + ":" + GetArg("-rpcpassword", "");
     }
+
+    strRPCCORSDomain = GetArg("-rpccorsdomain", "");
     return true;
 }
 
