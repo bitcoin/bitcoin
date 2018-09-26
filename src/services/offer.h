@@ -11,7 +11,7 @@
 #include "chainparams.h"
 #include "script/script.h"
 #include "serialize.h"
-#include "assetallocation.h"
+#include "services/assetallocation.h"
 class CWalletTx;
 class CTransaction;
 class CReserveKey;
