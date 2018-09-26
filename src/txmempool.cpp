@@ -1269,6 +1269,16 @@ size_t CTxMemPool::DynamicMemoryUsage() const {
     return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 15 * sizeof(void*)) * mapTx.size() + memusage::DynamicUsage(mapNextTx) + memusage::DynamicUsage(mapDeltas) + memusage::DynamicUsage(mapLinks) + memusage::DynamicUsage(vTxHashes) + cachedInnerUsage;
 }
 
+double CTxMemPool::UsedMemoryShare() const
+{
+    // use 1000000 instead of real bytes number in megabyte because of
+    // this param is calculated in such way in other places (see AppInit
+    // function in src/init.cpp or mempoolInfoToJSON function in
+    // src/rpc/blockchain.cpp)
+    size_t maxmempool = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
+    return double(DynamicMemoryUsage()) / maxmempool;
+}
+
 void CTxMemPool::RemoveStaged(setEntries &stage, bool updateDescendants, MemPoolRemovalReason reason) {
     AssertLockHeld(cs);
     UpdateForRemoveFromMempool(stage, updateDescendants);

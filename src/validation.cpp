@@ -1818,7 +1818,7 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
                 // unknown masternode
                 continue;
             }
-            if (mnInfo.nProtocolVersion < DIP0001_PROTOCOL_VERSION) {
+            if (mnInfo.nProtocolVersion < MIN_INSTANTSEND_WITHOUT_FEE_PROTO_VERSION) {
                 // masternode is not upgraded yet
                 continue;
             }

@@ -174,6 +174,13 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nWindowSize = 4032;
         consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nThreshold = 3226; // 80% of 4032
 
+        // Deployment of InstantSend autolocks
+        consensus.vDeployments[Consensus::DEPLOYMENT_ISAUTOLOCKS].bit = 4;
+        consensus.vDeployments[Consensus::DEPLOYMENT_ISAUTOLOCKS].nStartTime = 1533945600; // Aug 11th, 2018
+        consensus.vDeployments[Consensus::DEPLOYMENT_ISAUTOLOCKS].nTimeout = 1565481600; // Aug 11th, 2019
+        consensus.vDeployments[Consensus::DEPLOYMENT_ISAUTOLOCKS].nWindowSize = 4032;
+        consensus.vDeployments[Consensus::DEPLOYMENT_ISAUTOLOCKS].nThreshold = 3226; // 80% of 4032
+
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000081021b74f9f47bbd7bc"); // 888900
 
@@ -327,6 +334,13 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nWindowSize = 100;
         consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nThreshold = 50; // 50% of 100
 
+        // Deployment of InstantSend autolocks
+        consensus.vDeployments[Consensus::DEPLOYMENT_ISAUTOLOCKS].bit = 4;
+        consensus.vDeployments[Consensus::DEPLOYMENT_ISAUTOLOCKS].nStartTime = 1532476800; // Jul 25th, 2018
+        consensus.vDeployments[Consensus::DEPLOYMENT_ISAUTOLOCKS].nTimeout = 1564012800; // Jul 25th, 2019
+        consensus.vDeployments[Consensus::DEPLOYMENT_ISAUTOLOCKS].nWindowSize = 100;
+        consensus.vDeployments[Consensus::DEPLOYMENT_ISAUTOLOCKS].nThreshold = 50; // 50% of 100
+
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000003be69c34b1244f"); // 143200
 
@@ -464,6 +478,13 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nWindowSize = 100;
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nThreshold = 50; // 50% of 100
 
+        // Deployment of InstantSend autolocks
+        consensus.vDeployments[Consensus::DEPLOYMENT_ISAUTOLOCKS].bit = 4;
+        consensus.vDeployments[Consensus::DEPLOYMENT_ISAUTOLOCKS].nStartTime = 1535752800; // Sep 1st, 2018
+        consensus.vDeployments[Consensus::DEPLOYMENT_ISAUTOLOCKS].nTimeout = 1567288800; // Sep 1st, 2019
+        consensus.vDeployments[Consensus::DEPLOYMENT_ISAUTOLOCKS].nWindowSize = 100;
+        consensus.vDeployments[Consensus::DEPLOYMENT_ISAUTOLOCKS].nThreshold = 50; // 50% of 100
+
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000000000000000");
 
@@ -583,6 +604,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].bit = 3;
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nStartTime = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nTimeout = 999999999999ULL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_ISAUTOLOCKS].bit = 4;
+        consensus.vDeployments[Consensus::DEPLOYMENT_ISAUTOLOCKS].nStartTime = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_ISAUTOLOCKS].nTimeout = 999999999999ULL;
+
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");

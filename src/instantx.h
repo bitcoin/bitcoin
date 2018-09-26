@@ -28,6 +28,8 @@ extern CInstantSend instantsend;
 
 static const int MIN_INSTANTSEND_PROTO_VERSION      = 70210;
 
+static const int MIN_INSTANTSEND_WITHOUT_FEE_PROTO_VERSION = 70211;
+
 /// For how long we are going to accept votes/locks
 /// after we saw the first one for a specific transaction
 static const int INSTANTSEND_LOCK_TIMEOUT_SECONDS   = 15;
@@ -45,6 +47,9 @@ class CInstantSend
 {
 private:
     static const std::string SERIALIZATION_VERSION_STRING;
+    /// Automatic locks of "simple" transactions are only allowed
+    /// when mempool usage is lower than this threshold
+    static const double AUTO_IX_MEMPOOL_THRESHOLD;
 
     // Keep track of current block height
     int nCachedBlockHeight;
@@ -148,6 +153,12 @@ public:
     std::string ToString() const;
 
     void DoMaintenance() { CheckAndRemove(); }
+
+    /// checks if we can automatically lock "simple" transactions
+    static bool CanAutoLock();
+
+    /// flag of the AutoLock Bip9 activation
+    static std::atomic<bool> isAutoLockBip9Active;
 };
 
 /**
@@ -157,6 +168,9 @@ class CTxLockRequest
 {
 private:
     static const CAmount MIN_FEE            = 0.0001 * COIN;
+    /// If transaction has less or equal inputs than MAX_INPUTS_FOR_AUTO_IX,
+    /// it will be automatically locked
+    static const int MAX_INPUTS_FOR_AUTO_IX = 4;
 
 public:
     /// Warn for a large number of inputs to an IS tx - fees could be substantial
@@ -167,6 +181,7 @@ public:
 
     CTxLockRequest() : tx(MakeTransactionRef()) {}
     CTxLockRequest(const CTransaction& _tx) : tx(MakeTransactionRef(_tx)) {};
+    CTxLockRequest(const CTransactionRef& _tx) : tx(_tx) {};
 
     ADD_SERIALIZE_METHODS;
 
@@ -178,6 +193,9 @@ public:
     bool IsValid() const;
     CAmount GetMinFee() const;
     int GetMaxSignatures() const;
+
+    // checks if related transaction is "simple" to lock it automatically
+    bool IsSimple() const;
 
     const uint256 &GetHash() const {
         return tx->GetHash();
