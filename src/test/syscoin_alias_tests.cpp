@@ -6,14 +6,14 @@
 #include "utiltime.h"
 #include "util.h"
 #include "rpc/server.h"
-#include "alias.h"
-#include "cert.h"
+#include "services/alias.h"
+#include "services/cert.h"
 #include "base58.h"
 #include "chainparams.h"
 #include <boost/test/unit_test.hpp>
 #include <boost/lexical_cast.hpp>
 #include <iterator>
-#include "ranges.h"
+#include "services/ranges.h"
 using namespace std;
 BOOST_GLOBAL_FIXTURE( SyscoinTestingSetup );
 

@@ -1,9 +1,9 @@
-#include "graph.h"
-#include "offer.h"
-#include "cert.h"
-#include "alias.h"
-#include "asset.h"
-#include "assetallocation.h"
+#include "services/graph.h"
+#include "services/offer.h"
+#include "services/cert.h"
+#include "services/alias.h"
+#include "services/asset.h"
+#include "services/assetallocation.h"
 #include "validation.h"
 using namespace boost;
 using namespace std;

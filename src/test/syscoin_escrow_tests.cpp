@@ -7,8 +7,8 @@
 #include "rpc/server.h"
 #include <boost/test/unit_test.hpp>
 #include "feedback.h"
-#include "alias.h"
-#include "cert.h"
+#include "services/alias.h"
+#include "services/cert.h"
 #include "core_io.h"
 #include "base58.h"
 #include <boost/lexical_cast.hpp>
