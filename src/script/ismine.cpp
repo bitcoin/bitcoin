@@ -23,9 +23,9 @@ namespace {
  */
 enum class IsMineSigVersion
 {
-    TOP = 0,        //! scriptPubKey execution
-    P2SH = 1,       //! P2SH redeemScript
-    WITNESS_V0 = 2  //! P2WSH witness script execution
+    TOP = 0,        //!< scriptPubKey execution
+    P2SH = 1,       //!< P2SH redeemScript
+    WITNESS_V0 = 2, //!< P2WSH witness script execution
 };
 
 /**
@@ -35,10 +35,10 @@ enum class IsMineSigVersion
  */
 enum class IsMineResult
 {
-    NO = 0,          //! Not ours
-    WATCH_ONLY = 1,  //! Included in watch-only balance
-    SPENDABLE = 2,   //! Included in all balances
-    INVALID = 3,     //! Not spendable by anyone (uncompressed pubkey in segwit, P2SH inside P2SH or witness, witness inside witness)
+    NO = 0,         //!< Not ours
+    WATCH_ONLY = 1, //!< Included in watch-only balance
+    SPENDABLE = 2,  //!< Included in all balances
+    INVALID = 3,    //!< Not spendable by anyone (uncompressed pubkey in segwit, P2SH inside P2SH or witness, witness inside witness)
 };
 
 bool PermitsUncompressed(IsMineSigVersion sigversion)
