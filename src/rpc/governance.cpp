@@ -164,6 +164,15 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
 
     CGovernanceObject govobj(hashParent, nRevision, nTime, uint256(), strDataHex);
 
+    // This command is dangerous because it consumes 5 DASH irreversibly.
+    // If params are lost, it's very hard to bruteforce them and yet
+    // users ignore all instructions on dashcentral etc. and do not save them...
+    // Let's log them here and hope users do not mess with debug.log
+    LogPrintf("gobject_prepare -- params: %s %s %s %s, data: %s, hash: %s\n",
+                request.params[1].get_str(), request.params[2].get_str(),
+                request.params[3].get_str(), request.params[4].get_str(),
+                govobj.GetDataAsPlainString(), govobj.GetHash().ToString());
+
     if (govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
         CProposalValidator validator(strDataHex);
         if (!validator.Validate()) {
