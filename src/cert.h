@@ -9,7 +9,7 @@
 #include "dbwrapper.h"
 #include "script/script.h"
 #include "serialize.h"
-#include "services/assetallocation.h"
+#include "assetallocation.h"
 class CWalletTx;
 class CTransaction;
 class CReserveKey;

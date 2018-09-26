@@ -31,11 +31,11 @@
 #include <univalue.h>
 // SYSCOIN
 using namespace std;
-#include "services/alias.h"
-#include "services/offer.h"
-#include "services/escrow.h"
-#include "services/assetallocation.h"
-#include "services/asset.h"
+#include "alias.h"
+#include "offer.h"
+#include "escrow.h"
+#include "assetallocation.h"
+#include "asset.h"
 #include "coincontrol.h"
 extern bool GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, std::vector<unsigned char> &vchPubKey);
 extern std::string stringFromVch(const std::vector<unsigned char> &vch);
