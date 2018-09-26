@@ -8,12 +8,12 @@
 #include "amount.h"
 #include "rpc/server.h"
 #include "feedback.h"
-#include "services/cert.h"
-#include "services/asset.h"
-#include "services/assetallocation.h"
-#include "services/escrow.h"
-#include "services/offer.h"
-#include "services/alias.h"
+#include "cert.h"
+#include "asset.h"
+#include "assetallocation.h"
+#include "escrow.h"
+#include "offer.h"
+#include "alias.h"
 #include "wallet/crypter.h"
 #include "random.h"
 #include "base58.h"
@@ -28,7 +28,7 @@
 #include <boost/thread.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/case_conv.hpp> // for to_upper()
-#include "services/ranges.h"
+#include "ranges.h"
 static int node1LastBlock = 0;
 static int node2LastBlock = 0;
 static int node3LastBlock = 0;
