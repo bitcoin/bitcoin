@@ -343,13 +343,13 @@ struct TxMempoolInfo
  * this is passed to the notification signal.
  */
 enum class MemPoolRemovalReason {
-    UNKNOWN = 0, //! Manually removed or unknown reason
-    EXPIRY,      //! Expired from mempool
-    SIZELIMIT,   //! Removed in size limiting
-    REORG,       //! Removed for reorganization
-    BLOCK,       //! Removed for block
-    CONFLICT,    //! Removed for conflict with in-block transaction
-    REPLACED     //! Removed for replacement
+    UNKNOWN = 0, //!< Manually removed or unknown reason
+    EXPIRY,      //!< Expired from mempool
+    SIZELIMIT,   //!< Removed in size limiting
+    REORG,       //!< Removed for reorganization
+    BLOCK,       //!< Removed for block
+    CONFLICT,    //!< Removed for conflict with in-block transaction
+    REPLACED,    //!< Removed for replacement
 };
 
 class SaltedTxidHasher
