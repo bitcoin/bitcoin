@@ -133,7 +133,8 @@ public:
     CBitcoinAddress(const char* pszAddress) { SetString(pszAddress); }
 
     CTxDestination Get() const;
-    bool IsDeprecated() const;
+    static bool IsDeprecated(const std::string& address);
+    static std::string ConvertToNew(const std::string& address);
     bool GetKeyID(CKeyID &keyID) const;
     bool IsScript() const;
 };

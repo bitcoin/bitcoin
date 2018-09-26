@@ -79,6 +79,37 @@ string AccountFromValue(const Value& value)
     return strAccount;
 }
 
+Value oldtonewaddress(const json_spirit::Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "oldtonewaddress( \"oldaddress\" )\n"
+            "\nConverts given old Crown address to a new one.\n"
+            "\nArguments:\n"
+            "1. \"oldaddress\"        (string, required) The old Crown address.\n"
+            "\nResult:\n"
+            "\"crownaddress\"    (string) The new crown address\n"
+            "\nExamples:\n"
+            + HelpExampleCli("oldtonewaddress", "15bj2HB2UbmjEZgXyEW4M8MhUL5TXGCN8L")
+            + HelpExampleCli("oldtonewaddress", "\"15bj2HB2UbmjEZgXyEW4M8MhUL5TXGCN8L\"")
+            + HelpExampleRpc("oldtonewaddress", "\"15bj2HB2UbmjEZgXyEW4M8MhUL5TXGCN8L\"")
+        );
+
+    std::string strAddress = params[0].get_str();
+
+    if (CBitcoinAddress(strAddress).IsValid())
+    {
+        throw runtime_error("Error: Given address is a valid new Crown address and cannot be converted.");
+    }
+
+    std::string newAddress = CBitcoinAddress::ConvertToNew(strAddress);
+    if (newAddress.compare(strAddress) == 0)
+    {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unable to convert. Invalid Crown address.");
+    }
+    return newAddress;
+}
+
 Value getnewaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
