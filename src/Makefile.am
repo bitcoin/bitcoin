@@ -83,8 +83,11 @@ if BUILD_BITCOIND
   bin_PROGRAMS += bitcoind
 endif
 
-if BUILD_BITCOIN_UTILS
-  bin_PROGRAMS += bitcoin-cli bitcoin-tx
+if BUILD_BITCOIN_CLI
+  bin_PROGRAMS += bitcoin-cli
+endif
+if BUILD_BITCOIN_TX
+  bin_PROGRAMS += bitcoin-tx
 endif
 
 .PHONY: FORCE check-symbols check-security
