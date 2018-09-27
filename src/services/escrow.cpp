@@ -2,10 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "escrow.h"
-#include "offer.h"
-#include "alias.h"
-#include "cert.h"
+#include "services/escrow.h"
+#include "services/offer.h"
+#include "services/alias.h"
+#include "services/cert.h"
 #include "init.h"
 #include "validation.h"
 #include "core_io.h"

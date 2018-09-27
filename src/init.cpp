@@ -71,12 +71,12 @@
 #include <stdio.h>
 #include <memory>
 // SYSCOIN services
-#include "alias.h"
-#include "offer.h"
-#include "cert.h"
-#include "escrow.h"
-#include "asset.h"
-#include "assetallocation.h"
+#include "services/alias.h"
+#include "services/offer.h"
+#include "services/cert.h"
+#include "services/escrow.h"
+#include "services/asset.h"
+#include "services/assetallocation.h"
 #include "thread_pool/thread_pool.hpp"
 #ifndef WIN32
 #include <signal.h>
