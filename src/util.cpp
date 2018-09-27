@@ -1255,8 +1255,21 @@ fs::path AbsPathForConfigVal(const fs::path& path, bool net_specific)
 int ScheduleBatchPriority()
 {
 #ifdef SCHED_BATCH
-    const static sched_param param{0};
-    if (int ret = pthread_setschedparam(pthread_self(), SCHED_BATCH, &param)) {
+    sched_param param;
+    int policy;
+    int ret = pthread_getschedparam(pthread_self(), &policy, &param);
+    if (ret != 0) {
+        LogPrintf("pthread_getschedparam: %s\n", strerror(errno));
+        return ret;
+    }
+    /*
+      From man7 sched on Linux: For threads scheduled under one of the normal
+      scheduling policies (SCHED_OTHER, SCHED_IDLE, SCHED_BATCH), sched_priority
+      is not used in scheduling decisions (it must be specified as 0).
+    */
+    param.sched_priority = 0;
+    ret = pthread_setschedparam(pthread_self(), SCHED_BATCH, &param);
+    if (ret != 0) {
         LogPrintf("Failed to pthread_setschedparam: %s\n", strerror(errno));
         return ret;
     }
