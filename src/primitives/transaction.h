@@ -174,6 +174,72 @@ public:
     std::string ToString() const;
 };
 
+/**
+ * Base Interface for transaction types both mutable and immutable.
+ * We use CRTP for static resolution -- no virtual methods.
+ */
+template <typename T>
+class CBaseTransaction
+{
+public:
+
+    // Accessors for fields.
+    inline std::vector<CTxIn> GetVin() const
+    {
+        return static_cast<const T*>(this)->vin;
+    }
+
+    inline std::vector<CTxOut> GetVout() const
+    {
+        return static_cast<const T*>(this)->vout;
+    }
+
+    inline int32_t GetNVersion() const
+    {
+        return static_cast<const T*>(this)->nVersion;
+    }
+
+    inline uint32_t GetNLockTime() const
+    {
+        return static_cast<const T*>(this)->nLockTime;
+    }
+
+    // Overridable methods.
+    inline uint256 GetHash() const
+    {
+        return static_cast<T*>(this)->GetHash();
+    }
+
+    inline uint256 GetWitnessHash() const
+    {
+        return static_cast<T*>(this)->GetWitnessHash();
+    }
+
+    // Delegates to external function template.
+    template <typename Stream>
+    inline void Serialize(Stream& s) const
+    {
+        SerializeTransaction(*this, s);
+    }
+
+    // Common logic.
+    bool HasWitness() const
+    {
+        for (size_t i = 0; i < GetVin().size(); i++) {
+            if (!GetVin()[i].scriptWitness.IsNull()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Casts down to concrete type for compatibility with code that doesn't use the base class.
+    inline operator const T&() const
+    {
+        return *static_cast<const T*>(this);
+    }
+};
+
 struct CMutableTransaction;
 
 /**
@@ -229,10 +295,10 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
 }
 
 template<typename Stream, typename TxType>
-inline void SerializeTransaction(const TxType& tx, Stream& s) {
+inline void SerializeTransaction(const CBaseTransaction<TxType>& tx, Stream& s) {
     const bool fAllowWitness = !(s.GetVersion() & SERIALIZE_TRANSACTION_NO_WITNESS);
 
-    s << tx.nVersion;
+    s << tx.GetNVersion();
     unsigned char flags = 0;
     // Consistency check
     if (fAllowWitness) {
@@ -247,21 +313,21 @@ inline void SerializeTransaction(const TxType& tx, Stream& s) {
         s << vinDummy;
         s << flags;
     }
-    s << tx.vin;
-    s << tx.vout;
+    s << tx.GetVin();
+    s << tx.GetVout();
     if (flags & 1) {
-        for (size_t i = 0; i < tx.vin.size(); i++) {
-            s << tx.vin[i].scriptWitness.stack;
+        for (size_t i = 0; i < tx.GetVin().size(); i++) {
+            s << tx.GetVin()[i].scriptWitness.stack;
         }
     }
-    s << tx.nLockTime;
+    s << tx.GetNLockTime();
 }
 
 
 /** The basic transaction that is broadcasted on the network and contained in
  * blocks.  A transaction can contain multiple inputs and outputs.
  */
-class CTransaction
+class CTransaction : public CBaseTransaction<CTransaction>
 {
 public:
     // Default transaction version.
@@ -344,20 +410,10 @@ public:
     }
 
     std::string ToString() const;
-
-    bool HasWitness() const
-    {
-        for (size_t i = 0; i < vin.size(); i++) {
-            if (!vin[i].scriptWitness.IsNull()) {
-                return true;
-            }
-        }
-        return false;
-    }
 };
 
 /** A mutable version of CTransaction. */
-struct CMutableTransaction
+struct CMutableTransaction  : public CBaseTransaction<CMutableTransaction>
 {
     std::vector<CTxIn> vin;
     std::vector<CTxOut> vout;
@@ -388,15 +444,6 @@ struct CMutableTransaction
      */
     uint256 GetHash() const;
 
-    bool HasWitness() const
-    {
-        for (size_t i = 0; i < vin.size(); i++) {
-            if (!vin[i].scriptWitness.IsNull()) {
-                return true;
-            }
-        }
-        return false;
-    }
 };
 
 typedef std::shared_ptr<const CTransaction> CTransactionRef;
