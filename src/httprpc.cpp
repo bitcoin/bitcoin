@@ -65,8 +65,6 @@ private:
 static std::string strRPCUserColonPass;
 /* Stored RPC timer interface (for unregistration) */
 static HTTPRPCTimerInterface* httpRPCTimerInterface = 0;
-/* RPC CORS Domain, allowed Origin */
-static std::string strRPCCORSDomain;
 
 static void JSONErrorReply(HTTPRequest* req, const UniValue& objError, const UniValue& id)
 {
@@ -148,13 +146,16 @@ static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUserna
     }
     return multiUserAuthorized(strUserPass);
 }
-
-static bool checkCORS(HTTPRequest* req)
+// Syscoin This is not a CORS check. Only check if OPTIONS are
+// set in order to allow localhost to localhost communications
+static bool checkPreflight(HTTPRequest* req)
 {
     // https://www.w3.org/TR/cors/#resource-requests
 
     // 1. If the Origin header is not present terminate this set of steps.
     // The request is outside the scope of this specification.
+    // Syscoin Keep origin so as not to have to set Access-Control-Allow-Origin
+    // to *
     std::pair<bool, std::string> origin = req->GetHeader("origin");
     if (!origin.first) {
         return false;
@@ -165,6 +166,9 @@ static bool checkCORS(HTTPRequest* req)
     // and terminate this set of steps.
     // Note: Always matching is acceptable since the list of origins can be
     // unbounded.
+    // Syscoin We are only satifying the OPTIONS request in this method in order to
+    // allow localhost to localhost communications. If CORS is implemented origin
+    // would be checked against an acceptable domain
     // if (origin.second != strRPCCORSDomain) {
     //     return false;
     // }
@@ -221,7 +225,9 @@ static bool checkCORS(HTTPRequest* req)
         // Access-Control-Allow-Credentials header with the case-sensitive
         // string "true" as value.
         req->WriteHeader("Access-Control-Allow-Origin", origin.second);
-        req->WriteHeader("Access-Control-Allow-Credentials", "true");
+        // Syscoin as we are only handling OPTIONS there is
+        // no need to expose the response
+        //req->WriteHeader("Access-Control-Allow-Credentials", "true");
 
         // 8. Optionally add a single Access-Control-Max-Age header with as
         // value the amount of seconds the user agent is allowed to cache
@@ -262,7 +268,9 @@ static bool checkCORS(HTTPRequest* req)
     // header as value, and add a single Access-Control-Allow-Credentials
     // header with the case-sensitive string "true" as value.
     req->WriteHeader("Access-Control-Allow-Origin", origin.second);
-    req->WriteHeader("Access-Control-Allow-Credentials", "true");
+    // Syscoin as we are only handling OPTIONS there is
+    // no need to expose the response
+    // req->WriteHeader("Access-Control-Allow-Credentials", "true");
 
     // 4. If the list of exposed headers is not empty add one or more
     // Access-Control-Expose-Headers headers, with as values the header
@@ -274,8 +282,9 @@ static bool checkCORS(HTTPRequest* req)
 
 static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
 {
-    // First, check and/or set CORS headers
-    if (checkCORS(req)) {
+    // Check if this is a preflight request - if so set the necessary
+    // headers to allow localhost to localhost communications
+    if (checkPreflight(req)) {
         return true;
     }
     // JSONRPC handles only POST
@@ -357,8 +366,6 @@ static bool InitRPCAuthentication()
         LogPrintf("Config options rpcuser and rpcpassword will soon be deprecated. Locally-run instances may remove rpcuser to use cookie-based auth, or may be replaced with rpcauth. Please see share/rpcuser for rpcauth auth generation.\n");
         strRPCUserColonPass = GetArg("-rpcuser", "") + ":" + GetArg("-rpcpassword", "");
     }
-
-    strRPCCORSDomain = GetArg("-rpccorsdomain", "");
     return true;
 }
 
