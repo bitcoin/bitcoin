@@ -205,7 +205,7 @@ class SegWitTest(BitcoinTestFramework):
         height = self.nodes[0].getblockcount() + 1
         block_time = self.nodes[0].getblockheader(tip)["mediantime"] + 1
         block = create_block(int(tip, 16), create_coinbase(height), block_time)
-        block.version = version
+        block.nVersion = version
         block.rehash()
         return block
 
@@ -769,12 +769,16 @@ class SegWitTest(BitcoinTestFramework):
         # will require a witness to spend a witness program regardless of
         # segwit activation.  Note that older bitcoind's that are not
         # segwit-aware would also reject this for failing CLEANSTACK.
-        test_transaction_acceptance(self.nodes[0], self.test_node, spend_tx, with_witness=False, accepted=False)
+        with self.nodes[0].assert_debug_log(
+                expected_msgs=(spend_tx.hash, 'was not accepted: non-mandatory-script-verify-flag (Witness program was passed an empty witness)')):
+            test_transaction_acceptance(self.nodes[0], self.test_node, spend_tx, with_witness=False, accepted=False)
 
-        # Try to put the witness script in the script_sig, should also fail.
-        spend_tx.vin[0].script_sig = CScript([p2wsh_pubkey, b'a'])
+        # Try to put the witness script in the scriptSig, should also fail.
+        spend_tx.vin[0].scriptSig = CScript([p2wsh_pubkey, b'a'])
         spend_tx.rehash()
-        test_transaction_acceptance(self.nodes[0], self.test_node, spend_tx, with_witness=False, accepted=False)
+        with self.nodes[0].assert_debug_log(
+                expected_msgs=('Not relaying invalid transaction {}'.format(spend_tx.hash), 'was not accepted: mandatory-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)')):
+            test_transaction_acceptance(self.nodes[0], self.test_node, spend_tx, with_witness=False, accepted=False)
 
         # Now put the witness script in the witness, should succeed after
         # segwit activates.
