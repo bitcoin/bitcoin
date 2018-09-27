@@ -106,8 +106,11 @@ if BUILD_BITCOIND
   bin_PROGRAMS += dashd
 endif
 
-if BUILD_BITCOIN_UTILS
-  bin_PROGRAMS += dash-cli dash-tx
+if BUILD_BITCOIN_CLI
+  bin_PROGRAMS += dash-cli
+endif
+if BUILD_BITCOIN_TX
+  bin_PROGRAMS += dash-tx
 endif
 
 .PHONY: FORCE check-symbols check-security
