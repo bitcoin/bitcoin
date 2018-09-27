@@ -1307,7 +1307,7 @@ bool CConnman::GenerateSelectSet(std::set<SOCKET> &recv_set, std::set<SOCKET> &s
     return !recv_set.empty() || !send_set.empty() || !error_set.empty();
 }
 
-void CConnman::SocketHandler()
+void CConnman::SocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set)
 {
     std::set<SOCKET> recv_select_set, send_select_set, error_select_set;
     if (!GenerateSelectSet(recv_select_set, send_select_set, error_select_set)) {
@@ -1362,12 +1362,38 @@ void CConnman::SocketHandler()
             return;
     }
 
+    for (SOCKET hSocket : recv_select_set) {
+        if (FD_ISSET(hSocket, &fdsetRecv)) {
+            recv_set.insert(hSocket);
+        }
+    }
+
+    for (SOCKET hSocket : send_select_set) {
+        if (FD_ISSET(hSocket, &fdsetSend)) {
+            send_set.insert(hSocket);
+        }
+    }
+
+    for (SOCKET hSocket : error_select_set) {
+        if (FD_ISSET(hSocket, &fdsetError)) {
+            error_set.insert(hSocket);
+        }
+    }
+}
+
+void CConnman::SocketHandler()
+{
+    std::set<SOCKET> recv_set, send_set, error_set;
+    SocketEvents(recv_set, send_set, error_set);
+
+    if (interruptNet) return;
+
     //
     // Accept new connections
     //
     for (const ListenSocket& hListenSocket : vhListenSocket)
     {
-        if (hListenSocket.socket != INVALID_SOCKET && FD_ISSET(hListenSocket.socket, &fdsetRecv))
+        if (hListenSocket.socket != INVALID_SOCKET && recv_set.count(hListenSocket.socket) > 0)
         {
             AcceptConnection(hListenSocket);
         }
@@ -1398,9 +1424,9 @@ void CConnman::SocketHandler()
             LOCK(pnode->cs_hSocket);
             if (pnode->hSocket == INVALID_SOCKET)
                 continue;
-            recvSet = FD_ISSET(pnode->hSocket, &fdsetRecv);
-            sendSet = FD_ISSET(pnode->hSocket, &fdsetSend);
-            errorSet = FD_ISSET(pnode->hSocket, &fdsetError);
+            recvSet = recv_set.count(pnode->hSocket) > 0;
+            sendSet = send_set.count(pnode->hSocket) > 0;
+            errorSet = error_set.count(pnode->hSocket) > 0;
         }
         if (recvSet || errorSet)
         {
