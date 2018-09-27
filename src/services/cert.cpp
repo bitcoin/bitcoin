@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "cert.h"
-#include "alias.h"
+#include "services/cert.h"
+#include "services/alias.h"
 #include "init.h"
 #include "validation.h"
 #include "util.h"

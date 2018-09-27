@@ -76,14 +76,14 @@ endif
 .PHONY: FORCE check-symbols check-security
 # syscoin core #
 SYSCOIN_CORE_H = \
-  alias.h \
-  offer.h \
-  cert.h \
-  ranges.h \
-  graph.h \
-  asset.h \
-  assetallocation.h \
-  escrow.h \
+  services/alias.h \
+  services/offer.h \
+  services/cert.h \
+  services/ranges.h \
+  services/graph.h \
+  services/asset.h \
+  services/assetallocation.h \
+  services/escrow.h \
   feedback.h \
   auxpow.h \
   thread_pool/fixed_function.hpp \
@@ -223,14 +223,14 @@ libsyscoin_util_a-clientversion.$(OBJEXT): obj/build.h
 libsyscoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 libsyscoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_server_a_SOURCES = \
-  alias.cpp \
-  offer.cpp \
-  cert.cpp \
-  ranges.cpp \
-  graph.cpp \
-  asset.cpp \
-  assetallocation.cpp \
-  escrow.cpp \
+  services/alias.cpp \
+  services/offer.cpp \
+  services/cert.cpp \
+  services/ranges.cpp \
+  services/graph.cpp \
+  services/asset.cpp \
+  services/assetallocation.cpp \
+  services/escrow.cpp \
   auxpow.cpp \
   activemasternode.cpp \
   addrman.cpp \

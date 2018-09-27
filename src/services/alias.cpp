@@ -2,13 +2,13 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 //
-#include "alias.h"
-#include "offer.h"
-#include "escrow.h"
-#include "cert.h"
-#include "offer.h"
-#include "asset.h"
-#include "assetallocation.h"
+#include "services/alias.h"
+#include "services/offer.h"
+#include "services/escrow.h"
+#include "services/cert.h"
+#include "services/offer.h"
+#include "services/asset.h"
+#include "services/assetallocation.h"
 #include "init.h"
 #include "util.h"
 #include "random.h"
