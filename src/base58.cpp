@@ -303,6 +303,16 @@ std::string CBitcoinAddress::ConvertToNew(const std::string& address)
     return address;
 }
 
+std::string CBitcoinAddress::ConvertToOld(const std::string& address)
+{
+    if (!IsDeprecated(address))
+    {
+        CTxDestination key = CBitcoinAddress(address).Get();
+        return CBitcoinAddress(key, CChainParams::DEPRECATED_ADDRESS_TYPE).ToString();
+    }
+    return address;
+}
+
 bool CBitcoinAddress::GetKeyID(CKeyID& keyID) const
 {
     if (!IsValid() || vchVersion != Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS, m_addressType))
