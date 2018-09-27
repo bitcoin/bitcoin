@@ -10,6 +10,9 @@
 #include <validation.h>
 #include <validationinterface.h>
 #include <consensus/params.h>
+#include <sync.h>
+
+extern CCriticalSection cs_main;
 
 /** Default for -maxorphantxsize, maximum size in megabytes the orphan map can grow before entries are removed */
 static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS_SIZE = 10; // this allows around 100 TXs of max size (and many more of normal size)
@@ -46,7 +49,7 @@ public:
 
     void ConsiderEviction(CNode *pto, int64_t time_in_seconds);
     void CheckForStaleTipAndEvictPeers(const Consensus::Params &consensusParams);
-    void EvictExtraOutboundPeers(int64_t time_in_seconds);
+    void EvictExtraOutboundPeers(int64_t time_in_seconds) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 private:
     int64_t m_stale_tip_check_time; //! Next time to check for stale tip
