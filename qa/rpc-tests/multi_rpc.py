@@ -127,7 +127,6 @@ class HTTPBasicsTest (SyscoinTestFramework):
         assert_equal(resp.getheader("access-control-allow-origin"), "http://localhost")
         assert_equal(resp.getheader("access-control-allow-methods"), "POST")
         assert_equal(resp.getheader("access-control-allow-headers"), "authorization,content-type")
-        assert_equal(resp.getheader("access-control-allow-credentials"), "true")
         conn.close()
 
         #Simple Cross Origin - no Origin
