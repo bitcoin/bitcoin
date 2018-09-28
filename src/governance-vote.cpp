@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2018 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,16 +11,19 @@
 
 std::string CGovernanceVoting::ConvertOutcomeToString(vote_outcome_enum_t nOutcome)
 {
-    switch(nOutcome)
-    {
-        case VOTE_OUTCOME_NONE:
-            return "NONE"; break;
-        case VOTE_OUTCOME_YES:
-            return "YES"; break;
-        case VOTE_OUTCOME_NO:
-            return "NO"; break;
-        case VOTE_OUTCOME_ABSTAIN:
-            return "ABSTAIN"; break;
+    switch (nOutcome) {
+    case VOTE_OUTCOME_NONE:
+        return "NONE";
+        break;
+    case VOTE_OUTCOME_YES:
+        return "YES";
+        break;
+    case VOTE_OUTCOME_NO:
+        return "NO";
+        break;
+    case VOTE_OUTCOME_ABSTAIN:
+        return "ABSTAIN";
+        break;
     }
     return "error";
 }
@@ -28,23 +31,22 @@ std::string CGovernanceVoting::ConvertOutcomeToString(vote_outcome_enum_t nOutco
 std::string CGovernanceVoting::ConvertSignalToString(vote_signal_enum_t nSignal)
 {
     std::string strReturn = "NONE";
-    switch(nSignal)
-    {
-        case VOTE_SIGNAL_NONE:
-            strReturn = "NONE";
-            break;
-        case VOTE_SIGNAL_FUNDING:
-            strReturn = "FUNDING";
-            break;
-        case VOTE_SIGNAL_VALID:
-            strReturn = "VALID";
-            break;
-        case VOTE_SIGNAL_DELETE:
-            strReturn = "DELETE";
-            break;
-        case VOTE_SIGNAL_ENDORSED:
-            strReturn = "ENDORSED";
-            break;
+    switch (nSignal) {
+    case VOTE_SIGNAL_NONE:
+        strReturn = "NONE";
+        break;
+    case VOTE_SIGNAL_FUNDING:
+        strReturn = "FUNDING";
+        break;
+    case VOTE_SIGNAL_VALID:
+        strReturn = "VALID";
+        break;
+    case VOTE_SIGNAL_DELETE:
+        strReturn = "DELETE";
+        break;
+    case VOTE_SIGNAL_ENDORSED:
+        strReturn = "ENDORSED";
+        break;
     }
 
     return strReturn;
@@ -54,13 +56,11 @@ std::string CGovernanceVoting::ConvertSignalToString(vote_signal_enum_t nSignal)
 vote_outcome_enum_t CGovernanceVoting::ConvertVoteOutcome(const std::string& strVoteOutcome)
 {
     vote_outcome_enum_t eVote = VOTE_OUTCOME_NONE;
-    if(strVoteOutcome == "yes") {
+    if (strVoteOutcome == "yes") {
         eVote = VOTE_OUTCOME_YES;
-    }
-    else if(strVoteOutcome == "no") {
+    } else if (strVoteOutcome == "no") {
         eVote = VOTE_OUTCOME_NO;
-    }
-    else if(strVoteOutcome == "abstain") {
+    } else if (strVoteOutcome == "abstain") {
         eVote = VOTE_OUTCOME_ABSTAIN;
     }
     return eVote;
@@ -68,12 +68,11 @@ vote_outcome_enum_t CGovernanceVoting::ConvertVoteOutcome(const std::string& str
 
 vote_signal_enum_t CGovernanceVoting::ConvertVoteSignal(const std::string& strVoteSignal)
 {
-    static const std::map <std::string, vote_signal_enum_t> mapStrVoteSignals = {
-        {"funding",  VOTE_SIGNAL_FUNDING},
-        {"valid",    VOTE_SIGNAL_VALID},
-        {"delete",   VOTE_SIGNAL_DELETE},
-        {"endorsed", VOTE_SIGNAL_ENDORSED}
-    };
+    static const std::map<std::string, vote_signal_enum_t> mapStrVoteSignals = {
+        {"funding", VOTE_SIGNAL_FUNDING},
+        {"valid", VOTE_SIGNAL_VALID},
+        {"delete", VOTE_SIGNAL_DELETE},
+        {"endorsed", VOTE_SIGNAL_ENDORSED}};
 
     const auto& it = mapStrVoteSignals.find(strVoteSignal);
     if (it == mapStrVoteSignals.end()) {
@@ -83,26 +82,27 @@ vote_signal_enum_t CGovernanceVoting::ConvertVoteSignal(const std::string& strVo
     return it->second;
 }
 
-CGovernanceVote::CGovernanceVote()
-    : fValid(true),
-      fSynced(false),
-      nVoteSignal(int(VOTE_SIGNAL_NONE)),
-      masternodeOutpoint(),
-      nParentHash(),
-      nVoteOutcome(int(VOTE_OUTCOME_NONE)),
-      nTime(0),
-      vchSig()
-{}
+CGovernanceVote::CGovernanceVote() :
+    fValid(true),
+    fSynced(false),
+    nVoteSignal(int(VOTE_SIGNAL_NONE)),
+    masternodeOutpoint(),
+    nParentHash(),
+    nVoteOutcome(int(VOTE_OUTCOME_NONE)),
+    nTime(0),
+    vchSig()
+{
+}
 
-CGovernanceVote::CGovernanceVote(const COutPoint& outpointMasternodeIn, const uint256& nParentHashIn, vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn)
-    : fValid(true),
-      fSynced(false),
-      nVoteSignal(eVoteSignalIn),
-      masternodeOutpoint(outpointMasternodeIn),
-      nParentHash(nParentHashIn),
-      nVoteOutcome(eVoteOutcomeIn),
-      nTime(GetAdjustedTime()),
-      vchSig()
+CGovernanceVote::CGovernanceVote(const COutPoint& outpointMasternodeIn, const uint256& nParentHashIn, vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn) :
+    fValid(true),
+    fSynced(false),
+    nVoteSignal(eVoteSignalIn),
+    masternodeOutpoint(outpointMasternodeIn),
+    nParentHash(nParentHashIn),
+    nVoteOutcome(eVoteOutcomeIn),
+    nTime(GetAdjustedTime()),
+    vchSig()
 {
     UpdateHash();
 }
@@ -120,7 +120,7 @@ std::string CGovernanceVote::ToString() const
 void CGovernanceVote::Relay(CConnman& connman) const
 {
     // Do not relay until fully synced
-    if(!masternodeSync.IsSynced()) {
+    if (!masternodeSync.IsSynced()) {
         LogPrint("gobject", "CGovernanceVote::Relay -- won't relay until fully synced\n");
         return;
     }
@@ -159,7 +159,7 @@ bool CGovernanceVote::Sign(const CKey& key, const CKeyID& keyID)
     if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
         uint256 hash = GetSignatureHash();
 
-        if(!CHashSigner::SignHash(hash, key, vchSig)) {
+        if (!CHashSigner::SignHash(hash, key, vchSig)) {
             LogPrintf("CGovernanceVote::Sign -- SignHash() failed\n");
             return false;
         }
@@ -169,16 +169,15 @@ bool CGovernanceVote::Sign(const CKey& key, const CKeyID& keyID)
             return false;
         }
     } else {
-
         std::string strMessage = masternodeOutpoint.ToStringShort() + "|" + nParentHash.ToString() + "|" +
-            std::to_string(nVoteSignal) + "|" + std::to_string(nVoteOutcome) + "|" + std::to_string(nTime);
+                                 std::to_string(nVoteSignal) + "|" + std::to_string(nVoteOutcome) + "|" + std::to_string(nTime);
 
-        if(!CMessageSigner::SignMessage(strMessage, vchSig, key)) {
+        if (!CMessageSigner::SignMessage(strMessage, vchSig, key)) {
             LogPrintf("CGovernanceVote::Sign -- SignMessage() failed\n");
             return false;
         }
 
-        if(!CMessageSigner::VerifyMessage(keyID, vchSig, strMessage, strError)) {
+        if (!CMessageSigner::VerifyMessage(keyID, vchSig, strMessage, strError)) {
             LogPrintf("CGovernanceVote::Sign -- VerifyMessage() failed, error: %s\n", strError);
             return false;
         }
@@ -197,11 +196,11 @@ bool CGovernanceVote::CheckSignature(const CKeyID& keyID) const
         if (!CHashSigner::VerifyHash(hash, keyID, vchSig, strError)) {
             // could be a signature in old format
             std::string strMessage = masternodeOutpoint.ToStringShort() + "|" + nParentHash.ToString() + "|" +
-                std::to_string(nVoteSignal) + "|" +
-                std::to_string(nVoteOutcome) + "|" +
-                std::to_string(nTime);
+                                     std::to_string(nVoteSignal) + "|" +
+                                     std::to_string(nVoteOutcome) + "|" +
+                                     std::to_string(nTime);
 
-            if(!CMessageSigner::VerifyMessage(keyID, vchSig, strMessage, strError)) {
+            if (!CMessageSigner::VerifyMessage(keyID, vchSig, strMessage, strError)) {
                 // nope, not in old format either
                 LogPrint("gobject", "CGovernanceVote::IsValid -- VerifyMessage() failed, error: %s\n", strError);
                 return false;
@@ -209,11 +208,11 @@ bool CGovernanceVote::CheckSignature(const CKeyID& keyID) const
         }
     } else {
         std::string strMessage = masternodeOutpoint.ToStringShort() + "|" + nParentHash.ToString() + "|" +
-            std::to_string(nVoteSignal) + "|" +
-            std::to_string(nVoteOutcome) + "|" +
-            std::to_string(nTime);
+                                 std::to_string(nVoteSignal) + "|" +
+                                 std::to_string(nVoteOutcome) + "|" +
+                                 std::to_string(nTime);
 
-        if(!CMessageSigner::VerifyMessage(keyID, vchSig, strMessage, strError)) {
+        if (!CMessageSigner::VerifyMessage(keyID, vchSig, strMessage, strError)) {
             LogPrint("gobject", "CGovernanceVote::IsValid -- VerifyMessage() failed, error: %s\n", strError);
             return false;
         }
@@ -224,27 +223,25 @@ bool CGovernanceVote::CheckSignature(const CKeyID& keyID) const
 
 bool CGovernanceVote::IsValid(bool useVotingKey) const
 {
-    if(nTime > GetAdjustedTime() + (60*60)) {
-        LogPrint("gobject", "CGovernanceVote::IsValid -- vote is too far ahead of current time - %s - nTime %lli - Max Time %lli\n", GetHash().ToString(), nTime, GetAdjustedTime() + (60*60));
+    if (nTime > GetAdjustedTime() + (60 * 60)) {
+        LogPrint("gobject", "CGovernanceVote::IsValid -- vote is too far ahead of current time - %s - nTime %lli - Max Time %lli\n", GetHash().ToString(), nTime, GetAdjustedTime() + (60 * 60));
         return false;
     }
 
     // support up to MAX_SUPPORTED_VOTE_SIGNAL, can be extended
-    if(nVoteSignal > MAX_SUPPORTED_VOTE_SIGNAL)
-    {
+    if (nVoteSignal > MAX_SUPPORTED_VOTE_SIGNAL) {
         LogPrint("gobject", "CGovernanceVote::IsValid -- Client attempted to vote on invalid signal(%d) - %s\n", nVoteSignal, GetHash().ToString());
         return false;
     }
 
     // 0=none, 1=yes, 2=no, 3=abstain. Beyond that reject votes
-    if(nVoteOutcome > 3)
-    {
+    if (nVoteOutcome > 3) {
         LogPrint("gobject", "CGovernanceVote::IsValid -- Client attempted to vote on invalid outcome(%d) - %s\n", nVoteSignal, GetHash().ToString());
         return false;
     }
 
     masternode_info_t infoMn;
-    if(!mnodeman.GetMasternodeInfo(masternodeOutpoint, infoMn)) {
+    if (!mnodeman.GetMasternodeInfo(masternodeOutpoint, infoMn)) {
         LogPrint("gobject", "CGovernanceVote::IsValid -- Unknown Masternode - %s\n", masternodeOutpoint.ToStringShort());
         return false;
     }
@@ -265,25 +262,25 @@ bool operator==(const CGovernanceVote& vote1, const CGovernanceVote& vote2)
 bool operator<(const CGovernanceVote& vote1, const CGovernanceVote& vote2)
 {
     bool fResult = (vote1.masternodeOutpoint < vote2.masternodeOutpoint);
-    if(!fResult) {
+    if (!fResult) {
         return false;
     }
     fResult = (vote1.masternodeOutpoint == vote2.masternodeOutpoint);
 
     fResult = fResult && (vote1.nParentHash < vote2.nParentHash);
-    if(!fResult) {
+    if (!fResult) {
         return false;
     }
     fResult = fResult && (vote1.nParentHash == vote2.nParentHash);
 
     fResult = fResult && (vote1.nVoteOutcome < vote2.nVoteOutcome);
-    if(!fResult) {
+    if (!fResult) {
         return false;
     }
     fResult = fResult && (vote1.nVoteOutcome == vote2.nVoteOutcome);
 
     fResult = fResult && (vote1.nVoteSignal == vote2.nVoteSignal);
-    if(!fResult) {
+    if (!fResult) {
         return false;
     }
     fResult = fResult && (vote1.nVoteSignal == vote2.nVoteSignal);
