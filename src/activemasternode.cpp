@@ -282,7 +282,7 @@ void CActiveLegacyMasternodeManager::ManageStateInitial(CConnman& connman)
     if(!fFoundLocal) {
         bool empty = true;
         // If we have some peers, let's try to find our local address from one of them
-        connman.ForEachNodeContinueIf(CConnman::AllNodes, [&fFoundLocal, &empty, this](CNode* pnode) {
+        connman.ForEachNodeContinueIf(CConnman::AllNodes, [&fFoundLocal, &empty](CNode* pnode) {
             empty = false;
             if (pnode->addr.IsIPv4())
                 fFoundLocal = GetLocal(activeMasternodeInfo.service, &pnode->addr) && CMasternode::IsValidNetAddr(activeMasternodeInfo.service);

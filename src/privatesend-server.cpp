@@ -431,7 +431,7 @@ void CPrivateSendServer::ChargeFees(CConnman& connman)
     std::random_shuffle(vecOffendersCollaterals.begin(), vecOffendersCollaterals.end());
 
     if(nState == POOL_STATE_ACCEPTING_ENTRIES || nState == POOL_STATE_SIGNING) {
-        LogPrintf("CPrivateSendServer::ChargeFees -- found uncooperative node (didn't %s transaction), charging fees: %s\n",
+        LogPrintf("CPrivateSendServer::ChargeFees -- found uncooperative node (didn't %s transaction), charging fees: %s",
                 (nState == POOL_STATE_SIGNING) ? "sign" : "send", vecOffendersCollaterals[0]->ToString());
 
         LOCK(cs_main);
@@ -716,7 +716,7 @@ bool CPrivateSendServer::CreateNewSession(const CDarksendAccept& dsa, PoolMessag
 
     if(!fUnitTest) {
         //broadcast that I'm accepting entries, only if it's the first entry through
-        CDarksendQueue dsq(dsa.nDenom, activeMasternodeInfo.outpoint, GetAdjustedTime(), false);
+        CDarksendQueue dsq(nSessionDenom, activeMasternodeInfo.outpoint, GetAdjustedTime(), false);
         LogPrint("privatesend", "CPrivateSendServer::CreateNewSession -- signing and relaying new queue: %s\n", dsq.ToString());
         dsq.Sign();
         dsq.Relay(connman);

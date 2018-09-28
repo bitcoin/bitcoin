@@ -53,12 +53,13 @@ public:
         addr(CService()),
         dsa(CDarksendAccept()),
         nTimeCreated(0)
-    {};
+    {}
 
     CPendingDsaRequest(const CService& addr_, const CDarksendAccept& dsa_):
         addr(addr_),
-        dsa(dsa_)
-    { nTimeCreated = GetTime(); }
+        dsa(dsa_),
+        nTimeCreated(GetTime())
+    {}
 
     CService GetAddr() { return addr; }
     CDarksendAccept GetDSA() { return dsa; }

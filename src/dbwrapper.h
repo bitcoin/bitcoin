@@ -371,6 +371,7 @@ private:
     };
 
     struct KeyValueHolder {
+        virtual ~KeyValueHolder() = default;
         virtual void Write(CDBBatch &batch) = 0;
     };
     typedef std::unique_ptr<KeyValueHolder> KeyValueHolderPtr;

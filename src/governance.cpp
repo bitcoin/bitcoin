@@ -1019,7 +1019,7 @@ void CGovernanceManager::RequestGovernanceObject(CNode* pfrom, const uint256& nH
         return;
     }
 
-    LogPrint("gobject", "CGovernanceObject::RequestGovernanceObject -- hash = %s (peer=%d)\n", nHash.ToString(), pfrom->GetId());
+    LogPrint("gobject", "CGovernanceManager::RequestGovernanceObject -- nHash %s peer=%d\n", nHash.ToString(), pfrom->GetId());
 
     CNetMsgMaker msgMaker(pfrom->GetSendVersion());
 

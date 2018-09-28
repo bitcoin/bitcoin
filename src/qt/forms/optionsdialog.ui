@@ -179,7 +179,7 @@
              <string>Show system popups for PrivateSend mixing transactions&lt;br/&gt;just like for all other transaction types.</string>
             </property>
             <property name="text">
-             <string>Show popups for Privatesend transactions</string>
+             <string>Show popups for PrivateSend transactions</string>
             </property>
            </widget>
           </item>

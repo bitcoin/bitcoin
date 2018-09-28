@@ -548,7 +548,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 
     if (tx.IsCoinBase())
     {
-        int minCbSize = 2;
+        size_t minCbSize = 2;
         if (tx.nType == TRANSACTION_COINBASE) {
             // With the introduction of CbTx, coinbase scripts are not required anymore to hold a valid block height
             minCbSize = 1;

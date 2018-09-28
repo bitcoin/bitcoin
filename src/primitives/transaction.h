@@ -179,7 +179,7 @@ public:
         // "Dust" is defined in terms of CTransaction::minRelayTxFee, which has units duffs-per-kilobyte.
         // If you'd pay more than 1/3 in fees to spend something, then we consider it dust.
         // A typical spendable txout is 34 bytes big, and will need a CTxIn of at least 148 bytes to spend
-        // i.e. total is 148 + 32 = 182 bytes. Default -minrelaytxfee is 1000 duffs per kB
+        // i.e. total is 148 + 34 = 182 bytes. Default -minrelaytxfee is 1000 duffs per kB
         // and that means that fee per spendable txout is 182 * 1000 / 1000 = 182 duffs.
         // So dust is a spendable txout less than 546 * minRelayTxFee / 1000 (in duffs)
         // i.e. 182 * 3 = 546 duffs with default -minrelaytxfee = minRelayTxFee = 1000 duffs per kB.

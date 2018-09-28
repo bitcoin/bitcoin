@@ -44,7 +44,7 @@ void RPCNestedTests::rpcNestedTests()
     RegisterAllCoreRPCCommands(tableRPC);
     tableRPC.appendCommand("rpcNestedTest", &vRPCCommands[0]);
     ClearDatadirCache();
-    std::string path = QDir::tempPath().toStdString() + "/" + strprintf("test_bitcoin_qt_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));
+    std::string path = QDir::tempPath().toStdString() + "/" + strprintf("test_dash_qt_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));
     QDir dir(QString::fromStdString(path));
     dir.mkpath(".");
     ForceSetArg("-datadir", path);

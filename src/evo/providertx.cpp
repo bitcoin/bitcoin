@@ -228,7 +228,9 @@ bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
     if (ptx.nVersion > CProRegTx::CURRENT_VERSION)
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-version");
 
-    if (ptx.nReason < CProUpRevTx::REASON_NOT_SPECIFIED || ptx.nReason > CProUpRevTx::REASON_LAST)
+    // ptx.nReason < CProUpRevTx::REASON_NOT_SPECIFIED is always `false` since
+    // ptx.nReason is unsigned and CProUpRevTx::REASON_NOT_SPECIFIED == 0
+    if (ptx.nReason > CProUpRevTx::REASON_LAST)
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-reason");
 
     if (pindexPrev) {

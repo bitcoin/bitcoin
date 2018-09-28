@@ -169,9 +169,9 @@ void CHDChain::DeriveChildExtKey(uint32_t nAccountIndex, bool fInternal, uint32_
     purposeKey.Derive(cointypeKey, Params().ExtCoinType() | 0x80000000);
     // derive m/purpose'/coin_type'/account'
     cointypeKey.Derive(accountKey, nAccountIndex | 0x80000000);
-    // derive m/purpose'/coin_type'/account/change
+    // derive m/purpose'/coin_type'/account'/change
     accountKey.Derive(changeKey, fInternal ? 1 : 0);
-    // derive m/purpose'/coin_type'/account/change/address_index
+    // derive m/purpose'/coin_type'/account'/change/address_index
     changeKey.Derive(extKeyRet, nChildIndex);
 }
 
