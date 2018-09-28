@@ -107,7 +107,7 @@
         <cursorShape>IBeamCursor</cursorShape>
        </property>
        <property name="text">
-        <string notr="true">Copyright &amp;copy; 2009-2013 The Bitcoin developers</string>
+        <string notr="true">Copyright &amp;copy; 2009-2013 The Primecoin developers</string>
        </property>
        <property name="textFormat">
         <enum>Qt::RichText</enum>

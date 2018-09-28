@@ -1367,6 +1367,7 @@ public:
     {
         SetNull();
         *((CBlockHeader*)this) = header;
+		(*((CBlockHeader*)this)).bnPrimeChainMultiplier = header.bnPrimeChainMultiplier;
     }
 
     IMPLEMENT_SERIALIZE
@@ -1393,6 +1394,7 @@ public:
         block.nTime          = nTime;
         block.nBits          = nBits;
         block.nNonce         = nNonce;
+		block.bnPrimeChainMultiplier = bnPrimeChainMultiplier;
         return block;
     }
 
@@ -1504,13 +1506,13 @@ public:
 
     void print() const
     {
-        printf("CBlock(hash=%s, hashBlockHeader=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%"PRIszu")\n",
+        printf("CBlock(hash=%s, hashBlockHeader=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, bigNum=%s, vtx=%"PRIszu")\n",
             GetHash().ToString().c_str(),
             GetHeaderHash().ToString().c_str(),
             nVersion,
             hashPrevBlock.ToString().c_str(),
             hashMerkleRoot.ToString().c_str(),
-            nTime, nBits, nNonce,
+            nTime, nBits, nNonce, (*(CBlockHeader*)this).bnPrimeChainMultiplier.GetHex().c_str(),
             vtx.size());
         for (unsigned int i = 0; i < vtx.size(); i++)
         {
@@ -1681,7 +1683,7 @@ public:
     unsigned int nTime;
     unsigned int nBits;
     unsigned int nNonce;
-
+	CBigNum bnPrimeChainMultiplier;
 
     CBlockIndex()
     {
@@ -1706,6 +1708,7 @@ public:
         nTime          = 0;
         nBits          = 0;
         nNonce         = 0;
+		bnPrimeChainMultiplier = 0;
     }
 
     CBlockIndex(CBlockHeader& block)
@@ -1731,6 +1734,7 @@ public:
         nTime          = block.nTime;
         nBits          = block.nBits;
         nNonce         = block.nNonce;
+		bnPrimeChainMultiplier = block.bnPrimeChainMultiplier;
     }
 
     CDiskBlockPos GetBlockPos() const {
@@ -1761,6 +1765,7 @@ public:
         block.nTime          = nTime;
         block.nBits          = nBits;
         block.nNonce         = nNonce;
+		block.bnPrimeChainMultiplier = bnPrimeChainMultiplier;
         return block;
     }
 
@@ -1895,6 +1900,7 @@ public:
         READWRITE(nBits);
         READWRITE(nNonce);
         READWRITE(hashBlock);
+		READWRITE(bnPrimeChainMultiplier);
     )
 
     uint256 GetBlockHash() const

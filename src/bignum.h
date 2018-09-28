@@ -385,6 +385,26 @@ public:
         return str;
     }
 
+	std::string GetHexStr() const
+	{
+		std::vector<unsigned char> vBuf = getvch();
+		if (vBuf.size() %2){
+			//not even
+			vBuf.push_back(0xCD);
+		}
+		std::vector<char> vstr;
+		vstr.reserve(500);
+		char hexval[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+		for (unsigned int j = 0; j < vBuf.size(); j++)
+		{
+			vstr.push_back(hexval[((vBuf[j] >> 4) & 0x0F)]);
+			vstr.push_back(hexval[(vBuf[j]) & 0x0F]);
+			vstr.push_back(' ');
+		}
+		vstr.push_back('\0');
+		return std::string(&vstr[0]);
+	}
+	
     std::string GetHex() const
     {
         return ToString(16);
