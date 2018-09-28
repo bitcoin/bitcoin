@@ -23,7 +23,7 @@
 #include <boost/foreach.hpp>
 #include <boost/thread.hpp>
 // SYSCOIN
-#include "services/alias.h"
+#include "alias.h"
 static uint64_t nAccountingEntryNumber = 0;
 
 static std::atomic<unsigned int> nWalletDBUpdateCounter;

@@ -9,9 +9,9 @@
 #include "dbwrapper.h"
 #include "feedback.h"
 #include "primitives/transaction.h"
-#include "services/ranges.h"
+#include "ranges.h"
 #include <unordered_map>
-#include "services/graph.h"
+#include "graph.h"
 class CWalletTx;
 class CTransaction;
 class CReserveKey;

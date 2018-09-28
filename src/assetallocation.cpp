@@ -2,9 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "services/assetallocation.h"
-#include "services/alias.h"
-#include "services/asset.h"
+#include "assetallocation.h"
+#include "alias.h"
+#include "asset.h"
 #include "init.h"
 #include "validation.h"
 #include "txmempool.h"

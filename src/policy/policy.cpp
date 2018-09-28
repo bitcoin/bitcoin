@@ -15,7 +15,7 @@
 
 #include <boost/foreach.hpp>
 // SYSCOIN need constant SYSCOIN_TX_VERSION
-#include "services/alias.h"
+#include "alias.h"
     /**
      * Check transaction inputs to mitigate two
      * potential denial-of-service attacks:
