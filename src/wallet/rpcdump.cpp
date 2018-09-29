@@ -1183,6 +1183,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
             nLowestTimestamp = chainActive.Tip()->GetBlockTime();
         } else {
             fRescan = false;
+            LogPrintf("Rescan completed\n");
         }
 
         for (const UniValue& data : requests.getValues()) {
