@@ -70,9 +70,7 @@ public:
         READWRITE(nSporkID);
         READWRITE(nValue);
         READWRITE(nTimeSigned);
-        if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(vchSig);
-        }
+        READWRITE(vchSig);
     }
 
     uint256 GetHash() const;
@@ -80,6 +78,7 @@ public:
 
     bool Sign(const CKey& key, bool fSporkSixActive);
     bool CheckSignature(const CKeyID& pubKeyId, bool fSporkSixActive) const;
+    bool GetSignerKeyID(CKeyID& retKeyidSporkSigner, bool fSporkSixActive);
     void Relay(CConnman& connman);
 };
 
@@ -91,11 +90,13 @@ private:
 
     mutable CCriticalSection cs;
     std::map<uint256, CSporkMessage> mapSporksByHash;
-    std::map<int, CSporkMessage> mapSporksActive;
+    std::map<int, std::map<CKeyID, CSporkMessage> > mapSporksActive;
 
-    CKeyID sporkPubKeyID;
+    std::set<CKeyID> setSporkPubKeyIDs;
+    int nMinSporkKeys;
     CKey sporkPrivKey;
 
+    bool SporkValueIsActive(int nSporkID, int64_t& nActiveValueRet) const;
 public:
 
     CSporkManager() {}
@@ -114,7 +115,9 @@ public:
             strVersion = SERIALIZATION_VERSION_STRING;
             READWRITE(strVersion);
         }
-        READWRITE(sporkPubKeyID);
+        // we don't serialize pubkey ids because pubkeys should be
+        // hardcoded or be setted with cmdline or options, should
+        // not reuse pubkeys from previous dashd run
         READWRITE(mapSporksByHash);
         READWRITE(mapSporksActive);
         // we don't serialize private key to prevent its leakage
@@ -135,6 +138,7 @@ public:
     bool GetSporkByHash(const uint256& hash, CSporkMessage &sporkRet);
 
     bool SetSporkAddress(const std::string& strAddress);
+    bool SetMinSporkKeys(int minSporkKeys);
     bool SetPrivKey(const std::string& strPrivKey);
 
     std::string ToString() const;
