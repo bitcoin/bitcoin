@@ -479,7 +479,7 @@ void CConnman::DumpBanlist()
         SetBannedSetDirty(false);
     }
 
-    LogPrint(BCLog::NET, "Flushed %d banned node ips/subnets to banlist.dat  %dms\n",
+    LogPrint(BCLog::NET, "- Flushed %d banned node ips/subnets to banlist.dat: %dms\n",
         banmap.size(), GetTimeMillis() - nStart);
 }
 
@@ -1696,7 +1696,7 @@ void CConnman::DumpAddresses()
     CAddrDB adb;
     adb.Write(addrman);
 
-    LogPrint(BCLog::NET, "Flushed %d addresses to peers.dat  %dms\n",
+    LogPrint(BCLog::NET, "- Flushed %d addresses to peers.dat: %dms\n",
            addrman.size(), GetTimeMillis() - nStart);
 }
 
@@ -2312,7 +2312,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     {
         CAddrDB adb;
         if (adb.Read(addrman))
-            LogPrintf("Loaded %i addresses from peers.dat  %dms\n", addrman.size(), GetTimeMillis() - nStart);
+            LogPrintf("- Loaded %i addresses from peers.dat: %dms\n", addrman.size(), GetTimeMillis() - nStart);
         else {
             addrman.Clear(); // Addrman can be in an inconsistent state after failure, reset it
             LogPrintf("Invalid or missing peers.dat; recreating\n");
@@ -2330,7 +2330,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
         SetBannedSetDirty(false); // no need to write down, just read data
         SweepBanned(); // sweep out unused entries
 
-        LogPrint(BCLog::NET, "Loaded %d banned node ips/subnets from banlist.dat  %dms\n",
+        LogPrint(BCLog::NET, "- Loaded %d banned node ips/subnets from banlist.dat: %dms\n",
             banmap.size(), GetTimeMillis() - nStart);
     } else {
         LogPrintf("Invalid or missing banlist.dat; recreating\n");

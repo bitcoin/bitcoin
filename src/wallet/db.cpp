@@ -715,7 +715,7 @@ void BerkeleyEnvironment::Flush(bool fShutdown)
             } else
                 mi++;
         }
-        LogPrint(BCLog::DB, "BerkeleyEnvironment::Flush: Flush(%s)%s took %15dms\n", fShutdown ? "true" : "false", fDbEnvInit ? "" : " database not started", GetTimeMillis() - nStart);
+        LogPrint(BCLog::DB, "- BerkeleyEnvironment::Flush: Flush(%s)%s: %dms\n", fShutdown ? "true" : "false", fDbEnvInit ? "" : " database not started", GetTimeMillis() - nStart);
         if (fShutdown) {
             char** listp;
             if (mapFileUseCount.empty()) {
@@ -763,7 +763,7 @@ bool BerkeleyBatch::PeriodicFlush(BerkeleyDatabase& database)
                 env->CheckpointLSN(strFile);
 
                 env->mapFileUseCount.erase(mi++);
-                LogPrint(BCLog::DB, "Flushed %s %dms\n", strFile, GetTimeMillis() - nStart);
+                LogPrint(BCLog::DB, "- Flushed %s: %dms\n", strFile, GetTimeMillis() - nStart);
                 ret = true;
             }
         }

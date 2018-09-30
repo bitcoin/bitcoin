@@ -1536,7 +1536,7 @@ bool AppInitMain(InitInterfaces& interfaces)
             }
 
             fLoaded = true;
-            LogPrintf(" block index %15dms\n", GetTimeMillis() - load_block_index_start_time);
+            LogPrintf("- Loaded block index: %dms\n", GetTimeMillis() - load_block_index_start_time);
         } while(false);
 
         if (!fLoaded && !ShutdownRequested()) {
