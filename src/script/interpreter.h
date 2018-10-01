@@ -15,8 +15,6 @@
 
 class CPubKey;
 class CScript;
-class CTransaction;
-class uint256;
 
 /** Signature hash types/flags */
 enum

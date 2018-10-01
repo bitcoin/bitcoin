@@ -174,9 +174,8 @@ bool CZMQPublishRawBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
     {
         LOCK(cs_main);
-        CBlock block;
-        if(!ReadBlockFromDisk(block, pindex, consensusParams))
-        {
+        CPureBlock block;
+        if (!ReadBlockFromDisk(block, pindex, consensusParams)) {
             zmqError("Can't read block from disk");
             return false;
         }

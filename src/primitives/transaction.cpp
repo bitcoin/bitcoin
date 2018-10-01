@@ -55,6 +55,7 @@ std::string CTxOut::ToString() const
 }
 
 CMutableTransaction::CMutableTransaction() : nVersion(CTransaction::CURRENT_VERSION), nLockTime(0) {}
+CMutableTransaction::CMutableTransaction(const CPureTransaction& tx) : vin(tx.vin), vout(tx.vout), nVersion(tx.nVersion), nLockTime(tx.nLockTime) {}
 CMutableTransaction::CMutableTransaction(const CTransaction& tx) : vin(tx.vin), vout(tx.vout), nVersion(tx.nVersion), nLockTime(tx.nLockTime) {}
 
 uint256 CMutableTransaction::GetHash() const
@@ -75,10 +76,16 @@ uint256 CTransaction::ComputeWitnessHash() const
     return SerializeHash(*this, SER_GETHASH, 0);
 }
 
+/* Only used for the CTransaction default constructor */
+CPureTransaction::CPureTransaction() : vin{}, vout{}, nVersion{CPureTransaction::CURRENT_VERSION}, nLockTime{0} {}
 /* For backward compatibility, the hash is initialized to 0. TODO: remove the need for this default constructor entirely. */
-CTransaction::CTransaction() : vin(), vout(), nVersion(CTransaction::CURRENT_VERSION), nLockTime(0), hash{}, m_witness_hash{} {}
-CTransaction::CTransaction(const CMutableTransaction& tx) : vin(tx.vin), vout(tx.vout), nVersion(tx.nVersion), nLockTime(tx.nLockTime), hash{ComputeHash()}, m_witness_hash{ComputeWitnessHash()} {}
-CTransaction::CTransaction(CMutableTransaction&& tx) : vin(std::move(tx.vin)), vout(std::move(tx.vout)), nVersion(tx.nVersion), nLockTime(tx.nLockTime), hash{ComputeHash()}, m_witness_hash{ComputeWitnessHash()} {}
+CTransaction::CTransaction() : CPureTransaction{}, hash{}, m_witness_hash{} {}
+
+CPureTransaction::CPureTransaction(const CMutableTransaction& tx) : vin{tx.vin}, vout{tx.vout}, nVersion{tx.nVersion}, nLockTime{tx.nLockTime} {}
+CTransaction::CTransaction(const CMutableTransaction& tx) : CPureTransaction{tx}, hash{ComputeHash()}, m_witness_hash{ComputeWitnessHash()} {}
+
+CPureTransaction::CPureTransaction(CMutableTransaction&& tx) : vin{std::move(tx.vin)}, vout{std::move(tx.vout)}, nVersion{tx.nVersion}, nLockTime{tx.nLockTime} {}
+CTransaction::CTransaction(CMutableTransaction&& tx) : CPureTransaction{std::move(tx)}, hash{ComputeHash()}, m_witness_hash{ComputeWitnessHash()} {}
 
 CAmount CTransaction::GetValueOut() const
 {
