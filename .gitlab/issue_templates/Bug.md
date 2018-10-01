@@ -23,6 +23,6 @@ logs, and code; it's very hard to read otherwise.) Drop full logs & dumps here: 
 ### Possible fixes
 (Any comments on what you think might be responsible for the problem, if you have particular insight.)
 
-/label ~"Type: Bug"  
+/label ~"Story: Bug" ~"Status: New/Suggestion"  
 /cc @artem  
 /assign @artem
