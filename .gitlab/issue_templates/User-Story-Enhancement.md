@@ -1,6 +1,6 @@
 ### User Story/Motivation/Problem
-(Please explain the problem you want to solve and motivation for this user story. This template should be used to add enhancements to existing features. We recommend to use the template below, feel free to add more details)
-As a < type of user >, I want < some goal, feature > so that < benefit, reason >. (For example: As a consumer, I want shopping cart functionality to easily purchase items online)
+(Please explain the problem you want to solve and motivation for this user story. This template should be used to add enhancements to existing features. We recommend to use the template below, feel free to add more details)  
+**As a < type of user >, I want < some goal, feature > so that < benefit, reason >.** (For example: As a consumer, I want shopping cart functionality to easily purchase items online)
 
 ### Requirements
 (If you can - please define the requirements, if not - skip it)
