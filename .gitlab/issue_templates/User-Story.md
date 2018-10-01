@@ -20,6 +20,6 @@ As a < type of user >, I want < some goal, feature > so that < benefit, reason >
 
 ### Link/refs/notes/images
 
-/label ~"Story: User Story/Feature" ~"Status: New"
-/cc @artem
+/label ~"Story: User Story/Feature" ~"Status: New"  
+/cc @artem  
 /assign @artem
