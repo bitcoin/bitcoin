@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2010 Satoshi Nakamoto
+
 // Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -156,7 +156,9 @@ bool BerkeleyEnvironment::Open(bool retry)
     dbenv->set_errfile(fsbridge::fopen(pathErrorFile, "a")); /// debug
     dbenv->set_flags(DB_AUTO_COMMIT, 1);
     dbenv->set_flags(DB_TXN_WRITE_NOSYNC, 1);
+#if DB_VERSION_MINOR > 7
     dbenv->log_set_config(DB_LOG_AUTO_REMOVE, 1);
+#endif
     int ret = dbenv->open(strPath.c_str(),
                          DB_CREATE |
                              DB_INIT_LOCK |
@@ -213,7 +215,9 @@ void BerkeleyEnvironment::MakeMock()
     dbenv->set_lk_max_locks(10000);
     dbenv->set_lk_max_objects(10000);
     dbenv->set_flags(DB_AUTO_COMMIT, 1);
+#if DB_VERSION_MINOR > 7
     dbenv->log_set_config(DB_LOG_IN_MEMORY, 1);
+#endif
     int ret = dbenv->open(nullptr,
                          DB_CREATE |
                              DB_INIT_LOCK |
