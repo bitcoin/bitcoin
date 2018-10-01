@@ -23,6 +23,6 @@ logs, and code; it's very hard to read otherwise.)
 ### Possible fixes
 (Any comments on what you think might be responsible for the problem, if you have particular insight.)
 
-/label ~"Type: Bug"
-/cc @artem
+/label ~"Type: Bug"  
+/cc @artem  
 /assign @artem
