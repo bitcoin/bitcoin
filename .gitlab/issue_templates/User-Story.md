@@ -20,6 +20,6 @@
 
 ### Link/refs/notes/images
 
-/label ~"Story: User Story/Feature" ~"Status: New"  
+/label ~"Story: User Story/Feature" ~"Status: New/Suggestion"  
 /cc @artem  
 /assign @artem
