@@ -14,8 +14,6 @@
 #include <map>
 #include <cassert>
 
-#include <sstream>        // .get_int64()
-
 class UniValue {
 public:
     enum VType { VNULL, VOBJ, VARR, VSTR, VNUM, VBOOL, };
