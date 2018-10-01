@@ -24,4 +24,5 @@ logs, and code; it's very hard to read otherwise.)
 (Any comments on what you think might be responsible for the problem, if you have particular insight.)
 
 /label ~"Type: Bug"
-/cc @finjosh
+/cc @artem
+/assign @artem
