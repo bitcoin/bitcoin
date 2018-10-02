@@ -9,7 +9,6 @@ This file is modified from python-bitcoinlib.
 
 import ctypes
 import ctypes.util
-import hashlib
 
 ssl = ctypes.cdll.LoadLibrary(ctypes.util.find_library ('ssl') or 'libeay32')
 
@@ -111,39 +110,11 @@ class CECKey():
         ssl.BN_CTX_free(ctx)
         return self.k
 
-    def set_privkey(self, key):
-        self.mb = ctypes.create_string_buffer(key)
-        return ssl.d2i_ECPrivateKey(ctypes.byref(self.k), ctypes.byref(ctypes.pointer(self.mb)), len(key))
-
-    def set_pubkey(self, key):
-        self.mb = ctypes.create_string_buffer(key)
-        return ssl.o2i_ECPublicKey(ctypes.byref(self.k), ctypes.byref(ctypes.pointer(self.mb)), len(key))
-
-    def get_privkey(self):
-        size = ssl.i2d_ECPrivateKey(self.k, 0)
-        mb_pri = ctypes.create_string_buffer(size)
-        ssl.i2d_ECPrivateKey(self.k, ctypes.byref(ctypes.pointer(mb_pri)))
-        return mb_pri.raw
-
     def get_pubkey(self):
         size = ssl.i2o_ECPublicKey(self.k, 0)
         mb = ctypes.create_string_buffer(size)
         ssl.i2o_ECPublicKey(self.k, ctypes.byref(ctypes.pointer(mb)))
         return mb.raw
-
-    def get_raw_ecdh_key(self, other_pubkey):
-        ecdh_keybuffer = ctypes.create_string_buffer(32)
-        r = ssl.ECDH_compute_key(ctypes.pointer(ecdh_keybuffer), 32,
-                                 ssl.EC_KEY_get0_public_key(other_pubkey.k),
-                                 self.k, 0)
-        if r != 32:
-            raise Exception('CKey.get_ecdh_key(): ECDH_compute_key() failed')
-        return ecdh_keybuffer.raw
-
-    def get_ecdh_key(self, other_pubkey, kdf=lambda k: hashlib.sha256(k).digest()):
-        # FIXME: be warned it's not clear what the kdf should be as a default
-        r = self.get_raw_ecdh_key(other_pubkey)
-        return kdf(r)
 
     def sign(self, hash, low_s = True):
         # FIXME: need unit tests for below cases
@@ -195,8 +166,6 @@ class CPubKey(bytes):
     Attributes:
 
     is_valid      - Corresponds to CPubKey.IsValid()
-    is_fullyvalid - Corresponds to CPubKey.IsFullyValid()
-    is_compressed - Corresponds to CPubKey.IsCompressed()
     """
 
     def __new__(cls, buf, _cec_key=None):
@@ -204,16 +173,11 @@ class CPubKey(bytes):
         if _cec_key is None:
             _cec_key = CECKey()
         self._cec_key = _cec_key
-        self.is_fullyvalid = _cec_key.set_pubkey(self) != 0
         return self
 
     @property
     def is_valid(self):
         return len(self) > 0
-
-    @property
-    def is_compressed(self):
-        return len(self) == 33
 
     def verify(self, hash, sig):
         return self._cec_key.verify(hash, sig)
