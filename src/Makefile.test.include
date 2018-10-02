@@ -8,6 +8,7 @@ TEST_SRCDIR = test
 TEST_BINARY=test/test_bitcoin$(EXEEXT)
 
 JSON_TEST_FILES = \
+  test/data/script_tests.json \
   test/data/base58_encode_decode.json \
   test/data/blockfilters.json \
   test/data/key_io_valid.json \
@@ -95,6 +96,15 @@ BITCOIN_TESTS =\
   test/validation_block_tests.cpp \
   test/versionbits_tests.cpp
 
+if ENABLE_PROPERTY_TESTS
+BITCOIN_TESTS += \
+  test/key_properties.cpp
+
+BITCOIN_TEST_SUITE += \
+  test/gen/crypto_gen.cpp \
+  test/gen/crypto_gen.h
+endif
+
 if ENABLE_WALLET
 BITCOIN_TESTS += \
   wallet/test/psbt_wallet_tests.cpp \
@@ -118,7 +128,7 @@ test_test_bitcoin_LDADD += $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN_C
   $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1) $(EVENT_LIBS) $(EVENT_PTHREADS_LIBS)
 test_test_bitcoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
-test_test_bitcoin_LDADD += $(LIBBITCOIN_CONSENSUS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS)
+test_test_bitcoin_LDADD += $(LIBBITCOIN_CONSENSUS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(RAPIDCHECK_LIBS)
 test_test_bitcoin_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) -static
 
 if ENABLE_ZMQ
