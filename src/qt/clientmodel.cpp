@@ -209,6 +209,11 @@ QString ClientModel::dataDir() const
     return GUIUtil::boostPathToQString(GetDataDir());
 }
 
+QString ClientModel::blocksDir() const
+{
+    return GUIUtil::boostPathToQString(GetBlocksDir());
+}
+
 void ClientModel::updateBanlist()
 {
     banTableModel->refresh();
