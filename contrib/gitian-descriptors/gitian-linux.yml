@@ -185,7 +185,6 @@ script: |
     find ${DISTNAME} -name "*.dbg" | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-${i}-debug.tar.gz
     DOCDISTNAME="${DISTNAME}/share/doc/bitcoin"
     mkdir -p ${DOCDISTNAME}/init
-    cp ../doc/README.md ${DOCDISTNAME}
     cp -r ../share/examples ${DOCDISTNAME}
     cp -r ../share/rpcauth ${DOCDISTNAME}
     cp ../contrib/init/bitcoind.* ${DOCDISTNAME}/init/

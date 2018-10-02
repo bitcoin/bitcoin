@@ -3,7 +3,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 ACLOCAL_AMFLAGS = -I build-aux/m4
-SUBDIRS = src
+SUBDIRS = src doc
 if ENABLE_MAN
 SUBDIRS += doc/man
 endif
