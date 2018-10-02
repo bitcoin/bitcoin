@@ -7,7 +7,7 @@ clone_depth: 5
 environment:
   APPVEYOR_SAVE_CACHE_ON_ERROR: true
   CLCACHE_SERVER: 1
-  PACKAGES: boost-filesystem boost-signals2 boost-test libevent openssl zeromq berkeleydb leveldb
+  PACKAGES: boost-filesystem boost-signals2 boost-test libevent openssl zeromq berkeleydb
   PATH: 'C:\Python37-x64;C:\Python37-x64\Scripts;%PATH%'
   PYTHONUTF8: 1
 cache:
