@@ -839,6 +839,9 @@ static bool GetConfigOptions(std::istream& stream, std::string& error, std::vect
             } else if ((pos = str.find('=')) != std::string::npos) {
                 std::string name = prefix + TrimString(str.substr(0, pos), pattern);
                 std::string value = TrimString(str.substr(pos + 1), pattern);
+                if (*value.begin() == '"' && *value.rbegin() == '"') {
+                    value = value.substr(1, value.size() - 2);
+                }
                 options.emplace_back(name, value);
             } else {
                 error = strprintf("parse error on line %i: %s", linenr, str);
