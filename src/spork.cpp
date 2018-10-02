@@ -237,7 +237,6 @@ bool CSporkManager::UpdateSpork(int nSporkID, int64_t nValue, CConnman& connman)
     return false;
 }
 
-// grab the spork, otherwise say it's off
 bool CSporkManager::IsSporkActive(int nSporkID)
 {
     LOCK(cs);
@@ -255,7 +254,6 @@ bool CSporkManager::IsSporkActive(int nSporkID)
     return false;
 }
 
-// grab the value of the spork on the network, or the default
 int64_t CSporkManager::GetSporkValue(int nSporkID)
 {
     LOCK(cs);
@@ -381,7 +379,6 @@ std::string CSporkManager::ToString() const
     LOCK(cs);
     return strprintf("Sporks: %llu", mapSporksActive.size());
 }
-
 
 uint256 CSporkMessage::GetHash() const
 {
