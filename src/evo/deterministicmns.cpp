@@ -174,10 +174,11 @@ CDeterministicMNCPtr CDeterministicMNList::GetMNPayee() const
         return nullptr;
 
     CDeterministicMNCPtr best;
-    for (const auto& dmn : valid_range()) {
-        if (!best || CompareByLastPaid(dmn, best))
+    ForEachMN(true, [&](const CDeterministicMNCPtr& dmn) {
+        if (!best || CompareByLastPaid(dmn, best)) {
             best = dmn;
-    }
+        }
+    });
 
     return best;
 }
@@ -310,8 +311,8 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
     evoDb.Write(std::make_pair(DB_LIST_DIFF, diff.blockHash), diff);
     if ((nHeight % SNAPSHOT_LIST_PERIOD) == 0) {
         evoDb.Write(std::make_pair(DB_LIST_SNAPSHOT, diff.blockHash), newList);
-        LogPrintf("CDeterministicMNManager::%s -- Wrote snapshot. nHeight=%d, mapCurMNs.size=%d\n",
-                  __func__, nHeight, newList.size());
+        LogPrintf("CDeterministicMNManager::%s -- Wrote snapshot. nHeight=%d, mapCurMNs.allMNsCount=%d\n",
+                  __func__, nHeight, newList.GetAllMNsCount());
     }
 
     if (nHeight == GetSpork15Value()) {
@@ -373,8 +374,8 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             if (dmn && dmn->nCollateralIndex == in.prevout.n) {
                 newList.RemoveMN(proTxHash);
 
-                LogPrintf("CDeterministicMNManager::%s -- MN %s removed from list because collateral was spent. nHeight=%d, mapCurMNs.size=%d\n",
-                          __func__, proTxHash.ToString(), nHeight, newList.size());
+                LogPrintf("CDeterministicMNManager::%s -- MN %s removed from list because collateral was spent. nHeight=%d, mapCurMNs.allMNsCount=%d\n",
+                          __func__, proTxHash.ToString(), nHeight, newList.GetAllMNsCount());
             }
         }
 

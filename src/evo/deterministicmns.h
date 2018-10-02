@@ -15,9 +15,6 @@
 
 #include <map>
 
-#include <boost/range/adaptors.hpp>
-#include <boost/range/any_range.hpp>
-
 class CBlock;
 class CBlockIndex;
 class CValidationState;
@@ -220,41 +217,18 @@ public:
 
 public:
 
-    size_t size() const
+    size_t GetAllMNsCount() const
     {
         return mnMap.size();
     }
 
-    typedef boost::any_range<const CDeterministicMNCPtr&, boost::forward_traversal_tag> range_type;
-
-    range_type all_range() const
-    {
-        return boost::adaptors::transform(mnMap, [] (const MnMap::value_type& p) -> const CDeterministicMNCPtr& {
-            return p.second;
-        });
-    }
-
-    range_type valid_range() const
-    {
-        return boost::adaptors::filter(all_range(), [&] (const CDeterministicMNCPtr& dmn) -> bool {
-            return IsMNValid(dmn);
-        });
-    }
-
-    size_t all_count() const
-    {
-        return mnMap.size();
-    }
-
-    size_t valid_count() const
-    {
-        size_t c = 0;
+    template<typename Callback>
+    void ForEachMN(bool onlyValid, Callback&& cb) const {
         for (const auto& p : mnMap) {
-            if (IsMNValid(p.second)) {
-                c++;
+            if (!onlyValid || IsMNValid(p.second)) {
+                cb(p.second);
             }
         }
-        return c;
     }
 
 public:

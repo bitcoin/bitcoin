@@ -381,7 +381,7 @@ void CMasternodeMan::AddDeterministicMasternodes()
         unsigned int oldMnCount = mapMasternodes.size();
 
         auto mnList = deterministicMNManager->GetListAtChainTip();
-        for (const auto& dmn : mnList.valid_range()) {
+        mnList.ForEachMN(true, [this](const CDeterministicMNCPtr& dmn) {
             // call Find() on each deterministic MN to force creation of CMasternode object
             auto mn = Find(COutPoint(dmn->proTxHash, dmn->nCollateralIndex));
             assert(mn);
@@ -395,7 +395,7 @@ void CMasternodeMan::AddDeterministicMasternodes()
 
             // If it appeared in the valid list, it is enabled no matter what
             mn->nActiveState = CMasternode::MASTERNODE_ENABLED;
-        }
+        });
 
         added = oldMnCount != mapMasternodes.size();
     }
@@ -415,9 +415,9 @@ void CMasternodeMan::RemoveNonDeterministicMasternodes()
         LOCK(cs);
         std::set<COutPoint> mnSet;
         auto mnList = deterministicMNManager->GetListAtChainTip();
-        for (const auto& dmn : mnList.valid_range()) {
+        mnList.ForEachMN(true, [&](const CDeterministicMNCPtr& dmn) {
             mnSet.insert(COutPoint(dmn->proTxHash, dmn->nCollateralIndex));
-        }
+        });
         auto it = mapMasternodes.begin();
         while (it != mapMasternodes.end()) {
             if (!mnSet.count(it->second.outpoint)) {
@@ -455,10 +455,11 @@ int CMasternodeMan::CountMasternodes(int nProtocolVersion)
 
     if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
         auto mnList = deterministicMNManager->GetListAtChainTip();
-        for (const auto& dmn : mnList.valid_range()) {
-            if (dmn->pdmnState->nProtocolVersion < nProtocolVersion) continue;
-            nCount++;
-        }
+        mnList.ForEachMN(true, [&](const CDeterministicMNCPtr& dmn) {
+            if (dmn->pdmnState->nProtocolVersion >= nProtocolVersion) {
+                nCount++;
+            }
+        });
     } else {
         for (const auto& mnpair : mapMasternodes) {
             if(mnpair.second.nProtocolVersion < nProtocolVersion) continue;
@@ -1693,7 +1694,7 @@ std::string CMasternodeMan::ToString() const
 
     if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
         info << "Masternodes: masternode object count: " << (int)mapMasternodes.size() <<
-                ", deterministic masternode count: " << deterministicMNManager->GetListAtChainTip().size() <<
+                ", deterministic masternode count: " << deterministicMNManager->GetListAtChainTip().GetAllMNsCount() <<
                 ", nDsqCount: " << (int)nDsqCount;
     } else {
         info << "Masternodes: " << (int)mapMasternodes.size() <<

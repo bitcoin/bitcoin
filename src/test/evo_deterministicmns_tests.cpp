@@ -199,11 +199,15 @@ static CDeterministicMNCPtr FindPayoutDmn(const CBlock& block)
 {
     auto dmnList = deterministicMNManager->GetListAtChainTip();
 
-    for (auto txout : block.vtx[0]->vout) {
-        for (auto& dmn : dmnList.valid_range()) {
-            if (txout.scriptPubKey == dmn->pdmnState->scriptPayout) {
-                return dmn;
+    for (const auto& txout : block.vtx[0]->vout) {
+        CDeterministicMNCPtr found;
+        dmnList.ForEachMN(true, [&](const CDeterministicMNCPtr& dmn) {
+            if (found == nullptr && txout.scriptPubKey == dmn->pdmnState->scriptPayout) {
+                found = dmn;
             }
+        });
+        if (found != nullptr) {
+            return found;
         }
     }
     return nullptr;

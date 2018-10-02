@@ -519,16 +519,16 @@ UniValue protx_list(const JSONRPCRequest& request)
             setOutpts.emplace(outpt.hash);
         }
 
-        for (const auto& dmn : deterministicMNManager->GetListAtChainTip().all_range()) {
+        deterministicMNManager->GetListAtChainTip().ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
             if (setOutpts.count(dmn->proTxHash) ||
-                    pwalletMain->HaveKey(dmn->pdmnState->keyIDOwner) ||
-                    pwalletMain->HaveKey(dmn->pdmnState->keyIDOperator) ||
-                    pwalletMain->HaveKey(dmn->pdmnState->keyIDVoting) ||
-                    CheckWalletOwnsScript(dmn->pdmnState->scriptPayout) ||
-                    CheckWalletOwnsScript(dmn->pdmnState->scriptOperatorPayout)) {
+                pwalletMain->HaveKey(dmn->pdmnState->keyIDOwner) ||
+                pwalletMain->HaveKey(dmn->pdmnState->keyIDOperator) ||
+                pwalletMain->HaveKey(dmn->pdmnState->keyIDVoting) ||
+                CheckWalletOwnsScript(dmn->pdmnState->scriptPayout) ||
+                CheckWalletOwnsScript(dmn->pdmnState->scriptOperatorPayout)) {
                 ret.push_back(BuildDMNListEntry(dmn, detailed));
             }
-        }
+        });
     } else if (type == "valid" || type == "registered") {
         if (request.params.size() > 4)
             protx_list_help();
@@ -542,16 +542,10 @@ UniValue protx_list(const JSONRPCRequest& request)
         bool detailed = request.params.size() > 3 ? ParseBoolV(request.params[3], "detailed") : false;
 
         CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(chainActive[height]->GetBlockHash());
-        CDeterministicMNList::range_type range;
-
-        if (type == "valid") {
-            range = mnList.valid_range();
-        } else if (type == "registered") {
-            range = mnList.all_range();
-        }
-        for (const auto& dmn : range) {
+        bool onlyValid = type == "valid";
+        mnList.ForEachMN(onlyValid, [&](const CDeterministicMNCPtr& dmn) {
             ret.push_back(BuildDMNListEntry(dmn, detailed));
-        }
+        });
     } else {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid type specified");
     }

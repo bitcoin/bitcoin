@@ -56,11 +56,11 @@ CSimplifiedMNList::CSimplifiedMNList(const std::vector<CSimplifiedMNListEntry>& 
 
 CSimplifiedMNList::CSimplifiedMNList(const CDeterministicMNList& dmnList)
 {
-    mnList.reserve(dmnList.all_count());
+    mnList.reserve(dmnList.GetAllMNsCount());
 
-    for (const auto& dmn : dmnList.all_range()) {
+    dmnList.ForEachMN(false, [this](const CDeterministicMNCPtr& dmn) {
         mnList.emplace_back(*dmn);
-    }
+    });
 
     std::sort(mnList.begin(), mnList.end(), [&](const CSimplifiedMNListEntry& a, const CSimplifiedMNListEntry& b) {
         return a.proRegTxHash.Compare(b.proRegTxHash) < 0;
