@@ -1,4 +1,4 @@
-﻿Microsoft Visual Studio Solution File, Format Version 12.00
+Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27130.2027
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -35,6 +35,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bitcoin-wallet", "bitcoin-wallet\bitcoin-wallet.vcxproj", "{84DE8790-EDE3-4483-81AC-C32F15E861F4}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbitcoin_wallet_tool", "libbitcoin_wallet_tool\libbitcoin_wallet_tool.vcxproj", "{F91AC55E-6F5E-4C58-9AC5-B40DB7DEEF93}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libsecp256k1", "libsecp256k1\libsecp256k1.vcxproj", "{BB493552-3B8C-4A8C-BF69-A6E7A51D2EA6}"
 EndProject
 Global
     GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -180,6 +182,14 @@ Global
         {F91AC55E-6F5E-4C58-9AC5-B40DB7DEEF93}.Release|x64.Build.0 = Release|x64
         {F91AC55E-6F5E-4C58-9AC5-B40DB7DEEF93}.Release|x86.ActiveCfg = Release|Win32
         {F91AC55E-6F5E-4C58-9AC5-B40DB7DEEF93}.Release|x86.Build.0 = Release|Win32
+        {BB493552-3B8C-4A8C-BF69-A6E7A51D2EA6}.Debug|x64.ActiveCfg = Debug|x64
+        {BB493552-3B8C-4A8C-BF69-A6E7A51D2EA6}.Debug|x64.Build.0 = Debug|x64
+        {BB493552-3B8C-4A8C-BF69-A6E7A51D2EA6}.Debug|x86.ActiveCfg = Debug|Win32
+        {BB493552-3B8C-4A8C-BF69-A6E7A51D2EA6}.Debug|x86.Build.0 = Debug|Win32
+        {BB493552-3B8C-4A8C-BF69-A6E7A51D2EA6}.Release|x64.ActiveCfg = Release|x64
+        {BB493552-3B8C-4A8C-BF69-A6E7A51D2EA6}.Release|x64.Build.0 = Release|x64
+        {BB493552-3B8C-4A8C-BF69-A6E7A51D2EA6}.Release|x86.ActiveCfg = Release|Win32
+        {BB493552-3B8C-4A8C-BF69-A6E7A51D2EA6}.Release|x86.Build.0 = Release|Win32
     EndGlobalSection
     GlobalSection(SolutionProperties) = preSolution
         HideSolutionNode = FALSE
@@ -190,3 +200,4 @@ Global
                                 SolutionGuid = {D0CAE2D0-8DB1-4A0B-80EE-800AA6C64323}
         SolutionGuid = {DA7D16A6-E5F0-45B3-B194-C3FE64F1BFCD}
     EndGlobalSection
+EndGlobal
