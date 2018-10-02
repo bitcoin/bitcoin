@@ -36,7 +36,11 @@ src/config/stamp-h1
 share/setup.nsi
 share/qt/Info.plist
 
+
+
 src/univalue/gen
+
+
 
 src/qt/*.moc
 src/qt/moc_*.cpp
