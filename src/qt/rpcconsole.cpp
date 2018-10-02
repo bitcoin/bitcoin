@@ -661,6 +661,7 @@ void RPCConsole::setClientModel(ClientModel *model)
         ui->clientVersion->setText(model->formatFullVersion());
         ui->clientUserAgent->setText(model->formatSubVersion());
         ui->dataDir->setText(model->dataDir());
+        ui->blocksDir->setText(model->blocksDir());
         ui->startupTime->setText(model->formatClientStartupTime());
         ui->networkName->setText(QString::fromStdString(Params().NetworkIDString()));
 
