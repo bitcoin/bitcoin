@@ -2753,7 +2753,14 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                 if (pick_new_inputs) {
                     nValueIn = 0;
                     setCoins.clear();
-                    coin_selection_params.change_spend_size = CalculateMaximumSignedInputSize(change_prototype_txout, this);
+                    int change_spend_size = CalculateMaximumSignedInputSize(change_prototype_txout, this);
+                    // If the wallet doesn't know how to sign change output, assume p2sh-p2wpkh
+                    // as lower-bound to allow BnB to do it's thing
+                    if (change_spend_size == -1) {
+                        coin_selection_params.change_spend_size = DUMMY_NESTED_P2WPKH_INPUT_SIZE;
+                    } else {
+                        coin_selection_params.change_spend_size = (size_t)change_spend_size;
+                    }
                     coin_selection_params.effective_fee = nFeeRateNeeded;
                     if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coin_control, coin_selection_params, bnb_used))
                     {
