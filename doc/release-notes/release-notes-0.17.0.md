@@ -1,6 +1,3 @@
-(note: this is a temporary file, to be added-to by anybody, and moved to
-release-notes at release time)
-
 Bitcoin Core version 0.17.0 is now available from:
 
   <https://bitcoincore.org/bin/bitcoin-core-0.17.0/>
