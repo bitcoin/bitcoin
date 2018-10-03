@@ -25,6 +25,8 @@ BITCOIN_INCLUDES=-I$(builddir) -I$(builddir)/obj $(BDB_CPPFLAGS) $(BOOST_CPPFLAG
 BITCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
 BITCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
 
+BLS_LIBS=-lchiabls -lgmp
+
 LIBBITCOIN_SERVER=libdash_server.a
 LIBBITCOIN_COMMON=libdash_common.a
 LIBBITCOIN_CONSENSUS=libdash_consensus.a
@@ -312,6 +314,8 @@ crypto_libdash_crypto_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(PIC_FLAGS)
 crypto_libdash_crypto_a_SOURCES = \
   crypto/aes.cpp \
   crypto/aes.h \
+  crypto/bls.cpp \
+  crypto/bls.h \
   crypto/common.h \
   crypto/hmac_sha256.cpp \
   crypto/hmac_sha256.h \
@@ -473,7 +477,7 @@ dashd_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-dashd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
+dashd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(BLS_LIBS)
 
 # dash-cli binary #
 dash_cli_SOURCES = dash-cli.cpp
@@ -490,7 +494,7 @@ dash_cli_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO)
-dash_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
+dash_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS) $(BLS_LIBS)
 #
 
 # dash-tx binary #
@@ -511,7 +515,7 @@ dash_tx_LDADD = \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1)
 
-dash_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+dash_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(BLS_LIBS)
 #
 
 # dashconsensus library #
@@ -524,7 +528,7 @@ if GLIBC_BACK_COMPAT
 endif
 
 libdashconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
-libdashconsensus_la_LIBADD = $(LIBSECP256K1)
+libdashconsensus_la_LIBADD = $(LIBSECP256K1) $(BLS_LIBS)
 libdashconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
 libdashconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
