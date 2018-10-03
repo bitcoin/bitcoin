@@ -1530,8 +1530,6 @@ int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* wallet, 
     CMutableTransaction txn;
     txn.vin.push_back(CTxIn(COutPoint()));
     if (!wallet->DummySignInput(txn.vin[0], txout, use_max_sig)) {
-        // This should never happen, because IsAllFromMe(ISMINE_SPENDABLE)
-        // implies that we can sign for every input.
         return -1;
     }
     return GetVirtualTransactionInputSize(txn.vin[0]);
