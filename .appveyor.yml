@@ -46,7 +46,7 @@ after_build:
 before_test:
 - ps:  ${conf_ini} = (Get-Content([IO.Path]::Combine(${env:APPVEYOR_BUILD_FOLDER}, "test", "config.ini.in")))
 - ps:  ${conf_ini} = $conf_ini.Replace("@abs_top_srcdir@", ${env:APPVEYOR_BUILD_FOLDER}).Replace("@abs_top_builddir@", ${env:APPVEYOR_BUILD_FOLDER}).Replace("@EXEEXT@", ".exe")
-- ps:  ${conf_ini} = $conf_ini.Replace("@ENABLE_WALLET_TRUE@", "").Replace("@BUILD_BITCOIN_UTILS_TRUE@", "").Replace("@BUILD_BITCOIND_TRUE@", "").Replace("@ENABLE_ZMQ_TRUE@", "")
+- ps:  ${conf_ini} = $conf_ini.Replace("@ENABLE_WALLET_TRUE@", "").Replace("@BUILD_BITCOIN_CLI_TRUE@", "").Replace("@BUILD_BITCOIND_TRUE@", "").Replace("@ENABLE_ZMQ_TRUE@", "")
 - ps:  ${utf8} = New-Object System.Text.UTF8Encoding ${false}
 - ps:  '[IO.File]::WriteAllLines([IO.Path]::Combine(${env:APPVEYOR_BUILD_FOLDER}, "test", "config.ini"), $conf_ini, ${utf8})'
 - ps:  move "build_msvc\${env:PLATFORM}\${env:CONFIGURATION}\*.exe" src
