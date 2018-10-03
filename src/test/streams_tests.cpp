@@ -102,15 +102,15 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader)
     BOOST_CHECK_THROW(reader >> d, std::ios_base::failure);
 
     // Read a 4 bytes as a signed int from the beginning of the buffer.
-    reader.seek(-6);
-    reader >> d;
+    VectorReader new_reader(SER_NETWORK, INIT_PROTO_VERSION, vch, 0);
+    new_reader >> d;
     BOOST_CHECK_EQUAL(d, 67370753); // 1,255,3,4 in little-endian base-256
-    BOOST_CHECK_EQUAL(reader.size(), 2);
-    BOOST_CHECK(!reader.empty());
+    BOOST_CHECK_EQUAL(new_reader.size(), 2);
+    BOOST_CHECK(!new_reader.empty());
 
     // Reading after end of byte vector throws an error even if the reader is
     // not totally empty.
-    BOOST_CHECK_THROW(reader >> d, std::ios_base::failure);
+    BOOST_CHECK_THROW(new_reader >> d, std::ios_base::failure);
 }
 
 BOOST_AUTO_TEST_CASE(bitstream_reader_writer)
