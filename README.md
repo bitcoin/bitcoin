@@ -1,4 +1,4 @@
-Bitcoin Core integration/staging tree
+Avincoin Core integration/staging tree
 =====================================
 
 [![Build Status](https://travis-ci.org/bitcoin/bitcoin.svg?branch=master)](https://travis-ci.org/bitcoin/bitcoin)
@@ -21,7 +21,7 @@ the Bitcoin Core software, see https://bitcoincore.org/en/download/, or read the
 License
 -------
 
-Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
+Avincoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
 information or see https://opensource.org/licenses/MIT.
 
 Development Process
