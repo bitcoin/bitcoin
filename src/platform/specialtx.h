@@ -95,7 +95,7 @@ static void FundSpecialTx(CMutableTransaction& tx, SpecialTxPayload payload)
     if (dummyTxOutAdded && tx.vout.size() > 1) {
         // FundTransaction added a change output, so we don't need the dummy txout anymore
         // Removing it results in slight overpayment of fees, but we ignore this for now (as it's a very low amount)
-        auto it = std::find(tx.vout.begin(), tx.vout.end(), dummyTxOut);
+        std::vector<CTxOut>::const_iterator it = std::find(tx.vout.begin(), tx.vout.end(), dummyTxOut);
         assert(it != tx.vout.end());
         tx.vout.erase(it);
     }
