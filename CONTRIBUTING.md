@@ -1,7 +1,7 @@
-Contributing to Bitcoin Core
+Contributing to Avincoin Core
 ============================
 
-The Bitcoin Core project operates an open contributor model where anyone is
+The Avincoin Core project operates an open contributor model where anyone is
 welcome to contribute towards development in the form of peer review, testing
 and patches. This document explains the practical process and guidelines for
 contributing.
@@ -21,7 +21,7 @@ list.
 Communication Channels
 ----------------------
 
-Most communication about Bitcoin Core development happens on IRC, in the
+Most communication about Avincoin Core development happens on IRC, in the
 #bitcoin-core-dev channel on Freenode. The easiest way to participate on IRC is
 with the web client, [webchat.freenode.net](https://webchat.freenode.net/). Chat
 history logs can be found
