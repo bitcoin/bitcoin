@@ -294,7 +294,15 @@ chaincoin.org (see below for chaincoin.org update instructions).
 
   - Optionally twitter, reddit /r/Chaincoin, ... but this will usually sort out itself
 
-  - Notify BlueMatt so that he can start building [the PPAs](https://launchpad.net/~chaincoin/+archive/ubuntu/chaincoin)
+  - bitcoincore.org blog post
+
+  - bitcoincore.org RPC documentation update
+
+  - Update title of #bitcoin on Freenode IRC
+
+  - Optionally twitter, reddit /r/Bitcoin, ... but this will usually sort out itself
+
+  - Notify BlueMatt so that he can start building [the PPAs](https://launchpad.net/~bitcoin/+archive/ubuntu/bitcoin)
 
   - Archive release notes for the new version to `doc/release-notes/` (branch `master` and branch of the release)
 
