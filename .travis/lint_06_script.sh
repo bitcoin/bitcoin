@@ -10,10 +10,12 @@ if [ "$TRAVIS_EVENT_TYPE" = "pull_request" ]; then
   test/lint/commit-script-check.sh $TRAVIS_COMMIT_RANGE
 fi
 
-test/lint/git-subtree-check.sh src/crypto/ctaes
-test/lint/git-subtree-check.sh src/secp256k1
-test/lint/git-subtree-check.sh src/univalue
-test/lint/git-subtree-check.sh src/leveldb
+for SUBTREE in src/crypto/ctaes src/leveldb src/secp256k1 src/univalue; do
+    if ! SUBTREE_OUTPUT=$(test/lint/git-subtree-check.sh ${SUBTREE} 2>&1); then
+        echo "${SUBTREE_OUTPUT}"
+        exit 1
+    fi
+done
 test/lint/check-doc.py
 test/lint/check-rpc-mappings.py .
 test/lint/lint-all.sh

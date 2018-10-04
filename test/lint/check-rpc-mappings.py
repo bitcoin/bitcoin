@@ -109,8 +109,6 @@ def main():
     client = SOURCE_CLIENT
     mapping = set(process_mapping(os.path.join(root, client)))
 
-    print('* Checking consistency between dispatch tables and vRPCConvertParams')
-
     # Check mapping consistency
     errors = 0
     for (cmdname, argidx, argname) in mapping:
