@@ -100,8 +100,13 @@ static const unsigned int DATABASE_WRITE_INTERVAL = 60 * 60;
 static const unsigned int DATABASE_FLUSH_INTERVAL = 24 * 60 * 60;
 /** Maximum length of reject messages. */
 static const unsigned int MAX_REJECT_MESSAGE_LENGTH = 111;
+<<<<<<< src/main.h
 /** The maximum allowed size of version 2 extra payload */
 static const unsigned int MAX_TX_EXTRA_PAYLOAD = 10000;
+=======
+/** Maximum number headers in memory */
+static const int MAX_HEADERS_IN_MEMORY = 50000;
+>>>>>>> src/main.h
 
 /** "reject" message codes */
 static const unsigned char REJECT_MALFORMED = 0x01;

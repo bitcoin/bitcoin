@@ -194,7 +194,6 @@ Value mnbudget(const Array& params, bool fHelp)
             return "Must wait for client to sync with masternode network. Try again in a minute or so.";            
         }
 
-        budget.mapSeenMasternodeBudgetProposals.insert(make_pair(budgetProposalBroadcast.GetHash(), budgetProposalBroadcast));
         budgetProposalBroadcast.Relay();
         budget.AddProposal(budgetProposalBroadcast);
 
@@ -265,7 +264,6 @@ Value mnbudget(const Array& params, bool fHelp)
 
             std::string strError = "";
             if(budget.SubmitProposalVote(vote, strError)) {
-                budget.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
                 vote.Relay();
                 success++;
                 statusObj.push_back(Pair("result", "success"));
@@ -320,7 +318,6 @@ Value mnbudget(const Array& params, bool fHelp)
 
         std::string strError = "";
         if(budget.SubmitProposalVote(vote, strError)){
-            budget.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
             vote.Relay();
             return "Voted successfully";
         } else {
@@ -546,7 +543,6 @@ Value mnbudgetvoteraw(const Array& params, bool fHelp)
 
     std::string strError = "";
     if(budget.SubmitProposalVote(vote, strError)){
-        budget.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         vote.Relay();
         return "Voted successfully";
     } else {
@@ -630,7 +626,6 @@ Value mnfinalbudget(const Array& params, bool fHelp)
 
             std::string strError = "";
             if(budget.UpdateBudgetDraft(vote, NULL, strError)){
-                budget.mapSeenBudgetDraftVotes.insert(make_pair(vote.GetHash(), vote));
                 vote.Relay();
                 success++;
                 statusObj.push_back(Pair("result", "success"));
@@ -680,7 +675,6 @@ Value mnfinalbudget(const Array& params, bool fHelp)
 
         std::string strError = "";
         if(budget.UpdateBudgetDraft(vote, NULL, strError)){
-            budget.mapSeenBudgetDraftVotes.insert(make_pair(vote.GetHash(), vote));
             vote.Relay();
             return "success";
         } else {

@@ -77,13 +77,15 @@ protected:
     //! the actually encoded data
     typedef std::vector<unsigned char, zero_after_free_allocator<unsigned char> > vector_uchar;
     vector_uchar vchData;
+    CChainParams::AddressType m_addressType;
+    static const unsigned int m_versionBytesPrivateKey = 1;
 
-    CBase58Data();
+    CBase58Data(CChainParams::AddressType = CChainParams::NEW_ADDRESS_TYPE);
     void SetData(const std::vector<unsigned char> &vchVersionIn, const void* pdata, size_t nSize);
     void SetData(const std::vector<unsigned char> &vchVersionIn, const unsigned char *pbegin, const unsigned char *pend);
 
 public:
-    bool SetString(const char* psz, unsigned int nVersionBytes = 1);
+    bool SetString(const char* psz);
     bool SetString(const std::string& str);
     std::string ToString() const;
     int CompareTo(const CBase58Data& b58) const;
@@ -93,6 +95,14 @@ public:
     bool operator>=(const CBase58Data& b58) const { return CompareTo(b58) >= 0; }
     bool operator< (const CBase58Data& b58) const { return CompareTo(b58) <  0; }
     bool operator> (const CBase58Data& b58) const { return CompareTo(b58) >  0; }
+
+private:
+    const unsigned int m_VersionBytes;
+    const unsigned int m_VersionBytesTest;
+    const unsigned int m_versionBytesOld;
+
+private:
+    virtual unsigned int GetVersionBytes() const;
 };
 
 /** base58-encoded Crown addresses.
@@ -109,12 +119,21 @@ public:
     bool IsValid() const;
     bool IsValid(const CChainParams &params) const;
 
-    CBitcoinAddress() {}
-    CBitcoinAddress(const CTxDestination &dest) { Set(dest); }
-    CBitcoinAddress(const std::string& strAddress) { SetString(strAddress); }
+    CBitcoinAddress() { }
+    CBitcoinAddress(const CTxDestination &dest, CChainParams::AddressType addressType = CChainParams::NEW_ADDRESS_TYPE)
+        : CBase58Data(addressType)
+    {
+        Set(dest);
+    }
+    CBitcoinAddress(const std::string& strAddress, CChainParams::AddressType addressType = CChainParams::NEW_ADDRESS_TYPE)
+        : CBase58Data(addressType)
+    {
+        SetString(strAddress);
+    }
     CBitcoinAddress(const char* pszAddress) { SetString(pszAddress); }
 
     CTxDestination Get() const;
+    bool IsDeprecated() const;
     bool GetKeyID(CKeyID &keyID) const;
     bool IsScript() const;
 };
@@ -133,6 +152,8 @@ public:
 
     CBitcoinSecret(const CKey& vchSecret) { SetKey(vchSecret); }
     CBitcoinSecret() {}
+private:
+    unsigned int GetVersionBytes() const;
 };
 
 template<typename K, int Size, CChainParams::Base58Type Type> class CBitcoinExtKeyBase : public CBase58Data
