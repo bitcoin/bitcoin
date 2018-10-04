@@ -6,5 +6,5 @@
 
 export LC_ALL=C
 
-travis_retry pip install codespell
+travis_retry pip install codespell==1.13.0
 travis_retry pip install flake8==3.5.0
