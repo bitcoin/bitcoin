@@ -528,6 +528,22 @@ std::string LicenseInfo()
            "\n";
 }
 
+std::string ConfigHelp(const std::string& strBitcoinClient)
+{
+    return strprintf(_("All command-line options (except for '%s') may be specified in a configuration file, and all configuration file options may also be specified on the command line. "
+                       "Command-line options override values set in the configuration file."),
+               "-conf") +
+           "\n" +
+           "\n" +
+           strprintf(_("The configuration file is a list of 'setting=value' pairs, one per line, with optional comments starting with the '%s' character."), "#") +
+           "\n" +
+           "\n" +
+           strprintf(_("The configuration file is not automatically created; you can create it using your favorite plain-text editor. "
+                       "By default, %s will look for a file named '%s' in the %s data directory, but both the data directory and the configuration file path may be changed using the '%s' and '%s' command-line arguments."),
+               strBitcoinClient, BITCOIN_CONF_FILENAME, PACKAGE_NAME, "-datadir", "-conf") +
+           "\n";
+}
+
 static void BlockNotifyCallback(bool initialSync, const CBlockIndex *pBlockIndex)
 {
     if (initialSync || !pBlockIndex)

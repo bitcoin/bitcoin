@@ -64,4 +64,7 @@ void SetupServerArgs();
 /** Returns licensing information (for -version) */
 std::string LicenseInfo();
 
+/** Returns configuration file help (for -help) */
+std::string ConfigHelp(const std::string& strBitcoinClient);
+
 #endif // BITCOIN_INIT_H
