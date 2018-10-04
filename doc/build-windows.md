@@ -133,7 +133,7 @@ Installation
 -------------
 
 After building using the Windows subsystem it can be useful to copy the compiled
-executables to a directory on the windows drive in the same directory structure
+executables to a directory on the Windows drive in the same directory structure
 as they appear in the release `.zip` archive. This can be done in the following
 way. This will install to `c:\workspace\bitcoin`, for example:
 
