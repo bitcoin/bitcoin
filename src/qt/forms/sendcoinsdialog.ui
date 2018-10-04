@@ -1107,16 +1107,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
              </item>
             </layout>
            </item>
-           <item>
-            <widget class="QCheckBox" name="optInRBF">
-             <property name="text">
-              <string>Enable Replace-By-Fee</string>
-             </property>
-             <property name="toolTip">
-              <string>With Replace-By-Fee (BIP-125) you can increase a transaction's fee after it is sent. Without this, a higher fee may be recommended to compensate for increased transaction delay risk.</string>
-             </property>
-            </widget>
-           </item>
           </layout>
          </widget>
         </item>
