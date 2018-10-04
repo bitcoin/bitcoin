@@ -243,6 +243,7 @@ extern json_spirit::Value snsync(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value service(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value node(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value update(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value getstakepointers(const json_spirit::Array& params, bool fHelp);
 
 // in rest.cpp
 extern bool HTTPReq_REST(AcceptedConnection *conn,

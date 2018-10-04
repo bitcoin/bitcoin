@@ -207,6 +207,7 @@ libbitcoin_server_a_SOURCES = \
   miner.cpp \
   mn-pos/kernel.cpp \
   mn-pos/stakeminer.cpp \
+  mn-pos/stakepointer.cpp \
   mn-pos/stakevalidation.cpp \
   net.cpp \
   noui.cpp \

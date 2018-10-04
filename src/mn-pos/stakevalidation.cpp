@@ -4,12 +4,14 @@
 #include <primitives/block.h>
 #include <chain.h>
 #include <pubkey.h>
+#include <wallet.h>
 #include <util.h>
 #include <arith_uint256.h>
 
 bool CheckBlockSignature(const CBlock& block, const CPubKey& pubkeyMasternode)
 {
     uint256 hashBlock = block.GetHash();
+
     return pubkeyMasternode.Verify(hashBlock, block.vchBlockSig);
 }
 
@@ -24,8 +26,12 @@ bool CheckProofOfStake(const CBlock& block, const CBlockIndex* prevBlock, const 
     CAmount nSNPayment = txPayment.vout[2].nValue;
 
     auto pairOut = std::make_pair(outpoint.hash, outpoint.n);
+    CAmount nAmountCollateral = (outpoint.n == 1 ? MASTERNODE_COLLATERAL : SYSTEMNODE_COLLATERAL);
+    nAmountCollateral *= COIN;
 
-    Kernel kernel(pairOut, (outpoint.n == 1 ? nMNPayment : nSNPayment), uint256(), prevBlock->GetBlockTime(), block.nTime);
+    uint256 nStakeModifier = prevBlock->GetAncestor(prevBlock->nHeight - 100)->GetBlockHash();
+
+    Kernel kernel(pairOut, nAmountCollateral, nStakeModifier, prevBlock->GetBlockTime(), block.nTime);
 
     bool fNegative;
     bool fOverflow;
@@ -36,6 +42,8 @@ bool CheckProofOfStake(const CBlock& block, const CBlockIndex* prevBlock, const 
     // Check range
     if (fNegative || bnTarget == 0 || fOverflow)
         return error("CheckProofOfStake() : nBits below minimum stake");
+
+    LogPrintf("%s : %s\n", __func__, kernel.ToString());
 
     return kernel.IsValidProof(ArithToUint256(bnTarget));
 }

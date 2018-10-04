@@ -17,6 +17,7 @@ public:
     bool IsValidProof(const uint256& nTarget);
     bool IsValidStakePointer(const StakePointer& stakePointer);
     void SetStakeTime(uint64_t nTime);
+    std::string ToString();
 
     static bool CheckProof(const arith_uint256& target, const arith_uint256& hash, const uint64_t nAmount);
 

@@ -291,34 +291,29 @@ int64_t CMasternode::GetLastPaid() const
 bool CMasternode::GetRecentPaymentBlocks(std::vector<const CBlockIndex*>& vPaymentBlocks, bool limitMostRecent) const
 {
     vPaymentBlocks.clear();
-    if (chainActive.Tip() == NULL) return false;
 
-    const CBlockIndex *BlockReading = chainActive.Tip();
-    int nBlockLimit = BlockReading->nHeight - PAYMENT_BLOCK_DEPTH;
-    if (nBlockLimit < 1)
-        nBlockLimit = 1;
+    int nMinimumValidBlockHeight = chainActive.Height() - PAYMENT_BLOCK_DEPTH;
+    if (nMinimumValidBlockHeight < 1)
+        nMinimumValidBlockHeight = 1;
+
+    CBlockIndex* pindex = chainActive[nMinimumValidBlockHeight];
 
     CScript mnpayee;
     mnpayee = GetScriptForDestination(pubkey.GetID());
 
     bool fBlockFound = false;
-    while (BlockReading && BlockReading->nHeight >= nBlockLimit) {
+    while (chainActive.Next(pindex)) {
+        CBlock block;
+        if (!ReadBlockFromDisk(block, pindex))
+            continue;
 
-        if(masternodePayments.mapMasternodeBlocks.count(BlockReading->nHeight)){
-            /*
-                Search for this payee, with at least 2 votes. This will aid in consensus allowing the network
-                to converge on the same payees quickly, then keep the same schedule.
-            */
-            if(masternodePayments.mapMasternodeBlocks[BlockReading->nHeight].HasPayeeWithVotes(mnpayee, 2)){
-                vPaymentBlocks.emplace_back(BlockReading);
-                fBlockFound = true;
-                if (limitMostRecent)
-                    return fBlockFound;
-            }
+        if (block.vtx[0].vout.size() > 1 && block.vtx[0].vout[1].scriptPubKey == mnpayee) {
+            vPaymentBlocks.emplace_back(pindex);
+            fBlockFound = true;
+            if (limitMostRecent)
+                return fBlockFound;
         }
-
-        if (BlockReading->pprev == NULL) { assert(BlockReading); break; }
-        BlockReading = BlockReading->pprev;
+        pindex = chainActive.Next(pindex);
     }
 
     return fBlockFound;
@@ -433,10 +428,11 @@ bool CMasternodeBroadcast::Create(std::string strService, std::string strKeyMast
         return false;
     }
 
-    return Create(txin, CService(strService), keyCollateralAddress, pubKeyCollateralAddress, keyMasternodeNew, pubKeyMasternodeNew, strErrorMessage, mnb);
+    bool fSignOver = true;
+    return Create(txin, CService(strService), keyCollateralAddress, pubKeyCollateralAddress, keyMasternodeNew, pubKeyMasternodeNew, fSignOver, strErrorMessage, mnb);
 }
 
-bool CMasternodeBroadcast::Create(CTxIn txin, CService service, CKey keyCollateralAddress, CPubKey pubKeyCollateralAddress, CKey keyMasternodeNew, CPubKey pubKeyMasternodeNew, std::string &strErrorMessage, CMasternodeBroadcast &mnb) {
+bool CMasternodeBroadcast::Create(CTxIn txin, CService service, CKey keyCollateralAddress, CPubKey pubKeyCollateralAddress, CKey keyMasternodeNew, CPubKey pubKeyMasternodeNew, bool fSignOver, std::string &strErrorMessage, CMasternodeBroadcast &mnb) {
     // wait for reindex and/or import to finish
     if (fImporting || fReindex) return false;
 
@@ -463,6 +459,17 @@ bool CMasternodeBroadcast::Create(CTxIn txin, CService service, CKey keyCollater
         LogPrintf("CMasternodeBroadcast::Create -- %s\n", strErrorMessage);
         mnb = CMasternodeBroadcast();
         return false;
+    }
+
+    //Additional signature for use in proof of stake
+    if (fSignOver) {
+        if (!keyCollateralAddress.Sign(pubKeyMasternodeNew.GetHash(), mnb.vchSigSignOver)) {
+            LogPrintf("CMasternodeBroadcast::Create failed signover\n");
+            mnb = CMasternodeBroadcast();
+            return false;
+        }
+        LogPrintf("%s: Signed over to key %s\n", __func__, pubKeyMasternodeNew.GetID().GetHex());
+        mnb.fSignOver = true;
     }
 
     return true;
@@ -678,6 +685,16 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS) const
     // if it matches our Masternode privkey, then we've been remotely activated
     if(pubkey2 == activeMasternode.pubKeyMasternode && protocolVersion == PROTOCOL_VERSION){
         activeMasternode.EnableHotColdMasterNode(vin, addr);
+        if (fSignOver) {
+            if (pubkey.Verify(pubkey2.GetHash(), vchSigSignOver)) {
+                LogPrintf("%s: Verified pubkey2 signover for staking\n", __func__);
+                activeMasternode.vchSigSignover = vchSigSignOver;
+            } else {
+                LogPrintf("%s: Failed to verify pubkey on signover!\n", __func__);
+            }
+        } else {
+            LogPrintf("%s: NOT SIGNOVER!\n", __func__);
+        }
     }
 
     bool isLocal = addr.IsRFC1918() || addr.IsLocal();

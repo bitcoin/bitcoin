@@ -409,6 +409,7 @@ public:
         fDefaultConsistencyChecks = true;
         fAllowMinDifficultyBlocks = false;
         fMineBlocksOnDemand = true;
+        nBlockPoSStart = 9999999;
     }
 
     const Checkpoints::CCheckpointData& Checkpoints() const 

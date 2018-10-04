@@ -5,6 +5,7 @@
 #include "../streams.h"
 #include "../hash.h"
 #include "stakepointer.h"
+#include "../tinyformat.h"
 
 /*
  * A 'proof hash' (also referred to as a 'kernel') is comprised of the following:
@@ -55,4 +56,10 @@ bool Kernel::IsValidProof(const uint256& nTarget)
 void Kernel::SetStakeTime(uint64_t nTime)
 {
     m_nTimeStake = nTime;
+}
+
+std::string Kernel::ToString()
+{
+    return strprintf("OutPoint: %s:%d Modifier=%s timeblockfrom=%d time=%d amount=%d", m_outpoint.first.GetHex(),
+                                m_outpoint.second, m_nStakeModifier.GetHex(), m_nTimeBlockFrom, m_nTimeStake, m_nAmount);
 }

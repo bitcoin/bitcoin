@@ -33,7 +33,7 @@ void CActiveSystemnode::ManageStatus()
         pmn = snodeman.Find(pubKeySystemnode);
         if(pmn != NULL) {
             pmn->Check();
-            if(pmn->IsEnabled() && pmn->protocolVersion == PROTOCOL_VERSION) EnableHotColdSystemNode(pmn->vin, pmn->addr);
+            if(pmn->IsEnabled() && pmn->protocolVersion == PROTOCOL_VERSION)  EnableHotColdSystemNode(pmn->vin, pmn->addr);
         }
     }
 

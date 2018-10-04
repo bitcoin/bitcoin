@@ -22,9 +22,13 @@
 #endif
 #include "masternode-payments.h"
 #include "systemnode-payments.h"
+#include "legacysigner.h"
+#include "masternodeconfig.h"
+#include "mn-pos/stakepointer.h"
 
 #include <boost/thread.hpp>
 #include <boost/tuple/tuple.hpp>
+#include <mn-pos/stakevalidation.h>
 
 using namespace std;
 
@@ -114,7 +118,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
 
     pblock->nVersion.SetBaseVersion(CBlockHeader::CURRENT_VERSION, nChainId);
 
-    if (fProofOfStake) {
+    if (fProofOfStake && chainActive.Height() + 1 >= Params().PoSStartHeight()) {
         pblock->nTime = GetAdjustedTime();
         CBlockIndex* pindexPrev = chainActive.Tip();
         pblock->nBits = GetNextWorkRequired(pindexPrev, pblock);
@@ -124,12 +128,15 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
         int nHeight = pindexPrev->nHeight + 1;
         uint32_t nTime = pblock->nTime;
         uint32_t nBits = pblock->nBits;
-        if (pwallet->CreateCoinStake(nHeight, nBits, nTime, txCoinStake, nTxNewTime)) {
+        StakePointer stakePointer;
+        if (pwallet->CreateCoinStake(nHeight, nBits, nTime, txCoinStake, nTxNewTime, stakePointer)) {
             pblock->nTime = nTxNewTime;
             pblock->vtx.clear();
             txCoinbase.vout[0].scriptPubKey = CScript();
-            pblock->vtx.emplace_back(txCoinbase);
+            pblock->vtx.emplace_back(CTransaction(txCoinbase));
+            txCoinStake.vin[0].scriptSig << nHeight << OP_0;
             pblock->vtx.emplace_back(CTransaction(txCoinStake));
+            pblock->stakePointer = stakePointer;
             fStakeFound = true;
         }
 
@@ -378,46 +385,69 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
         pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
         if (!fProofOfStake)
             UpdateTime(pblock, pindexPrev);
+
         pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock);
         pblock->nNonce         = 0;
         pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(pblock->vtx[0]);
 
         // Sign Block
         if (fProofOfStake) {
-            StakePointer stakePointer;
-            if (!pwallet->GetRecentStakePointer(stakePointer)) {
-                LogPrintf("CreateNewBlock() : Failed to find stake pointer\n");
-                return NULL;
-            }
-            pblock->stakePointer = stakePointer;
-
             CTxIn txInCollateralAddress;
-            CPubKey pubKeyCollateralAddress;
-            CKey keyCollateralAddress;
+            CPubKey pubKeyNode;
+            CKey keyNode;
             std::vector<unsigned char> vchSig;
+            std::string strPrivKey = strMasterNodePrivKey;
+            if (fMasterNode) {
 
-            if (fMasterNode && pwallet->GetMasternodeVinAndKeys(txInCollateralAddress, pubKeyCollateralAddress,
-                                                                keyCollateralAddress)) {
-                if (!keyCollateralAddress.Sign(pblock->GetHash(), vchSig)) {
+                std::string strErrorMessage;
+                if (!legacySigner.SetKey(strPrivKey, strErrorMessage, keyNode, pubKeyNode)) {
+                    strErrorMessage = strprintf("Can't find keys for masternode - %s", strErrorMessage);
+                    LogPrintf("CMasternodeBroadcast::Create -- %s\n", strErrorMessage);
+                    return NULL;
+                }
+
+                // Switch keys if using signed over staking key
+                if (!activeMasternode.vchSigSignover.empty()) {
+                    pblock->stakePointer.pubKeyCollateral = pblock->stakePointer.pubKeyProofOfStake;
+                    pblock->stakePointer.pubKeyProofOfStake = pubKeyNode;
+                    pblock->stakePointer.vchSigCollateralSignOver = activeMasternode.vchSigSignover;
+                    LogPrintf("%s signover set\n", __func__);
+                } else {
+                    LogPrintf("%s signover NOT set\n", __func__);
+                }
+
+                if (pubKeyNode != pblock->stakePointer.pubKeyProofOfStake) {
+                    LogPrintf("%s: using wrong pubkey. pointer=%s pubkeynode=%s\n", __func__, pblock->stakePointer.pubKeyProofOfStake.GetHash().GetHex(), pubKeyNode.GetHash().GetHex());
+                    return NULL;
+                }
+
+                pblock->hashMerkleRoot = pblock->BuildMerkleTree();
+
+                if (!keyNode.Sign(pblock->GetHash(), vchSig)) {
                     LogPrintf("CreateNewBlock() : Failed to sign block as masternode\n");
                     return NULL;
                 }
-            } else if (fSystemNode && pwallet->GetSystemnodeVinAndKeys(txInCollateralAddress, pubKeyCollateralAddress,
-                                                                       keyCollateralAddress)) {
-                if (!keyCollateralAddress.Sign(pblock->GetHash(), vchSig)) {
-                    LogPrintf("CreateNewBlock() : Failed to sign block as systemnode\n");
-                    return NULL;
-                }
+//            } else if (fSystemNode && pwallet->GetSystemnodeVinAndKeys(txInCollateralAddress, pubKeyCollateralAddress,
+//                                                                       keyCollateralAddress)) {
+//                if (!keyCollateralAddress.Sign(pblock->GetHash(), vchSig)) {
+//                    LogPrintf("CreateNewBlock() : Failed to sign block as systemnode\n");
+//                    return NULL;
+//                }
             } else {
                 LogPrintf("CreateNewBlock() : Failed to obtain key for block signature\n");
                 return NULL;
             }
+
             pblock->vchBlockSig = vchSig;
+            if (!CheckBlockSignature(*pblock, pblock->stakePointer.pubKeyProofOfStake)) {
+                LogPrintf("%s: Block signature is not valid\n", __func__);
+                return NULL;
+            }
         }
 
         CValidationState state;
         if (!TestBlockValidity(state, *pblock, pindexPrev, false, false)) {
-            LogPrintf("CreateNewBlock() : TestBlockValidity failed");
+            LogPrintf("CreateNewBlock() : TestBlockValidity failed\n");
             return NULL;
         }
     }
@@ -537,20 +567,25 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
 
     try {
         while (true) {
-            if (Params().MiningRequiresPeers()) {
-                // Busy-wait for the network to come online so we don't waste time mining
-                // on an obsolete chain. In regtest mode we expect to fly solo.
-                do {
-                    bool fvNodesEmpty;
-                    {
-                        LOCK(cs_vNodes);
-                        fvNodesEmpty = vNodes.empty();
-                    }
-                    if (!fvNodesEmpty && !IsInitialBlockDownload())
-                        break;
-                    MilliSleep(1000);
-                } while (true);
-            }
+//            if (fProofOfStake && chainActive.Height() + 1 < Params().PoSStartHeight() || !fMasterNode) {
+//                MilliSleep(1000);
+//                continue;
+//            }
+
+//            if (Params().MiningRequiresPeers()) {
+//                // Busy-wait for the network to come online so we don't waste time mining
+//                // on an obsolete chain. In regtest mode we expect to fly solo.
+//                do {
+//                    bool fvNodesEmpty;
+//                    {
+//                        LOCK(cs_vNodes);
+//                        fvNodesEmpty = vNodes.empty();
+//                    }
+//                    if (!fvNodesEmpty && !IsInitialBlockDownload())
+//                        break;
+//                    MilliSleep(1000);
+//                } while (true);
+//            }
 
             //
             // Create new block
@@ -562,10 +597,12 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
             if (!pblocktemplate)
             {
                 LogPrintf("Error in CrownnMiner: Keypool ran out, please call keypoolrefill before restarting the mining thread\n");
-                return;
+                MilliSleep(1000);
+                continue;
             }
             CBlock *pblock = &pblocktemplate->block;
-            IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
+            if (!fProofOfStake)
+                IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
 
             //Proof of Stake Miner
             if (fProofOfStake) {

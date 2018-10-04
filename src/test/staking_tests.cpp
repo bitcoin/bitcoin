@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(proof_validity)
 BOOST_AUTO_TEST_CASE(transaction_type)
 {
     CTxIn txIn;
-    txIn.scriptSig << OP_PROOFOFSTAKE;
+    txIn.scriptSig << OP_PROOFOFSTAKE << 10000 << OP_0;
     CMutableTransaction tx;
     tx.vin.emplace_back(txIn);
     tx.vout.emplace_back(CTxOut());
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(block_type)
     CBlock block;
     CMutableTransaction tx;
     CTxIn txIn;
-    txIn.scriptSig << OP_PROOFOFSTAKE;
+    txIn.scriptSig << OP_PROOFOFSTAKE << 29180 << OP_0;
     tx.vin.emplace_back(txIn);
     tx.vout.emplace_back(CTxOut());
     block.vtx.emplace_back(CTransaction());
