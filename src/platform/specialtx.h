@@ -80,7 +80,7 @@ static void FundSpecialTx(CMutableTransaction& tx, SpecialTxPayload payload)
     bool dummyTxOutAdded = false;
     if (tx.vout.empty()) {
         // add dummy txout as FundTransaction requires at least one output
-        tx.vout.emplace_back(dummyTxOut);
+        tx.vout.push_back(dummyTxOut);
         dummyTxOutAdded = true;
     }
 
