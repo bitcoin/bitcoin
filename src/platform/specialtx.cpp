@@ -96,8 +96,10 @@ bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex)
 uint256 CalcTxInputsHash(const CTransaction& tx)
 {
     CHashWriter hw(CLIENT_VERSION, SER_GETHASH);
-    for (const auto& in : tx.vin) {
-        hw << in.prevout;
+
+    for (size_t i = 0; i < tx.vin.size(); ++i)
+    {
+        hw << tx.vin[i].prevout;
     }
     return hw.GetHash();
 }

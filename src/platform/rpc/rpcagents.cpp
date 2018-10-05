@@ -160,7 +160,7 @@ json_spirit::Value detail::list(const json_spirit::Array& params, bool fHelp)
     const AgentRegistry& agents = GetAgentRegistry();
 
     json_spirit::Array result;
-    for (auto i = agents.begin(); i != agents.end(); ++i)
+    for (AgentRegistry::Iterator i = agents.begin(); i != agents.end(); ++i)
     {
         result.push_back(i->id.ToString());
     }
