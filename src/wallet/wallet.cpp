@@ -2729,7 +2729,12 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                 if (pick_new_inputs) {
                     nValueIn = 0;
                     setCoins.clear();
-                    coin_selection_params.change_spend_size = CalculateMaximumSignedInputSize(change_prototype_txout, this);
+                    int max_signed_input_size = CalculateMaximumSignedInputSize(change_prototype_txout, this);
+                    if (max_signed_input_size < 0) {
+                        strFailReason = _("Fee calculation failed");
+                        return false;
+                    }
+                    coin_selection_params.change_spend_size = max_signed_input_size;
                     coin_selection_params.effective_fee = nFeeRateNeeded;
                     if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coin_control, coin_selection_params, bnb_used))
                     {
