@@ -160,7 +160,7 @@ int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& i
     return nSigOps;
 }
 
-bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fCheckDuplicateInputs, uint64_t table[])
+bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fCheckDuplicateInputs, std::bitset<1ull<<21>* table)
 {
     // Basic checks that don't depend on any context
     if (tx.vin.empty())
@@ -272,67 +272,70 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
         //
         uint64_t k1 = GetRand(std::numeric_limits<uint64_t>::max());
         uint64_t k2 = GetRand(std::numeric_limits<uint64_t>::max());
-        auto hasher = [k1, k2](const COutPoint& out){return SipHashUint256Extra192(k1, k2, out.hash, out.n);};
         // If we haven't been given a table, make one now.
-        std::unique_ptr<uint64_t[]> upTable = table ? std::unique_ptr<uint64_t[]>(nullptr) :
-                                                      std::unique_ptr<uint64_t[]>(new uint64_t[1<<15]());
+        std::unique_ptr<std::bitset<1<<21>> upTable = table ? std::unique_ptr<std::bitset<1<<21>>(nullptr) :
+                                                      MakeUnique<std::bitset<1<<21>>();
         table = table ? table : upTable.get();
-#define HASH(h, a) \
-uint64_t bit1 = 1<<((std::get<0>(h)) & 63);\
-uint64_t bit2 = 1<<((std::get<0>(h)>>6) & 63);\
-uint64_t bit3 = 1<<((std::get<0>(h)>>12) & 63);\
-uint64_t bit4 = 1<<((std::get<0>(h)>>18) & 63);\
-uint64_t bit5 = 1<<((std::get<0>(h)>>24) & 63);\
-uint64_t bit6 = 1<<((std::get<0>(h)>>30) & 63);\
-uint64_t bit7 = 1<<((std::get<0>(h)>>36) & 63);\
-uint64_t bit8 = 1<<((std::get<0>(h)>>42) & 63);\
-uint64_t pos1 = (std::get<1>(h)     & 0x07FFF);\
-uint64_t pos2 = ((std::get<1>(h)>>15) & 0x07FFF);\
-uint64_t pos3 = ((std::get<1>(h)>>30) & 0x07FFF);\
-uint64_t pos4 = ((std::get<1>(h)>>45) & 0x07FFF);\
-uint64_t pos5 = (std::get<2>(h)     & 0x07FFF);\
-uint64_t pos6 = ((std::get<2>(h)>>15) & 0x07FFF);\
-uint64_t pos7 = ((std::get<2>(h)>>30) & 0x07FFF);\
-uint64_t pos8 = ((std::get<2>(h)>>45) & 0x07FFF);\
-        a;
-#define SET_BITS \
-        table[pos1] |= bit1;\
-        table[pos2] |= bit2;\
-        table[pos3] |= bit3;\
-        table[pos4] |= bit4;\
-        table[pos5] |= bit5;\
-        table[pos6] |= bit6;\
-        table[pos7] |= bit7;\
-        table[pos8] |= bit8;
-
-#define TOGGLE_BITS \
-        table[pos1] ^= bit1;\
-        table[pos2] ^= bit2;\
-        table[pos3] ^= bit3;\
-        table[pos4] ^= bit4;\
-        table[pos5] ^= bit5;\
-        table[pos6] ^= bit6;\
-        table[pos7] ^= bit7;\
-        table[pos8] ^= bit8;
-#define DONT_SET_BITS
-
-
+        struct pos {
+            uint64_t a : 21;
+            uint64_t b : 21;
+            uint64_t c : 21;
+            bool empty_1 : 1;
+            uint64_t d : 21;
+            uint64_t e : 21;
+            uint64_t f : 21;
+            bool empty_2 : 1;
+            uint64_t g : 21;
+            uint64_t h : 21;
+            uint64_t unused : 22;
+            void set(std::bitset<1<<21>& t) {
+                t.set(a);
+                t.set(b); 
+                t.set(c); 
+                t.set(d); 
+                t.set(e); 
+                t.set(f); 
+                t.set(g); 
+                t.set(h);
+            };
+        };
+        struct packed_hash {
+            uint64_t a;
+            uint64_t b;
+            uint64_t c;
+        };
+        union convert {
+            packed_hash ph;
+            pos p;
+        };
+        auto hasher = [k1, k2](const COutPoint& out){
+            auto h = SipHashUint256Extra192(k1, k2, out.hash, out.n);
+            convert v = {std::get<0>(h), std::get<1>(h), std::get<2>(h)};
+            return v.p;
+        };
         auto nil_hash = hasher(COutPoint{});
-        HASH(nil_hash, SET_BITS);
+        nil_hash.set(*table);
         std::unique_ptr<void, std::function<void(void*)>>
-            cleanupNilEntryGuard((void*)1, [&](void*) { TOGGLE_BITS; });
+            cleanupNilEntryGuard((void*)1, [&](void*) { 
+                    table->flip(nil_hash.a);
+                    table->flip(nil_hash.b);
+                    table->flip(nil_hash.c);
+                    table->flip(nil_hash.d);
+                    table->flip(nil_hash.e);
+                    table->flip(nil_hash.f);
+                    table->flip(nil_hash.g);
+                    table->flip(nil_hash.h);
+                    });
         for (auto txinit =  tx.vin.cbegin(); txinit != tx.vin.cend(); ++txinit) {
             auto hash = hasher(txinit->prevout);
-            HASH(hash, DONT_SET_BITS)
-            if (
-            (table[pos1] & bit1) &&
-            (table[pos2] & bit2) &&
-            (table[pos3] & bit3) &&
-            (table[pos4] & bit4) &&
-            (table[pos5] & bit5) &&
-            (table[pos6] & bit6) &&
-            (table[pos7] & bit7) &&
-            (table[pos8] & bit8)) {
+            if (table->test(hash.a) &&
+                table->test(hash.b) &&
+                table->test(hash.c) &&
+                table->test(hash.d) &&
+                table->test(hash.e) &&
+                table->test(hash.f) &&
+                table->test(hash.g) &&
+                table->test(hash.h)) {
                 if (txinit->prevout.IsNull()) {
                     return state.DoS(10, false, REJECT_INVALID, "bad-txns-prevout-null");
                 }
@@ -343,7 +346,7 @@ uint64_t pos8 = ((std::get<2>(h)>>45) & 0x07FFF);\
                     return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-duplicate");
                 }
             } else {
-                SET_BITS;
+                hash.set(*table);
             }
         }
     }

@@ -3122,7 +3122,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
 
     // Check transactions
     //
-    std::unique_ptr<uint64_t[]> table = std::unique_ptr<uint64_t[]>(new uint64_t[1<<15]());
+    std::unique_ptr<std::bitset<1<<21>> table = MakeUnique<std::bitset<1<<21>>();
     for (const auto& tx : block.vtx)
         if (!CheckTransaction(*tx, state, true, table.get()))
             return state.Invalid(false, state.GetRejectCode(), state.GetRejectReason(),
