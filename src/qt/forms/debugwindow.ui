@@ -127,6 +127,9 @@
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
          </property>
+         <property name="toolTip">
+          <string>To specify a non-default location of the data directory use the '%1' option.</string>
+         </property>
          <property name="text">
           <string>N/A</string>
          </property>
@@ -152,6 +155,9 @@
         <widget class="QLabel" name="blocksDir">
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
+         </property>
+         <property name="toolTip">
+          <string>To specify a non-default location of the blocks directory use the '%1' option.</string>
          </property>
          <property name="text">
           <string>N/A</string>
