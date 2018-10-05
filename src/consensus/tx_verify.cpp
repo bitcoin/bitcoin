@@ -182,11 +182,14 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
 
     // Check for duplicate inputs - note that this check is slow so we skip it in CheckBlock
     if (fCheckDuplicateInputs) {
-        std::set<COutPoint> vInOutPoints;
-        for (const auto& txin : tx.vin)
-        {
-            if (!vInOutPoints.insert(txin.prevout).second)
+        std::vector<COutPoint> outpoints;
+        outpoints.reserve(tx.vin.size());
+        for (const auto& txin : tx.vin) outpoints.push_back(txin.prevout);
+        std::sort(outpoints.begin(), outpoints.end());
+        for (size_t pos = 0; pos + 1 < outpoints.size(); ++pos) {
+            if (outpoints[pos] == outpoints[pos + 1]) {
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-duplicate");
+            }
         }
     }
 
