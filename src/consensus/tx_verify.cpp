@@ -278,22 +278,22 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
                                                       std::unique_ptr<uint64_t[]>(new uint64_t[1<<15]());
         table = table ? table : upTable.get();
 #define HASH(h, a) \
-uint64_t bit1 = 1<<(std::get<0>(h) & 63);\
-uint64_t bit2 = 1<<(std::get<0>(h)>>6 & 63);\
-uint64_t bit3 = 1<<(std::get<0>(h)>>12 & 63);\
-uint64_t bit4 = 1<<(std::get<0>(h)>>18 & 63);\
-uint64_t bit5 = 1<<(std::get<0>(h)>>24 & 63);\
-uint64_t bit6 = 1<<(std::get<0>(h)>>24 & 63);\
-uint64_t bit7 = 1<<(std::get<0>(h)>>24 & 63);\
-uint64_t bit8 = 1<<(std::get<0>(h)>>24 & 63);\
+uint64_t bit1 = 1<<((std::get<0>(h)) & 63);\
+uint64_t bit2 = 1<<((std::get<0>(h)>>6) & 63);\
+uint64_t bit3 = 1<<((std::get<0>(h)>>12) & 63);\
+uint64_t bit4 = 1<<((std::get<0>(h)>>18) & 63);\
+uint64_t bit5 = 1<<((std::get<0>(h)>>24) & 63);\
+uint64_t bit6 = 1<<((std::get<0>(h)>>30) & 63);\
+uint64_t bit7 = 1<<((std::get<0>(h)>>36) & 63);\
+uint64_t bit8 = 1<<((std::get<0>(h)>>42) & 63);\
 uint64_t pos1 = (std::get<1>(h)     & 0x07FFF);\
-uint64_t pos2 = (std::get<1>(h)>>15 & 0x07FFF);\
-uint64_t pos3 = (std::get<1>(h)>>30 & 0x07FFF);\
-uint64_t pos4 = (std::get<1>(h)>>45 & 0x07FFF);\
+uint64_t pos2 = ((std::get<1>(h)>>15) & 0x07FFF);\
+uint64_t pos3 = ((std::get<1>(h)>>30) & 0x07FFF);\
+uint64_t pos4 = ((std::get<1>(h)>>45) & 0x07FFF);\
 uint64_t pos5 = (std::get<2>(h)     & 0x07FFF);\
-uint64_t pos6 = (std::get<2>(h)>>15 & 0x07FFF);\
-uint64_t pos7 = (std::get<2>(h)>>30 & 0x07FFF);\
-uint64_t pos8 = (std::get<2>(h)>>45 & 0x07FFF);\
+uint64_t pos6 = ((std::get<2>(h)>>15) & 0x07FFF);\
+uint64_t pos7 = ((std::get<2>(h)>>30) & 0x07FFF);\
+uint64_t pos8 = ((std::get<2>(h)>>45) & 0x07FFF);\
         a;
 #define SET_BITS \
         table[pos1] |= bit1;\
