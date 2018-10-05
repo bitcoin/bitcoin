@@ -55,7 +55,7 @@ class WalletGroupTest(BitcoinTestFramework):
         v = [vout["value"] for vout in tx1["vout"]]
         v.sort()
         assert_approx(v[0], 0.2)
-        assert_approx(v[1], 0.3, 0.0001)
+        assert_approx(v[1], 0.3, 0.001)
 
         txid2 = self.nodes[2].sendtoaddress(self.nodes[0].getnewaddress(), 0.2)
         tx2 = self.nodes[2].getrawtransaction(txid2, True)
@@ -66,7 +66,7 @@ class WalletGroupTest(BitcoinTestFramework):
         v = [vout["value"] for vout in tx2["vout"]]
         v.sort()
         assert_approx(v[0], 0.2)
-        assert_approx(v[1], 1.3, 0.0001)
+        assert_approx(v[1], 1.3, 0.001)
 
         # Empty out node2's wallet
         self.nodes[2].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=self.nodes[2].getbalance(), subtractfeefromamount=True)

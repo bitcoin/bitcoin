@@ -40,7 +40,7 @@ class AbandonConflictTest(BitcoinTestFramework):
 
         sync_blocks(self.nodes)
         newbalance = self.nodes[0].getbalance()
-        assert(balance - newbalance < Decimal("0.001")) #no more than fees lost
+        assert(balance - newbalance < Decimal("0.01")) #no more than fees lost
         balance = newbalance
 
         # Disconnect nodes so node0's transactions don't get into node1's mempool
