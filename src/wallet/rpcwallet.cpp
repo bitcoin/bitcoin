@@ -1267,8 +1267,9 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
  * @param  fLong      Whether to include the JSON version of the transaction.
  * @param  ret        The UniValue into which the result is stored.
  * @param  filter     The "is mine" filter bool.
+ * @param  filter_label Optional label string to filter incoming transactions.
  */
-static void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* const pwallet, const CWalletTx& wtx, int nMinDepth, bool fLong, UniValue& ret, const isminefilter& filter)
+static void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* const pwallet, const CWalletTx& wtx, int nMinDepth, bool fLong, UniValue& ret, const isminefilter& filter, const std::string* filter_label)
 {
     CAmount nFee;
     std::list<COutputEntry> listReceived;
@@ -1279,7 +1280,7 @@ static void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* con
     bool involvesWatchonly = wtx.IsFromMe(ISMINE_WATCH_ONLY);
 
     // Sent
-    if ((!listSent.empty() || nFee != 0))
+    if (!filter_label)
     {
         for (const COutputEntry& s : listSent)
         {
@@ -1310,6 +1311,9 @@ static void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* con
             std::string label;
             if (pwallet->mapAddressBook.count(r.destination)) {
                 label = pwallet->mapAddressBook[r.destination].name;
+            }
+            if (filter_label && label != *filter_label) {
+                continue;
             }
             UniValue entry(UniValue::VOBJ);
             if (involvesWatchonly || (::IsMine(*pwallet, r.destination) & ISMINE_WATCH_ONLY)) {
@@ -1352,10 +1356,12 @@ UniValue listtransactions(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() > 4)
         throw std::runtime_error(
-            "listtransactions ( \"dummy\" count skip include_watchonly)\n"
+            "listtransactions ( \"label\" count skip include_watchonly )\n"
+            "\nIf a label name is provided, this will return only incoming transactions paying to addresses with the specified label.\n"
             "\nReturns up to 'count' most recent transactions skipping the first 'from' transactions.\n"
             "\nArguments:\n"
-            "1. \"dummy\"    (string, optional) If set, should be \"*\" for backwards compatibility.\n"
+            "1. \"label\"    (string, optional) If set, should be a valid label name to return only incoming transactions\n"
+            "              with the specified label, or \"*\" to disable filtering and return all transactions.\n"
             "2. count          (numeric, optional, default=10) The number of transactions to return\n"
             "3. skip           (numeric, optional, default=0) The number of transactions to skip\n"
             "4. include_watchonly (bool, optional, default=false) Include transactions to watch-only addresses (see 'importaddress')\n"
@@ -1400,8 +1406,12 @@ UniValue listtransactions(const JSONRPCRequest& request)
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
+    const std::string* filter_label = nullptr;
     if (!request.params[0].isNull() && request.params[0].get_str() != "*") {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Dummy value must be set to \"*\"");
+        filter_label = &request.params[0].get_str();
+        if (filter_label->empty()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Label argument must be a valid label name or \"*\".");
+        }
     }
     int nCount = 10;
     if (!request.params[1].isNull())
@@ -1431,7 +1441,7 @@ UniValue listtransactions(const JSONRPCRequest& request)
         for (CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
         {
             CWalletTx *const pwtx = (*it).second;
-            ListTransactions(*locked_chain, pwallet, *pwtx, 0, true, ret, filter);
+            ListTransactions(*locked_chain, pwallet, *pwtx, 0, true, ret, filter, filter_label);
             if ((int)ret.size() >= (nCount+nFrom)) break;
         }
     }
@@ -1568,7 +1578,7 @@ static UniValue listsinceblock(const JSONRPCRequest& request)
         CWalletTx tx = pairWtx.second;
 
         if (depth == -1 || tx.GetDepthInMainChain(*locked_chain) < depth) {
-            ListTransactions(*locked_chain, pwallet, tx, 0, true, transactions, filter);
+            ListTransactions(*locked_chain, pwallet, tx, 0, true, transactions, filter, nullptr /* filter_label */);
         }
     }
 
@@ -1585,7 +1595,7 @@ static UniValue listsinceblock(const JSONRPCRequest& request)
             if (it != pwallet->mapWallet.end()) {
                 // We want all transactions regardless of confirmation count to appear here,
                 // even negative confirmation ones, hence the big negative.
-                ListTransactions(*locked_chain, pwallet, it->second, -100000000, true, removed, filter);
+                ListTransactions(*locked_chain, pwallet, it->second, -100000000, true, removed, filter, nullptr /* filter_label */);
             }
         }
         paltindex = paltindex->pprev;
@@ -1688,7 +1698,7 @@ static UniValue gettransaction(const JSONRPCRequest& request)
     WalletTxToJSON(pwallet->chain(), *locked_chain, wtx, entry);
 
     UniValue details(UniValue::VARR);
-    ListTransactions(*locked_chain, pwallet, wtx, 0, false, details, filter);
+    ListTransactions(*locked_chain, pwallet, wtx, 0, false, details, filter, nullptr /* filter_label */);
     entry.pushKV("details", details);
 
     std::string strHex = EncodeHexTx(*wtx.tx, RPCSerializationFlags());
@@ -4143,7 +4153,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "listreceivedbyaddress",            &listreceivedbyaddress,         {"minconf","include_empty","include_watchonly","address_filter"} },
     { "wallet",             "listreceivedbylabel",              &listreceivedbylabel,           {"minconf","include_empty","include_watchonly"} },
     { "wallet",             "listsinceblock",                   &listsinceblock,                {"blockhash","target_confirmations","include_watchonly","include_removed"} },
-    { "wallet",             "listtransactions",                 &listtransactions,              {"dummy","count","skip","include_watchonly"} },
+    { "wallet",             "listtransactions",                 &listtransactions,              {"label|dummy","count","skip","include_watchonly"} },
     { "wallet",             "listunspent",                      &listunspent,                   {"minconf","maxconf","addresses","include_unsafe","query_options"} },
     { "wallet",             "listwalletdir",                    &listwalletdir,                 {} },
     { "wallet",             "listwallets",                      &listwallets,                   {} },
