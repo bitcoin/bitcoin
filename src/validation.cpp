@@ -3210,24 +3210,9 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
         uint64_t g : 21;
         uint64_t h : 21;
         uint64_t unused : 22;
-        void set(std::bitset<1<<21>& t) {
-            t.set(a);
-            t.set(b);
-            t.set(c);
-            t.set(d);
-            t.set(e);
-            t.set(f);
-            t.set(g);
-            t.set(h);
-        };
-    };
-    struct packed_hash {
-        uint64_t a;
-        uint64_t b;
-        uint64_t c;
     };
     union convert {
-        packed_hash ph;
+        uint64_t ph[3];
         pos p;
     };
 
@@ -3239,34 +3224,52 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
         return v.p;
     };
 
-    std::unique_ptr<std::bitset<1<<21>> table = MakeUnique<std::bitset<1<<21>>();
+    std::unique_ptr<std::bitset<1<<21>> pTable = MakeUnique<std::bitset<1<<21>>();
+    auto& table = *pTable.get();
     // Note that the first one tested is the coinbase transaction, whose input
-    // is null. Therefore, any subsequent null input would be a collision with 
+    // is null. Therefore, any subsequent null input would be a collision with
     // that null, enabling us to not null check
-    for (const auto& tx : block.vtx) {
-        for (auto txinit =  tx->vin.cbegin(); txinit != tx->vin.cend(); ++txinit) {
-            auto hash = hasher(txinit->prevout);
-            if (table->test(hash.a) &&
-                    table->test(hash.b) &&
-                    table->test(hash.c) &&
-                    table->test(hash.d) &&
-                    table->test(hash.e) &&
-                    table->test(hash.f) &&
-                    table->test(hash.g) &&
-                table->test(hash.h)) {
-                if (txinit->prevout.IsNull()) {
+    for (auto txit =  block.vtx.cbegin(); txit != block.vtx.cend(); ++txit) {
+        const auto& tx = **txit;
+        for (auto txinit =  tx.vin.cbegin(); txinit != tx.vin.cend(); ++txinit) {
+            const COutPoint& prevout = txinit->prevout;
+            const auto hash = hasher(prevout);
+            if (    !table[hash.a] || !table[hash.b] ||
+                    !table[hash.c] || !table[hash.d] ||
+                    !table[hash.e] || !table[hash.f] ||
+                    !table[hash.g] || !table[hash.h]){
+                table[hash.a] = true;
+                table[hash.b] = true;
+                table[hash.c] = true;
+                table[hash.d] = true;
+                table[hash.e] = true;
+                table[hash.f] = true;
+                table[hash.g] = true;
+                table[hash.h] = true;
+            } else {
+                if (prevout.IsNull()) {
                     return state.DoS(10, false, REJECT_INVALID, "bad-txns-prevout-null");
                 }
-                // If we have a potential collision, perform expensive check
-                for (const auto& tx2 : block.vtx) {
-                    for (auto txinit2 =  tx2->vin.cbegin(); txinit2 != tx2->vin.cend(); ++txinit2) {
-                        if (txinit2 != txinit && txinit2->prevout == txinit->prevout)
-                            return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-duplicate");
+                // If we have a potential collision, perform expensive check over
+                // all prior transactions, starting with the current txn
+                {
+                    // Check current transaction up to the input txinit
+                    auto elem = std::find_if(tx.vin.begin(), txinit,
+                            [&](const CTxIn& x){return x.prevout == prevout;});
+                    // If the iterator outputs anything except for txinit, then we have found a conflict
+                    if  (elem != txinit) {
+                        return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-duplicate");
                     }
-
                 }
-            } else {
-                hash.set(*table);
+                // Check prior transaction's inputs for conflict
+                for (auto txit2 =  block.vtx.cbegin(); txit2 != txit; ++txit2) {
+                    const auto& tx2 = **txit2;
+                    auto elem = std::find_if(tx2.vin.cbegin(), tx2.vin.cend(),
+                            [&](const CTxIn& x){return x.prevout == prevout;});
+                    if (elem != tx2.vin.cend())
+                        return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-duplicate");
+                }
+
             }
         }
     }
