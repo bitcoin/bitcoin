@@ -13,10 +13,6 @@
 #include <chain.h>
 #include <coins.h>
 #include <utilmoneystr.h>
-#include <utilmemory.h>
-#include <random.h>
-
-#include <functional>
 
 bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
 {
@@ -160,7 +156,7 @@ int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& i
     return nSigOps;
 }
 
-bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fCheckDuplicateInputs, std::bitset<1ull<<21>* table)
+bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fCheckDuplicateInputs)
 {
     // Basic checks that don't depend on any context
     if (tx.vin.empty())
@@ -185,170 +181,25 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
     }
 
     // Check for duplicate inputs - note that this check is slow so we skip it in CheckBlock
-    if (tx.IsCoinBase() ) {
+    if (fCheckDuplicateInputs) {
+        std::set<COutPoint> vInOutPoints;
+        for (const auto& txin : tx.vin)
+        {
+            if (!vInOutPoints.insert(txin.prevout).second)
+                return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-duplicate");
+        }
+    }
+
+    if (tx.IsCoinBase())
+    {
         if (tx.vin[0].scriptSig.size() < 2 || tx.vin[0].scriptSig.size() > 100)
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-length");
-    } else if (!fCheckDuplicateInputs || tx.vin.size() == 1){
-        for (const auto& txin : tx.vin) {
-            if (txin.prevout.IsNull()) {
+    }
+    else
+    {
+        for (const auto& txin : tx.vin)
+            if (txin.prevout.IsNull())
                 return state.DoS(10, false, REJECT_INVALID, "bad-txns-prevout-null");
-            }
-        }
-    } else{
-        // This duplication checking algorithm uses a probabilistic filter
-        // to check for collisions efficiently.
-        //
-        // This is faster than the naive construction, using a set, which
-        // requires more allocation and comparison of uint256s.
-        //
-        // First we create a bitset table with 1<<21 elements. This
-        // is around 300 KB, so we construct it on the heap.
-        //
-        // We also allow reusing a 'dirty' table because zeroing 300 KB
-        // can be expensive, and the table will operate acceptably for all of the
-        // transactions in a given block.
-        //
-        // Then, we iterate through the elements one by one, generated 8 salted
-        // 21-bit hashes (which can be quickly generated using siphash) based on
-        // each prevout.
-        //
-        // We then check if all 8 hashes are set in the table yet. If they are,
-        // we do a linear scan through the inputs to see if it was a true
-        // collision, and reject the txn.
-        //
-        // Otherwise, we set the 8 bits corresponding to the hashes and
-        // continue.
-        //
-        // From the perspective of the N+1st prevout, assuming the transaction
-        // does not double spend:
-        //
-        // Up to N*8 hashes have been set in the table already (potentially
-        // fewer if collisions)
-        //
-        // For each of the 8 hashes h_1...h_8, P(bit set in table for h_i) =
-        // (N*8)/1<<21
-        //
-        // Each of these probabilities is independent
-        //
-        // Therefore the total probability of a false collision on all bits is:
-        // ((N*8)/2**21)**8
-        //
-        // The cost of a false collision is to do N comparisons.
-        //
-        // Therefore, the expression for the expected number of comparisons is:
-        //
-        // Sum from i = 0 to M [ i*( i*8 / 2**21)**8 ]
-        //
-        // Based on an input being at least 41 bytes, and a block being 1M bytes
-        // max, there are a maximum of 24390 inputs, so M = 24390
-        //
-        // The total expected number of direct comparisons for M=24930 is
-        // therefore 0.33 with this algorithm.
-        //
-        // As a bonus, we also get "free" null checking by manually inserting
-        // the null element into the table so it always generates a conflict
-        // check. We remove this null-check before terminating so that we avoid
-        // doubling the bloat on the table.
-        //
-        // If a dirty table is used, the algorithms worst-case
-        // runtime is still better because of three key reasons:
-        //
-        // 1) the linear searches complexity is limited to each transaction's
-        // subset of inputs
-        // 2) The total number of inputs in the block still does not exceed
-        // 24930
-        // 3) less initialization of the table
-        //
-        //
-        // The worst case for this algorithm from a denial of service
-        // perspective with an invalid transaction would be to do a transaction
-        // where the last two elements are a collision. In this case, the scan
-        // would require to scan all N elements.
-        //
-        //
-        //
-        // N.B. When the table is dirty, the bits set in the table
-        // are meaningless because the hash was salted separately.
-        //
-        uint64_t k1 = GetRand(std::numeric_limits<uint64_t>::max());
-        uint64_t k2 = GetRand(std::numeric_limits<uint64_t>::max());
-        // If we haven't been given a table, make one now.
-        std::unique_ptr<std::bitset<1<<21>> upTable = table ? std::unique_ptr<std::bitset<1<<21>>(nullptr) :
-                                                      MakeUnique<std::bitset<1<<21>>();
-        table = table ? table : upTable.get();
-        struct pos {
-            uint64_t a : 21;
-            uint64_t b : 21;
-            uint64_t c : 21;
-            bool empty_1 : 1;
-            uint64_t d : 21;
-            uint64_t e : 21;
-            uint64_t f : 21;
-            bool empty_2 : 1;
-            uint64_t g : 21;
-            uint64_t h : 21;
-            uint64_t unused : 22;
-            void set(std::bitset<1<<21>& t) {
-                t.set(a);
-                t.set(b); 
-                t.set(c); 
-                t.set(d); 
-                t.set(e); 
-                t.set(f); 
-                t.set(g); 
-                t.set(h);
-            };
-        };
-        struct packed_hash {
-            uint64_t a;
-            uint64_t b;
-            uint64_t c;
-        };
-        union convert {
-            packed_hash ph;
-            pos p;
-        };
-        auto hasher = [k1, k2](const COutPoint& out){
-            auto h = SipHashUint256Extra192(k1, k2, out.hash, out.n);
-            convert v = {std::get<0>(h), std::get<1>(h), std::get<2>(h)};
-            return v.p;
-        };
-        auto nil_hash = hasher(COutPoint{});
-        nil_hash.set(*table);
-        std::unique_ptr<void, std::function<void(void*)>>
-            cleanupNilEntryGuard((void*)1, [&](void*) { 
-                    table->flip(nil_hash.a);
-                    table->flip(nil_hash.b);
-                    table->flip(nil_hash.c);
-                    table->flip(nil_hash.d);
-                    table->flip(nil_hash.e);
-                    table->flip(nil_hash.f);
-                    table->flip(nil_hash.g);
-                    table->flip(nil_hash.h);
-                    });
-        for (auto txinit =  tx.vin.cbegin(); txinit != tx.vin.cend(); ++txinit) {
-            auto hash = hasher(txinit->prevout);
-            if (table->test(hash.a) &&
-                table->test(hash.b) &&
-                table->test(hash.c) &&
-                table->test(hash.d) &&
-                table->test(hash.e) &&
-                table->test(hash.f) &&
-                table->test(hash.g) &&
-                table->test(hash.h)) {
-                if (txinit->prevout.IsNull()) {
-                    return state.DoS(10, false, REJECT_INVALID, "bad-txns-prevout-null");
-                }
-                // If we have a potential collision, then scan through the set up to here for the colliding element
-                auto elem = std::find_if(tx.vin.begin(), txinit, [txinit](CTxIn x){return x.prevout == txinit->prevout;});
-                // If the iterator outputs anything except for txinit, then we have found a conflict
-                if  (elem != txinit) {
-                    return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-duplicate");
-                }
-            } else {
-                hash.set(*table);
-            }
-        }
     }
 
     return true;

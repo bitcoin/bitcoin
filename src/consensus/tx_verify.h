@@ -9,7 +9,6 @@
 
 #include <stdint.h>
 #include <vector>
-#include <bitset>
 
 class CBlockIndex;
 class CCoinsViewCache;
@@ -19,7 +18,7 @@ class CValidationState;
 /** Transaction validation functions */
 
 /** Context-independent validity checks */
-bool CheckTransaction(const CTransaction& tx, CValidationState& state, bool fCheckDuplicateInputs=true, std::bitset<1ull<<21>* table=nullptr);
+bool CheckTransaction(const CTransaction& tx, CValidationState& state, bool fCheckDuplicateInputs=true);
 
 namespace Consensus {
 /**
