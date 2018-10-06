@@ -3123,35 +3123,34 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     // Check transactions for duplicate inputs
     //
 
-    // This duplication checking algorithm uses a probabilistic filter
-    // to check for collisions efficiently.
+    // This duplication checking algorithm uses a probabilistic filter to check
+    // for collisions efficiently.
     //
-    // This is faster than the naive construction, using a set, which
-    // requires more allocation and comparison of uint256s.
+    // This is faster than the naive construction, using a set, which requires
+    // more allocation and comparison of uint256s.
     //
-    // First we create a bitset table with 1<<21 elements. This
-    // is around 300 KB, so we construct it on the heap.
+    // First we create a bitset table with 1<<21 elements. This is around 300
+    // KB, so we construct it on the heap.
     //
-    // We also allow reusing a 'dirty' table because zeroing 300 KB
-    // can be expensive, and the table will operate acceptably for all of the
+    // We also allow reusing a 'dirty' table because zeroing 300 KB can be
+    // expensive, and the table will operate acceptably for all of the
     // transactions in a given block.
     //
     // Then, we iterate through the elements one by one, generated 8 salted
     // 21-bit hashes (which can be quickly generated using siphash) based on
     // each prevout.
     //
-    // We then check if all 8 hashes are set in the table yet. If they are,
-    // we do a linear scan through the inputs to see if it was a true
-    // collision, and reject the txn.
+    // We then check if all 8 hashes are set in the table yet. If they are, we
+    // do a linear scan through the inputs to see if it was a true collision,
+    // and reject the txn.
     //
-    // Otherwise, we set the 8 bits corresponding to the hashes and
-    // continue.
+    // Otherwise, we set the 8 bits corresponding to the hashes and continue.
     //
-    // From the perspective of the N+1st prevout, assuming the transaction
-    // does not double spend:
+    // From the perspective of the N+1st prevout, assuming the transaction does
+    // not double spend:
     //
-    // Up to N*8 hashes have been set in the table already (potentially
-    // fewer if collisions)
+    // Up to N*8 hashes have been set in the table already (potentially fewer if
+    // collisions)
     //
     // For each of the 8 hashes h_1...h_8, P(bit set in table for h_i) =
     // (N*8)/1<<21
@@ -3170,16 +3169,15 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     // Based on an input being at least 41 bytes, and a block being 1M bytes
     // max, there are a maximum of 24390 inputs, so M = 24390
     //
-    // The total expected number of direct comparisons for M=24930 is
-    // therefore 0.33 with this algorithm.
+    // The total expected number of direct comparisons for M=24930 is therefore
+    // 0.33 with this algorithm.
     //
-    // As a bonus, we also get "free" null checking by manually inserting
-    // the null element into the table so it always generates a conflict
-    // check. We remove this null-check before terminating so that we avoid
-    // doubling the bloat on the table.
+    // Note that the first element checked is the coinbase transaction, whose
+    // input is null. Therefore, any subsequent null input would be a collision
+    // with that null, enabling us to not null check every subsequent entry.
     //
-    // If a dirty table is used, the algorithms worst-case
-    // runtime is still better because of three key reasons:
+    // If a dirty table is used, the algorithms worst-case runtime is still
+    // better because of three key reasons:
     //
     // 1) the linear searches complexity is limited to each transaction's
     // subset of inputs
@@ -3188,16 +3186,16 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     // 3) less initialization of the table
     //
     //
-    // The worst case for this algorithm from a denial of service
-    // perspective with an invalid transaction would be to do a transaction
-    // where the last two elements are a collision. In this case, the scan
-    // would require to scan all N elements.
+    // The worst case for this algorithm from a denial of service perspective
+    // with an invalid transaction would be to do a transaction where the last
+    // two elements are a collision. In this case, the scan would require to
+    // scan all N elements.
     //
     //
     //
-    // N.B. When the table is dirty, the bits set in the table
-    // are meaningless because the hash was salted separately.
-    //
+    // N.B. When the table is dirty, the bits set in the table are meaningless
+    // because the hash was salted separately.
+
     struct pos {
         uint64_t a : 21;
         uint64_t b : 21;
@@ -3211,14 +3209,14 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
         uint64_t h : 21;
         uint64_t unused : 22;
     };
-    union convert {
-        uint64_t ph[3];
-        pos p;
-    };
 
     uint64_t k1 = GetRand(std::numeric_limits<uint64_t>::max());
     uint64_t k2 = GetRand(std::numeric_limits<uint64_t>::max());
     auto hasher = [k1, k2](const COutPoint& out){
+        union convert {
+            uint64_t ph[3];
+            pos p;
+        };
         auto h = SipHashUint256Extra192(k1, k2, out.hash, out.n);
         convert v = {std::get<0>(h), std::get<1>(h), std::get<2>(h)};
         return v.p;
@@ -3226,9 +3224,6 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
 
     std::unique_ptr<std::bitset<1<<21>> pTable = MakeUnique<std::bitset<1<<21>>();
     auto& table = *pTable.get();
-    // Note that the first one tested is the coinbase transaction, whose input
-    // is null. Therefore, any subsequent null input would be a collision with
-    // that null, enabling us to not null check
     for (auto txit =  block.vtx.cbegin(); txit != block.vtx.cend(); ++txit) {
         const auto& tx = **txit;
         for (auto txinit =  tx.vin.cbegin(); txinit != tx.vin.cend(); ++txinit) {
@@ -3266,10 +3261,10 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
                     const auto& tx2 = **txit2;
                     auto elem = std::find_if(tx2.vin.cbegin(), tx2.vin.cend(),
                             [&](const CTxIn& x){return x.prevout == prevout;});
-                    if (elem != tx2.vin.cend())
+                    if (elem != tx2.vin.cend()) {
                         return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-duplicate");
+                    }
                 }
-
             }
         }
     }
