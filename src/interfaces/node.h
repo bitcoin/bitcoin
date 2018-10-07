@@ -52,6 +52,12 @@ public:
     //! Choose network parameters.
     virtual void selectParams(const std::string& network) = 0;
 
+    //! Get the (assumed) blockchain size.
+    virtual uint64_t getAssumedBlockchainSize() = 0;
+
+    //! Get the (assumed) chain state size.
+    virtual uint64_t getAssumedChainStateSize() = 0;
+
     //! Get network name.
     virtual std::string getNetwork() = 0;
 
