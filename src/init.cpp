@@ -1370,7 +1370,6 @@ bool AppInitMain(InitInterfaces& interfaces)
     // -proxy sets a proxy for all outgoing network traffic
     // -noproxy (or -proxy=0) as well as the empty string can be used to not set a proxy, this is the default
     std::string proxyArg = gArgs.GetArg("-proxy", "");
-    SetReachable(NET_ONION, false);
     if (proxyArg != "" && proxyArg != "0") {
         CService proxyAddr;
         if (!Lookup(proxyArg.c_str(), proxyAddr, 9050, fNameLookup)) {
@@ -1385,7 +1384,6 @@ bool AppInitMain(InitInterfaces& interfaces)
         SetProxy(NET_IPV6, addrProxy);
         SetProxy(NET_ONION, addrProxy);
         SetNameProxy(addrProxy);
-        SetReachable(NET_ONION, true); // by default, -proxy sets onion as reachable, unless -noonion later
     }
 
     // -onion can be used to set only a proxy for .onion, or override normal proxy for .onion addresses
@@ -1404,7 +1402,6 @@ bool AppInitMain(InitInterfaces& interfaces)
             if (!addrOnion.IsValid())
                 return InitError(strprintf(_("Invalid -onion address or hostname: '%s'"), onionArg));
             SetProxy(NET_ONION, addrOnion);
-            SetReachable(NET_ONION, true);
         }
     }
 
