@@ -1,22 +1,24 @@
+// Copyright (c) 2019 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef BITCOIN_TEST_GEN_BLOCK_GEN_H
 #define BITCOIN_TEST_GEN_BLOCK_GEN_H
 
-#include "test/gen/crypto_gen.h"
-#include "test/gen/transaction_gen.h"
-#include "uint256.h"
-#include "primitives/block.h"
+#include <primitives/block.h>
+#include <test/gen/crypto_gen.h>
+#include <test/gen/transaction_gen.h>
+#include <uint256.h>
 
-#include <rapidcheck/gen/Arbitrary.h>
 #include <rapidcheck/Gen.h>
+#include <rapidcheck/gen/Arbitrary.h>
 
 
-typedef std::tuple<int32_t, uint256, uint256, uint32_t, uint32_t, uint32_t> BlockHeaderTup;
+using BlockHeaderTup = std::tuple<int32_t, uint256, uint256, uint32_t, uint32_t, uint32_t>;
 
 /** Generator for the primitives of a block header */
 rc::Gen<BlockHeaderTup> BlockHeaderPrimitives();
 
-namespace rc
-{
+namespace rc {
 /** Generator for a new CBlockHeader */
 template <>
 struct Arbitrary<CBlockHeader> {
@@ -54,5 +56,5 @@ struct Arbitrary<CBlock> {
         });
     }
 };
-} //namespace rc
+} // namespace rc
 #endif

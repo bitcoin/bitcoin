@@ -1,14 +1,17 @@
-#include "test/gen/script_gen.h"
+// Copyright (c) 2019 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+#include <test/gen/script_gen.h>
 
-#include "test/gen/crypto_gen.h"
-#include "script/script.h"
-#include "script/standard.h"
-#include "base58.h"
-#include "core_io.h"
-#include <rapidcheck/gen/Arbitrary.h>
+#include <base58.h>
+#include <core_io.h>
 #include <rapidcheck/Gen.h>
-#include <rapidcheck/gen/Predicate.h>
+#include <rapidcheck/gen/Arbitrary.h>
 #include <rapidcheck/gen/Numeric.h>
+#include <rapidcheck/gen/Predicate.h>
+#include <script/script.h>
+#include <script/standard.h>
+#include <test/gen/crypto_gen.h>
 
 /** Generates a P2PK/CKey pair */
 rc::Gen<SPKCKeyPair> P2PKSPK()
@@ -24,7 +27,7 @@ rc::Gen<SPKCKeyPair> P2PKSPK()
 rc::Gen<SPKCKeyPair> P2PKHSPK()
 {
     return rc::gen::map(rc::gen::arbitrary<CKey>(), [](const CKey& key) {
-        CKeyID id = key.GetPubKey().GetID();
+        PKHash id = PKHash(key.GetPubKey());
         std::vector<CKey> keys;
         keys.push_back(key);
         const CScript& s = GetScriptForDestination(id);
@@ -59,7 +62,7 @@ rc::Gen<SPKCKeyPair> P2SHSPK()
     return rc::gen::map(RawSPK(), [](const SPKCKeyPair& spk_keys) {
         const CScript& redeemScript = spk_keys.first;
         const std::vector<CKey>& keys = spk_keys.second;
-        const CScript& p2sh = GetScriptForDestination(CScriptID(redeemScript));
+        const CScript& p2sh = GetScriptForDestination(ScriptHash(redeemScript));
         return std::make_pair(redeemScript, keys);
     });
 }

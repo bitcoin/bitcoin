@@ -2,13 +2,15 @@
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
+#include <rapidcheck/Gen.h>
 #include <rapidcheck/boost_test.h>
 #include <rapidcheck/gen/Arbitrary.h>
-#include <rapidcheck/Gen.h>
 
-#include "script/script.h"
-#include "test/test_bitcoin.h"
-#include "test/gen/script_gen.h"
+#include <script/script.h>
+#include <test/gen/script_gen.h>
+#include <test/setup_common.h>
+
+#include <streams.h>
 
 BOOST_FIXTURE_TEST_SUITE(script_properties, BasicTestingSetup)
 

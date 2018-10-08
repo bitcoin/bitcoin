@@ -1,16 +1,17 @@
-// Copyright (c) 2012-2016 The Bitcoin Core developers
+// Copyright (c) 2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#include "test/gen/bloom_gen.h"
-#include "test/gen/crypto_gen.h"
+#include <test/gen/bloom_gen.h>
+#include <test/gen/crypto_gen.h>
 
-#include "test/test_bitcoin.h"
+#include <test/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
+#include <rapidcheck/Gen.h>
 #include <rapidcheck/boost_test.h>
 #include <rapidcheck/gen/Arbitrary.h>
-#include <rapidcheck/Gen.h>
 
+#include <streams.h>
 
 BOOST_FIXTURE_TEST_SUITE(bloom_properties, BasicTestingSetup)
 

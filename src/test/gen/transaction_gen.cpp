@@ -1,16 +1,19 @@
-#include "test/gen/transaction_gen.h"
+// Copyright (c) 2019 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+#include <test/gen/transaction_gen.h>
 
-#include "test/gen/crypto_gen.h"
-#include "test/gen/script_gen.h"
+#include <test/gen/crypto_gen.h>
+#include <test/gen/script_gen.h>
 
-#include "script/sign.h"
-#include "script/script.h"
-#include "primitives/transaction.h"
-#include "core_io.h"
-#include "keystore.h"
+#include <core_io.h>
+#include <primitives/transaction.h>
+#include <script/script.h>
+#include <script/sign.h>
+#include <wallet/wallet.h>
 
-#include <rapidcheck/gen/Arbitrary.h>
 #include <rapidcheck/Gen.h>
+#include <rapidcheck/gen/Arbitrary.h>
 #include <rapidcheck/gen/Predicate.h>
 #include <rapidcheck/gen/Select.h>
 
@@ -55,7 +58,7 @@ SpendingInfo sign(const SPKCKeyPair& spk_keys, const CScript& redeemScript = CSc
     const CAmount nValue = 0;
     const CScript& spk = spk_keys.first;
     const std::vector<CKey>& keys = spk_keys.second;
-    CBasicKeyStore store;
+    FillableSigningProvider store;
     for (const auto k : keys) {
         store.AddKey(k);
     }
@@ -102,7 +105,7 @@ rc::Gen<SpendingInfo> SignedP2SHTx()
         const CScript& redeemScript = spk_keys.first;
         const std::vector<CKey>& keys = spk_keys.second;
         //hash the spk
-        const CScript& p2sh = GetScriptForDestination(CScriptID(redeemScript));
+        const CScript& p2sh = GetScriptForDestination(ScriptHash(redeemScript));
         return sign(std::make_pair(p2sh, keys), redeemScript);
     });
 }

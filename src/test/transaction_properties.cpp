@@ -1,23 +1,22 @@
 
-#include "test/gen/transaction_gen.h"
+#include <test/gen/transaction_gen.h>
 
-#include "key.h"
-#include "base58.h"
-#include "script/script.h"
-#include "policy/policy.h"
-#include "primitives/transaction.h"
-#include "uint256.h"
-#include "util.h"
-#include "utilstrencodings.h"
-#include "test/test_bitcoin.h"
-#include "streams.h"
+#include <base58.h>
+#include <key.h>
+#include <policy/policy.h>
+#include <primitives/transaction.h>
+#include <script/script.h>
+#include <streams.h>
 #include <string>
+#include <test/setup_common.h>
+#include <uint256.h>
+#include <util/strencodings.h>
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
+#include <rapidcheck/Gen.h>
 #include <rapidcheck/boost_test.h>
 #include <rapidcheck/gen/Arbitrary.h>
-#include <rapidcheck/Gen.h>
 
 BOOST_FIXTURE_TEST_SUITE(transaction_properties, BasicTestingSetup)
 /** Helper function to run a SpendingInfo through the interpreter to check

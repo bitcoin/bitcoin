@@ -167,7 +167,7 @@ BITCOIN_TEST_SUITE += \
   test/gen/bloom_gen.h \
   test/gen/crypto_gen.cpp \
   test/gen/crypto_gen.h \
-  test/gen/merkle_block.h \
+  test/gen/merkleblock_gen.h \
   test/gen/script_gen.cpp \
   test/gen/script_gen.h \
   test/gen/transaction_gen.cpp \

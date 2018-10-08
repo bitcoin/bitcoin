@@ -1,8 +1,11 @@
+// Copyright (c) 2019 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef BITCOIN_TEST_GEN_BLOOM_GEN_H
 #define BITCOIN_TEST_GEN_BLOOM_GEN_H
 
-#include "bloom.h"
-#include "merkleblock.h"
+#include <bloom.h>
+#include <merkleblock.h>
 
 #include <math.h>
 
@@ -14,8 +17,7 @@ rc::Gen<double> BetweenZeroAndOne();
 
 rc::Gen<std::tuple<unsigned int, double, unsigned int, unsigned int>> BloomFilterPrimitives();
 
-namespace rc
-{
+namespace rc {
 /** Generator for a new CBloomFilter*/
 template <>
 struct Arbitrary<CBloomFilter> {

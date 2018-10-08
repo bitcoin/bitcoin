@@ -1,15 +1,17 @@
+// Copyright (c) 2019 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef BITCOIN_TEST_GEN_MERKLEBLOCK_GEN_H
 #define BITCOIN_TEST_GEN_MERKLEBLOCK_GEN_H
 
-#include <rapidcheck/gen/Arbitrary.h>
 #include <rapidcheck/Gen.h>
+#include <rapidcheck/gen/Arbitrary.h>
 
-#include "merkleblock.h"
-#include "test/gen/block_gen.h"
+#include <merkleblock.h>
+#include <test/gen/block_gen.h>
 
 #include <iostream>
-namespace rc
-{
+namespace rc {
 /** Returns a CMerkleblock with the hashes that match inside of the CPartialMerkleTree */
 template <>
 struct Arbitrary<std::pair<CMerkleBlock, std::set<uint256>>> {
@@ -89,5 +91,5 @@ struct Arbitrary<CPartialMerkleTree> {
             });
     };
 };
-} //namespace rc
+} // namespace rc
 #endif

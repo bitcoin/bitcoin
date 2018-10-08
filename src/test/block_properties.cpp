@@ -1,11 +1,15 @@
+// Copyright (c) 2018-2019 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include <boost/test/unit_test.hpp>
+#include <rapidcheck/Gen.h>
 #include <rapidcheck/boost_test.h>
 #include <rapidcheck/gen/Arbitrary.h>
-#include <rapidcheck/Gen.h>
 
-#include "test/test_bitcoin.h"
-#include "primitives/block.h"
-#include "test/gen/block_gen.h"
+#include <primitives/block.h>
+#include <streams.h>
+#include <test/gen/block_gen.h>
+#include <test/setup_common.h>
 
 
 BOOST_FIXTURE_TEST_SUITE(block_properties, BasicTestingSetup)

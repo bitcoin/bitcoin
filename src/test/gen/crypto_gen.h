@@ -1,9 +1,12 @@
+// Copyright (c) 2019 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef BITCOIN_TEST_GEN_CRYPTO_GEN_H
 #define BITCOIN_TEST_GEN_CRYPTO_GEN_H
 
-#include "key.h"
-#include "random.h"
-#include "uint256.h"
+#include <key.h>
+#include <random.h>
+#include <uint256.h>
 #include <rapidcheck/gen/Arbitrary.h>
 #include <rapidcheck/Gen.h>
 #include <rapidcheck/gen/Create.h>
@@ -56,5 +59,5 @@ struct Arbitrary<uint256> {
         return rc::gen::just(GetRandHash());
     };
 };
-} //namespace rc
+} // namespace rc
 #endif

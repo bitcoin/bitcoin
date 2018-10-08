@@ -1,18 +1,22 @@
+// Copyright (c) 2019 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef BITCOIN_TEST_GEN_TRANSACTION_GEN_H
 #define BITCOIN_TEST_GEN_TRANSACTION_GEN_H
 
-#include "test/gen/crypto_gen.h"
-#include "test/gen/script_gen.h"
+#include <test/gen/crypto_gen.h>
+#include <test/gen/script_gen.h>
 
-#include "script/script.h"
-#include "primitives/transaction.h"
-#include "amount.h"
+#include <amount.h>
+#include <primitives/transaction.h>
+#include <script/script.h>
 
-#include <rapidcheck/gen/Arbitrary.h>
 #include <rapidcheck/Gen.h>
+#include <rapidcheck/gen/Arbitrary.h>
 #include <rapidcheck/gen/Predicate.h>
 
-typedef std::tuple<const CTxOut, const CTransaction, const int> SpendingInfo;
+using SpendingInfo = std::tuple<const CTxOut, const CTransaction, const int>;
+
 /** A signed tx that validly spends a P2PKSPK and the input index */
 rc::Gen<SpendingInfo> SignedP2PKTx();
 
@@ -34,8 +38,7 @@ rc::Gen<SpendingInfo> SignedP2WSHTx();
 /** Generates a arbitrary validly signed tx */
 rc::Gen<SpendingInfo> SignedTx();
 
-namespace rc
-{
+namespace rc {
 /** Generator for a COutPoint */
 template <>
 struct Arbitrary<COutPoint> {
@@ -120,5 +123,5 @@ struct Arbitrary<CTransactionRef> {
         });
     };
 };
-} //namespace rc
+} // namespace rc
 #endif

@@ -1,15 +1,18 @@
-#include "test/gen/bloom_gen.h"
-#include "test/gen/crypto_gen.h"
+// Copyright (c) 2019 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+#include <test/gen/bloom_gen.h>
+#include <test/gen/crypto_gen.h>
 
-#include "bloom.h"
+#include <bloom.h>
 #include <math.h>
 
-#include <rapidcheck/gen/Arbitrary.h>
 #include <rapidcheck/Gen.h>
-#include <rapidcheck/gen/Tuple.h>
-#include <rapidcheck/gen/Predicate.h>
-#include <rapidcheck/gen/Numeric.h>
+#include <rapidcheck/gen/Arbitrary.h>
 #include <rapidcheck/gen/Container.h>
+#include <rapidcheck/gen/Numeric.h>
+#include <rapidcheck/gen/Predicate.h>
+#include <rapidcheck/gen/Tuple.h>
 
 /** Generates a double between [0,1) */
 rc::Gen<double> BetweenZeroAndOne()

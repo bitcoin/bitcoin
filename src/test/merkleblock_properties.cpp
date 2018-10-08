@@ -1,14 +1,15 @@
-#include "test/test_bitcoin.h"
+#include <test/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
+#include <rapidcheck/Gen.h>
 #include <rapidcheck/boost_test.h>
 #include <rapidcheck/gen/Arbitrary.h>
-#include <rapidcheck/Gen.h>
 
-#include "merkleblock.h"
-#include "test/gen/merkleblock_gen.h"
+#include <merkleblock.h>
+#include <test/gen/merkleblock_gen.h>
 
 #include <iostream>
+#include <streams.h>
 BOOST_FIXTURE_TEST_SUITE(merkleblock_properties, BasicTestingSetup)
 
 RC_BOOST_PROP(merkleblock_serialization_symmetry, (const CMerkleBlock& mb))
