@@ -296,6 +296,8 @@ bitcoin.org (see below for bitcoin.org update instructions).
 
   - bitcoincore.org blog post
 
+  - bitcoincore.org RPC documentation update
+
   - Update title of #bitcoin on Freenode IRC
 
   - Optionally twitter, reddit /r/Bitcoin, ... but this will usually sort out itself
