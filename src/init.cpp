@@ -218,8 +218,11 @@ void Shutdown(InitInterfaces& interfaces)
     }
 
     // FlushStateToDisk generates a ChainStateFlushed callback, which we should avoid missing
-    if (pcoinsTip != nullptr) {
-        FlushStateToDisk();
+    {
+        LOCK(cs_main);
+        if (pcoinsTip != nullptr) {
+            FlushStateToDisk();
+        }
     }
 
     // After there are no more peers/RPC left to give us new data which may generate
@@ -649,7 +652,10 @@ static void ThreadImport(std::vector<fs::path> vImportFiles)
             LoadExternalBlockFile(chainparams, file, &pos);
             nFile++;
         }
-        pblocktree->WriteReindexing(false);
+        {
+            LOCK(cs_main);
+            pblocktree->WriteReindexing(false);
+        }
         fReindex = false;
         LogPrintf("Reindexing finished\n");
         // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
@@ -1641,11 +1647,13 @@ bool AppInitMain(InitInterfaces& interfaces)
     }
 
     // Either install a handler to notify us when genesis activates, or set fHaveGenesis directly.
-    // No locking, as this happens before any background thread is started.
-    if (chainActive.Tip() == nullptr) {
-        uiInterface.NotifyBlockTip_connect(BlockNotifyGenesisWait);
-    } else {
-        fHaveGenesis = true;
+    {
+        LOCK(cs_main);
+        if (chainActive.Tip() == nullptr) {
+            uiInterface.NotifyBlockTip_connect(BlockNotifyGenesisWait);
+        } else {
+            fHaveGenesis = true;
+        }
     }
 
     if (gArgs.IsArgSet("-blocknotify"))

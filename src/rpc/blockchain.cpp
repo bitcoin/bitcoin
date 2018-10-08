@@ -1029,7 +1029,12 @@ static UniValue gettxoutsetinfo(const JSONRPCRequest& request)
 
     CCoinsStats stats;
     FlushStateToDisk();
-    if (GetUTXOStats(pcoinsdbview.get(), stats)) {
+    CCoinsView *currentView;
+    {
+        LOCK(cs_main);
+        currentView = pcoinsdbview.get();
+    }
+    if (GetUTXOStats(currentView, stats)) {
         ret.pushKV("height", (int64_t)stats.nHeight);
         ret.pushKV("bestblock", stats.hashBlock.GetHex());
         ret.pushKV("transactions", (int64_t)stats.nTransactions);

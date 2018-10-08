@@ -2669,7 +2669,6 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
     CMutableTransaction txNew;
 
     txNew.nLockTime = GetLocktimeForNewTransaction(locked_chain);
-
     FeeCalculation feeCalc;
     CAmount nFeeNeeded;
     int nBytes;
