@@ -5,7 +5,7 @@
 """Test node responses to invalid transactions.
 
 In this test we connect to one node over p2p, and test tx requests."""
-from test_framework.blocktools import create_block, create_coinbase, create_tx_with_script
+from test_framework.blocktools import create_block, create_coinbase
 from test_framework.messages import (
     COIN,
     COutPoint,
@@ -19,6 +19,7 @@ from test_framework.util import (
     assert_equal,
     wait_until,
 )
+from data import invalid_txs
 
 
 class InvalidTxRequestTest(BitcoinTestFramework):
@@ -63,12 +64,21 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         self.log.info("Mature the block.")
         self.nodes[0].generatetoaddress(100, self.nodes[0].get_deterministic_priv_key().address)
 
-        # b'\x64' is OP_NOTIF
-        # Transaction will be rejected with code 16 (REJECT_INVALID)
-        # and we get disconnected immediately
-        self.log.info('Test a transaction that is rejected')
-        tx1 = create_tx_with_script(block1.vtx[0], 0, script_sig=b'\x64' * 35, amount=50 * COIN - 12000)
-        node.p2p.send_txs_and_test([tx1], node, success=False, expect_disconnect=True)
+        # Iterate through a list of known invalid transaction types, ensuring each is
+        # rejected. Some are consensus invalid and some just violate policy.
+        for BadTxTemplate in invalid_txs.iter_all_templates():
+            self.log.info("Testing invalid transaction: %s", BadTxTemplate.__name__)
+            template = BadTxTemplate(spend_block=block1)
+            tx = template.get_tx()
+            node.p2p.send_txs_and_test(
+                [tx], node, success=False,
+                expect_disconnect=template.expect_disconnect,
+                reject_reason=template.reject_reason,
+            )
+
+            if template.expect_disconnect:
+                self.log.info("Reconnecting to peer")
+                self.reconnect_p2p()
 
         # Make two p2p connections to provide the node with orphans
         # * p2ps[0] will send valid orphan txs (one with low fee)
