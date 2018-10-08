@@ -40,10 +40,18 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
 
     // Cap last block file size, and mine new block in a new block file.
     const CBlockIndex* const null_block = nullptr;
-    CBlockIndex* oldTip = chainActive.Tip();
+    CBlockIndex* oldTip;
+    {
+        LOCK(cs_main);
+        oldTip = chainActive.Tip();
+    }
     GetBlockFileInfo(oldTip->GetBlockPos().nFile)->nSize = MAX_BLOCKFILE_SIZE;
     CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-    CBlockIndex* newTip = chainActive.Tip();
+    CBlockIndex* newTip;
+    {
+        LOCK(cs_main);
+        newTip = chainActive.Tip();
+    }
 
     auto locked_chain = chain->lock();
 
@@ -176,7 +184,13 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
 
     // Create two blocks with same timestamp to verify that importwallet rescan
     // will pick up both blocks, not just the first.
-    const int64_t BLOCK_TIME = chainActive.Tip()->GetBlockTimeMax() + 5;
+    int64_t blockTimeMax;
+    {
+        LOCK(cs_main);
+        blockTimeMax = chainActive.Tip()->GetBlockTimeMax();
+    }
+
+    const int64_t BLOCK_TIME = blockTimeMax + 5;
     SetMockTime(BLOCK_TIME);
     m_coinbase_txns.emplace_back(CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())).vtx[0]);
     m_coinbase_txns.emplace_back(CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())).vtx[0]);
@@ -188,7 +202,6 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
     m_coinbase_txns.emplace_back(CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())).vtx[0]);
 
     auto locked_chain = chain->lock();
-
     std::string backup_file = (SetDataDir("importwallet_rescan") / "wallet.backup").string();
 
     // Import key into wallet and call dumpwallet to create backup file.
@@ -369,10 +382,12 @@ public:
             blocktx = CMutableTransaction(*wallet->mapWallet.at(tx->GetHash()).tx);
         }
         CreateAndProcessBlock({CMutableTransaction(blocktx)}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-        LOCK(wallet->cs_wallet);
         auto it = wallet->mapWallet.find(tx->GetHash());
         BOOST_CHECK(it != wallet->mapWallet.end());
-        it->second.SetMerkleBranch(chainActive.Tip(), 1);
+        {
+            LOCK(cs_main);
+            it->second.SetMerkleBranch(chainActive.Tip(), 1);
+        }
         return it->second;
     }
 

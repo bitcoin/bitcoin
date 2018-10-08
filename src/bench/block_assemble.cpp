@@ -30,7 +30,10 @@ static std::shared_ptr<CBlock> PrepareBlock(const CScript& coinbase_scriptPubKey
             .CreateNewBlock(coinbase_scriptPubKey)
             ->block);
 
-    block->nTime = ::chainActive.Tip()->GetMedianTimePast() + 1;
+    {
+        LOCK(cs_main);
+        block->nTime = ::chainActive.Tip()->GetMedianTimePast() + 1;
+    }
     block->hashMerkleRoot = BlockMerkleRoot(*block);
 
     return block;
@@ -73,9 +76,12 @@ static void AssembleBlock(benchmark::State& state)
     boost::thread_group thread_group;
     CScheduler scheduler;
     {
-        ::pblocktree.reset(new CBlockTreeDB(1 << 20, true));
-        ::pcoinsdbview.reset(new CCoinsViewDB(1 << 23, true));
-        ::pcoinsTip.reset(new CCoinsViewCache(pcoinsdbview.get()));
+        {
+            LOCK(cs_main);
+            ::pblocktree.reset(new CBlockTreeDB(1 << 20, true));
+            ::pcoinsdbview.reset(new CCoinsViewDB(1 << 23, true));
+            ::pcoinsTip.reset(new CCoinsViewCache(pcoinsdbview.get()));
+        }
 
         const CChainParams& chainparams = Params();
         thread_group.create_thread(std::bind(&CScheduler::serviceQueue, &scheduler));
@@ -83,9 +89,12 @@ static void AssembleBlock(benchmark::State& state)
         LoadGenesisBlock(chainparams);
         CValidationState state;
         ActivateBestChain(state, chainparams);
-        assert(::chainActive.Tip() != nullptr);
-        const bool witness_enabled{IsWitnessEnabled(::chainActive.Tip(), chainparams.GetConsensus())};
-        assert(witness_enabled);
+        {
+            LOCK(cs_main);
+            assert(::chainActive.Tip() != nullptr);
+            const bool witness_enabled{IsWitnessEnabled(::chainActive.Tip(), chainparams.GetConsensus())};
+            assert(witness_enabled);
+        }
     }
 
     // Collect some loose transactions that spend the coinbases of our mined blocks

@@ -122,8 +122,7 @@ inline std::vector<OutputGroup>& GroupCoins(const std::vector<COutput>& coins)
 // Branch and bound coin selection tests
 BOOST_AUTO_TEST_CASE(bnb_search_test)
 {
-
-    LOCK(testWallet.cs_wallet);
+    LOCK2(cs_main, testWallet.cs_wallet);
 
     // Setup
     std::vector<CInputCoin> utxo_pool;
@@ -271,7 +270,7 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
     CAmount nValueRet;
     bool bnb_used;
 
-    LOCK(testWallet.cs_wallet);
+    LOCK2(cs_main, testWallet.cs_wallet);
 
     // test multiple times to allow for differences in the shuffle order
     for (int i = 0; i < RUN_TESTS; i++)
@@ -550,7 +549,7 @@ BOOST_AUTO_TEST_CASE(ApproximateBestSubset)
     CAmount nValueRet;
     bool bnb_used;
 
-    LOCK(testWallet.cs_wallet);
+    LOCK2(cs_main, testWallet.cs_wallet);
 
     empty_wallet();
 
@@ -569,6 +568,8 @@ BOOST_AUTO_TEST_CASE(ApproximateBestSubset)
 // Tests that with the ideal conditions, the coin selector will always be able to find a solution that can pay the target value
 BOOST_AUTO_TEST_CASE(SelectCoins_test)
 {
+    LOCK(cs_main);
+
     // Random generator stuff
     std::default_random_engine generator;
     std::exponential_distribution<double> distribution (100);
