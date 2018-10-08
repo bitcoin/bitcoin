@@ -7,7 +7,13 @@ import copy
 import struct
 import time
 
-from test_framework.blocktools import create_block, create_coinbase, create_tx_with_script, get_legacy_sigopcount_block
+from test_framework.blocktools import (
+    create_block,
+    create_coinbase,
+    create_tx_with_script,
+    get_legacy_sigopcount_block,
+    MAX_BLOCK_SIGOPS,
+)
 from test_framework.key import CECKey
 from test_framework.messages import (
     CBlock,
@@ -45,8 +51,7 @@ from test_framework.script import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
-
-MAX_BLOCK_SIGOPS = 20000
+from data import invalid_txs
 
 #  Use this class for tests that require behavior other than normal "mininode" behavior.
 #  For now, it is used to serialize a bloated varint (b64).
@@ -95,16 +100,21 @@ class FullBlockTest(BitcoinTestFramework):
         self.save_spendable_output()
         self.sync_blocks([b0])
 
+        # These constants chosen specifically to trigger an immature coinbase spend
+        # at a certain time below.
+        NUM_BUFFER_BLOCKS_TO_GENERATE = 99
+        NUM_OUTPUTS_TO_COLLECT = 33
+
         # Allow the block to mature
         blocks = []
-        for i in range(99):
-            blocks.append(self.next_block(5000 + i))
+        for i in range(NUM_BUFFER_BLOCKS_TO_GENERATE):
+            blocks.append(self.next_block("maturitybuffer.{}".format(i)))
             self.save_spendable_output()
         self.sync_blocks(blocks)
 
         # collect spendable outputs now to avoid cluttering the code later on
         out = []
-        for i in range(33):
+        for i in range(NUM_OUTPUTS_TO_COLLECT):
             out.append(self.get_spendable_output())
 
         # Start by building a couple of blocks on top (which output is spent is
@@ -116,7 +126,39 @@ class FullBlockTest(BitcoinTestFramework):
         b2 = self.next_block(2, spend=out[1])
         self.save_spendable_output()
 
-        self.sync_blocks([b1, b2])
+        self.sync_blocks([b1, b2], timeout=4)
+
+        # Select a txn with an output eligible for spending. This won't actually be spent,
+        # since we're testing submission of a series of blocks with invalid txns.
+        attempt_spend_tx = out[2]
+
+        # Submit blocks for rejection, each of which contains a single transaction
+        # (aside from coinbase) which should be considered invalid.
+        for TxTemplate in invalid_txs.iter_all_templates():
+            template = TxTemplate(spend_tx=attempt_spend_tx)
+
+            # Something about the serialization code for missing inputs creates
+            # a different hash in the test client than on bitcoind, resulting
+            # in a mismatching merkle root during block validation.
+            # Skip until we figure out what's going on.
+            if TxTemplate == invalid_txs.InputMissing:
+                continue
+            if template.valid_in_block:
+                continue
+
+            self.log.info("Reject block with invalid tx: %s", TxTemplate.__name__)
+            blockname = "for_invalid.%s" % TxTemplate.__name__
+            badblock = self.next_block(blockname)
+            badtx = template.get_tx()
+            self.sign_tx(badtx, attempt_spend_tx)
+            badtx.rehash()
+            badblock = self.update_block(blockname, [badtx])
+            self.sync_blocks(
+                [badblock], success=False,
+                reject_reason=(template.block_reject_reason or template.reject_reason),
+                reconnect=True, timeout=2)
+
+            self.move_tip(2)
 
         # Fork like this:
         #
@@ -1288,7 +1330,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.blocks[block_number] = block
         return block
 
-    def bootstrap_p2p(self):
+    def bootstrap_p2p(self, timeout=10):
         """Add a P2P connection to the node.
 
         Helper to connect and wait for version handshake."""
@@ -1299,15 +1341,15 @@ class FullBlockTest(BitcoinTestFramework):
         # an INV for the next block and receive two getheaders - one for the
         # IBD and one for the INV. We'd respond to both and could get
         # unexpectedly disconnected if the DoS score for that error is 50.
-        self.nodes[0].p2p.wait_for_getheaders(timeout=5)
+        self.nodes[0].p2p.wait_for_getheaders(timeout=timeout)
 
-    def reconnect_p2p(self):
+    def reconnect_p2p(self, timeout=60):
         """Tear down and bootstrap the P2P connection to the node.
 
         The node gets disconnected several times in this test. This helper
         method reconnects the p2p and restarts the network thread."""
         self.nodes[0].disconnect_p2ps()
-        self.bootstrap_p2p()
+        self.bootstrap_p2p(timeout=timeout)
 
     def sync_blocks(self, blocks, success=True, reject_reason=None, force_send=False, reconnect=False, timeout=60):
         """Sends blocks to test node. Syncs and verifies that tip has advanced to most recent block.
@@ -1316,7 +1358,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.nodes[0].p2p.send_blocks_and_test(blocks, self.nodes[0], success=success, reject_reason=reject_reason, force_send=force_send, timeout=timeout, expect_disconnect=reconnect)
 
         if reconnect:
-            self.reconnect_p2p()
+            self.reconnect_p2p(timeout=timeout)
 
 
 if __name__ == '__main__':
