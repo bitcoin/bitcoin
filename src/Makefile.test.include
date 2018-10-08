@@ -153,11 +153,25 @@ BITCOIN_TESTS =\
 
 if ENABLE_PROPERTY_TESTS
 BITCOIN_TESTS += \
-  test/key_properties.cpp
+  test/block_properties.cpp \
+  test/bloom_properties.cpp \
+  test/key_properties.cpp \
+  test/merkleblock_properties.cpp \
+  test/script_properties.cpp \
+  test/transaction_properties.cpp
 
 BITCOIN_TEST_SUITE += \
+  test/gen/block_gen.cpp \
+  test/gen/block_gen.h \
+  test/gen/bloom_gen.cpp \
+  test/gen/bloom_gen.h \
   test/gen/crypto_gen.cpp \
-  test/gen/crypto_gen.h
+  test/gen/crypto_gen.h \
+  test/gen/merkle_block.h \
+  test/gen/script_gen.cpp \
+  test/gen/script_gen.h \
+  test/gen/transaction_gen.cpp \
+  test/gen/transaction_gen.h
 endif
 
 if ENABLE_WALLET

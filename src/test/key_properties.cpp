@@ -7,13 +7,14 @@
 #include <util/system.h>
 #include <test/setup_common.h>
 #include <vector>
-
 #include <boost/test/unit_test.hpp>
 #include <rapidcheck/boost_test.h>
 #include <rapidcheck/gen/Arbitrary.h>
 #include <rapidcheck/Gen.h>
 
-#include <test/gen/crypto_gen.h>
+
+#include <key_io.h>
+#include "test/gen/crypto_gen.h"
 
 BOOST_FIXTURE_TEST_SUITE(key_properties, BasicTestingSetup)
 
@@ -28,6 +29,14 @@ RC_BOOST_PROP(key_generates_correct_pubkey, (const CKey& key))
 {
     CPubKey pubKey = key.GetPubKey();
     RC_ASSERT(key.VerifyPubKey(pubKey));
+}
+
+/** Serialization symmetry CKey -> CBitcoinSecret -> CKey */
+RC_BOOST_PROP(key_bitcoinsecret_symmetry, (const CKey& key))
+{
+    std::string secret = EncodeSecret(key);
+    CKey decode = DecodeSecret(secret);
+    RC_ASSERT(decode == key);
 }
 
 /** Create a CKey using the 'Set' function must give us the same key */
