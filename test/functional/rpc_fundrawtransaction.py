@@ -28,6 +28,7 @@ class RawTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
         self.setup_clean_chain = True
+        self.extra_args = [["-minrelaytxfee=0.00001000"]]*self.num_nodes
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -516,7 +517,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         oldBalance = self.nodes[0].getbalance()
 
         inputs = []
-        outputs = {self.nodes[0].getnewaddress():1.1}
+        outputs = {self.nodes[0].getnewaddress():Decimal("1.1")}
         rawtx = self.nodes[1].createrawtransaction(inputs, outputs)
         fundedTx = self.nodes[1].fundrawtransaction(rawtx)
 
@@ -527,7 +528,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.nodes[1].generate(1)
         self.sync_all()
 
-        # make sure funds are received at node1
+        # make sure funds are received at node0
         assert_equal(oldBalance+Decimal('51.10000000'), self.nodes[0].getbalance())
 
 
