@@ -444,7 +444,6 @@ static void UpdateBlockAvailability(NodeId nodeid, const uint256 &hash) EXCLUSIV
  */
 static void MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid, CConnman* connman) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    AssertLockHeld(cs_main);
     CNodeState* nodestate = State(nodeid);
     if (!nodestate || !nodestate->fSupportsDesiredCmpctVersion) {
         // Never ask from peers who can't provide witnesses.
@@ -480,7 +479,6 @@ static void MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid, CConnman* connma
 
 static bool TipMayBeStale(const Consensus::Params &consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    AssertLockHeld(cs_main);
     if (g_last_tip_update == 0) {
         g_last_tip_update = GetTime();
     }
@@ -833,7 +831,6 @@ void Misbehaving(NodeId pnode, int howmuch, const std::string& message) EXCLUSIV
 // we fully-validated them at some point.
 static bool BlockRequestAllowed(const CBlockIndex* pindex, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    AssertLockHeld(cs_main);
     if (chainActive.Contains(pindex)) return true;
     return pindex->IsValid(BLOCK_VALID_SCRIPTS) && (pindexBestHeader != nullptr) &&
         (pindexBestHeader->GetBlockTime() - pindex->GetBlockTime() < STALE_RELAY_AGE_LIMIT) &&
@@ -2927,7 +2924,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
 static bool SendRejectsAndCheckIfBanned(CNode* pnode, CConnman* connman, bool enable_bip61) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    AssertLockHeld(cs_main);
     CNodeState &state = *State(pnode->GetId());
 
     if (enable_bip61) {
@@ -3081,8 +3077,6 @@ bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& inter
 
 void PeerLogicValidation::ConsiderEviction(CNode *pto, int64_t time_in_seconds)
 {
-    AssertLockHeld(cs_main);
-
     CNodeState &state = *State(pto->GetId());
     const CNetMsgMaker msgMaker(pto->GetSendVersion());
 

@@ -313,8 +313,6 @@ static FILE* OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly = false);
 
 bool CheckFinalTx(const CTransaction &tx, int flags)
 {
-    AssertLockHeld(cs_main);
-
     // By convention a negative value for flags indicates that the
     // current network-enforced consensus rules should be used. In
     // a future soft-fork scenario that would mean checking which
@@ -345,7 +343,6 @@ bool CheckFinalTx(const CTransaction &tx, int flags)
 
 bool TestLockPointValidity(const LockPoints* lp)
 {
-    AssertLockHeld(cs_main);
     assert(lp);
     // If there are relative lock times then the maxInputBlock will be set
     // If there are no relative lock times, the LockPoints don't depend on the chain
@@ -459,7 +456,6 @@ std::string FormatStateMessage(const CValidationState &state)
 
 static bool IsCurrentForFeeEstimation() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    AssertLockHeld(cs_main);
     if (IsInitialBlockDownload())
         return false;
     if (chainActive.Tip()->GetBlockTime() < (GetTime() - MAX_FEE_ESTIMATION_TIP_AGE))
@@ -484,7 +480,6 @@ static bool IsCurrentForFeeEstimation() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 
 static void UpdateMempoolForReorg(DisconnectedBlockTransactions &disconnectpool, bool fAddToMempool) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    AssertLockHeld(cs_main);
     std::vector<uint256> vHashUpdate;
     // disconnectpool's insertion_order index sorts the entries from
     // oldest to newest, but the oldest entry will be the last tx from the
@@ -525,8 +520,6 @@ static void UpdateMempoolForReorg(DisconnectedBlockTransactions &disconnectpool,
 // were somehow broken and returning the wrong scriptPubKeys
 static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& view, const CTxMemPool& pool,
                  unsigned int flags, bool cacheSigStore, PrecomputedTransactionData& txdata) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
-    AssertLockHeld(cs_main);
-
     // pool.cs should be locked already, but go ahead and re-take the lock here
     // to enforce that mempool doesn't change between when we check the view
     // and when we actually call through to CheckInputs
@@ -563,7 +556,6 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
 {
     const CTransaction& tx = *ptx;
     const uint256 hash = tx.GetHash();
-    AssertLockHeld(cs_main);
     LOCK(pool.cs); // mempool "read lock" (held through GetMainSignals().TransactionAddedToMempool())
     if (pfMissingInputs) {
         *pfMissingInputs = false;
@@ -1209,7 +1201,6 @@ static void AlertNotify(const std::string& strMessage)
 
 static void CheckForkWarningConditions() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    AssertLockHeld(cs_main);
     // Before we get past initial download, we cannot reliably alert about forks
     // (we assume we don't get stuck on a fork before finishing our initial sync)
     if (IsInitialBlockDownload())
@@ -1250,7 +1241,6 @@ static void CheckForkWarningConditions() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 
 static void CheckForkWarningConditionsOnNewFork(CBlockIndex* pindexNewForkTip) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    AssertLockHeld(cs_main);
     // If we are on a fork that is sufficiently large, set a warning flag
     CBlockIndex* pfork = pindexNewForkTip;
     CBlockIndex* plonger = chainActive.Tip();
@@ -1367,6 +1357,9 @@ void InitScriptExecutionCache() {
  * entry again.
  *
  * Non-static (and re-declared) in src/test/txvalidationcache_tests.cpp
+ *
+ * Calling CheckInputs requires holding cs_main. This requirement can be removed
+ * by making CuckooCache not require external locks.
  */
 bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheSigStore, bool cacheFullScriptStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
@@ -1395,7 +1388,6 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
             // round - giving us 19 + 32 + 4 = 55 bytes (+ 8 + 1 = 64)
             static_assert(55 - sizeof(flags) - 32 >= 128/8, "Want at least 128 bits of nonce for script execution cache");
             CSHA256().Write(scriptExecutionCacheNonce.begin(), 55 - sizeof(flags) - 32).Write(tx.GetWitnessHash().begin(), 32).Write((unsigned char*)&flags, sizeof(flags)).Finalize(hashCacheEntry.begin());
-            AssertLockHeld(cs_main); //TODO: Remove this requirement by making CuckooCache not require external locks
             if (scriptExecutionCache.contains(hashCacheEntry, !cacheFullScriptStore)) {
                 return true;
             }
@@ -1735,8 +1727,6 @@ static bool IsScriptWitnessEnabled(const Consensus::Params& params)
 }
 
 static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consensus::Params& consensusparams) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
-    AssertLockHeld(cs_main);
-
     unsigned int flags = SCRIPT_VERIFY_NONE;
 
     // BIP16 didn't become active until Apr 1 2012 (on mainnet, and
@@ -1796,7 +1786,6 @@ static int64_t nBlocksTotal = 0;
 bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex,
                   CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck)
 {
-    AssertLockHeld(cs_main);
     assert(pindex);
     assert(*pindex->phashBlock == block.GetHash());
     int64_t nTimeStart = GetTimeMicros();
@@ -2544,8 +2533,6 @@ void CChainState::PruneBlockIndexCandidates() {
  */
 bool CChainState::ActivateBestChainStep(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, ConnectTrace& connectTrace)
 {
-    AssertLockHeld(cs_main);
-
     const CBlockIndex *pindexOldTip = chainActive.Tip();
     const CBlockIndex *pindexFork = chainActive.FindFork(pindexMostWork);
 
@@ -2793,8 +2780,6 @@ bool PreciousBlock(CValidationState& state, const CChainParams& params, CBlockIn
 
 bool CChainState::InvalidateBlock(CValidationState& state, const CChainParams& chainparams, CBlockIndex *pindex)
 {
-    AssertLockHeld(cs_main);
-
     // We first disconnect backwards and then mark the blocks as invalid.
     // This prevents a case where pruned nodes may fail to invalidateblock
     // and be left unable to start as they have no tip candidates (as there
@@ -2860,8 +2845,6 @@ bool InvalidateBlock(CValidationState& state, const CChainParams& chainparams, C
 }
 
 void CChainState::ResetBlockFailureFlags(CBlockIndex *pindex) {
-    AssertLockHeld(cs_main);
-
     int nHeight = pindex->nHeight;
 
     // Remove the invalidity flag from this block and all its descendants.
@@ -2899,8 +2882,6 @@ void ResetBlockFailureFlags(CBlockIndex *pindex) {
 
 CBlockIndex* CChainState::AddToBlockIndex(const CBlockHeader& block)
 {
-    AssertLockHeld(cs_main);
-
     // Check for duplicate
     uint256 hash = block.GetHash();
     BlockMap::iterator it = mapBlockIndex.find(hash);
@@ -3345,7 +3326,6 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
 
 bool CChainState::AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex)
 {
-    AssertLockHeld(cs_main);
     // Check for duplicate
     uint256 hash = block.GetHash();
     BlockMap::iterator miSelf = mapBlockIndex.find(hash);
@@ -3450,7 +3430,6 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
     const CBlock& block = *pblock;
 
     if (fNewBlock) *fNewBlock = false;
-    AssertLockHeld(cs_main);
 
     CBlockIndex *pindexDummy = nullptr;
     CBlockIndex *&pindex = ppindex ? *ppindex : pindexDummy;
@@ -3559,7 +3538,6 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
 
 bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams, const CBlock& block, CBlockIndex* pindexPrev, bool fCheckPOW, bool fCheckMerkleRoot)
 {
-    AssertLockHeld(cs_main);
     assert(pindexPrev && pindexPrev == chainActive.Tip());
     CCoinsViewCache viewNew(pcoinsTip.get());
     uint256 block_hash(block.GetHash());
@@ -3796,8 +3774,6 @@ fs::path GetBlockPosFilename(const CDiskBlockPos &pos, const char *prefix)
 
 CBlockIndex * CChainState::InsertBlockIndex(const uint256& hash)
 {
-    AssertLockHeld(cs_main);
-
     if (hash.IsNull())
         return nullptr;
 

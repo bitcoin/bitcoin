@@ -387,8 +387,6 @@ static std::string EntryDescriptionString()
 
 static void entryToJSON(UniValue &info, const CTxMemPoolEntry &e) EXCLUSIVE_LOCKS_REQUIRED(::mempool.cs)
 {
-    AssertLockHeld(mempool.cs);
-
     UniValue fees(UniValue::VOBJ);
     fees.pushKV("base", ValueFromAmount(e.GetFee()));
     fees.pushKV("modified", ValueFromAmount(e.GetModifiedFee()));

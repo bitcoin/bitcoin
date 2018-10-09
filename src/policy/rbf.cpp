@@ -16,8 +16,6 @@ bool SignalsOptInRBF(const CTransaction &tx)
 
 RBFTransactionState IsRBFOptIn(const CTransaction &tx, CTxMemPool &pool)
 {
-    AssertLockHeld(pool.cs);
-
     CTxMemPool::setEntries setAncestors;
 
     // First check the transaction itself.

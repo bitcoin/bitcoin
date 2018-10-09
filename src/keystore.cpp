@@ -9,7 +9,6 @@
 
 void CBasicKeyStore::ImplicitlyLearnRelatedKeyScripts(const CPubKey& pubkey)
 {
-    AssertLockHeld(cs_KeyStore);
     CKeyID key_id = pubkey.GetID();
     // We must actually know about this key already.
     assert(HaveKey(key_id) || mapWatchKeys.count(key_id));
