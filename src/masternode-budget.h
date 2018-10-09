@@ -291,6 +291,9 @@ public:
     bool fValid;
 
 private:
+    static bool AddOrUpdateVote(std::map<uint256, BudgetDraftVote>& votes, const BudgetDraftVote& vote, std::string& strError);
+
+private:
     // critical section to protect the inner data structures
     mutable CCriticalSection m_cs;
     bool m_autoChecked; //If it matches what we see, we'll auto vote for it (masternode only)

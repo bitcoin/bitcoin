@@ -1690,10 +1690,18 @@ bool BudgetDraft::AddOrUpdateVote(bool isOldVote, const BudgetDraftVote& vote, s
 {
     LOCK(m_cs);
 
-    uint256 masternodeHash = vote.vin.prevout.GetHash();
-    map<uint256, BudgetDraftVote>::iterator found = m_votes.find(masternodeHash);
+    if (isOldVote)
+        return AddOrUpdateVote(m_obsoleteVotes, vote, strError);
+    else
+        return AddOrUpdateVote(m_votes, vote, strError);
+}
 
-    if(found != m_votes.end()){
+bool BudgetDraft::AddOrUpdateVote(std::map<uint256, BudgetDraftVote>& votes, const BudgetDraftVote& vote, std::string& strError)
+{
+    uint256 masternodeHash = vote.vin.prevout.GetHash();
+    map<uint256, BudgetDraftVote>::iterator found = votes.find(masternodeHash);
+
+    if(found != votes.end()){
         const BudgetDraftVote& previousVote = found->second;
         if (previousVote.GetHash() == vote.GetHash()) {
             LogPrint("mnbudget", "BudgetDraft::AddOrUpdateVote - Already have the vote\n");
@@ -1717,10 +1725,7 @@ bool BudgetDraft::AddOrUpdateVote(bool isOldVote, const BudgetDraftVote& vote, s
         return false;
     }
 
-    if (isOldVote)
-        m_obsoleteVotes.insert(found, std::make_pair(masternodeHash, vote));
-    else
-        m_votes.insert(found, std::make_pair(masternodeHash, vote));
+    votes.insert(found, std::make_pair(masternodeHash, vote));
 
     return true;
 }
