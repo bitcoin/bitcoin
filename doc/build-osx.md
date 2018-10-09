@@ -11,6 +11,12 @@ Install the macOS command line tools:
 
 When the popup appears, click `Install`.
 
+If you're running macOS 10.14/Xcode 10.0 or later, and want to use the `depends` system,
+you'll also need to use the following script to install the macOS system headers into `/usr/include`.
+```
+open /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg
+```
+
 Then install [Homebrew](https://brew.sh).
 
 Dependencies
