@@ -11,8 +11,18 @@ from test_framework.util import (
     assert_greater_than,
     assert_raises_rpc_error,
     bytes_to_hex_str,
+    hex_str_to_bytes
 )
-
+from test_framework.script import (
+    CScript,
+    OP_0,
+    OP_1,
+    hash160,
+    OP_CHECKMULTISIG,
+    OP_HASH160,
+    OP_EQUAL
+)
+from test_framework.messages import sha256
 
 class ImportMultiTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -458,6 +468,65 @@ class ImportMultiTest(BitcoinTestFramework):
                 "timestamp": "",
             }])
 
+        # Import P2WPKH address
+        self.log.info("Should import a P2WPKH address")
+        address = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress(address_type="bech32"))
+        result = self.nodes[1].importmulti([{
+            "scriptPubKey": {
+                "address": address['address']
+            },
+            "timestamp": "now",
+        }])
+        assert_equal(result[0]['success'], True)
+        address_assert = self.nodes[1].getaddressinfo(address['address'])
+        assert_equal(address_assert['iswatchonly'], True)
+
+        # P2WSH multisig address + witnessscript + private keys
+        sig_address_1 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
+        sig_address_2 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
+        multi_sig_script = self.nodes[0].addmultisigaddress(1, [sig_address_1['pubkey'], sig_address_2['pubkey']], "", "bech32")
+        self.log.info("Should import a p2wsh with respective redeem script and private keys")
+        result = self.nodes[1].importmulti([{
+            "scriptPubKey": {
+                "address": multi_sig_script['address']
+            },
+            "timestamp": "now",
+            "witnessscript": multi_sig_script['redeemScript'],
+            "keys": [ self.nodes[0].dumpprivkey(sig_address_1['address'])]
+        }])
+        assert_equal(result[0]['success'], True)
+
+        # P2SH-P2PKH address + redeemscript + private key
+        sig_address_1 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress(address_type="p2sh-segwit"))
+        pubkeyhash = hash160(hex_str_to_bytes(sig_address_1['pubkey']))
+        pkscript = CScript([OP_0, pubkeyhash])
+        self.log.info("Should import a p2sh-p2pkh with respective redeem script and private keys")
+        result = self.nodes[1].importmulti([{
+            "scriptPubKey": {
+                "address": sig_address_1['address']
+            },
+            "timestamp": "now",
+            "redeemscript": bytes_to_hex_str(pkscript),
+            "keys": [ self.nodes[0].dumpprivkey(sig_address_1['address'])]
+        }])
+        assert_equal(result[0]['success'], True)
+
+        # P2SH-P2WSH 1-of-1 multisig + redeemscript + private key
+        sig_address_1 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
+        witness_program = CScript([OP_1, hex_str_to_bytes(sig_address_1['pubkey']), OP_1, OP_CHECKMULTISIG])
+        scripthash = sha256(witness_program)
+        redeem_script = CScript([OP_0, scripthash])
+        redeem_script_hash = hash160(redeem_script)
+        p2sh_script = CScript([OP_HASH160, redeem_script_hash, OP_EQUAL])
+        self.log.info("Should import a p2sh-p2wsh with respective redeem script and private keys")
+        result = self.nodes[1].importmulti([{
+            "scriptPubKey": bytes_to_hex_str(p2sh_script),
+            "timestamp": "now",
+            "redeemscript": bytes_to_hex_str(redeem_script),
+            "witnessscript": bytes_to_hex_str(witness_program),
+            "keys": [ self.nodes[0].dumpprivkey(sig_address_1['address'])]
+        }])
+        assert_equal(result[0]['success'], True)
 
 if __name__ == '__main__':
     ImportMultiTest ().main ()
