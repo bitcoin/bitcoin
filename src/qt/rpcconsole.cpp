@@ -538,6 +538,7 @@ bool RPCConsole::eventFilter(QObject* obj, QEvent *event)
             // forward these events to lineEdit
             if(obj == autoCompleter->popup()) {
                 QApplication::postEvent(ui->lineEdit, new QKeyEvent(*keyevt));
+                autoCompleter->popup()->hide();
                 return true;
             }
             break;
