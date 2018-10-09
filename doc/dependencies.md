@@ -20,7 +20,7 @@ These are the dependencies currently used by Bitcoin Core. You can find instruct
 | MiniUPnPc | [2.0.20180203](http://miniupnp.free.fr/files) |  | No |  |  |
 | OpenSSL | [1.0.1k](https://www.openssl.org/source) |  | Yes |  |  |
 | PCRE |  |  |  |  | [Yes](https://github.com/bitcoin/bitcoin/blob/master/depends/packages/qt.mk#L66) |
-| protobuf | [2.6.1](https://github.com/google/protobuf/releases) |  | No |  |  |
+| protobuf | [3.6.1](https://github.com/google/protobuf/releases) |  | No |  |  |
 | Python (tests) |  | [3.4](https://www.python.org/downloads) |  |  |  |
 | qrencode | [3.4.4](https://fukuchi.org/works/qrencode) |  | No |  |  |
 | Qt | [5.9.6](https://download.qt.io/official_releases/qt/) | 5.x | No |  |  |
