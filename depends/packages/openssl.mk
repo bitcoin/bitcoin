@@ -61,7 +61,8 @@ endef
 
 define $(package)_preprocess_cmds
   sed -i.old "/define DATE/d" util/mkbuildinf.pl && \
-  sed -i.old "s|engines apps test|engines|" Makefile.org
+  sed -i.old "s|engines apps test|engines|" Makefile.org && \
+  sed -i.old "s/-isysroot.*(CROSS_SDK)//" Configure
 endef
 
 define $(package)_config_cmds
