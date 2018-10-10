@@ -279,9 +279,6 @@ public:
 class CMasternodeBroadcast : public CMasternode
 {
 public:
-    bool fSignOver;
-    std::vector<unsigned char> vchSigSignOver;
-
     CMasternodeBroadcast();
     CMasternodeBroadcast(CService newAddr, CTxIn newVin, CPubKey newPubkey, CPubKey newPubkey2, int protocolVersionIn);
     CMasternodeBroadcast(const CMasternode& mn);
@@ -311,10 +308,7 @@ public:
         READWRITE(protocolVersion);
         READWRITE(lastPing);
         READWRITE(nLastDsq);
-
-            READWRITE(fSignOver);
-            READWRITE(vchSigSignOver);
-
+        READWRITE(vchSignover);
     }
 
     uint256 GetHash() const

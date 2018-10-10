@@ -62,6 +62,7 @@ CMasternode::CMasternode()
     pubkey = CPubKey();
     pubkey2 = CPubKey();
     sig = std::vector<unsigned char>();
+    vchSignover = std::vector<unsigned char>();
     activeState = MASTERNODE_ENABLED;
     sigTime = GetAdjustedTime();
     lastPing = CMasternodePing();
@@ -84,6 +85,7 @@ CMasternode::CMasternode(const CMasternode& other)
     pubkey = other.pubkey;
     pubkey2 = other.pubkey2;
     sig = other.sig;
+    vchSignover = other.vchSignover;
     activeState = other.activeState;
     sigTime = other.sigTime;
     lastPing = other.lastPing;
@@ -106,6 +108,7 @@ CMasternode::CMasternode(const CMasternodeBroadcast& mnb)
     pubkey = mnb.pubkey;
     pubkey2 = mnb.pubkey2;
     sig = mnb.sig;
+    vchSignover = mnb.vchSignover;
     activeState = MASTERNODE_ENABLED;
     sigTime = mnb.sigTime;
     lastPing = mnb.lastPing;
@@ -326,6 +329,7 @@ CMasternodeBroadcast::CMasternodeBroadcast()
     pubkey = CPubKey();
     pubkey2 = CPubKey();
     sig = std::vector<unsigned char>();
+    vchSignover = std::vector<unsigned char>();
     activeState = MASTERNODE_ENABLED;
     sigTime = GetAdjustedTime();
     lastPing = CMasternodePing();
@@ -346,6 +350,7 @@ CMasternodeBroadcast::CMasternodeBroadcast(CService newAddr, CTxIn newVin, CPubK
     pubkey = newPubkey;
     pubkey2 = newPubkey2;
     sig = std::vector<unsigned char>();
+    vchSignover = std::vector<unsigned char>();
     activeState = MASTERNODE_ENABLED;
     sigTime = GetAdjustedTime();
     lastPing = CMasternodePing();
@@ -366,6 +371,7 @@ CMasternodeBroadcast::CMasternodeBroadcast(const CMasternode& mn)
     pubkey = mn.pubkey;
     pubkey2 = mn.pubkey2;
     sig = mn.sig;
+    vchSignover = mn.vchSignover;
     activeState = mn.activeState;
     sigTime = mn.sigTime;
     lastPing = mn.lastPing;
@@ -463,13 +469,12 @@ bool CMasternodeBroadcast::Create(CTxIn txin, CService service, CKey keyCollater
 
     //Additional signature for use in proof of stake
     if (fSignOver) {
-        if (!keyCollateralAddress.Sign(pubKeyMasternodeNew.GetHash(), mnb.vchSigSignOver)) {
+        if (!keyCollateralAddress.Sign(pubKeyMasternodeNew.GetHash(), mnb.vchSignover)) {
             LogPrintf("CMasternodeBroadcast::Create failed signover\n");
             mnb = CMasternodeBroadcast();
             return false;
         }
         LogPrintf("%s: Signed over to key %s\n", __func__, pubKeyMasternodeNew.GetID().GetHex());
-        mnb.fSignOver = true;
     }
 
     return true;
@@ -685,10 +690,10 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS) const
     // if it matches our Masternode privkey, then we've been remotely activated
     if(pubkey2 == activeMasternode.pubKeyMasternode && protocolVersion == PROTOCOL_VERSION){
         activeMasternode.EnableHotColdMasterNode(vin, addr);
-        if (fSignOver) {
-            if (pubkey.Verify(pubkey2.GetHash(), vchSigSignOver)) {
-                LogPrintf("%s: Verified pubkey2 signover for staking\n", __func__);
-                activeMasternode.vchSigSignover = vchSigSignOver;
+        if (!vchSignover.empty()) {
+            if (pubkey.Verify(pubkey2.GetHash(), vchSignover)) {
+                LogPrintf("%s: Verified pubkey2 signover for staking, added to activemasternode\n", __func__);
+                activeMasternode.vchSigSignover = vchSignover;
             } else {
                 LogPrintf("%s: Failed to verify pubkey on signover!\n", __func__);
             }
