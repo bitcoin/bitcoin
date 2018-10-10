@@ -718,7 +718,7 @@ static UniValue signmessage(const JSONRPCRequest& request)
             + HelpExampleCli("signmessage", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" \"my message\"") +
             "\nVerify the signature\n"
             + HelpExampleCli("verifymessage", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" \"signature\" \"my message\"") +
-            "\nAs json rpc\n"
+            "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("signmessage", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\", \"my message\"")
         );
 
@@ -781,7 +781,7 @@ static UniValue getreceivedbyaddress(const JSONRPCRequest& request)
             + HelpExampleCli("getreceivedbyaddress", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" 0") +
             "\nThe amount with at least 6 confirmations\n"
             + HelpExampleCli("getreceivedbyaddress", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" 6") +
-            "\nAs a json rpc call\n"
+            "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("getreceivedbyaddress", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\", 6")
        );
 
@@ -857,7 +857,7 @@ static UniValue getreceivedbylabel(const JSONRPCRequest& request)
             + HelpExampleCli("getreceivedbylabel", "\"tabby\" 0") +
             "\nThe amount with at least 6 confirmations\n"
             + HelpExampleCli("getreceivedbylabel", "\"tabby\" 6") +
-            "\nAs a json rpc call\n"
+            "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("getreceivedbylabel", "\"tabby\", 6")
         );
 
@@ -940,7 +940,7 @@ static UniValue getbalance(const JSONRPCRequest& request)
             + HelpExampleCli("getbalance", "") +
             "\nThe total amount in the wallet at least 6 blocks confirmed\n"
             + HelpExampleCli("getbalance", "\"*\" 6") +
-            "\nAs a json rpc call\n"
+            "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("getbalance", "\"*\", 6")
         );
 
@@ -1244,7 +1244,7 @@ static UniValue sendmany(const JSONRPCRequest& request)
             + HelpExampleCli("sendmany", "\"tabby\" \"{\\\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\\\":0.01,\\\"XuQQkwA4FYkq2XERzMY2CiAZhJTEDAbtcG\\\":0.02}\"") +
             "\nSend two amounts to two different addresses setting the confirmation and comment:\n"
             + HelpExampleCli("sendmany", "\"tabby\" \"{\\\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\\\":0.01,\\\"XuQQkwA4FYkq2XERzMY2CiAZhJTEDAbtcG\\\":0.02}\" 6 false \"testing\"") +
-            "\nAs a json rpc call\n"
+            "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("sendmany", "\"tabby\", \"{\\\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\\\":0.01,\\\"XuQQkwA4FYkq2XERzMY2CiAZhJTEDAbtcG\\\":0.02}\", 6, false, \"testing\"");
     }
 
@@ -1396,7 +1396,7 @@ static UniValue addmultisigaddress(const JSONRPCRequest& request)
             "\nExamples:\n"
             "\nAdd a multisig address from 2 addresses\n"
             + HelpExampleCli("addmultisigaddress", "2 \"[\\\"Xt4qk9uKvQYAonVGSZNXqxeDmtjaEWgfrS\\\",\\\"XoSoWQkpgLpppPoyyzbUFh1fq2RBvW6UK2\\\"]\"") +
-            "\nAs json rpc call\n"
+            "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("addmultisigaddress", "2, \"[\\\"Xt4qk9uKvQYAonVGSZNXqxeDmtjaEWgfrS\\\",\\\"XoSoWQkpgLpppPoyyzbUFh1fq2RBvW6UK2\\\"]\"")
         ;
         throw std::runtime_error(msg);
@@ -1953,7 +1953,7 @@ static UniValue listtransactions(const JSONRPCRequest& request)
             + HelpExampleCli("listtransactions", "") +
             "\nList transactions 100 to 120\n"
             + HelpExampleCli("listtransactions", "\"*\" 20 100") +
-            "\nAs a json rpc call\n"
+            "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("listtransactions", "\"*\", 20, 100");
     }
     if (request.fHelp || request.params.size() > 4) throw std::runtime_error(help_text);
@@ -2513,7 +2513,7 @@ static UniValue walletpassphrase(const JSONRPCRequest& request)
             + HelpExampleCli("walletpassphrase", "\"my pass phrase\" 60 true") +
             "\nLock the wallet again (before 60 seconds)\n"
             + HelpExampleCli("walletlock", "") +
-            "\nAs json rpc call\n"
+            "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("walletpassphrase", "\"my pass phrase\", 60")
         );
     }
@@ -2650,7 +2650,7 @@ static UniValue walletlock(const JSONRPCRequest& request)
             + HelpExampleCli("sendtoaddress", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" 1.0") +
             "\nClear the passphrase since we are done before 2 minutes is up\n"
             + HelpExampleCli("walletlock", "") +
-            "\nAs json rpc call\n"
+            "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("walletlock", "")
         );
     }
@@ -2696,7 +2696,7 @@ static UniValue encryptwallet(const JSONRPCRequest& request)
             + HelpExampleCli("signmessage", "\"address\" \"test message\"") +
             "\nNow lock the wallet again by removing the passphrase\n"
             + HelpExampleCli("walletlock", "") +
-            "\nAs a json rpc call\n"
+            "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("encryptwallet", "\"my pass phrase\"")
         );
     }
@@ -2767,7 +2767,7 @@ static UniValue lockunspent(const JSONRPCRequest& request)
             + HelpExampleCli("listlockunspent", "") +
             "\nUnlock the transaction again\n"
             + HelpExampleCli("lockunspent", "true \"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":1}]\"") +
-            "\nAs a json rpc call\n"
+            "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("lockunspent", "false, \"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":1}]\"")
         );
 
@@ -2885,7 +2885,7 @@ static UniValue listlockunspent(const JSONRPCRequest& request)
             + HelpExampleCli("listlockunspent", "") +
             "\nUnlock the transaction again\n"
             + HelpExampleCli("lockunspent", "true \"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":1}]\"") +
-            "\nAs a json rpc call\n"
+            "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("listlockunspent", "")
         );
 
@@ -4161,7 +4161,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
             "\nResult:\n"
             "{\n"
             "  \"address\" : \"address\",        (string) The dash address validated\n"
-            "  \"scriptPubKey\" : \"hex\",       (string) The hex encoded scriptPubKey generated by the address\n"
+            "  \"scriptPubKey\" : \"hex\",       (string) The hex-encoded scriptPubKey generated by the address\n"
             "  \"ismine\" : true|false,        (boolean) If the address is yours or not\n"
             "  \"iswatchonly\" : true|false,   (boolean) If the address is watchonly\n"
             "  \"isscript\" : true|false,      (boolean) If the key is a script\n"
@@ -4330,7 +4330,7 @@ static UniValue listlabels(const JSONRPCRequest& request)
             + HelpExampleCli("listlabels", "receive") +
             "\nList labels that have sending addresses\n"
             + HelpExampleCli("listlabels", "send") +
-            "\nAs json rpc call\n"
+            "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("listlabels", "receive")
         );
 
@@ -4526,7 +4526,7 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
                             "      \"address\": x.xxx,    (obj, optional) A key-value pair. The key (string) is the Dash address, the value (float or string) is the amount in " + CURRENCY_UNIT + "\n"
                             "    },\n"
                             "    {\n"
-                            "      \"data\": \"hex\"        (obj, optional) A key-value pair. The key must be \"data\", the value is hex encoded data\n"
+                            "      \"data\": \"hex\"        (obj, optional) A key-value pair. The key must be \"data\", the value is hex-encoded data\n"
                             "    }\n"
                             "    ,...                     More key-value pairs of the above form. For compatibility reasons, a dictionary, which holds the key-value pairs directly, is also\n"
                             "                             accepted as second parameter.\n"
