@@ -8,7 +8,6 @@
 #include <QMenu>
 #include <QBuffer>
 #include <QWidget>
-#include <QtMac>
 
 #undef slots
 #include <Cocoa/Cocoa.h>
@@ -51,9 +50,7 @@ MacDockIconHandler::MacDockIconHandler() : QObject()
     this->m_dummyWidget = new QWidget();
     this->m_dockMenu = new QMenu(this->m_dummyWidget);
     this->setMainWindow(nullptr);
-#if QT_VERSION >= 0x050200
     this->m_dockMenu->setAsDockMenu();
-#endif
     [pool release];
 }
 
@@ -81,7 +78,12 @@ void MacDockIconHandler::setIcon(const QIcon &icon)
     else {
         // generate NSImage from QIcon and use this as dock icon.
         QSize size = icon.actualSize(QSize(128, 128));
-        image = QtMac::toNSImage(icon.pixmap(size));
+        CGImageRef cgimage = toCGImageRef(icon.pixmap(size));
+        NSBitmapImageRep *bitmapRep = [[NSBitmapImageRep alloc] initWithCGImage:cgimage];
+        image = [[NSImage alloc] init];
+        [image addRepresentation:bitmapRep];
+        [bitmapRep release];
+        CFRelease(cgimage);
 
         if(!image) {
             // if testnet image could not be created, load std. app icon
