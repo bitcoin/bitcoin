@@ -13,8 +13,10 @@ BOOST_FIXTURE_TEST_SUITE(amount_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(MoneyRangeTest)
 {
     BOOST_CHECK_EQUAL(MoneyRange(CAmount(-1)), false);
-    BOOST_CHECK_EQUAL(MoneyRange(MAX_MONEY + CAmount(1)), false);
+    BOOST_CHECK_EQUAL(MoneyRange(CAmount(0)), true);
     BOOST_CHECK_EQUAL(MoneyRange(CAmount(1)), true);
+    BOOST_CHECK_EQUAL(MoneyRange(MAX_MONEY), true);
+    BOOST_CHECK_EQUAL(MoneyRange(MAX_MONEY + CAmount(1)), false);
 }
 
 BOOST_AUTO_TEST_CASE(GetFeeTest)
@@ -23,43 +25,43 @@ BOOST_AUTO_TEST_CASE(GetFeeTest)
 
     feeRate = CFeeRate(0);
     // Must always return 0
-    BOOST_CHECK_EQUAL(feeRate.GetFee(0), 0);
-    BOOST_CHECK_EQUAL(feeRate.GetFee(1e5), 0);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(0), CAmount(0));
+    BOOST_CHECK_EQUAL(feeRate.GetFee(1e5), CAmount(0));
 
     feeRate = CFeeRate(1000);
     // Must always just return the arg
-    BOOST_CHECK_EQUAL(feeRate.GetFee(0), 0);
-    BOOST_CHECK_EQUAL(feeRate.GetFee(1), 1);
-    BOOST_CHECK_EQUAL(feeRate.GetFee(121), 121);
-    BOOST_CHECK_EQUAL(feeRate.GetFee(999), 999);
-    BOOST_CHECK_EQUAL(feeRate.GetFee(1e3), 1e3);
-    BOOST_CHECK_EQUAL(feeRate.GetFee(9e3), 9e3);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(0), CAmount(0));
+    BOOST_CHECK_EQUAL(feeRate.GetFee(1), CAmount(1));
+    BOOST_CHECK_EQUAL(feeRate.GetFee(121), CAmount(121));
+    BOOST_CHECK_EQUAL(feeRate.GetFee(999), CAmount(999));
+    BOOST_CHECK_EQUAL(feeRate.GetFee(1e3), CAmount(1e3));
+    BOOST_CHECK_EQUAL(feeRate.GetFee(9e3), CAmount(9e3));
 
     feeRate = CFeeRate(-1000);
     // Must always just return -1 * arg
-    BOOST_CHECK_EQUAL(feeRate.GetFee(0), 0);
-    BOOST_CHECK_EQUAL(feeRate.GetFee(1), -1);
-    BOOST_CHECK_EQUAL(feeRate.GetFee(121), -121);
-    BOOST_CHECK_EQUAL(feeRate.GetFee(999), -999);
-    BOOST_CHECK_EQUAL(feeRate.GetFee(1e3), -1e3);
-    BOOST_CHECK_EQUAL(feeRate.GetFee(9e3), -9e3);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(0), CAmount(0));
+    BOOST_CHECK_EQUAL(feeRate.GetFee(1), CAmount(-1));
+    BOOST_CHECK_EQUAL(feeRate.GetFee(121), CAmount(-121));
+    BOOST_CHECK_EQUAL(feeRate.GetFee(999), CAmount(-999));
+    BOOST_CHECK_EQUAL(feeRate.GetFee(1e3), CAmount(-1e3));
+    BOOST_CHECK_EQUAL(feeRate.GetFee(9e3), CAmount(-9e3));
 
     feeRate = CFeeRate(123);
     // Truncates the result, if not integer
-    BOOST_CHECK_EQUAL(feeRate.GetFee(0), 0);
-    BOOST_CHECK_EQUAL(feeRate.GetFee(8), 1); // Special case: returns 1 instead of 0
-    BOOST_CHECK_EQUAL(feeRate.GetFee(9), 1);
-    BOOST_CHECK_EQUAL(feeRate.GetFee(121), 14);
-    BOOST_CHECK_EQUAL(feeRate.GetFee(122), 15);
-    BOOST_CHECK_EQUAL(feeRate.GetFee(999), 122);
-    BOOST_CHECK_EQUAL(feeRate.GetFee(1e3), 123);
-    BOOST_CHECK_EQUAL(feeRate.GetFee(9e3), 1107);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(0), CAmount(0));
+    BOOST_CHECK_EQUAL(feeRate.GetFee(8), CAmount(1)); // Special case: returns 1 instead of 0
+    BOOST_CHECK_EQUAL(feeRate.GetFee(9), CAmount(1));
+    BOOST_CHECK_EQUAL(feeRate.GetFee(121), CAmount(14));
+    BOOST_CHECK_EQUAL(feeRate.GetFee(122), CAmount(15));
+    BOOST_CHECK_EQUAL(feeRate.GetFee(999), CAmount(122));
+    BOOST_CHECK_EQUAL(feeRate.GetFee(1e3), CAmount(123));
+    BOOST_CHECK_EQUAL(feeRate.GetFee(9e3), CAmount(1107));
 
     feeRate = CFeeRate(-123);
     // Truncates the result, if not integer
-    BOOST_CHECK_EQUAL(feeRate.GetFee(0), 0);
-    BOOST_CHECK_EQUAL(feeRate.GetFee(8), -1); // Special case: returns -1 instead of 0
-    BOOST_CHECK_EQUAL(feeRate.GetFee(9), -1);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(0), CAmount(0));
+    BOOST_CHECK_EQUAL(feeRate.GetFee(8), CAmount(-1)); // Special case: returns -1 instead of 0
+    BOOST_CHECK_EQUAL(feeRate.GetFee(9), CAmount(-1));
 
     // check alternate constructor
     feeRate = CFeeRate(1000);
@@ -67,6 +69,9 @@ BOOST_AUTO_TEST_CASE(GetFeeTest)
     BOOST_CHECK_EQUAL(feeRate.GetFee(100), altFeeRate.GetFee(100));
 
     // Check full constructor
+    BOOST_CHECK(CFeeRate(CAmount(-1), 0) == CFeeRate(0));
+    BOOST_CHECK(CFeeRate(CAmount(0), 0) == CFeeRate(0));
+    BOOST_CHECK(CFeeRate(CAmount(1), 0) == CFeeRate(0));
     // default value
     BOOST_CHECK(CFeeRate(CAmount(-1), 1000) == CFeeRate(-1));
     BOOST_CHECK(CFeeRate(CAmount(0), 1000) == CFeeRate(0));
