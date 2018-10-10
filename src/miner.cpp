@@ -567,25 +567,25 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
 
     try {
         while (true) {
-//            if (fProofOfStake && chainActive.Height() + 1 < Params().PoSStartHeight() || !fMasterNode) {
-//                MilliSleep(1000);
-//                continue;
-//            }
+            if (fProofOfStake && chainActive.Height() + 1 < Params().PoSStartHeight() || !fMasterNode || chainActive.Tip()->GetBlockTime() > GetAdjustedTime()) {
+                MilliSleep(1000);
+                continue;
+            }
 
-//            if (Params().MiningRequiresPeers()) {
-//                // Busy-wait for the network to come online so we don't waste time mining
-//                // on an obsolete chain. In regtest mode we expect to fly solo.
-//                do {
-//                    bool fvNodesEmpty;
-//                    {
-//                        LOCK(cs_vNodes);
-//                        fvNodesEmpty = vNodes.empty();
-//                    }
-//                    if (!fvNodesEmpty && !IsInitialBlockDownload())
-//                        break;
-//                    MilliSleep(1000);
-//                } while (true);
-//            }
+            if (Params().MiningRequiresPeers()) {
+                // Busy-wait for the network to come online so we don't waste time mining
+                // on an obsolete chain. In regtest mode we expect to fly solo.
+                do {
+                    bool fvNodesEmpty;
+                    {
+                        LOCK(cs_vNodes);
+                        fvNodesEmpty = vNodes.empty();
+                    }
+                    if (!fvNodesEmpty && !IsInitialBlockDownload())
+                        break;
+                    MilliSleep(1000);
+                } while (true);
+            }
 
             //
             // Create new block

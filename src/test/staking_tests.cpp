@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_CASE(stakeminer)
     uint256 nModifier = uint256S("123456");
     unsigned int nTimeBlockFrom = 100000;
     unsigned int nTimeStake = nTimeBlockFrom + (60*60*48);
-    uint64_t nAmount = 10000 * COIN;
+    uint64_t nAmount = 10000;
     Kernel kernel(outpoint, nAmount, nModifier, nTimeBlockFrom, nTimeStake);
 
     //A moderately easy difficulty target to hit

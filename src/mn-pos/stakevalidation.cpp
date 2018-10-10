@@ -27,7 +27,6 @@ bool CheckProofOfStake(const CBlock& block, const CBlockIndex* prevBlock, const 
 
     auto pairOut = std::make_pair(outpoint.hash, outpoint.n);
     CAmount nAmountCollateral = (outpoint.n == 1 ? MASTERNODE_COLLATERAL : SYSTEMNODE_COLLATERAL);
-    nAmountCollateral *= COIN;
 
     uint256 nStakeModifier = prevBlock->GetAncestor(prevBlock->nHeight - 100)->GetBlockHash();
 

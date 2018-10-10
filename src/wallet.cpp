@@ -1915,7 +1915,7 @@ bool CWallet::CreateCoinStake(const int nHeight, const uint32_t& nBits, const ui
         pvinActiveNode = &activeStakingNode->vin;
         ppubkeyActiveNode = &activeStakingNode->pubkey;
         nActiveNodeInputHeight = chainActive.Height() - activeStakingNode->GetMasternodeInputAge();
-        nAmountMN = static_cast<CAmount>(MASTERNODE_COLLATERAL * COIN);
+        nAmountMN = static_cast<CAmount>(MASTERNODE_COLLATERAL);
 
     } else if (fSystemNode) {
         CSystemnode* activeStakingNode;
@@ -1930,7 +1930,7 @@ bool CWallet::CreateCoinStake(const int nHeight, const uint32_t& nBits, const ui
         pvinActiveNode = &activeStakingNode->vin;
         ppubkeyActiveNode = &activeStakingNode->pubkey;
         nActiveNodeInputHeight = chainActive.Height() - activeStakingNode->GetSystemnodeInputAge();
-        nAmountMN = static_cast<CAmount>(SYSTEMNODE_COLLATERAL * COIN);
+        nAmountMN = static_cast<CAmount>(SYSTEMNODE_COLLATERAL);
 
     } else {
         LogPrintf("CreateCoinStake -- Must be masternode or system to create coin stake!\n");
