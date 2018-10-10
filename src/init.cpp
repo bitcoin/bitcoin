@@ -720,6 +720,17 @@ bool AppInit2(boost::thread_group& threadGroup)
     fLogTimestamps = GetBoolArg("-logtimestamps", true);
     fLogIPs = GetBoolArg("-logips", false);
 
+    if (IsArgSet("-devnet")) {
+        // Require setting of ports when running devnet
+        if (GetArg("-listen", DEFAULT_LISTEN) && !IsArgSet("-port"))
+            return InitError(_("-port must be specified when -devnet and -listen are specified"));
+        if (GetArg("-server", false) && !IsArgSet("-rpcport"))
+            return InitError(_("-rpcport must be specified when -devnet and -server are specified"));
+
+        if (mapMultiArgs.count("-devnet") > 1)
+            return InitError(_("-devnet can only be specified once"));
+    }
+
     if (mapArgs.count("-bind") || mapArgs.count("-whitebind")) {
         // when specifying an explicit binding address, you want to listen on it
         // even when -connect or -proxy is specified

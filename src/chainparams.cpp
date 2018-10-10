@@ -24,6 +24,82 @@ struct SeedSpec6 {
 
 #include "chainparamsseeds.h"
 
+static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
+{
+    CMutableTransaction txNew;
+    txNew.nVersion = 1;
+    txNew.vin.resize(1);
+    txNew.vout.resize(1);
+    txNew.vin[0].scriptSig = CScript() << 486604799 << CScriptNum(4) << std::vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
+    txNew.vout[0].nValue = genesisReward;
+    txNew.vout[0].scriptPubKey = genesisOutputScript;
+
+    CBlock genesis;
+    genesis.nTime    = nTime;
+    genesis.nBits    = nBits;
+    genesis.nNonce   = nNonce;
+    genesis.nVersion .SetGenesisVersion(nVersion);
+    genesis.vtx.push_back(txNew);
+    genesis.hashPrevBlock.SetNull();
+    genesis.hashMerkleRoot = genesis.BuildMerkleTree();
+    return genesis;
+}
+
+static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
+{
+    const char* pszTimestamp = "Wired 09/Jan/2014 The Grand Experiment Goes Live: Overstock.com Is Now Accepting Bitcoins";
+    const CScript genesisOutputScript = CScript() << ParseHex("040184710fa689ad5023690c80f3a49c8f13f8d45b8c857fbcbc8bc4a8e4d3eb4b10f4d4604fa08dce601aaf0f470216fe1b51850b4acf21b179c45070ac7b03a9") << OP_CHECKSIG;
+    return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
+}
+
+static CBlock CreateDevNetGenesisBlock(const uint256 &prevBlockHash, const std::string& devNetName, uint32_t nTime, uint32_t nNonce, uint32_t nBits, const CAmount& genesisReward)
+{
+    assert(!devNetName.empty());
+
+    CMutableTransaction txNew;
+    txNew.nVersion = 1;
+    txNew.vin.resize(1);
+    txNew.vout.resize(1);
+    // put height (BIP34) and devnet name into coinbase
+    txNew.vin[0].scriptSig = CScript() << 1 << std::vector<unsigned char>(devNetName.begin(), devNetName.end());
+    txNew.vout[0].nValue = genesisReward;
+    txNew.vout[0].scriptPubKey = CScript() << OP_RETURN;
+
+    CBlock genesis;
+    genesis.nTime    = nTime;
+    genesis.nBits    = nBits;
+    genesis.nNonce   = nNonce;
+    genesis.nVersion.SetGenesisVersion(4);
+    genesis.vtx.push_back(txNew);
+    genesis.hashPrevBlock = prevBlockHash;
+    genesis.hashMerkleRoot = genesis.BuildMerkleTree();
+    return genesis;
+}
+
+static CBlock FindDevNetGenesisBlock(const CChainParams& params, const CBlock &prevBlock, const CAmount& reward)
+{
+    std::string devNetName = GetDevNetName();
+    assert(!devNetName.empty());
+
+    CBlock block = CreateDevNetGenesisBlock(prevBlock.GetHash(), devNetName.c_str(), prevBlock.nTime + 1, 0, prevBlock.nBits, reward);
+
+    arith_uint256 bnTarget;
+    bnTarget.SetCompact(block.nBits);
+
+    for (uint32_t nNonce = 0; nNonce < UINT32_MAX; nNonce++) {
+        block.nNonce = nNonce;
+
+        uint256 hash = block.GetHash();
+        if (UintToArith256(hash) <= bnTarget)
+            return block;
+    }
+
+    // This is very unlikely to happen as we start the devnet with a very low difficulty. In many cases even the first
+    // iteration of the above loop will give a result already
+    error("FindDevNetGenesisBlock: could not find devnet genesis block for %s", devNetName);
+    assert(false);
+}
+
 /**
  * Main network
  */
@@ -328,6 +404,81 @@ public:
 static CTestNetParams testNetParams;
 
 /**
+ * Devnet
+ */
+class CDevNetParams : public CChainParams {
+public:
+    CDevNetParams() {
+        strNetworkID = "dev";
+        nSubsidyHalvingInterval = 210240;
+
+        /* FIXME
+        nMasternodePaymentsStartBlock = 500;
+        nMasternodePaymentsIncreaseBlock = 520;
+        nMasternodePaymentsIncreasePeriod = 10;
+        nInstantSendConfirmationsRequired = 2;
+        nInstantSendKeepLock = 6;
+        nBudgetPaymentsStartBlock = 550;
+        nBudgetPaymentsCycleBlocks = 50;
+        nBudgetPaymentsWindowBlocks = 10;
+        nSuperblockStartBlock = 560; // NOTE: Should satisfy nSuperblockStartBlock > nBudgetPeymentsStartBlock
+        nSuperblockStartHash = uint256(); // do not check this on devnet
+        nSuperblockCycle = 24; // Superblocks can be issued hourly on devnet
+        nGovernanceMinQuorum = 1;
+        nGovernanceFilterElements = 500;
+        nMasternodeMinimumConfirmations = 1;
+        powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 1
+        nPowTargetTimespan = 24 * 60 * 60; // Dash: 1 day
+        nPowTargetSpacing = 2.5 * 60; // Dash: 2.5 minutes
+        fPowAllowMinDifficultyBlocks = true;
+        fPowNoRetargeting = false;
+        nPowKGWHeight = 4001; // nPowKGWHeight >= nPowDGWHeight means "no KGW"
+        nPowDGWHeight = 4001;
+        nRuleChangeActivationThreshold = 1512; // 75% for testchains
+        nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
+         */
+
+        pchMessageStart[0] = 0xe2;
+        pchMessageStart[1] = 0xca;
+        pchMessageStart[2] = 0xff;
+        pchMessageStart[3] = 0xce;
+        vAlertPubKey = ParseHex("04517d8a699cb43d3938d7b24faaff7cda448ca4ea267723ba614784de661949bf632d6304316b244646dea079735b9a6fc4af804efb4752075b9fe2245e14e412");
+        nDefaultPort = 19999;
+
+        genesis = CreateGenesisBlock(1417713337, 1096447, 0x207fffff, 1, 50 * COIN);
+        hashGenesisBlock = genesis.GetHash();
+        assert(hashGenesisBlock == uint256S("0x000008ca1832a4baf228eb1553c03d3a2c8e02399550dd6ea8d65cec3ef23d2e"));
+        assert(genesis.hashMerkleRoot == uint256S("0xe0028eb9648db56b1ac77cf090b99048a8007e2bb64b68f092c03c7f56a662c7"));
+
+        devnetGenesis = FindDevNetGenesisBlock(*this, genesis, 50 * COIN);
+        hashDevnetGenesisBlock = devnetGenesis.GetHash();
+
+        vFixedSeeds.clear();
+        vSeeds.clear();
+        //vSeeds.push_back(CDNSSeedData("dashevo.org",  "devnet-seed.dashevo.org"));
+
+        // Testnet Dash addresses start with 'y'
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,140);
+        // Testnet Dash script addresses start with '8' or '9'
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,19);
+        // Testnet private keys start with '9' or 'c' (Bitcoin defaults)
+        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,239);
+        // Testnet Dash BIP32 pubkeys start with 'tpub' (Bitcoin defaults)
+        base58Prefixes[EXT_PUBLIC_KEY] = boost::assign::list_of(0x04)(0x35)(0x87)(0xCF).convert_to_container<std::vector<unsigned char> >();
+        // Testnet Dash BIP32 prvkeys start with 'tprv' (Bitcoin defaults)
+        base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x04)(0x35)(0x83)(0x94).convert_to_container<std::vector<unsigned char> >();
+
+        fMiningRequiresPeers = true;
+        fDefaultConsistencyChecks = false;
+        fRequireStandard = false;
+        fMineBlocksOnDemand = false;
+
+        nPoolMaxTransactions = 3;
+    }
+};
+static CDevNetParams *devNetParams;
+
+/**
  * Regression test
  */
 class CRegTestParams : public CTestNetParams {
@@ -452,6 +603,9 @@ CChainParams &Params(CBaseChainParams::Network network) {
             return testNetParams;
         case CBaseChainParams::REGTEST:
             return regTestParams;
+        case CBaseChainParams::DEVNET:
+            assert(devNetParams);
+            return *devNetParams;
         case CBaseChainParams::UNITTEST:
             return unitTestParams;
         default:

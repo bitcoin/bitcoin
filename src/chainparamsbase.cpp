@@ -42,6 +42,21 @@ public:
 };
 static CBaseTestNetParams testNetParams;
 
+/**
+ * Devnet
+ */
+class CBaseDevNetParams : public CBaseChainParams
+{
+public:
+    CBaseDevNetParams(const std::string &dataDir)
+    {
+        nRPCPort = 19998;
+        strDataDir = dataDir;
+    }
+};
+static CBaseDevNetParams *devNetParams;
+
+
 /*
  * Regression test
  */
@@ -80,6 +95,12 @@ const CBaseChainParams& BaseParams()
 
 void SelectBaseParams(CBaseChainParams::Network network)
 {
+    if (network == CBaseChainParams::DEVNET) {
+        std::string devNetName = GetDevNetName();
+        assert(!devNetName.empty());
+        devNetParams = new CBaseDevNetParams(devNetName);
+    }
+
     switch (network) {
     case CBaseChainParams::MAIN:
         pCurrentBaseParams = &mainParams;
@@ -121,6 +142,14 @@ bool SelectBaseParamsFromCommandLine()
 
     SelectBaseParams(network);
     return true;
+}
+
+std::string GetDevNetName()
+{
+    // This function should never be called for non-devnets
+    assert(IsArgSet("-devnet"));
+    std::string devNetName = GetArg("-devnet", "");
+    return "devnet" + (devNetName.empty() ? "" : "-" + devNetName);
 }
 
 bool AreBaseParamsConfigured()
