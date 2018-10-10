@@ -64,6 +64,8 @@ public:
         READWRITE(m_txLockReqRejected);
         READWRITE(m_completeTxLocks);
     }
+public:
+    static const int m_acceptedBlockCount = 24;
 
 private:
     void DoConsensusVote(const CTransaction& tx, int64_t nBlockHeight);
@@ -85,6 +87,9 @@ private:
 class CConsensusVote
 {
 public:
+    CConsensusVote()
+        : m_expiration(GetTime() + (60 * InstantSend::m_acceptedBlockCount))
+    { }
     uint256 GetHash() const;
     bool SignatureValid() const;
     bool Sign();
@@ -97,6 +102,7 @@ public:
         READWRITE(vinMasternode);
         READWRITE(vchMasterNodeSignature);
         READWRITE(nBlockHeight);
+        READWRITE(m_expiration);
     }
 
 public:
@@ -104,11 +110,16 @@ public:
     uint256 txHash;
     int nBlockHeight;
     std::vector<unsigned char> vchMasterNodeSignature;
+    int m_expiration;
 };
 
 class CTransactionLock
 {
 public:
+    CTransactionLock()
+        : m_expiration(GetTime() + (60 * InstantSend::m_acceptedBlockCount))
+        , m_timeout(GetTime() + (60 * 5))
+    { }
     bool SignaturesValid() const;
     int CountSignatures() const;
     void AddSignature(const CConsensusVote& cv);
@@ -121,16 +132,16 @@ public:
         READWRITE(nBlockHeight);
         READWRITE(txHash);
         READWRITE(vecConsensusVotes);
-        READWRITE(nExpiration);
-        READWRITE(nTimeout);
+        READWRITE(m_expiration);
+        READWRITE(m_timeout);
     }
 
 public:
     int nBlockHeight;
     uint256 txHash;
     std::vector<CConsensusVote> vecConsensusVotes;
-    int nExpiration;
-    int nTimeout;
+    int m_expiration;
+    int m_timeout;
 };
 
 #endif
