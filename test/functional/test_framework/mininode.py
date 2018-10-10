@@ -500,9 +500,9 @@ class P2PDataStore(P2PInterface):
                 wait_until(lambda: blocks[-1].sha256 in self.getdata_requests, timeout=timeout, lock=mininode_lock)
 
             if expect_disconnect:
-                self.wait_for_disconnect()
+                self.wait_for_disconnect(timeout=timeout)
             else:
-                self.sync_with_ping()
+                self.sync_with_ping(timeout=timeout)
 
             if success:
                 wait_until(lambda: node.getbestblockhash() == blocks[-1].hash, timeout=timeout)
