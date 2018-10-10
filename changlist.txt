@@ -1,0 +1,3 @@
+2018.09.28 0.8.7
+fix missing bignum field when spv wallet sync data.
+modify bitcoin to primecoin someplace
