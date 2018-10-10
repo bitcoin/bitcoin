@@ -459,18 +459,22 @@ void StopHTTPServer()
     }
     if (eventBase) {
         LogPrint(BCLog::HTTP, "Waiting for HTTP event thread to exit\n");
-        // Exit the event loop as soon as there are no active events.
-        event_base_loopexit(eventBase, nullptr);
+        // Ensure that event loop is empty before the loop exit
+        std::packaged_task<int(event_base*)> taskCleanup(event_base_dispatch);
+        std::future<int> threadResultCleanup = taskCleanup.get_future();
+        std::thread threadCleanup(std::move(taskCleanup), eventBase);
         // Give event loop a few seconds to exit (to send back last RPC responses), then break it
         // Before this was solved with event_base_loopexit, but that didn't work as expected in
         // at least libevent 2.0.21 and always introduced a delay. In libevent
         // master that appears to be solved, so in the future that solution
         // could be used again (if desirable).
         // (see discussion in https://github.com/bitcoin/bitcoin/pull/6990)
-        if (threadResult.valid() && threadResult.wait_for(std::chrono::milliseconds(2000)) == std::future_status::timeout) {
+        if ((threadResult.valid() && threadResult.wait_for(std::chrono::milliseconds(2000)) == std::future_status::timeout) ||
+            (threadResultCleanup.valid() && threadResultCleanup.wait_for(std::chrono::milliseconds(2000)) == std::future_status::timeout)) {
             LogPrintf("HTTP event loop did not exit within allotted time, sending loopbreak\n");
             event_base_loopbreak(eventBase);
         }
+        threadCleanup.join();
         threadHTTP.join();
     }
     if (eventHTTP) {
