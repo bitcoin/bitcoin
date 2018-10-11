@@ -35,7 +35,14 @@ bool CDarkSendEntry::AddScriptSig(const CTxIn& txin)
 
 uint256 CDarksendQueue::GetSignatureHash() const
 {
-    return SerializeHash(*this);
+    // Remove after migration to 70211
+    {
+    masternode_info_t mnInfo;
+    mnodeman.GetMasternodeInfo(masternodeOutpoint, mnInfo);
+    return SerializeHash(*this, SER_GETHASH, mnInfo.nProtocolVersion);
+    }
+    // END remove, replace with the code below
+    // return SerializeHash(*this);
 }
 
 bool CDarksendQueue::Sign()

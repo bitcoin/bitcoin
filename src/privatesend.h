@@ -174,6 +174,7 @@ class CDarksendQueue
 {
 public:
     int nDenom;
+    int nInputCount; // not used for anything but to calculate correct hash, remove after migration to 70211
     COutPoint masternodeOutpoint;
     int64_t nTime;
     bool fReady; //ready for submit
@@ -183,6 +184,7 @@ public:
 
     CDarksendQueue() :
         nDenom(0),
+        nInputCount(0),
         masternodeOutpoint(COutPoint()),
         nTime(0),
         fReady(false),
@@ -192,6 +194,7 @@ public:
 
     CDarksendQueue(int nDenom, COutPoint outpoint, int64_t nTime, bool fReady) :
         nDenom(nDenom),
+        nInputCount(0),
         masternodeOutpoint(outpoint),
         nTime(nTime),
         fReady(fReady),
@@ -206,7 +209,6 @@ public:
         READWRITE(nDenom);
         int nVersion = s.GetVersion();
         if (nVersion > 70208 && nVersion <= 70210) {
-            int nInputCount = 0;
             READWRITE(nInputCount);
         }
         READWRITE(masternodeOutpoint);

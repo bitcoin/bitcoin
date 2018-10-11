@@ -1083,14 +1083,14 @@ bool CPrivateSendClientSession::StartNewQueue(CAmount nValueMin, CAmount nBalanc
             return false;
         }
 
+        privateSendClient.AddUsedMasternode(infoMn.outpoint);
+
         // skip next mn payments winners
         if (mnpayments.IsScheduled(infoMn, 0)) {
             LogPrintf("CPrivateSendClientSession::StartNewQueue -- skipping winner, masternode=%s\n", infoMn.outpoint.ToStringShort());
             nTries++;
             continue;
         }
-
-        privateSendClient.AddUsedMasternode(infoMn.outpoint);
 
         if(infoMn.nLastDsq != 0 && infoMn.nLastDsq + nMnCountEnabled/5 > mnodeman.nDsqCount) {
             LogPrintf("CPrivateSendClientSession::StartNewQueue -- Too early to mix on this masternode!"
