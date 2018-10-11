@@ -29,8 +29,8 @@ class WalletLabelsTest(BitcoinTestFramework):
 
         # Note each time we call generate, all generated coins go into
         # the same address, so we call twice to get two addresses w/50 each
-        node.generate(1)
-        node.generate(101)
+        node.generatetoaddress(nblocks=1, address=node.getnewaddress(label='coinbase'))
+        node.generatetoaddress(nblocks=101, address=node.getnewaddress(label='coinbase'))
         assert_equal(node.getbalance(), 100)
 
         # there should be 2 address groups
@@ -42,8 +42,9 @@ class WalletLabelsTest(BitcoinTestFramework):
         linked_addresses = set()
         for address_group in address_groups:
             assert_equal(len(address_group), 1)
-            assert_equal(len(address_group[0]), 2)
+            assert_equal(len(address_group[0]), 3)
             assert_equal(address_group[0][1], 50)
+            assert_equal(address_group[0][2], 'coinbase')
             linked_addresses.add(address_group[0][0])
 
         # send 50 from each address to a third address not in this wallet
@@ -77,7 +78,7 @@ class WalletLabelsTest(BitcoinTestFramework):
             label.verify(node)
 
         # Check all labels are returned by listlabels.
-        assert_equal(node.listlabels(), [label.name for label in labels])
+        assert_equal(node.listlabels(), sorted(['coinbase'] + [label.name for label in labels]))
 
         # Send a transaction to each label.
         for label in labels:
