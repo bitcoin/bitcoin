@@ -1186,9 +1186,10 @@ void CMasternodeMan::DoFullVerificationStep(CConnman& connman)
     rank_pair_vec_t vecMasternodeRanks;
     GetMasternodeRanks(vecMasternodeRanks, nCachedBlockHeight - 1, MIN_POSE_PROTO_VERSION);
 
-    LOCK(cs);
+    std::vector<CAddress> vAddr;
 
-    int nCount = 0;
+    {
+    LOCK(cs);
 
     int nMyRank = -1;
     int nRanksTotal = (int)vecMasternodeRanks.size();
@@ -1216,13 +1217,6 @@ void CMasternodeMan::DoFullVerificationStep(CConnman& connman)
     int nOffset = MAX_POSE_RANK + nMyRank - 1;
     if(nOffset >= (int)vecMasternodeRanks.size()) return;
 
-    std::vector<const CMasternode*> vSortedByAddr;
-    for (const auto& mnpair : mapMasternodes) {
-        vSortedByAddr.push_back(&mnpair.second);
-    }
-
-    sort(vSortedByAddr.begin(), vSortedByAddr.end(), CompareByAddr());
-
     auto it = vecMasternodeRanks.begin() + nOffset;
     while(it != vecMasternodeRanks.end()) {
         if(it->second.IsPoSeVerified() || it->second.IsPoSeBanned()) {
@@ -1238,16 +1232,22 @@ void CMasternodeMan::DoFullVerificationStep(CConnman& connman)
         }
         LogPrint("masternode", "CMasternodeMan::DoFullVerificationStep -- Verifying masternode %s rank %d/%d address %s\n",
                     it->second.outpoint.ToStringShort(), it->first, nRanksTotal, it->second.addr.ToString());
-        if(SendVerifyRequest(CAddress(it->second.addr, NODE_NETWORK), vSortedByAddr, connman)) {
-            nCount++;
-            if(nCount >= MAX_POSE_CONNECTIONS) break;
+        CAddress addr = CAddress(it->second.addr, NODE_NETWORK);
+        if(CheckVerifyRequestAddr(addr, connman)) {
+            vAddr.push_back(addr);
+            if((int)vAddr.size() >= MAX_POSE_CONNECTIONS) break;
         }
         nOffset += MAX_POSE_CONNECTIONS;
         if(nOffset >= (int)vecMasternodeRanks.size()) break;
         it += MAX_POSE_CONNECTIONS;
     }
+    } // cs
 
-    LogPrint("masternode", "CMasternodeMan::DoFullVerificationStep -- Sent verification requests to %d masternodes\n", nCount);
+    for (const auto& addr : vAddr) {
+        PrepareVerifyRequest(addr, connman);
+    }
+
+    LogPrint("masternode", "CMasternodeMan::DoFullVerificationStep -- Prepared verification requests for %d masternodes\n", vAddr.size());
 }
 
 // This function tries to find masternodes with the same addr,
@@ -1311,26 +1311,28 @@ void CMasternodeMan::CheckSameAddr()
     }
 }
 
-bool CMasternodeMan::SendVerifyRequest(const CAddress& addr, const std::vector<const CMasternode*>& vSortedByAddr, CConnman& connman)
+bool CMasternodeMan::CheckVerifyRequestAddr(const CAddress& addr, CConnman& connman)
 {
     if (deterministicMNManager->IsDeterministicMNsSporkActive())
         return false;
 
     if(netfulfilledman.HasFulfilledRequest(addr, strprintf("%s", NetMsgType::MNVERIFY)+"-request")) {
         // we already asked for verification, not a good idea to do this too often, skip it
-        LogPrint("masternode", "CMasternodeMan::SendVerifyRequest -- too many requests, skipping... addr=%s\n", addr.ToString());
+        LogPrint("masternode", "CMasternodeMan::%s -- too many requests, skipping... addr=%s\n", __func__, addr.ToString());
         return false;
     }
 
-    if (connman.IsMasternodeOrDisconnectRequested(addr)) return false;
+    return !connman.IsMasternodeOrDisconnectRequested(addr);
+}
 
+void CMasternodeMan::PrepareVerifyRequest(const CAddress& addr, CConnman& connman)
+{
     connman.AddPendingMasternode(addr);
     // use random nonce, store it and require node to reply with correct one later
     CMasternodeVerification mnv(addr, GetRandInt(999999), nCachedBlockHeight - 1);
     LOCK(cs_mapPendingMNV);
     mapPendingMNV.insert(std::make_pair(addr, std::make_pair(GetTime(), mnv)));
-    LogPrintf("CMasternodeMan::SendVerifyRequest -- verifying node using nonce %d addr=%s\n", mnv.nonce, addr.ToString());
-    return true;
+    LogPrintf("CMasternodeMan::%s -- verifying node using nonce %d addr=%s\n", __func__, mnv.nonce, addr.ToString());
 }
 
 void CMasternodeMan::ProcessPendingMnvRequests(CConnman& connman)
