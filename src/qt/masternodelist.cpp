@@ -474,10 +474,7 @@ void MasternodeList::ShowQRCode(std::string strAlias) {
     bool fFound = false;
 
     for (const auto& mne : masternodeConfig.getEntries()) {
-        if (strAlias != mne.getAlias()) {
-            continue;
-        }
-        else {
+        if (strAlias == mne.getAlias()) {
             strMNPrivKey = mne.getPrivKey();
             strCollateral = mne.getTxHash() + "-" + mne.getOutputIndex();
             strIP = mne.getIp();

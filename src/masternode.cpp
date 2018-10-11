@@ -993,20 +993,16 @@ std::string CMasternodePing::GetDaemonString() const
 
 void CMasternode::AddGovernanceVote(uint256 nGovernanceObjectHash)
 {
-    if(mapGovernanceObjectsVotedOn.count(nGovernanceObjectHash)) {
-        mapGovernanceObjectsVotedOn[nGovernanceObjectHash]++;
-    } else {
-        mapGovernanceObjectsVotedOn.insert(std::make_pair(nGovernanceObjectHash, 1));
-    }
+    // Insert a zero value, or not. Then increment the value regardless. This
+    // ensures the value is in the map.
+    const auto& pair = mapGovernanceObjectsVotedOn.emplace(nGovernanceObjectHash, 0);
+    pair.first->second++;
 }
 
 void CMasternode::RemoveGovernanceObject(uint256 nGovernanceObjectHash)
 {
-    std::map<uint256, int>::iterator it = mapGovernanceObjectsVotedOn.find(nGovernanceObjectHash);
-    if(it == mapGovernanceObjectsVotedOn.end()) {
-        return;
-    }
-    mapGovernanceObjectsVotedOn.erase(it);
+    // Whether or not the govobj hash exists in the map first is irrelevant.
+    mapGovernanceObjectsVotedOn.erase(nGovernanceObjectHash);
 }
 
 /**
@@ -1017,15 +1013,7 @@ void CMasternode::RemoveGovernanceObject(uint256 nGovernanceObjectHash)
 */
 void CMasternode::FlagGovernanceItemsAsDirty()
 {
-    std::vector<uint256> vecDirty;
-    {
-        std::map<uint256, int>::iterator it = mapGovernanceObjectsVotedOn.begin();
-        while(it != mapGovernanceObjectsVotedOn.end()) {
-            vecDirty.push_back(it->first);
-            ++it;
-        }
-    }
-    for(size_t i = 0; i < vecDirty.size(); ++i) {
-        mnodeman.AddDirtyGovernanceObjectHash(vecDirty[i]);
+    for (auto& govObjHashPair : mapGovernanceObjectsVotedOn) {
+        mnodeman.AddDirtyGovernanceObjectHash(govObjHashPair.first);
     }
 }

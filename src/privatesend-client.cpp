@@ -305,7 +305,7 @@ std::string CPrivateSendClientSession::GetStatus(bool fWaitForBlock)
             if(     nStatusMessageProgress % 70 <= 30) strSuffix = ".";
             else if(nStatusMessageProgress % 70 <= 50) strSuffix = "..";
             else if(nStatusMessageProgress % 70 <= 70) strSuffix = "...";
-            return strprintf(_("Submitted to masternode, waiting in queue %s"), strSuffix);;
+            return strprintf(_("Submitted to masternode, waiting in queue %s"), strSuffix);
         case POOL_STATE_ACCEPTING_ENTRIES:
             if(nEntriesCount == 0) {
                 nStatusMessageProgress = 0;

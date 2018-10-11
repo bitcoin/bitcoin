@@ -270,9 +270,8 @@ void CGovernanceManager::CheckOrphanVotes(CGovernanceObject& govobj, CGovernance
     ScopedLockBool guard(cs, fRateChecksEnabled, false);
 
     int64_t nNow = GetAdjustedTime();
-    for (size_t i = 0; i < vecVotePairs.size(); ++i) {
+    for (auto& pairVote : vecVotePairs) {
         bool fRemove = false;
-        vote_time_pair_t& pairVote = vecVotePairs[i];
         CGovernanceVote& vote = pairVote.first;
         CGovernanceException exception;
         if (pairVote.second < nNow) {
@@ -368,8 +367,8 @@ void CGovernanceManager::UpdateCachesAndClean()
 
     LOCK2(cs_main, cs);
 
-    for (size_t i = 0; i < vecDirtyHashes.size(); ++i) {
-        object_m_it it = mapObjects.find(vecDirtyHashes[i]);
+    for (const uint256& nHash : vecDirtyHashes) {
+        object_m_it it = mapObjects.find(nHash);
         if (it == mapObjects.end()) {
             continue;
         }
@@ -1018,8 +1017,8 @@ void CGovernanceManager::RequestGovernanceObject(CNode* pfrom, const uint256& nH
             filter = CBloomFilter(Params().GetConsensus().nGovernanceFilterElements, GOVERNANCE_FILTER_FP_RATE, GetRandInt(999999), BLOOM_UPDATE_ALL);
             std::vector<CGovernanceVote> vecVotes = pObj->GetVoteFile().GetVotes();
             nVoteCount = vecVotes.size();
-            for (size_t i = 0; i < vecVotes.size(); ++i) {
-                filter.insert(vecVotes[i].GetHash());
+            for (const auto& vote : vecVotes) {
+                filter.insert(vote.GetHash());
             }
         }
     }
@@ -1296,8 +1295,7 @@ void CGovernanceManager::RequestOrphanObjects(CConnman& connman)
         std::vector<uint256> vecHashes;
         LOCK(cs);
         cmmapOrphanVotes.GetKeys(vecHashes);
-        for (size_t i = 0; i < vecHashes.size(); ++i) {
-            const uint256& nHash = vecHashes[i];
+        for (const uint256& nHash : vecHashes) {
             if (mapObjects.find(nHash) == mapObjects.end()) {
                 vecHashesFiltered.push_back(nHash);
             }
@@ -1305,10 +1303,8 @@ void CGovernanceManager::RequestOrphanObjects(CConnman& connman)
     }
 
     LogPrint("gobject", "CGovernanceObject::RequestOrphanObjects -- number objects = %d\n", vecHashesFiltered.size());
-    for (size_t i = 0; i < vecHashesFiltered.size(); ++i) {
-        const uint256& nHash = vecHashesFiltered[i];
-        for (size_t j = 0; j < vNodesCopy.size(); ++j) {
-            CNode* pnode = vNodesCopy[j];
+    for (const uint256& nHash : vecHashesFiltered) {
+        for (CNode* pnode : vNodesCopy) {
             if (pnode->fMasternode) {
                 continue;
             }
