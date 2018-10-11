@@ -11,59 +11,52 @@
 
 std::string CGovernanceVoting::ConvertOutcomeToString(vote_outcome_enum_t nOutcome)
 {
-    switch (nOutcome) {
-    case VOTE_OUTCOME_NONE:
-        return "NONE";
-        break;
-    case VOTE_OUTCOME_YES:
-        return "YES";
-        break;
-    case VOTE_OUTCOME_NO:
-        return "NO";
-        break;
-    case VOTE_OUTCOME_ABSTAIN:
-        return "ABSTAIN";
-        break;
+    static const std::map<vote_outcome_enum_t, std::string> mapOutcomeString = {
+        { VOTE_OUTCOME_NONE, "none" },
+        { VOTE_OUTCOME_YES, "yes" },
+        { VOTE_OUTCOME_NO, "no" },
+        { VOTE_OUTCOME_ABSTAIN, "abstain" } };
+
+    const auto& it = mapOutcomeString.find(nOutcome);
+    if (it == mapOutcomeString.end()) {
+        LogPrintf("CGovernanceVoting::%s -- ERROR: Unknown outcome %d\n", __func__, nOutcome);
+        return "error";
     }
-    return "error";
+    return it->second;
 }
 
 std::string CGovernanceVoting::ConvertSignalToString(vote_signal_enum_t nSignal)
 {
-    std::string strReturn = "NONE";
-    switch (nSignal) {
-    case VOTE_SIGNAL_NONE:
-        strReturn = "NONE";
-        break;
-    case VOTE_SIGNAL_FUNDING:
-        strReturn = "FUNDING";
-        break;
-    case VOTE_SIGNAL_VALID:
-        strReturn = "VALID";
-        break;
-    case VOTE_SIGNAL_DELETE:
-        strReturn = "DELETE";
-        break;
-    case VOTE_SIGNAL_ENDORSED:
-        strReturn = "ENDORSED";
-        break;
-    }
+    static const std::map<vote_signal_enum_t, std::string> mapSignalsString = {
+        { VOTE_SIGNAL_FUNDING, "funding" },
+        { VOTE_SIGNAL_VALID, "valid" },
+        { VOTE_SIGNAL_DELETE, "delete" },
+        { VOTE_SIGNAL_ENDORSED, "endorsed" } };
 
-    return strReturn;
+    const auto& it = mapSignalsString.find(nSignal);
+    if (it == mapSignalsString.end()) {
+        LogPrintf("CGovernanceVoting::%s -- ERROR: Unknown signal %d\n", __func__, nSignal);
+        return "none";
+    }
+    return it->second;
 }
 
 
 vote_outcome_enum_t CGovernanceVoting::ConvertVoteOutcome(const std::string& strVoteOutcome)
 {
-    vote_outcome_enum_t eVote = VOTE_OUTCOME_NONE;
-    if (strVoteOutcome == "yes") {
-        eVote = VOTE_OUTCOME_YES;
-    } else if (strVoteOutcome == "no") {
-        eVote = VOTE_OUTCOME_NO;
-    } else if (strVoteOutcome == "abstain") {
-        eVote = VOTE_OUTCOME_ABSTAIN;
+    static const std::map<std::string, vote_outcome_enum_t> mapStringOutcome = {
+        { "none", VOTE_OUTCOME_NONE },
+        { "yes", VOTE_OUTCOME_YES },
+        { "no", VOTE_OUTCOME_NO },
+        { "abstain", VOTE_OUTCOME_ABSTAIN } };
+
+    const auto& it = mapStringOutcome.find(strVoteOutcome);
+    if (it == mapStringOutcome.end()) {
+        LogPrintf("CGovernanceVoting::%s -- ERROR: Unknown outcome %s\n", __func__, strVoteOutcome);
+        return VOTE_OUTCOME_NONE;
     }
-    return eVote;
+    return it->second;
+
 }
 
 vote_signal_enum_t CGovernanceVoting::ConvertVoteSignal(const std::string& strVoteSignal)
