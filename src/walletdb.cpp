@@ -586,13 +586,8 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             ssKey >> strKey;
             ssValue >> strValue;
 
-            if (CBitcoinAddress(strAddress).IsDeprecated())
-            {
-                // If the address is deprecated then get the new address
-                // based on destination of old one
-                CTxDestination key = CBitcoinAddress(strAddress, CChainParams::DEPRECATED_ADDRESS_TYPE).Get();
-                strAddress = CBitcoinAddress(key).ToString();
-            }
+            // If the address is not depricated then the value won't be converted
+            strAddress = CBitcoinAddress::ConvertToNew(strAddress);
 
             if (!pwallet->LoadDestData(CBitcoinAddress(strAddress).Get(), strKey, strValue))
             {
