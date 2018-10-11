@@ -3289,6 +3289,12 @@ UniValue generate(const JSONRPCRequest& request)
         );
     }
 
+    if (!IsDeprecatedRPCEnabled("generate")) {
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "The wallet generate rpc method is deprecated and will be fully removed in v0.19. "
+            "To use generate in v0.18, restart bitcoind with -deprecatedrpc=generate.\n"
+            "Clients should transition to using the node rpc method generatetoaddress\n");
+    }
+
     int num_generate = request.params[0].get_int();
     uint64_t max_tries = 1000000;
     if (!request.params[1].isNull()) {
