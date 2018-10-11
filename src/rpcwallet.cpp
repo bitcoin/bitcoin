@@ -79,20 +79,20 @@ string AccountFromValue(const Value& value)
     return strAccount;
 }
 
-Value oldtonewaddress(const json_spirit::Array& params, bool fHelp)
+Value convertaddress(const json_spirit::Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "oldtonewaddress( \"oldaddress\" )\n"
+            "convertaddress( \"oldaddress\" )\n"
             "\nConverts given old Crown address to a new one.\n"
             "\nArguments:\n"
             "1. \"oldaddress\"        (string, required) The old Crown address.\n"
             "\nResult:\n"
             "\"crownaddress\"    (string) The new crown address\n"
             "\nExamples:\n"
-            + HelpExampleCli("oldtonewaddress", "15bj2HB2UbmjEZgXyEW4M8MhUL5TXGCN8L")
-            + HelpExampleCli("oldtonewaddress", "\"15bj2HB2UbmjEZgXyEW4M8MhUL5TXGCN8L\"")
-            + HelpExampleRpc("oldtonewaddress", "\"15bj2HB2UbmjEZgXyEW4M8MhUL5TXGCN8L\"")
+            + HelpExampleCli("convertaddress", "15bj2HB2UbmjEZgXyEW4M8MhUL5TXGCN8L")
+            + HelpExampleCli("convertaddress", "\"15bj2HB2UbmjEZgXyEW4M8MhUL5TXGCN8L\"")
+            + HelpExampleRpc("convertaddress", "\"15bj2HB2UbmjEZgXyEW4M8MhUL5TXGCN8L\"")
         );
 
     std::string strAddress = params[0].get_str();
