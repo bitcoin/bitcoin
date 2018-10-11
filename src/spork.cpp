@@ -15,7 +15,7 @@
 
 CSporkManager sporkManager;
 
-const std::string CSporkManager::SERIALIZATION_VERSION_STRING = "CMasternodeMan-Version-2";
+const std::string CSporkManager::SERIALIZATION_VERSION_STRING = "CSporkManager-Version-2";
 
 std::map<int, int64_t> mapSporkDefaults = {
     {SPORK_2_INSTANTSEND_ENABLED,            0},             // ON
