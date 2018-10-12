@@ -179,10 +179,8 @@ static void BLSVerify_LargeAggregatedBlock(size_t txCount, benchmark::State& sta
     CBLSSignature aggSig = CBLSSignature::AggregateInsecure(sigs);
 
     // Benchmark.
-    size_t i = 0;
     while (state.KeepRunning()) {
         aggSig.VerifyInsecureAggregated(pubKeys, msgHashes);
-        i = (i + 1) % pubKeys.size();
     }
 }
 
@@ -218,7 +216,6 @@ static void BLSVerify_LargeAggregatedBlock1000PreVerified(benchmark::State& stat
     }
 
     // Benchmark.
-    size_t i = 0;
     while (state.KeepRunning()) {
         BLSPublicKeyVector nonvalidatedPubKeys;
         std::vector<uint256> nonvalidatedHashes;
@@ -240,7 +237,6 @@ static void BLSVerify_LargeAggregatedBlock1000PreVerified(benchmark::State& stat
 
         bool valid = aggSigCopy.VerifyInsecureAggregated(nonvalidatedPubKeys, nonvalidatedHashes);
         assert(valid);
-        i = (i + 1) % pubKeys.size();
     }
 }
 
