@@ -80,6 +80,12 @@ CScript ParseScript(const std::string& s)
             // opcode, e.g. OP_ADD or ADD:
             result << mapOpNames[*w];
         }
+        else if (w->size() > 2 && IsHex(std::string(w->begin(), w->end())))
+        {
+            // Hex data that IS pushed onto stack:
+            std::vector<unsigned char> hex = ParseHex(std::string(w->begin(), w->end()));
+            result << hex;
+        }
         else
         {
             throw std::runtime_error("script parse error");

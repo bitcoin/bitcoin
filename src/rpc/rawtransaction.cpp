@@ -574,6 +574,40 @@ static UniValue decoderawtransaction(const JSONRPCRequest& request)
     return result;
 }
 
+static UniValue encodescript(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1)
+        throw std::runtime_error(
+            "encodescript \"asm\"\n"
+            "\nEncode a script given in an opcode sequence form to hex-string.\n"
+            "\nArguments:\n"
+            "1. \"asm\"     (string) the opcode sequence\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"asm\":\"asm\",   (string) original opcode sequence\n"
+            "  \"hex\":\"hex\",   (string) hex encoded script\n"
+            "  \"type\":\"type\", (string) script type\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("encodescript", "\"asm\"")
+            + HelpExampleRpc("encodescript", "\"asm\"")
+        );
+
+    RPCTypeCheck(request.params, {UniValue::VSTR});
+
+    UniValue r(UniValue::VOBJ);
+
+    CScript script;
+    if (request.params[0].get_str().size() > 0) {
+        script = ParseScript(request.params[0].get_str());
+    } else {
+        // Empty scripts are valid
+    }
+    ScriptPubKeyToUniv(script, r, true);
+
+    return r;
+}
+
 static UniValue decodescript(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
@@ -1700,6 +1734,7 @@ static const CRPCCommand commands[] =
     { "rawtransactions",    "getrawtransaction",            &getrawtransaction,         {"txid","verbose","blockhash"} },
     { "rawtransactions",    "createrawtransaction",         &createrawtransaction,      {"inputs","outputs","locktime","replaceable"} },
     { "rawtransactions",    "decoderawtransaction",         &decoderawtransaction,      {"hexstring","iswitness"} },
+    { "rawtransactions",    "encodescript",                 &encodescript,              {"asm"} },
     { "rawtransactions",    "decodescript",                 &decodescript,              {"hexstring"} },
     { "rawtransactions",    "sendrawtransaction",           &sendrawtransaction,        {"hexstring","allowhighfees"} },
     { "rawtransactions",    "combinerawtransaction",        &combinerawtransaction,     {"txs"} },
