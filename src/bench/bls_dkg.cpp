@@ -4,7 +4,7 @@
 
 #include "bench.h"
 #include "random.h"
-#include "crypto/bls_worker.h"
+#include "bls/bls_worker.h"
 
 extern CBLSWorker blsWorker;
 

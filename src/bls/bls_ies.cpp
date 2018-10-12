@@ -8,7 +8,7 @@
 #include "random.h"
 #include "streams.h"
 
-#include "aes.h"
+#include "crypto/aes.h"
 
 template <typename Out>
 static bool EncryptBlob(const void* in, size_t inSize, Out& out, const void* symKey, const void* iv)

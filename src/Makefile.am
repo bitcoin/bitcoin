@@ -314,8 +314,6 @@ crypto_libdash_crypto_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(PIC_FLAGS)
 crypto_libdash_crypto_a_SOURCES = \
   crypto/aes.cpp \
   crypto/aes.h \
-  crypto/bls.cpp \
-  crypto/bls.h \
   crypto/common.h \
   crypto/hmac_sha256.cpp \
   crypto/hmac_sha256.h \
@@ -364,6 +362,8 @@ libdash_consensus_a_SOURCES = \
   amount.h \
   arith_uint256.cpp \
   arith_uint256.h \
+  bls/bls.cpp \
+  bls/bls.h \
   consensus/merkle.cpp \
   consensus/merkle.h \
   consensus/params.h \
@@ -422,10 +422,10 @@ libdash_common_a_SOURCES = \
 libdash_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libdash_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libdash_util_a_SOURCES = \
-  crypto/bls_ies.cpp \
-  crypto/bls_ies.h \
-  crypto/bls_worker.cpp \
-  crypto/bls_worker.h \
+  bls/bls_ies.cpp \
+  bls/bls_ies.h \
+  bls/bls_worker.cpp \
+  bls/bls_worker.h \
   support/lockedpool.cpp \
   chainparamsbase.cpp \
   clientversion.cpp \

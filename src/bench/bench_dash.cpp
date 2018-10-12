@@ -8,7 +8,7 @@
 #include "validation.h"
 #include "util.h"
 
-#include "crypto/bls.h"
+#include "bls/bls.h"
 
 void CleanupBLSTests();
 void CleanupBLSDkgTests();
