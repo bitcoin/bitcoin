@@ -479,7 +479,7 @@ class WalletTest(BitcoinTestFramework):
         # Verify nothing new in wallet
         assert_equal(total_txs, len(self.nodes[0].listtransactions("*", 99999)))
 
-        # Test getaddressinfo. Note that these addresses are taken from disablewallet.py
+        # Test getaddressinfo on external address. Note that these addresses are taken from disablewallet.py
         assert_raises_rpc_error(-5, "Invalid address", self.nodes[0].getaddressinfo, "3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy")
         address_info = self.nodes[0].getaddressinfo("mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ")
         assert_equal(address_info['address'], "mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ")
@@ -487,6 +487,22 @@ class WalletTest(BitcoinTestFramework):
         assert not address_info["ismine"]
         assert not address_info["iswatchonly"]
         assert not address_info["isscript"]
+        assert not address_info["ischange"]
+
+        # Test getaddressinfo 'ischange' field on change address.
+        self.nodes[0].generate(1)
+        destination = self.nodes[1].getnewaddress()
+        txid = self.nodes[0].sendtoaddress(destination, 0.123)
+        tx = self.nodes[0].decoderawtransaction(self.nodes[0].getrawtransaction(txid))
+        output_addresses = [vout['scriptPubKey']['addresses'][0] for vout in tx["vout"]]
+        assert len(output_addresses) > 1
+        for address in output_addresses:
+            ischange = self.nodes[0].getaddressinfo(address)['ischange']
+            assert_equal(ischange, address != destination)
+            if ischange:
+                change = address
+        self.nodes[0].setlabel(change, 'foobar')
+        assert_equal(self.nodes[0].getaddressinfo(change)['ischange'], False)
 
 if __name__ == '__main__':
     WalletTest().main()
