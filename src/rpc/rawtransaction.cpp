@@ -574,6 +574,30 @@ static UniValue decoderawtransaction(const JSONRPCRequest& request)
     return result;
 }
 
+static UniValue encodescript(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1)
+        throw std::runtime_error(
+            "encodescript \"asm\"\n"
+            "\nEncode a script given in an opcode sequence form to hex-string.\n"
+            "\nArguments:\n"
+            "1. \"asm\"     (string) the opcode sequence\n"
+            "\nResult:\n"
+            "\"hex\"  (string) hex-encoded script\n"
+            "\nExamples:\n"
+            + HelpExampleCli("encodescript", "\"asm\"")
+            + HelpExampleRpc("encodescript", "\"asm\"")
+        );
+
+    RPCTypeCheck(request.params, {UniValue::VSTR});
+
+    UniValue r(UniValue::VSTR);
+
+    // TODO(mrwhythat): implement
+
+    return r;
+}
+
 static UniValue decodescript(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
@@ -1700,6 +1724,7 @@ static const CRPCCommand commands[] =
     { "rawtransactions",    "getrawtransaction",            &getrawtransaction,         {"txid","verbose","blockhash"} },
     { "rawtransactions",    "createrawtransaction",         &createrawtransaction,      {"inputs","outputs","locktime","replaceable"} },
     { "rawtransactions",    "decoderawtransaction",         &decoderawtransaction,      {"hexstring","iswitness"} },
+    { "rawtransactions",    "encodescript",                 &encodescript,              {"asm"} },
     { "rawtransactions",    "decodescript",                 &decodescript,              {"hexstring"} },
     { "rawtransactions",    "sendrawtransaction",           &sendrawtransaction,        {"hexstring","allowhighfees"} },
     { "rawtransactions",    "combinerawtransaction",        &combinerawtransaction,     {"txs"} },
