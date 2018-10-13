@@ -51,5 +51,20 @@ struct Descriptor {
 /** Parse a descriptor string. Included private keys are put in out. Returns nullptr if parsing fails. */
 std::unique_ptr<Descriptor> Parse(const std::string& descriptor, FlatSigningProvider& out);
 
-#endif // BITCOIN_SCRIPT_DESCRIPTOR_H
+/** Find a descriptor for the specified script, using information from provider where possible.
+ *
+ * A non-ranged descriptor which only generates the specified script will be returned in all
+ * circumstances.
+ *
+ * For public keys with key origin information, this information will be preserved in the returned
+ * descriptor.
+ *
+ * - If all information for solving `script` is present in `provider`, a descriptor will be returned
+ *   which is `IsSolvable()` and encapsulates said information.
+ * - Failing that, if `script` corresponds to a known address type, an "addr()" descriptor will be
+ *   returned (which is not `IsSolvable()`).
+ * - Failing that, a "raw()" descriptor is returned.
+ */
+std::unique_ptr<Descriptor> InferDescriptor(const CScript& script, const SigningProvider& provider);
 
+#endif // BITCOIN_SCRIPT_DESCRIPTOR_H
