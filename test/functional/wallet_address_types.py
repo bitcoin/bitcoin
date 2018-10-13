@@ -99,6 +99,8 @@ class AddressTypeTest(BitcoinTestFramework):
         """Run sanity checks on an address."""
         info = self.nodes[node].getaddressinfo(address)
         assert(self.nodes[node].validateaddress(address)['isvalid'])
+        assert_equal(info.get('solvable'), True)
+
         if not multisig and typ == 'legacy':
             # P2PKH
             assert(not info['isscript'])
@@ -142,6 +144,47 @@ class AddressTypeTest(BitcoinTestFramework):
             assert_equal(info['witness_version'], 0)
             assert_equal(len(info['witness_program']), 64)
             assert('pubkeys' in info)
+        else:
+            # Unknown type
+            assert(False)
+
+    def test_desc(self, node, address, multisig, typ, utxo):
+        """Run sanity checks on a descriptor reported by getaddressinfo."""
+        info = self.nodes[node].getaddressinfo(address)
+        assert('desc' in info)
+        assert_equal(info['desc'], utxo['desc'])
+        assert(self.nodes[node].validateaddress(address)['isvalid'])
+
+        # Use a ridiculously roundabout way to find the key origin info through
+        # the PSBT logic. However, this does test consistency between the PSBT reported
+        # fingerprints/paths and the descriptor logic.
+        psbt = self.nodes[node].createpsbt([{'txid':utxo['txid'], 'vout':utxo['vout']}],[{address:0.00010000}])
+        psbt = self.nodes[node].walletprocesspsbt(psbt, False, "ALL", True)
+        decode = self.nodes[node].decodepsbt(psbt['psbt'])
+        key_descs = {}
+        for deriv in decode['inputs'][0]['bip32_derivs']:
+            assert_equal(len(deriv['master_fingerprint']), 8)
+            assert_equal(deriv['path'][0], 'm')
+            key_descs[deriv['pubkey']] = '[' + deriv['master_fingerprint'] + deriv['path'][1:] + ']' + deriv['pubkey']
+
+        if not multisig and typ == 'legacy':
+            # P2PKH
+            assert_equal(info['desc'], "pkh(%s)" % key_descs[info['pubkey']])
+        elif not multisig and typ == 'p2sh-segwit':
+            # P2SH-P2WPKH
+            assert_equal(info['desc'], "sh(wpkh(%s))" % key_descs[info['pubkey']])
+        elif not multisig and typ == 'bech32':
+            # P2WPKH
+            assert_equal(info['desc'], "wpkh(%s)" % key_descs[info['pubkey']])
+        elif typ == 'legacy':
+            # P2SH-multisig
+            assert_equal(info['desc'], "sh(multi(2,%s,%s))" % (key_descs[info['pubkeys'][0]], key_descs[info['pubkeys'][1]]))
+        elif typ == 'p2sh-segwit':
+            # P2SH-P2WSH-multisig
+            assert_equal(info['desc'], "sh(wsh(multi(2,%s,%s)))" % (key_descs[info['embedded']['pubkeys'][0]], key_descs[info['embedded']['pubkeys'][1]]))
+        elif typ == 'bech32':
+            # P2WSH-multisig
+            assert_equal(info['desc'], "wsh(multi(2,%s,%s))" % (key_descs[info['pubkeys'][0]], key_descs[info['pubkeys'][1]]))
         else:
             # Unknown type
             assert(False)
@@ -198,6 +241,7 @@ class AddressTypeTest(BitcoinTestFramework):
             self.log.debug("Old balances are {}".format(old_balances))
             to_send = (old_balances[from_node] / 101).quantize(Decimal("0.00000001"))
             sends = {}
+            addresses = {}
 
             self.log.debug("Prepare sends")
             for n, to_node in enumerate(range(from_node, from_node + 4)):
@@ -228,6 +272,7 @@ class AddressTypeTest(BitcoinTestFramework):
 
                 # Output entry
                 sends[address] = to_send * 10 * (1 + n)
+                addresses[to_node] = (address, typ)
 
             self.log.debug("Sending: {}".format(sends))
             self.nodes[from_node].sendmany("", sends)
@@ -243,6 +288,17 @@ class AddressTypeTest(BitcoinTestFramework):
             # node5 collects fee and block subsidy to keep accounting simple
             self.nodes[5].generate(1)
             sync_blocks(self.nodes)
+
+            # Verify that the receiving wallet contains a UTXO with the expected address, and expected descriptor
+            for n, to_node in enumerate(range(from_node, from_node + 4)):
+                to_node %= 4
+                found = False
+                for utxo in self.nodes[to_node].listunspent():
+                    if utxo['address'] == addresses[to_node][0]:
+                        found = True
+                        self.test_desc(to_node, addresses[to_node][0], multisig, addresses[to_node][1], utxo)
+                        break
+                assert found
 
             new_balances = self.get_balances()
             self.log.debug("Check new balances: {}".format(new_balances))
