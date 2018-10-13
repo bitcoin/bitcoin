@@ -211,6 +211,7 @@ public:
     AddressDescriptor(CTxDestination destination) : m_destination(std::move(destination)) {}
 
     bool IsRange() const override { return false; }
+    bool IsSolvable() const override { return false; }
     std::string ToString() const override { return "addr(" + EncodeDestination(m_destination) + ")"; }
     bool ToPrivateString(const SigningProvider& arg, std::string& out) const override { out = ToString(); return true; }
     bool Expand(int pos, const SigningProvider& arg, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const override
@@ -229,6 +230,7 @@ public:
     RawDescriptor(CScript script) : m_script(std::move(script)) {}
 
     bool IsRange() const override { return false; }
+    bool IsSolvable() const override { return false; }
     std::string ToString() const override { return "raw(" + HexStr(m_script.begin(), m_script.end()) + ")"; }
     bool ToPrivateString(const SigningProvider& arg, std::string& out) const override { out = ToString(); return true; }
     bool Expand(int pos, const SigningProvider& arg, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const override
@@ -249,6 +251,7 @@ public:
     SingleKeyDescriptor(std::unique_ptr<PubkeyProvider> prov, const std::function<CScript(const CPubKey&)>& fn, const std::string& name) : m_script_fn(fn), m_fn_name(name), m_provider(std::move(prov)) {}
 
     bool IsRange() const override { return m_provider->IsRange(); }
+    bool IsSolvable() const override { return true; }
     std::string ToString() const override { return m_fn_name + "(" + m_provider->ToString() + ")"; }
     bool ToPrivateString(const SigningProvider& arg, std::string& out) const override
     {
@@ -289,6 +292,8 @@ public:
         }
         return false;
     }
+
+    bool IsSolvable() const override { return true; }
 
     std::string ToString() const override
     {
@@ -343,6 +348,7 @@ public:
     ConvertorDescriptor(std::unique_ptr<Descriptor> descriptor, const std::function<CScript(const CScript&)>& fn, const std::string& name) : m_convert_fn(fn), m_fn_name(name), m_descriptor(std::move(descriptor)) {}
 
     bool IsRange() const override { return m_descriptor->IsRange(); }
+    bool IsSolvable() const override { return m_descriptor->IsSolvable(); }
     std::string ToString() const override { return m_fn_name + "(" + m_descriptor->ToString() + ")"; }
     bool ToPrivateString(const SigningProvider& arg, std::string& out) const override
     {
@@ -377,6 +383,7 @@ public:
     ComboDescriptor(std::unique_ptr<PubkeyProvider> provider) : m_provider(std::move(provider)) {}
 
     bool IsRange() const override { return m_provider->IsRange(); }
+    bool IsSolvable() const override { return true; }
     std::string ToString() const override { return "combo(" + m_provider->ToString() + ")"; }
     bool ToPrivateString(const SigningProvider& arg, std::string& out) const override
     {
