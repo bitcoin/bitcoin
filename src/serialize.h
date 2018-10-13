@@ -241,6 +241,7 @@ template<typename Stream> inline void Unserialize(Stream& s, bool& a) { char f=s
  */
 inline unsigned int GetSizeOfCompactSize(uint64_t nSize)
 {
+    static_assert(sizeof(short) == 2 && sizeof(int) == 4, "Integer width assumptions");
     if (nSize < 253)             return sizeof(unsigned char);
     else if (nSize <= std::numeric_limits<unsigned short>::max()) return sizeof(unsigned char) + sizeof(unsigned short);
     else if (nSize <= std::numeric_limits<unsigned int>::max())  return sizeof(unsigned char) + sizeof(unsigned int);
@@ -252,6 +253,7 @@ inline void WriteCompactSize(CSizeComputer& os, uint64_t nSize);
 template<typename Stream>
 void WriteCompactSize(Stream& os, uint64_t nSize)
 {
+    static_assert(sizeof(short) == 2 && sizeof(int) == 4 && CHAR_BIT == 8, "Integer width assumptions");
     if (nSize < 253)
     {
         ser_writedata8(os, nSize);
