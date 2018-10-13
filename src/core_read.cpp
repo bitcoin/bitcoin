@@ -46,8 +46,24 @@ CScript ParseScript(const std::string& s)
         }
     }
 
+    std::vector<std::string> blocks;
     std::vector<std::string> words;
-    boost::algorithm::split(words, s, boost::algorithm::is_any_of(" \t\n"), boost::algorithm::token_compress_on);
+
+    bool quoted = false;
+    boost::algorithm::split(blocks, s, boost::algorithm::is_any_of("'"));
+    for (std::vector<std::string>::const_iterator b = blocks.begin(); b != blocks.end(); ++b, quoted = !quoted)
+    {
+        if (quoted)
+        {
+            words.push_back("'" + *b + "'");
+        }
+        else
+        {
+            std::vector<std::string> block_words;
+            boost::algorithm::split(block_words, *b, boost::algorithm::is_any_of(" \t\n"), boost::algorithm::token_compress_on);
+            words.insert(words.end(), block_words.begin(), block_words.end());
+        }
+    }
 
     for (std::vector<std::string>::const_iterator w = words.begin(); w != words.end(); ++w)
     {
@@ -70,8 +86,7 @@ CScript ParseScript(const std::string& s)
         }
         else if (w->size() >= 2 && w->front() == '\'' && w->back() == '\'')
         {
-            // Single-quoted string, pushed as data. NOTE: this is poor-man's
-            // parsing, spaces/tabs/newlines in single-quoted strings won't work.
+            // Single-quoted string, pushed as data:
             std::vector<unsigned char> value(w->begin()+1, w->end()-1);
             result << value;
         }
