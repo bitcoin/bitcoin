@@ -126,27 +126,31 @@ template<typename Stream> inline uint64_t ser_readdata64(Stream &s)
 }
 inline uint64_t ser_double_to_uint64(double x)
 {
-    union { double x; uint64_t y; } tmp;
-    tmp.x = x;
-    return tmp.y;
+    static_assert(sizeof(uint64_t) == sizeof(double), "Floating-point width assumption");
+    uint64_t y;
+    memcpy(&y, &x, sizeof(y));
+    return y;
 }
 inline uint32_t ser_float_to_uint32(float x)
 {
-    union { float x; uint32_t y; } tmp;
-    tmp.x = x;
-    return tmp.y;
+    static_assert(sizeof(uint32_t) == sizeof(float), "Floating-point width assumption");
+    uint32_t y;
+    memcpy(&y, &x, sizeof(y));
+    return y;
 }
 inline double ser_uint64_to_double(uint64_t y)
 {
-    union { double x; uint64_t y; } tmp;
-    tmp.y = y;
-    return tmp.x;
+    static_assert(sizeof(double) == sizeof(uint64_t), "Floating-point width assumption");
+    double x;
+    memcpy(&x, &y, sizeof(x));
+    return x;
 }
 inline float ser_uint32_to_float(uint32_t y)
 {
-    union { float x; uint32_t y; } tmp;
-    tmp.y = y;
-    return tmp.x;
+    static_assert(sizeof(float) == sizeof(uint32_t), "Floating-point width assumption");
+    float x;
+    memcpy(&x, &y, sizeof(x));
+    return x;
 }
 
 
