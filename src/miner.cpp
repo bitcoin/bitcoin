@@ -396,9 +396,9 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
             CPubKey pubKeyNode;
             CKey keyNode;
             std::vector<unsigned char> vchSig;
-            std::string strPrivKey = strMasterNodePrivKey;
+            std::string strPrivKey;
             if (fMasterNode) {
-
+                strPrivKey = strMasterNodePrivKey;
                 std::string strErrorMessage;
                 if (!legacySigner.SetKey(strPrivKey, strErrorMessage, keyNode, pubKeyNode)) {
                     strErrorMessage = strprintf("Can't find keys for masternode - %s", strErrorMessage);
@@ -417,7 +417,9 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
                 }
 
                 if (pubKeyNode != pblock->stakePointer.pubKeyProofOfStake) {
-                    LogPrintf("%s: using wrong pubkey. pointer=%s pubkeynode=%s\n", __func__, pblock->stakePointer.pubKeyProofOfStake.GetHash().GetHex(), pubKeyNode.GetHash().GetHex());
+                    LogPrintf("%s: using wrong pubkey. pointer=%s pubkeynode=%s\n", __func__,
+                              pblock->stakePointer.pubKeyProofOfStake.GetHash().GetHex(),
+                              pubKeyNode.GetHash().GetHex());
                     return NULL;
                 }
 
@@ -427,12 +429,38 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
                     LogPrintf("CreateNewBlock() : Failed to sign block as masternode\n");
                     return NULL;
                 }
-//            } else if (fSystemNode && pwallet->GetSystemnodeVinAndKeys(txInCollateralAddress, pubKeyCollateralAddress,
-//                                                                       keyCollateralAddress)) {
-//                if (!keyCollateralAddress.Sign(pblock->GetHash(), vchSig)) {
-//                    LogPrintf("CreateNewBlock() : Failed to sign block as systemnode\n");
-//                    return NULL;
-//                }
+            } else if (fSystemNode) {
+                strPrivKey = strSystemNodePrivKey;
+                std::string strErrorMessage;
+                if (!legacySigner.SetKey(strPrivKey, strErrorMessage, keyNode, pubKeyNode)) {
+                    strErrorMessage = strprintf("Can't find keys for systemnode - %s", strErrorMessage);
+                    LogPrintf("CSystemnodeBroadcast::Create -- %s\n", strErrorMessage);
+                    return NULL;
+                }
+
+                // Switch keys if using signed over staking key
+                if (!activeSystemnode.vchSigSignover.empty()) {
+                    pblock->stakePointer.pubKeyCollateral = pblock->stakePointer.pubKeyProofOfStake;
+                    pblock->stakePointer.pubKeyProofOfStake = pubKeyNode;
+                    pblock->stakePointer.vchSigCollateralSignOver = activeSystemnode.vchSigSignover;
+                    LogPrintf("%s signover set\n", __func__);
+                } else {
+                    LogPrintf("%s signover NOT set\n", __func__);
+                }
+
+                if (pubKeyNode != pblock->stakePointer.pubKeyProofOfStake) {
+                    LogPrintf("%s: using wrong pubkey. pointer=%s pubkeynode=%s\n", __func__,
+                              pblock->stakePointer.pubKeyProofOfStake.GetHash().GetHex(),
+                              pubKeyNode.GetHash().GetHex());
+                    return NULL;
+                }
+
+                pblock->hashMerkleRoot = pblock->BuildMerkleTree();
+
+                if (!keyNode.Sign(pblock->GetHash(), vchSig)) {
+                    LogPrintf("CreateNewBlock() : Failed to sign block as systemnode\n");
+                    return NULL;
+                }
             } else {
                 LogPrintf("CreateNewBlock() : Failed to obtain key for block signature\n");
                 return NULL;
@@ -567,7 +595,7 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
 
     try {
         while (true) {
-            if (fProofOfStake && chainActive.Height() + 1 < Params().PoSStartHeight() || !fMasterNode || chainActive.Tip()->GetBlockTime() > GetAdjustedTime()) {
+            if (fProofOfStake && chainActive.Height() + 1 < Params().PoSStartHeight() || !(fMasterNode || (fSystemNode && fProofOfStake)) || chainActive.Tip()->GetBlockTime() > GetAdjustedTime()) {
                 MilliSleep(1000);
                 continue;
             }

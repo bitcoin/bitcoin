@@ -166,6 +166,7 @@ CSystemnode::CSystemnode()
     pubkey = CPubKey();
     pubkey2 = CPubKey();
     sig = std::vector<unsigned char>();
+    vchSignover = std::vector<unsigned char>();
     activeState = SYSTEMNODE_ENABLED;
     sigTime = GetAdjustedTime();
     lastPing = CSystemnodePing();
@@ -182,6 +183,7 @@ CSystemnode::CSystemnode(const CSystemnode& other)
     pubkey = other.pubkey;
     pubkey2 = other.pubkey2;
     sig = other.sig;
+    vchSignover = other.vchSignover;
     activeState = other.activeState;
     sigTime = other.sigTime;
     lastPing = other.lastPing;
@@ -199,6 +201,7 @@ CSystemnode::CSystemnode(const CSystemnodeBroadcast& snb)
     pubkey2 = snb.pubkey2;
     sig = snb.sig;
     activeState = SYSTEMNODE_ENABLED;
+    vchSignover = snb.vchSignover;
     sigTime = snb.sigTime;
     lastPing = snb.lastPing;
     unitTest = false;
@@ -375,34 +378,29 @@ int64_t CSystemnode::GetLastPaid() const
 bool CSystemnode::GetRecentPaymentBlocks(std::vector<const CBlockIndex*>& vPaymentBlocks, bool limitMostRecent) const
 {
     vPaymentBlocks.clear();
-    if (chainActive.Tip() == NULL) return false;
 
-    const CBlockIndex *BlockReading = chainActive.Tip();
-    int nBlockLimit = BlockReading->nHeight - PAYMENT_BLOCK_DEPTH;
-    if (nBlockLimit < 1)
-        nBlockLimit = 1;
+    int nMinimumValidBlockHeight = chainActive.Height() - PAYMENT_BLOCK_DEPTH;
+    if (nMinimumValidBlockHeight < 1)
+        nMinimumValidBlockHeight = 1;
+
+    CBlockIndex* pindex = chainActive[nMinimumValidBlockHeight];
 
     CScript snpayee;
     snpayee = GetScriptForDestination(pubkey.GetID());
 
     bool fBlockFound = false;
-    while (BlockReading && BlockReading->nHeight >= nBlockLimit) {
+    while (chainActive.Next(pindex)) {
+        CBlock block;
+        if (!ReadBlockFromDisk(block, pindex))
+            continue;
 
-        if(systemnodePayments.mapSystemnodeBlocks.count(BlockReading->nHeight)){
-            /*
-                Search for this payee, with at least 2 votes. This will aid in consensus allowing the network
-                to converge on the same payees quickly, then keep the same schedule.
-            */
-            if(systemnodePayments.mapSystemnodeBlocks[BlockReading->nHeight].HasPayeeWithVotes(snpayee, 2)){
-                vPaymentBlocks.emplace_back(BlockReading);
-                fBlockFound = true;
-                if (limitMostRecent)
-                    return fBlockFound;
-            }
+        if (block.vtx[0].vout.size() > 2 && block.vtx[0].vout[2].scriptPubKey == snpayee) {
+            vPaymentBlocks.emplace_back(pindex);
+            fBlockFound = true;
+            if (limitMostRecent)
+                return fBlockFound;
         }
-
-        if (BlockReading->pprev == NULL) { assert(BlockReading); break; }
-        BlockReading = BlockReading->pprev;
+        pindex = chainActive.Next(pindex);
     }
 
     return fBlockFound;
@@ -623,6 +621,17 @@ bool CSystemnodeBroadcast::CheckInputsAndAdd(int& nDoS) const
     // if it matches our systemnode privkey, then we've been remotely activated
     if(pubkey2 == activeSystemnode.pubKeySystemnode && protocolVersion == PROTOCOL_VERSION){
         activeSystemnode.EnableHotColdSystemNode(vin, addr);
+        if (!vchSignover.empty()) {
+            if (pubkey.Verify(pubkey2.GetHash(), vchSignover)) {
+                LogPrintf("%s: Verified pubkey2 signover for staking, added to activesystemnode\n", __func__);
+                activeSystemnode.vchSigSignover = vchSignover;
+            } else {
+                LogPrintf("%s: Failed to verify pubkey on signover!\n", __func__);
+            }
+        } else {
+            LogPrintf("%s: NOT SIGNOVER!\n", __func__);
+        }
+
     }
 
     bool isLocal = addr.IsRFC1918() || addr.IsLocal();
@@ -647,6 +656,7 @@ CSystemnodeBroadcast::CSystemnodeBroadcast()
     pubkey = CPubKey();
     pubkey2 = CPubKey();
     sig = std::vector<unsigned char>();
+    vchSignover = std::vector<unsigned char>();
     activeState = SYSTEMNODE_ENABLED;
     sigTime = GetAdjustedTime();
     lastPing = CSystemnodePing();
@@ -661,6 +671,7 @@ CSystemnodeBroadcast::CSystemnodeBroadcast(CService newAddr, CTxIn newVin, CPubK
     pubkey = newPubkey;
     pubkey2 = newPubkey2;
     sig = std::vector<unsigned char>();
+    vchSignover = std::vector<unsigned char>();
     activeState = SYSTEMNODE_ENABLED;
     sigTime = GetAdjustedTime();
     lastPing = CSystemnodePing();
@@ -675,6 +686,7 @@ CSystemnodeBroadcast::CSystemnodeBroadcast(const CSystemnode& sn)
     pubkey = sn.pubkey;
     pubkey2 = sn.pubkey2;
     sig = sn.sig;
+    vchSignover = sn.vchSignover;
     activeState = sn.activeState;
     sigTime = sn.sigTime;
     lastPing = sn.lastPing;
@@ -731,10 +743,11 @@ bool CSystemnodeBroadcast::Create(std::string strService, std::string strKeySyst
         return false;
     }
 
-    return Create(txin, CService(strService), keyCollateralAddress, pubKeyCollateralAddress, keySystemnodeNew, pubKeySystemnodeNew, strErrorMessage, snb);
+    bool fSignOver = true;
+    return Create(txin, CService(strService), keyCollateralAddress, pubKeyCollateralAddress, keySystemnodeNew, pubKeySystemnodeNew, fSignOver, strErrorMessage, snb);
 }
 
-bool CSystemnodeBroadcast::Create(CTxIn txin, CService service, CKey keyCollateralAddress, CPubKey pubKeyCollateralAddress, CKey keySystemnodeNew, CPubKey pubKeySystemnodeNew, std::string &strErrorMessage, CSystemnodeBroadcast &snb) {
+bool CSystemnodeBroadcast::Create(CTxIn txin, CService service, CKey keyCollateralAddress, CPubKey pubKeyCollateralAddress, CKey keySystemnodeNew, CPubKey pubKeySystemnodeNew, bool fSignOver, std::string &strErrorMessage, CSystemnodeBroadcast &snb) {
     // wait for reindex and/or import to finish
     if (fImporting || fReindex) return false;
 
@@ -761,6 +774,16 @@ bool CSystemnodeBroadcast::Create(CTxIn txin, CService service, CKey keyCollater
         LogPrintf("CSystemnodeBroadcast::Create -- %s\n", strErrorMessage);
         snb = CSystemnodeBroadcast();
         return false;
+    }
+
+    //Additional signature for use in proof of stake
+    if (fSignOver) {
+        if (!keyCollateralAddress.Sign(pubKeySystemnodeNew.GetHash(), snb.vchSignover)) {
+            LogPrintf("CSystemnodeBroadcast::Create failed signover\n");
+            snb = CSystemnodeBroadcast();
+            return false;
+        }
+        LogPrintf("%s: Signed over to key %s\n", __func__, pubKeySystemnodeNew.GetID().GetHex());
     }
 
     return true;

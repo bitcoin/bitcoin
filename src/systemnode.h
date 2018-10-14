@@ -131,6 +131,7 @@ public:
     bool unitTest;
     int protocolVersion;
     CSystemnodePing lastPing;
+    std::vector<unsigned char> vchSignover;
 
     CSystemnode();
     CSystemnode(const CSystemnode& other);
@@ -153,6 +154,7 @@ public:
         swap(first.lastPing, second.lastPing);
         swap(first.unitTest, second.unitTest);
         swap(first.protocolVersion, second.protocolVersion);
+        swap(first.vchSignover, second.vchSignover);
     }
 
     CSystemnode& operator=(CSystemnode from)
@@ -176,18 +178,19 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
     {
-            LOCK(cs);
+        LOCK(cs);
 
-            READWRITE(vin);
-            READWRITE(addr);
-            READWRITE(pubkey);
-            READWRITE(pubkey2);
-            READWRITE(sig);
-            READWRITE(sigTime);
-            READWRITE(protocolVersion);
-            READWRITE(activeState);
-            READWRITE(lastPing);
-            READWRITE(unitTest);
+        READWRITE(vin);
+        READWRITE(addr);
+        READWRITE(pubkey);
+        READWRITE(pubkey2);
+        READWRITE(sig);
+        READWRITE(sigTime);
+        READWRITE(protocolVersion);
+        READWRITE(activeState);
+        READWRITE(lastPing);
+        READWRITE(unitTest);
+        READWRITE(vchSignover);
     }
 
     int64_t SecondsSincePayment() const;
@@ -250,7 +253,7 @@ public:
     CSystemnodeBroadcast(const CSystemnode& sn);
 
     /// Create Systemnode broadcast, needs to be relayed manually after that
-    static bool Create(CTxIn txin, CService service, CKey keyCollateral, CPubKey pubKeyCollateral, CKey keySystemnodeNew, CPubKey pubKeySystemnodeNew, std::string &strErrorMessage, CSystemnodeBroadcast &snb);
+    static bool Create(CTxIn txin, CService service, CKey keyCollateral, CPubKey pubKeyCollateral, CKey keySystemnodeNew, CPubKey pubKeySystemnodeNew, bool fSignOver, std::string &strErrorMessage, CSystemnodeBroadcast &snb);
     static bool Create(std::string strService, std::string strKey, std::string strTxHash, std::string strOutputIndex, std::string& strErrorMessage, CSystemnodeBroadcast &snb, bool fOffline = false);
 
     bool CheckAndUpdate(int& nDoS) const;
@@ -272,6 +275,7 @@ public:
         READWRITE(sigTime);
         READWRITE(protocolVersion);
         READWRITE(lastPing);
+        READWRITE(vchSignover);
     }
 
     uint256 GetHash() const
