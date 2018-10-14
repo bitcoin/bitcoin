@@ -17,9 +17,9 @@
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/algorithm/string/split.hpp>
 
 #include <algorithm>
+#include <regex>
 
 CScript ParseScript(const std::string& s)
 {
@@ -46,30 +46,16 @@ CScript ParseScript(const std::string& s)
         }
     }
 
-    std::vector<std::string> blocks;
     std::vector<std::string> words;
 
-    bool quoted = false;
-    boost::algorithm::split(blocks, s, boost::algorithm::is_any_of("'"));
-    for (std::vector<std::string>::const_iterator b = blocks.begin(); b != blocks.end(); ++b, quoted = !quoted)
-    {
-        if (quoted)
-        {
-            words.push_back("'" + *b + "'");
-        }
-        else
-        {
-            std::vector<std::string> block_words;
-            boost::algorithm::split(block_words, *b, boost::algorithm::is_any_of(" \t\n"), boost::algorithm::token_compress_on);
-            words.insert(words.end(), block_words.begin(), block_words.end());
-        }
-    }
+    std::regex t("('[^']*')|([^\\s]+)");
+    std::copy(std::sregex_token_iterator(s.begin(), s.end(), t), std::sregex_token_iterator(), std::back_inserter(words));
 
     for (std::vector<std::string>::const_iterator w = words.begin(); w != words.end(); ++w)
     {
         if (w->empty())
         {
-            // Empty string, ignore. (boost::split given '' will return one word)
+            // Empty string, ignore.
         }
         else if (std::all_of(w->begin(), w->end(), ::IsDigit) ||
             (w->front() == '-' && w->size() > 1 && std::all_of(w->begin()+1, w->end(), ::IsDigit)))
