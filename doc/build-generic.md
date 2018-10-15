@@ -56,6 +56,8 @@ Please replace `<host>` with your local system's `host-platform-triplet`. The fo
 If you want to cross-compile for another platform, choose the appropriate `<host>` and make sure to build the
 dependencies with the same host before.
 
+If you want to build for the same host but different distro, add `--enable-glibc-back-compat` when calling `./configure`.
+
 
 ccache
 ------
@@ -67,7 +69,7 @@ The default maximum cache size is 5G, which might not be enough to cache multipl
 very often. It is advised to increase the maximum cache size:
 
 ```bash
-$ ./depends/<host>/bin/ccache -M20G
+$ ./depends/<host>/native/bin/ccache -M20G
 ```
 
 Additional Configure Flags

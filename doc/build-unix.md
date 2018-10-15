@@ -10,22 +10,22 @@ Building the dependencies and Dash Core requires some essential build tools and 
 
 Run the following commands to install required packages:
 
-#####Debian/Ubuntu:
+##### Debian/Ubuntu:
 ```bash
 $ sudo apt-get install curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake
 ```
 
-#####Fedora:
+##### Fedora:
 ```bash
-$ sudo dnf install gcc-c++ libtool make autoconf automake python3 cmake
+$ sudo dnf install gcc-c++ libtool make autoconf automake python3 cmake libstdc++-static patch
 ```
 
-#####Arch Linux
+##### Arch Linux:
 ```bash
 $ pacman -S base-devel python3 cmake
 ```
 
-#####FreeBSD/OpenBSD
+##### FreeBSD/OpenBSD:
 ```bash
 pkg_add gmake cmake libtool
 pkg_add autoconf # (select highest version, e.g. 2.69)
