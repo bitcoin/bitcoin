@@ -10,6 +10,8 @@
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
+#include <future>
+#include <memory>
 #include <mutex>
 
 /*
@@ -33,5 +35,57 @@ private:
     Mutex mut;
     std::atomic<bool> flag;
 };
+
+struct InterruptFlag {
+    Mutex m_mutex;
+    std::condition_variable m_cond;
+    bool m_interrupted GUARDED_BY(m_mutex) = false;
+};
+
+extern thread_local InterruptFlag* g_interrupt_flag;
+
+class InterruptibleThread
+{
+public:
+    template<typename Function, typename ... Args>
+    InterruptibleThread(Function&& func, Args&& ...args) {
+        InterruptFlag* flag_ptr = new InterruptFlag();
+        m_interrupt_flag = std::unique_ptr<InterruptFlag>(flag_ptr);
+        m_internal = std::thread([flag_ptr](typename std::decay<Function>::type&& func, typename std::decay<Args>::type&&...args){
+            g_interrupt_flag = flag_ptr;
+            func(std::forward<Args>(args)...);
+        }, std::forward<Function>(func), std::forward<Args>(args)...);
+    }
+
+    void join();
+    void interrupt();
+
+private:
+    std::thread m_internal;
+    std::unique_ptr<InterruptFlag> m_interrupt_flag;
+};
+
+class ThreadInterrupted : public std::exception
+{
+};
+
+void InterruptionPoint();
+
+template <class Rep, class Period>
+void InterruptibleSleep(const std::chrono::duration<Rep, Period>& sleep_duration)
+{
+    if (!g_interrupt_flag) { // Not interruptible thread
+        std::this_thread::sleep_for(sleep_duration);
+        return;
+    }
+    WAIT_LOCK(g_interrupt_flag->m_mutex, lock);
+    if (g_interrupt_flag->m_interrupted) {
+        throw ThreadInterrupted();
+    }
+    g_interrupt_flag->m_cond.wait_for(lock, sleep_duration);
+    if (g_interrupt_flag->m_interrupted) {
+        throw ThreadInterrupted();
+    }
+}
 
 #endif //BITCOIN_THREADINTERRUPT_H

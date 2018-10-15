@@ -43,3 +43,30 @@ bool CThreadInterrupt::sleep_for(std::chrono::minutes rel_time)
 {
     return sleep_for(std::chrono::duration_cast<std::chrono::milliseconds>(rel_time));
 }
+
+thread_local InterruptFlag* g_interrupt_flag = nullptr;
+
+void InterruptibleThread::interrupt()
+{
+    {
+        LOCK(m_interrupt_flag->m_mutex);
+        m_interrupt_flag->m_interrupted = true;
+    }
+    m_interrupt_flag->m_cond.notify_one();
+}
+
+void InterruptibleThread::join()
+{
+    m_internal.join();
+}
+
+void InterruptionPoint()
+{
+    if (!g_interrupt_flag) { // Not interruptible thread
+        return;
+    }
+    LOCK(g_interrupt_flag->m_mutex);
+    if (g_interrupt_flag->m_interrupted) {
+        throw ThreadInterrupted();
+    }
+}
