@@ -979,7 +979,7 @@ bool CTxLockRequest::IsValid() const
 
     CAmount nValueOut = tx->GetValueOut();
 
-    if (nValueIn - nValueOut < GetMinFee()) {
+    if (nValueIn - nValueOut < GetMinFee(false)) {
         LogPrint("instantsend", "CTxLockRequest::IsValid -- did not include enough fees in transaction: fees=%d, tx=%s", nValueOut - nValueIn, ToString());
         return false;
     }
@@ -987,9 +987,9 @@ bool CTxLockRequest::IsValid() const
     return true;
 }
 
-CAmount CTxLockRequest::GetMinFee() const
+CAmount CTxLockRequest::GetMinFee(bool fForceMinFee) const
 {
-    if (IsSimple()) {
+    if (!fForceMinFee && CInstantSend::CanAutoLock() && IsSimple()) {
         return CAmount();
     }
     CAmount nMinFee = MIN_FEE;

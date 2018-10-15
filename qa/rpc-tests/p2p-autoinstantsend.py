@@ -190,6 +190,8 @@ class AutoInstantSendTest(BitcoinTestFramework):
         return info['SPORK_16_INSTANTSEND_AUTOLOCKS']
 
     def set_autoix_spork_state(self, state):
+        set_mocktime(get_mocktime() + 1)
+        set_node_times(self.nodes, get_mocktime())
         if state:
             value = 0
         else:
@@ -260,6 +262,10 @@ class AutoInstantSendTest(BitcoinTestFramework):
     def send_regular_IX(self):
         receiver_addr = self.nodes[self.receiver_idx].getnewaddress()
         txid = self.nodes[0].instantsendtoaddress(receiver_addr, 1.0)
+        MIN_FEE = satoshi_round(-0.0001)
+        fee = self.nodes[0].gettransaction(txid)['fee']
+        expected_fee = MIN_FEE * len(self.nodes[0].getrawtransaction(txid, True)['vin'])
+        assert_equal(fee, expected_fee)
         return self.check_IX_lock(txid)
 
 
@@ -294,6 +300,13 @@ class AutoInstantSendTest(BitcoinTestFramework):
 
         assert(self.send_regular_IX())
         assert(self.send_simple_tx())
+        assert(not self.send_complex_tx())
+
+        self.set_autoix_spork_state(False)
+        assert(not self.get_autoix_spork_state())
+
+        assert(self.send_regular_IX())
+        assert(not self.send_simple_tx())
         assert(not self.send_complex_tx())
 
 if __name__ == '__main__':

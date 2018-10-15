@@ -191,7 +191,7 @@ public:
     }
 
     bool IsValid() const;
-    CAmount GetMinFee() const;
+    CAmount GetMinFee(bool fForceMinFee) const;
     int GetMaxSignatures() const;
 
     // checks if related transaction is "simple" to lock it automatically
