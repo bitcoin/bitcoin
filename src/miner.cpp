@@ -595,9 +595,12 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
 
     try {
         while (true) {
-            if (fProofOfStake && chainActive.Height() + 1 < Params().PoSStartHeight() || !(fMasterNode || (fSystemNode && fProofOfStake)) || chainActive.Tip()->GetBlockTime() > GetAdjustedTime()) {
-                MilliSleep(1000);
-                continue;
+            if (fProofOfStake) {
+                if (chainActive.Height() + 1 < Params().PoSStartHeight() || (!fMasterNode && !fSystemNode) ||
+                    chainActive.Tip()->GetBlockTime() > GetAdjustedTime()) {
+                    MilliSleep(1000);
+                    continue;
+                }
             }
 
             if (Params().MiningRequiresPeers()) {
