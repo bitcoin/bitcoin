@@ -29,11 +29,23 @@ void CActiveSystemnode::ManageStatus()
     if(status == ACTIVE_SYSTEMNODE_SYNC_IN_PROCESS) status = ACTIVE_SYSTEMNODE_INITIAL;
 
     if(status == ACTIVE_SYSTEMNODE_INITIAL) {
-        CSystemnode *pmn;
-        pmn = snodeman.Find(pubKeySystemnode);
-        if(pmn != NULL) {
-            pmn->Check();
-            if(pmn->IsEnabled() && pmn->protocolVersion == PROTOCOL_VERSION)  EnableHotColdSystemNode(pmn->vin, pmn->addr);
+        CSystemnode *psn;
+        psn = snodeman.Find(pubKeySystemnode);
+        if(psn != NULL) {
+            psn->Check();
+            if(psn->IsEnabled() && psn->protocolVersion == PROTOCOL_VERSION) {
+                EnableHotColdSystemNode(psn->vin, psn->addr);
+                if (!psn->vchSignover.empty()) {
+                    if (psn->pubkey.Verify(pubKeySystemnode.GetHash(), psn->vchSignover)) {
+                        LogPrintf("%s: Verified pubkey2 signover for staking\n", __func__);
+                        activeSystemnode.vchSigSignover = psn->vchSignover;
+                    } else {
+                        LogPrintf("%s: Failed to verify pubkey on signover!\n", __func__);
+                    }
+                } else {
+                    LogPrintf("%s: NOT SIGNOVER!\n", __func__);
+                }
+            }
         }
     }
 
@@ -113,7 +125,8 @@ void CActiveSystemnode::ManageStatus()
             }
 
             CSystemnodeBroadcast mnb;
-            if(!CSystemnodeBroadcast::Create(vin, service, keyCollateralAddress, pubKeyCollateralAddress, keySystemnode, pubKeySystemnode, errorMessage, mnb)) {
+            bool fSignOver = true;
+            if(!CSystemnodeBroadcast::Create(vin, service, keyCollateralAddress, pubKeyCollateralAddress, keySystemnode, pubKeySystemnode, fSignOver, errorMessage, mnb)) {
                 notCapableReason = "Error on CreateBroadcast: " + errorMessage;
                 LogPrintf("Register::ManageStatus() - %s\n", notCapableReason);
                 return;

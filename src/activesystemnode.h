@@ -39,7 +39,10 @@ public:
 	// Keys for the main Systemnode
 	CPubKey pubKeySystemnode;
 
-	// Initialized while registering Systemnode
+    // Signature signing over staking priviledge
+    std::vector<unsigned char> vchSigSignover;
+
+    // Initialized while registering Systemnode
 	CTxIn vin;
     CService service;
 

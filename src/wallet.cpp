@@ -1933,7 +1933,7 @@ bool CWallet::CreateCoinStake(const int nHeight, const uint32_t& nBits, const ui
         nAmountMN = static_cast<CAmount>(SYSTEMNODE_COLLATERAL);
 
     } else {
-        LogPrintf("CreateCoinStake -- Must be masternode or system to create coin stake!\n");
+        LogPrintf("CreateCoinStake -- Must be masternode or systemnode to create coin stake!\n");
         return false;
     }
 
