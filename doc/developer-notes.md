@@ -71,11 +71,15 @@ required when doing so would need changes to significant pieces of existing
 code.
   - Variable (including function arguments) and namespace names are all lowercase, and may use `_` to
     separate words (snake_case).
-    - Class member variables have a `m_` prefix.
-    - Global variables have a `g_` prefix.
+    - Class member variables have a `m_` prefix, so it's obvious when variable
+      references in the code implicitly access the current class instance.
+    - Global variables have a `g_` prefix, so it's obvious when code is
+      accessing global state.
   - Constant names are all uppercase, and use `_` to separate words.
-  - Class names, function names and method names are UpperCamelCase
-    (PascalCase). Do not prefix class names with `C`.
+  - Type names, standalone function names, and static method names are
+    UpperCamelCase. Instance method names are lowerCamelCase, so it's obvious
+    when function calls in the code implicitly access the current class
+    instance. Class names should not be prefixed with `C`.
   - Test suite naming convention: The Boost test suite in file
     `src/test/foo_tests.cpp` should be named `foo_tests`. Test suite names
     must be unique.
