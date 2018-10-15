@@ -244,6 +244,11 @@ int GetNumCores();
 void RenameThread(const char* name);
 std::string GetThreadName();
 
+namespace ctpl {
+    class thread_pool;
+}
+void RenameThreadPool(ctpl::thread_pool& tp, const char* baseName);
+
 /**
  * .. and a wrapper that just calls func once
  */
