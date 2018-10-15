@@ -22,7 +22,7 @@ __m512i inline Xor(__m512i x, __m512i y) { return _mm512_xor_si512(x, y); }
 __m512i inline Xor(__m512i x, __m512i y, __m512i z) { return Xor(Xor(x, y), z); }
 __m512i inline Or(__m512i x, __m512i y) { return _mm512_or_si512(x, y); }
 __m512i inline And(__m512i x, __m512i y) { return _mm512_and_si512(x, y); }
-__m512i inline ShR(__m512i x, int n) { return _mm512_srli_epi32(x, n); }
+__m512i inline ShR(__m512i x, unsigned int n) { return _mm512_srli_epi32(x, n); }
 template<int N> __m512i inline RoL(__m512i x) { return _mm512_rol_epi32(x, N); }
 
 __m512i inline Ch(__m512i x, __m512i y, __m512i z) { return Xor(z, And(x, Xor(y, z))); }
