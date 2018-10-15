@@ -245,7 +245,7 @@ bool CScript::IsPayToScriptHash() const
 
 bool CScript::IsProofOfStakeMarker() const
 {
-    return (this->size() == 1 && (*this)[0] == OP_PROOFOFSTAKE);
+    return (this->size() > 1 && (*this)[0] == OP_PROOFOFSTAKE);
 }
 
 bool CScript::IsPushOnly() const

@@ -66,6 +66,28 @@ Value getpoolinfo(const Array& params, bool fHelp)
     return obj;
 }
 
+Value getstakepointers(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+                "getstakepointers\n"
+                "Returns stake pointers");
+
+    std::vector<StakePointer> vStakePointers;
+    pwalletMain->GetRecentStakePointers(vStakePointers);
+    Array ret;
+    for (auto p : vStakePointers) {
+        Object obj;
+        obj.push_back(Pair("blockhash", p.hashBlock.GetHex()));
+        obj.push_back(Pair("hashpubkey", p.pubKeyProofOfStake.GetID().GetHex()));
+        obj.push_back(Pair("pos", (int64_t)p.nPos));
+        obj.push_back(Pair("txid", p.txid.GetHex()));
+        ret.push_back(obj);
+    }
+
+    return ret;
+}
+
 
 Value masternode(const Array& params, bool fHelp)
 {

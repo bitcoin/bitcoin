@@ -331,8 +331,8 @@ public:
     bool GetMyMasternodes(std::vector<CMasternode*>& vActiveMasternodes);
     bool GetActiveMasternode(CMasternode *&activeStakingNode);
     bool GetActiveSystemnode(CSystemnode *&activeStakingNode);
-    bool CreateCoinStake(const int nHeight, const uint32_t& nBits, const uint32_t& nTime, CMutableTransaction& txCoinStake, uint32_t& nTxNewTime);
-    bool GetRecentStakePointer(StakePointer& stakePointer);
+    bool CreateCoinStake(const int nHeight, const uint32_t& nBits, const uint32_t& nTime, CMutableTransaction& txCoinStake, uint32_t& nTxNewTime, StakePointer& stakePointer);
+    bool GetRecentStakePointers(std::vector<StakePointer>& vStakePointers);
     bool ConvertList(std::vector<CTxIn> vCoins, std::vector<int64_t>& vecAmounts);
 
     static CFeeRate minTxFee;

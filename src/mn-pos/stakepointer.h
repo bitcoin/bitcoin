@@ -1,6 +1,7 @@
 #ifndef CROWNCOIN_PROOFPOINTER_H
 #define CROWNCOIN_PROOFPOINTER_H
 
+#include <pubkey.h>
 #include "uint256.h"
 #include "serialize.h"
 
@@ -16,20 +17,25 @@
  * @param hashPubKey The CKeyID (or pubkeyhash) of the masternode's payment
  */
 
-struct StakePointer
+class StakePointer
 {
+public:
     uint256 hashBlock;
     uint256 txid;
     unsigned int nPos;
-    uint160 hashPubKey;
+    CPubKey pubKeyProofOfStake;
+    CPubKey pubKeyCollateral; // The public key to the collateral address
+    std::vector<unsigned char> vchSigCollateralSignOver; // Signature signed from collateral pubkey giving permission to pubKeyProofOfStake
 
     void SetNull()
     {
         hashBlock = uint256();
         txid = uint256();
-        hashPubKey = uint160();
+        pubKeyProofOfStake = CPubKey();
         nPos = 0;
     }
+
+    bool VerifyCollateralSignOver() const;
 
     ADD_SERIALIZE_METHODS;
 
@@ -38,7 +44,9 @@ struct StakePointer
         READWRITE(hashBlock);
         READWRITE(txid);
         READWRITE(nPos);
-        READWRITE(hashPubKey);
+        READWRITE(pubKeyProofOfStake);
+        READWRITE(pubKeyCollateral);
+        READWRITE(vchSigCollateralSignOver);
     }
 };
 

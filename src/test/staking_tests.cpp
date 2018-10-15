@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_CASE(stakeminer)
     uint256 nModifier = uint256S("123456");
     unsigned int nTimeBlockFrom = 100000;
     unsigned int nTimeStake = nTimeBlockFrom + (60*60*48);
-    uint64_t nAmount = 10000 * COIN;
+    uint64_t nAmount = 10000;
     Kernel kernel(outpoint, nAmount, nModifier, nTimeBlockFrom, nTimeStake);
 
     //A moderately easy difficulty target to hit
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(proof_validity)
 BOOST_AUTO_TEST_CASE(transaction_type)
 {
     CTxIn txIn;
-    txIn.scriptSig << OP_PROOFOFSTAKE;
+    txIn.scriptSig << OP_PROOFOFSTAKE << 10000 << OP_0;
     CMutableTransaction tx;
     tx.vin.emplace_back(txIn);
     tx.vout.emplace_back(CTxOut());
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(block_type)
     CBlock block;
     CMutableTransaction tx;
     CTxIn txIn;
-    txIn.scriptSig << OP_PROOFOFSTAKE;
+    txIn.scriptSig << OP_PROOFOFSTAKE << 29180 << OP_0;
     tx.vin.emplace_back(txIn);
     tx.vout.emplace_back(CTxOut());
     block.vtx.emplace_back(CTransaction());

@@ -34,6 +34,9 @@ public:
 	// Keys for the main Masternode
 	CPubKey pubKeyMasternode;
 
+    // Signature signing over staking priviledge
+    std::vector<unsigned char> vchSigSignover;
+
 	// Initialized while registering Masternode
 	CTxIn vin;
     CService service;

@@ -10,6 +10,8 @@
 #include "txdb.h"
 #include "ui_interface.h"
 #include "util.h"
+#include "../chainparamsbase.h"
+
 #ifdef ENABLE_WALLET
 #include "db.h"
 #include "wallet.h"
@@ -35,7 +37,7 @@ struct TestingSetup {
         SetupEnvironment();
         fPrintToDebugLog = false; // don't want to write to debug.log file
         fCheckBlockIndex = true;
-        SelectParams(CBaseChainParams::MAIN);
+        SelectParams(CBaseChainParams::UNITTEST);
         noui_connect();
 #ifdef ENABLE_WALLET
         bitdb.MakeMock();

@@ -30,6 +30,7 @@
 #include "util.h"
 #include "spork.h"
 #include "utilmoneystr.h"
+#include "mn-pos/stakevalidation.h"
 
 #include <sstream>
 
@@ -975,7 +976,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     }
     else if (tx.IsCoinStake())
     {
-        if (tx.vin[0].scriptSig.size() != 1)
+        if (tx.vin[0].scriptSig.size() > 100)
             return state.DoS(100, error("CheckTransactions() : coinstake script size"),
                             REJECT_INVALID, "bad-cs-length");
     }
@@ -1554,7 +1555,7 @@ bool WriteBlockToDisk(CBlock& block, CDiskBlockPos& pos)
    both a block and its header.  */
 
 template<typename T>
-static bool ReadBlockOrHeader(T& block, const CDiskBlockPos& pos)
+static bool ReadBlockOrHeader(T& block, const CDiskBlockPos& pos, bool fProofOfStake)
 {
     block.SetNull();
 
@@ -1572,7 +1573,7 @@ static bool ReadBlockOrHeader(T& block, const CDiskBlockPos& pos)
     }
 
     // Check the header
-    if (!CheckProofOfWork(block))
+    if (!fProofOfStake && !CheckProofOfWork(block))
         return error("ReadBlockFromDisk : Errors in block header");
 
     return true;
@@ -1581,7 +1582,7 @@ static bool ReadBlockOrHeader(T& block, const CDiskBlockPos& pos)
 template<typename T>
 static bool ReadBlockOrHeader(T& block, const CBlockIndex* pindex)
 {
-    if (!ReadBlockOrHeader(block, pindex->GetBlockPos()))
+    if (!ReadBlockOrHeader(block, pindex->GetBlockPos(), pindex->IsProofOfStake()))
         return false;
     if (block.GetHash() != pindex->GetBlockHash())
         return error("ReadBlockFromDisk(CBlock&, CBlockIndex*) : GetHash() doesn't match index");
@@ -1590,7 +1591,7 @@ static bool ReadBlockOrHeader(T& block, const CBlockIndex* pindex)
 
 bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos)
 {
-    return ReadBlockOrHeader(block, pos);
+    return ReadBlockOrHeader(block, pos, block.IsProofOfStake());
 }
 
 bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex)
@@ -1974,8 +1975,11 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex
     if (!blockUndo.ReadFromDisk(pos, pindex->pprev->GetBlockHash()))
         return error("DisconnectBlock() : failure reading undo data");
 
-    if (blockUndo.vtxundo.size() + 1 != block.vtx.size())
-        return error("DisconnectBlock() : block and undo data inconsistent");
+    int nSizeCheck = blockUndo.vtxundo.size() + 1;
+    if (block.IsProofOfStake())
+        nSizeCheck++;
+    if (nSizeCheck != block.vtx.size())
+        return error("DisconnectBlock() : block and undo data inconsistent, check=%d size=%d", nSizeCheck, block.vtx.size());
 
     // undo transactions in reverse order
     for (int i = block.vtx.size() - 1; i >= 0; i--) {
@@ -2005,10 +2009,10 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex
         }
 
         // restore inputs
-        if (i > 0) { // not coinbases
+        if (i > 0 && !tx.IsCoinStake()) { // not coinbases
             const CTxUndo &txundo = blockUndo.vtxundo[i-1];
             if (txundo.vprevout.size() != tx.vin.size())
-                return error("DisconnectBlock() : transaction and undo data inconsistent");
+                return error("DisconnectBlock() : transaction and undo data inconsistent prevout=%d vin=%d", txundo.vprevout.size(), blockUndo.vtxundo.size());
             for (unsigned int j = tx.vin.size(); j-- > 0;) {
                 const COutPoint &out = tx.vin[j].prevout;
                 const CTxInUndo &undo = txundo.vprevout[j];
@@ -2092,7 +2096,7 @@ bool CheckBlockProofPointer(const CBlock& block, CPubKey& pubkeyMasternode, COut
         return error("%s: Failed to read block from disk", __func__);
 
     bool found = false;
-    for (const auto& tx : block.vtx) {
+    for (const auto& tx : blockFrom.vtx) {
         if (tx.GetHash() == stakePointer.txid) {
             if (tx.vout.size() <= stakePointer.nPos)
                 return error("%s: vout too small", __func__);
@@ -2101,11 +2105,25 @@ bool CheckBlockProofPointer(const CBlock& block, CPubKey& pubkeyMasternode, COut
             if (!ExtractDestination(tx.vout[stakePointer.nPos].scriptPubKey, dest))
                 return error("%s: failed to get destination from scriptPubKey", __func__);
 
-//            if (CBitcoinAddress(stakePointer.hashPubKey).ToString() != CBitcoinAddress(dest).ToString())
-//                return error("%s: Pubkeyhash from proof does not match stakepointer", __func__);
+            // The block can either be signed by the collateral key, or the masternode key if it has a sig with it verifying sign over
+            CBitcoinAddress addressProof(stakePointer.pubKeyProofOfStake.GetID());
+            CBitcoinAddress addressReward(dest);
+            CBitcoinAddress addressCollateralCheck(stakePointer.pubKeyCollateral.GetID());
+
+            if (addressCollateralCheck.ToString() != addressReward.ToString())
+                return error("%s: Wrong pubkeys: Pubkey Collateral in proof pointer = %s, pubkey in reward payment = %s", __func__, addressCollateralCheck.ToString(), addressReward.ToString());
+
+            pubkeyMasternode = stakePointer.pubKeyCollateral;
+
+            if (addressProof.ToString() != addressReward.ToString()) {
+                //Check if the key was signed over to another privkey
+                if (!stakePointer.VerifyCollateralSignOver())
+                    return error("%s: Collateral signover is not validated!", __func__);
+
+                pubkeyMasternode = stakePointer.pubKeyProofOfStake;
+            }
 
             outpoint = COutPoint(stakePointer.txid, stakePointer.nPos);
-
             found = true;
             break;
         }
@@ -2226,7 +2244,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         }
 
         CTxUndo undoDummy;
-        if (i > 0) {
+        if (i > 0 && !tx.IsCoinStake()) {
             blockundo.vtxundo.push_back(CTxUndo());
         }
         UpdateCoins(tx, state, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight);
@@ -2882,7 +2900,7 @@ bool ReconsiderBlock(CValidationState& state, CBlockIndex *pindex) {
     return true;
 }
 
-CBlockIndex* AddToBlockIndex(const CBlockHeader& block)
+CBlockIndex* AddToBlockIndex(const CBlockHeader& block, bool fProofOfStake)
 {
     // Check for duplicate
     uint256 hash = block.GetHash();
@@ -2910,6 +2928,8 @@ CBlockIndex* AddToBlockIndex(const CBlockHeader& block)
     pindexNew->RaiseValidity(BLOCK_VALID_TREE);
     if (pindexBestHeader == NULL || pindexBestHeader->nChainWork < pindexNew->nChainWork)
         pindexBestHeader = pindexNew;
+
+    pindexNew->fProofOfStake = fProofOfStake;
 
     setDirtyBlockIndex.insert(pindexNew);
 
@@ -3044,9 +3064,9 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool fCheckPOW)
 {
     // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block))
-        return state.DoS(50, error("CheckBlockHeader() : proof of work failed"),
-                         REJECT_INVALID, "high-hash");
+//    if (fCheckPOW && !CheckProofOfWork(block))
+//        return state.DoS(50, error("CheckBlockHeader() : proof of work failed"),
+//                         REJECT_INVALID, "high-hash");
 
     // Check timestamp
     if (block.GetBlockTime() > GetAdjustedTime() + 2 * 60 * 60)
@@ -3065,7 +3085,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 
     // Check that the header is valid (particularly PoW).  This is mostly
     // redundant with the call in AcceptBlockHeader.
-    if (!CheckBlockHeader(block, state, fCheckPOW))
+    bool fCheck = block.IsProofOfWork() && fCheckPOW;
+    if (!CheckBlockHeader(block, state, fCheck))
         return false;
 
     // Check the merkle root.
@@ -3267,7 +3288,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
     return true;
 }
 
-bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBlockIndex** ppindex)
+bool AcceptBlockHeader(const CBlockHeader& block, bool fProofOfStake, CValidationState& state, CBlockIndex** ppindex)
 {
     AssertLockHeld(cs_main);
     // Check for duplicate
@@ -3286,7 +3307,7 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBloc
         return true;
     }
 
-    if (!CheckBlockHeader(block, state))
+    if (!CheckBlockHeader(block, state, fProofOfStake))
         return false;
 
     // Get prev block index
@@ -3304,7 +3325,7 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBloc
         return false;
 
     if (pindex == NULL)
-        pindex = AddToBlockIndex(block);
+        pindex = AddToBlockIndex(block, fProofOfStake);
 
     if (ppindex)
         *ppindex = pindex;
@@ -3318,7 +3339,7 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, 
 
     CBlockIndex *&pindex = *ppindex;
 
-    if (!AcceptBlockHeader(block, state, &pindex))
+    if (!AcceptBlockHeader(block, block.IsProofOfStake(), state, &pindex))
         return false;
 
     if (pindex->nStatus & BLOCK_HAVE_DATA) {
@@ -3413,6 +3434,11 @@ const CBlockIndex* CBlockIndex::GetAncestor(int height) const
     return const_cast<CBlockIndex*>(this)->GetAncestor(height);
 }
 
+bool CBlockIndex::IsProofOfStake() const
+{
+    return fProofOfStake;
+}
+
 void CBlockIndex::BuildSkip()
 {
     if (pprev)
@@ -3422,7 +3448,7 @@ void CBlockIndex::BuildSkip()
 bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBlockPos *dbp)
 {
     // Preliminary checks
-    bool checked = CheckBlock(*pblock, state);
+    bool checked = CheckBlock(*pblock, state, pblock->IsProofOfWork());
 
     while(true) {
         TRY_LOCK(cs_main, lockMain);
@@ -3802,7 +3828,7 @@ bool InitBlockIndex() {
                 return error("LoadBlockIndex() : FindBlockPos failed");
             if (!WriteBlockToDisk(block, blockPos))
                 return error("LoadBlockIndex() : writing genesis block to disk failed");
-            CBlockIndex *pindex = AddToBlockIndex(block);
+            CBlockIndex *pindex = AddToBlockIndex(block, block.IsProofOfStake());
             if (!ReceivedBlockTransactions(block, state, pindex, blockPos))
                 return error("LoadBlockIndex() : genesis block not accepted");
             if (!ActivateBestChain(state, &block))
@@ -4711,7 +4737,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             bool fAlreadyHave = AlreadyHave(inv);
             LogPrint("net", "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom->id);
 
-            if (!fAlreadyHave && !fImporting && !fReindex && inv.type != MSG_BLOCK)
+            if (!fAlreadyHave && !fImporting && !fReindex)
                 pfrom->AskFor(inv);
 
 
@@ -4726,7 +4752,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                     // time the block arrives, the header chain leading up to it is already validated. Not
                     // doing this will result in the received block being rejected as an orphan in case it is
                     // not a direct successor.
-                    pfrom->PushMessage("getheaders", chainActive.GetLocator(pindexBestHeader), inv.hash);
+                    pfrom->PushMessage("getblocks", chainActive.GetLocator(pindexBestHeader), inv.hash);
                     CNodeState *nodestate = State(pfrom->GetId());
                     if (chainActive.Tip()->GetBlockTime() > GetAdjustedTime() - Params().TargetSpacing() * 20 &&
                         nodestate->nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
@@ -4976,64 +5002,64 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
     else if (strCommand == "headers" && !fImporting && !fReindex) // Ignore headers received while importing
     {
-        std::vector<CBlockHeader> headers;
-
-        // Bypass the normal CBlock deserialization, as we don't want to risk deserializing 2000 full blocks.
-        unsigned int nCount = ReadCompactSize(vRecv);
-        if (nCount > MAX_HEADERS_RESULTS) {
-            Misbehaving(pfrom->GetId(), 20);
-            return error("headers message size = %u", nCount);
-        }
-        headers.resize(nCount);
-        for (unsigned int n = 0; n < nCount; n++) {
-            vRecv >> headers[n];
-            ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
-        }
-
-        LOCK(cs_main);
-
-        if (nCount == 0) {
-            // Nothing interesting. Stop asking this peers for more headers.
-            return true;
-        }
-
-        // If we already know the last header in the message, then it contains
-        // no new information for us.  In this case, we do not request
-        // more headers later.  This prevents multiple chains of redundant
-        // getheader requests from running in parallel if triggered by incoming
-        // blocks while the node is still in initial headers sync.
-        const bool hasNewHeaders = (mapBlockIndex.count(headers.back().GetHash()) == 0);
-
-        CBlockIndex *pindexLast = NULL;
-        BOOST_FOREACH(const CBlockHeader& header, headers) {
-            CValidationState state;
-            if (pindexLast != NULL && header.hashPrevBlock != pindexLast->GetBlockHash()) {
-                Misbehaving(pfrom->GetId(), 20);
-                return error("non-continuous headers sequence");
-            }
-            if (!AcceptBlockHeader(header, state, &pindexLast)) {
-                int nDoS;
-                if (state.IsInvalid(nDoS)) {
-                    if (nDoS > 0)
-                        Misbehaving(pfrom->GetId(), nDoS);
-                    std::string strError = "invalid header received " + header.GetHash().ToString();
-                    return error(strError.c_str());
-                }
-            }
-        }
-
-        if (pindexLast)
-            UpdateBlockAvailability(pfrom->GetId(), pindexLast->GetBlockHash());
-
-        if (nCount == MAX_HEADERS_RESULTS && pindexLast && hasNewHeaders) {
-            // Headers message had its maximum size; the peer may have more headers.
-            // TODO: optimize: if pindexLast is an ancestor of chainActive.Tip or pindexBestHeader, continue
-            // from there instead.
-            LogPrint("net", "more getheaders (%d) to end to peer=%d (startheight:%d)\n", pindexLast->nHeight, pfrom->id, pfrom->nStartingHeight);
-            pfrom->PushMessage("getheaders", chainActive.GetLocator(pindexLast), uint256());
-        }
-
-        CheckBlockIndex();
+//        std::vector<CBlockHeader> headers;
+//
+//        // Bypass the normal CBlock deserialization, as we don't want to risk deserializing 2000 full blocks.
+//        unsigned int nCount = ReadCompactSize(vRecv);
+//        if (nCount > MAX_HEADERS_RESULTS) {
+//            Misbehaving(pfrom->GetId(), 20);
+//            return error("headers message size = %u", nCount);
+//        }
+//        headers.resize(nCount);
+//        for (unsigned int n = 0; n < nCount; n++) {
+//            vRecv >> headers[n];
+//            ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
+//        }
+//
+//        LOCK(cs_main);
+//
+//        if (nCount == 0) {
+//            // Nothing interesting. Stop asking this peers for more headers.
+//            return true;
+//        }
+//
+//        // If we already know the last header in the message, then it contains
+//        // no new information for us.  In this case, we do not request
+//        // more headers later.  This prevents multiple chains of redundant
+//        // getheader requests from running in parallel if triggered by incoming
+//        // blocks while the node is still in initial headers sync.
+//        const bool hasNewHeaders = (mapBlockIndex.count(headers.back().GetHash()) == 0);
+//
+//        CBlockIndex *pindexLast = NULL;
+//        BOOST_FOREACH(const CBlockHeader& header, headers) {
+//            CValidationState state;
+//            if (pindexLast != NULL && header.hashPrevBlock != pindexLast->GetBlockHash()) {
+//                Misbehaving(pfrom->GetId(), 20);
+//                return error("non-continuous headers sequence");
+//            }
+//            if (!AcceptBlockHeader(header, state, &pindexLast)) {
+//                int nDoS;
+//                if (state.IsInvalid(nDoS)) {
+//                    if (nDoS > 0)
+//                        Misbehaving(pfrom->GetId(), nDoS);
+//                    std::string strError = "invalid header received " + header.GetHash().ToString();
+//                    return error(strError.c_str());
+//                }
+//            }
+//        }
+//
+//        if (pindexLast)
+//            UpdateBlockAvailability(pfrom->GetId(), pindexLast->GetBlockHash());
+//
+//        if (nCount == MAX_HEADERS_RESULTS && pindexLast && hasNewHeaders) {
+//            // Headers message had its maximum size; the peer may have more headers.
+//            // TODO: optimize: if pindexLast is an ancestor of chainActive.Tip or pindexBestHeader, continue
+//            // from there instead.
+//            LogPrint("net", "more getheaders (%d) to end to peer=%d (startheight:%d)\n", pindexLast->nHeight, pfrom->id, pfrom->nStartingHeight);
+//            pfrom->PushMessage("getheaders", chainActive.GetLocator(pindexLast), uint256());
+//        }
+//
+//        CheckBlockIndex();
     }
 
     else if (strCommand == "block" && !fImporting && !fReindex) // Ignore blocks received while importing
@@ -5536,7 +5562,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                 nSyncStarted++;
                 CBlockIndex *pindexStart = pindexBestHeader->pprev ? pindexBestHeader->pprev : pindexBestHeader;
                 LogPrint("net", "initial getheaders (%d) to peer=%d (startheight:%d)\n", pindexStart->nHeight, pto->id, pto->nStartingHeight);
-                pto->PushMessage("getheaders", chainActive.GetLocator(pindexStart), uint256());
+                pto->PushMessage("getblocks", chainActive.GetLocator(pindexStart), uint256());
             }
         }
 
