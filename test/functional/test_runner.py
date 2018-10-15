@@ -130,6 +130,7 @@ BASE_SCRIPTS = [
     'wallet_groups.py',
     'p2p_disconnect_ban.py',
     'rpc_decodescript.py',
+    'rpc_encodescript.py',
     'rpc_blockchain.py',
     'rpc_deprecated.py',
     'wallet_disable.py',
