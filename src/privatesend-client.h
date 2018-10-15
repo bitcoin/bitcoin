@@ -110,7 +110,7 @@ private:
     /// step 0: select denominated inputs and txouts
     bool SelectDenominate(std::string& strErrorRet, std::vector< std::pair<CTxDSIn, CTxOut> >& vecPSInOutPairsRet);
     /// step 1: prepare denominated inputs and outputs
-    bool PrepareDenominate(int nMinRounds, int nMaxRounds, std::string& strErrorRet, const std::vector< std::pair<CTxDSIn, CTxOut> >& vecPSInOutPairsIn, std::vector< std::pair<CTxDSIn, CTxOut> >& vecPSInOutPairsRet);
+    bool PrepareDenominate(int nMinRounds, int nMaxRounds, std::string& strErrorRet, const std::vector< std::pair<CTxDSIn, CTxOut> >& vecPSInOutPairsIn, std::vector< std::pair<CTxDSIn, CTxOut> >& vecPSInOutPairsRet, bool fDryRun = false);
     /// step 2: send denominated inputs and outputs prepared in step 1
     bool SendDenominate(const std::vector< std::pair<CTxDSIn, CTxOut> >& vecPSInOutPairsIn, CConnman& connman);
 
