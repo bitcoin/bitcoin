@@ -45,7 +45,6 @@
 #include <sstream>
 
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/thread.hpp>
 
 #if defined(NDEBUG)
 # error "Bitcoin cannot be compiled without assertions."
@@ -2683,7 +2682,7 @@ bool CChainState::ActivateBestChain(CValidationState &state, const CChainParams&
     CBlockIndex *pindexNewTip = nullptr;
     int nStopAtHeight = gArgs.GetArg("-stopatheight", DEFAULT_STOPATHEIGHT);
     do {
-        boost::this_thread::interruption_point();
+        InterruptionPoint();
 
         if (GetMainSignals().CallbacksPending() > 10) {
             // Block until the validation queue drains. This should largely
@@ -3990,7 +3989,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
     int reportDone = 0;
     LogPrintf("[0%%]..."); /* Continued */
     for (pindex = chainActive.Tip(); pindex && pindex->pprev; pindex = pindex->pprev) {
-        boost::this_thread::interruption_point();
+        InterruptionPoint();
         int percentageDone = std::max(1, std::min(99, (int)(((double)(chainActive.Height() - pindex->nHeight)) / (double)nCheckDepth * (nCheckLevel >= 4 ? 50 : 100))));
         if (reportDone < percentageDone/10) {
             // report every 10% step
@@ -4048,7 +4047,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
     // check level 4: try reconnecting blocks
     if (nCheckLevel >= 4) {
         while (pindex != chainActive.Tip()) {
-            boost::this_thread::interruption_point();
+            InterruptionPoint();
             uiInterface.ShowProgress(_("Verifying blocks..."), std::max(1, std::min(99, 100 - (int)(((double)(chainActive.Height() - pindex->nHeight)) / (double)nCheckDepth * 50))), false);
             pindex = chainActive.Next(pindex);
             CBlock block;
@@ -4365,7 +4364,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
         CBufferedFile blkdat(fileIn, 2*MAX_BLOCK_SERIALIZED_SIZE, MAX_BLOCK_SERIALIZED_SIZE+8, SER_DISK, CLIENT_VERSION);
         uint64_t nRewind = blkdat.GetPos();
         while (!blkdat.eof()) {
-            boost::this_thread::interruption_point();
+            InterruptionPoint();
 
             blkdat.SetPos(nRewind);
             nRewind++; // start one byte further next time, in case of failure

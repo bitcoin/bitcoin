@@ -11,13 +11,12 @@
 #include <policy/policy.h>
 #include <pow.h>
 #include <scheduler.h>
+#include <threadinterrupt.h>
 #include <txdb.h>
 #include <txmempool.h>
 #include <utiltime.h>
 #include <validation.h>
 #include <validationinterface.h>
-
-#include <boost/thread.hpp>
 
 #include <list>
 #include <vector>
@@ -69,7 +68,7 @@ static void AssembleBlock(benchmark::State& state)
 
     InitScriptExecutionCache();
 
-    boost::thread_group thread_group;
+    std::vector<InterruptibleThread> thread_group;
     CScheduler scheduler;
     {
         ::pblocktree.reset(new CBlockTreeDB(1 << 20, true));
@@ -77,7 +76,7 @@ static void AssembleBlock(benchmark::State& state)
         ::pcoinsTip.reset(new CCoinsViewCache(pcoinsdbview.get()));
 
         const CChainParams& chainparams = Params();
-        thread_group.create_thread(boost::bind(&CScheduler::serviceQueue, &scheduler));
+        thread_group.emplace_back(std::bind(&CScheduler::serviceQueue, &scheduler));
         GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
         LoadGenesisBlock(chainparams);
         CValidationState state;
@@ -112,8 +111,13 @@ static void AssembleBlock(benchmark::State& state)
         PrepareBlock(SCRIPT_PUB);
     }
 
-    thread_group.interrupt_all();
-    thread_group.join_all();
+    for (auto& th : thread_group) {
+        th.interrupt();
+    }
+    scheduler.stop();
+    for (auto& th : thread_group) {
+        th.join();
+    }
     GetMainSignals().FlushBackgroundCallbacks();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
 }

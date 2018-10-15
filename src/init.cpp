@@ -58,7 +58,6 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/bind.hpp>
-#include <boost/thread.hpp>
 #include <openssl/crypto.h>
 
 #if ENABLE_ZMQ
@@ -138,7 +137,7 @@ public:
 static std::unique_ptr<CCoinsViewErrorCatcher> pcoinscatcher;
 static std::unique_ptr<ECCVerifyHandle> globalVerifyHandle;
 
-static boost::thread_group threadGroup;
+static std::vector<InterruptibleThread> threadGroup;
 static CScheduler scheduler;
 
 void Interrupt()
@@ -190,8 +189,13 @@ void Shutdown()
 
     // After everything has been shut down, but before things get flushed, stop the
     // CScheduler/checkqueue threadGroup
-    threadGroup.interrupt_all();
-    threadGroup.join_all();
+    for (auto& th : threadGroup) {
+        th.interrupt();
+    }
+    scheduler.stop();
+    for (auto& th : threadGroup) {
+        th.join();
+    }
 
     // After the threads that potentially access these pointers have been stopped,
     // destruct and reset all to nullptr.
@@ -1205,7 +1209,7 @@ bool AppInitMain()
 
     // Start the lightweight task scheduler thread
     CScheduler::Function serviceLoop = boost::bind(&CScheduler::serviceQueue, &scheduler);
-    threadGroup.create_thread(boost::bind(&TraceThread<CScheduler::Function>, "scheduler", serviceLoop));
+    threadGroup.emplace_back(std::bind(&TraceThread<CScheduler::Function>, "scheduler", serviceLoop));
 
     GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
     GetMainSignals().RegisterWithMempoolSignals(mempool);
@@ -1596,7 +1600,7 @@ bool AppInitMain()
         vImportFiles.push_back(strFile);
     }
 
-    threadGroup.create_thread(boost::bind(&ThreadImport, vImportFiles));
+    threadGroup.emplace_back(std::bind(&ThreadImport, vImportFiles));
 
     // Wait for genesis block to be processed
     {

@@ -11,12 +11,12 @@ BOOST_FIXTURE_TEST_SUITE(reverselock_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(reverselock_basics)
 {
-    boost::mutex mutex;
-    boost::unique_lock<boost::mutex> lock(mutex);
+    std::mutex mutex;
+    std::unique_lock<std::mutex> lock(mutex);
 
     BOOST_CHECK(lock.owns_lock());
     {
-        reverse_lock<boost::unique_lock<boost::mutex> > rlock(lock);
+        reverse_lock<std::unique_lock<std::mutex>> rlock(lock);
         BOOST_CHECK(!lock.owns_lock());
     }
     BOOST_CHECK(lock.owns_lock());
@@ -24,8 +24,8 @@ BOOST_AUTO_TEST_CASE(reverselock_basics)
 
 BOOST_AUTO_TEST_CASE(reverselock_errors)
 {
-    boost::mutex mutex;
-    boost::unique_lock<boost::mutex> lock(mutex);
+    std::mutex mutex;
+    std::unique_lock<std::mutex> lock(mutex);
 
     // Make sure trying to reverse lock an unlocked lock fails
     lock.unlock();
@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(reverselock_errors)
 
     bool failed = false;
     try {
-        reverse_lock<boost::unique_lock<boost::mutex> > rlock(lock);
+        reverse_lock<std::unique_lock<std::mutex>> rlock(lock);
     } catch(...) {
         failed = true;
     }
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(reverselock_errors)
     lock.lock();
     BOOST_CHECK(lock.owns_lock());
     {
-        reverse_lock<boost::unique_lock<boost::mutex> > rlock(lock);
+        reverse_lock<std::unique_lock<std::mutex>> rlock(lock);
         BOOST_CHECK(!lock.owns_lock());
     }
 

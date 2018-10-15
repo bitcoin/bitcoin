@@ -92,7 +92,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
 
         // We have to run a scheduler thread to prevent ActivateBestChain
         // from blocking due to queue overrun.
-        threadGroup.create_thread(boost::bind(&CScheduler::serviceQueue, &scheduler));
+        threadGroup.emplace_back(std::bind(&CScheduler::serviceQueue, &scheduler));
         GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
 
         mempool.setSanityCheck(1.0);
@@ -118,17 +118,20 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
 TestingSetup::~TestingSetup()
 {
     InterruptScriptCheck();
-        threadGroup.interrupt_all();
-        StopScriptCheck();
-        threadGroup.join_all();
-        GetMainSignals().FlushBackgroundCallbacks();
-        GetMainSignals().UnregisterBackgroundSignalScheduler();
-        g_connman.reset();
-        peerLogic.reset();
-        UnloadBlockIndex();
-        pcoinsTip.reset();
-        pcoinsdbview.reset();
-        pblocktree.reset();
+    for (auto& th : threadGroup)
+        th.interrupt();
+    scheduler.stop();
+    StopScriptCheck();
+    for (auto& th : threadGroup)
+        th.join();
+    GetMainSignals().FlushBackgroundCallbacks();
+    GetMainSignals().UnregisterBackgroundSignalScheduler();
+    g_connman.reset();
+    peerLogic.reset();
+    UnloadBlockIndex();
+    pcoinsTip.reset();
+    pcoinsdbview.reset();
+    pblocktree.reset();
 }
 
 TestChain100Setup::TestChain100Setup() : TestingSetup(CBaseChainParams::REGTEST)

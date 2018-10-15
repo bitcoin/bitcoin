@@ -40,8 +40,6 @@
 #include <memory>
 #include <stdint.h>
 
-#include <boost/thread.hpp>
-
 #include <QApplication>
 #include <QDebug>
 #include <QLibraryInfo>

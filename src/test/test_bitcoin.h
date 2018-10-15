@@ -16,8 +16,6 @@
 
 #include <memory>
 
-#include <boost/thread.hpp>
-
 extern uint256 insecure_rand_seed;
 extern FastRandomContext insecure_rand_ctx;
 
@@ -66,7 +64,7 @@ struct CConnmanTest {
 
 class PeerLogicValidation;
 struct TestingSetup: public BasicTestingSetup {
-    boost::thread_group threadGroup;
+    std::vector<InterruptibleThread> threadGroup;
     CConnman* connman;
     CScheduler scheduler;
     std::unique_ptr<PeerLogicValidation> peerLogic;

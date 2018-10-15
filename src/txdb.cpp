@@ -16,8 +16,6 @@
 
 #include <stdint.h>
 
-#include <boost/thread.hpp>
-
 static const char DB_COIN = 'C';
 static const char DB_COINS = 'c';
 static const char DB_BLOCK_FILES = 'f';
@@ -254,7 +252,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
 
     // Load mapBlockIndex
     while (pcursor->Valid()) {
-        boost::this_thread::interruption_point();
+        InterruptionPoint();
         std::pair<char, uint256> key;
         if (pcursor->GetKey(key) && key.first == DB_BLOCK_INDEX) {
             CDiskBlockIndex diskindex;
@@ -365,7 +363,7 @@ bool CCoinsViewDB::Upgrade() {
     std::pair<unsigned char, uint256> key;
     std::pair<unsigned char, uint256> prev_key = {DB_COINS, uint256()};
     while (pcursor->Valid()) {
-        boost::this_thread::interruption_point();
+        InterruptionPoint();
         if (ShutdownRequested()) {
             break;
         }
