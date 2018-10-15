@@ -1901,6 +1901,10 @@ bool CWallet::CreateCoinStake(const int nHeight, const uint32_t& nBits, const ui
     std::vector<StakePointer> vStakePointers;
     CAmount nAmountMN;
 
+    //! Add some spacing if blocks are coming in too fast
+    if (nTime < chainActive.Tip()->GetBlockTime())
+        MilliSleep(5000);
+
     //! Maybe have a polymorphic base class for masternode and systemnode?
     if (fMasterNode) {
         CMasternode* activeStakingNode;
