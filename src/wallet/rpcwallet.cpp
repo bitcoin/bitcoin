@@ -1121,7 +1121,8 @@ struct tallyitem
     }
 };
 
-static UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool by_label) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+
+static UniValue ListByAddress(CWallet * const pwallet, const UniValue& params, bool by_label, bool received) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // Minimum confirmations
     int nMinDepth = 1;
@@ -1160,26 +1161,55 @@ static UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bo
         if (nDepth < nMinDepth)
             continue;
 
-        for (const CTxOut& txout : wtx.tx->vout)
+        if (received)
         {
-            CTxDestination address;
-            if (!ExtractDestination(txout.scriptPubKey, address))
-                continue;
+            for (const CTxOut& txout : wtx.tx->vout)
+            {
+                CTxDestination address;
+                if (!ExtractDestination(txout.scriptPubKey, address))
+                    continue;
 
-            if (has_filtered_address && !(filtered_address == address)) {
-                continue;
+                if (has_filtered_address && !(filtered_address == address)) {
+                    continue;
+                }
+
+                isminefilter mine = IsMine(*pwallet, address);
+                if(!(mine & filter))
+                    continue;
+
+                tallyitem& item = mapTally[address];
+                item.nAmount += txout.nValue;
+                item.nConf = std::min(item.nConf, nDepth);
+                item.txids.push_back(wtx.GetHash());
+                if (mine & ISMINE_WATCH_ONLY)
+                    item.fIsWatchonly = true;
             }
+        }
+        else
+        {
+            for (const CTxIn& txin : wtx.tx->vin)
+            {
+                const COutPoint& prevout = txin.prevout;
+                const CTxOut& txout = pwallet->GetWalletTx(prevout.hash)->tx->vout[prevout.n];
+                CTxDestination address;
+                if (!ExtractDestination(txout.scriptPubKey, address))
+                    continue;
 
-            isminefilter mine = IsMine(*pwallet, address);
-            if(!(mine & filter))
-                continue;
+                if (has_filtered_address && !(filtered_address == address)) {
+                    continue;
+                }
 
-            tallyitem& item = mapTally[address];
-            item.nAmount += txout.nValue;
-            item.nConf = std::min(item.nConf, nDepth);
-            item.txids.push_back(wtx.GetHash());
-            if (mine & ISMINE_WATCH_ONLY)
-                item.fIsWatchonly = true;
+                isminefilter mine = IsMine(*pwallet, address);
+                if(!(mine & filter))
+                    continue;
+
+                tallyitem& item = mapTally[address];
+                item.nAmount += txout.nValue;
+                item.nConf = std::min(item.nConf, nDepth);
+                item.txids.push_back(wtx.GetHash());
+                if (mine & ISMINE_WATCH_ONLY)
+                    item.fIsWatchonly = true;
+            }
         }
     }
 
@@ -1265,6 +1295,56 @@ static UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bo
     return ret;
 }
 
+static UniValue listsentbyaddress(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() > 4)
+        throw std::runtime_error(
+            "listsentbyaddress ( minconf include_empty include_watchonly address_filter )\n"
+            "\nList balances by receiving address.\n"
+            "\nArguments:\n"
+            "1. minconf           (numeric, optional, default=1) The minimum number of confirmations before payments are included.\n"
+            "2. include_empty     (bool, optional, default=false) Whether to include addresses that haven't sent any payments.\n"
+            "3. include_watchonly (bool, optional, default=false) Whether to include watch-only addresses (see 'importaddress').\n"
+            "4. address_filter    (string, optional) If present, only return information on this address.\n"
+            "\nResult:\n"
+            "[\n"
+            "  {\n"
+            "    \"involvesWatchonly\" : true,        (bool) Only returned if imported addresses were involved in transaction\n"
+            "    \"address\" : \"sendingaddress\",    (string) The sending address\n"
+            "    \"amount\" : x.xxx,                  (numeric) The total amount in " + CURRENCY_UNIT + " sent by the address\n"
+            "    \"confirmations\" : n,               (numeric) The number of confirmations of the most recent transaction included\n"
+            "    \"label\" : \"label\",               (string) The label of the sending address. The default label is \"\".\n"
+            "    \"txids\": [\n"
+            "       \"txid\",                         (string) The ids of transactions sent by the address \n"
+            "       ...\n"
+            "    ]\n"
+            "  }\n"
+            "  ,...\n"
+            "]\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("listsentbyaddress", "")
+            + HelpExampleCli("listsentbyaddress", "6 true")
+            + HelpExampleRpc("listsentbyaddress", "6, true, true")
+            + HelpExampleRpc("listsentbyaddress", "6, true, true, \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\"")
+        );
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
+    LOCK2(cs_main, pwallet->cs_wallet);
+
+    return ListByAddress(pwallet, request.params, false, false);
+}
+
 static UniValue listreceivedbyaddress(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -1312,7 +1392,7 @@ static UniValue listreceivedbyaddress(const JSONRPCRequest& request)
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    return ListReceived(pwallet, request.params, false);
+    return ListByAddress(pwallet, request.params, false, true);
 }
 
 static UniValue listreceivedbylabel(const JSONRPCRequest& request)
@@ -1356,7 +1436,7 @@ static UniValue listreceivedbylabel(const JSONRPCRequest& request)
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    return ListReceived(pwallet, request.params, true);
+    return ListByAddress(pwallet, request.params, true, true);
 }
 
 static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
@@ -4091,6 +4171,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "listaddressgroupings",             &listaddressgroupings,          {} },
     { "wallet",             "listlabels",                       &listlabels,                    {"purpose"} },
     { "wallet",             "listlockunspent",                  &listlockunspent,               {} },
+    { "wallet",             "listsentbyaddress",                &listsentbyaddress,             {"minconf","include_empty","include_watchonly","address_filter"} },
     { "wallet",             "listreceivedbyaddress",            &listreceivedbyaddress,         {"minconf","include_empty","include_watchonly","address_filter"} },
     { "wallet",             "listreceivedbylabel",              &listreceivedbylabel,           {"minconf","include_empty","include_watchonly"} },
     { "wallet",             "listsinceblock",                   &listsinceblock,                {"blockhash","target_confirmations","include_watchonly","include_removed"} },
