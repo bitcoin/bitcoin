@@ -126,7 +126,10 @@ void InstantSend::ProcessMessage(CNode* pfrom, const std::string& strCommand, CD
 
         // Check if transaction is old for lock
         if (GetTransactionAge(ctx.txHash) > m_acceptedBlockCount)
+        {
+            IXLogPrintf("InstantSend::ProcessMessage - Old transaction lock request is received. TxId - %s\n", ctx.txHash.ToString());
             return;
+        }
 
         m_txLockVote.insert(make_pair(ctx.GetHash(), ctx));
 
@@ -215,6 +218,7 @@ bool InstantSend::IsIxTxValid(const CTransaction& txCollateral) const
 
 int64_t InstantSend::CreateNewLock(const CTransaction& tx)
 {
+    LOCK(cs);
     int64_t nTxAge = 0;
     BOOST_REVERSE_FOREACH(CTxIn i, tx.vin){
         nTxAge = GetInputAge(i);
@@ -251,6 +255,7 @@ int64_t InstantSend::CreateNewLock(const CTransaction& tx)
 // check if we need to vote on this transaction
 void InstantSend::DoConsensusVote(const CTransaction& tx, int64_t nBlockHeight)
 {
+    LOCK(cs);
     if(!fMasterNode) return;
 
     int n = mnodeman.GetMasternodeRank(activeMasternode.vin, nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
@@ -294,6 +299,7 @@ void InstantSend::DoConsensusVote(const CTransaction& tx, int64_t nBlockHeight)
 //received a consensus vote
 bool InstantSend::ProcessConsensusVote(CNode* pnode, const CConsensusVote& ctx)
 {
+    LOCK(cs);
     int n = mnodeman.GetMasternodeRank(ctx.vinMasternode, ctx.nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
 
     CMasternode* pmn = mnodeman.Find(ctx.vinMasternode);
@@ -386,6 +392,7 @@ bool InstantSend::ProcessConsensusVote(CNode* pnode, const CConsensusVote& ctx)
 
 bool InstantSend::CheckForConflictingLocks(const CTransaction& tx)
 {
+    LOCK(cs);
     /*
         It's possible (very unlikely though) to get 2 conflicting transaction locks approved by the network.
         In that case, they will cancel each other out.
@@ -393,17 +400,22 @@ bool InstantSend::CheckForConflictingLocks(const CTransaction& tx)
         Blocks could have been rejected during this time, which is OK. After they cancel out, the client will
         rescan the blocks and find they're acceptable and then take the chain with the most work.
     */
-    BOOST_FOREACH(const CTxIn& in, tx.vin){
-        if(m_lockedInputs.count(in.prevout)){
-            if(m_lockedInputs[in.prevout] != tx.GetHash()){
-                IXLogPrintf("InstantX::CheckForConflictingLocks - found two complete conflicting locks - removing both. %s %s", tx.GetHash().ToString().c_str(), m_lockedInputs[in.prevout].ToString().c_str());
-                if(m_txLocks.count(tx.GetHash())) m_txLocks[tx.GetHash()].m_expiration = GetTime();
-                if(m_txLocks.count(m_lockedInputs[in.prevout])) m_txLocks[m_lockedInputs[in.prevout]].m_expiration = GetTime();
+    BOOST_FOREACH(const CTxIn& in, tx.vin)
+    {
+        if(m_lockedInputs.count(in.prevout))
+        {
+            if(m_lockedInputs[in.prevout] != tx.GetHash())
+            {
+                IXLogPrintf("InstantX::CheckForConflictingLocks - found two complete conflicting locks - removing both. %s %s",
+                        tx.GetHash().ToString().c_str(), m_lockedInputs[in.prevout].ToString().c_str());
+                if(m_txLocks.count(tx.GetHash()))
+                    m_txLocks[tx.GetHash()].m_expiration = GetTime();
+                if(m_txLocks.count(m_lockedInputs[in.prevout]))
+                    m_txLocks[m_lockedInputs[in.prevout]].m_expiration = GetTime();
                 return true;
             }
         }
     }
-
     return false;
 }
 
@@ -424,6 +436,7 @@ int64_t InstantSend::GetAverageVoteTime() const
 
 void InstantSend::CheckAndRemove()
 {
+    LOCK(cs);
     if(chainActive.Tip() == NULL) return;
 
     std::map<uint256, CTransactionLock>::iterator it = m_txLocks.begin();
@@ -540,6 +553,7 @@ std::string InstantSend::ToString() const
 
 void InstantSend::Clear()
 {
+    LOCK(cs);
     m_lockedInputs.clear();
     m_txLockVote.clear();
     m_txLockReq.clear();
@@ -557,7 +571,6 @@ uint256 CConsensusVote::GetHash() const
 {
     return ArithToUint256(UintToArith256(vinMasternode.prevout.hash) + vinMasternode.prevout.n + UintToArith256(txHash));
 }
-
 
 bool CConsensusVote::SignatureValid() const
 {

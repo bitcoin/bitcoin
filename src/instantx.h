@@ -66,6 +66,7 @@ public:
     }
 public:
     static const int m_acceptedBlockCount = 24;
+    static const int m_numberOfSeconds = 60;
 
 private:
     void DoConsensusVote(const CTransaction& tx, int64_t nBlockHeight);
@@ -75,6 +76,9 @@ private:
     int64_t GetAverageVoteTime() const;
 
 private:
+    // critical section to protect the inner data structures
+    mutable CCriticalSection cs;
+
     std::map<COutPoint, uint256> m_lockedInputs;
     std::map<uint256, CConsensusVote> m_txLockVote;
     std::map<uint256, CTransaction> m_txLockReq;
@@ -88,7 +92,7 @@ class CConsensusVote
 {
 public:
     CConsensusVote()
-        : m_expiration(GetTime() + (60 * InstantSend::m_acceptedBlockCount))
+        : m_expiration(GetTime() + (InstantSend::m_numberOfSeconds * InstantSend::m_acceptedBlockCount))
     { }
     uint256 GetHash() const;
     bool SignatureValid() const;
@@ -117,8 +121,8 @@ class CTransactionLock
 {
 public:
     CTransactionLock()
-        : m_expiration(GetTime() + (60 * InstantSend::m_acceptedBlockCount))
-        , m_timeout(GetTime() + (60 * 5))
+        : m_expiration(GetTime() + (InstantSend::m_numberOfSeconds * InstantSend::m_acceptedBlockCount))
+        , m_timeout(GetTime() + (InstantSend::m_numberOfSeconds * 5))
     { }
     bool SignaturesValid() const;
     int CountSignatures() const;
