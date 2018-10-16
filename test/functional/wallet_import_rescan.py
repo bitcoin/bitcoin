@@ -122,15 +122,13 @@ class ImportRescanTest(BitcoinTestFramework):
 
         # Import keys with pruning disabled
         self.start_nodes(extra_args=[[]] * self.num_nodes)
-        super().import_deterministic_coinbase_privkeys()
+        for n in self.nodes:
+            n.importprivkey(privkey=n.get_deterministic_priv_key().key, label='coinbase')
         self.stop_nodes()
 
         self.start_nodes()
         for i in range(1, self.num_nodes):
             connect_nodes(self.nodes[i], 0)
-
-    def import_deterministic_coinbase_privkeys(self):
-        pass
 
     def run_test(self):
         # Create one transaction on node 0 with a unique amount for
