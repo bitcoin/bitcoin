@@ -199,21 +199,6 @@ class TestNode():
 
     def generate(self, nblocks, maxtries=1000000):
         self.log.debug("TestNode.generate() dispatches `generate` call to `generatetoaddress`")
-        # Try to import the node's deterministic private key. This is a no-op if the private key
-        # has already been imported.
-        try:
-            self.rpc.importprivkey(privkey=self.get_deterministic_priv_key().key, label='coinbase', rescan=False)
-        except JSONRPCException as e:
-            # This may fail if:
-            # - wallet is disabled ('Method not found')
-            # - there are multiple wallets to import to ('Wallet file not specified')
-            # - wallet is locked ('Error: Please enter the wallet passphrase with walletpassphrase first')
-            # Just ignore those errors. We can make this tidier by importing the privkey during TestFramework.setup_nodes
-            # TODO: tidy up deterministic privkey import.
-            assert str(e).startswith('Method not found') or \
-                str(e).startswith('Wallet file not specified') or \
-                str(e).startswith('Error: Please enter the wallet passphrase with walletpassphrase first')
-
         return self.generatetoaddress(nblocks=nblocks, address=self.get_deterministic_priv_key().address, maxtries=maxtries)
 
     def get_wallet_rpc(self, wallet_name):

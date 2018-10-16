@@ -63,6 +63,8 @@ class PruneTest(BitcoinTestFramework):
     def setup_nodes(self):
         self.add_nodes(self.num_nodes, self.extra_args)
         self.start_nodes()
+        for n in self.nodes:
+            n.importprivkey(privkey=n.get_deterministic_priv_key().key, label='coinbase', rescan=False)
 
     def create_big_chain(self):
         # Start by creating some coinbases we can spend later

@@ -28,10 +28,9 @@ class WalletTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def setup_network(self):
-        self.add_nodes(4)
-        self.start_node(0)
-        self.start_node(1)
-        self.start_node(2)
+        self.setup_nodes()
+        # Only need nodes 0-2 running at start of test
+        self.stop_node(3)
         connect_nodes_bi(self.nodes, 0, 1)
         connect_nodes_bi(self.nodes, 1, 2)
         connect_nodes_bi(self.nodes, 0, 2)
