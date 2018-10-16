@@ -826,8 +826,10 @@ static bool GetConfigOptions(std::istream& stream, std::string& error, std::vect
     std::string::size_type pos;
     int linenr = 1;
     while (std::getline(stream, str)) {
+        bool used_hash = false;
         if ((pos = str.find('#')) != std::string::npos) {
             str = str.substr(0, pos);
+            used_hash = true;
         }
         const static std::string pattern = " \t\r\n";
         str = TrimString(str, pattern);
@@ -840,6 +842,10 @@ static bool GetConfigOptions(std::istream& stream, std::string& error, std::vect
             } else if ((pos = str.find('=')) != std::string::npos) {
                 std::string name = prefix + TrimString(str.substr(0, pos), pattern);
                 std::string value = TrimString(str.substr(pos + 1), pattern);
+                if (used_hash && name == "rpcpassword") {
+                    error = strprintf("parse error on line %i, using # in rpcpassword can be ambiguous and should be avoided", linenr);
+                    return false;
+                }
                 options.emplace_back(name, value);
             } else {
                 error = strprintf("parse error on line %i: %s", linenr, str);
