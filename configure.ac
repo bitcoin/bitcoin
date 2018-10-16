@@ -120,15 +120,18 @@ AC_ARG_ENABLE([upnp-default],
   [use_upnp_default=$enableval],
   [use_upnp_default=no])
 
-# This is a simple alias for test_s_ below; note that the default case goes here
+# These 4 make up combinations for --without-test(s) and --disable-test(s)
 AC_ARG_ENABLE(test,
     AS_HELP_STRING([--disable-test,]),
     [use_tests=$enableval],
     [use_tests=yes])
-
 AC_ARG_ENABLE(tests,
     AS_HELP_STRING([--disable-tests],[do not compile tests (default is to compile)]),
     [use_tests=$enableval],)
+AC_ARG_WITH(test, AS_HELP_STRING([--without-test,]), [use_tests=$withval],)
+AC_ARG_WITH(tests,
+    AS_HELP_STRING([--without-tests],[alias for --disable-tests]),
+    [use_tests=$withval],)
 
 AC_ARG_ENABLE(gui-tests,
     AS_HELP_STRING([--disable-gui-tests],[do not compile GUI tests (default is to compile if GUI and tests enabled)]),
