@@ -1,1 +1,3 @@
-Xyephcoin is still underdevelopment
+Ndovucoin
+==========
+Still under development
