@@ -1059,15 +1059,26 @@ bool FileCommit(FILE *file)
     return !failure;
 }
 
-void DirectoryCommit(const fs::path &dirname)
+bool DirectoryCommit(const fs::path &dirname)
 {
+    bool success = false;
+
 #ifndef WIN32
     FILE* file = fsbridge::fopen(dirname, "r");
-    if (file) {
-        fsync(fileno(file));
-        fclose(file);
+    if (file == NULL) {
+        LogPrintf("%s: %s failed on %s: %d\n", __func__, "fopen", dirname, errno);
+        return false;
     }
+
+    if (fsync(fileno(file)) == 0 || errno == EINVAL) {  // Ignore EINVAL for filesystems that don't support sync
+        success = true;
+    } else {
+        LogPrintf("%s: %s failed on %s: %d\n", __func__, "fsync", dirname, errno);
+    }
+    fclose(file);
 #endif
+
+    return success;
 }
 
 bool TruncateFile(FILE *file, unsigned int length) {
