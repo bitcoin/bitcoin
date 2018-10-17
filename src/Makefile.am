@@ -155,6 +155,7 @@ BITCOIN_CORE_H = \
   reverselock.h \
   rpc/blockchain.h \
   rpc/client.h \
+  rpc/doc.h \
   rpc/mining.h \
   rpc/protocol.h \
   rpc/server.h \
@@ -248,6 +249,7 @@ libbitcoin_server_a_SOURCES = \
   pow.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
+  rpc/doc.cpp \
   rpc/mining.cpp \
   rpc/misc.cpp \
   rpc/net.cpp \
