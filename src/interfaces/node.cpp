@@ -37,12 +37,9 @@
 #include <boost/thread/thread.hpp>
 #include <univalue.h>
 
-class CWallet;
 std::vector<std::shared_ptr<CWallet>> GetWallets();
 
 namespace interfaces {
-
-class Wallet;
 
 namespace {
 
