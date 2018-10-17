@@ -60,6 +60,9 @@ void PrintExceptionContinue(const std::exception *pex, const char* pszThread);
 /**
  * Ensure file contents are fully committed to disk, using a platform-specific
  * feature analogous to fsync().
+ *
+ * @param file The file to be committed.
+ * @return True if we think we succeeded; false if we probably failed.
  */
 bool FileCommit(FILE *file);
 
