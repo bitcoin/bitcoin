@@ -4,6 +4,7 @@
 
 #include <zmq/zmqrpc.h>
 
+#include <rpc/doc.h>
 #include <rpc/server.h>
 #include <zmq/zmqabstractnotifier.h>
 #include <zmq/zmqnotificationinterface.h>
@@ -15,21 +16,19 @@ namespace {
 UniValue getzmqnotifications(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0) {
-        throw std::runtime_error(
-            "getzmqnotifications\n"
-            "\nReturns information about the active ZeroMQ notifications.\n"
-            "\nResult:\n"
-            "[\n"
-            "  {                        (json object)\n"
-            "    \"type\": \"pubhashtx\",   (string) Type of notification\n"
-            "    \"address\": \"...\"       (string) Address of the publisher\n"
-            "  },\n"
-            "  ...\n"
-            "]\n"
-            "\nExamples:\n"
-            + HelpExampleCli("getzmqnotifications", "")
-            + HelpExampleRpc("getzmqnotifications", "")
-        );
+        throw RPCDoc("getzmqnotifications")
+            .Desc("Returns information about the active ZeroMQ notifications.")
+            .Table("Result")
+            .Row("[")
+            .Row("  {", {"json object"})
+            .Row("    \"type\": \"pubhashtx\",", {"string"}, "Type of notification")
+            .Row("    \"address\": \"...\"", {"string"}, "Address of the publisher")
+            .Row("  },")
+            .Row("  ...")
+            .Row("]")
+            .ExampleCli("")
+            .ExampleRpc("")
+            .AsError();
     }
 
     UniValue result(UniValue::VARR);

@@ -21,8 +21,8 @@ private:
     const std::string m_code;
 
 public:
-    RPCDocExample(const std::string& description, const std::string& code);
-    RPCDocExample(const std::string& code);
+    explicit RPCDocExample(const std::string& description, const std::string& code);
+    explicit RPCDocExample(const std::string& code);
     std::string AsText() const;
 };
 
@@ -34,9 +34,9 @@ private:
     const std::string m_description;
 
 public:
-    RPCDocTableRow(const std::string& code);
-    RPCDocTableRow(const std::string& code, const std::string& description);
-    RPCDocTableRow(const std::string& code, const std::initializer_list<std::string>& types, const std::string& description);
+    explicit RPCDocTableRow(const std::string& code);
+    explicit RPCDocTableRow(const std::string& code, const std::string& description);
+    explicit RPCDocTableRow(const std::string& code, const std::initializer_list<std::string>& types, const std::string& description);
     std::string const& Code() const;
     std::vector<std::string> const& Types() const;
     std::vector<std::string> DescriptionLines() const;
@@ -51,7 +51,7 @@ private:
     size_t PrefixLength() const;
 
 public:
-    RPCDocTable(const std::string& name);
+    explicit RPCDocTable(const std::string& name);
     void AddRow(const RPCDocTableRow& row);
 
     std::string AsText() const;
@@ -67,8 +67,8 @@ private:
     std::vector<RPCDocExample> m_examples;
 
 public:
-    RPCDoc(std::string methodName);
-    RPCDoc(std::string methodName, std::string firstArguments);
+    explicit RPCDoc(const std::string& methodName);
+    explicit RPCDoc(const std::string& methodName, const std::string& firstArguments);
 
     RPCDoc& Desc(const std::string& description);
     RPCDoc& Table(const std::string& name);
@@ -77,7 +77,6 @@ public:
     RPCDoc& Row(const std::string& code, const std::string& description);
     RPCDoc& Row(const std::string& code, const std::initializer_list<std::string>& types, const std::string& description);
     RPCDoc& Rows(const std::vector<RPCDocTableRow>& rows);
-    RPCDoc& Example(const std::string& code);
     RPCDoc& Example(const std::string& description, const std::string& code);
 
     RPCDoc& ExampleCli(const std::string& args);

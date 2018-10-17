@@ -146,7 +146,7 @@ std::string ListLogCategories()
         // Omit the special cases.
         if (category_desc.flag != BCLog::NONE && category_desc.flag != BCLog::ALL) {
             if (outcount != 0) ret += ", ";
-            ret += category_desc.category;
+            ret += "`" + category_desc.category + "`";
             outcount++;
         }
     }

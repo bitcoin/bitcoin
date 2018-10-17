@@ -14,6 +14,8 @@
 #include <util.h>
 #include <utilstrencodings.h>
 
+#include <rpc/doc.h>
+
 #include <boost/bind.hpp>
 #include <boost/signals2/signal.hpp>
 #include <boost/algorithm/string/classification.hpp>
@@ -202,14 +204,13 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
 UniValue help(const JSONRPCRequest& jsonRequest)
 {
     if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
-        throw std::runtime_error(
-            "help ( \"command\" )\n"
-            "\nList all commands, or get help for a specified command.\n"
-            "\nArguments:\n"
-            "1. \"command\"     (string, optional) The command to get help on\n"
-            "\nResult:\n"
-            "\"text\"     (string) The help text\n"
-        );
+        throw RPCDoc("help", "( \"command\" )")
+            .Desc("List all commands, or get help for a specified command.")
+            .Table("Arguments")
+            .Row("1. \"command\"", {"string", "optional"}, "The command to get help on")
+            .Table("Result")
+            .Row("\"text\"", {"string"}, "The help text")
+            .AsError();
 
     std::string strCommand;
     if (jsonRequest.params.size() > 0)
@@ -223,9 +224,9 @@ UniValue stop(const JSONRPCRequest& jsonRequest)
 {
     // Accept the deprecated and ignored 'detach' boolean argument
     if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
-        throw std::runtime_error(
-            "stop\n"
-            "\nStop Bitcoin server.");
+        throw RPCDoc("stop")
+            .Desc("Stop Bitcoin server.")
+            .AsError();
     // Event loop will exit after current HTTP requests have been handled, so
     // this reply will get back to the client.
     StartShutdown();
@@ -235,15 +236,13 @@ UniValue stop(const JSONRPCRequest& jsonRequest)
 static UniValue uptime(const JSONRPCRequest& jsonRequest)
 {
     if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
-        throw std::runtime_error(
-                "uptime\n"
-                        "\nReturns the total uptime of the server.\n"
-                        "\nResult:\n"
-                        "ttt        (numeric) The number of seconds that the server has been running\n"
-                        "\nExamples:\n"
-                + HelpExampleCli("uptime", "")
-                + HelpExampleRpc("uptime", "")
-        );
+        throw RPCDoc("uptime")
+            .Desc("Returns the total uptime of the server.")
+            .Table("Result")
+            .Row("ttt", {"numeric"}, "The number of seconds that the server has been running")
+            .ExampleCli("")
+            .ExampleRpc("")
+            .AsError();
 
     return GetTime() - GetStartupTime();
 }

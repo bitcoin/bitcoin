@@ -65,7 +65,7 @@ std::vector<std::string> RPCDocTableRow::DescriptionLines() const
 size_t RPCDocTable::PrefixLength() const
 {
     size_t max = 0;
-    for (auto const& row : m_rows) {
+    for (const auto& row : m_rows) {
         size_t prefix = row.Code().length() + 2;
         if (prefix > max) {
             max = prefix;
@@ -82,22 +82,22 @@ RPCDocTable::RPCDocTable(const std::string& name)
 
 void RPCDocTable::AddRow(const RPCDocTableRow& row)
 {
-    m_rows.push_back(row);
+    m_rows.emplace_back(row);
 }
 
 std::string RPCDocTable::AsText() const
 {
-    std::string res = "";
+    std::string res;
     res += m_name;
     res += ":\n";
 
     size_t prefixLen = PrefixLength();
-    for (auto const& row : m_rows) {
-        std::string code = row.Code();
+    for (const auto& row : m_rows) {
+        const std::string& code = row.Code();
         res += row.Code();
         auto lines = row.DescriptionLines();
         bool firstLine = true;
-        for (auto const& line : lines) {
+        for (const auto& line : lines) {
             size_t spaces;
             if (firstLine) {
                 spaces = prefixLen - code.length();
@@ -111,7 +111,7 @@ std::string RPCDocTable::AsText() const
                 if (!types.empty()) {
                     bool firstType = true;
                     res += "(";
-                    for (auto const& type : types) {
+                    for (const auto& type : types) {
                         if (!firstType) {
                             res += ", ";
                         }
@@ -129,12 +129,12 @@ std::string RPCDocTable::AsText() const
     return res;
 }
 
-RPCDoc::RPCDoc(std::string methodName, std::string firstArguments)
+RPCDoc::RPCDoc(const std::string& methodName, const std::string& firstArguments)
     : m_methodName(methodName), m_firstArguments(firstArguments)
 {
 }
 
-RPCDoc::RPCDoc(std::string methodName)
+RPCDoc::RPCDoc(const std::string& methodName)
     : m_methodName(methodName), m_firstArguments("")
 {
 }
@@ -147,7 +147,7 @@ RPCDoc& RPCDoc::Desc(const std::string& description)
 
 RPCDoc& RPCDoc::Table(const std::string& name)
 {
-    m_tables.push_back(RPCDocTable(name));
+    m_tables.emplace_back(RPCDocTable(name));
     return *this;
 }
 
@@ -189,34 +189,28 @@ RPCDoc& RPCDoc::Row(const std::string& code, const std::initializer_list<std::st
 
 RPCDoc& RPCDoc::Rows(const std::vector<RPCDocTableRow>& rows)
 {
-    for (auto const& row : rows) {
+    for (const auto& row : rows) {
         m_tables.back().AddRow(row);
     }
     return *this;
 }
 
-RPCDoc& RPCDoc::Example(const std::string& code)
+RPCDoc& RPCDoc::Example(const std::string& description, const std::string& code)
 {
-    m_examples.push_back(RPCDocExample(code));
-    return *this;
-}
-
-RPCDoc& RPCDoc::Example(const std::string& code, const std::string& example)
-{
-    m_examples.push_back(RPCDocExample(code, example));
+    m_examples.emplace_back(RPCDocExample(description, code));
     return *this;
 }
 
 RPCDoc& RPCDoc::ExampleCli(const std::string& description, const std::string& methodName, const std::string& args)
 {
-    m_examples.push_back(
+    m_examples.emplace_back(
         RPCDocExample(description, "bitcoin-cli " + methodName + " " + args));
     return *this;
 }
 
 RPCDoc& RPCDoc::ExampleRpc(const std::string& description, const std::string& methodName, const std::string& args)
 {
-    m_examples.push_back(RPCDocExample(
+    m_examples.emplace_back(RPCDocExample(
         description,
         "curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", "
         "\"method\": \"" +
