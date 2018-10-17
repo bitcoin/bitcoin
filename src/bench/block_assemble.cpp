@@ -52,7 +52,7 @@ static CTxIn MineBlock(const CScript& coinbase_scriptPubKey)
 }
 
 
-static void AssembleBlock(benchmark::State& state)
+static void AssembleBlock(benchmark::State& benchmarkState)
 {
     const std::vector<unsigned char> op_true{OP_TRUE};
     CScriptWitness witness;
@@ -102,13 +102,13 @@ static void AssembleBlock(benchmark::State& state)
         LOCK(::cs_main); // Required for ::AcceptToMemoryPool.
 
         for (const auto& txr : txs) {
-            CValidationState state;
-            bool ret{::AcceptToMemoryPool(::mempool, state, txr, nullptr /* pfMissingInputs */, nullptr /* plTxnReplaced */, false /* bypass_limits */, /* nAbsurdFee */ 0)};
+            CValidationState validationState;
+            bool ret{::AcceptToMemoryPool(::mempool, validationState, txr, nullptr /* pfMissingInputs */, nullptr /* plTxnReplaced */, false /* bypass_limits */, /* nAbsurdFee */ 0)};
             assert(ret);
         }
     }
 
-    while (state.KeepRunning()) {
+    while (benchmarkState.KeepRunning()) {
         PrepareBlock(SCRIPT_PUB);
     }
 
