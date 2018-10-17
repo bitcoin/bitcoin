@@ -30,6 +30,7 @@
 #include <utilstrencodings.h>
 
 #include <memory>
+#include <unordered_set>
 
 #if defined(NDEBUG)
 # error "Bitcoin cannot be compiled without assertions."
@@ -153,7 +154,12 @@ namespace {
     std::atomic<int64_t> g_last_tip_update(0);
 
     /** Relay map */
-    typedef std::map<uint256, CTransactionRef> MapRelay;
+    struct RelayEntry {
+        explicit RelayEntry(CTransactionRef &&tx) : m_txref(tx) {}
+        CTransactionRef m_txref;
+        std::unordered_set<NodeId> m_node_set;
+    };
+    typedef std::map<uint256, RelayEntry> MapRelay;
     MapRelay mapRelay GUARDED_BY(cs_main);
     /** Expiration-time ordered list of (expire time, relay map entry) pairs. */
     std::deque<std::pair<int64_t, MapRelay::iterator>> vRelayExpiration GUARDED_BY(cs_main);
@@ -1284,8 +1290,8 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
             bool push = false;
             auto mi = mapRelay.find(inv.hash);
             int nSendFlags = (inv.type == MSG_TX ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
-            if (mi != mapRelay.end()) {
-                connman->PushMessage(pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *mi->second));
+            if (mi != mapRelay.end() && mi->second.m_node_set.count(pfrom->GetId())) {
+                connman->PushMessage(pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *mi->second.m_txref));
                 push = true;
             } else if (pfrom->timeLastMempoolReq) {
                 auto txinfo = mempool.info(inv.hash);
@@ -3609,7 +3615,10 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                             vRelayExpiration.pop_front();
                         }
 
-                        auto ret = mapRelay.insert(std::make_pair(hash, std::move(txinfo.tx)));
+                        auto ret = mapRelay.emplace(hash, RelayEntry(std::move(txinfo.tx)));
+                        // Add this peer to the node map indicating which peers
+                        // we will allow to download the transaction
+                        ret.first->second.m_node_set.insert(pto->GetId());
                         if (ret.second) {
                             vRelayExpiration.push_back(std::make_pair(nNow + 15 * 60 * 1000000, ret.first));
                         }
