@@ -1,4 +1,5 @@
 variables:
+  RELEASE_VERSION: "0.12.5.1"
   GIT_STRATEGY: "clone"
   MAKEJOBS: "-j4"
   CCACHE_SIZE: "100M"
@@ -35,21 +36,21 @@ cache:
   variables:
     CROWN_CONFIG: "--enable-mingw"
     HOST: "x86_64-w64-mingw32"
-    OUTDIR: "Crown-Win64"
+    OUTDIR: "Crown-Win64-${RELEASE_VERSION}-"
     PACKAGES: "nsis gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64 wine1.6 bc"
 
 .job_template: &win32_definition
   variables:
     CROWN_CONFIG: ""
     HOST: "i686-w64-mingw32"
-    OUTDIR: "Crown-Win32"
+    OUTDIR: "Crown-Win32-${RELEASE_VERSION}-"
     PACKAGES: "nsis g++-mingw-w64-i686 gcc-mingw-w64-i686 binutils-mingw-w64-i686 wine1.6 bc"
 
 .job_template: &linux64_definition
   variables:
     CROWN_CONFIG: "--enable-glibc-back-compat"
     HOST: "x86_64-unknown-linux-gnu"
-    OUTDIR: "Crown-Linux64"
+    OUTDIR: "Crown-Linux64-${RELEASE_VERSION}-"
     DEP_OPTS: "USE_LINUX_STATIC_QT5=1"
 
 .job_template: &linux32_definition
@@ -57,14 +58,14 @@ cache:
     CROWN_CONFIG: "--enable-glibc-back-compat"
     HOST: "i686-pc-linux-gnu"
     DEP_OPTS: "USE_LINUX_STATIC_QT5=1"
-    OUTDIR: "Crown-Linux32"
+    OUTDIR: "Crown-Linux32-${RELEASE_VERSION}-"
     PACKAGES: "g++-multilib bc"
 
 .job_template: &raspberrypi_definition
   variables:
     CROWN_CONFIG: "--enable-glibc-back-compat"
     HOST: "arm-linux-gnueabihf"
-    OUTDIR: "Crown-RaspberryPi"
+    OUTDIR: "Crown-RaspberryPi-${RELEASE_VERSION}-"
     PACKAGES: "g++-arm-linux-gnueabihf"
 
 .job_template: &osx_definition
@@ -72,7 +73,7 @@ cache:
     CROWN_CONFIG: ""
     HOST: "x86_64-apple-darwin11"
     OSX_SDK: "10.7"
-    OUTDIR: "Crown-Osx"
+    OUTDIR: "Crown-Osx-${RELEASE_VERSION}-"
     PACKAGES: "cmake gcc-multilib g++-multilib libcap-dev libbz2-dev"
 
 # Artifact settings for releases and snapshots
