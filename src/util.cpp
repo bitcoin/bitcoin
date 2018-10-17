@@ -1271,8 +1271,8 @@ int ScheduleBatchPriority()
 #endif
 }
 
-namespace util {
 #ifdef WIN32
+namespace util {
 WinCmdLineArgs::WinCmdLineArgs()
 {
     wchar_t** wargv = CommandLineToArgvW(GetCommandLineW(), &argc);
@@ -1295,5 +1295,5 @@ std::pair<int, char**> WinCmdLineArgs::get()
 {
     return std::make_pair(argc, argv);
 }
-#endif
 } // namespace util
+#endif
