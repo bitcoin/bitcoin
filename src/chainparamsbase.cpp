@@ -50,7 +50,7 @@ class CBaseDevNetParams : public CBaseChainParams
 public:
     CBaseDevNetParams(const std::string &dataDir)
     {
-        nRPCPort = 19998;
+        nRPCPort = 19342;
         strDataDir = dataDir;
     }
 };
@@ -99,6 +99,8 @@ void SelectBaseParams(CBaseChainParams::Network network)
         std::string devNetName = GetDevNetName();
         assert(!devNetName.empty());
         devNetParams = new CBaseDevNetParams(devNetName);
+        pCurrentBaseParams = devNetParams;
+        return;
     }
 
     switch (network) {
@@ -123,10 +125,15 @@ void SelectBaseParams(CBaseChainParams::Network network)
 CBaseChainParams::Network NetworkIdFromCommandLine()
 {
     bool fRegTest = GetBoolArg("-regtest", false);
+    bool fDevNet = IsArgSet("-devnet");
     bool fTestNet = GetBoolArg("-testnet", false);
 
-    if (fTestNet && fRegTest)
+    int nameParamsCount = (fRegTest ? 1 : 0) + (fDevNet ? 1 : 0) + (fTestNet ? 1 : 0);
+    if (nameParamsCount > 1)
         return CBaseChainParams::MAX_NETWORK_TYPES;
+
+    if (fDevNet)
+        return CBaseChainParams::DEVNET;
     if (fRegTest)
         return CBaseChainParams::REGTEST;
     if (fTestNet)

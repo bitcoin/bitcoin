@@ -47,8 +47,8 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
 
 static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
-    const char* pszTimestamp = "Wired 09/Jan/2014 The Grand Experiment Goes Live: Overstock.com Is Now Accepting Bitcoins";
-    const CScript genesisOutputScript = CScript() << ParseHex("040184710fa689ad5023690c80f3a49c8f13f8d45b8c857fbcbc8bc4a8e4d3eb4b10f4d4604fa08dce601aaf0f470216fe1b51850b4acf21b179c45070ac7b03a9") << OP_CHECKSIG;
+    const char* pszTimestamp = "The inception of Crowncoin 10/Oct/2014";
+    const CScript genesisOutputScript = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
     return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
 }
 
@@ -60,7 +60,6 @@ static CBlock CreateDevNetGenesisBlock(const uint256 &prevBlockHash, const std::
     txNew.nVersion = 1;
     txNew.vin.resize(1);
     txNew.vout.resize(1);
-    // put height (BIP34) and devnet name into coinbase
     txNew.vin[0].scriptSig = CScript() << 1 << std::vector<unsigned char>(devNetName.begin(), devNetName.end());
     txNew.vout[0].nValue = genesisReward;
     txNew.vout[0].scriptPubKey = CScript() << OP_RETURN;
@@ -159,6 +158,18 @@ static Checkpoints::MapCheckpoints mapCheckpointsTestnet =
         ;
 static const Checkpoints::CCheckpointData dataTestnet = {
         &mapCheckpointsTestnet,
+        1412760826, // * UNIX timestamp of last checkpoint block
+        0,          // * total number of transactions between genesis and last checkpoint
+                    //   (the tx=... number in the SetBestChain debug.log lines)
+        0           // * estimated number of transactions per day after checkpoint
+    };
+
+static Checkpoints::MapCheckpoints mapCheckpointsDevnet =
+        boost::assign::map_list_of
+        ( 0, uint256S("0x008bed705379377f4c5acca8e3effa909e4aa4a47462900a62cbf5f17d2d7035"))
+        ;
+static const Checkpoints::CCheckpointData dataDevnet = {
+        &mapCheckpointsDevnet,
         1412760826, // * UNIX timestamp of last checkpoint block
         0,          // * total number of transactions between genesis and last checkpoint
                     //   (the tx=... number in the SetBestChain debug.log lines)
@@ -411,46 +422,25 @@ public:
     CDevNetParams() {
         strNetworkID = "dev";
         nSubsidyHalvingInterval = 210240;
+        bnProofOfWorkLimit = ~arith_uint256(0) >> 8;
+        nMaxTipAge = 6 * 60 * 60;
 
-        /* FIXME
-        nMasternodePaymentsStartBlock = 500;
-        nMasternodePaymentsIncreaseBlock = 520;
-        nMasternodePaymentsIncreasePeriod = 10;
-        nInstantSendConfirmationsRequired = 2;
-        nInstantSendKeepLock = 6;
-        nBudgetPaymentsStartBlock = 550;
-        nBudgetPaymentsCycleBlocks = 50;
-        nBudgetPaymentsWindowBlocks = 10;
-        nSuperblockStartBlock = 560; // NOTE: Should satisfy nSuperblockStartBlock > nBudgetPeymentsStartBlock
-        nSuperblockStartHash = uint256(); // do not check this on devnet
-        nSuperblockCycle = 24; // Superblocks can be issued hourly on devnet
-        nGovernanceMinQuorum = 1;
-        nGovernanceFilterElements = 500;
-        nMasternodeMinimumConfirmations = 1;
-        powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 1
-        nPowTargetTimespan = 24 * 60 * 60; // Dash: 1 day
-        nPowTargetSpacing = 2.5 * 60; // Dash: 2.5 minutes
-        fPowAllowMinDifficultyBlocks = true;
-        fPowNoRetargeting = false;
-        nPowKGWHeight = 4001; // nPowKGWHeight >= nPowDGWHeight means "no KGW"
-        nPowDGWHeight = 4001;
-        nRuleChangeActivationThreshold = 1512; // 75% for testchains
-        nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
-         */
+        nTargetTimespan = 2 * 60 * 60;  // 2 hours
+        nTargetSpacing = 30;      // 30 seconds
 
-        pchMessageStart[0] = 0xe2;
-        pchMessageStart[1] = 0xca;
-        pchMessageStart[2] = 0xff;
-        pchMessageStart[3] = 0xce;
-        vAlertPubKey = ParseHex("04517d8a699cb43d3938d7b24faaff7cda448ca4ea267723ba614784de661949bf632d6304316b244646dea079735b9a6fc4af804efb4752075b9fe2245e14e412");
-        nDefaultPort = 19999;
+        pchMessageStart[0] = 0x0f;
+        pchMessageStart[1] = 0x18;
+        pchMessageStart[2] = 0x0e;
+        pchMessageStart[3] = 0x06;
+        vAlertPubKey = ParseHex("04977aae0411f4e1757e8682c87ee79180ad577ef0351054e6cda5c9381fcd8c7333e88ac250d3ab3e3aafd5d1c1d946f2ca62372db7f35c84398a878aa145f09a");
+        nDefaultPort = 19342;
 
-        genesis = CreateGenesisBlock(1417713337, 1096447, 0x207fffff, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1412760826, 175962739, bnProofOfWorkLimit.GetCompact(), 1, 10 * COIN);
         hashGenesisBlock = genesis.GetHash();
-        assert(hashGenesisBlock == uint256S("0x000008ca1832a4baf228eb1553c03d3a2c8e02399550dd6ea8d65cec3ef23d2e"));
-        assert(genesis.hashMerkleRoot == uint256S("0xe0028eb9648db56b1ac77cf090b99048a8007e2bb64b68f092c03c7f56a662c7"));
+        assert(hashGenesisBlock == uint256S("0x008bed705379377f4c5acca8e3effa909e4aa4a47462900a62cbf5f17d2d7035"));
+        assert(genesis.hashMerkleRoot == uint256S("0x80ad356118a9ab8db192db66ef77146cc36d958f959251feace550e4ca3d1446"));
 
-        devnetGenesis = FindDevNetGenesisBlock(*this, genesis, 50 * COIN);
+        devnetGenesis = FindDevNetGenesisBlock(*this, genesis, 10 * COIN);
         hashDevnetGenesisBlock = devnetGenesis.GetHash();
 
         vFixedSeeds.clear();
@@ -468,12 +458,33 @@ public:
         // Testnet Dash BIP32 prvkeys start with 'tprv' (Bitcoin defaults)
         base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x04)(0x35)(0x83)(0x94).convert_to_container<std::vector<unsigned char> >();
 
-        fMiningRequiresPeers = true;
+        fMiningRequiresPeers = false;
+        fAllowMinDifficultyBlocks = false;
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;
         fMineBlocksOnDemand = false;
 
         nPoolMaxTransactions = 3;
+    }
+
+    const Checkpoints::CCheckpointData& Checkpoints() const
+    {
+        return dataDevnet;
+    }
+
+    int AuxpowStartHeight() const
+    {
+        return 0;
+    }
+
+    bool StrictChainId() const
+    {
+        return false;
+    }
+
+    bool AllowLegacyBlocks(unsigned) const
+    {
+        return true;
     }
 };
 static CDevNetParams *devNetParams;
@@ -615,6 +626,10 @@ CChainParams &Params(CBaseChainParams::Network network) {
 }
 
 void SelectParams(CBaseChainParams::Network network) {
+    if (network == CBaseChainParams::DEVNET) {
+        devNetParams = new CDevNetParams();
+    }
+
     SelectBaseParams(network);
     pCurrentParams = &Params(network);
 }
