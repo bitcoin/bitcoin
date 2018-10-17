@@ -1045,6 +1045,14 @@ bool FileCommit(FILE *file)
         failure = true;
     }
 #endif
+#if HAVE_FSYNC
+    if (fsync(fileno(file)) == 0) {
+        return true;
+    } else if (errno != EINVAL) {
+        LogPrintf("%s: fsync failed: %d\n", __func__, errno);
+        failure = true;
+    }
+#endif
 
     // If no platform-specific flush mechanisms, entirely dependent on the result of fflush.
     // If platform-specific flush mechanisms exist, they must succeed, or we return failure.
