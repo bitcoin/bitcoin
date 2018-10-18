@@ -228,8 +228,8 @@ class AutoIXMempoolTest(BitcoinTestFramework):
         change_address = node_from.getnewaddress()
         fee = 0.001
         outputs={}
-        outputs[receiver_address] = amount
-        outputs[change_address] = in_amount - amount - fee
+        outputs[receiver_address] = satoshi_round(amount)
+        outputs[change_address] = satoshi_round(in_amount - amount - fee)
         rawtx = node_from.createrawtransaction(inputs, outputs)
         return node_from.signrawtransaction(rawtx)
 
