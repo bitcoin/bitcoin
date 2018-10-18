@@ -698,6 +698,36 @@ BOOST_FIXTURE_TEST_SUITE(TestBudgetDraft, BudgetDraftFixture)
         BOOST_CHECK_EQUAL(budget.GetBudgetDrafts().front()->GetHash(), draft.GetHash());
     }
 
+    BOOST_AUTO_TEST_CASE(AddNewVote)
+    {
+        std::vector<CTxBudgetPayment> txBudgetPayments;
+        txBudgetPayments.push_back(GetPayment(proposalA));
+
+        BudgetDraft draft(blockStart, txBudgetPayments, mn1.vin, keyPairMn);
+        BudgetDraftVote vote(mn1.vin, draft.GetHash());
+
+        draft.AddOrUpdateVote(false, vote, error);
+
+        BOOST_REQUIRE(!draft.GetVotes().empty());
+        BOOST_CHECK_EQUAL(mn1.vin.prevout.GetHash(), draft.GetVotes().begin()->first);
+        BOOST_CHECK_EQUAL(vote.GetHash(), draft.GetVotes().begin()->second.GetHash());
+    }
+
+    BOOST_AUTO_TEST_CASE(AddObsoleteVote)
+    {
+        std::vector<CTxBudgetPayment> txBudgetPayments;
+        txBudgetPayments.push_back(GetPayment(proposalA));
+
+        BudgetDraft draft(blockStart, txBudgetPayments, mn1.vin, keyPairMn);
+        BudgetDraftVote vote(mn1.vin, draft.GetHash());
+
+        draft.AddOrUpdateVote(true, vote, error);
+
+        BOOST_REQUIRE(!draft.GetObsoleteVotes().empty());
+        BOOST_CHECK_EQUAL(mn1.vin.prevout.GetHash(), draft.GetObsoleteVotes().begin()->first);
+        BOOST_CHECK_EQUAL(vote.GetHash(), draft.GetObsoleteVotes().begin()->second.GetHash());
+    }
+
 BOOST_AUTO_TEST_SUITE_END()
 
 namespace
