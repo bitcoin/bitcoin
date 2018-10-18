@@ -3694,7 +3694,12 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
             std::vector<const CBlockIndex*> vToDownload;
             NodeId staller = -1;
             FindNextBlocksToDownload(pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload, staller, consensusParams);
+            uint64_t max_height = std::max<uint64_t>(pto->nStartingHeight, state.pindexBestKnownBlock ? state.pindexBestKnownBlock->nHeight : 0);
             for (const CBlockIndex *pindex : vToDownload) {
+                if (pto->m_limited_node && pto->nStartingHeight > 0 && pindex->nHeight + NODE_NETWORK_LIMITED_MIN_BLOCKS <= max_height) {
+                    // This peer is borderline out of reach due to the limited min blocks threshold; it may end up disconnecting us, so let's stop for now
+                    break;
+                }
                 uint32_t nFetchFlags = GetFetchFlags(pto);
                 vGetData.push_back(CInv(MSG_BLOCK | nFetchFlags, pindex->GetBlockHash()));
                 MarkBlockAsInFlight(pto->GetId(), pindex->GetBlockHash(), pindex);
