@@ -875,6 +875,22 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& in
     return nSigOps;
 }
 
+int GetTransactionAge(const uint256 &txid)
+{
+    CTransaction tx;
+    uint256 hashBlock;
+    if (GetTransaction(txid, tx, hashBlock, true))
+    {
+        BlockMap::iterator it = mapBlockIndex.find(hashBlock);
+        if (it != mapBlockIndex.end())
+        {
+            return (chainActive.Tip()->nHeight + 1) - it->second->nHeight;
+        }
+    }
+
+    return -1;
+}
+
 int GetInputHeight(const CTxIn& vin)
 {
     CCoinsView viewDummy;
