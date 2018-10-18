@@ -104,7 +104,11 @@ TransactionView::TransactionView(QWidget* parent) :
     amountWidget = new QLineEdit(this);
     amountWidget->setPlaceholderText(tr("Min amount"));
     amountWidget->setFixedWidth(125);
-    amountWidget->setValidator(new QDoubleValidator(0, 1e20, 8, this));
+    QDoubleValidator *amountValidator = new QDoubleValidator(0, 1e20, 8, this);
+    QLocale amountLocale(QLocale::C);
+    amountLocale.setNumberOptions(QLocale::RejectGroupSeparator);
+    amountValidator->setLocale(amountLocale);
+    amountWidget->setValidator(amountValidator);
     amountWidget->setObjectName("amountWidget");
     hlayout->addWidget(amountWidget);
 
