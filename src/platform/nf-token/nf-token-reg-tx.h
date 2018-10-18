@@ -26,11 +26,17 @@ namespace Platform
             : m_nfToken(std::move(nfToken))
         {}
 
+        inline const NfToken & GetNfToken() const
+        {
+            return m_nfToken;
+        }
+
         bool Sign(CKey & privKey, CPubKey & pubKey);
 
         std::string ToString() const;
 
-        static bool CheckTx(const CTransaction& tx, const CBlockIndex* pIndex, CValidationState& state);
+        static bool CheckTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
+        static bool ProcessSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValidationState& state);
 
     public:
         ADD_SERIALIZE_METHODS

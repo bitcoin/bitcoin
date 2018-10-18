@@ -11,7 +11,7 @@
 
 namespace Platform
 {
-    bool NfTokenProtocolRegTx::CheckTx(const CTransaction& tx, const CBlockIndex* pIndex, CValidationState& state)
+    bool NfTokenProtocolRegTx::CheckTx(const CTransaction& tx, const CBlockIndex* pndexPrev, CValidationState& state)
     {
         AssertLockHeld(cs_main);
 

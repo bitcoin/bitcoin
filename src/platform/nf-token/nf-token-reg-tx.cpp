@@ -5,6 +5,7 @@
 #include "nf-token-reg-tx.h"
 #include "primitives/transaction.h"
 #include "platform/specialtx.h"
+#include "platform/nf-token/nf-tokens-manager.h"
 
 #include "sync.h"
 #include "main.h"
@@ -26,7 +27,7 @@ namespace Platform
         return true;
     }
 
-    bool NfTokenRegTx::CheckTx(const CTransaction& tx, const CBlockIndex* pIndex, CValidationState& state)
+    bool NfTokenRegTx::CheckTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
     {
         AssertLockHeld(cs_main);
 
@@ -34,18 +35,42 @@ namespace Platform
         if (!GetTxPayload(tx, nfTokenRegTx))
             return state.DoS(100, false, REJECT_INVALID, "bad-tx-payload");
 
+        const NfToken & nfToken = nfTokenRegTx.GetNfToken();
+
         if (nfTokenRegTx.m_version != NfTokenRegTx::CURRENT_VERSION)
             return state.DoS(100, false, REJECT_INVALID, "bad-token-reg-tx-version");
 
-        if (nfTokenRegTx.m_nfToken.tokenId.IsNull())
+        if (nfToken.tokenId.IsNull())
             return state.DoS(10, false, REJECT_INVALID, "bad-token-reg-tx-token");
 
-        if (nfTokenRegTx.m_nfToken.tokenOwnerKeyId.IsNull())
+        if (nfToken.tokenOwnerKeyId.IsNull())
             return state.DoS(10, false, REJECT_INVALID, "bad-token-reg-tx-owner-key-null");
 
-        if (nfTokenRegTx.m_nfToken.metadataAdminKeyId.IsNull())
+        if (nfToken.metadataAdminKeyId.IsNull())
             return state.DoS(10, false, REJECT_INVALID, "bad-token-reg-tx-metadata-admin-key-null");
 
-        return CheckNfTokenTxSignature(tx, nfTokenRegTx, nfTokenRegTx.m_nfToken.tokenOwnerKeyId, state);
+        //TODO: Validate metadata
+
+        if (pindexPrev != nullptr)
+        {
+            if (NfTokensManager::Instance().ContainsAtHeight(nfToken.tokenProtocolId, nfToken.tokenId, pindexPrev->nHeight))
+                return state.DoS(10, false, REJECT_DUPLICATE, "bad-token-reg-tx-dup-token");
+        }
+
+        return CheckNfTokenTxSignature(tx, nfTokenRegTx, nfTokenRegTx.GetNfToken().tokenOwnerKeyId, state);
+    }
+
+    bool NfTokenRegTx::ProcessSpecialTx(const CTransaction &tx, const CBlockIndex *pindex, CValidationState &state)
+    {
+        NfTokenRegTx nfTokenRegTx;
+        bool result = GetTxPayload(tx, nfTokenRegTx);
+        // should have been checked already
+        assert(result);
+
+        if (!result)
+            return state.DoS(100, false, REJECT_INVALID, "bad-tx-payload");
+
+        if (!NfTokensManager::Instance().AddNfToken(nfTokenRegTx.GetNfToken(), tx, pindex))
+            return state.DoS(100, false, REJECT_DUPLICATE/*REJECT_CONFLICT*/, "token-reg-tx-conflit");
     }
 }

@@ -14,17 +14,17 @@
 
 #include "governance.h"
 
-bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValidationState& state)
+bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {
     if (tx.nVersion < 3 || tx.nType == TRANSACTION_NORMAL)
         return true;
 
     switch (tx.nType) {
         case TRANSACTION_GOVERNANCE_VOTE:
-            return CheckVoteTx(tx, pindex, state);
+            return CheckVoteTx(tx, pindexPrev, state);
 
         case TRANSACTION_NF_TOKEN_REGISTER:
-            return Platform::NfTokenRegTx::CheckTx(tx, pindex, state);
+            return Platform::NfTokenRegTx::CheckTx(tx, pindexPrev, state);
     }
 
     return state.DoS(100, false, REJECT_INVALID, "bad-tx-type");
@@ -84,7 +84,7 @@ bool ProcessSpecialTxsInBlock(bool justCheck, const CBlock& block, const CBlockI
 {
     for (int i = 0; i < (int)block.vtx.size(); i++) {
         const CTransaction& tx = block.vtx[i];
-        if (!CheckSpecialTx(tx, pindex, state))
+        if (!CheckSpecialTx(tx, pindex->pprev, state))
             return false;
         if (!ProcessSpecialTx(justCheck, tx, pindex, state))
             return false;

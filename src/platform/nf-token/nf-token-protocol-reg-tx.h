@@ -30,7 +30,7 @@ namespace Platform
 
         std::string ToString() const;
 
-        static bool CheckTx(const CTransaction& tx, const CBlockIndex* pIndex, CValidationState& state);
+        static bool CheckTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
 
     public:
         ADD_SERIALIZE_METHODS
