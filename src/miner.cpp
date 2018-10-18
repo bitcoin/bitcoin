@@ -363,10 +363,15 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
         FillBlockPayee(txCoinbase, nFees);
         SNFillBlockPayee(txCoinbase, nFees);
 
+        // Proof of stake blocks pay the mining reward in the coinstake transaction
+        if (fProofOfStake)
+            txCoinbase.vout[0].nValue = 0;
+
         // Make payee
 	    if(txCoinbase.vout.size() > 1){
             pblock->payee = txCoinbase.vout[1].scriptPubKey;
         }
+
         // Make SNpayee
 	    if(txCoinbase.vout.size() > 2){
             pblock->payeeSN = txCoinbase.vout[2].scriptPubKey;
@@ -627,7 +632,6 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
             std::unique_ptr<CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(reservekey, pwallet, fProofOfStake));
             if (!pblocktemplate)
             {
-                LogPrintf("Error in CrownnMiner: Keypool ran out, please call keypoolrefill before restarting the mining thread\n");
                 MilliSleep(1000);
                 continue;
             }
