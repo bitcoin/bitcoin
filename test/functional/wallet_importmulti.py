@@ -217,7 +217,7 @@ class ImportMultiTest(BitcoinTestFramework):
         }])
         assert_equal(result[0]['success'], False)
         assert_equal(result[0]['error']['code'], -8)
-        assert_equal(result[0]['error']['message'], 'Incompatibility found between watchonly and keys')
+        assert_equal(result[0]['error']['message'], 'Watch-only addresses should not include private keys')
         address_assert = self.nodes[1].getaddressinfo(address['address'])
         assert_equal(address_assert['iswatchonly'], False)
         assert_equal(address_assert['ismine'], False)
@@ -358,7 +358,7 @@ class ImportMultiTest(BitcoinTestFramework):
         }])
         assert_equal(result[0]['success'], False)
         assert_equal(result[0]['error']['code'], -8)
-        assert_equal(result[0]['error']['message'], 'Incompatibility found between watchonly and keys')
+        assert_equal(result[0]['error']['message'], 'Watch-only addresses should not include private keys')
 
 
         # Address + Public key + !Internal + Wrong pubkey

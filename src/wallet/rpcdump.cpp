@@ -813,7 +813,7 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
         const UniValue& scriptPubKey = data["scriptPubKey"];
         bool isScript = scriptPubKey.getType() == UniValue::VSTR;
         if (!isScript && !(scriptPubKey.getType() == UniValue::VOBJ && scriptPubKey.exists("address"))) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid scriptPubKey");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "scriptPubKey must be string with script or JSON with address string");
         }
         const std::string& output = isScript ? scriptPubKey.get_str() : scriptPubKey["address"].get_str();
 
@@ -850,27 +850,28 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
 
         // Watchonly and private keys
         if (watchOnly && keys.size()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Incompatibility found between watchonly and keys");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Watch-only addresses should not include private keys");
         }
 
         // Internal addresses should not have a label
         if (internal && data.exists("label")) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Incompatibility found between internal and label");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Internal addresses should not have a label");
         }
 
         // Force users to provide the witness script in its field rather than redeemscript
         if (!strRedeemScript.empty() && script.IsPayToWitnessScriptHash()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Provide witnessscript not redeemscript for P2WSH address");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "P2WSH addresses have an empty redeemscript. Please provide the witnessscript instead.");
         }
 
-        CScript original_script = script;
-        CTxDestination original_dest = dest;
+        CScript scriptpubkey_script = script;
+        CTxDestination scriptpubkey_dest = dest;
+        bool allow_p2wpkh = true;
 
         // P2SH
         if (!strRedeemScript.empty() && script.IsPayToScriptHash()) {
             // Check the redeemScript is valid
             if (!IsHex(strRedeemScript)) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid redeem script");
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid redeem script: must be hex string");
             }
 
             // Import redeem script.
@@ -898,10 +899,10 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
             ExtractDestination(script, dest);
         }
 
-        // P2WSH
+        // (P2SH-)P2WSH
         if (!witness_script_hex.empty() && script.IsPayToWitnessScriptHash()) {
             if (!IsHex(witness_script_hex)) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid witness script");
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid witness script: must be hex string");
             }
 
             // Generate the scripts
@@ -923,8 +924,17 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
                 throw JSONRPCError(RPC_WALLET_ERROR, "Error adding p2wsh witnessScript to wallet");
             }
 
-        // P2PK/P2PKH/P2WPKH
-        } else if (dest.type() == typeid(CKeyID) || dest.type() == typeid(WitnessV0KeyHash)) {
+            // Now set script to the witnessScript so we parse the inner script as P2PK or P2PKH below
+            script = witness_script;
+            ExtractDestination(script, dest);
+            allow_p2wpkh = false; // P2WPKH cannot be embedded in P2WSH
+        }
+
+        // (P2SH-)P2PK/P2PKH/P2WPKH
+        if (dest.type() == typeid(CKeyID) || dest.type() == typeid(WitnessV0KeyHash)) {
+            if (!allow_p2wpkh && dest.type() == typeid(WitnessV0KeyHash)) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "P2WPKH cannot be embedded in P2WSH");
+            }
             if (keys.size() > 1 || pubKeys.size() > 1) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "More than one key given for one single-key address");
             }
@@ -971,13 +981,13 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
         }
 
         // Import the address
-        if (::IsMine(*pwallet, original_script) == ISMINE_SPENDABLE) {
+        if (::IsMine(*pwallet, scriptpubkey_script) == ISMINE_SPENDABLE) {
             throw JSONRPCError(RPC_WALLET_ERROR, "The wallet already contains the private key for this address or script");
         }
 
         pwallet->MarkDirty();
 
-        if (!pwallet->AddWatchOnly(original_script, timestamp)) {
+        if (!pwallet->AddWatchOnly(scriptpubkey_script, timestamp)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
         }
 
@@ -986,8 +996,8 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
         }
 
         // add to address book or update label
-        if (IsValidDestination(original_dest)) {
-            pwallet->SetAddressBook(original_dest, label, "receive");
+        if (IsValidDestination(scriptpubkey_dest)) {
+            pwallet->SetAddressBook(scriptpubkey_dest, label, "receive");
         }
 
         // Import private keys.
