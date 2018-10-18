@@ -24,7 +24,7 @@
     <ClCompile Include="..\..\src\wallet\test\*_tests.cpp" />
     <ClCompile Include="..\..\src\test\test_bitcoin.cpp" />
     <ClCompile Include="..\..\src\test\test_bitcoin_main.cpp" />
-    <ClCompile Include="..\..\src\wallet\test\wallet_test_fixture.cpp" />
+    <ClCompile Include="..\..\src\wallet\test\*_fixture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\libbitcoinconsensus\libbitcoinconsensus.vcxproj">
