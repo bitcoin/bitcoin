@@ -85,6 +85,9 @@ public:
 
         if (ser_action.ForRead())
         {
+            // If the address is not depricated then the value won't be converted
+            sAddress = CBitcoinAddress::ConvertToNew(sAddress);
+
             address = QString::fromStdString(sAddress);
             label = QString::fromStdString(sLabel);
             message = QString::fromStdString(sMessage);

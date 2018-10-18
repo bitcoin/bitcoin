@@ -100,6 +100,8 @@ static const unsigned int DATABASE_WRITE_INTERVAL = 60 * 60;
 static const unsigned int DATABASE_FLUSH_INTERVAL = 24 * 60 * 60;
 /** Maximum length of reject messages. */
 static const unsigned int MAX_REJECT_MESSAGE_LENGTH = 111;
+/** Maximum number headers in memory */
+static const int MAX_HEADERS_IN_MEMORY = 50000;
 
 /** "reject" message codes */
 static const unsigned char REJECT_MALFORMED = 0x01;
@@ -249,6 +251,7 @@ bool AcceptableInputs(CTxMemPool& pool, CValidationState &state, const CTransact
                         bool* pfMissingInputs, bool fRejectInsaneFee=false, bool isDSTX=false);
 
 int GetInputHeight(const CTxIn& vin);
+int GetTransactionAge(const uint256 &txid);
 int GetInputAge(const CTxIn& vin);
 int GetInputAgeIX(uint256 nTXHash, const CTxIn& vin);
 int GetIXConfirmations(uint256 nTXHash);

@@ -168,6 +168,12 @@ namespace {
 
     /** Dirty block file entries. */
     set<int> setDirtyFileInfo;
+
+    /** Map which holds received headers auxpow **/
+    std::map<uint256, CAuxPow> mapAuxPow;
+
+    /** Indicator to start/stop headers sync **/
+    bool g_headerSyncStopped = false;
 } // anon namespace
 
 //////////////////////////////////////////////////////////////////////////////
@@ -867,6 +873,22 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& in
             nSigOps += prevout.scriptPubKey.GetSigOpCount(tx.vin[i].scriptSig);
     }
     return nSigOps;
+}
+
+int GetTransactionAge(const uint256 &txid)
+{
+    CTransaction tx;
+    uint256 hashBlock;
+    if (GetTransaction(txid, tx, hashBlock, true))
+    {
+        BlockMap::iterator it = mapBlockIndex.find(hashBlock);
+        if (it != mapBlockIndex.end())
+        {
+            return (chainActive.Tip()->nHeight + 1) - it->second->nHeight;
+        }
+    }
+
+    return -1;
 }
 
 int GetInputHeight(const CTxIn& vin)
@@ -3577,6 +3599,9 @@ bool static LoadBlockIndexDB()
         return true;
     chainActive.SetTip(it->second);
 
+    // This function calls after relaunch so download headers again
+    pindexBestHeader = chainActive.Tip();
+
     PruneBlockIndexCandidates();
 
     LogPrintf("LoadBlockIndexDB(): hashBestChain=%s height=%d date=%s progress=%f\n",
@@ -4073,25 +4098,25 @@ bool static AlreadyHave(const CInv& inv)
         }
         return false;
     case MSG_BUDGET_VOTE:
-        if(budget.mapSeenMasternodeBudgetVotes.count(inv.hash)) {
+        if(budget.HasItem(inv.hash)) {
             masternodeSync.AddedBudgetItem(inv.hash);
             return true;
         }
         return false;
     case MSG_BUDGET_PROPOSAL:
-        if(budget.mapSeenMasternodeBudgetProposals.count(inv.hash)) {
+        if(budget.HasItem(inv.hash)) {
             masternodeSync.AddedBudgetItem(inv.hash);
             return true;
         }
         return false;
     case MSG_BUDGET_FINALIZED_VOTE:
-        if(budget.mapSeenBudgetDraftVotes.count(inv.hash)) {
+        if(budget.HasItem(inv.hash)) {
             masternodeSync.AddedBudgetItem(inv.hash);
             return true;
         }
         return false;
     case MSG_BUDGET_FINALIZED:
-        if(budget.mapSeenBudgetDrafts.count(inv.hash)) {
+        if(budget.HasItem(inv.hash)) {
             masternodeSync.AddedBudgetItem(inv.hash);
             return true;
         }
@@ -4168,7 +4193,12 @@ void static ProcessGetData(CNode* pfrom)
                     if (!ReadBlockFromDisk(block, (*mi).second))
                         assert(!"cannot load block from disk");
                     if (inv.type == MSG_BLOCK)
+                    {
+                        // Don't send auxpow information with block
+                        block.auxpow.reset();
+                        block.readWriteAuxPow = false;
                         pfrom->PushMessage("block", block);
+                    }
                     else // MSG_FILTERED_BLOCK)
                     {
                         LOCK(pfrom->cs_filter);
@@ -4269,40 +4299,44 @@ void static ProcessGetData(CNode* pfrom)
                     }
                 }
                 if (!pushed && inv.type == MSG_BUDGET_VOTE) {
-                    if(budget.mapSeenMasternodeBudgetVotes.count(inv.hash)){
+                    const BudgetDraftVote* item = budget.GetSeenBudgetDraftVote(inv.hash);
+                    if(item){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << budget.mapSeenMasternodeBudgetVotes[inv.hash];
+                        ss << *item;
                         pfrom->PushMessage("mvote", ss);
                         pushed = true;
                     }
                 }
 
                 if (!pushed && inv.type == MSG_BUDGET_PROPOSAL) {
-                    if(budget.mapSeenMasternodeBudgetProposals.count(inv.hash)){
+                    const CBudgetProposal* item = budget.GetSeenProposal(inv.hash);
+                    if(item){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << budget.mapSeenMasternodeBudgetProposals[inv.hash];
+                        ss << *item;
                         pfrom->PushMessage("mprop", ss);
                         pushed = true;
                     }
                 }
 
                 if (!pushed && inv.type == MSG_BUDGET_FINALIZED_VOTE) {
-                    if(budget.mapSeenBudgetDraftVotes.count(inv.hash)){
+                    const BudgetDraftVote* item = budget.GetSeenBudgetDraftVote(inv.hash);
+                    if(item){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << budget.mapSeenBudgetDraftVotes[inv.hash];
+                        ss << *item;
                         pfrom->PushMessage("fbvote", ss);
                         pushed = true;
                     }
                 }
 
                 if (!pushed && inv.type == MSG_BUDGET_FINALIZED) {
-                    if(budget.mapSeenBudgetDrafts.count(inv.hash)){
+                    const BudgetDraftBroadcast* item = budget.GetSeenBudgetDraft(inv.hash);
+                    if(item){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << budget.mapSeenBudgetDrafts[inv.hash];
+                        ss << item->Budget();
                         pfrom->PushMessage("fbs", ss);
                         pushed = true;
                     }
@@ -4933,17 +4967,33 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                     return error(strError.c_str());
                 }
             }
+            else
+            {
+                if (header.nVersion.IsAuxpow())
+                {
+                    // If block header is accepted successfully keep auxpow to use for blocks
+                    mapAuxPow.insert(std::pair<uint256, CAuxPow>(header.GetHash(), *(header.auxpow)));
+                }
+            }
         }
 
         if (pindexLast)
             UpdateBlockAvailability(pfrom->GetId(), pindexLast->GetBlockHash());
 
-        if (nCount == MAX_HEADERS_RESULTS && pindexLast && hasNewHeaders) {
-            // Headers message had its maximum size; the peer may have more headers.
-            // TODO: optimize: if pindexLast is an ancestor of chainActive.Tip or pindexBestHeader, continue
-            // from there instead.
-            LogPrint("net", "more getheaders (%d) to end to peer=%d (startheight:%d)\n", pindexLast->nHeight, pfrom->id, pfrom->nStartingHeight);
-            pfrom->PushMessage("getheaders", chainActive.GetLocator(pindexLast), uint256());
+        // Don't let headers sync to go further more than 50.000 blocks
+        if (pindexBestHeader->nHeight - chainActive.Tip()->nHeight < MAX_HEADERS_IN_MEMORY)
+        {
+            if (nCount == MAX_HEADERS_RESULTS && pindexLast && hasNewHeaders) {
+                // Headers message had its maximum size; the peer may have more headers.
+                // TODO: optimize: if pindexLast is an ancestor of chainActive.Tip or pindexBestHeader, continue
+                // from there instead.
+                LogPrint("net", "more getheaders (%d) to end to peer=%d (startheight:%d)\n", pindexLast->nHeight, pfrom->id, pfrom->nStartingHeight);
+                pfrom->PushMessage("getheaders", chainActive.GetLocator(pindexLast), uint256());
+            }
+        }
+        else
+        {
+            g_headerSyncStopped = true;
         }
 
         CheckBlockIndex();
@@ -4952,22 +5002,44 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     else if (strCommand == "block" && !fImporting && !fReindex) // Ignore blocks received while importing
     {
         CBlock block;
+        // Auxpow should be received with headers so no need to get it with blocks
+        if (pfrom->nVersion > AUXPOW_SEND_VERSION)
+        {
+            block.readWriteAuxPow = false;
+        }
         vRecv >> block;
 
-        CInv inv(MSG_BLOCK, block.GetHash());
-        LogPrint("net", "received block %s peer=%d\n", inv.hash.ToString(), pfrom->id);
+        bool processBlock = true;
+        if (block.nVersion.IsAuxpow() && pfrom->nVersion > AUXPOW_SEND_VERSION)
+        {
+            std::map<uint256, CAuxPow>::iterator auxIt = mapAuxPow.find(block.GetHash());
+            if (auxIt != mapAuxPow.end())
+            {
+                block.auxpow.reset(new CAuxPow(auxIt->second));
+                mapAuxPow.erase(block.GetHash());
+            } else {
+                LogPrintf("Couldn't find auxpow for block: %s, at height: %d\n", block.GetHash().ToString(), chainActive.Tip()->nHeight);
+                processBlock = false;
+            }
+        }
 
-        pfrom->AddInventoryKnown(inv);
+        if (processBlock)
+        {
+            CInv inv(MSG_BLOCK, block.GetHash());
+            LogPrint("net", "received block %s peer=%d\n", inv.hash.ToString(), pfrom->id);
 
-        CValidationState state;
-        ProcessNewBlock(state, pfrom, &block);
-        int nDoS;
-        if (state.IsInvalid(nDoS)) {
-            pfrom->PushMessage("reject", strCommand, state.GetRejectCode(),
-                               state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), inv.hash);
-            if (nDoS > 0) {
-                TRY_LOCK(cs_main, lockMain);
-                if(lockMain) Misbehaving(pfrom->GetId(), nDoS);
+            pfrom->AddInventoryKnown(inv);
+
+            CValidationState state;
+            ProcessNewBlock(state, pfrom, &block);
+            int nDoS;
+            if (state.IsInvalid(nDoS)) {
+                pfrom->PushMessage("reject", strCommand, state.GetRejectCode(),
+                                   state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), inv.hash);
+                if (nDoS > 0) {
+                    TRY_LOCK(cs_main, lockMain);
+                    if(lockMain) Misbehaving(pfrom->GetId(), nDoS);
+                }
             }
         }
 
@@ -5449,8 +5521,17 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                 nSyncStarted++;
                 CBlockIndex *pindexStart = pindexBestHeader->pprev ? pindexBestHeader->pprev : pindexBestHeader;
                 LogPrint("net", "initial getheaders (%d) to peer=%d (startheight:%d)\n", pindexStart->nHeight, pto->id, pto->nStartingHeight);
+
                 pto->PushMessage("getheaders", chainActive.GetLocator(pindexStart), uint256());
             }
+        }
+
+        // Restart headers sync if synced blocks coint is 10% behinde from headers
+        const int restartLimit = (MAX_HEADERS_IN_MEMORY * 10) / 100;
+        if (g_headerSyncStopped && (pindexBestHeader->nHeight - chainActive.Tip()->nHeight < restartLimit))
+        {
+            g_headerSyncStopped = false;
+            pto->PushMessage("getheaders", chainActive.GetLocator(pindexBestHeader), uint256());
         }
 
         // Resend wallet transactions that haven't gotten in a block yet

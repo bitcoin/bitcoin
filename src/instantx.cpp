@@ -42,15 +42,19 @@ void InstantSend::ProcessMessage(CNode* pfrom, const std::string& strCommand, CD
         CInv inv(MSG_TXLOCK_REQUEST, tx.GetHash());
         pfrom->AddInventoryKnown(inv);
 
-        if(m_txLockReq.count(tx.GetHash()) || m_txLockReqRejected.count(tx.GetHash())){
+        if(m_txLockReq.count(tx.GetHash()) || m_txLockReqRejected.count(tx.GetHash()))
             return;
-        }
 
-        if(!IsIxTxValid(tx)){
+        if(!IsIxTxValid(tx))
             return;
-        }
 
-        int nBlockHeight = CreateNewLock(tx);
+        // Check if transaction is old for lock
+        if (GetTransactionAge(tx.GetHash()) > m_acceptedBlockCount)
+            return;
+
+        int64_t nBlockHeight = CreateNewLock(tx);
+        if (nBlockHeight == 0)
+            return;
 
         bool fMissingInputs = false;
         CValidationState state;
@@ -117,13 +121,20 @@ void InstantSend::ProcessMessage(CNode* pfrom, const std::string& strCommand, CD
         CInv inv(MSG_TXLOCK_VOTE, ctx.GetHash());
         pfrom->AddInventoryKnown(inv);
 
-        if(m_txLockVote.count(ctx.GetHash())){
+        if (m_txLockVote.find(ctx.GetHash()) == m_txLockVote.end())
+            return;
+
+        // Check if transaction is old for lock
+        if (GetTransactionAge(ctx.txHash) > m_acceptedBlockCount)
+        {
+            IXLogPrintf("InstantSend::ProcessMessage - Old transaction lock request is received. TxId - %s\n", ctx.txHash.ToString());
             return;
         }
 
         m_txLockVote.insert(make_pair(ctx.GetHash(), ctx));
 
-        if(ProcessConsensusVote(pfrom, ctx)){
+        if (ProcessConsensusVote(pfrom, ctx))
+        {
             //Spam/Dos protection
             /*
                 Masternodes will sometimes propagate votes before the transaction is known to the client.
@@ -148,7 +159,6 @@ void InstantSend::ProcessMessage(CNode* pfrom, const std::string& strCommand, CD
             }
             RelayInv(inv);
         }
-
         return;
     }
     else if (strCommand == "txllist") //Get InstantX Locked list
@@ -208,6 +218,7 @@ bool InstantSend::IsIxTxValid(const CTransaction& txCollateral) const
 
 int64_t InstantSend::CreateNewLock(const CTransaction& tx)
 {
+    LOCK(cs);
     int64_t nTxAge = 0;
     BOOST_REVERSE_FOREACH(CTxIn i, tx.vin){
         nTxAge = GetInputAge(i);
@@ -230,8 +241,6 @@ int64_t InstantSend::CreateNewLock(const CTransaction& tx)
 
         CTransactionLock newLock;
         newLock.nBlockHeight = nBlockHeight;
-        newLock.nExpiration = GetTime() + (60 * 60); //locks expire after 60 minutes (24 confirmations)
-        newLock.nTimeout = GetTime() + (60 * 5);
         newLock.txHash = tx.GetHash();
         m_txLocks.insert(make_pair(tx.GetHash(), newLock));
     } else {
@@ -246,6 +255,7 @@ int64_t InstantSend::CreateNewLock(const CTransaction& tx)
 // check if we need to vote on this transaction
 void InstantSend::DoConsensusVote(const CTransaction& tx, int64_t nBlockHeight)
 {
+    LOCK(cs);
     if(!fMasterNode) return;
 
     int n = mnodeman.GetMasternodeRank(activeMasternode.vin, nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
@@ -289,6 +299,7 @@ void InstantSend::DoConsensusVote(const CTransaction& tx, int64_t nBlockHeight)
 //received a consensus vote
 bool InstantSend::ProcessConsensusVote(CNode* pnode, const CConsensusVote& ctx)
 {
+    LOCK(cs);
     int n = mnodeman.GetMasternodeRank(ctx.vinMasternode, ctx.nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
 
     CMasternode* pmn = mnodeman.Find(ctx.vinMasternode);
@@ -321,8 +332,6 @@ bool InstantSend::ProcessConsensusVote(CNode* pnode, const CConsensusVote& ctx)
 
         CTransactionLock newLock;
         newLock.nBlockHeight = 0;
-        newLock.nExpiration = GetTime()+(60*60);
-        newLock.nTimeout = GetTime()+(60*5);
         newLock.txHash = ctx.txHash;
         m_txLocks.insert(make_pair(ctx.txHash, newLock));
     } else
@@ -378,12 +387,12 @@ bool InstantSend::ProcessConsensusVote(CNode* pnode, const CConsensusVote& ctx)
         return true;
     }
 
-
     return false;
 }
 
 bool InstantSend::CheckForConflictingLocks(const CTransaction& tx)
 {
+    LOCK(cs);
     /*
         It's possible (very unlikely though) to get 2 conflicting transaction locks approved by the network.
         In that case, they will cancel each other out.
@@ -391,17 +400,22 @@ bool InstantSend::CheckForConflictingLocks(const CTransaction& tx)
         Blocks could have been rejected during this time, which is OK. After they cancel out, the client will
         rescan the blocks and find they're acceptable and then take the chain with the most work.
     */
-    BOOST_FOREACH(const CTxIn& in, tx.vin){
-        if(m_lockedInputs.count(in.prevout)){
-            if(m_lockedInputs[in.prevout] != tx.GetHash()){
-                IXLogPrintf("InstantX::CheckForConflictingLocks - found two complete conflicting locks - removing both. %s %s", tx.GetHash().ToString().c_str(), m_lockedInputs[in.prevout].ToString().c_str());
-                if(m_txLocks.count(tx.GetHash())) m_txLocks[tx.GetHash()].nExpiration = GetTime();
-                if(m_txLocks.count(m_lockedInputs[in.prevout])) m_txLocks[m_lockedInputs[in.prevout]].nExpiration = GetTime();
+    BOOST_FOREACH(const CTxIn& in, tx.vin)
+    {
+        if(m_lockedInputs.count(in.prevout))
+        {
+            if(m_lockedInputs[in.prevout] != tx.GetHash())
+            {
+                IXLogPrintf("InstantX::CheckForConflictingLocks - found two complete conflicting locks - removing both. %s %s",
+                        tx.GetHash().ToString().c_str(), m_lockedInputs[in.prevout].ToString().c_str());
+                if(m_txLocks.count(tx.GetHash()))
+                    m_txLocks[tx.GetHash()].m_expiration = GetTime();
+                if(m_txLocks.count(m_lockedInputs[in.prevout]))
+                    m_txLocks[m_lockedInputs[in.prevout]].m_expiration = GetTime();
                 return true;
             }
         }
     }
-
     return false;
 }
 
@@ -422,33 +436,55 @@ int64_t InstantSend::GetAverageVoteTime() const
 
 void InstantSend::CheckAndRemove()
 {
+    LOCK(cs);
     if(chainActive.Tip() == NULL) return;
 
     std::map<uint256, CTransactionLock>::iterator it = m_txLocks.begin();
 
-    while(it != m_txLocks.end()) {
-        if(GetTime() > it->second.nExpiration){ //keep them for an hour
+    while (it != m_txLocks.end())
+    {
+        if (GetTime() > it->second.m_expiration)
+        {
             IXLogPrintf("Removing old transaction lock %s\n", it->second.txHash.ToString().c_str());
 
-            if(m_txLockReq.count(it->second.txHash)){
-                CTransaction& tx = m_txLockReq[it->second.txHash];
+            // Remove rejected transaction if expired
+            m_txLockReqRejected.erase(it->second.txHash);
+
+            std::map<uint256, CTransaction>::iterator itLock = m_txLockReq.find(it->second.txHash);
+            if (itLock != m_txLockReq.end())
+            {
+                CTransaction& tx = itLock->second;
 
                 BOOST_FOREACH(const CTxIn& in, tx.vin)
                     m_lockedInputs.erase(in.prevout);
 
                 m_txLockReq.erase(it->second.txHash);
-                m_txLockReqRejected.erase(it->second.txHash);
 
                 BOOST_FOREACH(CConsensusVote& v, it->second.vecConsensusVotes)
                     m_txLockVote.erase(v.GetHash());
             }
-
             m_txLocks.erase(it++);
-        } else {
+        }
+        else
+        {
             it++;
         }
     }
 
+    std::map<uint256, CConsensusVote>::iterator itVote = m_txLockVote.begin();
+    while(itVote != m_txLockVote.end())
+    {
+        if (GetTime() > it->second.m_expiration ||
+                GetTransactionAge(it->second.txHash) > InstantSend::m_completeTxLocks)
+        {
+            // Remove transaction vote if it is expired or belongs to old transaction
+            m_txLockVote.erase(itVote++);
+        }
+        else
+        {
+            ++itVote;
+        }
+    }
 }
 
 int InstantSend::GetSignaturesCount(uint256 txHash) const
@@ -464,7 +500,7 @@ bool InstantSend::IsLockTimedOut(uint256 txHash) const
 {
     std::map<uint256, CTransactionLock>::const_iterator i = m_txLocks.find(txHash);
     if (i != m_txLocks.end()) {
-        return GetTime() > (*i).second.nTimeout;
+        return GetTime() > (*i).second.m_timeout;
     }
     return false;
 }
@@ -517,6 +553,7 @@ std::string InstantSend::ToString() const
 
 void InstantSend::Clear()
 {
+    LOCK(cs);
     m_lockedInputs.clear();
     m_txLockVote.clear();
     m_txLockReq.clear();
@@ -534,7 +571,6 @@ uint256 CConsensusVote::GetHash() const
 {
     return ArithToUint256(UintToArith256(vinMasternode.prevout.hash) + vinMasternode.prevout.n + UintToArith256(txHash));
 }
-
 
 bool CConsensusVote::SignatureValid() const
 {
