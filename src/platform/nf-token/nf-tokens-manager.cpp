@@ -4,7 +4,7 @@
 
 #include "primitives/transaction.h"
 #include "chain.h"
-#include "nf-tokens-entire-set-manager.h"
+#include "nf-tokens-manager.h"
 
 namespace Platform
 {
