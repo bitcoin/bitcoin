@@ -201,24 +201,22 @@ public:
     virtual void SleepForMicroseconds(int micros);
 };
 
+#ifdef UNICODE
+#define CP_AUTO CP_UTF8
+#else
+#define CP_AUTO CP_ACP
+#endif
+
 void ToWidePath(const std::string& value, std::wstring& target) {
 	wchar_t buffer[MAX_PATH];
-	MultiByteToWideChar(CP_ACP, 0, value.c_str(), -1, buffer, MAX_PATH);
+	MultiByteToWideChar(CP_AUTO, 0, value.c_str(), -1, buffer, MAX_PATH);
 	target = buffer;
 }
 
 void ToNarrowPath(const std::wstring& value, std::string& target) {
 	char buffer[MAX_PATH];
-	WideCharToMultiByte(CP_ACP, 0, value.c_str(), -1, buffer, MAX_PATH, NULL, NULL);
+	WideCharToMultiByte(CP_AUTO, 0, value.c_str(), -1, buffer, MAX_PATH, NULL, NULL);
 	target = buffer;
-}
-
-std::string GetCurrentDir()
-{
-    CHAR path[MAX_PATH];
-    ::GetModuleFileNameA(::GetModuleHandleA(NULL),path,MAX_PATH);
-    *strrchr(path,'\\') = 0;
-    return std::string(path);
 }
 
 std::wstring GetCurrentDirW()
@@ -229,13 +227,10 @@ std::wstring GetCurrentDirW()
     return std::wstring(path);
 }
 
-std::string& ModifyPath(std::string& path)
+std::string GetCurrentDir()
 {
-    if(path[0] == '/' || path[0] == '\\'){
-        path = CurrentDir + path;
-    }
-    std::replace(path.begin(),path.end(),'/','\\');
-
+    std::string path;
+    ToNarrowPath(GetCurrentDirW(), path);
     return path;
 }
 
@@ -245,6 +240,15 @@ std::wstring& ModifyPath(std::wstring& path)
         path = CurrentDirW + path;
     }
     std::replace(path.begin(),path.end(),L'/',L'\\');
+    return path;
+}
+
+std::string& ModifyPath(std::string& path)
+{
+    std::wstring wpath;
+    ToWidePath(path, wpath);
+    ModifyPath(wpath);
+    ToNarrowPath(wpath, path);
     return path;
 }
 
@@ -615,8 +619,8 @@ bool Win32Env::FileExists(const std::string& fname)
 {
 	std::string path = fname;
     std::wstring wpath;
-	ToWidePath(ModifyPath(path), wpath);
-    return ::PathFileExistsW(wpath.c_str()) ? true : false;
+	ToWidePath(path, wpath);
+    return ::PathFileExistsW(ModifyPath(wpath).c_str()) ? true : false;
 }
 
 Status Win32Env::GetChildren(const std::string& dir, std::vector<std::string>* result)
@@ -764,14 +768,16 @@ uint64_t Win32Env::NowMicros()
 static Status CreateDirInner( const std::string& dirname )
 {
     Status sRet;
-    DWORD attr = ::GetFileAttributes(dirname.c_str());
+    std::wstring wdirname;
+    ToWidePath(dirname, wdirname);
+    DWORD attr = ::GetFileAttributesW(wdirname.c_str());
     if (attr == INVALID_FILE_ATTRIBUTES) { // doesn't exist:
       std::size_t slash = dirname.find_last_of("\\");
       if (slash != std::string::npos){
 	sRet = CreateDirInner(dirname.substr(0, slash));
 	if (!sRet.ok()) return sRet;
       }
-      BOOL result = ::CreateDirectory(dirname.c_str(), NULL);
+      BOOL result = ::CreateDirectoryW(wdirname.c_str(), NULL);
       if (result == FALSE) {
 	sRet = Status::IOError(dirname, "Could not create directory.");
 	return sRet;
