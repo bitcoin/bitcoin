@@ -64,6 +64,9 @@ public:
         READWRITE(m_txLockReqRejected);
         READWRITE(m_completeTxLocks);
     }
+public:
+    static const int m_acceptedBlockCount = 24;
+    static const int m_numberOfSeconds = 60;
 
 private:
     void DoConsensusVote(const CTransaction& tx, int64_t nBlockHeight);
@@ -73,6 +76,9 @@ private:
     int64_t GetAverageVoteTime() const;
 
 private:
+    // critical section to protect the inner data structures
+    mutable CCriticalSection cs;
+
     std::map<COutPoint, uint256> m_lockedInputs;
     std::map<uint256, CConsensusVote> m_txLockVote;
     std::map<uint256, CTransaction> m_txLockReq;
@@ -85,6 +91,9 @@ private:
 class CConsensusVote
 {
 public:
+    CConsensusVote()
+        : m_expiration(GetTime() + (InstantSend::m_numberOfSeconds * InstantSend::m_acceptedBlockCount))
+    { }
     uint256 GetHash() const;
     bool SignatureValid() const;
     bool Sign();
@@ -97,6 +106,7 @@ public:
         READWRITE(vinMasternode);
         READWRITE(vchMasterNodeSignature);
         READWRITE(nBlockHeight);
+        READWRITE(m_expiration);
     }
 
 public:
@@ -104,11 +114,16 @@ public:
     uint256 txHash;
     int nBlockHeight;
     std::vector<unsigned char> vchMasterNodeSignature;
+    int m_expiration;
 };
 
 class CTransactionLock
 {
 public:
+    CTransactionLock()
+        : m_expiration(GetTime() + (InstantSend::m_numberOfSeconds * InstantSend::m_acceptedBlockCount))
+        , m_timeout(GetTime() + (InstantSend::m_numberOfSeconds * 5))
+    { }
     bool SignaturesValid() const;
     int CountSignatures() const;
     void AddSignature(const CConsensusVote& cv);
@@ -121,16 +136,16 @@ public:
         READWRITE(nBlockHeight);
         READWRITE(txHash);
         READWRITE(vecConsensusVotes);
-        READWRITE(nExpiration);
-        READWRITE(nTimeout);
+        READWRITE(m_expiration);
+        READWRITE(m_timeout);
     }
 
 public:
     int nBlockHeight;
     uint256 txHash;
     std::vector<CConsensusVote> vecConsensusVotes;
-    int nExpiration;
-    int nTimeout;
+    int m_expiration;
+    int m_timeout;
 };
 
 #endif
