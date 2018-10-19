@@ -124,3 +124,6 @@ db4/
 
 # clang-check
 *.plist
+/.idea/
+/cmake-build-debug/
+/CMakeLists.txt
