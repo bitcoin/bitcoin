@@ -8,6 +8,7 @@ Verify that a bitcoind node can load multiple wallet files
 """
 import os
 import shutil
+import time
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.test_node import ErrorMatch
@@ -262,7 +263,15 @@ class MultiWalletTest(BitcoinTestFramework):
         assert 'w1' not in self.nodes[0].listwallets()
 
         # Successfully unload the wallet referenced by the request endpoint
+        # Also ensure unload works during walletpassphrase timeout
+        wallets = node.listwallets()
+        w2.encryptwallet('test')
+        self.restart_node(0, ['-wallet={}'.format(wallet) for wallet in wallets])
+        w1 = node.get_wallet_rpc(wallet_names[0])
+        w2 = node.get_wallet_rpc(wallet_names[1])
+        w2.walletpassphrase('test', 1)
         w2.unloadwallet()
+        time.sleep(1.1)
         assert 'w2' not in self.nodes[0].listwallets()
 
         # Successfully unload all wallets
