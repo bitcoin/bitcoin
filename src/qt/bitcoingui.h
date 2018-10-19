@@ -82,6 +82,11 @@ public:
 #endif // ENABLE_WALLET
     bool enableWallet = false;
 
+    /** Get the tray icon status.
+        Some systems have not "system tray" or "notification area" available.
+    */
+    bool hasTrayIcon() const { return trayIcon; }
+
 protected:
     void changeEvent(QEvent *e);
     void closeEvent(QCloseEvent *event);
