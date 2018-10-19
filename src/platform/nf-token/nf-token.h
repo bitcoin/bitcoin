@@ -15,7 +15,7 @@ namespace Platform
     {
     public:
         /// NF token protocol unique symbol/identifier, can be represented as a base32 string, 12 symbols max
-        uint64_t tokenProtocolId{UKNOWN_TOKEN_PROTOCOL};
+        uint64_t tokenProtocolId{UNKNOWN_TOKEN_PROTOCOL};
 
         /// NF token unique identifier, can be a sha256 hash, tokenProtocolId + tokenId must be globally unique
         uint256 tokenId;
@@ -29,7 +29,7 @@ namespace Platform
         /// Metadata buffer
         std::vector<unsigned char> metadata;
 
-        static const uint64_t UKNOWN_TOKEN_PROTOCOL = -1;
+        static const uint64_t UNKNOWN_TOKEN_PROTOCOL = -1;
 
     public:
         ADD_SERIALIZE_METHODS

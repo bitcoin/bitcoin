@@ -34,9 +34,9 @@ namespace Platform
     class NfTokenIndex
     {
     public:
+        int height;
         //TODO: use block ptr for opt
         uint256 blockHash;
-        int height;
         uint256 regTxHash;
         std::shared_ptr<const NfToken> nfToken;
     };
@@ -45,7 +45,7 @@ namespace Platform
     {
         using result_type = uint64_t;
 
-        const result_type & operator()(const NfTokenIndex & nfTokenIndex)
+        result_type operator()(const NfTokenIndex & nfTokenIndex) const
         {
             return nfTokenIndex.nfToken->tokenProtocolId;
         }
@@ -55,7 +55,7 @@ namespace Platform
     {
         using result_type = uint256;
 
-        const result_type & operator()(const NfTokenIndex & nfTokenIndex)
+        result_type operator()(const NfTokenIndex & nfTokenIndex) const
         {
             return nfTokenIndex.nfToken->tokenId;
         }
@@ -65,7 +65,7 @@ namespace Platform
     {
         using result_type = CKeyID;
 
-        const result_type & operator()(const NfTokenIndex & nfTokenIndex)
+        result_type operator()(const NfTokenIndex & nfTokenIndex) const
         {
             return nfTokenIndex.nfToken->tokenOwnerKeyId;
         }
@@ -75,7 +75,7 @@ namespace Platform
     {
         using result_type = CKeyID;
 
-        const result_type & operator()(const NfTokenIndex & nfTokenIndex)
+        result_type operator()(const NfTokenIndex & nfTokenIndex) const
         {
             return nfTokenIndex.nfToken->metadataAdminKeyId;
         }
@@ -87,16 +87,15 @@ namespace Platform
             /// orderered by a composite-key <TokenProtocolId, TokenId>
             /// gives access to a globally unique nf token
             bmx::hashed_unique<
+                bmx::tag<Tags::ProtocolIdTokenId>,
                 bmx::composite_key<
-                    bmx::tag<Tags::ProtocolIdTokenId>,
+                    NfTokenIndex,
                     TokenProtocolIdExtractor,
-                    //bmx::member<NfTokenIndex, uint64_t, &NfToken::tokenProtocolId>,
                     TokenIdExtractor
-                    //bmx::member<NfTokenIndex, uint256, &NfToken::tokenId>
                 >
             >,
             /// ordered by nf-token registration transaction hash
-            /// gives access to all nf-tokens registered in this transactions
+            /// gives access to nf-token registered in this transaction
             bmx::hashed_unique<
                 bmx::tag<Tags::RegTxHash>,
                 bmx::member<NfTokenIndex, uint256, &NfTokenIndex::regTxHash>
@@ -110,12 +109,11 @@ namespace Platform
             /// ordered by a composity-key <TokenProtocolId, OwnerId>
             /// gives access to all nf-tokens owned by the OwnerId in this protocol
             bmx::hashed_non_unique<
+                bmx::tag<Tags::ProtocolIdOwnerId>,
                 bmx::composite_key<
-                    bmx::tag<Tags::ProtocolIdOwnerId>,
+                    NfTokenIndex,
                     TokenProtocolIdExtractor,
-                    //bmx::member<NfTokenIndex, uint64_t, &NfToken::tokenProtocolId>,
                     OwnerIdExtractor
-                    //bmx::member<NfTokenIndex, CKeyID, &NfToken::tokenOwnerKeyId>
                 >
             >,
             /// ordered by nf-token protocol id
@@ -127,42 +125,9 @@ namespace Platform
             /// ordered by the OwnerId in the gloabal nf-tokens set
             /// gives access the global set of nf-tokens owned by the OwnerId
             bmx::hashed_non_unique<
-                    bmx::tag<Tags::OwnerId>,
-                    OwnerIdExtractor
-                    //bmx::member<NfTokenIndex, CKeyID, &NfToken::tokenOwnerKeyId>
+                bmx::tag<Tags::OwnerId>,
+                OwnerIdExtractor
             >
-        >
-    >;
-
-    using NfTokenEntireSet = bmx::multi_index_container<
-        NfToken,
-        bmx::indexed_by<
-            bmx::hashed_unique<
-                bmx::composite_key<
-                    bmx::tag<Tags::ProtocolIdTokenId>,
-                    bmx::member<NfToken, uint64_t, &NfToken::tokenProtocolId>,
-                    bmx::member<NfToken, uint256, &NfToken::tokenId>
-                >
-            >,
-            bmx::hashed_non_unique<
-                bmx::composite_key<
-                    bmx::tag<Tags::ProtocolIdOwnerId>,
-                    bmx::member<NfToken, uint64_t, &NfToken::tokenProtocolId>,
-                    bmx::member<NfToken, CKeyID, &NfToken::tokenOwnerKeyId>
-                >
-            >,
-            bmx::hashed_non_unique<
-                bmx::tag<Tags::ProtocolId>,
-                bmx::member<NfToken, uint64_t, &NfToken::tokenProtocolId>
-            >,
-            bmx::hashed_non_unique<
-                    bmx::tag<Tags::OwnerId>,
-                    bmx::member<NfToken, CKeyID, &NfToken::tokenOwnerKeyId>
-            >//,
-            //bmx::hashed_non_unique<
-            //        bmx::tag<Tags::AdminId>,
-            //        bmx::member<NfToken, CKeyID, &NfToken::metadataAdminKeyId>
-            //>
         >
     >;
 
@@ -189,7 +154,7 @@ namespace Platform
             bool ContainsAtHeight(const uint64_t & protocolId, const uint256 & tokenId, int height) const;
 
             /// Retreive the specified nf-token index
-            const NfTokenIndex & GetNfTokenIndex(const uint64_t & protocolId, const uint256 & tokenId) const;
+            const NfTokenIndex * GetNfTokenIndex(const uint64_t & protocolId, const uint256 & tokenId) const;
             /// Retreive the specified nf-token
             std::weak_ptr<const NfToken> GetNfToken(const uint64_t & protocolId, const uint256 & tokenId) const;
 

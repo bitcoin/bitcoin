@@ -6,7 +6,7 @@
 
 namespace Platform
 {
-    using NfTokenSetByOwnerId = NfTokenSet::index<Tags::OwnerId>::type;
+    using NfTokenSetByOwnerId = NfTokenSingleProtocolSet::index<Tags::OwnerId>::type;
 
     NfTokensSingleProtocolManager::NfTokensSingleProtocolManager(const uint64_t & protocolId)
         : m_protocolId(protocolId)
@@ -83,7 +83,10 @@ namespace Platform
         const auto nfTokensRange = ownerIdIndex.equal_range(ownerId);
 
         std::vector<NfToken> nfTokens;
-        std::for_each(nfTokensRange.first, nfTokensRange.second, std::back_inserter(nfTokens));
+        std::for_each(nfTokensRange.first, nfTokensRange.second, [&](const NfToken & nfToken)
+        {
+            nfTokens.push_back(nfToken);
+        });
         return nfTokens;
     }
 
@@ -95,7 +98,7 @@ namespace Platform
         const auto nfTokensRange = ownerIdIndex.equal_range(ownerId);
 
         std::vector<uint256> nfTokenIds;
-        std::for_each(nfTokensRange.first, nfTokensRange.second, [](const NfToken & nfToken)
+        std::for_each(nfTokensRange.first, nfTokensRange.second, [&](const NfToken & nfToken)
         {
             nfTokenIds.push_back(nfToken.tokenId);
         });
