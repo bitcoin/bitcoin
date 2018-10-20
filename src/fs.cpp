@@ -6,6 +6,7 @@
 #include <sys/file.h>
 #include <sys/utsname.h>
 #else
+#define NOMINMAX
 #include <codecvt>
 #include <windows.h>
 #endif
@@ -110,7 +111,7 @@ bool FileLock::TryLock()
         return false;
     }
     _OVERLAPPED overlapped = {0};
-    if (!LockFileEx(hFile, LOCKFILE_EXCLUSIVE_LOCK | LOCKFILE_FAIL_IMMEDIATELY, 0, 0, 0, &overlapped)) {
+    if (!LockFileEx(hFile, LOCKFILE_EXCLUSIVE_LOCK | LOCKFILE_FAIL_IMMEDIATELY, 0, std::numeric_limits<DWORD>::max(), std::numeric_limits<DWORD>::max(), &overlapped)) {
         reason = GetErrorReason();
         return false;
     }
