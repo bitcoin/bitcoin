@@ -28,7 +28,7 @@ def check_ELF_PIE(executable):
     ok = False
     for line in stdout.splitlines():
         line = line.split()
-        if len(line)>=2 and line[0] == 'Type:' and line[1] == 'DYN':
+        if len(line) >= 2 and line[0] == 'Type:' and line[1] == 'DYN':
             ok = True
     return ok
 
@@ -97,7 +97,7 @@ def check_ELF_RELRO(executable):
         raise IOError('Error opening file')
     for line in stdout.splitlines():
         tokens = line.split()
-        if len(tokens)>1 and tokens[1] == '(BIND_NOW)' or (len(tokens)>2 and tokens[1] == '(FLAGS)' and 'BIND_NOW' in tokens[2:]):
+        if len(tokens) > 1 and tokens[1] == '(BIND_NOW)' or (len(tokens) > 2 and tokens[1] == '(FLAGS)' and 'BIND_NOW' in tokens[2:]):
             have_bindnow = True
     return have_gnu_relro and have_bindnow
 
@@ -129,9 +129,9 @@ def get_PE_dll_characteristics(executable):
     bits = 0
     for line in stdout.splitlines():
         tokens = line.split()
-        if len(tokens)>=2 and tokens[0] == 'architecture:':
+        if len(tokens) >= 2 and tokens[0] == 'architecture:':
             arch = tokens[1].rstrip(',')
-        if len(tokens)>=2 and tokens[0] == 'DllCharacteristics':
+        if len(tokens) >= 2 and tokens[0] == 'DllCharacteristics':
             bits = int(tokens[1],16)
     return (arch,bits)
 

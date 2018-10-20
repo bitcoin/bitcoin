@@ -443,7 +443,7 @@ class CompactBlocksTest(BitcoinTestFramework):
     # node needs, and that responding to them causes the block to be
     # reconstructed.
     def test_getblocktxn_requests(self, node, test_node, version):
-        with_witness = (version==2)
+        with_witness = (version == 2)
 
         def test_getblocktxn_response(compact_block, peer, expected_result):
             msg = msg_cmpctblock(compact_block.to_p2p())
@@ -560,7 +560,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         # verifying that the block isn't marked bad permanently. This is good
         # enough for now.
         msg = msg_blocktxn()
-        if version==2:
+        if version == 2:
             msg = msg_witness_blocktxn()
         msg.block_transactions = BlockTransactions(block.sha256, [block.vtx[5]] + block.vtx[7:])
         test_node.send_and_ping(msg)
@@ -575,7 +575,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         assert_equal(test_node.last_message["getdata"].inv[0].hash, block.sha256)
 
         # Deliver the block
-        if version==2:
+        if version == 2:
             test_node.send_and_ping(msg_witness_block(block))
         else:
             test_node.send_and_ping(msg_block(block))

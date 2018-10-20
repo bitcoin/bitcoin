@@ -100,7 +100,7 @@ def b58decode_chk(v):
 def get_bcaddress_version(strAddress):
     """ Returns None if strAddress is invalid.  Otherwise returns integer version of address. """
     addr = b58decode_chk(strAddress)
-    if addr is None or len(addr)!=21:
+    if addr is None or len(addr) != 21:
         return None
     version = addr[0]
     return ord(version)

@@ -135,7 +135,7 @@ class DecodeScriptTest(BitcoinTestFramework):
         # just imagine that the pub keys used below are different.
         # the purpose of this test is to check that a segwit script is not returned for bare multisig scripts
         # with an uncompressed pubkey in them.
-        rpc_result = self.nodes[0].decodescript('52' + push_public_key + push_uncompressed_public_key +'52ae')
+        rpc_result = self.nodes[0].decodescript('52' + push_public_key + push_uncompressed_public_key + '52ae')
         assert_equal('2 ' + public_key + ' ' + uncompressed_public_key + ' 2 OP_CHECKMULTISIG', rpc_result['asm'])
         # uncompressed pubkeys are invalid for checksigs in segwit scripts.
         # decodescript should not return a P2WPKH equivalent.

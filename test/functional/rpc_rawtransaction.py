@@ -147,7 +147,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             addrinfo = self.nodes[0].getaddressinfo(addr)
             pubkey = addrinfo["scriptPubKey"]
 
-            self.log.info('sendrawtransaction with missing prevtx info (%s)' %(type))
+            self.log.info('sendrawtransaction with missing prevtx info (%s)' % (type))
 
             # Test `signrawtransactionwithwallet` invalid `prevtxs`
             inputs  = [ {'txid' : txid, 'vout' : 3, 'sequence' : 1000}]
@@ -402,7 +402,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         inputs  = [ {'txid' : "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000", 'vout' : 1, 'sequence' : 1000}]
         outputs = { self.nodes[0].getnewaddress() : 1 }
         rawtx   = self.nodes[0].createrawtransaction(inputs, outputs)
-        decrawtx= self.nodes[0].decoderawtransaction(rawtx)
+        decrawtx = self.nodes[0].decoderawtransaction(rawtx)
         assert_equal(decrawtx['vin'][0]['sequence'], 1000)
 
         # 9. invalid parameters - sequence number out of range
@@ -418,7 +418,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         inputs  = [ {'txid' : "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000", 'vout' : 1, 'sequence' : 4294967294}]
         outputs = { self.nodes[0].getnewaddress() : 1 }
         rawtx   = self.nodes[0].createrawtransaction(inputs, outputs)
-        decrawtx= self.nodes[0].decoderawtransaction(rawtx)
+        decrawtx = self.nodes[0].decoderawtransaction(rawtx)
         assert_equal(decrawtx['vin'][0]['sequence'], 4294967294)
 
         ####################################

@@ -116,7 +116,7 @@ class PSBTTest(BitcoinTestFramework):
         node1_addr = self.nodes[1].getnewaddress()
         node2_addr = self.nodes[2].getnewaddress()
         txid1 = self.nodes[0].sendtoaddress(node1_addr, 13)
-        txid2 =self.nodes[0].sendtoaddress(node2_addr, 13)
+        txid2 = self.nodes[0].sendtoaddress(node2_addr, 13)
         self.nodes[0].generate(6)
         self.sync_all()
         vout1 = find_output(self.nodes[1], txid1, 13)

@@ -471,7 +471,7 @@ class SegWitTest(BitcoinTestFramework):
         uncompressed_solvable_address = [key_to_p2pkh(pubkeys[6])]
 
         spendable_after_addwitnessaddress = []      # These outputs should be seen after importaddress
-        solvable_after_addwitnessaddress=[]         # These outputs should be seen after importaddress but not spendable
+        solvable_after_addwitnessaddress = []       # These outputs should be seen after importaddress but not spendable
         unseen_anytime = []                         # These outputs should never be seen
         solvable_anytime = []                       # These outputs should be solvable after importpubkey
         unseen_anytime = []                         # These outputs should never be seen

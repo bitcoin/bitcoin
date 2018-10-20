@@ -11,9 +11,9 @@ import sys
 import dns.resolver
 import collections
 
-NSEEDS=512
+NSEEDS = 512
 
-MAX_SEEDS_PER_ASN=2
+MAX_SEEDS_PER_ASN = 2
 
 MIN_BLOCKS = 337600
 
@@ -104,7 +104,7 @@ def filtermultiport(ips):
     hist = collections.defaultdict(list)
     for ip in ips:
         hist[ip['sortkey']].append(ip)
-    return [value[0] for (key,value) in list(hist.items()) if len(value)==1]
+    return [value[0] for (key,value) in list(hist.items()) if len(value) == 1]
 
 # Based on Greg Maxwell's seed_filter.py
 def filterbyasn(ips, max_per_asn, max_total):

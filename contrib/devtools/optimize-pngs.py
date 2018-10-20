@@ -33,7 +33,7 @@ noHashChange = True
 
 outputArray = []
 for folder in folders:
-    absFolder=os.path.join(basePath, folder)
+    absFolder = os.path.join(basePath, folder)
     for file in os.listdir(absFolder):
         extension = os.path.splitext(file)[1]
         if extension.lower() == '.png':

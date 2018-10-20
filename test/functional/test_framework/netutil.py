@@ -39,7 +39,7 @@ def get_socket_inodes(pid):
     return inodes
 
 def _remove_empty(array):
-    return [x for x in array if x !='']
+    return [x for x in array if x != '']
 
 def _convert_ip_port(array):
     host,port = array.split(':')

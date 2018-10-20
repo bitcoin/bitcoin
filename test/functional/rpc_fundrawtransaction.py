@@ -271,7 +271,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         for i, out in enumerate(dec_tx['vout']):
             totalOut += out['value']
             if out['scriptPubKey']['addresses'][0] in outputs:
-                matchingOuts+=1
+                matchingOuts += 1
             else:
                 assert_equal(i, rawtxfund['changepos'])
 
@@ -302,7 +302,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         for out in dec_tx['vout']:
             totalOut += out['value']
             if out['scriptPubKey']['addresses'][0] in outputs:
-                matchingOuts+=1
+                matchingOuts += 1
 
         assert_equal(matchingOuts, 1)
         assert_equal(len(dec_tx['vout']), 2)
@@ -311,7 +311,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         for vinOut in dec_tx['vin']:
             for vinIn in inputs:
                 if vinIn['txid'] == vinOut['txid']:
-                    matchingIns+=1
+                    matchingIns += 1
 
         assert_equal(matchingIns, 2) #we now must see two vins identical to vins given as params
 
@@ -335,7 +335,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         for out in dec_tx['vout']:
             totalOut += out['value']
             if out['scriptPubKey']['addresses'][0] in outputs:
-                matchingOuts+=1
+                matchingOuts += 1
 
         assert_equal(matchingOuts, 2)
         assert_equal(len(dec_tx['vout']), 3)

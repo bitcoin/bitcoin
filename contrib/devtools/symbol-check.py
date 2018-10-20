@@ -114,7 +114,7 @@ def read_symbols(executable, imports=True):
         line = line.split()
         if 'Machine:' in line:
             arch = line[-1]
-        if len(line)>7 and re.match('[0-9]+:$', line[0]):
+        if len(line) > 7 and re.match('[0-9]+:$', line[0]):
             (sym, _, version) = line[7].partition('@')
             is_import = line[6] == 'UND'
             if version.startswith('@'):
@@ -142,7 +142,7 @@ def read_libraries(filename):
     libraries = []
     for line in stdout.splitlines():
         tokens = line.split()
-        if len(tokens)>2 and tokens[1] == '(NEEDED)':
+        if len(tokens) > 2 and tokens[1] == '(NEEDED)':
             match = re.match('^Shared library: \[(.*)\]$', ' '.join(tokens[2:]))
             if match:
                 libraries.append(match.group(1))

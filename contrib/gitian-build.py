@@ -164,8 +164,8 @@ def main():
     args.is_bionic = b'bionic' in subprocess.check_output(['lsb_release', '-cs'])
 
     if args.buildsign:
-        args.build=True
-        args.sign=True
+        args.build = True
+        args.sign = True
 
     if args.kvm and args.docker:
         raise Exception('Error: cannot have both kvm and docker')

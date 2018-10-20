@@ -44,7 +44,7 @@ pchIPv4 = bytearray([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff])
 pchOnionCat = bytearray([0xFD,0x87,0xD8,0x7E,0xEB,0x43])
 
 def name_to_ipv6(addr):
-    if len(addr)>6 and addr.endswith('.onion'):
+    if len(addr) > 6 and addr.endswith('.onion'):
         vchAddr = b32decode(addr[0:-6], True)
         if len(vchAddr) != 16-len(pchOnionCat):
             raise ValueError('Invalid onion %s' % vchAddr)
@@ -113,7 +113,7 @@ def process_nodes(g, f, structname, defaultport):
     g.write('\n};\n')
 
 def main():
-    if len(sys.argv)<2:
+    if len(sys.argv) < 2:
         print(('Usage: %s <path_to_nodes_txt>' % sys.argv[0]), file=sys.stderr)
         sys.exit(1)
     g = sys.stdout

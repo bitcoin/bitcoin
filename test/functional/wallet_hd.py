@@ -32,7 +32,7 @@ class WalletHDTest(BitcoinTestFramework):
 
         # create an internal key
         change_addr = self.nodes[1].getrawchangeaddress()
-        change_addrV= self.nodes[1].getaddressinfo(change_addr)
+        change_addrV = self.nodes[1].getaddressinfo(change_addr)
         assert_equal(change_addrV["hdkeypath"], "m/0'/1'/0'") #first internal child key
 
         # Import a non-HD private key in the HD wallet
@@ -61,7 +61,7 @@ class WalletHDTest(BitcoinTestFramework):
 
         # create an internal key (again)
         change_addr = self.nodes[1].getrawchangeaddress()
-        change_addrV= self.nodes[1].getaddressinfo(change_addr)
+        change_addrV = self.nodes[1].getaddressinfo(change_addr)
         assert_equal(change_addrV["hdkeypath"], "m/0'/1'/1'") #second internal child key
 
         self.sync_all()

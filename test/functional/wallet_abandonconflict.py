@@ -51,7 +51,7 @@ class AbandonConflictTest(BitcoinTestFramework):
         nB = next(i for i, vout in enumerate(self.nodes[0].getrawtransaction(txB, 1)["vout"]) if vout["value"] == Decimal("10"))
         nC = next(i for i, vout in enumerate(self.nodes[0].getrawtransaction(txC, 1)["vout"]) if vout["value"] == Decimal("10"))
 
-        inputs =[]
+        inputs = []
         # spend 10btc outputs from txA and txB
         inputs.append({"txid":txA, "vout":nA})
         inputs.append({"txid":txB, "vout":nB})
@@ -145,7 +145,7 @@ class AbandonConflictTest(BitcoinTestFramework):
 
         # Create a double spend of AB1 by spending again from only A's 10 output
         # Mine double spend from node 1
-        inputs =[]
+        inputs = []
         inputs.append({"txid":txA, "vout":nA})
         outputs = {}
         outputs[self.nodes[1].getnewaddress()] = Decimal("9.9999")

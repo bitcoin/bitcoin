@@ -173,7 +173,7 @@ def gen_invalid_base58_vector(template):
         suffix = bytearray(template[2])
 
     val = b58encode_chk(prefix + payload + suffix)
-    if random.randint(0,10)<1: # line corruption
+    if random.randint(0,10) < 1: # line corruption
         if randbool(): # add random character to end
             val += random.choice(b58chars)
         else: # replace random character in the middle

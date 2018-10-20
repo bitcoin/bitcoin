@@ -109,7 +109,7 @@ class WalletDumpTest(BitcoinTestFramework):
         addrs = []
         for i in range(0,test_addr_count):
             addr = self.nodes[0].getnewaddress()
-            vaddr= self.nodes[0].getaddressinfo(addr) #required to get hd keypath
+            vaddr = self.nodes[0].getaddressinfo(addr) #required to get hd keypath
             addrs.append(vaddr)
         # Should be a no-op:
         self.nodes[0].keypoolrefill()

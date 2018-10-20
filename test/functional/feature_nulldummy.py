@@ -82,7 +82,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
 
         self.log.info("Test 4: Non-NULLDUMMY base multisig transaction is invalid after activation")
         test4tx = create_transaction(self.nodes[0], test2tx.hash, self.address, amount=46)
-        test6txs=[CTransaction(test4tx)]
+        test6txs = [CTransaction(test4tx)]
         trueDummy(test4tx)
         assert_raises_rpc_error(-26, NULLDUMMY_ERROR, self.nodes[0].sendrawtransaction, bytes_to_hex_str(test4tx.serialize_with_witness()), True)
         self.block_submit(self.nodes[0], [test4tx])
