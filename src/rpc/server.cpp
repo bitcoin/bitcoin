@@ -204,8 +204,12 @@ UniValue help(const JSONRPCRequest& jsonRequest)
 {
     if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
         throw std::runtime_error(
-            "help ( \"command\" )\n"
-            "\nList all commands, or get help for a specified command.\n"
+            RPCHelpMan{"help",
+                "\nList all commands, or get help for a specified command.\n",
+                {
+                    {"command", RPCArg::Type::STR, true},
+                }}
+                .ToString() +
             "\nArguments:\n"
             "1. \"command\"     (string, optional) The command to get help on\n"
             "\nResult:\n"
@@ -225,8 +229,9 @@ UniValue stop(const JSONRPCRequest& jsonRequest)
     // Accept the deprecated and ignored 'detach' boolean argument
     if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
         throw std::runtime_error(
-            "stop\n"
-            "\nStop Bitcoin server.");
+            RPCHelpMan{"stop",
+                "\nStop Bitcoin server.", {}}
+                .ToString());
     // Event loop will exit after current HTTP requests have been handled, so
     // this reply will get back to the client.
     StartShutdown();
@@ -237,8 +242,9 @@ static UniValue uptime(const JSONRPCRequest& jsonRequest)
 {
     if (jsonRequest.fHelp || jsonRequest.params.size() > 0)
         throw std::runtime_error(
-                "uptime\n"
-                        "\nReturns the total uptime of the server.\n"
+            RPCHelpMan{"uptime",
+                "\nReturns the total uptime of the server.\n", {}}
+                .ToString() +
                         "\nResult:\n"
                         "ttt        (numeric) The number of seconds that the server has been running\n"
                         "\nExamples:\n"
