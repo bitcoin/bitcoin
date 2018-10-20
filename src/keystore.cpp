@@ -121,7 +121,7 @@ bool CBasicKeyStore::GetCScript(const CScriptID &hash, CScript& redeemScriptOut)
     return false;
 }
 
-static bool ExtractPubKey(const CScript &dest, CPubKey& pubKeyOut)
+bool ExtractPubKey(const CScript &dest, CPubKey& pubKeyOut)
 {
     //TODO: Use Solver to extract this?
     CScript::const_iterator pc = dest.begin();

@@ -805,6 +805,111 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     return reply;
 }
 
+struct UsageMaps {
+    using ScriptUseMap = std::map<CScriptID, bool>;
+    using WatchKeyUseMap = std::map<CKeyID, bool>;
+    using KeyUseMap = std::map<CKeyID, bool>;
+
+    WatchKeyUseMap map_watch_key_use;
+    ScriptUseMap map_script_use;
+    KeyUseMap map_key_use;
+};
+
+// Class which remembers whether every script and public key was used
+class AllUsedKeyStore : public CBasicKeyStore
+{
+private:
+    struct UsageMaps* usage = new UsageMaps();
+public:
+    bool AllUsed() const;
+    bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const override;
+    bool AddCScript(const CScript& redeemScript) override;
+    bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const override;
+    bool AddWatchOnly(const CScript &dest) override;
+    bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey) override;
+    bool GetKeyOrigin(const CKeyID& id, KeyOriginInfo& info) const override;
+};
+
+bool AllUsedKeyStore::GetPubKey(const CKeyID &address, CPubKey &pubkey_out) const
+{
+    LOCK(cs_KeyStore);
+    if (CBasicKeyStore::GetPubKey(address, pubkey_out)) {
+        usage->map_watch_key_use[address] = true;
+        return true;
+    }
+    return false;
+}
+
+bool AllUsedKeyStore::GetCScript(const CScriptID &hash, CScript& script_out) const
+{
+    LOCK(cs_KeyStore);
+    if (CBasicKeyStore::GetCScript(hash, script_out)) {
+        usage->map_script_use[hash] = true;
+        return true;
+    }
+    return false;
+}
+
+bool AllUsedKeyStore::AddWatchOnly(const CScript &dest)
+{
+    LOCK(cs_KeyStore);
+    setWatchOnly.insert(dest);
+    CPubKey pubKey;
+    if (ExtractPubKey(dest, pubKey)) {
+        mapWatchKeys[pubKey.GetID()] = pubKey;
+        usage->map_watch_key_use[pubKey.GetID()] = false;
+        return true;
+    }
+    return false;
+}
+
+bool AllUsedKeyStore::AddKeyPubKey(const CKey& key, const CPubKey &pubkey)
+{
+    LOCK(cs_KeyStore);
+    if (CBasicKeyStore::AddKeyPubKey(key, pubkey)) {
+        usage->map_key_use[pubkey.GetID()] = false;
+        return true;
+    }
+    return false;
+}
+
+bool AllUsedKeyStore::GetKey(const CKeyID &address, CKey &keyOut) const
+{
+    LOCK(cs_KeyStore);
+    if (CBasicKeyStore::GetKey(address, keyOut)) {
+        usage->map_key_use[address] = true;
+        return true;
+    }
+    return false;
+}
+
+bool AllUsedKeyStore::AddCScript(const CScript& redeemScript)
+{
+    if (redeemScript.size() > MAX_SCRIPT_ELEMENT_SIZE)
+        return error("CBasicKeyStore::AddCScript(): redeemScripts > %i bytes are invalid", MAX_SCRIPT_ELEMENT_SIZE);
+
+    LOCK(cs_KeyStore);
+    mapScripts[CScriptID(redeemScript)] =redeemScript;
+    usage->map_script_use[CScriptID(redeemScript)] = false;
+    return true;
+}
+
+bool AllUsedKeyStore::AllUsed() const
+{
+    LOCK(cs_KeyStore);
+    bool used = true;
+    for (const auto& script_pair : usage->map_script_use) {
+        used &= script_pair.second;
+    }
+    for (const auto& key_pair : usage->map_watch_key_use) {
+        used &= key_pair.second;
+    }
+    for (const auto& key_pair : usage->map_key_use) {
+        used &= key_pair.second;
+    }
+    return used;
+}
+
 static void ImportScriptsToKeyStore(CBasicKeyStore* keystore, const std::vector<CScript>& scripts)
 {
     for (const auto& script : scripts) {

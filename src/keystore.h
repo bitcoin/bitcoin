@@ -80,4 +80,7 @@ CKeyID GetKeyForDestination(const CKeyStore& store, const CTxDestination& dest);
 /** Checks if a CKey is in the given CKeyStore compressed or otherwise*/
 bool HaveKey(const CKeyStore& store, const CKey& key);
 
+/** Retrieves the pubkey from a p2pk scriptPubKey */
+bool ExtractPubKey(const CScript &dest, CPubKey& pubKeyOut);
+
 #endif // BITCOIN_KEYSTORE_H
