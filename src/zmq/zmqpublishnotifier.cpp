@@ -12,10 +12,10 @@
 
 static std::multimap<std::string, CZMQAbstractPublishNotifier*> mapPublishNotifiers;
 
-static const char *MSG_HASHBLOCK = "hashblock";
-static const char *MSG_HASHTX    = "hashtx";
-static const char *MSG_RAWBLOCK  = "rawblock";
-static const char *MSG_RAWTX     = "rawtx";
+static constexpr const char *MSG_HASHBLOCK = "hashblock";
+static constexpr const char *MSG_HASHTX    = "hashtx";
+static constexpr const char *MSG_RAWBLOCK  = "rawblock";
+static constexpr const char *MSG_RAWTX     = "rawtx";
 
 // Internal function to send multipart message
 static int zmq_send_multipart(void *sock, const void* data, size_t size, ...)

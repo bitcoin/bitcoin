@@ -13,14 +13,14 @@
 #include <primitives/block.h>
 
 /** "reject" message codes */
-static const unsigned char REJECT_MALFORMED = 0x01;
-static const unsigned char REJECT_INVALID = 0x10;
-static const unsigned char REJECT_OBSOLETE = 0x11;
-static const unsigned char REJECT_DUPLICATE = 0x12;
-static const unsigned char REJECT_NONSTANDARD = 0x40;
-// static const unsigned char REJECT_DUST = 0x41; // part of BIP 61
-static const unsigned char REJECT_INSUFFICIENTFEE = 0x42;
-static const unsigned char REJECT_CHECKPOINT = 0x43;
+static constexpr unsigned char REJECT_MALFORMED = 0x01;
+static constexpr unsigned char REJECT_INVALID = 0x10;
+static constexpr unsigned char REJECT_OBSOLETE = 0x11;
+static constexpr unsigned char REJECT_DUPLICATE = 0x12;
+static constexpr unsigned char REJECT_NONSTANDARD = 0x40;
+// static constexpr unsigned char REJECT_DUST = 0x41; // part of BIP 61
+static constexpr unsigned char REJECT_INSUFFICIENTFEE = 0x42;
+static constexpr unsigned char REJECT_CHECKPOINT = 0x43;
 
 /** Capture information about block/transaction validation */
 class CValidationState {

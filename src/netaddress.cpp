@@ -8,11 +8,11 @@
 #include <utilstrencodings.h>
 #include <tinyformat.h>
 
-static const unsigned char pchIPv4[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff };
-static const unsigned char pchOnionCat[] = {0xFD,0x87,0xD8,0x7E,0xEB,0x43};
+static constexpr unsigned char pchIPv4[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff };
+static constexpr unsigned char pchOnionCat[] = {0xFD,0x87,0xD8,0x7E,0xEB,0x43};
 
 // 0xFD + sha256("bitcoin")[0:5]
-static const unsigned char g_internal_prefix[] = { 0xFD, 0x6B, 0x88, 0xC0, 0x87, 0x24 };
+static constexpr unsigned char g_internal_prefix[] = { 0xFD, 0x6B, 0x88, 0xC0, 0x87, 0x24 };
 
 CNetAddr::CNetAddr()
 {
@@ -135,7 +135,7 @@ bool CNetAddr::IsRFC3964() const
 
 bool CNetAddr::IsRFC6052() const
 {
-    static const unsigned char pchRFC6052[] = {0,0x64,0xFF,0x9B,0,0,0,0,0,0,0,0};
+    static constexpr unsigned char pchRFC6052[] = {0,0x64,0xFF,0x9B,0,0,0,0,0,0,0,0};
     return (memcmp(ip, pchRFC6052, sizeof(pchRFC6052)) == 0);
 }
 
@@ -146,7 +146,7 @@ bool CNetAddr::IsRFC4380() const
 
 bool CNetAddr::IsRFC4862() const
 {
-    static const unsigned char pchRFC4862[] = {0xFE,0x80,0,0,0,0,0,0};
+    static constexpr unsigned char pchRFC4862[] = {0xFE,0x80,0,0,0,0,0,0};
     return (memcmp(ip, pchRFC4862, sizeof(pchRFC4862)) == 0);
 }
 
@@ -157,7 +157,7 @@ bool CNetAddr::IsRFC4193() const
 
 bool CNetAddr::IsRFC6145() const
 {
-    static const unsigned char pchRFC6145[] = {0,0,0,0,0,0,0,0,0xFF,0xFF,0,0};
+    static constexpr unsigned char pchRFC6145[] = {0,0,0,0,0,0,0,0,0xFF,0xFF,0,0};
     return (memcmp(ip, pchRFC6145, sizeof(pchRFC6145)) == 0);
 }
 
@@ -178,7 +178,7 @@ bool CNetAddr::IsLocal() const
        return true;
 
    // IPv6 loopback (::1/128)
-   static const unsigned char pchLocal[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1};
+   static constexpr unsigned char pchLocal[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1};
    if (memcmp(ip, pchLocal, 16) == 0)
        return true;
 
@@ -392,8 +392,8 @@ uint64_t CNetAddr::GetHash() const
 
 // private extensions to enum Network, only returned by GetExtNetwork,
 // and only used in GetReachabilityFrom
-static const int NET_UNKNOWN = NET_MAX + 0;
-static const int NET_TEREDO  = NET_MAX + 1;
+static constexpr int NET_UNKNOWN = NET_MAX + 0;
+static constexpr int NET_TEREDO  = NET_MAX + 1;
 int static GetExtNetwork(const CNetAddr *addr)
 {
     if (addr == nullptr)

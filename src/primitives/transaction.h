@@ -12,7 +12,7 @@
 #include <serialize.h>
 #include <uint256.h>
 
-static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
+static constexpr int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
 
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
@@ -68,21 +68,21 @@ public:
 
     /* Setting nSequence to this value for every input in a transaction
      * disables nLockTime. */
-    static const uint32_t SEQUENCE_FINAL = 0xffffffff;
+    static constexpr uint32_t SEQUENCE_FINAL = 0xffffffff;
 
     /* Below flags apply in the context of BIP 68*/
     /* If this flag set, CTxIn::nSequence is NOT interpreted as a
      * relative lock-time. */
-    static const uint32_t SEQUENCE_LOCKTIME_DISABLE_FLAG = (1U << 31);
+    static constexpr uint32_t SEQUENCE_LOCKTIME_DISABLE_FLAG = (1U << 31);
 
     /* If CTxIn::nSequence encodes a relative lock-time and this flag
      * is set, the relative lock-time has units of 512 seconds,
      * otherwise it specifies blocks with a granularity of 1. */
-    static const uint32_t SEQUENCE_LOCKTIME_TYPE_FLAG = (1 << 22);
+    static constexpr uint32_t SEQUENCE_LOCKTIME_TYPE_FLAG = (1 << 22);
 
     /* If CTxIn::nSequence encodes a relative lock-time, this mask is
      * applied to extract that lock-time from the sequence field. */
-    static const uint32_t SEQUENCE_LOCKTIME_MASK = 0x0000ffff;
+    static constexpr uint32_t SEQUENCE_LOCKTIME_MASK = 0x0000ffff;
 
     /* In order to use the same number of bits to encode roughly the
      * same wall-clock duration, and because blocks are naturally
@@ -91,7 +91,7 @@ public:
      * Converting from CTxIn::nSequence to seconds is performed by
      * multiplying by 512 = 2^9, or equivalently shifting up by
      * 9 bits. */
-    static const int SEQUENCE_LOCKTIME_GRANULARITY = 9;
+    static constexpr int SEQUENCE_LOCKTIME_GRANULARITY = 9;
 
     CTxIn()
     {
@@ -265,13 +265,13 @@ class CTransaction
 {
 public:
     // Default transaction version.
-    static const int32_t CURRENT_VERSION=2;
+    static constexpr int32_t CURRENT_VERSION=2;
 
     // Changing the default transaction version requires a two step process: first
     // adapting relay policy by bumping MAX_STANDARD_VERSION, and then later date
     // bumping the default CURRENT_VERSION at which point both CURRENT_VERSION and
     // MAX_STANDARD_VERSION will be equal.
-    static const int32_t MAX_STANDARD_VERSION=2;
+    static constexpr int32_t MAX_STANDARD_VERSION=2;
 
     // The local variables are made const to prevent unintended modification
     // without updating the cached hash value. However, CTransaction is not

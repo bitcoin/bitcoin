@@ -17,7 +17,7 @@ private:
     uint64_t bytes;
 
 public:
-    static const size_t OUTPUT_SIZE = 20;
+    static constexpr size_t OUTPUT_SIZE = 20;
 
     CRIPEMD160();
     CRIPEMD160& Write(const unsigned char* data, size_t len);

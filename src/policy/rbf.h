@@ -7,7 +7,7 @@
 
 #include <txmempool.h>
 
-static const uint32_t MAX_BIP125_RBF_SEQUENCE = 0xfffffffd;
+static constexpr uint32_t MAX_BIP125_RBF_SEQUENCE = 0xfffffffd;
 
 enum class RBFTransactionState {
     UNKNOWN,

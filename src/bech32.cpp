@@ -10,10 +10,10 @@ namespace
 typedef std::vector<uint8_t> data;
 
 /** The Bech32 character set for encoding. */
-const char* CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
+constexpr const char* CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 
 /** The Bech32 character set for decoding. */
-const int8_t CHARSET_REV[128] = {
+constexpr int8_t CHARSET_REV[128] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,

@@ -6,15 +6,15 @@
 #define BITCOIN_QT_GUICONSTANTS_H
 
 /* Milliseconds between model updates */
-static const int MODEL_UPDATE_DELAY = 250;
+static constexpr int MODEL_UPDATE_DELAY = 250;
 
 /* AskPassphraseDialog -- Maximum passphrase length */
-static const int MAX_PASSPHRASE_SIZE = 1024;
+static constexpr int MAX_PASSPHRASE_SIZE = 1024;
 
 /* BitcoinGUI -- Size of icons in status bar */
-static const int STATUSBAR_ICONSIZE = 16;
+static constexpr int STATUSBAR_ICONSIZE = 16;
 
-static const bool DEFAULT_SPLASHSCREEN = true;
+static constexpr bool DEFAULT_SPLASHSCREEN = true;
 
 /* Invalid field background style */
 #define STYLE_INVALID "background:#FF8080"
@@ -35,10 +35,10 @@ static const bool DEFAULT_SPLASHSCREEN = true;
 /* Tooltips longer than this (in characters) are converted into rich text,
    so that they can be word-wrapped.
  */
-static const int TOOLTIP_WRAP_THRESHOLD = 80;
+static constexpr int TOOLTIP_WRAP_THRESHOLD = 80;
 
 /* Maximum allowed URI length */
-static const int MAX_URI_LENGTH = 255;
+static constexpr int MAX_URI_LENGTH = 255;
 
 /* QRCodeDialog -- size of exported QR Code image */
 #define QR_IMAGE_SIZE 300

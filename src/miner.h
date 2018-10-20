@@ -21,7 +21,7 @@ class CScript;
 
 namespace Consensus { struct Params; };
 
-static const bool DEFAULT_PRINTPRIORITY = false;
+static constexpr bool DEFAULT_PRINTPRIORITY = false;
 
 struct CBlockTemplate
 {
