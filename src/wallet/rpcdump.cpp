@@ -805,6 +805,24 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     return reply;
 }
 
+static void ImportScriptsToKeyStore(CBasicKeyStore* keystore, const std::vector<CScript>& scripts)
+{
+    for (const auto& script : scripts) {
+        if (!keystore->HaveCScript(CScriptID(script)) && !keystore->AddCScript(script)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Error adding script to wallet");
+        }
+    }
+}
+
+static void AddScriptsToWalletWatchOnly(CWallet* wallet, const std::vector<CScript>& scripts, const int64_t timestamp)
+{
+    LOCK(wallet->cs_wallet);
+    for (const auto& script : scripts) {
+        if (!wallet->AddWatchOnly(script, timestamp)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Error adding script to wallet");
+        }
+    }
+}
 
 static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
@@ -829,6 +847,8 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
         // Generate the script and destination for the scriptPubKey provided
         CScript script;
         CTxDestination dest;
+        std::vector<CScript> scripts_to_import;
+        std::vector<CScript> scripts_to_watchonly;
 
         if (!isScript) {
             dest = DecodeDestination(output);
@@ -884,15 +904,8 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "The redeemScript does not match the scriptPubKey");
             }
 
-            pwallet->MarkDirty();
-
-            if (!pwallet->AddWatchOnly(redeemScript, timestamp)) {
-                throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
-            }
-
-            if (!pwallet->HaveCScript(redeem_id) && !pwallet->AddCScript(redeemScript)) {
-                throw JSONRPCError(RPC_WALLET_ERROR, "Error adding p2sh redeemScript to wallet");
-            }
+            scripts_to_import.push_back(redeemScript);
+            scripts_to_watchonly.push_back(redeemScript);
 
             // Now set script to the redeemScript so we parse the inner script as P2WSH or P2WPKH below
             script = redeemScript;
@@ -908,7 +921,6 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
             // Generate the scripts
             std::vector<unsigned char> witness_script_parsed(ParseHex(witness_script_hex));
             CScript witness_script = CScript(witness_script_parsed.begin(), witness_script_parsed.end());
-            CScriptID witness_id(witness_script);
 
             // Check that the witnessScript and scriptPubKey match
             if (GetScriptForDestination(WitnessV0ScriptHash(witness_script)) != script) {
@@ -916,13 +928,10 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
             }
 
             // Add the witness script as watch only only if it is not for P2SH-P2WSH
-            if (!scriptpubkey_script.IsPayToScriptHash() && !pwallet->AddWatchOnly(witness_script, timestamp)) {
-                throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
+            if (!scriptpubkey_script.IsPayToScriptHash()) {
+                scripts_to_watchonly.push_back(witness_script);
             }
-
-            if (!pwallet->HaveCScript(witness_id) && !pwallet->AddCScript(witness_script)) {
-                throw JSONRPCError(RPC_WALLET_ERROR, "Error adding p2wsh witnessScript to wallet");
-            }
+            scripts_to_import.push_back(witness_script);
 
             // Now set script to the witnessScript so we parse the inner script as P2PK or P2PKH below
             script = witness_script;
@@ -972,11 +981,7 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
                     throw JSONRPCError(RPC_WALLET_ERROR, "The wallet already contains the private key for this address or script");
                 }
 
-                pwallet->MarkDirty();
-
-                if (!pwallet->AddWatchOnly(scriptRawPubKey, timestamp)) {
-                    throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
-                }
+                scripts_to_watchonly.push_back(scriptRawPubKey);
             }
         }
 
@@ -985,20 +990,8 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
             throw JSONRPCError(RPC_WALLET_ERROR, "The wallet already contains the private key for this address or script");
         }
 
+        // Mark wallet dirty before any imports happen
         pwallet->MarkDirty();
-
-        if (!pwallet->AddWatchOnly(scriptpubkey_script, timestamp)) {
-            throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
-        }
-
-        if (!watchOnly && !pwallet->HaveCScript(CScriptID(scriptpubkey_script)) && !pwallet->AddCScript(scriptpubkey_script)) {
-            throw JSONRPCError(RPC_WALLET_ERROR, "Error adding scriptPubKey script to wallet");
-        }
-
-        // add to address book or update label
-        if (IsValidDestination(scriptpubkey_dest)) {
-            pwallet->SetAddressBook(scriptpubkey_dest, label, "receive");
-        }
 
         // Import private keys.
         for (size_t i = 0; i < keys.size(); i++) {
@@ -1027,7 +1020,27 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
                 throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
             }
 
+            scripts_to_watchonly.push_back(GetScriptForRawPubKey(pubKey));
+
             pwallet->UpdateTimeFirstKey(timestamp);
+        }
+
+        // Finally import things
+        // Import the scripts to the wallet
+        AddScriptsToWalletWatchOnly(pwallet, scripts_to_watchonly, timestamp);
+        ImportScriptsToKeyStore(pwallet, scripts_to_import);
+
+        if (!pwallet->AddWatchOnly(scriptpubkey_script, timestamp)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
+        }
+
+        if (!watchOnly && !pwallet->HaveCScript(CScriptID(scriptpubkey_script)) && !pwallet->AddCScript(scriptpubkey_script)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Error adding scriptPubKey script to wallet");
+        }
+
+        // add to address book or update label
+        if (IsValidDestination(dest)) {
+            pwallet->SetAddressBook(dest, label, "receive");
         }
 
         UniValue result = UniValue(UniValue::VOBJ);
