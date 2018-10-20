@@ -919,6 +919,42 @@ static void ImportScriptsToKeyStore(CBasicKeyStore* keystore, const std::vector<
     }
 }
 
+static void ImportKeysToKeyStore(CBasicKeyStore* keystore, const std::vector<CKey>& keys)
+{
+    for (const auto& key : keys) {
+        CPubKey pubKey = key.GetPubKey();
+        CKeyID vchAddress = pubKey.GetID();
+
+        if (keystore->HaveKey(vchAddress)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Already have this key");
+        }
+
+        if (!keystore->AddKeyPubKey(key, pubKey)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
+        }
+    }
+}
+
+static void AddKeyMetaToWallet(CWallet* wallet, const std::vector<CKey>& keys, const int64_t timestamp)
+{
+    LOCK(wallet->cs_wallet);
+    for (const auto& key : keys) {
+        CPubKey pubKey = key.GetPubKey();
+        CKeyID vchAddress = pubKey.GetID();
+        wallet->mapKeyMetadata[vchAddress].nCreateTime = timestamp;
+        wallet->UpdateTimeFirstKey(timestamp);
+    }
+}
+
+static void AddScriptsToKeyStoreWatchOnly(CBasicKeyStore* keystore, const std::vector<CScript>& scripts)
+{
+    for (const auto& script : scripts) {
+        if (!keystore->AddWatchOnly(script)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Error adding script to wallet");
+        }
+    }
+}
+
 static void AddScriptsToWalletWatchOnly(CWallet* wallet, const std::vector<CScript>& scripts, const int64_t timestamp)
 {
     LOCK(wallet->cs_wallet);
@@ -1099,6 +1135,7 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
         pwallet->MarkDirty();
 
         // Import private keys.
+        std::vector<CKey> keys_to_import;
         for (size_t i = 0; i < keys.size(); i++) {
             const std::string& strPrivkey = keys[i].get_str();
 
@@ -1108,32 +1145,37 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
             if (!key.IsValid()) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
             }
-
             CPubKey pubKey = key.GetPubKey();
             assert(key.VerifyPubKey(pubKey));
-
-            CKeyID vchAddress = pubKey.GetID();
-            pwallet->MarkDirty();
-
-            if (pwallet->HaveKey(vchAddress)) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Already have this key");
-            }
-
-            pwallet->mapKeyMetadata[vchAddress].nCreateTime = timestamp;
-
-            if (!pwallet->AddKeyPubKey(key, pubKey)) {
-                throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
-            }
-
-            scripts_to_watchonly.push_back(GetScriptForRawPubKey(pubKey));
-
-            pwallet->UpdateTimeFirstKey(timestamp);
+            keys_to_import.push_back(key);
         }
 
         // Finally import things
+        // Check for solvability and that only necessary things were introduced
+        if (scripts_to_import.size() || scripts_to_watchonly.size()) {
+            // Import everything into an AllUsedKeyStore first
+            AllUsedKeyStore auks;
+            AddScriptsToKeyStoreWatchOnly(&auks, scripts_to_watchonly);
+            ImportScriptsToKeyStore(&auks, scripts_to_import);
+            ImportKeysToKeyStore(&auks, keys_to_import);
+
+            // Check that we have everything for solvability by dummy signing
+            SignatureData sigdata;
+            if (!ProduceSignature(auks, DUMMY_SIGNATURE_CREATOR, scriptpubkey_script, sigdata)) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Not enough information was provided to make outputs with this scriptPubKey solvable.");
+            }
+
+            // Make sure that no extra data was provided
+            if (!auks.AllUsed()) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "More data was imported than was necessary to make this solvable.");
+            }
+        }
+
         // Import the scripts to the wallet
         AddScriptsToWalletWatchOnly(pwallet, scripts_to_watchonly, timestamp);
         ImportScriptsToKeyStore(pwallet, scripts_to_import);
+        ImportKeysToKeyStore(pwallet, keys_to_import);
+        AddKeyMetaToWallet(pwallet, keys_to_import, timestamp);
 
         if (!pwallet->AddWatchOnly(scriptpubkey_script, timestamp)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
