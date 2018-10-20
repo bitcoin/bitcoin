@@ -1,9 +1,9 @@
 package=chia_bls
-$(package)_version=b24c15cef6567a855e901b4774d1d22efb063ea9
+$(package)_version=ef06290c1d92eea79b46af135bcc823b019612a6
 # It's actually from https://github.com/Chia-Network/bls-signatures, but we have so many patches atm that it's forked
 $(package)_download_path=https://github.com/codablock/bls-signatures/archive
 $(package)_file_name=$($(package)_version).tar.gz
-$(package)_sha256_hash=96b5f9b70179e2e76123fb19b7a00dec9188b571757db15949bf9f1d8dee864f
+$(package)_sha256_hash=1e665359fdb946efce943340a324534f72832ecde97c4ebd4ad189f63e029300
 $(package)_dependencies=gmp
 #$(package)_patches=...TODO (when we switch back to https://github.com/Chia-Network/bls-signatures)
 

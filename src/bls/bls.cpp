@@ -444,9 +444,9 @@ struct secure_user_allocator {
 // otherwise locking of mutexes slows down the system at places were you'd never expect it
 // downside is that we must make sure that all threads have destroyed their copy of the pool before the global
 // LockedPool is destroyed. This means that all worker threads must finish before static destruction begins
-// we use sizeof(relic::bn_t) as the pool request size as this is what Chia's BLS library will request in most cases
+// we use sizeof(bn_t) as the pool request size as this is what Chia's BLS library will request in most cases
 // In case something larger is requested, we directly call into LockedPool and accept the slowness
-thread_local static boost::pool<secure_user_allocator> securePool(sizeof(relic::bn_t) + sizeof(size_t));
+thread_local static boost::pool<secure_user_allocator> securePool(sizeof(bn_t) + sizeof(size_t));
 
 static void* secure_allocate(size_t n)
 {
