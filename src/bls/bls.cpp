@@ -16,18 +16,14 @@
 #include <assert.h>
 #include <string.h>
 
-bool CBLSId::InternalSetBuf(const void* buf, size_t size)
+bool CBLSId::InternalSetBuf(const void* buf)
 {
-    assert(size == sizeof(uint256));
     memcpy(impl.begin(), buf, sizeof(uint256));
     return true;
 }
 
-bool CBLSId::InternalGetBuf(void* buf, size_t size) const
+bool CBLSId::InternalGetBuf(void* buf) const
 {
-    if (size != GetSerSize()) {
-        return false;
-    }
     memcpy(buf, impl.begin(), sizeof(uint256));
     return true;
 }
@@ -60,12 +56,8 @@ CBLSId CBLSId::FromHash(const uint256& hash)
     return id;
 }
 
-bool CBLSSecretKey::InternalSetBuf(const void* buf, size_t size)
+bool CBLSSecretKey::InternalSetBuf(const void* buf)
 {
-    if (size != GetSerSize()) {
-        return false;
-    }
-
     try {
         impl = bls::PrivateKey::FromBytes((const uint8_t*)buf);
         return true;
@@ -74,12 +66,8 @@ bool CBLSSecretKey::InternalSetBuf(const void* buf, size_t size)
     }
 }
 
-bool CBLSSecretKey::InternalGetBuf(void* buf, size_t size) const
+bool CBLSSecretKey::InternalGetBuf(void* buf) const
 {
-    if (size != GetSerSize()) {
-        return false;
-    }
-
     impl.Serialize((uint8_t*)buf);
     return true;
 }
@@ -185,12 +173,8 @@ CBLSSignature CBLSSecretKey::Sign(const uint256& hash) const
     return sigRet;
 }
 
-bool CBLSPublicKey::InternalSetBuf(const void* buf, size_t size)
+bool CBLSPublicKey::InternalSetBuf(const void* buf)
 {
-    if (size != GetSerSize()) {
-        return false;
-    }
-
     try {
         impl = bls::PublicKey::FromBytes((const uint8_t*)buf);
         return true;
@@ -199,12 +183,8 @@ bool CBLSPublicKey::InternalSetBuf(const void* buf, size_t size)
     }
 }
 
-bool CBLSPublicKey::InternalGetBuf(void* buf, size_t size) const
+bool CBLSPublicKey::InternalGetBuf(void* buf) const
 {
-    if (size != GetSerSize()) {
-        return false;
-    }
-
     impl.Serialize((uint8_t*)buf);
     return true;
 }
@@ -279,12 +259,8 @@ bool CBLSPublicKey::DHKeyExchange(const CBLSSecretKey& sk, const CBLSPublicKey& 
     return true;
 }
 
-bool CBLSSignature::InternalSetBuf(const void* buf, size_t size)
+bool CBLSSignature::InternalSetBuf(const void* buf)
 {
-    if (size != GetSerSize()) {
-        return false;
-    }
-
     try {
         impl = bls::InsecureSignature::FromBytes((const uint8_t*)buf);
         return true;
@@ -293,11 +269,8 @@ bool CBLSSignature::InternalSetBuf(const void* buf, size_t size)
     }
 }
 
-bool CBLSSignature::InternalGetBuf(void* buf, size_t size) const
+bool CBLSSignature::InternalGetBuf(void* buf) const
 {
-    if (size != GetSerSize()) {
-        return false;
-    }
     impl.Serialize((uint8_t*)buf);
     return true;
 }
