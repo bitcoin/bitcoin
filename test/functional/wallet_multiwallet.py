@@ -316,7 +316,7 @@ class MultiWalletTest(BitcoinTestFramework):
             assert_equal(rpc.getaddressinfo(addr)['ismine'], True)
 
         # Test .walletlock file is closed
-        self.start_node(1)
+        self.start_node(1, ["-walletcrosschain=1"])
         wallet = os.path.join(self.options.tmpdir, 'my_wallet')
         self.nodes[0].createwallet(wallet)
         assert_raises_rpc_error(-4, "Error initializing wallet database environment", self.nodes[1].loadwallet, wallet)

@@ -49,6 +49,7 @@ void DummyWalletInit::AddWalletOptions() const
         "-flushwallet",
         "-privdb",
         "-walletrejectlongchains",
+        "-walletcrosschain",
     });
 }
 

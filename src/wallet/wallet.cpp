@@ -4273,6 +4273,26 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
     auto locked_chain = chain.lock();
     LOCK(walletInstance->cs_wallet);
 
+    // Unless allowed, ensure wallet files are not reused across chains:
+    if (!gArgs.GetBoolArg("-walletcrosschain", DEFAULT_WALLETCROSSCHAIN))
+    {
+        WalletBatch batch(*walletInstance->database);
+        CBlockLocator locator;
+        if (batch.ReadBestBlock(locator))
+        {
+            // Wallet is assumed to be from another chain, if none of
+            // its last 6 best known blocks are in the active chain
+            // (this heavily relies on the fact that locator stores
+            // last 10 blocks consecutively):
+            const Optional<int> fork_height = locked_chain->findLocatorFork(locator);
+            if (fork_height && std::distance(locator.vHave.begin(), std::find(locator.vHave.begin(), locator.vHave.end(), locked_chain->getBlockHash(*fork_height))) > 6)
+            {
+                chain.initError(_("Wallet files should not be reused across chains"));
+                return nullptr;
+            }
+        }
+    }
+
     int rescan_height = 0;
     if (!gArgs.GetBoolArg("-rescan", false))
     {
