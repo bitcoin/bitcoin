@@ -6,15 +6,14 @@
 #include <qt/addressbookpage.h>
 #include <qt/addresstablemodel.h>
 #include <qt/editaddressdialog.h>
-#include <qt/callback.h>
 #include <qt/optionsmodel.h>
 #include <qt/platformstyle.h>
 #include <qt/qvalidatedlineedit.h>
 #include <qt/walletmodel.h>
 
 #include <key.h>
-#include <pubkey.h>
 #include <key_io.h>
+#include <pubkey.h>
 #include <wallet/wallet.h>
 
 #include <QTimer>
