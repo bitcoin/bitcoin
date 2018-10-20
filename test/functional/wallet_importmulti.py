@@ -489,7 +489,7 @@ class ImportMultiTest(BitcoinTestFramework):
         assert_equal(result[0]['success'], True)
         address_assert = self.nodes[1].getaddressinfo(address['address'])
         assert_equal(address_assert['iswatchonly'], True)
-        assert_equal(address_assert['issolvable'], False)
+        assert_equal(address_assert['solvable'], False)
 
         # Import P2WPKH address with public key but no private key
         self.log.info("Should import a P2WPKH address and public key as solvable but not spendable")
@@ -504,7 +504,7 @@ class ImportMultiTest(BitcoinTestFramework):
         assert_equal(result[0]['success'], True)
         address_assert = self.nodes[1].getaddressinfo(address['address'])
         assert_equal(address_assert['ismine'], False)
-        assert_equal(address_assert['issolvable'], True)
+        assert_equal(address_assert['solvable'], True)
 
         # Import P2WPKH address with key and check it is spendable
         self.log.info("Should import a P2WPKH address with key")
@@ -534,7 +534,7 @@ class ImportMultiTest(BitcoinTestFramework):
         }])
         assert_equal(result[0]['success'], True)
         address_assert = self.nodes[1].getaddressinfo(multi_sig_script['address'])
-        assert_equal(address_assert['issolvable'], False)
+        assert_equal(address_assert['solvable'], False)
 
         # Same P2WSH multisig address as above, but now with witnessscript + private keys
         self.log.info("Should import a p2wsh with respective redeem script and private keys")
@@ -548,7 +548,7 @@ class ImportMultiTest(BitcoinTestFramework):
         }])
         assert_equal(result[0]['success'], True)
         address_assert = self.nodes[1].getaddressinfo(multi_sig_script['address'])
-        assert_equal(address_assert['issolvable'], True)
+        assert_equal(address_assert['solvable'], True)
         assert_equal(address_assert['ismine'], True)
         assert_equal(address_assert['sigsrequired'], 2)
 
@@ -565,7 +565,7 @@ class ImportMultiTest(BitcoinTestFramework):
         }])
         assert_equal(result[0]['success'], True)
         address_assert = self.nodes[1].getaddressinfo(sig_address_1['address'])
-        assert_equal(address_assert['issolvable'], False)
+        assert_equal(address_assert['solvable'], False)
         assert_equal(address_assert['ismine'], False)
 
         # P2SH-P2WPKH address + redeemscript + public key with no private key
@@ -580,7 +580,7 @@ class ImportMultiTest(BitcoinTestFramework):
         }])
         assert_equal(result[0]['success'], True)
         address_assert = self.nodes[1].getaddressinfo(sig_address_1['address'])
-        assert_equal(address_assert['issolvable'], True)
+        assert_equal(address_assert['solvable'], True)
         assert_equal(address_assert['ismine'], False)
 
         # P2SH-P2WPKH address + redeemscript + private key
@@ -598,7 +598,7 @@ class ImportMultiTest(BitcoinTestFramework):
         }])
         assert_equal(result[0]['success'], True)
         address_assert = self.nodes[1].getaddressinfo(sig_address_1['address'])
-        assert_equal(address_assert['issolvable'], True)
+        assert_equal(address_assert['solvable'], True)
         assert_equal(address_assert['ismine'], True)
 
         # P2SH-P2WSH 1-of-1 multisig + redeemscript with no private key
@@ -617,7 +617,7 @@ class ImportMultiTest(BitcoinTestFramework):
         }])
         assert_equal(result[0]['success'], True)
         address_assert = self.nodes[1].getaddressinfo(multi_sig_script['address'])
-        assert_equal(address_assert['issolvable'], True)
+        assert_equal(address_assert['solvable'], True)
 
 if __name__ == '__main__':
     ImportMultiTest ().main ()
