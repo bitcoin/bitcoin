@@ -94,9 +94,10 @@ static void SignTransaction(CMutableTransaction& tx, const CKey& coinbaseKey)
     }
 }
 
-static CMutableTransaction CreateProRegTx(SimpleUTXOMap& utxos, int port, const CScript& scriptPayout, const CKey& coinbaseKey, CKey& mnKeyRet)
+static CMutableTransaction CreateProRegTx(SimpleUTXOMap& utxos, int port, const CScript& scriptPayout, const CKey& coinbaseKey, CKey& ownerKeyRet, CBLSSecretKey& operatorKeyRet)
 {
-    mnKeyRet.MakeNewKey(true);
+    ownerKeyRet.MakeNewKey(true);
+    operatorKeyRet.MakeNewKey();
 
     CAmount change;
     auto inputs = SelectUTXOs(utxos, 1000 * COIN, change);
@@ -105,9 +106,9 @@ static CMutableTransaction CreateProRegTx(SimpleUTXOMap& utxos, int port, const 
     proTx.nProtocolVersion = PROTOCOL_VERSION;
     proTx.nCollateralIndex = 0;
     proTx.addr = LookupNumeric("1.1.1.1", port);
-    proTx.keyIDOwner = mnKeyRet.GetPubKey().GetID();
-    proTx.keyIDOperator = mnKeyRet.GetPubKey().GetID();
-    proTx.keyIDVoting = mnKeyRet.GetPubKey().GetID();
+    proTx.keyIDOwner = ownerKeyRet.GetPubKey().GetID();
+    proTx.pubKeyOperator = operatorKeyRet.GetPublicKey();
+    proTx.keyIDVoting = ownerKeyRet.GetPubKey().GetID();
     proTx.scriptPayout = scriptPayout;
 
     CMutableTransaction tx;
@@ -115,14 +116,14 @@ static CMutableTransaction CreateProRegTx(SimpleUTXOMap& utxos, int port, const 
     tx.nType = TRANSACTION_PROVIDER_REGISTER;
     FundTransaction(tx, utxos, scriptPayout, 1000 * COIN, coinbaseKey);
     proTx.inputsHash = CalcTxInputsHash(tx);
-    CHashSigner::SignHash(::SerializeHash(proTx), mnKeyRet, proTx.vchSig);
+    CHashSigner::SignHash(::SerializeHash(proTx), ownerKeyRet, proTx.vchSig);
     SetTxPayload(tx, proTx);
     SignTransaction(tx, coinbaseKey);
 
     return tx;
 }
 
-static CMutableTransaction CreateProUpServTx(SimpleUTXOMap& utxos, const uint256& proTxHash, const CKey& mnKey, int port, const CScript& scriptOperatorPayout, const CKey& coinbaseKey)
+static CMutableTransaction CreateProUpServTx(SimpleUTXOMap& utxos, const uint256& proTxHash, const CBLSSecretKey& operatorKey, int port, const CScript& scriptOperatorPayout, const CKey& coinbaseKey)
 {
     CAmount change;
     auto inputs = SelectUTXOs(utxos, 1 * COIN, change);
@@ -138,21 +139,21 @@ static CMutableTransaction CreateProUpServTx(SimpleUTXOMap& utxos, const uint256
     tx.nType = TRANSACTION_PROVIDER_UPDATE_SERVICE;
     FundTransaction(tx, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), 1 * COIN, coinbaseKey);
     proTx.inputsHash = CalcTxInputsHash(tx);
-    CHashSigner::SignHash(::SerializeHash(proTx), mnKey, proTx.vchSig);
+    proTx.sig = operatorKey.Sign(::SerializeHash(proTx));
     SetTxPayload(tx, proTx);
     SignTransaction(tx, coinbaseKey);
 
     return tx;
 }
 
-static CMutableTransaction CreateProUpRegTx(SimpleUTXOMap& utxos, const uint256& proTxHash, const CKey& mnKey, const CKeyID& keyIDOperator, const CKeyID& keyIDVoting, const CScript& scriptPayout, const CKey& coinbaseKey)
+static CMutableTransaction CreateProUpRegTx(SimpleUTXOMap& utxos, const uint256& proTxHash, const CKey& mnKey, const CBLSPublicKey& pubKeyOperator, const CKeyID& keyIDVoting, const CScript& scriptPayout, const CKey& coinbaseKey)
 {
     CAmount change;
     auto inputs = SelectUTXOs(utxos, 1 * COIN, change);
 
     CProUpRegTx proTx;
     proTx.proTxHash = proTxHash;
-    proTx.keyIDOperator = keyIDOperator;
+    proTx.pubKeyOperator = pubKeyOperator;
     proTx.keyIDVoting = keyIDVoting;
     proTx.scriptPayout = scriptPayout;
 
@@ -168,7 +169,7 @@ static CMutableTransaction CreateProUpRegTx(SimpleUTXOMap& utxos, const uint256&
     return tx;
 }
 
-static CMutableTransaction CreateProUpRevTx(SimpleUTXOMap& utxos, const uint256& proTxHash, const CKey& mnKey, const CKey& coinbaseKey)
+static CMutableTransaction CreateProUpRevTx(SimpleUTXOMap& utxos, const uint256& proTxHash, const CBLSSecretKey& operatorKey, const CKey& coinbaseKey)
 {
     CAmount change;
     auto inputs = SelectUTXOs(utxos, 1 * COIN, change);
@@ -181,7 +182,7 @@ static CMutableTransaction CreateProUpRevTx(SimpleUTXOMap& utxos, const uint256&
     tx.nType = TRANSACTION_PROVIDER_UPDATE_REVOKE;
     FundTransaction(tx, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), 1 * COIN, coinbaseKey);
     proTx.inputsHash = CalcTxInputsHash(tx);
-    CHashSigner::SignHash(::SerializeHash(proTx), mnKey, proTx.vchSig);
+    proTx.sig = operatorKey.Sign(::SerializeHash(proTx));
     SetTxPayload(tx, proTx);
     SignTransaction(tx, coinbaseKey);
 
@@ -218,8 +219,9 @@ BOOST_AUTO_TEST_SUITE(evo_dip3_activation_tests)
 BOOST_FIXTURE_TEST_CASE(dip3_activation, TestChainDIP3BeforeActivationSetup)
 {
     auto utxos = BuildSimpleUtxoMap(coinbaseTxns);
-    CKey mnKey;
-    auto tx = CreateProRegTx(utxos, 1, GetScriptForDestination(payoutAddress.Get()), coinbaseKey, mnKey);
+    CKey ownerKey;
+    CBLSSecretKey operatorKey;
+    auto tx = CreateProRegTx(utxos, 1, GetScriptForDestination(payoutAddress.Get()), coinbaseKey, ownerKey, operatorKey);
     std::vector<CMutableTransaction> txns = {tx};
 
     int nHeight = chainActive.Height();
@@ -260,14 +262,17 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     int port = 1;
 
     std::vector<uint256> dmnHashes;
-    std::map<uint256, CKey> mnKeys;
+    std::map<uint256, CKey> ownerKeys;
+    std::map<uint256, CBLSSecretKey> operatorKeys;
 
     // register one MN per block
     for (size_t i = 0; i < 6; i++) {
-        CKey mnKey;
-        auto tx = CreateProRegTx(utxos, port++, GenerateRandomAddress(), coinbaseKey, mnKey);
+        CKey ownerKey;
+        CBLSSecretKey operatorKey;
+        auto tx = CreateProRegTx(utxos, port++, GenerateRandomAddress(), coinbaseKey, ownerKey, operatorKey);
         dmnHashes.emplace_back(tx.GetHash());
-        mnKeys.emplace(tx.GetHash(), mnKey);
+        ownerKeys.emplace(tx.GetHash(), ownerKey);
+        operatorKeys.emplace(tx.GetHash(), operatorKey);
         CreateAndProcessBlock({tx}, coinbaseKey);
         deterministicMNManager->UpdatedBlockTip(chainActive.Tip());
 
@@ -302,10 +307,12 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     for (size_t i = 0; i < 3; i++) {
         std::vector<CMutableTransaction> txns;
         for (size_t j = 0; j < 3; j++) {
-            CKey mnKey;
-            auto tx = CreateProRegTx(utxos, port++, GenerateRandomAddress(), coinbaseKey, mnKey);
+            CKey ownerKey;
+            CBLSSecretKey operatorKey;
+            auto tx = CreateProRegTx(utxos, port++, GenerateRandomAddress(), coinbaseKey, ownerKey, operatorKey);
             dmnHashes.emplace_back(tx.GetHash());
-            mnKeys.emplace(tx.GetHash(), mnKey);
+            ownerKeys.emplace(tx.GetHash(), ownerKey);
+            operatorKeys.emplace(tx.GetHash(), operatorKey);
             txns.emplace_back(tx);
         }
         CreateAndProcessBlock(txns, coinbaseKey);
@@ -320,7 +327,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     }
 
     // test ProUpServTx
-    auto tx = CreateProUpServTx(utxos, dmnHashes[0], mnKeys[dmnHashes[0]], 1000, CScript(), coinbaseKey);
+    auto tx = CreateProUpServTx(utxos, dmnHashes[0], operatorKeys[dmnHashes[0]], 1000, CScript(), coinbaseKey);
     CreateAndProcessBlock({tx}, coinbaseKey);
     deterministicMNManager->UpdatedBlockTip(chainActive.Tip());
     BOOST_ASSERT(chainActive.Height() == nHeight + 1);
@@ -330,7 +337,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     BOOST_ASSERT(dmn != nullptr && dmn->pdmnState->addr.GetPort() == 1000);
 
     // test ProUpRevTx
-    tx = CreateProUpRevTx(utxos, dmnHashes[0], mnKeys[dmnHashes[0]], coinbaseKey);
+    tx = CreateProUpRevTx(utxos, dmnHashes[0], operatorKeys[dmnHashes[0]], coinbaseKey);
     CreateAndProcessBlock({tx}, coinbaseKey);
     deterministicMNManager->UpdatedBlockTip(chainActive.Tip());
     BOOST_ASSERT(chainActive.Height() == nHeight + 1);
@@ -356,10 +363,10 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     }
 
     // test reviving the MN
-    CKey newOperatorKey;
-    newOperatorKey.MakeNewKey(false);
+    CBLSSecretKey newOperatorKey;
+    newOperatorKey.MakeNewKey();
     dmn = deterministicMNManager->GetListAtChainTip().GetMN(dmnHashes[0]);
-    tx = CreateProUpRegTx(utxos, dmnHashes[0], mnKeys[dmnHashes[0]], newOperatorKey.GetPubKey().GetID(), newOperatorKey.GetPubKey().GetID(), dmn->pdmnState->scriptPayout, coinbaseKey);
+    tx = CreateProUpRegTx(utxos, dmnHashes[0], ownerKeys[dmnHashes[0]], newOperatorKey.GetPublicKey(), ownerKeys[dmnHashes[0]].GetPubKey().GetID(), dmn->pdmnState->scriptPayout, coinbaseKey);
     CreateAndProcessBlock({tx}, coinbaseKey);
     deterministicMNManager->UpdatedBlockTip(chainActive.Tip());
     BOOST_ASSERT(chainActive.Height() == nHeight + 1);

@@ -30,8 +30,11 @@ extern CActiveDeterministicMasternodeManager* activeMasternodeManager;
 
 struct CActiveMasternodeInfo {
     // Keys for the active Masternode
-    CKeyID keyIDOperator;
-    CKey keyOperator;
+    CKeyID legacyKeyIDOperator;
+    CKey legacyKeyOperator;
+
+    std::unique_ptr<CBLSPublicKey> blsPubKeyOperator;
+    std::unique_ptr<CBLSSecretKey> blsKeyOperator;
 
     // Initialized while registering Masternode
     COutPoint outpoint;

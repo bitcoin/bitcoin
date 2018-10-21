@@ -33,9 +33,9 @@ std::string CDeterministicMNState::ToString() const
     }
 
     return strprintf("CDeterministicMNState(nRegisteredHeight=%d, nLastPaidHeight=%d, nPoSePenalty=%d, nPoSeRevivedHeight=%d, nPoSeBanHeight=%d, nRevocationReason=%d, "
-                     "keyIDOwner=%s, keyIDOperator=%s, keyIDVoting=%s, addr=%s, nProtocolVersion=%d, payoutAddress=%s, operatorRewardAddress=%s)",
+                     "keyIDOwner=%s, pubKeyOperator=%s, keyIDVoting=%s, addr=%s, nProtocolVersion=%d, payoutAddress=%s, operatorRewardAddress=%s)",
                      nRegisteredHeight, nLastPaidHeight, nPoSePenalty, nPoSeRevivedHeight, nPoSeBanHeight, nRevocationReason,
-                     keyIDOwner.ToString(), keyIDOperator.ToString(), keyIDVoting.ToString(), addr.ToStringIPPort(false), nProtocolVersion, payoutAddress, operatorRewardAddress);
+                     keyIDOwner.ToString(), pubKeyOperator.ToString(), keyIDVoting.ToString(), addr.ToStringIPPort(false), nProtocolVersion, payoutAddress, operatorRewardAddress);
 }
 
 void CDeterministicMNState::ToJson(UniValue& obj) const
@@ -49,7 +49,7 @@ void CDeterministicMNState::ToJson(UniValue& obj) const
     obj.push_back(Pair("PoSeBanHeight", nPoSeBanHeight));
     obj.push_back(Pair("revocationReason", nRevocationReason));
     obj.push_back(Pair("keyIDOwner", keyIDOwner.ToString()));
-    obj.push_back(Pair("keyIDOperator", keyIDOperator.ToString()));
+    obj.push_back(Pair("pubKeyOperator", pubKeyOperator.ToString()));
     obj.push_back(Pair("keyIDVoting", keyIDVoting.ToString()));
     obj.push_back(Pair("addr", addr.ToStringIPPort(false)));
     obj.push_back(Pair("protocolVersion", nProtocolVersion));
@@ -132,10 +132,10 @@ CDeterministicMNCPtr CDeterministicMNList::GetValidMN(const uint256& proTxHash) 
     return dmn;
 }
 
-CDeterministicMNCPtr CDeterministicMNList::GetMNByOperatorKey(const CKeyID& keyID)
+CDeterministicMNCPtr CDeterministicMNList::GetMNByOperatorKey(const CBLSPublicKey& pubKey)
 {
     for (const auto& p : mnMap) {
-        if (p.second->pdmnState->keyIDOperator == keyID) {
+        if (p.second->pdmnState->pubKeyOperator == pubKey) {
             return p.second;
         }
     }
@@ -256,7 +256,7 @@ void CDeterministicMNList::AddMN(const CDeterministicMNCPtr &dmn)
     mnMap = mnMap.set(dmn->proTxHash, dmn);
     AddUniqueProperty(dmn, dmn->pdmnState->addr);
     AddUniqueProperty(dmn, dmn->pdmnState->keyIDOwner);
-    AddUniqueProperty(dmn, dmn->pdmnState->keyIDOperator);
+    AddUniqueProperty(dmn, dmn->pdmnState->pubKeyOperator);
 }
 
 void CDeterministicMNList::UpdateMN(const uint256 &proTxHash, const CDeterministicMNStateCPtr &pdmnState)
@@ -270,7 +270,7 @@ void CDeterministicMNList::UpdateMN(const uint256 &proTxHash, const CDeterminist
 
     UpdateUniqueProperty(dmn, oldState->addr, pdmnState->addr);
     UpdateUniqueProperty(dmn, oldState->keyIDOwner, pdmnState->keyIDOwner);
-    UpdateUniqueProperty(dmn, oldState->keyIDOperator, pdmnState->keyIDOperator);
+    UpdateUniqueProperty(dmn, oldState->pubKeyOperator, pdmnState->pubKeyOperator);
 }
 
 void CDeterministicMNList::RemoveMN(const uint256& proTxHash)
@@ -279,7 +279,7 @@ void CDeterministicMNList::RemoveMN(const uint256& proTxHash)
     assert(dmn != nullptr);
     DeleteUniqueProperty(dmn, dmn->pdmnState->addr);
     DeleteUniqueProperty(dmn, dmn->pdmnState->keyIDOwner);
-    DeleteUniqueProperty(dmn, dmn->pdmnState->keyIDOperator);
+    DeleteUniqueProperty(dmn, dmn->pdmnState->pubKeyOperator);
     mnMap = mnMap.erase(proTxHash);
 }
 
@@ -387,7 +387,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
 
             if (newList.HasUniqueProperty(proTx.addr))
                 return _state.DoS(100, false, REJECT_CONFLICT, "bad-protx-dup-addr");
-            if (newList.HasUniqueProperty(proTx.keyIDOwner) || newList.HasUniqueProperty(proTx.keyIDOperator))
+            if (newList.HasUniqueProperty(proTx.keyIDOwner) || newList.HasUniqueProperty(proTx.pubKeyOperator))
                 return _state.DoS(100, false, REJECT_CONFLICT, "bad-protx-dup-key");
 
             auto dmn = std::make_shared<CDeterministicMN>(tx.GetHash(), proTx);
@@ -426,7 +426,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
 
             if (newState->nPoSeBanHeight != -1) {
                 // only revive when all keys are set
-                if (!newState->keyIDOperator.IsNull() && !newState->keyIDVoting.IsNull() && !newState->keyIDOwner.IsNull()) {
+                if (newState->pubKeyOperator.IsValid() && !newState->keyIDVoting.IsNull() && !newState->keyIDOwner.IsNull()) {
                     newState->nPoSeBanHeight = -1;
                     newState->nPoSeRevivedHeight = nHeight;
 
@@ -450,12 +450,12 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
                 return _state.DoS(100, false, REJECT_INVALID, "bad-protx-hash");
             }
             auto newState = std::make_shared<CDeterministicMNState>(*dmn->pdmnState);
-            if (newState->keyIDOperator != proTx.keyIDOperator) {
+            if (newState->pubKeyOperator != proTx.pubKeyOperator) {
                 // reset all operator related fields and put MN into PoSe-banned state in case the operator key changes
                 newState->ResetOperatorFields();
                 newState->BanIfNotBanned(nHeight);
             }
-            newState->keyIDOperator = proTx.keyIDOperator;
+            newState->pubKeyOperator = proTx.pubKeyOperator;
             newState->keyIDVoting = proTx.keyIDVoting;
             newState->scriptPayout = proTx.scriptPayout;
 

@@ -15,7 +15,7 @@
 CSimplifiedMNListEntry::CSimplifiedMNListEntry(const CDeterministicMN& dmn) :
     proRegTxHash(dmn.proTxHash),
     service(dmn.pdmnState->addr),
-    keyIDOperator(dmn.pdmnState->keyIDOperator),
+    pubKeyOperator(dmn.pdmnState->pubKeyOperator),
     keyIDVoting(dmn.pdmnState->keyIDVoting),
     isValid(dmn.pdmnState->nPoSeBanHeight == -1)
 {
@@ -30,8 +30,8 @@ uint256 CSimplifiedMNListEntry::CalcHash() const
 
 std::string CSimplifiedMNListEntry::ToString() const
 {
-    return strprintf("CSimplifiedMNListEntry(proRegTxHash=%s, service=%s, keyIDOperator=%s, keyIDVoting=%s, isValie=%d)",
-        proRegTxHash.ToString(), service.ToString(false), keyIDOperator.ToString(), keyIDVoting.ToString(), isValid);
+    return strprintf("CSimplifiedMNListEntry(proRegTxHash=%s, service=%s, pubKeyOperator=%s, keyIDVoting=%s, isValie=%d)",
+        proRegTxHash.ToString(), service.ToString(false), pubKeyOperator.ToString(), keyIDVoting.ToString(), isValid);
 }
 
 void CSimplifiedMNListEntry::ToJson(UniValue& obj) const
@@ -40,8 +40,8 @@ void CSimplifiedMNListEntry::ToJson(UniValue& obj) const
     obj.setObject();
     obj.push_back(Pair("proRegTxHash", proRegTxHash.ToString()));
     obj.push_back(Pair("service", service.ToString(false)));
-    obj.push_back(Pair("keyIDOperator", keyIDOperator.ToString()));
-    obj.push_back(Pair("keyIDVoting", keyIDOperator.ToString()));
+    obj.push_back(Pair("pubKeyOperator", pubKeyOperator.ToString()));
+    obj.push_back(Pair("keyIDVoting", keyIDVoting.ToString()));
     obj.push_back(Pair("isValid", isValid));
 }
 

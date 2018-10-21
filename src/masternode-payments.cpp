@@ -491,7 +491,7 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, const std::string& strCom
         }
 
         int nDos = 0;
-        if(!vote.CheckSignature(mnInfo.keyIDOperator, nCachedBlockHeight, nDos)) {
+        if(!vote.CheckSignature(mnInfo.legacyKeyIDOperator, nCachedBlockHeight, nDos)) {
             if(nDos) {
                 LOCK(cs_main);
                 LogPrintf("MASTERNODEPAYMENTVOTE -- ERROR: invalid signature\n");
@@ -551,12 +551,12 @@ bool CMasternodePaymentVote::Sign()
     if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
         uint256 hash = GetSignatureHash();
 
-        if(!CHashSigner::SignHash(hash, activeMasternodeInfo.keyOperator, vchSig)) {
+        if(!CHashSigner::SignHash(hash, activeMasternodeInfo.legacyKeyOperator, vchSig)) {
             LogPrintf("CMasternodePaymentVote::%s -- SignHash() failed\n", __func__);
             return false;
         }
 
-        if (!CHashSigner::VerifyHash(hash, activeMasternodeInfo.keyIDOperator, vchSig, strError)) {
+        if (!CHashSigner::VerifyHash(hash, activeMasternodeInfo.legacyKeyIDOperator, vchSig, strError)) {
             LogPrintf("CMasternodePaymentVote::%s -- VerifyHash() failed, error: %s\n", __func__, strError);
             return false;
         }
@@ -565,12 +565,12 @@ bool CMasternodePaymentVote::Sign()
                     std::to_string(nBlockHeight) +
                     ScriptToAsmStr(payee);
 
-        if(!CMessageSigner::SignMessage(strMessage, vchSig, activeMasternodeInfo.keyOperator)) {
+        if(!CMessageSigner::SignMessage(strMessage, vchSig, activeMasternodeInfo.legacyKeyOperator)) {
             LogPrintf("CMasternodePaymentVote::%s -- SignMessage() failed\n", __func__);
             return false;
         }
 
-        if(!CMessageSigner::VerifyMessage(activeMasternodeInfo.keyIDOperator, vchSig, strMessage, strError)) {
+        if(!CMessageSigner::VerifyMessage(activeMasternodeInfo.legacyKeyIDOperator, vchSig, strMessage, strError)) {
             LogPrintf("CMasternodePaymentVote::%s -- VerifyMessage() failed, error: %s\n", __func__, strError);
             return false;
         }

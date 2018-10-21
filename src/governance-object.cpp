@@ -330,6 +330,24 @@ bool CGovernanceObject::CheckSignature(const CKeyID& keyID) const
     return true;
 }
 
+bool CGovernanceObject::Sign(const CBLSSecretKey& key)
+{
+    CBLSSignature sig = key.Sign(GetSignatureHash());
+    sig.GetBuf(vchSig);
+    return true;
+}
+
+bool CGovernanceObject::CheckSignature(const CBLSPublicKey& pubKey) const
+{
+    CBLSSignature sig;
+    sig.SetBuf(vchSig);
+    if (!sig.VerifyInsecure(pubKey, GetSignatureHash())) {
+        LogPrintf("CGovernanceObject::CheckSignature -- VerifyInsecure() failed\n");
+        return false;
+    }
+    return true;
+}
+
 /**
    Return the actual object from the vchData JSON structure.
 
@@ -508,9 +526,16 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingMast
         }
 
         // Check that we have a valid MN signature
-        if (!CheckSignature(infoMn.keyIDOperator)) {
-            strError = "Invalid masternode signature for: " + strOutpoint + ", pubkey id = " + infoMn.keyIDOperator.ToString();
-            return false;
+        if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+            if (!CheckSignature(infoMn.blsPubKeyOperator)) {
+                strError = "Invalid masternode signature for: " + strOutpoint + ", pubkey id = " + infoMn.blsPubKeyOperator.ToString();
+                return false;
+            }
+        } else {
+            if (!CheckSignature(infoMn.legacyKeyIDOperator)) {
+                strError = "Invalid masternode signature for: " + strOutpoint + ", pubkey id = " + infoMn.legacyKeyIDOperator.ToString();
+                return false;
+            }
         }
 
         return true;

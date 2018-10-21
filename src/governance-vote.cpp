@@ -214,6 +214,26 @@ bool CGovernanceVote::CheckSignature(const CKeyID& keyID) const
     return true;
 }
 
+bool CGovernanceVote::Sign(const CBLSSecretKey& key)
+{
+    uint256 hash = GetSignatureHash();
+    CBLSSignature sig = key.Sign(hash);
+    sig.GetBuf(vchSig);
+    return true;
+}
+
+bool CGovernanceVote::CheckSignature(const CBLSPublicKey& pubKey) const
+{
+    uint256 hash = GetSignatureHash();
+    CBLSSignature sig;
+    sig.SetBuf(vchSig);
+    if (!sig.VerifyInsecure(pubKey, hash)) {
+        LogPrintf("CGovernanceVote::CheckSignature -- VerifyInsecure() failed\n");
+        return false;
+    }
+    return true;
+}
+
 bool CGovernanceVote::IsValid(bool useVotingKey) const
 {
     if (nTime > GetAdjustedTime() + (60 * 60)) {
@@ -239,7 +259,15 @@ bool CGovernanceVote::IsValid(bool useVotingKey) const
         return false;
     }
 
-    return CheckSignature(useVotingKey ? infoMn.keyIDVoting : infoMn.keyIDOperator);
+    if (useVotingKey) {
+        return CheckSignature(infoMn.keyIDVoting);
+    } else {
+        if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+            return CheckSignature(infoMn.blsPubKeyOperator);
+        } else {
+            return CheckSignature(infoMn.legacyKeyIDOperator);
+        }
+    }
 }
 
 bool operator==(const CGovernanceVote& vote1, const CGovernanceVote& vote2)

@@ -279,7 +279,9 @@ class DIP3Test(BitcoinTestFramework):
         mn.is_protx = False
         mn.p2p_port = p2p_port(mn.idx)
 
-        mn.mnkey = node.masternode('genkey')
+        blsKey = node.bls('generate')
+        mn.legacyMnkey = node.masternode('genkey')
+        mn.blsMnkey = blsKey['secret']
         mn.collateral_address = node.getnewaddress()
         mn.collateral_txid = node.sendtoaddress(mn.collateral_address, 1000)
         rawtx = node.getrawtransaction(mn.collateral_txid, 1)
@@ -302,10 +304,12 @@ class DIP3Test(BitcoinTestFramework):
         mn.is_protx = True
         mn.p2p_port = p2p_port(mn.idx)
 
+        blsKey = node.bls('generate')
         mn.ownerAddr = node.getnewaddress()
-        mn.operatorAddr = mn.ownerAddr
+        mn.operatorAddr = blsKey['public']
         mn.votingAddr = mn.ownerAddr
-        mn.mnkey = node.dumpprivkey(mn.operatorAddr)
+        mn.legacyMnkey = node.masternode('genkey')
+        mn.blsMnkey = blsKey['secret']
         mn.collateral_address = node.getnewaddress()
 
         mn.collateral_txid = node.protx('register', mn.collateral_address, '1000', '127.0.0.1:%d' % mn.p2p_port, '0', mn.ownerAddr, mn.operatorAddr, mn.votingAddr, 0, mn.collateral_address)
@@ -323,7 +327,7 @@ class DIP3Test(BitcoinTestFramework):
     def start_mn(self, mn):
         while len(self.nodes) <= mn.idx:
             self.nodes.append(None)
-        extra_args = ['-masternode=1', '-masternodeprivkey=%s' % mn.mnkey]
+        extra_args = ['-masternode=1', '-masternodeprivkey=%s' % mn.legacyMnkey, '-masternodeblsprivkey=%s' % mn.blsMnkey]
         n = start_node(mn.idx, self.options.tmpdir, self.extra_args + extra_args, redirect_stderr=True)
         self.nodes[mn.idx] = n
         for i in range(0, self.num_nodes):
@@ -341,7 +345,7 @@ class DIP3Test(BitcoinTestFramework):
         return mn
 
     def test_protx_update_service(self, mn):
-        self.nodes[0].protx('update_service', mn.collateral_txid, '127.0.0.2:%d' % mn.p2p_port, '0')
+        self.nodes[0].protx('update_service', mn.collateral_txid, '127.0.0.2:%d' % mn.p2p_port, '0', mn.blsMnkey)
         self.nodes[0].generate(1)
         self.sync_all()
         for node in self.nodes:
@@ -351,7 +355,7 @@ class DIP3Test(BitcoinTestFramework):
             assert_equal(mn_list['%s-%d' % (mn.collateral_txid, mn.collateral_vout)]['address'], '127.0.0.2:%d' % mn.p2p_port)
 
         # undo
-        self.nodes[0].protx('update_service', mn.collateral_txid, '127.0.0.1:%d' % mn.p2p_port, '0')
+        self.nodes[0].protx('update_service', mn.collateral_txid, '127.0.0.1:%d' % mn.p2p_port, '0', mn.blsMnkey)
         self.nodes[0].generate(1)
 
     def force_finish_mnsync(self, node):
@@ -374,7 +378,7 @@ class DIP3Test(BitcoinTestFramework):
             time.sleep(0.1)
 
     def write_mnconf_line(self, mn, f):
-        conf_line = "%s %s:%d %s %s %d\n" % (mn.alias, '127.0.0.1', mn.p2p_port, mn.mnkey, mn.collateral_txid, mn.collateral_vout)
+        conf_line = "%s %s:%d %s %s %d\n" % (mn.alias, '127.0.0.1', mn.p2p_port, mn.legacyMnkey, mn.collateral_txid, mn.collateral_vout)
         f.write(conf_line)
 
     def write_mnconf(self, mns):
@@ -594,12 +598,14 @@ class DIP3Test(BitcoinTestFramework):
         # Try to create ProTx (should still fail)
         address = node.getnewaddress()
         key = node.getnewaddress()
-        assert_raises_jsonrpc(None, "bad-tx-type", node.protx, 'register', address, '1000', '127.0.0.1:10000', '0', key, key, key, 0, address)
+        blsKey = node.bls('generate')
+        assert_raises_jsonrpc(None, "bad-tx-type", node.protx, 'register', address, '1000', '127.0.0.1:10000', '0', key, blsKey['public'], key, 0, address)
 
     def test_success_create_protx(self, node):
         address = node.getnewaddress()
         key = node.getnewaddress()
-        txid = node.protx('register', address, '1000', '127.0.0.1:10000', '0', key, key, key, 0, address)
+        blsKey = node.bls('generate')
+        txid = node.protx('register', address, '1000', '127.0.0.1:10000', '0', key, blsKey['public'], key, 0, address)
         rawtx = node.getrawtransaction(txid, 1)
         self.mine_double_spend(node, rawtx['vin'], address, use_mnmerkleroot_from_tip=True)
         self.sync_all()

@@ -8,6 +8,7 @@
 #include "key.h"
 #include "validation.h"
 #include "spork.h"
+#include "bls/bls.h"
 
 #include "evo/deterministicmns.h"
 
@@ -110,15 +111,15 @@ struct masternode_info_t
                       CPubKey const& pkCollAddr, CPubKey const& pkMN) :
         nActiveState{activeState}, nProtocolVersion{protoVer}, sigTime{sTime},
         outpoint{outpnt}, addr{addr},
-        pubKeyCollateralAddress{pkCollAddr}, pubKeyMasternode{pkMN}, keyIDCollateralAddress{pkCollAddr.GetID()}, keyIDOwner{pkMN.GetID()}, keyIDOperator{pkMN.GetID()}, keyIDVoting{pkMN.GetID()} {}
+        pubKeyCollateralAddress{pkCollAddr}, pubKeyMasternode{pkMN}, keyIDCollateralAddress{pkCollAddr.GetID()}, keyIDOwner{pkMN.GetID()}, legacyKeyIDOperator{pkMN.GetID()}, keyIDVoting{pkMN.GetID()} {}
 
     // only called when the network is in deterministic MN list mode
     masternode_info_t(int activeState, int protoVer, int64_t sTime,
                       COutPoint const& outpnt, CService const& addr,
-                      CKeyID const& pkCollAddr, CKeyID const& pkOwner, CKeyID const& pkOperator, CKeyID const& pkVoting) :
+                      CKeyID const& pkCollAddr, CKeyID const& pkOwner, CBLSPublicKey const& pkOperator, CKeyID const& pkVoting) :
         nActiveState{activeState}, nProtocolVersion{protoVer}, sigTime{sTime},
         outpoint{outpnt}, addr{addr},
-        pubKeyCollateralAddress{}, pubKeyMasternode{}, keyIDCollateralAddress{pkCollAddr}, keyIDOwner{pkOwner}, keyIDOperator{pkOperator}, keyIDVoting{pkVoting} {}
+        pubKeyCollateralAddress{}, pubKeyMasternode{}, keyIDCollateralAddress{pkCollAddr}, keyIDOwner{pkOwner}, blsPubKeyOperator{pkOperator}, keyIDVoting{pkVoting} {}
 
     int nActiveState = 0;
     int nProtocolVersion = 0;
@@ -130,7 +131,8 @@ struct masternode_info_t
     CPubKey pubKeyMasternode{}; // this will be invalid/unset when the network switches to deterministic MNs (luckely it's only important for the broadcast hash)
     CKeyID keyIDCollateralAddress{};
     CKeyID keyIDOwner{};
-    CKeyID keyIDOperator{};
+    CKeyID legacyKeyIDOperator{};
+    CBLSPublicKey blsPubKeyOperator;
     CKeyID keyIDVoting{};
 
     int64_t nLastDsq = 0; //the dsq count from the last dsq broadcast of this node
@@ -201,7 +203,8 @@ public:
         READWRITE(pubKeyMasternode);
         READWRITE(keyIDCollateralAddress);
         READWRITE(keyIDOwner);
-        READWRITE(keyIDOperator);
+        READWRITE(legacyKeyIDOperator);
+        READWRITE(blsPubKeyOperator);
         READWRITE(keyIDVoting);
         READWRITE(lastPing);
         READWRITE(vchSig);
@@ -358,7 +361,7 @@ public:
         if (ser_action.ForRead()) {
             keyIDCollateralAddress = pubKeyCollateralAddress.GetID();
             keyIDOwner = pubKeyMasternode.GetID();
-            keyIDOperator = pubKeyMasternode.GetID();
+            legacyKeyIDOperator = pubKeyMasternode.GetID();
             keyIDVoting = pubKeyMasternode.GetID();
         }
     }

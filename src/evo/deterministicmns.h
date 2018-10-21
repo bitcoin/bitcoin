@@ -9,6 +9,7 @@
 #include "providertx.h"
 #include "dbwrapper.h"
 #include "sync.h"
+#include "bls/bls.h"
 
 #include "immer/map.hpp"
 #include "immer/map_transient.hpp"
@@ -30,7 +31,7 @@ public:
     uint16_t nRevocationReason{CProUpRevTx::REASON_NOT_SPECIFIED};
 
     CKeyID keyIDOwner;
-    CKeyID keyIDOperator;
+    CBLSPublicKey pubKeyOperator;
     CKeyID keyIDVoting;
     CService addr;
     int32_t nProtocolVersion;
@@ -42,7 +43,7 @@ public:
     CDeterministicMNState(const CProRegTx& proTx)
     {
         keyIDOwner = proTx.keyIDOwner;
-        keyIDOperator = proTx.keyIDOperator;
+        pubKeyOperator = proTx.pubKeyOperator;
         keyIDVoting = proTx.keyIDVoting;
         addr = proTx.addr;
         nProtocolVersion = proTx.nProtocolVersion;
@@ -63,7 +64,7 @@ public:
         READWRITE(nPoSeBanHeight);
         READWRITE(nRevocationReason);
         READWRITE(keyIDOwner);
-        READWRITE(keyIDOperator);
+        READWRITE(pubKeyOperator);
         READWRITE(keyIDVoting);
         READWRITE(addr);
         READWRITE(nProtocolVersion);
@@ -73,7 +74,7 @@ public:
 
     void ResetOperatorFields()
     {
-        keyIDOperator.SetNull();
+        pubKeyOperator = CBLSPublicKey();
         addr = CService();
         nProtocolVersion = 0;
         scriptOperatorPayout = CScript();
@@ -95,7 +96,7 @@ public:
                nPoSeBanHeight == rhs.nPoSeBanHeight &&
                nRevocationReason == rhs.nRevocationReason &&
                keyIDOwner == rhs.keyIDOwner &&
-               keyIDOperator == rhs.keyIDOperator &&
+               pubKeyOperator == rhs.pubKeyOperator &&
                keyIDVoting == rhs.keyIDVoting &&
                addr == rhs.addr &&
                nProtocolVersion == rhs.nProtocolVersion &&
@@ -257,7 +258,7 @@ public:
     }
     CDeterministicMNCPtr GetMN(const uint256& proTxHash) const;
     CDeterministicMNCPtr GetValidMN(const uint256& proTxHash) const;
-    CDeterministicMNCPtr GetMNByOperatorKey(const CKeyID& keyID);
+    CDeterministicMNCPtr GetMNByOperatorKey(const CBLSPublicKey& pubKey);
     CDeterministicMNCPtr GetMNPayee() const;
 
     /**

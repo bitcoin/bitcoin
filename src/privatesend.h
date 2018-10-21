@@ -12,6 +12,7 @@
 #include "sync.h"
 #include "tinyformat.h"
 #include "timedata.h"
+#include "bls/bls.h"
 
 class CPrivateSend;
 class CConnman;
@@ -229,7 +230,7 @@ public:
      */
     bool Sign();
     /// Check if we have a valid Masternode address
-    bool CheckSignature(const CKeyID& keyIDOperator) const;
+    bool CheckSignature(const CKeyID& keyIDOperator, const CBLSPublicKey& blsPubKey) const;
 
     bool Relay(CConnman &connman);
 
@@ -307,7 +308,7 @@ public:
     uint256 GetSignatureHash() const;
 
     bool Sign();
-    bool CheckSignature(const CKeyID& keyIDOperator) const;
+    bool CheckSignature(const CKeyID& keyIDOperator, const CBLSPublicKey& blsPubKey) const;
 
     void SetConfirmedHeight(int nConfirmedHeightIn) { nConfirmedHeight = nConfirmedHeightIn; }
     bool IsExpired(int nHeight);

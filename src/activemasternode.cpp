@@ -59,7 +59,7 @@ void CActiveDeterministicMasternodeManager::Init()
 
     CDeterministicMNList mnList = deterministicMNManager->GetListAtChainTip();
 
-    CDeterministicMNCPtr dmn = mnList.GetMNByOperatorKey(activeMasternodeInfo.keyIDOperator);
+    CDeterministicMNCPtr dmn = mnList.GetMNByOperatorKey(*activeMasternodeInfo.blsPubKeyOperator);
     if (!dmn) {
         // MN not appeared on the chain yet
         return;
@@ -234,7 +234,7 @@ bool CActiveLegacyMasternodeManager::SendMasternodePing(CConnman& connman)
     mnp.nSentinelVersion = nSentinelVersion;
     mnp.fSentinelIsCurrent =
             (abs(GetAdjustedTime() - nSentinelPingTime) < MASTERNODE_SENTINEL_PING_MAX_SECONDS);
-    if(!mnp.Sign(activeMasternodeInfo.keyOperator, activeMasternodeInfo.keyIDOperator)) {
+    if(!mnp.Sign(activeMasternodeInfo.legacyKeyOperator, activeMasternodeInfo.legacyKeyIDOperator)) {
         LogPrintf("CActiveLegacyMasternodeManager::SendMasternodePing -- ERROR: Couldn't sign Masternode Ping\n");
         return false;
     }
@@ -351,11 +351,11 @@ void CActiveLegacyMasternodeManager::ManageStateRemote()
         return;
 
     LogPrint("masternode", "CActiveLegacyMasternodeManager::ManageStateRemote -- Start status = %s, type = %s, pinger enabled = %d, keyIDOperator = %s\n",
-             GetStatus(), GetTypeString(), fPingerEnabled, activeMasternodeInfo.keyIDOperator.ToString());
+             GetStatus(), GetTypeString(), fPingerEnabled, activeMasternodeInfo.legacyKeyIDOperator.ToString());
 
-    mnodeman.CheckMasternode(activeMasternodeInfo.keyIDOperator, true);
+    mnodeman.CheckMasternode(activeMasternodeInfo.legacyKeyIDOperator, true);
     masternode_info_t infoMn;
-    if(mnodeman.GetMasternodeInfo(activeMasternodeInfo.keyIDOperator, infoMn)) {
+    if(mnodeman.GetMasternodeInfo(activeMasternodeInfo.legacyKeyIDOperator, infoMn)) {
         if(infoMn.nProtocolVersion != PROTOCOL_VERSION) {
             nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
             strNotCapableReason = "Invalid protocol version";
@@ -376,12 +376,6 @@ void CActiveLegacyMasternodeManager::ManageStateRemote()
         }
         auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(infoMn.outpoint.hash);
         if (dmn) {
-            if (dmn->pdmnState->keyIDOperator != infoMn.keyIDOperator) {
-                nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
-                strNotCapableReason = strprintf("Masternode collateral is a ProTx and masternode key does not match key from -masternodeprivkey");
-                LogPrintf("CActiveLegacyMasternodeManager::ManageStateRemote -- %s: %s\n", GetStateString(), strNotCapableReason);
-                return;
-            }
             if (dmn->pdmnState->addr != infoMn.addr) {
                 nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
                 strNotCapableReason = strprintf("Masternode collateral is a ProTx and ProTx address does not match local address");

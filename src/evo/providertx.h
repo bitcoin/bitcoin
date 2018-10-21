@@ -7,6 +7,7 @@
 
 #include "primitives/transaction.h"
 #include "consensus/validation.h"
+#include "bls/bls.h"
 
 #include "netaddress.h"
 #include "pubkey.h"
@@ -25,7 +26,7 @@ public:
     uint32_t nCollateralIndex{(uint32_t) - 1};
     CService addr;
     CKeyID keyIDOwner;
-    CKeyID keyIDOperator;
+    CBLSPublicKey pubKeyOperator;
     CKeyID keyIDVoting;
     uint16_t nOperatorReward{0};
     CScript scriptPayout;
@@ -43,7 +44,7 @@ public:
         READWRITE(nCollateralIndex);
         READWRITE(addr);
         READWRITE(keyIDOwner);
-        READWRITE(keyIDOperator);
+        READWRITE(pubKeyOperator);
         READWRITE(keyIDVoting);
         READWRITE(*(CScriptBase*)(&scriptPayout));
         READWRITE(nOperatorReward);
@@ -69,7 +70,7 @@ public:
     CService addr;
     CScript scriptOperatorPayout;
     uint256 inputsHash; // replay protection
-    std::vector<unsigned char> vchSig;
+    CBLSSignature sig;
 
 public:
     ADD_SERIALIZE_METHODS;
@@ -84,7 +85,7 @@ public:
         READWRITE(*(CScriptBase*)(&scriptOperatorPayout));
         READWRITE(inputsHash);
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(vchSig);
+            READWRITE(sig);
         }
     }
 
@@ -101,7 +102,7 @@ public:
 public:
     uint16_t nVersion{CURRENT_VERSION}; // message version
     uint256 proTxHash;
-    CKeyID keyIDOperator;
+    CBLSPublicKey pubKeyOperator;
     CKeyID keyIDVoting;
     CScript scriptPayout;
     uint256 inputsHash; // replay protection
@@ -115,7 +116,7 @@ public:
     {
         READWRITE(nVersion);
         READWRITE(proTxHash);
-        READWRITE(keyIDOperator);
+        READWRITE(pubKeyOperator);
         READWRITE(keyIDVoting);
         READWRITE(*(CScriptBase*)(&scriptPayout));
         READWRITE(inputsHash);
@@ -148,7 +149,7 @@ public:
     uint256 proTxHash;
     uint16_t nReason{REASON_NOT_SPECIFIED};
     uint256 inputsHash; // replay protection
-    std::vector<unsigned char> vchSig;
+    CBLSSignature sig;
 
 public:
     ADD_SERIALIZE_METHODS;
@@ -161,7 +162,7 @@ public:
         READWRITE(nReason);
         READWRITE(inputsHash);
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(vchSig);
+            READWRITE(sig);
         }
     }
 

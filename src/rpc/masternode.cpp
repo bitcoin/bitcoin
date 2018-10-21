@@ -1063,7 +1063,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
                 obj.push_back(Pair(strOutpoint, HexStr(mn.keyIDOwner)));
             } else if (strMode == "keyIDOperator") {
                 if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) continue;
-                obj.push_back(Pair(strOutpoint, HexStr(mn.keyIDOperator)));
+                obj.push_back(Pair(strOutpoint, HexStr(mn.legacyKeyIDOperator)));
             } else if (strMode == "keyIDVoting") {
                 if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) continue;
                 obj.push_back(Pair(strOutpoint, HexStr(mn.keyIDVoting)));
@@ -1248,7 +1248,7 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
                 resultObj.push_back(Pair("outpoint", mnb.outpoint.ToStringShort()));
                 resultObj.push_back(Pair("addr", mnb.addr.ToString()));
                 resultObj.push_back(Pair("keyIDCollateralAddress", CBitcoinAddress(mnb.keyIDCollateralAddress).ToString()));
-                resultObj.push_back(Pair("keyIDMasternode", CBitcoinAddress(mnb.keyIDOperator).ToString()));
+                resultObj.push_back(Pair("keyIDMasternode", CBitcoinAddress(mnb.legacyKeyIDOperator).ToString()));
                 resultObj.push_back(Pair("vchSig", EncodeBase64(&mnb.vchSig[0], mnb.vchSig.size())));
                 resultObj.push_back(Pair("sigTime", mnb.sigTime));
                 resultObj.push_back(Pair("protocolVersion", mnb.nProtocolVersion));

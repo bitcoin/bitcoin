@@ -42,15 +42,31 @@ static bool CheckService(const uint256& proTxHash, const ProTx& proTx, const CBl
 }
 
 template <typename ProTx>
-static bool CheckInputsHashAndSig(const CTransaction &tx, const ProTx& proTx, const CKeyID &keyID, CValidationState& state)
+static bool CheckSig(const ProTx& proTx, const CKeyID& keyID, CValidationState& state)
+{
+    std::string strError;
+    if (!CHashSigner::VerifyHash(::SerializeHash(proTx), keyID, proTx.vchSig, strError))
+        return state.DoS(100, false, REJECT_INVALID, "bad-protx-sig", false, strError);
+    return true;
+}
+
+template <typename ProTx>
+static bool CheckSig(const ProTx& proTx, const CBLSPublicKey& pubKey, CValidationState& state)
+{
+    if (!proTx.sig.VerifyInsecure(pubKey, ::SerializeHash(proTx)))
+        return state.DoS(100, false, REJECT_INVALID, "bad-protx-sig", false);
+    return true;
+}
+
+template <typename ProTx, typename PubKey>
+static bool CheckInputsHashAndSig(const CTransaction &tx, const ProTx& proTx, const PubKey& pubKey, CValidationState& state)
 {
     uint256 inputsHash = CalcTxInputsHash(tx);
     if (inputsHash != proTx.inputsHash)
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-inputs-hash");
 
-    std::string strError;
-    if (!CHashSigner::VerifyHash(::SerializeHash(proTx), keyID, proTx.vchSig, strError))
-        return state.DoS(100, false, REJECT_INVALID, "bad-protx-sig", false, strError);
+    if (!CheckSig(proTx, pubKey, state))
+        return false;
 
     return true;
 }
@@ -70,7 +86,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral-index");
     if (tx.vout[ptx.nCollateralIndex].nValue != 1000 * COIN)
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral");
-    if (ptx.keyIDOwner.IsNull() || ptx.keyIDOperator.IsNull() || ptx.keyIDVoting.IsNull())
+    if (ptx.keyIDOwner.IsNull() || !ptx.pubKeyOperator.IsValid() || ptx.keyIDVoting.IsNull())
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-key-null");
     // we may support P2SH later, but restrict it for now (while in transitioning phase from old MN list to deterministic list)
     if (!ptx.scriptPayout.IsPayToPublicKeyHash())
@@ -82,7 +98,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-payee-dest");
     }
     // don't allow reuse of collateral key for other keys (don't allow people to put the collateral key onto an online server)
-    if (payoutDest == CTxDestination(ptx.keyIDOwner) || payoutDest == CTxDestination(ptx.keyIDOperator) || payoutDest == CTxDestination(ptx.keyIDVoting)) {
+    if (payoutDest == CTxDestination(ptx.keyIDOwner) || payoutDest == CTxDestination(ptx.keyIDVoting)) {
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-payee-reuse");
     }
 
@@ -101,12 +117,12 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
 
     if (pindexPrev) {
         auto mnList = deterministicMNManager->GetListForBlock(pindexPrev->GetBlockHash());
-        if (mnList.HasUniqueProperty(ptx.keyIDOwner) || mnList.HasUniqueProperty(ptx.keyIDOperator)) {
+        if (mnList.HasUniqueProperty(ptx.keyIDOwner) || mnList.HasUniqueProperty(ptx.pubKeyOperator)) {
             return state.DoS(10, false, REJECT_DUPLICATE, "bad-protx-dup-key");
         }
 
         if (!deterministicMNManager->IsDeterministicMNsSporkActive(pindexPrev->nHeight)) {
-            if (ptx.keyIDOwner != ptx.keyIDOperator || ptx.keyIDOwner != ptx.keyIDVoting) {
+            if (ptx.keyIDOwner != ptx.keyIDVoting) {
                 return state.DoS(10, false, REJECT_INVALID, "bad-protx-key-not-same");
             }
         }
@@ -147,7 +163,7 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
         }
 
         // we can only check the signature if pindexPrev != NULL and the MN is known
-        if (!CheckInputsHashAndSig(tx, ptx, mn->pdmnState->keyIDOperator, state))
+        if (!CheckInputsHashAndSig(tx, ptx, mn->pdmnState->pubKeyOperator, state))
             return false;
     }
 
@@ -165,7 +181,7 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
     if (ptx.nVersion > CProRegTx::CURRENT_VERSION)
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-version");
 
-    if (ptx.keyIDOperator.IsNull() || ptx.keyIDVoting.IsNull())
+    if (!ptx.pubKeyOperator.IsValid() || ptx.keyIDVoting.IsNull())
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-key-null");
     // we may support P2SH later, but restrict it for now (while in transitioning phase from old MN list to deterministic list)
     if (!ptx.scriptPayout.IsPayToPublicKeyHash())
@@ -184,7 +200,7 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
             return state.DoS(100, false, REJECT_INVALID, "bad-protx-hash");
 
         // don't allow reuse of collateral key for other keys (don't allow people to put the collateral key onto an online server)
-        if (payoutDest == CTxDestination(dmn->pdmnState->keyIDOwner) || payoutDest == CTxDestination(ptx.keyIDOperator) || payoutDest == CTxDestination(ptx.keyIDVoting)) {
+        if (payoutDest == CTxDestination(dmn->pdmnState->keyIDOwner) || payoutDest == CTxDestination(ptx.keyIDVoting)) {
             return state.DoS(10, false, REJECT_INVALID, "bad-protx-payee-reuse");
         }
 
@@ -197,15 +213,15 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
         if (coin.out.scriptPubKey != ptx.scriptPayout)
             return state.DoS(10, false, REJECT_INVALID, "bad-protx-payee-collateral");
 
-        if (mnList.HasUniqueProperty(ptx.keyIDOperator)) {
-            auto otherDmn = mnList.GetUniquePropertyMN(ptx.keyIDOperator);
+        if (mnList.HasUniqueProperty(ptx.pubKeyOperator)) {
+            auto otherDmn = mnList.GetUniquePropertyMN(ptx.pubKeyOperator);
             if (ptx.proTxHash != otherDmn->proTxHash) {
                 return state.DoS(10, false, REJECT_DUPLICATE, "bad-protx-dup-key");
             }
         }
 
         if (!deterministicMNManager->IsDeterministicMNsSporkActive(pindexPrev->nHeight)) {
-            if (dmn->pdmnState->keyIDOwner != ptx.keyIDOperator || dmn->pdmnState->keyIDOwner != ptx.keyIDVoting) {
+            if (dmn->pdmnState->keyIDOwner != ptx.keyIDVoting) {
                 return state.DoS(10, false, REJECT_INVALID, "bad-protx-key-not-same");
             }
         }
@@ -239,7 +255,7 @@ bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
         if (!dmn)
             return state.DoS(100, false, REJECT_INVALID, "bad-protx-hash");
 
-        if (!CheckInputsHashAndSig(tx, ptx, dmn->pdmnState->keyIDOperator, state))
+        if (!CheckInputsHashAndSig(tx, ptx, dmn->pdmnState->pubKeyOperator, state))
             return false;
     }
 
@@ -254,8 +270,8 @@ std::string CProRegTx::ToString() const
         payee = CBitcoinAddress(dest).ToString();
     }
 
-    return strprintf("CProRegTx(nVersion=%d, nProtocolVersion=%d, nCollateralIndex=%d, addr=%s, nOperatorReward=%f, keyIDOwner=%s, keyIDOperator=%s, keyIDVoting=%s, scriptPayout=%s)",
-        nVersion, nProtocolVersion, nCollateralIndex, addr.ToString(), (double)nOperatorReward / 100, keyIDOwner.ToString(), keyIDOperator.ToString(), keyIDVoting.ToString(), payee);
+    return strprintf("CProRegTx(nVersion=%d, nProtocolVersion=%d, nCollateralIndex=%d, addr=%s, nOperatorReward=%f, keyIDOwner=%s, pubKeyOperator=%s, keyIDVoting=%s, scriptPayout=%s)",
+        nVersion, nProtocolVersion, nCollateralIndex, addr.ToString(), (double)nOperatorReward / 100, keyIDOwner.ToString(), pubKeyOperator.ToString(), keyIDVoting.ToString(), payee);
 }
 
 void CProRegTx::ToJson(UniValue& obj) const
@@ -267,7 +283,7 @@ void CProRegTx::ToJson(UniValue& obj) const
     obj.push_back(Pair("collateralIndex", (int)nCollateralIndex));
     obj.push_back(Pair("service", addr.ToString(false)));
     obj.push_back(Pair("keyIDOwner", keyIDOwner.ToString()));
-    obj.push_back(Pair("keyIDOperator", keyIDOperator.ToString()));
+    obj.push_back(Pair("pubKeyOperator", pubKeyOperator.ToString()));
     obj.push_back(Pair("keyIDVoting", keyIDVoting.ToString()));
 
     CTxDestination dest;
@@ -316,8 +332,8 @@ std::string CProUpRegTx::ToString() const
         payee = CBitcoinAddress(dest).ToString();
     }
 
-    return strprintf("CProUpRegTx(nVersion=%d, proTxHash=%s, keyIDOperator=%s, keyIDVoting=%s, payoutAddress=%s)",
-                     nVersion, proTxHash.ToString(), keyIDOperator.ToString(), keyIDVoting.ToString(), payee);
+    return strprintf("CProUpRegTx(nVersion=%d, proTxHash=%s, pubKeyOperator=%s, keyIDVoting=%s, payoutAddress=%s)",
+                     nVersion, proTxHash.ToString(), pubKeyOperator.ToString(), keyIDVoting.ToString(), payee);
 }
 
 void CProUpRegTx::ToJson(UniValue& obj) const
@@ -326,7 +342,7 @@ void CProUpRegTx::ToJson(UniValue& obj) const
     obj.setObject();
     obj.push_back(Pair("version", nVersion));
     obj.push_back(Pair("proTxHash", proTxHash.ToString()));
-    obj.push_back(Pair("keyIDOperator", keyIDOperator.ToString()));
+    obj.push_back(Pair("pubKeyOperator", pubKeyOperator.ToString()));
     obj.push_back(Pair("keyIDVoting", keyIDVoting.ToString()));
     CTxDestination dest;
     if (ExtractDestination(scriptPayout, dest)) {

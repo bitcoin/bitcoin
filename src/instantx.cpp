@@ -1071,13 +1071,22 @@ bool CTxLockVote::CheckSignature() const
         return false;
     }
 
-    if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
+    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
         uint256 hash = GetSignatureHash();
 
-        if (!CHashSigner::VerifyHash(hash, infoMn.keyIDOperator, vchMasternodeSignature, strError)) {
+        CBLSSignature sig;
+        sig.SetBuf(vchMasternodeSignature);
+        if (!sig.IsValid() || !sig.VerifyInsecure(infoMn.blsPubKeyOperator, hash)) {
+            LogPrintf("CTxLockVote::CheckSignature -- VerifyInsecure() failed\n");
+            return false;
+        }
+    } else if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
+        uint256 hash = GetSignatureHash();
+
+        if (!CHashSigner::VerifyHash(hash, infoMn.legacyKeyIDOperator, vchMasternodeSignature, strError)) {
             // could be a signature in old format
             std::string strMessage = txHash.ToString() + outpoint.ToStringShort();
-        if (!CMessageSigner::VerifyMessage(infoMn.keyIDOperator, vchMasternodeSignature, strMessage, strError)) {
+            if (!CMessageSigner::VerifyMessage(infoMn.legacyKeyIDOperator, vchMasternodeSignature, strMessage, strError)) {
                 // nope, not in old format either
                 LogPrintf("CTxLockVote::CheckSignature -- VerifyMessage() failed, error: %s\n", strError);
                 return false;
@@ -1085,7 +1094,7 @@ bool CTxLockVote::CheckSignature() const
         }
     } else {
         std::string strMessage = txHash.ToString() + outpoint.ToStringShort();
-        if (!CMessageSigner::VerifyMessage(infoMn.keyIDOperator, vchMasternodeSignature, strMessage, strError)) {
+        if (!CMessageSigner::VerifyMessage(infoMn.legacyKeyIDOperator, vchMasternodeSignature, strMessage, strError)) {
             LogPrintf("CTxLockVote::CheckSignature -- VerifyMessage() failed, error: %s\n", strError);
             return false;
         }
@@ -1098,27 +1107,32 @@ bool CTxLockVote::Sign()
 {
     std::string strError;
 
-    if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
+    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
         uint256 hash = GetSignatureHash();
 
-        if (!CHashSigner::SignHash(hash, activeMasternodeInfo.keyOperator, vchMasternodeSignature)) {
+        CBLSSignature sig = activeMasternodeInfo.blsKeyOperator->Sign(hash);
+        sig.GetBuf(vchMasternodeSignature);
+    } else if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
+        uint256 hash = GetSignatureHash();
+
+        if (!CHashSigner::SignHash(hash, activeMasternodeInfo.legacyKeyOperator, vchMasternodeSignature)) {
             LogPrintf("CTxLockVote::Sign -- SignHash() failed\n");
             return false;
         }
 
-        if (!CHashSigner::VerifyHash(hash, activeMasternodeInfo.keyIDOperator, vchMasternodeSignature, strError)) {
+        if (!CHashSigner::VerifyHash(hash, activeMasternodeInfo.legacyKeyIDOperator, vchMasternodeSignature, strError)) {
             LogPrintf("CTxLockVote::Sign -- VerifyHash() failed, error: %s\n", strError);
             return false;
         }
     } else {
         std::string strMessage = txHash.ToString() + outpoint.ToStringShort();
 
-        if (!CMessageSigner::SignMessage(strMessage, vchMasternodeSignature, activeMasternodeInfo.keyOperator)) {
+        if (!CMessageSigner::SignMessage(strMessage, vchMasternodeSignature, activeMasternodeInfo.legacyKeyOperator)) {
             LogPrintf("CTxLockVote::Sign -- SignMessage() failed\n");
             return false;
         }
 
-        if (!CMessageSigner::VerifyMessage(activeMasternodeInfo.keyIDOperator, vchMasternodeSignature, strMessage, strError)) {
+        if (!CMessageSigner::VerifyMessage(activeMasternodeInfo.legacyKeyIDOperator, vchMasternodeSignature, strMessage, strError)) {
             LogPrintf("CTxLockVote::Sign -- VerifyMessage() failed, error: %s\n", strError);
             return false;
         }

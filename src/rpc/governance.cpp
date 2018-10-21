@@ -244,7 +244,7 @@ UniValue gobject_submit(const JSONRPCRequest& request)
 
     bool fMnFound = mnodeman.Has(activeMasternodeInfo.outpoint);
 
-    DBG( std::cout << "gobject: submit activeMasternodeInfo.keyIDOperator = " << activeMasternodeInfo.keyIDOperator.ToString()
+    DBG( std::cout << "gobject: submit activeMasternodeInfo.keyIDOperator = " << activeMasternodeInfo.legacyKeyIDOperator.ToString()
          << ", outpoint = " << activeMasternodeInfo.outpoint.ToStringShort()
          << ", params.size() = " << request.params.size()
          << ", fMnFound = " << fMnFound << std::endl; );
@@ -294,7 +294,11 @@ UniValue gobject_submit(const JSONRPCRequest& request)
     if (govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
         if (fMnFound) {
             govobj.SetMasternodeOutpoint(activeMasternodeInfo.outpoint);
-            govobj.Sign(activeMasternodeInfo.keyOperator, activeMasternodeInfo.keyIDOperator);
+            if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+                govobj.Sign(*activeMasternodeInfo.blsKeyOperator);
+            } else {
+                govobj.Sign(activeMasternodeInfo.legacyKeyOperator, activeMasternodeInfo.legacyKeyIDOperator);
+            }
         } else {
             LogPrintf("gobject(submit) -- Object submission rejected because node is not a masternode\n");
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Only valid masternodes can submit this type of object");
@@ -353,6 +357,10 @@ UniValue gobject_vote_conf(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 4)
         gobject_vote_conf_help();
 
+    if(deterministicMNManager->IsDeterministicMNsSporkActive()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Can't use vote-conf when deterministic masternodes are active");
+    }
+
     uint256 hash;
 
     hash = ParseHashV(request.params[1], "Object hash");
@@ -402,20 +410,8 @@ UniValue gobject_vote_conf(const JSONRPCRequest& request)
         return returnObj;
     }
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
-        if (govObjType == GOVERNANCE_OBJECT_PROPOSAL && mn.keyIDVoting != activeMasternodeInfo.keyIDOperator) {
-            nFailed++;
-            statusObj.push_back(Pair("result", "failed"));
-            statusObj.push_back(Pair("errorMessage", "Can't vote on proposal when operator key does not match voting key"));
-            resultsObj.push_back(Pair("dash.conf", statusObj));
-            returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", nSuccessful, nFailed)));
-            returnObj.push_back(Pair("detail", resultsObj));
-            return returnObj;
-        }
-    }
-
     CGovernanceVote vote(mn.outpoint, hash, eVoteSignal, eVoteOutcome);
-    if (!vote.Sign(activeMasternodeInfo.keyOperator, activeMasternodeInfo.keyIDOperator)) {
+    if (!vote.Sign(activeMasternodeInfo.legacyKeyOperator, activeMasternodeInfo.legacyKeyIDOperator)) {
         nFailed++;
         statusObj.push_back(Pair("result", "failed"));
         statusObj.push_back(Pair("errorMessage", "Failure to sign."));

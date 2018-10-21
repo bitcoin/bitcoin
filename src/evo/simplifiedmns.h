@@ -9,6 +9,7 @@
 #include "pubkey.h"
 #include "netaddress.h"
 #include "merkleblock.h"
+#include "bls/bls.h"
 
 class UniValue;
 class CDeterministicMNList;
@@ -19,7 +20,7 @@ class CSimplifiedMNListEntry
 public:
     uint256 proRegTxHash;
     CService service;
-    CKeyID keyIDOperator;
+    CBLSPublicKey pubKeyOperator;
     CKeyID keyIDVoting;
     bool isValid;
 
@@ -35,7 +36,7 @@ public:
     {
         READWRITE(proRegTxHash);
         READWRITE(service);
-        READWRITE(keyIDOperator);
+        READWRITE(pubKeyOperator);
         READWRITE(keyIDVoting);
         READWRITE(isValid);
     }

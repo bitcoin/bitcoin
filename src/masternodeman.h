@@ -173,7 +173,6 @@ public:
     bool GetMasternodeInfo(const uint256& proTxHash, masternode_info_t& mnInfoRet);
     bool GetMasternodeInfo(const COutPoint& outpoint, masternode_info_t& mnInfoRet);
     bool GetMasternodeInfo(const CKeyID& keyIDOperator, masternode_info_t& mnInfoRet);
-    bool GetMasternodeInfo(const CPubKey& pubKeyOperator, masternode_info_t& mnInfoRet);
     bool GetMasternodeInfo(const CScript& payee, masternode_info_t& mnInfoRet);
 
     /// Find an entry in the masternode list that is next to be paid
