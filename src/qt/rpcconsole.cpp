@@ -688,8 +688,7 @@ void RPCConsole::setClientModel(ClientModel *model)
     }
     if (!model) {
         // Client model is being set to 0, this means shutdown() is about to be called.
-        // Make sure we clean up the executor thread
-        Q_EMIT stopExecutor();
+        thread.quit();
         thread.wait();
     }
 }
@@ -975,11 +974,8 @@ void RPCConsole::startExecutor()
     // Requests from this object must go to executor
     connect(this, &RPCConsole::cmdRequest, executor, &RPCExecutor::request);
 
-    // On stopExecutor signal
-    // - quit the Qt event loop in the execution thread
-    connect(this, &RPCConsole::stopExecutor, &thread, &QThread::quit);
-    // - queue executor for deletion (in execution thread)
-    connect(&thread, &QThread::finished, executor, &RPCExecutor::deleteLater, Qt::DirectConnection);
+    // Make sure executor object is deleted in its own thread
+    connect(&thread, &QThread::finished, executor, &RPCExecutor::deleteLater);
 
     // Default implementation of QThread::run() simply spins up an event loop in the thread,
     // which is what we want.
