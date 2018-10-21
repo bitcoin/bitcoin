@@ -22,19 +22,19 @@ Output descriptors currently support:
 
 ## Examples
 
-- `pk(0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798)` represents a P2PK output.
-- `pkh(02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5)` represents a P2PKH output.
-- `wpkh(02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9)` represents a P2WPKH output.
-- `sh(wpkh(03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556))` represents a P2SH-P2WPKH output.
-- `combo(0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798)` represents a P2PK, P2PKH, P2WPKH, and P2SH-P2WPKH output.
-- `sh(wsh(pkh(02e493dbf1c10d80f3581e4904930b1404cc6c13900ee0758474fa94abe8c4cd13)))` represents a (overly complicated) P2SH-P2WSH-P2PKH output.
-- `multi(1,022f8bde4d1a07209355b4a7250a5c5128e88b84bddc619ab7cba8d569b240efe4,025cbdf0646e5db4eaa398f365f2ea7a0e3d419b7e0330e39ce92bddedcac4f9bc)` represents a bare *1-of-2* multisig.
-- `sh(multi(2,022f01e5e15cca351daff3843fb70f3c2f0a1bdd05e5af888a67784ef3e10a2a01,03acd484e2f0c7f65309ad178a9f559abde09796974c57e714c35f110dfc27ccbe))` represents a P2SH *2-of-2* multisig.
-- `wsh(multi(2,03a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7,03774ae7f858a9411e5ef4246b70c65aac5649980be5c17891bbec17895da008cb,03d01115d548e7561b15c38f004d734633687cf4419620095bc5b0f47070afe85a))` represents a P2WSH *2-of-3* multisig.
-- `sh(wsh(multi(1,03f28773c2d975288bc7d1d205c3748651b075fbc6610e58cddeeddf8f19405aa8,03499fdf9e895e719cfd64e67f07d38e3226aa7b63678949e6e49b241a60e823e4,02d7924d4f7d43ea965a465ae3095ff41131e5946f3c85f79e44adbcf8e27e080e)))` represents a P2SH-P2WSH *1-of-3* multisig.
-- `pk(xpub661MyMwAqRbcFtXgS5sYJABqqG9YLmC4Q1Rdap9gSE8NqtwybGhePY2gZ29ESFjqJoCu1Rupje8YtGqsefD265TMg7usUDFdp6W1EGMcet8)` refers to a single P2PK output, using the public key part from the specified xpub.
-- `pkh(xpub68Gmy5EdvgibQVfPdqkBBCHxA5htiqg55crXYuXoQRKfDBFA1WEjWgP6LHhwBZeNK1VTsfTFUHCdrfp1bgwQ9xv5ski8PX9rL2dZXvgGDnw/1'/2)` refers to a single P2PKH output, using child key *1'/2* of the specified xpub.
-- `wsh(multi(1,xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB/1/0/*,xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH/1/0/*))` refers to a chain of *1-of-2* P2WSH multisig outputs, using public keys taken from two HD chains with corresponding derivation paths.
+- `pk(0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798)` describes a P2PK output with the specified public key.
+- `pkh(02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5)` describes a P2PKH output with the specified public key.
+- `wpkh(02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9)` describes a P2WPKH output with the specified public key.
+- `sh(wpkh(03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556))` describes a P2SH-P2WPKH output with the specified public key.
+- `combo(0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798)` describes any P2PK, P2PKH, P2WPKH, or P2SH-P2WPKH output with the specified public key.
+- `sh(wsh(pkh(02e493dbf1c10d80f3581e4904930b1404cc6c13900ee0758474fa94abe8c4cd13)))` describes an (overly complicated) P2SH-P2WSH-P2PKH output with the specified public key.
+- `multi(1,022f8bde4d1a07209355b4a7250a5c5128e88b84bddc619ab7cba8d569b240efe4,025cbdf0646e5db4eaa398f365f2ea7a0e3d419b7e0330e39ce92bddedcac4f9bc)` describes a bare *1-of-2* multisig output with keys in the specified order.
+- `sh(multi(2,022f01e5e15cca351daff3843fb70f3c2f0a1bdd05e5af888a67784ef3e10a2a01,03acd484e2f0c7f65309ad178a9f559abde09796974c57e714c35f110dfc27ccbe))` describes a P2SH *2-of-2* multisig output with keys in the specified order.
+- `wsh(multi(2,03a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7,03774ae7f858a9411e5ef4246b70c65aac5649980be5c17891bbec17895da008cb,03d01115d548e7561b15c38f004d734633687cf4419620095bc5b0f47070afe85a))` describes a P2WSH *2-of-3* multisig output with keys in the specified order.
+- `sh(wsh(multi(1,03f28773c2d975288bc7d1d205c3748651b075fbc6610e58cddeeddf8f19405aa8,03499fdf9e895e719cfd64e67f07d38e3226aa7b63678949e6e49b241a60e823e4,02d7924d4f7d43ea965a465ae3095ff41131e5946f3c85f79e44adbcf8e27e080e)))` describes a P2SH-P2WSH *1-of-3* multisig output with keys in the specified order.
+- `pk(xpub661MyMwAqRbcFtXgS5sYJABqqG9YLmC4Q1Rdap9gSE8NqtwybGhePY2gZ29ESFjqJoCu1Rupje8YtGqsefD265TMg7usUDFdp6W1EGMcet8)` describes a P2PK output with the public key of the specified xpub.
+- `pkh(xpub68Gmy5EdvgibQVfPdqkBBCHxA5htiqg55crXYuXoQRKfDBFA1WEjWgP6LHhwBZeNK1VTsfTFUHCdrfp1bgwQ9xv5ski8PX9rL2dZXvgGDnw/1'/2)` describes a P2PKH output with child key *1'/2* of the specified xpub.
+- `wsh(multi(1,xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB/1/0/*,xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH/0/0/*))` describes a set of *1-of-2* P2WSH multisig outputs where the first multisig key is the *1/0/`i`* child of the first specified xpub and the second multisig key is the *0/0/`i`* child of the second specified xpub, and `i` is any number in a configurable range (`0-1000` by default).
 
 ## Reference
 
@@ -91,6 +91,15 @@ on Bitcoin's OP_CHECKMULTISIG opcode. To support these, we introduce the
 multisig policy, where any *k* out of the *n* provided public keys must
 sign.
 
+Key order is significant. A `multi()` expression describes a multisig script
+with keys in the specified order, and in a search for TXOs, it will not match
+outputs with multisig scriptPubKeys that have the same keys in a different
+order. Also, to prevent a combinatorial explosion of the search space, if more
+than one of the `multi()` key arguments is a BIP32 wildcard path ending in `/*`
+or `*'`, the `multi()` expression only matches multisig scripts with the `i`th
+child key from each wildcard path in lockstep, rather than scripts with any
+combination of child keys from each wildcard path.
+
 ### BIP32 derived keys and chains
 
 Most modern wallet software and hardware uses keys that are derived using
@@ -101,7 +110,7 @@ path consists of a sequence of 0 or more integers (in the range
 *0..2<sup>31</sup>-1*) each optionally followed by `'` or `h`, and
 separated by `/` characters. The string may optionally end with the
 literal `/*` or `/*'` (or `/*h`) to refer to all unhardened or hardened
-child keys instead.
+child keys in a configurable range (by default `0-1000`, inclusive).
 
 Whenever a public key is described using a hardened derivation step, the
 script cannot be computed without access to the corresponding private
@@ -119,6 +128,6 @@ steps, or for dumping wallet descriptors including private key material.
 
 In order to easily represent the sets of scripts currently supported by
 existing Bitcoin Core wallets, a convenience function `combo` is
-provided, which takes as input a public key, and constructs the P2PK,
+provided, which takes as input a public key, and describes a set of P2PK,
 P2PKH, P2WPKH, and P2SH-P2WPH scripts for that key. In case the key is
-uncompressed, it only constructs P2PK and P2PKH.
+uncompressed, the set only includes P2PK and P2PKH scripts.
