@@ -147,11 +147,11 @@ class BIP68Test(BitcoinTestFramework):
                 sequence_value = 0xfffffffe # this disables sequence locks
 
                 # 50% chance we enable sequence locks
-                if random.randint(0,1):
+                if random.randint(0, 1):
                     using_sequence_locks = True
 
                     # 10% of the time, make the input sequence value pass
-                    input_will_pass = (random.randint(1,10) == 1)
+                    input_will_pass = (random.randint(1, 10) == 1)
                     sequence_value = utxos[j]["confirmations"]
                     if not input_will_pass:
                         sequence_value += 1
@@ -170,7 +170,7 @@ class BIP68Test(BitcoinTestFramework):
                         can_time_lock = False
 
                     # if time-lockable, then 50% chance we make this a time lock
-                    if random.randint(0,1) and can_time_lock:
+                    if random.randint(0, 1) and can_time_lock:
                         # Find first time-lock value that fails, or latest one that succeeds
                         time_delta = sequence_value << SEQUENCE_LOCKTIME_GRANULARITY
                         if input_will_pass and time_delta > cur_time - orig_time:

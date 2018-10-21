@@ -42,7 +42,7 @@ def _remove_empty(array):
     return [x for x in array if x !='']
 
 def _convert_ip_port(array):
-    host,port = array.split(':')
+    host, port = array.split(':')
     # convert host from mangled-per-four-bytes form as used by kernel
     host = unhexlify(host)
     host_out = ''
@@ -50,7 +50,7 @@ def _convert_ip_port(array):
         (val,) = struct.unpack('=I', host[x*4:(x+1)*4])
         host_out += '%08x' % val
 
-    return host_out,int(port,16)
+    return host_out, int(port, 16)
 
 def netstat(typ='tcp'):
     '''
@@ -58,7 +58,7 @@ def netstat(typ='tcp'):
     To get pid of all network process running on system, you must run this script
     as superuser
     '''
-    with open('/proc/net/'+typ,'r',encoding='utf8') as f:
+    with open('/proc/net/'+typ, 'r', encoding='utf8') as f:
         content = f.readlines()
         content.pop(0)
     result = []
@@ -124,7 +124,7 @@ def addr_to_hex(addr):
         sub = [[], []] # prefix, suffix
         x = 0
         addr = addr.split(':')
-        for i,comp in enumerate(addr):
+        for i, comp in enumerate(addr):
             if comp == '':
                 if i == 0 or i == (len(addr)-1): # skip empty component at beginning or end
                     continue

@@ -89,7 +89,7 @@ def get_block_hashes(settings):
 # The block map shouldn't give or receive byte-reversed hashes.
 def mkblockmap(blkindex):
     blkmap = {}
-    for height,hash in enumerate(blkindex):
+    for height, hash in enumerate(blkindex):
         blkmap[hash] = height
     return blkmap
 

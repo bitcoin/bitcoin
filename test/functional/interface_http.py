@@ -58,7 +58,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         conn.close()
 
         #now do the same with "Connection: close"
-        headers = {"Authorization": "Basic " + str_to_b64str(authpair), "Connection":"close"}
+        headers = {"Authorization": "Basic " + str_to_b64str(authpair), "Connection": "close"}
 
         conn = http.client.HTTPConnection(url.hostname, url.port)
         conn.connect()

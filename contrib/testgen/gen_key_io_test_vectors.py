@@ -140,7 +140,7 @@ def gen_valid_vectors():
         for template, valid_vector_generator in [(t, g) for g, l in zip(glist, tlist) for t in l]:
             rv, payload = valid_vector_generator(template)
             assert is_valid(rv)
-            metadata = {x: y for x, y in zip(metadata_keys,template[3]) if y is not None}
+            metadata = {x: y for x, y in zip(metadata_keys, template[3]) if y is not None}
             hexrepr = b2a_hex(payload)
             if isinstance(hexrepr, bytes):
                 hexrepr = hexrepr.decode('utf8')
@@ -173,7 +173,7 @@ def gen_invalid_base58_vector(template):
         suffix = bytearray(template[2])
 
     val = b58encode_chk(prefix + payload + suffix)
-    if random.randint(0,10)<1: # line corruption
+    if random.randint(0, 10)<1: # line corruption
         if randbool(): # add random character to end
             val += random.choice(b58chars)
         else: # replace random character in the middle
@@ -233,7 +233,7 @@ def gen_invalid_vectors():
 if __name__ == '__main__':
     import sys
     import json
-    iters = {'valid':gen_valid_vectors, 'invalid':gen_invalid_vectors}
+    iters = {'valid': gen_valid_vectors, 'invalid': gen_invalid_vectors}
     try:
         uiter = iters[sys.argv[1]]
     except IndexError:

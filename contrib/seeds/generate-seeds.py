@@ -41,7 +41,7 @@ import re
 # ipv4 in ipv6 prefix
 pchIPv4 = bytearray([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff])
 # tor-specific ipv6 prefix
-pchOnionCat = bytearray([0xFD,0x87,0xD8,0x7E,0xEB,0x43])
+pchOnionCat = bytearray([0xFD, 0x87, 0xD8, 0x7E, 0xEB, 0x43])
 
 def name_to_ipv6(addr):
     if len(addr)>6 and addr.endswith('.onion'):
@@ -55,7 +55,7 @@ def name_to_ipv6(addr):
         sub = [[], []] # prefix, suffix
         x = 0
         addr = addr.split(':')
-        for i,comp in enumerate(addr):
+        for i, comp in enumerate(addr):
             if comp == '':
                 if i == 0 or i == (len(addr)-1): # skip empty component at beginning or end
                     continue
@@ -82,7 +82,7 @@ def parse_spec(s, defaultport):
         host = s
         port = ''
     else:
-        (host,_,port) = s.partition(':')
+        (host, _, port) = s.partition(':')
 
     if not port:
         port = defaultport
@@ -91,7 +91,7 @@ def parse_spec(s, defaultport):
 
     host = name_to_ipv6(host)
 
-    return (host,port)
+    return (host, port)
 
 def process_nodes(g, f, structname, defaultport):
     g.write('static SeedSpec6 %s[] = {\n' % structname)
@@ -107,7 +107,7 @@ def process_nodes(g, f, structname, defaultport):
             g.write(',\n')
         first = False
 
-        (host,port) = parse_spec(line, defaultport)
+        (host, port) = parse_spec(line, defaultport)
         hoststr = ','.join(('0x%02x' % b) for b in host)
         g.write('    {{%s}, %i}' % (hoststr, port))
     g.write('\n};\n')
@@ -127,10 +127,10 @@ def main():
     g.write(' * Each line contains a 16-byte IPv6 address and a port.\n')
     g.write(' * IPv4 as well as onion addresses are wrapped inside an IPv6 address accordingly.\n')
     g.write(' */\n')
-    with open(os.path.join(indir,'nodes_main.txt'), 'r', encoding="utf8") as f:
+    with open(os.path.join(indir, 'nodes_main.txt'), 'r', encoding="utf8") as f:
         process_nodes(g, f, 'pnSeed6_main', 8333)
     g.write('\n')
-    with open(os.path.join(indir,'nodes_test.txt'), 'r', encoding="utf8") as f:
+    with open(os.path.join(indir, 'nodes_test.txt'), 'r', encoding="utf8") as f:
         process_nodes(g, f, 'pnSeed6_test', 18333)
     g.write('#endif // BITCOIN_CHAINPARAMSSEEDS_H\n')
 

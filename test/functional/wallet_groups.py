@@ -76,7 +76,7 @@ class WalletGroupTest(BitcoinTestFramework):
         # Fill node2's wallet with 10000 outputs corresponding to the same
         # scriptPubKey
         for i in range(5):
-            raw_tx = self.nodes[0].createrawtransaction([{"txid":"0"*64, "vout":0}], [{addr2[0]: 0.05}])
+            raw_tx = self.nodes[0].createrawtransaction([{"txid": "0"*64, "vout": 0}], [{addr2[0]: 0.05}])
             tx = FromHex(CTransaction(), raw_tx)
             tx.vin = []
             tx.vout = [tx.vout[0]] * 2000

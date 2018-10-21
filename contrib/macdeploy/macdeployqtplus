@@ -282,7 +282,7 @@ def copyFramework(framework, path, verbose):
 
     if not framework.isDylib(): # Copy resources for real frameworks
 
-        linkfrom = os.path.join(path, "Contents","Frameworks", framework.frameworkName, "Versions", "Current")
+        linkfrom = os.path.join(path, "Contents", "Frameworks", framework.frameworkName, "Versions", "Current")
         linkto = framework.version
         if not os.path.exists(linkfrom):
             os.symlink(linkto, linkfrom)

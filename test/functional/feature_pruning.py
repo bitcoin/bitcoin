@@ -131,14 +131,14 @@ class PruneTest(BitcoinTestFramework):
         # Reboot node 1 to clear its mempool (hopefully make the invalidate faster)
         # Lower the block max size so we don't keep mining all our big mempool transactions (from disconnected blocks)
         self.stop_node(1)
-        self.start_node(1, extra_args=["-maxreceivebuffer=20000","-blockmaxweight=20000", "-checkblocks=5"])
+        self.start_node(1, extra_args=["-maxreceivebuffer=20000", "-blockmaxweight=20000", "-checkblocks=5"])
 
         height = self.nodes[1].getblockcount()
         self.log.info("Current block height: %d" % height)
 
         invalidheight = height-287
         badhash = self.nodes[1].getblockhash(invalidheight)
-        self.log.info("Invalidating block %s at height %d" % (badhash,invalidheight))
+        self.log.info("Invalidating block %s at height %d" % (badhash, invalidheight))
         self.nodes[1].invalidateblock(badhash)
 
         # We've now switched to our previously mined-24 block fork on node 1, but that's not what we want
@@ -154,7 +154,7 @@ class PruneTest(BitcoinTestFramework):
 
         # Reboot node1 to clear those giant tx's from mempool
         self.stop_node(1)
-        self.start_node(1, extra_args=["-maxreceivebuffer=20000","-blockmaxweight=20000", "-checkblocks=5"])
+        self.start_node(1, extra_args=["-maxreceivebuffer=20000", "-blockmaxweight=20000", "-checkblocks=5"])
 
         self.log.info("Generating new longer chain of 300 more blocks")
         self.nodes[1].generate(300)
@@ -184,7 +184,7 @@ class PruneTest(BitcoinTestFramework):
         if (usage > 550):
             raise AssertionError("Pruning target not being met")
 
-        return invalidheight,badhash
+        return invalidheight, badhash
 
     def reorg_back(self):
         # Verify that a block on the old main chain fork has been pruned away
@@ -394,7 +394,7 @@ class PruneTest(BitcoinTestFramework):
         self.mainchainhash2 = self.nodes[2].getblockhash(self.mainchainheight)
 
         self.log.info("Check that we can survive a 288 block reorg still")
-        (self.forkheight,self.forkhash) = self.reorg_test() #(1033, )
+        (self.forkheight, self.forkhash) = self.reorg_test() #(1033, )
         # Now create a 288 block reorg by mining a longer chain on N1
         # First disconnect N1
         # Then invalidate 1033 on main chain and 1032 on fork so height is 1032 on main chain

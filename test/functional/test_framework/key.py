@@ -173,8 +173,8 @@ class CECKey():
             while len(low_s_bytes) > 1 and low_s_bytes[0] == 0 and low_s_bytes[1] < 0x80:
                 low_s_bytes = low_s_bytes[1:]
             new_s_size = len(low_s_bytes)
-            new_total_size_byte = (total_size + new_s_size - s_size).to_bytes(1,byteorder='big')
-            new_s_size_byte = (new_s_size).to_bytes(1,byteorder='big')
+            new_total_size_byte = (total_size + new_s_size - s_size).to_bytes(1, byteorder='big')
+            new_s_size_byte = (new_s_size).to_bytes(1, byteorder='big')
             return b'\x30' + new_total_size_byte + mb_sig.raw[2:5+r_size] + new_s_size_byte + low_s_bytes
 
     def verify(self, hash, sig):

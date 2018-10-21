@@ -132,8 +132,8 @@ def get_PE_dll_characteristics(executable):
         if len(tokens)>=2 and tokens[0] == 'architecture:':
             arch = tokens[1].rstrip(',')
         if len(tokens)>=2 and tokens[0] == 'DllCharacteristics':
-            bits = int(tokens[1],16)
-    return (arch,bits)
+            bits = int(tokens[1], 16)
+    return (arch, bits)
 
 IMAGE_DLL_CHARACTERISTICS_HIGH_ENTROPY_VA = 0x0020
 IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE    = 0x0040
@@ -141,7 +141,7 @@ IMAGE_DLL_CHARACTERISTICS_NX_COMPAT       = 0x0100
 
 def check_PE_DYNAMIC_BASE(executable):
     '''PIE: DllCharacteristics bit 0x40 signifies dynamicbase (ASLR)'''
-    (arch,bits) = get_PE_dll_characteristics(executable)
+    (arch, bits) = get_PE_dll_characteristics(executable)
     reqbits = IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE
     return (bits & reqbits) == reqbits
 
@@ -149,7 +149,7 @@ def check_PE_DYNAMIC_BASE(executable):
 # to have secure ASLR.
 def check_PE_HIGH_ENTROPY_VA(executable):
     '''PIE: DllCharacteristics bit 0x20 signifies high-entropy ASLR'''
-    (arch,bits) = get_PE_dll_characteristics(executable)
+    (arch, bits) = get_PE_dll_characteristics(executable)
     if arch == 'i386:x86-64':
         reqbits = IMAGE_DLL_CHARACTERISTICS_HIGH_ENTROPY_VA
     else: # Unnecessary on 32-bit
@@ -159,7 +159,7 @@ def check_PE_HIGH_ENTROPY_VA(executable):
 
 def check_PE_NX(executable):
     '''NX: DllCharacteristics bit 0x100 signifies nxcompat (DEP)'''
-    (arch,bits) = get_PE_dll_characteristics(executable)
+    (arch, bits) = get_PE_dll_characteristics(executable)
     return (bits & IMAGE_DLL_CHARACTERISTICS_NX_COMPAT) == IMAGE_DLL_CHARACTERISTICS_NX_COMPAT
 
 CHECKS = {

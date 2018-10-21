@@ -36,11 +36,11 @@ import os
 #   (glibc)    GLIBC_2_11
 #
 MAX_VERSIONS = {
-'GCC':       (4,4,0),
-'CXXABI':    (1,3,3),
-'GLIBCXX':   (3,4,13),
-'GLIBC':     (2,11),
-'LIBATOMIC': (1,0)
+'GCC':       (4, 4, 0),
+'CXXABI':    (1, 3, 3),
+'GLIBCXX':   (3, 4, 13),
+'GLIBC':     (2, 11),
+'LIBATOMIC': (1, 0)
 }
 # See here for a description of _IO_stdin_used:
 # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=634261#109
@@ -75,11 +75,11 @@ ALLOWED_LIBRARIES = {
 'libdl.so.2' # programming interface to dynamic linker
 }
 ARCH_MIN_GLIBC_VER = {
-'80386':  (2,1),
-'X86-64': (2,2,5),
-'ARM':    (2,4),
-'AArch64':(2,17),
-'RISC-V': (2,27)
+'80386':  (2, 1),
+'X86-64': (2, 2, 5),
+'ARM':    (2, 4),
+'AArch64': (2, 17),
+'RISC-V': (2, 27)
 }
 class CPPFilt(object):
     '''
@@ -155,13 +155,13 @@ if __name__ == '__main__':
     retval = 0
     for filename in sys.argv[1:]:
         # Check imported symbols
-        for sym,version,arch in read_symbols(filename, True):
+        for sym, version, arch in read_symbols(filename, True):
             if version and not check_version(MAX_VERSIONS, version, arch):
                 print('%s: symbol %s from unsupported version %s' % (filename, cppfilt(sym), version))
                 retval = 1
         # Check exported symbols
         if arch != 'RISC-V':
-            for sym,version,arch in read_symbols(filename, False):
+            for sym, version, arch in read_symbols(filename, False):
                 if sym in IGNORE_EXPORTS:
                     continue
                 print('%s: export of symbol %s not allowed' % (filename, cppfilt(sym)))

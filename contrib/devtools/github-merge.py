@@ -14,9 +14,9 @@
 
 # In case of a clean merge that is accepted by the user, the local branch with
 # name $BRANCH is overwritten with the merged result, and optionally pushed.
-from __future__ import division,print_function,unicode_literals
+from __future__ import division, print_function, unicode_literals
 import os
-from sys import stdin,stdout,stderr
+from sys import stdin, stdout, stderr
 import argparse
 import hashlib
 import subprocess
@@ -24,13 +24,13 @@ import sys
 import json
 import codecs
 try:
-    from urllib.request import Request,urlopen
+    from urllib.request import Request, urlopen
 except:
-    from urllib2 import Request,urlopen
+    from urllib2 import Request, urlopen
 
 # External tools (can be overridden using environment)
-GIT = os.getenv('GIT','git')
-BASH = os.getenv('BASH','bash')
+GIT = os.getenv('GIT', 'git')
+BASH = os.getenv('BASH', 'bash')
 
 # OS specific configuration for terminal attributes
 ATTR_RESET = ''
@@ -46,11 +46,11 @@ def git_config_get(option, default=None):
     Get named configuration option from git repository.
     '''
     try:
-        return subprocess.check_output([GIT,'config','--get',option]).rstrip().decode('utf-8')
+        return subprocess.check_output([GIT, 'config', '--get', option]).rstrip().decode('utf-8')
     except subprocess.CalledProcessError:
         return default
 
-def retrieve_pr_info(repo,pull):
+def retrieve_pr_info(repo, pull):
     '''
     Retrieve pull request information from github.
     Return None if no title can be found, or an error happens.
@@ -66,10 +66,10 @@ def retrieve_pr_info(repo,pull):
         return None
 
 def ask_prompt(text):
-    print(text,end=" ",file=stderr)
+    print(text, end=" ", file=stderr)
     stderr.flush()
     reply = stdin.readline().rstrip()
-    print("",file=stderr)
+    print("", file=stderr)
     return reply
 
 def get_symlink_files():
@@ -130,8 +130,8 @@ def tree_sha512sum(commit='HEAD'):
     return overall.hexdigest()
 
 def print_merge_details(pull, title, branch, base_branch, head_branch):
-    print('%s#%s%s %s %sinto %s%s' % (ATTR_RESET+ATTR_PR,pull,ATTR_RESET,title,ATTR_RESET+ATTR_PR,branch,ATTR_RESET))
-    subprocess.check_call([GIT,'log','--graph','--topo-order','--pretty=format:'+COMMIT_FORMAT,base_branch+'..'+head_branch])
+    print('%s#%s%s %s %sinto %s%s' % (ATTR_RESET+ATTR_PR, pull, ATTR_RESET, title, ATTR_RESET+ATTR_PR, branch, ATTR_RESET))
+    subprocess.check_call([GIT, 'log', '--graph', '--topo-order', '--pretty=format:'+COMMIT_FORMAT, base_branch+'..'+head_branch])
 
 def parse_arguments():
     epilog = '''
@@ -153,8 +153,8 @@ def parse_arguments():
 def main():
     # Extract settings from git repo
     repo = git_config_get('githubmerge.repository')
-    host = git_config_get('githubmerge.host','git@github.com')
-    opt_branch = git_config_get('githubmerge.branch',None)
+    host = git_config_get('githubmerge.host', 'git@github.com')
+    opt_branch = git_config_get('githubmerge.branch', None)
     testcmd = git_config_get('githubmerge.testcmd')
     signingkey = git_config_get('user.signingkey')
     if repo is None:
@@ -162,8 +162,8 @@ def main():
         print("git config githubmerge.repository <owner>/<repo>", file=stderr)
         sys.exit(1)
     if signingkey is None:
-        print("ERROR: No GPG signing key set. Set one using:",file=stderr)
-        print("git config --global user.signingkey <key>",file=stderr)
+        print("ERROR: No GPG signing key set. Set one using:", file=stderr)
+        print("git config --global user.signingkey <key>", file=stderr)
         sys.exit(1)
 
     host_repo = host+":"+repo # shortcut for push/pull target
@@ -173,7 +173,7 @@ def main():
     pull = str(args.pull[0])
 
     # Receive pull information from github
-    info = retrieve_pr_info(repo,pull)
+    info = retrieve_pr_info(repo, pull)
     if info is None:
         sys.exit(1)
     title = info['title'].strip()
@@ -193,51 +193,51 @@ def main():
 
     devnull = open(os.devnull, 'w', encoding="utf8")
     try:
-        subprocess.check_call([GIT,'checkout','-q',branch])
+        subprocess.check_call([GIT, 'checkout', '-q', branch])
     except subprocess.CalledProcessError:
         print("ERROR: Cannot check out branch %s." % (branch), file=stderr)
         sys.exit(3)
     try:
-        subprocess.check_call([GIT,'fetch','-q',host_repo,'+refs/pull/'+pull+'/*:refs/heads/pull/'+pull+'/*',
+        subprocess.check_call([GIT, 'fetch', '-q', host_repo, '+refs/pull/'+pull+'/*:refs/heads/pull/'+pull+'/*',
                                                           '+refs/heads/'+branch+':refs/heads/'+base_branch])
     except subprocess.CalledProcessError:
-        print("ERROR: Cannot find pull request #%s or branch %s on %s." % (pull,branch,host_repo), file=stderr)
+        print("ERROR: Cannot find pull request #%s or branch %s on %s." % (pull, branch, host_repo), file=stderr)
         sys.exit(3)
     try:
-        subprocess.check_call([GIT,'log','-q','-1','refs/heads/'+head_branch], stdout=devnull, stderr=stdout)
+        subprocess.check_call([GIT, 'log', '-q', '-1', 'refs/heads/'+head_branch], stdout=devnull, stderr=stdout)
     except subprocess.CalledProcessError:
-        print("ERROR: Cannot find head of pull request #%s on %s." % (pull,host_repo), file=stderr)
+        print("ERROR: Cannot find head of pull request #%s on %s." % (pull, host_repo), file=stderr)
         sys.exit(3)
     try:
-        subprocess.check_call([GIT,'log','-q','-1','refs/heads/'+merge_branch], stdout=devnull, stderr=stdout)
+        subprocess.check_call([GIT, 'log', '-q', '-1', 'refs/heads/'+merge_branch], stdout=devnull, stderr=stdout)
     except subprocess.CalledProcessError:
-        print("ERROR: Cannot find merge of pull request #%s on %s." % (pull,host_repo), file=stderr)
+        print("ERROR: Cannot find merge of pull request #%s on %s." % (pull, host_repo), file=stderr)
         sys.exit(3)
-    subprocess.check_call([GIT,'checkout','-q',base_branch])
-    subprocess.call([GIT,'branch','-q','-D',local_merge_branch], stderr=devnull)
-    subprocess.check_call([GIT,'checkout','-q','-b',local_merge_branch])
+    subprocess.check_call([GIT, 'checkout', '-q', base_branch])
+    subprocess.call([GIT, 'branch', '-q', '-D', local_merge_branch], stderr=devnull)
+    subprocess.check_call([GIT, 'checkout', '-q', '-b', local_merge_branch])
 
     try:
         # Go up to the repository's root.
-        toplevel = subprocess.check_output([GIT,'rev-parse','--show-toplevel']).strip()
+        toplevel = subprocess.check_output([GIT, 'rev-parse', '--show-toplevel']).strip()
         os.chdir(toplevel)
         # Create unsigned merge commit.
         if title:
-            firstline = 'Merge #%s: %s' % (pull,title)
+            firstline = 'Merge #%s: %s' % (pull, title)
         else:
             firstline = 'Merge #%s' % (pull,)
         message = firstline + '\n\n'
-        message += subprocess.check_output([GIT,'log','--no-merges','--topo-order','--pretty=format:%h %s (%an)',base_branch+'..'+head_branch]).decode('utf-8')
+        message += subprocess.check_output([GIT, 'log', '--no-merges', '--topo-order', '--pretty=format:%h %s (%an)', base_branch+'..'+head_branch]).decode('utf-8')
         message += '\n\nPull request description:\n\n  ' + body.replace('\n', '\n  ') + '\n'
         try:
-            subprocess.check_call([GIT,'merge','-q','--commit','--no-edit','--no-ff','-m',message.encode('utf-8'),head_branch])
+            subprocess.check_call([GIT, 'merge', '-q', '--commit', '--no-edit', '--no-ff', '-m', message.encode('utf-8'), head_branch])
         except subprocess.CalledProcessError:
-            print("ERROR: Cannot be merged cleanly.",file=stderr)
-            subprocess.check_call([GIT,'merge','--abort'])
+            print("ERROR: Cannot be merged cleanly.", file=stderr)
+            subprocess.check_call([GIT, 'merge', '--abort'])
             sys.exit(4)
-        logmsg = subprocess.check_output([GIT,'log','--pretty=format:%s','-n','1']).decode('utf-8')
+        logmsg = subprocess.check_output([GIT, 'log', '--pretty=format:%s', '-n', '1']).decode('utf-8')
         if logmsg.rstrip() != firstline.rstrip():
-            print("ERROR: Creating merge failed (already merged?).",file=stderr)
+            print("ERROR: Creating merge failed (already merged?).", file=stderr)
             sys.exit(4)
 
         symlink_files = get_symlink_files()
@@ -254,7 +254,7 @@ def main():
             print("ERROR: Unable to compute tree hash")
             sys.exit(4)
         try:
-            subprocess.check_call([GIT,'commit','--amend','-m',message.encode('utf-8')])
+            subprocess.check_call([GIT, 'commit', '--amend', '-m', message.encode('utf-8')])
         except subprocess.CalledProcessError:
             print("ERROR: Cannot update message.", file=stderr)
             sys.exit(4)
@@ -264,32 +264,32 @@ def main():
 
         # Run test command if configured.
         if testcmd:
-            if subprocess.call(testcmd,shell=True):
-                print("ERROR: Running %s failed." % testcmd,file=stderr)
+            if subprocess.call(testcmd, shell=True):
+                print("ERROR: Running %s failed." % testcmd, file=stderr)
                 sys.exit(5)
 
             # Show the created merge.
-            diff = subprocess.check_output([GIT,'diff',merge_branch+'..'+local_merge_branch])
-            subprocess.check_call([GIT,'diff',base_branch+'..'+local_merge_branch])
+            diff = subprocess.check_output([GIT, 'diff', merge_branch+'..'+local_merge_branch])
+            subprocess.check_call([GIT, 'diff', base_branch+'..'+local_merge_branch])
             if diff:
-                print("WARNING: merge differs from github!",file=stderr)
+                print("WARNING: merge differs from github!", file=stderr)
                 reply = ask_prompt("Type 'ignore' to continue.")
                 if reply.lower() == 'ignore':
-                    print("Difference with github ignored.",file=stderr)
+                    print("Difference with github ignored.", file=stderr)
                 else:
                     sys.exit(6)
         else:
             # Verify the result manually.
-            print("Dropping you on a shell so you can try building/testing the merged source.",file=stderr)
-            print("Run 'git diff HEAD~' to show the changes being merged.",file=stderr)
-            print("Type 'exit' when done.",file=stderr)
+            print("Dropping you on a shell so you can try building/testing the merged source.", file=stderr)
+            print("Run 'git diff HEAD~' to show the changes being merged.", file=stderr)
+            print("Type 'exit' when done.", file=stderr)
             if os.path.isfile('/etc/debian_version'): # Show pull number on Debian default prompt
-                os.putenv('debian_chroot',pull)
-            subprocess.call([BASH,'-i'])
+                os.putenv('debian_chroot', pull)
+            subprocess.call([BASH, '-i'])
 
         second_sha512 = tree_sha512sum()
         if first_sha512 != second_sha512:
-            print("ERROR: Tree hash changed unexpectedly",file=stderr)
+            print("ERROR: Tree hash changed unexpectedly", file=stderr)
             sys.exit(8)
 
         # Sign the merge commit.
@@ -298,30 +298,30 @@ def main():
             reply = ask_prompt("Type 's' to sign off on the above merge, or 'x' to reject and exit.").lower()
             if reply == 's':
                 try:
-                    subprocess.check_call([GIT,'commit','-q','--gpg-sign','--amend','--no-edit'])
+                    subprocess.check_call([GIT, 'commit', '-q', '--gpg-sign', '--amend', '--no-edit'])
                     break
                 except subprocess.CalledProcessError:
-                    print("Error while signing, asking again.",file=stderr)
+                    print("Error while signing, asking again.", file=stderr)
             elif reply == 'x':
-                print("Not signing off on merge, exiting.",file=stderr)
+                print("Not signing off on merge, exiting.", file=stderr)
                 sys.exit(1)
 
         # Put the result in branch.
-        subprocess.check_call([GIT,'checkout','-q',branch])
-        subprocess.check_call([GIT,'reset','-q','--hard',local_merge_branch])
+        subprocess.check_call([GIT, 'checkout', '-q', branch])
+        subprocess.check_call([GIT, 'reset', '-q', '--hard', local_merge_branch])
     finally:
         # Clean up temporary branches.
-        subprocess.call([GIT,'checkout','-q',branch])
-        subprocess.call([GIT,'branch','-q','-D',head_branch],stderr=devnull)
-        subprocess.call([GIT,'branch','-q','-D',base_branch],stderr=devnull)
-        subprocess.call([GIT,'branch','-q','-D',merge_branch],stderr=devnull)
-        subprocess.call([GIT,'branch','-q','-D',local_merge_branch],stderr=devnull)
+        subprocess.call([GIT, 'checkout', '-q', branch])
+        subprocess.call([GIT, 'branch', '-q', '-D', head_branch], stderr=devnull)
+        subprocess.call([GIT, 'branch', '-q', '-D', base_branch], stderr=devnull)
+        subprocess.call([GIT, 'branch', '-q', '-D', merge_branch], stderr=devnull)
+        subprocess.call([GIT, 'branch', '-q', '-D', local_merge_branch], stderr=devnull)
 
     # Push the result.
     while True:
-        reply = ask_prompt("Type 'push' to push the result to %s, branch %s, or 'x' to exit without pushing." % (host_repo,branch)).lower()
+        reply = ask_prompt("Type 'push' to push the result to %s, branch %s, or 'x' to exit without pushing." % (host_repo, branch)).lower()
         if reply == 'push':
-            subprocess.check_call([GIT,'push',host_repo,'refs/heads/'+branch])
+            subprocess.check_call([GIT, 'push', host_repo, 'refs/heads/'+branch])
             break
         elif reply == 'x':
             sys.exit(1)

@@ -83,7 +83,7 @@ def get_block_hashes(settings, max_blocks_per_call=10000):
             print('Cannot continue. Program will halt.')
             return None
 
-        for x,resp_obj in enumerate(reply):
+        for x, resp_obj in enumerate(reply):
             if rpc.response_is_error(resp_obj):
                 print('JSON-RPC: error at height', height+x, ': ', resp_obj['error'], file=sys.stderr)
                 sys.exit(1)

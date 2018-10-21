@@ -23,15 +23,15 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         self.final = node2.getnewaddress()
 
     def run_test(self):
-        node0,node1,node2 = self.nodes
+        node0, node1, node2 = self.nodes
 
         # 50 BTC each, rest will be 25 BTC each
         node0.generate(149)
         self.sync_all()
 
         self.moved = 0
-        for self.nkeys in [3,5]:
-            for self.nsigs in [2,3]:
+        for self.nkeys in [3, 5]:
+            for self.nsigs in [2, 3]:
                 for self.output_type in ["bech32", "p2sh-segwit", "legacy"]:
                     self.get_keys()
                     self.do_multisig()
@@ -39,7 +39,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         self.checkbalances()
 
     def checkbalances(self):
-        node0,node1,node2 = self.nodes
+        node0, node1, node2 = self.nodes
         node0.generate(100)
         self.sync_all()
 
@@ -55,7 +55,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         assert bal0+bal1+bal2 == total
 
     def do_multisig(self):
-        node0,node1,node2 = self.nodes
+        node0, node1, node2 = self.nodes
 
         msig = node2.createmultisig(self.nsigs, self.pub, self.output_type)
         madd = msig["address"]
@@ -74,7 +74,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         txid = node0.sendtoaddress(madd, 40)
 
         tx = node0.getrawtransaction(txid, True)
-        vout = [v["n"] for v in tx["vout"] if madd in v["scriptPubKey"].get("addresses",[])]
+        vout = [v["n"] for v in tx["vout"] if madd in v["scriptPubKey"].get("addresses", [])]
         assert len(vout) == 1
         vout = vout[0]
         scriptPubKey = tx["vout"][vout]["scriptPubKey"]["hex"]

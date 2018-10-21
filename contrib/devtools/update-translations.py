@@ -61,7 +61,7 @@ def split_format_specifiers(specifiers):
     numeric = []
     other = []
     for s in specifiers:
-        if s in {'1','2','3','4','5','6','7','8','9'}:
+        if s in {'1', '2', '3', '4', '5', '6', '7', '8', '9'}:
             numeric.append(s)
         else:
             other.append(s)
@@ -75,11 +75,11 @@ def split_format_specifiers(specifiers):
         other = []
 
     # numeric (Qt) can be present in any order, others (strprintf) must be in specified order
-    return set(numeric),other
+    return set(numeric), other
 
 def sanitize_string(s):
     '''Sanitize string for printing'''
-    return s.replace('\n',' ')
+    return s.replace('\n', ' ')
 
 def check_format_specifiers(source, translation, errors, numerus):
     source_f = split_format_specifiers(find_format_specifiers(source))
@@ -138,11 +138,11 @@ def postprocess_translations(reduce_diff_hacks=False):
         _orig_escape_cdata = ET._escape_cdata
         ET._escape_cdata = escape_cdata
 
-    for (filename,filepath) in all_ts_files():
+    for (filename, filepath) in all_ts_files():
         os.rename(filepath, filepath+'.orig')
 
     have_errors = False
-    for (filename,filepath) in all_ts_files('.orig'):
+    for (filename, filepath) in all_ts_files('.orig'):
         # pre-fixups to cope with transifex output
         parser = ET.XMLParser(encoding='utf-8') # need to override encoding because 'utf8' is not understood only 'utf-8'
         with open(filepath + '.orig', 'rb') as f:

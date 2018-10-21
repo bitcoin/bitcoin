@@ -9,7 +9,7 @@ Runs automatically during `make check`.
 
 Can also be run manually."""
 
-from __future__ import division,print_function,unicode_literals
+from __future__ import division, print_function, unicode_literals
 
 import argparse
 import binascii

@@ -103,7 +103,7 @@ class SegWitTest(BitcoinTestFramework):
         assert(tmpl['sigoplimit'] == 20000)
         assert(tmpl['transactions'][0]['hash'] == txid)
         assert(tmpl['transactions'][0]['sigops'] == 2)
-        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit']})
+        tmpl = self.nodes[0].getblocktemplate({'rules': ['segwit']})
         assert(tmpl['sizelimit'] == 1000000)
         assert('weightlimit' not in tmpl)
         assert(tmpl['sigoplimit'] == 20000)
@@ -205,7 +205,7 @@ class SegWitTest(BitcoinTestFramework):
 
         self.log.info("Verify sigops are counted in GBT with BIP141 rules after the fork")
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
-        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit']})
+        tmpl = self.nodes[0].getblocktemplate({'rules': ['segwit']})
         assert(tmpl['sizelimit'] >= 3999577)  # actual maximum size is lower due to minimum mandatory non-witness data
         assert(tmpl['weightlimit'] == 4000000)
         assert(tmpl['sigoplimit'] == 80000)
@@ -532,7 +532,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # after importaddress it should pass addwitnessaddress
         v = self.nodes[0].getaddressinfo(compressed_solvable_address[1])
-        self.nodes[0].importaddress(v['hex'],"",False,True)
+        self.nodes[0].importaddress(v['hex'], "", False, True)
         for i in compressed_spendable_address + compressed_solvable_address + premature_witaddress:
             witaddress = self.nodes[0].addwitnessaddress(i)
             assert_equal(witaddress, self.nodes[0].addwitnessaddress(witaddress))
@@ -542,8 +542,8 @@ class SegWitTest(BitcoinTestFramework):
         self.mine_and_test_listunspent(unseen_anytime, 0)
 
         # Check that createrawtransaction/decoderawtransaction with non-v0 Bech32 works
-        v1_addr = program_to_witness(1, [3,5])
-        v1_tx = self.nodes[0].createrawtransaction([getutxo(spendable_txid[0])],{v1_addr: 1})
+        v1_addr = program_to_witness(1, [3, 5])
+        v1_tx = self.nodes[0].createrawtransaction([getutxo(spendable_txid[0])], {v1_addr: 1})
         v1_decoded = self.nodes[1].decoderawtransaction(v1_tx)
         assert_equal(v1_decoded['vout'][0]['scriptPubKey']['addresses'][0], v1_addr)
         assert_equal(v1_decoded['vout'][0]['scriptPubKey']['hex'], "51020305")
@@ -586,7 +586,7 @@ class SegWitTest(BitcoinTestFramework):
     def mine_and_test_listunspent(self, script_list, ismine):
         utxo = find_spendable_utxo(self.nodes[0], 50)
         tx = CTransaction()
-        tx.vin.append(CTxIn(COutPoint(int('0x'+utxo['txid'],0), utxo['vout'])))
+        tx.vin.append(CTxIn(COutPoint(int('0x'+utxo['txid'], 0), utxo['vout'])))
         for i in script_list:
             tx.vout.append(CTxOut(10000000, i))
         tx.rehash()
@@ -610,14 +610,14 @@ class SegWitTest(BitcoinTestFramework):
             assert_equal(watchcount, 0)
         return txid
 
-    def p2sh_address_to_script(self,v):
+    def p2sh_address_to_script(self, v):
         bare = CScript(hex_str_to_bytes(v['hex']))
         p2sh = CScript(hex_str_to_bytes(v['scriptPubKey']))
         p2wsh = CScript([OP_0, sha256(bare)])
         p2sh_p2wsh = CScript([OP_HASH160, hash160(p2wsh), OP_EQUAL])
         return([bare, p2sh, p2wsh, p2sh_p2wsh])
 
-    def p2pkh_address_to_script(self,v):
+    def p2pkh_address_to_script(self, v):
         pubkey = hex_str_to_bytes(v['pubkey'])
         p2wpkh = CScript([OP_0, hash160(pubkey)])
         p2sh_p2wpkh = CScript([OP_HASH160, hash160(p2wpkh), OP_EQUAL])
@@ -639,7 +639,7 @@ class SegWitTest(BitcoinTestFramework):
             f = BytesIO(hex_str_to_bytes(txraw))
             txtmp.deserialize(f)
             for j in range(len(txtmp.vout)):
-                tx.vin.append(CTxIn(COutPoint(int('0x'+i,0), j)))
+                tx.vin.append(CTxIn(COutPoint(int('0x'+i, 0), j)))
         tx.vout.append(CTxOut(0, CScript()))
         tx.rehash()
         signresults = self.nodes[0].signrawtransactionwithwallet(bytes_to_hex_str(tx.serialize_without_witness()))['hex']

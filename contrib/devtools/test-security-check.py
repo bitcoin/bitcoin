@@ -20,8 +20,8 @@ def write_testcode(filename):
     ''')
 
 def call_security_check(cc, source, executable, options):
-    subprocess.check_call([cc,source,'-o',executable] + options)
-    p = subprocess.Popen(['./security-check.py',executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
+    subprocess.check_call([cc, source, '-o', executable] + options)
+    p = subprocess.Popen(['./security-check.py', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
     (stdout, stderr) = p.communicate()
     return (p.returncode, stdout.rstrip())
 
@@ -32,15 +32,15 @@ class TestSecurityChecks(unittest.TestCase):
         cc = 'gcc'
         write_testcode(source)
 
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-zexecstack','-fno-stack-protector','-Wl,-znorelro','-no-pie','-fno-PIE']),
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-zexecstack', '-fno-stack-protector', '-Wl,-znorelro', '-no-pie', '-fno-PIE']),
                 (1, executable+': failed PIE NX RELRO Canary'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fno-stack-protector','-Wl,-znorelro','-no-pie','-fno-PIE']),
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack', '-fno-stack-protector', '-Wl,-znorelro', '-no-pie', '-fno-PIE']),
                 (1, executable+': failed PIE RELRO Canary'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-znorelro','-no-pie','-fno-PIE']),
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack', '-fstack-protector-all', '-Wl,-znorelro', '-no-pie', '-fno-PIE']),
                 (1, executable+': failed PIE RELRO'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-znorelro','-pie','-fPIE']),
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack', '-fstack-protector-all', '-Wl,-znorelro', '-pie', '-fPIE']),
                 (1, executable+': failed RELRO'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-zrelro','-Wl,-z,now','-pie','-fPIE']),
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack', '-fstack-protector-all', '-Wl,-zrelro', '-Wl,-z,now', '-pie', '-fPIE']),
                 (0, ''))
 
     def test_32bit_PE(self):
@@ -49,11 +49,11 @@ class TestSecurityChecks(unittest.TestCase):
         cc = 'i686-w64-mingw32-gcc'
         write_testcode(source)
 
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--no-nxcompat','-Wl,--no-dynamicbase']),
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--no-nxcompat', '-Wl,--no-dynamicbase']),
                 (1, executable+': failed DYNAMIC_BASE NX'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--no-dynamicbase']),
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat', '-Wl,--no-dynamicbase']),
                 (1, executable+': failed DYNAMIC_BASE'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--dynamicbase']),
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat', '-Wl,--dynamicbase']),
                 (0, ''))
     def test_64bit_PE(self):
         source = 'test1.c'
@@ -61,10 +61,10 @@ class TestSecurityChecks(unittest.TestCase):
         cc = 'x86_64-w64-mingw32-gcc'
         write_testcode(source)
 
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--no-nxcompat','-Wl,--no-dynamicbase','-Wl,--no-high-entropy-va']), (1, executable+': failed DYNAMIC_BASE HIGH_ENTROPY_VA NX'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--no-dynamicbase','-Wl,--no-high-entropy-va']), (1, executable+': failed DYNAMIC_BASE HIGH_ENTROPY_VA'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--dynamicbase','-Wl,--no-high-entropy-va']), (1, executable+': failed HIGH_ENTROPY_VA'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--dynamicbase','-Wl,--high-entropy-va']), (0, ''))
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--no-nxcompat', '-Wl,--no-dynamicbase', '-Wl,--no-high-entropy-va']), (1, executable+': failed DYNAMIC_BASE HIGH_ENTROPY_VA NX'))
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat', '-Wl,--no-dynamicbase', '-Wl,--no-high-entropy-va']), (1, executable+': failed DYNAMIC_BASE HIGH_ENTROPY_VA'))
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat', '-Wl,--dynamicbase', '-Wl,--no-high-entropy-va']), (1, executable+': failed HIGH_ENTROPY_VA'))
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat', '-Wl,--dynamicbase', '-Wl,--high-entropy-va']), (0, ''))
 
 if __name__ == '__main__':
     unittest.main()

@@ -108,7 +108,7 @@ class Socks5Connection():
                 addr = recvall(self.conn, 16)
             else:
                 raise IOError('Unknown address type %i' % atyp)
-            port_hi,port_lo = recvall(self.conn, 2)
+            port_hi, port_lo = recvall(self.conn, 2)
             port = (port_hi << 8) | port_lo
 
             # Send dummy response

@@ -59,7 +59,7 @@ def parseline(line):
     else:
         # Do IPv4 sanity check
         ip = 0
-        for i in range(0,4):
+        for i in range(0, 4):
             if int(m.group(i+2)) < 0 or int(m.group(i+2)) > 255:
                 return None
             ip = ip + (int(m.group(i+2)) << (8*(3-i)))
@@ -104,7 +104,7 @@ def filtermultiport(ips):
     hist = collections.defaultdict(list)
     for ip in ips:
         hist[ip['sortkey']].append(ip)
-    return [value[0] for (key,value) in list(hist.items()) if len(value)==1]
+    return [value[0] for (key, value) in list(hist.items()) if len(value)==1]
 
 # Based on Greg Maxwell's seed_filter.py
 def filterbyasn(ips, max_per_asn, max_total):

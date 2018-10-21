@@ -107,7 +107,7 @@ class WalletDumpTest(BitcoinTestFramework):
         # wallet, we will expect 21 addresses in the dump
         test_addr_count = 20
         addrs = []
-        for i in range(0,test_addr_count):
+        for i in range(0, test_addr_count):
             addr = self.nodes[0].getnewaddress()
             vaddr= self.nodes[0].getaddressinfo(addr) #required to get hd keypath
             addrs.append(vaddr)
