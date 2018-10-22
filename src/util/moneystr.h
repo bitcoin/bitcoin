@@ -6,8 +6,8 @@
 /**
  * Money parsing/formatting utilities.
  */
-#ifndef BITCOIN_UTILMONEYSTR_H
-#define BITCOIN_UTILMONEYSTR_H
+#ifndef BITCOIN_UTIL_MONEYSTR_H
+#define BITCOIN_UTIL_MONEYSTR_H
 
 #include <stdint.h>
 #include <string>
@@ -21,4 +21,4 @@ std::string FormatMoney(const CAmount& n);
 bool ParseMoney(const std::string& str, CAmount& nRet);
 bool ParseMoney(const char* pszIn, CAmount& nRet);
 
-#endif // BITCOIN_UTILMONEYSTR_H
+#endif // BITCOIN_UTIL_MONEYSTR_H

@@ -15,7 +15,7 @@
 #include <interfaces/node.h>
 #include <interfaces/wallet.h>
 #include <ui_interface.h>
-#include <util.h>
+#include <util/system.h>
 #include <version.h>
 
 #include <QApplication>
