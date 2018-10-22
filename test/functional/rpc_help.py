@@ -7,12 +7,18 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 
+import os
+
 
 class HelpRpcTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 
     def run_test(self):
+        self.test_categories()
+        self.dump_help()
+
+    def test_categories(self):
         node = self.nodes[0]
 
         # wrong argument count
@@ -36,6 +42,15 @@ class HelpRpcTest(BitcoinTestFramework):
             components.append('Zmq')
 
         assert_equal(titles, components)
+
+    def dump_help(self):
+        dump_dir = os.path.join(self.options.tmpdir, 'rpc_help_dump')
+        os.mkdir(dump_dir)
+        calls = [line.split(' ', 1)[0] for line in self.nodes[0].help().splitlines() if line and not line.startswith('==')]
+        for call in calls:
+            with open(os.path.join(dump_dir, call), 'w', encoding='utf-8') as f:
+                # Make sure the node can generate the help at runtime without crashing
+                f.write(self.nodes[0].help(call))
 
 
 if __name__ == '__main__':
