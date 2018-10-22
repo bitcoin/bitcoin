@@ -187,6 +187,20 @@ bool DirIsWritable(const fs::path& directory)
     return true;
 }
 
+bool GetRelativePath(fs::path& result, const fs::path& path, const fs::path& base)
+{
+    if (!path.is_absolute() || !base.is_absolute()) return false;
+    fs::path relative, parent = path;
+    boost::system::error_code ec;
+    while (!parent.empty() && parent != parent.root_path() && !fs::equivalent(parent, base, ec)) {
+        relative = parent.filename() / relative;
+        parent = parent.parent_path();
+    }
+    if (!fs::equivalent(parent, base, ec)) return false;
+    result = relative;
+    return true;
+}
+
 /**
  * Interpret a string argument as a boolean.
  *

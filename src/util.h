@@ -71,6 +71,13 @@ bool RenameOver(fs::path src, fs::path dest);
 bool LockDirectory(const fs::path& directory, const std::string lockfile_name, bool probe_only=false);
 bool DirIsWritable(const fs::path& directory);
 
+/**
+ * Returns path made relative to base. Does not resolve symlinks or normalizes
+ * paths, therefore boost::filesystem::relative (from version 1.67) is not a
+ * valid replacement.
+ */
+bool GetRelativePath(fs::path& result, const fs::path& path, const fs::path& base);
+
 /** Release all directory locks. This is used for unit testing only, at runtime
  * the global destructor will take care of the locks.
  */
