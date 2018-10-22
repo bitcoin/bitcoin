@@ -1217,6 +1217,25 @@ BOOST_AUTO_TEST_CASE(test_DirIsWritable)
     fs::remove(tmpdirname);
 }
 
+BOOST_AUTO_TEST_CASE(test_GetRelativePath)
+{
+    fs::path base = fs::temp_directory_path();
+    fs::path path;
+
+    BOOST_CHECK_EQUAL(GetRelativePath(path,  base / "foo/bar", "foo/bar"), false);
+    BOOST_CHECK_EQUAL(GetRelativePath(path, "foo/bar", base / "foo/bar"), false);
+    BOOST_CHECK_EQUAL(GetRelativePath(path, base, base / "foo"), false);
+
+    BOOST_CHECK_EQUAL(GetRelativePath(path, base, base), true);
+    BOOST_CHECK_EQUAL(path, "");
+
+    BOOST_CHECK_EQUAL(GetRelativePath(path, base / "bar", base), true);
+    BOOST_CHECK_EQUAL(path, "bar");
+
+    BOOST_CHECK_EQUAL(GetRelativePath(path, base / "foo/bar", base), true);
+    BOOST_CHECK_EQUAL(path, "foo/bar");
+}
+
 BOOST_AUTO_TEST_CASE(test_ToLower)
 {
     BOOST_CHECK_EQUAL(ToLower('@'), '@');
