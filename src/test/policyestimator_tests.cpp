@@ -59,6 +59,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                 tx.vin[0].prevout.n = 10000*blocknum+100*j+k; // make transaction unique
                 uint256 hash = tx.GetHash();
                 mpool.addUnchecked(entry.Fee(feeV[j]).Time(GetTime()).Height(blocknum).FromTx(tx));
+                BOOST_CHECK(feeEst.IsConsistent());
                 txHashes[j].push_back(hash);
             }
         }
@@ -75,6 +76,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
             }
         }
         mpool.removeForBlock(block, ++blocknum);
+        BOOST_CHECK(feeEst.IsConsistent());
         block.clear();
         // Check after just a few txs that combining buckets works as expected
         if (blocknum == 3) {
@@ -112,8 +114,10 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
 
     // Mine 50 more blocks with no transactions happening, estimates shouldn't change
     // We haven't decayed the moving average enough so we still have enough data points in every bucket
-    while (blocknum < 250)
+    while (blocknum < 250) {
         mpool.removeForBlock(block, ++blocknum);
+        BOOST_CHECK(feeEst.IsConsistent());
+    }
 
     BOOST_CHECK(feeEst.estimateFee(1) == CFeeRate(0));
     for (int i = 2; i < 10;i++) {
@@ -130,10 +134,12 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                 tx.vin[0].prevout.n = 10000*blocknum+100*j+k;
                 uint256 hash = tx.GetHash();
                 mpool.addUnchecked(entry.Fee(feeV[j]).Time(GetTime()).Height(blocknum).FromTx(tx));
+                BOOST_CHECK(feeEst.IsConsistent());
                 txHashes[j].push_back(hash);
             }
         }
         mpool.removeForBlock(block, ++blocknum);
+        BOOST_CHECK(feeEst.IsConsistent());
     }
 
     for (int i = 1; i < 10;i++) {
@@ -151,6 +157,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
         }
     }
     mpool.removeForBlock(block, 266);
+    BOOST_CHECK(feeEst.IsConsistent());
     block.clear();
     BOOST_CHECK(feeEst.estimateFee(1) == CFeeRate(0));
     for (int i = 2; i < 10;i++) {
@@ -165,6 +172,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                 tx.vin[0].prevout.n = 10000*blocknum+100*j+k;
                 uint256 hash = tx.GetHash();
                 mpool.addUnchecked(entry.Fee(feeV[j]).Time(GetTime()).Height(blocknum).FromTx(tx));
+                BOOST_CHECK(feeEst.IsConsistent());
                 CTransactionRef ptx = mpool.get(hash);
                 if (ptx)
                     block.push_back(ptx);
@@ -172,6 +180,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
             }
         }
         mpool.removeForBlock(block, ++blocknum);
+        BOOST_CHECK(feeEst.IsConsistent());
         block.clear();
     }
     BOOST_CHECK(feeEst.estimateFee(1) == CFeeRate(0));
