@@ -222,6 +222,9 @@ public:
     /** Calculation of highest target that estimates are tracked for */
     unsigned int HighestTargetTracked(FeeEstimateHorizon horizon) const;
 
+    /** Check stats are consistent (for unit tests) */
+    bool IsConsistent() const;
+
 private:
     mutable RecursiveMutex m_cs_fee_estimator;
 
@@ -253,6 +256,9 @@ private:
 
     /** Initialise bucketMap */
     void InitBucketMap() EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
+
+    /** Check stats are consistent (for unit tests) */
+    int CheckConsistent() const EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
 
     /** Process a transaction confirmed in a block*/
     bool processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry) EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
