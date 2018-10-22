@@ -40,7 +40,7 @@
     <ClCompile Include="..\..\src\script\script.cpp" />
     <ClCompile Include="..\..\src\script\script_error.cpp" />
     <ClCompile Include="..\..\src\uint256.cpp" />
-    <ClCompile Include="..\..\src\utilstrencodings.cpp" />
+    <ClCompile Include="..\..\src\util\strencodings.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

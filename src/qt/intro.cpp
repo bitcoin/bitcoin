@@ -13,7 +13,7 @@
 #include <qt/guiutil.h>
 
 #include <interfaces/node.h>
-#include <util.h>
+#include <util/system.h>
 
 #include <QFileDialog>
 #include <QSettings>
