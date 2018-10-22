@@ -98,9 +98,10 @@ void OptionsModel::Init(bool resetSettings)
       addOverriddenOption("-prune");
     }
 
-    if (!settings.contains("nDatabaseCache"))
-        settings.setValue("nDatabaseCache", (qint64)nDefaultDbCache);
-    if (!m_node.softSetArg("-dbcache", settings.value("nDatabaseCache").toString().toStdString()))
+    std::string nDbCacheSettings = settings.contains("nDatabaseCache") ?
+                                       settings.value("nDatabaseCache").toString().toStdString() :
+                                       std::to_string(nDefaultDbCache);
+    if (!m_node.softSetArg("-dbcache", nDbCacheSettings))
         addOverriddenOption("-dbcache");
 
     if (!settings.contains("nThreadsScriptVerif"))
@@ -296,7 +297,11 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
         case PruneSize:
             return settings.value("nPruneSize");
         case DatabaseCache:
-            return settings.value("nDatabaseCache");
+            if (gArgs.IsArgSet("-dbcache"))
+                return (qint64)gArgs.GetArg("-dbcache", nDefaultDbCache);
+            if (settings.contains("nDatabaseCache"))
+                return settings.value("nDatabaseCache");
+            return (qint64)nDefaultDbCache;
         case ThreadsScriptVerif:
             return settings.value("nThreadsScriptVerif");
         case Listen:
@@ -432,7 +437,11 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             }
             break;
         case DatabaseCache:
-            if (settings.value("nDatabaseCache") != value) {
+            if (QVariant::fromValue(gArgs.GetArg("-dbcache", nDefaultDbCache)) == value) break;
+            if (QVariant::fromValue(nDefaultDbCache) == value) {
+                settings.remove("nDatabaseCache");
+                setRestartRequired(true);
+            } else if (settings.value("nDatabaseCache") != value) {
                 settings.setValue("nDatabaseCache", value);
                 setRestartRequired(true);
             }
