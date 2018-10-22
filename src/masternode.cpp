@@ -17,7 +17,7 @@
 #include <messagesigner.h>
 #include <script/standard.h>
 #include <shutdown.h>
-#include <util.h>
+#include <util/system.h>
 #include <walletinitinterface.h>
 
 #include <string>

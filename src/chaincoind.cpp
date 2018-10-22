@@ -16,11 +16,11 @@
 #include <init.h>
 #include <noui.h>
 #include <shutdown.h>
-#include <util.h>
 #include <masternodeconfig.h>
+#include <util/system.h>
 #include <httpserver.h>
 #include <httprpc.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 #include <walletinitinterface.h>
 
 #include <stdio.h>

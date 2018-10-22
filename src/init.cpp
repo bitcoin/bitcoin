@@ -44,8 +44,8 @@
 #include <txmempool.h>
 #include <torcontrol.h>
 #include <ui_interface.h>
-#include <util.h>
-#include <utilmoneystr.h>
+#include <util/system.h>
+#include <util/moneystr.h>
 #include <validation.h>
 #include <validationinterface.h>
 #include <warnings.h>

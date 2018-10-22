@@ -54,7 +54,7 @@ qt_test_test_chaincoin_qt_SOURCES += \
   qt/test/wallettests.cpp \
   wallet/test/wallet_test_fixture.cpp
 if ENABLE_BIP70
-qt_test_test_bitcoin_qt_SOURCES += \
+qt_test_test_chaincoin_qt_SOURCES += \
   qt/test/paymentservertests.cpp
 endif # ENABLE_BIP70
 endif # ENABLE_WALLET

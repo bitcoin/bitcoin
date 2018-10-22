@@ -8,7 +8,7 @@
 #include <masternode.h>
 #include <masternodeman.h>
 #include <sync.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 
 #include <QTimer>
 #include <QMessageBox>

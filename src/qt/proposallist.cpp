@@ -14,7 +14,7 @@
 #include <masternodeman.h>
 #include <masternode.h>
 #include <messagesigner.h>
-#include <util.h>
+#include <util/system.h>
 #include <governance.h>
  
 #include <ui_interface.h>

@@ -14,7 +14,7 @@
 #include <netfulfilledman.h>
 #include <netmessagemaker.h>
 #include <ui_interface.h>
-#include <util.h>
+#include <util/system.h>
 
 
 class CMasternodeSync;

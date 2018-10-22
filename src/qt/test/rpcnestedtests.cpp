@@ -14,7 +14,7 @@
 #include <qt/rpcconsole.h>
 #include <test/test_chaincoin.h>
 #include <univalue.h>
-#include <util.h>
+#include <util/system.h>
 
 #include <QDir>
 #include <QtGlobal>

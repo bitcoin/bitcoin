@@ -18,7 +18,7 @@
 #include <script/standard.h>
 #include <shutdown.h>
 #include <ui_interface.h>
-#include <util.h>
+#include <util/system.h>
 #include <warnings.h>
 
 #include <boost/algorithm/string/replace.hpp>

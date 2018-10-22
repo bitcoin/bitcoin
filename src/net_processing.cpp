@@ -24,9 +24,9 @@
 #include <tinyformat.h>
 #include <txmempool.h>
 #include <ui_interface.h>
-#include <util.h>
-#include <utilmoneystr.h>
-#include <utilstrencodings.h>
+#include <util/system.h>
+#include <util/moneystr.h>
+#include <util/strencodings.h>
 
 #include <governance.h>
 #include <masternode-payments.h>

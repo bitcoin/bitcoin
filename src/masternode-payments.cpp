@@ -10,7 +10,7 @@
 #include <messagesigner.h>
 #include <netmessagemaker.h>
 #include <netfulfilledman.h>
-#include <util.h>
+#include <util/system.h>
 
 /** Object for who's going to get paid on which blocks */
 CMasternodePayments mnpayments;

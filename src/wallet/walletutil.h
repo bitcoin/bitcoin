@@ -7,7 +7,7 @@
 
 #include <chainparamsbase.h>
 #include <fs.h>
-#include <util.h>
+#include <util/system.h>
 #include <wallet/wallet.h>
 
 #include <vector>

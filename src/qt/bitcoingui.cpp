@@ -35,7 +35,7 @@
 #include <interfaces/node.h>
 #include <noui.h>
 #include <ui_interface.h>
-#include <util.h>
+#include <util/system.h>
 #include <qt/masternodelist.h>
 #include <qt/proposallist.h>
 

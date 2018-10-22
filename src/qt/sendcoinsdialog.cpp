@@ -25,7 +25,7 @@
 #include <key_io.h>
 #include <wallet/coincontrol.h>
 #include <ui_interface.h>
-#include <util.h>
+#include <util/system.h>
 #include <txmempool.h>
 #include <policy/fees.h>
 #include <wallet/fees.h>

@@ -22,8 +22,8 @@
 #include <primitives/transaction.h>
 #include <script/standard.h>
 #include <timedata.h>
-#include <util.h>
-#include <utilmoneystr.h>
+#include <util/system.h>
+#include <util/moneystr.h>
 #include <masternode-payments.h>
 #include <masternode-sync.h>
 #include <validation.h>

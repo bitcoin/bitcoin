@@ -4,7 +4,7 @@
 
 #include <interfaces/modules.h>
 #include <stdio.h>
-#include <util.h>
+#include <util/system.h>
 #include <walletinitinterface.h>
 
 class CWallet;

@@ -3,8 +3,8 @@
 #include <fs.h>
 #include <netbase.h>
 #include <masternodeconfig.h>
-#include <util.h>
-#include <utilstrencodings.h>
+#include <util/system.h>
+#include <util/strencodings.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>

@@ -20,7 +20,7 @@
 #include <netmessagemaker.h>
 #include <scheduler.h>
 #include <ui_interface.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 
 #include <governance.h>
 #include <masternode-sync.h>

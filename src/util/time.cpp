@@ -7,8 +7,7 @@
 #include <config/chaincoin-config.h>
 #endif
 
-#include <tinyformat.h>
-#include <utiltime.h>
+#include <util/time.h>
 
 #include <atomic>
 #include <boost/date_time/posix_time/posix_time.hpp>
