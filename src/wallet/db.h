@@ -97,6 +97,9 @@ public:
     }
 };
 
+/** Return whether a wallet database is currently loaded. */
+bool IsWalletLoaded(const fs::path& wallet_path);
+
 /** Get BerkeleyEnvironment and database filename given a wallet path. */
 BerkeleyEnvironment* GetWalletEnv(const fs::path& wallet_path, std::string& database_filename);
 
