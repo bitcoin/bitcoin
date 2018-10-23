@@ -56,9 +56,8 @@ bool WalletDatabaseFileId::operator==(const WalletDatabaseFileId& rhs) const
     return memcmp(value, &rhs.value, sizeof(value)) == 0;
 }
 
-BerkeleyEnvironment* GetWalletEnv(const fs::path& wallet_path, std::string& database_filename)
+static void SplitWalletPath(const fs::path& wallet_path, fs::path& env_directory, std::string& database_filename)
 {
-    fs::path env_directory;
     if (fs::is_regular_file(wallet_path)) {
         // Special case for backwards compatibility: if wallet path points to an
         // existing file, treat it as the path to a BDB data file in a parent
@@ -71,6 +70,24 @@ BerkeleyEnvironment* GetWalletEnv(const fs::path& wallet_path, std::string& data
         env_directory = wallet_path;
         database_filename = "wallet.dat";
     }
+}
+
+bool IsWalletLoaded(const fs::path& wallet_path)
+{
+    fs::path env_directory;
+    std::string database_filename;
+    SplitWalletPath(wallet_path, env_directory, database_filename);
+    LOCK(cs_db);
+    auto env = g_dbenvs.find(env_directory.string());
+    if (env == g_dbenvs.end()) return false;
+    auto db = env->second.m_databases.find(database_filename);
+    return db != env->second.m_databases.end();
+}
+
+BerkeleyEnvironment* GetWalletEnv(const fs::path& wallet_path, std::string& database_filename)
+{
+    fs::path env_directory;
+    SplitWalletPath(wallet_path, env_directory, database_filename);
     LOCK(cs_db);
     // Note: An unused temporary BerkeleyEnvironment object may be created inside the
     // emplace function if the key already exists. This is a little inefficient,
