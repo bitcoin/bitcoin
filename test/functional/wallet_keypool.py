@@ -49,11 +49,10 @@ class KeyPoolTest(BitcoinTestFramework):
         time.sleep(1.1)
         assert_equal(nodes[0].getwalletinfo()["unlocked_until"], 0)
 
-        # drain them by mining
-        nodes[0].generate(1)
-        nodes[0].generate(1)
-        nodes[0].generate(1)
-        assert_raises_rpc_error(-12, "Keypool ran out", nodes[0].generate, 1)
+        # drain the keypool
+        for _ in range(3):
+            nodes[0].getnewaddress()
+        assert_raises_rpc_error(-12, "Keypool ran out", nodes[0].getnewaddress)
 
 if __name__ == '__main__':
     KeyPoolTest().main()
