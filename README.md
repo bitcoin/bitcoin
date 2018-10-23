@@ -8,11 +8,11 @@ https://bitcoincore.org
 What is Bitcoin?
 ----------------
 
-Bitcoin is an experimental digital currency that enables instant payments to
+Bitcoin is an experimental digital currency that enables quick payments to
 anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
-with no central authority: managing transactions and issuing money are carried
+with no central authority: approving transactions and issuing money are carried
 out collectively by the network. Bitcoin Core is the name of open source
-software which enables the use of this currency.
+software which enables the use of this digital currency.
 
 For more information, as well as an immediately useable, binary version of
 the Bitcoin Core software, see https://bitcoincore.org/en/download/, or read the
