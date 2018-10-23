@@ -11,6 +11,7 @@ from test_framework.util import (
     assert_array_result,
     assert_equal,
     assert_fee_amount,
+    assert_greater_than,
     assert_raises_rpc_error,
     connect_nodes_bi,
     sync_blocks,
@@ -92,13 +93,13 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(txout['value'], 50)
 
         # Send 21 BTC from 0 to 2 using sendtoaddress call.
-        # Locked memory should use at least 32 bytes to sign each transaction
+        # Locked memory should increase to sign transactions
         self.log.info("test getmemoryinfo")
         memory_before = self.nodes[0].getmemoryinfo()
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 11)
         mempool_txid = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 10)
         memory_after = self.nodes[0].getmemoryinfo()
-        assert(memory_before['locked']['used'] + 64 <= memory_after['locked']['used'])
+        assert_greater_than(memory_after['locked']['used'], memory_before['locked']['used'])
 
         self.log.info("test gettxout (second part)")
         # utxo spent in mempool should be visible if you exclude mempool
