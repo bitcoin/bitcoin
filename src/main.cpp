@@ -4296,7 +4296,7 @@ void static ProcessGetData(CNode* pfrom)
                 }
 
                 if (!pushed && inv.type == MSG_BUDGET_PROPOSAL) {
-                    const CBudgetProposal* item = budget.GetSeenProposal(inv.hash);
+                    const CBudgetProposalBroadcast* item = budget.GetSeenProposal(inv.hash);
                     if(item){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
