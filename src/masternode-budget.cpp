@@ -1188,7 +1188,7 @@ const BudgetDraftVote* CBudgetManager::GetSeenBudgetDraftVote(uint256 hash) cons
         return &found->second;
 }
 
-const CBudgetProposal* CBudgetManager::GetSeenProposal(uint256 hash) const
+const CBudgetProposalBroadcast* CBudgetManager::GetSeenProposal(uint256 hash) const
 {
     LOCK(cs);
 
