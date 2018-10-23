@@ -166,7 +166,7 @@ static const Checkpoints::CCheckpointData dataTestnet = {
 
 static Checkpoints::MapCheckpoints mapCheckpointsDevnet =
         boost::assign::map_list_of
-        ( 0, uint256S("0x008bed705379377f4c5acca8e3effa909e4aa4a47462900a62cbf5f17d2d7035"))
+        ( 0, uint256S("0x0080ad356118a9ab8db192db66ef77146cc36d958f959251feace550e4ca3d1446"))
         ;
 static const Checkpoints::CCheckpointData dataDevnet = {
         &mapCheckpointsDevnet,
@@ -420,6 +420,7 @@ static CTestNetParams testNetParams;
 class CDevNetParams : public CChainParams {
 public:
     CDevNetParams() {
+        networkID = CBaseChainParams::DEVNET;
         strNetworkID = "dev";
         nSubsidyHalvingInterval = 210240;
         bnProofOfWorkLimit = ~arith_uint256(0) >> 8;
@@ -428,6 +429,10 @@ public:
         nTargetTimespan = 2 * 60 * 60;  // 2 hours
         nTargetSpacing = 30;      // 30 seconds
 
+        nEnforceBlockUpgradeMajority = 51;
+        nRejectBlockOutdatedMajority = 75;
+        nToCheckBlockUpgradeMajority = 100;
+
         pchMessageStart[0] = 0x0f;
         pchMessageStart[1] = 0x18;
         pchMessageStart[2] = 0x0e;
@@ -435,9 +440,10 @@ public:
         vAlertPubKey = ParseHex("04977aae0411f4e1757e8682c87ee79180ad577ef0351054e6cda5c9381fcd8c7333e88ac250d3ab3e3aafd5d1c1d946f2ca62372db7f35c84398a878aa145f09a");
         nDefaultPort = 19342;
 
-        genesis = CreateGenesisBlock(1412760826, 175962739, bnProofOfWorkLimit.GetCompact(), 1, 10 * COIN);
+        genesis = CreateGenesisBlock(1412760826, 175963287, bnProofOfWorkLimit.GetCompact(), 4, 10 * COIN);
         hashGenesisBlock = genesis.GetHash();
-        assert(hashGenesisBlock == uint256S("0x008bed705379377f4c5acca8e3effa909e4aa4a47462900a62cbf5f17d2d7035"));
+        
+        assert(hashGenesisBlock == uint256S("0x0055024546d26a67e2b0a13c86bc841efeeadb7b16155d5ea9a192cf6eeb56e6"));
         assert(genesis.hashMerkleRoot == uint256S("0x80ad356118a9ab8db192db66ef77146cc36d958f959251feace550e4ca3d1446"));
 
         devnetGenesis = FindDevNetGenesisBlock(*this, genesis, 10 * COIN);

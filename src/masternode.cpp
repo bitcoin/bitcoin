@@ -216,6 +216,8 @@ void CMasternode::Check(bool forceCheck)
 
 bool CMasternode::IsValidNetAddr() const
 {
+    if (Params().NetworkID() == CBaseChainParams::DEVNET)
+        return true;
     // TODO: regtest is fine with any addresses for now,
     // should probably be a bit smarter if one day we start to implement tests for this
     return (addr.IsIPv4() && addr.IsRoutable());
