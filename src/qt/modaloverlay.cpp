@@ -101,7 +101,7 @@ void ModalOverlay::tipUpdate(int count, const QDateTime& blockDate, double nVeri
             }
         }
         // show progress increase per hour
-        ui->progressIncreasePerH->setText(QString::number(progressPerHour * 100, 'f', 2)+"%");
+        ui->progressIncreasePerH->setText(QString::number(progressPerHour * 100, 'f', 2)+"%p");
 
         // show expected remaining time
         if(remainingMSecs >= 0) {
