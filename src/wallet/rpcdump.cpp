@@ -827,7 +827,7 @@ public:
     bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const override;
     bool AddWatchOnly(const CScript &dest) override;
     bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey) override;
-    bool GetKeyOrigin(const CKeyID& id, KeyOriginInfo& info) const override;
+    bool GetKey(const CKeyID &address, CKey &keyOut) const override;
 };
 
 bool AllUsedKeyStore::GetPubKey(const CKeyID &address, CPubKey &pubkey_out) const
@@ -858,9 +858,8 @@ bool AllUsedKeyStore::AddWatchOnly(const CScript &dest)
     if (ExtractPubKey(dest, pubKey)) {
         mapWatchKeys[pubKey.GetID()] = pubKey;
         usage->map_watch_key_use[pubKey.GetID()] = false;
-        return true;
     }
-    return false;
+    return true;
 }
 
 bool AllUsedKeyStore::AddKeyPubKey(const CKey& key, const CPubKey &pubkey)

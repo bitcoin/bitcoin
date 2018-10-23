@@ -619,5 +619,33 @@ class ImportMultiTest(BitcoinTestFramework):
         address_assert = self.nodes[1].getaddressinfo(multi_sig_script['address'])
         assert_equal(address_assert['solvable'], True)
 
+        # P2SH-P2WPKH address + redeemscript
+        # Should fail since a pubkey is needed to make this solvable
+        sig_address_1 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress(address_type="p2sh-segwit"))
+        pubkeyhash = hash160(hex_str_to_bytes(sig_address_1['pubkey']))
+        pkscript = CScript([OP_0, pubkeyhash])
+        self.log.info("Should fail to import a p2sh-p2wpkh with only the redeem script")
+        result = self.nodes[1].importmulti([{
+            "scriptPubKey": {
+                "address": sig_address_1['address']
+            },
+            "timestamp": "now",
+            "redeemscript": bytes_to_hex_str(pkscript),
+        }])
+        assert_equal(result[0]['success'], False)
+        assert_equal(result[0]['error']['message'], 'Not enough information was provided to make outputs with this scriptPubKey solvable.')
+
+        # P2SH-P2WPKH address + pubkey
+        # Weird case since the redeemScript is added to the wallet by importing the pubkey
+        self.log.info("Should import a p2sh-p2wpkh with only the pubkey")
+        result = self.nodes[1].importmulti([{
+            "scriptPubKey": {
+                "address": sig_address_1['address']
+            },
+            "timestamp": "now",
+            "pubkeys": [ sig_address_1['pubkey'] ]
+        }])
+        assert_equal(result[0]['success'], True)
+
 if __name__ == '__main__':
     ImportMultiTest ().main ()

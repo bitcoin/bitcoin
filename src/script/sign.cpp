@@ -457,6 +457,10 @@ public:
     const BaseSignatureChecker& Checker() const override { return DUMMY_CHECKER; }
     bool CreateSig(const SigningProvider& provider, std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const override
     {
+        // Fetch the key to satisfy things that rely on CreateSig doing GetKey
+        CKey key;
+        provider.GetKey(keyid, key);
+
         // Create a dummy signature that is a valid DER-encoding
         vchSig.assign(m_r_len + m_s_len + 7, '\000');
         vchSig[0] = 0x30;
