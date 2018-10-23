@@ -23,6 +23,7 @@ packages:
 - "autoconf"
 - "libtool"
 - "automake"
+- "cmake"
 - "faketime"
 - "bsdmainutils"
 - "ca-certificates"
