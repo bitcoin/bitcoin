@@ -915,8 +915,8 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "The witnessScript does not match the scriptPubKey or redeemScript");
             }
 
-            // Import into the wallet
-            if (!pwallet->AddWatchOnly(witness_script, timestamp)) {
+            // Add the witness script as watch only only if it is not for P2SH-P2WSH
+            if (!scriptpubkey_script.IsPayToScriptHash() && !pwallet->AddWatchOnly(witness_script, timestamp)) {
                 throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
             }
 
