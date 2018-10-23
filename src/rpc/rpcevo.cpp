@@ -160,7 +160,7 @@ static std::string SignAndSendSpecialTx(const CMutableTransaction& tx)
 void protx_register_help()
 {
     throw std::runtime_error(
-            "protx register \"collateralAddress\" collateralAmount \"ipAndPort\" protocolVersion \"ownerKeyAddr\" \"operatorKeyAddr\" \"votingKeyAddr\" operatorReward \"payoutAddress\"\n"
+            "protx register \"collateralAddress\" collateralAmount \"ipAndPort\" \"ownerKeyAddr\" \"operatorKeyAddr\" \"votingKeyAddr\" operatorReward \"payoutAddress\"\n"
             "\nCreates and sends a ProTx to the network. The resulting transaction will move the specified amount\n"
             "to the address specified by collateralAddress and will then function as the collateral of your\n"
             "masternode.\n"
@@ -173,29 +173,27 @@ void protx_register_help()
             "                         Must be exactly 1000 Dash.\n"
             "3. \"ipAndPort\"           (string, required) IP and port in the form \"IP:PORT\".\n"
             "                         Must be unique on the network. Can be set to 0, which will require a ProUpServTx afterwards.\n"
-            "4. \"protocolVersion\"     (numeric, required) The protocol version of your masternode.\n"
-            "                         Can be 0 to default to the clients protocol version.\n"
-            "5. \"ownerKeyAddr\"        (string, required) The owner key used for payee updates and proposal voting.\n"
+            "4. \"ownerKeyAddr\"        (string, required) The owner key used for payee updates and proposal voting.\n"
             "                         The private key belonging to this address be known in your wallet. The address must\n"
             "                         be unused and must differ from the collateralAddress\n"
-            "6. \"operatorKeyAddr\"     (string, required) The operator key address. The private key does not have to be known by your wallet.\n"
+            "5. \"operatorKeyAddr\"     (string, required) The operator key address. The private key does not have to be known by your wallet.\n"
             "                         It has to match the private key which is later used when operating the masternode.\n"
             "                         If set to \"0\" or an empty string, ownerAddr will be used.\n"
-            "7. \"votingKeyAddr\"       (string, required) The voting key address. The private key does not have to be known by your wallet.\n"
+            "6. \"votingKeyAddr\"       (string, required) The voting key address. The private key does not have to be known by your wallet.\n"
             "                         It has to match the private key which is later used when voting on proposals.\n"
             "                         If set to \"0\" or an empty string, ownerAddr will be used.\n"
-            "8. \"operatorReward\"      (numeric, required) The fraction in %% to share with the operator. If non-zero,\n"
-            "                         \"ipAndPort\" and \"protocolVersion\" must be zero as well. The value must be between 0 and 100.\n"
-            "9. \"payoutAddress\"       (string, required) The dash address to use for masternode reward payments\n"
+            "7. \"operatorReward\"      (numeric, required) The fraction in %% to share with the operator. If non-zero,\n"
+            "                         \"ipAndPort\" must be zero as well. The value must be between 0 and 100.\n"
+            "8. \"payoutAddress\"       (string, required) The dash address to use for masternode reward payments\n"
             "                         Must match \"collateralAddress\"."
             "\nExamples:\n"
-            + HelpExampleCli("protx", "register \"XrVhS9LogauRJGJu2sHuryjhpuex4RNPSb\" 1000 \"1.2.3.4:1234\" 0 \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" 0 \"XrVhS9LogauRJGJu2sHuryjhpuex4RNPSb\"")
+            + HelpExampleCli("protx", "register \"XrVhS9LogauRJGJu2sHuryjhpuex4RNPSb\" 1000 \"1.2.3.4:1234\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" 0 \"XrVhS9LogauRJGJu2sHuryjhpuex4RNPSb\"")
     );
 }
 
 UniValue protx_register(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 10)
+    if (request.fHelp || request.params.size() != 9)
         protx_register_help();
 
     CBitcoinAddress collateralAddress(request.params[1].get_str());
@@ -224,25 +222,21 @@ UniValue protx_register(const JSONRPCRequest& request)
             throw std::runtime_error(strprintf("invalid network address %s", request.params[3].get_str()));
     }
 
-    ptx.nProtocolVersion = ParseInt32V(request.params[4], "protocolVersion");
-    if (ptx.nProtocolVersion == 0 && ptx.addr != CService())
-        ptx.nProtocolVersion = PROTOCOL_VERSION;
-
-    CKey keyOwner = ParsePrivKey(request.params[5].get_str(), true);
-    CBLSPublicKey pubKeyOperator = ParseBLSPubKey(request.params[6].get_str(), "operator BLS address");
+    CKey keyOwner = ParsePrivKey(request.params[4].get_str(), true);
+    CBLSPublicKey pubKeyOperator = ParseBLSPubKey(request.params[5].get_str(), "operator BLS address");
     CKeyID keyIDVoting = keyOwner.GetPubKey().GetID();
-    if (request.params[7].get_str() != "0" && request.params[7].get_str() != "") {
-        keyIDVoting = ParsePubKeyIDFromAddress(request.params[7].get_str(), "voting address");
+    if (request.params[6].get_str() != "0" && request.params[6].get_str() != "") {
+        keyIDVoting = ParsePubKeyIDFromAddress(request.params[6].get_str(), "voting address");
     }
 
-    double operatorReward = ParseDoubleV(request.params[8], "operatorReward");
+    double operatorReward = ParseDoubleV(request.params[7], "operatorReward");
     if (operatorReward < 0 || operatorReward > 100)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "operatorReward must be between 0 and 100");
     ptx.nOperatorReward = (uint16_t)(operatorReward * 100);
 
-    CBitcoinAddress payoutAddress(request.params[9].get_str());
+    CBitcoinAddress payoutAddress(request.params[8].get_str());
     if (!payoutAddress.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid payout address: %s", request.params[9].get_str()));
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid payout address: %s", request.params[8].get_str()));
 
     ptx.keyIDOwner = keyOwner.GetPubKey().GetID();
     ptx.pubKeyOperator = pubKeyOperator;
@@ -271,28 +265,26 @@ UniValue protx_register(const JSONRPCRequest& request)
 void protx_update_service_help()
 {
     throw std::runtime_error(
-            "protx update_service \"proTxHash\" \"ipAndPort\" protocolVersion \"operatorKey\" (\"operatorPayoutAddress\")\n"
-            "\nCreates and sends a ProUpServTx to the network. This will update the address and protocol version\n"
+            "protx update_service \"proTxHash\" \"ipAndPort\" \"operatorKey\" (\"operatorPayoutAddress\")\n"
+            "\nCreates and sends a ProUpServTx to the network. This will update the IP address\n"
             "of a masternode. The operator key of the masternode must be known to your wallet.\n"
             "If this is done for a masternode that got PoSe-banned, the ProUpServTx will also revive this masternode.\n"
             "\nArguments:\n"
             "1. \"proTxHash\"                (string, required) The hash of the initial ProRegTx.\n"
             "2. \"ipAndPort\"                (string, required) IP and port in the form \"IP:PORT\".\n"
             "                              Must be unique on the network.\n"
-            "3. \"protocolVersion\"          (numeric, required) The protocol version of your masternode.\n"
-            "                              Can be 0 to default to the clients protocol version\n"
-            "4. \"operatorKey\"              (string, required) The operator private key belonging to the\n"
+            "3. \"operatorKey\"              (string, required) The operator private key belonging to the\n"
             "                              registered operator public key.\n"
-            "5. \"operatorPayoutAddress\"    (string, optional) The address used for operator reward payments.\n"
+            "4. \"operatorPayoutAddress\"    (string, optional) The address used for operator reward payments.\n"
             "                              Only allowed when the ProRegTx had a non-zero operatorReward value.\n"
             "\nExamples:\n"
-            + HelpExampleCli("protx", "update_service \"0123456701234567012345670123456701234567012345670123456701234567\" \"1.2.3.4:1234\" 0 5a2e15982e62f1e0b7cf9783c64cf7e3af3f90a52d6c40f6f95d624c0b1621cd")
+            + HelpExampleCli("protx", "update_service \"0123456701234567012345670123456701234567012345670123456701234567\" \"1.2.3.4:1234\" 5a2e15982e62f1e0b7cf9783c64cf7e3af3f90a52d6c40f6f95d624c0b1621cd")
     );
 }
 
 UniValue protx_update_service(const JSONRPCRequest& request)
 {
-    if (request.fHelp || (request.params.size() != 4 && request.params.size() != 5))
+    if (request.fHelp || (request.params.size() != 3 && request.params.size() != 4))
         protx_update_service_help();
 
     CProUpServTx ptx;
@@ -303,15 +295,10 @@ UniValue protx_update_service(const JSONRPCRequest& request)
         throw std::runtime_error(strprintf("invalid network address %s", request.params[3].get_str()));
     }
 
-    ptx.nProtocolVersion = ParseInt32V(request.params[3], "protocolVersion");
-    if (ptx.nProtocolVersion == 0) {
-        ptx.nProtocolVersion = PROTOCOL_VERSION;
-    }
+    CBLSSecretKey keyOperator = ParseBLSSecretKey(request.params[3].get_str(), "operatorKey");
 
-    CBLSSecretKey keyOperator = ParseBLSSecretKey(request.params[4].get_str(), "operatorKey");
-
-    if (request.params.size() > 5) {
-        CBitcoinAddress payoutAddress(request.params[5].get_str());
+    if (request.params.size() > 4) {
+        CBitcoinAddress payoutAddress(request.params[4].get_str());
         if (!payoutAddress.IsValid())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid operator payout address: %s", request.params[4].get_str()));
         ptx.scriptOperatorPayout = GetScriptForDestination(payoutAddress.Get());
@@ -410,7 +397,7 @@ void protx_revoke_help()
     throw std::runtime_error(
             "protx revoke \"proTxHash\"\n"
             "\nCreates and sends a ProUpRevTx to the network. This will revoke the operator key of the masternode and\n"
-            "put it into the PoSe-banned state. It will also set the service and protocol version fields of the masternode\n"
+            "put it into the PoSe-banned state. It will also set the service field of the masternode\n"
             "to zero. Use this in case your operator key got compromised or you want to stop providing your service\n"
             "to the masternode owner.\n"
             "The operator key of the masternode must be known to your wallet.\n"

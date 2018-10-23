@@ -33,9 +33,9 @@ std::string CDeterministicMNState::ToString() const
     }
 
     return strprintf("CDeterministicMNState(nRegisteredHeight=%d, nLastPaidHeight=%d, nPoSePenalty=%d, nPoSeRevivedHeight=%d, nPoSeBanHeight=%d, nRevocationReason=%d, "
-                     "keyIDOwner=%s, pubKeyOperator=%s, keyIDVoting=%s, addr=%s, nProtocolVersion=%d, payoutAddress=%s, operatorRewardAddress=%s)",
+                     "keyIDOwner=%s, pubKeyOperator=%s, keyIDVoting=%s, addr=%s, payoutAddress=%s, operatorRewardAddress=%s)",
                      nRegisteredHeight, nLastPaidHeight, nPoSePenalty, nPoSeRevivedHeight, nPoSeBanHeight, nRevocationReason,
-                     keyIDOwner.ToString(), pubKeyOperator.ToString(), keyIDVoting.ToString(), addr.ToStringIPPort(false), nProtocolVersion, payoutAddress, operatorRewardAddress);
+                     keyIDOwner.ToString(), pubKeyOperator.ToString(), keyIDVoting.ToString(), addr.ToStringIPPort(false), payoutAddress, operatorRewardAddress);
 }
 
 void CDeterministicMNState::ToJson(UniValue& obj) const
@@ -52,7 +52,6 @@ void CDeterministicMNState::ToJson(UniValue& obj) const
     obj.push_back(Pair("pubKeyOperator", pubKeyOperator.ToString()));
     obj.push_back(Pair("keyIDVoting", keyIDVoting.ToString()));
     obj.push_back(Pair("addr", addr.ToStringIPPort(false)));
-    obj.push_back(Pair("protocolVersion", nProtocolVersion));
 
     CTxDestination dest;
     if (ExtractDestination(scriptPayout, dest)) {
@@ -395,7 +394,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             CDeterministicMNState dmnState = *dmn->pdmnState;
             dmnState.nRegisteredHeight = nHeight;
 
-            if (proTx.addr == CService() || proTx.nProtocolVersion == 0) {
+            if (proTx.addr == CService()) {
                 // start in banned pdmnState as we need to wait for a ProUpServTx
                 dmnState.nPoSeBanHeight = nHeight;
             }
@@ -421,7 +420,6 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             }
             auto newState = std::make_shared<CDeterministicMNState>(*dmn->pdmnState);
             newState->addr = proTx.addr;
-            newState->nProtocolVersion = proTx.nProtocolVersion;
             newState->scriptOperatorPayout = proTx.scriptOperatorPayout;
 
             if (newState->nPoSeBanHeight != -1) {

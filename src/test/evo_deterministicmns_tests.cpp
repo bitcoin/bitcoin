@@ -103,7 +103,6 @@ static CMutableTransaction CreateProRegTx(SimpleUTXOMap& utxos, int port, const 
     auto inputs = SelectUTXOs(utxos, 1000 * COIN, change);
 
     CProRegTx proTx;
-    proTx.nProtocolVersion = PROTOCOL_VERSION;
     proTx.nCollateralIndex = 0;
     proTx.addr = LookupNumeric("1.1.1.1", port);
     proTx.keyIDOwner = ownerKeyRet.GetPubKey().GetID();
@@ -130,7 +129,6 @@ static CMutableTransaction CreateProUpServTx(SimpleUTXOMap& utxos, const uint256
 
     CProUpServTx proTx;
     proTx.proTxHash = proTxHash;
-    proTx.nProtocolVersion = PROTOCOL_VERSION;
     proTx.addr = LookupNumeric("1.1.1.1", port);
     proTx.scriptOperatorPayout = scriptOperatorPayout;
 

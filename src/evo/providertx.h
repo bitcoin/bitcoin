@@ -22,7 +22,8 @@ public:
 
 public:
     uint16_t nVersion{CURRENT_VERSION}; // message version
-    int32_t nProtocolVersion{0};
+    uint16_t nType{0}; // only 0 supported for now
+    uint16_t nMode{0}; // only 0 supported for now
     uint32_t nCollateralIndex{(uint32_t) - 1};
     CService addr;
     CKeyID keyIDOwner;
@@ -40,7 +41,8 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action)
     {
         READWRITE(nVersion);
-        READWRITE(nProtocolVersion);
+        READWRITE(nType);
+        READWRITE(nMode);
         READWRITE(nCollateralIndex);
         READWRITE(addr);
         READWRITE(keyIDOwner);
@@ -66,7 +68,6 @@ public:
 public:
     uint16_t nVersion{CURRENT_VERSION}; // message version
     uint256 proTxHash;
-    int32_t nProtocolVersion{0};
     CService addr;
     CScript scriptOperatorPayout;
     uint256 inputsHash; // replay protection
@@ -80,7 +81,6 @@ public:
     {
         READWRITE(nVersion);
         READWRITE(proTxHash);
-        READWRITE(nProtocolVersion);
         READWRITE(addr);
         READWRITE(*(CScriptBase*)(&scriptOperatorPayout));
         READWRITE(inputsHash);
@@ -102,6 +102,7 @@ public:
 public:
     uint16_t nVersion{CURRENT_VERSION}; // message version
     uint256 proTxHash;
+    uint16_t nMode{0}; // only 0 supported for now
     CBLSPublicKey pubKeyOperator;
     CKeyID keyIDVoting;
     CScript scriptPayout;
@@ -116,6 +117,7 @@ public:
     {
         READWRITE(nVersion);
         READWRITE(proTxHash);
+        READWRITE(nMode);
         READWRITE(pubKeyOperator);
         READWRITE(keyIDVoting);
         READWRITE(*(CScriptBase*)(&scriptPayout));

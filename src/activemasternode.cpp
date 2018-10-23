@@ -85,13 +85,6 @@ void CActiveDeterministicMasternodeManager::Init()
         return;
     }
 
-    if (mnListEntry->pdmnState->nProtocolVersion != PROTOCOL_VERSION) {
-        state = MASTERNODE_ERROR;
-        strError = "Local protocol version does not match version from ProTx. You may need to update the ProTx";
-        LogPrintf("CActiveDeterministicMasternodeManager::Init -- ERROR: %s", strError);
-        return;
-    }
-
     activeMasternodeInfo.outpoint = COutPoint(mnListEntry->proTxHash, mnListEntry->nCollateralIndex);
     state = MASTERNODE_READY;
 }

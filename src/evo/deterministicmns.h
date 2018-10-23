@@ -34,7 +34,6 @@ public:
     CBLSPublicKey pubKeyOperator;
     CKeyID keyIDVoting;
     CService addr;
-    int32_t nProtocolVersion;
     CScript scriptPayout;
     CScript scriptOperatorPayout;
 
@@ -46,7 +45,6 @@ public:
         pubKeyOperator = proTx.pubKeyOperator;
         keyIDVoting = proTx.keyIDVoting;
         addr = proTx.addr;
-        nProtocolVersion = proTx.nProtocolVersion;
         scriptPayout = proTx.scriptPayout;
     }
     template<typename Stream>
@@ -67,7 +65,6 @@ public:
         READWRITE(pubKeyOperator);
         READWRITE(keyIDVoting);
         READWRITE(addr);
-        READWRITE(nProtocolVersion);
         READWRITE(*(CScriptBase*)(&scriptPayout));
         READWRITE(*(CScriptBase*)(&scriptOperatorPayout));
     }
@@ -76,7 +73,6 @@ public:
     {
         pubKeyOperator = CBLSPublicKey();
         addr = CService();
-        nProtocolVersion = 0;
         scriptOperatorPayout = CScript();
         nRevocationReason = CProUpRevTx::REASON_NOT_SPECIFIED;
     }
@@ -99,7 +95,6 @@ public:
                pubKeyOperator == rhs.pubKeyOperator &&
                keyIDVoting == rhs.keyIDVoting &&
                addr == rhs.addr &&
-               nProtocolVersion == rhs.nProtocolVersion &&
                scriptPayout == rhs.scriptPayout &&
                scriptOperatorPayout == rhs.scriptOperatorPayout;
     }
@@ -221,6 +216,17 @@ public:
     size_t GetAllMNsCount() const
     {
         return mnMap.size();
+    }
+
+    size_t GetValidMNsCount() const
+    {
+        size_t count = 0;
+        for (const auto& p : mnMap) {
+            if (IsMNValid(p.second)) {
+                count++;
+            }
+        }
+        return count;
     }
 
     template<typename Callback>

@@ -312,7 +312,7 @@ class DIP3Test(BitcoinTestFramework):
         mn.blsMnkey = blsKey['secret']
         mn.collateral_address = node.getnewaddress()
 
-        mn.collateral_txid = node.protx('register', mn.collateral_address, '1000', '127.0.0.1:%d' % mn.p2p_port, '0', mn.ownerAddr, mn.operatorAddr, mn.votingAddr, 0, mn.collateral_address)
+        mn.collateral_txid = node.protx('register', mn.collateral_address, '1000', '127.0.0.1:%d' % mn.p2p_port, mn.ownerAddr, mn.operatorAddr, mn.votingAddr, 0, mn.collateral_address)
         rawtx = node.getrawtransaction(mn.collateral_txid, 1)
 
         mn.collateral_vout = -1
@@ -345,7 +345,7 @@ class DIP3Test(BitcoinTestFramework):
         return mn
 
     def test_protx_update_service(self, mn):
-        self.nodes[0].protx('update_service', mn.collateral_txid, '127.0.0.2:%d' % mn.p2p_port, '0', mn.blsMnkey)
+        self.nodes[0].protx('update_service', mn.collateral_txid, '127.0.0.2:%d' % mn.p2p_port, mn.blsMnkey)
         self.nodes[0].generate(1)
         self.sync_all()
         for node in self.nodes:
@@ -355,7 +355,7 @@ class DIP3Test(BitcoinTestFramework):
             assert_equal(mn_list['%s-%d' % (mn.collateral_txid, mn.collateral_vout)]['address'], '127.0.0.2:%d' % mn.p2p_port)
 
         # undo
-        self.nodes[0].protx('update_service', mn.collateral_txid, '127.0.0.1:%d' % mn.p2p_port, '0', mn.blsMnkey)
+        self.nodes[0].protx('update_service', mn.collateral_txid, '127.0.0.1:%d' % mn.p2p_port, mn.blsMnkey)
         self.nodes[0].generate(1)
 
     def force_finish_mnsync(self, node):
@@ -599,13 +599,13 @@ class DIP3Test(BitcoinTestFramework):
         address = node.getnewaddress()
         key = node.getnewaddress()
         blsKey = node.bls('generate')
-        assert_raises_jsonrpc(None, "bad-tx-type", node.protx, 'register', address, '1000', '127.0.0.1:10000', '0', key, blsKey['public'], key, 0, address)
+        assert_raises_jsonrpc(None, "bad-tx-type", node.protx, 'register', address, '1000', '127.0.0.1:10000', key, blsKey['public'], key, 0, address)
 
     def test_success_create_protx(self, node):
         address = node.getnewaddress()
         key = node.getnewaddress()
         blsKey = node.bls('generate')
-        txid = node.protx('register', address, '1000', '127.0.0.1:10000', '0', key, blsKey['public'], key, 0, address)
+        txid = node.protx('register', address, '1000', '127.0.0.1:10000', key, blsKey['public'], key, 0, address)
         rawtx = node.getrawtransaction(txid, 1)
         self.mine_double_spend(node, rawtx['vin'], address, use_mnmerkleroot_from_tip=True)
         self.sync_all()

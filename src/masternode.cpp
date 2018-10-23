@@ -55,7 +55,7 @@ CMasternode::CMasternode(const CMasternodeBroadcast& mnb) :
 {}
 
 CMasternode::CMasternode(const uint256 &proTxHash, const CDeterministicMNCPtr& dmn) :
-    masternode_info_t{ MASTERNODE_ENABLED, dmn->pdmnState->nProtocolVersion, GetAdjustedTime(),
+    masternode_info_t{ MASTERNODE_ENABLED, DMN_PROTO_VERSION, GetAdjustedTime(),
                        COutPoint(proTxHash, dmn->nCollateralIndex), dmn->pdmnState->addr, CKeyID(), dmn->pdmnState->keyIDOwner, dmn->pdmnState->pubKeyOperator, dmn->pdmnState->keyIDVoting},
     fAllowMixingTx(true)
 {
