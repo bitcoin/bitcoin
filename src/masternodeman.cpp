@@ -871,9 +871,6 @@ bool CMasternodeMan::GetMasternodeRanks(CMasternodeMan::rank_pair_vec_t& vecMast
 
 void CMasternodeMan::ProcessMasternodeConnections(CConnman& connman)
 {
-    //we don't care about this for regtest
-    if(Params().NetworkIDString() == CBaseChainParams::REGTEST) return;
-
     std::vector<masternode_info_t> vecMnInfo; // will be empty when no wallet
 #ifdef ENABLE_WALLET
     privateSendClient.GetMixingMasternodesInfo(vecMnInfo);
