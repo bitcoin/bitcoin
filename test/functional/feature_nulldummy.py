@@ -12,14 +12,13 @@ Generate 427 more blocks.
 [Consensus] Check that the new NULLDUMMY rules are not enforced on the 431st block.
 [Policy/Consensus] Check that the new NULLDUMMY rules are enforced on the 432nd block.
 """
+import time
 
 from test_framework.blocktools import create_coinbase, create_block, create_transaction, add_witness_commitment
 from test_framework.messages import CTransaction
 from test_framework.script import CScript
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, bytes_to_hex_str
-
-import time
 
 NULLDUMMY_ERROR = "non-mandatory-script-verify-flag (Dummy CHECKMULTISIG argument must be zero) (code 64)"
 
@@ -42,7 +41,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         # This script tests NULLDUMMY activation, which is part of the 'segwit' deployment, so we go through
         # normal segwit activation here (and don't use the default always-on behaviour).
-        self.extra_args = [['-whitelist=127.0.0.1', '-vbparams=segwit:0:999999999999', '-addresstype=legacy', "-deprecatedrpc=addwitnessaddress"]]
+        self.extra_args = [['-whitelist=127.0.0.1', '-vbparams=segwit:0:999999999999', '-addresstype=legacy']]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -50,14 +49,14 @@ class NULLDUMMYTest(BitcoinTestFramework):
     def run_test(self):
         self.address = self.nodes[0].getnewaddress()
         self.ms_address = self.nodes[0].addmultisigaddress(1, [self.address])['address']
-        self.wit_address = self.nodes[0].addwitnessaddress(self.address)
+        self.wit_address = self.nodes[0].getnewaddress(address_type='p2sh-segwit')
         self.wit_ms_address = self.nodes[0].addmultisigaddress(1, [self.address], '', 'p2sh-segwit')['address']
 
-        self.coinbase_blocks = self.nodes[0].generate(2) # Block 2
+        self.coinbase_blocks = self.nodes[0].generate(2)  # Block 2
         coinbase_txid = []
         for i in self.coinbase_blocks:
             coinbase_txid.append(self.nodes[0].getblock(i)['tx'][0])
-        self.nodes[0].generate(427) # Block 429
+        self.nodes[0].generate(427)  # Block 429
         self.lastblockhash = self.nodes[0].getbestblockhash()
         self.tip = int("0x" + self.lastblockhash, 0)
         self.lastblockheight = 429
@@ -82,7 +81,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
 
         self.log.info("Test 4: Non-NULLDUMMY base multisig transaction is invalid after activation")
         test4tx = create_transaction(self.nodes[0], test2tx.hash, self.address, amount=46)
-        test6txs=[CTransaction(test4tx)]
+        test6txs = [CTransaction(test4tx)]
         trueDummy(test4tx)
         assert_raises_rpc_error(-26, NULLDUMMY_ERROR, self.nodes[0].sendrawtransaction, bytes_to_hex_str(test4tx.serialize_with_witness()), True)
         self.block_submit(self.nodes[0], [test4tx])
@@ -99,8 +98,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
             self.nodes[0].sendrawtransaction(bytes_to_hex_str(i.serialize_with_witness()), True)
         self.block_submit(self.nodes[0], test6txs, True, True)
 
-
-    def block_submit(self, node, txs, witness = False, accept = False):
+    def block_submit(self, node, txs, witness=False, accept=False):
         block = create_block(self.tip, create_coinbase(self.lastblockheight + 1), self.lastblocktime + 1)
         block.nVersion = 4
         for tx in txs:
