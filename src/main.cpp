@@ -4285,7 +4285,7 @@ void static ProcessGetData(CNode* pfrom)
                     }
                 }
                 if (!pushed && inv.type == MSG_BUDGET_VOTE) {
-                    const BudgetDraftVote* item = budget.GetSeenBudgetDraftVote(inv.hash);
+                    const CBudgetVote* item = budget.GetSeenVote(inv.hash);
                     if(item){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
