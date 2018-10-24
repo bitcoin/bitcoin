@@ -13,9 +13,12 @@ TEST_QT_MOC_CPP = \
 if ENABLE_WALLET
 TEST_QT_MOC_CPP += \
   qt/test/moc_addressbooktests.cpp \
-  qt/test/moc_paymentservertests.cpp \
   qt/test/moc_wallettests.cpp
-endif
+if ENABLE_BIP70
+TEST_QT_MOC_CPP += \
+  qt/test/moc_paymentservertests.cpp
+endif # ENABLE_BIP70
+endif # ENABLE_WALLET
 
 TEST_QT_H = \
   qt/test/addressbooktests.h \
@@ -48,10 +51,13 @@ qt_test_test_bitcoin_qt_SOURCES = \
 if ENABLE_WALLET
 qt_test_test_bitcoin_qt_SOURCES += \
   qt/test/addressbooktests.cpp \
-  qt/test/paymentservertests.cpp \
   qt/test/wallettests.cpp \
   wallet/test/wallet_test_fixture.cpp
-endif
+if ENABLE_BIP70
+qt_test_test_bitcoin_qt_SOURCES += \
+  qt/test/paymentservertests.cpp
+endif # ENABLE_BIP70
+endif # ENABLE_WALLET
 
 nodist_qt_test_test_bitcoin_qt_SOURCES = $(TEST_QT_MOC_CPP)
 

@@ -439,8 +439,10 @@ void BitcoinApplication::addWallet(WalletModel* walletModel)
         window->setCurrentWallet(walletModel->getWalletName());
     }
 
+#ifdef ENABLE_BIP70
     connect(walletModel, &WalletModel::coinsSent,
         paymentServer, &PaymentServer::fetchPaymentACK);
+#endif
     connect(walletModel, &WalletModel::unload, this, &BitcoinApplication::removeWallet);
 
     m_wallet_models.push_back(walletModel);
@@ -467,7 +469,9 @@ void BitcoinApplication::initializeResult(bool success)
         // Log this only after AppInitMain finishes, as then logging setup is guaranteed complete
         qWarning() << "Platform customization:" << platformStyle->getName();
 #ifdef ENABLE_WALLET
+#ifdef ENABLE_BIP70
         PaymentServer::LoadRootCAs();
+#endif
         paymentServer->setOptionsModel(optionsModel);
 #endif
 
@@ -536,7 +540,7 @@ WId BitcoinApplication::getMainWinId() const
 
 static void SetupUIArgs()
 {
-#ifdef ENABLE_WALLET
+#if defined(ENABLE_WALLET) && defined(ENABLE_BIP70)
     gArgs.AddArg("-allowselfsignedrootcertificates", strprintf("Allow self signed root certificates (default: %u)", DEFAULT_SELFSIGNED_ROOTCERTS), true, OptionsCategory::GUI);
 #endif
     gArgs.AddArg("-choosedatadir", strprintf("Choose data directory on startup (default: %u)", DEFAULT_CHOOSE_DATADIR), false, OptionsCategory::GUI);
