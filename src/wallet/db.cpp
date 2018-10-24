@@ -107,13 +107,13 @@ void BerkeleyEnvironment::Close()
 
     fDbEnvInit = false;
 
-    for (auto& db : mapDb) {
+    for (auto& db : m_databases) {
         auto count = mapFileUseCount.find(db.first);
         assert(count == mapFileUseCount.end() || count->second == 0);
-        if (db.second) {
-            db.second->close(0);
-            delete db.second;
-            db.second = nullptr;
+        BerkeleyDatabase& database = db.second.get();
+        if (database.m_db) {
+            database.m_db->close(0);
+            database.m_db.reset();
         }
     }
 
@@ -480,7 +480,7 @@ BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const char* pszMode, bo
         if (!env->Open(false /* retry */))
             throw std::runtime_error("BerkeleyBatch: Failed to open database environment.");
 
-        pdb = env->mapDb[strFilename];
+        pdb = database.m_db.get();
         if (pdb == nullptr) {
             int ret;
             std::unique_ptr<Db> pdb_temp = MakeUnique<Db>(env->dbenv.get(), 0);
@@ -525,7 +525,7 @@ BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const char* pszMode, bo
             }
 
             pdb = pdb_temp.release();
-            env->mapDb[strFilename] = pdb;
+            database.m_db.reset(pdb);
 
             if (fCreate && !Exists(std::string("version"))) {
                 bool fTmp = fReadOnly;
@@ -580,12 +580,13 @@ void BerkeleyEnvironment::CloseDb(const std::string& strFile)
 {
     {
         LOCK(cs_db);
-        if (mapDb[strFile] != nullptr) {
+        auto it = m_databases.find(strFile);
+        assert(it != m_databases.end());
+        BerkeleyDatabase& database = it->second.get();
+        if (database.m_db) {
             // Close the database handle
-            Db* pdb = mapDb[strFile];
-            pdb->close(0);
-            delete pdb;
-            mapDb[strFile] = nullptr;
+            database.m_db->close(0);
+            database.m_db.reset();
         }
     }
 }
@@ -603,7 +604,7 @@ void BerkeleyEnvironment::ReloadDbEnv()
     });
 
     std::vector<std::string> filenames;
-    for (auto it : mapDb) {
+    for (auto it : m_databases) {
         filenames.push_back(it.first);
     }
     // Close the individual Db's
