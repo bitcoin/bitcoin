@@ -1449,7 +1449,7 @@ struct tallyitem
     }
 };
 
-static UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool by_label) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool by_label) EXCLUSIVE_LOCKS_REQUIRED(cs_main, pwallet->cs_wallet)
 {
     // Minimum confirmations
     int nMinDepth = 1;

@@ -5196,7 +5196,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(const WalletLocation& loc
     // Try to top up keypool. No-op if the wallet is locked.
     walletInstance->TopUpKeyPool();
 
-    LOCK(cs_main);
+    LOCK2(cs_main, walletInstance->cs_wallet);
 
     CBlockIndex *pindexRescan = chainActive.Genesis();
     if (!gArgs.GetBoolArg("-rescan", false))
@@ -5283,7 +5283,6 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(const WalletLocation& loc
     walletInstance->SetBroadcastTransactions(gArgs.GetBoolArg("-walletbroadcast", DEFAULT_WALLETBROADCAST));
 
     {
-        LOCK(walletInstance->cs_wallet);
         walletInstance->WalletLogPrintf("setExternalKeyPool.size() = %u\n",   walletInstance->KeypoolCountExternalKeys());
         walletInstance->WalletLogPrintf("setInternalKeyPool.size() = %u\n",   walletInstance->KeypoolCountInternalKeys());
         walletInstance->WalletLogPrintf("mapWallet.size() = %u\n",            walletInstance->mapWallet.size());
