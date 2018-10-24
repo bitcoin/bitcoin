@@ -3,6 +3,7 @@
 
 #include <coinjoin/coinjoin-client.h>
 #include <interfaces/node.h>
+#include <base58.h>
 #include <qt/bitcoinamountfield.h>
 #include <qt/callback.h>
 #include <qt/clientmodel.h>
