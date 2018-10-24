@@ -121,7 +121,7 @@ void InstantSend::ProcessMessage(CNode* pfrom, const std::string& strCommand, CD
         CInv inv(MSG_TXLOCK_VOTE, ctx.GetHash());
         pfrom->AddInventoryKnown(inv);
 
-        if (m_txLockVote.find(ctx.GetHash()) == m_txLockVote.end())
+        if (m_txLockVote.find(ctx.GetHash()) != m_txLockVote.end())
             return;
 
         // Check if transaction is old for lock
