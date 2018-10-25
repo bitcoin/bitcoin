@@ -16,7 +16,7 @@ To receive security and update notifications, please subscribe to:
 Notable changes
 ===============
 
-An issue was solved with OSX dmg generation, affecting OSX 10.12 to 10.14,
+An issue was solved with OSX dmg generation, affecting macOS 10.12 to 10.14,
 which could cause Finder to crash on install.
 
 There are no significant changes for other operating systems.
