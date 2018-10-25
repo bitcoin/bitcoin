@@ -14,7 +14,7 @@
 #include <boost/assign/list_of.hpp>
 
 #include <assert.h>
-#include <stdint.h>
+#include <limits>
 
 using namespace boost::assign;
 
@@ -86,7 +86,7 @@ static CBlock FindDevNetGenesisBlock(const CChainParams& params, const CBlock &p
     arith_uint256 bnTarget;
     bnTarget.SetCompact(block.nBits);
 
-    for (uint32_t nNonce = 0; nNonce < UINT32_MAX; nNonce++) {
+    for (uint32_t nNonce = 0; nNonce < std::numeric_limits<uint32_t>::max(); nNonce++) {
         block.nNonce = nNonce;
 
         uint256 hash = block.GetHash();
