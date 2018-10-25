@@ -174,6 +174,11 @@ public:
      */
     int CheckConsistent(size_t expected_bucket_count) const;
     int CheckConsistent(const std::vector<double>& exp_buckets, const std::map<double, unsigned int>& exp_bucket_map) const;
+
+    /**
+     * Copy state, adjusting stats for offset buckets
+     */
+    void ExtendStatsBelow(size_t added_buckets);
 };
 
 bool CBlockPolicyEstimator::IsConsistent() const
@@ -477,6 +482,25 @@ void TxConfirmStats::Write(AutoFile& fileout) const
     fileout << Using<VectorFormatter<VectorFormatter<EncodedDoubleFormatter>>>(failAvg);
 }
 
+void TxConfirmStats::ExtendStatsBelow(size_t added_buckets)
+{
+    assert(m_feerate_avg.size() + added_buckets == buckets.size());
+    if (added_buckets == 0) return;
+
+    m_feerate_avg.insert(m_feerate_avg.begin(), added_buckets, 0.0);
+    txCtAvg.insert(txCtAvg.begin(), added_buckets, 0.0);
+
+    for (unsigned int i = 0; i < confAvg.size(); ++i) {
+        confAvg[i].insert(confAvg[i].begin(), added_buckets, 0.0);
+    }
+
+    for (unsigned int i = 0; i < failAvg.size(); ++i) {
+        failAvg[i].insert(failAvg[i].begin(), added_buckets, 0.0);
+    }
+
+    resizeInMemoryCounters(buckets.size());
+}
+
 void TxConfirmStats::Read(AutoFile& filein, int nFileVersion, size_t numBuckets)
 {
     // Read data file and do some very basic sanity checking
@@ -609,12 +633,15 @@ bool CBlockPolicyEstimator::_removeTx(const uint256& hash, bool inBlock)
     }
 }
 
-CBlockPolicyEstimator::CBlockPolicyEstimator(const fs::path& estimation_filepath)
+CBlockPolicyEstimator::CBlockPolicyEstimator(const fs::path& estimation_filepath, double min_bucket_feerate)
     : m_estimation_filepath{estimation_filepath}, nBestSeenHeight{0}, firstRecordedHeight{0}, historicalFirst{0}, historicalBest{0}, trackedTxs{0}, untrackedTxs{0}
 {
-    static_assert(MIN_BUCKET_FEERATE > 0, "Min feerate must be nonzero");
+    assert(0 < min_bucket_feerate);
+    static_assert(BASE_BUCKET_FEERATE > 0, "Base feerate must be nonzero");
+    static_assert(BASE_BUCKET_FEERATE < MAX_BUCKET_FEERATE, "Max feerate must be greater than base feerate");
 
-    for (double boundary = MIN_BUCKET_FEERATE; boundary <= MAX_BUCKET_FEERATE; boundary *= FEE_SPACING) {
+    ExtendBucketsUpTo(BASE_BUCKET_FEERATE, min_bucket_feerate);
+    for (double boundary = BASE_BUCKET_FEERATE; boundary <= MAX_BUCKET_FEERATE; boundary *= FEE_SPACING) {
         buckets.push_back(boundary);
     }
     buckets.push_back(INF_FEERATE);
@@ -641,6 +668,20 @@ void CBlockPolicyEstimator::InitBucketMap()
     for (size_t bucketIndex = 0; bucketIndex < buckets.size(); ++bucketIndex) {
         bucketMap[buckets[bucketIndex]] = bucketIndex;
     }
+}
+
+size_t CBlockPolicyEstimator::ExtendBucketsUpTo(double base, double min)
+{
+    if (base <= min) return 0;
+
+    std::vector<double> below;
+    double bucketBoundary = base;
+    while (bucketBoundary > min) {
+        bucketBoundary /= FEE_SPACING;
+        below.push_back(bucketBoundary);
+    }
+    buckets.insert(buckets.begin(), below.rbegin(), below.rend());
+    return below.size();
 }
 
 void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, bool validFeeEstimate)
@@ -1024,8 +1065,10 @@ bool CBlockPolicyEstimator::Write(AutoFile& fileout) const
     return true;
 }
 
-bool CBlockPolicyEstimator::Read(AutoFile& filein)
+bool CBlockPolicyEstimator::Read(AutoFile& filein, double min_bucket_feerate)
 {
+    assert(0 < min_bucket_feerate);
+
     try {
         LOCK(m_cs_fee_estimator);
 
@@ -1074,10 +1117,17 @@ bool CBlockPolicyEstimator::Read(AutoFile& filein)
                 throw std::runtime_error("Corrupt estimates file. Long estimates don't pass consistency checks");
 
             // Fee estimates file parsed correctly
-            // Copy buckets from file and refresh our bucketmap
+
+            // Copy buckets from file, extend, and refresh our bucketmap
             buckets = fileBuckets;
+            const size_t added_before = ExtendBucketsUpTo(buckets.front(), min_bucket_feerate);
             bucketMap.clear();
             InitBucketMap();
+
+            // Extend stats to match extended buckets
+            fileFeeStats->ExtendStatsBelow(added_before);
+            fileShortStats->ExtendStatsBelow(added_before);
+            fileLongStats->ExtendStatsBelow(added_before);
 
             // Destroy old TxConfirmStats and point to new ones that already reference buckets and bucketMap
             feeStats = std::move(fileFeeStats);

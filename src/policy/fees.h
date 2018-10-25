@@ -164,26 +164,27 @@ private:
     static constexpr double SUFFICIENT_TXS_SHORT = 0.5;
 
     /** Minimum and Maximum values for tracking feerates
-     * The MIN_BUCKET_FEERATE should just be set to the lowest reasonable feerate we
-     * might ever want to track.  Historically this has been 1000 since it was
-     * inheriting DEFAULT_MIN_RELAY_TX_FEE and changing it is disruptive as it
-     * invalidates old estimates files. So leave it at 1000 unless it becomes
-     * necessary to lower it, and then lower it substantially.
+     * The MIN_BUCKET_FEERATE and MAX_BUCKET_FEERATE should just be set to
+     * the lowest and highest reasonable feerate we might ever want to track.
      */
-    static constexpr double MIN_BUCKET_FEERATE = 1000;
     static constexpr double MAX_BUCKET_FEERATE = 1e7;
 
     /** Spacing of FeeRate buckets
-     * We have to lump transactions into buckets based on feerate, but we want to be able
-     * to give accurate estimates over a large range of potential feerates
-     * Therefore it makes sense to exponentially space the buckets
+     * We have to lump transactions into buckets based on feerate,
+     * but we want to be able to give accurate estimates over a large
+     * range of potential feerates. Therefore it makes sense to exponentially
+     * space the buckets, which we do via a factor of FEE_SPACING. In order
+     * to support adjusting the MIN and MAX feerates above without invalidating
+     * the buckets, we specify a BASE level for the buckets that we repeatedly
+     * multiply (or divide) by the SPACING until we reach the MAX (or MIN).
      */
+    static constexpr double BASE_BUCKET_FEERATE = 1000;
     static constexpr double FEE_SPACING = 1.05;
 
     const fs::path m_estimation_filepath;
 public:
     /** Create new BlockPolicyEstimator and initialize stats tracking classes with default values */
-    CBlockPolicyEstimator(const fs::path& estimation_filepath);
+    CBlockPolicyEstimator(const fs::path& estimation_filepath, double min_bucket_feerate = BASE_BUCKET_FEERATE);
     ~CBlockPolicyEstimator();
 
     /** Process all the transactions that have been included in a block */
@@ -224,7 +225,7 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
     /** Read estimation data from a file */
-    bool Read(AutoFile& filein)
+    bool Read(AutoFile& filein, double min_bucket_feerate = BASE_BUCKET_FEERATE)
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
     /** Empty mempool transactions on shutdown to record failure to confirm for txs still in mempool */
@@ -278,6 +279,10 @@ private:
      * Return value is 0 if no problems were found, otherwise
      * is an internal value that can be used for debugging. */
     int CheckConsistent() const EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
+
+    /** Extend buckets at the lower end, up to base, with values above min
+     * Returns numbr of added buckets */
+    size_t ExtendBucketsUpTo(double base, double min) EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
 
     /** Process a transaction confirmed in a block*/
     bool processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry) EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
