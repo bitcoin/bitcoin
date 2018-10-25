@@ -531,14 +531,13 @@ CBlockPolicyEstimator::CBlockPolicyEstimator(const fs::path& estimation_filepath
     : m_estimation_filepath{estimation_filepath}, nBestSeenHeight{0}, firstRecordedHeight{0}, historicalFirst{0}, historicalBest{0}, trackedTxs{0}, untrackedTxs{0}
 {
     static_assert(MIN_BUCKET_FEERATE > 0, "Min feerate must be nonzero");
-    size_t bucketIndex = 0;
 
-    for (double bucketBoundary = MIN_BUCKET_FEERATE; bucketBoundary <= MAX_BUCKET_FEERATE; bucketBoundary *= FEE_SPACING, bucketIndex++) {
-        buckets.push_back(bucketBoundary);
-        bucketMap[bucketBoundary] = bucketIndex;
+    for (double boundary = MIN_BUCKET_FEERATE; boundary <= MAX_BUCKET_FEERATE; boundary *= FEE_SPACING) {
+        buckets.push_back(boundary);
     }
     buckets.push_back(INF_FEERATE);
-    bucketMap[INF_FEERATE] = bucketIndex;
+
+    InitBucketMap();
     assert(bucketMap.size() == buckets.size());
 
     feeStats = std::unique_ptr<TxConfirmStats>(new TxConfirmStats(buckets, bucketMap, MED_BLOCK_PERIODS, MED_DECAY, MED_SCALE));
@@ -553,6 +552,14 @@ CBlockPolicyEstimator::CBlockPolicyEstimator(const fs::path& estimation_filepath
 }
 
 CBlockPolicyEstimator::~CBlockPolicyEstimator() = default;
+
+void CBlockPolicyEstimator::InitBucketMap()
+{
+    assert(bucketMap.empty());
+    for (size_t bucketIndex = 0; bucketIndex < buckets.size(); ++bucketIndex) {
+        bucketMap[buckets[bucketIndex]] = bucketIndex;
+    }
+}
 
 void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, bool validFeeEstimate)
 {
@@ -981,9 +988,7 @@ bool CBlockPolicyEstimator::Read(AutoFile& filein)
             // Copy buckets from file and refresh our bucketmap
             buckets = fileBuckets;
             bucketMap.clear();
-            for (unsigned int i = 0; i < buckets.size(); i++) {
-                bucketMap[buckets[i]] = i;
-            }
+            InitBucketMap();
 
             // Destroy old TxConfirmStats and point to new ones that already reference buckets and bucketMap
             feeStats = std::move(fileFeeStats);
