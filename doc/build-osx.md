@@ -20,9 +20,8 @@ Dependencies
 
 See [dependencies.md](dependencies.md) for a complete overview.
 
-See [dependencies.md](dependencies.md) for a complete overview.
 
-If you want to build the disk image with `make deploy` (.dmg / optional), you need RSVG
+If you want to build the disk image with `make deploy` (.dmg / optional), you need RSVG:
 
     brew install librsvg
 
@@ -30,7 +29,7 @@ Berkeley DB
 -----------
 It is recommended to use Berkeley DB 4.8. If you have to build it yourself,
 you can use [the installation script included in contrib/](/contrib/install_db4.sh)
-like so
+like so:
 
 ```shell
 ./contrib/install_db4.sh .
@@ -38,12 +37,12 @@ like so
 
 from the root of the repository.
 
-**Note**: You only need Berkeley DB if the wallet is enabled (see the section *Disable-Wallet mode* below).
+**Note**: You only need Berkeley DB if the wallet is enabled (see [*Disable-wallet mode*](/doc/build-osx.md#disable-wallet-mode)).
 
 Build Chaincoin Core
 ------------------------
 
-1. Clone the Chaincoin Core source code and cd into `chaincoin`
+1. Clone the Chaincoin Core source code:
 
         git clone https://github.com/chaincoin/chaincoin
         cd chaincoin
@@ -82,13 +81,13 @@ Running
 
 Chaincoin Core is now available at `./src/chaincoind`
 
-Before running, it's recommended that you create an RPC configuration file.
+Before running, it's recommended that you create an RPC configuration file:
 
     echo -e "rpcuser=chaincoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Chaincoin/chaincoin.conf"
 
     chmod 600 "/Users/${USER}/Library/Application Support/Chaincoin/chaincoin.conf"
 
-The first time you run chaincoind, it will start downloading the blockchain. This process could take several hours.
+The first time you run chaincoind, it will start downloading the blockchain. This process could take many hours, or even days on slower than average systems.
 
 You can monitor the download process by looking at the debug.log file:
 
@@ -105,6 +104,6 @@ Other commands:
 Notes
 -----
 
-* Tested on OS X 10.10 Yosemite through macOS 10.13 High Sierra on 64-bit Intel processors only.
+* Tested on OS X 10.11 El Capitan through macOS 10.14 Mojave on 64-bit Intel processors only.
 
 * Building with downloaded Qt binaries is not officially supported. See the notes in [#7714](https://github.com/bitcoin/bitcoin/issues/7714)
