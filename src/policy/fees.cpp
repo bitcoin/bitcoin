@@ -939,6 +939,11 @@ bool CBlockPolicyEstimator::Read(AutoFile& filein)
 {
     try {
         LOCK(m_cs_fee_estimator);
+
+        // Strategy: read from file into local variables, throwing a runtime
+        // error if there's a parsing problem. Only copy into member variables
+        // once parsing has fully succeeded.
+
         int nVersionRequired, nVersionThatWrote;
         filein >> nVersionRequired >> nVersionThatWrote;
         if (nVersionRequired > CLIENT_VERSION) {
