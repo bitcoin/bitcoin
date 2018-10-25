@@ -127,7 +127,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 {
     CAmount total = 0;
     bool fSubtractFeeFromAmount = false;
-    bool fPrivateSend = true;
+    bool fPrivateSend = false;
     QList<SendCoinsRecipient> recipients = transaction.getRecipients();
     std::vector<CRecipient> vecSend;
 
@@ -142,11 +142,9 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
     // Pre-check input data for validity
     for (const SendCoinsRecipient &rcp : recipients)
     {
-        if (!rcp.fPrivateSend)
-        {
-            fPrivateSend = false;
-            continue;
-        }
+        if (rcp.fPrivateSend)
+            fPrivateSend = true;
+
         if (rcp.fSubtractFeeFromAmount)
             fSubtractFeeFromAmount = true;
 
