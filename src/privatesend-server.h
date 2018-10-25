@@ -25,7 +25,7 @@ private:
     bool fUnitTest;
 
     /// Add a clients entry to the pool
-    bool AddEntry(const CDarkSendEntry& entryNew, PoolMessage& nMessageIDRet);
+    bool AddEntry(const CPrivateSendEntry& entryNew, PoolMessage& nMessageIDRet);
     /// Add signature to a txin
     bool AddScriptSig(const CTxIn& txin);
 
@@ -41,9 +41,9 @@ private:
     void CommitFinalTransaction(CConnman& connman);
 
     /// Is this nDenom and txCollateral acceptable?
-    bool IsAcceptableDSA(const CDarksendAccept& dsa, PoolMessage &nMessageIDRet);
-    bool CreateNewSession(const CDarksendAccept& dsa, PoolMessage &nMessageIDRet, CConnman& connman);
-    bool AddUserToExistingSession(const CDarksendAccept& dsa, PoolMessage &nMessageIDRet);
+    bool IsAcceptableDSA(const CPrivateSendAccept& dsa, PoolMessage &nMessageIDRet);
+    bool CreateNewSession(const CPrivateSendAccept& dsa, PoolMessage &nMessageIDRet, CConnman& connman);
+    bool AddUserToExistingSession(const CPrivateSendAccept& dsa, PoolMessage &nMessageIDRet);
     /// Do we have enough users to take entries?
     bool IsSessionReady() { return (int)vecSessionCollaterals.size() >= CPrivateSend::GetMaxPoolTransactions(); }
 

@@ -45,24 +45,24 @@ private:
     static const int TIMEOUT = 15;
 
     CService addr;
-    CDarksendAccept dsa;
+    CPrivateSendAccept dsa;
     int64_t nTimeCreated;
 
 public:
     CPendingDsaRequest():
         addr(CService()),
-        dsa(CDarksendAccept()),
+        dsa(CPrivateSendAccept()),
         nTimeCreated(0)
     {}
 
-    CPendingDsaRequest(const CService& addr_, const CDarksendAccept& dsa_):
+    CPendingDsaRequest(const CService& addr_, const CPrivateSendAccept& dsa_):
         addr(addr_),
         dsa(dsa_),
         nTimeCreated(GetTime())
     {}
 
     CService GetAddr() { return addr; }
-    CDarksendAccept GetDSA() { return dsa; }
+    CPrivateSendAccept GetDSA() { return dsa; }
     bool IsExpired() { return GetTime() - nTimeCreated > TIMEOUT; }
 
     friend bool operator==(const CPendingDsaRequest& a, const CPendingDsaRequest& b)
@@ -126,7 +126,7 @@ private:
     /// As a client, check and sign the final transaction
     bool SignFinalTransaction(const CTransaction& finalTransactionNew, CNode* pnode, CConnman& connman);
 
-    void RelayIn(const CDarkSendEntry& entry, CConnman& connman);
+    void RelayIn(const CPrivateSendEntry& entry, CConnman& connman);
 
     void SetNull();
 

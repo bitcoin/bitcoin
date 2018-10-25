@@ -1224,7 +1224,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                 }
 
                 if (!push && inv.type == MSG_DSTX) {
-                    CDarksendBroadcastTx dstx = CPrivateSend::GetDSTX(inv.hash);
+                    CPrivateSendBroadcastTx dstx = CPrivateSend::GetDSTX(inv.hash);
                     if(dstx) {
                         connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::DSTX, dstx));
                         push = true;
@@ -1940,7 +1940,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         std::vector<uint256> vEraseQueue;
         CTransactionRef ptx;
         CTxLockRequest txLockRequest;
-        CDarksendBroadcastTx dstx;
+        CPrivateSendBroadcastTx dstx;
         int nInvType = MSG_TX;
         bool fCanAutoLock = false;
 
