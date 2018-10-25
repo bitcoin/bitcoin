@@ -40,8 +40,8 @@ public:
     ~MasternodeList();
 
     int getCount() {return clientModel->node().MNConfigCount();}
-    void setClientModel(ClientModel *clientModel);
-    void setWalletModel(WalletModel *walletModel);
+    void setClientModel(ClientModel *_clientModel);
+    void setWalletModel(WalletModel *_walletmodel);
     void ShowQRCode(std::string strAlias);
     void StartAlias(std::string strAlias);
     void StartAll(std::string strCommand = "start-all");

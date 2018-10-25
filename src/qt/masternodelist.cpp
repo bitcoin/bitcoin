@@ -79,19 +79,19 @@ MasternodeList::~MasternodeList()
     delete ui;
 }
 
-void MasternodeList::setClientModel(ClientModel *model)
+void MasternodeList::setClientModel(ClientModel *_clientmodel)
 {
-    this->clientModel = model;
-    if(model) {
+    this->clientModel = _clientmodel;
+    if(_clientmodel) {
         // try to update list when masternode count changes
         connect(clientModel, SIGNAL(strMasternodesChanged(QString)), this, SLOT(updateNodeList()));
     }
 }
 
-void MasternodeList::setWalletModel(WalletModel *model)
+void MasternodeList::setWalletModel(WalletModel *_walletmodel)
 {
-    this->walletModel = model;
-    if(model) {
+    this->walletModel = _walletmodel;
+    if(_walletmodel) {
         updateMyNodeList(true);
         updateNodeList();
     }
