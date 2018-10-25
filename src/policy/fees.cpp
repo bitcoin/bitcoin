@@ -637,7 +637,8 @@ CBlockPolicyEstimator::CBlockPolicyEstimator(const fs::path& estimation_filepath
     : m_estimation_filepath{estimation_filepath}, nBestSeenHeight{0}, firstRecordedHeight{0}, historicalFirst{0}, historicalBest{0}, trackedTxs{0}, untrackedTxs{0}
 {
     assert(0 < min_bucket_feerate);
-    static_assert(BASE_BUCKET_FEERATE > 0, "Base feerate must be nonzero");
+    static_assert(MIN_BUCKET_FEERATE > 0, "Min feerate must be nonzero");
+    static_assert(MIN_BUCKET_FEERATE <= BASE_BUCKET_FEERATE, "Min feerate cannot be greater than base feerate");
     static_assert(BASE_BUCKET_FEERATE < MAX_BUCKET_FEERATE, "Max feerate must be greater than base feerate");
 
     ExtendBucketsUpTo(BASE_BUCKET_FEERATE, min_bucket_feerate);

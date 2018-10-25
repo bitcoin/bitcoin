@@ -167,6 +167,7 @@ private:
      * The MIN_BUCKET_FEERATE and MAX_BUCKET_FEERATE should just be set to
      * the lowest and highest reasonable feerate we might ever want to track.
      */
+    static constexpr double MIN_BUCKET_FEERATE = 4;
     static constexpr double MAX_BUCKET_FEERATE = 1e7;
 
     /** Spacing of FeeRate buckets
@@ -184,7 +185,7 @@ private:
     const fs::path m_estimation_filepath;
 public:
     /** Create new BlockPolicyEstimator and initialize stats tracking classes with default values */
-    CBlockPolicyEstimator(const fs::path& estimation_filepath, double min_bucket_feerate = BASE_BUCKET_FEERATE);
+    CBlockPolicyEstimator(const fs::path& estimation_filepath, double min_bucket_feerate = MIN_BUCKET_FEERATE);
     ~CBlockPolicyEstimator();
 
     /** Process all the transactions that have been included in a block */
@@ -225,7 +226,7 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
     /** Read estimation data from a file */
-    bool Read(AutoFile& filein, double min_bucket_feerate = BASE_BUCKET_FEERATE)
+    bool Read(AutoFile& filein, double min_bucket_feerate = MIN_BUCKET_FEERATE)
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
     /** Empty mempool transactions on shutdown to record failure to confirm for txs still in mempool */
