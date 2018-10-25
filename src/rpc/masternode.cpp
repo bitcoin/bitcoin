@@ -597,89 +597,6 @@ UniValue masternode_genkey(const JSONRPCRequest& request)
     return CBitcoinSecret(secret).ToString();
 }
 
-void masternode_info_help()
-{
-    throw std::runtime_error(
-            "masternode info \"proTxHash\"\n"
-            "Print masternode information of specified masternode\n"
-            "\nArguments:\n"
-            "1. proTxHash        (string, required) proTxHash of masternode\n"
-    );
-}
-
-UniValue masternode_info(const JSONRPCRequest& request)
-{
-    if (request.fHelp || request.params.size() != 2)
-        masternode_info_help();
-
-    std::string strProTxHash = request.params[1].get_str();
-    if (!IsHex(strProTxHash) || strProTxHash.size() != 64)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid \"proTxHash\"");
-
-    uint256 proTxHash;
-    proTxHash.SetHex(strProTxHash);
-
-    CTransactionRef tx;
-    uint256 hashBlock;
-
-    auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(proTxHash);
-    if (!dmn) {
-        tx = mempool.get(proTxHash);
-        if (tx) {
-            if (tx->nVersion < 3 || tx->nType != TRANSACTION_PROVIDER_REGISTER)
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "TX is not a ProTx");
-            CProRegTx tmpProTx;
-            if (!GetTxPayload(*tx, tmpProTx))
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "TX is not a valid ProTx");
-            dmn = std::make_shared<CDeterministicMN>(tx->GetHash(), tmpProTx);
-        } else {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "ProTx not found");
-        }
-    } else {
-        if (!GetTransaction(proTxHash, tx, Params().GetConsensus(), hashBlock, true))
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Parent transaction of ProTx not found");
-
-        if (!mapBlockIndex.count(hashBlock))
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Parent transaction of ProTx not found");
-    }
-
-    UniValue obj(UniValue::VOBJ);
-
-    UniValue stateObj;
-    dmn->pdmnState->ToJson(stateObj);
-    obj.push_back(Pair("state", stateObj));
-
-    if (!hashBlock.IsNull()) {
-        UniValue blockObj(UniValue::VOBJ);
-        blockObj.push_back(Pair("blockhash", hashBlock.GetHex()));
-
-        LOCK(cs_main);
-        BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
-        if (mi != mapBlockIndex.end() && (*mi).second) {
-            CBlockIndex *pindex = (*mi).second;
-            if (chainActive.Contains(pindex)) {
-                blockObj.push_back(Pair("height", pindex->nHeight));
-                blockObj.push_back(Pair("confirmations", 1 + chainActive.Height() - pindex->nHeight));
-                blockObj.push_back(Pair("time", pindex->GetBlockTime()));
-                blockObj.push_back(Pair("blocktime", pindex->GetBlockTime()));
-            } else {
-                blockObj.push_back(Pair("height", -1));
-                blockObj.push_back(Pair("confirmations", 0));
-            }
-        }
-        obj.push_back(Pair("block", blockObj));
-
-        if (GetUTXOHeight(COutPoint(proTxHash, dmn->nCollateralIndex)) < 0) {
-            obj.push_back(Pair("isSpent", true));
-        }
-
-    } else {
-        obj.push_back(Pair("fromMempool", true));
-    }
-
-    return obj;
-}
-
 void masternode_list_conf_help()
 {
     throw std::runtime_error(
@@ -741,7 +658,8 @@ UniValue masternode_status(const JSONRPCRequest& request)
         auto dmn = activeMasternodeManager->GetDMN();
         if (dmn) {
             mnObj.push_back(Pair("proTxHash", dmn->proTxHash.ToString()));
-            mnObj.push_back(Pair("collateralIndex", (int)dmn->nCollateralIndex));
+            mnObj.push_back(Pair("collateralHash", dmn->collateralOutpoint.hash.ToString()));
+            mnObj.push_back(Pair("collateralIndex", (int)dmn->collateralOutpoint.n));
             UniValue stateObj;
             dmn->pdmnState->ToJson(stateObj);
             mnObj.push_back(Pair("dmnState", stateObj));
@@ -902,8 +820,6 @@ UniValue masternode(const JSONRPCRequest& request)
 #endif // ENABLE_WALLET
     } else if (strCommand == "genkey") {
         return masternode_genkey(request);
-    } else if (strCommand == "info") {
-        return masternode_info(request);
     } else if (strCommand == "list-conf") {
         return masternode_list_conf(request);
 #ifdef ENABLE_WALLET

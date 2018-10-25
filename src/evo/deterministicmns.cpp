@@ -66,7 +66,7 @@ void CDeterministicMNState::ToJson(UniValue& obj) const
 
 std::string CDeterministicMN::ToString() const
 {
-    return strprintf("CDeterministicMN(proTxHash=%s, nCollateralIndex=%d, nOperatorReward=%f, state=%s", proTxHash.ToString(), nCollateralIndex, (double)nOperatorReward / 100, pdmnState->ToString());
+    return strprintf("CDeterministicMN(proTxHash=%s, collateralOutpoint=%s, nOperatorReward=%f, state=%s", proTxHash.ToString(), collateralOutpoint.ToStringShort(), (double)nOperatorReward / 100, pdmnState->ToString());
 }
 
 void CDeterministicMN::ToJson(UniValue& obj) const
@@ -78,7 +78,8 @@ void CDeterministicMN::ToJson(UniValue& obj) const
     pdmnState->ToJson(stateObj);
 
     obj.push_back(Pair("proTxHash", proTxHash.ToString()));
-    obj.push_back(Pair("collateralIndex", (int)nCollateralIndex));
+    obj.push_back(Pair("collateralHash", collateralOutpoint.hash.ToString()));
+    obj.push_back(Pair("collateralIndex", (int)collateralOutpoint.n));
     obj.push_back(Pair("operatorReward", (double)nOperatorReward / 100));
     obj.push_back(Pair("state", stateObj));
 }
@@ -139,6 +140,11 @@ CDeterministicMNCPtr CDeterministicMNList::GetMNByOperatorKey(const CBLSPublicKe
         }
     }
     return nullptr;
+}
+
+CDeterministicMNCPtr CDeterministicMNList::GetMNByCollateral(const COutPoint& collateralOutpoint) const
+{
+    return GetUniquePropertyMN(collateralOutpoint);
 }
 
 static int CompareByLastPaid_GetHeight(const CDeterministicMN &dmn)
@@ -253,6 +259,7 @@ void CDeterministicMNList::AddMN(const CDeterministicMNCPtr &dmn)
 {
     assert(!mnMap.find(dmn->proTxHash));
     mnMap = mnMap.set(dmn->proTxHash, dmn);
+    AddUniqueProperty(dmn, dmn->collateralOutpoint);
     AddUniqueProperty(dmn, dmn->pdmnState->addr);
     AddUniqueProperty(dmn, dmn->pdmnState->keyIDOwner);
     AddUniqueProperty(dmn, dmn->pdmnState->pubKeyOperator);
@@ -276,6 +283,7 @@ void CDeterministicMNList::RemoveMN(const uint256& proTxHash)
 {
     auto dmn = GetMN(proTxHash);
     assert(dmn != nullptr);
+    DeleteUniqueProperty(dmn, dmn->collateralOutpoint);
     DeleteUniqueProperty(dmn, dmn->pdmnState->addr);
     DeleteUniqueProperty(dmn, dmn->pdmnState->keyIDOwner);
     DeleteUniqueProperty(dmn, dmn->pdmnState->pubKeyOperator);
@@ -368,13 +376,12 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
 
         // check if any existing MN collateral is spent by this transaction
         for (const auto& in : tx.vin) {
-            const uint256& proTxHash = in.prevout.hash;
-            auto dmn = newList.GetMN(proTxHash);
-            if (dmn && dmn->nCollateralIndex == in.prevout.n) {
-                newList.RemoveMN(proTxHash);
+            auto dmn = newList.GetMNByCollateral(in.prevout);
+            if (dmn && dmn->collateralOutpoint == in.prevout) {
+                newList.RemoveMN(dmn->proTxHash);
 
-                LogPrintf("CDeterministicMNManager::%s -- MN %s removed from list because collateral was spent. nHeight=%d, mapCurMNs.allMNsCount=%d\n",
-                          __func__, proTxHash.ToString(), nHeight, newList.GetAllMNsCount());
+                LogPrintf("CDeterministicMNManager::%s -- MN %s removed from list because collateral was spent. collateralOutpoint=%s, nHeight=%d, mapCurMNs.allMNsCount=%d\n",
+                          __func__, dmn->proTxHash.ToString(), dmn->collateralOutpoint.ToStringShort(), nHeight, newList.GetAllMNsCount());
             }
         }
 
@@ -389,7 +396,25 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             if (newList.HasUniqueProperty(proTx.keyIDOwner) || newList.HasUniqueProperty(proTx.pubKeyOperator))
                 return _state.DoS(100, false, REJECT_CONFLICT, "bad-protx-dup-key");
 
-            auto dmn = std::make_shared<CDeterministicMN>(tx.GetHash(), proTx);
+            auto dmn = std::make_shared<CDeterministicMN>();
+            dmn->proTxHash = tx.GetHash();
+
+            // collateralOutpoint is either pointing to an external collateral or to the ProRegTx itself
+            if (proTx.collateralOutpoint.hash.IsNull()) {
+                dmn->collateralOutpoint = COutPoint(tx.GetHash(), proTx.collateralOutpoint.n);
+            } else {
+                dmn->collateralOutpoint = proTx.collateralOutpoint;
+            }
+
+            Coin coin;
+            if (!proTx.collateralOutpoint.hash.IsNull() && (!GetUTXOCoin(dmn->collateralOutpoint, coin) || coin.out.nValue != 1000 * COIN)) {
+                // should actually never get to this point as CheckProRegTx should have handled this case.
+                // We do this additional check nevertheless to be 100% sure
+                return _state.DoS(100, false, REJECT_INVALID, "bad-protx-collateral");
+            }
+
+            dmn->nOperatorReward = proTx.nOperatorReward;
+            dmn->pdmnState = std::make_shared<CDeterministicMNState>(proTx);
 
             CDeterministicMNState dmnState = *dmn->pdmnState;
             dmnState.nRegisteredHeight = nHeight;
@@ -550,26 +575,45 @@ CDeterministicMNList CDeterministicMNManager::GetListAtChainTip()
     return GetListForBlock(tipBlockHash);
 }
 
-CDeterministicMNCPtr CDeterministicMNManager::GetMN(const uint256& blockHash, const uint256& proTxHash)
+bool CDeterministicMNManager::HasValidMNCollateralAtChainTip(const COutPoint& outpoint)
 {
-    auto mnList = GetListForBlock(blockHash);
-    return mnList.GetMN(proTxHash);
+    auto mnList = GetListAtChainTip();
+    auto dmn = mnList.GetMNByCollateral(outpoint);
+    return dmn && mnList.IsMNValid(dmn);
 }
 
-bool CDeterministicMNManager::HasValidMNAtBlock(const uint256& blockHash, const uint256& proTxHash)
+bool CDeterministicMNManager::HasMNCollateralAtChainTip(const COutPoint& outpoint)
 {
-    auto mnList = GetListForBlock(blockHash);
-    return mnList.IsMNValid(proTxHash);
-}
-
-bool CDeterministicMNManager::HasValidMNAtChainTip(const uint256& proTxHash)
-{
-    return GetListAtChainTip().IsMNValid(proTxHash);
+    auto mnList = GetListAtChainTip();
+    auto dmn = mnList.GetMNByCollateral(outpoint);
+    return dmn != nullptr;
 }
 
 int64_t CDeterministicMNManager::GetSpork15Value()
 {
     return sporkManager.GetSporkValue(SPORK_15_DETERMINISTIC_MNS_ENABLED);
+}
+
+bool CDeterministicMNManager::IsProTxWithCollateral(const CTransactionRef& tx, uint32_t n)
+{
+    if (tx->nVersion < 3 || tx->nType != TRANSACTION_PROVIDER_REGISTER) {
+        return false;
+    }
+    CProRegTx proTx;
+    if (!GetTxPayload(*tx, proTx)) {
+        return false;
+    }
+
+    if (!proTx.collateralOutpoint.hash.IsNull()) {
+        return false;
+    }
+    if (proTx.collateralOutpoint.n >= tx->vout.size() || proTx.collateralOutpoint.n != n) {
+        return false;
+    }
+    if (tx->vout[n].nValue != 1000 * COIN) {
+        return false;
+    }
+    return true;
 }
 
 bool CDeterministicMNManager::IsDeterministicMNsSporkActive(int nHeight)

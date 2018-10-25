@@ -383,7 +383,7 @@ void CMasternodeMan::AddDeterministicMasternodes()
         auto mnList = deterministicMNManager->GetListAtChainTip();
         mnList.ForEachMN(true, [this](const CDeterministicMNCPtr& dmn) {
             // call Find() on each deterministic MN to force creation of CMasternode object
-            auto mn = Find(COutPoint(dmn->proTxHash, dmn->nCollateralIndex));
+            auto mn = Find(dmn->collateralOutpoint);
             assert(mn);
 
             // make sure we use the splitted keys from now on
@@ -416,7 +416,7 @@ void CMasternodeMan::RemoveNonDeterministicMasternodes()
         std::set<COutPoint> mnSet;
         auto mnList = deterministicMNManager->GetListAtChainTip();
         mnList.ForEachMN(true, [&](const CDeterministicMNCPtr& dmn) {
-            mnSet.insert(COutPoint(dmn->proTxHash, dmn->nCollateralIndex));
+            mnSet.insert(dmn->collateralOutpoint);
         });
         auto it = mapMasternodes.begin();
         while (it != mapMasternodes.end()) {
@@ -539,11 +539,8 @@ CMasternode* CMasternodeMan::Find(const COutPoint &outpoint)
         // on-chain, like vote counts
 
         auto mnList = deterministicMNManager->GetListAtChainTip();
-        if (!mnList.IsMNValid(outpoint.hash)) {
-            return nullptr;
-        }
-        auto dmn = mnList.GetMN(outpoint.hash);
-        if (!dmn) {
+        auto dmn = mnList.GetMNByCollateral(outpoint);
+        if (!dmn || !mnList.IsMNValid(dmn)) {
             return nullptr;
         }
 
@@ -578,7 +575,7 @@ bool CMasternodeMan::GetMasternodeInfo(const uint256& proTxHash, masternode_info
     auto dmn = deterministicMNManager->GetListAtChainTip().GetValidMN(proTxHash);
     if (!dmn)
         return false;
-    return GetMasternodeInfo(COutPoint(proTxHash, dmn->nCollateralIndex), mnInfoRet);
+    return GetMasternodeInfo(dmn->collateralOutpoint, mnInfoRet);
 }
 
 bool CMasternodeMan::GetMasternodeInfo(const COutPoint& outpoint, masternode_info_t& mnInfoRet)
@@ -626,7 +623,7 @@ bool CMasternodeMan::Has(const COutPoint& outpoint)
 {
     LOCK(cs);
     if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
-        return deterministicMNManager->HasValidMNAtChainTip(outpoint.hash);
+        return deterministicMNManager->HasValidMNCollateralAtChainTip(outpoint);
     } else {
         return mapMasternodes.find(outpoint) != mapMasternodes.end();
     }
@@ -754,7 +751,7 @@ masternode_info_t CMasternodeMan::FindRandomNotInVec(const std::vector<COutPoint
             }
         }
         if(fExclude) continue;
-        if (deterministicMNManager->IsDeterministicMNsSporkActive() && !deterministicMNManager->HasValidMNAtChainTip(pmn->outpoint.hash))
+        if (deterministicMNManager->IsDeterministicMNsSporkActive() && !deterministicMNManager->HasValidMNCollateralAtChainTip(pmn->outpoint))
             continue;
         // found the one not in vecToExclude
         LogPrint("masternode", "CMasternodeMan::FindRandomNotInVec -- found, masternode=%s\n", pmn->outpoint.ToStringShort());
@@ -771,8 +768,10 @@ std::map<COutPoint, CMasternode> CMasternodeMan::GetFullMasternodeMap()
 
     if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
         std::map<COutPoint, CMasternode> result;
+        auto mnList = deterministicMNManager->GetListAtChainTip();
         for (const auto &p : mapMasternodes) {
-            if (deterministicMNManager->HasValidMNAtChainTip(p.first.hash)) {
+            auto dmn = mnList.GetMNByCollateral(p.first);
+            if (dmn && mnList.IsMNValid(dmn)) {
                 result.emplace(p.first, p.second);
             }
         }
@@ -796,7 +795,7 @@ bool CMasternodeMan::GetMasternodeScores(const uint256& nBlockHash, CMasternodeM
 
     // calculate scores
     for (const auto& mnpair : mapMasternodes) {
-        if (deterministicMNManager->IsDeterministicMNsSporkActive() && !deterministicMNManager->HasValidMNAtChainTip(mnpair.second.outpoint.hash))
+        if (deterministicMNManager->IsDeterministicMNsSporkActive() && !deterministicMNManager->HasValidMNCollateralAtChainTip(mnpair.second.outpoint))
             continue;
 
         if (mnpair.second.nProtocolVersion >= nMinProtocol) {

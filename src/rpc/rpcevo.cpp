@@ -116,9 +116,15 @@ static void FundSpecialTx(CMutableTransaction& tx, SpecialTxPayload payload)
 }
 
 template<typename SpecialTxPayload>
-static void SignSpecialTxPayload(const CMutableTransaction& tx, SpecialTxPayload& payload, const CKey& key)
+static void UpdateSpecialTxInputsHash(const CMutableTransaction& tx, SpecialTxPayload& payload)
 {
     payload.inputsHash = CalcTxInputsHash(tx);
+}
+
+template<typename SpecialTxPayload>
+static void SignSpecialTxPayload(const CMutableTransaction& tx, SpecialTxPayload& payload, const CKey& key)
+{
+    UpdateSpecialTxInputsHash(tx, payload);
     payload.vchSig.clear();
 
     uint256 hash = ::SerializeHash(payload);
@@ -130,7 +136,7 @@ static void SignSpecialTxPayload(const CMutableTransaction& tx, SpecialTxPayload
 template<typename SpecialTxPayload>
 static void SignSpecialTxPayload(const CMutableTransaction& tx, SpecialTxPayload& payload, const CBLSSecretKey& key)
 {
-    payload.inputsHash = CalcTxInputsHash(tx);
+    UpdateSpecialTxInputsHash(tx, payload);
 
     uint256 hash = ::SerializeHash(payload);
     payload.sig = key.Sign(hash);
@@ -139,8 +145,9 @@ static void SignSpecialTxPayload(const CMutableTransaction& tx, SpecialTxPayload
 static std::string SignAndSendSpecialTx(const CMutableTransaction& tx)
 {
     LOCK(cs_main);
+
     CValidationState state;
-    if (!CheckSpecialTx(tx, NULL, state))
+    if (!CheckSpecialTx(tx, chainActive.Tip(), state))
         throw std::runtime_error(FormatStateMessage(state));
 
     CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
@@ -157,11 +164,11 @@ static std::string SignAndSendSpecialTx(const CMutableTransaction& tx)
     return sendrawtransaction(sendRequest).get_str();
 }
 
-void protx_register_help()
+void protx_fund_register_help()
 {
     throw std::runtime_error(
-            "protx register \"collateralAddress\" collateralAmount \"ipAndPort\" \"ownerKeyAddr\" \"operatorKeyAddr\" \"votingKeyAddr\" operatorReward \"payoutAddress\"\n"
-            "\nCreates and sends a ProTx to the network. The resulting transaction will move the specified amount\n"
+            "protx fund_register \"collateralAddress\" \"ipAndPort\" \"ownerKeyAddr\" \"operatorKeyAddr\" \"votingKeyAddr\" operatorReward \"payoutAddress\"\n"
+            "\nCreates, funds and sends a ProTx to the network. The resulting transaction will move 1000 Dash\n"
             "to the address specified by collateralAddress and will then function as the collateral of your\n"
             "masternode.\n"
             "A few of the limitations you see in the arguments are temporary and might be lifted after DIP3\n"
@@ -169,94 +176,155 @@ void protx_register_help()
             "\nArguments:\n"
             "1. \"collateralAddress\"   (string, required) The dash address to send the collateral to.\n"
             "                         Must be a P2PKH address.\n"
-            "2. \"collateralAmount\"    (numeric or string, required) The collateral amount.\n"
-            "                         Must be exactly 1000 Dash.\n"
-            "3. \"ipAndPort\"           (string, required) IP and port in the form \"IP:PORT\".\n"
+            "2. \"ipAndPort\"           (string, required) IP and port in the form \"IP:PORT\".\n"
             "                         Must be unique on the network. Can be set to 0, which will require a ProUpServTx afterwards.\n"
-            "4. \"ownerKeyAddr\"        (string, required) The owner key used for payee updates and proposal voting.\n"
+            "3. \"ownerKeyAddr\"        (string, required) The owner key used for payee updates and proposal voting.\n"
             "                         The private key belonging to this address be known in your wallet. The address must\n"
             "                         be unused and must differ from the collateralAddress\n"
-            "5. \"operatorKeyAddr\"     (string, required) The operator key address. The private key does not have to be known by your wallet.\n"
+            "4. \"operatorKeyAddr\"     (string, required) The operator key address. The private key does not have to be known by your wallet.\n"
             "                         It has to match the private key which is later used when operating the masternode.\n"
             "                         If set to \"0\" or an empty string, ownerAddr will be used.\n"
-            "6. \"votingKeyAddr\"       (string, required) The voting key address. The private key does not have to be known by your wallet.\n"
+            "5. \"votingKeyAddr\"       (string, required) The voting key address. The private key does not have to be known by your wallet.\n"
             "                         It has to match the private key which is later used when voting on proposals.\n"
             "                         If set to \"0\" or an empty string, ownerAddr will be used.\n"
-            "7. \"operatorReward\"      (numeric, required) The fraction in %% to share with the operator. If non-zero,\n"
+            "6. \"operatorReward\"      (numeric, required) The fraction in % to share with the operator. If non-zero,\n"
             "                         \"ipAndPort\" must be zero as well. The value must be between 0 and 100.\n"
-            "8. \"payoutAddress\"       (string, required) The dash address to use for masternode reward payments\n"
+            "7. \"payoutAddress\"       (string, required) The dash address to use for masternode reward payments\n"
             "                         Must match \"collateralAddress\"."
             "\nExamples:\n"
-            + HelpExampleCli("protx", "register \"XrVhS9LogauRJGJu2sHuryjhpuex4RNPSb\" 1000 \"1.2.3.4:1234\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" 0 \"XrVhS9LogauRJGJu2sHuryjhpuex4RNPSb\"")
+            + HelpExampleCli("protx", "fund_register \"XrVhS9LogauRJGJu2sHuryjhpuex4RNPSb\" \"1.2.3.4:1234\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" 0 \"XrVhS9LogauRJGJu2sHuryjhpuex4RNPSb\"")
     );
 }
 
+void protx_register_help()
+{
+    throw std::runtime_error(
+            "protx register \"collateralHash\" collateralIndex \"ipAndPort\" \"ownerKeyAddr\" \"operatorKeyAddr\" \"votingKeyAddr\" operatorReward \"payoutAddress\"\n"
+            "\nSame as \"protx fund_register\", but with an externally referenced collateral.\n"
+            "The collateral is specified through \"collateralHash\" and \"collateralIndex\" and must be an unspent\n"
+            "transaction output. It must also not be used by any other masternode.\n"
+            "\nArguments:\n"
+            "1. \"collateralHash\"     (string, required) The collateral transaction hash.\n"
+            "2. collateralIndex      (numeric, required) The collateral transaction output index.\n"
+            "3., 4., 5. ...          See help text of \"protx fund_register\"\n"
+            "\nExamples:\n"
+            + HelpExampleCli("protx", "register \"0123456701234567012345670123456701234567012345670123456701234567\" 0 \"1.2.3.4:1234\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" 0 \"XrVhS9LogauRJGJu2sHuryjhpuex4RNPSb\"")
+    );
+}
+
+// handles register and fund_register in one method
 UniValue protx_register(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 9)
+    bool isFundRegister = request.params[0].get_str() == "fund_register";
+
+    if (isFundRegister && (request.fHelp || request.params.size() != 8)) {
+        protx_fund_register_help();
+    } else if (!isFundRegister && (request.fHelp || request.params.size() != 9)) {
         protx_register_help();
+    }
 
-    CBitcoinAddress collateralAddress(request.params[1].get_str());
-    if (!collateralAddress.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid collaterall address: %s", request.params[1].get_str()));
-    CScript collateralScript = GetScriptForDestination(collateralAddress.Get());
+    size_t paramIdx = 1;
 
-    CAmount collateralAmount;
-    if (!ParseMoney(request.params[2].get_str(), collateralAmount))
-        throw std::runtime_error(strprintf("invalid collateral amount %s", request.params[2].get_str()));
-    if (collateralAmount != 1000 * COIN)
-        throw std::runtime_error(strprintf("invalid collateral amount %d. only 1000 DASH is supported at the moment", collateralAmount));
-
-    CTxOut collateralTxOut(collateralAmount, collateralScript);
+    CAmount collateralAmount = 1000 * COIN;
 
     CMutableTransaction tx;
     tx.nVersion = 3;
     tx.nType = TRANSACTION_PROVIDER_REGISTER;
-    tx.vout.emplace_back(collateralTxOut);
 
     CProRegTx ptx;
     ptx.nVersion = CProRegTx::CURRENT_VERSION;
 
-    if (request.params[3].get_str() != "0" && request.params[3].get_str() != "") {
-        if (!Lookup(request.params[3].get_str().c_str(), ptx.addr, Params().GetDefaultPort(), false))
-            throw std::runtime_error(strprintf("invalid network address %s", request.params[3].get_str()));
+    if (isFundRegister) {
+        CBitcoinAddress collateralAddress(request.params[paramIdx].get_str());
+        if (!collateralAddress.IsValid())
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid collaterall address: %s", request.params[paramIdx].get_str()));
+        CScript collateralScript = GetScriptForDestination(collateralAddress.Get());
+
+        CTxOut collateralTxOut(collateralAmount, collateralScript);
+        tx.vout.emplace_back(collateralTxOut);
+
+        paramIdx++;
+    } else {
+        uint256 collateralHash = ParseHashV(request.params[paramIdx], "collateralHash");
+        int32_t collateralIndex = ParseInt32V(request.params[paramIdx + 1], "collateralIndex");
+        if (collateralHash.IsNull() || collateralIndex < 0) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid hash or index: %s-%d", collateralHash.ToString(), collateralIndex));
+        }
+
+        ptx.collateralOutpoint = COutPoint(collateralHash, (uint32_t)collateralIndex);
+        paramIdx += 2;
+
+        // TODO unlock on failure
+        LOCK(pwalletMain->cs_wallet);
+        pwalletMain->LockCoin(ptx.collateralOutpoint);
     }
 
-    CKey keyOwner = ParsePrivKey(request.params[4].get_str(), true);
-    CBLSPublicKey pubKeyOperator = ParseBLSPubKey(request.params[5].get_str(), "operator BLS address");
+    if (request.params[paramIdx].get_str() != "0" && request.params[paramIdx].get_str() != "") {
+        if (!Lookup(request.params[paramIdx].get_str().c_str(), ptx.addr, Params().GetDefaultPort(), false))
+            throw std::runtime_error(strprintf("invalid network address %s", request.params[paramIdx].get_str()));
+    }
+
+    CKey keyOwner = ParsePrivKey(request.params[paramIdx + 1].get_str(), true);
+    CBLSPublicKey pubKeyOperator = ParseBLSPubKey(request.params[paramIdx + 2].get_str(), "operator BLS address");
     CKeyID keyIDVoting = keyOwner.GetPubKey().GetID();
-    if (request.params[6].get_str() != "0" && request.params[6].get_str() != "") {
-        keyIDVoting = ParsePubKeyIDFromAddress(request.params[6].get_str(), "voting address");
+    if (request.params[paramIdx + 3].get_str() != "0" && request.params[paramIdx + 3].get_str() != "") {
+        keyIDVoting = ParsePubKeyIDFromAddress(request.params[paramIdx + 3].get_str(), "voting address");
     }
 
-    double operatorReward = ParseDoubleV(request.params[7], "operatorReward");
+    double operatorReward = ParseDoubleV(request.params[paramIdx + 4], "operatorReward");
     if (operatorReward < 0 || operatorReward > 100)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "operatorReward must be between 0 and 100");
     ptx.nOperatorReward = (uint16_t)(operatorReward * 100);
 
-    CBitcoinAddress payoutAddress(request.params[8].get_str());
+    CBitcoinAddress payoutAddress(request.params[paramIdx + 5].get_str());
     if (!payoutAddress.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid payout address: %s", request.params[8].get_str()));
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid payout address: %s", request.params[paramIdx + 5].get_str()));
 
     ptx.keyIDOwner = keyOwner.GetPubKey().GetID();
     ptx.pubKeyOperator = pubKeyOperator;
     ptx.keyIDVoting = keyIDVoting;
     ptx.scriptPayout = GetScriptForDestination(payoutAddress.Get());
 
-    SignSpecialTxPayload(tx, ptx, keyOwner); // make sure sig is set, otherwise fee calculation won't be correct
+    if (!isFundRegister) {
+        // make sure fee calculation works
+        ptx.vchSig.resize(65);
+    }
+
+    UpdateSpecialTxInputsHash(tx, ptx);
     FundSpecialTx(tx, ptx);
 
-    uint32_t collateralIndex = (uint32_t) - 1;
-    for (uint32_t i = 0; i < tx.vout.size(); i++) {
-        if (tx.vout[i] == collateralTxOut) {
-            collateralIndex = i;
-            break;
+    if (isFundRegister) {
+        uint32_t collateralIndex = (uint32_t) -1;
+        for (uint32_t i = 0; i < tx.vout.size(); i++) {
+            if (tx.vout[i].nValue == collateralAmount) {
+                collateralIndex = i;
+                break;
+            }
         }
+        assert(collateralIndex != (uint32_t) -1);
+        ptx.collateralOutpoint.n = collateralIndex;
     }
-    assert(collateralIndex != (uint32_t) - 1);
-    ptx.nCollateralIndex = collateralIndex;
 
-    SignSpecialTxPayload(tx, ptx, keyOwner); // redo signing
+    if (isFundRegister) {
+        UpdateSpecialTxInputsHash(tx, ptx);
+    } else {
+        // referencing external collateral, so lets prove we own it
+
+        Coin coin;
+        if (!GetUTXOCoin(ptx.collateralOutpoint, coin)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral not found: %s", ptx.collateralOutpoint.ToStringShort()));
+        }
+        CTxDestination txDest;
+        CKeyID keyID;
+        if (!ExtractDestination(coin.out.scriptPubKey, txDest) || !CBitcoinAddress(txDest).GetKeyID(keyID)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral type not supported: %s", ptx.collateralOutpoint.ToStringShort()));
+        }
+        CKey key;
+        if (!pwalletMain->GetKey(keyID, key)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral key not in wallet: %s", CBitcoinAddress(keyID).ToString()));
+        }
+        SignSpecialTxPayload(tx, ptx, key);
+    }
     SetTxPayload(tx, ptx);
 
     return SignAndSendSpecialTx(tx);
@@ -487,7 +555,7 @@ UniValue BuildDMNListEntry(const CDeterministicMNCPtr& dmn, bool detailed)
 
     dmn->ToJson(o);
 
-    int confirmations = GetUTXOConfirmations(COutPoint(dmn->proTxHash, dmn->nCollateralIndex));
+    int confirmations = GetUTXOConfirmations(dmn->collateralOutpoint);
     o.push_back(Pair("confirmations", confirmations));
 
     bool hasOwnerKey = pwalletMain->HaveKey(dmn->pdmnState->keyIDOwner);
@@ -497,8 +565,8 @@ UniValue BuildDMNListEntry(const CDeterministicMNCPtr& dmn, bool detailed)
     bool ownsCollateral = false;
     CTransactionRef collateralTx;
     uint256 tmpHashBlock;
-    if (GetTransaction(dmn->proTxHash, collateralTx, Params().GetConsensus(), tmpHashBlock)) {
-        ownsCollateral = CheckWalletOwnsScript(collateralTx->vout[dmn->nCollateralIndex].scriptPubKey);
+    if (GetTransaction(dmn->collateralOutpoint.hash, collateralTx, Params().GetConsensus(), tmpHashBlock)) {
+        ownsCollateral = CheckWalletOwnsScript(collateralTx->vout[dmn->collateralOutpoint.n].scriptPubKey);
     }
 
     UniValue walletObj(UniValue::VOBJ);
@@ -534,13 +602,13 @@ UniValue protx_list(const JSONRPCRequest& request)
 
         std::vector<COutPoint> vOutpts;
         pwalletMain->ListProTxCoins(vOutpts);
-        std::set<uint256> setOutpts;
+        std::set<COutPoint> setOutpts;
         for (const auto& outpt : vOutpts) {
-            setOutpts.emplace(outpt.hash);
+            setOutpts.emplace(outpt);
         }
 
         deterministicMNManager->GetListAtChainTip().ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
-            if (setOutpts.count(dmn->proTxHash) ||
+            if (setOutpts.count(dmn->collateralOutpoint) ||
                 pwalletMain->HaveKey(dmn->pdmnState->keyIDOwner) ||
                 pwalletMain->HaveKey(dmn->pdmnState->keyIDVoting) ||
                 CheckWalletOwnsScript(dmn->pdmnState->scriptPayout) ||
@@ -570,6 +638,30 @@ UniValue protx_list(const JSONRPCRequest& request)
     }
 
     return ret;
+}
+
+void protx_info_help()
+{
+    throw std::runtime_error(
+            "protx info \"proTxHash\"\n"
+            "\nReturns detailed information about a deterministic masternode.\n"
+            "\nArguments:\n"
+            "1. \"proTxHash\"           (string, required) The hash of the initial ProRegTx.\n"
+    );
+}
+
+UniValue protx_info(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 2)
+        protx_info_help();
+
+    uint256 proTxHash = ParseHashV(request.params[1], "proTxHash");
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+    auto dmn = mnList.GetMN(proTxHash);
+    if (!dmn) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s not found", proTxHash.ToString()));
+    }
+    return BuildDMNListEntry(dmn, true);
 }
 
 void protx_diff_help()
@@ -638,6 +730,7 @@ UniValue protx(const JSONRPCRequest& request)
                 "\nAvailable commands:\n"
                 "  register          - Create and send ProTx to network\n"
                 "  list              - List ProTxs\n"
+                "  info              - Return information about a ProTx\n"
                 "  update_service    - Create and send ProUpServTx to network\n"
                 "  update_registrar  - Create and send ProUpRegTx to network\n"
                 "  revoke            - Create and send ProUpRevTx to network\n"
@@ -647,10 +740,12 @@ UniValue protx(const JSONRPCRequest& request)
 
     std::string command = request.params[0].get_str();
 
-    if (command == "register") {
+    if (command == "fund_register" || command == "register") {
         return protx_register(request);
     } else if (command == "list") {
         return protx_list(request);
+    } else if (command == "info") {
+        return protx_info(request);
     } else if (command == "update_service") {
         return protx_update_service(request);
     } else if (command == "update_registrar") {

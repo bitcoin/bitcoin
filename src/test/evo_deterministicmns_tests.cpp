@@ -103,7 +103,7 @@ static CMutableTransaction CreateProRegTx(SimpleUTXOMap& utxos, int port, const 
     auto inputs = SelectUTXOs(utxos, 1000 * COIN, change);
 
     CProRegTx proTx;
-    proTx.nCollateralIndex = 0;
+    proTx.collateralOutpoint.n = 0;
     proTx.addr = LookupNumeric("1.1.1.1", port);
     proTx.keyIDOwner = ownerKeyRet.GetPubKey().GetID();
     proTx.pubKeyOperator = operatorKeyRet.GetPublicKey();
@@ -115,7 +115,6 @@ static CMutableTransaction CreateProRegTx(SimpleUTXOMap& utxos, int port, const 
     tx.nType = TRANSACTION_PROVIDER_REGISTER;
     FundTransaction(tx, utxos, scriptPayout, 1000 * COIN, coinbaseKey);
     proTx.inputsHash = CalcTxInputsHash(tx);
-    CHashSigner::SignHash(::SerializeHash(proTx), ownerKeyRet, proTx.vchSig);
     SetTxPayload(tx, proTx);
     SignTransaction(tx, coinbaseKey);
 

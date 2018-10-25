@@ -449,6 +449,9 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
         mapProTxAddresses.emplace(proTx.addr, tx.GetHash());
         mapProTxPubKeyIDs.emplace(proTx.keyIDOwner, tx.GetHash());
         mapProTxBlsPubKeyHashes.emplace(proTx.pubKeyOperator.GetHash(), tx.GetHash());
+        if (!proTx.collateralOutpoint.hash.IsNull()) {
+            mapProTxCollaterals.emplace(proTx.collateralOutpoint, tx.GetHash());
+        }
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
         CProUpServTx proTx;
         if (!GetTxPayload(tx, proTx)) {
@@ -646,6 +649,7 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
         mapProTxAddresses.erase(proTx.addr);
         mapProTxPubKeyIDs.erase(proTx.keyIDOwner);
         mapProTxBlsPubKeyHashes.erase(proTx.pubKeyOperator.GetHash());
+        mapProTxCollaterals.erase(proTx.collateralOutpoint);
     } else if (it->GetTx().nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
         CProUpServTx proTx;
         if (!GetTxPayload(it->GetTx(), proTx)) {
@@ -806,6 +810,16 @@ void CTxMemPool::removeProTxPubKeyConflicts(const CTransaction &tx, const CBLSPu
     }
 }
 
+void CTxMemPool::removeProTxCollateralConflicts(const CTransaction &tx, const COutPoint &collateralOutpoint)
+{
+    if (mapProTxCollaterals.count(collateralOutpoint)) {
+        uint256 conflictHash = mapProTxCollaterals[collateralOutpoint];
+        if (conflictHash != tx.GetHash() && mapTx.count(conflictHash)) {
+            removeRecursive(mapTx.find(conflictHash)->GetTx(), MemPoolRemovalReason::CONFLICT);
+        }
+    }
+}
+
 void CTxMemPool::removeProTxConflicts(const CTransaction &tx)
 {
     if (tx.nType == TRANSACTION_PROVIDER_REGISTER) {
@@ -822,6 +836,9 @@ void CTxMemPool::removeProTxConflicts(const CTransaction &tx)
         }
         removeProTxPubKeyConflicts(tx, proTx.keyIDOwner);
         removeProTxPubKeyConflicts(tx, proTx.pubKeyOperator);
+        if (!proTx.collateralOutpoint.hash.IsNull()) {
+            removeProTxCollateralConflicts(tx, proTx.collateralOutpoint);
+        }
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
         CProUpServTx proTx;
         if (!GetTxPayload(tx, proTx)) {
@@ -1127,7 +1144,11 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
         CProRegTx proTx;
         if (!GetTxPayload(tx, proTx))
             assert(false);
-        return mapProTxAddresses.count(proTx.addr) || mapProTxPubKeyIDs.count(proTx.keyIDOwner) || mapProTxBlsPubKeyHashes.count(proTx.pubKeyOperator.GetHash());
+        if (mapProTxAddresses.count(proTx.addr) || mapProTxPubKeyIDs.count(proTx.keyIDOwner) || mapProTxBlsPubKeyHashes.count(proTx.pubKeyOperator.GetHash()))
+            return true;
+        if (!proTx.collateralOutpoint.hash.IsNull() && mapProTxCollaterals.count(proTx.collateralOutpoint))
+            return true;
+        return false;
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
         CProUpServTx proTx;
         if (!GetTxPayload(tx, proTx))

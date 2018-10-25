@@ -24,7 +24,7 @@ public:
     uint16_t nVersion{CURRENT_VERSION}; // message version
     uint16_t nType{0}; // only 0 supported for now
     uint16_t nMode{0}; // only 0 supported for now
-    uint32_t nCollateralIndex{(uint32_t) - 1};
+    COutPoint collateralOutpoint{uint256(), (uint32_t)-1}; // if hash is null, we refer to a ProRegTx output
     CService addr;
     CKeyID keyIDOwner;
     CBLSPublicKey pubKeyOperator;
@@ -43,7 +43,7 @@ public:
         READWRITE(nVersion);
         READWRITE(nType);
         READWRITE(nMode);
-        READWRITE(nCollateralIndex);
+        READWRITE(collateralOutpoint);
         READWRITE(addr);
         READWRITE(keyIDOwner);
         READWRITE(pubKeyOperator);
@@ -178,8 +178,5 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
 bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
 bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
 bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
-
-bool IsProTxCollateral(const CTransaction& tx, uint32_t n);
-uint32_t GetProTxCollateralIndex(const CTransaction& tx);
 
 #endif//DASH_PROVIDERTX_H

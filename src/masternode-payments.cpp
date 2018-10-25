@@ -627,7 +627,7 @@ bool CMasternodePayments::IsScheduled(const masternode_info_t& mnInfo, int nNotB
     if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
         auto projectedPayees = deterministicMNManager->GetListAtChainTip().GetProjectedMNPayees(8);
         for (const auto &dmn : projectedPayees) {
-            if (dmn->proTxHash == mnInfo.outpoint.hash) {
+            if (dmn->collateralOutpoint == mnInfo.outpoint) {
                 return true;
             }
         }

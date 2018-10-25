@@ -537,6 +537,7 @@ private:
     std::map<CService, uint256> mapProTxAddresses;
     std::map<CKeyID, uint256> mapProTxPubKeyIDs;
     std::map<uint256, uint256> mapProTxBlsPubKeyHashes;
+    std::map<COutPoint, uint256> mapProTxCollaterals;
 
     void UpdateParent(txiter entry, txiter parent, bool add);
     void UpdateChild(txiter entry, txiter child, bool add);
@@ -582,6 +583,7 @@ public:
     void removeConflicts(const CTransaction &tx);
     void removeProTxPubKeyConflicts(const CTransaction &tx, const CKeyID &keyId);
     void removeProTxPubKeyConflicts(const CTransaction &tx, const CBLSPublicKey &pubKey);
+    void removeProTxCollateralConflicts(const CTransaction &tx, const COutPoint &collateralOutpoint);
     void removeProTxConflicts(const CTransaction &tx);
     void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight);
 

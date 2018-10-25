@@ -56,7 +56,7 @@ CMasternode::CMasternode(const CMasternodeBroadcast& mnb) :
 
 CMasternode::CMasternode(const uint256 &proTxHash, const CDeterministicMNCPtr& dmn) :
     masternode_info_t{ MASTERNODE_ENABLED, DMN_PROTO_VERSION, GetAdjustedTime(),
-                       COutPoint(proTxHash, dmn->nCollateralIndex), dmn->pdmnState->addr, CKeyID(), dmn->pdmnState->keyIDOwner, dmn->pdmnState->pubKeyOperator, dmn->pdmnState->keyIDVoting},
+                       dmn->collateralOutpoint, dmn->pdmnState->addr, CKeyID(), dmn->pdmnState->keyIDOwner, dmn->pdmnState->pubKeyOperator, dmn->pdmnState->keyIDVoting},
     fAllowMixingTx(true)
 {
     CTxDestination dest;
@@ -352,7 +352,7 @@ void CMasternode::UpdateLastPaid(const CBlockIndex *pindex, int nMaxBlocksToScan
     if(!pindex) return;
 
     if (deterministicMNManager->IsDeterministicMNsSporkActive(pindex->nHeight)) {
-        auto dmn = deterministicMNManager->GetListForBlock(pindex->GetBlockHash()).GetMN(outpoint.hash);
+        auto dmn = deterministicMNManager->GetListForBlock(pindex->GetBlockHash()).GetMNByCollateral(outpoint);
         if (!dmn || dmn->pdmnState->nLastPaidHeight == -1) {
             LogPrint("masternode", "CMasternode::UpdateLastPaidBlock -- searching for block with payment to %s -- not found\n", outpoint.ToStringShort());
         } else {

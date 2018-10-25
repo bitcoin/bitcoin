@@ -115,18 +115,11 @@ class CDeterministicMN
 {
 public:
     CDeterministicMN() {}
-    CDeterministicMN(const uint256& _proTxHash, const CProRegTx& _proTx)
-    {
-        proTxHash = _proTxHash;
-        nCollateralIndex = _proTx.nCollateralIndex;
-        nOperatorReward = _proTx.nOperatorReward;
-        pdmnState = std::make_shared<CDeterministicMNState>(_proTx);
-    }
     template<typename Stream>
     CDeterministicMN(deserialize_type, Stream& s) { s >> *this;}
 
     uint256 proTxHash;
-    uint32_t nCollateralIndex;
+    COutPoint collateralOutpoint;
     uint16_t nOperatorReward;
     CDeterministicMNStateCPtr pdmnState;
 
@@ -137,7 +130,7 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action)
     {
         READWRITE(proTxHash);
-        READWRITE(nCollateralIndex);
+        READWRITE(collateralOutpoint);
         READWRITE(nOperatorReward);
         READWRITE(pdmnState);
     }
@@ -258,6 +251,8 @@ public:
 
     bool IsMNValid(const uint256& proTxHash) const;
     bool IsMNPoSeBanned(const uint256& proTxHash) const;
+    bool IsMNValid(const CDeterministicMNCPtr& dmn) const;
+    bool IsMNPoSeBanned(const CDeterministicMNCPtr& dmn) const;
 
     bool HasMN(const uint256& proTxHash) const {
         return GetMN(proTxHash) != nullptr;
@@ -265,6 +260,7 @@ public:
     CDeterministicMNCPtr GetMN(const uint256& proTxHash) const;
     CDeterministicMNCPtr GetValidMN(const uint256& proTxHash) const;
     CDeterministicMNCPtr GetMNByOperatorKey(const CBLSPublicKey& pubKey);
+    CDeterministicMNCPtr GetMNByCollateral(const COutPoint& collateralOutpoint) const;
     CDeterministicMNCPtr GetMNPayee() const;
 
     /**
@@ -298,9 +294,6 @@ public:
     }
 
 private:
-    bool IsMNValid(const CDeterministicMNCPtr& dmn) const;
-    bool IsMNPoSeBanned(const CDeterministicMNCPtr& dmn) const;
-
     template<typename T>
     void AddUniqueProperty(const CDeterministicMNCPtr& dmn, const T& v)
     {
@@ -396,14 +389,16 @@ public:
     CDeterministicMNList GetListForBlock(const uint256& blockHash);
     CDeterministicMNList GetListAtChainTip();
 
-    CDeterministicMNCPtr GetMN(const uint256& blockHash, const uint256& proTxHash);
-    bool HasValidMNAtBlock(const uint256& blockHash, const uint256& proTxHash);
-    bool HasValidMNAtChainTip(const uint256& proTxHash);
+    // TODO remove after removal of old non-deterministic lists
+    bool HasValidMNCollateralAtChainTip(const COutPoint& outpoint);
+    bool HasMNCollateralAtChainTip(const COutPoint& outpoint);
+
+    // Test if given TX is a ProRegTx which also contains the collateral at index n
+    bool IsProTxWithCollateral(const CTransactionRef& tx, uint32_t n);
 
     bool IsDeterministicMNsSporkActive(int nHeight = -1);
 
 private:
-    void UpdateSpork15Value();
     int64_t GetSpork15Value();
     void CleanupCache(int nHeight);
 };
