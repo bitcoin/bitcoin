@@ -148,4 +148,9 @@ void UpdateRegtestBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime,
  */
 void UpdateRegtestBudgetParameters(int nMasternodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock);
 
+/**
+ * Allows modifying the subsidy and difficulty devnet parameters.
+ */
+void UpdateDevnetSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int nHighSubsidyBlocks, int nHighSubsidyFactor);
+
 #endif // BITCOIN_CHAINPARAMS_H

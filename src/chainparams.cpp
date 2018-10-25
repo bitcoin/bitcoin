@@ -554,6 +554,13 @@ public:
             0.01                          // * estimated number of transactions per second
         };
     }
+
+    void UpdateSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int nHighSubsidyBlocks, int nHighSubsidyFactor)
+    {
+        consensus.nMinimumDifficultyBlocks = nMinimumDifficultyBlocks;
+        consensus.nHighSubsidyBlocks = nHighSubsidyBlocks;
+        consensus.nHighSubsidyFactor = nHighSubsidyFactor;
+    }
 };
 static CDevNetParams *devNetParams;
 
@@ -730,4 +737,10 @@ void UpdateRegtestBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime,
 void UpdateRegtestBudgetParameters(int nMasternodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock)
 {
     regTestParams.UpdateBudgetParameters(nMasternodePaymentsStartBlock, nBudgetPaymentsStartBlock, nSuperblockStartBlock);
+}
+
+void UpdateDevnetSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int nHighSubsidyBlocks, int nHighSubsidyFactor)
+{
+    assert(devNetParams);
+    devNetParams->UpdateSubsidyAndDiffParams(nMinimumDifficultyBlocks, nHighSubsidyBlocks, nHighSubsidyFactor);
 }

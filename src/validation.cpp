@@ -1171,6 +1171,11 @@ CAmount GetBlockSubsidy(int nPrevBits, int nPrevHeight, const Consensus::Params&
         nSubsidy -= nSubsidy/14;
     }
 
+    // this is only active on devnets
+    if (nPrevHeight < consensusParams.nHighSubsidyBlocks) {
+        nSubsidy *= consensusParams.nHighSubsidyFactor;
+    }
+
     // Hard fork to reduce the block reward by 10 extra percent (allowing budget/superblocks)
     CAmount nSuperblockPart = (nPrevHeight > consensusParams.nBudgetPaymentsStartBlock) ? nSubsidy/10 : 0;
 

@@ -1323,6 +1323,15 @@ bool AppInitParameterInteraction()
         UpdateRegtestBudgetParameters(nMasternodePaymentsStartBlock, nBudgetPaymentsStartBlock, nSuperblockStartBlock);
     }
 
+    if (chainparams.NetworkIDString() == CBaseChainParams::DEVNET) {
+        int nMinimumDifficultyBlocks = GetArg("-minimumdifficultyblocks", chainparams.GetConsensus().nMinimumDifficultyBlocks);
+        int nHighSubsidyBlocks = GetArg("-highsubsidyblocks", chainparams.GetConsensus().nHighSubsidyBlocks);
+        int nHighSubsidyFactor = GetArg("-highsubsidyfactor", chainparams.GetConsensus().nHighSubsidyFactor);
+        UpdateDevnetSubsidyAndDiffParams(nMinimumDifficultyBlocks, nHighSubsidyBlocks, nHighSubsidyFactor);
+    } else if (IsArgSet("-minimumdifficultyblocks") || IsArgSet("-highsubsidyblocks") || IsArgSet("-highsubsidyfactor")) {
+        return InitError("Difficulty and subsidy parameters may only be overridden on devnet.");
+    }
+
     return true;
 }
 
