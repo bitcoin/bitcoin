@@ -63,7 +63,7 @@
       <bool>true</bool>
      </property>
      <property name="textInteractionFlags">
-      <set>Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+      <set>Qt::TextSelectableByMouse</set>
      </property>
     </widget>
    </item>
