@@ -48,8 +48,8 @@ public:
         READWRITE(keyIDOwner);
         READWRITE(pubKeyOperator);
         READWRITE(keyIDVoting);
-        READWRITE(*(CScriptBase*)(&scriptPayout));
         READWRITE(nOperatorReward);
+        READWRITE(*(CScriptBase*)(&scriptPayout));
         READWRITE(inputsHash);
         if (!(s.GetType() & SER_GETHASH)) {
             READWRITE(vchSig);
