@@ -1335,8 +1335,8 @@ bool CPrivateSendClientSession::MakeCollateralAmounts(CConnman& connman)
     if (!pwalletMain) return false;
 
     std::vector<CompactTallyItem> vecTally;
-    if(!pwalletMain->SelectCoinsGrouppedByAddresses(vecTally, false, false)) {
-        LogPrint("privatesend", "CPrivateSendClientSession::MakeCollateralAmounts -- SelectCoinsGrouppedByAddresses can't find any inputs!\n");
+    if(!pwalletMain->SelectCoinsGroupedByAddresses(vecTally, false, false)) {
+        LogPrint("privatesend", "CPrivateSendClientSession::MakeCollateralAmounts -- SelectCoinsGroupedByAddresses can't find any inputs!\n");
         return false;
     }
 
@@ -1439,8 +1439,8 @@ bool CPrivateSendClientSession::CreateDenominated(CConnman& connman)
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
     std::vector<CompactTallyItem> vecTally;
-    if(!pwalletMain->SelectCoinsGrouppedByAddresses(vecTally)) {
-        LogPrint("privatesend", "CPrivateSendClientSession::CreateDenominated -- SelectCoinsGrouppedByAddresses can't find any inputs!\n");
+    if(!pwalletMain->SelectCoinsGroupedByAddresses(vecTally)) {
+        LogPrint("privatesend", "CPrivateSendClientSession::CreateDenominated -- SelectCoinsGroupedByAddresses can't find any inputs!\n");
         return false;
     }
 
