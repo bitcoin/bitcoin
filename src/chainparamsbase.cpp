@@ -109,7 +109,10 @@ void SelectBaseParams(const std::string& chain)
     if (chain == CBaseChainParams::DEVNET) {
         std::string devNetName = GetDevNetName();
         assert(!devNetName.empty());
-        devNetParams = new CBaseDevNetParams(devNetName);
+
+        devNetParams = (CBaseDevNetParams*)new uint8_t[sizeof(CBaseDevNetParams)];
+        memset(devNetParams, 0, sizeof(CBaseDevNetParams));
+        new (devNetParams) CBaseDevNetParams(devNetName);
     }
 
     pCurrentBaseParams = &BaseParams(chain);
