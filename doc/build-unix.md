@@ -6,8 +6,8 @@ Some notes on how to build Bitcoin Core in Unix.
 
 Note
 ---------------------
-Always use absolute paths to configure and compile Bitcoin Core and the dependencies,
-for example, when specifying the path of the dependency:
+Always use absolute paths to configure and compile Bitcoin Core and the dependencies.
+For example, when specifying the path of the dependency:
 
 	../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
 
@@ -24,7 +24,7 @@ make
 make install # optional
 ```
 
-This will build bitcoin-qt as well if the dependencies are met.
+This will build bitcoin-qt as well, if the dependencies are met.
 
 Dependencies
 ---------------------
@@ -87,11 +87,12 @@ You can add the repository and install using the following commands:
     sudo apt-get install libdb4.8-dev libdb4.8++-dev
 
 Ubuntu and Debian have their own libdb-dev and libdb++-dev packages, but these will install
-BerkeleyDB 5.1 or later, which break binary wallet compatibility with the distributed executables which
+BerkeleyDB 5.1 or later. This will break binary wallet compatibility with the distributed executables, which
 are based on BerkeleyDB 4.8. If you do not care about wallet compatibility,
 pass `--with-incompatible-bdb` to configure.
 
-See the section "Disable-wallet mode" to build Bitcoin Core without wallet.
+To build Bitcoin Core without wallet, see [*Disable-wallet mode*](/doc/build-unix.md#disable-wallet-mode)
+
 
 Optional (see --with-miniupnpc and --enable-upnp-default):
 
@@ -161,7 +162,7 @@ Berkeley DB
 -----------
 It is recommended to use Berkeley DB 4.8. If you have to build it yourself,
 you can use [the installation script included in contrib/](/contrib/install_db4.sh)
-like so
+like so:
 
 ```shell
 ./contrib/install_db4.sh `pwd`
@@ -169,7 +170,7 @@ like so
 
 from the root of the repository.
 
-**Note**: You only need Berkeley DB if the wallet is enabled (see the section *Disable-Wallet mode* below).
+**Note**: You only need Berkeley DB if the wallet is enabled (see [*Disable-wallet mode*](/doc/build-unix.md#disable-wallet-mode)).
 
 Boost
 -----
@@ -193,9 +194,7 @@ Hardening Flags:
 
 
 Hardening enables the following features:
-
-* Position Independent Executable
-    Build position independent code to take advantage of Address Space Layout Randomization
+* _Position Independent Executable_: Build position independent code to take advantage of Address Space Layout Randomization
     offered by some kernels. Attackers who can cause execution of code at an arbitrary memory
     location are thwarted if they don't know where anything useful is located.
     The stack and heap are randomly located by default, but this allows the code section to be
@@ -213,8 +212,7 @@ Hardening enables the following features:
      TYPE
     ET_DYN
 
-* Non-executable Stack
-    If the stack is executable then trivial stack-based buffer overflow exploits are possible if
+* _Non-executable Stack_: If the stack is executable then trivial stack-based buffer overflow exploits are possible if
     vulnerable buffers are found. By default, Bitcoin Core should be built with a non-executable stack,
     but if one of the libraries it uses asks for an executable stack or someone makes a mistake
     and uses a compiler extension which requires an executable stack, it will silently build an
