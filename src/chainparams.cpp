@@ -14,6 +14,7 @@
 #include <boost/assign/list_of.hpp>
 
 #include <assert.h>
+#include <stdint.h>
 
 using namespace boost::assign;
 
