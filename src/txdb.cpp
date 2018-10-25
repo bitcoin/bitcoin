@@ -175,6 +175,21 @@ bool CBlockTreeDB::ReadFlag(const std::string &name, bool &fValue) {
     return true;
 }
 
+bool CBlockTreeDB::WriteBlockProofPointer(const uint256 &blockHash, const SPIdentifier &spID)
+{
+    return Write(std::make_pair('S', blockHash), spID);
+}
+
+bool CBlockTreeDB::ReadBlockProofPointer(const uint256 &blockHash, SPIdentifier &spID)
+{
+    return Read(std::make_pair('S', blockHash), spID);
+}
+
+bool CBlockTreeDB::EraseBlockProofPointer(const uint256 &blockHash)
+{
+    return Erase(std::make_pair('S', blockHash));
+}
+
 bool CBlockTreeDB::LoadBlockIndexGuts()
 {
     boost::scoped_ptr<leveldb::Iterator> pcursor(NewIterator());
@@ -198,7 +213,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
                 ssValue >> diskindex;
 
                 // Construct block index object
-                CBlockIndex* pindexNew = InsertBlockIndex(diskindex.GetBlockHash());
+                CBlockIndex* pindexNew = InsertBlockIndex(diskindex.GetBlockHash(), diskindex.fProofOfStake);
                 pindexNew->pprev          = InsertBlockIndex(diskindex.hashPrev);
                 pindexNew->nHeight        = diskindex.nHeight;
                 pindexNew->nFile          = diskindex.nFile;
