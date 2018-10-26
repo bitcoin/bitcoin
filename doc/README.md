@@ -1,4 +1,4 @@
-Dash Core 0.12.4
+Dash Core 0.13.0
 =====================
 
 This is the official reference wallet for Dash digital currency and comprises the backbone of the Dash peer-to-peer network. You can [download Dash Core](https://www.dash.org/downloads/) or [build it yourself](#building) using the guides below.
