@@ -3744,15 +3744,25 @@ bool FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& psbtx, int sig
         const CTxIn& txin = psbtx.tx->vin[i];
         PSBTInput& input = psbtx.inputs.at(i);
 
-        // If we don't know about this input, skip it and let someone else deal with it
-        const uint256& txhash = txin.prevout.hash;
-        const auto it = pwallet->mapWallet.find(txhash);
-        if (it != pwallet->mapWallet.end()) {
-            const CWalletTx& wtx = it->second;
-            CTxOut utxo = wtx.tx->vout[txin.prevout.n];
-            // Update both UTXOs from the wallet.
-            input.non_witness_utxo = wtx.tx;
-            input.witness_utxo = utxo;
+        if (PSBTInputSigned(input)) {
+            continue;
+        }
+
+        // Verify input looks sane. This will check that we have at most one uxto, witness or non-witness.
+        if (!input.IsSane()) {
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "PSBT input is not sane.");
+        }
+
+        // If we have no utxo, grab it from the wallet.
+        if (!input.non_witness_utxo && input.witness_utxo.IsNull()) {
+            const uint256& txhash = txin.prevout.hash;
+            const auto it = pwallet->mapWallet.find(txhash);
+            if (it != pwallet->mapWallet.end()) {
+                const CWalletTx& wtx = it->second;
+                // We only need the non_witness_utxo, which is a superset of the witness_utxo.
+                //   The signing code will switch to the smaller witness_utxo if this is ok.
+                input.non_witness_utxo = wtx.tx;
+            }
         }
 
         // Get the Sighash type
