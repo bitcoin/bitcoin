@@ -4322,7 +4322,7 @@ void static ProcessGetData(CNode* pfrom)
                     if(item){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << item->Budget();
+                        ss << item;
                         pfrom->PushMessage("fbs", ss);
                         pushed = true;
                     }
