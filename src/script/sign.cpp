@@ -513,6 +513,12 @@ bool IsSolvable(const SigningProvider& provider, const CScript& script)
     return false;
 }
 
+PartiallySignedTransaction::PartiallySignedTransaction(const CTransaction& tx) : tx(tx)
+{
+    inputs.resize(tx.vin.size());
+    outputs.resize(tx.vout.size());
+}
+
 bool PartiallySignedTransaction::IsNull() const
 {
     return !tx && inputs.empty() && outputs.empty() && unknown.empty();

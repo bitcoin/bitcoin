@@ -3992,14 +3992,7 @@ UniValue walletcreatefundedpsct(const JSONRPCRequest& request)
     FundTransaction(pwallet, rawTx, fee, change_position, request.params[3]);
 
     // Make a blank psct
-    PartiallySignedTransaction psctx;
-    psctx.tx = rawTx;
-    for (unsigned int i = 0; i < rawTx.vin.size(); ++i) {
-        psctx.inputs.push_back(PSCTInput());
-    }
-    for (unsigned int i = 0; i < rawTx.vout.size(); ++i) {
-        psctx.outputs.push_back(PSCTOutput());
-    }
+    PartiallySignedTransaction psctx(rawTx);
 
     // Fill transaction with out data but don't sign
     bool bip32derivs = request.params[4].isNull() ? false : request.params[4].get_bool();
