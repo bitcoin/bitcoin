@@ -301,11 +301,11 @@ class DashTestFramework(BitcoinTestFramework):
         self.sync_all()
         set_mocktime(get_mocktime() + 1)
         set_node_times(self.nodes, get_mocktime())
-        sync_masternodes(self.nodes)
+        sync_masternodes(self.nodes, True)
         for i in range(1, self.mn_count + 1):
             res = self.nodes[0].masternode("start-alias", "mn%d" % i)
             assert (res["result"] == 'successful')
-        sync_masternodes(self.nodes)
+        sync_masternodes(self.nodes, True)
         mn_info = self.nodes[0].masternodelist("status")
         assert (len(mn_info) == self.mn_count)
         for status in mn_info.values():
