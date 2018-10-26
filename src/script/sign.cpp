@@ -244,8 +244,11 @@ bool PSBTInputSigned(PSBTInput& input)
     return !input.final_script_sig.empty() || !input.final_script_witness.IsNull();
 }
 
-bool SignPSBTInput(const SigningProvider& provider, const CMutableTransaction& tx, PSBTInput& input, int index, int sighash)
+bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, int sighash)
 {
+    PSBTInput& input = psbt.inputs.at(index);
+    const CMutableTransaction& tx = *psbt.tx;
+
     if (PSBTInputSigned(input)) {
         return true;
     }
