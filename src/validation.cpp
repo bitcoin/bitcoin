@@ -1740,10 +1740,6 @@ static DisconnectResult DisconnectBlock(const CBlock& block, CValidationState& s
         }
     }
 
-    if (pindex->pprev && pindex->pprev->pprev && VersionBitsState(pindex->pprev->pprev, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0003, versionbitscache) != THRESHOLD_ACTIVE) {
-        fDIP0003ActiveAtTip = false;
-    }
-
     // move best block pointer to prevout block
     view.SetBestBlock(pindex->pprev->GetBlockHash());
 
@@ -1757,6 +1753,10 @@ static DisconnectResult DisconnectBlock(const CBlock& block, CValidationState& s
             return DISCONNECT_FAILED;
         }
     }
+
+    // make sure the flag is reset in case of a chain reorg
+    instantsend.isAutoLockBip9Active =
+            (VersionBitsState(pindex->pprev, Params().GetConsensus(), Consensus::DEPLOYMENT_ISAUTOLOCKS, versionbitscache) == THRESHOLD_ACTIVE);
 
     return fClean ? DISCONNECT_OK : DISCONNECT_UNCLEAN;
 }
@@ -2011,12 +2011,6 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         flags |= SCRIPT_VERIFY_NULLDUMMY;
     }
 
-    if (!fJustCheck && VersionBitsState(pindex->pprev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_DIP0003, versionbitscache) == THRESHOLD_ACTIVE) {
-        if (!fDIP0003ActiveAtTip)
-            LogPrintf("ConnectBlock -- DIP0003 got activated at height %d\n", pindex->nHeight);
-        fDIP0003ActiveAtTip = true;
-    }
-
     int64_t nTime2 = GetTimeMicros(); nTimeForks += nTime2 - nTime1;
     LogPrint("bench", "    - Fork checks: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeForks * 0.000001);
 
@@ -2249,6 +2243,14 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
     // add this block to the view's block chain
     view.SetBestBlock(pindex->GetBlockHash());
+
+    if (!fJustCheck) {
+        // check if previous block had DIP3 disabled and the new block has it enabled
+        if (VersionBitsState(pindex->pprev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_DIP0003, versionbitscache) != THRESHOLD_ACTIVE &&
+            VersionBitsState(pindex, chainparams.GetConsensus(), Consensus::DEPLOYMENT_DIP0003, versionbitscache) == THRESHOLD_ACTIVE) {
+            LogPrintf("%s -- DIP0003 got activated at height %d\n", __func__, pindex->nHeight);
+        }
+    }
 
     int64_t nTime5 = GetTimeMicros(); nTimeIndex += nTime5 - nTime4;
     LogPrint("bench", "    - Index writing: %.2fms [%.2fs]\n", 0.001 * (nTime5 - nTime4), nTimeIndex * 0.000001);

@@ -807,7 +807,15 @@ void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
     // GetMainSignals().UpdatedBlockTip(chainActive.Tip());
     pdsNotificationInterface->InitializeCurrentBlockTip();
 
-    if (activeMasternodeManager && fDIP0003ActiveAtTip)
+    bool fDIP003Active;
+    {
+        LOCK(cs_main);
+        if (chainActive.Tip()->pprev) {
+            fDIP003Active = VersionBitsState(chainActive.Tip()->pprev, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0003, versionbitscache) == THRESHOLD_ACTIVE;
+        }
+    }
+
+    if (activeMasternodeManager && fDIP003Active)
         activeMasternodeManager->Init();
 
 #ifdef ENABLE_WALLET
@@ -1758,11 +1766,6 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 if (fHavePruned && !fPruneMode) {
                     strLoadError = _("You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain");
                     break;
-                }
-
-                // Needs to be called after chain is initialized
-                if (chainActive.Tip() && chainActive.Tip()->pprev) {
-                    fDIP0003ActiveAtTip = VersionBitsState(chainActive.Tip()->pprev, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0003, versionbitscache) == THRESHOLD_ACTIVE;
                 }
 
                 uiInterface.InitMessage(_("Verifying blocks..."));
