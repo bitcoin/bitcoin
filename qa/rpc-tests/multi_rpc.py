@@ -116,6 +116,41 @@ class HTTPBasicsTest (SyscoinTestFramework):
         assert_equal(resp.status==401, True)
         conn.close()
 
+        #Preflight - all access control headers
+        headers = {"Origin": "http://localhost", "Access-Control-Request-Method": "POST", "Authorization": "Basic " + str_to_b64str(authpairnew)}
 
+        conn = httplib.HTTPConnection(url.hostname, url.port)
+        conn.connect()
+        conn.request('OPTIONS', '/', None, headers)
+        resp = conn.getresponse()
+        assert_equal(resp.status==401, False)
+        assert_equal(resp.getheader("access-control-allow-origin"), "http://localhost")
+        assert_equal(resp.getheader("access-control-allow-methods"), "POST")
+        assert_equal(resp.getheader("access-control-allow-headers"), "authorization,content-type")
+        conn.close()
+
+        #Simple Cross Origin - no Origin
+        headers = {"Access-Control-Request-Method": "POST", "Authorization": "Basic " + str_to_b64str(authpairnew)}
+
+        conn = httplib.HTTPConnection(url.hostname, url.port)
+        conn.connect()
+        conn.request('OPTIONS', '/', None, headers)
+        resp = conn.getresponse()
+        assert_equal(resp.status==401, False)
+        assert_equal(resp.getheader("access-control-allow-origin"), None)
+        conn.close()
+
+        #Simple Cross Origin - no OPTIONS
+        headers = {"Origin": "http://localhost", "Access-Control-Request-Method": "POST", "Authorization": "Basic " + str_to_b64str(authpairnew)}
+
+        conn = httplib.HTTPConnection(url.hostname, url.port)
+        conn.connect()
+        conn.request('POST', '/', None, headers)
+        resp = conn.getresponse()
+        assert_equal(resp.status==401, True)
+        assert_equal(resp.getheader("access-control-allow-origin"), "http://localhost")
+        assert_equal(resp.getheader("access-control-allow-methods"), None)
+        conn.close()
+        
 if __name__ == '__main__':
     HTTPBasicsTest ().main ()
