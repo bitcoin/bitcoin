@@ -207,8 +207,9 @@ MASTERNODE_COLLATERAL = 1000
 
 
 class MasternodeInfo:
-    def __init__(self, key, collateral_id, collateral_out):
+    def __init__(self, key, blsKey, collateral_id, collateral_out):
         self.key = key
+        self.blsKey = blsKey
         self.collateral_id = collateral_id
         self.collateral_out = collateral_out
 
@@ -238,6 +239,7 @@ class DashTestFramework(BitcoinTestFramework):
     def prepare_masternodes(self):
         for idx in range(0, self.mn_count):
             key = self.nodes[0].masternode("genkey")
+            blsKey = self.nodes[0].bls('generate')['secret']
             address = self.nodes[0].getnewaddress()
             txid = self.nodes[0].sendtoaddress(address, MASTERNODE_COLLATERAL)
             txrow = self.nodes[0].getrawtransaction(txid, True)
@@ -248,7 +250,7 @@ class DashTestFramework(BitcoinTestFramework):
                     collateral_vout = vout_idx
             self.nodes[0].lockunspent(False,
                                       [{"txid": txid, "vout": collateral_vout}])
-            self.mninfo.append(MasternodeInfo(key, txid, collateral_vout))
+            self.mninfo.append(MasternodeInfo(key, blsKey, txid, collateral_vout))
 
     def write_mn_config(self):
         conf = self.get_mnconf_file()
@@ -263,7 +265,8 @@ class DashTestFramework(BitcoinTestFramework):
     def create_masternodes(self):
         for idx in range(0, self.mn_count):
             args = ['-debug=masternode', '-externalip=127.0.0.1', '-masternode=1',
-                    '-masternodeprivkey=%s' % self.mninfo[idx].key] + self.extra_args
+                    '-masternodeprivkey=%s' % self.mninfo[idx].key,
+                    '-masternodeblsprivkey=%s' % self.mninfo[idx].blsKey] + self.extra_args
             self.nodes.append(start_node(idx + 1, self.options.tmpdir, args))
             for i in range(0, idx + 1):
                 connect_nodes(self.nodes[i], idx + 1)
