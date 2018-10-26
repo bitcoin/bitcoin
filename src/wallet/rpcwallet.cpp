@@ -3822,7 +3822,7 @@ bool FillPSCT(const CWallet* pwallet, PartiallySignedTransaction& psctx, int sig
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Specified Sighash and sighash in PSCT do not match.");
         }
 
-        complete &= SignPSCTInput(HidingSigningProvider(pwallet, !sign, !bip32derivs), *psctx.tx, input, i, sighash_type);
+        complete &= SignPSCTInput(HidingSigningProvider(pwallet, !sign, !bip32derivs), psctx, i, sighash_type);
     }
 
     // Fill in the bip32 keypaths and redeemscripts for the outputs so that hardware wallets can identify change

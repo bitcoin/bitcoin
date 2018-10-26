@@ -1545,9 +1545,7 @@ UniValue finalizepsct(const JSONRPCRequest& request)
     //   script.
     bool complete = true;
     for (unsigned int i = 0; i < psctx.tx->vin.size(); ++i) {
-        PSCTInput& input = psctx.inputs.at(i);
-
-        complete &= SignPSCTInput(DUMMY_SIGNING_PROVIDER, *psctx.tx, input, i, SIGHASH_ALL);
+        complete &= SignPSCTInput(DUMMY_SIGNING_PROVIDER, psctx, i, SIGHASH_ALL);
     }
 
     UniValue result(UniValue::VOBJ);
