@@ -5328,6 +5328,7 @@ bool ProcessMessages(CNode* pfrom)
             }
             else
             {
+                LogPrintf("ProcessMessages(%s, %u bytes): Exception '%s' caught, see below\n", SanitizeString(strCommand), nMessageSize, e.what());
                 PrintExceptionContinue(&e, "ProcessMessages()");
             }
         }
