@@ -566,6 +566,7 @@ struct PartiallySignedTransaction
     bool IsSane() const;
     PartiallySignedTransaction() {}
     PartiallySignedTransaction(const PartiallySignedTransaction& psbt_in) : tx(psbt_in.tx), inputs(psbt_in.inputs), outputs(psbt_in.outputs), unknown(psbt_in.unknown) {}
+    explicit PartiallySignedTransaction(const CTransaction& tx);
 
     // Only checks if they refer to the same transaction
     friend bool operator==(const PartiallySignedTransaction& a, const PartiallySignedTransaction &b)
