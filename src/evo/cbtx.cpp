@@ -14,19 +14,21 @@ bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidatio
 {
     AssertLockHeld(cs_main);
 
-    if (!tx.IsCoinBase())
+    if (!tx.IsCoinBase()) {
         return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-invalid");
+    }
 
     CCbTx cbTx;
-    if (!GetTxPayload(tx, cbTx))
+    if (!GetTxPayload(tx, cbTx)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-tx-payload");
+    }
 
-    if (cbTx.nVersion > CCbTx::CURRENT_VERSION)
+    if (cbTx.nVersion > CCbTx::CURRENT_VERSION) {
         return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-version");
+    }
 
-    if (pindexPrev) {
-        if (pindexPrev->nHeight + 1 != cbTx.nHeight)
-            return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-height");
+    if (pindexPrev && pindexPrev->nHeight + 1 != cbTx.nHeight) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-height");
     }
 
     return true;
@@ -37,12 +39,14 @@ bool CheckCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindex, C
 {
     AssertLockHeld(cs_main);
 
-    if (block.vtx[0]->nType != TRANSACTION_COINBASE)
+    if (block.vtx[0]->nType != TRANSACTION_COINBASE) {
         return true;
+    }
 
     CCbTx cbTx;
-    if (!GetTxPayload(*block.vtx[0], cbTx))
+    if (!GetTxPayload(*block.vtx[0], cbTx)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-tx-payload");
+    }
 
     if (pindex) {
         uint256 calculatedMerkleRoot;

@@ -43,8 +43,9 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
 
 bool ProcessSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValidationState& state)
 {
-    if (tx.nVersion < 3 || tx.nType == TRANSACTION_NORMAL)
+    if (tx.nVersion < 3 || tx.nType == TRANSACTION_NORMAL) {
         return true;
+    }
 
     switch (tx.nType) {
         case TRANSACTION_PROVIDER_REGISTER:
@@ -61,8 +62,9 @@ bool ProcessSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValida
 
 bool UndoSpecialTx(const CTransaction& tx, const CBlockIndex* pindex)
 {
-    if (tx.nVersion < 3 || tx.nType == TRANSACTION_NORMAL)
+    if (tx.nVersion < 3 || tx.nType == TRANSACTION_NORMAL) {
         return true;
+    }
 
     switch (tx.nType) {
         case TRANSACTION_PROVIDER_REGISTER:
@@ -81,17 +83,21 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
 {
     for (int i = 0; i < (int)block.vtx.size(); i++) {
         const CTransaction& tx = *block.vtx[i];
-        if (!CheckSpecialTx(tx, pindex->pprev, state))
+        if (!CheckSpecialTx(tx, pindex->pprev, state)) {
             return false;
-        if (!ProcessSpecialTx(tx, pindex, state))
+        }
+        if (!ProcessSpecialTx(tx, pindex, state)) {
             return false;
+        }
     }
 
-    if (!deterministicMNManager->ProcessBlock(block, pindex->pprev, state))
+    if (!deterministicMNManager->ProcessBlock(block, pindex->pprev, state)) {
         return false;
+    }
 
-    if (!CheckCbTxMerkleRootMNList(block, pindex, state))
+    if (!CheckCbTxMerkleRootMNList(block, pindex, state)) {
         return false;
+    }
 
     return true;
 }
@@ -100,12 +106,14 @@ bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex)
 {
     for (int i = (int)block.vtx.size() - 1; i >= 0; --i) {
         const CTransaction& tx = *block.vtx[i];
-        if (!UndoSpecialTx(tx, pindex))
+        if (!UndoSpecialTx(tx, pindex)) {
             return false;
+        }
     }
 
-    if (!deterministicMNManager->UndoBlock(block, pindex))
+    if (!deterministicMNManager->UndoBlock(block, pindex)) {
         return false;
+    }
 
     return true;
 }

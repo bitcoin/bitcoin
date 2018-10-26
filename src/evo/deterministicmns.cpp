@@ -175,8 +175,9 @@ static bool CompareByLastPaid(const CDeterministicMNCPtr &_a, const CDeterminist
 
 CDeterministicMNCPtr CDeterministicMNList::GetMNPayee() const
 {
-    if (mnMap.size() == 0)
+    if (mnMap.size() == 0) {
         return nullptr;
+    }
 
     CDeterministicMNCPtr best;
     ForEachMN(true, [&](const CDeterministicMNCPtr& dmn) {
@@ -391,10 +392,12 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
                 assert(false); // this should have been handled already
             }
 
-            if (newList.HasUniqueProperty(proTx.addr))
+            if (newList.HasUniqueProperty(proTx.addr)) {
                 return _state.DoS(100, false, REJECT_CONFLICT, "bad-protx-dup-addr");
-            if (newList.HasUniqueProperty(proTx.keyIDOwner) || newList.HasUniqueProperty(proTx.pubKeyOperator))
+            }
+            if (newList.HasUniqueProperty(proTx.keyIDOwner) || newList.HasUniqueProperty(proTx.pubKeyOperator)) {
                 return _state.DoS(100, false, REJECT_CONFLICT, "bad-protx-dup-key");
+            }
 
             auto dmn = std::make_shared<CDeterministicMN>();
             dmn->proTxHash = tx.GetHash();
@@ -436,8 +439,9 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
                 assert(false); // this should have been handled already
             }
 
-            if (newList.HasUniqueProperty(proTx.addr) && newList.GetUniquePropertyMN(proTx.addr)->proTxHash != proTx.proTxHash)
+            if (newList.HasUniqueProperty(proTx.addr) && newList.GetUniquePropertyMN(proTx.addr)->proTxHash != proTx.proTxHash) {
                 return _state.DoS(100, false, REJECT_CONFLICT, "bad-protx-dup-addr");
+            }
 
             CDeterministicMNCPtr dmn = newList.GetMN(proTx.proTxHash);
             if (!dmn) {
