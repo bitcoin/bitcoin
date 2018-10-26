@@ -977,7 +977,10 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, const std::string& strCommand,
         CMasternodeBroadcast mnb;
         vRecv >> mnb;
 
-        pfrom->setAskFor.erase(mnb.GetHash());
+        {
+            LOCK(cs_main);
+            connman.RemoveAskFor(mnb.GetHash());
+        }
 
         if(!masternodeSync.IsBlockchainSynced()) return;
 
@@ -1003,7 +1006,10 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, const std::string& strCommand,
 
         uint256 nHash = mnp.GetHash();
 
-        pfrom->setAskFor.erase(nHash);
+        {
+            LOCK(cs_main);
+            connman.RemoveAskFor(nHash);
+        }
 
         if(!masternodeSync.IsBlockchainSynced()) return;
 
@@ -1066,7 +1072,10 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, const std::string& strCommand,
         CMasternodeVerification mnv;
         vRecv >> mnv;
 
-        pfrom->setAskFor.erase(mnv.GetHash());
+        {
+            LOCK(cs_main);
+            connman.RemoveAskFor(mnv.GetHash());
+        }
 
         if(!masternodeSync.IsMasternodeListSynced()) return;
 

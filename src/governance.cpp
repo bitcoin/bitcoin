@@ -132,7 +132,10 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
 
         uint256 nHash = govobj.GetHash();
 
-        pfrom->setAskFor.erase(nHash);
+        {
+            LOCK(cs_main);
+            connman.RemoveAskFor(nHash);
+        }
 
         if (pfrom->nVersion < MIN_GOVERNANCE_PEER_PROTO_VERSION) {
             LogPrint("gobject", "MNGOVERNANCEOBJECT -- peer=%d using obsolete version %i\n", pfrom->id, pfrom->nVersion);
@@ -220,7 +223,10 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
 
         uint256 nHash = vote.GetHash();
 
-        pfrom->setAskFor.erase(nHash);
+        {
+            LOCK(cs_main);
+            connman.RemoveAskFor(nHash);
+        }
 
         if (pfrom->nVersion < MIN_GOVERNANCE_PEER_PROTO_VERSION) {
             LogPrint("gobject", "MNGOVERNANCEOBJECTVOTE -- peer=%d using obsolete version %i\n", pfrom->id, pfrom->nVersion);
@@ -1113,10 +1119,13 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
             // only use up to date peers
             if (pnode->nVersion < MIN_GOVERNANCE_PEER_PROTO_VERSION) continue;
             // stop early to prevent setAskFor overflow
-            size_t nProjectedSize = pnode->setAskFor.size() + nProjectedVotes;
-            if (nProjectedSize > SETASKFOR_MAX_SZ / 2) continue;
-            // to early to ask the same node
-            if (mapAskedRecently[nHashGovobj].count(pnode->addr)) continue;
+            {
+                LOCK(cs_main);
+                size_t nProjectedSize = pnode->setAskFor.size() + nProjectedVotes;
+                if (nProjectedSize > SETASKFOR_MAX_SZ / 2) continue;
+                // to early to ask the same node
+                if (mapAskedRecently[nHashGovobj].count(pnode->addr)) continue;
+            }
 
             RequestGovernanceObject(pnode, nHashGovobj, connman, true);
             mapAskedRecently[nHashGovobj][pnode->addr] = nNow + nTimeout;

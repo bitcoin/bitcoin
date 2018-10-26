@@ -310,6 +310,7 @@ public:
     void RelayTransaction(const CTransaction& tx, const CDataStream& ss);
     void RelayInv(CInv &inv, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
     void RelayInvFiltered(CInv &inv, const CTransaction &relatedTx, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
+    void RemoveAskFor(const uint256& hash);
 
     // Addrman functions
     size_t GetAddressCount() const;
@@ -929,6 +930,7 @@ public:
     }
 
     void AskFor(const CInv& inv);
+    void RemoveAskFor(const uint256& hash);
 
     void CloseSocketDisconnect();
 

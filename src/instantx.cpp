@@ -73,7 +73,10 @@ void CInstantSend::ProcessMessage(CNode* pfrom, const std::string& strCommand, C
 
         uint256 nVoteHash = vote.GetHash();
 
-        pfrom->setAskFor.erase(nVoteHash);
+        {
+            LOCK(cs_main);
+            connman.RemoveAskFor(nVoteHash);
+        }
 
         // Ignore any InstantSend messages until masternode list is synced
         if (!masternodeSync.IsMasternodeListSynced()) return;

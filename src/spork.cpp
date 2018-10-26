@@ -123,7 +123,7 @@ void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CD
         std::string strLogMsg;
         {
             LOCK(cs_main);
-            pfrom->setAskFor.erase(hash);
+            connman.RemoveAskFor(hash);
             if(!chainActive.Tip()) return;
             strLogMsg = strprintf("SPORK -- hash: %s id: %d value: %10d bestHeight: %d peer=%d", hash.ToString(), spork.nSporkID, spork.nValue, chainActive.Height(), pfrom->id);
         }

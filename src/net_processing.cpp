@@ -1962,7 +1962,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         CInv inv(nInvType, tx.GetHash());
         pfrom->AddInventoryKnown(inv);
-        pfrom->setAskFor.erase(inv.hash);
 
         // Process custom logic, no matter if tx will be accepted to mempool later or not
         if (strCommand == NetMsgType::TXLOCKREQUEST || fCanAutoLock) {
@@ -2009,10 +2008,10 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         LOCK(cs_main);
 
+        connman.RemoveAskFor(inv.hash);
+
         bool fMissingInputs = false;
         CValidationState state;
-
-        mapAlreadyAskedFor.erase(inv.hash);
 
         if (!AlreadyHave(inv) && AcceptToMemoryPool(mempool, state, ptx, true, &fMissingInputs)) {
             // Process custom txes, this changes AlreadyHave to "true"
