@@ -148,7 +148,7 @@ jobs:
       language: python
       python: '3.6'
       install:
-        - travis_retry pip install flake8
+        - travis_retry pip install flake8==3.5.0
       before_script:
         - git fetch --unshallow
       script:
