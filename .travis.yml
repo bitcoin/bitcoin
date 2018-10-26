@@ -68,18 +68,13 @@ script:
     - export TRAVIS_COMMIT_LOG=`git log --format=fuller -1`
     # Our scripts try to be Travis agnostic
     - $DOCKER_RUN_IN_BUILDER ./ci/build_depends.sh;
-    # Skip Dash Core build if depends build take more than 20 mins.
-    - if [ $SECONDS -lt 1200 ]; then $DOCKER_RUN_IN_BUILDER ./ci/build_src.sh && export SRC_BUILT="true"; fi
-    - |
-      if [ "$SRC_BUILT" = "true" ]; then
-        travis_wait 30 $DOCKER_RUN_IN_BUILDER ./ci/test_unittests.sh;
-        $DOCKER_RUN_IN_BUILDER ./ci/test_integrationtests.sh;
-        if [ "$DOCKER_BUILD" = "true" ]; then BUILD_DIR=build-ci/dashcore-$BUILD_TARGET ./docker/build-docker.sh; fi;
-      else
-        # Let the build fail immediately. Caches are still uploaded even after failure. The next Travis run should then
-        # use the caches and thus be much faster, causing the build to succeed
-        false
-      fi;
+    # Gracefully stop build without running into timeouts (which won't update caches) when building depends took too long
+    # Next build should fix this situation as it will start with a populated depends cache
+    - if [ $SECONDS -gt 1200 ]; then export DEPENDS_TIMEOUT="true"; false; fi # The "false" here ensures that the build is marked as failed even though the whole script returns 0
+    - test "$DEPENDS_TIMEOUT" != "true" && $DOCKER_RUN_IN_BUILDER ./ci/build_src.sh
+    - test "$DEPENDS_TIMEOUT" != "true" && $DOCKER_RUN_IN_BUILDER ./ci/test_unittests.sh
+    - test "$DEPENDS_TIMEOUT" != "true" && $DOCKER_RUN_IN_BUILDER ./ci/test_integrationtests.sh
+    - test "$DEPENDS_TIMEOUT" != "true" && if [ "$DOCKER_BUILD" = "true" ]; then BUILD_DIR=build-ci/dashcore-$BUILD_TARGET ./docker/build-docker.sh; fi
 after_script:
     - echo $TRAVIS_COMMIT_RANGE
     - echo $TRAVIS_COMMIT_LOG
