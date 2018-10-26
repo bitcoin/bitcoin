@@ -11,7 +11,7 @@
  */
 
 
-static const int PROTOCOL_VERSION = 70211;
+static const int PROTOCOL_VERSION = 70212;
 
 //! initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
@@ -45,6 +45,6 @@ static const int DIP0001_PROTOCOL_VERSION = 70208;
 static const int SHORT_IDS_BLOCKS_VERSION = 70209;
 
 //! introduction of DIP3/deterministic masternodes
-static const int DMN_PROTO_VERSION = 70211;
+static const int DMN_PROTO_VERSION = 70212;
 
 #endif // BITCOIN_VERSION_H

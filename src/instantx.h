@@ -28,8 +28,6 @@ extern CInstantSend instantsend;
 
 static const int MIN_INSTANTSEND_PROTO_VERSION      = 70210;
 
-static const int MIN_INSTANTSEND_WITHOUT_FEE_PROTO_VERSION = 70211;
-
 /// For how long we are going to accept votes/locks
 /// after we saw the first one for a specific transaction
 static const int INSTANTSEND_LOCK_TIMEOUT_SECONDS   = 15;
