@@ -165,13 +165,15 @@ public:
         // }
     }
     template <typename Stream>
-    inline void Unserialize(Stream& s)
+    inline void Unserialize(Stream& s, bool checkMalleable = true)
     {
         char buf[SerSize];
         s.read((char*)buf, SerSize);
         SetBuf(buf, SerSize);
 
-        CheckMalleable(buf, SerSize);
+        if (checkMalleable) {
+            CheckMalleable(buf, SerSize);
+        }
     }
 
     inline void CheckMalleable(void* buf, size_t size) const
