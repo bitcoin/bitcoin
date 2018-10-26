@@ -1539,12 +1539,15 @@ UniValue finalizepsct(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
     }
 
-    // Get all of the previous transactions
+    // Finalize input signatures -- in case we have partial signatures that add up to a complete
+    //   signature, but have not combined them yet (e.g. because the combiner that created this
+    //   PartiallySignedTransaction did not understand them), this will combine them into a final
+    //   script.
     bool complete = true;
     for (unsigned int i = 0; i < psctx.tx->vin.size(); ++i) {
         PSCTInput& input = psctx.inputs.at(i);
 
-        complete &= SignPSCTInput(DUMMY_SIGNING_PROVIDER, *psctx.tx, input, i, 1);
+        complete &= SignPSCTInput(DUMMY_SIGNING_PROVIDER, *psctx.tx, input, i, SIGHASH_ALL);
     }
 
     UniValue result(UniValue::VOBJ);

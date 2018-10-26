@@ -239,10 +239,14 @@ bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreato
     return sigdata.complete;
 }
 
+bool PSCTInputSigned(PSCTInput& input)
+{
+    return !input.final_script_sig.empty() || !input.final_script_witness.IsNull();
+}
+
 bool SignPSCTInput(const SigningProvider& provider, const CMutableTransaction& tx, PSCTInput& input, int index, int sighash)
 {
-    // if this input has a final scriptsig or scriptwitness, don't do anything with it
-    if (!input.final_script_sig.empty() || !input.final_script_witness.IsNull()) {
+    if (PSCTInputSigned(input)) {
         return true;
     }
 

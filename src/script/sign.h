@@ -730,6 +730,9 @@ bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreato
 bool SignSignature(const SigningProvider &provider, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, const CAmount& amount, int nHashType);
 bool SignSignature(const SigningProvider &provider, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType);
 
+/** Checks whether a PSCTInput is already signed. */
+bool PSCTInputSigned(PSCTInput& input);
+
 /** Signs a PSCTInput, verifying that all provided data matches what is being signed. */
 bool SignPSCTInput(const SigningProvider& provider, const CMutableTransaction& tx, PSCTInput& input, int index, int sighash = SIGHASH_ALL);
 
