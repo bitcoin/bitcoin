@@ -72,6 +72,21 @@ constexpr bool IsDigit(char c)
 }
 
 /**
+ * Tests if the given character is a whitespace character. The whitespace characters
+ * are: space, form-feed ('\f'), newline ('\n'), carriage return ('\r'), horizontal
+ * tab ('\t'), and vertical tab ('\v').
+ *
+ * This function is locale independent. Under the C locale this function gives the
+ * same result as std::isspace.
+ *
+ * @param[in] c     character to test
+ * @return          true if the argument is a whitespace character; otherwise false
+ */
+constexpr inline bool IsSpace(char c) noexcept {
+    return c == ' ' || c == '\f' || c == '\n' || c == '\r' || c == '\t' || c == '\v';
+}
+
+/**
  * Convert string to signed 32-bit integer with strict parse error feedback.
  * @returns true if the entire string could be parsed as valid integer,
  *   false if not the entire string could be parsed or when overflow or underflow occurred.
