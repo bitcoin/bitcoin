@@ -172,6 +172,8 @@ BITCOIN_CORE_H = \
   script/ismine.h \
   spork.h \
   streams.h \
+  support/allocators/mt_pooled_secure.h \
+  support/allocators/pooled_secure.h \
   support/allocators/secure.h \
   support/allocators/zeroafterfree.h \
   support/cleanse.h \
