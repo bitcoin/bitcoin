@@ -154,6 +154,7 @@ BASE_SCRIPTS = [
     'feature_versionbits_warning.py',
     'rpc_preciousblock.py',
     'wallet_importprunedfunds.py',
+    'p2p_leak_tx.py',
     'rpc_signmessage.py',
     'feature_nulldummy.py',
     'mempool_accept.py',
