@@ -20,7 +20,7 @@ Base build dependencies
 brew install automake libtool pkg-config
 ```
 
-If you want to build the disk image with `make deploy` (.dmg / optional), you need RSVG
+If you want to build the disk image with `make deploy` (.dmg / optional), you need RSVG:
 ```bash
 brew install librsvg
 ```
@@ -51,13 +51,13 @@ Running
 
 Dash Core is now available at `./src/dashd`
 
-Before running, you may create an empty configuration file.
+Before running, you may create an empty configuration file:
 
     touch "/Users/${USER}/Library/Application Support/DashCore/dash.conf"
 
     chmod 600 "/Users/${USER}/Library/Application Support/DashCore/dash.conf"
 
-The first time you run dashd, it will start downloading the blockchain. This process could take several hours.
+The first time you run dashd, it will start downloading the blockchain. This process could take many hours, or even days on slower than average systems.
 
 You can monitor the download process by looking at the debug.log file:
 
