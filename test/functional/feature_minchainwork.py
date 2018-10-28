@@ -31,6 +31,9 @@ class MinimumChainWorkTest(BitcoinTestFramework):
         self.extra_args = [[], ["-minimumchainwork=0x65"], ["-minimumchainwork=0x65"]]
         self.node_min_work = [0, 101, 101]
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def setup_network(self):
         # This test relies on the chain setup being:
         # node0 <- node1 <- node2

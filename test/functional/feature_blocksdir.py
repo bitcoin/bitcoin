@@ -16,6 +16,9 @@ class BlocksdirTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 1
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def run_test(self):
         self.stop_node(0)
         shutil.rmtree(self.nodes[0].datadir)

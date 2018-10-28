@@ -26,6 +26,9 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         self.num_nodes = 1
         self.setup_clean_chain = True
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def bootstrap_p2p(self, *, num_connections=1):
         """Add a P2P connection to the node.
 
@@ -136,11 +139,16 @@ class InvalidTxRequestTest(BitcoinTestFramework):
 
         # restart node with sending BIP61 messages disabled, check that it disconnects without sending the reject message
         self.log.info('Test a transaction that is rejected, with BIP61 disabled')
-        self.restart_node(0, ['-enablebip61=0','-persistmempool=0'])
+        self.restart_node(0, ['-enablebip61=0', '-persistmempool=0'])
         self.reconnect_p2p(num_connections=1)
-        node.p2p.send_txs_and_test([tx1], node, success=False, expect_disconnect=True)
+        with node.assert_debug_log(expected_msgs=[
+                "{} from peer=0 was not accepted: mandatory-script-verify-flag-failed (Invalid OP_IF construction) (code 16)".format(tx1.hash),
+                "disconnecting peer=0",
+        ]):
+            node.p2p.send_txs_and_test([tx1], node, success=False, expect_disconnect=True)
         # send_txs_and_test will have waited for disconnect, so we can safely check that no reject has been received
         assert_equal(node.p2p.reject_code_received, None)
+
 
 if __name__ == '__main__':
     InvalidTxRequestTest().main()

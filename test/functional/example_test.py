@@ -15,8 +15,8 @@ from collections import defaultdict
 
 # Avoid wildcard * imports if possible
 from test_framework.blocktools import (create_block, create_coinbase)
+from test_framework.messages import CInv
 from test_framework.mininode import (
-    CInv,
     P2PInterface,
     mininode_lock,
     msg_block,
@@ -67,10 +67,11 @@ def custom_function():
     # self.log.info("running custom_function")  # Oops! Can't run self.log outside the BitcoinTestFramework
     pass
 
+
 class ExampleTest(BitcoinTestFramework):
     # Each functional test is a subclass of the BitcoinTestFramework class.
 
-    # Override the set_test_params(), add_options(), setup_chain(), setup_network()
+    # Override the set_test_params(), skip_test_if_missing_module(), add_options(), setup_chain(), setup_network()
     # and setup_nodes() methods to customize the test setup as required.
 
     def set_test_params(self):
@@ -83,6 +84,9 @@ class ExampleTest(BitcoinTestFramework):
         self.extra_args = [[], ["-logips"], []]
 
         # self.log.info("I've finished set_test_params")  # Oops! Can't run self.log before run_test()
+
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
 
     # Use add_options() to add specific command-line options for your test.
     # In practice this is not used very much, since the tests are mostly written
@@ -111,7 +115,7 @@ class ExampleTest(BitcoinTestFramework):
         # sync_all() should not include node2, since we're not expecting it to
         # sync.
         connect_nodes(self.nodes[0], 1)
-        self.sync_all([self.nodes[0:1]])
+        self.sync_all([self.nodes[0:2]])
 
     # Use setup_nodes() to customize the node start behaviour (for example if
     # you don't want to start all nodes at the start of the test).
@@ -135,7 +139,7 @@ class ExampleTest(BitcoinTestFramework):
 
         # Generating a block on one of the nodes will get us out of IBD
         blocks = [int(self.nodes[0].generate(nblocks=1)[0], 16)]
-        self.sync_all([self.nodes[0:1]])
+        self.sync_all([self.nodes[0:2]])
 
         # Notice above how we called an RPC by calling a method with the same
         # name on the node object. Notice also how we used a keyword argument

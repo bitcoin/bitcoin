@@ -17,6 +17,7 @@
 #include <key_io.h>
 #include <wallet/wallet.h>
 
+#include <QApplication>
 #include <QTimer>
 #include <QMessageBox>
 
@@ -139,5 +140,16 @@ void TestAddAddressesToSendBook()
 
 void AddressBookTests::addressBookTests()
 {
+#ifdef Q_OS_MAC
+    if (QApplication::platformName() == "minimal") {
+        // Disable for mac on "minimal" platform to avoid crashes inside the Qt
+        // framework when it tries to look up unimplemented cocoa functions,
+        // and fails to handle returned nulls
+        // (https://bugreports.qt.io/browse/QTBUG-49686).
+        QWARN("Skipping AddressBookTests on mac build with 'minimal' platform set due to Qt bugs. To run AppTests, invoke "
+              "with 'test_bitcoin-qt -platform cocoa' on mac, or else use a linux or windows build.");
+        return;
+    }
+#endif
     TestAddAddressesToSendBook();
 }

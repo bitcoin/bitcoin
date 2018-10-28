@@ -30,6 +30,9 @@ class WalletLabelsTest(BitcoinTestFramework):
         """Don't connect nodes."""
         self.setup_nodes()
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def run_test(self):
         """Run the test twice - once using the accounts API and once using the labels API."""
         self.log.info("Test accounts API")

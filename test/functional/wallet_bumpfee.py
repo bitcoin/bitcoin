@@ -31,8 +31,13 @@ class BumpFeeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
-        self.extra_args = [["-deprecatedrpc=addwitnessaddress", "-walletrbf={}".format(i)]
-                           for i in range(self.num_nodes)]
+        self.extra_args = [[
+            "-deprecatedrpc=addwitnessaddress",
+            "-walletrbf={}".format(i),
+        ] for i in range(self.num_nodes)]
+
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
 
     def run_test(self):
         # Encrypt wallet for test_locked_wallet_fails test
