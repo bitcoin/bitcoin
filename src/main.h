@@ -116,6 +116,12 @@ struct BlockHasher
     size_t operator()(const uint256& hash) const { return hash.GetCheapHash(); }
 };
 
+typedef std::pair<uint256, unsigned int> SPIdentifier;
+struct SPHasher
+{
+    size_t operator()(const SPIdentifier& spID) const { return spID.first.GetHash(uint256S(std::to_string(spID.second))); }
+};
+
 extern CScript COINBASE_FLAGS;
 extern CCriticalSection cs_main;
 extern CTxMemPool mempool;
@@ -136,11 +142,12 @@ extern bool fCheckBlockIndex;
 extern size_t nCoinCacheUsage;
 extern CFeeRate minRelayTxFee;
 extern bool fAlerts;
-
 extern bool fLargeWorkForkFound;
 extern bool fLargeWorkInvalidChainFound;
 
 extern std::map<uint256, int64_t> mapRejectedBlocks;
+
+extern boost::unordered_set<SPIdentifier, SPHasher> setUsedStakePointers;
 
 /** Best header we've seen so far (used for getheaders queries' starting points). */
 extern CBlockIndex *pindexBestHeader;
@@ -230,7 +237,7 @@ bool ActivateBestChain(CValidationState &state, CBlock *pblock = NULL);
 int64_t GetBlockValue(int nHeight, const CAmount &nFees);
 
 /** Create a new block index entry for a given block hash */
-CBlockIndex * InsertBlockIndex(uint256 hash);
+CBlockIndex * InsertBlockIndex(uint256 hash, bool fLoadStakePointerID = false);
 /** Abort with a message */
 bool AbortNode(const std::string &msg, const std::string &userMessage="");
 /** Get statistics from node state */

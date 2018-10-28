@@ -57,6 +57,7 @@ CCriticalSection cs_main;
 
 BlockMap mapBlockIndex;
 CChain chainActive;
+boost::unordered_set<SPIdentifier, SPHasher> setUsedStakePointers;
 CBlockIndex *pindexBestHeader = NULL;
 int64_t nTimeBestReceived = 0;
 CWaitableCriticalSection csBestBlock;
@@ -2038,6 +2039,9 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex
         }
     }
 
+    if (!pblocktree->EraseBlockProofPointer(pindex->GetBlockHash()))
+        fClean && error("DisconnectBlock() : failed to erase used stakepointer info");
+
     // move best block pointer to prevout block
     view.SetBestBlock(pindex->pprev->GetBlockHash());
 
@@ -2090,6 +2094,10 @@ bool CheckBlockProofPointer(const CBlock& block, CPubKey& pubkeyMasternode, COut
     CBlockIndex* pindexFrom = mapBlockIndex.at(stakePointer.hashBlock);
     if (!chainActive.Contains(pindexFrom))
         return error("%s: Block %s is not in the block chain", __func__, stakePointer.hashBlock.GetHex());
+
+    SPIdentifier spID = std::make_pair(stakePointer.txid, stakePointer.nPos);
+    if (setUsedStakePointers.count(spID))
+        return error("%s: StakePointer (txid=%s, nPos=%u) has already been used", __func__, stakePointer.txid.GetHex(), stakePointer.nPos);
 
     CBlock blockFrom;
     if (!ReadBlockFromDisk(blockFrom, pindexFrom))
@@ -2294,6 +2302,12 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         if (!pblocktree->WriteTxIndex(vPos))
             return state.Abort("Failed to write transaction index");
 
+    if (block.IsProofOfStake()) {
+        SPIdentifier spID = std::make_pair(block.stakePointer.txid, block.stakePointer.nPos);
+        if (!pblocktree->WriteBlockProofPointer(block.GetHash(), spID));
+            return state.Abort("Failed to write stakepointer info");
+        setUsedStakePointers.insert(spID);
+    }
     // add this block to the view's block chain
     view.SetBestBlock(pindex->GetBlockHash());
 
@@ -3579,10 +3593,18 @@ boost::filesystem::path GetBlockPosFilename(const CDiskBlockPos &pos, const char
     return GetDataDir() / "blocks" / strprintf("%s%05u.dat", prefix, pos.nFile);
 }
 
-CBlockIndex * InsertBlockIndex(uint256 hash)
+CBlockIndex * InsertBlockIndex(uint256 hash, bool fLoadStakePointerID)
 {
     if (hash.IsNull())
         return NULL;
+
+    SPIdentifier spID;
+    if (fLoadStakePointerID) {
+        if (pblocktree->ReadBlockProofPointer(hash, spID))
+            setUsedStakePointers.insert(spID);
+        else
+            throw runtime_error("LoadBlockIndex() : Failed to get stakepointer info from disk");
+    }
 
     // Return existing
     BlockMap::iterator mi = mapBlockIndex.find(hash);

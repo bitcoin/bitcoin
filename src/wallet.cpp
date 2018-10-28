@@ -2013,7 +2013,8 @@ bool CWallet::GetRecentStakePointers(std::vector<StakePointer>& vStakePointers)
             CScript scriptMNPubKey;
             scriptMNPubKey = GetScriptForDestination(pactiveMN->pubkey.GetID());
             for (CTransaction& tx : blockLastPaid.vtx) {
-                if (tx.IsCoinBase() && tx.vout[1].scriptPubKey == scriptMNPubKey) {
+                SPIdentifier spID = std::make_pair(tx.GetHash(), 1);
+                if (tx.IsCoinBase() && tx.vout[1].scriptPubKey == scriptMNPubKey && !setUsedStakePointers.count(spID)) {
                     StakePointer stakePointer;
                     stakePointer.hashBlock = pindex->GetBlockHash();
                     stakePointer.txid = tx.GetHash();
@@ -2050,7 +2051,8 @@ bool CWallet::GetRecentStakePointers(std::vector<StakePointer>& vStakePointers)
             CScript scriptSNPubKey;
             scriptSNPubKey = GetScriptForDestination(pactiveSN->pubkey.GetID());
             for (CTransaction& tx : blockLastPaid.vtx) {
-                if (tx.IsCoinBase() && tx.vout[2].scriptPubKey == scriptSNPubKey) {
+                SPIdentifier spID = std::make_pair(tx.GetHash(), 1);
+                if (tx.IsCoinBase() && tx.vout[2].scriptPubKey == scriptSNPubKey && !setUsedStakePointers.count(spID)) {
                     StakePointer stakePointer;
                     stakePointer.hashBlock = pindex->GetBlockHash();
                     stakePointer.txid = tx.GetHash();

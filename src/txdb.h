@@ -67,6 +67,9 @@ public:
     bool WriteTxIndex(const std::vector<std::pair<uint256, CDiskTxPos> > &list);
     bool WriteFlag(const std::string &name, bool fValue);
     bool ReadFlag(const std::string &name, bool &fValue);
+    bool WriteBlockProofPointer(const uint256& blockHash, const SPIdentifier& spID);
+    bool ReadBlockProofPointer(const uint256& blockHash, SPIdentifier& spID);
+    bool EraseBlockProofPointer(const uint256& blockHash);
     bool LoadBlockIndexGuts();
 };
 
