@@ -33,7 +33,7 @@ void base_blob<BITS>::SetHex(const char* psz)
     memset(m_data, 0, sizeof(m_data));
 
     // skip leading spaces
-    while (isspace(*psz))
+    while (IsSpace(*psz))
         psz++;
 
     // skip 0x

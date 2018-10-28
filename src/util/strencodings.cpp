@@ -87,7 +87,7 @@ std::vector<unsigned char> ParseHex(const char* psz)
     std::vector<unsigned char> vch;
     while (true)
     {
-        while (isspace(*psz))
+        while (IsSpace(*psz))
             psz++;
         signed char c = HexDigit(*psz++);
         if (c == (signed char)-1)
@@ -272,7 +272,7 @@ std::string DecodeBase32(const std::string& str, bool* pf_invalid)
 {
     if (str.empty()) // No empty string allowed
         return false;
-    if (str.size() >= 1 && (isspace(str[0]) || isspace(str[str.size()-1]))) // No padding allowed
+    if (str.size() >= 1 && (IsSpace(str[0]) || IsSpace(str[str.size()-1]))) // No padding allowed
         return false;
     if (!ValidAsCString(str)) // No embedded NUL characters allowed
         return false;
