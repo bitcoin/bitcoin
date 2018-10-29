@@ -693,12 +693,12 @@ static UniValue getbalance(const JSONRPCRequest& request)
 
     if (request.fHelp || (request.params.size() > 3 ))
         throw std::runtime_error(
-            "getbalance ( \"dummy\" minconf include_watchonly )\n"
+            "getbalance ( trusted_only minconf include_watchonly )\n"
             "\nReturns the total available balance.\n"
             "The available balance is what the wallet considers currently spendable, and is\n"
             "thus affected by options which limit spendability such as -spendzeroconfchange.\n"
             "\nArguments:\n"
-            "1. (dummy)           (string, optional) Remains for backward compatibility. Must be excluded or set to \"*\".\n"
+            "1. trusted_only      (boolean, optional, default=true) Only include transactions considered trusted by the wallet.\n"
             "2. minconf           (numeric, optional, default=0) Only include transactions confirmed at least this many times.\n"
             "3. include_watchonly (bool, optional, default=false) Also include balance in watch-only addresses (see 'importaddress')\n"
             "\nResult:\n"
@@ -719,9 +719,18 @@ static UniValue getbalance(const JSONRPCRequest& request)
     auto locked_chain = pwallet->chain().lock();
     LOCK(pwallet->cs_wallet);
 
-    const UniValue& dummy_value = request.params[0];
-    if (!dummy_value.isNull() && dummy_value.get_str() != "*") {
-        throw JSONRPCError(RPC_METHOD_DEPRECATED, "dummy first argument must be excluded or set to \"*\".");
+    const UniValue& trusted_only_uv = request.params[0];
+    bool trusted_only = true;
+    if (trusted_only_uv.isBool()) {
+        trusted_only = trusted_only_uv.get_bool();
+    } else if (trusted_only_uv.isStr()) {
+        // backward compatibility
+        if (trusted_only_uv.get_str() != "*") {
+            throw JSONRPCError(RPC_METHOD_DEPRECATED, "accounts no longer supported; set 1st field to trusted_only");
+        }
+        trusted_only = false;
+    } else if (!trusted_only_uv.isNull()) {
+        throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Expected type %s, got %s", uvTypeName(UniValue::VSTR), uvTypeName(trusted_only_uv.type())));
     }
 
     int min_depth = 0;
@@ -734,7 +743,7 @@ static UniValue getbalance(const JSONRPCRequest& request)
         filter = filter | ISMINE_WATCH_ONLY;
     }
 
-    return ValueFromAmount(pwallet->GetBalance(filter, min_depth));
+    return ValueFromAmount(pwallet->GetBalance(filter, min_depth, trusted_only));
 }
 
 static UniValue getunconfirmedbalance(const JSONRPCRequest &request)
@@ -4132,7 +4141,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "encryptwallet",                    &encryptwallet,                 {"passphrase"} },
     { "wallet",             "getaddressesbylabel",              &getaddressesbylabel,           {"label"} },
     { "wallet",             "getaddressinfo",                   &getaddressinfo,                {"address"} },
-    { "wallet",             "getbalance",                       &getbalance,                    {"dummy","minconf","include_watchonly"} },
+    { "wallet",             "getbalance",                       &getbalance,                    {"trusted_only","minconf","include_watchonly"} },
     { "wallet",             "getnewaddress",                    &getnewaddress,                 {"label","address_type"} },
     { "wallet",             "getrawchangeaddress",              &getrawchangeaddress,           {"address_type"} },
     { "wallet",             "getreceivedbyaddress",             &getreceivedbyaddress,          {"address","minconf"} },
