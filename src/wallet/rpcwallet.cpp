@@ -888,12 +888,12 @@ static UniValue getbalance(const JSONRPCRequest& request)
             "2. minconf           (numeric, optional) Only include transactions confirmed at least this many times. \n"
             "                     The default is 1 if an account is provided or 0 if no account is provided\n")
             : std::string(
-            "getbalance ( \"(dummy)\" minconf include_watchonly )\n"
+            "getbalance ( trusted_only minconf include_watchonly )\n"
             "\nReturns the total available balance.\n"
             "The available balance is what the wallet considers currently spendable, and is\n"
             "thus affected by options which limit spendability such as -spendzeroconfchange.\n"
             "\nArguments:\n"
-            "1. (dummy)           (string, optional) Remains for backward compatibility. Must be excluded or set to \"*\".\n"
+            "1. trusted_only      (boolean, optional, default=true) Only include transactions considered trusted by the wallet.\n"
             "2. minconf           (numeric, optional, default=0) Only include transactions confirmed at least this many times.\n")) +
             "3. include_watchonly (bool, optional, default=false) Also include balance in watch-only addresses (see 'importaddress')\n"
             "\nResult:\n"
@@ -914,9 +914,21 @@ static UniValue getbalance(const JSONRPCRequest& request)
     LOCK2(cs_main, pwallet->cs_wallet);
 
     const UniValue& account_value = request.params[0];
+    bool trusted_only = true;
+    if (account_value.isBool()) {
+        trusted_only = account_value.get_bool();
+    } else if (account_value.isStr()) {
+        // backward compatibility
+        if (account_value.get_str() != "*" && !IsDeprecatedRPCEnabled("accounts")) {
+            throw JSONRPCError(RPC_METHOD_DEPRECATED, "accounts no longer supported; set 1st field to trusted_only");
+        }
+        trusted_only = false;
+    } else if (!account_value.isNull()) {
+        throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Expected type %s, got %s", uvTypeName(UniValue::VSTR), uvTypeName(account_value.type())));
+    }
 
     int min_depth = 0;
-    if (IsDeprecatedRPCEnabled("accounts") && !account_value.isNull()) {
+    if (IsDeprecatedRPCEnabled("accounts") && account_value.isStr()) {
         // Default min_depth to 1 when an account is provided.
         min_depth = 1;
     }
@@ -929,7 +941,7 @@ static UniValue getbalance(const JSONRPCRequest& request)
         filter = filter | ISMINE_WATCH_ONLY;
     }
 
-    if (!account_value.isNull()) {
+    if (account_value.isStr()) {
 
         const std::string& account_param = account_value.get_str();
         const std::string* account = account_param != "*" ? &account_param : nullptr;
@@ -941,7 +953,7 @@ static UniValue getbalance(const JSONRPCRequest& request)
         }
     }
 
-    return ValueFromAmount(pwallet->GetBalance(filter, min_depth));
+    return ValueFromAmount(pwallet->GetBalance(filter, min_depth, trusted_only));
 }
 
 static UniValue getunconfirmedbalance(const JSONRPCRequest &request)
@@ -4781,7 +4793,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "dumpwallet",                       &dumpwallet,                    {"filename"} },
     { "wallet",             "encryptwallet",                    &encryptwallet,                 {"passphrase"} },
     { "wallet",             "getaddressinfo",                   &getaddressinfo,                {"address"} },
-    { "wallet",             "getbalance",                       &getbalance,                    {"account|dummy","minconf","include_watchonly"} },
+    { "wallet",             "getbalance",                       &getbalance,                    {"trusted_only","minconf","include_watchonly"} },
     { "wallet",             "getnewaddress",                    &getnewaddress,                 {"label|account","address_type"} },
     { "wallet",             "getrawchangeaddress",              &getrawchangeaddress,           {"address_type"} },
     { "wallet",             "getreceivedbyaddress",             &getreceivedbyaddress,          {"address","minconf"} },
