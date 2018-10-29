@@ -71,6 +71,10 @@ enum BindFlags {
     BF_WHITELIST    = (1U << 2),
 };
 
+// The set of sockets cannot be modified while waiting
+// The sleep time needs to be small to avoid new sockets stalling
+static const uint64_t SELECT_TIMEOUT_MILLISECONDS = 50;
+
 const static std::string NET_MESSAGE_COMMAND_OTHER = "*other*";
 
 static const uint64_t RANDOMIZER_ID_NETGROUP = 0x6c0edd8036ef4036ULL; // SHA256("netgroup")[0:8]
@@ -1264,7 +1268,7 @@ void CConnman::SocketHandler()
     //
     struct timeval timeout;
     timeout.tv_sec  = 0;
-    timeout.tv_usec = 50000; // frequency to poll pnode->vSend
+    timeout.tv_usec = SELECT_TIMEOUT_MILLISECONDS * 1000; // frequency to poll pnode->vSend
 
     fd_set fdsetRecv;
     fd_set fdsetSend;
@@ -1337,7 +1341,7 @@ void CConnman::SocketHandler()
         }
         FD_ZERO(&fdsetSend);
         FD_ZERO(&fdsetError);
-        if (!interruptNet.sleep_for(std::chrono::milliseconds(timeout.tv_usec/1000)))
+        if (!interruptNet.sleep_for(std::chrono::milliseconds(SELECT_TIMEOUT_MILLISECONDS)))
             return;
     }
 
