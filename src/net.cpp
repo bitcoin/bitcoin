@@ -1207,7 +1207,6 @@ void MapPort(bool)
 // The second name should resolve to a list of seed addresses.
 static const char *strMainNetDNSSeed[][2] = {
     {"seedpeercoin", "seed.peercoin.net"},
-    {"seed", "seed.ppcoin.net"},
     {"seed2", "seed2.peercoin.net"},
     {"libraryseed", "seed.peercoin-library.org"},
     {"7serverseed", "ppcseed.ns.7server.net"},
