@@ -2035,7 +2035,7 @@ void CWallet::ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman
  */
 
 
-CAmount CWallet::GetBalance(const isminefilter& filter, const int min_depth) const
+CAmount CWallet::GetBalance(const isminefilter& filter, const int min_depth, const bool trusted_only) const
 {
     CAmount nTotal = 0;
     {
@@ -2044,9 +2044,17 @@ CAmount CWallet::GetBalance(const isminefilter& filter, const int min_depth) con
         for (const auto& entry : mapWallet)
         {
             const CWalletTx* pcoin = &entry.second;
-            if (pcoin->IsTrusted(*locked_chain) && pcoin->GetDepthInMainChain(*locked_chain) >= min_depth) {
-                nTotal += pcoin->GetAvailableCredit(*locked_chain, true, filter);
+
+            if (trusted_only) {
+                if (!pcoin->IsTrusted(*locked_chain)) continue;
+            } else {
+                LockAnnotation lock(::cs_main); // Temporary, for CheckFinalTx below. Removed in upcoming commit.
+                if (!CheckFinalTx(*pcoin->tx)) continue;
             }
+
+            if (pcoin->GetDepthInMainChain(*locked_chain) < min_depth) continue;
+
+            nTotal += pcoin->GetAvailableCredit(*locked_chain, true, filter);
         }
     }
 
