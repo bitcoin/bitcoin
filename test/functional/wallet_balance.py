@@ -89,10 +89,9 @@ class WalletTest(BitcoinTestFramework):
         # Same with minconf=0
         assert_equal(self.nodes[0].getbalance(minconf=0), Decimal('9.99'))
         assert_equal(self.nodes[1].getbalance(minconf=0), Decimal('29.99'))
-        # getbalance with a minconf incorrectly excludes coins that have been spent more recently than the minconf blocks ago
-        # TODO: fix getbalance tracking of coin spentness depth
-        assert_equal(self.nodes[0].getbalance(minconf=1), Decimal('0'))
-        assert_equal(self.nodes[1].getbalance(minconf=1), Decimal('0'))
+        # getbalance with a minconf includes coins that have been spent more recently than the minconf blocks ago
+        assert_equal(self.nodes[0].getbalance(minconf=1), Decimal('50'))
+        assert_equal(self.nodes[1].getbalance(minconf=1), Decimal('50'))
         # getunconfirmedbalance
         assert_equal(self.nodes[0].getunconfirmedbalance(), Decimal('60'))  # output of node 1's spend
         assert_equal(self.nodes[1].getunconfirmedbalance(), Decimal('0'))  # Doesn't include output of node 0's send since it was spent
@@ -121,10 +120,9 @@ class WalletTest(BitcoinTestFramework):
         self.nodes[1].generatetoaddress(2, RANDOM_COINBASE_ADDRESS)
         self.sync_all()
 
-        # getbalance with a minconf incorrectly excludes coins that have been spent more recently than the minconf blocks ago
-        # TODO: fix getbalance tracking of coin spentness depth
+        # getbalance with a minconf includes coins that have been spent more recently than the minconf blocks ago
         # getbalance with minconf=3 should still show the old balance
-        assert_equal(self.nodes[1].getbalance(minconf=3), Decimal('0'))
+        assert_equal(self.nodes[1].getbalance(minconf=3), Decimal('29.98'))
 
         # getbalance with minconf=2 will show the new balance.
         assert_equal(self.nodes[1].getbalance(minconf=2), Decimal('0'))
