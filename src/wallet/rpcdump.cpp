@@ -1155,7 +1155,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
                 .ToString() +
             "Arguments:\n"
             "1. requests     (array, required) Data to be imported\n"
-            "  [     (array of json objects)\n"
+            "  [     (array of objects)\n"
             "    {\n"
             "      \"scriptPubKey\": \"<script>\" | { \"address\":\"<address>\" }, (string / json, required) Type of scriptPubKey (string for script, json for address)\n"
             "      \"timestamp\": timestamp | \"now\"                        , (integer / string, required) Creation time of the key in seconds since epoch (Jan 1 1970 GMT),\n"

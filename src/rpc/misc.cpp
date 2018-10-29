@@ -330,7 +330,7 @@ static UniValue getmemoryinfo(const JSONRPCRequest& request)
             "  - \"mallocinfo\" returns an XML string describing low-level heap state (only available if compiled with glibc 2.10+).\n"
             "\nResult (mode \"stats\"):\n"
             "{\n"
-            "  \"locked\": {               (json object) Information about locked memory manager\n"
+            "  \"locked\": {               (object) Information about locked memory manager\n"
             "    \"used\": xxxxx,          (numeric) Number of bytes used\n"
             "    \"free\": xxxxx,          (numeric) Number of bytes available in current arenas\n"
             "    \"total\": xxxxxxx,       (numeric) Total number of bytes managed\n"
