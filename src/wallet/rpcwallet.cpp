@@ -3928,7 +3928,7 @@ static UniValue listlabels(const JSONRPCRequest& request)
             "\nArguments:\n"
             "1. \"purpose\"    (string, optional) Address purpose to list labels for ('send','receive'). An empty string is the same as not providing this argument.\n"
             "\nResult:\n"
-            "[               (array of string)\n"
+            "[               (array of strings)\n"
             "  \"label\",      (string) Label name\n"
             "  ...\n"
             "]\n"

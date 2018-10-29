@@ -386,7 +386,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
             "  \"coinbasetxn\" : { ... },          (object) information for coinbase transaction\n"
             "  \"target\" : \"xxxx\",                (string) The hash target\n"
             "  \"mintime\" : xxx,                  (numeric) The minimum timestamp appropriate for next block time in seconds since epoch (Jan 1 1970 GMT)\n"
-            "  \"mutable\" : [                     (array of string) list of ways the block template may be changed \n"
+            "  \"mutable\" : [                     (array of strings) list of ways the block template may be changed \n"
             "     \"value\"                          (string) A way the block template may be changed, e.g. 'time', 'transactions', 'prevblock'\n"
             "     ,...\n"
             "  ],\n"
