@@ -410,6 +410,7 @@ QVariant TransactionTableModel::txAddressDecoration(const TransactionRecord *wtx
     case TransactionRecord::RecvWithAddress:
     case TransactionRecord::RecvFromOther:
         return QIcon(":/icons/" + theme + "/tx_input");
+    case TransactionRecord::PrivateSend:
     case TransactionRecord::SendToAddress:
     case TransactionRecord::SendToOther:
         return QIcon(":/icons/" + theme + "/tx_output");
