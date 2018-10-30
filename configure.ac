@@ -174,7 +174,7 @@ AC_ARG_ENABLE([wallet],
 ##       compatibility with the legacy buildsystem.
 ##
 CXXFLAGS="$CXXFLAGS -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter"
-CPPFLAGS="$CPPFLAGS -DBOOST_SPIRIT_THREADSAFE -DHAVE_BUILD_INFO"
+CPPFLAGS="$CPPFLAGS -DBOOST_SPIRIT_THREADSAFE -DBOOST_NO_CXX11_SCOPED_ENUMS -DHAVE_BUILD_INFO"
 DEBUG_CXXFLAGS="-g -ggdb"
 RELEASE_CXXFLAGS="-O2"
 
