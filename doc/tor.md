@@ -110,8 +110,8 @@ are seen with `-debug=tor` they can be resolved by adding both the user running 
 the user running bitcoind to the same group and setting permissions appropriately. On
 Debian-based systems the user running bitcoind can be added to the debian-tor group,
 which has the appropriate permissions. An alternative authentication method is the use
-of the `-torpassword` flag and a `hash-password` which can be enabled and specified in
-Tor configuration.
+of the `-torpassword=hashpassword` option. The `hashpassword` can be enabled and specified in
+Tor configuration under the `HashedControlPassword` option.
 
 ## 4. Privacy recommendations
 
