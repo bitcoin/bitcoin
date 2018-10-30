@@ -56,7 +56,7 @@ static void CCheckQueueSpeedPrevectorJob(benchmark::State& state)
         // it is done explicitly here for clarity
         control.Wait();
     }
-    tg.interrupt_all();
+    queue.Interrupt();
     tg.join_all();
 }
 BENCHMARK(CCheckQueueSpeedPrevectorJob, 1400);

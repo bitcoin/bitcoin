@@ -91,15 +91,15 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     }
 
     nScriptCheckThreads = 3;
-    for (int i = 0; i < nScriptCheckThreads - 1; i++)
-        threadGroup.create_thread(&ThreadScriptCheck);
-
+    StartScriptCheck();
     g_banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     g_connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
 }
 
 TestingSetup::~TestingSetup()
 {
+    InterruptScriptCheck();
+    StopScriptCheck();
     threadGroup.interrupt_all();
     threadGroup.join_all();
     GetMainSignals().FlushBackgroundCallbacks();

@@ -178,6 +178,7 @@ static CScheduler scheduler;
 
 void Interrupt()
 {
+    InterruptScriptCheck();
     InterruptHTTPServer();
     InterruptHTTPRPC();
     InterruptRPC();
@@ -206,6 +207,7 @@ void Shutdown(InitInterfaces& interfaces)
     RenameThread("bitcoin-shutoff");
     mempool.AddTransactionsUpdated(1);
 
+    StopScriptCheck();
     StopHTTPRPC();
     StopREST();
     StopRPC();
@@ -1272,10 +1274,7 @@ bool AppInitMain(InitInterfaces& interfaces)
     InitScriptExecutionCache();
 
     LogPrintf("Using %u threads for script verification\n", nScriptCheckThreads);
-    if (nScriptCheckThreads) {
-        for (int i=0; i<nScriptCheckThreads-1; i++)
-            threadGroup.create_thread(&ThreadScriptCheck);
-    }
+    StartScriptCheck();
 
     // Start the lightweight task scheduler thread
     CScheduler::Function serviceLoop = std::bind(&CScheduler::serviceQueue, &scheduler);
