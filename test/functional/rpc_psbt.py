@@ -207,6 +207,13 @@ class PSBTTest(BitcoinTestFramework):
             assert tx_in["sequence"] > MAX_BIP125_RBF_SEQUENCE
         assert_equal(decoded_psbt["tx"]["locktime"], 0)
 
+        # Regression test for 14473 (mishandling of already-signed witness transaction):
+        psbtx_info = self.nodes[0].walletcreatefundedpsbt([{"txid":unspent["txid"], "vout":unspent["vout"]}], [{self.nodes[2].getnewaddress():unspent["amount"]+1}])
+        complete_psbt = self.nodes[0].walletprocesspsbt(psbtx_info["psbt"])
+        double_processed_psbt = self.nodes[0].walletprocesspsbt(complete_psbt["psbt"])
+        assert_equal(complete_psbt, double_processed_psbt)
+        # We don't care about the decode result, but decoding must succeed.
+        self.nodes[0].decodepsbt(double_processed_psbt["psbt"])
 
         # BIP 174 Test Vectors
 
