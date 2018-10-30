@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "core_io.h"
 #include "simplifiedmns.h"
 #include "specialtx.h"
 #include "deterministicmns.h"
@@ -83,6 +84,12 @@ void CSimplifiedMNListDiff::ToJson(UniValue& obj) const
 
     obj.push_back(Pair("baseBlockHash", baseBlockHash.ToString()));
     obj.push_back(Pair("blockHash", blockHash.ToString()));
+
+    CDataStream ssCbTxMerkleTree(SER_NETWORK, PROTOCOL_VERSION);
+    ssCbTxMerkleTree << cbTxMerkleTree;
+    obj.push_back(Pair("cbTxMerkleTree", HexStr(ssCbTxMerkleTree.begin(), ssCbTxMerkleTree.end())));
+
+    obj.push_back(Pair("cbTx", EncodeHexTx(*cbTx)));
 
     UniValue deletedMNsArr(UniValue::VARR);
     for (const auto& h : deletedMNs) {
