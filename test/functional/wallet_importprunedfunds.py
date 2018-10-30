@@ -25,11 +25,11 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
 
         self.sync_all()
 
-        # address
+        # Address
         address1 = self.nodes[0].getnewaddress()
-        # pubkey
+        # Pubkey
         address2 = self.nodes[0].getnewaddress()
-        # privkey
+        # Privkey
         address3 = self.nodes[0].getnewaddress()
         address3_privkey = self.nodes[0].dumpprivkey(address3)  # Using privkey
 

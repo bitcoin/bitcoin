@@ -42,7 +42,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         self.bootstrap_p2p(**kwargs)
 
     def run_test(self):
-        node = self.nodes[0]  # convenience reference to the node
+        node = self.nodes[0]  # Convenience reference to the node
 
         self.bootstrap_p2p()  # Add one p2p connection to the node
 

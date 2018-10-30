@@ -21,10 +21,10 @@ class DisconnectBanTest(BitcoinTestFramework):
         self.log.info("Test setban and listbanned RPCs")
 
         self.log.info("setban: successfully ban single IP address")
-        assert_equal(len(self.nodes[1].getpeerinfo()), 2)  # node1 should have 2 connections to node0 at this point
+        assert_equal(len(self.nodes[1].getpeerinfo()), 2)  # Node1 should have 2 connections to node0 at this point
         self.nodes[1].setban("127.0.0.1", "add")
         wait_until(lambda: len(self.nodes[1].getpeerinfo()) == 0, timeout=10)
-        assert_equal(len(self.nodes[1].getpeerinfo()), 0)  # all nodes must be disconnected at this point
+        assert_equal(len(self.nodes[1].getpeerinfo()), 0)  # All nodes must be disconnected at this point
         assert_equal(len(self.nodes[1].listbanned()), 1)
 
         self.log.info("clearbanned: successfully clear ban list")
@@ -38,7 +38,7 @@ class DisconnectBanTest(BitcoinTestFramework):
 
         self.log.info("setban: fail to ban an invalid subnet")
         assert_raises_rpc_error(-30, "Error: Invalid IP/Subnet", self.nodes[1].setban, "127.0.0.1/42", "add")
-        assert_equal(len(self.nodes[1].listbanned()), 1)  # still only one banned ip because 127.0.0.1 is within the range of 127.0.0.0/24
+        assert_equal(len(self.nodes[1].listbanned()), 1)  # Still only one banned ip because 127.0.0.1 is within the range of 127.0.0.0/24
 
         self.log.info("setban remove: fail to unban a non-banned subnet")
         assert_raises_rpc_error(-30, "Error: Unban failed", self.nodes[1].setban, "127.0.0.1", "remove")
@@ -56,8 +56,8 @@ class DisconnectBanTest(BitcoinTestFramework):
         # Set the mocktime so we can control when bans expire
         old_time = int(time.time())
         self.nodes[1].setmocktime(old_time)
-        self.nodes[1].setban("192.168.0.1", "add", 1)  # ban for 1 seconds
-        self.nodes[1].setban("2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/19", "add", 1000)  # ban for 1000 seconds
+        self.nodes[1].setban("192.168.0.1", "add", 1)  # Ban for 1 seconds
+        self.nodes[1].setban("2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/19", "add", 1000)  # Ban for 1000 seconds
         listBeforeShutdown = self.nodes[1].listbanned()
         assert_equal("192.168.0.1/32", listBeforeShutdown[2]['address'])
         # Move time forward by 3 seconds so the third ban has expired
@@ -93,7 +93,7 @@ class DisconnectBanTest(BitcoinTestFramework):
         assert not [node for node in self.nodes[0].getpeerinfo() if node['addr'] == address1]
 
         self.log.info("disconnectnode: successfully reconnect node")
-        connect_nodes_bi(self.nodes, 0, 1)  # reconnect the node
+        connect_nodes_bi(self.nodes, 0, 1)  # Reconnect the node
         assert_equal(len(self.nodes[0].getpeerinfo()), 2)
         assert [node for node in self.nodes[0].getpeerinfo() if node['addr'] == address1]
 

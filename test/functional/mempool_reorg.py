@@ -93,7 +93,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
 
         self.sync_all()
 
-        # mempool should be empty.
+        # Mempool should be empty.
         assert_equal(set(self.nodes[0].getrawmempool()), set())
 
 if __name__ == '__main__':

@@ -30,7 +30,7 @@ class ConfArgsTest(BitcoinTestFramework):
         self.nodes[0].assert_start_raises_init_error(expected_msg='Error reading configuration file: parse error on line 1: nono, if you intended to specify a negated option, use nono=1 instead')
 
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
-            conf.write('')  # clear
+            conf.write('')  # Clear
 
     def run_test(self):
         self.stop_node(0)

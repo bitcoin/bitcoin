@@ -82,7 +82,7 @@ class BlockchainTest(BitcoinTestFramework):
         ]
         res = self.nodes[0].getblockchaininfo()
 
-        # result should have these additional pruning keys if manual pruning is enabled
+        # Result should have these additional pruning keys if manual pruning is enabled
         assert_equal(sorted(res.keys()), sorted(['pruneheight', 'automatic_pruning'] + keys))
 
         # size_on_disk should be > 0
@@ -91,21 +91,21 @@ class BlockchainTest(BitcoinTestFramework):
         # pruneheight should be greater or equal to 0
         assert_greater_than_or_equal(res['pruneheight'], 0)
 
-        # check other pruning fields given that prune=1
+        # Check other pruning fields given that prune=1
         assert res['pruned']
         assert not res['automatic_pruning']
 
         self.restart_node(0, ['-stopatheight=207'])
         res = self.nodes[0].getblockchaininfo()
-        # should have exact keys
+        # Should have exact keys
         assert_equal(sorted(res.keys()), keys)
 
         self.restart_node(0, ['-stopatheight=207', '-prune=550'])
         res = self.nodes[0].getblockchaininfo()
-        # result should have these additional pruning keys if prune=550
+        # Result should have these additional pruning keys if prune=550
         assert_equal(sorted(res.keys()), sorted(['pruneheight', 'automatic_pruning', 'prune_target_size'] + keys))
 
-        # check related fields
+        # Check related fields
         assert res['pruned']
         assert_equal(res['pruneheight'], 0)
         assert res['automatic_pruning']
@@ -136,7 +136,7 @@ class BlockchainTest(BitcoinTestFramework):
         chaintxstats = self.nodes[0].getchaintxstats(1)
         # 200 txs plus genesis tx
         assert_equal(chaintxstats['txcount'], 201)
-        # tx rate should be 1 per 10 minutes, or 1/600
+        # Tx rate should be 1 per 10 minutes, or 1/600
         # we have to round because of binary math
         assert_equal(round(chaintxstats['txrate'] * 600, 10), Decimal(1))
 

@@ -33,11 +33,11 @@ class WalletLabelsTest(BitcoinTestFramework):
         node.generatetoaddress(nblocks=101, address=node.getnewaddress(label='coinbase'))
         assert_equal(node.getbalance(), 100)
 
-        # there should be 2 address groups
+        # There should be 2 address groups
         # each with 1 address with a balance of 50 Bitcoins
         address_groups = node.listaddressgroupings()
         assert_equal(len(address_groups), 2)
-        # the addresses aren't linked now, but will be after we send to the
+        # The addresses aren't linked now, but will be after we send to the
         # common address
         linked_addresses = set()
         for address_group in address_groups:
@@ -47,14 +47,14 @@ class WalletLabelsTest(BitcoinTestFramework):
             assert_equal(address_group[0][2], 'coinbase')
             linked_addresses.add(address_group[0][0])
 
-        # send 50 from each address to a third address not in this wallet
+        # Send 50 from each address to a third address not in this wallet
         common_address = "msf4WtN1YQKXvNtvdFYt9JBnUD2FB41kjr"
         node.sendmany(
             amounts={common_address: 100},
             subtractfeefrom=[common_address],
             minconf=1,
         )
-        # there should be 1 address group, with the previously
+        # There should be 1 address group, with the previously
         # unlinked addresses now linked (they both have 0 balance)
         address_groups = node.listaddressgroupings()
         assert_equal(len(address_groups), 1)
@@ -64,8 +64,8 @@ class WalletLabelsTest(BitcoinTestFramework):
 
         node.generate(1)
 
-        # we want to reset so that the "" label has what's expected.
-        # otherwise we're off by exactly the fee amount as that's mined
+        # We want to reset so that the "" label has what's expected.
+        # Otherwise we're off by exactly the fee amount as that's mined
         # and matures in the next 100 blocks
         amount_to_send = 1.0
 

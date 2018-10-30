@@ -51,13 +51,13 @@ class RPCBindTest(BitcoinTestFramework):
         base_args = ['-disablewallet', '-nolisten'] + ['-rpcallowip='+x for x in allow_ips]
         self.nodes[0].rpchost = None
         self.start_nodes([base_args])
-        # connect to node through non-loopback interface
+        # Connect to node through non-loopback interface
         node = get_rpc_proxy(rpc_url(self.nodes[0].datadir, 0, "%s:%d" % (rpchost, rpcport)), 0, coveragedir=self.options.coveragedir)
         node.getnetworkinfo()
         self.stop_nodes()
 
     def run_test(self):
-        # due to OS-specific network stats queries, this test works only on Linux
+        # Due to OS-specific network stats queries, this test works only on Linux
         if sum([self.options.run_ipv4, self.options.run_ipv6, self.options.run_nonloopback]) > 1:
             raise AssertionError("Only one of --ipv4, --ipv6 and --nonloopback can be set")
 
@@ -88,33 +88,33 @@ class RPCBindTest(BitcoinTestFramework):
 
     def _run_loopback_tests(self):
         if self.options.run_ipv4:
-            # check only IPv4 localhost (explicit)
+            # Check only IPv4 localhost (explicit)
             self.run_bind_test(['127.0.0.1'], '127.0.0.1', ['127.0.0.1'],
                 [('127.0.0.1', self.defaultport)])
-            # check only IPv4 localhost (explicit) with alternative port
+            # Check only IPv4 localhost (explicit) with alternative port
             self.run_bind_test(['127.0.0.1'], '127.0.0.1:32171', ['127.0.0.1:32171'],
                 [('127.0.0.1', 32171)])
-            # check only IPv4 localhost (explicit) with multiple alternative ports on same host
+            # Check only IPv4 localhost (explicit) with multiple alternative ports on same host
             self.run_bind_test(['127.0.0.1'], '127.0.0.1:32171', ['127.0.0.1:32171', '127.0.0.1:32172'],
                 [('127.0.0.1', 32171), ('127.0.0.1', 32172)])
         else:
-            # check default without rpcallowip (IPv4 and IPv6 localhost)
+            # Check default without rpcallowip (IPv4 and IPv6 localhost)
             self.run_bind_test(None, '127.0.0.1', [],
                 [('127.0.0.1', self.defaultport), ('::1', self.defaultport)])
-            # check default with rpcallowip (IPv6 any)
+            # Check default with rpcallowip (IPv6 any)
             self.run_bind_test(['127.0.0.1'], '127.0.0.1', [],
                 [('::0', self.defaultport)])
-            # check only IPv6 localhost (explicit)
+            # Check only IPv6 localhost (explicit)
             self.run_bind_test(['[::1]'], '[::1]', ['[::1]'],
                 [('::1', self.defaultport)])
-            # check both IPv4 and IPv6 localhost (explicit)
+            # Check both IPv4 and IPv6 localhost (explicit)
             self.run_bind_test(['127.0.0.1'], '127.0.0.1', ['127.0.0.1', '[::1]'],
                 [('127.0.0.1', self.defaultport), ('::1', self.defaultport)])
 
     def _run_nonloopback_tests(self):
         self.log.info("Using interface %s for testing" % self.non_loopback_ip)
 
-        # check only non-loopback interface
+        # Check only non-loopback interface
         self.run_bind_test([self.non_loopback_ip], self.non_loopback_ip, [self.non_loopback_ip],
             [(self.non_loopback_ip, self.defaultport)])
 

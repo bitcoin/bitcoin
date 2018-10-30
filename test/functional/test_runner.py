@@ -58,7 +58,7 @@ if os.name != 'nt' or sys.getwindowsversion() >= (10, 0, 14393):
         stderr_mode = ctypes.c_int32()
         kernel32.GetConsoleMode(stderr, ctypes.byref(stderr_mode))
         kernel32.SetConsoleMode(stderr, stderr_mode.value | ENABLE_VIRTUAL_TERMINAL_PROCESSING)
-    # primitive formatting on supported
+    # Primitive formatting on supported
     # terminal via ANSI escape sequences:
     BOLD = ('\033[0m', '\033[1m')
     GREEN = ('\033[0m', '\033[0;32m')
@@ -227,7 +227,7 @@ def main():
     parser.add_argument('--failfast', action='store_true', help='stop execution after the first test failure')
     args, unknown_args = parser.parse_known_args()
 
-    # args to be passed on always start with two dashes; tests are the remaining unknown args
+    # Args to be passed on always start with two dashes; tests are the remaining unknown args
     tests = [arg for arg in unknown_args if arg[:2] != "--"]
     passon_args = [arg for arg in unknown_args if arg[:2] == "--"]
 

@@ -41,26 +41,26 @@ class MultiWalletTest(BitcoinTestFramework):
 
         assert_equal(self.nodes[0].listwalletdir(), { 'wallets': [{ 'name': '' }] })
 
-        # check wallet.dat is created
+        # Check wallet.dat is created
         self.stop_nodes()
         assert_equal(os.path.isfile(wallet_dir('wallet.dat')), True)
 
-        # create symlink to verify wallet directory path can be referenced
+        # Create symlink to verify wallet directory path can be referenced
         # through symlink
         os.mkdir(wallet_dir('w7'))
         os.symlink('w7', wallet_dir('w7_symlink'))
 
-        # rename wallet.dat to make sure plain wallet file paths (as opposed to
+        # Rename wallet.dat to make sure plain wallet file paths (as opposed to
         # directory paths) can be loaded
         os.rename(wallet_dir("wallet.dat"), wallet_dir("w8"))
 
-        # create another dummy wallet for use in testing backups later
+        # Create another dummy wallet for use in testing backups later
         self.start_node(0, [])
         self.stop_nodes()
         empty_wallet = os.path.join(self.options.tmpdir, 'empty.dat')
         os.rename(wallet_dir("wallet.dat"), empty_wallet)
 
-        # restart node with a mix of wallet names:
+        # Restart node with a mix of wallet names:
         #   w1, w2, w3 - to verify new wallets created when non-existing paths specified
         #   w          - to verify wallet name matching works when one wallet path is prefix of another
         #   sub/w5     - to verify relative wallet path is created correctly
@@ -75,12 +75,12 @@ class MultiWalletTest(BitcoinTestFramework):
 
         assert_equal(set(node.listwallets()), set(wallet_names))
 
-        # check that all requested wallets were created
+        # Check that all requested wallets were created
         self.stop_node(0)
         for wallet_name in wallet_names:
             assert_equal(os.path.isfile(wallet_file(wallet_name)), True)
 
-        # should not initialize if wallet path can't be created
+        # Should not initialize if wallet path can't be created
         exp_stderr = "boost::filesystem::create_directory:"
         self.nodes[0].assert_start_raises_init_error(['-wallet=wallet.dat/bad'], exp_stderr, match=ErrorMatch.PARTIAL_REGEX)
 
@@ -88,21 +88,21 @@ class MultiWalletTest(BitcoinTestFramework):
         self.nodes[0].assert_start_raises_init_error(['-walletdir=wallets'], 'Error: Specified -walletdir "wallets" is a relative path', cwd=data_dir())
         self.nodes[0].assert_start_raises_init_error(['-walletdir=debug.log'], 'Error: Specified -walletdir "debug.log" is not a directory', cwd=data_dir())
 
-        # should not initialize if there are duplicate wallets
+        # Should not initialize if there are duplicate wallets
         self.nodes[0].assert_start_raises_init_error(['-wallet=w1', '-wallet=w1'], 'Error: Error loading wallet w1. Duplicate -wallet filename specified.')
 
-        # should not initialize if one wallet is a copy of another
+        # Should not initialize if one wallet is a copy of another
         shutil.copyfile(wallet_dir('w8'), wallet_dir('w8_copy'))
         exp_stderr = "BerkeleyBatch: Can't open database w8_copy \(duplicates fileid \w+ from w8\)"
         self.nodes[0].assert_start_raises_init_error(['-wallet=w8', '-wallet=w8_copy'], exp_stderr, match=ErrorMatch.PARTIAL_REGEX)
 
-        # should not initialize if wallet file is a symlink
+        # Should not initialize if wallet file is a symlink
         os.symlink('w8', wallet_dir('w8_symlink'))
         self.nodes[0].assert_start_raises_init_error(['-wallet=w8_symlink'], 'Error: Invalid -wallet path \'w8_symlink\'\. .*', match=ErrorMatch.FULL_REGEX)
 
-        # should not initialize if the specified walletdir does not exist
+        # Should not initialize if the specified walletdir does not exist
         self.nodes[0].assert_start_raises_init_error(['-walletdir=bad'], 'Error: Specified -walletdir "bad" does not exist')
-        # should not initialize if the specified walletdir is not a directory
+        # Should not initialize if the specified walletdir is not a directory
         not_a_dir = wallet_dir('notadir')
         open(not_a_dir, 'a', encoding="utf8").close()
         self.nodes[0].assert_start_raises_init_error(['-walletdir=' + not_a_dir], 'Error: Specified -walletdir "' + not_a_dir + '" is not a directory')
@@ -120,7 +120,7 @@ class MultiWalletTest(BitcoinTestFramework):
         self.nodes[0].assert_start_raises_init_error(['-upgradewallet', '-wallet=w1', '-wallet=w2'], "Error: -upgradewallet is only allowed with a single wallet file")
         self.nodes[0].assert_start_raises_init_error(['-upgradewallet=1', '-wallet=w1', '-wallet=w2'], "Error: -upgradewallet is only allowed with a single wallet file")
 
-        # if wallets/ doesn't exist, datadir should be the default wallet dir
+        # If wallets/ doesn't exist, datadir should be the default wallet dir
         wallet_dir2 = data_dir('walletdir')
         os.rename(wallet_dir(), wallet_dir2)
         self.start_node(0, ['-wallet=w4', '-wallet=w5'])
@@ -128,7 +128,7 @@ class MultiWalletTest(BitcoinTestFramework):
         w5 = wallet("w5")
         node.generatetoaddress(nblocks=1, address=w5.getnewaddress())
 
-        # now if wallets/ exists again, but the rootdir is specified as the walletdir, w4 and w5 should still be loaded
+        # Now if wallets/ exists again, but the rootdir is specified as the walletdir, w4 and w5 should still be loaded
         os.rename(wallet_dir2, wallet_dir())
         self.restart_node(0, ['-wallet=w4', '-wallet=w5', '-walletdir=' + data_dir()])
         assert_equal(set(node.listwallets()), {"w4", "w5"})
@@ -149,17 +149,17 @@ class MultiWalletTest(BitcoinTestFramework):
         wallets = [wallet(w) for w in wallet_names]
         wallet_bad = wallet("bad")
 
-        # check wallet names and balances
+        # Check wallet names and balances
         node.generatetoaddress(nblocks=1, address=wallets[0].getnewaddress())
         for wallet_name, wallet in zip(wallet_names, wallets):
             info = wallet.getwalletinfo()
             assert_equal(info['immature_balance'], 50 if wallet is wallets[0] else 0)
             assert_equal(info['walletname'], wallet_name)
 
-        # accessing invalid wallet fails
+        # Accessing invalid wallet fails
         assert_raises_rpc_error(-18, "Requested wallet does not exist or is not loaded", wallet_bad.getwalletinfo)
 
-        # accessing wallet RPC without using wallet endpoint fails
+        # Accessing wallet RPC without using wallet endpoint fails
         assert_raises_rpc_error(-19, "Wallet file not specified", node.getwalletinfo)
 
         w1, w2, w3, w4, *_ = wallets

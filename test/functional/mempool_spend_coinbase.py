@@ -38,13 +38,13 @@ class MempoolSpendCoinbaseTest(BitcoinTestFramework):
 
         spend_101_id = self.nodes[0].sendrawtransaction(spends_raw[0])
 
-        # coinbase at height 102 should be too immature to spend
+        # Coinbase at height 102 should be too immature to spend
         assert_raises_rpc_error(-26,"bad-txns-premature-spend-of-coinbase", self.nodes[0].sendrawtransaction, spends_raw[1])
 
-        # mempool should have just spend_101:
+        # Mempool should have just spend_101:
         assert_equal(self.nodes[0].getrawmempool(), [ spend_101_id ])
 
-        # mine a block, spend_101 should get confirmed
+        # Mine a block, spend_101 should get confirmed
         self.nodes[0].generate(1)
         assert_equal(set(self.nodes[0].getrawmempool()), set())
 

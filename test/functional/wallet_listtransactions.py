@@ -40,7 +40,7 @@ class ListTransactionsTest(BitcoinTestFramework):
         assert_array_result(self.nodes[1].listtransactions(),
                             {"txid": txid},
                             {"category": "receive", "amount": Decimal("0.1"), "confirmations": 0})
-        # mine a block, confirmations should change:
+        # Mine a block, confirmations should change:
         self.nodes[0].generate(1)
         self.sync_all()
         assert_array_result(self.nodes[0].listtransactions(),
@@ -181,7 +181,7 @@ class ListTransactionsTest(BitcoinTestFramework):
 
         # Replace tx3, and check that tx4 becomes unknown
         tx3_b = tx3_modified
-        tx3_b.vout[0].nValue -= int(Decimal("0.004") * COIN)  # bump the fee
+        tx3_b.vout[0].nValue -= int(Decimal("0.004") * COIN)  # Bump the fee
         tx3_b = bytes_to_hex_str(tx3_b.serialize())
         tx3_b_signed = self.nodes[0].signrawtransactionwithwallet(tx3_b)['hex']
         txid_3b = self.nodes[0].sendrawtransaction(tx3_b_signed, True)

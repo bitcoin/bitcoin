@@ -210,7 +210,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         # getrawtransaction with block hash #
         #####################################
 
-        # make a tx by sending then generate 2 blocks; block1 has the tx in it
+        # Make a tx by sending then generate 2 blocks; block1 has the tx in it
         tx = self.nodes[2].sendtoaddress(self.nodes[1].getnewaddress(), 1)
         block1, block2 = self.nodes[2].generate(2)
         self.sync_all()
@@ -254,10 +254,10 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         mSigObj = self.nodes[2].addmultisigaddress(2, [addr1Obj['pubkey'], addr1])['address']
 
-        #use balance deltas instead of absolute values
+        # Use balance deltas instead of absolute values
         bal = self.nodes[2].getbalance()
 
-        # send 1.2 BTC to msig adr
+        # Send 1.2 BTC to msig adr
         txId = self.nodes[0].sendtoaddress(mSigObj, 1.2)
         self.sync_all()
         self.nodes[0].generate(1)
@@ -331,7 +331,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.nodes[0].generate(1)
         self.sync_all()
 
-        assert_equal(self.nodes[2].getbalance(), bal) # the funds of a 2of2 multisig tx should not be marked as spendable
+        assert_equal(self.nodes[2].getbalance(), bal) # The funds of a 2of2 multisig tx should not be marked as spendable
 
         txDetails = self.nodes[0].gettransaction(txId, True)
         rawTx2 = self.nodes[0].decoderawtransaction(txDetails['hex'])
@@ -362,41 +362,41 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getbalance(), bal+Decimal('50.00000000')+Decimal('2.19000000')) #block reward + tx
 
         # decoderawtransaction tests
-        # witness transaction
+        # Witness transaction
         encrawtx = "010000000001010000000000000072c1a6a246ae63f74f931e8365e15a089c68d61900000000000000000000ffffffff0100e1f50500000000000102616100000000"
-        decrawtx = self.nodes[0].decoderawtransaction(encrawtx, True) # decode as witness transaction
+        decrawtx = self.nodes[0].decoderawtransaction(encrawtx, True) # Decode as witness transaction
         assert_equal(decrawtx['vout'][0]['value'], Decimal('1.00000000'))
-        assert_raises_rpc_error(-22, 'TX decode failed', self.nodes[0].decoderawtransaction, encrawtx, False) # force decode as non-witness transaction
-        # non-witness transaction
+        assert_raises_rpc_error(-22, 'TX decode failed', self.nodes[0].decoderawtransaction, encrawtx, False) # Force decode as non-witness transaction
+        # Non-witness transaction
         encrawtx = "01000000010000000000000072c1a6a246ae63f74f931e8365e15a089c68d61900000000000000000000ffffffff0100e1f505000000000000000000"
-        decrawtx = self.nodes[0].decoderawtransaction(encrawtx, False) # decode as non-witness transaction
+        decrawtx = self.nodes[0].decoderawtransaction(encrawtx, False) # Decode as non-witness transaction
         assert_equal(decrawtx['vout'][0]['value'], Decimal('1.00000000'))
 
         # getrawtransaction tests
-        # 1. valid parameters - only supply txid
+        # 1. Valid parameters - only supply txid
         txHash = rawTx["hash"]
         assert_equal(self.nodes[0].getrawtransaction(txHash), rawTxSigned['hex'])
 
-        # 2. valid parameters - supply txid and 0 for non-verbose
+        # 2. Valid parameters - supply txid and 0 for non-verbose
         assert_equal(self.nodes[0].getrawtransaction(txHash, 0), rawTxSigned['hex'])
 
-        # 3. valid parameters - supply txid and False for non-verbose
+        # 3. Valid parameters - supply txid and False for non-verbose
         assert_equal(self.nodes[0].getrawtransaction(txHash, False), rawTxSigned['hex'])
 
-        # 4. valid parameters - supply txid and 1 for verbose.
+        # 4. Valid parameters - supply txid and 1 for verbose.
         # We only check the "hex" field of the output so we don't need to update this test every time the output format changes.
         assert_equal(self.nodes[0].getrawtransaction(txHash, 1)["hex"], rawTxSigned['hex'])
 
-        # 5. valid parameters - supply txid and True for non-verbose
+        # 5. Valid parameters - supply txid and True for non-verbose
         assert_equal(self.nodes[0].getrawtransaction(txHash, True)["hex"], rawTxSigned['hex'])
 
-        # 6. invalid parameters - supply txid and string "Flase"
+        # 6. Invalid parameters - supply txid and string "Flase"
         assert_raises_rpc_error(-1, "not a boolean", self.nodes[0].getrawtransaction, txHash, "Flase")
 
-        # 7. invalid parameters - supply txid and empty array
+        # 7. Invalid parameters - supply txid and empty array
         assert_raises_rpc_error(-1, "not a boolean", self.nodes[0].getrawtransaction, txHash, [])
 
-        # 8. invalid parameters - supply txid and empty dict
+        # 8. Invalid parameters - supply txid and empty dict
         assert_raises_rpc_error(-1, "not a boolean", self.nodes[0].getrawtransaction, txHash, {})
 
         inputs  = [ {'txid' : "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000", 'vout' : 1, 'sequence' : 1000}]
@@ -405,12 +405,12 @@ class RawTransactionsTest(BitcoinTestFramework):
         decrawtx= self.nodes[0].decoderawtransaction(rawtx)
         assert_equal(decrawtx['vin'][0]['sequence'], 1000)
 
-        # 9. invalid parameters - sequence number out of range
+        # 9. Invalid parameters - sequence number out of range
         inputs  = [ {'txid' : "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000", 'vout' : 1, 'sequence' : -1}]
         outputs = { self.nodes[0].getnewaddress() : 1 }
         assert_raises_rpc_error(-8, 'Invalid parameter, sequence number is out of range', self.nodes[0].createrawtransaction, inputs, outputs)
 
-        # 10. invalid parameters - sequence number out of range
+        # 10. Invalid parameters - sequence number out of range
         inputs  = [ {'txid' : "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000", 'vout' : 1, 'sequence' : 4294967296}]
         outputs = { self.nodes[0].getnewaddress() : 1 }
         assert_raises_rpc_error(-8, 'Invalid parameter, sequence number is out of range', self.nodes[0].createrawtransaction, inputs, outputs)

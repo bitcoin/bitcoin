@@ -35,7 +35,7 @@ class KeyPoolTest(BitcoinTestFramework):
         assert(addr_data['hdseedid'] == wallet_info['hdseedid'])
         assert_raises_rpc_error(-12, "Error: Keypool ran out, please call keypoolrefill first", nodes[0].getnewaddress)
 
-        # put six (plus 2) new keys in the keypool (100% external-, +100% internal-keys, 1 in min)
+        # Put six (plus 2) new keys in the keypool (100% external-, +100% internal-keys, 1 in min)
         nodes[0].walletpassphrase('test', 12000)
         nodes[0].keypoolrefill(6)
         nodes[0].walletlock()
@@ -43,7 +43,7 @@ class KeyPoolTest(BitcoinTestFramework):
         assert_equal(wi['keypoolsize_hd_internal'], 6)
         assert_equal(wi['keypoolsize'], 6)
 
-        # drain the internal keys
+        # Drain the internal keys
         nodes[0].getrawchangeaddress()
         nodes[0].getrawchangeaddress()
         nodes[0].getrawchangeaddress()
@@ -51,10 +51,10 @@ class KeyPoolTest(BitcoinTestFramework):
         nodes[0].getrawchangeaddress()
         nodes[0].getrawchangeaddress()
         addr = set()
-        # the next one should fail
+        # The next one should fail
         assert_raises_rpc_error(-12, "Keypool ran out", nodes[0].getrawchangeaddress)
 
-        # drain the external keys
+        # Drain the external keys
         addr.add(nodes[0].getnewaddress())
         addr.add(nodes[0].getnewaddress())
         addr.add(nodes[0].getnewaddress())
@@ -62,18 +62,18 @@ class KeyPoolTest(BitcoinTestFramework):
         addr.add(nodes[0].getnewaddress())
         addr.add(nodes[0].getnewaddress())
         assert(len(addr) == 6)
-        # the next one should fail
+        # The next one should fail
         assert_raises_rpc_error(-12, "Error: Keypool ran out, please call keypoolrefill first", nodes[0].getnewaddress)
 
-        # refill keypool with three new addresses
+        # Refill keypool with three new addresses
         nodes[0].walletpassphrase('test', 1)
         nodes[0].keypoolrefill(3)
 
-        # test walletpassphrase timeout
+        # Test walletpassphrase timeout
         time.sleep(1.1)
         assert_equal(nodes[0].getwalletinfo()["unlocked_until"], 0)
 
-        # drain the keypool
+        # Drain the keypool
         for _ in range(3):
             nodes[0].getnewaddress()
         assert_raises_rpc_error(-12, "Keypool ran out", nodes[0].getnewaddress)

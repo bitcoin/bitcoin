@@ -96,7 +96,7 @@ class ReceivedByTest(BitcoinTestFramework):
         assert_equal(len(res), 3 + self.num_cb_reward_addresses)  # Became 3 entries
 
         # Not on random addr
-        other_addr = self.nodes[0].getnewaddress()  # note on node[0]! just a random addr
+        other_addr = self.nodes[0].getnewaddress()  # Note on node[0]! just a random addr
         res = self.nodes[1].listreceivedbyaddress(0, True, True, other_addr)
         assert_equal(len(res), 0)
 
@@ -126,7 +126,7 @@ class ReceivedByTest(BitcoinTestFramework):
 
         self.log.info("listreceivedbylabel + getreceivedbylabel Test")
 
-        # set pre-state
+        # Set pre-state
         label = ''
         address = self.nodes[1].getnewaddress()
         assert_equal(self.nodes[1].getaddressinfo(address)['label'], label)

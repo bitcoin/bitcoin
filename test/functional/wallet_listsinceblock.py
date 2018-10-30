@@ -90,10 +90,10 @@ class ListSinceBlockTest (BitcoinTestFramework):
         # Split network into two
         self.split_network()
 
-        # send to nodes[0] from nodes[2]
+        # Send to nodes[0] from nodes[2]
         senttx = self.nodes[2].sendtoaddress(self.nodes[0].getnewaddress(), 1)
 
-        # generate on both sides
+        # Generate on both sides
         lastblockhash = self.nodes[1].generate(6)[5]
         self.nodes[2].generate(7)
         self.log.info('lastblockhash=%s' % (lastblockhash))
@@ -146,13 +146,13 @@ class ListSinceBlockTest (BitcoinTestFramework):
         # Split network into two
         self.split_network()
 
-        # share utxo between nodes[1] and nodes[2]
+        # Share utxo between nodes[1] and nodes[2]
         utxos = self.nodes[2].listunspent()
         utxo = utxos[0]
         privkey = self.nodes[2].dumpprivkey(utxo['address'])
         self.nodes[1].importprivkey(privkey)
 
-        # send from nodes[1] using utxo to nodes[0]
+        # Send from nodes[1] using utxo to nodes[0]
         change = '%.8f' % (float(utxo['amount']) - 1.0003)
         recipient_dict = {
             self.nodes[0].getnewaddress(): 1,
@@ -166,7 +166,7 @@ class ListSinceBlockTest (BitcoinTestFramework):
             self.nodes[1].signrawtransactionwithwallet(
                 self.nodes[1].createrawtransaction(utxo_dicts, recipient_dict))['hex'])
 
-        # send from nodes[2] using utxo to nodes[3]
+        # Send from nodes[2] using utxo to nodes[3]
         recipient_dict2 = {
             self.nodes[3].getnewaddress(): 1,
             self.nodes[2].getnewaddress(): change,
@@ -175,7 +175,7 @@ class ListSinceBlockTest (BitcoinTestFramework):
             self.nodes[2].signrawtransactionwithwallet(
                 self.nodes[2].createrawtransaction(utxo_dicts, recipient_dict2))['hex'])
 
-        # generate on both sides
+        # Generate on both sides
         lastblockhash = self.nodes[1].generate(3)[2]
         self.nodes[2].generate(4)
 
@@ -183,14 +183,14 @@ class ListSinceBlockTest (BitcoinTestFramework):
 
         self.sync_all()
 
-        # gettransaction should work for txid1
+        # Gettransaction should work for txid1
         assert self.nodes[0].gettransaction(txid1)['txid'] == txid1, "gettransaction failed to find txid1"
 
         # listsinceblock(lastblockhash) should now include txid1, as seen from nodes[0]
         lsbres = self.nodes[0].listsinceblock(lastblockhash)
         assert any(tx['txid'] == txid1 for tx in lsbres['removed'])
 
-        # but it should not include 'removed' if include_removed=false
+        # But it should not include 'removed' if include_removed=false
         lsbres2 = self.nodes[0].listsinceblock(blockhash=lastblockhash, include_removed=False)
         assert 'removed' not in lsbres2
 
@@ -225,7 +225,7 @@ class ListSinceBlockTest (BitcoinTestFramework):
         # Split network into two
         self.split_network()
 
-        # create and sign a transaction
+        # Create and sign a transaction
         utxos = self.nodes[2].listunspent()
         utxo = utxos[0]
         change = '%.8f' % (float(utxo['amount']) - 1.0003)
@@ -243,18 +243,18 @@ class ListSinceBlockTest (BitcoinTestFramework):
 
         signedtx = signedtxres['hex']
 
-        # send from nodes[1]; this will end up in aa1
+        # Send from nodes[1]; this will end up in aa1
         txid1 = self.nodes[1].sendrawtransaction(signedtx)
 
-        # generate bb1-bb2 on right side
+        # Generate bb1-bb2 on right side
         self.nodes[2].generate(2)
 
-        # send from nodes[2]; this will end up in bb3
+        # Send from nodes[2]; this will end up in bb3
         txid2 = self.nodes[2].sendrawtransaction(signedtx)
 
         assert_equal(txid1, txid2)
 
-        # generate on both sides
+        # Generate on both sides
         lastblockhash = self.nodes[1].generate(3)[2]
         self.nodes[2].generate(2)
 
@@ -271,12 +271,12 @@ class ListSinceBlockTest (BitcoinTestFramework):
         assert any(tx['txid'] == txid1 for tx in lsbres['transactions'])
         assert any(tx['txid'] == txid1 for tx in lsbres['removed'])
 
-        # find transaction and ensure confirmations is valid
+        # Find transaction and ensure confirmations is valid
         for tx in lsbres['transactions']:
             if tx['txid'] == txid1:
                 assert_equal(tx['confirmations'], 2)
 
-        # the same check for the removed array; confirmations should STILL be 2
+        # The same check for the removed array; confirmations should STILL be 2
         for tx in lsbres['removed']:
             if tx['txid'] == txid1:
                 assert_equal(tx['confirmations'], 2)

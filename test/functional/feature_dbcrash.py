@@ -184,7 +184,7 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
             try:
                 nodei_utxo_hash = self.nodes[i].gettxoutsetinfo()['hash_serialized_2']
             except OSError:
-                # probably a crash on db flushing
+                # Probably a crash on db flushing
                 nodei_utxo_hash = self.restart_node(i, self.nodes[3].getbestblockhash())
             assert_equal(nodei_utxo_hash, node3_utxo_hash)
 

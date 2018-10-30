@@ -57,13 +57,13 @@ class HTTPBasicsTest(BitcoinTestFramework):
         ##################################################
         url = urllib.parse.urlparse(self.nodes[0].url)
 
-        #Old authpair
+        # Old authpair
         authpair = url.username + ':' + url.password
 
-        #New authpair generated via share/rpcauth tool
+        # New authpair generated via share/rpcauth tool
         password = "cA773lm788buwYe4g4WT+05pKyNruVKjQ25x3n0DQcM="
 
-        #Second authpair with different username
+        # Second authpair with different username
         password2 = "8/F3uMDw4KSEbw96U3CA1C4X05dkHDN2BPFjTgZW4KI="
         authpairnew = "rt:"+password
 
@@ -77,7 +77,7 @@ class HTTPBasicsTest(BitcoinTestFramework):
         assert_equal(resp.status, 200)
         conn.close()
 
-        #Use new authpair to confirm both work
+        # Use new authpair to confirm both work
         self.log.info('Correct...')
         headers = {"Authorization": "Basic " + str_to_b64str(authpairnew)}
 
@@ -88,7 +88,7 @@ class HTTPBasicsTest(BitcoinTestFramework):
         assert_equal(resp.status, 200)
         conn.close()
 
-        #Wrong login name with rt's password
+        # Wrong login name with rt's password
         self.log.info('Wrong...')
         authpairnew = "rtwrong:"+password
         headers = {"Authorization": "Basic " + str_to_b64str(authpairnew)}
@@ -100,7 +100,7 @@ class HTTPBasicsTest(BitcoinTestFramework):
         assert_equal(resp.status, 401)
         conn.close()
 
-        #Wrong password for rt
+        # Wrong password for rt
         self.log.info('Wrong...')
         authpairnew = "rt:"+password+"wrong"
         headers = {"Authorization": "Basic " + str_to_b64str(authpairnew)}
@@ -112,7 +112,7 @@ class HTTPBasicsTest(BitcoinTestFramework):
         assert_equal(resp.status, 401)
         conn.close()
 
-        #Correct for rt2
+        # Correct for rt2
         self.log.info('Correct...')
         authpairnew = "rt2:"+password2
         headers = {"Authorization": "Basic " + str_to_b64str(authpairnew)}
@@ -124,7 +124,7 @@ class HTTPBasicsTest(BitcoinTestFramework):
         assert_equal(resp.status, 200)
         conn.close()
 
-        #Wrong password for rt2
+        # Wrong password for rt2
         self.log.info('Wrong...')
         authpairnew = "rt2:"+password2+"wrong"
         headers = {"Authorization": "Basic " + str_to_b64str(authpairnew)}
@@ -136,7 +136,7 @@ class HTTPBasicsTest(BitcoinTestFramework):
         assert_equal(resp.status, 401)
         conn.close()
 
-        #Correct for randomly generated user
+        # Correct for randomly generated user
         self.log.info('Correct...')
         authpairnew = self.user+":"+self.password
         headers = {"Authorization": "Basic " + str_to_b64str(authpairnew)}
@@ -148,7 +148,7 @@ class HTTPBasicsTest(BitcoinTestFramework):
         assert_equal(resp.status, 200)
         conn.close()
 
-        #Wrong password for randomly generated user
+        # Wrong password for randomly generated user
         self.log.info('Wrong...')
         authpairnew = self.user+":"+self.password+"Wrong"
         headers = {"Authorization": "Basic " + str_to_b64str(authpairnew)}
@@ -178,7 +178,7 @@ class HTTPBasicsTest(BitcoinTestFramework):
         assert_equal(resp.status, 200)
         conn.close()
 
-        #Wrong login name with rpcuser's password
+        # Wrong login name with rpcuser's password
         rpcuserauthpair = "rpcuserwrong:rpcpassword"
         headers = {"Authorization": "Basic " + str_to_b64str(rpcuserauthpair)}
 
@@ -189,7 +189,7 @@ class HTTPBasicsTest(BitcoinTestFramework):
         assert_equal(resp.status, 401)
         conn.close()
 
-        #Wrong password for rpcuser
+        # Wrong password for rpcuser
         self.log.info('Wrong...')
         rpcuserauthpair = "rpcuser:rpcpasswordwrong"
         headers = {"Authorization": "Basic " + str_to_b64str(rpcuserauthpair)}

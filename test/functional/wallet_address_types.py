@@ -240,7 +240,7 @@ class AddressTypeTest(BitcoinTestFramework):
                 to_node %= 4
                 assert_equal(unconf_balances[to_node], to_send * 10 * (2 + n))
 
-            # node5 collects fee and block subsidy to keep accounting simple
+            # Node5 collects fee and block subsidy to keep accounting simple
             self.nodes[5].generate(1)
             sync_blocks(self.nodes)
 

@@ -228,13 +228,13 @@ class PruneTest(BitcoinTestFramework):
         assert(self.nodes[2].getblock(self.forkhash)["height"] == self.forkheight)
 
     def manual_test(self, node_number, use_timestamp):
-        # at this point, node has 995 blocks and has not yet run in prune mode
+        # At this point, node has 995 blocks and has not yet run in prune mode
         self.start_node(node_number)
         node = self.nodes[node_number]
         assert_equal(node.getblockcount(), 995)
         assert_raises_rpc_error(-1, "not in prune mode", node.pruneblockchain, 500)
 
-        # now re-start in manual pruning mode
+        # Now re-start in manual pruning mode
         self.stop_node(node_number)
         self.start_node(node_number, extra_args=["-prune=1"])
         node = self.nodes[node_number]
@@ -264,21 +264,21 @@ class PruneTest(BitcoinTestFramework):
         def has_block(index):
             return os.path.isfile(os.path.join(self.nodes[node_number].datadir, "regtest", "blocks", "blk{:05}.dat".format(index)))
 
-        # should not prune because chain tip of node 3 (995) < PruneAfterHeight (1000)
+        # Should not prune because chain tip of node 3 (995) < PruneAfterHeight (1000)
         assert_raises_rpc_error(-1, "Blockchain is too short for pruning", node.pruneblockchain, height(500))
 
         # Save block transaction count before pruning, assert value
         block1_details = node.getblock(node.getblockhash(1))
         assert_equal(block1_details["nTx"], len(block1_details["tx"]))
 
-        # mine 6 blocks so we are at height 1001 (i.e., above PruneAfterHeight)
+        # Mine 6 blocks so we are at height 1001 (i.e., above PruneAfterHeight)
         node.generate(6)
         assert_equal(node.getblockchaininfo()["blocks"], 1001)
 
         # Pruned block should still know the number of transactions
         assert_equal(node.getblockheader(node.getblockhash(1))["nTx"], block1_details["nTx"])
 
-        # negative heights should raise an exception
+        # Negative heights should raise an exception
         assert_raises_rpc_error(-8, "Negative", node.pruneblockchain, -10)
 
         # height=100 too low to prune first block file so this is a no-op
@@ -308,7 +308,7 @@ class PruneTest(BitcoinTestFramework):
         if not has_block(2):
             raise AssertionError("blk00002.dat is still there, should be pruned by now")
 
-        # advance the tip so blk00002.dat and blk00003.dat can be pruned (the last 288 blocks should now be in blk00004.dat)
+        # Advance the tip so blk00002.dat and blk00003.dat can be pruned (the last 288 blocks should now be in blk00004.dat)
         node.generate(288)
         prune(1000)
         if has_block(2):
@@ -316,21 +316,21 @@ class PruneTest(BitcoinTestFramework):
         if has_block(3):
             raise AssertionError("blk00003.dat is still there, should be pruned by now")
 
-        # stop node, start back up with auto-prune at 550MB, make sure still runs
+        # Stop node, start back up with auto-prune at 550MB, make sure still runs
         self.stop_node(node_number)
         self.start_node(node_number, extra_args=["-prune=550"])
 
         self.log.info("Success")
 
     def wallet_test(self):
-        # check that the pruning node's wallet is still in good shape
+        # Check that the pruning node's wallet is still in good shape
         self.log.info("Stop and start pruning node to trigger wallet rescan")
         self.stop_node(2)
         self.start_node(2, extra_args=["-prune=550"])
         self.log.info("Success")
 
-        # check that wallet loads successfully when restarting a pruned node after IBD.
-        # this was reported to fail in #7494.
+        # Check that wallet loads successfully when restarting a pruned node after IBD.
+        # This was reported to fail in #7494.
         self.log.info("Syncing node 5 to test wallet")
         connect_nodes(self.nodes[0], 5)
         nds = [self.nodes[0], self.nodes[5]]
@@ -360,7 +360,7 @@ class PruneTest(BitcoinTestFramework):
         # Start by mining a simple chain that all nodes have
         # N0=N1=N2 **...*(995)
 
-        # stop manual-pruning node with 995 blocks
+        # Stop manual-pruning node with 995 blocks
         self.stop_node(3)
         self.stop_node(4)
 
@@ -376,12 +376,12 @@ class PruneTest(BitcoinTestFramework):
         # N1=N2 **...*+...+(1044)
         # N0    **...**...**(1045)
         #
-        # reconnect nodes causing reorg on N1 and N2
+        # Reconnect nodes causing reorg on N1 and N2
         # N1=N2 **...*(1020) *...**(1045)
         #                   \
         #                    +...+(1044)
         #
-        # repeat this process until you have 12 stale forks hanging off the
+        # Repeat this process until you have 12 stale forks hanging off the
         # main chain on N1 and N2
         # N0    *************************...***************************(1320)
         #

@@ -63,10 +63,10 @@ def get_log_events(source, logfile):
             event = ''
             timestamp = ''
             for line in infile:
-                # skip blank lines
+                # Skip blank lines
                 if line == '\n':
                     continue
-                # if this line has a timestamp, it's the start of a new log event.
+                # If this line has a timestamp, it's the start of a new log event.
                 time_match = TIMESTAMP_PATTERN.match(line)
                 if time_match:
                     if event:
@@ -78,7 +78,7 @@ def get_log_events(source, logfile):
                         line = line.replace(timestamp, timestamp_micro)
                         timestamp = timestamp_micro
                     event = line
-                # if it doesn't have a timestamp, it's a continuation line of the previous log.
+                # If it doesn't have a timestamp, it's a continuation line of the previous log.
                 else:
                     # Add the line. Prefix with space equivalent to the source + timestamp so log lines are aligned
                     event += "                                   " + line

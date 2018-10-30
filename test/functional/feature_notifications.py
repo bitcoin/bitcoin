@@ -37,18 +37,18 @@ class NotificationsTest(BitcoinTestFramework):
         block_count = 10
         blocks = self.nodes[1].generatetoaddress(block_count, self.nodes[1].getnewaddress() if self.is_wallet_compiled() else ADDRESS_BCRT1_UNSPENDABLE)
 
-        # wait at most 10 seconds for expected number of files before reading the content
+        # Wait at most 10 seconds for expected number of files before reading the content
         wait_until(lambda: len(os.listdir(self.blocknotify_dir)) == block_count, timeout=10)
 
-        # directory content should equal the generated blocks hashes
+        # Directory content should equal the generated blocks hashes
         assert_equal(sorted(blocks), sorted(os.listdir(self.blocknotify_dir)))
 
         if self.is_wallet_compiled():
             self.log.info("test -walletnotify")
-            # wait at most 10 seconds for expected number of files before reading the content
+            # Wait at most 10 seconds for expected number of files before reading the content
             wait_until(lambda: len(os.listdir(self.walletnotify_dir)) == block_count, timeout=10)
 
-            # directory content should equal the generated transaction hashes
+            # Directory content should equal the generated transaction hashes
             txids_rpc = list(map(lambda t: t['txid'], self.nodes[1].listtransactions("*", block_count)))
             assert_equal(sorted(txids_rpc), sorted(os.listdir(self.walletnotify_dir)))
             self.stop_node(1)
@@ -56,13 +56,13 @@ class NotificationsTest(BitcoinTestFramework):
                 os.remove(os.path.join(self.walletnotify_dir, tx_file))
 
             self.log.info("test -walletnotify after rescan")
-            # restart node to rescan to force wallet notifications
+            # Restart node to rescan to force wallet notifications
             self.start_node(1)
             connect_nodes_bi(self.nodes, 0, 1)
 
             wait_until(lambda: len(os.listdir(self.walletnotify_dir)) == block_count, timeout=10)
 
-            # directory content should equal the generated transaction hashes
+            # Directory content should equal the generated transaction hashes
             txids_rpc = list(map(lambda t: t['txid'], self.nodes[1].listtransactions("*", block_count)))
             assert_equal(sorted(txids_rpc), sorted(os.listdir(self.walletnotify_dir)))
 

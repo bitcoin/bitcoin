@@ -63,11 +63,11 @@ class NodeNetworkLimitedTest(BitcoinTestFramework):
         sync_blocks([self.nodes[0], self.nodes[1]])
 
         self.log.info("Make sure we can max retrieve block at tip-288.")
-        node.send_getdata_for_block(blocks[1])  # last block in valid range
+        node.send_getdata_for_block(blocks[1])  # Last block in valid range
         node.wait_for_block(int(blocks[1], 16), timeout=3)
 
         self.log.info("Requesting block at height 2 (tip-289) must fail (ignored).")
-        node.send_getdata_for_block(blocks[0])  # first block outside of the 288+2 limit
+        node.send_getdata_for_block(blocks[0])  # First block outside of the 288+2 limit
         node.wait_for_disconnect(5)
 
         self.log.info("Check local address relay, do a fresh connection.")
@@ -82,32 +82,32 @@ class NodeNetworkLimitedTest(BitcoinTestFramework):
         self.nodes[0].disconnect_p2ps()
         node1.wait_for_disconnect()
 
-        # connect unsynced node 2 with pruned NODE_NETWORK_LIMITED peer
-        # because node 2 is in IBD and node 0 is a NODE_NETWORK_LIMITED peer, sync must not be possible
+        # Connect unsynced node 2 with pruned NODE_NETWORK_LIMITED peer.
+        # Because node 2 is in IBD and node 0 is a NODE_NETWORK_LIMITED peer, sync must not be possible
         connect_nodes_bi(self.nodes, 0, 2)
         try:
             sync_blocks([self.nodes[0], self.nodes[2]], timeout=5)
         except:
             pass
-        # node2 must remain at height 0
+        # Node2 must remain at height 0
         assert_equal(self.nodes[2].getblockheader(self.nodes[2].getbestblockhash())['height'], 0)
 
-        # now connect also to node 1 (non pruned)
+        # Now connect also to node 1 (non pruned)
         connect_nodes_bi(self.nodes, 1, 2)
 
-        # sync must be possible
+        # Sync must be possible
         sync_blocks(self.nodes)
 
-        # disconnect all peers
+        # Disconnect all peers
         self.disconnect_all()
 
-        # mine 10 blocks on node 0 (pruned node)
+        # Mine 10 blocks on node 0 (pruned node)
         self.nodes[0].generatetoaddress(10, self.nodes[0].get_deterministic_priv_key().address)
 
-        # connect node1 (non pruned) with node0 (pruned) and check if the can sync
+        # Connect node1 (non pruned) with node0 (pruned) and check if the can sync
         connect_nodes_bi(self.nodes, 0, 1)
 
-        # sync must be possible, node 1 is no longer in IBD and should therefore connect to node 0 (NODE_NETWORK_LIMITED)
+        # Sync must be possible, node 1 is no longer in IBD and should therefore connect to node 0 (NODE_NETWORK_LIMITED)
         sync_blocks([self.nodes[0], self.nodes[1]])
 
 if __name__ == '__main__':

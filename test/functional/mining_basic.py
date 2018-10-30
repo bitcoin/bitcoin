@@ -65,7 +65,7 @@ class MiningTest(BitcoinTestFramework):
         assert 'coinbasetxn' not in tmpl
 
         coinbase_tx = create_coinbase(height=int(tmpl["height"]) + 1)
-        # sequence numbers must not be max for nLockTime to have effect
+        # Sequence numbers must not be max for nLockTime to have effect
         coinbase_tx.vin[0].nSequence = 2 ** 32 - 2
         coinbase_tx.rehash()
 
@@ -127,7 +127,7 @@ class MiningTest(BitcoinTestFramework):
 
         self.log.info("getblocktemplate: Test bad bits")
         bad_block = copy.deepcopy(block)
-        bad_block.nBits = 469762303  # impossible in the real world
+        bad_block.nBits = 469762303  # Impossible in the real world
         assert_template(node, bad_block, 'bad-diffbits')
 
         self.log.info("getblocktemplate: Test bad merkle root")
@@ -214,7 +214,7 @@ class MiningTest(BitcoinTestFramework):
         assert_raises_rpc_error(-25, 'bad-prevblk', lambda: node.submitheader(hexdata=b2x(CBlockHeader(bad_block2).serialize())))
         node.submitheader(hexdata=b2x(CBlockHeader(block).serialize()))
         node.submitheader(hexdata=b2x(CBlockHeader(bad_block_root).serialize()))
-        assert_equal(node.submitblock(hexdata=b2x(block.serialize())), 'duplicate')  # valid
+        assert_equal(node.submitblock(hexdata=b2x(block.serialize())), 'duplicate')  # Valid
 
 
 if __name__ == '__main__':

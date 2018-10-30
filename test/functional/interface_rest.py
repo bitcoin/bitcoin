@@ -97,8 +97,8 @@ class RESTTest (BitcoinTestFramework):
         self.log.info("Load the transaction using the /tx URI")
 
         json_obj = self.test_rest_request("/tx/{}".format(txid))
-        spent = (json_obj['vin'][0]['txid'], json_obj['vin'][0]['vout'])  # get the vin to later check for utxo (should be spent by then)
-        # get n of 0.1 outpoint
+        spent = (json_obj['vin'][0]['txid'], json_obj['vin'][0]['vout'])  # Get the vin to later check for utxo (should be spent by then)
+        # Get n of 0.1 outpoint
         n, = filter_output_indices_by_value(json_obj['vout'], Decimal('0.1'))
         spending = (txid, n)
 
@@ -145,20 +145,20 @@ class RESTTest (BitcoinTestFramework):
         chain_height, = unpack("i", output.read(4))
         response_hash = binascii.hexlify(output.read(32)[::-1]).decode('ascii')
 
-        assert_equal(bb_hash, response_hash)  # check if getutxo's chaintip during calculation was fine
-        assert_equal(chain_height, 102)  # chain height must be 102
+        assert_equal(bb_hash, response_hash)  # Check if getutxo's chaintip during calculation was fine
+        assert_equal(chain_height, 102)  # Chain height must be 102
 
         self.log.info("Test the /getutxos URI with and without /checkmempool")
         # Create a transaction, check that it's found with /checkmempool, but
         # not found without. Then confirm the transaction and check that it's
         # found with or without /checkmempool.
 
-        # do a tx and don't sync
+        # Do a tx and don't sync
         txid = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.1)
         json_obj = self.test_rest_request("/tx/{}".format(txid))
-        # get the spent output to later check for utxo (should be spent by then)
+        # Get the spent output to later check for utxo (should be spent by then)
         spent = (json_obj['vin'][0]['txid'], json_obj['vin'][0]['vout'])
-        # get n of 0.1 outpoint
+        # Get n of 0.1 outpoint
         n, = filter_output_indices_by_value(json_obj['vout'], Decimal('0.1'))
         spending = (txid, n)
 
@@ -195,7 +195,7 @@ class RESTTest (BitcoinTestFramework):
         long_uri = '/'.join(['{}-{}'.format(txid, n_) for n_ in range(15)])
         self.test_rest_request("/getutxos/checkmempool/{}".format(long_uri), http_method='POST', status=200)
 
-        self.nodes[0].generate(1)  # generate block to not affect upcoming tests
+        self.nodes[0].generate(1)  # Generate block to not affect upcoming tests
         self.sync_all()
 
         self.log.info("Test the /block and /headers URIs")
@@ -230,8 +230,8 @@ class RESTTest (BitcoinTestFramework):
 
         # Compare with json block header
         json_obj = self.test_rest_request("/headers/1/{}".format(bb_hash))
-        assert_equal(len(json_obj), 1)  # ensure that there is one header in the json response
-        assert_equal(json_obj[0]['hash'], bb_hash)  # request/response hash should be the same
+        assert_equal(len(json_obj), 1)  # Ensure that there is one header in the json response
+        assert_equal(json_obj[0]['hash'], bb_hash)  # Request/response hash should be the same
 
         # Compare with normal RPC block response
         rpc_block_json = self.nodes[0].getblock(bb_hash)
@@ -242,7 +242,7 @@ class RESTTest (BitcoinTestFramework):
         self.nodes[1].generate(5)
         self.sync_all()
         json_obj = self.test_rest_request("/headers/5/{}".format(bb_hash))
-        assert_equal(len(json_obj), 5)  # now we should have 5 header objects
+        assert_equal(len(json_obj), 5)  # Now we should have 5 header objects
 
         self.log.info("Test the /tx URI")
 
@@ -267,7 +267,7 @@ class RESTTest (BitcoinTestFramework):
         # Check that there are exactly 3 transactions in the TX memory pool before generating the block
         json_obj = self.test_rest_request("/mempool/info")
         assert_equal(json_obj['size'], 3)
-        # the size of the memory pool should be greater than 3x ~100 bytes
+        # The size of the memory pool should be greater than 3x ~100 bytes
         assert_greater_than(json_obj['bytes'], 300)
 
         # Check that there are our submitted transactions in the TX memory pool

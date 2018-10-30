@@ -102,10 +102,10 @@ def split_inputs(from_node, txins, txouts, initial_split=False):
 def check_estimates(node, fees_seen):
     """Call estimatesmartfee and verify that the estimates meet certain invariants."""
 
-    delta = 1.0e-6  # account for rounding error
+    delta = 1.0e-6  # Account for rounding error
     last_feerate = float(max(fees_seen))
     all_smart_estimates = [node.estimatesmartfee(i) for i in range(1, 26)]
-    for i, e in enumerate(all_smart_estimates):  # estimate is for i+1
+    for i, e in enumerate(all_smart_estimates):  # Estimate is for i+1
         feerate = float(e["feerate"])
         assert_greater_than(feerate, 0)
 
@@ -162,7 +162,7 @@ class EstimateFeeTest(BitcoinTestFramework):
             sync_mempools(self.nodes[0:3], wait=.1)
             mined = mining_node.getblock(mining_node.generate(1)[0], True)["tx"]
             sync_blocks(self.nodes[0:3], wait=.1)
-            # update which txouts are confirmed
+            # Update which txouts are confirmed
             newmem = []
             for utx in self.memutxo:
                 if utx["txid"] in mined:

@@ -165,7 +165,7 @@ class BaseNode(P2PInterface):
             self.block_announced = True
             for x in message.headers:
                 x.calc_sha256()
-                # append because headers may be announced over multiple messages.
+                # Append because headers may be announced over multiple messages.
                 self.recent_headers_announced.append(x.sha256)
             self.last_blockhash_announced = message.headers[-1].sha256
 
@@ -289,17 +289,17 @@ class SendHeadersTest(BitcoinTestFramework):
             test_node.check_last_inv_announcement(inv=[tip])
             # Try a few different responses; none should affect next announcement
             if i == 0:
-                # first request the block
+                # First request the block
                 test_node.send_get_data([tip])
                 test_node.wait_for_block(tip)
             elif i == 1:
-                # next try requesting header and block
+                # Next try requesting header and block
                 test_node.send_get_headers(locator=[old_tip], hashstop=tip)
                 test_node.send_get_data([tip])
                 test_node.wait_for_block(tip)
-                test_node.clear_block_announcements()  # since we requested headers...
+                test_node.clear_block_announcements()  # Since we requested headers...
             elif i == 2:
-                # this time announce own block via headers
+                # This time announce own block via headers
                 inv_node.clear_block_announcements()
                 height = self.nodes[0].getblockcount()
                 last_time = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['time']
@@ -309,7 +309,7 @@ class SendHeadersTest(BitcoinTestFramework):
                 test_node.send_header_for_blocks([new_block])
                 test_node.wait_for_getdata([new_block.sha256])
                 test_node.send_message(msg_block(new_block))
-                test_node.sync_with_ping()  # make sure this block is processed
+                test_node.sync_with_ping()  # Make sure this block is processed
                 wait_until(lambda: inv_node.block_announced, timeout=60, lock=mininode_lock)
                 inv_node.clear_block_announcements()
                 test_node.clear_block_announcements()
@@ -467,7 +467,7 @@ class SendHeadersTest(BitcoinTestFramework):
         test_node.last_message.pop("getdata", None)
         test_node.send_header_for_blocks(blocks)
         test_node.sync_with_ping()
-        # should not have received any getdata messages
+        # Should not have received any getdata messages
         with mininode_lock:
             assert "getdata" not in test_node.last_message
 

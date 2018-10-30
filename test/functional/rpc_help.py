@@ -15,16 +15,16 @@ class HelpRpcTest(BitcoinTestFramework):
     def run_test(self):
         node = self.nodes[0]
 
-        # wrong argument count
+        # Wrong argument count
         assert_raises_rpc_error(-1, 'help', node.help, 'foo', 'bar')
 
-        # invalid argument
+        # Invalid argument
         assert_raises_rpc_error(-1, 'JSON value is not a string as expected', node.help, 0)
 
-        # help of unknown command
+        # Help of unknown command
         assert_equal(node.help('foo'), 'help: unknown command: foo')
 
-        # command titles
+        # Command titles
         titles = [line[3:-3] for line in node.help().splitlines() if line.startswith('==')]
 
         components = ['Blockchain', 'Control', 'Generating', 'Mining', 'Network', 'Rawtransactions', 'Util']

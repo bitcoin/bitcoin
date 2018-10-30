@@ -52,7 +52,7 @@ class AbandonConflictTest(BitcoinTestFramework):
         nC = next(i for i, vout in enumerate(self.nodes[0].getrawtransaction(txC, 1)["vout"]) if vout["value"] == Decimal("10"))
 
         inputs =[]
-        # spend 10btc outputs from txA and txB
+        # Spend 10btc outputs from txA and txB
         inputs.append({"txid":txA, "vout":nA})
         inputs.append({"txid":txB, "vout":nB})
         outputs = {}
@@ -79,7 +79,7 @@ class AbandonConflictTest(BitcoinTestFramework):
         inputs = [ {"txid":txABC2, "vout":0} ]
         outputs = { self.nodes[0].getnewaddress(): signed3_change }
         signed3 = self.nodes[0].signrawtransactionwithwallet(self.nodes[0].createrawtransaction(inputs, outputs))
-        # note tx is never directly referenced, only abandoned as a child of the above
+        # Note tx is never directly referenced, only abandoned as a child of the above
         self.nodes[0].sendrawtransaction(signed3["hex"])
 
         # In mempool txs from self should increase balance from change

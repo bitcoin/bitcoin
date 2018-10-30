@@ -165,7 +165,7 @@ class AssumeValidTest(BitcoinTestFramework):
         p2p1 = self.nodes[1].add_p2p_connection(BaseNode())
         p2p2 = self.nodes[2].add_p2p_connection(BaseNode())
 
-        # send header lists to all three nodes
+        # Send header lists to all three nodes
         p2p0.send_header_for_blocks(self.blocks[0:2000])
         p2p0.send_header_for_blocks(self.blocks[2000:])
         p2p1.send_header_for_blocks(self.blocks[0:2000])

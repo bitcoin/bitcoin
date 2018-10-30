@@ -61,9 +61,9 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         madd = msig["address"]
         mredeem = msig["redeemScript"]
         if self.output_type == 'bech32':
-            assert madd[0:4] == "bcrt"  # actually a bech32 address
+            assert madd[0:4] == "bcrt"  # Actually a bech32 address
 
-        # compare against addmultisigaddress
+        # Compare against addmultisigaddress
         msigw = node1.addmultisigaddress(self.nsigs, self.pub, None, self.output_type)
         maddw = msigw["address"]
         mredeemw = msigw["redeemScript"]

@@ -33,7 +33,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         signedtx = node.signrawtransactionwithwallet(rawtx)
         txid = node.sendrawtransaction(signedtx['hex'])
         fulltx = node.getrawtransaction(txid, 1)
-        assert(len(fulltx['vout']) == num_outputs) # make sure we didn't generate a change output
+        assert(len(fulltx['vout']) == num_outputs) # Make sure we didn't generate a change output
         return (txid, send_value)
 
     def run_test(self):

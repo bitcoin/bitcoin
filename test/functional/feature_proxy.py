@@ -146,7 +146,7 @@ class ProxyTest(BitcoinTestFramework):
         return rv
 
     def run_test(self):
-        # basic -proxy
+        # Basic -proxy
         self.node_test(self.nodes[0], [self.serv1, self.serv1, self.serv1, self.serv1], False)
 
         # -proxy plus -onion
@@ -159,7 +159,7 @@ class ProxyTest(BitcoinTestFramework):
         assert_equal(len(credentials), len(rv))
 
         if self.have_ipv6:
-            # proxy on IPv6 localhost
+            # Proxy on IPv6 localhost
             self.node_test(self.nodes[3], [self.serv3, self.serv3, self.serv3, self.serv3], False, False)
 
         def networks_dict(d):
@@ -168,7 +168,7 @@ class ProxyTest(BitcoinTestFramework):
                 r[x['name']] = x
             return r
 
-        # test RPC getnetworkinfo
+        # Test RPC getnetworkinfo
         n0 = networks_dict(self.nodes[0].getnetworkinfo())
         for net in ['ipv4','ipv6','onion']:
             assert_equal(n0[net]['proxy'], '%s:%i' % (self.conf1.addr))

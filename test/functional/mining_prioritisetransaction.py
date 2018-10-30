@@ -45,7 +45,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
 
         utxo_count = 90
         utxos = create_confirmed_utxos(self.relayfee, self.nodes[0], utxo_count)
-        base_fee = self.relayfee*100 # our transactions are smaller than 100kb
+        base_fee = self.relayfee*100 # Our transactions are smaller than 100kb
         txids = []
 
         # Create 3 batches of transactions at 3 different fee rate levels
@@ -67,8 +67,8 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
                 sizes[i] += mempool[j]['size']
             assert(sizes[i] > MAX_BLOCK_BASE_SIZE) # Fail => raise utxo_count
 
-        # add a fee delta to something in the cheapest bucket and make sure it gets mined
-        # also check that a different entry in the cheapest bucket is NOT mined
+        # Add a fee delta to something in the cheapest bucket and make sure it gets mined.
+        # Also check that a different entry in the cheapest bucket is NOT mined
         self.nodes[0].prioritisetransaction(txid=txids[0][0], fee_delta=int(3*base_fee*COIN))
 
         self.nodes[0].generate(1)

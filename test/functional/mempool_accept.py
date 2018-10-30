@@ -112,10 +112,10 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         self.log.info('A transaction that conflicts with an unconfirmed tx')
         # Send the transaction that replaces the mempool transaction and opts out of replaceability
         node.sendrawtransaction(hexstring=bytes_to_hex_str(tx.serialize()), allowhighfees=True)
-        # take original raw_tx_0
+        # Take original raw_tx_0
         tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_0)))
         tx.vout[0].nValue -= int(4 * fee * COIN)  # Set more fee
-        # skip re-signing the tx
+        # Skip re-signing the tx
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': '18: txn-mempool-conflict'}],
             rawtxs=[bytes_to_hex_str(tx.serialize())],
@@ -125,7 +125,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         self.log.info('A transaction with missing inputs, that never existed')
         tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_0)))
         tx.vin[0].prevout = COutPoint(hash=int('ff' * 32, 16), n=14)
-        # skip re-signing the tx
+        # Skip re-signing the tx
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'missing-inputs'}],
             rawtxs=[bytes_to_hex_str(tx.serialize())],

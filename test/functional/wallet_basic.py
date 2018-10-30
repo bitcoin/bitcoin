@@ -74,7 +74,7 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getbalance("*", 1, True), 50)
         assert_equal(self.nodes[0].getbalance(minconf=1), 50)
 
-        # first argument of getbalance must be excluded or set to "*"
+        # First argument of getbalance must be excluded or set to "*"
         assert_raises_rpc_error(-32, "dummy first argument must be excluded or set to \"*\"", self.nodes[0].getbalance, "")
 
         # Check that only first and second nodes have UTXOs
@@ -102,19 +102,19 @@ class WalletTest(BitcoinTestFramework):
         assert_greater_than(memory_after['locked']['used'], memory_before['locked']['used'])
 
         self.log.info("test gettxout (second part)")
-        # utxo spent in mempool should be visible if you exclude mempool
+        # UTXO spent in mempool should be visible if you exclude mempool
         # but invisible if you include mempool
         txout = self.nodes[0].gettxout(confirmed_txid, confirmed_index, False)
         assert_equal(txout['value'], 50)
         txout = self.nodes[0].gettxout(confirmed_txid, confirmed_index, True)
         assert txout is None
-        # new utxo from mempool should be invisible if you exclude mempool
+        # New UTXO from mempool should be invisible if you exclude mempool
         # but visible if you include mempool
         txout = self.nodes[0].gettxout(mempool_txid, 0, False)
         assert txout is None
         txout1 = self.nodes[0].gettxout(mempool_txid, 0, True)
         txout2 = self.nodes[0].gettxout(mempool_txid, 1, True)
-        # note the mempool tx will have randomly assigned indices
+        # Note the mempool tx will have randomly assigned indices
         # but 10 will go to node2 and the rest will go to node0
         balance = self.nodes[0].getbalance()
         assert_equal(set([txout1['value'], txout2['value']]), set([10, balance]))
@@ -161,7 +161,7 @@ class WalletTest(BitcoinTestFramework):
         self.nodes[1].generate(100)
         self.sync_all([self.nodes[0:3]])
 
-        # node0 should end up with 100 btc in block rewards plus fees, but
+        # Node0 should end up with 100 btc in block rewards plus fees, but
         # minus the 21 plus fees sent to node2
         assert_equal(self.nodes[0].getbalance(), 100 - 21)
         assert_equal(self.nodes[2].getbalance(), 21)
@@ -172,7 +172,7 @@ class WalletTest(BitcoinTestFramework):
         node0utxos = self.nodes[0].listunspent(1)
         assert_equal(len(node0utxos), 2)
 
-        # create both transactions
+        # Create both transactions
         txns_to_send = []
         for utxo in node0utxos:
             inputs = []
@@ -253,7 +253,7 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getwalletinfo()["unconfirmed_balance"], 1)
         assert_equal(self.nodes[0].getunconfirmedbalance(), 1)
 
-        # check if we can list zero value tx as available coins
+        # Check if we can list zero value tx as available coins
         # 1. create raw_tx
         # 2. hex-changed one output to 0.0
         # 3. sign and send
@@ -262,17 +262,17 @@ class WalletTest(BitcoinTestFramework):
         inputs = [{"txid": usp['txid'], "vout": usp['vout']}]
         outputs = {self.nodes[1].getnewaddress(): 49.998, self.nodes[0].getnewaddress(): 11.11}
 
-        raw_tx = self.nodes[1].createrawtransaction(inputs, outputs).replace("c0833842", "00000000")  # replace 11.11 with 0.0 (int32)
+        raw_tx = self.nodes[1].createrawtransaction(inputs, outputs).replace("c0833842", "00000000")  # Replace 11.11 with 0.0 (int32)
         signed_raw_tx = self.nodes[1].signrawtransactionwithwallet(raw_tx)
         decoded_raw_tx = self.nodes[1].decoderawtransaction(signed_raw_tx['hex'])
         zero_value_txid = decoded_raw_tx['txid']
         self.nodes[1].sendrawtransaction(signed_raw_tx['hex'])
 
         self.sync_all()
-        self.nodes[1].generate(1)  # mine a block
+        self.nodes[1].generate(1)  # Mine a block
         self.sync_all()
 
-        unspent_txs = self.nodes[0].listunspent()  # zero value tx must be in listunspents output
+        unspent_txs = self.nodes[0].listunspent()  # Zero value tx must be in listunspents output
         found = False
         for uTx in unspent_txs:
             if uTx['txid'] == zero_value_txid:
@@ -280,7 +280,7 @@ class WalletTest(BitcoinTestFramework):
                 assert_equal(uTx['amount'], Decimal('0'))
         assert(found)
 
-        # do some -walletbroadcast tests
+        # Do some -walletbroadcast tests
         self.stop_nodes()
         self.start_node(0, ["-walletbroadcast=0"])
         self.start_node(1, ["-walletbroadcast=0"])
@@ -292,11 +292,11 @@ class WalletTest(BitcoinTestFramework):
 
         txid_not_broadcast = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 2)
         tx_obj_not_broadcast = self.nodes[0].gettransaction(txid_not_broadcast)
-        self.nodes[1].generate(1)  # mine a block, tx should not be in there
+        self.nodes[1].generate(1)  # Mine a block, tx should not be in there
         self.sync_all([self.nodes[0:3]])
-        assert_equal(self.nodes[2].getbalance(), node_2_bal)  # should not be changed because tx was not broadcasted
+        assert_equal(self.nodes[2].getbalance(), node_2_bal)  # Should not be changed because tx was not broadcasted
 
-        # now broadcast from another node, mine a block, sync, and check the balance
+        # Now broadcast from another node, mine a block, sync, and check the balance
         self.nodes[1].sendrawtransaction(tx_obj_not_broadcast['hex'])
         self.nodes[1].generate(1)
         self.sync_all([self.nodes[0:3]])
@@ -304,10 +304,10 @@ class WalletTest(BitcoinTestFramework):
         tx_obj_not_broadcast = self.nodes[0].gettransaction(txid_not_broadcast)
         assert_equal(self.nodes[2].getbalance(), node_2_bal)
 
-        # create another tx
+        # Create another tx
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 2)
 
-        # restart the nodes with -walletbroadcast=1
+        # Restart the nodes with -walletbroadcast=1
         self.stop_nodes()
         self.start_node(0)
         self.start_node(1)
@@ -321,10 +321,10 @@ class WalletTest(BitcoinTestFramework):
         sync_blocks(self.nodes[0:3])
         node_2_bal += 2
 
-        # tx should be added to balance because after restarting the nodes tx should be broadcast
+        # Tx should be added to balance because after restarting the nodes tx should be broadcast
         assert_equal(self.nodes[2].getbalance(), node_2_bal)
 
-        # send a tx with value in a string (PR#6380 +)
+        # Send a tx with value in a string (PR#6380 +)
         txid = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), "2")
         tx_obj = self.nodes[0].gettransaction(txid)
         assert_equal(tx_obj['amount'], Decimal('-2'))
@@ -333,7 +333,7 @@ class WalletTest(BitcoinTestFramework):
         tx_obj = self.nodes[0].gettransaction(txid)
         assert_equal(tx_obj['amount'], Decimal('-0.0001'))
 
-        # check if JSON parser can handle scientific notation in strings
+        # Check if JSON parser can handle scientific notation in strings
         txid = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), "1e-4")
         tx_obj = self.nodes[0].gettransaction(txid)
         assert_equal(tx_obj['amount'], Decimal('-0.0001'))
@@ -380,7 +380,7 @@ class WalletTest(BitcoinTestFramework):
         # Check that the txid and balance is found by node1
         self.nodes[1].gettransaction(coinbase_txid)
 
-        # check if wallet or blockchain maintenance changes the balance
+        # Check if wallet or blockchain maintenance changes the balance
         self.sync_all([self.nodes[0:3]])
         blocks = self.nodes[0].generate(2)
         self.sync_all([self.nodes[0:3]])
@@ -392,33 +392,33 @@ class WalletTest(BitcoinTestFramework):
         #   - False: unicode directly as UTF-8
         for mode in [True, False]:
             self.nodes[0].rpc.ensure_ascii = mode
-            # unicode check: Basic Multilingual Plane, Supplementary Plane respectively
+            # Unicode check: Basic Multilingual Plane, Supplementary Plane respectively
             for label in [u'рыба', u'𝅘𝅥𝅯']:
                 addr = self.nodes[0].getnewaddress()
                 self.nodes[0].setlabel(addr, label)
                 assert_equal(self.nodes[0].getaddressinfo(addr)['label'], label)
                 assert(label in self.nodes[0].listlabels())
-        self.nodes[0].rpc.ensure_ascii = True  # restore to default
+        self.nodes[0].rpc.ensure_ascii = True  # Restore to default
 
-        # maintenance tests
+        # Maintenance tests
         maintenance = [
             '-rescan',
             '-reindex',
             '-zapwallettxes=1',
             '-zapwallettxes=2',
-            # disabled until issue is fixed: https://github.com/bitcoin/bitcoin/issues/7463
+            # Disabled until issue is fixed: https://github.com/bitcoin/bitcoin/issues/7463
             # '-salvagewallet',
         ]
         chainlimit = 6
         for m in maintenance:
             self.log.info("check " + m)
             self.stop_nodes()
-            # set lower ancestor limit for later
+            # Set lower ancestor limit for later
             self.start_node(0, [m, "-limitancestorcount=" + str(chainlimit)])
             self.start_node(1, [m, "-limitancestorcount=" + str(chainlimit)])
             self.start_node(2, [m, "-limitancestorcount=" + str(chainlimit)])
             if m == '-reindex':
-                # reindex will leave rpc warm up "early"; Wait for it to finish
+                # Reindex will leave rpc warm up "early"; Wait for it to finish
                 wait_until(lambda: [block_count] * 3 == [self.nodes[i].getblockcount() for i in range(3)])
             assert_equal(balance_nodes, [self.nodes[i].getbalance() for i in range(3)])
 
@@ -466,7 +466,7 @@ class WalletTest(BitcoinTestFramework):
         self.stop_node(0)
         self.start_node(0, extra_args=["-walletrejectlongchains", "-limitancestorcount=" + str(2 * chainlimit)])
 
-        # wait for loadmempool
+        # Wait for loadmempool
         timeout = 10
         while (timeout > 0 and len(self.nodes[0].getrawmempool()) < chainlimit * 2):
             time.sleep(0.5)

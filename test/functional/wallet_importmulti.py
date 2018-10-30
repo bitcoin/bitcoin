@@ -34,13 +34,13 @@ class ImportMultiTest(BitcoinTestFramework):
 
         node0_address1 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
 
-        #Check only one address
+        # Check only one address
         assert_equal(node0_address1['ismine'], True)
 
-        #Node 1 sync test
+        # Node 1 sync test
         assert_equal(self.nodes[1].getblockcount(),1)
 
-        #Address Test - before import
+        # Address Test - before import
         address_info = self.nodes[1].getaddressinfo(node0_address1['address'])
         assert_equal(address_info['iswatchonly'], False)
         assert_equal(address_info['ismine'], False)
@@ -438,7 +438,7 @@ class ImportMultiTest(BitcoinTestFramework):
         watchonly_timestamp = timestamp
 
 
-        # restart nodes to check for proper serialization/deserialization of watch only address
+        # Restart nodes to check for proper serialization/deserialization of watch only address
         self.stop_nodes()
         self.start_nodes()
         address_assert = self.nodes[1].getaddressinfo(watchonly_address)

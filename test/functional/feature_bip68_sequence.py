@@ -13,8 +13,8 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_greater_than, assert_raises_rpc_error, bytes_to_hex_str, get_bip9_status, satoshi_round, sync_blocks
 
 SEQUENCE_LOCKTIME_DISABLE_FLAG = (1<<31)
-SEQUENCE_LOCKTIME_TYPE_FLAG = (1<<22) # this means use time (0 means height)
-SEQUENCE_LOCKTIME_GRANULARITY = 9 # this is a bit-shift
+SEQUENCE_LOCKTIME_TYPE_FLAG = (1<<22) # This means use time (0 means height)
+SEQUENCE_LOCKTIME_GRANULARITY = 9 # This is a bit-shift
 SEQUENCE_LOCKTIME_MASK = 0x0000ffff
 
 # RPC error for non-BIP68 final transactions
@@ -60,7 +60,7 @@ class BIP68Test(BitcoinTestFramework):
     def test_disable_flag(self):
         # Create some unconfirmed inputs
         new_addr = self.nodes[0].getnewaddress()
-        self.nodes[0].sendtoaddress(new_addr, 2) # send 2 BTC
+        self.nodes[0].sendtoaddress(new_addr, 2) # Send 2 BTC
 
         utxos = self.nodes[0].listunspent(0, 0)
         assert(len(utxos) > 0)
@@ -144,7 +144,7 @@ class BIP68Test(BitcoinTestFramework):
             tx.nVersion = 2
             value = 0
             for j in range(num_inputs):
-                sequence_value = 0xfffffffe # this disables sequence locks
+                sequence_value = 0xfffffffe # This disables sequence locks
 
                 # 50% chance we enable sequence locks
                 if random.randint(0,1):
@@ -164,12 +164,12 @@ class BIP68Test(BitcoinTestFramework):
                     orig_time = self.get_median_time_past(utxos[j]["confirmations"])
                     cur_time = self.get_median_time_past(0) # MTP of the tip
 
-                    # can only timelock this input if it's not too old -- otherwise use height
+                    # Can only timelock this input if it's not too old -- otherwise use height
                     can_time_lock = True
                     if ((cur_time - orig_time) >> SEQUENCE_LOCKTIME_GRANULARITY) >= SEQUENCE_LOCKTIME_MASK:
                         can_time_lock = False
 
-                    # if time-lockable, then 50% chance we make this a time lock
+                    # If time-lockable, then 50% chance we make this a time lock
                     if random.randint(0,1) and can_time_lock:
                         # Find first time-lock value that fails, or latest one that succeeds
                         time_delta = sequence_value << SEQUENCE_LOCKTIME_GRANULARITY
@@ -344,7 +344,7 @@ class BIP68Test(BitcoinTestFramework):
         tx2.vin = [CTxIn(COutPoint(tx1.sha256, 0), nSequence=0)]
         tx2.vout = [CTxOut(int(tx1.vout[0].nValue - self.relayfee*COIN), CScript([b'a']))]
 
-        # sign tx2
+        # Sign tx2
         tx2_raw = self.nodes[0].signrawtransactionwithwallet(ToHex(tx2))["hex"]
         tx2 = FromHex(tx2, tx2_raw)
         tx2.rehash()
@@ -362,7 +362,7 @@ class BIP68Test(BitcoinTestFramework):
 
         assert_raises_rpc_error(-26, NOT_FINAL_ERROR, self.nodes[0].sendrawtransaction, ToHex(tx3))
 
-        # make a block that violates bip68; ensure that the tip updates
+        # Make a block that violates bip68; ensure that the tip updates
         tip = int(self.nodes[0].getbestblockhash(), 16)
         block = create_block(tip, create_coinbase(self.nodes[0].getblockcount()+1))
         block.nVersion = 3
@@ -376,7 +376,7 @@ class BIP68Test(BitcoinTestFramework):
         assert_equal(self.nodes[0].getbestblockhash(), block.hash)
 
     def activateCSV(self):
-        # activation should happen at block height 432 (3 periods)
+        # Activation should happen at block height 432 (3 periods)
         # getblockchaininfo will show CSV as active at block 431 (144 * 3 -1) since it's returning whether CSV is active for the next block.
         min_activation_height = 432
         height = self.nodes[0].getblockcount()

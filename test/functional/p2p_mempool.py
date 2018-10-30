@@ -23,11 +23,11 @@ class P2PMempoolTests(BitcoinTestFramework):
         # Add a p2p connection
         self.nodes[0].add_p2p_connection(P2PInterface())
 
-        #request mempool
+        # Request mempool
         self.nodes[0].p2p.send_message(msg_mempool())
         self.nodes[0].p2p.wait_for_disconnect()
 
-        #mininode must be disconnected at this point
+        # Mininode must be disconnected at this point
         assert_equal(len(self.nodes[0].getpeerinfo()), 0)
 
 if __name__ == '__main__':

@@ -30,7 +30,7 @@ class WalletHDTest(BitcoinTestFramework):
         assert_equal(masterkeyid, self.nodes[1].getwalletinfo()['hdmasterkeyid'])
         assert_equal(len(masterkeyid), 40)
 
-        # create an internal key
+        # Create an internal key
         change_addr = self.nodes[1].getrawchangeaddress()
         change_addrV= self.nodes[1].getaddressinfo(change_addr)
         assert_equal(change_addrV["hdkeypath"], "m/0'/1'/0'") #first internal child key
@@ -59,7 +59,7 @@ class WalletHDTest(BitcoinTestFramework):
         self.nodes[0].sendtoaddress(non_hd_add, 1)
         self.nodes[0].generate(1)
 
-        # create an internal key (again)
+        # Create an internal key (again)
         change_addr = self.nodes[1].getrawchangeaddress()
         change_addrV= self.nodes[1].getaddressinfo(change_addr)
         assert_equal(change_addrV["hdkeypath"], "m/0'/1'/1'") #second internal child key
@@ -69,7 +69,7 @@ class WalletHDTest(BitcoinTestFramework):
 
         self.log.info("Restore backup ...")
         self.stop_node(1)
-        # we need to delete the complete regtest directory
+        # We need to delete the complete regtest directory
         # otherwise node1 would auto-recover all funds in flag the keypool keys as used
         shutil.rmtree(os.path.join(self.nodes[1].datadir, "regtest", "blocks"))
         shutil.rmtree(os.path.join(self.nodes[1].datadir, "regtest", "chainstate"))
@@ -111,7 +111,7 @@ class WalletHDTest(BitcoinTestFramework):
         assert_equal(out['stop_height'], self.nodes[1].getblockcount())
         assert_equal(self.nodes[1].getbalance(), NUM_HD_ADDS + 1)
 
-        # send a tx and make sure its using the internal chain for the changeoutput
+        # Send a tx and make sure its using the internal chain for the changeoutput
         txid = self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         outs = self.nodes[1].decoderawtransaction(self.nodes[1].gettransaction(txid)['hex'])['vout']
         keypath = ""
