@@ -464,33 +464,35 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction) {
     PrecomputedTransactionData txdata(tx);
     boost::thread_group threadGroup;
     CCheckQueue<CScriptCheck> scriptcheckqueue(128);
-    CCheckQueueControl<CScriptCheck> control(&scriptcheckqueue);
+    {
+        CCheckQueueControl<CScriptCheck> control(&scriptcheckqueue);
 
-    for (int i=0; i<20; i++)
-        threadGroup.create_thread(boost::bind(&CCheckQueue<CScriptCheck>::Thread, boost::ref(scriptcheckqueue)));
+        for (int i=0; i<20; i++)
+            threadGroup.create_thread(boost::bind(&CCheckQueue<CScriptCheck>::Thread, boost::ref(scriptcheckqueue)));
 
-    std::vector<Coin> coins;
-    for(uint32_t i = 0; i < mtx.vin.size(); i++) {
-        Coin coin;
-        coin.nHeight = 1;
-        coin.fCoinBase = false;
-        coin.out.nValue = 1000;
-        coin.out.scriptPubKey = scriptPubKey;
-        coins.emplace_back(std::move(coin));
+        std::vector<Coin> coins;
+        for(uint32_t i = 0; i < mtx.vin.size(); i++) {
+            Coin coin;
+            coin.nHeight = 1;
+            coin.fCoinBase = false;
+            coin.out.nValue = 1000;
+            coin.out.scriptPubKey = scriptPubKey;
+            coins.emplace_back(std::move(coin));
+        }
+
+        for(uint32_t i = 0; i < mtx.vin.size(); i++) {
+            std::vector<CScriptCheck> vChecks;
+            CScriptCheck check(coins[tx.vin[i].prevout.n].out, tx, i, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, false, &txdata);
+            vChecks.push_back(CScriptCheck());
+            check.swap(vChecks.back());
+            control.Add(vChecks);
+        }
+
+        bool controlCheck = control.Wait();
+        assert(controlCheck);
     }
 
-    for(uint32_t i = 0; i < mtx.vin.size(); i++) {
-        std::vector<CScriptCheck> vChecks;
-        CScriptCheck check(coins[tx.vin[i].prevout.n].out, tx, i, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, false, &txdata);
-        vChecks.push_back(CScriptCheck());
-        check.swap(vChecks.back());
-        control.Add(vChecks);
-    }
-
-    bool controlCheck = control.Wait();
-    assert(controlCheck);
-
-    threadGroup.interrupt_all();
+    scriptcheckqueue.Interrupt();
     threadGroup.join_all();
 }
 

@@ -52,6 +52,9 @@ private:
     //! The temporary evaluation result.
     bool fAllOk;
 
+    //! The interrupt flag.
+    bool interrupted;
+
     /**
      * Number of verifications that haven't completed yet.
      * This includes elements that are no longer queued, but still in the
@@ -65,7 +68,6 @@ private:
     /** Internal function that does bulk of the verification work. */
     bool Loop(bool fMaster = false)
     {
-        boost::condition_variable& cond = fMaster ? condMaster : condWorker;
         std::vector<T> vChecks;
         vChecks.reserve(nBatchSize);
         unsigned int nNow = 0;
@@ -86,18 +88,28 @@ private:
                 }
                 // logically, the do loop starts here
                 while (queue.empty()) {
-                    if (fMaster && nTodo == 0) {
-                        nTotal--;
-                        bool fRet = fAllOk;
-                        // reset the status for new work later
-                        if (fMaster)
+                    if (fMaster) {
+                        if (nTodo == 0) {
+                            nTotal--;
+                            bool fRet = fAllOk;
+                            // reset the status for new work later
                             fAllOk = true;
-                        // return the current status
-                        return fRet;
+                            // return the current status
+                            return fRet;
+                        } else {
+                            condMaster.wait(lock);
+                        }
+                    } else {
+                        nIdle++;
+                        if (interrupted) {
+                            nTotal--;
+                            nIdle--;
+                            return false;
+                        } else {
+                            condWorker.wait(lock);
+                        }
+                        nIdle--;
                     }
-                    nIdle++;
-                    cond.wait(lock); // wait
-                    nIdle--;
                 }
                 // Decide how many work units to process now.
                 // * Do not try to do everything at once, but aim for increasingly smaller batches so
@@ -155,6 +167,16 @@ public:
             condWorker.notify_one();
         else if (vChecks.size() > 1)
             condWorker.notify_all();
+    }
+
+    void Interrupt()
+    {
+        {
+            boost::unique_lock<boost::mutex>(ControlMutex);
+            boost::unique_lock<boost::mutex>(mutex);
+            interrupted = true;
+        }
+        condWorker.notify_all();
     }
 
     ~CCheckQueue()
