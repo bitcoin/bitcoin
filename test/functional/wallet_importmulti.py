@@ -11,8 +11,14 @@ from test_framework.util import (
     assert_greater_than,
     assert_raises_rpc_error,
     bytes_to_hex_str,
+    hex_str_to_bytes
 )
-
+from test_framework.script import (
+    CScript,
+    OP_0,
+    hash160
+)
+from test_framework.messages import sha256
 
 class ImportMultiTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -89,6 +95,19 @@ class ImportMultiTest(BitcoinTestFramework):
         assert_equal(address_assert['iswatchonly'], True)
         assert_equal(address_assert['ismine'], False)
         assert_equal(address_assert['timestamp'], timestamp)
+
+        # ScriptPubKey + internal + label
+        self.log.info("Should not allow a label to be specified when internal is true")
+        address = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
+        result = self.nodes[1].importmulti([{
+            "scriptPubKey": address['scriptPubKey'],
+            "timestamp": "now",
+            "internal": True,
+            "label": "Example label"
+        }])
+        assert_equal(result[0]['success'], False)
+        assert_equal(result[0]['error']['code'], -8)
+        assert_equal(result[0]['error']['message'], 'Internal addresses should not have a label')
 
         # Nonstandard scriptPubKey + !internal
         self.log.info("Should not import a nonstandard scriptPubKey without internal flag")
@@ -198,7 +217,7 @@ class ImportMultiTest(BitcoinTestFramework):
         }])
         assert_equal(result[0]['success'], False)
         assert_equal(result[0]['error']['code'], -8)
-        assert_equal(result[0]['error']['message'], 'Incompatibility found between watchonly and keys')
+        assert_equal(result[0]['error']['message'], 'Watch-only addresses should not include private keys')
         address_assert = self.nodes[1].getaddressinfo(address['address'])
         assert_equal(address_assert['iswatchonly'], False)
         assert_equal(address_assert['ismine'], False)
@@ -339,7 +358,7 @@ class ImportMultiTest(BitcoinTestFramework):
         }])
         assert_equal(result[0]['success'], False)
         assert_equal(result[0]['error']['code'], -8)
-        assert_equal(result[0]['error']['message'], 'Incompatibility found between watchonly and keys')
+        assert_equal(result[0]['error']['message'], 'Watch-only addresses should not include private keys')
 
 
         # Address + Public key + !Internal + Wrong pubkey
@@ -355,7 +374,7 @@ class ImportMultiTest(BitcoinTestFramework):
         }])
         assert_equal(result[0]['success'], False)
         assert_equal(result[0]['error']['code'], -5)
-        assert_equal(result[0]['error']['message'], 'Consistency check failed')
+        assert_equal(result[0]['error']['message'], 'Key does not match address destination')
         address_assert = self.nodes[1].getaddressinfo(address['address'])
         assert_equal(address_assert['iswatchonly'], False)
         assert_equal(address_assert['ismine'], False)
@@ -375,7 +394,7 @@ class ImportMultiTest(BitcoinTestFramework):
         result = self.nodes[1].importmulti(request)
         assert_equal(result[0]['success'], False)
         assert_equal(result[0]['error']['code'], -5)
-        assert_equal(result[0]['error']['message'], 'Consistency check failed')
+        assert_equal(result[0]['error']['message'], 'Key does not match address destination')
         address_assert = self.nodes[1].getaddressinfo(address['address'])
         assert_equal(address_assert['iswatchonly'], False)
         assert_equal(address_assert['ismine'], False)
@@ -395,7 +414,7 @@ class ImportMultiTest(BitcoinTestFramework):
         }])
         assert_equal(result[0]['success'], False)
         assert_equal(result[0]['error']['code'], -5)
-        assert_equal(result[0]['error']['message'], 'Consistency check failed')
+        assert_equal(result[0]['error']['message'], 'Key does not match address destination')
         address_assert = self.nodes[1].getaddressinfo(address['address'])
         assert_equal(address_assert['iswatchonly'], False)
         assert_equal(address_assert['ismine'], False)
@@ -414,7 +433,7 @@ class ImportMultiTest(BitcoinTestFramework):
         }])
         assert_equal(result[0]['success'], False)
         assert_equal(result[0]['error']['code'], -5)
-        assert_equal(result[0]['error']['message'], 'Consistency check failed')
+        assert_equal(result[0]['error']['message'], 'Key does not match address destination')
         address_assert = self.nodes[1].getaddressinfo(address['address'])
         assert_equal(address_assert['iswatchonly'], False)
         assert_equal(address_assert['ismine'], False)
@@ -458,6 +477,147 @@ class ImportMultiTest(BitcoinTestFramework):
                 "timestamp": "",
             }])
 
+        # Import P2WPKH address as watch only
+        self.log.info("Should import a P2WPKH address as watch only")
+        address = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress(address_type="bech32"))
+        result = self.nodes[1].importmulti([{
+            "scriptPubKey": {
+                "address": address['address']
+            },
+            "timestamp": "now",
+        }])
+        assert_equal(result[0]['success'], True)
+        address_assert = self.nodes[1].getaddressinfo(address['address'])
+        assert_equal(address_assert['iswatchonly'], True)
+        assert_equal(address_assert['solvable'], False)
+
+        # Import P2WPKH address with public key but no private key
+        self.log.info("Should import a P2WPKH address and public key as solvable but not spendable")
+        address = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress(address_type="bech32"))
+        result = self.nodes[1].importmulti([{
+            "scriptPubKey": {
+                "address": address['address']
+            },
+            "timestamp": "now",
+            "pubkeys": [ address['pubkey'] ]
+        }])
+        assert_equal(result[0]['success'], True)
+        address_assert = self.nodes[1].getaddressinfo(address['address'])
+        assert_equal(address_assert['ismine'], False)
+        assert_equal(address_assert['solvable'], True)
+
+        # Import P2WPKH address with key and check it is spendable
+        self.log.info("Should import a P2WPKH address with key")
+        address = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress(address_type="bech32"))
+        result = self.nodes[1].importmulti([{
+            "scriptPubKey": {
+                "address": address['address']
+            },
+            "timestamp": "now",
+            "keys": [self.nodes[0].dumpprivkey(address['address'])]
+        }])
+        assert_equal(result[0]['success'], True)
+        address_assert = self.nodes[1].getaddressinfo(address['address'])
+        assert_equal(address_assert['iswatchonly'], False)
+        assert_equal(address_assert['ismine'], True)
+
+        # P2WSH multisig address without scripts or keys
+        sig_address_1 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
+        sig_address_2 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
+        multi_sig_script = self.nodes[0].addmultisigaddress(2, [sig_address_1['pubkey'], sig_address_2['pubkey']], "", "bech32")
+        self.log.info("Should import a p2wsh multisig as watch only without respective redeem script and private keys")
+        result = self.nodes[1].importmulti([{
+            "scriptPubKey": {
+                "address": multi_sig_script['address']
+            },
+            "timestamp": "now"
+        }])
+        assert_equal(result[0]['success'], True)
+        address_assert = self.nodes[1].getaddressinfo(multi_sig_script['address'])
+        assert_equal(address_assert['solvable'], False)
+
+        # Same P2WSH multisig address as above, but now with witnessscript + private keys
+        self.log.info("Should import a p2wsh with respective redeem script and private keys")
+        result = self.nodes[1].importmulti([{
+            "scriptPubKey": {
+                "address": multi_sig_script['address']
+            },
+            "timestamp": "now",
+            "witnessscript": multi_sig_script['redeemScript'],
+            "keys": [ self.nodes[0].dumpprivkey(sig_address_1['address']), self.nodes[0].dumpprivkey(sig_address_2['address']) ]
+        }])
+        assert_equal(result[0]['success'], True)
+        address_assert = self.nodes[1].getaddressinfo(multi_sig_script['address'])
+        assert_equal(address_assert['solvable'], True)
+        assert_equal(address_assert['ismine'], True)
+        assert_equal(address_assert['sigsrequired'], 2)
+
+        # P2SH-P2WPKH address with no redeemscript or public or private key
+        sig_address_1 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress(address_type="p2sh-segwit"))
+        pubkeyhash = hash160(hex_str_to_bytes(sig_address_1['pubkey']))
+        pkscript = CScript([OP_0, pubkeyhash])
+        self.log.info("Should import a p2sh-p2wpkh without redeem script or keys")
+        result = self.nodes[1].importmulti([{
+            "scriptPubKey": {
+                "address": sig_address_1['address']
+            },
+            "timestamp": "now"
+        }])
+        assert_equal(result[0]['success'], True)
+        address_assert = self.nodes[1].getaddressinfo(sig_address_1['address'])
+        assert_equal(address_assert['solvable'], False)
+        assert_equal(address_assert['ismine'], False)
+
+        # P2SH-P2WPKH address + redeemscript + public key with no private key
+        self.log.info("Should import a p2sh-p2wpkh with respective redeem script and pubkey as solvable")
+        result = self.nodes[1].importmulti([{
+            "scriptPubKey": {
+                "address": sig_address_1['address']
+            },
+            "timestamp": "now",
+            "redeemscript": bytes_to_hex_str(pkscript),
+            "pubkeys": [ sig_address_1['pubkey'] ]
+        }])
+        assert_equal(result[0]['success'], True)
+        address_assert = self.nodes[1].getaddressinfo(sig_address_1['address'])
+        assert_equal(address_assert['solvable'], True)
+        assert_equal(address_assert['ismine'], False)
+
+        # P2SH-P2WPKH address + redeemscript + private key
+        sig_address_1 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress(address_type="p2sh-segwit"))
+        pubkeyhash = hash160(hex_str_to_bytes(sig_address_1['pubkey']))
+        pkscript = CScript([OP_0, pubkeyhash])
+        self.log.info("Should import a p2sh-p2wpkh with respective redeem script and private keys")
+        result = self.nodes[1].importmulti([{
+            "scriptPubKey": {
+                "address": sig_address_1['address']
+            },
+            "timestamp": "now",
+            "redeemscript": bytes_to_hex_str(pkscript),
+            "keys": [ self.nodes[0].dumpprivkey(sig_address_1['address'])]
+        }])
+        assert_equal(result[0]['success'], True)
+        address_assert = self.nodes[1].getaddressinfo(sig_address_1['address'])
+        assert_equal(address_assert['solvable'], True)
+        assert_equal(address_assert['ismine'], True)
+
+        # P2SH-P2WSH 1-of-1 multisig + redeemscript with no private key
+        sig_address_1 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
+        multi_sig_script = self.nodes[0].addmultisigaddress(1, [sig_address_1['pubkey']], "", "p2sh-segwit")
+        scripthash = sha256(hex_str_to_bytes(multi_sig_script['redeemScript']))
+        redeem_script = CScript([OP_0, scripthash])
+        self.log.info("Should import a p2sh-p2wsh with respective redeem script but no private key")
+        result = self.nodes[1].importmulti([{
+            "scriptPubKey": {
+                "address": multi_sig_script['address']
+            },
+            "timestamp": "now",
+            "redeemscript": bytes_to_hex_str(redeem_script),
+            "witnessscript": multi_sig_script['redeemScript']
+        }])
+        assert_equal(result[0]['success'], True)
+        address_assert = self.nodes[1].getaddressinfo(multi_sig_script['address'])
+        assert_equal(address_assert['solvable'], True)
 
 if __name__ == '__main__':
     ImportMultiTest ().main ()
