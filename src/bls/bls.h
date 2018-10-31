@@ -15,6 +15,7 @@
 #include <chiabls/privatekey.hpp>
 #include <chiabls/publickey.hpp>
 #include <chiabls/signature.hpp>
+#undef DOUBLE
 
 #include <array>
 #include <unistd.h>
