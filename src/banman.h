@@ -39,18 +39,18 @@ class BanMan
 public:
     ~BanMan();
     BanMan(fs::path ban_file, CClientUIInterface* client_interface, int64_t default_ban_time);
-    void Ban(const CNetAddr& netAddr, const BanReason& banReason, int64_t bantimeoffset = 0, bool sinceUnixEpoch = false);
-    void Ban(const CSubNet& subNet, const BanReason& banReason, int64_t bantimeoffset = 0, bool sinceUnixEpoch = false);
+    void Ban(const CNetAddr& net_addr, const BanReason& ban_reason, int64_t ban_time_offset = 0, bool since_unix_epoch = false);
+    void Ban(const CSubNet& sub_net, const BanReason& ban_reason, int64_t ban_time_offset = 0, bool since_unix_epoch = false);
     void ClearBanned();
-    bool IsBanned(CNetAddr netAddr);
-    bool IsBanned(CSubNet subNet);
-    bool Unban(const CNetAddr& netAddr);
-    bool Unban(const CSubNet& subNet);
-    void GetBanned(banmap_t& banMap);
+    bool IsBanned(CNetAddr net_addr);
+    bool IsBanned(CSubNet sub_net);
+    bool Unban(const CNetAddr& net_addr);
+    bool Unban(const CSubNet& sub_net);
+    void GetBanned(banmap_t& banmap);
     void DumpBanlist();
 
 private:
-    void SetBanned(const banmap_t& banMap);
+    void SetBanned(const banmap_t& banmap);
     bool BannedSetIsDirty();
     //!set the "dirty" flag for the banlist
     void SetBannedSetDirty(bool dirty = true);

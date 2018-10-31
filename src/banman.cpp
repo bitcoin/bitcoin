@@ -16,7 +16,7 @@ BanMan::BanMan(fs::path ban_file, CClientUIInterface* client_interface, int64_t 
 {
     if (m_client_interface) m_client_interface->InitMessage(_("Loading banlist..."));
 
-    int64_t nStart = GetTimeMillis();
+    int64_t n_start = GetTimeMillis();
     m_is_dirty = false;
     banmap_t banmap;
     if (m_ban_db.Read(banmap)) {
@@ -25,7 +25,7 @@ BanMan::BanMan(fs::path ban_file, CClientUIInterface* client_interface, int64_t 
         SweepBanned();            // sweep out unused entries
 
         LogPrint(BCLog::NET, "Loaded %d banned node ips/subnets from banlist.dat  %dms\n",
-            banmap.size(), GetTimeMillis() - nStart);
+            banmap.size(), GetTimeMillis() - n_start);
     } else {
         LogPrintf("Invalid or missing banlist.dat; recreating\n");
         SetBannedSetDirty(true); // force write
@@ -44,7 +44,7 @@ void BanMan::DumpBanlist()
 
     if (!BannedSetIsDirty()) return;
 
-    int64_t nStart = GetTimeMillis();
+    int64_t n_start = GetTimeMillis();
 
     banmap_t banmap;
     GetBanned(banmap);
@@ -53,7 +53,7 @@ void BanMan::DumpBanlist()
     }
 
     LogPrint(BCLog::NET, "Flushed %d banned node ips/subnets to banlist.dat  %dms\n",
-        banmap.size(), GetTimeMillis() - nStart);
+        banmap.size(), GetTimeMillis() - n_start);
 }
 
 void BanMan::ClearBanned()
@@ -67,55 +67,55 @@ void BanMan::ClearBanned()
     if (m_client_interface) m_client_interface->BannedListChanged();
 }
 
-bool BanMan::IsBanned(CNetAddr netAddr)
+bool BanMan::IsBanned(CNetAddr net_addr)
 {
     LOCK(m_cs_banned);
     for (const auto& it : m_banned) {
-        CSubNet subNet = it.first;
-        CBanEntry banEntry = it.second;
+        CSubNet sub_net = it.first;
+        CBanEntry ban_entry = it.second;
 
-        if (subNet.Match(netAddr) && GetTime() < banEntry.nBanUntil) {
+        if (sub_net.Match(net_addr) && GetTime() < ban_entry.nBanUntil) {
             return true;
         }
     }
     return false;
 }
 
-bool BanMan::IsBanned(CSubNet subNet)
+bool BanMan::IsBanned(CSubNet sub_net)
 {
     LOCK(m_cs_banned);
-    banmap_t::iterator i = m_banned.find(subNet);
+    banmap_t::iterator i = m_banned.find(sub_net);
     if (i != m_banned.end()) {
-        CBanEntry banEntry = (*i).second;
-        if (GetTime() < banEntry.nBanUntil) {
+        CBanEntry ban_entry = (*i).second;
+        if (GetTime() < ban_entry.nBanUntil) {
             return true;
         }
     }
     return false;
 }
 
-void BanMan::Ban(const CNetAddr& netAddr, const BanReason& banReason, int64_t bantimeoffset, bool sinceUnixEpoch)
+void BanMan::Ban(const CNetAddr& net_addr, const BanReason& ban_reason, int64_t ban_time_offset, bool since_unix_epoch)
 {
-    CSubNet subNet(netAddr);
-    Ban(subNet, banReason, bantimeoffset, sinceUnixEpoch);
+    CSubNet sub_net(net_addr);
+    Ban(sub_net, ban_reason, ban_time_offset, since_unix_epoch);
 }
 
-void BanMan::Ban(const CSubNet& subNet, const BanReason& banReason, int64_t bantimeoffset, bool sinceUnixEpoch)
+void BanMan::Ban(const CSubNet& sub_net, const BanReason& ban_reason, int64_t ban_time_offset, bool since_unix_epoch)
 {
-    CBanEntry banEntry(GetTime(), banReason);
+    CBanEntry ban_entry(GetTime(), ban_reason);
 
-    int64_t normalized_bantimeoffset = bantimeoffset;
-    bool normalized_sinceUnixEpoch = sinceUnixEpoch;
-    if (bantimeoffset <= 0) {
-        normalized_bantimeoffset = m_default_ban_time;
-        normalized_sinceUnixEpoch = false;
+    int64_t normalized_ban_time_offset = ban_time_offset;
+    bool normalized_since_unix_epoch = since_unix_epoch;
+    if (ban_time_offset <= 0) {
+        normalized_ban_time_offset = m_default_ban_time;
+        normalized_since_unix_epoch = false;
     }
-    banEntry.nBanUntil = (normalized_sinceUnixEpoch ? 0 : GetTime()) + normalized_bantimeoffset;
+    ban_entry.nBanUntil = (normalized_since_unix_epoch ? 0 : GetTime()) + normalized_ban_time_offset;
 
     {
         LOCK(m_cs_banned);
-        if (m_banned[subNet].nBanUntil < banEntry.nBanUntil) {
-            m_banned[subNet] = banEntry;
+        if (m_banned[sub_net].nBanUntil < ban_entry.nBanUntil) {
+            m_banned[sub_net] = ban_entry;
             m_is_dirty = true;
         } else
             return;
@@ -123,20 +123,20 @@ void BanMan::Ban(const CSubNet& subNet, const BanReason& banReason, int64_t bant
     if (m_client_interface) m_client_interface->BannedListChanged();
 
     //store banlist to disk immediately if user requested ban
-    if (banReason == BanReasonManuallyAdded) DumpBanlist();
+    if (ban_reason == BanReasonManuallyAdded) DumpBanlist();
 }
 
-bool BanMan::Unban(const CNetAddr& netAddr)
+bool BanMan::Unban(const CNetAddr& net_addr)
 {
-    CSubNet subNet(netAddr);
-    return Unban(subNet);
+    CSubNet sub_net(net_addr);
+    return Unban(sub_net);
 }
 
-bool BanMan::Unban(const CSubNet& subNet)
+bool BanMan::Unban(const CSubNet& sub_net)
 {
     {
         LOCK(m_cs_banned);
-        if (m_banned.erase(subNet) == 0) return false;
+        if (m_banned.erase(sub_net) == 0) return false;
         m_is_dirty = true;
     }
     if (m_client_interface) m_client_interface->BannedListChanged();
@@ -144,42 +144,42 @@ bool BanMan::Unban(const CSubNet& subNet)
     return true;
 }
 
-void BanMan::GetBanned(banmap_t& banMap)
+void BanMan::GetBanned(banmap_t& banmap)
 {
     LOCK(m_cs_banned);
     // Sweep the banlist so expired bans are not returned
     SweepBanned();
-    banMap = m_banned; //create a thread safe copy
+    banmap = m_banned; //create a thread safe copy
 }
 
-void BanMan::SetBanned(const banmap_t& banMap)
+void BanMan::SetBanned(const banmap_t& banmap)
 {
     LOCK(m_cs_banned);
-    m_banned = banMap;
+    m_banned = banmap;
     m_is_dirty = true;
 }
 
 void BanMan::SweepBanned()
 {
     int64_t now = GetTime();
-    bool notifyUI = false;
+    bool notify_ui = false;
     {
         LOCK(m_cs_banned);
         banmap_t::iterator it = m_banned.begin();
         while (it != m_banned.end()) {
-            CSubNet subNet = (*it).first;
-            CBanEntry banEntry = (*it).second;
-            if (now > banEntry.nBanUntil) {
+            CSubNet sub_net = (*it).first;
+            CBanEntry ban_entry = (*it).second;
+            if (now > ban_entry.nBanUntil) {
                 m_banned.erase(it++);
                 m_is_dirty = true;
-                notifyUI = true;
-                LogPrint(BCLog::NET, "%s: Removed banned node ip/subnet from banlist.dat: %s\n", __func__, subNet.ToString());
+                notify_ui = true;
+                LogPrint(BCLog::NET, "%s: Removed banned node ip/subnet from banlist.dat: %s\n", __func__, sub_net.ToString());
             } else
                 ++it;
         }
     }
     // update UI
-    if (notifyUI && m_client_interface) {
+    if (notify_ui && m_client_interface) {
         m_client_interface->BannedListChanged();
     }
 }
