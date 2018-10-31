@@ -1809,7 +1809,7 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and %1 to clear screen.</source>
-        <translation>Usa le flecce su e giú per navigare nella storia, e %1 per pulire lo schermo</translation>
+        <translation>Usa le frecce su e giú per navigare nella storia, e %1 per pulire lo schermo</translation>
     </message>
     <message>
         <source>Type %1 for an overview of available commands.</source>
