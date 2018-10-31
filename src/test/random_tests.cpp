@@ -38,11 +38,18 @@ BOOST_AUTO_TEST_CASE(fastrandom_tests)
     BOOST_CHECK(ctx1.randbytes(50) == ctx2.randbytes(50));
 
     // Check that a nondeterministic ones are not
-    FastRandomContext ctx3;
-    FastRandomContext ctx4;
-    BOOST_CHECK(ctx3.rand64() != ctx4.rand64()); // extremely unlikely to be equal
-    BOOST_CHECK(ctx3.rand256() != ctx4.rand256());
-    BOOST_CHECK(ctx3.randbytes(7) != ctx4.randbytes(7));
+    {
+        FastRandomContext ctx3, ctx4;
+        BOOST_CHECK(ctx3.rand64() != ctx4.rand64()); // extremely unlikely to be equal
+    }
+    {
+        FastRandomContext ctx3, ctx4;
+        BOOST_CHECK(ctx3.rand256() != ctx4.rand256());
+    }
+    {
+        FastRandomContext ctx3, ctx4;
+        BOOST_CHECK(ctx3.randbytes(7) != ctx4.randbytes(7));
+    }
 }
 
 BOOST_AUTO_TEST_CASE(fastrandom_randbits)
