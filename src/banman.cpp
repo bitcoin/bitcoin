@@ -104,11 +104,14 @@ void BanMan::Ban(const CSubNet& subNet, const BanReason& banReason, int64_t bant
 {
     CBanEntry banEntry(GetTime());
     banEntry.banReason = banReason;
+
+    int64_t normalized_bantimeoffset = bantimeoffset;
+    bool normalized_sinceUnixEpoch = sinceUnixEpoch;
     if (bantimeoffset <= 0) {
-        bantimeoffset = m_default_ban_time;
-        sinceUnixEpoch = false;
+        normalized_bantimeoffset = m_default_ban_time;
+        normalized_sinceUnixEpoch = false;
     }
-    banEntry.nBanUntil = (sinceUnixEpoch ? 0 : GetTime()) + bantimeoffset;
+    banEntry.nBanUntil = (normalized_sinceUnixEpoch ? 0 : GetTime()) + normalized_bantimeoffset;
 
     {
         LOCK(m_cs_banned);
