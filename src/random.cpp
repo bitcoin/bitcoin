@@ -398,6 +398,7 @@ uint256 FastRandomContext::rand256()
 
 std::vector<unsigned char> FastRandomContext::randbytes(size_t len)
 {
+    if (requires_seed) RandomSeed();
     std::vector<unsigned char> ret(len);
     if (len > 0) {
         rng.Output(&ret[0], len);
