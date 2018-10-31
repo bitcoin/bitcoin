@@ -425,11 +425,28 @@ bool CBLSSignature::Recover(const std::vector<CBLSSignature>& sigs, const std::v
 
 #ifndef BUILD_BITCOIN_INTERNAL
 
-static mt_pooled_secure_allocator<uint8_t> g_blsSecureAllocator(sizeof(bn_t) + sizeof(size_t));
+static std::once_flag init_flag;
+static mt_pooled_secure_allocator<uint8_t>* secure_allocator_instance;
+static void create_secure_allocator()
+{
+    // make sure LockedPoolManager is initialized first (ensures destruction order)
+    LockedPoolManager::Instance();
+
+    // static variable in function scope ensures it's initialized when first accessed
+    // and destroyed before LockedPoolManager
+    static mt_pooled_secure_allocator<uint8_t> a(sizeof(bn_t) + sizeof(size_t));
+    secure_allocator_instance = &a;
+}
+
+static mt_pooled_secure_allocator<uint8_t>& get_secure_allocator()
+{
+    std::call_once(init_flag, create_secure_allocator);
+    return *secure_allocator_instance;
+}
 
 static void* secure_allocate(size_t n)
 {
-    uint8_t* ptr = g_blsSecureAllocator.allocate(n + sizeof(size_t));
+    uint8_t* ptr = get_secure_allocator().allocate(n + sizeof(size_t));
     *(size_t*)ptr = n;
     return ptr + sizeof(size_t);
 }
@@ -442,7 +459,7 @@ static void secure_free(void* p)
 
     uint8_t* ptr = (uint8_t*)p - sizeof(size_t);
     size_t n = *(size_t*)ptr;
-    return g_blsSecureAllocator.deallocate(ptr, n);
+    return get_secure_allocator().deallocate(ptr, n);
 }
 #endif
 
