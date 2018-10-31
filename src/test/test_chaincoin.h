@@ -26,17 +26,11 @@ std::ostream& operator<<(typename std::enable_if<std::is_enum<T>::value, std::os
     return stream << static_cast<typename std::underlying_type<T>::type>(e);
 }
 
-extern uint256 insecure_rand_seed;
 extern FastRandomContext insecure_rand_ctx;
 
-static inline void SeedInsecureRand(bool fDeterministic = false)
+static inline void SeedInsecureRand(bool deterministic = false)
 {
-    if (fDeterministic) {
-        insecure_rand_seed = uint256();
-    } else {
-        insecure_rand_seed = GetRandHash();
-    }
-    insecure_rand_ctx = FastRandomContext(insecure_rand_seed);
+    insecure_rand_ctx = FastRandomContext(deterministic);
 }
 
 static inline uint32_t InsecureRand32() { return insecure_rand_ctx.rand32(); }
