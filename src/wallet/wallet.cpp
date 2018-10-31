@@ -2462,7 +2462,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
         // Cases where we have 11+ outputs all pointing to the same destination may result in
         // privacy leaks as they will potentially be deterministically sorted. We solve that by
         // explicitly shuffling the outputs before processing
-        std::shuffle(vCoins.begin(), vCoins.end(), FastRandomContext());
+        Shuffle(vCoins.begin(), vCoins.end(), FastRandomContext());
     }
     std::vector<OutputGroup> groups = GroupOutputs(vCoins, !coin_control.m_avoid_partial_spends);
 
@@ -2922,7 +2922,7 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
         // Shuffle selected coins and fill in final vin
         txNew.vin.clear();
         std::vector<CInputCoin> selected_coins(setCoins.begin(), setCoins.end());
-        std::shuffle(selected_coins.begin(), selected_coins.end(), FastRandomContext());
+        Shuffle(selected_coins.begin(), selected_coins.end(), FastRandomContext());
 
         // Note how the sequence number is set to non-maxint so that
         // the nLockTime set above actually works.
