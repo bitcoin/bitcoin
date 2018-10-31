@@ -9,7 +9,6 @@
 #include <QObject>
 
 QT_BEGIN_NAMESPACE
-class QIcon;
 class QMenu;
 class QWidget;
 QT_END_NAMESPACE
@@ -24,7 +23,6 @@ public:
     ~MacDockIconHandler();
 
     QMenu *dockMenu();
-    void setIcon(const QIcon &icon);
     void setMainWindow(QMainWindow *window);
     static MacDockIconHandler *instance();
     static void cleanup();

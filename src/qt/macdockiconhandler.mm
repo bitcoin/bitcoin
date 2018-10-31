@@ -4,9 +4,7 @@
 
 #include "macdockiconhandler.h"
 
-#include <QImageWriter>
 #include <QMenu>
-#include <QBuffer>
 #include <QWidget>
 
 #undef slots
@@ -69,39 +67,6 @@ MacDockIconHandler::~MacDockIconHandler()
 QMenu *MacDockIconHandler::dockMenu()
 {
     return this->m_dockMenu;
-}
-
-void MacDockIconHandler::setIcon(const QIcon &icon)
-{
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    NSImage *image = nil;
-    if (icon.isNull())
-        image = [[NSImage imageNamed:@"NSApplicationIcon"] retain];
-    else {
-        // generate NSImage from QIcon and use this as dock icon.
-        QSize size = icon.actualSize(QSize(128, 128));
-        QPixmap pixmap = icon.pixmap(size);
-
-        // Write image into a R/W buffer from raw pixmap, then save the image.
-        QBuffer notificationBuffer;
-        if (!pixmap.isNull() && notificationBuffer.open(QIODevice::ReadWrite)) {
-            QImageWriter writer(&notificationBuffer, "PNG");
-            if (writer.write(pixmap.toImage())) {
-                NSData* macImgData = [NSData dataWithBytes:notificationBuffer.buffer().data()
-                                             length:notificationBuffer.buffer().size()];
-                image =  [[NSImage alloc] initWithData:macImgData];
-            }
-        }
-
-        if(!image) {
-            // if testnet image could not be created, load std. app icon
-            image = [[NSImage imageNamed:@"NSApplicationIcon"] retain];
-        }
-    }
-
-    [NSApp setApplicationIconImage:image];
-    [image release];
-    [pool release];
 }
 
 MacDockIconHandler *MacDockIconHandler::instance()
