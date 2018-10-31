@@ -37,10 +37,7 @@ static void CCheckQueueSpeedPrevectorJob(benchmark::State& state)
         void swap(PrevectorJob& x){p.swap(x.p);};
     };
     CCheckQueue<PrevectorJob> queue {QUEUE_BATCH_SIZE};
-    boost::thread_group tg;
-    for (auto x = 0; x < std::max(MIN_CORES, GetNumCores()); ++x) {
-       tg.create_thread([&]{queue.Thread();});
-    }
+    queue.Start(std::max(MIN_CORES, GetNumCores()));
     while (state.KeepRunning()) {
         // Make insecure_rand here so that each iteration is identical.
         FastRandomContext insecure_rand(true);
@@ -57,6 +54,6 @@ static void CCheckQueueSpeedPrevectorJob(benchmark::State& state)
         control.Wait();
     }
     queue.Interrupt();
-    tg.join_all();
+    queue.Stop();
 }
 BENCHMARK(CCheckQueueSpeedPrevectorJob, 1400);
