@@ -1201,7 +1201,6 @@ bool AppInitMain()
     InitSignatureCache();
     InitScriptExecutionCache();
 
-    LogPrintf("Using %u threads for script verification\n", nScriptCheckThreads);
     StartScriptCheck();
 
     // Start the lightweight task scheduler thread

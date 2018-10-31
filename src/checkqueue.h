@@ -7,6 +7,8 @@
 
 #include <sync.h>
 
+#include <util.h>
+
 #include <algorithm>
 #include <vector>
 
@@ -39,6 +41,9 @@ private:
     //! The queue of elements to be processed.
     //! As the order of booleans doesn't matter, it is used as a LIFO (stack)
     std::vector<T> queue GUARDED_BY(mutex);
+
+    //! The worker threads
+    std::vector<std::thread> m_threads;
 
     //! The number of workers (including the master) that are idle.
     int nIdle GUARDED_BY(mutex) = 0;
@@ -139,12 +144,6 @@ public:
     //! Create a new check queue
     explicit CCheckQueue(unsigned int nBatchSizeIn) : nBatchSize(nBatchSizeIn) {}
 
-    //! Worker thread
-    void Thread()
-    {
-        Loop();
-    }
-
     //! Wait until execution finishes, and return whether all evaluations were successful.
     bool Wait()
     {
@@ -166,6 +165,23 @@ public:
             condWorker.notify_all();
     }
 
+    void Start(const int n_threads, const char* const thread_name = nullptr)
+    {
+        assert(m_threads.size() == 0);
+        {
+            LOCK(mutex);
+            interrupted = false;
+        }
+        if (n_threads <= 0) return;
+        m_threads.reserve(n_threads);
+        for (int i = 0; i < n_threads; i++) {
+            m_threads.emplace_back([thread_name, this] {
+                if (thread_name != nullptr) RenameThread(thread_name);
+                Loop();
+            });
+        }
+    }
+
     void Interrupt()
     {
         {
@@ -175,10 +191,15 @@ public:
         condWorker.notify_all();
     }
 
+    void Stop()
+    {
+        for (std::thread& thread : m_threads) thread.join();
+        m_threads.clear();
+    }
+
     ~CCheckQueue()
     {
     }
-
 };
 
 /**
