@@ -14,6 +14,12 @@ You will need the following dependencies, which can be installed as root via pkg
 pkg install autoconf automake boost-libs git gmake libevent libtool openssl pkgconf
 ```
 
+In order to run the test suite (recommended), you will need to have Python 3 installed:
+
+```
+pkg install python3
+```
+
 For the wallet (optional):
 ```
 ./contrib/install_db4.sh `pwd`
@@ -36,9 +42,21 @@ git clone https://github.com/bitcoin/bitcoin
 
 ./configure                  # to build with wallet OR
 ./configure --disable-wallet # to build without wallet
+```
 
+followed by either:
+
+```
 gmake
 ```
+
+to build without testing, or
+
+```
+gmake check
+```
+
+to also run the test suite (recommended, if Python 3 is installed).
 
 *Note on debugging*: The version of `gdb` installed by default is [ancient and considered harmful](https://wiki.freebsd.org/GdbRetirement).
 It is not suitable for debugging a multi-threaded C++ program, not even for getting backtraces. Please install the package `gdb` and
