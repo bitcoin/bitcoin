@@ -226,6 +226,9 @@ static void http_request_cb(struct evhttp_request* req, void* /* arg */)
     {
         LOCK(g_http_connections_mutex);
         evhttp_connection* conn = evhttp_request_get_connection(req);
+        // One connection can be used for multiple requests (HTTP 1.1 or
+        // Connection: Keep-Alive header) so set the close callback on the first
+        // request only.
         if (g_http_connections.insert(conn).second) {
             evhttp_connection_set_closecb(conn, http_connection_close_cb, nullptr);
         }
