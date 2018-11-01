@@ -480,6 +480,9 @@ void StopHTTPServer()
     }
     {
         LogPrint(BCLog::HTTP, "Disabling reading on current connections\n");
+        // Workers completed their job but there can be events to process
+        // related to their response in the event loop. For now just disable
+        // reading on each connection, keep writes enabled.
         LOCK(g_http_connections_mutex);
         for (evhttp_connection* conn : g_http_connections) {
             bufferevent* bev = evhttp_connection_get_bufferevent(conn);
