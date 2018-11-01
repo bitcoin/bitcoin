@@ -300,6 +300,4 @@ typedef std::shared_ptr<BLSPublicKeyVector> BLSPublicKeyVectorPtr;
 typedef std::shared_ptr<BLSSecretKeyVector> BLSSecretKeyVectorPtr;
 typedef std::shared_ptr<BLSSignatureVector> BLSSignatureVectorPtr;
 
-bool BLSInit();
-
 #endif // DASH_CRYPTO_BLS_H
