@@ -56,6 +56,10 @@ public:
         }
     }
 
+    // When signing with the collateral key, we don't sign the hash but a generated message instead
+    // This is needed for HW wallet support which can only sign text messages as of now
+    std::string MakeSignString() const;
+
     std::string ToString() const;
     void ToJson(UniValue& obj) const;
 };

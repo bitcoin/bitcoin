@@ -42,7 +42,7 @@ static bool CheckService(const uint256& proTxHash, const ProTx& proTx, const CBl
 }
 
 template <typename ProTx>
-static bool CheckSig(const ProTx& proTx, const CKeyID& keyID, CValidationState& state)
+static bool CheckHashSig(const ProTx& proTx, const CKeyID& keyID, CValidationState& state)
 {
     std::string strError;
     if (!CHashSigner::VerifyHash(::SerializeHash(proTx), keyID, proTx.vchSig, strError)) {
@@ -52,7 +52,17 @@ static bool CheckSig(const ProTx& proTx, const CKeyID& keyID, CValidationState& 
 }
 
 template <typename ProTx>
-static bool CheckSig(const ProTx& proTx, const CBLSPublicKey& pubKey, CValidationState& state)
+static bool CheckStringSig(const ProTx& proTx, const CKeyID& keyID, CValidationState& state)
+{
+    std::string strError;
+    if (!CMessageSigner::VerifyMessage(keyID, proTx.vchSig,  proTx.MakeSignString(), strError)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-protx-sig", false, strError);
+    }
+    return true;
+}
+
+template <typename ProTx>
+static bool CheckHashSig(const ProTx& proTx, const CBLSPublicKey& pubKey, CValidationState& state)
 {
     if (!proTx.sig.VerifyInsecure(pubKey, ::SerializeHash(proTx))) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-sig", false);
@@ -66,20 +76,6 @@ static bool CheckInputsHash(const CTransaction &tx, const ProTx& proTx, CValidat
     uint256 inputsHash = CalcTxInputsHash(tx);
     if (inputsHash != proTx.inputsHash) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-inputs-hash");
-    }
-
-    return true;
-}
-
-template <typename ProTx, typename PubKey>
-static bool CheckInputsHashAndSig(const CTransaction &tx, const ProTx& proTx, const PubKey& pubKey, CValidationState& state)
-{
-    if (!CheckInputsHash(tx, proTx, state)) {
-        return false;
-    }
-
-    if (!CheckSig(proTx, pubKey, state)) {
-        return false;
     }
 
     return true;
@@ -186,18 +182,19 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
         }
     }
 
+    if (!CheckInputsHash(tx, ptx, state)) {
+        return false;
+    }
+
     if (!keyForPayloadSig.IsNull()) {
         // collateral is not part of this ProRegTx, so we must verify ownership of the collateral
-        if (!CheckInputsHashAndSig(tx, ptx, keyForPayloadSig, state)) {
+        if (!CheckStringSig(ptx, keyForPayloadSig, state)) {
             return false;
         }
     } else {
         // collateral is part of this ProRegTx, so we know the collateral is owned by the issuer
         if (!ptx.vchSig.empty()) {
             return state.DoS(100, false, REJECT_INVALID, "bad-protx-sig");
-        }
-        if (!CheckInputsHash(tx, ptx, state)) {
-            return false;
         }
     }
 
@@ -240,7 +237,10 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
         }
 
         // we can only check the signature if pindexPrev != NULL and the MN is known
-        if (!CheckInputsHashAndSig(tx, ptx, mn->pdmnState->pubKeyOperator, state)) {
+        if (!CheckInputsHash(tx, ptx, state)) {
+            return false;
+        }
+        if (!CheckHashSig(ptx, mn->pdmnState->pubKeyOperator, state)) {
             return false;
         }
     }
@@ -313,7 +313,10 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
             }
         }
 
-        if (!CheckInputsHashAndSig(tx, ptx, dmn->pdmnState->keyIDOwner, state)) {
+        if (!CheckInputsHash(tx, ptx, state)) {
+            return false;
+        }
+        if (!CheckHashSig(ptx, dmn->pdmnState->keyIDOwner, state)) {
             return false;
         }
     }
@@ -346,11 +349,39 @@ bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
         if (!dmn)
             return state.DoS(100, false, REJECT_INVALID, "bad-protx-hash");
 
-        if (!CheckInputsHashAndSig(tx, ptx, dmn->pdmnState->pubKeyOperator, state))
+        if (!CheckInputsHash(tx, ptx, state))
+            return false;
+        if (!CheckHashSig(ptx, dmn->pdmnState->pubKeyOperator, state))
             return false;
     }
 
     return true;
+}
+
+std::string CProRegTx::MakeSignString() const
+{
+    std::string s;
+
+    // We only include the important stuff in the string form...
+
+    CTxDestination destPayout;
+    CBitcoinAddress addrPayout;
+    std::string strPayout;
+    if (ExtractDestination(scriptPayout, destPayout) && addrPayout.Set(destPayout)) {
+        strPayout = addrPayout.ToString();
+    } else {
+        strPayout = HexStr(scriptPayout.begin(), scriptPayout.end());
+    }
+
+    s += strPayout + "|";
+    s += strprintf("%d", nOperatorReward) + "|";
+    s += CBitcoinAddress(keyIDOwner).ToString() + "|";
+    s += CBitcoinAddress(keyIDVoting).ToString() + "|";
+
+    // ... and also the full hash of the payload as a protection agains malleability and replays
+    s += ::SerializeHash(*this).ToString();
+
+    return s;
 }
 
 std::string CProRegTx::ToString() const
