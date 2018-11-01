@@ -27,6 +27,7 @@ class InstantSendTest(DashTestFramework):
         # make sender funds mature for InstantSend
         for i in range(0, 2):
             set_mocktime(get_mocktime() + 1)
+            set_node_times(self.nodes, get_mocktime())
             self.nodes[0].generate(1)
         # create doublepending transaction,  but don't relay it
         dblspnd_tx = self.create_raw_trx(self.nodes[self.sender_idx],
@@ -47,6 +48,7 @@ class InstantSendTest(DashTestFramework):
                 break
             if time() > start + 10:
                 break
+            sleep(0.1)
         assert(locked)
         # start last node
         self.nodes[self.isolated_idx] = start_node(self.isolated_idx,
@@ -56,6 +58,7 @@ class InstantSendTest(DashTestFramework):
         self.nodes[self.isolated_idx].sendrawtransaction(dblspnd_tx['hex'])
         # generate block on isolated node with doublespend transaction
         set_mocktime(get_mocktime() + 1)
+        set_node_times(self.nodes, get_mocktime())
         self.nodes[self.isolated_idx].generate(1)
         wrong_block = self.nodes[self.isolated_idx].getbestblockhash()
         # connect isolated block to network
