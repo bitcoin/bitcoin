@@ -875,8 +875,27 @@ UniValue protx(const JSONRPCRequest& request)
 }
 #endif//ENABLE_WALLET
 
+void bls_generate_help()
+{
+    throw std::runtime_error(
+            "bls generate\n"
+            "\nReturns a BLS secret/public key pair.\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"secret\": \"xxxx\",        (string) BLS secret key\n"
+            "  \"public\": \"xxxx\",        (string) BLS public key\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("bls generate", "")
+    );
+}
+
 UniValue bls_generate(const JSONRPCRequest& request)
 {
+    if (request.fHelp || request.params.size() != 1) {
+        bls_generate_help();
+    }
+
     CBLSSecretKey sk;
     sk.MakeNewKey();
 
@@ -886,12 +905,23 @@ UniValue bls_generate(const JSONRPCRequest& request)
     return ret;
 }
 
+void bls_help()
+{
+    throw std::runtime_error(
+            "bls \"command\" ...\n"
+            "Set of commands to execute BLS related actions.\n"
+            "To get help on individual commands, use \"help bls command\".\n"
+            "\nArguments:\n"
+            "1. \"command\"        (string, required) The command to execute\n"
+            "\nAvailable commands:\n"
+            "  generate          - Create a BLS secret/public key pair\n"
+            );
+}
+
 UniValue _bls(const JSONRPCRequest& request)
 {
     if (request.params.empty()) {
-        throw std::runtime_error(
-                "bls \"command\" ...\n"
-        );
+        bls_help();
     }
 
     std::string command = request.params[0].get_str();
@@ -899,7 +929,7 @@ UniValue _bls(const JSONRPCRequest& request)
     if (command == "generate") {
         return bls_generate(request);
     } else {
-        throw std::runtime_error("invalid command: " + command);
+        bls_help();
     }
 }
 
