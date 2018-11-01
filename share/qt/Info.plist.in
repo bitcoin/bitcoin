@@ -97,9 +97,6 @@
   <key>NSHighResolutionCapable</key>
     <string>True</string>
 
-  <key>LSAppNapIsDisabled</key>
-    <string>True</string>
-
   <key>NSRequiresAquaSystemAppearance</key>
     <string>True</string>
   
