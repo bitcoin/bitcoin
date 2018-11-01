@@ -486,7 +486,7 @@ void StopHTTPServer()
         LOCK(g_http_connections_mutex);
         for (evhttp_connection* conn : g_http_connections) {
             bufferevent* bev = evhttp_connection_get_bufferevent(conn);
-            if (bev) bufferevent_disable(bev, EV_READ);
+            bufferevent_disable(bev, EV_READ);
         }
         g_http_connections.clear();
     }
