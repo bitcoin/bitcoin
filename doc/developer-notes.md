@@ -70,7 +70,7 @@ tool to clean up patches automatically before submission.
 - **Symbol naming conventions**. These are preferred in new code, but are not
 required when doing so would need changes to significant pieces of existing
 code.
-  - Variable and namespace names are all lowercase, and may use `_` to
+  - Variable (including function arguments) and namespace names are all lowercase, and may use `_` to
     separate words (snake_case).
     - Class member variables have a `m_` prefix.
     - Global variables have a `g_` prefix.
