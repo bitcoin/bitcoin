@@ -4,6 +4,7 @@
 
 #include "activemasternode.h"
 #include "governance.h"
+#include "init.h"
 #include "validation.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
@@ -503,4 +504,11 @@ void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitia
         // We must be at the tip already, let's move to the next asset.
         SwitchToNextAsset(connman);
     }
+}
+
+void CMasternodeSync::DoMaintenance(CConnman &connman)
+{
+    if (ShutdownRequested()) return;
+
+    ProcessTick(connman);
 }

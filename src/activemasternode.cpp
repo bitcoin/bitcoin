@@ -255,6 +255,13 @@ bool CActiveLegacyMasternodeManager::UpdateSentinelPing(int version)
     return true;
 }
 
+void CActiveLegacyMasternodeManager::DoMaintenance(CConnman &connman)
+{
+    if (ShutdownRequested()) return;
+
+    ManageState(connman);
+}
+
 void CActiveLegacyMasternodeManager::ManageStateInitial(CConnman& connman)
 {
     if (deterministicMNManager->IsDeterministicMNsSporkActive())

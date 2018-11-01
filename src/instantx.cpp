@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "activemasternode.h"
+#include "init.h"
 #include "instantx.h"
 #include "key.h"
 #include "validation.h"
@@ -918,6 +919,13 @@ std::string CInstantSend::ToString() const
 {
     LOCK(cs_instantsend);
     return strprintf("Lock Candidates: %llu, Votes %llu", mapTxLockCandidates.size(), mapTxLockVotes.size());
+}
+
+void CInstantSend::DoMaintenance()
+{
+    if (ShutdownRequested()) return;
+
+    CheckAndRemove();
 }
 
 bool CInstantSend::CanAutoLock()

@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "chainparams.h"
+#include "init.h"
 #include "netfulfilledman.h"
 #include "util.h"
 
@@ -72,4 +73,11 @@ std::string CNetFulfilledRequestManager::ToString() const
     std::ostringstream info;
     info << "Nodes with fulfilled requests: " << (int)mapFulfilledRequests.size();
     return info.str();
+}
+
+void CNetFulfilledRequestManager::DoMaintenance()
+{
+    if (ShutdownRequested()) return;
+
+    CheckAndRemove();
 }

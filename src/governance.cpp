@@ -8,6 +8,7 @@
 #include "governance-object.h"
 #include "governance-validators.h"
 #include "governance-vote.h"
+#include "init.h"
 #include "masternode-sync.h"
 #include "masternode.h"
 #include "masternodeman.h"
@@ -570,7 +571,7 @@ struct sortProposalsByVotes {
 
 void CGovernanceManager::DoMaintenance(CConnman& connman)
 {
-    if (fLiteMode || !masternodeSync.IsSynced()) return;
+    if (fLiteMode || !masternodeSync.IsSynced() || ShutdownRequested()) return;
 
     // CHECK OBJECTS WE'VE ASKED FOR, REMOVE OLD ENTRIES
 

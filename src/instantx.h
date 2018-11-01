@@ -150,7 +150,7 @@ public:
 
     std::string ToString() const;
 
-    void DoMaintenance() { CheckAndRemove(); }
+    void DoMaintenance();
 
     /// checks if we can automatically lock "simple" transactions
     static bool CanAutoLock();
