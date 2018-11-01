@@ -228,8 +228,8 @@ def main():
     parser.add_argument('--force', '-f', action='store_true', help='run tests even on platforms where they are disabled by default (e.g. windows).')
     parser.add_argument('--help', '-h', '-?', action='store_true', help='print help text and exit')
     parser.add_argument('--jobs', '-j', type=int, default=4, help='how many test scripts to run in parallel. Default=4.')
-    parser.add_argument('--quiet', '-q', action='store_true', help='only print results summary and failure logs')
     parser.add_argument('--keepcache', '-k', action='store_true', help='the default behavior is to flush the cache directory on startup. --keepcache retains the cache from the previous testrun.')
+    parser.add_argument('--quiet', '-q', action='store_true', help='only print dots, results summary and failure logs')
     parser.add_argument('--tmpdirprefix', '-t', default=tempfile.gettempdir(), help="Root directory for datadirs")
     parser.add_argument('--failfast', action='store_true', help='stop execution after the first test failure')
     args, unknown_args = parser.parse_known_args()
@@ -324,11 +324,10 @@ def main():
         args=passon_args,
         runs_ci=args.ci,
         combined_logs_len=args.combinedlogslen,
-        failfast=args.failfast,
-        level=logging_level
+        failfast=args.failfast
     )
 
-def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=False, args=None, runs_ci, combined_logs_len=0,failfast=False, level=logging.DEBUG):
+def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=False, args=None, runs_ci=False, combined_logs_len=0,failfast=False):
     args = args or []
 
     # Warn if dashd is already running (unix only)
@@ -371,7 +370,6 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
         test_list=test_list,
         flags=flags,
         timeout_duration=TRAVIS_TIMEOUT_DURATION if runs_ci else float('inf'),  # in seconds
-        level
     )
     start_time = time.time()
     test_results = []
@@ -450,7 +448,7 @@ class TestHandler:
     Trigger the test scripts passed in via the list.
     """
 
-    def __init__(self, *, num_tests_parallel, tests_dir, tmpdir, test_list, flags, timeout_duration, logging_level=logging.DEBUG):
+    def __init__(self, *, num_tests_parallel, tests_dir, tmpdir, test_list, flags, timeout_duration):
         assert num_tests_parallel >= 1
         self.num_jobs = num_tests_parallel
         self.tests_dir = tests_dir
@@ -458,7 +456,6 @@ class TestHandler:
         self.timeout_duration = timeout_duration
         self.test_list = test_list
         self.flags = flags
-        self.logging_level = logging_level
         self.num_running = 0
         self.jobs = []
 
@@ -506,14 +503,12 @@ class TestHandler:
                         status = "Failed"
                     self.num_running -= 1
                     self.jobs.remove(job)
-                    if self.logging_level == logging.DEBUG:
-                        clearline = '\r' + (' ' * dot_count) + '\r'
-                        print(clearline, end='', flush=True)
-                        dot_count = 0
+                    clearline = '\r' + (' ' * dot_count) + '\r'
+                    print(clearline, end='', flush=True)
+                    dot_count = 0
                     return TestResult(name, status, int(time.time() - start_time)), testdir, stdout, stderr
-            if self.logging_level == logging.DEBUG:
-                print('.', end='', flush=True)
-                dot_count += 1
+            print('.', end='', flush=True)
+            dot_count += 1
 
     def kill_and_join(self):
         """Send SIGKILL to all jobs and block until all have ended."""
