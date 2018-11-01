@@ -146,8 +146,8 @@ static std::vector<CSubNet> rpc_allow_subnets;
 //! Work queue for handling longer requests off the event loop thread
 static WorkQueue<HTTPClosure>* workQueue = nullptr;
 //! Set of current HTTP connections
-static Mutex g_http_connections_cs;
-static std::set<evhttp_connection*> g_http_connections GUARDED_BY(g_http_connections_cs);
+static Mutex g_http_connections_mutex;
+static std::set<evhttp_connection*> g_http_connections GUARDED_BY(g_http_connections_mutex);
 //! Handlers for (sub)paths
 std::vector<HTTPPathHandler> pathHandlers;
 //! Bound listening sockets
@@ -216,7 +216,7 @@ static std::string RequestMethodString(HTTPRequest::RequestMethod m)
 /** HTTP connection close callback */
 static void http_connection_close_cb(struct evhttp_connection* conn, void* /* arg */)
 {
-    LOCK(g_http_connections_cs);
+    LOCK(g_http_connections_mutex);
     g_http_connections.erase(conn);
 }
 
@@ -224,7 +224,7 @@ static void http_connection_close_cb(struct evhttp_connection* conn, void* /* ar
 static void http_request_cb(struct evhttp_request* req, void* /* arg */)
 {
     {
-        LOCK(g_http_connections_cs);
+        LOCK(g_http_connections_mutex);
         evhttp_connection* conn = evhttp_request_get_connection(req);
         if (g_http_connections.insert(conn).second) {
             evhttp_connection_set_closecb(conn, http_connection_close_cb, nullptr);
@@ -477,7 +477,7 @@ void StopHTTPServer()
     }
     {
         LogPrint(BCLog::HTTP, "Disabling reading on current connections\n");
-        LOCK(g_http_connections_cs);
+        LOCK(g_http_connections_mutex);
         for (evhttp_connection* conn : g_http_connections) {
             bufferevent* bev = evhttp_connection_get_bufferevent(conn);
             if (bev) bufferevent_disable(bev, EV_READ);
@@ -604,7 +604,7 @@ void HTTPRequest::WriteReply(int nStatus, const std::string& strReply)
         // workaround above.
         if (event_get_version_number() >= 0x02010600 && event_get_version_number() < 0x02020001) {
             evhttp_connection* conn = evhttp_request_get_connection(req_copy);
-            LOCK(g_http_connections_cs);
+            LOCK(g_http_connections_mutex);
             if (conn && g_http_connections.count(conn)) {
                 bufferevent* bev = evhttp_connection_get_bufferevent(conn);
                 if (bev) bufferevent_enable(bev, EV_READ | EV_WRITE);
