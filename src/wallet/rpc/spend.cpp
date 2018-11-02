@@ -530,6 +530,7 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
                 {"subtract_fee_from_outputs", UniValueType(UniValue::VARR)},
                 {"replaceable", UniValueType(UniValue::VBOOL)},
                 {"conf_target", UniValueType(UniValue::VNUM)},
+                {"min_conf", UniValueType(UniValue::VNUM)},
                 {"estimate_mode", UniValueType(UniValue::VSTR)},
                 {"minconf", UniValueType(UniValue::VNUM)},
                 {"maxconf", UniValueType(UniValue::VNUM)},
@@ -605,6 +606,12 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
             if (coinControl.m_min_depth < 0) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative minconf");
             }
+        }
+        if (options.exists("min_conf")) {
+            if (options.exists("minconf")) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "min_conf and minconf options should not both be set. Use minconf (min_conf is deprecated).");
+            }
+            coinControl.m_min_depth = options["min_conf"].getInt<int>();
         }
 
         if (options.exists("maxconf")) {
