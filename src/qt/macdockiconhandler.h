@@ -7,11 +7,6 @@
 
 #include <QObject>
 
-QT_BEGIN_NAMESPACE
-class QMenu;
-class QWidget;
-QT_END_NAMESPACE
-
 /** macOS-specific Dock icon handler.
  */
 class MacDockIconHandler : public QObject
@@ -19,9 +14,6 @@ class MacDockIconHandler : public QObject
     Q_OBJECT
 
 public:
-    ~MacDockIconHandler();
-
-    QMenu *dockMenu();
     static MacDockIconHandler *instance();
     static void cleanup();
 
@@ -30,9 +22,6 @@ Q_SIGNALS:
 
 private:
     MacDockIconHandler();
-
-    QWidget *m_dummyWidget;
-    QMenu *m_dockMenu;
 };
 
 #endif // BITCOIN_QT_MACDOCKICONHANDLER_H
