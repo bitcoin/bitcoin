@@ -778,17 +778,9 @@ void protx_diff_help()
     throw std::runtime_error(
             "protx diff \"baseBlock\" \"block\"\n"
             "\nCalculates a diff between two deterministic masternode lists. The result also contains proof data.\n"
-            "specified, it defaults to \"wallet\". All types have the optional argument \"detailed\" which if set to\n"
-            "\"true\" will result in a detailed list to be returned. If set to \"false\", only the hashes of the ProTx\n"
-            "will be returned.\n"
-            "\nAvailable types:\n"
-            "  wallet (detailed)              - List only ProTx which are found in your wallet. This will also include ProTx which\n"
-            "                                   failed PoSe verfication\n"
-            "  valid (height) (detailed)      - List only ProTx which are active/valid at the given chain height. If height is not\n"
-            "                                   specified, it defaults to the current chain-tip\n"
-            "  registered (height) (detaileD) - List all ProTx which are registered at the given chain height. If height is not\n"
-            "                                   specified, it defaults to the current chain-tip. This will also include ProTx\n"
-            "                                   which failed PoSe verification at that height\n"
+            "\nArguments:\n"
+            "1. \"baseBlock\"           (numeric, required) The starting block height.\n"
+            "2. \"block\"               (numeric, required) The ending block height.\n"
     );
 }
 
