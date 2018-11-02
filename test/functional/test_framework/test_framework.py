@@ -230,7 +230,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             self.skip_test_if_missing_module()
             self.setup_chain()
             self.setup_network()
-            self.import_deterministic_coinbase_privkeys()
             self.run_test()
             success = TestStatus.PASSED
         except JSONRPCException:
@@ -353,11 +352,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             extra_args = self.extra_args
         self.add_nodes(self.num_nodes, extra_args)
         self.start_nodes()
+        self.import_deterministic_coinbase_privkeys()
 
     def import_deterministic_coinbase_privkeys(self):
-        if self.setup_clean_chain:
-            return
-
         for n in self.nodes:
             try:
                 n.getwalletinfo()
@@ -365,7 +362,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 assert str(e).startswith('Method not found')
                 continue
 
-            n.importprivkey(n.get_deterministic_priv_key().key)
+            n.importprivkey(privkey=n.get_deterministic_priv_key().key, label='coinbase')
 
     def run_test(self):
         """Tests must override this method to define test logic"""
@@ -925,6 +922,7 @@ class DashTestFramework(BitcoinTestFramework):
         self.log.info("Creating and starting controller node")
         self.add_nodes(1, extra_args=[self.extra_args[0]])
         self.start_node(0)
+        self.import_deterministic_coinbase_privkeys()
         required_balance = MASTERNODE_COLLATERAL * self.mn_count + 1
         self.log.info("Generating %d coins" % required_balance)
         while self.nodes[0].getbalance() < required_balance:
@@ -945,6 +943,7 @@ class DashTestFramework(BitcoinTestFramework):
         self.prepare_masternodes()
         self.prepare_datadirs()
         self.start_masternodes()
+        self.import_deterministic_coinbase_privkeys()
 
         # non-masternodes where disconnected from the control node during prepare_datadirs,
         # let's reconnect them back to make sure they receive updates
