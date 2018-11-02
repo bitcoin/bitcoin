@@ -4,17 +4,13 @@
 
 #include "macdockiconhandler.h"
 
-#include <QMenu>
-#include <QWidget>
-
 #undef slots
-#include <Cocoa/Cocoa.h>
 #include <objc/objc.h>
 #include <objc/message.h>
 
 static MacDockIconHandler *s_instance = nullptr;
 
-bool dockClickHandler(id self,SEL _cmd,...) {
+bool dockClickHandler(id self, SEL _cmd, ...) {
     Q_UNUSED(self)
     Q_UNUSED(_cmd)
 
@@ -32,28 +28,9 @@ void setupDockClickHandler() {
     class_replaceMethod(delClass, shouldHandle, (IMP)dockClickHandler, "B@:");
 }
 
-
 MacDockIconHandler::MacDockIconHandler() : QObject()
 {
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-
     setupDockClickHandler();
-    this->m_dummyWidget = new QWidget();
-    this->m_dockMenu = new QMenu(this->m_dummyWidget);
-#if QT_VERSION >= 0x050200
-    this->m_dockMenu->setAsDockMenu();
-#endif
-    [pool release];
-}
-
-MacDockIconHandler::~MacDockIconHandler()
-{
-    delete this->m_dummyWidget;
-}
-
-QMenu *MacDockIconHandler::dockMenu()
-{
-    return this->m_dockMenu;
 }
 
 MacDockIconHandler *MacDockIconHandler::instance()
