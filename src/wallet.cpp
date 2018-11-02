@@ -1271,11 +1271,12 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend,
                 }
 
                 int64 nChange = nValueIn - nValue - nFeeRet;
+                int64 nMinFeeBase = IsProtocolV07(wtxNew.nTime) ? MIN_TX_FEE : MIN_TX_FEE*10;
                 // The following if statement should be removed once enough miners
                 // have upgraded to the 0.9 GetMinFee() rules. Until then, this avoids
                 // creating free transactions that have change outputs less than
                 // CENT bitcoins.
-                if (nFeeRet < CTransaction::nMinTxFee && nChange > 0 && nChange < CENT)
+                if (nFeeRet < CTransaction::nMinTxFee && nChange > 0 && nChange < nMinFeeBase)
                 {
                     int64 nMoveToFee = min(nChange, CTransaction::nMinTxFee - nFeeRet);
                     nChange -= nMoveToFee;
@@ -1546,12 +1547,14 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     }
 
     int64 nMinFee = 0;
+    int64 nMinFeeBase = IsProtocolV07(txNew.nTime)? MIN_TX_FEE : MIN_TX_FEE*10;
+
     ploop
     {
         // Set output amount
         if (txNew.vout.size() == 3)
         {
-            txNew.vout[1].nValue = ((nCredit - nMinFee) / 2 / CENT) * CENT;
+            txNew.vout[1].nValue = ((nCredit - nMinFee) / 2 / nMinFeeBase) * nMinFeeBase;
             txNew.vout[2].nValue = nCredit - nMinFee - txNew.vout[1].nValue;
         }
         else
@@ -1571,9 +1574,9 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
             return error("CreateCoinStake : exceeded coinstake size limit");
 
         // Check enough fee is paid
-        if (nMinFee < txNew.GetMinFee() - MIN_TX_FEE)
+        if (nMinFee < txNew.GetMinFee() - nMinFeeBase)
         {
-            nMinFee = txNew.GetMinFee() - MIN_TX_FEE;
+            nMinFee = txNew.GetMinFee() - nMinFeeBase;
             continue; // try signing again
         }
         else
