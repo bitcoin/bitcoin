@@ -40,8 +40,8 @@ struct PubkeyProvider
 {
     virtual ~PubkeyProvider() = default;
 
-    /** Derive a public key. */
-    virtual bool GetPubKey(int pos, const SigningProvider& arg, CPubKey& key, KeyOriginInfo& info) const = 0;
+    /** Derive a public key. If key==nullptr, only info is desired. */
+    virtual bool GetPubKey(int pos, const SigningProvider& arg, CPubKey* key, KeyOriginInfo& info) const = 0;
 
     /** Whether this represent multiple public keys at different positions. */
     virtual bool IsRange() const = 0;
@@ -68,7 +68,7 @@ class OriginPubkeyProvider final : public PubkeyProvider
 
 public:
     OriginPubkeyProvider(KeyOriginInfo info, std::unique_ptr<PubkeyProvider> provider) : m_origin(std::move(info)), m_provider(std::move(provider)) {}
-    bool GetPubKey(int pos, const SigningProvider& arg, CPubKey& key, KeyOriginInfo& info) const override
+    bool GetPubKey(int pos, const SigningProvider& arg, CPubKey* key, KeyOriginInfo& info) const override
     {
         if (!m_provider->GetPubKey(pos, arg, key, info)) return false;
         std::copy(std::begin(m_origin.fingerprint), std::end(m_origin.fingerprint), info.fingerprint);
@@ -94,9 +94,9 @@ class ConstPubkeyProvider final : public PubkeyProvider
 
 public:
     ConstPubkeyProvider(const CPubKey& pubkey) : m_pubkey(pubkey) {}
-    bool GetPubKey(int pos, const SigningProvider& arg, CPubKey& key, KeyOriginInfo& info) const override
+    bool GetPubKey(int pos, const SigningProvider& arg, CPubKey* key, KeyOriginInfo& info) const override
     {
-        key = m_pubkey;
+        if (key) *key = m_pubkey;
         info.path.clear();
         CKeyID keyid = m_pubkey.GetID();
         std::copy(keyid.begin(), keyid.begin() + sizeof(info.fingerprint), info.fingerprint);
@@ -152,26 +152,28 @@ public:
     BIP32PubkeyProvider(const CExtPubKey& extkey, KeyPath path, DeriveType derive) : m_extkey(extkey), m_path(std::move(path)), m_derive(derive) {}
     bool IsRange() const override { return m_derive != DeriveType::NO; }
     size_t GetSize() const override { return 33; }
-    bool GetPubKey(int pos, const SigningProvider& arg, CPubKey& key, KeyOriginInfo& info) const override
+    bool GetPubKey(int pos, const SigningProvider& arg, CPubKey* key, KeyOriginInfo& info) const override
     {
-        if (IsHardened()) {
-            CExtKey extkey;
-            if (!GetExtKey(arg, extkey)) return false;
-            for (auto entry : m_path) {
-                extkey.Derive(extkey, entry);
+        if (key) {
+            if (IsHardened()) {
+                CExtKey extkey;
+                if (!GetExtKey(arg, extkey)) return false;
+                for (auto entry : m_path) {
+                    extkey.Derive(extkey, entry);
+                }
+                if (m_derive == DeriveType::UNHARDENED) extkey.Derive(extkey, pos);
+                if (m_derive == DeriveType::HARDENED) extkey.Derive(extkey, pos | 0x80000000UL);
+                *key = extkey.Neuter().pubkey;
+            } else {
+                // TODO: optimize by caching
+                CExtPubKey extkey = m_extkey;
+                for (auto entry : m_path) {
+                    extkey.Derive(extkey, entry);
+                }
+                if (m_derive == DeriveType::UNHARDENED) extkey.Derive(extkey, pos);
+                assert(m_derive != DeriveType::HARDENED);
+                *key = extkey.pubkey;
             }
-            if (m_derive == DeriveType::UNHARDENED) extkey.Derive(extkey, pos);
-            if (m_derive == DeriveType::HARDENED) extkey.Derive(extkey, pos | 0x80000000UL);
-            key = extkey.Neuter().pubkey;
-        } else {
-            // TODO: optimize by caching
-            CExtPubKey extkey = m_extkey;
-            for (auto entry : m_path) {
-                extkey.Derive(extkey, entry);
-            }
-            if (m_derive == DeriveType::UNHARDENED) extkey.Derive(extkey, pos);
-            assert(m_derive != DeriveType::HARDENED);
-            key = extkey.pubkey;
         }
         CKeyID keyid = m_extkey.pubkey.GetID();
         std::copy(keyid.begin(), keyid.begin() + sizeof(info.fingerprint), info.fingerprint);
@@ -285,7 +287,7 @@ public:
 
     bool ToPrivateString(const SigningProvider& arg, std::string& out) const override final { return ToStringHelper(&arg, out, true); }
 
-    bool Expand(int pos, const SigningProvider& arg, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const final
+    bool ExpandHelper(int pos, const SigningProvider& arg, Span<const unsigned char>* cache_read, std::vector<CScript>& output_scripts, FlatSigningProvider& out, std::vector<unsigned char>* cache_write) const
     {
         std::vector<std::pair<CPubKey, KeyOriginInfo>> entries;
         entries.reserve(m_pubkey_args.size());
@@ -293,12 +295,25 @@ public:
         // Construct temporary data in `entries` and `subscripts`, to avoid producing output in case of failure.
         for (const auto& p : m_pubkey_args) {
             entries.emplace_back();
-            if (!p->GetPubKey(pos, arg, entries.back().first, entries.back().second)) return false;
+            if (!p->GetPubKey(pos, arg, cache_read ? nullptr : &entries.back().first, entries.back().second)) return false;
+            if (cache_read) {
+                // Cached expanded public key exists, use it.
+                if (cache_read->size() == 0) return false;
+                bool compressed = ((*cache_read)[0] == 0x02 || (*cache_read)[0] == 0x03) && cache_read->size() >= 33;
+                bool uncompressed = ((*cache_read)[0] == 0x04) && cache_read->size() >= 65;
+                if (!(compressed || uncompressed)) return false;
+                CPubKey pubkey(cache_read->begin(), cache_read->begin() + (compressed ? 33 : 65));
+                entries.back().first = pubkey;
+                *cache_read = cache_read->subspan(compressed ? 33 : 65);
+            }
+            if (cache_write) {
+                cache_write->insert(cache_write->end(), entries.back().first.begin(), entries.back().first.end());
+            }
         }
         std::vector<CScript> subscripts;
         if (m_script_arg) {
             FlatSigningProvider subprovider;
-            if (!m_script_arg->Expand(pos, arg, subscripts, subprovider)) return false;
+            if (!m_script_arg->ExpandHelper(pos, arg, cache_read, subscripts, subprovider, cache_write)) return false;
             out = Merge(out, subprovider);
         }
 
@@ -321,6 +336,17 @@ public:
             output_scripts = MakeScripts(pubkeys, nullptr, out);
         }
         return true;
+    }
+
+    bool Expand(int pos, const SigningProvider& provider, std::vector<CScript>& output_scripts, FlatSigningProvider& out, std::vector<unsigned char>* cache = nullptr) const final
+    {
+        return ExpandHelper(pos, provider, nullptr, output_scripts, out, cache);
+    }
+
+    bool ExpandFromCache(int pos, const std::vector<unsigned char>& cache, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const final
+    {
+        Span<const unsigned char> span = MakeSpan(cache);
+        return ExpandHelper(pos, DUMMY_SIGNING_PROVIDER, &span, output_scripts, out, nullptr) && span.size() == 0;
     }
 };
 

@@ -88,9 +88,18 @@ void Check(const std::string& prv, const std::string& pub, int flags, const std:
         const auto& ref = scripts[(flags & RANGE) ? i : 0];
         for (int t = 0; t < 2; ++t) {
             const FlatSigningProvider& key_provider = (flags & HARDENED) ? keys_priv : keys_pub;
-            FlatSigningProvider script_provider;
-            std::vector<CScript> spks;
-            BOOST_CHECK((t ? parse_priv : parse_pub)->Expand(i, key_provider, spks, script_provider));
+            FlatSigningProvider script_provider, script_provider_cached;
+            std::vector<CScript> spks, spks_cached;
+            std::vector<unsigned char> cache;
+            BOOST_CHECK((t ? parse_priv : parse_pub)->Expand(i, key_provider, spks, script_provider, &cache));
+
+            // Try to expand again using cached data, and compare.
+            BOOST_CHECK(parse_pub->ExpandFromCache(i, cache, spks_cached, script_provider_cached));
+            BOOST_CHECK(spks == spks_cached);
+            BOOST_CHECK(script_provider.pubkeys == script_provider_cached.pubkeys);
+            BOOST_CHECK(script_provider.scripts == script_provider_cached.scripts);
+            BOOST_CHECK(script_provider.origins == script_provider_cached.origins);
+
             BOOST_CHECK_EQUAL(spks.size(), ref.size());
             for (size_t n = 0; n < spks.size(); ++n) {
                 BOOST_CHECK_EQUAL(ref[n], HexStr(spks[n].begin(), spks[n].end()));
