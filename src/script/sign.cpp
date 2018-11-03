@@ -705,5 +705,7 @@ FlatSigningProvider Merge(const FlatSigningProvider& a, const FlatSigningProvide
     ret.pubkeys.insert(b.pubkeys.begin(), b.pubkeys.end());
     ret.keys = a.keys;
     ret.keys.insert(b.keys.begin(), b.keys.end());
+    ret.origins = a.origins;
+    ret.origins.insert(b.origins.begin(), b.origins.end());
     return ret;
 }
