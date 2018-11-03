@@ -79,19 +79,42 @@ void Check(const std::string& prv, const std::string& pub, int flags, const std:
     BOOST_CHECK_EQUAL(parse_pub->IsRange(), (flags & RANGE) != 0);
     BOOST_CHECK_EQUAL(parse_priv->IsRange(), (flags & RANGE) != 0);
 
-
-    // Is not ranged descriptor, only a single result is expected.
+    // * For ranged descriptors,  the `scripts` parameter is a list of expected result outputs, for subsequent
+    //   positions to evaluate the descriptors on (so the first element of `scripts` is for evaluating the
+    //   descriptor at 0; the second at 1; and so on). To verify this, we evaluate the descriptors once for
+    //   each element in `scripts`.
+    // * For non-ranged descriptors, we evaluate the descriptors at positions 0, 1, and 2, but expect the
+    //   same result in each case, namely the first element of `scripts`. Because of that, the size of
+    //   `scripts` must be one in that case.
     if (!(flags & RANGE)) assert(scripts.size() == 1);
-
     size_t max = (flags & RANGE) ? scripts.size() : 3;
+
+    // Iterate over the position we'll evaluate the descriptors in.
     for (size_t i = 0; i < max; ++i) {
+        // Call the expected result scripts `ref`.
         const auto& ref = scripts[(flags & RANGE) ? i : 0];
+        // When t=0, evaluate the `prv` descriptor; when t=1, evaluate the `pub` descriptor.
         for (int t = 0; t < 2; ++t) {
+            // When the descriptor is hardened, evaluate with access to the private keys inside.
             const FlatSigningProvider& key_provider = (flags & HARDENED) ? keys_priv : keys_pub;
-            FlatSigningProvider script_provider;
-            std::vector<CScript> spks;
-            BOOST_CHECK((t ? parse_priv : parse_pub)->Expand(i, key_provider, spks, script_provider));
+
+            // Evaluate the descriptor selected by `t` in poisition `i`.
+            FlatSigningProvider script_provider, script_provider_cached;
+            std::vector<CScript> spks, spks_cached;
+            std::vector<unsigned char> cache;
+            BOOST_CHECK((t ? parse_priv : parse_pub)->Expand(i, key_provider, spks, script_provider, &cache));
+
+            // Compare the output with the expected result.
             BOOST_CHECK_EQUAL(spks.size(), ref.size());
+
+            // Try to expand again using cached data, and compare.
+            BOOST_CHECK(parse_pub->ExpandFromCache(i, cache, spks_cached, script_provider_cached));
+            BOOST_CHECK(spks == spks_cached);
+            BOOST_CHECK(script_provider.pubkeys == script_provider_cached.pubkeys);
+            BOOST_CHECK(script_provider.scripts == script_provider_cached.scripts);
+            BOOST_CHECK(script_provider.origins == script_provider_cached.origins);
+
+            // For each of the produced scripts, verify solvability, and when possible, try to sign a transaction spending it.
             for (size_t n = 0; n < spks.size(); ++n) {
                 BOOST_CHECK_EQUAL(ref[n], HexStr(spks[n]));
                 BOOST_CHECK_EQUAL(IsSolvable(Merge(key_provider, script_provider), spks[n]), (flags & UNSOLVABLE) == 0);
@@ -123,6 +146,7 @@ void Check(const std::string& prv, const std::string& pub, int flags, const std:
             }
         }
     }
+
     // Verify no expected paths remain that were not observed.
     BOOST_CHECK_MESSAGE(left_paths.empty(), "Not all expected key paths found: " + prv);
 }
@@ -136,12 +160,12 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
     // Basic single-key compressed
     Check("pk(XJvEUEcFWCHCyruc8ZX5exPZaGe4UR7gC5FHrhwPnQGDs1uWCsT2)", "pk(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)", SIGNABLE, {{"2103a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bdac"}});
     Check("pkh([deadbeef/1/2'/3/4']XJvEUEcFWCHCyruc8ZX5exPZaGe4UR7gC5FHrhwPnQGDs1uWCsT2)", "pkh([deadbeef/1/2'/3/4']03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)", SIGNABLE, {{"76a9149a1c78a507689f6f54b847ad1cef1e614ee23f1e88ac"}}, {{1, 0x80000002UL, 3, 0x80000004UL}});
-    Check("combo(XJvEUEcFWCHCyruc8ZX5exPZaGe4UR7gC5FHrhwPnQGDs1uWCsT2)", "combo(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)", SIGNABLE, {{"2103a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bdac", "76a9149a1c78a507689f6f54b847ad1cef1e614ee23f1e88ac"}});
+    Check("combo(XJvEUEcFWCHCyruc8ZX5exPZaGe4UR7gC5FHrhwPnQGDs1uWCsT2)", "combo(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)", SIGNABLE, {{"2103a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bdac", "76a9149a1c78a507689f6f54b847ad1cef1e614ee23f1e88ac", "a9141a31ad23bf49c247dd531a623c2ef57da3c400c587"}});
 
     // Basic single-key uncompressed
     Check("pk(7sH936MDoVPFVk2VoaCM5yW8P3BfPyffnZECyaHrZwfLgWpS13e)", "pk(04a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd5b8dec5235a0fa8722476c7709c02559e3aa73aa03918ba2d492eea75abea235)", SIGNABLE, {{"4104a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd5b8dec5235a0fa8722476c7709c02559e3aa73aa03918ba2d492eea75abea235ac"}});
     Check("pkh(7sH936MDoVPFVk2VoaCM5yW8P3BfPyffnZECyaHrZwfLgWpS13e)", "pkh(04a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd5b8dec5235a0fa8722476c7709c02559e3aa73aa03918ba2d492eea75abea235)", SIGNABLE, {{"76a914b5bd079c4d57cc7fc28ecf8213a6b791625b818388ac"}});
-    Check("combo(7sH936MDoVPFVk2VoaCM5yW8P3BfPyffnZECyaHrZwfLgWpS13e)", "combo(04a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd5b8dec5235a0fa8722476c7709c02559e3aa73aa03918ba2d492eea75abea235)", SIGNABLE, {{"4104a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd5b8dec5235a0fa8722476c7709c02559e3aa73aa03918ba2d492eea75abea235ac","76a914b5bd079c4d57cc7fc28ecf8213a6b791625b818388ac"}});
+    Check("combo(7sH936MDoVPFVk2VoaCM5yW8P3BfPyffnZECyaHrZwfLgWpS13e)", "combo(04a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd5b8dec5235a0fa8722476c7709c02559e3aa73aa03918ba2d492eea75abea235)", SIGNABLE, {{"4104a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd5b8dec5235a0fa8722476c7709c02559e3aa73aa03918ba2d492eea75abea235ac"}});
 
     // Some unconventional single-key constructions
     Check("sh(pk(XJvEUEcFWCHCyruc8ZX5exPZaGe4UR7gC5FHrhwPnQGDs1uWCsT2))", "sh(pk(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd))", SIGNABLE, {{"a9141857af51a5e516552b3086430fd8ce55f7c1a52487"}});
@@ -150,8 +174,8 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
     // Versions with BIP32 derivations
     Check("pk(xprv9uPDJpEQgRQfDcW7BkF7eTya6RPxXeJCqCJGHuCJ4GiRVLzkTXBAJMu2qaMWPrS7AANYqdq6vcBcBUdJCVVFceUvJFjaPdGZ2y9WACViL4L/0)", "pk(xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/0)", DEFAULT, {{"210379e45b3cf75f9c5f9befd8e9506fb962f6a9d185ac87001ec44a8d3df8d4a9e3ac"}}, {{0}});
     Check("pkh(xprv9s21ZrQH143K31xYSDQpPDxsXRTUcvj2iNHm5NUtrGiGG5e2DtALGdso3pGz6ssrdK4PFmM8NSpSBHNqPqm55Qn3LqFtT2emdEXVYsCzC2U/2147483647'/0)", "pkh(xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB/2147483647'/0)", HARDENED, {{"76a914ebdc90806a9c4356c1c88e42216611e1cb4c1c1788ac"}}, {{0xFFFFFFFFUL,0}});
-    Check("combo([01234567]xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc)", "combo([01234567]xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL)", SIGNABLE, {{"2102d2b36900396c9282fa14628566582f206a5dd0bcc8d5e892611806cafb0301f0ac", "76a91431a507b815593dfc51ffc7245ae7e5aee304246e88ac"}});
-    Check("combo(xprvA2JDeKCSNNZky6uBCviVfJSKyQ1mDYahRjijr5idH2WwLsEd4Hsb2Tyh8RfQMuPh7f7RtyzTtdrbdqqsunu5Mm3wDvUAKRHSC34sJ7in334/*)", "combo(xpub6FHa3pjLCk84BayeJxFW2SP4XRrFd1JYnxeLeU8EqN3vDfZmbqBqaGJAyiLjTAwm6ZLRQUMv1ZACTj37sR62cfN7fe5JnJ7dh8zL4fiyLHV/*)", RANGE, {{"2102df12b7035bdac8e3bab862a3a83d06ea6b17b6753d52edecba9be46f5d09e076ac", "76a914f90e3178ca25f2c808dc76624032d352fdbdfaf288ac"}, {"21032869a233c9adff9a994e4966e5b821fd5bac066da6c3112488dc52383b4a98ecac", "76a914a8409d1b6dfb1ed2a3e8aa5e0ef2ff26b15b75b788ac"}}, {{0}, {1}});
+    Check("combo([01234567]xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc)", "combo([01234567]xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL)", SIGNABLE, {{"2102d2b36900396c9282fa14628566582f206a5dd0bcc8d5e892611806cafb0301f0ac", "76a91431a507b815593dfc51ffc7245ae7e5aee304246e88ac", "a914330e2d4d29686cf671043c5157a42b9532ac168587"}});
+    Check("combo(xprvA2JDeKCSNNZky6uBCviVfJSKyQ1mDYahRjijr5idH2WwLsEd4Hsb2Tyh8RfQMuPh7f7RtyzTtdrbdqqsunu5Mm3wDvUAKRHSC34sJ7in334/*)", "combo(xpub6FHa3pjLCk84BayeJxFW2SP4XRrFd1JYnxeLeU8EqN3vDfZmbqBqaGJAyiLjTAwm6ZLRQUMv1ZACTj37sR62cfN7fe5JnJ7dh8zL4fiyLHV/*)", RANGE, {{"2102df12b7035bdac8e3bab862a3a83d06ea6b17b6753d52edecba9be46f5d09e076ac", "76a914f90e3178ca25f2c808dc76624032d352fdbdfaf288ac", "a914ebb09774a2d3ebe7cbad02bcec49e3971b75b51787"}, {"21032869a233c9adff9a994e4966e5b821fd5bac066da6c3112488dc52383b4a98ecac", "76a914a8409d1b6dfb1ed2a3e8aa5e0ef2ff26b15b75b788ac", "a91441b8fc4592be2987caa8706d0567cccd18431c1387"}}, {{0}, {1}});
     CheckUnparsable("combo([012345678]xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc)", "combo([012345678]xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL)"); // Too long key fingerprint
     CheckUnparsable("pkh(xprv9s21ZrQH143K31xYSDQpPDxsXRTUcvj2iNHm5NUtrGiGG5e2DtALGdso3pGz6ssrdK4PFmM8NSpSBHNqPqm55Qn3LqFtT2emdEXVYsCzC2U/2147483648)", "pkh(xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB/2147483648)"); // BIP 32 path element overflow
 
