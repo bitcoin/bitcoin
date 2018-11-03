@@ -16,9 +16,6 @@
 
 bool noui_ThreadSafeMessageBox(const std::string& message, const std::string& caption, unsigned int style)
 {
-    bool fSecure = style & CClientUIInterface::SECURE;
-    style &= ~CClientUIInterface::SECURE;
-
     std::string strCaption;
     // Check for usage of predefined caption
     switch (style) {
@@ -35,8 +32,7 @@ bool noui_ThreadSafeMessageBox(const std::string& message, const std::string& ca
         strCaption += caption; // Use supplied caption (can be empty)
     }
 
-    if (!fSecure)
-        LogPrintf("%s: %s\n", strCaption, message);
+    LogPrintf("%s: %s\n", strCaption, message);
     fprintf(stderr, "%s: %s\n", strCaption.c_str(), message.c_str());
     return false;
 }
