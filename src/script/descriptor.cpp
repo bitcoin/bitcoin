@@ -208,7 +208,7 @@ class DescriptorImpl : public Descriptor
     //! Public key arguments for this descriptor (size 1 for PK, PKH, WPKH; any size of Multisig).
     const std::vector<std::unique_ptr<PubkeyProvider>> m_pubkey_args;
     //! The sub-descriptor argument (nullptr for everything but SH and WSH).
-    const std::unique_ptr<Descriptor> m_script_arg;
+    const std::unique_ptr<DescriptorImpl> m_script_arg;
     //! The string name of the descriptor function.
     const std::string m_name;
 
@@ -230,7 +230,7 @@ protected:
     virtual std::vector<CScript> MakeScripts(const std::vector<CPubKey>& pubkeys, const CScript* script, FlatSigningProvider& out) const = 0;
 
 public:
-    DescriptorImpl(std::vector<std::unique_ptr<PubkeyProvider>> pubkeys, std::unique_ptr<Descriptor> script, const std::string& name) : m_pubkey_args(std::move(pubkeys)), m_script_arg(std::move(script)), m_name(name) {}
+    DescriptorImpl(std::vector<std::unique_ptr<PubkeyProvider>> pubkeys, std::unique_ptr<DescriptorImpl> script, const std::string& name) : m_pubkey_args(std::move(pubkeys)), m_script_arg(std::move(script)), m_name(name) {}
 
     bool IsSolvable() const override
     {
@@ -426,7 +426,7 @@ class SHDescriptor final : public DescriptorImpl
 protected:
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>&, const CScript* script, FlatSigningProvider&) const override { return Singleton(GetScriptForDestination(CScriptID(*script))); }
 public:
-    SHDescriptor(std::unique_ptr<Descriptor> desc) : DescriptorImpl({}, std::move(desc), "sh") {}
+    SHDescriptor(std::unique_ptr<DescriptorImpl> desc) : DescriptorImpl({}, std::move(desc), "sh") {}
 };
 
 /** A parsed wsh(...) descriptor. */
@@ -435,7 +435,7 @@ class WSHDescriptor final : public DescriptorImpl
 protected:
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>&, const CScript* script, FlatSigningProvider&) const override { return Singleton(GetScriptForDestination(WitnessV0ScriptHash(*script))); }
 public:
-    WSHDescriptor(std::unique_ptr<Descriptor> desc) : DescriptorImpl({}, std::move(desc), "wsh") {}
+    WSHDescriptor(std::unique_ptr<DescriptorImpl> desc) : DescriptorImpl({}, std::move(desc), "wsh") {}
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -583,7 +583,7 @@ std::unique_ptr<PubkeyProvider> ParsePubkey(const Span<const char>& sp, bool per
 }
 
 /** Parse a script in a particular context. */
-std::unique_ptr<Descriptor> ParseScript(Span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out)
+std::unique_ptr<DescriptorImpl> ParseScript(Span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out)
 {
     auto expr = Expr(sp);
     if (Func("pk", expr)) {
@@ -663,7 +663,7 @@ std::unique_ptr<PubkeyProvider> InferPubkey(const CPubKey& pubkey, ParseScriptCo
     return key_provider;
 }
 
-std::unique_ptr<Descriptor> InferScript(const CScript& script, ParseScriptContext ctx, const SigningProvider& provider)
+std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptContext ctx, const SigningProvider& provider)
 {
     std::vector<std::vector<unsigned char>> data;
     txnouttype txntype = Solver(script, data);
@@ -733,7 +733,7 @@ std::unique_ptr<Descriptor> Parse(const std::string& descriptor, FlatSigningProv
 {
     Span<const char> sp(descriptor.data(), descriptor.size());
     auto ret = ParseScript(sp, ParseScriptContext::TOP, out);
-    if (sp.size() == 0 && ret) return ret;
+    if (sp.size() == 0 && ret) return std::unique_ptr<Descriptor>(std::move(ret));
     return nullptr;
 }
 
