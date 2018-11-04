@@ -86,8 +86,10 @@ std::string COutput::ToString() const
 
 int COutput::Priority() const
 {
-    for (const auto& d : CPrivateSend::GetStandardDenominations())
-        if(tx->tx->vout[i].nValue == d) return 10000;
+    for (const auto& d : CPrivateSend::GetStandardDenominations()) {
+        // large denoms have lower value
+        if(tx->tx->vout[i].nValue == d) return (float)COIN / d * 10000;
+    }
     if(tx->tx->vout[i].nValue < 1*COIN) return 20000;
 
     //nondenom return largest first
@@ -2687,6 +2689,15 @@ static void ApproximateBestSubset(std::vector<std::pair<CAmount, std::pair<const
     }
 }
 
+struct CompareByPriority
+{
+    bool operator()(const COutput& t1,
+                    const COutput& t2) const
+    {
+        return t1.Priority() > t2.Priority();
+    }
+};
+
 // move denoms down
 bool less_then_denom (const COutput& out1, const COutput& out2)
 {
@@ -2704,7 +2715,7 @@ bool less_then_denom (const COutput& out1, const COutput& out2)
 }
 
 bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMine, const int nConfTheirs, const uint64_t nMaxAncestors, std::vector<COutput> vCoins,
-                                 std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, bool fUseInstantSend) const
+                                 std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, AvailableCoinsType nCoinType, bool fUseInstantSend) const
 {
     setCoinsRet.clear();
     nValueRet = 0;
@@ -2720,11 +2731,24 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
 
     random_shuffle(vCoins.begin(), vCoins.end(), GetRandInt);
 
-    // move denoms down on the list
-    std::sort(vCoins.begin(), vCoins.end(), less_then_denom);
+    int tryDenomStart = 0;
+    CAmount nMinChange = MIN_CHANGE;
+
+    if (nCoinType == ONLY_DENOMINATED) {
+        // larger denoms first
+        std::sort(vCoins.rbegin(), vCoins.rend(), CompareByPriority());
+        // we actually want denoms only, so let's skip "non-denom only" step
+        tryDenomStart = 1;
+        // no change is allowed
+        nMinChange = 0;
+    } else {
+        // move denoms down on the list
+        // try not to use denominated coins when not needed, save denoms for privatesend
+        std::sort(vCoins.begin(), vCoins.end(), less_then_denom);
+    }
 
     // try to find nondenom first to prevent unneeded spending of mixed coins
-    for (unsigned int tryDenom = 0; tryDenom < 2; tryDenom++)
+    for (unsigned int tryDenom = tryDenomStart; tryDenom < 2; tryDenom++)
     {
         LogPrint("selectcoins", "tryDenom: %d\n", tryDenom);
         vValue.clear();
@@ -2747,6 +2771,13 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
             CAmount n = pcoin->tx->vout[i].nValue;
             if (tryDenom == 0 && CPrivateSend::IsDenominatedAmount(n)) continue; // we don't want denom values on first run
 
+            if (nCoinType == ONLY_DENOMINATED) {
+                // Make sure it's actually anonymized
+                COutPoint outpoint = COutPoint(pcoin->GetHash(), i);
+                int nRounds = GetRealOutpointPrivateSendRounds(outpoint);
+                if (nRounds < privateSendClient.nPrivateSendRounds) continue;
+            }
+
             std::pair<CAmount, std::pair<const CWalletTx*,unsigned int> > coin = std::make_pair(n, std::make_pair(pcoin, i));
 
             if (n == nTargetValue)
@@ -2755,7 +2786,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
                 nValueRet += coin.first;
                 return true;
             }
-            else if (n < nTargetValue + MIN_CHANGE)
+            else if (n < nTargetValue + nMinChange)
             {
                 vValue.push_back(coin);
                 nTotalLower += n;
@@ -2789,7 +2820,9 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
             }
             setCoinsRet.insert(coinLowestLarger.second);
             nValueRet += coinLowestLarger.first;
-            return true;
+            // There is no change in PS, so we know the fee beforehand,
+            // can see if we exceeded the max fee and thus fail quickly.
+            return nCoinType == ONLY_DENOMINATED ? (nValueRet - nTargetValue <= maxTxFee) : true;
         }
 
         // nTotalLower > nTargetValue
@@ -2804,13 +2837,13 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
     CAmount nBest;
 
     ApproximateBestSubset(vValue, nTotalLower, nTargetValue, vfBest, nBest, fUseInstantSend);
-    if (nBest != nTargetValue && nTotalLower >= nTargetValue + MIN_CHANGE)
-        ApproximateBestSubset(vValue, nTotalLower, nTargetValue + MIN_CHANGE, vfBest, nBest, fUseInstantSend);
+    if (nBest != nTargetValue && nTotalLower >= nTargetValue + nMinChange)
+        ApproximateBestSubset(vValue, nTotalLower, nTargetValue + nMinChange, vfBest, nBest, fUseInstantSend);
 
     // If we have a bigger coin and (either the stochastic approximation didn't find a good solution,
     //                                   or the next bigger coin is closer), return the bigger coin
     if (coinLowestLarger.second.first &&
-        ((nBest != nTargetValue && nBest < nTargetValue + MIN_CHANGE) || coinLowestLarger.first <= nBest))
+        ((nBest != nTargetValue && nBest < nTargetValue + nMinChange) || coinLowestLarger.first <= nBest))
     {
         setCoinsRet.insert(coinLowestLarger.second);
         nValueRet += coinLowestLarger.first;
@@ -2829,7 +2862,9 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
         LogPrint("selectcoins", "%s - total %s\n", s, FormatMoney(nBest));
     }
 
-    return true;
+    // There is no change in PS, so we know the fee beforehand,
+    // can see if we exceeded the max fee and thus fail quickly.
+    return nCoinType == ONLY_DENOMINATED ? (nValueRet - nTargetValue <= maxTxFee) : true;
 }
 
 bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl* coinControl, AvailableCoinsType nCoinType, bool fUseInstantSend) const
@@ -2859,28 +2894,6 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
         return (nValueRet >= nTargetValue);
     }
 
-    //if we're doing only denominated, we need to round up to the nearest smallest denomination
-    if(nCoinType == ONLY_DENOMINATED) {
-        std::vector<CAmount> vecPrivateSendDenominations = CPrivateSend::GetStandardDenominations();
-        CAmount nSmallestDenom = vecPrivateSendDenominations.back();
-        // Make outputs by looping through denominations, from large to small
-        for (const auto& nDenom : vecPrivateSendDenominations)
-        {
-            for (const auto& out : vCoins)
-            {
-                //make sure it's the denom we're looking for, round the amount up to smallest denom
-                if(out.tx->tx->vout[out.i].nValue == nDenom && nValueRet + nDenom < nTargetValue + nSmallestDenom) {
-                    COutPoint outpoint = COutPoint(out.tx->GetHash(),out.i);
-                    int nRounds = GetCappedOutpointPrivateSendRounds(outpoint);
-                    // make sure it's actually anonymized
-                    if(nRounds < privateSendClient.nPrivateSendRounds) continue;
-                    nValueRet += nDenom;
-                    setCoinsRet.insert(std::make_pair(out.tx, out.i));
-                }
-            }
-        }
-        return (nValueRet >= nTargetValue);
-    }
     // calculate value from preset inputs and store them
     std::set<std::pair<const CWalletTx*, uint32_t> > setPresetCoins;
     CAmount nValueFromPresetInputs = 0;
@@ -2897,6 +2910,12 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
             // Clearly invalid input, fail
             if (pcoin->tx->vout.size() <= outpoint.n)
                 return false;
+            if (nCoinType == ONLY_DENOMINATED) {
+                // Make sure to include anonymized preset inputs only,
+                // even if some non-anonymized inputs were manually selected via CoinControl
+                int nRounds = GetRealOutpointPrivateSendRounds(outpoint);
+                if (nRounds < privateSendClient.nPrivateSendRounds) continue;
+            }
             nValueFromPresetInputs += pcoin->tx->vout[outpoint.n].nValue;
             setPresetCoins.insert(std::make_pair(pcoin, outpoint.n));
         } else
@@ -2916,13 +2935,13 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
     bool fRejectLongChains = GetBoolArg("-walletrejectlongchains", DEFAULT_WALLET_REJECT_LONG_CHAINS);
 
     bool res = nTargetValue <= nValueFromPresetInputs ||
-        SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 1, 6, 0, vCoins, setCoinsRet, nValueRet, fUseInstantSend) ||
-        SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 1, 1, 0, vCoins, setCoinsRet, nValueRet, fUseInstantSend) ||
-        (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, 2, vCoins, setCoinsRet, nValueRet, fUseInstantSend)) ||
-        (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, std::min((size_t)4, nMaxChainLength/3), vCoins, setCoinsRet, nValueRet, fUseInstantSend)) ||
-        (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, nMaxChainLength/2, vCoins, setCoinsRet, nValueRet, fUseInstantSend)) ||
-        (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, nMaxChainLength, vCoins, setCoinsRet, nValueRet, fUseInstantSend)) ||
-        (bSpendZeroConfChange && !fRejectLongChains && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, std::numeric_limits<uint64_t>::max(), vCoins, setCoinsRet, nValueRet, fUseInstantSend));
+        SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 1, 6, 0, vCoins, setCoinsRet, nValueRet, nCoinType, fUseInstantSend) ||
+        SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 1, 1, 0, vCoins, setCoinsRet, nValueRet, nCoinType, fUseInstantSend) ||
+        (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, 2, vCoins, setCoinsRet, nValueRet, nCoinType, fUseInstantSend)) ||
+        (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, std::min((size_t)4, nMaxChainLength/3), vCoins, setCoinsRet, nValueRet, nCoinType, fUseInstantSend)) ||
+        (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, nMaxChainLength/2, vCoins, setCoinsRet, nValueRet, nCoinType, fUseInstantSend)) ||
+        (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, nMaxChainLength, vCoins, setCoinsRet, nValueRet, nCoinType, fUseInstantSend)) ||
+        (bSpendZeroConfChange && !fRejectLongChains && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, 0, 1, std::numeric_limits<uint64_t>::max(), vCoins, setCoinsRet, nValueRet, nCoinType, fUseInstantSend));
 
     // because SelectCoinsMinConf clears the setCoinsRet, we now add the possible inputs to the coinset
     setCoinsRet.insert(setPresetCoins.begin(), setPresetCoins.end());
@@ -2932,15 +2951,6 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
 
     return res;
 }
-
-struct CompareByPriority
-{
-    bool operator()(const COutput& t1,
-                    const COutput& t2) const
-    {
-        return t1.Priority() > t2.Priority();
-    }
-};
 
 bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, bool overrideEstimatedFeeRate, const CFeeRate& specificFeeRate, int& nChangePosInOut, std::string& strFailReason, bool includeWatching, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, bool keepReserveKey, const CTxDestination& destChange)
 {
