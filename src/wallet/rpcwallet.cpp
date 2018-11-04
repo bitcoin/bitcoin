@@ -3458,6 +3458,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
             "  \"solvable\" : true|false,      (boolean) If the address is solvable by the wallet\n"
             "  \"iswatchonly\" : true|false,   (boolean) If the address is watchonly\n"
             "  \"isscript\" : true|false,      (boolean) If the key is a script\n"
+            "  \"ischange\" : true|false,      (boolean) If the address was used for change output\n"
             "  \"iswitness\" : true|false,     (boolean) If the address is a witness address\n"
             "  \"witness_version\" : version   (numeric, optional) The version number of the witness program\n"
             "  \"witness_program\" : \"hex\"     (string, optional) The hex value of the witness program\n"
@@ -3516,6 +3517,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
     if (pwallet->mapAddressBook.count(dest)) {
         ret.pushKV("label", pwallet->mapAddressBook[dest].name);
     }
+    ret.pushKV("ischange", pwallet->IsChange(scriptPubKey));
     const CKeyMetadata* meta = nullptr;
     CKeyID key_id = GetKeyForDestination(*pwallet, dest);
     if (!key_id.IsNull()) {
