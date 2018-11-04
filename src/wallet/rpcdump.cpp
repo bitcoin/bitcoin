@@ -836,7 +836,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
             if (meta.has_key_origin) {
                 file << " hdkeypath=" + WriteHDKeypath(meta.key_origin.path);
                 if (!(meta.hd_seed_id.IsNull() || (meta.hdKeypath == "s" && meta.hd_seed_id == keyid))) {
-                    file << " hdmasterkeyid=" + EncodeDestination(meta.hd_seed_id);
+                    file << " hdseedid=" + meta.hd_seed_id.GetHex();
                 }
             }
             file << strprintf(" # addr=%s\n", strAddr);
