@@ -40,7 +40,7 @@ Windows 64bit/32bit Cross-compilation
 Cross-compiling to Windows requires a few additional packages to be installed:
 
 ```bash
-$ sudo apt-get install nsis wine wine64 bc
+$ sudo apt-get install nsis wine-stable wine64 bc
 ```
 
 For Windows 64bit, install :
