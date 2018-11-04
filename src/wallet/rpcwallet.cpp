@@ -4165,6 +4165,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
             "  \"ismine\" : true|false,        (boolean) If the address is yours or not\n"
             "  \"iswatchonly\" : true|false,   (boolean) If the address is watchonly\n"
             "  \"isscript\" : true|false,      (boolean) If the key is a script\n"
+            " \"ischange\" : true|false,       (boolean) If the address was used for change output\n"
             "  \"script\" : \"type\"             (string, optional) The output script type. Only if \"isscript\" is true and the redeemscript is known. Possible types: nonstandard, pubkey, pubkeyhash, scripthash, multisig, nulldata\n"
             "  \"hex\" : \"hex\",                (string, optional) The redeemscript for the p2sh address\n"
             "  \"pubkeys\"                     (string, optional) Array of pubkeys associated with the known redeemscript (only if \"script\" is \"multisig\")\n"
@@ -4222,6 +4223,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
             ret.pushKV("account", pwallet->mapAddressBook[dest].name);
         }
     }
+    ret.pushKV("ischange", pwallet->IsChange(scriptPubKey));
     const CKeyMetadata* meta = nullptr;
     const CKeyID *key_id = boost::get<CKeyID>(&dest);
     if (key_id != nullptr && !key_id->IsNull()) {
