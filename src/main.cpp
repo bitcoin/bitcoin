@@ -655,7 +655,7 @@ int64 CTransaction::GetMinFee(unsigned int nBlockSize, bool fAllowFree,
     int64 nMinFee;
 
     if (IsProtocolV07(nTime)) // RFC-0007
-        nMinFee = ((int64)nBytes < 100) ? MIN_TX_FEE : ((int64)nBytes / 1000) * nBaseFee;
+        nMinFee = (nBytes < 100) ? MIN_TX_FEE : (int64)(nBytes * nBaseFee / 1000);
     else
         nMinFee = (1 + (int64)nBytes / 1000) * nBaseFee;
 
