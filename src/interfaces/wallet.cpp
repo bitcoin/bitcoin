@@ -342,8 +342,7 @@ public:
         return result;
     }
     bool tryGetTxStatus(const uint256& txid,
-        interfaces::WalletTxStatus& tx_status,
-        int64_t& adjusted_time) override
+        interfaces::WalletTxStatus& tx_status) override
     {
         TRY_LOCK(::cs_main, locked_chain);
         if (!locked_chain) {
@@ -357,7 +356,6 @@ public:
         if (mi == m_wallet.mapWallet.end()) {
             return false;
         }
-        adjusted_time = GetAdjustedTime();
         tx_status = MakeWalletTxStatus(mi->second);
         return true;
     }
@@ -365,14 +363,12 @@ public:
         WalletTxStatus& tx_status,
         WalletOrderForm& order_form,
         bool& in_mempool,
-        int& num_blocks,
-        int64_t& adjusted_time) override
+        int& num_blocks) override
     {
         LOCK2(::cs_main, m_wallet.cs_wallet);
         auto mi = m_wallet.mapWallet.find(txid);
         if (mi != m_wallet.mapWallet.end()) {
             num_blocks = ::chainActive.Height();
-            adjusted_time = GetAdjustedTime();
             in_mempool = mi->second.InMempool();
             order_form = mi->second.vOrderForm;
             tx_status = MakeWalletTxStatus(mi->second);

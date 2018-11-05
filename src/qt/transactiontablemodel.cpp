@@ -200,9 +200,8 @@ public:
             // try to update the status of this transaction from the wallet.
             // Otherwise, simply re-use the cached status.
             interfaces::WalletTxStatus wtx;
-            int64_t adjustedTime;
-            if (rec->statusUpdateNeeded(numBlocks, parent->getChainLockHeight()) && wallet.tryGetTxStatus(rec->hash, wtx, adjustedTime)) {
-                rec->updateStatus(wtx, numBlocks, adjustedTime, parent->getChainLockHeight());
+            if (rec->statusUpdateNeeded(numBlocks, parent->getChainLockHeight()) && wallet.tryGetTxStatus(rec->hash, wtx)) {
+                rec->updateStatus(wtx, numBlocks,  parent->getChainLockHeight());
             }
             return rec;
         }
