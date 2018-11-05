@@ -25,3 +25,14 @@ fs::path GetWalletDir()
 
     return path;
 }
+
+WalletLocation::WalletLocation(const std::string& name)
+    : m_name(name)
+    , m_path(fs::absolute(name, GetWalletDir()))
+{
+}
+
+bool WalletLocation::Exists() const
+{
+    return fs::symlink_status(m_path).type() != fs::file_not_found;
+}
