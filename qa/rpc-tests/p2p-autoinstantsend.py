@@ -52,7 +52,6 @@ class AutoInstantSendTest(DashTestFramework):
             if counter % sync_period == 0:
                 # sync nodes
                 self.sync_all()
-                sync_masternodes(self.nodes, True)
 
         while self.get_autoix_bip9_status() == 'started':
             set_mocktime(get_mocktime() + 1)
@@ -62,7 +61,6 @@ class AutoInstantSendTest(DashTestFramework):
             if counter % sync_period == 0:
                 # sync nodes
                 self.sync_all()
-                sync_masternodes(self.nodes, True)
 
         while self.get_autoix_bip9_status() == 'locked_in':
             set_mocktime(get_mocktime() + 1)
@@ -72,11 +70,9 @@ class AutoInstantSendTest(DashTestFramework):
             if counter % sync_period == 0:
                 # sync nodes
                 self.sync_all()
-                sync_masternodes(self.nodes, True)
 
         # sync nodes
         self.sync_all()
-        sync_masternodes(self.nodes, True)
 
         assert(self.get_autoix_bip9_status() == 'active')
 
@@ -118,6 +114,8 @@ class AutoInstantSendTest(DashTestFramework):
         return self.wait_for_instantlock(txid, self.nodes[0])
 
     def run_test(self):
+        # make sure masternodes are synced
+        sync_masternodes(self.nodes)
         # feed the sender with some balance
         sender_addr = self.nodes[self.sender_idx].getnewaddress()
         self.nodes[0].sendtoaddress(sender_addr, 1)
