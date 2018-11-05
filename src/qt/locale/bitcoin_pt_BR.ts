@@ -2729,7 +2729,7 @@ Nota:  Como a taxa é calculada por byte, uma taxa de "100 satoshis por kB" por 
     </message>
     <message>
         <source>Transaction total size</source>
-        <translation>Tamanho tota da transação</translation>
+        <translation>Tamanho total da transação</translation>
     </message>
     <message>
         <source>Transaction virtual size</source>
