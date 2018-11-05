@@ -2397,7 +2397,7 @@ bool CBlock::CheckBlock(CValidationState &state, bool fCheckPOW, bool fCheckMerk
         return state.DoS(50, error("CheckBlock() : coinstake timestamp violation nTimeBlock=%" PRI64u" nTimeTx=%u", GetBlockTime(), vtx[1].nTime));
 
     // Check coinbase reward
-    int64 nBaseFee = IsProtocolV07(vtx[0].nTime) ? MIN_TX_FEE : MIN_TX_FEE*10;
+    int64 nBaseFee = MIN_TX_FEE*10;
     if (vtx[0].GetValueOut() > (IsProofOfWork()? (GetProofOfWorkReward(nBits) - vtx[0].GetMinFee() + nBaseFee) : 0))
         return state.DoS(50, error("CheckBlock() : coinbase reward exceeded %s > %s",
                    FormatMoney(vtx[0].GetValueOut()).c_str(),
