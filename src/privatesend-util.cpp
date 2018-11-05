@@ -38,7 +38,7 @@ CScript CKeyHolderStorage::AddKey(CWallet* pwallet)
 
 void CKeyHolderStorage::KeepAll()
 {
-    std::vector<std::unique_ptr<CKeyHolder>> tmp;
+    std::vector<std::unique_ptr<CKeyHolder> > tmp;
     {
         // don't hold cs_storage while calling KeepKey(), which might lock cs_wallet
         LOCK(cs_storage);
@@ -46,7 +46,7 @@ void CKeyHolderStorage::KeepAll()
     }
 
     if (tmp.size() > 0) {
-        for (auto &key : tmp) {
+        for (auto& key : tmp) {
             key->KeepKey();
         }
         LogPrintf("CKeyHolderStorage::%s -- %lld keys kept\n", __func__, tmp.size());
@@ -55,7 +55,7 @@ void CKeyHolderStorage::KeepAll()
 
 void CKeyHolderStorage::ReturnAll()
 {
-    std::vector<std::unique_ptr<CKeyHolder>> tmp;
+    std::vector<std::unique_ptr<CKeyHolder> > tmp;
     {
         // don't hold cs_storage while calling ReturnKey(), which might lock cs_wallet
         LOCK(cs_storage);
@@ -63,7 +63,7 @@ void CKeyHolderStorage::ReturnAll()
     }
 
     if (tmp.size() > 0) {
-        for (auto &key : tmp) {
+        for (auto& key : tmp) {
             key->ReturnKey();
         }
         LogPrintf("CKeyHolderStorage::%s -- %lld keys returned\n", __func__, tmp.size());
