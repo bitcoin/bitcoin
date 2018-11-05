@@ -12,15 +12,14 @@ KNOWN_VIOLATIONS=(
     "src/qt/rpcconsole.cpp:.*atoi"
     "src/rest.cpp:.*strtol"
     "src/test/dbwrapper_tests.cpp:.*snprintf"
-    "src/test/getarg_tests.cpp.*split"
     "src/torcontrol.cpp:.*atoi"
     "src/torcontrol.cpp:.*strtol"
-    "src/util/system.cpp:.*atoi"
-    "src/util/system.cpp:.*fprintf"
     "src/util/strencodings.cpp:.*atoi"
     "src/util/strencodings.cpp:.*strtol"
     "src/util/strencodings.cpp:.*strtoul"
     "src/util/strencodings.h:.*atoi"
+    "src/util/system.cpp:.*atoi"
+    "src/util/system.cpp:.*fprintf"
 )
 
 REGEXP_IGNORE_EXTERNAL_DEPENDENCIES="^src/(crypto/ctaes/|leveldb/|secp256k1/|tinyformat.h|univalue/)"
