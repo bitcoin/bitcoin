@@ -1,6 +1,6 @@
 OpenBSD build guide
 ======================
-(updated for OpenBSD 6.3)
+(updated for OpenBSD 6.4)
 
 This guide describes how to build bitcoind and command-line utilities on OpenBSD.
 
@@ -14,7 +14,7 @@ Run the following as root to install the base dependencies for building:
 ```bash
 pkg_add git gmake libevent libtool boost
 pkg_add autoconf # (select highest version, e.g. 2.69)
-pkg_add automake # (select highest version, e.g. 1.15)
+pkg_add automake # (select highest version, e.g. 1.16)
 pkg_add python # (select highest version, e.g. 3.6)
 
 git clone https://github.com/bitcoin/bitcoin.git
@@ -60,8 +60,8 @@ Preparation:
 export AUTOCONF_VERSION=2.69
 
 # Replace this with the automake version that you installed. Include only
-# the major and minor parts of the version: use "1.15" for "automake-1.15.1".
-export AUTOMAKE_VERSION=1.15
+# the major and minor parts of the version: use "1.16" for "automake-1.16.1".
+export AUTOMAKE_VERSION=1.16
 
 ./autogen.sh
 ```
