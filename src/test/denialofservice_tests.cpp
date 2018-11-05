@@ -11,7 +11,7 @@
 #include <pow.h>
 #include <script/sign.h>
 #include <serialize.h>
-#include <util.h>
+#include <util/system.h>
 #include <validation.h>
 
 #include <test/test_bitcoin.h>

@@ -4,7 +4,7 @@
 
 #include <wallet/walletutil.h>
 
-#include <util.h>
+#include <util/system.h>
 
 fs::path GetWalletDir()
 {

@@ -12,8 +12,8 @@
 #include <policy/rbf.h>
 #include <validation.h> //for mempool access
 #include <txmempool.h>
-#include <utilmoneystr.h>
-#include <util.h>
+#include <util/moneystr.h>
+#include <util/system.h>
 #include <net.h>
 
 //! Check whether transaction has descendant in wallet or mempool, or has been

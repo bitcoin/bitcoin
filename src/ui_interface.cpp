@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <ui_interface.h>
-#include <util.h>
+#include <util/system.h>
 
 #include <boost/signals2/last_value.hpp>
 #include <boost/signals2/signal.hpp>

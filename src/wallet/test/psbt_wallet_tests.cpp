@@ -4,7 +4,7 @@
 
 #include <key_io.h>
 #include <script/sign.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 #include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
 #include <univalue.h>
