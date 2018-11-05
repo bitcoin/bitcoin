@@ -673,7 +673,15 @@ CLEAN_BITCOIN_TEST = test/*.gcda test/*.gcno test/fuzz/*.gcda test/fuzz/*.gcno t
 
 CLEANFILES += $(CLEAN_BITCOIN_TEST)
 
+if TARGET_WINDOWS
 dash_test: $(TEST_BINARY)
+else
+if ENABLE_BENCH
+dash_test: $(TEST_BINARY) $(BENCH_BINARY)
+else
+dash_test: $(TEST_BINARY)
+endif
+endif
 
 dash_test_check: $(TEST_BINARY) FORCE
 	$(MAKE) check-TESTS TESTS=$^
@@ -688,6 +696,14 @@ if BUILD_BITCOIN_TX
 endif
 	@echo "Running test/util/rpcauth-test.py..."
 	$(PYTHON) $(top_builddir)/test/util/rpcauth-test.py
+if TARGET_WINDOWS
+else
+if ENABLE_BENCH
+# Disabled because benchmarks are too heavy in Dash
+#	@echo "Running bench/bench_dash"
+#	$(BENCH_BINARY)
+endif
+endif
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
 
 if !ENABLE_FUZZ
