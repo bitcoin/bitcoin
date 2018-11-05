@@ -757,7 +757,7 @@ UniValue masternode_check(const JSONRPCRequest& request)
     return obj;
 }
 
-void masternode_help()
+[[ noreturn ]] void masternode_help()
 {
     throw std::runtime_error(
         "masternode \"command\"...\n"
@@ -794,7 +794,7 @@ UniValue masternode(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "DEPRECATED, please use start-all instead");
 #endif // ENABLE_WALLET
 
-    if (request.fHelp && strCommand.empty()) {
+    if (request.fHelp || strCommand.empty()) {
         masternode_help();
     }
 
@@ -834,7 +834,6 @@ UniValue masternode(const JSONRPCRequest& request)
         return masternode_check(request);
     } else {
         masternode_help();
-        return UniValue::VNULL; // avoid compiler warnings
     }
 }
 

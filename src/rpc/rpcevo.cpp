@@ -819,28 +819,32 @@ UniValue protx_diff(const JSONRPCRequest& request)
     return ret;
 }
 
+[[ noreturn ]] void protx_help()
+{
+    throw std::runtime_error(
+            "protx \"command\" ...\n"
+            "Set of commands to execute ProTx related actions.\n"
+            "To get help on individual commands, use \"help protx command\".\n"
+            "\nArguments:\n"
+            "1. \"command\"        (string, required) The command to execute\n"
+            "\nAvailable commands:\n"
+            "  register          - Create and send ProTx to network\n"
+            "  register_fund     - Fund, create and send ProTx to network\n"
+            "  register_prepare  - Create an unsigned ProTx\n"
+            "  register_submit   - Sign and submit a ProTx\n"
+            "  list              - List ProTxs\n"
+            "  info              - Return information about a ProTx\n"
+            "  update_service    - Create and send ProUpServTx to network\n"
+            "  update_registrar  - Create and send ProUpRegTx to network\n"
+            "  revoke            - Create and send ProUpRevTx to network\n"
+            "  diff              - Calculate a diff and a proof between two masternode lists\n"
+    );
+}
 
 UniValue protx(const JSONRPCRequest& request)
 {
-    if (request.params.empty()) {
-        throw std::runtime_error(
-                "protx \"command\" ...\n"
-                "Set of commands to execute ProTx related actions.\n"
-                "To get help on individual commands, use \"help protx command\".\n"
-                "\nArguments:\n"
-                "1. \"command\"        (string, required) The command to execute\n"
-                "\nAvailable commands:\n"
-                "  register          - Create and send ProTx to network\n"
-                "  register_fund     - Fund, create and send ProTx to network\n"
-                "  register_prepare  - Create an unsigned ProTx\n"
-                "  register_submit   - Sign and submit a ProTx\n"
-                "  list              - List ProTxs\n"
-                "  info              - Return information about a ProTx\n"
-                "  update_service    - Create and send ProUpServTx to network\n"
-                "  update_registrar  - Create and send ProUpRegTx to network\n"
-                "  revoke            - Create and send ProUpRevTx to network\n"
-                "  diff              - Calculate a diff and a proof between two masternode lists\n"
-        );
+    if (request.fHelp || request.params.empty()) {
+        protx_help();
     }
 
     std::string command = request.params[0].get_str();
@@ -862,7 +866,7 @@ UniValue protx(const JSONRPCRequest& request)
     } else if (command == "diff") {
         return protx_diff(request);
     } else {
-        throw std::runtime_error("invalid command: " + command);
+        protx_help();
     }
 }
 #endif//ENABLE_WALLET
@@ -897,7 +901,7 @@ UniValue bls_generate(const JSONRPCRequest& request)
     return ret;
 }
 
-void bls_help()
+[[ noreturn ]] void bls_help()
 {
     throw std::runtime_error(
             "bls \"command\" ...\n"
@@ -912,7 +916,7 @@ void bls_help()
 
 UniValue _bls(const JSONRPCRequest& request)
 {
-    if (request.params.empty()) {
+    if (request.fHelp || request.params.empty()) {
         bls_help();
     }
 

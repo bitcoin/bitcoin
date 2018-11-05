@@ -945,7 +945,7 @@ UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
     return bResult;
 }
 
-void gobject_help()
+[[ noreturn ]] void gobject_help()
 {
     throw std::runtime_error(
             "gobject \"command\"...\n"
@@ -975,15 +975,9 @@ UniValue gobject(const JSONRPCRequest& request)
     if (request.params.size() >= 1)
         strCommand = request.params[0].get_str();
 
-    if ((request.fHelp && strCommand.empty())  ||
-        (
-#ifdef ENABLE_WALLET
-         strCommand != "prepare" &&
-#endif // ENABLE_WALLET
-         strCommand != "vote-many" && strCommand != "vote-conf" && strCommand != "vote-alias" && strCommand != "submit" && strCommand != "count" &&
-         strCommand != "deserialize" && strCommand != "get" && strCommand != "getvotes" && strCommand != "getcurrentvotes" && strCommand != "list" && strCommand != "diff" &&
-         strCommand != "check" ))
-            gobject_help();
+    if (request.fHelp || strCommand.empty()) {
+        gobject_help();
+    }
 
     if (strCommand == "count") {
         return gobject_count(request);
@@ -1026,9 +1020,9 @@ UniValue gobject(const JSONRPCRequest& request)
     } else if (strCommand == "getcurrentvotes") {
         // GETVOTES FOR SPECIFIC GOVERNANCE OBJECT
         return gobject_getcurrentvotes(request);
+    } else {
+        gobject_help();
     }
-
-    throw std::runtime_error("invalid command: " + strCommand);
 }
 
 UniValue voteraw(const JSONRPCRequest& request)
