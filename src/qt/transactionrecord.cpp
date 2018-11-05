@@ -158,7 +158,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
     return parts;
 }
 
-void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, int numBlocks, int64_t adjustedTime)
+void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, int numBlocks)
 {
     // Determine transaction status
 
