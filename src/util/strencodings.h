@@ -28,6 +28,7 @@ enum SafeChars
     SAFE_CHARS_DEFAULT, //!< The full set of allowed chars
     SAFE_CHARS_UA_COMMENT, //!< BIP-0014 subset
     SAFE_CHARS_FILENAME, //!< Chars allowed in filenames
+    SAFE_CHARS_URI, //!< Chars allowed in URIs (RFC 3986)
 };
 
 /**
