@@ -50,12 +50,6 @@ if [ "$RUN_UNIT_TESTS" = "true" ]; then
   END_FOLD
 fi
 
-if [ "$RUN_BENCH" = "true" ]; then
-  BEGIN_FOLD bench
-  DOCKER_EXEC LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/depends/$HOST/lib $OUTDIR/bin/bench_bitcoin -scaling=0.001
-  END_FOLD
-fi
-
 if [ "$TRAVIS_EVENT_TYPE" = "cron" ]; then
   extended="--extended --exclude feature_pruning"
 fi
