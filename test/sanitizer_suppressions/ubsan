@@ -10,7 +10,6 @@ unsigned-integer-overflow:basic_string.h
 unsigned-integer-overflow:bench/bench.h
 unsigned-integer-overflow:bitcoin-tx.cpp
 unsigned-integer-overflow:bloom.cpp
-unsigned-integer-overflow:chain.cpp
 unsigned-integer-overflow:chain.h
 unsigned-integer-overflow:coded_stream.h
 unsigned-integer-overflow:core_write.cpp
