@@ -26,6 +26,7 @@
 #include <script/sign.h>
 #include <script/standard.h>
 #include <uint256.h>
+#include <util/bip32.h>
 #include <util/strencodings.h>
 #include <validation.h>
 #include <validationinterface.h>
