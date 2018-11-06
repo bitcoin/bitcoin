@@ -676,7 +676,6 @@ int64 CTransaction::GetMinFee(unsigned int nBlockSize, bool fAllowFree,
     // is less than MIN_TX_FEE:
     if (nMinFee < nMinFeeBase && mode == GMF_SEND)
     {
-		printf("SUKA: nMinFee < nMinFeeBase \n");
         BOOST_FOREACH(const CTxOut& txout, vout)
             if (txout.nValue < nMinFeeBase)
                 nMinFee = nMinFeeBase;
@@ -1528,8 +1527,7 @@ bool CTransaction::CheckInputs(CValidationState &state, CCoinsViewCache &inputs,
             if (!GetCoinAge(state, inputs, nCoinAge))
                 return error("CheckInputs() : %s unable to get coin age for coinstake", GetHash().ToString().c_str());
             int64 nStakeReward = GetValueOut() - nValueIn;
-            int64 nMinFeeBase = IsProtocolV07(nTime) ? MIN_TX_FEE : MIN_TX_FEE*10;
-            if (nStakeReward > GetProofOfStakeReward(nCoinAge) - GetMinFee() + nMinFeeBase)
+            if (nStakeReward > GetProofOfStakeReward(nCoinAge) - GetMinFee() + MIN_TX_FEE*10)
                 return state.DoS(100, error("CheckInputs() : %s stake reward exceeded", GetHash().ToString().c_str()));
         }
         else
@@ -2397,8 +2395,7 @@ bool CBlock::CheckBlock(CValidationState &state, bool fCheckPOW, bool fCheckMerk
         return state.DoS(50, error("CheckBlock() : coinstake timestamp violation nTimeBlock=%" PRI64u" nTimeTx=%u", GetBlockTime(), vtx[1].nTime));
 
     // Check coinbase reward
-    int64 nBaseFee = MIN_TX_FEE*10;
-    if (vtx[0].GetValueOut() > (IsProofOfWork()? (GetProofOfWorkReward(nBits) - vtx[0].GetMinFee() + nBaseFee) : 0))
+    if (vtx[0].GetValueOut() > (IsProofOfWork()? (GetProofOfWorkReward(nBits) - vtx[0].GetMinFee() + MIN_TX_FEE*10) : 0))
         return state.DoS(50, error("CheckBlock() : coinbase reward exceeded %s > %s",
                    FormatMoney(vtx[0].GetValueOut()).c_str(),
                    FormatMoney(IsProofOfWork()? GetProofOfWorkReward(nBits) : 0).c_str()));
