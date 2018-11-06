@@ -7,6 +7,7 @@
 #include "addresstablemodel.h"
 #include "optionsmodel.h"
 #include "coincontrol.h"
+#include "kernel.h"
 
 #include <QApplication>
 #include <QCheckBox>
@@ -418,6 +419,9 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     if (!model)
         return;
 
+    bool fNewFees = IsProtocolV07(GetAdjustedTime());
+    int64 nMinFeeBase = fNewFees ? MIN_TX_FEE : MIN_TX_FEE*10;
+
     // nPayAmount
     qint64 nPayAmount = 0;
     bool fLowOutput = false;
@@ -436,7 +440,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
 
         if (amount > 0)
         {
-            if (amount < CENT)
+            if (amount < nMinFeeBase)
                 fLowOutput = true;
         }
     }
@@ -526,9 +530,9 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
             // if sub-cent change is required, the fee must be raised to at least unit's min fee
             // or until nChange becomes zero
             // NOTE: this depends on the exact behaviour of GetMinFee
-            if (nPayFee < MIN_TX_FEE && nChange > 0 && nChange < CENT)
+            if (nPayFee < nMinFeeBase && nChange > 0 && nChange < nMinFeeBase)
             {
-                int64 nMoveToFee = min(nChange, MIN_TX_FEE - nPayFee);
+                int64 nMoveToFee = min(nChange, nMinFeeBase - nPayFee);
                 nChange -= nMoveToFee;
                 nPayFee += nMoveToFee;
             }
@@ -555,7 +559,12 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
             sPriorityLabel = CoinControlDialog::getPriorityLabel(dPriority);
 
             // Fee
-            int64 nFee = nTransactionFee * (1 + (int64)nBytes / 1000);
+            int64 nFee;
+
+            if (fNewFees)
+                nFee = nTransactionFee * nBytes / 1000;
+            else
+                nFee = nTransactionFee * (1 + (int64)nBytes / 1000);
 
             // Min Fee
             int64 nMinFee = txDummy.GetMinFee(nBytes);
