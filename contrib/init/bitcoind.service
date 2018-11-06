@@ -26,8 +26,9 @@ Restart=on-failure
 # Provide a private /tmp and /var/tmp.
 PrivateTmp=true
 
-# Mount /usr, /boot/ and /etc read-only for the process.
+# Mount /usr, /boot/ and /etc read-only for the process, but allow writes to /etc/bitcoin.
 ProtectSystem=full
+ReadwritePaths=/etc/bitcoin
 
 # Disallow the process and all of its children to gain
 # new privileges through execve().
