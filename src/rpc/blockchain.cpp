@@ -12,8 +12,8 @@
 #include <checkpoints.h>
 #include <coins.h>
 #include <consensus/validation.h>
-#include <validation.h>
 #include <core_io.h>
+#include <hash.h>
 #include <index/txindex.h>
 #include <key_io.h>
 #include <policy/feerate.h>
@@ -21,14 +21,15 @@
 #include <policy/rbf.h>
 #include <primitives/transaction.h>
 #include <rpc/server.h>
+#include <rpc/util.h>
 #include <script/descriptor.h>
 #include <streams.h>
 #include <sync.h>
 #include <txdb.h>
 #include <txmempool.h>
-#include <util/system.h>
 #include <util/strencodings.h>
-#include <hash.h>
+#include <util/system.h>
+#include <validation.h>
 #include <validationinterface.h>
 #include <versionbitsinfo.h>
 #include <warnings.h>
