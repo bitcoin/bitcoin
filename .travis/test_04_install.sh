@@ -7,7 +7,7 @@
 export LC_ALL=C.UTF-8
 
 travis_retry docker pull "$DOCKER_NAME_TAG"
-export UBSAN_OPTIONS="suppressions=${TRAVIS_BUILD_DIR}/contrib/sanitizers-ubsan.suppressions"
+export UBSAN_OPTIONS="suppressions=${TRAVIS_BUILD_DIR}/contrib/sanitizers-ubsan.suppressions:print_stacktrace=1:halt_on_error=1"
 env | grep -E '^(CCACHE_|WINEDEBUG|LC_ALL|BOOST_TEST_RANDOM|CONFIG_SHELL|UBSAN_OPTIONS)' | tee /tmp/env
 if [[ $HOST = *-mingw32 ]]; then
   DOCKER_ADMIN="--cap-add SYS_ADMIN"
