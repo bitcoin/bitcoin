@@ -115,6 +115,28 @@ class TestNode():
         ]
         return PRIV_KEYS[self.index]
 
+    def get_mem_rss(self):
+        """Get the memory usage (RSS) per `ps`.
+
+        If process is stopped or `ps` is unavailable, return None.
+        """
+        if not (self.running and self.process):
+            self.log.warning("Couldn't get memory usage; process isn't running.")
+            return None
+
+        try:
+            return int(subprocess.check_output(
+                "ps h -o rss {}".format(self.process.pid),
+                shell=True, stderr=subprocess.DEVNULL).strip())
+
+        # Catching `Exception` broadly to avoid failing on platforms where ps
+        # isn't installed or doesn't work as expected, e.g. OpenBSD.
+        #
+        # We could later use something like `psutils` to work across platforms.
+        except Exception:
+            self.log.exception("Unable to get memory usage")
+            return None
+
     def _node_msg(self, msg: str) -> str:
         """Return a modified msg that identifies this node by its index as a debugging aid."""
         return "[node %d] %s" % (self.index, msg)
@@ -270,6 +292,29 @@ class TestNode():
             for expected_msg in expected_msgs:
                 if re.search(re.escape(expected_msg), log, flags=re.MULTILINE) is None:
                     self._raise_assertion_error('Expected message "{}" does not partially match log:\n\n{}\n\n'.format(expected_msg, print_log))
+
+    @contextlib.contextmanager
+    def assert_memory_usage_stable(self, perc_increase_allowed=0.03):
+        """Context manager that allows the user to assert that a node's memory usage (RSS)
+        hasn't increased beyond some threshold percentage.
+        """
+        before_memory_usage = self.get_mem_rss()
+
+        yield
+
+        after_memory_usage = self.get_mem_rss()
+
+        if not (before_memory_usage and after_memory_usage):
+            self.log.warning("Unable to detect memory usage (RSS) - skipping memory check.")
+            return
+
+        perc_increase_memory_usage = 1 - (float(before_memory_usage) / after_memory_usage)
+
+        if perc_increase_memory_usage > perc_increase_allowed:
+            self._raise_assertion_error(
+                "Memory usage increased over threshold of {:.3f}% from {} to {} ({:.3f}%)".format(
+                    perc_increase_allowed * 100, before_memory_usage, after_memory_usage,
+                    perc_increase_memory_usage * 100))
 
     def assert_start_raises_init_error(self, extra_args=None, expected_msg=None, match=ErrorMatch.FULL_TEXT, *args, **kwargs):
         """Attempt to start the node and expect it to raise an error.
