@@ -22,12 +22,26 @@ struct CMutableTransaction;
 
 struct KeyOriginInfo
 {
-    unsigned char fingerprint[4];
+    unsigned char fingerprint[4]; //!< First 32 bits of the Hash160 of the public key at the root of the path
     std::vector<uint32_t> path;
 
     friend bool operator==(const KeyOriginInfo& a, const KeyOriginInfo& b)
     {
         return std::equal(std::begin(a.fingerprint), std::end(a.fingerprint), std::begin(b.fingerprint)) && a.path == b.path;
+    }
+
+    ADD_SERIALIZE_METHODS;
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
+        READWRITE(fingerprint);
+        READWRITE(path);
+    }
+
+    void clear()
+    {
+        memset(fingerprint, 0, 4);
+        path.clear();
     }
 };
 
