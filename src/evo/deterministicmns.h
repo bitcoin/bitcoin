@@ -5,11 +5,11 @@
 #ifndef DASH_DETERMINISTICMNS_H
 #define DASH_DETERMINISTICMNS_H
 
+#include "bls/bls.h"
+#include "dbwrapper.h"
 #include "evodb.h"
 #include "providertx.h"
-#include "dbwrapper.h"
 #include "sync.h"
-#include "bls/bls.h"
 
 #include "immer/map.hpp"
 #include "immer/map_transient.hpp"
@@ -47,8 +47,11 @@ public:
         addr = proTx.addr;
         scriptPayout = proTx.scriptPayout;
     }
-    template<typename Stream>
-    CDeterministicMNState(deserialize_type, Stream& s) { s >> *this;}
+    template <typename Stream>
+    CDeterministicMNState(deserialize_type, Stream& s)
+    {
+        s >> *this;
+    }
 
     ADD_SERIALIZE_METHODS;
 
@@ -115,8 +118,11 @@ class CDeterministicMN
 {
 public:
     CDeterministicMN() {}
-    template<typename Stream>
-    CDeterministicMN(deserialize_type, Stream& s) { s >> *this;}
+    template <typename Stream>
+    CDeterministicMN(deserialize_type, Stream& s)
+    {
+        s >> *this;
+    }
 
     uint256 proTxHash;
     COutPoint collateralOutpoint;
@@ -144,7 +150,7 @@ typedef std::shared_ptr<const CDeterministicMN> CDeterministicMNCPtr;
 
 class CDeterministicMNListDiff;
 
-template<typename Stream, typename K, typename T, typename Hash, typename Equal>
+template <typename Stream, typename K, typename T, typename Hash, typename Equal>
 void SerializeImmerMap(Stream& os, const immer::map<K, T, Hash, Equal>& m)
 {
     WriteCompactSize(os, m.size());
@@ -152,13 +158,12 @@ void SerializeImmerMap(Stream& os, const immer::map<K, T, Hash, Equal>& m)
         Serialize(os, (*mi));
 }
 
-template<typename Stream, typename K, typename T, typename Hash, typename Equal>
+template <typename Stream, typename K, typename T, typename Hash, typename Equal>
 void UnserializeImmerMap(Stream& is, immer::map<K, T, Hash, Equal>& m)
 {
     m = immer::map<K, T, Hash, Equal>();
     unsigned int nSize = ReadCompactSize(is);
-    for (unsigned int i = 0; i < nSize; i++)
-    {
+    for (unsigned int i = 0; i < nSize; i++) {
         std::pair<K, T> item;
         Unserialize(is, item);
         m = m.set(item.first, item.second);
@@ -169,7 +174,7 @@ class CDeterministicMNList
 {
 public:
     typedef immer::map<uint256, CDeterministicMNCPtr> MnMap;
-    typedef immer::map<uint256, std::pair<uint256, uint32_t>> MnUniquePropertyMap;
+    typedef immer::map<uint256, std::pair<uint256, uint32_t> > MnUniquePropertyMap;
 
 private:
     uint256 blockHash;
@@ -184,9 +189,10 @@ private:
 public:
     CDeterministicMNList() {}
     explicit CDeterministicMNList(const uint256& _blockHash, int _height) :
-            blockHash(_blockHash),
-            nHeight(_height)
-    {}
+        blockHash(_blockHash),
+        nHeight(_height)
+    {
+    }
 
     ADD_SERIALIZE_METHODS;
 
@@ -205,7 +211,6 @@ public:
     }
 
 public:
-
     size_t GetAllMNsCount() const
     {
         return mnMap.size();
@@ -222,8 +227,9 @@ public:
         return count;
     }
 
-    template<typename Callback>
-    void ForEachMN(bool onlyValid, Callback&& cb) const {
+    template <typename Callback>
+    void ForEachMN(bool onlyValid, Callback&& cb) const
+    {
         for (const auto& p : mnMap) {
             if (!onlyValid || IsMNValid(p.second)) {
                 cb(p.second);
@@ -254,7 +260,8 @@ public:
     bool IsMNValid(const CDeterministicMNCPtr& dmn) const;
     bool IsMNPoSeBanned(const CDeterministicMNCPtr& dmn) const;
 
-    bool HasMN(const uint256& proTxHash) const {
+    bool HasMN(const uint256& proTxHash) const
+    {
         return GetMN(proTxHash) != nullptr;
     }
     CDeterministicMNCPtr GetMN(const uint256& proTxHash) const;
@@ -274,16 +281,16 @@ public:
     CDeterministicMNListDiff BuildDiff(const CDeterministicMNList& to) const;
     CDeterministicMNList ApplyDiff(const CDeterministicMNListDiff& diff) const;
 
-    void AddMN(const CDeterministicMNCPtr &dmn);
-    void UpdateMN(const uint256 &proTxHash, const CDeterministicMNStateCPtr &pdmnState);
+    void AddMN(const CDeterministicMNCPtr& dmn);
+    void UpdateMN(const uint256& proTxHash, const CDeterministicMNStateCPtr& pdmnState);
     void RemoveMN(const uint256& proTxHash);
 
-    template<typename T>
+    template <typename T>
     bool HasUniqueProperty(const T& v) const
     {
         return mnUniquePropertyMap.count(::SerializeHash(v)) != 0;
     }
-    template<typename T>
+    template <typename T>
     CDeterministicMNCPtr GetUniquePropertyMN(const T& v) const
     {
         auto p = mnUniquePropertyMap.find(::SerializeHash(v));
@@ -294,7 +301,7 @@ public:
     }
 
 private:
-    template<typename T>
+    template <typename T>
     void AddUniqueProperty(const CDeterministicMNCPtr& dmn, const T& v)
     {
         auto hash = ::SerializeHash(v);
@@ -306,7 +313,7 @@ private:
         }
         mnUniquePropertyMap = mnUniquePropertyMap.set(hash, newEntry);
     }
-    template<typename T>
+    template <typename T>
     void DeleteUniqueProperty(const CDeterministicMNCPtr& dmn, const T& oldValue)
     {
         auto oldHash = ::SerializeHash(oldValue);
@@ -318,7 +325,7 @@ private:
             mnUniquePropertyMap = mnUniquePropertyMap.set(oldHash, std::make_pair(dmn->proTxHash, p->second - 1));
         }
     }
-    template<typename T>
+    template <typename T>
     void UpdateUniqueProperty(const CDeterministicMNCPtr& dmn, const T& oldValue, const T& newValue)
     {
         if (oldValue == newValue) {
@@ -381,7 +388,7 @@ public:
     bool ProcessBlock(const CBlock& block, const CBlockIndex* pindexPrev, CValidationState& state);
     bool UndoBlock(const CBlock& block, const CBlockIndex* pindex);
 
-    void UpdatedBlockTip(const CBlockIndex *pindex);
+    void UpdatedBlockTip(const CBlockIndex* pindex);
 
     // the returned list will not contain the correct block hash (we can't know it yet as the coinbase TX is not updated yet)
     bool BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, CValidationState& state, CDeterministicMNList& mnListRet);
@@ -405,4 +412,4 @@ private:
 
 extern CDeterministicMNManager* deterministicMNManager;
 
-#endif//DASH_DETERMINISTICMNS_H
+#endif //DASH_DETERMINISTICMNS_H

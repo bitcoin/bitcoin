@@ -1,14 +1,14 @@
-// Copyright (c) 2017 The Dash Core developers
+// Copyright (c) 2017-2018 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "cbtx.h"
-#include "specialtx.h"
 #include "deterministicmns.h"
 #include "simplifiedmns.h"
+#include "specialtx.h"
 
-#include "validation.h"
 #include "univalue.h"
+#include "validation.h"
 
 bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {

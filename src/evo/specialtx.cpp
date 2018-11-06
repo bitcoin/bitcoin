@@ -2,17 +2,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "primitives/transaction.h"
-#include "primitives/block.h"
+#include "chainparams.h"
+#include "clientversion.h"
 #include "consensus/validation.h"
 #include "hash.h"
-#include "clientversion.h"
+#include "primitives/block.h"
+#include "primitives/transaction.h"
 #include "validation.h"
-#include "chainparams.h"
 
-#include "specialtx.h"
-#include "deterministicmns.h"
 #include "cbtx.h"
+#include "deterministicmns.h"
+#include "specialtx.h"
 
 bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {
@@ -26,16 +26,16 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
     }
 
     switch (tx.nType) {
-        case TRANSACTION_PROVIDER_REGISTER:
-            return CheckProRegTx(tx, pindexPrev, state);
-        case TRANSACTION_PROVIDER_UPDATE_SERVICE:
-            return CheckProUpServTx(tx, pindexPrev, state);
-        case TRANSACTION_PROVIDER_UPDATE_REGISTRAR:
-            return CheckProUpRegTx(tx, pindexPrev, state);
-        case TRANSACTION_PROVIDER_UPDATE_REVOKE:
-            return CheckProUpRevTx(tx, pindexPrev, state);
-        case TRANSACTION_COINBASE:
-            return CheckCbTx(tx, pindexPrev, state);
+    case TRANSACTION_PROVIDER_REGISTER:
+        return CheckProRegTx(tx, pindexPrev, state);
+    case TRANSACTION_PROVIDER_UPDATE_SERVICE:
+        return CheckProUpServTx(tx, pindexPrev, state);
+    case TRANSACTION_PROVIDER_UPDATE_REGISTRAR:
+        return CheckProUpRegTx(tx, pindexPrev, state);
+    case TRANSACTION_PROVIDER_UPDATE_REVOKE:
+        return CheckProUpRevTx(tx, pindexPrev, state);
+    case TRANSACTION_COINBASE:
+        return CheckCbTx(tx, pindexPrev, state);
     }
 
     return state.DoS(10, false, REJECT_INVALID, "bad-tx-type");
@@ -48,13 +48,13 @@ bool ProcessSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValida
     }
 
     switch (tx.nType) {
-        case TRANSACTION_PROVIDER_REGISTER:
-        case TRANSACTION_PROVIDER_UPDATE_SERVICE:
-        case TRANSACTION_PROVIDER_UPDATE_REGISTRAR:
-        case TRANSACTION_PROVIDER_UPDATE_REVOKE:
-            return true; // handled in batches per block
-        case TRANSACTION_COINBASE:
-            return true; // nothing to do
+    case TRANSACTION_PROVIDER_REGISTER:
+    case TRANSACTION_PROVIDER_UPDATE_SERVICE:
+    case TRANSACTION_PROVIDER_UPDATE_REGISTRAR:
+    case TRANSACTION_PROVIDER_UPDATE_REVOKE:
+        return true; // handled in batches per block
+    case TRANSACTION_COINBASE:
+        return true; // nothing to do
     }
 
     return state.DoS(100, false, REJECT_INVALID, "bad-tx-type");
@@ -67,13 +67,13 @@ bool UndoSpecialTx(const CTransaction& tx, const CBlockIndex* pindex)
     }
 
     switch (tx.nType) {
-        case TRANSACTION_PROVIDER_REGISTER:
-        case TRANSACTION_PROVIDER_UPDATE_SERVICE:
-        case TRANSACTION_PROVIDER_UPDATE_REGISTRAR:
-        case TRANSACTION_PROVIDER_UPDATE_REVOKE:
-            return true; // handled in batches per block
-        case TRANSACTION_COINBASE:
-            return true; // nothing to do
+    case TRANSACTION_PROVIDER_REGISTER:
+    case TRANSACTION_PROVIDER_UPDATE_SERVICE:
+    case TRANSACTION_PROVIDER_UPDATE_REGISTRAR:
+    case TRANSACTION_PROVIDER_UPDATE_REVOKE:
+        return true; // handled in batches per block
+    case TRANSACTION_COINBASE:
+        return true; // nothing to do
     }
 
     return false;

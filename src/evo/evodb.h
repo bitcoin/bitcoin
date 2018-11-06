@@ -25,14 +25,14 @@ public:
         return t;
     }
 
-    template<typename K, typename V>
+    template <typename K, typename V>
     bool Read(const K& key, V& value)
     {
         LOCK(cs);
         return dbTransaction.Read(key, value);
     }
 
-    template<typename K, typename V>
+    template <typename K, typename V>
     void Write(const K& key, const V& value)
     {
         LOCK(cs);
@@ -61,4 +61,4 @@ public:
 
 extern CEvoDB* evoDb;
 
-#endif//DASH_EVODB_H
+#endif //DASH_EVODB_H

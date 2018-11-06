@@ -1,17 +1,17 @@
-// Copyright (c) 2017 The Dash Core developers
+// Copyright (c) 2017-2018 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "cbtx.h"
 #include "core_io.h"
+#include "deterministicmns.h"
 #include "simplifiedmns.h"
 #include "specialtx.h"
-#include "deterministicmns.h"
-#include "cbtx.h"
 
-#include "validation.h"
-#include "univalue.h"
-#include "consensus/merkle.h"
 #include "chainparams.h"
+#include "consensus/merkle.h"
+#include "univalue.h"
+#include "validation.h"
 
 CSimplifiedMNListEntry::CSimplifiedMNListEntry(const CDeterministicMN& dmn) :
     proRegTxHash(dmn.proTxHash),
@@ -68,7 +68,7 @@ CSimplifiedMNList::CSimplifiedMNList(const CDeterministicMNList& dmnList)
     });
 }
 
-uint256 CSimplifiedMNList::CalcMerkleRoot(bool *pmutated) const
+uint256 CSimplifiedMNList::CalcMerkleRoot(bool* pmutated) const
 {
     std::vector<uint256> leaves;
     leaves.reserve(mnList.size());

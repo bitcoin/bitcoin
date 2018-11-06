@@ -7,7 +7,7 @@
 CEvoDB* evoDb;
 
 CEvoDB::CEvoDB(size_t nCacheSize, bool fMemory, bool fWipe) :
-        db(fMemory ? "" : (GetDataDir() / "evodb"), nCacheSize, fMemory, fWipe),
-        dbTransaction(db)
+    db(fMemory ? "" : (GetDataDir() / "evodb"), nCacheSize, fMemory, fWipe),
+    dbTransaction(db)
 {
 }

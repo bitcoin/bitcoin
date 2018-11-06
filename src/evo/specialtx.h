@@ -5,9 +5,9 @@
 #ifndef DASH_SPECIALTX_H
 #define DASH_SPECIALTX_H
 
+#include "primitives/transaction.h"
 #include "streams.h"
 #include "version.h"
-#include "primitives/transaction.h"
 
 class CBlock;
 class CBlockIndex;
@@ -49,4 +49,4 @@ void SetTxPayload(CMutableTransaction& tx, const T& payload)
 
 uint256 CalcTxInputsHash(const CTransaction& tx);
 
-#endif//DASH_SPECIALTX_H
+#endif //DASH_SPECIALTX_H

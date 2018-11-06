@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2018 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,8 +11,8 @@
 #include "primitives/transaction.h"
 #include "validationinterface.h"
 
-#include "evo/providertx.h"
 #include "evo/deterministicmns.h"
+#include "evo/providertx.h"
 
 struct CActiveMasternodeInfo;
 class CActiveLegacyMasternodeManager;
@@ -69,7 +69,7 @@ public:
     std::string GetStatus() const;
 
 private:
-    bool GetLocalAddress(CService &addrRet);
+    bool GetLocalAddress(CService& addrRet);
 };
 
 // Responsible for activating the Masternode and pinging the network (legacy MN list)
@@ -101,11 +101,12 @@ public:
     std::string strNotCapableReason;
 
 
-    CActiveLegacyMasternodeManager()
-        : eType(MASTERNODE_UNKNOWN),
-          fPingerEnabled(false),
-          nState(ACTIVE_MASTERNODE_INITIAL)
-    {}
+    CActiveLegacyMasternodeManager() :
+        eType(MASTERNODE_UNKNOWN),
+        fPingerEnabled(false),
+        nState(ACTIVE_MASTERNODE_INITIAL)
+    {
+    }
 
     /// Manage state of active Masternode
     void ManageState(CConnman& connman);
@@ -116,7 +117,7 @@ public:
 
     bool UpdateSentinelPing(int version);
 
-    void DoMaintenance(CConnman &connman);
+    void DoMaintenance(CConnman& connman);
 
 private:
     void ManageStateInitial(CConnman& connman);

@@ -1,15 +1,15 @@
-// Copyright (c) 2017 The Dash Core developers
+// Copyright (c) 2017-2018 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef DASH_SIMPLIFIEDMNS_H
 #define DASH_SIMPLIFIEDMNS_H
 
-#include "serialize.h"
-#include "pubkey.h"
-#include "netaddress.h"
-#include "merkleblock.h"
 #include "bls/bls.h"
+#include "merkleblock.h"
+#include "netaddress.h"
+#include "pubkey.h"
+#include "serialize.h"
 
 class UniValue;
 class CDeterministicMNList;
@@ -58,7 +58,7 @@ public:
     CSimplifiedMNList(const std::vector<CSimplifiedMNListEntry>& smlEntries);
     CSimplifiedMNList(const CDeterministicMNList& dmnList);
 
-    uint256 CalcMerkleRoot(bool *pmutated = NULL) const;
+    uint256 CalcMerkleRoot(bool* pmutated = NULL) const;
 };
 
 /// P2P messages
@@ -110,4 +110,4 @@ public:
 
 bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet, std::string& errorRet);
 
-#endif//DASH_SIMPLIFIEDMNS_H
+#endif //DASH_SIMPLIFIEDMNS_H

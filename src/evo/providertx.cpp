@@ -2,20 +2,20 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "deterministicmns.h"
 #include "providertx.h"
 #include "specialtx.h"
-#include "deterministicmns.h"
 
-#include "hash.h"
-#include "clientversion.h"
-#include "streams.h"
-#include "messagesigner.h"
-#include "chainparams.h"
-#include "validation.h"
-#include "univalue.h"
-#include "core_io.h"
-#include "script/standard.h"
 #include "base58.h"
+#include "chainparams.h"
+#include "clientversion.h"
+#include "core_io.h"
+#include "hash.h"
+#include "messagesigner.h"
+#include "script/standard.h"
+#include "streams.h"
+#include "univalue.h"
+#include "validation.h"
 
 template <typename ProTx>
 static bool CheckService(const uint256& proTxHash, const ProTx& proTx, const CBlockIndex* pindexPrev, CValidationState& state)
@@ -55,7 +55,7 @@ template <typename ProTx>
 static bool CheckStringSig(const ProTx& proTx, const CKeyID& keyID, CValidationState& state)
 {
     std::string strError;
-    if (!CMessageSigner::VerifyMessage(keyID, proTx.vchSig,  proTx.MakeSignString(), strError)) {
+    if (!CMessageSigner::VerifyMessage(keyID, proTx.vchSig, proTx.MakeSignString(), strError)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-sig", false, strError);
     }
     return true;
@@ -71,7 +71,7 @@ static bool CheckHashSig(const ProTx& proTx, const CBLSPublicKey& pubKey, CValid
 }
 
 template <typename ProTx>
-static bool CheckInputsHash(const CTransaction &tx, const ProTx& proTx, CValidationState& state)
+static bool CheckInputsHash(const CTransaction& tx, const ProTx& proTx, CValidationState& state)
 {
     uint256 inputsHash = CalcTxInputsHash(tx);
     if (inputsHash != proTx.inputsHash) {
@@ -427,7 +427,7 @@ std::string CProUpServTx::ToString() const
     }
 
     return strprintf("CProUpServTx(nVersion=%d, proTxHash=%s, addr=%s, operatorPayoutAddress=%s)",
-                     nVersion, proTxHash.ToString(), addr.ToString(), payee);
+        nVersion, proTxHash.ToString(), addr.ToString(), payee);
 }
 
 void CProUpServTx::ToJson(UniValue& obj) const
@@ -454,7 +454,7 @@ std::string CProUpRegTx::ToString() const
     }
 
     return strprintf("CProUpRegTx(nVersion=%d, proTxHash=%s, pubKeyOperator=%s, keyIDVoting=%s, payoutAddress=%s)",
-                     nVersion, proTxHash.ToString(), pubKeyOperator.ToString(), keyIDVoting.ToString(), payee);
+        nVersion, proTxHash.ToString(), pubKeyOperator.ToString(), keyIDVoting.ToString(), payee);
 }
 
 void CProUpRegTx::ToJson(UniValue& obj) const
@@ -476,7 +476,7 @@ void CProUpRegTx::ToJson(UniValue& obj) const
 std::string CProUpRevTx::ToString() const
 {
     return strprintf("CProUpRevTx(nVersion=%d, proTxHash=%s, nReason=%d)",
-                     nVersion, proTxHash.ToString(), nReason);
+        nVersion, proTxHash.ToString(), nReason);
 }
 
 void CProUpRevTx::ToJson(UniValue& obj) const
