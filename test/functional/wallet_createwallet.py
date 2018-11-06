@@ -31,8 +31,8 @@ class CreateWalletTest(BitcoinTestFramework):
         self.log.info("Test disableprivatekeys creation.")
         self.nodes[0].createwallet(wallet_name='w1', disable_private_keys=True)
         w1 = node.get_wallet_rpc('w1')
-        assert_raises_rpc_error(-4, "Error: Private keys are disabled for this wallet", w1.getnewaddress)
-        assert_raises_rpc_error(-4, "Error: Private keys are disabled for this wallet", w1.getrawchangeaddress)
+        assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w1.getnewaddress)
+        assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w1.getrawchangeaddress)
         w1.importpubkey(w0.getaddressinfo(address1)['pubkey'])
 
         self.log.info('Test that private keys cannot be imported')
@@ -48,8 +48,8 @@ class CreateWalletTest(BitcoinTestFramework):
         self.log.info("Test blank creation with private keys disabled.")
         self.nodes[0].createwallet(wallet_name='w2', disable_private_keys=True, blank=True)
         w2 = node.get_wallet_rpc('w2')
-        assert_raises_rpc_error(-4, "Error: Private keys are disabled for this wallet", w2.getnewaddress)
-        assert_raises_rpc_error(-4, "Error: Private keys are disabled for this wallet", w2.getrawchangeaddress)
+        assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w2.getnewaddress)
+        assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w2.getrawchangeaddress)
         w2.importpubkey(w0.getaddressinfo(address1)['pubkey'])
 
         self.log.info("Test blank creation with private keys enabled.")
@@ -89,12 +89,12 @@ class CreateWalletTest(BitcoinTestFramework):
         self.nodes[0].createwallet(wallet_name='w5', disable_private_keys=True, blank=True)
         w5 = node.get_wallet_rpc('w5')
         assert_equal(w5.getwalletinfo()['keypoolsize'], 0)
-        assert_raises_rpc_error(-4, "Error: Private keys are disabled for this wallet", w5.getnewaddress)
-        assert_raises_rpc_error(-4, "Error: Private keys are disabled for this wallet", w5.getrawchangeaddress)
+        assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w5.getnewaddress)
+        assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w5.getrawchangeaddress)
         # Encrypt the wallet
         w5.encryptwallet('pass')
-        assert_raises_rpc_error(-4, "Error: Private keys are disabled for this wallet", w5.getnewaddress)
-        assert_raises_rpc_error(-4, "Error: Private keys are disabled for this wallet", w5.getrawchangeaddress)
+        assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w5.getnewaddress)
+        assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w5.getrawchangeaddress)
 
 if __name__ == '__main__':
     CreateWalletTest().main()
