@@ -3443,20 +3443,8 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
                 internal = true;
             }
 
-            assert(m_max_keypool_index < std::numeric_limits<int64_t>::max()); // How in the hell did you use so many keys?
-            int64_t index = ++m_max_keypool_index;
-
             CPubKey pubkey(GenerateNewKey(batch, internal));
-            if (!batch.WritePool(index, CKeyPool(pubkey, internal))) {
-                throw std::runtime_error(std::string(__func__) + ": writing generated key failed");
-            }
-
-            if (internal) {
-                setInternalKeyPool.insert(index);
-            } else {
-                setExternalKeyPool.insert(index);
-            }
-            m_pool_key_to_index[pubkey.GetID()] = index;
+            AddKeypoolPubkeyWithDB(pubkey, internal, batch);
         }
         if (missingInternal + missingExternal > 0) {
             WalletLogPrintf("keypool added %d keys (%d internal), size=%u (%u internal)\n", missingInternal + missingExternal, missingInternal, setInternalKeyPool.size() + setExternalKeyPool.size() + set_pre_split_keypool.size(), setInternalKeyPool.size());
@@ -3464,6 +3452,29 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
     }
     NotifyCanGetAddressesChanged();
     return true;
+}
+
+void CWallet::AddKeypoolPubkey(const CPubKey& pubkey, const bool internal)
+{
+    WalletBatch batch(*database);
+    AddKeypoolPubkeyWithDB(pubkey, internal, batch);
+    NotifyCanGetAddressesChanged();
+}
+
+void CWallet::AddKeypoolPubkeyWithDB(const CPubKey& pubkey, const bool internal, WalletBatch& batch)
+{
+    LOCK(cs_wallet);
+    assert(m_max_keypool_index < std::numeric_limits<int64_t>::max()); // How in the hell did you use so many keys?
+    int64_t index = ++m_max_keypool_index;
+    if (!batch.WritePool(index, CKeyPool(pubkey, internal))) {
+        throw std::runtime_error(std::string(__func__) + ": writing imported pubkey failed");
+    }
+    if (internal) {
+        setInternalKeyPool.insert(index);
+    } else {
+        setExternalKeyPool.insert(index);
+    }
+    m_pool_key_to_index[pubkey.GetID()] = index;
 }
 
 bool CWallet::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& keypool, bool fRequestedInternal)
