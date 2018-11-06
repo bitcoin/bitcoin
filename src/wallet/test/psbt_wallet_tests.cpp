@@ -4,6 +4,7 @@
 
 #include <key_io.h>
 #include <script/sign.h>
+#include <util/bip32.h>
 #include <util/strencodings.h>
 #include <wallet/psbtwallet.h>
 #include <wallet/rpcwallet.h>
