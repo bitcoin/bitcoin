@@ -207,10 +207,13 @@ class P2PConnection(asyncio.Protocol):
 
         This method takes a P2P payload, builds the P2P header and adds
         the message to the send buffer to be sent over the socket."""
+        tmsg = self.build_message(message)
+        self._log_message("send", message)
+        return self.send_raw_message(tmsg)
+
+    def send_raw_message(self, raw_message_bytes):
         if not self.is_connected:
             raise IOError('Not connected')
-        self._log_message("send", message)
-        tmsg = self._build_message(message)
 
         def maybe_write():
             if not self._transport:
@@ -220,12 +223,12 @@ class P2PConnection(asyncio.Protocol):
             # Python 3.4 versions.
             if hasattr(self._transport, 'is_closing') and self._transport.is_closing():
                 return
-            self._transport.write(tmsg)
+            self._transport.write(raw_message_bytes)
         NetworkThread.network_event_loop.call_soon_threadsafe(maybe_write)
 
     # Class utility methods
 
-    def _build_message(self, message):
+    def build_message(self, message):
         """Build a serialized P2P message"""
         command = message.command
         data = message.serialize()
@@ -409,9 +412,9 @@ class P2PInterface(P2PConnection):
 
     # Message sending helper functions
 
-    def send_and_ping(self, message):
+    def send_and_ping(self, message, timeout=60):
         self.send_message(message)
-        self.sync_with_ping()
+        self.sync_with_ping(timeout=timeout)
 
     # Sync up with the node
     def sync_with_ping(self, timeout=60):
