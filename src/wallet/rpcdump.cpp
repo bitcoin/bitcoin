@@ -13,6 +13,7 @@
 #include <script/script.h>
 #include <script/standard.h>
 #include <sync.h>
+#include <util/bip32.h>
 #include <util/system.h>
 #include <util/time.h>
 #include <validation.h>
@@ -850,7 +851,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
             } else {
                 file << "change=1";
             }
-            file << strprintf(" # addr=%s%s\n", strAddr, (pwallet->mapKeyMetadata[keyid].hdKeypath.size() > 0 ? " hdkeypath="+pwallet->mapKeyMetadata[keyid].hdKeypath : ""));
+            file << strprintf(" # addr=%s%s\n", strAddr, (pwallet->mapKeyMetadata[keyid].has_key_origin ? " hdkeypath="+WriteHDKeypath(pwallet->mapKeyMetadata[keyid].key_origin.path) : ""));
         }
     }
     file << "\n";
