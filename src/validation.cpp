@@ -3393,7 +3393,7 @@ bool CChainState::AcceptBlockHeader(const CBlockHeader& block, CValidationState&
             }
         }
     }
-    if (pindex == nullptr)
+    if (pindex == nullptr && !state.IsInvalid())
         pindex = AddToBlockIndex(block);
 
     if (ppindex)
