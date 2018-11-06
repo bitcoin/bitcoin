@@ -72,7 +72,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
                 "memory exhaustion. May take a bit...")
 
             # Run a bunch of times to test for memory exhaustion.
-            for _ in range(200):
+            for _ in range(80):
                 node.p2p.send_message(msg_at_size)
 
             # Check that, even though the node is being hammered by nonsense from one
@@ -82,7 +82,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
 
             # Peer 1, despite serving up a bunch of nonsense, should still be connected.
             self.log.info("Waiting for node to drop junk messages.")
-            node.p2p.sync_with_ping(timeout=8)
+            node.p2p.sync_with_ping(timeout=30)
             assert node.p2p.is_connected
 
         #
