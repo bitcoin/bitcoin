@@ -3,28 +3,21 @@ skip_tags: true
 image: Visual Studio 2017
 configuration: Release
 platform: x64
+clone_depth: 5
 environment:
   APPVEYOR_SAVE_CACHE_ON_ERROR: true
   CLCACHE_SERVER: 1
   PACKAGES: boost-filesystem boost-signals2 boost-test libevent openssl zeromq berkeleydb secp256k1 leveldb
-  PYTHONIOENCODING: utf-8
+  PATH: 'C:\Python37-x64;C:\Python37-x64\Scripts;%PATH%'
+  PYTHONUTF8: 1
 cache:
 - C:\tools\vcpkg\installed
 - C:\Users\appveyor\clcache
-init:
-- cmd: set PATH=C:\Python36-x64;C:\Python36-x64\Scripts;%PATH%
 install:
-- cmd: pip install git+https://github.com/frerich/clcache.git
+- cmd: pip install --quiet git+https://github.com/frerich/clcache.git@v4.2.0
 # Disable zmq test for now since python zmq library on Windows would cause Access violation sometimes.
 # - cmd: pip install zmq
-- ps:  $packages = $env:PACKAGES -Split ' '
-- ps:  for ($i=0; $i -lt $packages.length; $i++) {
-           $env:ALL_PACKAGES += $packages[$i] + ":" + $env:PLATFORM + "-windows-static "
-       }
-- cmd: git -C C:\Tools\vcpkg pull # This is a temporary fix, can be removed after appveyor update its image to include Microsoft/vcpkg#4046
-- cmd: C:\Tools\vcpkg\bootstrap-vcpkg.bat
-- cmd: vcpkg remove --recurse --outdated
-- cmd: vcpkg install %ALL_PACKAGES%
+- cmd: vcpkg install --triplet %PLATFORM%-windows-static %PACKAGES% > NUL
 - cmd: del /s /q C:\Tools\vcpkg\installed\%PLATFORM%-windows-static\debug # Remove unused debug library
 before_build:
 - ps:  clcache -M 536870912
@@ -42,7 +35,7 @@ before_build:
 build_script:
 - cmd: msbuild /p:TrackFileAccess=false /p:CLToolExe=clcache.exe build_msvc\bitcoin.sln /m /v:q /nowarn:C4244;C4267;C4715 /nologo
 after_build:
-- ps:  fsutil behavior set disablelastaccess 0 # Disable Access time feature on Windows (better performance)
+- ps:  fsutil behavior set disablelastaccess 1 # Disable Access time feature on Windows (better performance)
 - ps:  clcache -z
 before_test:
 - ps:  ${conf_ini} = (Get-Content([IO.Path]::Combine(${env:APPVEYOR_BUILD_FOLDER}, "test", "config.ini.in")))
@@ -57,9 +50,9 @@ before_test:
 - ps:  '[IO.File]::WriteAllLines([IO.Path]::Combine(${env:APPVEYOR_BUILD_FOLDER}, "test", "config.ini"), ${conf_ini}, ${utf8})'
 - ps:  move "build_msvc\${env:PLATFORM}\${env:CONFIGURATION}\*.exe" src
 test_script:
-- cmd: src\test_bitcoin.exe
-- ps:  src\bench_bitcoin.exe -evals=1 -scaling=0
+- cmd: src\test_bitcoin.exe -k stdout -e stdout 2> NUL
+- cmd: src\bench_bitcoin.exe -evals=1 -scaling=0 > NUL
 - ps:  python test\util\bitcoin-util-test.py
 - cmd: python test\util\rpcauth-test.py
-- cmd: python test\functional\test_runner.py --ci --force --quiet --combinedlogslen=4000
+- cmd: python test\functional\test_runner.py --ci --force --quiet --combinedlogslen=4000 --failfast
 deploy: off
