@@ -12,10 +12,8 @@
 #include <core_io.h>
 #include <index/txindex.h>
 #include <init.h>
-#include <keystore.h>
-#include <validation.h>
-#include <validationinterface.h>
 #include <key_io.h>
+#include <keystore.h>
 #include <merkleblock.h>
 #include <net.h>
 #include <policy/policy.h>
@@ -31,6 +29,8 @@
 #include <txmempool.h>
 #include <uint256.h>
 #include <util/strencodings.h>
+#include <validation.h>
+#include <validationinterface.h>
 
 #include <future>
 #include <stdint.h>
