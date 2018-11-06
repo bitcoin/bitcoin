@@ -5,10 +5,15 @@ float-divide-by-zero:policy/fees.cpp
 float-divide-by-zero:validation.cpp
 float-divide-by-zero:wallet/wallet.cpp
 nonnull-attribute:support/cleanse.cpp
+unsigned-integer-overflow:arith_uint256.h
 unsigned-integer-overflow:basic_string.h
 unsigned-integer-overflow:bench/bench.h
+unsigned-integer-overflow:bitcoin-tx.cpp
 unsigned-integer-overflow:bloom.cpp
+unsigned-integer-overflow:chain.cpp
 unsigned-integer-overflow:chain.h
+unsigned-integer-overflow:coded_stream.h
+unsigned-integer-overflow:core_write.cpp
 unsigned-integer-overflow:crypto/chacha20.cpp
 unsigned-integer-overflow:crypto/ctaes/ctaes.c
 unsigned-integer-overflow:crypto/ripemd160.cpp
@@ -21,7 +26,11 @@ unsigned-integer-overflow:leveldb/util/bloom.cc
 unsigned-integer-overflow:leveldb/util/crc32c.h
 unsigned-integer-overflow:leveldb/util/hash.cc
 unsigned-integer-overflow:policy/fees.cpp
+unsigned-integer-overflow:prevector.h
 unsigned-integer-overflow:script/interpreter.cpp
 unsigned-integer-overflow:stl_bvector.h
+unsigned-integer-overflow:streams.h
 unsigned-integer-overflow:txmempool.cpp
+unsigned-integer-overflow:util/strencodings.cpp
 unsigned-integer-overflow:validation.cpp
+vptr:fs.cpp
