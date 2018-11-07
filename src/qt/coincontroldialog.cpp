@@ -462,7 +462,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     coinControl->ListSelected(vCoinControl);
     model->getOutputs(vCoinControl, vOutputs);
 
-    nPayFee = nTransactionFee;
+    nPayFee = MIN_TX_FEE;
     ploop
     {
         txDummy.vin.clear();
