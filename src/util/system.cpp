@@ -280,11 +280,13 @@ public:
  * IsArgNegated() method. One use case for this is to have a way to disable
  * options that are not normally boolean (e.g. using -nodebuglogfile to request
  * that debug log output is not sent to any file at all).
+ *
+ * If offsets is provided, options are being prepended.
  */
 
 NODISCARD static bool InterpretOption(std::string key, std::string val, unsigned int flags,
                                       std::map<std::string, std::vector<std::string>>& args,
-                                      std::string& error)
+                                      std::string& error, std::map<std::string, size_t>* offsets)
 {
     assert(key[0] == '-');
 
@@ -298,7 +300,16 @@ NODISCARD static bool InterpretOption(std::string key, std::string val, unsigned
         key.erase(option_index, 2);
         if (flags & ArgsManager::ALLOW_BOOL) {
             if (InterpretBool(val)) {
-                args[key].clear();
+                auto& opt_values = args[key];
+                if (offsets) {
+                    // only clear entries created by this config file
+                    if (offsets->count(key)) {
+                        opt_values.erase(opt_values.begin(), opt_values.begin() + offsets->at(key));
+                        offsets->erase(key);
+                    }
+                } else {
+                    opt_values.clear();
+                }
                 return true;
             }
             // Double negatives like -nofoo=0 are supported (but discouraged)
@@ -309,7 +320,13 @@ NODISCARD static bool InterpretOption(std::string key, std::string val, unsigned
             return false;
         }
     }
-    args[key].push_back(val);
+    auto& opt_values = args[key];
+    if (offsets) {
+        opt_values.insert(opt_values.begin() + (*offsets)[key], val);
+        ++(*offsets)[key];
+    } else {
+        opt_values.push_back(val);
+    }
     return true;
 }
 
@@ -410,7 +427,7 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
 
         const unsigned int flags = FlagsOfKnownArg(key);
         if (flags) {
-            if (!InterpretOption(key, val, flags, m_override_args, error)) {
+            if (!InterpretOption(key, val, flags, m_override_args, error, nullptr)) {
                 return false;
             }
         } else {
@@ -852,18 +869,19 @@ static bool GetConfigOptions(std::istream& stream, const std::string& filepath, 
     return true;
 }
 
-bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& filepath, std::string& error, bool ignore_invalid_keys)
+bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& filepath, std::string& error, bool ignore_invalid_keys, bool prepend)
 {
     LOCK(cs_args);
     std::vector<std::pair<std::string, std::string>> options;
     if (!GetConfigOptions(stream, filepath, error, options, m_config_sections)) {
         return false;
     }
+    std::map<std::string, size_t> offsets;
     for (const std::pair<std::string, std::string>& option : options) {
         const std::string strKey = std::string("-") + option.first;
         const unsigned int flags = FlagsOfKnownArg(strKey);
         if (flags) {
-            if (!InterpretOption(strKey, option.second, flags, m_config_args, error)) {
+            if (!InterpretOption(strKey, option.second, flags, m_config_args, error, prepend ? &offsets : nullptr)) {
                 return false;
             }
         } else {
