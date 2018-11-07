@@ -994,8 +994,9 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
             throw JSONRPCError(RPC_WALLET_ERROR, "Error adding scriptPubKey script to wallet");
         }
 
-        // add to address book or update label
-        if (IsValidDestination(scriptpubkey_dest)) {
+        // if not internal add to address book or update label
+        if (!internal) {
+            assert(IsValidDestination(scriptpubkey_dest));
             pwallet->SetAddressBook(scriptpubkey_dest, label, "receive");
         }
 
@@ -1087,7 +1088,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
             "      \"witnessscript\": \"<script>\"                           , (string, optional) Allowed only if the scriptPubKey is a P2SH-P2WSH or P2WSH address/scriptPubKey\n"
             "      \"pubkeys\": [\"<pubKey>\", ... ]                         , (array, optional) Array of strings giving pubkeys that must occur in the output or redeemscript\n"
             "      \"keys\": [\"<key>\", ... ]                               , (array, optional) Array of strings giving private keys whose corresponding public keys must occur in the output or redeemscript\n"
-            "      \"internal\": <true>                                    , (boolean, optional, default: false) Stating whether matching outputs should be treated as not incoming payments\n"
+            "      \"internal\": <true>                                    , (boolean, optional, default: false) Stating whether matching outputs should be treated as not incoming payments aka change\n"
             "      \"watchonly\": <true>                                   , (boolean, optional, default: false) Stating whether matching outputs should be considered watched even when they're not spendable, only allowed if keys are empty\n"
             "      \"label\": <label>                                      , (string, optional, default: '') Label to assign to the address, only allowed with internal=false\n"
             "    }\n"
