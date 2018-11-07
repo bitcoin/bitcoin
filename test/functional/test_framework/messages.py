@@ -35,7 +35,6 @@ MY_VERSION = 70014  # past bip-31 for ping/pong
 MY_SUBVERSION = b"/python-mininode-tester:0.0.3/"
 MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)
 
-MAX_INV_SZ = 50000
 MAX_LOCATOR_SZ = 101
 MAX_BLOCK_BASE_SIZE = 1000000
 
@@ -57,9 +56,6 @@ MSG_TYPE_MASK = 0xffffffff >> 2
 # Serialization/deserialization tools
 def sha256(s):
     return hashlib.new('sha256', s).digest()
-
-def ripemd160(s):
-    return hashlib.new('ripemd160', s).digest()
 
 def hash256(s):
     return sha256(sha256(s))
@@ -887,13 +883,12 @@ class BlockTransactions:
 
 
 class CPartialMerkleTree:
-    __slots__ = ("fBad", "nTransactions", "vBits", "vHash")
+    __slots__ = ("nTransactions", "vBits", "vHash")
 
     def __init__(self):
         self.nTransactions = 0
         self.vHash = []
         self.vBits = []
-        self.fBad = False
 
     def deserialize(self, f):
         self.nTransactions = struct.unpack("<i", f.read(4))[0]
