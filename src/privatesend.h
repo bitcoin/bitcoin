@@ -24,7 +24,7 @@ static const int PRIVATESEND_QUEUE_TIMEOUT = 30;
 static const int PRIVATESEND_SIGNING_TIMEOUT = 15;
 
 //! minimum peer version accepted by mixing pool
-static const int MIN_PRIVATESEND_PEER_PROTO_VERSION = 70210;
+static const int MIN_PRIVATESEND_PEER_PROTO_VERSION = 70212;
 
 static const size_t PRIVATESEND_ENTRY_MAX_SIZE = 9;
 
@@ -118,11 +118,6 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action)
     {
         READWRITE(nDenom);
-        int nVersion = s.GetVersion();
-        if (nVersion > 70208 && nVersion <= 70210) {
-            int nInputCount = 0;
-            READWRITE(nInputCount);
-        }
         READWRITE(txCollateral);
     }
 
@@ -179,7 +174,6 @@ class CPrivateSendQueue
 {
 public:
     int nDenom;
-    int nInputCount; // not used for anything but to calculate correct hash, remove after migration to 70211
     COutPoint masternodeOutpoint;
     int64_t nTime;
     bool fReady; //ready for submit
@@ -189,7 +183,6 @@ public:
 
     CPrivateSendQueue() :
         nDenom(0),
-        nInputCount(0),
         masternodeOutpoint(COutPoint()),
         nTime(0),
         fReady(false),
@@ -200,7 +193,6 @@ public:
 
     CPrivateSendQueue(int nDenom, COutPoint outpoint, int64_t nTime, bool fReady) :
         nDenom(nDenom),
-        nInputCount(0),
         masternodeOutpoint(outpoint),
         nTime(nTime),
         fReady(fReady),
@@ -215,10 +207,6 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action)
     {
         READWRITE(nDenom);
-        int nVersion = s.GetVersion();
-        if (nVersion > 70208 && nVersion <= 70210) {
-            READWRITE(nInputCount);
-        }
         READWRITE(masternodeOutpoint);
         READWRITE(nTime);
         READWRITE(fReady);
@@ -390,8 +378,6 @@ private:
     CPrivateSend(CPrivateSend const&) = delete;
     CPrivateSend& operator=(CPrivateSend const&) = delete;
 
-    static const CAmount COLLATERAL = 0.001 * COIN;
-
     // static members
     static std::vector<CAmount> vecStandardDenominations;
     static std::map<uint256, CPrivateSendBroadcastTx> mapDSTX;
@@ -424,8 +410,8 @@ public:
 
     /// If the collateral is valid given by a client
     static bool IsCollateralValid(const CTransaction& txCollateral);
-    static CAmount GetCollateralAmount() { return COLLATERAL; }
-    static CAmount GetMaxCollateralAmount() { return COLLATERAL * 4; }
+    static CAmount GetCollateralAmount() { return GetSmallestDenomination() / 10; }
+    static CAmount GetMaxCollateralAmount() { return GetCollateralAmount() * 4; }
 
     static bool IsCollateralAmount(CAmount nInputAmount);
 

@@ -312,9 +312,7 @@ void CPrivateSend::InitStandardDenominations()
     vecStandardDenominations.push_back((1 * COIN) + 1000);
     vecStandardDenominations.push_back((.1 * COIN) + 100);
     vecStandardDenominations.push_back((.01 * COIN) + 10);
-    /* Disabled till we need them
-    vecStandardDenominations.push_back( (.001     * COIN)+1 );
-    */
+    vecStandardDenominations.push_back((.001 * COIN) + 1);
 }
 
 // check to make sure the collateral provided by the client is valid
@@ -329,8 +327,7 @@ bool CPrivateSend::IsCollateralValid(const CTransaction& txCollateral)
     for (const auto& txout : txCollateral.vout) {
         nValueOut += txout.nValue;
 
-        bool fAllowData = mnpayments.GetMinMasternodePaymentsProto() > 70208;
-        if (!txout.scriptPubKey.IsPayToPublicKeyHash() && !(fAllowData && txout.scriptPubKey.IsUnspendable())) {
+        if (!txout.scriptPubKey.IsPayToPublicKeyHash() && !txout.scriptPubKey.IsUnspendable()) {
             LogPrintf("CPrivateSend::IsCollateralValid -- Invalid Script, txCollateral=%s", txCollateral.ToString());
             return false;
         }
@@ -367,13 +364,8 @@ bool CPrivateSend::IsCollateralValid(const CTransaction& txCollateral)
 
 bool CPrivateSend::IsCollateralAmount(CAmount nInputAmount)
 {
-    if (mnpayments.GetMinMasternodePaymentsProto() > 70208) {
-        // collateral input can be anything between 1x and "max" (including both)
-        return (nInputAmount >= GetCollateralAmount() && nInputAmount <= GetMaxCollateralAmount());
-    } else { // <= 70208
-        // collateral input can be anything between 2x and "max" (including both)
-        return (nInputAmount >= GetCollateralAmount() * 2 && nInputAmount <= GetMaxCollateralAmount());
-    }
+    // collateral input can be anything between 1x and "max" (including both)
+    return (nInputAmount >= GetCollateralAmount() && nInputAmount <= GetMaxCollateralAmount());
 }
 
 /*  Create a nice string to show the denominations
