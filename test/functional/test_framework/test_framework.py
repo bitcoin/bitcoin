@@ -43,6 +43,8 @@ TEST_EXIT_PASSED = 0
 TEST_EXIT_FAILED = 1
 TEST_EXIT_SKIPPED = 77
 
+TMPDIR_PREFIX = "bitcoin_func_test_"
+
 
 class SkipTest(Exception):
     """This exception is raised to skip a test"""
@@ -151,7 +153,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             self.options.tmpdir = os.path.abspath(self.options.tmpdir)
             os.makedirs(self.options.tmpdir, exist_ok=False)
         else:
-            self.options.tmpdir = tempfile.mkdtemp(prefix="test")
+            self.options.tmpdir = tempfile.mkdtemp(prefix=TMPDIR_PREFIX)
         self._start_logging()
 
         self.log.debug('Setting up network thread')
