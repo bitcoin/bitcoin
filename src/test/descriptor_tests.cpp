@@ -79,19 +79,33 @@ void Check(const std::string& prv, const std::string& pub, int flags, const std:
     BOOST_CHECK_EQUAL(parse_pub->IsRange(), (flags & RANGE) != 0);
     BOOST_CHECK_EQUAL(parse_priv->IsRange(), (flags & RANGE) != 0);
 
-
-    // Is not ranged descriptor, only a single result is expected.
+    // * For ranged descriptors,  the `scripts` parameter is a list of expected result outputs, for subsequent
+    //   positions to evaluate the descriptors on (so the first element of `scripts` is for evaluating the
+    //   descriptor at 0; the second at 1; and so on). To verify this, we evaluate the descriptors once for
+    //   each element in `scripts`.
+    // * For non-ranged descriptors, we evaluate the descriptors at positions 0, 1, and 2, but expect the
+    //   same result in each case, namely the first element of `scripts`. Because of that, the size of
+    //   `scripts` must be one in that case.
     if (!(flags & RANGE)) assert(scripts.size() == 1);
-
     size_t max = (flags & RANGE) ? scripts.size() : 3;
+
+    // Iterate over the position we'll evaluate the descriptors in.
     for (size_t i = 0; i < max; ++i) {
+        // Call the expected result scripts `ref`.
         const auto& ref = scripts[(flags & RANGE) ? i : 0];
+        // When t=0, evaluate the `prv` descriptor; when t=1, evaluate the `pub` descriptor.
         for (int t = 0; t < 2; ++t) {
+            // When the descriptor is hardened, evaluate with access to the private keys inside.
             const FlatSigningProvider& key_provider = (flags & HARDENED) ? keys_priv : keys_pub;
+
+            // Evaluate the descriptor selected by `t` in poisition `i`.
             FlatSigningProvider script_provider, script_provider_cached;
             std::vector<CScript> spks, spks_cached;
             std::vector<unsigned char> cache;
             BOOST_CHECK((t ? parse_priv : parse_pub)->Expand(i, key_provider, spks, script_provider, &cache));
+
+            // Compare the output with the expected result.
+            BOOST_CHECK_EQUAL(spks.size(), ref.size());
 
             // Try to expand again using cached data, and compare.
             BOOST_CHECK(parse_pub->ExpandFromCache(i, cache, spks_cached, script_provider_cached));
@@ -100,7 +114,7 @@ void Check(const std::string& prv, const std::string& pub, int flags, const std:
             BOOST_CHECK(script_provider.scripts == script_provider_cached.scripts);
             BOOST_CHECK(script_provider.origins == script_provider_cached.origins);
 
-            BOOST_CHECK_EQUAL(spks.size(), ref.size());
+            // For each of the produced scripts, verify solvability, and when possible, try to sign a transaction spending it.
             for (size_t n = 0; n < spks.size(); ++n) {
                 BOOST_CHECK_EQUAL(ref[n], HexStr(spks[n].begin(), spks[n].end()));
                 BOOST_CHECK_EQUAL(IsSolvable(Merge(key_provider, script_provider), spks[n]), (flags & UNSOLVABLE) == 0);
@@ -132,6 +146,7 @@ void Check(const std::string& prv, const std::string& pub, int flags, const std:
             }
         }
     }
+
     // Verify no expected paths remain that were not observed.
     BOOST_CHECK_MESSAGE(left_paths.empty(), "Not all expected key paths found: " + prv);
 }
