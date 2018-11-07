@@ -134,13 +134,6 @@ static int AppInitRPC(int argc, char* argv[])
         tfm::format(std::cerr, "Error reading configuration file: %s\n", error);
         return EXIT_FAILURE;
     }
-    // Check for -chain, -testnet or -regtest parameter (BaseParams() calls are only valid after this clause)
-    try {
-        SelectBaseParams(gArgs.GetChainName());
-    } catch (const std::exception& e) {
-        tfm::format(std::cerr, "Error: %s\n", e.what());
-        return EXIT_FAILURE;
-    }
     return CONTINUE_EXECUTION;
 }
 
