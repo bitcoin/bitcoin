@@ -52,12 +52,12 @@ public:
                 }
             }
 
-            uint16_t offset = 0;
+            int32_t offset = 0;
             for (size_t j = 0; j < indexes.size(); j++) {
-                if (uint64_t(indexes[j]) + uint64_t(offset) > std::numeric_limits<uint16_t>::max())
+                if (int32_t(indexes[j]) + offset > std::numeric_limits<uint16_t>::max())
                     throw std::ios_base::failure("indexes overflowed 16 bits");
                 indexes[j] = indexes[j] + offset;
-                offset = indexes[j] + 1;
+                offset = int32_t(indexes[j]) + 1;
             }
         } else {
             for (size_t i = 0; i < indexes.size(); i++) {
