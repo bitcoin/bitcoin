@@ -63,14 +63,7 @@ static bool GetPubKey(const SigningProvider& provider, SignatureData& sigdata, c
         return true;
     }
     // Query the underlying provider
-    if (provider.GetPubKey(address, pubkey)) {
-        KeyOriginInfo info;
-        if (provider.GetKeyOrigin(address, info)) {
-            sigdata.misc_pubkeys.emplace(address, std::make_pair(pubkey, std::move(info)));
-        }
-        return true;
-    }
-    return false;
+    return provider.GetPubKey(address, pubkey);
 }
 
 static bool CreateSig(const BaseSignatureCreator& creator, SignatureData& sigdata, const SigningProvider& provider, std::vector<unsigned char>& sig_out, const CPubKey& pubkey, const CScript& scriptcode, SigVersion sigversion)
