@@ -10,6 +10,7 @@
 #include <util/strencodings.h>
 #include <netbase.h>
 #include <rpc/protocol.h> // For HTTP status codes
+#include <shutdown.h>
 #include <sync.h>
 #include <ui_interface.h>
 
@@ -583,6 +584,9 @@ void HTTPRequest::WriteHeader(const std::string& hdr, const std::string& value)
 void HTTPRequest::WriteReply(int nStatus, const std::string& strReply)
 {
     assert(!replySent && req);
+    if (ShutdownRequested()) {
+        WriteHeader("Connection", "close");
+    }
     // Send event to main http thread to send reply message
     struct evbuffer* evb = evhttp_request_get_output_buffer(req);
     assert(evb);
