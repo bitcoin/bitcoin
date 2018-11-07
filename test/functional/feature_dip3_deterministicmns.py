@@ -40,14 +40,6 @@ class DIP3Test(BitcoinTestFramework):
             if i < len(self.nodes) and self.nodes[i] is not None and self.nodes[i].process is not None:
                 connect_nodes(self.nodes[i], 0)
 
-    def stop_controller_node(self):
-        self.log.info("stopping controller node")
-        self.stop_node(0)
-
-    def restart_controller_node(self):
-        self.stop_controller_node()
-        self.start_controller_node()
-
     def run_test(self):
         self.log.info("funding controller node")
         while self.nodes[0].getbalance() < (self.num_initial_mn + 3) * 1000:
@@ -216,7 +208,6 @@ class DIP3Test(BitcoinTestFramework):
         mn = Masternode()
         mn.idx = idx
         mn.alias = alias
-        mn.is_protx = True
         mn.p2p_port = p2p_port(mn.idx)
 
         blsKey = node.bls('generate')

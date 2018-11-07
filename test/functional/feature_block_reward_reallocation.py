@@ -151,7 +151,7 @@ class BlockRewardReallocationTest(DashTestFramework):
         assert_equal(bt['masternode'][0]['amount'], 6874285801) # 0.4999999998
 
         self.log.info("Reallocation should kick-in with the superblock mined at height = 2010")
-        for period in range(19):  # there will be 19 adjustments, 3 superblocks long each
+        for _ in range(19):  # there will be 19 adjustments, 3 superblocks long each
             for i in range(3):
                 self.bump_mocktime(10)
                 self.nodes[0].generate(10)
@@ -163,7 +163,7 @@ class BlockRewardReallocationTest(DashTestFramework):
         assert_equal(bt['masternode'][0]['amount'], 6132959502) # 0.6
 
         self.log.info("Reward split should stay ~60/40 after reallocation is done")
-        for period in range(10):  # check 10 next superblocks
+        for _ in range(10):  # check 10 next superblocks
             self.bump_mocktime(10)
             self.nodes[0].generate(10)
             bt = self.nodes[0].getblocktemplate()

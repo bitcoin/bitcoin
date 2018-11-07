@@ -36,7 +36,6 @@ MY_VERSION = 70219  # LLMQ_DATA_MESSAGES_VERSION
 MY_SUBVERSION = b"/python-mininode-tester:0.0.3%s/"
 MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)
 
-MAX_INV_SZ = 50000
 MAX_LOCATOR_SZ = 101
 MAX_BLOCK_SIZE = 1000000
 
@@ -163,22 +162,6 @@ def ser_uint256_vector(l):
     r = ser_compact_size(len(l))
     for i in l:
         r += ser_uint256(i)
-    return r
-
-
-def deser_string_vector(f):
-    nit = deser_compact_size(f)
-    r = []
-    for i in range(nit):
-        t = deser_string(f)
-        r.append(t)
-    return r
-
-
-def ser_string_vector(l):
-    r = ser_compact_size(len(l))
-    for sv in l:
-        r += ser_string(sv)
     return r
 
 
@@ -831,13 +814,12 @@ class BlockTransactions:
 
 
 class CPartialMerkleTree:
-    __slots__ = ("fBad", "nTransactions", "vBits", "vHash")
+    __slots__ = ("nTransactions", "vBits", "vHash")
 
     def __init__(self):
         self.nTransactions = 0
         self.vBits = []
         self.vHash = []
-        self.fBad = False
 
     def deserialize(self, f):
         self.nTransactions = struct.unpack("<I", f.read(4))[0]
