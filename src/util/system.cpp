@@ -972,6 +972,14 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
         }
     }
 
+    // Check for chain settings (BaseParams() calls are only valid after this clause)
+    try {
+        SelectBaseParams(gArgs.GetChainName());
+    } catch (const std::exception& e) {
+        error = e.what();
+        return false;
+    }
+
     // If datadir is changed in .conf file:
     gArgs.ClearPathCache();
     if (!CheckDataDirOption()) {
