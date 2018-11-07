@@ -8,6 +8,7 @@ EXTRA_LIBRARIES += qt/libdashqt.a
 
 # dash qt core #
 QT_TS = \
+  qt/locale/dash_ar.ts \
   qt/locale/dash_bg.ts \
   qt/locale/dash_de.ts \
   qt/locale/dash_en.ts \
@@ -16,13 +17,15 @@ QT_TS = \
   qt/locale/dash_fr.ts \
   qt/locale/dash_it.ts \
   qt/locale/dash_ja.ts \
+  qt/locale/dash_ko.ts \
   qt/locale/dash_nl.ts \
   qt/locale/dash_pl.ts \
   qt/locale/dash_pt.ts \
-  qt/locale/dash_pt_BR.ts \
   qt/locale/dash_ru.ts \
   qt/locale/dash_sk.ts \
   qt/locale/dash_sv.ts \
+  qt/locale/dash_th.ts \
+  qt/locale/dash_tr.ts \
   qt/locale/dash_vi.ts \
   qt/locale/dash_zh_CN.ts \
   qt/locale/dash_zh_TW.ts

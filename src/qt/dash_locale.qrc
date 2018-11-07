@@ -1,5 +1,6 @@
 <!DOCTYPE RCC><RCC version="1.0">
     <qresource prefix="/translations">
+        <file alias="ar">locale/dash_ar.qm</file>
         <file alias="bg">locale/dash_bg.qm</file>
         <file alias="de">locale/dash_de.qm</file>
         <file alias="en">locale/dash_en.qm</file>
@@ -8,12 +9,15 @@
         <file alias="fr">locale/dash_fr.qm</file>
         <file alias="it">locale/dash_it.qm</file>
         <file alias="ja">locale/dash_ja.qm</file>
+        <file alias="ko">locale/dash_ko.qm</file>
         <file alias="nl">locale/dash_nl.qm</file>
         <file alias="pl">locale/dash_pl.qm</file>
         <file alias="pt">locale/dash_pt.qm</file>
         <file alias="ru">locale/dash_ru.qm</file>
         <file alias="sk">locale/dash_sk.qm</file>
         <file alias="sv">locale/dash_sv.qm</file>
+        <file alias="th">locale/dash_th.qm</file>
+        <file alias="tr">locale/dash_tr.qm</file>
         <file alias="vi">locale/dash_vi.qm</file>
         <file alias="zh_CN">locale/dash_zh_CN.qm</file>
         <file alias="zh_TW">locale/dash_zh_TW.qm</file>
