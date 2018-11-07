@@ -869,7 +869,7 @@ static bool GetConfigOptions(std::istream& stream, const std::string& filepath, 
     return true;
 }
 
-bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& filepath, std::string& error, bool ignore_invalid_keys, bool prepend)
+bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& filepath, std::string& error, bool ignore_invalid_keys, bool prepend, bool make_net_specific)
 {
     LOCK(cs_args);
     std::vector<std::pair<std::string, std::string>> options;
@@ -878,7 +878,12 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& file
     }
     std::map<std::string, size_t> offsets;
     for (const std::pair<std::string, std::string>& option : options) {
-        const std::string strKey = std::string("-") + option.first;
+        std::string strKey = std::string("-") + option.first;
+
+        if (make_net_specific) {
+            strKey = ArgsManagerHelper::NetworkArg(*this, strKey);
+        }
+
         const unsigned int flags = FlagsOfKnownArg(strKey);
         if (flags) {
             if (!InterpretOption(strKey, option.second, flags, m_config_args, error, prepend ? &offsets : nullptr)) {
