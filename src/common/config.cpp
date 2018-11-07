@@ -4,6 +4,7 @@
 
 #include <common/args.h>
 
+#include <chainparamsbase.h>
 #include <common/settings.h>
 #include <logging.h>
 #include <sync.h>
@@ -213,6 +214,14 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
                 tfm::format(std::cerr, "warning: -includeconf cannot be used from included files; ignoring -includeconf=%s\n", conf_file_name);
             }
         }
+    }
+
+    // Check for chain settings (BaseParams() calls are only valid after this clause)
+    try {
+        SelectBaseParams(gArgs.GetChainType());
+    } catch (const std::exception& e) {
+        error = e.what();
+        return false;
     }
 
     // If datadir is changed in .conf file:
