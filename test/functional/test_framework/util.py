@@ -169,6 +169,54 @@ def assert_array_result(object_array, to_match, expected, should_not_find=False)
     if num_matched > 0 and should_not_find:
         raise AssertionError("Objects were found %s" % (str(to_match)))
 
+
+# OP_RETURN Splices
+####################
+
+# A hex string representing 128 OP_RETURN outputs each with 512 bytes of data
+#
+# Serialization breakdown:
+#
+# 0x81 - 129 outputs (128 OP_RETURN and 1 Change output)
+#
+# OP_RETURN Output format:
+#   Amount
+#       0x0000000000000000 : 8 bytes for 0 amount (OP_RETURN)
+#   VarInt for scriptPubKey Size
+#       0xfd : signals 2 byte VarInt
+#       0x0402 : (little-endian) scriptPubKey is 516 bytes
+#   scriptPubKey
+#       0x6a4d : OP_RETURN OP_PUSHDATA2
+#       0x0200 : <DATA_SIZE> (512 bytes)
+#       0x01*512 : 512 bytes of '01'
+MULTI_OP_RETURN = "81" + ("0000000000000000"  # Amount
+                  "fd0402" +                  # VarInt scriptPubKey size
+                  "6a4d" +                    # OP_RETURN PUSHDATA2
+                  "0200" +                    # Data is 512 bytes
+                  "01" * 512) * 128          # 512 bytes of data (repeat script 128 times)
+
+# A hex string segment representing 1 OP_RETURN output 947000 bytes of data.
+#
+# Serialization breakdown:
+#
+# 0x02 - 2 outputs (1 OP_RETURN and 1 Change output)
+#
+# OP_RETURN Output format:
+#   Amount
+#       0x0000000000000000 : 8 bytes for 0 amount (OP_RETURN)
+#   VarInt for scriptPubKey Size
+#       0xfe : signals 4 byte VarInt
+#       0x3e730e00 : (little-endian) scriptPubKey is 947006 bytes
+#   scriptPubKey
+#       0x6a4e : OP_RETURN OP_PUSHDATA4
+#       0x000e7338: <DATA_SIZE> (947000 bytes)
+#       0x01*947000 :  947000 bytes of '01'
+GIANT_OP_RETURN = "02" + ("0000000000000000" +  # Amount
+                  "fe3e730e00" +                # VarInt scriptPubKey size
+                  "6a4e" +                      # OP_RETURN OP_PUSHDATA4
+                  "000e7338" +                  # Data is 947000 bytes
+                  ("01" * 947000))              # 947000 bytes of data
+
 # Utility functions
 ###################
 
@@ -489,8 +537,7 @@ def create_confirmed_utxos(fee, node, count):
         return utxos
     for i in range(iterations):
         t = utxos.pop()
-        inputs = []
-        inputs.append({"txid": t["txid"], "vout": t["vout"]})
+        inputs = [{"txid": t["txid"], "vout": t["vout"]}]
         outputs = {}
         send_value = t['amount'] - fee
         outputs[addr1] = satoshi_round(send_value / 2)
@@ -506,57 +553,40 @@ def create_confirmed_utxos(fee, node, count):
     assert(len(utxos) >= count)
     return utxos
 
-# Create large OP_RETURN txouts that can be appended to a transaction
-# to make it large (helper for constructing large transactions).
-def gen_return_txouts():
-    # Some pre-processing to create a bunch of OP_RETURN txouts to insert into transactions we create
-    # So we have big transactions (and therefore can't fit very many into each block)
-    # create one script_pubkey
-    script_pubkey = "6a4d0200"  # OP_RETURN OP_PUSH2 512 bytes
-    for i in range(512):
-        script_pubkey = script_pubkey + "01"
-    # concatenate 128 txouts of above script_pubkey which we'll insert before the txout for change
-    txouts = "81"
-    for k in range(128):
-        # add txout value
-        txouts = txouts + "0000000000000000"
-        # add length of script_pubkey
-        txouts = txouts + "fd0402"
-        # add script_pubkey
-        txouts = txouts + script_pubkey
-    return txouts
-
-# Create a spend of each passed-in utxo, splicing in "txouts" to each raw
-# transaction to make it large.  See gen_return_txouts() above.
-def create_lots_of_big_transactions(node, txouts, utxos, num, fee):
+# Create single large transaction. Can specify the kind of op_return_txout
+# to splice into the transaction. By default, it will splice in
+# 128 OP_RETURN outputs of 512 data bytes (see MULTI_OP_RETURN)
+def create_big_transaction(node, utxo, fee, op_return_txout=MULTI_OP_RETURN):
     addr = node.getnewaddress()
-    txids = []
-    for _ in range(num):
-        t = utxos.pop()
-        inputs = [{"txid": t["txid"], "vout": t["vout"]}]
-        outputs = {}
-        change = t['amount'] - fee
-        outputs[addr] = satoshi_round(change)
-        rawtx = node.createrawtransaction(inputs, outputs)
-        newtx = rawtx[0:92]
-        newtx = newtx + txouts
-        newtx = newtx + rawtx[94:]
-        signresult = node.signrawtransactionwithwallet(newtx, None, "NONE")
-        txid = node.sendrawtransaction(signresult["hex"], True)
-        txids.append(txid)
+    inputs = [{"txid": utxo["txid"], "vout": utxo["vout"]}]
+    outputs = {addr: satoshi_round(utxo['amount'] - fee)}
+    rawtx = node.createrawtransaction(inputs, outputs)
+    # Signing with SIGHASH_NONE allows splicing in OP_RETURNS after signing
+    signresult = node.signrawtransactionwithwallet(rawtx, None, "NONE")['hex']
+    # Look for sequence number, followed by '01' for number of outputs
+    output_index = signresult.index('ffffffff01')
+    # 8 characters forwards past 'ffffffff' and the splice includes the correct number of outputs
+    # so the '01' can be skipped when copying the rest of the signed tx
+    signresult = signresult[:output_index+8] + op_return_txout + signresult[output_index+10:]
+    return node.sendrawtransaction(signresult, True)
+
+
+# Create a spend of each passed-in utxo, splicing in "txout" to each raw
+# transaction to make it large. By default, it will splice in
+# 128 OP_RETURN outputs of 512 data bytes (see MULTI_OP_RETURN)
+def create_lots_of_big_transactions(node, utxos, num, fee, op_return_txout=MULTI_OP_RETURN):
+    assert_greater_than_or_equal(len(utxos), num)
+    txids = [create_big_transaction(node, utxos.pop(), fee, op_return_txout) for _ in range(num)]
     return txids
 
+# Create a large block from a single large transaction
 def mine_large_block(node, utxos=None):
-    # generate a 66k transaction,
-    # and 14 of them is close to the 1MB block limit
-    num = 14
-    txouts = gen_return_txouts()
     utxos = utxos if utxos is not None else []
-    if len(utxos) < num:
-        utxos.clear()
+    if not utxos:
         utxos.extend(node.listunspent())
-    fee = 100 * node.getnetworkinfo()["relayfee"]
-    create_lots_of_big_transactions(node, txouts, utxos, num, fee=fee)
+    fee = 1000 * node.getnetworkinfo()["relayfee"]
+    # Generates ~947Kb transaction
+    create_big_transaction(node, utxos.pop(), fee=fee, op_return_txout=GIANT_OP_RETURN)
     node.generate(1)
 
 def find_vout_for_address(node, txid, addr):
