@@ -1366,7 +1366,7 @@ dnl RapidCheck property-based testing
 
 enable_property_tests=no
 if test "x$use_rapidcheck" = xauto; then
-    AC_CHECK_HEADERS([rapidcheck.h], [enable_property_tests=yes])
+    AC_CHECK_HEADER([rapidcheck/boost_test.h], [enable_property_tests=yes])
 elif test "x$use_rapidcheck" != xno; then
     enable_property_tests=yes
 fi
