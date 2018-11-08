@@ -421,6 +421,10 @@ qt_bitcoin_qt_LDADD += $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL)
   $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
 if ENABLE_BIP70
 qt_bitcoin_qt_LDADD += $(SSL_LIBS)
+else
+if TARGET_WINDOWS
+qt_bitcoin_qt_LDADD += $(SSL_LIBS)
+endif
 endif
 qt_bitcoin_qt_LDADD += $(CRYPTO_LIBS)
 qt_bitcoin_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
