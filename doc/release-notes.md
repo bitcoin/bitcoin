@@ -116,11 +116,49 @@ Build system changes
   need BIP70 support are encouraged to use this option to reduce their
   exposure to future vulnerabilities.
 
-Updated RPCs
-------------
+Deprecated or removed RPCs
+--------------------------
 
 - The `signrawtransaction` RPC is removed after being deprecated and
   hidden behind a special configuration option in version 0.17.0.
+
+- The 'account' API is removed after being deprecated in v0.17.  The
+  'label' API was introduced in v0.17 as a replacement for accounts.
+  See the [release notes from v0.17](https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.17.0.md#label-and-account-apis-for-wallet)
+  for a full description of the changes from the 'account' API to the
+  'label' API.
+
+- The `addwitnessaddress` RPC is removed after being deprecated in
+  version 0.13.0.
+
+- The wallet's `generate` RPC method is deprecated and will be fully
+  removed in a subsequent major version.  This RPC is only used for
+  testing, but its implementation reached across multiple subsystems
+  (wallet and mining), so it is being deprecated to simplify the
+  wallet-node interface.  Projects that are using `generate` for testing
+  purposes should transition to using the `generatetoaddress` RPC, which
+  does not require or use the wallet component. Calling
+  `generatetoaddress` with an address returned by the `getnewaddress`
+  RPC gives the same functionality as the old `generate` RPC.  To
+  continue using `generate` in this version, restart bitcoind with the
+  `-deprecatedrpc=generate` configuration option.
+
+New RPCs
+--------
+
+- A new `getnodeaddresses` RPC returns peer addresses known to this
+  node. It may be used to find nodes to connect to without using a DNS
+  seeder.
+
+- A new `listwalletdir` RPC returns a list of wallets in the wallet
+  directory (either the default wallet directory or the directory
+  configured by the `-walletdir` parameter).
+
+Updated RPCs
+------------
+
+Note: some low-level RPC changes mainly useful for testing are described
+in the Low-level Changes section below.
 
 - The `getpeerinfo` RPC now returns an additional "minfeefilter" field
   set to the peer's BIP133 fee filter.  You can use this to detect that
@@ -140,6 +178,10 @@ Updated RPCs
 - The `getaddressinfo` RPC now provides an `ischange` field indicating
   whether the wallet used the address in a change output.
 
+- The `importmulti` RPC has been updated to support P2WSH, P2WPKH,
+  P2SH-P2WPKH, and P2SH-P2WSH. Requests for P2WSH and P2SH-P2WSH accept
+  an additional `witnessscript` parameter.
+
 Low-level changes
 =================
 
@@ -155,6 +197,14 @@ RPC
 
 - A new `submitheader` RPC allows submitting block headers independently
   from their block.  This is likely only useful for testing.
+
+Configuration
+-------------
+
+- The `-usehd` configuration option was removed in version 0.16. From
+  that version onwards, all new wallets created are hierarchical
+  deterministic wallets. This release makes specifying `-usehd` an
+  invalid configuration option.
 
 Credits
 =======
