@@ -188,8 +188,8 @@ void OptionsDialog::setModel(OptionsModel *_model)
         if (_model->isRestartRequired())
             showRestartWarning(true);
 
-        // Prune values are in GB to be consistent with intro.cpp
-        static constexpr uint64_t nMinDiskSpace = (MIN_DISK_SPACE_FOR_BLOCK_FILES / GB_BYTES) + (MIN_DISK_SPACE_FOR_BLOCK_FILES % GB_BYTES) ? 1 : 0;
+        static constexpr uint64_t MiB_BYTES = 1024 * 1024;
+        static constexpr uint64_t nMinDiskSpace = (MIN_DISK_SPACE_FOR_BLOCK_FILES + MiB_BYTES - 1) / MiB_BYTES;
         ui->pruneSize->setRange(nMinDiskSpace, std::numeric_limits<int>::max());
 
         QString strLabel = _model->getOverriddenByCommandLine();
@@ -243,8 +243,21 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->bitcoinAtStartup, OptionsModel::StartAtStartup);
     mapper->addMapping(ui->threadsScriptVerif, OptionsModel::ThreadsScriptVerif);
     mapper->addMapping(ui->databaseCache, OptionsModel::DatabaseCache);
-    mapper->addMapping(ui->prune, OptionsModel::Prune);
-    mapper->addMapping(ui->pruneSize, OptionsModel::PruneSize);
+
+    qlonglong current_prune = model->data(model->index(OptionsModel::PruneMiB, 0), Qt::EditRole).toLongLong();
+    if (current_prune == 0) {
+        ui->prune->setChecked(false);
+        ui->pruneSize->setEnabled(false);
+    } else if (current_prune == 1) {
+        // Manual pruning
+        ui->prune->setTristate();
+        ui->prune->setCheckState(Qt::PartiallyChecked);
+        ui->pruneSize->setEnabled(false);
+    } else {
+        ui->prune->setChecked(true);
+        ui->pruneSize->setEnabled(true);
+        ui->pruneSize->setValue(current_prune);
+    }
 
     /* Wallet */
     mapper->addMapping(ui->spendZeroConfChange, OptionsModel::SpendZeroConfChange);
@@ -375,6 +388,18 @@ void OptionsDialog::on_okButton_clicked()
                 return;
             }
         }
+    }
+
+    switch (ui->prune->checkState()) {
+    case Qt::Unchecked:
+        model->setData(model->index(OptionsModel::PruneMiB, 0), 0);
+        break;
+    case Qt::PartiallyChecked:
+        model->setData(model->index(OptionsModel::PruneMiB, 0), 1);
+        break;
+    case Qt::Checked:
+        model->setData(model->index(OptionsModel::PruneMiB, 0), ui->pruneSize->value());
+        break;
     }
 
     {
