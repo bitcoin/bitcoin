@@ -80,9 +80,9 @@ Running
 
 Bitcoin Core is now available at `./src/bitcoind`
 
-Before running, it's recommended that you create an RPC configuration file:
+Before running, you may create an empty configuration file:
 
-    echo -e "rpcuser=bitcoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf"
+    touch "/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf"
 
     chmod 600 "/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf"
 
