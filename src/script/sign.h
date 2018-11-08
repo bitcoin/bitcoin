@@ -206,6 +206,9 @@ template<typename Stream>
 void SerializeHDKeypaths(Stream& s, const std::map<CPubKey, KeyOriginInfo>& hd_keypaths, uint8_t type)
 {
     for (auto keypath_pair : hd_keypaths) {
+        if (!keypath_pair.first.IsValid()) {
+            throw std::ios_base::failure("Invalid CPubKey being serialized");
+        }
         SerializeToVector(s, type, MakeSpan(keypath_pair.first));
         WriteCompactSize(s, (keypath_pair.second.path.size() + 1) * sizeof(uint32_t));
         s << keypath_pair.second.fingerprint;
