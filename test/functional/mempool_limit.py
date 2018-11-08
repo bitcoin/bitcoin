@@ -7,7 +7,7 @@
 from decimal import Decimal
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_greater_than, assert_raises_rpc_error, create_confirmed_utxos, create_lots_of_big_transactions
+from test_framework.util import assert_equal, assert_greater_than, assert_raises_rpc_error, create_confirmed_utxos, create_big_transaction, GIANT_OP_RETURN
 
 class MempoolLimitTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -25,8 +25,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getmempoolinfo()['minrelaytxfee'], Decimal('0.00001000'))
         assert_equal(self.nodes[0].getmempoolinfo()['mempoolminfee'], Decimal('0.00001000'))
 
-        txids = []
-        utxos = create_confirmed_utxos(relayfee, self.nodes[0], 91)
+        utxos = create_confirmed_utxos(relayfee, self.nodes[0], 7)
 
         self.log.info('Create a mempool tx that will be evicted')
         us0 = utxos.pop()
@@ -40,10 +39,12 @@ class MempoolLimitTest(BitcoinTestFramework):
         txid = self.nodes[0].sendrawtransaction(txFS['hex'])
 
         relayfee = self.nodes[0].getnetworkinfo()['relayfee']
-        base_fee = relayfee*100
-        for i in range (3):
-            txids.append([])
-            txids[i] = create_lots_of_big_transactions(self.nodes[0], utxos[30*i:30*i+30], 30, (i+1)*base_fee)
+        base_fee = relayfee*10000
+
+        # Each tx is over 900Kb, each with a slightly higher fee. After 6 insertions
+        # the mempool should evict the original transaction
+        for i in range (6):
+            create_big_transaction(self.nodes[0], utxos[i], (i+1)*base_fee, op_return_txout=GIANT_OP_RETURN)
 
         self.log.info('The tx should be evicted by now')
         assert(txid not in self.nodes[0].getrawmempool())
