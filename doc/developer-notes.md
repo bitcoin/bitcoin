@@ -41,12 +41,13 @@ Coding Style (General)
 ----------------------
 
 Various coding styles have been used during the history of the codebase,
-and the result is not very consistent. However, we're now trying to converge to
-a single style, which is specified below. When writing patches, favor the new
-style over attempting to mimic the surrounding style, except for move-only
-commits.
-
-Do not submit patches solely to modify the style of existing code.
+and the result is not very consistent. The style described in this guide is
+generally preferred in new code and when changing existing code, instead of
+mimicking the surrounding style. But developers should use discretion in
+allowing small differences and in not submitting changes that largely (or
+entirely) consist of style changes. We expect style to gradually converge
+in parts of the codebase that are actively developed, but not to the extent
+that this interferes with other priorities.
 
 Coding Style (C++)
 ------------------
