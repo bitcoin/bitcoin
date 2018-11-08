@@ -51,9 +51,9 @@ Running
 
 Dash Core is now available at `./src/dashd`
 
-Before running, it's recommended that you create an RPC configuration file.
+Before running, you may create an empty configuration file.
 
-    echo -e "rpcuser=dashrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/DashCore/dash.conf"
+    touch "/Users/${USER}/Library/Application Support/DashCore/dash.conf"
 
     chmod 600 "/Users/${USER}/Library/Application Support/DashCore/dash.conf"
 
