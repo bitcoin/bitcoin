@@ -178,6 +178,10 @@ class PSBTTest(BitcoinTestFramework):
             extracted = self.nodes[2].finalizepsbt(extractor['extract'], True)['hex']
             assert_equal(extracted, extractor['result'])
 
+        # Test that psbts with p2pkh outputs are created properly
+        p2pkh = self.nodes[0].getnewaddress()
+        psbt = self.nodes[1].walletcreatefundedpsbt([], [{p2pkh : 1}], 0, {"includeWatching" : True}, True)
+        self.nodes[0].decodepsbt(psbt['psbt'])
 
 if __name__ == '__main__':
     PSBTTest().main()
