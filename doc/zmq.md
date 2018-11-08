@@ -98,6 +98,20 @@ ZMQ_SUBSCRIBE option set to one or either of these prefixes (for
 instance, just `hash`); without doing so will result in no messages
 arriving. Please see `contrib/zmq/zmq_sub.py` for a working example.
 
+The ZMQ_PUB socket's ZMQ_TCP_KEEPALIVE option is enabled. This means that
+the underlying SO_KEEPALIVE option is enabled when using a TCP transport.
+The effective TCP keepalive values are managed through the underlying
+operating system configuration and must be configured prior to connection establishment.
+
+For example, when running on GNU/Linux, one might use the following
+to lower the keepalive setting to 10 minutes:
+
+sudo sysctl -w net.ipv4.tcp_keepalive_time=600
+
+Setting the keepalive values appropriately for your operating environment may
+improve connectivity in situations where long-lived connections are silently
+dropped by network middle boxes.
+
 ## Remarks
 
 From the perspective of bitcoind, the ZeroMQ socket is write-only; PUB
