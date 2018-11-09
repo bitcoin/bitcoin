@@ -5,6 +5,7 @@
 
 #include <chainparams.h>
 #include <init.h>
+#include <interfaces/chain.h>
 #include <net.h>
 #include <scheduler.h>
 #include <outputtype.h>
@@ -28,28 +29,8 @@ public:
     //! Wallets parameter interaction
     bool ParameterInteraction() const override;
 
-    //! Register wallet RPCs.
-    void RegisterRPC(CRPCTable &tableRPC) const override;
-
-    //! Responsible for reading and validating the -wallet arguments and verifying the wallet database.
-    //  This function will perform salvage on the wallet if requested, as long as only one wallet is
-    //  being loaded (WalletParameterInteraction forbids -salvagewallet, -zapwallettxes or -upgradewallet with multiwallet).
-    bool Verify() const override;
-
-    //! Load wallet databases.
-    bool Open() const override;
-
-    //! Complete startup of wallets.
-    void Start(CScheduler& scheduler) const override;
-
-    //! Flush all wallets in preparation for shutdown.
-    void Flush() const override;
-
-    //! Stop all wallets. Wallets will be flushed first.
-    void Stop() const override;
-
-    //! Close all wallets.
-    void Close() const override;
+    //! Add wallets that should be opened to list of init interfaces.
+    void Construct(InitInterfaces& interfaces) const override;
 };
 
 const WalletInitInterface& g_wallet_init_interface = WalletInit();
@@ -99,7 +80,6 @@ bool WalletInit::ParameterInteraction() const
         return true;
     }
 
-    gArgs.SoftSetArg("-wallet", "");
     const bool is_multiwallet = gArgs.GetArgs("-wallet").size() > 1;
 
     if (gArgs.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY) && gArgs.SoftSetBoolArg("-walletbroadcast", false)) {
@@ -165,21 +145,8 @@ bool WalletInit::ParameterInteraction() const
     return true;
 }
 
-void WalletInit::RegisterRPC(CRPCTable &t) const
+bool VerifyWallets(interfaces::Chain& chain, const std::vector<std::string>& wallet_files)
 {
-    if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
-        return;
-    }
-
-    RegisterWalletRPCCommands(t);
-}
-
-bool WalletInit::Verify() const
-{
-    if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
-        return true;
-    }
-
     if (gArgs.IsArgSet("-walletdir")) {
         fs::path wallet_dir = gArgs.GetArg("-walletdir", "");
         boost::system::error_code error;
@@ -200,8 +167,6 @@ bool WalletInit::Verify() const
 
     uiInterface.InitMessage(_("Verifying wallet(s)..."));
 
-    std::vector<std::string> wallet_files = gArgs.GetArgs("-wallet");
-
     // Parameter interaction code should have thrown an error if -salvagewallet
     // was enabled with more than wallet file, so the wallet_files size check
     // here should have no effect.
@@ -219,7 +184,7 @@ bool WalletInit::Verify() const
 
         std::string error_string;
         std::string warning_string;
-        bool verify_success = CWallet::Verify(location, salvage_wallet, error_string, warning_string);
+        bool verify_success = CWallet::Verify(chain, location, salvage_wallet, error_string, warning_string);
         if (!error_string.empty()) InitError(error_string);
         if (!warning_string.empty()) InitWarning(warning_string);
         if (!verify_success) return false;
@@ -228,15 +193,20 @@ bool WalletInit::Verify() const
     return true;
 }
 
-bool WalletInit::Open() const
+void WalletInit::Construct(InitInterfaces& interfaces) const
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         LogPrintf("Wallet disabled!\n");
-        return true;
+        return;
     }
+    gArgs.SoftSetArg("-wallet", "");
+    interfaces.chain_clients.emplace_back(interfaces::MakeWalletClient(*interfaces.chain, gArgs.GetArgs("-wallet")));
+}
 
-    for (const std::string& walletFile : gArgs.GetArgs("-wallet")) {
-        std::shared_ptr<CWallet> pwallet = CWallet::CreateWalletFromFile(WalletLocation(walletFile));
+bool LoadWallets(interfaces::Chain& chain, const std::vector<std::string>& wallet_files)
+{
+    for (const std::string& walletFile : wallet_files) {
+        std::shared_ptr<CWallet> pwallet = CWallet::CreateWalletFromFile(chain, WalletLocation(walletFile));
         if (!pwallet) {
             return false;
         }
@@ -246,7 +216,7 @@ bool WalletInit::Open() const
     return true;
 }
 
-void WalletInit::Start(CScheduler& scheduler) const
+void StartWallets(CScheduler& scheduler)
 {
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
         pwallet->postInitProcess();
@@ -256,21 +226,21 @@ void WalletInit::Start(CScheduler& scheduler) const
     scheduler.scheduleEvery(MaybeCompactWalletDB, 500);
 }
 
-void WalletInit::Flush() const
+void FlushWallets()
 {
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
         pwallet->Flush(false);
     }
 }
 
-void WalletInit::Stop() const
+void StopWallets()
 {
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
         pwallet->Flush(true);
     }
 }
 
-void WalletInit::Close() const
+void UnloadWallets()
 {
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
         RemoveWallet(pwallet);
