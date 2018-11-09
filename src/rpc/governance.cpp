@@ -975,7 +975,7 @@ UniValue gobject(const JSONRPCRequest& request)
     if (request.params.size() >= 1)
         strCommand = request.params[0].get_str();
 
-    if (request.fHelp || strCommand.empty()) {
+    if (request.fHelp && strCommand.empty()) {
         gobject_help();
     }
 

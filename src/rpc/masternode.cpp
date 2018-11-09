@@ -794,7 +794,7 @@ UniValue masternode(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "DEPRECATED, please use start-all instead");
 #endif // ENABLE_WALLET
 
-    if (request.fHelp || strCommand.empty()) {
+    if (request.fHelp && strCommand.empty()) {
         masternode_help();
     }
 
