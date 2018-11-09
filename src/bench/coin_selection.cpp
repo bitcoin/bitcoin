@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
+#include <interfaces/chain.h>
 #include <wallet/coinselection.h>
 #include <wallet/wallet.h>
 
@@ -27,7 +28,8 @@ static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<st
 // (https://github.com/bitcoin/bitcoin/issues/7883#issuecomment-224807484)
 static void CoinSelection(benchmark::Bench& bench)
 {
-    const CWallet wallet(WalletLocation(), WalletDatabase::CreateDummy());
+    auto chain = interfaces::MakeChain();
+    const CWallet wallet(*chain, WalletLocation(), WalletDatabase::CreateDummy());
     std::vector<std::unique_ptr<CWalletTx>> wtxs;
     LOCK(wallet.cs_wallet);
 
@@ -57,7 +59,8 @@ static void CoinSelection(benchmark::Bench& bench)
 }
 
 typedef std::set<CInputCoin> CoinSet;
-static const CWallet testWallet(WalletLocation(), WalletDatabase::CreateDummy());
+static auto testChain = interfaces::MakeChain();
+static const CWallet testWallet(*testChain, WalletLocation(), WalletDatabase::CreateDummy());
 std::vector<std::unique_ptr<CWalletTx>> wtxn;
 
 // Copied from src/wallet/test/coinselector_tests.cpp
