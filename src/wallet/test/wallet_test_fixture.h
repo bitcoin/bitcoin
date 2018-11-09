@@ -7,6 +7,8 @@
 
 #include <test/test_bitcoin.h>
 
+#include <interfaces/chain.h>
+#include <interfaces/wallet.h>
 #include <wallet/wallet.h>
 
 #include <memory>
@@ -17,6 +19,7 @@ struct WalletTestingSetup: public TestingSetup {
     explicit WalletTestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~WalletTestingSetup();
 
+    std::unique_ptr<interfaces::Chain> m_chain = interfaces::MakeChain();
     CWallet m_wallet;
 };
 

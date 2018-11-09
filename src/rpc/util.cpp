@@ -9,6 +9,8 @@
 #include <tinyformat.h>
 #include <util/strencodings.h>
 
+InitInterfaces* g_rpc_interfaces = nullptr;
+
 // Converts a hex string to a public key if possible
 CPubKey HexToPubKey(const std::string& hex_in)
 {
