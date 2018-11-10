@@ -46,11 +46,11 @@ class Variant(collections.namedtuple("Variant", "call data rescan prune")):
 
         if self.call == Call.single:
             if self.data == Data.address:
-                response = self.try_rpc(self.node.importaddress, address=self.address["address"], rescan=rescan)
+                response = self.try_rpc(self.node.importaddress, address=self.address["address"], label=self.label, rescan=rescan)
             elif self.data == Data.pub:
-                response = self.try_rpc(self.node.importpubkey, pubkey=self.address["pubkey"], rescan=rescan)
+                response = self.try_rpc(self.node.importpubkey, pubkey=self.address["pubkey"], label=self.label, rescan=rescan)
             elif self.data == Data.priv:
-                response = self.try_rpc(self.node.importprivkey, privkey=self.key, rescan=rescan)
+                response = self.try_rpc(self.node.importprivkey, privkey=self.key, label=self.label, rescan=rescan)
             assert_equal(response, None)
 
         elif self.call == Call.multi:
@@ -61,18 +61,32 @@ class Variant(collections.namedtuple("Variant", "call data rescan prune")):
                 "timestamp": timestamp + TIMESTAMP_WINDOW + (1 if self.rescan == Rescan.late_timestamp else 0),
                 "pubkeys": [self.address["pubkey"]] if self.data == Data.pub else [],
                 "keys": [self.key] if self.data == Data.priv else [],
+                "label": self.label,
                 "watchonly": self.data != Data.priv
             }], {"rescan": self.rescan in (Rescan.yes, Rescan.late_timestamp)})
             assert_equal(response, [{"success": True}])
 
     def check(self, txid=None, amount=None, confirmations=None):
-        """Verify that listreceivedbyaddress returns expected values."""
+        """Verify that listtransactions/listreceivedbyaddress return expected values."""
+
+        txs = self.node.listtransactions(label=self.label, count=10000, skip=0, include_watchonly=True)
+        assert_equal(len(txs), self.expected_txs)
 
         addresses = self.node.listreceivedbyaddress(minconf=0, include_watchonly=True, address_filter=self.address['address'])
         if self.expected_txs:
             assert_equal(len(addresses[0]["txids"]), self.expected_txs)
 
         if txid is not None:
+            tx, = [tx for tx in txs if tx["txid"] == txid]
+            assert_equal(tx["label"], self.label)
+            assert_equal(tx["address"], self.address["address"])
+            assert_equal(tx["amount"], amount)
+            assert_equal(tx["category"], "receive")
+            assert_equal(tx["label"], self.label)
+            assert_equal(tx["txid"], txid)
+            assert_equal(tx["confirmations"], confirmations)
+            assert_equal("trusted" not in tx, True)
+
             address, = [ad for ad in addresses if txid in ad["txids"]]
             assert_equal(address["address"], self.address["address"])
             assert_equal(address["amount"], self.expected_balance)
@@ -136,7 +150,8 @@ class ImportRescanTest(BitcoinTestFramework):
         # Create one transaction on node 0 with a unique amount for
         # each possible type of wallet import RPC.
         for i, variant in enumerate(IMPORT_VARIANTS):
-            variant.address = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress())
+            variant.label = "label {} {}".format(i, variant)
+            variant.address = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress(variant.label))
             variant.key = self.nodes[1].dumpprivkey(variant.address["address"])
             variant.initial_amount = 10 - (i + 1) / 4.0
             variant.initial_txid = self.nodes[0].sendtoaddress(variant.address["address"], variant.initial_amount)

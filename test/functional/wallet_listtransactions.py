@@ -97,9 +97,10 @@ class ListTransactionsTest(BitcoinTestFramework):
         txid = self.nodes[1].sendtoaddress(multisig["address"], 0.1)
         self.nodes[1].generate(1)
         self.sync_all()
-        assert not [tx for tx in self.nodes[0].listtransactions(dummy="*", count=100, skip=0, include_watchonly=False) if "label" in tx and tx["label"] == "watchonly"]
-        txs = [tx for tx in self.nodes[0].listtransactions(dummy="*", count=100, skip=0, include_watchonly=True) if "label" in tx and tx['label'] == 'watchonly']
-        assert_array_result(txs, {"category": "receive", "amount": Decimal("0.1")}, {"txid": txid})
+        assert len(self.nodes[0].listtransactions(label="watchonly", count=100, skip=0, include_watchonly=False)) == 0
+        assert_array_result(self.nodes[0].listtransactions(label="watchonly", count=100, skip=0, include_watchonly=True),
+                            {"category": "receive", "amount": Decimal("0.1")},
+                            {"txid": txid, "label": "watchonly"})
 
         self.run_rbf_opt_in_test()
 
