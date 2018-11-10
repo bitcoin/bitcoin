@@ -18,6 +18,7 @@
 #include "rpcserver.h"
 #include "util.h"
 #include "auxpow.h"
+#include "spork.h"
 #ifdef ENABLE_WALLET
 #include "db.h"
 #include "wallet.h"
@@ -412,6 +413,15 @@ Value getblocktemplate(const Array& params, bool fHelp)
             "  \"enforce_systemnode_payments\" : true|false  (boolean) true, if systemnode payments are enforced\n"
             "  \"payeeSN\" : \"xxx\",                        (string) required systemnode payee for the next block\n"
             "  \"payeeSN_amount\" : n,                       (numeric) required amount to pay systemnode \n"
+            "  \"superblock\" : [                  (array) required superblock payees that must be included in the next block\n"
+            "      {\n"
+            "         \"payee\" : \"xxxx\",        (string) payee address\n"
+            "         \"script\" : \"xxxx\",       (string) payee scriptPubKey\n"
+            "         \"amount\": n                (numeric) required amount to pay\n"
+            "      }\n"
+            "      ,...\n"
+            "  ],\n"
+            "  \"superblocks_enabled\" : true|false  (boolean) true, if superblock payments are enabled\n"
             "}\n"
 
             "\nExamples:\n"
@@ -662,6 +672,24 @@ Value getblocktemplate(const Array& params, bool fHelp)
         result.push_back(Pair("payeeSN", ""));
         result.push_back(Pair("payeeSN_amount", ""));
     }
+
+    Array superblockObjArray;
+    if(pblock->voutSuperblock.size())
+    {
+        BOOST_FOREACH(const CTxOut& txout, pblock->voutSuperblock)
+        {
+            Object entry;
+            CTxDestination address;
+            ExtractDestination(txout.scriptPubKey, address);
+            CBitcoinAddress address2(address);
+            entry.push_back(Pair("payee", address2.ToString().c_str()));
+            entry.push_back(Pair("script", HexStr(txout.scriptPubKey)));
+            entry.push_back(Pair("amount", txout.nValue));
+            superblockObjArray.push_back(entry);
+        }
+    }
+    result.push_back(Pair("superblock", superblockObjArray));
+    result.push_back(Pair("superblocks_enabled", IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS)));
 
     return result;
 }

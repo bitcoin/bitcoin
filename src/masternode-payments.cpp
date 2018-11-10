@@ -119,13 +119,13 @@ bool CMasternodePayments::CanVote(COutPoint outMasternode, int nBlockHeight)
     return true;
 }
 
-void FillBlockPayee(CMutableTransaction& txNew, int64_t nFees)
+void FillBlockPayee(CMutableTransaction& txNew, int64_t nFees, std::vector<CTxOut>& voutSuperblockRet)
 {
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(!pindexPrev) return;
 
     if(IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS) && budget.IsBudgetPaymentBlock(pindexPrev->nHeight+1)){
-        budget.FillBlockPayee(txNew, nFees);
+        budget.FillBlockPayee(txNew, nFees, voutSuperblockRet);
     } else {
         masternodePayments.FillBlockPayee(txNew, nFees);
     }

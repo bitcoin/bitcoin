@@ -326,15 +326,17 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         }
 
         // Masternode and general budget payments
-        FillBlockPayee(txNew, nFees);
+        FillBlockPayee(txNew, nFees, pblock->voutSuperblock);
         SNFillBlockPayee(txNew, nFees);
 
         // Make payee
-	    if(txNew.vout.size() > 1){
+	if(txNew.vout.size() > 1)
+        {
             pblock->payee = txNew.vout[1].scriptPubKey;
         }
         // Make SNpayee
-	    if(txNew.vout.size() > 2){
+	if(txNew.vout.size() > 2)
+        {
             pblock->payeeSN = txNew.vout[2].scriptPubKey;
         }
 
