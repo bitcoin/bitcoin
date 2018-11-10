@@ -25,6 +25,7 @@ import dns.resolver
 import collections
 import json
 import time
+import multiprocessing
 
 PATTERN_IPV4 = re.compile(r"^((\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})):(\d+)$")
 PATTERN_IPV6 = re.compile(r"^\[([0-9a-z:]+)\]:(\d+)$")
@@ -90,6 +91,10 @@ def filtermultiport(ips):
         hist[ip['sortkey']].append(ip)
     return [value[0] for (key,value) in list(hist.items()) if len(value)==1]
 
+def resolveasn(resolver, ip):
+    asn = int([x.to_text() for x in resolver.query('.'.join(reversed(ip.split('.'))) + '.origin.asn.cymru.com', 'TXT').response.answer][0].split('\"')[1].split(' ')[0])
+    return asn
+
 # Based on Greg Maxwell's seed_filter.py
 def filterbyasn(ips, max_per_asn, max_total):
     # Sift out ips by type
@@ -99,17 +104,23 @@ def filterbyasn(ips, max_per_asn, max_total):
 
     my_resolver = dns.resolver.Resolver()
 
+    pool = multiprocessing.Pool(processes=16)
+
     # OpenDNS servers
     my_resolver.nameservers = ['208.67.222.222', '208.67.220.220']
+
+    # Resolve ASNs in parallel
+    asns = [pool.apply_async(resolveasn, args=(my_resolver, ip['ip'])) for ip in ips_ipv4]
 
     # Filter IPv4 by ASN
     result = []
     asn_count = {}
-    for ip in ips_ipv4:
+    for i in range(len(ips_ipv4)):
+        ip = ips_ipv4[i]
         if len(result) == max_total:
             break
         try:
-            asn = int([x.to_text() for x in my_resolver.query('.'.join(reversed(ip['ip'].split('.'))) + '.origin.asn.cymru.com', 'TXT').response.answer][0].split('\"')[1].split(' ')[0])
+            asn = asns[i].get()
             if asn not in asn_count:
                 asn_count[asn] = 0
             if asn_count[asn] == max_per_asn:
@@ -127,7 +138,11 @@ def filterbyasn(ips, max_per_asn, max_total):
     return result
 
 def main():
-    js = json.load(sys.stdin)
+    if len(sys.argv) > 1:
+        with open(sys.argv[1], 'r') as f:
+            js = json.load(f)
+    else:
+        js = json.load(sys.stdin)
     ips = [parseline(line) for collateral, line in js.items()]
 
     cur_time = int(time.time())
