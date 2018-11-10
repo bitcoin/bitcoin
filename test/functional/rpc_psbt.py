@@ -276,6 +276,10 @@ class PSBTTest(BitcoinTestFramework):
 
         self.test_utxo_conversion()
 
+        # Test that psbts with p2pkh outputs are created properly
+        p2pkh = self.nodes[0].getnewaddress(address_type='legacy')
+        psbt = self.nodes[1].walletcreatefundedpsbt([], [{p2pkh : 1}], 0, {"includeWatching" : True}, True)
+        self.nodes[0].decodepsbt(psbt['psbt'])
 
 if __name__ == '__main__':
     PSBTTest().main()
