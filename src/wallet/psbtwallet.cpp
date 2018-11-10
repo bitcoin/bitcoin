@@ -22,13 +22,16 @@ TransactionError FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& ps
             return TransactionError::INVALID_PSBT;
         }
 
-        const uint256& txhash = txin.prevout.hash;
-        const auto it = pwallet->mapWallet.find(txhash);
-        if (it != pwallet->mapWallet.end()) {
-            const CWalletTx& wtx = it->second;
-            // We only need the non_witness_utxo, which is a superset of the witness_utxo.
-            //   The signing code will switch to the smaller witness_utxo if this is ok.
-            input.non_witness_utxo = wtx.tx;
+        // If we have no utxo, grab it from the wallet.
+        if (!input.non_witness_utxo) {
+            const uint256& txhash = txin.prevout.hash;
+            const auto it = pwallet->mapWallet.find(txhash);
+            if (it != pwallet->mapWallet.end()) {
+                const CWalletTx& wtx = it->second;
+                // We only need the non_witness_utxo, which is a superset of the witness_utxo.
+                //   The signing code will switch to the smaller witness_utxo if this is ok.
+                input.non_witness_utxo = wtx.tx;
+            }
         }
 
         // Get the Sighash type
