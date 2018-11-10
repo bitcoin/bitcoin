@@ -53,10 +53,11 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         block_time = best_block["time"] + 1
 
         # Use merkle-root malleability to generate an invalid block with
-        # same blockheader.
+        # same blockheader (CVE-2012-2459).
         # Manufacture a block with 3 transactions (coinbase, spend of prior
         # coinbase, spend of that spend).  Duplicate the 3rd transaction to
         # leave merkle root and blockheader unchanged but invalidate the block.
+        # For more information on merkle-root malleability see src/consensus/merkle.cpp.
         self.log.info("Test merkle root malleability.")
 
         block2 = create_block(tip, create_coinbase(height), block_time)
@@ -81,7 +82,7 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
 
         node.p2p.send_blocks_and_test([block2], node, success=False, reject_reason='bad-txns-duplicate')
 
-        # Check transactions for duplicate inputs
+        # Check transactions for duplicate inputs (CVE-2018-17144)
         self.log.info("Test duplicate input block.")
 
         block2_orig.vtx[2].vin.append(block2_orig.vtx[2].vin[0])
