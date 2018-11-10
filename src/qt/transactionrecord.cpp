@@ -155,13 +155,12 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     sub.type = TransactionRecord::PrivateSendCollateralPayment;
                 } else {
                     for (const auto& txout : wtx.tx->vout) {
-                        if(txout.nValue == CPrivateSend::GetMaxCollateralAmount()) {
+                        if (txout.nValue == CPrivateSend::GetMaxCollateralAmount()) {
                             sub.type = TransactionRecord::PrivateSendMakeCollaterals;
-                            break;
-                        }
-                        if(CPrivateSend::IsDenominatedAmount(txout.nValue)) {
+                            continue; // Keep looking, could be a part of PrivateSendCreateDenominations
+                        } else if (CPrivateSend::IsDenominatedAmount(txout.nValue)) {
                             sub.type = TransactionRecord::PrivateSendCreateDenominations;
-                            break;
+                            break; // Done, it's definitely a tx creating mixing denoms, no need to look any further
                         }
                     }
                 }
