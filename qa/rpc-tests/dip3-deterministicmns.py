@@ -294,6 +294,24 @@ class DIP3Test(BitcoinTestFramework):
         for mn in mns_protx:
             self.test_protx_update_service(mn)
 
+        print("testing reusing of collaterals for replaced MNs")
+        for i in range(0, 5):
+            mn = mns_protx[i]
+            # a few of these will actually refer to old ProRegTx internal collaterals,
+            # which should work the same as external collaterals
+            mn = self.create_mn_protx(self.nodes[0], mn.idx, 'mn-protx-%d' % mn.idx, mn.collateral_txid, mn.collateral_vout)
+            mns_protx[i] = mn
+            self.nodes[0].generate(1)
+            self.sync_all()
+            self.assert_mnlists(mns_protx)
+            print("restarting MN %s" % mn.alias)
+            self.stop_node(mn.idx)
+            self.start_mn(mn)
+            self.sync_all()
+
+        print("testing instant send with replaced MNs")
+        self.test_instantsend(20, 5)
+
     def create_mn(self, node, idx, alias):
         mn = Masternode()
         mn.idx = idx

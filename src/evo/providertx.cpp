@@ -18,7 +18,7 @@
 #include "validation.h"
 
 template <typename ProTx>
-static bool CheckService(const uint256& proTxHash, const ProTx& proTx, const CBlockIndex* pindexPrev, CValidationState& state)
+static bool CheckService(const uint256& proTxHash, const ProTx& proTx, CValidationState& state)
 {
     if (!proTx.addr.IsValid()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-addr");
@@ -29,13 +29,6 @@ static bool CheckService(const uint256& proTxHash, const ProTx& proTx, const CBl
 
     if (!proTx.addr.IsIPv4()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-addr");
-    }
-
-    if (pindexPrev) {
-        auto mnList = deterministicMNManager->GetListForBlock(pindexPrev->GetBlockHash());
-        if (mnList.HasUniqueProperty(proTx.addr) && mnList.GetUniquePropertyMN(proTx.addr)->proTxHash != proTxHash) {
-            return state.DoS(10, false, REJECT_DUPLICATE, "bad-protx-dup-addr");
-        }
     }
 
     return true;
@@ -135,7 +128,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
 
     // It's allowed to set addr to 0, which will put the MN into PoSe-banned state and require a ProUpServTx to be issues later
     // If any of both is set, it must be valid however
-    if (ptx.addr != CService() && !CheckService(tx.GetHash(), ptx, pindexPrev, state)) {
+    if (ptx.addr != CService() && !CheckService(tx.GetHash(), ptx, state)) {
         return false;
     }
 
@@ -144,6 +137,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
     }
 
     CKeyID keyForPayloadSig;
+    COutPoint collateralOutpoint;
 
     if (!ptx.collateralOutpoint.hash.IsNull()) {
         Coin coin;
@@ -162,17 +156,23 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
         if (!txAddr.GetKeyID(keyForPayloadSig)) {
             return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral-pkh");
         }
+
+        collateralOutpoint = ptx.collateralOutpoint;
+    } else {
+        collateralOutpoint = COutPoint(tx.GetHash(), ptx.collateralOutpoint.n);
     }
 
     if (pindexPrev) {
         auto mnList = deterministicMNManager->GetListForBlock(pindexPrev->GetBlockHash());
-        if (mnList.HasUniqueProperty(ptx.keyIDOwner) || mnList.HasUniqueProperty(ptx.pubKeyOperator)) {
-            return state.DoS(10, false, REJECT_DUPLICATE, "bad-protx-dup-key");
+
+        // only allow reusing of addresses when it's for the same collateral (which replaces the old MN)
+        if (mnList.HasUniqueProperty(ptx.addr) && mnList.GetUniquePropertyMN(ptx.addr)->collateralOutpoint != collateralOutpoint) {
+            return state.DoS(10, false, REJECT_DUPLICATE, "bad-protx-dup-addr");
         }
 
-        // check for collaterals which are already used in other MNs
-        if (!ptx.collateralOutpoint.hash.IsNull() && mnList.HasUniqueProperty(ptx.collateralOutpoint)) {
-            return state.DoS(10, false, REJECT_DUPLICATE, "bad-protx-dup-collateral");
+        // never allow duplicate keys, even if this ProTx would replace an existing MN
+        if (mnList.HasUniqueProperty(ptx.keyIDOwner) || mnList.HasUniqueProperty(ptx.pubKeyOperator)) {
+            return state.DoS(10, false, REJECT_DUPLICATE, "bad-protx-dup-key");
         }
 
         if (!deterministicMNManager->IsDeterministicMNsSporkActive(pindexPrev->nHeight)) {
@@ -214,7 +214,7 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-version");
     }
 
-    if (!CheckService(ptx.proTxHash, ptx, pindexPrev, state)) {
+    if (!CheckService(ptx.proTxHash, ptx, state)) {
         return false;
     }
 
@@ -223,6 +223,11 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
         auto mn = mnList.GetMN(ptx.proTxHash);
         if (!mn) {
             return state.DoS(100, false, REJECT_INVALID, "bad-protx-hash");
+        }
+
+        // don't allow updating to addresses already used by other MNs
+        if (mnList.HasUniqueProperty(ptx.addr) && mnList.GetUniquePropertyMN(ptx.addr)->proTxHash != ptx.proTxHash) {
+            return state.DoS(10, false, REJECT_DUPLICATE, "bad-protx-dup-addr");
         }
 
         if (ptx.scriptOperatorPayout != CScript()) {

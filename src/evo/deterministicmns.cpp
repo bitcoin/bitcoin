@@ -392,13 +392,6 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
                 assert(false); // this should have been handled already
             }
 
-            if (newList.HasUniqueProperty(proTx.addr)) {
-                return _state.DoS(100, false, REJECT_CONFLICT, "bad-protx-dup-addr");
-            }
-            if (newList.HasUniqueProperty(proTx.keyIDOwner) || newList.HasUniqueProperty(proTx.pubKeyOperator)) {
-                return _state.DoS(100, false, REJECT_CONFLICT, "bad-protx-dup-key");
-            }
-
             auto dmn = std::make_shared<CDeterministicMN>();
             dmn->proTxHash = tx.GetHash();
 
@@ -414,6 +407,23 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
                 // should actually never get to this point as CheckProRegTx should have handled this case.
                 // We do this additional check nevertheless to be 100% sure
                 return _state.DoS(100, false, REJECT_INVALID, "bad-protx-collateral");
+            }
+
+            auto replacedDmn = newList.GetMNByCollateral(dmn->collateralOutpoint);
+            if (replacedDmn != nullptr) {
+                // This might only happen with a ProRegTx that refers an external collateral
+                // In that case the new ProRegTx will replace the old one. This means the old one is removed
+                // and the new one is added like a completely fresh one, which is also at the bottom of the payment list
+                newList.RemoveMN(replacedDmn->proTxHash);
+                LogPrintf("CDeterministicMNManager::%s -- MN %s removed from list because collateral was used for a new ProRegTx. collateralOutpoint=%s, nHeight=%d, mapCurMNs.allMNsCount=%d\n",
+                          __func__, replacedDmn->proTxHash.ToString(), dmn->collateralOutpoint.ToStringShort(), nHeight, newList.GetAllMNsCount());
+            }
+
+            if (newList.HasUniqueProperty(proTx.addr)) {
+                return _state.DoS(100, false, REJECT_CONFLICT, "bad-protx-dup-addr");
+            }
+            if (newList.HasUniqueProperty(proTx.keyIDOwner) || newList.HasUniqueProperty(proTx.pubKeyOperator)) {
+                return _state.DoS(100, false, REJECT_CONFLICT, "bad-protx-dup-key");
             }
 
             dmn->nOperatorReward = proTx.nOperatorReward;
