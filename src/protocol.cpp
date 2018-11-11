@@ -80,7 +80,7 @@ CMessageHeader::CMessageHeader(const MessageStartChars& pchMessageStartIn)
 {
     memcpy(pchMessageStart, pchMessageStartIn, MESSAGE_START_SIZE);
     memset(pchCommand, 0, sizeof(pchCommand));
-    nMessageSize = -1;
+    nMessageSize = std::numeric_limits<decltype(nMessageSize)>::max();
     memset(pchChecksum, 0, CHECKSUM_SIZE);
 }
 
