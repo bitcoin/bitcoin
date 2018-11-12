@@ -5232,6 +5232,7 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
     unsigned int nExtraNonce = 0;
 
     string strMintMessage = _("Info: Minting suspended due to locked wallet.");
+    string strMintSyncMessage = _("Info: Minting suspended while synchronizing wallet.");
     string strMintDisabledMessage = _("Info: Minting disabled by 'nominting' option.");
     string strMintBlockMessage = _("Info: Minting suspended due to block creation failure.");
 
@@ -5244,6 +5245,12 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
 
         while (vNodes.empty())
             MilliSleep(1000);
+
+        while (Checkpoints::GuessVerificationProgress(pindexBest)<0.99999)
+        {
+            strMintWarning = strMintSyncMessage;
+            MilliSleep(10000);
+        }
 
         while (pwallet->IsLocked())
         {
