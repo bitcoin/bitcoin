@@ -149,6 +149,7 @@ protected:
     std::string m_network GUARDED_BY(cs_args);
     std::set<std::string> m_network_only_args GUARDED_BY(cs_args);
     std::map<OptionsCategory, std::map<std::string, Arg>> m_available_args GUARDED_BY(cs_args);
+    std::set<std::string> m_config_sections GUARDED_BY(cs_args);
 
     bool ReadConfigStream(std::istream& stream, std::string& error, bool ignore_invalid_keys = false);
 
@@ -169,7 +170,12 @@ public:
      * on the command line or in a network-specific section in the
      * config file.
      */
-    void WarnForSectionOnlyArgs();
+    const std::set<std::string> GetUnsuitableSectionOnlyArgs() const;
+
+    /**
+     * Log warnings for unrecognized section names in the config file.
+     */
+    const std::set<std::string> GetUnrecognizedSections() const;
 
     /**
      * Return a vector of strings of the given argument
