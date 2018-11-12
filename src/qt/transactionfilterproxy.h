@@ -36,6 +36,13 @@ public:
         WatchOnlyFilter_No
     };
 
+    enum InstantSendFilter
+    {
+        InstantSendFilter_All,
+        InstantSendFilter_Yes,
+        InstantSendFilter_No
+    };
+
     void setDateRange(const QDateTime &from, const QDateTime &to);
     void setAddressPrefix(const QString &addrPrefix);
     /**
@@ -44,6 +51,7 @@ public:
     void setTypeFilter(quint32 modes);
     void setMinAmount(const CAmount& minimum);
     void setWatchOnlyFilter(WatchOnlyFilter filter);
+    void setInstantSendFilter(InstantSendFilter filter);
 
     /** Set maximum number of rows returned, -1 if unlimited. */
     void setLimit(int limit);
@@ -62,6 +70,7 @@ private:
     QString addrPrefix;
     quint32 typeFilter;
     WatchOnlyFilter watchOnlyFilter;
+    InstantSendFilter instantsendFilter;
     CAmount minAmount;
     int limitRows;
     bool showInactive;
