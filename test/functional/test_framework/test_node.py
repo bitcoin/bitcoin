@@ -118,22 +118,19 @@ class TestNode():
     def get_mem_rss(self):
         """Get the memory usage (RSS) per `ps`.
 
-        If process is stopped or `ps` is unavailable, return None.
+        Returns None if `ps` is unavailable.
         """
-        if not (self.running and self.process):
-            self.log.warning("Couldn't get memory usage; process isn't running.")
-            return None
+        assert self.running
 
         try:
             return int(subprocess.check_output(
-                "ps h -o rss {}".format(self.process.pid),
-                shell=True, stderr=subprocess.DEVNULL).strip())
+                ["ps", "h", "-o", "rss", "{}".format(self.process.pid)],
+                stderr=subprocess.DEVNULL).split()[-1])
 
-        # Catching `Exception` broadly to avoid failing on platforms where ps
-        # isn't installed or doesn't work as expected, e.g. OpenBSD.
+        # Avoid failing on platforms where ps isn't installed.
         #
         # We could later use something like `psutils` to work across platforms.
-        except Exception:
+        except (FileNotFoundError, subprocess.SubprocessError):
             self.log.exception("Unable to get memory usage")
             return None
 
@@ -308,7 +305,7 @@ class TestNode():
             self.log.warning("Unable to detect memory usage (RSS) - skipping memory check.")
             return
 
-        perc_increase_memory_usage = 1 - (float(before_memory_usage) / after_memory_usage)
+        perc_increase_memory_usage = (after_memory_usage / before_memory_usage) - 1
 
         if perc_increase_memory_usage > perc_increase_allowed:
             self._raise_assertion_error(
