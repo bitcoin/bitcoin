@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <iterator>
 #include <type_traits>
@@ -198,22 +199,11 @@ private:
     const T* item_ptr(difference_type pos) const { return is_direct() ? direct_ptr(pos) : indirect_ptr(pos); }
 
     void fill(T* dst, ptrdiff_t count) {
-        if (IS_TRIVIALLY_CONSTRUCTIBLE<T>::value) {
-            // The most common use of prevector is where T=unsigned char. For
-            // trivially constructible types, we can use memset() to avoid
-            // looping.
-            ::memset(dst, 0, count * sizeof(T));
-        } else {
-            for (auto i = 0; i < count; ++i) {
-                new(static_cast<void*>(dst + i)) T();
-            }
-        }
+        std::fill_n(dst, count, T{});
     }
 
     void fill(T* dst, ptrdiff_t count, const T& value) {
-        for (auto i = 0; i < count; ++i) {
-            new(static_cast<void*>(dst + i)) T(value);
-        }
+        std::fill_n(dst, count, value);
     }
 
     template<typename InputIterator>
