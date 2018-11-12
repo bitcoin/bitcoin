@@ -146,7 +146,7 @@ void TestGUI()
         auto locked_chain = wallet->chain().lock();
         WalletRescanReserver reserver(wallet.get());
         reserver.reserve();
-        wallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver, true);
+        wallet->ScanForWalletTransactions(*::chainActive.Genesis(), nullptr, reserver, true);
     }
     wallet->SetBroadcastTransactions(true);
 
