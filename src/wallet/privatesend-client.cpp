@@ -1324,7 +1324,7 @@ bool CPrivateSendClient::MakeCollateralAmounts(const CompactTallyItem& tallyItem
 
     // use the same nCachedLastSuccessBlock as for DS mixing to prevent race
     CValidationState state;
-    if(!pmixingwallet->CommitTransaction(MakeTransactionRef(std::move(*wtx.tx)), std::move(wtx.mapValue), {} /* orderForm */, std::move(wtx.strFromAccount), reservekeyChange, connman, state)) {
+    if(!pmixingwallet->CommitTransaction(MakeTransactionRef(std::move(*wtx.tx)), std::move(wtx.mapValue), {} /* orderForm */, reservekeyChange, connman, state)) {
         LogPrintf("CPrivateSendClient::MakeCollateralAmounts -- CommitTransaction failed! Reason given: %s\n", state.GetRejectReason());
         return false;
     }
@@ -1459,7 +1459,7 @@ bool CPrivateSendClient::CreateDenominated(const CompactTallyItem& tallyItem, bo
     keyHolderStorageDenom.KeepAll();
 
     CValidationState state;
-    if(!pmixingwallet->CommitTransaction(tx, std::move(wtx.mapValue), {} /* orderForm */, std::move(wtx.strFromAccount), reservekeyChange, connman, state)) {
+    if(!pmixingwallet->CommitTransaction(tx, std::move(wtx.mapValue), {} /* orderForm */, reservekeyChange, connman, state)) {
         LogPrintf("CPrivateSendClient::CreateDenominated -- CommitTransaction failed! Reason given: %s\n", state.GetRejectReason());
         return false;
     }
