@@ -5,8 +5,8 @@
 
 DEPSDIR:=/usr/i586-mingw32msvc
 
-CC := i586-mingw32msvc-gcc
-CXX := i586-mingw32msvc-g++
+CC := i686-w64-mingw32-gcc
+CXX := i686-w64-mingw32-g++
 
 USE_UPNP:=0
 USE_IPV6:=1
@@ -14,13 +14,13 @@ USE_IPV6:=1
 INCLUDEPATHS= \
  -I"$(CURDIR)" \
  -I"$(CURDIR)"/obj \
- -I"$(DEPSDIR)/boost_1_50_0" \
+ -I"$(DEPSDIR)/boost_1_52_0" \
  -I"$(DEPSDIR)/db-4.8.30.NC/build_unix" \
  -I"$(DEPSDIR)/openssl-1.0.1g/include" \
  -I"$(DEPSDIR)"
 
 LIBPATHS= \
- -L"$(DEPSDIR)/boost_1_50_0/stage/lib" \
+ -L"$(DEPSDIR)/boost_1_52_0/stage/lib" \
  -L"$(DEPSDIR)/db-4.8.30.NC/build_unix" \
  -L"$(DEPSDIR)/openssl-1.0.1g"
 
@@ -39,7 +39,11 @@ DEFS=-D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE
 DEBUGFLAGS=-g
 xCXXFLAGS=-O2 -w -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS) $(CXXFLAGS)
 # enable: ASLR, DEP and large address aware
-xLDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat -Wl,--large-address-aware $(LDFLAGS)
+xLDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat -static $(LDFLAGS)
+
+ifndef WIN64
+	xLDFLAGS += -Wl,--large-address-aware
+endif
 
 TESTDEFS = -DTEST_DATA_DIR=$(abspath test/data)
 

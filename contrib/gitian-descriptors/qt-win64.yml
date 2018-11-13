@@ -3,10 +3,10 @@ name: "qt"
 suites:
 - "bionic"
 architectures:
-- "i386"
+- "amd64"
 packages: 
-- "gcc-mingw-w64-i686"
-- "g++-mingw-w64-i686"
+- "gcc-mingw-w64-x86-64"
+- "g++-mingw-w64-x86-64"
 - "zip"
 - "faketime"
 reference_datetime: "2015-01-30 00:00:00"
@@ -34,13 +34,13 @@ script: |
   sed --posix "s|QMAKE_LIB\t\t= \$\${CROSS_COMPILE}ar -ru|QMAKE_LIB\t\t= $HOME/ar -Dr|" -i mkspecs/win32-g++/qmake.conf
   echo '#!/bin/bash' > $HOME/ar
   echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> $HOME/ar
-  echo 'i686-w64-mingw32-ar "$@"' >> $HOME/ar
+  echo 'x86_64-w64-mingw32-ar "$@"' >> $HOME/ar
   chmod +x $HOME/ar
   
   #export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1
   export FAKETIME=$REFERENCE_DATETIME
   export TZ=UTC
-  ./configure -prefix $INSTDIR -confirm-license -release -opensource -static -no-qt3support -xplatform win32-g++ -device-option CROSS_COMPILE=i686-w64-mingw32- -no-multimedia -no-audio-backend -no-phonon -no-phonon-backend -no-declarative -no-script -no-scripttools -no-javascript-jit -no-webkit -no-svg -no-xmlpatterns -no-sql-sqlite -no-nis -no-cups -no-iconv -no-dbus -no-gif -no-libtiff -no-opengl -nomake examples -nomake demos -nomake docs -no-feature-style-plastique -no-feature-style-cleanlooks -no-feature-style-motif -no-feature-style-cde -no-feature-style-windowsce -no-feature-style-windowsmobile -no-feature-style-s60
+  ./configure -prefix $INSTDIR -confirm-license -release -opensource -static -no-qt3support -xplatform win32-g++ -device-option CROSS_COMPILE=x86_64-w64-mingw32- -no-multimedia -no-audio-backend -no-phonon -no-phonon-backend -no-declarative -no-script -no-scripttools -no-javascript-jit -no-webkit -no-svg -no-xmlpatterns -no-sql-sqlite -no-nis -no-cups -no-iconv -no-dbus -no-gif -no-libtiff -no-opengl -nomake examples -nomake demos -nomake docs -no-feature-style-plastique -no-feature-style-cleanlooks -no-feature-style-motif -no-feature-style-cde -no-feature-style-windowsce -no-feature-style-windowsmobile -no-feature-style-s60
   find . -name *.prl | xargs -l sed 's|/\.||' -i
   find . -name *.prl | xargs -l sed 's|/$||' -i
   make $MAKEOPTS install
@@ -51,4 +51,4 @@ script: |
 
   # as zip stores file timestamps, use faketime to intercept stat calls to set dates for all files to reference date
   export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1
-  zip -r $OUTDIR/qt-win32-4.8.7-gitian-r1.zip *
+  zip -r $OUTDIR/qt-win64-4.8.7-gitian-r1.zip *

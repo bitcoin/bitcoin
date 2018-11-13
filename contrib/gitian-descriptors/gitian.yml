@@ -1,33 +1,43 @@
 ---
 name: "primecoin"
 suites:
-- "lucid"
+- "bionic"
 architectures:
 - "i386"
 - "amd64"
 packages: 
-- "libdb4.8++-dev"
 - "qt4-qmake"
 - "libqt4-dev"
 - "libboost-system-dev"
 - "libboost-filesystem-dev"
 - "libboost-program-options-dev"
 - "libboost-thread-dev"
-- "libssl-dev"
+- "libssl1.0-dev"
+- "libpng-dev"
 - "git-core"
 - "unzip"
 - "pkg-config"
-- "libpng12-dev"
 reference_datetime: "2011-01-30 00:00:00"
 remotes:
-- "url": "https://github.com/primecoin/primecoin.git"
+- "url": "/Users/zhengjun/project/git_project/primecoin"
   "dir": "primecoin"
 files:
+- "db-4.8.30.NC.tar.gz"
 - "miniupnpc-1.6.tar.gz"
 - "qrencode-3.2.0.tar.bz2"
 script: |
   INSTDIR="$HOME/install"
   export LIBRARY_PATH="$INSTDIR/lib"
+  #
+  tar xzf db-4.8.30.NC.tar.gz
+  cd db-4.8.30.NC
+  sed -i.old 's/__atomic_compare_exchange/__atomic_compare_exchange_db/' dbinc/atomic.h
+  sed -i.old 's/atomic_init/atomic_init_db/' dbinc/atomic.h mp/mp_region.c mp/mp_mvcc.c mp/mp_fget.c mutex/mut_method.c mutex/mut_tas.c
+  cd build_unix
+  ../dist/configure --prefix=$INSTDIR --disable-shared --enable-cxx --disable-replication --with-pic
+  make $MAKEOPTS
+  make install
+  cd ../..
   #
   tar xzf miniupnpc-1.6.tar.gz
   cd miniupnpc-1.6

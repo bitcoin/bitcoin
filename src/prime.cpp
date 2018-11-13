@@ -354,6 +354,32 @@ bool ProbablePrimeChainTest(const CBigNum& bnPrimeChainOrigin, unsigned int nBit
     return (nChainLengthCunningham1 >= nBits || nChainLengthCunningham2 >= nBits || nChainLengthBiTwin >= nBits);
 }
 
+// Fast check block header integrity
+bool CheckBlockHeaderIntegrity(uint256 hashBlockHeader, unsigned int nBits, const CBigNum& bnPrimeChainMultiplier)
+{
+    // Check target
+    if (TargetGetLength(nBits) < nTargetMinLength || TargetGetLength(nBits) > 99)
+        return error("CheckBlockHeaderIntegrity() : invalid chain length target %s", TargetToString(nBits).c_str());
+     // Check header hash limit
+    if (hashBlockHeader < hashBlockHeaderLimit)
+        return error("CheckBlockHeaderIntegrity() : block header hash under limit");
+    // Check target for prime proof-of-work
+    CBigNum bnPrimeChainOrigin = CBigNum(hashBlockHeader) * bnPrimeChainMultiplier;
+    if (bnPrimeChainOrigin < bnPrimeMin)
+        return error("CheckBlockHeaderIntegrity() : prime too small %s", bnPrimeChainOrigin.GetHexStr().c_str());
+    // First prime in chain must not exceed cap
+    if (bnPrimeChainOrigin > bnPrimeMax)
+        return error("CheckBlockHeaderIntegrity() : prime too big %s", bnPrimeChainOrigin.GetHexStr().c_str());
+     // Proof-of-work check contains Fermat test of prime chain origin, it takes a lot of time,
+    // typical CPU can do ~60-70k Fermat tests per second in single thread, current block
+    // height at moment near 2.7M. So, we can't use Fermat test at startup for checking block headers
+    // in index database. Also, we can't use trial division test for preliminary check, because
+    // prime chain origin can be Carmichael number than can pass CheckPrimeProofOfWork function,
+    // but not pass another primality tests.
+     // For adding any check here, we need add it to CheckPrimeProofOfWork before
+    return true;
+}
+
 // Check prime proof-of-work
 bool CheckPrimeProofOfWork(uint256 hashBlockHeader, unsigned int nBits, const CBigNum& bnPrimeChainMultiplier, unsigned int& nChainType, unsigned int& nChainLength)
 {

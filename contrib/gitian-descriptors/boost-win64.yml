@@ -1,0 +1,86 @@
+---
+name: "boost"
+suites:
+- "bionic"
+architectures:
+- "amd64"
+packages: 
+- "gcc-mingw-w64-x86-64"
+- "g++-mingw-w64-x86-64"
+- "faketime"
+- "zip"
+reference_datetime: "2015-01-30 00:00:00"
+remotes: []
+files:
+- "boost_1_52_0.tar.bz2"
+script: |
+  TMPDIR="$HOME/tmpdir"
+  LIBRARIES="chrono,filesystem,program_options,system,thread,test"
+  OPTIONS="variant=release --layout=tagged --build-type=complete --user-config=user-config.jam threading=multi link=static -sNO_BZIP2=1 -sNO_ZLIB=1 target-os=windows threadapi=win32 runtime-link=static address-model=64 toolset=gcc"
+  mkdir -p $TMPDIR/bin/$GBUILD_BITS $TMPDIR/include
+  tar xjf boost_1_52_0.tar.bz2
+  cd boost_1_52_0
+
+  # Make patch
+  echo "--- a/boost/detail/interlocked.hpp" > interlocked.patch
+  echo "+++ b/boost/detail/interlocked.hpp" >> interlocked.patch
+  echo "@@ -125,13 +125,30 @@" >> interlocked.patch
+  echo " # define BOOST_INTERLOCKED_EXCHANGE _InterlockedExchange" >> interlocked.patch
+  echo " # define BOOST_INTERLOCKED_EXCHANGE_ADD _InterlockedExchangeAdd" >> interlocked.patch
+  echo "" >> interlocked.patch
+  echo "+// Unlike __MINGW64__, __MINGW64_VERSION_MAJOR is defined by MinGW-w64 for both 32 and 64-bit targets." >> interlocked.patch
+  echo "+#elif defined(__MINGW64_VERSION_MAJOR)" >> interlocked.patch
+  echo "+" >> interlocked.patch
+  echo "+// MinGW-w64 provides intrin.h for both 32 and 64-bit targets." >> interlocked.patch
+  echo "+#include <intrin.h>" >> interlocked.patch
+  echo "+" >> interlocked.patch
+  echo "+# define BOOST_INTERLOCKED_INCREMENT _InterlockedIncrement" >> interlocked.patch
+  echo "+# define BOOST_INTERLOCKED_DECREMENT _InterlockedDecrement" >> interlocked.patch
+  echo "+# define BOOST_INTERLOCKED_COMPARE_EXCHANGE _InterlockedCompareExchange" >> interlocked.patch
+  echo "+# define BOOST_INTERLOCKED_EXCHANGE _InterlockedExchange" >> interlocked.patch
+  echo "+# define BOOST_INTERLOCKED_EXCHANGE_ADD _InterlockedExchangeAdd" >> interlocked.patch
+  echo "+# if defined(__x86_64__) || defined(__x86_64)" >> interlocked.patch
+  echo "+#  define BOOST_INTERLOCKED_COMPARE_EXCHANGE_POINTER _InterlockedCompareExchangePointer" >> interlocked.patch
+  echo "+#  define BOOST_INTERLOCKED_EXCHANGE_POINTER _InterlockedExchangePointer" >> interlocked.patch
+  echo "+# else" >> interlocked.patch
+  echo "+#  define BOOST_INTERLOCKED_COMPARE_EXCHANGE_POINTER(dest,exchange,compare) \\" >> interlocked.patch
+  echo "+((void*)BOOST_INTERLOCKED_COMPARE_EXCHANGE((long volatile*)(dest),(long)(exchange),(long)(compare)))" >> interlocked.patch
+  echo "+#  define BOOST_INTERLOCKED_EXCHANGE_POINTER(dest,exchange) \\" >> interlocked.patch
+  echo "+((void*)BOOST_INTERLOCKED_EXCHANGE((long volatile*)(dest),(long)(exchange)))" >> interlocked.patch
+  echo "+# endif" >> interlocked.patch
+  echo "+" >> interlocked.patch
+  echo " #elif defined( WIN32 ) || defined( _WIN32 ) || defined( __WIN32__ ) || defined( __CYGWIN__ )" >> interlocked.patch
+  echo "" >> interlocked.patch
+  echo "-#if defined(__MINGW64__)" >> interlocked.patch
+  echo "-#define BOOST_INTERLOCKED_IMPORT" >> interlocked.patch
+  echo "-#else" >> interlocked.patch
+  echo " #define BOOST_INTERLOCKED_IMPORT __declspec(dllimport)" >> interlocked.patch
+  echo "-#endif" >> interlocked.patch
+  echo "" >> interlocked.patch
+  echo "" >> interlocked.patch
+  echo " namespace boost" >> interlocked.patch
+ 
+  # Apply patch
+  patch -p1 < interlocked.patch
+  
+  echo "using gcc : 7.3 : x86_64-w64-mingw32-g++
+        :
+        <archiver>x86_64-w64-mingw32-ar
+        <striper>x86_64-w64-mingw32-strip
+        <ranlib>x86_64-w64-mingw32-ranlib
+        <rc>x86_64-w64-mingw32-windres
+        <cxxflags>-frandom-seed=boost1 -fvisibility=hidden
+  ;" > user-config.jam
+  ./bootstrap.sh --without-icu --with-libraries=$LIBRARIES
+  ./b2 -d2 -j2 -d1 --prefix=$TMPDIR $OPTIONS stage
+  for lib in chrono filesystem program_options system thread_win32 unit_test_framework; do
+      mkdir $lib
+      (cd $lib ; ar xf ../stage/lib/libboost_${lib}-mt-s.a)
+      mv $lib $TMPDIR/bin/$GBUILD_BITS
+  done
+  cp -a boost $TMPDIR/include
+  cd $TMPDIR
+  export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
+  zip -r boost-win64-1.52.0-gitian.zip *
+  cp boost-win64-1.52.0-gitian.zip $OUTDIR

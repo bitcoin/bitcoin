@@ -5,7 +5,7 @@ SetCompressor /SOLID lzma
 
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
-!define VERSION 0.1.2
+!define VERSION 0.1.4
 !define COMPANY "Primecoin project"
 !define URL http://primecoin.org/
 
@@ -45,13 +45,13 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-OutFile primecoin-0.1.2-win32-setup.exe
+OutFile primecoin-0.1.4-win32-setup.exe
 InstallDir $PROGRAMFILES\Primecoin
 CRCCheck on
 XPStyle on
 BrandingText " "
 ShowInstDetails show
-VIProductVersion 0.1.2.0
+VIProductVersion 0.1.4.0
 VIAddVersionKey ProductName Primecoin
 VIAddVersionKey ProductVersion "${VERSION}"
 VIAddVersionKey CompanyName "${COMPANY}"

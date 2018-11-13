@@ -1,3 +1,9 @@
-2018.09.28 0.8.7
+2018.09.28 primecoin 0.1.3
 fix missing bignum field when spv wallet sync data.
 modify bitcoin to primecoin someplace
+
+2018.11.11 primecoin 0.1.4
+modify *.yml for gitian release, thanks to Ivan's help
+add dns seed
+Refine checkpoint operation
+Add header check when load from disk

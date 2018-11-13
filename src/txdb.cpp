@@ -8,6 +8,7 @@
 #include "txdb.h"
 #include "main.h"
 #include "hash.h"
+#include "prime.h"
 
 using namespace std;
 
@@ -224,10 +225,14 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
                 pindexNew->nTime          = diskindex.nTime;
                 pindexNew->nBits          = diskindex.nBits;
                 pindexNew->nNonce         = diskindex.nNonce;
-				pindexNew->bnPrimeChainMultiplier = diskindex.bnPrimeChainMultiplier;
+                pindexNew->bnPrimeChainMultiplier = diskindex.bnPrimeChainMultiplier;
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
 
+                CBlockHeader header(pindexNew->GetBlockHeader());
+                if (!CheckBlockHeaderIntegrity(header.GetHeaderHash(), pindexNew->nBits, pindexNew->bnPrimeChainMultiplier))
+                    return error("%s: CheckBlockHeaderIntegrity failed: %s", __func__, pindexNew->ToString().c_str());
+                
                 // Watch for genesis block
                 if (pindexGenesisBlock == NULL && diskindex.GetBlockHash() == hashGenesisBlock)
                     pindexGenesisBlock = pindexNew;

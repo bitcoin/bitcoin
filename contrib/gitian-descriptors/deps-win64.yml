@@ -3,10 +3,10 @@ name: "primecoin-deps"
 suites:
 - "bionic"
 architectures:
-- "i386"
+- "amd64"
 packages:
-- "gcc-mingw-w64-i686"
-- "g++-mingw-w64-i686"
+- "gcc-mingw-w64-x86-64"
+- "g++-mingw-w64-x86-64"
 - "git-core"
 - "zip"
 - "faketime"
@@ -27,7 +27,7 @@ script: |
   #
   tar xzf openssl-1.0.1g.tar.gz
   cd openssl-1.0.1g
-  ./Configure --cross-compile-prefix=i686-w64-mingw32- mingw no-camellia no-capieng no-cast no-comp no-dso no-dtls1 no-ec_nistp_64_gcc_128 no-gost no-gmp no-heartbeats no-idea no-jpake no-krb5 no-libunbound no-md2 no-mdc2 no-rc4 no-rc5 no-rdrand no-rfc3779 no-rsax no-sctp no-seed no-sha0 no-shared no-ssl-trace no-ssl2 no-ssl3 no-static_engine no-store no-unit-test no-weak-ssl-ciphers no-whirlpool no-zlib no-zlib-dynamic
+  ./Configure --cross-compile-prefix=x86_64-w64-mingw32- mingw64 no-camellia no-capieng no-cast no-comp no-dso no-dtls1 no-ec_nistp_64_gcc_128 no-gost no-gmp no-heartbeats no-idea no-jpake no-krb5 no-libunbound no-md2 no-mdc2 no-rc4 no-rc5 no-rdrand no-rfc3779 no-rsax no-sctp no-seed no-sha0 no-shared no-ssl-trace no-ssl2 no-ssl3 no-static_engine no-store no-unit-test no-weak-ssl-ciphers no-whirlpool no-zlib no-zlib-dynamic
   make
   cd ..
   #
@@ -36,40 +36,40 @@ script: |
   sed -i.old 's/__atomic_compare_exchange/__atomic_compare_exchange_db/' dbinc/atomic.h
   sed -i.old 's/atomic_init/atomic_init_db/' dbinc/atomic.h mp/mp_region.c mp/mp_mvcc.c mp/mp_fget.c mutex/mut_method.c mutex/mut_tas.c
   cd build_unix
-  ../dist/configure --disable-shared --disable-replication --enable-cxx --enable-mingw --host=i686-w64-mingw32
+  ../dist/configure --disable-shared --disable-replication --enable-cxx --enable-mingw --host=x86_64-w64-mingw32
   make $MAKEOPTS
   cd ../..
   #
   tar xzf miniupnpc-1.6.tar.gz
   cd miniupnpc-1.6
   mkdir dll
-  sed -e 's|MINIUPNPC_VERSION_STRING \"version\"|MINIUPNPC_VERSION_STRING \"1.6\"|' -e 's|OS/version|i686-w64-mingw32|' miniupnpcstrings.h.in > miniupnpcstrings.h
+  sed -e 's|MINIUPNPC_VERSION_STRING \"version\"|MINIUPNPC_VERSION_STRING \"1.6\"|' -e 's|OS/version|x86_64-w64-mingw32|' miniupnpcstrings.h.in > miniupnpcstrings.h
   sed -i.old "s|miniupnpcstrings.h: miniupnpcstrings.h.in wingenminiupnpcstrings|miniupnpcstrings.h: miniupnpcstrings.h.in|" Makefile.mingw
   sed 's/CC = gcc/CC ?= gcc/' -i Makefile.mingw
-  CC=i686-w64-mingw32-gcc AR=i686-w64-mingw32-ar make libminiupnpc.a -f Makefile.mingw
+  CC=x86_64-w64-mingw32-gcc AR=x86_64-w64-mingw32-ar make libminiupnpc.a -f Makefile.mingw
   cd ..
   mv miniupnpc-1.6 miniupnpc
   #
   tar xzf zlib-1.2.7.tar.gz
   cd zlib-1.2.7
-  make -f win32/Makefile.gcc PREFIX=i686-w64-mingw32- $MAKEOPTS
+  make -f win32/Makefile.gcc PREFIX=x86_64-w64-mingw32- $MAKEOPTS
   cd ..
   #
   tar xzf libpng-1.5.12.tar.gz
   cd libpng-1.5.12
   sed -i 's/as_fn_error $? "newly created file is older than distributed files!/echo $? "newly created file is older than distributed files!/' configure
-  ./configure --disable-shared --host=i686-w64-mingw32 LDFLAGS="-L../zlib-1.2.7/" CFLAGS="-I../zlib-1.2.7/"
+  ./configure --disable-shared --host=x86_64-w64-mingw32 LDFLAGS="-L../zlib-1.2.7/" CFLAGS="-I../zlib-1.2.7/"
   make $MAKEOPTS
   cd ..
   #
   tar xjf qrencode-3.2.0.tar.bz2
   cd qrencode-3.2.0
   sed -i 's/as_fn_error $? "newly created file is older than distributed files!/echo $? "newly created file is older than distributed files!/' configure
-  ./configure --disable-shared -without-tools --disable-sdltest --host=i686-w64-mingw32 png_LIBS="../libpng-1.5.12/.libs/libpng15.a ../zlib-1.2.7/libz.a" png_CFLAGS="-I../libpng-1.5.12"
+  ./configure --disable-shared -without-tools --disable-sdltest --host=x86_64-w64-mingw32 png_LIBS="../libpng-1.5.12/.libs/libpng15.a ../zlib-1.2.7/libz.a" png_CFLAGS="-I../libpng-1.5.12"
   make $MAKEOPTS
   cd ..
   #
-  zip -r $OUTDIR/primecoin-deps-0.0.2.zip \
+  zip -r $OUTDIR/primecoin-deps-win64-0.0.2.zip \
     $(ls qrencode-*/{qrencode.h,.libs/libqrencode.{,l}a} | sort) \
     $(ls db-*/build_unix/{libdb_cxx.a,db.h,db_cxx.h,libdb.a,.libs/libdb_cxx-?.?.a} | sort) \
     $(find openssl-* -name '*.a' -o -name '*.h' | sort) \

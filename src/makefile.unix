@@ -63,7 +63,9 @@ LIBS+= \
  -Wl,-B$(LMODE2) \
    -l z \
    -l dl \
-   -l pthread
+   -l pthread \
+   -l rt \
+   -static-libstdc++
 
 
 # Hardening
@@ -144,7 +146,8 @@ OBJS= \
     obj/leveldb.o \
     obj/txdb.o \
     obj/prime.o \
-    obj/checkpointsync.o
+    obj/checkpointsync.o \
+    obj/glibc_compat.o
 
 all: primecoind
 

@@ -1,7 +1,7 @@
 TEMPLATE = app
 TARGET = primecoin-qt
 macx:TARGET = "Primecoin-Qt"
-VERSION = 0.1.2
+VERSION = 0.1.4
 INCLUDEPATH += src src/json src/qt
 QT += network
 DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
@@ -44,10 +44,21 @@ contains(RELEASE, 1) {
 }
 # for extra security (see: https://wiki.debian.org/Hardening): this flag is GCC compiler-specific
 QMAKE_CXXFLAGS *= -D_FORTIFY_SOURCE=2
-# for extra security on Windows: enable ASLR and DEP via GCC linker flags
-win32:QMAKE_LFLAGS *= -Wl,--dynamicbase -Wl,--nxcompat
-# on Windows: enable GCC large address aware linker flag
-win32:QMAKE_LFLAGS *= -Wl,--large-address-aware
+
+win32 {
+    # for extra security on Windows: enable ASLR and DEP via GCC linker flags
+    win32:QMAKE_LFLAGS *= -Wl,--dynamicbase -Wl,--nxcompat -static
+    contains(WIN64, 1) {
+        message(Building for Windows 64-bit)
+    } else {
+        # on Windows 32-bit: enable GCC large address aware linker flag
+        message(Building for Windows 32-bit)
+        win32:QMAKE_LFLAGS *= -Wl,--large-address-aware
+    }
+} else {
+    SOURCES += glibc_compat.cpp
+    QMAKE_LFLAGS += -static-libgcc -static-libstdc++
+}
 
 # use: qmake "USE_QRCODE=1"
 # libqrencode (http://fukuchi.org/works/qrencode/index.en.html) must be installed for support
@@ -55,6 +66,7 @@ contains(USE_QRCODE, 1) {
     message(Building with QRCode support)
     DEFINES += USE_QRCODE
     LIBS += -lqrencode
+    win32:QMAKE_LFLAGS += -pthread
 }
 
 # use: qmake "USE_UPNP=1" ( enabled by default; default)
@@ -419,7 +431,7 @@ macx:LIBS += -lboost_chrono$$BOOST_LIB_SUFFIX
 contains(RELEASE, 1) {
     !win32:!macx {
         # Linux: turn dynamic linking back on for c/c++ runtime libraries
-        LIBS += -Wl,-Bdynamic
+        LIBS += -Wl,-Bdynamic -ldl -lrt
     }
 }
 

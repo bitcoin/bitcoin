@@ -1,39 +1,40 @@
 ---
 name: "primecoin"
 suites:
-- "lucid"
+- "bionic"
 architectures:
 - "i386"
 packages:
-- "mingw32"
+- "gcc-mingw-w64-i686"
+- "g++-mingw-w64-i686"
 - "git-core"
 - "unzip"
 - "nsis"
 - "faketime"
-reference_datetime: "2011-01-30 00:00:00"
+reference_datetime: "2015-01-30 00:00:00"
 remotes:
-- "url": "https://github.com/primecoin/primecoin.git"
+- "url": "/Users/zhengjun/project/git_project/primecoin"
   "dir": "primecoin"
 files:
-- "qt-win32-4.8.3-gitian-r1.zip"
-- "boost-win32-1.50.0-gitian.zip"
+- "qt-win32-4.8.7-gitian-r1.zip"
+- "boost-win32-1.52.0-gitian.zip"
 - "primecoin-deps-0.0.2.zip"
 script: |
   #
   mkdir $HOME/qt
   cd $HOME/qt
-  unzip ../build/qt-win32-4.8.3-gitian-r1.zip
+  unzip ../build/qt-win32-4.8.7-gitian-r1.zip
   cd $HOME/build/
   export PATH=$HOME/qt/bin/:$PATH
   #
-  mkdir boost_1_50_0
-  cd boost_1_50_0
+  mkdir boost_1_52_0
+  cd boost_1_52_0
   mkdir -p stage/lib
-  unzip ../boost-win32-1.50.0-gitian.zip
+  unzip ../boost-win32-1.52.0-gitian.zip
   cd bin/$GBUILD_BITS
   for lib in *; do
-    i586-mingw32msvc-ar rc ../../stage/lib/libboost_${lib}-mt-s.a $lib/*.o
-    i586-mingw32msvc-ranlib ../../stage/lib/libboost_${lib}-mt-s.a
+    i686-w64-mingw32-ar rc ../../stage/lib/libboost_${lib}-mt-s.a $lib/*.o
+    i686-w64-mingw32-ranlib ../../stage/lib/libboost_${lib}-mt-s.a
   done
   cd ../..
   mv include/boost .
@@ -48,19 +49,19 @@ script: |
   git archive HEAD | tar -x -C $OUTDIR/src
   cp $OUTDIR/src/doc/README_windows.txt $OUTDIR/readme.txt
   cp $OUTDIR/src/COPYING $OUTDIR/COPYING.txt
-  export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+  export LD_PRELOAD=export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1
   export FAKETIME=$REFERENCE_DATETIME
   export TZ=UTC
-  $HOME/qt/src/bin/qmake -spec unsupported/win32-g++-cross MINIUPNPC_LIB_PATH=$HOME/build/miniupnpc MINIUPNPC_INCLUDE_PATH=$HOME/build/ BDB_LIB_PATH=$HOME/build/db-4.8.30.NC/build_unix BDB_INCLUDE_PATH=$HOME/build/db-4.8.30.NC/build_unix BOOST_LIB_PATH=$HOME/build/boost_1_50_0/stage/lib BOOST_INCLUDE_PATH=$HOME/build/boost_1_50_0 BOOST_LIB_SUFFIX=-mt-s BOOST_THREAD_LIB_SUFFIX=_win32-mt-s OPENSSL_LIB_PATH=$HOME/build/openssl-1.0.1g OPENSSL_INCLUDE_PATH=$HOME/build/openssl-1.0.1g/include QRENCODE_LIB_PATH=$HOME/build/qrencode-3.2.0/.libs QRENCODE_INCLUDE_PATH=$HOME/build/qrencode-3.2.0 USE_QRCODE=1 INCLUDEPATH=$HOME/build DEFINES=BOOST_THREAD_USE_LIB BITCOIN_NEED_QT_PLUGINS=1 QMAKE_LRELEASE=lrelease QMAKE_CXXFLAGS=-frandom-seed=primecoin USE_BUILD_INFO=1
+  $HOME/qt/src/bin/qmake MINIUPNPC_LIB_PATH=$HOME/build/miniupnpc MINIUPNPC_INCLUDE_PATH=$HOME/build/ BDB_LIB_PATH=$HOME/build/db-4.8.30.NC/build_unix BDB_INCLUDE_PATH=$HOME/build/db-4.8.30.NC/build_unix BOOST_LIB_PATH=$HOME/build/boost_1_52_0/stage/lib BOOST_INCLUDE_PATH=$HOME/build/boost_1_52_0 BOOST_LIB_SUFFIX=-mt-s BOOST_THREAD_LIB_SUFFIX=_win32-mt-s OPENSSL_LIB_PATH=$HOME/build/openssl-1.0.1g OPENSSL_INCLUDE_PATH=$HOME/build/openssl-1.0.1g/include QRENCODE_LIB_PATH=$HOME/build/qrencode-3.2.0/.libs QRENCODE_INCLUDE_PATH=$HOME/build/qrencode-3.2.0 USE_QRCODE=1 INCLUDEPATH=$HOME/build DEFINES=BOOST_THREAD_USE_LIB BITCOIN_NEED_QT_PLUGINS=1 QMAKE_LRELEASE=$HOME/qt/src/bin/lrelease QMAKE_CXXFLAGS=-frandom-seed=primecoin USE_BUILD_INFO=1
   make $MAKEOPTS
   cp release/primecoin-qt.exe $OUTDIR/
   #
   cd src
-  export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+  export LD_PRELOAD=export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1
   export FAKETIME=$REFERENCE_DATETIME
   export TZ=UTC
-  make -f makefile.linux-mingw $MAKEOPTS DEPSDIR=$HOME/build primecoind.exe USE_UPNP=1 DEBUGFLAGS="-frandom-seed=primecoin"
-  i586-mingw32msvc-strip primecoind.exe
+  make -f makefile.linux-mingw $MAKEOPTS CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ DEPSDIR=$HOME/build primecoind.exe USE_UPNP=1 DEBUGFLAGS="-frandom-seed=primecoin"
+  i686-w64-mingw32-strip primecoind.exe
   mkdir $OUTDIR/daemon
   cp primecoind.exe $OUTDIR/daemon
   cd ..

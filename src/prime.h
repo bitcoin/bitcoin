@@ -67,6 +67,7 @@ enum // prime chain type
     PRIME_CHAIN_CUNNINGHAM2 = 2u,
     PRIME_CHAIN_BI_TWIN     = 3u,
 };
+bool CheckBlockHeaderIntegrity(uint256 hashBlockHeader, unsigned int nBits, const CBigNum& bnPrimeChainMultiplier);
 bool CheckPrimeProofOfWork(uint256 hashBlockHeader, unsigned int nBits, const CBigNum& bnPrimeChainMultiplier, unsigned int& nChainType, unsigned int& nChainLength);
 bool CheckPrimeProofOfWorkV02Compatibility(uint256 hashBlockHeader);
 
