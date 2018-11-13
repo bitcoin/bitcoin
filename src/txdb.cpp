@@ -175,21 +175,6 @@ bool CBlockTreeDB::ReadFlag(const std::string &name, bool &fValue) {
     return true;
 }
 
-bool CBlockTreeDB::WriteBlockProofPointer(const uint256 &blockHash, const SPIdentifier &spID)
-{
-    return Write(std::make_pair('S', blockHash), spID);
-}
-
-bool CBlockTreeDB::ReadBlockProofPointer(const uint256 &blockHash, SPIdentifier &spID)
-{
-    return Read(std::make_pair('S', blockHash), spID);
-}
-
-bool CBlockTreeDB::EraseBlockProofPointer(const uint256 &blockHash)
-{
-    return Erase(std::make_pair('S', blockHash));
-}
-
 bool CBlockTreeDB::LoadBlockIndexGuts()
 {
     boost::scoped_ptr<leveldb::Iterator> pcursor(NewIterator());
@@ -214,7 +199,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
 
                 // Construct block index object
                 CBlockIndex* pindexNew = InsertBlockIndex(diskindex.GetBlockHash(), diskindex.fProofOfStake);
-                pindexNew->pprev          = InsertBlockIndex(diskindex.hashPrev);
+                pindexNew->pprev          = InsertBlockIndex(diskindex.hashPrev, diskindex.fProofOfStake);
                 pindexNew->nHeight        = diskindex.nHeight;
                 pindexNew->nFile          = diskindex.nFile;
                 pindexNew->nDataPos       = diskindex.nDataPos;
@@ -227,6 +212,11 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
                 pindexNew->fProofOfStake  = diskindex.fProofOfStake;
+                pindexNew->stakeSource    = diskindex.stakeSource;
+                if (pindexNew->fProofOfStake) {
+                    COutPoint stakeSource(diskindex.stakeSource.first, diskindex.stakeSource.second);
+                    setUsedStakePointers.emplace(stakeSource.GetHash());
+                }
 
                 /* Bitcoin checks the PoW here.  We don't do this because
                    the CDiskBlockIndex does not contain the auxpow.

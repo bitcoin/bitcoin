@@ -147,7 +147,7 @@ extern bool fLargeWorkInvalidChainFound;
 
 extern std::map<uint256, int64_t> mapRejectedBlocks;
 
-extern boost::unordered_set<SPIdentifier, SPHasher> setUsedStakePointers;
+extern std::set<uint256> setUsedStakePointers;
 
 /** Best header we've seen so far (used for getheaders queries' starting points). */
 extern CBlockIndex *pindexBestHeader;
@@ -237,7 +237,7 @@ bool ActivateBestChain(CValidationState &state, CBlock *pblock = NULL);
 int64_t GetBlockValue(int nHeight, const CAmount &nFees);
 
 /** Create a new block index entry for a given block hash */
-CBlockIndex * InsertBlockIndex(uint256 hash, bool fLoadStakePointerID = false);
+CBlockIndex * InsertBlockIndex(uint256 hash, bool fProofOfStake);
 /** Abort with a message */
 bool AbortNode(const std::string &msg, const std::string &userMessage="");
 /** Get statistics from node state */
