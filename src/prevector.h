@@ -196,11 +196,7 @@ private:
     T* item_ptr(difference_type pos) { return is_direct() ? direct_ptr(pos) : indirect_ptr(pos); }
     const T* item_ptr(difference_type pos) const { return is_direct() ? direct_ptr(pos) : indirect_ptr(pos); }
 
-    void fill(T* dst, ptrdiff_t count) {
-        std::fill_n(dst, count, T{});
-    }
-
-    void fill(T* dst, ptrdiff_t count, const T& value) {
+    void fill(T* dst, ptrdiff_t count, const T& value = T{}) {
         std::fill_n(dst, count, value);
     }
 
