@@ -1200,7 +1200,6 @@ namespace
         std::vector<CBlockIndex> blocks;
 
         const int fees;
-        std::vector<CTxOut> voutSuperblock;
         const uint256 budgetDraftCollateral;
 
         std::string error;
@@ -1299,7 +1298,7 @@ BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
         CMutableTransaction actual;
         actual.vout.push_back(CTxOut());
 
-        budget.FillBlockPayee(actual, fees, voutSuperblock);
+        budget.FillBlockPayee(actual, fees);
 
         BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(), actual.vout.begin(), actual.vout.end());
     }
@@ -1349,7 +1348,7 @@ BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
         CMutableTransaction actual;
         actual.vout.push_back(CTxOut());
 
-        budget.FillBlockPayee(actual, fees, voutSuperblock);
+        budget.FillBlockPayee(actual, fees);
 
         BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(), actual.vout.begin(), actual.vout.end());
     }
@@ -1422,7 +1421,7 @@ BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
         CMutableTransaction actual;
         actual.vout.push_back(CTxOut());
 
-        budget.FillBlockPayee(actual, fees, voutSuperblock);
+        budget.FillBlockPayee(actual, fees);
 
         BOOST_CHECK(budget.IsBudgetPaymentBlock(chainActive.Tip()->nHeight + 1));
         BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(), actual.vout.begin(), actual.vout.end());
@@ -1459,7 +1458,7 @@ BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
         CMutableTransaction actual;
         actual.vout.push_back(CTxOut());
 
-        budget.FillBlockPayee(actual, fees, voutSuperblock);
+        budget.FillBlockPayee(actual, fees);
 
         BOOST_CHECK(!budget.IsBudgetPaymentBlock(chainActive.Tip()->nHeight + 1));
         BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(), actual.vout.begin(), actual.vout.end());
@@ -1490,7 +1489,7 @@ BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
         CMutableTransaction actual;
         actual.vout.push_back(CTxOut());
 
-        budget.FillBlockPayee(actual, fees, voutSuperblock);
+        budget.FillBlockPayee(actual, fees);
 
         BOOST_CHECK(!budget.IsBudgetPaymentBlock(chainActive.Tip()->nHeight + 1));
         BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(), actual.vout.begin(), actual.vout.end());
@@ -1539,7 +1538,7 @@ BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
         CMutableTransaction actual;
         actual.vout.push_back(CTxOut());
 
-        budget.FillBlockPayee(actual, fees, voutSuperblock);
+        budget.FillBlockPayee(actual, fees);
 
         BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(), actual.vout.begin(), actual.vout.end());
     }
@@ -1568,7 +1567,7 @@ BOOST_FIXTURE_TEST_SUITE(SuperblockPayment, SuperblockPaymentFixture)
 
         CMutableTransaction actual;
         actual.vout.push_back(CTxOut());
-        budget.FillBlockPayee(actual, fees, voutSuperblock);
+        budget.FillBlockPayee(actual, fees);
 
         BOOST_CHECK(budget.IsTransactionValid(actual, blockHeight));
     }

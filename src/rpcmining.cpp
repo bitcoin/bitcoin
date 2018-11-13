@@ -19,6 +19,7 @@
 #include "util.h"
 #include "auxpow.h"
 #include "spork.h"
+#include "masternode-budget.h"
 #ifdef ENABLE_WALLET
 #include "db.h"
 #include "wallet.h"
@@ -644,50 +645,63 @@ Value getblocktemplate(const Array& params, bool fHelp)
     result.push_back(Pair("height", (int64_t)(pindexPrev->nHeight+1)));
     result.push_back(Pair("votes", aVotes));
 
-
-    if(pblock->payee != CScript()){
+    if (pblock->payee != CScript())
+    {
         CTxDestination address1;
         ExtractDestination(pblock->payee, address1);
         CBitcoinAddress address2(address1);
         result.push_back(Pair("payee", address2.ToString().c_str()));
         result.push_back(Pair("payee_amount", (int64_t)pblock->vtx[0].vout[1].nValue));
-    } else {
+    }
+    else
+    {
         result.push_back(Pair("payee", ""));
         result.push_back(Pair("payee_amount", ""));
     }
 
-    result.push_back(Pair("masternode_payments", pblock->nTime > Params().StartMasternodePayments()));
-    result.push_back(Pair("enforce_masternode_payments", true));
-
-    result.push_back(Pair("systemnode_payments", pblock->nTime > Params().StartMasternodePayments()));
-    result.push_back(Pair("enforce_systemnode_payments", true));
-
-    if(pblock->payeeSN != CScript()){
+    if (pblock->payeeSN != CScript())
+    {
         CTxDestination address1;
         ExtractDestination(pblock->payeeSN, address1);
         CBitcoinAddress address2(address1);
         result.push_back(Pair("payeeSN", address2.ToString().c_str()));
         result.push_back(Pair("payeeSN_amount", (int64_t)pblock->vtx[0].vout[2].nValue));
-    } else {
+    }
+    else
+    {
         result.push_back(Pair("payeeSN", ""));
         result.push_back(Pair("payeeSN_amount", ""));
     }
+    result.push_back(Pair("enforce_masternode_payments", true));
+    result.push_back(Pair("enforce_systemnode_payments", true));
 
     Array superblockObjArray;
-    if(pblock->voutSuperblock.size())
+    if (IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS) && budget.IsBudgetPaymentBlock(pindexPrev->nHeight + 1))
     {
-        BOOST_FOREACH(const CTxOut& txout, pblock->voutSuperblock)
+        // Don't pay masternodes/systemnodes
+        result.push_back(Pair("masternode_payments", false));
+        result.push_back(Pair("systemnode_payments", false)); 
+
+        // pblock->vtx[0].vout[0] is for miner
+        for (unsigned int i = 1; i < pblock->vtx[0].vout.size(); i++)
         {
             Object entry;
             CTxDestination address;
-            ExtractDestination(txout.scriptPubKey, address);
+            CTxOut out = pblock->vtx[0].vout[i];
+            ExtractDestination(out.scriptPubKey, address);
             CBitcoinAddress address2(address);
             entry.push_back(Pair("payee", address2.ToString().c_str()));
-            entry.push_back(Pair("script", HexStr(txout.scriptPubKey)));
-            entry.push_back(Pair("amount", txout.nValue));
+            entry.push_back(Pair("script", HexStr(out.scriptPubKey)));
+            entry.push_back(Pair("amount", out.nValue));
             superblockObjArray.push_back(entry);
         }
     }
+    else
+    {
+        result.push_back(Pair("masternode_payments", true));
+        result.push_back(Pair("systemnode_payments", true)); 
+    }
+
     result.push_back(Pair("superblock", superblockObjArray));
     result.push_back(Pair("superblocks_enabled", IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS)));
 

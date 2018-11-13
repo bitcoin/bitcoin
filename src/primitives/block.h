@@ -86,7 +86,6 @@ public:
     // memory only
     mutable CScript payee;
     mutable CScript payeeSN;
-    mutable std::vector<CTxOut> voutSuperblock; // superblock payment
     mutable std::vector<uint256> vMerkleTree;
     mutable bool fChecked;
 

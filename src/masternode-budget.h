@@ -141,7 +141,7 @@ public:
 
     bool IsBudgetPaymentBlock(int nBlockHeight) const;
     bool IsTransactionValid(const CTransaction &txNew, int nBlockHeight) const;
-    void FillBlockPayee(CMutableTransaction &txNew, CAmount nFees, std::vector<CTxOut>& voutSuperblockRet) const;
+    void FillBlockPayee(CMutableTransaction &txNew, CAmount nFees) const;
 
     std::string GetRequiredPaymentsString(int nBlockHeight) const;
     std::string ToString() const;

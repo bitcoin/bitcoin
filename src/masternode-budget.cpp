@@ -440,7 +440,7 @@ const BudgetDraft* CBudgetManager::GetMostVotedBudget(int height) const
     return budgetToPay;
 }
 
-void CBudgetManager::FillBlockPayee(CMutableTransaction& txNew, CAmount nFees, std::vector<CTxOut>& voutSuperblockRet) const
+void CBudgetManager::FillBlockPayee(CMutableTransaction& txNew, CAmount nFees) const
 {
     assert (txNew.vout.size() == 1); // There is a blank for block creator's reward
 
@@ -460,19 +460,13 @@ void CBudgetManager::FillBlockPayee(CMutableTransaction& txNew, CAmount nFees, s
     if (budgetToPay == NULL)
         return;
 
-    // make sure it's empty, just in case
-    voutSuperblockRet.clear();
-
     // Pay the proposals
 
     BOOST_FOREACH(const CTxBudgetPayment& payment, budgetToPay->GetBudgetPayments())
     {
         LogPrintf("CBudgetManager::FillBlockPayee - Budget payment to %s for %lld; proposal %s\n",
             ScriptToAddress(payment.payee).ToString(), payment.nAmount, payment.nProposalHash.ToString());
-
-        CTxOut txout = CTxOut(payment.nAmount, payment.payee);
-        txNew.vout.push_back(txout);
-        voutSuperblockRet.push_back(txout);
+        txNew.vout.push_back(CTxOut(payment.nAmount, payment.payee));
     }
 }
 
