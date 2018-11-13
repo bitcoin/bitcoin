@@ -178,7 +178,7 @@ class DIP3Test(BitcoinTestFramework):
             self.nodes[0].generate(1)
 
             if fund:
-                # collateral has moved, so we need to start it again
+                # collateral has moved, so we need to "masternode start" it again
                 mns_to_restart.append(mns[i])
             else:
                 # collateral has not moved, so it should still be in the masternode list even after upgrade
@@ -195,7 +195,7 @@ class DIP3Test(BitcoinTestFramework):
         print("restarting controller and upgraded MNs")
         self.restart_controller_node()
         self.force_finish_mnsync_list(self.nodes[0])
-        for mn in mns_to_restart:
+        for mn in mns_protx:
             print("restarting MN %s" % mn.alias)
             self.stop_node(mn.idx)
             self.start_mn(mn)
