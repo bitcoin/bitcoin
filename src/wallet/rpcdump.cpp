@@ -348,7 +348,7 @@ UniValue importprunedfunds(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() != 2)
         throw std::runtime_error(
-            "importprunedfunds\n"
+            "importprunedfunds \"rawtransaction\" \"txoutproof\"\n"
             "\nImports funds without rescan. Corresponding address or script must previously be included in wallet. Aimed towards pruned wallets. The end-user is responsible to import additional transactions that subsequently spend the imported outputs or rescan after the point in the blockchain the transaction is included.\n"
             "\nArguments:\n"
             "1. \"rawtransaction\" (string, required) A raw transaction in hex funding an already-existing address in wallet\n"
@@ -1085,8 +1085,8 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
     // clang-format off
     if (mainRequest.fHelp || mainRequest.params.size() < 1 || mainRequest.params.size() > 2)
         throw std::runtime_error(
-            "importmulti \"requests\" ( \"options\" )\n\n"
-            "Import addresses/scripts (with private or public keys, redeem script (P2SH)), rescanning all addresses in one-shot-only (rescan can be disabled via options). Requires a new wallet backup.\n\n"
+            "importmulti \"requests\" ( \"options\" )\n"
+            "\nImport addresses/scripts (with private or public keys, redeem script (P2SH)), rescanning all addresses in one-shot-only (rescan can be disabled via options). Requires a new wallet backup.\n\n"
             "Arguments:\n"
             "1. requests     (array, required) Data to be imported\n"
             "  [     (array of json objects)\n"
