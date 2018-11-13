@@ -444,7 +444,8 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
     if (tx.nType == TRANSACTION_PROVIDER_REGISTER) {
         CProRegTx proTx;
         if (!GetTxPayload(tx, proTx)) {
-            assert(false);
+            LogPrintf("%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
+            return false;
         }
         mapProTxAddresses.emplace(proTx.addr, tx.GetHash());
         mapProTxPubKeyIDs.emplace(proTx.keyIDOwner, tx.GetHash());
@@ -455,13 +456,15 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
         CProUpServTx proTx;
         if (!GetTxPayload(tx, proTx)) {
-            assert(false);
+            LogPrintf("%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
+            return false;
         }
         mapProTxAddresses.emplace(proTx.addr, tx.GetHash());
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
         CProUpRegTx proTx;
         if (!GetTxPayload(tx, proTx)) {
-            assert(false);
+            LogPrintf("%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
+            return false;
         }
         mapProTxBlsPubKeyHashes.emplace(proTx.pubKeyOperator.GetHash(), tx.GetHash());
     }
@@ -825,7 +828,8 @@ void CTxMemPool::removeProTxConflicts(const CTransaction &tx)
     if (tx.nType == TRANSACTION_PROVIDER_REGISTER) {
         CProRegTx proTx;
         if (!GetTxPayload(tx, proTx)) {
-            assert(false);
+            LogPrintf("%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
+            return;
         }
 
         if (mapProTxAddresses.count(proTx.addr)) {
@@ -842,7 +846,8 @@ void CTxMemPool::removeProTxConflicts(const CTransaction &tx)
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
         CProUpServTx proTx;
         if (!GetTxPayload(tx, proTx)) {
-            assert(false);
+            LogPrintf("%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
+            return;
         }
 
         if (mapProTxAddresses.count(proTx.addr)) {
@@ -854,7 +859,8 @@ void CTxMemPool::removeProTxConflicts(const CTransaction &tx)
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
         CProUpRegTx proTx;
         if (!GetTxPayload(tx, proTx)) {
-            assert(false);
+            LogPrintf("%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
+            return;
         }
 
         removeProTxPubKeyConflicts(tx, proTx.pubKeyOperator);
@@ -1142,8 +1148,10 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
     LOCK(cs);
     if (tx.nType == TRANSACTION_PROVIDER_REGISTER) {
         CProRegTx proTx;
-        if (!GetTxPayload(tx, proTx))
-            assert(false);
+        if (!GetTxPayload(tx, proTx)) {
+            LogPrintf("%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
+            return true; // i.e. can't decode payload == conflict
+        }
         if (mapProTxAddresses.count(proTx.addr) || mapProTxPubKeyIDs.count(proTx.keyIDOwner) || mapProTxBlsPubKeyHashes.count(proTx.pubKeyOperator.GetHash()))
             return true;
         if (!proTx.collateralOutpoint.hash.IsNull() && mapProTxCollaterals.count(proTx.collateralOutpoint))
@@ -1151,14 +1159,18 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
         return false;
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
         CProUpServTx proTx;
-        if (!GetTxPayload(tx, proTx))
-            assert(false);
+        if (!GetTxPayload(tx, proTx)) {
+            LogPrintf("%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
+            return true; // i.e. can't decode payload == conflict
+        }
         auto it = mapProTxAddresses.find(proTx.addr);
         return it != mapProTxAddresses.end() && it->second != proTx.proTxHash;
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
         CProUpRegTx proTx;
-        if (!GetTxPayload(tx, proTx))
-            assert(false);
+        if (!GetTxPayload(tx, proTx)) {
+            LogPrintf("%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
+            return true; // i.e. can't decode payload == conflict
+        }
         auto it = mapProTxBlsPubKeyHashes.find(proTx.pubKeyOperator.GetHash());
         return it != mapProTxBlsPubKeyHashes.end() && it->second != proTx.proTxHash;
     }
