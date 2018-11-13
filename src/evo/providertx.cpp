@@ -76,8 +76,6 @@ static bool CheckInputsHash(const CTransaction& tx, const ProTx& proTx, CValidat
 
 bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {
-    AssertLockHeld(cs_main);
-
     CProRegTx ptx;
     if (!GetTxPayload(tx, ptx)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-payload");
@@ -203,8 +201,6 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
 
 bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {
-    AssertLockHeld(cs_main);
-
     CProUpServTx ptx;
     if (!GetTxPayload(tx, ptx)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-payload");
@@ -255,8 +251,6 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
 
 bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {
-    AssertLockHeld(cs_main);
-
     CProUpRegTx ptx;
     if (!GetTxPayload(tx, ptx)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-payload");
@@ -331,8 +325,6 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
 
 bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {
-    AssertLockHeld(cs_main);
-
     CProUpRevTx ptx;
     if (!GetTxPayload(tx, ptx)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-payload");

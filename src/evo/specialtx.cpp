@@ -16,8 +16,6 @@
 
 bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {
-    AssertLockHeld(cs_main);
-
     if (tx.nVersion < 3 || tx.nType == TRANSACTION_NORMAL)
         return true;
 

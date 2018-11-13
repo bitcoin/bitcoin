@@ -12,8 +12,6 @@
 
 bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {
-    AssertLockHeld(cs_main);
-
     if (!tx.IsCoinBase()) {
         return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-invalid");
     }
@@ -37,8 +35,6 @@ bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidatio
 // This can only be done after the block has been fully processed, as otherwise we won't have the finished MN list
 bool CheckCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindex, CValidationState& state)
 {
-    AssertLockHeld(cs_main);
-
     if (block.vtx[0]->nType != TRANSACTION_COINBASE) {
         return true;
     }
@@ -63,7 +59,6 @@ bool CheckCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindex, C
 
 bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev, uint256& merkleRootRet, CValidationState& state)
 {
-    AssertLockHeld(cs_main);
     LOCK(deterministicMNManager->cs);
 
     CDeterministicMNList tmpMNList;
