@@ -157,7 +157,10 @@ UniValue importprivkey(const JSONRPCRequest& request)
         CKeyID vchAddress = pubkey.GetID();
         {
             pwallet->MarkDirty();
-            pwallet->SetAddressBook(vchAddress, strLabel, "receive");
+
+            if (!request.params[1].isNull() || pwallet->mapAddressBook.count(vchAddress) == 0) {
+                pwallet->SetAddressBook(vchAddress, strLabel, "receive");
+            }
 
             // Don't throw error in case a key is already there
             if (pwallet->HaveKey(vchAddress)) {
