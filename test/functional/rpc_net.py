@@ -74,12 +74,12 @@ class NetTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getnetworkinfo()['networkactive'], True)
         assert_equal(self.nodes[0].getnetworkinfo()['connections'], 2)
 
-        self.nodes[0].setnetworkactive(False)
+        self.nodes[0].setnetworkactive(state=False)
         assert_equal(self.nodes[0].getnetworkinfo()['networkactive'], False)
         # Wait a bit for all sockets to close
         wait_until(lambda: self.nodes[0].getnetworkinfo()['connections'] == 0, timeout=3)
 
-        self.nodes[0].setnetworkactive(True)
+        self.nodes[0].setnetworkactive(state=True)
         connect_nodes_bi(self.nodes, 0, 1)
         assert_equal(self.nodes[0].getnetworkinfo()['networkactive'], True)
         assert_equal(self.nodes[0].getnetworkinfo()['connections'], 2)
@@ -88,7 +88,7 @@ class NetTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getaddednodeinfo(), [])
         # add a node (node2) to node0
         ip_port = "127.0.0.1:{}".format(p2p_port(2))
-        self.nodes[0].addnode(ip_port, 'add')
+        self.nodes[0].addnode(node=ip_port, command='add')
         # check that the node has indeed been added
         added_nodes = self.nodes[0].getaddednodeinfo(ip_port)
         assert_equal(len(added_nodes), 1)
