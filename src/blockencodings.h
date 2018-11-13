@@ -186,6 +186,9 @@ public:
 
         READWRITE(prefilledtxn);
 
+        if (BlockTxCount() > std::numeric_limits<uint16_t>::max())
+            throw std::ios_base::failure("indexes overflowed 16 bits");
+
         if (ser_action.ForRead())
             FillShortTxIDSelector();
     }
