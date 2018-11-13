@@ -847,7 +847,10 @@ UniValue protx(const JSONRPCRequest& request)
         protx_help();
     }
 
-    std::string command = request.params[0].get_str();
+    std::string command;
+    if (request.params.size() >= 1) {
+        command = request.params[0].get_str();
+    }
 
     if (command == "register" || command == "register_fund" || command == "register_prepare") {
         return protx_register(request);
@@ -916,11 +919,14 @@ UniValue bls_generate(const JSONRPCRequest& request)
 
 UniValue _bls(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.empty()) {
+    if (request.fHelp && request.params.empty()) {
         bls_help();
     }
 
-    std::string command = request.params[0].get_str();
+    std::string command;
+    if (request.params.size() >= 1) {
+        command = request.params[0].get_str();
+    }
 
     if (command == "generate") {
         return bls_generate(request);
