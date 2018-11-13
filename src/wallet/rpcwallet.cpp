@@ -2075,7 +2075,21 @@ static UniValue lockunspent(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
-            "lockunspent unlock ([{\"txid\":\"txid\",\"vout\":n},...])\n"
+            RPCHelpMan{"lockunspent",
+                {
+                    {"unlock", RPCArg::Type::BOOL, false},
+                    {"transactions", RPCArg::Type::ARR,
+                        {
+                            {"", RPCArg::Type::OBJ,
+                                {
+                                    {"txid", RPCArg::Type::STR_HEX, false},
+                                    {"vout", RPCArg::Type::NUM, false},
+                                },
+                                true},
+                        },
+                        true},
+                }}
+                .ToString() +
             "\nUpdates list of temporarily unspendable outputs.\n"
             "Temporarily lock (unlock=false) or unlock (unlock=true) specified transaction outputs.\n"
             "If no transaction outputs are specified when unlocking then all current locked transaction outputs are unlocked.\n"
@@ -2620,7 +2634,26 @@ static UniValue listunspent(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() > 5)
         throw std::runtime_error(
-            "listunspent ( minconf maxconf  [\"addresses\",...] [include_unsafe] [query_options])\n"
+            RPCHelpMan{"listunspent",
+                {
+                    {"minconf", RPCArg::Type::NUM, true},
+                    {"maxconf", RPCArg::Type::NUM, true},
+                    {"addresses", RPCArg::Type::ARR,
+                        {
+                            {"address", RPCArg::Type::STR_HEX, true},
+                        },
+                        true},
+                    {"include_unsafe", RPCArg::Type::BOOL, true},
+                    {"query_options", RPCArg::Type::OBJ,
+                        {
+                            {"minimumAmount", RPCArg::Type::AMOUNT, true},
+                            {"maximumAmount", RPCArg::Type::AMOUNT, true},
+                            {"maximumCount", RPCArg::Type::NUM, true},
+                            {"minimumSumAmount", RPCArg::Type::AMOUNT, true},
+                        },
+                        true},
+                }}
+                .ToString() +
             "\nReturns array of unspent transaction outputs\n"
             "with between minconf and maxconf (inclusive) confirmations.\n"
             "Optionally filter to only include txouts paid to specified addresses.\n"
@@ -2995,7 +3028,25 @@ UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw std::runtime_error(
-            "signrawtransactionwithwallet \"hexstring\" ( [{\"txid\":\"id\",\"vout\":n,\"scriptPubKey\":\"hex\",\"redeemScript\":\"hex\"},...] sighashtype )\n"
+            RPCHelpMan{"signrawtransactionwithwallet",
+                {
+                    {"hexstring", RPCArg::Type::STR, false},
+                    {"prevtxs", RPCArg::Type::ARR,
+                        {
+                            {"", RPCArg::Type::OBJ,
+                                {
+                                    {"txid", RPCArg::Type::STR_HEX, false},
+                                    {"vout", RPCArg::Type::NUM, false},
+                                    {"scriptPubKey", RPCArg::Type::STR_HEX, false},
+                                    {"redeemScript", RPCArg::Type::STR_HEX, false},
+                                    {"amount", RPCArg::Type::AMOUNT, false},
+                                },
+                                false},
+                        },
+                        true},
+                    {"sighashtype", RPCArg::Type::STR, true},
+                }}
+                .ToString() +
             "\nSign inputs for raw transaction (serialized, hex-encoded).\n"
             "The second optional argument (may be null) is an array of previous transaction outputs that\n"
             "this transaction depends on but may not yet be in the block chain.\n"
@@ -3902,7 +3953,55 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 5)
         throw std::runtime_error(
-                            "walletcreatefundedpsbt [{\"txid\":\"id\",\"vout\":n},...] [{\"address\":amount},{\"data\":\"hex\"},...] ( locktime ) ( replaceable ) ( options bip32derivs )\n"
+            RPCHelpMan{"walletcreatefundedpsbt",
+                {
+                    {"inputs", RPCArg::Type::ARR,
+                        {
+                            {"", RPCArg::Type::OBJ,
+                                {
+                                    {"txid", RPCArg::Type::STR_HEX, false},
+                                    {"vout", RPCArg::Type::NUM, false},
+                                    {"sequence", RPCArg::Type::NUM, false},
+                                },
+                                false},
+                        },
+                        false},
+                    {"outputs", RPCArg::Type::ARR,
+                        {
+                            {"", RPCArg::Type::OBJ,
+                                {
+                                    {"address", RPCArg::Type::AMOUNT, true},
+                                },
+                                true},
+                            {"", RPCArg::Type::OBJ,
+                                {
+                                    {"data", RPCArg::Type::STR_HEX, true},
+                                },
+                                true},
+                        },
+                        false},
+                    {"locktime", RPCArg::Type::NUM, true},
+                    {"options", RPCArg::Type::OBJ,
+                        {
+                            {"changeAddress", RPCArg::Type::STR_HEX, true},
+                            {"changePosition", RPCArg::Type::NUM, true},
+                            {"change_type", RPCArg::Type::STR, true},
+                            {"includeWatching", RPCArg::Type::BOOL, true},
+                            {"lockUnspents", RPCArg::Type::BOOL, true},
+                            {"feeRate", RPCArg::Type::NUM, true},
+                            {"subtractFeeFromOutputs", RPCArg::Type::ARR,
+                                {
+                                    {"int", RPCArg::Type::NUM, true},
+                                },
+                                true},
+                            {"replaceable", RPCArg::Type::BOOL, true},
+                            {"conf_target", RPCArg::Type::NUM, true},
+                            {"estimate_mode", RPCArg::Type::STR, true},
+                        },
+                        true},
+                    {"bip32derivs", RPCArg::Type::BOOL, true},
+                }}
+                .ToString() +
                             "\nCreates and funds a transaction in the Partially Signed Transaction format. Inputs will be added if supplied inputs are not enough\n"
                             "Implements the Creator and Updater roles.\n"
                             "\nArguments:\n"

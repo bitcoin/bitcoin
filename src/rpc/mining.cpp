@@ -18,10 +18,11 @@
 #include <rpc/blockchain.h>
 #include <rpc/mining.h>
 #include <rpc/server.h>
+#include <rpc/util.h>
 #include <shutdown.h>
 #include <txmempool.h>
-#include <util/system.h>
 #include <util/strencodings.h>
+#include <util/system.h>
 #include <validation.h>
 #include <validationinterface.h>
 #include <versionbitsinfo.h>
