@@ -3332,13 +3332,12 @@ UniValue rescanblockchain(const JSONRPCRequest& request)
         }
     }
 
-    const CBlockIndex* stopBlock;
+    const CBlockIndex *failed_block, *stopBlock;
     CWallet::ScanResult result =
-        pwallet->ScanForWalletTransactions(pindexStart, pindexStop, reserver, stopBlock, true);
+        pwallet->ScanForWalletTransactions(pindexStart, pindexStop, reserver, failed_block, stopBlock, true);
     switch (result) {
     case CWallet::ScanResult::SUCCESS:
-        stopBlock = pindexStop ? pindexStop : pChainTip;
-        break;
+        break; // stopBlock set by ScanForWalletTransactions
     case CWallet::ScanResult::FAILURE:
         throw JSONRPCError(RPC_MISC_ERROR, "Rescan failed. Potentially corrupted data files.");
     case CWallet::ScanResult::USER_ABORT:

@@ -1613,9 +1613,9 @@ int64_t CWallet::RescanFromTime(int64_t startTime, const WalletRescanReserver& r
     }
 
     if (startBlock) {
-        const CBlockIndex* failedBlock;
+        const CBlockIndex *failedBlock, *stop_block;
         // TODO: this should take into account failure by ScanResult::USER_ABORT
-        if (ScanResult::FAILURE == ScanForWalletTransactions(startBlock, nullptr, reserver, failedBlock, update)) {
+        if (ScanResult::FAILURE == ScanForWalletTransactions(startBlock, nullptr, reserver, failedBlock, stop_block, update)) {
             return failedBlock->GetBlockTimeMax() + TIMESTAMP_WINDOW + 1;
         }
     }
@@ -1628,8 +1628,10 @@ int64_t CWallet::RescanFromTime(int64_t startTime, const WalletRescanReserver& r
  * exist in the wallet will be updated.
  *
  * @param[in] pindexStop if not a nullptr, the scan will stop at this block-index
- * @param[out] failed_block if FAILURE is returned, will be set to the most
- *    recent block that could not be scanned, otherwise nullptr
+ * @param[out] failed_block if FAILURE is returned, the most recent block
+ *     that could not be scanned, otherwise nullptr
+ * @param[out] stop_block the most recent block that could be scanned,
+ *     otherwise nullptr if no block could be scanned
  *
  * @return ScanResult indicating success or failure of the scan. SUCCESS if
  * scan was successful. FAILURE if a complete rescan was not possible (due to
@@ -1640,7 +1642,7 @@ int64_t CWallet::RescanFromTime(int64_t startTime, const WalletRescanReserver& r
  * the main chain after to the addition of any new keys you want to detect
  * transactions for.
  */
-CWallet::ScanResult CWallet::ScanForWalletTransactions(const CBlockIndex* const pindexStart, const CBlockIndex* const pindexStop, const WalletRescanReserver& reserver, const CBlockIndex*& failed_block, bool fUpdate)
+CWallet::ScanResult CWallet::ScanForWalletTransactions(const CBlockIndex* const pindexStart, const CBlockIndex* const pindexStop, const WalletRescanReserver& reserver, const CBlockIndex*& failed_block, const CBlockIndex*& stop_block, bool fUpdate)
 {
     int64_t nNow = GetTime();
     const CChainParams& chainParams = Params();
@@ -1694,7 +1696,10 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const CBlockIndex* const 
                 for (size_t posInBlock = 0; posInBlock < block.vtx.size(); ++posInBlock) {
                     SyncTransaction(block.vtx[posInBlock], pindex, posInBlock, fUpdate);
                 }
+                // scan succeeded, record block as most recent successfully scanned
+                stop_block = pindex;
             } else {
+                // could not scan block, keep scanning but record this block as the most recent failure
                 failed_block = pindex;
             }
             if (pindex == pindexStop) {
@@ -4174,8 +4179,8 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
         nStart = GetTimeMillis();
         {
             WalletRescanReserver reserver(walletInstance.get());
-            const CBlockIndex* stop_block;
-            if (!reserver.reserve() || (ScanResult::SUCCESS != walletInstance->ScanForWalletTransactions(pindexRescan, nullptr, reserver, stop_block, true))) {
+            const CBlockIndex *stop_block, *failed_block;
+            if (!reserver.reserve() || (ScanResult::SUCCESS != walletInstance->ScanForWalletTransactions(pindexRescan, nullptr, reserver, failed_block, stop_block, true))) {
                 InitError(_("Failed to rescan the wallet during initialization"));
                 return nullptr;
             }
