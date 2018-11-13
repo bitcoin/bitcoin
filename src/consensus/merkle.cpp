@@ -46,7 +46,7 @@
 uint256 ComputeMerkleRoot(std::vector<uint256> hashes, bool* mutated) {
     bool mutation = false;
     while (hashes.size() > 1) {
-        if (mutated) {
+        if (mutated != nullptr && !mutation) {
             for (size_t pos = 0; pos + 1 < hashes.size(); pos += 2) {
                 if (hashes[pos] == hashes[pos + 1]) mutation = true;
             }
@@ -57,7 +57,7 @@ uint256 ComputeMerkleRoot(std::vector<uint256> hashes, bool* mutated) {
         SHA256D64(hashes[0].begin(), hashes[0].begin(), hashes.size() / 2);
         hashes.resize(hashes.size() / 2);
     }
-    if (mutated) *mutated = mutation;
+    if (mutated != nullptr) *mutated = mutation;
     if (hashes.size() == 0) return uint256();
     return hashes[0];
 }
@@ -83,4 +83,3 @@ uint256 BlockWitnessMerkleRoot(const CBlock& block, bool* mutated)
     }
     return ComputeMerkleRoot(std::move(leaves), mutated);
 }
-
