@@ -235,7 +235,7 @@ UniValue stop(const JSONRPCRequest& jsonRequest)
 
 static UniValue uptime(const JSONRPCRequest& jsonRequest)
 {
-    if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
+    if (jsonRequest.fHelp || jsonRequest.params.size() > 0)
         throw std::runtime_error(
                 "uptime\n"
                         "\nReturns the total uptime of the server.\n"

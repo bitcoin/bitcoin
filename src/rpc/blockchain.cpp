@@ -287,12 +287,12 @@ static UniValue waitforblockheight(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
-            "waitforblockheight <height> (timeout)\n"
+            "waitforblockheight height ( timeout )\n"
             "\nWaits for (at least) block height and returns the height and hash\n"
             "of the current tip.\n"
             "\nReturns the current block on timeout or exit.\n"
             "\nArguments:\n"
-            "1. height  (required, int) Block height to wait for (int)\n"
+            "1. height  (int, required) Block height to wait for.\n"
             "2. timeout (int, optional, default=0) Time in milliseconds to wait for a response. 0 indicates no timeout.\n"
             "\nResult:\n"
             "{                           (json object)\n"
@@ -696,11 +696,11 @@ static UniValue getblockheader(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
-            "getblockheader \"hash\" ( verbose )\n"
+            "getblockheader \"blockhash\" ( verbose )\n"
             "\nIf verbose is false, returns a string that is serialized, hex-encoded data for blockheader 'hash'.\n"
             "If verbose is true, returns an Object with information about blockheader <hash>.\n"
             "\nArguments:\n"
-            "1. \"hash\"          (string, required) The block hash\n"
+            "1. \"blockhash\"     (string, required) The block hash\n"
             "2. verbose           (boolean, optional, default=true) true for a json object, false for the hex-encoded data\n"
             "\nResult (for verbose = true):\n"
             "{\n"
@@ -926,7 +926,7 @@ static UniValue pruneblockchain(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-            "pruneblockchain\n"
+            "pruneblockchain height\n"
             "\nArguments:\n"
             "1. \"height\"       (numeric, required) The block height to prune up to. May be set to a discrete height, or a unix timestamp\n"
             "                  to prune blocks whose block time is at least 2 hours older than the provided timestamp.\n"
@@ -1563,7 +1563,7 @@ static UniValue getchaintxstats(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 2)
         throw std::runtime_error(
-            "getchaintxstats ( nblocks blockhash )\n"
+            "getchaintxstats ( nblocks \"blockhash\" )\n"
             "\nCompute statistics about the total number and rate of transactions in the chain.\n"
             "\nArguments:\n"
             "1. nblocks      (numeric, optional) Size of the window in number of blocks (default: one month).\n"
@@ -2040,7 +2040,7 @@ UniValue scantxoutset(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
-            "scantxoutset <action> ( <scanobjects> )\n"
+            "scantxoutset \"action\" [scanobjects,...]\n"
             "\nEXPERIMENTAL warning: this call may be removed or changed in future releases.\n"
             "\nScans the unspent transaction output set for entries that match certain output descriptors.\n"
             "Examples of output descriptors are:\n"
