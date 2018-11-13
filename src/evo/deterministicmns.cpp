@@ -210,6 +210,54 @@ std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(int
     return result;
 }
 
+std::vector<CDeterministicMNCPtr> CDeterministicMNList::CalculateQuorum(size_t maxSize, const uint256& modifier) const
+{
+    auto scores = CalculateScores(modifier);
+
+    // sort is descending order
+    std::sort(scores.rbegin(), scores.rend(), [](const std::pair<arith_uint256, CDeterministicMNCPtr>& a, std::pair<arith_uint256, CDeterministicMNCPtr>& b) {
+        if (a.first == b.first) {
+            // this should actually never happen, but we should stay compatible with how the non deterministic MNs did the sorting
+            return a.second->collateralOutpoint < b.second->collateralOutpoint;
+        }
+        return a.first < b.first;
+    });
+
+    // take top maxSize entries and return it
+    std::vector<CDeterministicMNCPtr> result;
+    result.resize(std::min(maxSize, scores.size()));
+    for (size_t i = 0; i < result.size(); i++) {
+        result[i] = std::move(scores[i].second);
+    }
+    return result;
+}
+
+std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> CDeterministicMNList::CalculateScores(const uint256& modifier) const
+{
+    std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> scores;
+    scores.reserve(GetAllMNsCount());
+    ForEachMN(true, [&](const CDeterministicMNCPtr& dmn) {
+        if (dmn->pdmnState->confirmedHash.IsNull()) {
+            // we only take confirmed MNs into account to avoid hash grinding on the ProRegTxHash to sneak MNs into a
+            // future quorums
+            return;
+        }
+        // calculate sha256(sha256(proTxHash, confirmedHash), modifier) per MN
+        // Please note that this is not a double-sha256 but a single-sha256
+        // The first part is already precalculated (confirmedHashWithProRegTxHash)
+        // TODO When https://github.com/bitcoin/bitcoin/pull/13191 gets backported, implement something that is similar but for single-sha256
+        uint256 h;
+        CSHA256 sha256;
+        sha256.Write(dmn->pdmnState->confirmedHashWithProRegTxHash.begin(), dmn->pdmnState->confirmedHashWithProRegTxHash.size());
+        sha256.Write(modifier.begin(), modifier.size());
+        sha256.Finalize(h.begin());
+
+        scores.emplace_back(UintToArith256(h), dmn);
+    });
+
+    return scores;
+}
+
 CDeterministicMNListDiff CDeterministicMNList::BuildDiff(const CDeterministicMNList& to) const
 {
     CDeterministicMNListDiff diffRet;
@@ -370,6 +418,24 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
     newList.SetHeight(nHeight);
 
     auto payee = oldList.GetMNPayee();
+
+    // we iterate the oldList here and update the newList
+    // this is only valid as long these have not diverged at this point, which is the case as long as we don't add
+    // code above this loop that modifies newList
+    oldList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
+        if (!dmn->pdmnState->confirmedHash.IsNull()) {
+            // already confirmed
+            return;
+        }
+        // this works on the previous block, so confirmation will happen one block after nMasternodeMinimumConfirmations
+        // has been reached, but the block hash will then point to the block at nMasternodeMinimumConfirmations
+        int nConfirmations = pindexPrev->nHeight - dmn->pdmnState->nRegisteredHeight;
+        if (nConfirmations >= Params().GetConsensus().nMasternodeMinimumConfirmations) {
+            CDeterministicMNState newState = *dmn->pdmnState;
+            newState.UpdateConfirmedHash(dmn->proTxHash, pindexPrev->GetBlockHash());
+            newList.UpdateMN(dmn->proTxHash, std::make_shared<CDeterministicMNState>(newState));
+        }
+    });
 
     // we skip the coinbase
     for (int i = 1; i < (int)block.vtx.size(); i++) {

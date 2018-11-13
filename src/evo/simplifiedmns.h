@@ -19,6 +19,7 @@ class CSimplifiedMNListEntry
 {
 public:
     uint256 proRegTxHash;
+    uint256 confirmedHash;
     CService service;
     CBLSPublicKey pubKeyOperator;
     CKeyID keyIDVoting;
@@ -35,6 +36,7 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action)
     {
         READWRITE(proRegTxHash);
+        READWRITE(confirmedHash);
         READWRITE(service);
         READWRITE(pubKeyOperator);
         READWRITE(keyIDVoting);

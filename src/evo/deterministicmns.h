@@ -5,6 +5,7 @@
 #ifndef DASH_DETERMINISTICMNS_H
 #define DASH_DETERMINISTICMNS_H
 
+#include "arith_uint256.h"
 #include "bls/bls.h"
 #include "dbwrapper.h"
 #include "evodb.h"
@@ -29,6 +30,12 @@ public:
     int nPoSeRevivedHeight{-1};
     int nPoSeBanHeight{-1};
     uint16_t nRevocationReason{CProUpRevTx::REASON_NOT_SPECIFIED};
+
+    // the block hash X blocks after registration, used in quorum calculations
+    uint256 confirmedHash;
+    // sha256(proTxHash, confirmedHash) to speed up quorum calculations
+    // please note that this is NOT a double-sha256 hash
+    uint256 confirmedHashWithProRegTxHash;
 
     CKeyID keyIDOwner;
     CBLSPublicKey pubKeyOperator;
@@ -64,6 +71,8 @@ public:
         READWRITE(nPoSeRevivedHeight);
         READWRITE(nPoSeBanHeight);
         READWRITE(nRevocationReason);
+        READWRITE(confirmedHash);
+        READWRITE(confirmedHashWithProRegTxHash);
         READWRITE(keyIDOwner);
         READWRITE(pubKeyOperator);
         READWRITE(keyIDVoting);
@@ -85,6 +94,14 @@ public:
             nPoSeBanHeight = height;
         }
     }
+    void UpdateConfirmedHash(const uint256& _proTxHash, const uint256& _confirmedHash)
+    {
+        confirmedHash = _confirmedHash;
+        CSHA256 h;
+        h.Write(_proTxHash.begin(), _proTxHash.size());
+        h.Write(_confirmedHash.begin(), _confirmedHash.size());
+        h.Finalize(confirmedHashWithProRegTxHash.begin());
+    }
 
     bool operator==(const CDeterministicMNState& rhs) const
     {
@@ -94,6 +111,8 @@ public:
                nPoSeRevivedHeight == rhs.nPoSeRevivedHeight &&
                nPoSeBanHeight == rhs.nPoSeBanHeight &&
                nRevocationReason == rhs.nRevocationReason &&
+               confirmedHash == rhs.confirmedHash &&
+               confirmedHashWithProRegTxHash == rhs.confirmedHashWithProRegTxHash &&
                keyIDOwner == rhs.keyIDOwner &&
                pubKeyOperator == rhs.pubKeyOperator &&
                keyIDVoting == rhs.keyIDVoting &&
@@ -277,6 +296,15 @@ public:
      * @return
      */
     std::vector<CDeterministicMNCPtr> GetProjectedMNPayees(int nCount) const;
+
+    /**
+     * Calculate a quorum based on the modifier. The resulting list is deterministically sorted by score
+     * @param maxSize
+     * @param modifier
+     * @return
+     */
+    std::vector<CDeterministicMNCPtr> CalculateQuorum(size_t maxSize, const uint256& modifier) const;
+    std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> CalculateScores(const uint256& modifier) const;
 
     CDeterministicMNListDiff BuildDiff(const CDeterministicMNList& to) const;
     CDeterministicMNList ApplyDiff(const CDeterministicMNListDiff& diff) const;

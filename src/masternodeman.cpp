@@ -783,26 +783,31 @@ std::map<COutPoint, CMasternode> CMasternodeMan::GetFullMasternodeMap()
 
 bool CMasternodeMan::GetMasternodeScores(const uint256& nBlockHash, CMasternodeMan::score_pair_vec_t& vecMasternodeScoresRet, int nMinProtocol)
 {
-    vecMasternodeScoresRet.clear();
-
-    if (!masternodeSync.IsMasternodeListSynced())
-        return false;
-
     AssertLockHeld(cs);
 
-    if (mapMasternodes.empty())
-        return false;
+    vecMasternodeScoresRet.clear();
 
-    // calculate scores
-    for (const auto& mnpair : mapMasternodes) {
-        if (deterministicMNManager->IsDeterministicMNsSporkActive() && !deterministicMNManager->HasValidMNCollateralAtChainTip(mnpair.second.outpoint))
-            continue;
+    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+        auto mnList = deterministicMNManager->GetListAtChainTip();
+        auto scores = mnList.CalculateScores(nBlockHash);
+        for (const auto& p : scores) {
+            auto* mn = Find(p.second->collateralOutpoint);
+            vecMasternodeScoresRet.emplace_back(p.first, mn);
+        }
+    } else {
+        if (!masternodeSync.IsMasternodeListSynced())
+            return false;
 
-        if (mnpair.second.nProtocolVersion >= nMinProtocol) {
-            vecMasternodeScoresRet.push_back(std::make_pair(mnpair.second.CalculateScore(nBlockHash), &mnpair.second));
+        if (mapMasternodes.empty())
+            return false;
+
+        // calculate scores
+        for (const auto& mnpair : mapMasternodes) {
+            if (mnpair.second.nProtocolVersion >= nMinProtocol) {
+                vecMasternodeScoresRet.push_back(std::make_pair(mnpair.second.CalculateScore(nBlockHash), &mnpair.second));
+            }
         }
     }
-
     sort(vecMasternodeScoresRet.rbegin(), vecMasternodeScoresRet.rend(), CompareScoreMN());
     return !vecMasternodeScoresRet.empty();
 }
