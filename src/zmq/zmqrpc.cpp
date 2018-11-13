@@ -5,6 +5,7 @@
 #include <zmq/zmqrpc.h>
 
 #include <rpc/server.h>
+#include <rpc/util.h>
 #include <zmq/zmqabstractnotifier.h>
 #include <zmq/zmqnotificationinterface.h>
 
