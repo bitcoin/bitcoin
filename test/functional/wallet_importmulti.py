@@ -129,7 +129,7 @@ class ImportMultiTest(BitcoinTestFramework):
             "pubkeys": [ address['pubkey'] ],
             "internal": True
         }]
-        result = self.nodes[1].importmulti(request)
+        result = self.nodes[1].importmulti(requests=request)
         assert_equal(result[0]['success'], True)
         address_assert = self.nodes[1].getaddressinfo(address['address'])
         assert_equal(address_assert['iswatchonly'], True)
@@ -144,7 +144,7 @@ class ImportMultiTest(BitcoinTestFramework):
             "timestamp": "now",
             "pubkeys": [ address['pubkey'] ]
         }]
-        result = self.nodes[1].importmulti(request)
+        result = self.nodes[1].importmulti(requests=request)
         assert_equal(result[0]['success'], False)
         assert_equal(result[0]['error']['code'], -8)
         assert_equal(result[0]['error']['message'], 'Internal must be set to true for nonstandard scriptPubKey imports.')

@@ -23,8 +23,9 @@ def b2x(b):
 def assert_template(node, block, expect, rehash=True):
     if rehash:
         block.hashMerkleRoot = block.calc_merkle_root()
-    rsp = node.getblocktemplate({'data': b2x(block.serialize()), 'mode': 'proposal'})
+    rsp = node.getblocktemplate(template_request={'data': b2x(block.serialize()), 'mode': 'proposal'})
     assert_equal(rsp, expect)
+
 
 class MiningTest(BitcoinTestFramework):
     def set_test_params(self):
