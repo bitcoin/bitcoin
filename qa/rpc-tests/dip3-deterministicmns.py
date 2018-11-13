@@ -655,7 +655,7 @@ class DIP3Test(BitcoinTestFramework):
         address = node.getnewaddress()
         key = node.getnewaddress()
         blsKey = node.bls('generate')
-        assert_raises_jsonrpc(None, "bad-tx-type", node.protx, 'register_fund', address, '127.0.0.1:10000', key, blsKey['public'], key, 0, address)
+        assert_raises_jsonrpc(None, "bad-tx-type-dip3", node.protx, 'register_fund', address, '127.0.0.1:10000', key, blsKey['public'], key, 0, address)
 
     def test_success_create_protx(self, node):
         address = node.getnewaddress()

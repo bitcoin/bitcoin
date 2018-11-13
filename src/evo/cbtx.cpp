@@ -20,7 +20,7 @@ bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidatio
 
     CCbTx cbTx;
     if (!GetTxPayload(tx, cbTx)) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-tx-payload");
+        return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-payload");
     }
 
     if (cbTx.nVersion > CCbTx::CURRENT_VERSION) {
@@ -45,7 +45,7 @@ bool CheckCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindex, C
 
     CCbTx cbTx;
     if (!GetTxPayload(*block.vtx[0], cbTx)) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-tx-payload");
+        return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-payload");
     }
 
     if (pindex) {

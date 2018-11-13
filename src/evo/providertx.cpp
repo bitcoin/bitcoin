@@ -80,7 +80,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
 
     CProRegTx ptx;
     if (!GetTxPayload(tx, ptx)) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-tx-payload");
+        return state.DoS(100, false, REJECT_INVALID, "bad-protx-payload");
     }
 
     if (ptx.nVersion > CProRegTx::CURRENT_VERSION) {
@@ -207,7 +207,7 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
 
     CProUpServTx ptx;
     if (!GetTxPayload(tx, ptx)) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-tx-payload");
+        return state.DoS(100, false, REJECT_INVALID, "bad-protx-payload");
     }
 
     if (ptx.nVersion > CProRegTx::CURRENT_VERSION) {
@@ -259,7 +259,7 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
 
     CProUpRegTx ptx;
     if (!GetTxPayload(tx, ptx)) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-tx-payload");
+        return state.DoS(100, false, REJECT_INVALID, "bad-protx-payload");
     }
 
     if (ptx.nVersion > CProRegTx::CURRENT_VERSION) {
@@ -335,7 +335,7 @@ bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
 
     CProUpRevTx ptx;
     if (!GetTxPayload(tx, ptx)) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-tx-payload");
+        return state.DoS(100, false, REJECT_INVALID, "bad-protx-payload");
     }
 
     if (ptx.nVersion > CProRegTx::CURRENT_VERSION) {
