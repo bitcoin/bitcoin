@@ -12,8 +12,6 @@
 #include <primitives/block.h>
 #include <uint256.h>
 
-uint256 ComputeMerkleRoot(std::vector<uint256> hashes, bool* mutated = nullptr);
-
 /*
  * Compute the Merkle root of the transactions in a block.
  * *mutated is set to true if a duplicated subtree was found.

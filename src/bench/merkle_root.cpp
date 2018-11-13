@@ -6,7 +6,8 @@
 
 #include <uint256.h>
 #include <random.h>
-#include <consensus/merkle.h>
+
+uint256 ComputeMerkleRoot(std::vector<uint256> hashes, bool* mutated);
 
 static void MerkleRoot(benchmark::State& state)
 {
