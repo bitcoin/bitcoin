@@ -1,6 +1,8 @@
 #ifndef BITCOIN_QT_TEST_UTIL_H
 #define BITCOIN_QT_TEST_UTIL_H
 
+#include <QString>
+
 /**
  * Press "Ok" button in message box dialog.
  *
