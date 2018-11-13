@@ -184,7 +184,10 @@ class NodeImpl : public Node
             LOCK(::cs_main);
             tip = ::chainActive.Tip();
         }
-        return GuessVerificationProgress(Params().TxData(), tip);
+        if (!::masternodeSync.IsBlockchainSynced())
+            return GuessVerificationProgress(Params().TxData(), tip);
+        else
+            return ::masternodeSync.getMNSyncStatus();
     }
     bool isInitialBlockDownload() override { return IsInitialBlockDownload(); }
     bool getReindex() override { return ::fReindex; }
@@ -225,22 +228,22 @@ class NodeImpl : public Node
     }
     //! Module signals
 
-    std::string getMNSyncStatus() override { return masternodeSync.GetSyncStatus(); }
-    bool IsMasternodelistSynced() override { return masternodeSync.IsMasternodeListSynced(); }
-    bool MNIsBlockchainsynced() override { return masternodeSync.IsBlockchainSynced(); }
-    bool MNIsSynced() override { return masternodeSync.IsSynced(); }
-    int MNConfigCount() override { return masternodeConfig.getCount(); }
-    std::vector<CMasternodeConfig::CMasternodeEntry>& MNgetEntries() override { return masternodeConfig.getEntries(); }
+    std::string getMNSyncStatus() override { return ::masternodeSync.GetSyncStatus(); }
+    bool IsMasternodelistSynced() override { return ::masternodeSync.IsMasternodeListSynced(); }
+    bool MNIsBlockchainsynced() override { return ::masternodeSync.IsBlockchainSynced(); }
+    bool MNIsSynced() override { return ::masternodeSync.IsSynced(); }
+    int MNConfigCount() override { return ::masternodeConfig.getCount(); }
+    std::vector<CMasternodeConfig::CMasternodeEntry>& MNgetEntries() override { return ::masternodeConfig.getEntries(); }
 
     MasterNodeCount getMNcount() override
     {
         MasterNodeCount result;
-        result.size = mnodeman.size();
-        result.compatible = mnodeman.CountMasternodes(MIN_PRIVATESEND_PEER_PROTO_VERSION);
-        result.enabled = mnodeman.CountEnabled(MIN_PRIVATESEND_PEER_PROTO_VERSION);
-        result.countIPv4 = mnodeman.CountByIP(NET_IPV4);
-        result.countIPv6 = mnodeman.CountByIP(NET_IPV6);
-        result.countTOR = mnodeman.CountByIP(NET_ONION);
+        result.size = ::mnodeman.size();
+        result.compatible = ::mnodeman.CountMasternodes(MIN_PRIVATESEND_PEER_PROTO_VERSION);
+        result.enabled = ::mnodeman.CountEnabled(MIN_PRIVATESEND_PEER_PROTO_VERSION);
+        result.countIPv4 = ::mnodeman.CountByIP(NET_IPV4);
+        result.countIPv6 = ::mnodeman.CountByIP(NET_IPV6);
+        result.countTOR = ::mnodeman.CountByIP(NET_ONION);
         return result;
     }
 
@@ -288,10 +291,6 @@ class NodeImpl : public Node
     std::unique_ptr<Handler> handleNotifyAlertChanged(NotifyAlertChangedFn fn) override
     {
         return MakeHandler(::uiInterface.NotifyAlertChanged.connect(fn));
-    }
-    std::unique_ptr<Handler> handleNotifyMNSyncProgress(NotifyMNSyncProgressFn fn) override
-    {
-        return MakeHandler(::uiInterface.NotifyMNSyncProgress.connect(fn));
     }
     std::unique_ptr<Handler> handleBannedListChanged(BannedListChangedFn fn) override
     {

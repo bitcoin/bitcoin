@@ -155,9 +155,12 @@ enum BlockSource ClientModel::getBlockSource() const
         return BlockSource::REINDEX;
     else if (m_node.getImporting())
         return BlockSource::DISK;
-    else if (getNumConnections() > 0)
-        return BlockSource::NETWORK;
-
+    else if (getNumConnections() > 0) {
+        if (m_node.MNIsBlockchainsynced())
+            return BlockSource::MASTERNODE;
+        else
+            return BlockSource::NETWORK;
+    }
     return BlockSource::NONE;
 }
 
@@ -273,13 +276,6 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, int heig
     }
 }
 
-static void NotifyMNSyncProgress(ClientModel *clientmodel, const std::string &title, double nProgress)
-{
-    QMetaObject::invokeMethod(clientmodel, "moduleDataSyncProgress", Qt::QueuedConnection,
-                              Q_ARG(QString, QString::fromStdString(title)),
-                              Q_ARG(double, nProgress));
-}
-
 void ClientModel::subscribeToCoreSignals()
 {
     // Connect signals to client
@@ -290,7 +286,6 @@ void ClientModel::subscribeToCoreSignals()
     m_handler_banned_list_changed = m_node.handleBannedListChanged(boost::bind(BannedListChanged, this));
     m_handler_notify_block_tip = m_node.handleNotifyBlockTip(boost::bind(BlockTipChanged, this, _1, _2, _3, _4, false));
     m_handler_notify_header_tip = m_node.handleNotifyHeaderTip(boost::bind(BlockTipChanged, this, _1, _2, _3, _4, true));
-    m_handler_notify_mn_data = m_node.handleNotifyMNSyncProgress(boost::bind(NotifyMNSyncProgress, this, _1, _2));
 }
 
 void ClientModel::unsubscribeFromCoreSignals()
@@ -303,7 +298,6 @@ void ClientModel::unsubscribeFromCoreSignals()
     m_handler_banned_list_changed->disconnect();
     m_handler_notify_block_tip->disconnect();
     m_handler_notify_header_tip->disconnect();
-    m_handler_notify_mn_data->disconnect();
 }
 
 bool ClientModel::getProxyInfo(std::string& ip_port) const

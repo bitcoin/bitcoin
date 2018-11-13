@@ -86,7 +86,6 @@ void CMasternodeSync::SwitchToNextAsset(CConnman* connman)
         case(MASTERNODE_SYNC_GOVERNANCE):
             LogPrintf("CMasternodeSync::SwitchToNextAsset -- Completed %s in %llds\n", GetAssetName(), GetTime() - nTimeAssetSyncStarted);
             nRequestedMasternodeAssets = MASTERNODE_SYNC_FINISHED;
-            uiInterface.NotifyMNSyncProgress("", 1);
             //try to activate our masternode if possible
             activeMasternode.ManageState(connman);
 
@@ -165,10 +164,7 @@ void CMasternodeSync::ProcessTick(CConnman* connman)
         return;
     }
 
-    // Calculate "progress" for LOG reporting / GUI notification
-    double nProgress = double(nRequestedMasternodeAttempt + (nRequestedMasternodeAssets - 1) * 8) / (8*4);
-    LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nRequestedMasternodeAssets %d nRequestedMasternodeAttempt %d nSyncProgress %f\n", nTick, nRequestedMasternodeAssets, nRequestedMasternodeAttempt, nProgress);
-    uiInterface.NotifyMNSyncProgress(GetSyncStatus(), nProgress);
+    LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nRequestedMasternodeAssets %d nRequestedMasternodeAttempt %d nSyncProgress %f\n", nTick, nRequestedMasternodeAssets, nRequestedMasternodeAttempt, GetSyncStatus());
 
     std::vector<CNode*> vNodesCopy = connman->CopyNodeVector();
     for (auto& pnode : vNodesCopy)
@@ -438,9 +434,7 @@ void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitia
 
 void CMasternodeSync::Controller(CScheduler& scheduler, CConnman* connman)
 {
-    if (fLiteMode) {
-        uiInterface.NotifyMNSyncProgress("", 1);
-    } else {
+    if (!fLiteMode) {
         scheduler.scheduleEvery(std::bind(&CMasternodeSync::ProcessTick, this, connman), 1000);
     }
 }
