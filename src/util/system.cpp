@@ -78,7 +78,7 @@
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
-#include <boost/thread.hpp>
+
 #include <openssl/crypto.h>
 #include <openssl/rand.h>
 #include <openssl/conf.h>
