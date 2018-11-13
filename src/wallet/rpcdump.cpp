@@ -113,7 +113,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
             "Hint: use importmulti to import more than one private key.\n"
             "\nArguments:\n"
             "1. \"privkey\"          (string, required) The private key (see dumpprivkey)\n"
-            "2. \"label\"            (string, optional, default=\"\") An optional label\n"
+            "2. \"label\"            (string, optional, default=current label if address exists, otherwise \"\") An optional label\n"
             "3. rescan               (boolean, optional, default=true) Rescan the wallet for transactions\n"
             "\nNote: This call can take over an hour to complete if rescan is true, during that time, other rpc calls\n"
             "may report that the imported key exists but related transactions are still missing, leading to temporarily incorrect/bogus balances and unspent outputs until rescan completes.\n"
@@ -163,9 +163,14 @@ UniValue importprivkey(const JSONRPCRequest& request)
         CKeyID vchAddress = pubkey.GetID();
         {
             pwallet->MarkDirty();
-            // We don't know which corresponding address will be used; label them all
+
+            // We don't know which corresponding address will be used;
+            // label all new addresses, and label existing addresses if a
+            // label was passed.
             for (const auto& dest : GetAllDestinationsForKey(pubkey)) {
-                pwallet->SetAddressBook(dest, strLabel, "receive");
+                if (!request.params[1].isNull() || pwallet->mapAddressBook.count(dest) == 0) {
+                    pwallet->SetAddressBook(dest, strLabel, "receive");
+                }
             }
 
             // Don't throw error in case a key is already there
