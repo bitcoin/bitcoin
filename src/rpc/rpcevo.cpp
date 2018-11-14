@@ -449,7 +449,7 @@ void protx_update_service_help()
 
 UniValue protx_update_service(const JSONRPCRequest& request)
 {
-    if (request.fHelp || (request.params.size() != 3 && request.params.size() != 4))
+    if (request.fHelp || (request.params.size() != 4 && request.params.size() != 5))
         protx_update_service_help();
 
     CProUpServTx ptx;
