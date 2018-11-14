@@ -3013,7 +3013,7 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, CAmount nValueMin, CAmount 
     std::vector<COutput> vCoins;
 
     {
-        LOCK(cs_wallet);
+        LOCK2(cs_main, cs_wallet);
         AvailableCoins(vCoins, true, nullptr, ONLY_DENOMINATED);
     }
 
@@ -3172,8 +3172,8 @@ bool CWallet::SelectPrivateCoins(CAmount nValueMin, CAmount nValueMax, std::vect
     nValueRet = 0;
     std::vector<COutput> vCoins;
     {
-        LOCK(cs_wallet);
-       AvailableCoins(vCoins, true, coinControl, nPrivateSendRoundsMin < 0 ? ONLY_NONDENOMINATED : ONLY_DENOMINATED);
+        LOCK2(cs_main, cs_wallet);
+        AvailableCoins(vCoins, true, coinControl, nPrivateSendRoundsMin < 0 ? ONLY_NONDENOMINATED : ONLY_DENOMINATED);
     }
 
     //order the array so largest nondenom are first, then denominations, then very small inputs.
@@ -3316,7 +3316,7 @@ int CWallet::CountInputsWithAmount(CAmount nInputAmount)
 
 bool CWallet::HasCollateralInputs(bool fOnlyConfirmed) const
 {
-    LOCK(cs_wallet);
+    LOCK2(cs_main, cs_wallet);
     std::vector<COutput> vCoins;
     AvailableCoins(vCoins, fOnlyConfirmed, nullptr, ONLY_PRIVATESEND_COLLATERAL);
 
