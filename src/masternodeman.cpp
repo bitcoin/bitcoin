@@ -605,18 +605,26 @@ bool CMasternodeMan::GetMasternodeInfo(const CKeyID& keyIDOperator, masternode_i
 
 bool CMasternodeMan::GetMasternodeInfo(const CScript& payee, masternode_info_t& mnInfoRet)
 {
-    CTxDestination dest;
-    if (!ExtractDestination(payee, dest) || !boost::get<CKeyID>(&dest))
+    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+        // we can't reliably search by payee as there might be duplicates. Also, keyIDCollateralAddress is not
+        // always the payout address as DIP3 allows using different keys for collateral and payouts
+        // this method is only used from ComputeBlockVersion, which has a different logic for deterministic MNs
+        // this method won't be reimplemented when removing the compatibility code
         return false;
-    CKeyID keyId = *boost::get<CKeyID>(&dest);
-    LOCK(cs);
-    for (const auto& mnpair : mapMasternodes) {
-        if (mnpair.second.keyIDCollateralAddress == keyId) {
-            mnInfoRet = mnpair.second.GetInfo();
-            return true;
+    } else {
+        CTxDestination dest;
+        if (!ExtractDestination(payee, dest) || !boost::get<CKeyID>(&dest))
+            return false;
+        CKeyID keyId = *boost::get<CKeyID>(&dest);
+        LOCK(cs);
+        for (const auto& mnpair : mapMasternodes) {
+            if (mnpair.second.keyIDCollateralAddress == keyId) {
+                mnInfoRet = mnpair.second.GetInfo();
+                return true;
+            }
         }
+        return false;
     }
-    return false;
 }
 
 bool CMasternodeMan::Has(const COutPoint& outpoint)
