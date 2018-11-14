@@ -178,7 +178,7 @@ class DIP3Test(BitcoinTestFramework):
             self.nodes[0].generate(1)
 
             if fund:
-                # collateral has moved, so we need to "masternode start" it again
+                # collateral has moved, so we need to start it again
                 mns_to_restart.append(mns[i])
             else:
                 # collateral has not moved, so it should still be in the masternode list even after upgrade
@@ -195,7 +195,7 @@ class DIP3Test(BitcoinTestFramework):
         print("restarting controller and upgraded MNs")
         self.restart_controller_node()
         self.force_finish_mnsync_list(self.nodes[0])
-        for mn in mns_protx:
+        for mn in mns_to_restart:
             print("restarting MN %s" % mn.alias)
             self.stop_node(mn.idx)
             self.start_mn(mn)
@@ -337,7 +337,7 @@ class DIP3Test(BitcoinTestFramework):
 
         return mn
 
-    def create_mn_protx_base(self, node, idx, alias):
+    def create_mn_protx_base(self, node, idx, alias, legacy_mn_key):
         mn = Masternode()
         mn.idx = idx
         mn.alias = alias
@@ -348,14 +348,14 @@ class DIP3Test(BitcoinTestFramework):
         mn.ownerAddr = node.getnewaddress()
         mn.operatorAddr = blsKey['public']
         mn.votingAddr = mn.ownerAddr
-        mn.legacyMnkey = node.masternode('genkey')
+        mn.legacyMnkey = node.masternode('genkey') if legacy_mn_key is None else legacy_mn_key
         mn.blsMnkey = blsKey['secret']
 
         return mn
 
     # create a protx MN and also fund it (using collateral inside ProRegTx)
-    def create_mn_protx_fund(self, node, idx, alias):
-        mn = self.create_mn_protx_base(node, idx, alias)
+    def create_mn_protx_fund(self, node, idx, alias, legacy_mn_key=None):
+        mn = self.create_mn_protx_base(node, idx, alias, legacy_mn_key=legacy_mn_key)
         mn.collateral_address = node.getnewaddress()
 
         mn.protx_hash = node.protx('register_fund', mn.collateral_address, '127.0.0.1:%d' % mn.p2p_port, mn.ownerAddr, mn.operatorAddr, mn.votingAddr, 0, mn.collateral_address)
@@ -372,8 +372,8 @@ class DIP3Test(BitcoinTestFramework):
         return mn
 
     # create a protx MN which refers to an existing collateral
-    def create_mn_protx(self, node, idx, alias, collateral_txid, collateral_vout):
-        mn = self.create_mn_protx_base(node, idx, alias)
+    def create_mn_protx(self, node, idx, alias, collateral_txid, collateral_vout, legacy_mn_key=None):
+        mn = self.create_mn_protx_base(node, idx, alias, legacy_mn_key=legacy_mn_key)
         mn.rewards_address = node.getnewaddress()
 
         mn.protx_hash = node.protx('register', collateral_txid, collateral_vout, '127.0.0.1:%d' % mn.p2p_port, mn.ownerAddr, mn.operatorAddr, mn.votingAddr, 0, mn.rewards_address)
@@ -400,9 +400,9 @@ class DIP3Test(BitcoinTestFramework):
     def upgrade_mn_protx(self, mn, refund):
         if refund:
             self.spend_mn_collateral(mn)
-            mn = self.create_mn_protx_fund(self.nodes[0], mn.idx, 'mn-protx-%d' % mn.idx)
+            mn = self.create_mn_protx_fund(self.nodes[0], mn.idx, 'mn-protx-%d' % mn.idx, legacy_mn_key=mn.legacyMnkey)
         else:
-            mn = self.create_mn_protx(self.nodes[0], mn.idx, 'mn-protx-%d' % mn.idx, mn.collateral_txid, mn.collateral_vout)
+            mn = self.create_mn_protx(self.nodes[0], mn.idx, 'mn-protx-%d' % mn.idx, mn.collateral_txid, mn.collateral_vout, legacy_mn_key=mn.legacyMnkey)
         return mn
 
     def test_protx_update_service(self, mn):
