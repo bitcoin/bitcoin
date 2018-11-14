@@ -676,7 +676,7 @@ int64_t CDeterministicMNManager::GetSpork15Value()
 
 bool CDeterministicMNManager::IsProTxWithCollateral(const CTransactionRef& tx, uint32_t n)
 {
-    if (tx->nVersion < 3 || tx->nType != TRANSACTION_PROVIDER_REGISTER) {
+    if (tx->nVersion != 3 || tx->nType != TRANSACTION_PROVIDER_REGISTER) {
         return false;
     }
     CProRegTx proTx;

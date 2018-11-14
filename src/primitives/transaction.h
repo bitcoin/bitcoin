@@ -260,7 +260,7 @@ public:
         s << vin;
         s << vout;
         s << nLockTime;
-        if (this->nVersion >= 3 && this->nType != TRANSACTION_NORMAL)
+        if (this->nVersion == 3 && this->nType != TRANSACTION_NORMAL)
             s << vExtraPayload;
     }
 
@@ -339,7 +339,7 @@ struct CMutableTransaction
         READWRITE(vin);
         READWRITE(vout);
         READWRITE(nLockTime);
-        if (this->nVersion >= 3 && this->nType != TRANSACTION_NORMAL) {
+        if (this->nVersion == 3 && this->nType != TRANSACTION_NORMAL) {
             READWRITE(vExtraPayload);
         }
     }

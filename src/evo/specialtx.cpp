@@ -16,7 +16,7 @@
 
 bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {
-    if (tx.nVersion < 3 || tx.nType == TRANSACTION_NORMAL)
+    if (tx.nVersion != 3 || tx.nType == TRANSACTION_NORMAL)
         return true;
 
     if (pindexPrev && VersionBitsState(pindexPrev, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0003, versionbitscache) != THRESHOLD_ACTIVE) {
@@ -41,7 +41,7 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
 
 bool ProcessSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValidationState& state)
 {
-    if (tx.nVersion < 3 || tx.nType == TRANSACTION_NORMAL) {
+    if (tx.nVersion != 3 || tx.nType == TRANSACTION_NORMAL) {
         return true;
     }
 
@@ -60,7 +60,7 @@ bool ProcessSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValida
 
 bool UndoSpecialTx(const CTransaction& tx, const CBlockIndex* pindex)
 {
-    if (tx.nVersion < 3 || tx.nType == TRANSACTION_NORMAL) {
+    if (tx.nVersion != 3 || tx.nType == TRANSACTION_NORMAL) {
         return true;
     }
 
