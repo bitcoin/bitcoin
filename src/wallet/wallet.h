@@ -97,7 +97,7 @@ enum WalletFeature
 };
 
 //! Default for -addresstype
-constexpr OutputType DEFAULT_ADDRESS_TYPE{OutputType::LEGACY};
+constexpr OutputType DEFAULT_ADDRESS_TYPE{OutputType::P2SH_SEGWIT};
 
 enum AvailableCoinsType
 {
@@ -648,18 +648,18 @@ private:
     WalletBatch *encrypted_batch GUARDED_BY(cs_wallet) = nullptr;
 
     //! the current wallet version: clients below this version are not able to load the wallet
-    int nWalletVersion;
+    int nWalletVersion = FEATURE_BASE;
 
     //! the maximum wallet format version: memory-only variable that specifies to what version this wallet may be upgraded
     int nWalletMaxVersion GUARDED_BY(cs_wallet) = FEATURE_BASE;
 
-    int64_t nNextResend;
-    int64_t nLastResend;
-    bool fBroadcastTransactions;
+    int64_t nNextResend = 0;
+    int64_t nLastResend = 0;
+    bool fBroadcastTransactions = false;
 
-    mutable bool fAnonymizableTallyCached;
+    mutable bool fAnonymizableTallyCached = false;
     mutable std::vector<CompactTallyItem> vecAnonymizableTallyCached;
-    mutable bool fAnonymizableTallyCachedNonDenom;
+    mutable bool fAnonymizableTallyCachedNonDenom = false;
     mutable std::vector<CompactTallyItem> vecAnonymizableTallyCachedNonDenom;
 
     /**
@@ -746,7 +746,7 @@ private:
      *
      * Protected by cs_main (see BlockUntilSyncedToCurrentChain)
      */
-    const CBlockIndex* m_last_block_processed;
+    const CBlockIndex* m_last_block_processed = nullptr;
 
 public:
     /*
@@ -786,39 +786,17 @@ public:
 
     typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
     MasterKeyMap mapMasterKeys;
-    unsigned int nMasterKeyMaxID;
+    unsigned int nMasterKeyMaxID = 0;
 
     /** Construct wallet with specified name and database implementation. */
     CWallet(std::string name, std::unique_ptr<WalletDatabase> database) : m_name(std::move(name)), database(std::move(database))
     {
-        SetNull();
     }
 
     ~CWallet()
     {
         delete encrypted_batch;
         encrypted_batch = nullptr;
-    }
-
-    void SetNull()
-    {
-        nWalletVersion = FEATURE_BASE;
-        nWalletMaxVersion = FEATURE_BASE;
-        nMasterKeyMaxID = 0;
-        nOrderPosNext = 0;
-        nAccountingEntryNumber = 0;
-        nNextResend = 0;
-        nLastResend = 0;
-        m_max_keypool_index = 0;
-        nTimeFirstKey = 0;
-        fBroadcastTransactions = false;
-        fAnonymizableTallyCached = false;
-        fAnonymizableTallyCachedNonDenom = false;
-        vecAnonymizableTallyCached.clear();
-        vecAnonymizableTallyCachedNonDenom.clear();
-        nRelockTime = 0;
-        fAbortRescan = false;
-        fScanningWallet = false;
     }
 
     std::map<uint256, CWalletTx> mapWallet GUARDED_BY(cs_wallet);
@@ -942,7 +920,7 @@ public:
     bool LoadWatchOnly(const CScript &dest);
 
     //! Holds a timestamp at which point the wallet is scheduled (externally) to be relocked. Caller must arrange for actual relocking to occur via Lock().
-    int64_t nRelockTime;
+    int64_t nRelockTime = 0;
 
     bool Unlock(const SecureString& strWalletPassphrase, bool fForMixingOnly = false);
     bool ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase, const SecureString& strNewWalletPassphrase);
