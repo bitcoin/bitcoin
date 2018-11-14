@@ -105,8 +105,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
     if (ptx.keyIDOwner.IsNull() || !ptx.pubKeyOperator.IsValid() || ptx.keyIDVoting.IsNull()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-key-null");
     }
-    // we may support P2SH later, but restrict it for now (while in transitioning phase from old MN list to deterministic list)
-    if (!ptx.scriptPayout.IsPayToPublicKeyHash()) {
+    if (!ptx.scriptPayout.IsPayToPublicKeyHash() && !ptx.scriptPayout.IsPayToScriptHash()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-payee");
     }
 
@@ -266,8 +265,7 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
     if (!ptx.pubKeyOperator.IsValid() || ptx.keyIDVoting.IsNull()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-key-null");
     }
-    // we may support P2SH later, but restrict it for now (while in transitioning phase from old MN list to deterministic list)
-    if (!ptx.scriptPayout.IsPayToPublicKeyHash()) {
+    if (!ptx.scriptPayout.IsPayToPublicKeyHash() && !ptx.scriptPayout.IsPayToScriptHash()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-payee");
     }
 
