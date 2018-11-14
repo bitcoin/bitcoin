@@ -101,12 +101,6 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
         if (tx.vout[ptx.collateralOutpoint.n].nValue != 1000 * COIN) {
             return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral");
         }
-
-        // This is a temporary restriction that will be lifted later
-        // It is required while we are transitioning from the old MN list to the deterministic list
-        if (tx.vout[ptx.collateralOutpoint.n].scriptPubKey != ptx.scriptPayout) {
-            return state.DoS(10, false, REJECT_INVALID, "bad-protx-payee-collateral");
-        }
     }
     if (ptx.keyIDOwner.IsNull() || !ptx.pubKeyOperator.IsValid() || ptx.keyIDVoting.IsNull()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-key-null");
@@ -295,14 +289,9 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
             return state.DoS(10, false, REJECT_INVALID, "bad-protx-payee-reuse");
         }
 
-        // This is a temporary restriction that will be lifted later
-        // It is required while we are transitioning from the old MN list to the deterministic list
         Coin coin;
         if (!GetUTXOCoin(dmn->collateralOutpoint, coin)) {
             return state.DoS(100, false, REJECT_INVALID, "bad-protx-payee-collateral");
-        }
-        if (coin.out.scriptPubKey != ptx.scriptPayout) {
-            return state.DoS(10, false, REJECT_INVALID, "bad-protx-payee-collateral");
         }
 
         if (mnList.HasUniqueProperty(ptx.pubKeyOperator)) {
