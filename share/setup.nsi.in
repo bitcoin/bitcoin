@@ -80,6 +80,7 @@ Section -Main SEC0000
     SetOutPath $INSTDIR\daemon
     File @abs_top_srcdir@/release/@BITCOIN_DAEMON_NAME@@EXEEXT@
     File @abs_top_srcdir@/release/@BITCOIN_CLI_NAME@@EXEEXT@
+    File @abs_top_srcdir@/release/@BITCOIN_TX_NAME@@EXEEXT@
     SetOutPath $INSTDIR\doc
     File /r /x Makefile* @abs_top_srcdir@/doc\*.*
     SetOutPath $INSTDIR
