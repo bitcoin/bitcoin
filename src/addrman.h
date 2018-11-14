@@ -488,6 +488,9 @@ public:
         nIdCount = 0;
         nTried = 0;
         nNew = 0;
+        nLastGood = 1; //Initially at 1 so that "never" is strictly worse.
+        mapInfo.clear();
+        mapAddr.clear();
     }
 
     CAddrMan()
@@ -523,6 +526,7 @@ public:
     //! Add a single address.
     bool Add(const CAddress &addr, const CNetAddr& source, int64_t nTimePenalty = 0)
     {
+        LOCK(cs);
         bool fRet = false;
         Check();
         fRet |= Add_(addr, source, nTimePenalty);
@@ -536,6 +540,7 @@ public:
     //! Add multiple addresses.
     bool Add(const std::vector<CAddress> &vAddr, const CNetAddr& source, int64_t nTimePenalty = 0)
     {
+        LOCK(cs);
         int nAdd = 0;
         Check();
         for (std::vector<CAddress>::const_iterator it = vAddr.begin(); it != vAddr.end(); it++)
