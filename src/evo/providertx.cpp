@@ -93,15 +93,6 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-mode");
     }
 
-    // when collateralOutpoint refers to an external collateral, we check it further down
-    if (ptx.collateralOutpoint.hash.IsNull()) {
-        if (ptx.collateralOutpoint.n >= tx.vout.size()) {
-            return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral-index");
-        }
-        if (tx.vout[ptx.collateralOutpoint.n].nValue != 1000 * COIN) {
-            return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral");
-        }
-    }
     if (ptx.keyIDOwner.IsNull() || !ptx.pubKeyOperator.IsValid() || ptx.keyIDVoting.IsNull()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-key-null");
     }
@@ -152,6 +143,12 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
 
         collateralOutpoint = ptx.collateralOutpoint;
     } else {
+        if (ptx.collateralOutpoint.n >= tx.vout.size()) {
+            return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral-index");
+        }
+        if (tx.vout[ptx.collateralOutpoint.n].nValue != 1000 * COIN) {
+            return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral");
+        }
         collateralOutpoint = COutPoint(tx.GetHash(), ptx.collateralOutpoint.n);
     }
 
