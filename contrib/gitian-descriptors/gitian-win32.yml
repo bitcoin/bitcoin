@@ -3,7 +3,7 @@ name: "primecoin"
 suites:
 - "bionic"
 architectures:
-- "i386"
+- "amd64"
 packages:
 - "gcc-mingw-w64-i686"
 - "g++-mingw-w64-i686"
@@ -31,7 +31,7 @@ script: |
   cd boost_1_52_0
   mkdir -p stage/lib
   unzip ../boost-win32-1.52.0-gitian.zip
-  cd bin/$GBUILD_BITS
+  cd bin/32
   for lib in *; do
     i686-w64-mingw32-ar rc ../../stage/lib/libboost_${lib}-mt-s.a $lib/*.o
     i686-w64-mingw32-ranlib ../../stage/lib/libboost_${lib}-mt-s.a
