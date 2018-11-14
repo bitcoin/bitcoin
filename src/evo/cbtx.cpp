@@ -12,6 +12,10 @@
 
 bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {
+    if (tx.nType != TRANSACTION_COINBASE) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-type");
+    }
+
     if (!tx.IsCoinBase()) {
         return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-invalid");
     }

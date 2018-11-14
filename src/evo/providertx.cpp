@@ -76,6 +76,10 @@ static bool CheckInputsHash(const CTransaction& tx, const ProTx& proTx, CValidat
 
 bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {
+    if (tx.nType != TRANSACTION_PROVIDER_REGISTER) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-protx-type");
+    }
+
     CProRegTx ptx;
     if (!GetTxPayload(tx, ptx)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-payload");
@@ -201,6 +205,10 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
 
 bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {
+    if (tx.nType != TRANSACTION_PROVIDER_UPDATE_SERVICE) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-protx-type");
+    }
+
     CProUpServTx ptx;
     if (!GetTxPayload(tx, ptx)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-payload");
@@ -251,6 +259,10 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
 
 bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {
+    if (tx.nType != TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-protx-type");
+    }
+
     CProUpRegTx ptx;
     if (!GetTxPayload(tx, ptx)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-payload");
@@ -325,6 +337,10 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
 
 bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {
+    if (tx.nType != TRANSACTION_PROVIDER_UPDATE_REVOKE) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-protx-type");
+    }
+
     CProUpRevTx ptx;
     if (!GetTxPayload(tx, ptx)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-payload");
