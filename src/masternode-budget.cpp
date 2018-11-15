@@ -466,7 +466,6 @@ void CBudgetManager::FillBlockPayee(CMutableTransaction& txNew, CAmount nFees) c
     {
         LogPrintf("CBudgetManager::FillBlockPayee - Budget payment to %s for %lld; proposal %s\n",
             ScriptToAddress(payment.payee).ToString(), payment.nAmount, payment.nProposalHash.ToString());
-
         txNew.vout.push_back(CTxOut(payment.nAmount, payment.payee));
     }
 }

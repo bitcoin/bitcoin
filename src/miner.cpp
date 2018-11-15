@@ -17,6 +17,8 @@
 #include "timedata.h"
 #include "util.h"
 #include "utilmoneystr.h"
+#include "spork.h"
+#include "masternode-budget.h"
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #endif
@@ -329,13 +331,18 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         FillBlockPayee(txNew, nFees);
         SNFillBlockPayee(txNew, nFees);
 
-        // Make payee
-	    if(txNew.vout.size() > 1){
-            pblock->payee = txNew.vout[1].scriptPubKey;
-        }
-        // Make SNpayee
-	    if(txNew.vout.size() > 2){
-            pblock->payeeSN = txNew.vout[2].scriptPubKey;
+        if (!(IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS) && budget.IsBudgetPaymentBlock(pindexPrev->nHeight + 1)))
+        {
+            // Make payee
+            if(txNew.vout.size() > 1)
+            {
+                pblock->payee = txNew.vout[1].scriptPubKey;
+            }
+            // Make SNpayee
+            if(txNew.vout.size() > 2)
+            {
+                pblock->payeeSN = txNew.vout[2].scriptPubKey;
+            }
         }
 
         nLastBlockTx = nBlockTx;
