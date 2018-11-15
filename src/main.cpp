@@ -2103,6 +2103,10 @@ bool CheckBlockProofPointer(const CBlockIndex* pindex, const CBlock& block, CPub
         return error("%s: Stake pointer from height %d is more than %d blocks deep, violating valid stake pointer duration",
                 __func__, pindexFrom->nHeight, Params().ValidStakePointerDuration());
 
+    //Reject any stakepointers that are too recent
+    if (pindexFrom->nHeight > pindex->nHeight - Params().MaxReorganizationDepth())
+        return error("%s: Stake pointer from height %d is too recent", __func__, pindexFrom->nHeight);
+
     COutPoint stakeSource(stakePointer.txid, stakePointer.nPos);
     auto hashPointer = stakeSource.GetHash();
     if (mapUsedStakePointers.count(hashPointer)) {
@@ -3251,6 +3255,11 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
     assert(pindexPrev);
 
     int nHeight = pindexPrev->nHeight+1;
+
+    //If this is a reorg, check that it is not too deep
+    int nMaxReorgDepth = GetArg("-maxreorg", Params().MaxReorganizationDepth());
+    if (chainActive.Height() - nHeight >= nMaxReorgDepth)
+        return state.DoS(1, error("%s: forked chain older than max reorganization depth (height %d)", __func__, nHeight));
 
     // Disallow legacy blocks after merge-mining start.
     if (!Params().AllowLegacyBlocks(nHeight)

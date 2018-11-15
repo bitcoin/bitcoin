@@ -88,6 +88,7 @@ public:
     int32_t PoSChainId () const { return nPoSChainId; }
     int PoSStartHeight() const { return nBlockPoSStart; }
     int ValidStakePointerDuration() const { return nStakePointerValidityPeriod; }
+    int MaxReorganizationDepth() const { return nMaxReorgDepth; }
     /* Return start height of auxpow and the retarget interval change.  */
     virtual int AuxpowStartHeight() const = 0;
     /* Return whether or not to enforce strict chain ID checks.  */
@@ -134,6 +135,7 @@ protected:
     int32_t nPoSChainId;
     int nBlockPoSStart;
     int nStakePointerValidityPeriod;
+    int nMaxReorgDepth;
 };
 
 /** 
