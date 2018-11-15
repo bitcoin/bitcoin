@@ -29,6 +29,21 @@ public:
     CSimplifiedMNListEntry() {}
     CSimplifiedMNListEntry(const CDeterministicMN& dmn);
 
+    bool operator==(const CSimplifiedMNListEntry& rhs) const
+    {
+        return proRegTxHash == rhs.proRegTxHash &&
+               confirmedHash == rhs.confirmedHash &&
+               service == rhs.service &&
+               pubKeyOperator == rhs.pubKeyOperator &&
+               keyIDVoting == rhs.keyIDVoting &&
+               isValid == rhs.isValid;
+    }
+
+    bool operator!=(const CSimplifiedMNListEntry& rhs) const
+    {
+        return !(rhs == *this);
+    }
+
 public:
     ADD_SERIALIZE_METHODS;
 

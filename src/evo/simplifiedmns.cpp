@@ -144,7 +144,7 @@ bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& bloc
 
     auto baseDmnList = deterministicMNManager->GetListForBlock(baseBlockHash);
     auto dmnList = deterministicMNManager->GetListForBlock(blockHash);
-    auto dmnDiff = baseDmnList.BuildDiff(dmnList);
+    mnListDiffRet = baseDmnList.BuildSimplifiedDiff(dmnList);
 
     // TODO store coinbase TX in CBlockIndex
     CBlock block;
@@ -153,8 +153,6 @@ bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& bloc
         return false;
     }
 
-    mnListDiffRet.baseBlockHash = baseBlockHash;
-    mnListDiffRet.blockHash = blockHash;
     mnListDiffRet.cbTx = block.vtx[0];
 
     std::vector<uint256> vHashes;
@@ -164,17 +162,6 @@ bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& bloc
     }
     vMatch[0] = true; // only coinbase matches
     mnListDiffRet.cbTxMerkleTree = CPartialMerkleTree(vHashes, vMatch);
-    mnListDiffRet.deletedMNs.assign(dmnDiff.removedMns.begin(), dmnDiff.removedMns.end());
-
-    for (const auto& p : dmnDiff.addedMNs) {
-        mnListDiffRet.mnList.emplace_back(*p.second);
-    }
-    for (const auto& p : dmnDiff.updatedMNs) {
-        const auto& dmn = dmnList.GetMN(p.first);
-        CDeterministicMN newDmn(*dmn);
-        newDmn.pdmnState = p.second;
-        mnListDiffRet.mnList.emplace_back(newDmn);
-    }
 
     return true;
 }

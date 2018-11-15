@@ -10,6 +10,7 @@
 #include "dbwrapper.h"
 #include "evodb.h"
 #include "providertx.h"
+#include "simplifiedmns.h"
 #include "sync.h"
 
 #include "immer/map.hpp"
@@ -307,6 +308,7 @@ public:
     std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> CalculateScores(const uint256& modifier) const;
 
     CDeterministicMNListDiff BuildDiff(const CDeterministicMNList& to) const;
+    CSimplifiedMNListDiff BuildSimplifiedDiff(const CDeterministicMNList& to) const;
     CDeterministicMNList ApplyDiff(const CDeterministicMNListDiff& diff) const;
 
     void AddMN(const CDeterministicMNCPtr& dmn);

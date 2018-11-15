@@ -283,6 +283,34 @@ CDeterministicMNListDiff CDeterministicMNList::BuildDiff(const CDeterministicMNL
     return diffRet;
 }
 
+CSimplifiedMNListDiff CDeterministicMNList::BuildSimplifiedDiff(const CDeterministicMNList& to) const
+{
+    CSimplifiedMNListDiff diffRet;
+    diffRet.baseBlockHash = blockHash;
+    diffRet.blockHash = to.blockHash;
+
+    to.ForEachMN(false, [&](const CDeterministicMNCPtr& toPtr) {
+        const auto fromPtr = mnMap.find(toPtr->proTxHash);
+        if (fromPtr == nullptr) {
+            diffRet.mnList.emplace_back(*toPtr);
+        } else {
+            CSimplifiedMNListEntry sme1(*toPtr);
+            CSimplifiedMNListEntry sme2(**fromPtr);
+            if (sme1 != sme2) {
+                diffRet.mnList.emplace_back(*toPtr);
+            }
+        }
+    });
+    ForEachMN(false, [&](const CDeterministicMNCPtr& fromPtr) {
+        const auto toPtr = to.mnMap.find(fromPtr->proTxHash);
+        if (toPtr == nullptr) {
+            diffRet.deletedMNs.emplace_back(fromPtr->proTxHash);
+        }
+    });
+
+    return diffRet;
+}
+
 CDeterministicMNList CDeterministicMNList::ApplyDiff(const CDeterministicMNListDiff& diff) const
 {
     assert(diff.prevBlockHash == blockHash && diff.nHeight == nHeight + 1);
