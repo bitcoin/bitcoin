@@ -2975,7 +2975,7 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, bool ov
         coinControl.Select(txin.prevout);
 
     int nExtraPayloadSize = 0;
-    if (tx.nVersion >= 3 && tx.nType != TRANSACTION_NORMAL)
+    if (tx.nVersion == 3 && tx.nType != TRANSACTION_NORMAL)
         nExtraPayloadSize = (int)tx.vExtraPayload.size();
 
     CReserveKey reservekey(this);

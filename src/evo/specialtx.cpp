@@ -16,9 +16,7 @@
 
 bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {
-    AssertLockHeld(cs_main);
-
-    if (tx.nVersion < 3 || tx.nType == TRANSACTION_NORMAL)
+    if (tx.nVersion != 3 || tx.nType == TRANSACTION_NORMAL)
         return true;
 
     if (pindexPrev && VersionBitsState(pindexPrev, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0003, versionbitscache) != THRESHOLD_ACTIVE) {
@@ -38,12 +36,12 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
         return CheckCbTx(tx, pindexPrev, state);
     }
 
-    return state.DoS(10, false, REJECT_INVALID, "bad-tx-type");
+    return state.DoS(10, false, REJECT_INVALID, "bad-tx-type-check");
 }
 
 bool ProcessSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValidationState& state)
 {
-    if (tx.nVersion < 3 || tx.nType == TRANSACTION_NORMAL) {
+    if (tx.nVersion != 3 || tx.nType == TRANSACTION_NORMAL) {
         return true;
     }
 
@@ -57,12 +55,12 @@ bool ProcessSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValida
         return true; // nothing to do
     }
 
-    return state.DoS(100, false, REJECT_INVALID, "bad-tx-type");
+    return state.DoS(100, false, REJECT_INVALID, "bad-tx-type-proc");
 }
 
 bool UndoSpecialTx(const CTransaction& tx, const CBlockIndex* pindex)
 {
-    if (tx.nVersion < 3 || tx.nType == TRANSACTION_NORMAL) {
+    if (tx.nVersion != 3 || tx.nType == TRANSACTION_NORMAL) {
         return true;
     }
 

@@ -12,7 +12,9 @@
 
 bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {
-    AssertLockHeld(cs_main);
+    if (tx.nType != TRANSACTION_COINBASE) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-type");
+    }
 
     if (!tx.IsCoinBase()) {
         return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-invalid");
@@ -20,7 +22,7 @@ bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidatio
 
     CCbTx cbTx;
     if (!GetTxPayload(tx, cbTx)) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-tx-payload");
+        return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-payload");
     }
 
     if (cbTx.nVersion > CCbTx::CURRENT_VERSION) {
@@ -37,15 +39,13 @@ bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidatio
 // This can only be done after the block has been fully processed, as otherwise we won't have the finished MN list
 bool CheckCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindex, CValidationState& state)
 {
-    AssertLockHeld(cs_main);
-
     if (block.vtx[0]->nType != TRANSACTION_COINBASE) {
         return true;
     }
 
     CCbTx cbTx;
     if (!GetTxPayload(*block.vtx[0], cbTx)) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-tx-payload");
+        return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-payload");
     }
 
     if (pindex) {
@@ -63,7 +63,6 @@ bool CheckCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindex, C
 
 bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev, uint256& merkleRootRet, CValidationState& state)
 {
-    AssertLockHeld(cs_main);
     LOCK(deterministicMNManager->cs);
 
     CDeterministicMNList tmpMNList;
