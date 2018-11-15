@@ -553,6 +553,9 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
     tx.nVersion = 3;
     tx.nType = TRANSACTION_PROVIDER_UPDATE_REGISTRAR;
 
+    // make sure we get anough fees added
+    ptx.vchSig.resize(65);
+
     FundSpecialTx(tx, ptx);
     SignSpecialTxPayloadByHash(tx, ptx, keyOwner);
     SetTxPayload(tx, ptx);
