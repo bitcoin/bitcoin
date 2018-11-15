@@ -265,20 +265,20 @@ CDeterministicMNListDiff CDeterministicMNList::BuildDiff(const CDeterministicMNL
     diffRet.blockHash = to.blockHash;
     diffRet.nHeight = to.nHeight;
 
-    for (const auto& p : to.mnMap) {
-        const auto fromPtr = mnMap.find(p.first);
+    to.ForEachMN(false, [&](const CDeterministicMNCPtr& toPtr) {
+        auto fromPtr = GetMN(toPtr->proTxHash);
         if (fromPtr == nullptr) {
-            diffRet.addedMNs.emplace(p.first, p.second);
-        } else if (*p.second->pdmnState != *(*fromPtr)->pdmnState) {
-            diffRet.updatedMNs.emplace(p.first, p.second->pdmnState);
+            diffRet.addedMNs.emplace(toPtr->proTxHash, toPtr);
+        } else if (*toPtr->pdmnState != *fromPtr->pdmnState) {
+            diffRet.updatedMNs.emplace(toPtr->proTxHash, fromPtr->pdmnState);
         }
-    }
-    for (const auto& p : mnMap) {
-        const auto toPtr = to.mnMap.find(p.first);
+    });
+    ForEachMN(false, [&](const CDeterministicMNCPtr& fromPtr) {
+        auto toPtr = to.GetMN(fromPtr->proTxHash);
         if (toPtr == nullptr) {
-            diffRet.removedMns.insert(p.first);
+            diffRet.removedMns.insert(fromPtr->proTxHash);
         }
-    }
+    });
 
     return diffRet;
 }
