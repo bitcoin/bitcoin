@@ -270,7 +270,7 @@ CDeterministicMNListDiff CDeterministicMNList::BuildDiff(const CDeterministicMNL
         if (fromPtr == nullptr) {
             diffRet.addedMNs.emplace(toPtr->proTxHash, toPtr);
         } else if (*toPtr->pdmnState != *fromPtr->pdmnState) {
-            diffRet.updatedMNs.emplace(toPtr->proTxHash, fromPtr->pdmnState);
+            diffRet.updatedMNs.emplace(toPtr->proTxHash, toPtr->pdmnState);
         }
     });
     ForEachMN(false, [&](const CDeterministicMNCPtr& fromPtr) {
@@ -290,19 +290,19 @@ CSimplifiedMNListDiff CDeterministicMNList::BuildSimplifiedDiff(const CDetermini
     diffRet.blockHash = to.blockHash;
 
     to.ForEachMN(false, [&](const CDeterministicMNCPtr& toPtr) {
-        const auto fromPtr = mnMap.find(toPtr->proTxHash);
+        auto fromPtr = GetMN(toPtr->proTxHash);
         if (fromPtr == nullptr) {
             diffRet.mnList.emplace_back(*toPtr);
         } else {
             CSimplifiedMNListEntry sme1(*toPtr);
-            CSimplifiedMNListEntry sme2(**fromPtr);
+            CSimplifiedMNListEntry sme2(*fromPtr);
             if (sme1 != sme2) {
                 diffRet.mnList.emplace_back(*toPtr);
             }
         }
     });
     ForEachMN(false, [&](const CDeterministicMNCPtr& fromPtr) {
-        const auto toPtr = to.mnMap.find(fromPtr->proTxHash);
+        auto toPtr = to.GetMN(fromPtr->proTxHash);
         if (toPtr == nullptr) {
             diffRet.deletedMNs.emplace_back(fromPtr->proTxHash);
         }
