@@ -147,7 +147,8 @@ extern bool fLargeWorkInvalidChainFound;
 
 extern std::map<uint256, int64_t> mapRejectedBlocks;
 
-extern std::set<uint256> setUsedStakePointers;
+typedef uint256 PointerHash;
+extern std::map<PointerHash, uint256> mapUsedStakePointers; //pointer hash matched to blockhash that it is in
 
 /** Best header we've seen so far (used for getheaders queries' starting points). */
 extern CBlockIndex *pindexBestHeader;

@@ -57,7 +57,7 @@ CCriticalSection cs_main;
 
 BlockMap mapBlockIndex;
 CChain chainActive;
-std::set<uint256> setUsedStakePointers;
+std::map<PointerHash, uint256> mapUsedStakePointers;
 CBlockIndex *pindexBestHeader = NULL;
 int64_t nTimeBestReceived = 0;
 CWaitableCriticalSection csBestBlock;
@@ -2042,7 +2042,7 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex
     // Undo stake pointer
     if (pindex->IsProofOfStake()) {
         COutPoint stakeSource(pindex->stakeSource.first, pindex->stakeSource.second);
-        setUsedStakePointers.erase(stakeSource.GetHash());
+        mapUsedStakePointers.erase(stakeSource.GetHash());
     }
 
     // move best block pointer to prevout block
@@ -2088,7 +2088,7 @@ void ThreadScriptCheck() {
     scriptcheckqueue.Thread();
 }
 
-bool CheckBlockProofPointer(const CBlock& block, CPubKey& pubkeyMasternode, COutPoint& outpoint)
+bool CheckBlockProofPointer(const CBlockIndex* pindex, const CBlock& block, CPubKey& pubkeyMasternode, COutPoint& outpoint)
 {
     StakePointer stakePointer = block.stakePointer;
     if (!mapBlockIndex.count(stakePointer.hashBlock))
@@ -2099,8 +2099,20 @@ bool CheckBlockProofPointer(const CBlock& block, CPubKey& pubkeyMasternode, COut
         return error("%s: Block %s is not in the block chain", __func__, stakePointer.hashBlock.GetHex());
 
     COutPoint stakeSource(stakePointer.txid, stakePointer.nPos);
-    if (setUsedStakePointers.count(stakeSource.GetHash()))
-        return error("%s: StakePointer (txid=%s, nPos=%u) has already been used", __func__, stakePointer.txid.GetHex(), stakePointer.nPos);
+    auto hashPointer = stakeSource.GetHash();
+    if (mapUsedStakePointers.count(hashPointer)) {
+        //Marked as already used, but could potentially be a reorg, so check if they are in the same chain
+        auto hashBlockOfPointer = mapUsedStakePointers.at(hashPointer);
+        if (mapBlockIndex.count(hashBlockOfPointer)) {
+            //Check the ancestor of the block we are checking. If this chain's block at the height of the prev stake pointer has the same hash,
+            //then this is the same chain and therefore need to reject the new block
+            auto pindexPrevPointer = mapBlockIndex.at(hashBlockOfPointer);
+            auto pindexCheck = pindex->GetAncestor(pindexPrevPointer->nHeight);
+            if (pindexCheck->GetBlockHash() == pindexPrevPointer->GetBlockHash())
+                return error("%s: StakePointer (txid=%s, nPos=%u) has already been used", __func__, stakePointer.txid.GetHex(), stakePointer.nPos);
+        }
+    }
+
 
     CBlock blockFrom;
     if (!ReadBlockFromDisk(blockFrom, pindexFrom))
@@ -2164,7 +2176,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
         CPubKey pubkeyMasternode;
         COutPoint outpoint;
-        if (!CheckBlockProofPointer(block, pubkeyMasternode, outpoint))
+        if (!CheckBlockProofPointer(pindex, block, pubkeyMasternode, outpoint))
             return state.DoS(100, error("%s: Invalid block proof pointer", __func__), REJECT_INVALID,
                              "signature-invalid");
 
@@ -2307,7 +2319,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     if (block.IsProofOfStake()) {
         COutPoint stakeSource(block.stakePointer.txid, block.stakePointer.nPos);
-        setUsedStakePointers.insert(stakeSource.GetHash());
+        mapUsedStakePointers.emplace(stakeSource.GetHash(), block.GetHash());
     }
 
     // add this block to the view's block chain
@@ -3335,7 +3347,7 @@ bool AcceptBlockHeader(const CBlockHeader& block, bool fProofOfStake, CValidatio
             return state.DoS(0, error("%s : prev block not found", __func__), 0, "bad-prevblk");
         pindexPrev = (*mi).second;
         if (pindexPrev->nStatus & BLOCK_FAILED_MASK)
-            return state.DoS(100, error("%s : prev block invalid", __func__), REJECT_INVALID, "bad-prevblk");
+            return state.DoS(100, error("%s : prev block (%s) invalid", __func__, pindexPrev->GetBlockHash().GetHex()), REJECT_INVALID, "bad-prevblk");
     }
 
     if (!ContextualCheckBlockHeader(block, state, pindexPrev))
@@ -5084,21 +5096,33 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     {
         CBlock block;
         vRecv >> block;
-
-        CInv inv(MSG_BLOCK, block.GetHash());
+        auto hashBlock = block.GetHash();
+        CInv inv(MSG_BLOCK, hashBlock);
         LogPrint("net", "received block %s peer=%d\n", inv.hash.ToString(), pfrom->id);
 
-        pfrom->AddInventoryKnown(inv);
-
-        CValidationState state;
-        ProcessNewBlock(state, pfrom, &block);
-        int nDoS;
-        if (state.IsInvalid(nDoS)) {
-            pfrom->PushMessage("reject", strCommand, state.GetRejectCode(),
-                               state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), inv.hash);
-            if (nDoS > 0) {
-                TRY_LOCK(cs_main, lockMain);
-                if(lockMain) Misbehaving(pfrom->GetId(), nDoS);
+        //sometimes we will be sent their most recent block and its not the one we want, in that case tell where we are
+        if (!mapBlockIndex.count(block.hashPrevBlock)) {
+            if (pfrom->setBlockAskedFor.count(hashBlock)) {
+                //we already asked for this block, so lets work backwards and ask for the previous block
+                pfrom->PushMessage("getblocks", chainActive.GetLocator(), block.hashPrevBlock);
+                pfrom->setBlockAskedFor.emplace(block.hashPrevBlock);
+            } else {
+                //ask to sync to this block
+                pfrom->PushMessage("getblocks", chainActive.GetLocator(), hashBlock);
+                pfrom->setBlockAskedFor.emplace(hashBlock);
+            }
+        } else {
+            pfrom->AddInventoryKnown(inv);
+            CValidationState state;
+            ProcessNewBlock(state, pfrom, &block);
+            int nDoS;
+            if (state.IsInvalid(nDoS)) {
+                pfrom->PushMessage("reject", strCommand, state.GetRejectCode(),
+                                   state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), inv.hash);
+                if (nDoS > 0) {
+                    TRY_LOCK(cs_main, lockMain);
+                    if (lockMain) Misbehaving(pfrom->GetId(), nDoS);
+                }
             }
         }
 

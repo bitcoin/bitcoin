@@ -608,7 +608,7 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
                 }
             }
 
-            if (Params().MiningRequiresPeers()) {
+            if (!GetBoolArg("-jumpstart", false) && Params().MiningRequiresPeers()) {
                 // Busy-wait for the network to come online so we don't waste time mining
                 // on an obsolete chain. In regtest mode we expect to fly solo.
                 do {

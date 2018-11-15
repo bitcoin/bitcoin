@@ -64,6 +64,9 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool txDe
     result.push_back(Pair("size", (int)::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION)));
     result.push_back(Pair("height", blockindex->nHeight));
     result.push_back(Pair("version", block.nVersion.GetFullVersion()));
+    result.push_back(Pair("proof_type", block.IsProofOfStake() ? "PoS" : "PoW"));
+    if (block.IsProofOfStake())
+        result.push_back(Pair("stake_source", COutPoint(block.stakePointer.txid, block.stakePointer.nPos).ToString()));
     result.push_back(Pair("merkleroot", block.hashMerkleRoot.GetHex()));
     Array txs;
     BOOST_FOREACH(const CTransaction&tx, block.vtx)

@@ -304,6 +304,7 @@ public:
     std::vector<CInv> vInventoryToSend;
     CCriticalSection cs_inventory;
     std::multimap<int64_t, CInv> mapAskFor;
+    std::set<uint256> setBlockAskedFor;
 
     // Ping time measurement:
     // The pong reply we're expecting, or 0 if no pong expected.

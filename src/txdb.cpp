@@ -215,7 +215,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
                 pindexNew->stakeSource    = diskindex.stakeSource;
                 if (pindexNew->fProofOfStake) {
                     COutPoint stakeSource(diskindex.stakeSource.first, diskindex.stakeSource.second);
-                    setUsedStakePointers.emplace(stakeSource.GetHash());
+                    mapUsedStakePointers.emplace(stakeSource.GetHash(), diskindex.GetBlockHash());
                 }
 
                 /* Bitcoin checks the PoW here.  We don't do this because
