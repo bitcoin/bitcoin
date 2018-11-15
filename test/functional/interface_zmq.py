@@ -69,6 +69,7 @@ class ZMQTest (BitcoinTestFramework):
         ]
         self.add_nodes(self.num_nodes, self.extra_args)
         self.start_nodes()
+        self.import_deterministic_coinbase_privkeys()
 
     def run_test(self):
         try:
@@ -121,10 +122,10 @@ class ZMQTest (BitcoinTestFramework):
 
         self.log.info("Test the getzmqnotifications RPC")
         assert_equal(self.nodes[0].getzmqnotifications(), [
-            {"type": "pubhashblock", "address": ADDRESS},
-            {"type": "pubhashtx", "address": ADDRESS},
-            {"type": "pubrawblock", "address": ADDRESS},
-            {"type": "pubrawtx", "address": ADDRESS},
+            {"type": "pubhashblock", "address": ADDRESS, "hwm": 1000},
+            {"type": "pubhashtx", "address": ADDRESS, "hwm": 1000},
+            {"type": "pubrawblock", "address": ADDRESS, "hwm": 1000},
+            {"type": "pubrawtx", "address": ADDRESS, "hwm": 1000},
         ])
 
         assert_equal(self.nodes[1].getzmqnotifications(), [])

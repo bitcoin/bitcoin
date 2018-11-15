@@ -3,11 +3,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <utilmoneystr.h>
+#include <util/moneystr.h>
 
 #include <primitives/transaction.h>
 #include <tinyformat.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 
 std::string FormatMoney(const CAmount& n)
 {
@@ -41,7 +41,7 @@ bool ParseMoney(const char* pszIn, CAmount& nRet)
     std::string strWhole;
     int64_t nUnits = 0;
     const char* p = pszIn;
-    while (isspace(*p))
+    while (IsSpace(*p))
         p++;
     for (; *p; p++)
     {
@@ -56,14 +56,14 @@ bool ParseMoney(const char* pszIn, CAmount& nRet)
             }
             break;
         }
-        if (isspace(*p))
+        if (IsSpace(*p))
             break;
         if (!isdigit(*p))
             return false;
         strWhole.insert(strWhole.end(), *p);
     }
     for (; *p; p++)
-        if (!isspace(*p))
+        if (!IsSpace(*p))
             return false;
     if (strWhole.size() > 10) // guard against 63 bit overflow
         return false;

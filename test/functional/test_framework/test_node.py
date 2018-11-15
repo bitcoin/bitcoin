@@ -115,6 +115,25 @@ class TestNode():
         ]
         return PRIV_KEYS[self.index]
 
+    def get_mem_rss(self):
+        """Get the memory usage (RSS) per `ps`.
+
+        Returns None if `ps` is unavailable.
+        """
+        assert self.running
+
+        try:
+            return int(subprocess.check_output(
+                ["ps", "h", "-o", "rss", "{}".format(self.process.pid)],
+                stderr=subprocess.DEVNULL).split()[-1])
+
+        # Avoid failing on platforms where ps isn't installed.
+        #
+        # We could later use something like `psutils` to work across platforms.
+        except (FileNotFoundError, subprocess.SubprocessError):
+            self.log.exception("Unable to get memory usage")
+            return None
+
     def _node_msg(self, msg: str) -> str:
         """Return a modified msg that identifies this node by its index as a debugging aid."""
         return "[node %d] %s" % (self.index, msg)
@@ -199,21 +218,6 @@ class TestNode():
 
     def generate(self, nblocks, maxtries=1000000):
         self.log.debug("TestNode.generate() dispatches `generate` call to `generatetoaddress`")
-        # Try to import the node's deterministic private key. This is a no-op if the private key
-        # has already been imported.
-        try:
-            self.rpc.importprivkey(privkey=self.get_deterministic_priv_key().key, label='coinbase', rescan=False)
-        except JSONRPCException as e:
-            # This may fail if:
-            # - wallet is disabled ('Method not found')
-            # - there are multiple wallets to import to ('Wallet file not specified')
-            # - wallet is locked ('Error: Please enter the wallet passphrase with walletpassphrase first')
-            # Just ignore those errors. We can make this tidier by importing the privkey during TestFramework.setup_nodes
-            # TODO: tidy up deterministic privkey import.
-            assert str(e).startswith('Method not found') or \
-                str(e).startswith('Wallet file not specified') or \
-                str(e).startswith('Error: Please enter the wallet passphrase with walletpassphrase first')
-
         return self.generatetoaddress(nblocks=nblocks, address=self.get_deterministic_priv_key().address, maxtries=maxtries)
 
     def get_wallet_rpc(self, wallet_name):
@@ -285,6 +289,29 @@ class TestNode():
             for expected_msg in expected_msgs:
                 if re.search(re.escape(expected_msg), log, flags=re.MULTILINE) is None:
                     self._raise_assertion_error('Expected message "{}" does not partially match log:\n\n{}\n\n'.format(expected_msg, print_log))
+
+    @contextlib.contextmanager
+    def assert_memory_usage_stable(self, perc_increase_allowed=0.03):
+        """Context manager that allows the user to assert that a node's memory usage (RSS)
+        hasn't increased beyond some threshold percentage.
+        """
+        before_memory_usage = self.get_mem_rss()
+
+        yield
+
+        after_memory_usage = self.get_mem_rss()
+
+        if not (before_memory_usage and after_memory_usage):
+            self.log.warning("Unable to detect memory usage (RSS) - skipping memory check.")
+            return
+
+        perc_increase_memory_usage = (after_memory_usage / before_memory_usage) - 1
+
+        if perc_increase_memory_usage > perc_increase_allowed:
+            self._raise_assertion_error(
+                "Memory usage increased over threshold of {:.3f}% from {} to {} ({:.3f}%)".format(
+                    perc_increase_allowed * 100, before_memory_usage, after_memory_usage,
+                    perc_increase_memory_usage * 100))
 
     def assert_start_raises_init_error(self, extra_args=None, expected_msg=None, match=ErrorMatch.FULL_TEXT, *args, **kwargs):
         """Attempt to start the node and expect it to raise an error.

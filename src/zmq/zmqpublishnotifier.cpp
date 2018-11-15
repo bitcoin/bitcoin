@@ -7,7 +7,7 @@
 #include <streams.h>
 #include <zmq/zmqpublishnotifier.h>
 #include <validation.h>
-#include <util.h>
+#include <util/system.h>
 #include <rpc/server.h>
 
 static std::multimap<std::string, CZMQAbstractPublishNotifier*> mapPublishNotifiers;
@@ -76,8 +76,18 @@ bool CZMQAbstractPublishNotifier::Initialize(void *pcontext)
             return false;
         }
 
-        int rc = zmq_bind(psocket, address.c_str());
-        if (rc!=0)
+        LogPrint(BCLog::ZMQ, "zmq: Outbound message high water mark for %s at %s is %d\n", type, address, outbound_message_high_water_mark);
+
+        int rc = zmq_setsockopt(psocket, ZMQ_SNDHWM, &outbound_message_high_water_mark, sizeof(outbound_message_high_water_mark));
+        if (rc != 0)
+        {
+            zmqError("Failed to set outbound message high water mark");
+            zmq_close(psocket);
+            return false;
+        }
+
+        rc = zmq_bind(psocket, address.c_str());
+        if (rc != 0)
         {
             zmqError("Failed to bind address");
             zmq_close(psocket);
@@ -120,7 +130,7 @@ void CZMQAbstractPublishNotifier::Shutdown()
 
     if (count == 1)
     {
-        LogPrint(BCLog::ZMQ, "Close socket at address %s\n", address);
+        LogPrint(BCLog::ZMQ, "zmq: Close socket at address %s\n", address);
         int linger = 0;
         zmq_setsockopt(psocket, ZMQ_LINGER, &linger, sizeof(linger));
         zmq_close(psocket);

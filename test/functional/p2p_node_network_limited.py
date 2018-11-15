@@ -43,8 +43,8 @@ class NodeNetworkLimitedTest(BitcoinTestFramework):
         disconnect_nodes(self.nodes[1], 2)
 
     def setup_network(self):
-        super(NodeNetworkLimitedTest, self).setup_network()
-        self.disconnect_all()
+        self.add_nodes(self.num_nodes, self.extra_args)
+        self.start_nodes()
 
     def run_test(self):
         node = self.nodes[0].add_p2p_connection(P2PIgnoreInv())

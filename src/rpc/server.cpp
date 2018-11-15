@@ -8,11 +8,12 @@
 #include <fs.h>
 #include <key_io.h>
 #include <random.h>
+#include <rpc/util.h>
 #include <shutdown.h>
 #include <sync.h>
 #include <ui_interface.h>
-#include <util.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
+#include <util/system.h>
 
 #include <boost/bind.hpp>
 #include <boost/signals2/signal.hpp>
@@ -234,7 +235,7 @@ UniValue stop(const JSONRPCRequest& jsonRequest)
 
 static UniValue uptime(const JSONRPCRequest& jsonRequest)
 {
-    if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
+    if (jsonRequest.fHelp || jsonRequest.params.size() > 0)
         throw std::runtime_error(
                 "uptime\n"
                         "\nReturns the total uptime of the server.\n"

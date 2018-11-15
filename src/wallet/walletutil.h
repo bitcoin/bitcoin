@@ -15,4 +15,24 @@ fs::path GetWalletDir();
 //! Get wallets in wallet directory.
 std::vector<fs::path> ListWalletDir();
 
+//! The WalletLocation class provides wallet information.
+class WalletLocation final
+{
+    std::string m_name;
+    fs::path m_path;
+
+public:
+    explicit WalletLocation() {}
+    explicit WalletLocation(const std::string& name);
+
+    //! Get wallet name.
+    const std::string& GetName() const { return m_name; }
+
+    //! Get wallet absolute path.
+    const fs::path& GetPath() const { return m_path; }
+
+    //! Return whether the wallet exists.
+    bool Exists() const;
+};
+
 #endif // BITCOIN_WALLET_WALLETUTIL_H

@@ -7,17 +7,18 @@
 #include <chainparams.h>
 #include <clientversion.h>
 #include <core_io.h>
-#include <validation.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netbase.h>
 #include <policy/policy.h>
 #include <rpc/protocol.h>
+#include <rpc/util.h>
 #include <sync.h>
 #include <timedata.h>
 #include <ui_interface.h>
-#include <util.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
+#include <util/system.h>
+#include <validation.h>
 #include <version.h>
 #include <warnings.h>
 
@@ -200,7 +201,7 @@ static UniValue addnode(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 2 ||
         (strCommand != "onetry" && strCommand != "add" && strCommand != "remove"))
         throw std::runtime_error(
-            "addnode \"node\" \"add|remove|onetry\"\n"
+            "addnode \"node\" \"command\"\n"
             "\nAttempts to add or remove a node from the addnode list.\n"
             "Or try a connection to a node once.\n"
             "Nodes added using addnode (or -connect) are protected from DoS disconnection and are not required to be\n"
@@ -243,13 +244,13 @@ static UniValue disconnectnode(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() == 0 || request.params.size() >= 3)
         throw std::runtime_error(
-            "disconnectnode \"[address]\" [nodeid]\n"
+            "disconnectnode ( \"address\" nodeid )\n"
             "\nImmediately disconnects from the specified peer node.\n"
             "\nStrictly one out of 'address' and 'nodeid' can be provided to identify the node.\n"
             "\nTo disconnect by nodeid, either set 'address' to the empty string, or call using the named 'nodeid' argument only.\n"
             "\nArguments:\n"
             "1. \"address\"     (string, optional) The IP address/port of the node\n"
-            "2. \"nodeid\"      (number, optional) The node ID (see getpeerinfo for node IDs)\n"
+            "2. nodeid        (number, optional) The node ID (see getpeerinfo for node IDs)\n"
             "\nExamples:\n"
             + HelpExampleCli("disconnectnode", "\"192.168.0.6:8333\"")
             + HelpExampleCli("disconnectnode", "\"\" 1")
@@ -499,7 +500,7 @@ static UniValue setban(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() < 2 ||
         (strCommand != "add" && strCommand != "remove"))
         throw std::runtime_error(
-                            "setban \"subnet\" \"add|remove\" (bantime) (absolute)\n"
+                            "setban \"subnet\" \"command\" ( bantime absolute )\n"
                             "\nAttempts to add or remove an IP/Subnet from the banned list.\n"
                             "\nArguments:\n"
                             "1. \"subnet\"       (string, required) The IP/Subnet (see getpeerinfo for nodes IP) with an optional netmask (default is /32 = single IP)\n"
@@ -610,7 +611,7 @@ static UniValue setnetworkactive(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1) {
         throw std::runtime_error(
-            "setnetworkactive true|false\n"
+            "setnetworkactive state\n"
             "\nDisable/enable all p2p network activity.\n"
             "\nArguments:\n"
             "1. \"state\"        (boolean, required) true to enable networking, false to disable\n"
