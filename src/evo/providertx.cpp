@@ -93,26 +93,10 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-mode");
     }
 
-    // when collateralOutpoint refers to an external collateral, we check it further down
-    if (ptx.collateralOutpoint.hash.IsNull()) {
-        if (ptx.collateralOutpoint.n >= tx.vout.size()) {
-            return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral-index");
-        }
-        if (tx.vout[ptx.collateralOutpoint.n].nValue != 1000 * COIN) {
-            return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral");
-        }
-
-        // This is a temporary restriction that will be lifted later
-        // It is required while we are transitioning from the old MN list to the deterministic list
-        if (tx.vout[ptx.collateralOutpoint.n].scriptPubKey != ptx.scriptPayout) {
-            return state.DoS(10, false, REJECT_INVALID, "bad-protx-payee-collateral");
-        }
-    }
     if (ptx.keyIDOwner.IsNull() || !ptx.pubKeyOperator.IsValid() || ptx.keyIDVoting.IsNull()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-key-null");
     }
-    // we may support P2SH later, but restrict it for now (while in transitioning phase from old MN list to deterministic list)
-    if (!ptx.scriptPayout.IsPayToPublicKeyHash()) {
+    if (!ptx.scriptPayout.IsPayToPublicKeyHash() && !ptx.scriptPayout.IsPayToScriptHash()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-payee");
     }
 
@@ -121,7 +105,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
         // should not happen as we checked script types before
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-payee-dest");
     }
-    // don't allow reuse of collateral key for other keys (don't allow people to put the collateral key onto an online server)
+    // don't allow reuse of payout key for other keys (don't allow people to put the payee key onto an online server)
     if (payoutDest == CTxDestination(ptx.keyIDOwner) || payoutDest == CTxDestination(ptx.keyIDVoting)) {
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-payee-reuse");
     }
@@ -136,6 +120,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-operator-reward");
     }
 
+    CTxDestination collateralTxDest;
     CKeyID keyForPayloadSig;
     COutPoint collateralOutpoint;
 
@@ -145,21 +130,36 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
             return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral");
         }
 
-        CTxDestination txDest;
-        if (!ExtractDestination(coin.out.scriptPubKey, txDest)) {
+        if (!ExtractDestination(coin.out.scriptPubKey, collateralTxDest)) {
             return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral-dest");
         }
 
         // Extract key from collateral. This only works for P2PK and P2PKH collaterals and will fail for P2SH.
         // Issuer of this ProRegTx must prove ownership with this key by signing the ProRegTx
-        CBitcoinAddress txAddr(txDest);
-        if (!txAddr.GetKeyID(keyForPayloadSig)) {
+        if (!CBitcoinAddress(collateralTxDest).GetKeyID(keyForPayloadSig)) {
             return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral-pkh");
         }
 
         collateralOutpoint = ptx.collateralOutpoint;
     } else {
+        if (ptx.collateralOutpoint.n >= tx.vout.size()) {
+            return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral-index");
+        }
+        if (tx.vout[ptx.collateralOutpoint.n].nValue != 1000 * COIN) {
+            return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral");
+        }
+
+        if (!ExtractDestination(tx.vout[ptx.collateralOutpoint.n].scriptPubKey, collateralTxDest)) {
+            return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral-dest");
+        }
+
         collateralOutpoint = COutPoint(tx.GetHash(), ptx.collateralOutpoint.n);
+    }
+
+    // don't allow reuse of collateral key for other keys (don't allow people to put the collateral key onto an online server)
+    // this check applies to internal and external collateral, but internal collaterals are not necessarely a P2PKH
+    if (collateralTxDest == CTxDestination(ptx.keyIDOwner) || collateralTxDest == CTxDestination(ptx.keyIDVoting)) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral-reuse");
     }
 
     if (pindexPrev) {
@@ -272,8 +272,7 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
     if (!ptx.pubKeyOperator.IsValid() || ptx.keyIDVoting.IsNull()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-key-null");
     }
-    // we may support P2SH later, but restrict it for now (while in transitioning phase from old MN list to deterministic list)
-    if (!ptx.scriptPayout.IsPayToPublicKeyHash()) {
+    if (!ptx.scriptPayout.IsPayToPublicKeyHash() && !ptx.scriptPayout.IsPayToScriptHash()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-payee");
     }
 
@@ -290,19 +289,24 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
             return state.DoS(100, false, REJECT_INVALID, "bad-protx-hash");
         }
 
-        // don't allow reuse of collateral key for other keys (don't allow people to put the collateral key onto an online server)
+        // don't allow reuse of payee key for other keys (don't allow people to put the payee key onto an online server)
         if (payoutDest == CTxDestination(dmn->pdmnState->keyIDOwner) || payoutDest == CTxDestination(ptx.keyIDVoting)) {
             return state.DoS(10, false, REJECT_INVALID, "bad-protx-payee-reuse");
         }
 
-        // This is a temporary restriction that will be lifted later
-        // It is required while we are transitioning from the old MN list to the deterministic list
         Coin coin;
         if (!GetUTXOCoin(dmn->collateralOutpoint, coin)) {
-            return state.DoS(100, false, REJECT_INVALID, "bad-protx-payee-collateral");
+            // this should never happen (there would be no dmn otherwise)
+            return state.DoS(100, false, REJECT_INVALID, "bad-protx-collateral");
         }
-        if (coin.out.scriptPubKey != ptx.scriptPayout) {
-            return state.DoS(10, false, REJECT_INVALID, "bad-protx-payee-collateral");
+
+        // don't allow reuse of collateral key for other keys (don't allow people to put the collateral key onto an online server)
+        CTxDestination collateralTxDest;
+        if (!ExtractDestination(coin.out.scriptPubKey, collateralTxDest)) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-protx-collateral-dest");
+        }
+        if (collateralTxDest == CTxDestination(dmn->pdmnState->keyIDOwner) || collateralTxDest == CTxDestination(ptx.keyIDVoting)) {
+            return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral-reuse");
         }
 
         if (mnList.HasUniqueProperty(ptx.pubKeyOperator)) {

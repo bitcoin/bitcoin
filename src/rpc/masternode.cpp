@@ -283,13 +283,22 @@ UniValue GetNextMasternodeForPayment(int heightShift)
     nHeight = pindex->nHeight + heightShift;
     mnodeman.UpdateLastPaid(pindex);
 
+    CScript payeeScript;
     if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
         auto payee = deterministicMNManager->GetListAtChainTip().GetMNPayee();
         if (!payee || !mnodeman.GetMasternodeInfo(payee->proTxHash, mnInfo))
             return "unknown";
+        payeeScript = payee->pdmnState->scriptPayout;
     } else {
         if (!mnodeman.GetNextMasternodeInQueueForPayment(nHeight, true, nCount, mnInfo))
             return "unknown";
+        payeeScript = GetScriptForDestination(mnInfo.keyIDCollateralAddress);
+    }
+
+    CTxDestination payeeDest;
+    CBitcoinAddress payeeAddr;
+    if (ExtractDestination(payeeScript, payeeDest)) {
+        payeeAddr = CBitcoinAddress(payeeDest);
     }
 
     UniValue obj(UniValue::VOBJ);
@@ -298,7 +307,7 @@ UniValue GetNextMasternodeForPayment(int heightShift)
     obj.push_back(Pair("IP:port",       mnInfo.addr.ToString()));
     obj.push_back(Pair("protocol",      mnInfo.nProtocolVersion));
     obj.push_back(Pair("outpoint",      mnInfo.outpoint.ToStringShort()));
-    obj.push_back(Pair("payee",         CBitcoinAddress(mnInfo.keyIDCollateralAddress).ToString()));
+    obj.push_back(Pair("payee",         payeeAddr.IsValid() ? payeeAddr.ToString() : "UNKNOWN"));
     obj.push_back(Pair("lastseen",      mnInfo.nTimeLastPing));
     obj.push_back(Pair("activeseconds", mnInfo.nTimeLastPing - mnInfo.sigTime));
     return obj;
@@ -877,6 +886,23 @@ UniValue masternodelist(const JSONRPCRequest& request)
         for (const auto& mnpair : mapMasternodes) {
             CMasternode mn = mnpair.second;
             std::string strOutpoint = mnpair.first.ToStringShort();
+
+            CScript payeeScript;
+            if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+                auto dmn = deterministicMNManager->GetListAtChainTip().GetMNByCollateral(mn.outpoint);
+                if (dmn) {
+                    payeeScript = dmn->pdmnState->scriptPayout;
+                }
+            } else {
+                payeeScript = GetScriptForDestination(mn.keyIDCollateralAddress);
+            }
+
+            CTxDestination payeeDest;
+            std::string payeeStr = "UNKOWN";
+            if (ExtractDestination(payeeScript, payeeDest)) {
+                payeeStr = CBitcoinAddress(payeeDest).ToString();
+            }
+
             if (strMode == "activeseconds") {
                 if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) continue;
                 obj.push_back(Pair(strOutpoint, (int64_t)(mn.lastPing.sigTime - mn.sigTime)));
@@ -900,7 +926,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
                 streamFull << std::setw(18) <<
                                mn.GetStatus() << " " <<
                                mn.nProtocolVersion << " " <<
-                               CBitcoinAddress(mn.keyIDCollateralAddress).ToString() << " " <<
+                               payeeStr << " " <<
                                (int64_t)mn.lastPing.sigTime << " " << std::setw(8) <<
                                (int64_t)(mn.lastPing.sigTime - mn.sigTime) << " " << std::setw(10) <<
                                mn.GetLastPaidTime() << " "  << std::setw(6) <<
@@ -915,7 +941,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
                 streamInfo << std::setw(18) <<
                                mn.GetStatus() << " " <<
                                mn.nProtocolVersion << " " <<
-                               CBitcoinAddress(mn.keyIDCollateralAddress).ToString() << " " <<
+                               payeeStr << " " <<
                                (int64_t)mn.lastPing.sigTime << " " << std::setw(8) <<
                                (int64_t)(mn.lastPing.sigTime - mn.sigTime) << " " <<
                                mn.lastPing.GetSentinelString() << " "  <<
@@ -964,11 +990,9 @@ UniValue masternodelist(const JSONRPCRequest& request)
                 if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) continue;
                 obj.push_back(Pair(strOutpoint, (int64_t)mn.lastPing.sigTime));
             } else if (strMode == "payee") {
-                CBitcoinAddress address(mn.keyIDCollateralAddress);
-                std::string strPayee = address.ToString();
-                if (strFilter !="" && strPayee.find(strFilter) == std::string::npos &&
+                if (strFilter !="" && payeeStr.find(strFilter) == std::string::npos &&
                     strOutpoint.find(strFilter) == std::string::npos) continue;
-                obj.push_back(Pair(strOutpoint, strPayee));
+                obj.push_back(Pair(strOutpoint, payeeStr));
             } else if (strMode == "protocol") {
                 if (strFilter !="" && strFilter != strprintf("%d", mn.nProtocolVersion) &&
                     strOutpoint.find(strFilter) == std::string::npos) continue;

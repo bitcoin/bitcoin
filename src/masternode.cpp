@@ -56,13 +56,9 @@ CMasternode::CMasternode(const CMasternodeBroadcast& mnb) :
 
 CMasternode::CMasternode(const uint256 &proTxHash, const CDeterministicMNCPtr& dmn) :
     masternode_info_t{ MASTERNODE_ENABLED, DMN_PROTO_VERSION, GetAdjustedTime(),
-                       dmn->collateralOutpoint, dmn->pdmnState->addr, CKeyID(), dmn->pdmnState->keyIDOwner, dmn->pdmnState->pubKeyOperator, dmn->pdmnState->keyIDVoting},
+                       dmn->collateralOutpoint, dmn->pdmnState->addr, CKeyID() /* not valid with DIP3 */, dmn->pdmnState->keyIDOwner, dmn->pdmnState->pubKeyOperator, dmn->pdmnState->keyIDVoting},
     fAllowMixingTx(true)
 {
-    CTxDestination dest;
-    if (!ExtractDestination(dmn->pdmnState->scriptPayout, dest) || !boost::get<CKeyID>(&dest))
-        assert(false); // should not happen (previous verification forbids non p2pkh/p2pk
-    keyIDCollateralAddress = *boost::get<CKeyID>(&dest);
 }
 
 //
