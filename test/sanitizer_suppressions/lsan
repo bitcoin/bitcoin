@@ -1,0 +1,7 @@
+leak:addCoin
+leak:libcrypto
+leak:libqminimal
+leak:libQt5Core
+leak:libQt5Gui
+leak:libQt5Widgets
+leak:new_allocator.h
