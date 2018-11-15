@@ -386,12 +386,6 @@ class TestSandbox(unittest.TestCase):
         expected = '/home/xyz/test/wallet/devnet-rose/masternode.conf'
         self.assertEqual(sb.mnconfig_filename('wallet'), expected)
 
-    # def test_setup_masternodes(self):
-    #     fp = StringIO.StringIO(masternode_json)
-    #     sb = sandbox.Sandbox('/home/binaries', '/home/xyz/test', fp)
-    #
-    #     sb.setup_masternodes()
-
     def test_write_mninfo_to_config(self):
         fp = StringIO.StringIO(masternode_json)
         sb = sandbox.Sandbox('/home/binaries', '/home/xyz/test', fp)

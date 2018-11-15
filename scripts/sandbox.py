@@ -6,9 +6,9 @@ import json
 import os
 import shutil
 import subprocess
-
-# TODO: add mninfo to config_for_node
 import time
+
+import math
 
 
 def create_dir(dirname):
@@ -329,7 +329,6 @@ class Sandbox:
                   for mn in self.masternodes(controller)
                   if not is_setup(mn, controller)
                   ]
-        # print self.masternodes('hq')
         if mnodes:
             return mnodes[0]
         else:
@@ -354,7 +353,6 @@ class Sandbox:
         self.write_config(masternode)
         self.start_node(masternode)
 
-        # time.sleep(1)
         self.start_masternode(masternode)
 
     def stop_node(self, node):
@@ -412,16 +410,29 @@ def run_simulation(json_desc_file, target_dir, bin_dir):
                     continue
                 balance = sb.check_balance(node)
                 if balance > 1000:
+                    # Didn't find a good way to send all the money AND include tx fee
+                    # This code will send almost all the money almost always successfully
+
+                    # Also, it's important to send in big chunks since it will keep the collateral
+                    # transaction reasonably small (and huge tx sizes are a problem since the
+                    # encoded tx won't fit into pipe)
+
                     to = sb.network['nodes'][node]['send_to']
                     amount = int(math.floor(balance / 1000.0)) * 1000
                     print 'Sending {0} to {1}'.format(amount, to)
-                    sb.send(node, sb.gen_or_reuse_address(to), amount)
-                    print '{0} balance: {1}'.format(to, sb.check_balance(to))
+
+                    try:
+                        sb.send(node, sb.gen_or_reuse_address(to), amount)
+                        time.sleep(1)
+                        print '{0} balance: {1}'.format(to, sb.check_balance(to))
+
+                    except subprocess.CalledProcessError as ex:
+                        print ex.output
 
             mn, node = sb.next_masternode_to_setup()
             if mn is not None:
                 balance = sb.check_balance(node)
-                if balance < 10000:
+                if balance < 10001:
                     continue
 
                 print 'Setting up masternode {0}'.format(mn)
@@ -464,11 +475,3 @@ if __name__ == '__main__':
         print ex
     except RuntimeError as ex:
         print ex
-
-    # sb = Sandbox('~/work/crown-sandbox/cmake-build-debug/src', '~/work/TEST', open('test.json'))
-    # sb.prepare()
-    #
-    # assert (os.path.exists(os.path.expanduser('~/work/TEST/seed')))
-    #
-    # # sb.start_node('seed', binary='crown_qt')
-    # sb.start_nodes()
