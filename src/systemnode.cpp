@@ -371,15 +371,13 @@ int64_t CSystemnode::GetLastPaid() const
     return 0;
 }
 
-#define PAYMENT_BLOCK_DEPTH 2000
-
 // Find all blocks where SN received reward within defined block depth
 // Used for generating stakepointers
 bool CSystemnode::GetRecentPaymentBlocks(std::vector<const CBlockIndex*>& vPaymentBlocks, bool limitMostRecent) const
 {
     vPaymentBlocks.clear();
 
-    int nMinimumValidBlockHeight = chainActive.Height() - PAYMENT_BLOCK_DEPTH;
+    int nMinimumValidBlockHeight = chainActive.Height() - Params().ValidStakePointerDuration();
     if (nMinimumValidBlockHeight < 1)
         nMinimumValidBlockHeight = 1;
 

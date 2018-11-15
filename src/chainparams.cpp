@@ -130,6 +130,7 @@ public:
 
         nAuxpowChainId = 20;
         nPoSChainId = 22;
+        nStakePointerValidityPeriod = 1440; //Stake pointers are valid to stake with for the next 1 day worth of blocks
 
         /**
          * Build the genesis block. Note that the output of the genesis coinbase cannot

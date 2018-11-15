@@ -2090,13 +2090,18 @@ void ThreadScriptCheck() {
 
 bool CheckBlockProofPointer(const CBlockIndex* pindex, const CBlock& block, CPubKey& pubkeyMasternode, COutPoint& outpoint)
 {
+    //First make sure that the stake pointer points to a block that is in the blockchain
     StakePointer stakePointer = block.stakePointer;
     if (!mapBlockIndex.count(stakePointer.hashBlock))
         return error("%s: Unknown block hash %s", __func__, stakePointer.hashBlock.GetHex());
-
     CBlockIndex* pindexFrom = mapBlockIndex.at(stakePointer.hashBlock);
     if (!chainActive.Contains(pindexFrom))
         return error("%s: Block %s is not in the block chain", __func__, stakePointer.hashBlock.GetHex());
+
+    //Reject any stakepointers that are not within the acceptable period that we consider valid for staking
+    if (pindexFrom->nHeight < pindex->nHeight - Params().ValidStakePointerDuration())
+        return error("%s: Stake pointer from height %d is more than %d blocks deep, violating valid stake pointer duration",
+                __func__, pindexFrom->nHeight, Params().ValidStakePointerDuration());
 
     COutPoint stakeSource(stakePointer.txid, stakePointer.nPos);
     auto hashPointer = stakeSource.GetHash();
