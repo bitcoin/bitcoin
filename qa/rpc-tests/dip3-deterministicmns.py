@@ -294,6 +294,25 @@ class DIP3Test(BitcoinTestFramework):
         for mn in mns_protx:
             self.test_protx_update_service(mn)
 
+        print("testing P2SH/multisig for payee addresses")
+        multisig = self.nodes[0].createmultisig(1, [self.nodes[0].getnewaddress(), self.nodes[0].getnewaddress()])['address']
+        self.update_mn_payee(mns_protx[0], multisig)
+        found_multisig_payee = False
+        for i in range(len(mns_protx)):
+            bt = self.nodes[0].getblocktemplate()
+            expected_payee = bt['masternode'][0]['payee']
+            expected_amount = bt['masternode'][0]['amount']
+            self.nodes[0].generate(1)
+            self.sync_all()
+            if expected_payee == multisig:
+                block = self.nodes[0].getblock(self.nodes[0].getbestblockhash())
+                cbtx = self.nodes[0].getrawtransaction(block['tx'][0], 1)
+                for out in cbtx['vout']:
+                    if 'addresses' in out['scriptPubKey']:
+                        if expected_payee in out['scriptPubKey']['addresses'] and out['valueSat'] == expected_amount:
+                            found_multisig_payee = True
+        assert(found_multisig_payee)
+
         print("testing reusing of collaterals for replaced MNs")
         for i in range(0, 5):
             mn = mns_protx[i]
@@ -404,6 +423,13 @@ class DIP3Test(BitcoinTestFramework):
         else:
             mn = self.create_mn_protx(self.nodes[0], mn.idx, 'mn-protx-%d' % mn.idx, mn.collateral_txid, mn.collateral_vout, legacy_mn_key=mn.legacyMnkey)
         return mn
+
+    def update_mn_payee(self, mn, payee):
+        self.nodes[0].protx('update_registrar', mn.protx_hash, '', '', payee)
+        self.nodes[0].generate(1)
+        self.sync_all()
+        info = self.nodes[0].protx('info', mn.protx_hash)
+        assert(info['state']['payoutAddress'] == payee)
 
     def test_protx_update_service(self, mn):
         self.nodes[0].protx('update_service', mn.protx_hash, '127.0.0.2:%d' % mn.p2p_port, mn.blsMnkey)
