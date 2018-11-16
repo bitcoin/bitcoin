@@ -146,10 +146,6 @@
    don't. */
 #define HAVE_DECL_STRNLEN 1
 
-/* Define to 1 if you have the declaration of `__builtin_clz', and to 0 if you
-   don't. */
-//#define HAVE_DECL___BUILTIN_CLZ 1
-
 /* Define to 1 if you have the declaration of `__builtin_clzl', and to 0 if
    you don't. */
 //#define HAVE_DECL___BUILTIN_CLZL 1
