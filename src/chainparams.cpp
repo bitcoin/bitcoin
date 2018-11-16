@@ -192,7 +192,7 @@ public:
     CTestNetParams() {
         strNetworkID = "test";
         consensus.BIP16Height = 0;
-        consensus.BIP34Height = 0;
+        consensus.BIP34Height = 1;
         consensus.BIP34Hash = uint256S("0");
         consensus.BIP65Height = 9999999;   // peercoin: fails on block 293427
         consensus.BIP66Height = 9999999;   // peercoin: fails on block 293427

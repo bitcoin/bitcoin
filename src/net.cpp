@@ -2743,6 +2743,8 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     fPauseRecv = false;
     fPauseSend = false;
     nProcessQueueSize = 0;
+    nPoSTemperature = MAX_CONSECUTIVE_POS_HEADERS/4;
+    lastAcceptedHeader = uint256();
 
     for (const std::string &msg : getAllNetMessageTypes())
         mapRecvBytesPerMsgCmd[msg] = 0;

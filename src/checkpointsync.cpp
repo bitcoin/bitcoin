@@ -210,6 +210,9 @@ uint256 AutoSelectSyncCheckpoint()
 // Check against synchronized checkpoint
 bool CheckSyncCheckpoint(const uint256& hashBlock, const CBlockIndex* pindexPrev)
 {
+   // skip checks during reindex, except for genesis block
+   if (pindexPrev->nHeight > 0 && chainActive.Height() == 0) return true;
+
     //ppcTODO - needs rewrite, because it is very slow during accepting headers
     return true;
 //    int nHeight = pindexPrev->nHeight + 1;
