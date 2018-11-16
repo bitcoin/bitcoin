@@ -371,21 +371,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             sync_blocks(group)
             sync_mempools(group)
 
-    def enable_mocktime(self):
-        """Enable mocktime for the script.
-
-        mocktime may be needed for scripts that use the cached version of the
-        blockchain.  If the cached version of the blockchain is used without
-        mocktime then the mempools will not sync due to IBD.
-
-        For backward compatibility of the python scripts with previous
-        versions of the cache, this helper function sets mocktime to Jan 1,
-        2014 + (201 * 10 * 60)"""
-        self.mocktime = 1388534400 + (201 * 10 * 60)
-
-    def disable_mocktime(self):
-        self.mocktime = 0
-
     # Private helper methods. These should not be accessed by the subclass test scripts.
 
     def _start_logging(self):
@@ -451,6 +436,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             for node in self.nodes:
                 node.wait_for_rpc_connection()
 
+            # For backward compatibility of the python scripts with previous
+            # versions of the cache, set mocktime to Jan 1,
+            # 2014 + (201 * 10 * 60)"""
+            self.mocktime = 1388534400 + (201 * 10 * 60)
+
             # Create a 200-block-long chain; each of the 4 first nodes
             # gets 25 mature blocks and 25 immature.
             # Note: To preserve compatibility with older versions of
@@ -458,7 +448,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             #
             # blocks are created with timestamps 10 minutes apart
             # starting from 2010 minutes in the past
-            self.enable_mocktime()
             block_time = self.mocktime - (201 * 10 * 60)
             for i in range(2):
                 for peer in range(4):
@@ -472,7 +461,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # Shut them down, and clean up cache directories:
             self.stop_nodes()
             self.nodes = []
-            self.disable_mocktime()
+            self.mocktime = 0
 
             def cache_path(n, *paths):
                 return os.path.join(get_datadir_path(self.options.cachedir, n), "regtest", *paths)
