@@ -421,7 +421,7 @@ AC_DEFUN([_BITCOIN_QT_FIND_LIBS_WITH_PKGCONFIG],[
     QT_LIB_PREFIX=Qt5
     qt5_modules="Qt5Core Qt5Gui Qt5Network Qt5Widgets"
     BITCOIN_QT_CHECK([
-      PKG_CHECK_MODULES([QT5], [$qt5_modules], [QT_INCLUDES="$QT5_CFLAGS"; QT_LIBS="$QT5_LIBS" have_qt=yes],[have_qt=no])
+      PKG_CHECK_MODULES([QT5], [$qt5_modules], [have_qt=yes; BITCOIN_SYSTEM_INCLUDE([QT_INCLUDES], [$QT5_CFLAGS]) QT_MOC_INCLUDES="$QT5_CFLAGS"; QT_LIBS="$QT5_LIBS"],[have_qt=no])
 
       if test "x$have_qt" != xyes; then
         have_qt=no
@@ -429,9 +429,9 @@ AC_DEFUN([_BITCOIN_QT_FIND_LIBS_WITH_PKGCONFIG],[
       fi
     ])
     BITCOIN_QT_CHECK([
-      PKG_CHECK_MODULES([QT_TEST], [${QT_LIB_PREFIX}Test], [QT_TEST_INCLUDES="$QT_TEST_CFLAGS"; have_qt_test=yes], [have_qt_test=no])
+      PKG_CHECK_MODULES([QT_TEST], [${QT_LIB_PREFIX}Test], [have_qt_test=yes; BITCOIN_SYSTEM_INCLUDE([QT_TEST_INCLUDES], [$QT_TEST_CFLAGS])], [have_qt_test=no])
       if test "x$use_dbus" != xno; then
-        PKG_CHECK_MODULES([QT_DBUS], [${QT_LIB_PREFIX}DBus], [QT_DBUS_INCLUDES="$QT_DBUS_CFLAGS"; have_qt_dbus=yes], [have_qt_dbus=no])
+        PKG_CHECK_MODULES([QT_DBUS], [${QT_LIB_PREFIX}DBus], [have_qt_dbus=yes; BITCOIN_SYSTEM_INCLUDE([QT_DBUS_INCLUDES], [$QT_DBUS_CFLAGS])], [have_qt_dbus=no])
       fi
     ])
   ])
@@ -451,7 +451,8 @@ AC_DEFUN([_BITCOIN_QT_FIND_LIBS_WITHOUT_PKGCONFIG],[
   TEMP_LIBS="$LIBS"
   BITCOIN_QT_CHECK([
     if test "x$qt_include_path" != x; then
-      QT_INCLUDES="-I$qt_include_path -I$qt_include_path/QtCore -I$qt_include_path/QtGui -I$qt_include_path/QtWidgets -I$qt_include_path/QtNetwork -I$qt_include_path/QtTest -I$qt_include_path/QtDBus"
+      QT_MOC_INCLUDES="-I$qt_include_path -I$qt_include_path/QtCore -I$qt_include_path/QtGui -I$qt_include_path/QtWidgets -I$qt_include_path/QtNetwork -I$qt_include_path/QtTest -I$qt_include_path/QtDBus"
+      BITCOIN_SYSTEM_INCLUDE([QT_INCLUDES], [$QT_MOC_INCLUDES])
       CPPFLAGS="$QT_INCLUDES $CPPFLAGS"
     fi
   ])
