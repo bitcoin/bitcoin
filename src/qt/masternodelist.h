@@ -44,12 +44,15 @@ public:
 private:
     QMenu* contextMenu;
     int64_t nTimeFilterUpdated;
+    int64_t nTimeFilterUpdatedDIP3;
     bool fFilterUpdated;
+    bool fFilterUpdatedDIP3;
 
 public Q_SLOTS:
     void updateMyMasternodeInfo(QString strAlias, QString strAddr, const COutPoint& outpoint);
     void updateMyNodeList(bool fForce = false);
     void updateNodeList();
+    void updateDIP3List();
 
 Q_SIGNALS:
     void doubleClicked(const QModelIndex&);
@@ -66,11 +69,16 @@ private:
     // Protects tableWidgetMyMasternodes
     CCriticalSection cs_mymnlist;
 
+    // Protects tableWidgetMasternodesDIP3
+    CCriticalSection cs_dip3list;
+
     QString strCurrentFilter;
+    QString strCurrentFilterDIP3;
 
 private Q_SLOTS:
     void showContextMenu(const QPoint&);
     void on_filterLineEdit_textChanged(const QString& strFilterIn);
+    void on_filterLineEditDIP3_textChanged(const QString& strFilterIn);
     void on_QRButton_clicked();
     void on_startButton_clicked();
     void on_startAllButton_clicked();

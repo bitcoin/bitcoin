@@ -45,6 +45,13 @@ MasternodeList::MasternodeList(const PlatformStyle* platformStyle, QWidget* pare
     int columnActiveWidth = 130;
     int columnLastSeenWidth = 130;
 
+    int columnPoSeScoreWidth = 80;
+    int columnRegisteredWidth = 80;
+    int columnLastPaidWidth = 80;
+    int columnNextPaymentWidth = 100;
+    int columnPayeeWidth = 130;
+    int columnOperatorRewardWidth = 130;
+
     ui->tableWidgetMyMasternodes->setColumnWidth(0, columnAliasWidth);
     ui->tableWidgetMyMasternodes->setColumnWidth(1, columnAddressWidth);
     ui->tableWidgetMyMasternodes->setColumnWidth(2, columnProtocolWidth);
@@ -58,6 +65,15 @@ MasternodeList::MasternodeList(const PlatformStyle* platformStyle, QWidget* pare
     ui->tableWidgetMasternodes->setColumnWidth(3, columnActiveWidth);
     ui->tableWidgetMasternodes->setColumnWidth(4, columnLastSeenWidth);
 
+    ui->tableWidgetMasternodesDIP3->setColumnWidth(0, columnAddressWidth);
+    ui->tableWidgetMasternodesDIP3->setColumnWidth(1, columnStatusWidth);
+    ui->tableWidgetMasternodesDIP3->setColumnWidth(2, columnPoSeScoreWidth);
+    ui->tableWidgetMasternodesDIP3->setColumnWidth(3, columnRegisteredWidth);
+    ui->tableWidgetMasternodesDIP3->setColumnWidth(4, columnLastPaidWidth);
+    ui->tableWidgetMasternodesDIP3->setColumnWidth(5, columnNextPaymentWidth);
+    ui->tableWidgetMasternodesDIP3->setColumnWidth(6, columnPayeeWidth);
+    ui->tableWidgetMasternodesDIP3->setColumnWidth(7, columnOperatorRewardWidth);
+
     ui->tableWidgetMyMasternodes->setContextMenuPolicy(Qt::CustomContextMenu);
 
     QAction* startAliasAction = new QAction(tr("Start alias"), this);
@@ -70,11 +86,15 @@ MasternodeList::MasternodeList(const PlatformStyle* platformStyle, QWidget* pare
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(updateNodeList()));
     connect(timer, SIGNAL(timeout()), this, SLOT(updateMyNodeList()));
+    connect(timer, SIGNAL(timeout()), this, SLOT(updateDIP3List()));
     timer->start(1000);
 
     fFilterUpdated = false;
+    fFilterUpdatedDIP3 = false;
     nTimeFilterUpdated = GetTime();
+    nTimeFilterUpdatedDIP3 = GetTime();
     updateNodeList();
+    updateDIP3List();
 }
 
 MasternodeList::~MasternodeList()
@@ -288,8 +308,15 @@ void MasternodeList::updateNodeList()
     ui->tableWidgetMasternodes->setSortingEnabled(false);
     ui->tableWidgetMasternodes->clearContents();
     ui->tableWidgetMasternodes->setRowCount(0);
-    std::map<COutPoint, CMasternode> mapMasternodes = mnodeman.GetFullMasternodeMap();
+
+    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+        ui->countLabel->setText(QString::number(0));
+        return;
+    }
+
     int offsetFromUtc = GetOffsetFromUtc();
+
+    std::map<COutPoint, CMasternode> mapMasternodes = mnodeman.GetFullMasternodeMap();
 
     for (const auto& mnpair : mapMasternodes) {
         CMasternode mn = mnpair.second;
@@ -325,12 +352,124 @@ void MasternodeList::updateNodeList()
     ui->tableWidgetMasternodes->setSortingEnabled(true);
 }
 
+void MasternodeList::updateDIP3List()
+{
+    TRY_LOCK(cs_dip3list, fLockAcquired);
+    if (!fLockAcquired) return;
+
+    static int64_t nTimeListUpdated = GetTime();
+
+    // to prevent high cpu usage update only once in MASTERNODELIST_UPDATE_SECONDS seconds
+    // or MASTERNODELIST_FILTER_COOLDOWN_SECONDS seconds after filter was last changed
+    int64_t nSecondsToWait = fFilterUpdatedDIP3
+                             ? nTimeFilterUpdatedDIP3 - GetTime() + MASTERNODELIST_FILTER_COOLDOWN_SECONDS
+                             : nTimeListUpdated - GetTime() + MASTERNODELIST_UPDATE_SECONDS;
+
+    if (fFilterUpdatedDIP3) {
+        ui->countLabel->setText(QString::fromStdString(strprintf("Please wait... %d", nSecondsToWait)));
+    }
+    if (nSecondsToWait > 0) return;
+
+    nTimeListUpdated = GetTime();
+    fFilterUpdatedDIP3 = false;
+
+    QString strToFilter;
+    ui->countLabelDIP3->setText("Updating...");
+    ui->tableWidgetMasternodesDIP3->setSortingEnabled(false);
+    ui->tableWidgetMasternodesDIP3->clearContents();
+    ui->tableWidgetMasternodesDIP3->setRowCount(0);
+
+    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+        ui->dip3NoteLabel->setVisible(false);
+    }
+
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+    auto projectedPayees = mnList.GetProjectedMNPayees(mnList.GetValidMNsCount());
+    std::map<uint256, int> nextPayments;
+    for (size_t i = 0; i < projectedPayees.size(); i++) {
+        const auto& dmn = projectedPayees[i];
+        nextPayments.emplace(dmn->proTxHash, mnList.GetHeight() + (int)i + 1);
+    }
+
+    mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
+        // populate list
+        // Address, Protocol, Status, Active Seconds, Last Seen, Pub Key
+        QTableWidgetItem* addressItem = new QTableWidgetItem(QString::fromStdString(dmn->pdmnState->addr.ToString()));
+        QTableWidgetItem* statusItem = new QTableWidgetItem(mnList.IsMNValid(dmn) ? tr("ENABLED") : (mnList.IsMNPoSeBanned(dmn) ? tr("POSE_BANNED") : tr("UNKNOWN")));
+        QTableWidgetItem* PoSeScoreItem = new QTableWidgetItem(QString::number(dmn->pdmnState->nPoSePenalty));
+        QTableWidgetItem* registeredItem = new QTableWidgetItem(QString::number(dmn->pdmnState->nRegisteredHeight));
+        QTableWidgetItem* lastPaidItem = new QTableWidgetItem(QString::number(dmn->pdmnState->nLastPaidHeight));
+        QTableWidgetItem* nextPaymentItem = new QTableWidgetItem(nextPayments.count(dmn->proTxHash) ? QString::number(nextPayments[dmn->proTxHash]) : tr("UNKNOWN"));
+
+        CTxDestination payeeDest;
+        QString payeeStr;
+        if (ExtractDestination(dmn->pdmnState->scriptPayout, payeeDest)) {
+            payeeStr = QString::fromStdString(CBitcoinAddress(payeeDest).ToString());
+        } else {
+            payeeStr = tr("UNKNOWN");
+        }
+        QTableWidgetItem* payeeItem = new QTableWidgetItem(payeeStr);
+
+        QString operatorRewardStr;
+        if (dmn->nOperatorReward) {
+            operatorRewardStr += QString::number(dmn->nOperatorReward / 100.0, 'f', 2) + "%";
+
+            if (dmn->pdmnState->scriptOperatorPayout != CScript()) {
+                CTxDestination dest;
+                if (ExtractDestination(dmn->pdmnState->scriptOperatorPayout, dest)) {
+                    operatorRewardStr += tr(" to %1").arg(QString::fromStdString(CBitcoinAddress(payeeDest).ToString()));
+                } else {
+                    operatorRewardStr += tr(" to UNKNOWN");
+                }
+            } else {
+                operatorRewardStr += tr(" but not claimed");
+            }
+        } else {
+            operatorRewardStr = tr("NONE");
+        }
+        QTableWidgetItem* operatorRewardItem = new QTableWidgetItem(operatorRewardStr);
+
+        if (strCurrentFilterDIP3 != "") {
+            strToFilter = addressItem->text() + " " +
+                          statusItem->text() + " " +
+                          PoSeScoreItem->text() + " " +
+                          registeredItem->text() + " " +
+                          lastPaidItem->text() + " " +
+                          nextPaymentItem->text() + " " +
+                          payeeItem->text() + " " +
+                          operatorRewardItem->text();
+            if (!strToFilter.contains(strCurrentFilterDIP3)) return;
+        }
+
+        ui->tableWidgetMasternodesDIP3->insertRow(0);
+        ui->tableWidgetMasternodesDIP3->setItem(0, 0, addressItem);
+        ui->tableWidgetMasternodesDIP3->setItem(0, 1, statusItem);
+        ui->tableWidgetMasternodesDIP3->setItem(0, 2, PoSeScoreItem);
+        ui->tableWidgetMasternodesDIP3->setItem(0, 3, registeredItem);
+        ui->tableWidgetMasternodesDIP3->setItem(0, 4, lastPaidItem);
+        ui->tableWidgetMasternodesDIP3->setItem(0, 5, nextPaymentItem);
+        ui->tableWidgetMasternodesDIP3->setItem(0, 6, payeeItem);
+        ui->tableWidgetMasternodesDIP3->setItem(0, 7, operatorRewardItem);
+    });
+
+    ui->countLabelDIP3->setText(QString::number(ui->tableWidgetMasternodesDIP3->rowCount()));
+    ui->tableWidgetMasternodesDIP3->setSortingEnabled(true);
+}
+
 void MasternodeList::on_filterLineEdit_textChanged(const QString& strFilterIn)
 {
     strCurrentFilter = strFilterIn;
     nTimeFilterUpdated = GetTime();
     fFilterUpdated = true;
     ui->countLabel->setText(QString::fromStdString(strprintf("Please wait... %d", MASTERNODELIST_FILTER_COOLDOWN_SECONDS)));
+}
+
+void MasternodeList::on_filterLineEditDIP3_textChanged(const QString& strFilterIn)
+{
+    strCurrentFilterDIP3 = strFilterIn;
+    nTimeFilterUpdatedDIP3 = GetTime();
+    fFilterUpdatedDIP3 = true;
+    ui->countLabelDIP3->setText(QString::fromStdString(strprintf("Please wait... %d", MASTERNODELIST_FILTER_COOLDOWN_SECONDS)));
 }
 
 void MasternodeList::on_startButton_clicked()

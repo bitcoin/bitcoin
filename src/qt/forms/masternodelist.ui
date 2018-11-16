@@ -217,7 +217,55 @@
          <string>All Masternodes</string>
         </attribute>
         <layout class="QGridLayout" name="gridLayout">
-         <item row="1" column="0">
+         <item row="1" column="0" rowspan="2" colspan="2">
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QLabel" name="label_filter">
+             <property name="text">
+              <string>Filter List:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="filterLineEdit">
+             <property name="toolTip">
+              <string>Filter masternode list</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_3">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>10</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_count">
+             <property name="text">
+              <string>Node Count:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="countLabel">
+             <property name="text">
+              <string>0</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="3" column="0">
           <widget class="QTableWidget" name="tableWidgetMasternodes">
            <property name="editTriggers">
             <set>QAbstractItemView::NoEditTriggers</set>
@@ -270,26 +318,46 @@
           </widget>
          </item>
          <item row="0" column="0">
-          <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <widget class="QLabel" name="legacyListNote">
+           <property name="text">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note: This list represents the legacy and non-deterministic masternode list. It is only active as long as DIP3 has not been fully activated. After SPORK15 activation, this list will be empty.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::AutoText</enum>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tabDIP3Masternodes">
+        <attribute name="title">
+         <string>DIP3 Masternodes</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout_3">
+         <item row="1" column="0">
+          <layout class="QHBoxLayout" name="horizontalLayout_4">
            <property name="bottomMargin">
             <number>0</number>
            </property>
            <item>
-            <widget class="QLabel" name="label_filter">
+            <widget class="QLabel" name="label_filter_2">
              <property name="text">
               <string>Filter List:</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="filterLineEdit">
+            <widget class="QLineEdit" name="filterLineEditDIP3">
              <property name="toolTip">
               <string>Filter masternode list</string>
              </property>
             </widget>
            </item>
            <item>
-            <spacer name="horizontalSpacer_3">
+            <spacer name="horizontalSpacer_4">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
              </property>
@@ -302,20 +370,95 @@
             </spacer>
            </item>
            <item>
-            <widget class="QLabel" name="label_count">
+            <widget class="QLabel" name="label_count_2">
              <property name="text">
               <string>Node Count:</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QLabel" name="countLabel">
+            <widget class="QLabel" name="countLabelDIP3">
              <property name="text">
               <string>0</string>
              </property>
             </widget>
            </item>
           </layout>
+         </item>
+         <item row="2" column="0">
+          <widget class="QTableWidget" name="tableWidgetMasternodesDIP3">
+           <property name="editTriggers">
+            <set>QAbstractItemView::NoEditTriggers</set>
+           </property>
+           <property name="alternatingRowColors">
+            <bool>true</bool>
+           </property>
+           <property name="selectionMode">
+            <enum>QAbstractItemView::NoSelection</enum>
+           </property>
+           <property name="selectionBehavior">
+            <enum>QAbstractItemView::SelectRows</enum>
+           </property>
+           <property name="sortingEnabled">
+            <bool>true</bool>
+           </property>
+           <attribute name="horizontalHeaderStretchLastSection">
+            <bool>true</bool>
+           </attribute>
+           <column>
+            <property name="text">
+             <string>Address</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Status</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>PoSe Score</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Registered</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Last Paid</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Next Payment</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Payee</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Operator Reward</string>
+            </property>
+           </column>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="dip3NoteLabel">
+           <property name="text">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note: This list is not active yet and only for informational purposes. The network is still running in compatibility mode, which means that the non-deterministic masternode list is still active. Only after SPORK15 activation, this list will become the active one. Also, the values in the payment related fields are not used at the moment, but still updated for every block. Please ignore this until SPORK15 activation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::AutoText</enum>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
          </item>
         </layout>
        </widget>
