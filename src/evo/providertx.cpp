@@ -239,8 +239,7 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
                 // don't allow to set operator reward payee in case no operatorReward was set
                 return state.DoS(10, false, REJECT_INVALID, "bad-protx-operator-payee");
             }
-            // we may support P2SH later, but restrict it for now (while in transitioning phase from old MN list to deterministic list)
-            if (!ptx.scriptOperatorPayout.IsPayToPublicKeyHash()) {
+            if (!ptx.scriptOperatorPayout.IsPayToPublicKeyHash() && !ptx.scriptOperatorPayout.IsPayToScriptHash()) {
                 return state.DoS(10, false, REJECT_INVALID, "bad-protx-operator-payee");
             }
         }
