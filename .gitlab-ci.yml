@@ -71,8 +71,8 @@ cache:
 .job_template: &osx_definition
   variables:
     CROWN_CONFIG: ""
-    HOST: "x86_64-apple-darwin11"
-    OSX_SDK: "10.7"
+    HOST: "x86_64-apple-darwin14"
+    OSX_SDK: "10.8"
     GOAL: "install deploy"
     PACKAGES: "cmake gcc-multilib g++-multilib libcap-dev libbz2-dev"
 
