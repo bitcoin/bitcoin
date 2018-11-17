@@ -150,6 +150,8 @@ protected:
     std::set<std::string> m_network_only_args GUARDED_BY(cs_args);
     std::map<OptionsCategory, std::map<std::string, Arg>> m_available_args GUARDED_BY(cs_args);
 
+    const std::set<std::string> valid_prefixes = {"main", "test", "regtest"};
+
     bool ReadConfigStream(std::istream& stream, std::string& error, bool ignore_invalid_keys = false);
 
 public:
@@ -278,6 +280,11 @@ public:
      * Check whether we know of this arg
      */
     bool IsArgKnown(const std::string& key) const;
+
+    /**
+     * Check whether we know of this prefix
+     */
+    bool IsPrefixKnown(const std::string& key) const;
 };
 
 extern ArgsManager gArgs;

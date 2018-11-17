@@ -523,6 +523,19 @@ bool ArgsManager::IsArgNegated(const std::string& strArg) const
     return false;
 }
 
+bool ArgsManager::IsPrefixKnown(const std::string& key) const
+{
+    const size_t option_index = key.find('.');
+
+    if (option_index == std::string::npos) {
+        return true;
+    }
+
+    const std::string prefix = key.substr(0, option_index);
+
+    return valid_prefixes.find(prefix) != valid_prefixes.end();
+}
+
 std::string ArgsManager::GetArg(const std::string& strArg, const std::string& strDefault) const
 {
     if (IsArgNegated(strArg)) return "0";
@@ -875,6 +888,18 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, std::string& error, boo
             m_config_args[strKey].clear();
         } else {
             m_config_args[strKey].push_back(strValue);
+        }
+
+        // Check that the prefix is known
+        if (!IsPrefixKnown(option.first)) {
+            const std::string prefix = option.first.substr(0, option.first.find('.'));
+
+            if (!ignore_invalid_keys) {
+                error = strprintf("Invalid configuration prefix %s in value %s", prefix, option.first.c_str());
+                return false;
+            } else {
+                LogPrintf("Ignoring configuration value %s with unknown configuration prefix %s\n", option.first, prefix);
+            }
         }
 
         // Check that the arg is known
