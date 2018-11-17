@@ -67,17 +67,6 @@ build process.
 
 See also: [dependencies.md](dependencies.md).
 
-## Install NSIS
-
-The following steps are necessary to create the binary file. In order to create it, the system must
-have [NSIS](https://nsis.sourceforge.io/Main_Page) installed.
-
-```
-sudo apt install nsis
-make deploy
-makensis share/setup.nsi
-```
-
 ## Building for 64-bit Windows
 
 The first step is to install the mingw-w64 cross-compilation tool chain:
@@ -139,6 +128,17 @@ Then build using:
 ## Depends system
 
 For further documentation on the depends system see [README.md](../depends/README.md) in the depends directory.
+
+## Install NSIS
+
+The following steps are necessary to create the binary file. In order to create it, the system must
+have [NSIS](https://nsis.sourceforge.io/Main_Page) installed.
+
+```
+sudo apt install nsis
+make deploy
+makensis share/setup.nsi
+```
 
 Installation
 -------------
