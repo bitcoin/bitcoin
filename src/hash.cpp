@@ -245,3 +245,12 @@ uint64_t SipHashUint256Extra(uint64_t k0, uint64_t k1, const uint256& val, uint3
     SIPROUND;
     return v0 ^ v1 ^ v2 ^ v3;
 }
+
+int32_t peercoinRandseed;
+int univHash(const uint256 &x) {
+  int h = peercoinRandseed >> 20;
+  const uint32_t *p = x.GetDataPtr();
+  for(int i = 0; i < 8; i++)
+    h ^=  (p[i] >> (h & 0xf)) + (peercoinRandseed >> i);
+  return (h + (h >> 16))  & 1023; // 2^n - 1
+}

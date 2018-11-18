@@ -1164,6 +1164,9 @@ bool AppInitSanityChecks()
     ECC_Start();
     globalVerifyHandle.reset(new ECCVerifyHandle());
 
+    // peercoin: init hash seed
+    peercoinRandseed = GetRand(1 << 30);
+
     // peercoin: moved here because ECC need to be initialized to execute this
     if (gArgs.IsArgSet("-checkpointkey")) // peercoin: checkpoint master priv key
     {

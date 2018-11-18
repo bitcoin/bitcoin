@@ -2790,13 +2790,16 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             }   // LOCK(cs_main);
 
             bool fNewBlock = false;
-            ProcessNewBlock(chainparams, pblock, forceProcessing, &fNewBlock, &pindexLastAccepted);
+            bool fPoSDuplicate = false;
+            ProcessNewBlock(chainparams, pblock, forceProcessing, &fNewBlock, &pindexLastAccepted, &fPoSDuplicate);
             if (fNewBlock) {
                 pfrom->nLastBlockTime = GetTime();
             } else {
                 LOCK(cs_main);
                 mapBlockSource.erase(pblock->GetHash());
             }
+            if (fPoSDuplicate)
+                pfrom->nPoSTemperature += 100;
         }
     }
 

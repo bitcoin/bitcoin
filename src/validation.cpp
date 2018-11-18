@@ -82,6 +82,7 @@ namespace {
             return false;
         }
     };
+    uint256 vStakeSeen[1024];
 } // anon namespace
 
 enum DisconnectResult
@@ -3609,13 +3610,14 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
     return true;
 }
 
-bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, bool fForceProcessing, bool* fNewBlock, CBlockIndex** ppindex)
+bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, bool fForceProcessing, bool* fNewBlock, CBlockIndex** ppindex, bool* fPoSDuplicate)
 {
     AssertLockNotHeld(cs_main);
 
     {
         CBlockIndex *pindex = nullptr;
         if (fNewBlock) *fNewBlock = false;
+        if (fPoSDuplicate) *fPoSDuplicate = false;
         CValidationState state;
         // Ensure that CheckBlock() passes before calling AcceptBlock, as
         // belt-and-suspenders.
@@ -3632,6 +3634,13 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
         if (!ret) {
             GetMainSignals().BlockChecked(*pblock, state);
             return error("%s: AcceptBlock FAILED (%s)", __func__, state.GetDebugMessage());
+        }
+
+        if (pindex->IsProofOfStake()) {
+            int32_t ndx = univHash(pindex->hashProofOfStake);
+            if (fPoSDuplicate && vStakeSeen[ndx] == pindex->hashProofOfStake)
+                *fPoSDuplicate = true;
+            vStakeSeen[ndx] = pindex->hashProofOfStake;
         }
     }
 
