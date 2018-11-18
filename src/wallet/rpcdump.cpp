@@ -772,7 +772,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
             file << "# extended private masterkey: " << EncodeExtKey(masterKey) << "\n\n";
         }
     }
-    for (std::vector<std::pair<int64_t, CKeyID> >::const_iterator it = vKeyBirth.begin(); it != vKeyBirth.end(); it++) {
+    for (std::vector<std::pair<int64_t, CKeyID> >::const_iterator it = vKeyBirth.begin(); it != vKeyBirth.end(); ++it) {
         const CKeyID &keyid = it->second;
         std::string strTime = FormatISO8601DateTime(it->first);
         std::string strAddr;
