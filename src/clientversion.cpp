@@ -13,7 +13,7 @@
  * for both crownd and crown-qt, to make it harder for attackers to
  * target servers or GUI users specifically.
  */
-const std::string CLIENT_NAME("Crown Core Test RC4");
+const std::string CLIENT_NAME("Crown Core Test RC5");
 
 /**
  * Client version number
