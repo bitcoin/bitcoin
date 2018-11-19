@@ -45,7 +45,6 @@
 
 #include <univalue.h>
 
-#include <boost/algorithm/string.hpp>
 #include <boost/thread/thread.hpp> // boost::thread::interrupt
 
 #include <memory>
