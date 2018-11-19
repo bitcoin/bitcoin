@@ -1634,7 +1634,7 @@ double ConvertBitsToDouble(unsigned int nBits)
 
 int64_t GetBlockValue(int nHeight, const CAmount &nFees)
 {
-    int64_t nSubsidy = 10 * COIN;
+    int64_t nSubsidy = 12 * COIN;
     int halvings = nHeight / Params().SubsidyHalvingInterval();
 
     // Force block reward to zero when right shift is undefined.
@@ -1644,10 +1644,15 @@ int64_t GetBlockValue(int nHeight, const CAmount &nFees)
     // Subsidy is cut in half every 2,100,000 blocks which will occur approximately every 4 years.
     nSubsidy >>= halvings;
 
-    if(Params().NetworkID() == CBaseChainParams::TESTNET){
-        if(nHeight > 20000) nSubsidy -= nSubsidy/10;
-    } else {
-        if(nHeight > 1265000) nSubsidy -= nSubsidy/10;
+    if (Params().NetworkID() == CBaseChainParams::TESTNET)
+    {
+        if (nHeight > 20000)
+            nSubsidy -= nSubsidy * 0.25; // budget payment is 25%
+    } 
+    else
+    {
+        if (nHeight > 1265000)
+            nSubsidy -= nSubsidy * 0.25; // budget payment is 25%
     }
 
     return nSubsidy + nFees;
