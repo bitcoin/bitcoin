@@ -709,17 +709,18 @@ CAmount CBudgetManager::GetTotalBudget(int nHeight)
     if(chainActive.Tip() == NULL) return 0;
 
     //get min block value and calculate from that
-    CAmount nSubsidy = 10 * COIN;
+    CAmount nSubsidy = 12 * COIN;
     int halvings = nHeight / Params().SubsidyHalvingInterval();
 
     // Subsidy is cut in half every 2,100,000 blocks which will occur approximately every 4 years.
     nSubsidy >>= halvings;
 
     // Amount of blocks in a months period of time (using 1 minutes per) = (60*24*30)/1
-    if(Params().NetworkID() == CBaseChainParams::MAIN) return ((nSubsidy/100)*10)*1440*30;
+    if(Params().NetworkID() == CBaseChainParams::MAIN)
+        return ((nSubsidy / 100) * 25) * 1440 * 30;
 
     //for testing purposes
-    return ((nSubsidy/100)*10)*50;
+    return ((nSubsidy / 100) * 25) * 50;
 }
 
 void CBudgetManager::NewBlock()
