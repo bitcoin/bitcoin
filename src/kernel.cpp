@@ -24,7 +24,7 @@ unsigned int nProtocolV05TestSwitchTime = 1447700000;
 const unsigned int nProtocolV06SwitchTime     = 1513050000; // Tue 12 Dec 03:40:00 UTC 2017
 const unsigned int nProtocolV06TestSwitchTime = 1508198400; // Tue 17 Oct 00:00:00 UTC 2017
 // Protocol switch time for 0.7 kernel protocol
-const unsigned int nProtocolV07SwitchTime     = 1544097600; // Thu 06 Dec 12:00:00 UTC 2018
+const unsigned int nProtocolV07SwitchTime     = 1545652800; // Thu 24 Dec 12:00:00 UTC 2018
 const unsigned int nProtocolV07TestSwitchTime = 1541505600; // Tue 06 Nov 12:00:00 UTC 2018
 
 
