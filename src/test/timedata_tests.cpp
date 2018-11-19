@@ -34,4 +34,22 @@ BOOST_AUTO_TEST_CASE(util_MedianFilter)
     BOOST_CHECK_EQUAL(filter.median(), 7);
 }
 
+
+BOOST_AUTO_TEST_CASE(util_MedianFilterShallNotGrowBeyondSize)
+{
+
+  CMedianFilter<int> filter(2,15);
+
+  BOOST_CHECK_EQUAL(filter.size(),1); // 15
+
+  filter.input(100); // 15 100
+  BOOST_CHECK_EQUAL(filter.size(),2);
+
+  filter.input(10); // 100 10
+  BOOST_CHECK_EQUAL(filter.size(),2);
+  BOOST_CHECK_EQUAL(filter.sorted()[0],10);
+  BOOST_CHECK_EQUAL(filter.sorted()[1],100);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
