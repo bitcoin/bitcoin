@@ -5,26 +5,11 @@ Setup
 ---------------------
 Bitcoin Core is the original Bitcoin client and it builds the backbone of the network. It downloads and, by default, stores the entire history of Bitcoin transactions, which requires a few hundred gigabytes of disk space. Depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
 
-To download Bitcoin Core, visit [bitcoincore.org](https://bitcoincore.org/en/releases/).
+To download Bitcoin Core, visit [bitcoincore.org](https://bitcoincore.org/en/download/).
 
 Running
 ---------------------
-The following are some helpful notes on how to run Bitcoin Core on your native platform.
-
-### Unix
-
-Unpack the files into a directory and run:
-
-- `bin/bitcoin-qt` (GUI) or
-- `bin/bitcoind` (headless)
-
-### Windows
-
-Unpack the files into a directory, and then run bitcoin-qt.exe.
-
-### macOS
-
-Drag Bitcoin Core to your applications folder, and then run Bitcoin Core.
+Please refer to [https://bitcoin.org/en/full-node](https://bitcoin.org/en/full-node) for instructions.   
 
 ### Need Help?
 
