@@ -12,9 +12,25 @@ set(CMAKE_CXX_STANDARD 14)
 
 include_directories(
         src
+        src/qt/forms
         src/leveldb/include
         src/univalue/include
 )
+
+if(UNIX AND NOT APPLE)
+    set(DEPENDS_PREFIX depends/x86_64-pc-linux-gnu)
+elseif(APPLE)
+    set(DEPENDS_PREFIX depends/x86_64-apple-darwin11)
+elseif(WIN32)
+    set(DEPENDS_PREFIX depends/x86_64-w64-mingw32)
+endif()
+
+message(STATUS "DEPENDS_PREFIX: ${DEPENDS_PREFIX}")
+
+if(DEFINED DEPENDS_PREFIX)
+    include_directories(${DEPENDS_PREFIX}/include)
+    include_directories(${DEPENDS_PREFIX}/include/QtWidgets)
+endif()
 
 add_definitions(
         -DENABLE_WALLET=1
