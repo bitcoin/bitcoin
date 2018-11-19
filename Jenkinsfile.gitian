@@ -117,6 +117,8 @@ for(int i = 0; i < targets.size(); i++) {
           archiveArtifacts artifacts: 'dashcore-binaries/*', fingerprint: true
         }
 
+        // TODO remove this in a few days (only needed to prune the old compressed file from Jenkins caches)
+        sh "cd gitian-builder/cache && find -name ccache.tar.gz | xargs rm -f"
         sh "cd gitian-builder/cache && tar czfv ../../cache-${gitianDescriptor.name}.tar.gz common ${gitianDescriptor.name}"
         archiveArtifacts artifacts: "cache-${gitianDescriptor.name}.tar.gz", fingerprint: true
       }

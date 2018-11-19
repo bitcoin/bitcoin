@@ -61,12 +61,15 @@ script: |
     export CCACHE_DIR=${GBUILD_PACKAGE_CACHE}/ccache
     # As we later wrap the gcc binaries, this is fast
     export CCACHE_COMPILERCHECK="content"
-    if [ -f ${GBUILD_PACKAGE_CACHE}/ccache.tar.gz ]; then
+    if [ -f ${GBUILD_PACKAGE_CACHE}/ccache.tar ]; then
       pushd ${GBUILD_PACKAGE_CACHE}
-      tar xzf ccache.tar.gz
-      rm ccache.tar.gz
+      tar xf ccache.tar
+      rm ccache.tar
       popd
     fi
+    # instead of compressing ccache.tar, we let ccache handle it by itself
+    # Otherwise we end up uncompressing/compressing a lot of cache files which we actually never use
+    export CCACHE_COMPRESS=1
   else
     CONFIGFLAGS="${CONFIGFLAGS} --disable-ccache"
   fi
@@ -212,7 +215,7 @@ script: |
   # Compress ccache (otherwise the assert file will get too huge)
   if [ "$CCACHE_DIR" != "" ]; then
     pushd ${GBUILD_PACKAGE_CACHE}
-    tar czf ccache.tar.gz ccache
+    tar cf ccache.tar ccache
     rm -rf ccache
     popd
   fi
