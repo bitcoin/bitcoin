@@ -129,15 +129,15 @@ Then build using:
 
 For further documentation on the depends system see [README.md](../depends/README.md) in the depends directory.
 
-## Install NSIS
+Create installer
+-----------------
 
-The following steps are necessary to create the binary file. In order to create it, the system must
+The following steps are necessary to create the binary installer. In order to create it, the system must
 have [NSIS](https://nsis.sourceforge.io/Main_Page) installed.
 
 ```
 sudo apt install nsis
 make deploy
-makensis share/setup.nsi
 ```
 
 Installation
