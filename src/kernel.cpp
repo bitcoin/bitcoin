@@ -44,6 +44,17 @@ static std::map<int, unsigned int> mapStakeModifierCheckpoints =
     (371850, 0x9b850bdfu )
     ;
 
+static std::map<int, unsigned int> mapStakeModifierTestnetCheckpoints =
+    boost::assign::map_list_of
+    ( 0, 0x0e00670bu )
+    ( 19080, 0x3711dc3au )
+    ( 30583, 0xb480fadeu )
+    ( 99999, 0x9a62eaecu )
+    (219999, 0xeafe96c3u )
+    (336000, 0x8330dc09u )
+    (373484, 0x4e97d40bu )
+    ;
+
 // Whether the given coinstake is subject to new v0.3 protocol
 bool IsProtocolV03(unsigned int nTimeCoinStake)
 {
@@ -541,8 +552,11 @@ unsigned int GetStakeModifierChecksum(const CBlockIndex* pindex)
 // Check stake modifier hard checkpoints
 bool CheckStakeModifierCheckpoints(int nHeight, unsigned int nStakeModifierChecksum)
 {
-    if (fTestNet) return true; // Testnet has no checkpoints
-    if (mapStakeModifierCheckpoints.count(nHeight))
+    if (fTestNet && mapStakeModifierTestnetCheckpoints.count(nHeight))
+        return nStakeModifierChecksum == mapStakeModifierTestnetCheckpoints[nHeight];
+
+    if (!fTestNet && mapStakeModifierCheckpoints.count(nHeight))
         return nStakeModifierChecksum == mapStakeModifierCheckpoints[nHeight];
+
     return true;
 }
