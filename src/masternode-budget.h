@@ -305,6 +305,8 @@ public:
     bool fValid;
 
 private:
+    static bool AddOrUpdateVote(std::map<uint256, BudgetDraftVote>& votes, const BudgetDraftVote& vote, std::string& strError);
+
     //vote on this finalized budget as a masternode
     void SubmitVote();
 

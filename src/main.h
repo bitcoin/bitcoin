@@ -251,6 +251,7 @@ bool AcceptableInputs(CTxMemPool& pool, CValidationState &state, const CTransact
                         bool* pfMissingInputs, bool fRejectInsaneFee=false, bool isDSTX=false);
 
 int GetInputHeight(const CTxIn& vin);
+int GetTransactionAge(const uint256 &txid);
 int GetInputAge(const CTxIn& vin);
 int GetInputAgeIX(uint256 nTXHash, const CTxIn& vin);
 int GetIXConfirmations(uint256 nTXHash);
