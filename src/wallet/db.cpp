@@ -692,7 +692,7 @@ void BerkeleyEnvironment::Flush(bool fShutdown)
 {
     int64_t nStart = GetTimeMillis();
     // Flush log data to the actual data file on all files that are not in use
-    LogPrint(BCLog::DB, "BerkeleyEnvironment::Flush: Flush(%s)%s\n", fShutdown ? "true" : "false", fDbEnvInit ? "" : " database not started");
+    LogPrint(BCLog::DB, "BerkeleyEnvironment::Flush: [%s] Flush(%s)%s\n", strPath, fShutdown ? "true" : "false", fDbEnvInit ? "" : " database not started");
     if (!fDbEnvInit)
         return;
     {
