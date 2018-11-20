@@ -46,6 +46,7 @@ All available commands can be listed with `"help"`, and information about a spec
   - [omni_gettransaction](#omni_gettransaction)
   - [omni_listtransactions](#omni_listtransactions)
   - [omni_listblocktransactions](#omni_listblocktransactions)
+  - [omni_listblockstransactions](#omni_listblockstransactions)
   - [omni_listpendingtransactions](#omni_listpendingtransactions)
   - [omni_getactivedexsells](#omni_getactivedexsells)
   - [omni_listproperties](#omni_listproperties)
@@ -1063,6 +1064,35 @@ Lists all Omni transactions in a block.
 
 ```bash
 $ omnicore-cli "omni_listblocktransactions" 279007
+```
+
+---
+
+### omni_listblockstransactions
+
+Lists all Omni transactions in a given range of blocks.
+
+Note: the list of transactions is unordered and can contain invalid transactions!
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `firstblock`        | number  | required | the index of the first block to consider                                                     |
+| `lastblock`         | number  | required | the index of the last block to consider                                                      |
+
+**Result:**
+```js
+[      // (array of string)
+  "hash",  // (string) the hash of the transaction
+  ...
+]
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_omni_listblocktransactions" 279007 300000
 ```
 
 ---
