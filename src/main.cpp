@@ -5246,7 +5246,7 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
         while (vNodes.empty())
             MilliSleep(1000);
 
-        while (Checkpoints::GuessVerificationProgress(pindexBest)<0.99999)
+        while (Checkpoints::GuessVerificationProgress(pindexBest)<0.9998)
         {
             strMintWarning = strMintSyncMessage;
             MilliSleep(10000);
