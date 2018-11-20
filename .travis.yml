@@ -1,4 +1,3 @@
-sudo: required
 dist: trusty
 os: linux
 language: minimal
@@ -42,7 +41,6 @@ jobs:
 # lint stage
     - stage: lint
       env:
-      sudo: false
       cache: false
       language: python
       python: '3.6'
