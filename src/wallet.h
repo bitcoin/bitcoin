@@ -328,7 +328,6 @@ public:
                            CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl = NULL, AvailableCoinsType coin_type=ALL_COINS, CAmount nFeePay=0);
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
     bool CreateCollateralTransaction(CMutableTransaction& txCollateral, std::string& strReason);
-    bool GetMyMasternodes(std::vector<CMasternode*>& vActiveMasternodes);
     bool GetActiveMasternode(CMasternode *&activeStakingNode);
     bool GetActiveSystemnode(CSystemnode *&activeStakingNode);
     bool CreateCoinStake(const int nHeight, const uint32_t& nBits, const uint32_t& nTime, CMutableTransaction& txCoinStake, uint32_t& nTxNewTime, StakePointer& stakePointer);

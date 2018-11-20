@@ -1844,28 +1844,12 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
     return true;
 }
 
-bool CWallet::GetMyMasternodes(std::vector<CMasternode*>& vActiveMasternodes)
-{
-    //todo lock - CPSC-28
-    std::vector<CNodeEntry> mnEntries = masternodeConfig.getEntries();
-
-    for (auto& mne : mnEntries) {
-        CTxIn vin = CTxIn(uint256S(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
-        CMasternode* pmn = mnodeman.Find(vin);
-        if (!pmn)
-            continue;
-        vActiveMasternodes.emplace_back(pmn);
-    }
-
-    return static_cast<bool>(vActiveMasternodes.size());
-}
-
 bool CWallet::GetActiveMasternode(CMasternode *&activeStakingNode)
 {
     activeStakingNode = NULL;
     if (activeMasternode.status == ACTIVE_MASTERNODE_STARTED)
         activeStakingNode = mnodeman.Find(activeMasternode.vin);
-    return activeStakingNode;
+    return activeStakingNode != nullptr;
 }
 
 bool CWallet::GetActiveSystemnode(CSystemnode *&activeStakingNode)
@@ -1873,17 +1857,16 @@ bool CWallet::GetActiveSystemnode(CSystemnode *&activeStakingNode)
     activeStakingNode = NULL;
     if (activeSystemnode.status == ACTIVE_SYSTEMNODE_STARTED)
         activeStakingNode = snodeman.Find(activeSystemnode.vin);
-    return activeStakingNode;
+    return activeStakingNode != nullptr;
 }
 
-#define STAKE_MODIFIER_DEPTH 100
 // Return hash for a block that precedes stake pointer
 uint256 CWallet::GenerateStakeModifier(const CBlockIndex* prewardBlockIndex) const
 {
     if (!prewardBlockIndex)
         return uint256();
 
-    const CBlockIndex* pstakeModBlockIndex = prewardBlockIndex->GetAncestor(prewardBlockIndex->nHeight - STAKE_MODIFIER_DEPTH);
+    const CBlockIndex* pstakeModBlockIndex = prewardBlockIndex->GetAncestor(prewardBlockIndex->nHeight - Params().KernelModifierOffset());
     if (!pstakeModBlockIndex) {
         LogPrintf("GenerateStakeModifier -- Failed retrieving block index for stake modifier\n");
         return uint256();
@@ -1949,7 +1932,7 @@ bool CWallet::CreateCoinStake(const int nHeight, const uint32_t& nBits, const ui
         CBlockIndex* pindex = mapBlockIndex.at(pointer.hashBlock);
 
         // check that collateral transaction happened long enough before this stake pointer
-        if (pindex->nHeight - STAKE_MODIFIER_DEPTH <= nActiveNodeInputHeight)
+        if (pindex->nHeight - Params().KernelModifierOffset() <= nActiveNodeInputHeight)
             continue;
 
         // generate stake modifier based off block that happened before this stake pointer

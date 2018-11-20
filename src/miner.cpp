@@ -25,6 +25,7 @@
 #include "legacysigner.h"
 #include "masternodeconfig.h"
 #include "mn-pos/stakepointer.h"
+#include "mn-pos/stakeminer.h"
 
 #include <boost/thread.hpp>
 #include <boost/tuple/tuple.hpp>
@@ -394,86 +395,12 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
         pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock);
         pblock->nNonce         = 0;
         pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(pblock->vtx[0]);
+        pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 
         // Sign Block
         if (fProofOfStake) {
-            CTxIn txInCollateralAddress;
-            CPubKey pubKeyNode;
-            CKey keyNode;
-            std::vector<unsigned char> vchSig;
-            std::string strPrivKey;
-            if (fMasterNode) {
-                strPrivKey = strMasterNodePrivKey;
-                std::string strErrorMessage;
-                if (!legacySigner.SetKey(strPrivKey, strErrorMessage, keyNode, pubKeyNode)) {
-                    strErrorMessage = strprintf("Can't find keys for masternode - %s", strErrorMessage);
-                    LogPrintf("CMasternodeBroadcast::Create -- %s\n", strErrorMessage);
-                    return NULL;
-                }
-
-                // Switch keys if using signed over staking key
-                if (!activeMasternode.vchSigSignover.empty()) {
-                    pblock->stakePointer.pubKeyCollateral = pblock->stakePointer.pubKeyProofOfStake;
-                    pblock->stakePointer.pubKeyProofOfStake = pubKeyNode;
-                    pblock->stakePointer.vchSigCollateralSignOver = activeMasternode.vchSigSignover;
-                    LogPrintf("%s signover set\n", __func__);
-                } else {
-                    LogPrintf("%s signover NOT set\n", __func__);
-                }
-
-                if (pubKeyNode != pblock->stakePointer.pubKeyProofOfStake) {
-                    LogPrintf("%s: using wrong pubkey. pointer=%s pubkeynode=%s\n", __func__,
-                              pblock->stakePointer.pubKeyProofOfStake.GetHash().GetHex(),
-                              pubKeyNode.GetHash().GetHex());
-                    return NULL;
-                }
-
-                pblock->hashMerkleRoot = pblock->BuildMerkleTree();
-
-                if (!keyNode.Sign(pblock->GetHash(), vchSig)) {
-                    LogPrintf("CreateNewBlock() : Failed to sign block as masternode\n");
-                    return NULL;
-                }
-            } else if (fSystemNode) {
-                strPrivKey = strSystemNodePrivKey;
-                std::string strErrorMessage;
-                if (!legacySigner.SetKey(strPrivKey, strErrorMessage, keyNode, pubKeyNode)) {
-                    strErrorMessage = strprintf("Can't find keys for systemnode - %s", strErrorMessage);
-                    LogPrintf("CSystemnodeBroadcast::Create -- %s\n", strErrorMessage);
-                    return NULL;
-                }
-
-                // Switch keys if using signed over staking key
-                if (!activeSystemnode.vchSigSignover.empty()) {
-                    pblock->stakePointer.pubKeyCollateral = pblock->stakePointer.pubKeyProofOfStake;
-                    pblock->stakePointer.pubKeyProofOfStake = pubKeyNode;
-                    pblock->stakePointer.vchSigCollateralSignOver = activeSystemnode.vchSigSignover;
-                    LogPrintf("%s signover set\n", __func__);
-                } else {
-                    LogPrintf("%s signover NOT set\n", __func__);
-                }
-
-                if (pubKeyNode != pblock->stakePointer.pubKeyProofOfStake) {
-                    LogPrintf("%s: using wrong pubkey. pointer=%s pubkeynode=%s\n", __func__,
-                              pblock->stakePointer.pubKeyProofOfStake.GetHash().GetHex(),
-                              pubKeyNode.GetHash().GetHex());
-                    return NULL;
-                }
-
-                pblock->hashMerkleRoot = pblock->BuildMerkleTree();
-
-                if (!keyNode.Sign(pblock->GetHash(), vchSig)) {
-                    LogPrintf("CreateNewBlock() : Failed to sign block as systemnode\n");
-                    return NULL;
-                }
-            } else {
-                LogPrintf("CreateNewBlock() : Failed to obtain key for block signature\n");
-                return NULL;
-            }
-
-            pblock->vchBlockSig = vchSig;
-            if (!CheckBlockSignature(*pblock, pblock->stakePointer.pubKeyProofOfStake)) {
-                LogPrintf("%s: Block signature is not valid\n", __func__);
+            if (!SignBlock(pblock)) {
+                LogPrintf("%s: Failed to sign block\n", __func__);
                 return NULL;
             }
         }
