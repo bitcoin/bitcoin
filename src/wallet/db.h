@@ -31,6 +31,8 @@ struct WalletDatabaseFileId {
     bool operator==(const WalletDatabaseFileId& rhs) const;
 };
 
+class BerkeleyDatabase;
+
 class BerkeleyEnvironment
 {
 private:
@@ -43,7 +45,7 @@ private:
 public:
     std::unique_ptr<DbEnv> dbenv;
     std::map<std::string, int> mapFileUseCount;
-    std::map<std::string, Db*> mapDb;
+    std::map<std::string, std::reference_wrapper<BerkeleyDatabase>> m_databases;
     std::unordered_map<std::string, WalletDatabaseFileId> m_fileids;
     std::condition_variable_any m_db_in_use;
 
@@ -54,6 +56,7 @@ public:
     void MakeMock();
     bool IsMock() const { return fMockDb; }
     bool IsInitialized() const { return fDbEnvInit; }
+    bool IsDatabaseLoaded(const std::string& db_filename) const { return m_databases.find(db_filename) != m_databases.end(); }
     fs::path Directory() const { return strPath; }
 
     /**
@@ -95,6 +98,9 @@ public:
     }
 };
 
+/** Return whether a wallet database is currently loaded. */
+bool IsWalletLoaded(const fs::path& wallet_path);
+
 /** Get BerkeleyEnvironment and database filename given a wallet path. */
 BerkeleyEnvironment* GetWalletEnv(const fs::path& wallet_path, std::string& database_filename);
 
@@ -115,10 +121,19 @@ public:
         nUpdateCounter(0), nLastSeen(0), nLastFlushed(0), nLastWalletUpdate(0)
     {
         env = GetWalletEnv(wallet_path, strFile);
+        auto inserted = env->m_databases.emplace(strFile, std::ref(*this));
+        assert(inserted.second);
         if (mock) {
             env->Close();
             env->Reset();
             env->MakeMock();
+        }
+    }
+
+    ~BerkeleyDatabase() {
+        if (env) {
+            size_t erased = env->m_databases.erase(strFile);
+            assert(erased == 1);
         }
     }
 
@@ -160,6 +175,9 @@ public:
     unsigned int nLastSeen;
     unsigned int nLastFlushed;
     int64_t nLastWalletUpdate;
+
+    /** Database pointer. This is initialized lazily and reset during flushes, so it can be null. */
+    std::unique_ptr<Db> m_db;
 
 private:
     /** BerkeleyDB specific */

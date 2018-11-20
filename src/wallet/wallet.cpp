@@ -4949,11 +4949,9 @@ bool CWallet::Verify(const WalletLocation& location, bool salvage_wallet, std::s
     }
 
     // Make sure that the wallet path doesn't clash with an existing wallet path
-    for (auto wallet : GetWallets()) {
-        if (wallet->GetLocation().GetPath() == wallet_path) {
-            error_string = strprintf("Error loading wallet %s. Duplicate -wallet filename specified.", location.GetName());
-            return false;
-        }
+    if (IsWalletLoaded(wallet_path)) {
+        error_string = strprintf("Error loading wallet %s. Duplicate -wallet filename specified.", location.GetName());
+        return false;
     }
 
     try {
@@ -5264,7 +5262,10 @@ bool CWallet::BackupWallet(const std::string& strDest)
 bool CWallet::AutoBackupWallet(const fs::path& wallet_path, std::string& strBackupWarningRet, std::string& strBackupErrorRet)
 {
     strBackupWarningRet = strBackupErrorRet = "";
-    std::string strWalletName = m_name.empty() ? "wallet.dat" : m_name;
+    std::string strWalletName = GetName();
+    if (strWalletName.empty()) {
+        strWalletName = "wallet.dat";
+    }
 
     if (nWalletBackups <= 0) {
         LogPrintf("Automatic wallet backups are disabled!\n");
