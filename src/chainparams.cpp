@@ -132,6 +132,7 @@ public:
         nPoSChainId = 22;
         nStakePointerValidityPeriod = 1440; //Stake pointers are valid to stake with for the next 1 day worth of blocks
         nMaxReorgDepth = 100;
+        nKernelModifierOffset = 100; //Number blocks before the stake pointer is the kernel modifier from
 
         /**
          * Build the genesis block. Note that the output of the genesis coinbase cannot

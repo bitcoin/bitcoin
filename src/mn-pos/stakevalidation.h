@@ -10,6 +10,6 @@ class CTransaction;
 bool CheckBlockSignature(const CBlock& block, const CPubKey& pubkeyMasternode);
 
 // Check kernel hash target and coinstake signature
-bool CheckProofOfStake(const CBlock& block, const CBlockIndex* prevBlock, const COutPoint& outpoint, const CTransaction& txPayment);
+bool CheckProofOfStake(const CBlock& block, const CBlockIndex* prevBlock, const COutPoint& outpointStakePointer);
 
 #endif //CROWNCORE_STAKEVALIDATION_H

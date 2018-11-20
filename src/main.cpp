@@ -2088,7 +2088,7 @@ void ThreadScriptCheck() {
     scriptcheckqueue.Thread();
 }
 
-bool CheckBlockProofPointer(const CBlockIndex* pindex, const CBlock& block, CPubKey& pubkeyMasternode, COutPoint& outpoint)
+bool CheckBlockProofPointer(const CBlockIndex* pindex, const CBlock& block, CPubKey& pubkeyMasternode, COutPoint& outpointStakePointer, CTransaction& txPayment)
 {
     //First make sure that the stake pointer points to a block that is in the blockchain
     StakePointer stakePointer = block.stakePointer;
@@ -2107,6 +2107,7 @@ bool CheckBlockProofPointer(const CBlockIndex* pindex, const CBlock& block, CPub
     if (pindexFrom->nHeight > pindex->nHeight - Params().MaxReorganizationDepth())
         return error("%s: Stake pointer from height %d is too recent", __func__, pindexFrom->nHeight);
 
+    //Ensure that this stake pointer is not already used by another block in the chain
     COutPoint stakeSource(stakePointer.txid, stakePointer.nPos);
     auto hashPointer = stakeSource.GetHash();
     if (mapUsedStakePointers.count(hashPointer)) {
@@ -2122,11 +2123,11 @@ bool CheckBlockProofPointer(const CBlockIndex* pindex, const CBlock& block, CPub
         }
     }
 
-
     CBlock blockFrom;
     if (!ReadBlockFromDisk(blockFrom, pindexFrom))
         return error("%s: Failed to read block from disk", __func__);
 
+    //Check the actual transaction the stake pointer is claiming paid the masternode
     bool found = false;
     for (const auto& tx : blockFrom.vtx) {
         if (tx.GetHash() == stakePointer.txid) {
@@ -2155,7 +2156,8 @@ bool CheckBlockProofPointer(const CBlockIndex* pindex, const CBlock& block, CPub
                 pubkeyMasternode = stakePointer.pubKeyProofOfStake;
             }
 
-            outpoint = COutPoint(stakePointer.txid, stakePointer.nPos);
+            outpointStakePointer = COutPoint(stakePointer.txid, stakePointer.nPos);
+            txPayment = tx;
             found = true;
             break;
         }
@@ -2164,25 +2166,32 @@ bool CheckBlockProofPointer(const CBlockIndex* pindex, const CBlock& block, CPub
     return found;
 }
 
+bool IsMasternodeOrSystemnodeReward(const CTransaction& tx, const COutPoint& outpoint)
+{
+    //todo: Need to validate that this was a payment made to a valid masternode or systemnode
+    return true;
+}
+
 bool CheckStake(const CBlockIndex* pindex, const CBlock& block)
 {
     AssertLockHeld(cs_main);
     CPubKey pubkeyMasternode;
-    COutPoint outpoint;
-    if (!CheckBlockProofPointer(pindex, block, pubkeyMasternode, outpoint))
+    COutPoint outpointStakePointer;
+    CTransaction txPayment;
+    if (!CheckBlockProofPointer(pindex, block, pubkeyMasternode, outpointStakePointer, txPayment))
         return error("%s: Invalid block proof pointer", __func__);
 
+    // Check the transaction the stakepointer is from
+    if (!IsMasternodeOrSystemnodeReward(txPayment, outpointStakePointer))
+        return error("%s: block's stake pointer points to an invalid payment", __func__);
+
+    // Validate the block's signature to prevent malleation
     if (!CheckBlockSignature(block, pubkeyMasternode))
         return error("%s: Invalid signature", __func__);
 
-    CTransaction txPayment;
-    uint256 hashPrevBlock;
-    if (!GetTransaction(outpoint.hash, txPayment, hashPrevBlock, true))
-        return error("%s: Cannot find MN or SN payment", __func__);
-
     //cs_main is locked and mapblockindex checks for hashblock in CheckBlockProofPointer. Fine to access directly.
     CBlockIndex* pindexFrom = mapBlockIndex.at(block.stakePointer.hashBlock);
-    return CheckProofOfStake(block, pindexFrom, outpoint, txPayment);
+    return CheckProofOfStake(block, pindexFrom, outpointStakePointer);
 }
 
 static int64_t nTimeVerify = 0;

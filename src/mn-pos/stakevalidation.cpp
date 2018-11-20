@@ -16,17 +16,29 @@ bool CheckBlockSignature(const CBlock& block, const CPubKey& pubkeyMasternode)
 }
 
 // Check kernel hash target and coinstake signature
-bool CheckProofOfStake(const CBlock& block, const CBlockIndex* prevBlock, const COutPoint& outpoint, const CTransaction& txPayment)
+bool CheckProofOfStake(const CBlock& block, const CBlockIndex* prevBlock, const COutPoint& outpointStakePointer)
 {
     const CTransaction tx = block.vtx[1];
     if (!tx.IsCoinStake())
         return error("CheckProofOfStake() : called on non-coinstake %s", tx.GetHash().ToString().c_str());
 
-    auto pairOut = std::make_pair(outpoint.hash, outpoint.n);
-    CAmount nAmountCollateral = (outpoint.n == 1 ? MASTERNODE_COLLATERAL : SYSTEMNODE_COLLATERAL);
+    // Get the stake modifier
+    auto pindexModifier = prevBlock->GetAncestor(prevBlock->nHeight - Params().KernelModifierOffset());
+    if (!pindexModifier)
+        return error("CheckProofOfStake() : could not find modifier index for stake");
+    uint256 nStakeModifier = pindexModifier->GetBlockHash();
 
-    uint256 nStakeModifier = prevBlock->GetAncestor(prevBlock->nHeight - 100)->GetBlockHash();
+    // Get the correct amount for the collateral
+    CAmount nAmountCollateral = 0;
+    if (outpointStakePointer.n == 1)
+        nAmountCollateral = MASTERNODE_COLLATERAL;
+    else if (outpointStakePointer.n == 2)
+        nAmountCollateral = SYSTEMNODE_COLLATERAL;
+    else
+        return error("%s: Stake pointer is neither pos 1 or 2", __func__);
 
+    // Reconstruct the kernel that created the stake
+    auto pairOut = std::make_pair(outpointStakePointer.hash, outpointStakePointer.n);
     Kernel kernel(pairOut, nAmountCollateral, nStakeModifier, prevBlock->GetBlockTime(), block.nTime);
 
     bool fNegative;
