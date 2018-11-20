@@ -22,9 +22,6 @@ bool CheckProofOfStake(const CBlock& block, const CBlockIndex* prevBlock, const 
     if (!tx.IsCoinStake())
         return error("CheckProofOfStake() : called on non-coinstake %s", tx.GetHash().ToString().c_str());
 
-    CAmount nMNPayment = txPayment.vout[1].nValue;
-    CAmount nSNPayment = txPayment.vout[2].nValue;
-
     auto pairOut = std::make_pair(outpoint.hash, outpoint.n);
     CAmount nAmountCollateral = (outpoint.n == 1 ? MASTERNODE_COLLATERAL : SYSTEMNODE_COLLATERAL);
 

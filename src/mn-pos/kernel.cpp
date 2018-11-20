@@ -24,11 +24,6 @@ Kernel::Kernel(const std::pair<uint256, unsigned int>& outpoint, const uint64_t 
     m_nTimeStake = nTimeStake;
 }
 
-uint64_t Kernel::GetAmount() const
-{
-    return m_nAmount;
-}
-
 uint256 Kernel::GetStakeHash()
 {
     CDataStream ss(SER_GETHASH, 0);

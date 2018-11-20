@@ -11,11 +11,9 @@ class Kernel
 public:
     Kernel(const std::pair<uint256, unsigned int>& outpoint, const uint64_t nAmount, const uint256& nStakeModifier,
             const uint64_t& nTimeBlockFrom, const uint64_t& nTimeStake);
-    uint64_t GetAmount() const;
     uint256 GetStakeHash();
     uint64_t GetTime() const;
     bool IsValidProof(const uint256& nTarget);
-    bool IsValidStakePointer(const StakePointer& stakePointer);
     void SetStakeTime(uint64_t nTime);
     std::string ToString();
 
