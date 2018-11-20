@@ -2164,6 +2164,27 @@ bool CheckBlockProofPointer(const CBlockIndex* pindex, const CBlock& block, CPub
     return found;
 }
 
+bool CheckStake(const CBlockIndex* pindex, const CBlock& block)
+{
+    AssertLockHeld(cs_main);
+    CPubKey pubkeyMasternode;
+    COutPoint outpoint;
+    if (!CheckBlockProofPointer(pindex, block, pubkeyMasternode, outpoint))
+        return error("%s: Invalid block proof pointer", __func__);
+
+    if (!CheckBlockSignature(block, pubkeyMasternode))
+        return error("%s: Invalid signature", __func__);
+
+    CTransaction txPayment;
+    uint256 hashPrevBlock;
+    if (!GetTransaction(outpoint.hash, txPayment, hashPrevBlock, true))
+        return error("%s: Cannot find MN or SN payment", __func__);
+
+    //cs_main is locked and mapblockindex checks for hashblock in CheckBlockProofPointer. Fine to access directly.
+    CBlockIndex* pindexFrom = mapBlockIndex.at(block.stakePointer.hashBlock);
+    return CheckProofOfStake(block, pindexFrom, outpoint, txPayment);
+}
+
 static int64_t nTimeVerify = 0;
 static int64_t nTimeConnect = 0;
 static int64_t nTimeIndex = 0;
@@ -2183,27 +2204,8 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             return state.DoS(100, error("%s: Proof of Work block submitted after PoW end", __func__), REJECT_INVALID,
                     "pow-end");
 
-        CPubKey pubkeyMasternode;
-        COutPoint outpoint;
-        if (!CheckBlockProofPointer(pindex, block, pubkeyMasternode, outpoint))
-            return state.DoS(100, error("%s: Invalid block proof pointer", __func__), REJECT_INVALID,
-                             "signature-invalid");
-
-        if (!CheckBlockSignature(block, pubkeyMasternode))
-            return state.DoS(100, error("%s: Invalid signature", __func__), REJECT_INVALID,
-                             "signature-invalid");
-
-        CTransaction txPayment;
-        uint256 hashPrevBlock;
-        if (!GetTransaction(outpoint.hash, txPayment, hashPrevBlock, true)) {
-            return state.DoS(100, error("%s: Cannot find MN or SN payment", __func__), REJECT_INVALID, "tx-invalid");
-        }
-
-        CBlockIndex* pindexFrom = mapBlockIndex.at(block.stakePointer.hashBlock);
-
-        if (!CheckProofOfStake(block, pindexFrom, outpoint, txPayment)) {
-            return state.DoS(100, error("%s: Proof of Stake check failed", __func__), REJECT_INVALID, "PoS invalid");
-        }
+        if (!CheckStake(pindex, block))
+            state.DoS(100, error("%s: Block has invalid proof of stake", __func__), REJECT_INVALID, "pos-invalid");
 
     } else if (block.IsProofOfStake()) {
         return state.DoS(100, error("%s: Proof of Stake block submitted before PoW end", __func__), REJECT_INVALID,
