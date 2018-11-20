@@ -317,6 +317,8 @@ public:
         strDevfundAddress = "mr59c3aniaN3qHXej5L8UBsssRZbiUUMnz";
         strLegacySignerDummyAddress = "mr59c3aniaN3qHXej5L8UBsssRZbiUUMnz";
         nStartMasternodePayments = 1420837558; //Fri, 09 Jan 2015 21:05:58 GMT
+
+        nStakePointerValidityPeriod = 3000;
     }
     const Checkpoints::CCheckpointData& Checkpoints() const 
     {

@@ -1,5 +1,5 @@
-#ifndef CROWNCOIN_STAKEVALIDATION_H
-#define CROWNCOIN_STAKEVALIDATION_H
+#ifndef CROWNCORE_STAKEVALIDATION_H
+#define CROWNCORE_STAKEVALIDATION_H
 
 class CBlock;
 class CPubKey;
@@ -12,4 +12,4 @@ bool CheckBlockSignature(const CBlock& block, const CPubKey& pubkeyMasternode);
 // Check kernel hash target and coinstake signature
 bool CheckProofOfStake(const CBlock& block, const CBlockIndex* prevBlock, const COutPoint& outpoint, const CTransaction& txPayment);
 
-#endif //CROWNCOIN_STAKEVALIDATION_H
+#endif //CROWNCORE_STAKEVALIDATION_H

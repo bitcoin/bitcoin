@@ -57,7 +57,7 @@
  *  version  code  unspentness       vout[4]                                                     vout[16]           height
  *
  *  - version = 1
- *  - code = 9 (coinbase, neither vout[0] or vout[1] are unspent,
+ *  - code = 9 (coinbase/coinstake, neither vout[0] or vout[1] are unspent,
  *                2 (1, +1 because both bit 2 and bit 4 are unset) non-zero bitvector bytes follow)
  *  - unspentness bitvector: bits 2 (0x04) and 14 (0x4000) are set, so vout[2+2] and vout[14+2] are unspent
  *  - vout[4]: 86ef97d5790061b01caab50f1b8e9c50a5057eb43c2d9563a4ee
@@ -73,7 +73,7 @@
 class CCoins
 {
 public:
-    //! whether transaction is a coinbase
+    //! whether transaction is a coinbase/coinstake
     bool fBlockReward;
 
     //! unspent transaction outputs; spent outputs are .IsNull(); spent outputs at the end of the array are dropped
