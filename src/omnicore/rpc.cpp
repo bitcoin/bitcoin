@@ -1891,6 +1891,45 @@ UniValue omni_listblocktransactions(const UniValue& params, bool fHelp)
     }
 
     return response;
+}    
+
+UniValue omni_listblockstransactions(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 2)
+        throw runtime_error(
+            "omni_listblocktransactions firstblock lastblock\n"
+            "\nLists all Omni transactions in a given range of blocks.\n"
+            "\nNote: the list of transactions is unordered and can contain invalid transactions!\n"
+            "\nArguments:\n"
+            "1. firstblock           (number, required) the index of the first block to consider\n"
+            "2. lastblock            (number, required) the index of the last block to consider\n"
+            "\nResult:\n"
+            "[                       (array of string)\n"
+            "  \"hash\",                 (string) the hash of the transaction\n"
+            "  ...\n"
+            "]\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("omni_listblocktransactions", "279007 300000")
+            + HelpExampleRpc("omni_listblocktransactions", "279007, 300000")
+        );
+
+    int blockFirst = params[0].get_int();
+    int blockLast = params[1].get_int();
+
+    std::set<uint256> txs;
+    UniValue response(UniValue::VARR);
+
+    LOCK(cs_tally);
+    {
+        p_txlistdb->GetOmniTxsInBlockRange(blockFirst, blockLast, txs);
+    }
+
+    BOOST_FOREACH(const uint256& tx, txs) {
+        response.push_back(tx.GetHex());
+    }
+
+    return response;
 }
 
 UniValue omni_gettransaction(const UniValue& params, bool fHelp)
@@ -2447,6 +2486,7 @@ static const CRPCCommand commands[] =
     { "omni layer (data retrieval)", "omni_gettrade",                  &omni_gettrade,                   false },
     { "omni layer (data retrieval)", "omni_getsto",                    &omni_getsto,                     false },
     { "omni layer (data retrieval)", "omni_listblocktransactions",     &omni_listblocktransactions,      false },
+    { "omni layer (data retrieval)", "omni_listblockstransactions",    &omni_listblockstransactions,     false },
     { "omni layer (data retrieval)", "omni_listpendingtransactions",   &omni_listpendingtransactions,    false },
     { "omni layer (data retrieval)", "omni_getallbalancesforaddress",  &omni_getallbalancesforaddress,   false },
     { "omni layer (data retrieval)", "omni_gettradehistoryforaddress", &omni_gettradehistoryforaddress,  false },
