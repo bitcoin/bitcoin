@@ -1282,6 +1282,9 @@ bool AppInit2(boost::thread_group& threadGroup)
                 if (!mapBlockIndex.empty() && mapBlockIndex.count(Params().HashGenesisBlock()) == 0)
                     return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
 
+                if (!Params().HashDevnetGenesisBlock().IsNull() && !mapBlockIndex.empty() && mapBlockIndex.count(Params().HashDevnetGenesisBlock()) == 0)
+                    return InitError(_("Incorrect or no devnet genesis block found. Wrong datadir for devnet specified?"));
+
                 // Initialize the block index (no-op if non-empty database was already loaded)
                 if (!InitBlockIndex()) {
                     strLoadError = _("Error initializing block database");

@@ -1628,6 +1628,12 @@ int64_t GetBlockValue(int nHeight, const CAmount &nFees)
     // Subsidy is cut in half every 2,100,000 blocks which will occur approximately every 4 years.
     nSubsidy >>= halvings;
 
+    if (Params().NetworkID() == CBaseChainParams::DEVNET)
+    {
+        if (nHeight == 1)
+            return 1000000 * COIN;
+    }
+
     if(Params().NetworkID() == CBaseChainParams::TESTNET){
         if(nHeight > 20000) nSubsidy -= nSubsidy/10;
     } else {
@@ -2965,6 +2971,14 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool f
     if (fCheckPOW && !CheckProofOfWork(block))
         return state.DoS(50, error("CheckBlockHeader() : proof of work failed"),
                          REJECT_INVALID, "high-hash");
+
+    // Check DevNet
+    if (!Params().HashDevnetGenesisBlock().IsNull() &&
+        block.hashPrevBlock == Params().HashGenesisBlock() &&
+        block.GetHash() != Params().HashDevnetGenesisBlock()) {
+        return state.DoS(100, error("CheckBlockHeader(): wrong devnet genesis"),
+                         REJECT_INVALID, "devnet-genesis");
+    }
 
     // Check timestamp
     if (block.GetBlockTime() > GetAdjustedTime() + 2 * 60 * 60)
