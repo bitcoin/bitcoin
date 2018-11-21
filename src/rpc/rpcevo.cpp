@@ -197,7 +197,7 @@ void protx_register_fund_help()
             "3. \"ownerKeyAddr\"        (string, required) The owner key used for payee updates and proposal voting.\n"
             "                         The private key belonging to this address be known in your wallet. The address must\n"
             "                         be unused and must differ from the collateralAddress\n"
-            "4. \"operatorPubKey\"      (string, required) The operator public key. The private key does not have to be known.\n"
+            "4. \"operatorPubKey\"      (string, required) The operator BLS public key. The private key does not have to be known.\n"
             "                         It has to match the private key which is later used when operating the masternode.\n"
             "5. \"votingKeyAddr\"       (string, required) The voting key address. The private key does not have to be known by your wallet.\n"
             "                         It has to match the private key which is later used when voting on proposals.\n"
