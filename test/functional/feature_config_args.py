@@ -34,6 +34,11 @@ class ConfArgsTest(BitcoinTestFramework):
         self.nodes[0].assert_start_raises_init_error(expected_msg='Error reading configuration file: parse error on line 3, using # in rpcpassword can be ambiguous and should be avoided')
 
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+            conf.write('testnot.datadir=1\n[testnet]\n')
+        self.restart_node(0)
+        self.nodes[0].stop_node(expected_stderr='Warning: Section [testnet] is not recognized.' + os.linesep + 'Warning: Section [testnot] is not recognized.')
+
+        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
             conf.write('')  # clear
 
     def run_test(self):
