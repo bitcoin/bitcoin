@@ -26,6 +26,7 @@
 #include "masternodeconfig.h"
 #include "mn-pos/stakepointer.h"
 #include "mn-pos/stakeminer.h"
+#include "spork.h"
 
 #include <boost/thread.hpp>
 #include <boost/tuple/tuple.hpp>
@@ -361,21 +362,25 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
         }
 
         // Masternode and general budget payments
-        FillBlockPayee(txCoinbase, nFees);
-        SNFillBlockPayee(txCoinbase, nFees);
+        if (IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)) {
+            FillBlockPayee(txCoinbase, nFees);
+            SNFillBlockPayee(txCoinbase, nFees);
+        }
 
         // Proof of stake blocks pay the mining reward in the coinstake transaction
-        if (fProofOfStake)
+        if (fProofOfStake) {
             txCoinbase.vout[0].nValue = 0;
+            txCoinbase.vout[0].scriptPubKey = CScript();
+        }
 
         // Make payee
 	    if(txCoinbase.vout.size() > 1){
-            pblock->payee = txCoinbase.vout[1].scriptPubKey;
+            pblock->payee = txCoinbase.vout[MN_PMT_SLOT].scriptPubKey;
         }
 
         // Make SNpayee
 	    if(txCoinbase.vout.size() > 2){
-            pblock->payeeSN = txCoinbase.vout[2].scriptPubKey;
+            pblock->payeeSN = txCoinbase.vout[SN_PMT_SLOT].scriptPubKey;
         }
 
         nLastBlockTx = nBlockTx;

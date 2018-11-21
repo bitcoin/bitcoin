@@ -2168,8 +2168,7 @@ bool CheckBlockProofPointer(const CBlockIndex* pindex, const CBlock& block, CPub
 
 bool IsMasternodeOrSystemnodeReward(const CTransaction& tx, const COutPoint& outpoint)
 {
-    //todo: Need to validate that this was a payment made to a valid masternode or systemnode
-    return true;
+    return outpoint.n == MN_PMT_SLOT || outpoint.n == SN_PMT_SLOT;
 }
 
 bool CheckStake(const CBlockIndex* pindex, const CBlock& block)
@@ -2214,7 +2213,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                     "pow-end");
 
         if (!CheckStake(pindex, block))
-            state.DoS(100, error("%s: Block has invalid proof of stake", __func__), REJECT_INVALID, "pos-invalid");
+            return state.DoS(100, error("%s: Block has invalid proof of stake", __func__), REJECT_INVALID, "pos-invalid");
 
     } else if (block.IsProofOfStake()) {
         return state.DoS(100, error("%s: Proof of Stake block submitted before PoW end", __func__), REJECT_INVALID,
@@ -3219,6 +3218,13 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         }
 
         if(nHeight != 0){
+            //Require no masternode payments if the spork is disabled, this is required to make sure no stakepointers are
+            //given to non masternode/systemnodes
+            if (nHeight >= Params().PoSStartHeight() && !IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)) {
+                if (block.vtx[0].vout.size() > 1)
+                    return state.DoS(100,
+                            error("CheckBlock() : Masternode/systemnode payments made when payment enforcement is disabled"));
+            }
             if(!IsBlockPayeeValid(block.vtx[0], nHeight))
             {
                 mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));

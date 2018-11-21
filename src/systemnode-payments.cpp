@@ -295,14 +295,22 @@ bool CSystemnodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
     BOOST_FOREACH(CSystemnodePayee& payee, vecPayments)
     {
         bool found = false;
-        BOOST_FOREACH(CTxOut out, txNew.vout){
-            if(payee.scriptPubKey == out.scriptPubKey && systemnodePayment == out.nValue){
+        int pos = -1;
+        for (unsigned int i = 0; i < txNew.vout.size(); i++){
+            if(payee.scriptPubKey == txNew.vout[i].scriptPubKey && systemnodePayment == txNew.vout[i].nValue){
+                pos = i;
                 found = true;
+                break;
             }
         }
 
         if(payee.nVotes >= SNPAYMENTS_SIGNATURES_REQUIRED){
-            if(found) return true;
+            if(found) {
+                //When proof of stake is active, enforce specific payment positions
+                if (nBlockHeight >= Params().PoSStartHeight() && pos != SN_PMT_SLOT)
+                    return error("%s: Systemnode payment is not in coinbase.vout[%d]", __func__, SN_PMT_SLOT);
+                return true;
+            }
 
             CTxDestination address1;
             ExtractDestination(payee.scriptPubKey, address1);

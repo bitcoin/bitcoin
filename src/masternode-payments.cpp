@@ -42,29 +42,29 @@ bool IsBlockValueValid(const CBlock& block, int64_t nExpectedValue){
         LogPrintf("IsBlockValueValid() : WARNING: Couldn't find previous block");
     }
 
-    CAmount nMiningReward = block.vtx[0].GetValueOut();
+    CAmount nBlockCreation = block.vtx[0].GetValueOut();
     if (fProofOfStake)
-        nMiningReward += block.vtx[1].GetValueOut();
+        nBlockCreation += block.vtx[1].GetValueOut();
 
     if(!masternodeSync.IsSynced()) { //there is no budget data to use to check anything
         //super blocks will always be on these blocks, max 100 per budgeting
         if(nHeight % GetBudgetPaymentCycleBlocks() < 100){
             return true;
         } else {
-            if (nMiningReward > nExpectedValue) return false;
+            if (nBlockCreation > nExpectedValue) return false;
         }
     } else { // we're synced and have data so check the budget schedule
 
         //are these blocks even enabled
-        if(!IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS)){
-            return block.vtx[0].GetValueOut() <= nExpectedValue;
+        if (!IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS)) {
+            return nBlockCreation <= nExpectedValue;
         }
 
         if(budget.IsBudgetPaymentBlock(nHeight)){
             //the value of the block is evaluated in CheckBlock
             return true;
         } else {
-            if (nMiningReward > nExpectedValue) return false;
+            if (nBlockCreation > nExpectedValue) return false;
         }
     }
 
@@ -388,14 +388,23 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
     BOOST_FOREACH(CMasternodePayee& payee, vecPayments)
     {
         bool found = false;
-        BOOST_FOREACH(CTxOut out, txNew.vout){
-            if(payee.scriptPubKey == out.scriptPubKey && masternodePayment == out.nValue){
+        int pos = -1;
+        for (unsigned int i = 0; i < txNew.vout.size(); i++) {
+            if(payee.scriptPubKey == txNew.vout[i].scriptPubKey && masternodePayment == txNew.vout[i].nValue){
                 found = true;
+                pos = i;
+                break;
             }
         }
 
         if(payee.nVotes >= MNPAYMENTS_SIGNATURES_REQUIRED){
-            if(found) return true;
+            if(found) {
+                //When proof of stake is active, enforce specific payment positions
+                if (nBlockHeight >= Params().PoSStartHeight() && pos != MN_PMT_SLOT)
+                        return error("%s: Masternode payment is not in coinbase.vout[%d]", __func__, MN_PMT_SLOT);
+
+                return true;
+            }
 
             CTxDestination address1;
             ExtractDestination(payee.scriptPubKey, address1);

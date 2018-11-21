@@ -25,6 +25,7 @@ extern CMasternodePayments masternodePayments;
 
 #define MNPAYMENTS_SIGNATURES_REQUIRED           6
 #define MNPAYMENTS_SIGNATURES_TOTAL              10
+#define MN_PMT_SLOT                              1
 
 void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 bool IsReferenceNode(CTxIn& vin);

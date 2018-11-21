@@ -24,6 +24,7 @@ extern CSystemnodePayments systemnodePayments;
 
 #define SNPAYMENTS_SIGNATURES_REQUIRED           6
 #define SNPAYMENTS_SIGNATURES_TOTAL              10
+#define SN_PMT_SLOT                              2
 
 void SNFillBlockPayee(CMutableTransaction& txNew, int64_t nFees);
 bool SNIsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight);
