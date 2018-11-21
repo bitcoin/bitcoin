@@ -40,6 +40,11 @@ int64_t GetStartupTime();
 
 extern const char * const BITCOIN_CONF_FILENAME;
 extern const char * const BITCOIN_PID_FILENAME;
+#ifdef ENABLE_WALLET
+static const bool DEFAULT_MITIGATE_SPECTRE = true;
+#else
+static const bool DEFAULT_MITIGATE_SPECTRE = false;
+#endif
 
 /** Translate a message to the native language of the user. */
 const extern std::function<std::string(const char*)> G_TRANSLATION_FUN;
@@ -53,6 +58,7 @@ inline std::string _(const char* psz)
     return G_TRANSLATION_FUN ? (G_TRANSLATION_FUN)(psz) : psz;
 }
 
+void SpectreMitigation(bool enable);
 void SetupEnvironment();
 bool SetupNetworking();
 

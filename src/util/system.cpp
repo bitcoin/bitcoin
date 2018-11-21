@@ -67,6 +67,31 @@
 
 #ifdef HAVE_SYS_PRCTL_H
 #include <sys/prctl.h>
+// Set spectre prctl defines so that we can build on older kernels
+#ifndef PR_GET_SPECULATION_CTRL
+#define PR_GET_SPECULATION_CTRL 52
+#endif
+#ifndef PR_SET_SPECULATION_CTRL
+#define PR_SET_SPECULATION_CTRL 53
+#endif
+#ifndef PR_SPEC_STORE_BYPASS
+#define PR_SPEC_STORE_BYPASS 0
+#endif
+#ifndef PR_SPEC_NOT_AFFECTED
+#define PR_SPEC_NOT_AFFECTED 0
+#endif
+#ifndef PR_SPEC_PRCTL
+#define PR_SPEC_PRCTL (1UL << 0)
+#endif
+#ifndef PR_SPEC_ENABLE
+#define PR_SPEC_ENABLE (1UL << 1)
+#endif
+#ifndef PR_SPEC_DISABLE
+#define PR_SPEC_DISABLE (1UL << 2)
+#endif
+#ifndef PR_SPEC_FORCE_DISABLE
+#define PR_SPEC_FORCE_DISABLE (1UL << 3)
+#endif
 #endif
 
 #ifdef HAVE_MALLOPT_ARENA_MAX
@@ -1183,6 +1208,44 @@ void RenameThread(const char* name)
 #else
     // Prevent warnings for unused parameters...
     (void)name;
+#endif
+}
+
+void SpectreMitigation(bool enable)
+{
+#if defined(HAVE_SYS_PRCTL_H)
+    int status = prctl(PR_GET_SPECULATION_CTRL, PR_SPEC_STORE_BYPASS, 0, 0, 0);
+    if (status == -1) {
+        LogPrintf("Kernel does not support per process spectre mitigation control: %s.\n", strerror(errno));
+    } else if (status == PR_SPEC_NOT_AFFECTED) {
+        LogPrintf("System is not affected by spectre.\n");
+    } else if (status & PR_SPEC_DISABLE && enable) {
+        LogPrintf("Spectre mitigation is already enabled.\n");
+    } else if (status & PR_SPEC_ENABLE && !enable) {
+        LogPrintf("Spectre mitigation is already disabled.\n");
+    } else if (!(status & PR_SPEC_PRCTL) || status & PR_SPEC_FORCE_DISABLE) {
+        if (status & PR_SPEC_DISABLE && !enable) {
+            LogPrintf("Spectre mitigation is enabled and can not be disabled.\n");
+        } else if (status & PR_SPEC_ENABLE && enable) {
+            LogPrintf("Spectre mitigation is disabled and can not be enabled.\n");
+        }
+    } else if (status & PR_SPEC_PRCTL && status & PR_SPEC_DISABLE && !enable) {
+        if (!prctl(PR_SET_SPECULATION_CTRL, PR_SPEC_STORE_BYPASS, PR_SPEC_ENABLE, 0, 0)) {
+            LogPrintf("Failed to disable spectre mitigation: %s.\n", strerror(errno));
+        } else {
+            LogPrintf("Spectre mitigation has been disabled.\n");
+        }
+    } else if (status & PR_SPEC_PRCTL && status & PR_SPEC_ENABLE && enable) {
+        if (!prctl(PR_SET_SPECULATION_CTRL, PR_SPEC_STORE_BYPASS, PR_SPEC_DISABLE, 0, 0)) {
+            LogPrintf("Failed to enable spectre mitigation: %s.\n", strerror(errno));
+        } else {
+            LogPrintf("Spectre mitigation has been enabled.\n");
+        }
+    } else {
+        LogPrintf("Spectre mitigation control returned status %d.\n", status);
+    }
+#else
+    LogPrintf("Per process spectre mitigation control is not available on this platform.\n");
 #endif
 }
 

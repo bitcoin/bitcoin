@@ -358,6 +358,13 @@ void SetupServerArgs()
     gArgs.AddArg("-minimumchainwork=<hex>", strprintf("Minimum work assumed to exist on a valid chain in hex (default: %s, testnet: %s)", defaultChainParams->GetConsensus().nMinimumChainWork.GetHex(), testnetChainParams->GetConsensus().nMinimumChainWork.GetHex()), true, OptionsCategory::OPTIONS);
     gArgs.AddArg("-par=<n>", strprintf("Set the number of script verification threads (%u to %d, 0 = auto, <0 = leave that many cores free, default: %d)",
         -GetNumCores(), MAX_SCRIPTCHECK_THREADS, DEFAULT_SCRIPTCHECK_THREADS), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-mitigatespectre", strprintf("Attempt to enable per process spectre mitigations (default: %u%s)", DEFAULT_MITIGATE_SPECTRE, (
+#ifdef ENABLE_WALLET
+    " or 0 if -disablewallet set"
+#else
+    ""
+#endif
+    )), true, OptionsCategory::OPTIONS);
     gArgs.AddArg("-persistmempool", strprintf("Whether to save the mempool on shutdown and load on restart (default: %u)", DEFAULT_PERSIST_MEMPOOL), false, OptionsCategory::OPTIONS);
 #ifndef WIN32
     gArgs.AddArg("-pid=<file>", strprintf("Specify pid file. Relative paths will be prefixed by a net-specific datadir location. (default: %s)", BITCOIN_PID_FILENAME), false, OptionsCategory::OPTIONS);
@@ -887,6 +894,9 @@ bool AppInitBasicSetup()
     PSETPROCDEPPOL setProcDEPPol = (PSETPROCDEPPOL)GetProcAddress(GetModuleHandleA("Kernel32.dll"), "SetProcessDEPPolicy");
     if (setProcDEPPol != nullptr) setProcDEPPol(PROCESS_DEP_ENABLE);
 #endif
+
+    bool mitigatespectre_default = !gArgs.GetBoolArg("-disablewallet", false) && DEFAULT_MITIGATE_SPECTRE;
+    SpectreMitigation(gArgs.GetBoolArg("-mitigatespectre", mitigatespectre_default));
 
     if (!SetupNetworking())
         return InitError("Initializing networking failed");
