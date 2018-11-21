@@ -2178,6 +2178,10 @@ bool IsMasternodeOrSystemnodeReward(const CTransaction& tx, const COutPoint& out
 bool CheckStake(const CBlockIndex* pindex, const CBlock& block)
 {
     AssertLockHeld(cs_main);
+    //Coinbase has to be 0 value
+    if (block.vtx[0].vout[0].nValue > 0)
+        return error("%s: Coinbase output 0 must have 0 value", __func__);
+
     CPubKey pubkeyMasternode;
     COutPoint outpointStakePointer;
     CTransaction txPayment;
