@@ -1987,6 +1987,9 @@ bool CWallet::GetRecentStakePointers(std::vector<StakePointer>& vStakePointers)
         }
 
         for (auto pindex : vBlocksLastPaid) {
+            if (budget.IsBudgetPaymentBlock(pindex->nHeight))
+                continue;
+
             CBlock blockLastPaid;
             if (!ReadBlockFromDisk(blockLastPaid, pindex)) {
                 LogPrintf("GetRecentStakePointer -- Failed reading block from disk\n");
@@ -1996,12 +1999,12 @@ bool CWallet::GetRecentStakePointers(std::vector<StakePointer>& vStakePointers)
             CScript scriptMNPubKey;
             scriptMNPubKey = GetScriptForDestination(pactiveMN->pubkey.GetID());
             for (CTransaction& tx : blockLastPaid.vtx) {
-                auto stakeSource = COutPoint(tx.GetHash(), 1);
-                if (tx.IsCoinBase() && tx.vout[1].scriptPubKey == scriptMNPubKey && !mapUsedStakePointers.count(stakeSource.GetHash())) {
+                auto stakeSource = COutPoint(tx.GetHash(), MN_PMT_SLOT);
+                if (tx.IsCoinBase() && tx.vout[MN_PMT_SLOT].scriptPubKey == scriptMNPubKey && !mapUsedStakePointers.count(stakeSource.GetHash())) {
                     StakePointer stakePointer;
                     stakePointer.hashBlock = pindex->GetBlockHash();
                     stakePointer.txid = tx.GetHash();
-                    stakePointer.nPos = 1;
+                    stakePointer.nPos = MN_PMT_SLOT;
                     stakePointer.pubKeyProofOfStake = pactiveMN->pubkey;
                     vStakePointers.emplace_back(stakePointer);
                     found = true;
@@ -2034,12 +2037,12 @@ bool CWallet::GetRecentStakePointers(std::vector<StakePointer>& vStakePointers)
             CScript scriptSNPubKey;
             scriptSNPubKey = GetScriptForDestination(pactiveSN->pubkey.GetID());
             for (CTransaction& tx : blockLastPaid.vtx) {
-                auto stakeSource = COutPoint(tx.GetHash(), 1);
-                if (tx.IsCoinBase() && tx.vout[2].scriptPubKey == scriptSNPubKey && !mapUsedStakePointers.count(stakeSource.GetHash())) {
+                auto stakeSource = COutPoint(tx.GetHash(), SN_PMT_SLOT);
+                if (tx.IsCoinBase() && tx.vout[SN_PMT_SLOT].scriptPubKey == scriptSNPubKey && !mapUsedStakePointers.count(stakeSource.GetHash())) {
                     StakePointer stakePointer;
                     stakePointer.hashBlock = pindex->GetBlockHash();
                     stakePointer.txid = tx.GetHash();
-                    stakePointer.nPos = 1;
+                    stakePointer.nPos = SN_PMT_SLOT;
                     stakePointer.pubKeyProofOfStake = pactiveSN->pubkey;
                     vStakePointers.emplace_back(stakePointer);
                     found = true;

@@ -2107,6 +2107,10 @@ bool CheckBlockProofPointer(const CBlockIndex* pindex, const CBlock& block, CPub
     if (pindexFrom->nHeight > pindex->nHeight - Params().MaxReorganizationDepth())
         return error("%s: Stake pointer from height %d is too recent", __func__, pindexFrom->nHeight);
 
+    //No stakepointers from budgetblocks
+    if (budget.IsBudgetPaymentBlock(pindexFrom->nHeight))
+        return error("%s: Stake pointers cannot be from budget blocks", __func__);
+
     //Ensure that this stake pointer is not already used by another block in the chain
     COutPoint stakeSource(stakePointer.txid, stakePointer.nPos);
     auto hashPointer = stakeSource.GetHash();
