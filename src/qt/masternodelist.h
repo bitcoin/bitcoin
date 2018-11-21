@@ -6,6 +6,8 @@
 #include "sync.h"
 #include "util.h"
 
+#include <evo/deterministicmns.h>
+
 #include <QMenu>
 #include <QTimer>
 #include <QWidget>
@@ -40,9 +42,11 @@ public:
     void ShowQRCode(std::string strAlias);
     void StartAlias(std::string strAlias);
     void StartAll(std::string strCommand = "start-all");
+    CDeterministicMNCPtr GetSelectedDIP3MN();
 
 private:
     QMenu* contextMenu;
+    QMenu* contextMenuDIP3;
     int64_t nTimeFilterUpdated;
     int64_t nTimeFilterUpdatedDIP3;
     bool fFilterUpdated;
@@ -77,6 +81,7 @@ private:
 
 private Q_SLOTS:
     void showContextMenu(const QPoint&);
+    void showContextMenuDIP3(const QPoint&);
     void on_filterLineEdit_textChanged(const QString& strFilterIn);
     void on_filterLineEditDIP3_textChanged(const QString& strFilterIn);
     void on_QRButton_clicked();
@@ -85,5 +90,9 @@ private Q_SLOTS:
     void on_startMissingButton_clicked();
     void on_tableWidgetMyMasternodes_itemSelectionChanged();
     void on_UpdateButton_clicked();
+
+    void on_extraInfoDIP3_clicked();
+    void on_copyProTxHash_clicked();
+    void on_copyCollateralOutpoint_clicked();
 };
 #endif // MASTERNODELIST_H

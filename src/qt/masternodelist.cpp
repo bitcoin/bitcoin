@@ -9,13 +9,17 @@
 #include "masternode-sync.h"
 #include "masternodeconfig.h"
 #include "masternodeman.h"
+#include "netbase.h"
 #include "qrdialog.h"
 #include "sync.h"
 #include "wallet/wallet.h"
 #include "walletmodel.h"
 
+#include <univalue.h>
+
 #include <QMessageBox>
 #include <QTimer>
+#include <QtGui/QClipboard>
 
 int GetOffsetFromUtc()
 {
@@ -75,6 +79,7 @@ MasternodeList::MasternodeList(const PlatformStyle* platformStyle, QWidget* pare
     ui->tableWidgetMasternodesDIP3->setColumnWidth(7, columnOperatorRewardWidth);
 
     ui->tableWidgetMyMasternodes->setContextMenuPolicy(Qt::CustomContextMenu);
+    ui->tableWidgetMasternodesDIP3->setContextMenuPolicy(Qt::CustomContextMenu);
 
     QAction* startAliasAction = new QAction(tr("Start alias"), this);
     contextMenu = new QMenu();
@@ -82,6 +87,16 @@ MasternodeList::MasternodeList(const PlatformStyle* platformStyle, QWidget* pare
     connect(ui->tableWidgetMyMasternodes, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showContextMenu(const QPoint&)));
     connect(ui->tableWidgetMyMasternodes, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(on_QRButton_clicked()));
     connect(startAliasAction, SIGNAL(triggered()), this, SLOT(on_startButton_clicked()));
+
+    QAction* copyProTxHashAction = new QAction(tr("Copy ProTx Hash"), this);
+    QAction* copyCollateralOutpointAction = new QAction(tr("Copy Collateral Outpoint"), this);
+    contextMenuDIP3 = new QMenu();
+    contextMenuDIP3->addAction(copyProTxHashAction);
+    contextMenuDIP3->addAction(copyCollateralOutpointAction);
+    connect(ui->tableWidgetMasternodesDIP3, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showContextMenuDIP3(const QPoint&)));
+    connect(ui->tableWidgetMasternodesDIP3, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(on_extraInfoDIP3_clicked()));
+    connect(copyProTxHashAction, SIGNAL(triggered()), this, SLOT(on_copyProTxHash_clicked()));
+    connect(copyCollateralOutpointAction, SIGNAL(triggered()), this, SLOT(on_copyCollateralOutpoint_clicked()));
 
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(updateNodeList()));
@@ -120,6 +135,12 @@ void MasternodeList::showContextMenu(const QPoint& point)
 {
     QTableWidgetItem* item = ui->tableWidgetMyMasternodes->itemAt(point);
     if (item) contextMenu->exec(QCursor::pos());
+}
+
+void MasternodeList::showContextMenuDIP3(const QPoint& point)
+{
+    QTableWidgetItem* item = ui->tableWidgetMasternodesDIP3->itemAt(point);
+    if (item) contextMenuDIP3->exec(QCursor::pos());
 }
 
 void MasternodeList::StartAlias(std::string strAlias)
@@ -645,4 +666,64 @@ void MasternodeList::ShowQRCode(std::string strAlias)
     dialog->setModel(walletModel->getOptionsModel());
     dialog->setInfo(strWindowtitle, QString::fromStdString(strMNPrivKey), strHTML, strQRCodeTitle);
     dialog->show();
+}
+
+CDeterministicMNCPtr MasternodeList::GetSelectedDIP3MN()
+{
+    std::string strAddress;
+    {
+        LOCK(cs_dip3list);
+
+        QItemSelectionModel* selectionModel = ui->tableWidgetMasternodesDIP3->selectionModel();
+        QModelIndexList selected = selectionModel->selectedRows();
+
+        if (selected.count() == 0) return nullptr;
+
+        QModelIndex index = selected.at(0);
+        int nSelectedRow = index.row();
+        strAddress = ui->tableWidgetMasternodesDIP3->item(nSelectedRow, 0)->text().toStdString();
+    }
+    CService addr;
+    if (!Lookup(strAddress.c_str(), addr, Params().GetDefaultPort(), false)) {
+        return nullptr;
+    }
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+    return mnList.GetUniquePropertyMN(addr);
+}
+
+void MasternodeList::on_extraInfoDIP3_clicked()
+{
+    auto dmn = GetSelectedDIP3MN();
+    if (!dmn) {
+        return;
+    }
+
+    UniValue json(UniValue::VOBJ);
+    dmn->ToJson(json);
+
+    // Title of popup window
+    QString strWindowtitle = tr("Additional information for DIP3 Masternode %1").arg(QString::fromStdString(dmn->proTxHash.ToString()));
+    QString strText = QString::fromStdString(json.write(2));
+
+    QMessageBox::information(this, strWindowtitle, strText);
+}
+
+void MasternodeList::on_copyProTxHash_clicked()
+{
+    auto dmn = GetSelectedDIP3MN();
+    if (!dmn) {
+        return;
+    }
+
+    QApplication::clipboard()->setText(QString::fromStdString(dmn->proTxHash.ToString()));
+}
+
+void MasternodeList::on_copyCollateralOutpoint_clicked()
+{
+    auto dmn = GetSelectedDIP3MN();
+    if (!dmn) {
+        return;
+    }
+
+    QApplication::clipboard()->setText(QString::fromStdString(dmn->collateralOutpoint.ToStringShort()));
 }
