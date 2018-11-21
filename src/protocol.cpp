@@ -59,7 +59,6 @@ const char *MNGOVERNANCEOBJECTVOTE="govobjvote";
 const char *GETMNLISTDIFF="getmnlistd";
 const char *MNLISTDIFF="mnlistdiff";
 const char *QFCOMMITMENT="qfcommit";
-const char *QDCOMMITMENT="qdcommit";
 const char *QCONTRIB="qcontrib";
 };
 
@@ -89,7 +88,7 @@ static const char* ppszTypeName[] =
     "unused inv type 19",
     "compact block", // Should never occur
     NetMsgType::QFCOMMITMENT,
-    NetMsgType::QDCOMMITMENT,
+    "qdcommit", // was only shortly used on testnet
     NetMsgType::QCONTRIB,
 };
 
@@ -144,7 +143,6 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::GETMNLISTDIFF,
     NetMsgType::MNLISTDIFF,
     NetMsgType::QFCOMMITMENT,
-    NetMsgType::QDCOMMITMENT,
     NetMsgType::QCONTRIB,
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));

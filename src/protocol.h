@@ -265,7 +265,6 @@ extern const char *MNGOVERNANCEOBJECTVOTE;
 extern const char *GETMNLISTDIFF;
 extern const char *MNLISTDIFF;
 extern const char *QFCOMMITMENT;
-extern const char *QDCOMMITMENT;
 extern const char *QCONTRIB;
 };
 
@@ -361,8 +360,8 @@ enum GetDataMsg {
     // MSG_CMPCT_BLOCK should not appear in any invs except as a part of getdata.
     MSG_CMPCT_BLOCK = 20, //!< Defined in BIP152
     MSG_QUORUM_FINAL_COMMITMENT = 21,
-    MSG_QUORUM_DUMMY_COMMITMENT = 22, // only valid on testnet/devnet/regtest
-    MSG_QUORUM_DUMMY_CONTRIBUTION = 23, // not a valid contribution and only allowed on testnet/devnet/regtest. Will later be replaced with the real contribution
+    /* MSG_QUORUM_DUMMY_COMMITMENT = 22, */ // was shortly used on testnet/devnet/regtest
+    /* MSG_QUORUM_DUMMY_CONTRIBUTION = 23, */ // not a valid contribution and only allowed on testnet/devnet/regtest. Will later be replaced with the real contribution
 };
 
 /** inv message data */

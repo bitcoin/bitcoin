@@ -141,7 +141,6 @@ BITCOIN_CORE_H = \
   limitedmap.h \
   llmq/quorums_commitment.h \
   llmq/quorums_blockprocessor.h \
-  llmq/quorums_dummydkg.h \
   llmq/quorums_utils.h \
   llmq/quorums_init.h \
   masternode-meta.h \
@@ -249,7 +248,6 @@ libdash_server_a_SOURCES = \
   governance-votedb.cpp \
   llmq/quorums_commitment.cpp \
   llmq/quorums_blockprocessor.cpp \
-  llmq/quorums_dummydkg.cpp \
   llmq/quorums_utils.cpp \
   llmq/quorums_init.cpp \
   masternode-meta.cpp \
