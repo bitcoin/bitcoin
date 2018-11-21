@@ -506,7 +506,6 @@ void protx_update_registrar_help()
             "                         It has to match the private key which is later used when voting on proposals.\n"
             "                         If set to \"0\" or an empty string, the last on-chain voting key of the masternode will be used.\n"
             "4. \"payoutAddress\"       (string, required) The dash address to use for masternode reward payments\n"
-            "                         Must match \"collateralAddress\" of initial ProRegTx.\n"
             "                         If set to \"0\" or an empty string, the last on-chain payout address of the masternode will be used.\n"
             "\nExamples:\n"
             + HelpExampleCli("protx", "update_registrar \"0123456701234567012345670123456701234567012345670123456701234567\" \"982eb34b7c7f614f29e5c665bc3605f1beeef85e3395ca12d3be49d2868ecfea5566f11cedfad30c51b2403f2ad95b67\" \"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\"")
@@ -566,7 +565,7 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
 void protx_revoke_help()
 {
     throw std::runtime_error(
-            "protx revoke \"proTxHash\"\n"
+            "protx revoke \"proTxHash\" \"operatorKey\"\n"
             "\nCreates and sends a ProUpRevTx to the network. This will revoke the operator key of the masternode and\n"
             "put it into the PoSe-banned state. It will also set the service field of the masternode\n"
             "to zero. Use this in case your operator key got compromised or you want to stop providing your service\n"
