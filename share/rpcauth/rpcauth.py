@@ -5,17 +5,13 @@
 
 import sys
 import os
-from random import SystemRandom
 import base64
+from binascii import hexlify
 import hmac
 
-def generate_salt():
-    # This uses os.urandom() underneath
-    cryptogen = SystemRandom()
-
-    # Create 16 byte hex salt
-    salt_sequence = [cryptogen.randrange(256) for _ in range(16)]
-    return ''.join([format(r, 'x') for r in salt_sequence])
+def generate_salt(size):
+    """Create size byte hex salt"""
+    return hexlify(os.urandom(size)).decode()
 
 def generate_password():
     """Create 32 byte b64 password"""
@@ -32,7 +28,8 @@ def main():
 
     username = sys.argv[1]
 
-    salt = generate_salt()
+    # Create 16 byte hex salt
+    salt = generate_salt(16)
     if len(sys.argv) > 2:
         password = sys.argv[2]
     else:
