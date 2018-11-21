@@ -3228,7 +3228,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         if(nHeight != 0){
             //Require no masternode payments if the spork is disabled, this is required to make sure no stakepointers are
             //given to non masternode/systemnodes
-            if (nHeight >= Params().PoSStartHeight() && !IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)) {
+            if (nHeight >= Params().PoSStartHeight() && !IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT) && masternodeSync.IsBlockchainSynced()) {
                 if (block.vtx[0].vout.size() > 1)
                     return state.DoS(100,
                             error("CheckBlock() : Masternode/systemnode payments made when payment enforcement is disabled"));
