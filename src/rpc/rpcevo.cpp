@@ -327,11 +327,14 @@ UniValue protx_register(const JSONRPCRequest& request)
         keyIDVoting = ParsePubKeyIDFromAddress(request.params[paramIdx + 3].get_str(), "voting address");
     }
 
-    double operatorReward = ParseDoubleV(request.params[paramIdx + 4], "operatorReward");
-    if (operatorReward < 0 || operatorReward > 100) {
+    int64_t operatorReward;
+    if (!ParseFixedPoint(request.params[paramIdx + 4].getValStr(), 2, &operatorReward)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "operatorReward must be a number");
+    }
+    if (operatorReward < 0 || operatorReward > 10000) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "operatorReward must be between 0.00 and 100.00");
     }
-    ptx.nOperatorReward = (uint16_t)(operatorReward * 100);
+    ptx.nOperatorReward = operatorReward;
 
     CBitcoinAddress payoutAddress(request.params[paramIdx + 5].get_str());
     if (!payoutAddress.IsValid()) {
