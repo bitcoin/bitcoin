@@ -213,11 +213,12 @@ class DIP3Test(BitcoinTestFramework):
             banned = False
             t = time.time()
             while (not punished or not banned) and (time.time() - t) < 120:
-                time.sleep(1)
+                # Init phase needs some time
+                time.sleep(0.5)
 
-                # 10 blocks until we can mine the dummy commitment
-                for j in range(10):
-                    self.nodes[0].generate(1)
+                # all phases
+                for j in range(6):
+                    self.nodes[0].generate(2)
                     self.sync_all()
                     time.sleep(0.5)
 
