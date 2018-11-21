@@ -579,14 +579,14 @@ class FullBlockTest(BitcoinTestFramework):
         while b47.sha256 < target:
             b47.nNonce += 1
             b47.rehash()
-        self.sync_blocks([b47], False, request_block=False)
+        self.sync_blocks([b47], False, force_send=True, reject_reason='high-hash')
 
         self.log.info("Reject a block with a timestamp >2 hours in the future")
         self.move_tip(44)
         b48 = self.next_block(48, solve=False)
         b48.nTime = int(time.time()) + 60 * 60 * 3
         b48.solve()
-        self.sync_blocks([b48], False, request_block=False)
+        self.sync_blocks([b48], False, force_send=True, reject_reason='time-too-new')
 
         self.log.info("Reject a block with invalid merkle hash")
         self.move_tip(44)
@@ -600,7 +600,7 @@ class FullBlockTest(BitcoinTestFramework):
         b50 = self.next_block(50)
         b50.nBits = b50.nBits - 1
         b50.solve()
-        self.sync_blocks([b50], False, request_block=False, reconnect=True)
+        self.sync_blocks([b50], False, force_send=True, reject_reason='bad-diffbits', reconnect=True)
 
         self.log.info("Reject a block with two coinbase transactions")
         self.move_tip(44)
@@ -630,7 +630,7 @@ class FullBlockTest(BitcoinTestFramework):
         b54 = self.next_block(54, spend=out[15])
         b54.nTime = b35.nTime - 1
         b54.solve()
-        self.sync_blocks([b54], False, request_block=False)
+        self.sync_blocks([b54], False, force_send=True, reject_reason='time-too-old')
 
         # valid timestamp
         self.move_tip(53)
@@ -1078,11 +1078,11 @@ class FullBlockTest(BitcoinTestFramework):
 
         self.move_tip(77)
         b80 = self.next_block(80, spend=out[25])
-        self.sync_blocks([b80], False, request_block=False)
+        self.sync_blocks([b80], False, force_send=True)
         self.save_spendable_output()
 
         b81 = self.next_block(81, spend=out[26])
-        self.sync_blocks([b81], False, request_block=False)  # other chain is same length
+        self.sync_blocks([b81], False, force_send=True)  # other chain is same length
         self.save_spendable_output()
 
         b82 = self.next_block(82, spend=out[27])
@@ -1189,7 +1189,7 @@ class FullBlockTest(BitcoinTestFramework):
         blocks2 = []
         for i in range(89, LARGE_REORG_SIZE + 89):
             blocks2.append(self.next_block("alt" + str(i)))
-        self.sync_blocks(blocks2, False, request_block=False)
+        self.sync_blocks(blocks2, False, force_send=True)
 
         # extend alt chain to trigger re-org
         block = self.next_block("alt" + str(chain1_tip + 1))
@@ -1198,7 +1198,7 @@ class FullBlockTest(BitcoinTestFramework):
         # ... and re-org back to the first chain
         self.move_tip(chain1_tip)
         block = self.next_block(chain1_tip + 1)
-        self.sync_blocks([block], False, request_block=False)
+        self.sync_blocks([block], False, force_send=True)
         block = self.next_block(chain1_tip + 2)
         self.sync_blocks([block], True, timeout=180)
 
@@ -1309,14 +1309,15 @@ class FullBlockTest(BitcoinTestFramework):
         self.nodes[0].disconnect_p2ps()
         self.bootstrap_p2p()
 
-    def sync_blocks(self, blocks, success=True, reject_reason=None, request_block=True, reconnect=False, timeout=60):
+    def sync_blocks(self, blocks, success=True, reject_reason=None, force_send=False, reconnect=False, timeout=60):
         """Sends blocks to test node. Syncs and verifies that tip has advanced to most recent block.
 
         Call with success = False if the tip shouldn't advance to the most recent block."""
-        self.nodes[0].p2p.send_blocks_and_test(blocks, self.nodes[0], success=success, reject_reason=reject_reason, request_block=request_block, timeout=timeout, expect_disconnect=reconnect)
+        self.nodes[0].p2p.send_blocks_and_test(blocks, self.nodes[0], success=success, reject_reason=reject_reason, force_send=force_send, timeout=timeout, expect_disconnect=reconnect)
 
         if reconnect:
             self.reconnect_p2p()
+
 
 if __name__ == '__main__':
     FullBlockTest().main()
