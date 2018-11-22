@@ -460,7 +460,7 @@ UniValue protx_update_service(const JSONRPCRequest& request)
     ptx.proTxHash = ParseHashV(request.params[1], "proTxHash");
 
     if (!Lookup(request.params[2].get_str().c_str(), ptx.addr, Params().GetDefaultPort(), false)) {
-        throw std::runtime_error(strprintf("invalid network address %s", request.params[3].get_str()));
+        throw std::runtime_error(strprintf("invalid network address %s", request.params[2].get_str()));
     }
 
     CBLSSecretKey keyOperator = ParseBLSSecretKey(request.params[3].get_str(), "operatorKey");
