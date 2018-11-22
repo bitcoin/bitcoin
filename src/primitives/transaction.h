@@ -12,7 +12,8 @@
 #include "uint256.h"
 
 /** Transaction types */
-enum {
+enum TxType : int16_t
+{
     TRANSACTION_NORMAL = 0,
     TRANSACTION_GOVERNANCE_VOTE = 1000,
 

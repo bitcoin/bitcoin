@@ -5,32 +5,14 @@
 #ifndef CROWN_PLATFORM_NF_TOKENS_MANAGER_H
 #define CROWN_PLATFORM_NF_TOKENS_MANAGER_H
 
-#include <boost/multi_index_container.hpp>
-#include <boost/multi_index/hashed_index.hpp>
-#include <boost/multi_index/member.hpp>
-#include <boost/multi_index/composite_key.hpp>
+#include "nf-token-multiindex-utils.h"
 #include "nf-token.h"
-#include "nf-tokens-single-protocol-manager.h"
 
 class CTransaction;
 class CBlockIndex;
 
 namespace Platform
 {
-    namespace bmx = boost::multi_index;
-
-    namespace Tags
-    {
-        class BlockHash {};
-        class RegTxHash {};
-        class ProtocolId {};
-        //class TokenId {};
-        class ProtocolIdTokenId {};
-        class ProtocolIdOwnerId {};
-        //class OwnerId {};
-        //class AdminId {};
-    }
-
     class NfTokenIndex
     {
     public:

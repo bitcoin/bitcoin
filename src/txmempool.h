@@ -7,11 +7,14 @@
 #define BITCOIN_TXMEMPOOL_H
 
 #include <list>
+#include <map>
 
 #include "amount.h"
 #include "coins.h"
 #include "primitives/transaction.h"
 #include "sync.h"
+
+#include "platform/specialtx-common.h"
 
 class CAutoFile;
 
@@ -87,7 +90,7 @@ public:
  * an input of a transaction in the pool, it is dropped,
  * as are non-standard transactions.
  */
-class CTxMemPool
+class CTxMemPool : public SpecTxMemPoolHandlerRegistrator
 {
 private:
     bool fSanityCheck; //! Normally false, true if -checkmempool or -regtest
@@ -133,6 +136,9 @@ public:
     void ApplyDeltas(const uint256 hash, double &dPriorityDelta, CAmount &nFeeDelta);
     void ClearPrioritisation(const uint256 hash);
 
+    bool ExistsSpecTxConflict(const CTransaction & tx) const;
+    void RemoveSpecTxConflicts(const CTransaction &tx, std::list<CTransaction>& removed);
+
     unsigned long size()
     {
         LOCK(cs);
@@ -164,6 +170,14 @@ public:
     bool ReadFeeEstimates(CAutoFile& filein);
 
     size_t DynamicMemoryUsage() const;
+
+public:
+    // SpecTxMemPoolHandlerRegistrator i-face
+    bool RegisterHandler(TxType specialTxType, SpecTxMemPoolHandler * handler) override;
+    void UnregisterHandler(TxType specialTxType) override;
+
+private:
+    std::map<TxType, SpecTxMemPoolHandler *> m_specTxHandlers;
 };
 
 /** 

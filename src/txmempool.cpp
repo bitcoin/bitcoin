@@ -434,7 +434,15 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry)
         nTransactionsUpdated++;
         totalTxSize += entry.GetTxSize();
         cachedInnerUsage += entry.DynamicMemoryUsage();
+
+        // If special transaciton, add using appropriate tx handler if registered
+        auto handlerIt = m_specTxHandlers.find(static_cast<TxType>(tx.nType));
+        if (handlerIt != m_specTxHandlers.end() && handlerIt->second != nullptr)
+        {
+            return handlerIt->second->AddMemPoolTx(tx); //TODO: client code doesn't check the return value
+        }
     }
+
     return true;
 }
 
@@ -475,6 +483,13 @@ void CTxMemPool::remove(const CTransaction &origTx, std::list<CTransaction>& rem
             }
             BOOST_FOREACH(const CTxIn& txin, tx.vin)
                 mapNextTx.erase(txin.prevout);
+
+            // If special transaciton, remove using appropriate tx handler if registered
+            auto handlerIt = m_specTxHandlers.find(static_cast<TxType>(tx.nType));
+            if (handlerIt != m_specTxHandlers.end() && handlerIt->second != nullptr)
+            {
+                handlerIt->second->RemoveMemPoolTx(tx);
+            }
 
             removed.push_back(tx);
             totalTxSize -= mapTx[hash].GetTxSize();
@@ -547,6 +562,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransaction>& vtx, unsigned i
         std::list<CTransaction> dummy;
         remove(tx, dummy, false);
         removeConflicts(tx, conflicts);
+        RemoveSpecTxConflicts(tx, conflicts);
         ClearPrioritisation(tx.GetHash());
     }
 }
@@ -731,6 +747,48 @@ void CTxMemPool::ClearPrioritisation(const uint256 hash)
     mapDeltas.erase(hash);
 }
 
+bool CTxMemPool::ExistsSpecTxConflict(const CTransaction & tx) const
+{
+    LOCK(cs);
+
+    auto handlerIt = m_specTxHandlers.find(static_cast<TxType>(tx.nType));
+    if (handlerIt != m_specTxHandlers.end() && handlerIt->second != nullptr)
+        return handlerIt->second->ExistsTxConflict(tx);
+    return false;
+}
+
+void CTxMemPool::RemoveSpecTxConflicts(const CTransaction &tx, std::list<CTransaction>& removed)
+{
+    LOCK(cs);
+
+    auto handlerIt = m_specTxHandlers.find(static_cast<TxType>(tx.nType));
+    if (handlerIt != m_specTxHandlers.end() && handlerIt->second != nullptr)
+    {
+        uint256 conflictTxHash = handlerIt->second->GetConflictTxIfExists(tx);
+        if (!conflictTxHash.IsNull())
+        {
+            auto txIt = mapTx.find(conflictTxHash);
+            if (txIt != mapTx.end())
+            {
+                this->remove(txIt->second.GetTx(), removed, true);
+            }
+        }
+    }
+}
+
+bool CTxMemPool::RegisterHandler(TxType specialTxType, SpecTxMemPoolHandler * handler)
+{
+    LOCK(cs);
+    if (handler != nullptr)
+        return m_specTxHandlers.emplace(std::make_pair(specialTxType, handler)).second;
+    return  false;
+}
+
+void CTxMemPool::UnregisterHandler(TxType specialTxType)
+{
+    LOCK(cs);
+    m_specTxHandlers.erase(specialTxType);
+}
 
 CCoinsViewMemPool::CCoinsViewMemPool(CCoinsView *baseIn, CTxMemPool &mempoolIn) : CCoinsViewBacked(baseIn), mempool(mempoolIn) { }
 

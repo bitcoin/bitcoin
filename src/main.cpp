@@ -1054,6 +1054,9 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
                          error("AcceptToMemoryPool : nonstandard transaction: %s", reason),
                          REJECT_NONSTANDARD, reason);
 
+    if (pool.ExistsSpecTxConflict(tx))
+        return state.DoS(0, false, REJECT_DUPLICATE, "spec-tx-dup");
+
     // is it already in the memory pool?
     uint256 hash = tx.GetHash();
     if (pool.exists(hash))
