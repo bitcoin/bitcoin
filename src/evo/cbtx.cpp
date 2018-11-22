@@ -25,7 +25,7 @@ bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidatio
         return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-payload");
     }
 
-    if (cbTx.nVersion > CCbTx::CURRENT_VERSION) {
+    if (cbTx.nVersion == 0 || cbTx.nVersion > CCbTx::CURRENT_VERSION) {
         return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-version");
     }
 
