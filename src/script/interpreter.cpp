@@ -1119,7 +1119,8 @@ public:
                 nCodeSeparators++;
         }
         ::WriteCompactSize(s, scriptCode.size() - nCodeSeparators);
-        it = itBegin;
+        if (nCodeSeparators > 0)
+            it = itBegin;
         while (scriptCode.GetOp(it, opcode)) {
             if (opcode == OP_CODESEPARATOR) {
                 s.write((char*)&itBegin[0], it-itBegin-1);
