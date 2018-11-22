@@ -72,5 +72,6 @@ namespace Platform
 
         if (!NfTokensManager::Instance().AddNfToken(nfTokenRegTx.GetNfToken(), tx, pindex))
             return state.DoS(100, false, REJECT_DUPLICATE/*REJECT_CONFLICT*/, "token-reg-tx-conflit");
+        return true;
     }
 }
