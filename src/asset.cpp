@@ -1360,7 +1360,8 @@ bool AssetRange(const CAmount& amount, int precision, bool isInputRange)
 }
 bool CAssetDB::ScanAssets(const int count, const int from, const UniValue& oOptions, UniValue& oRes) {
 	string strTxid = "";
-	vector<vector<unsigned char> > vchAddresses, vchAsset;
+	vector<vector<unsigned char> > vchAddresses;
+	vector<unsigned char> vchAsset;
 	int nStartBlock = 0;
 	if (!oOptions.isNull()) {
 		const UniValue &txid = find_value(oOptions, "txid");
