@@ -1443,7 +1443,7 @@ bool CAssetAllocationTransactionsDB::ScanAssetAllocationIndex(const int count, c
 					bParseKey = true;
 				}
 				else {
-					const UniValue &receiverAddress = find_value(sender, "receiver_address");
+					const UniValue &receiverAddress = find_value(receiver, "receiver_address");
 					if (receiverAddress.isStr()) {
 						vecSenders.push_back(receiverAddress.get_str());
 						bParseKey = true;
