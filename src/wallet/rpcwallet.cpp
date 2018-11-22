@@ -4793,7 +4793,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "dumpwallet",                       &dumpwallet,                    {"filename"} },
     { "wallet",             "encryptwallet",                    &encryptwallet,                 {"passphrase"} },
     { "wallet",             "getaddressinfo",                   &getaddressinfo,                {"address"} },
-    { "wallet",             "getbalance",                       &getbalance,                    {"trusted_only","minconf","include_watchonly"} },
+    { "wallet",             "getbalance",                       &getbalance,                    {"trusted_only|account","minconf","include_watchonly"} },
     { "wallet",             "getnewaddress",                    &getnewaddress,                 {"label|account","address_type"} },
     { "wallet",             "getrawchangeaddress",              &getrawchangeaddress,           {"address_type"} },
     { "wallet",             "getreceivedbyaddress",             &getreceivedbyaddress,          {"address","minconf"} },
