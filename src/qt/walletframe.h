@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -37,8 +37,8 @@ public:
     void setClientModel(ClientModel *clientModel);
 
     bool addWallet(WalletModel *walletModel);
-    bool setCurrentWallet(const QString& name);
-    bool removeWallet(const QString &name);
+    bool setCurrentWallet(WalletModel* wallet_model);
+    bool removeWallet(WalletModel* wallet_model);
     void removeAllWallets();
 
     bool handlePaymentRequest(const SendCoinsRecipient& recipient);
@@ -53,7 +53,7 @@ private:
     QStackedWidget *walletStack;
     BitcoinGUI *gui;
     ClientModel *clientModel;
-    QMap<QString, WalletView*> mapWalletViews;
+    QMap<WalletModel*, WalletView*> mapWalletViews;
 
     bool bOutOfSync;
 
