@@ -35,6 +35,8 @@ class RPCArgument:
         self.idx = idx
         self.convert = False
 
+        self.names, self.idx, self.convert  # make vulture happy; we don't care if they're actually used
+
 def parse_string(s):
     assert s[0] == '"'
     assert s[-1] == '"'
@@ -119,18 +121,6 @@ def main():
         if argname not in rargnames:
             print('ERROR: %s argument %i is named %s in vRPCConvertParams but %s in dispatch table' % (cmdname, argidx, argname, rargnames), file=sys.stderr)
             errors += 1
-
-    # Check for conflicts in vRPCConvertParams conversion
-    # All aliases for an argument must either be present in the
-    # conversion table, or not. Anything in between means an oversight
-    # and some aliases won't work.
-    for cmd in cmds:
-        for arg in cmd.args:
-            convert = [((cmd.name, arg.idx, argname) in mapping) for argname in arg.names]
-            if any(convert) != all(convert):
-                print('ERROR: %s argument %s has conflicts in vRPCConvertParams conversion specifier %s' % (cmd.name, arg.names, convert))
-                errors += 1
-            arg.convert = all(convert)
 
     # Check for conversion difference by argument name.
     # It is preferable for API consistency that arguments with the same name
