@@ -44,7 +44,11 @@ from test_framework.script import (
     hash160,
 )
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    assert_raises_rpc_error,
+    bytes_to_hex_str,
+)
 
 MAX_BLOCK_SIGOPS = 20000
 
@@ -69,16 +73,19 @@ class CBrokenBlock(CBlock):
     def normal_serialize(self):
         return super().serialize()
 
+
 class FullBlockTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.num_nodes = 1
+        self.num_nodes = 2
         self.setup_clean_chain = True
-        self.extra_args = [[]]
+
+    def setup_network(self):
+        # The two nodes are not connected
+        # One is tested on the p2p interface, the other on the rpc interface
+        self.setup_nodes()
 
     def run_test(self):
-        node = self.nodes[0]  # convenience reference to the node
-
-        self.bootstrap_p2p()  # Add one p2p connection to the node
+        self.bootstrap_p2p()  # Add one p2p connection to the node 0
 
         self.block_heights = {}
         self.coinbase_key = CECKey()
@@ -197,7 +204,8 @@ class FullBlockTest(BitcoinTestFramework):
         self.sync_blocks([b12, b13, b14], success=False, reject_reason='bad-cb-amount', reconnect=True)
 
         # New tip should be b13.
-        assert_equal(node.getbestblockhash(), b13.hash)
+        assert_equal(self.nodes[0].getbestblockhash(), b13.hash)
+        assert_equal(self.nodes[1].getbestblockhash(), b13.hash)
 
         # Add a block with MAX_BLOCK_SIGOPS and one with one more sigop
         #     genesis -> b1 (0) -> b2 (1) -> b5 (2) -> b6  (3)
@@ -555,7 +563,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.block_heights[b45.sha256] = self.block_heights[self.tip.sha256] + 1
         self.tip = b45
         self.blocks[45] = b45
-        self.sync_blocks([b45], success=False, reject_reason='bad-cb-missing', reconnect=True)
+        self.sync_blocks([b45], success=False, reject_reason='bad-cb-missing', reconnect=True, rpc_reject='Block does not start with a coinbase')
 
         self.log.info("Reject a block with no transactions")
         self.move_tip(44)
@@ -570,7 +578,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.tip = b46
         assert 46 not in self.blocks
         self.blocks[46] = b46
-        self.sync_blocks([b46], success=False, reject_reason='bad-blk-length', reconnect=True)
+        self.sync_blocks([b46], success=False, reject_reason='bad-blk-length', reconnect=True, rpc_reject='Block does not start with a coinbase')
 
         self.log.info("Reject a block with invalid work")
         self.move_tip(44)
@@ -824,13 +832,13 @@ class FullBlockTest(BitcoinTestFramework):
         tx.vin.append(CTxIn(COutPoint(b64a.vtx[1].sha256, 0)))
         b64a = self.update_block("64a", [tx])
         assert_equal(len(b64a.serialize()), MAX_BLOCK_BASE_SIZE + 8)
-        self.sync_blocks([b64a], success=False, reject_reason='non-canonical ReadCompactSize()')
+        self.sync_blocks([b64a], success=False, reject_reason='non-canonical ReadCompactSize()', rpc_reject='Block decode failed')
 
         # bitcoind doesn't disconnect us for sending a bloated block, but if we subsequently
         # resend the header message, it won't send us the getdata message again. Just
         # disconnect and reconnect and then call sync_blocks.
         # TODO: improve this test to be less dependent on P2P DOS behaviour.
-        node.disconnect_p2ps()
+        self.nodes[0].disconnect_p2ps()
         self.reconnect_p2p()
 
         self.move_tip(60)
@@ -1289,7 +1297,7 @@ class FullBlockTest(BitcoinTestFramework):
         return block
 
     def bootstrap_p2p(self):
-        """Add a P2P connection to the node.
+        """Add a P2P connection to node 0.
 
         Helper to connect and wait for version handshake."""
         self.nodes[0].add_p2p_connection(P2PDataStore())
@@ -1302,21 +1310,42 @@ class FullBlockTest(BitcoinTestFramework):
         self.nodes[0].p2p.wait_for_getheaders(timeout=5)
 
     def reconnect_p2p(self):
-        """Tear down and bootstrap the P2P connection to the node.
+        """Tear down and bootstrap the P2P connection to node 0.
 
         The node gets disconnected several times in this test. This helper
         method reconnects the p2p and restarts the network thread."""
         self.nodes[0].disconnect_p2ps()
         self.bootstrap_p2p()
 
-    def sync_blocks(self, blocks, success=True, reject_reason=None, force_send=False, reconnect=False, timeout=60):
-        """Sends blocks to test node. Syncs and verifies that tip has advanced to most recent block.
+    def sync_blocks(self, blocks, success=True, reject_reason=None, force_send=False, reconnect=False, rpc_reject=None, timeout=60):
+        """Sends blocks to all test nodes. Syncs and verifies that tip has advanced to most recent block.
 
         Call with success = False if the tip shouldn't advance to the most recent block."""
         self.nodes[0].p2p.send_blocks_and_test(blocks, self.nodes[0], success=success, reject_reason=reject_reason, force_send=force_send, timeout=timeout, expect_disconnect=reconnect)
 
+        rpc_send_blocks_and_test(node=self.nodes[1], blocks=blocks, success=success, reject_reason=reject_reason, rpc_reject=rpc_reject)
+
         if reconnect:
             self.reconnect_p2p()
+
+
+def rpc_send_blocks_and_test(*, node, blocks, success, reject_reason, rpc_reject):
+    def submit():
+        for b in blocks:
+            node.submitblock(hexdata=bytes_to_hex_str(b.serialize()))
+
+    if rpc_reject:
+        # reject_reason is ignored
+        assert_raises_rpc_error(code=-22, message=rpc_reject, fun=submit)
+    else:
+        reject_reason = [reject_reason] if reject_reason else []
+        with node.assert_debug_log(expected_msgs=reject_reason):
+            submit()
+
+    if success:
+        assert_equal(node.getbestblockhash(), blocks[-1].hash)
+    else:
+        assert node.getbestblockhash() != blocks[-1].hash
 
 
 if __name__ == '__main__':
