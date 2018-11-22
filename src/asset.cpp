@@ -1414,7 +1414,7 @@ bool CAssetDB::ScanAssets(const int count, const int from, const UniValue& oOpti
 					pcursor->Next();
 					continue;
 				}
-				if (!vchAliasOrAddress.empty() && std::find(vchAddresses.begin(), vchAddresses.end(), txPos.vchAliasOrAddress) != vchAddresses.end())
+				if (!vchAddresses.empty() && std::find(vchAddresses.begin(), vchAddresses.end(), txPos.vchAliasOrAddress) != vchAddresses.end())
 				{
 					pcursor->Next();
 					continue;
