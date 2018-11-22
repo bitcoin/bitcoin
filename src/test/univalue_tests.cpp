@@ -92,6 +92,15 @@ BOOST_AUTO_TEST_CASE(univalue_typecheck)
     BOOST_CHECK_THROW(v4.getKeys(), std::runtime_error);
     BOOST_CHECK_THROW(v4.getValues(), std::runtime_error);
     BOOST_CHECK_THROW(v4.get_obj(), std::runtime_error);
+    BOOST_CHECK(v4.setNumStr("2.01"));
+    BOOST_CHECK_THROW(v4.get_int(), std::runtime_error);
+    BOOST_CHECK_THROW(v4.get_int64(), std::runtime_error);
+    BOOST_CHECK_THROW(v4.get_str(), std::runtime_error);
+    BOOST_CHECK_EQUAL(v4.get_real(), 2.01);
+    BOOST_CHECK_THROW(v4.get_array(), std::runtime_error);
+    BOOST_CHECK_THROW(v4.getKeys(), std::runtime_error);
+    BOOST_CHECK_THROW(v4.getValues(), std::runtime_error);
+    BOOST_CHECK_THROW(v4.get_obj(), std::runtime_error);
 
     UniValue v5;
     BOOST_CHECK(v5.read("[true, 10]"));
