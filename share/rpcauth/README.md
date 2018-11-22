@@ -3,12 +3,16 @@ RPC Tools
 
 ### [RPCAuth](/share/rpcauth) ###
 
-Create login credentials for a JSON-RPC user.
+```
+usage: rpcauth.py [-h] username [password]
 
-Usage:
+Create login credentials for a JSON-RPC user
 
-    ./rpcauth.py <username>
+positional arguments:
+  username    the username for authentication
+  password    leave empty to generate a random password or specify "-" to
+              prompt for password
 
-in which case the script will generate a password. To specify a custom password do:
-
-    ./rpcauth.py <username> <password>
+optional arguments:
+  -h, --help  show this help message and exit
+  ```
