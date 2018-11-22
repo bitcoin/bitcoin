@@ -1416,7 +1416,7 @@ bool CAssetAllocationTransactionsDB::ScanAssetAllocationIndex(const int count, c
 		const UniValue &senders = find_value(oOptions, "senders");
 		if (senders.isArray()) {
 			const UniValue &sendersArray = senders.get_array();
-			for (int i = 0; i < sendersArray.length();i++) {
+			for (int i = 0; i < sendersArray.size();i++) {
 				const UniValue &sender = sendersArray[i].get_obj();
 				const UniValue &senderAlias = find_value(sender, "sender_alias");
 				if (senderAlias.isStr()) {
@@ -1435,7 +1435,7 @@ bool CAssetAllocationTransactionsDB::ScanAssetAllocationIndex(const int count, c
 		const UniValue &receivers = find_value(oOptions, "receivers");
 		if (receivers.isArray()) {
 			const UniValue &receiversArray = senders.get_array();
-			for (int i = 0; i < receiversArray.length(); i++) {
+			for (int i = 0; i < receiversArray.size(); i++) {
 				const UniValue &receiver = receiversArray[i].get_obj();
 				const UniValue &receiverAlias = find_value(receiver, "receiver_alias");
 				if (receiverAlias.isStr()) {
