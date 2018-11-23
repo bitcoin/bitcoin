@@ -287,10 +287,30 @@ CTxDestination CBitcoinAddress::Get() const
         return CNoDestination();
 }
 
-bool CBitcoinAddress::IsDeprecated() const
+bool CBitcoinAddress::IsDeprecated(const std::string& address)
 {
     // If the old constructed address is valid then it's deprecated
-    return CBitcoinAddress(this->ToString(), CChainParams::DEPRECATED_ADDRESS_TYPE).IsValid();
+    return CBitcoinAddress(address, CChainParams::DEPRECATED_ADDRESS_TYPE).IsValid();
+}
+
+std::string CBitcoinAddress::ConvertToNew(const std::string& address)
+{
+    if (IsDeprecated(address))
+    {
+        CTxDestination key = CBitcoinAddress(address, CChainParams::DEPRECATED_ADDRESS_TYPE).Get();
+        return CBitcoinAddress(key).ToString();
+    }
+    return address;
+}
+
+std::string CBitcoinAddress::ConvertToOld(const std::string& address)
+{
+    if (!IsDeprecated(address))
+    {
+        CTxDestination key = CBitcoinAddress(address).Get();
+        return CBitcoinAddress(key, CChainParams::DEPRECATED_ADDRESS_TYPE).ToString();
+    }
+    return address;
 }
 
 bool CBitcoinAddress::GetKeyID(CKeyID& keyID) const

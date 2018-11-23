@@ -69,21 +69,21 @@ BOOST_FIXTURE_TEST_SUITE(Prefix_tests, PrefixFixture)
     BOOST_AUTO_TEST_CASE(OldAddressCheckMultisig)
     {
         // Check that the old address is deprecated
-        BOOST_CHECK(CBitcoinAddress(oldAddressMultisig).IsDeprecated());
-        // Get destination for old address
-        CTxDestination dest = CBitcoinAddress(oldAddressMultisig, CChainParams::DEPRECATED_ADDRESS_TYPE).Get();
+        BOOST_CHECK(CBitcoinAddress::IsDeprecated(oldAddressMultisig));
+        // Get new address from the old one
+        std::string newAddress = CBitcoinAddress::ConvertToNew(oldAddressMultisig);
         // Check that the new address is not deprecated
-        BOOST_CHECK(!CBitcoinAddress(dest).IsDeprecated());
+        BOOST_CHECK(!CBitcoinAddress::IsDeprecated(newAddress));
     }
 
     BOOST_AUTO_TEST_CASE(NewAddressCheckMultisig)
     {
         // Check that the new address is not deprecated
-        BOOST_CHECK(!CBitcoinAddress(newAddressMultisig).IsDeprecated());
-        // Get destination for new address
-        CTxDestination dest = CBitcoinAddress(newAddressMultisig).Get();
+        BOOST_CHECK(!CBitcoinAddress::IsDeprecated(newAddressMultisig));
+        // Get old address from the new one 
+        std::string oldAddress = CBitcoinAddress::ConvertToOld(newAddressMultisig);
         // Check that the old address deprecated
-        BOOST_CHECK(CBitcoinAddress(dest, CChainParams::DEPRECATED_ADDRESS_TYPE).IsDeprecated());
+        BOOST_CHECK(CBitcoinAddress::IsDeprecated(oldAddress));
     }
 
     // TESTNET check
@@ -124,22 +124,22 @@ BOOST_FIXTURE_TEST_SUITE(Prefix_tests, PrefixFixture)
     {
         SelectParams(CBaseChainParams::TESTNET);
         // Check that the old address is deprecated
-        BOOST_CHECK(CBitcoinAddress(testnetOldAddressMultisig).IsDeprecated());
-        // Get destination for old address
-        CTxDestination dest = CBitcoinAddress(testnetOldAddressMultisig, CChainParams::DEPRECATED_ADDRESS_TYPE).Get();
+        BOOST_CHECK(CBitcoinAddress::IsDeprecated(testnetOldAddressMultisig));
+        // Get new address from the old one
+        std::string newAddress = CBitcoinAddress::ConvertToNew(testnetOldAddressMultisig);
         // Check that the new address is not deprecated
-        BOOST_CHECK(!CBitcoinAddress(dest).IsDeprecated());
+        BOOST_CHECK(!CBitcoinAddress::IsDeprecated(newAddress));
     }
 
     BOOST_AUTO_TEST_CASE(TestnetNewAddressCheckMultisig)
     {
         SelectParams(CBaseChainParams::TESTNET);
         // Check that the new address is not deprecated
-        BOOST_CHECK(!CBitcoinAddress(testnetNewAddressMultisig).IsDeprecated());
-        // Get destination for new address
-        CTxDestination dest = CBitcoinAddress(testnetNewAddressMultisig).Get();
+        BOOST_CHECK(!CBitcoinAddress::IsDeprecated(testnetNewAddressMultisig));
+        // Get old address from the new one 
+        std::string oldAddress = CBitcoinAddress::ConvertToOld(testnetNewAddressMultisig);
         // Check that the old address deprecated
-        BOOST_CHECK(CBitcoinAddress(dest, CChainParams::DEPRECATED_ADDRESS_TYPE).IsDeprecated());
+        BOOST_CHECK(CBitcoinAddress::IsDeprecated(oldAddress));
     }
 
 BOOST_AUTO_TEST_SUITE_END()

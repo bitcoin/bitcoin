@@ -85,13 +85,8 @@ public:
 
         if (ser_action.ForRead())
         {
-            if (CBitcoinAddress(sAddress).IsDeprecated())
-            {
-                // If the address is deprecated then get the new address
-                // based on destination of old one
-                CTxDestination key = CBitcoinAddress(sAddress, CChainParams::DEPRECATED_ADDRESS_TYPE).Get();
-                sAddress = CBitcoinAddress(key).ToString();
-            }
+            // If the address is not depricated then the value won't be converted
+            sAddress = CBitcoinAddress::ConvertToNew(sAddress);
 
             address = QString::fromStdString(sAddress);
             label = QString::fromStdString(sLabel);
