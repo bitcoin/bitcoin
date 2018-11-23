@@ -1470,9 +1470,9 @@ bool CAssetAllocationTransactionsDB::ScanAssetAllocationIndex(const int count, c
 					continue;
 				if (!strAsset.empty() && strAsset != contents[1])
 					continue;
-				if (!vecSenders.empty() && std::find(vecSenders.begin(), vecSenders.end(), contents[2]) != vecSenders.end())
+				if (!vecSenders.empty() && std::find(vecSenders.begin(), vecSenders.end(), contents[2]) == vecSenders.end())
 					continue;
-				if (!vecReceivers.empty() && std::find(vecReceivers.begin(), vecReceivers.end(), contents[3]) != vecReceivers.end())
+				if (!vecReceivers.empty() && std::find(vecReceivers.begin(), vecReceivers.end(), contents[3]) == vecReceivers.end())
 					continue;
 			}
 			index += 1;
