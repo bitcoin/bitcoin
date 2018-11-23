@@ -71,11 +71,6 @@ Q_DECLARE_METATYPE(bool*)
 Q_DECLARE_METATYPE(CAmount)
 Q_DECLARE_METATYPE(uint256)
 
-static void InitMessage(const std::string& message)
-{
-    noui_InitMessage(message);
-}
-
 /** Translate string to current locale using Qt. */
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = [](const char* psz) {
     return QCoreApplication::translate("bitcoin-core", psz).toStdString();
@@ -561,10 +556,12 @@ int main(int argc, char *argv[])
 #endif
     SetupEnvironment();
 
-    // Connect bitcoind signal handlers
-    noui_connect();
-
     std::unique_ptr<interfaces::Node> node = interfaces::MakeNode();
+
+    // Subscribe to global signals from core
+    std::unique_ptr<interfaces::Handler> handler_message_box = node->handleMessageBox(noui_ThreadSafeMessageBox);
+    std::unique_ptr<interfaces::Handler> handler_question = node->handleQuestion(noui_ThreadSafeQuestion);
+    std::unique_ptr<interfaces::Handler> handler_init_message = node->handleInitMessage(noui_InitMessage);
 
     // Do not refer to data directory yet, this can be overridden by Intro::pickDataDirectory
 
@@ -698,9 +695,6 @@ int main(int argc, char *argv[])
     app.parameterSetup();
     // Load GUI settings from QSettings
     app.createOptionsModel(gArgs.GetBoolArg("-resetguisettings", false));
-
-    // Subscribe to global signals from core
-    std::unique_ptr<interfaces::Handler> handler = node->handleInitMessage(InitMessage);
 
     if (gArgs.GetBoolArg("-splash", DEFAULT_SPLASHSCREEN) && !gArgs.GetBoolArg("-min", false))
         app.createSplashScreen(networkStyle.data());
