@@ -2629,6 +2629,14 @@ void CConnman::RelayTransaction(const CTransaction& tx)
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)
     {
+        if (nInv == MSG_TXLOCK_REQUEST) {
+            // Additional filtering for lock requests.
+            // Make it here because lock request processing
+            // differs from simple tx processing in PushInventory
+            // and tx info will not be available there.
+            LOCK(pnode->cs_filter);
+            if(pnode->pfilter && !pnode->pfilter->IsRelevantAndUpdate(tx)) continue;
+        }
         pnode->PushInventory(inv);
     }
 }
@@ -2650,6 +2658,19 @@ void CConnman::RelayInvFiltered(CInv &inv, const CTransaction& relatedTx, const 
             LOCK(pnode->cs_filter);
             if(pnode->pfilter && !pnode->pfilter->IsRelevantAndUpdate(relatedTx))
                 continue;
+        }
+        pnode->PushInventory(inv);
+    }
+}
+
+void CConnman::RelayInvFiltered(CInv &inv, const uint256& relatedTxHash, const int minProtoVersion)
+{
+    LOCK(cs_vNodes);
+    for (const auto& pnode : vNodes) {
+        if(pnode->nVersion < minProtoVersion) continue;
+        {
+            LOCK(pnode->cs_filter);
+            if(pnode->pfilter && !pnode->pfilter->contains(relatedTxHash)) continue;
         }
         pnode->PushInventory(inv);
     }
