@@ -698,6 +698,36 @@ BOOST_FIXTURE_TEST_SUITE(TestBudgetDraft, BudgetDraftFixture)
         BOOST_CHECK_EQUAL(budget.GetBudgetDrafts().front()->GetHash(), draft.GetHash());
     }
 
+    BOOST_AUTO_TEST_CASE(AddNewVote)
+    {
+        std::vector<CTxBudgetPayment> txBudgetPayments;
+        txBudgetPayments.push_back(GetPayment(proposalA));
+
+        BudgetDraft draft(blockStart, txBudgetPayments, mn1.vin, keyPairMn);
+        BudgetDraftVote vote(mn1.vin, draft.GetHash());
+
+        draft.AddOrUpdateVote(false, vote, error);
+
+        BOOST_REQUIRE(!draft.GetVotes().empty());
+        BOOST_CHECK_EQUAL(mn1.vin.prevout.GetHash(), draft.GetVotes().begin()->first);
+        BOOST_CHECK_EQUAL(vote.GetHash(), draft.GetVotes().begin()->second.GetHash());
+    }
+
+    BOOST_AUTO_TEST_CASE(AddObsoleteVote)
+    {
+        std::vector<CTxBudgetPayment> txBudgetPayments;
+        txBudgetPayments.push_back(GetPayment(proposalA));
+
+        BudgetDraft draft(blockStart, txBudgetPayments, mn1.vin, keyPairMn);
+        BudgetDraftVote vote(mn1.vin, draft.GetHash());
+
+        draft.AddOrUpdateVote(true, vote, error);
+
+        BOOST_REQUIRE(!draft.GetObsoleteVotes().empty());
+        BOOST_CHECK_EQUAL(mn1.vin.prevout.GetHash(), draft.GetObsoleteVotes().begin()->first);
+        BOOST_CHECK_EQUAL(vote.GetHash(), draft.GetObsoleteVotes().begin()->second.GetHash());
+    }
+
 BOOST_AUTO_TEST_SUITE_END()
 
 namespace
@@ -898,7 +928,7 @@ BOOST_FIXTURE_TEST_SUITE(BudgetVoting, BudgetManagerVotingFixture)
 
         BOOST_CHECK(isSubmitted);
         BOOST_CHECK(error.empty());
-        BOOST_CHECK_EQUAL(budget.mapProposals[proposal.GetHash()].mapVotes[vote.vin.prevout.GetHash()].vin, vote.vin);
+        BOOST_CHECK_EQUAL(budget.FindProposal(proposal.GetHash())->mapVotes[vote.vin.prevout.GetHash()].vin, vote.vin);
     }
 
     BOOST_AUTO_TEST_CASE(SubmitVoteTooClose)
@@ -914,7 +944,7 @@ BOOST_FIXTURE_TEST_SUITE(BudgetVoting, BudgetManagerVotingFixture)
 
         BOOST_CHECK(!isSubmitted);
         BOOST_CHECK(!error.empty());
-        BOOST_CHECK(budget.mapProposals[proposal.GetHash()].mapVotes.empty());
+        BOOST_CHECK(budget.FindProposal(proposal.GetHash())->mapVotes.empty());
     }
 
     BOOST_AUTO_TEST_CASE(SubmitVoteTooCloseSecondPayment)
@@ -935,7 +965,7 @@ BOOST_FIXTURE_TEST_SUITE(BudgetVoting, BudgetManagerVotingFixture)
 
         BOOST_CHECK(!isSubmitted);
         BOOST_CHECK(!error.empty());
-        BOOST_CHECK(budget.mapProposals[proposal.GetHash()].mapVotes.empty());
+        BOOST_CHECK(budget.FindProposal(proposal.GetHash())->mapVotes.empty());
     }
 
     BOOST_AUTO_TEST_CASE(SubmitVoteProposalNotExists)
@@ -952,7 +982,7 @@ BOOST_FIXTURE_TEST_SUITE(BudgetVoting, BudgetManagerVotingFixture)
 
         BOOST_CHECK(!isSubmitted);
         BOOST_CHECK(!error.empty());
-        BOOST_CHECK(budget.mapProposals[proposal.GetHash()].mapVotes.empty());
+        BOOST_CHECK(budget.FindProposal(proposal.GetHash())->mapVotes.empty());
     }
 
     BOOST_AUTO_TEST_CASE(UpdateProposalSuccess)
@@ -984,7 +1014,7 @@ BOOST_FIXTURE_TEST_SUITE(BudgetVoting, BudgetManagerVotingFixture)
 
         BOOST_CHECK(isSubmitted);
         BOOST_CHECK(error.empty());
-        BOOST_CHECK_EQUAL(budget.mapProposals[proposal.GetHash()].mapVotes[vote.vin.prevout.GetHash()].vin, vote.vin);
+        BOOST_CHECK_EQUAL(budget.FindProposal(proposal.GetHash())->mapVotes[vote.vin.prevout.GetHash()].vin, vote.vin);
     }
 
     BOOST_AUTO_TEST_CASE(UpdateProposalNotExists)
@@ -1017,7 +1047,7 @@ BOOST_FIXTURE_TEST_SUITE(BudgetVoting, BudgetManagerVotingFixture)
 
         BOOST_CHECK(!isSubmitted);
         BOOST_CHECK(!error.empty());
-        BOOST_CHECK(budget.mapProposals[proposal.GetHash()].mapVotes.empty());
+        BOOST_CHECK(budget.FindProposal(proposal.GetHash())->mapVotes.empty());
     }
 
     BOOST_AUTO_TEST_CASE(UpdateProposalTooClose)
@@ -1049,7 +1079,7 @@ BOOST_FIXTURE_TEST_SUITE(BudgetVoting, BudgetManagerVotingFixture)
 
         BOOST_CHECK(!isSubmitted);
         BOOST_CHECK(!error.empty());
-        BOOST_CHECK(budget.mapProposals[proposal.GetHash()].mapVotes.empty());
+        BOOST_CHECK(budget.FindProposal(proposal.GetHash())->mapVotes.empty());
     }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -1129,7 +1159,7 @@ BOOST_FIXTURE_TEST_SUITE(TestnetBudgetVoting, TestnetBudgetManagerVotingFixture)
 
         BOOST_CHECK(isSubmitted);
         BOOST_CHECK(error.empty());
-        BOOST_CHECK_EQUAL(budget.mapProposals[proposal.GetHash()].mapVotes[vote.vin.prevout.GetHash()].vin, vote.vin);
+        BOOST_CHECK_EQUAL(budget.FindProposal(proposal.GetHash())->mapVotes[vote.vin.prevout.GetHash()].vin, vote.vin);
     }
 
     BOOST_AUTO_TEST_CASE(SubmitVoteTooClose)
@@ -1145,7 +1175,7 @@ BOOST_FIXTURE_TEST_SUITE(TestnetBudgetVoting, TestnetBudgetManagerVotingFixture)
 
         BOOST_CHECK(!isSubmitted);
         BOOST_CHECK(!error.empty());
-        BOOST_CHECK(budget.mapProposals[proposal.GetHash()].mapVotes.empty());
+        BOOST_CHECK(budget.FindProposal(proposal.GetHash())->mapVotes.empty());
     }
 
 BOOST_AUTO_TEST_SUITE_END()

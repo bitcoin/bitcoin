@@ -1,9 +1,8 @@
 variables:
+  RELEASE_VERSION: "0.12.5.2"
   GIT_STRATEGY: "clone"
-  OUTDIR: "out"
   MAKEJOBS: "-j4"
   CCACHE_SIZE: "100M"
-  GOAL: "install"
   CROWN_CONFIG_ALL: "--disable-reduced-exports --disable-dependency-tracking --prefix=$CI_PROJECT_DIR/depends/$HOST --bindir=$CI_PROJECT_DIR/$OUTDIR/bin --libdir=$CI_PROJECT_DIR/$OUTDIR/lib"
   SDK_URL: "https://bitcoincore.org/depends-sources/sdks"
   WINEDEBUG: "fixme-all"
@@ -31,48 +30,62 @@ cache:
     - cd crown-$HOST
     - ./configure --cache-file=../config.cache $CROWN_CONFIG_ALL $CROWN_CONFIG
     - make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && make $GOAL V=1 ; false )
+    - if [ -n "$OSX_SDK" ]; then cp Crown-Qt.dmg ../../Crown-Qt.dmg; fi
 
 .job_template: &win64_definition
   variables:
     CROWN_CONFIG: "--enable-mingw"
     HOST: "x86_64-w64-mingw32"
+    GOAL: "install"
+    OUTDIR: "Crown-${RELEASE_VERSION}-Win64"
     PACKAGES: "nsis gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64 wine1.6 bc"
 
 .job_template: &win32_definition
   variables:
     CROWN_CONFIG: ""
     HOST: "i686-w64-mingw32"
+    GOAL: "install"
+    OUTDIR: "Crown-${RELEASE_VERSION}-Win32"
     PACKAGES: "nsis g++-mingw-w64-i686 gcc-mingw-w64-i686 binutils-mingw-w64-i686 wine1.6 bc"
 
 .job_template: &linux64_definition
   variables:
     CROWN_CONFIG: "--enable-glibc-back-compat"
     HOST: "x86_64-unknown-linux-gnu"
+    GOAL: "install"
+    OUTDIR: "Crown-${RELEASE_VERSION}-Linux64"
     DEP_OPTS: "USE_LINUX_STATIC_QT5=1"
 
 .job_template: &linux32_definition
   variables:
     CROWN_CONFIG: "--enable-glibc-back-compat"
     HOST: "i686-pc-linux-gnu"
+    GOAL: "install"
     DEP_OPTS: "USE_LINUX_STATIC_QT5=1"
+    OUTDIR: "Crown-${RELEASE_VERSION}-Linux32"
     PACKAGES: "g++-multilib bc"
 
 .job_template: &raspberrypi_definition
   variables:
     CROWN_CONFIG: "--enable-glibc-back-compat"
     HOST: "arm-linux-gnueabihf"
+    GOAL: "install"
+    OUTDIR: "Crown-${RELEASE_VERSION}-RaspberryPi"
     PACKAGES: "g++-arm-linux-gnueabihf"
 
 .job_template: &osx_definition
   variables:
     CROWN_CONFIG: ""
     HOST: "x86_64-apple-darwin11"
+    GOAL: "install deploy"
     OSX_SDK: "10.7"
+    OUTDIR: "Crown-${RELEASE_VERSION}-Osx"
     PACKAGES: "cmake gcc-multilib g++-multilib libcap-dev libbz2-dev"
 
 # Artifact settings for releases and snapshots
 .job_template: &release_definition
   artifacts:
+    name: "$OUTDIR"
     paths:
     - $OUTDIR
   only:
@@ -81,12 +94,31 @@ cache:
 
 .job_template: &snapshot_definition
   artifacts:
+    name: "$OUTDIR"
     paths:
     - $OUTDIR
     expire_in: 2 weeks
   except:
     - master
     - tags
+
+.job_template: &macos_release_definition
+  artifacts:
+    paths:
+    - Crown-Qt.dmg
+  only:
+    - master
+    - tags
+
+.job_template: &macos_snapshot_definition
+  artifacts:
+    paths:
+    - Crown-Qt.dmg
+    expire_in: 2 weeks
+  except:
+    - master
+    - tags
+
 
 # Job definitions for releases
 Win64:
@@ -119,6 +151,11 @@ Osx:
   <<: *job_definition 
   <<: *release_definition
 
+Osx-dmg:
+  <<: *osx_definition
+  <<: *job_definition 
+  <<: *macos_release_definition
+
 # Job definitions for temporary builds (snapshots)
 Win64-snapshot:
   <<: *win64_definition 
@@ -149,6 +186,11 @@ Osx-snapshot:
   <<: *osx_definition
   <<: *job_definition 
   <<: *snapshot_definition 
+
+Osx-snapshot-dmg:
+  <<: *osx_definition
+  <<: *job_definition 
+  <<: *macos_snapshot_definition 
 
 # Trigger the docker build and delivery
 trigger_docker_build:
