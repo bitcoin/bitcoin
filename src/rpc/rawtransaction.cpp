@@ -32,6 +32,7 @@
 #include "evo/specialtx.h"
 #include "evo/providertx.h"
 #include "evo/cbtx.h"
+#include "llmq/quorums_commitment.h"
 
 #include <stdint.h>
 
@@ -165,6 +166,13 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
             UniValue obj;
             cbTx.ToJson(obj);
             entry.push_back(Pair("cbTx", obj));
+        }
+    } else if (tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
+        llmq::CFinalCommitment qcTx;
+        if (GetTxPayload(tx, qcTx)) {
+            UniValue obj;
+            qcTx.ToJson(obj);
+            entry.push_back(Pair("qcTx", obj));
         }
     }
 

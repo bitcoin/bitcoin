@@ -270,6 +270,7 @@ extern const char *MNGOVERNANCEOBJECTVOTE;
 extern const char *MNVERIFY;
 extern const char *GETMNLISTDIFF;
 extern const char *MNLISTDIFF;
+extern const char *QFCOMMITMENT;
 };
 
 /* Get a vector of all valid message types (see above) */
@@ -371,6 +372,7 @@ enum GetDataMsg {
     // Nodes may always request a MSG_CMPCT_BLOCK in a getdata, however,
     // MSG_CMPCT_BLOCK should not appear in any invs except as a part of getdata.
     MSG_CMPCT_BLOCK = 20, //!< Defined in BIP152
+    MSG_QUORUM_FINAL_COMMITMENT = 21,
 };
 
 /** inv message data */

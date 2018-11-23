@@ -514,10 +514,15 @@ int GetUTXOConfirmations(const COutPoint& outpoint)
 
 bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 {
+    bool allowEmptyTxInOut = false;
+    if (tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
+        allowEmptyTxInOut = true;
+    }
+
     // Basic checks that don't depend on any context
-    if (tx.vin.empty())
+    if (!allowEmptyTxInOut && tx.vin.empty())
         return state.DoS(10, false, REJECT_INVALID, "bad-txns-vin-empty");
-    if (tx.vout.empty())
+    if (!allowEmptyTxInOut && tx.vout.empty())
         return state.DoS(10, false, REJECT_INVALID, "bad-txns-vout-empty");
     // Size limits
     if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > MAX_LEGACY_BLOCK_SIZE)
@@ -580,7 +585,8 @@ bool ContextualCheckTransaction(const CTransaction& tx, CValidationState &state,
                 tx.nType != TRANSACTION_PROVIDER_UPDATE_SERVICE &&
                 tx.nType != TRANSACTION_PROVIDER_UPDATE_REGISTRAR &&
                 tx.nType != TRANSACTION_PROVIDER_UPDATE_REVOKE &&
-                tx.nType != TRANSACTION_COINBASE) {
+                tx.nType != TRANSACTION_COINBASE &&
+                tx.nType != TRANSACTION_QUORUM_COMMITMENT) {
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-type");
             }
             if (tx.IsCoinBase() && tx.nType != TRANSACTION_COINBASE)
@@ -644,6 +650,11 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 
     if (!ContextualCheckTransaction(tx, state, Params().GetConsensus(), chainActive.Tip()))
         return error("%s: ContextualCheckTransaction: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
+
+    if (tx.nVersion == 3 && tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
+        // quorum commitment is not allowed outside of blocks
+        return state.DoS(100, false, REJECT_INVALID, "qc-not-allowed");
+    }
 
     if (!CheckSpecialTx(tx, chainActive.Tip(), state))
         return false;

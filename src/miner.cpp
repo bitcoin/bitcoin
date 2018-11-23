@@ -33,6 +33,8 @@
 #include "evo/simplifiedmns.h"
 #include "evo/deterministicmns.h"
 
+#include "llmq/quorums_blockprocessor.h"
+
 #include <algorithm>
 #include <boost/thread.hpp>
 #include <boost/tuple/tuple.hpp>
@@ -149,6 +151,16 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     nLockTimeCutoff = (STANDARD_LOCKTIME_VERIFY_FLAGS & LOCKTIME_MEDIAN_TIME_PAST)
                        ? nMedianTimePast
                        : pblock->GetBlockTime();
+
+    if (fDIP0003Active_context) {
+        for (auto& p : Params().GetConsensus().llmqs) {
+            CTransactionRef qcTx;
+            if (llmq::quorumBlockProcessor->GetMinableCommitmentTx(p.first, pindexPrev, qcTx)) {
+                pblock->vtx.emplace_back(qcTx);
+                pblocktemplate->vTxFees.emplace_back(0);
+            }
+        }
+    }
 
     addPriorityTxs();
 

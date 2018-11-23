@@ -780,6 +780,13 @@ class DIP3Test(BitcoinTestFramework):
 
         block = create_block(int(tip_hash, 16), coinbase)
         block.vtx += vtx
+
+        # Add quorum commitments from template
+        for tx in bt['transactions']:
+            tx2 = FromHex(CTransaction(), tx['data'])
+            if tx2.nType == 6:
+                block.vtx.append(tx2)
+
         block.hashMerkleRoot = block.calc_merkle_root()
         block.solve()
         result = node.submitblock(ToHex(block))

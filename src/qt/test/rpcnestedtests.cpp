@@ -15,6 +15,7 @@
 #include "util.h"
 
 #include "evo/deterministicmns.h"
+#include "llmq/quorums_init.h"
 
 #include <QDir>
 #include <QtGlobal>
@@ -53,6 +54,9 @@ void RPCNestedTests::rpcNestedTests()
     pblocktree = new CBlockTreeDB(1 << 20, true);
     pcoinsdbview = new CCoinsViewDB(1 << 23, true);
     deterministicMNManager = new CDeterministicMNManager(*evoDb);
+
+    llmq::InitLLMQSystem(*evoDb);
+
     pcoinsTip = new CCoinsViewCache(pcoinsdbview);
     InitBlockIndex(chainparams);
     {

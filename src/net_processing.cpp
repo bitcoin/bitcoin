@@ -44,6 +44,8 @@
 
 #include "evo/deterministicmns.h"
 #include "evo/simplifiedmns.h"
+#include "llmq/quorums_commitment.h"
+#include "llmq/quorums_blockprocessor.h"
 
 #include <boost/thread.hpp>
 
@@ -962,6 +964,9 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 
     case MSG_MASTERNODE_VERIFY:
         return mnodeman.mapSeenMasternodeVerification.count(inv.hash);
+
+    case MSG_QUORUM_FINAL_COMMITMENT:
+        return llmq::quorumBlockProcessor->HasMinableCommitment(inv.hash);
     }
 
     // Don't know what it is, just say we already got one
@@ -1271,6 +1276,14 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                 if (!push && inv.type == MSG_MASTERNODE_VERIFY) {
                     if(mnodeman.mapSeenMasternodeVerification.count(inv.hash)) {
                         connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::MNVERIFY, mnodeman.mapSeenMasternodeVerification[inv.hash]));
+                        push = true;
+                    }
+                }
+
+                if (!push && (inv.type == MSG_QUORUM_FINAL_COMMITMENT)) {
+                    llmq::CFinalCommitment o;
+                    if (llmq::quorumBlockProcessor->GetMinableCommitmentByHash(inv.hash, o)) {
+                        connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::QFCOMMITMENT, o));
                         push = true;
                     }
                 }
@@ -2885,6 +2898,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             sporkManager.ProcessSpork(pfrom, strCommand, vRecv, connman);
             masternodeSync.ProcessMessage(pfrom, strCommand, vRecv);
             governance.ProcessMessage(pfrom, strCommand, vRecv, connman);
+            llmq::quorumBlockProcessor->ProcessMessage(pfrom, strCommand, vRecv, connman);
         }
         else
         {
