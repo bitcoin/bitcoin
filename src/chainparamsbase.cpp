@@ -42,6 +42,21 @@ public:
 };
 static CBaseTestNetParams testNetParams;
 
+/**
+ * Devnet
+ */
+class CBaseDevNetParams : public CBaseChainParams
+{
+public:
+    CBaseDevNetParams(const std::string &dataDir)
+    {
+        nRPCPort = 19342;
+        strDataDir = dataDir;
+    }
+};
+static CBaseDevNetParams *devNetParams;
+
+
 /*
  * Regression test
  */
@@ -80,6 +95,14 @@ const CBaseChainParams& BaseParams()
 
 void SelectBaseParams(CBaseChainParams::Network network)
 {
+    if (network == CBaseChainParams::DEVNET) {
+        std::string devNetName = GetDevNetName();
+        assert(!devNetName.empty());
+        devNetParams = new CBaseDevNetParams(devNetName);
+        pCurrentBaseParams = devNetParams;
+        return;
+    }
+
     switch (network) {
     case CBaseChainParams::MAIN:
         pCurrentBaseParams = &mainParams;
@@ -102,10 +125,15 @@ void SelectBaseParams(CBaseChainParams::Network network)
 CBaseChainParams::Network NetworkIdFromCommandLine()
 {
     bool fRegTest = GetBoolArg("-regtest", false);
+    bool fDevNet = IsArgSet("-devnet");
     bool fTestNet = GetBoolArg("-testnet", false);
 
-    if (fTestNet && fRegTest)
+    int nameParamsCount = (fRegTest ? 1 : 0) + (fDevNet ? 1 : 0) + (fTestNet ? 1 : 0);
+    if (nameParamsCount > 1)
         return CBaseChainParams::MAX_NETWORK_TYPES;
+
+    if (fDevNet)
+        return CBaseChainParams::DEVNET;
     if (fRegTest)
         return CBaseChainParams::REGTEST;
     if (fTestNet)
@@ -121,6 +149,14 @@ bool SelectBaseParamsFromCommandLine()
 
     SelectBaseParams(network);
     return true;
+}
+
+std::string GetDevNetName()
+{
+    // This function should never be called for non-devnets
+    assert(IsArgSet("-devnet"));
+    std::string devNetName = GetArg("-devnet", "");
+    return "devnet" + (devNetName.empty() ? "" : "-" + devNetName);
 }
 
 bool AreBaseParamsConfigured()
