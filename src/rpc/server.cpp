@@ -142,10 +142,6 @@ std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKey)
     return ParseHexV(find_value(o, strKey), strKey);
 }
 
-/**
- * Note: This interface may still be subject to change.
- */
-
 std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest& helpreq) const
 {
     std::string strRet;
@@ -207,11 +203,9 @@ UniValue help(const JSONRPCRequest& jsonRequest)
             RPCHelpMan{"help",
                 "\nList all commands, or get help for a specified command.\n",
                 {
-                    {"command", RPCArg::Type::STR, true},
+                    {"command", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "The command to get help on"},
                 }}
                 .ToString() +
-            "\nArguments:\n"
-            "1. \"command\"     (string, optional) The command to get help on\n"
             "\nResult:\n"
             "\"text\"     (string) The help text\n"
         );
@@ -256,9 +250,6 @@ static UniValue uptime(const JSONRPCRequest& jsonRequest)
 }
 
 // clang-format off
-/**
- * Call Table
- */
 static const CRPCCommand vRPCCommands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------

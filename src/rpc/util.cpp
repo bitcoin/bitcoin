@@ -129,10 +129,124 @@ UniValue DescribeAddress(const CTxDestination& dest)
     return boost::apply_visitor(DescribeAddressVisitor(), dest);
 }
 
+struct Section {
+    Section(const std::string& left, const std::string& right)
+        : m_left{left}, m_right{right} {}
+    const std::string m_left;
+    const std::string m_right;
+};
+
+struct Sections {
+    std::vector<Section> m_sections;
+    size_t m_max_pad{0};
+
+    void PushSection(const Section& s)
+    {
+        m_max_pad = std::max(m_max_pad, s.m_left.size());
+        m_sections.push_back(s);
+    }
+
+    enum class OuterType {
+        ARR,
+        OBJ,
+        NAMED_ARG, // Only set on first recursion
+    };
+
+    void Push(const RPCArg& arg, const size_t current_indent = 5, const OuterType outer_type = OuterType::NAMED_ARG)
+    {
+        const auto indent = std::string(current_indent, ' ');
+        const auto indent_next = std::string(current_indent + 2, ' ');
+        switch (arg.m_type) {
+        case RPCArg::Type::STR_HEX:
+        case RPCArg::Type::STR:
+        case RPCArg::Type::NUM:
+        case RPCArg::Type::AMOUNT:
+        case RPCArg::Type::BOOL: {
+            if (outer_type == OuterType::NAMED_ARG) return; // Nothing more to do for non-recursive types on first recursion
+            auto left = indent;
+            if (arg.m_type_str.size() != 0 && outer_type == OuterType::OBJ) {
+                left += "\"" + arg.m_name + "\":" + arg.m_type_str.at(0);
+            } else {
+                left += outer_type == OuterType::OBJ ? arg.ToStringObj() : arg.ToString();
+            }
+            left += ",";
+            PushSection({left, arg.ToDescriptionString(/* implicitly_required */ outer_type == OuterType::ARR)});
+            break;
+        }
+        case RPCArg::Type::OBJ:
+        case RPCArg::Type::OBJ_USER_KEYS: {
+            const auto right = outer_type == OuterType::NAMED_ARG ? "" : arg.ToDescriptionString(/* implicitly_required */ outer_type == OuterType::ARR);
+            PushSection({indent + "{", right});
+            for (const auto& arg_inner : arg.m_inner) {
+                Push(arg_inner, current_indent + 2, OuterType::OBJ);
+            }
+            if (arg.m_type != RPCArg::Type::OBJ) {
+                PushSection({indent_next + "...", ""});
+            }
+            PushSection({indent + "}" + (outer_type != OuterType::NAMED_ARG ? "," : ""), ""});
+            break;
+        }
+        case RPCArg::Type::ARR: {
+            auto left = indent;
+            left += outer_type == OuterType::OBJ ? "\"" + arg.m_name + "\":" : "";
+            left += "[";
+            const auto right = outer_type == OuterType::NAMED_ARG ? "" : arg.ToDescriptionString(/* implicitly_required */ outer_type == OuterType::ARR);
+            PushSection({left, right});
+            for (const auto& arg_inner : arg.m_inner) {
+                Push(arg_inner, current_indent + 2, OuterType::ARR);
+            }
+            PushSection({indent_next + "...", ""});
+            PushSection({indent + "]" + (outer_type != OuterType::NAMED_ARG ? "," : ""), ""});
+            break;
+        }
+
+            // no default case, so the compiler can warn about missing cases
+        }
+    }
+
+    std::string ToString() const
+    {
+        std::string ret;
+        const size_t pad = m_max_pad + 4;
+        for (const auto& s : m_sections) {
+            if (s.m_right.empty()) {
+                ret += s.m_left;
+                ret += "\n";
+                continue;
+            }
+
+            std::string left = s.m_left;
+            left.resize(pad, ' ');
+            ret += left;
+
+            // Properly pad after newlines
+            std::string right;
+            size_t begin = 0;
+            size_t new_line_pos = s.m_right.find_first_of('\n');
+            while (true) {
+                right += s.m_right.substr(begin, new_line_pos - begin);
+                if (new_line_pos == std::string::npos) {
+                    break; //No new line
+                }
+                right += "\n" + std::string(pad, ' ');
+                begin = s.m_right.find_first_not_of(' ', new_line_pos + 1);
+                if (begin == std::string::npos) {
+                    break; // Empty line
+                }
+                new_line_pos = s.m_right.find_first_of('\n', begin + 1);
+            }
+            ret += right;
+            ret += "\n";
+        }
+        return ret;
+    }
+};
+
 std::string RPCHelpMan::ToString() const
 {
     std::string ret;
 
+    // Oneline summary
     ret += m_name;
     bool is_optional{false};
     for (const auto& arg : m_args) {
@@ -145,13 +259,89 @@ std::string RPCHelpMan::ToString() const
             // If support for positional arguments is deprecated in the future, remove this line
             assert(!is_optional);
         }
-        ret += arg.ToString();
+        ret += arg.ToString(/* oneline */ true);
     }
     if (is_optional) ret += " )";
     ret += "\n";
 
+    // Description
     ret += m_description;
 
+    // Arguments
+    Sections sections;
+    for (size_t i{0}; i < m_args.size(); ++i) {
+        const auto& arg = m_args.at(i);
+
+        if (i == 0) ret += "\nArguments:\n";
+
+        // Push named argument name and description
+        const auto str_wrapper = (arg.m_type == RPCArg::Type::STR || arg.m_type == RPCArg::Type::STR_HEX) ? "\"" : "";
+        sections.m_sections.emplace_back(std::to_string(i + 1) + ". " + str_wrapper + arg.m_name + str_wrapper, arg.ToDescriptionString());
+        sections.m_max_pad = std::max(sections.m_max_pad, sections.m_sections.back().m_left.size());
+
+        // Recursively push nested args
+        sections.Push(arg);
+    }
+    ret += sections.ToString();
+
+    return ret;
+}
+
+std::string RPCArg::ToDescriptionString(const bool implicitly_required) const
+{
+    std::string ret;
+    ret += "(";
+    if (m_type_str.size() != 0) {
+        ret += m_type_str.at(1);
+    } else {
+        switch (m_type) {
+        case Type::STR_HEX:
+        case Type::STR: {
+            ret += "string";
+            break;
+        }
+        case Type::NUM: {
+            ret += "numeric";
+            break;
+        }
+        case Type::AMOUNT: {
+            ret += "numeric or string";
+            break;
+        }
+        case Type::BOOL: {
+            ret += "boolean";
+            break;
+        }
+        case Type::OBJ:
+        case Type::OBJ_USER_KEYS: {
+            ret += "json object";
+            break;
+        }
+        case Type::ARR: {
+            ret += "json array";
+            break;
+        }
+
+            // no default case, so the compiler can warn about missing cases
+        }
+    }
+    if (!implicitly_required) {
+        ret += ", ";
+        if (m_optional) {
+            ret += "optional";
+            if (!m_default_value.empty()) {
+                ret += ", default=" + m_default_value;
+            } else {
+                // TODO enable this assert, when all optional parameters have their default value documented
+                //assert(false);
+            }
+        } else {
+            ret += "required";
+            assert(m_default_value.empty()); // Default value is ignored, and must not be present
+        }
+    }
+    ret += ")";
+    ret += m_description.empty() ? "" : " " + m_description;
     return ret;
 }
 
@@ -185,9 +375,9 @@ std::string RPCArg::ToStringObj() const
     assert(false);
 }
 
-std::string RPCArg::ToString() const
+std::string RPCArg::ToString(const bool oneline) const
 {
-    if (!m_oneline_description.empty()) return m_oneline_description;
+    if (oneline && !m_oneline_description.empty()) return m_oneline_description;
 
     switch (m_type) {
     case Type::STR_HEX:
@@ -215,7 +405,7 @@ std::string RPCArg::ToString() const
     case Type::ARR: {
         std::string res;
         for (const auto& i : m_inner) {
-            res += i.ToString() + ",";
+            res += i.ToString(oneline) + ",";
         }
         return "[" + res + "...]";
     }
