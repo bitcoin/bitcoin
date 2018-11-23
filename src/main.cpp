@@ -1521,7 +1521,7 @@ bool CheckProofOfWork(const CBlockHeader& block)
     return true;
 }
 
-bool WriteBlockToDisk(CBlock& block, CDiskBlockPos& pos)
+bool WriteBlockToDisk(const CBlock& block, CDiskBlockPos& pos)
 {
     // Open history file to append
     CAutoFile fileout(OpenBlockFile(pos), SER_DISK, CLIENT_VERSION);
@@ -1630,7 +1630,7 @@ int64_t GetBlockValue(int nHeight, const CAmount &nFees)
 
     if (Params().NetworkID() == CBaseChainParams::DEVNET)
     {
-        if (nHeight == 1)
+        if (nHeight == 2)
             return 1000000 * COIN;
     }
 
@@ -2406,7 +2406,7 @@ static int64_t nTimePostConnect = 0;
  * Connect a new block to chainActive. pblock is either NULL or a pointer to a CBlock
  * corresponding to pindexNew, to bypass loading it again from disk.
  */
-bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew, CBlock *pblock) {
+bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew, const CBlock *pblock) {
     assert(pindexNew->pprev == chainActive.Tip());
     mempool.check(pcoinsTip);
     // Read block from disk.
@@ -2619,7 +2619,7 @@ static void PruneBlockIndexCandidates() {
  * Try to make some progress towards making pindexMostWork the active block.
  * pblock is either NULL or a pointer to a CBlock corresponding to pindexMostWork.
  */
-static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMostWork, CBlock *pblock) {
+static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMostWork, const CBlock *pblock) {
     AssertLockHeld(cs_main);
     bool fInvalidFound = false;
     const CBlockIndex *pindexOldTip = chainActive.Tip();
@@ -2688,7 +2688,7 @@ static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMo
  * or an activated best chain. pblock is either NULL or a pointer to a block
  * that is already loaded (to avoid loading it again from disk).
  */
-bool ActivateBestChain(CValidationState &state, CBlock *pblock) {
+bool ActivateBestChain(CValidationState &state, const CBlock *pblock) {
     CBlockIndex *pindexNewTip = NULL;
     CBlockIndex *pindexMostWork = NULL;
     do {
@@ -3140,6 +3140,14 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
     if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
         return state.Invalid(error("%s : block's timestamp is too early", __func__),
                              REJECT_INVALID, "time-too-old");
+
+    // Check DevNet
+    if (Params().NetworkID() == CBaseChainParams::DEVNET &&
+        block.hashPrevBlock == Params().HashGenesisBlock() &&
+        block.GetHash() != Params().DevNetGenesisBlock().GetHash()) {
+        return state.DoS(100, error("CheckBlockHeader(): wrong devnet genesis"),
+                         REJECT_INVALID, "devnet-genesis");
+    }
 
     // Check that the block chain matches the known block chain up to a checkpoint
     if (!Checkpoints::CheckBlock(nHeight, hash))
@@ -3705,6 +3713,24 @@ bool LoadBlockIndex()
     return true;
 }
 
+static bool AddGenesisBlock(const CBlock& block, CValidationState& state)
+{
+    // Start new block file
+    unsigned int nBlockSize = ::GetSerializeSize(block, SER_DISK, CLIENT_VERSION);
+    CDiskBlockPos blockPos;
+    if (!FindBlockPos(state, blockPos, nBlockSize+8, 0, block.GetBlockTime()))
+        return error("LoadBlockIndex() : FindBlockPos failed");
+    if (!WriteBlockToDisk(block, blockPos))
+        return error("LoadBlockIndex() : writing genesis block to disk failed");
+    CBlockIndex *pindex = AddToBlockIndex(block);
+    if (!ReceivedBlockTransactions(block, state, pindex, blockPos))
+        return error("LoadBlockIndex() : genesis block not accepted");
+    if (!ActivateBestChain(state, &block))
+        return error("LoadBlockIndex() : genesis block cannot be activated");
+
+    return true;
+}
+
 
 bool InitBlockIndex() {
     LOCK(cs_main);
@@ -3720,20 +3746,15 @@ bool InitBlockIndex() {
     // Only add the genesis block if not reindexing (in which case we reuse the one already on disk)
     if (!fReindex) {
         try {
-            CBlock &block = const_cast<CBlock&>(Params().GenesisBlock());
-            // Start new block file
-            unsigned int nBlockSize = ::GetSerializeSize(block, SER_DISK, CLIENT_VERSION);
-            CDiskBlockPos blockPos;
             CValidationState state;
-            if (!FindBlockPos(state, blockPos, nBlockSize+8, 0, block.GetBlockTime()))
-                return error("LoadBlockIndex() : FindBlockPos failed");
-            if (!WriteBlockToDisk(block, blockPos))
-                return error("LoadBlockIndex() : writing genesis block to disk failed");
-            CBlockIndex *pindex = AddToBlockIndex(block);
-            if (!ReceivedBlockTransactions(block, state, pindex, blockPos))
-                return error("LoadBlockIndex() : genesis block not accepted");
-            if (!ActivateBestChain(state, &block))
-                return error("LoadBlockIndex() : genesis block cannot be activated");
+            if (!AddGenesisBlock(Params().GenesisBlock(), state))
+                return false;
+
+            if (Params().NetworkID() == CBaseChainParams::DEVNET) {
+                if (!AddGenesisBlock(Params().DevNetGenesisBlock(), state))
+                    return false;
+            }
+
             // Force a chainstate write so that when we VerifyDB in a moment, it doesnt check stale data
             return FlushStateToDisk(state, FLUSH_STATE_ALWAYS);
         } catch(std::runtime_error &e) {
@@ -4465,6 +4486,19 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         // Be shy and don't send version until we hear
         if (pfrom->fInbound)
             pfrom->PushVersion();
+
+        if (Params().NetworkID() == CBaseChainParams::DEVNET) {
+            if (pfrom->strSubVer.find(strprintf("devnet=%s", GetDevNetName())) == std::string::npos) {
+                LOCK(cs_main);
+                LogPrintf("connected to wrong devnet. Reported version is %s, expected devnet name is %s\n", pfrom->strSubVer, GetDevNetName());
+                if (!pfrom->fInbound)
+                    Misbehaving(pfrom->GetId(), 100); // don't try to connect again
+                else
+                    Misbehaving(pfrom->GetId(), 1); // whover connected, might just have made a mistake, don't ban him immediately
+                pfrom->fDisconnect = true;
+                return true;
+            }
+        }
 
         pfrom->fClient = !(pfrom->nServices & NODE_NETWORK);
 

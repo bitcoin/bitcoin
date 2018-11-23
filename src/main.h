@@ -226,7 +226,7 @@ int64_t GetMasternodePayment(int nHeight, int64_t blockValue);
 int64_t GetSystemnodePayment(int nHeight, int64_t blockValue);
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock);
 
-bool ActivateBestChain(CValidationState &state, CBlock *pblock = NULL);
+bool ActivateBestChain(CValidationState &state, const CBlock *pblock = NULL);
 int64_t GetBlockValue(int nHeight, const CAmount &nFees);
 
 /** Create a new block index entry for a given block hash */
@@ -399,7 +399,7 @@ public:
 
 
 /** Functions for disk access for blocks */
-bool WriteBlockToDisk(CBlock& block, CDiskBlockPos& pos);
+bool WriteBlockToDisk(const CBlock& block, CDiskBlockPos& pos);
 bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex);
 bool ReadBlockHeaderFromDisk(CBlockHeader& block, const CBlockIndex* pindex);
 
