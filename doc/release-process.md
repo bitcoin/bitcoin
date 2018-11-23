@@ -6,11 +6,12 @@ Before every release candidate:
 * Update translations (ping wumpus on IRC) see [translation_process.md](https://github.com/bitcoin/bitcoin/blob/master/doc/translation_process.md#synchronising-translations).
 
 * Update manpages, see [gen-manpages.sh](https://github.com/bitcoin/bitcoin/blob/master/contrib/devtools/README.md#gen-manpagessh).
+* Update release candidate version in `configure.ac` (`CLIENT_VERSION_RC`)
 
 Before every minor and major release:
 
 * Update [bips.md](bips.md) to account for changes since the last release.
-* Update version in `configure.ac` (don't forget to set `CLIENT_VERSION_IS_RELEASE` to `true`)
+* Update version in `configure.ac` (don't forget to set `CLIENT_VERSION_IS_RELEASE` to `true`) (don't forget to set `CLIENT_VERSION_RC` to `0`)
 * Write release notes (see below)
 * Update `src/chainparams.cpp` nMinimumChainWork with information from the getblockchaininfo rpc.
 * Update `src/chainparams.cpp` defaultAssumeValid with information from the getblockhash rpc.
