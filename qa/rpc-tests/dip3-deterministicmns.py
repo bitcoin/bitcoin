@@ -169,6 +169,7 @@ class DIP3Test(BitcoinTestFramework):
         first_upgrade_count = 5
         mns_after_upgrade = []
         mns_to_restart = []
+        mns_to_restart_later = []
         mns_protx = []
         print("upgrading first %d MNs to use ProTx (but not deterministic MN lists)" % first_upgrade_count)
         for i in range(first_upgrade_count):
@@ -183,6 +184,7 @@ class DIP3Test(BitcoinTestFramework):
             else:
                 # collateral has not moved, so it should still be in the masternode list even after upgrade
                 mns_after_upgrade.append(mns[i])
+                mns_to_restart_later.append(mns[i])
             mns_protx.append(mns[i])
         for i in range(first_upgrade_count, len(mns)):
             mns_after_upgrade.append(mns[i])
@@ -213,6 +215,14 @@ class DIP3Test(BitcoinTestFramework):
 
         print("testing instant send (with mixed ProTx and legacy nodes)")
         self.test_instantsend(10, 5)
+
+        # We still need to restart them as otherwise they won't have the BLS operator key loaded
+        print("restart upgraded nodes which refer to old collaterals")
+        for mn in mns_to_restart_later:
+            print("restarting MN %s" % mn.alias)
+            self.stop_node(mn.idx)
+            self.start_mn(mn)
+            self.force_finish_mnsync_list(mn.node)
 
         print("activating spork15")
         height = self.nodes[0].getblockchaininfo()['blocks']
