@@ -850,6 +850,7 @@ if config.dmg is not None:
             print("Running AppleScript:")
             print(s)
 
+        time.sleep(2) # fixes '112:116: execution error: Finder got an error: Can’t get disk "Dash-Core". (-1728)'
         p = subprocess.Popen(['osascript', '-'], stdin=subprocess.PIPE)
         p.communicate(input=s.encode('utf-8'))
         if p.returncode:
