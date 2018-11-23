@@ -94,6 +94,7 @@ void CActiveDeterministicMasternodeManager::Init()
         return;
     }
 
+    activeMasternodeInfo.proTxHash = mnListEntry->proTxHash;
     activeMasternodeInfo.outpoint = mnListEntry->collateralOutpoint;
     state = MASTERNODE_READY;
 }
@@ -113,6 +114,7 @@ void CActiveDeterministicMasternodeManager::UpdatedBlockTip(const CBlockIndex* p
         if (!mnList.IsMNValid(mnListEntry->proTxHash)) {
             // MN disappeared from MN list
             state = MASTERNODE_REMOVED;
+            activeMasternodeInfo.proTxHash = uint256();
             activeMasternodeInfo.outpoint.SetNull();
             // MN might have reappeared in same block with a new ProTx (with same masternode key)
             Init();

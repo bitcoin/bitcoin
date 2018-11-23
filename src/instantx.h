@@ -8,6 +8,8 @@
 #include "net.h"
 #include "primitives/transaction.h"
 
+#include "evo/deterministicmns.h"
+
 class CTxLockVote;
 class COutPointLock;
 class CTxLockRequest;
@@ -231,7 +233,9 @@ class CTxLockVote
 private:
     uint256 txHash;
     COutPoint outpoint;
+    // TODO remove this member when the legacy masternode code is removed after DIP3 deployment
     COutPoint outpointMasternode;
+    uint256 masternodeProTxHash;
     std::vector<unsigned char> vchMasternodeSignature;
     // local memory only
     int nConfirmedHeight; ///< When corresponding tx is 0-confirmed or conflicted, nConfirmedHeight is -1
@@ -242,15 +246,17 @@ public:
         txHash(),
         outpoint(),
         outpointMasternode(),
+        masternodeProTxHash(),
         vchMasternodeSignature(),
         nConfirmedHeight(-1),
         nTimeCreated(GetTime())
         {}
 
-    CTxLockVote(const uint256& txHashIn, const COutPoint& outpointIn, const COutPoint& outpointMasternodeIn) :
+    CTxLockVote(const uint256& txHashIn, const COutPoint& outpointIn, const COutPoint& outpointMasternodeIn, const uint256& masternodeProTxHashIn) :
         txHash(txHashIn),
         outpoint(outpointIn),
         outpointMasternode(outpointMasternodeIn),
+        masternodeProTxHash(masternodeProTxHashIn),
         vchMasternodeSignature(),
         nConfirmedHeight(-1),
         nTimeCreated(GetTime())
@@ -263,6 +269,11 @@ public:
         READWRITE(txHash);
         READWRITE(outpoint);
         READWRITE(outpointMasternode);
+        if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+            // Starting with spork15 activation, the proTxHash is included. When we bump to >= 70213, we can remove
+            // the surrounding if. We might also remove outpointMasternode as well later
+            READWRITE(masternodeProTxHash);
+        }
         if (!(s.GetType() & SER_GETHASH)) {
             READWRITE(vchMasternodeSignature);
         }

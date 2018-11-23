@@ -37,6 +37,7 @@ struct CActiveMasternodeInfo {
     std::unique_ptr<CBLSSecretKey> blsKeyOperator;
 
     // Initialized while registering Masternode
+    uint256 proTxHash;
     COutPoint outpoint;
     CService service;
 };
