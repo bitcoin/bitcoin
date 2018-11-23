@@ -14,6 +14,7 @@
 #include <boost/assign/list_of.hpp>
 
 #include <assert.h>
+#include <limits>
 
 using namespace boost::assign;
 
@@ -23,6 +24,81 @@ struct SeedSpec6 {
 };
 
 #include "chainparamsseeds.h"
+
+static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
+{
+    CMutableTransaction txNew;
+    txNew.nVersion = 1;
+    txNew.vin.resize(1);
+    txNew.vout.resize(1);
+    txNew.vin[0].scriptSig = CScript() << 486604799 << CScriptNum(4) << std::vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
+    txNew.vout[0].nValue = genesisReward;
+    txNew.vout[0].scriptPubKey = genesisOutputScript;
+
+    CBlock genesis;
+    genesis.nTime    = nTime;
+    genesis.nBits    = nBits;
+    genesis.nNonce   = nNonce;
+    genesis.nVersion .SetGenesisVersion(nVersion);
+    genesis.vtx.push_back(txNew);
+    genesis.hashPrevBlock.SetNull();
+    genesis.hashMerkleRoot = genesis.BuildMerkleTree();
+    return genesis;
+}
+
+static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
+{
+    const char* pszTimestamp = "The inception of Crowncoin 10/Oct/2014";
+    const CScript genesisOutputScript = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
+    return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
+}
+
+static CBlock CreateDevNetGenesisBlock(const uint256 &prevBlockHash, const std::string& devNetName, uint32_t nTime, uint32_t nNonce, uint32_t nBits, const CAmount& genesisReward)
+{
+    assert(!devNetName.empty());
+
+    CMutableTransaction txNew;
+    txNew.nVersion = 1;
+    txNew.vin.resize(1);
+    txNew.vout.resize(1);
+    txNew.vin[0].scriptSig = CScript() << 1 << std::vector<unsigned char>(devNetName.begin(), devNetName.end());
+    txNew.vout[0].nValue = genesisReward;
+    txNew.vout[0].scriptPubKey = CScript() << OP_RETURN;
+
+    CBlock genesis;
+    genesis.nTime    = nTime;
+    genesis.nBits    = nBits;
+    genesis.nNonce   = nNonce;
+    genesis.nVersion.SetGenesisVersion(4);
+    genesis.vtx.push_back(txNew);
+    genesis.hashPrevBlock = prevBlockHash;
+    genesis.hashMerkleRoot = genesis.BuildMerkleTree();
+    return genesis;
+}
+
+static CBlock FindDevNetGenesisBlock(const CChainParams& params, const CBlock &prevBlock, const CAmount& reward)
+{
+    std::string devNetName = GetDevNetName();
+    assert(!devNetName.empty());
+
+    CBlock block = CreateDevNetGenesisBlock(prevBlock.GetHash(), devNetName.c_str(), prevBlock.nTime + 1, 0, prevBlock.nBits, reward);
+
+    arith_uint256 bnTarget;
+    bnTarget.SetCompact(block.nBits);
+
+    for (uint32_t nNonce = 0; nNonce < std::numeric_limits<uint32_t>::max(); nNonce++) {
+        block.nNonce = nNonce;
+
+        uint256 hash = block.GetHash();
+        if (UintToArith256(hash) <= bnTarget)
+            return block;
+    }
+
+    // This is very unlikely to happen as we start the devnet with a very low difficulty. In many cases even the first
+    // iteration of the above loop will give a result already
+    error("FindDevNetGenesisBlock: could not find devnet genesis block for %s", devNetName);
+    assert(false);
+}
 
 /**
  * Main network
@@ -83,6 +159,18 @@ static Checkpoints::MapCheckpoints mapCheckpointsTestnet =
         ;
 static const Checkpoints::CCheckpointData dataTestnet = {
         &mapCheckpointsTestnet,
+        1412760826, // * UNIX timestamp of last checkpoint block
+        0,          // * total number of transactions between genesis and last checkpoint
+                    //   (the tx=... number in the SetBestChain debug.log lines)
+        0           // * estimated number of transactions per day after checkpoint
+    };
+
+static Checkpoints::MapCheckpoints mapCheckpointsDevnet =
+        boost::assign::map_list_of
+        ( 0, uint256S("0x0080ad356118a9ab8db192db66ef77146cc36d958f959251feace550e4ca3d1446"))
+        ;
+static const Checkpoints::CCheckpointData dataDevnet = {
+        &mapCheckpointsDevnet,
         1412760826, // * UNIX timestamp of last checkpoint block
         0,          // * total number of transactions between genesis and last checkpoint
                     //   (the tx=... number in the SetBestChain debug.log lines)
@@ -350,6 +438,93 @@ public:
 static CTestNetParams testNetParams;
 
 /**
+ * Devnet
+ */
+class CDevNetParams : public CChainParams {
+public:
+    CDevNetParams() {
+        networkID = CBaseChainParams::DEVNET;
+        strNetworkID = "dev";
+        nSubsidyHalvingInterval = 210240;
+        bnProofOfWorkLimit = ~arith_uint256(0) >> 8;
+        nMaxTipAge = 6 * 60 * 60;
+
+        nTargetTimespan = 2 * 60 * 60;  // 2 hours
+        nTargetSpacing = 30;      // 30 seconds
+
+        nEnforceBlockUpgradeMajority = 51;
+        nRejectBlockOutdatedMajority = 75;
+        nToCheckBlockUpgradeMajority = 100;
+
+        pchMessageStart[0] = 0x0f;
+        pchMessageStart[1] = 0x18;
+        pchMessageStart[2] = 0x0e;
+        pchMessageStart[3] = 0x06;
+        vAlertPubKey = ParseHex("04977aae0411f4e1757e8682c87ee79180ad577ef0351054e6cda5c9381fcd8c7333e88ac250d3ab3e3aafd5d1c1d946f2ca62372db7f35c84398a878aa145f09a");
+        nDefaultPort = 19342;
+
+        genesis = CreateGenesisBlock(1412760826, 175963287, bnProofOfWorkLimit.GetCompact(), 4, 10 * COIN);
+        hashGenesisBlock = genesis.GetHash();
+        
+        assert(hashGenesisBlock == uint256S("0x0055024546d26a67e2b0a13c86bc841efeeadb7b16155d5ea9a192cf6eeb56e6"));
+        assert(genesis.hashMerkleRoot == uint256S("0x80ad356118a9ab8db192db66ef77146cc36d958f959251feace550e4ca3d1446"));
+
+        devnetGenesis = FindDevNetGenesisBlock(*this, genesis, 10 * COIN);
+        hashDevnetGenesisBlock = devnetGenesis.GetHash();
+
+        vFixedSeeds.clear();
+        vSeeds.clear();
+
+        // Crown addresses start with 'CRW'
+        base58Prefixes[PUBKEY_ADDRESS] = list_of(0x01)(0x75)(0x07).convert_to_container<std::vector<unsigned char> >();
+        base58PrefixesOld[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);
+        // Crown script addresses start with 'CRM'
+        base58Prefixes[SCRIPT_ADDRESS] = list_of(0x01)(0x74)(0xF1).convert_to_container<std::vector<unsigned char> >();
+        base58PrefixesOld[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,28);                   // Crown script addresses start with 'C'
+        base58Prefixes[SECRET_KEY]     = std::vector<unsigned char>(1,128);                  // Crown private keys start with '5'
+        base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x04)(0x88)(0xB2)(0x1E).convert_to_container<std::vector<unsigned char> >();
+        base58Prefixes[EXT_SECRET_KEY] = list_of(0x04)(0x88)(0xAD)(0xE4).convert_to_container<std::vector<unsigned char> >();
+        base58Prefixes[EXT_COIN_TYPE]  = list_of(0x80000048).convert_to_container<std::vector<unsigned char> >();             // Crown BIP44 coin type is '72'
+
+        // Identity addresses start with 'CRP'
+        base58Prefixes[IDENTITY_ADDRESS] = list_of(0x01)(0x74)(0xF6).convert_to_container<std::vector<unsigned char> >();
+        // App service addresses start with 'CRA'
+        base58Prefixes[APP_SERVICE_ADDRESS] = list_of(0x01)(0x74)(0xD5).convert_to_container<std::vector<unsigned char> >();
+        // Title addresses start with 'CRT'
+        base58Prefixes[TITLE_ADDRESS] = list_of(0x01)(0x75)(0x00).convert_to_container<std::vector<unsigned char> >();
+
+        fMiningRequiresPeers = false;
+        fAllowMinDifficultyBlocks = false;
+        fDefaultConsistencyChecks = false;
+        fRequireStandard = false;
+        fMineBlocksOnDemand = false;
+
+        nPoolMaxTransactions = 3;
+    }
+
+    const Checkpoints::CCheckpointData& Checkpoints() const
+    {
+        return dataDevnet;
+    }
+
+    int AuxpowStartHeight() const
+    {
+        return 0;
+    }
+
+    bool StrictChainId() const
+    {
+        return false;
+    }
+
+    bool AllowLegacyBlocks(unsigned) const
+    {
+        return true;
+    }
+};
+static CDevNetParams *devNetParams;
+
+/**
  * Regression test
  */
 class CRegTestParams : public CTestNetParams {
@@ -474,6 +649,9 @@ CChainParams &Params(CBaseChainParams::Network network) {
             return testNetParams;
         case CBaseChainParams::REGTEST:
             return regTestParams;
+        case CBaseChainParams::DEVNET:
+            assert(devNetParams);
+            return *devNetParams;
         case CBaseChainParams::UNITTEST:
             return unitTestParams;
         default:
@@ -483,6 +661,10 @@ CChainParams &Params(CBaseChainParams::Network network) {
 }
 
 void SelectParams(CBaseChainParams::Network network) {
+    if (network == CBaseChainParams::DEVNET) {
+        devNetParams = new CDevNetParams();
+    }
+
     SelectBaseParams(network);
     pCurrentParams = &Params(network);
 }
