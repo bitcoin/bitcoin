@@ -95,6 +95,11 @@ struct Params {
     int nMinimumDifficultyBlocks{0};
     int nHighSubsidyBlocks{0};
     int nHighSubsidyFactor{1};
+
+    // This is temporary until we reset testnet for retesting of the full DIP3 deployment
+    int nTemporaryTestnetForkDIP3Height{0};
+    uint256 nTemporaryTestnetForkDIP3BlockHash;
+    int nTemporaryTestnetForkHeight{0};
 };
 } // namespace Consensus
 

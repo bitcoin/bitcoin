@@ -378,6 +378,11 @@ public:
         // Testnet Dash BIP44 coin type is '1' (All coin's testnet default)
         nExtCoinType = 1;
 
+        // This is temporary until we reset testnet for retesting of the full DIP3 deployment
+        consensus.nTemporaryTestnetForkDIP3Height = 264000;
+        consensus.nTemporaryTestnetForkHeight = 273000;
+        consensus.nTemporaryTestnetForkDIP3BlockHash.SetHex("00000048e6e71d4bd90e7c456dcb94683ae832fcad13e1760d8283f7e89f332f");
+
         fMiningRequiresPeers = true;
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;
