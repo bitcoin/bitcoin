@@ -2120,10 +2120,11 @@ bool CheckBlockProofPointer(const CBlockIndex* pindex, const CBlock& block, CPub
         if (mapBlockIndex.count(hashBlockOfPointer)) {
             //Check the ancestor of the block we are checking. If this chain's block at the height of the prev stake pointer has the same hash,
             //then this is the same chain and therefore need to reject the new block
-            auto pindexPrevPointer = mapBlockIndex.at(hashBlockOfPointer);
-            auto pindexCheck = pindex->GetAncestor(pindexPrevPointer->nHeight);
-            if (pindexCheck && pindexCheck->GetBlockHash() == pindexPrevPointer->GetBlockHash())
-                return error("%s: StakePointer (txid=%s, nPos=%u) has already been used", __func__, stakePointer.txid.GetHex(), stakePointer.nPos);
+            auto pindexUsedPointer = mapBlockIndex.at(hashBlockOfPointer);
+            auto pindexCheck = pindex->GetAncestor(pindexUsedPointer->nHeight);
+            if (pindexCheck && pindexCheck->GetBlockHash() == pindexUsedPointer->GetBlockHash())
+                return error("%s: StakePointer (txid=%s, nPos=%u) has already been used in block %s", __func__,
+                        stakePointer.txid.GetHex(), stakePointer.nPos, pindexCheck->GetBlockHash().GetHex());
         }
     }
 

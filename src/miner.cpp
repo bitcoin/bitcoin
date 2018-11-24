@@ -545,10 +545,15 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
         while (true) {
             if (fProofOfStake) {
                 if (chainActive.Height() + 1 < Params().PoSStartHeight() || (!fMasterNode && !fSystemNode) ||
-                    chainActive.Tip()->GetBlockTime() > GetAdjustedTime() ||
-                    (!masternodeSync.IsSynced() && !(GetBoolArg("-jumpstart", false)))) {
-                    MilliSleep(1000);
-                    continue;
+                    chainActive.Tip()->GetBlockTime() > GetAdjustedTime()) {
+
+                    //Check the state of the blockchain being synced before trying to stake
+                    if (!masternodeSync.AreSporksSynced() || !masternodeSync.IsBlockchainSynced()) {
+                        if (!GetBoolArg("-jumpstart", false)) {
+                            MilliSleep(1000);
+                            continue;
+                        }
+                    }
                 }
             }
 
