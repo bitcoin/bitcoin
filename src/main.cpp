@@ -2307,9 +2307,13 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     // Check that block's created coins is under the maximum allowed amount
     if (!IsBlockValueValid(block, GetBlockValue(pindex->pprev->nHeight, nFees))){
+        CAmount nValueCreated = block.vtx[0].GetValueOut();
+        if (block.IsProofOfStake())
+            nValueCreated += block.vtx[1].GetValueOut();
+
         return state.DoS(100,
-                         error("ConnectBlock() : coinbase pays too much (actual=%d vs limit=%d)",
-                               block.vtx[0].GetValueOut(), GetBlockValue(pindex->pprev->nHeight, nFees)),
+                         error("ConnectBlock() : block pays too much (actual=%d vs limit=%d)",
+                               nValueCreated, GetBlockValue(pindex->pprev->nHeight, nFees)),
                                REJECT_INVALID, "bad-cb-amount");
     }
 
@@ -3230,7 +3234,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
             //given to non masternode/systemnodes
             if (nHeight >= Params().PoSStartHeight() && !IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)) {
                 //Don't consider this invalid if the blockchain is not synced. Add exception for jumpstart, which forces sync to return true.
-                if (masternodeSync.IsBlockchainSynced() && !GetBoolArg("-jumpstart", false) && block.vtx[0].vout.size() > 1)
+                if (masternodeSync.IsSynced() && !GetBoolArg("-jumpstart", false) && block.vtx[0].vout.size() > 1)
                     return state.DoS(100,
                             error("CheckBlock() : Masternode/systemnode payments made when payment enforcement is disabled"));
             }

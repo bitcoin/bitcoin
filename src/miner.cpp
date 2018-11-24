@@ -120,11 +120,11 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
 
     pblock->nVersion.SetBaseVersion(CBlockHeader::CURRENT_VERSION, nChainId);
 
+    CMutableTransaction txCoinStake;
     if (fProofOfStake && chainActive.Height() + 1 >= Params().PoSStartHeight()) {
         pblock->nTime = GetAdjustedTime();
         CBlockIndex* pindexPrev = chainActive.Tip();
         pblock->nBits = GetNextWorkRequired(pindexPrev, pblock);
-        CMutableTransaction txCoinStake;
         bool fStakeFound = false;
         uint32_t nTxNewTime = 0;
         int nHeight = pindexPrev->nHeight + 1;
@@ -369,6 +369,17 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
 
         // Proof of stake blocks pay the mining reward in the coinstake transaction
         if (fProofOfStake) {
+            CAmount nValueNodeRewards = 0;
+            if (txCoinbase.vout.size() > 1)
+                nValueNodeRewards += txCoinbase.vout[MN_PMT_SLOT].nValue;
+            if (txCoinbase.vout.size() > 2)
+                nValueNodeRewards += txCoinbase.vout[SN_PMT_SLOT].nValue;
+
+            //Reduce PoS reward by the node rewards
+            txCoinStake.vout[1].nValue -= nValueNodeRewards;
+            pblock->vtx[1] = txCoinStake;
+
+            // Make sure coinbase has null values
             txCoinbase.vout[0].nValue = 0;
             txCoinbase.vout[0].scriptPubKey = CScript();
         }
@@ -412,7 +423,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
 
         CValidationState state;
         if (!TestBlockValidity(state, *pblock, pindexPrev, false, false)) {
-            LogPrintf("CreateNewBlock() : TestBlockValidity failed\n");
+            LogPrintf("CreateNewBlock() : TestBlockValidity failed\n  %s\n", pblock->ToString());
             return NULL;
         }
     }
@@ -534,7 +545,7 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
         while (true) {
             if (fProofOfStake) {
                 if (chainActive.Height() + 1 < Params().PoSStartHeight() || (!fMasterNode && !fSystemNode) ||
-                    chainActive.Tip()->GetBlockTime() > GetAdjustedTime()) {
+                    chainActive.Tip()->GetBlockTime() > GetAdjustedTime() || !masternodeSync.IsSynced()) {
                     MilliSleep(1000);
                     continue;
                 }

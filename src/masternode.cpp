@@ -294,7 +294,7 @@ bool CMasternode::GetRecentPaymentBlocks(std::vector<const CBlockIndex*>& vPayme
 {
     vPaymentBlocks.clear();
 
-    int nMinimumValidBlockHeight = chainActive.Height() - Params().ValidStakePointerDuration();
+    int nMinimumValidBlockHeight = chainActive.Height() - Params().ValidStakePointerDuration() + 1;
     if (nMinimumValidBlockHeight < 1)
         nMinimumValidBlockHeight = 1;
 
