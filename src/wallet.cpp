@@ -1931,6 +1931,10 @@ bool CWallet::CreateCoinStake(const int nHeight, const uint32_t& nBits, const ui
 
         CBlockIndex* pindex = mapBlockIndex.at(pointer.hashBlock);
 
+        // Make sure this pointer is not too deep
+        if (nHeight - pindex->nHeight >= Params().ValidStakePointerDuration() + 1)
+            continue;
+
         // check that collateral transaction happened long enough before this stake pointer
         if (pindex->nHeight - Params().KernelModifierOffset() <= nActiveNodeInputHeight)
             continue;
