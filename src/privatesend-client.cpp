@@ -1444,8 +1444,12 @@ bool CPrivateSendClientSession::CreateDenominated(CConnman& connman)
 
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
+    // NOTE: We do not allow txes larger than 100kB, so we have to limit number of inputs here.
+    // We still want to consume a lot of inputs to avoid creating only smaller denoms though.
+    // Knowing that each CTxIn is at least 148b big, 400 inputs should take 400 x ~148b = ~60kB.
+    // This still leaves more than enough room for another data of typical CreateDenominated tx.
     std::vector<CompactTallyItem> vecTally;
-    if (!pwalletMain->SelectCoinsGroupedByAddresses(vecTally)) {
+    if (!pwalletMain->SelectCoinsGroupedByAddresses(vecTally, true, true, true, 400)) {
         LogPrint("privatesend", "CPrivateSendClientSession::CreateDenominated -- SelectCoinsGroupedByAddresses can't find any inputs!\n");
         return false;
     }

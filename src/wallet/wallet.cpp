@@ -3069,14 +3069,14 @@ struct CompareByAmount
     }
 };
 
-bool CWallet::SelectCoinsGroupedByAddresses(std::vector<CompactTallyItem>& vecTallyRet, bool fSkipDenominated, bool fAnonymizable, bool fSkipUnconfirmed) const
+bool CWallet::SelectCoinsGroupedByAddresses(std::vector<CompactTallyItem>& vecTallyRet, bool fSkipDenominated, bool fAnonymizable, bool fSkipUnconfirmed, int nMaxOupointsPerAddress) const
 {
     LOCK2(cs_main, cs_wallet);
 
     isminefilter filter = ISMINE_SPENDABLE;
 
-    // try to use cache for already confirmed anonymizable inputs
-    if(fAnonymizable && fSkipUnconfirmed) {
+    // try to use cache for already confirmed anonymizable inputs, no cache should be used when the limit is specified
+    if(nMaxOupointsPerAddress != -1 && fAnonymizable && fSkipUnconfirmed) {
         if(fSkipDenominated && fAnonymizableTallyCachedNonDenom) {
             vecTallyRet = vecAnonymizableTallyCachedNonDenom;
             LogPrint("selectcoins", "SelectCoinsGroupedByAddresses - using cache for non-denom inputs %d\n", vecTallyRet.size());
@@ -3114,6 +3114,9 @@ bool CWallet::SelectCoinsGroupedByAddresses(std::vector<CompactTallyItem>& vecTa
             isminefilter mine = ::IsMine(*this, txdest);
             if(!(mine & filter)) continue;
 
+            auto itTallyItem = mapTally.find(txdest);
+            if (nMaxOupointsPerAddress != -1 && itTallyItem != mapTally.end() && itTallyItem->second.vecOutPoints.size() >= nMaxOupointsPerAddress) continue;
+
             if(IsSpent(outpoint.hash, i) || IsLockedCoin(outpoint.hash, i)) continue;
 
             if(fSkipDenominated && CPrivateSend::IsDenominatedAmount(wtx.tx->vout[i].nValue)) continue;
@@ -3129,10 +3132,12 @@ bool CWallet::SelectCoinsGroupedByAddresses(std::vector<CompactTallyItem>& vecTa
                 if(GetCappedOutpointPrivateSendRounds(COutPoint(outpoint.hash, i)) >= privateSendClient.nPrivateSendRounds) continue;
             }
 
-            CompactTallyItem& item = mapTally[txdest];
-            item.txdest = txdest;
-            item.nAmount += wtx.tx->vout[i].nValue;
-            item.vecOutPoints.emplace_back(outpoint.hash, i);
+            if (itTallyItem == mapTally.end()) {
+                itTallyItem = mapTally.emplace(txdest, CompactTallyItem()).first;
+                itTallyItem->second.txdest = txdest;
+            }
+            itTallyItem->second.nAmount += wtx.tx->vout[i].nValue;
+            itTallyItem->second.vecOutPoints.emplace_back(outpoint.hash, i);
         }
     }
 
@@ -3146,8 +3151,8 @@ bool CWallet::SelectCoinsGroupedByAddresses(std::vector<CompactTallyItem>& vecTa
     // order by amounts per address, from smallest to largest
     std::sort(vecTallyRet.rbegin(), vecTallyRet.rend(), CompareByAmount());
 
-    // cache already confirmed anonymizable entries for later use
-    if(fAnonymizable && fSkipUnconfirmed) {
+    // cache already confirmed anonymizable entries for later use, no cache should be saved when the limit is specified
+    if(nMaxOupointsPerAddress != -1 && fAnonymizable && fSkipUnconfirmed) {
         if(fSkipDenominated) {
             vecAnonymizableTallyCachedNonDenom = vecTallyRet;
             fAnonymizableTallyCachedNonDenom = true;
