@@ -132,12 +132,13 @@ void gobject_prepare_help()
                 "2. revision      (numeric, required) object revision in the system\n"
                 "3. time          (numeric, required) time this object was created\n"
                 "4. data-hex      (string, required)  data in hex string form\n"
+                "5. use-IS        (boolean, optional, default=false) InstantSend lock the collateral, only requiring one chain confirmation\n"
                 );
 }
 
 UniValue gobject_prepare(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 5)
+    if (request.fHelp || (request.params.size() != 5 && request.params.size() != 6)) 
         gobject_prepare_help();
 
     if (!EnsureWalletIsAvailable(request.fHelp))
@@ -159,6 +160,8 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
     int nRevision = atoi(strRevision);
     int64_t nTime = atoi64(strTime);
     std::string strDataHex = request.params[4].get_str();
+    bool useIS = false;
+    if (request.params.size() > 5) useIS = request.params[5].getBool();
 
     // CREATE A NEW COLLATERAL TRANSACTION FOR THIS SPECIFIC OBJECT
 
@@ -197,7 +200,7 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
     EnsureWalletIsUnlocked();
 
     CWalletTx wtx;
-    if (!pwalletMain->GetBudgetSystemCollateralTX(wtx, govobj.GetHash(), govobj.GetMinCollateralFee(), false)) {
+    if (!pwalletMain->GetBudgetSystemCollateralTX(wtx, govobj.GetHash(), govobj.GetMinCollateralFee(), useIS)) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Error making collateral transaction for governance object. Please check your wallet balance and make sure your wallet is unlocked.");
     }
 
