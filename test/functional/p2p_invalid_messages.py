@@ -3,6 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test node responses to invalid network messages."""
+import os
 import struct
 
 from test_framework import messages
@@ -66,7 +67,10 @@ class InvalidMessagesTest(BitcoinTestFramework):
         msg_at_size = msg_unrecognized("b" * valid_data_limit)
         assert len(msg_at_size.serialize()) == msg_limit
 
-        with node.assert_memory_usage_stable(increase_allowed=0.5):
+        increase_allowed = 0.5
+        if [s for s in os.environ.get("BITCOIN_CONFIG", "").split(" ") if "--with-sanitizers" in s and "address" in s]:
+            increase_allowed = 3.5
+        with node.assert_memory_usage_stable(increase_allowed=increase_allowed):
             self.log.info(
                 "Sending a bunch of large, junk messages to test "
                 "memory exhaustion. May take a bit...")
