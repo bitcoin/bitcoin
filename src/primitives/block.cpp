@@ -10,9 +10,36 @@
 #include <util/strencodings.h>
 #include <crypto/common.h>
 
+#include <atomic>
+
 uint256 CBlockHeader::GetHash() const
 {
     return SerializeHash(*this);
+}
+
+CBlockHeader::CBlockHeader(const CBlockHeader& header)
+    : nVersion{header.nVersion},
+      hashPrevBlock{header.hashPrevBlock},
+      hashMerkleRoot{header.hashMerkleRoot},
+      nTime{header.nTime},
+      nBits{header.nBits},
+      nNonce{header.nNonce}
+{
+}
+
+CBlock::CBlock(const CBlock& block)
+    : CBlockHeader{static_cast<CBlockHeader>(block)},
+      vtx{block.vtx}
+{
+    std::atomic_store(&m_checked, std::atomic_load(&block.m_checked));
+}
+
+CBlock& CBlock::operator=(const CBlock& block)
+{
+    *(static_cast<CBlockHeader*>(this)) = static_cast<CBlockHeader>(block);
+    vtx = block.vtx;
+    std::atomic_store(&m_checked, std::atomic_load(&block.m_checked));
+    return *this;
 }
 
 std::string CBlock::ToString() const

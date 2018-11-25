@@ -3081,7 +3081,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
 {
     // These are checks that are independent of context.
 
-    if (block.fChecked)
+    if (block.m_checked)
         return true;
 
     // Check that the header is valid (particularly PoW).  This is mostly
@@ -3135,7 +3135,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-sigops", false, "out-of-bounds SigOpCount");
 
     if (fCheckPOW && fCheckMerkleRoot)
-        block.fChecked = true;
+        block.m_checked = true;
 
     return true;
 }

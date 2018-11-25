@@ -10,6 +10,8 @@
 #include <serialize.h>
 #include <uint256.h>
 
+#include <atomic>
+
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work
  * requirements.  When they solve the proof-of-work, they broadcast the block
@@ -32,6 +34,8 @@ public:
     {
         SetNull();
     }
+
+    CBlockHeader(const CBlockHeader& header);
 
     ADD_SERIALIZE_METHODS;
 
@@ -76,7 +80,7 @@ public:
     std::vector<CTransactionRef> vtx;
 
     // memory only
-    mutable bool fChecked;
+    mutable std::atomic<bool> m_checked;
 
     CBlock()
     {
@@ -88,6 +92,9 @@ public:
         SetNull();
         *(static_cast<CBlockHeader*>(this)) = header;
     }
+
+    CBlock(const CBlock& block);
+    CBlock& operator=(const CBlock& block);
 
     ADD_SERIALIZE_METHODS;
 
@@ -101,7 +108,7 @@ public:
     {
         CBlockHeader::SetNull();
         vtx.clear();
-        fChecked = false;
+        m_checked = false;
     }
 
     CBlockHeader GetBlockHeader() const
