@@ -50,24 +50,26 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
             return;
         }
 
-        {
-            TRY_LOCK(cs_vecqueue, lockRecv);
-            if (!lockRecv) return;
+        if (vecSessionCollaterals.size() == 0) {
+            {
+                TRY_LOCK(cs_vecqueue, lockRecv);
+                if (!lockRecv) return;
 
-            for (const auto& q : vecPrivateSendQueue) {
-                if (q.masternodeOutpoint == activeMasternodeInfo.outpoint) {
-                    // refuse to create another queue this often
-                    LogPrint("privatesend", "DSACCEPT -- last dsq is still in queue, refuse to mix\n");
-                    return;
+                for (const auto& q : vecPrivateSendQueue) {
+                    if (q.masternodeOutpoint == activeMasternodeInfo.outpoint) {
+                        // refuse to create another queue this often
+                        LogPrint("privatesend", "DSACCEPT -- last dsq is still in queue, refuse to mix\n");
+                        PushStatus(pfrom, STATUS_REJECTED, ERR_RECENT, connman);
+                        return;
+                    }
                 }
             }
-        }
 
-        if (vecSessionCollaterals.size() == 0 && mnInfo.nLastDsq != 0 &&
-            mnInfo.nLastDsq + mnodeman.CountMasternodes() / 5 > mnodeman.nDsqCount) {
-            LogPrintf("DSACCEPT -- last dsq too recent, must wait: addr=%s\n", pfrom->addr.ToString());
-            PushStatus(pfrom, STATUS_REJECTED, ERR_RECENT, connman);
-            return;
+            if (mnInfo.nLastDsq != 0 && mnInfo.nLastDsq + mnodeman.CountMasternodes() / 5 > mnodeman.nDsqCount) {
+                LogPrintf("DSACCEPT -- last dsq too recent, must wait: addr=%s\n", pfrom->addr.ToString());
+                PushStatus(pfrom, STATUS_REJECTED, ERR_RECENT, connman);
+                return;
+            }
         }
 
         PoolMessage nMessageID = MSG_NOERR;
