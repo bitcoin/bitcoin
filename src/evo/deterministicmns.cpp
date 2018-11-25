@@ -13,6 +13,9 @@
 #include "validation.h"
 #include "validationinterface.h"
 
+#include "llmq/quorums_commitment.h"
+#include "llmq/quorums_utils.h"
+
 #include <univalue.h>
 
 static const std::string DB_LIST_SNAPSHOT = "dmn_S";
@@ -258,6 +261,55 @@ std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> CDeterministicMNList
     return scores;
 }
 
+int CDeterministicMNList::CalcMaxPoSePenalty() const
+{
+    // Maximum PoSe penalty is dynamic and equals the number of registered MNs
+    // It's however at least 100.
+    // This means that the max penalty is usually equal to a full payment cycle
+    return std::max(100, (int)GetAllMNsCount());
+}
+
+int CDeterministicMNList::CalcPenalty(int percent) const
+{
+    assert(percent > 0);
+    return (CalcMaxPoSePenalty() * percent) / 100;
+}
+
+void CDeterministicMNList::PoSePunish(const uint256& proTxHash, int penalty)
+{
+    assert(penalty > 0);
+
+    auto dmn = GetMN(proTxHash);
+    assert(dmn);
+
+    int maxPenalty = CalcMaxPoSePenalty();
+
+    auto newState = std::make_shared<CDeterministicMNState>(*dmn->pdmnState);
+    newState->nPoSePenalty += penalty;
+    newState->nPoSePenalty = std::min(maxPenalty, newState->nPoSePenalty);
+
+    LogPrintf("CDeterministicMNList::%s -- punished MN %s, penalty %d->%d (max=%d)\n",
+              __func__, proTxHash.ToString(), dmn->pdmnState->nPoSePenalty, newState->nPoSePenalty, maxPenalty);
+
+    if (newState->nPoSePenalty >= maxPenalty && newState->nPoSeBanHeight == -1) {
+        newState->nPoSeBanHeight = nHeight;
+        LogPrintf("CDeterministicMNList::%s -- banned MN %s at height %d\n",
+                  __func__, proTxHash.ToString(), nHeight);
+    }
+    UpdateMN(proTxHash, newState);
+}
+
+void CDeterministicMNList::PoSeDecrease(const uint256& proTxHash)
+{
+    auto dmn = GetMN(proTxHash);
+    assert(dmn);
+    assert(dmn->pdmnState->nPoSePenalty > 0 && dmn->pdmnState->nPoSeBanHeight == -1);
+
+    auto newState = std::make_shared<CDeterministicMNState>(*dmn->pdmnState);
+    newState->nPoSePenalty--;
+    UpdateMN(proTxHash, newState);
+}
+
 CDeterministicMNListDiff CDeterministicMNList::BuildDiff(const CDeterministicMNList& to) const
 {
     CDeterministicMNListDiff diffRet;
@@ -465,6 +517,8 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
         }
     });
 
+    DecreasePoSePenalties(newList);
+
     // we skip the coinbase
     for (int i = 1; i < (int)block.vtx.size(); i++) {
         const CTransaction& tx = *block.vtx[i];
@@ -478,6 +532,11 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
                 LogPrintf("CDeterministicMNManager::%s -- MN %s removed from list because collateral was spent. collateralOutpoint=%s, nHeight=%d, mapCurMNs.allMNsCount=%d\n",
                     __func__, dmn->proTxHash.ToString(), dmn->collateralOutpoint.ToStringShort(), nHeight, newList.GetAllMNsCount());
             }
+        }
+
+        if (tx.nVersion != 3) {
+            // only interested in special TXs
+            continue;
         }
 
         if (tx.nType == TRANSACTION_PROVIDER_REGISTER) {
@@ -558,6 +617,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             if (newState->nPoSeBanHeight != -1) {
                 // only revive when all keys are set
                 if (newState->pubKeyOperator.IsValid() && !newState->keyIDVoting.IsNull() && !newState->keyIDOwner.IsNull()) {
+                    newState->nPoSePenalty = 0;
                     newState->nPoSeBanHeight = -1;
                     newState->nPoSeRevivedHeight = nHeight;
 
@@ -613,6 +673,14 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
 
             LogPrintf("CDeterministicMNManager::%s -- MN %s revoked operator key at height %d: %s\n",
                 __func__, proTx.proTxHash.ToString(), nHeight, proTx.ToString());
+        } else if (tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
+            llmq::CFinalCommitment qc;
+            if (!GetTxPayload(tx, qc)) {
+                assert(false); // this should have been handled already
+            }
+            if (!qc.IsNull()) {
+                HandleQuorumCommitment(qc, newList);
+            }
         }
     }
 
@@ -627,6 +695,43 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
     mnListRet = std::move(newList);
 
     return true;
+}
+
+void CDeterministicMNManager::HandleQuorumCommitment(llmq::CFinalCommitment& qc, CDeterministicMNList& mnList)
+{
+    // The commitment has already been validated at this point so it's safe to use members of it
+
+    auto members = llmq::CLLMQUtils::GetAllQuorumMembers((Consensus::LLMQType)qc.llmqType, qc.quorumHash);
+
+    for (size_t i = 0; i < members.size(); i++) {
+        if (!mnList.HasMN(members[i]->proTxHash)) {
+            continue;
+        }
+        if (!qc.validMembers[i]) {
+            // punish MN for failed DKG participation
+            // The idea is to immediately ban a MN when it fails 2 DKG sessions with only a few blocks in-between
+            // If there were enough blocks between failures, the MN has a chance to recover as he reduces his penalty by 1 for every block
+            // If it however fails 3 times in the timespan of a single payment cycle, it should definitely get banned
+            mnList.PoSePunish(members[i]->proTxHash, mnList.CalcPenalty(66));
+        }
+    }
+}
+
+void CDeterministicMNManager::DecreasePoSePenalties(CDeterministicMNList& mnList)
+{
+    std::vector<uint256> toDecrease;
+    toDecrease.reserve(mnList.GetValidMNsCount() / 10);
+    // only iterate and decrease for valid ones (not PoSe banned yet)
+    // if a MN ever reaches the maximum, it stays in PoSe banned state until revived
+    mnList.ForEachMN(true, [&](const CDeterministicMNCPtr& dmn) {
+        if (dmn->pdmnState->nPoSePenalty > 0 && dmn->pdmnState->nPoSeBanHeight == -1) {
+            toDecrease.emplace_back(dmn->proTxHash);
+        }
+    });
+
+    for (const auto& proTxHash : toDecrease) {
+        mnList.PoSeDecrease(proTxHash);
+    }
 }
 
 CDeterministicMNList CDeterministicMNManager::GetListForBlock(const uint256& blockHash)

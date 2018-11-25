@@ -22,6 +22,11 @@ class CBlock;
 class CBlockIndex;
 class CValidationState;
 
+namespace llmq
+{
+    class CFinalCommitment;
+}
+
 class CDeterministicMNState
 {
 public:
@@ -307,6 +312,39 @@ public:
     std::vector<CDeterministicMNCPtr> CalculateQuorum(size_t maxSize, const uint256& modifier) const;
     std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> CalculateScores(const uint256& modifier) const;
 
+    /**
+     * Calculates the maximum penalty which is allowed at the height of this MN list. It is dynamic and might change
+     * for every block.
+     * @return
+     */
+    int CalcMaxPoSePenalty() const;
+
+    /**
+     * Returns a the given percentage from the max penalty for this MN list. Always use this method to calculate the
+     * value later passed to PoSePunish. The percentage should be high enough to take per-block penalty decreasing for MNs
+     * into account. This means, if you want to accept 2 failures per payment cycle, you should choose a percentage that
+     * is higher then 50%, e.g. 66%.
+     * @param percent
+     * @return
+     */
+    int CalcPenalty(int percent) const;
+
+    /**
+     * Punishes a MN for misbehavior. If the resulting penalty score of the MN reaches the max penalty, it is banned.
+     * Penalty scores are only increased when the MN is not already banned, which means that after banning the penalty
+     * might appear lower then the current max penalty, while the MN is still banned.
+     * @param proTxHash
+     * @param penalty
+     */
+    void PoSePunish(const uint256& proTxHash, int penalty);
+
+    /**
+     * Decrease penalty score of MN by 1.
+     * Only allowed on non-banned MNs.
+     * @param proTxHash
+     */
+    void PoSeDecrease(const uint256& proTxHash);
+
     CDeterministicMNListDiff BuildDiff(const CDeterministicMNList& to) const;
     CSimplifiedMNListDiff BuildSimplifiedDiff(const CDeterministicMNList& to) const;
     CDeterministicMNList ApplyDiff(const CDeterministicMNListDiff& diff) const;
@@ -422,6 +460,8 @@ public:
 
     // the returned list will not contain the correct block hash (we can't know it yet as the coinbase TX is not updated yet)
     bool BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, CValidationState& state, CDeterministicMNList& mnListRet);
+    void HandleQuorumCommitment(llmq::CFinalCommitment& qc, CDeterministicMNList& mnList);
+    void DecreasePoSePenalties(CDeterministicMNList& mnList);
 
     CDeterministicMNList GetListForBlock(const uint256& blockHash);
     CDeterministicMNList GetListAtChainTip();
