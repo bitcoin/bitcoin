@@ -170,13 +170,15 @@ private:
 class BerkeleyBatch
 {
     /** RAII class that automatically cleanses its data on destruction */
-    class SafeDbt final {
+    class SafeDbt final
+    {
         Dbt m_dbt;
 
     public:
-        // construct Dbt with data or flags
-        SafeDbt(u_int32_t flags = 0);
-        SafeDbt(void *data, size_t size);
+        // construct Dbt with internally-managed data
+        SafeDbt();
+        // construct Dbt with provided data
+        SafeDbt(void* data, size_t size);
         ~SafeDbt();
 
         // delegate to Dbt
@@ -227,7 +229,7 @@ public:
         SafeDbt datKey(ssKey.data(), ssKey.size());
 
         // Read
-        SafeDbt datValue(DB_DBT_MALLOC);
+        SafeDbt datValue;
         int ret = pdb->get(activeTxn, datKey, datValue, 0);
         bool success = false;
         if (datValue.get_data() != nullptr) {
@@ -318,8 +320,8 @@ public:
     int ReadAtCursor(Dbc* pcursor, CDataStream& ssKey, CDataStream& ssValue)
     {
         // Read at cursor
-        SafeDbt datKey(DB_DBT_MALLOC);
-        SafeDbt datValue(DB_DBT_MALLOC);
+        SafeDbt datKey;
+        SafeDbt datValue;
         int ret = pcursor->get(datKey, datValue, DB_NEXT);
         if (ret != 0)
             return ret;
