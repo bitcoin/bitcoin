@@ -448,9 +448,10 @@ bool CPrivateSendClientSession::CheckTimeout()
 void CPrivateSendClientManager::CheckTimeout()
 {
     if (fMasternodeMode) return;
-    if (!fEnablePrivateSend) return;
 
     CheckQueue();
+
+    if (!fEnablePrivateSend) return;
 
     LOCK(cs_deqsessions);
     for (auto& session : deqSessions) {
