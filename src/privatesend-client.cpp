@@ -1347,6 +1347,11 @@ bool CPrivateSendClientSession::MakeCollateralAmounts(CConnman& connman)
         return false;
     }
 
+    // Start from smallest balances first to consume tiny amounts and cleanup UTXO a bit
+    std::sort(vecTally.begin(), vecTally.end(), [](const CompactTallyItem& a, const CompactTallyItem& b) {
+        return a.nAmount < b.nAmount;
+    });
+
     // First try to use only non-denominated funds
     for (const auto& item : vecTally) {
         if (!MakeCollateralAmounts(item, false, connman)) continue;
@@ -1454,6 +1459,11 @@ bool CPrivateSendClientSession::CreateDenominated(CConnman& connman)
         LogPrint("privatesend", "CPrivateSendClientSession::CreateDenominated -- SelectCoinsGroupedByAddresses can't find any inputs!\n");
         return false;
     }
+
+    // Start from largest balances first to speed things up by creating txes with larger/largest denoms included
+    std::sort(vecTally.begin(), vecTally.end(), [](const CompactTallyItem& a, const CompactTallyItem& b) {
+        return a.nAmount > b.nAmount;
+    });
 
     bool fCreateMixingCollaterals = !pwalletMain->HasCollateralInputs();
 

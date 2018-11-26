@@ -3060,15 +3060,6 @@ bool CWallet::SelectPSInOutPairsByDenominations(int nDenom, CAmount nValueMin, C
     return nValueTotal >= nValueMin && nDenom == nDenomResult;
 }
 
-struct CompareByAmount
-{
-    bool operator()(const CompactTallyItem& t1,
-                    const CompactTallyItem& t2) const
-    {
-        return t1.nAmount > t2.nAmount;
-    }
-};
-
 bool CWallet::SelectCoinsGroupedByAddresses(std::vector<CompactTallyItem>& vecTallyRet, bool fSkipDenominated, bool fAnonymizable, bool fSkipUnconfirmed, int nMaxOupointsPerAddress) const
 {
     LOCK2(cs_main, cs_wallet);
@@ -3142,14 +3133,12 @@ bool CWallet::SelectCoinsGroupedByAddresses(std::vector<CompactTallyItem>& vecTa
     }
 
     // construct resulting vector
+    // NOTE: vecTallyRet is "sorted" by txdest (i.e. address), just like mapTally
     vecTallyRet.clear();
     for (const auto& item : mapTally) {
         if(fAnonymizable && item.second.nAmount < nSmallestDenom) continue;
         vecTallyRet.push_back(item.second);
     }
-
-    // order by amounts per address, from smallest to largest
-    std::sort(vecTallyRet.rbegin(), vecTallyRet.rend(), CompareByAmount());
 
     // cache already confirmed anonymizable entries for later use, no cache should be saved when the limit is specified
     if(nMaxOupointsPerAddress != -1 && fAnonymizable && fSkipUnconfirmed) {
