@@ -17,7 +17,7 @@
 #include <key.h>
 #include <key_io.h>
 #include <keystore.h>
-#include <masternodeconfig.h>
+#include <modules/masternode/masternode_config.h>
 #include <net.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
@@ -32,8 +32,8 @@
 #include <util/moneystr.h>
 #include <wallet/fees.h>
 
-#include <governance.h>
-#include <wallet/privatesend-client.h>
+#include <modules/platform/funding.h>
+#include <wallet/privatesend_client.h>
 
 #include <algorithm>
 #include <assert.h>

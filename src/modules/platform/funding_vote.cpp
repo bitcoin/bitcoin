@@ -2,10 +2,10 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <governance-vote.h>
-#include <governance-object.h>
-#include <masternodeman.h>
-#include <masternode-sync.h>
+#include <modules/platform/funding_vote.h>
+#include <modules/platform/funding_object.h>
+#include <modules/masternode/masternode_man.h>
+#include <modules/masternode/masternode_sync.h>
 #include <messagesigner.h>
 #include <util/system.h>
 

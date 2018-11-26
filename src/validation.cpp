@@ -42,8 +42,8 @@
 #include <validationinterface.h>
 #include <warnings.h>
 
-#include <masternodeman.h>
-#include <masternode-payments.h>
+#include <modules/masternode/masternode_man.h>
+#include <modules/masternode/masternode_payments.h>
 
 #include <future>
 #include <sstream>

@@ -21,8 +21,8 @@
 #include <qt/intro.h>
 
 #ifdef ENABLE_WALLET
-#include <wallet/privatesend-client.h>
-#include <masternodeconfig.h>
+#include <wallet/privatesend_client.h>
+#include <modules/masternode/masternode_config.h>
 #endif
 
 #include <QNetworkProxy>

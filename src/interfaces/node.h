@@ -7,7 +7,7 @@
 
 #include <cachedb.h>     // For banmap_t
 #include <amount.h>     // For CAmount
-#include <masternodeconfig.h> // For CMasternodeConfig::CMasternodeEntry
+#include <modules/masternode/masternode_config.h> // For CMasternodeConfig::CMasternodeEntry
 #include <net.h>        // For CConnman::NumConnections
 #include <netaddress.h> // For Network
 

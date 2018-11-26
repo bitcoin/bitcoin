@@ -93,7 +93,6 @@ endif
 .PHONY: FORCE check-symbols check-security
 # chaincoin core #
 BITCOIN_CORE_H = \
-  activemasternode.h \
   addrman.h \
   attributes.h \
   base58.h \
@@ -121,13 +120,6 @@ BITCOIN_CORE_H = \
   core_memusage.h \
   cuckoocache.h \
   fs.h \
-  governance.h \
-  governance-classes.h \
-  governance-exceptions.h \
-  governance-object.h \
-  governance-validators.h \
-  governance-vote.h \
-  governance-votedb.h \
   httprpc.h \
   httpserver.h \
   index/base.h \
@@ -145,14 +137,24 @@ BITCOIN_CORE_H = \
   dbwrapper.h \
   limitedmap.h \
   logging.h \
-  masternode.h \
-  masternode-payments.h \
-  masternode-sync.h \
-  masternodeman.h \
-  masternodeconfig.h \
   memusage.h \
   merkleblock.h \
   miner.h \
+  modules/masternode/activemasternode.h \
+  modules/masternode/masternode.h \
+  modules/masternode/masternode_payments.h \
+  modules/masternode/masternode_sync.h \
+  modules/masternode/masternode_man.h \
+  modules/masternode/masternode_config.h \
+  modules/platform/funding.h \
+  modules/platform/funding_classes.h \
+  modules/platform/funding_exceptions.h \
+  modules/platform/funding_object.h \
+  modules/platform/funding_validators.h \
+  modules/platform/funding_vote.h \
+  modules/platform/funding_votedb.h \
+  modules/privatesend/privatesend.h \
+  modules/privatesend/privatesend_server.h \
   net.h \
   net_processing.h \
   netaddress.h \
@@ -167,8 +169,6 @@ BITCOIN_CORE_H = \
   policy/rbf.h \
   pow.h \
   protocol.h \
-  privatesend.h \
-  privatesend-server.h \
   random.h \
   reverselock.h \
   reverse_iterator.h \
@@ -217,7 +217,7 @@ BITCOIN_CORE_H = \
   wallet/db.h \
   wallet/feebumper.h \
   wallet/fees.h \
-  wallet/privatesend-client.h \
+  wallet/privatesend_client.h \
   wallet/rpcwallet.h \
   wallet/wallet.h \
   wallet/walletdb.h \
@@ -241,7 +241,6 @@ libbitcoin_util_a-clientversion.$(OBJEXT): obj/build.h
 libbitcoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 libbitcoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_server_a_SOURCES = \
-  activemasternode.cpp \
   addrman.cpp \
   bloom.cpp \
   blockencodings.cpp \
@@ -260,20 +259,23 @@ libbitcoin_server_a_SOURCES = \
   interfaces/node.cpp \
   init.cpp \
   dbwrapper.cpp \
-  governance.cpp \
-  governance-classes.cpp \
-  governance-object.cpp \
-  governance-validators.cpp \
-  governance-vote.cpp \
-  governance-votedb.cpp \
-  masternode.cpp \
-  masternode-payments.cpp \
-  masternode-sync.cpp \
-  masternodeconfig.cpp \
-  masternodeman.cpp \
   merkleblock.cpp \
   messagesigner.cpp \
   miner.cpp \
+  modules/masternode/activemasternode.cpp \
+  modules/masternode/masternode.cpp \
+  modules/masternode/masternode_payments.cpp \
+  modules/masternode/masternode_sync.cpp \
+  modules/masternode/masternode_config.cpp \
+  modules/masternode/masternode_man.cpp \
+  modules/platform/funding.cpp \
+  modules/platform/funding_classes.cpp \
+  modules/platform/funding_object.cpp \
+  modules/platform/funding_validators.cpp \
+  modules/platform/funding_vote.cpp \
+  modules/platform/funding_votedb.cpp \
+  modules/privatesend/privatesend.cpp \
+  modules/privatesend/privatesend_server.cpp \
   net.cpp \
   netfulfilledman.cpp \
   net_processing.cpp \
@@ -283,8 +285,6 @@ libbitcoin_server_a_SOURCES = \
   policy/policy.cpp \
   policy/rbf.cpp \
   pow.cpp \
-  privatesend.cpp \
-  privatesend-server.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
   rpc/masternode.cpp \
@@ -334,7 +334,7 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/feebumper.cpp \
   wallet/fees.cpp \
   wallet/init.cpp \
-  wallet/privatesend-client.cpp \
+  wallet/privatesend_client.cpp \
   wallet/rpcdump.cpp \
   wallet/rpcwallet.cpp \
   wallet/wallet.cpp \

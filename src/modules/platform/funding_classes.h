@@ -6,7 +6,7 @@
 
 //#define ENABLE_CHAINCOIN_DEBUG
 
-#include <governance.h>
+#include <modules/platform/funding.h>
 #include <key.h>
 #include <key_io.h>
 #include <script/standard.h>

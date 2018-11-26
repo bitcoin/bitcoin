@@ -22,9 +22,9 @@
 #include <ui_interface.h>
 #include <util/strencodings.h>
 
-#include <governance.h>
-#include <masternode-sync.h>
-#include <masternodeman.h>
+#include <modules/platform/funding.h>
+#include <modules/masternode/masternode_sync.h>
+#include <modules/masternode/masternode_man.h>
 
 #ifdef WIN32
 #include <string.h>

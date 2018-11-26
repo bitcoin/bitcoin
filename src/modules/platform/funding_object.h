@@ -8,9 +8,9 @@
 //#define ENABLE_CHAINCOIN_DEBUG
 
 #include <cachemultimap.h>
-#include <governance-exceptions.h>
-#include <governance-vote.h>
-#include <governance-votedb.h>
+#include <modules/platform/funding_exceptions.h>
+#include <modules/platform/funding_vote.h>
+#include <modules/platform/funding_votedb.h>
 #include <key.h>
 #include <net.h>
 #include <sync.h>

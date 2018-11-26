@@ -4,19 +4,19 @@
 
 //#define ENABLE_CHAINCOIN_DEBUG
 
-#include <activemasternode.h>
+#include <modules/masternode/activemasternode.h>
 #include <consensus/validation.h>
 #include <core_io.h>
-#include <governance.h>
-#include <governance-vote.h>
-#include <governance-classes.h>
-#include <governance-validators.h>
+#include <modules/platform/funding.h>
+#include <modules/platform/funding_vote.h>
+#include <modules/platform/funding_classes.h>
+#include <modules/platform/funding_validators.h>
 #include <init.h>
 #include <validation.h>
-#include <masternode.h>
-#include <masternode-sync.h>
-#include <masternodeconfig.h>
-#include <masternodeman.h>
+#include <modules/masternode/masternode.h>
+#include <modules/masternode/masternode_sync.h>
+#include <modules/masternode/masternode_config.h>
+#include <modules/masternode/masternode_man.h>
 #include <messagesigner.h>
 #include <rpc/server.h>
 #include <util/system.h>

@@ -6,7 +6,7 @@
 #define BITCOIN_PRIVATESENDSERVER_H
 
 #include <net.h>
-#include <privatesend.h>
+#include <modules/privatesend/privatesend.h>
 
 class CPrivateSendServer;
 

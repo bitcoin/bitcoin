@@ -8,7 +8,7 @@
 #include <util/system.h>
 #include <core_io.h>
 #include <key.h>
-#include <masternode.h>
+#include <modules/masternode/masternode.h>
 #include <net_processing.h>
 #include <util/strencodings.h>
 

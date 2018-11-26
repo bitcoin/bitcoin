@@ -3,13 +3,13 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <core_io.h>
-#include <governance.h>
-#include <governance-classes.h>
-#include <governance-object.h>
-#include <governance-vote.h>
-#include <governance-validators.h>
-#include <masternodeman.h>
-#include <masternode-sync.h>
+#include <modules/platform/funding.h>
+#include <modules/platform/funding_classes.h>
+#include <modules/platform/funding_object.h>
+#include <modules/platform/funding_vote.h>
+#include <modules/platform/funding_validators.h>
+#include <modules/masternode/masternode_man.h>
+#include <modules/masternode/masternode_sync.h>
 #include <messagesigner.h>
 #include <util/system.h>
 

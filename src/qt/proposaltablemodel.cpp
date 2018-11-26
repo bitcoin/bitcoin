@@ -9,9 +9,9 @@
 #include <qt/optionsmodel.h>
 #include <qt/platformstyle.h>
 #include <qt/proposalrecord.h>
-#include <governance.h>
-#include <governance-vote.h>
-#include <governance-object.h>
+#include <modules/platform/funding.h>
+#include <modules/platform/funding_vote.h>
+#include <modules/platform/funding_object.h>
 #include <interfaces/node.h>
 
 #include <core_io.h>

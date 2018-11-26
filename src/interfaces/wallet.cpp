@@ -28,7 +28,7 @@
 #include <validation.h>
 #include <wallet/feebumper.h>
 #include <wallet/fees.h>
-#include <wallet/privatesend-client.h>
+#include <wallet/privatesend_client.h>
 #include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>

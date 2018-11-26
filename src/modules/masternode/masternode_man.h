@@ -6,7 +6,7 @@
 #ifndef MASTERNODEMAN_H
 #define MASTERNODEMAN_H
 
-#include <masternode.h>
+#include <modules/masternode/masternode.h>
 #include <sync.h>
 
 class CMasternodeMan;

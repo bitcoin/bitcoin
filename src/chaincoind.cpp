@@ -17,7 +17,7 @@
 #include <init.h>
 #include <noui.h>
 #include <shutdown.h>
-#include <masternodeconfig.h>
+#include <modules/masternode/masternode_config.h>
 #include <util/system.h>
 #include <httpserver.h>
 #include <httprpc.h>

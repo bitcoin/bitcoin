@@ -2,7 +2,7 @@
 #include <chainparams.h>
 #include <fs.h>
 #include <netbase.h>
-#include <masternodeconfig.h>
+#include <modules/masternode/masternode_config.h>
 #include <util/system.h>
 #include <util/strencodings.h>
 

@@ -26,7 +26,7 @@
 #include <qt/paymentserver.h>
 #include <qt/walletmodel.h>
 #endif
-#include <masternodeconfig.h>
+#include <modules/masternode/masternode_config.h>
 
 #include <interfaces/handler.h>
 #include <interfaces/node.h>

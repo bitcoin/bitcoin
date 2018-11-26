@@ -20,7 +20,7 @@
 #include <qt/walletmodel.h>
 
 #include <qt/darksendconfig.h>
-#include <wallet/privatesend-client.h>
+#include <wallet/privatesend_client.h>
 
 #include <QAbstractItemDelegate>
 #include <QPainter>

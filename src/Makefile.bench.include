@@ -66,7 +66,7 @@ CLEANFILES += $(CLEAN_BITCOIN_BENCH)
 
 bench/checkblock.cpp: bench/data/block413567.raw.h
 
-bitcoin_bench: $(BENCH_BINARY)
+chaincoin_bench: $(BENCH_BINARY)
 
 bench: $(BENCH_BINARY) FORCE
 	$(BENCH_BINARY)

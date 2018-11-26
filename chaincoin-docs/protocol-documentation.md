@@ -293,7 +293,7 @@ Get Masternode list or specific entry
 | ---------- | ----------- | --------- | -------- |
 | 41 | vin | [CTxIn](#ctxin) | The unspent output which is holding 1000 CHC
 
-#### Defined Sync Item IDs (per src/masternode-sync.h)
+#### Defined Sync Item IDs (per src/modules/mastenode/masternode_sync.h)
 
 | Item ID | Name | Description |
 | ---------- | ---------- | ----------- |

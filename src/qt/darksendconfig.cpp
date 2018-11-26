@@ -4,7 +4,7 @@
 #include <qt/bitcoinunits.h>
 #include <qt/guiconstants.h>
 #include <qt/optionsmodel.h>
-#include <wallet/privatesend-client.h>
+#include <wallet/privatesend_client.h>
 #include <qt/walletmodel.h>
 
 #include <QMessageBox>
