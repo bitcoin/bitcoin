@@ -3583,6 +3583,9 @@ bool TestBlockValidity(CValidationState &state, const CBlock& block, CBlockIndex
         return false;
     if (!ConnectBlock(block, state, &indexDummy, viewNew, true))
         return false;
+    COutPoint pointer(block.stakePointer.txid, block.stakePointer.nPos);
+    if (mapUsedStakePointers.count(pointer.GetHash()))
+        return false;
     assert(state.IsValid());
 
     return true;
