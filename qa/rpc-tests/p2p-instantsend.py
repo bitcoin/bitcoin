@@ -29,6 +29,8 @@ class InstantSendTest(DashTestFramework):
             set_mocktime(get_mocktime() + 1)
             set_node_times(self.nodes, get_mocktime())
             self.nodes[0].generate(1)
+        self.sync_all()
+
         # create doublepending transaction,  but don't relay it
         dblspnd_tx = self.create_raw_trx(self.nodes[self.sender_idx],
                                        self.nodes[self.isolated_idx],
