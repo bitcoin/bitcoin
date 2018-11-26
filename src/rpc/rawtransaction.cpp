@@ -908,7 +908,7 @@ static UniValue signrawtransactionwithkey(const JSONRPCRequest& request)
             RPCHelpMan{"signrawtransactionwithkey",
                 {
                     {"hexstring", RPCArg::Type::STR, false},
-                    {"privkyes", RPCArg::Type::ARR,
+                    {"privkeys", RPCArg::Type::ARR,
                         {
                             {"privatekey", RPCArg::Type::STR_HEX, false},
                         },
@@ -1063,7 +1063,7 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
         throw std::runtime_error(
             // clang-format off
             "testmempoolaccept [\"rawtxs\"] ( allowhighfees )\n"
-            "\nReturns if raw transaction (serialized, hex-encoded) would be accepted by mempool.\n"
+            "\nReturns result of mempool acceptance tests indicating if raw transaction (serialized, hex-encoded) would be accepted by mempool.\n"
             "\nThis checks if the transaction violates the consensus or policy rules.\n"
             "\nSee sendrawtransaction call.\n"
             "\nArguments:\n"
