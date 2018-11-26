@@ -90,7 +90,7 @@ class SegWitTest(BitcoinTestFramework):
 
         self.log.info("Verify sigops are counted in GBT with pre-BIP141 rules before the fork")
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
-        tmpl = self.nodes[0].getblocktemplate({})
+        tmpl = self.nodes[0].getblocktemplate({'rules': ['segwit']})
         assert(tmpl['sizelimit'] == 1000000)
         assert('weightlimit' not in tmpl)
         assert(tmpl['sigoplimit'] == 20000)
@@ -232,15 +232,7 @@ class SegWitTest(BitcoinTestFramework):
         assert(tx.wit.is_null())
         assert(txid3 in self.nodes[0].getrawmempool())
 
-        # Now try calling getblocktemplate() without segwit support.
-        template = self.nodes[0].getblocktemplate()
-
-        # Check that tx1 is the only transaction of the 3 in the template.
-        template_txids = [t['txid'] for t in template['transactions']]
-        assert(txid2 not in template_txids and txid3 not in template_txids)
-        assert(txid1 in template_txids)
-
-        # Check that running with segwit support results in all 3 being included.
+        # Check that getblocktemplate includes all transactions.
         template = self.nodes[0].getblocktemplate({"rules": ["segwit"]})
         template_txids = [t['txid'] for t in template['transactions']]
         assert(txid1 in template_txids)
