@@ -98,15 +98,15 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
         }
     }
 
+    if (!llmq::quorumBlockProcessor->ProcessBlock(block, pindex->pprev, state)) {
+        return false;
+    }
+
     if (!deterministicMNManager->ProcessBlock(block, pindex->pprev, state)) {
         return false;
     }
 
     if (!CheckCbTxMerkleRootMNList(block, pindex, state)) {
-        return false;
-    }
-
-    if (!llmq::quorumBlockProcessor->ProcessBlock(block, pindex->pprev, state)) {
         return false;
     }
 
@@ -122,11 +122,11 @@ bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex)
         }
     }
 
-    if (!llmq::quorumBlockProcessor->UndoBlock(block, pindex)) {
+    if (!deterministicMNManager->UndoBlock(block, pindex)) {
         return false;
     }
 
-    if (!deterministicMNManager->UndoBlock(block, pindex)) {
+    if (!llmq::quorumBlockProcessor->UndoBlock(block, pindex)) {
         return false;
     }
 

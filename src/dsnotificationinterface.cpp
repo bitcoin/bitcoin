@@ -16,6 +16,8 @@
 
 #include "evo/deterministicmns.h"
 
+#include "llmq/quorums_dummydkg.h"
+
 void CDSNotificationInterface::InitializeCurrentBlockTip()
 {
     LOCK(cs_main);
@@ -38,6 +40,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
         return;
 
     deterministicMNManager->UpdatedBlockTip(pindexNew);
+    llmq::quorumDummyDKG->UpdatedBlockTip(pindexNew, fInitialDownload);
 
     masternodeSync.UpdatedBlockTip(pindexNew, fInitialDownload, connman);
 

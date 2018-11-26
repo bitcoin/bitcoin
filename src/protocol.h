@@ -271,6 +271,7 @@ extern const char *MNVERIFY;
 extern const char *GETMNLISTDIFF;
 extern const char *MNLISTDIFF;
 extern const char *QFCOMMITMENT;
+extern const char *QDCOMMITMENT;
 };
 
 /* Get a vector of all valid message types (see above) */
@@ -373,6 +374,7 @@ enum GetDataMsg {
     // MSG_CMPCT_BLOCK should not appear in any invs except as a part of getdata.
     MSG_CMPCT_BLOCK = 20, //!< Defined in BIP152
     MSG_QUORUM_FINAL_COMMITMENT = 21,
+    MSG_QUORUM_DUMMY_COMMITMENT = 22, // only valid on testnet/devnet/regtest
 };
 
 /** inv message data */

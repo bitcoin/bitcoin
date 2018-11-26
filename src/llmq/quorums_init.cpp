@@ -6,6 +6,7 @@
 
 #include "quorums_blockprocessor.h"
 #include "quorums_commitment.h"
+#include "quorums_dummydkg.h"
 
 namespace llmq
 {
@@ -13,10 +14,13 @@ namespace llmq
 void InitLLMQSystem(CEvoDB& evoDb)
 {
     quorumBlockProcessor = new CQuorumBlockProcessor(evoDb);
+    quorumDummyDKG = new CDummyDKG();
 }
 
 void DestroyLLMQSystem()
 {
+    delete quorumDummyDKG;
+    quorumDummyDKG = nullptr;
     delete quorumBlockProcessor;
     quorumBlockProcessor = nullptr;
 }

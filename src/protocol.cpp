@@ -72,6 +72,7 @@ const char *MNVERIFY="mnv";
 const char *GETMNLISTDIFF="getmnlistd";
 const char *MNLISTDIFF="mnlistdiff";
 const char *QFCOMMITMENT="qfcommit";
+const char *QDCOMMITMENT="qdcommit";
 };
 
 static const char* ppszTypeName[] =
@@ -100,6 +101,7 @@ static const char* ppszTypeName[] =
     NetMsgType::MNVERIFY,
     "compact block", // Should never occur
     NetMsgType::QFCOMMITMENT,
+    NetMsgType::QDCOMMITMENT,
 };
 
 /** All known message types. Keep this in the same order as the list of
@@ -160,6 +162,7 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::GETMNLISTDIFF,
     NetMsgType::MNLISTDIFF,
     NetMsgType::QFCOMMITMENT,
+    NetMsgType::QDCOMMITMENT,
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
 
