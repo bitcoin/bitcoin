@@ -11,9 +11,9 @@
 #include <cachemap.h>
 #include <cachemultimap.h>
 #include <chain.h>
-#include <governance-exceptions.h>
-#include <governance-object.h>
-#include <governance-vote.h>
+#include <modules/platform/funding_exceptions.h>
+#include <modules/platform/funding_object.h>
+#include <modules/platform/funding_vote.h>
 #include <net.h>
 #include <sync.h>
 #include <timedata.h>

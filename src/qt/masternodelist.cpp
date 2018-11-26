@@ -5,8 +5,8 @@
 #include <qt/qrdialog.h>
 #include <qt/walletmodel.h>
 
-#include <masternode.h>
-#include <masternodeman.h>
+#include <modules/masternode/masternode.h>
+#include <modules/masternode/masternode_man.h>
 #include <sync.h>
 #include <util/strencodings.h>
 

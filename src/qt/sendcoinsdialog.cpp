@@ -30,7 +30,7 @@
 #include <policy/fees.h>
 #include <wallet/fees.h>
 
-#include <privatesend.h>
+#include <modules/privatesend/privatesend.h>
 
 #include <QFontMetrics>
 #include <QScrollBar>

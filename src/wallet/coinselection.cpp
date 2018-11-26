@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <wallet/coinselection.h>
-#include <privatesend.h>
+#include <modules/privatesend/privatesend.h>
 
 #include <util/system.h>
 #include <util/moneystr.h>

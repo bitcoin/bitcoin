@@ -2,15 +2,15 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <activemasternode.h>
+#include <modules/masternode/activemasternode.h>
 #include <checkpoints.h>
 #include <consensus/validation.h>
-#include <governance.h>
+#include <modules/platform/funding.h>
 #include <validation.h>
-#include <masternode.h>
-#include <masternode-payments.h>
-#include <masternode-sync.h>
-#include <masternodeman.h>
+#include <modules/masternode/masternode.h>
+#include <modules/masternode/masternode_payments.h>
+#include <modules/masternode/masternode_sync.h>
+#include <modules/masternode/masternode_man.h>
 #include <netfulfilledman.h>
 #include <netmessagemaker.h>
 #include <ui_interface.h>

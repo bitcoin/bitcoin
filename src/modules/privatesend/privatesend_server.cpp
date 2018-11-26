@@ -1,14 +1,14 @@
 // Copyright (c) 2014-2017 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#include <privatesend-server.h>
+#include <modules/privatesend/privatesend_server.h>
 
-#include <activemasternode.h>
+#include <modules/masternode/activemasternode.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <core_io.h>
-#include <masternode-sync.h>
-#include <masternodeman.h>
+#include <modules/masternode/masternode_sync.h>
+#include <modules/masternode/masternode_man.h>
 #include <netmessagemaker.h>
 #include <scheduler.h>
 #include <script/interpreter.h>

@@ -11,11 +11,11 @@
 #include <qt/proposaltablemodel.h>
 
 #include <interfaces/node.h>
-#include <masternodeman.h>
-#include <masternode.h>
+#include <modules/masternode/masternode_man.h>
+#include <modules/masternode/masternode.h>
 #include <messagesigner.h>
 #include <util/system.h>
-#include <governance.h>
+#include <modules/platform/funding.h>
  
 #include <ui_interface.h>
 

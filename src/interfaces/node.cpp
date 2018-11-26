@@ -12,9 +12,9 @@
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
 #include <interfaces/wallet.h>
-#include <masternode-sync.h>
-#include <masternodeconfig.h>
-#include <masternodeman.h>
+#include <modules/masternode/masternode_sync.h>
+#include <modules/masternode/masternode_config.h>
+#include <modules/masternode/masternode_man.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netaddress.h>
@@ -23,7 +23,7 @@
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <primitives/block.h>
-#include <privatesend.h>
+#include <modules/privatesend/privatesend.h>
 #include <rpc/server.h>
 #include <scheduler.h>
 #include <shutdown.h>

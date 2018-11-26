@@ -8,11 +8,11 @@
 #include <addrman.h>
 #include <chainparams.h>
 #include <clientversion.h>
-#include <governance.h>
+#include <modules/platform/funding.h>
 #include <hash.h>
 #include <netfulfilledman.h>
-#include <masternodeman.h>
-#include <masternode-payments.h>
+#include <modules/masternode/masternode_man.h>
+#include <modules/masternode/masternode_payments.h>
 #include <random.h>
 #include <streams.h>
 #include <tinyformat.h>

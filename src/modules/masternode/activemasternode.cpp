@@ -2,10 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <activemasternode.h>
-#include <masternode.h>
-#include <masternode-sync.h>
-#include <masternodeman.h>
+#include <modules/masternode/activemasternode.h>
+#include <modules/masternode/masternode.h>
+#include <modules/masternode/masternode_sync.h>
+#include <modules/masternode/masternode_man.h>
 #include <netbase.h>
 #include <protocol.h>
 #include <scheduler.h>

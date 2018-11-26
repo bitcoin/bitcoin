@@ -5,8 +5,8 @@
 #ifndef PRIVATESENDCLIENT_H
 #define PRIVATESENDCLIENT_H
 
-#include <masternode.h>
-#include <privatesend.h>
+#include <modules/masternode/masternode.h>
+#include <modules/privatesend/privatesend.h>
 #include <validationinterface.h>
 #include <wallet/wallet.h>
 

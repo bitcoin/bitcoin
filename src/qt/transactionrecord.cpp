@@ -11,7 +11,7 @@
 #include <timedata.h>
 #include <validation.h>
 
-#include <privatesend.h>
+#include <modules/privatesend/privatesend.h>
 
 #include <stdint.h>
 

@@ -22,7 +22,7 @@
 #include <util/strencodings.h>
 #include <warnings.h>
 
-#include <masternode-sync.h>
+#include <modules/masternode/masternode_sync.h>
 
 #include <stdint.h>
 #ifdef HAVE_MALLOC_INFO

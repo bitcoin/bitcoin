@@ -4,12 +4,12 @@
 
 #include <chainparams.h>
 #include <interfaces/modules.h>
-#include <governance.h>
-#include <masternodeman.h>
-#include <masternode-payments.h>
-#include <masternode-sync.h>
-#include <privatesend.h>
-#include <privatesend-server.h>
+#include <modules/platform/funding.h>
+#include <modules/masternode/masternode_man.h>
+#include <modules/masternode/masternode_payments.h>
+#include <modules/masternode/masternode_sync.h>
+#include <modules/privatesend/privatesend.h>
+#include <modules/privatesend/privatesend_server.h>
 
 void ModuleInterface::InitializeCurrentBlockTip()
 {

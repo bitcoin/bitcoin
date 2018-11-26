@@ -30,9 +30,9 @@
 #include <versionbitsinfo.h>
 #include <warnings.h>
 
-#include <governance-classes.h>
-#include <masternode-payments.h>
-#include <masternode-sync.h>
+#include <modules/platform/funding_classes.h>
+#include <modules/masternode/masternode_payments.h>
+#include <modules/masternode/masternode_sync.h>
 
 #include <memory>
 #include <stdint.h>

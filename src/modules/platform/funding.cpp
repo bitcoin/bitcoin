@@ -3,16 +3,16 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/validation.h>
-#include <governance.h>
-#include <governance-object.h>
-#include <governance-validators.h>
-#include <governance-vote.h>
-#include <governance-classes.h>
+#include <modules/platform/funding.h>
+#include <modules/platform/funding_object.h>
+#include <modules/platform/funding_validators.h>
+#include <modules/platform/funding_vote.h>
+#include <modules/platform/funding_classes.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>
-#include <masternode.h>
-#include <masternode-sync.h>
-#include <masternodeman.h>
+#include <modules/masternode/masternode.h>
+#include <modules/masternode/masternode_sync.h>
+#include <modules/masternode/masternode_man.h>
 #include <messagesigner.h>
 #include <netfulfilledman.h>
 #include <util/system.h>
