@@ -37,9 +37,10 @@ ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QO
     m_node(node),
     optionsModel(_optionsModel),
     peerTableModel(0),
-    cachedMasternodeCountString(""),
     banTableModel(0),
-    pollTimer(0)
+    cachedMasternodeCountString(""),
+    pollTimer(0),
+    pollMnTimer(0)
 {
     cachedBestHeaderHeight = -1;
     cachedBestHeaderTime = -1;

@@ -91,9 +91,9 @@ private:
     std::unique_ptr<interfaces::Handler> m_handler_notify_header_tip;
     OptionsModel *optionsModel;
     PeerTableModel *peerTableModel;
-    QString cachedMasternodeCountString;
     BanTableModel *banTableModel;
 
+    QString cachedMasternodeCountString;
     QTimer *pollTimer;
     QTimer *pollMnTimer;
 
