@@ -139,7 +139,7 @@ def main():
         if len(parents) == 2 and check_merge and not allow_unclean:
             current_tree = subprocess.check_output([GIT, 'show', '--format=%T', current_commit], universal_newlines=True, encoding='utf8').splitlines()[0]
             subprocess.call([GIT, 'checkout', '--force', '--quiet', parents[0]])
-            subprocess.call([GIT, 'merge', '--no-ff', '--quiet', parents[1]], stdout=subprocess.DEVNULL)
+            subprocess.call([GIT, 'merge', '--no-ff', '--quiet', '--no-gpg-sign', parents[1]], stdout=subprocess.DEVNULL)
             recreated_tree = subprocess.check_output([GIT, 'show', '--format=format:%T', 'HEAD'], universal_newlines=True, encoding='utf8').splitlines()[0]
             if current_tree != recreated_tree:
                 print("Merge commit {} is not clean".format(current_commit), file=sys.stderr)
