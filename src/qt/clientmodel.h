@@ -29,6 +29,7 @@ QT_END_NAMESPACE
 
 enum class BlockSource {
     NONE,
+    MASTERNODE,
     REINDEX,
     DISK,
     NETWORK
@@ -71,6 +72,7 @@ public:
     bool isReleaseVersion() const;
     QString formatClientStartupTime() const;
     QString dataDir() const;
+    QString blocksDir() const;
 
     bool getProxyInfo(std::string& ip_port) const;
 
@@ -87,12 +89,11 @@ private:
     std::unique_ptr<interfaces::Handler> m_handler_banned_list_changed;
     std::unique_ptr<interfaces::Handler> m_handler_notify_block_tip;
     std::unique_ptr<interfaces::Handler> m_handler_notify_header_tip;
-    std::unique_ptr<interfaces::Handler> m_handler_notify_mn_data;
     OptionsModel *optionsModel;
     PeerTableModel *peerTableModel;
-    QString cachedMasternodeCountString;
     BanTableModel *banTableModel;
 
+    QString cachedMasternodeCountString;
     QTimer *pollTimer;
     QTimer *pollMnTimer;
 
@@ -103,7 +104,6 @@ Q_SIGNALS:
     void numConnectionsChanged(int count);
     void strMasternodesChanged(const QString &strMasternodes);
     void numBlocksChanged(int count, const QDateTime& blockDate, double nVerificationProgress, bool header);
-    void moduleDataSyncProgress(const QString &title, double nProgress);
     void mempoolSizeChanged(long count, size_t mempoolSizeInBytes);
     void networkActiveChanged(bool networkActive);
     void alertsChanged(const QString &warnings);

@@ -186,6 +186,12 @@ public:
 
     virtual MasterNodeCount getMNcount() = 0;
 
+    //! Return default wallet directory.
+    virtual std::string getWalletDir() = 0;
+
+    //! Return available wallets in wallet directory.
+    virtual std::vector<std::string> listWalletDir() = 0;
+
     //! Return interfaces for accessing wallets (if any).
     virtual std::vector<std::unique_ptr<Wallet>> getWallets() = 0;
 
@@ -224,10 +230,6 @@ public:
     //! Register handler for notify alert messages.
     using NotifyAlertChangedFn = std::function<void()>;
     virtual std::unique_ptr<Handler> handleNotifyAlertChanged(NotifyAlertChangedFn fn) = 0;
-
-    //! Register handler for MN status messages.
-    using NotifyMNSyncProgressFn = std::function<void(const std::string& title, double nProgress)>;
-    virtual std::unique_ptr<Handler> handleNotifyMNSyncProgress(NotifyMNSyncProgressFn fn) = 0;
 
     //! Register handler for ban list messages.
     using BannedListChangedFn = std::function<void()>;

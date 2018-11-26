@@ -14,8 +14,8 @@
 #include <script/interpreter.h>
 #include <shutdown.h>
 #include <txmempool.h>
-#include <util.h>
-#include <utilmoneystr.h>
+#include <util/system.h>
+#include <util/moneystr.h>
 
 CPrivateSendServer privateSendServer;
 
@@ -218,7 +218,7 @@ void CPrivateSendServer::ProcessModuleMessage(CNode* pfrom, const std::string& s
                 LogPrint(BCLog::PRIVSEND, "DSVIN -- txin=%s\n", txin.ToString());
 
                 Coin coin;
-                if(GetUTXOCoin(txin.prevout, coin)) {
+                if(pcoinsTip->GetCoin(txin.prevout, coin)) {
                     nValueIn += coin.out.nValue;
                 } else {
                     LogPrintf("DSVIN -- missing input! tx=%s\n", tx.GetHash().ToString());

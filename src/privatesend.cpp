@@ -14,8 +14,8 @@
 #include <reverse_iterator.h>
 #include <script/sign.h>
 #include <txmempool.h>
-#include <util.h>
-#include <utilmoneystr.h>
+#include <util/system.h>
+#include <util/moneystr.h>
 
 bool CDarkSendEntry::AddScriptSig(const CTxIn& txin)
 {
@@ -217,7 +217,7 @@ bool CPrivateSend::IsCollateralValid(const CTransaction& txCollateral)
 
     for (const auto& txin : txCollateral.vin) {
         Coin coin;
-        if(!GetUTXOCoin(txin.prevout, coin)) {
+        if(!pcoinsTip->GetCoin(txin.prevout, coin)) {
             LogPrint(BCLog::PRIVSEND, "CPrivateSend::IsCollateralValid -- Unknown inputs in collateral transaction, txCollateral=%s\n", txCollateral.ToString());
             return false;
         }

@@ -5,7 +5,7 @@
 #include <qt/clientmodel.h>
 #include <qt/platformstyle.h>
 #include <sync.h>
-#include <util.h>
+#include <util/system.h>
 
 #include <QMenu>
 #include <QTimer>

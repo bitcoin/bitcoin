@@ -8,7 +8,7 @@
 #include <masternode.h>
 #include <masternodeman.h>
 #include <sync.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 
 #include <QTimer>
 #include <QMessageBox>
@@ -60,13 +60,12 @@ MasternodeList::MasternodeList(interfaces::Node& node, const PlatformStyle *plat
     QAction *startAliasAction = new QAction(tr("Start alias"), this);
     contextMenu = new QMenu();
     contextMenu->addAction(startAliasAction);
-    connect(ui->tableWidgetMyMasternodes, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showContextMenu(const QPoint&)));
-    connect(ui->tableWidgetMyMasternodes, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(on_QRButton_clicked()));
-    connect(startAliasAction, SIGNAL(triggered()), this, SLOT(on_startButton_clicked()));
+    connect(ui->tableWidgetMyMasternodes, &QTableView::customContextMenuRequested, this, &MasternodeList::showContextMenu);
+    connect(ui->tableWidgetMyMasternodes, &QTableView::doubleClicked, this, &MasternodeList::on_QRButton_clicked);
+    connect(startAliasAction, &QAction::triggered, this, &MasternodeList::on_startButton_clicked);
 
     timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(updateNodeList()));
-    connect(timer, SIGNAL(timeout()), this, SLOT(updateMyNodeList()));
+    connect(timer, &QTimer::timeout, this, &MasternodeList::updateNodeList);
     timer->start(1000);
 
     fFilterUpdated = false;
@@ -84,7 +83,7 @@ void MasternodeList::setClientModel(ClientModel *_clientmodel)
     this->clientModel = _clientmodel;
     if(_clientmodel) {
         // try to update list when masternode count changes
-        connect(clientModel, SIGNAL(strMasternodesChanged(QString)), this, SLOT(updateNodeList()));
+        connect(clientModel, &ClientModel::strMasternodesChanged, this, &MasternodeList::updateNodeList);
     }
 }
 
@@ -327,6 +326,7 @@ void MasternodeList::updateNodeList()
 
     ui->countLabel->setText(QString::number(ui->tableWidgetMasternodes->rowCount()));
     ui->tableWidgetMasternodes->setSortingEnabled(true);
+    updateMyNodeList();
 }
 
 void MasternodeList::on_filterLineEdit_textChanged(const QString &strFilterIn)

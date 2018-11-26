@@ -63,6 +63,7 @@ from test_framework.util import (
     sync_mempools,
 )
 
+
 class AddressTypeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 6
@@ -72,8 +73,11 @@ class AddressTypeTest(BitcoinTestFramework):
             ["-addresstype=p2sh-segwit", "-changetype=bech32"],
             ["-addresstype=bech32"],
             ["-changetype=p2sh-segwit"],
-            []
+            [],
         ]
+
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
 
     def setup_network(self):
         self.setup_nodes()
@@ -143,7 +147,7 @@ class AddressTypeTest(BitcoinTestFramework):
             assert(False)
 
     def test_change_output_type(self, node_sender, destinations, expected_type):
-        txid = self.nodes[node_sender].sendmany(fromaccount="", amounts=dict.fromkeys(destinations, 0.001))
+        txid = self.nodes[node_sender].sendmany(dummy="", amounts=dict.fromkeys(destinations, 0.001))
         raw_tx = self.nodes[node_sender].getrawtransaction(txid)
         tx = self.nodes[node_sender].decoderawtransaction(raw_tx)
 

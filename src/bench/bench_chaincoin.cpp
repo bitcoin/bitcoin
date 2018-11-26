@@ -7,11 +7,13 @@
 #include <crypto/sha256.h>
 #include <key.h>
 #include <random.h>
-#include <util.h>
-#include <utilstrencodings.h>
+#include <util/system.h>
+#include <util/strencodings.h>
 #include <validation.h>
 
 #include <memory>
+
+const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
 static const int64_t DEFAULT_BENCH_EVALUATIONS = 5;
 static const char* DEFAULT_BENCH_FILTER = ".*";
@@ -80,7 +82,7 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-    std::unique_ptr<benchmark::Printer> printer(new benchmark::ConsolePrinter());
+    std::unique_ptr<benchmark::Printer> printer = MakeUnique<benchmark::ConsolePrinter>();
     std::string printer_arg = gArgs.GetArg("-printer", DEFAULT_BENCH_PRINTER);
     if ("plot" == printer_arg) {
         printer.reset(new benchmark::PlotlyPrinter(

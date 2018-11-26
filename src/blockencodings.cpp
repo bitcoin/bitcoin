@@ -6,12 +6,13 @@
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
 #include <chainparams.h>
-#include <hash.h>
+#include <crypto/sha256.h>
+#include <crypto/siphash.h>
 #include <random.h>
 #include <streams.h>
 #include <txmempool.h>
-#include <util.h>
 #include <validation.h>
+#include <util/system.h>
 
 #include <unordered_map>
 
@@ -60,7 +61,7 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
         if (cmpctblock.prefilledtxn[i].tx->IsNull())
             return READ_STATUS_INVALID;
 
-        lastprefilledindex += cmpctblock.prefilledtxn[i].index + 1; //index is a uint16_t, so cant overflow here
+        lastprefilledindex += cmpctblock.prefilledtxn[i].index + 1; //index is a uint16_t, so can't overflow here
         if (lastprefilledindex > std::numeric_limits<uint16_t>::max())
             return READ_STATUS_INVALID;
         if ((uint32_t)lastprefilledindex > cmpctblock.shorttxids.size() + i) {
@@ -162,7 +163,7 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
             break;
     }
 
-    LogPrint(BCLog::CMPCTBLOCK, "Initialized PartiallyDownloadedBlock for block %s using a cmpctblock of size %lu\n", cmpctblock.header.GetHash().ToString(), GetSerializeSize(cmpctblock, SER_NETWORK, PROTOCOL_VERSION));
+    LogPrint(BCLog::CMPCTBLOCK, "Initialized PartiallyDownloadedBlock for block %s using a cmpctblock of size %lu\n", cmpctblock.header.GetHash().ToString(), GetSerializeSize(cmpctblock, PROTOCOL_VERSION));
 
     return READ_STATUS_OK;
 }

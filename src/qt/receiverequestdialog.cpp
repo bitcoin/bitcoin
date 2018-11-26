@@ -30,10 +30,10 @@ QRImageWidget::QRImageWidget(QWidget *parent):
 {
     contextMenu = new QMenu(this);
     QAction *saveImageAction = new QAction(tr("&Save Image..."), this);
-    connect(saveImageAction, SIGNAL(triggered()), this, SLOT(saveImage()));
+    connect(saveImageAction, &QAction::triggered, this, &QRImageWidget::saveImage);
     contextMenu->addAction(saveImageAction);
     QAction *copyImageAction = new QAction(tr("&Copy Image"), this);
-    connect(copyImageAction, SIGNAL(triggered()), this, SLOT(copyImage()));
+    connect(copyImageAction, &QAction::triggered, this, &QRImageWidget::copyImage);
     contextMenu->addAction(copyImageAction);
 }
 
@@ -97,7 +97,7 @@ ReceiveRequestDialog::ReceiveRequestDialog(QWidget *parent) :
     ui->lblQRCode->setVisible(false);
 #endif
 
-    connect(ui->btnSaveAs, SIGNAL(clicked()), ui->lblQRCode, SLOT(saveImage()));
+    connect(ui->btnSaveAs, &QPushButton::clicked, ui->lblQRCode, &QRImageWidget::saveImage);
 }
 
 ReceiveRequestDialog::~ReceiveRequestDialog()
@@ -110,7 +110,7 @@ void ReceiveRequestDialog::setModel(WalletModel *_model)
     this->model = _model;
 
     if (_model)
-        connect(_model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(update()));
+        connect(_model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &ReceiveRequestDialog::update);
 
     // update the display unit if necessary
     update();

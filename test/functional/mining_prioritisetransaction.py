@@ -18,6 +18,9 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.extra_args = [["-printpriority=1"], ["-printpriority=1"]]
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def run_test(self):
         # Test `prioritisetransaction` required parameters
         assert_raises_rpc_error(-1, "prioritisetransaction", self.nodes[0].prioritisetransaction)
@@ -28,7 +31,8 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         assert_raises_rpc_error(-1, "prioritisetransaction", self.nodes[0].prioritisetransaction, '', 0, 0, 0)
 
         # Test `prioritisetransaction` invalid `txid`
-        assert_raises_rpc_error(-1, "txid must be hexadecimal string", self.nodes[0].prioritisetransaction, txid='foo', fee_delta=0)
+        assert_raises_rpc_error(-8, "txid must be of length 64 (not 3, for 'foo')", self.nodes[0].prioritisetransaction, txid='foo', fee_delta=0)
+        assert_raises_rpc_error(-8, "txid must be hexadecimal string (not 'Zd1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000')", self.nodes[0].prioritisetransaction, txid='Zd1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000', fee_delta=0)
 
         # Test `prioritisetransaction` invalid `dummy`
         txid = '1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000'

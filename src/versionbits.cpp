@@ -6,24 +6,6 @@
 
 #include <consensus/params.h>
 
-const struct VBDeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_BITS_DEPLOYMENTS] = {
-    {
-        /*.name =*/ "testdummy",
-        /*.gbt_force =*/ true,
-        /*.check_mn_protocol =*/ false,
-    },
-    {
-        /*.name =*/ "csv",
-        /*.gbt_force =*/ true,
-        /*.check_mn_protocol =*/ false,
-    },
-    {
-        /*.name =*/ "segwit",
-        /*.gbt_force =*/ true,
-        /*.check_mn_protocol =*/ true,
-    }
-};
-
 ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const
 {
     int nPeriod = Period(params);

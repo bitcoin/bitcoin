@@ -1,9 +1,10 @@
 #include <qt/test/wallettests.h>
 #include <qt/test/util.h>
 
+#include <interfaces/chain.h>
 #include <interfaces/node.h>
+#include <base58.h>
 #include <qt/bitcoinamountfield.h>
-#include <qt/callback.h>
 #include <qt/optionsmodel.h>
 #include <qt/platformstyle.h>
 #include <qt/qvalidatedlineedit.h>
@@ -39,7 +40,7 @@ namespace
 //! Press "Yes" or "Cancel" buttons in modal send confirmation dialog.
 void ConfirmSend(QString* text = nullptr, bool cancel = false)
 {
-    QTimer::singleShot(0, makeCallback([text, cancel](Callback* callback) {
+    QTimer::singleShot(0, [text, cancel]() {
         for (QWidget* widget : QApplication::topLevelWidgets()) {
             if (widget->inherits("SendConfirmationDialog")) {
                 SendConfirmationDialog* dialog = qobject_cast<SendConfirmationDialog*>(widget);
@@ -49,8 +50,7 @@ void ConfirmSend(QString* text = nullptr, bool cancel = false)
                 button->click();
             }
         }
-        delete callback;
-    }), SLOT(call()));
+    });
 }
 
 //! Send coins to address and return txid.
@@ -133,7 +133,8 @@ void TestGUI()
     for (int i = 0; i < 5; ++i) {
         test.CreateAndProcessBlock({}, GetScriptForRawPubKey(test.coinbaseKey.GetPubKey()));
     }
-    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>("mock", WalletDatabase::CreateMock());
+    auto chain = interfaces::MakeChain();
+    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(*chain, WalletLocation(), WalletDatabase::CreateMock());
     bool firstRun;
     wallet->LoadWallet(firstRun);
     {
@@ -142,7 +143,7 @@ void TestGUI()
         wallet->AddKeyPubKey(test.coinbaseKey, test.coinbaseKey.GetPubKey());
     }
     {
-        LOCK(cs_main);
+        auto locked_chain = wallet->chain().lock();
         WalletRescanReserver reserver(wallet.get());
         reserver.reserve();
         wallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver, true);
@@ -243,5 +244,16 @@ void TestGUI()
 
 void WalletTests::walletTests()
 {
+#ifdef Q_OS_MAC
+    if (QApplication::platformName() == "minimal") {
+        // Disable for mac on "minimal" platform to avoid crashes inside the Qt
+        // framework when it tries to look up unimplemented cocoa functions,
+        // and fails to handle returned nulls
+        // (https://bugreports.qt.io/browse/QTBUG-49686).
+        QWARN("Skipping WalletTests on mac build with 'minimal' platform set due to Qt bugs. To run AppTests, invoke "
+              "with 'test_bitcoin-qt -platform cocoa' on mac, or else use a linux or windows build.");
+        return;
+    }
+#endif
     TestGUI();
 }

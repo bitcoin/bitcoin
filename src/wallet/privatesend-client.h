@@ -9,7 +9,6 @@
 #include <privatesend.h>
 #include <validationinterface.h>
 #include <wallet/wallet.h>
-#include <wallet/walletutil.h>
 
 class CPrivateSendClient;
 class CConnman;
@@ -37,6 +36,35 @@ static const int PRIVATESEND_KEYS_THRESHOLD_STOP    = 50;
 // The main object for accessing mixing
 extern CPrivateSendClient privateSendClient;
 
+class CKeyHolder
+{
+private:
+    CReserveKey reserveKey;
+    CPubKey pubKey;
+public:
+    CKeyHolder(CWallet* pwalletIn);
+    CKeyHolder(CKeyHolder&&) = default;
+    CKeyHolder& operator=(CKeyHolder&&) = default;
+    void KeepKey();
+    void ReturnKey();
+
+    CScript GetScriptForDestination() const;
+
+};
+
+class CKeyHolderStorage
+{
+private:
+    std::vector<std::unique_ptr<CKeyHolder> > storage;
+    mutable CCriticalSection cs_storage;
+
+public:
+    CScript AddKey(CWallet* pwalletIn);
+    void KeepAll();
+    void ReturnAll();
+
+};
+
 class CPendingDsaRequest
 {
 private:
@@ -51,7 +79,7 @@ public:
         addr(CService()),
         dsa(CDarksendAccept()),
         nTimeCreated(0)
-    {};
+    {}
 
     CPendingDsaRequest(const CService& addr_, const CDarksendAccept& dsa_):
         addr(addr_),
@@ -117,23 +145,23 @@ private:
 
     // Make sure we have enough keys since last backup
     bool CheckAutomaticBackup();
-    bool JoinExistingQueue(CAmount nBalanceNeedsAnonymized, CConnman* connman);
-    bool StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsAnonymized, CConnman* connman);
+    bool JoinExistingQueue(CAmount nBalanceNeedsAnonymized);
+    bool StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsAnonymized);
 
     /// Create denominations
-    bool CreateDenominated(CConnman* connman);
-    bool CreateDenominated(const CompactTallyItem& tallyItem, bool fCreateMixingCollaterals, CConnman* connman);
+    bool CreateDenominated();
+    bool CreateDenominated(interfaces::Chain::Lock &locked_chain, const CompactTallyItem& tallyItem, bool fCreateMixingCollaterals);
 
     /// Split up large inputs or make fee sized inputs
-    bool MakeCollateralAmounts(CConnman* connman);
-    bool MakeCollateralAmounts(const CompactTallyItem& tallyItem, bool fTryDenominated, CConnman* connman);
+    bool MakeCollateralAmounts(interfaces::Chain::Lock &locked_chain);
+    bool MakeCollateralAmounts(interfaces::Chain::Lock &locked_chain, const CompactTallyItem& tallyItem, bool fTryDenominated);
 
     /// As a client, submit part of a future mixing transaction to a Masternode to start the process
-    bool SubmitDenominate(CConnman* connman);
+    bool SubmitDenominate();
     /// step 1: prepare denominated inputs and outputs
     bool PrepareDenominate(int nMinRounds, int nMaxRounds, std::string& strErrorRet, std::vector<CTxDSIn>& vecTxDSInRet, std::vector<CTxOut>& vecTxOutRet);
     /// step 2: send denominated inputs and outputs prepared in step 1
-    bool SendDenominate(const std::vector<CTxDSIn>& vecTxDSIn, const std::vector<CTxOut>& vecTxOut, CConnman* connman);
+    bool SendDenominate(const std::vector<CTxDSIn>& vecTxDSIn, const std::vector<CTxOut>& vecTxOut);
 
     /// Get Masternode updates about the progress of mixing
     bool CheckPoolStateUpdate(PoolState nStateNew, int nEntriesCountNew, PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID, int nSessionIDNew=0);
@@ -141,9 +169,9 @@ private:
     void SetState(PoolState nStateNew);
 
     /// As a client, check and sign the final transaction
-    bool SignFinalTransaction(const CTransaction& finalTransactionNew, CNode* pnode, CConnman* connman);
+    bool SignFinalTransaction(const CTransaction& finalTransactionNew, CNode* pnode);
 
-    void RelayIn(const CDarkSendEntry& entry, CConnman* connman);
+    void RelayIn(const CDarkSendEntry& entry);
 
     void SetNull();
 
@@ -169,7 +197,7 @@ public:
         nCachedNumBlocks(std::numeric_limits<int>::max()),
         fCreateAutoBackups(true) { SetNull(); }
 
-    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman);
+    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
 
     bool getWallet(const std::string walletIn);
 
@@ -188,18 +216,18 @@ public:
     bool IsMixingMasternode(const CNode* pnode);
 
     /// one-shot mixing attempt
-    bool DoOnceDenominating(std::string walletIn, CConnman* connman);
+    bool DoOnceDenominating(std::string walletIn);
 
     /// Passively run mixing in the background according to the configuration in settings
-    bool DoAutomaticDenominating(CConnman* connman);
+    bool DoAutomaticDenominating(interfaces::Chain::Lock &locked_chain);
 
-    void ProcessPendingDsaRequest(CConnman* connman);
+    void ProcessPendingDsaRequest();
 
     void CheckTimeout();
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload);
-    void ClientTask(CConnman* connman);
-    void Controller(CScheduler& scheduler, CConnman* connman);
+    void ClientTask();
+    void Controller(CScheduler& scheduler);
 };
 
 #endif

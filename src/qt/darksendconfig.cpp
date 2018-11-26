@@ -19,9 +19,9 @@ DarksendConfig::DarksendConfig(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    connect(ui->buttonBasic, SIGNAL(clicked()), this, SLOT(clickBasic()));
-    connect(ui->buttonHigh, SIGNAL(clicked()), this, SLOT(clickHigh()));
-    connect(ui->buttonMax, SIGNAL(clicked()), this, SLOT(clickMax()));
+    connect(ui->buttonBasic, &QPushButton::clicked, this, &DarksendConfig::clickBasic);
+    connect(ui->buttonHigh, &QPushButton::clicked, this, &DarksendConfig::clickHigh);
+    connect(ui->buttonMax, &QPushButton::clicked, this, &DarksendConfig::clickMax);
 }
 
 DarksendConfig::~DarksendConfig()

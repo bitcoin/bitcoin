@@ -143,13 +143,13 @@ OverviewPage::OverviewPage(interfaces::Node& node, const PlatformStyle *platform
     // Note: minimum height of listTransactions will be set later in updateAdvancedPSUI() to reflect actual settings
     ui->listTransactions->setAttribute(Qt::WA_MacShowFocusRect, false);
 
-    connect(ui->listTransactions, SIGNAL(clicked(QModelIndex)), this, SLOT(handleTransactionClicked(QModelIndex)));
+    connect(ui->listTransactions, &QListView::clicked, this, &OverviewPage::handleTransactionClicked);
 
     // init "out of sync" warning labels
     // start with displaying the "out of sync" warnings
     showOutOfSyncWarning(true);
-    connect(ui->labelWalletStatus, SIGNAL(clicked()), this, SLOT(handleOutOfSyncWarningClicks()));
-    connect(ui->labelTransactionsStatus, SIGNAL(clicked()), this, SLOT(handleOutOfSyncWarningClicks()));
+    connect(ui->labelWalletStatus, &QPushButton::clicked, this, &OverviewPage::handleOutOfSyncWarningClicks);
+    connect(ui->labelTransactionsStatus, &QPushButton::clicked, this, &OverviewPage::handleOutOfSyncWarningClicks);
     ui->labelPrivateSendSyncStatus->setText("(" + tr("out of sync") + ")");
 
     // hide PS frame (helps to preserve saved size)
@@ -179,7 +179,7 @@ OverviewPage::OverviewPage(interfaces::Node& node, const PlatformStyle *platform
         privateSendClient.fCreateAutoBackups = false;
 
         timer = new QTimer(this);
-        connect(timer, SIGNAL(timeout()), this, SLOT(privateSendStatus()));
+        connect(timer, &QTimer::timeout, this, &OverviewPage::privateSendStatus);
         timer->start(1000);
     }
 }
@@ -197,7 +197,7 @@ void OverviewPage::handleOutOfSyncWarningClicks()
 
 OverviewPage::~OverviewPage()
 {
-    if(timer) disconnect(timer, SIGNAL(timeout()), this, SLOT(privateSendStatus()));
+    if(timer) disconnect(timer, &QTimer::timeout, this, &OverviewPage::privateSendStatus);
     delete ui;
 }
 
@@ -255,7 +255,7 @@ void OverviewPage::setClientModel(ClientModel *model)
     if(model)
     {
         // Show warning if this is a prerelease version
-        connect(model, SIGNAL(alertsChanged(QString)), this, SLOT(updateAlerts(QString)));
+        connect(model, &ClientModel::alertsChanged, this, &OverviewPage::updateAlerts);
         updateAlerts(model->getStatusBarWarnings());
     }
 }
@@ -271,26 +271,26 @@ void OverviewPage::setWalletModel(WalletModel *model)
         interfaces::Wallet& wallet = model->wallet();
         interfaces::WalletBalances balances = wallet.getBalances();
         setBalance(balances);
-        connect(model, SIGNAL(balanceChanged(interfaces::WalletBalances)), this, SLOT(setBalance(interfaces::WalletBalances)));
+        connect(model, &WalletModel::balanceChanged, this, &OverviewPage::setBalance);
 
-        connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
+        connect(model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &OverviewPage::updateDisplayUnit);
 
         updateWatchOnlyLabels(wallet.haveWatchOnly());
-        connect(model, SIGNAL(notifyWatchonlyChanged(bool)), this, SLOT(updateWatchOnlyLabels(bool)));
+        connect(model, &WalletModel::notifyWatchonlyChanged, this, &OverviewPage::updateWatchOnlyLabels);
 
         // explicitly update PS frame and transaction list to reflect actual settings
         updateAdvancedPSUI(model->getOptionsModel()->getShowAdvancedPSUI());
 
         // that's it for litemode
         if(fLiteMode) return;
-        connect(model->getOptionsModel(), SIGNAL(privateSendRoundsChanged()), this, SLOT(updatePrivateSendProgress()));
-        connect(model->getOptionsModel(), SIGNAL(privateSentAmountChanged()), this, SLOT(updatePrivateSendProgress()));
-        connect(model->getOptionsModel(), SIGNAL(advancedPSUIChanged(bool)), this, SLOT(updateAdvancedPSUI(bool)));
+        connect(model->getOptionsModel(), &OptionsModel::privateSendRoundsChanged, this, &OverviewPage::updatePrivateSendProgress);
+        connect(model->getOptionsModel(), &OptionsModel::privateSentAmountChanged, this, &OverviewPage::updatePrivateSendProgress);
+        connect(model->getOptionsModel(), &OptionsModel::advancedPSUIChanged, this, &OverviewPage::updateAdvancedPSUI);
 
-        connect(ui->privateSendAuto, SIGNAL(clicked()), this, SLOT(privateSendAuto()));
-        connect(ui->privateSendReset, SIGNAL(clicked()), this, SLOT(privateSendReset()));
-        connect(ui->privateSendInfo, SIGNAL(clicked()), this, SLOT(privateSendInfo()));
-        connect(ui->togglePrivateSend, SIGNAL(clicked()), this, SLOT(togglePrivateSend()));
+        connect(ui->privateSendAuto, &QPushButton::clicked, this, &OverviewPage::privateSendAuto);
+        connect(ui->privateSendReset, &QPushButton::clicked, this, &OverviewPage::privateSendReset);
+        connect(ui->privateSendInfo, &QPushButton::clicked, this, &OverviewPage::privateSendInfo);
+        connect(ui->togglePrivateSend, &QPushButton::clicked, this, &OverviewPage::togglePrivateSend);
 
         // privatesend buttons will not react to spacebar must be clicked on
         ui->privateSendAuto->setFocusPolicy(Qt::NoFocus);
@@ -527,7 +527,7 @@ void OverviewPage::privateSendStatus()
 
 void OverviewPage::privateSendAuto(){
     const std::string name = walletModel->getWalletName().toStdString();
-    privateSendClient.DoOnceDenominating(name, g_connman.get());
+    privateSendClient.DoOnceDenominating(name);
 }
 
 void OverviewPage::privateSendReset(){

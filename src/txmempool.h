@@ -15,6 +15,7 @@
 
 #include <amount.h>
 #include <coins.h>
+#include <crypto/siphash.h>
 #include <indirectmap.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
@@ -28,6 +29,7 @@
 #include <boost/signals2/signal.hpp>
 
 class CBlockIndex;
+extern CCriticalSection cs_main;
 
 /** Fake height value used in Coin to signify they are only in the memory pool (since 0.8) */
 static const uint32_t MEMPOOL_HEIGHT = 0x7FFFFFFF;
@@ -64,14 +66,14 @@ class CTxMemPool;
 class CTxMemPoolEntry
 {
 private:
-    CTransactionRef tx;
-    CAmount nFee;              //!< Cached to avoid expensive parent-transaction lookups
-    size_t nTxWeight;          //!< ... and avoid recomputing tx weight (also used for GetTxSize())
-    size_t nUsageSize;         //!< ... and total memory usage
-    int64_t nTime;             //!< Local time when entering the mempool
-    unsigned int entryHeight;  //!< Chain height when entering the mempool
-    bool spendsCoinbase;       //!< keep track of transactions that spend a coinbase
-    int64_t sigOpCost;         //!< Total sigop cost
+    const CTransactionRef tx;
+    const CAmount nFee;             //!< Cached to avoid expensive parent-transaction lookups
+    const size_t nTxWeight;         //!< ... and avoid recomputing tx weight (also used for GetTxSize())
+    const size_t nUsageSize;        //!< ... and total memory usage
+    const int64_t nTime;            //!< Local time when entering the mempool
+    const unsigned int entryHeight; //!< Chain height when entering the mempool
+    const bool spendsCoinbase;      //!< keep track of transactions that spend a coinbase
+    const int64_t sigOpCost;        //!< Total sigop cost
     int64_t feeDelta;          //!< Used for determining the priority of the transaction for mining in a block
     LockPoints lockPoints;     //!< Track the height and time at which tx was final
 
@@ -342,13 +344,13 @@ struct TxMempoolInfo
  * this is passed to the notification signal.
  */
 enum class MemPoolRemovalReason {
-    UNKNOWN = 0, //! Manually removed or unknown reason
-    EXPIRY,      //! Expired from mempool
-    SIZELIMIT,   //! Removed in size limiting
-    REORG,       //! Removed for reorganization
-    BLOCK,       //! Removed for block
-    CONFLICT,    //! Removed for conflict with in-block transaction
-    REPLACED     //! Removed for replacement
+    UNKNOWN = 0, //!< Manually removed or unknown reason
+    EXPIRY,      //!< Expired from mempool
+    SIZELIMIT,   //!< Removed in size limiting
+    REORG,       //!< Removed for reorganization
+    BLOCK,       //!< Removed for block
+    CONFLICT,    //!< Removed for conflict with in-block transaction
+    REPLACED,    //!< Removed for replacement
 };
 
 class SaltedTxidHasher
@@ -539,11 +541,11 @@ public:
     // Note that addUnchecked is ONLY called from ATMP outside of tests
     // and any other callers may break wallet's in-mempool tracking (due to
     // lack of CValidationInterface::TransactionAddedToMempool callbacks).
-    void addUnchecked(const uint256& hash, const CTxMemPoolEntry& entry, bool validFeeEstimate = true) EXCLUSIVE_LOCKS_REQUIRED(cs);
-    void addUnchecked(const uint256& hash, const CTxMemPoolEntry& entry, setEntries& setAncestors, bool validFeeEstimate = true) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void addUnchecked(const CTxMemPoolEntry& entry, bool validFeeEstimate = true) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void addUnchecked(const CTxMemPoolEntry& entry, setEntries& setAncestors, bool validFeeEstimate = true) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     void removeRecursive(const CTransaction &tx, MemPoolRemovalReason reason = MemPoolRemovalReason::UNKNOWN);
-    void removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight, int flags);
+    void removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight, int flags) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void removeConflicts(const CTransaction &tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight);
 
@@ -565,7 +567,15 @@ public:
     void ApplyDelta(const uint256 hash, CAmount &nFeeDelta) const;
     void ClearPrioritisation(const uint256 hash);
 
-public:
+    /** Get the transaction in the pool that spends the same prevout */
+    const CTransaction* GetConflictTx(const COutPoint& prevout) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    /** Returns an iterator to the given hash, if found */
+    boost::optional<txiter> GetIter(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    /** Translate a set of hashes into a set of pool iterators to avoid repeated lookups */
+    setEntries GetIterSet(const std::set<uint256>& hashes) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+
     /** Remove a set of transactions from the mempool.
      *  If a transaction is in this set, then all in-mempool descendants must
      *  also be in the set, unless this transaction is being removed for being
@@ -638,7 +648,7 @@ public:
         return totalTxSize;
     }
 
-    bool exists(uint256 hash) const
+    bool exists(const uint256& hash) const
     {
         LOCK(cs);
         return (mapTx.count(hash) != 0);

@@ -5,47 +5,34 @@
 #ifndef BITCOIN_WALLET_WALLETUTIL_H
 #define BITCOIN_WALLET_WALLETUTIL_H
 
-#include <chainparamsbase.h>
-#include <util.h>
-#include <wallet/wallet.h>
+#include <fs.h>
+
+#include <vector>
 
 //! Get the path of the wallet directory.
 fs::path GetWalletDir();
 
-/**
- * Figures out what wallet, if any, to use for a Private Send.
- *
- * @param[in]
- * @return nullptr if no wallet should be used, or a pointer to the CWallet
- */
+//! Get wallets in wallet directory.
+std::vector<fs::path> ListWalletDir();
 
-class CKeyHolder
+//! The WalletLocation class provides wallet information.
+class WalletLocation final
 {
-private:
-    CReserveKey reserveKey;
-    CPubKey pubKey;
-public:
-    CKeyHolder(CWallet* pwalletIn);
-    CKeyHolder(CKeyHolder&&) = default;
-    CKeyHolder& operator=(CKeyHolder&&) = default;
-    void KeepKey();
-    void ReturnKey();
-
-    CScript GetScriptForDestination() const;
-
-};
-
-class CKeyHolderStorage
-{
-private:
-    std::vector<std::unique_ptr<CKeyHolder> > storage;
-    mutable CCriticalSection cs_storage;
+    std::string m_name;
+    fs::path m_path;
 
 public:
-    CScript AddKey(CWallet* pwalletIn);
-    void KeepAll();
-    void ReturnAll();
+    explicit WalletLocation() {}
+    explicit WalletLocation(const std::string& name);
 
+    //! Get wallet name.
+    const std::string& GetName() const { return m_name; }
+
+    //! Get wallet absolute path.
+    const fs::path& GetPath() const { return m_path; }
+
+    //! Return whether the wallet exists.
+    bool Exists() const;
 };
 
 #endif // BITCOIN_WALLET_WALLETUTIL_H

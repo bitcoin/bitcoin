@@ -19,8 +19,8 @@
 #include <masternodeman.h>
 #include <messagesigner.h>
 #include <rpc/server.h>
-#include <util.h>
-#include <utilmoneystr.h>
+#include <util/system.h>
+#include <util/moneystr.h>
 #ifdef ENABLE_WALLET
 #include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
@@ -189,7 +189,8 @@ UniValue gobject(const JSONRPCRequest& request)
         EnsureWalletIsUnlocked(pwallet);
 
         CTransactionRef tx;
-        if(!pwallet->GetBudgetSystemCollateralTX(tx, govobj.GetHash(), govobj.GetMinCollateralFee())) {
+        auto locked_chain = pwallet->chain().lock();
+        if(!pwallet->GetBudgetSystemCollateralTX(*locked_chain, tx, govobj.GetHash(), govobj.GetMinCollateralFee())) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Error making collateral transaction for governance object. Please check your wallet balance and make sure your wallet is unlocked.");
         }
 
@@ -197,7 +198,7 @@ UniValue gobject(const JSONRPCRequest& request)
         CReserveKey reservekey(pwallet);
         // -- send the tx to the network
         CValidationState state;
-        if (!pwallet->CommitTransaction(tx, {} /* mapValue */, {} /* orderForm */, {} /* fromAccount */, reservekey, g_connman.get(), state)) {
+        if (!pwallet->CommitTransaction(tx, {} /* mapValue */, {} /* orderForm */, reservekey, g_connman.get(), state)) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "CommitTransaction failed! Reason given: " + state.GetRejectReason());
         }
 

@@ -7,7 +7,7 @@
 #include <masternodeman.h>
 #include <masternode-sync.h>
 #include <messagesigner.h>
-#include <util.h>
+#include <util/system.h>
 
 std::string CGovernanceVoting::ConvertOutcomeToString(vote_outcome_enum_t nOutcome)
 {

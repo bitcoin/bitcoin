@@ -209,6 +209,9 @@ class SendHeadersTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 2
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def mine_blocks(self, count):
         """Mine count blocks and return the new tip."""
 
@@ -402,7 +405,7 @@ class SendHeadersTest(BitcoinTestFramework):
 
             block_time += 9
 
-            fork_point = self.nodes[0].getblock("%02x" % new_block_hashes[0])["previousblockhash"]
+            fork_point = self.nodes[0].getblock("%064x" % new_block_hashes[0])["previousblockhash"]
             fork_point = int(fork_point, 16)
 
             # Use getblocks/getdata

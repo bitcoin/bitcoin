@@ -13,8 +13,8 @@
 #include <serialize.h>
 #include <streams.h>
 #include <uint256.h>
-#include <util.h>
-#include <utilstrencodings.h>
+#include <util/system.h>
+#include <util/strencodings.h>
 #include <test/test_chaincoin.h>
 
 #include <vector>
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(bloom_create_insert_serialize_with_tweak)
 
 BOOST_AUTO_TEST_CASE(bloom_create_insert_key)
 {
-    std::string strSecret = std::string("6EzRqdFPMVMpXjsRhLYxkqX51dHk3GFqUBuj2mezhD7nWhUoZot");
+    std::string strSecret = std::string("5Kg1gnAjaLfKiwhhPpGS3QfRg2m6awQvaj98JCZBZQ5SuS2F15C");
     CKey key = DecodeSecret(strSecret);
     CPubKey pubkey = key.GetPubKey();
     std::vector<unsigned char> vchPubKey(pubkey.begin(), pubkey.end());
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(bloom_create_insert_key)
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << filter;
 
-    std::vector<unsigned char> vch = ParseHex("0358c8c4080000000000000001");
+    std::vector<unsigned char> vch = ParseHex("038fc16b080000000000000001");
     std::vector<char> expected(vch.size());
 
     for (unsigned int i = 0; i < vch.size(); i++)
@@ -177,10 +177,10 @@ BOOST_AUTO_TEST_CASE(bloom_match)
 
 BOOST_AUTO_TEST_CASE(merkle_block_1)
 {
-    CBlock block = getBlock9tx();
+    CBlock block = getBlock13b8a();
     CBloomFilter filter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
     // Match the last transaction
-    filter.insert(uint256S("0x63614bb98320bdd653820c6ce0d8e0f1b3f7ca5b00e84f8c9386b03713be410c"));
+    filter.insert(uint256S("0x74d681e0e03bafa802c8aa084379aa98d9fcd632ddc2ed9782b586ec87451f20"));
 
     CMerkleBlock merkleBlock(block, filter);
     BOOST_CHECK_EQUAL(merkleBlock.header.GetHash().GetHex(), block.GetHash().GetHex());
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_1)
     BOOST_CHECK_EQUAL(merkleBlock.vMatchedTxn.size(), 1U);
     std::pair<unsigned int, uint256> pair = merkleBlock.vMatchedTxn[0];
 
-    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == uint256S("0x63614bb98320bdd653820c6ce0d8e0f1b3f7ca5b00e84f8c9386b03713be410c"));
+    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == uint256S("0x74d681e0e03bafa802c8aa084379aa98d9fcd632ddc2ed9782b586ec87451f20"));
     BOOST_CHECK(merkleBlock.vMatchedTxn[0].first == 8);
 
     std::vector<uint256> vMatched;
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_1)
         BOOST_CHECK(vMatched[i] == merkleBlock.vMatchedTxn[i].second);
 
     // Also match the 8th transaction
-    filter.insert(uint256S("0xcb57fa25ca0eb5c63c929ba1fdbcf376566b7f1ad02bf528e67f0d5ae38c6cac"));
+    filter.insert(uint256S("0xdd1fd2a6fc16404faf339881a90adbde7f4f728691ac62e8f168809cdfae1053"));
     merkleBlock = CMerkleBlock(block, filter);
     BOOST_CHECK(merkleBlock.header.GetHash() == block.GetHash());
 
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_1)
 
     BOOST_CHECK(merkleBlock.vMatchedTxn[1] == pair);
 
-    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == uint256S("0xcb57fa25ca0eb5c63c929ba1fdbcf376566b7f1ad02bf528e67f0d5ae38c6cac"));
+    BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == uint256S("0xdd1fd2a6fc16404faf339881a90adbde7f4f728691ac62e8f168809cdfae1053"));
     BOOST_CHECK(merkleBlock.vMatchedTxn[0].first == 7);
 
     BOOST_CHECK(merkleBlock.txn.ExtractMatches(vMatched, vIndex) == block.hashMerkleRoot);
@@ -485,7 +485,7 @@ BOOST_AUTO_TEST_CASE(rolling_bloom)
         if (rb1.contains(RandomData()))
             ++nHits;
     }
-    // Run test_chaincoin with --log_level=message to see BOOST_TEST_MESSAGEs:
+    // Run test_bitcoin with --log_level=message to see BOOST_TEST_MESSAGEs:
     BOOST_TEST_MESSAGE("RollingBloomFilter got " << nHits << " false positives (~100 expected)");
 
     // Insanely unlikely to get a fp count outside this range:

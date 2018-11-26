@@ -12,9 +12,9 @@
 #include <serialize.h>
 #include <streams.h>
 #include <univalue.h>
-#include <util.h>
-#include <utilmoneystr.h>
-#include <utilstrencodings.h>
+#include <util/system.h>
+#include <util/moneystr.h>
+#include <util/strencodings.h>
 
 UniValue ValueFromAmount(const CAmount& amount)
 {
@@ -141,8 +141,7 @@ void ScriptToUniv(const CScript& script, UniValue& out, bool include_address)
     out.pushKV("hex", HexStr(script.begin(), script.end()));
 
     std::vector<std::vector<unsigned char>> solns;
-    txnouttype type;
-    Solver(script, type, solns);
+    txnouttype type = Solver(script, solns);
     out.pushKV("type", GetTxnOutputType(type));
 
     CTxDestination address;
@@ -182,7 +181,7 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
     entry.pushKV("txid", tx.GetHash().GetHex());
     entry.pushKV("hash", tx.GetWitnessHash().GetHex());
     entry.pushKV("version", tx.nVersion);
-    entry.pushKV("size", (int)::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION));
+    entry.pushKV("size", (int)::GetSerializeSize(tx, PROTOCOL_VERSION));
     entry.pushKV("vsize", (GetTransactionWeight(tx) + WITNESS_SCALE_FACTOR - 1) / WITNESS_SCALE_FACTOR);
     entry.pushKV("weight", GetTransactionWeight(tx));
     entry.pushKV("locktime", (int64_t)tx.nLockTime);

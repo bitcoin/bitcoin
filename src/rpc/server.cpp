@@ -8,15 +8,15 @@
 #include <fs.h>
 #include <key_io.h>
 #include <random.h>
+#include <rpc/util.h>
 #include <shutdown.h>
 #include <sync.h>
 #include <ui_interface.h>
-#include <util.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
+#include <util/system.h>
 
 #include <boost/bind.hpp>
 #include <boost/signals2/signal.hpp>
-#include <boost/algorithm/string/case_conv.hpp> // for to_upper()
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 
@@ -117,16 +117,12 @@ CAmount AmountFromValue(const UniValue& value)
 
 uint256 ParseHashV(const UniValue& v, std::string strName)
 {
-    std::string strHex;
-    if (v.isStr())
-        strHex = v.get_str();
+    std::string strHex(v.get_str());
+    if (64 != strHex.length())
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be of length %d (not %d, for '%s')", strName, 64, strHex.length(), strHex));
     if (!IsHex(strHex)) // Note: IsHex("") is false
         throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be hexadecimal string (not '"+strHex+"')");
-    if (64 != strHex.length())
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be of length %d (not %d)", strName, 64, strHex.length()));
-    uint256 result;
-    result.SetHex(strHex);
-    return result;
+    return uint256S(strHex);
 }
 uint256 ParseHashO(const UniValue& o, std::string strKey)
 {
@@ -192,9 +188,7 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
                     if (!category.empty())
                         strRet += "\n";
                     category = pcmd->category;
-                    std::string firstLetter = category.substr(0,1);
-                    boost::to_upper(firstLetter);
-                    strRet += "== " + firstLetter + category.substr(1) + " ==\n";
+                    strRet += "== " + Capitalize(category) + " ==\n";
                 }
             }
             strRet += strHelp + "\n";
@@ -210,8 +204,12 @@ UniValue help(const JSONRPCRequest& jsonRequest)
 {
     if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
         throw std::runtime_error(
-            "help ( \"command\" )\n"
-            "\nList all commands, or get help for a specified command.\n"
+            RPCHelpMan{"help",
+                "\nList all commands, or get help for a specified command.\n",
+                {
+                    {"command", RPCArg::Type::STR, true},
+                }}
+                .ToString() +
             "\nArguments:\n"
             "1. \"command\"     (string, optional) The command to get help on\n"
             "\nResult:\n"
@@ -231,8 +229,9 @@ UniValue stop(const JSONRPCRequest& jsonRequest)
     // Accept the deprecated and ignored 'detach' boolean argument
     if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
         throw std::runtime_error(
-            "stop\n"
-            "\nStop Chaincoin server.");
+            RPCHelpMan{"stop",
+                "\nStop Chaincoin server.", {}}
+                .ToString());
     // Event loop will exit after current HTTP requests have been handled, so
     // this reply will get back to the client.
     StartShutdown();
@@ -241,10 +240,11 @@ UniValue stop(const JSONRPCRequest& jsonRequest)
 
 static UniValue uptime(const JSONRPCRequest& jsonRequest)
 {
-    if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
+    if (jsonRequest.fHelp || jsonRequest.params.size() > 0)
         throw std::runtime_error(
-                "uptime\n"
-                        "\nReturns the total uptime of the server.\n"
+            RPCHelpMan{"uptime",
+                "\nReturns the total uptime of the server.\n", {}}
+                .ToString() +
                         "\nResult:\n"
                         "ttt        (numeric) The number of seconds that the server has been running\n"
                         "\nExamples:\n"
@@ -255,6 +255,7 @@ static UniValue uptime(const JSONRPCRequest& jsonRequest)
     return GetTime() - GetStartupTime();
 }
 
+// clang-format off
 /**
  * Call Table
  */
@@ -266,6 +267,7 @@ static const CRPCCommand vRPCCommands[] =
     { "control",            "stop",                   &stop,                   {}  },
     { "control",            "uptime",                 &uptime,                 {}  },
 };
+// clang-format on
 
 CRPCTable::CRPCTable()
 {
@@ -541,7 +543,7 @@ void RPCUnsetTimerInterface(RPCTimerInterface *iface)
         timerInterface = nullptr;
 }
 
-void RPCRunLater(const std::string& name, std::function<void(void)> func, int64_t nSeconds)
+void RPCRunLater(const std::string& name, std::function<void()> func, int64_t nSeconds)
 {
     if (!timerInterface)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No timer handler registered for RPC");

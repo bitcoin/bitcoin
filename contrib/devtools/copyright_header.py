@@ -15,35 +15,32 @@ import os
 ################################################################################
 
 EXCLUDE = [
-    # libsecp256k1:
-    'src/secp256k1/include/secp256k1.h',
-    'src/secp256k1/include/secp256k1_ecdh.h',
-    'src/secp256k1/include/secp256k1_recovery.h',
-    'src/secp256k1/include/secp256k1_schnorr.h',
-    'src/secp256k1/src/java/org_bitcoin_NativeSecp256k1.c',
-    'src/secp256k1/src/java/org_bitcoin_NativeSecp256k1.h',
-    'src/secp256k1/src/java/org_bitcoin_Secp256k1Context.c',
-    'src/secp256k1/src/java/org_bitcoin_Secp256k1Context.h',
-    # univalue:
-    'src/univalue/test/object.cpp',
-    'src/univalue/lib/univalue_escapes.h',
     # auto generated:
     'src/qt/bitcoinstrings.cpp',
     'src/chainparamsseeds.h',
     # other external copyrights:
     'src/tinyformat.h',
-    'src/leveldb/util/env_win.cc',
-    'src/crypto/ctaes/bench.c',
     'test/functional/test_framework/bignum.py',
     # python init:
     '*__init__.py',
 ]
 EXCLUDE_COMPILED = re.compile('|'.join([fnmatch.translate(m) for m in EXCLUDE]))
 
+EXCLUDE_DIRS = [
+    # git subtrees
+    "src/crypto/ctaes/",
+    "src/leveldb/",
+    "src/secp256k1/",
+    "src/univalue/",
+]
+
 INCLUDE = ['*.h', '*.cpp', '*.cc', '*.c', '*.py']
 INCLUDE_COMPILED = re.compile('|'.join([fnmatch.translate(m) for m in INCLUDE]))
 
 def applies_to_file(filename):
+    for excluded_dir in EXCLUDE_DIRS:
+        if filename.startswith(excluded_dir):
+            return False
     return ((EXCLUDE_COMPILED.match(filename) is None) and
             (INCLUDE_COMPILED.match(filename) is not None))
 
@@ -81,7 +78,7 @@ ANY_COPYRIGHT_STYLE_OR_YEAR_STYLE = ("%s %s" % (ANY_COPYRIGHT_STYLE,
 ANY_COPYRIGHT_COMPILED = re.compile(ANY_COPYRIGHT_STYLE_OR_YEAR_STYLE)
 
 def compile_copyright_regex(copyright_style, year_style, name):
-    return re.compile('%s %s %s' % (copyright_style, year_style, name))
+    return re.compile('%s %s,? %s' % (copyright_style, year_style, name))
 
 EXPECTED_HOLDER_NAMES = [
     "Satoshi Nakamoto\n",
@@ -107,6 +104,9 @@ EXPECTED_HOLDER_NAMES = [
     "Jan-Klaas Kollhof\n",
     "Sam Rushing\n",
     "ArtForz -- public domain half-a-node\n",
+    "Intel Corporation",
+    "The Zcash developers",
+    "Jeremy Rubin",
 ]
 
 DOMINANT_STYLE_COMPILED = {}

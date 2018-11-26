@@ -83,8 +83,11 @@ if BUILD_BITCOIND
   bin_PROGRAMS += chaincoind
 endif
 
-if BUILD_BITCOIN_UTILS
-  bin_PROGRAMS += chaincoin-cli chaincoin-tx
+if BUILD_BITCOIN_CLI
+  bin_PROGRAMS += chaincoin-cli
+endif
+if BUILD_BITCOIN_TX
+  bin_PROGRAMS += chaincoin-tx
 endif
 
 .PHONY: FORCE check-symbols check-security
@@ -92,10 +95,12 @@ endif
 BITCOIN_CORE_H = \
   activemasternode.h \
   addrman.h \
+  attributes.h \
   base58.h \
   bech32.h \
   bloom.h \
   blockencodings.h \
+  blockfilter.h \
   cachedb.h \
   chain.h \
   chainparams.h \
@@ -129,9 +134,10 @@ BITCOIN_CORE_H = \
   index/txindex.h \
   indirectmap.h \
   init.h \
+  interfaces/chain.h \
   interfaces/handler.h \
   interfaces/node.h \
-  interfaces/moduleinterface.h \
+  interfaces/modules.h \
   interfaces/wallet.h \
   key.h \
   key_io.h \
@@ -196,13 +202,15 @@ BITCOIN_CORE_H = \
   txmempool.h \
   ui_interface.h \
   undo.h \
-  util.h \
-  utilmemory.h \
-  utilmoneystr.h \
-  utiltime.h \
+  util/bytevectorhash.h \
+  util/system.h \
+  util/memory.h \
+  util/moneystr.h \
+  util/time.h \
   validation.h \
   validationinterface.h \
   versionbits.h \
+  versionbitsinfo.h \
   walletinitinterface.h \
   wallet/coincontrol.h \
   wallet/crypter.h \
@@ -237,6 +245,7 @@ libbitcoin_server_a_SOURCES = \
   addrman.cpp \
   bloom.cpp \
   blockencodings.cpp \
+  blockfilter.cpp \
   chain.cpp \
   cachedb.cpp \
   checkpoints.cpp \
@@ -245,6 +254,10 @@ libbitcoin_server_a_SOURCES = \
   httpserver.cpp \
   index/base.cpp \
   index/txindex.cpp \
+  interfaces/chain.cpp \
+  interfaces/handler.cpp \
+  interfaces/modules.cpp \
+  interfaces/node.cpp \
   init.cpp \
   dbwrapper.cpp \
   governance.cpp \
@@ -293,6 +306,10 @@ libbitcoin_server_a_SOURCES = \
   validationinterface.cpp \
   versionbits.cpp \
   $(BITCOIN_CORE_H)
+
+if !ENABLE_WALLET
+libbitcoin_server_a_SOURCES += dummywallet.cpp
+endif
 
 if ENABLE_ZMQ
 libbitcoin_zmq_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(ZMQ_CFLAGS)
@@ -347,7 +364,9 @@ crypto_libbitcoin_crypto_base_a_SOURCES = \
   crypto/sha256.cpp \
   crypto/sha256.h \
   crypto/sha512.cpp \
-  crypto/sha512.h
+  crypto/sha512.h \
+  crypto/siphash.cpp \
+  crypto/siphash.h
 
 # c11
 crypto_libbitcoin_crypto_base_a_SOURCES += \
@@ -429,8 +448,8 @@ libbitcoin_consensus_a_SOURCES = \
   tinyformat.h \
   uint256.cpp \
   uint256.h \
-  utilstrencodings.cpp \
-  utilstrencodings.h \
+  util/strencodings.cpp \
+  util/strencodings.h \
   version.h
 
 # common: shared between chaincoind, and chaincoin-qt and non-server tools
@@ -456,6 +475,7 @@ libbitcoin_common_a_SOURCES = \
   script/ismine.cpp \
   script/sign.cpp \
   script/standard.cpp \
+  versionbitsinfo.cpp \
   warnings.cpp \
   $(BITCOIN_CORE_H)
 
@@ -472,19 +492,17 @@ libbitcoin_util_a_SOURCES = \
   compat/glibcxx_sanity.cpp \
   compat/strnlen.cpp \
   fs.cpp \
-  interfaces/handler.cpp \
-  interfaces/moduleinterface.cpp \
-  interfaces/node.cpp \
   logging.cpp \
   random.cpp \
   rpc/protocol.cpp \
   support/cleanse.cpp \
   sync.cpp \
   threadinterrupt.cpp \
-  util.cpp \
-  utilmoneystr.cpp \
-  utilstrencodings.cpp \
-  utiltime.cpp \
+  util/bytevectorhash.cpp \
+  util/system.cpp \
+  util/moneystr.cpp \
+  util/strencodings.cpp \
+  util/time.cpp \
   $(BITCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT
@@ -515,6 +533,7 @@ endif
 chaincoind_LDADD = \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_WALLET) \
+  $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_COMMON) \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_UTIL) \
@@ -526,7 +545,7 @@ chaincoind_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-chaincoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
+chaincoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
 
 # chaincoin-cli binary #
 chaincoin_cli_SOURCES = chaincoin-cli.cpp
@@ -544,7 +563,7 @@ chaincoin_cli_LDADD = \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO)
 
-chaincoin_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
+chaincoin_cli_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
 
 # chaincoin-tx binary #
@@ -641,9 +660,11 @@ if HARDEN
 	$(AM_V_at) READELF=$(READELF) OBJDUMP=$(OBJDUMP) $(top_srcdir)/contrib/devtools/security-check.py < $(bin_PROGRAMS)
 endif
 
+if ENABLE_BIP70
 %.pb.cc %.pb.h: %.proto
 	@test -f $(PROTOC)
 	$(AM_V_GEN) $(PROTOC) --cpp_out=$(@D) --proto_path=$(<D) $<
+endif
 
 if EMBEDDED_LEVELDB
 include Makefile.leveldb.include

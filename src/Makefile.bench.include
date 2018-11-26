@@ -18,10 +18,12 @@ bench_bench_chaincoin_SOURCES = \
   bench/block_assemble.cpp \
   bench/checkblock.cpp \
   bench/checkqueue.cpp \
+  bench/duplicate_inputs.cpp \
   bench/examples.cpp \
   bench/rollingbloom.cpp \
   bench/crypto_hash.cpp \
   bench/ccoins_caching.cpp \
+  bench/gcs_filter.cpp \
   bench/merkle_root.cpp \
   bench/mempool_eviction.cpp \
   bench/verify_script.cpp \
@@ -55,7 +57,7 @@ if ENABLE_WALLET
 bench_bench_chaincoin_SOURCES += bench/coin_selection.cpp
 endif
 
-bench_bench_chaincoin_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
+bench_bench_chaincoin_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS)
 bench_bench_chaincoin_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 CLEAN_BITCOIN_BENCH = bench/*.gcda bench/*.gcno $(GENERATED_BENCH_FILES)

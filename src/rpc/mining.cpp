@@ -12,7 +12,6 @@
 #include <consensus/params.h>
 #include <consensus/validation.h>
 #include <core_io.h>
-#include <validation.h>
 #include <key_io.h>
 #include <miner.h>
 #include <net.h>
@@ -21,11 +20,14 @@
 #include <rpc/blockchain.h>
 #include <rpc/mining.h>
 #include <rpc/server.h>
+#include <rpc/util.h>
 #include <shutdown.h>
 #include <txmempool.h>
-#include <util.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
+#include <util/system.h>
+#include <validation.h>
 #include <validationinterface.h>
+#include <versionbitsinfo.h>
 #include <warnings.h>
 
 #include <governance-classes.h>
@@ -91,10 +93,15 @@ static UniValue getnetworkhashps(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 2)
         throw std::runtime_error(
-            "getnetworkhashps ( nblocks height )\n"
-            "\nReturns the estimated network hashes per second based on the last n blocks.\n"
-            "Pass in [blocks] to override # of blocks, -1 specifies since last difficulty change.\n"
-            "Pass in [height] to estimate the network speed at the time when a certain block was found.\n"
+            RPCHelpMan{"getnetworkhashps",
+                "\nReturns the estimated network hashes per second based on the last n blocks.\n"
+                "Pass in [blocks] to override # of blocks, -1 specifies since last difficulty change.\n"
+                "Pass in [height] to estimate the network speed at the time when a certain block was found.\n",
+                {
+                    {"nblocks", RPCArg::Type::NUM, true},
+                    {"height", RPCArg::Type::NUM, true},
+                }}
+                .ToString() +
             "\nArguments:\n"
             "1. nblocks     (numeric, optional, default=120) The number of blocks, or -1 for blocks since last difficulty change.\n"
             "2. height      (numeric, optional, default=-1) To estimate at the time of the given height.\n"
@@ -161,8 +168,14 @@ static UniValue generatetoaddress(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 3)
         throw std::runtime_error(
-            "generatetoaddress nblocks address (maxtries)\n"
-            "\nMine blocks immediately to a specified address (before the RPC call returns)\n"
+            RPCHelpMan{"generatetoaddress",
+                "\nMine blocks immediately to a specified address (before the RPC call returns)\n",
+                {
+                    {"nblocks", RPCArg::Type::NUM, false},
+                    {"address", RPCArg::Type::STR, false},
+                    {"maxtries", RPCArg::Type::NUM, true},
+                }}
+                .ToString() +
             "\nArguments:\n"
             "1. nblocks      (numeric, required) How many blocks are generated immediately.\n"
             "2. address      (string, required) The address to send the newly generated bitcoin to.\n"
@@ -172,6 +185,8 @@ static UniValue generatetoaddress(const JSONRPCRequest& request)
             "\nExamples:\n"
             "\nGenerate 11 blocks to myaddress\n"
             + HelpExampleCli("generatetoaddress", "11 \"myaddress\"")
+            + "If you are running the bitcoin core wallet, you can get a new address to send the newly generated chaincoin to with:\n"
+            + HelpExampleCli("getnewaddress", "")
         );
 
     int nGenerate = request.params[0].get_int();
@@ -195,8 +210,9 @@ static UniValue getmininginfo(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
-            "getmininginfo\n"
-            "\nReturns a json object containing mining-related information."
+            RPCHelpMan{"getmininginfo",
+                "\nReturns a json object containing mining-related information.", {}}
+                .ToString() +
             "\nResult:\n"
             "{\n"
             "  \"blocks\": nnn,             (numeric) The current block\n"
@@ -234,8 +250,14 @@ static UniValue prioritisetransaction(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 3)
         throw std::runtime_error(
-            "prioritisetransaction <txid> <dummy value> <fee delta>\n"
-            "Accepts the transaction into mined blocks at a higher (or lower) priority\n"
+            RPCHelpMan{"prioritisetransaction",
+                "Accepts the transaction into mined blocks at a higher (or lower) priority\n",
+                {
+                    {"txid", RPCArg::Type::STR, false},
+                    {"dummy", RPCArg::Type::NUM, false},
+                    {"fee_delta", RPCArg::Type::NUM, false},
+                }}
+                .ToString() +
             "\nArguments:\n"
             "1. \"txid\"       (string, required) The transaction id.\n"
             "2. dummy          (numeric, optional) API-Compatibility for previous API. Must be zero or null.\n"
@@ -253,7 +275,7 @@ static UniValue prioritisetransaction(const JSONRPCRequest& request)
 
     LOCK(cs_main);
 
-    uint256 hash = ParseHashStr(request.params[0].get_str(), "txid");
+    uint256 hash(ParseHashV(request.params[0], "txid"));
     CAmount nAmount = request.params[2].get_int64();
 
     if (!(request.params[1].isNull() || request.params[1].get_real() == 0)) {
@@ -297,14 +319,32 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
-            "getblocktemplate ( TemplateRequest )\n"
-            "\nIf the request parameters include a 'mode' key, that is used to explicitly select between the default 'template' request or a 'proposal'.\n"
-            "It returns data needed to construct a block to work on.\n"
-            "For full specification, see BIPs 22, 23, and 9:\n"
-            "    https://github.com/bitcoin/bips/blob/master/bip-0022.mediawiki\n"
-            "    https://github.com/bitcoin/bips/blob/master/bip-0023.mediawiki\n"
-            "    https://github.com/bitcoin/bips/blob/master/bip-0009.mediawiki#getblocktemplate_changes\n"
-
+            RPCHelpMan{"getblocktemplate",
+                "\nIf the request parameters include a 'mode' key, that is used to explicitly select between the default 'template' request or a 'proposal'.\n"
+                "It returns data needed to construct a block to work on.\n"
+                "For full specification, see BIPs 22, 23, 9, and 145:\n"
+                "    https://github.com/bitcoin/bips/blob/master/bip-0022.mediawiki\n"
+                "    https://github.com/bitcoin/bips/blob/master/bip-0023.mediawiki\n"
+                "    https://github.com/bitcoin/bips/blob/master/bip-0009.mediawiki#getblocktemplate_changes\n"
+                "    https://github.com/bitcoin/bips/blob/master/bip-0145.mediawiki\n",
+                {
+                    {"template_request", RPCArg::Type::OBJ,
+                        {
+                            {"mode", RPCArg::Type::STR, true},
+                            {"capabilities", RPCArg::Type::ARR,
+                                {
+                                    {"support", RPCArg::Type::STR, true},
+                                },
+                                true},
+                            {"rules", RPCArg::Type::ARR,
+                                {
+                                    {"support", RPCArg::Type::STR, true},
+                                },
+                                true},
+                        },
+                        true, "\"template_request\""},
+                }}
+                .ToString() +
             "\nArguments:\n"
                 "1. template_request          (json object, optional) A json object in the following spec\n"
             "     {\n"
@@ -384,8 +424,8 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
             "}\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("getblocktemplate", "")
-            + HelpExampleRpc("getblocktemplate", "")
+            + HelpExampleCli("getblocktemplate", "{\"rules\": [\"segwit\"]}")
+            + HelpExampleRpc("getblocktemplate", "{\"rules\": [\"segwit\"]}")
          );
 
     LOCK(cs_main);
@@ -490,7 +530,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
             // Format: <hashBestChain><nTransactionsUpdatedLast>
             std::string lpstr = lpval.get_str();
 
-            hashWatchedChain.SetHex(lpstr.substr(0, 64));
+            hashWatchedChain = ParseHashV(lpstr.substr(0, 64), "longpollid");
             nTransactionsUpdatedLastLP = atoi64(lpstr.substr(64));
         }
         else
@@ -505,7 +545,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
         {
             checktxtime = std::chrono::steady_clock::now() + std::chrono::minutes(1);
 
-            WaitableLock lock(g_best_block_mutex);
+            WAIT_LOCK(g_best_block_mutex, lock);
             while (g_best_block == hashWatchedChain && IsRPCRunning())
             {
                 if (g_best_block_cv.wait_until(lock, checktxtime) == std::cv_status::timeout)
@@ -762,10 +802,14 @@ static UniValue submitblock(const JSONRPCRequest& request)
     // We allow 2 arguments for compliance with BIP22. Argument 2 is ignored.
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2) {
         throw std::runtime_error(
-            "submitblock \"hexdata\"  ( \"dummy\" )\n"
-            "\nAttempts to submit new block to network.\n"
-            "See https://en.bitcoin.it/wiki/BIP_0022 for full specification.\n"
-
+            RPCHelpMan{"submitblock",
+                "\nAttempts to submit new block to network.\n"
+                "See https://en.bitcoin.it/wiki/BIP_0022 for full specification.\n",
+                {
+                    {"hexdata", RPCArg::Type::STR_HEX, false},
+                    {"dummy", RPCArg::Type::STR, true},
+                }}
+                .ToString() +
             "\nArguments\n"
             "1. \"hexdata\"        (string, required) the hex-encoded block data to submit\n"
             "2. \"dummy\"          (optional) dummy value, for compatibility with BIP22. This value is ignored.\n"
@@ -813,11 +857,7 @@ static UniValue submitblock(const JSONRPCRequest& request)
     RegisterValidationInterface(&sc);
     bool accepted = ProcessNewBlock(Params(), blockptr, /* fForceProcessing */ true, /* fNewBlock */ &new_block);
     UnregisterValidationInterface(&sc);
-    if (!new_block) {
-        if (!accepted) {
-            // TODO Maybe pass down fNewBlock to AcceptBlockHeader, so it is properly set to true in this case?
-            return "invalid";
-        }
+    if (!new_block && accepted) {
         return "duplicate";
     }
     if (!sc.found) {
@@ -826,21 +866,60 @@ static UniValue submitblock(const JSONRPCRequest& request)
     return BIP22ValidationResult(sc.state);
 }
 
-static UniValue estimatefee(const JSONRPCRequest& request)
+static UniValue submitheader(const JSONRPCRequest& request)
 {
-    throw JSONRPCError(RPC_METHOD_DEPRECATED, "estimatefee was removed in v0.17.\n"
-        "Clients should use estimatesmartfee.");
+    if (request.fHelp || request.params.size() != 1) {
+        throw std::runtime_error(
+            RPCHelpMan{"submitheader",
+                "\nDecode the given hexdata as a header and submit it as a candidate chain tip if valid."
+                "\nThrows when the header is invalid.\n",
+                {
+                    {"hexdata", RPCArg::Type::STR_HEX, false},
+                }}
+                .ToString() +
+            "\nArguments\n"
+            "1. \"hexdata\"        (string, required) the hex-encoded block header data\n"
+            "\nResult:\n"
+            "None"
+            "\nExamples:\n" +
+            HelpExampleCli("submitheader", "\"aabbcc\"") +
+            HelpExampleRpc("submitheader", "\"aabbcc\""));
+    }
+
+    CBlockHeader h;
+    if (!DecodeHexBlockHeader(h, request.params[0].get_str())) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block header decode failed");
+    }
+    {
+        LOCK(cs_main);
+        if (!LookupBlockIndex(h.hashPrevBlock)) {
+            throw JSONRPCError(RPC_VERIFY_ERROR, "Must submit previous header (" + h.hashPrevBlock.GetHex() + ") first");
+        }
+    }
+
+    CValidationState state;
+    ProcessNewBlockHeaders({h}, state, Params(), /* ppindex */ nullptr, /* first_invalid */ nullptr);
+    if (state.IsValid()) return NullUniValue;
+    if (state.IsError()) {
+        throw JSONRPCError(RPC_VERIFY_ERROR, FormatStateMessage(state));
+    }
+    throw JSONRPCError(RPC_VERIFY_ERROR, state.GetRejectReason());
 }
 
 static UniValue estimatesmartfee(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
-            "estimatesmartfee conf_target (\"estimate_mode\")\n"
-            "\nEstimates the approximate fee per kilobyte needed for a transaction to begin\n"
-            "confirmation within conf_target blocks if possible and return the number of blocks\n"
-            "for which the estimate is valid. Uses virtual transaction size as defined\n"
-            "in BIP 141 (witness data is discounted).\n"
+            RPCHelpMan{"estimatesmartfee",
+                "\nEstimates the approximate fee per kilobyte needed for a transaction to begin\n"
+                "confirmation within conf_target blocks if possible and return the number of blocks\n"
+                "for which the estimate is valid. Uses virtual transaction size as defined\n"
+                "in BIP 141 (witness data is discounted).\n",
+                {
+                    {"conf_target", RPCArg::Type::NUM, false},
+                    {"estimate_mode", RPCArg::Type::STR, true},
+                }}
+                .ToString() +
             "\nArguments:\n"
             "1. conf_target     (numeric) Confirmation target in blocks (1 - 1008)\n"
             "2. \"estimate_mode\" (string, optional, default=CONSERVATIVE) The fee estimate mode.\n"
@@ -849,7 +928,7 @@ static UniValue estimatesmartfee(const JSONRPCRequest& request)
             "                   higher feerate and is more likely to be sufficient for the desired\n"
             "                   target, but is not as responsive to short term drops in the\n"
             "                   prevailing fee market.  Must be one of:\n"
-            "       \"UNSET\" (defaults to CONSERVATIVE)\n"
+            "       \"UNSET\"\n"
             "       \"ECONOMICAL\"\n"
             "       \"CONSERVATIVE\"\n"
             "\nResult:\n"
@@ -897,14 +976,19 @@ static UniValue estimaterawfee(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
-            "estimaterawfee conf_target (threshold)\n"
-            "\nWARNING: This interface is unstable and may disappear or change!\n"
-            "\nWARNING: This is an advanced API call that is tightly coupled to the specific\n"
-            "         implementation of fee estimation. The parameters it can be called with\n"
-            "         and the results it returns will change if the internal implementation changes.\n"
-            "\nEstimates the approximate fee per kilobyte needed for a transaction to begin\n"
-            "confirmation within conf_target blocks if possible. Uses virtual transaction size as\n"
-            "defined in BIP 141 (witness data is discounted).\n"
+            RPCHelpMan{"estimaterawfee",
+                "\nWARNING: This interface is unstable and may disappear or change!\n"
+                "\nWARNING: This is an advanced API call that is tightly coupled to the specific\n"
+                "         implementation of fee estimation. The parameters it can be called with\n"
+                "         and the results it returns will change if the internal implementation changes.\n"
+                "\nEstimates the approximate fee per kilobyte needed for a transaction to begin\n"
+                "confirmation within conf_target blocks if possible. Uses virtual transaction size as\n"
+                "defined in BIP 141 (witness data is discounted).\n",
+                {
+                    {"conf_target", RPCArg::Type::NUM, false},
+                    {"threshold", RPCArg::Type::NUM, true},
+                }}
+                .ToString() +
             "\nArguments:\n"
             "1. conf_target (numeric) Confirmation target in blocks (1 - 1008)\n"
             "2. threshold   (numeric, optional) The proportion of transactions in a given feerate range that must have been\n"
@@ -949,7 +1033,7 @@ static UniValue estimaterawfee(const JSONRPCRequest& request)
 
     UniValue result(UniValue::VOBJ);
 
-    for (FeeEstimateHorizon horizon : {FeeEstimateHorizon::SHORT_HALFLIFE, FeeEstimateHorizon::MED_HALFLIFE, FeeEstimateHorizon::LONG_HALFLIFE}) {
+    for (const FeeEstimateHorizon horizon : {FeeEstimateHorizon::SHORT_HALFLIFE, FeeEstimateHorizon::MED_HALFLIFE, FeeEstimateHorizon::LONG_HALFLIFE}) {
         CFeeRate feeRate;
         EstimationResult buckets;
 
@@ -995,6 +1079,7 @@ static UniValue estimaterawfee(const JSONRPCRequest& request)
     return result;
 }
 
+// clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
@@ -1003,15 +1088,16 @@ static const CRPCCommand commands[] =
     { "mining",             "prioritisetransaction",  &prioritisetransaction,  {"txid","dummy","fee_delta"} },
     { "mining",             "getblocktemplate",       &getblocktemplate,       {"template_request"} },
     { "mining",             "submitblock",            &submitblock,            {"hexdata","dummy"} },
+    { "mining",             "submitheader",           &submitheader,           {"hexdata"} },
 
 
     { "generating",         "generatetoaddress",      &generatetoaddress,      {"nblocks","address","maxtries"} },
 
-    { "hidden",             "estimatefee",            &estimatefee,            {} },
     { "util",               "estimatesmartfee",       &estimatesmartfee,       {"conf_target", "estimate_mode"} },
 
     { "hidden",             "estimaterawfee",         &estimaterawfee,         {"conf_target", "threshold"} },
 };
+// clang-format on
 
 void RegisterMiningRPCCommands(CRPCTable &t)
 {

@@ -30,6 +30,15 @@ class ConfArgsTest(BitcoinTestFramework):
         self.nodes[0].assert_start_raises_init_error(expected_msg='Error reading configuration file: parse error on line 1: nono, if you intended to specify a negated option, use nono=1 instead')
 
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+            conf.write('server=1\nrpcuser=someuser\nrpcpassword=some#pass')
+        self.nodes[0].assert_start_raises_init_error(expected_msg='Error reading configuration file: parse error on line 3, using # in rpcpassword can be ambiguous and should be avoided')
+
+        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+            conf.write('testnot.datadir=1\n[testnet]\n')
+        self.restart_node(0)
+        self.nodes[0].stop_node(expected_stderr='Warning: Section [testnet] is not recognized.' + os.linesep + 'Warning: Section [testnot] is not recognized.')
+
+        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
             conf.write('')  # clear
 
     def run_test(self):
@@ -65,13 +74,18 @@ class ConfArgsTest(BitcoinTestFramework):
         # Temporarily disabled, because this test would access the user's home dir (~/.bitcoin)
         #self.start_node(0, ['-conf='+conf_file, '-wallet=w1'])
         #self.stop_node(0)
+        #assert os.path.exists(os.path.join(new_data_dir, 'regtest', 'blocks'))
+        #if self.is_wallet_compiled():
         #assert os.path.exists(os.path.join(new_data_dir, 'regtest', 'wallets', 'w1'))
 
         # Ensure command line argument overrides datadir in conf
         os.mkdir(new_data_dir_2)
         self.nodes[0].datadir = new_data_dir_2
         self.start_node(0, ['-datadir='+new_data_dir_2, '-conf='+conf_file, '-wallet=w2'])
-        assert os.path.exists(os.path.join(new_data_dir_2, 'regtest', 'wallets', 'w2'))
+        assert os.path.exists(os.path.join(new_data_dir_2, 'regtest', 'blocks'))
+        if self.is_wallet_compiled():
+            assert os.path.exists(os.path.join(new_data_dir_2, 'regtest', 'wallets', 'w2'))
+
 
 if __name__ == '__main__':
     ConfArgsTest().main()

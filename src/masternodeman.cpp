@@ -7,7 +7,7 @@
 #include <clientversion.h>
 #include <governance.h>
 #include <init.h>
-#include <interfaces/moduleinterface.h>
+#include <interfaces/chain.h>
 #include <masternode-payments.h>
 #include <masternode-sync.h>
 #include <masternodeman.h>
@@ -18,7 +18,7 @@
 #include <script/standard.h>
 #include <shutdown.h>
 #include <ui_interface.h>
-#include <util.h>
+#include <util/system.h>
 #include <warnings.h>
 
 #include <boost/algorithm/string/replace.hpp>
@@ -548,8 +548,12 @@ bool CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight, bool f
         //it's too new, wait for a cycle
         if(fFilterSigTime && mnpair.second.sigTime + (nMnCount*2.6*60) > GetAdjustedTime()) continue;
 
+        //check the output
+        Coin coin;
+        if (!pcoinsTip->GetCoin(mnpair.first, coin)) continue;
+
         //make sure it has at least as many confirmations as there are masternodes
-        if(GetUTXOConfirmations(mnpair.first) < nMnCount) continue;
+        if((chainActive.Height() - coin.nHeight + 1) < nMnCount) continue;
 
         vecMasternodeLastPaid.push_back(std::make_pair(mnpair.second.GetLastPaidBlock(), &mnpair.second));
     }
@@ -723,7 +727,12 @@ void CMasternodeMan::ProcessMasternodeConnections(CConnman* connman)
     if(Params().NetworkIDString() == CBaseChainParams::REGTEST) return;
 
     connman->ForEachNode([](CNode* pnode) {
-        if(pnode->fMasternode && !g_wallet_interface->IsMixingMasternode(pnode)) {
+        bool ismixing = false;
+        for (const auto& client : g_mn_interfaces->chain_clients) {
+            if (client->mixingMasternode(pnode))
+                ismixing = true;
+        }
+        if(pnode->fMasternode && !ismixing) {
             LogPrintf("Closing Masternode connection: peer=%d, addr=%s\n", pnode->GetId(), pnode->addr.ToString());
             pnode->fDisconnect = true;
         }

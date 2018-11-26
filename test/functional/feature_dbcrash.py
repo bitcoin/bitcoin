@@ -64,9 +64,13 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
         self.node3_args = ["-blockmaxweight=4000000"]
         self.extra_args = [self.node0_args, self.node1_args, self.node2_args, self.node3_args]
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def setup_network(self):
         self.add_nodes(self.num_nodes, extra_args=self.extra_args)
         self.start_nodes()
+        self.import_deterministic_coinbase_privkeys()
         # Leave them unconnected, we'll use submitblock directly in this test
 
     def restart_node(self, node_index, expected_tip):

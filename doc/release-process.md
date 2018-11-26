@@ -6,11 +6,12 @@ Before every release candidate:
 * Update translations (ping wumpus on IRC) see [translation_process.md](https://github.com/chaincoin/chaincoin/blob/master/doc/translation_process.md#synchronising-translations).
 
 * Update manpages, see [gen-manpages.sh](https://github.com/chaincoin/chaincoin/blob/master/contrib/devtools/README.md#gen-manpagessh).
+* Update release candidate version in `configure.ac` (`CLIENT_VERSION_RC`)
 
 Before every minor and major release:
 
 * Update [bips.md](bips.md) to account for changes since the last release.
-* Update version in `configure.ac` (don't forget to set `CLIENT_VERSION_IS_RELEASE` to `true`)
+* Update version in `configure.ac` (don't forget to set `CLIENT_VERSION_IS_RELEASE` to `true`) (don't forget to set `CLIENT_VERSION_RC` to `0`)
 * Write release notes (see below)
 * Update `src/chainparams.cpp` nMinimumChainWork with information from the getblockchaininfo rpc.
 * Update `src/chainparams.cpp` defaultAssumeValid with information from the getblockhash rpc.
@@ -294,7 +295,15 @@ chaincoin.org (see below for chaincoin.org update instructions).
 
   - Optionally twitter, reddit /r/Chaincoin, ... but this will usually sort out itself
 
-  - Notify BlueMatt so that he can start building [the PPAs](https://launchpad.net/~chaincoin/+archive/ubuntu/chaincoin)
+  - bitcoincore.org blog post
+
+  - bitcoincore.org RPC documentation update
+
+  - Update title of #bitcoin on Freenode IRC
+
+  - Optionally twitter, reddit /r/Bitcoin, ... but this will usually sort out itself
+
+  - Notify BlueMatt so that he can start building [the PPAs](https://launchpad.net/~bitcoin/+archive/ubuntu/bitcoin)
 
   - Archive release notes for the new version to `doc/release-notes/` (branch `master` and branch of the release)
 

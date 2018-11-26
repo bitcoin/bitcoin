@@ -45,6 +45,9 @@ class WalletBackupTest(BitcoinTestFramework):
         # nodes 1, 2,3 are spenders, let's give them a keypool=100
         self.extra_args = [["-keypool=100"], ["-keypool=100"], ["-keypool=100"], []]
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def setup_network(self, split=False):
         self.setup_nodes()
         connect_nodes(self.nodes[0], 3)

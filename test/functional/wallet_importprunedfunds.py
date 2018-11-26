@@ -19,6 +19,9 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 2
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def run_test(self):
         self.log.info("Mining blocks...")
         self.nodes[0].generate(101)
@@ -81,7 +84,7 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
 
         # Import with affiliated address with no rescan
         self.nodes[1].importaddress(address=address2, rescan=False)
-        self.nodes[1].importprunedfunds(rawtxn2, proof2)
+        self.nodes[1].importprunedfunds(rawtransaction=rawtxn2, txoutproof=proof2)
         assert [tx for tx in self.nodes[1].listtransactions(include_watchonly=True) if tx['txid'] == txnid2]
 
         # Import with private key with no rescan

@@ -12,6 +12,9 @@ class ListSinceBlockTest (BitcoinTestFramework):
         self.num_nodes = 4
         self.setup_clean_chain = True
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def run_test(self):
         self.nodes[2].generate(101)
         self.sync_all()
@@ -50,8 +53,10 @@ class ListSinceBlockTest (BitcoinTestFramework):
                                 "42759cde25462784395a337460bde75f58e73d3f08bd31fdc3507cbac856a2c4")
         assert_raises_rpc_error(-5, "Block not found", self.nodes[0].listsinceblock,
                                 "0000000000000000000000000000000000000000000000000000000000000000")
-        assert_raises_rpc_error(-5, "Block not found", self.nodes[0].listsinceblock,
+        assert_raises_rpc_error(-8, "blockhash must be of length 64 (not 11, for 'invalid-hex')", self.nodes[0].listsinceblock,
                                 "invalid-hex")
+        assert_raises_rpc_error(-8, "blockhash must be hexadecimal string (not 'Z000000000000000000000000000000000000000000000000000000000000000')", self.nodes[0].listsinceblock,
+                                "Z000000000000000000000000000000000000000000000000000000000000000")
 
     def test_reorg(self):
         '''

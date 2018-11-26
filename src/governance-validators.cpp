@@ -7,7 +7,7 @@
 #include <key_io.h>
 #include <timedata.h>
 #include <tinyformat.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 
 #include <algorithm>
 

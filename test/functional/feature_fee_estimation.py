@@ -126,6 +126,9 @@ class EstimateFeeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def setup_network(self):
         """
         We'll setup the network to have 3 nodes that all mine with different parameters.
@@ -141,6 +144,9 @@ class EstimateFeeTest(BitcoinTestFramework):
         # (68k weight is room enough for 120 or so transactions)
         # Node2 is a stingy miner, that
         # produces too small blocks (room for only 55 or so transactions)
+        self.start_nodes()
+        self.import_deterministic_coinbase_privkeys()
+        self.stop_nodes()
 
     def transact_and_mine(self, numblocks, mining_node):
         min_fee = Decimal("0.00001")

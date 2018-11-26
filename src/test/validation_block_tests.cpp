@@ -10,7 +10,7 @@
 #include <miner.h>
 #include <pow.h>
 #include <random.h>
-#include <test/test_bitcoin.h>
+#include <test/test_chaincoin.h>
 #include <validation.h>
 #include <validationinterface.h>
 
@@ -23,7 +23,7 @@ BOOST_FIXTURE_TEST_SUITE(validation_block_tests, RegtestingSetup)
 struct TestSubscriber : public CValidationInterface {
     uint256 m_expected_tip;
 
-    TestSubscriber(uint256 tip) : m_expected_tip(tip) {}
+    explicit TestSubscriber(uint256 tip) : m_expected_tip(tip) {}
 
     void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload) override
     {

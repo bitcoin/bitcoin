@@ -11,7 +11,7 @@
 #include <masternodeman.h>
 #include <masternode-sync.h>
 #include <messagesigner.h>
-#include <util.h>
+#include <util/system.h>
 
 #include <univalue.h>
 #include <string>

@@ -72,6 +72,7 @@ public:
     void SwitchToNextAsset(CConnman* connman);
 
     void ProcessTick(CConnman* connman);
+    double getMNSyncStatus() { return (nRequestedMasternodeAttempt + (nRequestedMasternodeAssets - 1) * 8.0) / 32.0;}
     void ProcessModuleMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman);
     void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload, CConnman* connman);
 

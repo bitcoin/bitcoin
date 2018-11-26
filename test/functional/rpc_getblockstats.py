@@ -170,6 +170,8 @@ class GetblockstatsTest(BitcoinTestFramework):
                                 self.nodes[0].getblockstats, hash_or_height=1, stats=['minfee' , 'aaa%s' % inv_sel_stat])
 
         assert_raises_rpc_error(-8, 'One or more of the selected stats requires -txindex enabled',
+                                self.nodes[1].getblockstats, hash_or_height=1)
+        assert_raises_rpc_error(-8, 'One or more of the selected stats requires -txindex enabled',
                                 self.nodes[1].getblockstats, hash_or_height=self.start_height + self.max_stat_pos)
 
         # Mainchain's genesis block shouldn't be found on regtest

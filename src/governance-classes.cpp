@@ -8,7 +8,7 @@
 #include <governance-classes.h>
 #include <init.h>
 #include <validation.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 
 #include <boost/algorithm/string.hpp>
 

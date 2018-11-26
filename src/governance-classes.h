@@ -10,7 +10,7 @@
 #include <key.h>
 #include <key_io.h>
 #include <script/standard.h>
-#include <util.h>
+#include <util/system.h>
 
 class CSuperblock;
 class CGovernanceTrigger;

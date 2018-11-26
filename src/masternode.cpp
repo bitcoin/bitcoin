@@ -8,7 +8,7 @@
 #include <chainparams.h>
 #include <consensus/tx_verify.h>
 #include <init.h>
-#include <interfaces/moduleinterface.h>
+#include <interfaces/chain.h>
 #include <netbase.h>
 #include <masternode.h>
 #include <masternode-payments.h>
@@ -17,11 +17,12 @@
 #include <messagesigner.h>
 #include <script/standard.h>
 #include <shutdown.h>
-#include <util.h>
+#include <util/system.h>
 #include <walletinitinterface.h>
 
 #include <string>
 
+InitInterfaces* g_mn_interfaces = nullptr;
 
 CMasternode::CMasternode() :
     masternode_info_t{ MASTERNODE_ENABLED, PROTOCOL_VERSION, GetAdjustedTime()},
@@ -115,7 +116,7 @@ CMasternode::CollateralStatus CMasternode::CheckCollateral(const COutPoint& outp
     AssertLockHeld(cs_main);
 
     Coin coin;
-    if(!GetUTXOCoin(outpoint, coin)) {
+    if(!pcoinsTip->GetCoin(outpoint, coin)) {
         return COLLATERAL_UTXO_NOT_FOUND;
     }
 
@@ -149,7 +150,7 @@ void CMasternode::Check(bool fForce)
     int nHeight = 0;
     if(!fUnitTest) {
         Coin coin;
-        if(!GetUTXOCoin(outpoint, coin)) {
+        if(!pcoinsTip->GetCoin(outpoint, coin)) {
             nActiveState = MASTERNODE_OUTPOINT_SPENT;
             LogPrint(BCLog::MNODE, "CMasternode::Check -- Failed to find Masternode UTXO, masternode=%s\n", outpoint.ToStringShort());
             return;
@@ -366,7 +367,13 @@ bool CMasternodeBroadcast::Create(const std::string& strService, const std::stri
     if (!CMessageSigner::GetKeysFromSecret(strKeyMasternode, keyMasternodeNew, pubKeyMasternodeNew))
         return Log(strprintf("Invalid masternode key %s", strKeyMasternode));
 
-    if (!g_wallet_interface->CheckMNCollateral(outpoint, destNew, pubKeyCollateralAddressNew, keyCollateralAddressNew, strTxHash, strOutputIndex))
+    bool foundmnout = false;
+    for (const auto& client : g_mn_interfaces->chain_clients) {
+        if (client->checkCollateral(outpoint, destNew, pubKeyCollateralAddressNew, keyCollateralAddressNew, strTxHash, strOutputIndex))
+            foundmnout = true;
+    }
+
+    if (!foundmnout)
         return Log(strprintf("Could not allocate outpoint %s:%s for masternode %s", strTxHash, strOutputIndex, strService));
 
     CService service;

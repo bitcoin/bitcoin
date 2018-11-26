@@ -89,7 +89,7 @@ static int ec_privkey_import_der(const secp256k1_context* ctx, unsigned char *ou
  * will be set to the number of bytes used in the buffer.
  * key32 must point to a 32-byte raw private key.
  */
-static int ec_privkey_export_der(const secp256k1_context *ctx, unsigned char *privkey, size_t *privkeylen, const unsigned char *key32, int compressed) {
+static int ec_privkey_export_der(const secp256k1_context *ctx, unsigned char *privkey, size_t *privkeylen, const unsigned char *key32, bool compressed) {
     assert(*privkeylen >= CKey::PRIVATE_KEY_SIZE);
     secp256k1_pubkey pubkey;
     size_t pubkeylen = 0;
@@ -170,7 +170,7 @@ CPrivKey CKey::GetPrivKey() const {
     size_t privkeylen;
     privkey.resize(PRIVATE_KEY_SIZE);
     privkeylen = PRIVATE_KEY_SIZE;
-    ret = ec_privkey_export_der(secp256k1_context_sign, privkey.data(), &privkeylen, begin(), fCompressed ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED);
+    ret = ec_privkey_export_der(secp256k1_context_sign, privkey.data(), &privkeylen, begin(), fCompressed);
     assert(ret);
     privkey.resize(privkeylen);
     return privkey;

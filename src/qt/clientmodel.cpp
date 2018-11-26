@@ -21,7 +21,7 @@
 #include <netbase.h>
 #include <txmempool.h>
 #include <ui_interface.h>
-#include <util.h>
+#include <util/system.h>
 #include <warnings.h>
 
 #include <stdint.h>
@@ -37,20 +37,21 @@ ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QO
     m_node(node),
     optionsModel(_optionsModel),
     peerTableModel(0),
-    cachedMasternodeCountString(""),
     banTableModel(0),
-    pollTimer(0)
+    cachedMasternodeCountString(""),
+    pollTimer(0),
+    pollMnTimer(0)
 {
     cachedBestHeaderHeight = -1;
     cachedBestHeaderTime = -1;
     peerTableModel = new PeerTableModel(m_node, this);
     banTableModel = new BanTableModel(m_node, this);
     pollTimer = new QTimer(this);
-    connect(pollTimer, SIGNAL(timeout()), this, SLOT(updateTimer()));
+    connect(pollTimer, &QTimer::timeout, this, &ClientModel::updateTimer);
     pollTimer->start(MODEL_UPDATE_DELAY);
 
     pollMnTimer = new QTimer(this);
-    connect(pollMnTimer, SIGNAL(timeout()), this, SLOT(updateMnTimer()));
+    connect(pollMnTimer, &QTimer::timeout, this, &ClientModel::updateMnTimer);
     // no need to update as frequent as data for balances/txes/blocks
     pollMnTimer->start(MODEL_UPDATE_DELAY * 4);
 
@@ -155,9 +156,12 @@ enum BlockSource ClientModel::getBlockSource() const
         return BlockSource::REINDEX;
     else if (m_node.getImporting())
         return BlockSource::DISK;
-    else if (getNumConnections() > 0)
-        return BlockSource::NETWORK;
-
+    else if (getNumConnections() > 0) {
+        if (m_node.MNIsBlockchainsynced())
+            return BlockSource::MASTERNODE;
+        else
+            return BlockSource::NETWORK;
+    }
     return BlockSource::NONE;
 }
 
@@ -204,6 +208,11 @@ QString ClientModel::formatClientStartupTime() const
 QString ClientModel::dataDir() const
 {
     return GUIUtil::boostPathToQString(GetDataDir());
+}
+
+QString ClientModel::blocksDir() const
+{
+    return GUIUtil::boostPathToQString(GetBlocksDir());
 }
 
 void ClientModel::updateBanlist()
@@ -273,13 +282,6 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, int heig
     }
 }
 
-static void NotifyMNSyncProgress(ClientModel *clientmodel, const std::string &title, double nProgress)
-{
-    QMetaObject::invokeMethod(clientmodel, "moduleDataSyncProgress", Qt::QueuedConnection,
-                              Q_ARG(QString, QString::fromStdString(title)),
-                              Q_ARG(double, nProgress));
-}
-
 void ClientModel::subscribeToCoreSignals()
 {
     // Connect signals to client
@@ -290,7 +292,6 @@ void ClientModel::subscribeToCoreSignals()
     m_handler_banned_list_changed = m_node.handleBannedListChanged(boost::bind(BannedListChanged, this));
     m_handler_notify_block_tip = m_node.handleNotifyBlockTip(boost::bind(BlockTipChanged, this, _1, _2, _3, _4, false));
     m_handler_notify_header_tip = m_node.handleNotifyHeaderTip(boost::bind(BlockTipChanged, this, _1, _2, _3, _4, true));
-    m_handler_notify_mn_data = m_node.handleNotifyMNSyncProgress(boost::bind(NotifyMNSyncProgress, this, _1, _2));
 }
 
 void ClientModel::unsubscribeFromCoreSignals()
@@ -303,7 +304,6 @@ void ClientModel::unsubscribeFromCoreSignals()
     m_handler_banned_list_changed->disconnect();
     m_handler_notify_block_tip->disconnect();
     m_handler_notify_header_tip->disconnect();
-    m_handler_notify_mn_data->disconnect();
 }
 
 bool ClientModel::getProxyInfo(std::string& ip_port) const

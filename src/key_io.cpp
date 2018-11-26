@@ -7,7 +7,7 @@
 #include <base58.h>
 #include <bech32.h>
 #include <script/script.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/static_visitor.hpp>
@@ -24,7 +24,7 @@ private:
     const CChainParams& m_params;
 
 public:
-    DestinationEncoder(const CChainParams& params) : m_params(params) {}
+    explicit DestinationEncoder(const CChainParams& params) : m_params(params) {}
 
     std::string operator()(const CKeyID& id) const
     {

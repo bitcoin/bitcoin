@@ -4,8 +4,11 @@
 
 #include <wallet/coinselection.h>
 #include <privatesend.h>
-#include <util.h>
-#include <utilmoneystr.h>
+
+#include <util/system.h>
+#include <util/moneystr.h>
+
+#include <boost/optional.hpp>
 
 // Descending order comparator
 struct {

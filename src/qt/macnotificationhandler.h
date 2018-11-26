@@ -19,7 +19,7 @@ public:
     void showNotification(const QString &title, const QString &text);
 
     /** check if OS can handle UserNotifications */
-    bool hasUserNotificationCenterSupport(void);
+    bool hasUserNotificationCenterSupport();
     static MacNotificationHandler *instance();
 };
 

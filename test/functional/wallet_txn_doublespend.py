@@ -18,10 +18,8 @@ class TxnMallTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
 
-    def __init__(self):
-        super().__init__()
-        self.num_nodes = 4
-        self.setup_clean_chain = False
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
 
     def add_options(self, parser):
         parser.add_argument("--mineblock", dest="mine_block", default=False, action="store_true",

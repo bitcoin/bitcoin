@@ -75,7 +75,7 @@ void* Arena::alloc(size_t size)
 
     // Create the used-chunk, taking its space from the end of the free-chunk
     const size_t size_remaining = size_ptr_it->first - size;
-    auto alloced = chunks_used.emplace(size_ptr_it->second + size_remaining, size).first;
+    auto allocated = chunks_used.emplace(size_ptr_it->second + size_remaining, size).first;
     chunks_free_end.erase(size_ptr_it->second + size_ptr_it->first);
     if (size_ptr_it->first == size) {
         // whole chunk is used up
@@ -88,7 +88,7 @@ void* Arena::alloc(size_t size)
     }
     size_to_free_chunk.erase(size_ptr_it);
 
-    return reinterpret_cast<void*>(alloced->first);
+    return reinterpret_cast<void*>(allocated->first);
 }
 
 void Arena::free(void *ptr)

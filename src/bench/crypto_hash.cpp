@@ -9,11 +9,12 @@
 #include <hash.h>
 #include <random.h>
 #include <uint256.h>
-#include <utiltime.h>
+#include <util/time.h>
 #include <crypto/ripemd160.h>
 #include <crypto/sha1.h>
 #include <crypto/sha256.h>
 #include <crypto/sha512.h>
+#include <crypto/siphash.h>
 
 /* Number of bytes to hash per iteration */
 static const uint64_t BUFFER_SIZE = 1000*1000;
@@ -80,18 +81,16 @@ static void SipHash_32b(benchmark::State& state)
 static void FastRandom_32bit(benchmark::State& state)
 {
     FastRandomContext rng(true);
-    uint32_t x = 0;
     while (state.KeepRunning()) {
-        x += rng.rand32();
+        rng.rand32();
     }
 }
 
 static void FastRandom_1bit(benchmark::State& state)
 {
     FastRandomContext rng(true);
-    uint32_t x = 0;
     while (state.KeepRunning()) {
-        x += rng.randbool();
+        rng.randbool();
     }
 }
 

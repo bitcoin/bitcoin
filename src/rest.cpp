@@ -3,20 +3,21 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <attributes.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <core_io.h>
+#include <httpserver.h>
 #include <index/txindex.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
-#include <validation.h>
-#include <httpserver.h>
 #include <rpc/blockchain.h>
 #include <rpc/server.h>
 #include <streams.h>
 #include <sync.h>
 #include <txmempool.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
+#include <validation.h>
 #include <version.h>
 
 #include <boost/algorithm/string.hpp>
@@ -105,15 +106,6 @@ static std::string AvailableDataFormatsString()
     return formats;
 }
 
-static bool ParseHashStr(const std::string& strReq, uint256& v)
-{
-    if (!IsHex(strReq) || (strReq.size() != 64))
-        return false;
-
-    v.SetHex(strReq);
-    return true;
-}
-
 static bool CheckWarmup(HTTPRequest* req)
 {
     std::string statusmessage;
@@ -157,13 +149,13 @@ static bool rest_headers(HTTPRequest* req,
         }
     }
 
-    CDataStream ssHeader(SER_NETWORK, PROTOCOL_VERSION);
-    for (const CBlockIndex *pindex : headers) {
-        ssHeader << pindex->GetBlockHeader();
-    }
-
     switch (rf) {
     case RetFormat::BINARY: {
+        CDataStream ssHeader(SER_NETWORK, PROTOCOL_VERSION);
+        for (const CBlockIndex *pindex : headers) {
+            ssHeader << pindex->GetBlockHeader();
+        }
+
         std::string binaryHeader = ssHeader.str();
         req->WriteHeader("Content-Type", "application/octet-stream");
         req->WriteReply(HTTP_OK, binaryHeader);
@@ -171,6 +163,11 @@ static bool rest_headers(HTTPRequest* req,
     }
 
     case RetFormat::HEX: {
+        CDataStream ssHeader(SER_NETWORK, PROTOCOL_VERSION);
+        for (const CBlockIndex *pindex : headers) {
+            ssHeader << pindex->GetBlockHeader();
+        }
+
         std::string strHex = HexStr(ssHeader.begin(), ssHeader.end()) + "\n";
         req->WriteHeader("Content-Type", "text/plain");
         req->WriteReply(HTTP_OK, strHex);
@@ -224,11 +221,10 @@ static bool rest_block(HTTPRequest* req,
             return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
     }
 
-    CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
-    ssBlock << block;
-
     switch (rf) {
     case RetFormat::BINARY: {
+        CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
+        ssBlock << block;
         std::string binaryBlock = ssBlock.str();
         req->WriteHeader("Content-Type", "application/octet-stream");
         req->WriteReply(HTTP_OK, binaryBlock);
@@ -236,6 +232,8 @@ static bool rest_block(HTTPRequest* req,
     }
 
     case RetFormat::HEX: {
+        CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
+        ssBlock << block;
         std::string strHex = HexStr(ssBlock.begin(), ssBlock.end()) + "\n";
         req->WriteHeader("Content-Type", "text/plain");
         req->WriteReply(HTTP_OK, strHex);
@@ -360,11 +358,11 @@ static bool rest_tx(HTTPRequest* req, const std::string& strURIPart)
     if (!GetTransaction(hash, tx, Params().GetConsensus(), hashBlock, true))
         return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
 
-    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
-    ssTx << tx;
-
     switch (rf) {
     case RetFormat::BINARY: {
+        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
+        ssTx << tx;
+
         std::string binaryTx = ssTx.str();
         req->WriteHeader("Content-Type", "application/octet-stream");
         req->WriteReply(HTTP_OK, binaryTx);
@@ -372,6 +370,9 @@ static bool rest_tx(HTTPRequest* req, const std::string& strURIPart)
     }
 
     case RetFormat::HEX: {
+        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
+        ssTx << tx;
+
         std::string strHex = HexStr(ssTx.begin(), ssTx.end()) + "\n";
         req->WriteHeader("Content-Type", "text/plain");
         req->WriteReply(HTTP_OK, strHex);
@@ -464,7 +465,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
                 oss >> fCheckMemPool;
                 oss >> vOutPoints;
             }
-        } catch (const std::ios_base::failure& e) {
+        } catch (const std::ios_base::failure&) {
             // abort in case of unreadable binary data
             return RESTERR(req, HTTP_BAD_REQUEST, "Parse error");
         }
@@ -591,11 +592,10 @@ static const struct {
       {"/rest/getutxos", rest_getutxos},
 };
 
-bool StartREST()
+void StartREST()
 {
     for (unsigned int i = 0; i < ARRAYLEN(uri_prefixes); i++)
         RegisterHTTPHandler(uri_prefixes[i].prefix, false, uri_prefixes[i].handler);
-    return true;
 }
 
 void InterruptREST()

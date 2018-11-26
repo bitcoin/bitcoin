@@ -16,7 +16,7 @@ struct TransactionCompressor {
 private:
     CTransactionRef& tx;
 public:
-    TransactionCompressor(CTransactionRef& txIn) : tx(txIn) {}
+    explicit TransactionCompressor(CTransactionRef& txIn) : tx(txIn) {}
 
     ADD_SERIALIZE_METHODS;
 
@@ -52,12 +52,12 @@ public:
                 }
             }
 
-            uint16_t offset = 0;
-            for (size_t j = 0; i < indexes.size(); j++) {
-                if (uint64_t(indexes[j]) + uint64_t(offset) > std::numeric_limits<uint16_t>::max())
+            int32_t offset = 0;
+            for (size_t j = 0; j < indexes.size(); j++) {
+                if (int32_t(indexes[j]) + offset > std::numeric_limits<uint16_t>::max())
                     throw std::ios_base::failure("indexes overflowed 16 bits");
                 indexes[j] = indexes[j] + offset;
-                offset = indexes[j] + 1;
+                offset = int32_t(indexes[j]) + 1;
             }
         } else {
             for (size_t i = 0; i < indexes.size(); i++) {
@@ -75,7 +75,7 @@ public:
     std::vector<CTransactionRef> txn;
 
     BlockTransactions() {}
-    BlockTransactions(const BlockTransactionsRequest& req) :
+    explicit BlockTransactions(const BlockTransactionsRequest& req) :
         blockhash(req.blockhash), txn(req.indexes.size()) {}
 
     ADD_SERIALIZE_METHODS;
@@ -186,6 +186,9 @@ public:
 
         READWRITE(prefilledtxn);
 
+        if (BlockTxCount() > std::numeric_limits<uint16_t>::max())
+            throw std::ios_base::failure("indexes overflowed 16 bits");
+
         if (ser_action.ForRead())
             FillShortTxIDSelector();
     }
@@ -198,11 +201,12 @@ protected:
     CTxMemPool* pool;
 public:
     CBlockHeader header;
-    PartiallyDownloadedBlock(CTxMemPool* poolIn) : pool(poolIn) {}
+    explicit PartiallyDownloadedBlock(CTxMemPool* poolIn) : pool(poolIn) {}
 
     // extra_txn is a list of extra transactions to look at, in <witness hash, reference> form
-    ReadStatus InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const std::vector<std::pair<uint256, CTransactionRef> > &extra_txn);
+    ReadStatus InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const std::vector<std::pair<uint256, CTransactionRef>>& extra_txn);
     bool IsTxAvailable(size_t index) const;
-    ReadStatus FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing);};
+    ReadStatus FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing);
+};
 
 #endif // BITCOIN_BLOCKENCODINGS_H
