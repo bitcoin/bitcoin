@@ -1619,10 +1619,7 @@ UniValue createpsct(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 4)
         throw std::runtime_error(
-<<<<<<< HEAD
-                            "createpsct [{\"txid\":\"id\",\"vout\":n},...] [{\"address\":amount},{\"data\":\"hex\"},...] ( locktime ) ( replaceable )\n"
-=======
-            RPCHelpMan{"createpsbt",
+            RPCHelpMan{"createpsct",
                 {
                     {"inputs", RPCArg::Type::ARR,
                         {
@@ -1653,7 +1650,6 @@ UniValue createpsct(const JSONRPCRequest& request)
                     {"replaceable", RPCArg::Type::BOOL, true},
                 }}
                 .ToString() +
->>>>>>> fa483e13b... rpc: Add RPCHelpMan for machine-generated help
                             "\nCreates a transaction in the Partially Signed Transaction format.\n"
                             "Implements the Creator role.\n"
                             "\nArguments:\n"

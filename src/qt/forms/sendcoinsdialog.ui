@@ -189,7 +189,7 @@
             <number>0</number>
            </property>
            <item>
-            <layout class="QHBoxLayout" name="horizontalLayoutCoinControl3" stretch="0,0,0,1">
+            <layout class="QHBoxLayout" name="horizontalLayoutCoinControl3" stretch="0,0,0,0,1">
              <property name="spacing">
               <number>20</number>
              </property>
@@ -414,6 +414,19 @@
               </layout>
              </item>
              <item>
+              <widget class="QLabel" name="labelCoinControlChangeText">
+               <property name="font">
+                <font>
+                 <weight>75</weight>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>Change:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
               <layout class="QFormLayout" name="formLayoutCoinControl4">
                <property name="horizontalSpacing">
                 <number>10</number>
@@ -459,19 +472,6 @@
                  </property>
                  <property name="textInteractionFlags">
                   <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="0">
-                <widget class="QLabel" name="labelCoinControlChangeText">
-                 <property name="font">
-                  <font>
-                   <weight>75</weight>
-                   <bold>true</bold>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>Change:</string>
                  </property>
                 </widget>
                </item>
@@ -588,7 +588,7 @@
         <x>0</x>
         <y>0</y>
         <width>824</width>
-        <height>106</height>
+        <height>122</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,1">
@@ -842,7 +842,7 @@
                  <item>
                   <widget class="QLabel" name="labelCustomPerKilobyte">
                    <property name="toolTip">
-                    <string>Specify a custom fee per kB (1,000 bytes) of the transaction's virtual size. Note:  Since the fee is calculated on a per-byte basis, a fee of "100 chuffs per kB" for a transaction size of 500 bytes (half of 1 kB) would ultimately yield a fee of only 50 chuffs.</string>
+                    <string>Specify a custom fee per kB (1,000 bytes) of the transaction's virtual size. Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 chuffs per kB&quot; for a transaction size of 500 bytes (half of 1 kB) would ultimately yield a fee of only 50 chuffs.</string>
                    </property>
                    <property name="text">
                     <string>per kilobyte</string>
