@@ -214,7 +214,7 @@ class DIP3Test(BitcoinTestFramework):
         self.test_mn_votes(10, test_enforcement=True)
 
         print("testing instant send (with mixed ProTx and legacy nodes)")
-        self.test_instantsend(10, 5)
+        self.test_instantsend(10, 3)
 
         # We still need to restart them as otherwise they won't have the BLS operator key loaded
         print("restart upgraded nodes which refer to old collaterals")
@@ -298,7 +298,7 @@ class DIP3Test(BitcoinTestFramework):
             self.sync_all()
 
         print("testing instant send with deterministic MNs")
-        self.test_instantsend(20, 5)
+        self.test_instantsend(10, 5)
 
         print("testing ProUpServTx")
         for mn in mns_protx:
@@ -339,7 +339,7 @@ class DIP3Test(BitcoinTestFramework):
             self.sync_all()
 
         print("testing instant send with replaced MNs")
-        self.test_instantsend(20, 5)
+        self.test_instantsend(10, 3)
 
     def create_mn(self, node, idx, alias):
         mn = Masternode()
