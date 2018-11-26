@@ -2091,6 +2091,7 @@ CAmount CWalletTx::GetDenominatedCredit(interfaces::Chain::Lock& locked_chain, i
     uint256 hashTx = GetHash();
     for (unsigned int i = 0; i < tx->vout.size(); i++)
     {
+        LOCK(pwallet->cs_wallet);
         if(!pwallet->IsSpent(locked_chain, hashTx, i) && CPrivateSend::IsDenominatedAmount(tx->vout[i].nValue))
         {
             const CTxOut &txout = tx->vout[i];
