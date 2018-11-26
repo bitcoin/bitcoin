@@ -828,7 +828,7 @@ bool CPrivateSendClient::DoAutomaticDenominating(interfaces::Chain::Lock& locked
     CAmount nValueMin = CPrivateSend::GetSmallestDenomination();
 
     // if there are no confirmed DS collateral inputs yet
-    if(!pmixingwallet->HasCollateralInputs()) {
+    if(!pmixingwallet->HasCollateralInputs(locked_chain)) {
         // should have some additional amount for them
         nValueMin += CPrivateSend::GetMaxCollateralAmount();
     }
@@ -847,16 +847,12 @@ bool CPrivateSendClient::DoAutomaticDenominating(interfaces::Chain::Lock& locked
     // excluding denoms
     CAmount nBalanceAnonimizableNonDenom = pmixingwallet->GetAnonymizableBalance(true);
     // denoms
-    CAmount nBalanceDenominatedConf = pmixingwallet->GetDenominatedBalance();
-    CAmount nBalanceDenominatedUnconf = pmixingwallet->GetDenominatedBalance(true);
-    CAmount nBalanceDenominated = nBalanceDenominatedConf + nBalanceDenominatedUnconf;
+    CAmount nBalanceDenominated = pmixingwallet->GetDenominatedBalance();
 
-    LogPrint(BCLog::PRIVSEND, "CPrivateSendClient::DoAutomaticDenominating -- nValueMin: %f, nBalanceNeedsAnonymized: %f, nBalanceAnonimizableNonDenom: %f, nBalanceDenominatedConf: %f, nBalanceDenominatedUnconf: %f, nBalanceDenominated: %f\n",
+    LogPrint(BCLog::PRIVSEND, "CPrivateSendClient::DoAutomaticDenominating -- nValueMin: %f, nBalanceNeedsAnonymized: %f, nBalanceAnonimizableNonDenom: %f, nBalanceDenominatedConf: %f, nBalanceDenominated: %f\n",
             (float)nValueMin/COIN,
             (float)nBalanceNeedsAnonymized/COIN,
             (float)nBalanceAnonimizableNonDenom/COIN,
-            (float)nBalanceDenominatedConf/COIN,
-            (float)nBalanceDenominatedUnconf/COIN,
             (float)nBalanceDenominated/COIN);
 
     // Check if we have should create more denominated inputs i.e.
@@ -868,8 +864,8 @@ bool CPrivateSendClient::DoAutomaticDenominating(interfaces::Chain::Lock& locked
     }
 
     //check if we have the collateral sized inputs
-    if(!pmixingwallet->HasCollateralInputs())
-        return !pmixingwallet->HasCollateralInputs(false) && MakeCollateralAmounts(locked_chain);
+    if(!pmixingwallet->HasCollateralInputs(locked_chain))
+        return !pmixingwallet->HasCollateralInputs(locked_chain, false) && MakeCollateralAmounts(locked_chain);
 
     if(nSessionID) {
         strAutoDenomResult = _("Mixing in progress...");
@@ -884,7 +880,7 @@ bool CPrivateSendClient::DoAutomaticDenominating(interfaces::Chain::Lock& locked
     SetNull();
 
     // should be no unconfirmed denoms in non-multi-session mode
-    if(!fPrivateSendMultiSession && nBalanceDenominatedUnconf > 0) {
+    if(!fPrivateSendMultiSession && nBalanceDenominated > 0) {
         LogPrint(BCLog::PRIVSEND, "CPrivateSendClient::DoAutomaticDenominating -- Found unconfirmed denominated outputs, will wait till they confirm to continue.\n");
         strAutoDenomResult = _("Found unconfirmed denominated outputs, will wait till they confirm to continue.");
         fEnablePrivateSend = true;
@@ -1417,7 +1413,7 @@ bool CPrivateSendClient::CreateDenominated()
         return false;
     }
 
-    bool fCreateMixingCollaterals = !pmixingwallet->HasCollateralInputs();
+    bool fCreateMixingCollaterals = !pmixingwallet->HasCollateralInputs(*locked_chain);
 
     for (const auto& item : vecTally) {
         if(!CreateDenominated(*locked_chain, item, fCreateMixingCollaterals)) continue;

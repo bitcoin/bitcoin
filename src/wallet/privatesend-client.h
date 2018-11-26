@@ -79,7 +79,7 @@ public:
         addr(CService()),
         dsa(CDarksendAccept()),
         nTimeCreated(0)
-    {};
+    {}
 
     CPendingDsaRequest(const CService& addr_, const CDarksendAccept& dsa_):
         addr(addr_),

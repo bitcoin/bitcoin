@@ -218,7 +218,7 @@ void CPrivateSendServer::ProcessModuleMessage(CNode* pfrom, const std::string& s
                 LogPrint(BCLog::PRIVSEND, "DSVIN -- txin=%s\n", txin.ToString());
 
                 Coin coin;
-                if(GetUTXOCoin(txin.prevout, coin)) {
+                if(pcoinsTip->GetCoin(txin.prevout, coin)) {
                     nValueIn += coin.out.nValue;
                 } else {
                     LogPrintf("DSVIN -- missing input! tx=%s\n", tx.GetHash().ToString());

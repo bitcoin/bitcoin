@@ -548,8 +548,12 @@ bool CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight, bool f
         //it's too new, wait for a cycle
         if(fFilterSigTime && mnpair.second.sigTime + (nMnCount*2.6*60) > GetAdjustedTime()) continue;
 
+        //check the output
+        Coin coin;
+        if (!pcoinsTip->GetCoin(mnpair.first, coin)) continue;
+
         //make sure it has at least as many confirmations as there are masternodes
-        if(GetUTXOConfirmations(mnpair.first) < nMnCount) continue;
+        if((chainActive.Height() - coin.nHeight + 1) < nMnCount) continue;
 
         vecMasternodeLastPaid.push_back(std::make_pair(mnpair.second.GetLastPaidBlock(), &mnpair.second));
     }
@@ -728,7 +732,7 @@ void CMasternodeMan::ProcessMasternodeConnections(CConnman* connman)
             if (client->mixingMasternode(pnode))
                 ismixing = true;
         }
-        if(!ismixing) {
+        if(pnode->fMasternode && !ismixing) {
             LogPrintf("Closing Masternode connection: peer=%d, addr=%s\n", pnode->GetId(), pnode->addr.ToString());
             pnode->fDisconnect = true;
         }
