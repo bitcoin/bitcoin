@@ -376,7 +376,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
                 nValueNodeRewards += txCoinbase.vout[SN_PMT_SLOT].nValue;
 
             //Reduce PoS reward by the node rewards
-            txCoinStake.vout[1].nValue -= nValueNodeRewards;
+            txCoinStake.vout[0].nValue -= nValueNodeRewards;
             pblock->vtx[1] = txCoinStake;
 
             // Make sure coinbase has null values
