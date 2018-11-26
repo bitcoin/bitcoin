@@ -1340,6 +1340,19 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         return true;
     }
 
+    // BEGIN TEMPORARY CODE
+    bool fDIP0003Active;
+    {
+        LOCK(cs_main);
+        fDIP0003Active = VersionBitsState(chainActive.Tip(), chainparams.GetConsensus(), Consensus::DEPLOYMENT_DIP0003, versionbitscache) == THRESHOLD_ACTIVE;
+    }
+    // TODO delete this in next release after v13
+    int nMinPeerProtoVersion = MIN_PEER_PROTO_VERSION;
+    if (fDIP0003Active) {
+        nMinPeerProtoVersion = MIN_PEER_PROTO_VERSION_DIP3;
+    }
+    // END TEMPORARY CODE
+
     if (!(pfrom->GetLocalServices() & NODE_BLOOM) &&
               (strCommand == NetMsgType::FILTERLOAD ||
                strCommand == NetMsgType::FILTERADD))
@@ -1418,12 +1431,12 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             return false;
         }
 
-        if (nVersion < MIN_PEER_PROTO_VERSION)
+        if (nVersion < nMinPeerProtoVersion)
         {
             // disconnect from peers older than this proto version
             LogPrintf("peer=%d using obsolete version %i; disconnecting\n", pfrom->id, nVersion);
             connman.PushMessage(pfrom, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::REJECT, strCommand, REJECT_OBSOLETE,
-                               strprintf("Version must be %d or greater", MIN_PEER_PROTO_VERSION)));
+                               strprintf("Version must be %d or greater", nMinPeerProtoVersion)));
             pfrom->fDisconnect = true;
             return false;
         }
@@ -1563,6 +1576,17 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
     // At this point, the outgoing message serialization version can't change.
     const CNetMsgMaker msgMaker(pfrom->GetSendVersion());
+
+    // BEGIN TEMPORARY CODE
+    if (pfrom->nVersion < nMinPeerProtoVersion) {
+        // disconnect from peers with version < 70212 after DIP3 has activated through the BIP9 deployment
+        LogPrintf("peer=%d using obsolete version %i after DIP3 activation; disconnecting\n", pfrom->id, pfrom->GetSendVersion());
+        connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::REJECT, strCommand, REJECT_OBSOLETE,
+                strprintf("Version must be %d or greater", nMinPeerProtoVersion)));
+        pfrom->fDisconnect = true;
+        return false;
+    }
+    // END TEMPORARY CODE
 
     if (strCommand == NetMsgType::VERACK)
     {
