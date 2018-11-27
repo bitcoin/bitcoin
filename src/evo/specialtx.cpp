@@ -38,7 +38,7 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
     case TRANSACTION_COINBASE:
         return CheckCbTx(tx, pindexPrev, state);
     case TRANSACTION_QUORUM_COMMITMENT:
-        return true; // can't really check much here. checks are done in ProcessBlock
+        return llmq::CheckLLMQCommitment(tx, pindexPrev, state);
     }
 
     return state.DoS(10, false, REJECT_INVALID, "bad-tx-type-check");

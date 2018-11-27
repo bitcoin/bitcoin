@@ -345,7 +345,7 @@ void CDummyDKG::CreateFinalCommitment(Consensus::LLMQType llmqType, const CBlock
         }
         fqc.membersSig = CBLSSignature::AggregateSecure(memberSigs, memberPubKeys, commitmentHash);
 
-        if (!fqc.Verify(members)) {
+        if (!fqc.Verify(members, true)) {
             LogPrintf("CDummyDKG::%s -- self created final commitment is invalid for quorum %s:%d, validMembers=%d, signers=%d\n", __func__,
                       fqc.quorumHash.ToString(), fqc.llmqType, fqc.CountValidMembers(), fqc.CountSigners());
             continue;

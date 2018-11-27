@@ -90,7 +90,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
 
         auto members = CLLMQUtils::GetAllQuorumMembers(type, qc.quorumHash);
 
-        if (!qc.Verify(members)) {
+        if (!qc.Verify(members, true)) {
             LOCK(cs_main);
             LogPrintf("CQuorumBlockProcessor::%s -- commitment for quorum %s:%d is not valid, peer=%d\n", __func__,
                       qc.quorumHash.ToString(), qc.llmqType, pfrom->id);
@@ -167,7 +167,7 @@ bool CQuorumBlockProcessor::ProcessCommitment(const CBlockIndex* pindexPrev, con
     }
 
     if (qc.IsNull()) {
-        if (!qc.VerifyNull(pindexPrev->nHeight + 1)) {
+        if (!qc.VerifyNull()) {
             return state.DoS(100, false, REJECT_INVALID, "bad-qc-invalid-null");
         }
         return true;
@@ -185,7 +185,7 @@ bool CQuorumBlockProcessor::ProcessCommitment(const CBlockIndex* pindexPrev, con
 
     auto members = CLLMQUtils::GetAllQuorumMembers(params.type, quorumHash);
 
-    if (!qc.Verify(members)) {
+    if (!qc.Verify(members, true)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-qc-invalid");
     }
 
@@ -236,21 +236,18 @@ bool CQuorumBlockProcessor::GetCommitmentsFromBlock(const CBlock& block, const C
 
     for (const auto& tx : block.vtx) {
         if (tx->nType == TRANSACTION_QUORUM_COMMITMENT) {
-            CFinalCommitment qc;
+            CFinalCommitmentTxPayload qc;
             if (!GetTxPayload(*tx, qc)) {
+                // should not happen as it was verified before processing the block
                 return state.DoS(100, false, REJECT_INVALID, "bad-tx-payload");
             }
 
-            if (!consensus.llmqs.count((Consensus::LLMQType)qc.llmqType)) {
-                return state.DoS(100, false, REJECT_INVALID, "bad-qc-type");
-            }
-
             // only allow one commitment per type and per block
-            if (ret.count((Consensus::LLMQType)qc.llmqType)) {
+            if (ret.count((Consensus::LLMQType)qc.commitment.llmqType)) {
                 return state.DoS(100, false, REJECT_INVALID, "bad-qc-dup");
             }
 
-            ret.emplace((Consensus::LLMQType)qc.llmqType, std::move(qc));
+            ret.emplace((Consensus::LLMQType)qc.commitment.llmqType, std::move(qc.commitment));
         }
     }
 
@@ -406,7 +403,6 @@ bool CQuorumBlockProcessor::GetMinableCommitment(Consensus::LLMQType llmqType, c
     if (it == minableCommitmentsByQuorum.end()) {
         // null commitment required
         ret = CFinalCommitment(Params().GetConsensus().llmqs.at(llmqType), quorumHash);
-        ret.quorumVvecHash = ::SerializeHash(std::make_pair(quorumHash, nHeight));
         return true;
     }
 
@@ -419,10 +415,12 @@ bool CQuorumBlockProcessor::GetMinableCommitmentTx(Consensus::LLMQType llmqType,
 {
     AssertLockHeld(cs_main);
 
-    CFinalCommitment qc;
-    if (!GetMinableCommitment(llmqType, pindexPrev, qc)) {
+    CFinalCommitmentTxPayload qc;
+    if (!GetMinableCommitment(llmqType, pindexPrev, qc.commitment)) {
         return false;
     }
+
+    qc.nHeight = pindexPrev->nHeight + 1;
 
     CMutableTransaction tx;
     tx.nVersion = 3;

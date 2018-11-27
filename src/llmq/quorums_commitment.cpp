@@ -6,6 +6,9 @@
 #include "quorums_utils.h"
 
 #include "chainparams.h"
+#include "validation.h"
+
+#include "evo/specialtx.h"
 
 #include <univalue.h>
 
@@ -24,7 +27,7 @@ CFinalCommitment::CFinalCommitment(const Consensus::LLMQParams& params, const ui
     LogPrintStr(strprintf("CFinalCommitment::%s -- %s", __func__, tinyformat::format(__VA_ARGS__))); \
 } while(0)
 
-bool CFinalCommitment::Verify(const std::vector<CDeterministicMNCPtr>& members) const
+bool CFinalCommitment::Verify(const std::vector<CDeterministicMNCPtr>& members, bool checkSigs) const
 {
     if (nVersion == 0 || nVersion > CURRENT_VERSION) {
         return false;
@@ -76,30 +79,33 @@ bool CFinalCommitment::Verify(const std::vector<CDeterministicMNCPtr>& members) 
         }
     }
 
-    uint256 commitmentHash = CLLMQUtils::BuildCommitmentHash((uint8_t)params.type, quorumHash, validMembers, quorumPublicKey, quorumVvecHash);
+    // sigs are only checked when the block is processed
+    if (checkSigs) {
+        uint256 commitmentHash = CLLMQUtils::BuildCommitmentHash((uint8_t)params.type, quorumHash, validMembers, quorumPublicKey, quorumVvecHash);
 
-    std::vector<CBLSPublicKey> memberPubKeys;
-    for (size_t i = 0; i < members.size(); i++) {
-        if (!signers[i]) {
-            continue;
+        std::vector<CBLSPublicKey> memberPubKeys;
+        for (size_t i = 0; i < members.size(); i++) {
+            if (!signers[i]) {
+                continue;
+            }
+            memberPubKeys.emplace_back(members[i]->pdmnState->pubKeyOperator);
         }
-        memberPubKeys.emplace_back(members[i]->pdmnState->pubKeyOperator);
-    }
 
-    if (!membersSig.VerifySecureAggregated(memberPubKeys, commitmentHash)) {
-        LogPrintfFinalCommitment("invalid aggregated members signature\n");
-        return false;
-    }
+        if (!membersSig.VerifySecureAggregated(memberPubKeys, commitmentHash)) {
+            LogPrintfFinalCommitment("invalid aggregated members signature\n");
+            return false;
+        }
 
-    if (!quorumSig.VerifyInsecure(quorumPublicKey, commitmentHash)) {
-        LogPrintfFinalCommitment("invalid quorum signature\n");
-        return false;
+        if (!quorumSig.VerifyInsecure(quorumPublicKey, commitmentHash)) {
+            LogPrintfFinalCommitment("invalid quorum signature\n");
+            return false;
+        }
     }
 
     return true;
 }
 
-bool CFinalCommitment::VerifyNull(int nHeight) const
+bool CFinalCommitment::VerifyNull() const
 {
     if (!Params().GetConsensus().llmqs.count((Consensus::LLMQType)llmqType)) {
         LogPrintfFinalCommitment("invalid llmqType=%d\n", llmqType);
@@ -108,11 +114,6 @@ bool CFinalCommitment::VerifyNull(int nHeight) const
     const auto& params = Params().GetConsensus().llmqs.at((Consensus::LLMQType)llmqType);
 
     if (!IsNull() || !VerifySizes(params)) {
-        return false;
-    }
-
-    uint256 expectedQuorumVvecHash = ::SerializeHash(std::make_pair(quorumHash, nHeight));
-    if (quorumVvecHash != expectedQuorumVvecHash) {
         return false;
     }
 
@@ -141,6 +142,52 @@ void CFinalCommitment::ToJson(UniValue& obj) const
     obj.push_back(Pair("signersCount", CountSigners()));
     obj.push_back(Pair("validMembersCount", CountValidMembers()));
     obj.push_back(Pair("quorumPublicKey", quorumPublicKey.ToString()));
+}
+
+bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
+{
+    CFinalCommitmentTxPayload qcTx;
+    if (!GetTxPayload(tx, qcTx)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-qc-payload");
+    }
+
+    if (qcTx.nVersion == 0 || qcTx.nVersion > CFinalCommitmentTxPayload::CURRENT_VERSION) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-qc-version");
+    }
+
+    if (qcTx.nHeight != pindexPrev->nHeight + 1) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-qc-height");
+    }
+
+    if (!mapBlockIndex.count(qcTx.commitment.quorumHash)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-qc-quorum-hash");
+    }
+
+    const CBlockIndex* pindexQuorum = mapBlockIndex[qcTx.commitment.quorumHash];
+
+    if (pindexQuorum != pindexPrev->GetAncestor(pindexQuorum->nHeight)) {
+        // not part of active chain
+        return state.DoS(100, false, REJECT_INVALID, "bad-qc-quorum-hash");
+    }
+
+    if (!Params().GetConsensus().llmqs.count((Consensus::LLMQType)qcTx.commitment.llmqType)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-qc-type");
+    }
+    const auto& params = Params().GetConsensus().llmqs.at((Consensus::LLMQType)qcTx.commitment.llmqType);
+
+    if (qcTx.commitment.IsNull()) {
+        if (!qcTx.commitment.VerifyNull()) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-qc-invalid-null");
+        }
+        return true;
+    }
+
+    auto members = CLLMQUtils::GetAllQuorumMembers(params.type, qcTx.commitment.quorumHash);
+    if (!qcTx.commitment.Verify(members, false)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-qc-invalid");
+    }
+
+    return true;
 }
 
 }

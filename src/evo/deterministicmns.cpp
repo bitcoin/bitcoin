@@ -674,12 +674,12 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             LogPrintf("CDeterministicMNManager::%s -- MN %s revoked operator key at height %d: %s\n",
                 __func__, proTx.proTxHash.ToString(), nHeight, proTx.ToString());
         } else if (tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
-            llmq::CFinalCommitment qc;
+            llmq::CFinalCommitmentTxPayload qc;
             if (!GetTxPayload(tx, qc)) {
                 assert(false); // this should have been handled already
             }
-            if (!qc.IsNull()) {
-                HandleQuorumCommitment(qc, newList);
+            if (!qc.commitment.IsNull()) {
+                HandleQuorumCommitment(qc.commitment, newList);
             }
         }
     }

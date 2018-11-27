@@ -48,8 +48,8 @@ public:
         return (int)std::count(validMembers.begin(), validMembers.end(), true);
     }
 
-    bool Verify(const std::vector<CDeterministicMNCPtr>& members) const;
-    bool VerifyNull(int nHeight) const;
+    bool Verify(const std::vector<CDeterministicMNCPtr>& members, bool checkSigs) const;
+    bool VerifyNull() const;
     bool VerifySizes(const Consensus::LLMQParams& params) const;
 
     void ToJson(UniValue& obj) const;
@@ -79,6 +79,7 @@ public:
             return false;
         }
         if (quorumPublicKey.IsValid() ||
+            !quorumVvecHash.IsNull() ||
             membersSig.IsValid() ||
             quorumSig.IsValid()) {
             return false;
@@ -86,6 +87,30 @@ public:
         return true;
     }
 };
+
+class CFinalCommitmentTxPayload
+{
+public:
+    static const uint16_t CURRENT_VERSION = 1;
+
+public:
+    uint16_t nVersion{CURRENT_VERSION};
+    uint32_t nHeight{(uint32_t)-1};
+    CFinalCommitment commitment;
+
+public:
+    ADD_SERIALIZE_METHODS
+
+    template<typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
+        READWRITE(nVersion);
+        READWRITE(nHeight);
+        READWRITE(commitment);
+    }
+};
+
+bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
 
 }
 
