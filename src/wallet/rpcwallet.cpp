@@ -2009,21 +2009,13 @@ static UniValue walletpassphrase(const JSONRPCRequest& request)
         nSleepTime = MAX_SLEEP_TIME;
     }
 
-    if (strWalletPass.length() > 0)
-    {
-        if (!pwallet->Unlock(strWalletPass)) {
-            throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
-        }
+    if (strWalletPass.empty()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase can not be empty");
     }
-    else
-        throw std::runtime_error(
-            RPCHelpMan{"walletpassphrase",
-                "Stores the wallet decryption key in memory for <timeout> seconds.",
-                {
-                    {"passphrase", RPCArg::Type::STR, false},
-                    {"timeout", RPCArg::Type::NUM, false},
-                }}
-                .ToString());
+
+    if (!pwallet->Unlock(strWalletPass)) {
+        throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
+    }
 
     pwallet->TopUpKeyPool();
 
@@ -2089,15 +2081,9 @@ static UniValue walletpassphrasechange(const JSONRPCRequest& request)
     strNewWalletPass.reserve(100);
     strNewWalletPass = request.params[1].get_str().c_str();
 
-    if (strOldWalletPass.length() < 1 || strNewWalletPass.length() < 1)
-        throw std::runtime_error(
-            RPCHelpMan{"walletpassphrasechange",
-                "Changes the wallet passphrase from <oldpassphrase> to <newpassphrase>.",
-                {
-                    {"oldpassphrase", RPCArg::Type::STR, false},
-                    {"newpassphrase", RPCArg::Type::STR, false},
-                }}
-                .ToString());
+    if (strOldWalletPass.empty() || strNewWalletPass.empty()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase can not be empty");
+    }
 
     if (!pwallet->ChangeWalletPassphrase(strOldWalletPass, strNewWalletPass)) {
         throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
@@ -2200,14 +2186,9 @@ static UniValue encryptwallet(const JSONRPCRequest& request)
     strWalletPass.reserve(100);
     strWalletPass = request.params[0].get_str().c_str();
 
-    if (strWalletPass.length() < 1)
-        throw std::runtime_error(
-            RPCHelpMan{"encryptwallet",
-                "Encrypts the wallet with <passphrase>.",
-                {
-                    {"passphrase", RPCArg::Type::STR, false},
-                }}
-                .ToString());
+    if (strWalletPass.empty()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase can not be empty");
+    }
 
     if (!pwallet->EncryptWallet(strWalletPass)) {
         throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Error: Failed to encrypt the wallet.");
