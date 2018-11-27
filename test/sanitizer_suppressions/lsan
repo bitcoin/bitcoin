@@ -1,7 +1,3 @@
-# Suppress warnings about addCoin(...) leak in the CoinSelection benchmark
-leak:addCoin
-leak:bench_bitcoin
-
 # Suppress warnings triggered in dependencies
 leak:libcrypto
 leak:libqminimal
