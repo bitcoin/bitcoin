@@ -11,11 +11,6 @@ deadlock:TestPotentialDeadLockDetected
 race:src/qt/test/*
 deadlock:src/qt/test/*
 
-# WIP: Unidentified suppressions to run the functional tests
-#race:zmqpublishnotifier.cpp
-#
-#deadlock:CreateWalletFromFile
-#deadlock:importprivkey
-#deadlock:walletdb.h
-#deadlock:walletdb.cpp
-#deadlock:wallet/db.cpp
+# External libraries
+deadlock:libdb
+race:libzmq
