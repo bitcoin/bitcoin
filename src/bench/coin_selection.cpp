@@ -4,25 +4,19 @@
 
 #include <bench/bench.h>
 #include <interfaces/chain.h>
-#include <wallet/wallet.h>
 #include <wallet/coinselection.h>
+#include <wallet/wallet.h>
 
 #include <set>
 
-static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<OutputGroup>& groups)
+static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<std::unique_ptr<CWalletTx>>& wtxs)
 {
-    int nInput = 0;
-
     static int nextLockTime = 0;
     CMutableTransaction tx;
     tx.nLockTime = nextLockTime++; // so all transactions get different hashes
-    tx.vout.resize(nInput + 1);
-    tx.vout[nInput].nValue = nValue;
-    CWalletTx* wtx = new CWalletTx(&wallet, MakeTransactionRef(std::move(tx)));
-
-    int nAge = 6 * 24;
-    COutput output(wtx, nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
-    groups.emplace_back(output.GetInputCoin(), 6, false, 0, 0);
+    tx.vout.resize(1);
+    tx.vout[0].nValue = nValue;
+    wtxs.push_back(MakeUnique<CWalletTx>(&wallet, MakeTransactionRef(std::move(tx))));
 }
 
 // Simple benchmark for wallet coin selection. Note that it maybe be necessary
@@ -36,14 +30,21 @@ static void CoinSelection(benchmark::State& state)
 {
     auto chain = interfaces::MakeChain();
     const CWallet wallet(*chain, WalletLocation(), WalletDatabase::CreateDummy());
+    std::vector<std::unique_ptr<CWalletTx>> wtxs;
     LOCK(wallet.cs_wallet);
 
     // Add coins.
-    std::vector<OutputGroup> groups;
     for (int i = 0; i < 1000; ++i) {
-        addCoin(1000 * COIN, wallet, groups);
+        addCoin(1000 * COIN, wallet, wtxs);
     }
-    addCoin(3 * COIN, wallet, groups);
+    addCoin(3 * COIN, wallet, wtxs);
+
+    // Create groups
+    std::vector<OutputGroup> groups;
+    for (const auto& wtx : wtxs) {
+        COutput output(wtx.get(), 0 /* iIn */, 6 * 24 /* nDepthIn */, true /* spendable */, true /* solvable */, true /* safe */);
+        groups.emplace_back(output.GetInputCoin(), 6, false, 0, 0);
+    }
 
     const CoinEligibilityFilter filter_standard(1, 6, 0);
     const CoinSelectionParams coin_selection_params(true, 34, 148, CFeeRate(0), 0);
