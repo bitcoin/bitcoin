@@ -145,9 +145,10 @@ class PSBTTest(BitcoinTestFramework):
         self.nodes[0].decodepsbt(new_psbt)
 
         # Make sure that a psbt with signatures cannot be converted
+        # Error could be either "TX decode failed" (segwit inputs causes parsing to fail) or "Inputs must not have scriptSigs and scriptWitnesses"
         signedtx = self.nodes[0].signrawtransactionwithwallet(rawtx['hex'])
-        assert_raises_rpc_error(-22, "TX decode failed", self.nodes[0].converttopsbt, signedtx['hex'])
-        assert_raises_rpc_error(-22, "TX decode failed", self.nodes[0].converttopsbt, signedtx['hex'], False)
+        assert_raises_rpc_error(-22, "", self.nodes[0].converttopsbt, signedtx['hex'])
+        assert_raises_rpc_error(-22, "", self.nodes[0].converttopsbt, signedtx['hex'], False)
         # Unless we allow it to convert and strip signatures
         self.nodes[0].converttopsbt(signedtx['hex'], True)
 
