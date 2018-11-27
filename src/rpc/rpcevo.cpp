@@ -202,10 +202,9 @@ void protx_register_fund_help()
             "5. \"votingKeyAddr\"       (string, required) The voting key address. The private key does not have to be known by your wallet.\n"
             "                         It has to match the private key which is later used when voting on proposals.\n"
             "                         If set to \"0\" or an empty string, ownerAddr will be used.\n"
-            "6. \"operatorReward\"      (numeric, required) The fraction in % to share with the operator. If non-zero,\n"
-            "                         \"ipAndPort\" must be zero as well. The value must be between 0.00 and 100.00.\n"
-            "7. \"payoutAddress\"       (string, required) The dash address to use for masternode reward payments\n"
-            "                         Must match \"collateralAddress\"."
+            "6. \"operatorReward\"      (numeric, required) The fraction in % to share with the operator. The value must be\n"
+            "                         between 0.00 and 100.00.\n"
+            "7. \"payoutAddress\"       (string, required) The dash address to use for masternode reward payments."
             "\nExamples:\n"
             + HelpExampleCli("protx", "register_fund \"XrVhS9LogauRJGJu2sHuryjhpuex4RNPSb\" \"1.2.3.4:1234\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" \"93746e8731c57f87f79b3620a7982924e2931717d49540a85864bd543de11c43fb868fd63e501a1db37e19ed59ae6db4\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" 0 \"XrVhS9LogauRJGJu2sHuryjhpuex4RNPSb\"")
     );
