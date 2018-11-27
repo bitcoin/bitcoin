@@ -92,7 +92,7 @@ jobs:
         DEP_OPTS="NO_QT=1 NO_UPNP=1 DEBUG=1 ALLOW_HOST_PACKAGES=1"
         GOAL="install"
         BITCOIN_CONFIG="--enable-zmq --with-gui=qt5 --enable-glibc-back-compat --enable-reduce-exports --enable-debug CXXFLAGS=\"-g0 -O2\""
-# x86_64 Linux (xenial, no depends, only system libs, sanitizers: thread (TSAN))
+# x86_64 Linux (xenial, no depends, only system libs, sanitizers: thread (TSan))
     - stage: test
       env: >-
         HOST=x86_64-unknown-linux-gnu
@@ -102,14 +102,15 @@ jobs:
         RUN_FUNCTIONAL_TESTS=false # Disabled for now. TODO identify suppressions or exclude specific tests
         GOAL="install"
         BITCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER --with-sanitizers=thread --disable-hardening --disable-asm CC=clang CXX=clang++"
-# x86_64 Linux (no depends, only system libs, sanitizers: undefined (UBSAN) + integer)
+# x86_64 Linux (no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer)
     - stage: test
       env: >-
         HOST=x86_64-unknown-linux-gnu
         PACKAGES="clang llvm python3-zmq qtbase5-dev qttools5-dev-tools libssl1.0-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libdb5.3++-dev libminiupnpc-dev libzmq3-dev libprotobuf-dev protobuf-compiler libqrencode-dev"
         NO_DEPENDS=1
+        FUNCTIONAL_TESTS_CONFIG="--exclude wallet_multiwallet.py" # Temporarily suppress ASan heap-use-after-free (see issue #14163)
         GOAL="install"
-        BITCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER --with-sanitizers=integer,undefined CC=clang CXX=clang++"
+        BITCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER --with-sanitizers=address,integer,undefined CC=clang CXX=clang++"
 # x86_64 Linux, No wallet
     - stage: test
       env: >-
