@@ -1,23 +1,21 @@
-sudo: required
 dist: trusty
 os: linux
 language: minimal
 cache:
   ccache: true
   directories:
-  - depends/built
-  - depends/sdk-sources
-  - $HOME/.ccache
+    - depends/built
+    - depends/sdk-sources
+    - $HOME/.ccache
 stages:
   - lint
   - test
 env:
   global:
     - MAKEJOBS=-j3
-    - RUN_TESTS=false
-    - RUN_BENCH=false  # Set to true for any one job that has debug enabled, to quickly check bench is not crashing or hitting assertions
+    - RUN_UNIT_TESTS=true
+    - RUN_FUNCTIONAL_TESTS=true
     - DOCKER_NAME_TAG=ubuntu:18.04
-    - LC_ALL=C.UTF-8
     - BOOST_TEST_RANDOM=1$TRAVIS_BUILD_ID
     - CCACHE_SIZE=100M
     - CCACHE_TEMPDIR=/tmp/.ccache-temp
@@ -28,80 +26,61 @@ env:
     - WINEDEBUG=fixme-all
     - DOCKER_PACKAGES="build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git ca-certificates ccache"
 before_install:
-    - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
-    - BEGIN_FOLD () { echo ""; CURRENT_FOLD_NAME=$1; echo "travis_fold:start:${CURRENT_FOLD_NAME}"; }
-    - END_FOLD () { RET=$?; echo "travis_fold:end:${CURRENT_FOLD_NAME}"; return $RET; }
+  - set -o errexit; source .travis/test_03_before_install.sh
 install:
-    - travis_retry docker pull $DOCKER_NAME_TAG
-    - env | grep -E '^(CCACHE_|WINEDEBUG|LC_ALL|BOOST_TEST_RANDOM|CONFIG_SHELL)' | tee /tmp/env
-    - if [[ $HOST = *-mingw32 ]]; then DOCKER_ADMIN="--cap-add SYS_ADMIN"; fi
-    - DOCKER_ID=$(docker run $DOCKER_ADMIN -idt --mount type=bind,src=$TRAVIS_BUILD_DIR,dst=$TRAVIS_BUILD_DIR --mount type=bind,src=$CCACHE_DIR,dst=$CCACHE_DIR -w $TRAVIS_BUILD_DIR --env-file /tmp/env $DOCKER_NAME_TAG)
-    - DOCKER_EXEC () { docker exec $DOCKER_ID bash -c "cd $PWD && $*"; }
-    - if [ -n "$DPKG_ADD_ARCH" ]; then DOCKER_EXEC dpkg --add-architecture "$DPKG_ADD_ARCH" ; fi
-    - travis_retry DOCKER_EXEC apt-get update
-    - travis_retry DOCKER_EXEC apt-get install --no-install-recommends --no-upgrade -qq $PACKAGES $DOCKER_PACKAGES
+  - set -o errexit; source .travis/test_04_install.sh
 before_script:
-    - DOCKER_EXEC echo \> \$HOME/.bitcoin  # Make sure default datadir does not exist and is never read by creating a dummy file
-    - mkdir -p depends/SDKs depends/sdk-sources
-    - if [ -n "$OSX_SDK" -a ! -f depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz ]; then curl --location --fail $SDK_URL/MacOSX${OSX_SDK}.sdk.tar.gz -o depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz; fi
-    - if [ -n "$OSX_SDK" -a -f depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz ]; then tar -C depends/SDKs -xf depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz; fi
-    - if [[ $HOST = *-mingw32 ]]; then DOCKER_EXEC update-alternatives --set $HOST-g++ \$\(which $HOST-g++-posix\); fi
-    - if [ -z "$NO_DEPENDS" ]; then DOCKER_EXEC CONFIG_SHELL= make $MAKEJOBS -C depends HOST=$HOST $DEP_OPTS; fi
+  - set -o errexit; source .travis/test_05_before_script.sh
 script:
-    - export TRAVIS_COMMIT_LOG=`git log --format=fuller -1`
-    - OUTDIR=$BASE_OUTDIR/$TRAVIS_PULL_REQUEST/$TRAVIS_JOB_NUMBER-$HOST
-    - BITCOIN_CONFIG_ALL="--disable-dependency-tracking --prefix=$TRAVIS_BUILD_DIR/depends/$HOST --bindir=$OUTDIR/bin --libdir=$OUTDIR/lib"
-    - if [ -z "$NO_DEPENDS" ]; then DOCKER_EXEC ccache --max-size=$CCACHE_SIZE; fi
-    - BEGIN_FOLD autogen; test -n "$CONFIG_SHELL" && DOCKER_EXEC "$CONFIG_SHELL" -c "./autogen.sh" || DOCKER_EXEC ./autogen.sh; END_FOLD
-    - mkdir build && cd build
-    - BEGIN_FOLD configure; DOCKER_EXEC ../configure --cache-file=config.cache $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( cat config.log && false); END_FOLD
-    - BEGIN_FOLD distdir; DOCKER_EXEC make distdir VERSION=$HOST; END_FOLD
-    - cd bitcoin-$HOST
-    - BEGIN_FOLD configure; DOCKER_EXEC ./configure --cache-file=../config.cache $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( cat config.log && false); END_FOLD
-    - BEGIN_FOLD build; DOCKER_EXEC make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && DOCKER_EXEC make $GOAL V=1 ; false ); END_FOLD
-    - if [ "$RUN_TESTS" = "true" ]; then BEGIN_FOLD unit-tests; DOCKER_EXEC LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/depends/$HOST/lib make $MAKEJOBS check VERBOSE=1; END_FOLD; fi
-    - if [ "$RUN_BENCH" = "true" ]; then BEGIN_FOLD bench; DOCKER_EXEC LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/depends/$HOST/lib $OUTDIR/bin/bench_bitcoin -scaling=0.001 ; END_FOLD; fi
-    - if [ "$TRAVIS_EVENT_TYPE" = "cron" ]; then extended="--extended --exclude feature_pruning,feature_dbcrash"; fi
-    - if [ "$RUN_TESTS" = "true" ]; then BEGIN_FOLD functional-tests; DOCKER_EXEC test/functional/test_runner.py --combinedlogslen=4000 --coverage --quiet --failfast ${extended}; END_FOLD; fi
+  - if [ $SECONDS -gt 1200 ]; then set +o errexit; echo "Travis early exit to cache current state"; false; else set -o errexit; source .travis/test_06_script.sh; fi
 after_script:
-    - echo $TRAVIS_COMMIT_RANGE
-    - echo $TRAVIS_COMMIT_LOG
+  - echo $TRAVIS_COMMIT_RANGE
+  - echo $TRAVIS_COMMIT_LOG
 jobs:
   include:
+# lint stage
+    - stage: lint
+      env:
+      cache: false
+      language: python
+      python: '3.6'
+      install:
+        - set -o errexit; source .travis/lint_04_install.sh
+      before_script:
+        - set -o errexit; source .travis/lint_05_before_script.sh
+      script:
+        - set -o errexit; source .travis/lint_06_script.sh
 # ARM
     - stage: test
       env: >-
         HOST=arm-linux-gnueabihf
-        PACKAGES="g++-arm-linux-gnueabihf"
-        DEP_OPTS="NO_QT=1"
+        PACKAGES="python3 g++-arm-linux-gnueabihf"
+        RUN_UNIT_TESTS=false
+        RUN_FUNCTIONAL_TESTS=false
         GOAL="install"
-        BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
+        # -Wno-psabi is to disable ABI warnings: "note: parameter passing for argument of type ... changed in GCC 7.1"
+        # This could be removed once the ABI change warning does not show up by default
+        BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports CXXFLAGS=-Wno-psabi"
 # Win32
     - stage: test
       env: >-
         HOST=i686-w64-mingw32
         DPKG_ADD_ARCH="i386"
-        DEP_OPTS="NO_QT=1"
         PACKAGES="python3 nsis g++-mingw-w64-i686 wine-binfmt wine32"
-        RUN_TESTS=true
-        GOAL="install"
-        BITCOIN_CONFIG="--enable-reduce-exports"
+        GOAL="deploy"
+        BITCOIN_CONFIG="--enable-reduce-exports --disable-gui-tests"
 # Win64
     - stage: test
       env: >-
         HOST=x86_64-w64-mingw32
-        DEP_OPTS="NO_QT=1"
         PACKAGES="python3 nsis g++-mingw-w64-x86-64 wine-binfmt wine64"
-        RUN_TESTS=true
-        GOAL="install"
-        BITCOIN_CONFIG="--enable-reduce-exports"
+        GOAL="deploy"
+        BITCOIN_CONFIG="--enable-reduce-exports --disable-gui-tests"
 # 32-bit + dash
     - stage: test
       env: >-
         HOST=i686-pc-linux-gnu
         PACKAGES="g++-multilib python3-zmq"
-        DEP_OPTS="NO_QT=1"
-        RUN_TESTS=true
         GOAL="install"
         BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++"
         CONFIG_SHELL="/bin/dash"
@@ -111,26 +90,33 @@ jobs:
         HOST=x86_64-unknown-linux-gnu
         PACKAGES="python3-zmq qtbase5-dev qttools5-dev-tools protobuf-compiler libdbus-1-dev libharfbuzz-dev libprotobuf-dev"
         DEP_OPTS="NO_QT=1 NO_UPNP=1 DEBUG=1 ALLOW_HOST_PACKAGES=1"
-        RUN_TESTS=true
-        RUN_BENCH=true
         GOAL="install"
         BITCOIN_CONFIG="--enable-zmq --with-gui=qt5 --enable-glibc-back-compat --enable-reduce-exports --enable-debug CXXFLAGS=\"-g0 -O2\""
-# x86_64 Linux (Qt5 & system libs)
+# x86_64 Linux (xenial, no depends, only system libs, sanitizers: thread (TSan))
     - stage: test
       env: >-
         HOST=x86_64-unknown-linux-gnu
-        PACKAGES="python3-zmq qtbase5-dev qttools5-dev-tools libssl1.0-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libdb5.3++-dev libminiupnpc-dev libzmq3-dev libprotobuf-dev protobuf-compiler libqrencode-dev"
+        DOCKER_NAME_TAG=ubuntu:16.04
+        PACKAGES="clang llvm python3-zmq qtbase5-dev qttools5-dev-tools libssl-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libdb5.3++-dev libminiupnpc-dev libzmq3-dev libprotobuf-dev protobuf-compiler libqrencode-dev"
         NO_DEPENDS=1
-        RUN_TESTS=true
+        RUN_FUNCTIONAL_TESTS=false # Disabled for now. TODO identify suppressions or exclude specific tests
         GOAL="install"
-        BITCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --enable-glibc-back-compat --enable-reduce-exports --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER"
+        BITCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER --with-sanitizers=thread --disable-hardening --disable-asm CC=clang CXX=clang++"
+# x86_64 Linux (no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer)
+    - stage: test
+      env: >-
+        HOST=x86_64-unknown-linux-gnu
+        PACKAGES="clang llvm python3-zmq qtbase5-dev qttools5-dev-tools libssl1.0-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libdb5.3++-dev libminiupnpc-dev libzmq3-dev libprotobuf-dev protobuf-compiler libqrencode-dev"
+        NO_DEPENDS=1
+        FUNCTIONAL_TESTS_CONFIG="--exclude wallet_multiwallet.py" # Temporarily suppress ASan heap-use-after-free (see issue #14163)
+        GOAL="install"
+        BITCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER --with-sanitizers=address,integer,undefined CC=clang CXX=clang++"
 # x86_64 Linux, No wallet
     - stage: test
       env: >-
         HOST=x86_64-unknown-linux-gnu
-        PACKAGES="python3"
+        PACKAGES="python3-zmq"
         DEP_OPTS="NO_WALLET=1"
-        RUN_TESTS=true
         GOAL="install"
         BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
 # Cross-Mac
@@ -139,28 +125,7 @@ jobs:
         HOST=x86_64-apple-darwin14
         PACKAGES="cmake imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools python-dev python3-setuptools-git"
         OSX_SDK=10.11
-        GOAL="all deploy"
+        RUN_UNIT_TESTS=false
+        RUN_FUNCTIONAL_TESTS=false
+        GOAL="deploy"
         BITCOIN_CONFIG="--enable-gui --enable-reduce-exports --enable-werror"
-    - stage: lint
-      env:
-      sudo: false
-      cache: false
-      language: python
-      python: '3.6'
-      install:
-        - travis_retry pip install flake8
-      before_script:
-        - git fetch --unshallow
-      script:
-        - if [ "$TRAVIS_EVENT_TYPE" = "pull_request" ]; then test/lint/commit-script-check.sh $TRAVIS_COMMIT_RANGE; fi
-        - test/lint/git-subtree-check.sh src/crypto/ctaes
-        - test/lint/git-subtree-check.sh src/secp256k1
-        - test/lint/git-subtree-check.sh src/univalue
-        - test/lint/git-subtree-check.sh src/leveldb
-        - test/lint/check-doc.py
-        - test/lint/check-rpc-mappings.py .
-        - test/lint/lint-all.sh
-        - if [ "$TRAVIS_REPO_SLUG" = "bitcoin/bitcoin" -a "$TRAVIS_EVENT_TYPE" = "cron" ]; then
-              while read LINE; do travis_retry gpg --keyserver hkp://subset.pool.sks-keyservers.net --recv-keys $LINE; done < contrib/verify-commits/trusted-keys &&
-              travis_wait 50 contrib/verify-commits/verify-commits.py;
-          fi
