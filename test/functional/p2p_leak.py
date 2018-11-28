@@ -103,7 +103,7 @@ class P2PLeakTest(BitcoinTestFramework):
         wait_until(lambda: no_verack_idlenode.version_received, timeout=10, lock=mininode_lock)
 
         # Mine a block and make sure that it's not sent to the connected nodes
-        self.nodes[0].generate(1)
+        self.nodes[0].generatetoaddress(1, self.nodes[0].get_deterministic_priv_key().address)
 
         #Give the node enough time to possibly leak out a message
         time.sleep(5)

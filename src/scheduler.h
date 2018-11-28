@@ -40,7 +40,7 @@ public:
     CScheduler();
     ~CScheduler();
 
-    typedef std::function<void(void)> Function;
+    typedef std::function<void()> Function;
 
     // Call func at/after time t
     void schedule(Function f, boost::chrono::system_clock::time_point t=boost::chrono::system_clock::now());
@@ -99,7 +99,7 @@ private:
     CScheduler *m_pscheduler;
 
     CCriticalSection m_cs_callbacks_pending;
-    std::list<std::function<void (void)>> m_callbacks_pending GUARDED_BY(m_cs_callbacks_pending);
+    std::list<std::function<void ()>> m_callbacks_pending GUARDED_BY(m_cs_callbacks_pending);
     bool m_are_callbacks_running GUARDED_BY(m_cs_callbacks_pending) = false;
 
     void MaybeScheduleProcessQueue();
@@ -111,10 +111,10 @@ public:
     /**
      * Add a callback to be executed. Callbacks are executed serially
      * and memory is release-acquire consistent between callback executions.
-     * Practially, this means that callbacks can behave as if they are executed
+     * Practically, this means that callbacks can behave as if they are executed
      * in order by a single thread.
      */
-    void AddToProcessQueue(std::function<void (void)> func);
+    void AddToProcessQueue(std::function<void ()> func);
 
     // Processes all remaining queue members on the calling thread, blocking until queue is empty
     // Must be called after the CScheduler has no remaining processing threads!

@@ -11,6 +11,7 @@ from test_framework.util import (
     assert_array_result,
     assert_equal,
     assert_fee_amount,
+    assert_greater_than,
     assert_raises_rpc_error,
     connect_nodes_bi,
     sync_blocks,
@@ -23,11 +24,13 @@ class WalletTest(BitcoinTestFramework):
         self.num_nodes = 4
         self.setup_clean_chain = True
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def setup_network(self):
-        self.add_nodes(4)
-        self.start_node(0)
-        self.start_node(1)
-        self.start_node(2)
+        self.setup_nodes()
+        # Only need nodes 0-2 running at start of test
+        self.stop_node(3)
         connect_nodes_bi(self.nodes, 0, 1)
         connect_nodes_bi(self.nodes, 1, 2)
         connect_nodes_bi(self.nodes, 0, 2)
@@ -89,13 +92,13 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(txout['value'], 50)
 
         # Send 21 BTC from 0 to 2 using sendtoaddress call.
-        # Locked memory should use at least 32 bytes to sign each transaction
+        # Locked memory should increase to sign transactions
         self.log.info("test getmemoryinfo")
         memory_before = self.nodes[0].getmemoryinfo()
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 11)
         mempool_txid = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 10)
         memory_after = self.nodes[0].getmemoryinfo()
-        assert(memory_before['locked']['used'] + 64 <= memory_after['locked']['used'])
+        assert_greater_than(memory_after['locked']['used'], memory_before['locked']['used'])
 
         self.log.info("test gettxout (second part)")
         # utxo spent in mempool should be visible if you exclude mempool
@@ -131,9 +134,15 @@ class WalletTest(BitcoinTestFramework):
         assert_equal([unspent_0], self.nodes[2].listlockunspent())
         self.nodes[2].lockunspent(True, [unspent_0])
         assert_equal(len(self.nodes[2].listlockunspent()), 0)
-        assert_raises_rpc_error(-8, "Invalid parameter, unknown transaction",
+        assert_raises_rpc_error(-8, "txid must be of length 64 (not 34, for '0000000000000000000000000000000000')",
                                 self.nodes[2].lockunspent, False,
                                 [{"txid": "0000000000000000000000000000000000", "vout": 0}])
+        assert_raises_rpc_error(-8, "txid must be hexadecimal string (not 'ZZZ0000000000000000000000000000000000000000000000000000000000000')",
+                                self.nodes[2].lockunspent, False,
+                                [{"txid": "ZZZ0000000000000000000000000000000000000000000000000000000000000", "vout": 0}])
+        assert_raises_rpc_error(-8, "Invalid parameter, unknown transaction",
+                                self.nodes[2].lockunspent, False,
+                                [{"txid": "0000000000000000000000000000000000000000000000000000000000000000", "vout": 0}])
         assert_raises_rpc_error(-8, "Invalid parameter, vout index out of bounds",
                                 self.nodes[2].lockunspent, False,
                                 [{"txid": unspent_0["txid"], "vout": 999}])
@@ -470,7 +479,7 @@ class WalletTest(BitcoinTestFramework):
         # Verify nothing new in wallet
         assert_equal(total_txs, len(self.nodes[0].listtransactions("*", 99999)))
 
-        # Test getaddressinfo. Note that these addresses are taken from disablewallet.py
+        # Test getaddressinfo on external address. Note that these addresses are taken from disablewallet.py
         assert_raises_rpc_error(-5, "Invalid address", self.nodes[0].getaddressinfo, "3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy")
         address_info = self.nodes[0].getaddressinfo("mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ")
         assert_equal(address_info['address'], "mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ")
@@ -478,6 +487,22 @@ class WalletTest(BitcoinTestFramework):
         assert not address_info["ismine"]
         assert not address_info["iswatchonly"]
         assert not address_info["isscript"]
+        assert not address_info["ischange"]
+
+        # Test getaddressinfo 'ischange' field on change address.
+        self.nodes[0].generate(1)
+        destination = self.nodes[1].getnewaddress()
+        txid = self.nodes[0].sendtoaddress(destination, 0.123)
+        tx = self.nodes[0].decoderawtransaction(self.nodes[0].getrawtransaction(txid))
+        output_addresses = [vout['scriptPubKey']['addresses'][0] for vout in tx["vout"]]
+        assert len(output_addresses) > 1
+        for address in output_addresses:
+            ischange = self.nodes[0].getaddressinfo(address)['ischange']
+            assert_equal(ischange, address != destination)
+            if ischange:
+                change = address
+        self.nodes[0].setlabel(change, 'foobar')
+        assert_equal(self.nodes[0].getaddressinfo(change)['ischange'], False)
 
 if __name__ == '__main__':
     WalletTest().main()

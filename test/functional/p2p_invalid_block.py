@@ -42,10 +42,10 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         # Save the coinbase for later
         block1 = block
         tip = block.sha256
-        node.p2p.send_blocks_and_test([block1], node, True)
+        node.p2p.send_blocks_and_test([block1], node, success=True)
 
         self.log.info("Mature the block.")
-        node.generate(100)
+        node.generatetoaddress(100, node.get_deterministic_priv_key().address)
 
         best_block = node.getblock(node.getbestblockhash())
         tip = int(node.getbestblockhash(), 16)
@@ -77,9 +77,19 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         block2.vtx.append(tx2)
         assert_equal(block2.hashMerkleRoot, block2.calc_merkle_root())
         assert_equal(orig_hash, block2.rehash())
-        assert(block2_orig.vtx != block2.vtx)
+        assert block2_orig.vtx != block2.vtx
 
-        node.p2p.send_blocks_and_test([block2], node, False, False, 16, b'bad-txns-duplicate')
+        node.p2p.send_blocks_and_test([block2], node, success=False, reject_reason='bad-txns-duplicate')
+
+        # Check transactions for duplicate inputs
+        self.log.info("Test duplicate input block.")
+
+        block2_orig.vtx[2].vin.append(block2_orig.vtx[2].vin[0])
+        block2_orig.vtx[2].rehash()
+        block2_orig.hashMerkleRoot = block2_orig.calc_merkle_root()
+        block2_orig.rehash()
+        block2_orig.solve()
+        node.p2p.send_blocks_and_test([block2_orig], node, success=False, reject_reason='bad-txns-inputs-duplicate')
 
         self.log.info("Test very broken block.")
 
@@ -92,7 +102,8 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         block3.rehash()
         block3.solve()
 
-        node.p2p.send_blocks_and_test([block3], node, False, False, 16, b'bad-cb-amount')
+        node.p2p.send_blocks_and_test([block3], node, success=False, reject_reason='bad-cb-amount')
+
 
 if __name__ == '__main__':
     InvalidBlockRequestTest().main()

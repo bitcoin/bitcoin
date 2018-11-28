@@ -9,7 +9,7 @@
 export LC_ALL=C
 
 EXPECTED_CIRCULAR_DEPENDENCIES=(
-    "chainparamsbase -> util -> chainparamsbase"
+    "chainparamsbase -> util/system -> chainparamsbase"
     "checkpoints -> validation -> checkpoints"
     "index/txindex -> validation -> index/txindex"
     "policy/fees -> txmempool -> policy/fees"
@@ -25,12 +25,10 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "qt/sendcoinsdialog -> qt/walletmodel -> qt/sendcoinsdialog"
     "qt/transactiontablemodel -> qt/walletmodel -> qt/transactiontablemodel"
     "qt/walletmodel -> qt/walletmodeltransaction -> qt/walletmodel"
-    "rpc/rawtransaction -> wallet/rpcwallet -> rpc/rawtransaction"
     "txmempool -> validation -> txmempool"
     "validation -> validationinterface -> validation"
     "wallet/coincontrol -> wallet/wallet -> wallet/coincontrol"
     "wallet/fees -> wallet/wallet -> wallet/fees"
-    "wallet/rpcwallet -> wallet/wallet -> wallet/rpcwallet"
     "wallet/wallet -> wallet/walletdb -> wallet/wallet"
     "policy/fees -> policy/policy -> validation -> policy/fees"
     "policy/rbf -> txmempool -> validation -> policy/rbf"

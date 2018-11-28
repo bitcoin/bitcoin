@@ -33,15 +33,20 @@ class PruneTest(BitcoinTestFramework):
 
         # Create nodes 0 and 1 to mine.
         # Create node 2 to test pruning.
-        self.full_node_default_args = ["-maxreceivebuffer=20000", "-checkblocks=5", "-limitdescendantcount=100", "-limitdescendantsize=5000", "-limitancestorcount=100", "-limitancestorsize=5000" ]
+        self.full_node_default_args = ["-maxreceivebuffer=20000", "-checkblocks=5", "-limitdescendantcount=100", "-limitdescendantsize=5000", "-limitancestorcount=100", "-limitancestorsize=5000"]
         # Create nodes 3 and 4 to test manual pruning (they will be re-started with manual pruning later)
         # Create nodes 5 to test wallet in prune mode, but do not connect
-        self.extra_args = [self.full_node_default_args,
-                           self.full_node_default_args,
-                           ["-maxreceivebuffer=20000", "-prune=550"],
-                           ["-maxreceivebuffer=20000"],
-                           ["-maxreceivebuffer=20000"],
-                           ["-prune=550"]]
+        self.extra_args = [
+            self.full_node_default_args,
+            self.full_node_default_args,
+            ["-maxreceivebuffer=20000", "-prune=550"],
+            ["-maxreceivebuffer=20000"],
+            ["-maxreceivebuffer=20000"],
+            ["-prune=550"],
+        ]
+
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
 
     def setup_network(self):
         self.setup_nodes()
@@ -58,6 +63,8 @@ class PruneTest(BitcoinTestFramework):
     def setup_nodes(self):
         self.add_nodes(self.num_nodes, self.extra_args)
         self.start_nodes()
+        for n in self.nodes:
+            n.importprivkey(privkey=n.get_deterministic_priv_key().key, label='coinbase', rescan=False)
 
     def create_big_chain(self):
         # Start by creating some coinbases we can spend later
@@ -242,7 +249,7 @@ class PruneTest(BitcoinTestFramework):
                 return index
 
         def prune(index, expected_ret=None):
-            ret = node.pruneblockchain(height(index))
+            ret = node.pruneblockchain(height=height(index))
             # Check the return value. When use_timestamp is True, just check
             # that the return value is less than or equal to the expected
             # value, because when more than one block is generated per second,

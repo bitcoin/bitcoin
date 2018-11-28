@@ -9,6 +9,7 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <init.h>
+#include <interfaces/chain.h>
 #include <interfaces/handler.h>
 #include <interfaces/wallet.h>
 #include <net.h>
@@ -25,30 +26,32 @@
 #include <sync.h>
 #include <txmempool.h>
 #include <ui_interface.h>
-#include <util.h>
+#include <util/system.h>
 #include <validation.h>
 #include <warnings.h>
 
 #if defined(HAVE_CONFIG_H)
 #include <config/bitcoin-config.h>
 #endif
-#ifdef ENABLE_WALLET
-#include <wallet/fees.h>
-#include <wallet/wallet.h>
-#define CHECK_WALLET(x) x
-#else
-#define CHECK_WALLET(x) throw std::logic_error("Wallet function called in non-wallet build.")
-#endif
 
 #include <atomic>
-#include <boost/thread/thread.hpp>
 #include <univalue.h>
 
+class CWallet;
+fs::path GetWalletDir();
+std::vector<fs::path> ListWalletDir();
+std::vector<std::shared_ptr<CWallet>> GetWallets();
+
 namespace interfaces {
+
+class Wallet;
+
 namespace {
 
 class NodeImpl : public Node
 {
+public:
+    NodeImpl() { m_interfaces.chain = MakeChain(); }
     bool parseParameters(int argc, const char* const argv[], std::string& error) override
     {
         return gArgs.ParseParameters(argc, argv, error);
@@ -67,11 +70,11 @@ class NodeImpl : public Node
         return AppInitBasicSetup() && AppInitParameterInteraction() && AppInitSanityChecks() &&
                AppInitLockDataDirectory();
     }
-    bool appInitMain() override { return AppInitMain(); }
+    bool appInitMain() override { return AppInitMain(m_interfaces); }
     void appShutdown() override
     {
         Interrupt();
-        Shutdown();
+        Shutdown(m_interfaces);
     }
     void startShutdown() override { StartShutdown(); }
     bool shutdownRequested() override { return ShutdownRequested(); }
@@ -219,17 +222,25 @@ class NodeImpl : public Node
         LOCK(::cs_main);
         return ::pcoinsTip->GetCoin(output, coin);
     }
+    std::string getWalletDir() override
+    {
+        return GetWalletDir().string();
+    }
+    std::vector<std::string> listWalletDir() override
+    {
+        std::vector<std::string> paths;
+        for (auto& path : ListWalletDir()) {
+            paths.push_back(path.string());
+        }
+        return paths;
+    }
     std::vector<std::unique_ptr<Wallet>> getWallets() override
     {
-#ifdef ENABLE_WALLET
         std::vector<std::unique_ptr<Wallet>> wallets;
         for (const std::shared_ptr<CWallet>& wallet : GetWallets()) {
             wallets.emplace_back(MakeWallet(wallet));
         }
         return wallets;
-#else
-        throw std::logic_error("Node::getWallets() called in non-wallet build.");
-#endif
     }
     std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) override
     {
@@ -249,8 +260,7 @@ class NodeImpl : public Node
     }
     std::unique_ptr<Handler> handleLoadWallet(LoadWalletFn fn) override
     {
-        CHECK_WALLET(
-            return MakeHandler(::uiInterface.LoadWallet_connect([fn](std::shared_ptr<CWallet> wallet) { fn(MakeWallet(wallet)); })));
+        return MakeHandler(::uiInterface.LoadWallet_connect([fn](std::shared_ptr<CWallet> wallet) { fn(MakeWallet(wallet)); }));
     }
     std::unique_ptr<Handler> handleNotifyNumConnectionsChanged(NotifyNumConnectionsChangedFn fn) override
     {
@@ -283,6 +293,7 @@ class NodeImpl : public Node
                     GuessVerificationProgress(Params().TxData(), block));
             }));
     }
+    InitInterfaces m_interfaces;
 };
 
 } // namespace

@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chain.h>
-#include <util.h>
+#include <util/system.h>
 #include <test/test_bitcoin.h>
 
 #include <vector>
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(findearliestatleast_test)
 BOOST_AUTO_TEST_CASE(findearliestatleast_edge_test)
 {
     std::list<CBlockIndex> blocks;
-    for (unsigned int timeMax : {100, 100, 100, 200, 200, 200, 300, 300, 300}) {
+    for (const unsigned int timeMax : {100, 100, 100, 200, 200, 200, 300, 300, 300}) {
         CBlockIndex* prev = blocks.empty() ? nullptr : &blocks.back();
         blocks.emplace_back();
         blocks.back().nHeight = prev ? prev->nHeight + 1 : 0;
@@ -170,7 +170,6 @@ BOOST_AUTO_TEST_CASE(findearliestatleast_edge_test)
     BOOST_CHECK_EQUAL(chain.FindEarliestAtLeast(-1)->nHeight, 0);
 
     BOOST_CHECK_EQUAL(chain.FindEarliestAtLeast(std::numeric_limits<int64_t>::min())->nHeight, 0);
-    BOOST_CHECK_EQUAL(chain.FindEarliestAtLeast(std::numeric_limits<unsigned int>::min())->nHeight, 0);
     BOOST_CHECK_EQUAL(chain.FindEarliestAtLeast(-int64_t(std::numeric_limits<unsigned int>::max()) - 1)->nHeight, 0);
     BOOST_CHECK(!chain.FindEarliestAtLeast(std::numeric_limits<int64_t>::max()));
     BOOST_CHECK(!chain.FindEarliestAtLeast(std::numeric_limits<unsigned int>::max()));

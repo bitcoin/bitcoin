@@ -110,6 +110,8 @@ Q_SIGNALS:
     /**  Fired when a message should be reported to the user */
     void message(const QString &title, const QString &message, unsigned int style);
 
+    void bumpedFee(const uint256& txid);
+
 public Q_SLOTS:
     void chooseDate(int idx);
     void chooseType(int idx);

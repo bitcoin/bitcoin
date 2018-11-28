@@ -12,7 +12,7 @@
 #include <random.h>
 #include <streams.h>
 #include <tinyformat.h>
-#include <util.h>
+#include <util/system.h>
 
 namespace {
 

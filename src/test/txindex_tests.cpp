@@ -5,8 +5,8 @@
 #include <index/txindex.h>
 #include <script/standard.h>
 #include <test/test_bitcoin.h>
-#include <util.h>
-#include <utiltime.h>
+#include <util/system.h>
+#include <util/time.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
@@ -61,6 +61,8 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
             BOOST_ERROR("Read incorrect tx");
         }
     }
+
+    txindex.Stop(); // Stop thread before calling destructor
 }
 
 BOOST_AUTO_TEST_SUITE_END()

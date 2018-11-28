@@ -11,7 +11,7 @@
 #include <net.h>
 #include <netbase.h>
 #include <chainparams.h>
-#include <util.h>
+#include <util/system.h>
 
 #include <memory>
 
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
         unsigned char pchMsgTmp[4];
         ssPeers1 >> pchMsgTmp;
         ssPeers1 >> addrman1;
-    } catch (const std::exception& e) {
+    } catch (const std::exception&) {
         exceptionThrown = true;
     }
 
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(caddrdb_read_corrupted)
         unsigned char pchMsgTmp[4];
         ssPeers1 >> pchMsgTmp;
         ssPeers1 >> addrman1;
-    } catch (const std::exception& e) {
+    } catch (const std::exception&) {
         exceptionThrown = true;
     }
     // Even through de-serialization failed addrman is not left in a clean state.
@@ -179,14 +179,52 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     bool fInboundIn = false;
 
     // Test that fFeeler is false by default.
-    std::unique_ptr<CNode> pnode1(new CNode(id++, NODE_NETWORK, height, hSocket, addr, 0, 0, CAddress(), pszDest, fInboundIn));
+    std::unique_ptr<CNode> pnode1 = MakeUnique<CNode>(id++, NODE_NETWORK, height, hSocket, addr, 0, 0, CAddress(), pszDest, fInboundIn);
     BOOST_CHECK(pnode1->fInbound == false);
     BOOST_CHECK(pnode1->fFeeler == false);
 
     fInboundIn = true;
-    std::unique_ptr<CNode> pnode2(new CNode(id++, NODE_NETWORK, height, hSocket, addr, 1, 1, CAddress(), pszDest, fInboundIn));
+    std::unique_ptr<CNode> pnode2 = MakeUnique<CNode>(id++, NODE_NETWORK, height, hSocket, addr, 1, 1, CAddress(), pszDest, fInboundIn);
     BOOST_CHECK(pnode2->fInbound == true);
     BOOST_CHECK(pnode2->fFeeler == false);
+}
+
+// prior to PR #14728, this test triggers an undefined behavior
+BOOST_AUTO_TEST_CASE(ipv4_peer_with_ipv6_addrMe_test)
+{
+    // set up local addresses; all that's necessary to reproduce the bug is
+    // that a normal IPv4 address is among the entries, but if this address is
+    // !IsRoutable the undefined behavior is easier to trigger deterministically
+    {
+        LOCK(cs_mapLocalHost);
+        in_addr ipv4AddrLocal;
+        ipv4AddrLocal.s_addr = 0x0100007f;
+        CNetAddr addr = CNetAddr(ipv4AddrLocal);
+        LocalServiceInfo lsi;
+        lsi.nScore = 23;
+        lsi.nPort = 42;
+        mapLocalHost[addr] = lsi;
+    }
+
+    // create a peer with an IPv4 address
+    in_addr ipv4AddrPeer;
+    ipv4AddrPeer.s_addr = 0xa0b0c001;
+    CAddress addr = CAddress(CService(ipv4AddrPeer, 7777), NODE_NETWORK);
+    std::unique_ptr<CNode> pnode = MakeUnique<CNode>(0, NODE_NETWORK, 0, INVALID_SOCKET, addr, 0, 0, CAddress{}, std::string{}, false);
+    pnode->fSuccessfullyConnected.store(true);
+
+    // the peer claims to be reaching us via IPv6
+    in6_addr ipv6AddrLocal;
+    memset(ipv6AddrLocal.s6_addr, 0, 16);
+    ipv6AddrLocal.s6_addr[0] = 0xcc;
+    CAddress addrLocal = CAddress(CService(ipv6AddrLocal, 7777), NODE_NETWORK);
+    pnode->SetAddrLocal(addrLocal);
+
+    // before patch, this causes undefined behavior detectable with clang's -fsanitize=memory
+    AdvertiseLocal(&*pnode);
+
+    // suppress no-checks-run warning; if this test fails, it's by triggering a sanitizer
+    BOOST_CHECK(1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

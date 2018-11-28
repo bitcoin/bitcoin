@@ -22,12 +22,12 @@ CMD_ROOT_DIR = '`git rev-parse --show-toplevel`/{}'.format(FOLDER_GREP)
 CMD_GREP_ARGS = r"git grep --perl-regexp '{}' -- {} ':(exclude){}'".format(REGEX_ARG, CMD_ROOT_DIR, FOLDER_TEST)
 CMD_GREP_DOCS = r"git grep --perl-regexp '{}' {}".format(REGEX_DOC, CMD_ROOT_DIR)
 # list unsupported, deprecated and duplicate args as they need no documentation
-SET_DOC_OPTIONAL = set(['-rpcssl', '-benchmark', '-h', '-help', '-socks', '-tor', '-debugnet', '-whitelistalwaysrelay', '-promiscuousmempoolflags', '-blockminsize', '-dbcrashratio', '-forcecompactdb', '-usehd'])
+SET_DOC_OPTIONAL = set(['-h', '-help', '-dbcrashratio', '-forcecompactdb'])
 
 
 def main():
-    used = check_output(CMD_GREP_ARGS, shell=True, universal_newlines=True)
-    docd = check_output(CMD_GREP_DOCS, shell=True, universal_newlines=True)
+    used = check_output(CMD_GREP_ARGS, shell=True, universal_newlines=True, encoding='utf8')
+    docd = check_output(CMD_GREP_DOCS, shell=True, universal_newlines=True, encoding='utf8')
 
     args_used = set(re.findall(re.compile(REGEX_ARG), used))
     args_docd = set(re.findall(re.compile(REGEX_DOC), docd)).union(SET_DOC_OPTIONAL)

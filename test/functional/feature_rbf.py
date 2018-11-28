@@ -61,17 +61,26 @@ def make_utxo(node, amount, confirmed=True, scriptPubKey=CScript([1])):
 
     return COutPoint(int(txid, 16), 0)
 
-class ReplaceByFeeTest(BitcoinTestFramework):
 
+class ReplaceByFeeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.extra_args= [["-maxorphantx=1000",
-                           "-whitelist=127.0.0.1",
-                           "-limitancestorcount=50",
-                           "-limitancestorsize=101",
-                           "-limitdescendantcount=200",
-                           "-limitdescendantsize=101"],
-                           ["-mempoolreplacement=0"]]
+        self.extra_args = [
+            [
+                "-maxorphantx=1000",
+                "-whitelist=127.0.0.1",
+                "-limitancestorcount=50",
+                "-limitancestorsize=101",
+                "-limitdescendantcount=200",
+                "-limitdescendantsize=101",
+            ],
+            [
+                "-mempoolreplacement=0",
+            ],
+        ]
+
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
 
     def run_test(self):
         # Leave IBD
@@ -429,6 +438,9 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         tx1a_hex = txToHex(tx1a)
         tx1a_txid = self.nodes[0].sendrawtransaction(tx1a_hex, True)
 
+        # This transaction isn't shown as replaceable
+        assert_equal(self.nodes[0].getmempoolentry(tx1a_txid)['bip125-replaceable'], False)
+
         # Shouldn't be able to double-spend
         tx1b = CTransaction()
         tx1b.vin = [CTxIn(tx0_outpoint, nSequence=0)]
@@ -469,7 +481,10 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         tx3a.vout = [CTxOut(int(0.9*COIN), CScript([b'c'])), CTxOut(int(0.9*COIN), CScript([b'd']))]
         tx3a_hex = txToHex(tx3a)
 
-        self.nodes[0].sendrawtransaction(tx3a_hex, True)
+        tx3a_txid = self.nodes[0].sendrawtransaction(tx3a_hex, True)
+
+        # This transaction is shown as replaceable
+        assert_equal(self.nodes[0].getmempoolentry(tx3a_txid)['bip125-replaceable'], True)
 
         tx3b = CTransaction()
         tx3b.vin = [CTxIn(COutPoint(tx1a_txid, 0), nSequence=0)]

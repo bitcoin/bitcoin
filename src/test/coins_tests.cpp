@@ -2,17 +2,18 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <attributes.h>
 #include <coins.h>
+#include <consensus/validation.h>
 #include <script/standard.h>
+#include <test/test_bitcoin.h>
 #include <uint256.h>
 #include <undo.h>
-#include <utilstrencodings.h>
-#include <test/test_bitcoin.h>
+#include <util/strencodings.h>
 #include <validation.h>
-#include <consensus/validation.h>
 
-#include <vector>
 #include <map>
+#include <vector>
 
 #include <boost/test/unit_test.hpp>
 
@@ -36,7 +37,7 @@ class CCoinsViewTest : public CCoinsView
     std::map<COutPoint, Coin> map_;
 
 public:
-    bool GetCoin(const COutPoint& outpoint, Coin& coin) const override
+    NODISCARD bool GetCoin(const COutPoint& outpoint, Coin& coin) const override
     {
         std::map<COutPoint, Coin>::const_iterator it = map_.find(outpoint);
         if (it == map_.end()) {
@@ -508,7 +509,7 @@ BOOST_AUTO_TEST_CASE(ccoins_serialization)
         Coin cc4;
         ss4 >> cc4;
         BOOST_CHECK_MESSAGE(false, "We should have thrown");
-    } catch (const std::ios_base::failure& e) {
+    } catch (const std::ios_base::failure&) {
     }
 
     // Very large scriptPubKey (3*10^9 bytes) past the end of the stream
@@ -521,7 +522,7 @@ BOOST_AUTO_TEST_CASE(ccoins_serialization)
         Coin cc5;
         ss5 >> cc5;
         BOOST_CHECK_MESSAGE(false, "We should have thrown");
-    } catch (const std::ios_base::failure& e) {
+    } catch (const std::ios_base::failure&) {
     }
 }
 
@@ -719,7 +720,7 @@ static void CheckAddCoinBase(CAmount base_value, CAmount cache_value, CAmount mo
         test.cache.AddCoin(OUTPOINT, Coin(std::move(output), 1, coinbase), coinbase);
         test.cache.SelfTest();
         GetCoinsMapEntry(test.cache.map(), result_value, result_flags);
-    } catch (std::logic_error& e) {
+    } catch (std::logic_error&) {
         result_value = FAIL;
         result_flags = NO_ENTRY;
     }
@@ -736,7 +737,7 @@ static void CheckAddCoinBase(CAmount base_value, CAmount cache_value, CAmount mo
 template <typename... Args>
 static void CheckAddCoin(Args&&... args)
 {
-    for (CAmount base_value : {ABSENT, PRUNED, VALUE1})
+    for (const CAmount base_value : {ABSENT, PRUNED, VALUE1})
         CheckAddCoinBase(base_value, std::forward<Args>(args)...);
 }
 
@@ -780,7 +781,7 @@ void CheckWriteCoins(CAmount parent_value, CAmount child_value, CAmount expected
         WriteCoinsViewEntry(test.cache, child_value, child_flags);
         test.cache.SelfTest();
         GetCoinsMapEntry(test.cache.map(), result_value, result_flags);
-    } catch (std::logic_error& e) {
+    } catch (std::logic_error&) {
         result_value = FAIL;
         result_flags = NO_ENTRY;
     }
@@ -848,10 +849,10 @@ BOOST_AUTO_TEST_CASE(ccoins_write)
     // they would be too repetitive (the parent cache is never updated in these
     // cases). The loop below covers these cases and makes sure the parent cache
     // is always left unchanged.
-    for (CAmount parent_value : {ABSENT, PRUNED, VALUE1})
-        for (CAmount child_value : {ABSENT, PRUNED, VALUE2})
-            for (char parent_flags : parent_value == ABSENT ? ABSENT_FLAGS : FLAGS)
-                for (char child_flags : child_value == ABSENT ? ABSENT_FLAGS : CLEAN_FLAGS)
+    for (const CAmount parent_value : {ABSENT, PRUNED, VALUE1})
+        for (const CAmount child_value : {ABSENT, PRUNED, VALUE2})
+            for (const char parent_flags : parent_value == ABSENT ? ABSENT_FLAGS : FLAGS)
+                for (const char child_flags : child_value == ABSENT ? ABSENT_FLAGS : CLEAN_FLAGS)
                     CheckWriteCoins(parent_value, child_value, parent_value, parent_flags, child_flags, parent_flags);
 }
 

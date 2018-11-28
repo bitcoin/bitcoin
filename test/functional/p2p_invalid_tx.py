@@ -61,7 +61,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         node.p2p.send_blocks_and_test([block], node, success=True)
 
         self.log.info("Mature the block.")
-        self.nodes[0].generate(100)
+        self.nodes[0].generatetoaddress(100, self.nodes[0].get_deterministic_priv_key().address)
 
         # b'\x64' is OP_NOTIF
         # Transaction will be rejected with code 16 (REJECT_INVALID)
@@ -76,7 +76,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         self.reconnect_p2p(num_connections=2)
 
         self.log.info('Test orphan transaction handling ... ')
-        # Create a root transaction that we withhold until all dependend transactions
+        # Create a root transaction that we withhold until all dependent transactions
         # are sent out and in the orphan cache
         SCRIPT_PUB_KEY_OP_TRUE = b'\x51\x75' * 15 + b'\x51'
         tx_withhold = CTransaction()
@@ -116,7 +116,8 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         assert_equal(2, len(node.getpeerinfo()))  # p2ps[1] is still connected
 
         self.log.info('Send the withhold tx ... ')
-        node.p2p.send_txs_and_test([tx_withhold], node, success=True)
+        with node.assert_debug_log(expected_msgs=["bad-txns-in-belowout"]):
+            node.p2p.send_txs_and_test([tx_withhold], node, success=True)
 
         # Transactions that should end up in the mempool
         expected_mempool = {
@@ -134,13 +135,6 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         wait_until(lambda: 1 == len(node.getpeerinfo()), timeout=12)  # p2ps[1] is no longer connected
         assert_equal(expected_mempool, set(node.getrawmempool()))
 
-        # restart node with sending BIP61 messages disabled, check that it disconnects without sending the reject message
-        self.log.info('Test a transaction that is rejected, with BIP61 disabled')
-        self.restart_node(0, ['-enablebip61=0','-persistmempool=0'])
-        self.reconnect_p2p(num_connections=1)
-        node.p2p.send_txs_and_test([tx1], node, success=False, expect_disconnect=True)
-        # send_txs_and_test will have waited for disconnect, so we can safely check that no reject has been received
-        assert_equal(node.p2p.reject_code_received, None)
 
 if __name__ == '__main__':
     InvalidTxRequestTest().main()

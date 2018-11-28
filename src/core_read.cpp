@@ -11,8 +11,8 @@
 #include <serialize.h>
 #include <streams.h>
 #include <univalue.h>
-#include <util.h>
-#include <utilstrencodings.h>
+#include <util/system.h>
+#include <util/strencodings.h>
 #include <version.h>
 
 #include <boost/algorithm/string/classification.hpp>
@@ -193,14 +193,13 @@ bool DecodePSBT(PartiallySignedTransaction& psbt, const std::string& base64_tx, 
     return true;
 }
 
-uint256 ParseHashStr(const std::string& strHex, const std::string& strName)
+bool ParseHashStr(const std::string& strHex, uint256& result)
 {
-    if (!IsHex(strHex)) // Note: IsHex("") is false
-        throw std::runtime_error(strName + " must be hexadecimal string (not '" + strHex + "')");
+    if ((strHex.size() != 64) || !IsHex(strHex))
+        return false;
 
-    uint256 result;
     result.SetHex(strHex);
-    return result;
+    return true;
 }
 
 std::vector<unsigned char> ParseHexUV(const UniValue& v, const std::string& strName)
