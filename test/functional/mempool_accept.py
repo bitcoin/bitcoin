@@ -5,6 +5,7 @@
 """Test mempool acceptance of raw transactions."""
 
 from io import BytesIO
+import math
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import (
     BIP125_SEQUENCE_NUMBER,
@@ -180,7 +181,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
 
         self.log.info('A really large transaction')
         tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
-        tx.vin = [tx.vin[0]] * (MAX_BLOCK_SIZE // len(tx.vin[0].serialize()))
+        tx.vin = [tx.vin[0]] * math.ceil(MAX_BLOCK_SIZE / len(tx.vin[0].serialize()))
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': '16: bad-txns-oversize'}],
             rawtxs=[bytes_to_hex_str(tx.serialize())],
