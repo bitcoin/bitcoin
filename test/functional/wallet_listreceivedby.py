@@ -68,6 +68,10 @@ class ReceivedByTest(BitcoinTestFramework):
         res = self.nodes[1].listreceivedbyaddress(minconf=0, include_empty=True, include_watchonly=True, address_filter=addr)
         assert_array_result(res, {"address": addr}, expected)
         assert_equal(len(res), 1)
+        # Test for regression on CLI calls with address string (#14173)
+        cli_res = self.nodes[1].cli.listreceivedbyaddress(0, True, True, addr)
+        assert_array_result(cli_res, {"address": addr}, expected)
+        assert_equal(len(cli_res), 1)
         # Error on invalid address
         assert_raises_rpc_error(-4, "address_filter parameter was invalid", self.nodes[1].listreceivedbyaddress, minconf=0, include_empty=True, include_watchonly=True, address_filter="bamboozling")
         # Another address receive money
