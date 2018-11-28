@@ -1874,12 +1874,14 @@ CAmount CWalletTx::GetAvailableCredit(interfaces::Chain::Lock& locked_chain, boo
     CAmount* cache = nullptr;
     bool* cache_used = nullptr;
 
-    if (filter == ISMINE_SPENDABLE) {
-        cache = &nAvailableCreditCached;
-        cache_used = &fAvailableCreditCached;
-    } else if (filter == ISMINE_WATCH_ONLY) {
-        cache = &nAvailableWatchCreditCached;
-        cache_used = &fAvailableWatchCreditCached;
+    if (min_depth == 0) {
+        if (filter == ISMINE_SPENDABLE) {
+            cache = &nAvailableCreditCached;
+            cache_used = &fAvailableCreditCached;
+        } else if (filter == ISMINE_WATCH_ONLY) {
+            cache = &nAvailableWatchCreditCached;
+            cache_used = &fAvailableWatchCreditCached;
+        }
     }
 
     if (fUseCache && cache_used && *cache_used) {
