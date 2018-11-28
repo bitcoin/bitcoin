@@ -822,14 +822,20 @@ bool CMasternodeMan::GetMasternodeScores(const uint256& nBlockHash, CMasternodeM
 
 bool CMasternodeMan::GetMasternodeRank(const COutPoint& outpoint, int& nRankRet, int nBlockHeight, int nMinProtocol)
 {
+    uint256 tmp;
+    return GetMasternodeRank(outpoint, nRankRet, tmp, nBlockHeight, nMinProtocol);
+}
+
+bool CMasternodeMan::GetMasternodeRank(const COutPoint& outpoint, int& nRankRet, uint256& blockHashRet, int nBlockHeight, int nMinProtocol)
+{
     nRankRet = -1;
 
     if (!masternodeSync.IsMasternodeListSynced())
         return false;
 
     // make sure we know about this block
-    uint256 nBlockHash = uint256();
-    if (!GetBlockHash(nBlockHash, nBlockHeight)) {
+    blockHashRet = uint256();
+    if (!GetBlockHash(blockHashRet, nBlockHeight)) {
         LogPrintf("CMasternodeMan::%s -- ERROR: GetBlockHash() failed at nBlockHeight %d\n", __func__, nBlockHeight);
         return false;
     }
@@ -837,7 +843,7 @@ bool CMasternodeMan::GetMasternodeRank(const COutPoint& outpoint, int& nRankRet,
     LOCK(cs);
 
     score_pair_vec_t vecMasternodeScores;
-    if (!GetMasternodeScores(nBlockHash, vecMasternodeScores, nMinProtocol))
+    if (!GetMasternodeScores(blockHashRet, vecMasternodeScores, nMinProtocol))
         return false;
 
     int nRank = 0;
