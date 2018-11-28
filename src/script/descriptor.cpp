@@ -214,9 +214,9 @@ public:
     bool IsSolvable() const override { return false; }
     std::string ToString() const override { return "addr(" + EncodeDestination(m_destination) + ")"; }
     bool ToPrivateString(const SigningProvider& arg, std::string& out) const override { out = ToString(); return true; }
-    bool Expand(int pos, const SigningProvider& arg, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const override
+    bool Expand(int pos, const SigningProvider& arg, std::vector<CScript>* output_scripts, FlatSigningProvider& out) const override
     {
-        output_scripts = std::vector<CScript>{GetScriptForDestination(m_destination)};
+        if (output_scripts) *output_scripts = std::vector<CScript>{GetScriptForDestination(m_destination)};
         return true;
     }
 };
@@ -233,9 +233,9 @@ public:
     bool IsSolvable() const override { return false; }
     std::string ToString() const override { return "raw(" + HexStr(m_script.begin(), m_script.end()) + ")"; }
     bool ToPrivateString(const SigningProvider& arg, std::string& out) const override { out = ToString(); return true; }
-    bool Expand(int pos, const SigningProvider& arg, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const override
+    bool Expand(int pos, const SigningProvider& arg, std::vector<CScript>* output_scripts, FlatSigningProvider& out) const override
     {
-        output_scripts = std::vector<CScript>{m_script};
+        if (output_scripts) *output_scripts = std::vector<CScript>{m_script};
         return true;
     }
 };
@@ -260,12 +260,12 @@ public:
         out = m_fn_name + "(" + std::move(ret) + ")";
         return true;
     }
-    bool Expand(int pos, const SigningProvider& arg, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const override
+    bool Expand(int pos, const SigningProvider& arg, std::vector<CScript>* output_scripts, FlatSigningProvider& out) const override
     {
         CPubKey key;
         KeyOriginInfo info;
         if (!m_provider->GetPubKey(pos, arg, key, info)) return false;
-        output_scripts = std::vector<CScript>{m_script_fn(key)};
+        if (output_scripts) *output_scripts = std::vector<CScript>{m_script_fn(key)};
         out.origins.emplace(key.GetID(), std::move(info));
         out.pubkeys.emplace(key.GetID(), key);
         return true;
@@ -316,7 +316,7 @@ public:
         return true;
     }
 
-    bool Expand(int pos, const SigningProvider& arg, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const override
+    bool Expand(int pos, const SigningProvider& arg, std::vector<CScript>* output_scripts, FlatSigningProvider& out) const override
     {
         std::vector<std::pair<CPubKey, KeyOriginInfo>> entries;
         entries.reserve(m_providers.size());
@@ -332,7 +332,7 @@ public:
             out.origins.emplace(entry.first.GetID(), std::move(entry.second));
             out.pubkeys.emplace(entry.first.GetID(), entry.first);
         }
-        output_scripts = std::vector<CScript>{GetScriptForMultisig(m_threshold, pubkeys)};
+        if (output_scripts) *output_scripts = std::vector<CScript>{GetScriptForMultisig(m_threshold, pubkeys)};
         return true;
     }
 };
@@ -357,15 +357,15 @@ public:
         out = m_fn_name + "(" + std::move(ret) + ")";
         return true;
     }
-    bool Expand(int pos, const SigningProvider& arg, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const override
+    bool Expand(int pos, const SigningProvider& arg, std::vector<CScript>* output_scripts, FlatSigningProvider& out) const override
     {
         std::vector<CScript> sub;
-        if (!m_descriptor->Expand(pos, arg, sub, out)) return false;
-        output_scripts.clear();
+        if (!m_descriptor->Expand(pos, arg, &sub, out)) return false;
+        if (output_scripts) output_scripts->clear();
         for (const auto& script : sub) {
             CScriptID id(script);
             out.scripts.emplace(CScriptID(script), script);
-            output_scripts.push_back(m_convert_fn(script));
+            if (output_scripts) output_scripts->push_back(m_convert_fn(script));
         }
         return true;
     }
@@ -392,7 +392,7 @@ public:
         out = "combo(" + std::move(ret) + ")";
         return true;
     }
-    bool Expand(int pos, const SigningProvider& arg, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const override
+    bool Expand(int pos, const SigningProvider& arg, std::vector<CScript>* output_scripts, FlatSigningProvider& out) const override
     {
         CPubKey key;
         KeyOriginInfo info;
@@ -401,7 +401,7 @@ public:
         {
             CScript p2pk = GetScriptForRawPubKey(key);
             CScript p2pkh = GetScriptForDestination(keyid);
-            output_scripts = std::vector<CScript>{std::move(p2pk), std::move(p2pkh)};
+            if (output_scripts) *output_scripts = std::vector<CScript>{std::move(p2pk), std::move(p2pkh)};
             out.pubkeys.emplace(keyid, key);
             out.origins.emplace(keyid, std::move(info));
         }
@@ -410,8 +410,8 @@ public:
             CScriptID p2wpkh_id(p2wpkh);
             CScript p2sh_p2wpkh = GetScriptForDestination(p2wpkh_id);
             out.scripts.emplace(p2wpkh_id, p2wpkh);
-            output_scripts.push_back(std::move(p2wpkh));
-            output_scripts.push_back(std::move(p2sh_p2wpkh));
+            if (output_scripts) output_scripts->push_back(std::move(p2wpkh));
+            if (output_scripts) output_scripts->push_back(std::move(p2sh_p2wpkh));
         }
         return true;
     }

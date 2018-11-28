@@ -46,10 +46,10 @@ struct Descriptor {
      *
      * pos: the position at which to expand the descriptor. If IsRange() is false, this is ignored.
      * provider: the provider to query for private keys in case of hardened derivation.
-     * output_script: the expanded scriptPubKeys will be put here.
+     * output_script: optionally the expanded scriptPubKeys will be put here.
      * out: scripts and public keys necessary for solving the expanded scriptPubKeys will be put here (may be equal to provider).
      */
-    virtual bool Expand(int pos, const SigningProvider& provider, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const = 0;
+    virtual bool Expand(int pos, const SigningProvider& provider, std::vector<CScript>* output_scripts, FlatSigningProvider& out) const = 0;
 };
 
 /** Parse a descriptor string. Included private keys are put in out. Returns nullptr if parsing fails. */

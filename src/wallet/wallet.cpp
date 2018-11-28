@@ -107,9 +107,8 @@ std::string COutput::ToString() const
 
 std::vector<CKeyID> GetAffectedKeys(const CScript& spk, const SigningProvider& provider)
 {
-    std::vector<CScript> dummy;
     FlatSigningProvider out;
-    InferDescriptor(spk, provider)->Expand(0, DUMMY_SIGNING_PROVIDER, dummy, out);
+    InferDescriptor(spk, provider)->Expand(0, DUMMY_SIGNING_PROVIDER, nullptr, out);
     std::vector<CKeyID> ret;
     for (const auto& entry : out.pubkeys) {
         ret.push_back(entry.first);

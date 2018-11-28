@@ -90,7 +90,7 @@ void Check(const std::string& prv, const std::string& pub, int flags, const std:
             const FlatSigningProvider& key_provider = (flags & HARDENED) ? keys_priv : keys_pub;
             FlatSigningProvider script_provider;
             std::vector<CScript> spks;
-            BOOST_CHECK((t ? parse_priv : parse_pub)->Expand(i, key_provider, spks, script_provider));
+            BOOST_CHECK((t ? parse_priv : parse_pub)->Expand(i, key_provider, &spks, script_provider));
             BOOST_CHECK_EQUAL(spks.size(), ref.size());
             for (size_t n = 0; n < spks.size(); ++n) {
                 BOOST_CHECK_EQUAL(ref[n], HexStr(spks[n].begin(), spks[n].end()));
@@ -108,7 +108,7 @@ void Check(const std::string& prv, const std::string& pub, int flags, const std:
                 BOOST_CHECK_EQUAL(inferred->IsSolvable(), !(flags & UNSOLVABLE));
                 std::vector<CScript> spks_inferred;
                 FlatSigningProvider provider_inferred;
-                BOOST_CHECK(inferred->Expand(0, provider_inferred, spks_inferred, provider_inferred));
+                BOOST_CHECK(inferred->Expand(0, provider_inferred, &spks_inferred, provider_inferred));
                 BOOST_CHECK_EQUAL(spks_inferred.size(), 1);
                 BOOST_CHECK(spks_inferred[0] == spks[n]);
                 BOOST_CHECK_EQUAL(IsSolvable(provider_inferred, spks_inferred[0]), !(flags & UNSOLVABLE));
