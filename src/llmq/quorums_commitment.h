@@ -108,6 +108,8 @@ public:
         READWRITE(nHeight);
         READWRITE(commitment);
     }
+
+    void ToJson(UniValue& obj) const;
 };
 
 bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
