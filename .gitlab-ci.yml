@@ -104,7 +104,7 @@ cache:
 
 .job_template: &macos_release_definition
   artifacts:
-    name: "$OUTDIR"-dmg
+    name: "$OUTDIR-dmg"
     paths:
     - Crown-Qt.dmg
   only:
@@ -113,7 +113,7 @@ cache:
 
 .job_template: &macos_snapshot_definition
   artifacts:
-    name: "$OUTDIR"-dmg
+    name: "$OUTDIR-dmg"
     paths:
     - Crown-Qt.dmg
     expire_in: 2 weeks
