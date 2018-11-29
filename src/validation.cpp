@@ -3530,12 +3530,14 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
         CBlockIndex *pindex = nullptr;
         if (fNewBlock) *fNewBlock = false;
         CValidationState state;
+
+        // CheckBlock() does not support multi-threaded block validation because CBlock::fChecked can cause data race.
+        // Therefore, the following critical section must include the CheckBlock() call as well.
+        LOCK(cs_main);
+
         // Ensure that CheckBlock() passes before calling AcceptBlock, as
         // belt-and-suspenders.
         bool ret = CheckBlock(*pblock, state, chainparams.GetConsensus());
-
-        LOCK(cs_main);
-
         if (ret) {
             // Store to disk
             ret = g_chainstate.AcceptBlock(pblock, state, chainparams, &pindex, fForceProcessing, nullptr, fNewBlock);
