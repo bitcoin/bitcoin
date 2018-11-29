@@ -74,6 +74,9 @@ public:
 
     void RemoveVotesFromMasternode(const COutPoint& outpointMasternode);
 
+    // TODO can be removed after full DIP3 deployment
+    std::vector<uint256> RemoveOldVotes(unsigned int nMinTime);
+
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>

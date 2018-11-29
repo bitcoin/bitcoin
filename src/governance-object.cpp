@@ -177,7 +177,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         }
     }
 
-    bool onlyOwnerAllowed = nObjectType == GOVERNANCE_OBJECT_PROPOSAL;
+    bool onlyOwnerAllowed = nObjectType == GOVERNANCE_OBJECT_PROPOSAL && vote.GetSignal() == VOTE_SIGNAL_FUNDING;
 
     // Finally check that the vote is actually valid (done last because of cost of signature verification)
     if (!vote.IsValid(onlyOwnerAllowed)) {
@@ -789,4 +789,22 @@ void CGovernanceObject::CheckOrphanVotes(CConnman& connman)
             cmmapOrphanVotes.Erase(key, pairVote);
         }
     }
+}
+
+std::vector<uint256> CGovernanceObject::RemoveOldVotes(unsigned int nMinTime)
+{
+    LOCK(cs);
+
+    auto removed = fileVotes.RemoveOldVotes(nMinTime);
+
+    if (!removed.empty()) {
+        std::string removedStr;
+        for (auto& h : removed) {
+            removedStr += strprintf("  %s\n", h.ToString());
+        }
+        LogPrintf("CGovernanceObject::RemoveOldVotes -- Removed %d old (pre-DIP3) votes for %s:\n%s\n", removed.size(), GetHash().ToString(), removedStr);
+        fDirtyCache = true;
+    }
+
+    return removed;
 }
