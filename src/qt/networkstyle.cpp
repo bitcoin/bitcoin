@@ -5,6 +5,8 @@
 #include "networkstyle.h"
 
 #include "guiconstants.h"
+#include "chainparams.h"
+#include "tinyformat.h"
 
 #include <QApplication>
 
@@ -17,6 +19,7 @@ static const struct {
 } network_styles[] = {
     {"main", QAPP_APP_NAME_DEFAULT, ":/icons/toolbar", "", ":/images/splash"},
     {"test", QAPP_APP_NAME_TESTNET, ":/icons/bitcoin_testnet", QT_TRANSLATE_NOOP("SplashScreen", "[testnet]"), ":/images/splash_testnet"},
+    {"dev", QAPP_APP_NAME_DEVNET, ":/icons/bitcoin_testnet", QT_TRANSLATE_NOOP("SplashScreen", "[devnet: %s]"), ":/images/splash_testnet"},
     {"regtest", QAPP_APP_NAME_TESTNET, ":/icons/bitcoin_testnet", "[regtest]", ":/images/splash_testnet"}
 };
 static const unsigned network_styles_count = sizeof(network_styles)/sizeof(*network_styles);
@@ -36,11 +39,19 @@ const NetworkStyle *NetworkStyle::instantiate(const QString &networkId)
     {
         if (networkId == network_styles[x].networkId)
         {
+            std::string appName = network_styles[x].appName;
+            std::string titleAddText = network_styles[x].titleAddText;
+
+            if (networkId == "dev") {
+                appName = strprintf(appName, GetDevNetName());
+                titleAddText = strprintf(titleAddText, GetDevNetName());
+            }
+
             return new NetworkStyle(
-                    network_styles[x].appName,
-                    network_styles[x].appIcon,
-                    network_styles[x].titleAddText,
-                    network_styles[x].splashImage);
+                appName.c_str(),
+                network_styles[x].appIcon,
+                titleAddText.c_str(),
+                network_styles[x].splashImage);
         }
     }
     return 0;

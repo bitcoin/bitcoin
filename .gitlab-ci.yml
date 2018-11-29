@@ -1,6 +1,6 @@
 variables:
+  RELEASE_VERSION: "0.12.5.1"
   GIT_STRATEGY: "clone"
-  OUTDIR: "out"
   MAKEJOBS: "-j4"
   CCACHE_SIZE: "100M"
   CROWN_CONFIG_ALL: "--disable-reduced-exports --disable-dependency-tracking --prefix=$CI_PROJECT_DIR/depends/$HOST --bindir=$CI_PROJECT_DIR/$OUTDIR/bin --libdir=$CI_PROJECT_DIR/$OUTDIR/lib"
@@ -37,6 +37,7 @@ cache:
     CROWN_CONFIG: "--enable-mingw"
     HOST: "x86_64-w64-mingw32"
     GOAL: "install"
+    OUTDIR: "Crown-${RELEASE_VERSION}-Win64"
     PACKAGES: "nsis gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64 wine1.6 bc"
 
 .job_template: &win32_definition
@@ -44,6 +45,7 @@ cache:
     CROWN_CONFIG: ""
     HOST: "i686-w64-mingw32"
     GOAL: "install"
+    OUTDIR: "Crown-${RELEASE_VERSION}-Win32"
     PACKAGES: "nsis g++-mingw-w64-i686 gcc-mingw-w64-i686 binutils-mingw-w64-i686 wine1.6 bc"
 
 .job_template: &linux64_definition
@@ -51,6 +53,7 @@ cache:
     CROWN_CONFIG: "--enable-glibc-back-compat"
     HOST: "x86_64-unknown-linux-gnu"
     GOAL: "install"
+    OUTDIR: "Crown-${RELEASE_VERSION}-Linux64"
     DEP_OPTS: "USE_LINUX_STATIC_QT5=1"
 
 .job_template: &linux32_definition
@@ -59,6 +62,7 @@ cache:
     HOST: "i686-pc-linux-gnu"
     GOAL: "install"
     DEP_OPTS: "USE_LINUX_STATIC_QT5=1"
+    OUTDIR: "Crown-${RELEASE_VERSION}-Linux32"
     PACKAGES: "g++-multilib bc"
 
 .job_template: &raspberrypi_definition
@@ -66,6 +70,7 @@ cache:
     CROWN_CONFIG: "--enable-glibc-back-compat"
     HOST: "arm-linux-gnueabihf"
     GOAL: "install"
+    OUTDIR: "Crown-${RELEASE_VERSION}-RaspberryPi"
     PACKAGES: "g++-arm-linux-gnueabihf"
 
 .job_template: &osx_definition
@@ -74,11 +79,13 @@ cache:
     HOST: "x86_64-apple-darwin14"
     OSX_SDK: "10.8"
     GOAL: "install deploy"
+    OUTDIR: "Crown-${RELEASE_VERSION}-Osx"
     PACKAGES: "cmake gcc-multilib g++-multilib libcap-dev libbz2-dev"
 
 # Artifact settings for releases and snapshots
 .job_template: &release_definition
   artifacts:
+    name: "$OUTDIR"
     paths:
     - $OUTDIR
   only:
@@ -87,6 +94,7 @@ cache:
 
 .job_template: &snapshot_definition
   artifacts:
+    name: "$OUTDIR"
     paths:
     - $OUTDIR
     expire_in: 2 weeks
