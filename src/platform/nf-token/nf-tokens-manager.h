@@ -162,8 +162,18 @@ namespace Platform
             /// Total amount of nf-tokens for the specified protocol
             std::size_t TotalSupply(const uint64_t & protocolId) const;
 
+            /// Delete the specified nf-token
+            bool Delete(const uint64_t & protocolId, const uint256 & tokenId);
+            /// Delete the specified nf-token at the specified block height, ignore if at different height
+            bool DeleteAtHeight(const uint64_t & protocolId, const uint256 & tokenId, int height);
+
+            /// Update the best block tip
+            void UpdateBlockTip(const CBlockIndex * pindex);
+
         private:
             NfTokensIndexSet m_nfTokensIndexSet;
+            int m_tipHeight{-1};
+            uint256 m_tipBlockHash;
 
             static std::unique_ptr<NfTokensManager> s_instance;
     };

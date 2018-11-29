@@ -2344,6 +2344,9 @@ void FlushStateToDisk() {
 void static UpdateTip(CBlockIndex *pindexNew) {
     chainActive.SetTip(pindexNew);
 
+    // Update block tip for special txs handlers
+    UpdateSpecialTxsBlockTip(pindexNew);
+
     // New best block
     nTimeBestReceived = GetTime();
     mempool.AddTransactionsUpdated(1);

@@ -27,7 +27,7 @@ namespace Platform
         return true;
     }
 
-    bool NfTokenRegTx::CheckTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
+    bool NfTokenRegTx::CheckTx(const CTransaction& tx, const CBlockIndex* pindexLast, CValidationState& state)
     {
         AssertLockHeld(cs_main);
 
@@ -51,27 +51,45 @@ namespace Platform
 
         //TODO: Validate metadata
 
-        if (pindexPrev != nullptr)
+        if (pindexLast != nullptr)
         {
-            if (NfTokensManager::Instance().ContainsAtHeight(nfToken.tokenProtocolId, nfToken.tokenId, pindexPrev->nHeight))
+            if (NfTokensManager::Instance().ContainsAtHeight(nfToken.tokenProtocolId, nfToken.tokenId, pindexLast->nHeight))
                 return state.DoS(10, false, REJECT_DUPLICATE, "bad-token-reg-tx-dup-token");
         }
 
         return CheckNfTokenTxSignature(tx, nfTokenRegTx, nfTokenRegTx.GetNfToken().tokenOwnerKeyId, state);
     }
 
-    bool NfTokenRegTx::ProcessSpecialTx(const CTransaction &tx, const CBlockIndex *pindex, CValidationState &state)
+    bool NfTokenRegTx::ProcessTx(const CTransaction &tx, const CBlockIndex *pindex, CValidationState &state)
     {
         NfTokenRegTx nfTokenRegTx;
         bool result = GetTxPayload(tx, nfTokenRegTx);
         // should have been checked already
         assert(result);
 
+        //TODO: remove after extensive testing of release version
         if (!result)
             return state.DoS(100, false, REJECT_INVALID, "bad-tx-payload");
 
-        if (!NfTokensManager::Instance().AddNfToken(nfTokenRegTx.GetNfToken(), tx, pindex))
-            return state.DoS(100, false, REJECT_DUPLICATE/*REJECT_CONFLICT*/, "token-reg-tx-conflit");
+        auto nfToken = nfTokenRegTx.GetNfToken();
+
+        if (!NfTokensManager::Instance().AddNfToken(nfToken, tx, pindex))
+            return state.DoS(100, false, REJECT_DUPLICATE/*TODO: REJECT_CONFLICT*/, "token-reg-tx-conflit");
         return true;
+    }
+
+    bool NfTokenRegTx::UndoTx(const CTransaction& tx, const CBlockIndex * pindex)
+    {
+        NfTokenRegTx nfTokenRegTx;
+        bool result = GetTxPayload(tx, nfTokenRegTx);
+        // should have been checked already
+        assert(result);
+
+        //TODO: remove after extensive testing of release version
+        if (!result)
+            return false;
+
+        auto nfToken = nfTokenRegTx.GetNfToken();
+        return NfTokensManager::Instance().DeleteAtHeight(nfToken.tokenProtocolId, nfToken.tokenId, pindex->nHeight);
     }
 }

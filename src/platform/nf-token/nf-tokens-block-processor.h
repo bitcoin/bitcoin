@@ -1,6 +1,8 @@
 #ifndef CROWN_PLATFORM_NF_TOKENS_PROCESSOR_H
 #define CROWN_PLATFORM_NF_TOKENS_PROCESSOR_H
 
+#include "nf-tokens-manager.h"
+
 class CBlock;
 class CBlockIndex;
 class CValidationState;

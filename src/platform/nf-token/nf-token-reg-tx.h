@@ -35,8 +35,9 @@ namespace Platform
 
         std::string ToString() const;
 
-        static bool CheckTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
-        static bool ProcessSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValidationState& state);
+        static bool CheckTx(const CTransaction & tx, const CBlockIndex * pindexLast, CValidationState & state);
+        static bool ProcessTx(const CTransaction & tx, const CBlockIndex * pindex, CValidationState & state);
+        static bool UndoTx(const CTransaction & tx, const CBlockIndex * pindex);
 
     public:
         ADD_SERIALIZE_METHODS

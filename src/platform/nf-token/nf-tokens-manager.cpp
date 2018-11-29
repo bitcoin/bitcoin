@@ -21,17 +21,9 @@ namespace Platform
         assert(!nfToken.tokenOwnerKeyId.IsNull());
         assert(!nfToken.metadataAdminKeyId.IsNull());
 
-        NfTokenIndex newNfTokenIndex;
-        newNfTokenIndex.blockHash = *pindex->phashBlock;
-        newNfTokenIndex.height = pindex->nHeight;
-        newNfTokenIndex.regTxHash = tx.GetHash();
-        newNfTokenIndex.nfToken.reset(new NfToken(nfToken));
-
-        //NfTokenIndex newNfTokenIndex {*pindex->phashBlock, tx.GetHash(), std::shared_ptr<NfToken>(new NfToken(nfToken))};
+        NfTokenIndex newNfTokenIndex {pindex->nHeight, *pindex->phashBlock, tx.GetHash(), std::shared_ptr<NfToken>(new NfToken(nfToken))};
 
         return m_nfTokensIndexSet.emplace(std::move(newNfTokenIndex)).second;
-
-        //return m_nfTokensSet.emplace( {*pindex->phashBlock, tx.GetHash(), std::shared_ptr<NfToken>(new NfToken(nfToken))} );
     }
 
     const NfTokenIndex * NfTokensManager::GetNfTokenIndex(const uint64_t & protocolId, const uint256 & tokenId) const
@@ -187,5 +179,36 @@ namespace Platform
 
         const NfTokensIndexSetByProtocolId & protocolIndex = m_nfTokensIndexSet.get<Tags::ProtocolId>();
         return protocolIndex.count(protocolId);
+    }
+
+    bool NfTokensManager::Delete(const uint64_t &protocolId, const uint256 &tokenId)
+    {
+        return DeleteAtHeight(protocolId, tokenId, m_tipHeight);
+    }
+
+    bool NfTokensManager::DeleteAtHeight(const uint64_t & protocolId, const uint256 & tokenId, int height)
+    {
+        assert(protocolId != NfToken::UNKNOWN_TOKEN_PROTOCOL);
+        assert(!tokenId.IsNull());
+        assert(height >= 0);
+
+        auto it = m_nfTokensIndexSet.find(std::make_tuple(protocolId, tokenId));
+        if (it != m_nfTokensIndexSet.end() && it->height <= height)
+        {
+            bool result = m_nfTokensIndexSet.erase(it) != m_nfTokensIndexSet.end();
+            assert(result);
+            return result;
+        }
+        return false;
+    }
+
+    void NfTokensManager::UpdateBlockTip(const CBlockIndex * pindex)
+    {
+        assert(pindex != nullptr);
+        if (pindex != nullptr)
+        {
+            m_tipHeight = pindex->nHeight;
+            m_tipBlockHash = pindex->GetBlockHash();
+        }
     }
 }

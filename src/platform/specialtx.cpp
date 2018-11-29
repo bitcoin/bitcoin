@@ -11,20 +11,21 @@
 #include "specialtx.h"
 #include "governance-vote.h"
 #include "nf-token/nf-token-reg-tx.h" // TODO: refactoring - handlers registration in the tx impl. Special tx itself shouldn't know about handlers
+#include "nf-token/nf-tokens-manager.h"
 
 #include "governance.h"
 
-bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
+bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexLast, CValidationState& state)
 {
     if (tx.nVersion < 3 || tx.nType == TRANSACTION_NORMAL)
         return true;
 
     switch (tx.nType) {
         case TRANSACTION_GOVERNANCE_VOTE:
-            return CheckVoteTx(tx, pindexPrev, state);
+            return CheckVoteTx(tx, pindexLast, state);
 
         case TRANSACTION_NF_TOKEN_REGISTER:
-            return Platform::NfTokenRegTx::CheckTx(tx, pindexPrev, state);
+            return Platform::NfTokenRegTx::CheckTx(tx, pindexLast, state);
     }
 
     return state.DoS(100, false, REJECT_INVALID, "bad-tx-type");
@@ -58,7 +59,7 @@ bool ProcessSpecialTx(bool justCheck, const CTransaction& tx, const CBlockIndex*
         }
 
         case TRANSACTION_NF_TOKEN_REGISTER:
-            return true; // handled in batches per block
+            return Platform::NfTokenRegTx::ProcessTx(tx, pindex, state);
     }
 
     return state.DoS(100, false, REJECT_INVALID, "bad-tx-type");
@@ -69,12 +70,13 @@ bool UndoSpecialTx(const CTransaction& tx, const CBlockIndex* pindex)
     if (tx.nVersion < 3 || tx.nType == TRANSACTION_NORMAL)
         return true;
 
-    switch (tx.nType) {
+    switch (tx.nType)
+    {
         case TRANSACTION_GOVERNANCE_VOTE:
             return true; // handled in batches per block
 
         case TRANSACTION_NF_TOKEN_REGISTER:
-            return true; // handled in batches per block
+            return Platform::NfTokenRegTx::UndoTx(tx, pindex);
     }
 
     return false;
@@ -84,7 +86,7 @@ bool ProcessSpecialTxsInBlock(bool justCheck, const CBlock& block, const CBlockI
 {
     for (int i = 0; i < (int)block.vtx.size(); i++) {
         const CTransaction& tx = block.vtx[i];
-        if (!CheckSpecialTx(tx, pindex->pprev, state))
+        if (!CheckSpecialTx(tx, pindex, state))
             return false;
         if (!ProcessSpecialTx(justCheck, tx, pindex, state))
             return false;
@@ -101,6 +103,11 @@ bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex)
             return false;
     }
     return true;
+}
+
+void UpdateSpecialTxsBlockTip(const CBlockIndex* pindex)
+{
+    Platform::NfTokensManager::Instance().UpdateBlockTip(pindex);
 }
 
 uint256 CalcTxInputsHash(const CTransaction& tx)
