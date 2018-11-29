@@ -19,7 +19,7 @@ packages:
 - "pkg-config"
 reference_datetime: "2011-01-30 00:00:00"
 remotes:
-- "url": "/Users/zhengjun/project/git_project/primecoin"
+- "url": "https://github.com/primecointeam/primecoin.git"
   "dir": "primecoin"
 files:
 - "db-4.8.30.NC.tar.gz"

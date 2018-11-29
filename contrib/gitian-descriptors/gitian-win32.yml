@@ -13,7 +13,7 @@ packages:
 - "faketime"
 reference_datetime: "2015-01-30 00:00:00"
 remotes:
-- "url": "/Users/zhengjun/project/git_project/primecoin"
+- "url": "https://github.com/primecointeam/primecoin.git"
   "dir": "primecoin"
 files:
 - "qt-win32-4.8.7-gitian-r1.zip"
@@ -31,7 +31,7 @@ script: |
   cd boost_1_52_0
   mkdir -p stage/lib
   unzip ../boost-win32-1.52.0-gitian.zip
-  cd bin/32
+  cd bin/$GBUILD_BITS
   for lib in *; do
     i686-w64-mingw32-ar rc ../../stage/lib/libboost_${lib}-mt-s.a $lib/*.o
     i686-w64-mingw32-ranlib ../../stage/lib/libboost_${lib}-mt-s.a

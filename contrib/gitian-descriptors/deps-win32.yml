@@ -3,7 +3,7 @@ name: "primecoin-deps"
 suites:
 - "bionic"
 architectures:
-- "i386"
+- "amd64"
 packages:
 - "gcc-mingw-w64-i686"
 - "g++-mingw-w64-i686"

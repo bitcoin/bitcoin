@@ -13,7 +13,7 @@ packages:
 - "faketime"
 reference_datetime: "2015-01-30 00:00:00"
 remotes:
-- "url": "/Users/zhengjun/project/git_project/primecoin"
+- "url": "https://github.com/primecointeam/primecoin.git"
   "dir": "primecoin"
 files:
 - "qt-win64-4.8.7-gitian-r1.zip"
