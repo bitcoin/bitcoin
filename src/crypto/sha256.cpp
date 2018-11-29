@@ -10,6 +10,7 @@
 #include <atomic>
 
 #define TAVX2(args...)
+#define TSHANI(args...)
 
 #if defined(__x86_64__) || defined(__amd64__) || defined(__i386__)
 #if defined(USE_ASM)
@@ -25,6 +26,11 @@ void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks);
 #       undef TAVX2
 #       define TAVX2(args...) args
 #   endif // ENABLE_AVX2
+#   ifdef ENABLE_SHANI
+#       define TRY_SHANI
+#       undef TSHANI
+#       define TSHANI(args...) args
+#   endif // ENABLE_SHANI
 #endif
 
 #endif
@@ -587,15 +593,11 @@ std::string SHA256AutoDetect()
     std::string ret = "standard";
 #if defined(USE_ASM) && (defined(__x86_64__) || defined(__amd64__) || defined(__i386__))
 
-    bool have_sse4 = false;
-    bool have_shani = false;
-
-    (void)have_sse4;
-    (void)have_shani;
-
     uint32_t eax, ebx, ecx, edx;
     cpuid(1, 0, eax, ebx, ecx, edx);
-    have_sse4 = (ecx >> 19) & 1;
+    bool have_sse4 = (ecx >> 19) & 1;
+
+    TSHANI(bool have_shani = false);
 
 #ifdef TRY_AVX2
     bool have_avx2 = false;
@@ -607,10 +609,10 @@ std::string SHA256AutoDetect()
     if (have_sse4) {
         cpuid(7, 0, eax, ebx, ecx, edx);
         TAVX2(have_avx2 = (ebx >> 5) & 1);
-        have_shani = (ebx >> 29) & 1;
+        TSHANI(have_shani = (ebx >> 29) & 1);
     }
 
-#if defined(ENABLE_SHANI) && !defined(BUILD_BITCOIN_INTERNAL)
+#ifdef TRY_SHANI
     if (have_shani) {
         Transform = sha256_shani::Transform;
         TransformD64 = TransformD64Wrapper<sha256_shani::Transform>;
@@ -619,7 +621,7 @@ std::string SHA256AutoDetect()
         have_sse4 = false; // Disable SSE4/AVX2;
         TAVX2(have_avx2 = false);
     }
-#endif
+#endif // TRY_SHANI
 
     if (have_sse4) {
 #if defined(__x86_64__) || defined(__amd64__)
