@@ -34,6 +34,9 @@ static CKey ParsePrivKey(const std::string &strKeyOrAddress, bool allowAddresses
     CBitcoinAddress address;
     if (allowAddresses && address.SetString(strKeyOrAddress) && address.IsValid()) {
 #ifdef ENABLE_WALLET
+        if (!pwalletMain) {
+            throw std::runtime_error("addresses not supported when wallet is disabled");
+        }
         CKeyID keyId;
         CKey key;
         if (!address.GetKeyID(keyId) || !pwalletMain->GetKey(keyId, key))
@@ -643,6 +646,10 @@ void protx_list_help()
 }
 
 static bool CheckWalletOwnsScript(const CScript& script) {
+    if (!pwalletMain) {
+        return false;
+    }
+
     CTxDestination dest;
     if (ExtractDestination(script, dest)) {
         if ((boost::get<CKeyID>(&dest) && pwalletMain->HaveKey(*boost::get<CKeyID>(&dest))) || (boost::get<CScriptID>(&dest) && pwalletMain->HaveCScript(*boost::get<CScriptID>(&dest)))) {
@@ -665,9 +672,9 @@ UniValue BuildDMNListEntry(const CDeterministicMNCPtr& dmn, bool detailed)
     int confirmations = GetUTXOConfirmations(dmn->collateralOutpoint);
     o.push_back(Pair("confirmations", confirmations));
 
-    bool hasOwnerKey = pwalletMain->HaveKey(dmn->pdmnState->keyIDOwner);
-    bool hasOperatorKey = false; //pwalletMain->HaveKey(dmn->pdmnState->keyIDOperator);
-    bool hasVotingKey = pwalletMain->HaveKey(dmn->pdmnState->keyIDVoting);
+    bool hasOwnerKey = pwalletMain && pwalletMain->HaveKey(dmn->pdmnState->keyIDOwner);
+    bool hasOperatorKey = false; //pwalletMain && pwalletMain->HaveKey(dmn->pdmnState->keyIDOperator);
+    bool hasVotingKey = pwalletMain && pwalletMain->HaveKey(dmn->pdmnState->keyIDVoting);
 
     bool ownsCollateral = false;
     CTransactionRef collateralTx;
@@ -701,9 +708,14 @@ UniValue protx_list(const JSONRPCRequest& request)
 
     UniValue ret(UniValue::VARR);
 
-    LOCK2(cs_main, pwalletMain->cs_wallet);
+    LOCK(cs_main);
 
     if (type == "wallet") {
+        if (!pwalletMain) {
+            throw std::runtime_error("\"protx list wallet\" not supported when wallet is disabled");
+        }
+        LOCK(pwalletMain->cs_wallet);
+
         if (request.params.size() > 3) {
             protx_list_help();
         }
