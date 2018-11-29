@@ -1,5 +1,5 @@
 WalletFrame {
-border-image: url(':/images/crownium/drkblue_walletFrame_bg') 0 0 0 0 stretch stretch;
+border-image: url(':/images/crownium/walletFrame_bg') 0 0 0 0 stretch stretch;
 /* background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #222222, stop: .1 #EEEEEE, stop: .9 #EEEEEE, stop: 1 #222222); */
 border-top:0px solid #000;
 margin:0;
@@ -158,7 +158,7 @@ border:0px;
 }
 
 QComboBox::down-arrow {
-border-image: url(':/images/crownium/drkblue_downArrow') 0 0 0 0 stretch stretch;
+border-image: url(':/images/crownium/downArrow') 0 0 0 0 stretch stretch;
 }
 
 QComboBox QListView {
@@ -213,7 +213,7 @@ padding-top:2px;
 }
 
 QAbstractSpinBox::up-arrow {
-image:url(':/images/crownium/drkblue_upArrow_small');
+image:url(':/images/crownium/upArrow_small');
 }
 
 QAbstractSpinBox::down-button {
@@ -231,7 +231,7 @@ padding-bottom:2px;
 }
 
 QAbstractSpinBox::down-arrow {
-image:url(':/images/crownium/drkblue_downArrow_small');
+image:url(':/images/crownium/downArrow_small');
 }
 
 QCheckBox {
@@ -392,19 +392,19 @@ height:10px;
 }
 
 QScrollBar:up-arrow {
-background-image: url(':/images/crownium/drkblue_upArrow_small');
+background-image: url(':/images/crownium/upArrow_small');
 }
 
 QScrollBar:down-arrow {
-background-image: url(':/images/crownium/drkblue_downArrow_small');
+background-image: url(':/images/crownium/downArrow_small');
 }
 
 QScrollBar:left-arrow {
-background-image: url(':/images/crownium/drkblue_leftArrow_small');
+background-image: url(':/images/crownium/leftArrow_small');
 }
 
 QScrollBar:right-arrow {
-background-image: url(':/images/crownium/drkblue_rightArrow_small');
+background-image: url(':/images/crownium/rightArrow_small');
 }
 
 
@@ -413,7 +413,7 @@ background-image: url(':/images/crownium/drkblue_rightArrow_small');
 /* DIALOG BOXES */
 
 QDialog {
-border-image: url(':/images/crownium/drkblue_walletFrame_bg') 0 0 0 0 stretch stretch;
+border-image: url(':/images/crownium/walletFrame_bg') 0 0 0 0 stretch stretch;
 }
 
 QDialog .QTabWidget {
@@ -503,7 +503,7 @@ border:1px solid #9e9e9e;
 
 /* Dialog: Sign / Verify Message */
 QDialog#SignVerifyMessageDialog {
-border-image: url(':/images/crownium/drkblue_walletFrame_bg') 0 0 0 0 stretch stretch;
+border-image: url(':/images/crownium/walletFrame_bg') 0 0 0 0 stretch stretch;
 }
 
 QDialog#SignVerifyMessageDialog QPushButton#addressBookButton_SM { /* Address Book Button */
@@ -518,7 +518,7 @@ background-color:#fff;
 }
 
 QDialog#SignVerifyMessageDialog QPushButton#pasteButton_SM { /* Paste Button */
-/* qproperty-icon: url(":/icons/drkblue/drkblue_editpaste"); */
+/* qproperty-icon: url(":/icons/drkblue/editpaste"); */
 background-color:transparent;
 padding-left:15px;
 }
@@ -528,7 +528,7 @@ font-size:10px;
 }
 
 QDialog#SignVerifyMessageDialog QPushButton#copySignatureButton_SM { /* Copy Button */
-/* qproperty-icon: url(":/icons/drkblue/drkblue_editcopy"); */
+/* qproperty-icon: url(":/icons/drkblue/editcopy"); */
 background-color:transparent;
 padding-left:10px;
 padding-right:10px;
@@ -731,7 +731,7 @@ background:#ff0000;
 }
 
 QDialog#RPCConsole QWidget#tab_nettraffic {
-border-image: url(':/images/crownium/drkblue_walletFrame_bg') 0 0 0 0 stretch stretch;
+border-image: url(':/images/crownium/walletFrame_bg') 0 0 0 0 stretch stretch;
 }
 
 QDialog#RPCConsole QWidget#tab_nettraffic  QSlider#sldGraphRange{ /* Network slider background */
@@ -740,7 +740,7 @@ background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #000000, s
 
 
 QDialog#RPCConsole QWidget#tab_info {
-border-image: url(':/images/crownium/drkblue_walletFrame_bg') 0 0 0 0 stretch stretch;
+border-image: url(':/images/crownium/walletFrame_bg') 0 0 0 0 stretch stretch;
 }
 
 /* HELP MENU */
@@ -1182,7 +1182,7 @@ background-color:transparent;
 }
 
 QWidget#contentWidget { /* The actual content with the text/buttons/etc... */
-border-image: url(':/images/crownium/drkblue_walletFrame_bg') 0 0 0 0 stretch stretch;
+border-image: url(':/images/crownium/walletFrame_bg') 0 0 0 0 stretch stretch;
 border-top:0px solid #000;
 margin:0;
 padding-top:20px;
@@ -1474,7 +1474,7 @@ color:#333;
 }
 
 QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::branch:selected { /* Coin Control Branch Icon */
-background-image: url(':/images/crownium/drkblue_qtreeview_selected');
+background-image: url(':/images/crownium/qtreeview_selected');
 background-repeat:no-repeat;
 background-position:center;
 background-color:#f7f7f7;
@@ -1482,7 +1482,7 @@ color:#333;
 }
 
 QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::branch:checked { /* Coin Control Branch Icon */
-background-image: url(':/images/crownium/drkblue_qtreeview_selected');
+background-image: url(':/images/crownium/qtreeview_selected');
 background-repeat:no-repeat;
 background-position:center;
 background-color:#f7f7f7;

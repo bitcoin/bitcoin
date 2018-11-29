@@ -304,10 +304,10 @@ RES_ICONS = \
   qt/res/icons/drkblue/connect3_16.png \
   qt/res/icons/drkblue/connect4_16.png \
   qt/res/icons/drkblue/debugwindow.png \
-  qt/res/icons/drkblue/drkblue_editpaste.png \
-  qt/res/icons/drkblue/drkblue_address-book.png \
-  qt/res/icons/drkblue/drkblue_editcopy.png \
-  qt/res/icons/drkblue/drkblue_remove.png \
+  qt/res/icons/drkblue/editpaste.png \
+  qt/res/icons/drkblue/address-book.png \
+  qt/res/icons/drkblue/editcopy.png \
+  qt/res/icons/drkblue/remove.png \
   qt/res/icons/drkblue/edit.png \
   qt/res/icons/drkblue/editcopy.png \
   qt/res/icons/drkblue/editpaste.png \
@@ -359,10 +359,10 @@ RES_ICONS = \
   qt/res/icons/crownium/connect3_16.png \
   qt/res/icons/crownium/connect4_16.png \
   qt/res/icons/crownium/debugwindow.png \
-  qt/res/icons/crownium/drkblue_editpaste.png \
-  qt/res/icons/crownium/drkblue_address-book.png \
-  qt/res/icons/crownium/drkblue_editcopy.png \
-  qt/res/icons/crownium/drkblue_remove.png \
+  qt/res/icons/crownium/editpaste.png \
+  qt/res/icons/crownium/address-book.png \
+  qt/res/icons/crownium/editcopy.png \
+  qt/res/icons/crownium/remove.png \
   qt/res/icons/crownium/edit.png \
   qt/res/icons/crownium/editcopy.png \
   qt/res/icons/crownium/editpaste.png \
@@ -414,10 +414,10 @@ RES_ICONS = \
   qt/res/icons/light/connect3_16.png \
   qt/res/icons/light/connect4_16.png \
   qt/res/icons/light/debugwindow.png \
-  qt/res/icons/light/drkblue_editpaste.png \
-  qt/res/icons/light/drkblue_address-book.png \
-  qt/res/icons/light/drkblue_editcopy.png \
-  qt/res/icons/light/drkblue_remove.png \
+  qt/res/icons/light/editpaste.png \
+  qt/res/icons/light/address-book.png \
+  qt/res/icons/light/editcopy.png \
+  qt/res/icons/light/remove.png \
   qt/res/icons/light/edit.png \
   qt/res/icons/light/editcopy.png \
   qt/res/icons/light/editpaste.png \
@@ -469,10 +469,10 @@ RES_ICONS = \
   qt/res/icons/trad/connect3_16.png \
   qt/res/icons/trad/connect4_16.png \
   qt/res/icons/trad/debugwindow.png \
-  qt/res/icons/trad/drkblue_editpaste.png \
-  qt/res/icons/trad/drkblue_address-book.png \
-  qt/res/icons/trad/drkblue_editcopy.png \
-  qt/res/icons/trad/drkblue_remove.png \
+  qt/res/icons/trad/editpaste.png \
+  qt/res/icons/trad/address-book.png \
+  qt/res/icons/trad/editcopy.png \
+  qt/res/icons/trad/remove.png \
   qt/res/icons/trad/edit.png \
   qt/res/icons/trad/editcopy.png \
   qt/res/icons/trad/editpaste.png \
@@ -512,7 +512,6 @@ RES_ICONS = \
   qt/res/icons/green/about.png \
   qt/res/icons/green/about_qt.png \
   qt/res/icons/green/add.png \
-  qt/res/icons/green/address-book2.png \
   qt/res/icons/green/address-book.png \
   qt/res/icons/green/browse.png \
   qt/res/icons/green/clock1.png \
@@ -656,50 +655,50 @@ RES_IMAGES = \
   qt/res/images/drkblue/chaincoin_logo_horizontal.png \
   qt/res/images/drkblue/unchecked.png \
   qt/res/images/drkblue/checked.png \
-  qt/res/images/drkblue/drkblue_downArrow.png \
-  qt/res/images/drkblue/drkblue_downArrow_small.png \
-  qt/res/images/drkblue/drkblue_upArrow_small.png \
-  qt/res/images/drkblue/drkblue_leftArrow_small.png \
-  qt/res/images/drkblue/drkblue_rightArrow_small.png \
-  qt/res/images/drkblue/drkblue_qtreeview_selected.png \
-  qt/res/images/drkblue/drkblue_walletFrame_bg.png \
+  qt/res/images/drkblue/downArrow.png \
+  qt/res/images/drkblue/downArrow_small.png \
+  qt/res/images/drkblue/upArrow_small.png \
+  qt/res/images/drkblue/leftArrow_small.png \
+  qt/res/images/drkblue/rightArrow_small.png \
+  qt/res/images/drkblue/qtreeview_selected.png \
+  qt/res/images/drkblue/walletFrame_bg.png \
   qt/res/images/crownium/about.png \
   qt/res/images/crownium/splash.png \
   qt/res/images/crownium/splash_testnet.png \
   qt/res/images/crownium/chaincoin_logo_horizontal.png \
   qt/res/images/crownium/unchecked.png \
   qt/res/images/crownium/checked.png \
-  qt/res/images/crownium/drkblue_downArrow.png \
-  qt/res/images/crownium/drkblue_downArrow_small.png \
-  qt/res/images/crownium/drkblue_upArrow_small.png \
-  qt/res/images/crownium/drkblue_leftArrow_small.png \
-  qt/res/images/crownium/drkblue_rightArrow_small.png \
-  qt/res/images/crownium/drkblue_qtreeview_selected.png \
-  qt/res/images/crownium/drkblue_walletFrame_bg.png \
+  qt/res/images/crownium/downArrow.png \
+  qt/res/images/crownium/downArrow_small.png \
+  qt/res/images/crownium/upArrow_small.png \
+  qt/res/images/crownium/leftArrow_small.png \
+  qt/res/images/crownium/rightArrow_small.png \
+  qt/res/images/crownium/qtreeview_selected.png \
+  qt/res/images/crownium/walletFrame_bg.png \
   qt/res/images/light/about.png \
   qt/res/images/light/splash.png \
   qt/res/images/light/splash_testnet.png \
   qt/res/images/light/chaincoin_logo_horizontal.png \
   qt/res/images/light/unchecked.png \
   qt/res/images/light/checked.png \
-  qt/res/images/light/drkblue_downArrow.png \
-  qt/res/images/light/drkblue_downArrow_small.png \
-  qt/res/images/light/drkblue_upArrow_small.png \
-  qt/res/images/light/drkblue_leftArrow_small.png \
-  qt/res/images/light/drkblue_rightArrow_small.png \
-  qt/res/images/light/drkblue_qtreeview_selected.png \
-  qt/res/images/light/drkblue_walletFrame_bg.png \
+  qt/res/images/light/downArrow.png \
+  qt/res/images/light/downArrow_small.png \
+  qt/res/images/light/upArrow_small.png \
+  qt/res/images/light/leftArrow_small.png \
+  qt/res/images/light/rightArrow_small.png \
+  qt/res/images/light/qtreeview_selected.png \
+  qt/res/images/light/walletFrame_bg.png \
   qt/res/images/trad/about.png \
   qt/res/images/trad/splash.png \
   qt/res/images/trad/splash_testnet.png \
   qt/res/images/trad/chaincoin_logo_horizontal.png \
-  qt/res/images/trad/drkblue_downArrow.png \
-  qt/res/images/trad/drkblue_downArrow_small.png \
-  qt/res/images/trad/drkblue_upArrow_small.png \
-  qt/res/images/trad/drkblue_leftArrow_small.png \
-  qt/res/images/trad/drkblue_rightArrow_small.png \
-  qt/res/images/trad/drkblue_qtreeview_selected.png \
-  qt/res/images/trad/drkblue_walletFrame_bg.png \
+  qt/res/images/trad/downArrow.png \
+  qt/res/images/trad/downArrow_small.png \
+  qt/res/images/trad/upArrow_small.png \
+  qt/res/images/trad/leftArrow_small.png \
+  qt/res/images/trad/rightArrow_small.png \
+  qt/res/images/trad/qtreeview_selected.png \
+  qt/res/images/trad/walletFrame_bg.png \
   qt/res/images/green/about.png \
   qt/res/images/green/chaincoin_logo_horizontal.png \
   qt/res/images/green/checked.png \
