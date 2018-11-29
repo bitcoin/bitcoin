@@ -631,7 +631,7 @@ void protx_list_help()
     throw std::runtime_error(
             "protx list (\"type\")\n"
             "\nLists all ProTxs in your wallet or on-chain, depending on the given type. If \"type\" is not\n"
-            "specified, it defaults to \"wallet\". All types have the optional argument \"detailed\" which if set to\n"
+            "specified, it defaults to \"registered\". All types have the optional argument \"detailed\" which if set to\n"
             "\"true\" will result in a detailed list to be returned. If set to \"false\", only the hashes of the ProTx\n"
             "will be returned.\n"
             "\nAvailable types:\n"
@@ -701,7 +701,7 @@ UniValue protx_list(const JSONRPCRequest& request)
         protx_list_help();
     }
 
-    std::string type = "wallet";
+    std::string type = "registered";
     if (request.params.size() > 1) {
         type = request.params[1].get_str();
     }
