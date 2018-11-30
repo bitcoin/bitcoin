@@ -9,6 +9,8 @@
 #include <string.h>
 #include <atomic>
 
+#define TAVX2(args...)
+
 #if defined(__x86_64__) || defined(__amd64__) || defined(__i386__)
 #if defined(USE_ASM)
 #include <cpuid.h>
@@ -16,6 +18,15 @@ namespace sha256_sse4
 {
 void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks);
 }
+
+#if !defined(BUILD_BITCOIN_INTERNAL)
+#   ifdef ENABLE_AVX2
+#       define TRY_AVX2
+#       undef TAVX2
+#       define TAVX2(args...) args
+#   endif // ENABLE_AVX2
+#endif
+
 #endif
 #endif
 
@@ -559,6 +570,7 @@ void inline cpuid(uint32_t leaf, uint32_t subleaf, uint32_t& a, uint32_t& b, uin
 #endif
 }
 
+#ifdef TRY_AVX2
 /** Check whether the OS has enabled AVX registers. */
 bool AVXEnabled()
 {
@@ -566,40 +578,35 @@ bool AVXEnabled()
     __asm__("xgetbv" : "=a"(a), "=d"(d) : "c"(0));
     return (a & 6) == 6;
 }
+#endif // TRY_AVX2
 #endif
 } // namespace
-
 
 std::string SHA256AutoDetect()
 {
     std::string ret = "standard";
 #if defined(USE_ASM) && (defined(__x86_64__) || defined(__amd64__) || defined(__i386__))
-    bool have_sse4 = false;
-    bool have_xsave = false;
-    bool have_avx = false;
-    bool have_avx2 = false;
-    bool have_shani = false;
-    bool enabled_avx = false;
 
-    (void)AVXEnabled;
+    bool have_sse4 = false;
+    bool have_shani = false;
+
     (void)have_sse4;
-    (void)have_avx;
-    (void)have_xsave;
-    (void)have_avx2;
     (void)have_shani;
-    (void)enabled_avx;
 
     uint32_t eax, ebx, ecx, edx;
     cpuid(1, 0, eax, ebx, ecx, edx);
     have_sse4 = (ecx >> 19) & 1;
-    have_xsave = (ecx >> 27) & 1;
-    have_avx = (ecx >> 28) & 1;
-    if (have_xsave && have_avx) {
-        enabled_avx = AVXEnabled();
-    }
+
+#ifdef TRY_AVX2
+    bool have_avx2 = false;
+    bool have_xsave = (ecx >> 27) & 1;
+    bool have_avx = (ecx >> 28) & 1;
+    bool enabled_avx = have_xsave && have_avx && AVXEnabled();
+#endif // TRY_AVX2
+
     if (have_sse4) {
         cpuid(7, 0, eax, ebx, ecx, edx);
-        have_avx2 = (ebx >> 5) & 1;
+        TAVX2(have_avx2 = (ebx >> 5) & 1);
         have_shani = (ebx >> 29) & 1;
     }
 
@@ -610,7 +617,7 @@ std::string SHA256AutoDetect()
         TransformD64_2way = sha256d64_shani::Transform_2way;
         ret = "shani(1way,2way)";
         have_sse4 = false; // Disable SSE4/AVX2;
-        have_avx2 = false;
+        TAVX2(have_avx2 = false);
     }
 #endif
 
@@ -626,12 +633,12 @@ std::string SHA256AutoDetect()
 #endif
     }
 
-#if defined(ENABLE_AVX2) && !defined(BUILD_BITCOIN_INTERNAL)
-    if (have_avx2 && have_avx && enabled_avx) {
+#ifdef TRY_AVX2
+    if (have_avx2 && enabled_avx) {
         TransformD64_8way = sha256d64_avx2::Transform_8way;
         ret += ",avx2(8way)";
     }
-#endif
+#endif // TRY_AVX2
 #endif
 
     assert(SelfTest());
