@@ -476,10 +476,15 @@ Value getnetworkinfo(const Array& params, bool fHelp)
             + HelpExampleRpc("getnetworkinfo", "")
         );
 
+    auto comments = std::vector<std::string>{};
+    if (Params().NetworkID() == CBaseChainParams::DEVNET) {
+        // Add devnet name to user agent. This allows to disconnect nodes immediately if they don't belong to our own devnet
+        comments.push_back(strprintf("devnet=%s", GetDevNetName()));
+    }
+
     Object obj;
     obj.push_back(Pair("version",       CLIENT_VERSION));
-    obj.push_back(Pair("subversion",
-        FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, std::vector<string>())));
+    obj.push_back(Pair("subversion",    strSubVersion));
     obj.push_back(Pair("protocolversion",PROTOCOL_VERSION));
     obj.push_back(Pair("localservices",       strprintf("%016x", nLocalServices)));
     obj.push_back(Pair("timeoffset",    GetTimeOffset()));

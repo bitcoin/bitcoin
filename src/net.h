@@ -136,6 +136,9 @@ extern std::deque<std::pair<int64_t, CInv> > vRelayExpiration;
 extern CCriticalSection cs_mapRelay;
 extern limitedmap<CInv, int64_t> mapAlreadyAskedFor;
 
+/** Subversion as sent to the P2P network in `version` messages */
+extern std::string strSubVersion;
+
 extern std::vector<std::string> vAddedNodes;
 extern CCriticalSection cs_vAddedNodes;
 

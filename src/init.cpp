@@ -1104,6 +1104,13 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     RegisterNodeSignals(GetNodeSignals());
 
+    auto comments = std::vector<std::string>{};
+    if (Params().NetworkID() == CBaseChainParams::DEVNET) {
+        // Add devnet name to user agent. This allows to disconnect nodes immediately if they don't belong to our own devnet
+        comments.push_back(strprintf("devnet=%s", GetDevNetName()));
+    }
+    strSubVersion = FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, comments);
+
     if (mapArgs.count("-onlynet")) {
         std::set<enum Network> nets;
         BOOST_FOREACH(std::string snet, mapMultiArgs["-onlynet"]) {
