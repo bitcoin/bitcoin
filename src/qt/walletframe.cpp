@@ -102,7 +102,7 @@ void WalletFrame::gotoSignMessageTab(QString addr)
 
 void WalletFrame::gotoVerifyMessageTab(QString addr)
 {
-    walletStack->gotoSignMessageTab(addr);
+    walletStack->gotoVerifyMessageTab(addr);
 }
 
 void WalletFrame::encryptWallet(bool status)

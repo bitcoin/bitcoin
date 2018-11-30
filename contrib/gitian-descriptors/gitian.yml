@@ -5,7 +5,7 @@ suites:
 architectures:
 - "i386"
 - "amd64"
-packages: 
+packages:
 - "qt4-qmake"
 - "libqt4-dev"
 - "libboost-system-dev"

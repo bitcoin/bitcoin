@@ -7,3 +7,10 @@ modify *.yml for gitian release, thanks to Ivan's help
 add dns seed
 Refine checkpoint operation
 Add header check when load from disk
+
+2018.11.27 primecoin 0.1.5
+1.modify bitcoin to primecoin someplace
+2.Fixed an issue where the menu could not be seen when the program started
+3.Adds verification of password length
+4.Fixed some UI logic errors
+5.Fixed a problem with English display in Chinese version

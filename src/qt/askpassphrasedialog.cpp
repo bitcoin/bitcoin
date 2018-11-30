@@ -188,17 +188,22 @@ void AskPassphraseDialog::textChanged()
 {
     // Validate input, set Ok button to enabled when acceptable
     bool acceptable = false;
+    int nLen1 = ui->passEdit1->text().length();
+    int nLen2 = ui->passEdit2->text().length();
+    int nLen3 = ui->passEdit3->text().length();
+
     switch(mode)
     {
     case Encrypt: // New passphrase x2
-        acceptable = !ui->passEdit2->text().isEmpty() && !ui->passEdit3->text().isEmpty();
+        acceptable = !ui->passEdit2->text().isEmpty() && !ui->passEdit3->text().isEmpty() && nLen2 >= MIN_PASSPHRASE_SIZE && nLen3 >= MIN_PASSPHRASE_SIZE;
         break;
     case Unlock: // Old passphrase x1
     case Decrypt:
-        acceptable = !ui->passEdit1->text().isEmpty();
+        acceptable = !ui->passEdit1->text().isEmpty() && nLen1 >= MIN_PASSPHRASE_SIZE;
         break;
     case ChangePass: // Old passphrase x1, new passphrase x2
-        acceptable = !ui->passEdit1->text().isEmpty() && !ui->passEdit2->text().isEmpty() && !ui->passEdit3->text().isEmpty();
+        acceptable = !ui->passEdit1->text().isEmpty() && !ui->passEdit2->text().isEmpty() && !ui->passEdit3->text().isEmpty() 
+        && nLen1 >= MIN_PASSPHRASE_SIZE && nLen2 >= MIN_PASSPHRASE_SIZE && nLen3 >= MIN_PASSPHRASE_SIZE;
         break;
     }
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(acceptable);

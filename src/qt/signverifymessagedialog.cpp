@@ -24,10 +24,10 @@ SignVerifyMessageDialog::SignVerifyMessageDialog(QWidget *parent) :
 
 #if (QT_VERSION >= 0x040700)
     /* Do not move this to the XML file, Qt before 4.7 will choke on it */
-    ui->addressIn_SM->setPlaceholderText(tr("Enter a Primecoin address"));
+    ui->addressIn_SM->setPlaceholderText(tr("Enter a Primecoin address (e.g. AbXwmGxDc5ZxwPwgT1QckjRUmF4XXYP765)"));
     ui->signatureOut_SM->setPlaceholderText(tr("Click \"Sign Message\" to generate signature"));
 
-    ui->addressIn_VM->setPlaceholderText(tr("Enter a Primecoin address"));
+    ui->addressIn_VM->setPlaceholderText(tr("Enter a Primecoin address (e.g. AbXwmGxDc5ZxwPwgT1QckjRUmF4XXYP765)"));
     ui->signatureIn_VM->setPlaceholderText(tr("Enter Primecoin signature"));
 #endif
 
@@ -70,7 +70,6 @@ void SignVerifyMessageDialog::setAddress_VM(const QString &address)
 void SignVerifyMessageDialog::showTab_SM(bool fShow)
 {
     ui->tabWidget->setCurrentIndex(0);
-
     if (fShow)
         this->show();
 }

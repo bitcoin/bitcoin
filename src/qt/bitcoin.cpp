@@ -260,7 +260,10 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
+                    //This is currently done so that menus can be displayed when the program starts
+                    window.hide();
                     window.show();
+                    window.activateWindow();
                 }
 
                 // Now that initialization/startup is done, process any command-line

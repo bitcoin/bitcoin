@@ -17,7 +17,7 @@
 // primecoin client version - intended for display purpose ONLY
 #define PRIMECOIN_VERSION_MAJOR       0
 #define PRIMECOIN_VERSION_MINOR       1
-#define PRIMECOIN_VERSION_REVISION    4
+#define PRIMECOIN_VERSION_REVISION    5
 #define PRIMECOIN_VERSION_BUILD       0
 
 // Copyright year (2009-this)
