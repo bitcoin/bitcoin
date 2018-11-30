@@ -53,7 +53,4 @@ static const int BIP0031_VERSION = 60000;
 //! "mempool" command, enhanced "getdata" behavior starts with this version
 static const int MEMPOOL_GD_VERSION = 60002;
 
-//! Nodes above this version won't send AuxPow information with blocks
-static const int AUXPOW_SEND_VERSION = 70053;
-
 #endif // BITCOIN_VERSION_H
