@@ -117,7 +117,7 @@ public:
      * @param nUntilHeight Removes all IS Locks confirmed up until nUntilHeight
      * @return returns an unordered_map of the hash of the IS Locks and a pointer object to the IS Locks for all IS Locks which were removed
      */
-    std::unordered_map<uint256, CInstantSendLockPtr> RemoveConfirmedInstantSendLocks(int nUntilHeight);
+    std::unordered_map<uint256, CInstantSendLockPtr, StaticSaltedHasher> RemoveConfirmedInstantSendLocks(int nUntilHeight);
     /**
      * Removes IS Locks from the archive if the tx was confirmed 100 blocks before nUntilHeight
      * @param nUntilHeight the height from which to base the remove of archive IS Locks
@@ -230,7 +230,7 @@ private:
     void ProcessMessageInstantSendLock(const CNode* pfrom, const CInstantSendLockPtr& islock) LOCKS_EXCLUDED(cs);
     static bool PreVerifyInstantSendLock(const CInstantSendLock& islock);
     bool ProcessPendingInstantSendLocks();
-    std::unordered_set<uint256> ProcessPendingInstantSendLocks(int signOffset, const std::unordered_map<uint256, std::pair<NodeId, CInstantSendLockPtr>, StaticSaltedHasher>& pend, bool ban);
+    std::unordered_set<uint256, StaticSaltedHasher> ProcessPendingInstantSendLocks(int signOffset, const std::unordered_map<uint256, std::pair<NodeId, CInstantSendLockPtr>, StaticSaltedHasher>& pend, bool ban);
     void ProcessInstantSendLock(NodeId from, const uint256& hash, const CInstantSendLockPtr& islock);
 
     void AddNonLockedTx(const CTransactionRef& tx, const CBlockIndex* pindexMined);

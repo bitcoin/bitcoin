@@ -9,6 +9,7 @@
 #include <llmq/signing.h>
 
 #include <chainparams.h>
+#include <crypto/common.h>
 #include <net.h>
 #include <saltedhasher.h>
 #include <streams.h>
@@ -70,9 +71,13 @@ private:
     uint256 lastSignedMsgHash GUARDED_BY(cs);
 
     // We keep track of txids from recently received blocks so that we can check if all TXs got islocked
-    using BlockTxs = std::unordered_map<uint256, std::shared_ptr<std::unordered_set<uint256, StaticSaltedHasher>>>;
+    struct BlockHasher
+    {
+        size_t operator()(const uint256& hash) const { return ReadLE64(hash.begin()); }
+    };
+    using BlockTxs = std::unordered_map<uint256, std::shared_ptr<std::unordered_set<uint256, StaticSaltedHasher>>, BlockHasher>;
     BlockTxs blockTxs GUARDED_BY(cs);
-    std::unordered_map<uint256, int64_t> txFirstSeenTime GUARDED_BY(cs);
+    std::unordered_map<uint256, int64_t, StaticSaltedHasher> txFirstSeenTime GUARDED_BY(cs);
 
     std::map<uint256, int64_t> seenChainLocks GUARDED_BY(cs);
 
