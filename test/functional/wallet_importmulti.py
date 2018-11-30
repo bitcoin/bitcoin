@@ -4,7 +4,13 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the importmulti RPC."""
 
-from test_framework import script
+from test_framework.messages import sha256
+from test_framework.script import (
+    CScript,
+    OP_0,
+    OP_NOP,
+    hash160
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -13,12 +19,6 @@ from test_framework.util import (
     bytes_to_hex_str,
     hex_str_to_bytes
 )
-from test_framework.script import (
-    CScript,
-    OP_0,
-    hash160
-)
-from test_framework.messages import sha256
 
 class ImportMultiTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -112,7 +112,7 @@ class ImportMultiTest(BitcoinTestFramework):
 
         # Nonstandard scriptPubKey + !internal
         self.log.info("Should not import a nonstandard scriptPubKey without internal flag")
-        nonstandardScriptPubKey = address['scriptPubKey'] + bytes_to_hex_str(script.CScript([script.OP_NOP]))
+        nonstandardScriptPubKey = address['scriptPubKey'] + bytes_to_hex_str(CScript([OP_NOP]))
         address = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
         result = self.nodes[1].importmulti([{
             "scriptPubKey": nonstandardScriptPubKey,
