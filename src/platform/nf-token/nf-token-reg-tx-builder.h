@@ -5,6 +5,7 @@
 #ifndef CROWN_PLATFORM_NF_TOKEN_REG_TX_BUILDER_H
 #define CROWN_PLATFORM_NF_TOKEN_REG_TX_BUILDER_H
 
+#include "utilstrencodings.h"
 #include "rpcserver.h"
 #include "platform/rpc/specialtx-rpc-utils.h"
 #include "nf-token-reg-tx.h"
@@ -16,8 +17,8 @@ namespace Platform
     public:
         NfTokenRegTxBuilder & SetTokenProtocol(const json_spirit::Value & tokenProtocolId)
         {
-            //TODO: convert base 32 string to the token type name/id
-            //m_nfToken.tokenProtocolId;
+            auto tokenProtocolIdStr = DecodeBase32(tokenProtocolId.get_str());
+            m_nfToken.tokenProtocolId = std::stoull(tokenProtocolIdStr);
             return *this;
         }
 
