@@ -23,7 +23,7 @@ namespace Platform
         /// Public key id of the owner of the nf-token
         CKeyID tokenOwnerKeyId;
 
-        /// Public key id of th metadata operator, may be null
+        /// Public key id of the metadata operator, may be null
         CKeyID metadataAdminKeyId;
 
         /// Metadata buffer

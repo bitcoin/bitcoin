@@ -33,7 +33,7 @@ namespace Platform
                 "                                 The token id must be unique in the token type space.\n"
 
                 "3. \"nfTokenOwnerAddr\"          (string, required) The token owner key, can be used in any operations with the token.\n"
-                "                                 The private key belonging to this address must be known in your wallet.\n"
+                "                                 The private key belonging to this address may be or may be not known in your wallet.\n"
 
                 "4. \"nfTokenMetadataAdminAddr\"  (string, optional, default = \"0\") The metadata token administration key, can be used to modify token metadata.\n"
                 "                                 The private key does not have to be known by your wallet. Can be set to 0.\n"
