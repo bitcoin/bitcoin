@@ -593,11 +593,11 @@ std::string SHA256AutoDetect()
     std::string ret = "standard";
 #if defined(USE_ASM) && (defined(__x86_64__) || defined(__amd64__) || defined(__i386__))
 
+    bool have_shani;
+
     uint32_t eax, ebx, ecx, edx;
     cpuid(1, 0, eax, ebx, ecx, edx);
     bool have_sse4 = (ecx >> 19) & 1;
-
-    TSHANI(bool have_shani = false);
 
 #ifdef TRY_AVX2
     bool have_avx2 = false;
