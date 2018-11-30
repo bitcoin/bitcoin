@@ -137,7 +137,6 @@ class Sandbox:
         port = self.port_base
         for name, node in self.network['nodes'].iteritems():
             set_default(node, 'generate', False)
-            set_default(node, 'seed', False)
             set_default(node, 'addnodes', [])
             set_default(node, 'masternodes', [])
             set_default(node, 'mnconfig', {})
@@ -226,9 +225,7 @@ class Sandbox:
         for peer in node['addnodes']:
             config.add(('addnode', self.node_ip(peer)))
 
-        seeds = [k for k, node in self.network['nodes'].iteritems() if node['seed']]
-
-        for seed_name in seeds:
+        for seed_name in self.network['nodes']:
             if seed_name != name:
                 config.add(('addnode', self.node_ip(seed_name)))
 
@@ -347,13 +344,18 @@ class Sandbox:
         }
         self.network['nodes'][masternode]['mnprivkey'] = prvkey
 
+        self.stop_node(control_node)
+        time.sleep(1)
         self.write_mnconfig(control_node)
+        self.start_node(control_node)
 
         self.stop_node(masternode)
+        time.sleep(1)
         self.write_config(masternode)
         self.start_node(masternode)
 
-        self.start_masternode(masternode)
+        time.sleep(1)
+        self.start_masternode(control_node, masternode)
 
     def stop_node(self, node):
         return self.client_command(node, 'crown-cli', 'stop')
@@ -364,8 +366,8 @@ class Sandbox:
     def masternode_controllers(self):
         return [k for k, v in self.network['nodes'].iteritems() if v['masternodes'] != []]
 
-    def start_masternode(self, masternode):
-        self.client_command(masternode, 'crown-cli', 'masternode', 'start', )
+    def start_masternode(self, control_node, masternode):
+        self.client_command(control_node, 'crown-cli', 'masternode', 'start-alias', masternode)
 
     def gen_or_reuse_address(self, node):
         if 'receive_with' in self.network['nodes'][node]:
@@ -390,14 +392,17 @@ def command(json_desc_file, target_dir, bin_dir, node, *args):
     if node == '_':
         for node in sb.network['nodes']:
             try:
-                print sb.client_command(node, 'crown-cli', *args)
+                sb.client_command(node, 'crown-cli', *args)
             except subprocess.CalledProcessError as ex:
                 print ex.output
                 print 'error running on ', node, ': ', ex
             except Exception as ex:
                 print 'error running on ', node, ': ', ex
     else:
-        print sb.client_command(node, 'crown-cli', *args)
+        out, err = sb.client_command(node, 'crown-cli', *args)
+        print out
+        if len(err.strip()) > 0:
+            print err
 
 
 def run_simulation(json_desc_file, target_dir, bin_dir):
