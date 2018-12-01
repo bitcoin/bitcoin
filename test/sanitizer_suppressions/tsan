@@ -1,9 +1,6 @@
 # ThreadSanitizer suppressions
 # ============================
 
-# fChecked is theoretically racy, practically only in unit tests
-race:CheckBlock
-
 # WalletBatch (unidentified deadlock)
 deadlock:WalletBatch
 
