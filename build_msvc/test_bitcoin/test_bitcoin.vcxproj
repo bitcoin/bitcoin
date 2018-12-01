@@ -21,6 +21,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\test\*_tests.cpp" />
+    <ClCompile Include="..\..\src\test\*_properties.cpp" />
+    <ClCompile Include="..\..\src\test\gen\*_gen.cpp" />
     <ClCompile Include="..\..\src\wallet\test\*_tests.cpp" />
     <ClCompile Include="..\..\src\test\test_bitcoin.cpp" />
     <ClCompile Include="..\..\src\test\test_bitcoin_main.cpp" />
