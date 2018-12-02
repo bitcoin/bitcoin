@@ -246,9 +246,9 @@ private:
     std::map<uint256, TxStatsInfo> mapMemPoolTxs GUARDED_BY(m_cs_fee_estimator);
 
     /** Classes to track historical data on transaction confirmations */
-    std::unique_ptr<TxConfirmStats> feeStats;
-    std::unique_ptr<TxConfirmStats> shortStats;
-    std::unique_ptr<TxConfirmStats> longStats;
+    std::unique_ptr<TxConfirmStats> feeStats PT_GUARDED_BY(m_cs_fee_estimator);
+    std::unique_ptr<TxConfirmStats> shortStats PT_GUARDED_BY(m_cs_fee_estimator);
+    std::unique_ptr<TxConfirmStats> longStats PT_GUARDED_BY(m_cs_fee_estimator);
 
     unsigned int trackedTxs GUARDED_BY(m_cs_fee_estimator);
     unsigned int untrackedTxs GUARDED_BY(m_cs_fee_estimator);
