@@ -64,12 +64,6 @@ public:
     size_t size() const { return stream->size(); }
 };
 
-template<typename S>
-OverrideStream<S> WithOrVersion(S* s, int nVersionFlag)
-{
-    return OverrideStream<S>(s, s->GetType(), s->GetVersion() | nVersionFlag);
-}
-
 /* Minimal stream for overwriting and/or appending to an existing byte vector
  *
  * The referenced vector will grow as necessary
