@@ -39,6 +39,8 @@
 
 #include <univalue.h>
 
+#include <regex>
+
 #include <boost/thread/thread.hpp> // boost::thread::interrupt
 
 #include <memory>
@@ -819,27 +821,27 @@ static UniValue getblock(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
             RPCHelpMan{"getblock",
-                "\nIf verbosity is 0, returns a string that is serialized, hex-encoded data for block 'hash'.\n"
-                "If verbosity is 1, returns an Object with information about block <hash>.\n"
-                "If verbosity is 2, returns an Object with information about block <hash> and information about each transaction. \n",
+                "\nIf verbosity is 0, returns a string that is serialized, hex-encoded data for block 'hash|height'.\n"
+                "If verbosity is 1, returns an Object with information about block <hash|height>.\n"
+                "If verbosity is 2, returns an Object with information about block <hash|height> and information about each transaction. \n",
                 {
                     {"blockhash", RPCArg::Type::STR_HEX, false},
                     {"verbosity", RPCArg::Type::NUM, true},
                 }}
                 .ToString() +
             "\nArguments:\n"
-            "1. \"blockhash\"          (string, required) The block hash\n"
+            "1. \"blockhash\"          (string, required) The block hash or height\n"
             "2. verbosity              (numeric, optional, default=1) 0 for hex-encoded data, 1 for a json object, and 2 for json object with transaction data\n"
             "\nResult (for verbosity = 0):\n"
             "\"data\"             (string) A string that is serialized, hex-encoded data for block 'hash'.\n"
             "\nResult (for verbosity = 1):\n"
             "{\n"
-            "  \"hash\" : \"hash\",     (string) the block hash (same as provided)\n"
+            "  \"hash\" : \"hash\",     (string) the block hash (same as provided hash)\n"
             "  \"confirmations\" : n,   (numeric) The number of confirmations, or -1 if the block is not on the main chain\n"
             "  \"size\" : n,            (numeric) The block size\n"
             "  \"strippedsize\" : n,    (numeric) The block size excluding witness data\n"
             "  \"weight\" : n           (numeric) The block weight as defined in BIP 141\n"
-            "  \"height\" : n,          (numeric) The block height or index\n"
+            "  \"height\" : n,          (numeric) The block height or index (same as provided height)\n"
             "  \"version\" : n,         (numeric) The block version\n"
             "  \"versionHex\" : \"00000000\", (string) The block version formatted in hexadecimal\n"
             "  \"merkleroot\" : \"xxxx\", (string) The merkle root\n"
@@ -868,11 +870,37 @@ static UniValue getblock(const JSONRPCRequest& request)
             "\nExamples:\n"
             + HelpExampleCli("getblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
             + HelpExampleRpc("getblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
+            + HelpExampleCli("getblock", "1000")
+            + HelpExampleRpc("getblock", "1000")
         );
 
     LOCK(cs_main);
 
-    uint256 hash(ParseHashV(request.params[0], "blockhash"));
+    std::string strHash = request.params[0].get_str();
+
+    // If height is supplied, find the hash
+    if (strHash.size() < (2 * sizeof(uint256))) {
+        // std::stoi allows characters, whereas we want to be strict
+        std::regex r("[[:digit:]]+");
+        if (!std::regex_match(strHash, r)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid block height parameter");
+        }
+
+        int nHeight = -1;
+        try {
+            nHeight = std::stoi(strHash);
+        }
+        catch (const std::exception &e) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid block height parameter");
+        }
+
+        if (nHeight < 0 || nHeight > chainActive.Height()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
+        }
+        strHash = chainActive[nHeight]->GetBlockHash().GetHex();
+    }
+
+    uint256 hash(ParseHashV(strHash, "blockhash"));
 
     int verbosity = 1;
     if (!request.params[1].isNull()) {
