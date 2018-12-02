@@ -22,10 +22,6 @@ class TransactionView;
 class WalletModel;
 class AddressBookPage;
 
-namespace interfaces {
-    class Node;
-};
-
 QT_BEGIN_NAMESPACE
 class QLabel;
 class QModelIndex;
@@ -43,7 +39,7 @@ class WalletView : public QStackedWidget
     Q_OBJECT
 
 public:
-    explicit WalletView(interfaces::Node& node, const PlatformStyle *platformStyle, QWidget *parent);
+    explicit WalletView(const PlatformStyle *platformStyle, QWidget *parent);
     ~WalletView();
 
     void setBitcoinGUI(BitcoinGUI *gui);
@@ -80,8 +76,6 @@ private:
     QProgressDialog *progressDialog;
     QLabel *transactionSum;
     const PlatformStyle *platformStyle;
-
-    interfaces::Node& m_node;
 
 public Q_SLOTS:
     /** Switch to overview (home) page */

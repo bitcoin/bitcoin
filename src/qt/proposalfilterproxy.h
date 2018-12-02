@@ -18,12 +18,13 @@ public:
     explicit ProposalFilterProxy(QObject *parent = 0);
 
 
+    /** Earliest date that can be represented (far in the past) */
     static const QDateTime MIN_DATE;
-
+    /** Last date that can be represented (far in the future) */
     static const QDateTime MAX_DATE;
 
-    void setProposalStart(const QDateTime &date);
-    void setProposalEnd(const QDateTime &date);
+    void setDateStartRange(const QDateTime &from, const QDateTime &to);
+    void setDateEndRange(const QDateTime &from, const QDateTime &to);
     void setProposal(const QString &proposal);
     
     void setMinAmount(const CAmount& minimum);
@@ -38,8 +39,10 @@ protected:
     bool filterAcceptsRow(int source_row, const QModelIndex & source_parent) const;
 
 private:
-    QDateTime startDate;
-    QDateTime endDate;
+    QDateTime dateStartFrom;
+    QDateTime dateStartTo;
+    QDateTime dateEndFrom;
+    QDateTime dateEndTo;
     QString proposalName;
     CAmount minAmount;
     CAmount minPercentage;

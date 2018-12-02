@@ -9,7 +9,6 @@
 #include <qt/guiutil.h>
 
 #include <interfaces/node.h>
-#include <validation.h> // for cs_main
 #include <sync.h>
 
 #include <QDebug>

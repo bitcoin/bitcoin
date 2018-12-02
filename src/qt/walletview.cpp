@@ -32,15 +32,14 @@
 #include <QSettings>
 #include <QVBoxLayout>
 
-WalletView::WalletView(interfaces::Node& node, const PlatformStyle *_platformStyle, QWidget *parent):
+WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     QStackedWidget(parent),
     clientModel(0),
     walletModel(0),
-    platformStyle(_platformStyle),
-    m_node(node)
+    platformStyle(_platformStyle)
 {
     // Create tabs
-    overviewPage = new OverviewPage(m_node, platformStyle);
+    overviewPage = new OverviewPage(platformStyle);
 
     transactionsPage = new QWidget(this);
     QVBoxLayout *vbox = new QVBoxLayout();
@@ -84,12 +83,11 @@ WalletView::WalletView(interfaces::Node& node, const PlatformStyle *_platformSty
 
     QSettings settings;
     if (!fLiteMode && settings.value("fShowMasternodesTab").toBool()) {
-        masternodeListPage = new MasternodeList(m_node, platformStyle);
+        masternodeListPage = new MasternodeList(platformStyle);
         addWidget(masternodeListPage);
+        proposalListPage = new ProposalList(platformStyle);
+        addWidget(proposalListPage);
     }
-
-    proposalListPage = new ProposalList(m_node, platformStyle);
-    addWidget(proposalListPage);
 
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
     connect(overviewPage, &OverviewPage::transactionClicked, transactionView, static_cast<void (TransactionView::*)(const QModelIndex&)>(&TransactionView::focusTransaction));
@@ -151,6 +149,7 @@ void WalletView::setClientModel(ClientModel *_clientModel)
     QSettings settings;
     if (!fLiteMode && settings.value("fShowMasternodesTab").toBool()) {
         masternodeListPage->setClientModel(_clientModel);
+        proposalListPage->setClientModel(_clientModel);
     }
 }
 
@@ -238,7 +237,10 @@ void WalletView::gotoReceiveCoinsPage()
 
 void WalletView::gotoProposalPage()
 {
-    setCurrentWidget(proposalListPage);
+    QSettings settings;
+    if (!fLiteMode && settings.value("fShowMasternodesTab").toBool()) {
+        setCurrentWidget(proposalListPage);
+    }
 }
 
 void WalletView::gotoSendCoinsPage(QString addr)

@@ -4,20 +4,17 @@
 
 #include <qt/proposaltablemodel.h>
 
+#include <qt/clientmodel.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
-#include <qt/platformstyle.h>
 #include <qt/proposalrecord.h>
-#include <modules/platform/funding.h>
-#include <modules/platform/funding_vote.h>
-#include <modules/platform/funding_object.h>
-#include <interfaces/node.h>
 
 #include <core_io.h>
-#include <validation.h>
+#include <interfaces/node.h>
 #include <sync.h>
 #include <uint256.h>
+#include <univalue.h>
 #include <util/system.h>
  
 #include <QColor>
@@ -25,83 +22,216 @@
 #include <QDebug>
 #include <QIcon>
 #include <QList>
-#include <univalue.h>
 
 static int column_alignments[] = {
+        Qt::AlignRight|Qt::AlignVCenter,
+        Qt::AlignCenter|Qt::AlignVCenter,
+        Qt::AlignCenter|Qt::AlignVCenter,
+        Qt::AlignRight|Qt::AlignVCenter,
+        Qt::AlignRight|Qt::AlignVCenter,
+        Qt::AlignRight|Qt::AlignVCenter,
         Qt::AlignLeft|Qt::AlignVCenter,
-        Qt::AlignRight|Qt::AlignVCenter,
-        Qt::AlignRight|Qt::AlignVCenter,
-        Qt::AlignRight|Qt::AlignVCenter,
-        Qt::AlignRight|Qt::AlignVCenter,
-        Qt::AlignRight|Qt::AlignVCenter,
-        Qt::AlignRight|Qt::AlignVCenter,
         Qt::AlignRight|Qt::AlignVCenter
     };
 
-ProposalTableModel::ProposalTableModel(interfaces::Node& node, const PlatformStyle *platformStyle, QObject *parent):
-        QAbstractTableModel(parent),
-        m_node(node),
-        platformStyle(platformStyle)
+// Comparison operator for sort/binary search of model proposal list
+struct HashLessThan
 {
-    columns << tr("Proposal") << tr("Amount") << tr("Start Date") << tr("End Date") << tr("Yes") << tr("No") << tr("Abs. Yes") << tr("Percentage");
-    
-    networkManager = new QNetworkAccessManager(this);
+    bool operator()(const ProposalRecord &a, const ProposalRecord &b) const
+    {
+        return a.hash < b.hash;
+    }
+    bool operator()(const ProposalRecord &a, const uint256 &b) const
+    {
+        return a.hash < b;
+    }
+    bool operator()(const uint256 &a, const ProposalRecord &b) const
+    {
+        return a < b.hash;
+    }
+};
 
-    connect(networkManager, &QNetworkAccessManager::finished, this, &ProposalTableModel::onResult);
+// Private implementation
+class ProposalTablePriv
+{
+public:
+    explicit ProposalTablePriv(ProposalTableModel *_parent) :
+        parent(_parent)
+    {
+    }
 
-    refreshProposals();
+    ProposalTableModel *parent;
+
+    QList<ProposalRecord> cachedProposals;
+
+    /* Query entire proposal list from core.
+     */
+    void refreshProposalList(interfaces::Node& node)
+    {
+        qDebug() << "ProposalTablePriv::refreshProposalList";
+        cachedProposals.clear();
+
+        for (const auto& prop : node.getProposals())
+        {
+            int percentage = 0;
+            if (node.getMNcount().enabled > 0)
+                percentage = round(prop.abs_yes * 100 / node.getMNcount().enabled);
+
+            cachedProposals.append(ProposalRecord(
+                            prop.hash,
+                            prop.amount,
+                            prop.start,
+                            prop.end,
+                            prop.yes,
+                            prop.no,
+                            prop.abs_yes,
+                            QString::fromStdString(prop.name),
+                            QString::fromStdString(prop.url),
+                            percentage));
+        }
+
+        // qLowerBound() and qUpperBound() require our cachedAddressTable list to be sorted in asc order
+        qSort(cachedProposals.begin(), cachedProposals.end(), HashLessThan());
+    }
+
+    void updateProposal(interfaces::Node& node, const uint256& hash, int status)
+    {
+        qDebug() << "ProposalTablePriv::updateProposal"+ QString::fromStdString(hash.ToString()) + " " + QString::number(status);
+
+        // Find bounds of this proposal in model
+        QList<ProposalRecord>::iterator lower = qLowerBound(
+            cachedProposals.begin(), cachedProposals.end(), hash, HashLessThan());
+        QList<ProposalRecord>::iterator upper = qUpperBound(
+            cachedProposals.begin(), cachedProposals.end(), hash, HashLessThan());
+        int lowerIndex = (lower - cachedProposals.begin());
+        int upperIndex = (upper - cachedProposals.begin());
+        bool inModel = (lower != upper);
+        switch(status)
+        {
+        case CT_NEW:
+            if(inModel)
+            {
+                qWarning() << "ProposalTablePriv::updateProposal: Warning: Got CT_NEW, but proposal is already in model";
+                break;
+            }
+            if(true /*showProposal*/)
+            {
+                // Find proposal on platform
+                interfaces::Proposal prop = node.getProposal(hash);
+                if(prop.hash == uint256())
+                {
+                    qWarning() << "ProposalTablePriv::updateProposal: Warning: Got CT_NEW, but proposal is not on platform";
+                    break;
+                }
+                // Added -- insert at the right position
+                int percentage = 0;
+                if (node.getMNcount().enabled > 0)
+                    percentage = round(prop.abs_yes * 100 / node.getMNcount().enabled);
+
+                ProposalRecord toInsert =
+                        ProposalRecord(
+                            prop.hash,
+                            prop.amount,
+                            prop.start,
+                            prop.end,
+                            prop.yes,
+                            prop.no,
+                            prop.abs_yes,
+                            QString::fromStdString(prop.name),
+                            QString::fromStdString(prop.url),
+                            percentage);
+
+                parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex);
+                cachedProposals.insert(lowerIndex, toInsert);
+                parent->endInsertRows();
+            }
+            break;
+        case CT_DELETED:
+            if(!inModel)
+            {
+                qWarning() << "ProposalTablePriv::updateProposal: Warning: Got CT_DELETED, but proposal is not in model";
+                break;
+            }
+            // Removed -- remove entire transaction from table
+            parent->beginRemoveRows(QModelIndex(), lowerIndex, upperIndex-1);
+            cachedProposals.erase(lower, upper);
+            parent->endRemoveRows();
+            break;
+        case CT_UPDATED:
+            if(!inModel)
+            {
+                qWarning() << "ProposalTablePriv::updateProposal: Warning: Got CT_UPDATED, but entry is not in model";
+                break;
+            }
+            // Find proposal on platform
+            interfaces::Proposal prop = node.getProposal(hash);
+            if(prop.hash == uint256())
+            {
+                qWarning() << "ProposalTablePriv::updateProposal: Warning: Got CT_UPDATED, but proposal is not on platform";
+                break;
+            }
+            int percentage = 0;
+            if (node.getMNcount().enabled > 0)
+                percentage = round(prop.abs_yes * 100 / node.getMNcount().enabled);
+            lower->hash = prop.hash;
+            lower->start_epoch = prop.start;
+            lower->end_epoch = prop.end;
+            lower->yesVotes = prop.yes;
+            lower->noVotes = prop.no;
+            lower-> absoluteYesVotes = prop.abs_yes;
+            lower->amount = prop.amount;
+            lower->name = QString::fromStdString(prop.name);
+            lower->url = QString::fromStdString(prop.url);
+            lower->percentage = percentage;
+            break;
+        }
+    }
+
+    int size()
+    {
+        return cachedProposals.size();
+    }
+
+    ProposalRecord *index(int idx)
+    {
+        if(idx >= 0 && idx < cachedProposals.size())
+        {
+            ProposalRecord *rec = &cachedProposals[idx];
+            return rec;
+        }
+        return 0;
+    }
+};
+
+ProposalTableModel::ProposalTableModel(ClientModel *parent):
+        QAbstractTableModel(parent),
+        clientModel(parent),
+        priv(new ProposalTablePriv(this))
+{
+    columns << tr("Amount (CHC)") << tr("Start Date") << tr("End Date") << tr("Yes") << tr("No") << tr("Absolute") << tr("Proposal") << tr("Percentage");
+    priv->refreshProposalList(clientModel->node());
+
+    // Subscribe for updates
+    connect(clientModel, &ClientModel::updateProposal, this, &ProposalTableModel::updateProposal);
 }
 
 ProposalTableModel::~ProposalTableModel()
 {
+    delete priv;
 }
 
-void ProposalTableModel::refreshProposals() {
-    beginResetModel();
-    proposalRecords.clear();
+void ProposalTableModel::updateProposal(const QString &hash, int status)
+{
+    uint256 updated;
+    updated.SetHex(hash.toStdString());
 
-    int mnCount = m_node.getMNcount().enabled;
-
-    std::vector<const CGovernanceObject*> objs = governance.GetAllNewerThan(0);
-
-    for (const auto& pGovObj : objs)
-    {
-        if(pGovObj->GetObjectType() != GOVERNANCE_OBJECT_PROPOSAL) continue;
-
-        UniValue objResult(UniValue::VOBJ);
-        UniValue dataObj(UniValue::VOBJ);
-        objResult.read(pGovObj->GetDataAsPlainString());
-
-        std::vector<UniValue> arr1 = objResult.getValues();
-        std::vector<UniValue> arr2 = arr1.at( 0 ).getValues();
-        dataObj = arr2.at( 1 );
-
-        int percentage = 0;
-        if(mnCount > 0) percentage = round(pGovObj->GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING) * 100 / mnCount);
-        
-        proposalRecords.append(new ProposalRecord(
-                        QString::fromStdString(pGovObj->GetHash().ToString()),
-                        dataObj["start_epoch"].get_int(),
-                        dataObj["end_epoch"].get_int(),
-                        QString::fromStdString(dataObj["url"].get_str()),
-                        QString::fromStdString(dataObj["name"].get_str()),
-                        pGovObj->GetYesCount(VOTE_SIGNAL_FUNDING),
-                        pGovObj->GetNoCount(VOTE_SIGNAL_FUNDING),
-                        pGovObj->GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING),
-                        dataObj["payment_amount"].get_int(),
-                        percentage));
-    }
-    endResetModel();
-}
-
-void ProposalTableModel::onResult(QNetworkReply *result) {
-    /**/
+    priv->updateProposal(clientModel->node(), updated, status);
 }
 
 int ProposalTableModel::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    return proposalRecords.size();
+    return priv->size();
 }
 
 int ProposalTableModel::columnCount(const QModelIndex &parent) const
@@ -124,11 +254,11 @@ QVariant ProposalTableModel::data(const QModelIndex &index, int role) const
         case Proposal:
             return rec->name;
         case YesVotes:
-            return (long long) rec->yesVotes;
+            return rec->yesVotes;
         case NoVotes:
-            return (long long) rec->noVotes;
+            return rec->noVotes;
         case AbsoluteYesVotes:
-            return (long long) rec->absoluteYesVotes;
+            return rec->absoluteYesVotes;
         case StartDate:
             return (QDateTime::fromTime_t((qint32)rec->start_epoch)).date().toString(Qt::SystemLocaleLongDate);
         case EndDate:
@@ -149,15 +279,15 @@ QVariant ProposalTableModel::data(const QModelIndex &index, int role) const
         case EndDate:
             return rec->end_epoch;
         case YesVotes:
-            return (long long) rec->yesVotes;
+            return qint64(rec->yesVotes);
         case NoVotes:
-            return (long long) rec->noVotes;
+            return qint64(rec->noVotes);
         case AbsoluteYesVotes:
-            return (long long) rec->absoluteYesVotes;
+            return qint64(rec->absoluteYesVotes);
         case Amount:
-            return qint64((long long) rec->amount);
+            return qint64(rec->amount);
         case Percentage:
-            return (long long) rec->percentage;
+            return qint64(rec->percentage);
         }
         break;
     case Qt::TextAlignmentRole:
@@ -176,23 +306,23 @@ QVariant ProposalTableModel::data(const QModelIndex &index, int role) const
     case ProposalRole:
         return rec->name;
     case AmountRole:
-        return (long long) rec->amount;
+        return qint64(rec->amount);
     case StartDateRole:
-        return rec->start_epoch;
+        return QDateTime::fromTime_t(static_cast<uint>(rec->start_epoch));
     case EndDateRole:
-        return rec->end_epoch;
+        return QDateTime::fromTime_t(static_cast<uint>(rec->end_epoch));
     case YesVotesRole:
-        return (long long) rec->yesVotes;
+        return qint64(rec->yesVotes);
     case NoVotesRole:
-        return (long long) rec->noVotes;
+        return qint64(rec->noVotes);
     case AbsoluteYesVotesRole:
-        return (long long) rec->absoluteYesVotes;
+        return qint64(rec->absoluteYesVotes);
     case PercentageRole:
-        return (long long) rec->percentage;
+        return qint64(rec->percentage);
     case ProposalUrlRole:
         return rec->url;
     case ProposalHashRole:
-        return rec->hash;
+        return rec->getObjHash();
     }
     return QVariant();
 }
@@ -216,9 +346,9 @@ QVariant ProposalTableModel::headerData(int section, Qt::Orientation orientation
             case Proposal:
                 return tr("Proposal Name");
             case StartDate:
-                return tr("Date and time that the proposal starts.");
+                return tr("Date and time the proposal starts.");
             case EndDate:
-                return tr("Date and time that the proposal ends.");
+                return tr("Date and time the proposal expires.");
             case YesVotes:
                 return tr("Obtained yes votes.");
             case NoVotes:
@@ -238,11 +368,10 @@ QVariant ProposalTableModel::headerData(int section, Qt::Orientation orientation
 QModelIndex ProposalTableModel::index(int row, int column, const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-
-    if(row >= 0 && row < proposalRecords.size()) {
-        ProposalRecord *rec = proposalRecords[row];
-        return createIndex(row, column, rec);
+    ProposalRecord *data = priv->index(row);
+    if(data)
+    {
+        return createIndex(row, column, priv->index(row));
     }
-
     return QModelIndex();
 }

@@ -4701,9 +4701,11 @@ bool CWallet::Verify(interfaces::Chain& chain, const WalletLocation& location, b
     }
 
     // Make sure that the wallet path doesn't clash with an existing wallet path
-    if (IsWalletLoaded(wallet_path)) {
-        error_string = strprintf("Error loading wallet %s. Duplicate -wallet filename specified.", location.GetName());
-        return false;
+    for (auto wallet : GetWallets()) {
+        if (wallet->GetLocation().GetPath() == wallet_path) {
+            error_string = strprintf("Error loading wallet %s. Duplicate -wallet filename specified.", location.GetName());
+            return false;
+        }
     }
 
     try {
@@ -5123,7 +5125,7 @@ bool AutoBackupWallet (std::shared_ptr<CWallet> pwallet, std::string walletFile,
             // ... opened wallet
             auto locked_chain = pwallet->chain().lock();
             LOCK(pwallet->cs_wallet);
-            fs::path backupFile = backupsDir / (walletFile + dateTimeStr);
+            fs::path backupFile = backupsDir / (pwallet->GetDisplayName() + dateTimeStr);
             if(!pwallet->BackupWallet(backupFile.string())) {
                 strBackupWarning = strprintf(_("Failed to create backup %s!"), backupFile.string());
                 pwallet->WalletLogPrintf("%s\n", strBackupWarning);

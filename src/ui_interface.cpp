@@ -22,6 +22,8 @@ struct UISignals {
     boost::signals2::signal<CClientUIInterface::NotifyBlockTipSig> NotifyBlockTip;
     boost::signals2::signal<CClientUIInterface::NotifyHeaderTipSig> NotifyHeaderTip;
     boost::signals2::signal<CClientUIInterface::BannedListChangedSig> BannedListChanged;
+    boost::signals2::signal<CClientUIInterface::NotifyMasternodeChangedSig> NotifyMasternodeChanged;
+    boost::signals2::signal<CClientUIInterface::NotifyProposalChangedSig> NotifyProposalChanged;
 } g_ui_signals;
 
 #define ADD_SIGNALS_IMPL_WRAPPER(signal_name)                                                                 \
@@ -45,6 +47,8 @@ ADD_SIGNALS_IMPL_WRAPPER(ShowProgress);
 ADD_SIGNALS_IMPL_WRAPPER(NotifyBlockTip);
 ADD_SIGNALS_IMPL_WRAPPER(NotifyHeaderTip);
 ADD_SIGNALS_IMPL_WRAPPER(BannedListChanged);
+ADD_SIGNALS_IMPL_WRAPPER(NotifyMasternodeChanged);
+ADD_SIGNALS_IMPL_WRAPPER(NotifyProposalChanged);
 
 bool CClientUIInterface::ThreadSafeMessageBox(const std::string& message, const std::string& caption, unsigned int style) { return g_ui_signals.ThreadSafeMessageBox(message, caption, style); }
 bool CClientUIInterface::ThreadSafeQuestion(const std::string& message, const std::string& non_interactive_message, const std::string& caption, unsigned int style) { return g_ui_signals.ThreadSafeQuestion(message, non_interactive_message, caption, style); }
@@ -57,7 +61,8 @@ void CClientUIInterface::ShowProgress(const std::string& title, int nProgress, b
 void CClientUIInterface::NotifyBlockTip(bool b, const CBlockIndex* i) { return g_ui_signals.NotifyBlockTip(b, i); }
 void CClientUIInterface::NotifyHeaderTip(bool b, const CBlockIndex* i) { return g_ui_signals.NotifyHeaderTip(b, i); }
 void CClientUIInterface::BannedListChanged() { return g_ui_signals.BannedListChanged(); }
-
+void CClientUIInterface::NotifyMasternodeChanged(const uint256& hash, ChangeType status) { return g_ui_signals.NotifyMasternodeChanged(hash, status); }
+void CClientUIInterface::NotifyProposalChanged(const uint256& hash, ChangeType status) { return g_ui_signals.NotifyProposalChanged(hash, status); }
 
 bool InitError(const std::string& str)
 {

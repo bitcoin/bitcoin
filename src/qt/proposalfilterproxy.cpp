@@ -14,8 +14,10 @@ const QDateTime ProposalFilterProxy::MAX_DATE = QDateTime::fromTime_t(0xFFFFFFFF
 
 ProposalFilterProxy::ProposalFilterProxy(QObject *parent) :
     QSortFilterProxyModel(parent),
-    startDate(MIN_DATE),
-    endDate(MAX_DATE),
+    dateStartFrom(MIN_DATE),
+    dateStartTo(MAX_DATE),
+    dateEndFrom(MIN_DATE),
+    dateEndTo(MAX_DATE),
     proposalName(),
     minAmount(0),
     minPercentage(-100),
@@ -29,8 +31,8 @@ bool ProposalFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &sou
 {
     QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
 
-    int proposalStartDate = index.data(ProposalTableModel::StartDateRole).toInt();
-    int proposalEndDate = index.data(ProposalTableModel::EndDateRole).toInt();
+    QDateTime proposalStartDate = index.data(ProposalTableModel::StartDateRole).toDateTime();
+    QDateTime proposalEndDate = index.data(ProposalTableModel::EndDateRole).toDateTime();
     QString propName = index.data(ProposalTableModel::ProposalRole).toString();
     qint64 amount = llabs(index.data(ProposalTableModel::AmountRole).toLongLong());
     int yesVotes = index.data(ProposalTableModel::YesVotesRole).toInt();
@@ -38,10 +40,10 @@ bool ProposalFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &sou
     int absoluteYesVotes = index.data(ProposalTableModel::AbsoluteYesVotesRole).toInt();
     int percentage = index.data(ProposalTableModel::PercentageRole).toInt();
 
-    if(proposalStartDate < (startDate.toMSecsSinceEpoch() / 1000))
-       return false;
-    if(proposalEndDate > (endDate.toMSecsSinceEpoch() / 1000))
-       return false;
+    if (proposalStartDate < dateStartFrom || proposalStartDate > dateStartTo)
+        return false;
+    if (proposalEndDate < dateEndFrom || proposalEndDate > dateEndTo)
+        return false;
     if(!propName.contains(proposalName, Qt::CaseInsensitive))
         return false;
     if(amount < minAmount)
@@ -58,15 +60,17 @@ bool ProposalFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &sou
     return true;
 }
 
-void ProposalFilterProxy::setProposalStart(const QDateTime &date)
+void ProposalFilterProxy::setDateStartRange(const QDateTime &from, const QDateTime &to)
 {
-    this->startDate = date;
+    this->dateStartFrom = from;
+    this->dateStartTo = to;
     invalidateFilter();
 }
 
-void ProposalFilterProxy::setProposalEnd(const QDateTime &date)
+void ProposalFilterProxy::setDateEndRange(const QDateTime &from, const QDateTime &to)
 {
-    this->endDate = date;
+    this->dateEndFrom = from;
+    this->dateEndTo = to;
     invalidateFilter();
 }
 

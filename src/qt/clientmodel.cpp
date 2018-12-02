@@ -9,6 +9,7 @@
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 #include <qt/peertablemodel.h>
+#include <qt/proposaltablemodel.h>
 
 #include <chain.h>
 #include <chainparams.h>
@@ -38,6 +39,7 @@ ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QO
     optionsModel(_optionsModel),
     peerTableModel(0),
     banTableModel(0),
+    proposalTableModel(0),
     cachedMasternodeCountString(""),
     pollTimer(0),
     pollMnTimer(0)
@@ -46,6 +48,7 @@ ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QO
     cachedBestHeaderTime = -1;
     peerTableModel = new PeerTableModel(m_node, this);
     banTableModel = new BanTableModel(m_node, this);
+    proposalTableModel = new ProposalTableModel(this);
     pollTimer = new QTimer(this);
     connect(pollTimer, &QTimer::timeout, this, &ClientModel::updateTimer);
     pollTimer->start(MODEL_UPDATE_DELAY);
@@ -185,6 +188,11 @@ BanTableModel *ClientModel::getBanTableModel()
     return banTableModel;
 }
 
+ProposalTableModel *ClientModel::getProposalTableModel()
+{
+    return proposalTableModel;
+}
+
 QString ClientModel::formatFullVersion() const
 {
     return QString::fromStdString(FormatFullVersion());
@@ -282,6 +290,25 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, int heig
     }
 }
 
+static void NotifyMasternodeChanged(ClientModel *clientmodel, const uint256 &hash, ChangeType status)
+{
+    // emits signal "updateMasternode"
+    QString strHash = QString::fromStdString(hash.GetHex());
+    QMetaObject::invokeMethod(clientmodel, "updateMasternode", Qt::QueuedConnection,
+                              Q_ARG(QString, strHash),
+                              Q_ARG(int, status));
+}
+
+static void NotifyProposalChanged(ClientModel *clientmodel, const uint256 &hash, ChangeType status)
+{
+    // emits signal "updateProposal"
+    QString strHash = QString::fromStdString(hash.GetHex());
+    QMetaObject::invokeMethod(clientmodel, "updateProposal", Qt::QueuedConnection,
+                              Q_ARG(QString, strHash),
+                              Q_ARG(int, status));
+}
+
+
 void ClientModel::subscribeToCoreSignals()
 {
     // Connect signals to client
@@ -292,6 +319,8 @@ void ClientModel::subscribeToCoreSignals()
     m_handler_banned_list_changed = m_node.handleBannedListChanged(boost::bind(BannedListChanged, this));
     m_handler_notify_block_tip = m_node.handleNotifyBlockTip(boost::bind(BlockTipChanged, this, _1, _2, _3, _4, false));
     m_handler_notify_header_tip = m_node.handleNotifyHeaderTip(boost::bind(BlockTipChanged, this, _1, _2, _3, _4, true));
+    m_handler_notify_masternode_changed = m_node.handleMasternodeChanged(boost::bind(NotifyMasternodeChanged, this, _1, _2));
+    m_handler_notify_proposal_changed = m_node.handleProposalChanged(boost::bind(NotifyProposalChanged, this, _1, _2));
 }
 
 void ClientModel::unsubscribeFromCoreSignals()
@@ -304,6 +333,8 @@ void ClientModel::unsubscribeFromCoreSignals()
     m_handler_banned_list_changed->disconnect();
     m_handler_notify_block_tip->disconnect();
     m_handler_notify_header_tip->disconnect();
+    m_handler_notify_masternode_changed->disconnect();
+    m_handler_notify_proposal_changed->disconnect();
 }
 
 bool ClientModel::getProxyInfo(std::string& ip_port) const

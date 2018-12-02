@@ -19,7 +19,7 @@
 #include <timedata.h>
 #include <univalue.h>
 
-#include <univalue.h>
+#include <boost/signals2/signal.hpp>
 
 class CGovernanceManager;
 class CGovernanceTriggerManager;
@@ -410,6 +410,8 @@ public:
 
     int RequestGovernanceObjectVotes(CNode* pnode, CConnman* connman);
     int RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy, CConnman* connman);
+
+    bool VoteWithAll(const uint256& hash, const std::string strVoteSignal, int& nSuccessRet, int& nFailedRet, CConnman* connman);
 
 private:
     void RequestGovernanceObject(CNode* pfrom, const uint256& nHash, CConnman* connman, bool fUseFilter = false);

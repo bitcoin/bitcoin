@@ -15,18 +15,11 @@
 
 int GetOffsetFromUtc()
 {
-#if QT_VERSION < 0x050200
-    const QDateTime dateTime1 = QDateTime::currentDateTime();
-    const QDateTime dateTime2 = QDateTime(dateTime1.date(), dateTime1.time(), Qt::UTC);
-    return dateTime1.secsTo(dateTime2);
-#else
     return QDateTime::currentDateTime().offsetFromUtc();
-#endif
 }
 
-MasternodeList::MasternodeList(interfaces::Node& node, const PlatformStyle *platformStyle, QWidget *parent) :
+MasternodeList::MasternodeList(const PlatformStyle *platformStyle, QWidget *parent) :
     QWidget(parent),
-    m_node(node),
     ui(new Ui::MasternodeList),
     clientModel(0),
     walletModel(0)
@@ -104,31 +97,19 @@ void MasternodeList::showContextMenu(const QPoint &point)
 
 void MasternodeList::StartAlias(std::string strAlias)
 {
+    if (!clientModel)
+        return;
+
     std::string strStatusHtml;
     strStatusHtml += "<center>Alias: " + strAlias;
+    std::string strError;
 
-    for (const auto& mne : m_node.MNgetEntries()) {
-        if(mne.getAlias() == strAlias) {
-            std::string strError;
-            CMasternodeBroadcast mnb;
-
-            bool fSuccess = CMasternodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
-
-            int nDoS;
-            if (fSuccess && !mnodeman.CheckMnbAndUpdateMasternodeList(nullptr, mnb, nDoS, g_connman.get())) {
-                strError = "Failed to verify MNB";
-                fSuccess = false;
-            }
-
-            if(fSuccess) {
-                strStatusHtml += "<br>Successfully started masternode.";
-                mnodeman.NotifyMasternodeUpdates(g_connman.get());
-            } else {
-                strStatusHtml += "<br>Failed to start masternode.<br>Error: " + strError;
-            }
-            break;
-        }
+    if (!clientModel->node().MNStartAlias(strAlias, strError)) {
+        strStatusHtml += "<br>Failed to start masternode.<br>Error: " + strError;
+    } else {
+        strStatusHtml += "<br>Successfully started masternode.";
     }
+
     strStatusHtml += "</center>";
 
     QMessageBox msg;
@@ -140,44 +121,24 @@ void MasternodeList::StartAlias(std::string strAlias)
 
 void MasternodeList::StartAll(std::string strCommand)
 {
+    if (!clientModel)
+        return;
+
+    std::string strError = strprintf("No connection to node");
     int nCountSuccessful = 0;
     int nCountFailed = 0;
-    std::string strFailedHtml;
 
-    for (const auto& mne : m_node.MNgetEntries()) {
-        std::string strError;
-        CMasternodeBroadcast mnb;
-
-        int32_t nOutputIndex = 0;
-        if(!ParseInt32(mne.getOutputIndex(), &nOutputIndex)) {
-            continue;
-        }
-
-        COutPoint outpoint = COutPoint(uint256S(mne.getTxHash()), nOutputIndex);
-
-        if(strCommand == "start-missing" && mnodeman.Has(outpoint)) continue;
-
-        bool fSuccess = CMasternodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
-
-        int nDoS;
-        if (fSuccess && !mnodeman.CheckMnbAndUpdateMasternodeList(nullptr, mnb, nDoS, g_connman.get())) {
-            strError = "Failed to verify MNB";
-            fSuccess = false;
-        }
-
-        if(fSuccess) {
-            nCountSuccessful++;
-            mnodeman.NotifyMasternodeUpdates(g_connman.get());
-        } else {
-            nCountFailed++;
-            strFailedHtml += "\nFailed to start " + mne.getAlias() + ". Error: " + strError;
-        }
+    if (!clientModel->node().MNStartAll(strCommand, strError, nCountSuccessful, nCountFailed)) {
+        QMessageBox msg;
+        msg.setText(QString::fromStdString(strError));
+        msg.exec();
+        return;
     }
 
     std::string returnObj;
     returnObj = strprintf("Successfully started %d masternodes, failed to start %d, total %d", nCountSuccessful, nCountFailed, nCountFailed + nCountSuccessful);
     if (nCountFailed > 0) {
-        returnObj += strFailedHtml;
+        returnObj += strError;
     }
 
     QMessageBox msg;
@@ -248,7 +209,7 @@ void MasternodeList::updateMyNodeList(bool fForce)
 
     ui->tableWidgetMyMasternodes->setSortingEnabled(false);
     if(!clientModel) return;
-    for (const auto& mne : m_node.MNgetEntries()) {
+    for (const auto& mne : clientModel->node().MNgetEntries()) {
         int32_t nOutputIndex = 0;
         if(!ParseInt32(mne.getOutputIndex(), &nOutputIndex)) {
             continue;
@@ -401,8 +362,10 @@ void MasternodeList::on_startAllButton_clicked()
 
 void MasternodeList::on_startMissingButton_clicked()
 {
+    if (!clientModel)
+        return;
 
-    if(!m_node.IsMasternodelistSynced()) {
+    if (!clientModel->node().IsMasternodelistSynced()) {
         QMessageBox::critical(this, tr("Command is not available right now"),
             tr("You can't use this command until masternode list is synced"));
         return;
@@ -475,6 +438,9 @@ void MasternodeList::ShowQRCode(std::string strAlias) {
     if(!walletModel || !walletModel->getOptionsModel())
         return;
 
+    if (!clientModel)
+        return;
+
     // Get private key for this alias
     std::string strMNPrivKey = "";
     std::string strCollateral = "";
@@ -482,7 +448,7 @@ void MasternodeList::ShowQRCode(std::string strAlias) {
     CMasternode mn;
     bool fFound = false;
 
-    for (auto mne : m_node.MNgetEntries()) {
+    for (auto mne : clientModel->node().MNgetEntries()) {
         if (strAlias != mne.getAlias()) {
             continue;
         }

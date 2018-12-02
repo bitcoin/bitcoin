@@ -11,10 +11,12 @@
 #include <net_processing.h>
 #include <netmessagemaker.h>
 #include <modules/masternode/masternode.h>
+#include <modules/masternode/masternode_config.h>
 #include <modules/masternode/masternode_sync.h>
 #include <modules/masternode/masternode_man.h>
 #include <messagesigner.h>
 #include <netfulfilledman.h>
+#include <ui_interface.h>
 #include <util/system.h>
 
 CGovernanceManager governance;
@@ -265,6 +267,7 @@ void CGovernanceManager::ProcessModuleMessage(CNode* pfrom, const std::string& s
         }
         // SEND NOTIFICATION TO SCRIPT/ZMQ
         GetMainSignals().NotifyGovernanceVote(vote);
+        uiInterface.NotifyProposalChanged(vote.GetParentHash(), CT_UPDATED);
     }
 }
 
@@ -363,7 +366,7 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
 
     // SEND NOTIFICATION TO SCRIPT/ZMQ
     GetMainSignals().NotifyGovernanceObject(govobj);
-
+    uiInterface.NotifyProposalChanged(govobj.GetHash(), CT_NEW);
 
     DBG( std::cout << "CGovernanceManager::AddGovernanceObject END" << std::endl; );
 }
@@ -434,6 +437,9 @@ void CGovernanceManager::UpdateCachesAndClean()
                     uint256 nKey = lit->key;
                     ++lit;
                     cmapVoteToObject.Erase(nKey);
+                    if(pObj->GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
+                        uiInterface.NotifyProposalChanged(pObj->GetHash(), CT_UPDATED);
+                    }
                 }
                 else {
                     ++lit;
@@ -445,6 +451,7 @@ void CGovernanceManager::UpdateCachesAndClean()
             if(pObj->GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
                 // keep hashes of deleted proposals forever
                 nTimeExpired = std::numeric_limits<int64_t>::max();
+                uiInterface.NotifyProposalChanged(pObj->GetHash(), CT_DELETED);
             } else {
                 int64_t nSuperblockCycleSeconds = Params().GetConsensus().nSuperblockCycle * Params().GetConsensus().nPowTargetSpacing;
                 nTimeExpired = pObj->GetCreationTime() + 2 * nSuperblockCycleSeconds + GOVERNANCE_DELETION_DELAY;
@@ -890,6 +897,9 @@ bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, 
     }
 
     bool fOk = govobj.ProcessVote(pfrom, vote, exception, connman) && cmapVoteToObject.Insert(nHashVote, &govobj);
+    if (fOk) {
+        uiInterface.NotifyProposalChanged(govobj.GetHash(), CT_UPDATED);
+    }
     LEAVE_CRITICAL_SECTION(cs);
     return fOk;
 }
@@ -1153,6 +1163,55 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
                 vTriggerObjHashes.size(), vOtherObjHashes.size(), mapAskedRecently.size());
 
     return int(vTriggerObjHashes.size() + vOtherObjHashes.size());
+}
+
+bool CGovernanceManager::VoteWithAll(const uint256& hash, const std::string strVoteSignal, int& nSuccessRet, int& nFailedRet, CConnman* connman)
+{
+    vote_signal_enum_t eVoteSignal = CGovernanceVoting::ConvertVoteSignal("funding");
+    vote_outcome_enum_t eVoteOutcome = CGovernanceVoting::ConvertVoteOutcome(strVoteSignal);
+
+    for (const auto& mne : masternodeConfig.getEntries()) {
+        CPubKey pubKeyMasternode;
+        CKey keyMasternode;
+
+        if(!CMessageSigner::GetKeysFromSecret(mne.getPrivKey(), keyMasternode, pubKeyMasternode)){
+            nFailedRet++;
+            continue;
+         }
+
+        uint256 nTxHash;
+        nTxHash.SetHex(mne.getTxHash());
+
+        int nOutputIndex = 0;
+        if(!ParseInt32(mne.getOutputIndex(), &nOutputIndex)) {
+            continue;
+        }
+
+        COutPoint outpoint(nTxHash, nOutputIndex);
+
+        CMasternode mn;
+        bool fMnFound = mnodeman.Get(outpoint, mn);
+
+        if(!fMnFound) {
+            nFailedRet++;
+            continue;
+        }
+
+        CGovernanceVote vote(mn.outpoint, hash, eVoteSignal, eVoteOutcome);
+        if(!vote.Sign(keyMasternode, pubKeyMasternode)){
+            nFailedRet++;
+            continue;
+        }
+
+        CGovernanceException exception;
+        if(governance.ProcessVoteAndRelay(vote, exception, connman)) {
+            nSuccessRet++;
+        }
+        else {
+            nFailedRet++;
+        }
+    }
+    return true;
 }
 
 bool CGovernanceManager::AcceptObjectMessage(const uint256& nHash)
