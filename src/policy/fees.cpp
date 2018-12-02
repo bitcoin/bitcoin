@@ -710,6 +710,7 @@ CFeeRate CBlockPolicyEstimator::estimateRawFee(int confTarget, double successThr
 
 unsigned int CBlockPolicyEstimator::HighestTargetTracked(FeeEstimateHorizon horizon) const
 {
+    LOCK(m_cs_fee_estimator);
     switch (horizon) {
     case FeeEstimateHorizon::SHORT_HALFLIFE: {
         return shortStats->GetMaxConfirms();
