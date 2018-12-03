@@ -1677,7 +1677,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                     if (txout.IsDust(::minRelayTxFee))
                     {
                         strFailReason = _("Transaction amount too small");
-//                        return false;
+                        return false;
                     }
                     txNew.vout.push_back(txout);
                 }
