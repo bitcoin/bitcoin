@@ -6,6 +6,7 @@
 #define DASH_QUORUMS_INIT_H
 
 class CEvoDB;
+class CScheduler;
 
 namespace llmq
 {
@@ -13,7 +14,7 @@ namespace llmq
 // If true, we will connect to all new quorums and watch their communication
 static const bool DEFAULT_WATCH_QUORUMS = false;
 
-void InitLLMQSystem(CEvoDB& evoDb);
+void InitLLMQSystem(CEvoDB& evoDb, CScheduler* scheduler);
 void DestroyLLMQSystem();
 
 }

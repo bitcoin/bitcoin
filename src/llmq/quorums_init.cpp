@@ -8,12 +8,14 @@
 #include "quorums_commitment.h"
 #include "quorums_dkgsessionmgr.h"
 
+#include "scheduler.h"
+
 namespace llmq
 {
 
 static CBLSWorker blsWorker;
 
-void InitLLMQSystem(CEvoDB& evoDb)
+void InitLLMQSystem(CEvoDB& evoDb, CScheduler* scheduler)
 {
     quorumBlockProcessor = new CQuorumBlockProcessor(evoDb);
     quorumDKGSessionManager = new CDKGSessionManager(evoDb, blsWorker);
