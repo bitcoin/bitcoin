@@ -354,8 +354,6 @@ class Sandbox:
         self.write_config(masternode)
         self.start_node(masternode)
 
-        time.sleep(1)
-        self.start_masternode(control_node, masternode)
 
     def stop_node(self, node):
         return self.client_command(node, 'crown-cli', 'stop')
@@ -367,7 +365,7 @@ class Sandbox:
         return [k for k, v in self.network['nodes'].iteritems() if v['masternodes'] != []]
 
     def start_masternode(self, control_node, masternode):
-        self.client_command(control_node, 'crown-cli', 'masternode', 'start-alias', masternode)
+        return self.client_command(control_node, 'crown-cli', 'masternode', 'start-alias', masternode)
 
     def gen_or_reuse_address(self, node):
         if 'receive_with' in self.network['nodes'][node]:
@@ -375,6 +373,14 @@ class Sandbox:
 
         self.network['nodes'][node]['receive_with'] = self.gen_address(node)
         return self.network['nodes'][node]['receive_with']
+
+    def get_block_height(self, node):
+        try:
+            out, err = self.client_command(node, 'crown-cli', 'getinfo')
+            info = json.loads(out)
+            return int(info['blocks'])
+        except ValueError:
+            return 0
 
 
 def prepare(json_desc_file, target_dir, bin_dir):
@@ -442,6 +448,21 @@ def run_simulation(json_desc_file, target_dir, bin_dir):
 
                 print 'Setting up masternode {0}'.format(mn)
                 sb.setup_masternode(node, mn)
+
+                blockheight = sb.get_block_height(node)
+                while blockheight == 0:
+                    print 'Cannot get block height. Retrying...'
+                    time.sleep(2)
+                    blockheight = sb.get_block_height(node)
+
+                while True:
+                    time.sleep(2)
+                    if sb.get_block_height(node) > blockheight + 15:
+                        break
+
+                out, err = sb.start_masternode(node, mn)
+                print err
+                print out
                 print 'Next masternode is {0}'.format(sb.next_masternode_to_setup()[0])
 
         except RuntimeError:
