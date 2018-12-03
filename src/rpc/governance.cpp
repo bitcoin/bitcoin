@@ -133,12 +133,14 @@ void gobject_prepare_help()
                 "3. time          (numeric, required) time this object was created\n"
                 "4. data-hex      (string, required)  data in hex string form\n"
                 "5. use-IS        (boolean, optional, default=false) InstantSend lock the collateral, only requiring one chain confirmation\n"
+                "6. outputHash    (string, optional) the single output to submit the proposal fee from\n"
+                "7. outputIndex   (numeric, optional) The output index.\n"
                 );
 }
 
 UniValue gobject_prepare(const JSONRPCRequest& request)
 {
-    if (request.fHelp || (request.params.size() != 5 && request.params.size() != 6)) 
+    if (request.fHelp || (request.params.size() != 5 && request.params.size() != 6 && request.params.size() != 8)) 
         gobject_prepare_help();
 
     if (!EnsureWalletIsAvailable(request.fHelp))
@@ -199,9 +201,23 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
 
     EnsureWalletIsUnlocked();
 
+    // If specified, spend this outpoint as the proposal fee
+    COutPoint outpoint;
+    outpoint.SetNull();
+    if (request.params.size() == 8) {
+        uint256 collateralHash = ParseHashV(request.params[6], "outputHash");
+        int32_t collateralIndex = ParseInt32V(request.params[7], "outputIndex");
+        if (collateralHash.IsNull() || collateralIndex < 0) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid hash or index: %s-%d", collateralHash.ToString(), collateralIndex));
+        }
+        outpoint = COutPoint(collateralHash, (uint32_t)collateralIndex);
+    }
+
     CWalletTx wtx;
-    if (!pwalletMain->GetBudgetSystemCollateralTX(wtx, govobj.GetHash(), govobj.GetMinCollateralFee(), useIS)) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Error making collateral transaction for governance object. Please check your wallet balance and make sure your wallet is unlocked.");
+    if (!pwalletMain->GetBudgetSystemCollateralTX(wtx, govobj.GetHash(), govobj.GetMinCollateralFee(), useIS, outpoint)) {
+        std::string err = "Error making collateral transaction for governance object. Please check your wallet balance and make sure your wallet is unlocked.";
+        if (request.params.size() == 8) err += "Please verify your specified output is valid and is enough for the combined proposal fee and transaction fee.";
+        throw JSONRPCError(RPC_INTERNAL_ERROR, err);
     }
 
     // -- make our change address
