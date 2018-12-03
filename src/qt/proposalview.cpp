@@ -297,20 +297,6 @@ void ProposalList::setClientModel(ClientModel *_clientModel)
     }
 }
 
-void ProposalList::refreshProposals()
-{
-    int64_t secondsRemaining = nLastUpdate - GetTime() + PROPOSALLIST_UPDATE_SECONDS;
-
-    QString secOrMinutes = (secondsRemaining / 60 > 1) ? tr("minute(s)") : tr("second(s)");
-    secondsLabel->setText(tr("List will be updated in %1 %2").arg((secondsRemaining > 60) ? QString::number(secondsRemaining / 60) : QString::number(secondsRemaining), secOrMinutes));
-
-    nLastUpdate = GetTime();
-
-    // proposalTableModel->refreshProposals();
-
-    secondsLabel->setText(tr("List will be updated in 0 second(s)"));
-}
-
 void ProposalList::chooseStartDate(int idx)
 {
     if(!proposalProxyModel) return;

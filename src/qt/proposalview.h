@@ -31,8 +31,6 @@ class QSignalMapper;
 class QTableView;
 QT_END_NAMESPACE
 
-#define PROPOSALLIST_UPDATE_SECONDS 30
-
 class ProposalList : public QWidget
 {
     Q_OBJECT
@@ -116,7 +114,6 @@ Q_SIGNALS:
     void doubleClicked(const QModelIndex&);
 
 public Q_SLOTS:
-    void refreshProposals();
     void changedProposal();
     void chooseStartDate(int idx);
     void chooseEndDate(int idx);
