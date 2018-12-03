@@ -148,7 +148,19 @@ namespace tfm = tinyformat;
 #   endif
 #endif
 
-#define TINYFORMAT_HIDDEN
+#if defined(__GLIBCXX__) && __GLIBCXX__ < 20080201
+//  std::showpos is broken on old libstdc++ as provided with OSX.  See
+//  http://gcc.gnu.org/ml/libstdc++/2007-11/msg00075.html
+#   define TINYFORMAT_OLD_LIBSTDCPLUSPLUS_WORKAROUND
+#endif
+
+#ifdef __APPLE__
+// Workaround OSX linker warning: Xcode uses different default symbol
+// visibilities for static libs vs executables (see issue #25)
+#   define TINYFORMAT_HIDDEN __attribute__((visibility("hidden")))
+#else
+#   define TINYFORMAT_HIDDEN
+#endif
 
 namespace tinyformat {
 
@@ -216,6 +228,27 @@ struct formatValueAsType<T,fmtT,true>
     static void invoke(std::ostream& out, const T& value)
         { out << static_cast<fmtT>(value); }
 };
+
+#ifdef TINYFORMAT_OLD_LIBSTDCPLUSPLUS_WORKAROUND
+template<typename T, bool convertible = is_convertible<T, int>::value>
+struct formatZeroIntegerWorkaround
+{
+    static bool invoke(std::ostream& /**/, const T& /**/) { return false; }
+};
+template<typename T>
+struct formatZeroIntegerWorkaround<T,true>
+{
+    static bool invoke(std::ostream& out, const T& value)
+    {
+        if (static_cast<int>(value) == 0 && out.flags() & std::ios::showpos)
+        {
+            out << "+0";
+            return true;
+        }
+        return false;
+    }
+};
+#endif // TINYFORMAT_OLD_LIBSTDCPLUSPLUS_WORKAROUND
 
 // Convert an arbitrary type to integer.  The version with convertible=false
 // throws an error.
@@ -469,7 +502,7 @@ class FormatArg
          { }
 
         template<typename T>
-        FormatArg(const T& value)
+        explicit FormatArg(const T& value)
             : m_value(static_cast<const void*>(&value)),
             m_formatImpl(&formatImpl<T>),
             m_toIntImpl(&toIntImpl<T>)
@@ -846,7 +879,7 @@ class FormatListN : public FormatList
     public:
 #ifdef TINYFORMAT_USE_VARIADIC_TEMPLATES
         template<typename... Args>
-        FormatListN(const Args&... args)
+        explicit FormatListN(const Args&... args)
             : FormatList(&m_formatterStore[0], N),
             m_formatterStore { FormatArg(args)... }
         { static_assert(sizeof...(args) == N, "Number of args must be N"); }
@@ -855,7 +888,7 @@ class FormatListN : public FormatList
 #       define TINYFORMAT_MAKE_FORMATLIST_CONSTRUCTOR(n)       \
                                                                \
         template<TINYFORMAT_ARGTYPES(n)>                       \
-        FormatListN(TINYFORMAT_VARARGS(n))                     \
+        explicit FormatListN(TINYFORMAT_VARARGS(n))            \
             : FormatList(&m_formatterStore[0], n)              \
         { assert(n == N); init(0, TINYFORMAT_PASSARGS(n)); }   \
                                                                \

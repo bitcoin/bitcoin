@@ -1241,21 +1241,6 @@ void RenameThread(const char* name)
 #endif
 }
 
-std::string GetThreadName()
-{
-    char name[16];
-#if defined(PR_GET_NAME)
-    // Only the first 15 characters are used (16 - NUL terminator)
-    ::prctl(PR_GET_NAME, name, 0, 0, 0);
-#elif defined(MAC_OSX)
-    pthread_getname_np(pthread_self(), name, 16);
-// #elif (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))
-// #else
-    // no get_name here
-#endif
-    return std::string(name);
-}
-
 void SetupEnvironment()
 {
 #ifdef HAVE_MALLOPT_ARENA_MAX

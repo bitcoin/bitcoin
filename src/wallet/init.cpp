@@ -13,8 +13,8 @@
 #include <util/system.h>
 #include <util/moneystr.h>
 #include <validation.h>
-#include <wallet/privatesend_client.h>
 #include <walletinitinterface.h>
+#include <wallet/privatesend_client.h>
 #include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
