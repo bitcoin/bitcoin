@@ -43,7 +43,7 @@ namespace
 
 json_spirit::Value agents(const json_spirit::Array& params, bool fHelp)
 {
-    std::string command = GetCommand(params);
+    auto command = GetCommand(params);
 
     if (command == "vote")
         return detail::vote(params, fHelp);
@@ -124,24 +124,23 @@ json_spirit::Value detail::vote(const json_spirit::Array& params, bool fHelp)
             continue;
         }
 
-        FundSpecialTx(tx, voteTx);
-        SignSpecialTxPayload(tx, voteTx, keyMasternode);
-        SetTxPayload(tx, voteTx);
-
-        std::string result = SignAndSendSpecialTx(tx);
-
-        if(true)
+        try
         {
+            FundSpecialTx(tx, voteTx);
+            SignSpecialTxPayload(tx, voteTx, keyMasternode);
+            SetTxPayload(tx, voteTx);
+
+            std::string result = SignAndSendSpecialTx(tx);
+
             ++success;
             statusObj.push_back(json_spirit::Pair("result", result));
         }
-        else
+        catch(const std::exception& ex)
         {
             ++failed;
             statusObj.push_back(json_spirit::Pair("result", "failed"));
-            statusObj.push_back(json_spirit::Pair("errorMessage", "?"));
+            statusObj.push_back(json_spirit::Pair("errorMessage", ex.what()));
             resultsObj.push_back(json_spirit::Pair(mne.getAlias(), statusObj));
-            continue;
         }
 
         resultsObj.push_back(json_spirit::Pair(mne.getAlias(), statusObj));
