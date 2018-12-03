@@ -31,8 +31,6 @@ class QSignalMapper;
 class QTableView;
 QT_END_NAMESPACE
 
-#define PROPOSALLIST_UPDATE_SECONDS 30
-
 class ProposalList : public QWidget
 {
     Q_OBJECT
