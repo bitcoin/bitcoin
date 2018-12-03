@@ -29,6 +29,8 @@ bool IsProtocolV05(unsigned int nTimeTx);
 // Whether a given block is subject to new v0.6 protocol
 // Test against previous block index! (always available)
 bool IsProtocolV06(const CBlockIndex *pindexPrev);
+// Whether a given block is subject to new BIPs from bitcoin 0.16.x
+bool IsBTC16BIPsEnabled(uint32_t nTimeTx);
 
 // Compute the hash modifier for proof-of-stake
 bool ComputeNextStakeModifier(const CBlockIndex* pindexCurrent, uint64_t& nStakeModifier, bool& fGeneratedStakeModifier);

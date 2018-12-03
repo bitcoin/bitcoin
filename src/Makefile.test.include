@@ -85,8 +85,7 @@ BITCOIN_TESTS =\
   test/txvalidationcache_tests.cpp \
   test/uint256_tests.cpp \
   test/util_tests.cpp \
-  test/validation_block_tests.cpp \
-  test/versionbits_tests.cpp
+  test/validation_block_tests.cpp
 
 if ENABLE_WALLET
 BITCOIN_TESTS += \

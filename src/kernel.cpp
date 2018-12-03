@@ -31,6 +31,9 @@ unsigned int nProtocolV05TestSwitchTime = 1447700000;
 const unsigned int nProtocolV06SwitchTime     = 1513050000; // Tue 12 Dec 03:40:00 UTC 2017
 const unsigned int nProtocolV06TestSwitchTime = 1508198400; // Tue 17 Oct 00:00:00 UTC 2017
 
+// Switch time for new BIPs from bitcoin 0.16.x
+const uint32_t nBTC16BIPsSwitchTime = 1559260800; // Fri 31 May 00:00:00 UTC 2019
+
 // Hard checkpoints of stake modifiers to ensure they are deterministic
 static std::map<int, unsigned int> mapStakeModifierCheckpoints =
     boost::assign::map_list_of
@@ -76,6 +79,11 @@ bool IsProtocolV06(const CBlockIndex* pindexPrev)
     return true;
 
   return false;
+}
+
+bool IsBTC16BIPsEnabled(uint32_t nTimeTx)
+{
+    return nTimeTx >= nBTC16BIPsSwitchTime;
 }
 
 // Get the last stake modifier and its generation time from a given block

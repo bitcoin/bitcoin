@@ -32,6 +32,7 @@ public:
     int32_t nFlags;
     // peercoin: Used in CheckProofOfStake().
     static const int32_t NORMAL_SERIALIZE_SIZE=80;
+    static const int32_t CURRENT_VERSION=3;
 
     CBlockHeader()
     {
@@ -56,7 +57,7 @@ public:
 
     void SetNull()
     {
-        nVersion = 0;
+        nVersion = CURRENT_VERSION;
         hashPrevBlock.SetNull();
         hashMerkleRoot.SetNull();
         nTime = 0;
