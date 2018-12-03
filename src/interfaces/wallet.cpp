@@ -477,7 +477,7 @@ public:
     bool DoAutoBackup(std::string walletIn, std::string& strBackupWarning, std::string& strBackupError) override
     {
         std::shared_ptr<CWallet> const pwallet = GetWallet(walletIn);
-        return AutoBackupWallet(pwallet, nullptr, strBackupWarning, strBackupError);
+        return AutoBackupWallet(pwallet, WalletLocation(), strBackupWarning, strBackupError);
     }
 
     std::unique_ptr<Handler> handleUnload(UnloadFn fn) override

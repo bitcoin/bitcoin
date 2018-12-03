@@ -4735,7 +4735,7 @@ bool CWallet::Verify(interfaces::Chain& chain, const WalletLocation& location, b
         return false;
     }
 
-    return AutoBackupWallet(nullptr, location.GetName(), warning_string, error_string);
+    return AutoBackupWallet(nullptr, location, warning_string, error_string);
 }
 
 std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain, const WalletLocation& location, uint64_t wallet_creation_flags)
@@ -4875,18 +4875,6 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
         auto locked_chain = chain.assumeLocked();  // Temporary. Removed in upcoming lock cleanup
         walletInstance->ChainStateFlushed(chainActive.GetLocator());
 
-        // Try to create wallet backup right after new wallet was created
-        std::string strBackupWarning;
-        std::string strBackupError;
-        if(!AutoBackupWallet(walletInstance, nullptr, strBackupWarning, strBackupError)) {
-            if (!strBackupWarning.empty()) {
-                InitWarning(strBackupWarning);
-            }
-            if (!strBackupError.empty()) {
-                InitError(strBackupError);
-                return nullptr;
-            }
-        }
     } else if (wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS) {
         // Make it impossible to disable private keys after creation
         InitError(strprintf(_("Error loading %s: Private keys can only be disabled during creation"), walletFile));
@@ -5102,7 +5090,7 @@ bool CWallet::BackupWallet(const std::string& strDest)
 
 // This should be called carefully:
 // either supply "wallet" (if already loaded) or "strWalletFile" (if wallet wasn't loaded yet)
-bool AutoBackupWallet (std::shared_ptr<CWallet> pwallet, std::string walletFile, std::string& strBackupWarning, std::string& strBackupError)
+bool AutoBackupWallet (std::shared_ptr<CWallet> pwallet, const WalletLocation& location, std::string& strBackupWarning, std::string& strBackupError)
 {
     strBackupWarning = strBackupError = "";
 
@@ -5122,6 +5110,8 @@ bool AutoBackupWallet (std::shared_ptr<CWallet> pwallet, std::string walletFile,
                 return false;
             }
         }
+
+        const fs::path& wallet_path = pwallet ? pwallet->GetLocation().GetPath() : location.GetPath();
 
         // Create backup of the ...
         std::string dateTimeStr = FormatISO8601DateTime(GetTime());
@@ -5148,9 +5138,10 @@ bool AutoBackupWallet (std::shared_ptr<CWallet> pwallet, std::string walletFile,
             }
         } else {
             // ... walletFile file
-            if (walletFile == "") walletFile = "wallet.dat";
-            fs::path sourceFile = GetDataDir() / walletFile;
-            fs::path backupFile = backupsDir / (walletFile + dateTimeStr);
+            std::string strWallet = location.GetName();
+            if (strWallet == "") strWallet = "wallet.dat";
+            fs::path sourceFile = location.GetPath() / "wallet.dat";
+            fs::path backupFile = backupsDir / (strWallet + "-" + dateTimeStr);
             sourceFile.make_preferred();
             backupFile.make_preferred();
             if (fs::exists(backupFile))
@@ -5186,7 +5177,7 @@ bool AutoBackupWallet (std::shared_ptr<CWallet> pwallet, std::string walletFile,
             {
                 currentFile = dir_iter->path().filename();
                 // Only add the backups for the current wallet, e.g. wallet.dat.*
-                if(dir_iter->path().stem().string() == walletFile)
+                if(dir_iter->path().stem().string() == wallet_path)
                 {
                     folder_set.insert(folder_set_t::value_type(fs::last_write_time(dir_iter->path()), *dir_iter));
                 }

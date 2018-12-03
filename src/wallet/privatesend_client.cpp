@@ -724,7 +724,7 @@ bool CPrivateSendClient::CheckAutomaticBackup()
             std::string errorString;
             std::shared_ptr<CWallet> const pwallet = GetWallet(pmixingwallet->GetName());
 
-            if(!AutoBackupWallet(pwallet, "", warningString, errorString)) {
+            if(!AutoBackupWallet(pwallet, WalletLocation(), warningString, errorString)) {
                 if(!warningString.empty()) {
                     // There were some issues saving backup but yet more or less safe to continue
                     LogPrintf("CPrivateSendClient::CheckAutomaticBackup -- WARNING! Something went wrong on automatic backup: %s\n", warningString);
