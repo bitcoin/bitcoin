@@ -62,7 +62,7 @@
            </property>
            <property name="icon">
             <iconset resource="../chaincoin.qrc">
-             <normaloff>:/icons/green/address-book2</normaloff>:/icons/green/address-book2</iconset>
+             <normaloff>:/icons/green/address-book</normaloff>:/icons/green/address-book</iconset>
            </property>
            <property name="shortcut">
             <string>Alt+A</string>
@@ -259,7 +259,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset theme="address-book2"/>
+            <iconset theme="address-book"/>
            </property>
            <property name="shortcut">
             <string>Alt+A</string>

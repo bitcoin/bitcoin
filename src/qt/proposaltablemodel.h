@@ -11,49 +11,43 @@
 #include <QStringList>
 #include <QNetworkReply>
 #include <QNetworkRequest>
-#include <QNetworkAccessManager>
 #include <QUrl>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonValue>
 #include <QJsonArray>
 
-class PlatformStyle;
+class ClientModel;
 class ProposalRecord;
 class ProposalTablePriv;
-
-namespace interfaces {
-    class Node;
-};
-
 
 class ProposalTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 
 public:
-    explicit ProposalTableModel(interfaces::Node& node, const PlatformStyle *platformStyle, QObject *parent = 0);
+    explicit ProposalTableModel(ClientModel *parent = 0);
     ~ProposalTableModel();
 
     enum ColumnIndex {
-        Proposal = 0,
-        Amount = 1,
-        StartDate = 2,
-        EndDate = 3,
-        YesVotes = 4,
-        NoVotes = 5,
-        AbsoluteYesVotes = 6,
+        Amount = 0,
+        StartDate = 1,
+        EndDate = 2,
+        YesVotes = 3,
+        NoVotes = 4,
+        AbsoluteYesVotes = 5,
+        Proposal = 6,
         Percentage = 7
     };
 
     enum RoleIndex {
-        ProposalRole = Qt::UserRole,
-        AmountRole,
+        AmountRole = Qt::UserRole,
         StartDateRole,
         EndDateRole,
         YesVotesRole,
         NoVotesRole,
         AbsoluteYesVotesRole,
+        ProposalRole,
         PercentageRole,
         ProposalUrlRole,
         ProposalHashRole,
@@ -61,23 +55,20 @@ public:
 
     int rowCount(const QModelIndex &parent) const;
     int columnCount(const QModelIndex &parent) const;
-    void refreshProposals();
     QVariant data(const QModelIndex &index, int role) const;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
     QModelIndex index(int row, int column, const QModelIndex & parent = QModelIndex()) const;
 
 private:
-    interfaces::Node& m_node;
-    QNetworkAccessManager *networkManager;
-    QNetworkReply *currentReply;
-
-    QList<ProposalRecord*> proposalRecords;
+    ClientModel *clientModel;
     QStringList columns;
-    const PlatformStyle *platformStyle;
+    ProposalTablePriv *priv;
 
 public Q_SLOTS:
+    /* New proposal, or proposal changed status */
+    void updateProposal(const QString &hash, int status);
 
-    void onResult(QNetworkReply *result);
+    friend class ProposalTablePriv;
 };
 
 #endif // BITCOIN_QT_PROPOSALTABLEMODEL_H

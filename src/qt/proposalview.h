@@ -14,12 +14,9 @@
 #include <QKeyEvent>
 #include <QTimer>
 
+class ClientModel;
 class PlatformStyle;
 class ProposalFilterProxy;
-
-namespace interfaces {
-    class Node;
-};
 
 
 QT_BEGIN_NAMESPACE
@@ -41,9 +38,9 @@ class ProposalList : public QWidget
     Q_OBJECT
 
 public:
-    explicit ProposalList(interfaces::Node& node, const PlatformStyle *platformStyle, QWidget *parent = 0);
+    explicit ProposalList(const PlatformStyle *platformStyle, QWidget *parent = 0);
 
-    void setModel();
+    void setClientModel(ClientModel *clientModel);
 
     enum DateEnum
     {
@@ -57,27 +54,27 @@ public:
     };
 
     enum ColumnWidths {
-        PROPOSAL_COLUMN_WIDTH = 380,
-        START_DATE_COLUMN_WIDTH = 110,
-        END_DATE_COLUMN_WIDTH = 110,
+        AMOUNT_COLUMN_WIDTH = 100,
+        START_DATE_COLUMN_WIDTH = 140,
+        END_DATE_COLUMN_WIDTH = 140,
         YES_VOTES_COLUMN_WIDTH = 60,
         NO_VOTES_COLUMN_WIDTH = 60,
         ABSOLUTE_YES_COLUMN_WIDTH = 60,
-        AMOUNT_COLUMN_WIDTH = 100,
-        PERCENTAGE_COLUMN_WIDTH = 80,
+        PROPOSAL_COLUMN_WIDTH = 300,
+        PERCENTAGE_COLUMN_WIDTH = 100,
         MINIMUM_COLUMN_WIDTH = 23
     };
 
 private:
-    interfaces::Node& m_node;
+    ClientModel *clientModel;
     ProposalTableModel *proposalTableModel;
     ProposalFilterProxy *proposalProxyModel;
     QTableView *proposalList;
     int64_t nLastUpdate = 0;
 
     QLineEdit *proposalWidget;
-    QComboBox *startDateWidget;
-    QComboBox *endDateWidget;
+    QComboBox *dateStartWidget;
+    QComboBox *dateEndWidget;
     QTimer *timer;
 
     QLineEdit *yesVotesWidget;
@@ -89,15 +86,17 @@ private:
 
     QMenu *contextMenu;
 
-    QFrame *startDateRangeWidget;
-    QDateTimeEdit *proposalStartDate;
+    QFrame *dateStartRangeWidget;
+    QDateTimeEdit *dateStartFrom;
+    QDateTimeEdit *dateStartTo;
 
-    QFrame *endDateRangeWidget;
-    QDateTimeEdit *proposalEndDate;
+    QFrame *dateEndRangeWidget;
+    QDateTimeEdit *dateEndFrom;
+    QDateTimeEdit *dateEndTo;
     ColumnAlignedLayout *hlayout;
 
-    QWidget *createStartDateRangeWidget();
-    QWidget *createEndDateRangeWidget();
+    QWidget *createDateStartRangeWidget();
+    QWidget *createDateEndRangeWidget();
     void vote_click_handler(const std::string voteString);
 
     GUIUtil::TableViewLastColumnResizingFixer *columnResizingFixer;
@@ -106,27 +105,26 @@ private:
 
 private Q_SLOTS:
     void contextualMenu(const QPoint &);
-    void startDateRangeChanged();
-    void endDateRangeChanged();
+    void dateStartRangeChanged();
+    void dateEndRangeChanged();
     void voteYes();
     void voteNo();
     void voteAbstain();
     void openProposalUrl();
-    void invalidateAlignedLayout();
 
 Q_SIGNALS:
     void doubleClicked(const QModelIndex&);
 
 public Q_SLOTS:
     void refreshProposals();
-    void changedProposal(const QString &proposal);
+    void changedProposal();
     void chooseStartDate(int idx);
     void chooseEndDate(int idx);
-    void changedYesVotes(const QString &minYesVotes);
-    void changedNoVotes(const QString &minNoVotes);
-    void changedAbsoluteYesVotes(const QString &minAbsoluteYesVotes);
-    void changedPercentage(const QString &minPercentage);
-    void changedAmount(const QString &minAmount);
+    void changedYesVotes();
+    void changedNoVotes();
+    void changedAbsoluteYesVotes();
+    void changedPercentage();
+    void changedAmount();
 
 };
 

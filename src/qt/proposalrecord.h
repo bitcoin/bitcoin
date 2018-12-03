@@ -11,35 +11,44 @@
 #include <QList>
 #include <QString>
 
-class CWallet;
+namespace interfaces {
+class Node;
+struct Proposal;
+}
 
 class ProposalRecord
 {
 public:
     ProposalRecord():
-            hash(""), start_epoch(0), end_epoch(0), url(""), name(""), yesVotes(0), noVotes(0), absoluteYesVotes(0), amount(0), percentage(0)
+            hash(), amount(0), start_epoch(0), end_epoch(0), yesVotes(0), noVotes(0), absoluteYesVotes(0), name(""), url(""), percentage(0)
     {
     }
 
-    ProposalRecord(QString hash, qint64 start_epoch, qint64 end_epoch,
-                QString url, QString name,
-                const CAmount& yesVotes, const CAmount& noVotes, const CAmount& absoluteYesVotes,
-                const CAmount& amount, const CAmount& percentage):
-            hash(hash), start_epoch(start_epoch), end_epoch(end_epoch), url(url), name(name), yesVotes(yesVotes), noVotes(noVotes),
-            absoluteYesVotes(absoluteYesVotes), amount(amount), percentage(percentage)
+    ProposalRecord(uint256 hash, const CAmount& amount, qint64 start_epoch, qint64 end_epoch,
+                const int64_t& yesVotes, const int64_t& noVotes, const int64_t& absoluteYesVotes,
+                QString name, QString url, const int64_t& percentage):
+            hash(hash), amount(amount), start_epoch(start_epoch), end_epoch(end_epoch), yesVotes(yesVotes), noVotes(noVotes),
+            absoluteYesVotes(absoluteYesVotes), name(name), url(url), percentage(percentage)
     {
     }
 
-    QString hash;
+    /** Decompose CGovernanceObject to model proposal records.
+     */
+    static bool showProposal();
+
+    uint256 hash;
+    CAmount amount;
     qint64 start_epoch;
     qint64 end_epoch;
-    QString url;
+    int64_t yesVotes;
+    int64_t noVotes;
+    int64_t absoluteYesVotes;
     QString name;
-    CAmount yesVotes;
-    CAmount noVotes;
-    CAmount absoluteYesVotes;
-    CAmount amount;
-    CAmount percentage;
+    QString url;
+    int64_t percentage;
+
+    /** Return the unique identifier for this proposal (part) */
+    QString getObjHash() const;
 };
 
 #endif // BITCOIN_QT_PROPOSALRECORD_H

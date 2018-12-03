@@ -10,6 +10,7 @@
 #include <memory>
 #include <stdint.h>
 #include <string>
+#include <uint256.h>
 
 class CWallet;
 class CBlockIndex;
@@ -116,8 +117,14 @@ public:
     /** Best header has changed */
     ADD_SIGNALS_DECL_WRAPPER(NotifyHeaderTip, void, bool, const CBlockIndex*);
 
-    /** Banlist did change. */
+    /** Bannedlist did change. */
     ADD_SIGNALS_DECL_WRAPPER(BannedListChanged, void, void);
+
+    /** Masternodelist did change. */
+    ADD_SIGNALS_DECL_WRAPPER(NotifyMasternodeChanged, void, const uint256&, ChangeType);
+
+    /** Proposallist did change. */
+    ADD_SIGNALS_DECL_WRAPPER(NotifyProposalChanged, void, const uint256&, ChangeType);
 };
 
 /** Show warning message **/

@@ -6,7 +6,6 @@
 #include <qt/bitcoingui.h>
 
 #include <qt/bitcoinunits.h>
-#include <chainparams.h>
 #include <qt/clientmodel.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
@@ -36,8 +35,6 @@
 #include <noui.h>
 #include <ui_interface.h>
 #include <util/system.h>
-#include <qt/masternodelist.h>
-#include <qt/proposallist.h>
 
 #include <iostream>
 
@@ -109,7 +106,7 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const PlatformStyle *_platformSty
     if(enableWallet)
     {
         /** Create wallet frame and make it the central widget */
-        walletFrame = new WalletFrame(node, _platformStyle, this);
+        walletFrame = new WalletFrame(_platformStyle, this);
         setCentralWidget(walletFrame);
     } else
 #endif // ENABLE_WALLET
@@ -185,7 +182,7 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const PlatformStyle *_platformSty
     QString curStyle = QApplication::style()->metaObject()->className();
     if(curStyle == "QWindowsStyle" || curStyle == "QWindowsXPStyle")
     {
-        progressBar->setStyleSheet("QProgressBar { background-color: #595a5c; color: #ffffff; border: 1px solid grey; border-radius: 7px; padding: 1px; text-align: center; } QProgressBar::chunk { background: #51ba50; color: #ffffff; border-radius: 7px; margin: 0px; }");
+        progressBar->setStyleSheet("QProgressBar { background-color: #e8e8e8; border: 1px solid grey; border-radius: 7px; padding: 1px; text-align: center; } QProgressBar::chunk { background: QLinearGradient(x1: 0, y1: 0, x2: 1, y2: 0, stop: 0 #FF8000, stop: 1 orange); border-radius: 7px; margin: 0px; }");
     }
 
     statusBar()->addWidget(progressBarLabel);
@@ -282,18 +279,6 @@ void BitcoinGUI::createActions()
     tabGroup->addAction(historyAction);
 
 #ifdef ENABLE_WALLET
-    QSettings settings;
-    if (!fLiteMode && settings.value("fShowMasternodesTab").toBool()) {
-        masternodeAction = new QAction(QIcon(":/icons/" + theme + "/masternodes"), tr("&Masternodes"), this);
-        masternodeAction->setStatusTip(tr("Browse masternodes"));
-        masternodeAction->setToolTip(masternodeAction->statusTip());
-        masternodeAction->setCheckable(true);
-        masternodeAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
-        tabGroup->addAction(masternodeAction);
-        connect(masternodeAction, &QAction::triggered, this, static_cast<void (BitcoinGUI::*)()>(&BitcoinGUI::showNormalIfMinimized));
-        connect(masternodeAction, &QAction::triggered, this, &BitcoinGUI::gotoMasternodePage);
-    }
-
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
     // can be triggered from the tray menu, and need to show the GUI to be useful.
     connect(overviewAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
@@ -310,12 +295,24 @@ void BitcoinGUI::createActions()
     connect(historyAction, &QAction::triggered, this, &BitcoinGUI::gotoHistoryPage);
 #endif // ENABLE_WALLET
 
-    proposalAction = new QAction(QIcon(":/icons/" + theme + "/proposal"), tr("&Proposals"), this);
-    proposalAction->setStatusTip(tr("Browse proposals"));
-    proposalAction->setToolTip(proposalAction->statusTip());
-    proposalAction->setCheckable(true);
-    proposalAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_6));
-    tabGroup->addAction(proposalAction);
+    QSettings settings;
+    if (!fLiteMode && settings.value("fShowMasternodesTab").toBool()) {
+        masternodeAction = new QAction(QIcon(":/icons/" + theme + "/masternodes"), tr("&Masternodes"), this);
+        masternodeAction->setStatusTip(tr("Browse masternodes"));
+        masternodeAction->setToolTip(masternodeAction->statusTip());
+        masternodeAction->setCheckable(true);
+        masternodeAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
+        tabGroup->addAction(masternodeAction);
+        connect(masternodeAction, &QAction::triggered, this, static_cast<void (BitcoinGUI::*)()>(&BitcoinGUI::showNormalIfMinimized));
+        connect(masternodeAction, &QAction::triggered, this, &BitcoinGUI::gotoMasternodePage);
+
+        proposalAction = new QAction(QIcon(":/icons/" + theme + "/proposal"), tr("&Proposals"), this);
+        proposalAction->setStatusTip(tr("Browse proposals"));
+        proposalAction->setToolTip(proposalAction->statusTip());
+        proposalAction->setCheckable(true);
+        proposalAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_6));
+        tabGroup->addAction(proposalAction);
+    }
 
     quitAction = new QAction(QIcon(":/icons/" + theme + "/quit"), tr("E&xit"), this);
     quitAction->setStatusTip(tr("Quit application"));
@@ -369,7 +366,7 @@ void BitcoinGUI::createActions()
 
     usedSendingAddressesAction = new QAction(QIcon(":/icons/" + theme + "/address-book"), tr("&Sending addresses..."), this);
     usedSendingAddressesAction->setStatusTip(tr("Show the list of used sending addresses and labels"));
-    usedReceivingAddressesAction = new QAction(QIcon(":/icons/" + theme + "/address-book2"), tr("&Receiving addresses..."), this);
+    usedReceivingAddressesAction = new QAction(QIcon(":/icons/" + theme + "/address-book"), tr("&Receiving addresses..."), this);
     usedReceivingAddressesAction->setStatusTip(tr("Show the list of used receiving addresses and labels"));
 
     openAction = new QAction(QIcon(":/icons/" + theme + "/open"), tr("Open $URI..."), this);
@@ -446,7 +443,6 @@ void BitcoinGUI::createMenuBar()
     {
         file->addAction(openAction);
         file->addAction(backupWalletAction);
-        file->addSeparator();
         file->addAction(signMessageAction);
         file->addAction(verifyMessageAction);
         file->addSeparator();
@@ -503,9 +499,8 @@ void BitcoinGUI::createToolBars()
         if (!fLiteMode && settings.value("fShowMasternodesTab").toBool() && masternodeAction)
         {
             toolbar->addAction(masternodeAction);
+            toolbar->addAction(proposalAction);
         }
-        toolbar->addAction(proposalAction);
-        toolbar->setMovable(false); // remove unused icon in upper left corner
         overviewAction->setChecked(true);
 
 #ifdef ENABLE_WALLET
@@ -662,8 +657,8 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     QSettings settings;
     if (!fLiteMode && settings.value("fShowMasternodesTab").toBool() && masternodeAction) {
         masternodeAction->setEnabled(enabled);
+        proposalAction->setEnabled(enabled);
     }
-    proposalAction->setEnabled(enabled);
     encryptWalletAction->setEnabled(enabled);
     backupWalletAction->setEnabled(enabled);
     changePassphraseAction->setEnabled(enabled);
@@ -724,6 +719,7 @@ void BitcoinGUI::createTrayIconMenu()
         trayIconMenu->addSeparator();
         trayIconMenu->addAction(showBackupsAction);
     }
+    trayIconMenu->addAction(optionsAction);
     trayIconMenu->addAction(openInfoAction);
     trayIconMenu->addAction(openRPCConsoleAction);
     trayIconMenu->addAction(openGraphAction);
@@ -877,8 +873,11 @@ void BitcoinGUI::gotoSendCoinsPage(QString addr)
 
 void BitcoinGUI::gotoProposalPage()
 {
-    proposalAction->setChecked(true);
-    if (walletFrame) walletFrame->gotoProposalPage();
+    QSettings settings;
+    if (!fLiteMode && settings.value("fShowMasternodesTab").toBool() && proposalAction) {
+        proposalAction->setChecked(true);
+        if (walletFrame) walletFrame->gotoProposalPage();
+    }
 }
 
 void BitcoinGUI::gotoSignMessageTab(QString addr)

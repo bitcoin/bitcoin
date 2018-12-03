@@ -4,3 +4,16 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <qt/proposalrecord.h>
+
+#include <interfaces/node.h>
+
+bool ProposalRecord::showProposal()
+{
+    // Used to show/hide expired entries in the future
+    return true;
+}
+
+QString ProposalRecord::getObjHash() const
+{
+    return QString::fromStdString(hash.ToString());
+}

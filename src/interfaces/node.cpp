@@ -15,6 +15,8 @@
 #include <modules/masternode/masternode_sync.h>
 #include <modules/masternode/masternode_config.h>
 #include <modules/masternode/masternode_man.h>
+#include <modules/platform/funding.h>
+#include <modules/privatesend/privatesend.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netaddress.h>
@@ -23,13 +25,13 @@
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <primitives/block.h>
-#include <modules/privatesend/privatesend.h>
 #include <rpc/server.h>
 #include <scheduler.h>
 #include <shutdown.h>
 #include <sync.h>
 #include <txmempool.h>
 #include <ui_interface.h>
+#include <util/strencodings.h>
 #include <util/system.h>
 #include <validation.h>
 #include <warnings.h>
@@ -51,6 +53,33 @@ namespace interfaces {
 class Wallet;
 
 namespace {
+
+Proposal MakeProposal(const CGovernanceObject& pGovObj)
+{
+    Proposal result;
+    if (pGovObj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
+        UniValue objResult(UniValue::VOBJ);
+        UniValue dataObj(UniValue::VOBJ);
+        objResult.read(pGovObj.GetDataAsPlainString());
+
+        std::vector<UniValue> arr1 = objResult.getValues();
+        std::vector<UniValue> arr2 = arr1.at( 0 ).getValues();
+        dataObj = arr2.at( 1 );
+
+        result.hash = pGovObj.GetHash();
+        result.start = dataObj["start_epoch"].get_int64();
+        result.end = dataObj["end_epoch"].get_int64();
+        result.yes = pGovObj.GetYesCount(VOTE_SIGNAL_FUNDING);
+        result.no = pGovObj.GetNoCount(VOTE_SIGNAL_FUNDING);
+        result.abs_yes = pGovObj.GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING);
+        result.amount = dataObj["payment_amount"].get_int64();
+        result.name = dataObj["name"].get_str();
+        result.url = dataObj["url"].get_str();
+
+        return result;
+    }
+    return {};
+}
 
 class NodeImpl : public Node
 {
@@ -238,6 +267,61 @@ public:
     int MNConfigCount() override { return ::masternodeConfig.getCount(); }
     std::vector<CMasternodeConfig::CMasternodeEntry>& MNgetEntries() override { return ::masternodeConfig.getEntries(); }
 
+    bool MNStartAlias(std::string strAlias, std::string strErrorRet) override
+    {
+        for (const auto& mne : ::masternodeConfig.getEntries()) {
+            if(mne.getAlias() == strAlias) {
+                CMasternodeBroadcast mnb;
+                if (!CMasternodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strErrorRet, mnb)) {
+                    return false;
+                }
+
+                int nDoS = 0;
+                if (!g_connman || !::mnodeman.CheckMnbAndUpdateMasternodeList(nullptr, mnb, nDoS, g_connman.get())) {
+                    strErrorRet = "Failed to verify MNB";
+                    return false;
+                }
+                ::mnodeman.NotifyMasternodeUpdates(g_connman.get());
+                return true;
+            }
+        }
+        strErrorRet = "Masternode not found";
+        return false;
+    }
+
+    bool MNStartAll(std::string strCommand, std::string strErrorRet, int nCountSuccessful, int nCountFailed) override
+    {
+        for (const auto& mne : ::masternodeConfig.getEntries()) {
+            std::string strError;
+            CMasternodeBroadcast mnb;
+
+            int32_t nOutputIndex = 0;
+            if(!ParseInt32(mne.getOutputIndex(), &nOutputIndex)) {
+                continue;
+            }
+
+            COutPoint outpoint = COutPoint(uint256S(mne.getTxHash()), nOutputIndex);
+
+            if(strCommand == "start-missing" && ::mnodeman.Has(outpoint)) continue;
+
+            bool fSuccess = CMasternodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
+
+            int nDoS = 0;
+            if (fSuccess && (!g_connman || !::mnodeman.CheckMnbAndUpdateMasternodeList(nullptr, mnb, nDoS, g_connman.get()))) {
+                strError = "Failed to verify MNB";
+                fSuccess = false;
+            }
+            if(fSuccess) {
+                nCountSuccessful++;
+                ::mnodeman.NotifyMasternodeUpdates(g_connman.get());
+            } else {
+                nCountFailed++;
+                strErrorRet += "\nFailed to start " + mne.getAlias() + ". Error: " + strError;
+            }
+        }
+        return true;
+    }
+
     MasterNodeCount getMNcount() override
     {
         MasterNodeCount result;
@@ -249,7 +333,27 @@ public:
         result.countTOR = ::mnodeman.CountByIP(NET_ONION);
         return result;
     }
-
+    Proposal getProposal(const uint256& hash) override
+    {
+        LOCK(governance.cs);
+        CGovernanceObject* pGovObj = ::governance.FindGovernanceObject(hash);
+        return MakeProposal(*pGovObj);
+    }
+    std::vector<Proposal> getProposals() override
+    {
+        std::vector<Proposal> result;
+        std::vector<const CGovernanceObject*> objs = ::governance.GetAllNewerThan(0);
+        for (const auto& pGovObj : objs)
+        {
+            if(pGovObj->GetObjectType() != GOVERNANCE_OBJECT_PROPOSAL) continue;
+            result.emplace_back(MakeProposal(*pGovObj));
+        }
+        return result;
+    }
+    bool sendVoting(const uint256& hash, const std::string strVoteSignal, int& nSuccessRet, int& nFailedRet) override
+    {
+        return g_connman ? ::governance.VoteWithAll(hash, strVoteSignal, nSuccessRet, nFailedRet, g_connman.get()) : false;
+    }
     std::string getWalletDir() override
     {
         return GetWalletDir().string();
@@ -320,6 +424,14 @@ public:
                 fn(initial_download, block->nHeight, block->GetBlockTime(),
                     GuessVerificationProgress(Params().TxData(), block));
             }));
+    }
+    std::unique_ptr<Handler> handleMasternodeChanged(MasternodeChangedFn fn) override
+    {
+        return MakeHandler(::uiInterface.NotifyMasternodeChanged_connect(fn));
+    }
+    std::unique_ptr<Handler> handleProposalChanged(ProposalChangedFn fn) override
+    {
+        return MakeHandler(::uiInterface.NotifyProposalChanged_connect(fn));
     }
     InitInterfaces m_interfaces;
 };

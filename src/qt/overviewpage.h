@@ -16,10 +16,6 @@ class TxViewDelegate;
 class PlatformStyle;
 class WalletModel;
 
-namespace interfaces {
-    class Node;
-}
-
 namespace Ui {
     class OverviewPage;
 }
@@ -34,7 +30,7 @@ class OverviewPage : public QWidget
     Q_OBJECT
 
 public:
-    explicit OverviewPage(interfaces::Node& node, const PlatformStyle *platformStyle, QWidget *parent = 0);
+    explicit OverviewPage(const PlatformStyle *platformStyle, QWidget *parent = 0);
     ~OverviewPage();
 
     void setClientModel(ClientModel *clientModel);
@@ -51,7 +47,6 @@ Q_SIGNALS:
 
 private:
     QTimer *timer;
-    interfaces::Node& m_node;
     Ui::OverviewPage *ui;
     ClientModel *clientModel;
     WalletModel *walletModel;

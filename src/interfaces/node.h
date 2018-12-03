@@ -5,11 +5,12 @@
 #ifndef BITCOIN_INTERFACES_NODE_H
 #define BITCOIN_INTERFACES_NODE_H
 
-#include <cachedb.h>     // For banmap_t
-#include <amount.h>     // For CAmount
-#include <modules/masternode/masternode_config.h> // For CMasternodeConfig::CMasternodeEntry
-#include <net.h>        // For CConnman::NumConnections
-#include <netaddress.h> // For Network
+#include <cachedb.h>                                // For banmap_t
+#include <amount.h>                                 // For CAmount
+#include <modules/masternode/masternode_config.h>   // For CMasternodeConfig::CMasternodeEntry
+#include <net.h>                                    // For CConnman::NumConnections
+#include <netaddress.h>                             // For Network
+#include <ui_interface.h>                           // For ChangeType
 
 #include <functional>
 #include <memory>
@@ -33,8 +34,9 @@ class Handler;
 class Wallet;
 
 struct MasterNodeCount;
+struct Proposal;
 
-//! Top-level interface for a bitcoin node (bitcoind process).
+//! Top-level interface for a chaincoin node (chaincoind process).
 class Node
 {
 public:
@@ -183,8 +185,19 @@ public:
     virtual bool MNIsSynced() = 0;
     virtual int MNConfigCount() = 0;
     virtual std::vector<CMasternodeConfig::CMasternodeEntry>& MNgetEntries() = 0;
+    virtual bool MNStartAlias(std::string strAlias, std::string strErrorRet) = 0;
+    virtual bool MNStartAll(std::string strCommand, std::string strErrorRet, int nCountSuccessful, int nCountFailed) = 0;
 
     virtual MasterNodeCount getMNcount() = 0;
+
+    //! Get a proposal
+    virtual Proposal getProposal(const uint256& hash) = 0;
+
+    //! Get a list of all active proposals
+    virtual std::vector<Proposal> getProposals() = 0;
+
+    //! Vote with all available Masternodes
+    virtual bool sendVoting(const uint256& hash, const std::string strVoteSignal, int& nSuccessRet, int& nFailedRet) = 0;
 
     //! Return default wallet directory.
     virtual std::string getWalletDir() = 0;
@@ -244,6 +257,14 @@ public:
     using NotifyHeaderTipFn =
         std::function<void(bool initial_download, int height, int64_t block_time, double verification_progress)>;
     virtual std::unique_ptr<Handler> handleNotifyHeaderTip(NotifyHeaderTipFn fn) = 0;
+
+    //! Register handler for Masternode changed messages.
+    using MasternodeChangedFn = std::function<void(const uint256& hash, ChangeType status)>;
+    virtual std::unique_ptr<Handler> handleMasternodeChanged(MasternodeChangedFn fn) = 0;
+
+    //! Register handler for proposal changed messages.
+    using ProposalChangedFn = std::function<void(const uint256& hash, ChangeType status)>;
+    virtual std::unique_ptr<Handler> handleProposalChanged(ProposalChangedFn fn) = 0;
 };
 
 struct MasterNodeCount
@@ -260,6 +281,19 @@ struct MasterNodeCount
         return size != prev.size || compatible != prev.compatible || enabled != prev.enabled ||
                 countIPv4 != prev.countIPv4 || countIPv6 != prev.countIPv6 || countTOR != prev.countTOR;
     }
+};
+
+struct Proposal
+{
+    uint256 hash = uint256();
+    int64_t start = 0;
+    int64_t end = 0;
+    int yes = 0;
+    int no = 0;
+    int abs_yes = 0;
+    CAmount amount = 0;
+    std::string name = "";
+    std::string url = "";
 };
 
 //! Return implementation of Node interface.

@@ -15,6 +15,7 @@
 class BanTableModel;
 class OptionsModel;
 class PeerTableModel;
+class ProposalTableModel;
 
 class CBlockIndex;
 
@@ -55,6 +56,7 @@ public:
     OptionsModel *getOptionsModel();
     PeerTableModel *getPeerTableModel();
     BanTableModel *getBanTableModel();
+    ProposalTableModel *getProposalTableModel();
 
     //! Return number of connections, default is in- and outbound (total)
     int getNumConnections(unsigned int flags = CONNECTIONS_ALL) const;
@@ -89,9 +91,12 @@ private:
     std::unique_ptr<interfaces::Handler> m_handler_banned_list_changed;
     std::unique_ptr<interfaces::Handler> m_handler_notify_block_tip;
     std::unique_ptr<interfaces::Handler> m_handler_notify_header_tip;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_masternode_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_proposal_changed;
     OptionsModel *optionsModel;
     PeerTableModel *peerTableModel;
     BanTableModel *banTableModel;
+    ProposalTableModel *proposalTableModel;
 
     QString cachedMasternodeCountString;
     QTimer *pollTimer;
@@ -112,8 +117,14 @@ Q_SIGNALS:
     //! Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
 
-    // Show progress dialog e.g. for verifychain
+    //! Show progress dialog e.g. for verifychain
     void showProgress(const QString &title, int nProgress);
+
+    //! New masternode, or masternode changed status
+    void updateMasternode(const QString &hash, int status);
+
+    //! New masternode, or masternode changed status
+    void updateProposal(const QString &hash, int status);
 
 public Q_SLOTS:
     void updateTimer();

@@ -1,5 +1,5 @@
 WalletFrame {
-border-image: url(':/images/drkblue/drkblue_walletFrame_bg') 0 0 0 0 stretch stretch;
+border-image: url(':/images/drkblue/walletFrame_bg') 0 0 0 0 stretch stretch;
 border-top:0px solid #000;
 margin:0;
 padding:0;
@@ -150,7 +150,7 @@ border:0px;
 }
 
 QComboBox::down-arrow {
-border-image: url(':/images/drkblue/drkblue_downArrow') 0 0 0 0 stretch stretch;
+border-image: url(':/images/drkblue/downArrow') 0 0 0 0 stretch stretch;
 }
 
 QComboBox QListView {
@@ -205,7 +205,7 @@ padding-top:2px;
 }
 
 QAbstractSpinBox::up-arrow {
-image:url(':/images/drkblue/drkblue_upArrow_small');
+image:url(':/images/drkblue/upArrow_small');
 }
 
 QAbstractSpinBox::down-button {
@@ -223,7 +223,7 @@ padding-bottom:2px;
 }
 
 QAbstractSpinBox::down-arrow {
-image:url(':/images/drkblue/drkblue_downArrow_small');
+image:url(':/images/drkblue/downArrow_small');
 }
 
 QCheckBox {
@@ -383,19 +383,19 @@ height:10px;
 }
 
 QScrollBar:up-arrow {
-background-image: url(':/images/drkblue/drkblue_upArrow_small');
+background-image: url(':/images/drkblue/upArrow_small');
 }
 
 QScrollBar:down-arrow {
-background-image: url(':/images/drkblue/drkblue_downArrow_small');
+background-image: url(':/images/drkblue/downArrow_small');
 }
 
 QScrollBar:left-arrow {
-background-image: url(':/images/drkblue/drkblue_leftArrow_small');
+background-image: url(':/images/drkblue/leftArrow_small');
 }
 
 QScrollBar:right-arrow {
-background-image: url(':/images/drkblue/drkblue_rightArrow_small');
+background-image: url(':/images/drkblue/rightArrow_small');
 }
 
 
@@ -505,7 +505,7 @@ background-color:#fff;
 }
 
 QDialog#SignVerifyMessageDialog QPushButton#pasteButton_SM { /* Paste Button */
-/* qproperty-icon: url(":/icons/drkblue/drkblue_editpaste"); */
+/* qproperty-icon: url(":/icons/drkblue/editpaste"); */
 background-color:transparent;
 padding-left:15px;
 }
@@ -515,7 +515,7 @@ font-size:10px;
 }
 
 QDialog#SignVerifyMessageDialog QPushButton#copySignatureButton_SM { /* Copy Button */
-/* qproperty-icon: url(":/icons/drkblue/drkblue_editcopy"); */
+/* qproperty-icon: url(":/icons/drkblue/editcopy"); */
 background-color:transparent;
 padding-left:10px;
 padding-right:10px;
@@ -1162,7 +1162,7 @@ background-color:transparent;
 }
 
 QWidget#contentWidget { /* The actual content with the text/buttons/etc... */
-border-image: url(':/images/drkblue/drkblue_walletFrame_bg') 0 0 0 0 stretch stretch;
+border-image: url(':/images/drkblue/walletFrame_bg') 0 0 0 0 stretch stretch;
 border-top:0px solid #000;
 margin:0;
 padding-top:20px;
@@ -1461,7 +1461,7 @@ color:#333;
 }
 
 QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::branch:selected { /* Coin Control Branch Icon */
-background-image: url(':/images/drkblue/drkblue_qtreeview_selected');
+background-image: url(':/images/drkblue/qtreeview_selected');
 background-repeat:no-repeat;
 background-position:center;
 background-color:#f7f7f7;
@@ -1469,7 +1469,7 @@ color:#333;
 }
 
 QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::branch:checked { /* Coin Control Branch Icon */
-background-image: url(':/images/drkblue/drkblue_qtreeview_selected');
+background-image: url(':/images/drkblue/qtreeview_selected');
 background-repeat:no-repeat;
 background-position:center;
 background-color:#f7f7f7;

@@ -118,7 +118,7 @@ private:
     QToolBar* appToolBar = nullptr;
     QAction* overviewAction = nullptr;
     QAction* historyAction = nullptr;
-    QAction *masternodeAction = nullptr;
+    QAction* masternodeAction = nullptr;
     QAction* quitAction = nullptr;
     QAction* sendCoinsAction = nullptr;
     QAction* sendCoinsMenuAction = nullptr;
@@ -135,17 +135,17 @@ private:
     QAction* backupWalletAction = nullptr;
     QAction* changePassphraseAction = nullptr;
     QAction* aboutQtAction = nullptr;
-    QAction *openInfoAction = nullptr;
+    QAction* openInfoAction = nullptr;
     QAction* openRPCConsoleAction = nullptr;
-    QAction *openGraphAction = nullptr;
-    QAction *openPeersAction = nullptr;
-    QAction *openConfEditorAction = nullptr;
-    QAction *openMNConfEditorAction = nullptr;
-    QAction *showBackupsAction = nullptr;
-    QAction *openAction = nullptr;
-    QAction *showHelpMessageAction = nullptr;
-    QAction *showPrivateSendHelpAction = nullptr;
-    QAction *proposalAction = nullptr;
+    QAction* openGraphAction = nullptr;
+    QAction* openPeersAction = nullptr;
+    QAction* openConfEditorAction = nullptr;
+    QAction* openMNConfEditorAction = nullptr;
+    QAction* showBackupsAction = nullptr;
+    QAction* openAction = nullptr;
+    QAction* showHelpMessageAction = nullptr;
+    QAction* showPrivateSendHelpAction = nullptr;
+    QAction* proposalAction = nullptr;
     QAction* m_wallet_selector_label_action = nullptr;
     QAction* m_wallet_selector_action = nullptr;
 
@@ -154,7 +154,6 @@ private:
 
     QSystemTrayIcon* trayIcon = nullptr;
     QMenu* trayIconMenu = nullptr;
-    QMenu *dockIconMenu = nullptr;
     Notificator* notificator = nullptr;
     RPCConsole* rpcConsole = nullptr;
     HelpMessageDialog* helpMessageDialog = nullptr;
@@ -255,12 +254,12 @@ public Q_SLOTS:
     void gotoOverviewPage();
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
-    /** Switch to masternode page */
-    void gotoMasternodePage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
+    /** Switch to masternode page */
+    void gotoMasternodePage();
     /** Switch to proposal page */
     void gotoProposalPage();
 

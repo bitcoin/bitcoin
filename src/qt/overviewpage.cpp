@@ -122,10 +122,9 @@ public:
 };
 #include <qt/overviewpage.moc>
 
-OverviewPage::OverviewPage(interfaces::Node& node, const PlatformStyle *platformStyle, QWidget *parent) :
+OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) :
     QWidget(parent),
     timer(nullptr),
-    m_node(node),
     ui(new Ui::OverviewPage),
     clientModel(0),
     walletModel(0),
@@ -331,7 +330,8 @@ void OverviewPage::showOutOfSyncWarning(bool fShow)
 
 void OverviewPage::updatePrivateSendProgress()
 {
-    if(!m_node.MNIsBlockchainsynced() || m_node.shutdownRequested()) return;
+    if (!clientModel) return;
+    if (!clientModel->node().MNIsBlockchainsynced()) return;
 
     QString strAmountAndRounds;
     QString strPrivateSendAmount = BitcoinUnits::formatHtmlWithUnit(nDisplayUnit, privateSendClient.nPrivateSendAmount * COIN, false, BitcoinUnits::separatorAlways);
@@ -406,10 +406,12 @@ void OverviewPage::updateAdvancedPSUI(bool _fShowAdvancedPSUI) {
 
 void OverviewPage::privateSendStatus()
 {
-    if(!m_node.MNIsBlockchainsynced() || m_node.shutdownRequested()) return;
+    if (!clientModel) return;
+    if (!clientModel->node().MNIsBlockchainsynced()) return;
+
     static int64_t nLastDSProgressBlockTime = 0;
 
-    int nBestHeight = m_node.getNumBlocks();
+    int nBestHeight = clientModel->node().getNumBlocks();
 
     // We are processing more then 1 block per second, we'll just leave
     if(((nBestHeight - privateSendClient.nCachedNumBlocks) / (GetTimeMillis() - nLastDSProgressBlockTime + 1) > 1)) return;
@@ -539,6 +541,7 @@ void OverviewPage::privateSendReset(){
 }
 
 void OverviewPage::privateSendInfo(){
+    if (!clientModel) return;
     HelpMessageDialog dlg(clientModel->node(), this, HelpMessageDialog::pshelp);
     dlg.exec();
 }

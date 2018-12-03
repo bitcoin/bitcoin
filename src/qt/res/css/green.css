@@ -1,5 +1,5 @@
 WalletFrame {
-border-image: url(':/images/green/drkblue_walletFrame_bg') 0 0 0 0 stretch stretch;
+border-image: url(':/images/green/walletFrame_bg') 0 0 0 0 stretch stretch;
 border-top:0px solid #000;
 margin:0;
 padding-top:20px;
@@ -159,7 +159,7 @@ border:0px;
 }
 
 QComboBox::down-arrow {
-border-image: url(':/images/green/drkblue_downArrow') 0 0 0 0 stretch stretch;
+border-image: url(':/images/green/downArrow') 0 0 0 0 stretch stretch;
 }
 
 QComboBox QListView {
@@ -214,7 +214,7 @@ padding-top:2px;
 }
 
 QAbstractSpinBox::up-arrow {
-image:url(':/images/green/drkblue_upArrow_small');
+image:url(':/images/green/upArrow_small');
 }
 
 QAbstractSpinBox::down-button {
@@ -232,7 +232,7 @@ padding-bottom:2px;
 }
 
 QAbstractSpinBox::down-arrow {
-image:url(':/images/green/drkblue_downArrow_small');
+image:url(':/images/green/downArrow_small');
 }
 
 QCheckBox {
@@ -322,90 +322,12 @@ background-color:#f0f0f0;
 color:#333;
 }
 
-QScrollBar { /* Scroll Bar */
-
-}
-
-QScrollBar:vertical { /* Vertical Scroll Bar Attributes */
-border:0;
-background:#ffffff;
-width:18px;
-margin: 18px 0px 18px 0px;
-}
-
-QScrollBar:horizontal { /* Horizontal Scroll Bar Attributes */
-border:0;
-background:#ffffff;
-height:18px;
-margin: 0px 18px 0px 18px;
-}
 
 
-QScrollBar::handle:vertical { /* Scroll Bar Slider - vertical */
-background:#e0e0e0;
-min-height:10px;
-}
 
-QScrollBar::handle:horizontal { /* Scroll Bar Slider - horizontal */
-background:#e0e0e0;
-min-width:10px;
-}
 
-QScrollBar::add-page, QScrollBar::sub-page { /* Scroll Bar Background */
-background:#F8F6F6;
-}
 
-QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical, QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal { /* Define Arrow Button Dimensions */
-background-color:#F8F6F6;
-border: 1px solid #f2f0f0;
-width:16px;
-height:16px;
-}
 
-QScrollBar::add-line:vertical:pressed, QScrollBar::sub-line:vertical:pressed, QScrollBar::add-line:horizontal:pressed, QScrollBar::sub-line:horizontal:pressed {
-background-color:#e0e0e0;
-}
-
-QScrollBar::sub-line:vertical { /* Vertical - top button position */
-subcontrol-position:top;
-subcontrol-origin: margin;
-}
-
-QScrollBar::add-line:vertical { /* Vertical - bottom button position */
-subcontrol-position:bottom;
-subcontrol-origin: margin;
-}
-
-QScrollBar::sub-line:horizontal { /* Vertical - left button position */
-subcontrol-position:left;
-subcontrol-origin: margin;
-}
-
-QScrollBar::add-line:horizontal { /* Vertical - right button position */
-subcontrol-position:right;
-subcontrol-origin: margin;
-}
-
-QScrollBar:up-arrow, QScrollBar:down-arrow, QScrollBar:left-arrow, QScrollBar:right-arrow { /* Arrows Icon */
-width:10px;
-height:10px;
-}
-
-QScrollBar:up-arrow {
-background-image: url(':/images/green/drkblue_upArrow_small');
-}
-
-QScrollBar:down-arrow {
-background-image: url(':/images/green/drkblue_downArrow_small');
-}
-
-QScrollBar:left-arrow {
-background-image: url(':/images/green/drkblue_leftArrow_small');
-}
-
-QScrollBar:right-arrow {
-background-image: url(':/images/green/drkblue_rightArrow_small');
-}
 
 
 /*******************************************************/
@@ -514,7 +436,7 @@ background-color:#fff;
 }
 
 QDialog#SignVerifyMessageDialog QPushButton#pasteButton_SM { /* Paste Button */
-/* qproperty-icon: url(":/icons/light/drkblue_editpaste"); */
+/* qproperty-icon: url(":/icons/light/editpaste"); */
 background-color:transparent;
 padding-left:15px;
 }
@@ -524,7 +446,7 @@ font-size:10px;
 }
 
 QDialog#SignVerifyMessageDialog QPushButton#copySignatureButton_SM { /* Copy Button */
-/* qproperty-icon: url(":/icons/light/drkblue_editcopy"); */
+/* qproperty-icon: url(":/icons/light/editcopy"); */
 background-color:transparent;
 padding-left:10px;
 padding-right:10px;
@@ -1182,7 +1104,7 @@ background-color:transparent;
 }
 
 QWidget#contentWidget { /* The actual content with the text/buttons/etc... */
-border-image: url(':/images/green/drkblue_walletFrame_bg') 0 0 0 0 stretch stretch;
+border-image: url(':/images/green/walletFrame_bg') 0 0 0 0 stretch stretch;
 border-top:0px solid #000;
 margin:0;
 padding-top:20px;
@@ -1484,7 +1406,7 @@ color:#333;
 }
 
 QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::branch:selected { /* Coin Control Branch Icon */
-background-image: url(':/images/green/drkblue_qtreeview_selected');
+background-image: url(':/images/green/qtreeview_selected');
 background-repeat:no-repeat;
 background-position:center;
 background-color:#f7f7f7;
@@ -1492,7 +1414,7 @@ color:#333;
 }
 
 QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::branch:checked { /* Coin Control Branch Icon */
-background-image: url(':/images/green/drkblue_qtreeview_selected');
+background-image: url(':/images/green/qtreeview_selected');
 background-repeat:no-repeat;
 background-position:center;
 background-color:#f7f7f7;
@@ -1674,4 +1596,31 @@ QDialog#TransactionDescDialog QTextEdit { /* Contents of Receive Coin Dialog */
 border:1px solid #d7d7d7;
 }
 
+/* PROPOSALS PAGE */
+
+ProposalList QLineEdit { /* Filters */
+    margin-bottom:2px;
+    margin-right:1px;
+    min-width:111px;
+    text-align:center;
+}
+
+ProposalList QLineEdit#proposalWidget { /* Address Filter */
+    margin-bottom:2px;
+    margin-right:1px;
+    min-width:305px;
+    text-align:center;
+}
+
+ProposalList QLineEdit#amountWidget { /* Amount Filter */
+    margin-bottom:2px;
+    margin-right:1px;
+    max-width:100px;
+    text-align:center;
+}
+
+ProposalList QComboBox {
+    margin-bottom:1px;
+    margin-right:1px;
+}
 

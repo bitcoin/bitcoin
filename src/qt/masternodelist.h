@@ -36,10 +36,9 @@ class MasternodeList : public QWidget
     Q_OBJECT
 
 public:
-    explicit MasternodeList(interfaces::Node& node, const PlatformStyle *platformStyle, QWidget *parent = 0);
+    explicit MasternodeList(const PlatformStyle *platformStyle, QWidget *parent = 0);
     ~MasternodeList();
 
-    int getCount() {return clientModel->node().MNConfigCount();}
     void setClientModel(ClientModel *_clientModel);
     void setWalletModel(WalletModel *_walletmodel);
     void ShowQRCode(std::string strAlias);
@@ -60,7 +59,6 @@ Q_SIGNALS:
     void doubleClicked(const QModelIndex&);
 
 private:
-    interfaces::Node& m_node;
     QTimer *timer;
     Ui::MasternodeList *ui;
     ClientModel *clientModel;
