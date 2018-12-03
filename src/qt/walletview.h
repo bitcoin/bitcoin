@@ -7,7 +7,7 @@
 
 #include <amount.h>
 #include <qt/masternodelist.h>
-#include <qt/proposallist.h>
+#include <qt/proposalview.h>
 
 #include <QStackedWidget>
 

@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <qt/proposallist.h>
+#include <qt/proposalview.h>
 
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>
