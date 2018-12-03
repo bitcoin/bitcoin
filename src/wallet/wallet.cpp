@@ -2319,9 +2319,9 @@ CAmount CWallet::GetDenominatedBalance() const
     {
         auto locked_chain = chain().lock();
         LOCK(cs_wallet);
-        for (std::map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        for (const auto& entry : mapWallet)
         {
-            const CWalletTx* pcoin = &(*it).second;
+            const CWalletTx* pcoin = &entry.second;
 
             nTotal += pcoin->GetDenominatedCredit(*locked_chain);
         }
