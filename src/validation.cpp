@@ -2188,8 +2188,10 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
     LogPrint("bench", "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime3 - nTime2), 0.001 * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime3 - nTime2) / (nInputs-1), nTimeConnect * 0.000001);
 
-    if (!ProcessSpecialTxsInBlock(block, pindex, state))
-        return false;
+    if (!ProcessSpecialTxsInBlock(block, pindex, state)) {
+        return error("ConnectBlock(): ProcessSpecialTxsInBlock for block %s failed with %s",
+                     pindex->GetBlockHash().ToString(), FormatStateMessage(state));
+    }
 
     // DASH : MODIFIED TO CHECK MASTERNODE PAYMENTS AND SUPERBLOCKS
 
