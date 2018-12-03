@@ -52,7 +52,7 @@ class IncludeConfTest(BitcoinTestFramework):
 
         subversion = self.nodes[0].getnetworkinfo()["subversion"]
         assert subversion.endswith("main; relative)/")
-        self.stop_node(0, expected_stderr="warning: -includeconf cannot be used from included files; ignoring -includeconf=relative2.conf")
+        self.stop_node(0, expected_stderr="Warning: relative.conf:2: -includeconf cannot be used from included files; ignoring -includeconf=relative2.conf")
 
         self.log.info("-includeconf cannot contain invalid arg")
 

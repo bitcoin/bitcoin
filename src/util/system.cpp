@@ -15,7 +15,6 @@
 #include <util/string.h>
 #include <util/translation.h>
 
-
 #if (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))
 #include <pthread.h>
 #include <pthread_np.h>
@@ -750,11 +749,14 @@ fs::path GetConfigFile(const std::string& confPath)
     return AbsPathForConfigVal(fs::path(confPath), false);
 }
 
-static bool GetConfigOptions(std::istream& stream, const std::string& filepath, std::string& error, std::vector<std::pair<std::string, std::string>>& options, std::list<SectionInfo>& sections)
+static bool GetConfigOptions(std::istream& stream, const std::string& filepath, const std::string& initial_section, std::string& error, std::vector<std::pair<std::string, std::string>>& options, std::list<SectionInfo>& sections, int depth)
 {
-    std::string str, prefix;
+    static const int MAX_INCLUDECONF_DEPTH = 1;
+    std::string str;
     std::string::size_type pos;
     int linenr = 1;
+    bool have_initial_section = !initial_section.empty();
+    std::string section = initial_section;
     while (std::getline(stream, str)) {
         bool used_hash = false;
         if ((pos = str.find('#')) != std::string::npos) {
@@ -765,25 +767,69 @@ static bool GetConfigOptions(std::istream& stream, const std::string& filepath, 
         str = TrimString(str, pattern);
         if (!str.empty()) {
             if (*str.begin() == '[' && *str.rbegin() == ']') {
-                const std::string section = str.substr(1, str.size() - 2);
-                sections.emplace_back(SectionInfo{section, filepath, linenr});
-                prefix = section + '.';
-            } else if (*str.begin() == '-') {
-                error = strprintf("parse error on line %i: %s, options in configuration file must be specified without leading -", linenr, str);
-                return false;
-            } else if ((pos = str.find('=')) != std::string::npos) {
-                std::string name = prefix + TrimString(str.substr(0, pos), pattern);
-                std::string value = TrimString(str.substr(pos + 1), pattern);
-                if (used_hash && name.find("rpcpassword") != std::string::npos) {
-                    error = strprintf("parse error on line %i, using # in rpcpassword can be ambiguous and should be avoided", linenr);
+                std::string tmp_section = str.substr(1, str.size() - 2);
+                if (tmp_section.empty()) {
+                    error = strprintf("parse error on %s:%i, empty section name should not be used", filepath, linenr);
                     return false;
                 }
-                options.emplace_back(name, value);
-                if ((pos = name.rfind('.')) != std::string::npos && prefix.length() <= pos) {
-                    sections.emplace_back(SectionInfo{name.substr(0, pos), filepath, linenr});
+                if (have_initial_section && section != tmp_section) {
+                    tfm::format(std::cerr, "Warning: %s:%i: square bracket should not use here to start a section, rest of this file are ignored\n", filepath, linenr);
+                    return true;
+                }
+                section = tmp_section;
+                sections.emplace_back(SectionInfo{section, filepath, linenr});
+            } else if (*str.begin() == '-') {
+                error = strprintf("parse error on %s:%i: %s, options in configuration file must be specified without leading -", filepath, linenr, str);
+                return false;
+            } else if ((pos = str.find('=')) != std::string::npos) {
+                std::string tmp_section;
+                std::string key = TrimString(str.substr(0, pos), pattern);
+                std::string::size_type separator_pos;
+                bool simple_arg = true;
+                if ((separator_pos = key.rfind('.')) == std::string::npos) {
+                    tmp_section = section;
+                } else {
+                    simple_arg = false;
+                    tmp_section = key.substr(0, separator_pos);
+                    if (tmp_section.empty()) {
+                        error = strprintf("parse error on %s:%i, empty section name should not be used", filepath, linenr);
+                        return false;
+                    }
+                    if (!section.empty() && section != tmp_section) {
+                        tfm::format(std::cerr, "Warning: %s:%i: period should not use here to specify a section\n", filepath, linenr);
+                        ++linenr;
+                        continue;
+                    }
+                    sections.emplace_back(SectionInfo{tmp_section, filepath, linenr});
+                    key = key.substr(separator_pos + 1);
+                }
+                std::string value = TrimString(str.substr(pos + 1), pattern);
+                if (used_hash && key == "rpcpassword") {
+                    error = strprintf("parse error on %s:%i, using # in rpcpassword can be ambiguous and should be avoided", filepath, linenr);
+                    return false;
+                }
+                options.emplace_back(tmp_section.empty() ? key : tmp_section + '.' + key, value);
+                if (key == "includeconf") {
+                    if (depth < 0) {
+                        continue;
+                    }
+                    if (depth < MAX_INCLUDECONF_DEPTH) {
+                        fsbridge::ifstream include_config(GetConfigFile(value));
+                        if (include_config.good()) {
+                            if (!GetConfigOptions(include_config, value, tmp_section, error, options, sections, depth + 1)) {
+                                return false;
+                            }
+                            LogPrintf("Included configuration file %s\n", value);
+                        } else {
+                            error = "Failed to include configuration file " + value;
+                            return false;
+                        }
+                    } else {
+                        tfm::format(std::cerr, "Warning: %s:%i: -includeconf cannot be used from included files; ignoring -includeconf=%s\n", filepath, linenr, value);
+                    }
                 }
             } else {
-                error = strprintf("parse error on line %i: %s", linenr, str);
+                error = strprintf("parse error on %s:%i: %s", filepath, linenr, str);
                 if (str.size() >= 2 && str.substr(0, 2) == "no") {
                     error += strprintf(", if you intended to specify a negated option, use %s=1 instead", str);
                 }
@@ -795,13 +841,16 @@ static bool GetConfigOptions(std::istream& stream, const std::string& filepath, 
     return true;
 }
 
-bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& filepath, std::string& error, bool ignore_invalid_keys)
+bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& filepath, std::string& error, bool ignore_invalid_keys, bool includeconf_enabled)
 {
-    LOCK(cs_args);
     std::vector<std::pair<std::string, std::string>> options;
-    if (!GetConfigOptions(stream, filepath, error, options, m_config_sections)) {
+    std::string initial_section;
+    std::list<SectionInfo> sections = std::list<SectionInfo>();
+    if (!GetConfigOptions(stream, filepath, initial_section, error, options, sections, includeconf_enabled ? 0 : -1)) {
         return false;
     }
+    LOCK(cs_args);
+    m_config_sections = sections;
     for (const std::pair<std::string, std::string>& option : options) {
         std::string section;
         std::string key = option.first;
@@ -837,9 +886,6 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
 
     // ok to not have a config file
     if (stream.good()) {
-        if (!ReadConfigStream(stream, confPath, error, ignore_invalid_keys)) {
-            return false;
-        }
         // `-includeconf` cannot be included in the command line arguments except
         // as `-noincludeconf` (which indicates that no included conf file should be used).
         bool use_conf_file{true};
@@ -851,54 +897,8 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
                 use_conf_file = false;
             }
         }
-        if (use_conf_file) {
-            std::string chain_id = GetChainName();
-            std::vector<std::string> conf_file_names;
-
-            auto add_includes = [&](const std::string& network, size_t skip = 0) {
-                size_t num_values = 0;
-                LOCK(cs_args);
-                if (auto* section = util::FindKey(m_settings.ro_config, network)) {
-                    if (auto* values = util::FindKey(*section, "includeconf")) {
-                        for (size_t i = std::max(skip, util::SettingsSpan(*values).negated()); i < values->size(); ++i) {
-                            conf_file_names.push_back((*values)[i].get_str());
-                        }
-                        num_values = values->size();
-                    }
-                }
-                return num_values;
-            };
-
-            // We haven't set m_network yet (that happens in SelectParams()), so manually check
-            // for network.includeconf args.
-            const size_t chain_includes = add_includes(chain_id);
-            const size_t default_includes = add_includes({});
-
-            for (const std::string& conf_file_name : conf_file_names) {
-                fsbridge::ifstream conf_file_stream(GetConfigFile(conf_file_name));
-                if (conf_file_stream.good()) {
-                    if (!ReadConfigStream(conf_file_stream, conf_file_name, error, ignore_invalid_keys)) {
-                        return false;
-                    }
-                    LogPrintf("Included configuration file %s\n", conf_file_name);
-                } else {
-                    error = "Failed to include configuration file " + conf_file_name;
-                    return false;
-                }
-            }
-
-            // Warn about recursive -includeconf
-            conf_file_names.clear();
-            add_includes(chain_id, /* skip= */ chain_includes);
-            add_includes({}, /* skip= */ default_includes);
-            std::string chain_id_final = GetChainName();
-            if (chain_id_final != chain_id) {
-                // Also warn about recursive includeconf for the chain that was specified in one of the includeconfs
-                add_includes(chain_id_final);
-            }
-            for (const std::string& conf_file_name : conf_file_names) {
-                tfm::format(std::cerr, "warning: -includeconf cannot be used from included files; ignoring -includeconf=%s\n", conf_file_name);
-            }
+        if (!ReadConfigStream(stream, confPath, error, ignore_invalid_keys, use_conf_file)) {
+            return false;
         }
     }
 

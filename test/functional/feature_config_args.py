@@ -19,8 +19,11 @@ class ConfArgsTest(BitcoinTestFramework):
         # Assume node is stopped
 
         inc_conf_file_path = os.path.join(self.nodes[0].datadir, 'include.conf')
-        with open(os.path.join(self.nodes[0].datadir, 'bitcoin.conf'), 'a', encoding='utf-8') as conf:
+        conf_base_path = os.path.join(self.nodes[0].datadir, 'bitcoin.conf')
+        conf_base_contents = open(conf_base_path, encoding='utf-8').read()
+        with open(conf_base_path, 'w', encoding='utf-8') as conf:
             conf.write('includeconf={}\n'.format(inc_conf_file_path))
+            conf.write(conf_base_contents)
 
         self.nodes[0].assert_start_raises_init_error(
             expected_msg='Error: Error parsing command line arguments: Invalid parameter -dash_cli=1',
@@ -34,7 +37,7 @@ class ConfArgsTest(BitcoinTestFramework):
 
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
             conf.write('-dash=1\n')
-        self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on line 1: -dash=1, options in configuration file must be specified without leading -')
+        self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on ' + inc_conf_file_path + ':1: -dash=1, options in configuration file must be specified without leading -')
 
         if self.is_wallet_compiled():
             with open(inc_conf_file_path, 'w', encoding='utf8') as conf:
@@ -44,27 +47,44 @@ class ConfArgsTest(BitcoinTestFramework):
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
             conf.write('regtest=0\n') # mainnet
             conf.write('acceptnonstdtxn=1\n')
-        self.nodes[0].assert_start_raises_init_error(expected_msg='Error: acceptnonstdtxn is not currently supported for main chain')
+        self.nodes[0].assert_start_raises_init_error(
+            expected_msg='Error: acceptnonstdtxn is not currently supported for main chain',
+            extra_args=['-conf={}'.format(inc_conf_file_path)],
+        )
 
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
             conf.write('nono\n')
-        self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on line 1: nono, if you intended to specify a negated option, use nono=1 instead')
+        self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on ' + inc_conf_file_path + ':1: nono, if you intended to specify a negated option, use nono=1 instead')
 
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
             conf.write('server=1\nrpcuser=someuser\nrpcpassword=some#pass')
-        self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on line 3, using # in rpcpassword can be ambiguous and should be avoided')
+        self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on ' + inc_conf_file_path + ':3, using # in rpcpassword can be ambiguous and should be avoided')
 
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
             conf.write('server=1\nrpcuser=someuser\nmain.rpcpassword=some#pass')
-        self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on line 3, using # in rpcpassword can be ambiguous and should be avoided')
+        self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on ' + inc_conf_file_path + ':3, using # in rpcpassword can be ambiguous and should be avoided')
 
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
             conf.write('server=1\nrpcuser=someuser\n[main]\nrpcpassword=some#pass')
-        self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on line 4, using # in rpcpassword can be ambiguous and should be avoided')
+        self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on ' + inc_conf_file_path + ':4, using # in rpcpassword can be ambiguous and should be avoided')
+
+        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+            conf.write('[]')
+        self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on ' + inc_conf_file_path + ':1, empty section name should not be used')
+
+        with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+            conf.write('.foo=1')
+        self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on ' + inc_conf_file_path + ':1, empty section name should not be used')
 
         inc_conf_file2_path = os.path.join(self.nodes[0].datadir, 'include2.conf')
-        with open(os.path.join(self.nodes[0].datadir, 'bitcoin.conf'), 'a', encoding='utf-8') as conf:
+        inc_conf_file3_path = os.path.join(self.nodes[0].datadir, 'include3.conf')
+        open(inc_conf_file2_path, 'w', encoding='utf-8').close() # create empty file
+        open(inc_conf_file3_path, 'w', encoding='utf-8').close() # create empty file
+        with open(conf_base_path, 'w', encoding='utf-8') as conf:
+            conf.write('regtest=1\nregtest.includeconf={}\n'.format(inc_conf_file3_path))
+            conf.write('includeconf={}\n'.format(inc_conf_file_path))
             conf.write('includeconf={}\n'.format(inc_conf_file2_path))
+            conf.write(conf_base_contents)
 
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
             conf.write('testnot.datadir=1\n')
@@ -74,9 +94,36 @@ class ConfArgsTest(BitcoinTestFramework):
         self.nodes[0].stop_node(expected_stderr='Warning: ' + inc_conf_file_path + ':1 Section [testnot] is not recognized.' + os.linesep + inc_conf_file2_path + ':1 Section [testnet] is not recognized.')
 
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
-            conf.write('')  # clear
+            conf.write('uacomment=s0\n'
+                'regtest.uacomment=s1\n'
+                '[regtest]\n'
+                'uacomment=s2\n')
         with open(inc_conf_file2_path, 'w', encoding='utf-8') as conf:
-            conf.write('')  # clear
+            conf.write( 'uacomment=s3\n'
+                'regtest.uacomment=s4\n'
+                'test.uacomment=s5\n'
+                '[regtest]\n'
+                'uacomment=s6\n'
+                '[test]\n'
+                'uacomment=s7\n')
+        with open(inc_conf_file3_path, 'w', encoding='utf-8') as conf:
+            conf.write( 'uacomment=s8\n'
+                'regtest.uacomment=s9\n'
+                'test.uacomment=sa\n'
+                '[regtest]\n'
+                'uacomment=sb\n'
+                '[test]\n'
+                'uacomment=sc\n')
+        self.nodes[0].wait_until_stopped()
+        self.start_node(0)
+        subversion = self.nodes[0].getnetworkinfo()["subversion"]
+        assert subversion.endswith("s8; s9; sb; s1; s2; s4; s6; s0; s3)/")
+        self.nodes[0].stop_node(expected_stderr=
+            'Warning: ' + inc_conf_file3_path + ':3: period should not use here to specify a section' + os.linesep +
+            'Warning: ' + inc_conf_file3_path + ':6: square bracket should not use here to start a section, rest of this file are ignored')
+
+        with open(conf_base_path, 'w', encoding='utf-8') as conf:
+            conf.write(conf_base_contents)
 
     def test_log_buffer(self):
         with self.nodes[0].assert_debug_log(expected_msgs=['Warning: parsed potentially confusing double-negative -connect=0\n']):
