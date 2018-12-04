@@ -1653,7 +1653,7 @@ double ConvertBitsToDouble(unsigned int nBits)
 
 int64_t GetBlockValue(int nHeight, const CAmount &nFees)
 {
-    int64_t nSubsidy = 10 * COIN;
+    int64_t nSubsidy = 12 * COIN;
     int halvings = nHeight / Params().SubsidyHalvingInterval();
 
     // Force block reward to zero when right shift is undefined.
@@ -1669,10 +1669,15 @@ int64_t GetBlockValue(int nHeight, const CAmount &nFees)
             return 1000000 * COIN;
     }
 
-    if(Params().NetworkID() == CBaseChainParams::TESTNET){
-        if(nHeight > 20000) nSubsidy -= nSubsidy/10;
-    } else {
-        if(nHeight > 1265000) nSubsidy -= nSubsidy/10;
+    if (Params().NetworkID() == CBaseChainParams::TESTNET)
+    {
+        if (nHeight > 20000)
+            nSubsidy -= nSubsidy * 0.25; // budget payment is 25%
+    } 
+    else
+    {
+        if (nHeight > 1265000)
+            nSubsidy -= nSubsidy * 0.25; // budget payment is 25%
     }
 
     return nSubsidy + nFees;
@@ -4346,7 +4351,7 @@ void static ProcessGetData(CNode* pfrom)
                     }
                 }
                 if (!pushed && inv.type == MSG_BUDGET_VOTE) {
-                    const BudgetDraftVote* item = budget.GetSeenBudgetDraftVote(inv.hash);
+                    const CBudgetVote* item = budget.GetSeenVote(inv.hash);
                     if(item){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
@@ -4357,7 +4362,7 @@ void static ProcessGetData(CNode* pfrom)
                 }
 
                 if (!pushed && inv.type == MSG_BUDGET_PROPOSAL) {
-                    const CBudgetProposal* item = budget.GetSeenProposal(inv.hash);
+                    const CBudgetProposalBroadcast* item = budget.GetSeenProposal(inv.hash);
                     if(item){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
@@ -4383,7 +4388,7 @@ void static ProcessGetData(CNode* pfrom)
                     if(item){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << item->Budget();
+                        ss << *item;
                         pfrom->PushMessage("fbs", ss);
                         pushed = true;
                     }
@@ -5401,6 +5406,7 @@ bool ProcessMessages(CNode* pfrom)
             }
             else
             {
+                LogPrintf("ProcessMessages(%s, %u bytes): Exception '%s' caught, see below\n", SanitizeString(strCommand), nMessageSize, e.what());
                 PrintExceptionContinue(&e, "ProcessMessages()");
             }
         }

@@ -1,5 +1,5 @@
 variables:
-  RELEASE_VERSION: "0.12.5.1"
+  RELEASE_VERSION: "0.12.5.2"
   GIT_STRATEGY: "clone"
   MAKEJOBS: "-j4"
   CCACHE_SIZE: "100M"
@@ -104,6 +104,7 @@ cache:
 
 .job_template: &macos_release_definition
   artifacts:
+    name: "$OUTDIR-dmg"
     paths:
     - Crown-Qt.dmg
   only:
@@ -112,6 +113,7 @@ cache:
 
 .job_template: &macos_snapshot_definition
   artifacts:
+    name: "$OUTDIR-dmg"
     paths:
     - Crown-Qt.dmg
     expire_in: 2 weeks
