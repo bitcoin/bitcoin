@@ -403,6 +403,7 @@ void SetupServerArgs()
     gArgs.AddArg("-proxyrandomize", strprintf("Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)", DEFAULT_PROXYRANDOMIZE), false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-seednode=<ip>", "Connect to a node to retrieve peer addresses, and disconnect. This option can be specified multiple times to connect to multiple nodes.", false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-timeout=<n>", strprintf("Specify connection timeout in milliseconds (minimum: 1, default: %d)", DEFAULT_CONNECT_TIMEOUT), false, OptionsCategory::CONNECTION);
+    gArgs.AddArg("-peertimeout=<n>", strprintf("Specify p2p connection timeout in seconds. This option determines the amount of time a peer may be inactive before the connection to it is dropped. (minimum: 1, default: %d)", DEFAULT_PEER_CONNECT_TIMEOUT), true, OptionsCategory::CONNECTION);
     gArgs.AddArg("-torcontrol=<ip>:<port>", strprintf("Tor control port to use if onion listening enabled (default: %s)", DEFAULT_TOR_CONTROL), false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-torpassword=<pass>", "Tor control port password (default: empty)", false, OptionsCategory::CONNECTION);
 #ifdef USE_UPNP
@@ -856,6 +857,7 @@ int nMaxConnections;
 int nUserMaxConnections;
 int nFD;
 ServiceFlags nLocalServices = ServiceFlags(NODE_NETWORK | NODE_NETWORK_LIMITED);
+int64_t peer_connect_timeout;
 
 } // namespace
 
@@ -1054,8 +1056,14 @@ bool AppInitParameterInteraction()
     }
 
     nConnectTimeout = gArgs.GetArg("-timeout", DEFAULT_CONNECT_TIMEOUT);
-    if (nConnectTimeout <= 0)
+    if (nConnectTimeout <= 0) {
         nConnectTimeout = DEFAULT_CONNECT_TIMEOUT;
+    }
+
+    peer_connect_timeout = gArgs.GetArg("-peertimeout", DEFAULT_PEER_CONNECT_TIMEOUT);
+    if (peer_connect_timeout <= 0) {
+        return InitError("peertimeout cannot be configured with a negative value.");
+    }
 
     if (gArgs.IsArgSet("-minrelaytxfee")) {
         CAmount n = 0;
@@ -1693,6 +1701,7 @@ bool AppInitMain(InitInterfaces& interfaces)
 
     connOptions.nMaxOutboundTimeframe = nMaxOutboundTimeframe;
     connOptions.nMaxOutboundLimit = nMaxOutboundLimit;
+    connOptions.m_peer_connect_timeout = peer_connect_timeout;
 
     for (const std::string& strBind : gArgs.GetArgs("-bind")) {
         CService addrBind;
