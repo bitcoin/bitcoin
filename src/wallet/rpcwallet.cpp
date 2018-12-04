@@ -3005,7 +3005,7 @@ static UniValue fundrawtransaction(const JSONRPCRequest& request)
                             "                              Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
                             "                              If no outputs are specified here, the sender pays the fee.",
                                 {
-                                    {"vout_index", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "", ""},
+                                    {"vout_index", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "", "The zero-based output index, before a change output is added."},
                                 },
                             },
                             {"replaceable", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "", "Marks this transaction as BIP125 replaceable.\n"
