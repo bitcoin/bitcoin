@@ -136,9 +136,13 @@ preconfigured and the creation of a hidden service is automatic. If permission p
 are seen with `-debug=tor` they can be resolved by adding both the user running Tor and
 the user running dashd to the same group and setting permissions appropriately. On
 Debian-based systems the user running dashd can be added to the debian-tor group,
-which has the appropriate permissions. An alternative authentication method is the use
-of the `-torpassword` flag and a `hash-password` which can be enabled and specified in
-Tor configuration.
+which has the appropriate permissions.
+
+An alternative authentication method is the use
+of the `-torpassword=password` option. The `password` is the clear text form that
+was used when generating the hashed password for the `HashedControlPassword` option
+in the tor configuration file. The hashed password can be obtained with the command
+`tor --hash-password password` (read the tor manual for more details).
 
 ## 5. Privacy recommendations
 
