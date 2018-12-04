@@ -4044,7 +4044,7 @@ string GetWarnings(string strFor)
     string strStatusBar;
     string strRPC;
 
-    if (CLIENT_VERSION_BUILD % 2 != 0)
+    if (CLIENT_VERSION_REVISION % 2 != 0)
         strStatusBar = _("This is a pre-release test build - use at your own risk - do not use for mining or merchant applications");
 
     if (GetBoolArg("-testsafemode", false))
