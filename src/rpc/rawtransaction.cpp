@@ -413,9 +413,12 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
         }
         outputs = std::move(outputs_dict);
     }
-    for (const std::string& name_ : outputs.getKeys()) {
+    // for (const std::string& name_ : outputs.getKeys()) {
+    for (size_t i = 0; i < outputs.size(); ++i) {
+        const UniValue& output = outputs[i];
+        const std::string& name_ = outputs.getKeys()[i];
         if (name_ == "data") {
-            std::vector<unsigned char> data = ParseHexV(outputs[name_].getValStr(), "Data");
+            std::vector<unsigned char> data = ParseHexV(output.getValStr(), "Data");
 
             CTxOut out(0, CScript() << OP_RETURN << data);
             rawTx.vout.push_back(out);
@@ -430,7 +433,7 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
             }
 
             CScript scriptPubKey = GetScriptForDestination(destination);
-            CAmount nAmount = AmountFromValue(outputs[name_]);
+            CAmount nAmount = AmountFromValue(output.getValStr());
 
             CTxOut out(nAmount, scriptPubKey);
             rawTx.vout.push_back(out);
