@@ -53,7 +53,7 @@ namespace Platform
 
         if (pindexLast != nullptr)
         {
-            if (NfTokensManager::Instance().ContainsAtHeight(nfToken.tokenProtocolId, nfToken.tokenId, pindexLast->nHeight))
+            if (NfTokensManager::Instance().Contains(nfToken.tokenProtocolId, nfToken.tokenId, pindexLast->nHeight))
                 return state.DoS(10, false, REJECT_DUPLICATE, "bad-token-reg-tx-dup-token");
         }
 
@@ -90,6 +90,6 @@ namespace Platform
             return false;
 
         auto nfToken = nfTokenRegTx.GetNfToken();
-        return NfTokensManager::Instance().DeleteAtHeight(nfToken.tokenProtocolId, nfToken.tokenId, pindex->nHeight);
+        return NfTokensManager::Instance().Delete(nfToken.tokenProtocolId, nfToken.tokenId, pindex->nHeight);
     }
 }

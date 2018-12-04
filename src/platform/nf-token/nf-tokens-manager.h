@@ -66,7 +66,7 @@ namespace Platform
     using NfTokensIndexSet = bmx::multi_index_container<
         NfTokenIndex,
         bmx::indexed_by<
-            /// orderered by a composite-key <TokenProtocolId, TokenId>
+            /// hash-indexed by a composite-key <TokenProtocolId, TokenId>
             /// gives access to a globally unique nf token
             bmx::hashed_unique<
                 bmx::tag<Tags::ProtocolIdTokenId>,
@@ -76,20 +76,20 @@ namespace Platform
                     TokenIdExtractor
                 >
             >,
-            /// ordered by nf-token registration transaction hash
-            /// gives access to nf-token registered in this transaction
+            /// hash-indexed by nf-token registration transaction hash
+            /// gives access to the nf-token registered in a specified transaction
             bmx::hashed_unique<
                 bmx::tag<Tags::RegTxHash>,
                 bmx::member<NfTokenIndex, uint256, &NfTokenIndex::regTxHash>
             >,
-            /// ordered by nf-token registration block hash
-            /// gives access to all nf-tokens registered in this block
+            /// hash-indexed by nf-token registration block hash
+            /// gives access to all nf-tokens registered in a specified block
             bmx::hashed_non_unique<
                 bmx::tag<Tags::BlockHash>,
                 bmx::member<NfTokenIndex, uint256, &NfTokenIndex::blockHash>
             >,
-            /// ordered by a composity-key <TokenProtocolId, OwnerId>
-            /// gives access to all nf-tokens owned by the OwnerId in this protocol
+            /// hash-indexed by a composite-key <TokenProtocolId, OwnerId>
+            /// gives access to all nf-tokens owned by the OwnerId in a specified protocol
             bmx::hashed_non_unique<
                 bmx::tag<Tags::ProtocolIdOwnerId>,
                 bmx::composite_key<
@@ -98,14 +98,14 @@ namespace Platform
                     OwnerIdExtractor
                 >
             >,
-            /// ordered by nf-token protocol id
-            /// gives access to all nf-tokens for this protocol
+            /// hash-indexed by nf-token protocol id
+            /// gives access to all nf-tokens for a specified protocol
             bmx::hashed_non_unique<
                 bmx::tag<Tags::ProtocolId>,
                 TokenProtocolIdExtractor
             >,
-            /// ordered by the OwnerId in the gloabal nf-tokens set
-            /// gives access the global set of nf-tokens owned by the OwnerId
+            /// hash-indexed by the OwnerId in the gloabal nf-tokens set
+            /// gives access a global set of nf-tokens owned by the OwnerId
             bmx::hashed_non_unique<
                 bmx::tag<Tags::OwnerId>,
                 OwnerIdExtractor
@@ -125,49 +125,48 @@ namespace Platform
                 return *s_instance;
             }
 
-            //std::unique_ptr<NfTokensSingleProtocolManager> ComposeSingleProtocolManager(const uint64_t & protocolId);
-
             /// Adds a new nf-token to the global set
             bool AddNfToken(const NfToken & nfToken, const CTransaction & tx, const CBlockIndex * pindex);
 
-            /// Checks the existence of the specified nf-token
+            /// Checks the existence of a specified nf-token
             bool Contains(const uint64_t & protocolId, const uint256 & tokenId) const;
-            /// Checks the existence of the specified nf-token at the specified height
-            bool ContainsAtHeight(const uint64_t & protocolId, const uint256 & tokenId, int height) const;
+            /// Checks the existence of a specified nf-token at a specified height
+            bool Contains(const uint64_t & protocolId, const uint256 & tokenId, int height) const;
 
-            /// Retreive the specified nf-token index
+            /// Retreive a specified nf-token index
             const NfTokenIndex * GetNfTokenIndex(const uint64_t & protocolId, const uint256 & tokenId) const;
             /// Retreive the specified nf-token
             std::weak_ptr<const NfToken> GetNfToken(const uint64_t & protocolId, const uint256 & tokenId) const;
 
-            /// Owner of the specified nf-token
+            /// Owner of a specified nf-token
             CKeyID OwnerOf(const uint64_t & protocolId, const uint256 & tokenId) const;
 
-            /// Amount of all nf-tokens belonging to the specified owner within the protocol
+            /// Amount of all nf-tokens belonging to a specified owner within a protocol
             std::size_t BalanceOf(const uint64_t & protocolId, const CKeyID & ownerId) const;
-            /// Retreive all nf-tokens belonging to the specified owner within the protocol
-            std::vector<std::weak_ptr<const NfToken> > NfTokensOf(const uint64_t & protocolId, const CKeyID & ownerId) const;
-            /// Retreive all nf-token IDs belonging to the specified owner within the protocol
-            std::vector<uint256> NfTokenIdsOf(const uint64_t & protocolId, const CKeyID & ownerId) const;
+            /// Amount of all nf-tokens belonging to a specified owner in a global protocol set
+            std::size_t BalanceOf(const CKeyID & ownerId) const;
 
-            /// Amount of all nf-tokens belonging to the specified owner in the global protocol set
-            std::size_t BalanceOf(const CKeyID & ownerId);
-            /// Retreive all nf-tokens belonging to the specified owner in the global protocol set
+            /// Retreive all nf-tokens belonging to a specified owner within a protocol
+            std::vector<std::weak_ptr<const NfToken> > NfTokensOf(const uint64_t & protocolId, const CKeyID & ownerId) const;
+            /// Retreive all nf-tokens belonging to a specified owner in a global protocol set
             std::vector<std::weak_ptr<const NfToken> > NfTokensOf(const CKeyID & ownerId) const;
-            /// Retreive all nf-tokens IDs belonging to the specified owner in the global protocol set
+
+            /// Retreive all nf-token IDs belonging to a specified owner within a protocol
+            std::vector<uint256> NfTokenIdsOf(const uint64_t & protocolId, const CKeyID & ownerId) const;
+            /// Retreive all nf-tokens IDs belonging to a specified owner in a global protocol set
             std::vector<uint256> NfTokenIdsOf(const CKeyID & ownerId) const;
 
             /// Total amount of nf-tokens
             std::size_t TotalSupply() const;
-            /// Total amount of nf-tokens for the specified protocol
+            /// Total amount of nf-tokens for a specified protocol
             std::size_t TotalSupply(const uint64_t & protocolId) const;
 
-            /// Delete the specified nf-token
+            /// Delete a specified nf-token
             bool Delete(const uint64_t & protocolId, const uint256 & tokenId);
-            /// Delete the specified nf-token at the specified block height, ignore if at different height
-            bool DeleteAtHeight(const uint64_t & protocolId, const uint256 & tokenId, int height);
+            /// Delete a specified nf-token at a specified block height, ignore if at different height
+            bool Delete(const uint64_t & protocolId, const uint256 & tokenId, int height);
 
-            /// Update the best block tip
+            /// Update with the best block tip
             void UpdateBlockTip(const CBlockIndex * pindex);
 
         private:

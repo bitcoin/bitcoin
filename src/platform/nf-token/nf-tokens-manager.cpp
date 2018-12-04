@@ -8,9 +8,9 @@
 
 namespace Platform
 {
-    using NfTokensIndexSetByProtocolAndOwnerId = NfTokensIndexSet::index<Tags::ProtocolIdOwnerId>::type;
-    using NfTokensIndexSetByProtocolId = NfTokensIndexSet::index<Tags::ProtocolId>::type;
-    using NfTokensIndexSetByOwnerId = NfTokensIndexSet::index<Tags::OwnerId>::type;
+    using NftIndexByProtocolAndOwnerId = NfTokensIndexSet::index<Tags::ProtocolIdOwnerId>::type;
+    using NftIndexByProtocolId = NfTokensIndexSet::index<Tags::ProtocolId>::type;
+    using NftIndexByOwnerId = NfTokensIndexSet::index<Tags::OwnerId>::type;
 
     /*static*/ std::unique_ptr<NfTokensManager> NfTokensManager::s_instance;
 
@@ -54,7 +54,7 @@ namespace Platform
         return std::weak_ptr<const NfToken>();
     }
 
-    bool NfTokensManager::ContainsAtHeight(const uint64_t &protocolId, const uint256 &tokenId, int height) const
+    bool NfTokensManager::Contains(const uint64_t &protocolId, const uint256 &tokenId, int height) const
     {
         assert(protocolId != NfToken::UNKNOWN_TOKEN_PROTOCOL);
         assert(!tokenId.IsNull());
@@ -88,8 +88,16 @@ namespace Platform
         assert(protocolId != NfToken::UNKNOWN_TOKEN_PROTOCOL);
         assert(!ownerId.IsNull());
 
-        const NfTokensIndexSetByProtocolAndOwnerId & protocolOwnerIndex = m_nfTokensIndexSet.get<Tags::ProtocolIdOwnerId>();
+        const NftIndexByProtocolAndOwnerId & protocolOwnerIndex = m_nfTokensIndexSet.get<Tags::ProtocolIdOwnerId>();
         return protocolOwnerIndex.count(std::make_tuple(protocolId, ownerId));
+    }
+
+    std::size_t NfTokensManager::BalanceOf(const CKeyID & ownerId) const
+    {
+        assert(!ownerId.IsNull());
+
+        const NftIndexByOwnerId & ownerIndex = m_nfTokensIndexSet.get<Tags::OwnerId>();
+        return ownerIndex.count(ownerId);
     }
 
     std::vector<std::weak_ptr<const NfToken> > NfTokensManager::NfTokensOf(const uint64_t & protocolId, const CKeyID & ownerId) const
@@ -97,8 +105,25 @@ namespace Platform
         assert(protocolId != NfToken::UNKNOWN_TOKEN_PROTOCOL);
         assert(!ownerId.IsNull());
 
-        const NfTokensIndexSetByProtocolAndOwnerId & protocolOwnerIndex = m_nfTokensIndexSet.get<Tags::ProtocolIdOwnerId>();
+        const NftIndexByProtocolAndOwnerId & protocolOwnerIndex = m_nfTokensIndexSet.get<Tags::ProtocolIdOwnerId>();
         const auto range = protocolOwnerIndex.equal_range(std::make_tuple(protocolId, ownerId));
+
+        std::vector<std::weak_ptr<const NfToken> > nfTokens;
+        //nfTokens.reserve(std::distance(range.first, range.second));
+        std::for_each(range.first, range.second, [&](const NfTokenIndex & nfTokenIdx)
+        {
+            nfTokens.emplace_back(nfTokenIdx.nfToken);
+        });
+
+        return nfTokens;
+    }
+
+    std::vector<std::weak_ptr<const NfToken> > NfTokensManager::NfTokensOf(const CKeyID & ownerId) const
+    {
+        assert(!ownerId.IsNull());
+
+        const NftIndexByOwnerId & ownerIndex = m_nfTokensIndexSet.get<Tags::OwnerId>();
+        const auto range = ownerIndex.equal_range(ownerId);
 
         std::vector<std::weak_ptr<const NfToken> > nfTokens;
         //nfTokens.reserve(std::distance(range.first, range.second));
@@ -115,7 +140,7 @@ namespace Platform
         assert(protocolId != NfToken::UNKNOWN_TOKEN_PROTOCOL);
         assert(!ownerId.IsNull());
 
-        const NfTokensIndexSetByProtocolAndOwnerId & protocolOwnerIndex = m_nfTokensIndexSet.get<Tags::ProtocolIdOwnerId>();
+        const NftIndexByProtocolAndOwnerId & protocolOwnerIndex = m_nfTokensIndexSet.get<Tags::ProtocolIdOwnerId>();
         const auto range = protocolOwnerIndex.equal_range(std::make_tuple(protocolId, ownerId));
 
         std::vector<uint256> nfTokenIds;
@@ -127,36 +152,11 @@ namespace Platform
         return nfTokenIds;
     }
 
-    std::size_t NfTokensManager::BalanceOf(const CKeyID & ownerId)
-    {
-        assert(!ownerId.IsNull());
-
-        const NfTokensIndexSetByOwnerId & ownerIndex = m_nfTokensIndexSet.get<Tags::OwnerId>();
-        return ownerIndex.count(ownerId);
-    }
-
-    std::vector<std::weak_ptr<const NfToken> > NfTokensManager::NfTokensOf(const CKeyID & ownerId) const
-    {
-        assert(!ownerId.IsNull());
-
-        const NfTokensIndexSetByOwnerId & ownerIndex = m_nfTokensIndexSet.get<Tags::OwnerId>();
-        const auto range = ownerIndex.equal_range(ownerId);
-
-        std::vector<std::weak_ptr<const NfToken> > nfTokens;
-        //nfTokens.reserve(std::distance(range.first, range.second));
-        std::for_each(range.first, range.second, [&](const NfTokenIndex & nfTokenIdx)
-        {
-            nfTokens.emplace_back(nfTokenIdx.nfToken);
-        });
-
-        return nfTokens;
-    }
-
     std::vector<uint256> NfTokensManager::NfTokenIdsOf(const CKeyID & ownerId) const
     {
         assert(!ownerId.IsNull());
 
-        const NfTokensIndexSetByOwnerId & ownerIndex = m_nfTokensIndexSet.get<Tags::OwnerId>();
+        const NftIndexByOwnerId & ownerIndex = m_nfTokensIndexSet.get<Tags::OwnerId>();
         const auto range = ownerIndex.equal_range(ownerId);
 
         std::vector<uint256> nfTokenIds;
@@ -177,16 +177,16 @@ namespace Platform
     {
         assert(protocolId != NfToken::UNKNOWN_TOKEN_PROTOCOL);
 
-        const NfTokensIndexSetByProtocolId & protocolIndex = m_nfTokensIndexSet.get<Tags::ProtocolId>();
+        const NftIndexByProtocolId & protocolIndex = m_nfTokensIndexSet.get<Tags::ProtocolId>();
         return protocolIndex.count(protocolId);
     }
 
     bool NfTokensManager::Delete(const uint64_t &protocolId, const uint256 &tokenId)
     {
-        return DeleteAtHeight(protocolId, tokenId, m_tipHeight);
+        return Delete(protocolId, tokenId, m_tipHeight);
     }
 
-    bool NfTokensManager::DeleteAtHeight(const uint64_t & protocolId, const uint256 & tokenId, int height)
+    bool NfTokensManager::Delete(const uint64_t & protocolId, const uint256 & tokenId, int height)
     {
         assert(protocolId != NfToken::UNKNOWN_TOKEN_PROTOCOL);
         assert(!tokenId.IsNull());
