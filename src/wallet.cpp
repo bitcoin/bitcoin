@@ -1791,14 +1791,24 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                     // add the dust to the fee.
                     if (newTxOut.IsDust(::minRelayTxFee))
                     {
+                        nChangePosInOut = -1;
                         nFeeRet += nChange;
-                        nChange = 0;
                         reservekey.ReturnKey();
                     }
                     else
                     {
-                        // Insert change txn at random position:
-                        vector<CTxOut>::iterator position = txNew.vout.begin()+GetRandInt(txNew.vout.size()+1);
+                        if (nChangePosInOut == -1)
+                        {
+                            // Insert change txn at random position:
+                            nChangePosInOut = GetRandInt(txNew.vout.size()+1);
+                        }
+                        else if ((unsigned int)nChangePosInOut > txNew.vout.size())
+                        {
+                            strFailReason = _("Change index out of range");
+                            return false;
+                        }
+
+                        std::vector<CTxOut>::iterator position = txNew.vout.begin()+nChangePosInOut;
                         txNew.vout.insert(position, newTxOut);
                     }
                 }
