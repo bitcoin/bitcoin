@@ -904,6 +904,16 @@ class RawTransactionsTest(BitcoinTestFramework):
         # The total subtracted from the outputs is equal to the fee.
         assert_equal(share[0] + share[2] + share[3], result[0]['fee'])
 
+        # test funding with custom min_conf
+        inputs = []
+        outputs = {self.nodes[2].getnewaddress(): 1}
+        rawtx = self.nodes[3].createrawtransaction(inputs, outputs)
+        unspent = self.nodes[3].listunspent()
+        assert len(unspent) == 1
+        input_confs = unspent[0]['confirmations']
+        assert_raises_rpc_error(-4, "Insufficient funds", self.nodes[3].fundrawtransaction, rawtx,  {'min_conf': input_confs + 1})
+        result = self.nodes[3].fundrawtransaction(rawtx, {'min_conf': input_confs})
+
     def test_subtract_fee_with_presets(self):
         self.log.info("Test fundrawtxn subtract fee from outputs with preset inputs that are sufficient")
 
