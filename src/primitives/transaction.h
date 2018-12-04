@@ -147,17 +147,25 @@ public:
 
     uint256 GetHash() const;
 
-    bool IsDust(CFeeRate minRelayTxFee) const
+    CAmount GetDustThreshold(const CFeeRate &minRelayTxFee) const
     {
-        // "Dust" is defined in terms of CTransaction::minRelayTxFee, which has units cSats-per-kilobyte.
+        // "Dust" is defined in terms of CTransaction::minRelayTxFee, which has units duffs-per-kilobyte.
         // If you'd pay more than 1/3 in fees to spend something, then we consider it dust.
-        // A typical txout is 34 bytes big, and will need a CTxIn of at least 148 bytes to spend
-        // i.e. total is 148 + 32 = 182 bytes. Default -minrelaytxfee is 10000 cSats per kB
-        // and that means that fee per txout is 182 * 10000 / 1000 = 1820 cSats.
-        // So dust is a txout less than 1820 *3 = 5460 cSats
-        // with default -minrelaytxfee = minRelayTxFee = 10000 cSats per kB.
-        size_t nSize = GetSerializeSize(SER_DISK,0)+148u;
-        return (nValue < 3*minRelayTxFee.GetFee(nSize));
+        // A typical spendable txout is 34 bytes big, and will need a CTxIn of at least 148 bytes to spend
+        // i.e. total is 148 + 32 = 182 bytes. Default -minrelaytxfee is 1000 duffs per kB
+        // and that means that fee per spendable txout is 182 * 1000 / 1000 = 182 duffs.
+        // So dust is a spendable txout less than 546 * minRelayTxFee / 1000 (in duffs)
+        // i.e. 182 * 3 = 546 duffs with default -minrelaytxfee = minRelayTxFee = 1000 duffs per kB.
+        if (scriptPubKey.IsUnspendable())
+            return 0;
+
+        size_t nSize = GetSerializeSize(SER_DISK, 0) + 148u;
+        return 3*minRelayTxFee.GetFee(nSize);
+    }
+
+    bool IsDust(const CFeeRate &minRelayTxFee) const
+    {
+        return (nValue < GetDustThreshold(minRelayTxFee));
     }
 
     friend bool operator==(const CTxOut& a, const CTxOut& b)

@@ -1630,16 +1630,21 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
     m_useInstantSend = true;
     CAmount nValue = 0;
     CAmount nFeePay = 0;
-
-    BOOST_FOREACH (const CRecipient& s, vecSend)
+    int nChangePosRequest = nChangePosInOut;
+    unsigned int nSubtractFeeFromAmount = 0;
+    for (const auto& recipient : vecSend)
     {
-        if (nValue < 0)
+        if (nValue < 0 || recipient.nAmount < 0)
         {
-            strFailReason = _("Transaction amounts must be positive");
+            strFailReason = _("Transaction amounts must not be negative");
             return false;
         }
-        nValue += s.nAmount;
+        nValue += recipient.nAmount;
+
+        if (recipient.fSubtractFeeFromAmount)
+            nSubtractFeeFromAmount++;
     }
+
     if(nValue > GetSporkValue(SPORK_5_MAX_VALUE) * COIN)
     {
         m_useInstantSend = false;
@@ -1647,9 +1652,9 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                     GetSporkValue(SPORK_5_MAX_VALUE));
     }
 
-    if (vecSend.empty() || nValue < 0)
+    if (vecSend.empty())
     {
-        strFailReason = _("Transaction amounts must be positive");
+        strFailReason = _("Transaction must have at least one recipient");
         return false;
     }
 
@@ -1664,19 +1669,44 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
             if(nFeePay > 0) nFeeRet = nFeePay;
             while (true)
             {
+                nChangePosInOut = nChangePosRequest;
                 txNew.vin.clear();
                 txNew.vout.clear();
                 wtxNew.fFromMe = true;
+                bool fFirst = true;
 
-                CAmount nTotalValue = nValue + nFeeRet;
+                CAmount nValueToSelect = nValue;
+                if (nSubtractFeeFromAmount == 0)
+                    nValueToSelect += nFeeRet;
                 double dPriority = 0;
+
                 // vouts to the payees
-                BOOST_FOREACH (const CRecipient& s, vecSend)
+                for (const auto& recipient : vecSend)
                 {
-                    CTxOut txout(s.nAmount, s.scriptPubKey);
+                    CTxOut txout(recipient.nAmount, recipient.scriptPubKey);
+
+                    if (recipient.fSubtractFeeFromAmount)
+                    {
+                        txout.nValue -= nFeeRet / nSubtractFeeFromAmount; // Subtract fee equally from each selected recipient
+
+                        if (fFirst) // first receiver pays the remainder not divisible by output count
+                        {
+                            fFirst = false;
+                            txout.nValue -= nFeeRet % nSubtractFeeFromAmount;
+                        }
+                    }
+
                     if (txout.IsDust(::minRelayTxFee))
                     {
-                        strFailReason = _("Transaction amount too small");
+                        if (recipient.fSubtractFeeFromAmount && nFeeRet > 0)
+                        {
+                            if (txout.nValue < 0)
+                                strFailReason = _("The transaction amount is too small to pay the fee");
+                            else
+                                strFailReason = _("The transaction amount is too small to send after the fee has been deducted");
+                        }
+                        else
+                            strFailReason = _("Transaction amount too small");
                         return false;
                     }
                     txNew.vout.push_back(txout);
@@ -1686,11 +1716,11 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 set<pair<const CWalletTx*,unsigned int> > setCoins;
                 CAmount nValueIn = 0;
 
-                bool selected = SelectCoins(nTotalValue, setCoins, nValueIn, coinControl, coin_type, m_useInstantSend);
+                bool selected = SelectCoins(nValueToSelect, setCoins, nValueIn, coinControl, coin_type, m_useInstantSend);
                 if (m_useInstantSend && !selected)
                 {
                     // If coin selection failed for InstantX try to select coins for ordinary transaction.
-                    selected = SelectCoins(nTotalValue, setCoins, nValueIn, coinControl, coin_type, false);
+                    selected = SelectCoins(nValueToSelect, setCoins, nValueIn, coinControl, coin_type, false);
                     if (selected)
                     {
                         // Proceed with ordinary transaction without instant send.
