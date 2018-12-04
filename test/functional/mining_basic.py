@@ -25,6 +25,7 @@ from test_framework.util import (
     assert_raises_rpc_error,
     bytes_to_hex_str as b2x,
 )
+from test_framework.script import CScriptNum
 
 
 def assert_template(node, block, expect, rehash=True):
@@ -59,10 +60,18 @@ class MiningTest(BitcoinTestFramework):
         assert 'proposal' in tmpl['capabilities']
         assert 'coinbasetxn' not in tmpl
 
-        coinbase_tx = create_coinbase(height=int(tmpl["height"]) + 1)
+        next_height = int(tmpl["height"])
+        coinbase_tx = create_coinbase(height=next_height)
         # sequence numbers must not be max for nLockTime to have effect
         coinbase_tx.vin[0].nSequence = 2 ** 32 - 2
         coinbase_tx.rehash()
+
+        # round-trip the encoded bip34 block height commitment
+        assert_equal(CScriptNum.decode(coinbase_tx.vin[0].scriptSig), next_height)
+        # round-trip negative and multi-byte CScriptNums to catch python regression
+        assert_equal(CScriptNum.decode(CScriptNum.encode(CScriptNum(1500))), 1500)
+        assert_equal(CScriptNum.decode(CScriptNum.encode(CScriptNum(-1500))), -1500)
+        assert_equal(CScriptNum.decode(CScriptNum.encode(CScriptNum(-1))), -1)
 
         block = CBlock()
         block.nVersion = tmpl["version"]
