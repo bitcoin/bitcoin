@@ -179,7 +179,7 @@ public:
 
     const BudgetDraftBroadcast* GetSeenBudgetDraft(uint256 hash) const;
     const BudgetDraftVote* GetSeenBudgetDraftVote(uint256 hash) const;
-    const CBudgetProposal* GetSeenProposal(uint256 hash) const;
+    const CBudgetProposalBroadcast* GetSeenProposal(uint256 hash) const;
     const CBudgetVote* GetSeenVote(uint256 hash) const;
 
     bool AddProposal(const CBudgetProposal &budgetProposal, bool checkCollateral = true);
