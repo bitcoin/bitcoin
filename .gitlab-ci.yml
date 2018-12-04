@@ -1,5 +1,5 @@
 variables:
-  RELEASE_VERSION: "0.12.5.1"
+  RELEASE_VERSION: "0.12.5.2"
   GIT_STRATEGY: "clone"
   MAKEJOBS: "-j4"
   CCACHE_SIZE: "100M"
