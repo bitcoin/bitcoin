@@ -165,9 +165,9 @@ struct Sections {
             if (outer_type == OuterType::NAMED_ARG) return; // Nothing more to do for non-recursive types on first recursion
             auto left = indent;
             if (arg.m_type_str.size() != 0 && outer_type == OuterType::OBJ) {
-                left += "\"" + arg.m_name + "\":" + arg.m_type_str.at(0);
+                left += "\"" + arg.m_name + "\": " + arg.m_type_str.at(0);
             } else {
-                left += outer_type == OuterType::OBJ ? arg.ToStringObj() : arg.ToString();
+                left += outer_type == OuterType::OBJ ? arg.ToStringObj(/* oneline */ false) : arg.ToString(/* oneline */ false);
             }
             left += ",";
             PushSection({left, arg.ToDescriptionString(/* implicitly_required */ outer_type == OuterType::ARR)});
@@ -188,7 +188,7 @@ struct Sections {
         }
         case RPCArg::Type::ARR: {
             auto left = indent;
-            left += outer_type == OuterType::OBJ ? "\"" + arg.m_name + "\":" : "";
+            left += outer_type == OuterType::OBJ ? "\"" + arg.m_name + "\": " : "";
             left += "[";
             const auto right = outer_type == OuterType::NAMED_ARG ? "" : arg.ToDescriptionString(/* implicitly_required */ outer_type == OuterType::ARR);
             PushSection({left, right});
@@ -345,9 +345,16 @@ std::string RPCArg::ToDescriptionString(const bool implicitly_required) const
     return ret;
 }
 
-std::string RPCArg::ToStringObj() const
+std::string RPCArg::ToStringObj(const bool oneline) const
 {
-    std::string res = "\"" + m_name + "\":";
+    std::string res;
+    res += "\"";
+    res += m_name;
+    if (oneline) {
+        res += "\":";
+    } else {
+        res += "\": ";
+    }
     switch (m_type) {
     case Type::STR:
         return res + "\"str\"";
@@ -362,7 +369,7 @@ std::string RPCArg::ToStringObj() const
     case Type::ARR:
         res += "[";
         for (const auto& i : m_inner) {
-            res += i.ToString() + ",";
+            res += i.ToString(oneline) + ",";
         }
         return res + "...]";
     case Type::OBJ:
@@ -393,7 +400,7 @@ std::string RPCArg::ToString(const bool oneline) const
     case Type::OBJ_USER_KEYS: {
         std::string res;
         for (size_t i = 0; i < m_inner.size();) {
-            res += m_inner[i].ToStringObj();
+            res += m_inner[i].ToStringObj(oneline);
             if (++i < m_inner.size()) res += ",";
         }
         if (m_type == Type::OBJ) {

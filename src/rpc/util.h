@@ -88,8 +88,21 @@ struct RPCArg {
         assert(type == Type::ARR || type == Type::OBJ);
     }
 
-    std::string ToString(bool oneline = false) const;
-    std::string ToStringObj() const;
+    /**
+     * Return the type string of the argument.
+     * Set oneline to allow it to be overrided by a custom oneline type string (m_oneline_description).
+     */
+    std::string ToString(bool oneline) const;
+    /**
+     * Return the type string of the argument when it is in an object (dict).
+     * Set oneline to get the oneline representation (less whitespace)
+     */
+    std::string ToStringObj(bool oneline) const;
+    /**
+     * Return the description string, including the argument type and whether
+     * the argument is required.
+     * implicitly_required is set for arguments in an array, which are neither optional nor required.
+     */
     std::string ToDescriptionString(bool implicitly_required = false) const;
 };
 
