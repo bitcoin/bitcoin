@@ -90,7 +90,7 @@ struct RPCArg {
 
     /**
      * Return the type string of the argument.
-     * Set oneline to allow it to be overrided by a custom oneline type string (m_oneline_description).
+     * Set oneline to allow it to be overridden by a custom oneline type string (m_oneline_description).
      */
     std::string ToString(bool oneline) const;
     /**

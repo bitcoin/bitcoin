@@ -81,7 +81,7 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
                 {
                     {"txid", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The transaction id"},
                     {"verbose", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "false", "If false, return a string, otherwise return a json object"},
-                    {"blockhash", RPCArg::Type::STR_HEX, /* opt */ true, /* default_val */ "", "The block in which to look for the transaction"},
+                    {"blockhash", RPCArg::Type::STR_HEX, /* opt */ true, /* default_val */ "null", "The block in which to look for the transaction"},
                 }}
                 .ToString() +
             "\nResult (if verbose is not set or set to false):\n"
@@ -218,7 +218,7 @@ static UniValue gettxoutproof(const JSONRPCRequest& request)
                             {"txid", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "A transaction hash"},
                         },
                         },
-                    {"blockhash", RPCArg::Type::STR_HEX, /* opt */ true, /* default_val */ "", "If specified, looks for txid in the block with this hash"},
+                    {"blockhash", RPCArg::Type::STR_HEX, /* opt */ true, /* default_val */ "null", "If specified, looks for txid in the block with this hash"},
                 }}
                 .ToString() +
             "\nResult:\n"
@@ -457,11 +457,11 @@ static UniValue createrawtransaction(const JSONRPCRequest& request)
                 {
                     {"inputs", RPCArg::Type::ARR, /* opt */ false, /* default_val */ "", "A json array of json objects",
                         {
-                            {"", RPCArg::Type::OBJ, /* opt */ false, /* default_val */ "", "",
+                            {"", RPCArg::Type::OBJ, /* opt */ true, /* default_val */ "", "",
                                 {
                                     {"txid", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The transaction id"},
                                     {"vout", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "The output number"},
-                                    {"sequence", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "", "The sequence number"},
+                                    {"sequence", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "depends on the value of the 'replaceable' and 'locktime' arguments", "The sequence number"},
                                 },
                                 },
                         },
@@ -519,7 +519,7 @@ static UniValue decoderawtransaction(const JSONRPCRequest& request)
                 "\nReturn a JSON object representing the serialized, hex-encoded transaction.\n",
                 {
                     {"hexstring", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The transaction hex string"},
-                    {"iswitness", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "", "Whether the transaction hex is a serialized witness transaction\n"
+                    {"iswitness", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "depends on heuristic tests", "Whether the transaction hex is a serialized witness transaction\n"
             "                         If iswitness is not present, heuristic tests will be used in decoding"},
                 }}
                 .ToString() +
@@ -923,14 +923,14 @@ static UniValue signrawtransactionwithkey(const JSONRPCRequest& request)
                             {"privatekey", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "private key in base58-encoding"},
                         },
                         },
-                    {"prevtxs", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "", "A json array of previous dependent transaction outputs",
+                    {"prevtxs", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "null", "A json array of previous dependent transaction outputs",
                         {
                             {"", RPCArg::Type::OBJ, /* opt */ true, /* default_val */ "", "",
                                 {
                                     {"txid", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The transaction id"},
                                     {"vout", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "The output number"},
                                     {"scriptPubKey", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "script key"},
-                                    {"redeemScript", RPCArg::Type::STR_HEX, /* opt */ true, /* default_val */ "", "(required for P2SH or P2WSH) redeem script"},
+                                    {"redeemScript", RPCArg::Type::STR_HEX, /* opt */ true, /* default_val */ "omitted", "(required for P2SH or P2WSH) redeem script"},
                                     {"amount", RPCArg::Type::AMOUNT, /* opt */ false, /* default_val */ "", "The amount spent"},
                                 },
                                 },
@@ -1603,7 +1603,7 @@ UniValue createpsbt(const JSONRPCRequest& request)
                                 {
                                     {"txid", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The transaction id"},
                                     {"vout", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "The output number"},
-                                    {"sequence", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "", "The sequence number"},
+                                    {"sequence", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "depends on the value of the 'replaceable' and 'locktime' arguments", "The sequence number"},
                                 },
                                 },
                         },
@@ -1674,7 +1674,7 @@ UniValue converttopsbt(const JSONRPCRequest& request)
                     {"hexstring", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The hex string of a raw transaction"},
                     {"permitsigdata", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "false", "If true, any signatures in the input will be discarded and conversion.\n"
                             "                              will continue. If false, RPC will fail if any signatures are present."},
-                    {"iswitness", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "", "Whether the transaction hex is a serialized witness transaction.\n"
+                    {"iswitness", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "depends on heuristic tests", "Whether the transaction hex is a serialized witness transaction.\n"
                             "                              If iswitness is not present, heuristic tests will be used in decoding. If true, only witness deserializaion\n"
                             "                              will be tried. If false, only non-witness deserialization will be tried. Only has an effect if\n"
                             "                              permitsigdata is true."},

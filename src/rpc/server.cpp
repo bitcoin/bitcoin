@@ -203,7 +203,7 @@ UniValue help(const JSONRPCRequest& jsonRequest)
             RPCHelpMan{"help",
                 "\nList all commands, or get help for a specified command.\n",
                 {
-                    {"command", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "The command to get help on"},
+                    {"command", RPCArg::Type::STR, /* opt */ true, /* default_val */ "all commands", "The command to get help on"},
                 }}
                 .ToString() +
             "\nResult:\n"
