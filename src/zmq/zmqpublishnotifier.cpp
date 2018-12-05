@@ -10,7 +10,6 @@
 #include <util/system.h>
 #include <rpc/server.h>
 #include <rpc/blockchain.h>
-#include <rpc/rawtransaction.cpp>
 
 static std::multimap<std::string, CZMQAbstractPublishNotifier*> mapPublishNotifiers;
 

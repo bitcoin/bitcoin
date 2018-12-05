@@ -6,6 +6,7 @@
 #define BITCOIN_ZMQ_ZMQPUBLISHNOTIFIER_H
 
 #include <zmq/zmqabstractnotifier.h>
+#include <rpc/rawtransaction.cpp>
 
 class CBlockIndex;
 
