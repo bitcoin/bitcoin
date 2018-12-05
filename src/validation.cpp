@@ -3133,7 +3133,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
 bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& params)
 {
     LOCK(cs_main);
-    return IsBTC16BIPsEnabled(pindexPrev->nTime);
+    return pindexPrev ? IsBTC16BIPsEnabled(pindexPrev->nTime) : false; // pindexPrev == null on genesis block
 }
 
 // Compute at which vout of the block's coinbase transaction the witness
