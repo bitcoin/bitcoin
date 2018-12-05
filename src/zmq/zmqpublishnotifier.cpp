@@ -9,6 +9,8 @@
 #include <validation.h>
 #include <util/system.h>
 #include <rpc/server.h>
+#include <rpc/blockchain.h>
+#include <rpc/rawtransaction.cpp>
 
 static std::multimap<std::string, CZMQAbstractPublishNotifier*> mapPublishNotifiers;
 
@@ -16,6 +18,8 @@ static const char *MSG_HASHBLOCK = "hashblock";
 static const char *MSG_HASHTX    = "hashtx";
 static const char *MSG_RAWBLOCK  = "rawblock";
 static const char *MSG_RAWTX     = "rawtx";
+static const char *MSG_JSONBLOCK = "jsonblock";
+static const char *MSG_JSONTX    = "jsontx";
 
 // Internal function to send multipart message
 static int zmq_send_multipart(void *sock, const void* data, size_t size, ...)
@@ -150,7 +154,7 @@ bool CZMQAbstractPublishNotifier::SendMessage(const char *command, const void* d
     if (rc == -1)
         return false;
 
-    /* increment memory only sequence number after sending */
+    /* increment memory-only sequence number after sending */
     nSequence++;
 
     return true;
@@ -185,7 +189,7 @@ bool CZMQPublishRawBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
     {
         LOCK(cs_main);
         CBlock block;
-        if(!ReadBlockFromDisk(block, pindex, consensusParams))
+        if (!ReadBlockFromDisk(block, pindex, consensusParams))
         {
             zmqError("Can't read block from disk");
             return false;
@@ -205,3 +209,38 @@ bool CZMQPublishRawTransactionNotifier::NotifyTransaction(const CTransaction &tr
     ss << transaction;
     return SendMessage(MSG_RAWTX, &(*ss.begin()), ss.size());
 }
+
+bool CZMQPublishJSONBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
+{
+    LogPrint(BCLog::ZMQ, "zmq: Publish jsonblock %s\n", pindex->GetBlockHash().GetHex());
+
+    const Consensus::Params& consensusParams = Params().GetConsensus();
+    UniValue jsonBlock;
+    {
+        LOCK(cs_main);
+        CBlock block;
+        if (!ReadBlockFromDisk(block, pindex, consensusParams))
+        {
+            zmqError("Can't read block from disk");
+            return false;
+        }
+
+        jsonBlock = blockToJSON(block, pindex, 1);
+    }
+
+    std::string msg = jsonBlock.write(0, 0);
+    return SendMessage(MSG_JSONBLOCK, &(*msg.begin()), msg.size());
+}
+
+bool CZMQPublishJSONTransactionNotifier::NotifyTransaction(const CTransaction &transaction)
+{
+    uint256 hash = transaction.GetHash();
+    LogPrint(BCLog::ZMQ, "zmq: Publish jsontx %s\n", hash.GetHex());
+
+    UniValue jsonTx(UniValue::VOBJ);
+    TxToJSON(transaction, chainActive.Tip()->GetBlockHash(), jsonTx);
+
+    std::string msg = jsonTx.write(0, 0);
+    return SendMessage(MSG_JSONTX, &(*msg.begin()), msg.size());
+}
+ 

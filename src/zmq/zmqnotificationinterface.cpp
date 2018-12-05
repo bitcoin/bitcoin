@@ -48,6 +48,8 @@ CZMQNotificationInterface* CZMQNotificationInterface::Create()
     factories["pubhashtx"] = CZMQAbstractNotifier::Create<CZMQPublishHashTransactionNotifier>;
     factories["pubrawblock"] = CZMQAbstractNotifier::Create<CZMQPublishRawBlockNotifier>;
     factories["pubrawtx"] = CZMQAbstractNotifier::Create<CZMQPublishRawTransactionNotifier>;
+    factories["pubjsonblock"] = CZMQAbstractNotifier::Create<CZMQPublishJSONBlockNotifier>;
+    factories["pubjsontx"] = CZMQAbstractNotifier::Create<CZMQPublishJSONTransactionNotifier>;
 
     for (const auto& entry : factories)
     {
