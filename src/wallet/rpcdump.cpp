@@ -110,18 +110,14 @@ UniValue importprivkey(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw std::runtime_error(
             RPCHelpMan{"importprivkey",
-                "\nAdds a private key (as returned by dumpprivkey) to your wallet. Requires a new wallet backup.\n",
+                "\nAdds a private key (as returned by dumpprivkey) to your wallet. Requires a new wallet backup.\n"
+                "Hint: use importmulti to import more than one private key.\n",
                 {
-                    {"privkey", RPCArg::Type::STR, false},
-                    {"label", RPCArg::Type::STR, true},
-                    {"rescan", RPCArg::Type::BOOL, true},
+                    {"privkey", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The private key (see dumpprivkey)"},
+                    {"label", RPCArg::Type::STR, /* opt */ true, /* default_val */ "current label if address exists, otherwise \"\"", "An optional label"},
+                    {"rescan", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "true", "Rescan the wallet for transactions"},
                 }}
                 .ToString() +
-            "Hint: use importmulti to import more than one private key.\n"
-            "\nArguments:\n"
-            "1. \"privkey\"          (string, required) The private key (see dumpprivkey)\n"
-            "2. \"label\"            (string, optional, default=current label if address exists, otherwise \"\") An optional label\n"
-            "3. rescan               (boolean, optional, default=true) Rescan the wallet for transactions\n"
             "\nNote: This call can take over an hour to complete if rescan is true, during that time, other rpc calls\n"
             "may report that the imported key exists but related transactions are still missing, leading to temporarily incorrect/bogus balances and unspent outputs until rescan completes.\n"
             "\nExamples:\n"
@@ -278,17 +274,12 @@ UniValue importaddress(const JSONRPCRequest& request)
             RPCHelpMan{"importaddress",
                 "\nAdds an address or script (in hex) that can be watched as if it were in your wallet but cannot be used to spend. Requires a new wallet backup.\n",
                 {
-                    {"address", RPCArg::Type::STR, false},
-                    {"label", RPCArg::Type::STR, true},
-                    {"rescan", RPCArg::Type::BOOL, true},
-                    {"p2sh", RPCArg::Type::BOOL, true},
+                    {"address", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The Bitcoin address (or hex-encoded script)"},
+                    {"label", RPCArg::Type::STR, /* opt */ true, /* default_val */ "\"\"", "An optional label"},
+                    {"rescan", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "true", "Rescan the wallet for transactions"},
+                    {"p2sh", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "false", "Add the P2SH version of the script as well"},
                 }}
                 .ToString() +
-            "\nArguments:\n"
-            "1. \"address\"          (string, required) The Bitcoin address (or hex-encoded script)\n"
-            "2. \"label\"            (string, optional, default=\"\") An optional label\n"
-            "3. rescan               (boolean, optional, default=true) Rescan the wallet for transactions\n"
-            "4. p2sh                 (boolean, optional, default=false) Add the P2SH version of the script as well\n"
             "\nNote: This call can take over an hour to complete if rescan is true, during that time, other rpc calls\n"
             "may report that the imported address exists but related transactions are still missing, leading to temporarily incorrect/bogus balances and unspent outputs until rescan completes.\n"
             "If you have the full public key, you should call importpubkey instead of this.\n"
@@ -365,13 +356,10 @@ UniValue importprunedfunds(const JSONRPCRequest& request)
             RPCHelpMan{"importprunedfunds",
                 "\nImports funds without rescan. Corresponding address or script must previously be included in wallet. Aimed towards pruned wallets. The end-user is responsible to import additional transactions that subsequently spend the imported outputs or rescan after the point in the blockchain the transaction is included.\n",
                 {
-                    {"rawtransaction", RPCArg::Type::STR_HEX, false},
-                    {"txoutproof", RPCArg::Type::STR_HEX, false},
+                    {"rawtransaction", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "A raw transaction in hex funding an already-existing address in wallet"},
+                    {"txoutproof", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The hex output from gettxoutproof that contains the transaction"},
                 }}
-                .ToString() +
-            "\nArguments:\n"
-            "1. \"rawtransaction\" (string, required) A raw transaction in hex funding an already-existing address in wallet\n"
-            "2. \"txoutproof\"     (string, required) The hex output from gettxoutproof that contains the transaction\n"
+                .ToString()
         );
 
     CMutableTransaction tx;
@@ -434,11 +422,9 @@ UniValue removeprunedfunds(const JSONRPCRequest& request)
             RPCHelpMan{"removeprunedfunds",
                 "\nDeletes the specified transaction from the wallet. Meant for use with pruned wallets and as a companion to importprunedfunds. This will affect wallet balances.\n",
                 {
-                    {"txid", RPCArg::Type::STR_HEX, false},
+                    {"txid", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The hex-encoded id of the transaction you are deleting"},
                 }}
                 .ToString() +
-            "\nArguments:\n"
-            "1. \"txid\"           (string, required) The hex-encoded id of the transaction you are deleting\n"
             "\nExamples:\n"
             + HelpExampleCli("removeprunedfunds", "\"a8d0c0184dde994a09ec054286f1ce581bebf46446a512166eae7628734ea0a5\"") +
             "\nAs a JSON-RPC call\n"
@@ -477,15 +463,11 @@ UniValue importpubkey(const JSONRPCRequest& request)
             RPCHelpMan{"importpubkey",
                 "\nAdds a public key (in hex) that can be watched as if it were in your wallet but cannot be used to spend. Requires a new wallet backup.\n",
                 {
-                    {"pubkey", RPCArg::Type::STR, false},
-                    {"label", RPCArg::Type::STR, true},
-                    {"rescan", RPCArg::Type::BOOL, true},
+                    {"pubkey", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The hex-encoded public key"},
+                    {"label", RPCArg::Type::STR, /* opt */ true, /* default_val */ "\"\"", "An optional label"},
+                    {"rescan", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "true", "Rescan the wallet for transactions"},
                 }}
                 .ToString() +
-            "\nArguments:\n"
-            "1. \"pubkey\"           (string, required) The hex-encoded public key\n"
-            "2. \"label\"            (string, optional, default=\"\") An optional label\n"
-            "3. rescan               (boolean, optional, default=true) Rescan the wallet for transactions\n"
             "\nNote: This call can take over an hour to complete if rescan is true, during that time, other rpc calls\n"
             "may report that the imported pubkey exists but related transactions are still missing, leading to temporarily incorrect/bogus balances and unspent outputs until rescan completes.\n"
             "\nExamples:\n"
@@ -555,11 +537,9 @@ UniValue importwallet(const JSONRPCRequest& request)
             RPCHelpMan{"importwallet",
                 "\nImports keys from a wallet dump file (see dumpwallet). Requires a new wallet backup to include imported keys.\n",
                 {
-                    {"filename", RPCArg::Type::STR, false},
+                    {"filename", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The wallet file"},
                 }}
                 .ToString() +
-            "\nArguments:\n"
-            "1. \"filename\"    (string, required) The wallet file\n"
             "\nExamples:\n"
             "\nDump the wallet\n"
             + HelpExampleCli("dumpwallet", "\"test\"") +
@@ -690,11 +670,9 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
                 "\nReveals the private key corresponding to 'address'.\n"
                 "Then the importprivkey can be used with this output\n",
                 {
-                    {"address", RPCArg::Type::STR, false},
+                    {"address", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The bitcoin address for the private key"},
                 }}
                 .ToString() +
-            "\nArguments:\n"
-            "1. \"address\"   (string, required) The bitcoin address for the private key\n"
             "\nResult:\n"
             "\"key\"                (string) The private key\n"
             "\nExamples:\n"
@@ -741,11 +719,9 @@ UniValue dumpwallet(const JSONRPCRequest& request)
                 "Note that if your wallet contains keys which are not derived from your HD seed (e.g. imported keys), these are not covered by\n"
                 "only backing up the seed itself, and must be backed up too (e.g. ensure you back up the whole dumpfile).\n",
                 {
-                    {"filename", RPCArg::Type::STR, false},
+                    {"filename", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The filename with path (either absolute or relative to bitcoind)"},
                 }}
                 .ToString() +
-            "\nArguments:\n"
-            "1. \"filename\"    (string, required) The filename with path (either absolute or relative to bitcoind)\n"
             "\nResult:\n"
             "{                           (json object)\n"
             "  \"filename\" : {        (string) The filename with full absolute path\n"
@@ -1127,57 +1103,49 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
     if (mainRequest.fHelp || mainRequest.params.size() < 1 || mainRequest.params.size() > 2)
         throw std::runtime_error(
             RPCHelpMan{"importmulti",
-                "\nImport addresses/scripts (with private or public keys, redeem script (P2SH)), rescanning all addresses in one-shot-only (rescan can be disabled via options). Requires a new wallet backup.\n\n",
+                "\nImport addresses/scripts (with private or public keys, redeem script (P2SH)), rescanning all addresses in one-shot-only (rescan can be disabled via options). Requires a new wallet backup.\n",
                 {
-                    {"requests", RPCArg::Type::ARR,
+                    {"requests", RPCArg::Type::ARR, /* opt */ false, /* default_val */ "", "Data to be imported",
                         {
-                            {"", RPCArg::Type::OBJ,
+                            {"", RPCArg::Type::OBJ, /* opt */ false, /* default_val */ "", "",
                                 {
-                                    {
-                                        {"scriptPubKey", RPCArg::Type::STR, false},
-                                        {"timestamp", RPCArg::Type::NUM, false},
-                                        {"redeemscript", RPCArg::Type::STR, true},
-                                        {"witnessscript", RPCArg::Type::STR, true},
-                                        {"internal", RPCArg::Type::BOOL, true},
-                                        {"watchonly", RPCArg::Type::BOOL, true},
-                                        {"label", RPCArg::Type::STR, true},
+                                    {"scriptPubKey", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "Type of scriptPubKey (string for script, json for address)",
+                                        /* oneline_description */ "", {"\"<script>\" | { \"address\":\"<address>\" }", "string / json"}
                                     },
+                                    {"timestamp", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "Creation time of the key in seconds since epoch (Jan 1 1970 GMT),\n"
+        "                                                              or the string \"now\" to substitute the current synced blockchain time. The timestamp of the oldest\n"
+        "                                                              key will determine how far back blockchain rescans need to begin for missing wallet transactions.\n"
+        "                                                              \"now\" can be specified to bypass scanning, for keys which are known to never have been used, and\n"
+        "                                                              0 can be specified to scan the entire blockchain. Blocks up to 2 hours before the earliest key\n"
+        "                                                              creation time of all keys being imported by the importmulti call will be scanned.",
+                                        /* oneline_description */ "", {"timestamp | \"now\"", "integer / string"}
+                                    },
+                                    {"redeemscript", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "Allowed only if the scriptPubKey is a P2SH or P2SH-P2WSH address/scriptPubKey"},
+                                    {"witnessscript", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "Allowed only if the scriptPubKey is a P2SH-P2WSH or P2WSH address/scriptPubKey"},
+                                    {"pubkeys", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "", "Array of strings giving pubkeys that must occur in the output or redeemscript",
+                                        {
+                                            {"pubKey", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", ""},
+                                        }
+                                    },
+                                    {"keys", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "", "Array of strings giving private keys whose corresponding public keys must occur in the output or redeemscript",
+                                        {
+                                            {"key", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", ""},
+                                        }
+                                    },
+                                    {"internal", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "false", "Stating whether matching outputs should be treated as not incoming payments aka change"},
+                                    {"watchonly", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "false", "Stating whether matching outputs should be considered watched even when they're not spendable, only allowed if keys are empty"},
+                                    {"label", RPCArg::Type::STR, /* opt */ true, /* default_val */ "''", "Label to assign to the address, only allowed with internal=false"},
                                 },
-                                false},
+                            },
                         },
-                        false, "\"requests\""},
-                    {"options", RPCArg::Type::OBJ,
+                        "\"requests\""},
+                    {"options", RPCArg::Type::OBJ, /* opt */ true, /* default_val */ "", "",
                         {
-                            {"rescan", RPCArg::Type::BOOL, true},
+                            {"rescan", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "true", "Stating if should rescan the blockchain after all imports"},
                         },
-                        true, "\"options\""},
+                        "\"options\""},
                 }}
                 .ToString() +
-            "Arguments:\n"
-            "1. requests     (array, required) Data to be imported\n"
-            "  [     (array of json objects)\n"
-            "    {\n"
-            "      \"scriptPubKey\": \"<script>\" | { \"address\":\"<address>\" }, (string / json, required) Type of scriptPubKey (string for script, json for address)\n"
-            "      \"timestamp\": timestamp | \"now\"                        , (integer / string, required) Creation time of the key in seconds since epoch (Jan 1 1970 GMT),\n"
-            "                                                              or the string \"now\" to substitute the current synced blockchain time. The timestamp of the oldest\n"
-            "                                                              key will determine how far back blockchain rescans need to begin for missing wallet transactions.\n"
-            "                                                              \"now\" can be specified to bypass scanning, for keys which are known to never have been used, and\n"
-            "                                                              0 can be specified to scan the entire blockchain. Blocks up to 2 hours before the earliest key\n"
-            "                                                              creation time of all keys being imported by the importmulti call will be scanned.\n"
-            "      \"redeemscript\": \"<script>\"                            , (string, optional) Allowed only if the scriptPubKey is a P2SH or P2SH-P2WSH address/scriptPubKey\n"
-            "      \"witnessscript\": \"<script>\"                           , (string, optional) Allowed only if the scriptPubKey is a P2SH-P2WSH or P2WSH address/scriptPubKey\n"
-            "      \"pubkeys\": [\"<pubKey>\", ... ]                         , (array, optional) Array of strings giving pubkeys that must occur in the output or redeemscript\n"
-            "      \"keys\": [\"<key>\", ... ]                               , (array, optional) Array of strings giving private keys whose corresponding public keys must occur in the output or redeemscript\n"
-            "      \"internal\": <true>                                    , (boolean, optional, default: false) Stating whether matching outputs should be treated as not incoming payments aka change\n"
-            "      \"watchonly\": <true>                                   , (boolean, optional, default: false) Stating whether matching outputs should be considered watched even when they're not spendable, only allowed if keys are empty\n"
-            "      \"label\": <label>                                      , (string, optional, default: '') Label to assign to the address, only allowed with internal=false\n"
-            "    }\n"
-            "  ,...\n"
-            "  ]\n"
-            "2. options                 (json, optional)\n"
-            "  {\n"
-            "     \"rescan\": <false>,         (boolean, optional, default: true) Stating if should rescan the blockchain after all imports\n"
-            "  }\n"
             "\nNote: This call can take over an hour to complete if rescan is true, during that time, other rpc calls\n"
             "may report that the imported keys, addresses or scripts exists but related transactions are still missing.\n"
             "\nExamples:\n" +
