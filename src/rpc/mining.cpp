@@ -241,7 +241,7 @@ static UniValue prioritisetransaction(const JSONRPCRequest& request)
                 "Accepts the transaction into mined blocks at a higher (or lower) priority\n",
                 {
                     {"txid", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The transaction id."},
-                    {"dummy", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "API-Compatibility for previous API. Must be zero or null.\n"
+                    {"dummy", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "null", "API-Compatibility for previous API. Must be zero or null.\n"
             "                  DEPRECATED. For forward compatibility use named arguments and omit this parameter."},
                     {"fee_delta", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "The fee value (in satoshis) to add (or subtract, if negative).\n"
             "                  Note, that this value is not a fee rate. It is a value to modify absolute fee of the TX.\n"
