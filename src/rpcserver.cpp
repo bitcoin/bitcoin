@@ -141,6 +141,25 @@ vector<unsigned char> ParseHexO(const Object& o, string strKey)
     return ParseHexV(find_value(o, strKey), strKey);
 }
 
+bool ParseBoolV(const Value& v, const std::string &strName)
+{
+    std::string strBool;
+    if (v.type() == bool_type)
+        return v.get_bool();
+    else if (v.type() == int_type)
+        strBool = itostr(v.get_int());
+    else if (v.type() == str_type)
+        strBool = v.get_str();
+
+    std::transform(strBool.begin(), strBool.end(), strBool.begin(), ::tolower);
+
+    if (strBool == "true" || strBool == "yes" || strBool == "1") {
+        return true;
+    } else if (strBool == "false" || strBool == "no" || strBool == "0") {
+        return false;
+    }
+    throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be true, false, yes, no, 1 or 0 (not '"+strBool+"')");
+}
 
 /**
  * Note: This interface may still be subject to change.

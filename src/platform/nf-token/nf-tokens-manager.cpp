@@ -181,7 +181,20 @@ namespace Platform
         return protocolIndex.count(protocolId);
     }
 
-    bool NfTokensManager::Delete(const uint64_t &protocolId, const uint256 &tokenId)
+    NfTokensManager::NftIndexRange NfTokensManager::FullNftIndexRange() const
+    {
+        return m_nfTokensIndexSet;
+    }
+
+    NfTokensManager::NftIndexRange NfTokensManager::NftIndexRangeByHeight(int height) const
+    {
+        return m_nfTokensIndexSet.get<Tags::Height>().range(
+                    bmx::unbounded,
+                    [&](int curHeight) { return curHeight <= height; }
+        );
+    }
+
+    bool NfTokensManager::Delete(const uint64_t & protocolId, const uint256 & tokenId)
     {
         return Delete(protocolId, tokenId, m_tipHeight);
     }

@@ -5,6 +5,9 @@
 #ifndef CROWN_PLATFORM_NF_TOKENS_MANAGER_H
 #define CROWN_PLATFORM_NF_TOKENS_MANAGER_H
 
+#include <boost/range/adaptors.hpp>
+#include <boost/range/any_range.hpp>
+
 #include "nf-token-multiindex-utils.h"
 #include "nf-token.h"
 
@@ -88,6 +91,13 @@ namespace Platform
                 bmx::tag<Tags::BlockHash>,
                 bmx::member<NfTokenIndex, uint256, &NfTokenIndex::blockHash>
             >,
+            /// ordered by nf-token registration block height
+            /// gives access to all nf-tokens registered at a specific block height
+            /// or gives access to a range requested by height
+            bmx::ordered_non_unique<
+                bmx::tag<Tags::Height>,
+                bmx::member<NfTokenIndex, int, &NfTokenIndex::height>
+            >,
             /// hash-indexed by a composite-key <TokenProtocolId, OwnerId>
             /// gives access to all nf-tokens owned by the OwnerId in a specified protocol
             bmx::hashed_non_unique<
@@ -160,6 +170,11 @@ namespace Platform
             std::size_t TotalSupply() const;
             /// Total amount of nf-tokens for a specified protocol
             std::size_t TotalSupply(const uint64_t & protocolId) const;
+
+            using NftIndexRange = boost::any_range<const NfTokenIndex &, boost::forward_traversal_tag>;
+
+            NftIndexRange FullNftIndexRange() const;
+            NftIndexRange NftIndexRangeByHeight(int height) const;
 
             /// Delete a specified nf-token
             bool Delete(const uint64_t & protocolId, const uint256 & tokenId);

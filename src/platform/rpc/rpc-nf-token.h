@@ -13,6 +13,8 @@ namespace Platform
 {
     json_spirit::Value RegisterNfToken(const json_spirit::Array& params, bool fHelp);
     void RegisterNfTokenHelp();
+    json_spirit::Value ListNfTokenTxs(const json_spirit::Array& params, bool fHelp);
+    void ListNfTokenTxsHelp();
 }
 
 #endif // CROWN_PLATFORM_RPC_NF_TOKEN_H

@@ -5,6 +5,7 @@
 #include "primitives/transaction.h"
 #include "platform/specialtx.h"
 #include "platform/nf-token/nf-token-reg-tx-builder.h"
+#include "platform/nf-token/nf-tokens-manager.h"
 #include "specialtx-rpc-utils.h"
 #include "rpc-nf-token.h"
 
@@ -39,7 +40,7 @@ namespace Platform
                 "                                 The private key does not have to be known by your wallet. Can be set to 0.\n"
 
                 "5. \"nfTokenMetadata\"           (string, optional) metadata describing the token.\n"
-                "                                 It may contain text or binary in hex/base64 //TODO .\n";
+                "                                 It may contain text or binary in hex/base64 //TODO .\n";//TODO: add examples
 
         throw std::runtime_error(helpMessage);
     }
@@ -70,5 +71,63 @@ namespace Platform
 
         std::string result = SignAndSendSpecialTx(tx);
         return result;
+    }
+
+    void ListNfTokenTxsHelp()
+    {
+        static std::string helpMessage =
+                "nftoken list\n"
+                "Lists all nftoken registration (for now) transactions on chain (or in your wallet:TODO)\n";
+                "\nArguments:\n"
+                //"1. \"tx-id-or-nftoken-id\" (boolean, optional)\n"
+                "1. \"height\"              (numeric, optional) If height is not specified, it defaults to the current chain-tip\n"
+                "2. \"verbose\"             (boolean, optional, default=false) true for a detailed list, false for an array of transaction IDs\n";
+        throw std::runtime_error(helpMessage);
+    }
+
+    json_spirit::Object BuildNftRecord(const NfTokenIndex & nftIndex)
+    {
+        json_spirit::Object nftJsonObj;
+        nftJsonObj.push_back(json_spirit::Pair("block hash", nftIndex.blockHash.GetHex()));
+        nftJsonObj.push_back(json_spirit::Pair("reg tx hash", nftIndex.regTxHash.GetHex()));
+        nftJsonObj.push_back(json_spirit::Pair("height", nftIndex.height));
+        //nftJsonObj.push_back(json_spirit::Pair("timestamp", ));
+        nftJsonObj.push_back(json_spirit::Pair("NFT protocol id", nftIndex.nfToken->tokenProtocolId));
+        nftJsonObj.push_back(json_spirit::Pair("NFT id", nftIndex.nfToken->tokenId.GetHex()));
+        nftJsonObj.push_back(json_spirit::Pair("NFT owner address", nftIndex.nfToken->tokenOwnerKeyId.GetHex()));
+        nftJsonObj.push_back(json_spirit::Pair("Metadata amdin address", nftIndex.nfToken->metadataAdminKeyId.GetHex()));
+        //nftJsonObj.push_back(json_spirit::Pair("Metadata", nftIndex.nfToken->metadata));
+        return nftJsonObj;
+    }
+
+    json_spirit::Value ListNfTokenTxs(const json_spirit::Array& params, bool fHelp)
+    {
+        if (fHelp || params.size() < 1 || params.size() > 3)
+            ListNfTokenTxsHelp();
+
+        int height = (params.size() > 1) ? params[1].get_int() : chainActive.Height();
+        if (height < 0 || height > chainActive.Height())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
+
+        bool verbose = (params.size() > 2) ? ParseBoolV(params[2], "verbose") : false;
+
+        json_spirit::Array nftList;
+
+        auto tokensRange = NfTokensManager::Instance().NftIndexRangeByHeight(height);
+        for (const auto & nftIndex : tokensRange)
+        {
+            if (verbose)
+            {
+                nftList.push_back(BuildNftRecord(nftIndex));
+            }
+            else
+            {
+                json_spirit::Object hashObj;
+                hashObj.push_back(json_spirit::Pair("reg tx hash", nftIndex.regTxHash.GetHex()));
+                nftList.push_back(hashObj);
+            }
+        }
+
+        return nftList;
     }
 }
