@@ -9,11 +9,16 @@ from test_framework.address import (
     key_to_p2pkh,
     key_to_p2sh_p2wpkh,
     key_to_p2wpkh,
+    script_to_p2sh,
+    script_to_p2sh_p2wsh,
+    script_to_p2wsh,
 )
-from test_framework.messages import sha256
 from test_framework.script import (
     CScript,
     OP_0,
+    OP_2,
+    OP_3,
+    OP_CHECKMULTISIG,
     OP_CHECKSIG,
     OP_DUP,
     OP_EQUAL,
@@ -21,6 +26,7 @@ from test_framework.script import (
     OP_HASH160,
     OP_NOP,
     hash160,
+    sha256,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -40,6 +46,16 @@ Key = namedtuple('Key', ['privkey',
                          'p2sh_p2wpkh_script',
                          'p2sh_p2wpkh_redeem_script',
                          'p2sh_p2wpkh_addr'])
+
+Multisig = namedtuple('Multisig', ['privkeys',
+                                   'pubkeys',
+                                   'p2sh_script',
+                                   'p2sh_addr',
+                                   'redeem_script',
+                                   'p2wsh_script',
+                                   'p2wsh_addr',
+                                   'p2sh_p2wsh_script',
+                                   'p2sh_p2wsh_addr'])
 
 class ImportMultiTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -69,6 +85,28 @@ class ImportMultiTest(BitcoinTestFramework):
                    CScript([OP_HASH160, hash160(CScript([OP_0, pkh])), OP_EQUAL]).hex(),  # p2sh-p2wpkh
                    CScript([OP_0, pkh]).hex(),  # p2sh-p2wpkh redeem script
                    key_to_p2sh_p2wpkh(pubkey))  # p2sh-p2wpkh addr
+
+    def get_multisig(self):
+        """Generate a fresh multisig on node0
+
+        Returns a named tuple of privkeys, pubkeys and all address and scripts."""
+        addrs = []
+        pubkeys = []
+        for _ in range(3):
+            addr = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
+            addrs.append(addr['address'])
+            pubkeys.append(addr['pubkey'])
+        script_code = CScript([OP_2] + [hex_str_to_bytes(pubkey) for pubkey in pubkeys] + [OP_3, OP_CHECKMULTISIG])
+        witness_script = CScript([OP_0, sha256(script_code)])
+        return Multisig([self.nodes[0].dumpprivkey(addr) for addr in addrs],
+                        pubkeys,
+                        CScript([OP_HASH160, hash160(script_code), OP_EQUAL]).hex(),  # p2sh
+                        script_to_p2sh(script_code),  # p2sh addr
+                        script_code.hex(),  # redeem script
+                        witness_script.hex(),  # p2wsh
+                        script_to_p2wsh(script_code),  # p2wsh addr
+                        CScript([OP_HASH160, witness_script, OP_EQUAL]).hex(),  # p2sh-p2wsh
+                        script_to_p2sh_p2wsh(script_code))  # p2sh-p2wsh addr
 
     def run_test(self):
         self.log.info("Mining blocks...")
@@ -302,102 +340,90 @@ class ImportMultiTest(BitcoinTestFramework):
         assert_equal('timestamp' in address_assert, False)
 
         # P2SH address
-        sig_address_1 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
-        sig_address_2 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
-        sig_address_3 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
-        multi_sig_script = self.nodes[0].createmultisig(2, [sig_address_1['pubkey'], sig_address_2['pubkey'], sig_address_3['pubkey']])
+        multisig = self.get_multisig()
         self.nodes[1].generate(100)
-        self.nodes[1].sendtoaddress(multi_sig_script['address'], 10.00)
+        self.nodes[1].sendtoaddress(multisig.p2sh_addr, 10.00)
         self.nodes[1].generate(1)
         timestamp = self.nodes[1].getblock(self.nodes[1].getbestblockhash())['mediantime']
 
         self.log.info("Should import a p2sh")
         result = self.nodes[1].importmulti([{
             "scriptPubKey": {
-                "address": multi_sig_script['address']
+                "address": multisig.p2sh_addr
             },
             "timestamp": "now",
         }])
         assert_equal(result[0]['success'], True)
-        address_assert = self.nodes[1].getaddressinfo(multi_sig_script['address'])
+        address_assert = self.nodes[1].getaddressinfo(multisig.p2sh_addr)
         assert_equal(address_assert['isscript'], True)
         assert_equal(address_assert['iswatchonly'], True)
         assert_equal(address_assert['timestamp'], timestamp)
-        p2shunspent = self.nodes[1].listunspent(0, 999999, [multi_sig_script['address']])[0]
+        p2shunspent = self.nodes[1].listunspent(0, 999999, [multisig.p2sh_addr])[0]
         assert_equal(p2shunspent['spendable'], False)
         assert_equal(p2shunspent['solvable'], False)
 
         # P2SH + Redeem script
-        sig_address_1 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
-        sig_address_2 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
-        sig_address_3 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
-        multi_sig_script = self.nodes[0].createmultisig(2, [sig_address_1['pubkey'], sig_address_2['pubkey'], sig_address_3['pubkey']])
+        multisig = self.get_multisig()
         self.nodes[1].generate(100)
-        self.nodes[1].sendtoaddress(multi_sig_script['address'], 10.00)
+        self.nodes[1].sendtoaddress(multisig.p2sh_addr, 10.00)
         self.nodes[1].generate(1)
         timestamp = self.nodes[1].getblock(self.nodes[1].getbestblockhash())['mediantime']
 
         self.log.info("Should import a p2sh with respective redeem script")
         result = self.nodes[1].importmulti([{
             "scriptPubKey": {
-                "address": multi_sig_script['address']
+                "address": multisig.p2sh_addr
             },
             "timestamp": "now",
-            "redeemscript": multi_sig_script['redeemScript']
+            "redeemscript": multisig.redeem_script
         }])
         assert_equal(result[0]['success'], True)
-        address_assert = self.nodes[1].getaddressinfo(multi_sig_script['address'])
+        address_assert = self.nodes[1].getaddressinfo(multisig.p2sh_addr)
         assert_equal(address_assert['timestamp'], timestamp)
 
-        p2shunspent = self.nodes[1].listunspent(0, 999999, [multi_sig_script['address']])[0]
+        p2shunspent = self.nodes[1].listunspent(0, 999999, [multisig.p2sh_addr])[0]
         assert_equal(p2shunspent['spendable'], False)
         assert_equal(p2shunspent['solvable'], True)
 
         # P2SH + Redeem script + Private Keys + !Watchonly
-        sig_address_1 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
-        sig_address_2 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
-        sig_address_3 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
-        multi_sig_script = self.nodes[0].createmultisig(2, [sig_address_1['pubkey'], sig_address_2['pubkey'], sig_address_3['pubkey']])
+        multisig = self.get_multisig()
         self.nodes[1].generate(100)
-        self.nodes[1].sendtoaddress(multi_sig_script['address'], 10.00)
+        self.nodes[1].sendtoaddress(multisig.p2sh_addr, 10.00)
         self.nodes[1].generate(1)
         timestamp = self.nodes[1].getblock(self.nodes[1].getbestblockhash())['mediantime']
 
         self.log.info("Should import a p2sh with respective redeem script and private keys")
         result = self.nodes[1].importmulti([{
             "scriptPubKey": {
-                "address": multi_sig_script['address']
+                "address": multisig.p2sh_addr
             },
             "timestamp": "now",
-            "redeemscript": multi_sig_script['redeemScript'],
-            "keys": [self.nodes[0].dumpprivkey(sig_address_1['address']), self.nodes[0].dumpprivkey(sig_address_2['address'])]
+            "redeemscript": multisig.redeem_script,
+            "keys": multisig.privkeys[0:2]
         }])
         assert_equal(result[0]['success'], True)
-        address_assert = self.nodes[1].getaddressinfo(multi_sig_script['address'])
+        address_assert = self.nodes[1].getaddressinfo(multisig.p2sh_addr)
         assert_equal(address_assert['timestamp'], timestamp)
 
-        p2shunspent = self.nodes[1].listunspent(0, 999999, [multi_sig_script['address']])[0]
+        p2shunspent = self.nodes[1].listunspent(0, 999999, [multisig.p2sh_addr])[0]
         assert_equal(p2shunspent['spendable'], False)
         assert_equal(p2shunspent['solvable'], True)
 
         # P2SH + Redeem script + Private Keys + Watchonly
-        sig_address_1 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
-        sig_address_2 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
-        sig_address_3 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
-        multi_sig_script = self.nodes[0].createmultisig(2, [sig_address_1['pubkey'], sig_address_2['pubkey'], sig_address_3['pubkey']])
+        multisig = self.get_multisig()
         self.nodes[1].generate(100)
-        self.nodes[1].sendtoaddress(multi_sig_script['address'], 10.00)
+        self.nodes[1].sendtoaddress(multisig.p2sh_addr, 10.00)
         self.nodes[1].generate(1)
         timestamp = self.nodes[1].getblock(self.nodes[1].getbestblockhash())['mediantime']
 
         self.log.info("Should import a p2sh with respective redeem script and private keys")
         result = self.nodes[1].importmulti([{
             "scriptPubKey": {
-                "address": multi_sig_script['address']
+                "address": multisig.p2sh_addr
             },
             "timestamp": "now",
-            "redeemscript": multi_sig_script['redeemScript'],
-            "keys": [self.nodes[0].dumpprivkey(sig_address_1['address']), self.nodes[0].dumpprivkey(sig_address_2['address'])],
+            "redeemscript": multisig.redeem_script,
+            "keys": multisig.privkeys[0:2],
             "watchonly": True
         }])
         assert_equal(result[0]['success'], False)
@@ -565,32 +591,30 @@ class ImportMultiTest(BitcoinTestFramework):
         assert_equal(address_assert['ismine'], True)
 
         # P2WSH multisig address without scripts or keys
-        sig_address_1 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
-        sig_address_2 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
-        multi_sig_script = self.nodes[0].addmultisigaddress(2, [sig_address_1['pubkey'], sig_address_2['pubkey']], "", "bech32")
+        multisig = self.get_multisig()
         self.log.info("Should import a p2wsh multisig as watch only without respective redeem script and private keys")
         result = self.nodes[1].importmulti([{
             "scriptPubKey": {
-                "address": multi_sig_script['address']
+                "address": multisig.p2wsh_addr
             },
             "timestamp": "now"
         }])
         assert_equal(result[0]['success'], True)
-        address_assert = self.nodes[1].getaddressinfo(multi_sig_script['address'])
+        address_assert = self.nodes[1].getaddressinfo(multisig.p2sh_addr)
         assert_equal(address_assert['solvable'], False)
 
         # Same P2WSH multisig address as above, but now with witnessscript + private keys
-        self.log.info("Should import a p2wsh with respective redeem script and private keys")
+        self.log.info("Should import a p2wsh with respective witness script and private keys")
         result = self.nodes[1].importmulti([{
             "scriptPubKey": {
-                "address": multi_sig_script['address']
+                "address": multisig.p2wsh_addr
             },
             "timestamp": "now",
-            "witnessscript": multi_sig_script['redeemScript'],
-            "keys": [self.nodes[0].dumpprivkey(sig_address_1['address']), self.nodes[0].dumpprivkey(sig_address_2['address'])]
+            "witnessscript": multisig.redeem_script,
+            "keys": multisig.privkeys
         }])
         assert_equal(result[0]['success'], True)
-        address_assert = self.nodes[1].getaddressinfo(multi_sig_script['address'])
+        address_assert = self.nodes[1].getaddressinfo(multisig.p2sh_addr)
         assert_equal(address_assert['solvable'], True)
         assert_equal(address_assert['ismine'], True)
         assert_equal(address_assert['sigsrequired'], 2)
@@ -642,22 +666,19 @@ class ImportMultiTest(BitcoinTestFramework):
         assert_equal(address_assert['solvable'], True)
         assert_equal(address_assert['ismine'], True)
 
-        # P2SH-P2WSH 1-of-1 multisig + redeemscript with no private key
-        sig_address_1 = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
-        multi_sig_script = self.nodes[0].addmultisigaddress(1, [sig_address_1['pubkey']], "", "p2sh-segwit")
-        scripthash = sha256(hex_str_to_bytes(multi_sig_script['redeemScript']))
-        redeem_script = CScript([OP_0, scripthash])
+        # P2SH-P2WSH multisig + redeemscript with no private key
+        multisig = self.get_multisig()
         self.log.info("Should import a p2sh-p2wsh with respective redeem script but no private key")
         result = self.nodes[1].importmulti([{
             "scriptPubKey": {
-                "address": multi_sig_script['address']
+                "address": multisig.p2sh_p2wsh_addr
             },
             "timestamp": "now",
-            "redeemscript": bytes_to_hex_str(redeem_script),
-            "witnessscript": multi_sig_script['redeemScript']
+            "redeemscript": multisig.p2wsh_script,
+            "witnessscript": multisig.redeem_script,
         }])
         assert_equal(result[0]['success'], True)
-        address_assert = self.nodes[1].getaddressinfo(multi_sig_script['address'])
+        address_assert = self.nodes[1].getaddressinfo(multisig.p2sh_addr)
         assert_equal(address_assert['solvable'], True)
 
 if __name__ == '__main__':
