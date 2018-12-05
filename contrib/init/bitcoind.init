@@ -26,7 +26,7 @@ lockfile=${BITCOIND_LOCKFILE-/var/lock/subsys/bitcoind}
 bitcoind=${BITCOIND_BIN-/usr/bin/bitcoind}
 
 # bitcoind opts default to -disablewallet, override with BITCOIND_OPTS
-bitcoind_opts=${BITCOIND_OPTS--disablewallet}
+bitcoind_opts=${BITCOIND_OPTS--conf=/.bitcoin/bitcoin.conf -datadir=/.bitcoin -daemon -disablewallet}
 
 start() {
     echo -n $"Starting $prog: "
