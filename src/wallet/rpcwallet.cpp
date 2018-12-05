@@ -4502,24 +4502,34 @@ void AddKeypathToMap(const CWallet* pwallet, const CKeyID& keyID, std::map<CPubK
     hd_keypaths.emplace(vchPubKey, keypath);
 }
 
-bool FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& psbtx, const CTransaction* txConst, int sighash_type, bool sign, bool bip32derivs)
+bool FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& psbtx, int sighash_type, bool sign, bool bip32derivs)
 {
     LOCK(pwallet->cs_wallet);
     // Get all of the previous transactions
     bool complete = true;
-    for (unsigned int i = 0; i < txConst->vin.size(); ++i) {
-        const CTxIn& txin = txConst->vin[i];
+    for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
+        const CTxIn& txin = psbtx.tx->vin[i];
         PSBTInput& input = psbtx.inputs.at(i);
 
-        // If we don't know about this input, skip it and let someone else deal with it
-        const uint256& txhash = txin.prevout.hash;
-        const auto it = pwallet->mapWallet.find(txhash);
-        if (it != pwallet->mapWallet.end()) {
-            const CWalletTx& wtx = it->second;
-            CTxOut utxo = wtx.tx->vout[txin.prevout.n];
-            // Update both UTXOs from the wallet.
-            input.non_witness_utxo = wtx.tx;
-            input.witness_utxo = utxo;
+        if (PSBTInputSigned(input)) {
+            continue;
+        }
+
+        // Verify input looks sane. This will check that we have at most one uxto, witness or non-witness.
+        if (!input.IsSane()) {
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "PSBT input is not sane.");
+        }
+
+        // If we have no utxo, grab it from the wallet.
+        if (!input.non_witness_utxo && input.witness_utxo.IsNull()) {
+            const uint256& txhash = txin.prevout.hash;
+            const auto it = pwallet->mapWallet.find(txhash);
+            if (it != pwallet->mapWallet.end()) {
+                const CWalletTx& wtx = it->second;
+                // We only need the non_witness_utxo, which is a superset of the witness_utxo.
+                //   The signing code will switch to the smaller witness_utxo if this is ok.
+                input.non_witness_utxo = wtx.tx;
+            }
         }
 
         // Get the Sighash type
@@ -4529,24 +4539,15 @@ bool FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& psbtx, const C
 
         SignatureData sigdata;
         if (sign) {
-            complete &= SignPSBTInput(*pwallet, *psbtx.tx, input, sigdata, i, sighash_type);
+            complete &= SignPSBTInput(*pwallet, psbtx, sigdata, i, sighash_type);
         } else {
-            complete &= SignPSBTInput(PublicOnlySigningProvider(pwallet), *psbtx.tx, input, sigdata, i, sighash_type);
+            complete &= SignPSBTInput(PublicOnlySigningProvider(pwallet), psbtx, sigdata, i, sighash_type);
         }
 
         if (sigdata.witness) {
             // Convert the non-witness utxo to witness
             if (input.witness_utxo.IsNull() && input.non_witness_utxo) {
                 input.witness_utxo = input.non_witness_utxo->vout[txin.prevout.n];
-            }
-        }
-
-        // If both UTXO types are present, drop the unnecessary one.
-        if (input.non_witness_utxo && !input.witness_utxo.IsNull()) {
-            if (sigdata.witness) {
-                input.non_witness_utxo = nullptr;
-            } else {
-                input.witness_utxo.SetNull();
             }
         }
 
@@ -4559,8 +4560,8 @@ bool FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& psbtx, const C
     }
 
     // Fill in the bip32 keypaths and redeemscripts for the outputs so that hardware wallets can identify change
-    for (unsigned int i = 0; i < txConst->vout.size(); ++i) {
-        const CTxOut& out = txConst->vout.at(i);
+    for (unsigned int i = 0; i < psbtx.tx->vout.size(); ++i) {
+        const CTxOut& out = psbtx.tx->vout.at(i);
         PSBTOutput& psbt_out = psbtx.outputs.at(i);
 
         // Dummy tx so we can use ProduceSignature to get stuff out
@@ -4637,19 +4638,15 @@ UniValue walletprocesspsbt(const JSONRPCRequest& request)
     // Get the sighash type
     int nHashType = ParseSighashString(request.params[2]);
 
-    // Use CTransaction for the constant parts of the
-    // transaction to avoid rehashing.
-    const CTransaction txConst(*psbtx.tx);
-
     // Fill transaction with our data and also sign
     bool sign = request.params[1].isNull() ? true : request.params[1].get_bool();
     bool bip32derivs = request.params[3].isNull() ? false : request.params[3].get_bool();
-    bool complete = FillPSBT(pwallet, psbtx, &txConst, nHashType, sign, bip32derivs);
+    bool complete = FillPSBT(pwallet, psbtx, nHashType, sign, bip32derivs);
 
     UniValue result(UniValue::VOBJ);
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << psbtx;
-    result.pushKV("psbt", EncodeBase64((unsigned char*)ssTx.data(), ssTx.size()));
+    result.pushKV("psbt", EncodeBase64(ssTx.str()));
     result.pushKV("complete", complete);
 
     return result;
@@ -4741,29 +4738,18 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
     FundTransaction(pwallet, rawTx, fee, change_position, request.params[3]);
 
     // Make a blank psbt
-    PartiallySignedTransaction psbtx;
-    psbtx.tx = rawTx;
-    for (unsigned int i = 0; i < rawTx.vin.size(); ++i) {
-        psbtx.inputs.push_back(PSBTInput());
-    }
-    for (unsigned int i = 0; i < rawTx.vout.size(); ++i) {
-        psbtx.outputs.push_back(PSBTOutput());
-    }
-
-    // Use CTransaction for the constant parts of the
-    // transaction to avoid rehashing.
-    const CTransaction txConst(*psbtx.tx);
+    PartiallySignedTransaction psbtx(rawTx);
 
     // Fill transaction with out data but don't sign
     bool bip32derivs = request.params[4].isNull() ? false : request.params[4].get_bool();
-    FillPSBT(pwallet, psbtx, &txConst, 1, false, bip32derivs);
+    FillPSBT(pwallet, psbtx, 1, false, bip32derivs);
 
     // Serialize the PSBT
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << psbtx;
 
     UniValue result(UniValue::VOBJ);
-    result.pushKV("psbt", EncodeBase64((unsigned char*)ssTx.data(), ssTx.size()));
+    result.pushKV("psbt", EncodeBase64(ssTx.str()));
     result.pushKV("fee", ValueFromAmount(fee));
     result.pushKV("changepos", change_position);
     return result;
