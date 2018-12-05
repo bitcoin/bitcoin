@@ -90,7 +90,7 @@ static UniValue createmultisig(const JSONRPCRequest& request)
                         {
                             {"key", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The hex-encoded public key"},
                         }},
-                    {"address_type", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\". Default is legacy."},
+                    {"address_type", RPCArg::Type::STR, /* opt */ true, /* default_val */ "legacy", "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
                 }}
                 .ToString() +
             "\nResult:\n"
@@ -311,7 +311,7 @@ static UniValue getmemoryinfo(const JSONRPCRequest& request)
             RPCHelpMan{"getmemoryinfo",
                 "Returns an object containing information about memory usage.\n",
                 {
-                    {"mode", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "determines what kind of information is returned. This argument is optional, the default mode is \"stats\".\n"
+                    {"mode", RPCArg::Type::STR, /* opt */ true, /* default_val */ "\"stats\"", "determines what kind of information is returned.\n"
             "  - \"stats\" returns general statistics about memory usage in the daemon.\n"
             "  - \"mallocinfo\" returns an XML string describing low-level heap state (only available if compiled with glibc 2.10+)."},
                 }}
@@ -384,11 +384,11 @@ UniValue logging(const JSONRPCRequest& request)
             "  - \"none\", \"0\" : even if other logging categories are specified, ignore all of them.\n"
             ,
                 {
-                    {"include", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "", "A json array of categories to add debug logging",
+                    {"include", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "null", "A json array of categories to add debug logging",
                         {
                             {"include_category", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "the valid logging category"},
                         }},
-                    {"exclude", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "", "A json array of categories to remove debug logging",
+                    {"exclude", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "null", "A json array of categories to remove debug logging",
                         {
                             {"exclude_category", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "the valid logging category"},
                         }},
