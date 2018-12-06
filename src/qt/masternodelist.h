@@ -91,8 +91,8 @@ private Q_SLOTS:
     void on_tableWidgetMyMasternodes_itemSelectionChanged();
     void on_UpdateButton_clicked();
 
-    void on_extraInfoDIP3_clicked();
-    void on_copyProTxHash_clicked();
-    void on_copyCollateralOutpoint_clicked();
+    void extraInfoDIP3_clicked();
+    void copyProTxHash_clicked();
+    void copyCollateralOutpoint_clicked();
 };
 #endif // MASTERNODELIST_H
