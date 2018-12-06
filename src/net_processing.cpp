@@ -1793,16 +1793,24 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                         MSG_MASTERNODE_PING,
                         MSG_MASTERNODE_VERIFY,
                 };
+                static std::set<int> allowWhileInIBDObjs = {
+                        MSG_SPORK
+                };
                 if (legacyMNObjs.count(inv.type) && deterministicMNManager->IsDeterministicMNsSporkActive()) {
                     LogPrint("net", "ignoring (%s) inv of legacy type %d peer=%d\n", inv.hash.ToString(), inv.type, pfrom->id);
                     continue;
                 }
 
                 pfrom->AddInventoryKnown(inv);
-                if (fBlocksOnly)
-                    LogPrint("net", "transaction (%s) inv sent in violation of protocol peer=%d\n", inv.hash.ToString(), pfrom->id);
-                else if (!fAlreadyHave && !fImporting && !fReindex && !IsInitialBlockDownload())
-                    pfrom->AskFor(inv);
+                if (fBlocksOnly) {
+                    LogPrint("net", "transaction (%s) inv sent in violation of protocol peer=%d\n", inv.hash.ToString(),
+                             pfrom->id);
+                } else if (!fAlreadyHave) {
+                    bool allowWhileInIBD = allowWhileInIBDObjs.count(inv.type);
+                    if (allowWhileInIBD || (!fImporting && !fReindex && !IsInitialBlockDownload())) {
+                        pfrom->AskFor(inv);
+                    }
+                }
             }
 
             // Track requests for our stuff
