@@ -150,6 +150,12 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
         nTimeLastProcess = GetTime();
         return;
     }
+
+    if(GetTime() - nTimeLastProcess < MASTERNODE_SYNC_TICK_SECONDS) {
+        // too early, nothing to do here
+        return;
+    }
+
     nTimeLastProcess = GetTime();
 
     // reset sync status in case of any other sync failure
