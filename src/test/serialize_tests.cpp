@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(varints)
     }
 
     for (uint64_t i = 0;  i < 100000000000ULL; i += 999999937) {
-        uint64_t j = -1;
+        uint64_t j = std::numeric_limits<uint64_t>::max();
         ss >> VARINT(j);
         BOOST_CHECK_MESSAGE(i == j, "decoded:" << j << " expected:" << i);
     }
