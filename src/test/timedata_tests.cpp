@@ -2,9 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
-#include <timedata.h>
 #include <netaddress.h>
 #include <test/test_bitcoin.h>
+#include <timedata.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -114,6 +114,109 @@ BOOST_AUTO_TEST_CASE(util_AddTimeDataIgnoreSampleWithDuplicateIP)
 
     BOOST_CHECK_EQUAL(CountOffsetSamples(), samples); // sample was ignored
     BOOST_CHECK_EQUAL(GetTimeOffset(), offset);       //new offset was not computed
+}
+
+
+BOOST_AUTO_TEST_CASE(util_AddTimeDataAlgorithmMedianIsWithinBounds)
+{
+    int limit = 10;
+    int64_t offset = 0;
+    std::set<CNetAddr> knownSet;
+    CMedianFilter<int64_t> offsetFilter(limit, 0); // max size : 10 , init value: 0
+
+
+    for (int sample = 1; sample < 4; sample++) { // precondition: 4 samples, all within bounds
+        std::stringstream stream;
+        stream << "1.1.1." << sample;
+        std::string ip = stream.str();
+        AddTimeDataAlgorithm(utilBuildAddress(ip), sample, knownSet, offsetFilter, offset);
+    }
+
+    BOOST_CHECK_EQUAL(offset, 0);
+    BOOST_CHECK_EQUAL(offsetFilter.size(), 4);
+
+    AddTimeDataAlgorithm(utilBuildAddress("1.1.1.200"), 200, knownSet, offsetFilter, offset);
+
+    BOOST_CHECK_EQUAL(offset, offsetFilter.median());
+    BOOST_CHECK_EQUAL(offsetFilter.size(), 5);
+}
+
+BOOST_AUTO_TEST_CASE(util_AddTimeDataAlgorithmMedianIsOutsideBounds)
+{
+    int limit = 10;
+    int64_t offset = 0;
+    std::set<CNetAddr> knownSet;
+    CMedianFilter<int64_t> offsetFilter(limit, 0); // max size : limit , init value: 0
+
+    for (int sample = 1; sample < 4; sample++) { // precondition: 4 samples, all outside bounds
+        std::stringstream stream;
+        stream << "1.1.1." << 1 + sample;
+        std::string ip = stream.str();
+        AddTimeDataAlgorithm(utilBuildAddress(ip), 2 * DEFAULT_MAX_TIME_ADJUSTMENT, knownSet, offsetFilter, offset);
+    } // sorted filter: 0 x x x  -- x is outside the boundaries
+
+    BOOST_CHECK_EQUAL(offset, 0);
+    BOOST_CHECK_EQUAL(offsetFilter.size(), 4);
+
+    // offset is computed only when number of entries is uneven
+    AddTimeDataAlgorithm(utilBuildAddress("1.1.1.5"), 1, knownSet, offsetFilter, offset); // sorted filter : 0 1 (x) x x  -- median (x)
+    BOOST_CHECK_EQUAL(offset, 0);
+    AddTimeDataAlgorithm(utilBuildAddress("1.1.1.6"), 1, knownSet, offsetFilter, offset); // sorted filter : 0 1 1 x x x
+    BOOST_CHECK_EQUAL(offset, 0);
+    AddTimeDataAlgorithm(utilBuildAddress("1.1.1.7"), 1, knownSet, offsetFilter, offset);                               // sorted filter : 0 1 1 (1) x x x x -- median (1)
+    BOOST_CHECK_EQUAL(offset, 1);                                                                                       // flip to 1
+    AddTimeDataAlgorithm(utilBuildAddress("1.1.1.8"), 2 * DEFAULT_MAX_TIME_ADJUSTMENT, knownSet, offsetFilter, offset); // sorted filter : 0 1 1 1 x x x x x
+    BOOST_CHECK_EQUAL(offset, 1);
+    AddTimeDataAlgorithm(utilBuildAddress("1.1.1.9"), 2 * DEFAULT_MAX_TIME_ADJUSTMENT, knownSet, offsetFilter, offset); // sorted filter : 0 1 1 1 (x) x x x x x -- median (x)
+    BOOST_CHECK_EQUAL(offset, 0);                                                                                       // flip back to zero
+
+    BOOST_CHECK_EQUAL(offsetFilter.size(), 9);
+}
+
+BOOST_AUTO_TEST_CASE(util_AddTimeDataAlgorithmAtLeastFiveSamplesToComputeOffset)
+{
+    int limit = 10;
+    int64_t offset = 0;
+    std::set<CNetAddr> knownSet;
+    CMedianFilter<int64_t> offsetFilter(limit, 0); // max size : limit , init value: 0
+
+    AddTimeDataAlgorithm(utilBuildAddress("1.1.1.1"), 1, knownSet, offsetFilter, offset);
+    BOOST_CHECK_EQUAL(offset, 0);
+
+    AddTimeDataAlgorithm(utilBuildAddress("1.1.1.2"), 2, knownSet, offsetFilter, offset);
+    BOOST_CHECK_EQUAL(offset, 0);
+
+    AddTimeDataAlgorithm(utilBuildAddress("1.1.1.3"), 3, knownSet, offsetFilter, offset);
+    BOOST_CHECK_EQUAL(offset, 0);
+
+    AddTimeDataAlgorithm(utilBuildAddress("1.1.1.4"), 4, knownSet, offsetFilter, offset); // this is the fifth entry
+    BOOST_CHECK_EQUAL(offset, 2);
+}
+
+BOOST_AUTO_TEST_CASE(util_AddTimeDataAlgorithmIgnoresSamplesBeyondInternalLimit)
+{
+    int limit = 10;
+    int64_t offset = 0;
+    std::set<CNetAddr> knownSet;
+    CMedianFilter<int64_t> offsetFilter(limit, 0); // max size : limit , init value: 0
+
+
+    for (int sample = 1; sample < limit; sample++) { // precondition: limit samples
+        std::stringstream stream;
+        stream << "1.1.1." << sample;
+        std::string ip = stream.str();
+        AddTimeDataAlgorithm(utilBuildAddress(ip), sample, knownSet, offsetFilter, offset);
+    }
+
+    BOOST_CHECK_EQUAL(offsetFilter.size(), limit);
+
+    int64_t pre = offset;
+    int size = offsetFilter.size();
+
+    AddTimeDataAlgorithm(utilBuildAddress("1.1.1.200"), 200, knownSet, offsetFilter, offset);
+
+    BOOST_CHECK_EQUAL(offset, pre);
+    BOOST_CHECK_EQUAL(offsetFilter.size(), size);
 }
 
 

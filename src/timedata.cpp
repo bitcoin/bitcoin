@@ -6,19 +6,17 @@
 #include <config/bitcoin-config.h>
 #endif
 
-#include <timedata.h>
-
 #include <netaddress.h>
 #include <sync.h>
+#include <timedata.h>
 #include <ui_interface.h>
-#include <util/system.h>
 #include <util/strencodings.h>
+#include <util/system.h>
 #include <warnings.h>
 
 
 static CCriticalSection cs_nTimeOffset;
 static int64_t nTimeOffset GUARDED_BY(cs_nTimeOffset) = 0;
-
 
 
 /**
@@ -48,6 +46,8 @@ static int64_t abs64(int64_t n)
 #define BITCOIN_TIMEDATA_MAX_SAMPLES 200
 
 
+static std::set<CNetAddr> setKnown;
+
 static CMedianFilter<int64_t> vTimeOffsets(BITCOIN_TIMEDATA_MAX_SAMPLES, 0);
 
 int CountOffsetSamples()
@@ -56,20 +56,26 @@ int CountOffsetSamples()
     return vTimeOffsets.size();
 }
 
-
 void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
 {
     LOCK(cs_nTimeOffset);
+
+    AddTimeDataAlgorithm(ip, nOffsetSample, setKnown, vTimeOffsets, nTimeOffset);
+}
+
+
+void AddTimeDataAlgorithm(const CNetAddr& ip, const int64_t nOffsetSample, std::set<CNetAddr>& knownSet, CMedianFilter<int64_t>& offsetFilter, int64_t& offset)
+{
     // Ignore duplicates
-    static std::set<CNetAddr> setKnown;
-    if (setKnown.size() == BITCOIN_TIMEDATA_MAX_SAMPLES)
+
+    if (knownSet.size() == BITCOIN_TIMEDATA_MAX_SAMPLES)
         return;
-    if (!setKnown.insert(ip).second)
+    if (!knownSet.insert(ip).second)
         return;
 
     // Add data
-    vTimeOffsets.input(nOffsetSample);
-    LogPrint(BCLog::NET,"added time data, samples %d, offset %+d (%+d minutes)\n", vTimeOffsets.size(), nOffsetSample, nOffsetSample/60);
+    offsetFilter.input(nOffsetSample);
+    LogPrint(BCLog::NET, "added time data, samples %d, offset %+d (%+d minutes)\n", offsetFilter.size(), nOffsetSample, nOffsetSample / 60);
 
     // There is a known issue here (see issue #4521):
     //
@@ -88,31 +94,25 @@ void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
     // So we should hold off on fixing this and clean it up as part of
     // a timing cleanup that strengthens it in a number of other ways.
     //
-    if (vTimeOffsets.size() >= 5 && vTimeOffsets.size() % 2 == 1)
-    {
-        int64_t nMedian = vTimeOffsets.median();
-        std::vector<int64_t> vSorted = vTimeOffsets.sorted();
+    if (offsetFilter.size() >= 5 && offsetFilter.size() % 2 == 1) {
+        int64_t nMedian = offsetFilter.median();
+        std::vector<int64_t> vSorted = offsetFilter.sorted();
         // Only let other nodes change our time by so much
-        if (abs64(nMedian) <= std::max<int64_t>(0, gArgs.GetArg("-maxtimeadjustment", DEFAULT_MAX_TIME_ADJUSTMENT)))
-        {
-            nTimeOffset = nMedian;
-        }
-        else
-        {
-            nTimeOffset = 0;
+        if (abs64(nMedian) <= std::max<int64_t>(0, gArgs.GetArg("-maxtimeadjustment", DEFAULT_MAX_TIME_ADJUSTMENT))) {
+            offset = nMedian;
+        } else {
+            offset = 0;
 
-            static bool fDone;
-            if (!fDone)
-            {
+            static bool gDone;
+            if (!gDone) {
                 // If nobody has a time different than ours but within 5 minutes of ours, give a warning
                 bool fMatch = false;
                 for (const int64_t nOffset : vSorted)
                     if (nOffset != 0 && abs64(nOffset) < 5 * 60)
                         fMatch = true;
 
-                if (!fMatch)
-                {
-                    fDone = true;
+                if (!fMatch) {
+                    gDone = true;
                     std::string strMessage = strprintf(_("Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly."), _(PACKAGE_NAME));
                     SetMiscWarning(strMessage);
                     uiInterface.ThreadSafeMessageBox(strMessage, "", CClientUIInterface::MSG_WARNING);
@@ -126,7 +126,7 @@ void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
             }
             LogPrint(BCLog::NET, "|  "); /* Continued */
 
-            LogPrint(BCLog::NET, "nTimeOffset = %+d  (%+d minutes)\n", nTimeOffset, nTimeOffset/60);
+            LogPrint(BCLog::NET, "nTimeOffset = %+d  (%+d minutes)\n", offset, offset / 60);
         }
     }
 }
