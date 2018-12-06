@@ -182,6 +182,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "echojson", 7, "arg7" },
     { "echojson", 8, "arg8" },
     { "echojson", 9, "arg9" },
+    { "stop", 0, "wait" },
 };
 
 class CRPCConvertTable

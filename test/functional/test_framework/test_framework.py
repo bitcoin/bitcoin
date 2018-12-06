@@ -280,16 +280,16 @@ class BitcoinTestFramework(object):
             for node in self.nodes:
                 coverage.write_all_rpc_commands(self.options.coveragedir, node.rpc)
 
-    def stop_node(self, i):
+    def stop_node(self, i, wait=0):
         """Stop a dashd test node"""
-        self.nodes[i].stop_node()
+        self.nodes[i].stop_node(wait=wait)
         self.nodes[i].wait_until_stopped()
 
-    def stop_nodes(self):
+    def stop_nodes(self, wait=0):
         """Stop multiple dashd test nodes"""
         for node in self.nodes:
             # Issue RPC to stop nodes
-            node.stop_node()
+            node.stop_node(wait=wait)
 
         for node in self.nodes:
             # Wait for nodes to stop
