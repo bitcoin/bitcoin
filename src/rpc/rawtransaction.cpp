@@ -417,20 +417,20 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
     const std::vector<std::string>& keys = outputs.getKeys();
     for (size_t i = 0; i < outputs.size(); ++i) {
         const std::string& valStr = outputs[i].getValStr();
-        const std::string& name_ = keys[i];
-        if (name_ == "data") {
+        const std::string& name = keys[i];
+        if (name == "data") {
             const std::vector<unsigned char> data = ParseHexV(valStr, "Data");
 
             const CTxOut out(0, CScript() << OP_RETURN << data);
             rawTx.vout.push_back(out);
         } else {
-            CTxDestination destination = DecodeDestination(name_);
+            CTxDestination destination = DecodeDestination(name);
             if (!IsValidDestination(destination)) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Bitcoin address: ") + name_);
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Bitcoin address: ") + name);
             }
 
             if (!destinations.insert(destination).second) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ") + name_);
+                throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ") + name);
             }
 
             const CScript scriptPubKey = GetScriptForDestination(destination);
