@@ -5149,17 +5149,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         LogPrint("net", "received block %s peer=%d\n", inv.hash.ToString(), pfrom->id);
 
         //sometimes we will be sent their most recent block and its not the one we want, in that case tell where we are
-        if (!mapBlockIndex.count(block.hashPrevBlock)) {
-            if (pfrom->setBlockAskedFor.count(hashBlock)) {
-                //we already asked for this block, so lets work backwards and ask for the previous block
-                pfrom->PushMessage("getblocks", chainActive.GetLocator(), block.hashPrevBlock);
-                pfrom->setBlockAskedFor.emplace(block.hashPrevBlock);
-            } else {
-                //ask to sync to this block
-                pfrom->PushMessage("getblocks", chainActive.GetLocator(), hashBlock);
-                pfrom->setBlockAskedFor.emplace(hashBlock);
-            }
-        } else {
+        if (mapBlockIndex.count(block.hashPrevBlock) && mapBlockIndex.at(block.hashPrevBlock)->nChainTx) {
             pfrom->AddInventoryKnown(inv);
             CValidationState state;
             ProcessNewBlock(state, pfrom, &block);
@@ -5172,8 +5162,17 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                     if (lockMain) Misbehaving(pfrom->GetId(), nDoS);
                 }
             }
+        } else {
+            if (pfrom->setBlockAskedFor.count(hashBlock)) {
+                //we already asked for this block, so lets work backwards and ask for the previous block
+                pfrom->PushMessage("getblocks", chainActive.GetLocator(), block.hashPrevBlock);
+                pfrom->setBlockAskedFor.emplace(block.hashPrevBlock);
+            } else {
+                //ask to sync to this block
+                pfrom->PushMessage("getblocks", chainActive.GetLocator(), hashBlock);
+                pfrom->setBlockAskedFor.emplace(hashBlock);
+            }
         }
-
     }
 
 
