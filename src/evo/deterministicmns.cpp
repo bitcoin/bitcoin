@@ -275,7 +275,7 @@ int CDeterministicMNList::CalcPenalty(int percent) const
     return (CalcMaxPoSePenalty() * percent) / 100;
 }
 
-void CDeterministicMNList::PoSePunish(const uint256& proTxHash, int penalty)
+void CDeterministicMNList::PoSePunish(const uint256& proTxHash, int penalty, bool debugLogs)
 {
     assert(penalty > 0);
 
@@ -288,13 +288,17 @@ void CDeterministicMNList::PoSePunish(const uint256& proTxHash, int penalty)
     newState->nPoSePenalty += penalty;
     newState->nPoSePenalty = std::min(maxPenalty, newState->nPoSePenalty);
 
-    LogPrintf("CDeterministicMNList::%s -- punished MN %s, penalty %d->%d (max=%d)\n",
-              __func__, proTxHash.ToString(), dmn->pdmnState->nPoSePenalty, newState->nPoSePenalty, maxPenalty);
+    if (debugLogs) {
+        LogPrintf("CDeterministicMNList::%s -- punished MN %s, penalty %d->%d (max=%d)\n",
+                  __func__, proTxHash.ToString(), dmn->pdmnState->nPoSePenalty, newState->nPoSePenalty, maxPenalty);
+    }
 
     if (newState->nPoSePenalty >= maxPenalty && newState->nPoSeBanHeight == -1) {
         newState->nPoSeBanHeight = nHeight;
-        LogPrintf("CDeterministicMNList::%s -- banned MN %s at height %d\n",
-                  __func__, proTxHash.ToString(), nHeight);
+        if (debugLogs) {
+            LogPrintf("CDeterministicMNList::%s -- banned MN %s at height %d\n",
+                      __func__, proTxHash.ToString(), nHeight);
+        }
     }
     UpdateMN(proTxHash, newState);
 }
@@ -431,7 +435,7 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
     int nHeight = pindexPrev->nHeight + 1;
 
     CDeterministicMNList newList;
-    if (!BuildNewListFromBlock(block, pindexPrev, _state, newList)) {
+    if (!BuildNewListFromBlock(block, pindexPrev, _state, newList, true)) {
         return false;
     }
 
@@ -486,7 +490,7 @@ void CDeterministicMNManager::UpdatedBlockTip(const CBlockIndex* pindex)
     tipBlockHash = pindex->GetBlockHash();
 }
 
-bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, CValidationState& _state, CDeterministicMNList& mnListRet)
+bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, CValidationState& _state, CDeterministicMNList& mnListRet, bool debugLogs)
 {
     AssertLockHeld(cs);
 
@@ -529,8 +533,10 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             if (dmn && dmn->collateralOutpoint == in.prevout) {
                 newList.RemoveMN(dmn->proTxHash);
 
-                LogPrintf("CDeterministicMNManager::%s -- MN %s removed from list because collateral was spent. collateralOutpoint=%s, nHeight=%d, mapCurMNs.allMNsCount=%d\n",
-                    __func__, dmn->proTxHash.ToString(), dmn->collateralOutpoint.ToStringShort(), nHeight, newList.GetAllMNsCount());
+                if (debugLogs) {
+                    LogPrintf("CDeterministicMNManager::%s -- MN %s removed from list because collateral was spent. collateralOutpoint=%s, nHeight=%d, mapCurMNs.allMNsCount=%d\n",
+                        __func__, dmn->proTxHash.ToString(), dmn->collateralOutpoint.ToStringShort(), nHeight, newList.GetAllMNsCount());
+                }
             }
         }
 
@@ -568,8 +574,10 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
                 // In that case the new ProRegTx will replace the old one. This means the old one is removed
                 // and the new one is added like a completely fresh one, which is also at the bottom of the payment list
                 newList.RemoveMN(replacedDmn->proTxHash);
-                LogPrintf("CDeterministicMNManager::%s -- MN %s removed from list because collateral was used for a new ProRegTx. collateralOutpoint=%s, nHeight=%d, mapCurMNs.allMNsCount=%d\n",
-                          __func__, replacedDmn->proTxHash.ToString(), dmn->collateralOutpoint.ToStringShort(), nHeight, newList.GetAllMNsCount());
+                if (debugLogs) {
+                    LogPrintf("CDeterministicMNManager::%s -- MN %s removed from list because collateral was used for a new ProRegTx. collateralOutpoint=%s, nHeight=%d, mapCurMNs.allMNsCount=%d\n",
+                              __func__, replacedDmn->proTxHash.ToString(), dmn->collateralOutpoint.ToStringShort(), nHeight, newList.GetAllMNsCount());
+                }
             }
 
             if (newList.HasUniqueProperty(proTx.addr)) {
@@ -594,8 +602,10 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
 
             newList.AddMN(dmn);
 
-            LogPrintf("CDeterministicMNManager::%s -- MN %s added at height %d: %s\n",
-                __func__, tx.GetHash().ToString(), nHeight, proTx.ToString());
+            if (debugLogs) {
+                LogPrintf("CDeterministicMNManager::%s -- MN %s added at height %d: %s\n",
+                    __func__, tx.GetHash().ToString(), nHeight, proTx.ToString());
+            }
         } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
             CProUpServTx proTx;
             if (!GetTxPayload(tx, proTx)) {
@@ -621,15 +631,18 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
                     newState->nPoSeBanHeight = -1;
                     newState->nPoSeRevivedHeight = nHeight;
 
-                    LogPrintf("CDeterministicMNManager::%s -- MN %s revived at height %d\n",
-                        __func__, proTx.proTxHash.ToString(), nHeight);
+                    if (debugLogs) {
+                        LogPrintf("CDeterministicMNManager::%s -- MN %s revived at height %d\n",
+                            __func__, proTx.proTxHash.ToString(), nHeight);
+                    }
                 }
             }
 
             newList.UpdateMN(proTx.proTxHash, newState);
-
-            LogPrintf("CDeterministicMNManager::%s -- MN %s updated at height %d: %s\n",
-                __func__, proTx.proTxHash.ToString(), nHeight, proTx.ToString());
+            if (debugLogs) {
+                LogPrintf("CDeterministicMNManager::%s -- MN %s updated at height %d: %s\n",
+                    __func__, proTx.proTxHash.ToString(), nHeight, proTx.ToString());
+            }
         } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
             CProUpRegTx proTx;
             if (!GetTxPayload(tx, proTx)) {
@@ -652,8 +665,10 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
 
             newList.UpdateMN(proTx.proTxHash, newState);
 
-            LogPrintf("CDeterministicMNManager::%s -- MN %s updated at height %d: %s\n",
-                __func__, proTx.proTxHash.ToString(), nHeight, proTx.ToString());
+            if (debugLogs) {
+                LogPrintf("CDeterministicMNManager::%s -- MN %s updated at height %d: %s\n",
+                    __func__, proTx.proTxHash.ToString(), nHeight, proTx.ToString());
+            }
         } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REVOKE) {
             CProUpRevTx proTx;
             if (!GetTxPayload(tx, proTx)) {
@@ -671,15 +686,17 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
 
             newList.UpdateMN(proTx.proTxHash, newState);
 
-            LogPrintf("CDeterministicMNManager::%s -- MN %s revoked operator key at height %d: %s\n",
-                __func__, proTx.proTxHash.ToString(), nHeight, proTx.ToString());
+            if (debugLogs) {
+                LogPrintf("CDeterministicMNManager::%s -- MN %s revoked operator key at height %d: %s\n",
+                    __func__, proTx.proTxHash.ToString(), nHeight, proTx.ToString());
+            }
         } else if (tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
             llmq::CFinalCommitmentTxPayload qc;
             if (!GetTxPayload(tx, qc)) {
                 assert(false); // this should have been handled already
             }
             if (!qc.commitment.IsNull()) {
-                HandleQuorumCommitment(qc.commitment, newList);
+                HandleQuorumCommitment(qc.commitment, newList, debugLogs);
             }
         }
     }
@@ -697,7 +714,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
     return true;
 }
 
-void CDeterministicMNManager::HandleQuorumCommitment(llmq::CFinalCommitment& qc, CDeterministicMNList& mnList)
+void CDeterministicMNManager::HandleQuorumCommitment(llmq::CFinalCommitment& qc, CDeterministicMNList& mnList, bool debugLogs)
 {
     // The commitment has already been validated at this point so it's safe to use members of it
 
@@ -712,7 +729,7 @@ void CDeterministicMNManager::HandleQuorumCommitment(llmq::CFinalCommitment& qc,
             // The idea is to immediately ban a MN when it fails 2 DKG sessions with only a few blocks in-between
             // If there were enough blocks between failures, the MN has a chance to recover as he reduces his penalty by 1 for every block
             // If it however fails 3 times in the timespan of a single payment cycle, it should definitely get banned
-            mnList.PoSePunish(members[i]->proTxHash, mnList.CalcPenalty(66));
+            mnList.PoSePunish(members[i]->proTxHash, mnList.CalcPenalty(66), debugLogs);
         }
     }
 }

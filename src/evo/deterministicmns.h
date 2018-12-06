@@ -336,7 +336,7 @@ public:
      * @param proTxHash
      * @param penalty
      */
-    void PoSePunish(const uint256& proTxHash, int penalty);
+    void PoSePunish(const uint256& proTxHash, int penalty, bool debugLogs);
 
     /**
      * Decrease penalty score of MN by 1.
@@ -459,8 +459,8 @@ public:
     void UpdatedBlockTip(const CBlockIndex* pindex);
 
     // the returned list will not contain the correct block hash (we can't know it yet as the coinbase TX is not updated yet)
-    bool BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, CValidationState& state, CDeterministicMNList& mnListRet);
-    void HandleQuorumCommitment(llmq::CFinalCommitment& qc, CDeterministicMNList& mnList);
+    bool BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, CValidationState& state, CDeterministicMNList& mnListRet, bool debugLogs);
+    void HandleQuorumCommitment(llmq::CFinalCommitment& qc, CDeterministicMNList& mnList, bool debugLogs);
     void DecreasePoSePenalties(CDeterministicMNList& mnList);
 
     CDeterministicMNList GetListForBlock(const uint256& blockHash);
