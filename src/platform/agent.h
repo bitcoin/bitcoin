@@ -6,61 +6,66 @@
 
 #include <boost/iterator/iterator_categories.hpp>
 #include <boost/iterator/iterator_facade.hpp>
-#include <boost/shared_ptr.hpp>
 
 #include "uint256.h"
 
-struct Identity
+namespace Platform
 {
-    uint256 id;
-
-public:
-    Identity(uint256 id)
-        : id(id)
-    {}
-};
-
-class AgentRegistryIteratorImpl;
-
-class AgentRegistry
-{
-public:
-    void Add(const Identity& agent);
-    void Remove(const Identity& agent);
-    bool IsAgent(uint256 id) const;
-
-    AgentRegistry();
-
-public:
-    class Iterator:
-        public boost::iterator_facade<Iterator, const Identity, boost::single_pass_traversal_tag>
+    struct Identity
     {
-    public:
-        typedef AgentRegistryIteratorImpl Impl;
-
-        explicit Iterator(std::auto_ptr<Impl> impl);
+        uint256 id;
 
     public:
-        void increment();
-        bool equal(const Iterator& other) const;
-        const Identity& dereference() const;
-
-    private:
-        boost::shared_ptr<Impl> m_impl;
+        Identity(uint256 id)
+            : id(id)
+        {}
     };
 
-    typedef Iterator iterator;
-    typedef Iterator const_iterator;
+    class AgentRegistryIteratorImpl;
 
-public:
-    const_iterator begin() const;
-    const_iterator end() const;
+    class AgentRegistry
+    {
+    public:
+        void Add(const Identity& agent);
+        void Remove(const Identity& agent);
+        bool IsAgent(uint256 id) const;
 
-private:
-    std::map<uint256, Identity> m_agents;
-};
+        AgentRegistry();
 
-AgentRegistry& GetAgentRegistry();
+    public:
+        class Iterator:
+            public boost::iterator_facade<Iterator, const Identity, boost::single_pass_traversal_tag>
+        {
+        public:
+            using Impl = AgentRegistryIteratorImpl;
 
+            explicit Iterator(std::unique_ptr<Impl> impl);
+            ~Iterator();
+
+            Iterator(Iterator&&);
+            Iterator& operator=(Iterator&&);
+
+        public:
+            void increment();
+            bool equal(const Iterator& other) const;
+            const Identity& dereference() const;
+
+        private:
+            std::unique_ptr<Impl> m_impl;
+        };
+
+        typedef Iterator iterator;
+        typedef Iterator const_iterator;
+
+    public:
+        const_iterator begin() const;
+        const_iterator end() const;
+
+    private:
+        std::map<uint256, Identity> m_agents;
+    };
+
+    AgentRegistry& GetAgentRegistry();
+}
 
 #endif //CROWN_PLATFORM_AGENT_H

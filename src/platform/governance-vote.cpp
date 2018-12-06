@@ -8,13 +8,16 @@
 #include "sync.h"
 #include "main.h"
 
-bool CheckVoteTx(const CTransaction& tx, const CBlockIndex* pindex, CValidationState& state)
+namespace Platform
 {
-    AssertLockHeld(cs_main);
+    bool CheckVoteTx(const CTransaction& tx, const CBlockIndex* pindex, CValidationState& state)
+    {
+        AssertLockHeld(cs_main);
 
-    VoteTx vtx;
-    if (!GetTxPayload(tx, vtx))
-        return state.DoS(100, false, REJECT_INVALID, "bad-tx-payload");
+        VoteTx vtx;
+        if (!GetTxPayload(tx, vtx))
+            return state.DoS(100, false, REJECT_INVALID, "bad-tx-payload");
 
-    return true;
+        return true;
+    }
 }

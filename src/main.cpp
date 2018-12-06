@@ -1054,7 +1054,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     if (!CheckTransaction(tx, state))
         return error("AcceptToMemoryPool: : CheckTransaction failed");
 
-    if (!CheckSpecialTx(tx, chainActive.Tip(), state))
+    if (!Platform::CheckSpecialTx(tx, chainActive.Tip(), state))
         return false;
 
     // Coinbase is only valid in a block, not as a loose transaction
@@ -2011,7 +2011,7 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex
     if (blockUndo.vtxundo.size() + 1 != block.vtx.size())
         return error("DisconnectBlock() : block and undo data inconsistent");
 
-    if (!UndoSpecialTxsInBlock(block, pindex)) {
+    if (!Platform::UndoSpecialTxsInBlock(block, pindex)) {
         return error("DisconnectBlock() : failed to undo special tx");;
     }
 
@@ -2205,7 +2205,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     int64_t nTime1 = GetTimeMicros(); nTimeConnect += nTime1 - nTimeStart;
     LogPrint("bench", "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime1 - nTimeStart), 0.001 * (nTime1 - nTimeStart) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime1 - nTimeStart) / (nInputs-1), nTimeConnect * 0.000001);
 
-    if (!ProcessSpecialTxsInBlock(fJustCheck, block, pindex, state))
+    if (!Platform::ProcessSpecialTxsInBlock(fJustCheck, block, pindex, state))
         return false;
 
     if(!IsBlockValueValid(block, GetBlockValue(pindex->pprev->nHeight, nFees))){

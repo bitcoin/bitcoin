@@ -12,39 +12,42 @@ class CValidationState;
 class CKey;
 class CPubKey;
 
-class VoteTx
+namespace Platform
 {
-public:
-    static const int CURRENT_VERSION = 1;
-
-    enum Value { abstain = 0, yes, no };
-
-public:
-    CTxIn voterId;
-    int64_t electionCode;
-    int64_t vote;
-    uint256 candidate;
-    std::vector<unsigned char> signature;
-
-    bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode) { return true; }
-
-public:
-    ADD_SERIALIZE_METHODS;
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    class VoteTx
     {
-        READWRITE(voterId);
-        READWRITE(electionCode);
-        READWRITE(vote);
-        READWRITE(candidate);
-        READWRITE(signature);
-    }
+    public:
+        static const int CURRENT_VERSION = 1;
 
-    std::string ToString() const {return ""; }
-};
+        enum Value { abstain = 0, yes, no };
+
+    public:
+        CTxIn voterId;
+        int64_t electionCode;
+        int64_t vote;
+        uint256 candidate;
+        std::vector<unsigned char> signature;
+
+        bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode) { return true; }
+
+    public:
+        ADD_SERIALIZE_METHODS;
+        template <typename Stream, typename Operation>
+        inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+        {
+            READWRITE(voterId);
+            READWRITE(electionCode);
+            READWRITE(vote);
+            READWRITE(candidate);
+            READWRITE(signature);
+        }
+
+        std::string ToString() const {return ""; }
+    };
 
 
 
-bool CheckVoteTx(const CTransaction& tx, const CBlockIndex* pindex, CValidationState& state);
+    bool CheckVoteTx(const CTransaction& tx, const CBlockIndex* pindex, CValidationState& state);
+}
 
 #endif //PROJECT_GOVERNANCE_VOTE_H

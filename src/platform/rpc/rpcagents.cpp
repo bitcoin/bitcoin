@@ -24,7 +24,7 @@ namespace
     {
         LOCK(cs_main);
         CValidationState state;
-        if (!CheckSpecialTx(tx, NULL, state))
+        if (!Platform::CheckSpecialTx(tx, NULL, state))
             throw std::runtime_error(FormatStateMessage(state));
 
         CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
@@ -65,9 +65,9 @@ json_spirit::Value detail::vote(const json_spirit::Array& params, bool fHelp)
     std::string strVote = params[2].get_str();
 
     if(strVote != "yes" && strVote != "no") return "You can only vote 'yes' or 'no'";
-    VoteTx::Value nVote = VoteTx::abstain;
-    if(strVote == "yes") nVote = VoteTx::yes;
-    if(strVote == "no") nVote = VoteTx::no;
+    Platform::VoteTx::Value nVote = Platform::VoteTx::abstain;
+    if(strVote == "yes") nVote = Platform::VoteTx::yes;
+    if(strVote == "no") nVote = Platform::VoteTx::no;
 
     int success = 0;
     int failed = 0;
@@ -109,7 +109,7 @@ json_spirit::Value detail::vote(const json_spirit::Array& params, bool fHelp)
         tx.nVersion = 2;
         tx.nType = TRANSACTION_GOVERNANCE_VOTE;
 
-        VoteTx voteTx;
+        Platform::VoteTx voteTx;
         voteTx.voterId = pmn->vin;
         voteTx.electionCode = 1;
         voteTx.vote = nVote;
@@ -156,12 +156,10 @@ json_spirit::Value detail::vote(const json_spirit::Array& params, bool fHelp)
 
 json_spirit::Value detail::list(const json_spirit::Array& params, bool fHelp)
 {
-    const AgentRegistry& agents = GetAgentRegistry();
-
     json_spirit::Array result;
-    for (AgentRegistry::Iterator i = agents.begin(); i != agents.end(); ++i)
+    for (const auto& agent: Platform::GetAgentRegistry())
     {
-        result.push_back(i->id.ToString());
+        result.push_back(agent.id.ToString());
     }
 
     return result;
