@@ -816,7 +816,7 @@ std::vector<uint256> CGovernanceObject::RemoveOldVotes(unsigned int nMinTime)
         auto& miRef = itMnPair->second.mapInstances;
         auto itVotePair = miRef.begin();
         while (itVotePair != miRef.end()) {
-            if (itVotePair->second.nTime < nMinTime) {
+            if (itVotePair->second.nCreationTime < nMinTime) {
                 miRef.erase(itVotePair++);
             } else {
                 ++itVotePair;
