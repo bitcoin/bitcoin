@@ -329,6 +329,7 @@ public:
         nEnforceBlockUpgradeMajority = 51;
         nRejectBlockOutdatedMajority = 75;
         nToCheckBlockUpgradeMajority = 100;
+        nSubsidyHalvingInterval = 130000;
         nMinerThreads = 0;
         nTargetTimespan = 2 * 24 * 60 * 60;  // 2 days
         nTargetSpacing = 1.5 * 60;      // 1.5 minutes
