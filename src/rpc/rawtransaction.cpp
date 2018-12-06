@@ -414,9 +414,10 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
         outputs = std::move(outputs_dict);
     }
 
+    const std::vector<std::string>& keys = outputs.getKeys();
     for (size_t i = 0; i < outputs.size(); ++i) {
         const std::string& valStr = outputs[i].getValStr();
-        const std::string& name_ = outputs.getKeys()[i];
+        const std::string& name_ = keys[i];
         if (name_ == "data") {
             const std::vector<unsigned char> data = ParseHexV(valStr, "Data");
 
