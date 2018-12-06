@@ -415,6 +415,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
 
         // Sign Block
         if (fProofOfStake) {
+            pblock->SetProofOfStake(true);
             if (!SignBlock(pblock)) {
                 LogPrintf("%s: Failed to sign block\n", __func__);
                 return NULL;
