@@ -676,6 +676,11 @@ protected:
 
 UniValue submitblock(const JSONRPCRequest& request)
 {
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
     // We allow 2 arguments for compliance with BIP22. Argument 2 is ignored.
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2) {
         throw std::runtime_error(
@@ -727,7 +732,7 @@ UniValue submitblock(const JSONRPCRequest& request)
         throw JSONRPCError(-100, "Block failed CheckBlock() function.");
 
     // peercoin: sign block
-    if (vpwallets.empty() || !SignBlock(block, *vpwallets[0]))
+    if (!SignBlock(block, *pwallet))
         throw JSONRPCError(-100, "Unable to sign block, wallet locked?");
 
     {

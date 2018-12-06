@@ -3384,6 +3384,11 @@ UniValue rescanblockchain(const JSONRPCRequest& request)
 
 UniValue listminting(const JSONRPCRequest& request)
 {
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
     if(request.fHelp || request.params.size() > 2)
         throw std::runtime_error(
                 "listminting [count=-1] [from=0]\n"
@@ -3398,16 +3403,14 @@ UniValue listminting(const JSONRPCRequest& request)
 //        from = request.params[1].get_int();
 
     UniValue ret(UniValue::VARR);
-
+    LOCK2(cs_main, pwallet->cs_wallet);
     const CBlockIndex *p = GetLastBlockIndex(chainActive.Tip(), true);
     double difficulty = p->GetBlockDifficulty();
     int64_t nStakeMinAge = Params().GetConsensus().nStakeMinAge;
 
-    if (!vpwallets.empty())
-    for (std::map<uint256, CWalletTx>::iterator it = vpwallets[0]->mapWallet.begin(); it != vpwallets[0]->mapWallet.end(); ++it)
+    for (std::map<uint256, CWalletTx>::iterator it = pwallet->mapWallet.begin(); it != pwallet->mapWallet.end(); ++it)
     {
-
-        std::vector<KernelRecord> txList = KernelRecord::decomposeOutput(vpwallets[0], it->second);
+        std::vector<KernelRecord> txList = KernelRecord::decomposeOutput(pwallet, it->second);
         int64_t minAge = nStakeMinAge / 60 / 60 / 24;
         for (auto& kr : txList) {
             if(!kr.spent) {
@@ -3421,9 +3424,10 @@ UniValue listminting(const JSONRPCRequest& request)
                 std::string strAge = boost::lexical_cast<std::string>(kr.getAge());
                 std::string strCoinAge = boost::lexical_cast<std::string>(kr.coinAge);
 
-                UniValue params(UniValue::VARR);
-                params.push_back(kr.address);
-                std::string account = AccountFromValue(getaccount(request));
+                JSONRPCRequest request2;
+                request2.params = UniValue(UniValue::VARR);
+                request2.params.push_back(kr.address);
+                std::string account = AccountFromValue(getaccount(request2));
 
                 std::string status = "immature";
                 int searchInterval = 0;
