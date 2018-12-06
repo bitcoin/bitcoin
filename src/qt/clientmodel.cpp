@@ -66,6 +66,11 @@ ClientModel::~ClientModel()
     unsubscribeFromCoreSignals();
 }
 
+bool ClientModel::isMNBlochchainSynced() const
+{
+    return m_node.MNIsBlockchainsynced();
+}
+
 int ClientModel::getNumConnections(unsigned int flags) const
 {
     CConnman::NumConnections connections = CConnman::CONNECTIONS_NONE;
