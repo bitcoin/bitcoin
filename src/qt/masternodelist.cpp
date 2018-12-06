@@ -454,6 +454,7 @@ void MasternodeList::updateDIP3List()
             operatorRewardStr = tr("NONE");
         }
         QTableWidgetItem* operatorRewardItem = new QTableWidgetItem(operatorRewardStr);
+        QTableWidgetItem* proTxHashItem = new QTableWidgetItem(QString::fromStdString(dmn->proTxHash.ToString()));
 
         if (strCurrentFilterDIP3 != "") {
             strToFilter = addressItem->text() + " " +
@@ -463,11 +464,10 @@ void MasternodeList::updateDIP3List()
                           lastPaidItem->text() + " " +
                           nextPaymentItem->text() + " " +
                           payeeItem->text() + " " +
-                          operatorRewardItem->text();
+                          operatorRewardItem->text() + " " +
+                          proTxHashItem->text();
             if (!strToFilter.contains(strCurrentFilterDIP3)) return;
         }
-
-        QTableWidgetItem* proTxHashItem = new QTableWidgetItem(QString::fromStdString(dmn->proTxHash.ToString()));
 
         ui->tableWidgetMasternodesDIP3->insertRow(0);
         ui->tableWidgetMasternodesDIP3->setItem(0, 0, addressItem);
