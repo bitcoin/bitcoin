@@ -1786,6 +1786,18 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             }
             else
             {
+                static std::set<int> legacyMNObjs = {
+                        MSG_MASTERNODE_PAYMENT_VOTE,
+                        MSG_MASTERNODE_PAYMENT_BLOCK,
+                        MSG_MASTERNODE_ANNOUNCE,
+                        MSG_MASTERNODE_PING,
+                        MSG_MASTERNODE_VERIFY,
+                };
+                if (legacyMNObjs.count(inv.type) && deterministicMNManager->IsDeterministicMNsSporkActive()) {
+                    LogPrint("net", "ignoring (%s) inv of legacy type %d peer=%d\n", inv.hash.ToString(), inv.type, pfrom->id);
+                    continue;
+                }
+
                 pfrom->AddInventoryKnown(inv);
                 if (fBlocksOnly)
                     LogPrint("net", "transaction (%s) inv sent in violation of protocol peer=%d\n", inv.hash.ToString(), pfrom->id);
