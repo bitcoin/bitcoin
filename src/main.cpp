@@ -65,6 +65,7 @@ CConditionVariable cvBlockChange;
 int nScriptCheckThreads = 0;
 bool fImporting = false;
 bool fReindex = false;
+bool fVerifying = false;
 bool fTxIndex = true;
 bool fIsBareMultisigStd = true;
 bool fCheckBlockIndex = false;
@@ -2040,7 +2041,7 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex
     }
 
     // Undo stake pointer
-    if (pindex->IsProofOfStake()) {
+    if (!fVerifying && pindex->IsProofOfStake()) {
         COutPoint stakeSource(pindex->stakeSource.first, pindex->stakeSource.second);
         mapUsedStakePointers.erase(stakeSource.GetHash());
     }
