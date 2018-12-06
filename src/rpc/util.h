@@ -109,10 +109,7 @@ struct RPCArg {
 class RPCHelpMan
 {
 public:
-    RPCHelpMan(const std::string& name, const std::string& description, const std::vector<RPCArg>& args)
-        : m_name{name}, m_description{description}, m_args{args}
-    {
-    }
+    RPCHelpMan(const std::string& name, const std::string& description, const std::vector<RPCArg>& args);
 
     std::string ToString() const;
 
