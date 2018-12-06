@@ -13,7 +13,6 @@ class CCoinControl
 {
 public:
     CTxDestination destChange;
-    bool fUsePrivateSend;
     bool fUseInstantSend;
     //! If false, allows unselected inputs, but requires all selected inputs be used
     bool fAllowOtherInputs;
