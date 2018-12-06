@@ -30,7 +30,7 @@ cache:
     - cd crown-$HOST
     - ./configure --cache-file=../config.cache $CROWN_CONFIG_ALL $CROWN_CONFIG
     - make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && make $GOAL V=1 ; false )
-    - if [ -n "$OSX_SDK" ]; then cp Crown-Qt.dmg ../../Crown-Qt.dmg; fi
+    - if [ -n "$DMG" ]; then cp Crown-Qt.dmg ../../Crown-Qt.dmg; fi
 
 .job_template: &win64_definition
   variables:
@@ -78,7 +78,17 @@ cache:
     CROWN_CONFIG: ""
     HOST: "x86_64-apple-darwin14"
     OSX_SDK: "10.8"
-    GOAL: "install deploy"
+    GOAL: "install"
+    OUTDIR: "Crown-${RELEASE_VERSION}-Osx"
+    PACKAGES: "cmake gcc-multilib g++-multilib libcap-dev libbz2-dev"
+
+.job_template: &osx_dmg_definition
+  variables:
+    CROWN_CONFIG: ""
+    HOST: "x86_64-apple-darwin14"
+    OSX_SDK: "10.8"
+    DMG: "True"
+    GOAL: "deploy"
     OUTDIR: "Crown-${RELEASE_VERSION}-Osx"
     PACKAGES: "cmake gcc-multilib g++-multilib libcap-dev libbz2-dev"
 
@@ -102,7 +112,7 @@ cache:
     - master
     - tags
 
-.job_template: &macos_release_definition
+.job_template: &dmg_release_definition
   artifacts:
     name: "$OUTDIR-dmg"
     paths:
@@ -111,7 +121,7 @@ cache:
     - master
     - tags
 
-.job_template: &macos_snapshot_definition
+.job_template: &dmg_snapshot_definition
   artifacts:
     name: "$OUTDIR-dmg"
     paths:
@@ -120,7 +130,6 @@ cache:
   except:
     - master
     - tags
-
 
 # Job definitions for releases
 Win64:
@@ -154,9 +163,9 @@ Osx:
   <<: *release_definition
 
 Osx-dmg:
-  <<: *osx_definition
+  <<: *osx_dmg_definition
   <<: *job_definition 
-  <<: *macos_release_definition
+  <<: *dmg_release_definition
 
 # Job definitions for temporary builds (snapshots)
 Win64-snapshot:
@@ -189,10 +198,10 @@ Osx-snapshot:
   <<: *job_definition 
   <<: *snapshot_definition 
 
-Osx-snapshot-dmg:
-  <<: *osx_definition
+Osx-dmg-snapshot:
+  <<: *osx_dmg_definition
   <<: *job_definition 
-  <<: *macos_snapshot_definition 
+  <<: *dmg_snapshot_definition
 
 # Trigger the docker build and delivery
 trigger_docker_build:
