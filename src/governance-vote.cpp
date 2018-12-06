@@ -218,6 +218,9 @@ bool CGovernanceVote::Sign(const CBLSSecretKey& key)
 {
     uint256 hash = GetSignatureHash();
     CBLSSignature sig = key.Sign(hash);
+    if (!sig.IsValid()) {
+        return false;
+    }
     sig.GetBuf(vchSig);
     return true;
 }

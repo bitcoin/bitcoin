@@ -333,6 +333,9 @@ bool CGovernanceObject::CheckSignature(const CKeyID& keyID) const
 bool CGovernanceObject::Sign(const CBLSSecretKey& key)
 {
     CBLSSignature sig = key.Sign(GetSignatureHash());
+    if (!key.IsValid()) {
+        return false;
+    }
     sig.GetBuf(vchSig);
     return true;
 }

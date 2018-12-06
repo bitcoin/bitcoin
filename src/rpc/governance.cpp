@@ -376,10 +376,6 @@ UniValue gobject_vote_conf(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 4)
         gobject_vote_conf_help();
 
-    if(deterministicMNManager->IsDeterministicMNsSporkActive()) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Can't use vote-conf when deterministic masternodes are active");
-    }
-
     uint256 hash;
 
     hash = ParseHashV(request.params[1], "Object hash");
@@ -430,7 +426,19 @@ UniValue gobject_vote_conf(const JSONRPCRequest& request)
     }
 
     CGovernanceVote vote(mn.outpoint, hash, eVoteSignal, eVoteOutcome);
-    if (!vote.Sign(activeMasternodeInfo.legacyKeyOperator, activeMasternodeInfo.legacyKeyIDOperator)) {
+
+    bool signSuccess = false;
+    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+        if (govObjType == GOVERNANCE_OBJECT_PROPOSAL && eVoteSignal == VOTE_SIGNAL_FUNDING) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Can't use vote-conf for proposals when deterministic masternodes are active");
+        }
+        if (activeMasternodeInfo.blsKeyOperator) {
+            signSuccess = vote.Sign(*activeMasternodeInfo.blsKeyOperator);
+        }
+    } else {
+        signSuccess = vote.Sign(activeMasternodeInfo.legacyKeyOperator, activeMasternodeInfo.legacyKeyIDOperator);
+    }
+    if (!signSuccess) {
         nFailed++;
         statusObj.push_back(Pair("result", "failed"));
         statusObj.push_back(Pair("errorMessage", "Failure to sign."));
@@ -593,6 +601,11 @@ UniValue gobject_vote_many(const JSONRPCRequest& request)
     // We can remove this when we remove support for masternode.conf and only support wallet based masternode
     // management
     if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+        if (!pwalletMain) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "vote-many not supported when wallet is disabled.");
+        }
+        entries.clear();
+
         auto mnList = deterministicMNManager->GetListAtChainTip();
         mnList.ForEachMN(true, [&](const CDeterministicMNCPtr& dmn) {
             bool found = false;
@@ -620,6 +633,10 @@ UniValue gobject_vote_many(const JSONRPCRequest& request)
             }
         });
     }
+#else
+    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "vote-many not supported when wallet is disabled.");
+    }
 #endif
 
     return VoteWithMasternodeList(entries, hash, eVoteSignal, eVoteOutcome);
@@ -634,7 +651,7 @@ void gobject_vote_alias_help()
                 "1. governance-hash   (string, required) hash of the governance object\n"
                 "2. vote              (string, required) vote, possible values: [funding|valid|delete|endorsed]\n"
                 "3. vote-outcome      (string, required) vote outcome, possible values: [yes|no|abstain]\n"
-                "4. alias-name        (string, required) masternode alias"
+                "4. alias-name        (string, required) masternode alias or proTxHash after DIP3 activation"
                 );
 }
 
@@ -646,8 +663,6 @@ UniValue gobject_vote_alias(const JSONRPCRequest& request)
     uint256 hash = ParseHashV(request.params[1], "Object hash");
     std::string strVoteSignal = request.params[2].get_str();
     std::string strVoteOutcome = request.params[3].get_str();
-
-    std::string strAlias = request.params[4].get_str();
 
     vote_signal_enum_t eVoteSignal = CGovernanceVoting::ConvertVoteSignal(strVoteSignal);
     if (eVoteSignal == VOTE_SIGNAL_NONE) {
@@ -662,9 +677,36 @@ UniValue gobject_vote_alias(const JSONRPCRequest& request)
     }
 
     std::vector<CMasternodeConfig::CMasternodeEntry> entries;
-    for (const auto& mne : masternodeConfig.getEntries()) {
-        if (strAlias == mne.getAlias())
-            entries.push_back(mne);
+
+    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+#ifdef ENABLE_WALLET
+        if (!pwalletMain) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "vote-alias not supported when wallet is disabled");
+        }
+
+        uint256 proTxHash = ParseHashV(request.params[4], "alias-name");
+        auto dmn = deterministicMNManager->GetListAtChainTip().GetValidMN(proTxHash);
+        if (!dmn) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid or unknown proTxHash");
+        }
+
+        CKey votingKey;
+        if (!pwalletMain->GetKey(dmn->pdmnState->keyIDVoting, votingKey)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Voting ekey %s not known by wallet", CBitcoinAddress(dmn->pdmnState->keyIDVoting).ToString()));
+        }
+
+        CBitcoinSecret secret(votingKey);
+        CMasternodeConfig::CMasternodeEntry mne(dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToStringIPPort(false), secret.ToString(), dmn->collateralOutpoint.hash.ToString(), itostr(dmn->collateralOutpoint.n));
+        entries.push_back(mne);
+#else
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "vote-alias not supported when wallet is disabled");
+#endif
+    } else {
+        std::string strAlias = request.params[4].get_str();
+        for (const auto& mne : masternodeConfig.getEntries()) {
+            if (strAlias == mne.getAlias())
+                entries.push_back(mne);
+        }
     }
 
     return VoteWithMasternodeList(entries, hash, eVoteSignal, eVoteOutcome);

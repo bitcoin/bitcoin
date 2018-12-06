@@ -1152,6 +1152,9 @@ bool CTxLockVote::Sign()
         uint256 hash = GetSignatureHash();
 
         CBLSSignature sig = activeMasternodeInfo.blsKeyOperator->Sign(hash);
+        if (!sig.IsValid()) {
+            return false;
+        }
         sig.GetBuf(vchMasternodeSignature);
     } else if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
         uint256 hash = GetSignatureHash();

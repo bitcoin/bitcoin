@@ -55,6 +55,9 @@ bool CPrivateSendQueue::Sign()
     if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
         uint256 hash = GetSignatureHash();
         CBLSSignature sig = activeMasternodeInfo.blsKeyOperator->Sign(hash);
+        if (!sig.IsValid()) {
+            return false;
+        }
         sig.GetBuf(vchSig);
     } else if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
         uint256 hash = GetSignatureHash();
@@ -148,6 +151,9 @@ bool CPrivateSendBroadcastTx::Sign()
         uint256 hash = GetSignatureHash();
 
         CBLSSignature sig = activeMasternodeInfo.blsKeyOperator->Sign(hash);
+        if (!sig.IsValid()) {
+            return false;
+        }
         sig.GetBuf(vchSig);
     } else if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
         uint256 hash = GetSignatureHash();
