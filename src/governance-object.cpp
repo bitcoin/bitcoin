@@ -795,6 +795,7 @@ std::vector<uint256> CGovernanceObject::RemoveOldVotes(unsigned int nMinTime)
 {
     LOCK(cs);
 
+    // Drop pre-DIP3 votes from vote db
     auto removed = fileVotes.RemoveOldVotes(nMinTime);
 
     if (!removed.empty()) {
@@ -804,6 +805,25 @@ std::vector<uint256> CGovernanceObject::RemoveOldVotes(unsigned int nMinTime)
         }
         LogPrintf("CGovernanceObject::RemoveOldVotes -- Removed %d old (pre-DIP3) votes for %s:\n%s\n", removed.size(), GetHash().ToString(), removedStr);
         fDirtyCache = true;
+    }
+
+    // Same for current votes per MN for this specific object
+    auto itMnPair = mapCurrentMNVotes.begin();
+    while (itMnPair != mapCurrentMNVotes.end()) {
+        auto& miRef = itMnPair->second.mapInstances;
+        auto itVotePair = miRef.begin();
+        while (itVotePair != miRef.end()) {
+            if (itVotePair->second.nTime < nMinTime) {
+                miRef.erase(itVotePair++);
+            } else {
+                ++itVotePair;
+            }
+        }
+        if (miRef.empty()) {
+            mapCurrentMNVotes.erase(itMnPair++);
+        } else {
+            ++itMnPair;
+        }
     }
 
     return removed;
