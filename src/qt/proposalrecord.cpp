@@ -5,8 +5,6 @@
 
 #include <qt/proposalrecord.h>
 
-#include <interfaces/node.h>
-
 bool ProposalRecord::showProposal()
 {
     // Used to show/hide expired entries in the future

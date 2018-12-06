@@ -20,8 +20,6 @@
 #include <QColor>
 #include <QDateTime>
 #include <QDebug>
-#include <QIcon>
-#include <QList>
 
 static int column_alignments[] = {
         Qt::AlignRight|Qt::AlignVCenter,
@@ -56,9 +54,7 @@ class ProposalTablePriv
 {
 public:
     explicit ProposalTablePriv(ProposalTableModel *_parent) :
-        parent(_parent)
-    {
-    }
+        parent(_parent) {}
 
     ProposalTableModel *parent;
 
@@ -297,11 +293,10 @@ QVariant ProposalTableModel::data(const QModelIndex &index, int role) const
             if(rec->percentage < 10) {
                 return COLOR_NEGATIVE;
             } else {
-                return QColor(23, 168, 26);
+                return COLOR_GREEN;
             }
         } 
-
-        return COLOR_BAREADDRESS;
+        return COLOR_BLACK;
         break;
     case ProposalRole:
         return rec->name;

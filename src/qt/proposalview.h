@@ -68,7 +68,6 @@ private:
     ProposalTableModel *proposalTableModel;
     ProposalFilterProxy *proposalProxyModel;
     QTableView *proposalList;
-    int64_t nLastUpdate = 0;
 
     QLineEdit *proposalWidget;
     QComboBox *dateStartWidget;
@@ -91,7 +90,6 @@ private:
     QFrame *dateEndRangeWidget;
     QDateTimeEdit *dateEndFrom;
     QDateTimeEdit *dateEndTo;
-    ColumnAlignedLayout *hlayout;
 
     QWidget *createDateStartRangeWidget();
     QWidget *createDateEndRangeWidget();

@@ -60,9 +60,9 @@ public:
     QModelIndex index(int row, int column, const QModelIndex & parent = QModelIndex()) const;
 
 private:
-    ClientModel *clientModel;
+    ClientModel* const clientModel;
+    ProposalTablePriv *priv = nullptr;
     QStringList columns;
-    ProposalTablePriv *priv;
 
 public Q_SLOTS:
     /* New proposal, or proposal changed status */
