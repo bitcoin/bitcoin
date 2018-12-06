@@ -28,6 +28,8 @@ Developer Notes
     - [Strings and formatting](#strings-and-formatting)
     - [Shadowing](#shadowing)
     - [Threads and synchronization](#threads-and-synchronization)
+    - [Scripts](#scripts)
+        - [Shebang](#shebang)
     - [Source code organization](#source-code-organization)
     - [GUI](#gui)
     - [Subtrees](#subtrees)
@@ -619,6 +621,31 @@ TRY_LOCK(cs_vNodes, lockNodes);
 {
     ...
 }
+```
+
+Scripts
+--------------------------
+
+### Shebang
+
+- Use `#!/usr/bin/env bash` instead of obsolete `#!/bin/bash`.
+
+  - [*Rationale*](https://github.com/dylanaraps/pure-bash-bible#shebang):
+
+    `#!/bin/bash` assumes it is always installed to /bin/ which can cause issues;
+
+    `#!/usr/bin/env bash` searches the user's PATH to find the bash binary.
+
+  OK:
+
+```bash
+#!/usr/bin/env bash
+```
+
+  Wrong:
+
+```bash
+#!/bin/bash
 ```
 
 Source code organization
