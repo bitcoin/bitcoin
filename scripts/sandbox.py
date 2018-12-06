@@ -295,16 +295,11 @@ class Sandbox:
         return out.strip()
 
     def get_transaction(self, node, txhash, binary='crown-cli'):
-        rtx, err = self.client_command(node, binary, 'getrawtransaction', txhash)
+        tx, err = self.client_command(node, binary, 'getrawtransaction', txhash, '1')
         if len(err) != 0:
             print err
         assert (len(err) == 0)
-        dtx, err = self.client_command(node, binary, 'decoderawtransaction', rtx.strip())
-        if len(err) != 0:
-            print err
-            print rtx
-        assert (len(err) == 0)
-        return json.loads(dtx)
+        return json.loads(tx)
 
     def create_key(self, node, binary='crown-cli'):
         out, err = self.client_command(node, binary, 'node', 'genkey')
@@ -354,6 +349,24 @@ class Sandbox:
         self.write_config(masternode)
         self.start_node(masternode)
 
+        while 'confirmations' not in colltx or colltx['confirmations'] < 15:
+            print '{0} confirmations, waiting'.format(colltx['confirmations'] if 'confirmations' in colltx else 0)
+            time.sleep(2)
+            colltx = self.get_transaction(control_node, txhash)
+
+        out, err = self.start_masternode(control_node, masternode)
+        print err
+        print out
+
+    def stop_nodes(self, nodes=None):
+        if nodes is None:
+            nodes = []
+        nodes = nodes if nodes != [] else self.network['nodes'].iterkeys()
+        for name in nodes:
+            try:
+                self.stop_node(name)
+            except RuntimeError as e:
+                print e
 
     def stop_node(self, node):
         return self.client_command(node, 'crown-cli', 'stop')
@@ -391,6 +404,11 @@ def prepare(json_desc_file, target_dir, bin_dir):
 def start(json_desc_file, target_dir, bin_dir, nodes):
     sb = Sandbox(bin_dir, target_dir, open(json_desc_file))
     sb.start_nodes(nodes)
+
+
+def stop(json_desc_file, target_dir, bin_dir, nodes):
+    sb = Sandbox(bin_dir, target_dir, open(json_desc_file))
+    sb.stop_nodes(nodes)
 
 
 def command(json_desc_file, target_dir, bin_dir, node, *args):
@@ -490,6 +508,8 @@ if __name__ == '__main__':
             prepare(parsed.file, parsed.directory, parsed.bin_directory)
         elif parsed.command[0] == 'start':
             start(parsed.file, parsed.directory, parsed.bin_directory, parsed.command[1:])
+        elif parsed.command[0] == 'stop':
+            stop(parsed.file, parsed.directory, parsed.bin_directory, parsed.command[1:])
         elif parsed.command[0] == 'cmd':
             command(parsed.file, parsed.directory, parsed.bin_directory, parsed.command[1], *parsed.command[2:])
         elif parsed.command[0] == 'sim':
