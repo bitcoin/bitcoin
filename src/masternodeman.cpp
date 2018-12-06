@@ -455,7 +455,7 @@ int CMasternodeMan::CountMasternodes(int nProtocolVersion)
 
     if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
         auto mnList = deterministicMNManager->GetListAtChainTip();
-        nCount = (int)mnList.GetValidMNsCount();
+        nCount = (int)mnList.GetAllMNsCount();
     } else {
         for (const auto& mnpair : mapMasternodes) {
             if(mnpair.second.nProtocolVersion < nProtocolVersion) continue;
@@ -469,15 +469,17 @@ int CMasternodeMan::CountEnabled(int nProtocolVersion)
 {
     LOCK(cs);
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive())
-        return CountMasternodes(nProtocolVersion);
-
     int nCount = 0;
     nProtocolVersion = nProtocolVersion == -1 ? mnpayments.GetMinMasternodePaymentsProto() : nProtocolVersion;
 
-    for (const auto& mnpair : mapMasternodes) {
-        if(mnpair.second.nProtocolVersion < nProtocolVersion || !mnpair.second.IsEnabled()) continue;
-        nCount++;
+    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+        auto mnList = deterministicMNManager->GetListAtChainTip();
+        nCount = (int)mnList.GetValidMNsCount();
+    } else {
+        for (const auto& mnpair : mapMasternodes) {
+            if (mnpair.second.nProtocolVersion < nProtocolVersion || !mnpair.second.IsEnabled()) continue;
+            nCount++;
+        }
     }
 
     return nCount;
