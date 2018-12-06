@@ -73,7 +73,8 @@ public:
         LogPrintf("refreshWallet\n");
         cachedWallet.clear();
         {
-            LOCK(wallet->cs_wallet);
+            // cs_main lock was added because GetDepthInMainChain requires it
+            LOCK2(cs_main, wallet->cs_wallet);
             for(std::map<uint256, CWalletTx>::iterator it = wallet->mapWallet.begin(); it != wallet->mapWallet.end(); ++it)
             {
                 std::vector<KernelRecord> txList = KernelRecord::decomposeOutput(wallet, it->second);
