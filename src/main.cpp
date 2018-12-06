@@ -2012,9 +2012,9 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex
 
         // restore inputs
         if (i > 0 && !tx.IsCoinStake()) { // not coinbases
-            const CTxUndo &txundo = blockUndo.vtxundo[i-1];
+            const CTxUndo &txundo = blockUndo.vtxundo[i-2];
             if (txundo.vprevout.size() != tx.vin.size())
-                return error("DisconnectBlock() : transaction and undo data inconsistent prevout=%d vin=%d", txundo.vprevout.size(), blockUndo.vtxundo.size());
+                return error("DisconnectBlock() : transaction and undo data inconsistent prevout=%d vin=%d height=%d %s", txundo.vprevout.size(), blockUndo.vtxundo.size(), pindex->nHeight, tx.ToString());
             for (unsigned int j = tx.vin.size(); j-- > 0;) {
                 const COutPoint &out = tx.vin[j].prevout;
                 const CTxInUndo &undo = txundo.vprevout[j];
@@ -2119,13 +2119,25 @@ bool CheckBlockProofPointer(const CBlockIndex* pindex, const CBlock& block, CPub
         //Marked as already used, but could potentially be a reorg, so check if they are in the same chain
         auto hashBlockOfPointer = mapUsedStakePointers.at(hashPointer);
         if (mapBlockIndex.count(hashBlockOfPointer)) {
-            //Check the ancestor of the block we are checking. If this chain's block at the height of the prev stake pointer has the same hash,
-            //then this is the same chain and therefore need to reject the new block
+
             auto pindexUsedPointer = mapBlockIndex.at(hashBlockOfPointer);
-            auto pindexCheck = pindex->GetAncestor(pindexUsedPointer->nHeight);
-            if (pindexCheck && pindexCheck->GetBlockHash() == pindexUsedPointer->GetBlockHash())
-                return error("%s: StakePointer (txid=%s, nPos=%u) has already been used in block %s", __func__,
-                        stakePointer.txid.GetHex(), stakePointer.nPos, pindexCheck->GetBlockHash().GetHex());
+
+            // This check is only applicable if the used pointer is deeper in the chain (else it is likely just reindex or other check)
+            if (pindex->nHeight >= pindexUsedPointer->nHeight) {
+
+                // if it is the same block, then it is not a duplicate
+                if (pindex->GetBlockHash() != pindexUsedPointer->GetBlockHash()) {
+
+                    //Check the ancestor of the block we are checking. If this chain's block at the height of the prev stake pointer has the same hash,
+                    //then this is the same chain and therefore need to reject the new block
+                    auto pindexCheck = pindex->GetAncestor(pindexUsedPointer->nHeight);
+                    if (pindexCheck && pindexCheck->GetBlockHash() == pindexUsedPointer->GetBlockHash())
+                        return error("%s: StakePointer (txid=%s, nPos=%u) has already been used in block %s",
+                                     __func__,
+                                     stakePointer.txid.GetHex(), stakePointer.nPos,
+                                     pindexCheck->GetBlockHash().GetHex());
+                }
+            }
         }
     }
 

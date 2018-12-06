@@ -131,6 +131,11 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
         uint32_t nTime = pblock->nTime;
         uint32_t nBits = pblock->nBits;
         StakePointer stakePointer;
+
+        // Slow down blocks so that the testnet chain does not burn through the stakepointers too quick
+        if (Params().NetworkIDString() == "test" && GetAdjustedTime() - chainActive.Tip()->nTime < 30)
+            MilliSleep(30000);
+
         if (pwallet->CreateCoinStake(nHeight, nBits, nTime, txCoinStake, nTxNewTime, stakePointer)) {
             pblock->nTime = nTxNewTime;
             pblock->vtx.clear();
