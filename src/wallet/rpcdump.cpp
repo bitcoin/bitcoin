@@ -719,7 +719,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
                 "Note that if your wallet contains keys which are not derived from your HD seed (e.g. imported keys), these are not covered by\n"
                 "only backing up the seed itself, and must be backed up too (e.g. ensure you back up the whole dumpfile).\n",
                 {
-                    {"filename", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The filename with path (either absolute or relative to bitcoind)"},
+                    {"filename", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The filename with path (either absolute or relative to bitcoind). TODO: mention time specifiers"},
                 }}
                 .ToString() +
             "\nResult:\n"
@@ -728,7 +728,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("dumpwallet", "\"test\"")
-            + HelpExampleRpc("dumpwallet", "\"test\"")
+            + HelpExampleRpc("dumpwallet", "\"test_%Y%m%d_%H%M%S\"")
         );
 
     auto locked_chain = pwallet->chain().lock();
@@ -736,8 +736,11 @@ UniValue dumpwallet(const JSONRPCRequest& request)
 
     EnsureWalletIsUnlocked(pwallet);
 
-    fs::path filepath = request.params[0].get_str();
-    filepath = fs::absolute(filepath);
+    char path[1024];
+    time_t now = time(0);
+    strftime(path, sizeof(path), request.params[0].get_str().c_str(), localtime(&now));
+
+    const fs::path filepath = fs::absolute(fs::path(path));
 
     /* Prevent arbitrary files from being overwritten. There have been reports
      * that users have overwritten wallet files this way:
