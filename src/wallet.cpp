@@ -1972,91 +1972,66 @@ bool CWallet::CreateCoinStake(const int nHeight, const uint32_t& nBits, const ui
     return false;
 }
 
-bool CWallet::GetRecentStakePointers(std::vector<StakePointer>& vStakePointers)
+template<typename stakingnode>
+bool GetPointers(stakingnode* pstaker, std::vector<StakePointer>& vStakePointers, int nPaymentSlot)
 {
     bool found = false;
-    if (fMasterNode) {
-        // find pointer to active CMasternode object
-        CMasternode* pactiveMN;
-        if (!GetActiveMasternode(pactiveMN)) {
-            LogPrintf("GetRecentStakePointer -- Couldn't find CMasternode object for active masternode\n");
+    // get block index of last mn payment
+    std::vector<const CBlockIndex*> vBlocksLastPaid;
+    if (!pstaker->GetRecentPaymentBlocks(vBlocksLastPaid, false)) {
+        LogPrintf("GetRecentStakePointer -- Couldn't find last paid block\n");
+        return false;
+    }
+
+    for (auto pindex : vBlocksLastPaid) {
+        if (budget.IsBudgetPaymentBlock(pindex->nHeight))
+            continue;
+
+        CBlock blockLastPaid;
+        if (!ReadBlockFromDisk(blockLastPaid, pindex)) {
+            LogPrintf("GetRecentStakePointer -- Failed reading block from disk\n");
             return false;
         }
 
-        // get block index of last mn payment
-        std::vector<const CBlockIndex*> vBlocksLastPaid;
-        if (!pactiveMN->GetRecentPaymentBlocks(vBlocksLastPaid, false)) {
-            LogPrintf("GetRecentStakePointer -- Couldn't find last paid block\n");
-            return false;
-        }
-
-        for (auto pindex : vBlocksLastPaid) {
-            if (budget.IsBudgetPaymentBlock(pindex->nHeight))
+        CScript scriptMNPubKey;
+        scriptMNPubKey = GetScriptForDestination(pstaker->pubkey.GetID());
+        for (CTransaction& tx : blockLastPaid.vtx) {
+            auto stakeSource = COutPoint(tx.GetHash(), nPaymentSlot);
+            uint256 hashPointer = stakeSource.GetHash();
+            if (mapUsedStakePointers.count(hashPointer))
                 continue;
-
-            CBlock blockLastPaid;
-            if (!ReadBlockFromDisk(blockLastPaid, pindex)) {
-                LogPrintf("GetRecentStakePointer -- Failed reading block from disk\n");
-                return false;
-            }
-
-            CScript scriptMNPubKey;
-            scriptMNPubKey = GetScriptForDestination(pactiveMN->pubkey.GetID());
-            for (CTransaction& tx : blockLastPaid.vtx) {
-                auto stakeSource = COutPoint(tx.GetHash(), MN_PMT_SLOT);
-                if (tx.IsCoinBase() && tx.vout[MN_PMT_SLOT].scriptPubKey == scriptMNPubKey && !mapUsedStakePointers.count(stakeSource.GetHash())) {
-                    StakePointer stakePointer;
-                    stakePointer.hashBlock = pindex->GetBlockHash();
-                    stakePointer.txid = tx.GetHash();
-                    stakePointer.nPos = MN_PMT_SLOT;
-                    stakePointer.pubKeyProofOfStake = pactiveMN->pubkey;
-                    vStakePointers.emplace_back(stakePointer);
-                    found = true;
-                    continue;
-                }
-            }
-        }
-
-    } else if (fSystemNode) {
-
-        CSystemnode* pactiveSN;
-        if (!GetActiveSystemnode(pactiveSN)) {
-            LogPrintf("GetRecentStakePointer -- Couldn't find CSystemnode object for active systemnode\n");
-            return false;
-        }
-
-        std::vector<const CBlockIndex*> vBlocksLastPaid;
-        if (!pactiveSN->GetRecentPaymentBlocks(vBlocksLastPaid, true)) {
-            LogPrintf("GetRecentStakePointer -- Couldn't find last paid block\n");
-            return false;
-        }
-        for (auto pindex : vBlocksLastPaid) {
-
-            CBlock blockLastPaid;
-            if (!ReadBlockFromDisk(blockLastPaid, pindex)) {
-                LogPrintf("GetRecentStakePointer -- Failed reading block from disk\n");
-                return false;
-            }
-
-            CScript scriptSNPubKey;
-            scriptSNPubKey = GetScriptForDestination(pactiveSN->pubkey.GetID());
-            for (CTransaction& tx : blockLastPaid.vtx) {
-                auto stakeSource = COutPoint(tx.GetHash(), SN_PMT_SLOT);
-                if (tx.IsCoinBase() && tx.vout[SN_PMT_SLOT].scriptPubKey == scriptSNPubKey && !mapUsedStakePointers.count(stakeSource.GetHash())) {
-                    StakePointer stakePointer;
-                    stakePointer.hashBlock = pindex->GetBlockHash();
-                    stakePointer.txid = tx.GetHash();
-                    stakePointer.nPos = SN_PMT_SLOT;
-                    stakePointer.pubKeyProofOfStake = pactiveSN->pubkey;
-                    vStakePointers.emplace_back(stakePointer);
-                    found = true;
-                    continue;
-                }
+            if (tx.IsCoinBase() && tx.vout[nPaymentSlot].scriptPubKey == scriptMNPubKey) {
+                StakePointer stakePointer;
+                stakePointer.hashBlock = pindex->GetBlockHash();
+                stakePointer.txid = tx.GetHash();
+                stakePointer.nPos = nPaymentSlot;
+                stakePointer.pubKeyProofOfStake = pstaker->pubkey;
+                vStakePointers.emplace_back(stakePointer);
+                found = true;
+                continue;
             }
         }
     }
 
     return found;
+}
+
+bool CWallet::GetRecentStakePointers(std::vector<StakePointer>& vStakePointers)
+{
+    if (fMasterNode) {
+        // find pointer to active CMasternode object
+        CMasternode* pactiveMN;
+        if (!GetActiveMasternode(pactiveMN))
+            return error("GetRecentStakePointer -- Couldn't find CMasternode object for active masternode\n");
+
+        return GetPointers(pactiveMN, vStakePointers, MN_PMT_SLOT);
+    }
+
+    CSystemnode* pactiveSN;
+    if (!GetActiveSystemnode(pactiveSN))
+        return error("GetRecentStakePointer -- Couldn't find CSystemnode object for active systemnode\n");
+
+    return GetPointers(pactiveSN, vStakePointers, SN_PMT_SLOT);
 }
 
 CAmount CWallet::GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarget, const CTxMemPool& pool)
