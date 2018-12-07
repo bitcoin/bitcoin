@@ -492,9 +492,6 @@ static int CommandLineRPC(int argc, char *argv[])
             }
         } while (fWait);
     }
-    catch (const boost::thread_interrupted&) {
-        throw;
-    }
     catch (const std::exception& e) {
         strPrint = std::string("error: ") + e.what();
         nRet = EXIT_FAILURE;
