@@ -28,7 +28,7 @@ namespace Platform
         uint256 candidate;
         std::vector<unsigned char> signature;
 
-        bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode) { return true; }
+        bool Sign(const CKey& keyMasternode, const CPubKey& pubKeyMasternode) { return true; }
 
     public:
         ADD_SERIALIZE_METHODS;

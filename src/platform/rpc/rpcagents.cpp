@@ -24,7 +24,7 @@ namespace
     {
         LOCK(cs_main);
         CValidationState state;
-        if (!Platform::CheckSpecialTx(tx, NULL, state))
+        if (!Platform::CheckSpecialTx(tx, nullptr, state))
             throw std::runtime_error(FormatStateMessage(state));
 
         CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
@@ -39,6 +39,92 @@ namespace
         return sendrawtransaction(sendRequest, false).get_str();
     }
 
+    json_spirit::Object SendVotingTransaction(
+        const CPubKey& pubKeyMasternode,
+        const CKey& keyMasternode,
+        const CTxIn& vin,
+        Platform::VoteTx::Value vote,
+        const uint256& hash
+    )
+    {
+        try
+        {
+            json_spirit::Object statusObj;
+
+            CMutableTransaction tx;
+            tx.nVersion = 2;
+            tx.nType = TRANSACTION_GOVERNANCE_VOTE;
+
+            Platform::VoteTx voteTx;
+            voteTx.voterId = vin;
+            voteTx.electionCode = 1;
+            voteTx.vote = vote;
+            voteTx.candidate = hash;
+
+            if(!voteTx.Sign(keyMasternode, pubKeyMasternode))
+            {
+                statusObj.push_back(json_spirit::Pair("result", "failed"));
+                statusObj.push_back(json_spirit::Pair("errorMessage", "Failure to sign"));
+                return statusObj;
+            }
+
+            FundSpecialTx(tx, voteTx);
+            SignSpecialTxPayload(tx, voteTx, keyMasternode);
+            SetTxPayload(tx, voteTx);
+
+            std::string result = SignAndSendSpecialTx(tx);
+
+            statusObj.push_back(json_spirit::Pair("result", result));
+            return statusObj;
+        }
+        catch(const std::exception& ex)
+        {
+            json_spirit::Object statusObj;
+            statusObj.push_back(json_spirit::Pair("result", "failed"));
+            statusObj.push_back(json_spirit::Pair("errorMessage", ex.what()));
+            return statusObj;
+        }
+    }
+
+    json_spirit::Object CastSingleVote(const uint256& hash, Platform::VoteTx::Value vote, const CNodeEntry& mne)
+    {
+        std::string errorMessage;
+        std::vector<unsigned char> vchMasterNodeSignature;
+        std::string strMasterNodeSignMessage;
+
+        CKey keyCollateralAddress;
+        CPubKey pubKeyMasternode;
+        CKey keyMasternode;
+
+        json_spirit::Object statusObj;
+
+        if(!legacySigner.SetKey(mne.getPrivKey(), errorMessage, keyMasternode, pubKeyMasternode)){
+            statusObj.push_back(json_spirit::Pair("result", "failed"));
+            statusObj.push_back(json_spirit::Pair("errorMessage", "Masternode signing error, could not set key correctly: " + errorMessage));
+            return statusObj;
+        }
+
+        CMasternode* pmn = mnodeman.Find(pubKeyMasternode);
+        if(pmn == nullptr)
+        {
+            statusObj.push_back(json_spirit::Pair("result", "failed"));
+            statusObj.push_back(json_spirit::Pair("errorMessage", "Can't find masternode by pubkey"));
+            return statusObj;
+        }
+
+        return SendVotingTransaction(pubKeyMasternode, keyMasternode, pmn->vin, vote, hash);
+    }
+
+    Platform::VoteTx::Value ParseVote(const std::string& voteText)
+    {
+        if(voteText != "yes" && voteText != "no")
+            throw std::runtime_error("You can only vote 'yes' or 'no'");
+
+        else if(voteText == "yes")
+            return Platform::VoteTx::yes;
+        else
+            return Platform::VoteTx::no;
+    }
 }
 
 json_spirit::Value agents(const json_spirit::Array& params, bool fHelp)
@@ -55,93 +141,24 @@ json_spirit::Value agents(const json_spirit::Array& params, bool fHelp)
 
 json_spirit::Value detail::vote(const json_spirit::Array& params, bool fHelp)
 {
-    std::vector<CNodeEntry> mnEntries;
-    mnEntries = masternodeConfig.getEntries();
-
     if (params.size() != 3)
         throw std::runtime_error("Correct usage is 'mnbudget vote proposal-hash yes|no'");
 
-    uint256 hash = ParseHashV(params[1], "parameter 1");
-    std::string strVote = params[2].get_str();
+    auto hash = ParseHashV(params[1], "parameter 1");
+    auto nVote = ParseVote(params[2].get_str());
 
-    if(strVote != "yes" && strVote != "no") return "You can only vote 'yes' or 'no'";
-    Platform::VoteTx::Value nVote = Platform::VoteTx::abstain;
-    if(strVote == "yes") nVote = Platform::VoteTx::yes;
-    if(strVote == "no") nVote = Platform::VoteTx::no;
+    auto success = 0;
+    auto failed = 0;
+    auto resultsObj = json_spirit::Object{};
 
-    int success = 0;
-    int failed = 0;
-
-    json_spirit::Object resultsObj;
-
-    BOOST_FOREACH(const CNodeEntry& mne, masternodeConfig.getEntries())
+    for(const auto& mne: masternodeConfig.getEntries())
     {
-        std::string errorMessage;
-        std::vector<unsigned char> vchMasterNodeSignature;
-        std::string strMasterNodeSignMessage;
-
-        CPubKey pubKeyCollateralAddress;
-        CKey keyCollateralAddress;
-        CPubKey pubKeyMasternode;
-        CKey keyMasternode;
-
-        json_spirit::Object statusObj;
-
-        if(!legacySigner.SetKey(mne.getPrivKey(), errorMessage, keyMasternode, pubKeyMasternode)){
-            failed++;
-            statusObj.push_back(json_spirit::Pair("result", "failed"));
-            statusObj.push_back(json_spirit::Pair("errorMessage", "Masternode signing error, could not set key correctly: " + errorMessage));
-            resultsObj.push_back(json_spirit::Pair(mne.getAlias(), statusObj));
-            continue;
-        }
-
-        CMasternode* pmn = mnodeman.Find(pubKeyMasternode);
-        if(pmn == NULL)
-        {
+        auto statusObj = CastSingleVote(hash, nVote, mne);
+        auto result = json_spirit::find_value(statusObj, "result");
+        if (result.type() != json_spirit::Value_type::str_type || result.get_str() == "failed")
             ++failed;
-            statusObj.push_back(json_spirit::Pair("result", "failed"));
-            statusObj.push_back(json_spirit::Pair("errorMessage", "Can't find masternode by pubkey"));
-            resultsObj.push_back(json_spirit::Pair(mne.getAlias(), statusObj));
-            continue;
-        }
-
-        CMutableTransaction tx;
-        tx.nVersion = 2;
-        tx.nType = TRANSACTION_GOVERNANCE_VOTE;
-
-        Platform::VoteTx voteTx;
-        voteTx.voterId = pmn->vin;
-        voteTx.electionCode = 1;
-        voteTx.vote = nVote;
-        voteTx.candidate = hash;
-
-        if(!voteTx.Sign(keyMasternode, pubKeyMasternode))
-        {
-            ++failed;
-            statusObj.push_back(json_spirit::Pair("result", "failed"));
-            statusObj.push_back(json_spirit::Pair("errorMessage", "Failure to sign"));
-            resultsObj.push_back(json_spirit::Pair(mne.getAlias(), statusObj));
-            continue;
-        }
-
-        try
-        {
-            FundSpecialTx(tx, voteTx);
-            SignSpecialTxPayload(tx, voteTx, keyMasternode);
-            SetTxPayload(tx, voteTx);
-
-            std::string result = SignAndSendSpecialTx(tx);
-
+        else
             ++success;
-            statusObj.push_back(json_spirit::Pair("result", result));
-        }
-        catch(const std::exception& ex)
-        {
-            ++failed;
-            statusObj.push_back(json_spirit::Pair("result", "failed"));
-            statusObj.push_back(json_spirit::Pair("errorMessage", ex.what()));
-            resultsObj.push_back(json_spirit::Pair(mne.getAlias(), statusObj));
-        }
 
         resultsObj.push_back(json_spirit::Pair(mne.getAlias(), statusObj));
 
@@ -154,7 +171,7 @@ json_spirit::Value detail::vote(const json_spirit::Array& params, bool fHelp)
     return returnObj;
 }
 
-json_spirit::Value detail::list(const json_spirit::Array& params, bool fHelp)
+json_spirit::Value detail::list(const json_spirit::Array& params, bool )
 {
     json_spirit::Array result;
     for (const auto& agent: Platform::GetAgentRegistry())
