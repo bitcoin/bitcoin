@@ -954,9 +954,8 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
         if (tx.IsCoinBase() && tx.nType != TRANSACTION_NORMAL)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-cb-type");
     }
-
     // all version 1 transactions are normal
-    if (tx.nType != TRANSACTION_NORMAL)
+    else if (tx.nType != TRANSACTION_NORMAL)
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-type");
 
     // Basic checks that don't depend on any context
