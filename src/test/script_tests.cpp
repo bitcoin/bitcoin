@@ -14,6 +14,7 @@
 #include <util/strencodings.h>
 #include <test/test_bitcoin.h>
 #include <rpc/server.h>
+#include <test/factories/transactions.h>
 
 #if defined(HAVE_CONSENSUS_LIB)
 #include <script/bitcoinconsensus.h>
@@ -121,40 +122,6 @@ static ScriptError_t ParseScriptError(const std::string &name)
 
 BOOST_FIXTURE_TEST_SUITE(script_tests, BasicTestingSetup)
 
-CMutableTransaction BuildCreditingTransaction(const CScript& scriptPubKey, int nValue = 0)
-{
-    CMutableTransaction txCredit;
-    txCredit.nVersion = 1;
-    txCredit.nLockTime = 0;
-    txCredit.vin.resize(1);
-    txCredit.vout.resize(1);
-    txCredit.vin[0].prevout.SetNull();
-    txCredit.vin[0].scriptSig = CScript() << CScriptNum(0) << CScriptNum(0);
-    txCredit.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
-    txCredit.vout[0].scriptPubKey = scriptPubKey;
-    txCredit.vout[0].nValue = nValue;
-
-    return txCredit;
-}
-
-CMutableTransaction BuildSpendingTransaction(const CScript& scriptSig, const CScriptWitness& scriptWitness, const CTransaction& txCredit)
-{
-    CMutableTransaction txSpend;
-    txSpend.nVersion = 1;
-    txSpend.nLockTime = 0;
-    txSpend.vin.resize(1);
-    txSpend.vout.resize(1);
-    txSpend.vin[0].scriptWitness = scriptWitness;
-    txSpend.vin[0].prevout.hash = txCredit.GetHash();
-    txSpend.vin[0].prevout.n = 0;
-    txSpend.vin[0].scriptSig = scriptSig;
-    txSpend.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
-    txSpend.vout[0].scriptPubKey = CScript();
-    txSpend.vout[0].nValue = txCredit.vout[0].nValue;
-
-    return txSpend;
-}
-
 void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScriptWitness& scriptWitness, int flags, const std::string& message, int scriptError, CAmount nValue = 0)
 {
     bool expect = (scriptError == SCRIPT_ERR_OK);
@@ -163,7 +130,7 @@ void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScript
         flags |= SCRIPT_VERIFY_WITNESS;
     }
     ScriptError err;
-    const CTransaction txCredit{BuildCreditingTransaction(scriptPubKey, nValue)};
+    const CMutableTransaction txCredit{BuildCreditingTransaction(scriptPubKey, nValue)};
     CMutableTransaction tx = BuildSpendingTransaction(scriptSig, scriptWitness, txCredit);
     CMutableTransaction tx2 = tx;
     BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, &scriptWitness, flags, MutableTransactionSignatureChecker(&tx, 0, txCredit.vout[0].nValue), &err) == expect, message);
@@ -328,8 +295,9 @@ public:
             redeemscript = scriptPubKey;
             scriptPubKey = CScript() << OP_HASH160 << ToByteVector(CScriptID(redeemscript)) << OP_EQUAL;
         }
-        creditTx = MakeTransactionRef(BuildCreditingTransaction(scriptPubKey, nValue));
-        spendTx = BuildSpendingTransaction(CScript(), CScriptWitness(), *creditTx);
+        CMutableTransaction creditMutTx = BuildCreditingTransaction(scriptPubKey, nValue);
+        spendTx = BuildSpendingTransaction(CScript(), CScriptWitness(), creditMutTx);
+        creditTx = MakeTransactionRef(creditMutTx);
     }
 
     TestBuilder& ScriptError(ScriptError_t err)
@@ -1097,7 +1065,7 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG12)
     CScript scriptPubKey12;
     scriptPubKey12 << OP_1 << ToByteVector(key1.GetPubKey()) << ToByteVector(key2.GetPubKey()) << OP_2 << OP_CHECKMULTISIG;
 
-    const CTransaction txFrom12{BuildCreditingTransaction(scriptPubKey12)};
+    const CMutableTransaction txFrom12{BuildCreditingTransaction(scriptPubKey12, 0)};
     CMutableTransaction txTo12 = BuildSpendingTransaction(CScript(), CScriptWitness(), txFrom12);
 
     CScript goodsig1 = sign_multisig(scriptPubKey12, key1, CTransaction(txTo12));
@@ -1128,7 +1096,7 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG23)
     CScript scriptPubKey23;
     scriptPubKey23 << OP_2 << ToByteVector(key1.GetPubKey()) << ToByteVector(key2.GetPubKey()) << ToByteVector(key3.GetPubKey()) << OP_3 << OP_CHECKMULTISIG;
 
-    const CTransaction txFrom23{BuildCreditingTransaction(scriptPubKey23)};
+    const CMutableTransaction txFrom23{BuildCreditingTransaction(scriptPubKey23, 0)};
     CMutableTransaction txTo23 = BuildSpendingTransaction(CScript(), CScriptWitness(), txFrom23);
 
     std::vector<CKey> keys;
@@ -1210,8 +1178,8 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
         BOOST_CHECK(keystore.AddKey(key));
     }
 
-    CMutableTransaction txFrom = BuildCreditingTransaction(GetScriptForDestination(keys[0].GetPubKey().GetID()));
-    CMutableTransaction txTo = BuildSpendingTransaction(CScript(), CScriptWitness(), CTransaction(txFrom));
+    CMutableTransaction txFrom = BuildCreditingTransaction(GetScriptForDestination(keys[0].GetPubKey().GetID()), 0);
+    CMutableTransaction txTo = BuildSpendingTransaction(CScript(), CScriptWitness(), txFrom);
     CScript& scriptPubKey = txFrom.vout[0].scriptPubKey;
     SignatureData scriptSig;
 
@@ -1533,7 +1501,7 @@ BOOST_AUTO_TEST_CASE(bitcoinconsensus_verify_script_returns_true)
     CScriptWitness wit;
 
     scriptPubKey << OP_1;
-    CTransaction creditTx = BuildCreditingTransaction(scriptPubKey, 1);
+    CMutableTransaction creditTx = BuildCreditingTransaction(scriptPubKey, 1);
     CTransaction spendTx = BuildSpendingTransaction(scriptSig, wit, creditTx);
 
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
@@ -1556,7 +1524,7 @@ BOOST_AUTO_TEST_CASE(bitcoinconsensus_verify_script_tx_index_err)
     CScriptWitness wit;
 
     scriptPubKey << OP_EQUAL;
-    CTransaction creditTx = BuildCreditingTransaction(scriptPubKey, 1);
+    CMutableTransaction creditTx = BuildCreditingTransaction(scriptPubKey, 1);
     CTransaction spendTx = BuildSpendingTransaction(scriptSig, wit, creditTx);
 
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
@@ -1579,7 +1547,7 @@ BOOST_AUTO_TEST_CASE(bitcoinconsensus_verify_script_tx_size)
     CScriptWitness wit;
 
     scriptPubKey << OP_EQUAL;
-    CTransaction creditTx = BuildCreditingTransaction(scriptPubKey, 1);
+    CMutableTransaction creditTx = BuildCreditingTransaction(scriptPubKey, 1);
     CTransaction spendTx = BuildSpendingTransaction(scriptSig, wit, creditTx);
 
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
@@ -1602,7 +1570,7 @@ BOOST_AUTO_TEST_CASE(bitcoinconsensus_verify_script_tx_serialization)
     CScriptWitness wit;
 
     scriptPubKey << OP_EQUAL;
-    CTransaction creditTx = BuildCreditingTransaction(scriptPubKey, 1);
+    CMutableTransaction creditTx = BuildCreditingTransaction(scriptPubKey, 1);
     CTransaction spendTx = BuildSpendingTransaction(scriptSig, wit, creditTx);
 
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
@@ -1625,7 +1593,7 @@ BOOST_AUTO_TEST_CASE(bitcoinconsensus_verify_script_amount_required_err)
     CScriptWitness wit;
 
     scriptPubKey << OP_EQUAL;
-    CTransaction creditTx = BuildCreditingTransaction(scriptPubKey, 1);
+    CMutableTransaction creditTx = BuildCreditingTransaction(scriptPubKey, 1);
     CTransaction spendTx = BuildSpendingTransaction(scriptSig, wit, creditTx);
 
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
@@ -1648,7 +1616,7 @@ BOOST_AUTO_TEST_CASE(bitcoinconsensus_verify_script_invalid_flags)
     CScriptWitness wit;
 
     scriptPubKey << OP_EQUAL;
-    CTransaction creditTx = BuildCreditingTransaction(scriptPubKey, 1);
+    CMutableTransaction creditTx = BuildCreditingTransaction(scriptPubKey, 1);
     CTransaction spendTx = BuildSpendingTransaction(scriptSig, wit, creditTx);
 
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);

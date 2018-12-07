@@ -30,6 +30,7 @@ LIBBITCOIN_CONSENSUS=libbitcoin_consensus.a
 LIBBITCOIN_CLI=libbitcoin_cli.a
 LIBBITCOIN_UTIL=libbitcoin_util.a
 LIBBITCOIN_CRYPTO_BASE=crypto/libbitcoin_crypto_base.a
+LIBBITCOIN_FACTORIES=factories/libbitcoin_factories.a
 LIBBITCOINQT=qt/libbitcoinqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
 
@@ -70,7 +71,8 @@ EXTRA_LIBRARIES += \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_CLI) \
   $(LIBBITCOIN_WALLET) \
-  $(LIBBITCOIN_ZMQ)
+  $(LIBBITCOIN_ZMQ) \
+  $(LIBBITCOIN_FACTORIES)
 
 lib_LTLIBRARIES = $(LIBBITCOINCONSENSUS)
 
@@ -444,6 +446,14 @@ if GLIBC_BACK_COMPAT
 libbitcoin_util_a_SOURCES += compat/glibc_compat.cpp
 AM_LDFLAGS += $(COMPAT_LDFLAGS)
 endif
+
+factories_libbitcoin_factories_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+factories_libbitcoin_factories_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+factories_libbitcoin_factories_a_SOURCES = \
+  test/factories/transactions.cpp \
+  $(BITCOIN_CORE_H)
+factories_libbitcoin_factories_a_LIBADD = \
+  $(LIBBITCOIN_CONSENSUS)
 
 # cli: shared between bitcoin-cli and bitcoin-qt
 libbitcoin_cli_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
