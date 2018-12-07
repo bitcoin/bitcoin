@@ -72,7 +72,7 @@ bool IsBlockValueValid(const CBlock& block, int64_t nExpectedValue){
     return true;
 }
 
-bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, const uint32_t& nTime, const uint32_t& nTimePrevBlock)
+bool IsBlockPayeeValid(const CAmount& nAmountCreated, const CTransaction& txNew, int nBlockHeight, const uint32_t& nTime, const uint32_t& nTimePrevBlock)
 {
     if(!masternodeSync.IsSynced()) { //there is no budget data to use to check anything -- find the longest chain
         LogPrint("mnpayments", "Client not synced, skipping block payee checks\n");
@@ -97,7 +97,7 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, const uint32
     }
 
     //check for masternode payee
-    if(masternodePayments.IsTransactionValid(txNew, nBlockHeight))
+    if(masternodePayments.IsTransactionValid(nAmountCreated, txNew, nBlockHeight))
     {
         return true;
     } else if (nTime - nTimePrevBlock > Params().ChainStallDuration()) {
@@ -372,14 +372,14 @@ bool CMasternodePayments::AddWinningMasternode(CMasternodePaymentWinner& winnerI
     return true;
 }
 
-bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
+bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew, const CAmount& nValueCreated)
 {
     LOCK(cs_vecPayments);
 
     int nMaxSignatures = 0;
     std::string strPayeesPossible = "";
 
-    CAmount masternodePayment = GetMasternodePayment(nBlockHeight, txNew.GetValueOut());
+    CAmount masternodePayment = GetMasternodePayment(nBlockHeight, nValueCreated);
 
     //require at least 6 signatures
 
@@ -462,12 +462,12 @@ std::string CMasternodePayments::GetRequiredPaymentsString(int nBlockHeight)
     return "Unknown";
 }
 
-bool CMasternodePayments::IsTransactionValid(const CTransaction& txNew, int nBlockHeight)
+bool CMasternodePayments::IsTransactionValid(const CAmount& nValueCreated, const CTransaction& txNew, int nBlockHeight)
 {
     LOCK(cs_mapMasternodeBlocks);
 
     if(mapMasternodeBlocks.count(nBlockHeight)){
-        return mapMasternodeBlocks[nBlockHeight].IsTransactionValid(txNew);
+        return mapMasternodeBlocks[nBlockHeight].IsTransactionValid(txNew, nValueCreated);
     }
 
     return true;

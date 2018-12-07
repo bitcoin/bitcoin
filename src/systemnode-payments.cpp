@@ -22,7 +22,7 @@ CCriticalSection cs_vecSNPayments;
 CCriticalSection cs_mapSystemnodeBlocks;
 CCriticalSection cs_mapSystemnodePayeeVotes;
 
-bool SNIsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, const uint32_t& nTime, const uint32_t& nTimePrevBlock)
+bool SNIsBlockPayeeValid(const CAmount& nValueCreated, const CTransaction& txNew, int nBlockHeight, const uint32_t& nTime, const uint32_t& nTimePrevBlock)
 {
     if(!systemnodeSync.IsSynced()) { //there is no budget data to use to check anything -- find the longest chain
         LogPrint("snpayments", "Client not synced, skipping block payee checks\n");
@@ -47,7 +47,7 @@ bool SNIsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, const uint
     }
 
     //check for systemnode payee
-    if(systemnodePayments.IsTransactionValid(txNew, nBlockHeight)) {
+    if(systemnodePayments.IsTransactionValid(nValueCreated, txNew, nBlockHeight)) {
         return true;
     } else if (nTime - nTimePrevBlock > Params().ChainStallDuration()) {
         // The chain has stalled, allow the first block to have no payment to winners
@@ -66,12 +66,12 @@ bool SNIsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, const uint
     return false;
 }
 
-bool CSystemnodePayments::IsTransactionValid(const CTransaction& txNew, int nBlockHeight)
+bool CSystemnodePayments::IsTransactionValid(const CAmount& nValueCreated, const CTransaction& txNew, int nBlockHeight)
 {
     LOCK(cs_mapSystemnodeBlocks);
 
     if(mapSystemnodeBlocks.count(nBlockHeight)){
-        return mapSystemnodeBlocks[nBlockHeight].IsTransactionValid(txNew);
+        return mapSystemnodeBlocks[nBlockHeight].IsTransactionValid(txNew, nValueCreated);
     }
 
     return true;
@@ -277,14 +277,14 @@ std::string CSystemnodePayments::GetRequiredPaymentsString(int nBlockHeight)
     return "Unknown";
 }
 
-bool CSystemnodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
+bool CSystemnodeBlockPayees::IsTransactionValid(const CTransaction& txNew, const CAmount& nValueCreated)
 {
     LOCK(cs_vecPayments);
 
     int nMaxSignatures = 0;
     std::string strPayeesPossible = "";
 
-    CAmount systemnodePayment = GetSystemnodePayment(nBlockHeight, txNew.GetValueOut());
+    CAmount systemnodePayment = GetSystemnodePayment(nBlockHeight, nValueCreated);
 
     //require at least 6 signatures
 
