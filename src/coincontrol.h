@@ -39,7 +39,6 @@ public:
         fAllowWatchOnly = false;
         setSelected.clear();
         fUseInstantSend = false;
-        fUsePrivateSend = true;
         nMinimumTotalFee = 0;
         nFeeRate = CFeeRate(0);
         fOverrideFeeRate = false;
