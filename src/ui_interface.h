@@ -14,6 +14,7 @@
 
 class CWallet;
 class CBlockIndex;
+class COutPoint;
 namespace boost {
 namespace signals2 {
 class connection;
@@ -121,7 +122,7 @@ public:
     ADD_SIGNALS_DECL_WRAPPER(BannedListChanged, void, void);
 
     /** Masternodelist did change. */
-    ADD_SIGNALS_DECL_WRAPPER(NotifyMasternodeChanged, void, const uint256&, ChangeType);
+    ADD_SIGNALS_DECL_WRAPPER(NotifyMasternodeChanged, void, const COutPoint&, ChangeType);
 
     /** Proposallist did change. */
     ADD_SIGNALS_DECL_WRAPPER(NotifyProposalChanged, void, const uint256&, ChangeType);

@@ -2,327 +2,213 @@
 <ui version="4.0">
  <class>MasternodeList</class>
  <widget class="QWidget" name="MasternodeList">
+  <property name="windowModality">
+   <enum>Qt::NonModal</enum>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>945</width>
+    <width>960</width>
     <height>457</height>
    </rect>
   </property>
-  <property name="windowTitle">
-   <string>Form</string>
+  <property name="minimumSize">
+   <size>
+    <width>960</width>
+    <height>0</height>
+   </size>
   </property>
-  <layout class="QVBoxLayout" name="topLayout">
-   <property name="leftMargin">
-    <number>0</number>
-   </property>
-   <property name="topMargin">
-    <number>0</number>
-   </property>
-   <property name="rightMargin">
-    <number>0</number>
-   </property>
-   <property name="bottomMargin">
-    <number>0</number>
-   </property>
+  <property name="focusPolicy">
+   <enum>Qt::NoFocus</enum>
+  </property>
+  <property name="windowTitle">
+   <string>Masternode List</string>
+  </property>
+  <layout class="QHBoxLayout" name="horizontalLayout_2">
    <item>
     <layout class="QVBoxLayout" name="verticalLayout">
+     <property name="leftMargin">
+      <number>25</number>
+     </property>
+     <property name="topMargin">
+      <number>25</number>
+     </property>
+     <property name="rightMargin">
+      <number>25</number>
+     </property>
      <property name="bottomMargin">
-      <number>0</number>
+      <number>25</number>
      </property>
      <item>
-      <spacer name="horizontalSpacer0">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+      <widget class="QTabWidget" name="tabWidget">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
        </property>
-       <property name="sizeHint" stdset="0">
+       <property name="minimumSize">
         <size>
-         <width>40</width>
-         <height>20</height>
+         <width>0</width>
+         <height>0</height>
         </size>
        </property>
-      </spacer>
-     </item>
-     <item>
-      <widget class="QTabWidget" name="tabWidget">
        <property name="currentIndex">
-        <number>0</number>
+        <number>1</number>
        </property>
-       <widget class="QWidget" name="tabMyMasternodes">
+       <widget class="QWidget" name="MyNodeList">
         <attribute name="title">
-         <string>My Masternodes</string>
+         <string>My Masterodes</string>
         </attribute>
-        <layout class="QGridLayout" name="gridLayout_2">
-         <item row="0" column="0">
-          <layout class="QVBoxLayout" name="verticalLayout_2">
-           <property name="bottomMargin">
-            <number>0</number>
-           </property>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_note">
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-             <item>
-              <widget class="QLabel" name="updateNote">
-               <property name="text">
-                <string>Note: Status of your masternodes in local wallet can potentially be slightly incorrect.&lt;br /&gt;Always wait for wallet to sync additional data and then double check from another node&lt;br /&gt;if your masternode should be running but you still do not see &quot;ENABLED&quot; in &quot;Status&quot; field.</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <widget class="QTableWidget" name="tableWidgetMyMasternodes">
-             <property name="minimumSize">
-              <size>
-               <width>695</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="editTriggers">
-              <set>QAbstractItemView::NoEditTriggers</set>
-             </property>
-             <property name="alternatingRowColors">
-              <bool>true</bool>
-             </property>
-             <property name="selectionMode">
-              <enum>QAbstractItemView::SingleSelection</enum>
-             </property>
-             <property name="selectionBehavior">
-              <enum>QAbstractItemView::SelectRows</enum>
-             </property>
-             <property name="sortingEnabled">
-              <bool>true</bool>
-             </property>
-             <attribute name="horizontalHeaderStretchLastSection">
-              <bool>true</bool>
-             </attribute>
-             <column>
-              <property name="text">
-               <string>Alias</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
-               <string>Address</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
-               <string>Protocol</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
-               <string>Status</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
-               <string>Active</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
-               <string>Last Seen</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
-               <string>Payee</string>
-              </property>
-             </column>
-            </widget>
-           </item>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_5">
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-             <item>
-              <widget class="QPushButton" name="startButton">
-               <property name="text">
-                <string>S&amp;tart alias</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="startAllButton">
-               <property name="text">
-                <string>Start &amp;all</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="startMissingButton">
-               <property name="text">
-                <string>Start &amp;MISSING</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="UpdateButton">
-               <property name="text">
-                <string>&amp;Update status</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="QRButton">
-               <property name="toolTip">
-                <string>Show additional Masternode information</string>
-               </property>
-               <property name="text">
-                <string>Show Details</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="autoupdate_label">
-               <property name="toolTip">
-                <string/>
-               </property>
-               <property name="text">
-                <string>Status will be updated automatically in (sec):</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="secondsLabel">
-               <property name="text">
-                <string>0</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <spacer name="horizontalSpacer_5">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-            </layout>
-           </item>
-          </layout>
-         </item>
-        </layout>
        </widget>
-       <widget class="QWidget" name="tabAllMasternodes">
+       <widget class="QWidget" name="AllNodeList">
         <attribute name="title">
-         <string>All Masternodes</string>
+         <string>All Masterodes</string>
         </attribute>
-        <layout class="QGridLayout" name="gridLayout">
-         <item row="1" column="0">
-          <widget class="QTableWidget" name="tableWidgetMasternodes">
-           <property name="editTriggers">
-            <set>QAbstractItemView::NoEditTriggers</set>
-           </property>
-           <property name="alternatingRowColors">
-            <bool>true</bool>
-           </property>
-           <property name="selectionBehavior">
-            <enum>QAbstractItemView::SelectRows</enum>
-           </property>
-           <property name="selectionMode">
-            <enum>QAbstractItemView::NoSelection</enum>
-           </property>
-           <property name="sortingEnabled">
-            <bool>true</bool>
-           </property>
-           <attribute name="horizontalHeaderStretchLastSection">
-            <bool>true</bool>
-           </attribute>
-           <column>
-            <property name="text">
-             <string>Address</string>
-            </property>
-           </column>
-           <column>
-            <property name="text">
-             <string>Protocol</string>
-            </property>
-           </column>
-           <column>
-            <property name="text">
-             <string>Status</string>
-            </property>
-           </column>
-           <column>
-            <property name="text">
-             <string>Active</string>
-            </property>
-           </column>
-           <column>
-            <property name="text">
-             <string>Last Seen</string>
-            </property>
-           </column>
-           <column>
-            <property name="text">
-             <string>Payee</string>
-            </property>
-           </column>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <layout class="QHBoxLayout" name="horizontalLayout_3">
-           <property name="bottomMargin">
-            <number>0</number>
-           </property>
-           <item>
-            <widget class="QLabel" name="label_filter">
-             <property name="text">
-              <string>Filter List:</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLineEdit" name="filterLineEdit">
-             <property name="toolTip">
-              <string>Filter masternode list</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <spacer name="horizontalSpacer_3">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>10</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item>
-            <widget class="QLabel" name="label_count">
-             <property name="text">
-              <string>Node Count:</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="countLabel">
-             <property name="text">
-              <string>0</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-        </layout>
        </widget>
       </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="searchLineEdit">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="sizeIncrement">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="placeholderText">
+        <string>Enter search string (Alias, Payee, State,...)</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QTableView" name="tableView">
+       <property name="showDropIndicator" stdset="0">
+        <bool>false</bool>
+       </property>
+       <property name="dragDropOverwriteMode">
+        <bool>false</bool>
+       </property>
+       <property name="selectionMode">
+        <enum>QAbstractItemView::SingleSelection</enum>
+       </property>
+       <property name="selectionBehavior">
+        <enum>QAbstractItemView::SelectRows</enum>
+       </property>
+       <property name="sortingEnabled">
+        <bool>true</bool>
+       </property>
+       <attribute name="horizontalHeaderMinimumSectionSize">
+        <number>60</number>
+       </attribute>
+       <attribute name="verticalHeaderVisible">
+        <bool>false</bool>
+       </attribute>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QPushButton" name="QRButton">
+         <property name="minimumSize">
+          <size>
+           <width>130</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Show Details</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="startButton">
+         <property name="minimumSize">
+          <size>
+           <width>130</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Start</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="startAllButton">
+         <property name="minimumSize">
+          <size>
+           <width>130</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Start All</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="startMissingButton">
+         <property name="minimumSize">
+          <size>
+           <width>130</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Start MISSING</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Node Count:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="countLabel">
+         <property name="text">
+          <string>00000</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Enabled:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="enabledLabel">
+         <property name="text">
+          <string>00000</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
     </layout>
    </item>

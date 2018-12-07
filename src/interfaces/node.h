@@ -10,6 +10,7 @@
 #include <modules/masternode/masternode_config.h>   // For CMasternodeConfig::CMasternodeEntry
 #include <net.h>                                    // For CConnman::NumConnections
 #include <netaddress.h>                             // For Network
+#include <primitives/transaction.h>
 #include <ui_interface.h>                           // For ChangeType
 
 #include <functional>
@@ -34,6 +35,7 @@ class Handler;
 class Wallet;
 
 struct MasterNodeCount;
+struct Masternode;
 struct Proposal;
 
 //! Top-level interface for a chaincoin node (chaincoind process).
@@ -190,6 +192,15 @@ public:
 
     virtual MasterNodeCount getMasternodeCount() = 0;
 
+    //! Get a masternode
+    virtual Masternode getMasternode(const COutPoint& outpoint) = 0;
+
+    //! Get masternodekey
+    virtual std::string getMasternodeKey(const std::string& alias) = 0;
+
+    //! Get a list of all masternodes
+    virtual std::vector<Masternode> getMasternodes() = 0;
+
     //! Get a proposal
     virtual Proposal getProposal(const uint256& hash) = 0;
 
@@ -259,7 +270,7 @@ public:
     virtual std::unique_ptr<Handler> handleNotifyHeaderTip(NotifyHeaderTipFn fn) = 0;
 
     //! Register handler for Masternode changed messages.
-    using MasternodeChangedFn = std::function<void(const uint256& hash, ChangeType status)>;
+    using MasternodeChangedFn = std::function<void(const COutPoint& outpoint, ChangeType status)>;
     virtual std::unique_ptr<Handler> handleMasternodeChanged(MasternodeChangedFn fn) = 0;
 
     //! Register handler for proposal changed messages.
@@ -281,6 +292,22 @@ struct MasterNodeCount
         return size != prev.size || compatible != prev.compatible || enabled != prev.enabled ||
                 countIPv4 != prev.countIPv4 || countIPv6 != prev.countIPv6 || countTOR != prev.countTOR;
     }
+};
+
+struct Masternode
+{
+    COutPoint outpoint = COutPoint();
+    std::string alias = "";
+    std::string address = "";
+    int64_t protocol = 0;
+    int64_t daemon = 0;
+    int64_t sentinel = 0;
+    std::string status = "MISSING";
+    int64_t active = 0;
+    int64_t last_seen = 0;
+    std::string payee = "";
+    int64_t banscore = 0;
+    int64_t lastpaid = 0;
 };
 
 struct Proposal

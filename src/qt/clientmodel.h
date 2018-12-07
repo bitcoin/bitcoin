@@ -15,6 +15,7 @@
 class BanTableModel;
 class OptionsModel;
 class PeerTableModel;
+class MasternodeTableModel;
 class ProposalTableModel;
 
 class CBlockIndex;
@@ -56,6 +57,7 @@ public:
     OptionsModel *getOptionsModel();
     PeerTableModel *getPeerTableModel();
     BanTableModel *getBanTableModel();
+    MasternodeTableModel *getMasternodeTableModel();
     ProposalTableModel *getProposalTableModel();
 
     //! Return number of connections, default is in- and outbound (total)
@@ -96,6 +98,7 @@ private:
     OptionsModel *optionsModel;
     PeerTableModel *peerTableModel;
     BanTableModel *banTableModel;
+    MasternodeTableModel *masternodeTableModel;
     ProposalTableModel *proposalTableModel;
 
     QString cachedMasternodeCountString;
@@ -121,7 +124,7 @@ Q_SIGNALS:
     void showProgress(const QString &title, int nProgress);
 
     //! New masternode, or masternode changed status
-    void updateMasternode(const QString &hash, int status);
+    void updateMasternode(const QString &outpoint, const int &n, int status);
 
     //! New masternode, or masternode changed status
     void updateProposal(const QString &hash, int status);

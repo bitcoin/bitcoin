@@ -17,6 +17,7 @@
 #include <messagesigner.h>
 #include <script/standard.h>
 #include <shutdown.h>
+#include <ui_interface.h>
 #include <util/system.h>
 #include <walletinitinterface.h>
 
@@ -152,6 +153,7 @@ void CMasternode::Check(bool fForce)
         Coin coin;
         if(!pcoinsTip->GetCoin(outpoint, coin)) {
             nActiveState = MASTERNODE_OUTPOINT_SPENT;
+            uiInterface.NotifyMasternodeChanged(outpoint, CT_UPDATED);
             LogPrint(BCLog::MNODE, "CMasternode::Check -- Failed to find Masternode UTXO, masternode=%s\n", outpoint.ToStringShort());
             return;
         }
@@ -164,12 +166,14 @@ void CMasternode::Check(bool fForce)
         // Otherwise give it a chance to proceed further to do all the usual checks and to change its state.
         // Masternode still will be on the edge and can be banned back easily if it keeps ignoring mnverify
         // or connect attempts. Will require few mnverify messages to strengthen its position in mn list.
+        uiInterface.NotifyMasternodeChanged(outpoint, CT_UPDATED);
         LogPrintf("CMasternode::Check -- Masternode %s is unbanned and back in list now\n", outpoint.ToStringShort());
         DecreasePoSeBanScore();
     } else if(nPoSeBanScore >= MASTERNODE_POSE_BAN_MAX_SCORE) {
         nActiveState = MASTERNODE_POSE_BAN;
         // ban for the whole payment cycle
         nPoSeBanHeight = nHeight + mnodeman.size();
+        uiInterface.NotifyMasternodeChanged(outpoint, CT_UPDATED);
         LogPrintf("CMasternode::Check -- Masternode %s is banned till block %d now\n", outpoint.ToStringShort(), nPoSeBanHeight);
         return;
     }
@@ -185,6 +189,7 @@ void CMasternode::Check(bool fForce)
     if(fRequireUpdate) {
         nActiveState = MASTERNODE_UPDATE_REQUIRED;
         if(nActiveStatePrev != nActiveState) {
+            uiInterface.NotifyMasternodeChanged(outpoint, CT_UPDATED);
             LogPrint(BCLog::MNODE, "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());
         }
         return;
@@ -196,6 +201,7 @@ void CMasternode::Check(bool fForce)
     if(fWaitForPing && !fOurMasternode) {
         // ...but if it was already expired before the initial check - return right away
         if(IsExpired() || IsSentinelPingExpired() || IsNewStartRequired()) {
+            uiInterface.NotifyMasternodeChanged(outpoint, CT_UPDATED);
             LogPrint(BCLog::MNODE, "CMasternode::Check -- Masternode %s is in %s state, waiting for ping\n", outpoint.ToStringShort(), GetStateString());
             return;
         }
@@ -207,6 +213,7 @@ void CMasternode::Check(bool fForce)
         if(!IsPingedWithin(MASTERNODE_NEW_START_REQUIRED_SECONDS)) {
             nActiveState = MASTERNODE_NEW_START_REQUIRED;
             if(nActiveStatePrev != nActiveState) {
+                uiInterface.NotifyMasternodeChanged(outpoint, CT_UPDATED);
                 LogPrint(BCLog::MNODE, "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());
             }
             return;
@@ -215,6 +222,7 @@ void CMasternode::Check(bool fForce)
         if(!IsPingedWithin(MASTERNODE_EXPIRATION_SECONDS)) {
             nActiveState = MASTERNODE_EXPIRED;
             if(nActiveStatePrev != nActiveState) {
+                uiInterface.NotifyMasternodeChanged(outpoint, CT_UPDATED);
                 LogPrint(BCLog::MNODE, "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());
             }
             return;
@@ -229,18 +237,20 @@ void CMasternode::Check(bool fForce)
         if(fSentinelPingExpired) {
             nActiveState = MASTERNODE_SENTINEL_PING_EXPIRED;
             if(nActiveStatePrev != nActiveState) {
+                uiInterface.NotifyMasternodeChanged(outpoint, CT_UPDATED);
                 LogPrint(BCLog::MNODE, "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());
             }
             return;
         }
     }
 
-    // Allow MNs to become PRE_ENABLED immediately in regtest/devnet
+    // Allow MNs to become ENABLED immediately in regtest/devnet
     // On mainnet/testnet, we require them to be in PRE_ENABLED state for some time before they get into ENABLED state
     if (Params().NetworkIDString() != CBaseChainParams::REGTEST) {
         if (lastPing.sigTime - sigTime < MASTERNODE_MIN_MNP_SECONDS) {
             nActiveState = MASTERNODE_PRE_ENABLED;
             if (nActiveStatePrev != nActiveState) {
+                uiInterface.NotifyMasternodeChanged(outpoint, CT_UPDATED);
                 LogPrint(BCLog::MNODE, "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());
             }
             return;
@@ -258,6 +268,7 @@ void CMasternode::Check(bool fForce)
         if(fSentinelPingExpired) {
             nActiveState = MASTERNODE_SENTINEL_PING_EXPIRED;
             if(nActiveStatePrev != nActiveState) {
+                uiInterface.NotifyMasternodeChanged(outpoint, CT_UPDATED);
                 LogPrint(BCLog::MNODE, "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());
             }
             return;
@@ -266,6 +277,7 @@ void CMasternode::Check(bool fForce)
 
     nActiveState = MASTERNODE_ENABLED; // OK
     if(nActiveStatePrev != nActiveState) {
+        uiInterface.NotifyMasternodeChanged(outpoint, CT_UPDATED);
         LogPrint(BCLog::MNODE, "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());
     }
 }
@@ -479,6 +491,7 @@ bool CMasternodeBroadcast::Update(CMasternode* pmn, int& nDos, CConnman* connman
     AssertLockHeld(cs_main);
 
     if(pmn->sigTime == sigTime && !fRecovery) {
+        uiInterface.NotifyMasternodeChanged(pmn->outpoint, CT_UPDATED);
         // mapSeenMasternodeBroadcast in CMasternodeMan::CheckMnbAndUpdateMasternodeList should filter legit duplicates
         // but this still can happen if we just started, which is ok, just do nothing here.
         return false;
@@ -487,6 +500,7 @@ bool CMasternodeBroadcast::Update(CMasternode* pmn, int& nDos, CConnman* connman
     // this broadcast is older than the one that we already have - it's bad and should never happen
     // unless someone is doing something fishy
     if(pmn->sigTime > sigTime) {
+        uiInterface.NotifyMasternodeChanged(pmn->outpoint, CT_UPDATED);
         LogPrintf("CMasternodeBroadcast::Update -- Bad sigTime %d (existing broadcast is at %d) for Masternode %s %s\n",
                       sigTime, pmn->sigTime, outpoint.ToStringShort(), addr.ToString());
         return false;
@@ -496,18 +510,21 @@ bool CMasternodeBroadcast::Update(CMasternode* pmn, int& nDos, CConnman* connman
 
     // masternode is banned by PoSe
     if(pmn->IsPoSeBanned()) {
+        uiInterface.NotifyMasternodeChanged(pmn->outpoint, CT_UPDATED);
         LogPrintf("CMasternodeBroadcast::Update -- Banned by PoSe, masternode=%s\n", outpoint.ToStringShort());
         return false;
     }
 
     // IsVnAssociatedWithPubkey is validated once in CheckOutpoint, after that they just need to match
     if(pmn->pubKeyCollateralAddress != pubKeyCollateralAddress) {
+        uiInterface.NotifyMasternodeChanged(pmn->outpoint, CT_UPDATED);
         LogPrintf("CMasternodeBroadcast::Update -- Got mismatched pubKeyCollateralAddress and outpoint\n");
         nDos = 33;
         return false;
     }
 
     if (!CheckSignature(nDos)) {
+        uiInterface.NotifyMasternodeChanged(pmn->outpoint, CT_UPDATED);
         LogPrintf("CMasternodeBroadcast::Update -- CheckSignature() failed, masternode=%s\n", outpoint.ToStringShort());
         return false;
     }
@@ -522,7 +539,7 @@ bool CMasternodeBroadcast::Update(CMasternode* pmn, int& nDos, CConnman* connman
         }
         masternodeSync.BumpAssetLastTime("CMasternodeBroadcast::Update");
     }
-
+    uiInterface.NotifyMasternodeChanged(pmn->outpoint, CT_UPDATED);
     return true;
 }
 

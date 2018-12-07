@@ -61,7 +61,7 @@ void CClientUIInterface::ShowProgress(const std::string& title, int nProgress, b
 void CClientUIInterface::NotifyBlockTip(bool b, const CBlockIndex* i) { return g_ui_signals.NotifyBlockTip(b, i); }
 void CClientUIInterface::NotifyHeaderTip(bool b, const CBlockIndex* i) { return g_ui_signals.NotifyHeaderTip(b, i); }
 void CClientUIInterface::BannedListChanged() { return g_ui_signals.BannedListChanged(); }
-void CClientUIInterface::NotifyMasternodeChanged(const uint256& hash, ChangeType status) { return g_ui_signals.NotifyMasternodeChanged(hash, status); }
+void CClientUIInterface::NotifyMasternodeChanged(const COutPoint& hash, ChangeType status) { return g_ui_signals.NotifyMasternodeChanged(hash, status); }
 void CClientUIInterface::NotifyProposalChanged(const uint256& hash, ChangeType status) { return g_ui_signals.NotifyProposalChanged(hash, status); }
 
 bool InitError(const std::string& str)

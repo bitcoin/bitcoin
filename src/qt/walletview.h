@@ -6,7 +6,7 @@
 #define BITCOIN_QT_WALLETVIEW_H
 
 #include <amount.h>
-#include <qt/masternodelist.h>
+#include <qt/masternodeview.h>
 #include <qt/proposalview.h>
 
 #include <QStackedWidget>

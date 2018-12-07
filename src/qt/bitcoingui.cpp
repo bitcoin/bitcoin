@@ -994,6 +994,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
             break;
         case BlockSource::MASTERNODE:
             progressBarLabel->setText(QString::fromStdString(m_node.getModuleSyncStatus()));
+            progressBar->setVisible(false);
             break;
         case BlockSource::NONE:
             if (header) {
