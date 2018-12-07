@@ -7,23 +7,7 @@
 #include <..\src\streams.h>
 #include <..\src\version.h>
 
-CMutableTransaction BuildSpendingTransaction(const CScript& scriptSig, const CScriptWitness& scriptWitness, int nValue = 0)
-{
-    CMutableTransaction txSpend;
-    txSpend.nVersion = 1;
-    txSpend.nLockTime = 0;
-    txSpend.vin.resize(1);
-    txSpend.vout.resize(1);
-    txSpend.vin[0].scriptWitness = scriptWitness;
-    txSpend.vin[0].prevout.hash = uint256();
-    txSpend.vin[0].prevout.n = 0;
-    txSpend.vin[0].scriptSig = scriptSig;
-    txSpend.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
-    txSpend.vout[0].scriptPubKey = CScript();
-    txSpend.vout[0].nValue = nValue;
-
-    return txSpend;
-}
+#include <..\src\factories\transactions.h>
 
 int main()
 {
