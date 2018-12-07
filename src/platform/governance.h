@@ -25,6 +25,8 @@ namespace Platform
     class VotingRound
     {
     public:
+        virtual ~VotingRound() = default;
+
         virtual void RegisterCandidate(uint256 id) = 0;
         virtual void AcceptVote(const Vote& vote) = 0;
         virtual std::vector<uint256> CalculateResult() const = 0;
