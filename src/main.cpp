@@ -30,6 +30,7 @@
 #include "util.h"
 #include "spork.h"
 #include "utilmoneystr.h"
+#include "platform/specialtx.h"
 
 #include <sstream>
 
@@ -943,6 +944,20 @@ int GetIXConfirmations(uint256 nTXHash)
 
 bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 {
+    // check version 2 transaction types
+    if (tx.nVersion >= 2)
+    {
+        if (tx.nType != TRANSACTION_NORMAL &&
+            tx.nType != TRANSACTION_GOVERNANCE_VOTE)
+            return state.DoS(100, false, REJECT_INVALID, "bad-txns-type");
+
+        if (tx.IsCoinBase() && tx.nType != TRANSACTION_NORMAL)
+            return state.DoS(100, false, REJECT_INVALID, "bad-txns-cb-type");
+    }
+    // all version 1 transactions are normal
+    else if (tx.nType != TRANSACTION_NORMAL)
+        return state.DoS(100, false, REJECT_INVALID, "bad-txns-type");
+
     // Basic checks that don't depend on any context
     if (tx.vin.empty())
         return state.DoS(10, error("CheckTransaction() : vin empty"),
@@ -954,6 +969,9 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
         return state.DoS(100, error("CheckTransaction() : size limits failed"),
                          REJECT_INVALID, "bad-txns-oversize");
+
+    if (tx.extraPayload.size() > MAX_TX_EXTRA_PAYLOAD)
+        return state.DoS(100, false, REJECT_INVALID, "bad-txns-payload-oversize");
 
     // Check for negative or overflow output values
     CAmount nValueOut = 0;
@@ -1037,6 +1055,9 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
     if (!CheckTransaction(tx, state))
         return error("AcceptToMemoryPool: : CheckTransaction failed");
+
+    if (!Platform::CheckSpecialTx(tx, chainActive.Tip(), state))
+        return false;
 
     // Coinbase is only valid in a block, not as a loose transaction
     if (tx.IsCoinBase())
@@ -1815,7 +1836,7 @@ void static InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state
     if (state.IsInvalid(nDoS)) {
         std::map<uint256, NodeId>::iterator it = mapBlockSource.find(pindex->GetBlockHash());
         if (it != mapBlockSource.end() && State(it->second)) {
-            CBlockReject reject = {state.GetRejectCode(), state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), pindex->GetBlockHash()};
+            CBlockReject reject = {static_cast<unsigned char>(state.GetRejectCode()), state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), pindex->GetBlockHash()};
             State(it->second)->rejects.push_back(reject);
             if (nDoS > 0)
                 Misbehaving(it->second, nDoS);
@@ -1991,6 +2012,10 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex
 
     if (blockUndo.vtxundo.size() + 1 != block.vtx.size())
         return error("DisconnectBlock() : block and undo data inconsistent");
+
+    if (!Platform::UndoSpecialTxsInBlock(block, pindex)) {
+        return error("DisconnectBlock() : failed to undo special tx");;
+    }
 
     // undo transactions in reverse order
     for (int i = block.vtx.size() - 1; i >= 0; i--) {
@@ -2181,6 +2206,9 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     }
     int64_t nTime1 = GetTimeMicros(); nTimeConnect += nTime1 - nTimeStart;
     LogPrint("bench", "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime1 - nTimeStart), 0.001 * (nTime1 - nTimeStart) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime1 - nTimeStart) / (nInputs-1), nTimeConnect * 0.000001);
+
+    if (!Platform::ProcessSpecialTxsInBlock(fJustCheck, block, pindex, state))
+        return false;
 
     if(!IsBlockValueValid(block, GetBlockValue(pindex->pprev->nHeight, nFees))){
         return state.DoS(100,
@@ -5740,3 +5768,12 @@ public:
         mapOrphanTransactionsByPrev.clear();
     }
 } instance_of_cmaincleanup;
+
+/** Convert CValidationState to a human-readable message for logging */
+std::string FormatStateMessage(const CValidationState &state)
+{
+    return strprintf("%s%s (code %i)",
+                     state.GetRejectReason(),
+                     state.GetDebugMessage().empty() ? "" : ", "+state.GetDebugMessage(),
+                     state.GetRejectCode());
+}

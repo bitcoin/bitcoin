@@ -1006,7 +1006,8 @@ public:
     template<typename S>
     void Serialize(S &s, int nType, int nVersion) const {
         // Serialize nVersion
-        ::Serialize(s, txTo.nVersion, nType, nVersion);
+        int32_t n32bitVersion = txTo.nVersion | (txTo.nType << 16);
+        ::Serialize(s, n32bitVersion, nType, nVersion);
         // Serialize vin
         unsigned int nInputs = fAnyoneCanPay ? 1 : txTo.vin.size();
         ::WriteCompactSize(s, nInputs);
@@ -1019,6 +1020,8 @@ public:
              SerializeOutput(s, nOutput, nType, nVersion);
         // Serialize nLockTime
         ::Serialize(s, txTo.nLockTime, nType, nVersion);
+        if (txTo.nVersion >= 3 && txTo.nType != TRANSACTION_NORMAL)
+            ::Serialize(s, txTo.extraPayload, nType, nVersion);
     }
 };
 
