@@ -1,4 +1,4 @@
-Chaincoin Core staging tree 0.16.99
+Chaincoin Core staging tree 0.17.99
 ===============================
 
 master is the working branch, [for releases follow here](https://github.com/chaincoin/chaincoin/releases)
