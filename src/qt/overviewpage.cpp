@@ -339,7 +339,6 @@ void OverviewPage::showOutOfSyncWarning(bool fShow)
 void OverviewPage::updatePrivateSendProgress()
 {
     if (!clientModel) return;
-    if (!clientModel->isMNBlochchainSynced()) return;
 
     QString strAmountAndRounds;
     QString strPrivateSendAmount = BitcoinUnits::formatHtmlWithUnit(nDisplayUnit, privateSendClient.nPrivateSendAmount * COIN, false, BitcoinUnits::separatorAlways);
@@ -415,7 +414,7 @@ void OverviewPage::updateAdvancedPSUI(bool _fShowAdvancedPSUI) {
 void OverviewPage::privateSendStatus()
 {
     if (!clientModel) return;
-    if (!clientModel->isMNBlochchainSynced()) return;
+    if (!walletModel) return;
 
     static int64_t nLastDSProgressBlockTime = 0;
 

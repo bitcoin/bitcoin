@@ -6,7 +6,6 @@
 #define BITCOIN_QT_PROPOSALLIST_H
 
 #include <qt/clientmodel.h>
-#include <qt/columnalignedlayout.h>
 #include <qt/guiutil.h>
 #include <qt/proposaltablemodel.h>
 

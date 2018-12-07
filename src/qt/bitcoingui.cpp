@@ -993,7 +993,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
             progressBarLabel->setText(tr("Reindexing blocks on disk..."));
             break;
         case BlockSource::MASTERNODE:
-            progressBarLabel->setText(QString::fromStdString(m_node.getMNSyncStatus()));
+            progressBarLabel->setText(QString::fromStdString(m_node.getModuleSyncStatus()));
             break;
         case BlockSource::NONE:
             if (header) {
@@ -1013,7 +1013,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
     tooltip = tr("Processed %n block(s) of transaction history.", "", count);
 
     // Set icon state: spinning if catching up, tick otherwise
-    if((secs < 25*60) && m_node.MNIsSynced())
+    if((secs < 25*60) && m_node.isModuleDataSynced())
     {
         tooltip = tr("Up to date") + QString(".<br>") + tooltip;
         labelBlocksIcon->setPixmap(platformStyle->SingleColorIcon(":/icons/synced").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));

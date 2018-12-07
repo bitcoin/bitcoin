@@ -70,8 +70,8 @@ public:
         for (const auto& prop : node.getProposals())
         {
             int percentage = 0;
-            if (node.getMNcount().enabled > 0)
-                percentage = round(prop.abs_yes * 100 / node.getMNcount().enabled);
+            if (node.getMasternodeCount().enabled > 0)
+                percentage = round(prop.abs_yes * 100 / node.getMasternodeCount().enabled);
 
             cachedProposals.append(ProposalRecord(
                             prop.hash,
@@ -121,8 +121,8 @@ public:
                 }
                 // Added -- insert at the right position
                 int percentage = 0;
-                if (node.getMNcount().enabled > 0)
-                    percentage = round(prop.abs_yes * 100 / node.getMNcount().enabled);
+                if (node.getMasternodeCount().enabled > 0)
+                    percentage = round(prop.abs_yes * 100 / node.getMasternodeCount().enabled);
 
                 ProposalRecord toInsert =
                         ProposalRecord(
@@ -167,8 +167,8 @@ public:
                 break;
             }
             int percentage = 0;
-            if (node.getMNcount().enabled > 0)
-                percentage = round(prop.abs_yes * 100 / node.getMNcount().enabled);
+            if (node.getMasternodeCount().enabled > 0)
+                percentage = round(prop.abs_yes * 100 / node.getMasternodeCount().enabled);
             lower->hash = prop.hash;
             lower->start_epoch = prop.start;
             lower->end_epoch = prop.end;

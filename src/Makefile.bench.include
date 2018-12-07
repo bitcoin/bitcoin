@@ -32,7 +32,7 @@ bench_bench_chaincoin_SOURCES = \
   bench/lockedpool.cpp \
   bench/prevector.cpp
 
-nodist_bench_bench_chaincoin_SOURCES = $(GENERATED_TEST_FILES)
+nodist_bench_bench_chaincoin_SOURCES = $(GENERATED_BENCH_FILES)
 
 bench_bench_chaincoin_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CLFAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
 bench_bench_chaincoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
