@@ -361,7 +361,7 @@ def get_auth_cookie(datadir, chain):
                     assert password is None  # Ensure that there is only one rpcpassword line
                     password = line.split("=")[1].strip("\n")
     chain = get_chain_folder(datadir, chain)
-    if os.path.isfile(os.path.join(datadir, chain, ".cookie")):
+    if os.path.isfile(os.path.join(datadir, chain, ".cookie")) and os.access(os.path.join(datadir, chain, ".cookie"), os.R_OK):
         with open(os.path.join(datadir, chain, ".cookie"), 'r', encoding="ascii") as f:
             userpass = f.read()
             split_userpass = userpass.split(':')
