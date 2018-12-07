@@ -82,12 +82,12 @@ int ClientModel::getNumConnections(unsigned int flags) const
 
 QString ClientModel::getMasternodeCountString() const
 {
-    return tr("Total: %1 (PS compatible: %2 / Enabled: %3) (IPv4: %4, IPv6: %5, TOR: %6)").arg(QString::number((int)m_node.getMNcount().size))
-            .arg(QString::number((int)m_node.getMNcount().compatible))
-            .arg(QString::number((int)m_node.getMNcount().enabled))
-            .arg(QString::number((int)m_node.getMNcount().countIPv4))
-            .arg(QString::number((int)m_node.getMNcount().countIPv6))
-            .arg(QString::number((int)m_node.getMNcount().countTOR));
+    return tr("Total: %1 (PS compatible: %2 / Enabled: %3) (IPv4: %4, IPv6: %5, TOR: %6)").arg(QString::number((int)m_node.getMasternodeCount().size))
+            .arg(QString::number((int)m_node.getMasternodeCount().compatible))
+            .arg(QString::number((int)m_node.getMasternodeCount().enabled))
+            .arg(QString::number((int)m_node.getMasternodeCount().countIPv4))
+            .arg(QString::number((int)m_node.getMasternodeCount().countIPv6))
+            .arg(QString::number((int)m_node.getMasternodeCount().countTOR));
 }
 
 int ClientModel::getHeaderTipHeight() const
@@ -160,7 +160,7 @@ enum BlockSource ClientModel::getBlockSource() const
     else if (m_node.getImporting())
         return BlockSource::DISK;
     else if (getNumConnections() > 0) {
-        if (m_node.MNIsBlockchainsynced())
+        if (m_node.isMasternodeChainSynced())
             return BlockSource::MASTERNODE;
         else
             return BlockSource::NETWORK;

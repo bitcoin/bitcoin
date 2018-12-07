@@ -260,14 +260,14 @@ public:
     }
     //! Module signals
 
-    std::string getMNSyncStatus() override { return ::masternodeSync.GetSyncStatus(); }
-    bool IsMasternodelistSynced() override { return ::masternodeSync.IsMasternodeListSynced(); }
-    bool MNIsBlockchainsynced() override { return ::masternodeSync.IsBlockchainSynced(); }
-    bool MNIsSynced() override { return ::masternodeSync.IsSynced(); }
-    int MNConfigCount() override { return ::masternodeConfig.getCount(); }
+    std::string getModuleSyncStatus() override { return ::masternodeSync.GetSyncStatus(); }
+    bool isMasternodeChainSynced() override { return ::masternodeSync.IsBlockchainSynced(); }
+    bool isMasternodelistSynced() override { return ::masternodeSync.IsMasternodeListSynced(); }
+    bool isModuleDataSynced() override { return ::masternodeSync.IsSynced(); }
+    int getMasternodeConfigCount() override { return ::masternodeConfig.getCount(); }
     std::vector<CMasternodeConfig::CMasternodeEntry>& MNgetEntries() override { return ::masternodeConfig.getEntries(); }
 
-    bool MNStartAlias(std::string strAlias, std::string strErrorRet) override
+    bool startMasternodeAlias(const std::string& strAlias, std::string& strErrorRet) override
     {
         for (const auto& mne : ::masternodeConfig.getEntries()) {
             if(mne.getAlias() == strAlias) {
@@ -289,7 +289,7 @@ public:
         return false;
     }
 
-    bool MNStartAll(std::string strCommand, std::string strErrorRet, int nCountSuccessful, int nCountFailed) override
+    bool startAllMasternodes(const std::string& strCommand, std::string& strErrorRet, int& nCountSuccessful, int& nCountFailed) override
     {
         for (const auto& mne : ::masternodeConfig.getEntries()) {
             std::string strError;
@@ -322,7 +322,7 @@ public:
         return true;
     }
 
-    MasterNodeCount getMNcount() override
+    MasterNodeCount getMasternodeCount() override
     {
         MasterNodeCount result;
         result.size = ::mnodeman.size();

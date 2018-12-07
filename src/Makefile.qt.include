@@ -168,7 +168,6 @@ QT_MOC_CPP = \
   qt/moc_overviewpage.cpp \
   qt/moc_peertablemodel.cpp \
   qt/moc_paymentserver.cpp \
-  qt/moc_columnalignedlayout.cpp \
   qt/moc_proposalfilterproxy.cpp \
   qt/moc_proposaltablemodel.cpp \
   qt/moc_proposalview.cpp \
@@ -252,7 +251,6 @@ BITCOIN_QT_H = \
   qt/overviewpage.h \
   qt/paymentrequestplus.h \
   qt/paymentserver.h \
-  qt/columnalignedlayout.h \
   qt/proposalfilterproxy.h \
   qt/proposalrecord.h \
   qt/proposaltablemodel.h \
@@ -589,7 +587,6 @@ BITCOIN_QT_WALLET_CPP = \
   qt/openuridialog.cpp \
   qt/overviewpage.cpp \
   qt/paymentserver.cpp \
-  qt/columnalignedlayout.cpp \
   qt/proposalfilterproxy.cpp \
   qt/proposalrecord.cpp \
   qt/proposaltablemodel.cpp \

@@ -32,6 +32,8 @@ static const bool DEFAULT_SPLASHSCREEN = true;
 #define COLOR_TX_STATUS_DANGER QColor(200, 100, 100)
 /* Transaction list -- TX status decoration - default color */
 #define COLOR_BLACK QColor(0, 0, 0)
+/* General -- green */
+#define COLOR_GREEN QColor(23, 168, 26)
 
 /* Tooltips longer than this (in characters) are converted into rich text,
    so that they can be word-wrapped.

@@ -339,7 +339,6 @@ void OverviewPage::showOutOfSyncWarning(bool fShow)
 void OverviewPage::updatePrivateSendProgress()
 {
     if (!clientModel) return;
-    if (!clientModel->node().MNIsBlockchainsynced()) return;
 
     QString strAmountAndRounds;
     QString strPrivateSendAmount = BitcoinUnits::formatHtmlWithUnit(nDisplayUnit, privateSendClient.nPrivateSendAmount * COIN, false, BitcoinUnits::separatorAlways);
@@ -415,11 +414,11 @@ void OverviewPage::updateAdvancedPSUI(bool _fShowAdvancedPSUI) {
 void OverviewPage::privateSendStatus()
 {
     if (!clientModel) return;
-    if (!clientModel->node().MNIsBlockchainsynced()) return;
+    if (!walletModel) return;
 
     static int64_t nLastDSProgressBlockTime = 0;
 
-    int nBestHeight = clientModel->node().getNumBlocks();
+    int nBestHeight = clientModel->getHeaderTipHeight();
 
     // We are processing more then 1 block per second, we'll just leave
     if(((nBestHeight - privateSendClient.nCachedNumBlocks) / (GetTimeMillis() - nLastDSProgressBlockTime + 1) > 1)) return;

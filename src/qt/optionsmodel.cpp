@@ -11,7 +11,6 @@
 
 #include <qt/bitcoinunits.h>
 #include <qt/guiutil.h>
-#include <qt/masternodelist.h>
 
 #include <interfaces/node.h>
 #include <validation.h> // For DEFAULT_SCRIPTCHECK_THREADS
@@ -92,7 +91,7 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("theme", "");
 
     if (!settings.contains("fShowMasternodesTab"))
-        settings.setValue("fShowMasternodesTab", m_node.MNConfigCount());
+        settings.setValue("fShowMasternodesTab", m_node.getMasternodeConfigCount());
 
     // PrivateSend
     if (!settings.contains("fShowAdvancedPSUI"))

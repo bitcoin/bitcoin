@@ -8,13 +8,7 @@
 #include <amount.h>
 #include <uint256.h>
 
-#include <QList>
 #include <QString>
-
-namespace interfaces {
-class Node;
-struct Proposal;
-}
 
 class ProposalRecord
 {
@@ -32,8 +26,6 @@ public:
     {
     }
 
-    /** Decompose CGovernanceObject to model proposal records.
-     */
     static bool showProposal();
 
     uint256 hash;

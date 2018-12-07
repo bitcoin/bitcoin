@@ -6,7 +6,6 @@
 #define BITCOIN_QT_PROPOSALLIST_H
 
 #include <qt/clientmodel.h>
-#include <qt/columnalignedlayout.h>
 #include <qt/guiutil.h>
 #include <qt/proposaltablemodel.h>
 
@@ -68,7 +67,6 @@ private:
     ProposalTableModel *proposalTableModel;
     ProposalFilterProxy *proposalProxyModel;
     QTableView *proposalList;
-    int64_t nLastUpdate = 0;
 
     QLineEdit *proposalWidget;
     QComboBox *dateStartWidget;
@@ -91,7 +89,6 @@ private:
     QFrame *dateEndRangeWidget;
     QDateTimeEdit *dateEndFrom;
     QDateTimeEdit *dateEndTo;
-    ColumnAlignedLayout *hlayout;
 
     QWidget *createDateStartRangeWidget();
     QWidget *createDateEndRangeWidget();

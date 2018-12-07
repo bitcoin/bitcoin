@@ -179,16 +179,16 @@ public:
     virtual bool getUnspentOutput(const COutPoint& output, Coin& coin) = 0;
 
     //! Module signals
-    virtual std::string getMNSyncStatus() = 0;
-    virtual bool IsMasternodelistSynced() = 0;
-    virtual bool MNIsBlockchainsynced() = 0;
-    virtual bool MNIsSynced() = 0;
-    virtual int MNConfigCount() = 0;
+    virtual std::string getModuleSyncStatus() = 0;
+    virtual bool isMasternodeChainSynced() = 0;
+    virtual bool isMasternodelistSynced() = 0;
+    virtual bool isModuleDataSynced() = 0;
+    virtual int getMasternodeConfigCount() = 0;
     virtual std::vector<CMasternodeConfig::CMasternodeEntry>& MNgetEntries() = 0;
-    virtual bool MNStartAlias(std::string strAlias, std::string strErrorRet) = 0;
-    virtual bool MNStartAll(std::string strCommand, std::string strErrorRet, int nCountSuccessful, int nCountFailed) = 0;
+    virtual bool startMasternodeAlias(const std::string& strAlias, std::string& strErrorRet) = 0;
+    virtual bool startAllMasternodes(const std::string& strCommand, std::string&  strErrorRet, int& nCountSuccessful, int& nCountFailed) = 0;
 
-    virtual MasterNodeCount getMNcount() = 0;
+    virtual MasterNodeCount getMasternodeCount() = 0;
 
     //! Get a proposal
     virtual Proposal getProposal(const uint256& hash) = 0;

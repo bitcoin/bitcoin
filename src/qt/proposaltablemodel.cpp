@@ -20,8 +20,6 @@
 #include <QColor>
 #include <QDateTime>
 #include <QDebug>
-#include <QIcon>
-#include <QList>
 
 static int column_alignments[] = {
         Qt::AlignRight|Qt::AlignVCenter,
@@ -56,9 +54,7 @@ class ProposalTablePriv
 {
 public:
     explicit ProposalTablePriv(ProposalTableModel *_parent) :
-        parent(_parent)
-    {
-    }
+        parent(_parent) {}
 
     ProposalTableModel *parent;
 
@@ -74,8 +70,8 @@ public:
         for (const auto& prop : node.getProposals())
         {
             int percentage = 0;
-            if (node.getMNcount().enabled > 0)
-                percentage = round(prop.abs_yes * 100 / node.getMNcount().enabled);
+            if (node.getMasternodeCount().enabled > 0)
+                percentage = round(prop.abs_yes * 100 / node.getMasternodeCount().enabled);
 
             cachedProposals.append(ProposalRecord(
                             prop.hash,
@@ -125,8 +121,8 @@ public:
                 }
                 // Added -- insert at the right position
                 int percentage = 0;
-                if (node.getMNcount().enabled > 0)
-                    percentage = round(prop.abs_yes * 100 / node.getMNcount().enabled);
+                if (node.getMasternodeCount().enabled > 0)
+                    percentage = round(prop.abs_yes * 100 / node.getMasternodeCount().enabled);
 
                 ProposalRecord toInsert =
                         ProposalRecord(
@@ -171,8 +167,8 @@ public:
                 break;
             }
             int percentage = 0;
-            if (node.getMNcount().enabled > 0)
-                percentage = round(prop.abs_yes * 100 / node.getMNcount().enabled);
+            if (node.getMasternodeCount().enabled > 0)
+                percentage = round(prop.abs_yes * 100 / node.getMasternodeCount().enabled);
             lower->hash = prop.hash;
             lower->start_epoch = prop.start;
             lower->end_epoch = prop.end;
@@ -297,11 +293,10 @@ QVariant ProposalTableModel::data(const QModelIndex &index, int role) const
             if(rec->percentage < 10) {
                 return COLOR_NEGATIVE;
             } else {
-                return QColor(23, 168, 26);
+                return COLOR_GREEN;
             }
         } 
-
-        return COLOR_BAREADDRESS;
+        return COLOR_BLACK;
         break;
     case ProposalRole:
         return rec->name;

@@ -15,8 +15,6 @@
 #include <interfaces/node.h>
 #include <util/system.h>
  
-#include <ui_interface.h>
-
 #include <QComboBox>
 #include <QDateTimeEdit>
 #include <QDesktopServices>
