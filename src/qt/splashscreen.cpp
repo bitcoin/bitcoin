@@ -145,10 +145,8 @@ bool SplashScreen::eventFilter(QObject * obj, QEvent * ev) {
     return QObject::eventFilter(obj, ev);
 }
 
-void SplashScreen::slotFinish(QWidget *mainWin)
+void SplashScreen::finish()
 {
-    Q_UNUSED(mainWin);
-
     /* If the window is minimized, hide() will be ignored. */
     /* Make sure we de-minimize the splashscreen window before hiding */
     if (isMinimized())
