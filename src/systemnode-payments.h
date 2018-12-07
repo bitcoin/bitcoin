@@ -27,7 +27,7 @@ extern CSystemnodePayments systemnodePayments;
 #define SN_PMT_SLOT                              2
 
 void SNFillBlockPayee(CMutableTransaction& txNew, int64_t nFees);
-bool SNIsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight);
+bool SNIsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, const uint32_t& nTime, const uint32_t& nTimePrevBlock);
 std::string SNGetRequiredPaymentsString(int nBlockHeight);
 
 

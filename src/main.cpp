@@ -3252,12 +3252,12 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
                     return state.DoS(100,
                             error("CheckBlock() : Masternode/systemnode payments made when payment enforcement is disabled"));
             }
-            if(!IsBlockPayeeValid(block.vtx[0], nHeight))
+            if(!IsBlockPayeeValid(block.vtx[0], nHeight, block.nTime, pindexPrev->nTime))
             {
                 mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
                 return state.DoS(100, error("CheckBlock() : Couldn't find masternode/budget payment"));
             }
-            if(!SNIsBlockPayeeValid(block.vtx[0], nHeight))
+            if(!SNIsBlockPayeeValid(block.vtx[0], nHeight, block.nTime, pindexPrev->nTime))
             {
                 mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
                 return state.DoS(100, error("CheckBlock() : Couldn't find systemnode/budget payment"));
