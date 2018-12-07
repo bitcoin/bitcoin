@@ -263,6 +263,15 @@ public:
         return *phashBlock;
     }
 
+    /**
+     * Check whether this block's and all previous blocks' transactions have been
+     * downloaded (and stored to disk) at some point.
+     *
+     * Does not imply the transactions are consensus-valid (ConnectTip might fail)
+     * Does not imply the transactions are still stored on disk. (IsBlockPruned might return true)
+     */
+    bool HaveTxsDownloaded() const { return nChainTx != 0; }
+
     int64_t GetBlockTime() const
     {
         return (int64_t)nTime;
