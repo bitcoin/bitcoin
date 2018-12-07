@@ -84,6 +84,7 @@ bool CMasternodeMan::Add(CMasternode &mn)
     if (Has(mn.outpoint)) return false;
 
     LogPrint(BCLog::MNODE, "CMasternodeMan::Add -- Adding new Masternode: addr=%s, %i now\n", mn.addr.ToString(), size() + 1);
+    uiInterface.NotifyMasternodeChanged(mn.outpoint, CT_NEW);
     mapMasternodes[mn.outpoint] = mn;
     fMasternodesAdded = true;
     return true;
@@ -202,6 +203,7 @@ void CMasternodeMan::CheckAndRemove(CConnman* connman)
 
                 // and finally remove it from the list
                 it->second.FlagGovernanceItemsAsDirty();
+                uiInterface.NotifyMasternodeChanged(it->first, CT_DELETED);
                 mapMasternodes.erase(it++);
                 fMasternodesRemoved = true;
             } else {
@@ -1492,6 +1494,7 @@ bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CNode* pfrom, CMasternodeBr
                     }
                 }
             }
+            uiInterface.NotifyMasternodeChanged(mnb.outpoint, CT_UPDATED);
             return true;
         }
         mapSeenMasternodeBroadcast.insert(std::make_pair(hash, std::make_pair(GetTime(), mnb)));
@@ -1541,7 +1544,6 @@ bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CNode* pfrom, CMasternodeBr
         LogPrintf("CMasternodeMan::CheckMnbAndUpdateMasternodeList -- Rejected Masternode entry: %s  addr=%s\n", mnb.outpoint.ToStringShort(), mnb.addr.ToString());
         return false;
     }
-
     return true;
 }
 

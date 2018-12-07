@@ -54,6 +54,33 @@ class Wallet;
 
 namespace {
 
+Masternode MakeMasternode(const CMasternode& masternode)
+{
+    Masternode result;
+    result.alias = "";
+    for (const auto& mne : ::masternodeConfig.getEntries())
+    {
+        if ((COutPoint(uint256S(mne.getTxHash()), atoi(mne.getOutputIndex()))) == masternode.outpoint)
+        {
+            result.alias = mne.getAlias();
+            break;
+        }
+    }
+    result.outpoint = masternode.outpoint;
+    result.address = masternode.addr.ToString();
+    result.protocol = masternode.nProtocolVersion;
+    result.daemon = masternode.lastPing.nDaemonVersion;
+    result.sentinel = masternode.lastPing.nSentinelVersion;
+    result.status = CMasternode::StateToString(masternode.nActiveState);
+    result.active = masternode.lastPing.sigTime - masternode.sigTime;
+    result.last_seen = masternode.lastPing.sigTime;
+    result.payee = EncodeDestination(masternode.collDest);
+    result.banscore = masternode.nPoSeBanScore;
+    result.lastpaid = masternode.nTimeLastPaid;
+
+    return result;
+}
+
 Proposal MakeProposal(const CGovernanceObject& pGovObj)
 {
     Proposal result;
@@ -219,7 +246,7 @@ public:
         if (!::masternodeSync.IsBlockchainSynced())
             return GuessVerificationProgress(Params().TxData(), tip);
         else
-            return ::masternodeSync.getMNSyncStatus();
+            return ::masternodeSync.getModuleSyncStatus();
     }
     bool isInitialBlockDownload() override { return IsInitialBlockDownload(); }
     bool getReindex() override { return ::fReindex; }
@@ -302,7 +329,7 @@ public:
 
             COutPoint outpoint = COutPoint(uint256S(mne.getTxHash()), nOutputIndex);
 
-            if(strCommand == "start-missing" && ::mnodeman.Has(outpoint)) continue;
+            if(strCommand == "start-missing" && !::mnodeman.Has(outpoint)) continue;
 
             bool fSuccess = CMasternodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
 
@@ -331,6 +358,54 @@ public:
         result.countIPv4 = ::mnodeman.CountByIP(NET_IPV4);
         result.countIPv6 = ::mnodeman.CountByIP(NET_IPV6);
         result.countTOR = ::mnodeman.CountByIP(NET_ONION);
+        return result;
+    }
+    Masternode getMasternode(const COutPoint& outpoint) override
+    {
+        CMasternode masternodeRet;
+        ::mnodeman.Get(outpoint, masternodeRet);
+        return MakeMasternode(masternodeRet);
+    }
+
+    std::string getMasternodeKey(const std::string& alias) override
+    {
+        for (const auto& mne : ::masternodeConfig.getEntries())
+        {
+            if (alias == mne.getAlias())
+                return mne.getPrivKey();
+        }
+        return {};
+    }
+    std::vector<Masternode> getMasternodes() override
+    {
+        std::vector<Masternode> result;
+        std::map<COutPoint, CMasternode> mapMasternodes = mnodeman.GetFullMasternodeMap();
+        for (const auto& mnpair : mapMasternodes)
+        {
+            CMasternode masternode = mnpair.second;
+            result.emplace_back(MakeMasternode(masternode));
+        }
+        for (const auto& mne : ::masternodeConfig.getEntries())
+        {
+            bool fFound = false;
+            for (const auto& mnpair : mapMasternodes)
+            {
+                CMasternode masternode = mnpair.second;
+                if (masternode.outpoint == COutPoint(uint256S(mne.getTxHash()), atoi(mne.getOutputIndex())))
+                {
+                    fFound = true;
+                    break;
+                }
+            }
+            if (!fFound)
+            {
+                Masternode mineMissing;
+                mineMissing.outpoint = COutPoint(uint256S(mne.getTxHash()), atoi(mne.getOutputIndex()));
+                mineMissing.alias = mne.getAlias();
+                mineMissing.address = mne.getIp();
+                result.emplace_back(mineMissing);
+            }
+        }
         return result;
     }
     Proposal getProposal(const uint256& hash) override

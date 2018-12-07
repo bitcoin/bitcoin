@@ -8,6 +8,7 @@
 #include <qt/bantablemodel.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
+#include <qt/masternodetablemodel.h>
 #include <qt/peertablemodel.h>
 #include <qt/proposaltablemodel.h>
 
@@ -39,6 +40,7 @@ ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QO
     optionsModel(_optionsModel),
     peerTableModel(0),
     banTableModel(0),
+    masternodeTableModel(0),
     proposalTableModel(0),
     cachedMasternodeCountString(""),
     pollTimer(0),
@@ -48,6 +50,7 @@ ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QO
     cachedBestHeaderTime = -1;
     peerTableModel = new PeerTableModel(m_node, this);
     banTableModel = new BanTableModel(m_node, this);
+    masternodeTableModel = new MasternodeTableModel(this);
     proposalTableModel = new ProposalTableModel(this);
     pollTimer = new QTimer(this);
     connect(pollTimer, &QTimer::timeout, this, &ClientModel::updateTimer);
@@ -188,6 +191,11 @@ BanTableModel *ClientModel::getBanTableModel()
     return banTableModel;
 }
 
+MasternodeTableModel *ClientModel::getMasternodeTableModel()
+{
+    return masternodeTableModel;
+}
+
 ProposalTableModel *ClientModel::getProposalTableModel()
 {
     return proposalTableModel;
@@ -290,21 +298,20 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, int heig
     }
 }
 
-static void NotifyMasternodeChanged(ClientModel *clientmodel, const uint256 &hash, ChangeType status)
+static void NotifyMasternodeChanged(ClientModel *clientmodel, const COutPoint &outpoint, ChangeType status)
 {
     // emits signal "updateMasternode"
-    QString strHash = QString::fromStdString(hash.GetHex());
     QMetaObject::invokeMethod(clientmodel, "updateMasternode", Qt::QueuedConnection,
-                              Q_ARG(QString, strHash),
+                              Q_ARG(QString, QString::fromStdString(outpoint.hash.ToString())),
+                              Q_ARG(int, outpoint.n),
                               Q_ARG(int, status));
 }
 
 static void NotifyProposalChanged(ClientModel *clientmodel, const uint256 &hash, ChangeType status)
 {
     // emits signal "updateProposal"
-    QString strHash = QString::fromStdString(hash.GetHex());
     QMetaObject::invokeMethod(clientmodel, "updateProposal", Qt::QueuedConnection,
-                              Q_ARG(QString, strHash),
+                              Q_ARG(QString, QString::fromStdString(hash.ToString())),
                               Q_ARG(int, status));
 }
 
