@@ -214,7 +214,7 @@ void ProposalList::voteDelete()
 
 void ProposalList::voteEndorse()
 {
-    vote_click_handler("endorse");
+    vote_click_handler("endorsed");
 }
 
 void ProposalList::vote_click_handler(const std::string voteString)
