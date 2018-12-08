@@ -785,7 +785,7 @@ UniValue gobject(const JSONRPCRequest& request)
 
         // COLLECT PARAMETERS FROM USER
 
-        uint256 hash = ParseHashV(request.params[1], "Governance hash");
+        uint256 hash = ParseHashV(request.params[1], "Funding hash");
 
         // FIND OBJECT USER IS LOOKING FOR
 
@@ -794,7 +794,7 @@ UniValue gobject(const JSONRPCRequest& request)
         CGovernanceObject* pGovObj = governance.FindGovernanceObject(hash);
 
         if(pGovObj == nullptr) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown governance-hash");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown funding-hash");
         }
 
         // REPORT RESULTS TO USER

@@ -4,442 +4,197 @@
 
 #include <qt/proposalview.h>
 
+#include <qt/forms/ui_proposallist.h>
+
 #include <qt/clientmodel.h>
-#include <qt/guiutil.h>
 #include <qt/platformstyle.h>
-#include <qt/optionsmodel.h>
-#include <qt/proposalfilterproxy.h>
-#include <qt/proposalrecord.h>
 #include <qt/proposaltablemodel.h>
 
 #include <interfaces/node.h>
 #include <util/system.h>
  
 #include <QComboBox>
+#include <QDateTime>
 #include <QDateTimeEdit>
 #include <QDesktopServices>
-#include <QDoubleValidator>
-#include <QHBoxLayout>
-#include <QHeaderView>
 #include <QLabel>
-#include <QPushButton>
-#include <QLineEdit>
 #include <QMenu>
-#include <QPoint>
-#include <QScrollBar>
-#include <QSettings>
-#include <QTableView>
+#include <QMessageBox>
+#include <QSortFilterProxyModel>
 #include <QUrl>
-#include <QVBoxLayout>
+
+class ProposalFilterProxyModel final : public QSortFilterProxyModel
+{
+    QDateTime dateFrom = QDateTime::fromTime_t(0);
+    QDateTime dateTo  = QDateTime::fromTime_t(0xFFFFFFFF);
+
+public:
+    ProposalFilterProxyModel(QObject* parent)
+        : QSortFilterProxyModel(parent)
+    {
+        setDynamicSortFilter(true);
+        setFilterCaseSensitivity(Qt::CaseInsensitive);
+        setSortCaseSensitivity(Qt::CaseInsensitive);
+    }
+
+    void setDateRange(const QDateTime &from, const QDateTime &to)
+    {
+        this->dateFrom = from;
+        this->dateTo = to;
+        invalidateFilter();
+    }
+
+protected:
+    bool filterAcceptsRow(int row, const QModelIndex& parent) const
+    {
+        auto model = sourceModel();
+        auto proposal = model->index(row, ProposalTableModel::Proposal, parent);
+        auto amount = model->index(row, ProposalTableModel::Amount, parent);
+
+        if (filterRegExp().indexIn(model->data(proposal).toString()) < 0 &&
+                filterRegExp().indexIn(model->data(amount).toString()) < 0) {
+            return false;
+        }
+        QDateTime datetime = model->data(proposal, ProposalTableModel::ProposalDateFilterRole).toDateTime();
+        if (datetime < dateFrom || datetime > dateTo)
+            return false;
+        return true;
+    }
+};
+
 
 ProposalList::ProposalList(const PlatformStyle *platformStyle, QWidget *parent) :
-    QWidget(parent), clientModel(0),
-    proposalProxyModel(0), proposalList(0), columnResizingFixer(0)
+    QWidget(parent),
+    clientModel(0),
+    ui(new Ui::ProposalList)
 {
-    // Build filter row
-    setContentsMargins(0,0,0,0);
-
-    QHBoxLayout *hlayout = new QHBoxLayout();
-    hlayout->setContentsMargins(0,0,0,0);
+    ui->setupUi(this);
 
     if (platformStyle->getUseExtraSpacing()) {
-        hlayout->setSpacing(5);
-        hlayout->addSpacing(26);
+        ui->hlayout->setSpacing(5);
+        ui->hlayout->addSpacing(26);
     } else {
-        hlayout->setSpacing(0);
-        hlayout->addSpacing(23);
+        ui->hlayout->setSpacing(0);
+        ui->hlayout->addSpacing(23);
     }
 
-    amountWidget = new QLineEdit(this);
-    amountWidget->setFixedWidth(AMOUNT_COLUMN_WIDTH);
-    amountWidget->setPlaceholderText(tr("Min amount"));
-    amountWidget->setValidator(new QDoubleValidator(0, 1e20, 8, this));
-    amountWidget->setObjectName("amountWidget");
-    hlayout->addWidget(amountWidget);
-
-    dateStartWidget = new QComboBox(this);
     if (platformStyle->getUseExtraSpacing()) {
-        dateStartWidget->setFixedWidth(START_DATE_COLUMN_WIDTH + 1);
+        ui->dateWidget->setFixedWidth(141);
     } else {
-        dateStartWidget->setFixedWidth(START_DATE_COLUMN_WIDTH);
+        ui->dateWidget->setFixedWidth(140);
     }
-    dateStartWidget->addItem(tr("All"), All);
-    dateStartWidget->addItem(tr("Today"), Today);
-    dateStartWidget->addItem(tr("This week"), ThisWeek);
-    dateStartWidget->addItem(tr("This month"), ThisMonth);
-    dateStartWidget->addItem(tr("Last month"), LastMonth);
-    dateStartWidget->addItem(tr("This year"), ThisYear);
-    dateStartWidget->addItem(tr("Range..."), Range);
-    hlayout->addWidget(dateStartWidget);
+    ui->dateWidget->addItem(tr("All"), All);
+    ui->dateWidget->addItem(tr("Ends today"), Today);
+    ui->dateWidget->addItem(tr("Ends this week"), ThisWeek);
+    ui->dateWidget->addItem(tr("Ends this month"), ThisMonth);
+    ui->dateWidget->addItem(tr("Ends this year"), ThisYear);
+    ui->dateWidget->addItem(tr("End range..."), Range);
 
-    dateEndWidget = new QComboBox(this);
-    if (platformStyle->getUseExtraSpacing()) {
-        dateEndWidget->setFixedWidth(END_DATE_COLUMN_WIDTH + 1);
-    } else {
-        dateEndWidget->setFixedWidth(END_DATE_COLUMN_WIDTH);
-    }
-    dateEndWidget->addItem(tr("All"), All);
-    dateEndWidget->addItem(tr("Today"), Today);
-    dateEndWidget->addItem(tr("This week"), ThisWeek);
-    dateEndWidget->addItem(tr("This month"), ThisMonth);
-    dateEndWidget->addItem(tr("Last month"), LastMonth);
-    dateEndWidget->addItem(tr("This year"), ThisYear);
-    dateEndWidget->addItem(tr("Range..."), Range);
-    hlayout->addWidget(dateEndWidget);
+    ui->vlayout->addWidget(createDateRangeWidget());
 
-    yesVotesWidget = new QLineEdit(this);
-    if (platformStyle->getUseExtraSpacing()) {
-        yesVotesWidget->setFixedWidth(YES_VOTES_COLUMN_WIDTH + 1);
-    } else {
-        yesVotesWidget->setFixedWidth(YES_VOTES_COLUMN_WIDTH);
-    }
-    yesVotesWidget->setPlaceholderText(tr("Min yes votes"));
-    yesVotesWidget->setValidator(new QIntValidator(0, INT_MAX, this));
-    yesVotesWidget->setObjectName("yesVotesWidget");
-    hlayout->addWidget(yesVotesWidget);
-
-    noVotesWidget = new QLineEdit(this);
-    if (platformStyle->getUseExtraSpacing()) {
-        noVotesWidget->setFixedWidth(NO_VOTES_COLUMN_WIDTH + 1);
-    } else {
-        noVotesWidget->setFixedWidth(NO_VOTES_COLUMN_WIDTH);
-    }
-    noVotesWidget->setPlaceholderText(tr("Min no votes"));
-    noVotesWidget->setValidator(new QIntValidator(0, INT_MAX, this));
-    noVotesWidget->setObjectName("noVotesWidget");
-    hlayout->addWidget(noVotesWidget);
-
-
-    absoluteYesVotesWidget = new QLineEdit(this);
-    if (platformStyle->getUseExtraSpacing()) {
-        absoluteYesVotesWidget->setFixedWidth(ABSOLUTE_YES_COLUMN_WIDTH + 1);
-    } else {
-        absoluteYesVotesWidget->setFixedWidth(ABSOLUTE_YES_COLUMN_WIDTH);
-    }
-    absoluteYesVotesWidget->setPlaceholderText(tr("Min abs. yes votes"));
-    absoluteYesVotesWidget->setValidator(new QIntValidator(INT_MIN, INT_MAX, this));
-    absoluteYesVotesWidget->setObjectName("absoluteYesVotesWidget");
-    hlayout->addWidget(absoluteYesVotesWidget);
-
-    proposalWidget = new QLineEdit(this);
-    proposalWidget->setPlaceholderText(tr("Enter proposal name"));
-    proposalWidget->setObjectName("proposalWidget");
-    hlayout->addWidget(proposalWidget);
-
-    percentageWidget = new QLineEdit(this);
-    if (platformStyle->getUseExtraSpacing()) {
-        percentageWidget->setFixedWidth(PERCENTAGE_COLUMN_WIDTH + 1);
-    } else {
-        percentageWidget->setFixedWidth(PERCENTAGE_COLUMN_WIDTH);
-    }
-    percentageWidget->setPlaceholderText(tr("Min percentage"));
-    percentageWidget->setValidator(new QIntValidator(-100, 100, this));
-    percentageWidget->setObjectName("percentageWidget");
-    hlayout->addWidget(percentageWidget);
-
-    // Delay before filtering proposals in ms
-    static const int input_filter_delay = 200;
-
-    QTimer* amount_typing_delay = new QTimer(this);
-    amount_typing_delay->setSingleShot(true);
-    amount_typing_delay->setInterval(input_filter_delay);
-
-    QTimer* prefix_typing_delay = new QTimer(this);
-    prefix_typing_delay->setSingleShot(true);
-    prefix_typing_delay->setInterval(input_filter_delay);
-
-    QTimer* yes_typing_delay = new QTimer(this);
-    yes_typing_delay->setSingleShot(true);
-    yes_typing_delay->setInterval(input_filter_delay);
-
-    QTimer* no_typing_delay = new QTimer(this);
-    no_typing_delay->setSingleShot(true);
-    no_typing_delay->setInterval(input_filter_delay);
-
-    QTimer* abs_yes_typing_delay = new QTimer(this);
-    abs_yes_typing_delay->setSingleShot(true);
-    abs_yes_typing_delay->setInterval(input_filter_delay);
-
-    QTimer* percentage_typing_delay = new QTimer(this);
-    percentage_typing_delay->setSingleShot(true);
-    percentage_typing_delay->setInterval(input_filter_delay);
-
-    QVBoxLayout *vlayout = new QVBoxLayout(this);
-    vlayout->setContentsMargins(0,0,0,0);
-    vlayout->setSpacing(0);
-
-    QTableView *view = new QTableView(this);
-    vlayout->addLayout(hlayout);
-    vlayout->addWidget(createDateStartRangeWidget());
-    vlayout->addWidget(createDateEndRangeWidget());
-    vlayout->addWidget(view);
-    vlayout->setSpacing(0);
-    int width = view->verticalScrollBar()->sizeHint().width();
-    // Cover scroll bar width with spacing
-    if (platformStyle->getUseExtraSpacing()) {
-        hlayout->addSpacing(width+2);
-    } else {
-        hlayout->addSpacing(width);
-    }
-    // Always show scroll bar
-    view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-    view->setTabKeyNavigation(false);
-    view->setContextMenuPolicy(Qt::CustomContextMenu);
-
-    view->installEventFilter(this);
-
-    proposalList = view;
-    proposalList->setObjectName("proposalList");
-
-    QHBoxLayout *actionBar = new QHBoxLayout();
-    actionBar->setSpacing(11);
-    actionBar->addSpacing(25);
-    actionBar->setContentsMargins(0,20,0,20);
-
-    QPushButton *voteYesButton = new QPushButton(tr("Vote Yes"), this);
-    voteYesButton->setToolTip(tr("Vote Yes on the selected proposal"));
-    actionBar->addWidget(voteYesButton);
-
-    QPushButton *voteAbstainButton = new QPushButton(tr("Vote Abstain"), this);
-    voteAbstainButton->setToolTip(tr("Vote Abstain on the selected proposal"));
-    actionBar->addWidget(voteAbstainButton);
-
-    QPushButton *voteNoButton = new QPushButton(tr("Vote No"), this);
-    voteNoButton->setToolTip(tr("Vote No on the selected proposal"));
-    actionBar->addWidget(voteNoButton);
-
-    secondsLabel = new QLabel();
-    actionBar->addWidget(secondsLabel);
-    actionBar->addStretch();
-
-    vlayout->addLayout(actionBar);
-
-    QAction *voteYesAction = new QAction(tr("Vote yes"), this);
-    QAction *voteAbstainAction = new QAction(tr("Vote abstain"), this);
-    QAction *voteNoAction = new QAction(tr("Vote no"), this);
+    QAction *voteFundingAction = new QAction(tr("Vote funding"), this);
+    QAction *voteDeleteAction = new QAction(tr("Vote delete"), this);
+    QAction *voteEndorseAction = new QAction(tr("Vote endorse"), this);
     QAction *openUrlAction = new QAction(tr("Visit proposal website"), this);
-    // QAction *openStatisticsAction = new QAction(tr("Visit statistics website"), this);
 
     contextMenu = new QMenu(this);
-    contextMenu->addAction(voteYesAction);
-    contextMenu->addAction(voteAbstainAction);
-    contextMenu->addAction(voteNoAction);
+    contextMenu->addAction(voteFundingAction);
+    contextMenu->addAction(voteDeleteAction);
+    contextMenu->addAction(voteEndorseAction);
     contextMenu->addSeparator();
     contextMenu->addAction(openUrlAction);
 
-    connect(voteYesButton, &QPushButton::clicked, this, &ProposalList::voteYes);
-    connect(voteAbstainButton, &QPushButton::clicked, this, &ProposalList::voteAbstain);
-    connect(voteNoButton, &QPushButton::clicked, this, &ProposalList::voteNo);
+    connect(ui->voteFundingButton, &QPushButton::clicked, this, &ProposalList::voteFunding);
+    connect(ui->voteDeleteButton, &QPushButton::clicked, this, &ProposalList::voteDelete);
+    connect(ui->voteEndorseButton, &QPushButton::clicked, this, &ProposalList::voteEndorse);
 
-    connect(proposalWidget, &QLineEdit::textChanged, prefix_typing_delay, static_cast<void (QTimer::*)()>(&QTimer::start));
-    connect(prefix_typing_delay, &QTimer::timeout, this, &ProposalList::changedProposal);
-    connect(dateStartWidget, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &ProposalList::chooseStartDate);
-    connect(dateEndWidget, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &ProposalList::chooseEndDate);
-    connect(yesVotesWidget, &QLineEdit::textChanged, yes_typing_delay, static_cast<void (QTimer::*)()>(&QTimer::start));
-    connect(yes_typing_delay, &QTimer::timeout, this, &ProposalList::changedYesVotes);
-    connect(noVotesWidget, &QLineEdit::textChanged, no_typing_delay, static_cast<void (QTimer::*)()>(&QTimer::start));
-    connect(no_typing_delay, &QTimer::timeout, this, &ProposalList::changedNoVotes);
-    connect(absoluteYesVotesWidget, &QLineEdit::textChanged, abs_yes_typing_delay, static_cast<void (QTimer::*)()>(&QTimer::start));
-    connect(abs_yes_typing_delay, &QTimer::timeout, this, &ProposalList::changedAbsoluteYesVotes);
-    connect(amountWidget, &QLineEdit::textChanged, amount_typing_delay, static_cast<void (QTimer::*)()>(&QTimer::start));
-    connect(amount_typing_delay, &QTimer::timeout, this, &ProposalList::changedAmount);
-    connect(percentageWidget, &QLineEdit::textChanged, percentage_typing_delay, static_cast<void (QTimer::*)()>(&QTimer::start));
-    connect(percentage_typing_delay, &QTimer::timeout, this, &ProposalList::changedPercentage);
+    connect(ui->tableView, &QTableView::customContextMenuRequested, this, &ProposalList::contextualMenu);
+    connect(ui->tableView, &QTableView::doubleClicked, this, &ProposalList::openProposalUrl);
 
-    connect(view, &QTableView::doubleClicked, this, &ProposalList::openProposalUrl);
-    connect(view, &QTableView::customContextMenuRequested, this, &ProposalList::contextualMenu);
-
-    connect(voteYesAction, &QAction::triggered, this, &ProposalList::voteYes);
-    connect(voteNoAction, &QAction::triggered, this, &ProposalList::voteNo);
-    connect(voteAbstainAction, &QAction::triggered, this, &ProposalList::voteAbstain);
+    connect(voteFundingAction, &QAction::triggered, this, &ProposalList::voteFunding);
+    connect(voteDeleteAction, &QAction::triggered, this, &ProposalList::voteDelete);
 
     connect(openUrlAction, &QAction::triggered, this, &ProposalList::openProposalUrl);
+}
 
-
-    // connect(proposalList->selectionModel(), SIGNAL(selectionChanged(QItemSelection, QItemSelection)), this, SLOT(computeSum()));
-
-    setLayout(vlayout);
+ProposalList::~ProposalList()
+{
+    delete ui;
 }
 
 void ProposalList::setClientModel(ClientModel *_clientModel)
 {
     this->clientModel = _clientModel;
-    if (_clientModel) {
-        proposalProxyModel = new ProposalFilterProxy(this);
-        proposalProxyModel->setSourceModel(_clientModel->getProposalTableModel());
-        proposalProxyModel->setDynamicSortFilter(true);
-        proposalProxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
-        proposalProxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
+    if(!_clientModel)
+        return;
 
-        proposalProxyModel->setSortRole(Qt::EditRole);
+    proposalProxyModel = new ProposalFilterProxyModel(this);
+    proposalProxyModel->setSourceModel(_clientModel->getProposalTableModel());
 
-        proposalList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        proposalList->setModel(proposalProxyModel);
-        proposalList->setAlternatingRowColors(true);
-        proposalList->setSelectionBehavior(QAbstractItemView::SelectRows);
-        proposalList->setSelectionMode(QAbstractItemView::ExtendedSelection);
-        proposalList->setSortingEnabled(true);
-        proposalList->sortByColumn(ProposalTableModel::StartDate, Qt::DescendingOrder);
-        proposalList->verticalHeader()->hide();
+    connect(ui->searchLineEdit, &QLineEdit::textChanged, proposalProxyModel, &QSortFilterProxyModel::setFilterWildcard);
+    connect(ui->dateWidget, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &ProposalList::chooseDate);
 
-        proposalList->setColumnWidth(ProposalTableModel::Amount, AMOUNT_COLUMN_WIDTH);
-        proposalList->setColumnWidth(ProposalTableModel::StartDate, START_DATE_COLUMN_WIDTH);
-        proposalList->setColumnWidth(ProposalTableModel::EndDate, END_DATE_COLUMN_WIDTH);
-        proposalList->setColumnWidth(ProposalTableModel::YesVotes, YES_VOTES_COLUMN_WIDTH);
-        proposalList->setColumnWidth(ProposalTableModel::NoVotes, NO_VOTES_COLUMN_WIDTH);
-        proposalList->setColumnWidth(ProposalTableModel::AbsoluteYesVotes, ABSOLUTE_YES_COLUMN_WIDTH);
-        proposalList->setColumnWidth(ProposalTableModel::Proposal, PROPOSAL_COLUMN_WIDTH);
-        proposalList->setColumnWidth(ProposalTableModel::Percentage, PERCENTAGE_COLUMN_WIDTH);
+    ui->tableView->setModel(proposalProxyModel);
+    ui->tableView->sortByColumn(0, Qt::AscendingOrder);
 
-        columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(proposalList, PERCENTAGE_COLUMN_WIDTH, MINIMUM_COLUMN_WIDTH, this);
-    }
+    // Set column widths
+    ui->tableView->horizontalHeader()->setSectionResizeMode(ProposalTableModel::Amount, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setSectionResizeMode(ProposalTableModel::StartDate, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setSectionResizeMode(ProposalTableModel::EndDate, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setSectionResizeMode(ProposalTableModel::YesVotes, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setSectionResizeMode(ProposalTableModel::NoVotes, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setSectionResizeMode(ProposalTableModel::AbsoluteYesVotes, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setSectionResizeMode(ProposalTableModel::Funding, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setSectionResizeMode(ProposalTableModel::Percentage, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setSectionResizeMode(ProposalTableModel::Proposal, QHeaderView::Stretch);
 }
 
-void ProposalList::chooseStartDate(int idx)
+void ProposalList::chooseDate(int idx)
 {
     if(!proposalProxyModel) return;
     QDate current = QDate::currentDate();
-    dateStartRangeWidget->setVisible(false);
-    switch(dateStartWidget->itemData(idx).toInt())
+    dateRangeWidget->setVisible(false);
+    switch(ui->dateWidget->itemData(idx).toInt())
     {
     case All:
-        proposalProxyModel->setDateStartRange(
-                ProposalFilterProxy::MIN_DATE,
-                ProposalFilterProxy::MAX_DATE);
+        proposalProxyModel->setDateRange(
+                QDateTime::fromTime_t(0),
+                QDateTime::fromTime_t(0xFFFFFFFF));
         break;
     case Today:
-        proposalProxyModel->setDateStartRange(
+        proposalProxyModel->setDateRange(
                 QDateTime(current),
-                ProposalFilterProxy::MAX_DATE);
+                QDateTime(current.addDays(1)));
         break;
     case ThisWeek: {
-        // Find last Monday
-        QDate startOfWeek = current.addDays(-(current.dayOfWeek()-1));
-        proposalProxyModel->setDateStartRange(
-                QDateTime(startOfWeek),
-                ProposalFilterProxy::MAX_DATE);
+        // Find next Monday
+        QDate startOfWeek = current.addDays(7-(current.dayOfWeek()));
+        proposalProxyModel->setDateRange(
+                QDateTime(current),
+                QDateTime(startOfWeek));
         } break;
     case ThisMonth:
-        proposalProxyModel->setDateStartRange(
-                QDateTime(QDate(current.year(), current.month(), 1)),
-                ProposalFilterProxy::MAX_DATE);
-        break;
-    case LastMonth:
-        proposalProxyModel->setDateStartRange(
-                QDateTime(QDate(current.year(), current.month(), 1).addMonths(-1)),
-                QDateTime(QDate(current.year(), current.month(), 1)));
+        proposalProxyModel->setDateRange(
+                QDateTime(current),
+                QDateTime(QDate(current.year(), current.month() + 1, 1)));
         break;
     case ThisYear:
-        proposalProxyModel->setDateStartRange(
-                QDateTime(QDate(current.year(), 1, 1)),
-                ProposalFilterProxy::MAX_DATE);
+        proposalProxyModel->setDateRange(
+                QDateTime(current),
+                QDateTime(QDate(current.year() + 1, 1, 1)));
         break;
     case Range:
-        dateStartRangeWidget->setVisible(true);
-        dateStartRangeChanged();
+        dateRangeWidget->setVisible(true);
+        dateRangeChanged();
         break;
     }
 }
 
-void ProposalList::chooseEndDate(int idx)
-{
-    if(!proposalProxyModel) return;
-    QDate current = QDate::currentDate();
-    dateEndRangeWidget->setVisible(false);
-    switch(dateEndWidget->itemData(idx).toInt())
-    {
-    case All:
-        proposalProxyModel->setDateEndRange(
-                ProposalFilterProxy::MIN_DATE,
-                ProposalFilterProxy::MAX_DATE);
-        break;
-    case Today:
-        proposalProxyModel->setDateEndRange(
-                QDateTime(current),
-                ProposalFilterProxy::MAX_DATE);
-        break;
-    case ThisWeek: {
-        // Find last Monday
-        QDate startOfWeek = current.addDays(-(current.dayOfWeek()-1));
-        proposalProxyModel->setDateEndRange(
-                QDateTime(startOfWeek),
-                ProposalFilterProxy::MAX_DATE);
-        } break;
-    case ThisMonth:
-        proposalProxyModel->setDateEndRange(
-                QDateTime(QDate(current.year(), current.month(), 1)),
-                ProposalFilterProxy::MAX_DATE);
-        break;
-    case LastMonth:
-        proposalProxyModel->setDateEndRange(
-                QDateTime(QDate(current.year(), current.month(), 1).addMonths(-1)),
-                QDateTime(QDate(current.year(), current.month(), 1)));
-        break;
-    case ThisYear:
-        proposalProxyModel->setDateEndRange(
-                QDateTime(QDate(current.year(), 1, 1)),
-                ProposalFilterProxy::MAX_DATE);
-        break;
-    case Range:
-        dateEndRangeWidget->setVisible(true);
-        dateEndRangeChanged();
-        break;
-    }
-}
-
-
-void ProposalList::changedAmount()
-{
-    if(!proposalProxyModel)
-        return;
-
-    proposalProxyModel->setMinAmount(amountWidget->text().toInt());
-}
-
-void ProposalList::changedPercentage()
-{
-    if(!proposalProxyModel)
-        return;
-
-    proposalProxyModel->setMinPercentage(percentageWidget->text().toInt());
-}
-
-void ProposalList::changedProposal()
-{
-    if(!proposalProxyModel)
-        return;
-
-    proposalProxyModel->setProposal(proposalWidget->text());
-}
-
-void ProposalList::changedYesVotes()
-{
-    if(!proposalProxyModel)
-        return;
-
-    proposalProxyModel->setMinYesVotes(yesVotesWidget->text().toInt());
-}
-
-void ProposalList::changedNoVotes()
-{
-    if(!proposalProxyModel)
-        return;
-
-    proposalProxyModel->setMinNoVotes(noVotesWidget->text().toInt());
-}
-
-void ProposalList::changedAbsoluteYesVotes()
-{
-    if(!proposalProxyModel)
-        return;
-
-    proposalProxyModel->setMinAbsoluteYesVotes(absoluteYesVotesWidget->text().toInt());
-}
 
 void ProposalList::contextualMenu(const QPoint &point)
 {
-    QModelIndex index = proposalList->indexAt(point);
-    QModelIndexList selection = proposalList->selectionModel()->selectedRows(0);
+    QModelIndex index = ui->tableView->indexAt(point);
+    QModelIndexList selection = ui->tableView->selectionModel()->selectedRows(0);
     if (selection.empty())
         return;
 
@@ -447,158 +202,120 @@ void ProposalList::contextualMenu(const QPoint &point)
         contextMenu->exec(QCursor::pos());
 }
 
-void ProposalList::voteYes()
+void ProposalList::voteFunding()
 {
-    vote_click_handler("yes");
+    vote_click_handler("funding");
 }
 
-void ProposalList::voteNo()
+void ProposalList::voteDelete()
 {
-    vote_click_handler("no");
+    vote_click_handler("delete");
 }
 
-void ProposalList::voteAbstain()
+void ProposalList::voteEndorse()
 {
-    vote_click_handler("abstain");
+    vote_click_handler("endorse");
 }
 
 void ProposalList::vote_click_handler(const std::string voteString)
 {
-    if (!proposalList->selectionModel())
+    if (!ui->tableView->selectionModel())
         return;
 
     if (!clientModel)
         return;
 
-    QModelIndexList selection = proposalList->selectionModel()->selectedRows();
+    QModelIndexList selection = ui->tableView->selectionModel()->selectedRows();
     if(selection.empty())
         return;
 
-    QString proposalName = selection.at(0).data(ProposalTableModel::ProposalRole).toString();
+    QString proposalName = selection.at(0).data(ProposalTableModel::Proposal).toString();
 
-    QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm vote"),
-        tr("Are you sure you want to vote <strong>%1</strong> on the proposal <strong>%2</strong>?").arg(QString::fromStdString(voteString), proposalName),
-        QMessageBox::Yes | QMessageBox::Cancel,
-        QMessageBox::Cancel);
+    QMessageBox msgBox;
+    msgBox.setText(tr("Your vote <strong>%1</strong> on the selected proposal is ready to be sent. How would you like to vote?").arg(QString::fromStdString(voteString)));
+    msgBox.setWindowTitle(tr("Confirm vote"));
+    msgBox.setIcon(QMessageBox::Question);
+    msgBox.addButton(tr("CANCEL"), QMessageBox::RejectRole);
+    QAbstractButton* pButtonNo = msgBox.addButton(tr("No"), QMessageBox::YesRole);
+    QAbstractButton* pButtonAbs = msgBox.addButton(tr("Abstain"), QMessageBox::YesRole);
+    QAbstractButton* pButtonYes = msgBox.addButton(tr("Yes"), QMessageBox::YesRole);
 
-    if(retval != QMessageBox::Yes) return;
+    msgBox.setEscapeButton(QMessageBox::Cancel);
+    msgBox.setDefaultButton(QMessageBox::Cancel);
+
+    msgBox.exec();
+
+    std::pair<std::string, std::string> strVote;
+    if (msgBox.clickedButton()==pButtonYes) strVote = std::make_pair(voteString, "yes");
+    else if (msgBox.clickedButton()==pButtonAbs) strVote = std::make_pair(voteString, "abstain");
+    else if (msgBox.clickedButton()==pButtonNo) strVote = std::make_pair(voteString, "no");
+    else return;
 
     uint256 hash;
     hash.SetHex(selection.at(0).data(ProposalTableModel::ProposalHashRole).toString().toStdString());
 
-    int nSuccessful = 0;
-    int nFailed = 0;
+    std::pair<int,int> nResult = std::make_pair(0, 0);
 
-    if (!clientModel->node().sendVoting(hash, voteString, nSuccessful, nFailed))
+    if (!clientModel->node().sendVoting(hash, strVote, nResult))
         QMessageBox::critical(this, tr("No Client Connection"),
             tr("There was an error connecting to the network. Please try again."));
     else
         QMessageBox::information(this, tr("Voting"),
-            tr("You voted %1 %2 time(s) successfully and failed %3 time(s) on %4").arg(QString::fromStdString(voteString), QString::number(nSuccessful), QString::number(nFailed), proposalName));
+            tr("You voted %1 %2 %3 time(s) successfully and failed %4 time(s).").arg(QString::fromStdString(strVote.first), QString::fromStdString(strVote.second), QString::number(nResult.second), QString::number(nResult.first)));
 }
 
 void ProposalList::openProposalUrl()
 {
-    if(!proposalList || !proposalList->selectionModel())
+    if(!ui->tableView || !ui->tableView->selectionModel())
         return;
 
-    QModelIndexList selection = proposalList->selectionModel()->selectedRows(0);
+    QModelIndexList selection = ui->tableView->selectionModel()->selectedRows(0);
     if(!selection.isEmpty())
          QDesktopServices::openUrl(selection.at(0).data(ProposalTableModel::ProposalUrlRole).toString());
 }
 
-QWidget *ProposalList::createDateStartRangeWidget()
+QWidget *ProposalList::createDateRangeWidget()
 {
-    dateStartRangeWidget = new QFrame();
-    dateStartRangeWidget->setFrameStyle(QFrame::Panel | QFrame::Raised);
-    dateStartRangeWidget->setContentsMargins(1,1,1,1);
-    QHBoxLayout *layout = new QHBoxLayout(dateStartRangeWidget);
+    dateRangeWidget = new QFrame();
+    dateRangeWidget->setFrameStyle(QFrame::Panel | QFrame::Raised);
+    dateRangeWidget->setContentsMargins(1,1,1,1);
+    QHBoxLayout *layout = new QHBoxLayout(dateRangeWidget);
     layout->setContentsMargins(0,0,0,0);
     layout->addSpacing(23);
     layout->addWidget(new QLabel(tr("Range:")));
 
-    dateStartFrom = new QDateTimeEdit(this);
-    dateStartFrom->setDisplayFormat("dd/MM/yy");
-    dateStartFrom->setCalendarPopup(true);
-    dateStartFrom->setMinimumWidth(100);
-    dateStartFrom->setDate(QDate::currentDate().addDays(-7));
-    layout->addWidget(dateStartFrom);
+    dateFrom = new QDateTimeEdit(this);
+    dateFrom->setDisplayFormat("dd/MM/yy");
+    dateFrom->setCalendarPopup(true);
+    dateFrom->setMinimumWidth(100);
+    dateFrom->setDate(QDate::currentDate().addDays(-7));
+    layout->addWidget(dateFrom);
     layout->addWidget(new QLabel(tr("to")));
 
-    dateStartTo = new QDateTimeEdit(this);
-    dateStartTo->setDisplayFormat("dd/MM/yy");
-    dateStartTo->setCalendarPopup(true);
-    dateStartTo->setMinimumWidth(100);
-    dateStartTo->setDate(QDate::currentDate());
-    layout->addWidget(dateStartTo);
+    dateTo = new QDateTimeEdit(this);
+    dateTo->setDisplayFormat("dd/MM/yy");
+    dateTo->setCalendarPopup(true);
+    dateTo->setMinimumWidth(100);
+    dateTo->setDate(QDate::currentDate());
+    layout->addWidget(dateTo);
     layout->addStretch();
 
     // Hide by default
-    dateStartRangeWidget->setVisible(false);
+    dateRangeWidget->setVisible(false);
 
     // Notify on change
-    connect(dateStartFrom, &QDateTimeEdit::dateChanged, this, &ProposalList::dateStartRangeChanged);
-    connect(dateStartTo, &QDateTimeEdit::dateChanged, this, &ProposalList::dateStartRangeChanged);
+    connect(dateFrom, &QDateTimeEdit::dateChanged, this, &ProposalList::dateRangeChanged);
+    connect(dateTo, &QDateTimeEdit::dateChanged, this, &ProposalList::dateRangeChanged);
 
-    return dateStartRangeWidget;
+    return dateRangeWidget;
 }
 
-QWidget *ProposalList::createDateEndRangeWidget()
-{
-    dateEndRangeWidget = new QFrame();
-    dateEndRangeWidget->setFrameStyle(QFrame::Panel | QFrame::Raised);
-    dateEndRangeWidget->setContentsMargins(1,1,1,1);
-    QHBoxLayout *layout = new QHBoxLayout(dateEndRangeWidget);
-    layout->setContentsMargins(0,0,0,0);
-    layout->addSpacing(23);
-    layout->addWidget(new QLabel(tr("Range:")));
-
-    dateEndFrom = new QDateTimeEdit(this);
-    dateEndFrom->setDisplayFormat("dd/MM/yy");
-    dateEndFrom->setCalendarPopup(true);
-    dateEndFrom->setMinimumWidth(100);
-    dateEndFrom->setDate(QDate::currentDate().addDays(-7));
-    layout->addWidget(dateEndFrom);
-    layout->addWidget(new QLabel(tr("to")));
-
-    dateEndTo = new QDateTimeEdit(this);
-    dateEndTo->setDisplayFormat("dd/MM/yy");
-    dateEndTo->setCalendarPopup(true);
-    dateEndTo->setMinimumWidth(100);
-    dateEndTo->setDate(QDate::currentDate());
-    layout->addWidget(dateEndTo);
-    layout->addStretch();
-
-    // Hide by default
-    dateEndRangeWidget->setVisible(false);
-
-    // Notify on change
-    connect(dateEndFrom, &QDateTimeEdit::dateChanged, this, &ProposalList::dateEndRangeChanged);
-    connect(dateEndTo, &QDateTimeEdit::dateChanged, this, &ProposalList::dateEndRangeChanged);
-
-    return dateEndRangeWidget;
-}
-
-void ProposalList::dateStartRangeChanged()
+void ProposalList::dateRangeChanged()
 {
     if(!proposalProxyModel)
         return;
-    proposalProxyModel->setDateStartRange(
-            QDateTime(dateStartFrom->date()),
-            QDateTime(dateStartTo->date()).addDays(1));
+    proposalProxyModel->setDateRange(
+            QDateTime(dateFrom->date()),
+            QDateTime(dateTo->date()).addDays(1));
 }
 
-void ProposalList::dateEndRangeChanged()
-{
-    if(!proposalProxyModel)
-        return;
-    proposalProxyModel->setDateEndRange(
-            QDateTime(dateEndFrom->date()),
-            QDateTime(dateEndTo->date()).addDays(1));
-}
-
-void ProposalList::resizeEvent(QResizeEvent* event)
-{
-    QWidget::resizeEvent(event);
-    columnResizingFixer->stretchColumnWidth(ProposalTableModel::Proposal);
-}

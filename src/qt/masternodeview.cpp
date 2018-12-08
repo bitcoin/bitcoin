@@ -2,10 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#if defined(HAVE_CONFIG_H)
-#include <config/chaincoin-config.h>
-#endif
-
 #include <qt/masternodeview.h>
 
 #include <qt/forms/ui_masternodelist.h>
@@ -19,7 +15,6 @@
 
 #include <interfaces/node.h>
 
-#include <QIcon>
 #include <QMenu>
 #include <QMessageBox>
 #include <QSortFilterProxyModel>
@@ -126,7 +121,6 @@ void MasternodeList::setClientModel(ClientModel *_clientmodel)
     if(!_clientmodel)
         return;
 
-    auto type = tab  == MyNodesTab ? MasternodeTableModel::MyNodes : MasternodeTableModel::AllNodes;
     proxyModelMyNodes = new MasternodeSortFilterProxyModel(MasternodeTableModel::MyNodes, this);
     proxyModelAllNodes = new MasternodeSortFilterProxyModel(MasternodeTableModel::AllNodes, this);
     proxyModelMyNodes->setSourceModel(_clientmodel->getMasternodeTableModel());
@@ -149,7 +143,7 @@ void MasternodeList::setClientModel(ClientModel *_clientmodel)
     ui->tableView->horizontalHeader()->setSectionResizeMode(MasternodeTableModel::Payee, QHeaderView::Stretch);
 
     selectionChanged();
-    UpdateCounter();
+    UpdateCounter(clientModel->getMasternodeCountString());
 }
 
 void MasternodeList::setWalletModel(WalletModel *_walletmodel)
@@ -157,10 +151,9 @@ void MasternodeList::setWalletModel(WalletModel *_walletmodel)
     this->walletModel = _walletmodel;
 }
 
-void MasternodeList::UpdateCounter()
+void MasternodeList::UpdateCounter(QString count)
 {
-    this->ui->countLabel->setText(QString::number(clientModel->node().getMasternodeCount().size));
-    this->ui->enabledLabel->setText(QString::number(clientModel->node().getMasternodeCount().enabled));
+    this->ui->countLabel->setText(count);
 }
 
 void MasternodeList::StartAlias(std::string strAlias)
@@ -412,8 +405,8 @@ void MasternodeList::ShowQRCode(const COutPoint& _outpoint) {
     strHTML += "<b>" + tr("Status") +           ": </b>" + GUIUtil::HtmlEscape(toShow.status) + "<br>";
     strHTML += "<b>" + tr("Payee") +            ": </b>" + GUIUtil::HtmlEscape(toShow.payee) + "<br>";
     strHTML += "<b>" + tr("Active") +           ": </b>" + GUIUtil::HtmlEscape(DurationToDHMS(toShow.active)) + "<br>";
-    strHTML += "<b>" + tr("Last Seen") +        ": </b>" + (toShow.last_seen > 0 ? GUIUtil::HtmlEscape(QDateTime::fromTime_t((qint32)toShow.last_seen).toString(Qt::SystemLocaleLongDate)) : tr("unknown")) + "<br>";
-    strHTML += "<b>" + tr("Last Paid") +        ": </b>" + (toShow.lastpaid > 0 ? GUIUtil::HtmlEscape(QDateTime::fromTime_t((qint32)toShow.lastpaid).toString(Qt::SystemLocaleLongDate)) : tr("unknown")) + "<br>";
+    strHTML += "<b>" + tr("Last Seen") +        ": </b>" + (toShow.last_seen > 0 ? GUIUtil::HtmlEscape(QDateTime::fromTime_t(toShow.last_seen).toString(Qt::SystemLocaleLongDate)) : tr("unknown")) + "<br>";
+    strHTML += "<b>" + tr("Last Paid") +        ": </b>" + (toShow.lastpaid > 0 ? GUIUtil::HtmlEscape(QDateTime::fromTime_t(toShow.lastpaid).toString(Qt::SystemLocaleLongDate)) : tr("unknown")) + "<br>";
     strHTML += "<b>" + tr("Ban Score") +        ": </b>" + QString::number(toShow.banscore) + "<br>";
 
     // Open QR dialog

@@ -18,7 +18,6 @@
 #include <QJsonArray>
 
 class ClientModel;
-class ProposalRecord;
 class ProposalTablePriv;
 
 class ProposalTableModel : public QAbstractTableModel
@@ -37,20 +36,15 @@ public:
         NoVotes = 4,
         AbsoluteYesVotes = 5,
         Proposal = 6,
-        Percentage = 7
+        Endorsed = 7,
+        Funding = 8,
+        Percentage = 9
     };
 
     enum RoleIndex {
-        AmountRole = Qt::UserRole,
-        StartDateRole,
-        EndDateRole,
-        YesVotesRole,
-        NoVotesRole,
-        AbsoluteYesVotesRole,
-        ProposalRole,
-        PercentageRole,
+        ProposalHashRole = Qt::UserRole,
         ProposalUrlRole,
-        ProposalHashRole,
+        ProposalDateFilterRole
     };
 
     int rowCount(const QModelIndex &parent) const;
@@ -63,6 +57,9 @@ private:
     ClientModel* const clientModel;
     ProposalTablePriv *priv = nullptr;
     QStringList columns;
+
+    /** Notify listeners that data changed. */
+    void emitDataChanged(int index);
 
 public Q_SLOTS:
     /* New proposal, or proposal changed status */

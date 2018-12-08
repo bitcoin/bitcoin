@@ -208,7 +208,7 @@ public:
     virtual std::vector<Proposal> getProposals() = 0;
 
     //! Vote with all available Masternodes
-    virtual bool sendVoting(const uint256& hash, const std::string strVoteSignal, int& nSuccessRet, int& nFailedRet) = 0;
+    virtual bool sendVoting(const uint256& hash, const std::pair<std::string, std::string>& strVoteSignal, std::pair<int, int>& nResult) = 0;
 
     //! Return default wallet directory.
     virtual std::string getWalletDir() = 0;
@@ -299,28 +299,30 @@ struct Masternode
     COutPoint outpoint = COutPoint();
     std::string alias = "";
     std::string address = "";
-    int64_t protocol = 0;
-    int64_t daemon = 0;
-    int64_t sentinel = 0;
+    int protocol = 0;
+    uint32_t daemon = 0;
+    uint32_t sentinel = 0;
     std::string status = "MISSING";
     int64_t active = 0;
     int64_t last_seen = 0;
     std::string payee = "";
-    int64_t banscore = 0;
+    int banscore = 0;
     int64_t lastpaid = 0;
 };
 
 struct Proposal
 {
     uint256 hash = uint256();
-    int64_t start = 0;
-    int64_t end = 0;
+    uint32_t start = 0;
+    uint32_t end = 0;
     int yes = 0;
     int no = 0;
     int abs_yes = 0;
     CAmount amount = 0;
     std::string name = "";
     std::string url = "";
+    bool funding = 0;
+    bool endorsed = 0;
 };
 
 //! Return implementation of Node interface.

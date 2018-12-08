@@ -1,5 +1,4 @@
 // Copyright (c) 2011-2018 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -40,17 +39,17 @@ struct MasternodeTableEntry
 
     Type type;
     QString txhash;
-    qint64 n;
+    qint32 n;
     QString alias;
     QString address;
-    qint64 protocol;
-    qint64 daemon;
-    qint64 sentinel;
+    int protocol;
+    qint32 daemon;
+    qint32 sentinel;
     QString status;
     qint64 active;
     qint64 lastseen;
     QString payee;
-    qint64 banscore;
+    int banscore;
 
     QString outpoint() const
     {
@@ -58,9 +57,9 @@ struct MasternodeTableEntry
     }
 
     MasternodeTableEntry() {}
-    MasternodeTableEntry(Type _type, const QString & _txhash, const qint64& _n, const QString &_alias, const QString &_address,
-                         const qint64 &_protocol, const qint64 &_daemon, const qint64 &_sentinel, const QString &_status,
-                         const qint64 &_active, const qint64 &_lastseen, const QString &_payee, const qint64 &_banscore) :
+    MasternodeTableEntry(Type _type, const QString & _txhash, const qint32& _n, const QString &_alias, const QString &_address,
+                         const int &_protocol, const qint32 &_daemon, const qint32 &_sentinel, const QString &_status,
+                         const qint64 &_active, const qint64 &_lastseen, const QString &_payee, const int &_banscore) :
         type(_type), txhash(_txhash), n(_n), alias(_alias), address(_address), protocol(_protocol), daemon (_daemon),
         sentinel (_sentinel), status(_status), active(_active), lastseen(_lastseen), payee(_payee), banscore(_banscore) {}
 };
@@ -69,7 +68,6 @@ struct MasternodeTableEntry
 static MasternodeTableEntry::Type translateMasternodeType(const QString &strAlias)
 {
     MasternodeTableEntry::Type addressType = MasternodeTableEntry::Hidden;
-    // "refund" addresses aren't shown, and change addresses aren't in mapAddressBook at all.
     if (strAlias != "")
         addressType = MasternodeTableEntry::MyNodeList;
     else
@@ -140,7 +138,6 @@ public:
 
         // Find bounds of this masternode in model
         QString strOutpoint = QString::fromStdString(outpoint.ToStringShort());
-        qWarning() << "MasternodeTablePriv::updateMasternode: strOutpoint: " + strOutpoint + " " + QString::number(status);
         QList<MasternodeTableEntry>::iterator lower = qLowerBound(
             cachedMasternodeTable.begin(), cachedMasternodeTable.end(), strOutpoint, outpointEntryLessThan());
         QList<MasternodeTableEntry>::iterator upper = qUpperBound(
@@ -153,11 +150,25 @@ public:
         case CT_NEW:
             if(inModel)
             {
-                qWarning() << "MasternodeTablePriv::updateMasternode: Warning: Got CT_NEW, but masternode is already in model: " + QString::fromStdString(strprintf("%s-%d", outpoint.hash.ToString(), outpoint.n)) + " " + QString::number(status);
+                //must be our own one and we are just at a clean start -> try to update
+                interfaces::Masternode masternode = node.getMasternode(outpoint);
+                lower->txhash = QString::fromStdString(masternode.outpoint.hash.ToString());
+                lower->n = masternode.outpoint.n;
+                lower->alias = QString::fromStdString(masternode.alias);
+                lower->address = QString::fromStdString(masternode.address);
+                lower->protocol = masternode.protocol;
+                lower->daemon = masternode.daemon;
+                lower->sentinel = masternode.sentinel;
+                lower->status = QString::fromStdString(masternode.status);
+                lower->active = masternode.active;
+                lower->lastseen = masternode.last_seen;
+                lower->payee = QString::fromStdString(masternode.payee);
+                lower->banscore = masternode.banscore;
+                parent->emitDataChanged(lowerIndex);
                 break;
             }
         {
-            // Find proposal on platform
+            // Find masternode on platform
             interfaces::Masternode masternode = node.getMasternode(outpoint);
             if(masternode.outpoint == COutPoint())
             {
@@ -195,7 +206,7 @@ public:
                 qWarning() << "MasternodeTablePriv::updateMasternode: Warning: Got CT_DELETED, but masternode is not in model: " + QString::fromStdString(strprintf("%s-%d", outpoint.hash.ToString(), outpoint.n)) + " " + QString::number(status);
                 break;
             }
-            // Removed -- remove entire transaction from table
+            // Removed -- remove entire masternode from table
             parent->beginRemoveRows(QModelIndex(), lowerIndex, upperIndex-1);
             cachedMasternodeTable.erase(lower, upper);
             parent->endRemoveRows();
@@ -209,9 +220,14 @@ public:
         {
             // Find masternode on platform
             interfaces::Masternode masternode = node.getMasternode(outpoint);
-            if(masternode.outpoint == COutPoint())
+            //don't remove our own nodes
+            if(lower->alias == "" && masternode.outpoint == COutPoint())
             {
+                // did we receive a wrong signal? The node got highes priority, delete the entry
                 qWarning() << "MasternodeTablePriv::updateMasternode: Warning: Got CT_UPDATED, but masternode is not on platform: " + QString::fromStdString(strprintf("%s-%d", outpoint.hash.ToString(), outpoint.n)) + " " + QString::number(status);
+                parent->beginRemoveRows(QModelIndex(), lowerIndex, upperIndex-1);
+                cachedMasternodeTable.erase(lower, upper);
+                parent->endRemoveRows();
                 break;
             }
             MasternodeTableEntry::Type addressType = translateMasternodeType(
@@ -300,26 +316,26 @@ QVariant MasternodeTableModel::data(const QModelIndex &index, int role) const
         switch(index.column())
         {
         case Alias:
-            return rec->alias;
+            return QString(rec->alias);
         case Address:
-            return rec->address;
+            return QString(rec->address);
         case Daemon:
-            return rec->daemon;
+            return qint32(rec->daemon);
         case Status:
-            return rec->status;
+            return QString(rec->status);
         case Score:
-            return rec->banscore;
+            return int(rec->banscore);
         case Active:
             return QString::fromStdString(DurationToDHMS(rec->active));
         case Last_Seen:
             if (rec->lastseen > 0)
-                return (QDateTime::fromTime_t((qint32)rec->lastseen)).date().toString(Qt::SystemLocaleLongDate);
+                return (QDateTime::fromTime_t(rec->lastseen)).date().toString(Qt::SystemLocaleLongDate);
             else {
                 QString ret = tr("never");
                 return ret;
             }
         case Payee:
-            return rec->payee;
+            return QString(rec->payee);
         default: break;
         }
     case TypeRole:

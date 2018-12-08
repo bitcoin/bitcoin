@@ -437,9 +437,6 @@ void CGovernanceManager::UpdateCachesAndClean()
                     uint256 nKey = lit->key;
                     ++lit;
                     cmapVoteToObject.Erase(nKey);
-                    if(pObj->GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
-                        uiInterface.NotifyProposalChanged(pObj->GetHash(), CT_UPDATED);
-                    }
                 }
                 else {
                     ++lit;
@@ -1165,24 +1162,24 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
     return int(vTriggerObjHashes.size() + vOtherObjHashes.size());
 }
 
-bool CGovernanceManager::VoteWithAll(const uint256& hash, const std::string strVoteSignal, int& nSuccessRet, int& nFailedRet, CConnman* connman)
+bool CGovernanceManager::VoteWithAll(const uint256& hash, const std::pair<std::string, std::string>& strVoteSignal, std::pair<int, int>& nResult, CConnman* connman)
 {
-    vote_signal_enum_t eVoteSignal = CGovernanceVoting::ConvertVoteSignal("funding");
-    vote_outcome_enum_t eVoteOutcome = CGovernanceVoting::ConvertVoteOutcome(strVoteSignal);
+    vote_signal_enum_t eVoteSignal = CGovernanceVoting::ConvertVoteSignal(strVoteSignal.first);
+    vote_outcome_enum_t eVoteOutcome = CGovernanceVoting::ConvertVoteOutcome(strVoteSignal.second);
 
     for (const auto& mne : masternodeConfig.getEntries()) {
         CPubKey pubKeyMasternode;
         CKey keyMasternode;
 
         if(!CMessageSigner::GetKeysFromSecret(mne.getPrivKey(), keyMasternode, pubKeyMasternode)){
-            nFailedRet++;
+            nResult.first++;
             continue;
          }
 
         uint256 nTxHash;
         nTxHash.SetHex(mne.getTxHash());
 
-        int nOutputIndex = 0;
+        int32_t nOutputIndex = 0;
         if(!ParseInt32(mne.getOutputIndex(), &nOutputIndex)) {
             continue;
         }
@@ -1193,22 +1190,22 @@ bool CGovernanceManager::VoteWithAll(const uint256& hash, const std::string strV
         bool fMnFound = mnodeman.Get(outpoint, mn);
 
         if(!fMnFound) {
-            nFailedRet++;
+            nResult.first++;
             continue;
         }
 
         CGovernanceVote vote(mn.outpoint, hash, eVoteSignal, eVoteOutcome);
         if(!vote.Sign(keyMasternode, pubKeyMasternode)){
-            nFailedRet++;
+            nResult.first++;
             continue;
         }
 
         CGovernanceException exception;
         if(governance.ProcessVoteAndRelay(vote, exception, connman)) {
-            nSuccessRet++;
+            nResult.second++;
         }
         else {
-            nFailedRet++;
+            nResult.first++;
         }
     }
     return true;

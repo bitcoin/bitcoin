@@ -7,15 +7,9 @@
 #include <qt/clientmodel.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
-#include <qt/optionsmodel.h>
-#include <qt/proposalrecord.h>
 
-#include <core_io.h>
 #include <interfaces/node.h>
-#include <sync.h>
-#include <uint256.h>
-#include <univalue.h>
-#include <util/system.h>
+#include <key_io.h>
  
 #include <QColor>
 #include <QDateTime>
@@ -29,8 +23,41 @@ static int column_alignments[] = {
         Qt::AlignRight|Qt::AlignVCenter,
         Qt::AlignRight|Qt::AlignVCenter,
         Qt::AlignLeft|Qt::AlignVCenter,
+        Qt::AlignCenter|Qt::AlignVCenter,
+        Qt::AlignCenter|Qt::AlignVCenter,
         Qt::AlignRight|Qt::AlignVCenter
     };
+
+struct ProposalRecord
+{
+    uint256 hash;
+    CAmount amount;
+    qint32 start_epoch;
+    qint32 end_epoch;
+    int64_t yesVotes;
+    int64_t noVotes;
+    int64_t absoluteYesVotes;
+    QString name;
+    QString url;
+    bool endorsed;
+    bool funding;
+    int64_t percentage;
+
+    /** Return the unique identifier for this proposal (part) */
+    QString getObjHash() const
+    {
+        return QString::fromStdString(hash.ToString());
+    }
+
+
+    ProposalRecord() {}
+    ProposalRecord(const uint256 _hash, const CAmount& _amount, qint32 _start_epoch, qint32 _end_epoch,
+                const int64_t& _yesVotes, const int64_t& _noVotes, const int64_t& _absoluteYesVotes,
+                QString _name, QString _url, const bool _funding, const bool _endorsed, const int64_t& _percentage):
+            hash(_hash), amount(_amount), start_epoch(_start_epoch), end_epoch(_end_epoch), yesVotes(_yesVotes),
+            noVotes(_noVotes), absoluteYesVotes(_absoluteYesVotes), name(_name), url(_url), endorsed(_endorsed),
+            funding(_funding), percentage(_percentage) {}
+};
 
 // Comparison operator for sort/binary search of model proposal list
 struct HashLessThan
@@ -83,6 +110,8 @@ public:
                             prop.abs_yes,
                             QString::fromStdString(prop.name),
                             QString::fromStdString(prop.url),
+                            prop.endorsed,
+                            prop.funding,
                             percentage));
         }
 
@@ -102,15 +131,19 @@ public:
         int lowerIndex = (lower - cachedProposals.begin());
         int upperIndex = (upper - cachedProposals.begin());
         bool inModel = (lower != upper);
+        bool add = true;
+        bool update = true;
         switch(status)
         {
         case CT_NEW:
             if(inModel)
             {
+                // should never happen but attemt to update
                 qWarning() << "ProposalTablePriv::updateProposal: Warning: Got CT_NEW, but proposal is already in model";
-                break;
+                status = CT_UPDATED;
+                add = false;
             }
-            if(true /*showProposal*/)
+            if(add)
             {
                 // Find proposal on platform
                 interfaces::Proposal prop = node.getProposal(hash);
@@ -135,13 +168,15 @@ public:
                             prop.abs_yes,
                             QString::fromStdString(prop.name),
                             QString::fromStdString(prop.url),
+                            prop.endorsed,
+                            prop.funding,
                             percentage);
 
                 parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex);
                 cachedProposals.insert(lowerIndex, toInsert);
                 parent->endInsertRows();
+                break;
             }
-            break;
         case CT_DELETED:
             if(!inModel)
             {
@@ -156,30 +191,41 @@ public:
         case CT_UPDATED:
             if(!inModel)
             {
+                //strange, not there... warn and try to add it
                 qWarning() << "ProposalTablePriv::updateProposal: Warning: Got CT_UPDATED, but entry is not in model";
-                break;
+                status = CT_NEW;
+                update = false;
             }
-            // Find proposal on platform
-            interfaces::Proposal prop = node.getProposal(hash);
-            if(prop.hash == uint256())
+            if (update)
             {
-                qWarning() << "ProposalTablePriv::updateProposal: Warning: Got CT_UPDATED, but proposal is not on platform";
+                // Find proposal on platform
+                interfaces::Proposal prop = node.getProposal(hash);
+                if(prop.hash == uint256())
+                {
+                    // did we receive a wrong signal? The node got highes priority, delete the entry
+                    qWarning() << "ProposalTablePriv::updateProposal: Warning: Got CT_UPDATED, but proposal is not on platform";
+                    parent->beginRemoveRows(QModelIndex(), lowerIndex, upperIndex-1);
+                    cachedProposals.erase(lower, upper);
+                    parent->endRemoveRows();
+                    break;
+                }
+                int percentage = 0;
+                if (node.getMasternodeCount().enabled > 0)
+                    percentage = round(prop.abs_yes * 100 / node.getMasternodeCount().enabled);
+                lower->hash = prop.hash;
+                lower->start_epoch = prop.start;
+                lower->end_epoch = prop.end;
+                lower->yesVotes = prop.yes;
+                lower->noVotes = prop.no;
+                lower-> absoluteYesVotes = prop.abs_yes;
+                lower->amount = prop.amount;
+                lower->name = QString::fromStdString(prop.name);
+                lower->url = QString::fromStdString(prop.url);
+                lower->endorsed = prop.endorsed;
+                lower->funding = prop.funding;
+                lower->percentage = percentage;
                 break;
             }
-            int percentage = 0;
-            if (node.getMasternodeCount().enabled > 0)
-                percentage = round(prop.abs_yes * 100 / node.getMasternodeCount().enabled);
-            lower->hash = prop.hash;
-            lower->start_epoch = prop.start;
-            lower->end_epoch = prop.end;
-            lower->yesVotes = prop.yes;
-            lower->noVotes = prop.no;
-            lower-> absoluteYesVotes = prop.abs_yes;
-            lower->amount = prop.amount;
-            lower->name = QString::fromStdString(prop.name);
-            lower->url = QString::fromStdString(prop.url);
-            lower->percentage = percentage;
-            break;
         }
     }
 
@@ -204,7 +250,7 @@ ProposalTableModel::ProposalTableModel(ClientModel *parent):
         clientModel(parent),
         priv(new ProposalTablePriv(this))
 {
-    columns << tr("Amount (CHC)") << tr("Start Date") << tr("End Date") << tr("Yes") << tr("No") << tr("Absolute") << tr("Proposal") << tr("Percentage");
+    columns << tr("Amount") << tr("Start Date") << tr("End Date") << tr("Yes") << tr("No") << tr("Absolute") << tr("Proposal") << tr("Endorsed") << tr("Funding") << tr("Percentage");
     priv->refreshProposalList(clientModel->node());
 
     // Subscribe for updates
@@ -240,6 +286,9 @@ QVariant ProposalTableModel::data(const QModelIndex &index, int role) const
 {
     if(!index.isValid())
         return QVariant();
+
+    QString theme = GUIUtil::getThemeName();
+
     ProposalRecord *rec = static_cast<ProposalRecord*>(index.internalPointer());
 
     switch(role)
@@ -248,42 +297,30 @@ QVariant ProposalTableModel::data(const QModelIndex &index, int role) const
         switch(index.column())
         {
         case Proposal:
-            return rec->name;
-        case YesVotes:
-            return rec->yesVotes;
-        case NoVotes:
-            return rec->noVotes;
-        case AbsoluteYesVotes:
-            return rec->absoluteYesVotes;
-        case StartDate:
-            return (QDateTime::fromTime_t((qint32)rec->start_epoch)).date().toString(Qt::SystemLocaleLongDate);
-        case EndDate:
-            return (QDateTime::fromTime_t((qint32)rec->end_epoch)).date().toString(Qt::SystemLocaleLongDate);
-        case Percentage:
-            return QString("%1\%").arg(rec->percentage);
-        case Amount:
-            return BitcoinUnits::format(BitcoinUnits::chuffs, rec->amount);
-        }
-        break;
-    case Qt::EditRole:
-        switch(index.column())
-        {
-        case Proposal:
-            return rec->name;
-        case StartDate:
-            return rec->start_epoch;
-        case EndDate:
-            return rec->end_epoch;
+            return QString(rec->name);
         case YesVotes:
             return qint64(rec->yesVotes);
         case NoVotes:
             return qint64(rec->noVotes);
         case AbsoluteYesVotes:
             return qint64(rec->absoluteYesVotes);
-        case Amount:
-            return qint64(rec->amount);
+        case StartDate:
+            return (QDateTime::fromTime_t(rec->start_epoch)).date().toString(Qt::SystemLocaleLongDate);
+        case EndDate:
+            return (QDateTime::fromTime_t(rec->end_epoch)).date().toString(Qt::SystemLocaleLongDate);
         case Percentage:
-            return qint64(rec->percentage);
+            return QString("%1\%").arg(rec->percentage);
+        case Amount:
+            return BitcoinUnits::format(BitcoinUnits::chuffs, rec->amount);
+        case Funding:
+        {
+            QString ret;
+            rec->funding == true ?  ret = "Yes" : ret = "No";
+            return QString(ret);
+        }
+        case Endorsed:
+            if (rec->funding == true)
+                return QIcon(":/icons/" + theme + "/transaction_confirmed");
         }
         break;
     case Qt::TextAlignmentRole:
@@ -296,28 +333,23 @@ QVariant ProposalTableModel::data(const QModelIndex &index, int role) const
                 return COLOR_GREEN;
             }
         } 
+        break;
+        if(index.column() == Funding) {
+            if(rec->funding) {
+                return COLOR_GREEN;
+            } else {
+                return COLOR_NEGATIVE;
+            }
+        }
         return COLOR_BLACK;
         break;
-    case ProposalRole:
-        return rec->name;
-    case AmountRole:
-        return qint64(rec->amount);
-    case StartDateRole:
-        return QDateTime::fromTime_t(static_cast<uint>(rec->start_epoch));
-    case EndDateRole:
-        return QDateTime::fromTime_t(static_cast<uint>(rec->end_epoch));
-    case YesVotesRole:
-        return qint64(rec->yesVotes);
-    case NoVotesRole:
-        return qint64(rec->noVotes);
-    case AbsoluteYesVotesRole:
-        return qint64(rec->absoluteYesVotes);
-    case PercentageRole:
-        return qint64(rec->percentage);
-    case ProposalUrlRole:
-        return rec->url;
     case ProposalHashRole:
         return rec->getObjHash();
+    case ProposalUrlRole:
+        return rec->url;
+    case ProposalDateFilterRole:
+        return QDateTime::fromTime_t(rec->end_epoch);
+    default: break;
     }
     return QVariant();
 }
@@ -326,34 +358,33 @@ QVariant ProposalTableModel::headerData(int section, Qt::Orientation orientation
 {
     if(orientation == Qt::Horizontal)
     {
-        if(role == Qt::DisplayRole)
+        if(role == Qt::DisplayRole && section < columns.size())
         {
             return columns[section];
         }
-        else if (role == Qt::TextAlignmentRole)
-        {
-            return Qt::AlignCenter;
-        } 
         else if (role == Qt::ToolTipRole)
         {
             switch(section)
             {
             case Proposal:
-                return tr("Proposal Name");
+                return tr("Name and short description");
             case StartDate:
-                return tr("Date and time the proposal starts.");
+                return tr("Starting date of the proposal");
             case EndDate:
-                return tr("Date and time the proposal expires.");
+                return tr("Expiry date of the proposal");
             case YesVotes:
-                return tr("Obtained yes votes.");
+                return tr("Obtained funding yes votes");
             case NoVotes:
-                return tr("Obtained no votes.");
+                return tr("Obtained funding no votes");
             case AbsoluteYesVotes:
-                return tr("Obtained absolute yes votes.");
+                return tr("Obtained absolute yes votes (difference funding yes / no)");
             case Amount:
-                return tr("Proposed amount.");
+                return tr("Proposed amount");
+            case Funding:
+                return tr("Current funding state based on votes");
             case Percentage:
-                return tr("Current vote percentage.");
+                return tr("Current vote percentage");
+            default: break;
             }
         }
     }
@@ -369,4 +400,9 @@ QModelIndex ProposalTableModel::index(int row, int column, const QModelIndex &pa
         return createIndex(row, column, priv->index(row));
     }
     return QModelIndex();
+}
+
+void ProposalTableModel::emitDataChanged(int idx)
+{
+    Q_EMIT dataChanged(index(idx, 0, QModelIndex()), index(idx, columns.length()-1, QModelIndex()));
 }

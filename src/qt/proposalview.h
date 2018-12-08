@@ -6,28 +6,24 @@
 #define BITCOIN_QT_PROPOSALLIST_H
 
 #include <qt/clientmodel.h>
-#include <qt/guiutil.h>
 #include <qt/proposaltablemodel.h>
 
 #include <QWidget>
-#include <QKeyEvent>
-#include <QTimer>
 
 class ClientModel;
 class PlatformStyle;
-class ProposalFilterProxy;
+class ProposalFilterProxyModel;
 
+namespace Ui {
+    class ProposalList;
+}
 
 QT_BEGIN_NAMESPACE
-class QComboBox;
 class QDateTimeEdit;
 class QFrame;
-class QItemSelectionModel;
-class QLineEdit;
+class QItemSelection;
 class QMenu;
 class QModelIndex;
-class QSignalMapper;
-class QTableView;
 QT_END_NAMESPACE
 
 class ProposalList : public QWidget
@@ -36,8 +32,7 @@ class ProposalList : public QWidget
 
 public:
     explicit ProposalList(const PlatformStyle *platformStyle, QWidget *parent = 0);
-
-    void setClientModel(ClientModel *clientModel);
+    ~ProposalList();
 
     enum DateEnum
     {
@@ -45,81 +40,39 @@ public:
         Today,
         ThisWeek,
         ThisMonth,
-        LastMonth,
         ThisYear,
         Range
     };
 
-    enum ColumnWidths {
-        AMOUNT_COLUMN_WIDTH = 100,
-        START_DATE_COLUMN_WIDTH = 140,
-        END_DATE_COLUMN_WIDTH = 140,
-        YES_VOTES_COLUMN_WIDTH = 60,
-        NO_VOTES_COLUMN_WIDTH = 60,
-        ABSOLUTE_YES_COLUMN_WIDTH = 60,
-        PROPOSAL_COLUMN_WIDTH = 300,
-        PERCENTAGE_COLUMN_WIDTH = 100,
-        MINIMUM_COLUMN_WIDTH = 23
-    };
+    void setClientModel(ClientModel *clientModel);
+    void voteFunding();
+    void voteDelete();
+    void voteEndorse();
+    void openProposalUrl();
 
 private:
     ClientModel *clientModel;
+    Ui::ProposalList *ui;
     ProposalTableModel *proposalTableModel;
-    ProposalFilterProxy *proposalProxyModel;
-    QTableView *proposalList;
-
-    QLineEdit *proposalWidget;
-    QComboBox *dateStartWidget;
-    QComboBox *dateEndWidget;
-    QTimer *timer;
-
-    QLineEdit *yesVotesWidget;
-    QLineEdit *noVotesWidget;
-    QLineEdit *absoluteYesVotesWidget;
-    QLineEdit *amountWidget;
-    QLineEdit *percentageWidget;
-    QLabel *secondsLabel;
+    ProposalFilterProxyModel *proposalProxyModel;
 
     QMenu *contextMenu;
 
-    QFrame *dateStartRangeWidget;
-    QDateTimeEdit *dateStartFrom;
-    QDateTimeEdit *dateStartTo;
+    QFrame *dateRangeWidget;
+    QDateTimeEdit *dateFrom;
+    QDateTimeEdit *dateTo;
 
-    QFrame *dateEndRangeWidget;
-    QDateTimeEdit *dateEndFrom;
-    QDateTimeEdit *dateEndTo;
+    QWidget *createDateRangeWidget();
 
-    QWidget *createDateStartRangeWidget();
-    QWidget *createDateEndRangeWidget();
     void vote_click_handler(const std::string voteString);
-
-    GUIUtil::TableViewLastColumnResizingFixer *columnResizingFixer;
-
-    virtual void resizeEvent(QResizeEvent* event);
 
 private Q_SLOTS:
     void contextualMenu(const QPoint &);
-    void dateStartRangeChanged();
-    void dateEndRangeChanged();
-    void voteYes();
-    void voteNo();
-    void voteAbstain();
-    void openProposalUrl();
+    void dateRangeChanged();
+    void chooseDate(int idx);
 
 Q_SIGNALS:
     void doubleClicked(const QModelIndex&);
-
-public Q_SLOTS:
-    void changedProposal();
-    void chooseStartDate(int idx);
-    void chooseEndDate(int idx);
-    void changedYesVotes();
-    void changedNoVotes();
-    void changedAbsoluteYesVotes();
-    void changedPercentage();
-    void changedAmount();
-
 };
 
 #endif // BITCOIN_QT_PROPOSALLIST_H

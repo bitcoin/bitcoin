@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MasternodeList</class>
- <widget class="QWidget" name="MasternodeList">
+ <class>ProposalList</class>
+ <widget class="QWidget" name="ProposalList">
   <property name="windowModality">
    <enum>Qt::NonModal</enum>
   </property>
@@ -29,9 +29,9 @@
    <enum>Qt::NoFocus</enum>
   </property>
   <property name="windowTitle">
-   <string>Masternode List</string>
+   <string>Proposal List</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_2">
+  <layout class="QVBoxLayout" name="verticalLayout">
    <property name="leftMargin">
     <number>0</number>
    </property>
@@ -45,7 +45,7 @@
     <number>0</number>
    </property>
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout">
+    <layout class="QVBoxLayout" name="vlayout_main">
      <property name="leftMargin">
       <number>25</number>
      </property>
@@ -59,56 +59,47 @@
       <number>0</number>
      </property>
      <item>
-      <widget class="QTabWidget" name="tabWidget">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>0</height>
-        </size>
-       </property>
-       <property name="currentIndex">
-        <number>0</number>
-       </property>
-       <widget class="QWidget" name="MyNodeList">
-        <attribute name="title">
-         <string>My Masterodes</string>
-        </attribute>
-       </widget>
-       <widget class="QWidget" name="AllNodeList">
-        <attribute name="title">
-         <string>All Masterodes</string>
-        </attribute>
-       </widget>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLineEdit" name="searchLineEdit">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="sizeIncrement">
-        <size>
-         <width>0</width>
-         <height>0</height>
-        </size>
-       </property>
-       <property name="placeholderText">
-        <string>Enter search string (Alias, Payee, State,...)</string>
-       </property>
-      </widget>
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <item>
+        <widget class="QComboBox" name="dateWidget">
+         <property name="currentText">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="vlayout"/>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="searchLineEdit">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="sizeIncrement">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="placeholderText">
+          <string>Enter search string (Name, Amount,...)</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item>
       <widget class="QTableView" name="tableView">
        <property name="minimumSize">
+        <size>
+         <width>910</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="baseSize">
         <size>
          <width>910</width>
          <height>0</height>
@@ -135,8 +126,14 @@
        <property name="sortingEnabled">
         <bool>true</bool>
        </property>
+       <attribute name="horizontalHeaderDefaultSectionSize">
+        <number>80</number>
+       </attribute>
        <attribute name="horizontalHeaderMinimumSectionSize">
-        <number>60</number>
+        <number>80</number>
+       </attribute>
+       <attribute name="horizontalHeaderStretchLastSection">
+        <bool>false</bool>
        </attribute>
        <attribute name="verticalHeaderVisible">
         <bool>false</bool>
@@ -144,22 +141,31 @@
       </widget>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout">
+      <layout class="QHBoxLayout" name="hlayout">
+       <property name="spacing">
+        <number>25</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
        <item>
-        <widget class="QPushButton" name="QRButton">
+        <widget class="QPushButton" name="voteFundingButton">
          <property name="minimumSize">
           <size>
            <width>130</width>
            <height>0</height>
           </size>
          </property>
+         <property name="toolTip">
+          <string>Vote &quot;Funding&quot; on the selected proposal</string>
+         </property>
          <property name="text">
-          <string>Show Details</string>
+          <string>Vote Funding</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="startButton">
+        <widget class="QPushButton" name="voteDeleteButton">
          <property name="minimumSize">
           <size>
            <width>130</width>
@@ -167,12 +173,12 @@
           </size>
          </property>
          <property name="text">
-          <string>Start</string>
+          <string>Vote Delete</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="startAllButton">
+        <widget class="QPushButton" name="voteEndorseButton">
          <property name="minimumSize">
           <size>
            <width>130</width>
@@ -180,20 +186,14 @@
           </size>
          </property>
          <property name="text">
-          <string>Start All</string>
+          <string>Vote Endorse</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="startMissingButton">
-         <property name="minimumSize">
-          <size>
-           <width>130</width>
-           <height>0</height>
-          </size>
-         </property>
+        <widget class="QLabel" name="label">
          <property name="text">
-          <string>Start MISSING</string>
+          <string>Choose your vote in the popup after selecting a type. Votes are sent trough all eligible Masternodes.</string>
          </property>
         </widget>
        </item>
@@ -209,20 +209,6 @@
           </size>
          </property>
         </spacer>
-       </item>
-       <item>
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>Node Count:</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="countLabel">
-         <property name="text">
-          <string>00000</string>
-         </property>
-        </widget>
        </item>
       </layout>
      </item>
