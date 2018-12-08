@@ -107,7 +107,6 @@ MasternodeList::MasternodeList(const PlatformStyle *platformStyle, QWidget *pare
     connect(ui->tabWidget, &QTabWidget::currentChanged, this, &MasternodeList::selectionChanged);
     connect(ui->tableView, &QTableView::doubleClicked, this, &MasternodeList::on_QRButton_clicked);
     connect(startAliasAction, &QAction::triggered, this, &MasternodeList::on_startButton_clicked);
-    connect(clientModel, &ClientModel::strMasternodesChanged, this, &MasternodeList::UpdateCounter);
 }
 
 MasternodeList::~MasternodeList()
@@ -127,7 +126,9 @@ void MasternodeList::setClientModel(ClientModel *_clientmodel)
     proxyModelAllNodes->setSourceModel(_clientmodel->getMasternodeTableModel());
 
     connect(ui->searchLineEdit, &QLineEdit::textChanged, proxyModelMyNodes, &QSortFilterProxyModel::setFilterWildcard);
+
     connect(ui->searchLineEdit, &QLineEdit::textChanged, proxyModelAllNodes, &QSortFilterProxyModel::setFilterWildcard);
+    connect(clientModel, &ClientModel::strMasternodesChanged, this, &MasternodeList::UpdateCounter);
 
     ui->tableView->setModel(proxyModelMyNodes);
     ui->tableView->sortByColumn(0, Qt::AscendingOrder);
