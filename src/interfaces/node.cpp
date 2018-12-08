@@ -94,14 +94,16 @@ Proposal MakeProposal(const CGovernanceObject& pGovObj)
         dataObj = arr2.at( 1 );
 
         result.hash = pGovObj.GetHash();
-        result.start = dataObj["start_epoch"].get_int64();
-        result.end = dataObj["end_epoch"].get_int64();
+        result.start = dataObj["start_epoch"].get_int();
+        result.end = dataObj["end_epoch"].get_int();
         result.yes = pGovObj.GetYesCount(VOTE_SIGNAL_FUNDING);
         result.no = pGovObj.GetNoCount(VOTE_SIGNAL_FUNDING);
         result.abs_yes = pGovObj.GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING);
         result.amount = dataObj["payment_amount"].get_int64();
         result.name = dataObj["name"].get_str();
         result.url = dataObj["url"].get_str();
+        result.funding = pGovObj.IsSetCachedFunding();
+        result.endorsed = pGovObj.IsSetCachedEndorsed();
 
         return result;
     }
@@ -425,9 +427,9 @@ public:
         }
         return result;
     }
-    bool sendVoting(const uint256& hash, const std::string strVoteSignal, int& nSuccessRet, int& nFailedRet) override
+    bool sendVoting(const uint256& hash, const std::pair<std::string, std::string>& strVoteSignal, std::pair<int, int>& nResult) override
     {
-        return g_connman ? ::governance.VoteWithAll(hash, strVoteSignal, nSuccessRet, nFailedRet, g_connman.get()) : false;
+        return g_connman ? ::governance.VoteWithAll(hash, strVoteSignal, nResult, g_connman.get()) : false;
     }
     std::string getWalletDir() override
     {

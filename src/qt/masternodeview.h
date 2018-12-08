@@ -45,7 +45,7 @@ public:
 
     void setClientModel(ClientModel *_clientmodel);
     void setWalletModel(WalletModel *_walletmodel);
-    void UpdateCounter();
+    void UpdateCounter(QString count);
     void ShowQRCode(const COutPoint& _outpoint);
     void StartAlias(std::string strAlias);
     void StartAll(std::string strCommand = "start-all");
@@ -58,7 +58,9 @@ private:
     MasternodeTableModel *masternodeTableModel;
     MasternodeSortFilterProxyModel *proxyModelMyNodes;
     MasternodeSortFilterProxyModel *proxyModelAllNodes;
+
     QMenu *contextMenu;
+
     QAction *startAliasAction; // to be able to explicitly disable it
 
     // Protects tableView

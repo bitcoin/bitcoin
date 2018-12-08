@@ -411,7 +411,7 @@ public:
     int RequestGovernanceObjectVotes(CNode* pnode, CConnman* connman);
     int RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy, CConnman* connman);
 
-    bool VoteWithAll(const uint256& hash, const std::string strVoteSignal, int& nSuccessRet, int& nFailedRet, CConnman* connman);
+    bool VoteWithAll(const uint256& hash, const std::pair<std::string, std::string>& strVoteSignal, std::pair<int, int>& nResult, CConnman* connman);
 
 private:
     void RequestGovernanceObject(CNode* pfrom, const uint256& nHash, CConnman* connman, bool fUseFilter = false);

@@ -11,6 +11,7 @@
 #include <modules/masternode/masternode_man.h>
 #include <modules/masternode/masternode_sync.h>
 #include <messagesigner.h>
+#include <ui_interface.h>
 #include <util/system.h>
 
 #include <univalue.h>
@@ -676,7 +677,7 @@ void CGovernanceObject::UpdateSentinelVariables()
     // CALCULATE MINIMUM SUPPORT LEVELS REQUIRED
 
     int nMnCount = mnodeman.CountEnabled();
-    if(nMnCount == 0) return;
+    if (nMnCount == 0) return;
 
     // CALCULATE THE MINUMUM VOTE COUNT REQUIRED FOR FULL SIGNAL
 
@@ -685,24 +686,38 @@ void CGovernanceObject::UpdateSentinelVariables()
 
     // SET SENTINEL FLAGS TO FALSE
 
-    fCachedFunding = false;
     fCachedValid = true; //default to valid
     fCachedEndorsed = false;
-    fDirtyCache = false;
 
-    // SET SENTINEL FLAGS TO TRUE IF MIMIMUM SUPPORT LEVELS ARE REACHED
+    // TOGGLE SENTINEL FLAGS IF MIMIMUM SUPPORT LEVELS HAVE CHANGED
     // ARE ANY OF THESE FLAGS CURRENTLY ACTIVATED?
 
-    if(GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING) >= nAbsVoteReq) fCachedFunding = true;
-    if((GetAbsoluteYesCount(VOTE_SIGNAL_DELETE) >= nAbsDeleteReq) && !fCachedDelete) {
+    if ((GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING) >= nAbsVoteReq) && !fCachedFunding) {
+        fCachedFunding = true;
+        uiInterface.NotifyProposalChanged(this->GetHash(), CT_UPDATED);
+    } else if ((GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING) < nAbsVoteReq) && fCachedFunding) {
+        fCachedFunding = false;
+        uiInterface.NotifyProposalChanged(this->GetHash(), CT_UPDATED);
+    }
+
+    if ((GetAbsoluteYesCount(VOTE_SIGNAL_DELETE) >= nAbsDeleteReq) && !fCachedDelete) {
         fCachedDelete = true;
         if(nDeletionTime == 0) {
             nDeletionTime = GetAdjustedTime();
         }
     }
-    if(GetAbsoluteYesCount(VOTE_SIGNAL_ENDORSED) >= nAbsVoteReq) fCachedEndorsed = true;
 
-    if(GetAbsoluteNoCount(VOTE_SIGNAL_VALID) >= nAbsVoteReq) fCachedValid = false;
+    if ((GetAbsoluteYesCount(VOTE_SIGNAL_ENDORSED) >= nAbsVoteReq) && !fCachedEndorsed) {
+        fCachedEndorsed = true;
+        uiInterface.NotifyProposalChanged(this->GetHash(), CT_UPDATED);
+    } else if ((GetAbsoluteYesCount(VOTE_SIGNAL_ENDORSED) < nAbsVoteReq) && fCachedEndorsed) {
+        fCachedEndorsed = false;
+        uiInterface.NotifyProposalChanged(this->GetHash(), CT_UPDATED);
+    }
+
+    if (GetAbsoluteNoCount(VOTE_SIGNAL_VALID) >= nAbsVoteReq) fCachedValid = false;
+
+    fDirtyCache = false;
 }
 
 void CGovernanceObject::CheckOrphanVotes(CConnman* connman)
