@@ -1120,14 +1120,14 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
         "                                                              creation time of all keys being imported by the importmulti call will be scanned.",
                                         /* oneline_description */ "", {"timestamp | \"now\"", "integer / string"}
                                     },
-                                    {"redeemscript", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "Allowed only if the scriptPubKey is a P2SH or P2SH-P2WSH address/scriptPubKey"},
-                                    {"witnessscript", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "Allowed only if the scriptPubKey is a P2SH-P2WSH or P2WSH address/scriptPubKey"},
-                                    {"pubkeys", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "", "Array of strings giving pubkeys that must occur in the output or redeemscript",
+                                    {"redeemscript", RPCArg::Type::STR, /* opt */ true, /* default_val */ "omitted", "Allowed only if the scriptPubKey is a P2SH or P2SH-P2WSH address/scriptPubKey"},
+                                    {"witnessscript", RPCArg::Type::STR, /* opt */ true, /* default_val */ "omitted", "Allowed only if the scriptPubKey is a P2SH-P2WSH or P2WSH address/scriptPubKey"},
+                                    {"pubkeys", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "empty array", "Array of strings giving pubkeys that must occur in the output or redeemscript",
                                         {
                                             {"pubKey", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", ""},
                                         }
                                     },
-                                    {"keys", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "", "Array of strings giving private keys whose corresponding public keys must occur in the output or redeemscript",
+                                    {"keys", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "empty array", "Array of strings giving private keys whose corresponding public keys must occur in the output or redeemscript",
                                         {
                                             {"key", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", ""},
                                         }
@@ -1139,7 +1139,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
                             },
                         },
                         "\"requests\""},
-                    {"options", RPCArg::Type::OBJ, /* opt */ true, /* default_val */ "", "",
+                    {"options", RPCArg::Type::OBJ, /* opt */ true, /* default_val */ "null", "",
                         {
                             {"rescan", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "true", "Stating if should rescan the blockchain after all imports"},
                         },
