@@ -245,6 +245,7 @@ libbitcoin_server_a_SOURCES = \
   platform/rpc/specialtx-rpc-utils.cpp \
   platform/rpc/rpcagents.cpp \
   platform/rpc/rpc-nf-token.cpp \
+  platform/nf-token/nf-token-multiindex-utils.cpp \
   platform/nf-token/nf-tokens-single-protocol-manager.cpp \
   platform/nf-token/nf-tokens-manager.cpp \
   platform/nf-token/nf-token-tx-mem-pool-handler.cpp \

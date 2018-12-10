@@ -2,13 +2,13 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "nf-token-reg-tx.h"
-#include "primitives/transaction.h"
-#include "platform/specialtx.h"
-#include "platform/nf-token/nf-tokens-manager.h"
-
 #include "sync.h"
 #include "main.h"
+
+#include "primitives/transaction.h"
+#include "platform/specialtx.h"
+#include "nf-tokens-manager.h"
+#include "nf-token-reg-tx.h"
 
 namespace Platform
 {
