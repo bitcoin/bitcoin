@@ -360,14 +360,14 @@ class DIP3Test(BitcoinTestFramework):
             punished = False
             banned = False
             t = time.time()
-            while (not punished or not banned) and (time.time() - t) < 60:
+            while (not punished or not banned) and (time.time() - t) < 120:
                 time.sleep(1)
 
-                # 2 dummy phases
-                for j in range(2):
-                    self.nodes[0].generate(2)
+                # 10 blocks until we can mine the dummy commitment
+                for j in range(10):
+                    self.nodes[0].generate(1)
                     self.sync_all()
-                    time.sleep(1)
+                    time.sleep(0.5)
 
                 info = self.nodes[0].protx('info', mn.protx_hash)
                 if not punished:

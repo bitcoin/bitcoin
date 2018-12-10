@@ -970,6 +970,8 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         return llmq::quorumBlockProcessor->HasMinableCommitment(inv.hash);
     case MSG_QUORUM_DUMMY_COMMITMENT:
         return llmq::quorumDummyDKG->HasDummyCommitment(inv.hash);
+    case MSG_QUORUM_DUMMY_CONTRIBUTION:
+        return llmq::quorumDummyDKG->HasDummyContribution(inv.hash);
     }
 
     // Don't know what it is, just say we already got one
@@ -1287,6 +1289,14 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     llmq::CFinalCommitment o;
                     if (llmq::quorumBlockProcessor->GetMinableCommitmentByHash(inv.hash, o)) {
                         connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::QFCOMMITMENT, o));
+                        push = true;
+                    }
+                }
+
+                if (!push && (inv.type == MSG_QUORUM_DUMMY_CONTRIBUTION)) {
+                    llmq::CDummyContribution o;
+                    if (llmq::quorumDummyDKG->GetDummyContribution(inv.hash, o)) {
+                        connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::QCONTRIB, o));
                         push = true;
                     }
                 }

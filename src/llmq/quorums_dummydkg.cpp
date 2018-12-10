@@ -27,7 +27,28 @@ CDummyDKG* quorumDummyDKG;
 
 void CDummyDKG::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
 {
-    if (strCommand == NetMsgType::QDCOMMITMENT) {
+    if (strCommand == NetMsgType::QCONTRIB) {
+        if (!sporkManager.IsSporkActive(SPORK_17_QUORUM_DKG_ENABLED)) {
+            return;
+        }
+
+        CDummyContribution qc;
+        try {
+            vRecv >> qc;
+        } catch (...) {
+            // When we switch to the real DKG, non-upgraded nodes will get to this point. Let them just ignore the
+            // incompatible messages
+            return;
+        }
+
+        uint256 hash = ::SerializeHash(qc);
+        {
+            LOCK(cs_main);
+            connman.RemoveAskFor(hash);
+        }
+
+        ProcessDummyContribution(pfrom->id, qc);
+    } else if (strCommand == NetMsgType::QDCOMMITMENT) {
         if (!Params().GetConsensus().fLLMQAllowDummyCommitments) {
             Misbehaving(pfrom->id, 100);
             return;
@@ -47,6 +68,89 @@ void CDummyDKG::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDat
 
         ProcessDummyCommitment(pfrom->id, qc);
     }
+}
+
+void CDummyDKG::ProcessDummyContribution(NodeId from, const llmq::CDummyContribution& qc)
+{
+    if (!Params().GetConsensus().llmqs.count((Consensus::LLMQType)qc.llmqType)) {
+        LOCK(cs_main);
+        LogPrintf("CDummyDKG::%s -- invalid commitment type %d, peer=%d\n", __func__,
+                  qc.llmqType, from);
+        if (from != -1) {
+            Misbehaving(from, 100);
+        }
+        return;
+    }
+
+    auto type = (Consensus::LLMQType)qc.llmqType;
+    const auto& params = Params().GetConsensus().llmqs.at(type);
+
+    int curQuorumHeight;
+    const CBlockIndex* quorumIndex;
+    {
+        LOCK(cs_main);
+        curQuorumHeight = chainActive.Height() - (chainActive.Height() % params.dkgInterval);
+        quorumIndex = chainActive[curQuorumHeight];
+    }
+    uint256 quorumHash = quorumIndex->GetBlockHash();
+    if (qc.quorumHash != quorumHash) {
+        LogPrintf("CDummyDKG::%s -- dummy contrinution for wrong quorum, peer=%d\n", __func__,
+                  from);
+        return;
+    }
+
+    auto members = CLLMQUtils::GetAllQuorumMembers(type, qc.quorumHash);
+    if (members.size() != params.size) {
+        LOCK(cs_main);
+        LogPrintf("CDummyDKG::%s -- invalid members count %d, peer=%d\n", __func__,
+                  members.size(), from);
+        if (from != -1) {
+            Misbehaving(from, 100);
+        }
+        return;
+    }
+    if (qc.signer >= members.size()) {
+        LOCK(cs_main);
+        LogPrintf("CDummyDKG::%s -- invalid signer %d, peer=%d\n", __func__,
+                  qc.signer, from);
+        if (from != -1) {
+            Misbehaving(from, 100);
+        }
+        return;
+    }
+
+    auto signer = members[qc.signer];
+
+    {
+        LOCK(sessionCs);
+        if (curSessions[type].dummyContributionsFromMembers.count(signer->proTxHash)) {
+            return;
+        }
+    }
+
+    // verify member sig
+    if (!qc.sig.VerifyInsecure(signer->pdmnState->pubKeyOperator, qc.GetSignHash())) {
+        LOCK(cs_main);
+        LogPrintf("CDummyDKG::%s -- invalid memberSig, peer=%d\n", __func__,
+                  from);
+        if (from != -1) {
+            Misbehaving(from, 100);
+        }
+        return;
+    }
+
+    LogPrintf("CDummyDKG::%s -- processed dummy contribution for quorum %s:%d, signer=%d, peer=%d\n", __func__,
+              qc.quorumHash.ToString(), qc.llmqType, qc.signer, from);
+
+    uint256 hash = ::SerializeHash(qc);
+    {
+        LOCK(sessionCs);
+        curSessions[type].dummyContributions[hash] = qc;
+        curSessions[type].dummyContributionsFromMembers[signer->proTxHash] = hash;
+    }
+
+    CInv inv(MSG_QUORUM_DUMMY_CONTRIBUTION, hash);
+    g_connman->RelayInv(inv, DMN_PROTO_VERSION);
 }
 
 void CDummyDKG::ProcessDummyCommitment(NodeId from, const llmq::CDummyCommitment& qc)
@@ -174,16 +278,6 @@ void CDummyDKG::ProcessDummyCommitment(NodeId from, const llmq::CDummyCommitment
     uint256 hash = ::SerializeHash(qc);
     {
         LOCK(sessionCs);
-
-        // Mark all members as bad initially and clear that state when we receive a valid dummy commitment from them
-        // This information is then used in the next sessions to determine which ones are valid
-        if (curSessions[type].dummyCommitments.empty()) {
-            for (const auto& dmn : members) {
-                curSessions[type].badMembers.emplace(dmn->proTxHash);
-            }
-        }
-
-        curSessions[type].badMembers.erase(signer->proTxHash);
         curSessions[type].dummyCommitments[hash] = qc;
         curSessions[type].dummyCommitmentsFromMembers[commitmentHash][signer->proTxHash] = hash;
     }
@@ -215,11 +309,50 @@ void CDummyDKG::UpdatedBlockTip(const CBlockIndex* pindex, bool fInitialDownload
         const auto& params = p.second;
         int phaseIndex = pindex->nHeight % params.dkgInterval;
         if (phaseIndex == 0) {
-            CreateDummyCommitment(params.type, pindex);
+            CreateDummyContribution(params.type, pindex);
         } else if (phaseIndex == params.dkgPhaseBlocks * 2) {
+            CreateDummyCommitment(params.type, pindex);
+        } else if (phaseIndex == params.dkgPhaseBlocks * 4) {
             CreateFinalCommitment(params.type, pindex);
         }
     }
+}
+
+void CDummyDKG::CreateDummyContribution(Consensus::LLMQType llmqType, const CBlockIndex* pindex)
+{
+    const auto& params = Params().GetConsensus().llmqs.at(llmqType);
+    int quorumHeight = pindex->nHeight - (pindex->nHeight % params.dkgInterval);
+    const CBlockIndex* quorumIndex;
+    {
+        LOCK(cs_main);
+        quorumIndex = chainActive[quorumHeight];
+    }
+    uint256 quorumHash = quorumIndex->GetBlockHash();
+
+    auto members = CLLMQUtils::GetAllQuorumMembers(llmqType, quorumHash);
+    if (members.size() != params.size) {
+        return;
+    }
+
+    int myIdx = -1;
+    for (size_t i = 0; i < members.size(); i++) {
+        if (members[i]->collateralOutpoint == activeMasternodeInfo.outpoint) {
+            myIdx = (int)i;
+            break;
+        }
+    }
+    if (myIdx == -1) {
+        return;
+    }
+    auto signer = members[myIdx];
+
+    CDummyContribution qc;
+    qc.llmqType = (uint8_t)llmqType;
+    qc.quorumHash = quorumHash;
+    qc.signer = (uint16_t)myIdx;
+    qc.sig = activeMasternodeInfo.blsKeyOperator->Sign(qc.GetSignHash());
+
+    ProcessDummyContribution(-1, qc);
 }
 
 void CDummyDKG::CreateDummyCommitment(Consensus::LLMQType llmqType, const CBlockIndex* pindex)
@@ -254,6 +387,9 @@ void CDummyDKG::CreateDummyCommitment(Consensus::LLMQType llmqType, const CBlock
     auto vvec = BuildVvec(svec);
     auto vvecHash = ::SerializeHash(vvec);
     auto validMembers = GetValidMembers(llmqType, members);
+    if (std::count(validMembers.begin(), validMembers.end(), true) < params.minSize) {
+        return;
+    }
 
     auto commitmentHash = CLLMQUtils::BuildCommitmentHash((uint8_t)llmqType, quorumHash, validMembers, vvec[0], vvecHash);
 
@@ -356,9 +492,8 @@ void CDummyDKG::CreateFinalCommitment(Consensus::LLMQType llmqType, const CBlock
         quorumBlockProcessor->AddMinableCommitment(fqc);
     }
 
-    prevSessions[llmqType].badMembers = curSessions[llmqType].badMembers;
-    prevSessions[llmqType].dummyCommitments = std::move(curSessions[llmqType].dummyCommitments);
-    prevSessions[llmqType].dummyCommitmentsFromMembers = std::move(curSessions[llmqType].dummyCommitmentsFromMembers);
+    // reset for next round
+    curSessions[llmqType] = CDummyDKGSession();
 }
 
 std::vector<bool> CDummyDKG::GetValidMembers(Consensus::LLMQType llmqType, const std::vector<CDeterministicMNCPtr>& members)
@@ -368,20 +503,14 @@ std::vector<bool> CDummyDKG::GetValidMembers(Consensus::LLMQType llmqType, const
 
     LOCK(sessionCs);
 
-    // Valid members are members that sent us a dummy commitment in the previous session
+    // Valid members are members that sent us a dummy contribution in this session
 
     for (size_t i = 0; i < params.size; i++) {
-        if (!prevSessions[llmqType].badMembers.count(members[i]->proTxHash)) {
+        if (curSessions[llmqType].dummyContributionsFromMembers.count(members[i]->proTxHash)) {
             ret[i] = true;
         }
     }
 
-    // set all to valid if last sessions failed (this reboots everything)
-    if (std::count(ret.begin(), ret.end(), true) < params.minSize) {
-        for (size_t i = 0; i < params.size; i++) {
-            ret[i] = true;
-        }
-    }
     return ret;
 }
 
@@ -424,6 +553,31 @@ BLSPublicKeyVector CDummyDKG::BuildVvec(const BLSSecretKeyVector& svec)
         vvec.emplace_back(svec[i].GetPublicKey());
     }
     return vvec;
+}
+
+bool CDummyDKG::HasDummyContribution(const uint256& hash)
+{
+    LOCK(sessionCs);
+    for (const auto& p : curSessions) {
+        auto it = p.second.dummyContributions.find(hash);
+        if (it != p.second.dummyContributions.end()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool CDummyDKG::GetDummyContribution(const uint256& hash, CDummyContribution& ret)
+{
+    LOCK(sessionCs);
+    for (const auto& p : curSessions) {
+        auto it = p.second.dummyContributions.find(hash);
+        if (it != p.second.dummyContributions.end()) {
+            ret = it->second;
+            return true;
+        }
+    }
+    return false;
 }
 
 bool CDummyDKG::HasDummyCommitment(const uint256& hash)

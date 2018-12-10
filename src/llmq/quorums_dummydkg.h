@@ -43,6 +43,38 @@ class CConnman;
 namespace llmq
 {
 
+// This is more like a PING than a contribution
+// We will later replace this message (reusing same inv type) for the real contribution
+// Deserialization will then be incompatible between peers, but that is fine (let them reject the messages)
+class CDummyContribution
+{
+public:
+    uint8_t llmqType{Consensus::LLMQ_NONE};
+    uint256 quorumHash;
+    uint16_t signer{(uint16_t)-1};
+
+    CBLSSignature sig;
+
+public:
+    ADD_SERIALIZE_METHODS
+
+    template<typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
+        READWRITE(llmqType);
+        READWRITE(quorumHash);
+        READWRITE(signer);
+        READWRITE(sig);
+    }
+
+    uint256 GetSignHash() const
+    {
+        CDummyContribution tmp(*this);
+        tmp.sig = CBLSSignature();
+        return ::SerializeHash(tmp);
+    }
+};
+
 // This message is only allowed on testnet/devnet/regtest
 // If any peer tries to send this message on mainnet, it is banned immediately
 // It is used to test commitments on testnet without actually running a full-blown DKG.
@@ -82,8 +114,9 @@ public:
 class CDummyDKGSession
 {
 public:
-    std::set<uint256> badMembers;
+    std::map<uint256, CDummyContribution> dummyContributions;
     std::map<uint256, CDummyCommitment> dummyCommitments;
+    std::map<uint256, uint256> dummyContributionsFromMembers;
     std::map<uint256, std::map<uint256, uint256>> dummyCommitmentsFromMembers;
 };
 
@@ -94,17 +127,20 @@ class CDummyDKG
 {
 private:
     CCriticalSection sessionCs;
-    std::map<Consensus::LLMQType, CDummyDKGSession> prevSessions;
     std::map<Consensus::LLMQType, CDummyDKGSession> curSessions;
 
 public:
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
+    void ProcessDummyContribution(NodeId from, const CDummyContribution& qc);
     void ProcessDummyCommitment(NodeId from, const CDummyCommitment& qc);
 
     void UpdatedBlockTip(const CBlockIndex* pindex, bool fInitialDownload);
+    void CreateDummyContribution(Consensus::LLMQType llmqType, const CBlockIndex* pindex);
     void CreateDummyCommitment(Consensus::LLMQType llmqType, const CBlockIndex* pindex);
     void CreateFinalCommitment(Consensus::LLMQType llmqType, const CBlockIndex* pindex);
 
+    bool HasDummyContribution(const uint256& hash);
+    bool GetDummyContribution(const uint256& hash, CDummyContribution& ret);
     bool HasDummyCommitment(const uint256& hash);
     bool GetDummyCommitment(const uint256& hash, CDummyCommitment& ret);
 
