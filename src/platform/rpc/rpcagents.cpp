@@ -53,7 +53,7 @@ namespace
             json_spirit::Object statusObj;
 
             CMutableTransaction tx;
-            tx.nVersion = 2;
+            tx.nVersion = 3;
             tx.nType = TRANSACTION_GOVERNANCE_VOTE;
 
             auto vote = Platform::Vote{hash, voteValue, GetTime(), 1, vin};

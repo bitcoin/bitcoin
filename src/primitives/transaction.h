@@ -232,7 +232,7 @@ public:
         READWRITE(*const_cast<std::vector<CTxIn>*>(&vin));
         READWRITE(*const_cast<std::vector<CTxOut>*>(&vout));
         READWRITE(*const_cast<uint32_t*>(&nLockTime));
-        if (this->nVersion >= 2 && this->nType != TRANSACTION_NORMAL) {
+        if (this->nVersion >= 3 && this->nType != TRANSACTION_NORMAL) {
             READWRITE(*const_cast<std::vector<uint8_t>*>(&extraPayload));
         }
         if (ser_action.ForRead())
@@ -302,7 +302,7 @@ struct CMutableTransaction
         READWRITE(vin);
         READWRITE(vout);
         READWRITE(nLockTime);
-        if (this->nVersion >= 2 && this->nType != TRANSACTION_NORMAL) {
+        if (this->nVersion >= 3 && this->nType != TRANSACTION_NORMAL) {
             READWRITE(extraPayload);
         }
     }

@@ -944,8 +944,8 @@ int GetIXConfirmations(uint256 nTXHash)
 
 bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 {
-    // check version 2 transaction types
-    if (tx.nVersion >= 2)
+    // check version 3 transaction types
+    if (tx.nVersion >= 3)
     {
         if (tx.nType != TRANSACTION_NORMAL &&
             tx.nType != TRANSACTION_GOVERNANCE_VOTE)
