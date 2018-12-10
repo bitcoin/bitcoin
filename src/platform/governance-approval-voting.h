@@ -24,8 +24,15 @@ namespace Platform
         void NotifyResultChange(std::function<void()> onChanged) override;
 
     private:
+        struct CompareTxIn // TODO: replace with a more efficient solution
+        {
+            bool operator () (const CTxIn& a, const CTxIn& b) const
+            {
+                return a.ToString() < b.ToString();
+            }
+        };
         int m_threshold;
-        std::map<uint256, int> m_votes;
+        std::map<uint256, std::map<CTxIn, Vote, CompareTxIn>> m_votes; //TODO: refactor to boost::multi_index
     };
 }
 

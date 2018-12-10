@@ -44,6 +44,12 @@ namespace Platform
             : Vote(candidate, value, time, electionCode, voterId, {})
         {}
 
+        Vote() = default;
+        Vote(const Vote&) = default;
+        Vote& operator=(const Vote&) = default;
+        Vote(Vote&&) = default;
+        Vote& operator=(Vote&&) = default;
+
         CTxIn VoterId() const { return m_voterId; }
         int64_t ElectionCode() const { return m_electionCode; }
         uint256 Candidate() const { return m_candidate; }
@@ -70,7 +76,7 @@ namespace Platform
         virtual ~VotingRound() = default;
 
         virtual void RegisterCandidate(uint256 id) = 0;
-        virtual void AcceptVote(const Vote& vote) = 0;
+        virtual void AcceptVote(const Vote& vote) = 0;  // Votes are assumed to be signed correclty
         virtual std::vector<uint256> CalculateResult() const = 0;
         virtual void NotifyResultChange(std::function<void()> onStateChanged) = 0;
     };
