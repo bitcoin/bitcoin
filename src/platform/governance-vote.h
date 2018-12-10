@@ -19,8 +19,6 @@ namespace Platform
     public:
         static const int CURRENT_VERSION = 1;
 
-        enum Value { abstain = 0, yes, no };
-
     public:
         CTxIn voterId;
         int64_t electionCode;
