@@ -1,6 +1,6 @@
 #ifdef ENABLE_AVX2
 
-#include <stdint.h>
+#include <cstdint>
 #include <immintrin.h>
 
 #include <crypto/sha256.h>

@@ -6,7 +6,7 @@
 #ifndef BITCOIN_SCRIPT_BITCOINCONSENSUS_H
 #define BITCOIN_SCRIPT_BITCOINCONSENSUS_H
 
-#include <stdint.h>
+#include <cstdint>
 
 #if defined(BUILD_BITCOIN_INTERNAL) && defined(HAVE_CONFIG_H)
 #include <config/bitcoin-config.h>

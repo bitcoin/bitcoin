@@ -10,10 +10,10 @@
 #include <util/system.h>
 #include <crypto/hmac_sha256.h>
 
-#include <vector>
+#include <cstdlib>
 #include <deque>
 #include <set>
-#include <stdlib.h>
+#include <vector>
 
 #include <boost/bind.hpp>
 #include <boost/signals2/signal.hpp>

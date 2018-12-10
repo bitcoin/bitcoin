@@ -28,29 +28,29 @@
 
 #include <winsock2.h>     // Must be included before mswsock.h and windows.h
 
+#include <cstdint>
 #include <mswsock.h>
 #include <windows.h>
 #include <ws2tcpip.h>
-#include <stdint.h>
 #else
+#include <arpa/inet.h>
+#include <climits>
 #include <fcntl.h>
+#include <ifaddrs.h>
+#include <net/if.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <sys/mman.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <net/if.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <arpa/inet.h>
-#include <ifaddrs.h>
-#include <limits.h>
-#include <netdb.h>
 #include <unistd.h>
 #endif
 
 #ifndef WIN32
 typedef unsigned int SOCKET;
-#include <errno.h>
+#include <cerrno>
 #define WSAGetLastError()   errno
 #define WSAEINVAL           EINVAL
 #define WSAEALREADY         EALREADY

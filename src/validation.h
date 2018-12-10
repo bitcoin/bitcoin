@@ -21,11 +21,11 @@
 #include <versionbits.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <exception>
 #include <map>
 #include <memory>
 #include <set>
-#include <stdint.h>
 #include <string>
 #include <utility>
 #include <vector>

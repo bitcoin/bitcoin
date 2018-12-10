@@ -7,8 +7,8 @@
 #ifdef EVENT_SET_MEM_FUNCTIONS_IMPLEMENTED
 // It would probably be ideal to define dummy test(s) that report skipped, but boost::test doesn't seem to make that practical (at least not in versions available with common distros)
 
+#include <cstdlib>
 #include <map>
-#include <stdlib.h>
 
 #include <support/events.h>
 

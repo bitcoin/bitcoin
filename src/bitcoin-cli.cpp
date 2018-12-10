@@ -15,8 +15,8 @@
 #include <util/system.h>
 #include <util/strencodings.h>
 
+#include <cstdio>
 #include <memory>
-#include <stdio.h>
 #include <tuple>
 
 #include <event2/buffer.h>

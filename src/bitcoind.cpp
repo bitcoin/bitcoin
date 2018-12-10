@@ -22,7 +22,7 @@
 #include <util/strencodings.h>
 #include <walletinitinterface.h>
 
-#include <stdio.h>
+#include <cstdio>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 

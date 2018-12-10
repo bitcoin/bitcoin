@@ -5,7 +5,7 @@
 #ifndef BITCOIN_FS_H
 #define BITCOIN_FS_H
 
-#include <stdio.h>
+#include <cstdio>
 #include <string>
 #if defined WIN32 && defined __GLIBCXX__
 #include <ext/stdio_filebuf.h>

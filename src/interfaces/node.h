@@ -10,10 +10,10 @@
 #include <net.h>        // For CConnman::NumConnections
 #include <netaddress.h> // For Network
 
+#include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <memory>
-#include <stddef.h>
-#include <stdint.h>
 #include <string>
 #include <tuple>
 #include <vector>

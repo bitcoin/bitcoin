@@ -8,9 +8,9 @@
 
 #include <fs.h>
 
+#include <cstdint>
 #include <list>
 #include <map>
-#include <stdint.h>
 #include <string>
 
 #include <univalue.h>

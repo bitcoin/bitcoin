@@ -16,7 +16,7 @@
 #include <version.h>
 
 #include <atomic>
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 
 /** Message header.

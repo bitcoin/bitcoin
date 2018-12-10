@@ -24,7 +24,7 @@
 #include <wallet/wallet.h>
 #include <policy/policy.h>
 
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 
 QString TransactionDesc::FormatTxStatus(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& status, bool inMempool, int numBlocks)

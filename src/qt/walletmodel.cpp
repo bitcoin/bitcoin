@@ -24,7 +24,7 @@
 #include <wallet/coincontrol.h>
 #include <wallet/wallet.h>
 
-#include <stdint.h>
+#include <cstdint>
 
 #include <QDebug>
 #include <QMessageBox>

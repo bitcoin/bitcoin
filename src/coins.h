@@ -14,8 +14,8 @@
 #include <serialize.h>
 #include <uint256.h>
 
-#include <assert.h>
-#include <stdint.h>
+#include <cassert>
+#include <cstdint>
 
 #include <unordered_map>
 

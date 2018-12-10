@@ -24,11 +24,11 @@
 #include <threadinterrupt.h>
 
 #include <atomic>
-#include <deque>
-#include <stdint.h>
-#include <thread>
-#include <memory>
 #include <condition_variable>
+#include <cstdint>
+#include <deque>
+#include <memory>
+#include <thread>
 
 #ifndef WIN32
 #include <arpa/inet.h>

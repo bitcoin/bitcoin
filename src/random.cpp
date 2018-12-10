@@ -15,8 +15,8 @@
 #include <sync.h>     // for WAIT_LOCK
 #include <util/time.h> // for GetTime()
 
-#include <stdlib.h>
 #include <chrono>
+#include <cstdlib>
 #include <thread>
 
 #ifndef WIN32

@@ -5,18 +5,18 @@
 #include <httprpc.h>
 
 #include <chainparams.h>
+#include <crypto/hmac_sha256.h>
+#include <cstdio>
 #include <httpserver.h>
 #include <key_io.h>
+#include <random.h>
 #include <rpc/protocol.h>
 #include <rpc/server.h>
-#include <random.h>
 #include <sync.h>
-#include <util/system.h>
-#include <util/strencodings.h>
 #include <ui_interface.h>
+#include <util/strencodings.h>
+#include <util/system.h>
 #include <walletinitinterface.h>
-#include <crypto/hmac_sha256.h>
-#include <stdio.h>
 
 #include <memory>
 

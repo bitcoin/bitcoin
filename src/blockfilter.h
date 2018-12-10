@@ -5,7 +5,7 @@
 #ifndef BITCOIN_BLOCKFILTER_H
 #define BITCOIN_BLOCKFILTER_H
 
-#include <stdint.h>
+#include <cstdint>
 #include <unordered_set>
 #include <vector>
 

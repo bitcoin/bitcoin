@@ -28,8 +28,8 @@
 #include <versionbitsinfo.h>
 #include <warnings.h>
 
+#include <cstdint>
 #include <memory>
-#include <stdint.h>
 
 unsigned int ParseConfirmTarget(const UniValue& value)
 {

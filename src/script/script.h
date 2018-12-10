@@ -10,12 +10,12 @@
 #include <prevector.h>
 #include <serialize.h>
 
-#include <assert.h>
+#include <cassert>
 #include <climits>
+#include <cstdint>
+#include <cstring>
 #include <limits>
 #include <stdexcept>
-#include <stdint.h>
-#include <string.h>
 #include <string>
 #include <vector>
 

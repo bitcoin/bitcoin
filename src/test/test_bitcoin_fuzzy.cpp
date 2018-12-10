@@ -21,7 +21,7 @@
 #include <undo.h>
 #include <version.h>
 
-#include <stdint.h>
+#include <cstdint>
 #include <unistd.h>
 
 #include <algorithm>

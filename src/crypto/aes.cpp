@@ -5,8 +5,8 @@
 #include <crypto/aes.h>
 #include <crypto/common.h>
 
-#include <assert.h>
-#include <string.h>
+#include <cassert>
+#include <cstring>
 
 extern "C" {
 #include <crypto/ctaes/ctaes.c>

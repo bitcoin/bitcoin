@@ -14,14 +14,14 @@
 #include <sync.h>
 #include <ui_interface.h>
 
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <memory>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
-#include <sys/types.h>
+#include <csignal>
 #include <sys/stat.h>
-#include <signal.h>
+#include <sys/types.h>
 
 #include <event2/thread.h>
 #include <event2/buffer.h>

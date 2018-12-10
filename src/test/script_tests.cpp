@@ -19,8 +19,8 @@
 #include <script/bitcoinconsensus.h>
 #endif
 
+#include <cstdint>
 #include <fstream>
-#include <stdint.h>
 #include <string>
 #include <vector>
 

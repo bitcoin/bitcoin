@@ -9,9 +9,9 @@
 #include <script/script_error.h>
 #include <primitives/transaction.h>
 
-#include <vector>
-#include <stdint.h>
+#include <cstdint>
 #include <string>
+#include <vector>
 
 class CPubKey;
 class CScript;

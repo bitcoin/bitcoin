@@ -11,8 +11,8 @@
 #include <random.h>
 #include <streams.h>
 
-#include <math.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstdlib>
 
 
 #define LN2SQUARED 0.4804530139182014246671025263266649717305529515945455

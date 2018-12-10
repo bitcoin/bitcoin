@@ -12,7 +12,7 @@
 #include <util/strencodings.h>
 #include <versionbitsinfo.h>
 
-#include <assert.h>
+#include <cassert>
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>

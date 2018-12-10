@@ -11,10 +11,10 @@
 #include <util/moneystr.h>
 #include <test/test_bitcoin.h>
 
-#include <stdint.h>
+#include <cstdint>
 #include <vector>
 #ifndef WIN32
-#include <signal.h>
+#include <csignal>
 #include <sys/types.h>
 #include <sys/wait.h>
 #endif

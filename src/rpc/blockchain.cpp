@@ -34,8 +34,8 @@
 #include <versionbitsinfo.h>
 #include <warnings.h>
 
-#include <assert.h>
-#include <stdint.h>
+#include <cassert>
+#include <cstdint>
 
 #include <univalue.h>
 

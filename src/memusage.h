@@ -7,7 +7,7 @@
 
 #include <indirectmap.h>
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <map>
 #include <memory>

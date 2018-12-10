@@ -30,7 +30,7 @@
 #include <wallet/fees.h>
 
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 #include <future>
 
 #include <boost/algorithm/string/replace.hpp>

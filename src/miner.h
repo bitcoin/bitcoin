@@ -10,10 +10,10 @@
 #include <txmempool.h>
 #include <validation.h>
 
-#include <stdint.h>
-#include <memory>
-#include <boost/multi_index_container.hpp>
 #include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index_container.hpp>
+#include <cstdint>
+#include <memory>
 
 class CBlockIndex;
 class CChainParams;

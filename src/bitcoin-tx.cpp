@@ -22,8 +22,8 @@
 #include <util/moneystr.h>
 #include <util/strencodings.h>
 
+#include <cstdio>
 #include <memory>
-#include <stdio.h>
 
 #include <boost/algorithm/string.hpp>
 

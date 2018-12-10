@@ -11,8 +11,8 @@
 #include <wallet/db.h>
 #include <key.h>
 
+#include <cstdint>
 #include <list>
-#include <stdint.h>
 #include <string>
 #include <utility>
 #include <vector>

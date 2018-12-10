@@ -20,10 +20,10 @@
 #endif
 #include <windows.h>
 #else
-#include <sys/mman.h> // for mmap
+#include <climits>        // for PAGESIZE
+#include <sys/mman.h>     // for mmap
 #include <sys/resource.h> // for getrlimit
-#include <limits.h> // for PAGESIZE
-#include <unistd.h> // for sysconf
+#include <unistd.h>       // for sysconf
 #endif
 
 #include <algorithm>

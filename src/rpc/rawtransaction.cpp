@@ -30,8 +30,8 @@
 #include <validation.h>
 #include <validationinterface.h>
 
+#include <cstdint>
 #include <future>
-#include <stdint.h>
 
 #include <univalue.h>
 

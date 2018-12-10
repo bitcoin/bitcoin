@@ -35,7 +35,7 @@
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
 
-#include <stdint.h>
+#include <cstdint>
 
 #include <univalue.h>
 

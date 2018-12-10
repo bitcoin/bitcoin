@@ -13,7 +13,7 @@
 #include <serialize.h>
 #include <span.h>
 
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 #include <vector>
 

@@ -5,9 +5,9 @@
 #ifndef BITCOIN_RPC_BLOCKCHAIN_H
 #define BITCOIN_RPC_BLOCKCHAIN_H
 
-#include <vector>
-#include <stdint.h>
 #include <amount.h>
+#include <cstdint>
+#include <vector>
 
 class CBlock;
 class CBlockIndex;

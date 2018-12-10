@@ -6,8 +6,8 @@
 #ifndef BITCOIN_PRIMITIVES_TRANSACTION_H
 #define BITCOIN_PRIMITIVES_TRANSACTION_H
 
-#include <stdint.h>
 #include <amount.h>
+#include <cstdint>
 #include <script/script.h>
 #include <serialize.h>
 #include <uint256.h>

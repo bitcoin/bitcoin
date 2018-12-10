@@ -7,8 +7,8 @@
 #include <rpc/protocol.h>
 #include <util/system.h>
 
+#include <cstdint>
 #include <set>
-#include <stdint.h>
 
 class CRPCConvertParam
 {

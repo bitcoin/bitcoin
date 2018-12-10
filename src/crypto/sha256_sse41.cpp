@@ -1,6 +1,6 @@
 #ifdef ENABLE_SSE41
 
-#include <stdint.h>
+#include <cstdint>
 #include <immintrin.h>
 
 #include <crypto/sha256.h>

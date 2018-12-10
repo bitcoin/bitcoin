@@ -7,12 +7,12 @@
 #include <memory>
 #include <random.h>
 
+#include <algorithm>
+#include <cstdint>
 #include <leveldb/cache.h>
 #include <leveldb/env.h>
 #include <leveldb/filter_policy.h>
 #include <memenv.h>
-#include <stdint.h>
-#include <algorithm>
 
 class CBitcoinLevelDBLogger : public leveldb::Logger {
 public:

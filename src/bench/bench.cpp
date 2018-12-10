@@ -4,12 +4,12 @@
 
 #include <bench/bench.h>
 
-#include <assert.h>
-#include <iostream>
-#include <iomanip>
 #include <algorithm>
-#include <regex>
+#include <cassert>
+#include <iomanip>
+#include <iostream>
 #include <numeric>
+#include <regex>
 
 void benchmark::ConsolePrinter::header()
 {

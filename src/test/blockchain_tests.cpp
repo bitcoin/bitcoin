@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <rpc/blockchain.h>
 #include <test/test_bitcoin.h>

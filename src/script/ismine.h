@@ -8,7 +8,7 @@
 
 #include <script/standard.h>
 
-#include <stdint.h>
+#include <cstdint>
 
 class CKeyStore;
 class CScript;

@@ -7,13 +7,13 @@
 #include <test/test_bitcoin.h>
 
 #include <boost/test/unit_test.hpp>
-#include <stdint.h>
-#include <sstream>
+#include <cmath>
+#include <cstdint>
+#include <cstdio>
 #include <iomanip>
 #include <limits>
-#include <cmath>
+#include <sstream>
 #include <string>
-#include <stdio.h>
 
 BOOST_FIXTURE_TEST_SUITE(uint256_tests, BasicTestingSetup)
 

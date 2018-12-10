@@ -7,7 +7,7 @@
 #include <logging.h>
 #include <util/strencodings.h>
 
-#include <stdio.h>
+#include <cstdio>
 
 #include <map>
 #include <memory>

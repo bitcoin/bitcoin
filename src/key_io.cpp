@@ -12,9 +12,9 @@
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/static_visitor.hpp>
 
-#include <assert.h>
-#include <string.h>
 #include <algorithm>
+#include <cassert>
+#include <cstring>
 
 namespace
 {

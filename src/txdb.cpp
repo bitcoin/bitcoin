@@ -14,7 +14,7 @@
 #include <util/system.h>
 #include <ui_interface.h>
 
-#include <stdint.h>
+#include <cstdint>
 
 #include <boost/thread.hpp>
 

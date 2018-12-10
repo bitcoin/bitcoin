@@ -24,10 +24,10 @@
 #include <util/time.h>
 
 #include <atomic>
+#include <cstdint>
 #include <exception>
 #include <map>
 #include <set>
-#include <stdint.h>
 #include <string>
 #include <unordered_set>
 #include <utility>

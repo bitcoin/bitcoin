@@ -10,7 +10,7 @@
 #include <script/script.h>
 #include <script/standard.h>
 
-#include <assert.h>
+#include <cassert>
 #include <string>
 
 static const std::string OUTPUT_TYPE_STRING_LEGACY = "legacy";

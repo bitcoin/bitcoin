@@ -9,7 +9,7 @@
 #include <util/system.h>
 #include <util/memory.h>
 
-#include <assert.h>
+#include <cassert>
 
 const std::string CBaseChainParams::MAIN = "main";
 const std::string CBaseChainParams::TESTNET = "test";

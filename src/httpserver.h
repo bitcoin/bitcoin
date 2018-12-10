@@ -5,9 +5,9 @@
 #ifndef BITCOIN_HTTPSERVER_H
 #define BITCOIN_HTTPSERVER_H
 
-#include <string>
-#include <stdint.h>
+#include <cstdint>
 #include <functional>
+#include <string>
 
 static const int DEFAULT_HTTP_THREADS=4;
 static const int DEFAULT_HTTP_WORKQUEUE=16;

@@ -10,7 +10,7 @@
 #include <crypto/common.h>
 #include <uint256.h>
 
-#include <stdint.h>
+#include <cstdint>
 #include <limits>
 
 /* Seed OpenSSL PRNG with additional entropy data */
