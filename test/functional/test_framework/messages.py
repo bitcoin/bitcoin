@@ -764,7 +764,7 @@ class HeaderAndShortIDs:
         self.prefilled_txn = []
         self.use_witness = False
 
-        if p2pheaders_and_shortids != None:
+        if p2pheaders_and_shortids is not None:
             self.header = p2pheaders_and_shortids.header
             self.nonce = p2pheaders_and_shortids.nonce
             self.shortids = p2pheaders_and_shortids.shortids
@@ -822,7 +822,7 @@ class BlockTransactionsRequest:
 
     def __init__(self, blockhash=0, indexes = None):
         self.blockhash = blockhash
-        self.indexes = indexes if indexes != None else []
+        self.indexes = indexes if indexes is not None else []
 
     def deserialize(self, f):
         self.blockhash = deser_uint256(f)
@@ -863,7 +863,7 @@ class BlockTransactions:
 
     def __init__(self, blockhash=0, transactions = None):
         self.blockhash = blockhash
-        self.transactions = transactions if transactions != None else []
+        self.transactions = transactions if transactions is not None else []
 
     def deserialize(self, f):
         self.blockhash = deser_uint256(f)
@@ -1052,7 +1052,7 @@ class msg_getdata:
     command = b"getdata"
 
     def __init__(self, inv=None):
-        self.inv = inv if inv != None else []
+        self.inv = inv if inv is not None else []
 
     def deserialize(self, f):
         self.inv = deser_vector(f, CInv)

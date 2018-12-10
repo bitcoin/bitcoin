@@ -68,7 +68,7 @@ class TestNode():
         self.rpc_timeout = timewait
         self.binary = bitcoind
         self.coverage_dir = coverage_dir
-        if extra_conf != None:
+        if extra_conf is not None:
             append_config(datadir, extra_conf)
         # Most callers will just need to add extra args to the standard list below.
         # For those callers that need more flexibility, they can just set the args property directly.
