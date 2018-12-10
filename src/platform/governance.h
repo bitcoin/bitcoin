@@ -6,20 +6,51 @@
 
 #include <boost/function.hpp>
 
+#include <utility>
 #include <vector>
 
 namespace Platform
 {
+    enum class VoteValue { abstain = 0, yes, no };
+
     class Vote
     {
     public:
-        enum Value { abstain = 0, yes, no };
+        Vote(
+            const uint256& candidate,
+            VoteValue value,
+            int64_t time,
+            int64_t electionCode,
+            CTxIn voterId,
+            std::vector<unsigned char> signature
+        )
+            : m_voterId(std::move(voterId)), m_electionCode(electionCode), m_candidate(candidate), m_value(value), m_time(time), m_signature(std::move(signature))
+        {}
 
-        CTxIn voterId;
-        int64_t electionCode;
-        uint256 candidate;
-        Value value;
-        std::vector<unsigned char> signature;
+        Vote(
+            const uint256& candidate,
+            VoteValue value,
+            int64_t time,
+            int64_t electionCode,
+            const CTxIn& voterId
+        )
+            : Vote(candidate, value, time, electionCode, voterId, {})
+        {}
+
+        CTxIn VoterId() const { return m_voterId; }
+        int64_t ElectionCode() const { return m_electionCode; }
+        uint256 Candidate() const { return m_candidate; }
+        VoteValue Value() const { return m_value; }
+        int64_t Time() const { return m_time; }
+        const std::vector<unsigned char>& Signature() const { return m_signature; }
+
+    private:
+        CTxIn m_voterId;
+        int64_t m_electionCode;
+        uint256 m_candidate;
+        VoteValue m_value;
+        int64_t m_time;
+        std::vector<unsigned char> m_signature;
     };
 
     class VotingRound

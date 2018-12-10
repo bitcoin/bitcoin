@@ -25,6 +25,7 @@ namespace Platform
         CTxIn voterId;
         int64_t electionCode;
         int64_t vote;
+        int64_t time;
         uint256 candidate;
         std::vector<unsigned char> signature;
 

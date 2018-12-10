@@ -41,12 +41,7 @@ namespace Platform
                 VoteTx vtx;
                 GetTxPayload(tx, vtx);
 
-                Vote vote;
-                vote.candidate = vtx.candidate;
-                vote.value = static_cast<Vote::Value>(vtx.vote);
-                vote.electionCode = vtx.electionCode;
-                vote.voterId = vtx.voterId;
-                vote.signature = vtx.signature;
+                auto vote = Vote{vtx.candidate, static_cast<VoteValue>(vtx.vote), vtx.time, vtx.electionCode, vtx.voterId, vtx.signature};
 
                 AgentsVoting().AcceptVote(vote);
 

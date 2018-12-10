@@ -14,10 +14,10 @@ namespace Platform
 
         virtual void AcceptVote(const Vote& vote)
         {
-            if (vote.value == Vote::yes)
-                ++m_votes[vote.candidate];
+            if (vote.Value() == VoteValue::yes)
+                ++m_votes[vote.Candidate()];
             else
-                --m_votes[vote.candidate];
+                --m_votes[vote.Candidate()];
         }
 
         virtual std::vector<uint256> CalculateResult() const
