@@ -428,14 +428,14 @@ CDeterministicMNManager::CDeterministicMNManager(CEvoDB& _evoDb) :
 {
 }
 
-bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockIndex* pindexPrev, CValidationState& _state)
+bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& _state)
 {
     LOCK(cs);
 
-    int nHeight = pindexPrev->nHeight + 1;
+    int nHeight = pindex->nHeight;
 
     CDeterministicMNList newList;
-    if (!BuildNewListFromBlock(block, pindexPrev, _state, newList, true)) {
+    if (!BuildNewListFromBlock(block, pindex->pprev, _state, newList, true)) {
         return false;
     }
 
@@ -445,7 +445,7 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
 
     newList.SetBlockHash(block.GetHash());
 
-    CDeterministicMNList oldList = GetListForBlock(pindexPrev->GetBlockHash());
+    CDeterministicMNList oldList = GetListForBlock(pindex->pprev->GetBlockHash());
     CDeterministicMNListDiff diff = oldList.BuildDiff(newList);
 
     evoDb.Write(std::make_pair(DB_LIST_DIFF, diff.blockHash), diff);
