@@ -855,6 +855,10 @@ bool InitSanityCheck(void)
     if (!glibc_sanity_test() || !glibcxx_sanity_test())
         return false;
 
+    if (!BLSInit()) {
+        return false;
+    }
+
     return true;
 }
 
