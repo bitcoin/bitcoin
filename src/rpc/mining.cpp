@@ -907,7 +907,7 @@ static UniValue estimaterawfee(const JSONRPCRequest& request)
                     {"conf_target", RPCArg::Type::NUM, RPCArg::Optional::NO, "Confirmation target in blocks (1 - 1008)"},
                     {"threshold", RPCArg::Type::NUM, /* default */ "0.95", "The proportion of transactions in a given feerate range that must have been\n"
             "               confirmed within conf_target in order to consider those feerates as high enough and proceed to check\n"
-            "               lower buckets.  Default: 0.95"},
+            "               lower buckets."},
                 },
                 RPCResult{
             "{\n"
