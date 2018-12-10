@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "governance-vote.h"
+#include "agent.h"
 #include "specialtx.h"
 
 #include "sync.h"
@@ -32,13 +33,19 @@ namespace Platform
 
     bool ProcessVoteTx(const CTransaction& tx, const CBlockIndex* pindex, CValidationState& state)
     {
-        VoteTx vtx;
-        GetTxPayload(tx, vtx);
+        try
+        {
+            VoteTx vtx;
+            GetTxPayload(tx, vtx);
 
-        auto vote = vtx.GetVote();
+            AgentsVoting().AcceptVote(vtx.GetVote());
 
-        AgentsVoting().AcceptVote(vote);
+            return true;
+        }
+        catch (const std::exception& )
+        {
+            return state.DoS(1, false, REJECT_INVALID, "vote-tx-process-fail");
+        }
 
-        return true;
     }
 }

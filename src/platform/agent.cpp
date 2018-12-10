@@ -1,6 +1,7 @@
 #include "agent.h"
 #include "arith_uint256.h"
 #include "governance.h"
+#include "governance-approval-voting.h"
 
 #include <boost/foreach.hpp>
 #include <memory>
@@ -74,13 +75,9 @@ namespace Platform
     }
 
 
-    AgentRegistry::AgentRegistry()
+    AgentRegistry::AgentRegistry(std::unique_ptr<VotingRound> agentsVoting)
+        : m_agentsVoting(std::move(agentsVoting))
     {
-        Identity a1(ArithToUint256(7));
-        Add(a1);
-
-        Identity a2(ArithToUint256(8));
-        Add(a2);
     }
 
     void AgentRegistry::Add(const Identity& agent)
@@ -100,13 +97,17 @@ namespace Platform
 
     AgentRegistry& GetAgentRegistry()
     {
-        static AgentRegistry s_agent;
+        // TODO: Initialize explicitly via InitAgentsRegistry called during Init
+        // TODO: Use 10% of Masternodes as threshold
 
-        for (const auto& id: AgentsVoting().CalculateResult())
-        {
-            s_agent.Add(Identity(id));
-        }
+        static auto s_agentsVoting = std::make_unique<ApprovalVoting>(0);
+        static auto s_agentRegistry = std::make_unique<AgentRegistry>(std::move(s_agentsVoting));
 
-        return s_agent;
+        return *s_agentRegistry;
+    }
+
+    VotingRound& AgentsVoting()
+    {
+        return GetAgentRegistry().AgentsVoting();
     }
 }

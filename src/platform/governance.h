@@ -1,3 +1,7 @@
+// Copyright (c) 2014-2018 The Crown developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #ifndef CROWN_PLATFORM_GOVERNANCE_H
 #define CROWN_PLATFORM_GOVERNANCE_H
 
@@ -68,13 +72,8 @@ namespace Platform
         virtual void RegisterCandidate(uint256 id) = 0;
         virtual void AcceptVote(const Vote& vote) = 0;
         virtual std::vector<uint256> CalculateResult() const = 0;
-        virtual void NotifyResultChange(
-            boost::function<void(uint256)> onElected,
-            boost::function<void(uint256)> onDismissed
-        ) = 0;
+        virtual void NotifyResultChange(std::function<void()> onStateChanged) = 0;
     };
-
-    VotingRound& AgentsVoting();
 }
 
 #endif //CROWN_PLATFORM_GOVERNANCE_H
