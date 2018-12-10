@@ -30,7 +30,7 @@ namespace Platform
 
     bool ProcessSpecialTx(bool justCheck, const CTransaction &tx, const CBlockIndex *pindex, CValidationState &state)
     {
-        if (tx.nVersion < 2 || tx.nType == TRANSACTION_NORMAL)
+        if (tx.nVersion < 3 || tx.nType == TRANSACTION_NORMAL)
             return true;
 
         switch (tx.nType) {
@@ -38,14 +38,7 @@ namespace Platform
                 if (justCheck)
                     return true;
 
-                VoteTx vtx;
-                GetTxPayload(tx, vtx);
-
-                auto vote = vtx.GetVote();
-
-                AgentsVoting().AcceptVote(vote);
-
-                return true;
+                return ProcessVoteTx(tx, pindex, state);
             }
         }
 

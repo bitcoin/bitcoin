@@ -111,6 +111,8 @@ namespace
             return statusObj;
         }
 
+        assert(pmn->pubkey2 == pubKeyMasternode);
+
         return SendVotingTransaction(pubKeyMasternode, keyMasternode, pmn->vin, vote, hash);
     }
 

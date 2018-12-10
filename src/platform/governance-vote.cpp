@@ -18,6 +18,27 @@ namespace Platform
         if (!GetTxPayload(tx, vtx))
             return state.DoS(100, false, REJECT_INVALID, "bad-tx-payload");
 
+        auto vote = vtx.GetVote();
+
+        CMasternode* pmn = mnodeman.Find(vote.VoterId());
+        if(pmn == nullptr)
+            return state.DoS(10, false, REJECT_INVALID, "bad-vote-tx-no-masternode");
+
+        if (!vote.Verify(pmn->pubkey2))
+            return state.DoS(50, false, REJECT_INVALID, "bad-vote-tx-invalid-signature");
+
+        return true;
+    }
+
+    bool ProcessVoteTx(const CTransaction& tx, const CBlockIndex* pindex, CValidationState& state)
+    {
+        VoteTx vtx;
+        GetTxPayload(tx, vtx);
+
+        auto vote = vtx.GetVote();
+
+        AgentsVoting().AcceptVote(vote);
+
         return true;
     }
 }

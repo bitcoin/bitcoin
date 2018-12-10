@@ -72,6 +72,7 @@ namespace Platform
 
 
     bool CheckVoteTx(const CTransaction& tx, const CBlockIndex* pindex, CValidationState& state);
+    bool ProcessVoteTx(const CTransaction& tx, const CBlockIndex* pindex, CValidationState& state);
 }
 
 #endif //PROJECT_GOVERNANCE_VOTE_H
