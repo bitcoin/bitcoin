@@ -393,9 +393,13 @@ void CDeterministicMNList::AddMN(const CDeterministicMNCPtr& dmn)
     assert(!mnMap.find(dmn->proTxHash));
     mnMap = mnMap.set(dmn->proTxHash, dmn);
     AddUniqueProperty(dmn, dmn->collateralOutpoint);
-    AddUniqueProperty(dmn, dmn->pdmnState->addr);
+    if (dmn->pdmnState->addr != CService()) {
+        AddUniqueProperty(dmn, dmn->pdmnState->addr);
+    }
     AddUniqueProperty(dmn, dmn->pdmnState->keyIDOwner);
-    AddUniqueProperty(dmn, dmn->pdmnState->pubKeyOperator);
+    if (dmn->pdmnState->pubKeyOperator.IsValid()) {
+        AddUniqueProperty(dmn, dmn->pdmnState->pubKeyOperator);
+    }
 }
 
 void CDeterministicMNList::UpdateMN(const uint256& proTxHash, const CDeterministicMNStateCPtr& pdmnState)
@@ -417,9 +421,13 @@ void CDeterministicMNList::RemoveMN(const uint256& proTxHash)
     auto dmn = GetMN(proTxHash);
     assert(dmn != nullptr);
     DeleteUniqueProperty(dmn, dmn->collateralOutpoint);
-    DeleteUniqueProperty(dmn, dmn->pdmnState->addr);
+    if (dmn->pdmnState->addr != CService()) {
+        DeleteUniqueProperty(dmn, dmn->pdmnState->addr);
+    }
     DeleteUniqueProperty(dmn, dmn->pdmnState->keyIDOwner);
-    DeleteUniqueProperty(dmn, dmn->pdmnState->pubKeyOperator);
+    if (dmn->pdmnState->pubKeyOperator.IsValid()) {
+        DeleteUniqueProperty(dmn, dmn->pdmnState->pubKeyOperator);
+    }
     mnMap = mnMap.erase(proTxHash);
 }
 

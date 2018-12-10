@@ -203,6 +203,8 @@ public:
     using CBLSWrapper::operator==;
     using CBLSWrapper::operator!=;
 
+    CBLSId() {}
+
     void SetInt(int x);
     void SetHash(const uint256& hash);
 
@@ -220,6 +222,8 @@ public:
     using CBLSWrapper::operator=;
     using CBLSWrapper::operator==;
     using CBLSWrapper::operator!=;
+
+    CBLSSecretKey() {}
 
     void AggregateInsecure(const CBLSSecretKey& o);
     static CBLSSecretKey AggregateInsecure(const std::vector<CBLSSecretKey>& sks);
@@ -247,6 +251,8 @@ public:
     using CBLSWrapper::operator==;
     using CBLSWrapper::operator!=;
 
+    CBLSPublicKey() {}
+
     void AggregateInsecure(const CBLSPublicKey& o);
     static CBLSPublicKey AggregateInsecure(const std::vector<CBLSPublicKey>& pks);
 
@@ -265,8 +271,9 @@ class CBLSSignature : public CBLSWrapper<bls::InsecureSignature, BLS_CURVE_SIG_S
 public:
     using CBLSWrapper::operator==;
     using CBLSWrapper::operator!=;
+    using CBLSWrapper::CBLSWrapper;
 
-    CBLSSignature() = default;
+    CBLSSignature() {}
     CBLSSignature(const CBLSSignature&) = default;
     CBLSSignature& operator=(const CBLSSignature&) = default;
 

@@ -372,6 +372,9 @@ private:
     template <typename T>
     void AddUniqueProperty(const CDeterministicMNCPtr& dmn, const T& v)
     {
+        static const T nullValue;
+        assert(v != nullValue);
+
         auto hash = ::SerializeHash(v);
         auto oldEntry = mnUniquePropertyMap.find(hash);
         assert(!oldEntry || oldEntry->first == dmn->proTxHash);
@@ -384,6 +387,9 @@ private:
     template <typename T>
     void DeleteUniqueProperty(const CDeterministicMNCPtr& dmn, const T& oldValue)
     {
+        static const T nullValue;
+        assert(oldValue != nullValue);
+
         auto oldHash = ::SerializeHash(oldValue);
         auto p = mnUniquePropertyMap.find(oldHash);
         assert(p && p->first == dmn->proTxHash);
@@ -399,8 +405,15 @@ private:
         if (oldValue == newValue) {
             return;
         }
-        DeleteUniqueProperty(dmn, oldValue);
-        AddUniqueProperty(dmn, newValue);
+        static const T nullValue;
+
+        if (oldValue != nullValue) {
+            DeleteUniqueProperty(dmn, oldValue);
+        }
+
+        if (newValue != nullValue) {
+            AddUniqueProperty(dmn, newValue);
+        }
     }
 };
 
