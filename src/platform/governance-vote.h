@@ -6,6 +6,7 @@
 #define CROWN_GOVERNANCE_VOTE_H
 
 #include "primitives/transaction.h"
+#include "platform/governance.h"
 
 class CBlockIndex;
 class CValidationState;
@@ -20,6 +21,17 @@ namespace Platform
         static const int CURRENT_VERSION = 1;
 
     public:
+        VoteTx(Vote vote)
+            : voterId(vote.VoterId())
+            , electionCode(vote.ElectionCode())
+            , vote(ConvertVote(vote.Value()))
+            , time(vote.Time())
+            , candidate(vote.Candidate())
+            , signature(vote.Signature())
+        {}
+
+        VoteTx() = default;
+
         CTxIn voterId;
         int64_t electionCode;
         int64_t vote;
@@ -28,6 +40,23 @@ namespace Platform
         std::vector<unsigned char> signature;
 
         bool Sign(const CKey& keyMasternode, const CPubKey& pubKeyMasternode) { return true; }
+
+        static int64_t ConvertVote(VoteValue vote)
+        {
+            // Replace with more explicit serialization
+            return static_cast<int64_t>(vote);
+        }
+
+        static VoteValue ConvertVote(int64_t vote)
+        {
+            // Replace with more explicit serialization
+            return static_cast<VoteValue>(vote);
+        }
+
+        Vote GetVote() const
+        {
+            return { candidate, ConvertVote(vote), time, electionCode, voterId, signature };
+        }
 
     public:
         ADD_SERIALIZE_METHODS;

@@ -8,6 +8,7 @@
 #include "primitives/transaction.h"
 #include "platform/agent.h"
 #include "platform/governance-vote.h"
+#include "platform/governance.h"
 #include "platform/specialtx.h"
 
 namespace
@@ -43,7 +44,7 @@ namespace
         const CPubKey& pubKeyMasternode,
         const CKey& keyMasternode,
         const CTxIn& vin,
-        Platform::VoteTx::Value vote,
+        Platform::VoteValue voteValue,
         const uint256& hash
     )
     {
@@ -55,11 +56,8 @@ namespace
             tx.nVersion = 2;
             tx.nType = TRANSACTION_GOVERNANCE_VOTE;
 
-            Platform::VoteTx voteTx;
-            voteTx.voterId = vin;
-            voteTx.electionCode = 1;
-            voteTx.vote = vote;
-            voteTx.candidate = hash;
+            auto vote = Platform::Vote{hash, voteValue, GetTime(), 1, vin};
+            auto voteTx = Platform::VoteTx(vote);
 
             if(!voteTx.Sign(keyMasternode, pubKeyMasternode))
             {
@@ -86,7 +84,7 @@ namespace
         }
     }
 
-    json_spirit::Object CastSingleVote(const uint256& hash, Platform::VoteTx::Value vote, const CNodeEntry& mne)
+    json_spirit::Object CastSingleVote(const uint256& hash, Platform::VoteValue vote, const CNodeEntry& mne)
     {
         std::string errorMessage;
         std::vector<unsigned char> vchMasterNodeSignature;
@@ -115,15 +113,15 @@ namespace
         return SendVotingTransaction(pubKeyMasternode, keyMasternode, pmn->vin, vote, hash);
     }
 
-    Platform::VoteTx::Value ParseVote(const std::string& voteText)
+    Platform::VoteValue ParseVote(const std::string& voteText)
     {
         if(voteText != "yes" && voteText != "no")
             throw std::runtime_error("You can only vote 'yes' or 'no'");
 
         else if(voteText == "yes")
-            return Platform::VoteTx::yes;
+            return Platform::VoteValue::yes;
         else
-            return Platform::VoteTx::no;
+            return Platform::VoteValue::no;
     }
 }
 
