@@ -57,14 +57,15 @@ namespace
             tx.nType = TRANSACTION_GOVERNANCE_VOTE;
 
             auto vote = Platform::Vote{hash, voteValue, GetTime(), 1, vin};
-            auto voteTx = Platform::VoteTx(vote);
 
-            if(!voteTx.Sign(keyMasternode, pubKeyMasternode))
+            if(!vote.Sign(keyMasternode))
             {
                 statusObj.push_back(json_spirit::Pair("result", "failed"));
                 statusObj.push_back(json_spirit::Pair("errorMessage", "Failure to sign"));
                 return statusObj;
             }
+            assert(vote.Verify(pubKeyMasternode));
+            auto voteTx = Platform::VoteTx(vote);
 
             FundSpecialTx(tx, voteTx);
             SignSpecialTxPayload(tx, voteTx, keyMasternode);

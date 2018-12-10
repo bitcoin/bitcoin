@@ -10,8 +10,6 @@
 
 class CBlockIndex;
 class CValidationState;
-class CKey;
-class CPubKey;
 
 namespace Platform
 {
@@ -38,8 +36,6 @@ namespace Platform
         int64_t time;
         uint256 candidate;
         std::vector<unsigned char> signature;
-
-        bool Sign(const CKey& keyMasternode, const CPubKey& pubKeyMasternode) { return true; }
 
         static int64_t ConvertVote(VoteValue vote)
         {

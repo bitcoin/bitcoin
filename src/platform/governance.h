@@ -9,6 +9,9 @@
 #include <utility>
 #include <vector>
 
+class CKey;
+class CPubKey;
+
 namespace Platform
 {
     enum class VoteValue { abstain = 0, yes, no };
@@ -43,6 +46,10 @@ namespace Platform
         VoteValue Value() const { return m_value; }
         int64_t Time() const { return m_time; }
         const std::vector<unsigned char>& Signature() const { return m_signature; }
+
+        bool Sign(const CKey& keyMasternode) { return true; }
+        bool Verify(const CPubKey& keyMasternode) { return true; }
+
 
     private:
         CTxIn m_voterId;
