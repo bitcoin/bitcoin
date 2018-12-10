@@ -26,6 +26,8 @@ std::string CActiveDeterministicMasternodeManager::GetStateString() const
         return "POSE_BANNED";
     case MASTERNODE_REMOVED:
         return "REMOVED";
+    case MASTERNODE_OPERATOR_KEY_CHANGED:
+        return "OPERATOR_KEY_CHANGED";
     case MASTERNODE_READY:
         return "READY";
     case MASTERNODE_ERROR:
@@ -44,6 +46,8 @@ std::string CActiveDeterministicMasternodeManager::GetStatus() const
         return "Masternode was PoSe banned";
     case MASTERNODE_REMOVED:
         return "Masternode removed from list";
+    case MASTERNODE_OPERATOR_KEY_CHANGED:
+        return "Operator key changed or revoked";
     case MASTERNODE_READY:
         return "Ready";
     case MASTERNODE_ERROR:
@@ -116,11 +120,18 @@ void CActiveDeterministicMasternodeManager::UpdatedBlockTip(const CBlockIndex* p
             state = MASTERNODE_REMOVED;
             activeMasternodeInfo.proTxHash = uint256();
             activeMasternodeInfo.outpoint.SetNull();
-            // MN might have reappeared in same block with a new ProTx (with same masternode key)
+            // MN might have reappeared in same block with a new ProTx
+            Init();
+        } else if (mnList.GetMN(mnListEntry->proTxHash)->pdmnState->pubKeyOperator != mnListEntry->pdmnState->pubKeyOperator) {
+            // MN operator key changed or revoked
+            state = MASTERNODE_OPERATOR_KEY_CHANGED;
+            activeMasternodeInfo.proTxHash = uint256();
+            activeMasternodeInfo.outpoint.SetNull();
+            // MN might have reappeared in same block with a new ProTx
             Init();
         }
-    } else if (state == MASTERNODE_REMOVED || state == MASTERNODE_POSE_BANNED) {
-        // MN might have reappeared with a new ProTx (with same masternode key)
+    } else if (state == MASTERNODE_REMOVED || state == MASTERNODE_POSE_BANNED || state == MASTERNODE_OPERATOR_KEY_CHANGED) {
+        // MN might have reappeared with a new ProTx
         Init();
     }
 }
