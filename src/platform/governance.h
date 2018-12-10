@@ -27,22 +27,11 @@ namespace Platform
             const uint256& candidate,
             VoteValue value,
             int64_t time,
-            int64_t electionCode,
-            CTxIn voterId,
-            std::vector<unsigned char> signature
+            CTxIn voterId
         )
-            : m_voterId(std::move(voterId)), m_electionCode(electionCode), m_candidate(candidate), m_value(value), m_time(time), m_signature(std::move(signature))
+            : m_voterId(std::move(voterId)), m_candidate(candidate), m_value(value), m_time(time)
         {}
 
-        Vote(
-            const uint256& candidate,
-            VoteValue value,
-            int64_t time,
-            int64_t electionCode,
-            const CTxIn& voterId
-        )
-            : Vote(candidate, value, time, electionCode, voterId, {})
-        {}
 
         Vote() = default;
         Vote(const Vote&) = default;
@@ -51,23 +40,15 @@ namespace Platform
         Vote& operator=(Vote&&) = default;
 
         CTxIn VoterId() const { return m_voterId; }
-        int64_t ElectionCode() const { return m_electionCode; }
         uint256 Candidate() const { return m_candidate; }
         VoteValue Value() const { return m_value; }
         int64_t Time() const { return m_time; }
-        const std::vector<unsigned char>& Signature() const { return m_signature; }
-
-        bool Sign(const CKey& keyMasternode) { return true; }
-        bool Verify(const CPubKey& keyMasternode) { return true; }
-
 
     private:
         CTxIn m_voterId;
-        int64_t m_electionCode;
         uint256 m_candidate;
         VoteValue m_value;
         int64_t m_time;
-        std::vector<unsigned char> m_signature;
     };
 
     class VotingRound

@@ -5,6 +5,7 @@
 #ifndef CROWN_GOVERNANCE_VOTE_H
 #define CROWN_GOVERNANCE_VOTE_H
 
+#include <pubkey.h>
 #include "primitives/transaction.h"
 #include "platform/governance.h"
 
@@ -19,13 +20,12 @@ namespace Platform
         static const int CURRENT_VERSION = 1;
 
     public:
-        VoteTx(Vote vote)
+        VoteTx(Vote vote, int64_t electionCode)
             : voterId(vote.VoterId())
-            , electionCode(vote.ElectionCode())
+            , electionCode(electionCode)
             , vote(ConvertVote(vote.Value()))
             , time(vote.Time())
             , candidate(vote.Candidate())
-            , signature(vote.Signature())
         {}
 
         VoteTx() = default;
@@ -35,24 +35,12 @@ namespace Platform
         int64_t vote;
         int64_t time;
         uint256 candidate;
+        CKeyID keyId;
         std::vector<unsigned char> signature;
 
-        static int64_t ConvertVote(VoteValue vote)
-        {
-            // Replace with more explicit serialization
-            return static_cast<int64_t>(vote);
-        }
-
-        static VoteValue ConvertVote(int64_t vote)
-        {
-            // Replace with more explicit serialization
-            return static_cast<VoteValue>(vote);
-        }
-
-        Vote GetVote() const
-        {
-            return { candidate, ConvertVote(vote), time, electionCode, voterId, signature };
-        }
+        static int64_t ConvertVote(VoteValue vote);
+        static VoteValue ConvertVote(int64_t vote);
+        Vote GetVote() const;
 
     public:
         ADD_SERIALIZE_METHODS;
@@ -63,10 +51,11 @@ namespace Platform
             READWRITE(electionCode);
             READWRITE(vote);
             READWRITE(candidate);
+            READWRITE(keyId);
             READWRITE(signature);
         }
 
-        std::string ToString() const {return ""; }
+        std::string ToString() const;
     };
 
 

@@ -26,6 +26,8 @@ namespace Platform
     bool ProcessSpecialTxsInBlock(bool justCheck, const CBlock& block, const CBlockIndex* pindex, CValidationState& state);
     bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex);
 
+    uint256 CalcTxInputsHash(const CTransaction& tx);
+
     template <typename T>
     inline bool GetTxPayload(const std::vector<unsigned char>& payload, T& obj)
     {
@@ -107,12 +109,30 @@ namespace Platform
     static void SignSpecialTxPayload(const CMutableTransaction& tx, SpecialTxPayload& payload, const CKey& key)
     {
         // payload.inputsHash = CalcTxInputsHash(tx);
+        // TODO: consider adding inputs to payload
+
         payload.signature.clear();
+        payload.keyId = key.GetPubKey().GetID();
 
         uint256 hash = ::SerializeHash(payload);
         if (!CHashSigner::SignHash(hash, key, payload.signature)) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "failed to sign special tx");
         }
+    }
+
+    template <typename SpecialTxPayload>
+    static bool CheckInputsHashAndSig(const CTransaction &tx, const SpecialTxPayload& payload, const CKeyID &keyId, CValidationState& state)
+    {
+        uint256 inputsHash = CalcTxInputsHash(tx);
+        // if (inputsHash != proTx.inputsHash)
+        //    return state.DoS(100, false, REJECT_INVALID, "bad-protx-inputs-hash");
+        // TODO: consider adding inputs to payload
+
+        std::string strError;
+        if (!CHashSigner::VerifyHash(::SerializeHash(payload), keyId, payload.signature, strError))
+            return state.DoS(100, false, REJECT_INVALID, "bad-special-tx-sig", false, strError);
+
+        return true;
     }
 }
 

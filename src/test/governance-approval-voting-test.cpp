@@ -25,8 +25,6 @@ namespace
         CTxIn voter1{CTxIn(COutPoint(ArithToUint256(1), 1 * COIN))};
         CTxIn voter2{CTxIn(COutPoint(ArithToUint256(2), 1 * COIN))};
 
-        int64_t electionCode{42};
-
         TestApprovalVotingFixture()
         {
             SetMockTime(525960000);
@@ -43,7 +41,6 @@ namespace
                 candidate,
                 Platform::VoteValue::yes,
                 time,
-                electionCode,
                 voter
             };
 
@@ -55,7 +52,6 @@ namespace
                 candidate,
                 Platform::VoteValue::no,
                 time,
-                electionCode,
                 voter
             };
 

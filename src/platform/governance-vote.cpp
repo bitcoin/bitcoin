@@ -19,13 +19,7 @@ namespace Platform
         if (!GetTxPayload(tx, vtx))
             return state.DoS(100, false, REJECT_INVALID, "bad-tx-payload");
 
-        auto vote = vtx.GetVote();
-
-        CMasternode* pmn = mnodeman.Find(vote.VoterId());
-        if(pmn == nullptr)
-            return state.DoS(10, false, REJECT_INVALID, "bad-vote-tx-no-masternode");
-
-        if (!vote.Verify(pmn->pubkey2))
+        if (!CheckInputsHashAndSig(tx, vtx, vtx.keyId, state))
             return state.DoS(50, false, REJECT_INVALID, "bad-vote-tx-invalid-signature");
 
         return true;
@@ -38,6 +32,13 @@ namespace Platform
             VoteTx vtx;
             GetTxPayload(tx, vtx);
 
+            CMasternode* pmn = mnodeman.Find(vtx.voterId);
+            if(pmn == nullptr)
+                return state.DoS(10, false, REJECT_INVALID, "vote-tx-process-fail-no-masternode");
+
+            if (pmn->pubkey2.GetID() != vtx.keyId)
+                return state.DoS(10, false, REJECT_INVALID, "vote-tx-process-fail-signed-by-wrong-key");
+
             AgentsVoting().AcceptVote(vtx.GetVote());
 
             return true;
@@ -46,6 +47,32 @@ namespace Platform
         {
             return state.DoS(1, false, REJECT_INVALID, "vote-tx-process-fail");
         }
+
+    }
+
+    int64_t VoteTx::ConvertVote(VoteValue vote)
+    {
+        // Replace with more explicit serialization
+        return static_cast<int64_t>(vote);
+    }
+
+    VoteValue VoteTx::ConvertVote(int64_t vote)
+    {
+        // Replace with more explicit serialization
+        return static_cast<VoteValue>(vote);
+    }
+
+    Vote VoteTx::GetVote() const
+    {
+        return { candidate, ConvertVote(vote), time, voterId };
+    }
+
+    std::string VoteTx::ToString() const
+    {
+        return strprintf(
+            "VoteTx(candidate=%s,vote=%d,time=%d,voter=%s,election=%d)",
+            candidate.ToString(),vote, time, voterId.ToString(),electionCode
+        );
 
     }
 }
