@@ -215,7 +215,7 @@ static UniValue waitfornewblock(const JSONRPCRequest& request)
                 "\nWaits for a specific new block and returns useful info about it.\n"
                 "\nReturns the current block on timeout or exit.\n",
                 {
-                    {"timeout", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "0", "Time in milliseconds to wait for a response. 0 indicates no timeout."},
+                    {"timeout", RPCArg::Type::NUM, /* default */ "0", "Time in milliseconds to wait for a response. 0 indicates no timeout."},
                 },
                 RPCResult{
             "{                           (json object)\n"
@@ -256,8 +256,8 @@ static UniValue waitforblock(const JSONRPCRequest& request)
                 "\nWaits for a specific new block and returns useful info about it.\n"
                 "\nReturns the current block on timeout or exit.\n",
                 {
-                    {"blockhash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "Block hash to wait for."},
-                    {"timeout", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "0", "Time in milliseconds to wait for a response. 0 indicates no timeout."},
+                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Block hash to wait for."},
+                    {"timeout", RPCArg::Type::NUM, /* default */ "0", "Time in milliseconds to wait for a response. 0 indicates no timeout."},
                 },
                 RPCResult{
             "{                           (json object)\n"
@@ -302,8 +302,8 @@ static UniValue waitforblockheight(const JSONRPCRequest& request)
                 "of the current tip.\n"
                 "\nReturns the current block on timeout or exit.\n",
                 {
-                    {"height", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "Block height to wait for."},
-                    {"timeout", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "0", "Time in milliseconds to wait for a response. 0 indicates no timeout."},
+                    {"height", RPCArg::Type::NUM, RPCArg::Optional::NO, "Block height to wait for."},
+                    {"timeout", RPCArg::Type::NUM, /* default */ "0", "Time in milliseconds to wait for a response. 0 indicates no timeout."},
                 },
                 RPCResult{
             "{                           (json object)\n"
@@ -501,7 +501,7 @@ static UniValue getrawmempool(const JSONRPCRequest& request)
                 "\nReturns all transaction ids in memory pool as a json array of string transaction ids.\n"
                 "\nHint: use getmempoolentry to fetch a specific transaction from the mempool.\n",
                 {
-                    {"verbose", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "false", "True for a json object, false for array of transaction ids"},
+                    {"verbose", RPCArg::Type::BOOL, /* default */ "false", "True for a json object, false for array of transaction ids"},
                 },
                 RPCResult{"for verbose = false",
             "[                     (json array of string)\n"
@@ -535,8 +535,8 @@ static UniValue getmempoolancestors(const JSONRPCRequest& request)
             RPCHelpMan{"getmempoolancestors",
                 "\nIf txid is in the mempool, returns all in-mempool ancestors.\n",
                 {
-                    {"txid", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The transaction id (must be in mempool)"},
-                    {"verbose", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "false", "True for a json object, false for array of transaction ids"},
+                    {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id (must be in mempool)"},
+                    {"verbose", RPCArg::Type::BOOL, /* default */ "false", "True for a json object, false for array of transaction ids"},
                 },
                 {
                     RPCResult{"for verbose = false",
@@ -605,8 +605,8 @@ static UniValue getmempooldescendants(const JSONRPCRequest& request)
             RPCHelpMan{"getmempooldescendants",
                 "\nIf txid is in the mempool, returns all in-mempool descendants.\n",
                 {
-                    {"txid", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The transaction id (must be in mempool)"},
-                    {"verbose", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "false", "True for a json object, false for array of transaction ids"},
+                    {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id (must be in mempool)"},
+                    {"verbose", RPCArg::Type::BOOL, /* default */ "false", "True for a json object, false for array of transaction ids"},
                 },
                 {
                     RPCResult{"for verbose = false",
@@ -675,7 +675,7 @@ static UniValue getmempoolentry(const JSONRPCRequest& request)
             RPCHelpMan{"getmempoolentry",
                 "\nReturns mempool data for given transaction\n",
                 {
-                    {"txid", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The transaction id (must be in mempool)"},
+                    {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id (must be in mempool)"},
                 },
                 RPCResult{
             "{                           (json object)\n"
@@ -711,7 +711,7 @@ static UniValue getblockhash(const JSONRPCRequest& request)
             RPCHelpMan{"getblockhash",
                 "\nReturns hash of block in best-block-chain at height provided.\n",
                 {
-                    {"height", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "The height index"},
+                    {"height", RPCArg::Type::NUM, RPCArg::Optional::NO, "The height index"},
                 },
                 RPCResult{
             "\"hash\"         (string) The block hash\n"
@@ -740,8 +740,8 @@ static UniValue getblockheader(const JSONRPCRequest& request)
                 "\nIf verbose is false, returns a string that is serialized, hex-encoded data for blockheader 'hash'.\n"
                 "If verbose is true, returns an Object with information about blockheader <hash>.\n",
                 {
-                    {"blockhash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The block hash"},
-                    {"verbose", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "true", "true for a json object, false for the hex-encoded data"},
+                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
+                    {"verbose", RPCArg::Type::BOOL, /* default */ "true", "true for a json object, false for the hex-encoded data"},
                 },
                 {
                     RPCResult{"for verbose = true",
@@ -830,8 +830,8 @@ static UniValue getblock(const JSONRPCRequest& request)
                 "If verbosity is 1, returns an Object with information about block <hash>.\n"
                 "If verbosity is 2, returns an Object with information about block <hash> and information about each transaction. \n",
                 {
-                    {"blockhash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The block hash"},
-                    {"verbosity", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "1", "0 for hex-encoded data, 1 for a json object, and 2 for json object with transaction data"},
+                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
+                    {"verbosity", RPCArg::Type::NUM, /* default */ "1", "0 for hex-encoded data, 1 for a json object, and 2 for json object with transaction data"},
                 },
                 {
                     RPCResult{"for verbosity = 0",
@@ -986,7 +986,7 @@ static UniValue pruneblockchain(const JSONRPCRequest& request)
         throw std::runtime_error(
             RPCHelpMan{"pruneblockchain", "",
                 {
-                    {"height", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "The block height to prune up to. May be set to a discrete height, or a unix timestamp\n"
+                    {"height", RPCArg::Type::NUM, RPCArg::Optional::NO, "The block height to prune up to. May be set to a discrete height, or a unix timestamp\n"
             "                  to prune blocks whose block time is at least 2 hours older than the provided timestamp."},
                 },
                 RPCResult{
@@ -1085,9 +1085,9 @@ UniValue gettxout(const JSONRPCRequest& request)
             RPCHelpMan{"gettxout",
                 "\nReturns details about an unspent transaction output.\n",
                 {
-                    {"txid", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The transaction id"},
-                    {"n", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "vout number"},
-                    {"include_mempool", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "true", "Whether to include the mempool. Note that an unspent output that is spent in the mempool won't appear."},
+                    {"txid", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction id"},
+                    {"n", RPCArg::Type::NUM, RPCArg::Optional::NO, "vout number"},
+                    {"include_mempool", RPCArg::Type::BOOL, /* default */ "true", "Whether to include the mempool. Note that an unspent output that is spent in the mempool won't appear."},
                 },
                 RPCResult{
             "{\n"
@@ -1166,8 +1166,8 @@ static UniValue verifychain(const JSONRPCRequest& request)
             RPCHelpMan{"verifychain",
                 "\nVerifies blockchain database.\n",
                 {
-                    {"checklevel", RPCArg::Type::NUM, /* opt */ true, /* default_val */ strprintf("%d, range=0-4", nCheckLevel), "How thorough the block verification is."},
-                    {"nblocks", RPCArg::Type::NUM, /* opt */ true, /* default_val */ strprintf("%d, 0=all", nCheckDepth), "The number of blocks to check."},
+                    {"checklevel", RPCArg::Type::NUM, /* default */ strprintf("%d, range=0-4", nCheckLevel), "How thorough the block verification is."},
+                    {"nblocks", RPCArg::Type::NUM, /* default */ strprintf("%d, 0=all", nCheckDepth), "The number of blocks to check."},
                 },
                 RPCResult{
             "true|false       (boolean) Verified or not\n"
@@ -1534,7 +1534,7 @@ static UniValue preciousblock(const JSONRPCRequest& request)
                 "\nA later preciousblock call can override the effect of an earlier one.\n"
                 "\nThe effects of preciousblock are not retained across restarts.\n",
                 {
-                    {"blockhash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "the hash of the block to mark as precious"},
+                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hash of the block to mark as precious"},
                 },
                 RPCResults{},
                 RPCExamples{
@@ -1571,7 +1571,7 @@ static UniValue invalidateblock(const JSONRPCRequest& request)
             RPCHelpMan{"invalidateblock",
                 "\nPermanently marks a block as invalid, as if it violated a consensus rule.\n",
                 {
-                    {"blockhash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "the hash of the block to mark as invalid"},
+                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hash of the block to mark as invalid"},
                 },
                 RPCResults{},
                 RPCExamples{
@@ -1612,7 +1612,7 @@ static UniValue reconsiderblock(const JSONRPCRequest& request)
                 "\nRemoves invalidity status of a block, its ancestors and its descendants, reconsider them for activation.\n"
                 "This can be used to undo the effects of invalidateblock.\n",
                 {
-                    {"blockhash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "the hash of the block to reconsider"},
+                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hash of the block to reconsider"},
                 },
                 RPCResults{},
                 RPCExamples{
@@ -1650,8 +1650,8 @@ static UniValue getchaintxstats(const JSONRPCRequest& request)
             RPCHelpMan{"getchaintxstats",
                 "\nCompute statistics about the total number and rate of transactions in the chain.\n",
                 {
-                    {"nblocks", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "one month", "Size of the window in number of blocks"},
-                    {"blockhash", RPCArg::Type::STR_HEX, /* opt */ true, /* default_val */ "chain tip", "The hash of the block that ends the window."},
+                    {"nblocks", RPCArg::Type::NUM, /* default */ "one month", "Size of the window in number of blocks"},
+                    {"blockhash", RPCArg::Type::STR_HEX, /* default */ "chain tip", "The hash of the block that ends the window."},
                 },
                 RPCResult{
             "{\n"
@@ -1785,11 +1785,11 @@ static UniValue getblockstats(const JSONRPCRequest& request)
                 "It won't work for some heights with pruning.\n"
                 "It won't work without -txindex for utxo_size_inc, *fee or *feerate stats.\n",
                 {
-                    {"hash_or_height", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "The block hash or height of the target block", "", {"", "string or numeric"}},
-                    {"stats", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "all values", "Values to plot (see result below)",
+                    {"hash_or_height", RPCArg::Type::NUM, RPCArg::Optional::NO, "The block hash or height of the target block", "", {"", "string or numeric"}},
+                    {"stats", RPCArg::Type::ARR, /* default */ "all values", "Values to plot (see result below)",
                         {
-                            {"height", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "Selected statistic"},
-                            {"time", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "Selected statistic"},
+                            {"height", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Selected statistic"},
+                            {"time", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Selected statistic"},
                         },
                         "stats"},
                 },
@@ -2148,18 +2148,18 @@ UniValue scantxoutset(const JSONRPCRequest& request)
                 "In the latter case, a range needs to be specified by below if different from 1000.\n"
                 "For more information on output descriptors, see the documentation in the doc/descriptors.md file.\n",
                 {
-                    {"action", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The action to execute\n"
+                    {"action", RPCArg::Type::STR, RPCArg::Optional::NO, "The action to execute\n"
             "                                      \"start\" for starting a scan\n"
             "                                      \"abort\" for aborting the current scan (returns true when abort was successful)\n"
             "                                      \"status\" for progress report (in %) of the current scan"},
-                    {"scanobjects", RPCArg::Type::ARR, /* opt */ false, /* default_val */ "", "Array of scan objects\n"
+                    {"scanobjects", RPCArg::Type::ARR, RPCArg::Optional::NO, "Array of scan objects\n"
             "                                  Every scan object is either a string descriptor or an object:",
                         {
-                            {"descriptor", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "An output descriptor"},
-                            {"", RPCArg::Type::OBJ, /* opt */ true, /* default_val */ "", "An object with output descriptor and metadata",
+                            {"descriptor", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "An output descriptor"},
+                            {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "An object with output descriptor and metadata",
                                 {
-                                    {"desc", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "An output descriptor"},
-                                    {"range", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "1000", "Up to what child index HD chains should be explored"},
+                                    {"desc", RPCArg::Type::STR, RPCArg::Optional::NO, "An output descriptor"},
+                                    {"range", RPCArg::Type::NUM, /* default */ "1000", "Up to what child index HD chains should be explored"},
                                 },
                             },
                         },
