@@ -254,6 +254,11 @@ void SendCoinsDialog::on_sendButton_clicked()
         return;
     }
 
+    // apply BIP69
+    if (bBIP69Enabled) {
+        std::sort(recipients.begin(), recipients.end(), CompareSendCoinsRecipientBIP69());
+    }
+
     QString strFunds = tr("using") + " <b>" + tr("anonymous funds") + "</b>";
     QString strFee = "";
     recipients[0].inputType = ONLY_DENOMINATED;
