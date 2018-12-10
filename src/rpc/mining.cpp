@@ -717,7 +717,7 @@ static UniValue submitblock(const JSONRPCRequest& request)
                 "See https://en.bitcoin.it/wiki/BIP_0022 for full specification.\n",
                 {
                     {"hexdata", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "the hex-encoded block data to submit"},
-                    {"dummy", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "dummy value, for compatibility with BIP22. This value is ignored."},
+                    {"dummy", RPCArg::Type::STR, /* opt */ true, /* default_val */ "ignored", "dummy value, for compatibility with BIP22. This value is ignored."},
                 }}
                 .ToString() +
             "\nResult:\n"
@@ -888,9 +888,9 @@ static UniValue estimaterawfee(const JSONRPCRequest& request)
                 "defined in BIP 141 (witness data is discounted).\n",
                 {
                     {"conf_target", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "Confirmation target in blocks (1 - 1008)"},
-                    {"threshold", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "", "The proportion of transactions in a given feerate range that must have been\n"
+                    {"threshold", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "0.95", "The proportion of transactions in a given feerate range that must have been\n"
             "               confirmed within conf_target in order to consider those feerates as high enough and proceed to check\n"
-            "               lower buckets.  Default: 0.95"},
+            "               lower buckets."},
                 }}
                 .ToString() +
             "\nResult:\n"

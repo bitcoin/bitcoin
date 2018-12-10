@@ -212,11 +212,9 @@ static UniValue waitfornewblock(const JSONRPCRequest& request)
                 "\nWaits for a specific new block and returns useful info about it.\n"
                 "\nReturns the current block on timeout or exit.\n",
                 {
-                    {"timeout", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "", ""},
+                    {"timeout", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "0", "Time in milliseconds to wait for a response. 0 indicates no timeout."},
                 }}
                 .ToString() +
-            "\nArguments:\n"
-            "1. timeout (int, optional, default=0) Time in milliseconds to wait for a response. 0 indicates no timeout.\n"
             "\nResult:\n"
             "{                           (json object)\n"
             "  \"hash\" : {       (string) The blockhash\n"
@@ -1609,7 +1607,7 @@ static UniValue getchaintxstats(const JSONRPCRequest& request)
                 "\nCompute statistics about the total number and rate of transactions in the chain.\n",
                 {
                     {"nblocks", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "one month", "Size of the window in number of blocks"},
-                    {"blockhash", RPCArg::Type::STR_HEX, /* opt */ true, /* default_val */ "", "The hash of the block that ends the window."},
+                    {"blockhash", RPCArg::Type::STR_HEX, /* opt */ true, /* default_val */ "chain tip", "The hash of the block that ends the window."},
                 }}
                 .ToString() +
             "\nResult:\n"
@@ -1743,7 +1741,7 @@ static UniValue getblockstats(const JSONRPCRequest& request)
                 "It won't work without -txindex for utxo_size_inc, *fee or *feerate stats.\n",
                 {
                     {"hash_or_height", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "The block hash or height of the target block", "", {"", "string or numeric"}},
-                    {"stats", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "", "Values to plot, by default all values (see result below)",
+                    {"stats", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "all values", "Values to plot (see result below)",
                         {
                             {"height", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "Selected statistic"},
                             {"time", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "Selected statistic"},
