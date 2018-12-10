@@ -191,10 +191,66 @@ BOOST_FIXTURE_TEST_SUITE(TestApprovalVoting, TestApprovalVotingFixture)
         av.AcceptVote(VoteFor(agent007, voter1));
         av.AcceptVote(VoteFor(agent007, voter1));
 
-        auto agents = av.CalculateResult(); // 006 && 008 have 1 vote, 007 has two votes
-        auto expected = std::vector<uint256>{agent007};
+        auto agents = av.CalculateResult();
 
         BOOST_CHECK(agents.empty());
+    }
+
+    BOOST_AUTO_TEST_CASE(ChangeThreshold)
+    {
+        auto threshold = 0;
+        auto av = Platform::ApprovalVoting(threshold);
+
+        av.RegisterCandidate(agent007);
+        av.AcceptVote(VoteFor(agent007, voter1));
+
+        BOOST_REQUIRE(!av.CalculateResult().empty());
+        av.SetThreshold(1);
+
+        BOOST_CHECK(av.CalculateResult().empty());
+    }
+
+    BOOST_AUTO_TEST_CASE(ChangeThresholdFiresNotification)
+    {
+        auto threshold = 0;
+        auto av = Platform::ApprovalVoting(threshold);
+
+        auto fired = false;
+        auto OnChanged = [&fired](){ fired = true; };
+        av.NotifyResultChange(OnChanged);
+
+        av.SetThreshold(1);
+
+        BOOST_CHECK(fired);
+    }
+
+    BOOST_AUTO_TEST_CASE(AcceptVoteFiresNotification)
+    {
+        auto threshold = 0;
+        auto av = Platform::ApprovalVoting(threshold);
+
+        auto fired = false;
+        auto OnChanged = [&fired](){ fired = true; };
+        av.NotifyResultChange(OnChanged);
+
+        av.RegisterCandidate(agent007);
+        av.AcceptVote(VoteFor(agent007, voter1));
+
+        BOOST_CHECK(fired);
+    }
+
+    BOOST_AUTO_TEST_CASE(RejectVoteDoesntFireNotification)
+    {
+        auto threshold = 0;
+        auto av = Platform::ApprovalVoting(threshold);
+
+        auto fired = false;
+        auto OnChanged = [&fired](){ fired = true; };
+        av.NotifyResultChange(OnChanged);
+
+        av.AcceptVote(VoteFor(agent007, voter1));
+
+        BOOST_CHECK(!fired);
     }
 
 BOOST_AUTO_TEST_SUITE_END()

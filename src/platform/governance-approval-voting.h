@@ -18,6 +18,8 @@ namespace Platform
             : m_threshold(threshhold)
         {}
 
+        void SetThreshold(int threshhold);
+
         void RegisterCandidate(uint256 id) override;
         void AcceptVote(const Vote &vote) override;
         std::vector<uint256> CalculateResult() const override;
@@ -33,6 +35,7 @@ namespace Platform
         };
         int m_threshold;
         std::map<uint256, std::map<CTxIn, Vote, CompareTxIn>> m_votes; //TODO: refactor to boost::multi_index
+        std::vector<std::function<void()>> m_observers;
     };
 }
 

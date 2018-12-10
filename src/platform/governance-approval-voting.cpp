@@ -4,6 +4,8 @@
 
 #include "governance-approval-voting.h"
 
+#include <boost/range/algorithm.hpp>
+
 namespace Platform
 {
     void ApprovalVoting::RegisterCandidate(uint256 id)
@@ -17,6 +19,7 @@ namespace Platform
         if (votes == m_votes.end())
             return;
 
+        boost::for_each(m_observers, [](std::function<void()> notify) { notify(); });
         votes->second.insert(std::make_pair(vote.VoterId(), vote));
     }
 
@@ -40,5 +43,14 @@ namespace Platform
         return boost::accumulate(m_votes, result, AppendVote);
     }
 
-    void ApprovalVoting::NotifyResultChange(std::function<void()> onStateChanged) {}
+    void ApprovalVoting::NotifyResultChange(std::function<void()> onStateChanged)
+    {
+        m_observers.push_back(onStateChanged);
+    }
+
+    void ApprovalVoting::SetThreshold(int threshhold)
+    {
+        m_threshold = threshhold;
+        boost::for_each(m_observers, [](std::function<void()> notify) { notify(); });
+    }
 }
