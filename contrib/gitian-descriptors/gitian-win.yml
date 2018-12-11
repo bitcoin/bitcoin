@@ -1,5 +1,5 @@
 ---
-name: "syscoin-win-3.0"
+name: "syscoin-win-3.2"
 enable_cache: true
 suites:
 - "trusty"

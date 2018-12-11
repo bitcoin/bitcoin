@@ -321,7 +321,7 @@ bool AccumulateInterestSinceLastClaim(CAssetAllocation & assetAllocation, const 
 	if (nBlocksSinceLastUpdate <= 0)
 		return false;
 	// formula is 1/N * (blocks since last update * previous balance/interest rate) where N is the number of blocks in the total time period
-	assetAllocation.nAccumulatedBalanceSinceLastInterestClaim += assetAllocation.nBalance*nBlocksSinceLastUpdate;
+	assetAllocation.nAccumulatedBalanceSinceLastInterestClaim += ((double)assetAllocation.nBalance)*nBlocksSinceLastUpdate;
 	assetAllocation.fAccumulatedInterestSinceLastInterestClaim += assetAllocation.fInterestRate*nBlocksSinceLastUpdate;
 	return true;
 }
@@ -1397,8 +1397,8 @@ void AssetAllocationTxToJSON(const int op, const std::vector<unsigned char> &vch
 }
 bool CAssetAllocationTransactionsDB::ScanAssetAllocationIndex(const int count, const int from, const UniValue& oOptions, UniValue& oRes) {
 	string strTxid = "";
-	string strSender = "";
-	string strReceiver = "";
+	vector<string> vecSenders;
+	vector<string> vecReceivers;
 	string strAsset = "";
 	bool bParseKey = false;
 	int nStartBlock = 0;
@@ -1413,25 +1413,43 @@ bool CAssetAllocationTransactionsDB::ScanAssetAllocationIndex(const int count, c
 			strAsset = asset.get_str();
 			bParseKey = true;
 		}
-		const UniValue &senderAlias = find_value(oOptions, "sender_alias");
-		if (senderAlias.isStr()) {
-			strSender = senderAlias.get_str();
-			bParseKey = true;
+		const UniValue &senders = find_value(oOptions, "senders");
+		if (senders.isArray()) {
+			const UniValue &sendersArray = senders.get_array();
+			for (int i = 0; i < sendersArray.size();i++) {
+				const UniValue &sender = sendersArray[i].get_obj();
+				const UniValue &senderAlias = find_value(sender, "sender_alias");
+				if (senderAlias.isStr()) {
+					vecSenders.push_back(senderAlias.get_str());
+					bParseKey = true;
+				}
+				else {
+					const UniValue &senderAddress = find_value(sender, "sender_address");
+					if (senderAddress.isStr()) {
+						vecSenders.push_back(senderAddress.get_str());
+						bParseKey = true;
+					}
+				}
+			}
 		}
-		const UniValue &senderAddress = find_value(oOptions, "sender_address");
-		if (senderAddress.isStr()) {
-			strSender = senderAddress.get_str();
-			bParseKey = true;
-		}
-		const UniValue &receiverAlias = find_value(oOptions, "receiver_alias");
-		if (receiverAlias.isStr()) {
-			strReceiver = receiverAlias.get_str();
-			bParseKey = true;
-		}
-		const UniValue &receiverAddress = find_value(oOptions, "receiver_address");
-		if (receiverAddress.isStr()) {
-			strReceiver = receiverAddress.get_str();
-			bParseKey = true;
+		const UniValue &receivers = find_value(oOptions, "receivers");
+		if (receivers.isArray()) {
+			const UniValue &receiversArray = senders.get_array();
+			for (int i = 0; i < receiversArray.size(); i++) {
+				const UniValue &receiver = receiversArray[i].get_obj();
+				const UniValue &receiverAlias = find_value(receiver, "receiver_alias");
+				if (receiverAlias.isStr()) {
+					vecSenders.push_back(receiverAlias.get_str());
+					bParseKey = true;
+				}
+				else {
+					const UniValue &receiverAddress = find_value(receiver, "receiver_address");
+					if (receiverAddress.isStr()) {
+						vecSenders.push_back(receiverAddress.get_str());
+						bParseKey = true;
+					}
+				}
+			}
 		}
 		const UniValue &startblock = find_value(oOptions, "startblock");
 		if (startblock.isNum()) {
@@ -1452,9 +1470,9 @@ bool CAssetAllocationTransactionsDB::ScanAssetAllocationIndex(const int count, c
 					continue;
 				if (!strAsset.empty() && strAsset != contents[1])
 					continue;
-				if (!strSender.empty() && strSender != contents[2])
+				if (!vecSenders.empty() && std::find(vecSenders.begin(), vecSenders.end(), contents[2]) == vecSenders.end())
 					continue;
-				if (!strReceiver.empty() && strReceiver != contents[3])
+				if (!vecReceivers.empty() && std::find(vecReceivers.begin(), vecReceivers.end(), contents[3]) == vecReceivers.end())
 					continue;
 			}
 			index += 1;
@@ -1574,15 +1592,27 @@ UniValue listassetallocationtransactions(const JSONRPCRequest& request) {
 			"    {\n"
 			"      \"txid\":txid					(string) Transaction ID to filter.\n"
 			"	   \"asset\":guid					(string) Asset GUID to filter.\n"
-			"      \"sender_alias\":string			(string) Sender alias to filter.\n"
-			"      \"sender_address\":string		(string) Sender address to filter.\n"
-			"      \"receiver_alias\":string		(string) Receiver alias to filter.\n"
-			"      \"receiver_address\":string		(string) Receiver address to filter.\n"
+			"	   \"senders\"						(array, optional) a json array with senders\n"
+			"		[\n"
+			"			{\n"
+			"				\"sender_alias\":string			(string) Sender alias to filter.\n"
+			"				\"sender_address\":string		(string) Sender address to filter.\n"
+			"			} \n"
+			"			,...\n"
+			"		]\n"
+			"	   \"receivers\"					(array, optional) a json array with receivers\n"
+			"		[\n"
+			"			{\n"
+			"				\"receiver_alias\":string		(string) Receiver alias to filter.\n"
+			"				\"receiver_address\":string		(string) Receiver address to filter.\n"
+			"			} \n"
+			"			,...\n"
+			"		]\n"
 			"      \"startblock\":block 			(number) Earliest block to filter from. Block number is the block at which the transaction would have entered your mempool.\n"
 			"    }\n"
 			+ HelpExampleCli("listassetallocationtransactions", "0 10")
 			+ HelpExampleCli("listassetallocationtransactions", "0 0 '{\"asset\":\"32bff1fa844c124\",\"startblock\":0}'")
-			+ HelpExampleCli("listassetallocationtransactions", "0 0 '{\"sender_address\":\"SfaMwYY19Dh96B9qQcJQuiNykVRTzXMsZR\"}'")
+			+ HelpExampleCli("listassetallocationtransactions", "0 0 '{\"senders\":[{\"sender_address\":\"SfaMwYY19Dh96B9qQcJQuiNykVRTzXMsZR\"},{\"sender_address\":\"SfaMwYY19Dh96B9qQcJQuiNykVRTzXMsZR\"}]}'")
 			+ HelpExampleCli("listassetallocationtransactions", "0 0 '{\"txid\":\"1c7f966dab21119bac53213a2bc7532bff1fa844c124fd750a7d0b1332440bd1\"}'")
 		);
 	UniValue options;
