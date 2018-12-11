@@ -15,7 +15,9 @@ from test_framework.test_node import ErrorMatch
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    wait_until,
 )
+from test_framework.authproxy import JSONRPCException
 
 
 class MultiWalletTest(BitcoinTestFramework):
@@ -308,11 +310,11 @@ class MultiWalletTest(BitcoinTestFramework):
             rpc.backupwallet(backup)
             self.nodes[0].unloadwallet(wallet_name)
             shutil.copyfile(empty_wallet, wallet_file(wallet_name))
-            self.nodes[0].loadwallet(wallet_name)
+            wait_until(lambda: self.nodes[0].loadwallet(wallet_name), ignore_exceptions=(JSONRPCException,))
             assert_equal(rpc.getaddressinfo(addr)['ismine'], False)
             self.nodes[0].unloadwallet(wallet_name)
             shutil.copyfile(backup, wallet_file(wallet_name))
-            self.nodes[0].loadwallet(wallet_name)
+            wait_until(lambda: self.nodes[0].loadwallet(wallet_name), ignore_exceptions=(JSONRPCException,))
             assert_equal(rpc.getaddressinfo(addr)['ismine'], True)
 
 
