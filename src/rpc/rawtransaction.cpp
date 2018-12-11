@@ -1104,7 +1104,7 @@ static UniValue sendrawtransaction(const JSONRPCRequest& request)
 
 static UniValue testmempoolaccept(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2) {
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3) {
         throw std::runtime_error(
             RPCHelpMan{"testmempoolaccept",
                 "\nReturns result of mempool acceptance tests indicating if raw transaction (serialized, hex-encoded) would be accepted by mempool.\n"
@@ -1118,6 +1118,7 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
                         },
                         },
                     {"allowhighfees", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "false", "Allow high fees"},
+                    {"allowunsignedtxs", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "false", "Allow test unsigned transactions"},
                 }}
                 .ToString() +
             "\nResult:\n"
@@ -1141,7 +1142,7 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
             );
     }
 
-    RPCTypeCheck(request.params, {UniValue::VARR, UniValue::VBOOL});
+    RPCTypeCheck(request.params, {UniValue::VARR, UniValue::VBOOL, UniValue::VBOOL});
     if (request.params[0].get_array().size() != 1) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Array must contain exactly one raw transaction for now");
     }
@@ -1162,13 +1163,18 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
     UniValue result_0(UniValue::VOBJ);
     result_0.pushKV("txid", tx_hash.GetHex());
 
+    bool test_accept_unsigned = false;
+    if (!request.params[2].isNull() && request.params[2].get_bool()) {
+        test_accept_unsigned = true;
+    }
+
     CValidationState state;
     bool missing_inputs;
     bool test_accept_res;
     {
         LOCK(cs_main);
         test_accept_res = AcceptToMemoryPool(mempool, state, std::move(tx), &missing_inputs,
-            nullptr /* plTxnReplaced */, false /* bypass_limits */, max_raw_tx_fee, /* test_accept */ true);
+            nullptr /* plTxnReplaced */, false /* bypass_limits */, max_raw_tx_fee, /* test_accept */ true, test_accept_unsigned);
     }
     result_0.pushKV("allowed", test_accept_res);
     if (!test_accept_res) {
@@ -1751,7 +1757,7 @@ static const CRPCCommand commands[] =
     { "rawtransactions",    "combinerawtransaction",        &combinerawtransaction,     {"txs"} },
     { "hidden",             "signrawtransaction",           &signrawtransaction,        {"hexstring","prevtxs","privkeys","sighashtype"} },
     { "rawtransactions",    "signrawtransactionwithkey",    &signrawtransactionwithkey, {"hexstring","privkeys","prevtxs","sighashtype"} },
-    { "rawtransactions",    "testmempoolaccept",            &testmempoolaccept,         {"rawtxs","allowhighfees"} },
+    { "rawtransactions",    "testmempoolaccept",            &testmempoolaccept,         {"rawtxs","allowhighfees","allowunsignedtxs"} },
     { "rawtransactions",    "decodepsbt",                   &decodepsbt,                {"psbt"} },
     { "rawtransactions",    "combinepsbt",                  &combinepsbt,               {"txs"} },
     { "rawtransactions",    "finalizepsbt",                 &finalizepsbt,              {"psbt", "extract"} },

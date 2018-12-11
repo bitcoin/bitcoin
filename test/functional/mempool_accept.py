@@ -65,6 +65,8 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, 'Array must contain exactly one raw transaction for now', lambda: node.testmempoolaccept(rawtxs=['ff00baar', 'ff22']))
         assert_raises_rpc_error(-22, 'TX decode failed', lambda: node.testmempoolaccept(rawtxs=['ff00baar']))
 
+        coins = node.listunspent()
+
         self.log.info('A transaction already in the blockchain')
         coin = coins.pop()  # Pick a random coin(base) to spend
         raw_tx_in_block = node.signrawtransactionwithwallet(node.createrawtransaction(
@@ -77,6 +79,26 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         self.check_mempool_result(
             result_expected=[{'txid': txid_in_block, 'allowed': False, 'reject-reason': '18: txn-already-known'}],
             rawtxs=[raw_tx_in_block],
+        )
+
+        self.log.info('An unsigned transaction')
+        coin = coins.pop()  # Pick a random coin(base) to spend
+        raw_unsigned_tx = node.createrawtransaction(
+            inputs=[{'txid': coin['txid'], 'vout': coin['vout']}],
+            outputs=[{node.getnewaddress(): 0.99}, {node.getnewaddress(): 49}],
+        )
+        tx = CTransaction()
+        tx.deserialize(BytesIO(hex_str_to_bytes(raw_unsigned_tx)))
+        raw_unsigned_txid = tx.rehash()
+        self.check_mempool_result(
+            result_expected=[{'txid': raw_unsigned_txid, 'allowed': False, 'reject-reason': '16: mandatory-script-verify-flag-failed (Operation not valid with the current stack size)'}],
+            rawtxs=[raw_unsigned_tx],
+        )
+        self.check_mempool_result(
+            result_expected=[{'txid': raw_unsigned_txid, 'allowed': True}],
+            rawtxs=[raw_unsigned_tx],
+            allowunsignedtxs=True,
+            allowhighfees=False
         )
 
         self.log.info('A transaction not in the mempool')
