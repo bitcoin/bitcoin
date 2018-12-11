@@ -65,6 +65,11 @@ public:
         TAB_PEERS = 3
     };
 
+    std::vector<TabTypes> tabs() const { return {TAB_INFO, TAB_CONSOLE, TAB_GRAPH, TAB_PEERS}; }
+
+    TabTypes tabFocus() const;
+    QString tabTitle(TabTypes tab_type) const;
+
 protected:
     virtual bool eventFilter(QObject* obj, QEvent *event);
     void keyPressEvent(QKeyEvent *);
