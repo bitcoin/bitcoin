@@ -315,7 +315,6 @@ bool mastercore::isCrowdsalePurchase(const uint256& txid, const std::string& add
         for (uint32_t loopPropertyId = startPropertyId; loopPropertyId < _my_sps->peekNextSPID(ecosystem); loopPropertyId++) {
             CMPSPInfo::Entry sp;
             if (!_my_sps->getSP(loopPropertyId, sp)) continue;
-            if (sp.issuer != address) continue;
             for (std::map<uint256, std::vector<int64_t> >::const_iterator it = sp.historicalData.begin(); it != sp.historicalData.end(); it++) {
                 if (it->first == txid) {
                     *propertyId = loopPropertyId;
