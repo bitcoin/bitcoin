@@ -25,6 +25,7 @@ class FileCorruptionTest(BitcoinTestFramework):
             mempool_dat.write(b'ff')
         with self.nodes[0].assert_debug_log(expected_msgs=['Failed to deserialize mempool data on disk']):
             self.start_nodes()
+        self.stop_node(0, expected_stderr='Warning: Failed to deserialize mempool data on disk: CAutoFile::read: end of file: iostream error. Continuing anyway.')
 
 
 if __name__ == '__main__':

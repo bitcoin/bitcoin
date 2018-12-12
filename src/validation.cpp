@@ -4749,7 +4749,7 @@ bool LoadMempool()
             mempool.PrioritiseTransaction(i.first, i.second);
         }
     } catch (const std::exception& e) {
-        LogPrintf("Failed to deserialize mempool data on disk: %s. Continuing anyway.\n", e.what());
+        UIWarning(strprintf("Failed to deserialize mempool data on disk: %s. Continuing anyway.\n", e.what()));
         return false;
     }
 
