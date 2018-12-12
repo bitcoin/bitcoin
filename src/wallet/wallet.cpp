@@ -1611,8 +1611,9 @@ int64_t CWallet::RescanFromTime(int64_t startTime, const WalletRescanReserver& r
     }
 
     if (startBlock) {
-        const CBlockIndex* const failedBlock = ScanForWalletTransactions(startBlock, nullptr, reserver, update);
-        if (failedBlock) {
+        const CBlockIndex *failedBlock, *stop_block;
+        // TODO: this should take into account failure by ScanResult::USER_ABORT
+        if (ScanResult::FAILURE == ScanForWalletTransactions(startBlock, nullptr, reserver, failedBlock, stop_block, update)) {
             return failedBlock->GetBlockTimeMax() + TIMESTAMP_WINDOW + 1;
         }
     }
@@ -1624,18 +1625,22 @@ int64_t CWallet::RescanFromTime(int64_t startTime, const WalletRescanReserver& r
  * from or to us. If fUpdate is true, found transactions that already
  * exist in the wallet will be updated.
  *
- * Returns null if scan was successful. Otherwise, if a complete rescan was not
- * possible (due to pruning or corruption), returns pointer to the most recent
- * block that could not be scanned.
+ * @param[in] pindexStop if not a nullptr, the scan will stop at this block-index
+ * @param[out] failed_block if FAILURE is returned, the most recent block
+ *     that could not be scanned, otherwise nullptr
+ * @param[out] stop_block the most recent block that could be scanned,
+ *     otherwise nullptr if no block could be scanned
  *
- * If pindexStop is not a nullptr, the scan will stop at the block-index
- * defined by pindexStop
+ * @return ScanResult indicating success or failure of the scan. SUCCESS if
+ * scan was successful. FAILURE if a complete rescan was not possible (due to
+ * pruning or corruption). USER_ABORT if the rescan was aborted before it
+ * could complete.
  *
- * Caller needs to make sure pindexStop (and the optional pindexStart) are on
+ * @pre Caller needs to make sure pindexStop (and the optional pindexStart) are on
  * the main chain after to the addition of any new keys you want to detect
  * transactions for.
  */
-CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, CBlockIndex* pindexStop, const WalletRescanReserver &reserver, bool fUpdate)
+CWallet::ScanResult CWallet::ScanForWalletTransactions(const CBlockIndex* const pindexStart, const CBlockIndex* const pindexStop, const WalletRescanReserver& reserver, const CBlockIndex*& failed_block, const CBlockIndex*& stop_block, bool fUpdate)
 {
     int64_t nNow = GetTime();
     const CChainParams& chainParams = Params();
@@ -1645,8 +1650,8 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, CBlock
         assert(pindexStop->nHeight >= pindexStart->nHeight);
     }
 
-    CBlockIndex* pindex = pindexStart;
-    CBlockIndex* ret = nullptr;
+    const CBlockIndex* pindex = pindexStart;
+    failed_block = nullptr;
 
     if (pindex) WalletLogPrintf("Rescan started from block %d...\n", pindex->nHeight);
 
@@ -1667,8 +1672,7 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, CBlock
             }
         }
         double progress_current = progress_begin;
-        while (pindex && !fAbortRescan && !ShutdownRequested())
-        {
+        while (pindex && !fAbortRescan && !ShutdownRequested()) {
             if (pindex->nHeight % 100 == 0 && progress_end - progress_begin > 0.0) {
                 ShowProgress(strprintf("%s " + _("Rescanning..."), GetDisplayName()), std::max(1, std::min(99, (int)((progress_current - progress_begin) / (progress_end - progress_begin) * 100))));
             }
@@ -1684,14 +1688,17 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, CBlock
                 if (pindex && !chainActive.Contains(pindex)) {
                     // Abort scan if current block is no longer active, to prevent
                     // marking transactions as coming from the wrong block.
-                    ret = pindex;
+                    failed_block = pindex;
                     break;
                 }
                 for (size_t posInBlock = 0; posInBlock < block.vtx.size(); ++posInBlock) {
                     SyncTransaction(block.vtx[posInBlock], pindex, posInBlock, fUpdate);
                 }
+                // scan succeeded, record block as most recent successfully scanned
+                stop_block = pindex;
             } else {
-                ret = pindex;
+                // could not scan block, keep scanning but record this block as the most recent failure
+                failed_block = pindex;
             }
             if (pindex == pindexStop) {
                 break;
@@ -1707,14 +1714,20 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, CBlock
                 }
             }
         }
+        ShowProgress(strprintf("%s " + _("Rescanning..."), GetDisplayName()), 100); // hide progress dialog in GUI
         if (pindex && fAbortRescan) {
             WalletLogPrintf("Rescan aborted at block %d. Progress=%f\n", pindex->nHeight, progress_current);
+            return ScanResult::USER_ABORT;
         } else if (pindex && ShutdownRequested()) {
             WalletLogPrintf("Rescan interrupted by shutdown request at block %d. Progress=%f\n", pindex->nHeight, progress_current);
+            return ScanResult::USER_ABORT;
         }
-        ShowProgress(strprintf("%s " + _("Rescanning..."), GetDisplayName()), 100); // hide progress dialog in GUI
     }
-    return ret;
+    if (failed_block) {
+        return ScanResult::FAILURE;
+    } else {
+        return ScanResult::SUCCESS;
+    }
 }
 
 void CWallet::ReacceptWalletTransactions()
@@ -4169,11 +4182,11 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
         nStart = GetTimeMillis();
         {
             WalletRescanReserver reserver(walletInstance.get());
-            if (!reserver.reserve()) {
+            const CBlockIndex *stop_block, *failed_block;
+            if (!reserver.reserve() || (ScanResult::SUCCESS != walletInstance->ScanForWalletTransactions(pindexRescan, nullptr, reserver, failed_block, stop_block, true))) {
                 InitError(_("Failed to rescan the wallet during initialization"));
                 return nullptr;
             }
-            walletInstance->ScanForWalletTransactions(pindexRescan, nullptr, reserver, true);
         }
         walletInstance->WalletLogPrintf("Rescan completed in %15dms\n", GetTimeMillis() - nStart);
         walletInstance->ChainStateFlushed(chainActive.GetLocator());
