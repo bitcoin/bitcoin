@@ -207,9 +207,11 @@ public:
 /** Base class for all Descriptor implementations. */
 class DescriptorImpl : public Descriptor
 {
-    //! Public key arguments for this descriptor (size 1 for PK, PKH, WPKH; any size of Multisig).
+    //! Public key arguments for this descriptor (size 1 for PK, PKH, WPKH; any size for Multisig).
     const std::vector<std::unique_ptr<PubkeyProvider>> m_pubkey_args;
     //! The sub-descriptor argument (nullptr for everything but SH and WSH).
+    //! In doc/descriptors.m this is referred to as SCRIPT expressions sh(SCRIPT)
+    //! and wsh(SCRIPT), and distinct from KEY expressions and ADDR expressions.
     const std::unique_ptr<DescriptorImpl> m_subdescriptor_arg;
     //! The string name of the descriptor function.
     const std::string m_name;
@@ -295,6 +297,8 @@ public:
         // Construct temporary data in `entries` and `subscripts`, to avoid producing output in case of failure.
         for (const auto& p : m_pubkey_args) {
             entries.emplace_back();
+            // If we have a cache, we don't need GetPubKey to compute the public key.
+            // Pass in nullptr to signify only origin info is desired.
             if (!p->GetPubKey(pos, arg, cache_read ? nullptr : &entries.back().first, entries.back().second)) return false;
             if (cache_read) {
                 // Cached expanded public key exists, use it.
