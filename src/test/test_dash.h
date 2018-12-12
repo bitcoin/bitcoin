@@ -16,9 +16,16 @@
 #include <txmempool.h>
 
 #include <memory>
+#include <type_traits>
 
 #include <boost/thread.hpp>
 
+// Enable BOOST_CHECK_EQUAL for enum class types
+template <typename T>
+std::ostream& operator<<(typename std::enable_if<std::is_enum<T>::value, std::ostream>::type& stream, const T& e)
+{
+    return stream << static_cast<typename std::underlying_type<T>::type>(e);
+}
 /**
  * This global and the helpers that use it are not thread-safe.
  *
