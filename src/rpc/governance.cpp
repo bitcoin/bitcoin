@@ -4,7 +4,6 @@
 
 //#define ENABLE_CHAINCOIN_DEBUG
 
-#include <modules/masternode/activemasternode.h>
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <modules/platform/funding.h>
@@ -13,6 +12,7 @@
 #include <modules/platform/funding_validators.h>
 #include <init.h>
 #include <validation.h>
+#include <modules/masternode/activemasternode.h>
 #include <modules/masternode/masternode.h>
 #include <modules/masternode/masternode_sync.h>
 #include <modules/masternode/masternode_config.h>
@@ -21,10 +21,6 @@
 #include <rpc/server.h>
 #include <util/system.h>
 #include <util/moneystr.h>
-#ifdef ENABLE_WALLET
-#include <wallet/rpcwallet.h>
-#include <wallet/wallet.h>
-#endif // ENABLE_WALLET
 
 UniValue gobject(const JSONRPCRequest& request)
 {
@@ -34,9 +30,6 @@ UniValue gobject(const JSONRPCRequest& request)
 
     if (request.fHelp  ||
         (
-#ifdef ENABLE_WALLET
-         strCommand != "prepare" &&
-#endif // ENABLE_WALLET
          strCommand != "vote-many" && strCommand != "vote-conf" && strCommand != "vote-alias" && strCommand != "submit" && strCommand != "count" &&
          strCommand != "deserialize" && strCommand != "get" && strCommand != "getvotes" && strCommand != "getcurrentvotes" && strCommand != "list" && strCommand != "diff" &&
          strCommand != "check" ))
@@ -45,9 +38,7 @@ UniValue gobject(const JSONRPCRequest& request)
                 "Manage governance objects\n"
                 "\nAvailable commands:\n"
                 "  check              - Validate governance object data (proposal only)\n"
-#ifdef ENABLE_WALLET
-                "  prepare            - Prepare governance object by signing and creating tx\n"
-#endif // ENABLE_WALLET
+                "  prepare            - DEPRECATED: please use 'prepareproposal' for creating the collateral\n"
                 "  submit             - Submit governance object to network\n"
                 "  deserialize        - Deserialize governance object from hex string to JSON\n"
                 "  count              - Count governance objects and votes (additional param: 'json' or 'all', default: 'json')\n"
@@ -134,83 +125,10 @@ UniValue gobject(const JSONRPCRequest& request)
         return objResult;
     }
 
-#ifdef ENABLE_WALLET
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
-        return NullUniValue;
-    }
-
-    // PREPARE THE GOVERNANCE OBJECT BY CREATING A COLLATERAL TRANSACTION
     if(strCommand == "prepare")
     {
-        if (request.params.size() != 5) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject prepare <parent-hash> <revision> <time> <data-hex>'");
-        }
-
-        // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
-
-        uint256 hashParent;
-
-        // -- attach to root node (root node doesn't really exist, but has a hash of zero)
-        if(request.params[1].get_str() == "0") {
-            hashParent = uint256();
-        } else {
-            hashParent = ParseHashV(request.params[1], "fee-txid, parameter 1");
-        }
-
-        std::string strRevision = request.params[2].get_str();
-        std::string strTime = request.params[3].get_str();
-        int nRevision = atoi(strRevision);
-        int64_t nTime = atoi64(strTime);
-        std::string strDataHex = request.params[4].get_str();
-
-        // CREATE A NEW COLLATERAL TRANSACTION FOR THIS SPECIFIC OBJECT
-
-        CGovernanceObject govobj(hashParent, nRevision, nTime, uint256(), strDataHex);
-
-        if(govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
-            CProposalValidator validator(strDataHex);
-            if(!validator.Validate())  {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid proposal data, error messages:" + validator.GetErrorMessages());
-            }
-        }
-
-        if(govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Trigger objects need not be prepared (however only masternodes can create them)");
-        }
-
-        LOCK2(cs_main, pwallet->cs_wallet);
-
-        std::string strError = "";
-        if(!govobj.IsValidLocally(strError, false))
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + govobj.GetHash().ToString() + " - " + strError);
-
-        EnsureWalletIsUnlocked(pwallet);
-
-        CTransactionRef tx;
-        auto locked_chain = pwallet->chain().lock();
-        if(!pwallet->GetBudgetSystemCollateralTX(*locked_chain, tx, govobj.GetHash(), govobj.GetMinCollateralFee())) {
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "Error making collateral transaction for governance object. Please check your wallet balance and make sure your wallet is unlocked.");
-        }
-
-        // -- make our change address
-        CReserveKey reservekey(pwallet);
-        // -- send the tx to the network
-        CValidationState state;
-        if (!pwallet->CommitTransaction(tx, {} /* mapValue */, {} /* orderForm */, reservekey, g_connman.get(), state)) {
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "CommitTransaction failed! Reason given: " + state.GetRejectReason());
-        }
-
-        DBG( std::cout << "gobject: prepare "
-             << " GetDataAsPlainString = " << govobj.GetDataAsPlainString()
-             << ", hash = " << govobj.GetHash().GetHex()
-             << ", txidFee = " << wtx.GetHash().GetHex()
-             << std::endl; );
-
-        return tx->GetHash().ToString();
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "DEPRECATED: please use 'prepareproposal' for creating the collateral.");
     }
-#endif // ENABLE_WALLET
 
     // AFTER COLLATERAL TRANSACTION HAS MATURED USER CAN SUBMIT GOVERNANCE OBJECT TO PROPAGATE NETWORK
     if(strCommand == "submit")
@@ -918,11 +836,11 @@ UniValue voteraw(const JSONRPCRequest& request)
     }
 }
 
-static UniValue getgovernanceinfo(const JSONRPCRequest& request)
+static UniValue getfundinginfo(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0) {
         throw std::runtime_error(
-            "getgovernanceinfo\n"
+            "getfundinginfo\n"
             "Returns an object containing governance parameters.\n"
             "\nResult:\n"
             "{\n"
@@ -936,8 +854,8 @@ static UniValue getgovernanceinfo(const JSONRPCRequest& request)
             "  \"maxgovobjdatasize\": xxxxx,             (numeric) maximum governance object data size in bytes\n"
             "}\n"
             "\nExamples:\n"
-            + HelpExampleCli("getgovernanceinfo", "")
-            + HelpExampleRpc("getgovernanceinfo", "")
+            + HelpExampleCli("getfundinginfo", "")
+            + HelpExampleRpc("getfundinginfo", "")
             );
     }
 
@@ -992,7 +910,7 @@ static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
     /* Chaincoin features */
-    { "chaincoin",          "getgovernanceinfo",      &getgovernanceinfo,      {} },
+    { "chaincoin",          "getfundinginfo",      &getfundinginfo,      {} },
     { "chaincoin",          "getsuperblockbudget",    &getsuperblockbudget,    {"index"} },
     { "chaincoin",          "gobject",                &gobject,                {} },
     { "chaincoin",          "voteraw",                &voteraw,                {} },

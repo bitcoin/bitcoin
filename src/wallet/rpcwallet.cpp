@@ -4143,6 +4143,100 @@ UniValue walletcreatefundedpsct(const JSONRPCRequest& request)
     return result;
 }
 
+UniValue prepareproposal(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() != 5)
+        throw std::runtime_error(
+            RPCHelpMan{"prepareproposal",
+                "\nCreates and submits the collateral transaction for a pre-defined proposal\n" +
+                       HelpRequiringPassphrase(pwallet) + "\n",
+                {
+                    {"parent-hash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The parent hash of the proposal\n"
+                            "0 if submitted for the first time"},
+                    {"revision", RPCArg::Type::ARR, /* opt */ false, /* default_val */ "0", "Revision of the proposal."},
+                    {"time", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "UNIX time of the submittal."},
+                    {"data-hex", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The hex string of the generated proposal."},
+                }}
+                .ToString() +
+                            "\nResult:\n"
+                            "{\n"
+                            "  \"txid\": \"value\"        (string)  The resulting collateral transaction (base64-encoded string)\n"
+                            "}\n"
+                            "\nExamples:\n"
+                            "\nCreate a transaction with no inputs\n"
+                            + HelpExampleCli("prepareproposal", "\"[{\\\"txid\\\":\\\"00010203\\\"}]\"")
+                            );
+
+    RPCTypeCheck(request.params, {
+                     UniValue::VSTR,
+                     UniValue::VARR,
+                     UniValue::VNUM,
+                     UniValue::VSTR
+                 }, true
+                 );
+
+    uint256 hashParent;
+
+    // -- attach to root node (root node doesn't really exist, but has a hash of zero)
+    if(request.params[1].get_str() == "0") {
+        hashParent = uint256();
+    } else {
+        hashParent = ParseHashV(request.params[1], "fee-txid, parameter 1");
+    }
+
+    std::string strRevision = request.params[2].get_str();
+    std::string strTime = request.params[3].get_str();
+    int nRevision = atoi(strRevision);
+    int64_t nTime = atoi64(strTime);
+    std::string strDataHex = request.params[4].get_str();
+
+    // CREATE A NEW COLLATERAL TRANSACTION FOR THIS SPECIFIC OBJECT
+
+    CGovernanceObject govobj(hashParent, nRevision, nTime, uint256(), strDataHex);
+
+    if(govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
+        CProposalValidator validator(strDataHex);
+        if(!validator.Validate())  {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid proposal data, error messages:" + validator.GetErrorMessages());
+        }
+    }
+
+    if(govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Trigger objects need not be prepared (however only masternodes can create them)");
+    }
+
+    LOCK2(cs_main, pwallet->cs_wallet);
+
+    std::string strError = "";
+    if(!govobj.IsValidLocally(strError, false))
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + govobj.GetHash().ToString() + " - " + strError);
+
+    EnsureWalletIsUnlocked(pwallet);
+
+    CTransactionRef tx;
+    auto locked_chain = pwallet->chain().lock();
+    if(!pwallet->GetBudgetSystemCollateralTX(*locked_chain, tx, govobj.GetHash(), govobj.GetMinCollateralFee())) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Error making collateral transaction for governance object. Please check your wallet balance and make sure your wallet is unlocked.");
+    }
+
+    // -- make our change address
+    CReserveKey reservekey(pwallet);
+    // -- send the tx to the network
+    CValidationState state;
+    if (!pwallet->CommitTransaction(tx, {} /* mapValue */, {} /* orderForm */, reservekey, g_connman.get(), state)) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "CommitTransaction failed! Reason given: " + state.GetRejectReason());
+    }
+
+    return tx->GetHash().ToString();
+}
+
 UniValue privatesend(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -4304,6 +4398,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "loadwallet",                       &loadwallet,                    {"filename"} },
     { "wallet",             "lockunspent",                      &lockunspent,                   {"unlock","transactions"} },
     { "wallet",             "privatesend",                      &privatesend,                   {"start","stop","reset"} },
+    { "wallet",             "prepareproposal",                  &prepareproposal,               {"parent-hash","revision","time", "hex-data"} },
     { "wallet",             "removeprunedfunds",                &removeprunedfunds,             {"txid"} },
     { "wallet",             "rescanblockchain",                 &rescanblockchain,              {"start_height", "stop_height"} },
     { "wallet",             "sendmany",                         &sendmany,                      {"dummy","amounts","minconf","comment","subtractfeefrom","replaceable","conf_target","estimate_mode"} },
