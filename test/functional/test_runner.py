@@ -112,6 +112,7 @@ BASE_SCRIPTS = [
     'wallet_txn_clone.py --segwit',
     'rpc_getchaintips.py',
     'interface_rest.py',
+    'feature_file_corruption.py',
     'mempool_spend_coinbase.py',
     'mempool_reorg.py',
     'mempool_persist.py',
