@@ -5,12 +5,15 @@
 #ifndef PRIVATESENDCLIENT_H
 #define PRIVATESENDCLIENT_H
 
+#include <interfaces/chain.h>
 #include <modules/masternode/masternode.h>
 #include <modules/privatesend/privatesend.h>
-#include <validationinterface.h>
-#include <wallet/wallet.h>
+
+struct CompactTallyItem;
 
 class CPrivateSendClient;
+class CReserveKey;
+class CWallet;
 class CConnman;
 
 static const int DENOMS_COUNT_MAX                   = 100;
@@ -33,33 +36,14 @@ static const int PRIVATESEND_KEYS_THRESHOLD_WARNING = 100;
 // Stop mixing completely, it's too dangerous to continue when we have only this many keys left
 static const int PRIVATESEND_KEYS_THRESHOLD_STOP    = 50;
 
-// The main object for accessing mixing
-extern CPrivateSendClient privateSendClient;
-
-class CKeyHolder
-{
-private:
-    CReserveKey reserveKey;
-    CPubKey pubKey;
-public:
-    CKeyHolder(CWallet* pwalletIn);
-    CKeyHolder(CKeyHolder&&) = default;
-    CKeyHolder& operator=(CKeyHolder&&) = default;
-    void KeepKey();
-    void ReturnKey();
-
-    CScript GetScriptForDestination() const;
-
-};
-
 class CKeyHolderStorage
 {
 private:
-    std::vector<std::unique_ptr<CKeyHolder> > storage;
+    std::vector<std::unique_ptr<CReserveKey> > storage;
     mutable CCriticalSection cs_storage;
 
 public:
-    CScript AddKey(CWallet* pwalletIn);
+    CScript AddKey(CWallet *pwalletIn);
     void KeepAll();
     void ReturnAll();
 
@@ -109,6 +93,7 @@ public:
 class CPrivateSendClient : public CPrivateSendBase
 {
 private:
+    CWallet* m_wallet;
     // Keep track of the used Masternodes
     std::vector<COutPoint> vecMasternodesUsed;
 
@@ -130,8 +115,6 @@ private:
     masternode_info_t infoMixingMasternode;
     CMutableTransaction txMyCollateral; // client side collateral
     CPendingDsaRequest pendingDsaRequest;
-
-    CWallet* pmixingwallet;
 
     CKeyHolderStorage keyHolderStorage; // storage for keys used in PrepareDenominate
 
@@ -185,7 +168,8 @@ public:
     int nCachedNumBlocks; //used for the overview screen
     bool fCreateAutoBackups; //builtin support for automatic backups
 
-    CPrivateSendClient() :
+    explicit CPrivateSendClient(CWallet* pwallet) :
+        m_wallet(pwallet),
         nCachedLastSuccessBlock(0),
         nMinBlocksToWait(1),
         txMyCollateral(CMutableTransaction()),
@@ -198,8 +182,6 @@ public:
         fCreateAutoBackups(true) { SetNull(); }
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
-
-    bool getWallet(const std::string walletIn);
 
     void ClearSkippedDenominations() { vecDenominationsSkipped.clear(); }
 
@@ -216,7 +198,7 @@ public:
     bool IsMixingMasternode(const CNode* pnode);
 
     /// one-shot mixing attempt
-    bool DoOnceDenominating(std::string walletIn);
+    bool DoOnceDenominating();
 
     /// Passively run mixing in the background according to the configuration in settings
     bool DoAutomaticDenominating(interfaces::Chain::Lock &locked_chain);
@@ -227,7 +209,6 @@ public:
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload);
     void ClientTask();
-    void Controller(CScheduler& scheduler);
 };
 
 #endif

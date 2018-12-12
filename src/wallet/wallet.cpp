@@ -30,9 +30,8 @@
 #include <timedata.h>
 #include <txmempool.h>
 #include <util/moneystr.h>
+#include <validation.h>
 #include <wallet/fees.h>
-
-#include <modules/platform/funding.h>
 #include <wallet/privatesend_client.h>
 
 #include <algorithm>
@@ -1221,7 +1220,7 @@ void CWallet::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const 
 
     m_last_block_processed = pindex;
     // quick & dirty
-    privateSendClient.UpdatedBlockTip(pindex, nullptr, IsInitialBlockDownload());
+    privateSendClient->UpdatedBlockTip(pindex, nullptr, IsInitialBlockDownload());
 }
 
 void CWallet::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock) {
@@ -1380,7 +1379,7 @@ int CWallet::GetCappedOutpointPrivateSendRounds(const COutPoint& outpoint) const
 {
     LOCK(cs_wallet);
     int realPrivateSendRounds = GetRealOutpointPrivateSendRounds(outpoint);
-    return realPrivateSendRounds > privateSendClient.nPrivateSendRounds ? privateSendClient.nPrivateSendRounds : realPrivateSendRounds;
+    return realPrivateSendRounds > privateSendClient->nPrivateSendRounds ? privateSendClient->nPrivateSendRounds : realPrivateSendRounds;
 }
 
 bool CWallet::IsDenominated(const COutPoint& outpoint) const
@@ -2073,7 +2072,7 @@ CAmount CWalletTx::GetDenominatedCredit(interfaces::Chain::Lock& locked_chain, i
     CAmount* cache = nullptr;
     bool* cache_used = nullptr;
 
-    if (nPrivateSendRounds >= privateSendClient.nPrivateSendRounds) {
+    if (nPrivateSendRounds >= pwallet->privateSendClient->nPrivateSendRounds) {
         cache = &nAnonymizedCreditCached;
         cache_used = &fAnonymizedCreditCached;
     } else {
@@ -2279,7 +2278,7 @@ CAmount CWallet::GetAnonymizedBalance(const int min_depth) const
         {
             const CWalletTx* pcoin = &entry.second;
             if (pcoin->IsTrusted(*locked_chain) && pcoin->GetDepthInMainChain(*locked_chain) >= min_depth) {
-                nTotal += pcoin->GetDenominatedCredit(*locked_chain, privateSendClient.nPrivateSendRounds);
+                nTotal += pcoin->GetDenominatedCredit(*locked_chain, privateSendClient->nPrivateSendRounds);
             }
         }
     }
@@ -2292,7 +2291,7 @@ CAmount CWallet::GetNeedsToBeAnonymizedBalance(CAmount nMinBalance) const
     if(fLiteMode) return 0;
 
     CAmount nAnonymizedBalance = GetAnonymizedBalance();
-    CAmount nNeedsToAnonymizeBalance = privateSendClient.nPrivateSendAmount*COIN - nAnonymizedBalance;
+    CAmount nNeedsToAnonymizeBalance = privateSendClient->nPrivateSendAmount*COIN - nAnonymizedBalance;
 
     // try to overshoot target DS balance up to nMinBalance
     nNeedsToAnonymizeBalance += nMinBalance;
@@ -2357,7 +2356,7 @@ float CWallet::UpdateProgress() const
 
     // apply some weights to them ...
     float denomWeight = 1;
-    float anonNormWeight = privateSendClient.nPrivateSendRounds;
+    float anonNormWeight = privateSendClient->nPrivateSendRounds;
     float anonFullWeight = 2;
     float fullWeight = denomWeight + anonNormWeight + anonFullWeight;
     // ... and calculate the whole progress
@@ -2758,7 +2757,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
                 COutPoint outpoint = COutPoint(out.tx->GetHash(),out.i);
                 int nRounds = GetCappedOutpointPrivateSendRounds(outpoint);
                 // make sure it's actually anonymized
-                if(nRounds < privateSendClient.nPrivateSendRounds) continue;
+                if(nRounds < privateSendClient->nPrivateSendRounds) continue;
             }
             nValueRet += out.tx->tx->vout[out.i].nValue;
             setCoinsRet.insert(out.GetInputCoin());
@@ -2781,7 +2780,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
                     COutPoint outpoint = COutPoint(out.tx->GetHash(),out.i);
                     int nRounds = GetCappedOutpointPrivateSendRounds(outpoint);
                     // make sure it's actually anonymized
-                    if(nRounds < privateSendClient.nPrivateSendRounds) continue;
+                    if(nRounds < privateSendClient->nPrivateSendRounds) continue;
                     nValueRet += nDenom;
                     setCoinsRet.insert(CInputCoin(out.tx->tx, out.i));
                 }
@@ -3053,7 +3052,7 @@ bool CWallet::SelectCoinsGrouppedByAddresses(std::vector<CompactTallyItem>& vecT
                     // otherwise they will just lead to higher fee / lower priority
                     if(pcoin->tx->vout[i].nValue <= nSmallestDenom/10) continue;
                     // ignore anonymized
-                    if(GetCappedOutpointPrivateSendRounds(COutPoint(pcoin->tx->GetHash(), i)) >= privateSendClient.nPrivateSendRounds) continue;
+                    if(GetCappedOutpointPrivateSendRounds(COutPoint(pcoin->tx->GetHash(), i)) >= privateSendClient->nPrivateSendRounds) continue;
                 }
 
                 CompactTallyItem& item = mapTally[txdest];
@@ -3593,7 +3592,7 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                     if (nCoinType == ONLY_DENOMINATED) {
                         nFeeRet += nChange;
                         // recheck skipped denominations during next mixing
-                        privateSendClient.ClearSkippedDenominations();
+                        privateSendClient->ClearSkippedDenominations();
                     } else {
 
                         // Fill a vout to ourself
@@ -4017,7 +4016,7 @@ bool CWallet::NewKeyPool()
             batch.ErasePool(nIndex);
         }
         setExternalKeyPool.clear();
-        privateSendClient.fEnablePrivateSend = false;
+        privateSendClient->fEnablePrivateSend = false;
         nKeysLeftSinceAutoBackup = 0;
 
         for (const int64_t nIndex : set_pre_split_keypool) {
@@ -4956,6 +4955,23 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
     walletInstance->m_spend_zero_conf_change = gArgs.GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE);
     walletInstance->m_signal_rbf = gArgs.GetBoolArg("-walletrbf", DEFAULT_WALLET_RBF);
 
+    walletInstance->privateSendClient->nLiquidityProvider = std::min(std::max((int)gArgs.GetArg("-liquidityprovider", DEFAULT_PRIVATESEND_LIQUIDITY), MIN_PRIVATESEND_LIQUIDITY), MAX_PRIVATESEND_LIQUIDITY);
+    int nMaxRounds = MAX_PRIVATESEND_ROUNDS;
+    if(walletInstance->privateSendClient->nLiquidityProvider) {
+        // special case for liquidity providers only, normal clients should use default value
+        walletInstance->privateSendClient->SetMinBlocksToWait(walletInstance->privateSendClient->nLiquidityProvider);
+        nMaxRounds = std::numeric_limits<int>::max();
+    }
+
+    walletInstance->privateSendClient->fEnablePrivateSend = gArgs.GetBoolArg("-enableprivatesend", false);
+    walletInstance->privateSendClient->fPrivateSendMultiSession = gArgs.GetBoolArg("-privatesendmultisession", DEFAULT_PRIVATESEND_MULTISESSION);
+    walletInstance->privateSendClient->nPrivateSendRounds = std::min(std::max((int)gArgs.GetArg("-privatesendrounds", DEFAULT_PRIVATESEND_ROUNDS), MIN_PRIVATESEND_ROUNDS), nMaxRounds);
+    walletInstance->privateSendClient->nPrivateSendAmount = std::min(std::max((int)gArgs.GetArg("-privatesendamount", DEFAULT_PRIVATESEND_AMOUNT), MIN_PRIVATESEND_AMOUNT), MAX_PRIVATESEND_AMOUNT);
+
+    LogPrintf("PrivateSend liquidityprovider: %d\n", walletInstance->privateSendClient->nLiquidityProvider);
+    LogPrintf("PrivateSend rounds: %d\n", walletInstance->privateSendClient->nPrivateSendRounds);
+    LogPrintf("PrivateSend amount: %d\n", walletInstance->privateSendClient->nPrivateSendAmount);
+
     walletInstance->WalletLogPrintf("Wallet completed loading in %15dms\n", GetTimeMillis() - nStart);
 
     // Try to top up keypool. No-op if the wallet is locked.
@@ -5056,13 +5072,13 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
     return walletInstance;
 }
 
-void CWallet::postInitProcess(bool mnconflock)
+void CWallet::postInitProcess()
 {
     // Add wallet transactions that aren't already in a block to mempool
     // Do this here as mempool requires genesis block to be loaded
     ReacceptWalletTransactions();
 
-    if((mnconflock) && (masternodeConfig.getCount() > 0)) {
+    if((gArgs.GetBoolArg("-mnconflock", true)) && (masternodeConfig.getCount() > 0)) {
         LOCK(cs_wallet);
         WalletLogPrintf("Locking Masternodes:\n");
         uint256 mnTxHash;
@@ -5357,4 +5373,11 @@ bool CWallet::GetKeyOrigin(const CKeyID& keyID, KeyOriginInfo& info) const
         std::copy(keyID.begin(), keyID.begin() + 4, info.fingerprint);
     }
     return true;
+}
+
+void privateSendClientTask()
+{
+    for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
+        pwallet->privateSendClient->ClientTask();
+    }
 }

@@ -28,8 +28,6 @@
 #include <wallet/fees.h>
 #include <wallet/wallet.h>
 
-#include <wallet/privatesend_client.h>
-
 #include <QApplication>
 #include <QCheckBox>
 #include <QCursor>
@@ -425,7 +423,7 @@ void CoinControlDialog::viewItemChanged(QTreeWidgetItem* item, int column)
         else {
             coinControl()->Select(outpt);
             int nRounds = model->wallet().getCappedOutpointPrivateSendRounds(outpt);
-            if (coinControl()->fUsePrivateSend && nRounds < privateSendClient.nPrivateSendRounds) {
+            if (coinControl()->fUsePrivateSend && nRounds < model->wallet().getPSRounds()) {
                 QMessageBox::warning(this, windowTitle(),
                     tr("Non-anonymized input selected. <b>PrivateSend will be disabled.</b><br><br>If you still want to use PrivateSend, please deselect all non-nonymized inputs first and then check PrivateSend checkbox again."),
                     QMessageBox::Ok, QMessageBox::Ok);

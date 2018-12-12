@@ -20,6 +20,7 @@
 #include <util/system.h>
 #include <wallet/crypter.h>
 #include <wallet/coinselection.h>
+#include <wallet/privatesend_client.h>
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
 
@@ -814,6 +815,8 @@ public:
     MasterKeyMap mapMasterKeys;
     unsigned int nMasterKeyMaxID = 0;
 
+    std::unique_ptr<CPrivateSendClient> privateSendClient = MakeUnique<CPrivateSendClient>(this);
+
     /** Construct wallet with specified name and database implementation. */
     CWallet(interfaces::Chain& chain, const WalletLocation& location, std::unique_ptr<WalletDatabase> database) : m_chain(chain), m_location(location), database(std::move(database))
     {
@@ -1180,7 +1183,7 @@ public:
      * Wallet post-init setup
      * Gives the wallet a chance to register repetitive tasks and complete post-init tasks
      */
-    void postInitProcess(bool mnconflock);
+    void postInitProcess();
 
     bool BackupWallet(const std::string& strDest);
 
@@ -1323,5 +1326,6 @@ public:
 // be IsAllFromMe).
 int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, bool use_max_sig = false) EXCLUSIVE_LOCKS_REQUIRED(wallet->cs_wallet);
 int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, const std::vector<CTxOut>& txouts, bool use_max_sig = false);
-bool AutoBackupWallet (std::shared_ptr<CWallet> pwallet, const WalletLocation& location, std::string& strBackupWarning, std::string& strBackupError);
+bool AutoBackupWallet(std::shared_ptr<CWallet> pwallet, const WalletLocation& location, std::string& strBackupWarning, std::string& strBackupError);
+void privateSendClientTask();
 #endif // BITCOIN_WALLET_WALLET_H

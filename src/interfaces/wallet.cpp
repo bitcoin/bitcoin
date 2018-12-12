@@ -374,7 +374,7 @@ public:
         result.mixing_progress = m_wallet.UpdateProgress();
         return result;
     }
-    bool tryGetBalances(WalletBalances& balances, int& num_blocks) override
+    bool tryGetBalances(WalletBalances& balances, PrivateSendStatus& status, int& num_blocks) override
     {
         auto locked_chain = m_wallet.chain().lock(true /* try_lock */);
         if (!locked_chain) return false;
@@ -383,6 +383,7 @@ public:
             return false;
         }
         balances = getBalances();
+        status = getPrivateSendStatus();
         num_blocks = ::chainActive.Height();
         return true;
     }
@@ -470,9 +471,73 @@ public:
     OutputType getDefaultAddressType() override { return m_wallet.m_default_address_type; }
     OutputType getDefaultChangeType() override { return m_wallet.m_default_change_type; }
 
-    int64_t GetKeysLeftSinceBackup() override { return m_wallet.nKeysLeftSinceAutoBackup; }
+    int getPSRounds() override { return m_wallet.privateSendClient->nPrivateSendRounds; }
 
-    int GetPSRounds() override { return privateSendClient.nPrivateSendRounds; }
+    void setPrivateSendParams(const int& rounds, const int& amount, const bool& multi) override
+    {
+        m_wallet.privateSendClient->nPrivateSendRounds = rounds;
+        m_wallet.privateSendClient->nPrivateSendAmount = amount;
+        m_wallet.privateSendClient->fPrivateSendMultiSession = multi;
+        m_wallet.privateSendClient->nCachedNumBlocks = std::numeric_limits<int>::max();
+    }
+
+    PrivateSendConstants getPrivateSendConstants() override
+    {
+        PrivateSendConstants result;
+        result.minamount = CPrivateSend::GetSmallestDenomination() + CPrivateSend::GetMaxCollateralAmount();
+        result.defaultamount = DEFAULT_PRIVATESEND_AMOUNT;
+        result.defaultrounds = DEFAULT_PRIVATESEND_ROUNDS;
+        result.keyswarning = PRIVATESEND_KEYS_THRESHOLD_WARNING;
+        result.defaultmulti = DEFAULT_PRIVATESEND_MULTISESSION;
+        return result;
+    }
+
+    PrivateSendStatus getPrivateSendStatus() override
+    {
+        PrivateSendStatus result;
+        result.enabled = m_wallet.privateSendClient->fEnablePrivateSend;
+        result.cachednumblocks = m_wallet.privateSendClient->nCachedNumBlocks;
+        result.amount = m_wallet.privateSendClient->nPrivateSendAmount;
+        result.rounds = m_wallet.privateSendClient->nPrivateSendRounds;
+        result.multisession = m_wallet.privateSendClient->fPrivateSendMultiSession;
+        result.denom = m_wallet.privateSendClient->nSessionDenom;
+        result.status = m_wallet.privateSendClient->GetStatus();
+        result.keysleft = m_wallet.nKeysLeftSinceAutoBackup;
+        return result;
+    }
+
+    void disableAutoBackup() override
+    {
+        m_wallet.privateSendClient->fCreateAutoBackups = false;
+    }
+
+    void setNumBlocks(const int& nCache) override
+    {
+        m_wallet.privateSendClient->nCachedNumBlocks = nCache;
+    }
+
+    void resetPool() override
+    {
+        m_wallet.privateSendClient->ResetPool();
+    }
+
+    void unlockCoins() override
+    {
+        m_wallet.privateSendClient->UnlockCoins();
+    }
+
+    void toggleMixing(const bool& fOff) override
+    {
+        if (fOff)
+            m_wallet.privateSendClient->fEnablePrivateSend = false;
+        else
+            m_wallet.privateSendClient->fEnablePrivateSend = !m_wallet.privateSendClient->fEnablePrivateSend;
+    }
+
+    void oneShotDenominate() override
+    {
+        m_wallet.privateSendClient->DoOnceDenominating();
+    }
 
     bool DoAutoBackup(std::string walletIn, std::string& strBackupWarning, std::string& strBackupError) override
     {

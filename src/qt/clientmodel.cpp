@@ -163,7 +163,7 @@ enum BlockSource ClientModel::getBlockSource() const
     else if (m_node.getImporting())
         return BlockSource::DISK;
     else if (getNumConnections() > 0) {
-        if (m_node.isMasternodeChainSynced())
+        if (m_node.isMasternodeChainSynced() && !m_node.isModuleDataSynced())
             return BlockSource::MASTERNODE;
         else
             return BlockSource::NETWORK;

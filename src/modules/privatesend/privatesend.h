@@ -317,8 +317,6 @@ public:
 class CPrivateSendBase
 {
 protected:
-    mutable CCriticalSection cs_darksend;
-
     // The current mixing sessions in progress on the network
     std::vector<CDarksendQueue> vecDarksendQueue;
 
@@ -335,6 +333,8 @@ protected:
     void CheckQueue();
 
 public:
+    mutable CCriticalSection cs_darksend;
+
     int nSessionDenom; //Users must submit an denom matching this
     int nSessionInputCount; //Users must submit a count matching this
 

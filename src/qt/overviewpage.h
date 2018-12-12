@@ -38,7 +38,7 @@ public:
     void showOutOfSyncWarning(bool fShow);
 
 public Q_SLOTS:
-    void privateSendStatus();
+    void privateSendStatus(const interfaces::PrivateSendStatus& status);
     void setBalance(const interfaces::WalletBalances& balances);
 
 Q_SIGNALS:
@@ -46,11 +46,11 @@ Q_SIGNALS:
     void outOfSyncWarningClicked();
 
 private:
-    QTimer *timer;
     Ui::OverviewPage *ui;
     ClientModel *clientModel;
     WalletModel *walletModel;
     interfaces::WalletBalances m_balances;
+    interfaces::PrivateSendStatus m_privsendstatus;
     int nDisplayUnit;
     bool fShowAdvancedPSUI;
 
