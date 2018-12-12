@@ -101,13 +101,52 @@ std::shared_ptr<CWallet> GetWallet(const std::string& name)
     return nullptr;
 }
 
+static std::mutex g_wallet_release_mutex;
+static std::condition_variable g_wallet_release_cv;
+static std::set<CWallet*> g_unloading_wallet_set;
+
 // Custom deleter for shared_ptr<CWallet>.
 static void ReleaseWallet(CWallet* wallet)
 {
+    // Unregister and delete the wallet right after BlockUntilSyncedToCurrentChain
+    // so that it's in sync with the current chainstate.
     wallet->WalletLogPrintf("Releasing wallet\n");
     wallet->BlockUntilSyncedToCurrentChain();
     wallet->Flush();
+    UnregisterValidationInterface(wallet);
     delete wallet;
+    // Wallet is now released, notify UnloadWallet, if any.
+    {
+        std::lock_guard<std::mutex> lock(g_wallet_release_mutex);
+        if (g_unloading_wallet_set.erase(wallet) == 0) {
+            // UnloadWallet was not called for this wallet, all done.
+            return;
+        }
+    }
+    g_wallet_release_cv.notify_all();
+}
+
+void UnloadWallet(std::shared_ptr<CWallet>&& wallet)
+{
+    // Mark wallet for unloading.
+    CWallet* pwallet = wallet.get();
+    {
+        std::lock_guard<std::mutex> lock(g_wallet_release_mutex);
+        auto it = g_unloading_wallet_set.insert(pwallet);
+        assert(it.second);
+    }
+    // The wallet can be in use so it's not possible to explicitly unload here.
+    // Notify the unload intent so that all remaining shared pointers are
+    // released.
+    pwallet->NotifyUnload();
+    // Time to ditch our shared_ptr and wait for ReleaseWallet call.
+    wallet.reset();
+    {
+        std::unique_lock<std::mutex> lock(g_wallet_release_mutex);
+        while (g_unloading_wallet_set.count(pwallet) == 1) {
+            g_wallet_release_cv.wait(lock);
+        }
+    }
 }
 
 const uint32_t BIP32_HARDENED_KEY_LIMIT = 0x80000000;
