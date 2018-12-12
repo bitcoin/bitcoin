@@ -146,7 +146,13 @@ void TestGUI()
         auto locked_chain = wallet->chain().lock();
         WalletRescanReserver reserver(wallet.get());
         reserver.reserve();
-        wallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver, true);
+        const CBlockIndex* const null_block = nullptr;
+        const CBlockIndex *stop_block, *failed_block;
+        QCOMPARE(
+            wallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver, failed_block, stop_block, true /* fUpdate */),
+            CWallet::ScanResult::SUCCESS);
+        QCOMPARE(stop_block, chainActive.Tip());
+        QCOMPARE(failed_block, null_block);
     }
     wallet->SetBroadcastTransactions(true);
 
