@@ -35,6 +35,8 @@ class Handler;
 class PendingWalletTx;
 struct WalletAddress;
 struct WalletBalances;
+struct PrivateSendStatus;
+struct PrivateSendConstants;
 struct WalletTx;
 struct WalletTxOut;
 struct WalletTxStatus;
@@ -192,7 +194,7 @@ public:
     virtual WalletBalances getBalances() = 0;
 
     //! Get balances if possible without blocking.
-    virtual bool tryGetBalances(WalletBalances& balances, int& num_blocks) = 0;
+    virtual bool tryGetBalances(WalletBalances& balances, PrivateSendStatus& status, int& num_blocks) = 0;
 
     //! Get balance.
     virtual CAmount getBalance() = 0;
@@ -247,11 +249,35 @@ public:
     //! Get default change type.
     virtual OutputType getDefaultChangeType() = 0;
 
-    //! Get keys left since last backup.
-    virtual int64_t GetKeysLeftSinceBackup() = 0;
-
     //! Return PrivateSend Rounds.
-    virtual int GetPSRounds() = 0;
+    virtual int getPSRounds() = 0;
+
+    //! Change PrivateSend Params.
+    virtual void setPrivateSendParams(const int& rounds, const int& amount, const bool& multi) = 0;
+
+    //! Get PrivateSend Settings.
+    virtual PrivateSendConstants getPrivateSendConstants() = 0;
+
+    //! Get PrivateSend Status.
+    virtual PrivateSendStatus getPrivateSendStatus() = 0;
+
+    //! Disable automatic wallet backup.
+    virtual void disableAutoBackup() = 0;
+
+    //! Update cached blocks in PrivateSend client.
+    virtual void setNumBlocks(const int& nCache) = 0;
+
+    //! Reset PrivateSend Client.
+    virtual void resetPool() = 0;
+
+    //! Unlock after toggle mixing.
+    virtual void unlockCoins() = 0;
+
+    //! Toggle PrivateSend mixing status.
+    virtual void toggleMixing(const bool& fOff = false) = 0;
+
+    //! One shot PrivateSend mixing.
+    virtual void oneShotDenominate() = 0;
 
     //! Return result of automatic wallet backup.
     virtual bool DoAutoBackup(std::string walletIn, std::string& strBackupWarning, std::string& strBackupError) = 0;
@@ -338,8 +364,37 @@ struct WalletBalances
                immature_balance != prev.immature_balance || anonymized_balance != prev.anonymized_balance ||
                anonymizeable_balance != prev.anonymizeable_balance || watch_only_balance != prev.watch_only_balance ||
                unconfirmed_watch_only_balance != prev.unconfirmed_watch_only_balance ||
-               immature_watch_only_balance != prev.immature_watch_only_balance || mixing_progress != prev.mixing_progress;
+               immature_watch_only_balance != prev.immature_watch_only_balance;
     }
+};
+
+//! PrivateSend Status
+struct PrivateSendStatus
+{
+    bool enabled = 0;
+    int cachednumblocks = 0;
+    int amount = 0;
+    int rounds = 0;
+    bool multisession = false;
+    int denom = 0;
+    int64_t keysleft = 0;
+    std::string status = "";
+
+    bool privateSendChanged(const PrivateSendStatus& prev) const
+    {
+        return enabled != prev.enabled || cachednumblocks != prev.cachednumblocks || amount != prev.amount || rounds != prev.rounds
+               || multisession != prev.multisession || status != prev.status || denom != prev.denom || keysleft != prev.keysleft;
+    }
+};
+
+//! PrivateSend Init
+struct PrivateSendConstants
+{
+    CAmount minamount = 0;
+    int defaultrounds = 0;
+    int defaultamount = 0;
+    int keyswarning = 0;
+    bool defaultmulti = false;
 };
 
 // Wallet transaction information.

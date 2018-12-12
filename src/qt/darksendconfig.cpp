@@ -4,7 +4,6 @@
 #include <qt/bitcoinunits.h>
 #include <qt/guiconstants.h>
 #include <qt/optionsmodel.h>
-#include <wallet/privatesend_client.h>
 #include <qt/walletmodel.h>
 
 #include <QMessageBox>
@@ -85,7 +84,7 @@ void DarksendConfig::configure(bool enabled, int coins, int rounds) {
 
     settings.setValue("nPrivateSendRounds", rounds);
     settings.setValue("nPrivateSendAmount", coins);
+    bool multi = settings.value("fPrivateSendMultiSession").toBool();
 
-    privateSendClient.nPrivateSendRounds = rounds;
-    privateSendClient.nPrivateSendAmount = coins;
+    model->privateSendConfigChanged(rounds, coins, multi);
 }

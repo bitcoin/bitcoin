@@ -18,8 +18,6 @@
 #include <netbase.h>
 #include <txdb.h> // for -dbcache defaults
 
-#include <wallet/privatesend_client.h>
-
 #include <QDataWidgetMapper>
 #include <QDir>
 #include <QIntValidator>
@@ -294,9 +292,6 @@ void OptionsDialog::on_openBitcoinConfButton_clicked()
 void OptionsDialog::on_okButton_clicked()
 {
     mapper->submit();
-#ifdef ENABLE_WALLET
-    privateSendClient.nCachedNumBlocks = std::numeric_limits<int>::max();
-#endif // ENABLE_WALLET
     accept();
     updateDefaultProxyNets();
 }

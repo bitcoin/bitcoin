@@ -37,11 +37,11 @@ WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces:
     transactionTableModel(0),
     recentRequestsTableModel(0),
     cachedEncryptionStatus(Unencrypted),
-    cachedNumBlocks(0),
-    cachedPrivateSendRounds(0)
+    cachedNumBlocks(0)
 {
     fHaveWatchOnly = m_wallet->haveWatchOnly();
     fForceCheckBalanceChanged = false;
+    m_privsendconfig = m_wallet->getPrivateSendConstants();
 
     addressTableModel = new AddressTableModel(this);
     transactionTableModel = new TransactionTableModel(platformStyle, this);
@@ -51,6 +51,8 @@ WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces:
     pollTimer = new QTimer(this);
     connect(pollTimer, &QTimer::timeout, this, &WalletModel::pollBalanceChanged);
     pollTimer->start(MODEL_UPDATE_DELAY);
+
+    connect(getOptionsModel(), &OptionsModel::privateSendConfigChanged, this, &WalletModel::privateSendConfigChanged);
 
     subscribeToCoreSignals();
 }
@@ -76,20 +78,21 @@ void WalletModel::pollBalanceChanged()
     // holding the locks for a longer time - for example, during a wallet
     // rescan.
     interfaces::WalletBalances new_balances;
+    interfaces::PrivateSendStatus new_status;
     int numBlocks = -1;
-    if (!m_wallet->tryGetBalances(new_balances, numBlocks)) {
+    if (!m_wallet->tryGetBalances(new_balances, new_status, numBlocks)) {
         return;
     }
 
-    if(fForceCheckBalanceChanged || m_node.getNumBlocks() != cachedNumBlocks || m_wallet->GetPSRounds() != cachedPrivateSendRounds)
+    if(fForceCheckBalanceChanged || m_node.getNumBlocks() != cachedNumBlocks)
     {
         fForceCheckBalanceChanged = false;
 
         // Balance and number of transactions might have changed
         cachedNumBlocks = m_node.getNumBlocks();
-        cachedPrivateSendRounds = m_wallet->GetPSRounds();
 
         checkBalanceChanged(new_balances);
+        checkPrivateSendChanged(new_status);
         if(transactionTableModel)
             transactionTableModel->updateConfirmations();
     }
@@ -100,6 +103,14 @@ void WalletModel::checkBalanceChanged(const interfaces::WalletBalances& new_bala
     if(new_balances.balanceChanged(m_cached_balances)) {
         m_cached_balances = new_balances;
         Q_EMIT balanceChanged(new_balances);
+    }
+}
+
+void WalletModel::checkPrivateSendChanged(const interfaces::PrivateSendStatus& new_status)
+{
+    if(new_status.privateSendChanged(m_cached_status)) {
+        m_cached_status = new_status;
+        Q_EMIT privateSendChanged(new_status);
     }
 }
 
@@ -316,6 +327,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
     }
 
     checkBalanceChanged(m_wallet->getBalances()); // update balance immediately, otherwise there could be a short noticeable delay until pollBalanceChanged hits
+    checkPrivateSendChanged(m_wallet->getPrivateSendStatus()); // update status immediately, otherwise there could be a short noticeable delay until pollBalanceChanged hits
 
     return SendCoinsReturn(OK);
 }
@@ -392,6 +404,13 @@ bool WalletModel::changePassphrase(const SecureString &oldPass, const SecureStri
 {
     m_wallet->lock(false); // Make sure wallet is locked before attempting pass change
     return m_wallet->changeWalletPassphrase(oldPass, newPass);
+}
+
+void WalletModel::privateSendConfigChanged(const int &rounds, const int &amount, const bool &multi)
+{
+
+    m_wallet->setPrivateSendParams(rounds, amount, multi);
+    fForceCheckBalanceChanged = true;
 }
 
 // Handlers for core signals

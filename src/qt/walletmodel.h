@@ -218,8 +218,17 @@ public:
     static bool isWalletEnabled();
     bool privateKeysDisabled() const;
 
+    void disableAutoBackup() { m_wallet->disableAutoBackup(); }
+    void setNumBlocks(const int& nCache) { m_wallet->setNumBlocks(nCache); }
+    void resetPool() { m_wallet->resetPool(); }
+    void unlockCoins() { m_wallet->disableAutoBackup(); }
+    void toggleMixing(const bool& fOff = false) { m_wallet->toggleMixing(fOff); }
+    void oneShotDenominate() { m_wallet->oneShotDenominate(); }
+
     interfaces::Node& node() const { return m_node; }
     interfaces::Wallet& wallet() const { return *m_wallet; }
+
+    interfaces::PrivateSendConstants m_privsendconfig;
 
     QString getWalletName() const;
 
@@ -249,19 +258,23 @@ private:
 
     // Cache some values to be able to detect changes
     interfaces::WalletBalances m_cached_balances;
+    interfaces::PrivateSendStatus m_cached_status;
     EncryptionStatus cachedEncryptionStatus;
     int cachedNumBlocks;
-    int cachedPrivateSendRounds;
 
     QTimer *pollTimer;
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
     void checkBalanceChanged(const interfaces::WalletBalances& new_balances);
+    void checkPrivateSendChanged(const interfaces::PrivateSendStatus& new_status);
 
 Q_SIGNALS:
     // Signal that balance in wallet changed
     void balanceChanged(const interfaces::WalletBalances& balances);
+
+    // Signal that balance in wallet changed
+    void privateSendChanged(const interfaces::PrivateSendStatus& status);
 
     // Encryption status of wallet changed
     void encryptionStatusChanged();
@@ -297,6 +310,8 @@ public Q_SLOTS:
     void updateWatchOnlyFlag(bool fHaveWatchonly);
     /* Current, immature or unconfirmed balance might have changed - emit 'balanceChanged' if so */
     void pollBalanceChanged();
+    /* PrivateSend config changed */
+    void privateSendConfigChanged(const int &rounds, const int &amount, const bool &multi);
 };
 
 #endif // BITCOIN_QT_WALLETMODEL_H

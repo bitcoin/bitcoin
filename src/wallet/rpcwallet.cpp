@@ -14,6 +14,8 @@
 #include <interfaces/chain.h>
 #include <validation.h>
 #include <key_io.h>
+#include <modules/platform/funding_object.h>
+#include <modules/platform/funding_validators.h>
 #include <net.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
@@ -2554,7 +2556,7 @@ static UniValue loadwallet(const JSONRPCRequest& request)
     }
     AddWallet(wallet);
 
-    wallet->postInitProcess(gArgs.GetBoolArg("-mnconflock", true) ? true : false);
+    wallet->postInitProcess();
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("name", wallet->GetName());
@@ -2608,7 +2610,7 @@ static UniValue createwallet(const JSONRPCRequest& request)
     }
     AddWallet(wallet);
 
-    wallet->postInitProcess(false);
+    wallet->postInitProcess();
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("name", wallet->GetName());
@@ -4263,17 +4265,17 @@ UniValue privatesend(const JSONRPCRequest& request)
                 throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please unlock wallet for mixing with walletpassphrase first.");
         }
         auto locked_chain = pwallet->chain().lock();
-        bool result = privateSendClient.DoAutomaticDenominating(*locked_chain);
-        return "Mixing " + (result ? "started successfully" : ("start failed: " + privateSendClient.GetStatus() + ", will retry"));
+        bool result = pwallet->privateSendClient->DoAutomaticDenominating(*locked_chain);
+        return "Mixing " + (result ? "started successfully" : ("start failed: " + pwallet->privateSendClient->GetStatus() + ", will retry"));
     }
 
     if(request.params[0].get_str() == "stop") {
-        privateSendClient.fEnablePrivateSend = false;
+        pwallet->privateSendClient->fEnablePrivateSend = false;
         return "Mixing was stopped";
     }
 
     if(request.params[0].get_str() == "reset") {
-        privateSendClient.ResetPool();
+        pwallet->privateSendClient->ResetPool();
         return "Mixing was reset";
     }
 
@@ -4294,11 +4296,11 @@ UniValue getpoolinfo(const JSONRPCRequest& request)
     }
 
     UniValue obj(UniValue::VOBJ);
-    obj.pushKV("mixing_mode",       (!fMasternodeMode && privateSendClient.fPrivateSendMultiSession) ? "multi-session" : "normal");
-    obj.pushKV("status",            privateSendClient.GetStatus());
+    obj.pushKV("mixing_mode",       (!fMasternodeMode && pwallet->privateSendClient->fPrivateSendMultiSession) ? "multi-session" : "normal");
+    obj.pushKV("status",            pwallet->privateSendClient->GetStatus());
 
     masternode_info_t mnInfo;
-    if (privateSendClient.GetMixingMasternodeInfo(mnInfo)) {
+    if (pwallet->privateSendClient->GetMixingMasternodeInfo(mnInfo)) {
         obj.pushKV("outpoint",      mnInfo.outpoint.ToStringShort());
         obj.pushKV("addr",          mnInfo.addr.ToString());
     }

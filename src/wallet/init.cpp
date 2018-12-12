@@ -150,19 +150,6 @@ bool WalletInit::ParameterInteraction() const
         }
     }
 
-    privateSendClient.nLiquidityProvider = std::min(std::max((int)gArgs.GetArg("-liquidityprovider", DEFAULT_PRIVATESEND_LIQUIDITY), MIN_PRIVATESEND_LIQUIDITY), MAX_PRIVATESEND_LIQUIDITY);
-    int nMaxRounds = MAX_PRIVATESEND_ROUNDS;
-    if(privateSendClient.nLiquidityProvider) {
-        // special case for liquidity providers only, normal clients should use default value
-        privateSendClient.SetMinBlocksToWait(privateSendClient.nLiquidityProvider);
-        nMaxRounds = std::numeric_limits<int>::max();
-    }
-
-    privateSendClient.fEnablePrivateSend = gArgs.GetBoolArg("-enableprivatesend", false);
-    privateSendClient.fPrivateSendMultiSession = gArgs.GetBoolArg("-privatesendmultisession", DEFAULT_PRIVATESEND_MULTISESSION);
-    privateSendClient.nPrivateSendRounds = std::min(std::max((int)gArgs.GetArg("-privatesendrounds", DEFAULT_PRIVATESEND_ROUNDS), MIN_PRIVATESEND_ROUNDS), nMaxRounds);
-    privateSendClient.nPrivateSendAmount = std::min(std::max((int)gArgs.GetArg("-privatesendamount", DEFAULT_PRIVATESEND_AMOUNT), MIN_PRIVATESEND_AMOUNT), MAX_PRIVATESEND_AMOUNT);
-
     int nLiqProvTmp = gArgs.GetArg("-liquidityprovider", DEFAULT_PRIVATESEND_LIQUIDITY);
     if (nLiqProvTmp > 0) {
         gArgs.ForceSetArg("-enableprivatesend", "1");
@@ -172,10 +159,6 @@ bool WalletInit::ParameterInteraction() const
         gArgs.ForceSetArg("-privatesendamount", itostr(MAX_PRIVATESEND_AMOUNT));
         LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -privatesendamount=%d\n", __func__, nLiqProvTmp, MAX_PRIVATESEND_AMOUNT);
     }
-
-    LogPrintf("PrivateSend liquidityprovider: %d\n", privateSendClient.nLiquidityProvider);
-    LogPrintf("PrivateSend rounds: %d\n", privateSendClient.nPrivateSendRounds);
-    LogPrintf("PrivateSend amount: %d\n", privateSendClient.nPrivateSendAmount);
 
     return true;
 }
@@ -254,12 +237,12 @@ bool LoadWallets(interfaces::Chain& chain, const std::vector<std::string>& walle
 void StartWallets(CScheduler& scheduler)
 {
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
-        pwallet->postInitProcess(gArgs.GetBoolArg("-mnconflock", true) ? true : false);
+        pwallet->postInitProcess();
     }
-    if(HasWallets()) privateSendClient.Controller(scheduler);
 
     // Run a thread to flush wallet periodically
     scheduler.scheduleEvery(MaybeCompactWalletDB, 500);
+    scheduler.scheduleEvery(privateSendClientTask, 1000);
 }
 
 void FlushWallets()
@@ -272,11 +255,11 @@ void FlushWallets()
 void StopWallets()
 {
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
+        // Stop PrivateSend, release keys
+        pwallet->privateSendClient->fEnablePrivateSend = false;
+        pwallet->privateSendClient->ResetPool();
         pwallet->Flush(true);
     }
-    // Stop PrivateSend, release keys
-    privateSendClient.fEnablePrivateSend = false;
-    privateSendClient.ResetPool();
 }
 
 void UnloadWallets()
@@ -298,5 +281,9 @@ bool CheckMNCollateral(COutPoint& outpointRet, CTxDestination &destRet, CPubKey&
 
 bool IsMixingMasternode(const CNode* pnode)
 {
-    return privateSendClient.IsMixingMasternode(pnode);
+    for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
+        if (pwallet->privateSendClient->IsMixingMasternode(pnode))
+            return true;
+    }
+    return false;
 }

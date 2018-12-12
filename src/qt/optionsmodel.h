@@ -84,6 +84,9 @@ public:
     bool getProxySettings(QNetworkProxy& proxy) const;
     bool getCoinControlFeatures() const { return fCoinControlFeatures; }
     bool getShowAdvancedPSUI() const { return fShowAdvancedPSUI; }
+    int getPrivateSendRounds() const { return nPrivateSendRounds; }
+    int getPrivateSendAmount() const { return nPrivateSendAmount; }
+    bool getPrivateSendMultiSession() const { return fPrivateSendMultiSession; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
 
     /* Restart flag helper */
@@ -103,6 +106,9 @@ private:
     QString strThirdPartyTxUrls;
     bool fCoinControlFeatures;
     bool fShowAdvancedPSUI;
+    int nPrivateSendRounds;
+    int nPrivateSendAmount;
+    bool fPrivateSendMultiSession;
     /* settings that were overriden by command-line */
     QString strOverriddenByCommandLine;
 
@@ -113,8 +119,7 @@ private:
     void checkAndMigrate();
 Q_SIGNALS:
     void displayUnitChanged(int unit);
-    void privateSendRoundsChanged();
-    void privateSentAmountChanged();
+    void privateSendConfigChanged(const int& rounds, const int& amount, const bool& multi);
     void advancedPSUIChanged(bool);
     void coinControlFeaturesChanged(bool);
     void hideTrayIconChanged(bool);
