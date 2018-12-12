@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(key_io_valid_gen)
         } else {
             CTxDestination dest;
             CScript exp_script(exp_payload.begin(), exp_payload.end());
-            ExtractDestination(exp_script, dest);
+            BOOST_CHECK(ExtractDestination(exp_script, dest));
             std::string address = EncodeDestination(dest);
 
             BOOST_CHECK_EQUAL(address, exp_base58string);

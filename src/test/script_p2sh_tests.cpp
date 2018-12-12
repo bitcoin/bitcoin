@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(sign)
     for (int i = 0; i < 4; i++)
     {
         key[i].MakeNewKey(true);
-        keystore.AddKey(key[i]);
+        BOOST_CHECK(keystore.AddKey(key[i]));
     }
 
     // 8 Scripts: checking all combinations of
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(sign)
     CScript evalScripts[4];
     for (int i = 0; i < 4; i++)
     {
-        keystore.AddCScript(standardScripts[i]);
+        BOOST_CHECK(keystore.AddCScript(standardScripts[i]));
         evalScripts[i] = GetScriptForDestination(CScriptID(standardScripts[i]));
     }
 
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(set)
     for (int i = 0; i < 4; i++)
     {
         key[i].MakeNewKey(true);
-        keystore.AddKey(key[i]);
+        BOOST_CHECK(keystore.AddKey(key[i]));
         keys.push_back(key[i].GetPubKey());
     }
 
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(set)
     for (int i = 0; i < 4; i++)
     {
         outer[i] = GetScriptForDestination(CScriptID(inner[i]));
-        keystore.AddCScript(inner[i]);
+        BOOST_CHECK(keystore.AddCScript(inner[i]));
     }
 
     CMutableTransaction txFrom;  // Funding transaction:
@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     for (int i = 0; i < 6; i++)
     {
         key[i].MakeNewKey(true);
-        keystore.AddKey(key[i]);
+        BOOST_CHECK(keystore.AddKey(key[i]));
     }
     for (int i = 0; i < 3; i++)
         keys.push_back(key[i].GetPubKey());
@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
 
     // First three are standard:
     CScript pay1 = GetScriptForDestination(key[0].GetPubKey().GetID());
-    keystore.AddCScript(pay1);
+    BOOST_CHECK(keystore.AddCScript(pay1));
     CScript pay1of3 = GetScriptForMultisig(1, keys);
 
     txFrom.vout[0].scriptPubKey = GetScriptForDestination(CScriptID(pay1)); // P2SH (OP_CHECKSIG)
@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     oneAndTwo << OP_3 << OP_CHECKMULTISIGVERIFY;
     oneAndTwo << OP_2 << ToByteVector(key[3].GetPubKey()) << ToByteVector(key[4].GetPubKey()) << ToByteVector(key[5].GetPubKey());
     oneAndTwo << OP_3 << OP_CHECKMULTISIG;
-    keystore.AddCScript(oneAndTwo);
+    BOOST_CHECK(keystore.AddCScript(oneAndTwo));
     txFrom.vout[3].scriptPubKey = GetScriptForDestination(CScriptID(oneAndTwo));
     txFrom.vout[3].nValue = 4000;
 
@@ -302,17 +302,17 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     for (unsigned i = 0; i < MAX_P2SH_SIGOPS; i++)
         fifteenSigops << ToByteVector(key[i%3].GetPubKey());
     fifteenSigops << OP_15 << OP_CHECKMULTISIG;
-    keystore.AddCScript(fifteenSigops);
+    BOOST_CHECK(keystore.AddCScript(fifteenSigops));
     txFrom.vout[4].scriptPubKey = GetScriptForDestination(CScriptID(fifteenSigops));
     txFrom.vout[4].nValue = 5000;
 
     // vout[5/6] are non-standard because they exceed MAX_P2SH_SIGOPS
     CScript sixteenSigops; sixteenSigops << OP_16 << OP_CHECKMULTISIG;
-    keystore.AddCScript(sixteenSigops);
+    BOOST_CHECK(keystore.AddCScript(sixteenSigops));
     txFrom.vout[5].scriptPubKey = GetScriptForDestination(CScriptID(sixteenSigops));
     txFrom.vout[5].nValue = 5000;
     CScript twentySigops; twentySigops << OP_CHECKMULTISIG;
-    keystore.AddCScript(twentySigops);
+    BOOST_CHECK(keystore.AddCScript(twentySigops));
     txFrom.vout[6].scriptPubKey = GetScriptForDestination(CScriptID(twentySigops));
     txFrom.vout[6].nValue = 6000;
 
