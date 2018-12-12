@@ -121,6 +121,12 @@ public:
 };
 
 /** Show warning message **/
+void UIWarning(const std::string& str);
+
+/** Show error message **/
+bool UIError(const std::string& str);
+
+/** Show warning message **/
 void InitWarning(const std::string& str);
 
 /** Show error message **/
