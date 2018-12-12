@@ -1360,7 +1360,8 @@ bool AssetRange(const CAmount& amount, int precision, bool isInputRange)
 }
 bool CAssetDB::ScanAssets(const int count, const int from, const UniValue& oOptions, UniValue& oRes) {
 	string strTxid = "";
-	vector<unsigned char> vchAliasOrAddress, vchAsset;
+	vector<vector<unsigned char> > vchAddresses;
+	vector<unsigned char> vchAsset;
 	int nStartBlock = 0;
 	if (!oOptions.isNull()) {
 		const UniValue &txid = find_value(oOptions, "txid");
@@ -1371,12 +1372,17 @@ bool CAssetDB::ScanAssets(const int count, const int from, const UniValue& oOpti
 		if (assetObj.isStr()) {
 			vchAsset = vchFromValue(assetObj);
 		}
-
-		const UniValue &alias = find_value(oOptions, "owner");
-		if (alias.isStr()) {
-			vchAliasOrAddress = vchFromValue(alias);
+		const UniValue &owners = find_value(oOptions, "owners");
+		if (owners.isArray()) {
+			const UniValue &ownersArray = owners.get_array();
+			for (int i = 0; i < ownersArray.size(); i++) {
+				const UniValue &owner = ownersArray[i].get_obj();
+				const UniValue &ownerStr = find_value(owner, "owner");
+				if (ownerStr.isStr()) {
+					vchAddresses.push_back(vchFromString(ownerStr.get_str()));
+				}
+			}
 		}
-
 		const UniValue &startblock = find_value(oOptions, "startblock");
 		if (startblock.isNum()) {
 			nStartBlock = startblock.get_int();
@@ -1409,7 +1415,7 @@ bool CAssetDB::ScanAssets(const int count, const int from, const UniValue& oOpti
 					pcursor->Next();
 					continue;
 				}
-				if (!vchAliasOrAddress.empty() && vchAliasOrAddress != txPos.vchAliasOrAddress)
+				if (!vchAddresses.empty() && std::find(vchAddresses.begin(), vchAddresses.end(), txPos.vchAliasOrAddress) == vchAddresses.end())
 				{
 					pcursor->Next();
 					continue;
@@ -1448,12 +1454,18 @@ UniValue listassets(const JSONRPCRequest& request) {
 			"    {\n"
 			"      \"txid\":txid					(string) Transaction ID to filter results for\n"
 			"	   \"asset\":guid					(string) Asset GUID to filter.\n"
-			"      \"owner\":string					(string) Alias or address to filter.\n"
+			"	   \"owners\"						(array, optional) a json array with owners\n"
+			"		[\n"
+			"			{\n"
+			"				\"owner\":string		(string) Alias or address to filter.\n"
+			"			} \n"
+			"			,...\n"
+			"		]\n"
 			"      \"startblock\":block 			(number) Earliest block to filter from. Block number is the block at which the transaction would have confirmed.\n"
 			"    }\n"
 			+ HelpExampleCli("listassets", "0")
 			+ HelpExampleCli("listassets", "10 10")
-			+ HelpExampleCli("listassets", "0 0 '{\"owner\":\"SfaT8dGhk1zaQkk8bujMfgWw3szxReej4S\"}'")
+			+ HelpExampleCli("listassets", "0 0 '{\"owners\":[{\"owner\":\"SfaMwYY19Dh96B9qQcJQuiNykVRTzXMsZR\"},{\"owner\":\"SfaMwYY19Dh96B9qQcJQuiNykVRTzXMsZR\"}]}'")
 			+ HelpExampleCli("listassets", "0 0 '{\"asset\":\"32bff1fa844c124\",\"owner\":\"SfaT8dGhk1zaQkk8bujMfgWw3szxReej4S\",\"startblock\":0}'")
 		);
 	UniValue options;
