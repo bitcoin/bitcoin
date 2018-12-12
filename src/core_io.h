@@ -15,6 +15,7 @@ class CBlock;
 class CBlockHeader;
 class CScript;
 class CTransaction;
+class CTxOut;
 struct CMutableTransaction;
 struct PartiallySignedTransaction;
 class uint256;
@@ -52,6 +53,7 @@ std::string SighashToStr(unsigned char sighash_type);
 void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex);
 void ScriptToUniv(const CScript& script, UniValue& out, bool include_address);
 void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, bool include_hex = true, int serialize_flags = 0);
+void FulltxToUniv(const CTransaction& tx, const uint256& hashBlock, const UniValue& related_outs, UniValue& entry, bool include_hex = true, int serialize_flags = 0);
 void TxToUniv2(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, bool include_hex = true, int serialize_flags = 0, int n = 0);
 
 #endif // BITCOIN_CORE_IO_H

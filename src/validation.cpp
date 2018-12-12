@@ -38,6 +38,7 @@
 #include <util/system.h>
 #include <util/moneystr.h>
 #include <util/strencodings.h>
+#include <univalue.h>
 #include <validationinterface.h>
 #include <warnings.h>
 
@@ -46,6 +47,7 @@
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/thread.hpp>
+#include "core_io.h"
 
 #if defined(NDEBUG)
 # error "Bitcoin cannot be compiled without assertions."
@@ -1041,6 +1043,44 @@ bool GetTransaction(const uint256& hash, CTransactionRef& txOut, const Consensus
 
 //////////////////////////////////////////////////////////////////////////////
 //
+// Rout
+//
+bool WriteRoutToDisk(const UniValue& rout)
+{
+    if (!rout.isObject()) {
+        return error("WriteRoutToDisk: rout must be object");
+    }
+    const UniValue& bhResult = find_value(rout, "blockHash");
+    if (!bhResult.isStr()) {
+        return error("WriteRoutToDisk: block_hash must be str");
+    }
+    const std::string& blockHash = bhResult.get_str();
+    CAutoFile fileout(OpenRoutFile(blockHash), SER_DISK, CLIENT_VERSION);
+    if (fileout.IsNull()) {
+        return error("WriteRoutToDisk: OpenRoutFile failed");
+    }
+    fileout << rout.write(1);
+    return true;
+}
+
+bool ReadRoutFromDisk(UniValue& rout, const std::string& blockHash)
+{
+    rout.setObject();
+    CAutoFile filein(OpenRoutFile(blockHash, true), SER_DISK, CLIENT_VERSION);
+    if (filein.IsNull()) {
+        return error("ReadRoutFromDisk: OpenRoutFile failed");
+    }
+    std::string buffer;
+    try {
+        filein >> buffer;
+    }
+    catch (const std::exception& e) {
+        return error("%s: Deserialize or I/O error - %s", __func__, e.what());
+    }
+    return rout.read(buffer);
+}
+
+//
 // CBlock and CBlockIndex
 //
 
@@ -1979,14 +2019,19 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     blockundo.vtxundo.reserve(block.vtx.size() - 1);
     std::vector<PrecomputedTransactionData> txdata;
     txdata.reserve(block.vtx.size()); // Required so that pointers to individual PrecomputedTransactionData don't get invalidated
+
+    UniValue rout(UniValue::VOBJ);
+    rout.pushKV("blockHash", block.GetHash().ToString());
+
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
+        UniValue vout(UniValue::VARR);
+
         const CTransaction &tx = *(block.vtx[i]);
 
         nInputs += tx.vin.size();
 
-        if (!tx.IsCoinBase())
-        {
+        if (!tx.IsCoinBase()) {
             CAmount txfee = 0;
             if (!Consensus::CheckTxInputs(tx, state, view, pindex->nHeight, txfee)) {
                 return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
@@ -2003,13 +2048,28 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
             prevheights.resize(tx.vin.size());
             for (size_t j = 0; j < tx.vin.size(); j++) {
                 prevheights[j] = view.AccessCoin(tx.vin[j].prevout).nHeight;
+
+                UniValue relatedOut(UniValue::VOBJ);
+                const CTxOut& prevOut = view.AccessCoin(tx.vin[j].prevout).out;
+                relatedOut.pushKV("value", ValueFromAmount(prevOut.nValue));
+                relatedOut.pushKV("n", (int64_t)tx.vin[j].prevout.n);
+                UniValue sig(UniValue::VOBJ);
+                ScriptPubKeyToUniv(prevOut.scriptPubKey, sig, true);
+                relatedOut.pushKV("scriptPubKey", sig);
+                vout.push_back(relatedOut);
             }
 
             if (!SequenceLocks(tx, nLockTimeFlags, &prevheights, *pindex)) {
                 return state.DoS(100, error("%s: contains a non-BIP68-final transaction", __func__),
                                  REJECT_INVALID, "bad-txns-nonfinal");
             }
+
+
+        } else {
+            vout.push_back(UniValue(UniValue::VOBJ));
         }
+
+        rout.pushKV(tx.GetHash().GetHex(), vout);
 
         // GetTransactionSigOpCost counts 3 types of sigops:
         // * legacy (always)
@@ -2072,6 +2132,8 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
 
     int64_t nTime6 = GetTimeMicros(); nTimeCallbacks += nTime6 - nTime5;
     LogPrint(BCLog::BENCH, "    - Callbacks: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime6 - nTime5), nTimeCallbacks * MICRO, nTimeCallbacks * MILLI / nBlocksTotal);
+
+    WriteRoutToDisk(rout);
 
     return true;
 }
@@ -3795,6 +3857,33 @@ bool CheckDiskSpace(uint64_t nAdditionalBytes, bool blocks_dir)
         return AbortNode("Disk space is low!", _("Error: Disk space is low!"));
 
     return true;
+}
+
+FILE* OpenRoutFile(const std::string& blockHash, bool fReadOnly)
+{
+    if (blockHash.length() < 4) {
+        return nullptr;
+    }
+    fs::path path = GetRoutFilename(blockHash);
+    fs::create_directories(path.parent_path());
+    FILE* file = fsbridge::fopen(path, fReadOnly ? "rb": "rb+");
+    if (!file && !fReadOnly)
+        file = fsbridge::fopen(path, "wb+");
+    if (!file) {
+        LogPrintf("Unable to open file %s\n", path.string());
+        return nullptr;
+    }
+    return file;
+}
+
+fs::path GetRoutFilename(const std::string& blockHash)
+{
+    std::string rbh(blockHash);
+    std::reverse(rbh.begin(), rbh.end());
+    if (rbh.length() < 4) {
+        rbh = "zzzz";
+    }
+    return GetRoutsDir() / rbh.substr(0, 2) / rbh.substr(2, 2) / strprintf("rout_%s.json", blockHash);
 }
 
 static FILE* OpenDiskFile(const CDiskBlockPos &pos, const char *prefix, bool fReadOnly)

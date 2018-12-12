@@ -22,6 +22,7 @@
 #include <primitives/transaction.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
+#include <rpc/rawtransaction.h>
 #include <script/descriptor.h>
 #include <streams.h>
 #include <sync.h>
@@ -154,6 +155,53 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
         result.pushKV("previousblockhash", blockindex->pprev->GetBlockHash().GetHex());
     if (pnext)
         result.pushKV("nextblockhash", pnext->GetBlockHash().GetHex());
+    return result;
+}
+
+UniValue fullblockToJSON(const CBlock& block, const CBlockIndex* blockindex, UniValue& rout, bool& rewrite)
+{
+    AssertLockHeld(cs_main);
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("hash", blockindex->GetBlockHash().GetHex());
+    int confirmations = -1;
+    // Only report confirmations if the block is on the main chain
+    if (chainActive.Contains(blockindex)) {
+        confirmations = chainActive.Height() - blockindex->nHeight + 1;
+    }
+    result.pushKV("confirmations", confirmations);
+    result.pushKV("strippedsize", (int)::GetSerializeSize(block, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS));
+    result.pushKV("size", (int)::GetSerializeSize(block, PROTOCOL_VERSION));
+    result.pushKV("weight", (int)::GetBlockWeight(block));
+    result.pushKV("height", blockindex->nHeight);
+    result.pushKV("version", block.nVersion);
+    result.pushKV("versionHex", strprintf("%08x", block.nVersion));
+    result.pushKV("merkleroot", block.hashMerkleRoot.GetHex());
+    UniValue txs(UniValue::VARR);
+    for(const auto& tx : block.vtx) {
+        UniValue related_outs = rout[tx->GetHash().GetHex()];
+        size_t related_outs_size = related_outs.size();
+        txs.push_back(do_getfulltransaction(tx->GetHash(), related_outs));
+        if (related_outs.size() != related_outs_size) {
+            rout.pushKV(tx->GetHash().GetHex(), related_outs);
+            rewrite = true;
+        }
+    }
+    result.pushKV("tx", txs);
+    result.pushKV("time", block.GetBlockTime());
+    result.pushKV("mediantime", (int64_t)blockindex->GetMedianTimePast());
+    result.pushKV("nonce", (uint64_t)block.nNonce);
+    result.pushKV("bits", strprintf("%08x", block.nBits));
+    result.pushKV("difficulty", GetDifficulty(blockindex));
+    result.pushKV("chainwork", blockindex->nChainWork.GetHex());
+    result.pushKV("nTx", (uint64_t)blockindex->nTx);
+
+    if (blockindex->pprev) {
+        result.pushKV("previousblockhash", blockindex->pprev->GetBlockHash().GetHex());
+    }
+    CBlockIndex *pnext = chainActive.Next(blockindex);
+    if (pnext) {
+        result.pushKV("nextblockhash", pnext->GetBlockHash().GetHex());
+    }
     return result;
 }
 
@@ -907,6 +955,68 @@ static UniValue getblock(const JSONRPCRequest& request)
     }
 
     return blockToJSON(block, chainActive.Tip(), pblockindex, verbosity >= 2);
+}
+
+
+static UniValue getfullblock(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+        throw std::runtime_error(
+            RPCHelpMan{"getfullblock",
+            "\nReturn the full block data.\n",
+                {
+                    {"blockhash", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The block hash"},
+                }}
+                .ToString() +
+            "\nResult:\n"
+            "{\n"
+            "  \"hash\" : \"hash\",               (string) the block hash (same as provided)\n"
+            "  \"confirmations\" : n,           (numeric) The number of confirmations, or -1 if the block is not on the main chain\n"
+            "  \"size\" : n,                    (numeric) The block size\n"
+            "  \"strippedsize\" : n,            (numeric) The block size excluding witness data\n"
+            "  \"weight\" : n                   (numeric) The block weight as defined in BIP 141\n"
+            "  \"height\" : n,                  (numeric) The block height or index\n"
+            "  \"version\" : n,                 (numeric) The block version\n"
+            "  \"versionHex\" : \"00000000\",     (string) The block version formatted in hexadecimal\n"
+            "  \"merkleroot\" : \"xxxx\",         (string) The merkle root\n"
+            "  \"tx\" : [                       (array of Objects) The transactions in the format of the getfulltransaction RPC\n"
+            "     ,...\n"
+            "  ],\n"
+            "  \"time\" : ttt,                  (numeric) The block time in seconds since epoch (Jan 1 1970 GMT)\n"
+            "  \"mediantime\" : ttt,            (numeric) The median block time in seconds since epoch (Jan 1 1970 GMT)\n"
+            "  \"nonce\" : n,                   (numeric) The nonce\n"
+            "  \"bits\" : \"1d00ffff\",           (string) The bits\n"
+            "  \"difficulty\" : x.xxx,          (numeric) The difficulty\n"
+            "  \"chainwork\" : \"xxxx\",          (string) Expected number of hashes required to produce the chain up to this block (in hex)\n"
+            "  \"nTx\" : n,                     (numeric) The number of transactions in the block.\n"
+            "  \"previousblockhash\" : \"hash\",  (string) The hash of the previous block\n"
+            "  \"nextblockhash\" : \"hash\"       (string) The hash of the next block\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getfullblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
+        );
+
+    LOCK(cs_main);
+    uint256 hash(ParseHashV(request.params[0], "blockhash"));
+    const CBlockIndex* pblockindex = LookupBlockIndex(hash);
+    if (!pblockindex) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+    }
+
+    const CBlock block = GetBlockChecked(pblockindex);
+    bool rewrite = false;
+    UniValue rout(UniValue::VOBJ);
+    if (!ReadRoutFromDisk(rout, block.GetHash().GetHex())) {
+        rout.setObject();
+        rewrite = true;
+    }
+    UniValue result = fullblockToJSON(block, pblockindex, rout, rewrite);
+    if (rewrite) {
+        rout.pushKV("blockHash", block.GetHash().GetHex());
+        WriteRoutToDisk(rout);
+    }
+
+    return result;
 }
 
 struct CCoinsStats
@@ -2312,6 +2422,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         "getbestblockhash",       &getbestblockhash,       {} },
     { "blockchain",         "getblockcount",          &getblockcount,          {} },
     { "blockchain",         "getblock",               &getblock,               {"blockhash","verbosity|verbose"} },
+    { "blockchain",         "getfullblock",           &getfullblock,           {"blockhash"} },
     { "blockchain",         "getblockhash",           &getblockhash,           {"height"} },
     { "blockchain",         "getblockheader",         &getblockheader,         {"blockhash","verbose"} },
     { "blockchain",         "getchaintips",           &getchaintips,           {} },

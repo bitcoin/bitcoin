@@ -19,6 +19,7 @@
 #include <script/script_error.h>
 #include <sync.h>
 #include <versionbits.h>
+#include <univalue.h>
 
 #include <algorithm>
 #include <exception>
@@ -249,8 +250,12 @@ bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& block, CValidationS
 bool CheckDiskSpace(uint64_t nAdditionalBytes = 0, bool blocks_dir = false);
 /** Open a block file (blk?????.dat) */
 FILE* OpenBlockFile(const CDiskBlockPos &pos, bool fReadOnly = false);
+/** Open a rout file (rout_?????.dat) */
+FILE* OpenRoutFile(const std::string& blockHash, bool fReadOnly = false);
 /** Translation to a filesystem path */
 fs::path GetBlockPosFilename(const CDiskBlockPos &pos, const char *prefix);
+/** Translation to a filesystem path */
+fs::path GetRoutFilename(const std::string& blockHash);
 /** Import blocks from an external file */
 bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskBlockPos *dbp = nullptr);
 /** Ensures we have a genesis block in the block tree, possibly writing one to disk. */
@@ -391,6 +396,8 @@ void InitScriptExecutionCache();
 
 
 /** Functions for disk access for blocks */
+bool WriteRoutToDisk(const UniValue& rout);
+bool ReadRoutFromDisk(UniValue& rout, const std::string& blockHash);
 bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus::Params& consensusParams);
 bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams);
 bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CDiskBlockPos& pos, const CMessageHeader::MessageStartChars& message_start);

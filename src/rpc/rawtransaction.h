@@ -5,6 +5,8 @@
 #ifndef BITCOIN_RPC_RAWTRANSACTION_H
 #define BITCOIN_RPC_RAWTRANSACTION_H
 
+#include <uint256.h>
+
 class CBasicKeyStore;
 struct CMutableTransaction;
 class UniValue;
@@ -18,5 +20,8 @@ UniValue SignTransaction(interfaces::Chain& chain, CMutableTransaction& mtx, con
 
 /** Create a transaction from univalue parameters */
 CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, const UniValue& rbf);
+
+// rawtransaction.cpp
+UniValue do_getfulltransaction(uint256 hash, UniValue& related_outs);
 
 #endif // BITCOIN_RPC_RAWTRANSACTION_H

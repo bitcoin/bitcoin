@@ -65,6 +65,32 @@ static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& 
     }
 }
 
+static void FulltxToJSON(const CTransaction& tx, const uint256 hashBlock, const UniValue& related_outs, UniValue& entry)
+{
+    // Call into TxToUniv() in bitcoin-common to decode the transaction hex.
+    //
+    // Blockchain contextual information (confirmations and blocktime) is not
+    // available to code in bitcoin-common, so we query them here and push the
+    // data into the returned UniValue.
+    FulltxToUniv(tx, uint256(), related_outs, entry, true, RPCSerializationFlags());
+
+    if (!hashBlock.IsNull()) {
+        LOCK(cs_main);
+
+        entry.pushKV("blockhash", hashBlock.GetHex());
+        CBlockIndex* pindex = LookupBlockIndex(hashBlock);
+        if (pindex) {
+            if (chainActive.Contains(pindex)) {
+                entry.pushKV("confirmations", 1 + chainActive.Height() - pindex->nHeight);
+                entry.pushKV("time", pindex->GetBlockTime());
+                entry.pushKV("blocktime", pindex->GetBlockTime());
+            }
+            else
+                entry.pushKV("confirmations", 0);
+        }
+    }
+}
+
 static void TxToJSON2(const CTransaction& tx, const uint256 hashBlock, UniValue& entry, int n)
 {
     // Call into TxToUniv() in bitcoin-common to decode the transaction hex.
@@ -234,6 +260,134 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
     UniValue result(UniValue::VOBJ);
     if (blockindex) result.pushKV("in_active_chain", in_active_chain);
     TxToJSON(*tx, hash_block, result);
+    return result;
+}
+
+static UniValue getfulltransaction(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 1)
+        throw std::runtime_error(
+            RPCHelpMan{"getfulltransaction",
+            "\nReturn the full transaction data.\n",
+                {
+                    {"txid", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The transaction id"},
+                }}
+                .ToString() +
+            "\nResult:\n"
+            "{\n"
+            "  \"hex\" : \"data\",         (string) The serialized, hex-encoded data for 'txid'\n"
+            "  \"txid\" : \"id\",          (string) The transaction id (same as provided)\n"
+            "  \"hash\" : \"id\",          (string) The transaction hash (differs from txid for witness transactions)\n"
+            "  \"size\" : n,             (numeric) The serialized transaction size\n"
+            "  \"vsize\" : n,            (numeric) The virtual transaction size (differs from size for witness transactions)\n"
+            "  \"weight\" : n,           (numeric) The transaction's weight (between vsize*4-3 and vsize*4)\n"
+            "  \"version\" : n,          (numeric) The version\n"
+            "  \"locktime\" : ttt,       (numeric) The lock time\n"
+            "  \"vin\" : [                        (array of json objects)\n"
+            "     {\n"
+            "       \"txid\": \"id\",               (string) The transaction id\n"
+            "       \"vout\": n,                  (numeric) \n"
+            "       \"relatedOut\": ro            (json object) The related out\n"
+            "       \"scriptSig\": {              (json object) The script\n"
+            "         \"asm\": \"asm\",             (string) asm\n"
+            "         \"hex\": \"hex\"              (string) hex\n"
+            "       },\n"
+            "       \"sequence\": n               (numeric) The script sequence number\n"
+            "       \"txinwitness\": [\"hex\", ...] (array of string) hex-encoded witness data (if any)\n"
+            "     }\n"
+            "     ,...\n"
+            "  ],\n"
+            "  \"vout\" : [                       (array of json objects)\n"
+            "     {\n"
+            "       \"value\" : x.xxx,            (numeric) The value in " + CURRENCY_UNIT + "\n"
+            "       \"n\" : n,                    (numeric) index\n"
+            "       \"scriptPubKey\" : {          (json object)\n"
+            "         \"asm\" : \"asm\",            (string) the asm\n"
+            "         \"hex\" : \"hex\",            (string) the hex\n"
+            "         \"reqSigs\" : n,            (numeric) The required sigs\n"
+            "         \"type\" : \"pubkeyhash\",    (string) The type, eg 'pubkeyhash'\n"
+            "         \"addresses\" : [           (json array of string)\n"
+            "           \"address\"               (string) bitcoin address\n"
+            "           ,...\n"
+            "         ]\n"
+            "       }\n"
+            "     }\n"
+            "     ,...\n"
+            "  ],\n"
+            "  \"blockhash\" : \"hash\",   (string) the block hash\n"
+            "  \"confirmations\" : n,    (numeric) The confirmations\n"
+            "  \"time\" : ttt,           (numeric) The transaction time in seconds since epoch (Jan 1 1970 GMT)\n"
+            "  \"blocktime\" : ttt       (numeric) The block time in seconds since epoch (Jan 1 1970 GMT)\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getfulltransaction", "\"mytxid\"")
+        );
+
+    uint256 hash = ParseHashV(request.params[0], "parameter 1");
+    if (hash == Params().GenesisBlock().hashMerkleRoot) {
+        // Special exception for the genesis block coinbase transaction
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "The genesis block coinbase is not considered an ordinary transaction and cannot be retrieved");
+    }
+
+    UniValue related_outs(UniValue::VARR);
+    return do_getfulltransaction(hash, related_outs);
+}
+
+UniValue do_getfulltransaction(uint256 hash, UniValue& related_outs)
+{
+
+    bool f_txindex_ready = false;
+    if (g_txindex) {
+        f_txindex_ready = g_txindex->BlockUntilSyncedToCurrentChain();
+    }
+
+    CTransactionRef tx;
+    uint256 hash_block;
+    if (!GetTransaction(hash, tx, Params().GetConsensus(), hash_block, true, nullptr)) {
+        std::string errmsg;
+        if (!g_txindex) {
+            errmsg = "No such mempool transaction. Use -txindex to enable blockchain transaction queries";
+        } else if (!f_txindex_ready) {
+            errmsg = "No such mempool transaction. Blockchain transactions are still in the process of being indexed";
+        } else {
+            errmsg = "No such mempool or blockchain transaction";
+        }
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, errmsg + ". Use gettransaction for wallet transactions.");
+    }
+
+    if (related_outs.size() != tx->vin.size()) {
+        related_outs.setArray();
+        for (unsigned int i = 0; i < tx->vin.size(); i++) {
+            const CTxIn& txin = tx->vin[i];
+            if (tx->IsCoinBase()) {
+                related_outs.push_back(UniValue(UniValue::VOBJ));
+                continue;
+            }
+            CTransactionRef related_tx;
+            uint256 related_hash_block;
+            if (!GetTransaction(txin.prevout.hash, related_tx, Params().GetConsensus(), related_hash_block, true, nullptr)) {
+                std::string errmsg;
+                if (!g_txindex) {
+                    errmsg = "No such mempool transaction. Use -txindex to enable blockchain transaction queries";
+                } else if (!f_txindex_ready) {
+                    errmsg = "No such mempool transaction. Blockchain transactions are still in the process of being indexed";
+                } else {
+                    errmsg = "No such mempool or blockchain transaction";
+                }
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, errmsg + ". Use gettransaction for wallet transactions.");
+            }
+            UniValue related_out(UniValue::VOBJ);
+            related_out.pushKV("value", ValueFromAmount(related_tx->vout[txin.prevout.n].nValue));
+            related_out.pushKV("n", (int64_t)txin.prevout.n);
+            UniValue related_spk(UniValue::VOBJ);
+            ScriptPubKeyToUniv(related_tx->vout[txin.prevout.n].scriptPubKey, related_spk, true);
+            related_out.pushKV("scriptPubKey", related_spk);
+            related_outs.push_back(related_out);
+        }
+    }
+
+    UniValue result(UniValue::VOBJ);
+    FulltxToJSON(*tx, hash_block, related_outs, result);
     return result;
 }
 
@@ -2153,6 +2307,7 @@ static const CRPCCommand commands[] =
 { //  category              name                            actor (function)            argNames
   //  --------------------- ------------------------        -----------------------     ----------
     { "rawtransactions",    "getrawtransaction",            &getrawtransaction,         {"txid","verbose","blockhash"} },
+    { "rawtransactions",    "getfulltransaction",           &getfulltransaction,        {"txid"} },
     { "rawtransactions",    "getrawtransaction2",           &getrawtransaction2,        {"txid", "n","verbose","blockhash"} },
     { "rawtransactions",    "createrawtransaction",         &createrawtransaction,      {"inputs","outputs","locktime","replaceable"} },
     { "rawtransactions",    "decoderawtransaction",         &decoderawtransaction,      {"hexstring","iswitness"} },
