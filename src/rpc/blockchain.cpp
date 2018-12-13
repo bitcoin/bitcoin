@@ -834,7 +834,7 @@ static UniValue getblock(const JSONRPCRequest& request)
             "\nResult (for verbosity = 2):\n"
             "{\n"
             "  ...,                     Same output as verbosity = 1.\n"
-            "  \"tx\" : [               (json array of Objects) The transactions in the format of the getrawtransaction RPC. Different from verbosity = 1 \"tx\" result.\n"
+            "  \"tx\" : [               (json array of json objects) The transactions in the format of the getrawtransaction RPC. Different from verbosity = 1 \"tx\" result.\n"
             "         ,...\n"
             "  ],\n"
             "  ,...                     Same output as verbosity = 1.\n"
