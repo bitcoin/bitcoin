@@ -9,7 +9,7 @@ These are the dependencies currently used by Bitcoin Core. You can find instruct
 | Boost | [1.64.0](https://www.boost.org/users/download/) | [1.47.0](https://github.com/bitcoin/bitcoin/pull/8920) | No |  |  |
 | Clang |  | [3.3+](https://llvm.org/releases/download.html) (C++11 support) |  |  |  |
 | D-Bus | [1.10.18](https://cgit.freedesktop.org/dbus/dbus/tree/NEWS?h=dbus-1.10) |  | No | Yes |  |
-| Expat | [2.2.5](https://libexpat.github.io/) |  | No | Yes |  |
+| Expat | [2.2.6](https://libexpat.github.io/) |  | No | Yes |  |
 | fontconfig | [2.12.1](https://www.freedesktop.org/software/fontconfig/release/) |  | No | Yes |  |
 | FreeType | [2.7.1](https://download.savannah.gnu.org/releases/freetype) |  | No |  |  |
 | GCC |  | [4.8+](https://gcc.gnu.org/) (C++11 support) |  |  |  |
@@ -23,7 +23,7 @@ These are the dependencies currently used by Bitcoin Core. You can find instruct
 | protobuf | [2.6.1](https://github.com/google/protobuf/releases) |  | No |  |  |
 | Python (tests) |  | [3.4](https://www.python.org/downloads) |  |  |  |
 | qrencode | [3.4.4](https://fukuchi.org/works/qrencode) |  | No |  |  |
-| Qt | [5.9.6](https://download.qt.io/official_releases/qt/) | [5.2](https://github.com/bitcoin/bitcoin/pull/14725) | No |  |  |
+| Qt | [5.9.7](https://download.qt.io/official_releases/qt/) | [5.2](https://github.com/bitcoin/bitcoin/pull/14725) | No |  |  |
 | XCB |  |  |  |  | [Yes](https://github.com/bitcoin/bitcoin/blob/master/depends/packages/qt.mk#L87) (Linux only) |
 | xkbcommon |  |  |  |  | [Yes](https://github.com/bitcoin/bitcoin/blob/master/depends/packages/qt.mk#L86) (Linux only) |
 | ZeroMQ | [4.2.5](https://github.com/zeromq/libzmq/releases) | 4.0.0 | No |  |  |
