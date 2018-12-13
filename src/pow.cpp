@@ -89,43 +89,18 @@ unsigned int static DarkGravityWave(const CBlockIndex* pindexLast, const CBlockH
         return bnPowLimit.GetCompact();
     }
 
-    if (params.fPowAllowMinDifficultyBlocks && (
-        // testnet ...
-        (params.hashDevnetGenesisBlock.IsNull() && pindexLast->nChainWork >= UintToArith256(uint256S("0x000000000000000000000000000000000000000000000000003e9ccfe0e03e01"))) ||
-        // or devnet
-        !params.hashDevnetGenesisBlock.IsNull())) {
-        // NOTE: 000000000000000000000000000000000000000000000000003e9ccfe0e03e01 is the work of the "wrong" chain,
-        // so this rule activates there immediately and new blocks with high diff from that chain are going
-        // to be rejected by updated nodes. Note, that old nodes are going to reject blocks from updated nodes
-        // after the "right" chain reaches this amount of work too. This is a temporary condition which should
-        // be removed when we decide to hard-fork testnet again.
-        // TODO: remove "testnet+work OR devnet" part on next testnet hard-fork
-        // Special difficulty rule for testnet/devnet:
-        // If the new block's timestamp is more than 2* 2.5 minutes
-        // then allow mining of a min-difficulty block.
-
-        // start using smoother adjustment on testnet when total work hits
-        // 000000000000000000000000000000000000000000000000003ff00000000000
-        if (pindexLast->nChainWork >= UintToArith256(uint256S("0x000000000000000000000000000000000000000000000000003ff00000000000"))
-            // and immediately on devnet
-            || !params.hashDevnetGenesisBlock.IsNull()) {
-            // recent block is more than 2 hours old
-            if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + 2 * 60 * 60) {
-                return bnPowLimit.GetCompact();
+    if (params.fPowAllowMinDifficultyBlocks) {
+        // recent block is more than 2 hours old
+        if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + 2 * 60 * 60) {
+            return bnPowLimit.GetCompact();
+        }
+        // recent block is more than 10 minutes old
+        if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nPowTargetSpacing * 4) {
+            arith_uint256 bnNew = arith_uint256().SetCompact(pindexLast->nBits) * 10;
+            if (bnNew > bnPowLimit) {
+                bnNew = bnPowLimit;
             }
-            // recent block is more than 10 minutes old
-            if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nPowTargetSpacing*4) {
-                arith_uint256 bnNew = arith_uint256().SetCompact(pindexLast->nBits) * 10;
-                if (bnNew > bnPowLimit) {
-                    bnNew = bnPowLimit;
-                }
-                return bnNew.GetCompact();
-            }
-        } else {
-            // old stuff
-            if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nPowTargetSpacing*2) {
-                return bnPowLimit.GetCompact();
-            }
+            return bnNew.GetCompact();
         }
     }
 
