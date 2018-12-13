@@ -19,7 +19,6 @@
 
 #include <boost/thread.hpp>
 
-extern uint256 insecure_rand_seed;
 extern FastRandomContext insecure_rand_ctx;
 
 /**
@@ -27,14 +26,9 @@ extern FastRandomContext insecure_rand_ctx;
  */
 extern bool g_mock_deterministic_tests;
 
-static inline void SeedInsecureRand(bool fDeterministic = false)
+static inline void SeedInsecureRand(bool deterministic = false)
 {
-    if (fDeterministic) {
-        insecure_rand_seed = uint256();
-    } else {
-        insecure_rand_seed = GetRandHash();
-    }
-    insecure_rand_ctx = FastRandomContext(insecure_rand_seed);
+    insecure_rand_ctx = FastRandomContext(deterministic);
 }
 
 static inline uint32_t InsecureRand32() { return insecure_rand_ctx.rand32(); }

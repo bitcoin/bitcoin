@@ -80,6 +80,14 @@ public:
     /** Initialize with explicit seed (only for testing) */
     explicit FastRandomContext(const uint256& seed);
 
+    // Do not permit copying a FastRandomContext (move it, or create a new one to get reseeded).
+    FastRandomContext(const FastRandomContext&) = delete;
+    FastRandomContext(FastRandomContext&&) = delete;
+    FastRandomContext& operator=(const FastRandomContext&) = delete;
+
+    /** Move a FastRandomContext. If the original one is used again, it will be reseeded. */
+    FastRandomContext& operator=(FastRandomContext&& from) noexcept;
+
     /** Generate a random 64-bit integer. */
     uint64_t rand64()
     {
