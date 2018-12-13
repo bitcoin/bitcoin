@@ -9,14 +9,9 @@ Runs automatically during `make check`.
 
 Can also be run manually."""
 
-from __future__ import division,print_function,unicode_literals
-
 import argparse
 import binascii
-try:
-    import configparser
-except ImportError:
-    import ConfigParser as configparser
+import configparser
 import difflib
 import json
 import logging
