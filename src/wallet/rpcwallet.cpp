@@ -3768,7 +3768,7 @@ static UniValue listlabels(const JSONRPCRequest& request)
                 }}
                 .ToString() +
             "\nResult:\n"
-            "[               (json array of string)\n"
+            "[               (json array of strings)\n"
             "  \"label\",      (string) Label name\n"
             "  ...\n"
             "]\n"

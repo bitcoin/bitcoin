@@ -495,7 +495,7 @@ static UniValue getrawmempool(const JSONRPCRequest& request)
                 }}
                 .ToString() +
             "\nResult: (for verbose = false):\n"
-            "[                     (json array of string)\n"
+            "[                     (json array of strings)\n"
             "  \"transactionid\"     (string) The transaction id\n"
             "  ,...\n"
             "]\n"
@@ -817,7 +817,7 @@ static UniValue getblock(const JSONRPCRequest& request)
             "  \"version\" : n,         (numeric) The block version\n"
             "  \"versionHex\" : \"00000000\", (string) The block version formatted in hexadecimal\n"
             "  \"merkleroot\" : \"xxxx\", (string) The merkle root\n"
-            "  \"tx\" : [               (json array of string) The transaction ids\n"
+            "  \"tx\" : [               (json array of strings) The transaction ids\n"
             "     \"transactionid\"     (string) The transaction id\n"
             "     ,...\n"
             "  ],\n"
@@ -1062,7 +1062,7 @@ UniValue gettxout(const JSONRPCRequest& request)
             "     \"hex\" : \"hex\",        (string) \n"
             "     \"reqSigs\" : n,          (numeric) Number of required signatures\n"
             "     \"type\" : \"pubkeyhash\", (string) The type, eg pubkeyhash\n"
-            "     \"addresses\" : [          (json array of string) array of bitcoin addresses\n"
+            "     \"addresses\" : [          (json array of strings) array of bitcoin addresses\n"
             "        \"address\"     (string) bitcoin address\n"
             "        ,...\n"
             "     ]\n"
