@@ -2730,7 +2730,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
                 }}
                 .ToString() +
             "\nResult\n"
-            "[                   (array of json object)\n"
+            "[                   (json array of json object)\n"
             "  {\n"
             "    \"txid\" : \"txid\",          (string) the transaction id \n"
             "    \"vout\" : n,               (numeric) the vout value\n"
