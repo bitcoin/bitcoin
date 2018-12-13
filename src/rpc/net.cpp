@@ -433,7 +433,7 @@ static UniValue getnetworkinfo(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
             RPCHelpMan{"getnetworkinfo",
-                "Returns an object containing various state info regarding P2P networking.\n", {}}
+                "Returns a json object containing various state info regarding P2P networking.\n", {}}
                 .ToString() +
             "\nResult:\n"
             "{\n"

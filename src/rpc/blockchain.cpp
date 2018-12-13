@@ -1225,7 +1225,7 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
             RPCHelpMan{"getblockchaininfo",
-                "Returns an object containing various state info regarding blockchain processing.\n", {}}
+                "Returns a json object containing various state info regarding blockchain processing.\n", {}}
                 .ToString() +
             "\nResult:\n"
             "{\n"
@@ -2105,7 +2105,7 @@ UniValue scantxoutset(const JSONRPCRequest& request)
             "                                      \"abort\" for aborting the current scan (returns true when abort was successful)\n"
             "                                      \"status\" for progress report (in %) of the current scan"},
                     {"scanobjects", RPCArg::Type::ARR, /* opt */ false, /* default_val */ "", "Array of scan objects\n"
-            "                                  Every scan object is either a string descriptor or an object:",
+            "                                  Every scan object is either a string descriptor or a json object:",
                         {
                             {"descriptor", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "An output descriptor"},
                             {"", RPCArg::Type::OBJ, /* opt */ true, /* default_val */ "", "An object with output descriptor and metadata",
@@ -2179,7 +2179,7 @@ UniValue scantxoutset(const JSONRPCRequest& request)
                     if (range < 0 || range > 1000000) throw JSONRPCError(RPC_INVALID_PARAMETER, "range out of range");
                 }
             } else {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Scan object needs to be either a string or an object");
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Scan object needs to be either a string or a json object");
             }
 
             FlatSigningProvider provider;

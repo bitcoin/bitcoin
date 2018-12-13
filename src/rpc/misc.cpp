@@ -309,7 +309,7 @@ static UniValue getmemoryinfo(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
             RPCHelpMan{"getmemoryinfo",
-                "Returns an object containing information about memory usage.\n",
+                "Returns a json object containing information about memory usage.\n",
                 {
                     {"mode", RPCArg::Type::STR, /* opt */ true, /* default_val */ "\"stats\"", "determines what kind of information is returned.\n"
             "  - \"stats\" returns general statistics about memory usage in the daemon.\n"

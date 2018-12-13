@@ -403,7 +403,7 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
         for (size_t i = 0; i < outputs.size(); ++i) {
             const UniValue& output = outputs[i];
             if (!output.isObject()) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, key-value pair not an object as expected");
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, key-value pair not a json object as expected");
             }
             if (output.size() != 1) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, key-value pair must contain exactly one key");

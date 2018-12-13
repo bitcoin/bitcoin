@@ -94,7 +94,7 @@ struct RPCArg {
      */
     std::string ToString(bool oneline) const;
     /**
-     * Return the type string of the argument when it is in an object (dict).
+     * Return the type string of the argument when it is in a json object (dict).
      * Set oneline to get the oneline representation (less whitespace)
      */
     std::string ToStringObj(bool oneline) const;
