@@ -274,6 +274,10 @@ void MasternodeList::updateMyMasternodeInfo(QString strAlias, QString strAddr, c
 
 void MasternodeList::updateMyNodeList(bool fForce)
 {
+    if (ShutdownRequested()) {
+        return;
+    }
+
     TRY_LOCK(cs_mymnlist, fLockAcquired);
     if (!fLockAcquired) return;
 
@@ -310,6 +314,10 @@ void MasternodeList::updateMyNodeList(bool fForce)
 
 void MasternodeList::updateNodeList()
 {
+    if (ShutdownRequested()) {
+        return;
+    }
+
     TRY_LOCK(cs_mnlist, fLockAcquired);
     if (!fLockAcquired) return;
 
@@ -380,6 +388,10 @@ void MasternodeList::updateNodeList()
 
 void MasternodeList::updateDIP3List()
 {
+    if (ShutdownRequested()) {
+        return;
+    }
+
     TRY_LOCK(cs_dip3list, fLockAcquired);
     if (!fLockAcquired) return;
 
