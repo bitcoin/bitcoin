@@ -44,11 +44,6 @@
 #pragma warning(disable:4717)
 #endif
 
-#ifdef _WIN32_WINNT
-#undef _WIN32_WINNT
-#endif
-#define _WIN32_WINNT 0x0501
-
 #ifdef _WIN32_IE
 #undef _WIN32_IE
 #endif
