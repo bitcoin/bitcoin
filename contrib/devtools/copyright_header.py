@@ -491,7 +491,7 @@ def get_git_change_year_range(filename):
 
 def file_already_has_core_copyright(file_lines):
     index, _ = get_updatable_copyright_line(file_lines)
-    return index != None
+    return index is not None
 
 ################################################################################
 # insert header execution
