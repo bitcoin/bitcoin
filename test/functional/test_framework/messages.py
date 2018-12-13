@@ -450,6 +450,8 @@ class CTransaction:
         if flags != 0:
             self.wit.vtxinwit = [CTxInWitness() for i in range(len(self.vin))]
             self.wit.deserialize(f)
+        else:
+            self.wit = CTxWitness()
         self.nLockTime = struct.unpack("<I", f.read(4))[0]
         self.sha256 = None
         self.hash = None
