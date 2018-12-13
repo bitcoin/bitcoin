@@ -12,6 +12,7 @@
 #include <index/txindex.h>
 #include <miner.h>
 #include <net_processing.h>
+#include <noui.h>
 #include <pow.h>
 #include <rpc/register.h>
 #include <rpc/server.h>
@@ -30,10 +31,7 @@
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
-FastRandomContext insecure_rand_ctx;
-
-extern bool fPrintToConsole;
-extern void noui_connect();
+thread_local FastRandomContext g_insecure_rand_ctx;
 
 std::ostream& operator<<(std::ostream& os, const uint256& num)
 {
@@ -116,23 +114,23 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
 
 TestingSetup::~TestingSetup()
 {
-        llmq::InterruptLLMQSystem();
-        llmq::StopLLMQSystem();
-        g_txindex->Interrupt();
-        g_txindex->Stop();
-        g_txindex.reset();
-        threadGroup.interrupt_all();
-        threadGroup.join_all();
-        StopScriptCheckWorkerThreads();
-        GetMainSignals().FlushBackgroundCallbacks();
-        GetMainSignals().UnregisterBackgroundSignalScheduler();
-        g_connman.reset();
-        g_banman.reset();
-        UnloadBlockIndex();
-        pcoinsTip.reset();
-        llmq::DestroyLLMQSystem();
-        pcoinsdbview.reset();
-        pblocktree.reset();
+    llmq::InterruptLLMQSystem();
+    llmq::StopLLMQSystem();
+    g_txindex->Interrupt();
+    g_txindex->Stop();
+    g_txindex.reset();
+    threadGroup.interrupt_all();
+    threadGroup.join_all();
+    StopScriptCheckWorkerThreads();
+    GetMainSignals().FlushBackgroundCallbacks();
+    GetMainSignals().UnregisterBackgroundSignalScheduler();
+    g_connman.reset();
+    g_banman.reset();
+    UnloadBlockIndex();
+    pcoinsTip.reset();
+    llmq::DestroyLLMQSystem();
+    pcoinsdbview.reset();
+    pblocktree.reset();
 }
 
 TestChainSetup::TestChainSetup(int blockCount) : TestingSetup(CBaseChainParams::REGTEST)
