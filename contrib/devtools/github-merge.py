@@ -25,7 +25,7 @@ import json
 import codecs
 try:
     from urllib.request import Request,urlopen
-except:
+except ImportError:
     from urllib2 import Request,urlopen
 
 # External tools (can be overridden using environment)
