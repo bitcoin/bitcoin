@@ -40,18 +40,18 @@ public:
     void AddMinableCommitment(const CFinalCommitment& fqc);
     bool HasMinableCommitment(const uint256& hash);
     bool GetMinableCommitmentByHash(const uint256& commitmentHash, CFinalCommitment& ret);
-    bool GetMinableCommitment(Consensus::LLMQType llmqType, const CBlockIndex* pindexPrev, CFinalCommitment& ret);
-    bool GetMinableCommitmentTx(Consensus::LLMQType llmqType, const CBlockIndex* pindexPrev, CTransactionRef& ret);
+    bool GetMinableCommitment(Consensus::LLMQType llmqType, int nHeight, CFinalCommitment& ret);
+    bool GetMinableCommitmentTx(Consensus::LLMQType llmqType, int nHeight, CTransactionRef& ret);
 
     bool HasMinedCommitment(Consensus::LLMQType llmqType, const uint256& quorumHash);
     bool GetMinedCommitment(Consensus::LLMQType llmqType, const uint256& quorumHash, CFinalCommitment& ret);
 
 private:
     bool GetCommitmentsFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, std::map<Consensus::LLMQType, CFinalCommitment>& ret, CValidationState& state);
-    bool ProcessCommitment(const CBlockIndex* pindexPrev, const CFinalCommitment& qc, CValidationState& state);
+    bool ProcessCommitment(const CBlockIndex* pindex, const CFinalCommitment& qc, CValidationState& state);
     bool IsMiningPhase(Consensus::LLMQType llmqType, int nHeight);
-    bool IsCommitmentRequired(Consensus::LLMQType llmqType, const CBlockIndex* pindexPrev);
-    uint256 GetQuorumBlockHash(Consensus::LLMQType llmqType, const CBlockIndex* pindexPrev);
+    bool IsCommitmentRequired(Consensus::LLMQType llmqType, int nHeight);
+    uint256 GetQuorumBlockHash(Consensus::LLMQType llmqType, int nHeight);
 };
 
 extern CQuorumBlockProcessor* quorumBlockProcessor;
