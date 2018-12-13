@@ -101,15 +101,6 @@ public:
     }
 };
 
-// same as CompareOutputBIP69 in primitives/transaction.h
-struct CompareSendCoinsRecipientBIP69
-{
-    inline bool operator()(const SendCoinsRecipient& a, const SendCoinsRecipient& b) const
-    {
-        return a.amount < b.amount || (a.amount == b.amount && a.address < b.address);
-    }
-};
-
 /** Interface to Bitcoin wallet from Qt view code. */
 class WalletModel : public QObject
 {
