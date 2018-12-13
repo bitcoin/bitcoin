@@ -74,7 +74,7 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
             RPCHelpMan{"getpeerinfo",
-                "\nReturns data about each connected network node as a json array of objects.\n", {}}
+                "\nReturns data about each connected network node as a json array of json objects.\n", {}}
                 .ToString() +
             "\nResult:\n"
             "[\n"

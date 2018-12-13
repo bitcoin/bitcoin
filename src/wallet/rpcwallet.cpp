@@ -2151,7 +2151,7 @@ static UniValue lockunspent(const JSONRPCRequest& request)
                 "Also see the listunspent call\n",
                 {
                     {"unlock", RPCArg::Type::BOOL, /* opt */ false, /* default_val */ "", "Whether to unlock (true) or lock (false) the specified transactions"},
-                    {"transactions", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "empty array", "A json array of objects. Each object the txid (string) vout (numeric).",
+                    {"transactions", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "empty array", "A json array of json objects. Each object the txid (string) vout (numeric).",
                         {
                             {"", RPCArg::Type::OBJ, /* opt */ true, /* default_val */ "", "",
                                 {
@@ -2435,7 +2435,7 @@ static UniValue listwalletdir(const JSONRPCRequest& request)
                 "Returns a list of wallets in the wallet directory.\n", {}}
                 .ToString() +
             "{\n"
-            "  \"wallets\" : [                (json array of objects)\n"
+            "  \"wallets\" : [                (json array of json objects)\n"
             "    {\n"
             "      \"name\" : \"name\"          (string) The wallet name\n"
             "    }\n"
@@ -3124,7 +3124,7 @@ UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
             "{\n"
             "  \"hex\" : \"value\",                  (string) The hex-encoded raw transaction with signature(s)\n"
             "  \"complete\" : true|false,          (boolean) If the transaction has a complete set of signatures\n"
-            "  \"errors\" : [                      (json array of objects) Script verification errors (if there are any)\n"
+            "  \"errors\" : [                      (json array of json objects) Script verification errors (if there are any)\n"
             "    {\n"
             "      \"txid\" : \"hash\",              (string) The hash of the referenced, previous transaction\n"
             "      \"vout\" : n,                   (numeric) The index of the output to spent and used as input\n"

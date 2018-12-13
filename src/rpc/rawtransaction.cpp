@@ -959,7 +959,7 @@ static UniValue signrawtransactionwithkey(const JSONRPCRequest& request)
             "{\n"
             "  \"hex\" : \"value\",                  (string) The hex-encoded raw transaction with signature(s)\n"
             "  \"complete\" : true|false,          (boolean) If the transaction has a complete set of signatures\n"
-            "  \"errors\" : [                      (json array of objects) Script verification errors (if there are any)\n"
+            "  \"errors\" : [                      (json array of json objects) Script verification errors (if there are any)\n"
             "    {\n"
             "      \"txid\" : \"hash\",              (string) The hash of the referenced, previous transaction\n"
             "      \"vout\" : n,                   (numeric) The index of the output to spent and used as input\n"
