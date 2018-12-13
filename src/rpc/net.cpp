@@ -307,7 +307,7 @@ static UniValue getaddednodeinfo(const JSONRPCRequest& request)
             "  {\n"
             "    \"addednode\" : \"192.168.0.201\",   (string) The node IP address or name (as provided to addnode)\n"
             "    \"connected\" : true|false,          (boolean) If connected\n"
-            "    \"addresses\" : [                    (list of objects) Only when connected = true\n"
+            "    \"addresses\" : [                    (json array of json objects) Only when connected = true\n"
             "       {\n"
             "         \"address\" : \"192.168.0.201:8333\",  (string) The bitcoin server IP and port we're connected to\n"
             "         \"connected\" : \"outbound\"           (string) connection, inbound or outbound\n"
