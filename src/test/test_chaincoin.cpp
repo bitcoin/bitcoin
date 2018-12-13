@@ -12,6 +12,7 @@
 #include <validation.h>
 #include <miner.h>
 #include <net_processing.h>
+#include <noui.h>
 #include <pow.h>
 #include <rpc/register.h>
 #include <rpc/server.h>
