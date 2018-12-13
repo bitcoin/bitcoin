@@ -206,7 +206,7 @@ after_success:
       sudo: false
       cache: false
       language: python
-      python: '3.6'
+      python: '3.4' # Oldest supported version according to doc/dependencies.md
       install:
         - set -o errexit; source .travis/lint_04_install.sh
       before_script:

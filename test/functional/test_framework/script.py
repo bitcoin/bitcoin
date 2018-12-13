@@ -430,6 +430,10 @@ class CScript(bytes):
         # join makes no sense for a CScript()
         raise NotImplementedError
 
+    # Python 3.4 compatibility
+    def hex(self):
+        return hexlify(self).decode('ascii')
+
     def __new__(cls, value=b''):
         if isinstance(value, bytes) or isinstance(value, bytearray):
             return super(CScript, cls).__new__(cls, value)
