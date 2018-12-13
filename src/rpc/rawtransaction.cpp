@@ -1163,9 +1163,9 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
     UniValue result_0(UniValue::VOBJ);
     result_0.pushKV("txid", tx_hash.GetHex());
 
-    bool test_accept_unsigned = false;
+    MemPoolValidationScope validation_scope = MemPoolValidationScope::TEST_ACCEPT;
     if (!request.params[2].isNull() && request.params[2].get_bool()) {
-        test_accept_unsigned = true;
+        validation_scope = MemPoolValidationScope::TEST_ACCEPT_UNSIGNED;
     }
 
     CValidationState state;
@@ -1174,7 +1174,7 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
     {
         LOCK(cs_main);
         test_accept_res = AcceptToMemoryPool(mempool, state, std::move(tx), &missing_inputs,
-            nullptr /* plTxnReplaced */, false /* bypass_limits */, max_raw_tx_fee, /* test_accept */ true, test_accept_unsigned);
+            nullptr /* plTxnReplaced */, false /* bypass_limits */, max_raw_tx_fee, validation_scope);
     }
     result_0.pushKV("allowed", test_accept_res);
     if (!test_accept_res) {

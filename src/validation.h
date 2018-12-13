@@ -302,11 +302,20 @@ void PruneAndFlush();
 /** Prune block files up to a given height */
 void PruneBlockFilesManual(int nManualPruneHeight);
 
+/** To what extend a transaction has to be validated
+ * by AcceptToMemoryPool.
+ */
+enum class MemPoolValidationScope {
+    ACCEPT,                 //!< Validate signed transaction and add to the pool
+    TEST_ACCEPT,            //!< Validate signed transaction but DO NOT add to the pool
+    TEST_ACCEPT_UNSIGNED    //!< Validate unsigned transaction (except scripts)
+};
+
 /** (try to) add transaction to memory pool
  * plTxnReplaced will be appended to with all transactions replaced from mempool **/
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransactionRef &tx,
                         bool* pfMissingInputs, std::list<CTransactionRef>* plTxnReplaced,
-                        bool bypass_limits, const CAmount nAbsurdFee, bool test_accept=false, bool test_accept_unsigned=false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+                        bool bypass_limits, const CAmount nAbsurdFee, MemPoolValidationScope validation_scope=MemPoolValidationScope::ACCEPT) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /** Convert CValidationState to a human-readable message for logging */
 std::string FormatStateMessage(const CValidationState &state);
