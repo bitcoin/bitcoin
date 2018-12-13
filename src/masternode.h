@@ -24,6 +24,7 @@ static const int MASTERNODE_EXPIRATION_SECONDS          = 120 * 60;
 static const int MASTERNODE_NEW_START_REQUIRED_SECONDS  = 180 * 60;
 
 static const int MASTERNODE_POSE_BAN_MAX_SCORE          = 5;
+static const int MASTERNODE_MAX_MIXING_TXES             = 5;
 
 //
 // The Masternode Ping Class : Contains a different serialize method for sending pings from masternodes throughout the network
@@ -179,7 +180,7 @@ public:
     int nBlockLastPaid{};
     int nPoSeBanScore{};
     int nPoSeBanHeight{};
-    bool fAllowMixingTx{};
+    int nMixingTxCount{};
     bool fUnitTest = false;
 
     // KEEP TRACK OF GOVERNANCE ITEMS EACH MASTERNODE HAS VOTE UPON FOR RECALCULATION
@@ -217,7 +218,7 @@ public:
         READWRITE(nProtocolVersion);
         READWRITE(nPoSeBanScore);
         READWRITE(nPoSeBanHeight);
-        READWRITE(fAllowMixingTx);
+        READWRITE(nMixingTxCount);
         READWRITE(fUnitTest);
         READWRITE(mapGovernanceObjectsVotedOn);
     }
@@ -275,6 +276,11 @@ public:
         return false;
     }
 
+    bool IsValidForMixingTxes() const
+    {
+        return nMixingTxCount <= MASTERNODE_MAX_MIXING_TXES;
+    }
+
     bool IsValidNetAddr();
     static bool IsValidNetAddr(CService addrIn);
 
@@ -308,7 +314,7 @@ public:
         nBlockLastPaid = from.nBlockLastPaid;
         nPoSeBanScore = from.nPoSeBanScore;
         nPoSeBanHeight = from.nPoSeBanHeight;
-        fAllowMixingTx = from.fAllowMixingTx;
+        nMixingTxCount = from.nMixingTxCount;
         fUnitTest = from.fUnitTest;
         mapGovernanceObjectsVotedOn = from.mapGovernanceObjectsVotedOn;
         return *this;

@@ -28,7 +28,7 @@
 /** Masternode manager */
 CMasternodeMan mnodeman;
 
-const std::string CMasternodeMan::SERIALIZATION_VERSION_STRING = "CMasternodeMan-Version-11";
+const std::string CMasternodeMan::SERIALIZATION_VERSION_STRING = "CMasternodeMan-Version-12";
 const int CMasternodeMan::LAST_PAID_SCAN_BLOCKS = 100;
 
 struct CompareLastPaidBlock
@@ -136,7 +136,7 @@ bool CMasternodeMan::AllowMixing(const COutPoint &outpoint)
     }
     nDsqCount++;
     pmn->nLastDsq = nDsqCount;
-    pmn->fAllowMixingTx = true;
+    pmn->nMixingTxCount = 0;
 
     return true;
 }
@@ -148,7 +148,7 @@ bool CMasternodeMan::DisallowMixing(const COutPoint &outpoint)
     if (!pmn) {
         return false;
     }
-    pmn->fAllowMixingTx = false;
+    pmn->nMixingTxCount++;
 
     return true;
 }

@@ -24,14 +24,12 @@
 
 
 CMasternode::CMasternode() :
-    masternode_info_t{ MASTERNODE_ENABLED, PROTOCOL_VERSION, GetAdjustedTime()},
-    fAllowMixingTx(true)
+    masternode_info_t{ MASTERNODE_ENABLED, PROTOCOL_VERSION, GetAdjustedTime()}
 {}
 
 CMasternode::CMasternode(CService addr, COutPoint outpoint, CPubKey pubKeyCollateralAddressNew, CPubKey pubKeyMasternodeNew, int nProtocolVersionIn) :
     masternode_info_t{ MASTERNODE_ENABLED, nProtocolVersionIn, GetAdjustedTime(),
-                       outpoint, addr, pubKeyCollateralAddressNew, pubKeyMasternodeNew},
-    fAllowMixingTx(true)
+                       outpoint, addr, pubKeyCollateralAddressNew, pubKeyMasternodeNew}
 {}
 
 CMasternode::CMasternode(const CMasternode& other) :
@@ -42,7 +40,7 @@ CMasternode::CMasternode(const CMasternode& other) :
     nBlockLastPaid(other.nBlockLastPaid),
     nPoSeBanScore(other.nPoSeBanScore),
     nPoSeBanHeight(other.nPoSeBanHeight),
-    fAllowMixingTx(other.fAllowMixingTx),
+    nMixingTxCount(other.nMixingTxCount),
     fUnitTest(other.fUnitTest)
 {}
 
@@ -50,14 +48,12 @@ CMasternode::CMasternode(const CMasternodeBroadcast& mnb) :
     masternode_info_t{ mnb.nActiveState, mnb.nProtocolVersion, mnb.sigTime,
                        mnb.outpoint, mnb.addr, mnb.pubKeyCollateralAddress, mnb.pubKeyMasternode},
     lastPing(mnb.lastPing),
-    vchSig(mnb.vchSig),
-    fAllowMixingTx(true)
+    vchSig(mnb.vchSig)
 {}
 
 CMasternode::CMasternode(const uint256 &proTxHash, const CDeterministicMNCPtr& dmn) :
     masternode_info_t{ MASTERNODE_ENABLED, DMN_PROTO_VERSION, GetAdjustedTime(),
-                       dmn->collateralOutpoint, dmn->pdmnState->addr, CKeyID() /* not valid with DIP3 */, dmn->pdmnState->keyIDOwner, dmn->pdmnState->pubKeyOperator, dmn->pdmnState->keyIDVoting},
-    fAllowMixingTx(true)
+                       dmn->collateralOutpoint, dmn->pdmnState->addr, CKeyID() /* not valid with DIP3 */, dmn->pdmnState->keyIDOwner, dmn->pdmnState->pubKeyOperator, dmn->pdmnState->keyIDVoting}
 {
 }
 
