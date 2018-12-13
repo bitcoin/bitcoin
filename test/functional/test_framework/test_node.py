@@ -79,7 +79,7 @@ class TestNode():
         self.binary = bitcoind
         self.coverage_dir = coverage_dir
         self.mocktime = mocktime
-        if extra_conf != None:
+        if extra_conf is not None:
             append_config(datadir, extra_conf)
         # Most callers will just need to add extra args to the standard list below.
         # For those callers that need more flexibity, they can just set the args property directly.
