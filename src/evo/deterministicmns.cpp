@@ -535,19 +535,6 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
     for (int i = 1; i < (int)block.vtx.size(); i++) {
         const CTransaction& tx = *block.vtx[i];
 
-        // check if any existing MN collateral is spent by this transaction
-        for (const auto& in : tx.vin) {
-            auto dmn = newList.GetMNByCollateral(in.prevout);
-            if (dmn && dmn->collateralOutpoint == in.prevout) {
-                newList.RemoveMN(dmn->proTxHash);
-
-                if (debugLogs) {
-                    LogPrintf("CDeterministicMNManager::%s -- MN %s removed from list because collateral was spent. collateralOutpoint=%s, nHeight=%d, mapCurMNs.allMNsCount=%d\n",
-                        __func__, dmn->proTxHash.ToString(), dmn->collateralOutpoint.ToStringShort(), nHeight, newList.GetAllMNsCount());
-                }
-            }
-        }
-
         if (tx.nVersion != 3) {
             // only interested in special TXs
             continue;
@@ -705,6 +692,24 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             }
             if (!qc.commitment.IsNull()) {
                 HandleQuorumCommitment(qc.commitment, newList, debugLogs);
+            }
+        }
+    }
+
+    // we skip the coinbase
+    for (int i = 1; i < (int)block.vtx.size(); i++) {
+        const CTransaction& tx = *block.vtx[i];
+
+        // check if any existing MN collateral is spent by this transaction
+        for (const auto& in : tx.vin) {
+            auto dmn = newList.GetMNByCollateral(in.prevout);
+            if (dmn && dmn->collateralOutpoint == in.prevout) {
+                newList.RemoveMN(dmn->proTxHash);
+
+                if (debugLogs) {
+                    LogPrintf("CDeterministicMNManager::%s -- MN %s removed from list because collateral was spent. collateralOutpoint=%s, nHeight=%d, mapCurMNs.allMNsCount=%d\n",
+                              __func__, dmn->proTxHash.ToString(), dmn->collateralOutpoint.ToStringShort(), nHeight, newList.GetAllMNsCount());
+                }
             }
         }
     }
