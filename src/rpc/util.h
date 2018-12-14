@@ -41,7 +41,7 @@ struct RPCArg {
     };
     const std::string m_name; //!< The name of the arg (can be empty for inner args)
     const Type m_type;
-    const std::vector<RPCArg> m_inner; //!< Only used for arrays or dicts
+    const std::vector<RPCArg> m_inner; //!< Only used for arrays or objects
     const bool m_optional;
     const std::string m_default_value; //!< Only used for optional args
     const std::string m_description;
@@ -94,7 +94,7 @@ struct RPCArg {
      */
     std::string ToString(bool oneline) const;
     /**
-     * Return the type string of the argument when it is in a json object (dict).
+     * Return the type string of the argument when it is in a json object.
      * Set oneline to get the oneline representation (less whitespace)
      */
     std::string ToStringObj(bool oneline) const;
