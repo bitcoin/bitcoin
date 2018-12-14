@@ -218,7 +218,7 @@ static UniValue waitfornewblock(const JSONRPCRequest& request)
             "\nResult:\n"
             "{                           (json object)\n"
             "  \"hash\" : {       (string) The blockhash\n"
-            "  \"height\" : {     (int) Block height\n"
+            "  \"height\" : {     (numeric) Block height\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("waitfornewblock", "1000")
@@ -259,7 +259,7 @@ static UniValue waitforblock(const JSONRPCRequest& request)
             "\nResult:\n"
             "{                           (json object)\n"
             "  \"hash\" : {       (string) The blockhash\n"
-            "  \"height\" : {     (int) Block height\n"
+            "  \"height\" : {     (numeric) Block height\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("waitforblock", "\"0000000000079f8ef3d2c688c244eb7a4570b24c9ed7b4a8c619eb02596f8862\", 1000")
@@ -304,7 +304,7 @@ static UniValue waitforblockheight(const JSONRPCRequest& request)
             "\nResult:\n"
             "{                           (json object)\n"
             "  \"hash\" : {       (string) The blockhash\n"
-            "  \"height\" : {     (int) Block height\n"
+            "  \"height\" : {     (numeric) Block height\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("waitforblockheight", "\"100\", 1000")
