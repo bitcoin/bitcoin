@@ -266,26 +266,6 @@ bool CQuorumBlockProcessor::IsMiningPhase(Consensus::LLMQType llmqType, int nHei
 
 bool CQuorumBlockProcessor::IsCommitmentRequired(Consensus::LLMQType llmqType, int nHeight)
 {
-    // BEGIN TEMPORARY CODE
-    bool allowMissingQc = false;
-    {
-        // TODO We added the commitments code while DIP3 was already activated on testnet and we want
-        // to avoid reverting the chain again, as people already had many MNs registered at that time.
-        // So, we do a simple hardfork here at a fixed height, but only while we're on the original
-        // DIP3 chain.
-        // As we need to fork/revert the chain later to re-test all deployment stages of DIP3, we can
-        // remove all this temporary code later.
-        LOCK(cs_main);
-        const auto& consensus = Params().GetConsensus();
-        if (consensus.nTemporaryTestnetForkDIP3Height != 0 &&
-            nHeight > consensus.nTemporaryTestnetForkDIP3Height &&
-            nHeight < consensus.nTemporaryTestnetForkHeight &&
-            chainActive[consensus.nTemporaryTestnetForkDIP3Height]->GetBlockHash() == consensus.nTemporaryTestnetForkDIP3BlockHash) {
-            allowMissingQc = true;
-        }
-    }
-    // END TEMPORARY CODE
-
     uint256 quorumHash = GetQuorumBlockHash(llmqType, nHeight);
 
     // perform extra check for quorumHash.IsNull as the quorum hash is unknown for the first block of a session
@@ -295,7 +275,7 @@ bool CQuorumBlockProcessor::IsCommitmentRequired(Consensus::LLMQType llmqType, i
     // did we already mine a non-null commitment for this session?
     bool hasMinedCommitment = !quorumHash.IsNull() && HasMinedCommitment(llmqType, quorumHash);
 
-    return isMiningPhase && !hasMinedCommitment && !allowMissingQc;
+    return isMiningPhase && !hasMinedCommitment;
 }
 
 // WARNING: This method returns uint256() on the first block of the DKG interval (because the block hash is not known yet)

@@ -73,18 +73,6 @@ bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev
 
     CSimplifiedMNList sml(tmpMNList);
 
-    // BEGIN TEMPORARY CODE
-    const auto& consensus = Params().GetConsensus();
-    if (consensus.nTemporaryTestnetForkHeight != 0 &&
-        pindexPrev->nHeight + 1 > consensus.nTemporaryTestnetForkDIP3Height &&
-        pindexPrev->nHeight + 1 < consensus.nTemporaryTestnetForkHeight &&
-        chainActive[consensus.nTemporaryTestnetForkDIP3Height]->GetBlockHash() == consensus.nTemporaryTestnetForkDIP3BlockHash) {
-        for (auto& sme : sml.mnList) {
-            sme.confirmedHash.SetNull();
-        }
-    }
-    // END TEMPORARY CODE
-
     bool mutated = false;
     merkleRootRet = sml.CalcMerkleRoot(&mutated);
     return !mutated;
