@@ -59,10 +59,8 @@ There are also [regression and integration tests](/test) written in Python 3. Th
 can be run with `test/functional/test_runner.py` if the [test dependencies](/test) are installed.
 
 Travis CI and AppVeyor CI make sure that every pull request is built for Linux, Windows,
-and macOS. Unit, integration, regression, and sanity tests are run automatically.
-
-See https://travis-ci.org/bitcoin/bitcoin and https://ci.appveyor.com/project/DrahtBot/bitcoin
-to view output from the Travis and AppVeyor build servers.
+and macOS. Unit, integration, regression, and sanity tests are run automatically on the
+build servers.
 
 ### Manual Quality Assurance (QA) Testing
 
