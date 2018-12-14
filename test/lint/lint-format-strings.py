@@ -241,12 +241,11 @@ def count_format_specifiers(format_string):
     4
     """
     assert(type(format_string) is str)
+    format_string = format_string.replace('%%', 'X')
     n = 0
     in_specifier = False
     for i, char in enumerate(format_string):
-        if format_string[i - 1:i + 1] == "%%" or format_string[i:i + 2] == "%%":
-            pass
-        elif char == "%":
+        if char == "%":
             in_specifier = True
             n += 1
         elif char in "aAcdeEfFgGinopsuxX":
