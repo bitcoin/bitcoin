@@ -46,15 +46,18 @@ Remember that this is a security-critical project. Mistakes can cost people lots
 ### Automated Testing
 
 Developers are strongly encouraged to write [unit tests](src/test/README.md) for new code, and to
-submit new unit tests for old code. Unit tests can be compiled and run
-(assuming they weren't disabled in configure) with: `make check`. Further details on running
-and extending unit tests can be found in [/src/test/README.md](/src/test/README.md).
+submit new unit tests for old code. Unit tests can be compiled and run with `make check`,
+assuming they weren't disabled in `configure`. Further details on running, writing,
+and extending unit tests can be found in [src/test/README.md](src/test/README.md).
 
-There are also [regression and integration tests](/test), written
-in Python, that are run automatically on the build server.
-These tests can be run (if the [test dependencies](/test) are installed) with: `test/functional/test_runner.py`
+There are also [regression and integration tests](/test) written in Python 3. These tests
+can be run with `test/functional/test_runner.py` if the [test dependencies](/test) are installed.
 
-The Travis CI system makes sure that every pull request is built for Windows, Linux, and macOS, and that unit/sanity tests are run automatically.
+Travis CI and AppVeyor CI make sure that every pull request is built for Linux, Windows,
+and macOS. Unit, integration, regression, and sanity tests are run automatically.
+
+See https://travis-ci.org/bitcoin/bitcoin and https://ci.appveyor.com/project/DrahtBot/bitcoin
+to view output from the Travis and AppVeyor build servers.
 
 ### Manual Quality Assurance (QA) Testing
 
@@ -75,4 +78,4 @@ Translations are periodically pulled from Transifex and merged into the git repo
 **Important**: We do not accept translation changes as GitHub pull requests because the next
 pull from Transifex would automatically overwrite them again.
 
-Translators should also subscribe to the [mailing list](https://groups.google.com/forum/#!forum/bitcoin-translators).
+Translators should also subscribe to the [translator mailing list](https://groups.google.com/forum/#!forum/bitcoin-translators).
