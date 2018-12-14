@@ -3020,7 +3020,7 @@ static UniValue fundrawtransaction(const JSONRPCRequest& request)
                             {"includeWatching", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "false", "Also select inputs which are watch only"},
                             {"lockUnspents", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "false", "Lock selected unspent outputs"},
                             {"feeRate", RPCArg::Type::AMOUNT, /* opt */ true, /* default_val */ "not set: makes wallet determine the fee", "Set a specific fee rate in " + CURRENCY_UNIT + "/kB"},
-                            {"subtractFeeFromOutputs", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "empty array", "A json array of integers.\n"
+                            {"subtractFeeFromOutputs", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "empty array", "A json array of numerics.\n"
                             "                              The fee will be equally deducted from the amount of each specified output.\n"
                             "                              Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
                             "                              If no outputs are specified here, the sender pays the fee.",
@@ -4065,7 +4065,7 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
                             {"includeWatching", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "false", "Also select inputs which are watch only"},
                             {"lockUnspents", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "false", "Lock selected unspent outputs"},
                             {"feeRate", RPCArg::Type::AMOUNT, /* opt */ true, /* default_val */ "not set: makes wallet determine the fee", "Set a specific fee rate in " + CURRENCY_UNIT + "/kB"},
-                            {"subtractFeeFromOutputs", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "empty array", "A json array of integers.\n"
+                            {"subtractFeeFromOutputs", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "empty array", "A json array of numerics.\n"
                             "                              The fee will be equally deducted from the amount of each specified output.\n"
                             "                              Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
                             "                              If no outputs are specified here, the sender pays the fee.",

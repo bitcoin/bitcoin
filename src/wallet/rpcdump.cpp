@@ -1163,7 +1163,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
         "                                                              \"now\" can be specified to bypass scanning, for keys which are known to never have been used, and\n"
         "                                                              0 can be specified to scan the entire blockchain. Blocks up to 2 hours before the earliest key\n"
         "                                                              creation time of all keys being imported by the importmulti call will be scanned.",
-                                        /* oneline_description */ "", {"timestamp | \"now\"", "integer / string"}
+                                        /* oneline_description */ "", {"timestamp | \"now\"", "numeric / string"}
                                     },
                                     {"redeemscript", RPCArg::Type::STR, /* opt */ true, /* default_val */ "omitted", "Allowed only if the scriptPubKey is a P2SH or P2SH-P2WSH address/scriptPubKey"},
                                     {"witnessscript", RPCArg::Type::STR, /* opt */ true, /* default_val */ "omitted", "Allowed only if the scriptPubKey is a P2SH-P2WSH or P2WSH address/scriptPubKey"},
