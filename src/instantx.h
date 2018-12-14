@@ -273,7 +273,7 @@ public:
         READWRITE(outpoint);
         READWRITE(outpointMasternode);
         if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
-            // Starting with spork15 activation, the proTxHash and quorumModifierHash is included. When we bump to >= 70213, we can remove
+            // Starting with spork15 activation, the proTxHash and quorumModifierHash is included. When we bump to >= 70214, we can remove
             // the surrounding if. We might also remove outpointMasternode as well later
             READWRITE(quorumModifierHash);
             READWRITE(masternodeProTxHash);

@@ -1615,7 +1615,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
     // BEGIN TEMPORARY CODE
     if (pfrom->nVersion < nMinPeerProtoVersion) {
-        // disconnect from peers with version < 70212 after DIP3 has activated through the BIP9 deployment
+        // disconnect from peers with version < 70213 after DIP3 has activated through the BIP9 deployment
         LogPrintf("peer=%d using obsolete version %i after DIP3 activation; disconnecting\n", pfrom->id, pfrom->GetSendVersion());
         connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::REJECT, strCommand, REJECT_OBSOLETE,
                 strprintf("Version must be %d or greater", nMinPeerProtoVersion)));
