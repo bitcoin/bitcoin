@@ -76,7 +76,6 @@ for BOOST_INCLUDE in $(git grep '^#include <boost/' -- "*.cpp" "*.h" | cut -f2 -
         fi
     done
     if [[ ${IS_EXPECTED_INCLUDE} == 0 ]]; then
-        EXIT_CODE=1
         echo "A new Boost dependency in the form of \"${BOOST_INCLUDE}\" appears to have been introduced:"
         git grep "${BOOST_INCLUDE}" -- "*.cpp" "*.h"
         echo
