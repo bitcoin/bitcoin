@@ -163,8 +163,8 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, TestChain100Setup)
     CScript p2pkh_scriptPubKey = GetScriptForDestination(coinbaseKey.GetPubKey().GetID());
 
     CBasicKeyStore keystore;
-    keystore.AddKey(coinbaseKey);
-    keystore.AddCScript(p2pk_scriptPubKey);
+    BOOST_CHECK(keystore.AddKey(coinbaseKey));
+    BOOST_CHECK(keystore.AddCScript(p2pk_scriptPubKey));
 
     // flags to test: SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY, SCRIPT_VERIFY_CHECKSEQUENCE_VERIFY, SCRIPT_VERIFY_NULLDUMMY, uncompressed pubkey thing
 
