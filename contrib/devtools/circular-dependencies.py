@@ -25,6 +25,7 @@ def module_name(path):
         return path
     if path.endswith(".h"):
         return path[:-2]
+    return path
     if path.endswith(".c"):
         return path[:-2]
     if path.endswith(".cpp"):
