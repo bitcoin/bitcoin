@@ -1,11 +1,11 @@
-Dash Core version 0.12.3.4
+Dash Core version 0.12.3.3
 ==========================
 
 Release is now available from:
 
   <https://www.dash.org/downloads/#wallets>
 
-This is an optional release and only contains changes for testnet. It is not required to update masternodes on mainnet.
+This is a critical bugfix release.
 
 Please report bugs using the issue tracker at github:
 
@@ -34,7 +34,7 @@ the database if you decide to use any pre-0.12.2.2 version.
 
 Wallet forward or backward compatibility was not affected.
 
-### Downgrade to 0.12.3.1/2/3
+### Downgrade to 0.12.2.2/3, 0.12.3.1/2
 
 Downgrading to these versions does not require any additional actions, should be
 fully compatible.
@@ -43,18 +43,16 @@ fully compatible.
 Notable changes
 ===============
 
-Fork/Reset testnet at block 4001
---------------------------------
+Fix crash bug with duplicate inputs within a transaction
+--------------------------------------------------------
 
-This release is NOT required on mainnet. It is intended to be deployed on testnet and will cause a fork at block 4001.
-The plan is to restart all testing for the v0.13.0.0 upgrade process.
+There was a critical bug discovered in Bitcoin Core's codebase recently which
+can cause node receiving a block to crash https://github.com/bitcoin/bitcoin/pull/14247
 
-When deployed on testnet, it is required to start with a fresh data directory or call Dash Core with `-reindex-chainstate`.
-
-0.12.3.4 Change log
+0.12.3.3 Change log
 ===================
 
-See detailed [set of changes](https://github.com/dashpay/dash/compare/v0.12.3.3...dashpay:v0.12.3.4).
+See detailed [set of changes](https://github.com/dashpay/dash/compare/v0.12.3.2...dashpay:v0.12.3.3).
 
 Credits
 =======
@@ -86,7 +84,6 @@ Dash Core tree 0.12.1.x was a fork of Bitcoin Core tree 0.12.
 
 These release are considered obsolete. Old release notes can be found here:
 
-- [v0.12.3.3](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.12.3.3.md) released Sep/19/2018
 - [v0.12.3.2](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.12.3.2.md) released Jul/09/2018
 - [v0.12.3.1](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.12.3.1.md) released Jul/03/2018
 - [v0.12.2.3](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.12.2.3.md) released Jan/12/2018
