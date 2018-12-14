@@ -314,12 +314,12 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
                     {"template_request", RPCArg::Type::OBJ, /* opt */ false, /* default_val */ "", "A json object in the following spec",
                         {
                             {"mode", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "This must be set to \"template\", \"proposal\" (see BIP 23), or omitted"},
-                            {"capabilities", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "", "A list of strings",
+                            {"capabilities", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "", "An array of strings",
                                 {
                                     {"support", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "client side supported feature, 'longpoll', 'coinbasetxn', 'coinbasevalue', 'proposal', 'serverlist', 'workid'"},
                                 },
                                 },
-                            {"rules", RPCArg::Type::ARR, /* opt */ false, /* default_val */ "", "A list of strings",
+                            {"rules", RPCArg::Type::ARR, /* opt */ false, /* default_val */ "", "An array of strings",
                                 {
                                     {"support", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "client side supported softfork deployment"},
                                 },
