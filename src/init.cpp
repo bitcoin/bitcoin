@@ -801,6 +801,12 @@ void InitParameterInteraction()
             LogPrintf("%s: parameter interaction: -whitebind set -> setting -listen=1\n", __func__);
     }
 
+    if (gArgs.IsArgSet("-connect")) {
+        // when only connecting to trusted nodes, do not seed via DNS, or listen by default
+            LogPrintf("%s: parameter interaction: -connect set -> setting -dnsseed=0\n", __func__);
+            LogPrintf("%s: parameter interaction: -connect set -> setting -listen=0\n", __func__);
+    }
+
     if (gArgs.GetBoolArg("-masternode", false)) {
         // masternodes MUST accept connections from outside
         gArgs.ForceSetArg("-listen", "1");
@@ -813,12 +819,6 @@ void InitParameterInteraction()
             gArgs.ForceSetArg("-maxconnections", itostr(DEFAULT_MAX_PEER_CONNECTIONS));
             LogPrintf("%s: parameter interaction: -masternode=1 -> setting -maxconnections=%d\n", __func__, DEFAULT_MAX_PEER_CONNECTIONS);
         }
-    }
-
-    if (gArgs.IsArgSet("-connect")) {
-        // when only connecting to trusted nodes, do not seed via DNS, or listen by default
-            LogPrintf("%s: parameter interaction: -connect set -> setting -dnsseed=0\n", __func__);
-            LogPrintf("%s: parameter interaction: -connect set -> setting -listen=0\n", __func__);
     }
 
     if (gArgs.IsArgSet("-proxy")) {
