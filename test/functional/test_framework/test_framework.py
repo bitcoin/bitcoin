@@ -281,7 +281,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     # Public helper methods. These can be accessed by the subclass test scripts.
 
     def add_nodes(self, num_nodes, extra_args=None, *, rpchost=None, binary=None):
-        """Instantiate TestNode objects"""
+        """Instantiate TestNode objects.
+
+        Should only be called once after the nodes have been specified in
+        set_test_params()."""
         if self.bind_to_localhost_only:
             extra_confs = [["bind=127.0.0.1"]] * num_nodes
         else:
@@ -294,8 +297,19 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         assert_equal(len(extra_args), num_nodes)
         assert_equal(len(binary), num_nodes)
         for i in range(num_nodes):
-            numnode = len(self.nodes)
-            self.nodes.append(TestNode(numnode, get_datadir_path(self.options.tmpdir, numnode), rpchost=rpchost, timewait=self.rpc_timewait, bitcoind=binary[i], bitcoin_cli=self.options.bitcoincli, mocktime=self.mocktime, coverage_dir=self.options.coveragedir, extra_conf=extra_confs[i], extra_args=extra_args[i], use_cli=self.options.usecli))
+            self.nodes.append(TestNode(
+                i,
+                get_datadir_path(self.options.tmpdir, i),
+                rpchost=rpchost,
+                timewait=self.rpc_timewait,
+                bitcoind=binary[i],
+                bitcoin_cli=self.options.bitcoincli,
+                mocktime=self.mocktime,
+                coverage_dir=self.options.coveragedir,
+                extra_conf=extra_confs[i],
+                extra_args=extra_args[i],
+                use_cli=self.options.usecli,
+            ))
 
     def start_node(self, i, *args, **kwargs):
         """Start a bitcoind"""
