@@ -36,7 +36,7 @@ The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 Useful hints for developers can be found in [doc/developer-notes.md](doc/developer-notes.md).
 
-Instructions for building Bitcoin Core from source are in [doc/build-unix.md](https://github.com/ch4ot1c/bitcoin/blob/improvements/readme/doc/build-unix.md#to-build).
+Instructions for building Bitcoin Core from source are in [doc/build-unix.md](doc/build-unix.md#to-build).
 See `doc/build-*.md` for other platforms.
 
 Testing
