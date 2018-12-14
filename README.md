@@ -14,9 +14,10 @@ with no central authority; managing transactions and issuing money are carried
 out collectively by the network. Bitcoin Core is the name of open source
 software which enables the use of this currency.
 
-For more information, as well as an immediately usable binary version of the
-Bitcoin Core software, see https://bitcoincore.org/en/download or read the
-[original whitepaper](https://bitcoincore.org/bitcoin.pdf).
+The latest version of Bitcoin Core is available at https://bitcoincore.org/en/download
+as a pre-built binary.
+
+To learn more, begin by reading the [original whitepaper](https://bitcoincore.org/bitcoin.pdf).
 
 License
 -------
@@ -31,8 +32,9 @@ The `master` branch is regularly built and tested, but is not guaranteed to be
 completely stable. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
 regularly to indicate new official, stable release versions of Bitcoin Core.
 
-The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md)
-and useful hints for developers can be found in [doc/developer-notes.md](doc/developer-notes.md).
+The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md).
+
+Useful hints for developers can be found in [doc/developer-notes.md](doc/developer-notes.md).
 
 Testing
 -------
