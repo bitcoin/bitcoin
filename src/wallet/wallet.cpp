@@ -25,6 +25,7 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <reverse_iterator.h>
+#include <script/descriptor.h>
 #include <script/script.h>
 #include <shutdown.h>
 #include <timedata.h>
@@ -119,67 +120,17 @@ int COutput::Priority() const
     return -(tx->tx->vout[i].nValue/COIN);
 }
 
-/** A class to identify which pubkeys a script and a keystore have in common. */
-class CAffectedKeysVisitor : public boost::static_visitor<void> {
-private:
-    const CKeyStore &keystore;
-    std::vector<CKeyID> &vKeys;
-
-public:
-    /**
-     * @param[in] keystoreIn The CKeyStore that is queried for the presence of a pubkey.
-     * @param[out] vKeysIn A vector to which a script's pubkey identifiers are appended if they are in the keystore.
-     */
-    CAffectedKeysVisitor(const CKeyStore &keystoreIn, std::vector<CKeyID> &vKeysIn) : keystore(keystoreIn), vKeys(vKeysIn) {}
-
-    /**
-     * Apply the visitor to each destination in a script, recursively to the redeemscript
-     * in the case of p2sh destinations.
-     * @param[in] script The CScript from which destinations are extracted.
-     * @post Any CKeyIDs that script and keystore have in common are appended to the visitor's vKeys.
-     */
-    void Process(const CScript &script) {
-        txnouttype type;
-        std::vector<CTxDestination> vDest;
-        int nRequired;
-        if (ExtractDestinations(script, type, vDest, nRequired)) {
-            for (const CTxDestination &dest : vDest)
-                boost::apply_visitor(*this, dest);
-        }
+std::vector<CKeyID> GetAffectedKeys(const CScript& spk, const SigningProvider& provider)
+{
+    std::vector<CScript> dummy;
+    FlatSigningProvider out;
+    InferDescriptor(spk, provider)->Expand(0, DUMMY_SIGNING_PROVIDER, dummy, out);
+    std::vector<CKeyID> ret;
+    for (const auto& entry : out.pubkeys) {
+        ret.push_back(entry.first);
     }
-
-    void operator()(const CKeyID &keyId) {
-        if (keystore.HaveKey(keyId))
-            vKeys.push_back(keyId);
-    }
-
-    void operator()(const CScriptID &scriptId) {
-        CScript script;
-        if (keystore.GetCScript(scriptId, script))
-            Process(script);
-    }
-
-    void operator()(const WitnessV0ScriptHash& scriptID)
-    {
-        CScriptID id;
-        CRIPEMD160().Write(scriptID.begin(), 32).Finalize(id.begin());
-        CScript script;
-        if (keystore.GetCScript(id, script)) {
-            Process(script);
-        }
-    }
-
-    void operator()(const WitnessV0KeyHash& keyid)
-    {
-        CKeyID id(keyid);
-        if (keystore.HaveKey(id)) {
-            vKeys.push_back(id);
-        }
-    }
-
-    template<typename X>
-    void operator()(const X &none) {}
-};
+    return ret;
+}
 
 const CWalletTx* CWallet::GetWalletTx(const uint256& hash) const
 {
@@ -1004,9 +955,7 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const CBlockI
             // loop though all outputs
             for (const CTxOut& txout: tx.vout) {
                 // extract addresses and check if they match with an unused keypool key
-                std::vector<CKeyID> vAffected;
-                CAffectedKeysVisitor(*this, vAffected).Process(txout.scriptPubKey);
-                for (const CKeyID &keyid : vAffected) {
+                for (const auto& keyid : GetAffectedKeys(txout.scriptPubKey, *this)) {
                     std::map<CKeyID, int64_t>::const_iterator mi = m_pool_key_to_index.find(keyid);
                     if (mi != m_pool_key_to_index.end()) {
                         WalletLogPrintf("%s: Detected a used keypool key, mark all keypool key up to this key as used\n", __func__);
@@ -1754,8 +1703,9 @@ int64_t CWallet::RescanFromTime(int64_t startTime, const WalletRescanReserver& r
     }
 
     if (startBlock) {
-        const CBlockIndex* const failedBlock = ScanForWalletTransactions(startBlock, nullptr, reserver, update);
-        if (failedBlock) {
+        const CBlockIndex *failedBlock, *stop_block;
+        // TODO: this should take into account failure by ScanResult::USER_ABORT
+        if (ScanResult::FAILURE == ScanForWalletTransactions(startBlock, nullptr, reserver, failedBlock, stop_block, update)) {
             return failedBlock->GetBlockTimeMax() + TIMESTAMP_WINDOW + 1;
         }
     }
@@ -1767,18 +1717,22 @@ int64_t CWallet::RescanFromTime(int64_t startTime, const WalletRescanReserver& r
  * from or to us. If fUpdate is true, found transactions that already
  * exist in the wallet will be updated.
  *
- * Returns null if scan was successful. Otherwise, if a complete rescan was not
- * possible (due to pruning or corruption), returns pointer to the most recent
- * block that could not be scanned.
+ * @param[in] pindexStop if not a nullptr, the scan will stop at this block-index
+ * @param[out] failed_block if FAILURE is returned, the most recent block
+ *     that could not be scanned, otherwise nullptr
+ * @param[out] stop_block the most recent block that could be scanned,
+ *     otherwise nullptr if no block could be scanned
  *
- * If pindexStop is not a nullptr, the scan will stop at the block-index
- * defined by pindexStop
+ * @return ScanResult indicating success or failure of the scan. SUCCESS if
+ * scan was successful. FAILURE if a complete rescan was not possible (due to
+ * pruning or corruption). USER_ABORT if the rescan was aborted before it
+ * could complete.
  *
- * Caller needs to make sure pindexStop (and the optional pindexStart) are on
+ * @pre Caller needs to make sure pindexStop (and the optional pindexStart) are on
  * the main chain after to the addition of any new keys you want to detect
  * transactions for.
  */
-CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, CBlockIndex* pindexStop, const WalletRescanReserver &reserver, bool fUpdate)
+CWallet::ScanResult CWallet::ScanForWalletTransactions(const CBlockIndex* const pindexStart, const CBlockIndex* const pindexStop, const WalletRescanReserver& reserver, const CBlockIndex*& failed_block, const CBlockIndex*& stop_block, bool fUpdate)
 {
     int64_t nNow = GetTime();
     const CChainParams& chainParams = Params();
@@ -1788,8 +1742,8 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, CBlock
         assert(pindexStop->nHeight >= pindexStart->nHeight);
     }
 
-    CBlockIndex* pindex = pindexStart;
-    CBlockIndex* ret = nullptr;
+    const CBlockIndex* pindex = pindexStart;
+    failed_block = nullptr;
 
     if (pindex) WalletLogPrintf("Rescan started from block %d...\n", pindex->nHeight);
 
@@ -1810,8 +1764,7 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, CBlock
             }
         }
         double progress_current = progress_begin;
-        while (pindex && !fAbortRescan && !ShutdownRequested())
-        {
+        while (pindex && !fAbortRescan && !ShutdownRequested()) {
             if (pindex->nHeight % 100 == 0 && progress_end - progress_begin > 0.0) {
                 ShowProgress(strprintf("%s " + _("Rescanning..."), GetDisplayName()), std::max(1, std::min(99, (int)((progress_current - progress_begin) / (progress_end - progress_begin) * 100))));
             }
@@ -1827,14 +1780,17 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, CBlock
                 if (pindex && !chainActive.Contains(pindex)) {
                     // Abort scan if current block is no longer active, to prevent
                     // marking transactions as coming from the wrong block.
-                    ret = pindex;
+                    failed_block = pindex;
                     break;
                 }
                 for (size_t posInBlock = 0; posInBlock < block.vtx.size(); ++posInBlock) {
                     SyncTransaction(block.vtx[posInBlock], pindex, posInBlock, fUpdate);
                 }
+                // scan succeeded, record block as most recent successfully scanned
+                stop_block = pindex;
             } else {
-                ret = pindex;
+                // could not scan block, keep scanning but record this block as the most recent failure
+                failed_block = pindex;
             }
             if (pindex == pindexStop) {
                 break;
@@ -1850,14 +1806,20 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, CBlock
                 }
             }
         }
+        ShowProgress(strprintf("%s " + _("Rescanning..."), GetDisplayName()), 100); // hide progress dialog in GUI
         if (pindex && fAbortRescan) {
             WalletLogPrintf("Rescan aborted at block %d. Progress=%f\n", pindex->nHeight, progress_current);
+            return ScanResult::USER_ABORT;
         } else if (pindex && ShutdownRequested()) {
             WalletLogPrintf("Rescan interrupted by shutdown request at block %d. Progress=%f\n", pindex->nHeight, progress_current);
+            return ScanResult::USER_ABORT;
         }
-        ShowProgress(strprintf("%s " + _("Rescanning..."), GetDisplayName()), 100); // hide progress dialog in GUI
     }
-    return ret;
+    if (failed_block) {
+        return ScanResult::FAILURE;
+    } else {
+        return ScanResult::SUCCESS;
+    }
 }
 
 void CWallet::ReacceptWalletTransactions()
@@ -2829,7 +2791,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
         // Cases where we have 11+ outputs all pointing to the same destination may result in
         // privacy leaks as they will potentially be deterministically sorted. We solve that by
         // explicitly shuffling the outputs before processing
-        std::shuffle(vCoins.begin(), vCoins.end(), FastRandomContext());
+        Shuffle(vCoins.begin(), vCoins.end(), FastRandomContext());
     }
     std::vector<OutputGroup> groups = GroupOutputs(vCoins, !coin_control.m_avoid_partial_spends);
 
@@ -3724,7 +3686,7 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
         // Shuffle selected coins and fill in final vin
         txNew.vin.clear();
         std::vector<CInputCoin> selected_coins(setCoins.begin(), setCoins.end());
-        std::shuffle(selected_coins.begin(), selected_coins.end(), FastRandomContext());
+        Shuffle(selected_coins.begin(), selected_coins.end(), FastRandomContext());
 
         // Note how the sequence number is set to non-maxint so that
         // the nLockTime set above actually works.
@@ -4526,7 +4488,6 @@ void CWallet::GetKeyBirthTimes(interfaces::Chain::Lock& locked_chain, std::map<C
         return;
 
     // find first block that affects those keys, if there are any left
-    std::vector<CKeyID> vAffected;
     for (const auto& entry : mapWallet) {
         // iterate over all wallet transactions...
         const CWalletTx &wtx = entry.second;
@@ -4536,14 +4497,12 @@ void CWallet::GetKeyBirthTimes(interfaces::Chain::Lock& locked_chain, std::map<C
             int nHeight = pindex->nHeight;
             for (const CTxOut &txout : wtx.tx->vout) {
                 // iterate over all their outputs
-                CAffectedKeysVisitor(*this, vAffected).Process(txout.scriptPubKey);
-                for (const CKeyID &keyid : vAffected) {
+                for (const auto &keyid : GetAffectedKeys(txout.scriptPubKey, *this)) {
                     // ... and all their affected keys
                     std::map<CKeyID, CBlockIndex*>::iterator rit = mapKeyFirstBlock.find(keyid);
                     if (rit != mapKeyFirstBlock.end() && nHeight < rit->second->nHeight)
                         rit->second = pindex;
                 }
-                vAffected.clear();
             }
         }
     }
@@ -5021,11 +4980,11 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
         nStart = GetTimeMillis();
         {
             WalletRescanReserver reserver(walletInstance.get());
-            if (!reserver.reserve()) {
+            const CBlockIndex *stop_block, *failed_block;
+            if (!reserver.reserve() || (ScanResult::SUCCESS != walletInstance->ScanForWalletTransactions(pindexRescan, nullptr, reserver, failed_block, stop_block, true))) {
                 InitError(_("Failed to rescan the wallet during initialization"));
                 return nullptr;
             }
-            walletInstance->ScanForWalletTransactions(pindexRescan, nullptr, reserver, true);
         }
         walletInstance->WalletLogPrintf("Rescan completed in %15dms\n", GetTimeMillis() - nStart);
         walletInstance->ChainStateFlushed(chainActive.GetLocator());

@@ -32,12 +32,6 @@ public:
         insecure_rand = FastRandomContext(true);
     }
 
-    int RandomInt(int nMax) override
-    {
-        state = (CHashWriter(SER_GETHASH, 0) << state).GetCheapHash();
-        return (unsigned int)(state % nMax);
-    }
-
     CAddrInfo* Find(const CNetAddr& addr, int* pnId = nullptr)
     {
         LOCK(cs);

@@ -242,6 +242,16 @@ struct Sections {
     }
 };
 
+RPCHelpMan::RPCHelpMan(const std::string& name, const std::string& description, const std::vector<RPCArg>& args)
+    : m_name{name}, m_description{description}, m_args{args}
+{
+    std::set<std::string> named_args;
+    for (const auto& arg : m_args) {
+        // Should have unique named arguments
+        assert(named_args.insert(arg.m_name).second);
+    }
+}
+
 std::string RPCHelpMan::ToString() const
 {
     std::string ret;

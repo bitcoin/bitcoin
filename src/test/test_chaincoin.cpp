@@ -12,6 +12,7 @@
 #include <validation.h>
 #include <miner.h>
 #include <net_processing.h>
+#include <noui.h>
 #include <pow.h>
 #include <rpc/register.h>
 #include <rpc/server.h>
@@ -37,8 +38,7 @@ void CConnmanTest::ClearNodes()
     g_connman->vNodes.clear();
 }
 
-uint256 insecure_rand_seed = GetRandHash();
-FastRandomContext insecure_rand_ctx(insecure_rand_seed);
+FastRandomContext insecure_rand_ctx;
 
 extern bool fPrintToConsole;
 extern void noui_connect();

@@ -59,13 +59,13 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
 
     // Nothing in pool, remove should do nothing:
     unsigned int poolSize = testPool.size();
-    testPool.removeRecursive(txParent);
+    testPool.removeRecursive(CTransaction(txParent));
     BOOST_CHECK_EQUAL(testPool.size(), poolSize);
 
     // Just the parent:
     testPool.addUnchecked(entry.FromTx(txParent));
     poolSize = testPool.size();
-    testPool.removeRecursive(txParent);
+    testPool.removeRecursive(CTransaction(txParent));
     BOOST_CHECK_EQUAL(testPool.size(), poolSize - 1);
 
     // Parent, children, grandchildren:
@@ -77,18 +77,18 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
     }
     // Remove Child[0], GrandChild[0] should be removed:
     poolSize = testPool.size();
-    testPool.removeRecursive(txChild[0]);
+    testPool.removeRecursive(CTransaction(txChild[0]));
     BOOST_CHECK_EQUAL(testPool.size(), poolSize - 2);
     // ... make sure grandchild and child are gone:
     poolSize = testPool.size();
-    testPool.removeRecursive(txGrandChild[0]);
+    testPool.removeRecursive(CTransaction(txGrandChild[0]));
     BOOST_CHECK_EQUAL(testPool.size(), poolSize);
     poolSize = testPool.size();
-    testPool.removeRecursive(txChild[0]);
+    testPool.removeRecursive(CTransaction(txChild[0]));
     BOOST_CHECK_EQUAL(testPool.size(), poolSize);
     // Remove parent, all children/grandchildren should go:
     poolSize = testPool.size();
-    testPool.removeRecursive(txParent);
+    testPool.removeRecursive(CTransaction(txParent));
     BOOST_CHECK_EQUAL(testPool.size(), poolSize - 5);
     BOOST_CHECK_EQUAL(testPool.size(), 0U);
 
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
     // Now remove the parent, as might happen if a block-re-org occurs but the parent cannot be
     // put into the mempool (maybe because it is non-standard):
     poolSize = testPool.size();
-    testPool.removeRecursive(txParent);
+    testPool.removeRecursive(CTransaction(txParent));
     BOOST_CHECK_EQUAL(testPool.size(), poolSize - 6);
     BOOST_CHECK_EQUAL(testPool.size(), 0U);
 }
@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE(MempoolAncestorIndexingTest)
     tx2.vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
     tx2.vout[0].nValue = 2 * COIN;
     pool.addUnchecked(entry.Fee(20000LL).FromTx(tx2));
-    uint64_t tx2Size = GetVirtualTransactionSize(tx2);
+    uint64_t tx2Size = GetVirtualTransactionSize(CTransaction(tx2));
 
     /* lowest fee */
     CMutableTransaction tx3 = CMutableTransaction();
@@ -357,7 +357,7 @@ BOOST_AUTO_TEST_CASE(MempoolAncestorIndexingTest)
     tx6.vout.resize(1);
     tx6.vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
     tx6.vout[0].nValue = 20 * COIN;
-    uint64_t tx6Size = GetVirtualTransactionSize(tx6);
+    uint64_t tx6Size = GetVirtualTransactionSize(CTransaction(tx6));
 
     pool.addUnchecked(entry.Fee(0LL).FromTx(tx6));
     BOOST_CHECK_EQUAL(pool.size(), 6U);
@@ -376,7 +376,7 @@ BOOST_AUTO_TEST_CASE(MempoolAncestorIndexingTest)
     tx7.vout.resize(1);
     tx7.vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
     tx7.vout[0].nValue = 10 * COIN;
-    uint64_t tx7Size = GetVirtualTransactionSize(tx7);
+    uint64_t tx7Size = GetVirtualTransactionSize(CTransaction(tx7));
 
     /* set the fee to just below tx2's feerate when including ancestor */
     CAmount fee = (20000/tx2Size)*(tx7Size + tx6Size) - 1;
@@ -464,12 +464,12 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     BOOST_CHECK(pool.exists(tx2.GetHash()));
     BOOST_CHECK(pool.exists(tx3.GetHash()));
 
-    pool.TrimToSize(GetVirtualTransactionSize(tx1)); // mempool is limited to tx1's size in memory usage, so nothing fits
+    pool.TrimToSize(GetVirtualTransactionSize(CTransaction(tx1))); // mempool is limited to tx1's size in memory usage, so nothing fits
     BOOST_CHECK(!pool.exists(tx1.GetHash()));
     BOOST_CHECK(!pool.exists(tx2.GetHash()));
     BOOST_CHECK(!pool.exists(tx3.GetHash()));
 
-    CFeeRate maxFeeRateRemoved(25000, GetVirtualTransactionSize(tx3) + GetVirtualTransactionSize(tx2));
+    CFeeRate maxFeeRateRemoved(25000, GetVirtualTransactionSize(CTransaction(tx3)) + GetVirtualTransactionSize(CTransaction(tx2)));
     BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), maxFeeRateRemoved.GetFeePerK() + 1000);
 
     CMutableTransaction tx4 = CMutableTransaction();

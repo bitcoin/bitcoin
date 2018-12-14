@@ -39,7 +39,7 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
     auto chain = interfaces::MakeChain();
 
     // Cap last block file size, and mine new block in a new block file.
-    CBlockIndex* const nullBlock = nullptr;
+    const CBlockIndex* const null_block = nullptr;
     CBlockIndex* oldTip = chainActive.Tip();
     GetBlockFileInfo(oldTip->GetBlockPos().nFile)->nSize = MAX_BLOCKFILE_SIZE;
     CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
@@ -54,7 +54,10 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
         AddKey(wallet, coinbaseKey);
         WalletRescanReserver reserver(&wallet);
         reserver.reserve();
-        BOOST_CHECK_EQUAL(nullBlock, wallet.ScanForWalletTransactions(oldTip, nullptr, reserver));
+        const CBlockIndex *stop_block, *failed_block;
+        BOOST_CHECK_EQUAL(wallet.ScanForWalletTransactions(oldTip, nullptr, reserver, failed_block, stop_block), CWallet::ScanResult::SUCCESS);
+        BOOST_CHECK_EQUAL(failed_block, null_block);
+        BOOST_CHECK_EQUAL(stop_block, newTip);
         BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 100 * COIN);
     }
 
@@ -69,7 +72,10 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
         AddKey(wallet, coinbaseKey);
         WalletRescanReserver reserver(&wallet);
         reserver.reserve();
-        BOOST_CHECK_EQUAL(oldTip, wallet.ScanForWalletTransactions(oldTip, nullptr, reserver));
+        const CBlockIndex *stop_block, *failed_block;
+        BOOST_CHECK_EQUAL(wallet.ScanForWalletTransactions(oldTip, nullptr, reserver, failed_block, stop_block), CWallet::ScanResult::FAILURE);
+        BOOST_CHECK_EQUAL(failed_block, oldTip);
+        BOOST_CHECK_EQUAL(stop_block, newTip);
         BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 50 * COIN);
     }
 
@@ -287,7 +293,11 @@ public:
         AddKey(*wallet, coinbaseKey);
         WalletRescanReserver reserver(wallet.get());
         reserver.reserve();
-        wallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver);
+        const CBlockIndex* const null_block = nullptr;
+        const CBlockIndex *stop_block, *failed_block;
+        BOOST_CHECK_EQUAL(wallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver, failed_block, stop_block), CWallet::ScanResult::SUCCESS);
+        BOOST_CHECK_EQUAL(stop_block, chainActive.Tip());
+        BOOST_CHECK_EQUAL(failed_block, null_block);
     }
 
     ~ListCoinsTestingSetup()
