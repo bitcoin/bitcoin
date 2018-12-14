@@ -36,7 +36,6 @@ static struct CRPCSignals
 {
     boost::signals2::signal<void ()> Started;
     boost::signals2::signal<void ()> Stopped;
-    boost::signals2::signal<void (const CRPCCommand&)> PreCommand;
 } g_rpcSignals;
 
 void RPCServer::OnStarted(std::function<void ()> slot)
@@ -483,8 +482,6 @@ UniValue CRPCTable::execute(const JSONRPCRequest &request) const
     const CRPCCommand *pcmd = tableRPC[request.strMethod];
     if (!pcmd)
         throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found");
-
-    g_rpcSignals.PreCommand(*pcmd);
 
     try
     {
