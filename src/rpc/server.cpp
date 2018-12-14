@@ -283,11 +283,37 @@ static UniValue uptime(const JSONRPCRequest& jsonRequest)
     return GetTime() - GetStartupTime();
 }
 
+static UniValue getrpcinfo(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() > 0) {
+        throw std::runtime_error(
+            RPCHelpMan{"getrpcinfo",
+                "\nReturns details of the RPC server.\n", {}}
+                .ToString()
+        );
+    }
+
+    LOCK(g_rpc_server_info.mutex);
+    UniValue active_commands(UniValue::VARR);
+    for (const RPCCommandExecutionInfo& info : g_rpc_server_info.active_commands) {
+        UniValue entry(UniValue::VOBJ);
+        entry.pushKV("method", info.method);
+        entry.pushKV("duration", GetTimeMicros() - info.start);
+        active_commands.push_back(entry);
+    }
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("active_commands", active_commands);
+
+    return result;
+}
+
 // clang-format off
 static const CRPCCommand vRPCCommands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
     /* Overall control/query calls */
+    { "control",            "getrpcinfo",             &getrpcinfo,             {}  },
     { "control",            "help",                   &help,                   {"command"}  },
     { "control",            "stop",                   &stop,                   {"wait"}  },
     { "control",            "uptime",                 &uptime,                 {}  },
