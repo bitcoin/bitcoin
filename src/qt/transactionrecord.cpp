@@ -150,11 +150,21 @@ void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, cons
     // Determine transaction status
 
     // Sort order, unrecorded transactions sort to the top
-    status.sortKey = strprintf("%010d-%01d-%010u-%03d",
+    int typesort;
+    switch (type) {
+    case SendToAddress: case SendToOther:
+        typesort = 2; break;
+    case RecvWithAddress: case RecvFromOther:
+        typesort = 3; break;
+    default:
+        typesort = 9;
+    }
+    status.sortKey = strprintf("%010d-%01d-%010u-%03d-%d",
         wtx.block_height,
         wtx.is_coinbase ? 1 : 0,
         wtx.time_received,
-        idx);
+        idx,
+        typesort);
     status.countsForBalance = wtx.is_trusted && !(wtx.blocks_to_maturity > 0);
     status.depth = wtx.depth_in_main_chain;
     status.m_cur_block_hash = block_hash;
