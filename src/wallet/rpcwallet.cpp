@@ -3410,7 +3410,7 @@ UniValue rescanblockchain(const JSONRPCRequest& request)
         }
     }
 
-    // We can't rescan beyond non-pruned blocks, stop and throw an error
+    // We can't rescan beyond pruned blocks, stop and throw an error
     if (fPruneMode) {
         auto locked_chain = pwallet->chain().lock();
         CBlockIndex *block = pindexStop ? pindexStop : pChainTip;
