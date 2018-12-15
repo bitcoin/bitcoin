@@ -291,11 +291,13 @@ static bool HTTPBindAddresses(struct evhttp* http)
 {
     uint16_t http_port{static_cast<uint16_t>(gArgs.GetArg("-rpcport", BaseParams().RPCPort()))};
     std::vector<std::pair<std::string, uint16_t>> endpoints;
+    bool is_default = false;
 
     // Determine what addresses to bind to
     if (!(gArgs.IsArgSet("-rpcallowip") && gArgs.IsArgSet("-rpcbind"))) { // Default to loopback if not allowing external IPs
         endpoints.push_back(std::make_pair("::1", http_port));
         endpoints.push_back(std::make_pair("127.0.0.1", http_port));
+        is_default = true;
         if (gArgs.IsArgSet("-rpcallowip")) {
             LogPrintf("WARNING: option -rpcallowip was specified without -rpcbind; this doesn't usually make sense\n");
         }
@@ -312,6 +314,7 @@ static bool HTTPBindAddresses(struct evhttp* http)
     }
 
     // Bind addresses
+    int num_fail = 0;
     for (std::vector<std::pair<std::string, uint16_t> >::iterator i = endpoints.begin(); i != endpoints.end(); ++i) {
         LogPrint(BCLog::HTTP, "Binding RPC on address %s port %i\n", i->first, i->second);
         evhttp_bound_socket *bind_handle = evhttp_bind_socket_with_handle(http, i->first.empty() ? nullptr : i->first.c_str(), i->second);
@@ -322,10 +325,27 @@ static bool HTTPBindAddresses(struct evhttp* http)
             }
             boundSockets.push_back(bind_handle);
         } else {
-            LogPrintf("Binding RPC on address %s port %i failed.\n", i->first, i->second);
+            int err = EVUTIL_SOCKET_ERROR();
+            if (!is_default || (err != EADDRNOTAVAIL && err != ENOENT)) {
+                LogPrintf("Binding RPC on address %s port %i failed (Error: %s).\n", i->first, i->second, NetworkErrorString(err));
+                num_fail += 1;
+            } else {
+                // Don't count failure if binding was not explicitly configured
+                // (default settings) and the address is not available.
+                // (for example: Travis without IPv6 localhost will return ENOENT)
+                LogPrintf("Binding RPC on address %s port %i failed, error ignored because interface was unavailable.\n", i->first, i->second);
+            }
         }
     }
-    return !boundSockets.empty();
+    if (num_fail != 0) {
+        // In case of an error, clean up listening sockets that succeeded to
+        // avoid leak
+        for (evhttp_bound_socket *socket : boundSockets) {
+            evhttp_del_accept_socket(http, socket);
+        }
+        boundSockets.clear();
+    }
+    return num_fail == 0;
 }
 
 /** Simple wrapper to set thread name and run work queue */
@@ -384,7 +404,7 @@ bool InitHTTPServer()
     evhttp_set_gencb(http, http_request_cb, nullptr);
 
     if (!HTTPBindAddresses(http)) {
-        LogPrintf("Unable to bind any endpoint for RPC server\n");
+        LogPrintf("Unable to bind all endpoints for RPC server\n");
         return false;
     }
 
