@@ -1455,7 +1455,17 @@ void RPCConsole::showOrHideBanTableIfRequired()
     ui->banHeading->setVisible(visible);
 }
 
+RPCConsole::TabTypes RPCConsole::tabFocus() const
+{
+    return (TabTypes) ui->tabWidget->currentIndex();
+}
+
 void RPCConsole::setTabFocus(enum TabTypes tabType)
 {
     showPage(tabType);
+}
+
+QString RPCConsole::tabTitle(TabTypes tab_type) const
+{
+    return ui->tabWidget->tabText(tab_type);
 }
