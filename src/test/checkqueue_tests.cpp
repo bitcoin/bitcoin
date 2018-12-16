@@ -333,7 +333,8 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_FrozenCleanup)
         // would get called twice).
         vChecks[0].should_freeze = true;
         control.Add(vChecks);
-        BOOST_CHECK(control.Wait()); // Hangs here
+        bool waitResult = control.Wait(); // Hangs here
+        assert(waitResult);
     });
     {
         std::unique_lock<std::mutex> l(FrozenCleanupCheck::m);
