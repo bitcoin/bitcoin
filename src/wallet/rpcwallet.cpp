@@ -3668,7 +3668,8 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
     }
     if (meta) {
         ret.pushKV("timestamp", meta->nCreateTime);
-        if (!meta->hdKeypath.empty()) {
+        KeyOriginInfo info;
+        if (!meta->hdKeypath.empty() && pwallet->GetKeyOrigin(key_id, info)) {
             ret.pushKV("hdkeypath", meta->hdKeypath);
             ret.pushKV("hdseedid", meta->hd_seed_id.GetHex());
             ret.pushKV("hdmasterkeyid", meta->hd_seed_id.GetHex());
