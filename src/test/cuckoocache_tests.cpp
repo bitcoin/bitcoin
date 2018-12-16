@@ -220,8 +220,10 @@ static void test_cache_erase_parallel(size_t megabytes)
             size_t ntodo = (n_insert/4)/3;
             size_t start = ntodo*x;
             size_t end = ntodo*(x+1);
-            for (uint32_t i = start; i < end; ++i)
-                BOOST_CHECK(set.contains(hashes[i], true));
+            for (uint32_t i = start; i < end; ++i) {
+                bool contains = set.contains(hashes[i], true);
+                assert(contains);
+            }
         });
 
     /** Wait for all threads to finish
