@@ -1038,15 +1038,16 @@ bool CTxLockVote::IsValid(CNode* pnode, CConnman& connman) const
     }
 
     // Verify that masternodeProTxHash belongs to the same MN referred by the collateral
-    // Only v13 nodes will send us locks with this field set, and only after spork15 activation
+    // This is a leftover from the legacy non-deterministic MN list where we used the collateral to identify MNs
+    // TODO eventually remove the collateral from CTxLockVote
     if (!masternodeProTxHash.IsNull()) {
-        masternode_info_t mnInfo;
-        if (!mnodeman.GetMasternodeInfo(masternodeProTxHash, mnInfo) || mnInfo.outpoint != outpointMasternode) {
+        auto dmn = mnList.GetValidMN(masternodeProTxHash);
+        if (!dmn || dmn->collateralOutpoint != outpointMasternode) {
             LogPrint("instantsend", "CTxLockVote::IsValid -- invalid masternodeProTxHash %s\n", masternodeProTxHash.ToString());
             return false;
         }
-    } else if (deterministicMNManager->IsDIP3Active()) {
-        LogPrint("instantsend", "CTxLockVote::IsValid -- missing masternodeProTxHash while DIP3 is active\n");
+    } else {
+        LogPrint("instantsend", "CTxLockVote::IsValid -- missing masternodeProTxHash\n");
         return false;
     }
 
