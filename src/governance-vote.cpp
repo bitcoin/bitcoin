@@ -256,20 +256,16 @@ bool CGovernanceVote::IsValid(bool useVotingKey) const
         return false;
     }
 
-    masternode_info_t infoMn;
-    if (!mnodeman.GetMasternodeInfo(masternodeOutpoint, infoMn)) {
+    auto dmn = deterministicMNManager->GetListAtChainTip().GetValidMNByCollateral(masternodeOutpoint);
+    if (!dmn) {
         LogPrint("gobject", "CGovernanceVote::IsValid -- Unknown Masternode - %s\n", masternodeOutpoint.ToStringShort());
         return false;
     }
 
     if (useVotingKey) {
-        return CheckSignature(infoMn.keyIDVoting);
+        return CheckSignature(dmn->pdmnState->keyIDVoting);
     } else {
-        if (deterministicMNManager->IsDIP3Active()) {
-            return CheckSignature(infoMn.blsPubKeyOperator);
-        } else {
-            return CheckSignature(infoMn.legacyKeyIDOperator);
-        }
+        return CheckSignature(dmn->pdmnState->pubKeyOperator);
     }
 }
 
