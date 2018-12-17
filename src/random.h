@@ -21,10 +21,10 @@
  *
  * Thread-safe.
  */
-void GetRandBytes(unsigned char* buf, int num);
-uint64_t GetRand(uint64_t nMax);
-int GetRandInt(int nMax);
-uint256 GetRandHash();
+void GetRandBytes(unsigned char* buf, int num) noexcept;
+uint64_t GetRand(uint64_t nMax) noexcept;
+int GetRandInt(int nMax) noexcept;
+uint256 GetRandHash() noexcept;
 
 /**
  * Gather entropy from various sources, feed it into the internal PRNG, and
@@ -34,7 +34,7 @@ uint256 GetRandHash();
  *
  * Thread-safe.
  */
-void GetStrongRandBytes(unsigned char* buf, int num);
+void GetStrongRandBytes(unsigned char* buf, int num) noexcept;
 
 /**
  * Sleep for 1ms, gather entropy from various sources, and feed them to the PRNG state.
@@ -78,10 +78,10 @@ private:
     }
 
 public:
-    explicit FastRandomContext(bool fDeterministic = false);
+    explicit FastRandomContext(bool fDeterministic = false) noexcept;
 
     /** Initialize with explicit seed (only for testing) */
-    explicit FastRandomContext(const uint256& seed);
+    explicit FastRandomContext(const uint256& seed) noexcept;
 
     // Do not permit copying a FastRandomContext (move it, or create a new one to get reseeded).
     FastRandomContext(const FastRandomContext&) = delete;
@@ -92,7 +92,7 @@ public:
     FastRandomContext& operator=(FastRandomContext&& from) noexcept;
 
     /** Generate a random 64-bit integer. */
-    uint64_t rand64()
+    uint64_t rand64() noexcept
     {
         if (bytebuf_size < 8) FillByteBuffer();
         uint64_t ret = ReadLE64(bytebuf + 64 - bytebuf_size);
@@ -101,7 +101,7 @@ public:
     }
 
     /** Generate a random (bits)-bit integer. */
-    uint64_t randbits(int bits) {
+    uint64_t randbits(int bits) noexcept {
         if (bits == 0) {
             return 0;
         } else if (bits > 32) {
@@ -116,7 +116,7 @@ public:
     }
 
     /** Generate a random integer in the range [0..range). */
-    uint64_t randrange(uint64_t range)
+    uint64_t randrange(uint64_t range) noexcept
     {
         --range;
         int bits = CountBits(range);
@@ -130,19 +130,19 @@ public:
     std::vector<unsigned char> randbytes(size_t len);
 
     /** Generate a random 32-bit integer. */
-    uint32_t rand32() { return randbits(32); }
+    uint32_t rand32() noexcept { return randbits(32); }
 
     /** generate a random uint256. */
-    uint256 rand256();
+    uint256 rand256() noexcept;
 
     /** Generate a random boolean. */
-    bool randbool() { return randbits(1); }
+    bool randbool() noexcept { return randbits(1); }
 
     // Compatibility with the C++11 UniformRandomBitGenerator concept
     typedef uint64_t result_type;
     static constexpr uint64_t min() { return 0; }
     static constexpr uint64_t max() { return std::numeric_limits<uint64_t>::max(); }
-    inline uint64_t operator()() { return rand64(); }
+    inline uint64_t operator()() noexcept { return rand64(); }
 };
 
 /** More efficient than using std::shuffle on a FastRandomContext.
