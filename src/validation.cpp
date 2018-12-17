@@ -1828,35 +1828,7 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
         ThresholdState state = VersionBitsState(pindexPrev, params, pos, versionbitscache);
         const struct BIP9DeploymentInfo& vbinfo = VersionBitsDeploymentInfo[pos];
         if (vbinfo.check_mn_protocol && state == THRESHOLD_STARTED && fCheckMasternodesUpgraded) {
-            if (deterministicMNManager->IsDIP3Active()) {
-                auto mnList = deterministicMNManager->GetListForBlock(pindexPrev->GetBlockHash());
-                auto payee = mnList.GetMNPayee();
-                if (!payee) {
-                    continue;
-                }
-            } else {
-                std::vector<CTxOut> voutMasternodePayments;
-                masternode_info_t mnInfo;
-                if (!mnpayments.GetBlockTxOuts(pindexPrev->nHeight + 1, 0, voutMasternodePayments)) {
-                    // no votes for this block
-                    continue;
-                }
-                bool mnKnown = false;
-                for (const auto& txout : voutMasternodePayments) {
-                    if (mnodeman.GetMasternodeInfo(txout.scriptPubKey, mnInfo)) {
-                        mnKnown = true;
-                        break;
-                    }
-                }
-                if (!mnKnown) {
-                    // unknown masternode
-                    continue;
-                }
-                if (mnInfo.nProtocolVersion < DMN_PROTO_VERSION) {
-                    // masternode is not upgraded yet
-                    continue;
-                }
-            }
+            // TODO implement new logic for MN upgrade checks (e.g. with LLMQ based feature/version voting)
         }
         if (state == THRESHOLD_LOCKED_IN || state == THRESHOLD_STARTED) {
             nVersion |= VersionBitsMask(params, (Consensus::DeploymentPos)i);
