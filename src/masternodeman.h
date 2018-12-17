@@ -140,6 +140,7 @@ public:
     bool IsValidForMixingTxes(const COutPoint &outpoint);
     bool AllowMixing(const COutPoint &outpoint);
     bool DisallowMixing(const COutPoint &outpoint);
+    int64_t GetLastDsq(const COutPoint &outpoint);
 
     /// Check all Masternodes
     void Check();

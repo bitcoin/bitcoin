@@ -200,7 +200,7 @@ public:
 
     bool GetBlockTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet) const;
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward) const;
-    bool IsScheduled(const masternode_info_t& mnInfo, int nNotBlockHeight) const;
+    bool IsScheduled(const CDeterministicMNCPtr& dmn, int nNotBlockHeight) const;
 
     bool UpdateLastVote(const CMasternodePaymentVote& vote);
 

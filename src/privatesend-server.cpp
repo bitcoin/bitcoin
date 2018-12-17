@@ -44,8 +44,9 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
 
         LogPrint("privatesend", "DSACCEPT -- nDenom %d (%s)  txCollateral %s", dsa.nDenom, CPrivateSend::GetDenominationsToString(dsa.nDenom), dsa.txCollateral.ToString());
 
-        masternode_info_t mnInfo;
-        if (!mnodeman.GetMasternodeInfo(activeMasternodeInfo.outpoint, mnInfo)) {
+        auto mnList = deterministicMNManager->GetListAtChainTip();
+        auto dmn = mnList.GetValidMNByCollateral(activeMasternodeInfo.outpoint);
+        if (!dmn) {
             PushStatus(pfrom, STATUS_REJECTED, ERR_MN_LIST, connman);
             return;
         }
@@ -65,7 +66,8 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
                 }
             }
 
-            if (mnInfo.nLastDsq != 0 && mnInfo.nLastDsq + mnodeman.CountMasternodes() / 5 > mnodeman.nDsqCount) {
+            int64_t nLastDsq = mnodeman.GetLastDsq(dmn->collateralOutpoint);
+            if (nLastDsq != 0 && nLastDsq + mnList.GetValidMNsCount() / 5 > mnodeman.nDsqCount) {
                 LogPrintf("DSACCEPT -- last dsq too recent, must wait: addr=%s\n", pfrom->addr.ToString());
                 PushStatus(pfrom, STATUS_REJECTED, ERR_RECENT, connman);
                 return;
@@ -111,12 +113,12 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
 
         if (dsq.IsExpired()) return;
 
-        masternode_info_t mnInfo;
-        if (!mnodeman.GetMasternodeInfo(dsq.masternodeOutpoint, mnInfo)) return;
+        auto mnList = deterministicMNManager->GetListAtChainTip();
+        auto dmn = mnList.GetValidMNByCollateral(dsq.masternodeOutpoint);
+        if (!dmn) return;
 
-        if (!dsq.CheckSignature(mnInfo.legacyKeyIDOperator, mnInfo.blsPubKeyOperator)) {
-            // we probably have outdated info
-            mnodeman.AskForMN(pfrom, dsq.masternodeOutpoint, connman);
+        if (!dsq.CheckSignature(dmn->pdmnState->pubKeyOperator)) {
+            // TODO ban?
             return;
         }
 
@@ -124,21 +126,22 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
             for (const auto& q : vecPrivateSendQueue) {
                 if (q.masternodeOutpoint == dsq.masternodeOutpoint) {
                     // no way same mn can send another "not yet ready" dsq this soon
-                    LogPrint("privatesend", "DSQUEUE -- Masternode %s is sending WAY too many dsq messages\n", mnInfo.addr.ToString());
+                    LogPrint("privatesend", "DSQUEUE -- Masternode %s is sending WAY too many dsq messages\n", dmn->pdmnState->addr.ToString());
                     return;
                 }
             }
 
-            int nThreshold = mnInfo.nLastDsq + mnodeman.CountMasternodes() / 5;
-            LogPrint("privatesend", "DSQUEUE -- nLastDsq: %d  threshold: %d  nDsqCount: %d\n", mnInfo.nLastDsq, nThreshold, mnodeman.nDsqCount);
+            int64_t nLastDsq = mnodeman.GetLastDsq(dmn->collateralOutpoint);
+            int nThreshold = nLastDsq + mnList.GetValidMNsCount() / 5;
+            LogPrint("privatesend", "DSQUEUE -- nLastDsq: %d  threshold: %d  nDsqCount: %d\n", nLastDsq, nThreshold, mnodeman.nDsqCount);
             //don't allow a few nodes to dominate the queuing process
-            if (mnInfo.nLastDsq != 0 && nThreshold > mnodeman.nDsqCount) {
-                LogPrint("privatesend", "DSQUEUE -- Masternode %s is sending too many dsq messages\n", mnInfo.addr.ToString());
+            if (nLastDsq != 0 && nThreshold > mnodeman.nDsqCount) {
+                LogPrint("privatesend", "DSQUEUE -- Masternode %s is sending too many dsq messages\n", dmn->pdmnState->addr.ToString());
                 return;
             }
             mnodeman.AllowMixing(dsq.masternodeOutpoint);
 
-            LogPrint("privatesend", "DSQUEUE -- new PrivateSend queue (%s) from masternode %s\n", dsq.ToString(), mnInfo.addr.ToString());
+            LogPrint("privatesend", "DSQUEUE -- new PrivateSend queue (%s) from masternode %s\n", dsq.ToString(), dmn->pdmnState->addr.ToString());
             vecPrivateSendQueue.push_back(dsq);
             dsq.Relay(connman);
         }

@@ -99,13 +99,13 @@ UniValue getpoolinfo(const JSONRPCRequest& request)
     // obj.push_back(Pair("entries",           pprivateSendBase->GetEntriesCount()));
     obj.push_back(Pair("status",            privateSendClient.GetStatuses()));
 
-    std::vector<masternode_info_t> vecMnInfo;
-    if (privateSendClient.GetMixingMasternodesInfo(vecMnInfo)) {
+    std::vector<CDeterministicMNCPtr> vecDmns;
+    if (privateSendClient.GetMixingMasternodesInfo(vecDmns)) {
         UniValue pools(UniValue::VARR);
-        for (const auto& mnInfo : vecMnInfo) {
+        for (const auto& dmn : vecDmns) {
             UniValue pool(UniValue::VOBJ);
-            pool.push_back(Pair("outpoint",      mnInfo.outpoint.ToStringShort()));
-            pool.push_back(Pair("addr",          mnInfo.addr.ToString()));
+            pool.push_back(Pair("outpoint",      dmn->collateralOutpoint.ToStringShort()));
+            pool.push_back(Pair("addr",          dmn->pdmnState->addr.ToString()));
             pools.push_back(pool);
         }
         obj.push_back(Pair("pools", pools));

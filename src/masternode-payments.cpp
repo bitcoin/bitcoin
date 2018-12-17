@@ -641,14 +641,14 @@ bool CMasternodePayments::GetBlockTxOuts(int nBlockHeight, CAmount blockReward, 
 
 // Is this masternode scheduled to get paid soon?
 // -- Only look ahead up to 8 blocks to allow for propagation of the latest 2 blocks of votes
-bool CMasternodePayments::IsScheduled(const masternode_info_t& mnInfo, int nNotBlockHeight) const
+bool CMasternodePayments::IsScheduled(const CDeterministicMNCPtr& dmnIn, int nNotBlockHeight) const
 {
     LOCK(cs_mapMasternodeBlocks);
 
     if (deterministicMNManager->IsDIP3Active()) {
         auto projectedPayees = deterministicMNManager->GetListAtChainTip().GetProjectedMNPayees(8);
         for (const auto &dmn : projectedPayees) {
-            if (dmn->collateralOutpoint == mnInfo.outpoint) {
+            if (dmn->proTxHash == dmnIn->proTxHash) {
                 return true;
             }
         }

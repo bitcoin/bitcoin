@@ -61,12 +61,12 @@ void CPrivateSendClientManager::ProcessMessage(CNode* pfrom, const std::string& 
 
         if (dsq.IsExpired()) return;
 
-        masternode_info_t infoMn;
-        if (!mnodeman.GetMasternodeInfo(dsq.masternodeOutpoint, infoMn)) return;
+        auto mnList = deterministicMNManager->GetListAtChainTip();
+        auto dmn = mnList.GetValidMNByCollateral(dsq.masternodeOutpoint);
+        if (!dmn) return;
 
-        if (!dsq.CheckSignature(infoMn.legacyKeyIDOperator, infoMn.blsPubKeyOperator)) {
-            // we probably have outdated info
-            mnodeman.AskForMN(pfrom, dsq.masternodeOutpoint, connman);
+        if (!dsq.CheckSignature(dmn->pdmnState->pubKeyOperator)) {
+            // TODO ban?
             return;
         }
 
@@ -74,9 +74,9 @@ void CPrivateSendClientManager::ProcessMessage(CNode* pfrom, const std::string& 
         if (dsq.fReady) {
             LOCK(cs_deqsessions);
             for (auto& session : deqSessions) {
-                masternode_info_t mnMixing;
-                if (session.GetMixingMasternodeInfo(mnMixing) && mnMixing.addr == infoMn.addr && session.GetState() == POOL_STATE_QUEUE) {
-                    LogPrint("privatesend", "DSQUEUE -- PrivateSend queue (%s) is ready on masternode %s\n", dsq.ToString(), infoMn.addr.ToString());
+                CDeterministicMNCPtr mnMixing;
+                if (session.GetMixingMasternodeInfo(mnMixing) && mnMixing->pdmnState->addr == dmn->pdmnState->addr && session.GetState() == POOL_STATE_QUEUE) {
+                    LogPrint("privatesend", "DSQUEUE -- PrivateSend queue (%s) is ready on masternode %s\n", dsq.ToString(), dmn->pdmnState->addr.ToString());
                     session.SubmitDenominate(connman);
                     return;
                 }
@@ -89,25 +89,26 @@ void CPrivateSendClientManager::ProcessMessage(CNode* pfrom, const std::string& 
             for (const auto& q : vecPrivateSendQueue) {
                 if (q.masternodeOutpoint == dsq.masternodeOutpoint) {
                     // no way same mn can send another "not yet ready" dsq this soon
-                    LogPrint("privatesend", "DSQUEUE -- Masternode %s is sending WAY too many dsq messages\n", infoMn.addr.ToString());
+                    LogPrint("privatesend", "DSQUEUE -- Masternode %s is sending WAY too many dsq messages\n", dmn->pdmnState->ToString());
                     return;
                 }
             }
 
-            int nThreshold = infoMn.nLastDsq + mnodeman.CountMasternodes() / 5;
-            LogPrint("privatesend", "DSQUEUE -- nLastDsq: %d  threshold: %d  nDsqCount: %d\n", infoMn.nLastDsq, nThreshold, mnodeman.nDsqCount);
+            int64_t nLastDsq = mnodeman.GetLastDsq(dsq.masternodeOutpoint);
+            int nThreshold = nLastDsq + mnList.GetValidMNsCount() / 5;
+            LogPrint("privatesend", "DSQUEUE -- nLastDsq: %d  threshold: %d  nDsqCount: %d\n", nLastDsq, nThreshold, mnodeman.nDsqCount);
             //don't allow a few nodes to dominate the queuing process
-            if (infoMn.nLastDsq != 0 && nThreshold > mnodeman.nDsqCount) {
-                LogPrint("privatesend", "DSQUEUE -- Masternode %s is sending too many dsq messages\n", infoMn.addr.ToString());
+            if (nLastDsq != 0 && nThreshold > mnodeman.nDsqCount) {
+                LogPrint("privatesend", "DSQUEUE -- Masternode %s is sending too many dsq messages\n", dmn->proTxHash.ToString());
                 return;
             }
 
             if (!mnodeman.AllowMixing(dsq.masternodeOutpoint)) return;
 
-            LogPrint("privatesend", "DSQUEUE -- new PrivateSend queue (%s) from masternode %s\n", dsq.ToString(), infoMn.addr.ToString());
+            LogPrint("privatesend", "DSQUEUE -- new PrivateSend queue (%s) from masternode %s\n", dsq.ToString(), dmn->pdmnState->addr.ToString());
             for (auto& session : deqSessions) {
-                masternode_info_t mnMixing;
-                if (session.GetMixingMasternodeInfo(mnMixing) && mnMixing.outpoint == dsq.masternodeOutpoint) {
+                CDeterministicMNCPtr mnMixing;
+                if (session.GetMixingMasternodeInfo(mnMixing) && mnMixing->collateralOutpoint == dsq.masternodeOutpoint) {
                     dsq.fTried = true;
                 }
             }
@@ -139,8 +140,8 @@ void CPrivateSendClientSession::ProcessMessage(CNode* pfrom, const std::string& 
             return;
         }
 
-        if (!infoMixingMasternode.fInfoValid) return;
-        if (infoMixingMasternode.addr != pfrom->addr) {
+        if (!mixingMasternode) return;
+        if (mixingMasternode->pdmnState->addr != pfrom->addr) {
             //LogPrintf("DSSTATUSUPDATE -- message doesn't match current Masternode: infoMixingMasternode %s addr %s\n", infoMixingMasternode.addr.ToString(), pfrom->addr.ToString());
             return;
         }
@@ -181,8 +182,8 @@ void CPrivateSendClientSession::ProcessMessage(CNode* pfrom, const std::string& 
             return;
         }
 
-        if (!infoMixingMasternode.fInfoValid) return;
-        if (infoMixingMasternode.addr != pfrom->addr) {
+        if (!mixingMasternode) return;
+        if (mixingMasternode->pdmnState->addr != pfrom->addr) {
             //LogPrintf("DSFINALTX -- message doesn't match current Masternode: infoMixingMasternode %s addr %s\n", infoMixingMasternode.addr.ToString(), pfrom->addr.ToString());
             return;
         }
@@ -208,9 +209,9 @@ void CPrivateSendClientSession::ProcessMessage(CNode* pfrom, const std::string& 
             return;
         }
 
-        if (!infoMixingMasternode.fInfoValid) return;
-        if (infoMixingMasternode.addr != pfrom->addr) {
-            LogPrint("privatesend", "DSCOMPLETE -- message doesn't match current Masternode: infoMixingMasternode=%s  addr=%s\n", infoMixingMasternode.addr.ToString(), pfrom->addr.ToString());
+        if (!mixingMasternode) return;
+        if (mixingMasternode->pdmnState->addr != pfrom->addr) {
+            LogPrint("privatesend", "DSCOMPLETE -- message doesn't match current Masternode: infoMixingMasternode=%s  addr=%s\n", mixingMasternode->pdmnState->addr.ToString(), pfrom->addr.ToString());
             return;
         }
 
@@ -258,7 +259,7 @@ void CPrivateSendClientSession::SetNull()
     // Client side
     nEntriesCount = 0;
     fLastEntryAccepted = false;
-    infoMixingMasternode = masternode_info_t();
+    mixingMasternode = nullptr;
     pendingDsaRequest = CPendingDsaRequest();
 
     CPrivateSendBaseSession::SetNull();
@@ -368,22 +369,22 @@ std::string CPrivateSendClientManager::GetSessionDenoms()
     return strSessionDenoms.empty() ? "N/A" : strSessionDenoms;
 }
 
-bool CPrivateSendClientSession::GetMixingMasternodeInfo(masternode_info_t& mnInfoRet) const
+bool CPrivateSendClientSession::GetMixingMasternodeInfo(CDeterministicMNCPtr& ret) const
 {
-    mnInfoRet = infoMixingMasternode.fInfoValid ? infoMixingMasternode : masternode_info_t();
-    return infoMixingMasternode.fInfoValid;
+    ret = mixingMasternode;
+    return ret != nullptr;
 }
 
-bool CPrivateSendClientManager::GetMixingMasternodesInfo(std::vector<masternode_info_t>& vecMnInfoRet) const
+bool CPrivateSendClientManager::GetMixingMasternodesInfo(std::vector<CDeterministicMNCPtr>& vecDmnsRet) const
 {
     LOCK(cs_deqsessions);
     for (const auto& session : deqSessions) {
-        masternode_info_t mnInfo;
-        if (session.GetMixingMasternodeInfo(mnInfo)) {
-            vecMnInfoRet.push_back(mnInfo);
+        CDeterministicMNCPtr dmn;
+        if (session.GetMixingMasternodeInfo(dmn)) {
+            vecDmnsRet.push_back(dmn);
         }
     }
-    return !vecMnInfoRet.empty();
+    return !vecDmnsRet.empty();
 }
 
 //
@@ -578,7 +579,7 @@ bool CPrivateSendClientSession::SignFinalTransaction(const CTransaction& finalTr
     if (!pwalletMain) return false;
 
     if (fMasternodeMode || pnode == nullptr) return false;
-    if (!infoMixingMasternode.fInfoValid) return false;
+    if (!mixingMasternode) return false;
 
     finalMutableTransaction = finalTransactionNew;
     LogPrintf("CPrivateSendClientSession::SignFinalTransaction -- finalMutableTransaction=%s", finalMutableTransaction.ToString());
@@ -588,7 +589,7 @@ bool CPrivateSendClientSession::SignFinalTransaction(const CTransaction& finalTr
     sort(finalMutableTransaction.vout.begin(), finalMutableTransaction.vout.end(), CompareOutputBIP69());
 
     if (finalMutableTransaction.GetHash() != finalTransactionNew.GetHash()) {
-        LogPrintf("CPrivateSendClientSession::SignFinalTransaction -- WARNING! Masternode %s is not BIP69 compliant!\n", infoMixingMasternode.outpoint.ToStringShort());
+        LogPrintf("CPrivateSendClientSession::SignFinalTransaction -- WARNING! Masternode %s is not BIP69 compliant!\n", mixingMasternode->proTxHash.ToString());
         UnlockCoins();
         keyHolderStorage.ReturnAll();
         SetNull();
@@ -832,7 +833,7 @@ bool CPrivateSendClientSession::DoAutomaticDenominating(CConnman& connman, bool 
             return false;
         }
 
-        if (mnodeman.size() == 0) {
+        if (deterministicMNManager->GetListAtChainTip().GetValidMNsCount() == 0) {
             LogPrint("privatesend", "CPrivateSendClientSession::DoAutomaticDenominating -- No Masternodes detected\n");
             strAutoDenomResult = _("No Masternodes detected.");
             return false;
@@ -952,7 +953,7 @@ bool CPrivateSendClientManager::DoAutomaticDenominating(CConnman& connman, bool 
         return false;
     }
 
-    int nMnCountEnabled = mnodeman.CountEnabled(MIN_PRIVATESEND_PEER_PROTO_VERSION);
+    int nMnCountEnabled = deterministicMNManager->GetListAtChainTip().GetValidMNsCount();
 
     // If we've used 90% of the Masternode list then drop the oldest first ~30%
     int nThreshold_high = nMnCountEnabled * 0.9;
@@ -999,22 +1000,22 @@ bool CPrivateSendClientSession::JoinExistingQueue(CAmount nBalanceNeedsAnonymize
 {
     if (!pwalletMain) return false;
 
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+
     std::vector<CAmount> vecStandardDenoms = CPrivateSend::GetStandardDenominations();
     // Look through the queues and see if anything matches
     CPrivateSendQueue dsq;
     while (privateSendClient.GetQueueItemAndTry(dsq)) {
-        masternode_info_t infoMn;
+        auto dmn = mnList.GetValidMNByCollateral(dsq.masternodeOutpoint);
 
-        if (!mnodeman.GetMasternodeInfo(dsq.masternodeOutpoint, infoMn)) {
+        if (!dmn) {
             LogPrintf("CPrivateSendClientSession::JoinExistingQueue -- dsq masternode is not in masternode list, masternode=%s\n", dsq.masternodeOutpoint.ToStringShort());
             continue;
         }
 
-        if (infoMn.nProtocolVersion < MIN_PRIVATESEND_PEER_PROTO_VERSION) continue;
-
         // skip next mn payments winners
-        if (mnpayments.IsScheduled(infoMn, 0)) {
-            LogPrintf("CPrivateSendClientSession::JoinExistingQueue -- skipping winner, masternode=%s\n", infoMn.outpoint.ToStringShort());
+        if (mnpayments.IsScheduled(dmn, 0)) {
+            LogPrintf("CPrivateSendClientSession::JoinExistingQueue -- skipping winner, masternode=%s\n", dmn->proTxHash.ToString());
             continue;
         }
 
@@ -1042,20 +1043,20 @@ bool CPrivateSendClientSession::JoinExistingQueue(CAmount nBalanceNeedsAnonymize
 
         privateSendClient.AddUsedMasternode(dsq.masternodeOutpoint);
 
-        if (connman.IsMasternodeOrDisconnectRequested(infoMn.addr)) {
-            LogPrintf("CPrivateSendClientSession::JoinExistingQueue -- skipping masternode connection, addr=%s\n", infoMn.addr.ToString());
+        if (connman.IsMasternodeOrDisconnectRequested(dmn->pdmnState->addr)) {
+            LogPrintf("CPrivateSendClientSession::JoinExistingQueue -- skipping masternode connection, addr=%s\n", dmn->pdmnState->addr.ToString());
             continue;
         }
 
         nSessionDenom = dsq.nDenom;
-        infoMixingMasternode = infoMn;
-        pendingDsaRequest = CPendingDsaRequest(infoMn.addr, CPrivateSendAccept(nSessionDenom, txMyCollateral));
-        connman.AddPendingMasternode(infoMn.addr);
+        mixingMasternode = dmn;
+        pendingDsaRequest = CPendingDsaRequest(dmn->pdmnState->addr, CPrivateSendAccept(nSessionDenom, txMyCollateral));
+        connman.AddPendingMasternode(dmn->pdmnState->addr);
         // TODO: add new state POOL_STATE_CONNECTING and bump MIN_PRIVATESEND_PEER_PROTO_VERSION
         SetState(POOL_STATE_QUEUE);
         nTimeLastSuccessfulStep = GetTime();
         LogPrintf("CPrivateSendClientSession::JoinExistingQueue -- pending connection (from queue): nSessionDenom: %d (%s), addr=%s\n",
-            nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom), infoMn.addr.ToString());
+            nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom), dmn->pdmnState->addr.ToString());
         strAutoDenomResult = _("Trying to connect...");
         return true;
     }
@@ -1068,7 +1069,7 @@ bool CPrivateSendClientSession::StartNewQueue(CAmount nValueMin, CAmount nBalanc
     if (!pwalletMain) return false;
 
     int nTries = 0;
-    int nMnCount = mnodeman.CountMasternodes();
+    int nMnCount = deterministicMNManager->GetListAtChainTip().GetValidMNsCount();
 
     // ** find the coins we'll use
     std::vector<CTxIn> vecTxIn;
@@ -1082,39 +1083,40 @@ bool CPrivateSendClientSession::StartNewQueue(CAmount nValueMin, CAmount nBalanc
 
     // otherwise, try one randomly
     while (nTries < 10) {
-        masternode_info_t infoMn = privateSendClient.GetNotUsedMasternode();
+        auto dmn = privateSendClient.GetRandomNotUsedMasternode();
 
-        if (!infoMn.fInfoValid) {
+        if (!dmn) {
             LogPrintf("CPrivateSendClientSession::StartNewQueue -- Can't find random masternode!\n");
             strAutoDenomResult = _("Can't find random Masternode.");
             return false;
         }
 
-        privateSendClient.AddUsedMasternode(infoMn.outpoint);
+        privateSendClient.AddUsedMasternode(dmn->collateralOutpoint);
 
         // skip next mn payments winners
-        if (mnpayments.IsScheduled(infoMn, 0)) {
-            LogPrintf("CPrivateSendClientSession::StartNewQueue -- skipping winner, masternode=%s\n", infoMn.outpoint.ToStringShort());
+        if (mnpayments.IsScheduled(dmn, 0)) {
+            LogPrintf("CPrivateSendClientSession::StartNewQueue -- skipping winner, masternode=%s\n", dmn->proTxHash.ToString());
             nTries++;
             continue;
         }
 
-        if (infoMn.nLastDsq != 0 && infoMn.nLastDsq + nMnCount / 5 > mnodeman.nDsqCount) {
+        int64_t nLastDsq = mnodeman.GetLastDsq(dmn->collateralOutpoint);
+        if (nLastDsq != 0 && nLastDsq + nMnCount / 5 > mnodeman.nDsqCount) {
             LogPrintf("CPrivateSendClientSession::StartNewQueue -- Too early to mix on this masternode!"
                       " masternode=%s  addr=%s  nLastDsq=%d  CountEnabled/5=%d  nDsqCount=%d\n",
-                infoMn.outpoint.ToStringShort(), infoMn.addr.ToString(), infoMn.nLastDsq,
+                dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToString(), nLastDsq,
                 nMnCount / 5, mnodeman.nDsqCount);
             nTries++;
             continue;
         }
 
-        if (connman.IsMasternodeOrDisconnectRequested(infoMn.addr)) {
-            LogPrintf("CPrivateSendClientSession::StartNewQueue -- skipping masternode connection, addr=%s\n", infoMn.addr.ToString());
+        if (connman.IsMasternodeOrDisconnectRequested(dmn->pdmnState->addr)) {
+            LogPrintf("CPrivateSendClientSession::StartNewQueue -- skipping masternode connection, addr=%s\n", dmn->pdmnState->addr.ToString());
             nTries++;
             continue;
         }
 
-        LogPrintf("CPrivateSendClientSession::StartNewQueue -- attempt %d connection to Masternode %s\n", nTries, infoMn.addr.ToString());
+        LogPrintf("CPrivateSendClientSession::StartNewQueue -- attempt %d connection to Masternode %s\n", nTries, dmn->pdmnState->addr.ToString());
 
         std::vector<CAmount> vecAmounts;
         pwalletMain->ConvertList(vecTxIn, vecAmounts);
@@ -1123,14 +1125,14 @@ bool CPrivateSendClientSession::StartNewQueue(CAmount nValueMin, CAmount nBalanc
             nSessionDenom = CPrivateSend::GetDenominationsByAmounts(vecAmounts);
         }
 
-        infoMixingMasternode = infoMn;
-        connman.AddPendingMasternode(infoMn.addr);
-        pendingDsaRequest = CPendingDsaRequest(infoMn.addr, CPrivateSendAccept(nSessionDenom, txMyCollateral));
+        mixingMasternode = dmn;
+        connman.AddPendingMasternode(dmn->pdmnState->addr);
+        pendingDsaRequest = CPendingDsaRequest(dmn->pdmnState->addr, CPrivateSendAccept(nSessionDenom, txMyCollateral));
         // TODO: add new state POOL_STATE_CONNECTING and bump MIN_PRIVATESEND_PEER_PROTO_VERSION
         SetState(POOL_STATE_QUEUE);
         nTimeLastSuccessfulStep = GetTime();
         LogPrintf("CPrivateSendClientSession::StartNewQueue -- pending connection, nSessionDenom: %d (%s), addr=%s\n",
-            nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom), infoMn.addr.ToString());
+            nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom), dmn->pdmnState->addr.ToString());
         strAutoDenomResult = _("Trying to connect...");
         return true;
     }
@@ -1596,9 +1598,9 @@ bool CPrivateSendClientSession::CreateDenominated(const CompactTallyItem& tallyI
 
 void CPrivateSendClientSession::RelayIn(const CPrivateSendEntry& entry, CConnman& connman)
 {
-    if (!infoMixingMasternode.fInfoValid) return;
+    if (!mixingMasternode) return;
 
-    connman.ForNode(infoMixingMasternode.addr, [&entry, &connman](CNode* pnode) {
+    connman.ForNode(mixingMasternode->pdmnState->addr, [&entry, &connman](CNode* pnode) {
         LogPrintf("CPrivateSendClientSession::RelayIn -- found master, relaying message to %s\n", pnode->addr.ToString());
         CNetMsgMaker msgMaker(pnode->GetSendVersion());
         connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSVIN, entry));

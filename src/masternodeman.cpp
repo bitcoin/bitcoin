@@ -163,6 +163,16 @@ bool CMasternodeMan::DisallowMixing(const COutPoint &outpoint)
     return true;
 }
 
+int64_t CMasternodeMan::GetLastDsq(const COutPoint& outpoint)
+{
+    LOCK(cs);
+    CMasternode* pmn = Find(outpoint);
+    if (!pmn) {
+        return 0;
+    }
+    return pmn->nLastDsq;
+}
+
 bool CMasternodeMan::PoSeBan(const COutPoint &outpoint)
 {
     LOCK(cs);
@@ -901,17 +911,17 @@ bool CMasternodeMan::GetMasternodeRanks(CMasternodeMan::rank_pair_vec_t& vecMast
 
 void CMasternodeMan::ProcessMasternodeConnections(CConnman& connman)
 {
-    std::vector<masternode_info_t> vecMnInfo; // will be empty when no wallet
+    std::vector<CDeterministicMNCPtr> vecDmns; // will be empty when no wallet
 #ifdef ENABLE_WALLET
-    privateSendClient.GetMixingMasternodesInfo(vecMnInfo);
+    privateSendClient.GetMixingMasternodesInfo(vecDmns);
 #endif // ENABLE_WALLET
 
-    connman.ForEachNode(CConnman::AllNodes, [&vecMnInfo](CNode* pnode) {
+    connman.ForEachNode(CConnman::AllNodes, [&](CNode* pnode) {
         if (pnode->fMasternode) {
 #ifdef ENABLE_WALLET
             bool fFound = false;
-            for (const auto& mnInfo : vecMnInfo) {
-                if (pnode->addr == mnInfo.addr) {
+            for (const auto& dmn : vecDmns) {
+                if (pnode->addr == dmn->pdmnState->addr) {
                     fFound = true;
                     break;
                 }

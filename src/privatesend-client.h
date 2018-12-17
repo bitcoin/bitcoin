@@ -10,8 +10,11 @@
 #include "privatesend.h"
 #include "wallet/wallet.h"
 
+#include "evo/deterministicmns.h"
+
 class CPrivateSendClientManager;
 class CConnman;
+class CNode;
 
 static const int DENOMS_COUNT_MAX = 100;
 
@@ -92,7 +95,7 @@ private:
     std::string strLastMessage;
     std::string strAutoDenomResult;
 
-    masternode_info_t infoMixingMasternode;
+    CDeterministicMNCPtr mixingMasternode;
     CMutableTransaction txMyCollateral; // client side collateral
     CPendingDsaRequest pendingDsaRequest;
 
@@ -139,7 +142,7 @@ public:
         fLastEntryAccepted(false),
         strLastMessage(),
         strAutoDenomResult(),
-        infoMixingMasternode(),
+        mixingMasternode(),
         txMyCollateral(),
         pendingDsaRequest(),
         keyHolderStorage()
@@ -154,7 +157,7 @@ public:
 
     std::string GetStatus(bool fWaitForBlock);
 
-    bool GetMixingMasternodeInfo(masternode_info_t& mnInfoRet) const;
+    bool GetMixingMasternodeInfo(CDeterministicMNCPtr& ret) const;
 
     /// Passively run mixing in the background according to the configuration in settings
     bool DoAutomaticDenominating(CConnman& connman, bool fDryRun = false);
@@ -235,7 +238,7 @@ public:
     std::string GetStatuses();
     std::string GetSessionDenoms();
 
-    bool GetMixingMasternodesInfo(std::vector<masternode_info_t>& vecMnInfoRet) const;
+    bool GetMixingMasternodesInfo(std::vector<CDeterministicMNCPtr>& vecDmnsRet) const;
 
     /// Passively run mixing in the background according to the configuration in settings
     bool DoAutomaticDenominating(CConnman& connman, bool fDryRun = false);
