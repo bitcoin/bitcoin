@@ -127,6 +127,16 @@ void CMasternodeMan::AskForMN(CNode* pnode, const COutPoint& outpoint, CConnman&
     connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSEG, outpoint));
 }
 
+bool CMasternodeMan::IsValidForMixingTxes(const COutPoint& outpoint)
+{
+    LOCK(cs);
+    CMasternode* pmn = Find(outpoint);
+    if (!pmn) {
+        return false;
+    }
+    return pmn->IsValidForMixingTxes();
+}
+
 bool CMasternodeMan::AllowMixing(const COutPoint &outpoint)
 {
     LOCK(cs);

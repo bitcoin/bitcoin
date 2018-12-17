@@ -2079,21 +2079,20 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 return true; // not an error
             }
 
-            CMasternode mn;
-
-            if(!mnodeman.Get(dstx.masternodeOutpoint, mn)) {
+            auto dmn = deterministicMNManager->GetListAtChainTip().GetValidMNByCollateral(dstx.masternodeOutpoint);
+            if(!dmn) {
                 LogPrint("privatesend", "DSTX -- Can't find masternode %s to verify %s\n", dstx.masternodeOutpoint.ToStringShort(), hashTx.ToString());
                 return false;
             }
 
-            if(!mn.IsValidForMixingTxes()) {
+            if(!mnodeman.IsValidForMixingTxes(dstx.masternodeOutpoint)) {
                 LogPrint("privatesend", "DSTX -- Masternode %s is sending too many transactions %s\n", dstx.masternodeOutpoint.ToStringShort(), hashTx.ToString());
                 return true;
                 // TODO: Not an error? Could it be that someone is relaying old DSTXes
                 // we have no idea about (e.g we were offline)? How to handle them?
             }
 
-            if (!dstx.CheckSignature(mn.legacyKeyIDOperator, mn.blsPubKeyOperator)) {
+            if (!dstx.CheckSignature(dmn->pdmnState->pubKeyOperator)) {
                 LogPrint("privatesend", "DSTX -- CheckSignature() failed for %s\n", hashTx.ToString());
                 return false;
             }

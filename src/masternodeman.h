@@ -137,6 +137,7 @@ public:
     void AskForMN(CNode *pnode, const COutPoint& outpoint, CConnman& connman);
 
     bool PoSeBan(const COutPoint &outpoint);
+    bool IsValidForMixingTxes(const COutPoint &outpoint);
     bool AllowMixing(const COutPoint &outpoint);
     bool DisallowMixing(const COutPoint &outpoint);
 
