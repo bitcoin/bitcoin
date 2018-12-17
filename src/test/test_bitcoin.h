@@ -26,7 +26,7 @@ std::ostream& operator<<(typename std::enable_if<std::is_enum<T>::value, std::os
     return stream << static_cast<typename std::underlying_type<T>::type>(e);
 }
 
-thread_local extern FastRandomContext g_insecure_rand_ctx;
+extern FastRandomContext g_insecure_rand_ctx;
 
 static inline void SeedInsecureRand(bool deterministic = false)
 {
