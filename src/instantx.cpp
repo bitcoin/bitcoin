@@ -468,7 +468,8 @@ void CInstantSend::UpdateVotedOutpoints(const CTxLockVote& vote, CTxLockCandidat
                     txLockCandidate.MarkOutpointAsAttacked(vote.GetOutpoint());
                     it2->second.MarkOutpointAsAttacked(vote.GetOutpoint());
                     // apply maximum PoSe ban score to this masternode i.e. PoSe-ban it instantly
-                    mnodeman.PoSeBan(vote.GetMasternodeOutpoint());
+                    // TODO Call new PoSe system when it's ready
+                    //mnodeman.PoSeBan(vote.GetMasternodeOutpoint());
                     // NOTE: This vote must be relayed further to let all other nodes know about such
                     // misbehaviour of this masternode. This way they should also be able to construct
                     // conflicting lock and PoSe-ban this masternode.
