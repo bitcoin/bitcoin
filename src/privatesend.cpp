@@ -52,75 +52,26 @@ bool CPrivateSendQueue::Sign()
 
     std::string strError = "";
 
-    if (deterministicMNManager->IsDIP3Active()) {
-        uint256 hash = GetSignatureHash();
-        CBLSSignature sig = activeMasternodeInfo.blsKeyOperator->Sign(hash);
-        if (!sig.IsValid()) {
-            return false;
-        }
-        sig.GetBuf(vchSig);
-    } else if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
-        uint256 hash = GetSignatureHash();
-
-        if (!CHashSigner::SignHash(hash, activeMasternodeInfo.legacyKeyOperator, vchSig)) {
-            LogPrintf("CPrivateSendQueue::Sign -- SignHash() failed\n");
-            return false;
-        }
-
-        if (!CHashSigner::VerifyHash(hash, activeMasternodeInfo.legacyKeyIDOperator, vchSig, strError)) {
-            LogPrintf("CPrivateSendQueue::Sign -- VerifyHash() failed, error: %s\n", strError);
-            return false;
-        }
-    } else {
-        std::string strMessage = CTxIn(masternodeOutpoint).ToString() +
-                                 std::to_string(nDenom) +
-                                 std::to_string(nTime) +
-                                 std::to_string(fReady);
-
-        if (!CMessageSigner::SignMessage(strMessage, vchSig, activeMasternodeInfo.legacyKeyOperator)) {
-            LogPrintf("CPrivateSendQueue::Sign -- SignMessage() failed, %s\n", ToString());
-            return false;
-        }
-
-        if (!CMessageSigner::VerifyMessage(activeMasternodeInfo.legacyKeyIDOperator, vchSig, strMessage, strError)) {
-            LogPrintf("CPrivateSendQueue::Sign -- VerifyMessage() failed, error: %s\n", strError);
-            return false;
-        }
+    uint256 hash = GetSignatureHash();
+    CBLSSignature sig = activeMasternodeInfo.blsKeyOperator->Sign(hash);
+    if (!sig.IsValid()) {
+        return false;
     }
+    sig.GetBuf(vchSig);
 
     return true;
 }
 
-bool CPrivateSendQueue::CheckSignature(const CKeyID& keyIDOperator, const CBLSPublicKey& blsPubKey) const
+bool CPrivateSendQueue::CheckSignature(const CBLSPublicKey& blsPubKey) const
 {
     std::string strError = "";
-    if (deterministicMNManager->IsDIP3Active()) {
-        uint256 hash = GetSignatureHash();
+    uint256 hash = GetSignatureHash();
 
-        CBLSSignature sig;
-        sig.SetBuf(vchSig);
-        if (!sig.IsValid() || !sig.VerifyInsecure(blsPubKey, hash)) {
-            LogPrintf("CTxLockVote::CheckSignature -- VerifyInsecure() failed\n");
-            return false;
-        }
-    } else if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
-        uint256 hash = GetSignatureHash();
-
-        if (!CHashSigner::VerifyHash(hash, keyIDOperator, vchSig, strError)) {
-            // we don't care about queues with old signature format
-            LogPrintf("CPrivateSendQueue::CheckSignature -- VerifyHash() failed, error: %s\n", strError);
-            return false;
-        }
-    } else {
-        std::string strMessage = CTxIn(masternodeOutpoint).ToString() +
-                                 std::to_string(nDenom) +
-                                 std::to_string(nTime) +
-                                 std::to_string(fReady);
-
-        if (!CMessageSigner::VerifyMessage(keyIDOperator, vchSig, strMessage, strError)) {
-            LogPrintf("CPrivateSendQueue::CheckSignature -- Got bad Masternode queue signature: %s; error: %s\n", ToString(), strError);
-            return false;
-        }
+    CBLSSignature sig;
+    sig.SetBuf(vchSig);
+    if (!sig.IsValid() || !sig.VerifyInsecure(blsPubKey, hash)) {
+        LogPrintf("CTxLockVote::CheckSignature -- VerifyInsecure() failed\n");
+        return false;
     }
 
     return true;
