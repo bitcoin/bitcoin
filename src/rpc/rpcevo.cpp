@@ -630,21 +630,19 @@ UniValue protx_revoke(const JSONRPCRequest& request)
 void protx_list_help()
 {
     throw std::runtime_error(
-            "protx list (\"type\")\n"
-            "\nLists all ProTxs in your wallet or on-chain, depending on the given type. If \"type\" is not\n"
-            "specified, it defaults to \"registered\". All types have the optional argument \"detailed\" which if set to\n"
-            "\"true\" will result in a detailed list to be returned. If set to \"false\", only the hashes of the ProTx\n"
-            "will be returned.\n"
+            "protx list (\"type\" \"detailed\" \"height\")\n"
+            "\nLists all ProTxs in your wallet or on-chain, depending on the given type.\n"
+            "If \"type\" is not specified, it defaults to \"registered\".\n"
+            "If \"detailed\" is not specified, it defaults to \"false\" and only the hashes of the ProTx will be returned.\n"
+            "If \"height\" is not specified, it defaults to the current chain-tip.\n"
             "\nAvailable types:\n"
+            "  registered   - List all ProTx which are registered at the given chain height.\n"
+            "                 This will also include ProTx which failed PoSe verfication.\n"
+            "  valid        - List only ProTx which are active/valid at the given chain height.\n"
 #ifdef ENABLE_WALLET
-            "  wallet (detailed)              - List only ProTx which are found in your wallet. This will also include ProTx which\n"
-            "                                   failed PoSe verfication\n"
+            "  wallet       - List only ProTx which are found in your wallet at the given chain height.\n"
+            "                 This will also include ProTx which failed PoSe verfication.\n"
 #endif
-            "  valid (height) (detailed)      - List only ProTx which are active/valid at the given chain height. If height is not\n"
-            "                                   specified, it defaults to the current chain-tip\n"
-            "  registered (height) (detaileD) - List all ProTx which are registered at the given chain height. If height is not\n"
-            "                                   specified, it defaults to the current chain-tip. This will also include ProTx\n"
-            "                                   which failed PoSe verification at that height\n"
     );
 }
 
@@ -739,13 +737,18 @@ UniValue protx_list(const JSONRPCRequest& request)
             throw std::runtime_error("\"protx list wallet\" not supported when wallet is disabled");
         }
 #ifdef ENABLE_WALLET
-        LOCK(pwalletMain->cs_wallet);
+        LOCK2(cs_main, pwalletMain->cs_wallet);
 
         if (request.params.size() > 3) {
             protx_list_help();
         }
 
         bool detailed = request.params.size() > 2 ? ParseBoolV(request.params[2], "detailed") : false;
+
+        int height = request.params.size() > 3 ? ParseInt32V(request.params[3], "height") : chainActive.Height();
+        if (height < 1 || height > chainActive.Height()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
+        }
 
         std::vector<COutPoint> vOutpts;
         pwalletMain->ListProTxCoins(vOutpts);
@@ -754,7 +757,8 @@ UniValue protx_list(const JSONRPCRequest& request)
             setOutpts.emplace(outpt);
         }
 
-        deterministicMNManager->GetListAtChainTip().ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
+        CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(chainActive[height]->GetBlockHash());
+        mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
             if (setOutpts.count(dmn->collateralOutpoint) ||
                 CheckWalletOwnsKey(dmn->pdmnState->keyIDOwner) ||
                 CheckWalletOwnsKey(dmn->pdmnState->keyIDVoting) ||
@@ -771,12 +775,12 @@ UniValue protx_list(const JSONRPCRequest& request)
 
         LOCK(cs_main);
 
-        int height = request.params.size() > 2 ? ParseInt32V(request.params[2], "height") : chainActive.Height();
+        bool detailed = request.params.size() > 2 ? ParseBoolV(request.params[2], "detailed") : false;
+
+        int height = request.params.size() > 3 ? ParseInt32V(request.params[3], "height") : chainActive.Height();
         if (height < 1 || height > chainActive.Height()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
         }
-
-        bool detailed = request.params.size() > 3 ? ParseBoolV(request.params[3], "detailed") : false;
 
         CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(chainActive[height]->GetBlockHash());
         bool onlyValid = type == "valid";
