@@ -42,10 +42,10 @@ struct CompareLastPaidBlock
 
 struct CompareScoreMN
 {
-    bool operator()(const std::pair<arith_uint256, const CMasternode*>& t1,
-                    const std::pair<arith_uint256, const CMasternode*>& t2) const
+    bool operator()(const std::pair<arith_uint256, const CDeterministicMNCPtr&>& t1,
+                    const std::pair<arith_uint256, const CDeterministicMNCPtr&>& t2) const
     {
-        return (t1.first != t2.first) ? (t1.first < t2.first) : (t1.second->outpoint < t2.second->outpoint);
+        return (t1.first != t2.first) ? (t1.first < t2.first) : (t1.second->collateralOutpoint < t2.second->collateralOutpoint);
     }
 };
 
@@ -257,9 +257,9 @@ void CMasternodeMan::CheckAndRemove(CConnman& connman)
                     // ask first MNB_RECOVERY_QUORUM_TOTAL masternodes we can connect to and we haven't asked recently
                     for(int i = 0; setRequested.size() < MNB_RECOVERY_QUORUM_TOTAL && i < (int)vecMasternodeRanks.size(); i++) {
                         // avoid banning
-                        if(mWeAskedForMasternodeListEntry.count(it->first) && mWeAskedForMasternodeListEntry[it->first].count(vecMasternodeRanks[i].second.addr)) continue;
+                        if(mWeAskedForMasternodeListEntry.count(it->first) && mWeAskedForMasternodeListEntry[it->first].count(vecMasternodeRanks[i].second->pdmnState->addr)) continue;
                         // didn't ask recently, ok to ask now
-                        CService addr = vecMasternodeRanks[i].second.addr;
+                        CService addr = vecMasternodeRanks[i].second->pdmnState->addr;
                         setRequested.insert(addr);
                         listScheduledMnbRequestConnections.push_back(std::make_pair(addr, hash));
                         fAskedForMnbRecovery = true;
@@ -766,33 +766,18 @@ std::map<COutPoint, CMasternode> CMasternodeMan::GetFullMasternodeMap()
     }
 }
 
-bool CMasternodeMan::GetMasternodeScores(const uint256& nBlockHash, CMasternodeMan::score_pair_vec_t& vecMasternodeScoresRet, int nMinProtocol)
+bool CMasternodeMan::GetMasternodeScores(const uint256& nBlockHash, CMasternodeMan::score_pair_vec_t& vecMasternodeScoresRet)
 {
     AssertLockHeld(cs);
 
     vecMasternodeScoresRet.clear();
 
-    if (deterministicMNManager->IsDIP3Active()) {
-        auto mnList = deterministicMNManager->GetListAtChainTip();
-        auto scores = mnList.CalculateScores(nBlockHash);
-        for (const auto& p : scores) {
-            auto* mn = Find(p.second->collateralOutpoint);
-            vecMasternodeScoresRet.emplace_back(p.first, mn);
-        }
-    } else {
-        if (!masternodeSync.IsMasternodeListSynced())
-            return false;
-
-        if (mapMasternodes.empty())
-            return false;
-
-        // calculate scores
-        for (const auto& mnpair : mapMasternodes) {
-            if (mnpair.second.nProtocolVersion >= nMinProtocol) {
-                vecMasternodeScoresRet.push_back(std::make_pair(mnpair.second.CalculateScore(nBlockHash), &mnpair.second));
-            }
-        }
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+    auto scores = mnList.CalculateScores(nBlockHash);
+    for (const auto& p : scores) {
+        vecMasternodeScoresRet.emplace_back(p.first, p.second);
     }
+
     sort(vecMasternodeScoresRet.rbegin(), vecMasternodeScoresRet.rend(), CompareScoreMN());
     return !vecMasternodeScoresRet.empty();
 }
@@ -820,13 +805,13 @@ bool CMasternodeMan::GetMasternodeRank(const COutPoint& outpoint, int& nRankRet,
     LOCK(cs);
 
     score_pair_vec_t vecMasternodeScores;
-    if (!GetMasternodeScores(blockHashRet, vecMasternodeScores, nMinProtocol))
+    if (!GetMasternodeScores(blockHashRet, vecMasternodeScores))
         return false;
 
     int nRank = 0;
     for (const auto& scorePair : vecMasternodeScores) {
         nRank++;
-        if(scorePair.second->outpoint == outpoint) {
+        if(scorePair.second->collateralOutpoint == outpoint) {
             nRankRet = nRank;
             return true;
         }
@@ -852,13 +837,13 @@ bool CMasternodeMan::GetMasternodeRanks(CMasternodeMan::rank_pair_vec_t& vecMast
     LOCK(cs);
 
     score_pair_vec_t vecMasternodeScores;
-    if (!GetMasternodeScores(nBlockHash, vecMasternodeScores, nMinProtocol))
+    if (!GetMasternodeScores(nBlockHash, vecMasternodeScores))
         return false;
 
     int nRank = 0;
     for (const auto& scorePair : vecMasternodeScores) {
         nRank++;
-        vecMasternodeRanksRet.push_back(std::make_pair(nRank, *scorePair.second));
+        vecMasternodeRanksRet.push_back(std::make_pair(nRank, scorePair.second));
     }
 
     return true;
@@ -1188,7 +1173,7 @@ void CMasternodeMan::DoFullVerificationStep(CConnman& connman)
                         (int)MAX_POSE_RANK);
             return;
         }
-        if(rankPair.second.outpoint == activeMasternodeInfo.outpoint) {
+        if(rankPair.second->collateralOutpoint == activeMasternodeInfo.outpoint) {
             nMyRank = rankPair.first;
             LogPrint("masternode", "CMasternodeMan::DoFullVerificationStep -- Found self at rank %d/%d, verifying up to %d masternodes\n",
                         nMyRank, nRanksTotal, (int)MAX_POSE_CONNECTIONS);
@@ -1218,8 +1203,8 @@ void CMasternodeMan::DoFullVerificationStep(CConnman& connman)
             continue;
         }
         LogPrint("masternode", "CMasternodeMan::DoFullVerificationStep -- Verifying masternode %s rank %d/%d address %s\n",
-                    it->second.outpoint.ToStringShort(), it->first, nRanksTotal, it->second.addr.ToString());
-        CAddress addr = CAddress(it->second.addr, NODE_NETWORK);
+                    it->second->collateralOutpoint.ToStringShort(), it->first, nRanksTotal, it->second->pdmnState->addr.ToString());
+        CAddress addr = CAddress(it->second->pdmnState->addr, NODE_NETWORK);
         if(CheckVerifyRequestAddr(addr, connman)) {
             vAddr.push_back(addr);
             if((int)vAddr.size() >= MAX_POSE_CONNECTIONS) break;

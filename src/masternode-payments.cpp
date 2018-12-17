@@ -1046,7 +1046,7 @@ void CMasternodePayments::CheckBlockVotes(int nBlockHeight)
                                               voteHash.ToString());
                         continue;
                     }
-                    if (itVote->second.masternodeOutpoint == mn.second.outpoint) {
+                    if (itVote->second.masternodeOutpoint == mn.second->collateralOutpoint) {
                         payee = itVote->second.payee;
                         found = true;
                         break;
@@ -1061,12 +1061,12 @@ void CMasternodePayments::CheckBlockVotes(int nBlockHeight)
             CBitcoinAddress address2(address1);
 
             debugStr += strprintf("    - %s - voted for %s\n",
-                                  mn.second.outpoint.ToStringShort(), address2.ToString());
+                                  mn.second->collateralOutpoint.ToStringShort(), address2.ToString());
         } else {
-            mapMasternodesDidNotVote.emplace(mn.second.outpoint, 0).first->second++;
+            mapMasternodesDidNotVote.emplace(mn.second->collateralOutpoint, 0).first->second++;
 
             debugStr += strprintf("    - %s - no vote received\n",
-                                  mn.second.outpoint.ToStringShort());
+                                  mn.second->collateralOutpoint.ToStringShort());
         }
 
         if (++i >= MNPAYMENTS_SIGNATURES_TOTAL) break;
