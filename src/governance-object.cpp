@@ -116,7 +116,9 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         return false;
     }
 
-    if (!mnodeman.Has(vote.GetMasternodeOutpoint())) {
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+
+    if (!mnList.HasValidMNByCollateral(vote.GetMasternodeOutpoint())) {
         std::ostringstream ostr;
         ostr << "CGovernanceObject::ProcessVote -- Masternode " << vote.GetMasternodeOutpoint().ToStringShort() << " not found";
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_WARNING);
@@ -212,9 +214,11 @@ void CGovernanceObject::ClearMasternodeVotes()
 {
     LOCK(cs);
 
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+
     vote_m_it it = mapCurrentMNVotes.begin();
     while (it != mapCurrentMNVotes.end()) {
-        if (!mnodeman.Has(it->first)) {
+        if (!mnList.HasValidMNByCollateral(it->first)) {
             fileVotes.RemoveVotesFromMasternode(it->first);
             mapCurrentMNVotes.erase(it++);
         } else {
@@ -812,6 +816,7 @@ void CGovernanceObject::UpdateSentinelVariables()
 void CGovernanceObject::CheckOrphanVotes(CConnman& connman)
 {
     int64_t nNow = GetAdjustedTime();
+    auto mnList = deterministicMNManager->GetListAtChainTip();
     const vote_cmm_t::list_t& listVotes = cmmapOrphanVotes.GetItemList();
     vote_cmm_t::list_cit it = listVotes.begin();
     while (it != listVotes.end()) {
@@ -821,7 +826,7 @@ void CGovernanceObject::CheckOrphanVotes(CConnman& connman)
         const CGovernanceVote& vote = pairVote.first;
         if (pairVote.second < nNow) {
             fRemove = true;
-        } else if (!mnodeman.Has(vote.GetMasternodeOutpoint())) {
+        } else if (!mnList.HasValidMNByCollateral(vote.GetMasternodeOutpoint())) {
             ++it;
             continue;
         }

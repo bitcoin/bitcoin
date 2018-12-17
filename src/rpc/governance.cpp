@@ -261,7 +261,8 @@ UniValue gobject_submit(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Must wait for client to sync with masternode network. Try again in a minute or so.");
     }
 
-    bool fMnFound = mnodeman.Has(activeMasternodeInfo.outpoint);
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+    bool fMnFound = mnList.HasValidMNByCollateral(activeMasternodeInfo.outpoint);
 
     DBG( std::cout << "gobject: submit activeMasternodeInfo.keyIDOperator = " << activeMasternodeInfo.legacyKeyIDOperator.ToString()
          << ", outpoint = " << activeMasternodeInfo.outpoint.ToStringShort()

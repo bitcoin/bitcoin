@@ -1029,7 +1029,9 @@ bool CTxLockRequest::IsSimple() const
 
 bool CTxLockVote::IsValid(CNode* pnode, CConnman& connman) const
 {
-    if (!mnodeman.Has(outpointMasternode)) {
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+
+    if (!mnList.HasValidMNByCollateral(outpointMasternode)) {
         LogPrint("instantsend", "CTxLockVote::IsValid -- Unknown masternode %s\n", outpointMasternode.ToStringShort());
         mnodeman.AskForMN(pnode, outpointMasternode, connman);
         return false;
