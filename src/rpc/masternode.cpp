@@ -270,29 +270,12 @@ UniValue masternode_count(const JSONRPCRequest& request)
 
 UniValue GetNextMasternodeForPayment(int heightShift)
 {
-    int nCount;
-    int nHeight;
-    masternode_info_t mnInfo;
-    CBlockIndex* pindex = NULL;
-    {
-        LOCK(cs_main);
-        pindex = chainActive.Tip();
-    }
-
-    nHeight = pindex->nHeight + heightShift;
-    mnodeman.UpdateLastPaid(pindex);
-
-    CScript payeeScript;
-    if (deterministicMNManager->IsDIP3Active()) {
-        auto payee = deterministicMNManager->GetListAtChainTip().GetMNPayee();
-        if (!payee || !mnodeman.GetMasternodeInfo(payee->proTxHash, mnInfo))
-            return "unknown";
-        payeeScript = payee->pdmnState->scriptPayout;
-    } else {
-        if (!mnodeman.GetNextMasternodeInQueueForPayment(nHeight, true, nCount, mnInfo))
-            return "unknown";
-        payeeScript = GetScriptForDestination(mnInfo.keyIDCollateralAddress);
-    }
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+    auto payees = mnList.GetProjectedMNPayees(heightShift);
+    if (payees.empty())
+        return "unknown";
+    auto payee = payees[heightShift - 9];
+    CScript payeeScript = payee->pdmnState->scriptPayout;
 
     CTxDestination payeeDest;
     CBitcoinAddress payeeAddr;
@@ -302,13 +285,11 @@ UniValue GetNextMasternodeForPayment(int heightShift)
 
     UniValue obj(UniValue::VOBJ);
 
-    obj.push_back(Pair("height",        nHeight));
-    obj.push_back(Pair("IP:port",       mnInfo.addr.ToString()));
-    obj.push_back(Pair("protocol",      mnInfo.nProtocolVersion));
-    obj.push_back(Pair("outpoint",      mnInfo.outpoint.ToStringShort()));
+    obj.push_back(Pair("height",        mnList.GetHeight() + heightShift));
+    obj.push_back(Pair("IP:port",       payee->pdmnState->addr.ToString()));
+    obj.push_back(Pair("proTxHash",     payee->proTxHash.ToString()));
+    obj.push_back(Pair("outpoint",      payee->collateralOutpoint.ToStringShort()));
     obj.push_back(Pair("payee",         payeeAddr.IsValid() ? payeeAddr.ToString() : "UNKNOWN"));
-    obj.push_back(Pair("lastseen",      mnInfo.nTimeLastPing));
-    obj.push_back(Pair("activeseconds", mnInfo.nTimeLastPing - mnInfo.sigTime));
     return obj;
 }
 
