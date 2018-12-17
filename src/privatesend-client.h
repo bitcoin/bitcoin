@@ -248,7 +248,7 @@ public:
     void ProcessPendingDsaRequest(CConnman& connman);
 
     void AddUsedMasternode(const COutPoint& outpointMn);
-    masternode_info_t GetNotUsedMasternode();
+    CDeterministicMNCPtr GetRandomNotUsedMasternode();
 
     void UpdatedSuccessBlock();
 

@@ -991,9 +991,43 @@ void CPrivateSendClientManager::AddUsedMasternode(const COutPoint& outpointMn)
     vecMasternodesUsed.push_back(outpointMn);
 }
 
-masternode_info_t CPrivateSendClientManager::GetNotUsedMasternode()
+CDeterministicMNCPtr CPrivateSendClientManager::GetRandomNotUsedMasternode()
 {
-    return mnodeman.FindRandomNotInVec(vecMasternodesUsed, MIN_PRIVATESEND_PEER_PROTO_VERSION);
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+
+    int nCountEnabled = mnList.GetValidMNsCount();
+    int nCountNotExcluded = nCountEnabled - vecMasternodesUsed.size();
+
+    LogPrintf("CPrivateSendClientManager::%s -- %d enabled masternodes, %d masternodes to choose from\n", __func__, nCountEnabled, nCountNotExcluded);
+    if(nCountNotExcluded < 1) {
+        return nullptr;
+    }
+
+    // fill a vector
+    std::vector<CDeterministicMNCPtr> vpMasternodesShuffled;
+    vpMasternodesShuffled.reserve((size_t)nCountEnabled);
+    mnList.ForEachMN(true, [&](const CDeterministicMNCPtr& dmn) {
+        vpMasternodesShuffled.emplace_back(dmn);
+    });
+
+    FastRandomContext insecure_rand;
+    // shuffle pointers
+    std::random_shuffle(vpMasternodesShuffled.begin(), vpMasternodesShuffled.end(), insecure_rand);
+
+    std::set<COutPoint> excludeSet(vecMasternodesUsed.begin(), vecMasternodesUsed.end());
+
+    // loop through
+    for (const auto& dmn : vpMasternodesShuffled) {
+        if (excludeSet.count(dmn->collateralOutpoint)) {
+            continue;
+        }
+
+        LogPrint("masternode", "CPrivateSendClientManager::%s -- found, masternode=%s\n", __func__, dmn->collateralOutpoint.ToStringShort());
+        return dmn;
+    }
+
+    LogPrint("masternode", "CPrivateSendClientManager::%s -- failed\n", __func__);
+    return nullptr;
 }
 
 bool CPrivateSendClientSession::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, CConnman& connman)
