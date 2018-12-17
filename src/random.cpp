@@ -55,7 +55,7 @@
     std::abort();
 }
 
-static inline int64_t GetPerformanceCounter()
+static inline int64_t GetPerformanceCounter() noexcept
 {
     // Read the hardware time stamp counter when available.
     // See https://en.wikipedia.org/wiki/Time_Stamp_Counter for more information.
@@ -105,7 +105,7 @@ static void InitHardwareRand() {}
 static void ReportHardwareRand() {}
 #endif
 
-static bool GetHardwareRand(unsigned char* ent32) {
+static bool GetHardwareRand(unsigned char* ent32) noexcept {
 #if defined(__x86_64__) || defined(__amd64__) || defined(__i386__)
     if (rdrand_supported) {
         uint8_t ok;
@@ -285,7 +285,7 @@ struct RNGState {
     bool m_strongly_seeded GUARDED_BY(m_mutex) = false;
     std::unique_ptr<Mutex[]> m_mutex_openssl;
 
-    RNGState()
+    RNGState() noexcept
     {
         InitHardwareRand();
 
@@ -313,7 +313,7 @@ struct RNGState {
      *
      * If this function has never been called with strong_seed = true, false is returned.
      */
-    bool MixExtract(unsigned char* out, size_t num, CSHA512&& hasher, bool strong_seed)
+    bool MixExtract(unsigned char* out, size_t num, CSHA512&& hasher, bool strong_seed) noexcept
     {
         assert(num <= 32);
         unsigned char buf[64];
@@ -344,7 +344,7 @@ struct RNGState {
     }
 };
 
-RNGState& GetRNGState()
+RNGState& GetRNGState() noexcept
 {
     // This C++11 idiom relies on the guarantee that static variable are initialized
     // on first call, even when multiple parallel calls are permitted.
@@ -364,13 +364,28 @@ void LockingCallbackOpenSSL(int mode, int i, const char* file, int line) NO_THRE
     }
 }
 
-static void SeedTimestamp(CSHA512& hasher)
+/* A note on the use of noexcept in the seeding functions below:
+ *
+ * None of the RNG code should ever throw any exception, with the sole exception
+ * of MilliSleep in SeedSleep, which can (and does) support interruptions which
+ * cause a boost::thread_interrupted to be thrown.
+ *
+ * This means that SeedSleep, and all functions that invoke it are throwing.
+ * However, we know that GetRandBytes() and GetStrongRandBytes() never trigger
+ * this sleeping logic, so they are noexcept. The same is true for all the
+ * GetRand*() functions that use GetRandBytes() indirectly.
+ *
+ * TODO: After moving away from interruptible boost-based thread management,
+ * everything can become noexcept here.
+ */
+
+static void SeedTimestamp(CSHA512& hasher) noexcept
 {
     int64_t perfcounter = GetPerformanceCounter();
     hasher.Write((const unsigned char*)&perfcounter, sizeof(perfcounter));
 }
 
-static void SeedFast(CSHA512& hasher)
+static void SeedFast(CSHA512& hasher) noexcept
 {
     unsigned char buffer[32];
 
@@ -386,7 +401,7 @@ static void SeedFast(CSHA512& hasher)
     SeedTimestamp(hasher);
 }
 
-static void SeedSlow(CSHA512& hasher)
+static void SeedSlow(CSHA512& hasher) noexcept
 {
     unsigned char buffer[32];
 
@@ -426,7 +441,7 @@ static void SeedSleep(CSHA512& hasher)
     RandAddSeedPerfmon(hasher);
 }
 
-static void SeedStartup(CSHA512& hasher)
+static void SeedStartup(CSHA512& hasher) noexcept
 {
 #ifdef WIN32
     RAND_screen();
@@ -482,11 +497,11 @@ static void ProcRand(unsigned char* out, int num, RNGLevel level)
     }
 }
 
-void GetRandBytes(unsigned char* buf, int num) { ProcRand(buf, num, RNGLevel::FAST); }
-void GetStrongRandBytes(unsigned char* buf, int num) { ProcRand(buf, num, RNGLevel::SLOW); }
+void GetRandBytes(unsigned char* buf, int num) noexcept { ProcRand(buf, num, RNGLevel::FAST); }
+void GetStrongRandBytes(unsigned char* buf, int num) noexcept { ProcRand(buf, num, RNGLevel::SLOW); }
 void RandAddSeedSleep() { ProcRand(nullptr, 0, RNGLevel::SLEEP); }
 
-uint64_t GetRand(uint64_t nMax)
+uint64_t GetRand(uint64_t nMax) noexcept
 {
     if (nMax == 0)
         return 0;
@@ -501,12 +516,12 @@ uint64_t GetRand(uint64_t nMax)
     return (nRand % nMax);
 }
 
-int GetRandInt(int nMax)
+int GetRandInt(int nMax) noexcept
 {
     return GetRand(nMax);
 }
 
-uint256 GetRandHash()
+uint256 GetRandHash() noexcept
 {
     uint256 hash;
     GetRandBytes((unsigned char*)&hash, sizeof(hash));
@@ -520,7 +535,7 @@ void FastRandomContext::RandomSeed()
     requires_seed = false;
 }
 
-uint256 FastRandomContext::rand256()
+uint256 FastRandomContext::rand256() noexcept
 {
     if (bytebuf_size < 32) {
         FillByteBuffer();
@@ -541,7 +556,7 @@ std::vector<unsigned char> FastRandomContext::randbytes(size_t len)
     return ret;
 }
 
-FastRandomContext::FastRandomContext(const uint256& seed) : requires_seed(false), bytebuf_size(0), bitbuf_size(0)
+FastRandomContext::FastRandomContext(const uint256& seed) noexcept : requires_seed(false), bytebuf_size(0), bitbuf_size(0)
 {
     rng.SetKey(seed.begin(), 32);
 }
@@ -592,7 +607,7 @@ bool Random_SanityCheck()
     return true;
 }
 
-FastRandomContext::FastRandomContext(bool fDeterministic) : requires_seed(!fDeterministic), bytebuf_size(0), bitbuf_size(0)
+FastRandomContext::FastRandomContext(bool fDeterministic) noexcept : requires_seed(!fDeterministic), bytebuf_size(0), bitbuf_size(0)
 {
     if (!fDeterministic) {
         return;
