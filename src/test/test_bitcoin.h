@@ -26,6 +26,13 @@ std::ostream& operator<<(typename std::enable_if<std::is_enum<T>::value, std::os
     return stream << static_cast<typename std::underlying_type<T>::type>(e);
 }
 
+/**
+ * This global and the helpers that use it are not thread-safe.
+ *
+ * If thread-safety is needed, the global could be made thread_local (given
+ * that thread_local is supported on all architectures we support) or a
+ * per-thread instance could be used in the multi-threaded test.
+ */
 extern FastRandomContext g_insecure_rand_ctx;
 
 static inline void SeedInsecureRand(bool deterministic = false)
