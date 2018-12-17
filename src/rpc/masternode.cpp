@@ -136,26 +136,20 @@ void masternode_list_help()
             "2. \"filter\"    (string, optional) Filter results. Partial match by outpoint by default in all modes,\n"
             "                                    additional matches in some modes are also available\n"
             "\nAvailable modes:\n"
-            "  activeseconds  - Print number of seconds masternode recognized by the network as enabled\n"
-            "                   (since latest issued \"masternode start/start-many/start-alias\")\n"
             "  addr           - Print ip address associated with a masternode (can be additionally filtered, partial match)\n"
-            "  daemon         - Print daemon version of a masternode (can be additionally filtered, exact match)\n"
-            "  full           - Print info in format 'status protocol payee lastseen activeseconds lastpaidtime lastpaidblock IP'\n"
+            "  full           - Print info in format 'status payee lastpaidtime lastpaidblock IP'\n"
             "                   (can be additionally filtered, partial match)\n"
-            "  info           - Print info in format 'status protocol payee lastseen activeseconds sentinelversion sentinelstate IP'\n"
+            "  info           - Print info in format 'status payee IP'\n"
             "                   (can be additionally filtered, partial match)\n"
             "  json           - Print info in JSON format (can be additionally filtered, partial match)\n"
             "  lastpaidblock  - Print the last block height a node was paid on the network\n"
             "  lastpaidtime   - Print the last time a node was paid on the network\n"
-            "  lastseen       - Print timestamp of when a masternode was last seen on the network\n"
             "  payee          - Print Dash address associated with a masternode (can be additionally filtered,\n"
             "                   partial match)\n"
-            "  protocol       - Print protocol of a masternode (can be additionally filtered, exact match)\n"
             "  keyid          - Print the masternode (not collateral) key id\n"
             "  rank           - Print rank of a masternode based on current block\n"
-            "  sentinel       - Print sentinel version of a masternode (can be additionally filtered, exact match)\n"
-            "  status         - Print masternode status: PRE_ENABLED / ENABLED / EXPIRED / SENTINEL_PING_EXPIRED / NEW_START_REQUIRED /\n"
-            "                   UPDATE_REQUIRED / POSE_BAN / OUTPOINT_SPENT (can be additionally filtered, partial match)\n"
+            "  status         - Print masternode status: ENABED / POSE_BAN / OUTPOINT_SPENT\n"
+            "                   (can be additionally filtered, partial match)\n"
         );
 }
 
@@ -819,10 +813,10 @@ UniValue masternodelist(const JSONRPCRequest& request)
     if (request.params.size() == 2) strFilter = request.params[1].get_str();
 
     if (request.fHelp || (
-                strMode != "activeseconds" && strMode != "addr" && strMode != "daemon" && strMode != "full" && strMode != "info" && strMode != "json" &&
-                strMode != "lastseen" && strMode != "lastpaidtime" && strMode != "lastpaidblock" &&
-                strMode != "protocol" && strMode != "payee" && strMode != "pubkey" &&
-                strMode != "rank" && strMode != "sentinel" && strMode != "status"))
+                strMode != "addr" && strMode != "full" && strMode != "info" && strMode != "json" &&
+                strMode != "lastpaidtime" && strMode != "lastpaidblock" &&
+                strMode != "payee" && strMode != "pubkey" &&
+                strMode != "rank" && strMode != "status"))
     {
         masternode_list_help();
     }
@@ -867,32 +861,16 @@ UniValue masternodelist(const JSONRPCRequest& request)
                 payeeStr = CBitcoinAddress(payeeDest).ToString();
             }
 
-            if (strMode == "activeseconds") {
-                if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) continue;
-                obj.push_back(Pair(strOutpoint, (int64_t)(mn.lastPing.sigTime - mn.sigTime)));
-            } else if (strMode == "addr") {
+            if (strMode == "addr") {
                 std::string strAddress = mn.addr.ToString();
                 if (strFilter !="" && strAddress.find(strFilter) == std::string::npos &&
                     strOutpoint.find(strFilter) == std::string::npos) continue;
                 obj.push_back(Pair(strOutpoint, strAddress));
-            } else if (strMode == "daemon") {
-                std::string strDaemon = mn.lastPing.GetDaemonString();
-                if (strFilter !="" && strDaemon.find(strFilter) == std::string::npos &&
-                    strOutpoint.find(strFilter) == std::string::npos) continue;
-                obj.push_back(Pair(strOutpoint, strDaemon));
-            } else if (strMode == "sentinel") {
-                std::string strSentinel = mn.lastPing.GetSentinelString();
-                if (strFilter !="" && strSentinel.find(strFilter) == std::string::npos &&
-                    strOutpoint.find(strFilter) == std::string::npos) continue;
-                obj.push_back(Pair(strOutpoint, strSentinel));
             } else if (strMode == "full") {
                 std::ostringstream streamFull;
                 streamFull << std::setw(18) <<
                                mn.GetStatus() << " " <<
-                               mn.nProtocolVersion << " " <<
                                payeeStr << " " <<
-                               (int64_t)mn.lastPing.sigTime << " " << std::setw(8) <<
-                               (int64_t)(mn.lastPing.sigTime - mn.sigTime) << " " << std::setw(10) <<
                                mn.GetLastPaidTime() << " "  << std::setw(6) <<
                                mn.GetLastPaidBlock() << " " <<
                                mn.addr.ToString();
@@ -904,12 +882,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
                 std::ostringstream streamInfo;
                 streamInfo << std::setw(18) <<
                                mn.GetStatus() << " " <<
-                               mn.nProtocolVersion << " " <<
                                payeeStr << " " <<
-                               (int64_t)mn.lastPing.sigTime << " " << std::setw(8) <<
-                               (int64_t)(mn.lastPing.sigTime - mn.sigTime) << " " <<
-                               mn.lastPing.GetSentinelString() << " "  <<
-                               (mn.lastPing.fSentinelIsCurrent ? "current" : "expired") << " " <<
                                mn.addr.ToString();
                 std::string strInfo = streamInfo.str();
                 if (strFilter !="" && strInfo.find(strFilter) == std::string::npos &&
@@ -920,12 +893,6 @@ UniValue masternodelist(const JSONRPCRequest& request)
                 streamInfo <<  mn.addr.ToString() << " " <<
                                CBitcoinAddress(mn.pubKeyCollateralAddress.GetID()).ToString() << " " <<
                                mn.GetStatus() << " " <<
-                               mn.nProtocolVersion << " " <<
-                               mn.lastPing.nDaemonVersion << " " <<
-                               mn.lastPing.GetSentinelString() << " " <<
-                               (mn.lastPing.fSentinelIsCurrent ? "current" : "expired") << " " <<
-                               (int64_t)mn.lastPing.sigTime << " " <<
-                               (int64_t)(mn.lastPing.sigTime - mn.sigTime) << " " <<
                                mn.GetLastPaidTime() << " " <<
                                mn.GetLastPaidBlock();
                 std::string strInfo = streamInfo.str();
@@ -935,12 +902,6 @@ UniValue masternodelist(const JSONRPCRequest& request)
                 objMN.push_back(Pair("address", mn.addr.ToString()));
                 objMN.push_back(Pair("payee", CBitcoinAddress(mn.pubKeyCollateralAddress.GetID()).ToString()));
                 objMN.push_back(Pair("status", mn.GetStatus()));
-                objMN.push_back(Pair("protocol", mn.nProtocolVersion));
-                objMN.push_back(Pair("daemonversion", mn.lastPing.GetDaemonString()));
-                objMN.push_back(Pair("sentinelversion", mn.lastPing.GetSentinelString()));
-                objMN.push_back(Pair("sentinelstate", (mn.lastPing.fSentinelIsCurrent ? "current" : "expired")));
-                objMN.push_back(Pair("lastseen", (int64_t)mn.lastPing.sigTime));
-                objMN.push_back(Pair("activeseconds", (int64_t)(mn.lastPing.sigTime - mn.sigTime)));
                 objMN.push_back(Pair("lastpaidtime", mn.GetLastPaidTime()));
                 objMN.push_back(Pair("lastpaidblock", mn.GetLastPaidBlock()));
                 obj.push_back(Pair(strOutpoint, objMN));
@@ -950,17 +911,10 @@ UniValue masternodelist(const JSONRPCRequest& request)
             } else if (strMode == "lastpaidtime") {
                 if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) continue;
                 obj.push_back(Pair(strOutpoint, mn.GetLastPaidTime()));
-            } else if (strMode == "lastseen") {
-                if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) continue;
-                obj.push_back(Pair(strOutpoint, (int64_t)mn.lastPing.sigTime));
             } else if (strMode == "payee") {
                 if (strFilter !="" && payeeStr.find(strFilter) == std::string::npos &&
                     strOutpoint.find(strFilter) == std::string::npos) continue;
                 obj.push_back(Pair(strOutpoint, payeeStr));
-            } else if (strMode == "protocol") {
-                if (strFilter !="" && strFilter != strprintf("%d", mn.nProtocolVersion) &&
-                    strOutpoint.find(strFilter) == std::string::npos) continue;
-                obj.push_back(Pair(strOutpoint, mn.nProtocolVersion));
             } else if (strMode == "keyIDOwner") {
                 if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) continue;
                 obj.push_back(Pair(strOutpoint, HexStr(mn.keyIDOwner)));
