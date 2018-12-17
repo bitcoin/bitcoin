@@ -1121,10 +1121,11 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
         }
         AddToSpends(hash);
 
+        auto mnList = deterministicMNManager->GetListAtChainTip();
         for(unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
             if (IsMine(wtx.tx->vout[i]) && !IsSpent(hash, i)) {
                 setWalletUTXO.insert(COutPoint(hash, i));
-                if (deterministicMNManager->IsProTxWithCollateral(wtx.tx, i) || deterministicMNManager->HasMNCollateralAtChainTip(COutPoint(hash, i))) {
+                if (deterministicMNManager->IsProTxWithCollateral(wtx.tx, i) || mnList.HasMNByCollateral(COutPoint(hash, i))) {
                     LockCoin(COutPoint(hash, i));
                 }
             }
@@ -3989,11 +3990,13 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
 // This avoids accidential spending of collaterals. They can still be unlocked manually if a spend is really intended.
 void CWallet::AutoLockMasternodeCollaterals()
 {
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+
     LOCK2(cs_main, cs_wallet);
     for (const auto& pair : mapWallet) {
         for (unsigned int i = 0; i < pair.second.tx->vout.size(); ++i) {
             if (IsMine(pair.second.tx->vout[i]) && !IsSpent(pair.first, i)) {
-                if (deterministicMNManager->IsProTxWithCollateral(pair.second.tx, i) || deterministicMNManager->HasMNCollateralAtChainTip(COutPoint(pair.first, i))) {
+                if (deterministicMNManager->IsProTxWithCollateral(pair.second.tx, i) || mnList.HasMNByCollateral(COutPoint(pair.first, i))) {
                     LockCoin(COutPoint(pair.first, i));
                 }
             }
@@ -4643,11 +4646,13 @@ void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts)
 
 void CWallet::ListProTxCoins(std::vector<COutPoint>& vOutpts)
 {
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+
     AssertLockHeld(cs_wallet);
     for (const auto &o : setWalletUTXO) {
         if (mapWallet.count(o.hash)) {
             const auto &p = mapWallet[o.hash];
-            if (deterministicMNManager->IsProTxWithCollateral(p.tx, o.n) || deterministicMNManager->HasMNCollateralAtChainTip(o)) {
+            if (deterministicMNManager->IsProTxWithCollateral(p.tx, o.n) || mnList.HasMNByCollateral(o)) {
                 vOutpts.emplace_back(o);
             }
         }

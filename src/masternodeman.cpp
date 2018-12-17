@@ -643,7 +643,7 @@ bool CMasternodeMan::Has(const COutPoint& outpoint)
 {
     LOCK(cs);
     if (deterministicMNManager->IsDIP3Active()) {
-        return deterministicMNManager->HasValidMNCollateralAtChainTip(outpoint);
+        return deterministicMNManager->GetListAtChainTip().HasValidMNByCollateral(outpoint);
     } else {
         return mapMasternodes.find(outpoint) != mapMasternodes.end();
     }
