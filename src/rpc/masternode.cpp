@@ -831,21 +831,31 @@ UniValue masternodelist(const JSONRPCRequest& request)
     }
 
     UniValue obj(UniValue::VOBJ);
-    std::map<COutPoint, CMasternode> mapMasternodes = mnodeman.GetFullMasternodeMap();
-    for (const auto& mnpair : mapMasternodes) {
-        CMasternode mn = mnpair.second;
-        std::string strOutpoint = mnpair.first.ToStringShort();
 
-        CScript payeeScript;
-        if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
-            auto dmn = deterministicMNManager->GetListAtChainTip().GetMNByCollateral(mn.outpoint);
-            if (dmn) {
-                payeeScript = dmn->pdmnState->scriptPayout;
-            }
-        } else {
-            payeeScript = GetScriptForDestination(mn.keyIDCollateralAddress);
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+    auto dmnToStatus = [&](const CDeterministicMNCPtr& dmn) {
+        if (mnList.IsMNValid(dmn)) {
+            return "ENABLED";
+        }
+        if (mnList.IsMNPoSeBanned(dmn)) {
+            return "POSE_BANNED";
+        }
+        return "UNKNOWN";
+    };
+    auto dmnToLastPaidTime = [&](const CDeterministicMNCPtr& dmn) {
+        if (dmn->pdmnState->nLastPaidHeight == 0) {
+            return (int)0;
         }
 
+        LOCK(cs_main);
+        const CBlockIndex* pindex = chainActive[dmn->pdmnState->nLastPaidHeight];
+        return (int)pindex->nTime;
+    };
+
+    mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
+        std::string strOutpoint = dmn->collateralOutpoint.ToStringShort();
+
+        CScript payeeScript = dmn->pdmnState->scriptPayout;
         CTxDestination payeeDest;
         std::string payeeStr = "UNKOWN";
         if (ExtractDestination(payeeScript, payeeDest)) {
@@ -853,75 +863,75 @@ UniValue masternodelist(const JSONRPCRequest& request)
         }
 
         if (strMode == "addr") {
-            std::string strAddress = mn.addr.ToString();
+            std::string strAddress = dmn->pdmnState->ToString();
             if (strFilter !="" && strAddress.find(strFilter) == std::string::npos &&
-                strOutpoint.find(strFilter) == std::string::npos) continue;
+                strOutpoint.find(strFilter) == std::string::npos) return;
             obj.push_back(Pair(strOutpoint, strAddress));
         } else if (strMode == "full") {
             std::ostringstream streamFull;
             streamFull << std::setw(18) <<
-                           mn.GetStatus() << " " <<
+                           dmnToStatus(dmn) << " " <<
                            payeeStr << " " <<
-                           mn.GetLastPaidTime() << " "  << std::setw(6) <<
-                           mn.GetLastPaidBlock() << " " <<
-                           mn.addr.ToString();
+                           dmnToLastPaidTime(dmn) << " "  << std::setw(6) <<
+                           dmn->pdmnState->nLastPaidHeight << " " <<
+                           dmn->pdmnState->addr.ToString();
             std::string strFull = streamFull.str();
             if (strFilter !="" && strFull.find(strFilter) == std::string::npos &&
-                strOutpoint.find(strFilter) == std::string::npos) continue;
+                strOutpoint.find(strFilter) == std::string::npos) return;
             obj.push_back(Pair(strOutpoint, strFull));
         } else if (strMode == "info") {
             std::ostringstream streamInfo;
             streamInfo << std::setw(18) <<
-                           mn.GetStatus() << " " <<
+                           dmnToStatus(dmn) << " " <<
                            payeeStr << " " <<
-                           mn.addr.ToString();
+                                           dmn->pdmnState->addr.ToString();
             std::string strInfo = streamInfo.str();
             if (strFilter !="" && strInfo.find(strFilter) == std::string::npos &&
-                strOutpoint.find(strFilter) == std::string::npos) continue;
+                strOutpoint.find(strFilter) == std::string::npos) return;
             obj.push_back(Pair(strOutpoint, strInfo));
         } else if (strMode == "json") {
             std::ostringstream streamInfo;
-            streamInfo <<  mn.addr.ToString() << " " <<
-                           CBitcoinAddress(mn.pubKeyCollateralAddress.GetID()).ToString() << " " <<
-                           mn.GetStatus() << " " <<
-                           mn.GetLastPaidTime() << " " <<
-                           mn.GetLastPaidBlock();
+            streamInfo <<  dmn->pdmnState->addr.ToString() << " " <<
+                           CBitcoinAddress(dmn->pdmnState->scriptPayout).ToString() << " " <<
+                           dmnToStatus(dmn) << " " <<
+                           dmnToLastPaidTime(dmn) << " " <<
+                           dmn->pdmnState->nLastPaidHeight;
             std::string strInfo = streamInfo.str();
             if (strFilter !="" && strInfo.find(strFilter) == std::string::npos &&
-                strOutpoint.find(strFilter) == std::string::npos) continue;
+                strOutpoint.find(strFilter) == std::string::npos) return;
             UniValue objMN(UniValue::VOBJ);
-            objMN.push_back(Pair("address", mn.addr.ToString()));
-            objMN.push_back(Pair("payee", CBitcoinAddress(mn.pubKeyCollateralAddress.GetID()).ToString()));
-            objMN.push_back(Pair("status", mn.GetStatus()));
-            objMN.push_back(Pair("lastpaidtime", mn.GetLastPaidTime()));
-            objMN.push_back(Pair("lastpaidblock", mn.GetLastPaidBlock()));
+            objMN.push_back(Pair("address", dmn->pdmnState->addr.ToString()));
+            objMN.push_back(Pair("payee", CBitcoinAddress(dmn->pdmnState->scriptPayout).ToString()));
+            objMN.push_back(Pair("status", dmnToStatus(dmn)));
+            objMN.push_back(Pair("lastpaidtime", dmnToLastPaidTime(dmn)));
+            objMN.push_back(Pair("lastpaidblock", dmn->pdmnState->nLastPaidHeight));
             obj.push_back(Pair(strOutpoint, objMN));
         } else if (strMode == "lastpaidblock") {
-            if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) continue;
-            obj.push_back(Pair(strOutpoint, mn.GetLastPaidBlock()));
+            if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) return;
+            obj.push_back(Pair(strOutpoint, dmn->pdmnState->nLastPaidHeight));
         } else if (strMode == "lastpaidtime") {
-            if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) continue;
-            obj.push_back(Pair(strOutpoint, mn.GetLastPaidTime()));
+            if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) return;
+            obj.push_back(Pair(strOutpoint, dmnToLastPaidTime(dmn)));
         } else if (strMode == "payee") {
             if (strFilter !="" && payeeStr.find(strFilter) == std::string::npos &&
-                strOutpoint.find(strFilter) == std::string::npos) continue;
+                strOutpoint.find(strFilter) == std::string::npos) return;
             obj.push_back(Pair(strOutpoint, payeeStr));
         } else if (strMode == "keyIDOwner") {
-            if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) continue;
-            obj.push_back(Pair(strOutpoint, HexStr(mn.keyIDOwner)));
-        } else if (strMode == "keyIDOperator") {
-            if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) continue;
-            obj.push_back(Pair(strOutpoint, HexStr(mn.legacyKeyIDOperator)));
+            if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) return;
+            obj.push_back(Pair(strOutpoint, HexStr(dmn->pdmnState->keyIDOwner)));
+        } else if (strMode == "pubKeyOperator") {
+            if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) return;
+            obj.push_back(Pair(strOutpoint, dmn->pdmnState->pubKeyOperator.ToString()));
         } else if (strMode == "keyIDVoting") {
-            if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) continue;
-            obj.push_back(Pair(strOutpoint, HexStr(mn.keyIDVoting)));
+            if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) return;
+            obj.push_back(Pair(strOutpoint, HexStr(dmn->pdmnState->keyIDVoting)));
         } else if (strMode == "status") {
-            std::string strStatus = mn.GetStatus();
+            std::string strStatus = dmnToStatus(dmn);
             if (strFilter !="" && strStatus.find(strFilter) == std::string::npos &&
-                strOutpoint.find(strFilter) == std::string::npos) continue;
+                strOutpoint.find(strFilter) == std::string::npos) return;
             obj.push_back(Pair(strOutpoint, strStatus));
         }
-    }
+    });
 
     return obj;
 }
