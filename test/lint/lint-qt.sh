@@ -10,7 +10,7 @@ export LC_ALL=C
 
 EXIT_CODE=0
 
-OUTPUT=$(git grep -E '(SIGNAL|, ?SLOT)\(' -- src/qt)
+OUTPUT=$(git grep -E '(SIGNAL|, ?SLOT)\(' -- src/qt | grep --invert-match 'QTimer::singleShot')
 if [[ ${OUTPUT} != "" ]]; then
     echo "Use Qt5 connect style in:"
     echo "$OUTPUT"
