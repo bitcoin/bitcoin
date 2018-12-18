@@ -110,7 +110,7 @@ bool autoCommit = true;
 int64_t exodus_prev = 0;
 
 //! Path for file based persistence
-boost::filesystem::path MPPersistencePath;
+boost::filesystem::path pathStateFiles;
 
 //! Flag to indicate whether Omni Core was initialized
 static int mastercoreInitialized = 0;
@@ -1643,8 +1643,8 @@ int mastercore_init()
     pDbFeeCache = new COmniFeeCache(GetDataDir() / "OMNI_feecache", fReindex);
     pDbFeeHistory = new COmniFeeHistory(GetDataDir() / "OMNI_feehistory", fReindex);
 
-    MPPersistencePath = GetDataDir() / "MP_persist";
-    TryCreateDirectory(MPPersistencePath);
+    pathStateFiles = GetDataDir() / "MP_persist";
+    TryCreateDirectory(pathStateFiles);
 
     bool wrongDBVersion = (pDbTransactionList->getDBVersion() != DB_VERSION);
 
