@@ -297,10 +297,11 @@ void GetRandBytes(unsigned char* buf, int num)
 namespace {
 struct RNGState {
     Mutex m_mutex;
-    unsigned char m_state[32] = {0};
-    uint64_t m_counter = 0;
+    unsigned char m_state[32] GUARDED_BY(m_mutex) = {0};
+    uint64_t m_counter GUARDED_BY(m_mutex) = 0;
 
-    explicit RNGState() {
+    RNGState()
+    {
         InitHardwareRand();
     }
 };
