@@ -4,7 +4,7 @@ The current precise version for Qt 5 is specified in [qt.mk](/depends/packages/q
 
 ## Compile and run
 
-See build instructions ([macOS](/doc/build-osx.md), [Windows](/doc/build-windows.md), [Unix](/doc/build-unix.md), etc).
+See build instructions ([macOS](/doc/build-macos.md), [Windows](/doc/build-windows.md), [Unix](/doc/build-unix.md), etc).
 
 To run:
 
@@ -83,7 +83,7 @@ Uncheck everything except Qt Creator during the installation process.
 
 Instructions for macOS:
 
-1. Make sure you installed everything through Homebrew mentioned in the [macOS build instructions](/doc/build-osx.md)
+1. Make sure you installed everything through Homebrew mentioned in the [macOS build instructions](/doc/build-macos.md)
 2. Use `./configure` with the `--enable-debug` flag
 3. In Qt Creator do "New Project" -> Import Project -> Import Existing Project
 4. Enter "bitcoin-qt" as project name, enter src/qt as location

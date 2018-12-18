@@ -36,7 +36,7 @@ like so:
 
 from the root of the repository.
 
-**Note**: You only need Berkeley DB if the wallet is enabled (see [*Disable-wallet mode*](/doc/build-osx.md#disable-wallet-mode)).
+**Note**: You only need Berkeley DB if the wallet is enabled (see [*Disable-wallet mode*](/doc/build-macos.md#disable-wallet-mode)).
 
 Build Bitcoin Core
 ------------------------
@@ -102,6 +102,6 @@ Other commands:
 Notes
 -----
 
-* Tested on OS X 10.10 Yosemite through macOS 10.13 High Sierra on 64-bit Intel processors only.
+* Tested on OS X 10.10 Yosemite through macOS 10.14 Mojave on 64-bit Intel processors only.
 
 * Building with downloaded Qt binaries is not officially supported. See the notes in [#7714](https://github.com/bitcoin/bitcoin/issues/7714)
