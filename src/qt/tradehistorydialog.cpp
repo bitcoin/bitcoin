@@ -313,7 +313,7 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
         std::string tempStrValue;
         {
             LOCK(cs_tally);
-            if (!p_txlistdb->getTX(hash, tempStrValue)) continue;
+            if (!pDbTransactionList->getTX(hash, tempStrValue)) continue;
         }
         std::vector<std::string> vstr;
         boost::split(vstr, tempStrValue, boost::is_any_of(":"), boost::token_compress_on);
@@ -369,7 +369,7 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
         // parse the transaction
         if (0 != ParseTransaction(wtx, blockHeight, 0, mp_obj)) continue;
         if (mp_obj.interpret_Transaction()) {
-            valid = p_txlistdb->getValidMPTX(hash);
+            valid = pDbTransactionList->getValidMPTX(hash);
             propertyIdForSale = mp_obj.getProperty();
             amountForSale = mp_obj.getAmount();
             divisibleForSale = isPropertyDivisible(propertyIdForSale);

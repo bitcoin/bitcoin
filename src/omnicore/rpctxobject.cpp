@@ -98,7 +98,7 @@ int populateRPCTransactionObject(const CTransaction& tx, const uint256& blockHas
         uint64_t tmpVout, tmpNValue, tmpPropertyId;
         {
             LOCK(cs_tally);
-            p_txlistdb->getPurchaseDetails(txid, 1, &tmpBuyer, &tmpSeller, &tmpVout, &tmpPropertyId, &tmpNValue);
+            pDbTransactionList->getPurchaseDetails(txid, 1, &tmpBuyer, &tmpSeller, &tmpVout, &tmpPropertyId, &tmpNValue);
         }
         UniValue purchases(UniValue::VARR);
         if (populateRPCDExPurchases(tx, purchases, filterAddress) <= 0) return -1;
@@ -123,7 +123,7 @@ int populateRPCTransactionObject(const CTransaction& tx, const uint256& blockHas
     bool valid = false;
     if (confirmations > 0) {
         LOCK(cs_tally);
-        valid = p_txlistdb->getValidMPTX(txid);
+        valid = pDbTransactionList->getValidMPTX(txid);
         positionInBlock = pDbTransaction->FetchTransactionPosition(txid);
     }
 
@@ -336,7 +336,7 @@ void populateRPCTypeTradeOffer(CMPTransaction& omniObj, UniValue& txobj)
         unsigned int tmptype = 0;
         uint64_t amountNew = 0;
         LOCK(cs_tally);
-        bool tmpValid = p_txlistdb->getValidMPTX(omniObj.getHash(), &tmpblock, &tmptype, &amountNew);
+        bool tmpValid = pDbTransactionList->getValidMPTX(omniObj.getHash(), &tmpblock, &tmptype, &amountNew);
         if (tmpValid && amountNew > 0) {
             amountDesired = calculateDesiredBTC(amountOffered, amountDesired, amountNew);
             amountOffered = amountNew;
@@ -421,7 +421,7 @@ void populateRPCTypeAcceptOffer(CMPTransaction& omniObj, UniValue& txobj)
     uint64_t amountNew = 0;
 
     LOCK(cs_tally);
-    bool tmpValid = p_txlistdb->getValidMPTX(omniObj.getHash(), &tmpblock, &tmptype, &amountNew);
+    bool tmpValid = pDbTransactionList->getValidMPTX(omniObj.getHash(), &tmpblock, &tmptype, &amountNew);
     if (tmpValid && amountNew > 0) amount = amountNew;
 
     txobj.push_back(Pair("propertyid", (uint64_t)propertyId));
@@ -585,7 +585,7 @@ void populateRPCExtendedTypeMetaDExTrade(const uint256& txid, uint32_t propertyI
     }
     txobj.push_back(Pair("status", MetaDEx_getStatusText(tradeStatus)));
     if (tradeStatus == TRADE_CANCELLED || tradeStatus == TRADE_CANCELLED_PART_FILLED) {
-        txobj.push_back(Pair("canceltxid", p_txlistdb->findMetaDExCancel(txid).GetHex()));
+        txobj.push_back(Pair("canceltxid", pDbTransactionList->findMetaDExCancel(txid).GetHex()));
     }
     txobj.push_back(Pair("matches", tradeArray));
 }
@@ -594,11 +594,11 @@ void populateRPCExtendedTypeMetaDExCancel(const uint256& txid, UniValue& txobj)
 {
     UniValue cancelArray(UniValue::VARR);
     LOCK(cs_tally);
-    int numberOfCancels = p_txlistdb->getNumberOfMetaDExCancels(txid);
+    int numberOfCancels = pDbTransactionList->getNumberOfMetaDExCancels(txid);
     if (0<numberOfCancels) {
         for(int refNumber = 1; refNumber <= numberOfCancels; refNumber++) {
             UniValue cancelTx(UniValue::VOBJ);
-            std::string strValue = p_txlistdb->getKeyValue(txid.ToString() + "-C" + strprintf("%d",refNumber));
+            std::string strValue = pDbTransactionList->getKeyValue(txid.ToString() + "-C" + strprintf("%d",refNumber));
             if (strValue.empty()) continue;
             std::vector<std::string> vstr;
             boost::split(vstr, strValue, boost::is_any_of(":"), boost::token_compress_on);
@@ -625,7 +625,7 @@ int populateRPCSendAllSubSends(const uint256& txid, UniValue& subSends)
     int numberOfSubSends = 0;
     {
         LOCK(cs_tally);
-        numberOfSubSends = p_txlistdb->getNumberOfSubRecords(txid);
+        numberOfSubSends = pDbTransactionList->getNumberOfSubRecords(txid);
     }
     if (numberOfSubSends <= 0) {
         PrintToLog("TXLISTDB Error: Transaction %s parsed as a send all but could not locate sub sends in txlistdb.\n", txid.GetHex());
@@ -637,7 +637,7 @@ int populateRPCSendAllSubSends(const uint256& txid, UniValue& subSends)
         int64_t amount;
         {
             LOCK(cs_tally);
-            p_txlistdb->getSendAllDetails(txid, subSend, propertyId, amount);
+            pDbTransactionList->getSendAllDetails(txid, subSend, propertyId, amount);
         }
         subSendObj.push_back(Pair("propertyid", (uint64_t)propertyId));
         subSendObj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
@@ -656,7 +656,7 @@ int populateRPCDExPurchases(const CTransaction& wtx, UniValue& purchases, std::s
     int numberOfPurchases = 0;
     {
         LOCK(cs_tally);
-        numberOfPurchases = p_txlistdb->getNumberOfSubRecords(wtx.GetHash());
+        numberOfPurchases = pDbTransactionList->getNumberOfSubRecords(wtx.GetHash());
     }
     if (numberOfPurchases <= 0) {
         PrintToLog("TXLISTDB Error: Transaction %s parsed as a DEx payment but could not locate purchases in txlistdb.\n", wtx.GetHash().GetHex());
@@ -668,7 +668,7 @@ int populateRPCDExPurchases(const CTransaction& wtx, UniValue& purchases, std::s
         uint64_t vout, nValue, propertyId;
         {
             LOCK(cs_tally);
-            p_txlistdb->getPurchaseDetails(wtx.GetHash(), purchaseNumber, &buyer, &seller, &vout, &propertyId, &nValue);
+            pDbTransactionList->getPurchaseDetails(wtx.GetHash(), purchaseNumber, &buyer, &seller, &vout, &propertyId, &nValue);
         }
         if (!filterAddress.empty() && buyer != filterAddress && seller != filterAddress) continue; // filter requested & doesn't match
         bool bIsMine = false;

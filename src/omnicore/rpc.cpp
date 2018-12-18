@@ -498,7 +498,7 @@ UniValue omni_getseedblocks(const UniValue& params, bool fHelp)
 
     {
         LOCK(cs_tally);
-        std::set<int> setSeedBlocks = p_txlistdb->GetSeedBlocks(startHeight, endHeight);
+        std::set<int> setSeedBlocks = pDbTransactionList->GetSeedBlocks(startHeight, endHeight);
         for (std::set<int>::const_iterator it = setSeedBlocks.begin(); it != setSeedBlocks.end(); ++it) {
             response.push_back(*it);
         }
@@ -619,8 +619,8 @@ UniValue mscrpc(const UniValue& params, bool fHelp)
         {
             LOCK(cs_tally);
             // display the whole CMPTxList (leveldb)
-            p_txlistdb->printAll();
-            p_txlistdb->printStats();
+            pDbTransactionList->printAll();
+            pDbTransactionList->printStats();
             break;
         }
         case 2:
@@ -657,7 +657,7 @@ UniValue mscrpc(const UniValue& params, bool fHelp)
         case 5:
         {
             LOCK(cs_tally);
-            PrintToConsole("isMPinBlockRange(%d,%d)=%s\n", extra2, extra3, p_txlistdb->isMPinBlockRange(extra2, extra3, false) ? "YES" : "NO");
+            PrintToConsole("isMPinBlockRange(%d,%d)=%s\n", extra2, extra3, pDbTransactionList->isMPinBlockRange(extra2, extra3, false) ? "YES" : "NO");
             break;
         }
         case 6:
@@ -1883,7 +1883,7 @@ UniValue omni_listblocktransactions(const UniValue& params, bool fHelp)
     LOCK(cs_tally);
 
     BOOST_FOREACH(const CTransaction&tx, block.vtx) {
-        if (p_txlistdb->exists(tx.GetHash())) {
+        if (pDbTransactionList->exists(tx.GetHash())) {
             // later we can add a verbose flag to decode here, but for now callers can send returned txids into gettransaction_MP
             // add the txid into the response as it's an MP transaction
             response.push_back(tx.GetHash().GetHex());
@@ -1922,7 +1922,7 @@ UniValue omni_listblockstransactions(const UniValue& params, bool fHelp)
 
     LOCK(cs_tally);
     {
-        p_txlistdb->GetOmniTxsInBlockRange(blockFirst, blockLast, txs);
+        pDbTransactionList->GetOmniTxsInBlockRange(blockFirst, blockLast, txs);
     }
 
     BOOST_FOREACH(const uint256& tx, txs) {
@@ -2140,8 +2140,8 @@ UniValue omni_getinfo(const UniValue& params, bool fHelp)
 
     LOCK(cs_tally);
 
-    int blockMPTransactions = p_txlistdb->getMPTransactionCountBlock(block);
-    int totalMPTransactions = p_txlistdb->getMPTransactionCountTotal();
+    int blockMPTransactions = pDbTransactionList->getMPTransactionCountBlock(block);
+    int totalMPTransactions = pDbTransactionList->getMPTransactionCountTotal();
     int totalMPTrades = pDbTradeList->getMPTradeCountTotal();
     infoResponse.push_back(Pair("block", block));
     infoResponse.push_back(Pair("blocktime", blockTime));

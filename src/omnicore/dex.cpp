@@ -516,7 +516,7 @@ int DEx_payment(const uint256& txid, unsigned int vout, const std::string& addre
         assert(update_tally_map(addressBuyer, propertyId, amountPurchased, BALANCE));
 
         bool valid = true;
-        p_txlistdb->recordPaymentTX(txid, valid, block, vout, propertyId, amountPurchased, addressBuyer, addressSeller);
+        pDbTransactionList->recordPaymentTX(txid, valid, block, vout, propertyId, amountPurchased, addressBuyer, addressSeller);
 
         rc = 0;
         PrintToLog("#######################################################\n");

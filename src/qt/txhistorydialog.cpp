@@ -271,14 +271,14 @@ int TXHistoryDialog::PopulateHistoryMap()
             int numberOfPurchases = 0;
             {
                 LOCK(cs_tally);
-                p_txlistdb->getPurchaseDetails(txHash, 1, &tmpBuyer, &tmpSeller, &tmpVout, &tmpPropertyId, &tmpNValue);
+                pDbTransactionList->getPurchaseDetails(txHash, 1, &tmpBuyer, &tmpSeller, &tmpVout, &tmpPropertyId, &tmpNValue);
             }
             bIsBuy = IsMyAddress(tmpBuyer);
-            numberOfPurchases = p_txlistdb->getNumberOfSubRecords(txHash);
+            numberOfPurchases = pDbTransactionList->getNumberOfSubRecords(txHash);
             if (0 >= numberOfPurchases) continue;
             for (int purchaseNumber = 1; purchaseNumber <= numberOfPurchases; purchaseNumber++) {
                 LOCK(cs_tally);
-                p_txlistdb->getPurchaseDetails(txHash, purchaseNumber, &tmpBuyer, &tmpSeller, &tmpVout, &tmpPropertyId, &tmpNValue);
+                pDbTransactionList->getPurchaseDetails(txHash, purchaseNumber, &tmpBuyer, &tmpSeller, &tmpVout, &tmpPropertyId, &tmpNValue);
                 total += tmpNValue;
             }
             if (!bIsBuy) {
@@ -303,7 +303,7 @@ int TXHistoryDialog::PopulateHistoryMap()
         int tmpBlock = 0;
         uint32_t type = 0;
         uint64_t amountNew = 0;
-        htxo.valid = p_txlistdb->getValidMPTX(txHash, &tmpBlock, &type, &amountNew);
+        htxo.valid = pDbTransactionList->getValidMPTX(txHash, &tmpBlock, &type, &amountNew);
         if (htxo.valid && type == MSC_TYPE_TRADE_OFFER && amountNew > 0) amount = amountNew; // override for when amount for sale has been auto-adjusted
         std::string displayAmount = FormatShortMP(mp_obj.getProperty(), amount) + getTokenLabel(mp_obj.getProperty());
         htxo.fundsMoved = true;

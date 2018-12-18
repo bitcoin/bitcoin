@@ -570,7 +570,7 @@ int mastercore::MetaDEx_CANCEL_AT_PRICE(const uint256& txid, unsigned int block,
 
             // record the cancellation
             bool bValid = true;
-            p_txlistdb->recordMetaDExCancelTX(txid, p_mdex->getHash(), bValid, block, p_mdex->getProperty(), p_mdex->getAmountRemaining());
+            pDbTransactionList->recordMetaDExCancelTX(txid, p_mdex->getHash(), bValid, block, p_mdex->getProperty(), p_mdex->getAmountRemaining());
 
             indexes->erase(iitt++);
         }
@@ -619,7 +619,7 @@ int mastercore::MetaDEx_CANCEL_ALL_FOR_PAIR(const uint256& txid, unsigned int bl
 
             // record the cancellation
             bool bValid = true;
-            p_txlistdb->recordMetaDExCancelTX(txid, p_mdex->getHash(), bValid, block, p_mdex->getProperty(), p_mdex->getAmountRemaining());
+            pDbTransactionList->recordMetaDExCancelTX(txid, p_mdex->getHash(), bValid, block, p_mdex->getProperty(), p_mdex->getAmountRemaining());
 
             indexes->erase(iitt++);
         }
@@ -676,7 +676,7 @@ int mastercore::MetaDEx_CANCEL_EVERYTHING(const uint256& txid, unsigned int bloc
 
                 // record the cancellation
                 bool bValid = true;
-                p_txlistdb->recordMetaDExCancelTX(txid, it->getHash(), bValid, block, it->getProperty(), it->getAmountRemaining());
+                pDbTransactionList->recordMetaDExCancelTX(txid, it->getHash(), bValid, block, it->getProperty(), it->getAmountRemaining());
 
                 indexes.erase(it++);
             }
@@ -787,7 +787,7 @@ int mastercore::MetaDEx_getStatus(const uint256& txid, uint32_t propertyIdForSal
     }
 
     // Return a "trade invalid" status if the trade was invalidated at parsing/interpretation (eg insufficient funds)
-    if (!p_txlistdb->getValidMPTX(txid)) return TRADE_INVALID;
+    if (!pDbTransactionList->getValidMPTX(txid)) return TRADE_INVALID;
 
     // Calculate and return the status of the trade via the amount sold and open/closed attributes.
     if (MetaDEx_isOpen(txid, propertyIdForSale)) {

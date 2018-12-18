@@ -123,7 +123,7 @@ static int reorgRecoveryMaxHeight = 0;
 //! LevelDB based storage for currencies, smart properties and tokens
 CMPSPInfo* mastercore::pDbSpInfo;
 //! LevelDB based storage for transactions, with txid as key and validity bit, and other data as value
-CMPTxList* mastercore::p_txlistdb;
+CMPTxList* mastercore::pDbTransactionList;
 //! LevelDB based storage for the MetaDEx trade history
 CMPTradeList* mastercore::pDbTradeList;
 //! LevelDB based storage for STO recipients
@@ -1524,23 +1524,23 @@ void clear_all_state()
 
     // LevelDB based storage
     pDbSpInfo->Clear();
-    p_txlistdb->Clear();
+    pDbTransactionList->Clear();
     pDbStoList->Clear();
     pDbTradeList->Clear();
     pDbTransaction->Clear();
     pDbFeeCache->Clear();
     p_feehistory->Clear();
-    assert(p_txlistdb->setDBVersion() == DB_VERSION); // new set of databases, set DB version
+    assert(pDbTransactionList->setDBVersion() == DB_VERSION); // new set of databases, set DB version
     exodus_prev = 0;
 }
 
 void RewindDBsAndState(int nHeight, int nBlockPrev = 0, bool fInitialParse = false)
 {
     // Check if any freeze related transactions would be rolled back - if so wipe the state and startclean
-    bool reorgContainsFreeze = p_txlistdb->CheckForFreezeTxs(nHeight);
+    bool reorgContainsFreeze = pDbTransactionList->CheckForFreezeTxs(nHeight);
 
     // NOTE: The blockNum parameter is inclusive, so deleteAboveBlock(1000) will delete records in block 1000 and above.
-    p_txlistdb->isMPinBlockRange(nHeight, reorgRecoveryMaxHeight, true);
+    pDbTransactionList->isMPinBlockRange(nHeight, reorgRecoveryMaxHeight, true);
     pDbTradeList->deleteAboveBlock(nHeight);
     pDbStoList->deleteAboveBlock(nHeight);
     pDbFeeCache->RollBackCache(nHeight);
@@ -1637,7 +1637,7 @@ int mastercore_init()
 
     pDbTradeList = new CMPTradeList(GetDataDir() / "MP_tradelist", fReindex);
     pDbStoList = new CMPSTOList(GetDataDir() / "MP_stolist", fReindex);
-    p_txlistdb = new CMPTxList(GetDataDir() / "MP_txlist", fReindex);
+    pDbTransactionList = new CMPTxList(GetDataDir() / "MP_txlist", fReindex);
     pDbSpInfo = new CMPSPInfo(GetDataDir() / "MP_spinfo", fReindex);
     pDbTransaction = new COmniTransactionDB(GetDataDir() / "Omni_TXDB", fReindex);
     pDbFeeCache = new COmniFeeCache(GetDataDir() / "OMNI_feecache", fReindex);
@@ -1646,7 +1646,7 @@ int mastercore_init()
     MPPersistencePath = GetDataDir() / "MP_persist";
     TryCreateDirectory(MPPersistencePath);
 
-    bool wrongDBVersion = (p_txlistdb->getDBVersion() != DB_VERSION);
+    bool wrongDBVersion = (pDbTransactionList->getDBVersion() != DB_VERSION);
 
     ++mastercoreInitialized;
 
@@ -1659,7 +1659,7 @@ int mastercore_init()
     bool noPreviousState = (nWaterlineBlock <= 0);
 
     if (startClean) {
-        assert(p_txlistdb->setDBVersion() == DB_VERSION); // new set of databases, set DB version
+        assert(pDbTransactionList->setDBVersion() == DB_VERSION); // new set of databases, set DB version
     } else if (wrongDBVersion) {
         nWaterlineBlock = -1; // force a clear_all_state and parse from start
     }
@@ -1698,13 +1698,13 @@ int mastercore_init()
     }
 
     // load feature activation messages from txlistdb and process them accordingly
-    p_txlistdb->LoadActivations(nWaterlineBlock);
+    pDbTransactionList->LoadActivations(nWaterlineBlock);
 
     // load all alerts from levelDB (and immediately expire old ones)
-    p_txlistdb->LoadAlerts(nWaterlineBlock);
+    pDbTransactionList->LoadAlerts(nWaterlineBlock);
 
     // load the state of any freeable properties and frozen addresses from levelDB
-    if (!p_txlistdb->LoadFreezeState(nWaterlineBlock)) {
+    if (!pDbTransactionList->LoadFreezeState(nWaterlineBlock)) {
         std::string strShutdownReason = "Failed to load freeze state from levelDB.  It is unsafe to continue.\n";
         PrintToLog(strShutdownReason);
         if (!GetBoolArg("-overrideforcedshutdown", false)) {
@@ -1736,9 +1736,9 @@ int mastercore_shutdown()
 {
     LOCK(cs_tally);
 
-    if (p_txlistdb) {
-        delete p_txlistdb;
-        p_txlistdb = NULL;
+    if (pDbTransactionList) {
+        delete pDbTransactionList;
+        pDbTransactionList = NULL;
     }
     if (pDbTradeList) {
         delete pDbTradeList;
@@ -1830,7 +1830,7 @@ bool mastercore_handler_tx(const CTransaction& tx, int nBlock, unsigned int idx,
         // PKT_ERROR - 2 = interpret_Transaction failed, structurally invalid payload
         if (interp_ret != PKT_ERROR - 2) {
             bool bValid = (0 <= interp_ret);
-            p_txlistdb->recordTX(tx.GetHash(), bValid, nBlock, mp_obj.getType(), mp_obj.getNewAmount());
+            pDbTransactionList->recordTX(tx.GetHash(), bValid, nBlock, mp_obj.getType(), mp_obj.getNewAmount());
             pDbTransaction->RecordTransaction(tx.GetHash(), idx, interp_ret);
         }
         fFoundTx |= (interp_ret == 0);

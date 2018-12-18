@@ -61,7 +61,7 @@ public:
 namespace mastercore
 {
     //! LevelDB based storage for transactions, with txid as key and validity bit, and other data as value
-    extern CMPTxList* p_txlistdb;
+    extern CMPTxList* pDbTransactionList;
 }
 
 
