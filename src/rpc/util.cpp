@@ -258,20 +258,19 @@ std::string RPCHelpMan::ToString() const
 
     // Oneline summary
     ret += m_name;
-    bool is_optional{false};
+    bool was_optional{false};
     for (const auto& arg : m_args) {
         ret += " ";
         if (arg.m_optional) {
-            if (!is_optional) ret += "( ";
-            is_optional = true;
+            if (!was_optional) ret += "( ";
+            was_optional = true;
         } else {
-            // Currently we still support unnamed arguments, so any argument following an optional argument must also be optional
-            // If support for positional arguments is deprecated in the future, remove this line
-            assert(!is_optional);
+            if (was_optional) ret += ") ";
+            was_optional = false;
         }
         ret += arg.ToString(/* oneline */ true);
     }
-    if (is_optional) ret += " )";
+    if (was_optional) ret += " )";
     ret += "\n";
 
     // Description
@@ -285,8 +284,7 @@ std::string RPCHelpMan::ToString() const
         if (i == 0) ret += "\nArguments:\n";
 
         // Push named argument name and description
-        const auto str_wrapper = (arg.m_type == RPCArg::Type::STR || arg.m_type == RPCArg::Type::STR_HEX) ? "\"" : "";
-        sections.m_sections.emplace_back(std::to_string(i + 1) + ". " + str_wrapper + arg.m_name + str_wrapper, arg.ToDescriptionString());
+        sections.m_sections.emplace_back(std::to_string(i + 1) + ". " + arg.m_name, arg.ToDescriptionString());
         sections.m_max_pad = std::max(sections.m_max_pad, sections.m_sections.back().m_left.size());
 
         // Recursively push nested args
