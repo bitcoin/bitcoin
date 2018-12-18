@@ -276,7 +276,7 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
                     buyer_amountGotAfterFee = buyer_amountGot - tradingFee;
 
                     // add the fee to the fee cache
-                    p_feecache->AddFee(pnew->getDesProperty(), pnew->getBlock(), tradingFee);
+                    pDbFeeCache->AddFee(pnew->getDesProperty(), pnew->getBlock(), tradingFee);
                 } else {
                     if (msc_debug_fees) PrintToLog("Skipping fee reduction for trade match %s:%s as one of the properties is Omni\n", pold->getHash().GetHex(), pnew->getHash().GetHex());
                 }

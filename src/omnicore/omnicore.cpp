@@ -131,7 +131,7 @@ CMPSTOList* mastercore::s_stolistdb;
 //! LevelDB based storage for storing Omni transaction validation and position in block data
 COmniTransactionDB* mastercore::p_OmniTXDB;
 //! LevelDB based storage for the MetaDEx fee cache
-COmniFeeCache* mastercore::p_feecache;
+COmniFeeCache* mastercore::pDbFeeCache;
 //! LevelDB based storage for the MetaDEx fee distributions
 COmniFeeHistory* mastercore::p_feehistory;
 
@@ -457,7 +457,7 @@ int64_t mastercore::getTotalTokens(uint32_t propertyId, int64_t* n_owners_total)
                 owners++;
             }
         }
-        int64_t cachedFee = p_feecache->GetCachedAmount(propertyId);
+        int64_t cachedFee = pDbFeeCache->GetCachedAmount(propertyId);
         totalTokens += cachedFee;
     }
 
@@ -590,8 +590,8 @@ uint32_t mastercore::GetNextPropertyId(bool maineco)
 // Perform any actions that need to be taken when the total number of tokens for a property ID changes
 void NotifyTotalTokensChanged(uint32_t propertyId, int block)
 {
-    p_feecache->UpdateDistributionThresholds(propertyId);
-    p_feecache->EvalCache(propertyId, block);
+    pDbFeeCache->UpdateDistributionThresholds(propertyId);
+    pDbFeeCache->EvalCache(propertyId, block);
 }
 
 void CheckWalletUpdate(bool forceUpdate)
@@ -1528,7 +1528,7 @@ void clear_all_state()
     s_stolistdb->Clear();
     t_tradelistdb->Clear();
     p_OmniTXDB->Clear();
-    p_feecache->Clear();
+    pDbFeeCache->Clear();
     p_feehistory->Clear();
     assert(p_txlistdb->setDBVersion() == DB_VERSION); // new set of databases, set DB version
     exodus_prev = 0;
@@ -1543,7 +1543,7 @@ void RewindDBsAndState(int nHeight, int nBlockPrev = 0, bool fInitialParse = fal
     p_txlistdb->isMPinBlockRange(nHeight, reorgRecoveryMaxHeight, true);
     t_tradelistdb->deleteAboveBlock(nHeight);
     s_stolistdb->deleteAboveBlock(nHeight);
-    p_feecache->RollBackCache(nHeight);
+    pDbFeeCache->RollBackCache(nHeight);
     p_feehistory->RollBackHistory(nHeight);
     reorgRecoveryMaxHeight = 0;
 
@@ -1640,7 +1640,7 @@ int mastercore_init()
     p_txlistdb = new CMPTxList(GetDataDir() / "MP_txlist", fReindex);
     _my_sps = new CMPSPInfo(GetDataDir() / "MP_spinfo", fReindex);
     p_OmniTXDB = new COmniTransactionDB(GetDataDir() / "Omni_TXDB", fReindex);
-    p_feecache = new COmniFeeCache(GetDataDir() / "OMNI_feecache", fReindex);
+    pDbFeeCache = new COmniFeeCache(GetDataDir() / "OMNI_feecache", fReindex);
     p_feehistory = new COmniFeeHistory(GetDataDir() / "OMNI_feehistory", fReindex);
 
     MPPersistencePath = GetDataDir() / "MP_persist";
@@ -1756,9 +1756,9 @@ int mastercore_shutdown()
         delete p_OmniTXDB;
         p_OmniTXDB = NULL;
     }
-    if (p_feecache) {
-        delete p_feecache;
-        p_feecache = NULL;
+    if (pDbFeeCache) {
+        delete pDbFeeCache;
+        pDbFeeCache = NULL;
     }
     if (p_feehistory) {
         delete p_feehistory;

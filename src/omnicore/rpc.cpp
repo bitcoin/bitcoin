@@ -329,7 +329,7 @@ UniValue omni_getfeetrigger(const UniValue& params, bool fHelp)
         uint32_t startPropertyId = (ecosystem == 1) ? 1 : TEST_ECO_PROPERTY_1;
         for (uint32_t itPropertyId = startPropertyId; itPropertyId < _my_sps->peekNextSPID(ecosystem); itPropertyId++) {
             if (propertyId == 0 || propertyId == itPropertyId) {
-                int64_t feeTrigger = p_feecache->GetDistributionThreshold(itPropertyId);
+                int64_t feeTrigger = pDbFeeCache->GetDistributionThreshold(itPropertyId);
                 std::string strFeeTrigger = FormatMP(itPropertyId, feeTrigger);
                 UniValue cacheObj(UniValue::VOBJ);
                 cacheObj.push_back(Pair("propertyid", (uint64_t)itPropertyId));
@@ -450,7 +450,7 @@ UniValue omni_getfeecache(const UniValue& params, bool fHelp)
         uint32_t startPropertyId = (ecosystem == 1) ? 1 : TEST_ECO_PROPERTY_1;
         for (uint32_t itPropertyId = startPropertyId; itPropertyId < _my_sps->peekNextSPID(ecosystem); itPropertyId++) {
             if (propertyId == 0 || propertyId == itPropertyId) {
-                int64_t cachedFee = p_feecache->GetCachedAmount(itPropertyId);
+                int64_t cachedFee = pDbFeeCache->GetCachedAmount(itPropertyId);
                 if (cachedFee == 0) {
                     // filter empty results unless the call specifically requested this property
                     if (propertyId != itPropertyId) continue;
@@ -711,8 +711,8 @@ UniValue mscrpc(const UniValue& params, bool fHelp)
         case 14:
         {
             LOCK(cs_tally);
-            p_feecache->printAll();
-            p_feecache->printStats();
+            pDbFeeCache->printAll();
+            pDbFeeCache->printStats();
 
             int64_t a = 1000;
             int64_t b = 1999;

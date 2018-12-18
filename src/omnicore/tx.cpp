@@ -1165,7 +1165,7 @@ int CMPTransaction::logicMath_SendToOwners()
         // v0 - do not credit the subtracted fee to any tally (ie burn the tokens)
     } else {
         // v1 - credit the subtracted fee to the fee cache
-        p_feecache->AddFee(feeProperty, block, transferFee);
+        pDbFeeCache->AddFee(feeProperty, block, transferFee);
     }
 
     // split up what was taken and distribute between all holders
