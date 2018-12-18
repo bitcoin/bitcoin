@@ -65,7 +65,11 @@ A host toolchain (`build-essential`) is necessary because some dependency
 packages (such as `protobuf`) need to build host utilities that are used in the
 build process.
 
-See also: [dependencies.md](dependencies.md).
+See [dependencies.md](dependencies.md) for a complete overview.
+
+If you want to build the windows installer with `make deploy` you need [NSIS](https://nsis.sourceforge.io/Main_Page):
+
+    sudo apt install nsis
 
 ## Building for 64-bit Windows
 
@@ -138,6 +142,10 @@ as they appear in the release `.zip` archive. This can be done in the following
 way. This will install to `c:\workspace\bitcoin`, for example:
 
     make install DESTDIR=/mnt/c/workspace/bitcoin
+
+You can also create an installer using:
+
+    make deploy
 
 Footnotes
 ---------
