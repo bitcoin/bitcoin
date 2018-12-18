@@ -124,7 +124,7 @@ int populateRPCTransactionObject(const CTransaction& tx, const uint256& blockHas
     if (confirmations > 0) {
         LOCK(cs_tally);
         valid = p_txlistdb->getValidMPTX(txid);
-        positionInBlock = p_OmniTXDB->FetchTransactionPosition(txid);
+        positionInBlock = pDbTransaction->FetchTransactionPosition(txid);
     }
 
     // populate some initial info for the transaction
@@ -150,7 +150,7 @@ int populateRPCTransactionObject(const CTransaction& tx, const uint256& blockHas
     if (confirmations != 0 && !blockHash.IsNull()) {
         txobj.push_back(Pair("valid", valid));
         if (!valid) {
-            txobj.push_back(Pair("invalidreason", p_OmniTXDB->FetchInvalidReason(txid)));
+            txobj.push_back(Pair("invalidreason", pDbTransaction->FetchInvalidReason(txid)));
         }
         txobj.push_back(Pair("blockhash", blockHash.GetHex()));
         txobj.push_back(Pair("blocktime", blockTime));

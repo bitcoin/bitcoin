@@ -129,7 +129,7 @@ CMPTradeList* mastercore::pDbTradeList;
 //! LevelDB based storage for STO recipients
 CMPSTOList* mastercore::pDbStoList;
 //! LevelDB based storage for storing Omni transaction validation and position in block data
-COmniTransactionDB* mastercore::p_OmniTXDB;
+COmniTransactionDB* mastercore::pDbTransaction;
 //! LevelDB based storage for the MetaDEx fee cache
 COmniFeeCache* mastercore::pDbFeeCache;
 //! LevelDB based storage for the MetaDEx fee distributions
@@ -1527,7 +1527,7 @@ void clear_all_state()
     p_txlistdb->Clear();
     pDbStoList->Clear();
     pDbTradeList->Clear();
-    p_OmniTXDB->Clear();
+    pDbTransaction->Clear();
     pDbFeeCache->Clear();
     p_feehistory->Clear();
     assert(p_txlistdb->setDBVersion() == DB_VERSION); // new set of databases, set DB version
@@ -1639,7 +1639,7 @@ int mastercore_init()
     pDbStoList = new CMPSTOList(GetDataDir() / "MP_stolist", fReindex);
     p_txlistdb = new CMPTxList(GetDataDir() / "MP_txlist", fReindex);
     pDbSpInfo = new CMPSPInfo(GetDataDir() / "MP_spinfo", fReindex);
-    p_OmniTXDB = new COmniTransactionDB(GetDataDir() / "Omni_TXDB", fReindex);
+    pDbTransaction = new COmniTransactionDB(GetDataDir() / "Omni_TXDB", fReindex);
     pDbFeeCache = new COmniFeeCache(GetDataDir() / "OMNI_feecache", fReindex);
     p_feehistory = new COmniFeeHistory(GetDataDir() / "OMNI_feehistory", fReindex);
 
@@ -1752,9 +1752,9 @@ int mastercore_shutdown()
         delete pDbSpInfo;
         pDbSpInfo = NULL;
     }
-    if (p_OmniTXDB) {
-        delete p_OmniTXDB;
-        p_OmniTXDB = NULL;
+    if (pDbTransaction) {
+        delete pDbTransaction;
+        pDbTransaction = NULL;
     }
     if (pDbFeeCache) {
         delete pDbFeeCache;
@@ -1831,7 +1831,7 @@ bool mastercore_handler_tx(const CTransaction& tx, int nBlock, unsigned int idx,
         if (interp_ret != PKT_ERROR - 2) {
             bool bValid = (0 <= interp_ret);
             p_txlistdb->recordTX(tx.GetHash(), bValid, nBlock, mp_obj.getType(), mp_obj.getNewAmount());
-            p_OmniTXDB->RecordTransaction(tx.GetHash(), idx, interp_ret);
+            pDbTransaction->RecordTransaction(tx.GetHash(), idx, interp_ret);
         }
         fFoundTx |= (interp_ret == 0);
     }
