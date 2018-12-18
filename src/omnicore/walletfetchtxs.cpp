@@ -95,7 +95,7 @@ std::map<std::string, uint256> FetchWalletOmniTransactions(unsigned int count, i
     std::string mySTOReceipts;
     {
         LOCK(cs_tally);
-        mySTOReceipts = s_stolistdb->getMySTOReceipts("");
+        mySTOReceipts = pDbStoList->getMySTOReceipts("");
     }
     std::vector<std::string> vecReceipts;
     if (!mySTOReceipts.empty()) {

@@ -1181,7 +1181,7 @@ int CMPTransaction::logicMath_SendToOwners()
         assert(update_tally_map(address, property, will_really_receive, BALANCE));
 
         // add to stodb
-        s_stolistdb->recordSTOReceive(address, txid, block, property, will_really_receive);
+        pDbStoList->recordSTOReceive(address, txid, block, property, will_really_receive);
 
         if (sent_so_far != (int64_t)nValue) {
             PrintToLog("sent_so_far= %14d, nValue= %14d, n_owners= %d\n", sent_so_far, nValue, numberOfReceivers);

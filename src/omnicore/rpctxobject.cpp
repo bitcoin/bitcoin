@@ -559,7 +559,7 @@ void populateRPCExtendedTypeSendToOwners(const uint256 txid, std::string extende
     UniValue receiveArray(UniValue::VARR);
     uint64_t tmpAmount = 0, stoFee = 0, numRecipients = 0;
     LOCK(cs_tally);
-    s_stolistdb->getRecipients(txid, extendedDetailsFilter, &receiveArray, &tmpAmount, &numRecipients);
+    pDbStoList->getRecipients(txid, extendedDetailsFilter, &receiveArray, &tmpAmount, &numRecipients);
     if (version == MP_TX_PKT_V0) {
         stoFee = numRecipients * TRANSFER_FEE_PER_OWNER;
     } else {

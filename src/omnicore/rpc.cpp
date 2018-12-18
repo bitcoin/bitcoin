@@ -678,8 +678,8 @@ UniValue mscrpc(const UniValue& params, bool fHelp)
         {
             LOCK(cs_tally);
             // display the STO receive list
-            s_stolistdb->printAll();
-            s_stolistdb->printStats();
+            pDbStoList->printAll();
+            pDbStoList->printStats();
             break;
         }
         case 9:

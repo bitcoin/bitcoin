@@ -331,7 +331,7 @@ int TXHistoryDialog::PopulateHistoryMap()
             UniValue receiveArray(UniValue::VARR);
             uint64_t tmpAmount = 0, stoFee = 0;
             LOCK(cs_tally);
-            s_stolistdb->getRecipients(txHash, "", &receiveArray, &tmpAmount, &stoFee);
+            pDbStoList->getRecipients(txHash, "", &receiveArray, &tmpAmount, &stoFee);
             displayAmount = FormatShortMP(mp_obj.getProperty(), tmpAmount) + getTokenLabel(mp_obj.getProperty());
         }
         htxo.amount = displayAmount;
