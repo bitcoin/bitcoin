@@ -7,9 +7,10 @@
 export LC_ALL=C.UTF-8
 
 travis_retry docker pull "$DOCKER_NAME_TAG"
+mkdir -p "${TRAVIS_BUILD_DIR}/sanitizer-output/"
 export ASAN_OPTIONS=""
 export LSAN_OPTIONS="suppressions=${TRAVIS_BUILD_DIR}/test/sanitizer_suppressions/lsan"
-export TSAN_OPTIONS="suppressions=${TRAVIS_BUILD_DIR}/test/sanitizer_suppressions/tsan"
+export TSAN_OPTIONS="suppressions=${TRAVIS_BUILD_DIR}/test/sanitizer_suppressions/tsan:log_path=${TRAVIS_BUILD_DIR}/sanitizer-output/tsan"
 export UBSAN_OPTIONS="suppressions=${TRAVIS_BUILD_DIR}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1"
 env | grep -E '^(BITCOIN_CONFIG|CCACHE_|WINEDEBUG|LC_ALL|BOOST_TEST_RANDOM|CONFIG_SHELL|(ASAN|LSAN|TSAN|UBSAN)_OPTIONS)' | tee /tmp/env
 if [[ $HOST = *-mingw32 ]]; then
