@@ -121,7 +121,7 @@ static int reorgRecoveryMode = 0;
 static int reorgRecoveryMaxHeight = 0;
 
 //! LevelDB based storage for currencies, smart properties and tokens
-CMPSPInfo* mastercore::_my_sps;
+CMPSPInfo* mastercore::pDbSpInfo;
 //! LevelDB based storage for transactions, with txid as key and validity bit, and other data as value
 CMPTxList* mastercore::p_txlistdb;
 //! LevelDB based storage for the MetaDEx trade history
@@ -439,7 +439,7 @@ int64_t mastercore::getTotalTokens(uint32_t propertyId, int64_t* n_owners_total)
     LOCK(cs_tally);
 
     CMPSPInfo::Entry property;
-    if (false == _my_sps->getSP(propertyId, property)) {
+    if (false == pDbSpInfo->getSP(propertyId, property)) {
         return 0; // property ID does not exist
     }
 
@@ -581,9 +581,9 @@ static int64_t calculate_and_update_devmsc(unsigned int nTime, int block)
 uint32_t mastercore::GetNextPropertyId(bool maineco)
 {
     if (maineco) {
-        return _my_sps->peekNextSPID(1);
+        return pDbSpInfo->peekNextSPID(1);
     } else {
-        return _my_sps->peekNextSPID(2);
+        return pDbSpInfo->peekNextSPID(2);
     }
 }
 
@@ -1523,7 +1523,7 @@ void clear_all_state()
     ClearFreezeState();
 
     // LevelDB based storage
-    _my_sps->Clear();
+    pDbSpInfo->Clear();
     p_txlistdb->Clear();
     s_stolistdb->Clear();
     t_tradelistdb->Clear();
@@ -1638,7 +1638,7 @@ int mastercore_init()
     t_tradelistdb = new CMPTradeList(GetDataDir() / "MP_tradelist", fReindex);
     s_stolistdb = new CMPSTOList(GetDataDir() / "MP_stolist", fReindex);
     p_txlistdb = new CMPTxList(GetDataDir() / "MP_txlist", fReindex);
-    _my_sps = new CMPSPInfo(GetDataDir() / "MP_spinfo", fReindex);
+    pDbSpInfo = new CMPSPInfo(GetDataDir() / "MP_spinfo", fReindex);
     p_OmniTXDB = new COmniTransactionDB(GetDataDir() / "Omni_TXDB", fReindex);
     pDbFeeCache = new COmniFeeCache(GetDataDir() / "OMNI_feecache", fReindex);
     p_feehistory = new COmniFeeHistory(GetDataDir() / "OMNI_feehistory", fReindex);
@@ -1748,9 +1748,9 @@ int mastercore_shutdown()
         delete s_stolistdb;
         s_stolistdb = NULL;
     }
-    if (_my_sps) {
-        delete _my_sps;
-        _my_sps = NULL;
+    if (pDbSpInfo) {
+        delete pDbSpInfo;
+        pDbSpInfo = NULL;
     }
     if (p_OmniTXDB) {
         delete p_OmniTXDB;

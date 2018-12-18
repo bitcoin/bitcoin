@@ -317,7 +317,7 @@ int TXHistoryDialog::PopulateHistoryMap()
         if (type == MSC_TYPE_CREATE_PROPERTY_FIXED || type == MSC_TYPE_CREATE_PROPERTY_VARIABLE || type == MSC_TYPE_CREATE_PROPERTY_MANUAL) {
             displayAmount = "N/A";
             if (htxo.valid) {
-                uint32_t propertyId = _my_sps->findSPByTX(txHash);
+                uint32_t propertyId = pDbSpInfo->findSPByTX(txHash);
                 if (type == MSC_TYPE_CREATE_PROPERTY_FIXED) displayAmount = FormatShortMP(propertyId, getTotalTokens(propertyId)) + getTokenLabel(propertyId);
             }
         }

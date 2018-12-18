@@ -274,7 +274,7 @@ void populateRPCTypeSimpleSend(CMPTransaction& omniObj, UniValue& txobj)
     bool crowdPurchase = isCrowdsalePurchase(omniObj.getHash(), omniObj.getReceiver(), &crowdPropertyId, &crowdTokens, &issuerTokens);
     if (crowdPurchase) {
         CMPSPInfo::Entry sp;
-        if (false == _my_sps->getSP(crowdPropertyId, sp)) {
+        if (false == pDbSpInfo->getSP(crowdPropertyId, sp)) {
             PrintToLog("SP Error: Crowdsale purchase for non-existent property %d in transaction %s", crowdPropertyId, omniObj.getHash().GetHex());
             return;
         }
@@ -433,7 +433,7 @@ void populateRPCTypeCreatePropertyFixed(CMPTransaction& omniObj, UniValue& txobj
 {
     LOCK(cs_tally);
     if (confirmations > 0) {
-        uint32_t propertyId = _my_sps->findSPByTX(omniObj.getHash());
+        uint32_t propertyId = pDbSpInfo->findSPByTX(omniObj.getHash());
         if (propertyId > 0) {
             txobj.push_back(Pair("propertyid", (uint64_t) propertyId));
             txobj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
@@ -454,7 +454,7 @@ void populateRPCTypeCreatePropertyVariable(CMPTransaction& omniObj, UniValue& tx
 {
     LOCK(cs_tally);
     if (confirmations > 0) {
-        uint32_t propertyId = _my_sps->findSPByTX(omniObj.getHash());
+        uint32_t propertyId = pDbSpInfo->findSPByTX(omniObj.getHash());
         if (propertyId > 0) {
             txobj.push_back(Pair("propertyid", (uint64_t) propertyId));
             txobj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
@@ -481,7 +481,7 @@ void populateRPCTypeCreatePropertyManual(CMPTransaction& omniObj, UniValue& txob
 {
     LOCK(cs_tally);
     if (confirmations > 0) {
-        uint32_t propertyId = _my_sps->findSPByTX(omniObj.getHash());
+        uint32_t propertyId = pDbSpInfo->findSPByTX(omniObj.getHash());
         if (propertyId > 0) {
             txobj.push_back(Pair("propertyid", (uint64_t) propertyId));
             txobj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));

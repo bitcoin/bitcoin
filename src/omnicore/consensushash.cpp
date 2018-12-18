@@ -258,9 +258,9 @@ uint256 GetConsensusHash()
     // Placeholders: "propertyid|issueraddress"
     for (uint8_t ecosystem = 1; ecosystem <= 2; ecosystem++) {
         uint32_t startPropertyId = (ecosystem == 1) ? 1 : TEST_ECO_PROPERTY_1;
-        for (uint32_t propertyId = startPropertyId; propertyId < _my_sps->peekNextSPID(ecosystem); propertyId++) {
+        for (uint32_t propertyId = startPropertyId; propertyId < pDbSpInfo->peekNextSPID(ecosystem); propertyId++) {
             CMPSPInfo::Entry sp;
-            if (!_my_sps->getSP(propertyId, sp)) {
+            if (!pDbSpInfo->getSP(propertyId, sp)) {
                 PrintToLog("Error loading property ID %d for consensus hashing, hash should not be trusted!\n");
                 continue;
             }

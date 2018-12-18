@@ -163,7 +163,7 @@ void COmniFeeCache::RollBackCache(int block)
     assert(pdb);
     for (uint8_t ecosystem = 1; ecosystem <= 2; ecosystem++) {
         uint32_t startPropertyId = (ecosystem == 1) ? 1 : TEST_ECO_PROPERTY_1;
-        for (uint32_t propertyId = startPropertyId; propertyId < mastercore::_my_sps->peekNextSPID(ecosystem); propertyId++) {
+        for (uint32_t propertyId = startPropertyId; propertyId < mastercore::pDbSpInfo->peekNextSPID(ecosystem); propertyId++) {
             const std::string key = strprintf("%010d", propertyId);
             std::set<feeCacheItem> sCacheHistoryItems = GetCacheHistory(propertyId);
             if (!sCacheHistoryItems.empty()) {

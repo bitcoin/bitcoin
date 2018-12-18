@@ -327,7 +327,7 @@ UniValue omni_getfeetrigger(const UniValue& params, bool fHelp)
 
     for (uint8_t ecosystem = 1; ecosystem <= 2; ecosystem++) {
         uint32_t startPropertyId = (ecosystem == 1) ? 1 : TEST_ECO_PROPERTY_1;
-        for (uint32_t itPropertyId = startPropertyId; itPropertyId < _my_sps->peekNextSPID(ecosystem); itPropertyId++) {
+        for (uint32_t itPropertyId = startPropertyId; itPropertyId < pDbSpInfo->peekNextSPID(ecosystem); itPropertyId++) {
             if (propertyId == 0 || propertyId == itPropertyId) {
                 int64_t feeTrigger = pDbFeeCache->GetDistributionThreshold(itPropertyId);
                 std::string strFeeTrigger = FormatMP(itPropertyId, feeTrigger);
@@ -448,7 +448,7 @@ UniValue omni_getfeecache(const UniValue& params, bool fHelp)
 
     for (uint8_t ecosystem = 1; ecosystem <= 2; ecosystem++) {
         uint32_t startPropertyId = (ecosystem == 1) ? 1 : TEST_ECO_PROPERTY_1;
-        for (uint32_t itPropertyId = startPropertyId; itPropertyId < _my_sps->peekNextSPID(ecosystem); itPropertyId++) {
+        for (uint32_t itPropertyId = startPropertyId; itPropertyId < pDbSpInfo->peekNextSPID(ecosystem); itPropertyId++) {
             if (propertyId == 0 || propertyId == itPropertyId) {
                 int64_t cachedFee = pDbFeeCache->GetCachedAmount(itPropertyId);
                 if (cachedFee == 0) {
@@ -627,7 +627,7 @@ UniValue mscrpc(const UniValue& params, bool fHelp)
         {
             LOCK(cs_tally);
             // display smart properties
-            _my_sps->printAll();
+            pDbSpInfo->printAll();
             break;
         }
         case 3:
@@ -874,7 +874,7 @@ UniValue omni_getallbalancesforaddress(const UniValue& params, bool fHelp)
     uint32_t propertyId = 0;
     while (0 != (propertyId = addressTally->next())) {
         CMPSPInfo::Entry property;
-        if (!_my_sps->getSP(propertyId, property)) {
+        if (!pDbSpInfo->getSP(propertyId, property)) {
             continue;
         }
 
@@ -991,7 +991,7 @@ UniValue omni_getwalletbalances(const UniValue& params, bool fHelp)
         std::tuple<int64_t, int64_t, int64_t> balance = item.second;
 
         CMPSPInfo::Entry property;
-        if (!_my_sps->getSP(propertyId, property)) {
+        if (!pDbSpInfo->getSP(propertyId, property)) {
             continue; // token wasn't found in the DB
         }
 
@@ -1078,7 +1078,7 @@ UniValue omni_getwalletaddressbalances(const UniValue& params, bool fHelp)
 
         while (0 != (propertyId = addressTally->next())) {
             CMPSPInfo::Entry property;
-            if (!_my_sps->getSP(propertyId, property)) {
+            if (!pDbSpInfo->getSP(propertyId, property)) {
                 continue; // token wasn't found in the DB
             }
 
@@ -1140,7 +1140,7 @@ UniValue omni_getproperty(const UniValue& params, bool fHelp)
     CMPSPInfo::Entry sp;
     {
         LOCK(cs_tally);
-        if (!_my_sps->getSP(propertyId, sp)) {
+        if (!pDbSpInfo->getSP(propertyId, sp)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not exist");
         }
     }
@@ -1193,10 +1193,10 @@ UniValue omni_listproperties(const UniValue& params, bool fHelp)
 
     LOCK(cs_tally);
 
-    uint32_t nextSPID = _my_sps->peekNextSPID(1);
+    uint32_t nextSPID = pDbSpInfo->peekNextSPID(1);
     for (uint32_t propertyId = 1; propertyId < nextSPID; propertyId++) {
         CMPSPInfo::Entry sp;
-        if (_my_sps->getSP(propertyId, sp)) {
+        if (pDbSpInfo->getSP(propertyId, sp)) {
             UniValue propertyObj(UniValue::VOBJ);
             propertyObj.push_back(Pair("propertyid", (uint64_t) propertyId));
             PropertyToJSON(sp, propertyObj); // name, category, subcategory, data, url, divisible
@@ -1205,10 +1205,10 @@ UniValue omni_listproperties(const UniValue& params, bool fHelp)
         }
     }
 
-    uint32_t nextTestSPID = _my_sps->peekNextSPID(2);
+    uint32_t nextTestSPID = pDbSpInfo->peekNextSPID(2);
     for (uint32_t propertyId = TEST_ECO_PROPERTY_1; propertyId < nextTestSPID; propertyId++) {
         CMPSPInfo::Entry sp;
-        if (_my_sps->getSP(propertyId, sp)) {
+        if (pDbSpInfo->getSP(propertyId, sp)) {
             UniValue propertyObj(UniValue::VOBJ);
             propertyObj.push_back(Pair("propertyid", (uint64_t) propertyId));
             PropertyToJSON(sp, propertyObj); // name, category, subcategory, data, url, divisible
@@ -1273,7 +1273,7 @@ UniValue omni_getcrowdsale(const UniValue& params, bool fHelp)
     CMPSPInfo::Entry sp;
     {
         LOCK(cs_tally);
-        if (!_my_sps->getSP(propertyId, sp)) {
+        if (!pDbSpInfo->getSP(propertyId, sp)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not exist");
         }
     }
@@ -1403,7 +1403,7 @@ UniValue omni_getactivecrowdsales(const UniValue& params, bool fHelp)
         uint32_t propertyId = crowd.getPropertyId();
 
         CMPSPInfo::Entry sp;
-        if (!_my_sps->getSP(propertyId, sp)) {
+        if (!pDbSpInfo->getSP(propertyId, sp)) {
             continue;
         }
 
@@ -1476,7 +1476,7 @@ UniValue omni_getgrants(const UniValue& params, bool fHelp)
     CMPSPInfo::Entry sp;
     {
         LOCK(cs_tally);
-        if (false == _my_sps->getSP(propertyId, sp)) {
+        if (false == pDbSpInfo->getSP(propertyId, sp)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not exist");
         }
     }

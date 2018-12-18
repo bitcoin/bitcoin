@@ -118,7 +118,7 @@ void LookupSPDialog::searchSP()
            strId = QString::fromStdString(searchText);
            propertyId = strId.toUInt();
            // check if this property ID exists, if not no match to populate and just return
-           spExists = _my_sps->hasSP(propertyId);
+           spExists = pDbSpInfo->hasSP(propertyId);
            if (spExists)
            {
                addSPToMatchingResults(propertyId);
@@ -132,12 +132,12 @@ void LookupSPDialog::searchSP()
         case 2: //search by address
            // iterate through my_sps looking for the issuer address and add any properties issued by said address to matchingcombo
            // talk with @Michael @Bart to see if perhaps a more efficient way to do this, but not major issue as only run on user request
-           nextSPID = _my_sps->peekNextSPID(1);
-           nextTestSPID = _my_sps->peekNextSPID(2);
+           nextSPID = pDbSpInfo->peekNextSPID(1);
+           nextTestSPID = pDbSpInfo->peekNextSPID(2);
            for (tmpPropertyId = 1; tmpPropertyId<nextSPID; tmpPropertyId++)
            {
                CMPSPInfo::Entry sp;
-               if (false != _my_sps->getSP(tmpPropertyId, sp))
+               if (false != pDbSpInfo->getSP(tmpPropertyId, sp))
                {
                    if (sp.issuer == searchText)
                    {
@@ -148,7 +148,7 @@ void LookupSPDialog::searchSP()
            for (tmpPropertyId = TEST_ECO_PROPERTY_1; tmpPropertyId<nextTestSPID; tmpPropertyId++)
            {
                CMPSPInfo::Entry sp;
-               if (false != _my_sps->getSP(tmpPropertyId, sp))
+               if (false != pDbSpInfo->getSP(tmpPropertyId, sp))
                {
                    if (sp.issuer == searchText)
                    {
@@ -159,12 +159,12 @@ void LookupSPDialog::searchSP()
         break;
         case 3: //search by freetext
            // iterate through my_sps and see if property name contains the search text
-           nextSPID = _my_sps->peekNextSPID(1);
-           nextTestSPID = _my_sps->peekNextSPID(2);
+           nextSPID = pDbSpInfo->peekNextSPID(1);
+           nextTestSPID = pDbSpInfo->peekNextSPID(2);
            for (tmpPropertyId = 1; tmpPropertyId<nextSPID; tmpPropertyId++)
            {
                CMPSPInfo::Entry sp;
-               if (false != _my_sps->getSP(tmpPropertyId, sp))
+               if (false != pDbSpInfo->getSP(tmpPropertyId, sp))
                {
                    // make the search case insensitive
                    string lowerName = sp.name;
@@ -181,7 +181,7 @@ void LookupSPDialog::searchSP()
            for (tmpPropertyId = TEST_ECO_PROPERTY_1; tmpPropertyId<nextTestSPID; tmpPropertyId++)
            {
                CMPSPInfo::Entry sp;
-               if (false != _my_sps->getSP(tmpPropertyId, sp))
+               if (false != pDbSpInfo->getSP(tmpPropertyId, sp))
                {
                    // make the search case insensitive
                    string lowerName = sp.name;
@@ -197,17 +197,17 @@ void LookupSPDialog::searchSP()
            }
         break;
         case 4: // grab everything
-           nextSPID = _my_sps->peekNextSPID(1);
+           nextSPID = pDbSpInfo->peekNextSPID(1);
            for (tmpPropertyId = 1; tmpPropertyId<nextSPID; tmpPropertyId++)
            {
                CMPSPInfo::Entry sp;
-               if (false != _my_sps->getSP(tmpPropertyId, sp)) { addSPToMatchingResults(tmpPropertyId); }
+               if (false != pDbSpInfo->getSP(tmpPropertyId, sp)) { addSPToMatchingResults(tmpPropertyId); }
            }
-           nextTestSPID = _my_sps->peekNextSPID(2);
+           nextTestSPID = pDbSpInfo->peekNextSPID(2);
            for (tmpPropertyId = TEST_ECO_PROPERTY_1; tmpPropertyId<nextTestSPID; tmpPropertyId++)
            {
                CMPSPInfo::Entry sp;
-               if (false != _my_sps->getSP(tmpPropertyId, sp)) { addSPToMatchingResults(tmpPropertyId); }
+               if (false != pDbSpInfo->getSP(tmpPropertyId, sp)) { addSPToMatchingResults(tmpPropertyId); }
            }
         break;
     }
@@ -217,7 +217,7 @@ void LookupSPDialog::searchSP()
 void LookupSPDialog::addSPToMatchingResults(unsigned int propertyId)
 {
     // verify the supplied property exists (sanity check) then populate the matching results combo box
-    bool spExists = _my_sps->hasSP(propertyId);
+    bool spExists = pDbSpInfo->hasSP(propertyId);
     if (spExists)
     {
         string spName;
@@ -244,7 +244,7 @@ void LookupSPDialog::updateDisplayedProperty()
     // map property Id
     unsigned int propertyId = strId.toUInt();
     CMPSPInfo::Entry sp;
-    if (false == _my_sps->getSP(propertyId, sp)) { return; } // something has gone wrong, don't attempt to display non-existent property
+    if (false == pDbSpInfo->getSP(propertyId, sp)) { return; } // something has gone wrong, don't attempt to display non-existent property
 
     // populate the fields
     bool divisible=sp.isDivisible();

@@ -149,8 +149,8 @@ static int write_mp_accepts(std::ofstream& file, SHA256_CTX* shaCtx)
 
 static int write_globals_state(std::ofstream& file, SHA256_CTX* shaCtx)
 {
-    uint32_t nextSPID = _my_sps->peekNextSPID(OMNI_PROPERTY_MSC);
-    uint32_t nextTestSPID = _my_sps->peekNextSPID(OMNI_PROPERTY_TMSC);
+    uint32_t nextSPID = pDbSpInfo->peekNextSPID(OMNI_PROPERTY_MSC);
+    uint32_t nextTestSPID = pDbSpInfo->peekNextSPID(OMNI_PROPERTY_TMSC);
     std::string lineOut = strprintf("%d,%d,%d",
             exodus_prev,
             nextSPID,
@@ -320,7 +320,7 @@ static int input_globals_state_string(const std::string& s)
     nextTestSPID = boost::lexical_cast<uint32_t>(vstr[i++]);
 
     exodus_prev = exodusPrev;
-    _my_sps->init(nextSPID, nextTestSPID);
+    pDbSpInfo->init(nextSPID, nextTestSPID);
     return 0;
 }
 
@@ -535,7 +535,7 @@ int PersistInMemoryState(const CBlockIndex* pBlockIndex)
     // clean-up the directory
     prune_state_files(pBlockIndex);
 
-    _my_sps->setWatermark(pBlockIndex->GetBlockHash());
+    pDbSpInfo->setWatermark(pBlockIndex->GetBlockHash());
 
     return 0;
 }
@@ -664,7 +664,7 @@ int LoadMostRelevantInMemoryState()
     // check the SP database and roll it back to its latest valid state
     // according to the active chain
     uint256 spWatermark;
-    if (!_my_sps->getWatermark(spWatermark)) {
+    if (!pDbSpInfo->getWatermark(spWatermark)) {
         // trigger a full reparse, if the SP database has no watermark
         PrintToLog("Failed to load historical state: SP database has no watermark\n");
         return -1;
@@ -678,7 +678,7 @@ int LoadMostRelevantInMemoryState()
     }
 
     while (NULL != spBlockIndex && false == chainActive.Contains(spBlockIndex)) {
-        int remainingSPs = _my_sps->popBlock(spBlockIndex->GetBlockHash());
+        int remainingSPs = pDbSpInfo->popBlock(spBlockIndex->GetBlockHash());
         if (remainingSPs < 0) {
             // trigger a full reparse, if the levelDB cannot roll back
             PrintToLog("Failed to load historical state: no valid state found after rolling back SP database\n");
@@ -688,7 +688,7 @@ int LoadMostRelevantInMemoryState()
     }*/
         spBlockIndex = spBlockIndex->pprev;
         if (spBlockIndex != NULL) {
-            _my_sps->setWatermark(spBlockIndex->GetBlockHash());
+            pDbSpInfo->setWatermark(spBlockIndex->GetBlockHash());
         }
     }
 
@@ -753,7 +753,7 @@ int LoadMostRelevantInMemoryState()
         }
 
         // go to the previous block
-        if (_my_sps->popBlock(curTip->GetBlockHash()) <= 0) {
+        if (pDbSpInfo->popBlock(curTip->GetBlockHash()) <= 0) {
             // trigger a full reparse, if the levelDB cannot roll back
             PrintToLog("Failed to load historical state: no valid state found after rolling back SP database (2)\n");
             return -1;
@@ -761,7 +761,7 @@ int LoadMostRelevantInMemoryState()
         curTip = curTip->pprev;
         spBlockIndex = curTip;
         if (curTip != NULL) {
-            _my_sps->setWatermark(curTip->GetBlockHash());
+            pDbSpInfo->setWatermark(curTip->GetBlockHash());
         }
     }
 
