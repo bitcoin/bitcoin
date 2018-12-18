@@ -125,7 +125,7 @@ CMPSPInfo* mastercore::pDbSpInfo;
 //! LevelDB based storage for transactions, with txid as key and validity bit, and other data as value
 CMPTxList* mastercore::p_txlistdb;
 //! LevelDB based storage for the MetaDEx trade history
-CMPTradeList* mastercore::t_tradelistdb;
+CMPTradeList* mastercore::pDbTradeList;
 //! LevelDB based storage for STO recipients
 CMPSTOList* mastercore::pDbStoList;
 //! LevelDB based storage for storing Omni transaction validation and position in block data
@@ -1526,7 +1526,7 @@ void clear_all_state()
     pDbSpInfo->Clear();
     p_txlistdb->Clear();
     pDbStoList->Clear();
-    t_tradelistdb->Clear();
+    pDbTradeList->Clear();
     p_OmniTXDB->Clear();
     pDbFeeCache->Clear();
     p_feehistory->Clear();
@@ -1541,7 +1541,7 @@ void RewindDBsAndState(int nHeight, int nBlockPrev = 0, bool fInitialParse = fal
 
     // NOTE: The blockNum parameter is inclusive, so deleteAboveBlock(1000) will delete records in block 1000 and above.
     p_txlistdb->isMPinBlockRange(nHeight, reorgRecoveryMaxHeight, true);
-    t_tradelistdb->deleteAboveBlock(nHeight);
+    pDbTradeList->deleteAboveBlock(nHeight);
     pDbStoList->deleteAboveBlock(nHeight);
     pDbFeeCache->RollBackCache(nHeight);
     p_feehistory->RollBackHistory(nHeight);
@@ -1635,7 +1635,7 @@ int mastercore_init()
         }
     }
 
-    t_tradelistdb = new CMPTradeList(GetDataDir() / "MP_tradelist", fReindex);
+    pDbTradeList = new CMPTradeList(GetDataDir() / "MP_tradelist", fReindex);
     pDbStoList = new CMPSTOList(GetDataDir() / "MP_stolist", fReindex);
     p_txlistdb = new CMPTxList(GetDataDir() / "MP_txlist", fReindex);
     pDbSpInfo = new CMPSPInfo(GetDataDir() / "MP_spinfo", fReindex);
@@ -1740,9 +1740,9 @@ int mastercore_shutdown()
         delete p_txlistdb;
         p_txlistdb = NULL;
     }
-    if (t_tradelistdb) {
-        delete t_tradelistdb;
-        t_tradelistdb = NULL;
+    if (pDbTradeList) {
+        delete pDbTradeList;
+        pDbTradeList = NULL;
     }
     if (pDbStoList) {
         delete pDbStoList;

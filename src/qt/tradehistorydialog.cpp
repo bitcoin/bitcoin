@@ -379,7 +379,7 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
             amountDesired = temp_metadexoffer.getAmountDesired();
             {
                 LOCK(cs_tally);
-                t_tradelistdb->getMatchingTrades(hash, propertyIdForSale, tradeArray, totalSold, totalReceived);
+                pDbTradeList->getMatchingTrades(hash, propertyIdForSale, tradeArray, totalSold, totalReceived);
                 orderOpen = MetaDEx_isOpen(hash, propertyIdForSale);
             }
         }
@@ -465,7 +465,7 @@ void TradeHistoryDialog::UpdateData()
         bool orderOpen = false;
         {
             LOCK(cs_tally);
-            t_tradelistdb->getMatchingTrades(txid, propertyIdForSale, tradeArray, totalSold, totalReceived);
+            pDbTradeList->getMatchingTrades(txid, propertyIdForSale, tradeArray, totalSold, totalReceived);
             orderOpen = MetaDEx_isOpen(txid, propertyIdForSale);
         }
         // work out new status & icon

@@ -670,8 +670,8 @@ UniValue mscrpc(const UniValue& params, bool fHelp)
         {
             LOCK(cs_tally);
             // display the whole CMPTradeList (leveldb)
-            t_tradelistdb->printAll();
-            t_tradelistdb->printStats();
+            pDbTradeList->printAll();
+            pDbTradeList->printStats();
             break;
         }
         case 8:
@@ -1652,7 +1652,7 @@ UniValue omni_gettradehistoryforaddress(const UniValue& params, bool fHelp)
     std::vector<uint256> vecTransactions;
     {
         LOCK(cs_tally);
-        t_tradelistdb->getTradesForAddress(address, vecTransactions, propertyId);
+        pDbTradeList->getTradesForAddress(address, vecTransactions, propertyId);
     }
 
     // Populate the address trade history into JSON objects until we have processed count transactions
@@ -1714,7 +1714,7 @@ UniValue omni_gettradehistoryforpair(const UniValue& params, bool fHelp)
     // request pair trade history from trade db
     UniValue response(UniValue::VARR);
     LOCK(cs_tally);
-    t_tradelistdb->getTradesForPair(propertyIdSideA, propertyIdSideB, response, count);
+    pDbTradeList->getTradesForPair(propertyIdSideA, propertyIdSideB, response, count);
     return response;
 }
 
@@ -2142,7 +2142,7 @@ UniValue omni_getinfo(const UniValue& params, bool fHelp)
 
     int blockMPTransactions = p_txlistdb->getMPTransactionCountBlock(block);
     int totalMPTransactions = p_txlistdb->getMPTransactionCountTotal();
-    int totalMPTrades = t_tradelistdb->getMPTradeCountTotal();
+    int totalMPTrades = pDbTradeList->getMPTradeCountTotal();
     infoResponse.push_back(Pair("block", block));
     infoResponse.push_back(Pair("blocktime", blockTime));
     infoResponse.push_back(Pair("blocktransactions", blockMPTransactions));

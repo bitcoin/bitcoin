@@ -37,7 +37,7 @@ public:
 namespace mastercore
 {
     //! LevelDB based storage for the MetaDEx trade history
-    extern CMPTradeList* t_tradelistdb;
+    extern CMPTradeList* pDbTradeList;
 }
 
 #endif // OMNICORE_DBTRADELIST_H

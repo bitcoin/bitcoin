@@ -441,7 +441,7 @@ void MetaDExDialog::ShowHistory()
 {
     UniValue history(UniValue::VARR);
     LOCK(cs_tally);
-    t_tradelistdb->getTradesForPair(GetPropForSale(), GetPropDesired(), history, 50);
+    pDbTradeList->getTradesForPair(GetPropForSale(), GetPropDesired(), history, 50);
     std::string strHistory = history.write(true);
 
     if (!strHistory.empty()) {

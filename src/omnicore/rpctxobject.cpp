@@ -574,7 +574,7 @@ void populateRPCExtendedTypeMetaDExTrade(const uint256& txid, uint32_t propertyI
     UniValue tradeArray(UniValue::VARR);
     int64_t totalReceived = 0, totalSold = 0;
     LOCK(cs_tally);
-    t_tradelistdb->getMatchingTrades(txid, propertyIdForSale, tradeArray, totalSold, totalReceived);
+    pDbTradeList->getMatchingTrades(txid, propertyIdForSale, tradeArray, totalSold, totalReceived);
     int tradeStatus = MetaDEx_getStatus(txid, propertyIdForSale, amountForSale, totalSold);
     if (tradeStatus == TRADE_OPEN || tradeStatus == TRADE_OPEN_PART_FILLED) {
         const CMPMetaDEx* tradeObj = MetaDEx_RetrieveTrade(txid);
