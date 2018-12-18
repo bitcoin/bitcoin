@@ -667,16 +667,6 @@ int64 CTransaction::GetMinFee(unsigned int nBlockSize, bool fAllowFree,
             nMinFee = 0;
     }
 
-    // This code can be removed after enough miners have upgraded to version 0.9.
-    // Until then, be safe when sending and require a fee if any output
-    // is less than MIN_TX_FEE:
-    if (nMinFee < nMinFeeBase && mode == GMF_SEND)
-    {
-        BOOST_FOREACH(const CTxOut& txout, vout)
-            if (txout.nValue < nMinFeeBase)
-                nMinFee = nMinFeeBase;
-    }
-
     // Raise the price as the block approaches full
     if (nBlockSize != 1 && nNewBlockSize >= MAX_BLOCK_SIZE_GEN/2)
     {
