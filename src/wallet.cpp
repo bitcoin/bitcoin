@@ -1358,7 +1358,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend,
                 // Check that enough fee is included
                 int64 nPayFee;
                 if (IsProtocolV07(wtxNew.nTime))
-                    nPayFee = (nBytes < 100) ? MIN_TX_FEE : (int64)(nBytes * nTransactionFee / 1000);
+                    nPayFee = (nBytes < 100) ? MIN_TX_FEE : (int64)(nBytes * (nTransactionFee / 1000));
                 else
                     nPayFee = nTransactionFee * (1 + (int64)nBytes / 1000);
                 int64 nMinFee = wtxNew.GetMinFee(1, false, GMF_SEND);

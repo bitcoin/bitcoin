@@ -85,7 +85,7 @@ int nBlocksToIgnore = 0;
 #endif
 
 // Settings
-int64 nTransactionFee = MIN_TX_FEE*10;
+int64 nTransactionFee = PERKB_TX_FEE;
 
 
 
@@ -646,18 +646,14 @@ bool CTransaction::CheckTransaction(CValidationState &state) const
 int64 CTransaction::GetMinFee(unsigned int nBlockSize, bool fAllowFree,
                               enum GetMinFee_mode mode) const
 {
-    // Base fee is 10 times either nMinTxFee or nMinRelayTxFee
-    int64 nBaseFee = 10 * ((mode == GMF_RELAY) ? nMinRelayTxFee : nMinTxFee);
-    int64 nMinFeeBase = IsProtocolV07(nTime) ? MIN_TX_FEE : MIN_TX_FEE*10;
-
     unsigned int nBytes = ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION);
     unsigned int nNewBlockSize = nBlockSize + nBytes;
     int64 nMinFee;
 
     if (IsProtocolV07(nTime)) // RFC-0007
-        nMinFee = (nBytes < 100) ? MIN_TX_FEE : (int64)(nBytes * nBaseFee / 1000);
+        nMinFee = (nBytes < 100) ? MIN_TX_FEE : (int64)(nBytes * (PERKB_TX_FEE / 1000));
     else
-        nMinFee = (1 + (int64)nBytes / 1000) * nBaseFee;
+        nMinFee = (1 + (int64)nBytes / 1000) * PERKB_TX_FEE;
 
     if (fAllowFree)
     {
@@ -1527,7 +1523,7 @@ bool CTransaction::CheckInputs(CValidationState &state, CCoinsViewCache &inputs,
             if (!GetCoinAge(state, inputs, nCoinAge))
                 return error("CheckInputs() : %s unable to get coin age for coinstake", GetHash().ToString().c_str());
             int64 nStakeReward = GetValueOut() - nValueIn;
-            if (nStakeReward > GetProofOfStakeReward(nCoinAge) - GetMinFee() + MIN_TX_FEE*10)
+            if (nStakeReward > GetProofOfStakeReward(nCoinAge) - GetMinFee() + IsProtocolV07(nTime) ? MIN_TX_FEE : PERKB_TX_FEE)
                 return state.DoS(100, error("CheckInputs() : %s stake reward exceeded", GetHash().ToString().c_str()));
         }
         else
@@ -2395,7 +2391,7 @@ bool CBlock::CheckBlock(CValidationState &state, bool fCheckPOW, bool fCheckMerk
         return state.DoS(50, error("CheckBlock() : coinstake timestamp violation nTimeBlock=%" PRI64u" nTimeTx=%u", GetBlockTime(), vtx[1].nTime));
 
     // Check coinbase reward
-    if (vtx[0].GetValueOut() > (IsProofOfWork()? (GetProofOfWorkReward(nBits) - vtx[0].GetMinFee() + MIN_TX_FEE*10) : 0))
+    if (vtx[0].GetValueOut() > (IsProofOfWork()? (GetProofOfWorkReward(nBits) - vtx[0].GetMinFee() + IsProtocolV07(vtx[0].nTime) ? MIN_TX_FEE : PERKB_TX_FEE) : 0))
         return state.DoS(50, error("CheckBlock() : coinbase reward exceeded %s > %s",
                    FormatMoney(vtx[0].GetValueOut()).c_str(),
                    FormatMoney(IsProofOfWork()? GetProofOfWorkReward(nBits) : 0).c_str()));
