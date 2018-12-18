@@ -230,7 +230,7 @@ void COmniFeeCache::DistributeCache(const uint32_t &propertyId, int block)
     PrintToLog("Fee distribution completed, distributed %d out of %d\n", sent_so_far, cachedAmount);
 
     // store the fee distribution
-    p_feehistory->RecordFeeDistribution(propertyId, block, sent_so_far, historyItems);
+    pDbFeeHistory->RecordFeeDistribution(propertyId, block, sent_so_far, historyItems);
 
     // final check to ensure the entire fee cache was distributed, then empty the cache
     assert(sent_so_far == cachedAmount);

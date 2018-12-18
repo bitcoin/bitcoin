@@ -187,7 +187,7 @@ UniValue omni_getfeedistribution(const UniValue& params, bool fHelp)
 
     UniValue response(UniValue::VOBJ);
 
-    bool found = p_feehistory->GetDistributionData(id, &propertyId, &block, &total);
+    bool found = pDbFeeHistory->GetDistributionData(id, &propertyId, &block, &total);
     if (!found) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Fee distribution ID does not exist");
     }
@@ -196,7 +196,7 @@ UniValue omni_getfeedistribution(const UniValue& params, bool fHelp)
     response.push_back(Pair("block", block));
     response.push_back(Pair("amount", FormatMP(propertyId, total)));
     UniValue recipients(UniValue::VARR);
-    std::set<std::pair<std::string,int64_t> > sRecipients = p_feehistory->GetFeeDistribution(id);
+    std::set<std::pair<std::string,int64_t> > sRecipients = pDbFeeHistory->GetFeeDistribution(id);
     bool divisible = isPropertyDivisible(propertyId);
     if (!sRecipients.empty()) {
         for (std::set<std::pair<std::string,int64_t> >::iterator it = sRecipients.begin(); it != sRecipients.end(); it++) {
@@ -251,7 +251,7 @@ UniValue omni_getfeedistributions(const UniValue& params, bool fHelp)
 
     UniValue response(UniValue::VARR);
 
-    std::set<int> sDistributions = p_feehistory->GetDistributionsForProperty(prop);
+    std::set<int> sDistributions = pDbFeeHistory->GetDistributionsForProperty(prop);
     if (!sDistributions.empty()) {
         for (std::set<int>::iterator it = sDistributions.begin(); it != sDistributions.end(); it++) {
             int id = *it;
@@ -259,7 +259,7 @@ UniValue omni_getfeedistributions(const UniValue& params, bool fHelp)
             uint32_t propertyId = 0;
             int64_t total = 0;
             UniValue responseObj(UniValue::VOBJ);
-            bool found = p_feehistory->GetDistributionData(id, &propertyId, &block, &total);
+            bool found = pDbFeeHistory->GetDistributionData(id, &propertyId, &block, &total);
             if (!found) {
                 PrintToLog("Fee History Error - Distribution data not found for distribution ID %d but it was included in GetDistributionsForProperty(prop %d)\n", id, prop);
                 continue;
@@ -269,7 +269,7 @@ UniValue omni_getfeedistributions(const UniValue& params, bool fHelp)
             responseObj.push_back(Pair("block", block));
             responseObj.push_back(Pair("amount", FormatMP(propertyId, total)));
             UniValue recipients(UniValue::VARR);
-            std::set<std::pair<std::string,int64_t> > sRecipients = p_feehistory->GetFeeDistribution(id);
+            std::set<std::pair<std::string,int64_t> > sRecipients = pDbFeeHistory->GetFeeDistribution(id);
             bool divisible = isPropertyDivisible(propertyId);
             if (!sRecipients.empty()) {
                 for (std::set<std::pair<std::string,int64_t> >::iterator it = sRecipients.begin(); it != sRecipients.end(); it++) {

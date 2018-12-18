@@ -133,7 +133,7 @@ COmniTransactionDB* mastercore::pDbTransaction;
 //! LevelDB based storage for the MetaDEx fee cache
 COmniFeeCache* mastercore::pDbFeeCache;
 //! LevelDB based storage for the MetaDEx fee distributions
-COmniFeeHistory* mastercore::p_feehistory;
+COmniFeeHistory* mastercore::pDbFeeHistory;
 
 //! In-memory collection of DEx offers
 OfferMap mastercore::my_offers;
@@ -1529,7 +1529,7 @@ void clear_all_state()
     pDbTradeList->Clear();
     pDbTransaction->Clear();
     pDbFeeCache->Clear();
-    p_feehistory->Clear();
+    pDbFeeHistory->Clear();
     assert(pDbTransactionList->setDBVersion() == DB_VERSION); // new set of databases, set DB version
     exodus_prev = 0;
 }
@@ -1544,7 +1544,7 @@ void RewindDBsAndState(int nHeight, int nBlockPrev = 0, bool fInitialParse = fal
     pDbTradeList->deleteAboveBlock(nHeight);
     pDbStoList->deleteAboveBlock(nHeight);
     pDbFeeCache->RollBackCache(nHeight);
-    p_feehistory->RollBackHistory(nHeight);
+    pDbFeeHistory->RollBackHistory(nHeight);
     reorgRecoveryMaxHeight = 0;
 
     nWaterlineBlock = ConsensusParams().GENESIS_BLOCK - 1;
@@ -1641,7 +1641,7 @@ int mastercore_init()
     pDbSpInfo = new CMPSPInfo(GetDataDir() / "MP_spinfo", fReindex);
     pDbTransaction = new COmniTransactionDB(GetDataDir() / "Omni_TXDB", fReindex);
     pDbFeeCache = new COmniFeeCache(GetDataDir() / "OMNI_feecache", fReindex);
-    p_feehistory = new COmniFeeHistory(GetDataDir() / "OMNI_feehistory", fReindex);
+    pDbFeeHistory = new COmniFeeHistory(GetDataDir() / "OMNI_feehistory", fReindex);
 
     MPPersistencePath = GetDataDir() / "MP_persist";
     TryCreateDirectory(MPPersistencePath);
@@ -1760,9 +1760,9 @@ int mastercore_shutdown()
         delete pDbFeeCache;
         pDbFeeCache = NULL;
     }
-    if (p_feehistory) {
-        delete p_feehistory;
-        p_feehistory = NULL;
+    if (pDbFeeHistory) {
+        delete pDbFeeHistory;
+        pDbFeeHistory = NULL;
     }
 
     mastercoreInitialized = 0;
