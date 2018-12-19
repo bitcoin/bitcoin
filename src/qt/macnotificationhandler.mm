@@ -4,6 +4,8 @@
 
 #include "macnotificationhandler.h"
 
+#include <logging.h>
+
 #undef slots
 #import <objc/runtime.h>
 #include <Cocoa/Cocoa.h>
@@ -29,6 +31,10 @@ void MacNotificationHandler::showNotification(const QString &title, const QStrin
         userNotification.informativeText = text.toNSString();
         [[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification: userNotification];
         [userNotification release];
+        LogPrintf("macOS: NSUserNotificationCenter dispatched\n");
+    }
+    else {
+        LogPrintf("macOS: no NSUserNotificationCenter support\n");
     }
 }
 
@@ -56,6 +62,8 @@ MacNotificationHandler *MacNotificationHandler::instance()
             // a bundle identifier is required to use OSXs User Notification Center
             method_exchangeImplementations(class_getInstanceMethod(aPossibleClass, @selector(bundleIdentifier)),
                                            class_getInstanceMethod(aPossibleClass, @selector(__bundleIdentifier)));
+
+            LogPrintf("macOS: bundleIdentifier swizzling done\n");
         }
     }
     return s_instance;
