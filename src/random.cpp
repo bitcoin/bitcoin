@@ -166,13 +166,13 @@ static void RandAddSeedPerfmon()
     if (ret == ERROR_SUCCESS) {
         RAND_add(vData.data(), nSize, nSize / 100.0);
         memory_cleanse(vData.data(), nSize);
-        LogPrint(BCLog::RAND, "%s: %lu bytes\n", __func__, nSize);
     } else {
-        static bool warned = false; // Warn only once
-        if (!warned) {
-            LogPrintf("%s: Warning: RegQueryValueExA(HKEY_PERFORMANCE_DATA) failed with code %i\n", __func__, ret);
-            warned = true;
-        }
+        // Performance data is only a best-effort attempt at improving the
+        // situation when the OS randomness (and other sources) aren't
+        // adequate. As a result, failure to read it is isn't considered critical,
+        // so we don't call RandFailure().
+        // TODO: Add logging when the logger is made functional before global
+        // constructors have been invoked.
     }
 #endif
 }
