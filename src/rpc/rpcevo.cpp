@@ -437,7 +437,7 @@ void protx_update_service_help()
     throw std::runtime_error(
             "protx update_service \"proTxHash\" \"ipAndPort\" \"operatorKey\" (\"operatorPayoutAddress\")\n"
             "\nCreates and sends a ProUpServTx to the network. This will update the IP address\n"
-            "of a masternode. The operator key of the masternode must be known to your wallet.\n"
+            "of a masternode.\n"
             "If this is done for a masternode that got PoSe-banned, the ProUpServTx will also revive this masternode.\n"
             "\nArguments:\n"
             "1. \"proTxHash\"                (string, required) The hash of the initial ProRegTx.\n"
@@ -570,12 +570,11 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
 void protx_revoke_help()
 {
     throw std::runtime_error(
-            "protx revoke \"proTxHash\" \"operatorKey\"\n"
+            "protx revoke \"proTxHash\" \"operatorKey\" ( reason )\n"
             "\nCreates and sends a ProUpRevTx to the network. This will revoke the operator key of the masternode and\n"
             "put it into the PoSe-banned state. It will also set the service field of the masternode\n"
             "to zero. Use this in case your operator key got compromised or you want to stop providing your service\n"
             "to the masternode owner.\n"
-            "The operator key of the masternode must be known to your wallet.\n"
             "\nArguments:\n"
             "1. \"proTxHash\"           (string, required) The hash of the initial ProRegTx.\n"
             "2. \"operatorKey\"         (string, required) The operator private key belonging to the\n"
@@ -588,7 +587,7 @@ void protx_revoke_help()
 
 UniValue protx_revoke(const JSONRPCRequest& request)
 {
-    if (request.fHelp || (request.params.size() != 2 && request.params.size() != 3)) {
+    if (request.fHelp || (request.params.size() != 3 && request.params.size() != 4)) {
         protx_revoke_help();
     }
 
