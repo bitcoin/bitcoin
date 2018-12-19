@@ -277,6 +277,9 @@ void MasternodeList::updateMyNodeList(bool fForce)
     if (ShutdownRequested()) {
         return;
     }
+    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+        return;
+    }
 
     TRY_LOCK(cs_mymnlist, fLockAcquired);
     if (!fLockAcquired) return;
@@ -315,6 +318,16 @@ void MasternodeList::updateMyNodeList(bool fForce)
 void MasternodeList::updateNodeList()
 {
     if (ShutdownRequested()) {
+        return;
+    }
+
+    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+        // we misuse the fact that updateNodeList is called regularely here and remove both tabs
+        if (ui->tabWidget->indexOf(ui->tabDIP3Masternodes) != 0) {
+            // remove "My Masternode" and "All Masternodes" tabs
+            ui->tabWidget->removeTab(0);
+            ui->tabWidget->removeTab(0);
+        }
         return;
     }
 
@@ -392,6 +405,10 @@ void MasternodeList::updateDIP3List()
         return;
     }
 
+    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+        ui->dip3NoteLabel->setVisible(false);
+    }
+
     TRY_LOCK(cs_dip3list, fLockAcquired);
     if (!fLockAcquired) return;
 
@@ -416,10 +433,6 @@ void MasternodeList::updateDIP3List()
     ui->tableWidgetMasternodesDIP3->setSortingEnabled(false);
     ui->tableWidgetMasternodesDIP3->clearContents();
     ui->tableWidgetMasternodesDIP3->setRowCount(0);
-
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
-        ui->dip3NoteLabel->setVisible(false);
-    }
 
     auto mnList = deterministicMNManager->GetListAtChainTip();
     auto projectedPayees = mnList.GetProjectedMNPayees(mnList.GetValidMNsCount());
