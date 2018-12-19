@@ -579,17 +579,17 @@ class ImportMultiTest(BitcoinTestFramework):
                               error_code=-8,
                               error_message='Descriptor is ranged, please specify the range')
 
-        # Test importing of a ranged descriptor without keys
+        # Test importing of a ranged descriptor with xpriv
         self.log.info("Should import the ranged descriptor with specified range as solvable")
         self.test_importmulti({"desc": descsum_create(desc),
                                "timestamp": "now",
                                "range": 1},
-                              success=True,
-                              warnings=["Some private keys are missing, outputs will be considered watchonly. If this is intentional, specify the watchonly flag."])
+                              success=True)
         for address in addresses:
             test_address(self.nodes[1],
-                         key.p2sh_p2wpkh_addr,
-                         solvable=True)
+                         address,
+                         solvable=True,
+                         ismine=True)
 
         self.test_importmulti({"desc": descsum_create(desc), "timestamp": "now", "range": -1},
                               success=False, error_code=-8, error_message='End of range is too high')
