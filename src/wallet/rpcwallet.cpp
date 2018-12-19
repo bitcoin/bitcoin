@@ -2641,26 +2641,29 @@ static UniValue loadwallet(const JSONRPCRequest& request)
 
 static UniValue createwallet(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3) {
-        throw std::runtime_error(
-            RPCHelpMan{"createwallet",
-                "\nCreates and loads a new wallet.\n",
-                {
-                    {"wallet_name", RPCArg::Type::STR, RPCArg::Optional::NO, "The name for the new wallet. If this is a path, the wallet will be created at the path location."},
-                    {"disable_private_keys", RPCArg::Type::BOOL, /* default */ "false", "Disable the possibility of private keys (only watchonlys are possible in this mode)."},
-                    {"blank", RPCArg::Type::BOOL, /* default */ "false", "Create a blank wallet. A blank wallet has no keys or HD seed. One can be set using sethdseed."},
-                },
-                RPCResult{
+    const RPCHelpMan help{
+        "createwallet",
+        "\nCreates and loads a new wallet.\n",
+        {
+            {"wallet_name", RPCArg::Type::STR, RPCArg::Optional::NO, "The name for the new wallet. If this is a path, the wallet will be created at the path location."},
+            {"disable_private_keys", RPCArg::Type::BOOL, /* default */ "false", "Disable the possibility of private keys (only watchonlys are possible in this mode)."},
+            {"blank", RPCArg::Type::BOOL, /* default */ "false", "Create a blank wallet. A blank wallet has no keys or HD seed. One can be set using sethdseed."},
+            {"passphrase", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Encrypt the wallet with this passphrase."},
+        },
+        RPCResult{
             "{\n"
             "  \"name\" :    <wallet_name>,        (string) The wallet name if created successfully. If the wallet was created using a full path, the wallet_name will be the full path.\n"
             "  \"warning\" : <warning>,            (string) Warning message if wallet was not loaded cleanly.\n"
             "}\n"
-                },
-                RPCExamples{
-                    HelpExampleCli("createwallet", "\"testwallet\"")
+        },
+        RPCExamples{
+            HelpExampleCli("createwallet", "\"testwallet\"")
             + HelpExampleRpc("createwallet", "\"testwallet\"")
-                },
-            }.ToString());
+        },
+    };
+
+    if (request.fHelp || !help.IsValidNumArgs(request.params.size())) {
+        throw std::runtime_error(help.ToString());
     }
     std::string error;
     std::string warning;
@@ -2670,7 +2673,20 @@ static UniValue createwallet(const JSONRPCRequest& request)
         flags |= WALLET_FLAG_DISABLE_PRIVATE_KEYS;
     }
 
+    bool create_blank = false; // Indicate that the wallet is actually supposed to be blank and not just blank to make it encrypted
     if (!request.params[2].isNull() && request.params[2].get_bool()) {
+        create_blank = true;
+        flags |= WALLET_FLAG_BLANK_WALLET;
+    }
+    SecureString passphrase;
+    passphrase.reserve(100);
+    if (!request.params[3].isNull()) {
+        passphrase = request.params[3].get_str().c_str();
+        if (passphrase.empty()) {
+            // Empty string is invalid
+            throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Cannot encrypt a wallet with a blank password");
+        }
+        // Born encrypted wallets need to be blank first so that wallet creation doesn't make any unencrypted keys
         flags |= WALLET_FLAG_BLANK_WALLET;
     }
 
@@ -2688,6 +2704,29 @@ static UniValue createwallet(const JSONRPCRequest& request)
     if (!wallet) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Wallet creation failed.");
     }
+
+    // Encrypt the wallet if there's a passphrase
+    if (!passphrase.empty() && !(flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        if (!wallet->EncryptWallet(passphrase)) {
+            throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Error: Wallet created but failed to encrypt.");
+        }
+
+        if (!create_blank) {
+            // Unlock the wallet
+            if (!wallet->Unlock(passphrase)) {
+                throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Error: Wallet was encrypted but could not be unlocked");
+            }
+
+            // Set a seed for the wallet
+            CPubKey master_pub_key = wallet->GenerateNewSeed();
+            wallet->SetHDSeed(master_pub_key);
+            wallet->NewKeyPool();
+
+            // Relock the wallet
+            wallet->Lock();
+        }
+    }
+
     AddWallet(wallet);
 
     wallet->postInitProcess();
@@ -4140,7 +4179,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "addmultisigaddress",               &addmultisigaddress,            {"nrequired","keys","label","address_type"} },
     { "wallet",             "backupwallet",                     &backupwallet,                  {"destination"} },
     { "wallet",             "bumpfee",                          &bumpfee,                       {"txid", "options"} },
-    { "wallet",             "createwallet",                     &createwallet,                  {"wallet_name", "disable_private_keys", "blank"} },
+    { "wallet",             "createwallet",                     &createwallet,                  {"wallet_name", "disable_private_keys", "blank", "passphrase"} },
     { "wallet",             "dumpprivkey",                      &dumpprivkey,                   {"address"}  },
     { "wallet",             "dumpwallet",                       &dumpwallet,                    {"filename"} },
     { "wallet",             "encryptwallet",                    &encryptwallet,                 {"passphrase"} },
