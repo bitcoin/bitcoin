@@ -54,6 +54,8 @@ void CDeterministicMNState::ToJson(UniValue& obj) const
     obj.push_back(Pair("keyIDOwner", keyIDOwner.ToString()));
     obj.push_back(Pair("pubKeyOperator", pubKeyOperator.ToString()));
     obj.push_back(Pair("keyIDVoting", keyIDVoting.ToString()));
+    obj.push_back(Pair("ownerKeyAddr", CBitcoinAddress(keyIDOwner).ToString()));
+    obj.push_back(Pair("votingKeyAddr", CBitcoinAddress(keyIDVoting).ToString()));
     obj.push_back(Pair("addr", addr.ToStringIPPort(false)));
 
     CTxDestination dest;
