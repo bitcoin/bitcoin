@@ -1654,7 +1654,30 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         nMaxOutboundLimit = GetArg("-maxuploadtarget", DEFAULT_MAX_UPLOAD_TARGET)*1024*1024;
     }
 
-    // ********************************************************* Step 7: load block chain
+    // ********************************************************* Step 7a: check lite mode and load sporks
+
+    // lite mode disables all Dash-specific functionality
+    fLiteMode = GetBoolArg("-litemode", false);
+    LogPrintf("fLiteMode %d\n", fLiteMode);
+
+    if(fLiteMode) {
+        InitWarning(_("You are starting in lite mode, all Dash-specific functionality is disabled."));
+    }
+
+    if((!fLiteMode && fTxIndex == false)
+       && chainparams.NetworkIDString() != CBaseChainParams::REGTEST) { // TODO remove this when pruning is fixed. See https://github.com/dashpay/dash/pull/1817 and https://github.com/dashpay/dash/pull/1743
+        return InitError(_("Transaction index can't be disabled in full mode. Either start with -litemode command line switch or enable transaction index."));
+    }
+
+    if (!fLiteMode) {
+        uiInterface.InitMessage(_("Loading sporks cache..."));
+        CFlatDB<CSporkManager> flatdb6("sporks.dat", "magicSporkCache");
+        if (!flatdb6.Load(sporkManager)) {
+            return InitError(_("Failed to load sporks cache from") + "\n" + (GetDataDir() / "sporks.dat").string());
+        }
+    }
+
+    // ********************************************************* Step 7b: load block chain
 
     fReindex = GetBoolArg("-reindex", false);
     bool fReindexChainState = GetBoolArg("-reindex-chainstate", false);
@@ -1856,30 +1879,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     LogPrintf("No wallet support compiled in!\n");
 #endif
 
-    // ********************************************************* Step 9a: check lite mode and load sporks
-
-    // lite mode disables all Dash-specific functionality
-    fLiteMode = GetBoolArg("-litemode", false);
-    LogPrintf("fLiteMode %d\n", fLiteMode);
-
-    if(fLiteMode) {
-        InitWarning(_("You are starting in lite mode, all Dash-specific functionality is disabled."));
-    }
-
-    if((!fLiteMode && fTxIndex == false)
-       && chainparams.NetworkIDString() != CBaseChainParams::REGTEST) { // TODO remove this when pruning is fixed. See https://github.com/dashpay/dash/pull/1817 and https://github.com/dashpay/dash/pull/1743
-        return InitError(_("Transaction index can't be disabled in full mode. Either start with -litemode command line switch or enable transaction index."));
-    }
-
-    if (!fLiteMode) {
-        uiInterface.InitMessage(_("Loading sporks cache..."));
-        CFlatDB<CSporkManager> flatdb6("sporks.dat", "magicSporkCache");
-        if (!flatdb6.Load(sporkManager)) {
-            return InitError(_("Failed to load sporks cache from") + "\n" + (GetDataDir() / "sporks.dat").string());
-        }
-    }
-
-    // ********************************************************* Step 9b: data directory maintenance
+    // ********************************************************* Step 9: data directory maintenance
 
     // if pruning, unset the service bit and perform the initial blockstore prune
     // after any wallet rescanning has taken place.
