@@ -23,7 +23,7 @@ CGovernanceManager governance;
 
 int nSubmittedFinalBudget;
 
-const std::string CGovernanceManager::SERIALIZATION_VERSION_STRING = "CGovernanceManager-Version-13";
+const std::string CGovernanceManager::SERIALIZATION_VERSION_STRING = "CGovernanceManager-Version-14";
 const int CGovernanceManager::MAX_TIME_FUTURE_DEVIATION = 60 * 60;
 const int CGovernanceManager::RELIABLE_PROPAGATION_TIME = 60;
 
@@ -581,6 +581,7 @@ void CGovernanceManager::DoMaintenance(CConnman& connman)
 
     if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
         ClearPreDIP3Votes();
+        RemoveInvalidProposalVotes();
     }
 
     // CHECK OBJECTS WE'VE ASKED FOR, REMOVE OLD ENTRIES
@@ -686,9 +687,9 @@ void CGovernanceManager::SyncSingleObjAndItsVotes(CNode* pnode, const uint256& n
     for (const auto& vote : fileVotes.GetVotes()) {
         uint256 nVoteHash = vote.GetHash();
 
-        bool onlyOwnerAllowed = govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL && vote.GetSignal() == VOTE_SIGNAL_FUNDING;
+        bool onlyVotingKeyAllowed = govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL && vote.GetSignal() == VOTE_SIGNAL_FUNDING;
 
-        if (filter.contains(nVoteHash) || !vote.IsValid(onlyOwnerAllowed)) {
+        if (filter.contains(nVoteHash) || !vote.IsValid(onlyVotingKeyAllowed)) {
             continue;
         }
         pnode->PushInventory(CInv(MSG_GOVERNANCE_OBJECT_VOTE, nVoteHash));
@@ -1303,6 +1304,7 @@ void CGovernanceManager::UpdatedBlockTip(const CBlockIndex* pindex, CConnman& co
 
     if (deterministicMNManager->IsDeterministicMNsSporkActive(pindex->nHeight)) {
         ClearPreDIP3Votes();
+        RemoveInvalidProposalVotes();
     }
 
     CheckPostponedObjects(connman);
@@ -1356,6 +1358,45 @@ void CGovernanceManager::CleanOrphanObjects()
         }
     }
 }
+
+void CGovernanceManager::RemoveInvalidProposalVotes()
+{
+    auto curMNList = deterministicMNManager->GetListAtChainTip();
+    auto diff = lastMNListForVotingKeys.BuildDiff(curMNList);
+
+    LOCK(cs);
+
+    std::vector<COutPoint> changedKeyMNs;
+    for (const auto& p : diff.updatedMNs) {
+        auto oldDmn = lastMNListForVotingKeys.GetMN(p.first);
+        if (p.second->keyIDVoting != oldDmn->pdmnState->keyIDVoting) {
+            changedKeyMNs.emplace_back(oldDmn->collateralOutpoint);
+        }
+    }
+    for (const auto& proTxHash : diff.removedMns) {
+        auto oldDmn = lastMNListForVotingKeys.GetMN(proTxHash);
+        changedKeyMNs.emplace_back(oldDmn->collateralOutpoint);
+    }
+
+    for (const auto& outpoint : changedKeyMNs) {
+        for (auto& p : mapObjects) {
+            auto removed = p.second.RemoveInvalidProposalVotes(outpoint);
+            if (removed.empty()) {
+                continue;
+            }
+            for (auto& voteHash : removed) {
+                cmapVoteToObject.Erase(voteHash);
+                cmapInvalidVotes.Erase(voteHash);
+                cmmapOrphanVotes.Erase(voteHash);
+                setRequestedVotes.erase(voteHash);
+            }
+        }
+    }
+
+    // store current MN list for the next run so that we can determine which keys changed
+    lastMNListForVotingKeys = curMNList;
+}
+
 
 unsigned int CGovernanceManager::GetMinVoteTime()
 {

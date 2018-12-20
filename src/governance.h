@@ -19,6 +19,8 @@
 #include "timedata.h"
 #include "util.h"
 
+#include "evo/deterministicmns.h"
+
 #include <univalue.h>
 
 class CGovernanceManager;
@@ -261,6 +263,9 @@ private:
 
     bool fRateChecksEnabled;
 
+    // used to check for changed voting keys
+    CDeterministicMNList lastMNListForVotingKeys;
+
     class ScopedLockBool
     {
         bool& ref;
@@ -351,6 +356,7 @@ public:
         READWRITE(cmmapOrphanVotes);
         READWRITE(mapObjects);
         READWRITE(mapLastMasternodeObject);
+        READWRITE(lastMNListForVotingKeys);
         if (ser_action.ForRead() && (strVersion != SERIALIZATION_VERSION_STRING)) {
             Clear();
             return;
@@ -448,6 +454,8 @@ private:
     void RequestOrphanObjects(CConnman& connman);
 
     void CleanOrphanObjects();
+
+    void RemoveInvalidProposalVotes();
 
     // TODO can be removed after full DIP3 deployment
     unsigned int GetMinVoteTime();

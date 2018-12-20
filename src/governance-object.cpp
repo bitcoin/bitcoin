@@ -177,10 +177,10 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         }
     }
 
-    bool onlyOwnerAllowed = nObjectType == GOVERNANCE_OBJECT_PROPOSAL && vote.GetSignal() == VOTE_SIGNAL_FUNDING;
+    bool onlyVotingKeyAllowed = nObjectType == GOVERNANCE_OBJECT_PROPOSAL && vote.GetSignal() == VOTE_SIGNAL_FUNDING;
 
     // Finally check that the vote is actually valid (done last because of cost of signature verification)
-    if (!vote.IsValid(onlyOwnerAllowed)) {
+    if (!vote.IsValid(onlyVotingKeyAllowed)) {
         std::ostringstream ostr;
         ostr << "CGovernanceObject::ProcessVote -- Invalid vote"
              << ", MN outpoint = " << vote.GetMasternodeOutpoint().ToStringShort()
@@ -221,6 +221,51 @@ void CGovernanceObject::ClearMasternodeVotes()
             ++it;
         }
     }
+}
+
+std::set<uint256> CGovernanceObject::RemoveInvalidProposalVotes(const COutPoint& mnOutpoint)
+{
+    LOCK(cs);
+
+    if (nObjectType != GOVERNANCE_OBJECT_PROPOSAL) {
+        return {};
+    }
+
+    auto it = mapCurrentMNVotes.find(mnOutpoint);
+    if (it == mapCurrentMNVotes.end()) {
+        // don't even try as we don't have any votes from this MN
+        return {};
+    }
+
+    auto removedVotes = fileVotes.RemoveInvalidProposalVotes(mnOutpoint);
+    if (removedVotes.empty()) {
+        return {};
+    }
+
+    auto nParentHash = GetHash();
+    for (auto jt = it->second.mapInstances.begin(); jt != it->second.mapInstances.end(); ) {
+        CGovernanceVote tmpVote(mnOutpoint, nParentHash, (vote_signal_enum_t)jt->first, jt->second.eOutcome);
+        tmpVote.SetTime(jt->second.nCreationTime);
+        if (removedVotes.count(tmpVote.GetHash())) {
+            jt = it->second.mapInstances.erase(jt);
+        } else {
+            ++jt;
+        }
+    }
+    if (it->second.mapInstances.empty()) {
+        mapCurrentMNVotes.erase(it);
+    }
+
+    if (!removedVotes.empty()) {
+        std::string removedStr;
+        for (auto& h : removedVotes) {
+            removedStr += strprintf("  %s\n", h.ToString());
+        }
+        LogPrintf("CGovernanceObject::%s -- Removed %d invalid votes for %s from MN %s:\n%s\n", __func__, removedVotes.size(), nParentHash.ToString(), mnOutpoint.ToString(), removedStr);
+        fDirtyCache = true;
+    }
+
+    return removedVotes;
 }
 
 std::string CGovernanceObject::GetSignatureMessage() const
