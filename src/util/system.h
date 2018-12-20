@@ -186,11 +186,6 @@ public:
     const std::set<std::string> GetUnsuitableSectionOnlyArgs() const;
 
     /**
-     * Log warnings for unrecognized section names in the config file.
-     */
-    const std::list<SectionInfo> GetUnrecognizedSections() const;
-
-    /**
      * Return a vector of strings of the given argument
      *
      * @param strArg Argument to get (e.g. "-foo")
