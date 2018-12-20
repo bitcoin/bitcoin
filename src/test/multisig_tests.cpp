@@ -76,20 +76,20 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
     // Test a AND b:
     keys.assign(1,key[0]);
     keys.push_back(key[1]);
-    s = sign_multisig(a_and_b, keys, txTo[0], 0);
+    s = sign_multisig(a_and_b, keys, CTransaction(txTo[0]), 0);
     BOOST_CHECK(VerifyScript(s, a_and_b, nullptr, flags, MutableTransactionSignatureChecker(&txTo[0], 0, amount), &err));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
 
     for (int i = 0; i < 4; i++)
     {
         keys.assign(1,key[i]);
-        s = sign_multisig(a_and_b, keys, txTo[0], 0);
+        s = sign_multisig(a_and_b, keys, CTransaction(txTo[0]), 0);
         BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, nullptr, flags, MutableTransactionSignatureChecker(&txTo[0], 0, amount), &err), strprintf("a&b 1: %d", i));
         BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_INVALID_STACK_OPERATION, ScriptErrorString(err));
 
         keys.assign(1,key[1]);
         keys.push_back(key[i]);
-        s = sign_multisig(a_and_b, keys, txTo[0], 0);
+        s = sign_multisig(a_and_b, keys, CTransaction(txTo[0]), 0);
         BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, nullptr, flags, MutableTransactionSignatureChecker(&txTo[0], 0, amount), &err), strprintf("a&b 2: %d", i));
         BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_EVAL_FALSE, ScriptErrorString(err));
     }
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
     for (int i = 0; i < 4; i++)
     {
         keys.assign(1,key[i]);
-        s = sign_multisig(a_or_b, keys, txTo[1], 0);
+        s = sign_multisig(a_or_b, keys, CTransaction(txTo[1]), 0);
         if (i == 0 || i == 1)
         {
             BOOST_CHECK_MESSAGE(VerifyScript(s, a_or_b, nullptr, flags, MutableTransactionSignatureChecker(&txTo[1], 0, amount), &err), strprintf("a|b: %d", i));
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
         {
             keys.assign(1,key[i]);
             keys.push_back(key[j]);
-            s = sign_multisig(escrow, keys, txTo[2], 0);
+            s = sign_multisig(escrow, keys, CTransaction(txTo[2]), 0);
             if (i < j && i < 3 && j < 3)
             {
                 BOOST_CHECK_MESSAGE(VerifyScript(s, escrow, nullptr, flags, MutableTransactionSignatureChecker(&txTo[2], 0, amount), &err), strprintf("escrow 1: %d %d", i, j));
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(multisig_Sign)
     for (int i = 0; i < 4; i++)
     {
         key[i].MakeNewKey(true);
-        keystore.AddKey(key[i]);
+        BOOST_CHECK(keystore.AddKey(key[i]));
     }
 
     CScript a_and_b;
@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE(multisig_Sign)
 
     for (int i = 0; i < 3; i++)
     {
-        BOOST_CHECK_MESSAGE(SignSignature(keystore, txFrom, txTo[i], 0, SIGHASH_ALL), strprintf("SignSignature %d", i));
+        BOOST_CHECK_MESSAGE(SignSignature(keystore, CTransaction(txFrom), txTo[i], 0, SIGHASH_ALL), strprintf("SignSignature %d", i));
     }
 }
 

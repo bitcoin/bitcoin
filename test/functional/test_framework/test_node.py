@@ -68,7 +68,7 @@ class TestNode():
         self.rpc_timeout = timewait
         self.binary = bitcoind
         self.coverage_dir = coverage_dir
-        if extra_conf != None:
+        if extra_conf is not None:
             append_config(datadir, extra_conf)
         # Most callers will just need to add extra args to the standard list below.
         # For those callers that need more flexibility, they can just set the args property directly.
@@ -228,13 +228,13 @@ class TestNode():
             wallet_path = "wallet/{}".format(urllib.parse.quote(wallet_name))
             return self.rpc / wallet_path
 
-    def stop_node(self, expected_stderr=''):
+    def stop_node(self, expected_stderr='', wait=0):
         """Stop the node."""
         if not self.running:
             return
         self.log.debug("Stopping node")
         try:
-            self.stop()
+            self.stop(wait=wait)
         except http.client.CannotSendRequest:
             self.log.exception("Unable to stop node.")
 

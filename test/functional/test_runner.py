@@ -153,6 +153,7 @@ BASE_SCRIPTS = [
     'wallet_importprunedfunds.py',
     'p2p_leak_tx.py',
     'rpc_signmessage.py',
+    'wallet_balance.py',
     'feature_nulldummy.py',
     'mempool_accept.py',
     'wallet_import_rescan.py',
@@ -175,6 +176,7 @@ BASE_SCRIPTS = [
     'rpc_getblockstats.py',
     'p2p_fingerprint.py',
     'feature_uacomment.py',
+    'wallet_coinbase_category.py',
     'feature_filelock.py',
     'p2p_unrequested_blocks.py',
     'feature_includeconf.py',
@@ -185,6 +187,7 @@ BASE_SCRIPTS = [
     'feature_config_args.py',
     'rpc_help.py',
     'feature_help.py',
+    'feature_shutdown.py',
     # Don't append tests at the end to avoid merge conflicts
     # Put them in a random line within the section that fits their approximate run-time
 ]
@@ -272,7 +275,7 @@ def main():
     if tests:
         # Individual tests have been specified. Run specified tests that exist
         # in the ALL_SCRIPTS list. Accept the name with or without .py extension.
-        tests = [re.sub("\.py$", "", test) + ".py" for test in tests]
+        tests = [test + ".py" if ".py" not in test else test for test in tests]
         for test in tests:
             if test in ALL_SCRIPTS:
                 test_list.append(test)

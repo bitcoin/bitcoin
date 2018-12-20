@@ -223,7 +223,7 @@ bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& group
     std::vector<OutputGroup> applicable_groups;
     CAmount nTotalLower = 0;
 
-    random_shuffle(groups.begin(), groups.end(), GetRandInt);
+    Shuffle(groups.begin(), groups.end(), FastRandomContext());
 
     for (const OutputGroup& group : groups) {
         if (group.m_value == nTargetValue) {

@@ -12,6 +12,7 @@
 
 #include <amount.h>
 #include <coins.h>
+#include <crypto/common.h> // for ReadLE64
 #include <fs.h>
 #include <protocol.h> // For CMessageHeader::MessageStartChars
 #include <policy/feerate.h>
@@ -138,7 +139,10 @@ static const int DEFAULT_STOPATHEIGHT = 0;
 
 struct BlockHasher
 {
-    size_t operator()(const uint256& hash) const { return hash.GetCheapHash(); }
+    // this used to call `GetCheapHash()` in uint256, which was later moved; the
+    // cheap hash function simply calls ReadLE64() however, so the end result is
+    // identical
+    size_t operator()(const uint256& hash) const { return ReadLE64(hash.begin()); }
 };
 
 extern CScript COINBASE_FLAGS;

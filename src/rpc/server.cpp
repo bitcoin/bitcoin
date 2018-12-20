@@ -24,7 +24,7 @@
 #include <unordered_map>
 
 static CCriticalSection cs_rpcWarmup;
-static bool fRPCRunning = false;
+static std::atomic<bool> g_rpc_running{false};
 static bool fRPCInWarmup GUARDED_BY(cs_rpcWarmup) = true;
 static std::string rpcWarmupStatus GUARDED_BY(cs_rpcWarmup) = "RPC server started";
 /* Timer-creating functions */
@@ -142,10 +142,6 @@ std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKey)
     return ParseHexV(find_value(o, strKey), strKey);
 }
 
-/**
- * Note: This interface may still be subject to change.
- */
-
 std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest& helpreq) const
 {
     std::string strRet;
@@ -207,11 +203,9 @@ UniValue help(const JSONRPCRequest& jsonRequest)
             RPCHelpMan{"help",
                 "\nList all commands, or get help for a specified command.\n",
                 {
-                    {"command", RPCArg::Type::STR, true},
+                    {"command", RPCArg::Type::STR, /* opt */ true, /* default_val */ "all commands", "The command to get help on"},
                 }}
                 .ToString() +
-            "\nArguments:\n"
-            "1. \"command\"     (string, optional) The command to get help on\n"
             "\nResult:\n"
             "\"text\"     (string) The help text\n"
         );
@@ -227,6 +221,9 @@ UniValue help(const JSONRPCRequest& jsonRequest)
 UniValue stop(const JSONRPCRequest& jsonRequest)
 {
     // Accept the deprecated and ignored 'detach' boolean argument
+    // Also accept the hidden 'wait' integer argument (milliseconds)
+    // For instance, 'stop 1000' makes the call wait 1 second before returning
+    // to the client (intended for testing)
     if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
         throw std::runtime_error(
             RPCHelpMan{"stop",
@@ -235,6 +232,9 @@ UniValue stop(const JSONRPCRequest& jsonRequest)
     // Event loop will exit after current HTTP requests have been handled, so
     // this reply will get back to the client.
     StartShutdown();
+    if (jsonRequest.params[0].isNum()) {
+        MilliSleep(jsonRequest.params[0].get_int());
+    }
     return "Bitcoin server stopping";
 }
 
@@ -256,15 +256,12 @@ static UniValue uptime(const JSONRPCRequest& jsonRequest)
 }
 
 // clang-format off
-/**
- * Call Table
- */
 static const CRPCCommand vRPCCommands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
     /* Overall control/query calls */
     { "control",            "help",                   &help,                   {"command"}  },
-    { "control",            "stop",                   &stop,                   {}  },
+    { "control",            "stop",                   &stop,                   {"wait"}  },
     { "control",            "uptime",                 &uptime,                 {}  },
 };
 // clang-format on
@@ -306,7 +303,7 @@ bool CRPCTable::appendCommand(const std::string& name, const CRPCCommand* pcmd)
 void StartRPC()
 {
     LogPrint(BCLog::RPC, "Starting RPC\n");
-    fRPCRunning = true;
+    g_rpc_running = true;
     g_rpcSignals.Started();
 }
 
@@ -314,7 +311,7 @@ void InterruptRPC()
 {
     LogPrint(BCLog::RPC, "Interrupting RPC\n");
     // Interrupt e.g. running longpolls
-    fRPCRunning = false;
+    g_rpc_running = false;
 }
 
 void StopRPC()
@@ -327,7 +324,7 @@ void StopRPC()
 
 bool IsRPCRunning()
 {
-    return fRPCRunning;
+    return g_rpc_running;
 }
 
 void SetRPCWarmupStatus(const std::string& newStatus)

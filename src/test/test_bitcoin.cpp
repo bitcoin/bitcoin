@@ -11,6 +11,7 @@
 #include <crypto/sha256.h>
 #include <miner.h>
 #include <net_processing.h>
+#include <noui.h>
 #include <pow.h>
 #include <rpc/register.h>
 #include <rpc/server.h>
@@ -20,6 +21,8 @@
 #include <validation.h>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
+
+FastRandomContext g_insecure_rand_ctx;
 
 void CConnmanTest::AddNode(CNode& node)
 {
@@ -35,12 +38,6 @@ void CConnmanTest::ClearNodes()
     }
     g_connman->vNodes.clear();
 }
-
-uint256 insecure_rand_seed = GetRandHash();
-FastRandomContext insecure_rand_ctx(insecure_rand_seed);
-
-extern bool fPrintToConsole;
-extern void noui_connect();
 
 std::ostream& operator<<(std::ostream& os, const uint256& num)
 {
@@ -118,16 +115,16 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
 
 TestingSetup::~TestingSetup()
 {
-        threadGroup.interrupt_all();
-        threadGroup.join_all();
-        GetMainSignals().FlushBackgroundCallbacks();
-        GetMainSignals().UnregisterBackgroundSignalScheduler();
-        g_connman.reset();
-        peerLogic.reset();
-        UnloadBlockIndex();
-        pcoinsTip.reset();
-        pcoinsdbview.reset();
-        pblocktree.reset();
+    threadGroup.interrupt_all();
+    threadGroup.join_all();
+    GetMainSignals().FlushBackgroundCallbacks();
+    GetMainSignals().UnregisterBackgroundSignalScheduler();
+    g_connman.reset();
+    peerLogic.reset();
+    UnloadBlockIndex();
+    pcoinsTip.reset();
+    pcoinsdbview.reset();
+    pblocktree.reset();
 }
 
 TestChain100Setup::TestChain100Setup() : TestingSetup(CBaseChainParams::REGTEST)

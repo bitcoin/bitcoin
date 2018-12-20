@@ -17,6 +17,7 @@
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/test/wallet_test_fixture.h>
+#include <policy/policy.h>
 
 #include <boost/test/unit_test.hpp>
 #include <univalue.h>
@@ -33,18 +34,31 @@ static void AddKey(CWallet& wallet, const CKey& key)
     wallet.AddKeyPubKey(key, key.GetPubKey());
 }
 
-BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
+BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
 {
     auto chain = interfaces::MakeChain();
 
     // Cap last block file size, and mine new block in a new block file.
-    CBlockIndex* const nullBlock = nullptr;
+    const CBlockIndex* const null_block = nullptr;
     CBlockIndex* oldTip = chainActive.Tip();
     GetBlockFileInfo(oldTip->GetBlockPos().nFile)->nSize = MAX_BLOCKFILE_SIZE;
     CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
     CBlockIndex* newTip = chainActive.Tip();
 
     auto locked_chain = chain->lock();
+
+    // Verify ScanForWalletTransactions accomodates a null start block.
+    {
+        CWallet wallet(*chain, WalletLocation(), WalletDatabase::CreateDummy());
+        AddKey(wallet, coinbaseKey);
+        WalletRescanReserver reserver(&wallet);
+        reserver.reserve();
+        const CBlockIndex *stop_block = null_block + 1, *failed_block = null_block + 1;
+        BOOST_CHECK_EQUAL(wallet.ScanForWalletTransactions(nullptr, nullptr, reserver, failed_block, stop_block), CWallet::ScanResult::SUCCESS);
+        BOOST_CHECK_EQUAL(failed_block, null_block);
+        BOOST_CHECK_EQUAL(stop_block, null_block);
+        BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 0);
+    }
 
     // Verify ScanForWalletTransactions picks up transactions in both the old
     // and new block files.
@@ -53,7 +67,10 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
         AddKey(wallet, coinbaseKey);
         WalletRescanReserver reserver(&wallet);
         reserver.reserve();
-        BOOST_CHECK_EQUAL(nullBlock, wallet.ScanForWalletTransactions(oldTip, nullptr, reserver));
+        const CBlockIndex *stop_block = null_block + 1, *failed_block = null_block + 1;
+        BOOST_CHECK_EQUAL(wallet.ScanForWalletTransactions(oldTip, nullptr, reserver, failed_block, stop_block), CWallet::ScanResult::SUCCESS);
+        BOOST_CHECK_EQUAL(failed_block, null_block);
+        BOOST_CHECK_EQUAL(stop_block, newTip);
         BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 100 * COIN);
     }
 
@@ -68,9 +85,46 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
         AddKey(wallet, coinbaseKey);
         WalletRescanReserver reserver(&wallet);
         reserver.reserve();
-        BOOST_CHECK_EQUAL(oldTip, wallet.ScanForWalletTransactions(oldTip, nullptr, reserver));
+        const CBlockIndex *stop_block = null_block + 1, *failed_block = null_block + 1;
+        BOOST_CHECK_EQUAL(wallet.ScanForWalletTransactions(oldTip, nullptr, reserver, failed_block, stop_block), CWallet::ScanResult::FAILURE);
+        BOOST_CHECK_EQUAL(failed_block, oldTip);
+        BOOST_CHECK_EQUAL(stop_block, newTip);
         BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 50 * COIN);
     }
+
+    // Prune the remaining block file.
+    PruneOneBlockFile(newTip->GetBlockPos().nFile);
+    UnlinkPrunedFiles({newTip->GetBlockPos().nFile});
+
+    // Verify ScanForWalletTransactions scans no blocks.
+    {
+        CWallet wallet(*chain, WalletLocation(), WalletDatabase::CreateDummy());
+        AddKey(wallet, coinbaseKey);
+        WalletRescanReserver reserver(&wallet);
+        reserver.reserve();
+        const CBlockIndex *stop_block = null_block + 1, *failed_block = null_block + 1;
+        BOOST_CHECK_EQUAL(wallet.ScanForWalletTransactions(oldTip, nullptr, reserver, failed_block, stop_block), CWallet::ScanResult::FAILURE);
+        BOOST_CHECK_EQUAL(failed_block, newTip);
+        BOOST_CHECK_EQUAL(stop_block, null_block);
+        BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 0);
+    }
+}
+
+BOOST_FIXTURE_TEST_CASE(importmulti_rescan, TestChain100Setup)
+{
+    auto chain = interfaces::MakeChain();
+
+    // Cap last block file size, and mine new block in a new block file.
+    CBlockIndex* oldTip = chainActive.Tip();
+    GetBlockFileInfo(oldTip->GetBlockPos().nFile)->nSize = MAX_BLOCKFILE_SIZE;
+    CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
+    CBlockIndex* newTip = chainActive.Tip();
+
+    auto locked_chain = chain->lock();
+
+    // Prune the older block file.
+    PruneOneBlockFile(oldTip->GetBlockPos().nFile);
+    UnlinkPrunedFiles({oldTip->GetBlockPos().nFile});
 
     // Verify importmulti RPC returns failure for a key whose creation time is
     // before the missing block, and success for a key whose creation time is
@@ -286,7 +340,11 @@ public:
         AddKey(*wallet, coinbaseKey);
         WalletRescanReserver reserver(wallet.get());
         reserver.reserve();
-        wallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver);
+        const CBlockIndex* const null_block = nullptr;
+        const CBlockIndex *stop_block = null_block + 1, *failed_block = null_block + 1;
+        BOOST_CHECK_EQUAL(wallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver, failed_block, stop_block), CWallet::ScanResult::SUCCESS);
+        BOOST_CHECK_EQUAL(stop_block, chainActive.Tip());
+        BOOST_CHECK_EQUAL(failed_block, null_block);
     }
 
     ~ListCoinsTestingSetup()
@@ -392,6 +450,49 @@ BOOST_FIXTURE_TEST_CASE(wallet_disableprivkeys, TestChain100Setup)
     BOOST_CHECK(!wallet->TopUpKeyPool(1000));
     CPubKey pubkey;
     BOOST_CHECK(!wallet->GetKeyFromPool(pubkey, false));
+}
+
+// Explicit calculation which is used to test the wallet constant
+// We get the same virtual size due to rounding(weight/4) for both use_max_sig values
+static size_t CalculateNestedKeyhashInputSize(bool use_max_sig)
+{
+    // Generate ephemeral valid pubkey
+    CKey key;
+    key.MakeNewKey(true);
+    CPubKey pubkey = key.GetPubKey();
+
+    // Generate pubkey hash
+    uint160 key_hash(Hash160(pubkey.begin(), pubkey.end()));
+
+    // Create inner-script to enter into keystore. Key hash can't be 0...
+    CScript inner_script = CScript() << OP_0 << std::vector<unsigned char>(key_hash.begin(), key_hash.end());
+
+    // Create outer P2SH script for the output
+    uint160 script_id(Hash160(inner_script.begin(), inner_script.end()));
+    CScript script_pubkey = CScript() << OP_HASH160 << std::vector<unsigned char>(script_id.begin(), script_id.end()) << OP_EQUAL;
+
+    // Add inner-script to key store and key to watchonly
+    CBasicKeyStore keystore;
+    keystore.AddCScript(inner_script);
+    keystore.AddKeyPubKey(key, pubkey);
+
+    // Fill in dummy signatures for fee calculation.
+    SignatureData sig_data;
+
+    if (!ProduceSignature(keystore, use_max_sig ? DUMMY_MAXIMUM_SIGNATURE_CREATOR : DUMMY_SIGNATURE_CREATOR, script_pubkey, sig_data)) {
+        // We're hand-feeding it correct arguments; shouldn't happen
+        assert(false);
+    }
+
+    CTxIn tx_in;
+    UpdateInput(tx_in, sig_data);
+    return (size_t)GetVirtualTransactionInputSize(tx_in);
+}
+
+BOOST_FIXTURE_TEST_CASE(dummy_input_size_test, TestChain100Setup)
+{
+    BOOST_CHECK_EQUAL(CalculateNestedKeyhashInputSize(false), DUMMY_NESTED_P2WPKH_INPUT_SIZE);
+    BOOST_CHECK_EQUAL(CalculateNestedKeyhashInputSize(true), DUMMY_NESTED_P2WPKH_INPUT_SIZE);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

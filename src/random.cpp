@@ -398,6 +398,7 @@ uint256 FastRandomContext::rand256()
 
 std::vector<unsigned char> FastRandomContext::randbytes(size_t len)
 {
+    if (requires_seed) RandomSeed();
     std::vector<unsigned char> ret(len);
     if (len > 0) {
         rng.Output(&ret[0], len);
@@ -461,6 +462,20 @@ FastRandomContext::FastRandomContext(bool fDeterministic) : requires_seed(!fDete
     }
     uint256 seed;
     rng.SetKey(seed.begin(), 32);
+}
+
+FastRandomContext& FastRandomContext::operator=(FastRandomContext&& from) noexcept
+{
+    requires_seed = from.requires_seed;
+    rng = from.rng;
+    std::copy(std::begin(from.bytebuf), std::end(from.bytebuf), std::begin(bytebuf));
+    bytebuf_size = from.bytebuf_size;
+    bitbuf = from.bitbuf;
+    bitbuf_size = from.bitbuf_size;
+    from.requires_seed = true;
+    from.bytebuf_size = 0;
+    from.bitbuf_size = 0;
+    return *this;
 }
 
 void RandomInit()
