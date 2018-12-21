@@ -395,6 +395,7 @@ limitedmap<uint256, int64_t> g_already_asked_for GUARDED_BY(cs_main)(MAX_INV_SZ)
 
 /** Map maintaining per-node state. */
 static std::map<NodeId, CNodeState> mapNodeState GUARDED_BY(cs_main);
+static std::set<NodeId> g_outbound_peers GUARDED_BY(cs_main);
 
 static CNodeState *State(NodeId pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
     std::map<NodeId, CNodeState>::iterator it = mapNodeState.find(pnode);
@@ -770,9 +771,13 @@ void PeerLogicValidation::InitializeNode(CNode *pnode) {
     {
         LOCK(cs_main);
         mapNodeState.emplace_hint(mapNodeState.end(), std::piecewise_construct, std::forward_as_tuple(nodeid), std::forward_as_tuple(addr, std::move(addrName), pnode->fInbound, pnode->m_manual_connection));
+        if (!pnode->fInbound) {
+            g_outbound_peers.insert(nodeid);
+        }
     }
-    if(!pnode->fInbound)
+    if(!pnode->fInbound) {
         PushNodeVersion(pnode, connman, GetTime());
+    }
 }
 
 void PeerLogicValidation::FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTime) {
@@ -798,6 +803,7 @@ void PeerLogicValidation::FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTim
     g_outbound_peers_with_protect_from_disconnect -= state->m_chain_sync.m_protect;
     assert(g_outbound_peers_with_protect_from_disconnect >= 0);
 
+    g_outbound_peers.erase(nodeid);
     mapNodeState.erase(nodeid);
 
     if (mapNodeState.empty()) {
@@ -806,6 +812,7 @@ void PeerLogicValidation::FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTim
         assert(nPreferredDownload == 0);
         assert(nPeersWithValidatedDownloads == 0);
         assert(g_outbound_peers_with_protect_from_disconnect == 0);
+        assert(g_outbound_peers.empty());
     }
     LogPrint(BCLog::NET, "Cleared nodestate for peer=%d\n", nodeid);
 }
