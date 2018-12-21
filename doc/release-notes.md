@@ -65,6 +65,13 @@ platform.
 Notable changes
 ===============
 
+Mining
+------
+
+- Calls to `getblocktemplate` will fail if the segwit rule is not specified.
+  Calling `getblocktemplate` without segwit specified is almost certainly
+  a misconfiguration since doing so results in lower rewards for the miner.
+
 Command line option changes
 ---------------------------
 
@@ -181,6 +188,8 @@ in the Low-level Changes section below.
 - The `importmulti` RPC has been updated to support P2WSH, P2WPKH,
   P2SH-P2WPKH, and P2SH-P2WSH. Requests for P2WSH and P2SH-P2WSH accept
   an additional `witnessscript` parameter.
+
+- See the [Mining](#mining) section for changes to `getblocktemplate`.
 
 Low-level changes
 =================
