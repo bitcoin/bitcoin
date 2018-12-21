@@ -38,8 +38,9 @@ after_script:
   - echo $TRAVIS_COMMIT_LOG
 jobs:
   include:
-# lint stage
+
     - stage: lint
+      name: 'lint'
       env:
       cache: false
       language: python
@@ -50,8 +51,9 @@ jobs:
         - set -o errexit; source .travis/lint_05_before_script.sh
       script:
         - set -o errexit; source .travis/lint_06_script.sh
-# ARM
+
     - stage: test
+      name: 'ARM  [GOAL: install]  [no unit or functional tests]'
       env: >-
         HOST=arm-linux-gnueabihf
         PACKAGES="python3 g++-arm-linux-gnueabihf"
@@ -61,39 +63,44 @@ jobs:
         # -Wno-psabi is to disable ABI warnings: "note: parameter passing for argument of type ... changed in GCC 7.1"
         # This could be removed once the ABI change warning does not show up by default
         BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports CXXFLAGS=-Wno-psabi"
-# Win32
+
     - stage: test
+      name: 'Win32  [GOAL: deploy]  [no gui tests]'
       env: >-
         HOST=i686-w64-mingw32
         DPKG_ADD_ARCH="i386"
         PACKAGES="python3 nsis g++-mingw-w64-i686 wine-binfmt wine32"
         GOAL="deploy"
         BITCOIN_CONFIG="--enable-reduce-exports --disable-gui-tests"
-# Win64
+
     - stage: test
+      name: 'Win64  [GOAL: deploy]  [no gui tests]'
       env: >-
         HOST=x86_64-w64-mingw32
         PACKAGES="python3 nsis g++-mingw-w64-x86-64 wine-binfmt wine64"
         GOAL="deploy"
         BITCOIN_CONFIG="--enable-reduce-exports --disable-gui-tests"
-# 32-bit + dash
+
     - stage: test
+      name: '32-bit + dash  [GOAL: install]'
       env: >-
         HOST=i686-pc-linux-gnu
         PACKAGES="g++-multilib python3-zmq"
         GOAL="install"
         BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++"
         CONFIG_SHELL="/bin/dash"
-# x86_64 Linux (uses qt5 dev package instead of depends Qt to speed up build and avoid timeout)
+
     - stage: test
+      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [uses qt5 dev package instead of depends Qt to speed up build and avoid timeout]'
       env: >-
         HOST=x86_64-unknown-linux-gnu
         PACKAGES="python3-zmq qtbase5-dev qttools5-dev-tools protobuf-compiler libdbus-1-dev libharfbuzz-dev libprotobuf-dev"
         DEP_OPTS="NO_QT=1 NO_UPNP=1 DEBUG=1 ALLOW_HOST_PACKAGES=1"
         GOAL="install"
         BITCOIN_CONFIG="--enable-zmq --with-gui=qt5 --enable-glibc-back-compat --enable-reduce-exports --enable-debug CXXFLAGS=\"-g0 -O2\""
-# x86_64 Linux (xenial, no depends, only system libs, sanitizers: thread (TSan))
+
     - stage: test
+      name: 'x86_64 Linux  [GOAL: install]  [xenial]  [no depends, only system libs, sanitizers: thread (TSan), no wallet]'
       env: >-
         HOST=x86_64-unknown-linux-gnu
         DOCKER_NAME_TAG=ubuntu:16.04
@@ -101,8 +108,9 @@ jobs:
         NO_DEPENDS=1
         GOAL="install"
         BITCOIN_CONFIG="--enable-zmq --disable-wallet --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER --with-sanitizers=thread --disable-hardening --disable-asm CC=clang CXX=clang++"
-# x86_64 Linux (no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer)
+
     - stage: test
+      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer]'
       env: >-
         HOST=x86_64-unknown-linux-gnu
         PACKAGES="clang llvm python3-zmq qtbase5-dev qttools5-dev-tools libssl1.0-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libdb5.3++-dev libminiupnpc-dev libzmq3-dev libprotobuf-dev protobuf-compiler libqrencode-dev"
@@ -110,16 +118,18 @@ jobs:
         FUNCTIONAL_TESTS_CONFIG="--exclude wallet_multiwallet.py" # Temporarily suppress ASan heap-use-after-free (see issue #14163)
         GOAL="install"
         BITCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER --with-sanitizers=address,integer,undefined CC=clang CXX=clang++"
-# x86_64 Linux, No wallet
+
     - stage: test
+      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no wallet]'
       env: >-
         HOST=x86_64-unknown-linux-gnu
         PACKAGES="python3-zmq"
         DEP_OPTS="NO_WALLET=1"
         GOAL="install"
         BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
-# Cross-Mac
+
     - stage: test
+      name: 'macOS 10.10  [GOAL: deploy]'
       env: >-
         HOST=x86_64-apple-darwin14
         PACKAGES="cmake imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools python-dev python3-setuptools-git"
