@@ -225,6 +225,8 @@ libbitcoin_server_a_SOURCES = \
   platform/agent.h \
   platform/governance.cpp \
   platform/governance.h \
+  platform/governance-approval-voting.h \
+  platform/governance-approval-voting.cpp \
   platform/governance-vote.cpp \
   platform/governance-vote.h \
   platform/specialtx.h \

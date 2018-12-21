@@ -11,6 +11,9 @@
 
 namespace Platform
 {
+    class VotingRound;
+    class ApprovalVoting;
+
     struct Identity
     {
         uint256 id;
@@ -23,6 +26,8 @@ namespace Platform
 
     class AgentRegistryIteratorImpl;
 
+    // TODO: After Identities are in place decide, whether we need AgentRegistry as a separate entity,
+    //       or is it sufficient to have just a Voting Round to decide who is an agent and who is not
     class AgentRegistry
     {
     public:
@@ -30,7 +35,7 @@ namespace Platform
         void Remove(const Identity& agent);
         bool IsAgent(uint256 id) const;
 
-        AgentRegistry();
+        AgentRegistry(std::unique_ptr<VotingRound> agentsVoting);
 
     public:
         class Iterator:
@@ -61,11 +66,15 @@ namespace Platform
         const_iterator begin() const;
         const_iterator end() const;
 
+        VotingRound& AgentsVoting() { return *m_agentsVoting; }
+
     private:
+        std::unique_ptr<VotingRound> m_agentsVoting;
         std::map<uint256, Identity> m_agents;
     };
 
     AgentRegistry& GetAgentRegistry();
+    VotingRound& AgentsVoting();
 }
 
 #endif //CROWN_PLATFORM_AGENT_H

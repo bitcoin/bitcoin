@@ -5,12 +5,12 @@
 #ifndef CROWN_GOVERNANCE_VOTE_H
 #define CROWN_GOVERNANCE_VOTE_H
 
+#include <pubkey.h>
 #include "primitives/transaction.h"
+#include "platform/governance.h"
 
 class CBlockIndex;
 class CValidationState;
-class CKey;
-class CPubKey;
 
 namespace Platform
 {
@@ -19,16 +19,28 @@ namespace Platform
     public:
         static const int CURRENT_VERSION = 1;
 
-        enum Value { abstain = 0, yes, no };
-
     public:
+        VoteTx(Vote vote, int64_t electionCode)
+            : voterId(vote.VoterId())
+            , electionCode(electionCode)
+            , vote(ConvertVote(vote.Value()))
+            , time(vote.Time())
+            , candidate(vote.Candidate())
+        {}
+
+        VoteTx() = default;
+
         CTxIn voterId;
         int64_t electionCode;
         int64_t vote;
+        int64_t time;
         uint256 candidate;
+        CKeyID keyId;
         std::vector<unsigned char> signature;
 
-        bool Sign(const CKey& keyMasternode, const CPubKey& pubKeyMasternode) { return true; }
+        static int64_t ConvertVote(VoteValue vote);
+        static VoteValue ConvertVote(int64_t vote);
+        Vote GetVote() const;
 
     public:
         ADD_SERIALIZE_METHODS;
@@ -39,15 +51,17 @@ namespace Platform
             READWRITE(electionCode);
             READWRITE(vote);
             READWRITE(candidate);
+            READWRITE(keyId);
             READWRITE(signature);
         }
 
-        std::string ToString() const {return ""; }
+        std::string ToString() const;
     };
 
 
 
     bool CheckVoteTx(const CTransaction& tx, const CBlockIndex* pindex, CValidationState& state);
+    bool ProcessVoteTx(const CTransaction& tx, const CBlockIndex* pindex, CValidationState& state);
 }
 
 #endif //PROJECT_GOVERNANCE_VOTE_H
