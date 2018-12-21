@@ -167,7 +167,7 @@ bool IsBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockRewar
 
 bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward)
 {
-    if((!masternodeSync.IsSynced() && !deterministicMNManager->IsDeterministicMNsSporkActive(nBlockHeight)) || fLiteMode) {
+    if(!masternodeSync.IsSynced() || fLiteMode) {
         //there is no budget data to use to check anything, let's just accept the longest chain
         if(fDebug) LogPrintf("%s -- WARNING: Not enough data, skipping block payee checks\n", __func__);
         return true;
@@ -218,6 +218,7 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, CAmount bloc
 
     if (deterministicMNManager->IsDeterministicMNsSporkActive(nBlockHeight)) {
         // always enforce masternode payments when spork15 is active
+        LogPrintf("%s -- ERROR: Invalid masternode payment detected at height %d: %s", __func__, nBlockHeight, txNew.ToString());
         return false;
     } else {
         if(sporkManager.IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)) {
