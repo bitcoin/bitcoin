@@ -27,7 +27,7 @@ static std::shared_ptr<CBlock> PrepareBlock(const CScript& coinbase_scriptPubKey
 {
     auto block = std::make_shared<CBlock>(
         BlockAssembler{Params()}
-            .CreateNewBlock(coinbase_scriptPubKey, /* fMineWitnessTx */ true)
+            .CreateNewBlock(coinbase_scriptPubKey)
             ->block);
 
     block->nTime = ::chainActive.Tip()->GetMedianTimePast() + 1;
