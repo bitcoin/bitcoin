@@ -72,7 +72,11 @@ class TimeoutsTest(BitcoinTestFramework):
         ]
 
         with self.nodes[0].assert_debug_log(expected_msgs=expected_timeout_logs):
-            sleep(2)
+            sleep(3)
+            # By now, we waited a total of 5 seconds. Off-by-two for two
+            # reasons:
+            #  * The internal precision is one second
+            #  * Account for network delay
             assert not no_verack_node.is_connected
             assert not no_version_node.is_connected
             assert not no_send_node.is_connected
