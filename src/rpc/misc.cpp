@@ -40,9 +40,8 @@ static UniValue validateaddress(const JSONRPCRequest& request)
                 "script, hex, pubkeys, sigsrequired, pubkey, addresses, embedded, iscompressed, account, timestamp, hdkeypath, kdmasterkeyid.\n",
                 {
                     {"address", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The bitcoin address to validate"},
-                }}
-                .ToString() +
-            "\nResult:\n"
+                },
+                RPCResult{
             "{\n"
             "  \"isvalid\" : true|false,       (boolean) If the address is valid or not. If not, this is the only property returned.\n"
             "  \"address\" : \"address\",        (string) The bitcoin address validated\n"
@@ -52,10 +51,12 @@ static UniValue validateaddress(const JSONRPCRequest& request)
             "  \"witness_version\" : version   (numeric, optional) The version number of the witness program\n"
             "  \"witness_program\" : \"hex\"     (string, optional) The hex value of the witness program\n"
             "}\n"
-            "\nExamples:\n"
-            + HelpExampleCli("validateaddress", "\"1PSSGeFHDnKNxiEyFrD1wcEaHr9hrQDDWc\"")
+                },
+                RPCExamples{
+                    HelpExampleCli("validateaddress", "\"1PSSGeFHDnKNxiEyFrD1wcEaHr9hrQDDWc\"")
             + HelpExampleRpc("validateaddress", "\"1PSSGeFHDnKNxiEyFrD1wcEaHr9hrQDDWc\"")
-        );
+                },
+            }.ToString());
 
     CTxDestination dest = DecodeDestination(request.params[0].get_str());
     bool isValid = IsValidDestination(dest);
@@ -91,20 +92,20 @@ static UniValue createmultisig(const JSONRPCRequest& request)
                             {"key", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The hex-encoded public key"},
                         }},
                     {"address_type", RPCArg::Type::STR, /* opt */ true, /* default_val */ "legacy", "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
-                }}
-                .ToString() +
-            "\nResult:\n"
+                },
+                RPCResult{
             "{\n"
             "  \"address\":\"multisigaddress\",  (string) The value of the new multisig address.\n"
             "  \"redeemScript\":\"script\"       (string) The string value of the hex-encoded redemption script.\n"
             "}\n"
-
-            "\nExamples:\n"
+                },
+                RPCExamples{
             "\nCreate a multisig address from 2 public keys\n"
             + HelpExampleCli("createmultisig", "2 \"[\\\"03789ed0bb717d88f7d321a368d905e7430207ebbd82bd342cf11ae157a7ace5fd\\\",\\\"03dbc6764b8884a92e871274b87583e6d5c2a58819473e17e107ef3f6aa5a61626\\\"]\"") +
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("createmultisig", "2, \"[\\\"03789ed0bb717d88f7d321a368d905e7430207ebbd82bd342cf11ae157a7ace5fd\\\",\\\"03dbc6764b8884a92e871274b87583e6d5c2a58819473e17e107ef3f6aa5a61626\\\"]\"")
-        ;
+                },
+            }.ToString();
         throw std::runtime_error(msg);
     }
 
@@ -151,11 +152,11 @@ static UniValue verifymessage(const JSONRPCRequest& request)
                     {"address", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The bitcoin address to use for the signature."},
                     {"signature", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The signature provided by the signer in base 64 encoding (see signmessage)."},
                     {"message", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The message that was signed."},
-                }}
-                .ToString() +
-            "\nResult:\n"
+                },
+                RPCResult{
             "true|false   (boolean) If the signature is verified or not.\n"
-            "\nExamples:\n"
+                },
+                RPCExamples{
             "\nUnlock the wallet for 30 seconds\n"
             + HelpExampleCli("walletpassphrase", "\"mypassphrase\" 30") +
             "\nCreate the signature\n"
@@ -164,7 +165,8 @@ static UniValue verifymessage(const JSONRPCRequest& request)
             + HelpExampleCli("verifymessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\" \"signature\" \"my message\"") +
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("verifymessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\", \"signature\", \"my message\"")
-        );
+                },
+            }.ToString());
 
     LOCK(cs_main);
 
@@ -208,18 +210,19 @@ static UniValue signmessagewithprivkey(const JSONRPCRequest& request)
                 {
                     {"privkey", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The private key to sign the message with."},
                     {"message", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The message to create a signature of."},
-                }}
-                .ToString() +
-            "\nResult:\n"
+                },
+                RPCResult{
             "\"signature\"          (string) The signature of the message encoded in base 64\n"
-            "\nExamples:\n"
+                },
+                RPCExamples{
             "\nCreate the signature\n"
             + HelpExampleCli("signmessagewithprivkey", "\"privkey\" \"my message\"") +
             "\nVerify the signature\n"
             + HelpExampleCli("verifymessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\" \"signature\" \"my message\"") +
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("signmessagewithprivkey", "\"privkey\", \"my message\"")
-        );
+                },
+            }.ToString());
 
     std::string strPrivkey = request.params[0].get_str();
     std::string strMessage = request.params[1].get_str();
@@ -249,8 +252,10 @@ static UniValue setmocktime(const JSONRPCRequest& request)
                 {
                     {"timestamp", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "Unix seconds-since-epoch timestamp\n"
             "   Pass 0 to go back to using the system time."},
-                }}
-                .ToString()
+                },
+                RPCResults{},
+                RPCExamples{""},
+            }.ToString()
         );
 
     if (!Params().MineBlocksOnDemand())
@@ -314,9 +319,9 @@ static UniValue getmemoryinfo(const JSONRPCRequest& request)
                     {"mode", RPCArg::Type::STR, /* opt */ true, /* default_val */ "\"stats\"", "determines what kind of information is returned.\n"
             "  - \"stats\" returns general statistics about memory usage in the daemon.\n"
             "  - \"mallocinfo\" returns an XML string describing low-level heap state (only available if compiled with glibc 2.10+)."},
-                }}
-                .ToString() +
-            "\nResult (mode \"stats\"):\n"
+                },
+                {
+                    RPCResult{"mode \"stats\"",
             "{\n"
             "  \"locked\": {               (json object) Information about locked memory manager\n"
             "    \"used\": xxxxx,          (numeric) Number of bytes used\n"
@@ -327,12 +332,16 @@ static UniValue getmemoryinfo(const JSONRPCRequest& request)
             "    \"chunks_free\": xxxxx,   (numeric) Number unused chunks\n"
             "  }\n"
             "}\n"
-            "\nResult (mode \"mallocinfo\"):\n"
+                    },
+                    RPCResult{"mode \"mallocinfo\"",
             "\"<malloc version=\"1\">...\"\n"
-            "\nExamples:\n"
-            + HelpExampleCli("getmemoryinfo", "")
+                    },
+                },
+                RPCExamples{
+                    HelpExampleCli("getmemoryinfo", "")
             + HelpExampleRpc("getmemoryinfo", "")
-        );
+                },
+            }.ToString());
 
     std::string mode = request.params[0].isNull() ? "stats" : request.params[0].get_str();
     if (mode == "stats") {
@@ -392,17 +401,18 @@ UniValue logging(const JSONRPCRequest& request)
                         {
                             {"exclude_category", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "the valid logging category"},
                         }},
-                }}
-                .ToString() +
-            "\nResult:\n"
+                },
+                RPCResult{
             "{                   (json object where keys are the logging categories, and values indicates its status\n"
             "  \"category\": 0|1,  (numeric) if being debug logged or not. 0:inactive, 1:active\n"
             "  ...\n"
             "}\n"
-            "\nExamples:\n"
-            + HelpExampleCli("logging", "\"[\\\"all\\\"]\" \"[\\\"http\\\"]\"")
+                },
+                RPCExamples{
+                    HelpExampleCli("logging", "\"[\\\"all\\\"]\" \"[\\\"http\\\"]\"")
             + HelpExampleRpc("logging", "[\"all\"], \"[libevent]\"")
-        );
+                },
+            }.ToString());
     }
 
     uint32_t original_log_categories = g_logger->GetCategoryMask();
@@ -446,9 +456,11 @@ static UniValue echo(const JSONRPCRequest& request)
                 "\nSimply echo back the input arguments. This command is for testing.\n"
                 "\nThe difference between echo and echojson is that echojson has argument conversion enabled in the client-side table in "
                 "bitcoin-cli and the GUI. There is no server-side difference.",
-                {}}
-                .ToString() +
-            "");
+                {},
+                RPCResults{},
+                RPCExamples{""},
+            }.ToString()
+        );
 
     return request.params;
 }
