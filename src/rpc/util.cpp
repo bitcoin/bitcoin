@@ -242,14 +242,37 @@ struct Sections {
     }
 };
 
-RPCHelpMan::RPCHelpMan(const std::string& name, const std::string& description, const std::vector<RPCArg>& args)
-    : m_name{name}, m_description{description}, m_args{args}
+RPCHelpMan::RPCHelpMan(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples)
+    : m_name{std::move(name)},
+      m_description{std::move(description)},
+      m_args{std::move(args)},
+      m_results{std::move(results)},
+      m_examples{std::move(examples)}
 {
     std::set<std::string> named_args;
     for (const auto& arg : m_args) {
         // Should have unique named arguments
         assert(named_args.insert(arg.m_name).second);
     }
+}
+
+std::string RPCResults::ToDescriptionString() const
+{
+    std::string result;
+    for (const auto& r : m_results) {
+        if (r.m_cond.empty()) {
+            result += "\nResult:\n";
+        } else {
+            result += "\nResult (" + r.m_cond + "):\n";
+        }
+        result += r.m_result;
+    }
+    return result;
+}
+
+std::string RPCExamples::ToDescriptionString() const
+{
+    return m_examples.empty() ? m_examples : "\nExamples:\n" + m_examples;
 }
 
 std::string RPCHelpMan::ToString() const
@@ -291,6 +314,12 @@ std::string RPCHelpMan::ToString() const
         sections.Push(arg);
     }
     ret += sections.ToString();
+
+    // Result
+    ret += m_results.ToDescriptionString();
+
+    // Examples
+    ret += m_examples.ToDescriptionString();
 
     return ret;
 }
