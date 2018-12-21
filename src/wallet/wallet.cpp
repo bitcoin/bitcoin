@@ -138,8 +138,9 @@ CPubKey CWallet::GenerateNewKey(WalletBatch &batch, bool internal)
     int64_t nCreationTime = GetTime();
     CKeyMetadata metadata(nCreationTime);
 
-    // use HD key derivation if HD was enabled during wallet creation
+    // use HD key derivation if HD was enabled during wallet creation and a seed is present
     if (IsHDEnabled()) {
+        if (!HasHDSeed()) throw std::runtime_error(std::string(__func__) + ": No HD Seed");
         DeriveNewChildKey(batch, metadata, secret, (CanSupportFeature(FEATURE_HD_SPLIT) ? internal : false));
     } else {
         secret.MakeNewKey(fCompressed);
@@ -661,7 +662,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         Lock();
         Unlock(strWalletPassphrase);
 
-        // if we are using HD, replace the HD seed with a new one
+        // if we are using HD, create a fresh seed or replace the existing seed with a new one
         if (IsHDEnabled()) {
             SetHDSeed(GenerateNewSeed());
         }
@@ -1375,9 +1376,18 @@ void CWallet::SetHDChain(const CHDChain& chain, bool memonly)
     hdChain = chain;
 }
 
-bool CWallet::IsHDEnabled() const
+bool CWallet::HasHDSeed() const
 {
     return !hdChain.seed_id.IsNull();
+}
+
+bool CWallet::IsHDEnabled() const
+{
+    LOCK(cs_wallet);
+    // -usehd was removed in 0.16, so all wallets with FEATURE_PRE_SPLIT_KEYPOOL are HD
+    // For older wallets the presence of seed_id indicates if HD is enabled.
+    // Support for empty HD capable wallets was added in 0.18
+    return CanSupportFeature(FEATURE_PRE_SPLIT_KEYPOOL) || HasHDSeed();
 }
 
 void CWallet::SetWalletFlag(uint64_t flags)
@@ -3214,6 +3224,9 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
         if (IsLocked())
             return false;
 
+        // If wallet supports HD but no seed is present, do not top up keypool
+        if(IsHDEnabled() && !HasHDSeed()) return true;
+
         // Top up key pool
         unsigned int nTargetSize;
         if (kpSize > 0)
@@ -3333,6 +3346,10 @@ void CWallet::ReturnKey(int64_t nIndex, bool fInternal, const CPubKey& pubkey)
 bool CWallet::GetKeyFromPool(CPubKey& result, bool internal)
 {
     if (IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        return false;
+    }
+
+    if (IsHDEnabled() && !HasHDSeed()) {
         return false;
     }
 
@@ -3863,7 +3880,7 @@ bool CWallet::Verify(interfaces::Chain& chain, const WalletLocation& location, b
     return WalletBatch::VerifyDatabaseFile(wallet_path, warning_string, error_string);
 }
 
-std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain, const WalletLocation& location, uint64_t wallet_creation_flags)
+std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain, const WalletLocation& location, uint64_t wallet_creation_flags, bool create_empty)
 {
     const std::string& walletFile = location.GetName();
 
@@ -3979,20 +3996,28 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
 
     if (fFirstRun)
     {
-        // ensure this wallet.dat can only be opened by clients supporting HD with chain split and expects no default key
-        walletInstance->SetMinVersion(FEATURE_LATEST);
+        // Ensure this wallet can only be opened by clients supporting HD with
+        // chain split and expects no default key.
+        if (!create_empty) {
+            walletInstance->SetMinVersion(FEATURE_PRE_SPLIT_KEYPOOL);
+        } else {
+            // In addition, this wallet can only be opened by clients
+            // supporting empty wallets. Older clients might see these as
+            // non-HD wallets and try to upgrade them.
+            walletInstance->SetMinVersion(FEATURE_LATEST);
+        }
 
         if ((wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
             //selective allow to set flags
             walletInstance->SetWalletFlag(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
-        } else {
+        } else if (!create_empty) {
             // generate a new seed
             CPubKey seed = walletInstance->GenerateNewSeed();
             walletInstance->SetHDSeed(seed);
-        }
+        } // Otherwise, do not generate a new seed
 
         // Top up the keypool
-        if (!walletInstance->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && !walletInstance->TopUpKeyPool()) {
+        if (!create_empty && !walletInstance->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && !walletInstance->TopUpKeyPool()) {
             InitError(_("Unable to generate initial keys"));
             return nullptr;
         }

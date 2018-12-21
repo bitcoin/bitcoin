@@ -115,7 +115,9 @@ enum WalletFeature
 
     FEATURE_PRE_SPLIT_KEYPOOL = 169900, // Upgraded to HD SPLIT and can have a pre-split keypool
 
-    FEATURE_LATEST = FEATURE_PRE_SPLIT_KEYPOOL
+    FEATURE_ALLOW_EMPTY = 179900, // Wallet can be created without keys
+
+    FEATURE_LATEST = FEATURE_ALLOW_EMPTY
 };
 
 //! Default for -addresstype
@@ -1096,7 +1098,7 @@ public:
     static bool Verify(interfaces::Chain& chain, const WalletLocation& location, bool salvage_wallet, std::string& error_string, std::string& warning_string);
 
     /* Initializes the wallet, returns a new CWallet instance or a null pointer in case of an error */
-    static std::shared_ptr<CWallet> CreateWalletFromFile(interfaces::Chain& chain, const WalletLocation& location, uint64_t wallet_creation_flags = 0);
+    static std::shared_ptr<CWallet> CreateWalletFromFile(interfaces::Chain& chain, const WalletLocation& location, uint64_t wallet_creation_flags = 0, bool create_empty = false);
 
     /**
      * Wallet post-init setup
@@ -1109,6 +1111,9 @@ public:
     /* Set the HD chain model (chain child index counters) */
     void SetHDChain(const CHDChain& chain, bool memonly);
     const CHDChain& GetHDChain() const { return hdChain; }
+
+    /* Returns true if wallet has an HD seed */
+    bool HasHDSeed() const;
 
     /* Returns true if HD is enabled */
     bool IsHDEnabled() const;
