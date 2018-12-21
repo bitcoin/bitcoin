@@ -65,6 +65,15 @@ void CActiveDeterministicMasternodeManager::Init()
 
     if (!deterministicMNManager->IsDeterministicMNsSporkActive()) return;
 
+    // Check that our local network configuration is correct
+    if (!fListen) {
+        // listen option is probably overwritten by smth else, no good
+        state = MASTERNODE_ERROR;
+        strError = "Masternode must accept connections from outside. Make sure listen configuration option is not overwritten by some another parameter.";
+        LogPrintf("CActiveDeterministicMasternodeManager::Init -- ERROR: %s\n", strError);
+        return;
+    }
+
     if (!GetLocalAddress(activeMasternodeInfo.service)) {
         state = MASTERNODE_ERROR;
         return;
@@ -98,6 +107,21 @@ void CActiveDeterministicMasternodeManager::Init()
         return;
     }
 
+    if (Params().NetworkIDString() != CBaseChainParams::REGTEST) {
+        // Check socket connectivity
+        LogPrintf("CActiveDeterministicMasternodeManager::Init -- Checking inbound connection to '%s'\n", activeMasternodeInfo.service.ToString());
+        SOCKET hSocket;
+        bool fConnected = ConnectSocket(activeMasternodeInfo.service, hSocket, nConnectTimeout) && IsSelectableSocket(hSocket);
+        CloseSocket(hSocket);
+
+        if (!fConnected) {
+            state = MASTERNODE_ERROR;
+            strError = "Could not connect to " + activeMasternodeInfo.service.ToString();
+            LogPrintf("CActiveDeterministicMasternodeManager::Init -- ERROR: %s\n", strError);
+            return;
+        }
+    }
+
     activeMasternodeInfo.proTxHash = mnListEntry->proTxHash;
     activeMasternodeInfo.outpoint = mnListEntry->collateralOutpoint;
     state = MASTERNODE_READY;
@@ -111,9 +135,7 @@ void CActiveDeterministicMasternodeManager::UpdatedBlockTip(const CBlockIndex* p
 
     if (!deterministicMNManager->IsDeterministicMNsSporkActive(pindexNew->nHeight)) return;
 
-    if (state == MASTERNODE_WAITING_FOR_PROTX) {
-        Init();
-    } else if (state == MASTERNODE_READY) {
+    if (state == MASTERNODE_READY) {
         auto mnList = deterministicMNManager->GetListForBlock(pindexNew->GetBlockHash());
         if (!mnList.IsMNValid(mnListEntry->proTxHash)) {
             // MN disappeared from MN list
@@ -130,8 +152,8 @@ void CActiveDeterministicMasternodeManager::UpdatedBlockTip(const CBlockIndex* p
             // MN might have reappeared in same block with a new ProTx
             Init();
         }
-    } else if (state == MASTERNODE_REMOVED || state == MASTERNODE_POSE_BANNED || state == MASTERNODE_OPERATOR_KEY_CHANGED) {
-        // MN might have reappeared with a new ProTx
+    } else {
+        // MN might have (re)appeared with a new ProTx or we've found some peers and figured out our local address
         Init();
     }
 }
@@ -146,9 +168,20 @@ bool CActiveDeterministicMasternodeManager::GetLocalAddress(CService& addrRet)
         }
     }
     if (!fFoundLocal) {
-        strError = "Can't detect valid external address. Please consider using the externalip configuration option if problem persists. Make sure to use IPv4 address only.";
-        LogPrintf("CActiveDeterministicMasternodeManager::GetLocalAddress -- ERROR: %s\n", strError);
-        return false;
+        bool empty = true;
+        // If we have some peers, let's try to find our local address from one of them
+        g_connman->ForEachNodeContinueIf(CConnman::AllNodes, [&fFoundLocal, &empty](CNode* pnode) {
+            empty = false;
+            if (pnode->addr.IsIPv4())
+                fFoundLocal = GetLocal(activeMasternodeInfo.service, &pnode->addr) && CMasternode::IsValidNetAddr(activeMasternodeInfo.service);
+            return !fFoundLocal;
+        });
+        // nothing and no live connections, can't do anything for now
+        if (empty) {
+            strError = "Can't detect valid external address. Please consider using the externalip configuration option if problem persists. Make sure to use IPv4 address only.";
+            LogPrintf("CActiveDeterministicMasternodeManager::GetLocalAddress -- ERROR: %s\n", strError);
+            return false;
+        }
     }
     return true;
 }
