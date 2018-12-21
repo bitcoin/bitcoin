@@ -61,7 +61,7 @@ namespace Platform
         NfTokenRegTx nfTokenRegTx = nfTokenRegTxBuilder.BuildTx();
 
         CMutableTransaction tx;
-        tx.nVersion = 2; //TODO: fix it: 2 or 3? Assign current version to a const
+        tx.nVersion = 3;
         tx.nType = TRANSACTION_NF_TOKEN_REGISTER;
 
         FundSpecialTx(tx, nfTokenRegTx);
