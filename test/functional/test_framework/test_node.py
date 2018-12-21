@@ -434,7 +434,7 @@ class TestNodeCLI():
     def send_cli(self, command=None, *args, **kwargs):
         """Run bitcoin-cli command. Deserializes returned string as python object."""
         pos_args = [str(arg).lower() if type(arg) is bool else str(arg) for arg in args]
-        named_args = [str(key) + "=" + str(value) for (key, value) in kwargs.items()]
+        named_args = [str(key) + "=" + (str(value).lower() if type(value) is bool else str(value)) for (key, value) in kwargs.items()]
         assert not (pos_args and named_args), "Cannot use positional arguments and named arguments in the same bitcoin-cli call"
         p_args = [self.binary, "-datadir=" + self.datadir] + self.options
         if named_args:
