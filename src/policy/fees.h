@@ -228,10 +228,12 @@ public:
     unsigned int HighestTargetTracked(FeeEstimateHorizon horizon) const;
 
 private:
-    unsigned int nBestSeenHeight;
-    unsigned int firstRecordedHeight;
-    unsigned int historicalFirst;
-    unsigned int historicalBest;
+    mutable CCriticalSection m_cs_fee_estimator;
+
+    unsigned int nBestSeenHeight GUARDED_BY(m_cs_fee_estimator);
+    unsigned int firstRecordedHeight GUARDED_BY(m_cs_fee_estimator);
+    unsigned int historicalFirst GUARDED_BY(m_cs_fee_estimator);
+    unsigned int historicalBest GUARDED_BY(m_cs_fee_estimator);
 
     struct TxStatsInfo
     {
@@ -241,34 +243,32 @@ private:
     };
 
     // map of txids to information about that transaction
-    std::map<uint256, TxStatsInfo> mapMemPoolTxs;
+    std::map<uint256, TxStatsInfo> mapMemPoolTxs GUARDED_BY(m_cs_fee_estimator);
 
     /** Classes to track historical data on transaction confirmations */
-    std::unique_ptr<TxConfirmStats> feeStats;
-    std::unique_ptr<TxConfirmStats> shortStats;
-    std::unique_ptr<TxConfirmStats> longStats;
+    std::unique_ptr<TxConfirmStats> feeStats PT_GUARDED_BY(m_cs_fee_estimator);
+    std::unique_ptr<TxConfirmStats> shortStats PT_GUARDED_BY(m_cs_fee_estimator);
+    std::unique_ptr<TxConfirmStats> longStats PT_GUARDED_BY(m_cs_fee_estimator);
 
-    unsigned int trackedTxs;
-    unsigned int untrackedTxs;
+    unsigned int trackedTxs GUARDED_BY(m_cs_fee_estimator);
+    unsigned int untrackedTxs GUARDED_BY(m_cs_fee_estimator);
 
-    std::vector<double> buckets;              // The upper-bound of the range for the bucket (inclusive)
-    std::map<double, unsigned int> bucketMap; // Map of bucket upper-bound to index into all vectors by bucket
-
-    mutable CCriticalSection cs_feeEstimator;
+    std::vector<double> buckets GUARDED_BY(m_cs_fee_estimator); // The upper-bound of the range for the bucket (inclusive)
+    std::map<double, unsigned int> bucketMap GUARDED_BY(m_cs_fee_estimator); // Map of bucket upper-bound to index into all vectors by bucket
 
     /** Process a transaction confirmed in a block*/
-    bool processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry);
+    bool processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry) EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
 
     /** Helper for estimateSmartFee */
-    double estimateCombinedFee(unsigned int confTarget, double successThreshold, bool checkShorterHorizon, EstimationResult *result) const;
+    double estimateCombinedFee(unsigned int confTarget, double successThreshold, bool checkShorterHorizon, EstimationResult *result) const EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
     /** Helper for estimateSmartFee */
-    double estimateConservativeFee(unsigned int doubleTarget, EstimationResult *result) const;
+    double estimateConservativeFee(unsigned int doubleTarget, EstimationResult *result) const EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
     /** Number of blocks of data recorded while fee estimates have been running */
-    unsigned int BlockSpan() const;
+    unsigned int BlockSpan() const EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
     /** Number of blocks of recorded fee estimate data represented in saved data file */
-    unsigned int HistoricalBlockSpan() const;
+    unsigned int HistoricalBlockSpan() const EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
     /** Calculation of highest target that reasonable estimate can be provided for */
-    unsigned int MaxUsableEstimate() const;
+    unsigned int MaxUsableEstimate() const EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
 };
 
 class FeeFilterRounder
