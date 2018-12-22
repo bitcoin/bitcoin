@@ -48,7 +48,7 @@ class WalletBackupTest(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
-    def setup_network(self, split=False):
+    def setup_network(self):
         self.setup_nodes()
         connect_nodes(self.nodes[0], 3)
         connect_nodes(self.nodes[1], 3)
