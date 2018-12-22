@@ -460,7 +460,18 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 args = [self.options.bitcoind, "-datadir=" + datadir, '-disablewallet']
                 if i > 0:
                     args.append("-connect=127.0.0.1:" + str(p2p_port(0)))
-                self.nodes.append(TestNode(i, get_datadir_path(self.options.cachedir, i), extra_conf=["bind=127.0.0.1"], extra_args=[], rpchost=None, timewait=self.rpc_timeout, bitcoind=self.options.bitcoind, bitcoin_cli=self.options.bitcoincli, mocktime=self.mocktime, coverage_dir=None))
+                self.nodes.append(TestNode(
+                    i,
+                    get_datadir_path(self.options.cachedir, i),
+                    extra_conf=["bind=127.0.0.1"],
+                    extra_args=[],
+                    rpchost=None,
+                    timewait=self.rpc_timeout,
+                    bitcoind=self.options.bitcoind,
+                    bitcoin_cli=self.options.bitcoincli,
+                    mocktime=self.mocktime,
+                    coverage_dir=None,
+                ))
                 self.nodes[i].args = args
                 self.start_node(i)
 
