@@ -250,13 +250,10 @@ bool BlockFilter::BuildParams(GCSFilter::Params& params) const
         params.m_siphash_k1 = m_block_hash.GetUint64(1);
         params.m_P = BASIC_FILTER_P;
         params.m_M = BASIC_FILTER_M;
-        break;
-
-    default:
-        return false;
+        return true;
     }
 
-    return true;
+    return false;
 }
 
 uint256 BlockFilter::GetHash() const
