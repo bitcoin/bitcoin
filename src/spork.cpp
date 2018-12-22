@@ -129,6 +129,13 @@ void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CD
             strLogMsg = strprintf("SPORK -- hash: %s id: %d value: %10d bestHeight: %d peer=%d", hash.ToString(), spork.nSporkID, spork.nValue, chainActive.Height(), pfrom->id);
         }
 
+        if (spork.nTimeSigned > GetAdjustedTime() + 2 * 60 * 60) {
+            LOCK(cs_main);
+            LogPrintf("CSporkManager::ProcessSpork -- ERROR: too far into the future\n");
+            Misbehaving(pfrom->GetId(), 100);
+            return;
+        }
+
         CKeyID keyIDSigner;
         bool fSpork6IsActive = IsSporkActive(SPORK_6_NEW_SIGS);
         if (!spork.GetSignerKeyID(keyIDSigner, fSpork6IsActive)
