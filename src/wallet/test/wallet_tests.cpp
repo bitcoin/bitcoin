@@ -12,12 +12,13 @@
 
 #include <consensus/validation.h>
 #include <interfaces/chain.h>
+#include <policy/policy.h>
 #include <rpc/server.h>
 #include <test/test_bitcoin.h>
+#include <timedata.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/test/wallet_test_fixture.h>
-#include <policy/policy.h>
 
 #include <boost/test/unit_test.hpp>
 #include <univalue.h>
@@ -161,7 +162,7 @@ BOOST_FIXTURE_TEST_CASE(importmulti_rescan, TestChain100Setup)
                       "by pruning or data corruption (see bitcoind log for details) and could be dealt with by "
                       "downloading and rescanning the relevant blocks (see -reindex and -rescan "
                       "options).\"}},{\"success\":true}]",
-                              0, oldTip->GetBlockTimeMax(), TIMESTAMP_WINDOW));
+                0, oldTip->GetBlockTimeMax(), TIMESTAMP_WINDOW));
         RemoveWallet(wallet);
     }
 }
@@ -255,14 +256,13 @@ BOOST_FIXTURE_TEST_CASE(coin_mark_dirty_immature_credit, TestChain100Setup)
     // credit amount is calculated.
     wtx.MarkDirty();
     wallet.AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
-    BOOST_CHECK_EQUAL(wtx.GetImmatureCredit(*locked_chain), 50*COIN);
+    BOOST_CHECK_EQUAL(wtx.GetImmatureCredit(*locked_chain), 50 * COIN);
 }
 
-static int64_t AddTx(CWallet& wallet, uint32_t lockTime, int64_t mockTime, int64_t blockTime)
+static int64_t AddTx(CWallet& wallet, uint32_t lockTime, int64_t blockTime)
 {
     CMutableTransaction tx;
     tx.nLockTime = lockTime;
-    SetMockTime(mockTime);
     CBlockIndex* block = nullptr;
     if (blockTime > 0) {
         auto locked_chain = wallet.chain().lock();
@@ -286,33 +286,58 @@ static int64_t AddTx(CWallet& wallet, uint32_t lockTime, int64_t mockTime, int64
     return wallet.mapWallet.at(wtx.GetHash()).nTimeSmart;
 }
 
+
 // Simple test to verify assignment of CWalletTx::nSmartTime value. Could be
 // expanded to cover more corner cases of smart time logic.
 BOOST_AUTO_TEST_CASE(ComputeTimeSmart)
 {
+    // The ComputeTimeSmart funciton within the wallet retrieves the time using the GetAdjustedTime function in timedata.
+    // This function computes the time based on the system time (which can be mocked) and the time offset, which is not necessarily zero.
+    // Tests have to be executed in order, because the individual cases are stateful
+
     // New transaction should use clock time if lower than block time.
-    BOOST_CHECK_EQUAL(AddTx(m_wallet, 1, 100, 120), 100);
+    SetMockTime(10);
+    int64_t clockTime = GetAdjustedTime(); // includes time offset
+    int64_t blockTime = clockTime + 5;
+
+    BOOST_CHECK_EQUAL(AddTx(m_wallet, 1, blockTime), clockTime); // clocktime used
 
     // Test that updating existing transaction does not change smart time.
-    BOOST_CHECK_EQUAL(AddTx(m_wallet, 1, 200, 220), 100);
+    SetMockTime(20);
+    int64_t newBlockTime = GetAdjustedTime() + 10;
+    BOOST_CHECK_EQUAL(AddTx(m_wallet, 1, newBlockTime), clockTime); // time has not been changed
+
 
     // New transaction should use clock time if there's no block time.
-    BOOST_CHECK_EQUAL(AddTx(m_wallet, 2, 300, 0), 300);
+    SetMockTime(30);
+    clockTime = GetAdjustedTime();
+    blockTime = 0;                                               // block time is not set
+    BOOST_CHECK_EQUAL(AddTx(m_wallet, 2, blockTime), clockTime); // clocktime used, because blocktime is unset (zero)
 
     // New transaction should use block time if lower than clock time.
-    BOOST_CHECK_EQUAL(AddTx(m_wallet, 3, 420, 400), 400);
+    SetMockTime(40);
+    clockTime = GetAdjustedTime();
+    blockTime = clockTime - 2;
+    BOOST_CHECK_EQUAL(AddTx(m_wallet, 3, blockTime), blockTime); // blocktime used
 
     // New transaction should use latest entry time if higher than
     // min(block time, clock time).
-    BOOST_CHECK_EQUAL(AddTx(m_wallet, 4, 500, 390), 400);
+    SetMockTime(5);
+    newBlockTime = blockTime - 5;
+    BOOST_CHECK_EQUAL(AddTx(m_wallet, 4, newBlockTime), blockTime); // using the blocktime of the previous transaction
+
 
     // If there are future entries, new transaction should use time of the
     // newest entry that is no more than 300 seconds ahead of the clock time.
-    BOOST_CHECK_EQUAL(AddTx(m_wallet, 5, 50, 600), 300);
+    SetMockTime(1);
+    clockTime = GetAdjustedTime();
+    newBlockTime = clockTime + 1000;                                // this is way too far in the future
+    BOOST_CHECK_EQUAL(AddTx(m_wallet, 5, newBlockTime), blockTime); // the newest entry was the last one
 
     // Reset mock time for other tests.
     SetMockTime(0);
 }
+
 
 BOOST_AUTO_TEST_CASE(LoadReceiveRequests)
 {
@@ -377,7 +402,7 @@ public:
     }
 
     std::unique_ptr<interfaces::Chain> m_chain = interfaces::MakeChain();
-    std::unique_ptr<interfaces::Chain::Lock> m_locked_chain = m_chain->assumeLocked();  // Temporary. Removed in upcoming lock cleanup
+    std::unique_ptr<interfaces::Chain::Lock> m_locked_chain = m_chain->assumeLocked(); // Temporary. Removed in upcoming lock cleanup
     std::unique_ptr<CWallet> wallet;
 };
 
