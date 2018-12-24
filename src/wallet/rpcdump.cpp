@@ -964,6 +964,11 @@ static std::string RecurseImportData(const CScript& script, ImportData& import_d
     }
 }
 
+/**
+ * ProcessImport is called once for each request within an importmulti call.
+ * All input data is parsed and validated first. Then scripts, pubkeys and keys are imported.
+ * This function doesn't throw - all errors are caught and returned in the error field.
+ */
 static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
     UniValue warnings(UniValue::VARR);
@@ -1046,7 +1051,7 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
             const auto& str = keys[i].get_str();
             CKey key = DecodeSecret(str);
             if (!key.IsValid()) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid private key encoding at index %zu", i));
             }
             CPubKey pubkey = key.GetPubKey();
             CKeyID id = pubkey.GetID();
@@ -1081,7 +1086,9 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
                 for (const auto& require_key : import_data.used_keys) {
                     if (!require_key.second) continue; // Not a required key
                     if (pubkey_map.count(require_key.first) == 0 && privkey_map.count(require_key.first) == 0) {
-                        error = "some required keys are missing";
+                        if (error.empty()) error = "some required keys are missing: ";
+                        else error += ", ";
+                        error += HexStr(require_key.first);
                     }
                 }
             }
@@ -1116,7 +1123,7 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
 
         // Check whether we have any work to do
         if (::IsMine(*pwallet, script) & ISMINE_SPENDABLE) {
-            throw JSONRPCError(RPC_WALLET_ERROR, "The wallet already contains the private key for this address or script");
+            throw JSONRPCError(RPC_WALLET_ERROR, "This address or script is already owned by the wallet");
         }
 
         // All good, time to import
