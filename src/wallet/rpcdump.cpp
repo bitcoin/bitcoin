@@ -186,10 +186,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
             }
 
             // whenever a key is imported, we need to scan the whole chain
-            pwallet->UpdateTimeFirstKey(1);
-            pwallet->mapKeyMetadata[vchAddress].nCreateTime = 1;
-
-            if (!pwallet->AddKeyPubKey(key, pubkey)) {
+            if (!pwallet->AddKeyPubKey(key, pubkey, 1)) {
                 throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
             }
             pwallet->LearnAllRelatedScripts(pubkey);
@@ -651,7 +648,8 @@ UniValue importwallet(const JSONRPCRequest& request)
                 continue;
             }
             pwallet->WalletLogPrintf("Importing %s...\n", EncodeDestination(keyid));
-            if (!pwallet->AddKeyPubKey(key, pubkey)) {
+            nTimeBegin = std::min(nTimeBegin, time);
+            if (!pwallet->AddKeyPubKey(key, pubkey, time)) {
                 fGood = false;
                 continue;
             }
@@ -1138,12 +1136,10 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
             CPubKey pubkey = key.GetPubKey();
             const CKeyID& id = entry.first;
             assert(key.VerifyPubKey(pubkey));
-            pwallet->mapKeyMetadata[id].nCreateTime = timestamp;
             // If the private key is not present in the wallet, insert it.
-            if (!pwallet->HaveKey(id) && !pwallet->AddKeyPubKey(key, pubkey)) {
+            if (!pwallet->HaveKey(id) && !pwallet->AddKeyPubKey(key, pubkey, timestamp)) {
                 throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
             }
-            pwallet->UpdateTimeFirstKey(timestamp);
         }
         for (const auto& entry : pubkey_map) {
             const CPubKey& pubkey = entry.second;

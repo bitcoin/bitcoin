@@ -288,8 +288,16 @@ bool CWallet::AddKeyPubKeyWithDB(WalletBatch &batch, const CKey& secret, const C
 
 bool CWallet::AddKeyPubKey(const CKey& secret, const CPubKey &pubkey)
 {
+    const CKeyMetadata& meta = mapKeyMetadata[pubkey.GetID()];
+    UpdateTimeFirstKey(meta.nCreateTime);
     WalletBatch batch(*database);
     return CWallet::AddKeyPubKeyWithDB(batch, secret, pubkey);
+}
+
+bool CWallet::AddKeyPubKey(const CKey& secret, const CPubKey &pubkey, int64_t create_time)
+{
+    mapKeyMetadata[pubkey.GetID()].nCreateTime = create_time;
+    return AddKeyPubKey(secret, pubkey);
 }
 
 bool CWallet::AddCryptedKey(const CPubKey &vchPubKey,
