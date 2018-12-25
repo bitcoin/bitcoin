@@ -119,15 +119,15 @@ BOOST_AUTO_TEST_CASE(util_AddTimeDataDoNotComputeOffsetWhenSampleCountIsEven)
 
 BOOST_AUTO_TEST_CASE(util_AddTimeDataIgnoreSampleWithDuplicateIP)
 {
-    UtilPreconditionIsAtLeastFiveEntriesRequired("1.1.1.", 300); // precondition 1: at least 5 entries required to compute any offset
+    UtilPreconditionIsAtLeastFiveEntriesRequired("1.1.3.", 50); // precondition 1: at least 5 entries required to compute any offset
     BOOST_CHECK(CountOffsetSamples() >= 5);
 
 
-    AddTimeData(UtilBuildAddress("1.1.1.310"), 310);
+    AddTimeData(UtilBuildAddress("1.1.3.60"), 60);
 
     int64_t offset = GetTimeOffset();
     int samples = CountOffsetSamples();
-    AddTimeData(UtilBuildAddress("1.1.1.310"), 311);
+    AddTimeData(UtilBuildAddress("1.1.3.60"), 61);
 
     BOOST_CHECK_EQUAL(CountOffsetSamples(), samples); // sample was ignored
     BOOST_CHECK_EQUAL(GetTimeOffset(), offset);       //new offset was not computed
