@@ -54,6 +54,7 @@ BOOST_AUTO_TEST_CASE(util_MedianFilterShallNotGrowBeyondSize)
 CNetAddr UtilBuildAddress(const std::string& address)
 {
     struct sockaddr_in sa;
+    memset(&sa, 0, sizeof(sockaddr_in));
     inet_pton(AF_INET, address.c_str(), &(sa.sin_addr));
     CNetAddr addr = CNetAddr(sa.sin_addr);
     return addr;

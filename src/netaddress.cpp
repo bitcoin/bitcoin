@@ -291,12 +291,12 @@ std::string CNetAddr::ToString() const
 
 bool operator==(const CNetAddr& a, const CNetAddr& b)
 {
-    return (memcmp(a.ip, b.ip, 16) == 0);
+    return (memcmp(a.ip, b.ip, sizeof(a.ip)) == 0);
 }
 
 bool operator<(const CNetAddr& a, const CNetAddr& b)
 {
-    return (memcmp(a.ip, b.ip, 16) < 0);
+    return (memcmp(a.ip, b.ip, sizeof(a.ip)) < 0);
 }
 
 bool CNetAddr::GetInAddr(struct in_addr* pipv4Addr) const
