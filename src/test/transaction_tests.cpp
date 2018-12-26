@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
                 if (mapprevOutValues.count(tx.vin[i].prevout)) {
                     amount = mapprevOutValues[tx.vin[i].prevout];
                 }
-                unsigned int verify_flags = ParseScriptFlags(test[2].get_str());
+                unsigned int verify_flags = ~ParseScriptFlags(test[2].get_str());
                 const CScriptWitness *witness = &tx.vin[i].scriptWitness;
                 BOOST_CHECK_MESSAGE(VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout],
                                                  witness, verify_flags, TransactionSignatureChecker(&tx, i, amount, txdata), &err),
