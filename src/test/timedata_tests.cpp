@@ -65,17 +65,6 @@ CNetAddr UtilBuildAddress(unsigned char ip1, unsigned char ip2, unsigned char ip
     return addr;
 }
 
-/* Utility procedure to match the precondition that the AddTimeData procedure requires at least five time samples to compute a new offset */
-void UtilPreconditionIsAtLeastFiveEntriesRequired(const unsigned char ip1, const unsigned char ip2, const unsigned char ip3, unsigned int baseip4)
-{
-    for (unsigned int i = CountOffsetSamples(); i < 5; i++) { // precondition 1: at least 5 entries required to compute any offset
-        unsigned int val = baseip4 + i;
-        assert(val < 257); // we are talking ip addresses here
-        AddTimeData(UtilBuildAddress(ip1, ip2, ip3, val), val);
-    }
-}
-
-
 BOOST_AUTO_TEST_CASE(util_UtilBuildAddress)
 {
     CNetAddr cn1 = UtilBuildAddress(0x001, 0x001, 0x001, 0x0D2); // 1.1.1.210
@@ -97,86 +86,59 @@ BOOST_AUTO_TEST_CASE(util_UtilBuildAddress)
     BOOST_CHECK(neq);
 }
 
-
-BOOST_AUTO_TEST_CASE(util_AddTimeDataComputeOffsetWhenSampleCountIsUneven)
+BOOST_AUTO_TEST_CASE(util_AddTimeDataAlgorithmComputeOffsetWhenNewSampleCountIsGreaterEqualFiveAndUneven)
 {
-    UtilPreconditionIsAtLeastFiveEntriesRequired(0x001, 0x001, 0x001, 200); // precondition 1: at least 5 entries required to compute any offset. start at 1.1.1.200
-    BOOST_CHECK(CountOffsetSamples() >= 5);
+    int limit = 20; //  can store up to 20 samples
+    int64_t offset = 0;
+    std::set<CNetAddr> knownSet;
+    CMedianFilter<int64_t> offsetFilter(limit, 0); // max size : 20 , init sample: 0
 
 
-    if ((CountOffsetSamples() % 2) == 1) {                              // precondition 2: start with an even number of samples
-        AddTimeData(UtilBuildAddress(0x001, 0x001, 0x001, 0x0D2), 110); // 1.1.1.210 , offsetSample = 110
+    for (unsigned int sample = 1; sample < 10; sample++) { // precondition: at least 4 samples, all within bounds (including the init sample : 0
+        CNetAddr addr = UtilBuildAddress(0x001, 0x001, 0x001, sample);
+        AddTimeDataAlgorithm(addr, sample, knownSet, offsetFilter, offset); // 1.1.1.[1,2,3],  offsetSample = [1,2,3]
     }
 
-    BOOST_CHECK(CountOffsetSamples() % 2 == 0);
+    BOOST_CHECK(offset != 0); // offset has changed from the initial value
+
+    assert(offsetFilter.size() == 10); // next sample will be the 11th (uneven) and will trigger a new computation of the offset
 
 
-    int64_t offset = GetTimeOffset();
-    int samples = CountOffsetSamples();
-    AddTimeData(UtilBuildAddress(0x001, 0x001, 0x001, 0x0D3), 111); // 1.1.1.211 , offsetSample = 111
+    int samples = offsetFilter.size();
+    int64_t oldOffset = offset;
+    CNetAddr addr2 = UtilBuildAddress(0x001, 0x001, 0x001, 0x0010);
+    AddTimeDataAlgorithm(addr2, 111, knownSet, offsetFilter, offset); // 1.1.1.16 , offsetSample = 111
 
-    BOOST_CHECK_EQUAL(CountOffsetSamples(), samples + 1); // sample was added
-    BOOST_CHECK(GetTimeOffset() != offset);               // and new offset was computed
+    BOOST_CHECK_EQUAL(offsetFilter.size(), samples + 1); // sample was added...
+    BOOST_CHECK(oldOffset != offset);                    // ...and new offset was computed
 }
 
 
-BOOST_AUTO_TEST_CASE(util_AddTimeDataDoNotComputeOffsetWhenSampleCountIsEven)
+BOOST_AUTO_TEST_CASE(util_AddTimeDataAlgorithmDoNotComputeOffsetWhenNewSampleCountIsGreaterEqualFiveButEven)
 {
-    UtilPreconditionIsAtLeastFiveEntriesRequired(0x001, 0x001, 0x001, 100); // precondition 1: at least 5 entries required to compute any offset. start at 1.1.1.100
+    int limit = 20; //  can store up to 20 samples
+    int64_t offset = 0;
+    std::set<CNetAddr> knownSet;
+    CMedianFilter<int64_t> offsetFilter(limit, 0); // max size : 20 , init sample: 0
 
-    BOOST_CHECK(CountOffsetSamples() >= 5);
 
-    if (CountOffsetSamples() % 2 == 0) {                                // precondition 2: start with an uneven number of samples
-        AddTimeData(UtilBuildAddress(0x001, 0x001, 0x001, 0x06E), 113); // 1.1.1.110 , offsetSample = 113
+    for (unsigned int sample = 1; sample < 9; sample++) { // precondition: at least 4 samples, all within bounds (including the init sample : 0
+        CNetAddr addr = UtilBuildAddress(0x001, 0x001, 0x001, sample);
+        AddTimeDataAlgorithm(addr, sample, knownSet, offsetFilter, offset); // 1.1.1.[1,2,3],  offsetSample = [1,2,3]
     }
 
-    BOOST_CHECK(CountOffsetSamples() % 2 == 1);
+    BOOST_CHECK(offset != 0); // offset has changed from the initial value
+
+    assert(offsetFilter.size() == 9); // next sample will be the 10th (even) and will *not* trigger a new computation of the offset
 
 
-    int64_t offset = GetTimeOffset();
-    int samples = CountOffsetSamples();
-    AddTimeData(UtilBuildAddress(0x001, 0x001, 0x001, 0x06F), 114); // 1.1.1.111 , offsetSample = 114
+    int samples = offsetFilter.size();
+    int64_t oldOffset = offset;
+    CNetAddr addr2 = UtilBuildAddress(0x001, 0x001, 0x001, 0x0010);
+    AddTimeDataAlgorithm(addr2, 111, knownSet, offsetFilter, offset); // 1.1.1.16 , offsetSample = 111
 
-    BOOST_CHECK_EQUAL(CountOffsetSamples(), samples + 1); // sample was added
-    BOOST_CHECK_EQUAL(GetTimeOffset(), offset);           //new offset was not computed
-}
-
-
-BOOST_AUTO_TEST_CASE(util_AddTimeDataIgnoreSampleWithDuplicateIP)
-{
-    UtilPreconditionIsAtLeastFiveEntriesRequired(0x001, 0x001, 0x001, 50); // precondition 1: at least 5 entries required to compute any offset. start at 1.1.3.50
-    BOOST_CHECK(CountOffsetSamples() >= 5);
-
-    if ((CountOffsetSamples() % 2) == 1) {                             // precondition 2: start with an even number of samples
-        AddTimeData(UtilBuildAddress(0x001, 0x001, 0x001, 0x03A), 58); // 1.1.1.58 , offsetSample = 110
-    }
-
-    int64_t offset = GetTimeOffset();
-    int samples = CountOffsetSamples();
-
-    // add a sample with a given ip
-    AddTimeData(UtilBuildAddress(0x001, 0x001, 0x001, 0x03C), 60); // 1.1.1.60 , offsetSample = 60
-    BOOST_CHECK_EQUAL(CountOffsetSamples(), samples + 1);          // sample was added
-    BOOST_CHECK(GetTimeOffset() != offset);                        // a new offset was computed
-
-    offset = GetTimeOffset();
-    samples = CountOffsetSamples();
-
-    // add a new sample to start with an even number of samples because of precondition 2
-    AddTimeData(UtilBuildAddress(0x001, 0x001, 0x001, 0x03B), 59); // 1.1.1.59 , offsetSample = 111
-    BOOST_CHECK_EQUAL(CountOffsetSamples(), samples + 1);          // sample was added
-    BOOST_CHECK_EQUAL(GetTimeOffset(), offset);                    // ...but offset was not computed
-    BOOST_CHECK((CountOffsetSamples() % 2) == 0);                  // need an even number of samples again...
-
-
-    offset = GetTimeOffset();
-    samples = CountOffsetSamples();
-
-    // add a sample with a duplicate ip. this shall be ignored completely
-    AddTimeData(UtilBuildAddress(0x001, 0x001, 0x001, 0x03C), 61); // 1.1.1.60 , offsetSample = 61
-
-    BOOST_CHECK_EQUAL(CountOffsetSamples(), samples); // sample was completely ignored
-    BOOST_CHECK_EQUAL(GetTimeOffset(), offset);       // ...and offset was not computed
+    BOOST_CHECK_EQUAL(offsetFilter.size(), samples + 1); // sample was added...
+    BOOST_CHECK(oldOffset == offset);                    // ...but new offset was not computed
 }
 
 
