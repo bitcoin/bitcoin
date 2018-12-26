@@ -147,32 +147,32 @@ BOOST_AUTO_TEST_CASE(util_AddTimeDataIgnoreSampleWithDuplicateIP)
     UtilPreconditionIsAtLeastFiveEntriesRequired(0x001, 0x001, 0x001, 50); // precondition 1: at least 5 entries required to compute any offset. start at 1.1.3.50
     BOOST_CHECK(CountOffsetSamples() >= 5);
 
-	if ((CountOffsetSamples() % 2) == 1) {                              // precondition 2: start with an even number of samples
+    if ((CountOffsetSamples() % 2) == 1) {                             // precondition 2: start with an even number of samples
         AddTimeData(UtilBuildAddress(0x001, 0x001, 0x001, 0x03A), 58); // 1.1.1.58 , offsetSample = 110
     }
 
-	int64_t offset = GetTimeOffset();
+    int64_t offset = GetTimeOffset();
     int samples = CountOffsetSamples();
 
-	// add a sample with a given ip
+    // add a sample with a given ip
     AddTimeData(UtilBuildAddress(0x001, 0x001, 0x001, 0x03C), 60); // 1.1.1.60 , offsetSample = 60
-    BOOST_CHECK_EQUAL(CountOffsetSamples(), samples + 1); // sample was added
-	BOOST_CHECK(GetTimeOffset() != offset); // a new offset was computed
-
-	offset = GetTimeOffset();
-    samples = CountOffsetSamples();
-
-	// add a new sample to start with an even number of samples because of precondition 2
-	AddTimeData(UtilBuildAddress(0x001, 0x001, 0x001, 0x03B), 59); // 1.1.1.59 , offsetSample = 111
     BOOST_CHECK_EQUAL(CountOffsetSamples(), samples + 1);          // sample was added
-    BOOST_CHECK_EQUAL(GetTimeOffset(),offset); // ...but offset was not computed
-    BOOST_CHECK((CountOffsetSamples() % 2) == 0);                  // need an even number of samples again...
-	
+    BOOST_CHECK(GetTimeOffset() != offset);                        // a new offset was computed
 
-	offset = GetTimeOffset();
+    offset = GetTimeOffset();
     samples = CountOffsetSamples();
-    
-	// add a sample with a duplicate ip. this shall be ignored completely
+
+    // add a new sample to start with an even number of samples because of precondition 2
+    AddTimeData(UtilBuildAddress(0x001, 0x001, 0x001, 0x03B), 59); // 1.1.1.59 , offsetSample = 111
+    BOOST_CHECK_EQUAL(CountOffsetSamples(), samples + 1);          // sample was added
+    BOOST_CHECK_EQUAL(GetTimeOffset(), offset);                    // ...but offset was not computed
+    BOOST_CHECK((CountOffsetSamples() % 2) == 0);                  // need an even number of samples again...
+
+
+    offset = GetTimeOffset();
+    samples = CountOffsetSamples();
+
+    // add a sample with a duplicate ip. this shall be ignored completely
     AddTimeData(UtilBuildAddress(0x001, 0x001, 0x001, 0x03C), 61); // 1.1.1.60 , offsetSample = 61
 
     BOOST_CHECK_EQUAL(CountOffsetSamples(), samples); // sample was completely ignored
@@ -284,13 +284,13 @@ BOOST_AUTO_TEST_CASE(util_AddTimeDataAlgorithmIgnoreSampleWithDuplicateIp)
     std::set<CNetAddr> knownSet;
     CMedianFilter<int64_t> offsetFilter(capacity, 0); // max size : capacity , initial offset: 0
 
-	int samples = offsetFilter.size();
+    int samples = offsetFilter.size();
 
-	AddTimeDataAlgorithm(UtilBuildAddress(0x001, 0x001, 0x001, 0x0C8), 200, knownSet, offsetFilter, offset); // 1.1.1.200, offsetSample = 200
-    BOOST_CHECK_EQUAL(offsetFilter.size(), samples + 1); // new sample was accepted
+    AddTimeDataAlgorithm(UtilBuildAddress(0x001, 0x001, 0x001, 0x0C8), 200, knownSet, offsetFilter, offset); // 1.1.1.200, offsetSample = 200
+    BOOST_CHECK_EQUAL(offsetFilter.size(), samples + 1);                                                     // new sample was accepted
 
     AddTimeDataAlgorithm(UtilBuildAddress(0x001, 0x001, 0x001, 0x0C8), 201, knownSet, offsetFilter, offset); // 1.1.1.200, offsetSample = 201
-	BOOST_CHECK_EQUAL(offsetFilter.size(), samples + 1); // sample with duplicate ip was ignored
+    BOOST_CHECK_EQUAL(offsetFilter.size(), samples + 1);                                                     // sample with duplicate ip was ignored
 }
 
 
