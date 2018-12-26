@@ -88,13 +88,13 @@ BOOST_AUTO_TEST_CASE(util_UtilBuildAddress)
 
 BOOST_AUTO_TEST_CASE(util_AddTimeDataAlgorithmComputeOffsetWhenNewSampleCountIsGreaterEqualFiveAndUneven)
 {
-    int limit = 20; //  can store up to 20 samples
+    int capacity = 20; //  can store up to 20 samples
     int64_t offset = 0;
     std::set<CNetAddr> knownSet;
-    CMedianFilter<int64_t> offsetFilter(limit, 0); // max size : 20 , init sample: 0
+    CMedianFilter<int64_t> offsetFilter(capacity, 0); // max size : 20 , init sample: 0
 
 
-    for (unsigned int sample = 1; sample < 10; sample++) { // precondition: at least 4 samples, all within bounds (including the init sample : 0
+    for (unsigned int sample = 1; sample < 10; sample++) { // precondition: at least 4 samples. (including the init sample : 0)
         CNetAddr addr = UtilBuildAddress(0x001, 0x001, 0x001, sample);
         AddTimeDataAlgorithm(addr, sample, knownSet, offsetFilter, offset); // 1.1.1.[1,2,3],  offsetSample = [1,2,3]
     }
@@ -116,13 +116,13 @@ BOOST_AUTO_TEST_CASE(util_AddTimeDataAlgorithmComputeOffsetWhenNewSampleCountIsG
 
 BOOST_AUTO_TEST_CASE(util_AddTimeDataAlgorithmDoNotComputeOffsetWhenNewSampleCountIsGreaterEqualFiveButEven)
 {
-    int limit = 20; //  can store up to 20 samples
+    int capacity = 20; //  can store up to 20 samples
     int64_t offset = 0;
     std::set<CNetAddr> knownSet;
-    CMedianFilter<int64_t> offsetFilter(limit, 0); // max size : 20 , init sample: 0
+    CMedianFilter<int64_t> offsetFilter(capacity, 0); // max size : 20 , init sample: 0
 
 
-    for (unsigned int sample = 1; sample < 9; sample++) { // precondition: at least 4 samples, all within bounds (including the init sample : 0
+    for (unsigned int sample = 1; sample < 9; sample++) { // precondition: at least 7 samples. (including the init sample : 0
         CNetAddr addr = UtilBuildAddress(0x001, 0x001, 0x001, sample);
         AddTimeDataAlgorithm(addr, sample, knownSet, offsetFilter, offset); // 1.1.1.[1,2,3],  offsetSample = [1,2,3]
     }
@@ -142,15 +142,15 @@ BOOST_AUTO_TEST_CASE(util_AddTimeDataAlgorithmDoNotComputeOffsetWhenNewSampleCou
 }
 
 
-BOOST_AUTO_TEST_CASE(util_AddTimeDataAlgorithmMedianIsWithinBounds)
+BOOST_AUTO_TEST_CASE(util_AddTimeDataAlgorithmComputeOffsetWithMedianWithinBounds)
 {
-    int limit = 10;
+    int capacity = 10;
     int64_t offset = 0;
     std::set<CNetAddr> knownSet;
-    CMedianFilter<int64_t> offsetFilter(limit, 0); // max size : 10 , init value: 0
+    CMedianFilter<int64_t> offsetFilter(capacity, 0); // max size : 10 , init samplee: 0
 
 
-    for (unsigned int sample = 1; sample < 4; sample++) { // precondition: 4 samples, all within bounds
+    for (unsigned int sample = 1; sample < 4; sample++) { // precondition: 4 samples. (including the init sample : 0)
         CNetAddr addr = UtilBuildAddress(0x001, 0x001, 0x001, sample);
         AddTimeDataAlgorithm(addr, sample, knownSet, offsetFilter, offset); // 1.1.1.[1,2,3],  offsetSample = [1,2,3]
     }
@@ -164,12 +164,12 @@ BOOST_AUTO_TEST_CASE(util_AddTimeDataAlgorithmMedianIsWithinBounds)
     BOOST_CHECK_EQUAL(offsetFilter.size(), 5);
 }
 
-BOOST_AUTO_TEST_CASE(util_AddTimeDataAlgorithmMedianIsOutsideBounds)
+BOOST_AUTO_TEST_CASE(util_AddTimeDataAlgorithmOffsetFlipsToZeroIfMedianIsOutsideBounds)
 {
-    int limit = 10;
+    int capacity = 10;
     int64_t offset = 0;
     std::set<CNetAddr> knownSet;
-    CMedianFilter<int64_t> offsetFilter(limit, 0); // max size : limit , init value: 0
+    CMedianFilter<int64_t> offsetFilter(capacity, 0); // max size : 10 , init sample: 0
 
     for (int sample = 1; sample < 4; sample++) {                                                     // precondition: 4 samples, all outside bounds
         CNetAddr addr = UtilBuildAddress(0x001, 0x001, 0x001, sample);                               // 1.1.1.[1,2,3]
@@ -197,10 +197,10 @@ BOOST_AUTO_TEST_CASE(util_AddTimeDataAlgorithmMedianIsOutsideBounds)
 
 BOOST_AUTO_TEST_CASE(util_AddTimeDataAlgorithmAtLeastFiveSamplesToComputeOffset)
 {
-    int limit = 10;
+    int capacity = 10;
     int64_t offset = 0;
     std::set<CNetAddr> knownSet;
-    CMedianFilter<int64_t> offsetFilter(limit, 0); // max size : limit , init value: 0
+    CMedianFilter<int64_t> offsetFilter(capacity, 0); // max size : 10 , init sample: 0
 
     AddTimeDataAlgorithm(UtilBuildAddress(0x001, 0x001, 0x001, 0x001), 1, knownSet, offsetFilter, offset);
     BOOST_CHECK_EQUAL(offset, 0);
