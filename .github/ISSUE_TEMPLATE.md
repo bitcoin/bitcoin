@@ -17,5 +17,7 @@ If the node is "stuck" during sync or giving "block checksum mismatch" errors, p
 
 <!-- What type of machine are you observing the error on (OS/CPU and disk type)? -->
 
+<!-- For the GUI-related issue on Linux provide names and versions of a distro, a desktop environment and a graphical shell (if relevant). -->
+
 <!-- Any extra information that might be useful in the debugging process. -->
 <!--- This is normally the contents of a `debug.log` or `config.log` file. Raw text or a link to a pastebin type site are preferred. -->
