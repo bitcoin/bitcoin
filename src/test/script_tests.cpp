@@ -33,7 +33,7 @@
 
 static const unsigned int gFlags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC;
 
-unsigned int ParseScriptFlags(std::string strFlags);
+std::vector<unsigned int> ParseScriptFlags(std::string strFlags);
 std::string FormatScriptFlags(unsigned int flags);
 
 UniValue
@@ -996,7 +996,7 @@ BOOST_AUTO_TEST_CASE(script_json_test)
         CScript scriptSig = ParseScript(scriptSigString);
         std::string scriptPubKeyString = test[pos++].get_str();
         CScript scriptPubKey = ParseScript(scriptPubKeyString);
-        unsigned int scriptflags = ParseScriptFlags(test[pos++].get_str());
+        unsigned int scriptflags = ParseScriptFlags(test[pos++].get_str())[0];
         int scriptError = ParseScriptError(test[pos++].get_str());
 
         DoTest(scriptPubKey, scriptSig, witness, scriptflags, strTest, scriptError, nValue);

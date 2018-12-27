@@ -36,7 +36,6 @@ typedef std::vector<unsigned char> valtype;
 extern UniValue read_json(const std::string& jsondata);
 
 static std::map<std::string, unsigned int> mapFlagNames = {
-    {std::string("NONE"), (unsigned int)SCRIPT_VERIFY_NONE},
     {std::string("P2SH"), (unsigned int)SCRIPT_VERIFY_P2SH},
     {std::string("STRICTENC"), (unsigned int)SCRIPT_VERIFY_STRICTENC},
     {std::string("DERSIG"), (unsigned int)SCRIPT_VERIFY_DERSIG},
@@ -56,10 +55,12 @@ static std::map<std::string, unsigned int> mapFlagNames = {
     {std::string("CONST_SCRIPTCODE"), (unsigned int)SCRIPT_VERIFY_CONST_SCRIPTCODE},
 };
 
-unsigned int ParseScriptFlags(std::string strFlags)
+std::vector<unsigned int> ParseScriptFlags(std::string strFlags)
 {
-    if (strFlags.empty()) {
-        return 0;
+    std::vector<unsigned int> ret;
+    if (strFlags.empty() || strFlags == "NONE") {
+        ret.push_back(0);
+        return ret;
     }
     unsigned int flags = 0;
     std::vector<std::string> words;
@@ -71,8 +72,12 @@ unsigned int ParseScriptFlags(std::string strFlags)
             BOOST_ERROR("Bad test: unknown verification flag '" << word << "'");
         flags |= mapFlagNames[word];
     }
-
-    return flags;
+    ret.push_back(flags);
+    for (const std::string& word : words)
+    {
+        ret.push_back(flags & ~mapFlagNames[word]);
+    }
+    return ret;
 }
 
 std::string FormatScriptFlags(unsigned int flags)
@@ -91,6 +96,35 @@ std::string FormatScriptFlags(unsigned int flags)
     return ret.substr(0, ret.size() - 1);
 }
 
+bool CheckTx(const CTransaction& tx, const std::map<COutPoint, CScript>& mapprevOutScriptPubKeys, const std::map<COutPoint, int64_t>& mapprevOutValues, const unsigned int& flags, const PrecomputedTransactionData& txdata, const std::string& strTest, const bool expect_valid)
+{
+    bool tx_valid = true;
+    ScriptError err = expect_valid ? SCRIPT_ERR_UNKNOWN_ERROR : SCRIPT_ERR_OK;
+    for (unsigned int i = 0; i < tx.vin.size() && tx_valid; i++)
+    {
+        const CAmount amount = mapprevOutValues.count(tx.vin[i].prevout) ? mapprevOutValues.at(tx.vin[i].prevout) : 0;
+        try
+        {
+            tx_valid = VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys.at(tx.vin[i].prevout), &tx.vin[i].scriptWitness, flags, TransactionSignatureChecker(&tx, i, amount, txdata), &err);
+        }
+        catch (...)
+        {
+            BOOST_ERROR("Bad test: " << strTest);
+            return true; // The test format is bad and an error is thrown. Return true to silence further error.
+        }
+        if (expect_valid) {
+            BOOST_CHECK_MESSAGE(tx_valid, strTest);
+            BOOST_CHECK_MESSAGE((err == SCRIPT_ERR_OK), ScriptErrorString(err));
+            err = SCRIPT_ERR_UNKNOWN_ERROR;
+        }
+    }
+    if (!expect_valid) {
+        BOOST_CHECK_MESSAGE(!tx_valid, strTest);
+        BOOST_CHECK_MESSAGE((err != SCRIPT_ERR_OK), ScriptErrorString(err));
+    }
+    return (tx_valid == expect_valid);
+}
+
 BOOST_FIXTURE_TEST_SUITE(transaction_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(tx_valid)
@@ -101,10 +135,9 @@ BOOST_AUTO_TEST_CASE(tx_valid)
     // or [[[prevout hash, prevout index, prevout scriptPubKey], [input 2], ...],"], serializedTransaction, verifyFlags
     // ... where all scripts are stringified scripts.
     //
-    // verifyFlags is a comma separated list of script verification flags to apply, or "NONE"
+    // verifyFlags is a comma separated list of MINIMUM script verification flags NOT to apply, or "NONE"
     UniValue tests = read_json(std::string(json_tests::tx_valid, json_tests::tx_valid + sizeof(json_tests::tx_valid)));
 
-    ScriptError err;
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
         UniValue test = tests[idx];
         std::string strTest = test.write();
@@ -120,8 +153,8 @@ BOOST_AUTO_TEST_CASE(tx_valid)
             std::map<COutPoint, int64_t> mapprevOutValues;
             UniValue inputs = test[0].get_array();
             bool fValid = true;
-	    for (unsigned int inpIdx = 0; inpIdx < inputs.size(); inpIdx++) {
-	        const UniValue& input = inputs[inpIdx];
+            for (unsigned int inpIdx = 0; inpIdx < inputs.size(); inpIdx++) {
+                const UniValue& input = inputs[inpIdx];
                 if (!input.isArray())
                 {
                     fValid = false;
@@ -155,24 +188,22 @@ BOOST_AUTO_TEST_CASE(tx_valid)
             BOOST_CHECK(state.IsValid());
 
             PrecomputedTransactionData txdata(tx);
-            for (unsigned int i = 0; i < tx.vin.size(); i++)
-            {
-                if (!mapprevOutScriptPubKeys.count(tx.vin[i].prevout))
-                {
-                    BOOST_ERROR("Bad test: " << strTest);
-                    break;
-                }
+            std::vector<unsigned int> verify_flags = ParseScriptFlags(test[2].get_str());
 
-                CAmount amount = 0;
-                if (mapprevOutValues.count(tx.vin[i].prevout)) {
-                    amount = mapprevOutValues[tx.vin[i].prevout];
+            if (!CheckTx(tx, mapprevOutScriptPubKeys, mapprevOutValues, ~verify_flags[0], txdata, strTest, true))
+                BOOST_ERROR("Tx unexpectedly failed: " << strTest);
+            for (size_t f = 1; f < verify_flags.size(); f++)
+            {
+                unsigned int flags = ~verify_flags[f];
+                if (flags & SCRIPT_VERIFY_WITNESS) {
+                    flags |= SCRIPT_VERIFY_P2SH;
                 }
-                unsigned int verify_flags = ~ParseScriptFlags(test[2].get_str());
-                const CScriptWitness *witness = &tx.vin[i].scriptWitness;
-                BOOST_CHECK_MESSAGE(VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout],
-                                                 witness, verify_flags, TransactionSignatureChecker(&tx, i, amount, txdata), &err),
-                                    strTest);
-                BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
+                else if (flags & SCRIPT_VERIFY_CLEANSTACK) {
+                    flags |= SCRIPT_VERIFY_P2SH;
+                    flags |= SCRIPT_VERIFY_WITNESS;
+                }
+                if (!CheckTx(tx, mapprevOutScriptPubKeys, mapprevOutValues, flags, txdata, strTest, false))
+                    BOOST_ERROR("Too many flags unset: " << strTest);
             }
         }
     }
@@ -186,12 +217,10 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
     // or [[[prevout hash, prevout index, prevout scriptPubKey], [input 2], ...],"], serializedTransaction, verifyFlags
     // ... where all scripts are stringified scripts.
     //
-    // verifyFlags is a comma separated list of script verification flags to apply, or "NONE"
+    // verifyFlags is a comma separated list of MINIMUM script verification flags to apply, or "NONE",
+    // or "BADTX" for transactions not passing CheckTransaction().
     UniValue tests = read_json(std::string(json_tests::tx_invalid, json_tests::tx_invalid + sizeof(json_tests::tx_invalid)));
 
-    // Initialize to SCRIPT_ERR_OK. The tests expect err to be changed to a
-    // value other than SCRIPT_ERR_OK.
-    ScriptError err = SCRIPT_ERR_OK;
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
         UniValue test = tests[idx];
         std::string strTest = test.write();
@@ -207,8 +236,8 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
             std::map<COutPoint, int64_t> mapprevOutValues;
             UniValue inputs = test[0].get_array();
             bool fValid = true;
-	    for (unsigned int inpIdx = 0; inpIdx < inputs.size(); inpIdx++) {
-	        const UniValue& input = inputs[inpIdx];
+            for (unsigned int inpIdx = 0; inpIdx < inputs.size(); inpIdx++) {
+                const UniValue& input = inputs[inpIdx];
                 if (!input.isArray())
                 {
                     fValid = false;
@@ -244,25 +273,21 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
             }
 
             PrecomputedTransactionData txdata(tx);
-            for (unsigned int i = 0; i < tx.vin.size() && fValid; i++)
-            {
-                if (!mapprevOutScriptPubKeys.count(tx.vin[i].prevout))
-                {
-                    BOOST_ERROR("Bad test: " << strTest);
-                    break;
+            std::vector<unsigned int> verify_flags = ParseScriptFlags(test[2].get_str());
+            if (!CheckTx(tx, mapprevOutScriptPubKeys, mapprevOutValues, verify_flags[0], txdata, strTest, false))
+                BOOST_ERROR("Tx unexpectedly passed: " << strTest);
+            for (size_t f = 1; f < verify_flags.size(); f++) {
+                unsigned int flags = verify_flags[f];
+                if (!(flags & SCRIPT_VERIFY_WITNESS)) {
+                    flags &= ~(unsigned int)SCRIPT_VERIFY_CLEANSTACK;
                 }
-
-                unsigned int verify_flags = ParseScriptFlags(test[2].get_str());
-                CAmount amount = 0;
-                if (mapprevOutValues.count(tx.vin[i].prevout)) {
-                    amount = mapprevOutValues[tx.vin[i].prevout];
+                else if (!(flags & SCRIPT_VERIFY_P2SH)) {
+                    flags &= ~(unsigned int)SCRIPT_VERIFY_WITNESS;
+                    flags &= ~(unsigned int)SCRIPT_VERIFY_CLEANSTACK;
                 }
-                const CScriptWitness *witness = &tx.vin[i].scriptWitness;
-                fValid = VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout],
-                                      witness, verify_flags, TransactionSignatureChecker(&tx, i, amount, txdata), &err);
+                if (!CheckTx(tx, mapprevOutScriptPubKeys, mapprevOutValues, flags, txdata, strTest, true))
+                    BOOST_ERROR("Too many flags set: " << strTest);
             }
-            BOOST_CHECK_MESSAGE(!fValid, strTest);
-            BOOST_CHECK_MESSAGE(err != SCRIPT_ERR_OK, ScriptErrorString(err));
         }
     }
 }
