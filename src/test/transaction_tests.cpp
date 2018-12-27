@@ -238,7 +238,10 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
             CTransaction tx(deserialize, stream);
 
             CValidationState state;
-            fValid = CheckTransaction(tx, state) && state.IsValid();
+            if (!CheckTransaction(tx, state) || !state.IsValid()) {
+                BOOST_CHECK_MESSAGE(test[2].get_str() == "BADTX", strTest);
+                continue;
+            }
 
             PrecomputedTransactionData txdata(tx);
             for (unsigned int i = 0; i < tx.vin.size() && fValid; i++)
