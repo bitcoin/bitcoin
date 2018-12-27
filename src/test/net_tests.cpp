@@ -296,6 +296,8 @@ BOOST_AUTO_TEST_CASE(LimitedAndReachable_CNetAddr)
     SetLimited(NET_IPV4, true);
     BOOST_CHECK_EQUAL(IsLimited(addr), true);
     BOOST_CHECK_EQUAL(IsReachable(addr), false);
+
+    SetLimited(NET_IPV4, false); // have to reset this, because this is stateful.
 }
 
 
