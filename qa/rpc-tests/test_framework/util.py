@@ -407,18 +407,25 @@ def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, timewait=None
 def log_filename(dirname, n_node, logname):
     return os.path.join(dirname, "node"+str(n_node), "regtest", logname)
 
-def stop_node(node, i):
-    try:
-        node.stop()
-    except http.client.CannotSendRequest as e:
-        print("WARN: Unable to stop node: " + repr(e))
+def wait_node(i):
     return_code = bitcoind_processes[i].wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
     assert_equal(return_code, 0)
     del bitcoind_processes[i]
 
-def stop_nodes(nodes):
+def stop_node(node, i, wait=True):
+    try:
+        node.stop()
+    except http.client.CannotSendRequest as e:
+        print("WARN: Unable to stop node: " + repr(e))
+    if wait:
+        wait_node(i)
+
+def stop_nodes(nodes, fast=True):
     for i, node in enumerate(nodes):
-        stop_node(node, i)
+        stop_node(node, i, not fast)
+    if fast:
+        for i, node in enumerate(nodes):
+            wait_node(i)
     assert not bitcoind_processes.values() # All connections must be gone now
 
 def set_node_times(nodes, t):
