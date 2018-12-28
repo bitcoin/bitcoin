@@ -389,13 +389,16 @@ my_bind_socket_with_handle(struct evhttp *http, const char *address, ev_uint16_t
 {
 	evutil_socket_t fd;
 	struct evhttp_bound_socket *bound;
+	int serrno;
 
 	if ((fd = bind_socket(address, port, 1 /*reuse*/)) == -1)
 		return (NULL);
 
 	if (listen(fd, 128) == -1) {
+		serrno = EVUTIL_SOCKET_ERROR();
 		event_sock_warn(fd, "%s: listen", __func__);
 		evutil_closesocket(fd);
+		EVUTIL_SET_SOCKET_ERROR(serrno);
 		return (NULL);
 	}
 
