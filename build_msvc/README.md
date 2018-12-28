@@ -31,20 +31,13 @@ Additional dependencies required from the [bitcoin-core](https://github.com/bitc
 
 Building
 ---------------------
-The instructions below use vcpkg to install the dependencies.
+The instructions below use `vcpkg` to install the dependencies.
 
-- Clone and vcpkg from the [github repository](https://github.com/Microsoft/vcpkg) and install as per the instructions in the main README.md.
+- Clone `vcpkg` from the [github repository](https://github.com/Microsoft/vcpkg) and install as per the instructions in the main README.md.
 - Install the required packages (replace x64 with x86 as required):
-- Install the required dependencies with vcpkg:
 
 ```
-    PS >.\vcpkg install boost:x64-windows-static `
-    libevent:x64-windows-static `
-    openssl:x64-windows-static `
-    zeromq:x64-windows-static `
-    berkeleydb:x64-windows-static `
-    secp256k1:x64-windows-static `
-    leveldb:x64-windows-static
+    PS >.\vcpkg install --triplet x64-windows-static boost-filesystem boost-signals2 boost-test libevent openssl zeromq berkeleydb secp256k1 leveldb
 ```
 
 - Use Python to generate *.vcxproj from Makefile
