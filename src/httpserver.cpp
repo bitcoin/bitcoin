@@ -287,7 +287,7 @@ static bool ThreadHTTP(struct event_base* base)
 }
 
 static struct evhttp_bound_socket *
-my_bind_socket_with_handle(struct evhttp *http, const char *address, ev_uint16_t port)
+my_bind_socket_with_handle(struct evhttp *http, const char *address, ev_uint16_t port, bool& ignorable_error)
 {
     evutil_socket_t fd;
     struct evhttp_bound_socket *bound;
@@ -311,9 +311,18 @@ my_bind_socket_with_handle(struct evhttp *http, const char *address, ev_uint16_t
         const std::string strport = strprintf("%d", port);
         ai_result = evutil_getaddrinfo(address, strport.c_str(), &hints, &aitop);
         if (ai_result || !aitop) {
-            if (ai_result == EVUTIL_EAI_SYSTEM) {
+            switch (ai_result) {
+            case 0:
+                break;
+            case EVUTIL_EAI_SYSTEM:
                 LogPrintf("libevent: getaddrinfo\n");
-            } else if (ai_result) {
+                break;
+            case EVUTIL_EAI_ADDRFAMILY:
+            case EVUTIL_EAI_FAMILY:
+            case EVUTIL_EAI_SOCKTYPE:
+                ignorable_error = true;
+                break;
+            default:
                 LogPrintf("libevent: getaddrinfo: %s\n", evutil_gai_strerror(ai_result));
             }
             return nullptr;
@@ -384,7 +393,8 @@ static bool HTTPBindAddresses(struct evhttp* http)
     int num_fail = 0;
     for (std::vector<std::pair<std::string, uint16_t> >::iterator i = endpoints.begin(); i != endpoints.end(); ++i) {
         LogPrint(BCLog::HTTP, "Binding RPC on address %s port %i\n", i->first, i->second);
-        evhttp_bound_socket *bind_handle = my_bind_socket_with_handle(http, i->first.empty() ? nullptr : i->first.c_str(), i->second);
+        bool ignorable_error = false;
+        evhttp_bound_socket *bind_handle = my_bind_socket_with_handle(http, i->first.empty() ? nullptr : i->first.c_str(), i->second, ignorable_error);
         if (bind_handle) {
             CNetAddr addr;
             if (i->first.empty() || (LookupHost(i->first, addr, false) && addr.IsBindAny())) {
@@ -393,7 +403,7 @@ static bool HTTPBindAddresses(struct evhttp* http)
             boundSockets.push_back(bind_handle);
         } else {
             int err = EVUTIL_SOCKET_ERROR();
-            if (!is_default || (err != EADDRNOTAVAIL && err != ENOENT)) {
+            if (!is_default || (err != EADDRNOTAVAIL && err != ENOENT && err != EOPNOTSUPP && !ignorable_error)) {
                 LogPrintf("Binding RPC on address %s port %i failed (Error: %s).\n", i->first, i->second, NetworkErrorString(err));
                 num_fail += 1;
             } else {
