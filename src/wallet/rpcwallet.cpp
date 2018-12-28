@@ -3622,7 +3622,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
             "  \"hdkeypath\" : \"keypath\"       (string, optional) The HD keypath if the key is HD and available\n"
             "  \"hdseedid\" : \"<hash160>\"      (string, optional) The Hash160 of the HD seed\n"
             "  \"hdmasterkeyid\" : \"<hash160>\" (string, optional) alias for hdseedid maintained for backwards compatibility. Will be removed in V0.18.\n"
-            "  \"labels\"                      (object) Array of labels associated with the address.\n"
+            "  \"labels\"                      (json object) Array of labels associated with the address.\n"
             "    [\n"
             "      { (json object of label data)\n"
             "        \"name\": \"labelname\" (string) The label\n"
