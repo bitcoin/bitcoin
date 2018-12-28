@@ -286,27 +286,20 @@ static bool ThreadHTTP(struct event_base* base)
     return event_base_got_break(base) == 0;
 }
 
-// Temporary hacks to avoid modifying libevent code yet
-#define event_debug(x) LogPrintf x
-#define event_warn  LogPrintf
-#define event_warnx LogPrintf
-#define event_sock_warn(sock, ...) LogPrintf(__VA_ARGS__)
-
 static struct evhttp_bound_socket *
 my_bind_socket_with_handle(struct evhttp *http, const char *address, ev_uint16_t port)
 {
-	evutil_socket_t fd;
-	struct evhttp_bound_socket *bound;
-	int serrno;
+    evutil_socket_t fd;
+    struct evhttp_bound_socket *bound;
+    int serrno;
 
-    struct evutil_addrinfo *aitop = NULL;
+    struct evutil_addrinfo *aitop = nullptr;
 
     int reuse;
-    if (address == NULL && port == 0) {
+    if (address == nullptr && port == 0) {
         reuse = 0;
     } else {
         struct evutil_addrinfo hints;
-        char strport[NI_MAXSERV];
         int ai_result;
 
         memset(&hints, 0, sizeof(hints));
@@ -315,29 +308,27 @@ my_bind_socket_with_handle(struct evhttp *http, const char *address, ev_uint16_t
         /* turn NULL hostname into INADDR_ANY, and skip looking up any address
          * types we don't have an interface to connect to. */
         hints.ai_flags = EVUTIL_AI_PASSIVE|EVUTIL_AI_ADDRCONFIG;
-        evutil_snprintf(strport, sizeof(strport), "%d", port);
-        if ((ai_result = evutil_getaddrinfo(address, strport, &hints, &aitop)) != 0) {
+        const std::string strport = strprintf("%d", port);
+        if ((ai_result = evutil_getaddrinfo(address, strport.c_str(), &hints, &aitop)) != 0) {
             if (ai_result == EVUTIL_EAI_SYSTEM) {
-                event_warn("getaddrinfo");
+                LogPrintf("libevent: getaddrinfo\n");
             } else {
-                event_warnx("getaddrinfo: %s", evutil_gai_strerror(ai_result));
+                LogPrintf("libevent: getaddrinfo: %s\n", strerror(errno));
             }
             aitop = nullptr;
         }
 
-        if (aitop == NULL) {
+        if (aitop == nullptr) {
             return nullptr;
         }
 
         reuse = 1;
     }
 
-    int on = 1, r;
-
     /* Create listen socket */
     fd = socket(aitop ? aitop->ai_family : AF_INET, SOCK_STREAM, 0);
     if (fd == -1) {
-        event_sock_warn(-1, "socket");
+        LogPrintf("libevent: socket: %s\n", evutil_socket_error_to_string(evutil_socket_geterror(-1)));
     } else if (evutil_make_socket_nonblocking(fd) < 0) {
 out:
         serrno = EVUTIL_SOCKET_ERROR();
@@ -345,41 +336,36 @@ out:
         EVUTIL_SET_SOCKET_ERROR(serrno);
         fd = -1;
     } else {
-        if (evutil_make_socket_closeonexec(fd) < 0)
-            goto out;
+        if (evutil_make_socket_closeonexec(fd) < 0) goto out;
 
-        setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (void *)&on, sizeof(on));
-        if (reuse)
-            evutil_make_listen_socket_reuseable(fd);
+        const int on = 1;
+        setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (sockopt_arg_type)&on, sizeof(on));
+        if (reuse) evutil_make_listen_socket_reuseable(fd);
 
-        if (aitop != NULL) {
-            r = bind(fd, aitop->ai_addr, aitop->ai_addrlen);
-            if (r == -1)
-                goto out;
+        if (aitop != nullptr) {
+            if (bind(fd, aitop->ai_addr, aitop->ai_addrlen) == -1) goto out;
         }
     }
 
     if (aitop) evutil_freeaddrinfo(aitop);
-    if (fd == -1)
-		return (NULL);
+    if (fd == -1) return nullptr;
 
-	if (listen(fd, 128) == -1) {
-		serrno = EVUTIL_SOCKET_ERROR();
-		event_sock_warn(fd, "%s: listen", __func__);
-		evutil_closesocket(fd);
-		EVUTIL_SET_SOCKET_ERROR(serrno);
-		return (NULL);
-	}
+    if (listen(fd, 128) == -1) {
+        serrno = EVUTIL_SOCKET_ERROR();
+        LogPrintf("libevent: %s: listen\n", __func__);
+        evutil_closesocket(fd);
+        EVUTIL_SET_SOCKET_ERROR(serrno);
+        return nullptr;
+    }
 
-	bound = evhttp_accept_socket_with_handle(http, fd);
+    bound = evhttp_accept_socket_with_handle(http, fd);
 
-	if (bound != NULL) {
-		event_debug(("Bound to port %d - Awaiting connections ... ",
-			port));
-		return (bound);
-	}
+    if (bound != nullptr) {
+        LogPrint(BCLog::LIBEVENT, "libevent: Bound to port %d - Awaiting connections ... \n", port);
+        return bound;
+    }
 
-	return (NULL);
+    return nullptr;
 }
 
 /** Bind HTTP server to specified addresses */
