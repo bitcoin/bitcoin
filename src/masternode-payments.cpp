@@ -645,32 +645,12 @@ bool CMasternodePayments::IsScheduled(const CDeterministicMNCPtr& dmnIn, int nNo
 {
     LOCK(cs_mapMasternodeBlocks);
 
-    if (deterministicMNManager->IsDIP3Active()) {
-        auto projectedPayees = deterministicMNManager->GetListAtChainTip().GetProjectedMNPayees(8);
-        for (const auto &dmn : projectedPayees) {
-            if (dmn->proTxHash == dmnIn->proTxHash) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    if(!masternodeSync.IsMasternodeListSynced()) return false;
-
-    CScript mnpayee;
-    mnpayee = GetScriptForDestination(mnInfo.keyIDCollateralAddress);
-
-    for(int64_t h = nCachedBlockHeight; h <= nCachedBlockHeight + 8; h++){
-        if(h == nNotBlockHeight) continue;
-        std::vector<CTxOut> voutMasternodePayments;
-        if(GetBlockTxOuts(h, 0, voutMasternodePayments)) {
-            for (const auto& txout : voutMasternodePayments) {
-                if (txout.scriptPubKey == mnpayee)
-                    return true;
-            }
+    auto projectedPayees = deterministicMNManager->GetListAtChainTip().GetProjectedMNPayees(8);
+    for (const auto &dmn : projectedPayees) {
+        if (dmn->proTxHash == dmnIn->proTxHash) {
+            return true;
         }
     }
-
     return false;
 }
 
