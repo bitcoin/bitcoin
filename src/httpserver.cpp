@@ -342,9 +342,9 @@ my_bind_socket_with_handle(struct evhttp *http, const char *address, ev_uint16_t
 
     struct evutil_addrinfo *aitop = NULL;
 
-    /* just create an unbound socket */
+    int reuse;
     if (address == NULL && port == 0) {
-        fd = bind_socket_ai(NULL, 0);
+        reuse = 0;
     } else {
         struct evutil_addrinfo hints;
         char strport[NI_MAXSERV];
@@ -370,10 +370,10 @@ my_bind_socket_with_handle(struct evhttp *http, const char *address, ev_uint16_t
             return nullptr;
         }
 
-        fd = bind_socket_ai(aitop, 1 /*reuse*/);
-
-        evutil_freeaddrinfo(aitop);
+        reuse = 1;
     }
+    fd = bind_socket_ai(aitop, reuse);
+    if (aitop) evutil_freeaddrinfo(aitop);
     if (fd == -1)
 		return (NULL);
 
