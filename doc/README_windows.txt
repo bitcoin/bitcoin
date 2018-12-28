@@ -1,4 +1,4 @@
-Dash Core 0.13.0
+Dash Core 0.14.0
 =====================
 
 Intro
