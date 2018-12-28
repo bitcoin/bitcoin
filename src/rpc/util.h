@@ -101,7 +101,7 @@ struct RPCArg {
     /**
      * Return the description string, including the argument type and whether
      * the argument is required.
-     * implicitly_required is set for arguments in an array, which are neither optional nor required.
+     * implicitly_required is set for arguments in a json array, which are neither optional nor required.
      */
     std::string ToDescriptionString(bool implicitly_required = false) const;
 };

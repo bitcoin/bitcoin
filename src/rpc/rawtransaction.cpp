@@ -921,9 +921,9 @@ static UniValue signrawtransactionwithkey(const JSONRPCRequest& request)
         throw std::runtime_error(
             RPCHelpMan{"signrawtransactionwithkey",
                 "\nSign inputs for raw transaction (serialized, hex-encoded).\n"
-                "The second argument is an array of base58-encoded private\n"
+                "The second argument is a json array of base58-encoded private\n"
                 "keys that will be the only keys used to sign the transaction.\n"
-                "The third optional argument (may be null) is an array of previous transaction outputs that\n"
+                "The third optional argument (may be null) is a json array of previous transaction outputs that\n"
                 "this transaction depends on but may not yet be in the block chain.\n",
                 {
                     {"hexstring", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The transaction hex string"},
@@ -1111,7 +1111,7 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
                 "\nThis checks if the transaction violates the consensus or policy rules.\n"
                 "\nSee sendrawtransaction call.\n",
                 {
-                    {"rawtxs", RPCArg::Type::ARR, /* opt */ false, /* default_val */ "", "An array of hex strings of raw transactions.\n"
+                    {"rawtxs", RPCArg::Type::ARR, /* opt */ false, /* default_val */ "", "A json array of hex strings of raw transactions.\n"
             "                                        Length must be one for now.",
                         {
                             {"rawtx", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", ""},

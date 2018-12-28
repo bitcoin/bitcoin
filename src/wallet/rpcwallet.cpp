@@ -3093,7 +3093,7 @@ UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
         throw std::runtime_error(
             RPCHelpMan{"signrawtransactionwithwallet",
                 "\nSign inputs for raw transaction (serialized, hex-encoded).\n"
-                "The second optional argument (may be null) is an array of previous transaction outputs that\n"
+                "The second optional argument (may be null) is a json array of previous transaction outputs that\n"
                 "this transaction depends on but may not yet be in the block chain." +
                     HelpRequiringPassphrase(pwallet) + "\n",
                 {
@@ -3690,7 +3690,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
         }
     }
 
-    // Currently only one label can be associated with an address, return an array
+    // Currently only one label can be associated with an address, return a json array
     // so the API remains stable if we allow multiple labels to be associated with
     // an address.
     UniValue labels(UniValue::VARR);

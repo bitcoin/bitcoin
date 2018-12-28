@@ -133,7 +133,7 @@ void DeleteAuthCookie()
 std::vector<UniValue> JSONRPCProcessBatchReply(const UniValue &in, size_t num)
 {
     if (!in.isArray()) {
-        throw std::runtime_error("Batch must be an array");
+        throw std::runtime_error("Batch must be a json array");
     }
     std::vector<UniValue> batch(num);
     for (size_t i=0; i<in.size(); ++i) {
