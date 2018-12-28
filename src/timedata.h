@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <assert.h>
+#include <set>
 #include <stdint.h>
 #include <vector>
 
@@ -74,5 +75,9 @@ public:
 int64_t GetTimeOffset();
 int64_t GetAdjustedTime();
 void AddTimeData(const CNetAddr& ip, int64_t nTime);
+
+/** Functions to isolate the contract in AddTimeData */
+int CountOffsetSamples();
+void AddTimeDataAlgorithm(const CNetAddr& ip, const int64_t nOffsetSample, std::set<CNetAddr>& knownSet, CMedianFilter<int64_t>& offsetFilter, int64_t& offset);
 
 #endif // BITCOIN_TIMEDATA_H
