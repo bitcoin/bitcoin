@@ -699,7 +699,7 @@ bool CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight, bool f
         if(mnpair.second.nProtocolVersion < mnpayments.GetMinMasternodePaymentsProto()) continue;
 
         //it's in the list (up to 8 entries ahead of current block to allow propagation) -- so let's skip it
-        if(mnpayments.IsScheduled(mnpair.second, nBlockHeight)) continue;
+        //if(mnpayments.IsScheduled(mnpair.second, nBlockHeight)) continue;
 
         //it's too new, wait for a cycle
         if(fFilterSigTime && mnpair.second.sigTime + (nMnCount*2.6*60) > GetAdjustedTime()) continue;
@@ -1191,17 +1191,17 @@ void CMasternodeMan::DoFullVerificationStep(CConnman& connman)
 
     auto it = vecMasternodeRanks.begin() + nOffset;
     while(it != vecMasternodeRanks.end()) {
-        if(it->second.IsPoSeVerified() || it->second.IsPoSeBanned()) {
-            LogPrint("masternode", "CMasternodeMan::DoFullVerificationStep -- Already %s%s%s masternode %s address %s, skipping...\n",
-                        it->second.IsPoSeVerified() ? "verified" : "",
-                        it->second.IsPoSeVerified() && it->second.IsPoSeBanned() ? " and " : "",
-                        it->second.IsPoSeBanned() ? "banned" : "",
-                        it->second.outpoint.ToStringShort(), it->second.addr.ToString());
-            nOffset += MAX_POSE_CONNECTIONS;
-            if(nOffset >= (int)vecMasternodeRanks.size()) break;
-            it += MAX_POSE_CONNECTIONS;
-            continue;
-        }
+//        if(it->second.IsPoSeVerified() || it->second.IsPoSeBanned()) {
+//            LogPrint("masternode", "CMasternodeMan::DoFullVerificationStep -- Already %s%s%s masternode %s address %s, skipping...\n",
+//                        it->second.IsPoSeVerified() ? "verified" : "",
+//                        it->second.IsPoSeVerified() && it->second.IsPoSeBanned() ? " and " : "",
+//                        it->second.IsPoSeBanned() ? "banned" : "",
+//                        it->second.outpoint.ToStringShort(), it->second.addr.ToString());
+//            nOffset += MAX_POSE_CONNECTIONS;
+//            if(nOffset >= (int)vecMasternodeRanks.size()) break;
+//            it += MAX_POSE_CONNECTIONS;
+//            continue;
+//        }
         LogPrint("masternode", "CMasternodeMan::DoFullVerificationStep -- Verifying masternode %s rank %d/%d address %s\n",
                     it->second->collateralOutpoint.ToStringShort(), it->first, nRanksTotal, it->second->pdmnState->addr.ToString());
         CAddress addr = CAddress(it->second->pdmnState->addr, NODE_NETWORK);
