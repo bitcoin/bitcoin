@@ -292,47 +292,6 @@ static bool ThreadHTTP(struct event_base* base)
 #define event_warnx LogPrintf
 #define event_sock_warn(sock, ...) LogPrintf(__VA_ARGS__)
 
-/* Create a non-blocking socket and bind it */
-/* todo: rename this function */
-static evutil_socket_t
-bind_socket_ai(struct evutil_addrinfo *aitop, int reuse)
-{
-	evutil_socket_t fd;
-
-	int on = 1, r;
-	int serrno;
-
-	/* Create listen socket */
-	fd = socket(aitop ? aitop->ai_family : AF_INET, SOCK_STREAM, 0);
-	if (fd == -1) {
-			event_sock_warn(-1, "socket");
-			return (-1);
-	}
-
-	if (evutil_make_socket_nonblocking(fd) < 0)
-		goto out;
-	if (evutil_make_socket_closeonexec(fd) < 0)
-		goto out;
-
-	setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (void *)&on, sizeof(on));
-	if (reuse)
-		evutil_make_listen_socket_reuseable(fd);
-
-	if (aitop != NULL) {
-		r = bind(fd, aitop->ai_addr, aitop->ai_addrlen);
-		if (r == -1)
-			goto out;
-	}
-
-	return (fd);
-
- out:
-	serrno = EVUTIL_SOCKET_ERROR();
-	evutil_closesocket(fd);
-	EVUTIL_SET_SOCKET_ERROR(serrno);
-	return (-1);
-}
-
 static struct evhttp_bound_socket *
 my_bind_socket_with_handle(struct evhttp *http, const char *address, ev_uint16_t port)
 {
@@ -372,7 +331,34 @@ my_bind_socket_with_handle(struct evhttp *http, const char *address, ev_uint16_t
 
         reuse = 1;
     }
-    fd = bind_socket_ai(aitop, reuse);
+
+    int on = 1, r;
+
+    /* Create listen socket */
+    fd = socket(aitop ? aitop->ai_family : AF_INET, SOCK_STREAM, 0);
+    if (fd == -1) {
+        event_sock_warn(-1, "socket");
+    } else if (evutil_make_socket_nonblocking(fd) < 0) {
+out:
+        serrno = EVUTIL_SOCKET_ERROR();
+        evutil_closesocket(fd);
+        EVUTIL_SET_SOCKET_ERROR(serrno);
+        fd = -1;
+    } else {
+        if (evutil_make_socket_closeonexec(fd) < 0)
+            goto out;
+
+        setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (void *)&on, sizeof(on));
+        if (reuse)
+            evutil_make_listen_socket_reuseable(fd);
+
+        if (aitop != NULL) {
+            r = bind(fd, aitop->ai_addr, aitop->ai_addrlen);
+            if (r == -1)
+                goto out;
+        }
+    }
+
     if (aitop) evutil_freeaddrinfo(aitop);
     if (fd == -1)
 		return (NULL);
