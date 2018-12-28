@@ -362,28 +362,6 @@ make_addrinfo(const char *address, ev_uint16_t port)
 	return (ai);
 }
 
-static evutil_socket_t
-bind_socket(const char *address, ev_uint16_t port, int reuse)
-{
-	evutil_socket_t fd;
-	struct evutil_addrinfo *aitop = NULL;
-
-	/* just create an unbound socket */
-	if (address == NULL && port == 0)
-		return bind_socket_ai(NULL, 0);
-
-	aitop = make_addrinfo(address, port);
-
-	if (aitop == NULL)
-		return (-1);
-
-	fd = bind_socket_ai(aitop, reuse);
-
-	evutil_freeaddrinfo(aitop);
-
-	return (fd);
-}
-
 static struct evhttp_bound_socket *
 my_bind_socket_with_handle(struct evhttp *http, const char *address, ev_uint16_t port)
 {
@@ -391,7 +369,23 @@ my_bind_socket_with_handle(struct evhttp *http, const char *address, ev_uint16_t
 	struct evhttp_bound_socket *bound;
 	int serrno;
 
-	if ((fd = bind_socket(address, port, 1 /*reuse*/)) == -1)
+    struct evutil_addrinfo *aitop = NULL;
+
+    /* just create an unbound socket */
+    if (address == NULL && port == 0) {
+        fd = bind_socket_ai(NULL, 0);
+    } else {
+        aitop = make_addrinfo(address, port);
+
+        if (aitop == NULL) {
+            return nullptr;
+        }
+
+        fd = bind_socket_ai(aitop, 1 /*reuse*/);
+
+        evutil_freeaddrinfo(aitop);
+    }
+    if (fd == -1)
 		return (NULL);
 
 	if (listen(fd, 128) == -1) {
