@@ -124,7 +124,7 @@ does not need to be involved.
 - Finally anyone can broadcast the transaction using `sendrawtransaction "T"`.
 
 In case there are more signers, it may be advantageous to let them all sign in
-parallel, rather passing the PSBT from one signer to the next one. In the
+parallel, rather than passing the PSBT from one signer to the next one. In the
 above example this would translate to Carol handing a copy of *P* to each signer
 separately. They can then all invoke `walletprocesspsbt "P"`, and end up with
 their individually-signed PSBT structures. They then all send those back to
