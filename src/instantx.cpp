@@ -250,7 +250,7 @@ void CInstantSend::Vote(CTxLockCandidate& txLockCandidate, CConnman& connman)
             LogPrint("instantsend", "CInstantSend::Vote -- Can't calculate rank for masternode %s\n", activeMasternodeInfo.outpoint.ToStringShort());
             continue;
         }
-        if (!deterministicMNManager->IsDeterministicMNsSporkActive()) {
+        if (!deterministicMNManager->IsDIP3Active()) {
             // not used until spork15 activation
             quorumModifierHash = uint256();
         }
@@ -1043,7 +1043,7 @@ bool CTxLockVote::IsValid(CNode* pnode, CConnman& connman) const
             LogPrint("instantsend", "CTxLockVote::IsValid -- invalid masternodeProTxHash %s\n", masternodeProTxHash.ToString());
             return false;
         }
-    } else if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    } else if (deterministicMNManager->IsDIP3Active()) {
         LogPrint("instantsend", "CTxLockVote::IsValid -- missing masternodeProTxHash while DIP3 is active\n");
         return false;
     }
@@ -1069,7 +1069,7 @@ bool CTxLockVote::IsValid(CNode* pnode, CConnman& connman) const
             LogPrint("instantsend", "CTxLockVote::IsValid -- invalid quorumModifierHash %s, expected %s\n", quorumModifierHash.ToString(), expectedQuorumModifierHash.ToString());
             return false;
         }
-    } else if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    } else if (deterministicMNManager->IsDIP3Active()) {
         LogPrint("instantsend", "CTxLockVote::IsValid -- missing quorumModifierHash while DIP3 is active\n");
         return false;
     }
@@ -1112,7 +1112,7 @@ bool CTxLockVote::CheckSignature() const
         return false;
     }
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    if (deterministicMNManager->IsDIP3Active()) {
         uint256 hash = GetSignatureHash();
 
         CBLSSignature sig;
@@ -1148,7 +1148,7 @@ bool CTxLockVote::Sign()
 {
     std::string strError;
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    if (deterministicMNManager->IsDIP3Active()) {
         uint256 hash = GetSignatureHash();
 
         CBLSSignature sig = activeMasternodeInfo.blsKeyOperator->Sign(hash);

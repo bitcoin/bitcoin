@@ -82,7 +82,7 @@ bool CMasternodeMan::Add(CMasternode &mn)
 {
     LOCK(cs);
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive())
+    if (deterministicMNManager->IsDIP3Active())
         return false;
 
     if (Has(mn.outpoint)) return false;
@@ -100,7 +100,7 @@ void CMasternodeMan::AskForMN(CNode* pnode, const COutPoint& outpoint, CConnman&
     CNetMsgMaker msgMaker(pnode->GetSendVersion());
     LOCK(cs);
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive())
+    if (deterministicMNManager->IsDIP3Active())
         return;
 
     CService addrSquashed = Params().AllowMultiplePorts() ? (CService)pnode->addr : CService(pnode->addr, 0);
@@ -157,7 +157,7 @@ bool CMasternodeMan::PoSeBan(const COutPoint &outpoint)
 {
     LOCK(cs);
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive())
+    if (deterministicMNManager->IsDIP3Active())
         return true;
 
     CMasternode* pmn = Find(outpoint);
@@ -173,7 +173,7 @@ void CMasternodeMan::Check()
 {
     LOCK2(cs_main, cs);
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive())
+    if (deterministicMNManager->IsDIP3Active())
         return;
 
     for (auto& mnpair : mapMasternodes) {
@@ -185,7 +185,7 @@ void CMasternodeMan::Check()
 
 void CMasternodeMan::CheckAndRemove(CConnman& connman)
 {
-    if (deterministicMNManager->IsDeterministicMNsSporkActive())
+    if (deterministicMNManager->IsDIP3Active())
         return;
 
     if(!masternodeSync.IsMasternodeListSynced()) return;
@@ -372,7 +372,7 @@ void CMasternodeMan::CheckAndRemove(CConnman& connman)
 
 void CMasternodeMan::AddDeterministicMasternodes()
 {
-    if (!deterministicMNManager->IsDeterministicMNsSporkActive())
+    if (!deterministicMNManager->IsDIP3Active())
         return;
 
     bool added = false;
@@ -407,7 +407,7 @@ void CMasternodeMan::AddDeterministicMasternodes()
 
 void CMasternodeMan::RemoveNonDeterministicMasternodes()
 {
-    if (!deterministicMNManager->IsDeterministicMNsSporkActive())
+    if (!deterministicMNManager->IsDIP3Active())
         return;
 
     bool erased = false;
@@ -453,7 +453,7 @@ int CMasternodeMan::CountMasternodes(int nProtocolVersion)
     int nCount = 0;
     nProtocolVersion = nProtocolVersion == -1 ? mnpayments.GetMinMasternodePaymentsProto() : nProtocolVersion;
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    if (deterministicMNManager->IsDIP3Active()) {
         auto mnList = deterministicMNManager->GetListAtChainTip();
         nCount = (int)mnList.GetAllMNsCount();
     } else {
@@ -472,7 +472,7 @@ int CMasternodeMan::CountEnabled(int nProtocolVersion)
     int nCount = 0;
     nProtocolVersion = nProtocolVersion == -1 ? mnpayments.GetMinMasternodePaymentsProto() : nProtocolVersion;
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    if (deterministicMNManager->IsDIP3Active()) {
         auto mnList = deterministicMNManager->GetListAtChainTip();
         nCount = (int)mnList.GetValidMNsCount();
     } else {
@@ -507,7 +507,7 @@ void CMasternodeMan::DsegUpdate(CNode* pnode, CConnman& connman)
     CNetMsgMaker msgMaker(pnode->GetSendVersion());
     LOCK(cs);
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive())
+    if (deterministicMNManager->IsDIP3Active())
         return;
 
     CService addrSquashed = Params().AllowMultiplePorts() ? (CService)pnode->addr : CService(pnode->addr, 0);
@@ -533,7 +533,7 @@ CMasternode* CMasternodeMan::Find(const COutPoint &outpoint)
 {
     LOCK(cs);
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    if (deterministicMNManager->IsDIP3Active()) {
         // This code keeps compatibility to old code depending on the non-deterministic MN lists
         // When deterministic MN lists get activated, we stop relying on the MNs we encountered due to MNBs and start
         // using the MNs found in the deterministic MN manager. To keep compatibility, we create CMasternode entries
@@ -592,7 +592,7 @@ bool CMasternodeMan::GetMasternodeInfo(const COutPoint& outpoint, masternode_inf
 
 bool CMasternodeMan::GetMasternodeInfo(const CKeyID& keyIDOperator, masternode_info_t& mnInfoRet) {
     LOCK(cs);
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    if (deterministicMNManager->IsDIP3Active()) {
         return false;
     } else {
         for (const auto& mnpair : mapMasternodes) {
@@ -607,7 +607,7 @@ bool CMasternodeMan::GetMasternodeInfo(const CKeyID& keyIDOperator, masternode_i
 
 bool CMasternodeMan::GetMasternodeInfo(const CScript& payee, masternode_info_t& mnInfoRet)
 {
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    if (deterministicMNManager->IsDIP3Active()) {
         // we can't reliably search by payee as there might be duplicates. Also, keyIDCollateralAddress is not
         // always the payout address as DIP3 allows using different keys for collateral and payouts
         // this method is only used from ComputeBlockVersion, which has a different logic for deterministic MNs
@@ -632,7 +632,7 @@ bool CMasternodeMan::GetMasternodeInfo(const CScript& payee, masternode_info_t& 
 bool CMasternodeMan::Has(const COutPoint& outpoint)
 {
     LOCK(cs);
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    if (deterministicMNManager->IsDIP3Active()) {
         return deterministicMNManager->HasValidMNCollateralAtChainTip(outpoint);
     } else {
         return mapMasternodes.find(outpoint) != mapMasternodes.end();
@@ -649,7 +649,7 @@ bool CMasternodeMan::GetNextMasternodeInQueueForPayment(bool fFilterSigTime, int
 
 bool CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight, bool fFilterSigTime, int& nCountRet, masternode_info_t& mnInfoRet)
 {
-    if (deterministicMNManager->IsDeterministicMNsSporkActive(nBlockHeight)) {
+    if (deterministicMNManager->IsDIP3Active(nBlockHeight)) {
         return false;
     }
 
@@ -761,7 +761,7 @@ masternode_info_t CMasternodeMan::FindRandomNotInVec(const std::vector<COutPoint
             }
         }
         if(fExclude) continue;
-        if (deterministicMNManager->IsDeterministicMNsSporkActive() && !deterministicMNManager->HasValidMNCollateralAtChainTip(pmn->outpoint))
+        if (deterministicMNManager->IsDIP3Active() && !deterministicMNManager->HasValidMNCollateralAtChainTip(pmn->outpoint))
             continue;
         // found the one not in vecToExclude
         LogPrint("masternode", "CMasternodeMan::FindRandomNotInVec -- found, masternode=%s\n", pmn->outpoint.ToStringShort());
@@ -776,7 +776,7 @@ std::map<COutPoint, CMasternode> CMasternodeMan::GetFullMasternodeMap()
 {
     LOCK(cs);
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    if (deterministicMNManager->IsDIP3Active()) {
         std::map<COutPoint, CMasternode> result;
         auto mnList = deterministicMNManager->GetListAtChainTip();
         for (const auto &p : mapMasternodes) {
@@ -797,7 +797,7 @@ bool CMasternodeMan::GetMasternodeScores(const uint256& nBlockHash, CMasternodeM
 
     vecMasternodeScoresRet.clear();
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    if (deterministicMNManager->IsDIP3Active()) {
         auto mnList = deterministicMNManager->GetListAtChainTip();
         auto scores = mnList.CalculateScores(nBlockHash);
         for (const auto& p : scores) {
@@ -917,7 +917,7 @@ void CMasternodeMan::ProcessMasternodeConnections(CConnman& connman)
 std::pair<CService, std::set<uint256> > CMasternodeMan::PopScheduledMnbRequestConnection()
 {
     LOCK(cs);
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    if (deterministicMNManager->IsDIP3Active()) {
         return std::make_pair(CService(), std::set<uint256>());
     }
     if(listScheduledMnbRequestConnections.empty()) {
@@ -946,7 +946,7 @@ std::pair<CService, std::set<uint256> > CMasternodeMan::PopScheduledMnbRequestCo
 
 void CMasternodeMan::ProcessPendingMnbRequests(CConnman& connman)
 {
-    if (deterministicMNManager->IsDeterministicMNsSporkActive())
+    if (deterministicMNManager->IsDIP3Active())
         return;
 
     std::pair<CService, std::set<uint256> > p = PopScheduledMnbRequestConnection();
@@ -988,7 +988,7 @@ void CMasternodeMan::ProcessPendingMnbRequests(CConnman& connman)
 
 void CMasternodeMan::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
 {
-    if (deterministicMNManager->IsDeterministicMNsSporkActive())
+    if (deterministicMNManager->IsDIP3Active())
         return;
 
     if(fLiteMode) return; // disable all Dash specific functionality
@@ -1189,7 +1189,7 @@ void CMasternodeMan::PushDsegInvs(CNode* pnode, const CMasternode& mn)
 
 void CMasternodeMan::DoFullVerificationStep(CConnman& connman)
 {
-    if (deterministicMNManager->IsDeterministicMNsSporkActive())
+    if (deterministicMNManager->IsDIP3Active())
         return;
 
     if(activeMasternodeInfo.outpoint.IsNull()) return;
@@ -1269,7 +1269,7 @@ void CMasternodeMan::DoFullVerificationStep(CConnman& connman)
 
 void CMasternodeMan::CheckSameAddr()
 {
-    if (deterministicMNManager->IsDeterministicMNsSporkActive())
+    if (deterministicMNManager->IsDIP3Active())
         return;
 
     if(!masternodeSync.IsSynced() || mapMasternodes.empty()) return;
@@ -1325,7 +1325,7 @@ void CMasternodeMan::CheckSameAddr()
 
 bool CMasternodeMan::CheckVerifyRequestAddr(const CAddress& addr, CConnman& connman)
 {
-    if (deterministicMNManager->IsDeterministicMNsSporkActive())
+    if (deterministicMNManager->IsDIP3Active())
         return false;
 
     if(netfulfilledman.HasFulfilledRequest(addr, strprintf("%s", NetMsgType::MNVERIFY)+"-request")) {
@@ -1351,7 +1351,7 @@ void CMasternodeMan::ProcessPendingMnvRequests(CConnman& connman)
 {
     LOCK(cs_mapPendingMNV);
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive())
+    if (deterministicMNManager->IsDIP3Active())
         return;
 
     std::map<CService, std::pair<int64_t, CMasternodeVerification> >::iterator itPendingMNV = mapPendingMNV.begin();
@@ -1383,7 +1383,7 @@ void CMasternodeMan::SendVerifyReply(CNode* pnode, CMasternodeVerification& mnv,
 {
     AssertLockHeld(cs_main);
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive())
+    if (deterministicMNManager->IsDIP3Active())
         return;
 
     // only masternodes can sign this, why would someone ask regular node?
@@ -1443,7 +1443,7 @@ void CMasternodeMan::ProcessVerifyReply(CNode* pnode, CMasternodeVerification& m
 {
     AssertLockHeld(cs_main);
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive())
+    if (deterministicMNManager->IsDIP3Active())
         return;
 
     std::string strError;
@@ -1582,7 +1582,7 @@ void CMasternodeMan::ProcessVerifyBroadcast(CNode* pnode, const CMasternodeVerif
 {
     AssertLockHeld(cs_main);
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive())
+    if (deterministicMNManager->IsDIP3Active())
         return;
 
     std::string strError;
@@ -1706,7 +1706,7 @@ std::string CMasternodeMan::ToString() const
 {
     std::ostringstream info;
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    if (deterministicMNManager->IsDIP3Active()) {
         info << "Masternodes: masternode object count: " << (int)mapMasternodes.size() <<
                 ", deterministic masternode count: " << deterministicMNManager->GetListAtChainTip().GetAllMNsCount() <<
                 ", nDsqCount: " << (int)nDsqCount;
@@ -1725,7 +1725,7 @@ bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CNode* pfrom, CMasternodeBr
     // Need to lock cs_main here to ensure consistent locking order because the SimpleCheck call below locks cs_main
     LOCK(cs_main);
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive())
+    if (deterministicMNManager->IsDIP3Active())
         return false;
 
     {
@@ -1840,7 +1840,7 @@ void CMasternodeMan::UpdateLastPaid(const CBlockIndex* pindex)
 void CMasternodeMan::UpdateLastSentinelPingTime()
 {
     LOCK(cs);
-    if (deterministicMNManager->IsDeterministicMNsSporkActive())
+    if (deterministicMNManager->IsDIP3Active())
         return;
     nLastSentinelPingTime = GetTime();
 }
@@ -1874,7 +1874,7 @@ void CMasternodeMan::RemoveGovernanceObject(uint256 nGovernanceObjectHash)
 void CMasternodeMan::CheckMasternode(const CKeyID& keyIDOperator, bool fForce)
 {
     LOCK2(cs_main, cs);
-    if (deterministicMNManager->IsDeterministicMNsSporkActive())
+    if (deterministicMNManager->IsDIP3Active())
         return;
     for (auto& mnpair : mapMasternodes) {
         if (mnpair.second.legacyKeyIDOperator == keyIDOperator) {
@@ -1894,7 +1894,7 @@ bool CMasternodeMan::IsMasternodePingedWithin(const COutPoint& outpoint, int nSe
 void CMasternodeMan::SetMasternodeLastPing(const COutPoint& outpoint, const CMasternodePing& mnp)
 {
     LOCK(cs);
-    if (deterministicMNManager->IsDeterministicMNsSporkActive())
+    if (deterministicMNManager->IsDIP3Active())
         return;
     CMasternode* pmn = Find(outpoint);
     if(!pmn) {

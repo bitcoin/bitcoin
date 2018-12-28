@@ -279,8 +279,8 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
         nHeight++;
     }
 
-    // activate spork15
-    sporkManager.UpdateSpork(SPORK_15_DETERMINISTIC_MNS_ENABLED, chainActive.Height() + 1, *g_connman);
+    int DIP0003HeightBackup = Params().GetConsensus().DIP0003Height;
+    const_cast<Consensus::Params&>(Params().GetConsensus()).DIP0003Height = chainActive.Height() + 1;
     CreateAndProcessBlock({}, coinbaseKey);
     deterministicMNManager->UpdatedBlockTip(chainActive.Tip());
     nHeight++;
@@ -398,5 +398,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
         nHeight++;
     }
     BOOST_ASSERT(foundRevived);
+
+    const_cast<Consensus::Params&>(Params().GetConsensus()).DIP0003Height = DIP0003HeightBackup;
 }
 BOOST_AUTO_TEST_SUITE_END()

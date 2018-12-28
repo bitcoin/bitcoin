@@ -579,7 +579,7 @@ void CGovernanceManager::DoMaintenance(CConnman& connman)
 {
     if (fLiteMode || !masternodeSync.IsSynced() || ShutdownRequested()) return;
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    if (deterministicMNManager->IsDIP3Active()) {
         ClearPreDIP3Votes();
         RemoveInvalidProposalVotes();
     }
@@ -1302,7 +1302,7 @@ void CGovernanceManager::UpdatedBlockTip(const CBlockIndex* pindex, CConnman& co
     nCachedBlockHeight = pindex->nHeight;
     LogPrint("gobject", "CGovernanceManager::UpdatedBlockTip -- nCachedBlockHeight: %d\n", nCachedBlockHeight);
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive(pindex->nHeight)) {
+    if (deterministicMNManager->IsDIP3Active(pindex->nHeight)) {
         ClearPreDIP3Votes();
         RemoveInvalidProposalVotes();
     }
@@ -1401,10 +1401,10 @@ void CGovernanceManager::RemoveInvalidProposalVotes()
 unsigned int CGovernanceManager::GetMinVoteTime()
 {
     LOCK(cs_main);
-    if (!deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    if (!deterministicMNManager->IsDIP3Active()) {
         return 0;
     }
-    int64_t dip3SporkHeight = sporkManager.GetSporkValue(SPORK_15_DETERMINISTIC_MNS_ENABLED);
+    int64_t dip3SporkHeight = Params().GetConsensus().DIP0003Height;
     return chainActive[dip3SporkHeight]->nTime;
 }
 

@@ -277,7 +277,7 @@ void MasternodeList::updateMyNodeList(bool fForce)
     if (ShutdownRequested()) {
         return;
     }
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    if (deterministicMNManager->IsDIP3Active()) {
         return;
     }
 
@@ -321,7 +321,7 @@ void MasternodeList::updateNodeList()
         return;
     }
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    if (deterministicMNManager->IsDIP3Active()) {
         // we misuse the fact that updateNodeList is called regularely here and remove both tabs
         if (ui->tabWidget->indexOf(ui->tabDIP3Masternodes) != 0) {
             // remove "My Masternode" and "All Masternodes" tabs
@@ -356,7 +356,7 @@ void MasternodeList::updateNodeList()
     ui->tableWidgetMasternodes->clearContents();
     ui->tableWidgetMasternodes->setRowCount(0);
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    if (deterministicMNManager->IsDIP3Active()) {
         ui->countLabel->setText(QString::number(0));
         return;
     }
@@ -405,7 +405,7 @@ void MasternodeList::updateDIP3List()
         return;
     }
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    if (deterministicMNManager->IsDIP3Active()) {
         ui->dip3NoteLabel->setVisible(false);
     }
 

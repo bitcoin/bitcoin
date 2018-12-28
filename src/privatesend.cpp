@@ -52,7 +52,7 @@ bool CPrivateSendQueue::Sign()
 
     std::string strError = "";
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    if (deterministicMNManager->IsDIP3Active()) {
         uint256 hash = GetSignatureHash();
         CBLSSignature sig = activeMasternodeInfo.blsKeyOperator->Sign(hash);
         if (!sig.IsValid()) {
@@ -94,7 +94,7 @@ bool CPrivateSendQueue::Sign()
 bool CPrivateSendQueue::CheckSignature(const CKeyID& keyIDOperator, const CBLSPublicKey& blsPubKey) const
 {
     std::string strError = "";
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    if (deterministicMNManager->IsDIP3Active()) {
         uint256 hash = GetSignatureHash();
 
         CBLSSignature sig;
@@ -147,7 +147,7 @@ bool CPrivateSendBroadcastTx::Sign()
 
     std::string strError = "";
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    if (deterministicMNManager->IsDIP3Active()) {
         uint256 hash = GetSignatureHash();
 
         CBLSSignature sig = activeMasternodeInfo.blsKeyOperator->Sign(hash);
@@ -188,7 +188,7 @@ bool CPrivateSendBroadcastTx::CheckSignature(const CKeyID& keyIDOperator, const 
 {
     std::string strError = "";
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    if (deterministicMNManager->IsDIP3Active()) {
         uint256 hash = GetSignatureHash();
 
         CBLSSignature sig;

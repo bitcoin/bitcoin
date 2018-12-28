@@ -63,7 +63,7 @@ void CActiveDeterministicMasternodeManager::Init()
 
     if (!fMasternodeMode) return;
 
-    if (!deterministicMNManager->IsDeterministicMNsSporkActive()) return;
+    if (!deterministicMNManager->IsDIP3Active()) return;
 
     // Check that our local network configuration is correct
     if (!fListen) {
@@ -133,7 +133,7 @@ void CActiveDeterministicMasternodeManager::UpdatedBlockTip(const CBlockIndex* p
 
     if (!fMasternodeMode) return;
 
-    if (!deterministicMNManager->IsDeterministicMNsSporkActive(pindexNew->nHeight)) return;
+    if (!deterministicMNManager->IsDIP3Active(pindexNew->nHeight)) return;
 
     if (state == MASTERNODE_READY) {
         auto mnList = deterministicMNManager->GetListForBlock(pindexNew->GetBlockHash());
@@ -190,7 +190,7 @@ bool CActiveDeterministicMasternodeManager::GetLocalAddress(CService& addrRet)
 
 void CActiveLegacyMasternodeManager::ManageState(CConnman& connman)
 {
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) return;
+    if (deterministicMNManager->IsDIP3Active()) return;
 
     LogPrint("masternode", "CActiveLegacyMasternodeManager::ManageState -- Start\n");
     if (!fMasternodeMode) {
@@ -272,7 +272,7 @@ std::string CActiveLegacyMasternodeManager::GetTypeString() const
 
 bool CActiveLegacyMasternodeManager::SendMasternodePing(CConnman& connman)
 {
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) return false;
+    if (deterministicMNManager->IsDIP3Active()) return false;
 
     if (!fPingerEnabled) {
         LogPrint("masternode", "CActiveLegacyMasternodeManager::SendMasternodePing -- %s: masternode ping service is disabled, skipping...\n", GetStateString());
@@ -326,7 +326,7 @@ void CActiveLegacyMasternodeManager::DoMaintenance(CConnman& connman)
 
 void CActiveLegacyMasternodeManager::ManageStateInitial(CConnman& connman)
 {
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) return;
+    if (deterministicMNManager->IsDIP3Active()) return;
 
     LogPrint("masternode", "CActiveLegacyMasternodeManager::ManageStateInitial -- status = %s, type = %s, pinger enabled = %d\n", GetStatus(), GetTypeString(), fPingerEnabled);
 
@@ -409,7 +409,7 @@ void CActiveLegacyMasternodeManager::ManageStateInitial(CConnman& connman)
 
 void CActiveLegacyMasternodeManager::ManageStateRemote()
 {
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) return;
+    if (deterministicMNManager->IsDIP3Active()) return;
 
     LogPrint("masternode", "CActiveLegacyMasternodeManager::ManageStateRemote -- Start status = %s, type = %s, pinger enabled = %d, keyIDOperator = %s\n",
         GetStatus(), GetTypeString(), fPingerEnabled, activeMasternodeInfo.legacyKeyIDOperator.ToString());

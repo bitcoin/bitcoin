@@ -313,7 +313,7 @@ UniValue gobject_submit(const JSONRPCRequest& request)
     if (govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
         if (fMnFound) {
             govobj.SetMasternodeOutpoint(activeMasternodeInfo.outpoint);
-            if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+            if (deterministicMNManager->IsDIP3Active()) {
                 govobj.Sign(*activeMasternodeInfo.blsKeyOperator);
             } else {
                 govobj.Sign(activeMasternodeInfo.legacyKeyOperator, activeMasternodeInfo.legacyKeyIDOperator);
@@ -428,7 +428,7 @@ UniValue gobject_vote_conf(const JSONRPCRequest& request)
     CGovernanceVote vote(mn.outpoint, hash, eVoteSignal, eVoteOutcome);
 
     bool signSuccess = false;
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    if (deterministicMNManager->IsDIP3Active()) {
         if (govObjType == GOVERNANCE_OBJECT_PROPOSAL && eVoteSignal == VOTE_SIGNAL_FUNDING) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Can't use vote-conf for proposals when deterministic masternodes are active");
         }
@@ -520,7 +520,7 @@ UniValue VoteWithMasternodeList(const std::vector<CMasternodeConfig::CMasternode
             continue;
         }
 
-        if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+        if (deterministicMNManager->IsDIP3Active()) {
             if (govObjType == GOVERNANCE_OBJECT_PROPOSAL && mn.keyIDVoting != pubKeyOperator.GetID()) {
                 nFailed++;
                 statusObj.push_back(Pair("result", "failed"));
@@ -600,7 +600,7 @@ UniValue gobject_vote_many(const JSONRPCRequest& request)
     // This allows voting on proposals when you have the MN voting key in your wallet
     // We can remove this when we remove support for masternode.conf and only support wallet based masternode
     // management
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    if (deterministicMNManager->IsDIP3Active()) {
         if (!pwalletMain) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "vote-many not supported when wallet is disabled.");
         }
@@ -634,7 +634,7 @@ UniValue gobject_vote_many(const JSONRPCRequest& request)
         });
     }
 #else
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    if (deterministicMNManager->IsDIP3Active()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "vote-many not supported when wallet is disabled.");
     }
 #endif
@@ -678,7 +678,7 @@ UniValue gobject_vote_alias(const JSONRPCRequest& request)
 
     std::vector<CMasternodeConfig::CMasternodeEntry> entries;
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    if (deterministicMNManager->IsDIP3Active()) {
 #ifdef ENABLE_WALLET
         if (!pwalletMain) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "vote-alias not supported when wallet is disabled");

@@ -1189,7 +1189,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                 }
 
                 if (!push && inv.type == MSG_MASTERNODE_PAYMENT_VOTE) {
-                    if (!deterministicMNManager->IsDeterministicMNsSporkActive()) {
+                    if (!deterministicMNManager->IsDIP3Active()) {
                         if (mnpayments.HasVerifiedPaymentVote(inv.hash)) {
                             connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::MASTERNODEPAYMENTVOTE, mnpayments.mapMasternodePaymentVotes[inv.hash]));
                             push = true;
@@ -1198,7 +1198,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                 }
 
                 if (!push && inv.type == MSG_MASTERNODE_PAYMENT_BLOCK) {
-                    if (!deterministicMNManager->IsDeterministicMNsSporkActive()) {
+                    if (!deterministicMNManager->IsDIP3Active()) {
                         BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
                         LOCK(cs_mapMasternodeBlocks);
                         if (mi != mapBlockIndex.end() && mnpayments.mapMasternodeBlocks.count(mi->second->nHeight)) {
@@ -1216,7 +1216,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                 }
 
                 if (!push && inv.type == MSG_MASTERNODE_ANNOUNCE) {
-                    if (!deterministicMNManager->IsDeterministicMNsSporkActive()) {
+                    if (!deterministicMNManager->IsDIP3Active()) {
                         if (mnodeman.mapSeenMasternodeBroadcast.count(inv.hash)) {
                             connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::MNANNOUNCE, mnodeman.mapSeenMasternodeBroadcast[inv.hash].second));
                             push = true;
@@ -1225,7 +1225,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                 }
 
                 if (!push && inv.type == MSG_MASTERNODE_PING) {
-                    if (!deterministicMNManager->IsDeterministicMNsSporkActive()) {
+                    if (!deterministicMNManager->IsDIP3Active()) {
                         if (mnodeman.mapSeenMasternodePing.count(inv.hash)) {
                             connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::MNPING, mnodeman.mapSeenMasternodePing[inv.hash]));
                             push = true;
@@ -1806,7 +1806,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 static std::set<int> allowWhileInIBDObjs = {
                         MSG_SPORK
                 };
-                if (legacyMNObjs.count(inv.type) && deterministicMNManager->IsDeterministicMNsSporkActive()) {
+                if (legacyMNObjs.count(inv.type) && deterministicMNManager->IsDIP3Active()) {
                     LogPrint("net", "ignoring (%s) inv of legacy type %d peer=%d\n", inv.hash.ToString(), inv.type, pfrom->id);
                     continue;
                 }

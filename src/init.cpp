@@ -1947,7 +1947,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
             LogPrintf("  keyIDOperator: %s\n", CBitcoinAddress(activeMasternodeInfo.legacyKeyIDOperator).ToString());
         } else {
-            return InitError(_("You must specify a masternodeprivkey in the configuration. Please see documentation for help."));
+            //return InitError(_("You must specify a masternodeprivkey in the configuration. Please see documentation for help."));
         }
 
         std::string strMasterNodeBLSPrivKey = GetArg("-masternodeblsprivkey", "");

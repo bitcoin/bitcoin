@@ -572,7 +572,7 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingMast
         }
 
         // Check that we have a valid MN signature
-        if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+        if (deterministicMNManager->IsDIP3Active()) {
             if (!CheckSignature(infoMn.blsPubKeyOperator)) {
                 strError = "Invalid masternode signature for: " + strOutpoint + ", pubkey id = " + infoMn.blsPubKeyOperator.ToString();
                 return false;

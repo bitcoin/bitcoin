@@ -265,7 +265,7 @@ bool CGovernanceVote::IsValid(bool useVotingKey) const
     if (useVotingKey) {
         return CheckSignature(infoMn.keyIDVoting);
     } else {
-        if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+        if (deterministicMNManager->IsDIP3Active()) {
             return CheckSignature(infoMn.blsPubKeyOperator);
         } else {
             return CheckSignature(infoMn.legacyKeyIDOperator);

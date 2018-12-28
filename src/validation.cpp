@@ -1828,7 +1828,7 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
         ThresholdState state = VersionBitsState(pindexPrev, params, pos, versionbitscache);
         const struct BIP9DeploymentInfo& vbinfo = VersionBitsDeploymentInfo[pos];
         if (vbinfo.check_mn_protocol && state == THRESHOLD_STARTED && fCheckMasternodesUpgraded) {
-            if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+            if (deterministicMNManager->IsDIP3Active()) {
                 auto mnList = deterministicMNManager->GetListForBlock(pindexPrev->GetBlockHash());
                 auto payee = mnList.GetMNPayee();
                 if (!payee) {

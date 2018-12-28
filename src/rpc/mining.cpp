@@ -722,7 +722,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
 
     result.push_back(Pair("masternode", masternodeObj));
     result.push_back(Pair("masternode_payments_started", pindexPrev->nHeight + 1 > consensusParams.nMasternodePaymentsStartBlock));
-    result.push_back(Pair("masternode_payments_enforced", deterministicMNManager->IsDeterministicMNsSporkActive() || sporkManager.IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)));
+    result.push_back(Pair("masternode_payments_enforced", deterministicMNManager->IsDIP3Active() || sporkManager.IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)));
 
     UniValue superblockObjArray(UniValue::VARR);
     if(pblocktemplate->voutSuperblockPayments.size()) {

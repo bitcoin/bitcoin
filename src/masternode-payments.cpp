@@ -194,7 +194,7 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, CAmount bloc
             if(CSuperblockManager::IsValid(txNew, nBlockHeight, blockReward)) {
                 LogPrint("gobject", "%s -- Valid superblock at height %d: %s", __func__, nBlockHeight, txNew.ToString());
                 // only allow superblock and masternode payments in the same block after spork15 activation
-                if (!deterministicMNManager->IsDeterministicMNsSporkActive(nBlockHeight))
+                if (!deterministicMNManager->IsDIP3Active(nBlockHeight))
                     return true;
                 // continue validation, should also pay MN
             } else {
@@ -216,7 +216,7 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, CAmount bloc
         return true;
     }
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive(nBlockHeight)) {
+    if (deterministicMNManager->IsDIP3Active(nBlockHeight)) {
         // always enforce masternode payments when spork15 is active
         LogPrintf("%s -- ERROR: Invalid masternode payment detected at height %d: %s", __func__, nBlockHeight, txNew.ToString());
         return false;
@@ -241,7 +241,7 @@ void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount blo
             CSuperblockManager::GetSuperblockPayments(nBlockHeight, voutSuperblockPaymentsRet);
     }
 
-    bool allowSuperblockAndMNReward = deterministicMNManager->IsDeterministicMNsSporkActive(nBlockHeight);
+    bool allowSuperblockAndMNReward = deterministicMNManager->IsDIP3Active(nBlockHeight);
 
     // don't allow payments to superblocks AND masternodes before spork15 activation
     if (!voutSuperblockPaymentsRet.empty() && !allowSuperblockAndMNReward) {
@@ -304,7 +304,7 @@ std::map<int, std::string> GetRequiredPaymentsStrings(int nStartHeight, int nEnd
 
     bool doProjection = false;
     for(int h = nStartHeight; h < nEndHeight; h++) {
-        if (deterministicMNManager->IsDeterministicMNsSporkActive(h)) {
+        if (deterministicMNManager->IsDIP3Active(h)) {
             if (h <= nChainTipHeight) {
                 auto payee = deterministicMNManager->GetListForBlock(chainActive[h - 1]->GetBlockHash()).GetMNPayee();
                 mapPayments.emplace(h, GetRequiredPaymentsString(h, payee));
@@ -337,7 +337,7 @@ void CMasternodePayments::Clear()
 
 bool CMasternodePayments::UpdateLastVote(const CMasternodePaymentVote& vote)
 {
-    if (deterministicMNManager->IsDeterministicMNsSporkActive())
+    if (deterministicMNManager->IsDIP3Active())
         return false;
 
     LOCK(cs_mapMasternodePaymentVotes);
@@ -367,7 +367,7 @@ bool CMasternodePayments::GetMasternodeTxOuts(int nBlockHeight, CAmount blockRew
     voutMasternodePaymentsRet.clear();
 
     if(!GetBlockTxOuts(nBlockHeight, blockReward, voutMasternodePaymentsRet)) {
-        if (deterministicMNManager->IsDeterministicMNsSporkActive(nBlockHeight)) {
+        if (deterministicMNManager->IsDIP3Active(nBlockHeight)) {
             LogPrintf("CMasternodePayments::%s -- deterministic masternode lists enabled and no payee\n", __func__);
             return false;
         }
@@ -405,7 +405,7 @@ int CMasternodePayments::GetMinMasternodePaymentsProto() const {
 
 void CMasternodePayments::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
 {
-    if (deterministicMNManager->IsDeterministicMNsSporkActive())
+    if (deterministicMNManager->IsDIP3Active())
         return;
 
     if(fLiteMode) return; // disable all Dash specific functionality
@@ -592,7 +592,7 @@ bool CMasternodePayments::GetBlockTxOuts(int nBlockHeight, CAmount blockReward, 
 
     CAmount masternodeReward = GetMasternodePayment(nBlockHeight, blockReward);
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive(nBlockHeight)) {
+    if (deterministicMNManager->IsDIP3Active(nBlockHeight)) {
         uint256 blockHash;
         {
             LOCK(cs_main);
@@ -645,7 +645,7 @@ bool CMasternodePayments::IsScheduled(const masternode_info_t& mnInfo, int nNotB
 {
     LOCK(cs_mapMasternodeBlocks);
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    if (deterministicMNManager->IsDIP3Active()) {
         auto projectedPayees = deterministicMNManager->GetListAtChainTip().GetProjectedMNPayees(8);
         for (const auto &dmn : projectedPayees) {
             if (dmn->collateralOutpoint == mnInfo.outpoint) {
@@ -830,7 +830,7 @@ std::string CMasternodePayments::GetRequiredPaymentsString(int nBlockHeight) con
 
 bool CMasternodePayments::IsTransactionValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward) const
 {
-    if (deterministicMNManager->IsDeterministicMNsSporkActive(nBlockHeight)) {
+    if (deterministicMNManager->IsDIP3Active(nBlockHeight)) {
         std::vector<CTxOut> voutMasternodePayments;
         if (!GetBlockTxOuts(nBlockHeight, blockReward, voutMasternodePayments)) {
             LogPrintf("CMasternodePayments::%s -- ERROR failed to get payees for block at height %s\n", __func__, nBlockHeight);
@@ -863,7 +863,7 @@ bool CMasternodePayments::IsTransactionValid(const CTransaction& txNew, int nBlo
 
 void CMasternodePayments::CheckAndRemove()
 {
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    if (deterministicMNManager->IsDIP3Active()) {
         return;
     }
 
@@ -948,7 +948,7 @@ bool CMasternodePaymentVote::IsValid(CNode* pnode, int nValidationHeight, std::s
 
 bool CMasternodePayments::ProcessBlock(int nBlockHeight, CConnman& connman)
 {
-    if (deterministicMNManager->IsDeterministicMNsSporkActive(nBlockHeight)) {
+    if (deterministicMNManager->IsDIP3Active(nBlockHeight)) {
         return true;
     }
 
@@ -1087,7 +1087,7 @@ void CMasternodePayments::CheckBlockVotes(int nBlockHeight)
 
 void CMasternodePaymentVote::Relay(CConnman& connman) const
 {
-    if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
+    if (deterministicMNManager->IsDIP3Active()) {
         return;
     }
 
@@ -1292,7 +1292,7 @@ void CMasternodePayments::UpdatedBlockTip(const CBlockIndex *pindex, CConnman& c
 {
     if(!pindex) return;
 
-    if (deterministicMNManager->IsDeterministicMNsSporkActive(pindex->nHeight)) {
+    if (deterministicMNManager->IsDIP3Active(pindex->nHeight)) {
         return;
     }
 
