@@ -2889,6 +2889,11 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
             }
             nValueRet += out.tx->tx->vout[out.i].nValue;
             setCoinsRet.insert(std::make_pair(out.tx, out.i));
+
+            if (!coinControl->fRequireAllInputs && nValueRet >= nTargetValue) {
+                // stop when we added at least one input and enough inputs to have at least nTargetValue funds
+                return true;
+            }
         }
 
         return (nValueRet >= nTargetValue);

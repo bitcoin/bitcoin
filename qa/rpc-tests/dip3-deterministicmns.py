@@ -415,6 +415,7 @@ class DIP3Test(BitcoinTestFramework):
         mn.p2p_port = p2p_port(mn.idx)
 
         blsKey = node.bls('generate')
+        mn.fundsAddr = node.getnewaddress()
         mn.ownerAddr = node.getnewaddress()
         mn.operatorAddr = blsKey['public']
         mn.votingAddr = mn.ownerAddr
@@ -426,9 +427,11 @@ class DIP3Test(BitcoinTestFramework):
     # create a protx MN and also fund it (using collateral inside ProRegTx)
     def create_mn_protx_fund(self, node, idx, alias, legacy_mn_key=None):
         mn = self.create_mn_protx_base(node, idx, alias, legacy_mn_key=legacy_mn_key)
+        node.sendtoaddress(mn.fundsAddr, 1000.001)
+
         mn.collateral_address = node.getnewaddress()
 
-        mn.protx_hash = node.protx('register_fund', mn.collateral_address, '127.0.0.1:%d' % mn.p2p_port, mn.ownerAddr, mn.operatorAddr, mn.votingAddr, 0, mn.collateral_address)
+        mn.protx_hash = node.protx('register_fund', mn.collateral_address, '127.0.0.1:%d' % mn.p2p_port, mn.ownerAddr, mn.operatorAddr, mn.votingAddr, 0, mn.collateral_address, mn.fundsAddr)
         mn.collateral_txid = mn.protx_hash
         mn.collateral_vout = -1
 
@@ -444,9 +447,11 @@ class DIP3Test(BitcoinTestFramework):
     # create a protx MN which refers to an existing collateral
     def create_mn_protx(self, node, idx, alias, collateral_txid, collateral_vout, legacy_mn_key=None):
         mn = self.create_mn_protx_base(node, idx, alias, legacy_mn_key=legacy_mn_key)
+        node.sendtoaddress(mn.fundsAddr, 0.001)
+
         mn.rewards_address = node.getnewaddress()
 
-        mn.protx_hash = node.protx('register', collateral_txid, collateral_vout, '127.0.0.1:%d' % mn.p2p_port, mn.ownerAddr, mn.operatorAddr, mn.votingAddr, 0, mn.rewards_address)
+        mn.protx_hash = node.protx('register', collateral_txid, collateral_vout, '127.0.0.1:%d' % mn.p2p_port, mn.ownerAddr, mn.operatorAddr, mn.votingAddr, 0, mn.rewards_address, mn.fundsAddr)
         mn.collateral_txid = collateral_txid
         mn.collateral_vout = collateral_vout
 
@@ -476,14 +481,16 @@ class DIP3Test(BitcoinTestFramework):
         return mn
 
     def update_mn_payee(self, mn, payee):
-        self.nodes[0].protx('update_registrar', mn.protx_hash, '', '', payee)
+        self.nodes[0].sendtoaddress(mn.fundsAddr, 0.001)
+        self.nodes[0].protx('update_registrar', mn.protx_hash, '', '', payee, mn.fundsAddr)
         self.nodes[0].generate(1)
         self.sync_all()
         info = self.nodes[0].protx('info', mn.protx_hash)
         assert(info['state']['payoutAddress'] == payee)
 
     def test_protx_update_service(self, mn):
-        self.nodes[0].protx('update_service', mn.protx_hash, '127.0.0.2:%d' % mn.p2p_port, mn.blsMnkey)
+        self.nodes[0].sendtoaddress(mn.fundsAddr, 0.001)
+        self.nodes[0].protx('update_service', mn.protx_hash, '127.0.0.2:%d' % mn.p2p_port, mn.blsMnkey, "", mn.fundsAddr)
         self.nodes[0].generate(1)
         self.sync_all()
         for node in self.nodes:
@@ -493,7 +500,7 @@ class DIP3Test(BitcoinTestFramework):
             assert_equal(mn_list['%s-%d' % (mn.collateral_txid, mn.collateral_vout)]['address'], '127.0.0.2:%d' % mn.p2p_port)
 
         # undo
-        self.nodes[0].protx('update_service', mn.protx_hash, '127.0.0.1:%d' % mn.p2p_port, mn.blsMnkey)
+        self.nodes[0].protx('update_service', mn.protx_hash, '127.0.0.1:%d' % mn.p2p_port, mn.blsMnkey, "", mn.fundsAddr)
         self.nodes[0].generate(1)
 
     def force_finish_mnsync(self, node):
@@ -732,16 +739,20 @@ class DIP3Test(BitcoinTestFramework):
 
     def test_fail_create_protx(self, node):
         # Try to create ProTx (should still fail)
+        fund_address = node.getnewaddress()
         address = node.getnewaddress()
+        node.sendtoaddress(fund_address, 1000.001) # +0.001 for fees
         key = node.getnewaddress()
         blsKey = node.bls('generate')
-        assert_raises_jsonrpc(None, "bad-tx-type", node.protx, 'register_fund', address, '127.0.0.1:10000', key, blsKey['public'], key, 0, address)
+        assert_raises_jsonrpc(None, "bad-tx-type", node.protx, 'register_fund', address, '127.0.0.1:10000', key, blsKey['public'], key, 0, address, fund_address)
 
     def test_success_create_protx(self, node):
+        fund_address = node.getnewaddress()
         address = node.getnewaddress()
+        txid = node.sendtoaddress(fund_address, 1000.001) # +0.001 for fees
         key = node.getnewaddress()
         blsKey = node.bls('generate')
-        txid = node.protx('register_fund', address, '127.0.0.1:10000', key, blsKey['public'], key, 0, address)
+        node.protx('register_fund', address, '127.0.0.1:10000', key, blsKey['public'], key, 0, address, fund_address)
         rawtx = node.getrawtransaction(txid, 1)
         self.mine_double_spend(node, rawtx['vin'], address, use_mnmerkleroot_from_tip=True)
         self.sync_all()
