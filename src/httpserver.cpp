@@ -286,6 +286,130 @@ static bool ThreadHTTP(struct event_base* base)
     return event_base_got_break(base) == 0;
 }
 
+// Temporary hacks to avoid modifying libevent code yet
+#define event_debug(x) LogPrintf x
+#define event_warn  LogPrintf
+#define event_warnx LogPrintf
+#define event_sock_warn(sock, ...) LogPrintf(__VA_ARGS__)
+
+/* Create a non-blocking socket and bind it */
+/* todo: rename this function */
+static evutil_socket_t
+bind_socket_ai(struct evutil_addrinfo *aitop, int reuse)
+{
+	evutil_socket_t fd;
+
+	int on = 1, r;
+	int serrno;
+
+	/* Create listen socket */
+	fd = socket(aitop ? aitop->ai_family : AF_INET, SOCK_STREAM, 0);
+	if (fd == -1) {
+			event_sock_warn(-1, "socket");
+			return (-1);
+	}
+
+	if (evutil_make_socket_nonblocking(fd) < 0)
+		goto out;
+	if (evutil_make_socket_closeonexec(fd) < 0)
+		goto out;
+
+	setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (void *)&on, sizeof(on));
+	if (reuse)
+		evutil_make_listen_socket_reuseable(fd);
+
+	if (aitop != NULL) {
+		r = bind(fd, aitop->ai_addr, aitop->ai_addrlen);
+		if (r == -1)
+			goto out;
+	}
+
+	return (fd);
+
+ out:
+	serrno = EVUTIL_SOCKET_ERROR();
+	evutil_closesocket(fd);
+	EVUTIL_SET_SOCKET_ERROR(serrno);
+	return (-1);
+}
+
+static struct evutil_addrinfo *
+make_addrinfo(const char *address, ev_uint16_t port)
+{
+	struct evutil_addrinfo *ai = NULL;
+
+	struct evutil_addrinfo hints;
+	char strport[NI_MAXSERV];
+	int ai_result;
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	/* turn NULL hostname into INADDR_ANY, and skip looking up any address
+	 * types we don't have an interface to connect to. */
+	hints.ai_flags = EVUTIL_AI_PASSIVE|EVUTIL_AI_ADDRCONFIG;
+	evutil_snprintf(strport, sizeof(strport), "%d", port);
+	if ((ai_result = evutil_getaddrinfo(address, strport, &hints, &ai))
+	    != 0) {
+		if (ai_result == EVUTIL_EAI_SYSTEM)
+			event_warn("getaddrinfo");
+		else
+			event_warnx("getaddrinfo: %s",
+			    evutil_gai_strerror(ai_result));
+		return (NULL);
+	}
+
+	return (ai);
+}
+
+static evutil_socket_t
+bind_socket(const char *address, ev_uint16_t port, int reuse)
+{
+	evutil_socket_t fd;
+	struct evutil_addrinfo *aitop = NULL;
+
+	/* just create an unbound socket */
+	if (address == NULL && port == 0)
+		return bind_socket_ai(NULL, 0);
+
+	aitop = make_addrinfo(address, port);
+
+	if (aitop == NULL)
+		return (-1);
+
+	fd = bind_socket_ai(aitop, reuse);
+
+	evutil_freeaddrinfo(aitop);
+
+	return (fd);
+}
+
+static struct evhttp_bound_socket *
+my_bind_socket_with_handle(struct evhttp *http, const char *address, ev_uint16_t port)
+{
+	evutil_socket_t fd;
+	struct evhttp_bound_socket *bound;
+
+	if ((fd = bind_socket(address, port, 1 /*reuse*/)) == -1)
+		return (NULL);
+
+	if (listen(fd, 128) == -1) {
+		event_sock_warn(fd, "%s: listen", __func__);
+		evutil_closesocket(fd);
+		return (NULL);
+	}
+
+	bound = evhttp_accept_socket_with_handle(http, fd);
+
+	if (bound != NULL) {
+		event_debug(("Bound to port %d - Awaiting connections ... ",
+			port));
+		return (bound);
+	}
+
+	return (NULL);
+}
+
 /** Bind HTTP server to specified addresses */
 static bool HTTPBindAddresses(struct evhttp* http)
 {
@@ -317,7 +441,7 @@ static bool HTTPBindAddresses(struct evhttp* http)
     int num_fail = 0;
     for (std::vector<std::pair<std::string, uint16_t> >::iterator i = endpoints.begin(); i != endpoints.end(); ++i) {
         LogPrint(BCLog::HTTP, "Binding RPC on address %s port %i\n", i->first, i->second);
-        evhttp_bound_socket *bind_handle = evhttp_bind_socket_with_handle(http, i->first.empty() ? nullptr : i->first.c_str(), i->second);
+        evhttp_bound_socket *bind_handle = my_bind_socket_with_handle(http, i->first.empty() ? nullptr : i->first.c_str(), i->second);
         if (bind_handle) {
             CNetAddr addr;
             if (i->first.empty() || (LookupHost(i->first, addr, false) && addr.IsBindAny())) {
