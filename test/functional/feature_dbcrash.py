@@ -46,7 +46,7 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
         self.num_nodes = 4
         self.setup_clean_chain = False
         # Need a bit of extra time for the nodes to start up for this test
-        self.rpc_timewait = 90
+        self.rpc_timeout = 90
 
         # Set -maxmempool=0 to turn off mempool memory sharing with dbcache
         # Set -rpcservertimeout=900 to reduce socket disconnects in this
