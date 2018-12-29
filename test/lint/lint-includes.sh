@@ -50,7 +50,6 @@ EXPECTED_BOOST_INCLUDES=(
     boost/algorithm/string/classification.hpp
     boost/algorithm/string/replace.hpp
     boost/algorithm/string/split.hpp
-    boost/bind.hpp
     boost/chrono/chrono.hpp
     boost/date_time/posix_time/posix_time.hpp
     boost/filesystem.hpp
