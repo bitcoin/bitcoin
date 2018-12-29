@@ -32,7 +32,7 @@ class RawTransactionsTest(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
-    def setup_network(self, split=False):
+    def setup_network(self):
         self.setup_nodes()
 
         connect_nodes_bi(self.nodes, 0, 1)
