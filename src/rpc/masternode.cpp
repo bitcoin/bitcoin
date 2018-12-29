@@ -36,7 +36,8 @@ void EnsureWalletIsUnlocked();
 
 UniValue privatesend(const JSONRPCRequest& request)
 {
-    if (!EnsureWalletIsAvailable(request.fHelp))
+    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
 
     if (request.fHelp || request.params.size() != 1)
@@ -55,8 +56,8 @@ UniValue privatesend(const JSONRPCRequest& request)
 
     if (request.params[0].get_str() == "start") {
         {
-            LOCK(pwalletMain->cs_wallet);
-            if (pwalletMain->IsLocked(true))
+            LOCK(pwallet->cs_wallet);
+            if (pwallet->IsLocked(true))
                 throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please unlock wallet for mixing with walletpassphrase first.");
         }
 
@@ -81,6 +82,7 @@ UniValue privatesend(const JSONRPCRequest& request)
 
 UniValue getpoolinfo(const JSONRPCRequest& request)
 {
+    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
             "getpoolinfo\n"
@@ -108,9 +110,9 @@ UniValue getpoolinfo(const JSONRPCRequest& request)
         obj.push_back(Pair("pools", pools));
     }
 
-    if (pwalletMain) {
-        obj.push_back(Pair("keys_left",     pwalletMain->nKeysLeftSinceAutoBackup));
-        obj.push_back(Pair("warnings",      pwalletMain->nKeysLeftSinceAutoBackup < PRIVATESEND_KEYS_THRESHOLD_WARNING
+    if (pwallet) {
+        obj.push_back(Pair("keys_left",     pwallet->nKeysLeftSinceAutoBackup));
+        obj.push_back(Pair("warnings",      pwallet->nKeysLeftSinceAutoBackup < PRIVATESEND_KEYS_THRESHOLD_WARNING
                                                 ? "WARNING: keypool is almost depleted!" : ""));
     }
 #else // ENABLE_WALLET
@@ -312,15 +314,16 @@ void masternode_outputs_help()
 
 UniValue masternode_outputs(const JSONRPCRequest& request)
 {
+    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
     if (request.fHelp)
         masternode_outputs_help();
 
-    if (!EnsureWalletIsAvailable(request.fHelp))
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
 
     // Find possible candidates
     std::vector<COutput> vPossibleCoins;
-    pwalletMain->AvailableCoins(vPossibleCoins, true, NULL, false, ONLY_1000);
+    pwallet->AvailableCoins(vPossibleCoins, true, NULL, false, ONLY_1000);
 
     UniValue obj(UniValue::VOBJ);
     for (const auto& out : vPossibleCoins) {

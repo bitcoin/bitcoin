@@ -31,16 +31,16 @@ extern UniValue sendrawtransaction(const JSONRPCRequest& request);
 #endif//ENABLE_WALLET
 
 // Allows to specify Dash address or priv key. In case of Dash address, the priv key is taken from the wallet
-static CKey ParsePrivKey(const std::string &strKeyOrAddress, bool allowAddresses = true) {
+static CKey ParsePrivKey(CWallet* pwallet, const std::string &strKeyOrAddress, bool allowAddresses = true) {
     CBitcoinAddress address;
     if (allowAddresses && address.SetString(strKeyOrAddress) && address.IsValid()) {
 #ifdef ENABLE_WALLET
-        if (!pwalletMain) {
+        if (!pwallet) {
             throw std::runtime_error("addresses not supported when wallet is disabled");
         }
         CKeyID keyId;
         CKey key;
-        if (!address.GetKeyID(keyId) || !pwalletMain->GetKey(keyId, key))
+        if (!address.GetKeyID(keyId) || !pwallet->GetKey(keyId, key))
             throw std::runtime_error(strprintf("non-wallet or invalid address %s", strKeyOrAddress));
         return key;
 #else//ENABLE_WALLET
@@ -143,7 +143,7 @@ static void FundSpecialTx(CMutableTransaction& tx, const SpecialTxPayload& paylo
     int nChangePos = -1;
     std::string strFailReason;
 
-    if (!pwalletMain->CreateTransaction(vecSend, wtx, reservekey, nFee, nChangePos, strFailReason, &coinControl, false, ALL_COINS, false, tx.vExtraPayload.size())) {
+    if (!pwallet->CreateTransaction(vecSend, wtx, reservekey, nFee, nChangePos, strFailReason, &coinControl, false, ALL_COINS, false, tx.vExtraPayload.size())) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason);
     }
 
@@ -310,6 +310,7 @@ void protx_register_submit_help()
 // handles register, register_prepare and register_fund in one method
 UniValue protx_register(const JSONRPCRequest& request)
 {
+    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
     bool isExternalRegister = request.params[0].get_str() == "register";
     bool isFundRegister = request.params[0].get_str() == "register_fund";
     bool isPrepareRegister = request.params[0].get_str() == "register_prepare";
@@ -355,8 +356,8 @@ UniValue protx_register(const JSONRPCRequest& request)
         paramIdx += 2;
 
         // TODO unlock on failure
-        LOCK(pwalletMain->cs_wallet);
-        pwalletMain->LockCoin(ptx.collateralOutpoint);
+        LOCK(pwallet->cs_wallet);
+        pwallet->LockCoin(ptx.collateralOutpoint);
     }
 
     if (request.params[paramIdx].get_str() != "0" && request.params[paramIdx].get_str() != "") {
@@ -365,7 +366,7 @@ UniValue protx_register(const JSONRPCRequest& request)
         }
     }
 
-    CKey keyOwner = ParsePrivKey(request.params[paramIdx + 1].get_str(), true);
+    CKey keyOwner = ParsePrivKey(pwallet, request.params[paramIdx + 1].get_str(), true);
     CBLSPublicKey pubKeyOperator = ParseBLSPubKey(request.params[paramIdx + 2].get_str(), "operator BLS address");
     CKeyID keyIDVoting = keyOwner.GetPubKey().GetID();
     if (request.params[paramIdx + 3].get_str() != "0" && request.params[paramIdx + 3].get_str() != "") {
@@ -445,7 +446,7 @@ UniValue protx_register(const JSONRPCRequest& request)
         } else {
             // lets prove we own the collateral
             CKey key;
-            if (!pwalletMain->GetKey(keyID, key)) {
+            if (!pwallet->GetKey(keyID, key)) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral key not in wallet: %s", CBitcoinAddress(keyID).ToString()));
             }
             SignSpecialTxPayloadByString(tx, ptx, key);
@@ -601,6 +602,7 @@ void protx_update_registrar_help()
 
 UniValue protx_update_registrar(const JSONRPCRequest& request)
 {
+    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
     if (request.fHelp || (request.params.size() != 5 && request.params.size() != 6)) {
         protx_update_registrar_help();
     }
@@ -755,28 +757,28 @@ void protx_list_help()
     );
 }
 
-static bool CheckWalletOwnsKey(const CKeyID& keyID) {
+static bool CheckWalletOwnsKey(CWallet* pwallet, const CKeyID& keyID) {
 #ifndef ENABLE_WALLET
     return false;
 #else
-    if (!pwalletMain) {
+    if (!pwallet) {
         return false;
     }
-    return pwalletMain->HaveKey(keyID);
+    return pwallet->HaveKey(keyID);
 #endif
 }
 
-static bool CheckWalletOwnsScript(const CScript& script) {
+static bool CheckWalletOwnsScript(CWallet* pwallet, const CScript& script) {
 #ifndef ENABLE_WALLET
     return false;
 #else
-    if (!pwalletMain) {
+    if (!pwallet) {
         return false;
     }
 
     CTxDestination dest;
     if (ExtractDestination(script, dest)) {
-        if ((boost::get<CKeyID>(&dest) && pwalletMain->HaveKey(*boost::get<CKeyID>(&dest))) || (boost::get<CScriptID>(&dest) && pwalletMain->HaveCScript(*boost::get<CScriptID>(&dest)))) {
+        if ((boost::get<CKeyID>(&dest) && pwallet->HaveKey(*boost::get<CKeyID>(&dest))) || (boost::get<CScriptID>(&dest) && pwallet->HaveCScript(*boost::get<CScriptID>(&dest)))) {
             return true;
         }
     }
@@ -784,7 +786,7 @@ static bool CheckWalletOwnsScript(const CScript& script) {
 #endif
 }
 
-UniValue BuildDMNListEntry(const CDeterministicMNCPtr& dmn, bool detailed)
+UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMNCPtr& dmn, bool detailed)
 {
     if (!detailed) {
         return dmn->proTxHash.ToString();
@@ -797,15 +799,15 @@ UniValue BuildDMNListEntry(const CDeterministicMNCPtr& dmn, bool detailed)
     int confirmations = GetUTXOConfirmations(dmn->collateralOutpoint);
     o.push_back(Pair("confirmations", confirmations));
 
-    bool hasOwnerKey = CheckWalletOwnsKey(dmn->pdmnState->keyIDOwner);
+    bool hasOwnerKey = CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDOwner);
     bool hasOperatorKey = false; //CheckWalletOwnsKey(dmn->pdmnState->keyIDOperator);
-    bool hasVotingKey = CheckWalletOwnsKey(dmn->pdmnState->keyIDVoting);
+    bool hasVotingKey = CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDVoting);
 
     bool ownsCollateral = false;
     CTransactionRef collateralTx;
     uint256 tmpHashBlock;
     if (GetTransaction(dmn->collateralOutpoint.hash, collateralTx, Params().GetConsensus(), tmpHashBlock)) {
-        ownsCollateral = CheckWalletOwnsScript(collateralTx->vout[dmn->collateralOutpoint.n].scriptPubKey);
+        ownsCollateral = CheckWalletOwnsScript(pwallet, collateralTx->vout[dmn->collateralOutpoint.n].scriptPubKey);
     }
 
     UniValue walletObj(UniValue::VOBJ);
@@ -813,8 +815,8 @@ UniValue BuildDMNListEntry(const CDeterministicMNCPtr& dmn, bool detailed)
     walletObj.push_back(Pair("hasOperatorKey", hasOperatorKey));
     walletObj.push_back(Pair("hasVotingKey", hasVotingKey));
     walletObj.push_back(Pair("ownsCollateral", ownsCollateral));
-    walletObj.push_back(Pair("ownsPayeeScript", CheckWalletOwnsScript(dmn->pdmnState->scriptPayout)));
-    walletObj.push_back(Pair("ownsOperatorRewardScript", CheckWalletOwnsScript(dmn->pdmnState->scriptOperatorPayout)));
+    walletObj.push_back(Pair("ownsPayeeScript", CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptPayout)));
+    walletObj.push_back(Pair("ownsOperatorRewardScript", CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptOperatorPayout)));
     o.push_back(Pair("wallet", walletObj));
 
     return o;
@@ -822,12 +824,13 @@ UniValue BuildDMNListEntry(const CDeterministicMNCPtr& dmn, bool detailed)
 
 UniValue protx_list(const JSONRPCRequest& request)
 {
+    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
     if (request.fHelp) {
         protx_list_help();
     }
 
 #ifdef ENABLE_WALLET
-    bool hasWallet = pwalletMain != nullptr;
+    bool hasWallet = pwallet != nullptr;
 #else
     bool hasWallet = false;
 #endif
@@ -846,7 +849,7 @@ UniValue protx_list(const JSONRPCRequest& request)
             throw std::runtime_error("\"protx list wallet\" not supported when wallet is disabled");
         }
 #ifdef ENABLE_WALLET
-        LOCK2(cs_main, pwalletMain->cs_wallet);
+        LOCK2(cs_main, pwallet->cs_wallet);
 
         if (request.params.size() > 3) {
             protx_list_help();
@@ -860,7 +863,7 @@ UniValue protx_list(const JSONRPCRequest& request)
         }
 
         std::vector<COutPoint> vOutpts;
-        pwalletMain->ListProTxCoins(vOutpts);
+        pwallet->ListProTxCoins(vOutpts);
         std::set<COutPoint> setOutpts;
         for (const auto& outpt : vOutpts) {
             setOutpts.emplace(outpt);
@@ -871,9 +874,9 @@ UniValue protx_list(const JSONRPCRequest& request)
             if (setOutpts.count(dmn->collateralOutpoint) ||
                 CheckWalletOwnsKey(dmn->pdmnState->keyIDOwner) ||
                 CheckWalletOwnsKey(dmn->pdmnState->keyIDVoting) ||
-                CheckWalletOwnsScript(dmn->pdmnState->scriptPayout) ||
-                CheckWalletOwnsScript(dmn->pdmnState->scriptOperatorPayout)) {
-                ret.push_back(BuildDMNListEntry(dmn, detailed));
+                CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptPayout) ||
+                CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptOperatorPayout)) {
+                ret.push_back(BuildDMNListEntry(pwallet, dmn, detailed));
             }
         });
 #endif
@@ -894,7 +897,7 @@ UniValue protx_list(const JSONRPCRequest& request)
         CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(chainActive[height]->GetBlockHash());
         bool onlyValid = type == "valid";
         mnList.ForEachMN(onlyValid, [&](const CDeterministicMNCPtr& dmn) {
-            ret.push_back(BuildDMNListEntry(dmn, detailed));
+            ret.push_back(BuildDMNListEntry(pwallet, dmn, detailed));
         });
     } else {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid type specified");
@@ -915,6 +918,7 @@ void protx_info_help()
 
 UniValue protx_info(const JSONRPCRequest& request)
 {
+    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
     if (request.fHelp || request.params.size() != 2) {
         protx_info_help();
     }
@@ -925,7 +929,7 @@ UniValue protx_info(const JSONRPCRequest& request)
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s not found", proTxHash.ToString()));
     }
-    return BuildDMNListEntry(dmn, true);
+    return BuildDMNListEntry(pwallet, dmn, true);
 }
 
 void protx_diff_help()
@@ -1002,6 +1006,7 @@ UniValue protx_diff(const JSONRPCRequest& request)
 
 UniValue protx(const JSONRPCRequest& request)
 {
+    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
     if (request.fHelp && request.params.empty()) {
         protx_help();
     }
@@ -1012,7 +1017,7 @@ UniValue protx(const JSONRPCRequest& request)
     }
 
 #ifdef ENABLE_WALLET
-    bool hasWallet = pwalletMain != nullptr;
+    bool hasWallet = pwallet != nullptr;
 #else
     bool hasWallet = false;
 #endif
