@@ -1,4 +1,4 @@
-dist: trusty
+dist: xenial
 os: linux
 language: minimal
 cache:
