@@ -533,7 +533,8 @@ UniValue importwallet(const JSONRPCRequest& request)
 
 UniValue importelectrumwallet(const JSONRPCRequest& request)
 {
-    if (!EnsureWalletIsAvailable(request.fHelp))
+    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
@@ -555,9 +556,9 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
     if (fPruneMode)
         throw JSONRPCError(RPC_WALLET_ERROR, "Importing wallets is disabled in pruned mode");
 
-    LOCK2(cs_main, pwalletMain->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet);
 
-    EnsureWalletIsUnlocked();
+    EnsureWalletIsUnlocked(pwallet);
 
     std::ifstream file;
     std::string strFileName = request.params[0].get_str();
@@ -578,11 +579,11 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
     int64_t nFilesize = std::max((int64_t)1, (int64_t)file.tellg());
     file.seekg(0, file.beg);
 
-    pwalletMain->ShowProgress(_("Importing..."), 0); // show progress dialog in GUI
+    pwallet->ShowProgress(_("Importing..."), 0); // show progress dialog in GUI
 
     if(strFileExt == "csv") {
         while (file.good()) {
-            pwalletMain->ShowProgress("", std::max(1, std::min(99, (int)(((double)file.tellg() / (double)nFilesize) * 100))));
+            pwallet->ShowProgress("", std::max(1, std::min(99, (int)(((double)file.tellg() / (double)nFilesize) * 100))));
             std::string line;
             std::getline(file, line);
             if (line.empty() || line == "address,private_key")
@@ -598,12 +599,12 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
             CPubKey pubkey = key.GetPubKey();
             assert(key.VerifyPubKey(pubkey));
             CKeyID keyid = pubkey.GetID();
-            if (pwalletMain->HaveKey(keyid)) {
+            if (pwallet->HaveKey(keyid)) {
                 LogPrintf("Skipping import of %s (key already present)\n", CBitcoinAddress(keyid).ToString());
                 continue;
             }
             LogPrintf("Importing %s...\n", CBitcoinAddress(keyid).ToString());
-            if (!pwalletMain->AddKeyPubKey(key, pubkey)) {
+            if (!pwallet->AddKeyPubKey(key, pubkey)) {
                 fGood = false;
                 continue;
             }
@@ -620,7 +621,7 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
         std::vector<std::string> vKeys = data.getKeys();
 
         for (size_t i = 0; i < data.size(); i++) {
-            pwalletMain->ShowProgress("", std::max(1, std::min(99, int(i*100/data.size()))));
+            pwallet->ShowProgress("", std::max(1, std::min(99, int(i*100/data.size()))));
             if(!data[vKeys[i]].isStr())
                 continue;
             CBitcoinSecret vchSecret;
@@ -630,19 +631,19 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
             CPubKey pubkey = key.GetPubKey();
             assert(key.VerifyPubKey(pubkey));
             CKeyID keyid = pubkey.GetID();
-            if (pwalletMain->HaveKey(keyid)) {
+            if (pwallet->HaveKey(keyid)) {
                 LogPrintf("Skipping import of %s (key already present)\n", CBitcoinAddress(keyid).ToString());
                 continue;
             }
             LogPrintf("Importing %s...\n", CBitcoinAddress(keyid).ToString());
-            if (!pwalletMain->AddKeyPubKey(key, pubkey)) {
+            if (!pwallet->AddKeyPubKey(key, pubkey)) {
                 fGood = false;
                 continue;
             }
         }
     }
     file.close();
-    pwalletMain->ShowProgress("", 100); // hide progress dialog in GUI
+    pwallet->ShowProgress("", 100); // hide progress dialog in GUI
 
     // Whether to perform rescan after import
     int nStartHeight = 0;
@@ -653,10 +654,10 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
 
     // Assume that electrum wallet was created at that block
     int nTimeBegin = chainActive[nStartHeight]->GetBlockTime();
-    pwalletMain->UpdateTimeFirstKey(nTimeBegin);
+    pwallet->UpdateTimeFirstKey(nTimeBegin);
 
     LogPrintf("Rescanning %i blocks\n", chainActive.Height() - nStartHeight + 1);
-    pwalletMain->ScanForWalletTransactions(chainActive[nStartHeight], true);
+    pwallet->ScanForWalletTransactions(chainActive[nStartHeight], true);
 
     if (!fGood)
         throw JSONRPCError(RPC_WALLET_ERROR, "Error adding some keys to wallet");
@@ -706,6 +707,7 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
 
 UniValue dumphdinfo(const JSONRPCRequest& request)
 {
+    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
     if (!EnsureWalletIsAvailable(request.fHelp))
         return NullUniValue;
 
@@ -724,15 +726,15 @@ UniValue dumphdinfo(const JSONRPCRequest& request)
             + HelpExampleRpc("dumphdinfo", "")
         );
 
-    LOCK(pwalletMain->cs_wallet);
+    LOCK(pwallet->cs_wallet);
 
-    EnsureWalletIsUnlocked();
+    EnsureWalletIsUnlocked(pwallet);
 
     CHDChain hdChainCurrent;
-    if (!pwalletMain->GetHDChain(hdChainCurrent))
+    if (!pwallet->GetHDChain(hdChainCurrent))
         throw JSONRPCError(RPC_WALLET_ERROR, "This wallet is not a HD wallet.");
 
-    if (!pwalletMain->GetDecryptedHDChain(hdChainCurrent))
+    if (!pwallet->GetDecryptedHDChain(hdChainCurrent))
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Cannot decrypt HD seed");
 
     SecureString ssMnemonic;
@@ -855,7 +857,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
         if (pwallet->GetKey(keyid, key)) {
             file << strprintf("%s %s ", CBitcoinSecret(key).ToString(), strTime);
             if (pwallet->mapAddressBook.count(keyid)) {
-                file << strprintf("label=%s", EncodeDumpString(pwalletMain->mapAddressBook[keyid].name));
+                file << strprintf("label=%s", EncodeDumpString(pwallet->mapAddressBook[keyid].name));
             } else if (setKeyPool.count(keyid)) {
                 file << "reserve=1";
             } else {

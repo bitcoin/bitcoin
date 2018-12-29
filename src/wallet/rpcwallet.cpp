@@ -453,7 +453,8 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
 
 UniValue instantsendtoaddress(const JSONRPCRequest& request)
 {
-    if (!EnsureWalletIsAvailable(request.fHelp))
+    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
 
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 5)
@@ -480,7 +481,7 @@ UniValue instantsendtoaddress(const JSONRPCRequest& request)
             + HelpExampleRpc("instantsendtoaddress", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\", 0.1, \"donation\", \"seans outpost\"")
         );
 
-    LOCK2(cs_main, pwalletMain->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet);
 
     CBitcoinAddress address(request.params[0].get_str());
     if (!address.IsValid())
@@ -502,9 +503,9 @@ UniValue instantsendtoaddress(const JSONRPCRequest& request)
     if (request.params.size() > 4)
         fSubtractFeeFromAmount = request.params[4].get_bool();
 
-    EnsureWalletIsUnlocked();
+    EnsureWalletIsUnlocked(pwallet);
 
-    SendMoney(address.Get(), nAmount, fSubtractFeeFromAmount, wtx, true);
+    SendMoney(pwallet, address.Get(), nAmount, fSubtractFeeFromAmount, wtx, true);
 
     return wtx.GetHash().GetHex();
 }
@@ -564,7 +565,8 @@ UniValue listaddressgroupings(const JSONRPCRequest& request)
 
 UniValue listaddressbalances(const JSONRPCRequest& request)
 {
-    if (!EnsureWalletIsAvailable(request.fHelp))
+    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
 
     if (request.fHelp || request.params.size() > 1)
@@ -585,7 +587,7 @@ UniValue listaddressbalances(const JSONRPCRequest& request)
             + HelpExampleRpc("listaddressbalances", "10")
         );
 
-    LOCK2(cs_main, pwalletMain->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet);
 
     CAmount nMinAmount = 0;
     if (request.params.size() > 0)
@@ -595,7 +597,7 @@ UniValue listaddressbalances(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
 
     UniValue jsonBalances(UniValue::VOBJ);
-    std::map<CTxDestination, CAmount> balances = pwalletMain->GetAddressBalances();
+    std::map<CTxDestination, CAmount> balances = pwallet->GetAddressBalances();
     for (auto& balance : balances)
         if (balance.second >= nMinAmount)
             jsonBalances.push_back(Pair(CBitcoinAddress(balance.first).ToString(), ValueFromAmount(balance.second)));
@@ -1259,7 +1261,7 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
         if (it == mapTally.end() && !fIncludeEmpty)
             continue;
 
-        isminefilter mine = IsMine(*pwalletMain, address.Get());
+        isminefilter mine = IsMine(*pwallet, address.Get());
         if(!(mine & filter))
             continue;
 
@@ -2091,13 +2093,13 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
     if (request.params.size() >= 3)
         fForMixingOnly = request.params[2].get_bool();
 
-    if (fForMixingOnly && !pwalletMain->IsLocked(true) && pwalletMain->IsLocked())
+    if (fForMixingOnly && !pwallet->IsLocked(true) && pwallet->IsLocked())
         throw JSONRPCError(RPC_WALLET_ALREADY_UNLOCKED, "Error: Wallet is already unlocked for mixing only.");
 
-    if (!pwalletMain->IsLocked())
+    if (!pwallet->IsLocked())
         throw JSONRPCError(RPC_WALLET_ALREADY_UNLOCKED, "Error: Wallet is already fully unlocked.");
 
-    if (!pwalletMain->Unlock(strWalletPass, fForMixingOnly))
+    if (!pwallet->Unlock(strWalletPass, fForMixingOnly))
         throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
 
     pwallet->TopUpKeyPool();
@@ -2778,7 +2780,7 @@ UniValue listunspent(const JSONRPCRequest& request)
         entry.push_back(Pair("confirmations", out.nDepth));
         entry.push_back(Pair("spendable", out.fSpendable));
         entry.push_back(Pair("solvable", out.fSolvable));
-        entry.push_back(Pair("ps_rounds", pwalletMain->GetCappedOutpointPrivateSendRounds(COutPoint(out.tx->GetHash(), out.i))));
+        entry.push_back(Pair("ps_rounds", pwallet->GetCappedOutpointPrivateSendRounds(COutPoint(out.tx->GetHash(), out.i))));
         results.push_back(entry);
     }
 
