@@ -25,12 +25,13 @@ def tx_from_hex(hexstring):
 class ListTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.enable_mocktime()
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
     def run_test(self):
+        self.nodes[0].generate(1)  # Get out of IBD
+        self.sync_all()
         # Simple send, 0 to 1:
         txid = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.1)
         self.sync_all()
