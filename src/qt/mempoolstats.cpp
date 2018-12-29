@@ -246,11 +246,11 @@ void MempoolStats::drawChart()
             maxMinFee = sample.m_min_fee_per_k;
     }
 
-    int64_t dynMemUsagelog10Val = pow(10.0f, floor(log10(maxDynMemUsage*paddingTopSizeFactor-minDynMemUsage)));
+    int64_t dynMemUsagelog10Val = pow(10.0, floor(log10(maxDynMemUsage*paddingTopSizeFactor-minDynMemUsage)));
     int64_t topDynMemUsage = ceil((double)maxDynMemUsage*paddingTopSizeFactor/dynMemUsagelog10Val)*dynMemUsagelog10Val;
     int64_t bottomDynMemUsage = floor((double)minDynMemUsage/dynMemUsagelog10Val)*dynMemUsagelog10Val;
 
-    int64_t txCountLog10Val = pow(10.0f, floor(log10(maxTxCount*paddingTopSizeFactor-minTxCount)));
+    int64_t txCountLog10Val = pow(10.0, floor(log10(maxTxCount*paddingTopSizeFactor-minTxCount)));
     int64_t topTxCount = ceil((double)maxTxCount*paddingTopSizeFactor/txCountLog10Val)*txCountLog10Val;
     int64_t bottomTxCount = floor((double)minTxCount/txCountLog10Val)*txCountLog10Val;
 
