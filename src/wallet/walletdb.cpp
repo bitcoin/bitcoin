@@ -690,7 +690,7 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
     return result;
 }
 
-DBErrors CWalletDB::FindWalletTx(vector<uint256>& vTxHash, vector<CWalletTx>& vWtx)
+DBErrors CWalletDB::FindWalletTx(std::vector<uint256>& vTxHash, std::vector<CWalletTx>& vWtx)
 {
     bool fNoncriticalErrors = false;
     DBErrors result = DB_LOAD_OK;
@@ -753,11 +753,11 @@ DBErrors CWalletDB::FindWalletTx(vector<uint256>& vTxHash, vector<CWalletTx>& vW
     return result;
 }
 
-DBErrors CWalletDB::ZapSelectTx(vector<uint256>& vTxHashIn, vector<uint256>& vTxHashOut)
+DBErrors CWalletDB::ZapSelectTx(std::vector<uint256>& vTxHashIn, std::vector<uint256>& vTxHashOut)
 {
     // build list of wallet TXs and hashes
-    vector<uint256> vTxHash;
-    vector<CWalletTx> vWtx;
+    std::vector<uint256> vTxHash;
+    std::vector<CWalletTx> vWtx;
     DBErrors err = FindWalletTx(vTxHash, vWtx);
     if (err != DB_LOAD_OK) {
         return err;
@@ -791,10 +791,10 @@ DBErrors CWalletDB::ZapSelectTx(vector<uint256>& vTxHashIn, vector<uint256>& vTx
     return DB_LOAD_OK;
 }
 
-DBErrors CWalletDB::ZapWalletTx(vector<CWalletTx>& vWtx)
+DBErrors CWalletDB::ZapWalletTx(std::vector<CWalletTx>& vWtx)
 {
     // build list of wallet TXs
-    vector<uint256> vTxHash;
+    std::vector<uint256> vTxHash;
     DBErrors err = FindWalletTx(vTxHash, vWtx);
     if (err != DB_LOAD_OK)
         return err;
