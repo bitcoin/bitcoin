@@ -791,6 +791,24 @@ bool CWallet::MarkReplaced(const uint256& originalHash, const uint256& newHash)
     return success;
 }
 
+bool CWallet::UpdateWtxValues(CWalletTx& wtx, const mapValue_t& new_map)
+{
+    LOCK(cs_wallet);
+    wtx.mapValue = new_map;
+
+    WalletBatch batch(*database, "r+");
+
+    bool success = true;
+    if (!batch.WriteTx(wtx)) {
+        WalletLogPrintf("%s: Updating batch tx %s failed\n", __func__, wtx.GetHash().ToString());
+        success = false;
+    }
+
+    NotifyTransactionChanged(this, wtx.tx->GetHash(), CT_UPDATED);
+
+    return success;
+}
+
 bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
 {
     LOCK(cs_wallet);

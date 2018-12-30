@@ -80,6 +80,7 @@ public:
         cachedWallet.clear();
         {
             for (const auto& wtx : wallet.getWalletTxs()) {
+                TransactionRecord::migrateOldInfo(wallet, wtx);
                 if (TransactionRecord::showTransaction()) {
                     cachedWallet.append(TransactionRecord::decomposeTransaction(wtx));
                 }

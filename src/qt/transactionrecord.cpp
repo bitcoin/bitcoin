@@ -2,6 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif
+
+#ifdef ENABLE_BIP70
+#include <qt/paymentrequestplus.h>
+#include <qt/paymentserver.h>
+#endif
 #include <qt/transactionrecord.h>
 
 #include <consensus/consensus.h>
@@ -243,4 +251,47 @@ QString TransactionRecord::getTxHash() const
 int TransactionRecord::getOutputIndex() const
 {
     return idx;
+}
+
+void TransactionRecord::migrateOldInfo(interfaces::Wallet& wallet, const interfaces::WalletTx& wtx)
+{
+#ifdef ENABLE_BIP70
+    if (wtx.value_map.count("to") || wtx.value_map.count("skip_bip70")) {
+        // If there's already a "to", leave it alone
+        return;
+    }
+
+    for (const CTxOut& txout : wtx.tx->vout) {
+        CTxDestination address;
+        if (ExtractDestination(txout.scriptPubKey, address)) {
+            std::string name;
+            if (wallet.getAddress(address, &name, /* is_mine= */ nullptr, /* purpose= */ nullptr) && !name.empty()) {
+                // At least one output has a label, so leave it alone
+                return;
+            }
+        }
+    }
+
+    interfaces::WalletTxStatus tx_status;
+    interfaces::WalletOrderForm order_form;
+    bool in_mempool;
+    int num_blocks;
+    wallet.getWalletTxDetails(wtx.tx->GetHash(), tx_status, order_form, in_mempool, num_blocks);
+
+    for (const std::pair<std::string, std::string>& r : order_form)
+    {
+        if (r.first == "PaymentRequest") {
+            PaymentRequestPlus req;
+            req.parse(QByteArray::fromRawData(r.second.data(), r.second.size()));
+            QString merchant;
+            if (req.getMerchant(PaymentServer::getCertStore(), merchant)) {
+                const uint256 txid = wtx.tx->GetHash();
+                std::map<std::string, std::string> new_map = wtx.value_map;
+                new_map["to"] = merchant.toStdString();
+                wallet.writeWalletTxValues(txid, new_map);
+                return;
+            }
+        }
+    }
+#endif
 }

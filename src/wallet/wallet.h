@@ -1092,6 +1092,8 @@ public:
     /** Mark a transaction as replaced by another transaction (e.g., BIP 125). */
     bool MarkReplaced(const uint256& originalHash, const uint256& newHash);
 
+    bool UpdateWtxValues(CWalletTx& wtx, const mapValue_t& new_map);
+
     //! Verify wallet naming and perform salvage on the wallet if required
     static bool Verify(interfaces::Chain& chain, const WalletLocation& location, bool salvage_wallet, std::string& error_string, std::string& warning_string);
 

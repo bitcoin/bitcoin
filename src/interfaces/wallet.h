@@ -187,6 +187,8 @@ public:
         bool& in_mempool,
         int& num_blocks) = 0;
 
+    virtual bool writeWalletTxValues(const uint256& txid, std::map<std::string, std::string> new_map) = 0;
+
     //! Get balances.
     virtual WalletBalances getBalances() = 0;
 

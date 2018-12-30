@@ -143,6 +143,8 @@ public:
     /** Return whether a status update is needed.
      */
     bool statusUpdateNeeded(int numBlocks) const;
+
+    static void migrateOldInfo(interfaces::Wallet& wallet, const interfaces::WalletTx& wtx);
 };
 
 #endif // BITCOIN_QT_TRANSACTIONRECORD_H

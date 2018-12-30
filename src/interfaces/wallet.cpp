@@ -354,6 +354,13 @@ public:
         }
         return {};
     }
+    bool writeWalletTxValues(const uint256& txid, std::map<std::string, std::string> new_map)
+    {
+        LOCK(m_wallet.cs_wallet);
+        auto mi = m_wallet.mapWallet.find(txid);
+        assert(mi != m_wallet.mapWallet.end());
+        return m_wallet.UpdateWtxValues(mi->second, new_map);
+    }
     WalletBalances getBalances() override
     {
         WalletBalances result;

@@ -238,6 +238,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
     QByteArray transaction_array; /* store serialized transaction */
 
     {
+        mapValue_t mapValue;
         std::vector<std::pair<std::string, std::string>> vOrderForm;
         for (const SendCoinsRecipient &rcp : transaction.getRecipients())
         {
@@ -253,6 +254,9 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
                 std::string value;
                 rcp.paymentRequest.SerializeToString(&value);
                 vOrderForm.emplace_back("PaymentRequest", std::move(value));
+                if (!rcp.authenticatedMerchant.isEmpty()) {
+                    mapValue["to"] = rcp.authenticatedMerchant.toStdString();
+                }
             }
             else
 #endif
