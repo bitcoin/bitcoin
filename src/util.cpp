@@ -1,3 +1,4 @@
+// Copyright (c) 2018 The BitcoinV Core developers
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
@@ -710,7 +711,7 @@ fs::path GetDefaultDataDir()
     // Unix: ~/.bitcoin
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "Bitcoin";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / "BitcoinV";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -720,10 +721,10 @@ fs::path GetDefaultDataDir()
         pathRet = fs::path(pszHome);
 #ifdef MAC_OSX
     // Mac
-    return pathRet / "Library/Application Support/Bitcoin";
+    return pathRet / "Library/Application Support/BitcoinV";
 #else
     // Unix
-    return pathRet / ".bitcoin";
+    return pathRet / ".bitcoinV";
 #endif
 #endif
 }
@@ -1222,8 +1223,8 @@ std::string CopyrightHolders(const std::string& strPrefix)
     std::string strCopyrightHolders = strPrefix + strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION));
 
     // Check for untranslated substitution to make sure Bitcoin Core copyright is not removed by accident
-    if (strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION).find("Bitcoin Core") == std::string::npos) {
-        strCopyrightHolders += "\n" + strPrefix + "The Bitcoin Core developers";
+    if (strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION).find("BitcoinV Core") == std::string::npos) {
+        strCopyrightHolders += "\n" + strPrefix + "The BitcoinV Core developers";
     }
     return strCopyrightHolders;
 }

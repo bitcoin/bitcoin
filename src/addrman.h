@@ -547,6 +547,7 @@ public:
         Check();
         if (nAdd) {
             LogPrint(BCLog::ADDRMAN, "Added %i addresses from %s: %i tried, %i new\n", nAdd, source.ToString(), nTried, nNew);
+            printf("Added %i addresses from %s: %i tried, %i new\n", nAdd, source.ToString().c_str(), nTried, nNew);
         }
         return nAdd > 0;
     }

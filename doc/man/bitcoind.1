@@ -243,7 +243,7 @@ Relay non\-P2SH multisig (default: 1)
 .HP
 \fB\-port=\fR<port>
 .IP
-Listen for connections on <port> (default: 8333 or testnet: 18333)
+Listen for connections on <port> (default: 9333 or testnet: 19333)
 .HP
 \fB\-proxy=\fR<ip:port>
 .IP
@@ -319,7 +319,7 @@ Do not load the wallet and disable wallet RPC calls
 .HP
 \fB\-discardfee=\fR<amt>
 .IP
-The fee rate (in BTC/kB) that indicates your tolerance for discarding
+The fee rate (in BTCV/kB) that indicates your tolerance for discarding
 change by adding it to the fee (default: 0.0001). Note: An output
 is discarded if it is dust at this rate, but we will always
 discard up to the dust relay fee and a discard fee above that is
@@ -327,7 +327,7 @@ limited by the fee estimate for the longest target
 .HP
 \fB\-fallbackfee=\fR<amt>
 .IP
-A fee rate (in BTC/kB) that will be used when fee estimation has
+A fee rate (in BTCV/kB) that will be used when fee estimation has
 insufficient data (default: 0.0002)
 .HP
 \fB\-keypool=\fR<n>
@@ -336,12 +336,12 @@ Set key pool size to <n> (default: 1000)
 .HP
 \fB\-mintxfee=\fR<amt>
 .IP
-Fees (in BTC/kB) smaller than this are considered zero fee for
+Fees (in BTCV/kB) smaller than this are considered zero fee for
 transaction creation (default: 0.00001)
 .HP
 \fB\-paytxfee=\fR<amt>
 .IP
-Fee (in BTC/kB) to add to transactions you send (default: 0.00)
+Fee (in BTCV/kB) to add to transactions you send (default: 0.00)
 .HP
 \fB\-rescan\fR
 .IP
@@ -447,7 +447,7 @@ Prepend debug output with timestamp (default: 1)
 .HP
 \fB\-maxtxfee=\fR<amt>
 .IP
-Maximum total fees (in BTC) to use in a single wallet transaction or raw
+Maximum total fees (in BTCV) to use in a single wallet transaction or raw
 transaction; setting this too low may abort large transactions
 (default: 0.10)
 .HP
@@ -492,7 +492,7 @@ Enable transaction replacement in the memory pool (default: 1)
 .HP
 \fB\-minrelaytxfee=\fR<amt>
 .IP
-Fees (in BTC/kB) smaller than this are considered zero fee for relaying,
+Fees (in BTCV/kB) smaller than this are considered zero fee for relaying,
 mining and transaction creation (default: 0.00001)
 .HP
 \fB\-whitelistforcerelay\fR
@@ -513,7 +513,7 @@ Set maximum BIP141 block weight (default: 3996000)
 .HP
 \fB\-blockmintxfee=\fR<amt>
 .IP
-Set lowest fee rate (in BTC/kB) for transactions to be included in block
+Set lowest fee rate (in BTCV/kB) for transactions to be included in block
 creation. (default: 0.00001)
 .PP
 RPC server options:

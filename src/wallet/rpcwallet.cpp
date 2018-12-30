@@ -1,3 +1,4 @@
+// Copyright (c) 2018 The BitcoinV Core developers
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
@@ -3902,13 +3903,14 @@ UniValue generate(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2) {
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3) {
         throw std::runtime_error(
             "generate nblocks ( maxtries )\n"
             "\nMine up to nblocks blocks immediately (before the RPC call returns) to an address in the wallet.\n"
             "\nArguments:\n"
             "1. nblocks      (numeric, required) How many blocks are generated immediately.\n"
             "2. maxtries     (numeric, optional) How many iterations to try (default = 1000000).\n"
+            "3. extra_subsidy (Variable Block Reward). Specify as power of 2 to acheive best possible reward. Defaults to regular bitcoin block reward if not specified.\n"
             "\nResult:\n"
             "[ blockhashes ]     (array) hashes of blocks generated\n"
             "\nExamples:\n"
@@ -3923,6 +3925,12 @@ UniValue generate(const JSONRPCRequest& request)
         max_tries = request.params[1].get_int();
     }
 
+    // don't forget to update 'static const CRPCConvertParam vRPCConvertParams[] = ' in client.cpp
+    uint64_t extra_subsidy = 0; // defaults to regular bitcoin payout, always optional to increase.
+    if (!request.params[2].isNull()) {
+        extra_subsidy = request.params[2].get_int();
+    }    
+
     std::shared_ptr<CReserveScript> coinbase_script;
     pwallet->GetScriptForMining(coinbase_script);
 
@@ -3936,7 +3944,7 @@ UniValue generate(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No coinbase script available");
     }
 
-    return generateBlocks(coinbase_script, num_generate, max_tries, true);
+    return generateBlocks(coinbase_script, num_generate, max_tries, extra_subsidy, true);
 }
 
 UniValue rescanblockchain(const JSONRPCRequest& request)
@@ -4680,8 +4688,7 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
                             "       } \n"
                             "       ,...\n"
                             "     ]\n"
-                            "2. \"outputs\"               (array, required) a json array with outputs (key-value pairs), where none of the keys are duplicated.\n"
-                            "That is, each address can only appear once and there can only be one 'data' object.\n"
+                            "2. \"outputs\"               (array, required) a json array with outputs (key-value pairs)\n"
                             "   [\n"
                             "    {\n"
                             "      \"address\": x.xxx,    (obj, optional) A key-value pair. The key (string) is the bitcoin address, the value (float or string) is the amount in " + CURRENCY_UNIT + "\n"

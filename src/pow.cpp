@@ -1,3 +1,4 @@
+// Copyright (c) 2018 The BitcoinV Core developers
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
@@ -9,6 +10,7 @@
 #include <chain.h>
 #include <primitives/block.h>
 #include <uint256.h>
+#include <variable_block_reward.h>
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
@@ -76,7 +78,7 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
     bool fNegative;
     bool fOverflow;
     arith_uint256 bnTarget;
-
+ 
     bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
 
     // Check range
@@ -88,4 +90,27 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
         return false;
 
     return true;
+}
+
+bool CheckProofOfWork(int height, uint256 hash, CBlock &block, const Consensus::Params& params)
+{
+
+    if ( !CheckProofOfWork( hash, block.nBits, params) )
+    {
+        return false;
+    }
+
+
+    // now check for VBR
+    CAmount maxAllowedSubsidy = GetBlockSubsidyVBR( height, params, block, false);
+
+    uint64_t miners_specified_subsidy = block.vtx[0]->vout[0].nValue;
+
+    if ( miners_specified_subsidy <= maxAllowedSubsidy )
+    {
+        // miner's specified block rewad is ok, not too big.
+        return true;
+    }
+
+    return false;
 }

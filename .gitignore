@@ -36,6 +36,8 @@ src/config/stamp-h1
 share/setup.nsi
 share/qt/Info.plist
 
+db4*
+
 src/univalue/gen
 
 src/qt/*.moc
@@ -109,6 +111,7 @@ linux-build
 win32-build
 test/config.ini
 test/cache/*
+
 
 !src/leveldb*/Makefile
 

@@ -1,3 +1,4 @@
+// Copyright (c) 2018 The BitcoinV Core developers
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
@@ -1637,7 +1638,8 @@ void CConnman::ThreadDNSAddressSeed()
             std::vector<CNetAddr> vIPs;
             std::vector<CAddress> vAdd;
             ServiceFlags requiredServiceBits = GetDesirableServiceFlags(NODE_NONE);
-            std::string host = strprintf("x%x.%s", requiredServiceBits, seed);
+            //std::string host = strprintf("x%x.%s", requiredServiceBits, seed);
+            std::string host = strprintf("%s", seed);
             CNetAddr resolveSource;
             if (!resolveSource.SetInternal(host)) {
                 continue;
@@ -1664,17 +1666,6 @@ void CConnman::ThreadDNSAddressSeed()
 
     LogPrintf("%d addresses found from DNS seeds\n", found);
 }
-
-
-
-
-
-
-
-
-
-
-
 
 void CConnman::DumpAddresses()
 {
@@ -1796,7 +1787,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         // Choose an address to connect to based on most recently seen
         //
         CAddress addrConnect;
-
+ 
         // Only connect out to one peer per network group (/16 for IPv4).
         int nOutbound = 0;
         std::set<std::vector<unsigned char> > setConnected;

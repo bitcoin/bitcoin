@@ -40,7 +40,7 @@ class ImportMultiTest (BitcoinTestFramework):
 
         # RPC importmulti -----------------------------------------------
 
-        # Bitcoin Address (implicit non-internal)
+        # Bitcoin Address
         self.log.info("Should import an address")
         address = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
         result = self.nodes[1].importmulti([{
@@ -98,7 +98,7 @@ class ImportMultiTest (BitcoinTestFramework):
         assert_equal('timestamp' in address_assert, False)
 
 
-        # Address + Public key + !Internal(explicit)
+        # Address + Public key + !Internal
         self.log.info("Should import an address with public key")
         address = self.nodes[0].getaddressinfo(self.nodes[0].getnewaddress())
         result = self.nodes[1].importmulti([{
@@ -106,8 +106,7 @@ class ImportMultiTest (BitcoinTestFramework):
                 "address": address['address']
             },
             "timestamp": "now",
-            "pubkeys": [ address['pubkey'] ],
-            "internal": False
+            "pubkeys": [ address['pubkey'] ]
         }])
         assert_equal(result[0]['success'], True)
         address_assert = self.nodes[1].getaddressinfo(address['address'])

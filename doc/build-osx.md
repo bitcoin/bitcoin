@@ -53,8 +53,8 @@ Build Bitcoin Core
     You can disable the GUI build by passing `--without-gui` to configure.
 
         ./autogen.sh
-        ./configure
-        make
+        ./configure --enable-debug
+        make -j8
 
 3.  It is recommended to build and run the unit tests:
 
