@@ -297,7 +297,6 @@ BOOST_AUTO_TEST_CASE(ComputeTimeSmart)
     //
     // Tests have to be executed in order, because the individual cases are stateful
 
-
     // New transaction should use clock time if lower than block time.
     SetMockTime(10);
     int64_t clockTime = GetAdjustedTime(); // time + time offset (unfortunately, from a stateful data structure)
@@ -309,7 +308,6 @@ BOOST_AUTO_TEST_CASE(ComputeTimeSmart)
     SetMockTime(20);
     int64_t newBlockTime = GetAdjustedTime() + 10;
     BOOST_CHECK_EQUAL(AddTx(m_wallet, 1, newBlockTime), clockTime); // time has not changed from the preceding transaction
-
 
     // New transaction should use clock time if there's no block time.
     SetMockTime(30);
@@ -328,7 +326,6 @@ BOOST_AUTO_TEST_CASE(ComputeTimeSmart)
     SetMockTime(5);
     newBlockTime = blockTime - 5;
     BOOST_CHECK_EQUAL(AddTx(m_wallet, 4, newBlockTime), blockTime); // using the blocktime of the preceding transaction
-
 
     // If there are future entries, new transaction should use time of the
     // newest entry that is no more than 300 seconds ahead of the clock time.
