@@ -1212,7 +1212,7 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
             "Sign the transaction, and get back the hex\n"
             + HelpExampleCli("signrawtransaction", "\"myhex\"") +
             "\nTest acceptance of the transaction (signed hex)\n"
-            + HelpExampleCli("testmempoolaccept", "\"signedhex\"") +
+            + HelpExampleCli("testmempoolaccept", "[\"signedhex\"]") +
             "\nAs a json rpc call\n"
             + HelpExampleRpc("testmempoolaccept", "[\"signedhex\"]")
             // clang-format on
