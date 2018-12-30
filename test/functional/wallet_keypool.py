@@ -25,7 +25,9 @@ class KeyPoolTest(BitcoinTestFramework):
         assert(addr_before_encrypting_data['hdseedid'] == wallet_info_old['hdseedid'])
 
         # Encrypt wallet and wait to terminate
-        nodes[0].encryptwallet('test')
+        nodes[0].node_encrypt_wallet('test')
+        # Restart node 0
+        self.start_node(0)
         # Keep creating keys
         addr = nodes[0].getnewaddress()
         addr_data = nodes[0].getaddressinfo(addr)
@@ -73,10 +75,11 @@ class KeyPoolTest(BitcoinTestFramework):
         time.sleep(1.1)
         assert_equal(nodes[0].getwalletinfo()["unlocked_until"], 0)
 
-        # drain the keypool
-        for _ in range(3):
-            nodes[0].getnewaddress()
-        assert_raises_rpc_error(-12, "Keypool ran out", nodes[0].getnewaddress)
+        # drain them by mining
+        nodes[0].generate(1)
+        nodes[0].generate(1)
+        nodes[0].generate(1)
+        assert_raises_rpc_error(-12, "Keypool ran out", nodes[0].generate, 1)
 
         nodes[0].walletpassphrase('test', 100)
         nodes[0].keypoolrefill(100)

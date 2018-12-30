@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/system.h>
+#include <util.h>
 #include <test/test_bitcoin.h>
 
 #include <string>
@@ -24,11 +24,11 @@ static void ResetArgs(const std::string& strArg)
 
     // Convert to char*:
     std::vector<const char*> vecChar;
-    for (const std::string& s : vecArg)
+    for (std::string& s : vecArg)
         vecChar.push_back(s.c_str());
 
     std::string error;
-    BOOST_CHECK(gArgs.ParseParameters(vecChar.size(), vecChar.data(), error));
+    gArgs.ParseParameters(vecChar.size(), vecChar.data(), error);
 }
 
 static void SetupArgs(const std::vector<std::string>& args)

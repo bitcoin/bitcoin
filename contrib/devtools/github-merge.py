@@ -14,6 +14,7 @@
 
 # In case of a clean merge that is accepted by the user, the local branch with
 # name $BRANCH is overwritten with the merged result, and optionally pushed.
+from __future__ import division,print_function,unicode_literals
 import os
 from sys import stdin,stdout,stderr
 import argparse
@@ -22,7 +23,10 @@ import subprocess
 import sys
 import json
 import codecs
-from urllib.request import Request, urlopen
+try:
+    from urllib.request import Request,urlopen
+except:
+    from urllib2 import Request,urlopen
 
 # External tools (can be overridden using environment)
 GIT = os.getenv('GIT','git')

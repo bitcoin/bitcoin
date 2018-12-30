@@ -24,8 +24,8 @@ from test_framework.util import (
 class KeypoolRestoreTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 4
-        self.extra_args = [[], ['-keypool=100'], ['-keypool=100'], ['-keypool=100']]
+        self.num_nodes = 2
+        self.extra_args = [[], ['-keypool=100']]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -40,47 +40,32 @@ class KeypoolRestoreTest(BitcoinTestFramework):
         shutil.copyfile(wallet_path, wallet_backup_path)
         self.start_node(1, self.extra_args[1])
         connect_nodes_bi(self.nodes, 0, 1)
-        connect_nodes_bi(self.nodes, 0, 2)
-        connect_nodes_bi(self.nodes, 0, 3)
 
-        for i, output_type in enumerate(["legacy", "p2sh-segwit", "bech32"]):
+        self.log.info("Generate keys for wallet")
+        for _ in range(90):
+            addr_oldpool = self.nodes[1].getnewaddress()
+        for _ in range(20):
+            addr_extpool = self.nodes[1].getnewaddress()
 
-            self.log.info("Generate keys for wallet with address type: {}".format(output_type))
-            idx = i+1
-            for _ in range(90):
-                addr_oldpool = self.nodes[idx].getnewaddress(address_type=output_type)
-            for _ in range(20):
-                addr_extpool = self.nodes[idx].getnewaddress(address_type=output_type)
+        self.log.info("Send funds to wallet")
+        self.nodes[0].sendtoaddress(addr_oldpool, 10)
+        self.nodes[0].generate(1)
+        self.nodes[0].sendtoaddress(addr_extpool, 5)
+        self.nodes[0].generate(1)
+        sync_blocks(self.nodes)
 
-            # Make sure we're creating the outputs we expect
-            address_details = self.nodes[idx].validateaddress(addr_extpool)
-            if i == 0:
-                assert(not address_details["isscript"] and not address_details["iswitness"])
-            elif i == 1:
-                assert(address_details["isscript"] and not address_details["iswitness"])
-            else:
-                assert(not address_details["isscript"] and address_details["iswitness"])
+        self.log.info("Restart node with wallet backup")
+        self.stop_node(1)
+        shutil.copyfile(wallet_backup_path, wallet_path)
+        self.start_node(1, self.extra_args[1])
+        connect_nodes_bi(self.nodes, 0, 1)
+        self.sync_all()
 
-
-            self.log.info("Send funds to wallet")
-            self.nodes[0].sendtoaddress(addr_oldpool, 10)
-            self.nodes[0].generate(1)
-            self.nodes[0].sendtoaddress(addr_extpool, 5)
-            self.nodes[0].generate(1)
-            sync_blocks(self.nodes)
-
-            self.log.info("Restart node with wallet backup")
-            self.stop_node(idx)
-            shutil.copyfile(wallet_backup_path, wallet_path)
-            self.start_node(idx, self.extra_args[idx])
-            connect_nodes_bi(self.nodes, 0, idx)
-            self.sync_all()
-
-            self.log.info("Verify keypool is restored and balance is correct")
-            assert_equal(self.nodes[idx].getbalance(), 15)
-            assert_equal(self.nodes[idx].listtransactions()[0]['category'], "receive")
-            # Check that we have marked all keys up to the used keypool key as used
-            assert_equal(self.nodes[idx].getaddressinfo(self.nodes[idx].getnewaddress())['hdkeypath'], "m/0'/0'/110'")
+        self.log.info("Verify keypool is restored and balance is correct")
+        assert_equal(self.nodes[1].getbalance(), 15)
+        assert_equal(self.nodes[1].listtransactions()[0]['category'], "receive")
+        # Check that we have marked all keys up to the used keypool key as used
+        assert_equal(self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress())['hdkeypath'], "m/0'/0'/110'")
 
 
 if __name__ == '__main__':

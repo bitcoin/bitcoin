@@ -5,8 +5,8 @@
 
 #include <protocol.h>
 
-#include <util/system.h>
-#include <util/strencodings.h>
+#include <util.h>
+#include <utilstrencodings.h>
 
 #ifndef WIN32
 # include <arpa/inet.h>

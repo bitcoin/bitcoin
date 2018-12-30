@@ -4,7 +4,7 @@
 
 #include <wallet/coincontrol.h>
 
-#include <util/system.h>
+#include <util.h>
 
 void CCoinControl::SetNull()
 {

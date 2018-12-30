@@ -3337,6 +3337,10 @@ Hinweis: Eine Gebühr von "100 Satoshis pro kB" bei einer Größe der Transaktio
         <translation>Ungültiger Betrag für -fallbackfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation>Angegebener Blöcke-Ordner "%s" existiert nicht.</translation>
+    </message>
+    <message>
         <source>Upgrading txindex database</source>
         <translation>Erneuern der txindex Datenbank</translation>
     </message>
@@ -3483,12 +3487,6 @@ Hinweis: Eine Gebühr von "100 Satoshis pro kB" bei einer Größe der Transaktio
     <message>
         <source>Specified -walletdir "%s" is not a directory</source>
         <translation>Angegebenes Verzeichniss "%s" ist kein Verzeichniss</translation>
-    </message>
-    <message>
-        <source>Specified blocks directory "%s" does not exist.
-</source>
-        <translation>Angegebenes 'blocks'-Verzeichnis "%s" existiert nicht.
-</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>

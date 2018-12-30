@@ -36,6 +36,8 @@ src/config/stamp-h1
 share/setup.nsi
 share/qt/Info.plist
 
+db4*
+
 src/univalue/gen
 
 src/qt/*.moc
@@ -110,12 +112,10 @@ win32-build
 test/config.ini
 test/cache/*
 
+
 !src/leveldb*/Makefile
 
 /doc/doxygen/
 
 libbitcoinconsensus.pc
 contrib/devtools/split-debug.sh
-
-# Output from running db4 installation
-db4/

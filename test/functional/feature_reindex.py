@@ -18,8 +18,11 @@ class ReindexTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 1
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def reindex(self, justchainstate=False):
-        self.nodes[0].generatetoaddress(3, self.nodes[0].get_deterministic_priv_key().address)
+        self.nodes[0].generate(3)
         blockcount = self.nodes[0].getblockcount()
         self.stop_nodes()
         extra_args = [["-reindex-chainstate" if justchainstate else "-reindex"]]

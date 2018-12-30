@@ -29,8 +29,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         assert_raises_rpc_error(-1, "prioritisetransaction", self.nodes[0].prioritisetransaction, '', 0, 0, 0)
 
         # Test `prioritisetransaction` invalid `txid`
-        assert_raises_rpc_error(-8, "txid must be of length 64 (not 3, for 'foo')", self.nodes[0].prioritisetransaction, txid='foo', fee_delta=0)
-        assert_raises_rpc_error(-8, "txid must be hexadecimal string (not 'Zd1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000')", self.nodes[0].prioritisetransaction, txid='Zd1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000', fee_delta=0)
+        assert_raises_rpc_error(-1, "txid must be hexadecimal string", self.nodes[0].prioritisetransaction, txid='foo', fee_delta=0)
 
         # Test `prioritisetransaction` invalid `dummy`
         txid = '1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000'
@@ -84,7 +83,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
                 high_fee_tx = x
 
         # Something high-fee should have been mined!
-        assert(high_fee_tx is not None)
+        assert(high_fee_tx != None)
 
         # Add a prioritisation before a tx is in the mempool (de-prioritising a
         # high-fee transaction so that it's now low fee).
@@ -142,10 +141,10 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         # getblocktemplate to (eventually) return a new block.
         mock_time = int(time.time())
         self.nodes[0].setmocktime(mock_time)
-        template = self.nodes[0].getblocktemplate({'rules': ['segwit']})
+        template = self.nodes[0].getblocktemplate()
         self.nodes[0].prioritisetransaction(txid=tx_id, fee_delta=-int(self.relayfee*COIN))
         self.nodes[0].setmocktime(mock_time+10)
-        new_template = self.nodes[0].getblocktemplate({'rules': ['segwit']})
+        new_template = self.nodes[0].getblocktemplate()
 
         assert(template != new_template)
 

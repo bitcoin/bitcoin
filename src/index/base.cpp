@@ -7,7 +7,7 @@
 #include <shutdown.h>
 #include <tinyformat.h>
 #include <ui_interface.h>
-#include <util/system.h>
+#include <util.h>
 #include <validation.h>
 #include <warnings.h>
 
@@ -65,7 +65,7 @@ bool BaseIndex::Init()
     return true;
 }
 
-static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev)
 {
     AssertLockHeld(cs_main);
 

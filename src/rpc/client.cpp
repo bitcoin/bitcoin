@@ -1,3 +1,4 @@
+// Copyright (c) 2018 The BitcoinV Core developers
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
@@ -5,7 +6,7 @@
 
 #include <rpc/client.h>
 #include <rpc/protocol.h>
-#include <util/system.h>
+#include <util.h>
 
 #include <set>
 #include <stdint.h>
@@ -18,7 +19,6 @@ public:
     std::string paramName;  //!< parameter name
 };
 
-// clang-format off
 /**
  * Specify a (method, idx, name) here if the argument is a non-string RPC
  * argument and needs to be converted from JSON.
@@ -30,6 +30,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "setmocktime", 0, "timestamp" },
     { "generate", 0, "nblocks" },
     { "generate", 1, "maxtries" },
+    { "generate", 2, "extra_subsidy" },
     { "generatetoaddress", 0, "nblocks" },
     { "generatetoaddress", 2, "maxtries" },
     { "getnetworkhashps", 0, "nblocks" },
@@ -41,10 +42,14 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "settxfee", 0, "amount" },
     { "sethdseed", 0, "newkeypool" },
     { "getreceivedbyaddress", 1, "minconf" },
+    { "getreceivedbyaccount", 1, "minconf" },
     { "getreceivedbylabel", 1, "minconf" },
     { "listreceivedbyaddress", 0, "minconf" },
     { "listreceivedbyaddress", 1, "include_empty" },
     { "listreceivedbyaddress", 2, "include_watchonly" },
+    { "listreceivedbyaccount", 0, "minconf" },
+    { "listreceivedbyaccount", 1, "include_empty" },
+    { "listreceivedbyaccount", 2, "include_watchonly" },
     { "listreceivedbylabel", 0, "minconf" },
     { "listreceivedbylabel", 1, "include_empty" },
     { "listreceivedbylabel", 2, "include_watchonly" },
@@ -55,9 +60,15 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "waitforblockheight", 1, "timeout" },
     { "waitforblock", 1, "timeout" },
     { "waitfornewblock", 0, "timeout" },
+    { "move", 2, "amount" },
+    { "move", 3, "minconf" },
+    { "sendfrom", 2, "amount" },
+    { "sendfrom", 3, "minconf" },
     { "listtransactions", 1, "count" },
     { "listtransactions", 2, "skip" },
     { "listtransactions", 3, "include_watchonly" },
+    { "listaccounts", 0, "minconf" },
+    { "listaccounts", 1, "include_watchonly" },
     { "walletpassphrase", 1, "timeout" },
     { "getblocktemplate", 0, "template_request" },
     { "listsinceblock", 1, "target_confirmations" },
@@ -147,6 +158,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "logging", 0, "include" },
     { "logging", 1, "exclude" },
     { "disconnectnode", 1, "nodeid" },
+    { "addwitnessaddress", 1, "p2sh" },
     // Echo with conversion (For testing only)
     { "echojson", 0, "arg0" },
     { "echojson", 1, "arg1" },
@@ -161,10 +173,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "rescanblockchain", 0, "start_height"},
     { "rescanblockchain", 1, "stop_height"},
     { "createwallet", 1, "disable_private_keys"},
-    { "getnodeaddresses", 0, "count"},
-    { "stop", 0, "wait" },
 };
-// clang-format on
 
 class CRPCConvertTable
 {

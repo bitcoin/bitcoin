@@ -43,8 +43,6 @@ TEST_EXIT_PASSED = 0
 TEST_EXIT_FAILED = 1
 TEST_EXIT_SKIPPED = 77
 
-TMPDIR_PREFIX = "bitcoin_func_test_"
-
 
 class SkipTest(Exception):
     """This exception is raised to skip a test"""
@@ -95,7 +93,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.nodes = []
         self.network_thread = None
         self.mocktime = 0
-        self.rpc_timeout = 60  # Wait for up to 60 seconds for the RPC server to respond
+        self.rpc_timewait = 60  # Wait for up to 60 seconds for the RPC server to respond
         self.supports_cli = False
         self.bind_to_localhost_only = True
         self.set_test_params()
@@ -153,7 +151,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             self.options.tmpdir = os.path.abspath(self.options.tmpdir)
             os.makedirs(self.options.tmpdir, exist_ok=False)
         else:
-            self.options.tmpdir = tempfile.mkdtemp(prefix=TMPDIR_PREFIX)
+            self.options.tmpdir = tempfile.mkdtemp(prefix="test")
         self._start_logging()
 
         self.log.debug('Setting up network thread')
@@ -163,13 +161,12 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         success = TestStatus.FAILED
 
         try:
-            if self.options.usecli:
-                if not self.supports_cli:
-                    raise SkipTest("--usecli specified but test does not support using CLI")
-                self.skip_if_no_cli()
+            if self.options.usecli and not self.supports_cli:
+                raise SkipTest("--usecli specified but test does not support using CLI")
             self.skip_test_if_missing_module()
             self.setup_chain()
             self.setup_network()
+            self.import_deterministic_coinbase_privkeys()
             self.run_test()
             success = TestStatus.PASSED
         except JSONRPCException as e:
@@ -262,9 +259,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             extra_args = self.extra_args
         self.add_nodes(self.num_nodes, extra_args)
         self.start_nodes()
-        self.import_deterministic_coinbase_privkeys()
 
     def import_deterministic_coinbase_privkeys(self):
+        if self.setup_clean_chain:
+            return
+
         for n in self.nodes:
             try:
                 n.getwalletinfo()
@@ -272,7 +271,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 assert str(e).startswith('Method not found')
                 continue
 
-            n.importprivkey(privkey=n.get_deterministic_priv_key().key, label='coinbase')
+            n.importprivkey(n.get_deterministic_priv_key()[1])
 
     def run_test(self):
         """Tests must override this method to define test logic"""
@@ -281,10 +280,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     # Public helper methods. These can be accessed by the subclass test scripts.
 
     def add_nodes(self, num_nodes, extra_args=None, *, rpchost=None, binary=None):
-        """Instantiate TestNode objects.
-
-        Should only be called once after the nodes have been specified in
-        set_test_params()."""
+        """Instantiate TestNode objects"""
         if self.bind_to_localhost_only:
             extra_confs = [["bind=127.0.0.1"]] * num_nodes
         else:
@@ -297,19 +293,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         assert_equal(len(extra_args), num_nodes)
         assert_equal(len(binary), num_nodes)
         for i in range(num_nodes):
-            self.nodes.append(TestNode(
-                i,
-                get_datadir_path(self.options.tmpdir, i),
-                rpchost=rpchost,
-                timewait=self.rpc_timeout,
-                bitcoind=binary[i],
-                bitcoin_cli=self.options.bitcoincli,
-                mocktime=self.mocktime,
-                coverage_dir=self.options.coveragedir,
-                extra_conf=extra_confs[i],
-                extra_args=extra_args[i],
-                use_cli=self.options.usecli,
-            ))
+            self.nodes.append(TestNode(i, get_datadir_path(self.options.tmpdir, i), rpchost=rpchost, timewait=self.rpc_timewait, bitcoind=binary[i], bitcoin_cli=self.options.bitcoincli, mocktime=self.mocktime, coverage_dir=self.options.coveragedir, extra_conf=extra_confs[i], extra_args=extra_args[i], use_cli=self.options.usecli))
 
     def start_node(self, i, *args, **kwargs):
         """Start a bitcoind"""
@@ -342,16 +326,16 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             for node in self.nodes:
                 coverage.write_all_rpc_commands(self.options.coveragedir, node.rpc)
 
-    def stop_node(self, i, expected_stderr='', wait=0):
+    def stop_node(self, i, expected_stderr=''):
         """Stop a bitcoind test node"""
-        self.nodes[i].stop_node(expected_stderr, wait=wait)
+        self.nodes[i].stop_node(expected_stderr)
         self.nodes[i].wait_until_stopped()
 
-    def stop_nodes(self, wait=0):
+    def stop_nodes(self):
         """Stop multiple bitcoind test nodes"""
         for node in self.nodes:
             # Issue RPC to stop nodes
-            node.stop_node(wait=wait)
+            node.stop_node()
 
         for node in self.nodes:
             # Wait for nodes to stop
@@ -387,6 +371,21 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         for group in node_groups:
             sync_blocks(group)
             sync_mempools(group)
+
+    def enable_mocktime(self):
+        """Enable mocktime for the script.
+
+        mocktime may be needed for scripts that use the cached version of the
+        blockchain.  If the cached version of the blockchain is used without
+        mocktime then the mempools will not sync due to IBD.
+
+        For backward compatibility of the python scripts with previous
+        versions of the cache, this helper function sets mocktime to Jan 1,
+        2014 + (201 * 10 * 60)"""
+        self.mocktime = 1388534400 + (201 * 10 * 60)
+
+    def disable_mocktime(self):
+        self.mocktime = 0
 
     # Private helper methods. These should not be accessed by the subclass test scripts.
 
@@ -445,29 +444,13 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 args = [self.options.bitcoind, "-datadir=" + datadir, '-disablewallet']
                 if i > 0:
                     args.append("-connect=127.0.0.1:" + str(p2p_port(0)))
-                self.nodes.append(TestNode(
-                    i,
-                    get_datadir_path(self.options.cachedir, i),
-                    extra_conf=["bind=127.0.0.1"],
-                    extra_args=[],
-                    rpchost=None,
-                    timewait=self.rpc_timeout,
-                    bitcoind=self.options.bitcoind,
-                    bitcoin_cli=self.options.bitcoincli,
-                    mocktime=self.mocktime,
-                    coverage_dir=None,
-                ))
+                self.nodes.append(TestNode(i, get_datadir_path(self.options.cachedir, i), extra_conf=["bind=127.0.0.1"], extra_args=[], rpchost=None, timewait=self.rpc_timewait, bitcoind=self.options.bitcoind, bitcoin_cli=self.options.bitcoincli, mocktime=self.mocktime, coverage_dir=None))
                 self.nodes[i].args = args
                 self.start_node(i)
 
             # Wait for RPC connections to be ready
             for node in self.nodes:
                 node.wait_for_rpc_connection()
-
-            # For backward compatibility of the python scripts with previous
-            # versions of the cache, set mocktime to Jan 1,
-            # 2014 + (201 * 10 * 60)"""
-            self.mocktime = 1388534400 + (201 * 10 * 60)
 
             # Create a 200-block-long chain; each of the 4 first nodes
             # gets 25 mature blocks and 25 immature.
@@ -476,12 +459,13 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             #
             # blocks are created with timestamps 10 minutes apart
             # starting from 2010 minutes in the past
+            self.enable_mocktime()
             block_time = self.mocktime - (201 * 10 * 60)
             for i in range(2):
                 for peer in range(4):
                     for j in range(25):
                         set_node_times(self.nodes, block_time)
-                        self.nodes[peer].generatetoaddress(1, self.nodes[peer].get_deterministic_priv_key().address)
+                        self.nodes[peer].generatetoaddress(1, self.nodes[peer].get_deterministic_priv_key()[0])
                         block_time += 10 * 60
                     # Must sync before next peer starts generating blocks
                     sync_blocks(self.nodes)
@@ -489,7 +473,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # Shut them down, and clean up cache directories:
             self.stop_nodes()
             self.nodes = []
-            self.mocktime = 0
+            self.disable_mocktime()
 
             def cache_path(n, *paths):
                 return os.path.join(get_datadir_path(self.options.cachedir, n), "regtest", *paths)
@@ -541,7 +525,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         config = configparser.ConfigParser()
         config.read_file(open(self.options.configfile))
 
-        return config["components"].getboolean("ENABLE_CLI")
+        return config["components"].getboolean("ENABLE_UTILS")
 
     def is_wallet_compiled(self):
         """Checks whether the wallet module was compiled."""

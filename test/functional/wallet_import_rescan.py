@@ -26,7 +26,7 @@ import collections
 import enum
 import itertools
 
-Call = enum.Enum("Call", "single multiaddress multiscript")
+Call = enum.Enum("Call", "single multi")
 Data = enum.Enum("Data", "address pub priv")
 Rescan = enum.Enum("Rescan", "no yes late_timestamp")
 
@@ -53,11 +53,11 @@ class Variant(collections.namedtuple("Variant", "call data rescan prune")):
                 response = self.try_rpc(self.node.importprivkey, privkey=self.key, label=self.label, rescan=rescan)
             assert_equal(response, None)
 
-        elif self.call in (Call.multiaddress, Call.multiscript):
+        elif self.call == Call.multi:
             response = self.node.importmulti([{
                 "scriptPubKey": {
                     "address": self.address["address"]
-                } if self.call == Call.multiaddress else self.address["scriptPubKey"],
+                },
                 "timestamp": timestamp + TIMESTAMP_WINDOW + (1 if self.rescan == Rescan.late_timestamp else 0),
                 "pubkeys": [self.address["pubkey"]] if self.data == Data.pub else [],
                 "keys": [self.key] if self.data == Data.priv else [],
@@ -69,7 +69,7 @@ class Variant(collections.namedtuple("Variant", "call data rescan prune")):
     def check(self, txid=None, amount=None, confirmations=None):
         """Verify that listtransactions/listreceivedbyaddress return expected values."""
 
-        txs = self.node.listtransactions(label=self.label, count=10000, include_watchonly=True)
+        txs = self.node.listtransactions(label=self.label, count=10000, skip=0, include_watchonly=True)
         assert_equal(len(txs), self.expected_txs)
 
         addresses = self.node.listreceivedbyaddress(minconf=0, include_watchonly=True, address_filter=self.address['address'])
@@ -134,15 +134,17 @@ class ImportRescanTest(BitcoinTestFramework):
 
         self.add_nodes(self.num_nodes, extra_args=extra_args)
 
-        # Import keys with pruning disabled
+        # Import keys
         self.start_nodes(extra_args=[[]] * self.num_nodes)
-        for n in self.nodes:
-            n.importprivkey(privkey=n.get_deterministic_priv_key().key, label='coinbase')
+        super().import_deterministic_coinbase_privkeys()
         self.stop_nodes()
 
         self.start_nodes()
         for i in range(1, self.num_nodes):
             connect_nodes(self.nodes[i], 0)
+
+    def import_deterministic_coinbase_privkeys(self):
+        pass
 
     def run_test(self):
         # Create one transaction on node 0 with a unique amount for
@@ -151,7 +153,7 @@ class ImportRescanTest(BitcoinTestFramework):
             variant.label = "label {} {}".format(i, variant)
             variant.address = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress(variant.label))
             variant.key = self.nodes[1].dumpprivkey(variant.address["address"])
-            variant.initial_amount = 1 - (i + 1) / 64
+            variant.initial_amount = 10 - (i + 1) / 4.0
             variant.initial_txid = self.nodes[0].sendtoaddress(variant.address["address"], variant.initial_amount)
 
         # Generate a block containing the initial transactions, then another
@@ -181,7 +183,7 @@ class ImportRescanTest(BitcoinTestFramework):
 
         # Create new transactions sending to each address.
         for i, variant in enumerate(IMPORT_VARIANTS):
-            variant.sent_amount = 1 - (2 * i + 1) / 128
+            variant.sent_amount = 10 - (2 * i + 1) / 8.0
             variant.sent_txid = self.nodes[0].sendtoaddress(variant.address["address"], variant.sent_amount)
 
         # Generate a block containing the new transactions.

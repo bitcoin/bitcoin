@@ -14,8 +14,8 @@
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <interfaces/wallet.h>
+#include <util.h>
 #include <ui_interface.h>
-#include <util/system.h>
 #include <version.h>
 
 #include <QApplication>
@@ -23,7 +23,6 @@
 #include <QDesktopWidget>
 #include <QPainter>
 #include <QRadialGradient>
-
 
 SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const NetworkStyle *networkStyle) :
     QWidget(0, f), curAlignment(0), m_node(node)
@@ -36,7 +35,9 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
 
     float fontFactor            = 1.0;
     float devicePixelRatio      = 1.0;
+#if QT_VERSION > 0x050100
     devicePixelRatio = static_cast<QGuiApplication*>(QCoreApplication::instance())->devicePixelRatio();
+#endif
 
     // define text to place
     QString titleText       = tr(PACKAGE_NAME);
@@ -50,8 +51,10 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     QSize splashSize(480*devicePixelRatio,320*devicePixelRatio);
     pixmap = QPixmap(splashSize);
 
+#if QT_VERSION > 0x050100
     // change to HiDPI if it makes sense
     pixmap.setDevicePixelRatio(devicePixelRatio);
+#endif
 
     QPainter pixPaint(&pixmap);
     pixPaint.setPen(QColor(100,100,100));
@@ -144,8 +147,10 @@ bool SplashScreen::eventFilter(QObject * obj, QEvent * ev) {
     return QObject::eventFilter(obj, ev);
 }
 
-void SplashScreen::finish()
+void SplashScreen::slotFinish(QWidget *mainWin)
 {
+    Q_UNUSED(mainWin);
+
     /* If the window is minimized, hide() will be ignored. */
     /* Make sure we de-minimize the splashscreen window before hiding */
     if (isMinimized())
@@ -173,7 +178,7 @@ static void ShowProgress(SplashScreen *splash, const std::string &title, int nPr
 #ifdef ENABLE_WALLET
 void SplashScreen::ConnectWallet(std::unique_ptr<interfaces::Wallet> wallet)
 {
-    m_connected_wallet_handlers.emplace_back(wallet->handleShowProgress(std::bind(ShowProgress, this, std::placeholders::_1, std::placeholders::_2, false)));
+    m_connected_wallet_handlers.emplace_back(wallet->handleShowProgress(boost::bind(ShowProgress, this, _1, _2, false)));
     m_connected_wallets.emplace_back(std::move(wallet));
 }
 #endif
@@ -181,8 +186,8 @@ void SplashScreen::ConnectWallet(std::unique_ptr<interfaces::Wallet> wallet)
 void SplashScreen::subscribeToCoreSignals()
 {
     // Connect signals to client
-    m_handler_init_message = m_node.handleInitMessage(std::bind(InitMessage, this, std::placeholders::_1));
-    m_handler_show_progress = m_node.handleShowProgress(std::bind(ShowProgress, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+    m_handler_init_message = m_node.handleInitMessage(boost::bind(InitMessage, this, _1));
+    m_handler_show_progress = m_node.handleShowProgress(boost::bind(ShowProgress, this, _1, _2, _3));
 #ifdef ENABLE_WALLET
     m_handler_load_wallet = m_node.handleLoadWallet([this](std::unique_ptr<interfaces::Wallet> wallet) { ConnectWallet(std::move(wallet)); });
 #endif
@@ -193,7 +198,7 @@ void SplashScreen::unsubscribeFromCoreSignals()
     // Disconnect signals from client
     m_handler_init_message->disconnect();
     m_handler_show_progress->disconnect();
-    for (const auto& handler : m_connected_wallet_handlers) {
+    for (auto& handler : m_connected_wallet_handlers) {
         handler->disconnect();
     }
     m_connected_wallet_handlers.clear();

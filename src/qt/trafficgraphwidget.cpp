@@ -29,7 +29,7 @@ TrafficGraphWidget::TrafficGraphWidget(QWidget *parent) :
     clientModel(0)
 {
     timer = new QTimer(this);
-    connect(timer, &QTimer::timeout, this, &TrafficGraphWidget::updateRates);
+    connect(timer, SIGNAL(timeout()), SLOT(updateRates()));
 }
 
 void TrafficGraphWidget::setClientModel(ClientModel *model)
@@ -141,10 +141,10 @@ void TrafficGraphWidget::updateRates()
     }
 
     float tmax = 0.0f;
-    for (const float f : vSamplesIn) {
+    for (float f : vSamplesIn) {
         if(f > tmax) tmax = f;
     }
-    for (const float f : vSamplesOut) {
+    for (float f : vSamplesOut) {
         if(f > tmax) tmax = f;
     }
     fMax = tmax;

@@ -11,27 +11,19 @@
 #include <serialize.h>
 #include <streams.h>
 #include <sync.h>
-#include <util/system.h>
+#include <util.h>
 #include <version.h>
 
 #include <atomic>
 #include <map>
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 #include <db_cxx.h>
 
 static const unsigned int DEFAULT_WALLET_DBLOGSIZE = 100;
 static const bool DEFAULT_WALLET_PRIVDB = true;
-
-struct WalletDatabaseFileId {
-    u_int8_t value[DB_FILE_ID_LEN];
-    bool operator==(const WalletDatabaseFileId& rhs) const;
-};
-
-class BerkeleyDatabase;
 
 class BerkeleyEnvironment
 {
@@ -45,9 +37,7 @@ private:
 public:
     std::unique_ptr<DbEnv> dbenv;
     std::map<std::string, int> mapFileUseCount;
-    std::map<std::string, std::reference_wrapper<BerkeleyDatabase>> m_databases;
-    std::unordered_map<std::string, WalletDatabaseFileId> m_fileids;
-    std::condition_variable_any m_db_in_use;
+    std::map<std::string, Db*> mapDb;
 
     BerkeleyEnvironment(const fs::path& env_directory);
     ~BerkeleyEnvironment();
@@ -56,7 +46,6 @@ public:
     void MakeMock();
     bool IsMock() const { return fMockDb; }
     bool IsInitialized() const { return fDbEnvInit; }
-    bool IsDatabaseLoaded(const std::string& db_filename) const { return m_databases.find(db_filename) != m_databases.end(); }
     fs::path Directory() const { return strPath; }
 
     /**
@@ -86,7 +75,6 @@ public:
     void CheckpointLSN(const std::string& strFile);
 
     void CloseDb(const std::string& strFile);
-    void ReloadDbEnv();
 
     DbTxn* TxnBegin(int flags = DB_TXN_WRITE_NOSYNC)
     {
@@ -97,9 +85,6 @@ public:
         return ptxn;
     }
 };
-
-/** Return whether a wallet database is currently loaded. */
-bool IsWalletLoaded(const fs::path& wallet_path);
 
 /** Get BerkeleyEnvironment and database filename given a wallet path. */
 BerkeleyEnvironment* GetWalletEnv(const fs::path& wallet_path, std::string& database_filename);
@@ -121,19 +106,10 @@ public:
         nUpdateCounter(0), nLastSeen(0), nLastFlushed(0), nLastWalletUpdate(0)
     {
         env = GetWalletEnv(wallet_path, strFile);
-        auto inserted = env->m_databases.emplace(strFile, std::ref(*this));
-        assert(inserted.second);
         if (mock) {
             env->Close();
             env->Reset();
             env->MakeMock();
-        }
-    }
-
-    ~BerkeleyDatabase() {
-        if (env) {
-            size_t erased = env->m_databases.erase(strFile);
-            assert(erased == 1);
         }
     }
 
@@ -169,15 +145,10 @@ public:
 
     void IncrementUpdateCounter();
 
-    void ReloadDbEnv();
-
     std::atomic<unsigned int> nUpdateCounter;
     unsigned int nLastSeen;
     unsigned int nLastFlushed;
     int64_t nLastWalletUpdate;
-
-    /** Database pointer. This is initialized lazily and reset during flushes, so it can be null. */
-    std::unique_ptr<Db> m_db;
 
 private:
     /** BerkeleyDB specific */

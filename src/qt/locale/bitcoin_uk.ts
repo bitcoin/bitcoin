@@ -3478,12 +3478,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Вказаний шлях -walletdir "%s" не є каталогом</translation>
     </message>
     <message>
-        <source>Specified blocks directory "%s" does not exist.
-</source>
-        <translation>Вказаний шлях до блоків "%s" не існує
-</translation>
-    </message>
-    <message>
         <source>The transaction amount is too small to pay the fee</source>
         <translation>Неможливо сплатити комісію із-за малої суми транзакції</translation>
     </message>

@@ -16,7 +16,7 @@ static void AddTx(const CTransactionRef& tx, const CAmount& nFee, CTxMemPool& po
     bool spendsCoinbase = false;
     unsigned int sigOpCost = 4;
     LockPoints lp;
-    pool.addUnchecked(CTxMemPoolEntry(
+    pool.addUnchecked(tx->GetHash(), CTxMemPoolEntry(
                                          tx, nFee, nTime, nHeight,
                                          spendsCoinbase, sigOpCost, lp));
 }
@@ -127,7 +127,7 @@ static void MempoolEviction(benchmark::State& state)
         AddTx(tx6_r, 1100LL, pool);
         AddTx(tx7_r, 9000LL, pool);
         pool.TrimToSize(pool.DynamicMemoryUsage() * 3 / 4);
-        pool.TrimToSize(GetVirtualTransactionSize(*tx1_r));
+        pool.TrimToSize(GetVirtualTransactionSize(tx1));
     }
 }
 

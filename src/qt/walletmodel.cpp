@@ -2,10 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
-
 #include <qt/walletmodel.h>
 
 #include <qt/addresstablemodel.h>
@@ -20,7 +16,7 @@
 #include <interfaces/node.h>
 #include <key_io.h>
 #include <ui_interface.h>
-#include <util/system.h> // for GetBoolArg
+#include <util.h> // for GetBoolArg
 #include <wallet/coincontrol.h>
 #include <wallet/wallet.h>
 
@@ -48,7 +44,7 @@ WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces:
 
     // This timer will be fired repeatedly to update the balance
     pollTimer = new QTimer(this);
-    connect(pollTimer, &QTimer::timeout, this, &WalletModel::pollBalanceChanged);
+    connect(pollTimer, SIGNAL(timeout()), this, SLOT(pollBalanceChanged()));
     pollTimer->start(MODEL_UPDATE_DELAY);
 
     subscribeToCoreSignals();
@@ -146,7 +142,6 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         if (rcp.fSubtractFeeFromAmount)
             fSubtractFeeFromAmount = true;
 
-#ifdef ENABLE_BIP70
         if (rcp.paymentRequest.IsInitialized())
         {   // PaymentRequest...
             CAmount subtotal = 0;
@@ -169,7 +164,6 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             total += subtotal;
         }
         else
-#endif
         {   // User-entered bitcoin address / amount:
             if(!validateAddress(rcp.address))
             {
@@ -241,7 +235,6 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
         std::vector<std::pair<std::string, std::string>> vOrderForm;
         for (const SendCoinsRecipient &rcp : transaction.getRecipients())
         {
-#ifdef ENABLE_BIP70
             if (rcp.paymentRequest.IsInitialized())
             {
                 // Make sure any payment requests involved are still valid.
@@ -254,15 +247,13 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
                 rcp.paymentRequest.SerializeToString(&value);
                 vOrderForm.emplace_back("PaymentRequest", std::move(value));
             }
-            else
-#endif
-            if (!rcp.message.isEmpty()) // Message from normal bitcoin:URI (bitcoin:123...?message=example)
+            else if (!rcp.message.isEmpty()) // Message from normal bitcoin:URI (bitcoin:123...?message=example)
                 vOrderForm.emplace_back("Message", rcp.message.toStdString());
         }
 
         auto& newTx = transaction.getWtx();
         std::string rejectReason;
-        if (!newTx->commit({} /* mapValue */, std::move(vOrderForm), rejectReason))
+        if (!newTx->commit({} /* mapValue */, std::move(vOrderForm), {} /* fromAccount */, rejectReason))
             return SendCoinsReturn(TransactionCommitFailed, QString::fromStdString(rejectReason));
 
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
@@ -275,9 +266,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
     for (const SendCoinsRecipient &rcp : transaction.getRecipients())
     {
         // Don't touch the address book when we have a payment request
-#ifdef ENABLE_BIP70
         if (!rcp.paymentRequest.IsInitialized())
-#endif
         {
             std::string strAddress = rcp.address.toStdString();
             CTxDestination dest = DecodeDestination(strAddress);
@@ -428,12 +417,12 @@ static void NotifyWatchonlyChanged(WalletModel *walletmodel, bool fHaveWatchonly
 void WalletModel::subscribeToCoreSignals()
 {
     // Connect signals to wallet
-    m_handler_unload = m_wallet->handleUnload(std::bind(&NotifyUnload, this));
-    m_handler_status_changed = m_wallet->handleStatusChanged(std::bind(&NotifyKeyStoreStatusChanged, this));
-    m_handler_address_book_changed = m_wallet->handleAddressBookChanged(std::bind(NotifyAddressBookChanged, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5));
-    m_handler_transaction_changed = m_wallet->handleTransactionChanged(std::bind(NotifyTransactionChanged, this, std::placeholders::_1, std::placeholders::_2));
-    m_handler_show_progress = m_wallet->handleShowProgress(std::bind(ShowProgress, this, std::placeholders::_1, std::placeholders::_2));
-    m_handler_watch_only_changed = m_wallet->handleWatchOnlyChanged(std::bind(NotifyWatchonlyChanged, this, std::placeholders::_1));
+    m_handler_unload = m_wallet->handleUnload(boost::bind(&NotifyUnload, this));
+    m_handler_status_changed = m_wallet->handleStatusChanged(boost::bind(&NotifyKeyStoreStatusChanged, this));
+    m_handler_address_book_changed = m_wallet->handleAddressBookChanged(boost::bind(NotifyAddressBookChanged, this, _1, _2, _3, _4, _5));
+    m_handler_transaction_changed = m_wallet->handleTransactionChanged(boost::bind(NotifyTransactionChanged, this, _1, _2));
+    m_handler_show_progress = m_wallet->handleShowProgress(boost::bind(ShowProgress, this, _1, _2));
+    m_handler_watch_only_changed = m_wallet->handleWatchOnlyChanged(boost::bind(NotifyWatchonlyChanged, this, _1));
 }
 
 void WalletModel::unsubscribeFromCoreSignals()
@@ -503,7 +492,7 @@ bool WalletModel::saveReceiveRequest(const std::string &sAddress, const int64_t 
         return m_wallet->addDestData(dest, key, sRequest);
 }
 
-bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
+bool WalletModel::bumpFee(uint256 hash)
 {
     CCoinControl coin_control;
     coin_control.m_signal_bip125_rbf = true;
@@ -555,7 +544,8 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
         return false;
     }
     // commit the bumped transaction
-    if(!m_wallet->commitBumpTransaction(hash, std::move(mtx), errors, new_hash)) {
+    uint256 txid;
+    if(!m_wallet->commitBumpTransaction(hash, std::move(mtx), errors, txid)) {
         QMessageBox::critical(0, tr("Fee bump error"), tr("Could not commit transaction") + "<br />(" +
             QString::fromStdString(errors[0])+")");
          return false;

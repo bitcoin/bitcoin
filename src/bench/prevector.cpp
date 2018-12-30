@@ -2,20 +2,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <compat.h>
 #include <prevector.h>
 #include <serialize.h>
 #include <streams.h>
-#include <type_traits>
 
 #include <bench/bench.h>
-
-// GCC 4.8 is missing some C++11 type_traits,
-// https://www.gnu.org/software/gcc/gcc-5/changes.html
-#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 5
-#define IS_TRIVIALLY_CONSTRUCTIBLE std::has_trivial_default_constructor
-#else
-#define IS_TRIVIALLY_CONSTRUCTIBLE std::is_trivially_default_constructible
-#endif
 
 struct nontrivial_t {
     int x;

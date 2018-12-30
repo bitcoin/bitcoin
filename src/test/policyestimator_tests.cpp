@@ -6,7 +6,7 @@
 #include <policy/fees.h>
 #include <txmempool.h>
 #include <uint256.h>
-#include <util/system.h>
+#include <util.h>
 
 #include <test/test_bitcoin.h>
 
@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     tx.vin[0].scriptSig = garbage;
     tx.vout.resize(1);
     tx.vout[0].nValue=0LL;
-    CFeeRate baseRate(basefee, GetVirtualTransactionSize(CTransaction(tx)));
+    CFeeRate baseRate(basefee, GetVirtualTransactionSize(tx));
 
     // Create a fake block
     std::vector<CTransactionRef> block;
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
             for (int k = 0; k < 4; k++) { // add 4 fee txs
                 tx.vin[0].prevout.n = 10000*blocknum+100*j+k; // make transaction unique
                 uint256 hash = tx.GetHash();
-                mpool.addUnchecked(entry.Fee(feeV[j]).Time(GetTime()).Height(blocknum).FromTx(tx));
+                mpool.addUnchecked(hash, entry.Fee(feeV[j]).Time(GetTime()).Height(blocknum).FromTx(tx));
                 txHashes[j].push_back(hash);
             }
         }
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
             for (int k = 0; k < 4; k++) { // add 4 fee txs
                 tx.vin[0].prevout.n = 10000*blocknum+100*j+k;
                 uint256 hash = tx.GetHash();
-                mpool.addUnchecked(entry.Fee(feeV[j]).Time(GetTime()).Height(blocknum).FromTx(tx));
+                mpool.addUnchecked(hash, entry.Fee(feeV[j]).Time(GetTime()).Height(blocknum).FromTx(tx));
                 txHashes[j].push_back(hash);
             }
         }
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
             for (int k = 0; k < 4; k++) { // add 4 fee txs
                 tx.vin[0].prevout.n = 10000*blocknum+100*j+k;
                 uint256 hash = tx.GetHash();
-                mpool.addUnchecked(entry.Fee(feeV[j]).Time(GetTime()).Height(blocknum).FromTx(tx));
+                mpool.addUnchecked(hash, entry.Fee(feeV[j]).Time(GetTime()).Height(blocknum).FromTx(tx));
                 CTransactionRef ptx = mpool.get(hash);
                 if (ptx)
                     block.push_back(ptx);

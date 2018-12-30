@@ -12,7 +12,7 @@ QValidatedLineEdit::QValidatedLineEdit(QWidget *parent) :
     valid(true),
     checkValidator(0)
 {
-    connect(this, &QValidatedLineEdit::textChanged, this, &QValidatedLineEdit::markValid);
+    connect(this, SIGNAL(textChanged(QString)), this, SLOT(markValid()));
 }
 
 void QValidatedLineEdit::setValid(bool _valid)

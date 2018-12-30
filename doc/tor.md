@@ -93,7 +93,7 @@ API, to create and destroy 'ephemeral' hidden services programmatically.
 Bitcoin Core has been updated to make use of this.
 
 This means that if Tor is running (and proper authentication has been configured),
-Bitcoin Core automatically creates a hidden service to listen on. This will positively
+Bitcoin Core automatically creates a hidden service to listen on. This will positively 
 affect the number of available .onion nodes.
 
 This new feature is enabled by default if Bitcoin Core is listening (`-listen`), and
@@ -102,20 +102,15 @@ and, if not disabled, configured using the `-torcontrol` and `-torpassword` sett
 To show verbose debugging information, pass `-debug=tor`.
 
 Connecting to Tor's control socket API requires one of two authentication methods to be
-configured. It also requires the control socket to be enabled, e.g. put `ControlPort 9051`
-in `torrc` config file. For cookie authentication the user running bitcoind must have read
-access to the `CookieAuthFile` specified in Tor configuration. In some cases this is
+configured. For cookie authentication the user running bitcoind must have write access
+to the `CookieAuthFile` specified in Tor configuration. In some cases, this is
 preconfigured and the creation of a hidden service is automatic. If permission problems
 are seen with `-debug=tor` they can be resolved by adding both the user running Tor and
 the user running bitcoind to the same group and setting permissions appropriately. On
 Debian-based systems the user running bitcoind can be added to the debian-tor group,
-which has the appropriate permissions.
-
-An alternative authentication method is the use
-of the `-torpassword=password` option. The `password` is the clear text form that
-was used when generating the hashed password for the `HashedControlPassword` option
-in the tor configuration file. The hashed password can be obtained with the command
-`tor --hash-password password` (read the tor manual for more details).
+which has the appropriate permissions. An alternative authentication method is the use
+of the `-torpassword` flag and a `hash-password` which can be enabled and specified in
+Tor configuration.
 
 ## 4. Privacy recommendations
 

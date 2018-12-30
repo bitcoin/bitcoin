@@ -29,7 +29,7 @@ class PruneTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 6
-        self.rpc_timeout = 900
+        self.rpc_timewait = 900
 
         # Create nodes 0 and 1 to mine.
         # Create node 2 to test pruning.
@@ -63,8 +63,6 @@ class PruneTest(BitcoinTestFramework):
     def setup_nodes(self):
         self.add_nodes(self.num_nodes, self.extra_args)
         self.start_nodes()
-        for n in self.nodes:
-            n.importprivkey(privkey=n.get_deterministic_priv_key().key, label='coinbase', rescan=False)
 
     def create_big_chain(self):
         # Start by creating some coinbases we can spend later
@@ -191,8 +189,6 @@ class PruneTest(BitcoinTestFramework):
     def reorg_back(self):
         # Verify that a block on the old main chain fork has been pruned away
         assert_raises_rpc_error(-1, "Block not available (pruned data)", self.nodes[2].getblock, self.forkhash)
-        with self.nodes[2].assert_debug_log(expected_msgs=['block verification stopping at height', '(pruning, no data)']):
-            self.nodes[2].verifychain(checklevel=4, nblocks=0)
         self.log.info("Will need to redownload block %d" % self.forkheight)
 
         # Verify that we have enough history to reorg back to the fork point
@@ -251,7 +247,7 @@ class PruneTest(BitcoinTestFramework):
                 return index
 
         def prune(index, expected_ret=None):
-            ret = node.pruneblockchain(height=height(index))
+            ret = node.pruneblockchain(height(index))
             # Check the return value. When use_timestamp is True, just check
             # that the return value is less than or equal to the expected
             # value, because when more than one block is generated per second,

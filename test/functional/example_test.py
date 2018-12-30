@@ -77,7 +77,7 @@ class ExampleTest(BitcoinTestFramework):
     def set_test_params(self):
         """Override test parameters for your individual test.
 
-        This method must be overridden and num_nodes must be explicitly set."""
+        This method must be overridden and num_nodes must be exlicitly set."""
         self.setup_clean_chain = True
         self.num_nodes = 3
         # Use self.extra_args to change command-line arguments for the nodes
@@ -85,8 +85,6 @@ class ExampleTest(BitcoinTestFramework):
 
         # self.log.info("I've finished set_test_params")  # Oops! Can't run self.log before run_test()
 
-    # Use skip_test_if_missing_module() to skip the test if your test requires certain modules to be present.
-    # This test uses generate which requires wallet to be compiled
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
@@ -164,13 +162,13 @@ class ExampleTest(BitcoinTestFramework):
         self.tip = int(self.nodes[0].getbestblockhash(), 16)
         self.block_time = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['time'] + 1
 
-        height = self.nodes[0].getblockcount()
+        height = 1
 
         for i in range(10):
             # Use the mininode and blocktools functionality to manually build a block
             # Calling the generate() rpc is easier, but this allows us to exactly
             # control the blocks and transactions.
-            block = create_block(self.tip, create_coinbase(height+1), self.block_time)
+            block = create_block(self.tip, create_coinbase(height), self.block_time)
             block.solve()
             block_message = msg_block(block)
             # Send message is used to send a P2P message to the node over our P2PInterface

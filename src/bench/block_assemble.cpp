@@ -7,14 +7,13 @@
 #include <coins.h>
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
-#include <crypto/sha256.h>
 #include <miner.h>
 #include <policy/policy.h>
 #include <pow.h>
 #include <scheduler.h>
 #include <txdb.h>
 #include <txmempool.h>
-#include <util/time.h>
+#include <utiltime.h>
 #include <validation.h>
 #include <validationinterface.h>
 
@@ -27,7 +26,7 @@ static std::shared_ptr<CBlock> PrepareBlock(const CScript& coinbase_scriptPubKey
 {
     auto block = std::make_shared<CBlock>(
         BlockAssembler{Params()}
-            .CreateNewBlock(coinbase_scriptPubKey)
+            .CreateNewBlock(coinbase_scriptPubKey, /* fMineWitnessTx */ true)
             ->block);
 
     block->nTime = ::chainActive.Tip()->GetMedianTimePast() + 1;
@@ -42,8 +41,7 @@ static CTxIn MineBlock(const CScript& coinbase_scriptPubKey)
     auto block = PrepareBlock(coinbase_scriptPubKey);
 
     while (!CheckProofOfWork(block->GetHash(), block->nBits, Params().GetConsensus())) {
-        ++block->nNonce;
-        assert(block->nNonce);
+        assert(++block->nNonce);
     }
 
     bool processed{ProcessNewBlock(Params(), block, true, nullptr)};
@@ -78,7 +76,7 @@ static void AssembleBlock(benchmark::State& state)
         ::pcoinsTip.reset(new CCoinsViewCache(pcoinsdbview.get()));
 
         const CChainParams& chainparams = Params();
-        thread_group.create_thread(std::bind(&CScheduler::serviceQueue, &scheduler));
+        thread_group.create_thread(boost::bind(&CScheduler::serviceQueue, &scheduler));
         GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
         LoadGenesisBlock(chainparams);
         CValidationState state;

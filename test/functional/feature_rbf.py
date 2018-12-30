@@ -438,9 +438,6 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         tx1a_hex = txToHex(tx1a)
         tx1a_txid = self.nodes[0].sendrawtransaction(tx1a_hex, True)
 
-        # This transaction isn't shown as replaceable
-        assert_equal(self.nodes[0].getmempoolentry(tx1a_txid)['bip125-replaceable'], False)
-
         # Shouldn't be able to double-spend
         tx1b = CTransaction()
         tx1b.vin = [CTxIn(tx0_outpoint, nSequence=0)]
@@ -481,10 +478,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         tx3a.vout = [CTxOut(int(0.9*COIN), CScript([b'c'])), CTxOut(int(0.9*COIN), CScript([b'd']))]
         tx3a_hex = txToHex(tx3a)
 
-        tx3a_txid = self.nodes[0].sendrawtransaction(tx3a_hex, True)
-
-        # This transaction is shown as replaceable
-        assert_equal(self.nodes[0].getmempoolentry(tx3a_txid)['bip125-replaceable'], True)
+        self.nodes[0].sendrawtransaction(tx3a_hex, True)
 
         tx3b = CTransaction()
         tx3b.vin = [CTxIn(COutPoint(tx1a_txid, 0), nSequence=0)]

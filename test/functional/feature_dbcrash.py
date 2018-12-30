@@ -46,7 +46,7 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
         self.num_nodes = 4
         self.setup_clean_chain = False
         # Need a bit of extra time for the nodes to start up for this test
-        self.rpc_timeout = 90
+        self.rpc_timewait = 90
 
         # Set -maxmempool=0 to turn off mempool memory sharing with dbcache
         # Set -rpcservertimeout=900 to reduce socket disconnects in this
@@ -69,7 +69,6 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
     def setup_network(self):
         self.add_nodes(self.num_nodes, extra_args=self.extra_args)
         self.start_nodes()
-        self.import_deterministic_coinbase_privkeys()
         # Leave them unconnected, we'll use submitblock directly in this test
 
     def restart_node(self, node_index, expected_tip):

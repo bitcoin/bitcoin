@@ -62,7 +62,7 @@ uint32_t PolyMod(const data& v)
     // v, it corresponds to x^2 + v0*x + v1 mod g(x). As 1 mod g(x) = 1, that is the starting value
     // for `c`.
     uint32_t c = 1;
-    for (const auto v_i : v) {
+    for (auto v_i : v) {
         // We want to update `c` to correspond to a polynomial with one extra term. If the initial
         // value of `c` consists of the coefficients of c(x) = f(x) mod g(x), we modify it to
         // correspond to c'(x) = (f(x) * x + v_i) mod g(x), where v_i is the next input to
@@ -149,7 +149,7 @@ std::string Encode(const std::string& hrp, const data& values) {
     data combined = Cat(values, checksum);
     std::string ret = hrp + '1';
     ret.reserve(ret.size() + combined.size());
-    for (const auto c : combined) {
+    for (auto c : combined) {
         ret += CHARSET[c];
     }
     return ret;

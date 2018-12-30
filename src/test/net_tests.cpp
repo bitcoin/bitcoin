@@ -1,3 +1,4 @@
+// Copyright (c) 2018 The BitcoinV Core developers
 // Copyright (c) 2012-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -11,7 +12,7 @@
 #include <net.h>
 #include <netbase.h>
 #include <chainparams.h>
-#include <util/system.h>
+#include <util.h>
 
 #include <memory>
 
@@ -54,10 +55,10 @@ public:
         s << nUBuckets;
 
         CService serv;
-        BOOST_CHECK(Lookup("252.1.1.1", serv, 7777, false));
+        Lookup("252.1.1.1", serv, 7777, false);
         CAddress addr = CAddress(serv, NODE_NONE);
         CNetAddr resolved;
-        BOOST_CHECK(LookupHost("252.2.2.2", resolved, false));
+        LookupHost("252.2.2.2", resolved, false);
         CAddrInfo info = CAddrInfo(addr, resolved);
         s << info;
     }
@@ -82,7 +83,7 @@ BOOST_AUTO_TEST_CASE(cnode_listen_port)
     BOOST_CHECK(port == Params().GetDefaultPort());
     // test set port
     unsigned short altPort = 12345;
-    BOOST_CHECK(gArgs.SoftSetArg("-port", std::to_string(altPort)));
+    gArgs.SoftSetArg("-port", std::to_string(altPort));
     port = GetListenPort();
     BOOST_CHECK(port == altPort);
 }
@@ -94,16 +95,16 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
     addrmanUncorrupted.MakeDeterministic();
 
     CService addr1, addr2, addr3;
-    BOOST_CHECK(Lookup("250.7.1.1", addr1, 8333, false));
-    BOOST_CHECK(Lookup("250.7.2.2", addr2, 9999, false));
-    BOOST_CHECK(Lookup("250.7.3.3", addr3, 9999, false));
+    Lookup("250.7.1.1", addr1, 9333, false);
+    Lookup("250.7.2.2", addr2, 9999, false);
+    Lookup("250.7.3.3", addr3, 9999, false);
 
     // Add three addresses to new table.
     CService source;
-    BOOST_CHECK(Lookup("252.5.1.1", source, 8333, false));
-    BOOST_CHECK(addrmanUncorrupted.Add(CAddress(addr1, NODE_NONE), source));
-    BOOST_CHECK(addrmanUncorrupted.Add(CAddress(addr2, NODE_NONE), source));
-    BOOST_CHECK(addrmanUncorrupted.Add(CAddress(addr3, NODE_NONE), source));
+    Lookup("252.5.1.1", source, 9333, false);
+    addrmanUncorrupted.Add(CAddress(addr1, NODE_NONE), source);
+    addrmanUncorrupted.Add(CAddress(addr2, NODE_NONE), source);
+    addrmanUncorrupted.Add(CAddress(addr3, NODE_NONE), source);
 
     // Test that the de-serialization does not throw an exception.
     CDataStream ssPeers1 = AddrmanToStream(addrmanUncorrupted);
@@ -115,7 +116,7 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
         unsigned char pchMsgTmp[4];
         ssPeers1 >> pchMsgTmp;
         ssPeers1 >> addrman1;
-    } catch (const std::exception&) {
+    } catch (const std::exception& e) {
         exceptionThrown = true;
     }
 
@@ -128,7 +129,7 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
     CAddrMan addrman2;
     CAddrDB adb;
     BOOST_CHECK(addrman2.size() == 0);
-    BOOST_CHECK(adb.Read(addrman2, ssPeers2));
+    adb.Read(addrman2, ssPeers2);
     BOOST_CHECK(addrman2.size() == 3);
 }
 
@@ -148,7 +149,7 @@ BOOST_AUTO_TEST_CASE(caddrdb_read_corrupted)
         unsigned char pchMsgTmp[4];
         ssPeers1 >> pchMsgTmp;
         ssPeers1 >> addrman1;
-    } catch (const std::exception&) {
+    } catch (const std::exception& e) {
         exceptionThrown = true;
     }
     // Even through de-serialization failed addrman is not left in a clean state.
@@ -161,7 +162,7 @@ BOOST_AUTO_TEST_CASE(caddrdb_read_corrupted)
     CAddrMan addrman2;
     CAddrDB adb;
     BOOST_CHECK(addrman2.size() == 0);
-    BOOST_CHECK(!adb.Read(addrman2, ssPeers2));
+    adb.Read(addrman2, ssPeers2);
     BOOST_CHECK(addrman2.size() == 0);
 }
 
@@ -179,12 +180,12 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     bool fInboundIn = false;
 
     // Test that fFeeler is false by default.
-    std::unique_ptr<CNode> pnode1 = MakeUnique<CNode>(id++, NODE_NETWORK, height, hSocket, addr, 0, 0, CAddress(), pszDest, fInboundIn);
+    std::unique_ptr<CNode> pnode1(new CNode(id++, NODE_NETWORK, height, hSocket, addr, 0, 0, CAddress(), pszDest, fInboundIn));
     BOOST_CHECK(pnode1->fInbound == false);
     BOOST_CHECK(pnode1->fFeeler == false);
 
     fInboundIn = true;
-    std::unique_ptr<CNode> pnode2 = MakeUnique<CNode>(id++, NODE_NETWORK, height, hSocket, addr, 1, 1, CAddress(), pszDest, fInboundIn);
+    std::unique_ptr<CNode> pnode2(new CNode(id++, NODE_NETWORK, height, hSocket, addr, 1, 1, CAddress(), pszDest, fInboundIn));
     BOOST_CHECK(pnode2->fInbound == true);
     BOOST_CHECK(pnode2->fFeeler == false);
 }

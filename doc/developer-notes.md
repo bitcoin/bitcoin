@@ -28,8 +28,6 @@ Developer Notes
     - [Strings and formatting](#strings-and-formatting)
     - [Variable names](#variable-names)
     - [Threads and synchronization](#threads-and-synchronization)
-    - [Scripts](#scripts)
-        - [Shebang](#shebang)
     - [Source code organization](#source-code-organization)
     - [GUI](#gui)
     - [Subtrees](#subtrees)
@@ -71,7 +69,7 @@ tool to clean up patches automatically before submission.
 - **Symbol naming conventions**. These are preferred in new code, but are not
 required when doing so would need changes to significant pieces of existing
 code.
-  - Variable (including function arguments) and namespace names are all lowercase, and may use `_` to
+  - Variable and namespace names are all lowercase, and may use `_` to
     separate words (snake_case).
     - Class member variables have a `m_` prefix.
     - Global variables have a `g_` prefix.
@@ -441,11 +439,6 @@ General C++
 
   - *Rationale*: This avoids memory and resource leaks, and ensures exception safety
 
-- Use `MakeUnique()` to construct objects owned by `unique_ptr`s
-
-  - *Rationale*: `MakeUnique` is concise and ensures exception safety in complex expressions.
-    `MakeUnique` is a temporary project local implementation of `std::make_unique` (C++14).
-
 C++ data structures
 --------------------
 
@@ -519,7 +512,7 @@ Strings and formatting
   - *Rationale*: These functions do overflow checking, and avoid pesky locale issues.
 
 - Avoid using locale dependent functions if possible. You can use the provided
-  [`lint-locale-dependence.sh`](/test/lint/lint-locale-dependence.sh)
+  [`lint-locale-dependence.sh`](/contrib/devtools/lint-locale-dependence.sh)
   to check for accidental use of locale dependent functions.
 
   - *Rationale*: Unnecessary locale dependence can cause bugs that are very tricky to isolate and fix.
@@ -602,31 +595,6 @@ TRY_LOCK(cs_vNodes, lockNodes);
 {
     ...
 }
-```
-
-Scripts
---------------------------
-
-### Shebang
-
-- Use `#!/usr/bin/env bash` instead of obsolete `#!/bin/bash`.
-
-  - [*Rationale*](https://github.com/dylanaraps/pure-bash-bible#shebang):
-
-    `#!/bin/bash` assumes it is always installed to /bin/ which can cause issues;
-
-    `#!/usr/bin/env bash` searches the user's PATH to find the bash binary.
-
-  OK:
-
-```bash
-#!/usr/bin/env bash
-```
-
-  Wrong:
-
-```bash
-#!/bin/bash
 ```
 
 Source code organization
@@ -732,16 +700,16 @@ Current subtrees include:
   - Upstream at https://github.com/google/leveldb ; Maintained by Google, but
     open important PRs to Core to avoid delay.
   - **Note**: Follow the instructions in [Upgrading LevelDB](#upgrading-leveldb) when
-    merging upstream changes to the LevelDB subtree.
+    merging upstream changes to the leveldb subtree.
 
 - src/libsecp256k1
-  - Upstream at https://github.com/bitcoin-core/secp256k1/ ; actively maintained by Core contributors.
+  - Upstream at https://github.com/bitcoin-core/secp256k1/ ; actively maintaned by Core contributors.
 
 - src/crypto/ctaes
   - Upstream at https://github.com/bitcoin-core/ctaes ; actively maintained by Core contributors.
 
 - src/univalue
-  - Upstream at https://github.com/bitcoin-core/univalue ; actively maintained by Core contributors, deviates from upstream https://github.com/jgarzik/univalue
+  - Upstream at https://github.com/jgarzik/univalue ; report important PRs to Core to avoid delay.
 
 Upgrading LevelDB
 ---------------------
@@ -854,16 +822,7 @@ To create a scripted-diff:
     - `-BEGIN VERIFY SCRIPT-`
     - `-END VERIFY SCRIPT-`
 
-The scripted-diff is verified by the tool `test/lint/commit-script-check.sh`. The tool's default behavior when supplied
-with a commit is to verify all scripted-diffs from the beginning of time up to said commit. Internally, the tool passes
-the first supplied argument to `git rev-list --reverse` to determine which commits to verify script-diffs for, ignoring
-commits that don't conform to the commit message format described above.
-
-For development, it might be more convenient to verify all scripted-diffs in a range `A..B`, for example:
-
-```bash
-test/lint/commit-script-check.sh origin/master..HEAD
-```
+The scripted-diff is verified by the tool `test/lint/commit-script-check.sh`
 
 Commit [`bb81e173`](https://github.com/bitcoin/bitcoin/commit/bb81e173) is an example of a scripted-diff.
 

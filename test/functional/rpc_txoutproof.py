@@ -66,18 +66,12 @@ class MerkleBlockTest(BitcoinTestFramework):
         txid_spent = txin_spent["txid"]
         txid_unspent = txid1 if txin_spent["txid"] != txid1 else txid2
 
-        # Invalid txids
-        assert_raises_rpc_error(-8, "txid must be of length 64 (not 32, for '00000000000000000000000000000000')", self.nodes[2].gettxoutproof, ["00000000000000000000000000000000"], blockhash)
-        assert_raises_rpc_error(-8, "txid must be hexadecimal string (not 'ZZZ0000000000000000000000000000000000000000000000000000000000000')", self.nodes[2].gettxoutproof, ["ZZZ0000000000000000000000000000000000000000000000000000000000000"], blockhash)
-        # Invalid blockhashes
-        assert_raises_rpc_error(-8, "blockhash must be of length 64 (not 32, for '00000000000000000000000000000000')", self.nodes[2].gettxoutproof, [txid_spent], "00000000000000000000000000000000")
-        assert_raises_rpc_error(-8, "blockhash must be hexadecimal string (not 'ZZZ0000000000000000000000000000000000000000000000000000000000000')", self.nodes[2].gettxoutproof, [txid_spent], "ZZZ0000000000000000000000000000000000000000000000000000000000000")
         # We can't find the block from a fully-spent tx
         assert_raises_rpc_error(-5, "Transaction not yet in block", self.nodes[2].gettxoutproof, [txid_spent])
         # We can get the proof if we specify the block
         assert_equal(self.nodes[2].verifytxoutproof(self.nodes[2].gettxoutproof([txid_spent], blockhash)), [txid_spent])
         # We can't get the proof if we specify a non-existent block
-        assert_raises_rpc_error(-5, "Block not found", self.nodes[2].gettxoutproof, [txid_spent], "0000000000000000000000000000000000000000000000000000000000000000")
+        assert_raises_rpc_error(-5, "Block not found", self.nodes[2].gettxoutproof, [txid_spent], "00000000000000000000000000000000")
         # We can get the proof if the transaction is unspent
         assert_equal(self.nodes[2].verifytxoutproof(self.nodes[2].gettxoutproof([txid_unspent])), [txid_unspent])
         # We can get the proof if we provide a list of transactions and one of them is unspent. The ordering of the list should not matter.

@@ -5,8 +5,6 @@
 #ifndef BITCOIN_THREADINTERRUPT_H
 #define BITCOIN_THREADINTERRUPT_H
 
-#include <sync.h>
-
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
@@ -30,7 +28,7 @@ public:
 
 private:
     std::condition_variable cond;
-    Mutex mut;
+    std::mutex mut;
     std::atomic<bool> flag;
 };
 

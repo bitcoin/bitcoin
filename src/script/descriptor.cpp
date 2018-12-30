@@ -10,8 +10,8 @@
 #include <script/standard.h>
 
 #include <span.h>
-#include <util/system.h>
-#include <util/strencodings.h>
+#include <util.h>
+#include <utilstrencodings.h>
 
 #include <memory>
 #include <string>
@@ -40,8 +40,8 @@ struct PubkeyProvider
 {
     virtual ~PubkeyProvider() = default;
 
-    /** Derive a public key. If key==nullptr, only info is desired. */
-    virtual bool GetPubKey(int pos, const SigningProvider& arg, CPubKey* key, KeyOriginInfo& info) const = 0;
+    /** Derive a public key. */
+    virtual bool GetPubKey(int pos, const SigningProvider& arg, CPubKey& out) const = 0;
 
     /** Whether this represent multiple public keys at different positions. */
     virtual bool IsRange() const = 0;
@@ -56,37 +56,6 @@ struct PubkeyProvider
     virtual bool ToPrivateString(const SigningProvider& arg, std::string& out) const = 0;
 };
 
-class OriginPubkeyProvider final : public PubkeyProvider
-{
-    KeyOriginInfo m_origin;
-    std::unique_ptr<PubkeyProvider> m_provider;
-
-    std::string OriginString() const
-    {
-        return HexStr(std::begin(m_origin.fingerprint), std::end(m_origin.fingerprint)) + FormatKeyPath(m_origin.path);
-    }
-
-public:
-    OriginPubkeyProvider(KeyOriginInfo info, std::unique_ptr<PubkeyProvider> provider) : m_origin(std::move(info)), m_provider(std::move(provider)) {}
-    bool GetPubKey(int pos, const SigningProvider& arg, CPubKey* key, KeyOriginInfo& info) const override
-    {
-        if (!m_provider->GetPubKey(pos, arg, key, info)) return false;
-        std::copy(std::begin(m_origin.fingerprint), std::end(m_origin.fingerprint), info.fingerprint);
-        info.path.insert(info.path.begin(), m_origin.path.begin(), m_origin.path.end());
-        return true;
-    }
-    bool IsRange() const override { return m_provider->IsRange(); }
-    size_t GetSize() const override { return m_provider->GetSize(); }
-    std::string ToString() const override { return "[" + OriginString() + "]" + m_provider->ToString(); }
-    bool ToPrivateString(const SigningProvider& arg, std::string& ret) const override
-    {
-        std::string sub;
-        if (!m_provider->ToPrivateString(arg, sub)) return false;
-        ret = "[" + OriginString() + "]" + std::move(sub);
-        return true;
-    }
-};
-
 /** An object representing a parsed constant public key in a descriptor. */
 class ConstPubkeyProvider final : public PubkeyProvider
 {
@@ -94,12 +63,9 @@ class ConstPubkeyProvider final : public PubkeyProvider
 
 public:
     ConstPubkeyProvider(const CPubKey& pubkey) : m_pubkey(pubkey) {}
-    bool GetPubKey(int pos, const SigningProvider& arg, CPubKey* key, KeyOriginInfo& info) const override
+    bool GetPubKey(int pos, const SigningProvider& arg, CPubKey& out) const override
     {
-        if (key) *key = m_pubkey;
-        info.path.clear();
-        CKeyID keyid = m_pubkey.GetID();
-        std::copy(keyid.begin(), keyid.begin() + sizeof(info.fingerprint), info.fingerprint);
+        out = m_pubkey;
         return true;
     }
     bool IsRange() const override { return false; }
@@ -132,7 +98,7 @@ class BIP32PubkeyProvider final : public PubkeyProvider
         CKey key;
         if (!arg.GetKey(m_extkey.pubkey.GetID(), key)) return false;
         ret.nDepth = m_extkey.nDepth;
-        std::copy(m_extkey.vchFingerprint, m_extkey.vchFingerprint + sizeof(ret.vchFingerprint), ret.vchFingerprint);
+        std::copy(m_extkey.vchFingerprint, m_extkey.vchFingerprint + 4, ret.vchFingerprint);
         ret.nChild = m_extkey.nChild;
         ret.chaincode = m_extkey.chaincode;
         ret.key = key;
@@ -152,34 +118,27 @@ public:
     BIP32PubkeyProvider(const CExtPubKey& extkey, KeyPath path, DeriveType derive) : m_extkey(extkey), m_path(std::move(path)), m_derive(derive) {}
     bool IsRange() const override { return m_derive != DeriveType::NO; }
     size_t GetSize() const override { return 33; }
-    bool GetPubKey(int pos, const SigningProvider& arg, CPubKey* key, KeyOriginInfo& info) const override
+    bool GetPubKey(int pos, const SigningProvider& arg, CPubKey& out) const override
     {
-        if (key) {
-            if (IsHardened()) {
-                CExtKey extkey;
-                if (!GetExtKey(arg, extkey)) return false;
-                for (auto entry : m_path) {
-                    extkey.Derive(extkey, entry);
-                }
-                if (m_derive == DeriveType::UNHARDENED) extkey.Derive(extkey, pos);
-                if (m_derive == DeriveType::HARDENED) extkey.Derive(extkey, pos | 0x80000000UL);
-                *key = extkey.Neuter().pubkey;
-            } else {
-                // TODO: optimize by caching
-                CExtPubKey extkey = m_extkey;
-                for (auto entry : m_path) {
-                    extkey.Derive(extkey, entry);
-                }
-                if (m_derive == DeriveType::UNHARDENED) extkey.Derive(extkey, pos);
-                assert(m_derive != DeriveType::HARDENED);
-                *key = extkey.pubkey;
+        if (IsHardened()) {
+            CExtKey key;
+            if (!GetExtKey(arg, key)) return false;
+            for (auto entry : m_path) {
+                key.Derive(key, entry);
             }
+            if (m_derive == DeriveType::UNHARDENED) key.Derive(key, pos);
+            if (m_derive == DeriveType::HARDENED) key.Derive(key, pos | 0x80000000UL);
+            out = key.Neuter().pubkey;
+        } else {
+            // TODO: optimize by caching
+            CExtPubKey key = m_extkey;
+            for (auto entry : m_path) {
+                key.Derive(key, entry);
+            }
+            if (m_derive == DeriveType::UNHARDENED) key.Derive(key, pos);
+            assert(m_derive != DeriveType::HARDENED);
+            out = key.pubkey;
         }
-        CKeyID keyid = m_extkey.pubkey.GetID();
-        std::copy(keyid.begin(), keyid.begin() + sizeof(info.fingerprint), info.fingerprint);
-        info.path = m_path;
-        if (m_derive == DeriveType::UNHARDENED) info.path.push_back((uint32_t)pos);
-        if (m_derive == DeriveType::HARDENED) info.path.push_back(((uint32_t)pos) | 0x80000000L);
         return true;
     }
     std::string ToString() const override
@@ -204,261 +163,204 @@ public:
     }
 };
 
-/** Base class for all Descriptor implementations. */
-class DescriptorImpl : public Descriptor
+/** A parsed addr(A) descriptor. */
+class AddressDescriptor final : public Descriptor
 {
-    //! Public key arguments for this descriptor (size 1 for PK, PKH, WPKH; any size of Multisig).
-    const std::vector<std::unique_ptr<PubkeyProvider>> m_pubkey_args;
-    //! The sub-descriptor argument (nullptr for everything but SH and WSH).
-    const std::unique_ptr<DescriptorImpl> m_script_arg;
-    //! The string name of the descriptor function.
-    const std::string m_name;
-
-protected:
-    //! Return a serialization of anything except pubkey and script arguments, to be prepended to those.
-    virtual std::string ToStringExtra() const { return ""; }
-
-    /** A helper function to construct the scripts for this descriptor.
-     *
-     *  This function is invoked once for every CScript produced by evaluating
-     *  m_script_arg, or just once in case m_script_arg is nullptr.
-
-     *  @param pubkeys The evaluations of the m_pubkey_args field.
-     *  @param script The evaluation of m_script_arg (or nullptr when m_script_arg is nullptr).
-     *  @param out A FlatSigningProvider to put scripts or public keys in that are necessary to the solver.
-     *             The script and pubkeys argument to this function are automatically added.
-     *  @return A vector with scriptPubKeys for this descriptor.
-     */
-    virtual std::vector<CScript> MakeScripts(const std::vector<CPubKey>& pubkeys, const CScript* script, FlatSigningProvider& out) const = 0;
+    CTxDestination m_destination;
 
 public:
-    DescriptorImpl(std::vector<std::unique_ptr<PubkeyProvider>> pubkeys, std::unique_ptr<DescriptorImpl> script, const std::string& name) : m_pubkey_args(std::move(pubkeys)), m_script_arg(std::move(script)), m_name(name) {}
+    AddressDescriptor(CTxDestination destination) : m_destination(std::move(destination)) {}
 
-    bool IsSolvable() const override
+    bool IsRange() const override { return false; }
+    std::string ToString() const override { return "addr(" + EncodeDestination(m_destination) + ")"; }
+    bool ToPrivateString(const SigningProvider& arg, std::string& out) const override { out = ToString(); return true; }
+    bool Expand(int pos, const SigningProvider& arg, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const override
     {
-        if (m_script_arg) {
-            if (!m_script_arg->IsSolvable()) return false;
-        }
+        output_scripts = std::vector<CScript>{GetScriptForDestination(m_destination)};
         return true;
     }
+};
 
-    bool IsRange() const final
+/** A parsed raw(H) descriptor. */
+class RawDescriptor final : public Descriptor
+{
+    CScript m_script;
+
+public:
+    RawDescriptor(CScript script) : m_script(std::move(script)) {}
+
+    bool IsRange() const override { return false; }
+    std::string ToString() const override { return "raw(" + HexStr(m_script.begin(), m_script.end()) + ")"; }
+    bool ToPrivateString(const SigningProvider& arg, std::string& out) const override { out = ToString(); return true; }
+    bool Expand(int pos, const SigningProvider& arg, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const override
     {
-        for (const auto& pubkey : m_pubkey_args) {
-            if (pubkey->IsRange()) return true;
-        }
-        if (m_script_arg) {
-            if (m_script_arg->IsRange()) return true;
+        output_scripts = std::vector<CScript>{m_script};
+        return true;
+    }
+};
+
+/** A parsed pk(P), pkh(P), or wpkh(P) descriptor. */
+class SingleKeyDescriptor final : public Descriptor
+{
+    const std::function<CScript(const CPubKey&)> m_script_fn;
+    const std::string m_fn_name;
+    std::unique_ptr<PubkeyProvider> m_provider;
+
+public:
+    SingleKeyDescriptor(std::unique_ptr<PubkeyProvider> prov, const std::function<CScript(const CPubKey&)>& fn, const std::string& name) : m_script_fn(fn), m_fn_name(name), m_provider(std::move(prov)) {}
+
+    bool IsRange() const override { return m_provider->IsRange(); }
+    std::string ToString() const override { return m_fn_name + "(" + m_provider->ToString() + ")"; }
+    bool ToPrivateString(const SigningProvider& arg, std::string& out) const override
+    {
+        std::string ret;
+        if (!m_provider->ToPrivateString(arg, ret)) return false;
+        out = m_fn_name + "(" + std::move(ret) + ")";
+        return true;
+    }
+    bool Expand(int pos, const SigningProvider& arg, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const override
+    {
+        CPubKey key;
+        if (!m_provider->GetPubKey(pos, arg, key)) return false;
+        output_scripts = std::vector<CScript>{m_script_fn(key)};
+        out.pubkeys.emplace(key.GetID(), std::move(key));
+        return true;
+    }
+};
+
+CScript P2PKHGetScript(const CPubKey& pubkey) { return GetScriptForDestination(pubkey.GetID()); }
+CScript P2PKGetScript(const CPubKey& pubkey) { return GetScriptForRawPubKey(pubkey); }
+CScript P2WPKHGetScript(const CPubKey& pubkey) { return GetScriptForDestination(WitnessV0KeyHash(pubkey.GetID())); }
+
+/** A parsed multi(...) descriptor. */
+class MultisigDescriptor : public Descriptor
+{
+    int m_threshold;
+    std::vector<std::unique_ptr<PubkeyProvider>> m_providers;
+
+public:
+    MultisigDescriptor(int threshold, std::vector<std::unique_ptr<PubkeyProvider>> providers) : m_threshold(threshold), m_providers(std::move(providers)) {}
+
+    bool IsRange() const override
+    {
+        for (const auto& p : m_providers) {
+            if (p->IsRange()) return true;
         }
         return false;
     }
 
-    bool ToStringHelper(const SigningProvider* arg, std::string& out, bool priv) const
+    std::string ToString() const override
     {
-        std::string extra = ToStringExtra();
-        size_t pos = extra.size() > 0 ? 1 : 0;
-        std::string ret = m_name + "(" + extra;
-        for (const auto& pubkey : m_pubkey_args) {
-            if (pos++) ret += ",";
-            std::string tmp;
-            if (priv) {
-                if (!pubkey->ToPrivateString(*arg, tmp)) return false;
-            } else {
-                tmp = pubkey->ToString();
-            }
-            ret += std::move(tmp);
+        std::string ret = strprintf("multi(%i", m_threshold);
+        for (const auto& p : m_providers) {
+            ret += "," + p->ToString();
         }
-        if (m_script_arg) {
-            if (pos++) ret += ",";
-            std::string tmp;
-            if (!m_script_arg->ToStringHelper(arg, tmp, priv)) return false;
-            ret += std::move(tmp);
+        return std::move(ret) + ")";
+    }
+
+    bool ToPrivateString(const SigningProvider& arg, std::string& out) const override
+    {
+        std::string ret = strprintf("multi(%i", m_threshold);
+        for (const auto& p : m_providers) {
+            std::string sub;
+            if (!p->ToPrivateString(arg, sub)) return false;
+            ret += "," + std::move(sub);
         }
         out = std::move(ret) + ")";
         return true;
     }
 
-    std::string ToString() const final
+    bool Expand(int pos, const SigningProvider& arg, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const override
+    {
+        std::vector<CPubKey> pubkeys;
+        pubkeys.reserve(m_providers.size());
+        for (const auto& p : m_providers) {
+            CPubKey key;
+            if (!p->GetPubKey(pos, arg, key)) return false;
+            pubkeys.push_back(key);
+        }
+        for (const CPubKey& key : pubkeys) {
+            out.pubkeys.emplace(key.GetID(), std::move(key));
+        }
+        output_scripts = std::vector<CScript>{GetScriptForMultisig(m_threshold, pubkeys)};
+        return true;
+    }
+};
+
+/** A parsed sh(S) or wsh(S) descriptor. */
+class ConvertorDescriptor : public Descriptor
+{
+    const std::function<CScript(const CScript&)> m_convert_fn;
+    const std::string m_fn_name;
+    std::unique_ptr<Descriptor> m_descriptor;
+
+public:
+    ConvertorDescriptor(std::unique_ptr<Descriptor> descriptor, const std::function<CScript(const CScript&)>& fn, const std::string& name) : m_convert_fn(fn), m_fn_name(name), m_descriptor(std::move(descriptor)) {}
+
+    bool IsRange() const override { return m_descriptor->IsRange(); }
+    std::string ToString() const override { return m_fn_name + "(" + m_descriptor->ToString() + ")"; }
+    bool ToPrivateString(const SigningProvider& arg, std::string& out) const override
     {
         std::string ret;
-        ToStringHelper(nullptr, ret, false);
-        return ret;
+        if (!m_descriptor->ToPrivateString(arg, ret)) return false;
+        out = m_fn_name + "(" + std::move(ret) + ")";
+        return true;
     }
-
-    bool ToPrivateString(const SigningProvider& arg, std::string& out) const override final { return ToStringHelper(&arg, out, true); }
-
-    bool ExpandHelper(int pos, const SigningProvider& arg, Span<const unsigned char>* cache_read, std::vector<CScript>& output_scripts, FlatSigningProvider& out, std::vector<unsigned char>* cache_write) const
+    bool Expand(int pos, const SigningProvider& arg, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const override
     {
-        std::vector<std::pair<CPubKey, KeyOriginInfo>> entries;
-        entries.reserve(m_pubkey_args.size());
-
-        // Construct temporary data in `entries` and `subscripts`, to avoid producing output in case of failure.
-        for (const auto& p : m_pubkey_args) {
-            entries.emplace_back();
-            if (!p->GetPubKey(pos, arg, cache_read ? nullptr : &entries.back().first, entries.back().second)) return false;
-            if (cache_read) {
-                // Cached expanded public key exists, use it.
-                if (cache_read->size() == 0) return false;
-                bool compressed = ((*cache_read)[0] == 0x02 || (*cache_read)[0] == 0x03) && cache_read->size() >= 33;
-                bool uncompressed = ((*cache_read)[0] == 0x04) && cache_read->size() >= 65;
-                if (!(compressed || uncompressed)) return false;
-                CPubKey pubkey(cache_read->begin(), cache_read->begin() + (compressed ? 33 : 65));
-                entries.back().first = pubkey;
-                *cache_read = cache_read->subspan(compressed ? 33 : 65);
-            }
-            if (cache_write) {
-                cache_write->insert(cache_write->end(), entries.back().first.begin(), entries.back().first.end());
-            }
-        }
-        std::vector<CScript> subscripts;
-        if (m_script_arg) {
-            FlatSigningProvider subprovider;
-            if (!m_script_arg->ExpandHelper(pos, arg, cache_read, subscripts, subprovider, cache_write)) return false;
-            out = Merge(out, subprovider);
-        }
-
-        std::vector<CPubKey> pubkeys;
-        pubkeys.reserve(entries.size());
-        for (auto& entry : entries) {
-            pubkeys.push_back(entry.first);
-            out.origins.emplace(entry.first.GetID(), std::move(entry.second));
-            out.pubkeys.emplace(entry.first.GetID(), entry.first);
-        }
-        if (m_script_arg) {
-            for (const auto& subscript : subscripts) {
-                out.scripts.emplace(CScriptID(subscript), subscript);
-                std::vector<CScript> addscripts = MakeScripts(pubkeys, &subscript, out);
-                for (auto& addscript : addscripts) {
-                    output_scripts.push_back(std::move(addscript));
-                }
-            }
-        } else {
-            output_scripts = MakeScripts(pubkeys, nullptr, out);
+        std::vector<CScript> sub;
+        if (!m_descriptor->Expand(pos, arg, sub, out)) return false;
+        output_scripts.clear();
+        for (const auto& script : sub) {
+            CScriptID id(script);
+            out.scripts.emplace(CScriptID(script), script);
+            output_scripts.push_back(m_convert_fn(script));
         }
         return true;
     }
-
-    bool Expand(int pos, const SigningProvider& provider, std::vector<CScript>& output_scripts, FlatSigningProvider& out, std::vector<unsigned char>* cache = nullptr) const final
-    {
-        return ExpandHelper(pos, provider, nullptr, output_scripts, out, cache);
-    }
-
-    bool ExpandFromCache(int pos, const std::vector<unsigned char>& cache, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const final
-    {
-        Span<const unsigned char> span = MakeSpan(cache);
-        return ExpandHelper(pos, DUMMY_SIGNING_PROVIDER, &span, output_scripts, out, nullptr) && span.size() == 0;
-    }
 };
 
-/** Construct a vector with one element, which is moved into it. */
-template<typename T>
-std::vector<T> Singleton(T elem)
-{
-    std::vector<T> ret;
-    ret.emplace_back(std::move(elem));
-    return ret;
-}
-
-/** A parsed addr(A) descriptor. */
-class AddressDescriptor final : public DescriptorImpl
-{
-    const CTxDestination m_destination;
-protected:
-    std::string ToStringExtra() const override { return EncodeDestination(m_destination); }
-    std::vector<CScript> MakeScripts(const std::vector<CPubKey>&, const CScript*, FlatSigningProvider&) const override { return Singleton(GetScriptForDestination(m_destination)); }
-public:
-    AddressDescriptor(CTxDestination destination) : DescriptorImpl({}, {}, "addr"), m_destination(std::move(destination)) {}
-    bool IsSolvable() const final { return false; }
-};
-
-/** A parsed raw(H) descriptor. */
-class RawDescriptor final : public DescriptorImpl
-{
-    const CScript m_script;
-protected:
-    std::string ToStringExtra() const override { return HexStr(m_script.begin(), m_script.end()); }
-    std::vector<CScript> MakeScripts(const std::vector<CPubKey>&, const CScript*, FlatSigningProvider&) const override { return Singleton(m_script); }
-public:
-    RawDescriptor(CScript script) : DescriptorImpl({}, {}, "raw"), m_script(std::move(script)) {}
-    bool IsSolvable() const final { return false; }
-};
-
-/** A parsed pk(P) descriptor. */
-class PKDescriptor final : public DescriptorImpl
-{
-protected:
-    std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, const CScript*, FlatSigningProvider&) const override { return Singleton(GetScriptForRawPubKey(keys[0])); }
-public:
-    PKDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Singleton(std::move(prov)), {}, "pk") {}
-};
-
-/** A parsed pkh(P) descriptor. */
-class PKHDescriptor final : public DescriptorImpl
-{
-protected:
-    std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, const CScript*, FlatSigningProvider&) const override { return Singleton(GetScriptForDestination(keys[0].GetID())); }
-public:
-    PKHDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Singleton(std::move(prov)), {}, "pkh") {}
-};
-
-/** A parsed wpkh(P) descriptor. */
-class WPKHDescriptor final : public DescriptorImpl
-{
-protected:
-    std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, const CScript*, FlatSigningProvider&) const override { return Singleton(GetScriptForDestination(WitnessV0KeyHash(keys[0].GetID()))); }
-public:
-    WPKHDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Singleton(std::move(prov)), {}, "wpkh") {}
-};
+CScript ConvertP2SH(const CScript& script) { return GetScriptForDestination(CScriptID(script)); }
+CScript ConvertP2WSH(const CScript& script) { return GetScriptForDestination(WitnessV0ScriptHash(script)); }
 
 /** A parsed combo(P) descriptor. */
-class ComboDescriptor final : public DescriptorImpl
+class ComboDescriptor final : public Descriptor
 {
-protected:
-    std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, const CScript*, FlatSigningProvider& out) const override
+    std::unique_ptr<PubkeyProvider> m_provider;
+
+public:
+    ComboDescriptor(std::unique_ptr<PubkeyProvider> provider) : m_provider(std::move(provider)) {}
+
+    bool IsRange() const override { return m_provider->IsRange(); }
+    std::string ToString() const override { return "combo(" + m_provider->ToString() + ")"; }
+    bool ToPrivateString(const SigningProvider& arg, std::string& out) const override
     {
-        std::vector<CScript> ret;
-        CKeyID id = keys[0].GetID();
-        ret.emplace_back(GetScriptForRawPubKey(keys[0])); // P2PK
-        ret.emplace_back(GetScriptForDestination(id)); // P2PKH
-        if (keys[0].IsCompressed()) {
-            CScript p2wpkh = GetScriptForDestination(WitnessV0KeyHash(id));
-            out.scripts.emplace(CScriptID(p2wpkh), p2wpkh);
-            ret.emplace_back(p2wpkh);
-            ret.emplace_back(GetScriptForDestination(CScriptID(p2wpkh))); // P2SH-P2WPKH
-        }
-        return ret;
+        std::string ret;
+        if (!m_provider->ToPrivateString(arg, ret)) return false;
+        out = "combo(" + std::move(ret) + ")";
+        return true;
     }
-public:
-    ComboDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Singleton(std::move(prov)), {}, "combo") {}
-};
-
-/** A parsed multi(...) descriptor. */
-class MultisigDescriptor final : public DescriptorImpl
-{
-    const int m_threshold;
-protected:
-    std::string ToStringExtra() const override { return strprintf("%i", m_threshold); }
-    std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, const CScript*, FlatSigningProvider&) const override { return Singleton(GetScriptForMultisig(m_threshold, keys)); }
-public:
-    MultisigDescriptor(int threshold, std::vector<std::unique_ptr<PubkeyProvider>> providers) : DescriptorImpl(std::move(providers), {}, "multi"), m_threshold(threshold) {}
-};
-
-/** A parsed sh(...) descriptor. */
-class SHDescriptor final : public DescriptorImpl
-{
-protected:
-    std::vector<CScript> MakeScripts(const std::vector<CPubKey>&, const CScript* script, FlatSigningProvider&) const override { return Singleton(GetScriptForDestination(CScriptID(*script))); }
-public:
-    SHDescriptor(std::unique_ptr<DescriptorImpl> desc) : DescriptorImpl({}, std::move(desc), "sh") {}
-};
-
-/** A parsed wsh(...) descriptor. */
-class WSHDescriptor final : public DescriptorImpl
-{
-protected:
-    std::vector<CScript> MakeScripts(const std::vector<CPubKey>&, const CScript* script, FlatSigningProvider&) const override { return Singleton(GetScriptForDestination(WitnessV0ScriptHash(*script))); }
-public:
-    WSHDescriptor(std::unique_ptr<DescriptorImpl> desc) : DescriptorImpl({}, std::move(desc), "wsh") {}
+    bool Expand(int pos, const SigningProvider& arg, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const override
+    {
+        CPubKey key;
+        if (!m_provider->GetPubKey(pos, arg, key)) return false;
+        CKeyID keyid = key.GetID();
+        {
+            CScript p2pk = GetScriptForRawPubKey(key);
+            CScript p2pkh = GetScriptForDestination(keyid);
+            output_scripts = std::vector<CScript>{std::move(p2pk), std::move(p2pkh)};
+            out.pubkeys.emplace(keyid, key);
+        }
+        if (key.IsCompressed()) {
+            CScript p2wpkh = GetScriptForDestination(WitnessV0KeyHash(keyid));
+            CScriptID p2wpkh_id(p2wpkh);
+            CScript p2sh_p2wpkh = GetScriptForDestination(p2wpkh_id);
+            out.scripts.emplace(p2wpkh_id, p2wpkh);
+            output_scripts.push_back(std::move(p2wpkh));
+            output_scripts.push_back(std::move(p2sh_p2wpkh));
+        }
+        return true;
+    }
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -471,7 +373,7 @@ enum class ParseScriptContext {
     P2WSH,
 };
 
-/** Parse a constant. If successful, sp is updated to skip the constant and return true. */
+/** Parse a constant. If succesful, sp is updated to skip the constant and return true. */
 bool Const(const std::string& str, Span<const char>& sp)
 {
     if ((size_t)sp.size() >= str.size() && std::equal(str.begin(), str.end(), sp.begin())) {
@@ -481,7 +383,7 @@ bool Const(const std::string& str, Span<const char>& sp)
     return false;
 }
 
-/** Parse a function call. If successful, sp is updated to be the function's argument(s). */
+/** Parse a function call. If succesful, sp is updated to be the function's argument(s). */
 bool Func(const std::string& str, Span<const char>& sp)
 {
     if ((size_t)sp.size() >= str.size() + 2 && sp[str.size()] == '(' && sp[sp.size() - 1] == ')' && std::equal(str.begin(), str.end(), sp.begin())) {
@@ -529,7 +431,7 @@ std::vector<Span<const char>> Split(const Span<const char>& sp, char sep)
 }
 
 /** Parse a key path, being passed a split list of elements (the first element is ignored). */
-NODISCARD bool ParseKeyPath(const std::vector<Span<const char>>& split, KeyPath& out)
+bool ParseKeyPath(const std::vector<Span<const char>>& split, KeyPath& out)
 {
     for (size_t i = 1; i < split.size(); ++i) {
         Span<const char> elem = split[i];
@@ -545,8 +447,7 @@ NODISCARD bool ParseKeyPath(const std::vector<Span<const char>>& split, KeyPath&
     return true;
 }
 
-/** Parse a public key that excludes origin information. */
-std::unique_ptr<PubkeyProvider> ParsePubkeyInner(const Span<const char>& sp, bool permit_uncompressed, FlatSigningProvider& out)
+std::unique_ptr<PubkeyProvider> ParsePubkey(const Span<const char>& sp, bool permit_uncompressed, FlatSigningProvider& out)
 {
     auto split = Split(sp, '/');
     std::string str(split[0].begin(), split[0].end());
@@ -583,41 +484,19 @@ std::unique_ptr<PubkeyProvider> ParsePubkeyInner(const Span<const char>& sp, boo
     return MakeUnique<BIP32PubkeyProvider>(extpubkey, std::move(path), type);
 }
 
-/** Parse a public key including origin information (if enabled). */
-std::unique_ptr<PubkeyProvider> ParsePubkey(const Span<const char>& sp, bool permit_uncompressed, FlatSigningProvider& out)
-{
-    auto origin_split = Split(sp, ']');
-    if (origin_split.size() > 2) return nullptr;
-    if (origin_split.size() == 1) return ParsePubkeyInner(origin_split[0], permit_uncompressed, out);
-    if (origin_split[0].size() < 1 || origin_split[0][0] != '[') return nullptr;
-    auto slash_split = Split(origin_split[0].subspan(1), '/');
-    if (slash_split[0].size() != 8) return nullptr;
-    std::string fpr_hex = std::string(slash_split[0].begin(), slash_split[0].end());
-    if (!IsHex(fpr_hex)) return nullptr;
-    auto fpr_bytes = ParseHex(fpr_hex);
-    KeyOriginInfo info;
-    static_assert(sizeof(info.fingerprint) == 4, "Fingerprint must be 4 bytes");
-    assert(fpr_bytes.size() == 4);
-    std::copy(fpr_bytes.begin(), fpr_bytes.end(), info.fingerprint);
-    if (!ParseKeyPath(slash_split, info.path)) return nullptr;
-    auto provider = ParsePubkeyInner(origin_split[1], permit_uncompressed, out);
-    if (!provider) return nullptr;
-    return MakeUnique<OriginPubkeyProvider>(std::move(info), std::move(provider));
-}
-
 /** Parse a script in a particular context. */
-std::unique_ptr<DescriptorImpl> ParseScript(Span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out)
+std::unique_ptr<Descriptor> ParseScript(Span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out)
 {
     auto expr = Expr(sp);
     if (Func("pk", expr)) {
         auto pubkey = ParsePubkey(expr, ctx != ParseScriptContext::P2WSH, out);
         if (!pubkey) return nullptr;
-        return MakeUnique<PKDescriptor>(std::move(pubkey));
+        return MakeUnique<SingleKeyDescriptor>(std::move(pubkey), P2PKGetScript, "pk");
     }
     if (Func("pkh", expr)) {
         auto pubkey = ParsePubkey(expr, ctx != ParseScriptContext::P2WSH, out);
         if (!pubkey) return nullptr;
-        return MakeUnique<PKHDescriptor>(std::move(pubkey));
+        return MakeUnique<SingleKeyDescriptor>(std::move(pubkey), P2PKHGetScript, "pkh");
     }
     if (ctx == ParseScriptContext::TOP && Func("combo", expr)) {
         auto pubkey = ParsePubkey(expr, true, out);
@@ -650,17 +529,17 @@ std::unique_ptr<DescriptorImpl> ParseScript(Span<const char>& sp, ParseScriptCon
     if (ctx != ParseScriptContext::P2WSH && Func("wpkh", expr)) {
         auto pubkey = ParsePubkey(expr, false, out);
         if (!pubkey) return nullptr;
-        return MakeUnique<WPKHDescriptor>(std::move(pubkey));
+        return MakeUnique<SingleKeyDescriptor>(std::move(pubkey), P2WPKHGetScript, "wpkh");
     }
     if (ctx == ParseScriptContext::TOP && Func("sh", expr)) {
         auto desc = ParseScript(expr, ParseScriptContext::P2SH, out);
         if (!desc || expr.size()) return nullptr;
-        return MakeUnique<SHDescriptor>(std::move(desc));
+        return MakeUnique<ConvertorDescriptor>(std::move(desc), ConvertP2SH, "sh");
     }
     if (ctx != ParseScriptContext::P2WSH && Func("wsh", expr)) {
         auto desc = ParseScript(expr, ParseScriptContext::P2WSH, out);
         if (!desc || expr.size()) return nullptr;
-        return MakeUnique<WSHDescriptor>(std::move(desc));
+        return MakeUnique<ConvertorDescriptor>(std::move(desc), ConvertP2WSH, "wsh");
     }
     if (ctx == ParseScriptContext::TOP && Func("addr", expr)) {
         CTxDestination dest = DecodeDestination(std::string(expr.begin(), expr.end()));
@@ -676,91 +555,12 @@ std::unique_ptr<DescriptorImpl> ParseScript(Span<const char>& sp, ParseScriptCon
     return nullptr;
 }
 
-std::unique_ptr<PubkeyProvider> InferPubkey(const CPubKey& pubkey, ParseScriptContext, const SigningProvider& provider)
-{
-    std::unique_ptr<PubkeyProvider> key_provider = MakeUnique<ConstPubkeyProvider>(pubkey);
-    KeyOriginInfo info;
-    if (provider.GetKeyOrigin(pubkey.GetID(), info)) {
-        return MakeUnique<OriginPubkeyProvider>(std::move(info), std::move(key_provider));
-    }
-    return key_provider;
-}
-
-std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptContext ctx, const SigningProvider& provider)
-{
-    std::vector<std::vector<unsigned char>> data;
-    txnouttype txntype = Solver(script, data);
-
-    if (txntype == TX_PUBKEY) {
-        CPubKey pubkey(data[0].begin(), data[0].end());
-        if (pubkey.IsValid()) {
-            return MakeUnique<PKDescriptor>(InferPubkey(pubkey, ctx, provider));
-        }
-    }
-    if (txntype == TX_PUBKEYHASH) {
-        uint160 hash(data[0]);
-        CKeyID keyid(hash);
-        CPubKey pubkey;
-        if (provider.GetPubKey(keyid, pubkey)) {
-            return MakeUnique<PKHDescriptor>(InferPubkey(pubkey, ctx, provider));
-        }
-    }
-    if (txntype == TX_WITNESS_V0_KEYHASH && ctx != ParseScriptContext::P2WSH) {
-        uint160 hash(data[0]);
-        CKeyID keyid(hash);
-        CPubKey pubkey;
-        if (provider.GetPubKey(keyid, pubkey)) {
-            return MakeUnique<WPKHDescriptor>(InferPubkey(pubkey, ctx, provider));
-        }
-    }
-    if (txntype == TX_MULTISIG) {
-        std::vector<std::unique_ptr<PubkeyProvider>> providers;
-        for (size_t i = 1; i + 1 < data.size(); ++i) {
-            CPubKey pubkey(data[i].begin(), data[i].end());
-            providers.push_back(InferPubkey(pubkey, ctx, provider));
-        }
-        return MakeUnique<MultisigDescriptor>((int)data[0][0], std::move(providers));
-    }
-    if (txntype == TX_SCRIPTHASH && ctx == ParseScriptContext::TOP) {
-        uint160 hash(data[0]);
-        CScriptID scriptid(hash);
-        CScript subscript;
-        if (provider.GetCScript(scriptid, subscript)) {
-            auto sub = InferScript(subscript, ParseScriptContext::P2SH, provider);
-            if (sub) return MakeUnique<SHDescriptor>(std::move(sub));
-        }
-    }
-    if (txntype == TX_WITNESS_V0_SCRIPTHASH && ctx != ParseScriptContext::P2WSH) {
-        CScriptID scriptid;
-        CRIPEMD160().Write(data[0].data(), data[0].size()).Finalize(scriptid.begin());
-        CScript subscript;
-        if (provider.GetCScript(scriptid, subscript)) {
-            auto sub = InferScript(subscript, ParseScriptContext::P2WSH, provider);
-            if (sub) return MakeUnique<WSHDescriptor>(std::move(sub));
-        }
-    }
-
-    CTxDestination dest;
-    if (ExtractDestination(script, dest)) {
-        if (GetScriptForDestination(dest) == script) {
-            return MakeUnique<AddressDescriptor>(std::move(dest));
-        }
-    }
-
-    return MakeUnique<RawDescriptor>(script);
-}
-
 } // namespace
 
 std::unique_ptr<Descriptor> Parse(const std::string& descriptor, FlatSigningProvider& out)
 {
     Span<const char> sp(descriptor.data(), descriptor.size());
     auto ret = ParseScript(sp, ParseScriptContext::TOP, out);
-    if (sp.size() == 0 && ret) return std::unique_ptr<Descriptor>(std::move(ret));
+    if (sp.size() == 0 && ret) return ret;
     return nullptr;
-}
-
-std::unique_ptr<Descriptor> InferDescriptor(const CScript& script, const SigningProvider& provider)
-{
-    return InferScript(script, ParseScriptContext::TOP, provider);
 }

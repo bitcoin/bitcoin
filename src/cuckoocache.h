@@ -397,7 +397,7 @@ public:
         std::array<uint32_t, 8> locs = compute_hashes(e);
         // Make sure we have not already inserted this element
         // If we have, make sure that it does not get deleted
-        for (const uint32_t loc : locs)
+        for (uint32_t loc : locs)
             if (table[loc] == e) {
                 please_keep(loc);
                 epoch_flags[loc] = last_epoch;
@@ -405,7 +405,7 @@ public:
             }
         for (uint8_t depth = 0; depth < depth_limit; ++depth) {
             // First try to insert to an empty slot, if one exists
-            for (const uint32_t loc : locs) {
+            for (uint32_t loc : locs) {
                 if (!collection_flags.bit_is_set(loc))
                     continue;
                 table[loc] = std::move(e);
@@ -467,7 +467,7 @@ public:
     inline bool contains(const Element& e, const bool erase) const
     {
         std::array<uint32_t, 8> locs = compute_hashes(e);
-        for (const uint32_t loc : locs)
+        for (uint32_t loc : locs)
             if (table[loc] == e) {
                 if (erase)
                     allow_erase(loc);

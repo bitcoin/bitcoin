@@ -81,7 +81,7 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
 
         # Import with affiliated address with no rescan
         self.nodes[1].importaddress(address=address2, rescan=False)
-        self.nodes[1].importprunedfunds(rawtransaction=rawtxn2, txoutproof=proof2)
+        self.nodes[1].importprunedfunds(rawtxn2, proof2)
         assert [tx for tx in self.nodes[1].listtransactions(include_watchonly=True) if tx['txid'] == txnid2]
 
         # Import with private key with no rescan

@@ -65,11 +65,6 @@ public:
         TAB_PEERS = 3
     };
 
-    std::vector<TabTypes> tabs() const { return {TAB_INFO, TAB_CONSOLE, TAB_GRAPH, TAB_PEERS}; }
-
-    TabTypes tabFocus() const;
-    QString tabTitle(TabTypes tab_type) const;
-
 protected:
     virtual bool eventFilter(QObject* obj, QEvent *event);
     void keyPressEvent(QKeyEvent *);
@@ -101,8 +96,7 @@ public Q_SLOTS:
     void fontSmaller();
     void setFontSize(int newSize);
     /** Append the message to the message widget */
-    void message(int category, const QString &msg) { message(category, msg, false); }
-    void message(int category, const QString &message, bool html);
+    void message(int category, const QString &message, bool html = false);
     /** Set number of connections shown in the UI */
     void setNumConnections(int count);
     /** Set network state shown in the UI */

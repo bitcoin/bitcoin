@@ -7,7 +7,7 @@
 
 #include <hash.h>
 #include <tinyformat.h>
-#include <util/strencodings.h>
+#include <utilstrencodings.h>
 
 std::string COutPoint::ToString() const
 {
@@ -93,7 +93,7 @@ CAmount CTransaction::GetValueOut() const
 
 unsigned int CTransaction::GetTotalSize() const
 {
-    return ::GetSerializeSize(*this, PROTOCOL_VERSION);
+    return ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION);
 }
 
 std::string CTransaction::ToString() const

@@ -8,17 +8,15 @@
 
 #include <chainparams.h>
 #include <qt/test/rpcnestedtests.h>
-#include <util/system.h>
+#include <util.h>
 #include <qt/test/uritests.h>
 #include <qt/test/compattests.h>
 
 #ifdef ENABLE_WALLET
 #include <qt/test/addressbooktests.h>
-#ifdef ENABLE_BIP70
 #include <qt/test/paymentservertests.h>
-#endif // ENABLE_BIP70
 #include <qt/test/wallettests.h>
-#endif // ENABLE_WALLET
+#endif
 
 #include <QApplication>
 #include <QObject>
@@ -76,7 +74,7 @@ int main(int argc, char *argv[])
     if (QTest::qExec(&test1) != 0) {
         fInvalid = true;
     }
-#if defined(ENABLE_WALLET) && defined(ENABLE_BIP70)
+#ifdef ENABLE_WALLET
     PaymentServerTests test2;
     if (QTest::qExec(&test2) != 0) {
         fInvalid = true;

@@ -10,6 +10,8 @@
 
 #include "univalue.h"
 
+using namespace std;
+
 const UniValue NullUniValue;
 
 void UniValue::clear()
@@ -35,15 +37,15 @@ bool UniValue::setBool(bool val_)
     return true;
 }
 
-static bool validNumStr(const std::string& s)
+static bool validNumStr(const string& s)
 {
-    std::string tokenVal;
+    string tokenVal;
     unsigned int consumed;
     enum jtokentype tt = getJsonToken(tokenVal, consumed, s.data(), s.data() + s.size());
     return (tt == JTOK_NUMBER);
 }
 
-bool UniValue::setNumStr(const std::string& val_)
+bool UniValue::setNumStr(const string& val_)
 {
     if (!validNumStr(val_))
         return false;
@@ -56,7 +58,7 @@ bool UniValue::setNumStr(const std::string& val_)
 
 bool UniValue::setInt(uint64_t val_)
 {
-    std::ostringstream oss;
+    ostringstream oss;
 
     oss << val_;
 
@@ -65,7 +67,7 @@ bool UniValue::setInt(uint64_t val_)
 
 bool UniValue::setInt(int64_t val_)
 {
-    std::ostringstream oss;
+    ostringstream oss;
 
     oss << val_;
 
@@ -74,7 +76,7 @@ bool UniValue::setInt(int64_t val_)
 
 bool UniValue::setFloat(double val_)
 {
-    std::ostringstream oss;
+    ostringstream oss;
 
     oss << std::setprecision(16) << val_;
 
@@ -83,7 +85,7 @@ bool UniValue::setFloat(double val_)
     return ret;
 }
 
-bool UniValue::setStr(const std::string& val_)
+bool UniValue::setStr(const string& val_)
 {
     clear();
     typ = VSTR;

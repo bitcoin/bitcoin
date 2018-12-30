@@ -16,11 +16,10 @@ FALSE_POSITIVES = [
     ("src/dbwrapper.cpp", "vsnprintf(p, limit - p, format, backup_ap)"),
     ("src/index/base.cpp", "FatalError(const char* fmt, const Args&... args)"),
     ("src/netbase.cpp", "LogConnectFailure(bool manual_connection, const char* fmt, const Args&... args)"),
-    ("src/util/system.cpp", "strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION))"),
-    ("src/util/system.cpp", "strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION)"),
+    ("src/util.cpp", "strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION))"),
+    ("src/util.cpp", "strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION)"),
     ("src/wallet/wallet.h",  "WalletLogPrintf(std::string fmt, Params... parameters)"),
     ("src/wallet/wallet.h", "LogPrintf((\"%s \" + fmt).c_str(), GetDisplayName(), parameters...)"),
-    ("src/logging.h", "LogPrintf(const char* fmt, const Args&... args)"),
 ]
 
 
@@ -241,11 +240,12 @@ def count_format_specifiers(format_string):
     4
     """
     assert(type(format_string) is str)
-    format_string = format_string.replace('%%', 'X')
     n = 0
     in_specifier = False
     for i, char in enumerate(format_string):
-        if char == "%":
+        if format_string[i - 1:i + 1] == "%%" or format_string[i:i + 2] == "%%":
+            pass
+        elif char == "%":
             in_specifier = True
             n += 1
         elif char in "aAcdeEfFgGinopsuxX":

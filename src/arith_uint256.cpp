@@ -1,3 +1,4 @@
+// Copyright (c) 2018 The BitcoinV Core developers
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
@@ -6,7 +7,7 @@
 #include <arith_uint256.h>
 
 #include <uint256.h>
-#include <util/strencodings.h>
+#include <utilstrencodings.h>
 #include <crypto/common.h>
 
 #include <stdio.h>
@@ -176,7 +177,7 @@ unsigned int base_uint<BITS>::bits() const
     for (int pos = WIDTH - 1; pos >= 0; pos--) {
         if (pn[pos]) {
             for (int nbits = 31; nbits > 0; nbits--) {
-                if (pn[pos] & 1U << nbits)
+                if (pn[pos] & 1 << nbits)
                     return 32 * pos + nbits + 1;
             }
             return 32 * pos + 1;
@@ -259,4 +260,9 @@ arith_uint256 UintToArith256(const uint256 &a)
     for(int x=0; x<b.WIDTH; ++x)
         b.pn[x] = ReadLE32(a.begin() + x*4);
     return b;
+}
+
+uint32_t get_32bit_word_from_uint256(const uint256 &a)
+{
+    return ReadLE32(a.begin());
 }

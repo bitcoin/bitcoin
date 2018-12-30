@@ -1,3 +1,4 @@
+// Copyright (c) 2018 The BitcoinV Core developers
 // Copyright (c) 2011-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -13,7 +14,7 @@
 #include <qt/guiutil.h>
 
 #include <interfaces/node.h>
-#include <util/system.h>
+#include <util.h>
 
 #include <QFileDialog>
 #include <QSettings>
@@ -128,7 +129,7 @@ Intro::Intro(QWidget *parent) :
         .arg(tr(PACKAGE_NAME))
         .arg(BLOCK_CHAIN_SIZE)
         .arg(2009)
-        .arg(tr("Bitcoin"))
+        .arg(tr("BitcoinV"))
     );
     ui->lblExplanation2->setText(ui->lblExplanation2->text().arg(tr(PACKAGE_NAME)));
 
@@ -147,7 +148,7 @@ Intro::Intro(QWidget *parent) :
     }
     requiredSpace += CHAIN_STATE_SIZE;
     ui->sizeWarningLabel->setText(
-        tr("%1 will download and store a copy of the Bitcoin block chain.").arg(tr(PACKAGE_NAME)) + " " +
+        tr("%1 will download and store a copy of the BitcoinV block chain.").arg(tr(PACKAGE_NAME)) + " " +
         storageRequiresMsg.arg(requiredSpace) + " " +
         tr("The wallet will also be stored in this directory.")
     );
@@ -303,11 +304,11 @@ void Intro::startThread()
     FreespaceChecker *executor = new FreespaceChecker(this);
     executor->moveToThread(thread);
 
-    connect(executor, &FreespaceChecker::reply, this, &Intro::setStatus);
-    connect(this, &Intro::requestCheck, executor, &FreespaceChecker::check);
+    connect(executor, SIGNAL(reply(int,QString,quint64)), this, SLOT(setStatus(int,QString,quint64)));
+    connect(this, SIGNAL(requestCheck()), executor, SLOT(check()));
     /*  make sure executor object is deleted in its own thread */
-    connect(this, &Intro::stopThread, executor, &QObject::deleteLater);
-    connect(this, &Intro::stopThread, thread, &QThread::quit);
+    connect(this, SIGNAL(stopThread()), executor, SLOT(deleteLater()));
+    connect(this, SIGNAL(stopThread()), thread, SLOT(quit()));
 
     thread->start();
 }

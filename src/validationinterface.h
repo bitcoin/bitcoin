@@ -7,12 +7,10 @@
 #define BITCOIN_VALIDATIONINTERFACE_H
 
 #include <primitives/transaction.h> // CTransaction(Ref)
-#include <sync.h>
 
 #include <functional>
 #include <memory>
 
-extern CCriticalSection cs_main;
 class CBlock;
 class CBlockIndex;
 struct CBlockLocator;
@@ -53,7 +51,7 @@ void CallFunctionInValidationInterfaceQueue(std::function<void ()> func);
  *     });
  *     promise.get_future().wait();
  */
-void SyncWithValidationInterfaceQueue() LOCKS_EXCLUDED(cs_main);
+void SyncWithValidationInterfaceQueue();
 
 /**
  * Implement this to subscribe to events generated in validation

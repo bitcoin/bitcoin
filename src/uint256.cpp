@@ -5,7 +5,7 @@
 
 #include <uint256.h>
 
-#include <util/strencodings.h>
+#include <utilstrencodings.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -29,7 +29,7 @@ void base_blob<BITS>::SetHex(const char* psz)
     memset(data, 0, sizeof(data));
 
     // skip leading spaces
-    while (IsSpace(*psz))
+    while (isspace(*psz))
         psz++;
 
     // skip 0x

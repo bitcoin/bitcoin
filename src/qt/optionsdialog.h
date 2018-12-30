@@ -40,14 +40,8 @@ public:
     explicit OptionsDialog(QWidget *parent, bool enableWallet);
     ~OptionsDialog();
 
-    enum Tab {
-        TAB_MAIN,
-        TAB_NETWORK,
-    };
-
     void setModel(OptionsModel *model);
     void setMapper();
-    void setCurrentTab(OptionsDialog::Tab tab);
 
 private Q_SLOTS:
     /* set OK button state (enabled / disabled) */

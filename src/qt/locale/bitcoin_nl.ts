@@ -3492,12 +3492,6 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
         <translation>Opgegeven -walletdir "%s" is geen map</translation>
     </message>
     <message>
-        <source>Specified blocks directory "%s" does not exist.
-</source>
-        <translation>Opgegeven blocks map "%s" bestaat niet.
-</translation>
-    </message>
-    <message>
         <source>The transaction amount is too small to pay the fee</source>
         <translation>Het transactiebedrag is te klein om transactiekosten in rekening te brengen</translation>
     </message>

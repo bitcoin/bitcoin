@@ -26,7 +26,7 @@ def hash160(s):
 _opcode_instances = []
 class CScriptOp(int):
     """A single script opcode"""
-    __slots__ = ()
+    __slots__ = []
 
     @staticmethod
     def encode_op_pushdata(d):
@@ -361,11 +361,8 @@ class CScriptTruncatedPushDataError(CScriptInvalidError):
         self.data = data
         super(CScriptTruncatedPushDataError, self).__init__(msg)
 
-
 # This is used, eg, for blockchain heights in coinbase scripts (bip34)
-class CScriptNum:
-    __slots__ = ("value",)
-
+class CScriptNum():
     def __init__(self, d=0):
         self.value = d
 
@@ -385,22 +382,6 @@ class CScriptNum:
             r[-1] |= 0x80
         return bytes([len(r)]) + r
 
-    @staticmethod
-    def decode(vch):
-        result = 0
-        # We assume valid push_size and minimal encoding
-        value = vch[1:]
-        if len(value) == 0:
-            return result
-        for i, byte in enumerate(value):
-            result |= int(byte) << 8*i
-        if value[-1] >= 0x80:
-            # Mask for all but the highest result bit
-            num_mask = (2**(len(value)*8) - 1) >> 1
-            result &= num_mask
-            result *= -1
-        return result
-
 
 class CScript(bytes):
     """Serialized script
@@ -412,8 +393,6 @@ class CScript(bytes):
 
     iter(script) however does iterate by opcode.
     """
-    __slots__ = ()
-
     @classmethod
     def __coerce_instance(cls, other):
         # Coerce other into bytes
@@ -449,10 +428,6 @@ class CScript(bytes):
     def join(self, iterable):
         # join makes no sense for a CScript()
         raise NotImplementedError
-
-    # Python 3.4 compatibility
-    def hex(self):
-        return hexlify(self).decode('ascii')
 
     def __new__(cls, value=b''):
         if isinstance(value, bytes) or isinstance(value, bytearray):

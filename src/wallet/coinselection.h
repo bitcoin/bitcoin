@@ -10,7 +10,7 @@
 #include <random.h>
 
 //! target minimum change amount
-static constexpr CAmount MIN_CHANGE{COIN / 100};
+static const CAmount MIN_CHANGE = CENT;
 //! final minimum change amount after paying for fees
 static const CAmount MIN_FINAL_CHANGE = MIN_CHANGE/2;
 

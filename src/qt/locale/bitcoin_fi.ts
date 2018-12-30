@@ -326,6 +326,14 @@
         <translation>Avaa &amp;URI...</translation>
     </message>
     <message>
+        <source>Wallet:</source>
+        <translation>Lompakko:</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>oletuslompakko</translation>
+    </message>
+    <message>
         <source>Click to disable network activity.</source>
         <translation>Paina poistaaksesi verkkoyhteysilmaisin käytöstä.</translation>
     </message>
@@ -344,6 +352,10 @@
     <message>
         <source>Reindexing blocks on disk...</source>
         <translation>Ladataan lohkoindeksiä...</translation>
+    </message>
+    <message>
+        <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
+        <translation>Välipalvelin on &lt;b&gt;käytössä&lt;/b&gt;: %1</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
@@ -441,6 +453,10 @@
         <source>&amp;Command-line options</source>
         <translation>&amp;Komentorivin valinnat</translation>
     </message>
+    <message numerus="yes">
+        <source>%n active connection(s) to Bitcoin network</source>
+        <translation><numerusform>%n aktiivinen yhteys Bitcoin-verkkoon</numerusform><numerusform>%n aktiivista yhteyttä Bitcoin-verkkoon</numerusform></translation>
+    </message>
     <message>
         <source>Indexing blocks on disk...</source>
         <translation>Ladataan lohkoindeksiä...</translation>
@@ -448,6 +464,10 @@
     <message>
         <source>Processing blocks on disk...</source>
         <translation>Käsitellään lohkoja levyllä...</translation>
+    </message>
+    <message numerus="yes">
+        <source>Processed %n block(s) of transaction history.</source>
+        <translation><numerusform>Käsitelty %n lohko rahansiirtohistoriasta.</numerusform><numerusform>Käsitelty %n lohkoa rahansiirtohistoriasta.</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -1707,6 +1727,10 @@
     <message>
         <source>&amp;Unban</source>
         <translation>&amp;Poista esto</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>oletuslompakko</translation>
     </message>
     <message>
         <source>Welcome to the %1 RPC console.</source>

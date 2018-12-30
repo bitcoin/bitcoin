@@ -20,23 +20,23 @@ fi
 RET=0
 PREV_BRANCH=`git name-rev --name-only HEAD`
 PREV_HEAD=`git rev-parse HEAD`
-for commit in `git rev-list --reverse $1`; do
-    if git rev-list -n 1 --pretty="%s" $commit | grep -q "^scripted-diff:"; then
-        git checkout --quiet $commit^ || exit
-        SCRIPT="`git rev-list --format=%b -n1 $commit | sed '/^-BEGIN VERIFY SCRIPT-$/,/^-END VERIFY SCRIPT-$/{//!b};d'`"
+for i in `git rev-list --reverse $1`; do
+    if git rev-list -n 1 --pretty="%s" $i | grep -q "^scripted-diff:"; then
+        git checkout --quiet $i^ || exit
+        SCRIPT="`git rev-list --format=%b -n1 $i | sed '/^-BEGIN VERIFY SCRIPT-$/,/^-END VERIFY SCRIPT-$/{//!b};d'`"
         if test "x$SCRIPT" = "x"; then
-            echo "Error: missing script for: $commit"
+            echo "Error: missing script for: $i"
             echo "Failed"
             RET=1
         else
-            echo "Running script for: $commit"
+            echo "Running script for: $i"
             echo "$SCRIPT"
-            (eval "$SCRIPT")
-            git --no-pager diff --exit-code $commit && echo "OK" || (echo "Failed"; false) || RET=1
+            eval "$SCRIPT"
+            git --no-pager diff --exit-code $i && echo "OK" || (echo "Failed"; false) || RET=1
         fi
         git reset --quiet --hard HEAD
      else
-        if git rev-list "--format=%b" -n1 $commit | grep -q '^-\(BEGIN\|END\)[ a-zA-Z]*-$'; then
+        if git rev-list "--format=%b" -n1 $i | grep -q '^-\(BEGIN\|END\)[ a-zA-Z]*-$'; then
             echo "Error: script block marker but no scripted-diff in title"
             echo "Failed"
             RET=1

@@ -38,12 +38,6 @@ static const int MAX_STACK_SIZE = 1000;
 // otherwise as UNIX timestamp.
 static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20 1985 UTC
 
-// Maximum nLockTime. Since a lock time indicates the last invalid timestamp, a
-// transaction with this lock time will never be valid unless lock time
-// checking is disabled (by setting all input sequence numbers to
-// SEQUENCE_FINAL).
-static const uint32_t LOCKTIME_MAX = 0xFFFFFFFFU;
-
 template <typename T>
 std::vector<unsigned char> ToByteVector(const T& in)
 {

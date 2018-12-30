@@ -3,20 +3,25 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-#include <interfaces/chain.h>
-#include <wallet/coinselection.h>
 #include <wallet/wallet.h>
+#include <wallet/coinselection.h>
 
 #include <set>
 
-static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<std::unique_ptr<CWalletTx>>& wtxs)
+static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<OutputGroup>& groups)
 {
+    int nInput = 0;
+
     static int nextLockTime = 0;
     CMutableTransaction tx;
     tx.nLockTime = nextLockTime++; // so all transactions get different hashes
-    tx.vout.resize(1);
-    tx.vout[0].nValue = nValue;
-    wtxs.push_back(MakeUnique<CWalletTx>(&wallet, MakeTransactionRef(std::move(tx))));
+    tx.vout.resize(nInput + 1);
+    tx.vout[nInput].nValue = nValue;
+    CWalletTx* wtx = new CWalletTx(&wallet, MakeTransactionRef(std::move(tx)));
+
+    int nAge = 6 * 24;
+    COutput output(wtx, nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
+    groups.emplace_back(output.GetInputCoin(), 6, false, 0, 0);
 }
 
 // Simple benchmark for wallet coin selection. Note that it maybe be necessary
@@ -28,23 +33,15 @@ static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<st
 // (https://github.com/bitcoin/bitcoin/issues/7883#issuecomment-224807484)
 static void CoinSelection(benchmark::State& state)
 {
-    auto chain = interfaces::MakeChain();
-    const CWallet wallet(*chain, WalletLocation(), WalletDatabase::CreateDummy());
-    std::vector<std::unique_ptr<CWalletTx>> wtxs;
+    const CWallet wallet("dummy", WalletDatabase::CreateDummy());
     LOCK(wallet.cs_wallet);
 
     // Add coins.
-    for (int i = 0; i < 1000; ++i) {
-        addCoin(1000 * COIN, wallet, wtxs);
-    }
-    addCoin(3 * COIN, wallet, wtxs);
-
-    // Create groups
     std::vector<OutputGroup> groups;
-    for (const auto& wtx : wtxs) {
-        COutput output(wtx.get(), 0 /* iIn */, 6 * 24 /* nDepthIn */, true /* spendable */, true /* solvable */, true /* safe */);
-        groups.emplace_back(output.GetInputCoin(), 6, false, 0, 0);
+    for (int i = 0; i < 1000; ++i) {
+        addCoin(1000 * COIN, wallet, groups);
     }
+    addCoin(3 * COIN, wallet, groups);
 
     const CoinEligibilityFilter filter_standard(1, 6, 0);
     const CoinSelectionParams coin_selection_params(true, 34, 148, CFeeRate(0), 0);
@@ -60,8 +57,7 @@ static void CoinSelection(benchmark::State& state)
 }
 
 typedef std::set<CInputCoin> CoinSet;
-static auto testChain = interfaces::MakeChain();
-static const CWallet testWallet(*testChain, WalletLocation(), WalletDatabase::CreateDummy());
+static const CWallet testWallet("dummy", WalletDatabase::CreateDummy());
 std::vector<std::unique_ptr<CWalletTx>> wtxn;
 
 // Copied from src/wallet/test/coinselector_tests.cpp
@@ -70,7 +66,7 @@ static void add_coin(const CAmount& nValue, int nInput, std::vector<OutputGroup>
     CMutableTransaction tx;
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
-    std::unique_ptr<CWalletTx> wtx = MakeUnique<CWalletTx>(&testWallet, MakeTransactionRef(std::move(tx)));
+    std::unique_ptr<CWalletTx> wtx(new CWalletTx(&testWallet, MakeTransactionRef(std::move(tx))));
     set.emplace_back(COutput(wtx.get(), nInput, 0, true, true, true).GetInputCoin(), 0, true, 0, 0);
     wtxn.emplace_back(std::move(wtx));
 }

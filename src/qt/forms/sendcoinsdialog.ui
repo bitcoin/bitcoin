@@ -324,7 +324,7 @@
                   <enum>Qt::ActionsContextMenu</enum>
                  </property>
                  <property name="text">
-                  <string notr="true">0.00 BTC</string>
+                  <string notr="true">0.00 BTCV</string>
                  </property>
                  <property name="textInteractionFlags">
                   <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -404,7 +404,7 @@
                   <enum>Qt::ActionsContextMenu</enum>
                  </property>
                  <property name="text">
-                  <string notr="true">0.00 BTC</string>
+                  <string notr="true">0.00 BTCV</string>
                  </property>
                  <property name="textInteractionFlags">
                   <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -455,7 +455,7 @@
                   <enum>Qt::ActionsContextMenu</enum>
                  </property>
                  <property name="text">
-                  <string notr="true">0.00 BTC</string>
+                  <string notr="true">0.00 BTCV</string>
                  </property>
                  <property name="textInteractionFlags">
                   <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -484,7 +484,7 @@
                   <enum>Qt::ActionsContextMenu</enum>
                  </property>
                  <property name="text">
-                  <string notr="true">0.00 BTC</string>
+                  <string notr="true">0.00 BTCV</string>
                  </property>
                  <property name="textInteractionFlags">
                   <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -878,15 +878,28 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayoutFee8">
                  <item>
-                  <widget class="QLabel" name="labelCustomFeeWarning">
+                  <widget class="QCheckBox" name="checkBoxMinimumFee">
+                   <property name="toolTip">
+                    <string>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</string>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="labelMinFeeWarning">
                    <property name="enabled">
                     <bool>true</bool>
                    </property>
                    <property name="toolTip">
-                    <string>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</string>
+                    <string>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</string>
                    </property>
                    <property name="text">
-                    <string>A too low fee might result in a never confirming transaction (read the tooltip)</string>
+                    <string>(read the tooltip)</string>
+                   </property>
+                   <property name="margin">
+                    <number>5</number>
                    </property>
                   </widget>
                  </item>
@@ -979,6 +992,9 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
                    <property name="text">
                     <string/>
                    </property>
+                   <property name="margin">
+                    <number>2</number>
+                   </property>
                   </widget>
                  </item>
                  <item>
@@ -992,6 +1008,9 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
                   <widget class="QLabel" name="labelSmartFee2">
                    <property name="text">
                     <string>(Smart fee not initialized yet. This usually takes a few blocks...)</string>
+                   </property>
+                   <property name="margin">
+                    <number>2</number>
                    </property>
                   </widget>
                  </item>
@@ -1019,7 +1038,23 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
                      <property name="text">
                       <string>Confirmation time target:</string>
                      </property>
+                     <property name="margin">
+                      <number>2</number>
+                     </property>
                     </widget>
+                   </item>
+                   <item>
+                    <spacer name="verticalSpacer_3">
+                     <property name="orientation">
+                      <enum>Qt::Vertical</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>1</width>
+                       <height>1</height>
+                      </size>
+                     </property>
+                    </spacer>
                    </item>
                   </layout>
                  </item>
@@ -1214,7 +1249,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
           <cursorShape>IBeamCursor</cursorShape>
          </property>
          <property name="text">
-          <string notr="true">123.456 BTC</string>
+          <string notr="true">123.456 BTCV</string>
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>

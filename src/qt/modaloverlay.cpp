@@ -21,7 +21,7 @@ layerIsVisible(false),
 userClosed(false)
 {
     ui->setupUi(this);
-    connect(ui->closeButton, &QPushButton::clicked, this, &ModalOverlay::closeClicked);
+    connect(ui->closeButton, SIGNAL(clicked()), this, SLOT(closeClicked()));
     if (parent) {
         parent->installEventFilter(this);
         raise();

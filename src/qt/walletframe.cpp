@@ -68,11 +68,9 @@ bool WalletFrame::addWallet(WalletModel *walletModel)
     mapWalletViews[name] = walletView;
 
     // Ensure a walletView is able to show the main window
-    connect(walletView, &WalletView::showNormalIfMinimized, [this]{
-      gui->showNormalIfMinimized();
-    });
+    connect(walletView, SIGNAL(showNormalIfMinimized()), gui, SLOT(showNormalIfMinimized()));
 
-    connect(walletView, &WalletView::outOfSyncWarningClicked, this, &WalletFrame::outOfSyncWarningClicked);
+    connect(walletView, SIGNAL(outOfSyncWarningClicked()), this, SLOT(outOfSyncWarningClicked()));
 
     return true;
 }

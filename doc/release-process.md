@@ -6,12 +6,11 @@ Before every release candidate:
 * Update translations (ping wumpus on IRC) see [translation_process.md](https://github.com/bitcoin/bitcoin/blob/master/doc/translation_process.md#synchronising-translations).
 
 * Update manpages, see [gen-manpages.sh](https://github.com/bitcoin/bitcoin/blob/master/contrib/devtools/README.md#gen-manpagessh).
-* Update release candidate version in `configure.ac` (`CLIENT_VERSION_RC`)
 
 Before every minor and major release:
 
 * Update [bips.md](bips.md) to account for changes since the last release.
-* Update version in `configure.ac` (don't forget to set `CLIENT_VERSION_IS_RELEASE` to `true`) (don't forget to set `CLIENT_VERSION_RC` to `0`)
+* Update version in `configure.ac` (don't forget to set `CLIENT_VERSION_IS_RELEASE` to `true`)
 * Write release notes (see below)
 * Update `src/chainparams.cpp` nMinimumChainWork with information from the getblockchaininfo rpc.
 * Update `src/chainparams.cpp` defaultAssumeValid with information from the getblockhash rpc.
@@ -87,7 +86,7 @@ Ensure gitian-builder is up-to-date:
     pushd ./gitian-builder
     mkdir -p inputs
     wget -P inputs https://bitcoincore.org/cfields/osslsigncode-Backports-to-1.7.1.patch
-    wget -P inputs https://downloads.sourceforge.net/project/osslsigncode/osslsigncode/osslsigncode-1.7.1.tar.gz
+    wget -P inputs http://downloads.sourceforge.net/project/osslsigncode/osslsigncode/osslsigncode-1.7.1.tar.gz
     popd
 
 Create the macOS SDK tarball, see the [macOS readme](README_osx.md) for details, and copy it into the inputs directory.
@@ -296,8 +295,6 @@ bitcoin.org (see below for bitcoin.org update instructions).
   - Bitcoin Core announcements list https://bitcoincore.org/en/list/announcements/join/
 
   - bitcoincore.org blog post
-
-  - bitcoincore.org RPC documentation update
 
   - Update title of #bitcoin on Freenode IRC
 

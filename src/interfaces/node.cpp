@@ -9,7 +9,6 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <init.h>
-#include <interfaces/chain.h>
 #include <interfaces/handler.h>
 #include <interfaces/wallet.h>
 #include <net.h>
@@ -26,32 +25,30 @@
 #include <sync.h>
 #include <txmempool.h>
 #include <ui_interface.h>
-#include <util/system.h>
+#include <util.h>
 #include <validation.h>
 #include <warnings.h>
 
 #if defined(HAVE_CONFIG_H)
 #include <config/bitcoin-config.h>
 #endif
+#ifdef ENABLE_WALLET
+#include <wallet/fees.h>
+#include <wallet/wallet.h>
+#define CHECK_WALLET(x) x
+#else
+#define CHECK_WALLET(x) throw std::logic_error("Wallet function called in non-wallet build.")
+#endif
 
 #include <atomic>
+#include <boost/thread/thread.hpp>
 #include <univalue.h>
 
-class CWallet;
-fs::path GetWalletDir();
-std::vector<fs::path> ListWalletDir();
-std::vector<std::shared_ptr<CWallet>> GetWallets();
-
 namespace interfaces {
-
-class Wallet;
-
 namespace {
 
 class NodeImpl : public Node
 {
-public:
-    NodeImpl() { m_interfaces.chain = MakeChain(); }
     bool parseParameters(int argc, const char* const argv[], std::string& error) override
     {
         return gArgs.ParseParameters(argc, argv, error);
@@ -70,11 +67,11 @@ public:
         return AppInitBasicSetup() && AppInitParameterInteraction() && AppInitSanityChecks() &&
                AppInitLockDataDirectory();
     }
-    bool appInitMain() override { return AppInitMain(m_interfaces); }
+    bool appInitMain() override { return AppInitMain(); }
     void appShutdown() override
     {
         Interrupt();
-        Shutdown(m_interfaces);
+        Shutdown();
     }
     void startShutdown() override { StartShutdown(); }
     bool shutdownRequested() override { return ShutdownRequested(); }
@@ -222,65 +219,58 @@ public:
         LOCK(::cs_main);
         return ::pcoinsTip->GetCoin(output, coin);
     }
-    std::string getWalletDir() override
-    {
-        return GetWalletDir().string();
-    }
-    std::vector<std::string> listWalletDir() override
-    {
-        std::vector<std::string> paths;
-        for (auto& path : ListWalletDir()) {
-            paths.push_back(path.string());
-        }
-        return paths;
-    }
     std::vector<std::unique_ptr<Wallet>> getWallets() override
     {
+#ifdef ENABLE_WALLET
         std::vector<std::unique_ptr<Wallet>> wallets;
         for (const std::shared_ptr<CWallet>& wallet : GetWallets()) {
             wallets.emplace_back(MakeWallet(wallet));
         }
         return wallets;
+#else
+        throw std::logic_error("Node::getWallets() called in non-wallet build.");
+#endif
     }
     std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) override
     {
-        return MakeHandler(::uiInterface.InitMessage_connect(fn));
+        return MakeHandler(::uiInterface.InitMessage.connect(fn));
     }
     std::unique_ptr<Handler> handleMessageBox(MessageBoxFn fn) override
     {
-        return MakeHandler(::uiInterface.ThreadSafeMessageBox_connect(fn));
+        return MakeHandler(::uiInterface.ThreadSafeMessageBox.connect(fn));
     }
     std::unique_ptr<Handler> handleQuestion(QuestionFn fn) override
     {
-        return MakeHandler(::uiInterface.ThreadSafeQuestion_connect(fn));
+        return MakeHandler(::uiInterface.ThreadSafeQuestion.connect(fn));
     }
     std::unique_ptr<Handler> handleShowProgress(ShowProgressFn fn) override
     {
-        return MakeHandler(::uiInterface.ShowProgress_connect(fn));
+        return MakeHandler(::uiInterface.ShowProgress.connect(fn));
     }
     std::unique_ptr<Handler> handleLoadWallet(LoadWalletFn fn) override
     {
-        return MakeHandler(::uiInterface.LoadWallet_connect([fn](std::shared_ptr<CWallet> wallet) { fn(MakeWallet(wallet)); }));
+        CHECK_WALLET(
+            return MakeHandler(::uiInterface.LoadWallet.connect([fn](std::shared_ptr<CWallet> wallet) { fn(MakeWallet(wallet)); })));
     }
     std::unique_ptr<Handler> handleNotifyNumConnectionsChanged(NotifyNumConnectionsChangedFn fn) override
     {
-        return MakeHandler(::uiInterface.NotifyNumConnectionsChanged_connect(fn));
+        return MakeHandler(::uiInterface.NotifyNumConnectionsChanged.connect(fn));
     }
     std::unique_ptr<Handler> handleNotifyNetworkActiveChanged(NotifyNetworkActiveChangedFn fn) override
     {
-        return MakeHandler(::uiInterface.NotifyNetworkActiveChanged_connect(fn));
+        return MakeHandler(::uiInterface.NotifyNetworkActiveChanged.connect(fn));
     }
     std::unique_ptr<Handler> handleNotifyAlertChanged(NotifyAlertChangedFn fn) override
     {
-        return MakeHandler(::uiInterface.NotifyAlertChanged_connect(fn));
+        return MakeHandler(::uiInterface.NotifyAlertChanged.connect(fn));
     }
     std::unique_ptr<Handler> handleBannedListChanged(BannedListChangedFn fn) override
     {
-        return MakeHandler(::uiInterface.BannedListChanged_connect(fn));
+        return MakeHandler(::uiInterface.BannedListChanged.connect(fn));
     }
     std::unique_ptr<Handler> handleNotifyBlockTip(NotifyBlockTipFn fn) override
     {
-        return MakeHandler(::uiInterface.NotifyBlockTip_connect([fn](bool initial_download, const CBlockIndex* block) {
+        return MakeHandler(::uiInterface.NotifyBlockTip.connect([fn](bool initial_download, const CBlockIndex* block) {
             fn(initial_download, block->nHeight, block->GetBlockTime(),
                 GuessVerificationProgress(Params().TxData(), block));
         }));
@@ -288,12 +278,11 @@ public:
     std::unique_ptr<Handler> handleNotifyHeaderTip(NotifyHeaderTipFn fn) override
     {
         return MakeHandler(
-            ::uiInterface.NotifyHeaderTip_connect([fn](bool initial_download, const CBlockIndex* block) {
+            ::uiInterface.NotifyHeaderTip.connect([fn](bool initial_download, const CBlockIndex* block) {
                 fn(initial_download, block->nHeight, block->GetBlockTime(),
                     GuessVerificationProgress(Params().TxData(), block));
             }));
     }
-    InitInterfaces m_interfaces;
 };
 
 } // namespace

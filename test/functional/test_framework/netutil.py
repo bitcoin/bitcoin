@@ -107,7 +107,7 @@ def all_interfaces():
             max_possible *= 2
         else:
             break
-    namestr = names.tobytes()
+    namestr = names.tostring()
     return [(namestr[i:i+16].split(b'\0', 1)[0],
              socket.inet_ntoa(namestr[i+20:i+24]))
             for i in range(0, outbytes, struct_size)]

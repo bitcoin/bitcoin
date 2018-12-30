@@ -1,13 +1,15 @@
+#include <qt/callback.h>
+
 #include <QApplication>
 #include <QMessageBox>
-#include <QPushButton>
-#include <QString>
 #include <QTimer>
+#include <QString>
+#include <QPushButton>
 #include <QWidget>
 
 void ConfirmMessage(QString* text, int msec)
 {
-    QTimer::singleShot(msec, [text]() {
+    QTimer::singleShot(msec, makeCallback([text](Callback* callback) {
         for (QWidget* widget : QApplication::topLevelWidgets()) {
             if (widget->inherits("QMessageBox")) {
                 QMessageBox* messageBox = qobject_cast<QMessageBox*>(widget);
@@ -15,5 +17,6 @@ void ConfirmMessage(QString* text, int msec)
                 messageBox->defaultButton()->click();
             }
         }
-    });
+        delete callback;
+    }), SLOT(call()));
 }

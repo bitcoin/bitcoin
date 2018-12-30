@@ -1,3 +1,4 @@
+// Copyright (c) 2018 The BitcoinV Core developers
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
@@ -7,7 +8,7 @@
 
 #include <tinyformat.h>
 
-const std::string CURRENCY_UNIT = "BTC";
+const std::string CURRENCY_UNIT = "BTCV";
 
 CFeeRate::CFeeRate(const CAmount& nFeePaid, size_t nBytes_)
 {

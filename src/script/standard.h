@@ -135,10 +135,11 @@ const char* GetTxnOutputType(txnouttype t);
  * script hash, for P2PKH it will contain the key hash, etc.
  *
  * @param[in]   scriptPubKey   Script to parse
+ * @param[out]  typeRet        The script type
  * @param[out]  vSolutionsRet  Vector of parsed pubkeys and hashes
- * @return                     The script type. TX_NONSTANDARD represents a failed solve.
+ * @return                     True if script matches standard template
  */
-txnouttype Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned char>>& vSolutionsRet);
+bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::vector<unsigned char> >& vSolutionsRet);
 
 /**
  * Parse a standard scriptPubKey for the destination address. Assigns result to

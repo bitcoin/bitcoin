@@ -67,8 +67,6 @@ If a particular commit references another issue, please add the reference. For
 example: `refs #1234` or `fixes #4321`. Using the `fixes` or `closes` keywords
 will cause the corresponding issue to be closed when the pull request is merged.
 
-Commit messages should never contain any `@` mentions.
-
 Please refer to the [Git manual](https://git-scm.com/doc) for more information
 about Git.
 
@@ -136,10 +134,6 @@ before it will be merged. The basic squashing workflow is shown below.
     # On the next screen, edit/refine commit messages.
     # Save and quit.
     git push -f # (force push to GitHub)
-
-Please update the resulting commit message if needed, it should read as a
-coherent message. In most cases this means that you should not just list the
-interim commits.
 
 If you have problems with squashing (or other workflows with `git`), you can
 alternatively enable "Allow edits from maintainers" in the right GitHub

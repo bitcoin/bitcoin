@@ -17,12 +17,4 @@ if [[ ${OUTPUT} != "" ]]; then
     echo "${OUTPUT}"
     EXIT_CODE=1
 fi
-OUTPUT=$(git grep "check_output(" -- "*.py" | grep "universal_newlines=True" | grep -vE "encoding=.(ascii|utf8|utf-8).")
-if [[ ${OUTPUT} != "" ]]; then
-    echo "Python's check_output(...) seems to be used to get program outputs without explicitly"
-    echo "specifying encoding=\"utf8\":"
-    echo
-    echo "${OUTPUT}"
-    EXIT_CODE=1
-fi
 exit ${EXIT_CODE}

@@ -1,3 +1,4 @@
+// Copyright (c) 2018 The BitcoinV Core developers
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
@@ -18,7 +19,7 @@
 #include <netbase.h>
 #include <scheduler.h>
 #include <ui_interface.h>
-#include <util/strencodings.h>
+#include <utilstrencodings.h>
 
 #ifdef WIN32
 #include <string.h>
@@ -82,8 +83,8 @@ bool fDiscover = true;
 bool fListen = true;
 bool fRelayTxes = true;
 CCriticalSection cs_mapLocalHost;
-std::map<CNetAddr, LocalServiceInfo> mapLocalHost GUARDED_BY(cs_mapLocalHost);
-static bool vfLimited[NET_MAX] GUARDED_BY(cs_mapLocalHost) = {};
+std::map<CNetAddr, LocalServiceInfo> mapLocalHost;
+static bool vfLimited[NET_MAX] = {};
 std::string strSubVersion;
 
 limitedmap<uint256, int64_t> mapAlreadyAskedFor(MAX_INV_SZ);
@@ -134,12 +135,11 @@ static std::vector<CAddress> convertSeed6(const std::vector<SeedSpec6> &vSeedsIn
     const int64_t nOneWeek = 7*24*60*60;
     std::vector<CAddress> vSeedsOut;
     vSeedsOut.reserve(vSeedsIn.size());
-    FastRandomContext rng;
     for (const auto& seed_in : vSeedsIn) {
         struct in6_addr ip;
         memcpy(&ip, seed_in.addr, sizeof(ip));
         CAddress addr(CService(ip, seed_in.port), GetDesirableServiceFlags(NODE_NONE));
-        addr.nTime = GetTime() - rng.randrange(nOneWeek) - nOneWeek;
+        addr.nTime = GetTime() - GetRand(nOneWeek) - nOneWeek;
         vSeedsOut.push_back(addr);
     }
     return vSeedsOut;
@@ -190,16 +190,16 @@ void AdvertiseLocal(CNode *pnode)
         // If discovery is enabled, sometimes give our peer the address it
         // tells us that it sees us as in case it has a better idea of our
         // address than we do.
-        FastRandomContext rng;
         if (IsPeerAddrLocalGood(pnode) && (!addrLocal.IsRoutable() ||
-             rng.randbits((GetnScore(addrLocal) > LOCAL_MANUAL) ? 3 : 1) == 0))
+             GetRand((GetnScore(addrLocal) > LOCAL_MANUAL) ? 8:2) == 0))
         {
             addrLocal.SetIP(pnode->GetAddrLocal());
         }
         if (addrLocal.IsRoutable() || gArgs.GetBoolArg("-addrmantest", false))
         {
             LogPrint(BCLog::NET, "AdvertiseLocal: advertising address %s\n", addrLocal.ToString());
-            pnode->PushAddress(addrLocal, rng);
+            FastRandomContext insecure_rand;
+            pnode->PushAddress(addrLocal, insecure_rand);
         }
     }
 }
@@ -345,7 +345,7 @@ CNode* CConnman::FindNode(const CService& addr)
 bool CConnman::CheckIncomingNonce(uint64_t nonce)
 {
     LOCK(cs_vNodes);
-    for (const CNode* pnode : vNodes) {
+    for (CNode* pnode : vNodes) {
         if (!pnode->fSuccessfullyConnected && !pnode->fInbound && pnode->GetLocalNonce() == nonce)
             return false;
     }
@@ -716,10 +716,6 @@ void CNode::copyStats(CNodeStats &stats)
         X(nRecvBytes);
     }
     X(fWhitelisted);
-    {
-        LOCK(cs_feeFilter);
-        X(minFeeFilter);
-    }
 
     // It is common for nodes with good ping times to suddenly become lagged,
     // due to a new block arriving or other large transfer.
@@ -878,7 +874,16 @@ const uint256& CNetMessage::GetMessageHash() const
     return data_hash;
 }
 
-size_t CConnman::SocketSendData(CNode *pnode) const EXCLUSIVE_LOCKS_REQUIRED(pnode->cs_vSend)
+
+
+
+
+
+
+
+
+// requires LOCK(cs_vSend)
+size_t CConnman::SocketSendData(CNode *pnode) const
 {
     auto it = pnode->vSendMsg.begin();
     size_t nSentSize = 0;
@@ -1006,7 +1011,6 @@ bool CConnman::AttemptToEvictConnection()
                 continue;
             if (node->fDisconnect)
                 continue;
-            LOCK(node->cs_filter);
             NodeEvictionCandidate candidate = {node->GetId(), node->nTimeConnected, node->nMinPingUsecTime,
                                                node->nLastBlockTime, node->nLastTXTime,
                                                HasAllDesirableServiceFlags(node->nServices),
@@ -1149,322 +1153,310 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     }
 }
 
-void CConnman::DisconnectNodes()
+void CConnman::ThreadSocketHandler()
 {
+    unsigned int nPrevNodeCount = 0;
+    while (!interruptNet)
     {
-        LOCK(cs_vNodes);
-
-        if (!fNetworkActive) {
-            // Disconnect any connected nodes
-            for (CNode* pnode : vNodes) {
-                if (!pnode->fDisconnect) {
-                    LogPrint(BCLog::NET, "Network not active, dropping peer=%d\n", pnode->GetId());
-                    pnode->fDisconnect = true;
-                }
-            }
-        }
-
-        // Disconnect unused nodes
-        std::vector<CNode*> vNodesCopy = vNodes;
-        for (CNode* pnode : vNodesCopy)
+        //
+        // Disconnect nodes
+        //
         {
-            if (pnode->fDisconnect)
-            {
-                // remove from vNodes
-                vNodes.erase(remove(vNodes.begin(), vNodes.end(), pnode), vNodes.end());
+            LOCK(cs_vNodes);
 
-                // release outbound grant (if any)
-                pnode->grantOutbound.Release();
-
-                // close socket and cleanup
-                pnode->CloseSocketDisconnect();
-
-                // hold in disconnected pool until all refs are released
-                pnode->Release();
-                vNodesDisconnected.push_back(pnode);
-            }
-        }
-    }
-    {
-        // Delete disconnected nodes
-        std::list<CNode*> vNodesDisconnectedCopy = vNodesDisconnected;
-        for (CNode* pnode : vNodesDisconnectedCopy)
-        {
-            // wait until threads are done using it
-            if (pnode->GetRefCount() <= 0) {
-                bool fDelete = false;
-                {
-                    TRY_LOCK(pnode->cs_inventory, lockInv);
-                    if (lockInv) {
-                        TRY_LOCK(pnode->cs_vSend, lockSend);
-                        if (lockSend) {
-                            fDelete = true;
-                        }
+            if (!fNetworkActive) {
+                // Disconnect any connected nodes
+                for (CNode* pnode : vNodes) {
+                    if (!pnode->fDisconnect) {
+                        LogPrint(BCLog::NET, "Network not active, dropping peer=%d\n", pnode->GetId());
+                        pnode->fDisconnect = true;
                     }
                 }
-                if (fDelete) {
-                    vNodesDisconnected.remove(pnode);
-                    DeleteNode(pnode);
+            }
+
+            // Disconnect unused nodes
+            std::vector<CNode*> vNodesCopy = vNodes;
+            for (CNode* pnode : vNodesCopy)
+            {
+                if (pnode->fDisconnect)
+                {
+                    // remove from vNodes
+                    vNodes.erase(remove(vNodes.begin(), vNodes.end(), pnode), vNodes.end());
+
+                    // release outbound grant (if any)
+                    pnode->grantOutbound.Release();
+
+                    // close socket and cleanup
+                    pnode->CloseSocketDisconnect();
+
+                    // hold in disconnected pool until all refs are released
+                    pnode->Release();
+                    vNodesDisconnected.push_back(pnode);
                 }
             }
         }
-    }
-}
-
-void CConnman::NotifyNumConnectionsChanged()
-{
-    size_t vNodesSize;
-    {
-        LOCK(cs_vNodes);
-        vNodesSize = vNodes.size();
-    }
-    if(vNodesSize != nPrevNodeCount) {
-        nPrevNodeCount = vNodesSize;
-        if(clientInterface)
-            clientInterface->NotifyNumConnectionsChanged(vNodesSize);
-    }
-}
-
-void CConnman::InactivityCheck(CNode *pnode)
-{
-    int64_t nTime = GetSystemTimeInSeconds();
-    if (nTime - pnode->nTimeConnected > m_peer_connect_timeout)
-    {
-        if (pnode->nLastRecv == 0 || pnode->nLastSend == 0)
         {
-            LogPrint(BCLog::NET, "socket no message in first %i seconds, %d %d from %d\n", m_peer_connect_timeout, pnode->nLastRecv != 0, pnode->nLastSend != 0, pnode->GetId());
-            pnode->fDisconnect = true;
-        }
-        else if (nTime - pnode->nLastSend > TIMEOUT_INTERVAL)
-        {
-            LogPrintf("socket sending timeout: %is\n", nTime - pnode->nLastSend);
-            pnode->fDisconnect = true;
-        }
-        else if (nTime - pnode->nLastRecv > (pnode->nVersion > BIP0031_VERSION ? TIMEOUT_INTERVAL : 90*60))
-        {
-            LogPrintf("socket receive timeout: %is\n", nTime - pnode->nLastRecv);
-            pnode->fDisconnect = true;
-        }
-        else if (pnode->nPingNonceSent && pnode->nPingUsecStart + TIMEOUT_INTERVAL * 1000000 < GetTimeMicros())
-        {
-            LogPrintf("ping timeout: %fs\n", 0.000001 * (GetTimeMicros() - pnode->nPingUsecStart));
-            pnode->fDisconnect = true;
-        }
-        else if (!pnode->fSuccessfullyConnected)
-        {
-            LogPrint(BCLog::NET, "version handshake timeout from %d\n", pnode->GetId());
-            pnode->fDisconnect = true;
-        }
-    }
-}
-
-void CConnman::SocketHandler()
-{
-    //
-    // Find which sockets have data to receive
-    //
-    struct timeval timeout;
-    timeout.tv_sec  = 0;
-    timeout.tv_usec = 50000; // frequency to poll pnode->vSend
-
-    fd_set fdsetRecv;
-    fd_set fdsetSend;
-    fd_set fdsetError;
-    FD_ZERO(&fdsetRecv);
-    FD_ZERO(&fdsetSend);
-    FD_ZERO(&fdsetError);
-    SOCKET hSocketMax = 0;
-    bool have_fds = false;
-
-    for (const ListenSocket& hListenSocket : vhListenSocket) {
-        FD_SET(hListenSocket.socket, &fdsetRecv);
-        hSocketMax = std::max(hSocketMax, hListenSocket.socket);
-        have_fds = true;
-    }
-
-    {
-        LOCK(cs_vNodes);
-        for (CNode* pnode : vNodes)
-        {
-            // Implement the following logic:
-            // * If there is data to send, select() for sending data. As this only
-            //   happens when optimistic write failed, we choose to first drain the
-            //   write buffer in this case before receiving more. This avoids
-            //   needlessly queueing received data, if the remote peer is not themselves
-            //   receiving data. This means properly utilizing TCP flow control signalling.
-            // * Otherwise, if there is space left in the receive buffer, select() for
-            //   receiving data.
-            // * Hand off all complete messages to the processor, to be handled without
-            //   blocking here.
-
-            bool select_recv = !pnode->fPauseRecv;
-            bool select_send;
+            // Delete disconnected nodes
+            std::list<CNode*> vNodesDisconnectedCopy = vNodesDisconnected;
+            for (CNode* pnode : vNodesDisconnectedCopy)
             {
-                LOCK(pnode->cs_vSend);
-                select_send = !pnode->vSendMsg.empty();
-            }
-
-            LOCK(pnode->cs_hSocket);
-            if (pnode->hSocket == INVALID_SOCKET)
-                continue;
-
-            FD_SET(pnode->hSocket, &fdsetError);
-            hSocketMax = std::max(hSocketMax, pnode->hSocket);
-            have_fds = true;
-
-            if (select_send) {
-                FD_SET(pnode->hSocket, &fdsetSend);
-                continue;
-            }
-            if (select_recv) {
-                FD_SET(pnode->hSocket, &fdsetRecv);
+                // wait until threads are done using it
+                if (pnode->GetRefCount() <= 0) {
+                    bool fDelete = false;
+                    {
+                        TRY_LOCK(pnode->cs_inventory, lockInv);
+                        if (lockInv) {
+                            TRY_LOCK(pnode->cs_vSend, lockSend);
+                            if (lockSend) {
+                                fDelete = true;
+                            }
+                        }
+                    }
+                    if (fDelete) {
+                        vNodesDisconnected.remove(pnode);
+                        DeleteNode(pnode);
+                    }
+                }
             }
         }
-    }
-
-    int nSelect = select(have_fds ? hSocketMax + 1 : 0,
-                         &fdsetRecv, &fdsetSend, &fdsetError, &timeout);
-    if (interruptNet)
-        return;
-
-    if (nSelect == SOCKET_ERROR)
-    {
-        if (have_fds)
+        size_t vNodesSize;
         {
-            int nErr = WSAGetLastError();
-            LogPrintf("socket select error %s\n", NetworkErrorString(nErr));
-            for (unsigned int i = 0; i <= hSocketMax; i++)
-                FD_SET(i, &fdsetRecv);
+            LOCK(cs_vNodes);
+            vNodesSize = vNodes.size();
         }
+        if(vNodesSize != nPrevNodeCount) {
+            nPrevNodeCount = vNodesSize;
+            if(clientInterface)
+                clientInterface->NotifyNumConnectionsChanged(nPrevNodeCount);
+        }
+
+        //
+        // Find which sockets have data to receive
+        //
+        struct timeval timeout;
+        timeout.tv_sec  = 0;
+        timeout.tv_usec = 50000; // frequency to poll pnode->vSend
+
+        fd_set fdsetRecv;
+        fd_set fdsetSend;
+        fd_set fdsetError;
+        FD_ZERO(&fdsetRecv);
         FD_ZERO(&fdsetSend);
         FD_ZERO(&fdsetError);
-        if (!interruptNet.sleep_for(std::chrono::milliseconds(timeout.tv_usec/1000)))
-            return;
-    }
+        SOCKET hSocketMax = 0;
+        bool have_fds = false;
 
-    //
-    // Accept new connections
-    //
-    for (const ListenSocket& hListenSocket : vhListenSocket)
-    {
-        if (hListenSocket.socket != INVALID_SOCKET && FD_ISSET(hListenSocket.socket, &fdsetRecv))
-        {
-            AcceptConnection(hListenSocket);
+        for (const ListenSocket& hListenSocket : vhListenSocket) {
+            FD_SET(hListenSocket.socket, &fdsetRecv);
+            hSocketMax = std::max(hSocketMax, hListenSocket.socket);
+            have_fds = true;
         }
-    }
 
-    //
-    // Service each socket
-    //
-    std::vector<CNode*> vNodesCopy;
-    {
-        LOCK(cs_vNodes);
-        vNodesCopy = vNodes;
-        for (CNode* pnode : vNodesCopy)
-            pnode->AddRef();
-    }
-    for (CNode* pnode : vNodesCopy)
-    {
+        {
+            LOCK(cs_vNodes);
+            for (CNode* pnode : vNodes)
+            {
+                // Implement the following logic:
+                // * If there is data to send, select() for sending data. As this only
+                //   happens when optimistic write failed, we choose to first drain the
+                //   write buffer in this case before receiving more. This avoids
+                //   needlessly queueing received data, if the remote peer is not themselves
+                //   receiving data. This means properly utilizing TCP flow control signalling.
+                // * Otherwise, if there is space left in the receive buffer, select() for
+                //   receiving data.
+                // * Hand off all complete messages to the processor, to be handled without
+                //   blocking here.
+
+                bool select_recv = !pnode->fPauseRecv;
+                bool select_send;
+                {
+                    LOCK(pnode->cs_vSend);
+                    select_send = !pnode->vSendMsg.empty();
+                }
+
+                LOCK(pnode->cs_hSocket);
+                if (pnode->hSocket == INVALID_SOCKET)
+                    continue;
+
+                FD_SET(pnode->hSocket, &fdsetError);
+                hSocketMax = std::max(hSocketMax, pnode->hSocket);
+                have_fds = true;
+
+                if (select_send) {
+                    FD_SET(pnode->hSocket, &fdsetSend);
+                    continue;
+                }
+                if (select_recv) {
+                    FD_SET(pnode->hSocket, &fdsetRecv);
+                }
+            }
+        }
+
+        int nSelect = select(have_fds ? hSocketMax + 1 : 0,
+                             &fdsetRecv, &fdsetSend, &fdsetError, &timeout);
         if (interruptNet)
             return;
 
-        //
-        // Receive
-        //
-        bool recvSet = false;
-        bool sendSet = false;
-        bool errorSet = false;
+        if (nSelect == SOCKET_ERROR)
         {
-            LOCK(pnode->cs_hSocket);
-            if (pnode->hSocket == INVALID_SOCKET)
-                continue;
-            recvSet = FD_ISSET(pnode->hSocket, &fdsetRecv);
-            sendSet = FD_ISSET(pnode->hSocket, &fdsetSend);
-            errorSet = FD_ISSET(pnode->hSocket, &fdsetError);
+            if (have_fds)
+            {
+                int nErr = WSAGetLastError();
+                LogPrintf("socket select error %s\n", NetworkErrorString(nErr));
+                for (unsigned int i = 0; i <= hSocketMax; i++)
+                    FD_SET(i, &fdsetRecv);
+            }
+            FD_ZERO(&fdsetSend);
+            FD_ZERO(&fdsetError);
+            if (!interruptNet.sleep_for(std::chrono::milliseconds(timeout.tv_usec/1000)))
+                return;
         }
-        if (recvSet || errorSet)
+
+        //
+        // Accept new connections
+        //
+        for (const ListenSocket& hListenSocket : vhListenSocket)
         {
-            // typical socket buffer is 8K-64K
-            char pchBuf[0x10000];
-            int nBytes = 0;
+            if (hListenSocket.socket != INVALID_SOCKET && FD_ISSET(hListenSocket.socket, &fdsetRecv))
+            {
+                AcceptConnection(hListenSocket);
+            }
+        }
+
+        //
+        // Service each socket
+        //
+        std::vector<CNode*> vNodesCopy;
+        {
+            LOCK(cs_vNodes);
+            vNodesCopy = vNodes;
+            for (CNode* pnode : vNodesCopy)
+                pnode->AddRef();
+        }
+        for (CNode* pnode : vNodesCopy)
+        {
+            if (interruptNet)
+                return;
+
+            //
+            // Receive
+            //
+            bool recvSet = false;
+            bool sendSet = false;
+            bool errorSet = false;
             {
                 LOCK(pnode->cs_hSocket);
                 if (pnode->hSocket == INVALID_SOCKET)
                     continue;
-                nBytes = recv(pnode->hSocket, pchBuf, sizeof(pchBuf), MSG_DONTWAIT);
+                recvSet = FD_ISSET(pnode->hSocket, &fdsetRecv);
+                sendSet = FD_ISSET(pnode->hSocket, &fdsetSend);
+                errorSet = FD_ISSET(pnode->hSocket, &fdsetError);
             }
-            if (nBytes > 0)
+            if (recvSet || errorSet)
             {
-                bool notify = false;
-                if (!pnode->ReceiveMsgBytes(pchBuf, nBytes, notify))
-                    pnode->CloseSocketDisconnect();
-                RecordBytesRecv(nBytes);
-                if (notify) {
-                    size_t nSizeAdded = 0;
-                    auto it(pnode->vRecvMsg.begin());
-                    for (; it != pnode->vRecvMsg.end(); ++it) {
-                        if (!it->complete())
-                            break;
-                        nSizeAdded += it->vRecv.size() + CMessageHeader::HEADER_SIZE;
-                    }
-                    {
-                        LOCK(pnode->cs_vProcessMsg);
-                        pnode->vProcessMsg.splice(pnode->vProcessMsg.end(), pnode->vRecvMsg, pnode->vRecvMsg.begin(), it);
-                        pnode->nProcessQueueSize += nSizeAdded;
-                        pnode->fPauseRecv = pnode->nProcessQueueSize > nReceiveFloodSize;
-                    }
-                    WakeMessageHandler();
-                }
-            }
-            else if (nBytes == 0)
-            {
-                // socket closed gracefully
-                if (!pnode->fDisconnect) {
-                    LogPrint(BCLog::NET, "socket closed\n");
-                }
-                pnode->CloseSocketDisconnect();
-            }
-            else if (nBytes < 0)
-            {
-                // error
-                int nErr = WSAGetLastError();
-                if (nErr != WSAEWOULDBLOCK && nErr != WSAEMSGSIZE && nErr != WSAEINTR && nErr != WSAEINPROGRESS)
+                // typical socket buffer is 8K-64K
+                char pchBuf[0x10000];
+                int nBytes = 0;
                 {
-                    if (!pnode->fDisconnect)
-                        LogPrintf("socket recv error %s\n", NetworkErrorString(nErr));
+                    LOCK(pnode->cs_hSocket);
+                    if (pnode->hSocket == INVALID_SOCKET)
+                        continue;
+                    nBytes = recv(pnode->hSocket, pchBuf, sizeof(pchBuf), MSG_DONTWAIT);
+                }
+                if (nBytes > 0)
+                {
+                    bool notify = false;
+                    if (!pnode->ReceiveMsgBytes(pchBuf, nBytes, notify))
+                        pnode->CloseSocketDisconnect();
+                    RecordBytesRecv(nBytes);
+                    if (notify) {
+                        size_t nSizeAdded = 0;
+                        auto it(pnode->vRecvMsg.begin());
+                        for (; it != pnode->vRecvMsg.end(); ++it) {
+                            if (!it->complete())
+                                break;
+                            nSizeAdded += it->vRecv.size() + CMessageHeader::HEADER_SIZE;
+                        }
+                        {
+                            LOCK(pnode->cs_vProcessMsg);
+                            pnode->vProcessMsg.splice(pnode->vProcessMsg.end(), pnode->vRecvMsg, pnode->vRecvMsg.begin(), it);
+                            pnode->nProcessQueueSize += nSizeAdded;
+                            pnode->fPauseRecv = pnode->nProcessQueueSize > nReceiveFloodSize;
+                        }
+                        WakeMessageHandler();
+                    }
+                }
+                else if (nBytes == 0)
+                {
+                    // socket closed gracefully
+                    if (!pnode->fDisconnect) {
+                        LogPrint(BCLog::NET, "socket closed\n");
+                    }
                     pnode->CloseSocketDisconnect();
+                }
+                else if (nBytes < 0)
+                {
+                    // error
+                    int nErr = WSAGetLastError();
+                    if (nErr != WSAEWOULDBLOCK && nErr != WSAEMSGSIZE && nErr != WSAEINTR && nErr != WSAEINPROGRESS)
+                    {
+                        if (!pnode->fDisconnect)
+                            LogPrintf("socket recv error %s\n", NetworkErrorString(nErr));
+                        pnode->CloseSocketDisconnect();
+                    }
+                }
+            }
+
+            //
+            // Send
+            //
+            if (sendSet)
+            {
+                LOCK(pnode->cs_vSend);
+                size_t nBytes = SocketSendData(pnode);
+                if (nBytes) {
+                    RecordBytesSent(nBytes);
+                }
+            }
+
+            //
+            // Inactivity checking
+            //
+            int64_t nTime = GetSystemTimeInSeconds();
+            if (nTime - pnode->nTimeConnected > 60)
+            {
+                if (pnode->nLastRecv == 0 || pnode->nLastSend == 0)
+                {
+                    LogPrint(BCLog::NET, "socket no message in first 60 seconds, %d %d from %d\n", pnode->nLastRecv != 0, pnode->nLastSend != 0, pnode->GetId());
+                    pnode->fDisconnect = true;
+                }
+                else if (nTime - pnode->nLastSend > TIMEOUT_INTERVAL)
+                {
+                    LogPrintf("socket sending timeout: %is\n", nTime - pnode->nLastSend);
+                    pnode->fDisconnect = true;
+                }
+                else if (nTime - pnode->nLastRecv > (pnode->nVersion > BIP0031_VERSION ? TIMEOUT_INTERVAL : 90*60))
+                {
+                    LogPrintf("socket receive timeout: %is\n", nTime - pnode->nLastRecv);
+                    pnode->fDisconnect = true;
+                }
+                else if (pnode->nPingNonceSent && pnode->nPingUsecStart + TIMEOUT_INTERVAL * 1000000 < GetTimeMicros())
+                {
+                    LogPrintf("ping timeout: %fs\n", 0.000001 * (GetTimeMicros() - pnode->nPingUsecStart));
+                    pnode->fDisconnect = true;
+                }
+                else if (!pnode->fSuccessfullyConnected)
+                {
+                    LogPrint(BCLog::NET, "version handshake timeout from %d\n", pnode->GetId());
+                    pnode->fDisconnect = true;
                 }
             }
         }
-
-        //
-        // Send
-        //
-        if (sendSet)
         {
-            LOCK(pnode->cs_vSend);
-            size_t nBytes = SocketSendData(pnode);
-            if (nBytes) {
-                RecordBytesSent(nBytes);
-            }
+            LOCK(cs_vNodes);
+            for (CNode* pnode : vNodesCopy)
+                pnode->Release();
         }
-
-        InactivityCheck(pnode);
-    }
-    {
-        LOCK(cs_vNodes);
-        for (CNode* pnode : vNodesCopy)
-            pnode->Release();
-    }
-}
-
-void CConnman::ThreadSocketHandler()
-{
-    while (!interruptNet)
-    {
-        DisconnectNodes();
-        NotifyNumConnectionsChanged();
-        SocketHandler();
     }
 }
 
@@ -1622,7 +1614,7 @@ void CConnman::ThreadDNSAddressSeed()
 
         LOCK(cs_vNodes);
         int nRelevant = 0;
-        for (const CNode* pnode : vNodes) {
+        for (auto pnode : vNodes) {
             nRelevant += pnode->fSuccessfullyConnected && !pnode->fFeeler && !pnode->fOneShot && !pnode->m_manual_connection && !pnode->fInbound;
         }
         if (nRelevant >= 2) {
@@ -1646,7 +1638,8 @@ void CConnman::ThreadDNSAddressSeed()
             std::vector<CNetAddr> vIPs;
             std::vector<CAddress> vAdd;
             ServiceFlags requiredServiceBits = GetDesirableServiceFlags(NODE_NONE);
-            std::string host = strprintf("x%x.%s", requiredServiceBits, seed);
+            //std::string host = strprintf("x%x.%s", requiredServiceBits, seed);
+            std::string host = strprintf("%s", seed);
             CNetAddr resolveSource;
             if (!resolveSource.SetInternal(host)) {
                 continue;
@@ -1673,17 +1666,6 @@ void CConnman::ThreadDNSAddressSeed()
 
     LogPrintf("%d addresses found from DNS seeds\n", found);
 }
-
-
-
-
-
-
-
-
-
-
-
 
 void CConnman::DumpAddresses()
 {
@@ -1741,7 +1723,7 @@ int CConnman::GetExtraOutboundCount()
     int nOutbound = 0;
     {
         LOCK(cs_vNodes);
-        for (const CNode* pnode : vNodes) {
+        for (CNode* pnode : vNodes) {
             if (!pnode->fInbound && !pnode->m_manual_connection && !pnode->fFeeler && !pnode->fDisconnect && !pnode->fOneShot && pnode->fSuccessfullyConnected) {
                 ++nOutbound;
             }
@@ -1805,13 +1787,13 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         // Choose an address to connect to based on most recently seen
         //
         CAddress addrConnect;
-
+ 
         // Only connect out to one peer per network group (/16 for IPv4).
         int nOutbound = 0;
         std::set<std::vector<unsigned char> > setConnected;
         {
             LOCK(cs_vNodes);
-            for (const CNode* pnode : vNodes) {
+            for (CNode* pnode : vNodes) {
                 if (!pnode->fInbound && !pnode->m_manual_connection) {
                     // Netgroups for inbound and addnode peers are not excluded because our goal here
                     // is to not use multiple of our limited outbound slots on a single netgroup
@@ -2073,7 +2055,7 @@ void CConnman::ThreadMessageHandler()
                 pnode->Release();
         }
 
-        WAIT_LOCK(mutexMsgProc, lock);
+        std::unique_lock<std::mutex> lock(mutexMsgProc);
         if (!fMoreWork) {
             condMsgProc.wait_until(lock, std::chrono::steady_clock::now() + std::chrono::milliseconds(100), [this] { return fMsgProcWake; });
         }
@@ -2175,7 +2157,7 @@ void Discover()
             }
         }
     }
-#elif (HAVE_DECL_GETIFADDRS && HAVE_DECL_FREEIFADDRS)
+#else
     // Get local host ip
     struct ifaddrs* myaddrs;
     if (getifaddrs(&myaddrs) == 0)
@@ -2225,7 +2207,6 @@ CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In) : nSeed0(nSeed0In), nSe
     setBannedIsDirty = false;
     fAddressesInitialized = false;
     nLastNodeId = 0;
-    nPrevNodeCount = 0;
     nSendBufferMaxSize = 0;
     nReceiveFloodSize = 0;
     flagInterruptMsgProc = false;
@@ -2356,7 +2337,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     flagInterruptMsgProc = false;
 
     {
-        LOCK(mutexMsgProc);
+        std::unique_lock<std::mutex> lock(mutexMsgProc);
         fMsgProcWake = false;
     }
 

@@ -93,6 +93,9 @@ class P2PLeakTest(BitcoinTestFramework):
         self.num_nodes = 1
         self.extra_args = [['-banscore=' + str(banscore)]]
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def run_test(self):
         no_version_bannode = self.nodes[0].add_p2p_connection(CNodeNoVersionBan(), send_version=False, wait_for_verack=False)
         no_version_idlenode = self.nodes[0].add_p2p_connection(CNodeNoVersionIdle(), send_version=False, wait_for_verack=False)
@@ -103,7 +106,7 @@ class P2PLeakTest(BitcoinTestFramework):
         wait_until(lambda: no_verack_idlenode.version_received, timeout=10, lock=mininode_lock)
 
         # Mine a block and make sure that it's not sent to the connected nodes
-        self.nodes[0].generatetoaddress(1, self.nodes[0].get_deterministic_priv_key().address)
+        self.nodes[0].generate(1)
 
         #Give the node enough time to possibly leak out a message
         time.sleep(5)

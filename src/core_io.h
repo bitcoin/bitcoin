@@ -6,13 +6,11 @@
 #define BITCOIN_CORE_IO_H
 
 #include <amount.h>
-#include <attributes.h>
 
 #include <string>
 #include <vector>
 
 class CBlock;
-class CBlockHeader;
 class CScript;
 class CTransaction;
 struct CMutableTransaction;
@@ -23,21 +21,11 @@ class UniValue;
 // core_read.cpp
 CScript ParseScript(const std::string& s);
 std::string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDecode = false);
-NODISCARD bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no_witness = false, bool try_witness = true);
-NODISCARD bool DecodeHexBlk(CBlock&, const std::string& strHexBlk);
-bool DecodeHexBlockHeader(CBlockHeader&, const std::string& hex_header);
-
-/**
- * Parse a hex string into 256 bits
- * @param[in] strHex a hex-formatted, 64-character string
- * @param[out] result the result of the parasing
- * @returns true if successful, false if not
- *
- * @see ParseHashV for an RPC-oriented version of this
- */
-bool ParseHashStr(const std::string& strHex, uint256& result);
+bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no_witness = false, bool try_witness = true);
+bool DecodeHexBlk(CBlock&, const std::string& strHexBlk);
+uint256 ParseHashStr(const std::string&, const std::string& strName);
 std::vector<unsigned char> ParseHexUV(const UniValue& v, const std::string& strName);
-NODISCARD bool DecodePSBT(PartiallySignedTransaction& psbt, const std::string& base64_tx, std::string& error);
+bool DecodePSBT(PartiallySignedTransaction& psbt, const std::string& base64_tx, std::string& error);
 int ParseSighashString(const UniValue& sighash);
 
 // core_write.cpp

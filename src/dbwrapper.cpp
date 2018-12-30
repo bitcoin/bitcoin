@@ -78,7 +78,7 @@ static void SetMaxOpenFiles(leveldb::Options *options) {
     // do not interfere with select() loops. On 64-bit Unix hosts this value is
     // also OK, because up to that amount LevelDB will use an mmap
     // implementation that does not use extra file descriptors (the fds are
-    // closed after being mmap'ed).
+    // closed after being mmaped).
     //
     // Increasing the value beyond the default is dangerous because LevelDB will
     // fall back to a non-mmap implementation when the file count is too large.

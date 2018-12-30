@@ -17,7 +17,6 @@ import subprocess
 import tempfile
 import time
 import urllib.parse
-import collections
 
 from .authproxy import JSONRPCException
 from .util import (
@@ -68,7 +67,7 @@ class TestNode():
         self.rpc_timeout = timewait
         self.binary = bitcoind
         self.coverage_dir = coverage_dir
-        if extra_conf is not None:
+        if extra_conf != None:
             append_config(datadir, extra_conf)
         # Most callers will just need to add extra args to the standard list below.
         # For those callers that need more flexibility, they can just set the args property directly.
@@ -100,39 +99,19 @@ class TestNode():
 
     def get_deterministic_priv_key(self):
         """Return a deterministic priv key in base58, that only depends on the node's index"""
-        AddressKeyPair = collections.namedtuple('AddressKeyPair', ['address', 'key'])
         PRIV_KEYS = [
-            # address , privkey
-            AddressKeyPair('mjTkW3DjgyZck4KbiRusZsqTgaYTxdSz6z', 'cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW'),
-            AddressKeyPair('msX6jQXvxiNhx3Q62PKeLPrhrqZQdSimTg', 'cUxsWyKyZ9MAQTaAhUQWJmBbSvHMwSmuv59KgxQV7oZQU3PXN3KE'),
-            AddressKeyPair('mnonCMyH9TmAsSj3M59DsbH8H63U3RKoFP', 'cTrh7dkEAeJd6b3MRX9bZK8eRmNqVCMH3LSUkE3dSFDyzjU38QxK'),
-            AddressKeyPair('mqJupas8Dt2uestQDvV2NH3RU8uZh2dqQR', 'cVuKKa7gbehEQvVq717hYcbE9Dqmq7KEBKqWgWrYBa2CKKrhtRim'),
-            AddressKeyPair('msYac7Rvd5ywm6pEmkjyxhbCDKqWsVeYws', 'cQDCBuKcjanpXDpCqacNSjYfxeQj8G6CAtH1Dsk3cXyqLNC4RPuh'),
-            AddressKeyPair('n2rnuUnwLgXqf9kk2kjvVm8R5BZK1yxQBi', 'cQakmfPSLSqKHyMFGwAqKHgWUiofJCagVGhiB4KCainaeCSxeyYq'),
-            AddressKeyPair('myzuPxRwsf3vvGzEuzPfK9Nf2RfwauwYe6', 'cQMpDLJwA8DBe9NcQbdoSb1BhmFxVjWD5gRyrLZCtpuF9Zi3a9RK'),
-            AddressKeyPair('mumwTaMtbxEPUswmLBBN3vM9oGRtGBrys8', 'cSXmRKXVcoouhNNVpcNKFfxsTsToY5pvB9DVsFksF1ENunTzRKsy'),
-            AddressKeyPair('mpV7aGShMkJCZgbW7F6iZgrvuPHjZjH9qg', 'cSoXt6tm3pqy43UMabY6eUTmR3eSUYFtB2iNQDGgb3VUnRsQys2k'),
+            # adress , privkey
+            ('mjTkW3DjgyZck4KbiRusZsqTgaYTxdSz6z', 'cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW'),
+            ('msX6jQXvxiNhx3Q62PKeLPrhrqZQdSimTg', 'cUxsWyKyZ9MAQTaAhUQWJmBbSvHMwSmuv59KgxQV7oZQU3PXN3KE'),
+            ('mnonCMyH9TmAsSj3M59DsbH8H63U3RKoFP', 'cTrh7dkEAeJd6b3MRX9bZK8eRmNqVCMH3LSUkE3dSFDyzjU38QxK'),
+            ('mqJupas8Dt2uestQDvV2NH3RU8uZh2dqQR', 'cVuKKa7gbehEQvVq717hYcbE9Dqmq7KEBKqWgWrYBa2CKKrhtRim'),
+            ('msYac7Rvd5ywm6pEmkjyxhbCDKqWsVeYws', 'cQDCBuKcjanpXDpCqacNSjYfxeQj8G6CAtH1Dsk3cXyqLNC4RPuh'),
+            ('n2rnuUnwLgXqf9kk2kjvVm8R5BZK1yxQBi', 'cQakmfPSLSqKHyMFGwAqKHgWUiofJCagVGhiB4KCainaeCSxeyYq'),
+            ('myzuPxRwsf3vvGzEuzPfK9Nf2RfwauwYe6', 'cQMpDLJwA8DBe9NcQbdoSb1BhmFxVjWD5gRyrLZCtpuF9Zi3a9RK'),
+            ('mumwTaMtbxEPUswmLBBN3vM9oGRtGBrys8', 'cSXmRKXVcoouhNNVpcNKFfxsTsToY5pvB9DVsFksF1ENunTzRKsy'),
+            ('mpV7aGShMkJCZgbW7F6iZgrvuPHjZjH9qg', 'cSoXt6tm3pqy43UMabY6eUTmR3eSUYFtB2iNQDGgb3VUnRsQys2k'),
         ]
         return PRIV_KEYS[self.index]
-
-    def get_mem_rss_kilobytes(self):
-        """Get the memory usage (RSS) per `ps`.
-
-        Returns None if `ps` is unavailable.
-        """
-        assert self.running
-
-        try:
-            return int(subprocess.check_output(
-                ["ps", "h", "-o", "rss", "{}".format(self.process.pid)],
-                stderr=subprocess.DEVNULL).split()[-1])
-
-        # Avoid failing on platforms where ps isn't installed.
-        #
-        # We could later use something like `psutils` to work across platforms.
-        except (FileNotFoundError, subprocess.SubprocessError):
-            self.log.exception("Unable to get memory usage")
-            return None
 
     def _node_msg(self, msg: str) -> str:
         """Return a modified msg that identifies this node by its index as a debugging aid."""
@@ -206,19 +185,13 @@ class TestNode():
                 if e.errno != errno.ECONNREFUSED:  # Port not yet open?
                     raise  # unknown IO error
             except JSONRPCException as e:  # Initialization phase
-                # -28 RPC in warmup
-                # -342 Service unavailable, RPC server started but is shutting down due to error
-                if e.error['code'] != -28 and e.error['code'] != -342:
+                if e.error['code'] != -28:  # RPC in warmup?
                     raise  # unknown JSON RPC exception
             except ValueError as e:  # cookie file not found and no rpcuser or rpcassword. bitcoind still starting
                 if "No RPC credentials" not in str(e):
                     raise
             time.sleep(1.0 / poll_per_s)
         self._raise_assertion_error("Unable to connect to bitcoind")
-
-    def generate(self, nblocks, maxtries=1000000):
-        self.log.debug("TestNode.generate() dispatches `generate` call to `generatetoaddress`")
-        return self.generatetoaddress(nblocks=nblocks, address=self.get_deterministic_priv_key().address, maxtries=maxtries)
 
     def get_wallet_rpc(self, wallet_name):
         if self.use_cli:
@@ -228,13 +201,13 @@ class TestNode():
             wallet_path = "wallet/{}".format(urllib.parse.quote(wallet_name))
             return self.rpc / wallet_path
 
-    def stop_node(self, expected_stderr='', wait=0):
+    def stop_node(self, expected_stderr=''):
         """Stop the node."""
         if not self.running:
             return
         self.log.debug("Stopping node")
         try:
-            self.stop(wait=wait)
+            self.stop()
         except http.client.CannotSendRequest:
             self.log.exception("Unable to stop node.")
 
@@ -290,33 +263,6 @@ class TestNode():
                 if re.search(re.escape(expected_msg), log, flags=re.MULTILINE) is None:
                     self._raise_assertion_error('Expected message "{}" does not partially match log:\n\n{}\n\n'.format(expected_msg, print_log))
 
-    @contextlib.contextmanager
-    def assert_memory_usage_stable(self, *, increase_allowed=0.03):
-        """Context manager that allows the user to assert that a node's memory usage (RSS)
-        hasn't increased beyond some threshold percentage.
-
-        Args:
-            increase_allowed (float): the fractional increase in memory allowed until failure;
-                e.g. `0.12` for up to 12% increase allowed.
-        """
-        before_memory_usage = self.get_mem_rss_kilobytes()
-
-        yield
-
-        after_memory_usage = self.get_mem_rss_kilobytes()
-
-        if not (before_memory_usage and after_memory_usage):
-            self.log.warning("Unable to detect memory usage (RSS) - skipping memory check.")
-            return
-
-        perc_increase_memory_usage = (after_memory_usage / before_memory_usage) - 1
-
-        if perc_increase_memory_usage > increase_allowed:
-            self._raise_assertion_error(
-                "Memory usage increased over threshold of {:.3f}% from {} to {} ({:.3f}%)".format(
-                    increase_allowed * 100, before_memory_usage, after_memory_usage,
-                    perc_increase_memory_usage * 100))
-
     def assert_start_raises_init_error(self, extra_args=None, expected_msg=None, match=ErrorMatch.FULL_TEXT, *args, **kwargs):
         """Attempt to start the node and expect it to raise an error.
 
@@ -358,6 +304,14 @@ class TestNode():
                 else:
                     assert_msg = "bitcoind should have exited with expected error " + expected_msg
                 self._raise_assertion_error(assert_msg)
+
+    def node_encrypt_wallet(self, passphrase):
+        """"Encrypts the wallet.
+
+        This causes bitcoind to shutdown, so this method takes
+        care of cleaning up resources."""
+        self.encryptwallet(passphrase)
+        self.wait_until_stopped()
 
     def add_p2p_connection(self, p2p_conn, *, wait_for_verack=True, **kwargs):
         """Add a p2p connection to the node.
