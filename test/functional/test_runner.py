@@ -541,6 +541,8 @@ class TestResult():
             return 2, self.name.lower()
         elif self.status == "Skipped":
             return 1, self.name.lower()
+        else:
+            return 3, self.name.lower()
 
     def __repr__(self):
         if self.status == "Passed":
@@ -552,6 +554,9 @@ class TestResult():
         elif self.status == "Skipped":
             color = GREY
             glyph = CIRCLE
+        else:
+            color = GREY
+            glyph = CROSS
 
         return color[1] + "%s | %s%s | %s s\n" % (self.name.ljust(self.padding), glyph, self.status.ljust(7), self.time) + color[0]
 
