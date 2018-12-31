@@ -54,6 +54,8 @@ DIST_SHARE = \
 BIN_CHECKS=$(top_srcdir)/contrib/devtools/symbol-check.py \
            $(top_srcdir)/contrib/devtools/security-check.py
 
+BITCOIN_SVG = src/qt/res/src/bitcoin128.svg
+
 WINDOWS_PACKAGING = $(top_srcdir)/share/pixmaps/bitcoin.ico \
   $(top_srcdir)/share/pixmaps/nsis-header.bmp \
   $(top_srcdir)/share/pixmaps/nsis-wizard.bmp \
@@ -72,6 +74,11 @@ COVERAGE_INFO = $(COV_TOOL_WRAPPER) baseline.info \
 
 dist-hook:
 	-$(GIT) archive --format=tar HEAD -- src/clientversion.cpp | $(AMTAR) -C $(top_distdir) -xf -
+
+if WITH_XDG
+icondir = $(datadir)/icons/hicolor/scalable/apps
+icon_DATA = $(BITCOIN_SVG)
+endif
 
 $(BITCOIN_WIN_INSTALLER): all-recursive
 	$(MKDIR_P) $(top_builddir)/release
