@@ -380,13 +380,13 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
     for i in range(test_count):
         test_result, testdir, stdout, stderr = job_queue.get_next()
         test_results.append(test_result)
-        done_str = "{}/{} - {}{}{}".format(i + 1, test_count, BOLD[1], test_result.name, BOLD[0])
+        done_str = "{}/{} - {}{}{} {}".format(i + 1, test_count, BOLD[1], test_result.name, BOLD[0], test_result.status)
         if test_result.status == "Passed":
-            logging.debug("%s passed, Duration: %s s" % (done_str, test_result.time))
+            logging.debug("%s, Duration: %s s" % (done_str, test_result.time))
         elif test_result.status == "Skipped":
-            logging.debug("%s skipped" % (done_str))
+            logging.debug(done_str)
         else:
-            print("%s failed, Duration: %s s\n" % (done_str, test_result.time))
+            print("%s, Duration: %s s\n" % (done_str, test_result.time))
             print(BOLD[1] + 'stdout:\n' + BOLD[0] + stdout + '\n')
             print(BOLD[1] + 'stderr:\n' + BOLD[0] + stderr + '\n')
             if combined_logs_len and os.path.isdir(testdir):
@@ -499,10 +499,12 @@ class TestHandler:
                     log_out.seek(0), log_err.seek(0)
                     [stdout, stderr] = [log_file.read().decode('utf-8') for log_file in (log_out, log_err)]
                     log_out.close(), log_err.close()
-                    if proc.returncode == TEST_EXIT_PASSED and stderr == "":
-                        status = "Passed"
-                    elif proc.returncode == TEST_EXIT_SKIPPED:
+                    if proc.returncode == TEST_EXIT_SKIPPED:
                         status = "Skipped"
+                    elif stderr != "":
+                        status = "Failed with: \"{}\"".format(stderr)
+                    elif proc.returncode == TEST_EXIT_PASSED:
+                        status = "Passed"
                     else:
                         status = "Failed"
                     self.num_running -= 1
