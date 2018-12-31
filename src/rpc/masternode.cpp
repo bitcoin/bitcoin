@@ -142,12 +142,13 @@ void masternode_list_help()
             "  info           - Print info in format 'status payee IP'\n"
             "                   (can be additionally filtered, partial match)\n"
             "  json           - Print info in JSON format (can be additionally filtered, partial match)\n"
+            "  keyIDOwner     - Print the masternode owner key id\n"
+            "  keyIDVoting    - Print the masternode voting key id\n"
             "  lastpaidblock  - Print the last block height a node was paid on the network\n"
             "  lastpaidtime   - Print the last time a node was paid on the network\n"
             "  payee          - Print Dash address associated with a masternode (can be additionally filtered,\n"
             "                   partial match)\n"
-            "  keyid          - Print the masternode (not collateral) key id\n"
-            "  rank           - Print rank of a masternode based on current block\n"
+            "  pubKeyOperator - Print the masternode operator public key\n"
             "  status         - Print masternode status: ENABLED / POSE_BAN / OUTPOINT_SPENT\n"
             "                   (can be additionally filtered, partial match)\n"
         );
@@ -812,10 +813,13 @@ UniValue masternodelist(const JSONRPCRequest& request)
     if (request.params.size() >= 1) strMode = request.params[0].get_str();
     if (request.params.size() == 2) strFilter = request.params[1].get_str();
 
+    std::transform(strMode.begin(), strMode.end(), strMode.begin(), ::tolower);
+
     if (request.fHelp || (
                 strMode != "addr" && strMode != "full" && strMode != "info" && strMode != "json" &&
+                strMode != "keyidowner" && strMode != "keyidvoting" &&
                 strMode != "lastpaidtime" && strMode != "lastpaidblock" &&
-                strMode != "payee" && strMode != "pubkey" &&
+                strMode != "payee" && strMode != "pubkeyoperator" &&
                 strMode != "status"))
     {
         masternode_list_help();
@@ -863,7 +867,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
         }
 
         if (strMode == "addr") {
-            std::string strAddress = dmn->pdmnState->ToString();
+            std::string strAddress = dmn->pdmnState->addr.ToString(false);
             if (strFilter !="" && strAddress.find(strFilter) == std::string::npos &&
                 strOutpoint.find(strFilter) == std::string::npos) return;
             obj.push_back(Pair(strOutpoint, strAddress));
@@ -871,7 +875,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
             std::ostringstream streamFull;
             streamFull << std::setw(18) <<
                            dmnToStatus(dmn) << " " <<
-                           payeeStr << " " <<
+                           payeeStr << " " << std::setw(10) <<
                            dmnToLastPaidTime(dmn) << " "  << std::setw(6) <<
                            dmn->pdmnState->nLastPaidHeight << " " <<
                            dmn->pdmnState->addr.ToString();
@@ -916,13 +920,13 @@ UniValue masternodelist(const JSONRPCRequest& request)
             if (strFilter !="" && payeeStr.find(strFilter) == std::string::npos &&
                 strOutpoint.find(strFilter) == std::string::npos) return;
             obj.push_back(Pair(strOutpoint, payeeStr));
-        } else if (strMode == "keyIDOwner") {
+        } else if (strMode == "keyidowner") {
             if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) return;
             obj.push_back(Pair(strOutpoint, HexStr(dmn->pdmnState->keyIDOwner)));
-        } else if (strMode == "pubKeyOperator") {
+        } else if (strMode == "pubkeyoperator") {
             if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) return;
             obj.push_back(Pair(strOutpoint, dmn->pdmnState->pubKeyOperator.ToString()));
-        } else if (strMode == "keyIDVoting") {
+        } else if (strMode == "keyidvoting") {
             if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) return;
             obj.push_back(Pair(strOutpoint, HexStr(dmn->pdmnState->keyIDVoting)));
         } else if (strMode == "status") {
