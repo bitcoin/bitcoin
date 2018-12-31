@@ -54,7 +54,7 @@ DIST_SHARE = \
 BIN_CHECKS=$(top_srcdir)/contrib/devtools/symbol-check.py \
            $(top_srcdir)/contrib/devtools/security-check.py
 
-BITCOIN_SVG = src/qt/res/src/bitcoin128.svg
+BITCOIN_SVG = $(top_srcdir)/src/qt/res/src/bitcoin128.svg
 
 WINDOWS_PACKAGING = $(top_srcdir)/share/pixmaps/bitcoin.ico \
   $(top_srcdir)/share/pixmaps/nsis-header.bmp \
