@@ -1424,10 +1424,12 @@ AC_MSG_CHECKING([if wallet should be enabled])
 if test x$enable_wallet != xno; then
   AC_MSG_RESULT(yes)
   AC_DEFINE_UNQUOTED([ENABLE_WALLET],[1],[Define to 1 to enable wallet functions])
-
+  AND_WALLET=' and wallet'
 else
   AC_MSG_RESULT(no)
+  AND_WALLET=
 fi
+AC_SUBST(AND_WALLET)
 
 dnl enable upnp support
 AC_MSG_CHECKING([whether to build with support for UPnP])
