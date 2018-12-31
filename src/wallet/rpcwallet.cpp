@@ -461,7 +461,7 @@ UniValue instantsendtoaddress(const JSONRPCRequest& request)
         throw std::runtime_error(
             "instantsendtoaddress \"address\" amount ( \"comment\" \"comment-to\" subtractfeefromamount )\n"
             "\nSend an amount to a given address. The amount is a real and is rounded to the nearest 0.00000001\n"
-            + HelpRequiringPassphrase() +
+            + HelpRequiringPassphrase(pwallet) +
             "\nArguments:\n"
             "1. \"address\"     (string, required) The dash address to send to.\n"
             "2. \"amount\"      (numeric, required) The amount in " + CURRENCY_UNIT + " to send. eg 0.1\n"
@@ -2026,7 +2026,7 @@ UniValue keypoolrefill(const JSONRPCRequest& request)
     EnsureWalletIsUnlocked(pwallet);
     pwallet->TopUpKeyPool(kpSize);
 
-    if (pwallet->GetKeyPoolSize() < (pwallet->IsHDEnabled() ? kpSize * 2 : kpSize))
+    if (pwallet->GetKeyPoolSize() < (pwallet->IsHDEnabled() ? kpSize * 2 : kpSize)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Error refreshing keypool.");
     }
 
@@ -2048,7 +2048,7 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (pwallet->IsCrypted() && (request.fHelp || request.params.size() < 2 || request.params.size() > 3))
+    if (pwallet->IsCrypted() && (request.fHelp || request.params.size() < 2 || request.params.size() > 3)) {
         throw std::runtime_error(
             "walletpassphrase \"passphrase\" timeout ( mixingonly )\n"
             "\nStores the wallet decryption key in memory for 'timeout' seconds.\n"
@@ -2118,7 +2118,7 @@ UniValue walletpassphrasechange(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (pwallet->IsCrypted() && (request.fHelp || request.params.size() != 2))
+    if (pwallet->IsCrypted() && (request.fHelp || request.params.size() != 2)) {
         throw std::runtime_error(
             "walletpassphrasechange \"oldpassphrase\" \"newpassphrase\"\n"
             "\nChanges the wallet passphrase from 'oldpassphrase' to 'newpassphrase'.\n"
@@ -2169,7 +2169,7 @@ UniValue walletlock(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (pwallet->IsCrypted() && (request.fHelp || request.params.size() != 0))
+    if (pwallet->IsCrypted() && (request.fHelp || request.params.size() != 0)) {
         throw std::runtime_error(
             "walletlock\n"
             "\nRemoves the wallet encryption key from memory, locking the wallet.\n"
@@ -2209,7 +2209,7 @@ UniValue encryptwallet(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (!pwallet->IsCrypted() && (request.fHelp || request.params.size() != 1))
+    if (!pwallet->IsCrypted() && (request.fHelp || request.params.size() != 1)) {
         throw std::runtime_error(
             "encryptwallet \"passphrase\"\n"
             "\nEncrypts the wallet with 'passphrase'. This is for first time encryption.\n"
@@ -2437,7 +2437,8 @@ UniValue settxfee(const JSONRPCRequest& request)
 
 UniValue setprivatesendrounds(const JSONRPCRequest& request)
 {
-    if (!EnsureWalletIsAvailable(request.fHelp))
+    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
 
     if (request.fHelp || request.params.size() != 1)
@@ -2464,7 +2465,8 @@ UniValue setprivatesendrounds(const JSONRPCRequest& request)
 
 UniValue setprivatesendamount(const JSONRPCRequest& request)
 {
-    if (!EnsureWalletIsAvailable(request.fHelp))
+    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
 
     if (request.fHelp || request.params.size() != 1)
@@ -2550,7 +2552,7 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
     }
     obj.push_back(Pair("keys_left",     pwallet->nKeysLeftSinceAutoBackup));
     if (pwallet->IsCrypted())
-        obj.push_back(Pair("unlocked_until", nWalletUnlockTime));
+        obj.push_back(Pair("unlocked_until", pwallet->nRelockTime));
     obj.push_back(Pair("paytxfee",      ValueFromAmount(payTxFee.GetFeePerK())));
     if (fHDEnabled) {
         obj.push_back(Pair("hdchainid", hdChainCurrent.GetID().GetHex()));
@@ -2576,7 +2578,8 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
 
 UniValue keepass(const JSONRPCRequest& request)
 {
-    if (!EnsureWalletIsAvailable(request.fHelp))
+    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
 
     std::string strCommand;
@@ -2947,6 +2950,7 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
 
 UniValue setbip69enabled(const JSONRPCRequest& request)
 {
+    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
 

@@ -90,10 +90,10 @@ static CBLSSecretKey ParseBLSSecretKey(const std::string& hexKey, const std::str
 #ifdef ENABLE_WALLET
 
 template<typename SpecialTxPayload>
-static void FundSpecialTx(CMutableTransaction& tx, const SpecialTxPayload& payload, const CTxDestination& fundDest)
+static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const SpecialTxPayload& payload, const CTxDestination& fundDest)
 {
-    assert(pwalletMain != NULL);
-    LOCK2(cs_main, pwalletMain->cs_wallet);
+    assert(pwallet != NULL);
+    LOCK2(cs_main, pwallet->cs_wallet);
 
     CTxDestination nodest = CNoDestination();
     if (fundDest == nodest) {
@@ -124,7 +124,7 @@ static void FundSpecialTx(CMutableTransaction& tx, const SpecialTxPayload& paylo
     coinControl.fRequireAllInputs = false;
 
     std::vector<COutput> vecOutputs;
-    pwalletMain->AvailableCoins(vecOutputs);
+    pwallet->AvailableCoins(vecOutputs);
 
     for (const auto& out : vecOutputs) {
         CTxDestination txDest;
@@ -404,7 +404,7 @@ UniValue protx_register(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Dash address: ") + request.params[paramIdx + 6].get_str());
     }
 
-    FundSpecialTx(tx, ptx, fundAddress.Get());
+    FundSpecialTx(pwallet, tx, ptx, fundAddress.Get());
     UpdateSpecialTxInputsHash(tx, ptx);
 
     if (isFundRegister) {
@@ -508,6 +508,7 @@ void protx_update_service_help()
 
 UniValue protx_update_service(const JSONRPCRequest& request)
 {
+    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
     if (request.fHelp || (request.params.size() < 4 || request.params.size() > 6))
         protx_update_service_help();
 
@@ -567,7 +568,7 @@ UniValue protx_update_service(const JSONRPCRequest& request)
         }
     }
 
-    FundSpecialTx(tx, ptx, feeSource);
+    FundSpecialTx(pwallet, tx, ptx, feeSource);
 
     SignSpecialTxPayloadByHash(tx, ptx, keyOperator);
     SetTxPayload(tx, ptx);
@@ -651,7 +652,7 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Dash address: ") + request.params[5].get_str());
     }
 
-    FundSpecialTx(tx, ptx, feeSourceAddress.Get());
+    FundSpecialTx(pwallet, tx, ptx, feeSourceAddress.Get());
     SignSpecialTxPayloadByHash(tx, ptx, keyOwner);
     SetTxPayload(tx, ptx);
 
@@ -681,6 +682,7 @@ void protx_revoke_help()
 
 UniValue protx_revoke(const JSONRPCRequest& request)
 {
+    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
     if (request.fHelp || (request.params.size() < 3 || request.params.size() > 5)) {
         protx_revoke_help();
     }
@@ -716,17 +718,17 @@ UniValue protx_revoke(const JSONRPCRequest& request)
         CBitcoinAddress feeSourceAddress = CBitcoinAddress(request.params[4].get_str());
         if (!feeSourceAddress.IsValid())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Dash address: ") + request.params[4].get_str());
-        FundSpecialTx(tx, ptx, feeSourceAddress.Get());
+        FundSpecialTx(pwallet, tx, ptx, feeSourceAddress.Get());
     } else if (dmn->pdmnState->scriptOperatorPayout != CScript()) {
         // Using funds from previousely specified operator payout address
         CTxDestination txDest;
         ExtractDestination(dmn->pdmnState->scriptOperatorPayout, txDest);
-        FundSpecialTx(tx, ptx, txDest);
+        FundSpecialTx(pwallet, tx, ptx, txDest);
     } else if (dmn->pdmnState->scriptPayout != CScript()) {
         // Using funds from previousely specified masternode payout address
         CTxDestination txDest;
         ExtractDestination(dmn->pdmnState->scriptPayout, txDest);
-        FundSpecialTx(tx, ptx, txDest);
+        FundSpecialTx(pwallet, tx, ptx, txDest);
     } else {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No payout or fee source addresses found, can't revoke");
     }
@@ -872,8 +874,8 @@ UniValue protx_list(const JSONRPCRequest& request)
         CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(chainActive[height]->GetBlockHash());
         mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
             if (setOutpts.count(dmn->collateralOutpoint) ||
-                CheckWalletOwnsKey(dmn->pdmnState->keyIDOwner) ||
-                CheckWalletOwnsKey(dmn->pdmnState->keyIDVoting) ||
+                CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDOwner) ||
+                CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDVoting) ||
                 CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptPayout) ||
                 CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptOperatorPayout)) {
                 ret.push_back(BuildDMNListEntry(pwallet, dmn, detailed));

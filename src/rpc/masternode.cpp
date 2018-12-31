@@ -20,6 +20,8 @@
 #include "utilmoneystr.h"
 #include "txmempool.h"
 
+#include "wallet/rpcwallet.h" 
+
 #include "evo/specialtx.h"
 #include "evo/deterministicmns.h"
 
@@ -29,11 +31,7 @@
 
 UniValue masternodelist(const JSONRPCRequest& request);
 
-bool EnsureWalletIsAvailable(bool avoidException);
-
 #ifdef ENABLE_WALLET
-void EnsureWalletIsUnlocked();
-
 UniValue privatesend(const JSONRPCRequest& request)
 {
     CWallet* const pwallet = GetWalletForJSONRPCRequest(request);

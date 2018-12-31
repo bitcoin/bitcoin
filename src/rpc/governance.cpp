@@ -19,11 +19,10 @@
 #include "rpc/server.h"
 #include "util.h"
 #include "utilmoneystr.h"
+#include "wallet/rpcwallet.h" 
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
 #endif // ENABLE_WALLET
-
-bool EnsureWalletIsAvailable(bool avoidException);
 
 void gobject_count_help()
 {
