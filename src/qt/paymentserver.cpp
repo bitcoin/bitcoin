@@ -347,9 +347,9 @@ void PaymentServer::handleURIOrFile(const QString& s)
         }
     }
 
-#ifdef ENABLE_BIP70
     if (QFile::exists(s)) // payment request file
     {
+#ifdef ENABLE_BIP70
         PaymentRequestPlus request;
         SendCoinsRecipient recipient;
         if (!readPaymentRequestFromFile(s, request))
@@ -362,8 +362,12 @@ void PaymentServer::handleURIOrFile(const QString& s)
             Q_EMIT receivedPaymentRequest(recipient);
 
         return;
-    }
+#else
+        Q_EMIT message(tr("Payment request file handling"),
+            tr("Cannot process payment request because BIP70 support was not compiled in."),
+            CClientUIInterface::ICON_WARNING);
 #endif
+    }
 }
 
 void PaymentServer::handleURIConnection()
