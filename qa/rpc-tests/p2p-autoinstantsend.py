@@ -15,8 +15,7 @@ Test automatic InstantSend locks functionality.
 
 Checks that simple transactions automatically become InstantSend locked, 
 complex transactions don't become IS-locked and this functionality is
-activated only if it is BIP9-activated and SPORK_16_INSTANTSEND_AUTOLOCKS is 
-active.
+activated only if SPORK_16_INSTANTSEND_AUTOLOCKS is active.
 
 Also checks that this functionality doesn't influence regular InstantSend
 transactions with high fee. 
@@ -125,8 +124,6 @@ class AutoInstantSendTest(DashTestFramework):
             set_node_times(self.nodes, get_mocktime())
             self.nodes[0].generate(1)
             
-        self.enforce_masternode_payments()  # required for bip9 activation
-        assert(self.get_autoix_bip9_status() == 'defined')
         assert(not self.get_autoix_spork_state())
 
         assert(self.send_regular_IX())

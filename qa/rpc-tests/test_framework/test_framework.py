@@ -35,8 +35,8 @@ from .util import (
     set_mocktime,
     set_node_times,
     p2p_port,
-    satoshi_round
-)
+    satoshi_round,
+    wait_to_sync)
 from .authproxy import JSONRPCException
 
 
@@ -207,11 +207,15 @@ MASTERNODE_COLLATERAL = 1000
 
 
 class MasternodeInfo:
-    def __init__(self, key, blsKey, collateral_id, collateral_out):
-        self.key = key
-        self.blsKey = blsKey
-        self.collateral_id = collateral_id
-        self.collateral_out = collateral_out
+    def __init__(self, proTxHash, ownerAddr, votingAddr, pubKeyOperator, keyOperator, collateral_address, collateral_txid, collateral_vout):
+        self.proTxHash = proTxHash
+        self.ownerAddr = ownerAddr
+        self.votingAddr = votingAddr
+        self.pubKeyOperator = pubKeyOperator
+        self.keyOperator = keyOperator
+        self.collateral_address = collateral_address
+        self.collateral_txid = collateral_txid
+        self.collateral_vout = collateral_vout
 
 
 class DashTestFramework(BitcoinTestFramework):
@@ -228,71 +232,80 @@ class DashTestFramework(BitcoinTestFramework):
     def create_simple_node(self):
         idx = len(self.nodes)
         args = self.extra_args
-        self.nodes.append(start_node(idx, self.options.tmpdir,
-                                     args))
+        self.nodes.append(start_node(idx, self.options.tmpdir, args))
         for i in range(0, idx):
             connect_nodes(self.nodes[i], idx)
 
-    def get_mnconf_file(self):
-        return os.path.join(self.options.tmpdir, "node0/regtest/masternode.conf")
-
     def prepare_masternodes(self):
         for idx in range(0, self.mn_count):
-            key = self.nodes[0].masternode("genkey")
-            blsKey = self.nodes[0].bls('generate')['secret']
+            bls = self.nodes[0].bls('generate')
             address = self.nodes[0].getnewaddress()
             txid = self.nodes[0].sendtoaddress(address, MASTERNODE_COLLATERAL)
-            txrow = self.nodes[0].getrawtransaction(txid, True)
+
+            txraw = self.nodes[0].getrawtransaction(txid, True)
             collateral_vout = 0
-            for vout_idx in range(0, len(txrow["vout"])):
-                vout = txrow["vout"][vout_idx]
+            for vout_idx in range(0, len(txraw["vout"])):
+                vout = txraw["vout"][vout_idx]
                 if vout["value"] == MASTERNODE_COLLATERAL:
                     collateral_vout = vout_idx
-            self.nodes[0].lockunspent(False,
-                                      [{"txid": txid, "vout": collateral_vout}])
-            self.mninfo.append(MasternodeInfo(key, blsKey, txid, collateral_vout))
+            self.nodes[0].lockunspent(False, [{'txid': txid, 'vout': collateral_vout}])
 
-    def write_mn_config(self):
-        conf = self.get_mnconf_file()
-        f = open(conf, 'a')
-        for idx in range(0, self.mn_count):
-            f.write("mn%d 127.0.0.1:%d %s %s %d\n" % (idx + 1, p2p_port(idx + 1),
-                                                      self.mninfo[idx].key,
-                                                      self.mninfo[idx].collateral_id,
-                                                      self.mninfo[idx].collateral_out))
-        f.close()
+            # send to same address to reserve some funds for fees
+            self.nodes[0].sendtoaddress(address, 0.001)
 
-    def create_masternodes(self):
+            ownerAddr = self.nodes[0].getnewaddress()
+            votingAddr = self.nodes[0].getnewaddress()
+            rewardsAddr = self.nodes[0].getnewaddress()
+
+            port = p2p_port(len(self.nodes) + idx)
+            if (idx % 2) == 0:
+                self.nodes[0].lockunspent(True, [{'txid': txid, 'vout': collateral_vout}])
+                proTxHash = self.nodes[0].protx('register_fund', address, '127.0.0.1:%d' % port, ownerAddr, bls['public'], votingAddr, 0, rewardsAddr, address)
+            else:
+                self.nodes[0].generate(1)
+                proTxHash = self.nodes[0].protx('register', txid, collateral_vout, '127.0.0.1:%d' % port, ownerAddr, bls['public'], votingAddr, 0, rewardsAddr, address)
+            self.nodes[0].generate(1)
+
+            self.mninfo.append(MasternodeInfo(proTxHash, ownerAddr, votingAddr, bls['public'], bls['secret'], address, txid, collateral_vout))
+        self.sync_all()
+
+    def start_masternodes(self):
+        start_idx = len(self.nodes)
         for idx in range(0, self.mn_count):
-            args = ['-externalip=127.0.0.1', '-masternode=1',
-                    '-masternodeprivkey=%s' % self.mninfo[idx].key,
-                    '-masternodeblsprivkey=%s' % self.mninfo[idx].blsKey] + self.extra_args
-            self.nodes.append(start_node(idx + 1, self.options.tmpdir, args))
+            args = ['-masternode=1',
+                    '-masternodeblsprivkey=%s' % self.mninfo[idx].keyOperator] + self.extra_args
+            node = start_node(idx + start_idx, self.options.tmpdir, args)
+            self.mninfo[idx].node = node
+            self.nodes.append(node)
             for i in range(0, idx + 1):
-                connect_nodes(self.nodes[i], idx + 1)
+                connect_nodes(self.nodes[idx + start_idx], i)
+            wait_to_sync(node, True)
+        sync_masternodes(self.nodes, True)
 
     def setup_network(self):
         self.nodes = []
         # create faucet node for collateral and transactions
-        args = self.extra_args
+        args = ["-sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"] + self.extra_args
         self.nodes.append(start_node(0, self.options.tmpdir, args))
         required_balance = MASTERNODE_COLLATERAL * self.mn_count + 1
         while self.nodes[0].getbalance() < required_balance:
             set_mocktime(get_mocktime() + 1)
             set_node_times(self.nodes, get_mocktime())
             self.nodes[0].generate(1)
-        # create masternodes
-        self.prepare_masternodes()
-        self.write_mn_config()
-        stop_node(self.nodes[0], 0)
-        args = ["-sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"] + \
-               self.extra_args
-        self.nodes[0] = start_node(0, self.options.tmpdir,
-                                   args)
-        self.create_masternodes()
         # create connected simple nodes
         for i in range(0, self.num_nodes - self.mn_count - 1):
             self.create_simple_node()
+        sync_masternodes(self.nodes, True)
+
+        # activate DIP3
+        while self.nodes[0].getblockcount() < 500:
+            self.nodes[0].generate(10)
+        self.sync_all()
+
+        # create masternodes
+        self.prepare_masternodes()
+        self.start_masternodes()
+
         set_mocktime(get_mocktime() + 1)
         set_node_times(self.nodes, get_mocktime())
         self.nodes[0].generate(1)
@@ -300,17 +313,11 @@ class DashTestFramework(BitcoinTestFramework):
         self.sync_all()
         set_mocktime(get_mocktime() + 1)
         set_node_times(self.nodes, get_mocktime())
-        sync_masternodes(self.nodes, True)
-        for i in range(1, self.mn_count + 1):
-            res = self.nodes[0].masternode("start-alias", "mn%d" % i)
-            assert (res["result"] == 'successful')
+
         mn_info = self.nodes[0].masternodelist("status")
         assert (len(mn_info) == self.mn_count)
         for status in mn_info.values():
             assert (status == 'ENABLED')
-
-    def enforce_masternode_payments(self):
-        self.nodes[0].spork('SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT', 0)
 
     def create_raw_trx(self, node_from, node_to, amount, min_inputs, max_inputs):
         assert (min_inputs <= max_inputs)

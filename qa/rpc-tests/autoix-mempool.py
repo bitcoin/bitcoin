@@ -16,14 +16,14 @@ is full (more than 0.1 part from max value).
 
 '''
 
-MAX_MEMPOOL_SIZE = 5 # max node mempool in MBs
+MAX_MEMPOOL_SIZE = 1 # max node mempool in MBs
 MB_SIZE = 1000000 # C++ code use this coefficient to calc MB in mempool
 AUTO_IX_MEM_THRESHOLD = 0.1
 
 
 class AutoIXMempoolTest(DashTestFramework):
     def __init__(self):
-        super().__init__(13, 10, ["-maxmempool=%d" % MAX_MEMPOOL_SIZE])
+        super().__init__(13, 10, ["-maxmempool=%d" % MAX_MEMPOOL_SIZE, '-limitdescendantsize=10'])
         # set sender,  receiver
         self.receiver_idx = self.num_nodes - 2
         self.sender_idx = self.num_nodes - 3
@@ -118,7 +118,6 @@ class AutoIXMempoolTest(DashTestFramework):
     def run_test(self):
         # make sure masternodes are synced
         sync_masternodes(self.nodes)
-        self.enforce_masternode_payments()  # required for bip9 activation
         self.activate_autoix_bip9()
         self.set_autoix_spork_state(True)
 
