@@ -66,7 +66,8 @@ void CPrivateSendClientManager::ProcessMessage(CNode* pfrom, const std::string& 
         if (!dmn) return;
 
         if (!dsq.CheckSignature(dmn->pdmnState->pubKeyOperator)) {
-            // TODO ban?
+            LOCK(cs_main);
+            Misbehaving(pfrom->id, 10);
             return;
         }
 

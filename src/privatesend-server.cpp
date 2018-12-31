@@ -10,6 +10,7 @@
 #include "init.h"
 #include "masternode-sync.h"
 #include "masternodeman.h"
+#include "net_processing.h"
 #include "netmessagemaker.h"
 #include "script/interpreter.h"
 #include "txmempool.h"
@@ -118,7 +119,8 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
         if (!dmn) return;
 
         if (!dsq.CheckSignature(dmn->pdmnState->pubKeyOperator)) {
-            // TODO ban?
+            LOCK(cs_main);
+            Misbehaving(pfrom->id, 10);
             return;
         }
 
