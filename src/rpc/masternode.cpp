@@ -148,7 +148,7 @@ void masternode_list_help()
             "                   partial match)\n"
             "  keyid          - Print the masternode (not collateral) key id\n"
             "  rank           - Print rank of a masternode based on current block\n"
-            "  status         - Print masternode status: ENABED / POSE_BAN / OUTPOINT_SPENT\n"
+            "  status         - Print masternode status: ENABLED / POSE_BAN / OUTPOINT_SPENT\n"
             "                   (can be additionally filtered, partial match)\n"
         );
 }

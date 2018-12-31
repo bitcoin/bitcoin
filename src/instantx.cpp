@@ -1126,7 +1126,6 @@ bool CTxLockVote::CheckSignature() const
 
 bool CTxLockVote::Sign()
 {
-    std::string strError;
 
     uint256 hash = GetSignatureHash();
 

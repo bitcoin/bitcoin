@@ -50,7 +50,6 @@ bool CPrivateSendQueue::Sign()
 {
     if (!fMasternodeMode) return false;
 
-    std::string strError = "";
 
     uint256 hash = GetSignatureHash();
     CBLSSignature sig = activeMasternodeInfo.blsKeyOperator->Sign(hash);
@@ -64,7 +63,6 @@ bool CPrivateSendQueue::Sign()
 
 bool CPrivateSendQueue::CheckSignature(const CBLSPublicKey& blsPubKey) const
 {
-    std::string strError = "";
     uint256 hash = GetSignatureHash();
 
     CBLSSignature sig;
@@ -96,7 +94,6 @@ bool CPrivateSendBroadcastTx::Sign()
 {
     if (!fMasternodeMode) return false;
 
-    std::string strError = "";
 
     uint256 hash = GetSignatureHash();
 
@@ -111,7 +108,6 @@ bool CPrivateSendBroadcastTx::Sign()
 
 bool CPrivateSendBroadcastTx::CheckSignature(const CBLSPublicKey& blsPubKey) const
 {
-    std::string strError = "";
 
     uint256 hash = GetSignatureHash();
 
