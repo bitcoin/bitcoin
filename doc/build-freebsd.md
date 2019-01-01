@@ -40,8 +40,8 @@ git clone https://github.com/bitcoin/bitcoin
 ```
 ./autogen.sh
 
-./configure                  # to build with wallet OR
-./configure --disable-wallet # to build without wallet
+./configure MAKE=gmake                   # to build with wallet OR
+./configure MAKE=gmake  --disable-wallet # to build without wallet
 ```
 
 followed by either:
