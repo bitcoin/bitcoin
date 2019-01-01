@@ -1072,6 +1072,11 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                 return set_error(serror, SCRIPT_ERR_STACK_SIZE);
         }
     }
+    catch (ScriptError runtime_error)
+    {
+        return set_error(serror, runtime_error);
+
+    }
     catch (...)
     {
         return set_error(serror, SCRIPT_ERR_UNKNOWN_ERROR);
