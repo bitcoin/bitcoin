@@ -4371,7 +4371,8 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
                     LogPrintf("CreateCoinStake : kernel found\n");
                 std::vector<valtype> vSolutions;
                 txnouttype whichType;
-                CScript scriptPubKeyOut = pcoin.txout.scriptPubKey;
+                CScript scriptPubKeyOut;
+                scriptPubKeyKernel = pcoin.txout.scriptPubKey;
                 if (!Solver(scriptPubKeyKernel, whichType, vSolutions))
                 {
                     if (gArgs.GetBoolArg("-debug", false) && gArgs.GetBoolArg("-printcoinstake", false))
