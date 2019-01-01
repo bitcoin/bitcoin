@@ -694,8 +694,8 @@ public:
     const uint64_t nKeyedNetGroup;
     std::atomic_bool fPauseRecv;
     std::atomic_bool fPauseSend;
-protected:
 
+protected:
     mapMsgCmdSize mapSendBytesPerMsgCmd;
     mapMsgCmdSize mapRecvBytesPerMsgCmd GUARDED_BY(cs_vRecv);
 

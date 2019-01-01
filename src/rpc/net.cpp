@@ -178,16 +178,14 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
         obj.pushKV("minfeefilter", ValueFromAmount(stats.minFeeFilter));
 
         UniValue sendPerMsgCmd(UniValue::VOBJ);
-        for (const mapMsgCmdSize::value_type &i : stats.mapSendBytesPerMsgCmd) {
-            if (i.second > 0)
-                sendPerMsgCmd.pushKV(i.first, i.second);
+        for (const auto& i : stats.mapSendBytesPerMsgCmd) {
+            sendPerMsgCmd.pushKV(i.first, i.second);
         }
         obj.pushKV("bytessent_per_msg", sendPerMsgCmd);
 
         UniValue recvPerMsgCmd(UniValue::VOBJ);
-        for (const mapMsgCmdSize::value_type &i : stats.mapRecvBytesPerMsgCmd) {
-            if (i.second > 0)
-                recvPerMsgCmd.pushKV(i.first, i.second);
+        for (const auto& i : stats.mapRecvBytesPerMsgCmd) {
+            recvPerMsgCmd.pushKV(i.first, i.second);
         }
         obj.pushKV("bytesrecv_per_msg", recvPerMsgCmd);
 

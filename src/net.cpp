@@ -778,7 +778,6 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
         nBytes -= handled;
 
         if (msg.complete()) {
-
             //store received bytes per message command
             //to prevent a memory DOS, only allow valid commands
             mapMsgCmdSize::iterator i = mapRecvBytesPerMsgCmd.find(msg.hdr.pchCommand);
@@ -2709,8 +2708,8 @@ int CConnman::GetBestHeight() const
 
 unsigned int CConnman::GetReceiveFloodSize() const { return nReceiveFloodSize; }
 
-CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress& addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress &addrBindIn, const std::string& addrNameIn, bool fInboundIn) :
-    nTimeConnected(GetSystemTimeInSeconds()),
+CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress& addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress& addrBindIn, const std::string& addrNameIn, bool fInboundIn)
+    : nTimeConnected(GetSystemTimeInSeconds()),
     addr(addrIn),
     addrBind(addrBindIn),
     fInbound(fInboundIn),
@@ -2771,8 +2770,10 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     fPauseSend = false;
     nProcessQueueSize = 0;
 
-    for (const std::string &msg : getAllNetMessageTypes())
+    for (const std::string& msg : getAllNetMessageTypes()) {
         mapRecvBytesPerMsgCmd[msg] = 0;
+        mapSendBytesPerMsgCmd[msg] = 0;
+    }
     mapRecvBytesPerMsgCmd[NET_MESSAGE_COMMAND_OTHER] = 0;
 
     if (fLogIPs) {
@@ -2846,7 +2847,7 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
         bool optimisticSend(pnode->vSendMsg.empty());
 
         //log total amount of bytes per command
-        pnode->mapSendBytesPerMsgCmd[msg.command] += nTotalSize;
+        pnode->mapSendBytesPerMsgCmd.at(msg.command) += nTotalSize;
         pnode->nSendSize += nTotalSize;
 
         if (pnode->nSendSize > nSendBufferMaxSize)

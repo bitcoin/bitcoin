@@ -48,6 +48,12 @@ class NetTest(BitcoinTestFramework):
         # from getpeerinfo are bounded by those values.
         net_totals_before = self.nodes[0].getnettotals()
         peer_info = self.nodes[0].getpeerinfo()
+
+        assert '*other*' not in peer_info[0]['bytessent_per_msg']
+        assert_equal(peer_info[0]['bytessent_per_msg']['addr'], 0)
+        assert_equal(peer_info[0]['bytesrecv_per_msg']['*other*'], 0)
+        assert_equal(peer_info[0]['bytesrecv_per_msg']['addr'], 0)
+
         net_totals_after = self.nodes[0].getnettotals()
         assert_equal(len(peer_info), 2)
         peers_recv = sum([peer['bytesrecv'] for peer in peer_info])
