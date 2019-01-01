@@ -46,6 +46,7 @@
 #include <atomic>
 #include <thread>
 #include <unistd.h>
+#include <iostream>
 
 MinerView::MinerView(const PlatformStyle *platformStyle, QWidget *parent) :
     QWidget(parent), m_minerView(0), m_mining_active{false},
