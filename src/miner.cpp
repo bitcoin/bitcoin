@@ -162,7 +162,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
             nLastCoinStakeSearchTime = nSearchTime;
         }
         if (*pfPoSCancel)
-            return nullptr; // emercoin: there is no point to continue if we failed to create coinstake
+            return nullptr; // peercoin: there is no point to continue if we failed to create coinstake
     }
     else
         pblock->nBits = GetNextTargetRequired(pindexPrev, false, chainparams.GetConsensus());
@@ -529,7 +529,7 @@ static bool ProcessBlockFound(const CBlock* pblock, const CChainParams& chainpar
 void PoSMiner(CWallet *pwallet)
 {
     LogPrintf("CPUMiner started for proof-of-stake\n");
-    RenameThread("emercoin-stake-minter");
+    RenameThread("peercoin-stake-minter");
 
     unsigned int nExtraNonce = 0;
 

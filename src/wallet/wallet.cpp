@@ -4328,7 +4328,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     std::vector<CTransactionRef> vwtxPrev;
     int64_t nValueIn = 0;
     std::vector<COutput> vAvailableCoins;
-    AvailableCoins(vAvailableCoins, true, nullptr, false, txNew.nTime);
+    AvailableCoins(vAvailableCoins, true, nullptr, 1, MAX_MONEY, MAX_MONEY, 0, 0, 9999999, txNew.nTime);
     if (!SelectCoins(vAvailableCoins, nBalance - nReserveBalance, setCoins, nValueIn, nullptr))
         return false;
     if (setCoins.empty())
