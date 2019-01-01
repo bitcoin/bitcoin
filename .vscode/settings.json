@@ -62,6 +62,9 @@
         "algorithm": "cpp",
         "cfenv": "cpp",
         "hashtable": "cpp",
-        "string": "cpp"
+        "string": "cpp",
+        "stack": "cpp",
+        "variant": "cpp",
+        "__split_buffer": "cpp"
     }
 }
