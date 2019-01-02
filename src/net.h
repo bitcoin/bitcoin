@@ -346,6 +346,8 @@ private:
     void DisconnectNodes();
     void NotifyNumConnectionsChanged();
     void InactivityCheck(CNode *pnode);
+    bool GenerateSelectSet(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set);
+    void SocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set);
     void SocketHandler();
     void ThreadSocketHandler();
     void ThreadDNSAddressSeed();
