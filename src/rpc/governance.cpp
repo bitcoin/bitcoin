@@ -261,7 +261,8 @@ UniValue gobject_submit(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Must wait for client to sync with masternode network. Try again in a minute or so.");
     }
 
-    bool fMnFound = mnodeman.Has(activeMasternodeInfo.outpoint);
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+    bool fMnFound = mnList.HasValidMNByCollateral(activeMasternodeInfo.outpoint);
 
     DBG( std::cout << "gobject: submit activeMasternodeInfo.keyIDOperator = " << activeMasternodeInfo.legacyKeyIDOperator.ToString()
          << ", outpoint = " << activeMasternodeInfo.outpoint.ToStringShort()
@@ -412,10 +413,9 @@ UniValue gobject_vote_conf(const JSONRPCRequest& request)
     UniValue statusObj(UniValue::VOBJ);
     UniValue returnObj(UniValue::VOBJ);
 
-    CMasternode mn;
-    bool fMnFound = mnodeman.Get(activeMasternodeInfo.outpoint, mn);
+    auto dmn = deterministicMNManager->GetListAtChainTip().GetValidMNByCollateral(activeMasternodeInfo.outpoint);
 
-    if (!fMnFound) {
+    if (!dmn) {
         nFailed++;
         statusObj.push_back(Pair("result", "failed"));
         statusObj.push_back(Pair("errorMessage", "Can't find masternode by collateral output"));
@@ -425,19 +425,16 @@ UniValue gobject_vote_conf(const JSONRPCRequest& request)
         return returnObj;
     }
 
-    CGovernanceVote vote(mn.outpoint, hash, eVoteSignal, eVoteOutcome);
+    CGovernanceVote vote(dmn->collateralOutpoint, hash, eVoteSignal, eVoteOutcome);
 
     bool signSuccess = false;
-    if (deterministicMNManager->IsDIP3Active()) {
-        if (govObjType == GOVERNANCE_OBJECT_PROPOSAL && eVoteSignal == VOTE_SIGNAL_FUNDING) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Can't use vote-conf for proposals when deterministic masternodes are active");
-        }
-        if (activeMasternodeInfo.blsKeyOperator) {
-            signSuccess = vote.Sign(*activeMasternodeInfo.blsKeyOperator);
-        }
-    } else {
-        signSuccess = vote.Sign(activeMasternodeInfo.legacyKeyOperator, activeMasternodeInfo.legacyKeyIDOperator);
+    if (govObjType == GOVERNANCE_OBJECT_PROPOSAL && eVoteSignal == VOTE_SIGNAL_FUNDING) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Can't use vote-conf for proposals");
     }
+    if (activeMasternodeInfo.blsKeyOperator) {
+        signSuccess = vote.Sign(*activeMasternodeInfo.blsKeyOperator);
+    }
+
     if (!signSuccess) {
         nFailed++;
         statusObj.push_back(Pair("result", "failed"));
@@ -466,9 +463,9 @@ UniValue gobject_vote_conf(const JSONRPCRequest& request)
     return returnObj;
 }
 
-UniValue VoteWithMasternodeList(const std::vector<CMasternodeConfig::CMasternodeEntry>& entries,
-                                const uint256& hash, vote_signal_enum_t eVoteSignal,
-                                vote_outcome_enum_t eVoteOutcome)
+UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
+                             const uint256& hash, vote_signal_enum_t eVoteSignal,
+                             vote_outcome_enum_t eVoteOutcome)
 {
     int govObjType;
     {
@@ -483,59 +480,31 @@ UniValue VoteWithMasternodeList(const std::vector<CMasternodeConfig::CMasternode
     int nSuccessful = 0;
     int nFailed = 0;
 
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+
     UniValue resultsObj(UniValue::VOBJ);
 
-    for (const auto& mne : entries) {
-        CPubKey pubKeyOperator;
-        CKey keyOperator;
+    for (const auto& p : keys) {
+        const auto& proTxHash = p.first;
+        const auto& key = p.second;
 
         UniValue statusObj(UniValue::VOBJ);
 
-        if (!CMessageSigner::GetKeysFromSecret(mne.getPrivKey(), keyOperator, pubKeyOperator)) {
+        auto dmn = mnList.GetValidMN(proTxHash);
+        if (!dmn) {
             nFailed++;
             statusObj.push_back(Pair("result", "failed"));
-            statusObj.push_back(Pair("errorMessage", "Masternode signing error, could not set key correctly"));
-            resultsObj.push_back(Pair(mne.getAlias(), statusObj));
+            statusObj.push_back(Pair("errorMessage", "Can't find masternode by proTxHash"));
+            resultsObj.push_back(Pair(proTxHash.ToString(), statusObj));
             continue;
         }
 
-        uint256 nTxHash;
-        nTxHash.SetHex(mne.getTxHash());
-
-        int nOutputIndex = 0;
-        if (!ParseInt32(mne.getOutputIndex(), &nOutputIndex)) {
-            continue;
-        }
-
-        COutPoint outpoint(nTxHash, nOutputIndex);
-
-        CMasternode mn;
-        bool fMnFound = mnodeman.Get(outpoint, mn);
-
-        if (!fMnFound) {
-            nFailed++;
-            statusObj.push_back(Pair("result", "failed"));
-            statusObj.push_back(Pair("errorMessage", "Can't find masternode by collateral output"));
-            resultsObj.push_back(Pair(mne.getAlias(), statusObj));
-            continue;
-        }
-
-        if (deterministicMNManager->IsDIP3Active()) {
-            if (govObjType == GOVERNANCE_OBJECT_PROPOSAL && mn.keyIDVoting != pubKeyOperator.GetID()) {
-                nFailed++;
-                statusObj.push_back(Pair("result", "failed"));
-                statusObj.push_back(Pair("errorMessage", "Can't vote on proposal when key does not match voting key"));
-                resultsObj.push_back(Pair(mne.getAlias(), statusObj));
-                continue;
-            }
-        }
-
-        CGovernanceVote vote(mn.outpoint, hash, eVoteSignal, eVoteOutcome);
-        if (!vote.Sign(keyOperator, pubKeyOperator.GetID())) {
+        CGovernanceVote vote(dmn->collateralOutpoint, hash, eVoteSignal, eVoteOutcome);
+        if (!vote.Sign(key, key.GetPubKey().GetID())) {
             nFailed++;
             statusObj.push_back(Pair("result", "failed"));
             statusObj.push_back(Pair("errorMessage", "Failure to sign."));
-            resultsObj.push_back(Pair(mne.getAlias(), statusObj));
+            resultsObj.push_back(Pair(proTxHash.ToString(), statusObj));
             continue;
         }
 
@@ -549,7 +518,7 @@ UniValue VoteWithMasternodeList(const std::vector<CMasternodeConfig::CMasternode
             statusObj.push_back(Pair("errorMessage", exception.GetMessage()));
         }
 
-        resultsObj.push_back(Pair(mne.getAlias(), statusObj));
+        resultsObj.push_back(Pair(proTxHash.ToString(), statusObj));
     }
 
     UniValue returnObj(UniValue::VOBJ);
@@ -559,11 +528,12 @@ UniValue VoteWithMasternodeList(const std::vector<CMasternodeConfig::CMasternode
     return returnObj;
 }
 
+#ifdef ENABLE_WALLET
 void gobject_vote_many_help()
 {
     throw std::runtime_error(
                 "gobject vote-many <governance-hash> <vote> <vote-outcome>\n"
-                "Vote on a governance object by all masternodes (using masternode.conf setup)\n"
+                "Vote on a governance object by all masternodes for which the voting key is present in the local wallet\n"
                 "\nArguments:\n"
                 "1. governance-hash   (string, required) hash of the governance object\n"
                 "2. vote              (string, required) vote, possible values: [funding|valid|delete|endorsed]\n"
@@ -592,66 +562,33 @@ UniValue gobject_vote_many(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please use one of the following: 'yes', 'no' or 'abstain'");
     }
 
-    std::vector<CMasternodeConfig::CMasternodeEntry> entries = masternodeConfig.getEntries();
-
-#ifdef ENABLE_WALLET
-    // This is a hack to maintain code-level backwards compatibility with masternode.conf and the deterministic masternodes.
-    // Deterministic masternode keys are managed inside the wallet instead of masternode.conf
-    // This allows voting on proposals when you have the MN voting key in your wallet
-    // We can remove this when we remove support for masternode.conf and only support wallet based masternode
-    // management
-    if (deterministicMNManager->IsDIP3Active()) {
-        if (!pwalletMain) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "vote-many not supported when wallet is disabled.");
-        }
-        entries.clear();
-
-        auto mnList = deterministicMNManager->GetListAtChainTip();
-        mnList.ForEachMN(true, [&](const CDeterministicMNCPtr& dmn) {
-            bool found = false;
-            for (const auto &mne : entries) {
-                uint256 nTxHash;
-                nTxHash.SetHex(mne.getTxHash());
-
-                int nOutputIndex = 0;
-                if(!ParseInt32(mne.getOutputIndex(), &nOutputIndex)) {
-                    continue;
-                }
-
-                if (nTxHash == dmn->collateralOutpoint.hash && (uint32_t)nOutputIndex == dmn->collateralOutpoint.n) {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                CKey ownerKey;
-                if (pwalletMain->GetKey(dmn->pdmnState->keyIDVoting, ownerKey)) {
-                    CBitcoinSecret secret(ownerKey);
-                    CMasternodeConfig::CMasternodeEntry mne(dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToStringIPPort(false), secret.ToString(), dmn->collateralOutpoint.hash.ToString(), itostr(dmn->collateralOutpoint.n));
-                    entries.push_back(mne);
-                }
-            }
-        });
-    }
-#else
-    if (deterministicMNManager->IsDIP3Active()) {
+    if (!pwalletMain) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "vote-many not supported when wallet is disabled.");
     }
-#endif
 
-    return VoteWithMasternodeList(entries, hash, eVoteSignal, eVoteOutcome);
+    std::map<uint256, CKey> votingKeys;
+
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+    mnList.ForEachMN(true, [&](const CDeterministicMNCPtr& dmn) {
+        CKey votingKey;
+        if (pwalletMain->GetKey(dmn->pdmnState->keyIDVoting, votingKey)) {
+            votingKeys.emplace(dmn->proTxHash, votingKey);
+        }
+    });
+
+    return VoteWithMasternodes(votingKeys, hash, eVoteSignal, eVoteOutcome);
 }
 
 void gobject_vote_alias_help()
 {
     throw std::runtime_error(
                 "gobject vote-alias <governance-hash> <vote> <vote-outcome> <alias-name>\n"
-                "Vote on a governance object by masternode alias (using masternode.conf setup)\n"
+                "Vote on a governance object by masternode's voting key (if present in local wallet)\n"
                 "\nArguments:\n"
                 "1. governance-hash   (string, required) hash of the governance object\n"
                 "2. vote              (string, required) vote, possible values: [funding|valid|delete|endorsed]\n"
                 "3. vote-outcome      (string, required) vote outcome, possible values: [yes|no|abstain]\n"
-                "4. alias-name        (string, required) masternode alias or proTxHash after DIP3 activation"
+                "4. protx-hash        (string, required) masternode's proTxHash"
                 );
 }
 
@@ -676,41 +613,27 @@ UniValue gobject_vote_alias(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please use one of the following: 'yes', 'no' or 'abstain'");
     }
 
-    std::vector<CMasternodeConfig::CMasternodeEntry> entries;
-
-    if (deterministicMNManager->IsDIP3Active()) {
-#ifdef ENABLE_WALLET
-        if (!pwalletMain) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "vote-alias not supported when wallet is disabled");
-        }
-
-        uint256 proTxHash = ParseHashV(request.params[4], "alias-name");
-        auto dmn = deterministicMNManager->GetListAtChainTip().GetValidMN(proTxHash);
-        if (!dmn) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid or unknown proTxHash");
-        }
-
-        CKey votingKey;
-        if (!pwalletMain->GetKey(dmn->pdmnState->keyIDVoting, votingKey)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Voting ekey %s not known by wallet", CBitcoinAddress(dmn->pdmnState->keyIDVoting).ToString()));
-        }
-
-        CBitcoinSecret secret(votingKey);
-        CMasternodeConfig::CMasternodeEntry mne(dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToStringIPPort(false), secret.ToString(), dmn->collateralOutpoint.hash.ToString(), itostr(dmn->collateralOutpoint.n));
-        entries.push_back(mne);
-#else
+    if (!pwalletMain) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "vote-alias not supported when wallet is disabled");
-#endif
-    } else {
-        std::string strAlias = request.params[4].get_str();
-        for (const auto& mne : masternodeConfig.getEntries()) {
-            if (strAlias == mne.getAlias())
-                entries.push_back(mne);
-        }
     }
 
-    return VoteWithMasternodeList(entries, hash, eVoteSignal, eVoteOutcome);
+    uint256 proTxHash = ParseHashV(request.params[4], "protx-hash");
+    auto dmn = deterministicMNManager->GetListAtChainTip().GetValidMN(proTxHash);
+    if (!dmn) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid or unknown proTxHash");
+    }
+
+    CKey votingKey;
+    if (!pwalletMain->GetKey(dmn->pdmnState->keyIDVoting, votingKey)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Voting key %s not known by wallet", CBitcoinAddress(dmn->pdmnState->keyIDVoting).ToString()));
+    }
+
+    std::map<uint256, CKey> votingKeys;
+    votingKeys.emplace(proTxHash, votingKey);
+
+    return VoteWithMasternodes(votingKeys, hash, eVoteSignal, eVoteOutcome);
 }
+#endif
 
 UniValue ListObjects(const std::string& strCachedSignal, const std::string& strType, int nStartTime)
 {
@@ -1063,10 +986,12 @@ UniValue gobject(const JSONRPCRequest& request)
         return gobject_submit(request);
     } else if (strCommand == "vote-conf") {
         return gobject_vote_conf(request);
+#ifdef ENABLE_WALLET
     } else if (strCommand == "vote-many") {
         return gobject_vote_many(request);
     } else if (strCommand == "vote-alias") {
         return gobject_vote_alias(request);
+#endif
     } else if (strCommand == "list") {
         // USERS CAN QUERY THE SYSTEM FOR A LIST OF VARIOUS GOVERNANCE ITEMS
         return gobject_list(request);
@@ -1133,10 +1058,9 @@ UniValue voteraw(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Malformed base64 encoding");
     }
 
-    CMasternode mn;
-    bool fMnFound = mnodeman.Get(outpoint, mn);
+    auto dmn = deterministicMNManager->GetListAtChainTip().GetValidMNByCollateral(outpoint);
 
-    if (!fMnFound) {
+    if (!dmn) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Failure to find masternode in list : " + outpoint.ToStringShort());
     }
 

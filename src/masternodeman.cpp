@@ -42,10 +42,10 @@ struct CompareLastPaidBlock
 
 struct CompareScoreMN
 {
-    bool operator()(const std::pair<arith_uint256, const CMasternode*>& t1,
-                    const std::pair<arith_uint256, const CMasternode*>& t2) const
+    bool operator()(const std::pair<arith_uint256, const CDeterministicMNCPtr&>& t1,
+                    const std::pair<arith_uint256, const CDeterministicMNCPtr&>& t2) const
     {
-        return (t1.first != t2.first) ? (t1.first < t2.first) : (t1.second->outpoint < t2.second->outpoint);
+        return (t1.first != t2.first) ? (t1.first < t2.first) : (t1.second->collateralOutpoint < t2.second->collateralOutpoint);
     }
 };
 
@@ -127,6 +127,16 @@ void CMasternodeMan::AskForMN(CNode* pnode, const COutPoint& outpoint, CConnman&
     connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSEG, outpoint));
 }
 
+bool CMasternodeMan::IsValidForMixingTxes(const COutPoint& outpoint)
+{
+    LOCK(cs);
+    CMasternode* pmn = Find(outpoint);
+    if (!pmn) {
+        return false;
+    }
+    return pmn->IsValidForMixingTxes();
+}
+
 bool CMasternodeMan::AllowMixing(const COutPoint &outpoint)
 {
     LOCK(cs);
@@ -151,6 +161,16 @@ bool CMasternodeMan::DisallowMixing(const COutPoint &outpoint)
     pmn->nMixingTxCount++;
 
     return true;
+}
+
+int64_t CMasternodeMan::GetLastDsq(const COutPoint& outpoint)
+{
+    LOCK(cs);
+    CMasternode* pmn = Find(outpoint);
+    if (!pmn) {
+        return 0;
+    }
+    return pmn->nLastDsq;
 }
 
 bool CMasternodeMan::PoSeBan(const COutPoint &outpoint)
@@ -237,9 +257,9 @@ void CMasternodeMan::CheckAndRemove(CConnman& connman)
                     // ask first MNB_RECOVERY_QUORUM_TOTAL masternodes we can connect to and we haven't asked recently
                     for(int i = 0; setRequested.size() < MNB_RECOVERY_QUORUM_TOTAL && i < (int)vecMasternodeRanks.size(); i++) {
                         // avoid banning
-                        if(mWeAskedForMasternodeListEntry.count(it->first) && mWeAskedForMasternodeListEntry[it->first].count(vecMasternodeRanks[i].second.addr)) continue;
+                        if(mWeAskedForMasternodeListEntry.count(it->first) && mWeAskedForMasternodeListEntry[it->first].count(vecMasternodeRanks[i].second->pdmnState->addr)) continue;
                         // didn't ask recently, ok to ask now
-                        CService addr = vecMasternodeRanks[i].second.addr;
+                        CService addr = vecMasternodeRanks[i].second->pdmnState->addr;
                         setRequested.insert(addr);
                         listScheduledMnbRequestConnections.push_back(std::make_pair(addr, hash));
                         fAskedForMnbRecovery = true;
@@ -633,7 +653,7 @@ bool CMasternodeMan::Has(const COutPoint& outpoint)
 {
     LOCK(cs);
     if (deterministicMNManager->IsDIP3Active()) {
-        return deterministicMNManager->HasValidMNCollateralAtChainTip(outpoint);
+        return deterministicMNManager->GetListAtChainTip().HasValidMNByCollateral(outpoint);
     } else {
         return mapMasternodes.find(outpoint) != mapMasternodes.end();
     }
@@ -679,7 +699,7 @@ bool CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight, bool f
         if(mnpair.second.nProtocolVersion < mnpayments.GetMinMasternodePaymentsProto()) continue;
 
         //it's in the list (up to 8 entries ahead of current block to allow propagation) -- so let's skip it
-        if(mnpayments.IsScheduled(mnpair.second, nBlockHeight)) continue;
+        //if(mnpayments.IsScheduled(mnpair.second, nBlockHeight)) continue;
 
         //it's too new, wait for a cycle
         if(fFilterSigTime && mnpair.second.sigTime + (nMnCount*2.6*60) > GetAdjustedTime()) continue;
@@ -727,51 +747,6 @@ bool CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight, bool f
     return mnInfoRet.fInfoValid;
 }
 
-masternode_info_t CMasternodeMan::FindRandomNotInVec(const std::vector<COutPoint> &vecToExclude, int nProtocolVersion)
-{
-    LOCK(cs);
-
-    nProtocolVersion = nProtocolVersion == -1 ? mnpayments.GetMinMasternodePaymentsProto() : nProtocolVersion;
-
-    int nCountEnabled = CountEnabled(nProtocolVersion);
-    int nCountNotExcluded = nCountEnabled - vecToExclude.size();
-
-    LogPrintf("CMasternodeMan::FindRandomNotInVec -- %d enabled masternodes, %d masternodes to choose from\n", nCountEnabled, nCountNotExcluded);
-    if(nCountNotExcluded < 1) return masternode_info_t();
-
-    // fill a vector of pointers
-    std::vector<const CMasternode*> vpMasternodesShuffled;
-    for (const auto& mnpair : mapMasternodes) {
-        vpMasternodesShuffled.push_back(&mnpair.second);
-    }
-
-    FastRandomContext insecure_rand;
-    // shuffle pointers
-    std::random_shuffle(vpMasternodesShuffled.begin(), vpMasternodesShuffled.end(), insecure_rand);
-    bool fExclude;
-
-    // loop through
-    for (const auto& pmn : vpMasternodesShuffled) {
-        if(pmn->nProtocolVersion < nProtocolVersion || !pmn->IsEnabled()) continue;
-        fExclude = false;
-        for (const auto& outpointToExclude : vecToExclude) {
-            if(pmn->outpoint == outpointToExclude) {
-                fExclude = true;
-                break;
-            }
-        }
-        if(fExclude) continue;
-        if (deterministicMNManager->IsDIP3Active() && !deterministicMNManager->HasValidMNCollateralAtChainTip(pmn->outpoint))
-            continue;
-        // found the one not in vecToExclude
-        LogPrint("masternode", "CMasternodeMan::FindRandomNotInVec -- found, masternode=%s\n", pmn->outpoint.ToStringShort());
-        return pmn->GetInfo();
-    }
-
-    LogPrint("masternode", "CMasternodeMan::FindRandomNotInVec -- failed\n");
-    return masternode_info_t();
-}
-
 std::map<COutPoint, CMasternode> CMasternodeMan::GetFullMasternodeMap()
 {
     LOCK(cs);
@@ -791,33 +766,18 @@ std::map<COutPoint, CMasternode> CMasternodeMan::GetFullMasternodeMap()
     }
 }
 
-bool CMasternodeMan::GetMasternodeScores(const uint256& nBlockHash, CMasternodeMan::score_pair_vec_t& vecMasternodeScoresRet, int nMinProtocol)
+bool CMasternodeMan::GetMasternodeScores(const uint256& nBlockHash, CMasternodeMan::score_pair_vec_t& vecMasternodeScoresRet)
 {
     AssertLockHeld(cs);
 
     vecMasternodeScoresRet.clear();
 
-    if (deterministicMNManager->IsDIP3Active()) {
-        auto mnList = deterministicMNManager->GetListAtChainTip();
-        auto scores = mnList.CalculateScores(nBlockHash);
-        for (const auto& p : scores) {
-            auto* mn = Find(p.second->collateralOutpoint);
-            vecMasternodeScoresRet.emplace_back(p.first, mn);
-        }
-    } else {
-        if (!masternodeSync.IsMasternodeListSynced())
-            return false;
-
-        if (mapMasternodes.empty())
-            return false;
-
-        // calculate scores
-        for (const auto& mnpair : mapMasternodes) {
-            if (mnpair.second.nProtocolVersion >= nMinProtocol) {
-                vecMasternodeScoresRet.push_back(std::make_pair(mnpair.second.CalculateScore(nBlockHash), &mnpair.second));
-            }
-        }
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+    auto scores = mnList.CalculateScores(nBlockHash);
+    for (const auto& p : scores) {
+        vecMasternodeScoresRet.emplace_back(p.first, p.second);
     }
+
     sort(vecMasternodeScoresRet.rbegin(), vecMasternodeScoresRet.rend(), CompareScoreMN());
     return !vecMasternodeScoresRet.empty();
 }
@@ -845,13 +805,13 @@ bool CMasternodeMan::GetMasternodeRank(const COutPoint& outpoint, int& nRankRet,
     LOCK(cs);
 
     score_pair_vec_t vecMasternodeScores;
-    if (!GetMasternodeScores(blockHashRet, vecMasternodeScores, nMinProtocol))
+    if (!GetMasternodeScores(blockHashRet, vecMasternodeScores))
         return false;
 
     int nRank = 0;
     for (const auto& scorePair : vecMasternodeScores) {
         nRank++;
-        if(scorePair.second->outpoint == outpoint) {
+        if(scorePair.second->collateralOutpoint == outpoint) {
             nRankRet = nRank;
             return true;
         }
@@ -877,13 +837,13 @@ bool CMasternodeMan::GetMasternodeRanks(CMasternodeMan::rank_pair_vec_t& vecMast
     LOCK(cs);
 
     score_pair_vec_t vecMasternodeScores;
-    if (!GetMasternodeScores(nBlockHash, vecMasternodeScores, nMinProtocol))
+    if (!GetMasternodeScores(nBlockHash, vecMasternodeScores))
         return false;
 
     int nRank = 0;
     for (const auto& scorePair : vecMasternodeScores) {
         nRank++;
-        vecMasternodeRanksRet.push_back(std::make_pair(nRank, *scorePair.second));
+        vecMasternodeRanksRet.push_back(std::make_pair(nRank, scorePair.second));
     }
 
     return true;
@@ -891,17 +851,17 @@ bool CMasternodeMan::GetMasternodeRanks(CMasternodeMan::rank_pair_vec_t& vecMast
 
 void CMasternodeMan::ProcessMasternodeConnections(CConnman& connman)
 {
-    std::vector<masternode_info_t> vecMnInfo; // will be empty when no wallet
+    std::vector<CDeterministicMNCPtr> vecDmns; // will be empty when no wallet
 #ifdef ENABLE_WALLET
-    privateSendClient.GetMixingMasternodesInfo(vecMnInfo);
+    privateSendClient.GetMixingMasternodesInfo(vecDmns);
 #endif // ENABLE_WALLET
 
-    connman.ForEachNode(CConnman::AllNodes, [&vecMnInfo](CNode* pnode) {
+    connman.ForEachNode(CConnman::AllNodes, [&](CNode* pnode) {
         if (pnode->fMasternode) {
 #ifdef ENABLE_WALLET
             bool fFound = false;
-            for (const auto& mnInfo : vecMnInfo) {
-                if (pnode->addr == mnInfo.addr) {
+            for (const auto& dmn : vecDmns) {
+                if (pnode->addr == dmn->pdmnState->addr) {
                     fFound = true;
                     break;
                 }
@@ -1213,7 +1173,7 @@ void CMasternodeMan::DoFullVerificationStep(CConnman& connman)
                         (int)MAX_POSE_RANK);
             return;
         }
-        if(rankPair.second.outpoint == activeMasternodeInfo.outpoint) {
+        if(rankPair.second->collateralOutpoint == activeMasternodeInfo.outpoint) {
             nMyRank = rankPair.first;
             LogPrint("masternode", "CMasternodeMan::DoFullVerificationStep -- Found self at rank %d/%d, verifying up to %d masternodes\n",
                         nMyRank, nRanksTotal, (int)MAX_POSE_CONNECTIONS);
@@ -1231,20 +1191,20 @@ void CMasternodeMan::DoFullVerificationStep(CConnman& connman)
 
     auto it = vecMasternodeRanks.begin() + nOffset;
     while(it != vecMasternodeRanks.end()) {
-        if(it->second.IsPoSeVerified() || it->second.IsPoSeBanned()) {
-            LogPrint("masternode", "CMasternodeMan::DoFullVerificationStep -- Already %s%s%s masternode %s address %s, skipping...\n",
-                        it->second.IsPoSeVerified() ? "verified" : "",
-                        it->second.IsPoSeVerified() && it->second.IsPoSeBanned() ? " and " : "",
-                        it->second.IsPoSeBanned() ? "banned" : "",
-                        it->second.outpoint.ToStringShort(), it->second.addr.ToString());
-            nOffset += MAX_POSE_CONNECTIONS;
-            if(nOffset >= (int)vecMasternodeRanks.size()) break;
-            it += MAX_POSE_CONNECTIONS;
-            continue;
-        }
+//        if(it->second.IsPoSeVerified() || it->second.IsPoSeBanned()) {
+//            LogPrint("masternode", "CMasternodeMan::DoFullVerificationStep -- Already %s%s%s masternode %s address %s, skipping...\n",
+//                        it->second.IsPoSeVerified() ? "verified" : "",
+//                        it->second.IsPoSeVerified() && it->second.IsPoSeBanned() ? " and " : "",
+//                        it->second.IsPoSeBanned() ? "banned" : "",
+//                        it->second.outpoint.ToStringShort(), it->second.addr.ToString());
+//            nOffset += MAX_POSE_CONNECTIONS;
+//            if(nOffset >= (int)vecMasternodeRanks.size()) break;
+//            it += MAX_POSE_CONNECTIONS;
+//            continue;
+//        }
         LogPrint("masternode", "CMasternodeMan::DoFullVerificationStep -- Verifying masternode %s rank %d/%d address %s\n",
-                    it->second.outpoint.ToStringShort(), it->first, nRanksTotal, it->second.addr.ToString());
-        CAddress addr = CAddress(it->second.addr, NODE_NETWORK);
+                    it->second->collateralOutpoint.ToStringShort(), it->first, nRanksTotal, it->second->pdmnState->addr.ToString());
+        CAddress addr = CAddress(it->second->pdmnState->addr, NODE_NETWORK);
         if(CheckVerifyRequestAddr(addr, connman)) {
             vAddr.push_back(addr);
             if((int)vAddr.size() >= MAX_POSE_CONNECTIONS) break;

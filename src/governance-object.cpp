@@ -116,14 +116,13 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         return false;
     }
 
-    if (!mnodeman.Has(vote.GetMasternodeOutpoint())) {
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+
+    if (!mnList.HasValidMNByCollateral(vote.GetMasternodeOutpoint())) {
         std::ostringstream ostr;
         ostr << "CGovernanceObject::ProcessVote -- Masternode " << vote.GetMasternodeOutpoint().ToStringShort() << " not found";
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_WARNING);
         if (cmmapOrphanVotes.Insert(vote.GetMasternodeOutpoint(), vote_time_pair_t(vote, GetAdjustedTime() + GOVERNANCE_ORPHAN_EXPIRATION_TIME))) {
-            if (pfrom) {
-                mnodeman.AskForMN(pfrom, vote.GetMasternodeOutpoint(), connman);
-            }
             LogPrintf("%s\n", ostr.str());
         } else {
             LogPrint("gobject", "%s\n", ostr.str());
@@ -212,9 +211,11 @@ void CGovernanceObject::ClearMasternodeVotes()
 {
     LOCK(cs);
 
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+
     vote_m_it it = mapCurrentMNVotes.begin();
     while (it != mapCurrentMNVotes.end()) {
-        if (!mnodeman.Has(it->first)) {
+        if (!mnList.HasValidMNByCollateral(it->first)) {
             fileVotes.RemoveVotesFromMasternode(it->first);
             mapCurrentMNVotes.erase(it++);
         } else {
@@ -552,9 +553,11 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingMast
             return true;
         }
 
+        auto mnList = deterministicMNManager->GetListAtChainTip();
+
         std::string strOutpoint = masternodeOutpoint.ToStringShort();
-        masternode_info_t infoMn;
-        if (!mnodeman.GetMasternodeInfo(masternodeOutpoint, infoMn)) {
+        auto dmn = mnList.GetValidMNByCollateral(masternodeOutpoint);
+        if (!dmn) {
             CMasternode::CollateralStatus err = CMasternode::CheckCollateral(masternodeOutpoint, CKeyID());
             if (err == CMasternode::COLLATERAL_UTXO_NOT_FOUND) {
                 strError = "Failed to find Masternode UTXO, missing masternode=" + strOutpoint + "\n";
@@ -572,16 +575,9 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingMast
         }
 
         // Check that we have a valid MN signature
-        if (deterministicMNManager->IsDIP3Active()) {
-            if (!CheckSignature(infoMn.blsPubKeyOperator)) {
-                strError = "Invalid masternode signature for: " + strOutpoint + ", pubkey id = " + infoMn.blsPubKeyOperator.ToString();
-                return false;
-            }
-        } else {
-            if (!CheckSignature(infoMn.legacyKeyIDOperator)) {
-                strError = "Invalid masternode signature for: " + strOutpoint + ", pubkey id = " + infoMn.legacyKeyIDOperator.ToString();
-                return false;
-            }
+        if (!CheckSignature(dmn->pdmnState->pubKeyOperator)) {
+            strError = "Invalid masternode signature for: " + strOutpoint + ", pubkey = " + dmn->pdmnState->pubKeyOperator.ToString();
+            return false;
         }
 
         return true;
@@ -779,7 +775,7 @@ void CGovernanceObject::UpdateSentinelVariables()
 {
     // CALCULATE MINIMUM SUPPORT LEVELS REQUIRED
 
-    int nMnCount = mnodeman.CountEnabled();
+    int nMnCount = (int)deterministicMNManager->GetListAtChainTip().GetValidMNsCount();
     if (nMnCount == 0) return;
 
     // CALCULATE THE MINUMUM VOTE COUNT REQUIRED FOR FULL SIGNAL
@@ -812,6 +808,7 @@ void CGovernanceObject::UpdateSentinelVariables()
 void CGovernanceObject::CheckOrphanVotes(CConnman& connman)
 {
     int64_t nNow = GetAdjustedTime();
+    auto mnList = deterministicMNManager->GetListAtChainTip();
     const vote_cmm_t::list_t& listVotes = cmmapOrphanVotes.GetItemList();
     vote_cmm_t::list_cit it = listVotes.begin();
     while (it != listVotes.end()) {
@@ -821,7 +818,7 @@ void CGovernanceObject::CheckOrphanVotes(CConnman& connman)
         const CGovernanceVote& vote = pairVote.first;
         if (pairVote.second < nNow) {
             fRemove = true;
-        } else if (!mnodeman.Has(vote.GetMasternodeOutpoint())) {
+        } else if (!mnList.HasValidMNByCollateral(vote.GetMasternodeOutpoint())) {
             ++it;
             continue;
         }

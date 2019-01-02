@@ -8,6 +8,8 @@
 #include "masternode.h"
 #include "sync.h"
 
+#include "evo/deterministicmns.h"
+
 class CMasternodeMan;
 class CConnman;
 
@@ -16,9 +18,9 @@ extern CMasternodeMan mnodeman;
 class CMasternodeMan
 {
 public:
-    typedef std::pair<arith_uint256, const CMasternode*> score_pair_t;
+    typedef std::pair<arith_uint256, CDeterministicMNCPtr> score_pair_t;
     typedef std::vector<score_pair_t> score_pair_vec_t;
-    typedef std::pair<int, const CMasternode> rank_pair_t;
+    typedef std::pair<int, CDeterministicMNCPtr> rank_pair_t;
     typedef std::vector<rank_pair_t> rank_pair_vec_t;
 
 private:
@@ -80,7 +82,7 @@ private:
     /// Find an entry
     CMasternode* Find(const COutPoint& outpoint);
 
-    bool GetMasternodeScores(const uint256& nBlockHash, score_pair_vec_t& vecMasternodeScoresRet, int nMinProtocol = 0);
+    bool GetMasternodeScores(const uint256& nBlockHash, score_pair_vec_t& vecMasternodeScoresRet);
 
     void SyncSingle(CNode* pnode, const COutPoint& outpoint, CConnman& connman);
     void SyncAll(CNode* pnode, CConnman& connman);
@@ -137,8 +139,10 @@ public:
     void AskForMN(CNode *pnode, const COutPoint& outpoint, CConnman& connman);
 
     bool PoSeBan(const COutPoint &outpoint);
+    bool IsValidForMixingTxes(const COutPoint &outpoint);
     bool AllowMixing(const COutPoint &outpoint);
     bool DisallowMixing(const COutPoint &outpoint);
+    int64_t GetLastDsq(const COutPoint &outpoint);
 
     /// Check all Masternodes
     void Check();
@@ -179,9 +183,6 @@ public:
     bool GetNextMasternodeInQueueForPayment(int nBlockHeight, bool fFilterSigTime, int& nCountRet, masternode_info_t& mnInfoRet);
     /// Same as above but use current block height
     bool GetNextMasternodeInQueueForPayment(bool fFilterSigTime, int& nCountRet, masternode_info_t& mnInfoRet);
-
-    /// Find a random entry
-    masternode_info_t FindRandomNotInVec(const std::vector<COutPoint> &vecToExclude, int nProtocolVersion = -1);
 
     std::map<COutPoint, CMasternode> GetFullMasternodeMap();
 

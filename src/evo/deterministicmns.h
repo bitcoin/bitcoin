@@ -289,10 +289,23 @@ public:
     {
         return GetMN(proTxHash) != nullptr;
     }
+    bool HasValidMN(const uint256& proTxHash) const
+    {
+        return GetValidMN(proTxHash) != nullptr;
+    }
+    bool HasMNByCollateral(const COutPoint& collateralOutpoint) const
+    {
+        return GetMNByCollateral(collateralOutpoint) != nullptr;
+    }
+    bool HasValidMNByCollateral(const COutPoint& collateralOutpoint) const
+    {
+        return GetValidMNByCollateral(collateralOutpoint) != nullptr;
+    }
     CDeterministicMNCPtr GetMN(const uint256& proTxHash) const;
     CDeterministicMNCPtr GetValidMN(const uint256& proTxHash) const;
     CDeterministicMNCPtr GetMNByOperatorKey(const CBLSPublicKey& pubKey);
     CDeterministicMNCPtr GetMNByCollateral(const COutPoint& collateralOutpoint) const;
+    CDeterministicMNCPtr GetValidMNByCollateral(const COutPoint& collateralOutpoint) const;
     CDeterministicMNCPtr GetMNPayee() const;
 
     /**
@@ -478,10 +491,6 @@ public:
 
     CDeterministicMNList GetListForBlock(const uint256& blockHash);
     CDeterministicMNList GetListAtChainTip();
-
-    // TODO remove after removal of old non-deterministic lists
-    bool HasValidMNCollateralAtChainTip(const COutPoint& outpoint);
-    bool HasMNCollateralAtChainTip(const COutPoint& outpoint);
 
     // Test if given TX is a ProRegTx which also contains the collateral at index n
     bool IsProTxWithCollateral(const CTransactionRef& tx, uint32_t n);

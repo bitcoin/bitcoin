@@ -515,12 +515,17 @@ std::vector<CGovernanceVote> CGovernanceManager::GetCurrentVotes(const uint256& 
     if (it == mapObjects.end()) return vecResult;
     const CGovernanceObject& govobj = it->second;
 
-    CMasternode mn;
-    std::map<COutPoint, CMasternode> mapMasternodes;
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+    std::map<COutPoint, CDeterministicMNCPtr> mapMasternodes;
     if (mnCollateralOutpointFilter.IsNull()) {
-        mapMasternodes = mnodeman.GetFullMasternodeMap();
-    } else if (mnodeman.Get(mnCollateralOutpointFilter, mn)) {
-        mapMasternodes[mnCollateralOutpointFilter] = mn;
+        mnList.ForEachMN(true, [&](const CDeterministicMNCPtr& dmn) {
+            mapMasternodes.emplace(dmn->collateralOutpoint, dmn);
+        });
+    } else {
+        auto dmn = mnList.GetValidMNByCollateral(mnCollateralOutpointFilter);
+        if (dmn) {
+            mapMasternodes.emplace(dmn->collateralOutpoint, dmn);
+        }
     }
 
     // Loop thru each MN collateral outpoint and get the votes for the `nParentHash` governance object
@@ -1074,7 +1079,7 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
     int nMaxObjRequestsPerNode = 1;
     size_t nProjectedVotes = 2000;
     if (Params().NetworkIDString() != CBaseChainParams::MAIN) {
-        nMaxObjRequestsPerNode = std::max(1, int(nProjectedVotes / std::max(1, mnodeman.size())));
+        nMaxObjRequestsPerNode = std::max(1, int(nProjectedVotes / std::max(1, (int)deterministicMNManager->GetListAtChainTip().GetValidMNsCount())));
     }
 
     {

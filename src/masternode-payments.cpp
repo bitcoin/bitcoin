@@ -641,36 +641,16 @@ bool CMasternodePayments::GetBlockTxOuts(int nBlockHeight, CAmount blockReward, 
 
 // Is this masternode scheduled to get paid soon?
 // -- Only look ahead up to 8 blocks to allow for propagation of the latest 2 blocks of votes
-bool CMasternodePayments::IsScheduled(const masternode_info_t& mnInfo, int nNotBlockHeight) const
+bool CMasternodePayments::IsScheduled(const CDeterministicMNCPtr& dmnIn, int nNotBlockHeight) const
 {
     LOCK(cs_mapMasternodeBlocks);
 
-    if (deterministicMNManager->IsDIP3Active()) {
-        auto projectedPayees = deterministicMNManager->GetListAtChainTip().GetProjectedMNPayees(8);
-        for (const auto &dmn : projectedPayees) {
-            if (dmn->collateralOutpoint == mnInfo.outpoint) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    if(!masternodeSync.IsMasternodeListSynced()) return false;
-
-    CScript mnpayee;
-    mnpayee = GetScriptForDestination(mnInfo.keyIDCollateralAddress);
-
-    for(int64_t h = nCachedBlockHeight; h <= nCachedBlockHeight + 8; h++){
-        if(h == nNotBlockHeight) continue;
-        std::vector<CTxOut> voutMasternodePayments;
-        if(GetBlockTxOuts(h, 0, voutMasternodePayments)) {
-            for (const auto& txout : voutMasternodePayments) {
-                if (txout.scriptPubKey == mnpayee)
-                    return true;
-            }
+    auto projectedPayees = deterministicMNManager->GetListAtChainTip().GetProjectedMNPayees(8);
+    for (const auto &dmn : projectedPayees) {
+        if (dmn->proTxHash == dmnIn->proTxHash) {
+            return true;
         }
     }
-
     return false;
 }
 
@@ -1046,7 +1026,7 @@ void CMasternodePayments::CheckBlockVotes(int nBlockHeight)
                                               voteHash.ToString());
                         continue;
                     }
-                    if (itVote->second.masternodeOutpoint == mn.second.outpoint) {
+                    if (itVote->second.masternodeOutpoint == mn.second->collateralOutpoint) {
                         payee = itVote->second.payee;
                         found = true;
                         break;
@@ -1061,12 +1041,12 @@ void CMasternodePayments::CheckBlockVotes(int nBlockHeight)
             CBitcoinAddress address2(address1);
 
             debugStr += strprintf("    - %s - voted for %s\n",
-                                  mn.second.outpoint.ToStringShort(), address2.ToString());
+                                  mn.second->collateralOutpoint.ToStringShort(), address2.ToString());
         } else {
-            mapMasternodesDidNotVote.emplace(mn.second.outpoint, 0).first->second++;
+            mapMasternodesDidNotVote.emplace(mn.second->collateralOutpoint, 0).first->second++;
 
             debugStr += strprintf("    - %s - no vote received\n",
-                                  mn.second.outpoint.ToStringShort());
+                                  mn.second->collateralOutpoint.ToStringShort());
         }
 
         if (++i >= MNPAYMENTS_SIGNATURES_TOTAL) break;

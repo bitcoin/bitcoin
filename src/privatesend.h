@@ -225,7 +225,7 @@ public:
      */
     bool Sign();
     /// Check if we have a valid Masternode address
-    bool CheckSignature(const CKeyID& keyIDOperator, const CBLSPublicKey& blsPubKey) const;
+    bool CheckSignature(const CBLSPublicKey& blsPubKey) const;
 
     bool Relay(CConnman& connman);
 
@@ -306,7 +306,7 @@ public:
     uint256 GetSignatureHash() const;
 
     bool Sign();
-    bool CheckSignature(const CKeyID& keyIDOperator, const CBLSPublicKey& blsPubKey) const;
+    bool CheckSignature(const CBLSPublicKey& blsPubKey) const;
 
     void SetConfirmedHeight(int nConfirmedHeightIn) { nConfirmedHeight = nConfirmedHeightIn; }
     bool IsExpired(int nHeight);
