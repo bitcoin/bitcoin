@@ -82,6 +82,13 @@ Configuration option changes
   configuration file.  Recognized sections are `[test]`, `[main]`, and
   `[regtest]`.
 
+- Four new options are available for configuring the maximum number of
+  messages that ZMQ will queue in memory (the "high water mark") before
+  dropping additional messages.  The default value is 1,000, the same as
+  was used for previous releases.  See the [ZMQ
+  documentation](https://github.com/bitcoin/bitcoin/blob/master/doc/zmq.md#usage)
+  for details.
+
 - The `enablebip61` option (introduced in Bitcoin Core 0.17.0) is
   used to toggle sending of BIP 61 reject messages. Reject messages have no use
   case on the P2P network and are only logged for debugging by most network
@@ -210,6 +217,32 @@ in the Low-level Changes section below.
 - The `importmulti` RPC has been updated to support P2WSH, P2WPKH,
   P2SH-P2WPKH, and P2SH-P2WSH. Requests for P2WSH and P2SH-P2WSH accept
   an additional `witnessscript` parameter.
+
+- The `importmulti` RPC now returns an additional `warnings` field for
+  each request with an array of strings explaining when fields are being
+  ignored or are inconsistent, if there are any.
+
+- The `getaddressinfo` RPC now returns an additional `solvable` boolean
+  field when Bitcoin Core knows enough about the address's scriptPubKey,
+  optional redeemScript, and optional witnessScript in order for the
+  wallet to be able to generate an unsigned input spending funds sent to
+  that address.
+
+- The `getaddressinfo`, `listunspent`, and `scantxoutset` RPCs now
+  return an additional `desc` field that contains an output descriptor
+  containing all key paths and signing information for the address
+  (except for the private key).  The `desc` field is only returned for
+  `getaddressinfo` and `listunspent` when the address is solvable.
+
+- The `importprivkey` RPC will preserve previously-set labels for
+  addresses or public keys corresponding to the private key being
+  imported.  For example, if you imported a watch-only address with the
+  label "cold wallet" in earlier releases of Bitcoin Core, subsequently
+  importing the private key would default to resetting the address's
+  label to the default empty-string label ("").  In this release, the
+  previous label of "cold wallet" will be retained.  If you optionally
+  specify any label besides the default when calling `importprivkey`,
+  the new label will be applied to the address.
 
 - See the [Mining](#mining) section for changes to `getblocktemplate`.
 
