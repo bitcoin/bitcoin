@@ -70,7 +70,7 @@ class RPCBindTest(BitcoinTestFramework):
 
         self.log.info("Check for ipv6")
         have_ipv6 = test_ipv6_local()
-        if not have_ipv6 and not self.options.run_ipv4:
+        if not have_ipv6 and not (self.options.run_ipv4 or self.options.run_nonloopback):
             raise SkipTest("This test requires ipv6 support.")
 
         self.log.info("Check for non-loopback interface")
