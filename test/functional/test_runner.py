@@ -501,7 +501,10 @@ class TestHandler:
                     log_out.seek(0), log_err.seek(0)
                     [stdout, stderr] = [log_file.read().decode('utf-8') for log_file in (log_out, log_err)]
                     log_out.close(), log_err.close()
-                    if proc.returncode == TEST_EXIT_PASSED and stderr == "":
+                    # Ignore "Exception ignored in: " stderr messages
+                    # produced by python 3.4 cleanup (ubuntu 14.04)
+                    # https://bugs.python.org/issue22836
+                    if proc.returncode == TEST_EXIT_PASSED and stderr.replace("Exception ignored in: ", "") == "":
                         status = "Passed"
                     elif proc.returncode == TEST_EXIT_SKIPPED:
                         status = "Skipped"
