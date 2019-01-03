@@ -7,7 +7,6 @@
 #include "guiutil.h"
 #include "init.h"
 #include "masternode-sync.h"
-#include "masternodeman.h"
 #include "netbase.h"
 #include "qrdialog.h"
 #include "sync.h"

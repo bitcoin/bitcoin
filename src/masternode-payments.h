@@ -8,9 +8,10 @@
 #include "util.h"
 #include "core_io.h"
 #include "key.h"
-#include "masternode.h"
 #include "net_processing.h"
 #include "utilstrencodings.h"
+
+#include "evo/deterministicmns.h"
 
 class CMasternodePayments;
 

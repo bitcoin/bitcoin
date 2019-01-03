@@ -39,7 +39,6 @@
 #include "warnings.h"
 
 #include "instantx.h"
-#include "masternodeman.h"
 #include "masternode-payments.h"
 
 #include "evo/specialtx.h"

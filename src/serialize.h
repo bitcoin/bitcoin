@@ -596,8 +596,8 @@ template<typename Stream, typename K, typename Pred, typename A> void Unserializ
 /**
  * shared_ptr
  */
-template<typename Stream, typename T> void Serialize(Stream& os, const std::shared_ptr<const T>& p);
-template<typename Stream, typename T> void Unserialize(Stream& os, std::shared_ptr<const T>& p);
+template<typename Stream, typename T> void Serialize(Stream& os, const std::shared_ptr<T>& p);
+template<typename Stream, typename T> void Unserialize(Stream& os, std::shared_ptr<T>& p);
 
 /**
  * unique_ptr
@@ -941,15 +941,15 @@ void Unserialize(Stream& is, std::unique_ptr<const T>& p)
  * shared_ptr
  */
 template<typename Stream, typename T> void
-Serialize(Stream& os, const std::shared_ptr<const T>& p)
+Serialize(Stream& os, const std::shared_ptr<T>& p)
 {
     Serialize(os, *p);
 }
 
 template<typename Stream, typename T>
-void Unserialize(Stream& is, std::shared_ptr<const T>& p)
+void Unserialize(Stream& is, std::shared_ptr<T>& p)
 {
-    p = std::make_shared<const T>(deserialize, is);
+    p = std::make_shared<T>(deserialize, is);
 }
 
 

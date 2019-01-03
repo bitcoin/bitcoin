@@ -23,10 +23,10 @@
 #include "scheduler.h"
 #include "ui_interface.h"
 #include "utilstrencodings.h"
+#include "validation.h"
 
 #include "instantx.h"
 #include "masternode-sync.h"
-#include "masternodeman.h"
 #include "privatesend.h"
 
 #ifdef WIN32

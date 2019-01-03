@@ -5,9 +5,11 @@
 #include "governance-vote.h"
 #include "governance-object.h"
 #include "masternode-sync.h"
-#include "masternodeman.h"
 #include "messagesigner.h"
+#include "spork.h"
 #include "util.h"
+
+#include "evo/deterministicmns.h"
 
 std::string CGovernanceVoting::ConvertOutcomeToString(vote_outcome_enum_t nOutcome)
 {

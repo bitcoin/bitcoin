@@ -6,17 +6,16 @@
 #include "evo/deterministicmns.h"
 #include "init.h"
 #include "masternode-sync.h"
-#include "masternode.h"
-#include "masternodeman.h"
 #include "netbase.h"
 #include "protocol.h"
+#include "validation.h"
 #include "warnings.h"
 
 // Keep track of the active Masternode
 CActiveMasternodeInfo activeMasternodeInfo;
-CActiveDeterministicMasternodeManager* activeMasternodeManager;
+CActiveMasternodeManager* activeMasternodeManager;
 
-std::string CActiveDeterministicMasternodeManager::GetStateString() const
+std::string CActiveMasternodeManager::GetStateString() const
 {
     switch (state) {
     case MASTERNODE_WAITING_FOR_PROTX:
@@ -36,7 +35,7 @@ std::string CActiveDeterministicMasternodeManager::GetStateString() const
     }
 }
 
-std::string CActiveDeterministicMasternodeManager::GetStatus() const
+std::string CActiveMasternodeManager::GetStatus() const
 {
     switch (state) {
     case MASTERNODE_WAITING_FOR_PROTX:
@@ -56,7 +55,7 @@ std::string CActiveDeterministicMasternodeManager::GetStatus() const
     }
 }
 
-void CActiveDeterministicMasternodeManager::Init()
+void CActiveMasternodeManager::Init()
 {
     LOCK(cs_main);
 
@@ -97,12 +96,12 @@ void CActiveDeterministicMasternodeManager::Init()
 
     mnListEntry = dmn;
 
-    LogPrintf("CActiveDeterministicMasternodeManager::Init -- proTxHash=%s, proTx=%s\n", mnListEntry->proTxHash.ToString(), mnListEntry->ToString());
+    LogPrintf("CActiveMasternodeManager::Init -- proTxHash=%s, proTx=%s\n", mnListEntry->proTxHash.ToString(), mnListEntry->ToString());
 
     if (activeMasternodeInfo.service != mnListEntry->pdmnState->addr) {
         state = MASTERNODE_ERROR;
         strError = "Local address does not match the address from ProTx";
-        LogPrintf("CActiveDeterministicMasternodeManager::Init -- ERROR: %s", strError);
+        LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s", strError);
         return;
     }
 
@@ -126,7 +125,7 @@ void CActiveDeterministicMasternodeManager::Init()
     state = MASTERNODE_READY;
 }
 
-void CActiveDeterministicMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload)
+void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload)
 {
     LOCK(cs_main);
 
@@ -157,7 +156,7 @@ void CActiveDeterministicMasternodeManager::UpdatedBlockTip(const CBlockIndex* p
     }
 }
 
-bool CActiveDeterministicMasternodeManager::GetLocalAddress(CService& addrRet)
+bool CActiveMasternodeManager::GetLocalAddress(CService& addrRet)
 {
     // First try to find whatever local address is specified by externalip option
     bool fFoundLocal = GetLocal(addrRet) && IsValidNetAddr(addrRet);
@@ -178,14 +177,14 @@ bool CActiveDeterministicMasternodeManager::GetLocalAddress(CService& addrRet)
         // nothing and no live connections, can't do anything for now
         if (empty) {
             strError = "Can't detect valid external address. Please consider using the externalip configuration option if problem persists. Make sure to use IPv4 address only.";
-            LogPrintf("CActiveDeterministicMasternodeManager::GetLocalAddress -- ERROR: %s\n", strError);
+            LogPrintf("CActiveMasternodeManager::GetLocalAddress -- ERROR: %s\n", strError);
             return false;
         }
     }
     return true;
 }
 
-bool CActiveDeterministicMasternodeManager::IsValidNetAddr(CService addrIn)
+bool CActiveMasternodeManager::IsValidNetAddr(CService addrIn)
 {
     // TODO: regtest is fine with any addresses for now,
     // should probably be a bit smarter if one day we start to implement tests for this

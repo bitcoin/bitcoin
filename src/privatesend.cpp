@@ -8,13 +8,13 @@
 #include "consensus/validation.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
-#include "masternodeman.h"
 #include "messagesigner.h"
 #include "netmessagemaker.h"
 #include "script/sign.h"
 #include "txmempool.h"
 #include "util.h"
 #include "utilmoneystr.h"
+#include "validation.h"
 
 #include <string>
 

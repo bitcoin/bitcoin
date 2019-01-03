@@ -9,10 +9,12 @@
 #include "governance-vote.h"
 #include "governance.h"
 #include "instantx.h"
+#include "masternode-meta.h"
 #include "masternode-sync.h"
-#include "masternodeman.h"
 #include "messagesigner.h"
+#include "spork.h"
 #include "util.h"
+#include "validation.h"
 
 #include <string>
 #include <univalue.h>
@@ -117,8 +119,9 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
     }
 
     auto mnList = deterministicMNManager->GetListAtChainTip();
+    auto dmn = mnList.GetValidMNByCollateral(vote.GetMasternodeOutpoint());
 
-    if (!mnList.HasValidMNByCollateral(vote.GetMasternodeOutpoint())) {
+    if (!dmn) {
         std::ostringstream ostr;
         ostr << "CGovernanceObject::ProcessVote -- Masternode " << vote.GetMasternodeOutpoint().ToStringShort() << " not found";
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_WARNING);
@@ -191,7 +194,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         return false;
     }
 
-    if (!mnodeman.AddGovernanceVote(vote.GetMasternodeOutpoint(), vote.GetParentHash())) {
+    if (!mmetaman.AddGovernanceVote(dmn->proTxHash, vote.GetParentHash())) {
         std::ostringstream ostr;
         ostr << "CGovernanceObject::ProcessVote -- Unable to add governance vote"
              << ", MN outpoint = " << vote.GetMasternodeOutpoint().ToStringShort()

@@ -15,7 +15,7 @@
 #include "evo/providertx.h"
 
 struct CActiveMasternodeInfo;
-class CActiveDeterministicMasternodeManager;
+class CActiveMasternodeManager;
 
 static const int ACTIVE_MASTERNODE_INITIAL          = 0; // initial state
 static const int ACTIVE_MASTERNODE_SYNC_IN_PROCESS  = 1;
@@ -24,7 +24,7 @@ static const int ACTIVE_MASTERNODE_NOT_CAPABLE      = 3;
 static const int ACTIVE_MASTERNODE_STARTED          = 4;
 
 extern CActiveMasternodeInfo activeMasternodeInfo;
-extern CActiveDeterministicMasternodeManager* activeMasternodeManager;
+extern CActiveMasternodeManager* activeMasternodeManager;
 
 struct CActiveMasternodeInfo {
     // Keys for the active Masternode
@@ -38,7 +38,7 @@ struct CActiveMasternodeInfo {
 };
 
 
-class CActiveDeterministicMasternodeManager : public CValidationInterface
+class CActiveMasternodeManager : public CValidationInterface
 {
 public:
     enum masternode_state_t {

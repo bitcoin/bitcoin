@@ -5,7 +5,6 @@
 #ifndef PRIVATESENDCLIENT_H
 #define PRIVATESENDCLIENT_H
 
-#include "masternode.h"
 #include "privatesend-util.h"
 #include "privatesend.h"
 #include "wallet/wallet.h"

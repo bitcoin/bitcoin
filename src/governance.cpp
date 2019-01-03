@@ -9,14 +9,15 @@
 #include "governance-validators.h"
 #include "governance-vote.h"
 #include "init.h"
+#include "masternode-meta.h"
 #include "masternode-sync.h"
-#include "masternode.h"
-#include "masternodeman.h"
 #include "messagesigner.h"
 #include "net_processing.h"
 #include "netfulfilledman.h"
 #include "netmessagemaker.h"
+#include "spork.h"
 #include "util.h"
+#include "validation.h"
 #include "validationinterface.h"
 
 CGovernanceManager governance;
@@ -370,7 +371,7 @@ void CGovernanceManager::UpdateCachesAndClean()
 {
     LogPrint("gobject", "CGovernanceManager::UpdateCachesAndClean\n");
 
-    std::vector<uint256> vecDirtyHashes = mnodeman.GetAndClearDirtyGovernanceObjectHashes();
+    std::vector<uint256> vecDirtyHashes = mmetaman.GetAndClearDirtyGovernanceObjectHashes();
 
     LOCK2(cs_main, cs);
 
@@ -421,7 +422,7 @@ void CGovernanceManager::UpdateCachesAndClean()
         if ((pObj->IsSetCachedDelete() || pObj->IsSetExpired()) &&
             (nTimeSinceDeletion >= GOVERNANCE_DELETION_DELAY)) {
             LogPrintf("CGovernanceManager::UpdateCachesAndClean -- erase obj %s\n", (*it).first.ToString());
-            mnodeman.RemoveGovernanceObject(pObj->GetHash());
+            mmetaman.RemoveGovernanceObject(pObj->GetHash());
 
             // Remove vote references
             const object_ref_cm_t::list_t& listItems = cmapVoteToObject.GetItemList();

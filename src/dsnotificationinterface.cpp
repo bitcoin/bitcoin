@@ -6,13 +6,13 @@
 #include "dsnotificationinterface.h"
 #include "instantx.h"
 #include "governance.h"
-#include "masternodeman.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
 #include "privatesend.h"
 #ifdef ENABLE_WALLET
 #include "privatesend-client.h"
 #endif // ENABLE_WALLET
+#include "validation.h"
 
 #include "evo/deterministicmns.h"
 

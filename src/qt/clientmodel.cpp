@@ -20,9 +20,10 @@
 #include "ui_interface.h"
 #include "util.h"
 
-#include "masternodeman.h"
 #include "masternode-sync.h"
 #include "privatesend.h"
+
+#include "evo/deterministicmns.h"
 
 #include <stdint.h>
 

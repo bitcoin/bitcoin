@@ -8,14 +8,15 @@
 #include "consensus/validation.h"
 #include "core_io.h"
 #include "init.h"
+#include "masternode-meta.h"
 #include "masternode-sync.h"
-#include "masternodeman.h"
 #include "net_processing.h"
 #include "netmessagemaker.h"
 #include "script/interpreter.h"
 #include "txmempool.h"
 #include "util.h"
 #include "utilmoneystr.h"
+#include "validation.h"
 
 CPrivateSendServer privateSendServer;
 
@@ -67,8 +68,8 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
                 }
             }
 
-            int64_t nLastDsq = mnodeman.GetLastDsq(dmn->collateralOutpoint);
-            if (nLastDsq != 0 && nLastDsq + mnList.GetValidMNsCount() / 5 > mnodeman.nDsqCount) {
+            int64_t nLastDsq = mmetaman.GetMetaInfo(dmn->proTxHash)->GetLastDsq();
+            if (nLastDsq != 0 && nLastDsq + mnList.GetValidMNsCount() / 5 > mmetaman.GetDsqCount()) {
                 LogPrintf("DSACCEPT -- last dsq too recent, must wait: addr=%s\n", pfrom->addr.ToString());
                 PushStatus(pfrom, STATUS_REJECTED, ERR_RECENT, connman);
                 return;
@@ -133,15 +134,15 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
                 }
             }
 
-            int64_t nLastDsq = mnodeman.GetLastDsq(dmn->collateralOutpoint);
+            int64_t nLastDsq = mmetaman.GetMetaInfo(dmn->proTxHash)->GetLastDsq();
             int nThreshold = nLastDsq + mnList.GetValidMNsCount() / 5;
-            LogPrint("privatesend", "DSQUEUE -- nLastDsq: %d  threshold: %d  nDsqCount: %d\n", nLastDsq, nThreshold, mnodeman.nDsqCount);
+            LogPrint("privatesend", "DSQUEUE -- nLastDsq: %d  threshold: %d  nDsqCount: %d\n", nLastDsq, nThreshold, mmetaman.GetDsqCount());
             //don't allow a few nodes to dominate the queuing process
-            if (nLastDsq != 0 && nThreshold > mnodeman.nDsqCount) {
+            if (nLastDsq != 0 && nThreshold > mmetaman.GetDsqCount()) {
                 LogPrint("privatesend", "DSQUEUE -- Masternode %s is sending too many dsq messages\n", dmn->pdmnState->addr.ToString());
                 return;
             }
-            mnodeman.AllowMixing(dsq.masternodeOutpoint);
+            mmetaman.AllowMixing(dmn->proTxHash);
 
             LogPrint("privatesend", "DSQUEUE -- new PrivateSend queue (%s) from masternode %s\n", dsq.ToString(), dmn->pdmnState->addr.ToString());
             vecPrivateSendQueue.push_back(dsq);

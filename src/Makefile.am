@@ -144,10 +144,10 @@ BITCOIN_CORE_H = \
   llmq/quorums_dummydkg.h \
   llmq/quorums_utils.h \
   llmq/quorums_init.h \
-  masternode.h \
+  masternode-meta.h \
   masternode-payments.h \
   masternode-sync.h \
-  masternodeman.h \
+  masternode-utils.h \
   memusage.h \
   merkleblock.h \
   messagesigner.h \
@@ -252,10 +252,10 @@ libdash_server_a_SOURCES = \
   llmq/quorums_dummydkg.cpp \
   llmq/quorums_utils.cpp \
   llmq/quorums_init.cpp \
-  masternode.cpp \
+  masternode-meta.cpp \
   masternode-payments.cpp \
   masternode-sync.cpp \
-  masternodeman.cpp \
+  masternode-utils.cpp \
   merkleblock.cpp \
   messagesigner.cpp \
   miner.cpp \

@@ -9,12 +9,13 @@
 #include "init.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
-#include "masternodeman.h"
+#include "masternode-meta.h"
 #include "netmessagemaker.h"
 #include "script/sign.h"
 #include "txmempool.h"
 #include "util.h"
 #include "utilmoneystr.h"
+#include "validation.h"
 #include "wallet/coincontrol.h"
 
 #include <memory>
@@ -95,16 +96,16 @@ void CPrivateSendClientManager::ProcessMessage(CNode* pfrom, const std::string& 
                 }
             }
 
-            int64_t nLastDsq = mnodeman.GetLastDsq(dsq.masternodeOutpoint);
+            int64_t nLastDsq = mmetaman.GetMetaInfo(dmn->proTxHash)->GetLastDsq();
             int nThreshold = nLastDsq + mnList.GetValidMNsCount() / 5;
-            LogPrint("privatesend", "DSQUEUE -- nLastDsq: %d  threshold: %d  nDsqCount: %d\n", nLastDsq, nThreshold, mnodeman.nDsqCount);
+            LogPrint("privatesend", "DSQUEUE -- nLastDsq: %d  threshold: %d  nDsqCount: %d\n", nLastDsq, nThreshold, mmetaman.GetDsqCount());
             //don't allow a few nodes to dominate the queuing process
-            if (nLastDsq != 0 && nThreshold > mnodeman.nDsqCount) {
+            if (nLastDsq != 0 && nThreshold > mmetaman.GetDsqCount()) {
                 LogPrint("privatesend", "DSQUEUE -- Masternode %s is sending too many dsq messages\n", dmn->proTxHash.ToString());
                 return;
             }
 
-            if (!mnodeman.AllowMixing(dsq.masternodeOutpoint)) return;
+            mmetaman.AllowMixing(dmn->proTxHash);
 
             LogPrint("privatesend", "DSQUEUE -- new PrivateSend queue (%s) from masternode %s\n", dsq.ToString(), dmn->pdmnState->addr.ToString());
             for (auto& session : deqSessions) {
@@ -1135,12 +1136,12 @@ bool CPrivateSendClientSession::StartNewQueue(CAmount nValueMin, CAmount nBalanc
             continue;
         }
 
-        int64_t nLastDsq = mnodeman.GetLastDsq(dmn->collateralOutpoint);
-        if (nLastDsq != 0 && nLastDsq + nMnCount / 5 > mnodeman.nDsqCount) {
+        int64_t nLastDsq = mmetaman.GetMetaInfo(dmn->proTxHash)->GetLastDsq();
+        if (nLastDsq != 0 && nLastDsq + nMnCount / 5 > mmetaman.GetDsqCount()) {
             LogPrintf("CPrivateSendClientSession::StartNewQueue -- Too early to mix on this masternode!"
                       " masternode=%s  addr=%s  nLastDsq=%d  CountEnabled/5=%d  nDsqCount=%d\n",
                 dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToString(), nLastDsq,
-                nMnCount / 5, mnodeman.nDsqCount);
+                nMnCount / 5, mmetaman.GetDsqCount());
             nTries++;
             continue;
         }
