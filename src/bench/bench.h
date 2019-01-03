@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2018 The Bitcoin Core developers
+// Copyright (c) 2015-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -111,9 +111,9 @@ public:
 class ConsolePrinter : public Printer
 {
 public:
-    void header() override;
-    void result(const State& state) override;
-    void footer() override;
+    void header();
+    void result(const State& state);
+    void footer();
 };
 
 // creates box plot with plotly.js
@@ -121,9 +121,9 @@ class PlotlyPrinter : public Printer
 {
 public:
     PlotlyPrinter(std::string plotly_url, int64_t width, int64_t height);
-    void header() override;
-    void result(const State& state) override;
-    void footer() override;
+    void header();
+    void result(const State& state);
+    void footer();
 
 private:
     std::string m_plotly_url;

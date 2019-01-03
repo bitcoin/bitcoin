@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # Copyright (c) 2014 Wladimir J. van der Laan
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -15,6 +15,7 @@ It will do the following automatically:
 TODO:
 - auto-add new translations to the build system according to the translation process
 '''
+from __future__ import division, print_function
 import subprocess
 import re
 import sys
@@ -30,8 +31,6 @@ SOURCE_LANG = 'bitcoin_en.ts'
 LOCALE_DIR = 'src/qt/locale'
 # Minimum number of messages for translation to be considered at all
 MIN_NUM_MESSAGES = 10
-# Regexp to check for Bitcoin addresses
-ADDRESS_REGEXP = re.compile('([13]|bc1)[a-zA-Z0-9]{30,}')
 
 def check_at_repository_root():
     if not os.path.exists('.git'):
@@ -124,12 +123,6 @@ def escape_cdata(text):
     text = text.replace('"', '&quot;')
     return text
 
-def contains_bitcoin_addr(text, errors):
-    if text is not None and ADDRESS_REGEXP.search(text) is not None:
-        errors.append('Translation "%s" contains a bitcoin address. This will be removed.' % (text))
-        return True
-    return False
-
 def postprocess_translations(reduce_diff_hacks=False):
     print('Checking and postprocessing...')
 
@@ -168,7 +161,7 @@ def postprocess_translations(reduce_diff_hacks=False):
                     if translation is None:
                         continue
                     errors = []
-                    valid = check_format_specifiers(source, translation, errors, numerus) and not contains_bitcoin_addr(translation, errors)
+                    valid = check_format_specifiers(source, translation, errors, numerus)
 
                     for error in errors:
                         print('%s: %s' % (filename, error))

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 #
 #===- clang-format-diff.py - ClangFormat Diff Reformatter ----*- python -*--===#
 #
@@ -69,9 +69,10 @@ Example usage for git/svn users:
 
 import argparse
 import difflib
-import io
 import re
+import string
 import subprocess
+import StringIO
 import sys
 
 
@@ -109,7 +110,7 @@ def main():
     match = re.search('^\+\+\+\ (.*?/){%s}(\S*)' % args.p, line)
     if match:
       filename = match.group(2)
-    if filename is None:
+    if filename == None:
       continue
 
     if args.regex is not None:
@@ -132,9 +133,9 @@ def main():
           ['-lines', str(start_line) + ':' + str(end_line)])
 
   # Reformat files containing changes in place.
-  for filename, lines in lines_by_file.items():
+  for filename, lines in lines_by_file.iteritems():
     if args.i and args.verbose:
-      print('Formatting {}'.format(filename))
+      print 'Formatting', filename
     command = [binary, filename]
     if args.i:
       command.append('-i')
@@ -142,23 +143,20 @@ def main():
       command.append('-sort-includes')
     command.extend(lines)
     command.extend(['-style=file', '-fallback-style=none'])
-    p = subprocess.Popen(command,
-                         stdout=subprocess.PIPE,
-                         stderr=None,
-                         stdin=subprocess.PIPE,
-                         universal_newlines=True)
+    p = subprocess.Popen(command, stdout=subprocess.PIPE,
+                         stderr=None, stdin=subprocess.PIPE)
     stdout, stderr = p.communicate()
     if p.returncode != 0:
       sys.exit(p.returncode)
 
     if not args.i:
-      with open(filename, encoding="utf8") as f:
+      with open(filename) as f:
         code = f.readlines()
-      formatted_code = io.StringIO(stdout).readlines()
+      formatted_code = StringIO.StringIO(stdout).readlines()
       diff = difflib.unified_diff(code, formatted_code,
                                   filename, filename,
                                   '(before formatting)', '(after formatting)')
-      diff_string = ''.join(diff)
+      diff_string = string.join(diff, '')
       if len(diff_string) > 0:
         sys.stdout.write(diff_string)
 

@@ -26,10 +26,6 @@
         <translation>Одоо сонгогдсон байгаа хаягуудыг жагсаалтаас устгах</translation>
     </message>
     <message>
-        <source>Enter address or label to search</source>
-        <translation>Хайлт хийхийн тулд хаяг эсвэл шошгыг оруул</translation>
-    </message>
-    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Сонгогдсон таб дээрхи дата-г экспортлох</translation>
     </message>
@@ -229,6 +225,10 @@
         <source>version</source>
         <translation>хувилбар</translation>
     </message>
+    <message>
+        <source>Usage:</source>
+        <translation>Хэрэглээ:</translation>
+    </message>
     </context>
 <context>
     <name>Intro</name>
@@ -408,10 +408,6 @@
         <source>Copy &amp;Address</source>
         <translation>Хаягийг &amp;Хуулбарлах</translation>
     </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Түрүйвч</translation>
-    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
@@ -563,6 +559,14 @@
     </context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>Options:</source>
+        <translation>Сонголтууд:</translation>
+    </message>
+    <message>
+        <source>Wallet options:</source>
+        <translation>Түрүйвчийн сонголтууд:</translation>
+    </message>
     <message>
         <source>Information</source>
         <translation>Мэдээллэл</translation>

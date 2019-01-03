@@ -1,10 +1,7 @@
-#!/usr/bin/env bash
-#
 # Copyright (c) 2014-2015 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-export LC_ALL=C
 FRAMEDIR=$(dirname $0)
 for i in {0..35}
 do

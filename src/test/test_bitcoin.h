@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2018 The Bitcoin Core developers
+// Copyright (c) 2015-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,39 +14,26 @@
 #include <txdb.h>
 #include <txmempool.h>
 
-#include <memory>
-#include <type_traits>
-
 #include <boost/thread.hpp>
 
-// Enable BOOST_CHECK_EQUAL for enum class types
-template <typename T>
-std::ostream& operator<<(typename std::enable_if<std::is_enum<T>::value, std::ostream>::type& stream, const T& e)
+extern uint256 insecure_rand_seed;
+extern FastRandomContext insecure_rand_ctx;
+
+static inline void SeedInsecureRand(bool fDeterministic = false)
 {
-    return stream << static_cast<typename std::underlying_type<T>::type>(e);
+    if (fDeterministic) {
+        insecure_rand_seed = uint256();
+    } else {
+        insecure_rand_seed = GetRandHash();
+    }
+    insecure_rand_ctx = FastRandomContext(insecure_rand_seed);
 }
 
-/**
- * This global and the helpers that use it are not thread-safe.
- *
- * If thread-safety is needed, the global could be made thread_local (given
- * that thread_local is supported on all architectures we support) or a
- * per-thread instance could be used in the multi-threaded test.
- */
-extern FastRandomContext g_insecure_rand_ctx;
-
-static inline void SeedInsecureRand(bool deterministic = false)
-{
-    g_insecure_rand_ctx = FastRandomContext(deterministic);
-}
-
-static inline uint32_t InsecureRand32() { return g_insecure_rand_ctx.rand32(); }
-static inline uint256 InsecureRand256() { return g_insecure_rand_ctx.rand256(); }
-static inline uint64_t InsecureRandBits(int bits) { return g_insecure_rand_ctx.randbits(bits); }
-static inline uint64_t InsecureRandRange(uint64_t range) { return g_insecure_rand_ctx.randrange(range); }
-static inline bool InsecureRandBool() { return g_insecure_rand_ctx.randbool(); }
-
-static constexpr CAmount CENT{1000000};
+static inline uint32_t InsecureRand32() { return insecure_rand_ctx.rand32(); }
+static inline uint256 InsecureRand256() { return insecure_rand_ctx.rand256(); }
+static inline uint64_t InsecureRandBits(int bits) { return insecure_rand_ctx.randbits(bits); }
+static inline uint64_t InsecureRandRange(uint64_t range) { return insecure_rand_ctx.randrange(range); }
+static inline bool InsecureRandBool() { return insecure_rand_ctx.randbool(); }
 
 /** Basic testing setup.
  * This just configures logging and chain parameters.
@@ -56,11 +43,6 @@ struct BasicTestingSetup {
 
     explicit BasicTestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~BasicTestingSetup();
-
-    fs::path SetDataDir(const std::string& name);
-
-private:
-    const fs::path m_path_root;
 };
 
 /** Testing setup that configures a complete environment.
@@ -74,7 +56,8 @@ struct CConnmanTest {
 };
 
 class PeerLogicValidation;
-struct TestingSetup : public BasicTestingSetup {
+struct TestingSetup: public BasicTestingSetup {
+    fs::path pathTemp;
     boost::thread_group threadGroup;
     CConnman* connman;
     CScheduler scheduler;
@@ -102,7 +85,7 @@ struct TestChain100Setup : public TestingSetup {
 
     ~TestChain100Setup();
 
-    std::vector<CTransactionRef> m_coinbase_txns; // For convenience, coinbase transactions
+    std::vector<CTransaction> coinbaseTxns; // For convenience, coinbase transactions
     CKey coinbaseKey; // private/public key needed to spend coinbase transactions
 };
 
@@ -122,8 +105,8 @@ struct TestMemPoolEntryHelper
         nFee(0), nTime(0), nHeight(1),
         spendsCoinbase(false), sigOpCost(4) { }
 
-    CTxMemPoolEntry FromTx(const CMutableTransaction& tx);
-    CTxMemPoolEntry FromTx(const CTransactionRef& tx);
+    CTxMemPoolEntry FromTx(const CMutableTransaction &tx);
+    CTxMemPoolEntry FromTx(const CTransaction &tx);
 
     // Change the default value
     TestMemPoolEntryHelper &Fee(CAmount _fee) { nFee = _fee; return *this; }
@@ -134,8 +117,5 @@ struct TestMemPoolEntryHelper
 };
 
 CBlock getBlock13b8a();
-
-// define an implicit conversion here so that uint256 may be used directly in BOOST_CHECK_*
-std::ostream& operator<<(std::ostream& os, const uint256& num);
 
 #endif

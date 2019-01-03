@@ -26,10 +26,6 @@
         <translation>Borrar a dirección actualmente seleccionada da listaxe</translation>
     </message>
     <message>
-        <source>Enter address or label to search</source>
-        <translation>Introduce dirección ou etiqueta para buscar</translation>
-    </message>
-    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Exportar os datos da pestaña actual a un arquivo.</translation>
     </message>
@@ -385,7 +381,15 @@
         <source>Command-line options</source>
         <translation>Opcións da liña de comandos</translation>
     </message>
-</context>
+    <message>
+        <source>Usage:</source>
+        <translation>Emprego:</translation>
+    </message>
+    <message>
+        <source>command-line options</source>
+        <translation>opcións da liña de comandos</translation>
+    </message>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -748,10 +752,6 @@
         <source>&amp;Save Image...</source>
         <translation>&amp;Gardar Imaxe...</translation>
     </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Moedeiro</translation>
-    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
@@ -817,10 +817,6 @@
     <message>
         <source>S&amp;end</source>
         <translation>&amp;Enviar</translation>
-    </message>
-    <message>
-        <source>Transaction fee</source>
-        <translation>Tarifa de transacción</translation>
     </message>
     </context>
 <context>
@@ -1000,8 +996,52 @@
 <context>
     <name>bitcoin-core</name>
     <message>
+        <source>Options:</source>
+        <translation>Opcións:</translation>
+    </message>
+    <message>
+        <source>Specify data directory</source>
+        <translation>Especificar directorio de datos</translation>
+    </message>
+    <message>
+        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
+        <translation>Conectar a nodo para recuperar direccións de pares, e desconectar</translation>
+    </message>
+    <message>
+        <source>Specify your own public address</source>
+        <translation>Especificar a túa propia dirección pública</translation>
+    </message>
+    <message>
+        <source>Accept command line and JSON-RPC commands</source>
+        <translation>Aceptar liña de comandos e comandos JSON-RPC</translation>
+    </message>
+    <message>
+        <source>Run in the background as a daemon and accept commands</source>
+        <translation>Executar no fondo como un demo e aceptar comandos</translation>
+    </message>
+    <message>
         <source>Bitcoin Core</source>
         <translation>Core de Bitcoin</translation>
+    </message>
+    <message>
+        <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
+        <translation>Enlazar a unha dirección dada e escoitar sempre nela. Emprega a notación [host]:post para IPv6</translation>
+    </message>
+    <message>
+        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
+        <translation>Executar comando cando unha transacción do moedeiro cambia (%s no comando é substituído por TxID)</translation>
+    </message>
+    <message>
+        <source>&lt;category&gt; can be:</source>
+        <translation>&lt;categoría&gt; pode ser:</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
+        <translation>Aceptar conexións de fóra (por defecto: 1 se non -proxy ou -connect)</translation>
+    </message>
+    <message>
+        <source>Block creation options:</source>
+        <translation>Opcións de creación de bloque:</translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>
@@ -1044,12 +1084,28 @@
         <translation>Non hai suficientes descritores de arquivo dispoñibles.</translation>
     </message>
     <message>
+        <source>Specify wallet file (within data directory)</source>
+        <translation>Especificar arquivo do moedeiro (dentro do directorio de datos)</translation>
+    </message>
+    <message>
         <source>Verifying blocks...</source>
         <translation>Verificando bloques...</translation>
     </message>
     <message>
+        <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
+        <translation>Executar comando cando se recibe unha alerta relevante ou vemos un fork realmente longo (%s no cmd é substituído pola mensaxe)</translation>
+    </message>
+    <message>
         <source>Information</source>
         <translation>Información</translation>
+    </message>
+    <message>
+        <source>Send trace/debug info to console instead of debug.log file</source>
+        <translation>Enviar traza/información de depuración á consola en lugar de ao arquivo debug.log</translation>
+    </message>
+    <message>
+        <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
+        <translation>Recortar o arquivo debug.log ao arrancar o cliente (por defecto: 1 cando no-debug)</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
@@ -1064,8 +1120,28 @@
         <translation>A transacción é demasiado grande</translation>
     </message>
     <message>
+        <source>Username for JSON-RPC connections</source>
+        <translation>Nome de usuario para conexións JSON-RPC</translation>
+    </message>
+    <message>
         <source>Warning</source>
         <translation>Precaución</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to change -txindex</source>
+        <translation>Precisas reconstruír a base de datos empregando -reindex para cambiar -txindex</translation>
+    </message>
+    <message>
+        <source>Password for JSON-RPC connections</source>
+        <translation>Contrasinal para conexións JSON-RPC</translation>
+    </message>
+    <message>
+        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
+        <translation>Executar comando cando o mellor bloque cambie (%s no comando é sustituído polo hash do bloque)</translation>
+    </message>
+    <message>
+        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
+        <translation>Permitir lookup de DNS para -addnote, -seednote e -connect</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>

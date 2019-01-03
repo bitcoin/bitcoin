@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2018 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -30,12 +30,5 @@ public:
  *  Returns the name of the implementation.
  */
 std::string SHA256AutoDetect();
-
-/** Compute multiple double-SHA256's of 64-byte blobs.
- *  output:  pointer to a blocks*32 byte output buffer
- *  input:   pointer to a blocks*64 byte input buffer
- *  blocks:  the number of hashes to compute.
- */
-void SHA256D64(unsigned char* output, const unsigned char* input, size_t blocks);
 
 #endif // BITCOIN_CRYPTO_SHA256_H

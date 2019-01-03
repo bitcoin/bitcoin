@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,14 +11,11 @@
 #include <serialize.h>
 #include <streams.h>
 #include <sync.h>
-#include <util/system.h>
 #include <version.h>
 
 #include <atomic>
 #include <map>
-#include <memory>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 #include <db_cxx.h>
@@ -26,14 +23,7 @@
 static const unsigned int DEFAULT_WALLET_DBLOGSIZE = 100;
 static const bool DEFAULT_WALLET_PRIVDB = true;
 
-struct WalletDatabaseFileId {
-    u_int8_t value[DB_FILE_ID_LEN];
-    bool operator==(const WalletDatabaseFileId& rhs) const;
-};
-
-class BerkeleyDatabase;
-
-class BerkeleyEnvironment
+class CDBEnv
 {
 private:
     bool fDbEnvInit;
@@ -42,22 +32,20 @@ private:
     // shutdown problems/crashes caused by a static initialized internal pointer.
     std::string strPath;
 
+    void EnvShutdown();
+
 public:
+    mutable CCriticalSection cs_db;
     std::unique_ptr<DbEnv> dbenv;
     std::map<std::string, int> mapFileUseCount;
-    std::map<std::string, std::reference_wrapper<BerkeleyDatabase>> m_databases;
-    std::unordered_map<std::string, WalletDatabaseFileId> m_fileids;
-    std::condition_variable_any m_db_in_use;
+    std::map<std::string, Db*> mapDb;
 
-    BerkeleyEnvironment(const fs::path& env_directory);
-    ~BerkeleyEnvironment();
+    CDBEnv();
+    ~CDBEnv();
     void Reset();
 
     void MakeMock();
     bool IsMock() const { return fMockDb; }
-    bool IsInitialized() const { return fDbEnvInit; }
-    bool IsDatabaseLoaded(const std::string& db_filename) const { return m_databases.find(db_filename) != m_databases.end(); }
-    fs::path Directory() const { return strPath; }
 
     /**
      * Verify that database file strFile is OK. If it is not,
@@ -65,10 +53,10 @@ public:
      * This must be called BEFORE strFile is opened.
      * Returns true if strFile is OK.
      */
-    enum class VerifyResult { VERIFY_OK,
+    enum VerifyResult { VERIFY_OK,
                         RECOVER_OK,
                         RECOVER_FAIL };
-    typedef bool (*recoverFunc_type)(const fs::path& file_path, std::string& out_backup_filename);
+    typedef bool (*recoverFunc_type)(const std::string& strFile, std::string& out_backup_filename);
     VerifyResult Verify(const std::string& strFile, recoverFunc_type recoverFunc, std::string& out_backup_filename);
     /**
      * Salvage data from a file that Verify says is bad.
@@ -80,13 +68,12 @@ public:
     typedef std::pair<std::vector<unsigned char>, std::vector<unsigned char> > KeyValPair;
     bool Salvage(const std::string& strFile, bool fAggressive, std::vector<KeyValPair>& vResult);
 
-    bool Open(bool retry);
+    bool Open(const fs::path& path, bool retry = 0);
     void Close();
     void Flush(bool fShutdown);
     void CheckpointLSN(const std::string& strFile);
 
     void CloseDb(const std::string& strFile);
-    void ReloadDbEnv();
 
     DbTxn* TxnBegin(int flags = DB_TXN_WRITE_NOSYNC)
     {
@@ -98,61 +85,24 @@ public:
     }
 };
 
-/** Return whether a wallet database is currently loaded. */
-bool IsWalletLoaded(const fs::path& wallet_path);
-
-/** Get BerkeleyEnvironment and database filename given a wallet path. */
-BerkeleyEnvironment* GetWalletEnv(const fs::path& wallet_path, std::string& database_filename);
+extern CDBEnv bitdb;
 
 /** An instance of this class represents one database.
  * For BerkeleyDB this is just a (env, strFile) tuple.
  **/
-class BerkeleyDatabase
+class CWalletDBWrapper
 {
-    friend class BerkeleyBatch;
+    friend class CDB;
 public:
     /** Create dummy DB handle */
-    BerkeleyDatabase() : nUpdateCounter(0), nLastSeen(0), nLastFlushed(0), nLastWalletUpdate(0), env(nullptr)
+    CWalletDBWrapper() : nUpdateCounter(0), nLastSeen(0), nLastFlushed(0), nLastWalletUpdate(0), env(nullptr)
     {
     }
 
     /** Create DB handle to real database */
-    BerkeleyDatabase(const fs::path& wallet_path, bool mock = false) :
-        nUpdateCounter(0), nLastSeen(0), nLastFlushed(0), nLastWalletUpdate(0)
+    CWalletDBWrapper(CDBEnv *env_in, const std::string &strFile_in) :
+        nUpdateCounter(0), nLastSeen(0), nLastFlushed(0), nLastWalletUpdate(0), env(env_in), strFile(strFile_in)
     {
-        env = GetWalletEnv(wallet_path, strFile);
-        auto inserted = env->m_databases.emplace(strFile, std::ref(*this));
-        assert(inserted.second);
-        if (mock) {
-            env->Close();
-            env->Reset();
-            env->MakeMock();
-        }
-    }
-
-    ~BerkeleyDatabase() {
-        if (env) {
-            size_t erased = env->m_databases.erase(strFile);
-            assert(erased == 1);
-        }
-    }
-
-    /** Return object for accessing database at specified path. */
-    static std::unique_ptr<BerkeleyDatabase> Create(const fs::path& path)
-    {
-        return MakeUnique<BerkeleyDatabase>(path);
-    }
-
-    /** Return object for accessing dummy database with no read/write capabilities. */
-    static std::unique_ptr<BerkeleyDatabase> CreateDummy()
-    {
-        return MakeUnique<BerkeleyDatabase>();
-    }
-
-    /** Return object for accessing temporary in-memory database. */
-    static std::unique_ptr<BerkeleyDatabase> CreateMock()
-    {
-        return MakeUnique<BerkeleyDatabase>("", true /* mock */);
     }
 
     /** Rewrite the entire database on disk, with the exception of key pszSkip if non-zero
@@ -163,25 +113,24 @@ public:
      */
     bool Backup(const std::string& strDest);
 
+    /** Get a name for this database, for debugging etc.
+     */
+    std::string GetName() const { return strFile; }
+
     /** Make sure all changes are flushed to disk.
      */
     void Flush(bool shutdown);
 
     void IncrementUpdateCounter();
 
-    void ReloadDbEnv();
-
     std::atomic<unsigned int> nUpdateCounter;
     unsigned int nLastSeen;
     unsigned int nLastFlushed;
     int64_t nLastWalletUpdate;
 
-    /** Database pointer. This is initialized lazily and reset during flushes, so it can be null. */
-    std::unique_ptr<Db> m_db;
-
 private:
     /** BerkeleyDB specific */
-    BerkeleyEnvironment *env;
+    CDBEnv *env;
     std::string strFile;
 
     /** Return whether this database handle is a dummy for testing.
@@ -193,7 +142,7 @@ private:
 
 
 /** RAII class that provides access to a Berkeley database */
-class BerkeleyBatch
+class CDB
 {
 protected:
     Db* pdb;
@@ -201,26 +150,26 @@ protected:
     DbTxn* activeTxn;
     bool fReadOnly;
     bool fFlushOnClose;
-    BerkeleyEnvironment *env;
+    CDBEnv *env;
 
 public:
-    explicit BerkeleyBatch(BerkeleyDatabase& database, const char* pszMode = "r+", bool fFlushOnCloseIn=true);
-    ~BerkeleyBatch() { Close(); }
+    explicit CDB(CWalletDBWrapper& dbw, const char* pszMode = "r+", bool fFlushOnCloseIn=true);
+    ~CDB() { Close(); }
 
-    BerkeleyBatch(const BerkeleyBatch&) = delete;
-    BerkeleyBatch& operator=(const BerkeleyBatch&) = delete;
+    CDB(const CDB&) = delete;
+    CDB& operator=(const CDB&) = delete;
 
     void Flush();
     void Close();
-    static bool Recover(const fs::path& file_path, void *callbackDataIn, bool (*recoverKVcallback)(void* callbackData, CDataStream ssKey, CDataStream ssValue), std::string& out_backup_filename);
+    static bool Recover(const std::string& filename, void *callbackDataIn, bool (*recoverKVcallback)(void* callbackData, CDataStream ssKey, CDataStream ssValue), std::string& out_backup_filename);
 
     /* flush the wallet passively (TRY_LOCK)
        ideal to be called periodically */
-    static bool PeriodicFlush(BerkeleyDatabase& database);
+    static bool PeriodicFlush(CWalletDBWrapper& dbw);
     /* verifies the database environment */
-    static bool VerifyEnvironment(const fs::path& file_path, std::string& errorStr);
+    static bool VerifyEnvironment(const std::string& walletFile, const fs::path& walletDir, std::string& errorStr);
     /* verifies the database file */
-    static bool VerifyDatabaseFile(const fs::path& file_path, std::string& warningStr, std::string& errorStr, BerkeleyEnvironment::recoverFunc_type recoverFunc);
+    static bool VerifyDatabaseFile(const std::string& walletFile, const fs::path& walletDir, std::string& warningStr, std::string& errorStr, CDBEnv::recoverFunc_type recoverFunc);
 
 public:
     template <typename K, typename T>
@@ -380,7 +329,7 @@ public:
     {
         if (!pdb || activeTxn)
             return false;
-        DbTxn* ptxn = env->TxnBegin();
+        DbTxn* ptxn = bitdb.TxnBegin();
         if (!ptxn)
             return false;
         activeTxn = ptxn;
@@ -416,7 +365,7 @@ public:
         return Write(std::string("version"), nVersion);
     }
 
-    bool static Rewrite(BerkeleyDatabase& database, const char* pszSkip = nullptr);
+    bool static Rewrite(CWalletDBWrapper& dbw, const char* pszSkip = nullptr);
 };
 
 #endif // BITCOIN_WALLET_DB_H

@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2018 The Bitcoin Core developers
+# Copyright (c) 2014-2017 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test longpolling with getblocktemplate."""
 
-from decimal import Decimal
-
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import get_rpc_proxy, random_transaction
+from test_framework.util import *
 
 import threading
 
@@ -15,30 +13,27 @@ class LongpollThread(threading.Thread):
     def __init__(self, node):
         threading.Thread.__init__(self)
         # query current longpollid
-        template = node.getblocktemplate({'rules': ['segwit']})
-        self.longpollid = template['longpollid']
+        templat = node.getblocktemplate()
+        self.longpollid = templat['longpollid']
         # create a new connection to the node, we can't use the same
         # connection from two threads
         self.node = get_rpc_proxy(node.url, 1, timeout=600, coveragedir=node.coverage_dir)
 
     def run(self):
-        self.node.getblocktemplate({'longpollid': self.longpollid, 'rules': ['segwit']})
+        self.node.getblocktemplate({'longpollid':self.longpollid})
 
 class GetBlockTemplateLPTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
     def run_test(self):
         self.log.info("Warning: this test will take about 70 seconds in the best case. Be patient.")
         self.nodes[0].generate(10)
-        template = self.nodes[0].getblocktemplate({'rules': ['segwit']})
-        longpollid = template['longpollid']
+        templat = self.nodes[0].getblocktemplate()
+        longpollid = templat['longpollid']
         # longpollid should not change between successive invocations if nothing else happens
-        template2 = self.nodes[0].getblocktemplate({'rules': ['segwit']})
-        assert(template2['longpollid'] == longpollid)
+        templat2 = self.nodes[0].getblocktemplate()
+        assert(templat2['longpollid'] == longpollid)
 
         # Test 1: test that the longpolling wait if we do nothing
         thr = LongpollThread(self.nodes[0])
@@ -73,3 +68,4 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
 
 if __name__ == '__main__':
     GetBlockTemplateLPTest().main()
+

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2018 The Bitcoin Core developers
+# Copyright (c) 2014-2017 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the getchaintips RPC.
@@ -17,17 +17,17 @@ class GetChainTipsTest (BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
 
-    def run_test(self):
-        tips = self.nodes[0].getchaintips()
-        assert_equal(len(tips), 1)
-        assert_equal(tips[0]['branchlen'], 0)
-        assert_equal(tips[0]['height'], 200)
-        assert_equal(tips[0]['status'], 'active')
+    def run_test (self):
+        tips = self.nodes[0].getchaintips ()
+        assert_equal (len (tips), 1)
+        assert_equal (tips[0]['branchlen'], 0)
+        assert_equal (tips[0]['height'], 200)
+        assert_equal (tips[0]['status'], 'active')
 
         # Split the network and build two chains of different lengths.
-        self.split_network()
-        self.nodes[0].generatetoaddress(10, self.nodes[0].get_deterministic_priv_key().address)
-        self.nodes[2].generatetoaddress(20, self.nodes[2].get_deterministic_priv_key().address)
+        self.split_network ()
+        self.nodes[0].generate(10)
+        self.nodes[2].generate(20)
         self.sync_all([self.nodes[:2], self.nodes[2:]])
 
         tips = self.nodes[1].getchaintips ()

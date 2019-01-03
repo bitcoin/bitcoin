@@ -1,13 +1,9 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <threadinterrupt.h>
-
-#include <sync.h>
-
-CThreadInterrupt::CThreadInterrupt() : flag(false) {}
 
 CThreadInterrupt::operator bool() const
 {
@@ -22,7 +18,7 @@ void CThreadInterrupt::reset()
 void CThreadInterrupt::operator()()
 {
     {
-        LOCK(mut);
+        std::unique_lock<std::mutex> lock(mut);
         flag.store(true, std::memory_order_release);
     }
     cond.notify_all();
@@ -30,7 +26,7 @@ void CThreadInterrupt::operator()()
 
 bool CThreadInterrupt::sleep_for(std::chrono::milliseconds rel_time)
 {
-    WAIT_LOCK(mut, lock);
+    std::unique_lock<std::mutex> lock(mut);
     return !cond.wait_for(lock, rel_time, [this]() { return flag.load(std::memory_order_acquire); });
 }
 

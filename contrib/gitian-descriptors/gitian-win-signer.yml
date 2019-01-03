@@ -1,12 +1,11 @@
 ---
 name: "bitcoin-win-signer"
 suites:
-- "bionic"
+- "trusty"
 architectures:
 - "amd64"
 packages:
-# Once osslsigncode supports openssl 1.1, we can change this back to libssl-dev
-- "libssl1.0-dev"
+- "libssl-dev"
 - "autoconf"
 remotes:
 - "url": "https://github.com/bitcoin-core/bitcoin-detached-sigs.git"

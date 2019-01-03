@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2018 The Bitcoin Core developers
+# Copyright (c) 2016-2017 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,32 +15,35 @@ import os
 ################################################################################
 
 EXCLUDE = [
+    # libsecp256k1:
+    'src/secp256k1/include/secp256k1.h',
+    'src/secp256k1/include/secp256k1_ecdh.h',
+    'src/secp256k1/include/secp256k1_recovery.h',
+    'src/secp256k1/include/secp256k1_schnorr.h',
+    'src/secp256k1/src/java/org_bitcoin_NativeSecp256k1.c',
+    'src/secp256k1/src/java/org_bitcoin_NativeSecp256k1.h',
+    'src/secp256k1/src/java/org_bitcoin_Secp256k1Context.c',
+    'src/secp256k1/src/java/org_bitcoin_Secp256k1Context.h',
+    # univalue:
+    'src/univalue/test/object.cpp',
+    'src/univalue/lib/univalue_escapes.h',
     # auto generated:
     'src/qt/bitcoinstrings.cpp',
     'src/chainparamsseeds.h',
     # other external copyrights:
     'src/tinyformat.h',
+    'src/leveldb/util/env_win.cc',
+    'src/crypto/ctaes/bench.c',
     'test/functional/test_framework/bignum.py',
     # python init:
     '*__init__.py',
 ]
 EXCLUDE_COMPILED = re.compile('|'.join([fnmatch.translate(m) for m in EXCLUDE]))
 
-EXCLUDE_DIRS = [
-    # git subtrees
-    "src/crypto/ctaes/",
-    "src/leveldb/",
-    "src/secp256k1/",
-    "src/univalue/",
-]
-
 INCLUDE = ['*.h', '*.cpp', '*.cc', '*.c', '*.py']
 INCLUDE_COMPILED = re.compile('|'.join([fnmatch.translate(m) for m in INCLUDE]))
 
 def applies_to_file(filename):
-    for excluded_dir in EXCLUDE_DIRS:
-        if filename.startswith(excluded_dir):
-            return False
     return ((EXCLUDE_COMPILED.match(filename) is None) and
             (INCLUDE_COMPILED.match(filename) is not None))
 
@@ -78,7 +81,7 @@ ANY_COPYRIGHT_STYLE_OR_YEAR_STYLE = ("%s %s" % (ANY_COPYRIGHT_STYLE,
 ANY_COPYRIGHT_COMPILED = re.compile(ANY_COPYRIGHT_STYLE_OR_YEAR_STYLE)
 
 def compile_copyright_regex(copyright_style, year_style, name):
-    return re.compile('%s %s,? %s' % (copyright_style, year_style, name))
+    return re.compile('%s %s %s' % (copyright_style, year_style, name))
 
 EXPECTED_HOLDER_NAMES = [
     "Satoshi Nakamoto\n",
@@ -104,9 +107,6 @@ EXPECTED_HOLDER_NAMES = [
     "Jan-Klaas Kollhof\n",
     "Sam Rushing\n",
     "ArtForz -- public domain half-a-node\n",
-    "Intel Corporation",
-    "The Zcash developers",
-    "Jeremy Rubin",
 ]
 
 DOMINANT_STYLE_COMPILED = {}
@@ -146,7 +146,7 @@ def file_has_without_c_style_copyright_for_holder(contents, holder_name):
 ################################################################################
 
 def read_file(filename):
-    return open(os.path.abspath(filename), 'r', encoding="utf8").read()
+    return open(os.path.abspath(filename), 'r').read()
 
 def gather_file_info(filename):
     info = {}
@@ -286,7 +286,7 @@ Arguments:
 def report_cmd(argv):
     if len(argv) == 2:
         sys.exit(REPORT_USAGE)
-
+        
     base_directory = argv[2]
     if not os.path.exists(base_directory):
         sys.exit("*** bad <base_directory>: %s" % base_directory)
@@ -325,13 +325,13 @@ def get_most_recent_git_change_year(filename):
 ################################################################################
 
 def read_file_lines(filename):
-    f = open(os.path.abspath(filename), 'r', encoding="utf8")
+    f = open(os.path.abspath(filename), 'r')
     file_lines = f.readlines()
     f.close()
     return file_lines
 
 def write_file_lines(filename, file_lines):
-    f = open(os.path.abspath(filename), 'w', encoding="utf8")
+    f = open(os.path.abspath(filename), 'w')
     f.write(''.join(file_lines))
     f.close()
 
@@ -444,7 +444,7 @@ def print_file_action_message(filename, action):
 def update_cmd(argv):
     if len(argv) != 3:
         sys.exit(UPDATE_USAGE)
-
+    
     base_directory = argv[2]
     if not os.path.exists(base_directory):
         sys.exit("*** bad base_directory: %s" % base_directory)
@@ -491,7 +491,7 @@ def get_git_change_year_range(filename):
 
 def file_already_has_core_copyright(file_lines):
     index, _ = get_updatable_copyright_line(file_lines)
-    return index is not None
+    return index != None
 
 ################################################################################
 # insert header execution
@@ -506,7 +506,7 @@ def file_has_hashbang(file_lines):
 
 def insert_python_header(filename, file_lines, start_year, end_year):
     if file_has_hashbang(file_lines):
-        insert_idx = 1
+        insert_idx = 1 
     else:
         insert_idx = 0
     header_lines = get_python_header_lines_to_insert(start_year, end_year)
@@ -570,13 +570,13 @@ def insert_cmd(argv):
     _, extension = os.path.splitext(filename)
     if extension not in ['.h', '.cpp', '.cc', '.c', '.py']:
         sys.exit("*** cannot insert for file extension %s" % extension)
-
-    if extension == '.py':
+   
+    if extension == '.py': 
         style = 'python'
     else:
         style = 'cpp'
     exec_insert_header(filename, style)
-
+         
 ################################################################################
 # UI
 ################################################################################

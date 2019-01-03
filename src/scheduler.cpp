@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2018 The Bitcoin Core developers
+// Copyright (c) 2015-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,6 +8,7 @@
 #include <reverselock.h>
 
 #include <assert.h>
+#include <boost/bind.hpp>
 #include <utility>
 
 CScheduler::CScheduler() : nThreadsServicingQueue(0), stopRequested(false), stopWhenEmpty(false)
@@ -119,12 +120,12 @@ void CScheduler::scheduleFromNow(CScheduler::Function f, int64_t deltaMilliSecon
 static void Repeat(CScheduler* s, CScheduler::Function f, int64_t deltaMilliSeconds)
 {
     f();
-    s->scheduleFromNow(std::bind(&Repeat, s, f, deltaMilliSeconds), deltaMilliSeconds);
+    s->scheduleFromNow(boost::bind(&Repeat, s, f, deltaMilliSeconds), deltaMilliSeconds);
 }
 
 void CScheduler::scheduleEvery(CScheduler::Function f, int64_t deltaMilliSeconds)
 {
-    scheduleFromNow(std::bind(&Repeat, this, f, deltaMilliSeconds), deltaMilliSeconds);
+    scheduleFromNow(boost::bind(&Repeat, this, f, deltaMilliSeconds), deltaMilliSeconds);
 }
 
 size_t CScheduler::getQueueInfo(boost::chrono::system_clock::time_point &first,
@@ -158,7 +159,7 @@ void SingleThreadedSchedulerClient::MaybeScheduleProcessQueue() {
 }
 
 void SingleThreadedSchedulerClient::ProcessQueue() {
-    std::function<void ()> callback;
+    std::function<void (void)> callback;
     {
         LOCK(m_cs_callbacks_pending);
         if (m_are_callbacks_running) return;
@@ -186,7 +187,7 @@ void SingleThreadedSchedulerClient::ProcessQueue() {
     callback();
 }
 
-void SingleThreadedSchedulerClient::AddToProcessQueue(std::function<void ()> func) {
+void SingleThreadedSchedulerClient::AddToProcessQueue(std::function<void (void)> func) {
     assert(m_pscheduler);
 
     {

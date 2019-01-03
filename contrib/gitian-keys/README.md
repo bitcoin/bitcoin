@@ -1,10 +1,9 @@
 ## PGP keys of Gitian builders and Developers
 
-The file `keys.txt` contains fingerprints of the public keys of Gitian builders
-and active developers.
+The keys.txt contains the public keys of Gitian builders and active developers.
 
-The associated keys are mainly used to sign git commits or the build results
-of Gitian builds.
+The keys are mainly used to sign git commits or the build results of Gitian
+builds.
 
 The most recent version of each pgp key can be found on most pgp key servers.
 

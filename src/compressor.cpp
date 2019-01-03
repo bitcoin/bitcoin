@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,15 +9,7 @@
 #include <pubkey.h>
 #include <script/standard.h>
 
-/*
- * These check for scripts for which a special case with a shorter encoding is defined.
- * They are implemented separately from the CScript test, as these test for exact byte
- * sequence correspondences, and are more strict. For example, IsToPubKey also verifies
- * whether the public key is valid (as invalid ones cannot be represented in compressed
- * form).
- */
-
-static bool IsToKeyID(const CScript& script, CKeyID &hash)
+bool CScriptCompressor::IsToKeyID(CKeyID &hash) const
 {
     if (script.size() == 25 && script[0] == OP_DUP && script[1] == OP_HASH160
                             && script[2] == 20 && script[23] == OP_EQUALVERIFY
@@ -28,7 +20,7 @@ static bool IsToKeyID(const CScript& script, CKeyID &hash)
     return false;
 }
 
-static bool IsToScriptID(const CScript& script, CScriptID &hash)
+bool CScriptCompressor::IsToScriptID(CScriptID &hash) const
 {
     if (script.size() == 23 && script[0] == OP_HASH160 && script[1] == 20
                             && script[22] == OP_EQUAL) {
@@ -38,7 +30,7 @@ static bool IsToScriptID(const CScript& script, CScriptID &hash)
     return false;
 }
 
-static bool IsToPubKey(const CScript& script, CPubKey &pubkey)
+bool CScriptCompressor::IsToPubKey(CPubKey &pubkey) const
 {
     if (script.size() == 35 && script[0] == 33 && script[34] == OP_CHECKSIG
                             && (script[1] == 0x02 || script[1] == 0x03)) {
@@ -53,24 +45,24 @@ static bool IsToPubKey(const CScript& script, CPubKey &pubkey)
     return false;
 }
 
-bool CompressScript(const CScript& script, std::vector<unsigned char> &out)
+bool CScriptCompressor::Compress(std::vector<unsigned char> &out) const
 {
     CKeyID keyID;
-    if (IsToKeyID(script, keyID)) {
+    if (IsToKeyID(keyID)) {
         out.resize(21);
         out[0] = 0x00;
         memcpy(&out[1], &keyID, 20);
         return true;
     }
     CScriptID scriptID;
-    if (IsToScriptID(script, scriptID)) {
+    if (IsToScriptID(scriptID)) {
         out.resize(21);
         out[0] = 0x01;
         memcpy(&out[1], &scriptID, 20);
         return true;
     }
     CPubKey pubkey;
-    if (IsToPubKey(script, pubkey)) {
+    if (IsToPubKey(pubkey)) {
         out.resize(33);
         memcpy(&out[1], &pubkey[1], 32);
         if (pubkey[0] == 0x02 || pubkey[0] == 0x03) {
@@ -84,7 +76,7 @@ bool CompressScript(const CScript& script, std::vector<unsigned char> &out)
     return false;
 }
 
-unsigned int GetSpecialScriptSize(unsigned int nSize)
+unsigned int CScriptCompressor::GetSpecialSize(unsigned int nSize) const
 {
     if (nSize == 0 || nSize == 1)
         return 20;
@@ -93,7 +85,7 @@ unsigned int GetSpecialScriptSize(unsigned int nSize)
     return 0;
 }
 
-bool DecompressScript(CScript& script, unsigned int nSize, const std::vector<unsigned char> &in)
+bool CScriptCompressor::Decompress(unsigned int nSize, const std::vector<unsigned char> &in)
 {
     switch(nSize) {
     case 0x00:
@@ -147,7 +139,7 @@ bool DecompressScript(CScript& script, unsigned int nSize, const std::vector<uns
 // * if e==9, we only know the resulting number is not zero, so output 1 + 10*(n - 1) + 9
 // (this is decodable, as d is in [1-9] and e is in [0-9])
 
-uint64_t CompressAmount(uint64_t n)
+uint64_t CTxOutCompressor::CompressAmount(uint64_t n)
 {
     if (n == 0)
         return 0;
@@ -166,7 +158,7 @@ uint64_t CompressAmount(uint64_t n)
     }
 }
 
-uint64_t DecompressAmount(uint64_t x)
+uint64_t CTxOutCompressor::DecompressAmount(uint64_t x)
 {
     // x = 0  OR  x = 1+10*(9*n + d - 1) + e  OR  x = 1+10*(n - 1) + 9
     if (x == 0)

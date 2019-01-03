@@ -176,7 +176,6 @@ class SequentialFileImpl : public SequentialFile {
     return Status::OK();
   }
 
-  virtual std::string GetName() const { return "[memenv]"; }
  private:
   FileState* file_;
   uint64_t pos_;
@@ -197,7 +196,6 @@ class RandomAccessFileImpl : public RandomAccessFile {
     return file_->Read(offset, n, result, scratch);
   }
 
-  virtual std::string GetName() const { return "[memenv]"; }
  private:
   FileState* file_;
 };
@@ -220,7 +218,6 @@ class WritableFileImpl : public WritableFile {
   virtual Status Flush() { return Status::OK(); }
   virtual Status Sync() { return Status::OK(); }
 
-  virtual std::string GetName() const { return "[memenv]"; }
  private:
   FileState* file_;
 };

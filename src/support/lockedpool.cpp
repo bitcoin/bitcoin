@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2018 The Bitcoin Core developers
+// Copyright (c) 2016-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -47,9 +47,7 @@ Arena::Arena(void *base_in, size_t size_in, size_t alignment_in):
     base(static_cast<char*>(base_in)), end(static_cast<char*>(base_in) + size_in), alignment(alignment_in)
 {
     // Start with one free chunk that covers the entire arena
-    auto it = size_to_free_chunk.emplace(size_in, base);
-    chunks_free.emplace(base, it);
-    chunks_free_end.emplace(base + size_in, it);
+    chunks_free.emplace(base, size_in);
 }
 
 Arena::~Arena()
@@ -65,30 +63,26 @@ void* Arena::alloc(size_t size)
     if (size == 0)
         return nullptr;
 
-    // Pick a large enough free-chunk. Returns an iterator pointing to the first element that is not less than key.
-    // This allocation strategy is best-fit. According to "Dynamic Storage Allocation: A Survey and Critical Review",
-    // Wilson et. al. 1995, http://www.scs.stanford.edu/14wi-cs140/sched/readings/wilson.pdf, best-fit and first-fit
-    // policies seem to work well in practice.
-    auto size_ptr_it = size_to_free_chunk.lower_bound(size);
-    if (size_ptr_it == size_to_free_chunk.end())
+    // Pick a large enough free-chunk
+    auto it = std::find_if(chunks_free.begin(), chunks_free.end(),
+        [=](const std::map<char*, size_t>::value_type& chunk){ return chunk.second >= size; });
+    if (it == chunks_free.end())
         return nullptr;
 
     // Create the used-chunk, taking its space from the end of the free-chunk
-    const size_t size_remaining = size_ptr_it->first - size;
-    auto allocated = chunks_used.emplace(size_ptr_it->second + size_remaining, size).first;
-    chunks_free_end.erase(size_ptr_it->second + size_ptr_it->first);
-    if (size_ptr_it->first == size) {
-        // whole chunk is used up
-        chunks_free.erase(size_ptr_it->second);
-    } else {
-        // still some memory left in the chunk
-        auto it_remaining = size_to_free_chunk.emplace(size_remaining, size_ptr_it->second);
-        chunks_free[size_ptr_it->second] = it_remaining;
-        chunks_free_end.emplace(size_ptr_it->second + size_remaining, it_remaining);
-    }
-    size_to_free_chunk.erase(size_ptr_it);
+    auto alloced = chunks_used.emplace(it->first + it->second - size, size).first;
+    if (!(it->second -= size))
+        chunks_free.erase(it);
+    return reinterpret_cast<void*>(alloced->first);
+}
 
-    return reinterpret_cast<void*>(allocated->first);
+/* extend the Iterator if other begins at its end */
+template <class Iterator, class Pair> bool extend(Iterator it, const Pair& other) {
+    if (it->first + it->second == other.first) {
+        it->second += other.second;
+        return true;
+    }
+    return false;
 }
 
 void Arena::free(void *ptr)
@@ -103,30 +97,16 @@ void Arena::free(void *ptr)
     if (i == chunks_used.end()) {
         throw std::runtime_error("Arena: invalid or double free");
     }
-    std::pair<char*, size_t> freed = *i;
+    auto freed = *i;
     chunks_used.erase(i);
 
-    // coalesce freed with previous chunk
-    auto prev = chunks_free_end.find(freed.first);
-    if (prev != chunks_free_end.end()) {
-        freed.first -= prev->second->first;
-        freed.second += prev->second->first;
-        size_to_free_chunk.erase(prev->second);
-        chunks_free_end.erase(prev);
-    }
-
-    // coalesce freed with chunk after freed
-    auto next = chunks_free.find(freed.first + freed.second);
-    if (next != chunks_free.end()) {
-        freed.second += next->second->first;
-        size_to_free_chunk.erase(next->second);
+    // Add space to free map, coalescing contiguous chunks
+    auto next = chunks_free.upper_bound(freed.first);
+    auto prev = (next == chunks_free.begin()) ? chunks_free.end() : std::prev(next);
+    if (prev == chunks_free.end() || !extend(prev, freed))
+        prev = chunks_free.emplace_hint(next, freed);
+    if (next != chunks_free.end() && extend(prev, *next))
         chunks_free.erase(next);
-    }
-
-    // Add/set space with coalesced free chunk
-    auto it = size_to_free_chunk.emplace(freed.second, freed.first);
-    chunks_free[freed.first] = it;
-    chunks_free_end[freed.first + freed.second] = it;
 }
 
 Arena::Stats Arena::stats() const
@@ -135,13 +115,13 @@ Arena::Stats Arena::stats() const
     for (const auto& chunk: chunks_used)
         r.used += chunk.second;
     for (const auto& chunk: chunks_free)
-        r.free += chunk.second->first;
+        r.free += chunk.second;
     r.total = r.used + r.free;
     return r;
 }
 
 #ifdef ARENA_DEBUG
-static void printchunk(char* base, size_t sz, bool used) {
+void printchunk(char* base, size_t sz, bool used) {
     std::cout <<
         "0x" << std::hex << std::setw(16) << std::setfill('0') << base <<
         " 0x" << std::hex << std::setw(16) << std::setfill('0') << sz <<
@@ -204,7 +184,7 @@ void Win32LockedPageAllocator::FreeLocked(void* addr, size_t len)
 
 size_t Win32LockedPageAllocator::GetLimit()
 {
-    // TODO is there a limit on Windows, how to get it?
+    // TODO is there a limit on windows, how to get it?
     return std::numeric_limits<size_t>::max();
 }
 #endif

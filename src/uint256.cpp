@@ -1,11 +1,11 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <uint256.h>
 
-#include <util/strencodings.h>
+#include <utilstrencodings.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -29,7 +29,7 @@ void base_blob<BITS>::SetHex(const char* psz)
     memset(data, 0, sizeof(data));
 
     // skip leading spaces
-    while (IsSpace(*psz))
+    while (isspace(*psz))
         psz++;
 
     // skip 0x

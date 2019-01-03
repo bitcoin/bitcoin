@@ -1,9 +1,24 @@
-// Copyright (c) 2016-2018 The Bitcoin Core developers
+// Copyright (c) 2016-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <versionbits.h>
 #include <consensus/params.h>
+
+const struct VBDeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_BITS_DEPLOYMENTS] = {
+    {
+        /*.name =*/ "testdummy",
+        /*.gbt_force =*/ true,
+    },
+    {
+        /*.name =*/ "csv",
+        /*.gbt_force =*/ true,
+    },
+    {
+        /*.name =*/ "segwit",
+        /*.gbt_force =*/ true,
+    }
+};
 
 ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const
 {
@@ -14,7 +29,7 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
 
     // Check if this deployment is always active.
     if (nTimeStart == Consensus::BIP9Deployment::ALWAYS_ACTIVE) {
-        return ThresholdState::ACTIVE;
+        return THRESHOLD_ACTIVE;
     }
 
     // A block's state is always the same as that of the first of its period, so it is computed based on a pindexPrev whose height equals a multiple of nPeriod - 1.
@@ -27,12 +42,12 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
     while (cache.count(pindexPrev) == 0) {
         if (pindexPrev == nullptr) {
             // The genesis block is by definition defined.
-            cache[pindexPrev] = ThresholdState::DEFINED;
+            cache[pindexPrev] = THRESHOLD_DEFINED;
             break;
         }
         if (pindexPrev->GetMedianTimePast() < nTimeStart) {
             // Optimization: don't recompute down further, as we know every earlier block will be before the start time
-            cache[pindexPrev] = ThresholdState::DEFINED;
+            cache[pindexPrev] = THRESHOLD_DEFINED;
             break;
         }
         vToCompute.push_back(pindexPrev);
@@ -50,17 +65,17 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
         vToCompute.pop_back();
 
         switch (state) {
-            case ThresholdState::DEFINED: {
+            case THRESHOLD_DEFINED: {
                 if (pindexPrev->GetMedianTimePast() >= nTimeTimeout) {
-                    stateNext = ThresholdState::FAILED;
+                    stateNext = THRESHOLD_FAILED;
                 } else if (pindexPrev->GetMedianTimePast() >= nTimeStart) {
-                    stateNext = ThresholdState::STARTED;
+                    stateNext = THRESHOLD_STARTED;
                 }
                 break;
             }
-            case ThresholdState::STARTED: {
+            case THRESHOLD_STARTED: {
                 if (pindexPrev->GetMedianTimePast() >= nTimeTimeout) {
-                    stateNext = ThresholdState::FAILED;
+                    stateNext = THRESHOLD_FAILED;
                     break;
                 }
                 // We need to count
@@ -73,17 +88,17 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
                     pindexCount = pindexCount->pprev;
                 }
                 if (count >= nThreshold) {
-                    stateNext = ThresholdState::LOCKED_IN;
+                    stateNext = THRESHOLD_LOCKED_IN;
                 }
                 break;
             }
-            case ThresholdState::LOCKED_IN: {
+            case THRESHOLD_LOCKED_IN: {
                 // Always progresses into ACTIVE.
-                stateNext = ThresholdState::ACTIVE;
+                stateNext = THRESHOLD_ACTIVE;
                 break;
             }
-            case ThresholdState::FAILED:
-            case ThresholdState::ACTIVE: {
+            case THRESHOLD_FAILED:
+            case THRESHOLD_ACTIVE: {
                 // Nothing happens, these are terminal states.
                 break;
             }
@@ -134,7 +149,7 @@ int AbstractThresholdConditionChecker::GetStateSinceHeightFor(const CBlockIndex*
     const ThresholdState initialState = GetStateFor(pindexPrev, params, cache);
 
     // BIP 9 about state DEFINED: "The genesis block is by definition in this state for each deployment."
-    if (initialState == ThresholdState::DEFINED) {
+    if (initialState == THRESHOLD_DEFINED) {
         return 0;
     }
 

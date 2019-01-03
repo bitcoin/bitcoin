@@ -1,8 +1,9 @@
-// Copyright (c) 2015-2018 The Bitcoin Core developers
+// Copyright (c) 2015-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
+#include <bench/perf.h>
 
 #include <assert.h>
 #include <iostream>
@@ -95,6 +96,7 @@ benchmark::BenchRunner::BenchRunner(std::string name, benchmark::BenchFunction f
 
 void benchmark::BenchRunner::RunAll(Printer& printer, uint64_t num_evals, double scaling, const std::string& filter, bool is_list_only)
 {
+    perf_init();
     if (!std::ratio_less_equal<benchmark::clock::period, std::micro>::value) {
         std::cerr << "WARNING: Clock precision is worse than microsecond - benchmarks may be less accurate!\n";
     }
@@ -124,6 +126,8 @@ void benchmark::BenchRunner::RunAll(Printer& printer, uint64_t num_evals, double
     }
 
     printer.footer();
+
+    perf_fini();
 }
 
 bool benchmark::State::UpdateTimer(const benchmark::time_point current_time)

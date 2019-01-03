@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,29 +6,26 @@
 #include <config/bitcoin-config.h>
 #endif
 
+#include <consensus/merkle.h>
+#include <primitives/block.h>
+#include <script/script.h>
 #include <addrman.h>
-#include <blockencodings.h>
 #include <chain.h>
 #include <coins.h>
 #include <compressor.h>
-#include <consensus/merkle.h>
 #include <net.h>
-#include <primitives/block.h>
 #include <protocol.h>
-#include <pubkey.h>
-#include <script/script.h>
 #include <streams.h>
 #include <undo.h>
 #include <version.h>
+#include <pubkey.h>
+#include <blockencodings.h>
 
 #include <stdint.h>
 #include <unistd.h>
 
 #include <algorithm>
-#include <memory>
 #include <vector>
-
-const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
 enum TEST_ID {
     CBLOCK_DESERIALIZE=0,
@@ -54,7 +51,7 @@ enum TEST_ID {
     TEST_ID_END
 };
 
-static bool read_stdin(std::vector<uint8_t> &data) {
+bool read_stdin(std::vector<uint8_t> &data) {
     uint8_t buffer[1024];
     ssize_t length=0;
     while((length = read(STDIN_FILENO, buffer, 1024)) > 0) {
@@ -65,7 +62,7 @@ static bool read_stdin(std::vector<uint8_t> &data) {
     return length==0;
 }
 
-static int test_one_input(std::vector<uint8_t> buffer) {
+int test_one_input(std::vector<uint8_t> buffer) {
     if (buffer.size() < sizeof(uint32_t)) return 0;
 
     uint32_t test_id = 0xffffffff;
@@ -279,7 +276,7 @@ static int test_one_input(std::vector<uint8_t> buffer) {
 
 static std::unique_ptr<ECCVerifyHandle> globalVerifyHandle;
 void initialize() {
-    globalVerifyHandle = MakeUnique<ECCVerifyHandle>();
+    globalVerifyHandle = std::unique_ptr<ECCVerifyHandle>(new ECCVerifyHandle());
 }
 
 // This function is used by libFuzzer

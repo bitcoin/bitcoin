@@ -17,7 +17,8 @@
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 #endif
 
-std::string srcdir(JSON_TEST_SRC);
+using namespace std;
+string srcdir(JSON_TEST_SRC);
 static bool test_failed = false;
 
 #define d_assert(expr) { if (!(expr)) { test_failed = true; fprintf(stderr, "%s failed\n", filename.c_str()); } }
@@ -29,9 +30,9 @@ static std::string rtrim(std::string s)
     return s;
 }
 
-static void runtest(std::string filename, const std::string& jdata)
+static void runtest(string filename, const string& jdata)
 {
-        std::string prefix = filename.substr(0, 4);
+        string prefix = filename.substr(0, 4);
 
         bool wantPass = (prefix == "pass") || (prefix == "roun");
         bool wantFail = (prefix == "fail");
@@ -55,19 +56,19 @@ static void runtest(std::string filename, const std::string& jdata)
 
 static void runtest_file(const char *filename_)
 {
-        std::string basename(filename_);
-        std::string filename = srcdir + "/" + basename;
+        string basename(filename_);
+        string filename = srcdir + "/" + basename;
         FILE *f = fopen(filename.c_str(), "r");
         assert(f != NULL);
 
-        std::string jdata;
+        string jdata;
 
         char buf[4096];
         while (!feof(f)) {
                 int bread = fread(buf, 1, sizeof(buf), f);
                 assert(!ferror(f));
 
-                std::string s(buf, bread);
+                string s(buf, bread);
                 jdata += s;
         }
 

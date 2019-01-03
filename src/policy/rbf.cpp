@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2018 The Bitcoin Core developers
+// Copyright (c) 2016-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,7 +7,7 @@
 bool SignalsOptInRBF(const CTransaction &tx)
 {
     for (const CTxIn &txin : tx.vin) {
-        if (txin.nSequence <= MAX_BIP125_RBF_SEQUENCE) {
+        if (txin.nSequence < std::numeric_limits<unsigned int>::max()-1) {
             return true;
         }
     }
@@ -22,13 +22,13 @@ RBFTransactionState IsRBFOptIn(const CTransaction &tx, CTxMemPool &pool)
 
     // First check the transaction itself.
     if (SignalsOptInRBF(tx)) {
-        return RBFTransactionState::REPLACEABLE_BIP125;
+        return RBF_TRANSACTIONSTATE_REPLACEABLE_BIP125;
     }
 
     // If this transaction is not in our mempool, then we can't be sure
     // we will know about all its inputs.
     if (!pool.exists(tx.GetHash())) {
-        return RBFTransactionState::UNKNOWN;
+        return RBF_TRANSACTIONSTATE_UNKNOWN;
     }
 
     // If all the inputs have nSequence >= maxint-1, it still might be
@@ -40,8 +40,8 @@ RBFTransactionState IsRBFOptIn(const CTransaction &tx, CTxMemPool &pool)
 
     for (CTxMemPool::txiter it : setAncestors) {
         if (SignalsOptInRBF(it->GetTx())) {
-            return RBFTransactionState::REPLACEABLE_BIP125;
+            return RBF_TRANSACTIONSTATE_REPLACEABLE_BIP125;
         }
     }
-    return RBFTransactionState::FINAL;
+    return RBF_TRANSACTIONSTATE_FINAL;
 }

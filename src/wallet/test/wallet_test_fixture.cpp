@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2018 The Bitcoin Core developers
+// Copyright (c) 2016-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,19 +6,27 @@
 
 #include <rpc/server.h>
 #include <wallet/db.h>
-#include <wallet/rpcwallet.h>
 
 WalletTestingSetup::WalletTestingSetup(const std::string& chainName):
-    TestingSetup(chainName), m_wallet(*m_chain, WalletLocation(), WalletDatabase::CreateMock())
+    TestingSetup(chainName)
 {
+    bitdb.MakeMock();
+
     bool fFirstRun;
-    m_wallet.LoadWallet(fFirstRun);
-    RegisterValidationInterface(&m_wallet);
+    g_address_type = OUTPUT_TYPE_DEFAULT;
+    g_change_type = OUTPUT_TYPE_DEFAULT;
+    std::unique_ptr<CWalletDBWrapper> dbw(new CWalletDBWrapper(&bitdb, "wallet_test.dat"));
+    pwalletMain = MakeUnique<CWallet>(std::move(dbw));
+    pwalletMain->LoadWallet(fFirstRun);
+    RegisterValidationInterface(pwalletMain.get());
 
     RegisterWalletRPCCommands(tableRPC);
 }
 
 WalletTestingSetup::~WalletTestingSetup()
 {
-    UnregisterValidationInterface(&m_wallet);
+    UnregisterValidationInterface(pwalletMain.get());
+
+    bitdb.Flush(true);
+    bitdb.Reset();
 }

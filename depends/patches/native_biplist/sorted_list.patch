@@ -1,0 +1,29 @@
+--- a/biplist/__init__.py	2014-10-26 19:03:11.000000000 +0000
++++ b/biplist/__init__.py	2016-07-19 19:30:17.663521999 +0000
+@@ -541,7 +541,7 @@
+             return HashableWrapper(n)
+         elif isinstance(root, dict):
+             n = {}
+-            for key, value in iteritems(root):
++            for key, value in sorted(iteritems(root)):
+                 n[self.wrapRoot(key)] = self.wrapRoot(value)
+             return HashableWrapper(n)
+         elif isinstance(root, list):
+@@ -616,7 +616,7 @@
+             elif isinstance(obj, dict):
+                 size = proc_size(len(obj))
+                 self.incrementByteCount('dictBytes', incr=1+size)
+-                for key, value in iteritems(obj):
++                for key, value in sorted(iteritems(obj)):
+                     check_key(key)
+                     self.computeOffsets(key, asReference=True)
+                     self.computeOffsets(value, asReference=True)
+@@ -714,7 +714,7 @@
+                 keys = []
+                 values = []
+                 objectsToWrite = []
+-                for key, value in iteritems(obj):
++                for key, value in sorted(iteritems(obj)):
+                     keys.append(key)
+                     values.append(value)
+                 for key in keys:

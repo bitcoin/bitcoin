@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-# Copyright (c) 2015-2018 The Bitcoin Core developers
+#!/usr/bin/env python
+# Copyright (c) 2015-2017 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
@@ -8,50 +8,51 @@ Exit status will be 0 if successful, and the program will be silent.
 Otherwise the exit status will be 1 and it will log which executables failed which checks.
 Needs `readelf` (for ELF) and `objdump` (for PE).
 '''
+from __future__ import division,print_function,unicode_literals
 import subprocess
 import sys
 import os
 
 READELF_CMD = os.getenv('READELF', '/usr/bin/readelf')
 OBJDUMP_CMD = os.getenv('OBJDUMP', '/usr/bin/objdump')
-NONFATAL = {} # checks which are non-fatal for now but only generate a warning
+NONFATAL = {'HIGH_ENTROPY_VA'} # checks which are non-fatal for now but only generate a warning
 
 def check_ELF_PIE(executable):
     '''
     Check for position independent executable (PIE), allowing for address space randomization.
     '''
-    p = subprocess.Popen([READELF_CMD, '-h', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
+    p = subprocess.Popen([READELF_CMD, '-h', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
     (stdout, stderr) = p.communicate()
     if p.returncode:
         raise IOError('Error opening file')
 
     ok = False
-    for line in stdout.splitlines():
+    for line in stdout.split(b'\n'):
         line = line.split()
-        if len(line)>=2 and line[0] == 'Type:' and line[1] == 'DYN':
+        if len(line)>=2 and line[0] == b'Type:' and line[1] == b'DYN':
             ok = True
     return ok
 
 def get_ELF_program_headers(executable):
     '''Return type and flags for ELF program headers'''
-    p = subprocess.Popen([READELF_CMD, '-l', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
+    p = subprocess.Popen([READELF_CMD, '-l', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
     (stdout, stderr) = p.communicate()
     if p.returncode:
         raise IOError('Error opening file')
     in_headers = False
     count = 0
     headers = []
-    for line in stdout.splitlines():
-        if line.startswith('Program Headers:'):
+    for line in stdout.split(b'\n'):
+        if line.startswith(b'Program Headers:'):
             in_headers = True
-        if line == '':
+        if line == b'':
             in_headers = False
         if in_headers:
             if count == 1: # header line
-                ofs_typ = line.find('Type')
-                ofs_offset = line.find('Offset')
-                ofs_flags = line.find('Flg')
-                ofs_align = line.find('Align')
+                ofs_typ = line.find(b'Type')
+                ofs_offset = line.find(b'Offset')
+                ofs_flags = line.find(b'Flg')
+                ofs_align = line.find(b'Align')
                 if ofs_typ == -1 or ofs_offset == -1 or ofs_flags == -1 or ofs_align  == -1:
                     raise ValueError('Cannot parse elfread -lW output')
             elif count > 1:
@@ -68,9 +69,9 @@ def check_ELF_NX(executable):
     have_wx = False
     have_gnu_stack = False
     for (typ, flags) in get_ELF_program_headers(executable):
-        if typ == 'GNU_STACK':
+        if typ == b'GNU_STACK':
             have_gnu_stack = True
-        if 'W' in flags and 'E' in flags: # section is both writable and executable
+        if b'W' in flags and b'E' in flags: # section is both writable and executable
             have_wx = True
     return have_gnu_stack and not have_wx
 
@@ -86,18 +87,18 @@ def check_ELF_RELRO(executable):
         # This does not affect security: the permission flags of the GNU_RELRO program header are ignored, the PT_LOAD header determines the effective permissions.
         # However, the dynamic linker need to write to this area so these are RW.
         # Glibc itself takes care of mprotecting this area R after relocations are finished.
-        # See also https://marc.info/?l=binutils&m=1498883354122353
-        if typ == 'GNU_RELRO':
+        # See also http://permalink.gmane.org/gmane.comp.gnu.binutils/71347
+        if typ == b'GNU_RELRO':
             have_gnu_relro = True
 
     have_bindnow = False
-    p = subprocess.Popen([READELF_CMD, '-d', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
+    p = subprocess.Popen([READELF_CMD, '-d', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
     (stdout, stderr) = p.communicate()
     if p.returncode:
         raise IOError('Error opening file')
-    for line in stdout.splitlines():
+    for line in stdout.split(b'\n'):
         tokens = line.split()
-        if len(tokens)>1 and tokens[1] == '(BIND_NOW)' or (len(tokens)>2 and tokens[1] == '(FLAGS)' and 'BIND_NOW' in tokens[2:]):
+        if len(tokens)>1 and tokens[1] == b'(BIND_NOW)' or (len(tokens)>2 and tokens[1] == b'(FLAGS)' and b'BIND_NOW' in tokens[2]):
             have_bindnow = True
     return have_gnu_relro and have_bindnow
 
@@ -105,13 +106,13 @@ def check_ELF_Canary(executable):
     '''
     Check for use of stack canary
     '''
-    p = subprocess.Popen([READELF_CMD, '--dyn-syms', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
+    p = subprocess.Popen([READELF_CMD, '--dyn-syms', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
     (stdout, stderr) = p.communicate()
     if p.returncode:
         raise IOError('Error opening file')
     ok = False
-    for line in stdout.splitlines():
-        if '__stack_chk_fail' in line:
+    for line in stdout.split(b'\n'):
+        if b'__stack_chk_fail' in line:
             ok = True
     return ok
 
@@ -121,13 +122,13 @@ def get_PE_dll_characteristics(executable):
     Returns a tuple (arch,bits) where arch is 'i386:x86-64' or 'i386'
     and bits is the DllCharacteristics value.
     '''
-    p = subprocess.Popen([OBJDUMP_CMD, '-x',  executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
+    p = subprocess.Popen([OBJDUMP_CMD, '-x',  executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
     (stdout, stderr) = p.communicate()
     if p.returncode:
         raise IOError('Error opening file')
     arch = ''
     bits = 0
-    for line in stdout.splitlines():
+    for line in stdout.split('\n'):
         tokens = line.split()
         if len(tokens)>=2 and tokens[0] == 'architecture:':
             arch = tokens[1].rstrip(',')
@@ -150,7 +151,7 @@ def check_PE_DYNAMIC_BASE(executable):
 def check_PE_HIGH_ENTROPY_VA(executable):
     '''PIE: DllCharacteristics bit 0x20 signifies high-entropy ASLR'''
     (arch,bits) = get_PE_dll_characteristics(executable)
-    if arch == 'i386:x86-64':
+    if arch == 'i386:x86-64': 
         reqbits = IMAGE_DLL_CHARACTERISTICS_HIGH_ENTROPY_VA
     else: # Unnecessary on 32-bit
         assert(arch == 'i386')

@@ -224,7 +224,7 @@ private:
      *
      * Instead we treat the 32-bit random number as a Q32 fixed-point number in the range
      *  [0,1) and simply multiply it by the size.  Then we just shift the result down by
-     *  32-bits to get our bucket number.  The result has non-uniformity the same as a
+     *  32-bits to get our bucket number.  The results has non-uniformity the same as a
      *  mod, but it is much faster to compute. More about this technique can be found at
      *  http://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/
      *
@@ -242,14 +242,14 @@ private:
      */
     inline std::array<uint32_t, 8> compute_hashes(const Element& e) const
     {
-        return {{(uint32_t)(((uint64_t)hash_function.template operator()<0>(e) * (uint64_t)size) >> 32),
-                 (uint32_t)(((uint64_t)hash_function.template operator()<1>(e) * (uint64_t)size) >> 32),
-                 (uint32_t)(((uint64_t)hash_function.template operator()<2>(e) * (uint64_t)size) >> 32),
-                 (uint32_t)(((uint64_t)hash_function.template operator()<3>(e) * (uint64_t)size) >> 32),
-                 (uint32_t)(((uint64_t)hash_function.template operator()<4>(e) * (uint64_t)size) >> 32),
-                 (uint32_t)(((uint64_t)hash_function.template operator()<5>(e) * (uint64_t)size) >> 32),
-                 (uint32_t)(((uint64_t)hash_function.template operator()<6>(e) * (uint64_t)size) >> 32),
-                 (uint32_t)(((uint64_t)hash_function.template operator()<7>(e) * (uint64_t)size) >> 32)}};
+        return {{(uint32_t)((hash_function.template operator()<0>(e) * (uint64_t)size) >> 32),
+                 (uint32_t)((hash_function.template operator()<1>(e) * (uint64_t)size) >> 32),
+                 (uint32_t)((hash_function.template operator()<2>(e) * (uint64_t)size) >> 32),
+                 (uint32_t)((hash_function.template operator()<3>(e) * (uint64_t)size) >> 32),
+                 (uint32_t)((hash_function.template operator()<4>(e) * (uint64_t)size) >> 32),
+                 (uint32_t)((hash_function.template operator()<5>(e) * (uint64_t)size) >> 32),
+                 (uint32_t)((hash_function.template operator()<6>(e) * (uint64_t)size) >> 32),
+                 (uint32_t)((hash_function.template operator()<7>(e) * (uint64_t)size) >> 32)}};
     }
 
     /* end
@@ -397,7 +397,7 @@ public:
         std::array<uint32_t, 8> locs = compute_hashes(e);
         // Make sure we have not already inserted this element
         // If we have, make sure that it does not get deleted
-        for (const uint32_t loc : locs)
+        for (uint32_t loc : locs)
             if (table[loc] == e) {
                 please_keep(loc);
                 epoch_flags[loc] = last_epoch;
@@ -405,7 +405,7 @@ public:
             }
         for (uint8_t depth = 0; depth < depth_limit; ++depth) {
             // First try to insert to an empty slot, if one exists
-            for (const uint32_t loc : locs) {
+            for (uint32_t loc : locs) {
                 if (!collection_flags.bit_is_set(loc))
                     continue;
                 table[loc] = std::move(e);
@@ -467,7 +467,7 @@ public:
     inline bool contains(const Element& e, const bool erase) const
     {
         std::array<uint32_t, 8> locs = compute_hashes(e);
-        for (const uint32_t loc : locs)
+        for (uint32_t loc : locs)
             if (table[loc] == e) {
                 if (erase)
                     allow_erase(loc);
