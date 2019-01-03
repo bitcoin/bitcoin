@@ -497,12 +497,10 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Dash Core is downloading blocks...");
     }
 
-    // when enforcement is on we need information about a masternode payee or otherwise our block is going to be orphaned by the network
+    // Get expected MN/superblock payees. The call to GetBlockTxOuts might fail on regtest/devnet or when
+    // testnet is reset. This is fine and we ignore failure (blocks will be accepted)
     std::vector<CTxOut> voutMasternodePayments;
-    if (sporkManager.IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)
-        && !masternodeSync.IsBlockchainSynced()
-        && !mnpayments.GetBlockTxOuts(chainActive.Height() + 1, 0, voutMasternodePayments))
-            throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Dash Core is downloading masternode winners...");
+    mnpayments.GetBlockTxOuts(chainActive.Height() + 1, 0, voutMasternodePayments);
 
     // next bock is a superblock and we need governance info to correctly construct it
     if (sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED)
@@ -722,7 +720,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
 
     result.push_back(Pair("masternode", masternodeObj));
     result.push_back(Pair("masternode_payments_started", pindexPrev->nHeight + 1 > consensusParams.nMasternodePaymentsStartBlock));
-    result.push_back(Pair("masternode_payments_enforced", deterministicMNManager->IsDIP3Active() || sporkManager.IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)));
+    result.push_back(Pair("masternode_payments_enforced", true));
 
     UniValue superblockObjArray(UniValue::VARR);
     if(pblocktemplate->voutSuperblockPayments.size()) {
