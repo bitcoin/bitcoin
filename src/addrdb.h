@@ -43,6 +43,11 @@ public:
         nCreateTime = nCreateTimeIn;
     }
 
+    explicit CBanEntry(int64_t n_create_time_in, BanReason ban_reason_in) : CBanEntry(n_create_time_in)
+    {
+        banReason = ban_reason_in;
+    }
+
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
