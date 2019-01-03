@@ -365,7 +365,7 @@ class DIP3Test(BitcoinTestFramework):
         for j in range(repeat):
             for i in range(tx_count):
                 while True:
-                    from_node_idx = random.randint(0, len(self.nodes) - 1)
+                    from_node_idx = random.randint(1, len(self.nodes) - 1)
                     from_node = self.nodes[from_node_idx]
                     if from_node is not None:
                         break
@@ -375,7 +375,7 @@ class DIP3Test(BitcoinTestFramework):
                     if to_node is not None and from_node is not to_node:
                         break
                 to_address = to_node.getnewaddress()
-                txid = from_node.instantsendtoaddress(to_address, 0.01)
+                txid = from_node.instantsendtoaddress(to_address, 0.1)
                 for node in self.nodes:
                     if node is not None:
                         self.wait_for_instant_lock(node, to_node_idx, txid, timeout=timeout)
