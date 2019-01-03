@@ -2089,6 +2089,40 @@ void ThreadScriptCheck() {
     scriptcheckqueue.Thread();
 }
 
+bool IsStakePointerUsed(const CBlockIndex* pindexStake, const COutPoint& outpointFrom)
+{
+    auto hashPointer = outpointFrom.GetHash();
+    if (!mapUsedStakePointers.count(hashPointer))
+        return false;
+
+    // Marked as already used, but could potentially be a reorg, so check if they are in the same chain
+    auto hashBlockOfPointer = mapUsedStakePointers.at(hashPointer);
+    if (!mapBlockIndex.count(hashBlockOfPointer))
+        return false;
+
+    auto pindexUsedPointer = mapBlockIndex.at(hashBlockOfPointer);
+
+    // This check is only applicable if the used pointer is deeper in the chain (else it is likely just reindex or other check)
+    if (pindexStake->nHeight < pindexUsedPointer->nHeight)
+        return false;
+
+    // if it is the same block, then it is not a duplicate
+    if (pindexStake->GetBlockHash() == pindexUsedPointer->GetBlockHash())
+        return false;
+
+    //Check the ancestor of the block we are checking. If this chain's block at the height of the prev stake pointer has the same hash,
+    //then this is the same chain and therefore need to reject the new block
+    auto pindexCheck = pindexStake->GetAncestor(pindexUsedPointer->nHeight);
+    if (pindexCheck && pindexCheck->GetBlockHash() == pindexUsedPointer->GetBlockHash()) {
+        error("%s: StakePointer (txid=%s, nPos=%u) has already been used in block %s",
+              __func__, outpointFrom.hash.GetHex(), outpointFrom.n, pindexCheck->GetBlockHash().GetHex());
+        return true;
+    }
+
+    // This stakepointer has not been used
+    return false;
+}
+
 bool CheckBlockProofPointer(const CBlockIndex* pindex, const CBlock& block, CPubKey& pubkeyMasternode, COutPoint& outpointStakePointer, CTransaction& txPayment)
 {
     //First make sure that the stake pointer points to a block that is in the blockchain
@@ -2114,32 +2148,8 @@ bool CheckBlockProofPointer(const CBlockIndex* pindex, const CBlock& block, CPub
 
     //Ensure that this stake pointer is not already used by another block in the chain
     COutPoint stakeSource(stakePointer.txid, stakePointer.nPos);
-    auto hashPointer = stakeSource.GetHash();
-    if (mapUsedStakePointers.count(hashPointer)) {
-        //Marked as already used, but could potentially be a reorg, so check if they are in the same chain
-        auto hashBlockOfPointer = mapUsedStakePointers.at(hashPointer);
-        if (mapBlockIndex.count(hashBlockOfPointer)) {
-
-            auto pindexUsedPointer = mapBlockIndex.at(hashBlockOfPointer);
-
-            // This check is only applicable if the used pointer is deeper in the chain (else it is likely just reindex or other check)
-            if (pindex->nHeight >= pindexUsedPointer->nHeight) {
-
-                // if it is the same block, then it is not a duplicate
-                if (pindex->GetBlockHash() != pindexUsedPointer->GetBlockHash()) {
-
-                    //Check the ancestor of the block we are checking. If this chain's block at the height of the prev stake pointer has the same hash,
-                    //then this is the same chain and therefore need to reject the new block
-                    auto pindexCheck = pindex->GetAncestor(pindexUsedPointer->nHeight);
-                    if (pindexCheck && pindexCheck->GetBlockHash() == pindexUsedPointer->GetBlockHash())
-                        return error("%s: StakePointer (txid=%s, nPos=%u) has already been used in block %s",
-                                     __func__,
-                                     stakePointer.txid.GetHex(), stakePointer.nPos,
-                                     pindexCheck->GetBlockHash().GetHex());
-                }
-            }
-        }
-    }
+    if (IsStakePointerUsed(pindex, stakeSource))
+        return error("%s: stake pointer already used", __func__);
 
     CBlock blockFrom;
     if (!ReadBlockFromDisk(blockFrom, pindexFrom))
