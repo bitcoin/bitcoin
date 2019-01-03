@@ -392,11 +392,11 @@ class ComparisonTestFramework(BitcoinTestFramework):
 
     def add_options(self, parser):
         parser.add_option("--testbinary", dest="testbinary",
-                          default=os.getenv("DASHD", "dashd"),
-                          help="bitcoind binary to test")
+                          default=os.getenv("BITCOIND", "dashd"),
+                          help="dashd binary to test")
         parser.add_option("--refbinary", dest="refbinary",
-                          default=os.getenv("DASHD", "dashd"),
-                          help="bitcoind binary to use for reference nodes (if any)")
+                          default=os.getenv("BITCOIND", "dashd"),
+                          help="dashd binary to use for reference nodes (if any)")
 
     def setup_network(self):
         self.nodes = start_nodes(
