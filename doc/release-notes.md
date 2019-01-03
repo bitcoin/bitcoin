@@ -72,16 +72,44 @@ Mining
 - Calls to `getblocktemplate` will fail if the segwit rule is not specified.
   Calling `getblocktemplate` without segwit specified is almost certainly
   a misconfiguration since doing so results in lower rewards for the miner.
+  Failed calls will produce an error message describing how to enable the
+  segwit rule.
 
-Command line option changes
----------------------------
+Configuration option changes
+----------------------------
 
-The `-enablebip61` command line option (introduced in Bitcoin Core 0.17.0) is
-used to toggle sending of BIP 61 reject messages. Reject messages have no use
-case on the P2P network and are only logged for debugging by most network
-nodes. The option will now by default be off for improved privacy and security
-as well as reduced upload usage. The option can explicitly be turned on for
-local-network debugging purposes.
+- A warning is printed if an unrecognized section name is used in the
+  configuration file.  Recognized sections are `[test]`, `[main]`, and
+  `[regtest]`.
+
+- Four new options are available for configuring the maximum number of
+  messages that ZMQ will queue in memory (the "high water mark") before
+  dropping additional messages.  The default value is 1,000, the same as
+  was used for previous releases.  See the [ZMQ
+  documentation](https://github.com/bitcoin/bitcoin/blob/master/doc/zmq.md#usage)
+  for details.
+
+- The `enablebip61` option (introduced in Bitcoin Core 0.17.0) is
+  used to toggle sending of BIP 61 reject messages. Reject messages have no use
+  case on the P2P network and are only logged for debugging by most network
+  nodes. The option will now by default be off for improved privacy and security
+  as well as reduced upload usage. The option can explicitly be turned on for
+  local-network debugging purposes.
+
+- The `rpcallowip` option can no longer be used to automatically listen
+  on all network interfaces.  Instead, the `rpcbind` parameter must also
+  be used to specify the IP addresses to listen on.  Listening for RPC
+  commands over a public network connection is insecure and should be
+  disabled, so a warning is now printed if a user selects such a
+  configuration.  If you need to expose RPC in order to use a tool
+  like Docker, ensure you only bind RPC to your localhost, e.g. `docker
+  run [...] -p 127.0.0.1:8332:8332` (this is an extra `:8332` over the
+  normal Docker port specification).
+
+- The `rpcpassword` option now causes a startup error if the password
+  set in the configuration file contains a hash character (#), as it's
+  ambiguous whether the hash character is meant for the password or as a
+  comment.
 
 Documentation
 -------------
@@ -168,7 +196,7 @@ Updated RPCs
 Note: some low-level RPC changes mainly useful for testing are described
 in the Low-level Changes section below.
 
-- The `getpeerinfo` RPC now returns an additional "minfeefilter" field
+- The `getpeerinfo` RPC now returns an additional `minfeefilter` field
   set to the peer's BIP133 fee filter.  You can use this to detect that
   you have peers that are willing to accept transactions below the
   default minimum relay fee.
@@ -190,7 +218,49 @@ in the Low-level Changes section below.
   P2SH-P2WPKH, and P2SH-P2WSH. Requests for P2WSH and P2SH-P2WSH accept
   an additional `witnessscript` parameter.
 
+- The `importmulti` RPC now returns an additional `warnings` field for
+  each request with an array of strings explaining when fields are being
+  ignored or are inconsistent, if there are any.
+
+- The `getaddressinfo` RPC now returns an additional `solvable` boolean
+  field when Bitcoin Core knows enough about the address's scriptPubKey,
+  optional redeemScript, and optional witnessScript in order for the
+  wallet to be able to generate an unsigned input spending funds sent to
+  that address.
+
+- The `getaddressinfo`, `listunspent`, and `scantxoutset` RPCs now
+  return an additional `desc` field that contains an output descriptor
+  containing all key paths and signing information for the address
+  (except for the private key).  The `desc` field is only returned for
+  `getaddressinfo` and `listunspent` when the address is solvable.
+
+- The `importprivkey` RPC will preserve previously-set labels for
+  addresses or public keys corresponding to the private key being
+  imported.  For example, if you imported a watch-only address with the
+  label "cold wallet" in earlier releases of Bitcoin Core, subsequently
+  importing the private key would default to resetting the address's
+  label to the default empty-string label ("").  In this release, the
+  previous label of "cold wallet" will be retained.  If you optionally
+  specify any label besides the default when calling `importprivkey`,
+  the new label will be applied to the address.
+
 - See the [Mining](#mining) section for changes to `getblocktemplate`.
+
+Graphical User Interface (GUI)
+------------------------------
+
+- A new Window menu is added alongside the existing File, Settings, and
+  Help menus.  Several items from the other menus that opened new
+  windows have been moved to this new Window menu.
+
+- In the Send tab, the checkbox for "pay only the required fee"
+  has been removed.  Instead, the user can simply decrease the value in
+  the Custom Feerate field all the way down to the node's configured
+  minimum relay fee.
+
+- In the Overview tab, the watch-only balance will be the only
+  balance shown if the wallet was created using the `createwallet` RPC
+  and the `disable_private_keys` parameter was set to true.
 
 Low-level changes
 =================
@@ -215,6 +285,16 @@ Configuration
   that version onwards, all new wallets created are hierarchical
   deterministic wallets. This release makes specifying `-usehd` an
   invalid configuration option.
+
+Changes for particular platforms
+--------------------------------
+
+- On macOS, Bitcoin Core now opts out of application CPU throttling
+  ("app nap") during initial blockchain download, when catching up from
+  over 100 blocks behind the current chain tip, or when reindexing chain
+  data.  This helps prevent these operations from taking an excessively
+  long time because the operating system is attempting to conserve
+  power.
 
 Credits
 =======
