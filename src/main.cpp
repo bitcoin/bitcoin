@@ -56,7 +56,7 @@ bool fTxIndex = false;
 unsigned int nCoinCacheSize = 5000;
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for transaction creation) */
-int64 CTransaction::nMinTxFee = MIN_TX_FEE;  // Override with -mintxfee
+int64 CTransaction::nMinTxFee = PERKB_TX_FEE;  // Override with -mintxfee
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying) */
 int64 CTransaction::nMinRelayTxFee = MIN_RELAY_TX_FEE;
 
