@@ -448,31 +448,36 @@ CDeterministicMNManager::CDeterministicMNManager(CEvoDB& _evoDb) :
 
 bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& _state)
 {
-    LOCK(cs);
+    CDeterministicMNList oldList, newList;
+    CDeterministicMNListDiff diff;
 
     int nHeight = pindex->nHeight;
 
-    CDeterministicMNList newList;
-    if (!BuildNewListFromBlock(block, pindex->pprev, _state, newList, true)) {
-        return false;
+    {
+        LOCK(cs);
+
+        if (!BuildNewListFromBlock(block, pindex->pprev, _state, newList, true)) {
+            return false;
+        }
+
+        if (newList.GetHeight() == -1) {
+            newList.SetHeight(nHeight);
+        }
+
+        newList.SetBlockHash(block.GetHash());
+
+        oldList = GetListForBlock(pindex->pprev->GetBlockHash());
+        diff = oldList.BuildDiff(newList);
+
+        evoDb.Write(std::make_pair(DB_LIST_DIFF, diff.blockHash), diff);
+        if ((nHeight % SNAPSHOT_LIST_PERIOD) == 0) {
+            evoDb.Write(std::make_pair(DB_LIST_SNAPSHOT, diff.blockHash), newList);
+            LogPrintf("CDeterministicMNManager::%s -- Wrote snapshot. nHeight=%d, mapCurMNs.allMNsCount=%d\n",
+                __func__, nHeight, newList.GetAllMNsCount());
+        }
     }
 
-    if (newList.GetHeight() == -1) {
-        newList.SetHeight(nHeight);
-    }
-
-    newList.SetBlockHash(block.GetHash());
-
-    CDeterministicMNList oldList = GetListForBlock(pindex->pprev->GetBlockHash());
-    CDeterministicMNListDiff diff = oldList.BuildDiff(newList);
-
-    evoDb.Write(std::make_pair(DB_LIST_DIFF, diff.blockHash), diff);
-    if ((nHeight % SNAPSHOT_LIST_PERIOD) == 0) {
-        evoDb.Write(std::make_pair(DB_LIST_SNAPSHOT, diff.blockHash), newList);
-        LogPrintf("CDeterministicMNManager::%s -- Wrote snapshot. nHeight=%d, mapCurMNs.allMNsCount=%d\n",
-            __func__, nHeight, newList.GetAllMNsCount());
-    }
-
+    // Don't hold cs while calling signals
     if (!diff.addedMNs.empty() || !diff.removedMns.empty()) {
         GetMainSignals().NotifyMasternodeListChanged(newList);
     }
@@ -487,6 +492,7 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
         LogPrintf("CDeterministicMNManager::%s -- DIP3 is active now. nHeight=%d\n", __func__, nHeight);
     }
 
+    LOCK(cs);
     CleanupCache(nHeight);
 
     return true;
@@ -494,17 +500,19 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
 
 bool CDeterministicMNManager::UndoBlock(const CBlock& block, const CBlockIndex* pindex)
 {
-    LOCK(cs);
-
     int nHeight = pindex->nHeight;
     uint256 blockHash = block.GetHash();
 
     CDeterministicMNListDiff diff;
-    evoDb.Read(std::make_pair(DB_LIST_DIFF, blockHash), diff);
+    {
+        LOCK(cs);
+        evoDb.Read(std::make_pair(DB_LIST_DIFF, blockHash), diff);
 
-    evoDb.Erase(std::make_pair(DB_LIST_DIFF, blockHash));
-    evoDb.Erase(std::make_pair(DB_LIST_SNAPSHOT, blockHash));
-    mnListsCache.erase(blockHash);
+        evoDb.Erase(std::make_pair(DB_LIST_DIFF, blockHash));
+        evoDb.Erase(std::make_pair(DB_LIST_SNAPSHOT, blockHash));
+
+        mnListsCache.erase(blockHash);
+    }
 
     if (!diff.addedMNs.empty() || !diff.removedMns.empty()) {
         auto prevList = GetListForBlock(pindex->pprev->GetBlockHash());
