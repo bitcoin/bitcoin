@@ -29,6 +29,11 @@ void SetMockTime(int64_t nMockTimeIn)
     nMockTime = nMockTimeIn;
 }
 
+bool IsMockTime()
+{
+    return nMockTime != 0;
+}
+
 int64_t GetTimeMillis()
 {
     int64_t now = (boost::posix_time::microsec_clock::universal_time() -
