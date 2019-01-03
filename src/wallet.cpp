@@ -342,7 +342,7 @@ set<uint256> CWallet::GetConflicts(const uint256& txid) const
     AssertLockHeld(cs_wallet);
 
     std::map<uint256, CWalletTx>::const_iterator it = mapWallet.find(txid);
-    if (it == mapWallet.end())
+    if (it == mapWallet.end() || it->second.IsCoinStake() || it->second.IsCoinBase())
         return result;
     const CWalletTx& wtx = it->second;
 
