@@ -138,6 +138,8 @@ public:
     unsigned int nTime;
     unsigned int nBits;
     unsigned int nNonce;
+    bool fProofOfStake;
+    std::pair<uint256, unsigned int> stakeSource;
 
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
     uint32_t nSequenceId;
@@ -162,6 +164,9 @@ public:
         nTime          = 0;
         nBits          = 0;
         nNonce         = 0;
+        fProofOfStake  = false;
+        stakeSource.first = uint256();
+        stakeSource.second = 0;
     }
 
     CBlockIndex()
@@ -169,7 +174,7 @@ public:
         SetNull();
     }
 
-    CBlockIndex(const CBlockHeader& block)
+    CBlockIndex(const CBlock& block)
     {
         SetNull();
 
@@ -178,6 +183,11 @@ public:
         nTime          = block.nTime;
         nBits          = block.nBits;
         nNonce         = block.nNonce;
+        fProofOfStake  = block.IsProofOfStake();
+        if (fProofOfStake) {
+            stakeSource.first = block.stakePointer.txid;
+            stakeSource.second = block.stakePointer.nPos;
+        }
     }
 
     CDiskBlockPos GetBlockPos() const {
@@ -271,6 +281,7 @@ public:
     //! Efficiently find an ancestor of this block.
     CBlockIndex* GetAncestor(int height);
     const CBlockIndex* GetAncestor(int height) const;
+    bool IsProofOfStake() const;
 };
 
 /** Used to marshal pointers into hashes for db storage. */
@@ -311,6 +322,10 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
+        READWRITE(fProofOfStake);
+        if (fProofOfStake) {
+            READWRITE(stakeSource);
+        }
     }
 
     uint256 GetBlockHash() const

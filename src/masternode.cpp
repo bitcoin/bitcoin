@@ -62,6 +62,7 @@ CMasternode::CMasternode()
     pubkey = CPubKey();
     pubkey2 = CPubKey();
     sig = std::vector<unsigned char>();
+    vchSignover = std::vector<unsigned char>();
     activeState = MASTERNODE_ENABLED;
     sigTime = GetAdjustedTime();
     lastPing = CMasternodePing();
@@ -84,6 +85,7 @@ CMasternode::CMasternode(const CMasternode& other)
     pubkey = other.pubkey;
     pubkey2 = other.pubkey2;
     sig = other.sig;
+    vchSignover = other.vchSignover;
     activeState = other.activeState;
     sigTime = other.sigTime;
     lastPing = other.lastPing;
@@ -106,6 +108,7 @@ CMasternode::CMasternode(const CMasternodeBroadcast& mnb)
     pubkey = mnb.pubkey;
     pubkey2 = mnb.pubkey2;
     sig = mnb.sig;
+    vchSignover = mnb.vchSignover;
     activeState = MASTERNODE_ENABLED;
     sigTime = mnb.sigTime;
     lastPing = mnb.lastPing;
@@ -286,6 +289,40 @@ int64_t CMasternode::GetLastPaid() const
     return 0;
 }
 
+
+// Find all blocks where MN received reward within defined block depth
+// Used for generating stakepointers
+bool CMasternode::GetRecentPaymentBlocks(std::vector<const CBlockIndex*>& vPaymentBlocks, bool limitMostRecent) const
+{
+    vPaymentBlocks.clear();
+
+    int nMinimumValidBlockHeight = chainActive.Height() - Params().ValidStakePointerDuration() + 1;
+    if (nMinimumValidBlockHeight < 1)
+        nMinimumValidBlockHeight = 1;
+
+    CBlockIndex* pindex = chainActive[nMinimumValidBlockHeight];
+
+    CScript mnpayee;
+    mnpayee = GetScriptForDestination(pubkey.GetID());
+
+    bool fBlockFound = false;
+    while (chainActive.Next(pindex)) {
+        CBlock block;
+        if (!ReadBlockFromDisk(block, pindex))
+            continue;
+
+        if (block.vtx[0].vout.size() > 1 && block.vtx[0].vout[1].scriptPubKey == mnpayee) {
+            vPaymentBlocks.emplace_back(pindex);
+            fBlockFound = true;
+            if (limitMostRecent)
+                return fBlockFound;
+        }
+        pindex = chainActive.Next(pindex);
+    }
+
+    return fBlockFound;
+}
+
 CMasternodeBroadcast::CMasternodeBroadcast()
 {
     vin = CTxIn();
@@ -293,6 +330,7 @@ CMasternodeBroadcast::CMasternodeBroadcast()
     pubkey = CPubKey();
     pubkey2 = CPubKey();
     sig = std::vector<unsigned char>();
+    vchSignover = std::vector<unsigned char>();
     activeState = MASTERNODE_ENABLED;
     sigTime = GetAdjustedTime();
     lastPing = CMasternodePing();
@@ -313,6 +351,7 @@ CMasternodeBroadcast::CMasternodeBroadcast(CService newAddr, CTxIn newVin, CPubK
     pubkey = newPubkey;
     pubkey2 = newPubkey2;
     sig = std::vector<unsigned char>();
+    vchSignover = std::vector<unsigned char>();
     activeState = MASTERNODE_ENABLED;
     sigTime = GetAdjustedTime();
     lastPing = CMasternodePing();
@@ -333,6 +372,7 @@ CMasternodeBroadcast::CMasternodeBroadcast(const CMasternode& mn)
     pubkey = mn.pubkey;
     pubkey2 = mn.pubkey2;
     sig = mn.sig;
+    vchSignover = mn.vchSignover;
     activeState = mn.activeState;
     sigTime = mn.sigTime;
     lastPing = mn.lastPing;
@@ -395,10 +435,11 @@ bool CMasternodeBroadcast::Create(std::string strService, std::string strKeyMast
         return false;
     }
 
-    return Create(txin, CService(strService), keyCollateralAddress, pubKeyCollateralAddress, keyMasternodeNew, pubKeyMasternodeNew, strErrorMessage, mnb);
+    bool fSignOver = true;
+    return Create(txin, CService(strService), keyCollateralAddress, pubKeyCollateralAddress, keyMasternodeNew, pubKeyMasternodeNew, fSignOver, strErrorMessage, mnb);
 }
 
-bool CMasternodeBroadcast::Create(CTxIn txin, CService service, CKey keyCollateralAddress, CPubKey pubKeyCollateralAddress, CKey keyMasternodeNew, CPubKey pubKeyMasternodeNew, std::string &strErrorMessage, CMasternodeBroadcast &mnb) {
+bool CMasternodeBroadcast::Create(CTxIn txin, CService service, CKey keyCollateralAddress, CPubKey pubKeyCollateralAddress, CKey keyMasternodeNew, CPubKey pubKeyMasternodeNew, bool fSignOver, std::string &strErrorMessage, CMasternodeBroadcast &mnb) {
     // wait for reindex and/or import to finish
     if (fImporting || fReindex) return false;
 
@@ -425,6 +466,16 @@ bool CMasternodeBroadcast::Create(CTxIn txin, CService service, CKey keyCollater
         LogPrintf("CMasternodeBroadcast::Create -- %s\n", strErrorMessage);
         mnb = CMasternodeBroadcast();
         return false;
+    }
+
+    //Additional signature for use in proof of stake
+    if (fSignOver) {
+        if (!keyCollateralAddress.Sign(pubKeyMasternodeNew.GetHash(), mnb.vchSignover)) {
+            LogPrintf("CMasternodeBroadcast::Create failed signover\n");
+            mnb = CMasternodeBroadcast();
+            return false;
+        }
+        LogPrintf("%s: Signed over to key %s\n", __func__, pubKeyMasternodeNew.GetID().GetHex());
     }
 
     return true;
@@ -640,6 +691,16 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS) const
     // if it matches our Masternode privkey, then we've been remotely activated
     if(pubkey2 == activeMasternode.pubKeyMasternode && protocolVersion == PROTOCOL_VERSION){
         activeMasternode.EnableHotColdMasterNode(vin, addr);
+        if (!vchSignover.empty()) {
+            if (pubkey.Verify(pubkey2.GetHash(), vchSignover)) {
+                LogPrintf("%s: Verified pubkey2 signover for staking, added to activemasternode\n", __func__);
+                activeMasternode.vchSigSignover = vchSignover;
+            } else {
+                LogPrintf("%s: Failed to verify pubkey on signover!\n", __func__);
+            }
+        } else {
+            LogPrintf("%s: NOT SIGNOVER!\n", __func__);
+        }
     }
 
     bool isLocal = addr.IsRFC1918() || addr.IsLocal();

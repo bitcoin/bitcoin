@@ -155,14 +155,17 @@ static const Checkpoints::CCheckpointData data = {
 
 static Checkpoints::MapCheckpoints mapCheckpointsTestnet =
         boost::assign::map_list_of
-        ( 0, uint256S("0x0000000085370d5e122f64f4ab19c68614ff3df78c8d13cb814fd7e69a1dc6da"))
+        ( 0, uint256S("0x00008f72785c0713a31a5457c4169a17088338540410b548f302c92bc17c1bc1"))
+        ( 9820, uint256S("0x000007e98d19383421f4ff13528e364edb19cda8c302df0290b2aef16936d9b2"))
+        ( 9950, uint256S("0x000006ef1474fad5c76c503cd6896f6a09339a2c6fb66c7727566380567b1c7b"))
+        ( 10007, uint256S("0x485e03be7d12c2802e0e49f0410011da36d0070746c48fb9bf347eff550943fa"))
         ;
 static const Checkpoints::CCheckpointData dataTestnet = {
         &mapCheckpointsTestnet,
-        1412760826, // * UNIX timestamp of last checkpoint block
-        0,          // * total number of transactions between genesis and last checkpoint
+        1543018925, // * UNIX timestamp of last checkpoint block
+        10205,          // * total number of transactions between genesis and last checkpoint
                     //   (the tx=... number in the SetBestChain debug.log lines)
-        0           // * estimated number of transactions per day after checkpoint
+        2000           // * estimated number of transactions per day after checkpoint
     };
 
 static Checkpoints::MapCheckpoints mapCheckpointsDevnet =
@@ -213,7 +216,14 @@ public:
         nMinerThreads = 0;
         nTargetTimespan = 14 * 24 * 60 * 60; // Crown: 2 weeks
         nTargetSpacing = 1 * 60; // Crown: 1 minutes
-        nMaxTipAge = 6 * 60 * 60; 
+        nMaxTipAge = 6 * 60 * 60;
+
+        nAuxpowChainId = 20;
+        nPoSChainId = 22;
+        nStakePointerValidityPeriod = 1440; //Stake pointers are valid to stake with for the next 1 day worth of blocks
+        nMaxReorgDepth = 100;
+        nKernelModifierOffset = 100; //Number blocks before the stake pointer is the kernel modifier from
+        nChainStallDuration = 60*60; //Spacing between blocks that will consider the chain as "stalled"
 
         /**
          * Build the genesis block. Note that the output of the genesis coinbase cannot
@@ -334,54 +344,60 @@ public:
         nTargetTimespan = 2 * 24 * 60 * 60;  // 2 days
         nTargetSpacing = 1.5 * 60;      // 1.5 minutes
         nMaxTipAge = 0x7fffffff;
+        nBlockPoSStart = 10000;
 
         //! Modify the testnet genesis block so the timestamp is valid for a later start.
-        genesis.nTime    = 1412760826;
-        genesis.nNonce   = 1612467894;
+        genesis.nTime    = 1536962431;
+        genesis.nNonce   = 1112529522;
+        arith_uint256 nCompact = 0;
+        nCompact = ~nCompact;
+        nCompact >>= 16;
+        bnProofOfWorkLimit = nCompact;
+        genesis.nBits    = nCompact.GetCompact();
 
-	/*if (true && genesis.GetHash() != hashGenesisBlock)
-                       {
-                           printf("Searching for genesis block...\n");
-                           uint256 hashTarget = uint256().SetCompact(genesis.nBits);
-                           uint256 thash;
-                           while (true)
-                           {
-                               thash = genesis.GetHash();
-                               if (thash <= hashTarget)
-                                 break;
-                               if ((genesis.nNonce & 0xFFF) == 0)
-                               {
-                                   printf("nonce %08X: hash = %s (target = %s)\n", genesis.nNonce, thash.ToString().c_str(), hashTarget.ToString().c_str());
-                               }
-                               ++genesis.nNonce;
-                               if (genesis.nNonce == 0)
-                               {
-                                   printf("NONCE WRAPPED, incrementing time\n");
-                                   ++genesis.nTime;
-                               }
-                           }
-                           printf("genesis.nTime = %u \n", genesis.nTime);
-                           printf("genesis.nNonce = %u \n", genesis.nNonce);
-                           printf("genesis.nVersion = %u \n", genesis.nVersion);
-                           //printf("genesis.GetHash = %s\n", genesis.GetHash().ToString().c_str()); //first this, then comment this line out and uncomment the one under.
-                           printf("genesis.hashMerkleRoot = %s \n", genesis.hashMerkleRoot.ToString().c_str()); //improvised. worked for me, to find merkle root/
-                       }*/
+//	if (true && genesis.GetHash() != hashGenesisBlock)
+//                       {
+//                           printf("Searching for genesis block...\n");
+//                           arith_uint256 hashTarget = arith_uint256().SetCompact(genesis.nBits);
+//                           arith_uint256 thash;
+//                           while (true)
+//                           {
+//                               thash = UintToArith256(genesis.GetHash());
+//                               if (thash <= hashTarget)
+//                                 break;
+//                               if ((genesis.nNonce & 0xFFF) == 0)
+//                               {
+//                                   printf("nonce %08X: hash = %s (target = %s)\n", genesis.nNonce, thash.ToString().c_str(), hashTarget.ToString().c_str());
+//                               }
+//                               ++genesis.nNonce;
+//                               if (genesis.nNonce == 0)
+//                               {
+//                                   printf("NONCE WRAPPED, incrementing time\n");
+//                                   ++genesis.nTime;
+//                               }
+//                           }
+//                           printf("genesis.nTime = %u \n", genesis.nTime);
+//                           printf("genesis.nNonce = %u \n", genesis.nNonce);
+//                           printf("genesis.nVersion = %u \n", genesis.nVersion);
+//                           printf("genesis.GetHash = %s\n", genesis.GetHash().ToString().c_str()); //first this, then comment this line out and uncomment the one under.
+//                           printf("genesis.hashMerkleRoot = %s \n", genesis.hashMerkleRoot.ToString().c_str()); //improvised. worked for me, to find merkle root/
+//                       }
 
         hashGenesisBlock = genesis.GetHash();
-        assert(hashGenesisBlock == uint256S("0x0000000085370d5e122f64f4ab19c68614ff3df78c8d13cb814fd7e69a1dc6da"));
+        assert(hashGenesisBlock == uint256S("0x00008f72785c0713a31a5457c4169a17088338540410b548f302c92bc17c1bc1"));
         assert(genesis.hashMerkleRoot == uint256S("0x80ad356118a9ab8db192db66ef77146cc36d958f959251feace550e4ca3d1446"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
 
-        vSeeds.push_back(CDNSSeedData("fra-testnet-crwdns", "fra-testnet-crwdns.crowndns.info"));
-        vSeeds.push_back(CDNSSeedData("blr-testnet-crwdns", "blr-testnet-crwdns.crowndns.info"));
-        vSeeds.push_back(CDNSSeedData("sgp-testnet-crwdns", "sgp-testnet-crwdns.crowndns.info"));
-        vSeeds.push_back(CDNSSeedData("lon-testnet-crwdns", "lon-testnet-crwdns.crowndns.info"));
-        vSeeds.push_back(CDNSSeedData("nyc-testnet-crwdns", "nyc-testnet-crwdns.crowndns.info"));
-        vSeeds.push_back(CDNSSeedData("tor-testnet-crwdns", "tor-testnet-crwdns.crowndns.info"));
-        vSeeds.push_back(CDNSSeedData("sfo-testnet-crwdns", "sfo-testnet-crwdns.crowndns.info"));
-        vSeeds.push_back(CDNSSeedData("ams-testnet-crwdns", "ams-testnet-crwdns.crowndns.info"));
+//        vSeeds.push_back(CDNSSeedData("fra-testnet-crwdns", "fra-testnet-crwdns.crowndns.info"));
+//        vSeeds.push_back(CDNSSeedData("blr-testnet-crwdns", "blr-testnet-crwdns.crowndns.info"));
+//        vSeeds.push_back(CDNSSeedData("sgp-testnet-crwdns", "sgp-testnet-crwdns.crowndns.info"));
+//        vSeeds.push_back(CDNSSeedData("lon-testnet-crwdns", "lon-testnet-crwdns.crowndns.info"));
+//        vSeeds.push_back(CDNSSeedData("nyc-testnet-crwdns", "nyc-testnet-crwdns.crowndns.info"));
+//        vSeeds.push_back(CDNSSeedData("tor-testnet-crwdns", "tor-testnet-crwdns.crowndns.info"));
+//        vSeeds.push_back(CDNSSeedData("sfo-testnet-crwdns", "sfo-testnet-crwdns.crowndns.info"));
+//        vSeeds.push_back(CDNSSeedData("ams-testnet-crwdns", "ams-testnet-crwdns.crowndns.info"));
 
         // Testnet crown addresses start with 'tCRW'
         base58Prefixes[PUBKEY_ADDRESS] = list_of(0x01)(0x7A)(0xCD)(0x67).convert_to_container<std::vector<unsigned char> >();
@@ -416,6 +432,8 @@ public:
         strDevfundAddress = "mr59c3aniaN3qHXej5L8UBsssRZbiUUMnz";
         strLegacySignerDummyAddress = "mr59c3aniaN3qHXej5L8UBsssRZbiUUMnz";
         nStartMasternodePayments = 1420837558; //Fri, 09 Jan 2015 21:05:58 GMT
+
+        nStakePointerValidityPeriod = 3000;
     }
     const Checkpoints::CCheckpointData& Checkpoints() const 
     {
@@ -598,6 +616,7 @@ public:
         fDefaultConsistencyChecks = true;
         fAllowMinDifficultyBlocks = false;
         fMineBlocksOnDemand = true;
+        nBlockPoSStart = 9999999;
     }
 
     const Checkpoints::CCheckpointData& Checkpoints() const 

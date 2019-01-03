@@ -27,6 +27,11 @@ bool CMasternodeSync::IsSynced()
     return RequestedMasternodeAssets == MASTERNODE_SYNC_FINISHED;
 }
 
+bool CMasternodeSync::AreSporksSynced() const
+{
+    return RequestedMasternodeAssets > MASTERNODE_SYNC_SPORKS;
+}
+
 bool CMasternodeSync::IsBlockchainSynced()
 {
     static bool fBlockchainSynced = false;
@@ -50,7 +55,7 @@ bool CMasternodeSync::IsBlockchainSynced()
     if(pindex == NULL) return false;
 
 
-    if(pindex->nTime + 60*60 < GetTime())
+    if(!GetBoolArg("-jumpstart", false) && pindex->nTime + 60*60 < GetTime())
         return false;
 
     fBlockchainSynced = true;

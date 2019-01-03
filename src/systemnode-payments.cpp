@@ -22,7 +22,7 @@ CCriticalSection cs_vecSNPayments;
 CCriticalSection cs_mapSystemnodeBlocks;
 CCriticalSection cs_mapSystemnodePayeeVotes;
 
-bool SNIsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight)
+bool SNIsBlockPayeeValid(const CAmount& nValueCreated, const CTransaction& txNew, int nBlockHeight, const uint32_t& nTime, const uint32_t& nTimePrevBlock)
 {
     if(!systemnodeSync.IsSynced()) { //there is no budget data to use to check anything -- find the longest chain
         LogPrint("snpayments", "Client not synced, skipping block payee checks\n");
@@ -47,8 +47,11 @@ bool SNIsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight)
     }
 
     //check for systemnode payee
-    if(systemnodePayments.IsTransactionValid(txNew, nBlockHeight))
-    {
+    if(systemnodePayments.IsTransactionValid(nValueCreated, txNew, nBlockHeight)) {
+        return true;
+    } else if (nTime - nTimePrevBlock > Params().ChainStallDuration()) {
+        // The chain has stalled, allow the first block to have no payment to winners
+        LogPrintf("%s: Chain stall, time between blocks=%d\n", __func__, nTime - nTimePrevBlock);
         return true;
     } else {
         LogPrintf("Invalid mn payment detected %s\n", txNew.ToString().c_str());
@@ -63,12 +66,12 @@ bool SNIsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight)
     return false;
 }
 
-bool CSystemnodePayments::IsTransactionValid(const CTransaction& txNew, int nBlockHeight)
+bool CSystemnodePayments::IsTransactionValid(const CAmount& nValueCreated, const CTransaction& txNew, int nBlockHeight)
 {
     LOCK(cs_mapSystemnodeBlocks);
 
     if(mapSystemnodeBlocks.count(nBlockHeight)){
-        return mapSystemnodeBlocks[nBlockHeight].IsTransactionValid(txNew);
+        return mapSystemnodeBlocks[nBlockHeight].IsTransactionValid(txNew, nValueCreated);
     }
 
     return true;
@@ -274,14 +277,14 @@ std::string CSystemnodePayments::GetRequiredPaymentsString(int nBlockHeight)
     return "Unknown";
 }
 
-bool CSystemnodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
+bool CSystemnodeBlockPayees::IsTransactionValid(const CTransaction& txNew, const CAmount& nValueCreated)
 {
     LOCK(cs_vecPayments);
 
     int nMaxSignatures = 0;
     std::string strPayeesPossible = "";
 
-    CAmount systemnodePayment = GetSystemnodePayment(nBlockHeight, txNew.GetValueOut());
+    CAmount systemnodePayment = GetSystemnodePayment(nBlockHeight, nValueCreated);
 
     //require at least 6 signatures
 
@@ -295,14 +298,22 @@ bool CSystemnodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
     BOOST_FOREACH(CSystemnodePayee& payee, vecPayments)
     {
         bool found = false;
-        BOOST_FOREACH(CTxOut out, txNew.vout){
-            if(payee.scriptPubKey == out.scriptPubKey && systemnodePayment == out.nValue){
+        int pos = -1;
+        for (unsigned int i = 0; i < txNew.vout.size(); i++){
+            if(payee.scriptPubKey == txNew.vout[i].scriptPubKey && systemnodePayment == txNew.vout[i].nValue){
+                pos = i;
                 found = true;
+                break;
             }
         }
 
         if(payee.nVotes >= SNPAYMENTS_SIGNATURES_REQUIRED){
-            if(found) return true;
+            if(found) {
+                //When proof of stake is active, enforce specific payment positions
+                if (nBlockHeight >= Params().PoSStartHeight() && pos != SN_PMT_SLOT)
+                    return error("%s: Systemnode payment is not in coinbase.vout[%d]", __func__, SN_PMT_SLOT);
+                return true;
+            }
 
             CTxDestination address1;
             ExtractDestination(payee.scriptPubKey, address1);

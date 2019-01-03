@@ -24,9 +24,10 @@ extern CSystemnodePayments systemnodePayments;
 
 #define SNPAYMENTS_SIGNATURES_REQUIRED           6
 #define SNPAYMENTS_SIGNATURES_TOTAL              10
+#define SN_PMT_SLOT                              2
 
 void SNFillBlockPayee(CMutableTransaction& txNew, int64_t nFees);
-bool SNIsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight);
+bool SNIsBlockPayeeValid(const CAmount& nValueCreated, const CTransaction& txNew, int nBlockHeight, const uint32_t& nTime, const uint32_t& nTimePrevBlock);
 std::string SNGetRequiredPaymentsString(int nBlockHeight);
 
 
@@ -111,7 +112,7 @@ public:
         return false;
     }
 
-    bool IsTransactionValid(const CTransaction& txNew);
+    bool IsTransactionValid(const CTransaction& txNew, const CAmount& nValueCreated);
     std::string GetRequiredPaymentsString();
 
     ADD_SERIALIZE_METHODS;
@@ -217,7 +218,7 @@ public:
     void ProcessMessageSystemnodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
     void Sync(CNode* node, int nCountNeeded);
     void CheckAndRemove();
-    bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
+    bool IsTransactionValid(const CAmount& nValueCreated, const CTransaction& txNew, int nBlockHeight);
     bool GetBlockPayee(int nBlockHeight, CScript& payee);
     bool IsScheduled(CSystemnode& sn, int nNotBlockHeight);
     bool CanVote(COutPoint outSystemnode, int nBlockHeight);

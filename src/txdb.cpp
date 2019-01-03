@@ -126,7 +126,7 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
                 ssKey >> txhash;
                 ss << txhash;
                 ss << VARINT(coins.nVersion);
-                ss << (coins.fCoinBase ? 'c' : 'n');
+                ss << (coins.fBlockReward ? 'c' : 'n');
                 ss << VARINT(coins.nHeight);
                 stats.nTransactions++;
                 for (unsigned int i=0; i<coins.vout.size(); i++) {
@@ -198,8 +198,8 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
                 ssValue >> diskindex;
 
                 // Construct block index object
-                CBlockIndex* pindexNew = InsertBlockIndex(diskindex.GetBlockHash());
-                pindexNew->pprev          = InsertBlockIndex(diskindex.hashPrev);
+                CBlockIndex* pindexNew = InsertBlockIndex(diskindex.GetBlockHash(), diskindex.fProofOfStake);
+                pindexNew->pprev          = InsertBlockIndex(diskindex.hashPrev, diskindex.fProofOfStake);
                 pindexNew->nHeight        = diskindex.nHeight;
                 pindexNew->nFile          = diskindex.nFile;
                 pindexNew->nDataPos       = diskindex.nDataPos;
@@ -211,6 +211,12 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
                 pindexNew->nNonce         = diskindex.nNonce;
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
+                pindexNew->fProofOfStake  = diskindex.fProofOfStake;
+                pindexNew->stakeSource    = diskindex.stakeSource;
+                if (pindexNew->fProofOfStake) {
+                    COutPoint stakeSource(diskindex.stakeSource.first, diskindex.stakeSource.second);
+                    mapUsedStakePointers.emplace(stakeSource.GetHash(), diskindex.GetBlockHash());
+                }
 
                 /* Bitcoin checks the PoW here.  We don't do this because
                    the CDiskBlockIndex does not contain the auxpow.
