@@ -457,9 +457,6 @@ private:
 
     void RemoveInvalidProposalVotes();
 
-    // TODO can be removed after full DIP3 deployment
-    unsigned int GetMinVoteTime();
-    void ClearPreDIP3Votes();
 };
 
 #endif

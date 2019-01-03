@@ -14,7 +14,6 @@
 #include "validation.h"
 #include "masternode.h"
 #include "masternode-sync.h"
-#include "masternodeconfig.h"
 #include "masternodeman.h"
 #include "messagesigner.h"
 #include "rpc/server.h"
@@ -264,7 +263,7 @@ UniValue gobject_submit(const JSONRPCRequest& request)
     auto mnList = deterministicMNManager->GetListAtChainTip();
     bool fMnFound = mnList.HasValidMNByCollateral(activeMasternodeInfo.outpoint);
 
-    DBG( std::cout << "gobject: submit activeMasternodeInfo.keyIDOperator = " << activeMasternodeInfo.legacyKeyIDOperator.ToString()
+    DBG( std::cout << "gobject: submit activeMasternodeInfo.pubKeyOperator = " << (activeMasternodeInfo.blsPubKeyOperator ? activeMasternodeInfo.blsPubKeyOperator->ToString() : "N/A")
          << ", outpoint = " << activeMasternodeInfo.outpoint.ToStringShort()
          << ", params.size() = " << request.params.size()
          << ", fMnFound = " << fMnFound << std::endl; );
@@ -314,11 +313,7 @@ UniValue gobject_submit(const JSONRPCRequest& request)
     if (govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
         if (fMnFound) {
             govobj.SetMasternodeOutpoint(activeMasternodeInfo.outpoint);
-            if (deterministicMNManager->IsDIP3Active()) {
-                govobj.Sign(*activeMasternodeInfo.blsKeyOperator);
-            } else {
-                govobj.Sign(activeMasternodeInfo.legacyKeyOperator, activeMasternodeInfo.legacyKeyIDOperator);
-            }
+            govobj.Sign(*activeMasternodeInfo.blsKeyOperator);
         } else {
             LogPrintf("gobject(submit) -- Object submission rejected because node is not a masternode\n");
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Only valid masternodes can submit this type of object");
@@ -947,9 +942,9 @@ UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
             "  getcurrentvotes    - Get only current (tallying) votes for a governance object hash (does not include old votes)\n"
             "  list               - List governance objects (can be filtered by signal and/or object type)\n"
             "  diff               - List differences since last diff\n"
-            "  vote-alias         - Vote on a governance object by masternode alias (using masternode.conf setup)\n"
+            "  vote-alias         - Vote on a governance object by masternode alias/proTxHash\n"
             "  vote-conf          - Vote on a governance object by masternode configured in dash.conf\n"
-            "  vote-many          - Vote on a governance object by all masternodes (using masternode.conf setup)\n"
+            "  vote-many          - Vote on a governance object by all masternodes for which the voting key is in the wallet\n"
             );
 }
 
@@ -1113,8 +1108,6 @@ UniValue getgovernanceinfo(const JSONRPCRequest& request)
 
     UniValue obj(UniValue::VOBJ);
     obj.push_back(Pair("governanceminquorum", Params().GetConsensus().nGovernanceMinQuorum));
-    obj.push_back(Pair("masternodewatchdogmaxseconds", MASTERNODE_SENTINEL_PING_MAX_SECONDS));
-    obj.push_back(Pair("sentinelpingmaxseconds", MASTERNODE_SENTINEL_PING_MAX_SECONDS));
     obj.push_back(Pair("proposalfee", ValueFromAmount(GOVERNANCE_PROPOSAL_FEE_TX)));
     obj.push_back(Pair("superblockcycle", Params().GetConsensus().nSuperblockCycle));
     obj.push_back(Pair("lastsuperblock", nLastSuperblock));

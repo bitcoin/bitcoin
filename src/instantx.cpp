@@ -79,8 +79,8 @@ void CInstantSend::ProcessMessage(CNode* pfrom, const std::string& strCommand, C
             connman.RemoveAskFor(nVoteHash);
         }
 
-        // Ignore any InstantSend messages until masternode list is synced
-        if (!masternodeSync.IsMasternodeListSynced()) return;
+        // Ignore any InstantSend messages until blockchain is synced
+        if (!masternodeSync.IsBlockchainSynced()) return;
 
         {
             LOCK(cs_instantsend);
@@ -248,10 +248,6 @@ void CInstantSend::Vote(CTxLockCandidate& txLockCandidate, CConnman& connman)
         if (!mnodeman.GetMasternodeRank(activeMasternodeInfo.outpoint, nRank, quorumModifierHash, nLockInputHeight)) {
             LogPrint("instantsend", "CInstantSend::Vote -- Can't calculate rank for masternode %s\n", activeMasternodeInfo.outpoint.ToStringShort());
             continue;
-        }
-        if (!deterministicMNManager->IsDIP3Active()) {
-            // not used until spork15 activation
-            quorumModifierHash = uint256();
         }
 
         int nSignaturesTotal = COutPointLock::SIGNATURES_TOTAL;
@@ -666,7 +662,7 @@ int64_t CInstantSend::GetAverageMasternodeOrphanVoteTime()
 
 void CInstantSend::CheckAndRemove()
 {
-    if (!masternodeSync.IsMasternodeListSynced()) return;
+    if (!masternodeSync.IsBlockchainSynced()) return;
 
     LOCK(cs_instantsend);
 
@@ -1033,7 +1029,6 @@ bool CTxLockVote::IsValid(CNode* pnode, CConnman& connman) const
 
     if (!mnList.HasValidMNByCollateral(outpointMasternode)) {
         LogPrint("instantsend", "CTxLockVote::IsValid -- Unknown masternode %s\n", outpointMasternode.ToStringShort());
-        mnodeman.AskForMN(pnode, outpointMasternode, connman);
         return false;
     }
 
@@ -1071,8 +1066,8 @@ bool CTxLockVote::IsValid(CNode* pnode, CConnman& connman) const
             LogPrint("instantsend", "CTxLockVote::IsValid -- invalid quorumModifierHash %s, expected %s\n", quorumModifierHash.ToString(), expectedQuorumModifierHash.ToString());
             return false;
         }
-    } else if (deterministicMNManager->IsDIP3Active()) {
-        LogPrint("instantsend", "CTxLockVote::IsValid -- missing quorumModifierHash while DIP3 is active\n");
+    } else {
+        LogPrint("instantsend", "CTxLockVote::IsValid -- missing quorumModifierHash\n");
         return false;
     }
 

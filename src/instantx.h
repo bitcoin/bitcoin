@@ -233,7 +233,7 @@ class CTxLockVote
 private:
     uint256 txHash;
     COutPoint outpoint;
-    // TODO remove this member when the legacy masternode code is removed after DIP3 deployment
+    // TODO remove this member (not needed anymore after DIP3 has been deployed)
     COutPoint outpointMasternode;
     uint256 quorumModifierHash;
     uint256 masternodeProTxHash;
@@ -272,12 +272,8 @@ public:
         READWRITE(txHash);
         READWRITE(outpoint);
         READWRITE(outpointMasternode);
-        if (deterministicMNManager->IsDIP3Active()) {
-            // Starting with spork15 activation, the proTxHash and quorumModifierHash is included. When we bump to >= 70214, we can remove
-            // the surrounding if. We might also remove outpointMasternode as well later
-            READWRITE(quorumModifierHash);
-            READWRITE(masternodeProTxHash);
-        }
+        READWRITE(quorumModifierHash);
+        READWRITE(masternodeProTxHash);
         if (!(s.GetType() & SER_GETHASH)) {
             READWRITE(vchMasternodeSignature);
         }

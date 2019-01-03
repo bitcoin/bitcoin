@@ -259,8 +259,6 @@ public:
     // Signature related functions
 
     void SetMasternodeOutpoint(const COutPoint& outpoint);
-    bool Sign(const CKey& key, const CKeyID& keyID);
-    bool CheckSignature(const CKeyID& keyID) const;
     bool Sign(const CBLSSecretKey& key);
     bool CheckSignature(const CBLSPublicKey& pubKey) const;
 
@@ -354,9 +352,6 @@ private:
     std::set<uint256> RemoveInvalidProposalVotes(const COutPoint& mnOutpoint);
 
     void CheckOrphanVotes(CConnman& connman);
-
-    // TODO can be removed after DIP3 is fully deployed
-    std::vector<uint256> RemoveOldVotes(unsigned int nMinTime);
 };
 
 

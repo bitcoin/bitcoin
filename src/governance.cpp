@@ -144,7 +144,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
             return;
         }
 
-        if (!masternodeSync.IsMasternodeListSynced()) {
+        if (!masternodeSync.IsBlockchainSynced()) {
             LogPrint("gobject", "MNGOVERNANCEOBJECT -- masternode list not synced\n");
             return;
         }
@@ -222,12 +222,6 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
         CGovernanceVote vote;
         vRecv >> vote;
 
-        // TODO remove this check after full DIP3 deployment
-        if (vote.GetTimestamp() < GetMinVoteTime()) {
-            // Ignore votes pre-DIP3
-            return;
-        }
-
         uint256 nHash = vote.GetHash();
 
         {
@@ -241,7 +235,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
         }
 
         // Ignore such messages until masternode list is synced
-        if (!masternodeSync.IsMasternodeListSynced()) {
+        if (!masternodeSync.IsBlockchainSynced()) {
             LogPrint("gobject", "MNGOVERNANCEOBJECTVOTE -- masternode list not synced\n");
             return;
         }
@@ -585,7 +579,6 @@ void CGovernanceManager::DoMaintenance(CConnman& connman)
     if (fLiteMode || !masternodeSync.IsSynced() || ShutdownRequested()) return;
 
     if (deterministicMNManager->IsDIP3Active()) {
-        ClearPreDIP3Votes();
         RemoveInvalidProposalVotes();
     }
 
@@ -603,7 +596,7 @@ void CGovernanceManager::DoMaintenance(CConnman& connman)
 bool CGovernanceManager::ConfirmInventoryRequest(const CInv& inv)
 {
     // do not request objects until it's time to sync
-    if (!masternodeSync.IsWinnersListSynced()) return false;
+    if (!masternodeSync.IsBlockchainSynced()) return false;
 
     LOCK(cs);
 
@@ -1308,7 +1301,6 @@ void CGovernanceManager::UpdatedBlockTip(const CBlockIndex* pindex, CConnman& co
     LogPrint("gobject", "CGovernanceManager::UpdatedBlockTip -- nCachedBlockHeight: %d\n", nCachedBlockHeight);
 
     if (deterministicMNManager->IsDIP3Active(pindex->nHeight)) {
-        ClearPreDIP3Votes();
         RemoveInvalidProposalVotes();
     }
 
@@ -1400,39 +1392,4 @@ void CGovernanceManager::RemoveInvalidProposalVotes()
 
     // store current MN list for the next run so that we can determine which keys changed
     lastMNListForVotingKeys = curMNList;
-}
-
-
-unsigned int CGovernanceManager::GetMinVoteTime()
-{
-    LOCK(cs_main);
-    if (!deterministicMNManager->IsDIP3Active()) {
-        return 0;
-    }
-    int64_t dip3SporkHeight = Params().GetConsensus().DIP0003Height;
-    return chainActive[dip3SporkHeight]->nTime;
-}
-
-void CGovernanceManager::ClearPreDIP3Votes()
-{
-    // This removes all votes which were created before DIP3 spork15 activation
-    // All these votes are invalid immediately after spork15 activation due to the introduction of voting keys, which
-    // are not equal to the old masternode private keys
-
-    unsigned int minVoteTime = GetMinVoteTime();
-
-    LOCK(cs);
-    for (auto& p : mapObjects) {
-        auto& obj = p.second;
-        auto removed = obj.RemoveOldVotes(minVoteTime);
-        if (removed.empty()) {
-            continue;
-        }
-        for (auto& voteHash : removed) {
-            cmapVoteToObject.Erase(voteHash);
-            cmapInvalidVotes.Erase(voteHash);
-            cmmapOrphanVotes.Erase(voteHash);
-            setRequestedVotes.erase(voteHash);
-        }
-    }
 }

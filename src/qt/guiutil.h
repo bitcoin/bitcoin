@@ -117,9 +117,6 @@ namespace GUIUtil
     // Open dash.conf
     void openConfigfile();	
 
-    // Open masternode.conf
-    void openMNConfigfile();	
-
     // Browse backup folder
     void showBackups();
 

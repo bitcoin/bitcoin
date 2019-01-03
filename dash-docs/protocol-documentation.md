@@ -69,52 +69,6 @@ Bitcoin Public Key https://bitcoin.org/en/glossary/public-key
 
 ## Message Types
 
-### MNANNOUNCE - "mnb"
-
-CMasternodeBroadcast
-
-Whenever a masternode comes online or a client is syncing, they will send this message which describes the masternode entry and how to validate messages from it.
-
-| Field Size | Field Name | Data type | Description |
-| ---------- | ----------- | --------- | ---------- |
-| 36 | outpoint | [COutPoint](#coutpoint) | The unspent output which is holding 1000 DASH
-| # | addr | [CService](#cservice) | IPv4 address of the masternode
-| 33-65 | pubKeyCollateralAddress | [CPubKey](#cpubkey) | CPubKey of the main 1000 DASH unspent output
-| 33-65 | pubKeyMasternode | [CPubKey](#cpubkey) | CPubKey of the secondary signing key (For all other messaging other than announce message)
-| 71-73 | sig | char[] | Signature of this message (verifiable via pubKeyCollateralAddress)
-| 8 | sigTime | int64_t | Time which the signature was created
-| 4 | nProtocolVersion | int | The protocol version of the masternode
-| # | lastPing | [CMasternodePing](#mnping---mnp) | The last known ping of the masternode
-
-### MNPING - "mnp"
-
-CMasternodePing
-
-Every few minutes, masternodes ping the network with a message that propagates the whole network.
-
-| Field Size | Field Name | Data type | Description |
-| ---------- | ----------- | --------- | --------- |
-| 36 | masternodeOutpoint | [COutPoint](#coutpoint) | The unspent output of the masternode which is signing the message
-| 32 | blockHash | uint256 | Current chaintip blockhash minus 12
-| 8 | sigTime | int64_t | Signature time for this ping
-| 71-73 | vchSig | char[] | Signature of this message by masternode (verifiable via pubKeyMasternode)
-| 1 | fSentinelIsCurrent | bool | true if last sentinel ping was current
-| 4 | nSentinelVersion | uint32_t | The version of Sentinel running on the masternode which is signing the message
-| 4 | nDaemonVersion | uint32_t | The version of dashd of the masternode which is signing the message (i.e. CLIENT_VERSION)
-
-### MASTERNODEPAYMENTVOTE - "mnw"
-
-CMasternodePaymentVote
-
-When a new block is found on the network, a masternode quorum will be determined and those 10 selected masternodes will issue a masternode payment vote message to pick the next winning node.
-
-| Field Size | Field Name | Data type | Description |
-| ---------- | ----------- | --------- | ---------- |
-| 36 | masternodeOutpoint | [COutPoint](#coutpoint) | The unspent output of the masternode which is signing the message
-| 4 | nBlockHeight | int | The blockheight which the payee should be paid
-| ? | payeeAddress | CScript | The address to pay to
-| 71-73 | sig | char[] | Signature of the masternode which is signing the message
-
 ### DSTX - "dstx"
 
 CDarksendBroadcastTx
@@ -265,26 +219,6 @@ Spork
 
 ## Undocumented messages
 
-### MASTERNODEPAYMENTBLOCK - "mnwb"
-
-Masternode Payment Block
-
-*NOTE: Per src/protocol.cpp, there is no message for this (only inventory)*
-
-### MNVERIFY - "mnv"
-
-Masternode Verify
-
-| Field Size | Field Name | Data type | Description |
-| ---------- | ----------- | --------- | ---------- |
-| 36 | masternodeOutpoint1 | [COutPoint](#coutpoint) | The unspent output which is holding 1000 DASH for masternode 1
-| 36 | masternodeOutpoint2 | [COutPoint](#coutpoint) | The unspent output which is holding 1000 DASH for masternode 2
-| # | addr | [CService](#cservice) | IPv4 address / port of the masternode
-| 4 | nonce | int | Nonce
-| 4 | nBlockHeight | int | The blockheight
-| 66* | vchSig1 | char[] | Signature of by masternode 1 (unclear if 66 is the correct size, but this is what it appears to be in most cases)
-| 66* | vchSig2 | char[] | Signature of by masternode 2 (unclear if 66 is the correct size, but this is what it appears to be in most cases)
-
 ### DSFINALTX - "dsf"
 
 Darksend Final Transaction
@@ -312,16 +246,6 @@ Governance Sync
 | 32 | nHash | uint256 | |
 | # | filter | CBloomFilter | |
 
-### DSEG - "dseg"
-
-Masternode List/Entry Sync
-
-Get Masternode list or specific entry
-
-| Field Size | Field Name | Data type | Description |
-| ---------- | ----------- | --------- | ---------- |
-| 36 | masternodeOutpoint | [COutPoint](#coutpoint) | The unspent output which is holding 1000 DASH
-
 ### SYNCSTATUSCOUNT - "ssc"
 
 Sync Status Count
@@ -335,18 +259,6 @@ Sync Status Count
 
 | Item ID | Name | Description |
 | ---------- | ---------- | ----------- |
-| 2 | MASTERNODE_SYNC_LIST | |
-| 3 | MASTERNODE_SYNC_MNW | |
 | 4 | MASTERNODE_SYNC_GOVERNANCE | |
 | 10 | MASTERNODE_SYNC_GOVOBJ | |
 | 11 | MASTERNODE_SYNC_GOVOBJ_VOTE | |
-
-### MASTERNODEPAYMENTSYNC - "mnget"
-
-Masternode Payment Sync
-
-| Field Size | Field Name | Data type | Description |
-| ---------- | ----------- | --------- | ---------- |
-| 4 | nMnCount | int | | (DEPRECATED)
-
-*NOTE: There are no fields in this mesasge starting from protocol 70209*

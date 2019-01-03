@@ -500,7 +500,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     // when enforcement is on we need information about a masternode payee or otherwise our block is going to be orphaned by the network
     std::vector<CTxOut> voutMasternodePayments;
     if (sporkManager.IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)
-        && !masternodeSync.IsWinnersListSynced()
+        && !masternodeSync.IsBlockchainSynced()
         && !mnpayments.GetBlockTxOuts(chainActive.Height() + 1, 0, voutMasternodePayments))
             throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Dash Core is downloading masternode winners...");
 

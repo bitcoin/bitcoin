@@ -713,7 +713,7 @@ void CPrivateSendClientManager::AddSkippedDenom(const CAmount& nDenomValue)
 
 bool CPrivateSendClientManager::WaitForAnotherBlock()
 {
-    if (!masternodeSync.IsMasternodeListSynced())
+    if (!masternodeSync.IsBlockchainSynced())
         return true;
 
     if (fPrivateSendMultiSession)
@@ -802,7 +802,7 @@ bool CPrivateSendClientSession::DoAutomaticDenominating(CConnman& connman, bool 
     if (fMasternodeMode) return false; // no client-side mixing on masternodes
     if (nState != POOL_STATE_IDLE) return false;
 
-    if (!masternodeSync.IsMasternodeListSynced()) {
+    if (!masternodeSync.IsBlockchainSynced()) {
         strAutoDenomResult = _("Can't mix while sync in progress.");
         return false;
     }
@@ -939,7 +939,7 @@ bool CPrivateSendClientManager::DoAutomaticDenominating(CConnman& connman, bool 
     if (fMasternodeMode) return false; // no client-side mixing on masternodes
     if (!fEnablePrivateSend) return false;
 
-    if (!masternodeSync.IsMasternodeListSynced()) {
+    if (!masternodeSync.IsBlockchainSynced()) {
         strAutoDenomResult = _("Can't mix while sync in progress.");
         return false;
     }

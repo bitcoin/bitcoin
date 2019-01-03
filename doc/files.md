@@ -12,9 +12,7 @@
 * fee_estimates.dat: stores statistics used to estimate minimum transaction fees and priorities required for confirmation; since 0.10.0
 * mempool.dat: dump of the mempool's transactions; since 0.14.0.
 * governance.dat: stores data for governance obgects
-* masternode.conf: contains configuration settings for remote masternodes
 * mncache.dat: stores data for masternode list
-* mnpayments.dat: stores data for masternode payments
 * netfulfilled.dat: stores data about recently made network requests
 * peers.dat: peer IP address database (custom format); since 0.7.0
 * wallet.dat: personal wallet (BDB) with keys and transactions

@@ -23,7 +23,6 @@
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h"
 
-#include "masternodeconfig.h"
 #include "privatesend-client.h"
 #endif
 
@@ -92,9 +91,6 @@ void OptionsModel::Init(bool resetSettings)
 
     if (!settings.contains("digits"))
         settings.setValue("digits", "2");
-
-    if (!settings.contains("fShowMasternodesTab"))
-        settings.setValue("fShowMasternodesTab", masternodeConfig.getCount());
 
     // PrivateSend
     if (!settings.contains("fShowAdvancedPSUI"))

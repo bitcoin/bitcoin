@@ -343,11 +343,4 @@ BOOST_AUTO_TEST_CASE(rpc_convert_values_generatetoaddress)
     BOOST_CHECK_EQUAL(result[2].get_int(), 9);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_sentinel_ping)
-{
-    BOOST_CHECK_NO_THROW(CallRPC("sentinelping 1.0.2"));
-    BOOST_CHECK_THROW(CallRPC("sentinelping"), std::runtime_error);
-    BOOST_CHECK_THROW(CallRPC("sentinelping 2"), std::bad_cast);
-}
-
 BOOST_AUTO_TEST_SUITE_END()

@@ -20,6 +20,7 @@ class CValidationInterface;
 class CValidationState;
 class CGovernanceVote;
 class CGovernanceObject;
+class CDeterministicMNList;
 class uint256;
 
 // These functions dispatch to one or all registered wallets
@@ -41,6 +42,7 @@ protected:
     virtual void NotifyGovernanceVote(const CGovernanceVote &vote) {}
     virtual void NotifyGovernanceObject(const CGovernanceObject &object) {}
     virtual void NotifyInstantSendDoubleSpendAttempt(const CTransaction &currentTx, const CTransaction &previousTx) {}
+    virtual void NotifyMasternodeListChanged(const CDeterministicMNList& newList) {}
     virtual void SetBestChain(const CBlockLocator &locator) {}
     virtual bool UpdatedTransaction(const uint256 &hash) { return false;}
     virtual void Inventory(const uint256 &hash) {}
@@ -80,6 +82,8 @@ struct CMainSignals {
     boost::signals2::signal<void (const CGovernanceObject &)> NotifyGovernanceObject;
     /** Notifies listeners of a attempted InstantSend double spend*/
     boost::signals2::signal<void(const CTransaction &currentTx, const CTransaction &previousTx)> NotifyInstantSendDoubleSpendAttempt;
+    /** Notifies listeners that the MN list changed */
+    boost::signals2::signal<void(const CDeterministicMNList& newList)> NotifyMasternodeListChanged;
     /** Notifies listeners of an updated transaction without new data (for now: a coinbase potentially becoming visible). */
     boost::signals2::signal<bool (const uint256 &)> UpdatedTransaction;
     /** Notifies listeners of a new active block chain. */

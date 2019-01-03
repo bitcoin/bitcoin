@@ -940,21 +940,6 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
             return sporkManager.GetSporkByHash(inv.hash, spork);
         }
 
-    case MSG_MASTERNODE_PAYMENT_VOTE:
-        return mnpayments.mapMasternodePaymentVotes.count(inv.hash);
-
-    case MSG_MASTERNODE_PAYMENT_BLOCK:
-        {
-            BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
-            return mi != mapBlockIndex.end() && mnpayments.mapMasternodeBlocks.find(mi->second->nHeight) != mnpayments.mapMasternodeBlocks.end();
-        }
-
-    case MSG_MASTERNODE_ANNOUNCE:
-        return mnodeman.mapSeenMasternodeBroadcast.count(inv.hash) && !mnodeman.IsMnbRecoveryRequested(inv.hash);
-
-    case MSG_MASTERNODE_PING:
-        return mnodeman.mapSeenMasternodePing.count(inv.hash);
-
     case MSG_DSTX: {
         return static_cast<bool>(CPrivateSend::GetDSTX(inv.hash));
     }
@@ -962,9 +947,6 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     case MSG_GOVERNANCE_OBJECT:
     case MSG_GOVERNANCE_OBJECT_VOTE:
         return ! governance.ConfirmInventoryRequest(inv);
-
-    case MSG_MASTERNODE_VERIFY:
-        return mnodeman.mapSeenMasternodeVerification.count(inv.hash);
 
     case MSG_QUORUM_FINAL_COMMITMENT:
         return llmq::quorumBlockProcessor->HasMinableCommitment(inv.hash);
@@ -1188,51 +1170,6 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     }
                 }
 
-                if (!push && inv.type == MSG_MASTERNODE_PAYMENT_VOTE) {
-                    if (!deterministicMNManager->IsDIP3Active()) {
-                        if (mnpayments.HasVerifiedPaymentVote(inv.hash)) {
-                            connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::MASTERNODEPAYMENTVOTE, mnpayments.mapMasternodePaymentVotes[inv.hash]));
-                            push = true;
-                        }
-                    }
-                }
-
-                if (!push && inv.type == MSG_MASTERNODE_PAYMENT_BLOCK) {
-                    if (!deterministicMNManager->IsDIP3Active()) {
-                        BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
-                        LOCK(cs_mapMasternodeBlocks);
-                        if (mi != mapBlockIndex.end() && mnpayments.mapMasternodeBlocks.count(mi->second->nHeight)) {
-                            BOOST_FOREACH(CMasternodePayee& payee, mnpayments.mapMasternodeBlocks[mi->second->nHeight].vecPayees) {
-                                std::vector<uint256> vecVoteHashes = payee.GetVoteHashes();
-                                BOOST_FOREACH(uint256& hash, vecVoteHashes) {
-                                    if(mnpayments.HasVerifiedPaymentVote(hash)) {
-                                        connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::MASTERNODEPAYMENTVOTE, mnpayments.mapMasternodePaymentVotes[hash]));
-                                    }
-                                }
-                            }
-                            push = true;
-                        }
-                    }
-                }
-
-                if (!push && inv.type == MSG_MASTERNODE_ANNOUNCE) {
-                    if (!deterministicMNManager->IsDIP3Active()) {
-                        if (mnodeman.mapSeenMasternodeBroadcast.count(inv.hash)) {
-                            connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::MNANNOUNCE, mnodeman.mapSeenMasternodeBroadcast[inv.hash].second));
-                            push = true;
-                        }
-                    }
-                }
-
-                if (!push && inv.type == MSG_MASTERNODE_PING) {
-                    if (!deterministicMNManager->IsDIP3Active()) {
-                        if (mnodeman.mapSeenMasternodePing.count(inv.hash)) {
-                            connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::MNPING, mnodeman.mapSeenMasternodePing[inv.hash]));
-                            push = true;
-                        }
-                    }
-                }
-
                 if (!push && inv.type == MSG_DSTX) {
                     CPrivateSendBroadcastTx dstx = CPrivateSend::GetDSTX(inv.hash);
                     if(dstx) {
@@ -1274,13 +1211,6 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     if(topush) {
                         LogPrint("net", "ProcessGetData -- pushing: inv = %s\n", inv.ToString());
                         connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECTVOTE, ss));
-                        push = true;
-                    }
-                }
-
-                if (!push && inv.type == MSG_MASTERNODE_VERIFY) {
-                    if(mnodeman.mapSeenMasternodeVerification.count(inv.hash)) {
-                        connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::MNVERIFY, mnodeman.mapSeenMasternodeVerification[inv.hash]));
                         push = true;
                     }
                 }
@@ -1796,20 +1726,9 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             }
             else
             {
-                static std::set<int> legacyMNObjs = {
-                        MSG_MASTERNODE_PAYMENT_VOTE,
-                        MSG_MASTERNODE_PAYMENT_BLOCK,
-                        MSG_MASTERNODE_ANNOUNCE,
-                        MSG_MASTERNODE_PING,
-                        MSG_MASTERNODE_VERIFY,
-                };
                 static std::set<int> allowWhileInIBDObjs = {
                         MSG_SPORK
                 };
-                if (legacyMNObjs.count(inv.type) && deterministicMNManager->IsDIP3Active()) {
-                    LogPrint("net", "ignoring (%s) inv of legacy type %d peer=%d\n", inv.hash.ToString(), inv.type, pfrom->id);
-                    continue;
-                }
 
                 pfrom->AddInventoryKnown(inv);
                 if (fBlocksOnly) {
@@ -2973,8 +2892,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             privateSendClient.ProcessMessage(pfrom, strCommand, vRecv, connman);
 #endif // ENABLE_WALLET
             privateSendServer.ProcessMessage(pfrom, strCommand, vRecv, connman);
-            mnodeman.ProcessMessage(pfrom, strCommand, vRecv, connman);
-            mnpayments.ProcessMessage(pfrom, strCommand, vRecv, connman);
             instantsend.ProcessMessage(pfrom, strCommand, vRecv, connman);
             sporkManager.ProcessSpork(pfrom, strCommand, vRecv, connman);
             masternodeSync.ProcessMessage(pfrom, strCommand, vRecv);

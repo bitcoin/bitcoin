@@ -56,13 +56,11 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     if (fLiteMode)
         return;
 
-    mnodeman.UpdatedBlockTip(pindexNew);
     CPrivateSend::UpdatedBlockTip(pindexNew);
 #ifdef ENABLE_WALLET
     privateSendClient.UpdatedBlockTip(pindexNew);
 #endif // ENABLE_WALLET
     instantsend.UpdatedBlockTip(pindexNew);
-    mnpayments.UpdatedBlockTip(pindexNew, connman);
     governance.UpdatedBlockTip(pindexNew, connman);
 }
 
@@ -70,4 +68,11 @@ void CDSNotificationInterface::SyncTransaction(const CTransaction &tx, const CBl
 {
     instantsend.SyncTransaction(tx, pindex, posInBlock);
     CPrivateSend::SyncTransaction(tx, pindex, posInBlock);
+}
+
+void CDSNotificationInterface::NotifyMasternodeListChanged(const CDeterministicMNList& newList)
+{
+    governance.CheckMasternodeOrphanObjects(connman);
+    governance.CheckMasternodeOrphanVotes(connman);
+    governance.UpdateCachesAndClean();
 }

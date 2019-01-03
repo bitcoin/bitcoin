@@ -250,10 +250,6 @@ extern const char *TXLOCKREQUEST;
 extern const char *TXLOCKVOTE;
 extern const char *SPORK;
 extern const char *GETSPORKS;
-extern const char *MASTERNODEPAYMENTVOTE;
-extern const char *MASTERNODEPAYMENTSYNC;
-extern const char *MNANNOUNCE;
-extern const char *MNPING;
 extern const char *DSACCEPT;
 extern const char *DSVIN;
 extern const char *DSFINALTX;
@@ -262,12 +258,10 @@ extern const char *DSCOMPLETE;
 extern const char *DSSTATUSUPDATE;
 extern const char *DSTX;
 extern const char *DSQUEUE;
-extern const char *DSEG;
 extern const char *SYNCSTATUSCOUNT;
 extern const char *MNGOVERNANCESYNC;
 extern const char *MNGOVERNANCEOBJECT;
 extern const char *MNGOVERNANCEOBJECTVOTE;
-extern const char *MNVERIFY;
 extern const char *GETMNLISTDIFF;
 extern const char *MNLISTDIFF;
 extern const char *QFCOMMITMENT;
@@ -358,19 +352,11 @@ enum GetDataMsg {
     MSG_TXLOCK_REQUEST = 4,
     MSG_TXLOCK_VOTE = 5,
     MSG_SPORK = 6,
-    MSG_MASTERNODE_PAYMENT_VOTE = 7,
-    MSG_MASTERNODE_PAYMENT_BLOCK = 8, // reusing, was MSG_MASTERNODE_SCANNING_ERROR previousely, was NOT used in 12.0
-    MSG_BUDGET_VOTE = 9, // deprecated since 12.1
-    MSG_BUDGET_PROPOSAL = 10, // deprecated since 12.1
-    MSG_BUDGET_FINALIZED = 11, // deprecated since 12.1
-    MSG_BUDGET_FINALIZED_VOTE = 12, // deprecated since 12.1
-    MSG_MASTERNODE_QUORUM = 13, // not implemented
-    MSG_MASTERNODE_ANNOUNCE = 14,
-    MSG_MASTERNODE_PING = 15,
+    /* 7 - 15 were used in old Dash versions and were mainly budget and MN broadcast/ping related*/
     MSG_DSTX = 16,
     MSG_GOVERNANCE_OBJECT = 17,
     MSG_GOVERNANCE_OBJECT_VOTE = 18,
-    MSG_MASTERNODE_VERIFY = 19,
+    /* 19 was used for MSG_MASTERNODE_VERIFY and is not supported anymore */
     // Nodes may always request a MSG_CMPCT_BLOCK in a getdata, however,
     // MSG_CMPCT_BLOCK should not appear in any invs except as a part of getdata.
     MSG_CMPCT_BLOCK = 20, //!< Defined in BIP152

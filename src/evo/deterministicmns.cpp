@@ -473,6 +473,10 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
             __func__, nHeight, newList.GetAllMNsCount());
     }
 
+    if (!diff.addedMNs.empty() || !diff.removedMns.empty()) {
+        GetMainSignals().NotifyMasternodeListChanged(newList);
+    }
+
     const auto& consensusParams = Params().GetConsensus();
     if (nHeight == consensusParams.DIP0003Height) {
         if (!consensusParams.DIP0003Hash.IsNull() && consensusParams.DIP0003Hash != pindex->GetBlockHash()) {
@@ -495,9 +499,17 @@ bool CDeterministicMNManager::UndoBlock(const CBlock& block, const CBlockIndex* 
     int nHeight = pindex->nHeight;
     uint256 blockHash = block.GetHash();
 
+    CDeterministicMNListDiff diff;
+    evoDb.Read(std::make_pair(DB_LIST_DIFF, blockHash), diff);
+
     evoDb.Erase(std::make_pair(DB_LIST_DIFF, blockHash));
     evoDb.Erase(std::make_pair(DB_LIST_SNAPSHOT, blockHash));
     mnListsCache.erase(blockHash);
+
+    if (!diff.addedMNs.empty() || !diff.removedMns.empty()) {
+        auto prevList = GetListForBlock(pindex->pprev->GetBlockHash());
+        GetMainSignals().NotifyMasternodeListChanged(prevList);
+    }
 
     const auto& consensusParams = Params().GetConsensus();
     if (nHeight == consensusParams.DIP0003Height) {
